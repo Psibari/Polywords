@@ -19,23 +19,22 @@ export const useGameStore = create<GameStore>((set) => ({
       game: handleAnswer(state.game, promptId, meaningId),
     })),
 
- tick: () =>
-  set((state: any) => {
-    if (state.game.gameOver) return state;
+  tick: () =>
+    set((state: any) => {
+      if (state.game.gameOver) return state;
 
-    const newTime = state.game.timeLeft - 1;
+      const newTime = state.game.timeLeft - 1;
 
-    // 👇 combo decay
-    const newCombo = state.game.combo > 0
-      ? state.game.combo - 1
-      : 0;
+      const newCombo =
+        state.game.combo > 0 ? state.game.combo - 1 : 0;
 
-    return {
-      game: {
-        ...state.game,
-        timeLeft: newTime,
-        combo: newCombo,
-        gameOver: newTime <= 0,
-      },
-    };
-  }),
+      return {
+        game: {
+          ...state.game,
+          timeLeft: newTime,
+          combo: newCombo,
+          gameOver: newTime <= 0,
+        },
+      };
+    }),
+}));

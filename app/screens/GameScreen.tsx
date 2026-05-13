@@ -10,7 +10,7 @@ useEffect(() => {
   }, 1000);
 
   return () => clearInterval(interval);
-}, []);
+}, [])
   return (
     <View style={{ flex: 1, padding: 20 }}>
       <Text style={{ fontSize: 32 }}>{game.word}</Text>
