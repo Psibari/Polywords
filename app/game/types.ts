@@ -16,4 +16,5 @@ export type GameState = {
   score: number;
   combo: number;
   gameOver: boolean;
+  timeLeft: number;
 };

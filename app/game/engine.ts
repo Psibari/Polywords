@@ -11,6 +11,7 @@ export function createGame(): GameState {
     score: 0,
     combo: 0,
     gameOver: false,
+    timeLeft: 10,
   };
 }
 
@@ -35,11 +36,14 @@ export function handleAnswer(
 
   const newQueue = state.queue.filter(p => p.id !== promptId);
 
+  const newTime = correct ? state.timeLeft + 2 : state.timeLeft - 2;
+
   return {
     ...state,
     queue: newQueue,
     score: correct ? state.score + 10 : state.score,
     combo: correct ? state.combo + 1 : 0,
-    gameOver: newQueue.length === 0,
+    timeLeft: newTime,
+    gameOver: newQueue.length === 0 || newTime <= 0,
   };
 }
