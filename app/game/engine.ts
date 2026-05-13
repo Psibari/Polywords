@@ -43,7 +43,9 @@ export function handleAnswer(
   return {
     ...state,
     queue: newQueue,
-    score: correct ? state.score + 10 : state.score,
+    score: correct
+  ? state.score + 10 * (state.combo + 1)
+  : state.score,
     combo: correct ? state.combo + 1 : 0,
     timeLeft: newTime,
     gameOver: newQueue.length === 0 || newTime <= 0,
