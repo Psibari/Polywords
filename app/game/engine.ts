@@ -36,7 +36,9 @@ export function handleAnswer(
 
   const newQueue = state.queue.filter(p => p.id !== promptId);
 
-  const newTime = correct ? state.timeLeft + 2 : state.timeLeft - 2;
+ const newTime = correct 
+  ? state.timeLeft + (2 + state.combo) 
+  : state.timeLeft - 3;
 
   return {
     ...state,
