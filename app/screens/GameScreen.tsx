@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
+  Animated,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -18,128 +19,114 @@ function Lives({ lives }: { lives: number }) {
 }
 
 export default function GameScreen() {
-  const { game, chooseMeaning, submit, tick, startGame, pickUpgrade } =
+  const { game, submitMeaningChoice, tick, startGame, pickUpgrade } =
     useGameStore();
 
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  // ⏳ Timer loop
   useEffect(() => {
     const interval = setInterval(() => {
       tick();
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [tick]);
+  }, []);
 
+  // 🔥 Prompt pulse animation
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(pulse, {
+        toValue: 1.05,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(pulse, {
+        toValue: 1,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [game.currentPrompt.id]);
+
+  // 💀 GAME OVER
   if (game.status === "gameOver") {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.centerBlock}>
-          <Text style={styles.gameOverTitle}>Game Over</Text>
-          <Text style={styles.statText}>Score: {game.score}</Text>
-          <Text style={styles.statText}>Combo: {game.combo}</Text>
-          <Text style={styles.statText}>Correct: {game.correctMoves}</Text>
+        <View style={styles.center}>
+          <Text style={styles.title}>Run Over</Text>
+          <Text style={styles.stat}>Score: {game.score}</Text>
+          <Text style={styles.stat}>Correct: {game.correctMoves}</Text>
 
-          <Pressable style={styles.primaryButton} onPress={startGame}>
-            <Text style={styles.primaryButtonText}>Run It Back</Text>
+          <Pressable style={styles.button} onPress={startGame}>
+            <Text style={styles.buttonText}>Run It Back</Text>
           </Pressable>
         </View>
       </SafeAreaView>
     );
   }
 
+  // 🎴 UPGRADE
   if (game.status === "upgrade") {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.centerBlock}>
-          <Text style={styles.upgradeTitle}>Upgrade</Text>
-          <Text style={styles.upgradeSubtitle}>Pick a boost for this run</Text>
+        <View style={styles.center}>
+          <Text style={styles.title}>Upgrade</Text>
 
-          <View style={styles.cardList}>
-            <Pressable
-              style={styles.upgradeCard}
-              onPress={() => pickUpgrade("timeBuffer")}
-            >
-              <Text style={styles.cardTitle}>Time Buffer</Text>
-              <Text style={styles.cardBody}>+2 max time, +3 time now.</Text>
-            </Pressable>
+          <Pressable
+            style={styles.card}
+            onPress={() => pickUpgrade("timeBuffer")}
+          >
+            <Text style={styles.cardTitle}>+ Time</Text>
+          </Pressable>
 
-            <Pressable
-              style={styles.upgradeCard}
-              onPress={() => pickUpgrade("comboJuice")}
-            >
-              <Text style={styles.cardTitle}>Combo Juice</Text>
-              <Text style={styles.cardBody}>+1 combo and +25 score.</Text>
-            </Pressable>
+          <Pressable
+            style={styles.card}
+            onPress={() => pickUpgrade("comboJuice")}
+          >
+            <Text style={styles.cardTitle}>Combo Boost</Text>
+          </Pressable>
 
-            <Pressable
-              style={styles.upgradeCard}
-              onPress={() => pickUpgrade("panicShield")}
-            >
-              <Text style={styles.cardTitle}>Panic Shield</Text>
-              <Text style={styles.cardBody}>Next mistake costs no life.</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            style={styles.card}
+            onPress={() => pickUpgrade("panicShield")}
+          >
+            <Text style={styles.cardTitle}>Shield</Text>
+          </Pressable>
         </View>
       </SafeAreaView>
     );
   }
 
-  const selectedMeaning = game.currentWord.meanings.find(
-    (meaning) => meaning.id === game.selectedMeaningId
-  );
-
+  // 🎮 GAMEPLAY
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.topBar}>
+      {/* Top Bar */}
+      <View style={styles.top}>
         <Lives lives={game.lives} />
-        <Text style={styles.topStat}>⏳ {game.timeLeft}</Text>
-        <Text style={styles.topStat}>🔥 {game.combo}</Text>
-        <Text style={styles.topStat}>⭐ {game.score}</Text>
+        <Text style={styles.topText}>⏳ {game.timeLeft}</Text>
+        <Text style={styles.topText}>🔥 {game.combo}</Text>
+        <Text style={styles.topText}>⭐ {game.score}</Text>
       </View>
 
-      {game.shieldActive && (
-        <View style={styles.shieldPill}>
-          <Text style={styles.shieldText}>🛡️ Shield Ready</Text>
-        </View>
-      )}
+      {/* Word */}
+      <Text style={styles.word}>{game.currentWord.word}</Text>
 
-      <View style={styles.wordBlock}>
-        <Text style={styles.wordText}>{game.currentWord.word}</Text>
-        <Text style={styles.wordMeta}>
-          {game.currentWord.type} · {game.currentWord.theme}
-        </Text>
-      </View>
+      {/* Prompt */}
+      <Animated.View style={[styles.prompt, { transform: [{ scale: pulse }] }]}>
+        <Text style={styles.promptText}>{game.currentPrompt.text}</Text>
+      </Animated.View>
 
-      <View style={styles.orbRow}>
-        {game.currentWord.meanings.map((meaning) => {
-          const isSelected = meaning.id === game.selectedMeaningId;
-
-          return (
-            <Pressable
-              key={meaning.id}
-              onPress={() => chooseMeaning(meaning.id)}
-              style={[styles.orb, isSelected && styles.orbSelected]}
-            >
-              <Text style={styles.orbIcon}>{meaning.icon}</Text>
-              <Text style={styles.orbLabel}>{meaning.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <View style={styles.selectedMeaningBlock}>
-        <Text style={styles.selectedMeaningText}>
-          Drift: {selectedMeaning?.icon} {selectedMeaning?.label}
-        </Text>
-      </View>
-
-      <View style={styles.answerGrid}>
-        {game.answers.map((answer) => (
+      {/* Meaning Orbs */}
+      <View style={styles.orbs}>
+        {game.currentWord.meanings.map((m) => (
           <Pressable
-            key={answer}
-            style={styles.answerButton}
-            onPress={() => submit(answer)}
+            key={m.id}
+            style={styles.orb}
+            onPress={() => submitMeaningChoice(m.id)}
           >
-            <Text style={styles.answerText}>{answer}</Text>
+            <Text style={styles.icon}>{m.icon}</Text>
+            <Text style={styles.label}>{m.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -150,162 +137,111 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#10131a",
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    backgroundColor: "#0f1220",
+    padding: 20,
   },
-  topBar: {
+
+  top: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
   },
-  topStat: {
-    color: "#f5f7ff",
+
+  topText: {
+    color: "white",
     fontSize: 18,
     fontWeight: "700",
   },
+
   livesText: {
     fontSize: 20,
   },
-  shieldPill: {
-    alignSelf: "center",
-    marginTop: 12,
-    backgroundColor: "#1e3a5f",
-    borderRadius: 999,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+
+  word: {
+    textAlign: "center",
+    fontSize: 42,
+    color: "white",
+    marginTop: 40,
+    fontWeight: "900",
   },
-  shieldText: {
-    color: "#dbeafe",
-    fontSize: 14,
+
+  prompt: {
+    marginTop: 30,
+    backgroundColor: "#1c2230",
+    padding: 20,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+
+  promptText: {
+    color: "white",
+    fontSize: 28,
     fontWeight: "800",
   },
-  wordBlock: {
-    alignItems: "center",
-    marginTop: 36,
-    marginBottom: 24,
-  },
-  wordText: {
-    color: "#f5f7ff",
-    fontSize: 42,
-    fontWeight: "900",
-    letterSpacing: 2,
-  },
-  wordMeta: {
-    color: "#98a2b3",
-    fontSize: 14,
-    marginTop: 8,
-  },
-  orbRow: {
+
+  orbs: {
+    marginTop: 40,
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 12,
-    flexWrap: "wrap",
+    justifyContent: "space-around",
   },
+
   orb: {
-    minWidth: 90,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 999,
     alignItems: "center",
-    backgroundColor: "#1c2230",
-    borderWidth: 2,
-    borderColor: "#1c2230",
+    backgroundColor: "#20293a",
+    padding: 20,
+    borderRadius: 20,
   },
-  orbSelected: {
-    borderColor: "#7c5cff",
-    transform: [{ scale: 1.04 }],
+
+  icon: {
+    fontSize: 28,
   },
-  orbIcon: {
-    fontSize: 22,
-    marginBottom: 6,
-  },
-  orbLabel: {
-    color: "#f5f7ff",
-    fontSize: 13,
+
+  label: {
+    color: "white",
+    marginTop: 6,
     fontWeight: "700",
   },
-  selectedMeaningBlock: {
-    marginTop: 18,
-    marginBottom: 22,
-    alignItems: "center",
-  },
-  selectedMeaningText: {
-    color: "#cbd5e1",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  answerGrid: {
-    gap: 12,
-  },
-  answerButton: {
-    backgroundColor: "#20293a",
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-  },
-  answerText: {
-    color: "#ffffff",
-    fontSize: 20,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-  centerBlock: {
+
+  center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  gameOverTitle: {
-    color: "#ffffff",
-    fontSize: 38,
+
+  title: {
+    color: "white",
+    fontSize: 36,
     fontWeight: "900",
     marginBottom: 20,
   },
-  statText: {
-    color: "#cbd5e1",
+
+  stat: {
+    color: "#ccc",
     fontSize: 18,
-    marginBottom: 8,
   },
-  primaryButton: {
-    marginTop: 24,
+
+  button: {
+    marginTop: 20,
     backgroundColor: "#7c5cff",
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 28,
+    padding: 16,
+    borderRadius: 12,
   },
-  primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 18,
+
+  buttonText: {
+    color: "white",
     fontWeight: "800",
   },
-  upgradeTitle: {
-    color: "#ffffff",
-    fontSize: 36,
-    fontWeight: "900",
-    marginBottom: 8,
-  },
-  upgradeSubtitle: {
-    color: "#cbd5e1",
-    fontSize: 16,
-    marginBottom: 24,
-  },
-  cardList: {
-    width: "100%",
-    gap: 12,
-  },
-  upgradeCard: {
+
+  card: {
     backgroundColor: "#1c2230",
-    borderRadius: 18,
-    padding: 18,
+    padding: 20,
+    marginTop: 10,
+    borderRadius: 12,
+    width: 200,
+    alignItems: "center",
   },
+
   cardTitle: {
-    color: "#ffffff",
-    fontSize: 20,
+    color: "white",
     fontWeight: "800",
-    marginBottom: 6,
-  },
-  cardBody: {
-    color: "#cbd5e1",
-    fontSize: 15,
   },
 });
