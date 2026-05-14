@@ -13,11 +13,20 @@ export type WordEntry = {
   meanings: Meaning[];
 };
 
+export type Prompt = {
+  id: string;
+  text: string;
+  meaningId: string;
+};
+
+export type UpgradeChoice =
+  | "timeBuffer"
+  | "comboJuice"
+  | "panicShield";
+
 export type GameState = {
   currentWord: WordEntry;
-  selectedMeaningId: string | null;
-  answers: string[];
-  correctAnswer: string;
+  currentPrompt: Prompt;
   score: number;
   combo: number;
   correctMoves: number;
@@ -27,5 +36,3 @@ export type GameState = {
   status: "playing" | "upgrade" | "gameOver";
   shieldActive: boolean;
 };
-
-export type UpgradeChoice = "timeBuffer" | "comboJuice" | "panicShield";
