@@ -1,38 +1,74 @@
-import { GameState, WordEntry } from "./types";
+import { GameState, Meaning, WordEntry } from "./types";
 import { WORDS } from "./words";
 
-function getRandomWord(): WordEntry {
-  return WORDS[Math.floor(Math.random() * WORDS.length)];
+function pickRandom<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
 }
 
-function generateAnswers(word: WordEntry, meaningId: string) {
-  const meaning = word.meanings.find(m => m.id === meaningId)!;
+function shuffle<T>(items: T[]): T[] {
+  return [...items].sort(() => Math.random() - 0.5);
+}
 
-  const correct =
-    meaning.links[Math.floor(Math.random() * meaning.links.length)];
+function getRandomWord(excludeWord?: string): WordEntry {
+  const pool = WORDS.filter((word) => word.word !== excludeWord);
+  return pickRandom(pool.length > 0 ? pool : WORDS);
+}
 
-  const wrongPool = WORDS.flatMap(w =>
-    w.meanings.flatMap(m => m.links)
-  ).filter(l => !meaning.links.includes(l));
+function getMeaningById(word: WordEntry, meaningId: string): Meaning {
+  const meaning = word.meanings.find((item) => item.id === meaningId);
+  if (!meaning) {
+    throw new Error(`Meaning not found: ${meaningId}`);
+  }
+  return meaning;
+}
 
-  const wrong = wrongPool.sort(() => 0.5 - Math.random()).slice(0, 3);
+function getWrongAnswerPool(word: WordEntry, selectedMeaningId: string): string[] {
+  return WORDS.flatMap((entry) =>
+    entry.meanings
+      .filter(
+        (meaning) => !(entry.word === word.word && meaning.id === selectedMeaningId)
+      )
+      .flatMap((meaning) => meaning.links)
+  );
+}
 
-  const answers = [correct, ...wrong].sort(() => 0.5 - Math.random());
+function generateAnswers(
+  word: WordEntry,
+  meaningId: string
+): { answers: string[]; correctAnswer: string } {
+  const meaning = getMeaningById(word, meaningId);
+  const correctAnswer = pickRandom(meaning.links);
 
-  return { answers, correct };
+  const wrongPool = shuffle(getWrongAnswerPool(word, meaningId)).filter(
+    (item) => item !== correctAnswer
+  );
+
+  const wrongAnswers = wrongPool.slice(0, 3);
+  const answers = shuffle([correctAnswer, ...wrongAnswers]);
+
+  return { answers, correctAnswer };
+}
+
+function buildRound(word: WordEntry, selectedMeaningId?: string) {
+  const chosenMeaningId = selectedMeaningId ?? pickRandom(word.meanings).id;
+  const { answers, correctAnswer } = generateAnswers(word, chosenMeaningId);
+
+  return {
+    selectedMeaningId: chosenMeaningId,
+    answers,
+    correctAnswer,
+  };
 }
 
 export function createGame(): GameState {
-  const word = getRandomWord();
-  const meaning = word.meanings[0];
-
-  const { answers, correct } = generateAnswers(word, meaning.id);
+  const currentWord = getRandomWord();
+  const round = buildRound(currentWord);
 
   return {
-    currentWord: word,
-    selectedMeaningId: meaning.id,
-    answers,
-    correctAnswer: correct,
+    currentWord,
+    selectedMeaningId: round.selectedMeaningId,
+    answers: round.answers,
+    correctAnswer: round.correctAnswer,
     score: 0,
     combo: 0,
     correctMoves: 0,
@@ -44,50 +80,87 @@ export function createGame(): GameState {
   };
 }
 
-export function selectMeaning(state: GameState, meaningId: string) {
-  const { answers, correct } = generateAnswers(
-    state.currentWord,
-    meaningId
-  );
+export function selectMeaning(state: GameState, meaningId: string): GameState {
+  if (state.status !== "playing") {
+    return state;
+  }
+
+  const round = buildRound(state.currentWord, meaningId);
 
   return {
     ...state,
-    selectedMeaningId: meaningId,
-    answers,
-    correctAnswer: correct,
+    selectedMeaningId: round.selectedMeaningId,
+    answers: round.answers,
+    correctAnswer: round.correctAnswer,
   };
 }
 
 export function submitAnswer(state: GameState, answer: string): GameState {
-  const correct = answer === state.correctAnswer;
+  if (state.status !== "playing") {
+    return state;
+  }
 
-  if (correct) {
-    const newWord = getRandomWord();
-    const newMeaning = newWord.meanings[0];
+  const isCorrect = answer === state.correctAnswer;
 
-    const { answers, correct: newCorrect } = generateAnswers(
-      newWord,
-      newMeaning.id
-    );
+  if (!isCorrect) {
+    const nextLives = state.shieldActive ? state.lives : state.lives - 1;
+    const nextTime = Math.max(0, state.timeLeft - 2);
 
     return {
       ...state,
-      currentWord: newWord,
-      selectedMeaningId: newMeaning.id,
-      answers,
-      correctAnswer: newCorrect,
-      score: state.score + 10 * (state.combo + 1),
-      combo: state.combo + 1,
-      correctMoves: state.correctMoves + 1,
-      timeLeft: Math.min(state.timeLeft + 2, state.maxTime),
+      combo: 0,
+      lives: nextLives,
+      shieldActive: false,
+      timeLeft: nextTime,
+      status: nextLives <= 0 || nextTime <= 0 ? "gameOver" : "playing",
     };
+  }
+
+  const nextCorrectMoves = state.correctMoves + 1;
+  const nextWord = getRandomWord(state.currentWord.word);
+  const nextRound = buildRound(nextWord);
+  const nextCombo = state.combo + 1;
+  const nextTime = Math.min(state.maxTime, state.timeLeft + 2);
+  const nextScore = state.score + 10 * nextCombo;
+  const nextStatus = nextCorrectMoves % 7 === 0 ? "upgrade" : "playing";
+
+  return {
+    ...state,
+    currentWord: nextWord,
+    selectedMeaningId: nextRound.selectedMeaningId,
+    answers: nextRound.answers,
+    correctAnswer: nextRound.correctAnswer,
+    score: nextScore,
+    combo: nextCombo,
+    correctMoves: nextCorrectMoves,
+    timeLeft: nextTime,
+    status: nextStatus,
+  };
+}
+
+export function tickGame(state: GameState): GameState {
+  if (state.status !== "playing") {
+    return state;
+  }
+
+  const nextTime = Math.max(0, state.timeLeft - 1);
+  const nextCombo = Math.max(0, state.combo - 1);
+
+  return {
+    ...state,
+    timeLeft: nextTime,
+    combo: nextCombo,
+    status: nextTime <= 0 ? "gameOver" : "playing",
+  };
+}
+
+export function continueFromUpgrade(state: GameState): GameState {
+  if (state.status !== "upgrade") {
+    return state;
   }
 
   return {
     ...state,
-    lives: state.lives - 1,
-    combo: 0,
-    timeLeft: state.timeLeft - 2,
-    status: state.lives - 1 <= 0 ? "gameOver" : "playing",
+    status: "playing",
   };
-}
+}new
