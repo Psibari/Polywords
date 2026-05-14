@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { GameState } from "../game/types";
+import { GameState, UpgradeChoice } from "../game/types";
 import {
-  continueFromUpgrade,
+  applyUpgrade,
   createGame,
   selectMeaning,
   submitAnswer,
@@ -14,7 +14,7 @@ type GameStore = {
   chooseMeaning: (meaningId: string) => void;
   submit: (answer: string) => void;
   tick: () => void;
-  continueUpgrade: () => void;
+  pickUpgrade: (upgrade: UpgradeChoice) => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -37,8 +37,8 @@ export const useGameStore = create<GameStore>((set) => ({
       game: tickGame(state.game),
     })),
 
-  continueUpgrade: () =>
+  pickUpgrade: (upgrade) =>
     set((state) => ({
-      game: continueFromUpgrade(state.game),
+      game: applyUpgrade(state.game, upgrade),
     })),
 }));

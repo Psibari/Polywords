@@ -1,4 +1,4 @@
-import { GameState, Meaning, WordEntry } from "./types";
+import { GameState, Meaning, UpgradeChoice, WordEntry } from "./types";
 import { WORDS } from "./words";
 
 function pickRandom<T>(items: T[]): T {
@@ -154,13 +154,46 @@ export function tickGame(state: GameState): GameState {
   };
 }
 
-export function continueFromUpgrade(state: GameState): GameState {
+export function applyUpgrade(
+  state: GameState,
+  upgrade: UpgradeChoice
+): GameState {
   if (state.status !== "upgrade") {
     return state;
   }
 
-  return {
-    ...state,
-    status: "playing",
-  };
+  switch (upgrade) {
+    case "timeBuffer": {
+      const nextMaxTime = state.maxTime + 2;
+      return {
+        ...state,
+        maxTime: nextMaxTime,
+        timeLeft: Math.min(nextMaxTime, state.timeLeft + 3),
+        status: "playing",
+      };
+    }
+
+    case "comboJuice": {
+      return {
+        ...state,
+        combo: state.combo + 1,
+        score: state.score + 25,
+        status: "playing",
+      };
+    }
+
+    case "panicShield": {
+      return {
+        ...state,
+        shieldActive: true,
+        status: "playing",
+      };
+    }
+
+    default:
+      return {
+        ...state,
+        status: "playing",
+      };
+  }
 }

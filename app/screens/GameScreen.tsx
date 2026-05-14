@@ -18,7 +18,7 @@ function Lives({ lives }: { lives: number }) {
 }
 
 export default function GameScreen() {
-  const { game, chooseMeaning, submit, tick, startGame, continueUpgrade } =
+  const { game, chooseMeaning, submit, tick, startGame, pickUpgrade } =
     useGameStore();
 
   useEffect(() => {
@@ -54,19 +54,28 @@ export default function GameScreen() {
           <Text style={styles.upgradeSubtitle}>Pick a boost for this run</Text>
 
           <View style={styles.cardList}>
-            <Pressable style={styles.upgradeCard} onPress={continueUpgrade}>
+            <Pressable
+              style={styles.upgradeCard}
+              onPress={() => pickUpgrade("timeBuffer")}
+            >
               <Text style={styles.cardTitle}>Time Buffer</Text>
-              <Text style={styles.cardBody}>More breathing room.</Text>
+              <Text style={styles.cardBody}>+2 max time, +3 time now.</Text>
             </Pressable>
 
-            <Pressable style={styles.upgradeCard} onPress={continueUpgrade}>
+            <Pressable
+              style={styles.upgradeCard}
+              onPress={() => pickUpgrade("comboJuice")}
+            >
               <Text style={styles.cardTitle}>Combo Juice</Text>
-              <Text style={styles.cardBody}>Keep streak energy high.</Text>
+              <Text style={styles.cardBody}>+1 combo and +25 score.</Text>
             </Pressable>
 
-            <Pressable style={styles.upgradeCard} onPress={continueUpgrade}>
+            <Pressable
+              style={styles.upgradeCard}
+              onPress={() => pickUpgrade("panicShield")}
+            >
               <Text style={styles.cardTitle}>Panic Shield</Text>
-              <Text style={styles.cardBody}>One mistake hurts less.</Text>
+              <Text style={styles.cardBody}>Next mistake costs no life.</Text>
             </Pressable>
           </View>
         </View>
@@ -86,6 +95,12 @@ export default function GameScreen() {
         <Text style={styles.topStat}>🔥 {game.combo}</Text>
         <Text style={styles.topStat}>⭐ {game.score}</Text>
       </View>
+
+      {game.shieldActive && (
+        <View style={styles.shieldPill}>
+          <Text style={styles.shieldText}>🛡️ Shield Ready</Text>
+        </View>
+      )}
 
       <View style={styles.wordBlock}>
         <Text style={styles.wordText}>{game.currentWord.word}</Text>
@@ -151,6 +166,19 @@ const styles = StyleSheet.create({
   },
   livesText: {
     fontSize: 20,
+  },
+  shieldPill: {
+    alignSelf: "center",
+    marginTop: 12,
+    backgroundColor: "#1e3a5f",
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  shieldText: {
+    color: "#dbeafe",
+    fontSize: 14,
+    fontWeight: "800",
   },
   wordBlock: {
     alignItems: "center",

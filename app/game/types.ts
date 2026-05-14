@@ -27,3 +27,5 @@ export type GameState = {
   status: "playing" | "upgrade" | "gameOver";
   shieldActive: boolean;
 };
+
+export type UpgradeChoice = "timeBuffer" | "comboJuice" | "panicShield";
