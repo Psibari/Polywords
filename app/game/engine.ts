@@ -52,6 +52,7 @@ export function createGame(): GameState {
     shieldActive: false,
   };
 }
+
 export function submitMeaning(
   state: GameState,
   meaningId: string
@@ -81,6 +82,16 @@ export function submitMeaning(
   const score = state.score + 10 * combo;
   const timeLeft = Math.min(state.maxTime, state.timeLeft + 1);
 
+  // 🔥 restore stability for chosen meaning
+  const updatedMeanings = state.currentWord.meanings.map(m =>
+    m.id === meaningId
+      ? {
+          ...m,
+          stability: Math.min(100, (m.stability ?? 100) + 25),
+        }
+      : m
+  );
+
   // rotate word every 3 correct answers
   const nextWord =
     correctMoves % 3 === 0
@@ -91,7 +102,10 @@ export function submitMeaning(
 
   return {
     ...state,
-    currentWord: nextRound.currentWord,
+    currentWord: {
+      ...nextRound.currentWord,
+      meanings: updatedMeanings,
+    },
     currentPrompt: nextRound.currentPrompt,
     score,
     combo,
@@ -107,9 +121,10 @@ export function tickGame(state: GameState): GameState {
   const timeLeft = Math.max(0, state.timeLeft - 1);
   const combo = Math.max(0, state.combo - 1);
 
+  // 🔥 decay ALL meanings
   const meanings = state.currentWord.meanings.map(m => ({
     ...m,
-  stability: Math.max(0, (m.stability ?? 100) - 5),
+    stability: Math.max(0, (m.stability ?? 100) - 5),
   }));
 
   return {
@@ -131,7 +146,7 @@ export function applyUpgrade(
   if (state.status !== "upgrade") return state;
 
   switch (upgrade) {
-    case "timeBuffer":
+    case "timeBuffer": {
       const maxTime = state.maxTime + 2;
       return {
         ...state,
@@ -139,6 +154,7 @@ export function applyUpgrade(
         timeLeft: Math.min(maxTime, state.timeLeft + 3),
         status: "playing",
       };
+    }
 
     case "comboJuice":
       return {
