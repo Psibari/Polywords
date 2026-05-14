@@ -163,4 +163,4 @@ export function continueFromUpgrade(state: GameState): GameState {
     ...state,
     status: "playing",
   };
-}new
+}

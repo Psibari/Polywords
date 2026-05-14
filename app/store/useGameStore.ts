@@ -1,12 +1,20 @@
-import { create } from 'zustand';
-import { GameState } from '../game/types';
-import { createGame, handleAnswer } from '../game/engine';
+import { create } from "zustand";
+import { GameState } from "../game/types";
+import {
+  continueFromUpgrade,
+  createGame,
+  selectMeaning,
+  submitAnswer,
+  tickGame,
+} from "../game/engine";
 
 type GameStore = {
   game: GameState;
   startGame: () => void;
-  answer: (promptId: string, meaningId: string) => void;
+  chooseMeaning: (meaningId: string) => void;
+  submit: (answer: string) => void;
   tick: () => void;
+  continueUpgrade: () => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -14,27 +22,23 @@ export const useGameStore = create<GameStore>((set) => ({
 
   startGame: () => set({ game: createGame() }),
 
-  answer: (promptId, meaningId) =>
-    set((state: any) => ({
-      game: handleAnswer(state.game, promptId, meaningId),
+  chooseMeaning: (meaningId) =>
+    set((state) => ({
+      game: selectMeaning(state.game, meaningId),
+    })),
+
+  submit: (answer) =>
+    set((state) => ({
+      game: submitAnswer(state.game, answer),
     })),
 
   tick: () =>
-    set((state: any) => {
-      if (state.game.gameOver) return state;
+    set((state) => ({
+      game: tickGame(state.game),
+    })),
 
-      const newTime = state.game.timeLeft - 1;
-
-      const newCombo =
-        state.game.combo > 0 ? state.game.combo - 1 : 0;
-
-      return {
-        game: {
-          ...state.game,
-          timeLeft: newTime,
-          combo: newCombo,
-          gameOver: newTime <= 0,
-        },
-      };
-    }),
+  continueUpgrade: () =>
+    set((state) => ({
+      game: continueFromUpgrade(state.game),
+    })),
 }));
