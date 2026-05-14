@@ -3,8 +3,8 @@ export type Meaning = {
   label: string;
   icon: string;
   links: string[];
+  stability?: number;
 };
-
 export type WordEntry = {
   word: string;
   type: "Double" | "Triple" | "Quadruple";

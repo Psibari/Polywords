@@ -31,8 +31,16 @@ function buildRound(word: WordEntry) {
 export function createGame(): GameState {
   const round = buildRound(getRandomWord());
 
+  const meaningsWithStability = round.currentWord.meanings.map(m => ({
+    ...m,
+    stability: 100,
+  }));
+
   return {
-    currentWord: round.currentWord,
+    currentWord: {
+      ...round.currentWord,
+      meanings: meaningsWithStability,
+    },
     currentPrompt: round.currentPrompt,
     score: 0,
     combo: 0,
@@ -44,7 +52,6 @@ export function createGame(): GameState {
     shieldActive: false,
   };
 }
-
 export function submitMeaning(
   state: GameState,
   meaningId: string
@@ -100,10 +107,19 @@ export function tickGame(state: GameState): GameState {
   const timeLeft = Math.max(0, state.timeLeft - 1);
   const combo = Math.max(0, state.combo - 1);
 
+  const meanings = state.currentWord.meanings.map(m => ({
+    ...m,
+  stability: Math.max(0, (m.stability ?? 100) - 5),
+  }));
+
   return {
     ...state,
     timeLeft,
     combo,
+    currentWord: {
+      ...state.currentWord,
+      meanings,
+    },
     status: timeLeft <= 0 ? "gameOver" : "playing",
   };
 }
