@@ -33,7 +33,7 @@ export default function GameScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 Prompt pulse animation
+  // 🔥 Prompt pulse
   useEffect(() => {
     Animated.sequence([
       Animated.timing(pulse, {
@@ -117,18 +117,45 @@ export default function GameScreen() {
         <Text style={styles.promptText}>{game.currentPrompt.text}</Text>
       </Animated.View>
 
-      {/* Meaning Orbs */}
+      {/* Meaning Orbs with Stability */}
       <View style={styles.orbs}>
-        {game.currentWord.meanings.map((m) => (
-          <Pressable
-            key={m.id}
-            style={styles.orb}
-            onPress={() => submitMeaningChoice(m.id)}
-          >
-            <Text style={styles.icon}>{m.icon}</Text>
-            <Text style={styles.label}>{m.label}</Text>
-          </Pressable>
-        ))}
+        {game.currentWord.meanings.map((m) => {
+          const stability = m.stability ?? 100;
+          const collapsed = stability <= 10;
+
+          return (
+            <Pressable
+              key={m.id}
+              style={[
+                styles.orb,
+                collapsed && styles.collapsedOrb,
+              ]}
+              disabled={collapsed}
+              onPress={() => submitMeaningChoice(m.id)}
+            >
+              <Text style={styles.icon}>{m.icon}</Text>
+              <Text style={styles.label}>{m.label}</Text>
+
+              {/* Stability Bar */}
+              <View style={styles.barBackground}>
+                <View
+                  style={[
+                    styles.barFill,
+                    {
+                      width: `${stability}%`,
+                      backgroundColor:
+                        stability > 50
+                          ? "#4ade80"
+                          : stability > 20
+                          ? "#facc15"
+                          : "#f87171",
+                    },
+                  ]}
+                />
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
     </SafeAreaView>
   );
@@ -189,6 +216,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#20293a",
     padding: 20,
     borderRadius: 20,
+    width: 100,
+  },
+
+  collapsedOrb: {
+    opacity: 0.3,
   },
 
   icon: {
@@ -199,6 +231,20 @@ const styles = StyleSheet.create({
     color: "white",
     marginTop: 6,
     fontWeight: "700",
+  },
+
+  barBackground: {
+    width: 60,
+    height: 6,
+    backgroundColor: "#333",
+    borderRadius: 4,
+    marginTop: 6,
+    overflow: "hidden",
+  },
+
+  barFill: {
+    height: "100%",
+    borderRadius: 4,
   },
 
   center: {
