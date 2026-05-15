@@ -1,4 +1,14 @@
-import { SafeAreaView, View, Text, Pressable, StyleSheet } from "react-native";
+import { useEffect, useState, useRef } from "react";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+} from "react-native";
+import * as Haptics from "expo-haptics";
+import { Audio } from "expo-av";
+
 import { useGameStore } from "../store/useGameStore";
 import { SESSION } from "../game/session";
 
@@ -7,6 +17,52 @@ export default function GameScreen() {
     useGameStore();
 
   const step = SESSION[game.currentStepIndex];
+
+  const [flash, setFlash] = useState<"correct" | "wrong" | null>(null);
+
+  // 🔊 sounds
+  const correctSound = useRef<Audio.Sound | null>(null);
+  const wrongSound = useRef<Audio.Sound | null>(null);
+
+  // 🎧 load sounds once
+  useEffect(() => {
+    (async () => {
+      const correct = new Audio.Sound();
+      const wrong = new Audio.Sound();
+
+      await correct.loadAsync(require("../../assets/correct.mp3"));
+      await wrong.loadAsync(require("../../assets/wrong.mp3"));
+
+      correctSound.current = correct;
+      wrongSound.current = wrong;
+    })();
+
+    return () => {
+      correctSound.current?.unloadAsync();
+      wrongSound.current?.unloadAsync();
+    };
+  }, []);
+
+  // ⚡ feedback system
+  useEffect(() => {
+    if (!game.feedback) return;
+
+    const isWrong = game.feedback.toLowerCase().includes("mistake");
+
+    setFlash(isWrong ? "wrong" : "correct");
+
+    // 📳 HAPTICS
+    if (isWrong) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      wrongSound.current?.replayAsync();
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      correctSound.current?.replayAsync();
+    }
+
+    const t = setTimeout(() => setFlash(null), 250);
+    return () => clearTimeout(t);
+  }, [game.feedback]);
 
   // 💀 GAME OVER
   if (game.status === "gameOver") {
@@ -36,77 +92,54 @@ export default function GameScreen() {
     );
   }
 
-  // 🎴 PHRASE BREAK
-  if (game.status === "phraseBreak" && step.kind === "phraseBreak") {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.label}>PHRASE BREAK</Text>
-        <Text style={styles.word}>{step.phrase}</Text>
-
-        <Text style={styles.clue}>{step.question}</Text>
-
-        {step.choices.map((choice) => (
-          <Pressable
-            key={choice}
-            style={styles.option}
-            onPress={() => submitPhraseAnswer(choice)}
-          >
-            <Text style={styles.optionText}>{choice}</Text>
-          </Pressable>
-        ))}
-
-        {game.feedback && (
-          <Text style={styles.feedback}>{game.feedback}</Text>
-        )}
-      </SafeAreaView>
-    );
-  }
-
-  // 🎮 WORD GAMEPLAY
+  // 🎮 GAMEPLAY
   if (step.kind === "word") {
     const clue = step.clues[game.currentClueIndex];
 
     return (
-      <SafeAreaView style={styles.container}>
-        {/* TOP BAR */}
-        <View style={styles.top}>
-          <Text style={styles.topText}>
-            Round {game.currentStepIndex + 1}
-          </Text>
-          <Text style={styles.topText}>❤️ {game.lives}</Text>
-          <Text style={styles.topText}>🔥 {game.combo}</Text>
-          <Text style={styles.topText}>⭐ {game.score}</Text>
-        </View>
-
-        {/* EVENT LABEL */}
-        {step.eventType !== "normal" && (
-          <Text style={styles.event}>{step.eventType.toUpperCase()}</Text>
-        )}
-
-        {/* WORD */}
+      <SafeAreaView
+        style={[
+          styles.container,
+          flash === "correct" && styles.flashCorrect,
+          flash === "wrong" && styles.flashWrong,
+        ]}
+      >
         <Text style={styles.word}>{step.word}</Text>
 
-        {/* CLUE */}
-        <Text style={styles.clue}>{clue.text}</Text>
+        <Text style={styles.clueBig}>{clue.text.toUpperCase()}</Text>
 
-        {/* MEANINGS */}
         <View style={styles.options}>
-          {step.meanings.map((m) => (
-            <Pressable
-              key={m.id}
-              style={styles.option}
-              onPress={() => submitAnswer(m.id)}
-            >
-              <Text style={styles.optionText}>
-                {m.icon ?? ""} {m.hidden ? "???" : m.label}
-              </Text>
-            </Pressable>
-          ))}
+          {step.meanings.map((m) => {
+            const isHidden =
+              m.hidden && !game.revealedMeanings[m.id];
+
+            return (
+              <Pressable
+                key={m.id}
+                style={styles.option}
+                onPress={() => submitAnswer(m.id)}
+              >
+                <Text style={styles.optionText}>
+                  {m.icon ?? ""} {isHidden ? "???" : ""}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
-        {/* FEEDBACK */}
         {game.feedback && (
-          <Text style={styles.feedback}>{game.feedback}</Text>
+          <Text
+            style={[
+              styles.feedbackBig,
+              {
+                color: game.feedback.includes("Mistake")
+                  ? "#f87171"
+                  : "#4ade80",
+              },
+            ]}
+          >
+            {game.feedback}
+          </Text>
         )}
       </SafeAreaView>
     );
@@ -120,42 +153,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0f1220",
     padding: 20,
+    justifyContent: "center",
   },
 
-  top: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-
-  topText: {
-    color: "white",
-    fontWeight: "700",
-  },
-
-  label: {
-    color: "#aaa",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-
-  event: {
-    color: "#facc15",
-    textAlign: "center",
-    marginTop: 10,
-    fontWeight: "800",
-  },
+  flashCorrect: { backgroundColor: "#062e1c" },
+  flashWrong: { backgroundColor: "#3b0a0a" },
 
   word: {
     fontSize: 42,
     color: "white",
     textAlign: "center",
-    marginTop: 30,
     fontWeight: "900",
   },
 
-  clue: {
-    fontSize: 24,
-    color: "#ddd",
+  clueBig: {
+    fontSize: 28,
+    color: "white",
     textAlign: "center",
     marginTop: 20,
   },
@@ -166,22 +179,22 @@ const styles = StyleSheet.create({
 
   option: {
     backgroundColor: "#1c2230",
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
     marginTop: 10,
     alignItems: "center",
   },
 
   optionText: {
     color: "white",
-    fontWeight: "700",
+    fontSize: 26,
   },
 
-  feedback: {
+  feedbackBig: {
     marginTop: 20,
     textAlign: "center",
-    color: "#4ade80",
-    fontWeight: "800",
+    fontSize: 22,
+    fontWeight: "900",
   },
 
   center: {
@@ -191,8 +204,8 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 36,
     color: "white",
+    fontSize: 36,
     fontWeight: "900",
   },
 

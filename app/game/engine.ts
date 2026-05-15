@@ -1,5 +1,5 @@
 import { SESSION } from "./session";
-import { SessionStep, WordStep, PhraseBreakStep } from "./types";
+import { SessionStep } from "./types";
 
 export type GameState = {
   currentStepIndex: number;
@@ -11,6 +11,9 @@ export type GameState = {
   consecutiveSwitches: number;
   feedback: string | null;
   status: "playing" | "phraseBreak" | "gameOver" | "complete";
+
+  revealedMeanings: Record<string, boolean>;
+  mistakesInWord: number;
 };
 
 export function createGame(): GameState {
@@ -24,6 +27,8 @@ export function createGame(): GameState {
     consecutiveSwitches: 0,
     feedback: null,
     status: "playing",
+    revealedMeanings: {},
+    mistakesInWord: 0,
   };
 }
 
@@ -38,11 +43,9 @@ export function submitAnswer(
   if (state.status !== "playing") return state;
 
   const step = getCurrentStep(state);
-
   if (step.kind !== "word") return state;
 
   const clue = step.clues[state.currentClueIndex];
-
   const correct = clue.correctMeaningId === meaningId;
 
   // ❌ WRONG
@@ -53,18 +56,17 @@ export function submitAnswer(
       ...state,
       lives,
       combo: 0,
-      feedback: "Wrong",
+      mistakesInWord: state.mistakesInWord + 1,
+      feedback: "Mistake!",
       status: lives <= 0 ? "gameOver" : "playing",
     };
   }
 
   // ✅ CORRECT
   let points = 100;
-
-  let consecutiveSwitches = state.consecutiveSwitches;
   let feedback = "Correct";
+  let consecutiveSwitches = state.consecutiveSwitches;
 
-  // Switch bonus
   if (
     state.previousCorrectMeaningId &&
     state.previousCorrectMeaningId !== meaningId
@@ -76,44 +78,47 @@ export function submitAnswer(
     consecutiveSwitches = 0;
   }
 
-  // Semantic flow
   if (consecutiveSwitches >= 3) {
     points *= 2;
-    feedback = "Semantic Flow x2";
+    feedback = "Flow x2";
     consecutiveSwitches = 0;
   }
 
-  // Event modifiers
-  if (step.eventType === "speedRound") {
-    points *= 2;
-  }
+  let revealedMeanings = { ...state.revealedMeanings };
+  const meaning = step.meanings.find((m) => m.id === meaningId);
 
-  if (step.eventType === "bossWord") {
-    points *= 2;
-  }
-
-  if (clue.isSlangClue) {
-    points *= 2;
-  }
-
-  if (clue.isModernEraClue) {
+  if (meaning?.hidden && !revealedMeanings[meaningId]) {
+    revealedMeanings[meaningId] = true;
     points += 300;
-    feedback = "Era Bonus +300";
+    feedback = "Discovered +300";
   }
+
+  if (step.eventType === "speedRound") points *= 2;
+  if (step.eventType === "bossWord") points *= 2;
 
   const score = state.score + points;
   const combo = state.combo + 1;
 
   const nextClueIndex = state.currentClueIndex + 1;
 
-  // Move to next step if word finished
+  // ✅ WORD COMPLETE
   if (nextClueIndex >= step.clues.length) {
     const nextStepIndex = state.currentStepIndex + 1;
+
+    let bonus = 0;
+
+    // 🔥 PERFECT CLEAR
+    if (state.mistakesInWord === 0) {
+      bonus = 500;
+      feedback = "PERFECT +500";
+    } else {
+      feedback = "Word cleared";
+    }
 
     if (nextStepIndex >= SESSION.length) {
       return {
         ...state,
-        score,
+        score: score + bonus,
         combo,
         status: "complete",
       };
@@ -121,27 +126,19 @@ export function submitAnswer(
 
     const nextStep = SESSION[nextStepIndex];
 
-    if (nextStep.kind === "phraseBreak") {
-      return {
-        ...state,
-        currentStepIndex: nextStepIndex,
-        currentClueIndex: 0,
-        score,
-        combo,
-        status: "phraseBreak",
-        feedback: "Word cleared",
-      };
-    }
-
     return {
       ...state,
       currentStepIndex: nextStepIndex,
       currentClueIndex: 0,
-      score,
+      score: score + bonus,
       combo,
+      mistakesInWord: 0,
       previousCorrectMeaningId: meaningId,
       consecutiveSwitches,
-      feedback: "Word cleared",
+      revealedMeanings,
+      status:
+        nextStep.kind === "phraseBreak" ? "phraseBreak" : "playing",
+      feedback,
     };
   }
 
@@ -152,6 +149,7 @@ export function submitAnswer(
     combo,
     previousCorrectMeaningId: meaningId,
     consecutiveSwitches,
+    revealedMeanings,
     feedback,
   };
 }
@@ -161,13 +159,11 @@ export function submitPhraseAnswer(
   choice: string
 ): GameState {
   const step = getCurrentStep(state);
-
   if (step.kind !== "phraseBreak") return state;
 
   const correct = choice === step.correctChoice;
 
   let score = state.score;
-
   let feedback = "Wrong";
 
   if (correct) {
@@ -175,11 +171,9 @@ export function submitPhraseAnswer(
     feedback = "Phrase cracked +500";
   }
 
-  const nextStepIndex = state.currentStepIndex + 1;
-
   return {
     ...state,
-    currentStepIndex: nextStepIndex,
+    currentStepIndex: state.currentStepIndex + 1,
     currentClueIndex: 0,
     score,
     status: "playing",
