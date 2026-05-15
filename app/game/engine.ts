@@ -1,177 +1,188 @@
-import { GameState, Prompt, UpgradeChoice, WordEntry } from "./types";
-import { WORDS } from "./words";
+import { SESSION } from "./session";
+import { SessionStep, WordStep, PhraseBreakStep } from "./types";
 
-function pickRandom<T>(items: T[]): T {
-  return items[Math.floor(Math.random() * items.length)];
-}
-
-function getRandomWord(exclude?: string): WordEntry {
-  const pool = WORDS.filter(w => w.word !== exclude);
-  return pickRandom(pool.length ? pool : WORDS);
-}
-
-function createPrompt(word: WordEntry): Prompt {
-  const meaning = pickRandom(word.meanings);
-  const text = pickRandom(meaning.links);
-
-  return {
-    id: `${Date.now()}-${Math.random()}`,
-    text,
-    meaningId: meaning.id,
-  };
-}
-
-function buildRound(word: WordEntry) {
-  return {
-    currentWord: word,
-    currentPrompt: createPrompt(word),
-  };
-}
+export type GameState = {
+  currentStepIndex: number;
+  currentClueIndex: number;
+  score: number;
+  combo: number;
+  lives: number;
+  previousCorrectMeaningId: string | null;
+  consecutiveSwitches: number;
+  feedback: string | null;
+  status: "playing" | "phraseBreak" | "gameOver" | "complete";
+};
 
 export function createGame(): GameState {
-  const round = buildRound(getRandomWord());
-
-  const meaningsWithStability = round.currentWord.meanings.map(m => ({
-    ...m,
-    stability: 100,
-  }));
-
   return {
-    currentWord: {
-      ...round.currentWord,
-      meanings: meaningsWithStability,
-    },
-    currentPrompt: round.currentPrompt,
+    currentStepIndex: 0,
+    currentClueIndex: 0,
     score: 0,
     combo: 0,
-    correctMoves: 0,
     lives: 3,
-    timeLeft: 8,
-    maxTime: 8,
+    previousCorrectMeaningId: null,
+    consecutiveSwitches: 0,
+    feedback: null,
     status: "playing",
-    shieldActive: false,
   };
 }
 
-export function submitMeaning(
+function getCurrentStep(state: GameState): SessionStep {
+  return SESSION[state.currentStepIndex];
+}
+
+export function submitAnswer(
   state: GameState,
   meaningId: string
 ): GameState {
   if (state.status !== "playing") return state;
 
-  const correct = meaningId === state.currentPrompt.meaningId;
+  const step = getCurrentStep(state);
+
+  if (step.kind !== "word") return state;
+
+  const clue = step.clues[state.currentClueIndex];
+
+  const correct = clue.correctMeaningId === meaningId;
 
   // ❌ WRONG
   if (!correct) {
-    const lives = state.shieldActive ? state.lives : state.lives - 1;
-    const time = Math.max(0, state.timeLeft - 2);
+    const lives = state.lives - 1;
 
     return {
       ...state,
-      combo: 0,
       lives,
-      shieldActive: false,
-      timeLeft: time,
-      status: lives <= 0 || time <= 0 ? "gameOver" : "playing",
+      combo: 0,
+      feedback: "Wrong",
+      status: lives <= 0 ? "gameOver" : "playing",
     };
   }
 
   // ✅ CORRECT
-  const correctMoves = state.correctMoves + 1;
+  let points = 100;
+
+  let consecutiveSwitches = state.consecutiveSwitches;
+  let feedback = "Correct";
+
+  // Switch bonus
+  if (
+    state.previousCorrectMeaningId &&
+    state.previousCorrectMeaningId !== meaningId
+  ) {
+    points += 50;
+    consecutiveSwitches += 1;
+    feedback = "Clean switch +50";
+  } else {
+    consecutiveSwitches = 0;
+  }
+
+  // Semantic flow
+  if (consecutiveSwitches >= 3) {
+    points *= 2;
+    feedback = "Semantic Flow x2";
+    consecutiveSwitches = 0;
+  }
+
+  // Event modifiers
+  if (step.eventType === "speedRound") {
+    points *= 2;
+  }
+
+  if (step.eventType === "bossWord") {
+    points *= 2;
+  }
+
+  if (clue.isSlangClue) {
+    points *= 2;
+  }
+
+  if (clue.isModernEraClue) {
+    points += 300;
+    feedback = "Era Bonus +300";
+  }
+
+  const score = state.score + points;
   const combo = state.combo + 1;
-  const score = state.score + 10 * combo;
-  const timeLeft = Math.min(state.maxTime, state.timeLeft + 1);
 
-  // 🔥 restore stability for chosen meaning
-  const updatedMeanings = state.currentWord.meanings.map(m =>
-    m.id === meaningId
-      ? {
-          ...m,
-          stability: Math.min(100, (m.stability ?? 100) + 25),
-        }
-      : m
-  );
+  const nextClueIndex = state.currentClueIndex + 1;
 
-  // rotate word every 3 correct answers
-  const nextWord =
-    correctMoves % 3 === 0
-      ? getRandomWord(state.currentWord.word)
-      : state.currentWord;
+  // Move to next step if word finished
+  if (nextClueIndex >= step.clues.length) {
+    const nextStepIndex = state.currentStepIndex + 1;
 
-  const nextRound = buildRound(nextWord);
-
-  return {
-    ...state,
-    currentWord: {
-      ...nextRound.currentWord,
-      meanings: updatedMeanings,
-    },
-    currentPrompt: nextRound.currentPrompt,
-    score,
-    combo,
-    correctMoves,
-    timeLeft,
-    status: correctMoves % 7 === 0 ? "upgrade" : "playing",
-  };
-}
-
-export function tickGame(state: GameState): GameState {
-  if (state.status !== "playing") return state;
-
-  const timeLeft = Math.max(0, state.timeLeft - 1);
-  const combo = Math.max(0, state.combo - 1);
-
-  // 🔥 decay ALL meanings
-  const meanings = state.currentWord.meanings.map(m => ({
-    ...m,
-    stability: Math.max(0, (m.stability ?? 100) - 5),
-  }));
-
-  return {
-    ...state,
-    timeLeft,
-    combo,
-    currentWord: {
-      ...state.currentWord,
-      meanings,
-    },
-    status: timeLeft <= 0 ? "gameOver" : "playing",
-  };
-}
-
-export function applyUpgrade(
-  state: GameState,
-  upgrade: UpgradeChoice
-): GameState {
-  if (state.status !== "upgrade") return state;
-
-  switch (upgrade) {
-    case "timeBuffer": {
-      const maxTime = state.maxTime + 2;
+    if (nextStepIndex >= SESSION.length) {
       return {
         ...state,
-        maxTime,
-        timeLeft: Math.min(maxTime, state.timeLeft + 3),
-        status: "playing",
+        score,
+        combo,
+        status: "complete",
       };
     }
 
-    case "comboJuice":
+    const nextStep = SESSION[nextStepIndex];
+
+    if (nextStep.kind === "phraseBreak") {
       return {
         ...state,
-        combo: state.combo + 1,
-        score: state.score + 25,
-        status: "playing",
+        currentStepIndex: nextStepIndex,
+        currentClueIndex: 0,
+        score,
+        combo,
+        status: "phraseBreak",
+        feedback: "Word cleared",
       };
+    }
 
-    case "panicShield":
-      return {
-        ...state,
-        shieldActive: true,
-        status: "playing",
-      };
-
-    default:
-      return { ...state, status: "playing" };
+    return {
+      ...state,
+      currentStepIndex: nextStepIndex,
+      currentClueIndex: 0,
+      score,
+      combo,
+      previousCorrectMeaningId: meaningId,
+      consecutiveSwitches,
+      feedback: "Word cleared",
+    };
   }
+
+  return {
+    ...state,
+    currentClueIndex: nextClueIndex,
+    score,
+    combo,
+    previousCorrectMeaningId: meaningId,
+    consecutiveSwitches,
+    feedback,
+  };
+}
+
+export function submitPhraseAnswer(
+  state: GameState,
+  choice: string
+): GameState {
+  const step = getCurrentStep(state);
+
+  if (step.kind !== "phraseBreak") return state;
+
+  const correct = choice === step.correctChoice;
+
+  let score = state.score;
+
+  let feedback = "Wrong";
+
+  if (correct) {
+    score += 500;
+    feedback = "Phrase cracked +500";
+  }
+
+  const nextStepIndex = state.currentStepIndex + 1;
+
+  return {
+    ...state,
+    currentStepIndex: nextStepIndex,
+    currentClueIndex: 0,
+    score,
+    status: "playing",
+    feedback,
+  };
 }

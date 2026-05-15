@@ -1,18 +1,15 @@
 import { create } from "zustand";
-import { GameState, UpgradeChoice } from "../game/types";
 import {
   createGame,
-  submitMeaning,
-  tickGame,
-  applyUpgrade,
+  submitAnswer,
+  submitPhraseAnswer,
 } from "../game/engine";
 
 type GameStore = {
-  game: GameState;
+  game: ReturnType<typeof createGame>;
   startGame: () => void;
-  submitMeaningChoice: (meaningId: string) => void;
-  tick: () => void;
-  pickUpgrade: (upgrade: UpgradeChoice) => void;
+  submitAnswer: (meaningId: string) => void;
+  submitPhraseAnswer: (choice: string) => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -20,18 +17,13 @@ export const useGameStore = create<GameStore>((set) => ({
 
   startGame: () => set({ game: createGame() }),
 
-  submitMeaningChoice: (meaningId) =>
+  submitAnswer: (meaningId) =>
     set((state) => ({
-      game: submitMeaning(state.game, meaningId),
+      game: submitAnswer(state.game, meaningId),
     })),
 
-  tick: () =>
+  submitPhraseAnswer: (choice) =>
     set((state) => ({
-      game: tickGame(state.game),
-    })),
-
-  pickUpgrade: (upgrade) =>
-    set((state) => ({
-      game: applyUpgrade(state.game, upgrade),
+      game: submitPhraseAnswer(state.game, choice),
     })),
 }));
