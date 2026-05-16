@@ -1,367 +1,111 @@
-import { useEffect, useState, useRef } from "react";
-import {
-  SafeAreaView,
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-} from "react-native";
-import * as Haptics from "expo-haptics";
-import { Audio } from "expo-av";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { GameEngine } from '../logic/GameController';
 
-import { useGameStore } from "../store/useGameStore";
-import { SESSION } from "../game/session";
+// 1. ADD THIS TYPE DEFINITION TO STOP THE ERRORS
+interface WordVariant {
+  meaning: string;
+  clue: string;
+}
 
-export default function GameScreen() {
-  const { game, submitAnswer, submitPhraseAnswer, startGame } =
-    useGameStore();
+interface WordData {
+  word: string;
+  theme: string;
+  difficulty: string;
+  isBoss: boolean;
+  variants: WordVariant[];
+}
 
-  const step = SESSION[game.currentStepIndex];
+export default function GameScreen({ navigation }: any) {
+  // 2. TELL STATE TO EXPECT AN ARRAY OF WORDDATA
+  const [levelWords, setLevelWords] = useState<WordData[]>([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [pollyStatus, setPollyStatus] = useState('thinking');
 
-  const [flash, setFlash] = useState<"correct" | "wrong" | null>(null);
-
-  // 🔊 sounds
-  const correctSound = useRef<Audio.Sound | null>(null);
-  const wrongSound = useRef<Audio.Sound | null>(null);
-
-  // 🎧 load sounds once
   useEffect(() => {
-    (async () => {
-      const correct = new Audio.Sound();
-      const wrong = new Audio.Sound();
-
-      await correct.loadAsync(require("../../assets/correct.mp3"));
-      await wrong.loadAsync(require("../../assets/wrong.mp3"));
-
-      correctSound.current = correct;
-      wrongSound.current = wrong;
-    })();
-
-    return () => {
-      correctSound.current?.unloadAsync();
-      wrongSound.current?.unloadAsync();
-    };
+    // Generate Level 1 words
+    const freshWords = GameEngine.generateLevel(1) as WordData[];
+    setLevelWords(freshWords);
   }, []);
 
-  // ⚡ feedback system
-  useEffect(() => {
-    if (!game.feedback) return;
-
-    const isWrong = game.feedback.toLowerCase().includes("mistake") || game.feedback.includes("💔");
-
-    setFlash(isWrong ? "wrong" : "correct");
-
-    // 📳 HAPTICS
-    if (isWrong) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      wrongSound.current?.replayAsync();
-    } else {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      correctSound.current?.replayAsync();
-    }
-
-    const t = setTimeout(() => setFlash(null), 250);
-    return () => clearTimeout(t);
-  }, [game.feedback]);
-
-  // 💀 GAME OVER
-  if (game.status === "gameOver") {
+  if (levelWords.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.title}>Run Failed</Text>
-          <Text style={styles.stat}>Score: {game.score}</Text>
-
-          <Pressable style={styles.button} onPress={startGame}>
-            <Text style={styles.buttonText}>Retry</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      <View style={styles.loading}>
+        <Text>Loading 739 Words...</Text>
+      </View>
     );
   }
 
-  // 🏁 COMPLETE
-  if (game.status === "complete") {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.title}>Run Complete</Text>
-          <Text style={styles.stat}>Final Score: {game.score}</Text>
+  const currentWord = levelWords[currentIdx];
+
+  const handleChoice = (variant: WordVariant) => {
+    setScore(prev => prev + 10);
+    setPollyStatus('happy');
+
+    setTimeout(() => {
+      if (currentIdx < levelWords.length - 1) {
+        setCurrentIdx(prev => prev + 1);
+        setPollyStatus('thinking');
+      } else {
+        Alert.alert("LEVEL CLEAR!", `You scored ${score + 10} points!`, [
+          { text: "Awesome", onPress: () => navigation.goBack() }
+        ]);
+      }
+    }, 800);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.scoreText}>SCORE: {score}</Text>
+        <Text style={styles.levelText}>LEVEL 1</Text>
+      </View>
+
+      <View style={styles.wordContainer}>
+        <Text style={styles.mainWord}>{currentWord.word}</Text>
+        <Text style={styles.themeTag}>{currentWord.theme}</Text>
+      </View>
+
+      <View style={styles.pollyContainer}>
+        <View style={styles.bubble}>
+          {/* We show the clue for the FIRST meaning in the list */}
+          <Text style={styles.bubbleText}>"{currentWord.variants[0].clue}"</Text>
         </View>
-      </SafeAreaView>
-    );
-  }
-
-  // 📝 PHRASE BREAK SCREEN
-  if (game.status === "phraseBreak" && step.kind === "phraseBreak") {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.phraseCard}>
-          <Text style={styles.badgeText}>🧠 COGNITIVE REWARD BREAK</Text>
-          <Text style={styles.phraseTitle}>"{step.phrase.toUpperCase()}"</Text>
-          <Text style={styles.phraseQuestion}>{step.question}</Text>
-
-          <View style={styles.options}>
-            {step.choices.map((choice) => (
-              <Pressable
-                key={choice}
-                style={styles.phraseOption}
-                onPress={() => submitPhraseAnswer(choice)}
-              >
-                <Text style={styles.optionText}>{choice}</Text>
-              </Pressable>
-            ))}
-          </View>
+        <View style={styles.pollyPlaceholder}>
+          <Text>Polly: {pollyStatus}</Text>
         </View>
-      </SafeAreaView>
-    );
-  }
+      </View>
 
-  // 🎮 GAMEPLAY ENGINE UI
-  if (step.kind === "word") {
-    const clue = step.clues[game.currentClueIndex];
-
-    // Determine custom border/badge flair using your custom eventTypes
-    const isBoss = step.eventType === "bossWord";
-    const isSpeed = step.eventType === "speedRound";
-
-    return (
-      <SafeAreaView
-        style={[
-          styles.container,
-          flash === "correct" && styles.flashCorrect,
-          flash === "wrong" && styles.flashWrong,
-          isBoss && styles.borderBoss,
-          isSpeed && styles.borderSpeed,
-        ]}
-      >
-        {/* 🏆 TOP STATUS HUD SYSTEM */}
-        <View style={styles.hudRow}>
-          <Text style={styles.hudText}>✨ SCORE: {game.score}</Text>
-          <Text style={styles.hudText}>🔥 COMBO: {game.combo}</Text>
-          <Text style={styles.hudText}>❤️ LIVES: {"❤️".repeat(game.lives)}</Text>
-        </View>
-
-        {/* 🏷️ DYNAMIC EVENT BADGE */}
-        <View style={styles.badgeContainer}>
-          <Text style={[
-            styles.badgeText, 
-            isBoss && { color: "#ff4a4a" },
-            isSpeed && { color: "#ffdf00" }
-          ]}>
-            {step.eventType.toUpperCase()} • {step.emotionalRole.toUpperCase()}
-          </Text>
-        </View>
-
-        <Text style={styles.word}>{step.word}</Text>
-
-        <View style={styles.clueBox}>
-          {clue.isSlangClue && <Text style={styles.slangTag}>💬 SLANG MODE</Text>}
-          <Text style={styles.clueBig}>{clue.text.toUpperCase()}</Text>
-        </View>
-
-        <View style={styles.options}>
-          {step.meanings.map((m) => {
-            const isHidden = m.hidden && !game.revealedMeanings[m.id];
-
-            return (
-              <Pressable
-                key={m.id}
-                style={[styles.option, isHidden && styles.optionHidden]}
-                onPress={() => submitAnswer(m.id)}
-              >
-                <Text style={styles.optionText}>
-                  {m.icon ?? ""} {isHidden ? "🔒 UNKNOWN MEANING" : m.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Dynamic feedback panel with clean state strings */}
-        {game.feedback && (
-          <Text
-            style={[
-              styles.feedbackBig,
-              {
-                color: game.feedback.includes("Mistake") || game.feedback.includes("💔")
-                  ? "#f87171"
-                  : "#4ade80",
-              },
-            ]}
+      <View style={styles.buttonArea}>
+        {currentWord.variants.map((v, i) => (
+          <TouchableOpacity 
+            key={i} 
+            style={styles.choiceBtn} 
+            onPress={() => handleChoice(v)}
           >
-            {game.feedback}
-          </Text>
-        )}
-      </SafeAreaView>
-    );
-  }
-
-  return null;
+            <Text style={styles.choiceText}>{v.meaning}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0f1220",
-    padding: 20,
-    justifyContent: "center",
-  },
-
-  // Event Context Styling Boundaries
-  borderBoss: { borderWidth: 4, borderColor: "#ff4a4a" },
-  borderSpeed: { borderWidth: 4, borderColor: "#ffdf00" },
-
-  flashCorrect: { backgroundColor: "#062e1c" },
-  flashWrong: { backgroundColor: "#3b0a0a" },
-
-  // Top Status Bar Layout
-  hudRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    position: "absolute",
-    top: 60,
-    left: 20,
-    right: 20,
-  },
-  hudText: {
-    color: "#a0aec0",
-    fontWeight: "800",
-    fontSize: 14,
-  },
-
-  badgeContainer: {
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  badgeText: {
-    color: "#7c5cff",
-    fontWeight: "900",
-    fontSize: 13,
-    letterSpacing: 2,
-  },
-
-  word: {
-    fontSize: 48,
-    color: "white",
-    textAlign: "center",
-    fontWeight: "900",
-    letterSpacing: 4,
-  },
-
-  clueBox: {
-    backgroundColor: "#161b30",
-    borderRadius: 20,
-    padding: 24,
-    marginTop: 20,
-    minHeight: 120,
-    justifyContent: "center",
-  },
-  slangTag: {
-    color: "#ff8a00",
-    fontWeight: "900",
-    fontSize: 12,
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  clueBig: {
-    fontSize: 24,
-    color: "white",
-    textAlign: "center",
-    fontWeight: "700",
-    lineHeight: 32,
-  },
-
-  options: {
-    marginTop: 30,
-  },
-  option: {
-    backgroundColor: "#1c2230",
-    padding: 20,
-    borderRadius: 16,
-    marginTop: 12,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#2d3748",
-  },
-  optionHidden: {
-    backgroundColor: "#090b14",
-    borderStyle: "dashed",
-    borderColor: "#4a5568",
-  },
-  optionText: {
-    color: "white",
-    fontSize: 22,
-    fontWeight: "600",
-  },
-
-  // Phrase Break Module Layout
-  phraseCard: {
-    padding: 24,
-    backgroundColor: "#161b30",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#7c5cff",
-  },
-  phraseTitle: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "white",
-    textAlign: "center",
-    marginVertical: 16,
-  },
-  phraseQuestion: {
-    fontSize: 18,
-    color: "#cbd5e1",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  phraseOption: {
-    backgroundColor: "#22293f",
-    padding: 18,
-    borderRadius: 14,
-    marginTop: 10,
-  },
-
-  feedbackBig: {
-    position: "absolute",
-    bottom: 60,
-    left: 20,
-    right: 20,
-    textAlign: "center",
-    fontSize: 24,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
-
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    color: "white",
-    fontSize: 36,
-    fontWeight: "900",
-  },
-  stat: {
-    color: "#ccc",
-    marginTop: 10,
-    fontSize: 18,
-  },
-  button: {
-    marginTop: 20,
-    backgroundColor: "#7c5cff",
-    padding: 16,
-    borderRadius: 12,
-    width: 160,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "800",
-    fontSize: 16,
-  },
+  container: { flex: 1, backgroundColor: '#FFFEEA', padding: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10, marginTop: 10 },
+  scoreText: { fontSize: 18, fontWeight: 'bold', color: '#444' },
+  levelText: { fontSize: 18, fontWeight: 'bold', color: '#FF8C00' },
+  wordContainer: { alignItems: 'center', marginTop: 40 },
+  mainWord: { fontSize: 54, fontWeight: '900', color: '#111', letterSpacing: 2 },
+  themeTag: { fontSize: 14, color: '#888', textTransform: 'uppercase', marginTop: 5 },
+  pollyContainer: { alignItems: 'center', marginVertical: 40 },
+  bubble: { backgroundColor: 'white', padding: 20, borderRadius: 25, borderBottomRightRadius: 2, borderWidth: 2, borderColor: '#000', maxWidth: '85%' },
+  bubbleText: { fontSize: 18, textAlign: 'center', fontWeight: '500', fontStyle: 'italic' },
+  pollyPlaceholder: { width: 120, height: 120, backgroundColor: '#FFD700', borderRadius: 60, marginTop: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 3 },
+  buttonArea: { marginTop: 'auto', marginBottom: 30 },
+  choiceBtn: { backgroundColor: '#000', padding: 20, borderRadius: 20, marginBottom: 15, elevation: 5 },
+  choiceText: { color: 'white', textAlign: 'center', fontSize: 18, fontWeight: 'bold' },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' }
 });
