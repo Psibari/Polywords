@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { GameEngine } from '../logic/GameController';
 
 // --- TYPES ---
-interface WordVariant {
-  meaning: string;
-  clue: string;
-}
-
-interface WordData {
-  word: string;
-  theme: string;
-  difficulty: string;
-  isBoss: boolean;
-  variants: WordVariant[];
+interface WordVariant { meaning: string; clue: string; }
+interface WordData { 
+    word: string; theme: string; variants: WordVariant[]; 
+    difficulty: string; isBoss: boolean;
 }
 
 export default function GameScreen({ navigation }: any) {
@@ -23,7 +16,6 @@ export default function GameScreen({ navigation }: any) {
   const [score, setScore] = useState(0);
   const [pollyStatus, setPollyStatus] = useState<'thinking' | 'happy' | 'sassy'>('thinking');
 
-  // 1. Initial Load
   useEffect(() => {
     const freshWords = GameEngine.generateLevel(1) as WordData[];
     setLevelWords(freshWords);
@@ -32,7 +24,6 @@ export default function GameScreen({ navigation }: any) {
     }
   }, []);
 
-  // 2. Helper to pick the next "Switch Up" clue
   const pickNextRound = (nextIndex: number) => {
     const nextWord = levelWords[nextIndex];
     const randomVariant = nextWord.variants[Math.floor(Math.random() * nextWord.variants.length)];
@@ -42,70 +33,55 @@ export default function GameScreen({ navigation }: any) {
 
   const handleChoice = (selected: WordVariant) => {
     if (selected.meaning === targetVariant?.meaning) {
-      // CORRECT
       setScore(prev => prev + 10);
       setPollyStatus('happy');
-
       setTimeout(() => {
         if (currentIdx < levelWords.length - 1) {
           const nextIdx = currentIdx + 1;
           setCurrentIdx(nextIdx);
           pickNextRound(nextIdx);
         } else {
-          Alert.alert("LEVEL COMPLETE!", `Final Score: ${score + 10}`, [
-            { text: "Continue", onPress: () => navigation.goBack() }
-          ]);
+          Alert.alert("LEVEL COMPLETE!", `Final Score: ${score + 10}`, [{ text: "Done", onPress: () => navigation.goBack() }]);
         }
       }, 1000);
     } else {
-      // WRONG
       setPollyStatus('sassy');
-      // Briefly show sass then go back to thinking so they can try again
-      setTimeout(() => {
-        if (pollyStatus !== 'happy') setPollyStatus('thinking');
-      }, 1500);
+      setTimeout(() => { if (pollyStatus !== 'happy') setPollyStatus('thinking'); }, 1500);
     }
   };
 
-  if (!levelWords[currentIdx] || !targetVariant) {
-    return <View style={styles.loading}><Text>Loading Polly's Brain...</Text></View>;
-  }
+  if (!levelWords[currentIdx] || !targetVariant) return null;
 
   const currentWord = levelWords[currentIdx];
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.scoreText}>SCORE: {score}</Text>
-        <Text style={styles.levelText}>LEVEL 1</Text>
+        <Text style={styles.headerText}>Score: {score}</Text>
+        <Text style={styles.headerText}>Level 1</Text>
       </View>
 
-      <View style={styles.wordArea}>
-        <Text style={styles.mainWord}>{currentWord.word}</Text>
-        <View style={styles.themeBadge}>
-          <Text style={styles.themeText}>{currentWord.theme}</Text>
-        </View>
-      </View>
-
-      <View style={styles.pollySection}>
-        <View style={styles.speechBubble}>
+      <View style={styles.gameArea}>
+        <Text style={styles.wordTitle}>{currentWord.word}</Text>
+        
+        <View style={styles.clueBox}>
           <Text style={styles.clueText}>"{targetVariant.clue}"</Text>
         </View>
-        
-        {/* Placeholder for Polly Asset */}
-        <View style={[styles.pollyCircle, pollyStatus === 'happy' ? styles.bgHappy : pollyStatus === 'sassy' ? styles.bgSassy : styles.bgThink]}>
-          <Text style={styles.pollyLabel}>POLLY IS:{"\n"}{pollyStatus.toUpperCase()}</Text>
+
+        {/* ONLY Polly changes color now */}
+        <View style={[styles.pollyCircle, 
+          pollyStatus === 'happy' ? {backgroundColor: '#4CAF50'} : 
+          pollyStatus === 'sassy' ? {backgroundColor: '#F44336'} : 
+          {backgroundColor: '#FFD700'}
+        ]}>
+          <Text style={styles.pollyText}>Polly is {pollyStatus}</Text>
         </View>
       </View>
 
-      <View style={styles.optionsArea}>
-        {currentWord.variants.map((variant, index) => (
-          <TouchableOpacity 
-            key={index} 
-            style={styles.optionButton} 
-            onPress={() => handleChoice(variant)}
-          >
-            <Text style={styles.optionText}>{variant.meaning}</Text>
+      <View style={styles.buttonList}>
+        {currentWord.variants.map((v, i) => (
+          <TouchableOpacity key={i} style={styles.btn} onPress={() => handleChoice(v)}>
+            <Text style={styles.btnText}>{v.meaning}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -114,24 +90,22 @@ export default function GameScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFEEA', padding: 20 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
-  scoreText: { fontSize: 20, fontWeight: 'bold', color: '#444' },
-  levelText: { fontSize: 20, fontWeight: 'bold', color: '#E67E22' },
-  wordArea: { alignItems: 'center', marginTop: 30 },
-  mainWord: { fontSize: 50, fontWeight: '900', color: '#111', letterSpacing: 3 },
-  themeBadge: { backgroundColor: '#EEE', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10, marginTop: 5 },
-  themeText: { fontSize: 12, color: '#666', fontWeight: 'bold' },
-  pollySection: { alignItems: 'center', marginVertical: 30 },
-  speechBubble: { backgroundColor: 'white', padding: 20, borderRadius: 20, borderWidth: 3, borderColor: '#000', marginBottom: 20, width: '90%' },
-  clueText: { fontSize: 18, textAlign: 'center', fontStyle: 'italic', fontWeight: '600' },
-  pollyCircle: { width: 140, height: 140, borderRadius: 70, justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: '#000' },
-  bgThink: { backgroundColor: '#FFD700' },
-  bgHappy: { backgroundColor: '#4CAF50' },
-  bgSassy: { backgroundColor: '#F44336' },
-  pollyLabel: { textAlign: 'center', fontWeight: 'bold', fontSize: 14 },
-  optionsArea: { marginTop: 'auto', marginBottom: 20 },
-  optionButton: { backgroundColor: '#222', padding: 18, borderRadius: 15, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 5 },
-  optionText: { color: 'white', textAlign: 'center', fontSize: 18, fontWeight: 'bold' },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' }
+  container: { flex: 1, backgroundColor: '#FFFFFF' }, 
+  header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20 },
+  headerText: { fontSize: 18, fontWeight: '600' },
+  gameArea: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+  wordTitle: { fontSize: 48, fontWeight: '900', marginBottom: 10 },
+  clueBox: { padding: 20, marginHorizontal: 20, borderBottomWidth: 1, borderColor: '#eee' },
+  clueText: { fontSize: 20, textAlign: 'center', fontStyle: 'italic' },
+  pollyCircle: { width: 100, height: 100, borderRadius: 50, marginTop: 30, justifyContent: 'center', alignItems: 'center' },
+  pollyText: { fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
+  buttonList: { padding: 20 },
+  btn: { 
+    padding: 15, 
+    borderWidth: 1, // <--- FIXED: changed from borderWeight
+    borderColor: '#ccc', 
+    borderRadius: 10, 
+    marginBottom: 10 
+  },
+  btnText: { textAlign: 'center', fontSize: 18 }
 });
