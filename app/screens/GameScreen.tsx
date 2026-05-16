@@ -328,6 +328,8 @@ export default function GameScreen({ navigation }: any) {
   const [xpCounter, setXpCounter] = useState(0);
   const [timerExpired, setTimerExpired] = useState(false);
   const [selectedMeaningId, setSelectedMeaningId] = useState<string | null>(null);
+  const [correctMeaningId, setCorrectMeaningId] = useState<string | null>(null);
+  const [peakCombo, setPeakCombo] = useState(0);
 
   const cardAnim = useRef(new Animated.Value(0)).current;
   const feedbackAnim = useRef(new Animated.Value(0)).current;
@@ -342,6 +344,7 @@ export default function GameScreen({ navigation }: any) {
   useEffect(() => {
     cardAnim.setValue(0);
     setSelectedMeaningId(null);
+    setCorrectMeaningId(null);
     setTimerExpired(false);
     Animated.spring(cardAnim, { toValue: 1, damping: 16, stiffness: 160, useNativeDriver: true }).start();
 
@@ -356,6 +359,21 @@ export default function GameScreen({ navigation }: any) {
     }
     if (wordStep) setPrevEventType(wordStep.eventType);
   }, [game.currentStepIndex]);
+
+  // Auto-advance to next clue after showing result briefly
+  useEffect(() => {
+    if (selectedMeaningId === null) return;
+    const timer = setTimeout(() => {
+      setSelectedMeaningId(null);
+      setCorrectMeaningId(null);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [selectedMeaningId]);
+
+  // Track peak combo
+  useEffect(() => {
+    if (game.combo > peakCombo) setPeakCombo(game.combo);
+  }, [game.combo]);
 
   // Show feedback
   useEffect(() => {
@@ -393,9 +411,12 @@ export default function GameScreen({ navigation }: any) {
   }, [game.feedback]);
 
   const handleAnswer = useCallback((meaningId: string) => {
+    if (!wordStep || selectedMeaningId) return;
+    const currentClue = wordStep.clues[game.currentClueIndex];
+    setCorrectMeaningId(currentClue.correctMeaningId);
     setSelectedMeaningId(meaningId);
     submitAnswer(meaningId);
-  }, [submitAnswer]);
+  }, [wordStep, game.currentClueIndex, submitAnswer, selectedMeaningId]);
 
   const handleTimerExpire = useCallback(() => {
     setTimerExpired(true);
@@ -413,13 +434,13 @@ export default function GameScreen({ navigation }: any) {
   // ── Game Over ──
   if (game.status === 'gameOver') {
     const hiddenFound = Object.keys(game.revealedMeanings).length;
-    return <ResultsScreen score={game.score} combo={game.combo} hiddenFound={hiddenFound} onRestart={startGame} />;
+    return <ResultsScreen score={game.score} combo={peakCombo} hiddenFound={hiddenFound} onRestart={startGame} />;
   }
 
   // ── Complete ──
   if (game.status === 'complete') {
     const hiddenFound = Object.keys(game.revealedMeanings).length;
-    return <ResultsScreen score={game.score} combo={game.combo} hiddenFound={hiddenFound} onRestart={startGame} />;
+    return <ResultsScreen score={game.score} combo={peakCombo} hiddenFound={hiddenFound} onRestart={startGame} />;
   }
 
   // ── No step ──
@@ -510,20 +531,20 @@ export default function GameScreen({ navigation }: any) {
               <View style={styles.tilesGrid}>
                 {wordStep.meanings.map(m => {
                   const isSelected = selectedMeaningId === m.id;
-                  const isCorrect = clue?.correctMeaningId === m.id;
-                  const isWrong = isSelected && !isCorrect;
+                  const isCorrect = selectedMeaningId !== null && correctMeaningId === m.id;
+                  const isWrong = isSelected && correctMeaningId !== null && selectedMeaningId !== correctMeaningId;
                   const wasRevealed = !!game.revealedMeanings[m.id];
                   return (
                     <MeaningTile
                       key={m.id}
                       meaning={m}
                       isSelected={isSelected}
-                      isCorrect={isSelected && isCorrect}
+                      isCorrect={isCorrect}
                       isWrong={isWrong}
                       isHidden={!!m.hidden && !wasRevealed}
                       isSlang={!!m.isSlang}
                       isModern={m.era === 'modern'}
-                      revealed={isSelected}
+                      revealed={selectedMeaningId !== null}
                       onPress={() => handleAnswer(m.id)}
                     />
                   );
@@ -631,8 +652,8 @@ const styles = StyleSheet.create({
   gradeText: { fontSize: 96, fontWeight: '900', lineHeight: 100 },
   resultsTitle: { fontSize: 24, fontWeight: '700', color: C.text, marginBottom: 32 },
   statsGrid: { flexDirection: 'row', gap: 12, width: '100%', marginBottom: 24 },
-  statCard: { flex: 1, backgroundColor: C.bgCard, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 16, alignItems: 'center' },
-  statValue: { fontSize: 24, fontWeight: '900', color: C.text, marginBottom: 4 },
+  statCard: { flex: 1, backgroundColor: C.bgCard, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 12, alignItems: 'center' },
+  statValue: { fontSize: 20, fontWeight: '900', color: C.text, marginBottom: 4 },
   statLabel: { fontSize: 11, color: C.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
   nearMissCard: { width: '100%', backgroundColor: '#1A1200', borderWidth: 1, borderColor: C.gold, borderRadius: 14, padding: 16, marginBottom: 24 },
   nearMissText: { fontSize: 14, color: C.gold, lineHeight: 22, textAlign: 'center' },
