@@ -1,662 +1,1050 @@
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   Animated,
+  Dimensions,
+  Pressable,
   SafeAreaView,
   ScrollView,
-  Dimensions,
-} from 'react-native';
-import { useGameStore } from '../store/useGameStore';
-import { SESSION } from '../game/session';
-import { WordStep, PhraseBreakStep } from '../game/types';
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-const { width: SW } = Dimensions.get('window');
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
-// ─── Colour palette ────────────────────────────────────────────────────────
-const C = {
-  bg:          '#0F1220',
-  bgCard:      '#171B2E',
-  bgBoss:      '#1A0D1F',
-  bgSpeed:     '#1A1000',
-  bgPhrase:    '#0A1A14',
-  border:      '#2A2F4A',
-  borderGold:  '#F0B429',
-  borderBoss:  '#993556',
-  borderSpeed: '#FF6B35',
-  text:        '#F0EEF8',
-  textMuted:   '#8A88A0',
-  textSub:     '#5A5870',
-  gold:        '#F0B429',
-  green:       '#06D6A0',
-  red:         '#E74C3C',
-  purple:      '#7C5CFC',
-  orange:      '#FF6B35',
-  pink:        '#D4537E',
-  indigo:      '#534AB7',
+type Step =
+  | IntroStep
+  | ConveyorStep
+  | SwitchbackStep
+  | HiddenWordStep;
+
+type IntroStep = {
+  type: "intro";
+  title: string;
+  rule: string;
+  polly?: string;
 };
 
-// ─── Event type metadata ───────────────────────────────────────────────────
-function getEventMeta(eventType: string) {
-  switch (eventType) {
-    case 'speedRound':
-      return { label: '⚡ SPEED ROUND', color: C.orange, bg: C.bgSpeed, border: C.borderSpeed };
-    case 'bossWord':
-      return { label: '💥 BOSS WORD', color: C.pink, bg: C.bgBoss, border: C.borderBoss };
-    case 'slangDrop':
-      return { label: '😎 SLANG DROP', color: C.purple, bg: C.bgCard, border: C.purple };
-    case 'missingMeaning':
-      return { label: '💎 HIDDEN MEANING', color: C.gold, bg: C.bgCard, border: C.gold };
-    case 'semanticEvolution':
-      return { label: '🧠 ERA SHIFT', color: C.green, bg: C.bgCard, border: C.green };
-    case 'decoyTension':
-    case 'decoyHeavy':
-      return { label: '⚠️ DECOY ALERT', color: C.red, bg: C.bgCard, border: C.red };
-    case 'wordLore':
-      return { label: '📜 WORD LORE', color: C.gold, bg: C.bgCard, border: C.gold };
-    default:
-      return null;
+type ConveyorClue = {
+  clue: string;
+  answer: string;
+  choices: string[];
+};
+
+type ConveyorStep = {
+  type: "conveyor";
+  word: string;
+  label: string;
+  speedMs: number;
+  polly?: string;
+  clues: ConveyorClue[];
+  boss?: boolean;
+};
+
+type SwitchbackStep = {
+  type: "switchback";
+  label: string;
+  clueA: string;
+  clueB: string;
+  choices: string[];
+  answer: string;
+  polly?: string;
+};
+
+type HiddenWordStep = {
+  type: "hiddenWord";
+  label: string;
+  answer: string;
+  meanings: string[];
+  grid: string[][];
+  polly?: string;
+};
+
+const STEPS: Step[] = [
+  {
+    type: "intro",
+    title: "CONVEYOR BLITZ",
+    rule: "Tap the meaning before it slides away.",
+    polly: "Word stays still. Meaning moves. Don’t blink.",
+  },
+  {
+    type: "conveyor",
+    word: "BARK",
+    label: "CONVEYOR BLITZ",
+    speedMs: 5600,
+    clues: [
+      {
+        clue: "Noise from the yard",
+        answer: "DOG SOUND",
+        choices: ["DOG SOUND", "TREE SKIN", "LOUD ORDER", "BITE"],
+      },
+      {
+        clue: "Rough coat on a trunk",
+        answer: "TREE SKIN",
+        choices: ["WOOD", "TREE SKIN", "LEAF", "DOG SOUND"],
+      },
+      {
+        clue: "Snap an order",
+        answer: "LOUD ORDER",
+        choices: ["DOG SOUND", "LOUD ORDER", "TREE SKIN", "WHISPER"],
+      },
+    ],
+  },
+  {
+    type: "conveyor",
+    word: "BAT",
+    label: "SPEED ROUND",
+    speedMs: 3600,
+    polly: "Faster now.",
+    clues: [
+      {
+        clue: "Swings for the fences",
+        answer: "BASEBALL TOOL",
+        choices: ["BALL", "BASEBALL TOOL", "GLOVE", "FLYING MAMMAL"],
+      },
+      {
+        clue: "Sleeps upside down",
+        answer: "FLYING MAMMAL",
+        choices: ["OWL", "BASEBALL TOOL", "FLYING MAMMAL", "CAVE"],
+      },
+      {
+        clue: "Night hunter with wings",
+        answer: "FLYING MAMMAL",
+        choices: ["FLYING MAMMAL", "BIRD", "BATTERY", "BASEBALL TOOL"],
+      },
+    ],
+  },
+  {
+    type: "intro",
+    title: "SWITCHBACK",
+    rule: "Two clues. One word connects them.",
+    polly: "Now we flip the puzzle.",
+  },
+  {
+    type: "switchback",
+    label: "SWITCHBACK",
+    clueA: "Swings in baseball.",
+    clueB: "Sleeps in caves.",
+    choices: ["BALL", "BAT", "OWL", "GLOVE"],
+    answer: "BAT",
+    polly: "Brain glitch incoming.",
+  },
+  {
+    type: "conveyor",
+    word: "LIGHT",
+    label: "CONVEYOR BLITZ",
+    speedMs: 5000,
+    clues: [
+      {
+        clue: "Cuts through darkness",
+        answer: "BRIGHTNESS",
+        choices: ["BRIGHTNESS", "NOT HEAVY", "IGNITE", "SHADOW"],
+      },
+      {
+        clue: "Easy to carry",
+        answer: "NOT HEAVY",
+        choices: ["SMALL", "BRIGHTNESS", "NOT HEAVY", "SOFT"],
+      },
+      {
+        clue: "Start the candle",
+        answer: "IGNITE",
+        choices: ["BURN OUT", "IGNITE", "BRIGHTNESS", "NOT HEAVY"],
+      },
+    ],
+  },
+  {
+    type: "intro",
+    title: "HIDDEN WORD",
+    rule: "The clues point to one word. Find it in the grid.",
+    polly: "It’s hiding in the alphabet soup.",
+  },
+  {
+    type: "hiddenWord",
+    label: "HIDDEN WORD",
+    answer: "MATCH",
+    meanings: ["Starts a flame.", "Fits perfectly.", "Competitive showdown."],
+    grid: [
+      ["M", "A", "T", "C", "H"],
+      ["B", "R", "I", "N", "G"],
+      ["S", "P", "A", "R", "K"],
+      ["G", "A", "M", "E", "S"],
+      ["P", "A", "I", "R", "S"],
+    ],
+    polly: "Tap the letters in order for this prototype.",
+  },
+  {
+    type: "intro",
+    title: "BOSS WORD",
+    rule: "More meanings. Less mercy.",
+    polly: "Split it clean.",
+  },
+  {
+    type: "conveyor",
+    word: "BANK",
+    label: "BOSS WORD",
+    speedMs: 3900,
+    boss: true,
+    polly: "Careful. This one has elbows.",
+    clues: [
+      {
+        clue: "Where money waits",
+        answer: "MONEY PLACE",
+        choices: ["SAFE", "MONEY PLACE", "RIVER EDGE", "VAULT"],
+      },
+      {
+        clue: "Land beside flowing water",
+        answer: "RIVER EDGE",
+        choices: ["OCEAN WALL", "MONEY PLACE", "RIVER EDGE", "BRIDGE"],
+      },
+      {
+        clue: "Count on it happening",
+        answer: "RELY ON",
+        choices: ["RELY ON", "ORDER", "CHECK", "MONEY PLACE"],
+      },
+      {
+        clue: "Tilt into a turn",
+        answer: "PLANE TURN",
+        choices: ["PLANE TURN", "RIVER EDGE", "SPIN", "FALL"],
+      },
+    ],
+  },
+];
+
+export default function GameScreen() {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [clueIndex, setClueIndex] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [showClear, setShowClear] = useState(false);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [mistakes, setMistakes] = useState(0);
+  const [perfectWords, setPerfectWords] = useState(0);
+  const [wordMistakes, setWordMistakes] = useState(0);
+  const [introCount, setIntroCount] = useState(3);
+  const [selectedSwitchback, setSelectedSwitchback] = useState<string | null>(
+    null
+  );
+  const [hiddenPath, setHiddenPath] = useState<
+    { row: number; col: number; letter: string }[]
+  >([]);
+  const [finished, setFinished] = useState(false);
+
+  const slideX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
+  const timerScale = useRef(new Animated.Value(1)).current;
+
+  const step = STEPS[stepIndex];
+
+  const currentClue = useMemo(() => {
+    if (step.type !== "conveyor") return null;
+    return step.clues[clueIndex];
+  }, [step, clueIndex]);
+
+  useEffect(() => {
+    if (step.type !== "intro") return;
+
+    setIntroCount(3);
+
+   const timeouts: ReturnType<typeof setTimeout>[] = []; 
+
+    timeouts.push(
+      setTimeout(() => {
+        setIntroCount(2);
+      }, 800)
+    );
+
+    timeouts.push(
+      setTimeout(() => {
+        setIntroCount(1);
+      }, 1600)
+    );
+
+    timeouts.push(
+      setTimeout(() => {
+        setIntroCount(0);
+      }, 2400)
+    );
+
+    timeouts.push(
+      setTimeout(() => {
+        goNextStep();
+      }, 3200)
+    );
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [stepIndex]);
+
+  useEffect(() => {
+    if (step.type !== "conveyor" || showClear) return;
+
+    setLocked(false);
+    setFeedback("");
+
+    slideX.setValue(SCREEN_WIDTH);
+    timerScale.setValue(1);
+
+    Animated.timing(slideX, {
+      toValue: -SCREEN_WIDTH * 1.35,
+      duration: step.speedMs,
+      useNativeDriver: true,
+    }).start();
+
+    Animated.timing(timerScale, {
+      toValue: 0,
+      duration: step.speedMs,
+      useNativeDriver: false,
+    }).start();
+
+    const timeout = setTimeout(() => {
+      handleConveyorMiss();
+    }, step.speedMs);
+
+    return () => {
+      clearTimeout(timeout);
+      slideX.stopAnimation();
+      timerScale.stopAnimation();
+    };
+  }, [stepIndex, clueIndex, showClear]);
+
+  function goNextStep() {
+    if (stepIndex + 1 >= STEPS.length) {
+      setFinished(true);
+      return;
+    }
+
+    setStepIndex((current) => current + 1);
+    setClueIndex(0);
+    setLocked(false);
+    setFeedback("");
+    setShowClear(false);
+    setWordMistakes(0);
+    setSelectedSwitchback(null);
+    setHiddenPath([]);
   }
-}
 
-// ─── XP Float ─────────────────────────────────────────────────────────────
-function XPFloat({ value, onDone }: { value: string; onDone: () => void }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.sequence([
-      Animated.timing(anim, { toValue: 1, duration: 200, useNativeDriver: true }),
-      Animated.delay(600),
-      Animated.timing(anim, { toValue: 2, duration: 300, useNativeDriver: true }),
-    ]).start(onDone);
-  }, []);
-  return (
-    <Animated.Text style={[styles.xpFloat, {
-      opacity: anim.interpolate({ inputRange: [0, 0.5, 1, 1.8, 2], outputRange: [0, 1, 1, 1, 0] }),
-      transform: [{ translateY: anim.interpolate({ inputRange: [0, 1, 2], outputRange: [0, -20, -50] }) }],
-    }]}>{value}</Animated.Text>
-  );
-}
+  function clearCurrentWord() {
+    const perfect = wordMistakes === 0;
 
-// ─── Shift Banner ──────────────────────────────────────────────────────────
-function ShiftBanner({ label, color }: { label: string; color: string }) {
-  const anim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.sequence([
-      Animated.spring(anim, { toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true }),
-      Animated.delay(1000),
-      Animated.timing(anim, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start();
-  }, []);
-  return (
-    <Animated.View style={[styles.shiftBanner, { borderColor: color, opacity: anim, transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}>
-      <Text style={[styles.shiftBannerText, { color }]}>{label}</Text>
-    </Animated.View>
-  );
-}
-
-// ─── Lives display ─────────────────────────────────────────────────────────
-function Lives({ count }: { count: number }) {
-  return (
-    <View style={styles.livesRow}>
-      {[0, 1, 2].map(i => (
-        <Text key={i} style={[styles.lifeIcon, i >= count && styles.lifeIconDead]}>♥</Text>
-      ))}
-    </View>
-  );
-}
-
-// ─── Timer bar ─────────────────────────────────────────────────────────────
-function TimerBar({ active, duration, onExpire }: { active: boolean; duration: number; onExpire: () => void }) {
-  const anim = useRef(new Animated.Value(1)).current;
-  const ref = useRef<Animated.CompositeAnimation | null>(null);
-  useEffect(() => {
-    if (active) {
-      anim.setValue(1);
-      ref.current = Animated.timing(anim, { toValue: 0, duration: duration * 1000, useNativeDriver: false });
-      ref.current.start(({ finished }) => { if (finished) onExpire(); });
+    if (perfect) {
+      setPerfectWords((current) => current + 1);
+      setScore((current) => current + 350);
+      setFeedback("Perfect clear +350");
     } else {
-      ref.current?.stop();
+      setFeedback("Word cleared");
     }
-    return () => ref.current?.stop();
-  }, [active]);
 
-  const color = anim.interpolate({ inputRange: [0, 0.3, 1], outputRange: [C.red, C.gold, C.orange] });
+    setShowClear(true);
+  }
 
-  return (
-    <View style={styles.timerTrack}>
-      <Animated.View style={[styles.timerFill, { flex: anim, backgroundColor: color }]} />
-    </View>
-  );
-}
+  function advanceConveyor() {
+    if (step.type !== "conveyor") return;
 
-// ─── Meaning Tile ──────────────────────────────────────────────────────────
-function MeaningTile({
-  meaning,
-  isSelected,
-  isCorrect,
-  isWrong,
-  isHidden,
-  isSlang,
-  isModern,
-  onPress,
-  revealed,
-}: {
-  meaning: { id: string; label: string; icon?: string; hidden?: boolean; isSlang?: boolean; era?: string };
-  isSelected: boolean;
-  isCorrect: boolean;
-  isWrong: boolean;
-  isHidden: boolean;
-  isSlang: boolean;
-  isModern: boolean;
-  onPress: () => void;
-  revealed: boolean;
-}) {
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (isWrong) {
-      Animated.sequence([
-        Animated.timing(shakeAnim, { toValue: 8, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: -8, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 6, duration: 50, useNativeDriver: true }),
-        Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-      ]).start();
+    if (clueIndex + 1 >= step.clues.length) {
+      clearCurrentWord();
+      return;
     }
-    if (isCorrect) {
-      Animated.sequence([
-        Animated.spring(scaleAnim, { toValue: 1.06, damping: 10, stiffness: 300, useNativeDriver: true }),
-        Animated.spring(scaleAnim, { toValue: 1, damping: 10, stiffness: 300, useNativeDriver: true }),
-      ]).start();
+
+    setClueIndex((current) => current + 1);
+  }
+
+  function handleConveyorMiss() {
+    if (locked || step.type !== "conveyor" || showClear) return;
+
+    setLocked(true);
+    setMistakes((current) => current + 1);
+    setWordMistakes((current) => current + 1);
+    setStreak(0);
+    setFeedback("Too late.");
+
+    setTimeout(() => {
+      advanceConveyor();
+    }, 650);
+  }
+
+  function handleMeaningTap(choice: string) {
+    if (locked || step.type !== "conveyor" || !currentClue) return;
+
+    setLocked(true);
+
+    const correct = choice === currentClue.answer;
+
+    if (correct) {
+      const speedBonus = step.label === "SPEED ROUND" ? 2 : 1;
+      const bossBonus = step.boss ? 2 : 1;
+      const streakBonus = Math.min(streak * 10, 100);
+      const points = 100 * speedBonus * bossBonus + streakBonus;
+
+      setScore((current) => current + points);
+      setStreak((current) => current + 1);
+      setFeedback(`Clean +${points}`);
+    } else {
+      setMistakes((current) => current + 1);
+      setWordMistakes((current) => current + 1);
+      setStreak(0);
+      setFeedback(`Not that meaning. It was ${currentClue.answer}.`);
     }
-  }, [isWrong, isCorrect]);
 
-  let bg = C.bgCard;
-  let border = C.border;
-  let labelColor = C.text;
-
-  if (revealed && isCorrect) { bg = '#063D2E'; border = C.green; labelColor = '#7FFFD4'; }
-  else if (revealed && isWrong) { bg = '#3D0F1F'; border = C.red; labelColor = '#FF9999'; }
-  else if (isHidden) { bg = '#1A1500'; border = C.gold; }
-  else if (isSlang) { bg = '#12082A'; border = C.purple; }
-  else if (isModern) { bg = '#081A12'; border = C.green; }
-
-  const displayLabel = meaning.hidden && !revealed ? '???' : meaning.label;
-  const displayIcon = meaning.hidden && !revealed ? '🔮' : meaning.icon;
-
-  return (
-    <Animated.View style={{ transform: [{ translateX: shakeAnim }, { scale: scaleAnim }] }}>
-      <TouchableOpacity
-        style={[styles.tile, { backgroundColor: bg, borderColor: border }]}
-        onPress={onPress}
-        disabled={revealed}
-        activeOpacity={0.75}
-      >
-        <View style={styles.tileInner}>
-          <Text style={styles.tileIcon}>{displayIcon || '▸'}</Text>
-          <Text style={[styles.tileLabel, { color: labelColor }]}>{displayLabel}</Text>
-          {isSlang && !revealed && <View style={styles.slangBadge}><Text style={styles.slangBadgeText}>SLANG</Text></View>}
-          {isModern && !revealed && <View style={styles.eraBadge}><Text style={styles.eraBadgeText}>MODERN</Text></View>}
-          {revealed && isCorrect && <Text style={styles.tileTick}>✓</Text>}
-          {revealed && isWrong && <Text style={styles.tileCross}>✗</Text>}
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
-// ─── Results Screen ────────────────────────────────────────────────────────
-function ResultsScreen({ score, combo, hiddenFound, onRestart }: {
-  score: number; combo: number; hiddenFound: number; onRestart: () => void;
-}) {
-  const slideAnim = useRef(new Animated.Value(60)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(slideAnim, { toValue: 0, damping: 16, stiffness: 140, useNativeDriver: true }),
-      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  const grade = score >= 5000 ? 'S' : score >= 3000 ? 'A' : score >= 1500 ? 'B' : 'C';
-  const gradeColor = grade === 'S' ? C.gold : grade === 'A' ? C.green : grade === 'B' ? C.purple : C.textMuted;
-
-  // Retention hook — what they almost got
-  const nearMiss = hiddenFound === 0
-    ? '💎 You missed all hidden meanings — find them next run!'
-    : combo < 5
-    ? '🔥 One more combo and you would have hit PERFECT FLOW'
-    : null;
-
-  return (
-    <SafeAreaView style={[styles.root, { backgroundColor: C.bg }]}>
-      <Animated.View style={[styles.resultsContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-        <Text style={[styles.gradeText, { color: gradeColor }]}>{grade}</Text>
-        <Text style={styles.resultsTitle}>Session Complete</Text>
-
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{score.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>Score</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={[styles.statValue, { color: C.orange }]}>{combo}x</Text>
-            <Text style={styles.statLabel}>Best Combo</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={[styles.statValue, { color: C.gold }]}>{hiddenFound}</Text>
-            <Text style={styles.statLabel}>Hidden Found</Text>
-          </View>
-        </View>
-
-        {nearMiss && (
-          <View style={styles.nearMissCard}>
-            <Text style={styles.nearMissText}>{nearMiss}</Text>
-          </View>
-        )}
-
-        <TouchableOpacity style={styles.restartBtn} onPress={onRestart} activeOpacity={0.85}>
-          <Text style={styles.restartBtnText}>Play Again ↗</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </SafeAreaView>
-  );
-}
-
-// ─── Phrase Break Screen ───────────────────────────────────────────────────
-function PhraseBreakScreen({ step, onAnswer }: { step: PhraseBreakStep; onAnswer: (c: string) => void }) {
-  const [selected, setSelected] = useState<string | null>(null);
-  const slideAnim = useRef(new Animated.Value(SW)).current;
-
-  useEffect(() => {
-    Animated.spring(slideAnim, { toValue: 0, damping: 18, stiffness: 160, useNativeDriver: true }).start();
-  }, []);
-
-  const pick = (c: string) => {
-    if (selected) return;
-    setSelected(c);
-    setTimeout(() => onAnswer(c), 900);
-  };
-
-  return (
-    <Animated.View style={[styles.phraseContainer, { transform: [{ translateX: slideAnim }] }]}>
-      <View style={styles.phraseHeader}>
-        <Text style={styles.phraseEyebrow}>🎉 PHRASE BREAK</Text>
-        <Text style={styles.phraseTitle}>"{step.phrase}"</Text>
-        <Text style={styles.phraseQuestion}>{step.question}</Text>
-      </View>
-      <View style={styles.phraseChoices}>
-        {step.choices.map((c, i) => {
-          const isSelected = selected === c;
-          const isCorrect = c === step.correctChoice;
-          let bg = C.bgCard;
-          let border = C.border;
-          if (selected && isCorrect) { bg = '#063D2E'; border = C.green; }
-          else if (selected && isSelected && !isCorrect) { bg = '#3D0F1F'; border = C.red; }
-          return (
-            <TouchableOpacity key={i} style={[styles.phraseChoice, { backgroundColor: bg, borderColor: border }]} onPress={() => pick(c)} disabled={!!selected} activeOpacity={0.75}>
-              <Text style={styles.phraseChoiceText}>{c}</Text>
-              {selected && isCorrect && <Text style={styles.tileTick}>✓</Text>}
-              {selected && isSelected && !isCorrect && <Text style={styles.tileCross}>✗</Text>}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </Animated.View>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN GAME SCREEN
-// ═══════════════════════════════════════════════════════════════════════════
-export default function GameScreen({ navigation }: any) {
-  const { game, startGame, submitAnswer, submitPhraseAnswer } = useGameStore();
-
-  const [lastFeedback, setLastFeedback] = useState<string | null>(null);
-  const [showBanner, setShowBanner] = useState(false);
-  const [bannerMeta, setBannerMeta] = useState<{ label: string; color: string } | null>(null);
-  const [prevEventType, setPrevEventType] = useState<string>('');
-  const [xpFloats, setXpFloats] = useState<{ id: number; value: string }[]>([]);
-  const [xpCounter, setXpCounter] = useState(0);
-  const [timerExpired, setTimerExpired] = useState(false);
-  const [selectedMeaningId, setSelectedMeaningId] = useState<string | null>(null);
-  const [correctMeaningId, setCorrectMeaningId] = useState<string | null>(null);
-  const [peakCombo, setPeakCombo] = useState(0);
-
-  const cardAnim = useRef(new Animated.Value(0)).current;
-  const feedbackAnim = useRef(new Animated.Value(0)).current;
-  const screenShakeAnim = useRef(new Animated.Value(0)).current;
-
-  const step = SESSION[game.currentStepIndex];
-  const isWord = step?.kind === 'word';
-  const wordStep = isWord ? (step as WordStep) : null;
-  const phraseStep = !isWord ? (step as PhraseBreakStep) : null;
-
-  // Animate card in when step changes
-  useEffect(() => {
-    cardAnim.setValue(0);
-    setSelectedMeaningId(null);
-    setCorrectMeaningId(null);
-    setTimerExpired(false);
-    Animated.spring(cardAnim, { toValue: 1, damping: 16, stiffness: 160, useNativeDriver: true }).start();
-
-    // Show shift banner when event type changes
-    if (wordStep && wordStep.eventType !== prevEventType && prevEventType !== '') {
-      const meta = getEventMeta(wordStep.eventType);
-      if (meta) {
-        setBannerMeta(meta);
-        setShowBanner(true);
-        setTimeout(() => setShowBanner(false), 1800);
-      }
-    }
-    if (wordStep) setPrevEventType(wordStep.eventType);
-  }, [game.currentStepIndex]);
-
-  // Auto-advance to next clue after showing result briefly
-  useEffect(() => {
-    if (selectedMeaningId === null) return;
-    const timer = setTimeout(() => {
-      setSelectedMeaningId(null);
-      setCorrectMeaningId(null);
+    setTimeout(() => {
+      advanceConveyor();
     }, 700);
-    return () => clearTimeout(timer);
-  }, [selectedMeaningId]);
-
-  // Track peak combo
-  useEffect(() => {
-    if (game.combo > peakCombo) setPeakCombo(game.combo);
-  }, [game.combo]);
-
-  // Show feedback
-  useEffect(() => {
-    if (game.feedback) {
-      setLastFeedback(game.feedback);
-      feedbackAnim.setValue(0);
-      Animated.sequence([
-        Animated.timing(feedbackAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
-        Animated.delay(800),
-        Animated.timing(feedbackAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-      ]).start();
-
-      // Screen shake on boss hit
-      if (game.feedback.includes('BOSS HIT')) {
-        Animated.sequence([
-          Animated.timing(screenShakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
-          Animated.timing(screenShakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
-          Animated.timing(screenShakeAnim, { toValue: 6, duration: 60, useNativeDriver: true }),
-          Animated.timing(screenShakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
-        ]).start();
-      }
-
-      // Float XP on positive feedback
-      const xpMatch = game.feedback.match(/\+(\d+)/);
-      if (xpMatch) {
-        const id = xpCounter + 1;
-        setXpCounter(id);
-        setXpFloats(prev => [...prev, { id, value: `+${xpMatch[1]} XP` }]);
-      } else if (game.feedback.includes('x')) {
-        const id = xpCounter + 1;
-        setXpCounter(id);
-        setXpFloats(prev => [...prev, { id, value: game.feedback! }]);
-      }
-    }
-  }, [game.feedback]);
-
-  const handleAnswer = useCallback((meaningId: string) => {
-    if (!wordStep || selectedMeaningId) return;
-    const currentClue = wordStep.clues[game.currentClueIndex];
-    setCorrectMeaningId(currentClue.correctMeaningId);
-    setSelectedMeaningId(meaningId);
-    submitAnswer(meaningId);
-  }, [wordStep, game.currentClueIndex, submitAnswer, selectedMeaningId]);
-
-  const handleTimerExpire = useCallback(() => {
-    setTimerExpired(true);
-    // Force wrong on timer expiry — find first unselected correct meaning
-    if (wordStep) {
-      const clue = wordStep.clues[game.currentClueIndex];
-      submitAnswer('__timeout__');
-    }
-  }, [wordStep, game.currentClueIndex, submitAnswer]);
-
-  const handlePhraseAnswer = useCallback((choice: string) => {
-    submitPhraseAnswer(choice);
-  }, [submitPhraseAnswer]);
-
-  // ── Game Over ──
-  if (game.status === 'gameOver') {
-    const hiddenFound = Object.keys(game.revealedMeanings).length;
-    return <ResultsScreen score={game.score} combo={peakCombo} hiddenFound={hiddenFound} onRestart={startGame} />;
   }
 
-  // ── Complete ──
-  if (game.status === 'complete') {
-    const hiddenFound = Object.keys(game.revealedMeanings).length;
-    return <ResultsScreen score={game.score} combo={peakCombo} hiddenFound={hiddenFound} onRestart={startGame} />;
+  function handleSwitchback(choice: string) {
+    if (step.type !== "switchback" || selectedSwitchback) return;
+
+    setSelectedSwitchback(choice);
+
+    if (choice === step.answer) {
+      const points = 500 + streak * 10;
+      setScore((current) => current + points);
+      setStreak((current) => current + 1);
+      setFeedback(`Brain glitch solved +${points}`);
+    } else {
+      setMistakes((current) => current + 1);
+      setStreak(0);
+      setFeedback(`Almost. The bridge word was ${step.answer}.`);
+    }
   }
 
-  // ── No step ──
-  if (!step) return null;
+  function handleGridTap(row: number, col: number, letter: string) {
+    if (step.type !== "hiddenWord") return;
 
-  const eventMeta = wordStep ? getEventMeta(wordStep.eventType) : null;
-  const isSpeedRound = wordStep?.eventType === 'speedRound';
-  const isBossWord = wordStep?.eventType === 'bossWord';
-  const screenBg = eventMeta?.bg || C.bg;
-  const clue = wordStep?.clues[game.currentClueIndex];
+    const nextIndex = hiddenPath.length;
+    const expectedLetter = step.answer[nextIndex];
 
-  return (
-    <Animated.View style={[styles.rootWrap, { transform: [{ translateX: screenShakeAnim }] }]}>
-      <SafeAreaView style={[styles.root, { backgroundColor: screenBg }]}>
+    if (letter !== expectedLetter) {
+      setHiddenPath([]);
+      setMistakes((current) => current + 1);
+      setStreak(0);
+      setFeedback("Wrong trail. Start again.");
+      return;
+    }
 
-        {/* Shift Banner */}
-        {showBanner && bannerMeta && (
-          <View style={styles.bannerWrap}>
-            <ShiftBanner label={bannerMeta.label} color={bannerMeta.color} />
-          </View>
-        )}
+    const nextPath = [...hiddenPath, { row, col, letter }];
+    setHiddenPath(nextPath);
+    setFeedback("");
 
-        {/* XP Floats */}
-        <View style={styles.xpWrap} pointerEvents="none">
-          {xpFloats.map(f => (
-            <XPFloat key={f.id} value={f.value} onDone={() => setXpFloats(prev => prev.filter(x => x.id !== f.id))} />
-          ))}
+    if (nextPath.length === step.answer.length) {
+      const points = 600 + streak * 15;
+      setScore((current) => current + points);
+      setStreak((current) => current + 1);
+      setFeedback(`${step.answer} found +${points}`);
+    }
+  }
+
+  function restart() {
+    setStepIndex(0);
+    setClueIndex(0);
+    setLocked(false);
+    setFeedback("");
+    setShowClear(false);
+    setScore(0);
+    setStreak(0);
+    setMistakes(0);
+    setPerfectWords(0);
+    setWordMistakes(0);
+    setIntroCount(3);
+    setSelectedSwitchback(null);
+    setHiddenPath([]);
+    setFinished(false);
+  }
+
+  if (finished) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.kicker}>POLY RUN COMPLETE</Text>
+          <Text style={styles.title}>Score {score}</Text>
+          <Text style={styles.stat}>Perfect words: {perfectWords}</Text>
+          <Text style={styles.stat}>Mistakes: {mistakes}</Text>
+          <Text style={styles.polly}>🦜 That had shape. Now we tune the rhythm.</Text>
+
+          <Pressable style={styles.primaryButton} onPress={restart}>
+            <Text style={styles.primaryButtonText}>Run It Back</Text>
+          </Pressable>
         </View>
+      </SafeAreaView>
+    );
+  }
 
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: eventMeta?.border || C.border }]}>
-          <Lives count={game.lives} />
-          <View style={styles.headerCenter}>
-            {eventMeta && <Text style={[styles.eventLabel, { color: eventMeta.color }]}>{eventMeta.label}</Text>}
-            <Text style={styles.wordCounter}>
-              Word {game.currentStepIndex + 1} of {SESSION.length}
-            </Text>
-          </View>
-          <View style={styles.scoreBox}>
-            <Text style={styles.scoreText}>{game.score.toLocaleString()}</Text>
-            {game.combo > 1 && <Text style={styles.comboText}>{game.combo}x</Text>}
-          </View>
+  if (step.type === "intro") {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <Text style={styles.kicker}>NEW ROUND TYPE</Text>
+          <Text style={styles.introTitle}>{step.title}</Text>
+          <Text style={styles.introRule}>{step.rule}</Text>
+
+          {step.polly && <Text style={styles.polly}>🦜 {step.polly}</Text>}
+
+          <Text style={styles.countdown}>
+            {introCount === 0 ? "GO" : introCount}
+          </Text>
         </View>
+      </SafeAreaView>
+    );
+  }
 
-        {/* Speed timer */}
-        {isSpeedRound && (
-          <TimerBar active={!timerExpired && game.status === 'playing'} duration={5} onExpire={handleTimerExpire} />
-        )}
+  if (step.type === "switchback") {
+    const answered = selectedSwitchback !== null;
 
-        {/* Feedback bar */}
-        <Animated.View style={[styles.feedbackBar, { opacity: feedbackAnim, backgroundColor: lastFeedback?.includes('✗') || lastFeedback?.includes('💔') || lastFeedback?.includes('💥') ? '#3D0F1F' : '#063D2E' }]}>
-          <Text style={styles.feedbackText}>{lastFeedback}</Text>
-        </Animated.View>
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <TopBar score={score} streak={streak} stepIndex={stepIndex} />
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <Text style={styles.label}>{step.label}</Text>
+          <Text style={styles.switchClue}>{step.clueA}</Text>
+          <Text style={styles.switchClue}>{step.clueB}</Text>
 
-          {/* Phrase Break */}
-          {phraseStep && game.status === 'phraseBreak' && (
-            <PhraseBreakScreen step={phraseStep} onAnswer={handlePhraseAnswer} />
-          )}
+          {step.polly && <Text style={styles.pollySmall}>🦜 {step.polly}</Text>}
 
-          {/* Word Step */}
-          {wordStep && (
-            <Animated.View style={{ opacity: cardAnim, transform: [{ translateY: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
+          <View style={styles.choiceGrid}>
+            {step.choices.map((choice) => {
+              const selected = choice === selectedSwitchback;
+              const correct = choice === step.answer;
 
-              {/* Main Word */}
-              <View style={[styles.wordCard, { borderColor: eventMeta?.border || C.border, backgroundColor: isBossWord ? '#1A0A20' : C.bgCard }]}>
-                {isBossWord && <Text style={styles.bossLabel}>⚔️  BOSS WORD</Text>}
-                <Text style={[styles.mainWord, { color: isBossWord ? C.pink : C.text }]}>{wordStep.word}</Text>
-                <View style={styles.clueProgress}>
-                  {wordStep.clues.map((_, i) => (
-                    <View key={i} style={[styles.clueDot, i < game.currentClueIndex && styles.clueDotDone, i === game.currentClueIndex && styles.clueDotActive]} />
-                  ))}
-                </View>
-              </View>
+              return (
+                <Pressable
+                  key={choice}
+                  onPress={() => handleSwitchback(choice)}
+                  style={[
+                    styles.staticChoice,
+                    selected && styles.selectedChoice,
+                    answered && correct && styles.correctChoice,
+                    answered && selected && !correct && styles.wrongChoice,
+                  ]}
+                >
+                  <Text style={styles.staticChoiceText}>{choice}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
 
-              {/* Clue Card */}
-              {clue && (
-                <View style={[styles.clueCard, { borderColor: eventMeta?.border || C.border }]}>
-                  {isSpeedRound && <Text style={styles.clueEyebrow}>⚡ Match fast for bonus XP</Text>}
-                  <Text style={styles.clueText}>"{clue.text}"</Text>
-                  {clue.isSlangClue && <Text style={styles.clueBadge}>😎 slang clue</Text>}
-                  {clue.isModernEraClue && <Text style={[styles.clueBadge, { color: C.green }]}>🧠 modern usage</Text>}
-                </View>
-              )}
-
-              {/* Meaning Tiles */}
-              <View style={styles.tilesGrid}>
-                {wordStep.meanings.map(m => {
-                  const isSelected = selectedMeaningId === m.id;
-                  const isCorrect = selectedMeaningId !== null && correctMeaningId === m.id;
-                  const isWrong = isSelected && correctMeaningId !== null && selectedMeaningId !== correctMeaningId;
-                  const wasRevealed = !!game.revealedMeanings[m.id];
-                  return (
-                    <MeaningTile
-                      key={m.id}
-                      meaning={m}
-                      isSelected={isSelected}
-                      isCorrect={isCorrect}
-                      isWrong={isWrong}
-                      isHidden={!!m.hidden && !wasRevealed}
-                      isSlang={!!m.isSlang}
-                      isModern={m.era === 'modern'}
-                      revealed={selectedMeaningId !== null}
-                      onPress={() => handleAnswer(m.id)}
-                    />
-                  );
-                })}
-              </View>
-
-              {/* Word Lore */}
-              {wordStep.lore && game.currentClueIndex === wordStep.clues.length - 1 && (
-                <View style={styles.loreCard}>
-                  <Text style={styles.loreTitle}>{wordStep.lore.title}</Text>
-                  <Text style={styles.loreText}>{wordStep.lore.text}</Text>
-                </View>
-              )}
-
-            </Animated.View>
+          {answered && (
+            <FeedbackBox
+              text={feedback}
+              buttonText="Continue"
+              onPress={goNextStep}
+            />
           )}
         </ScrollView>
       </SafeAreaView>
-    </Animated.View>
+    );
+  }
+
+  if (step.type === "hiddenWord") {
+    const found = hiddenPath.length === step.answer.length;
+
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <TopBar score={score} streak={streak} stepIndex={stepIndex} />
+
+          <Text style={styles.label}>{step.label}</Text>
+          <Text style={styles.hiddenInstruction}>These meanings point to one word:</Text>
+
+          <View style={styles.meaningBox}>
+            {step.meanings.map((meaning) => (
+              <Text key={meaning} style={styles.meaningLine}>
+                {meaning}
+              </Text>
+            ))}
+          </View>
+
+          {step.polly && <Text style={styles.pollySmall}>🦜 {step.polly}</Text>}
+
+          <Text style={styles.hiddenProgress}>
+            {hiddenPath.map((item) => item.letter).join("") || "Find the word"}
+          </Text>
+
+          <View style={styles.grid}>
+            {step.grid.map((row, rowIndex) => (
+              <View key={`row-${rowIndex}`} style={styles.gridRow}>
+                {row.map((letter, colIndex) => {
+                  const selected = hiddenPath.some(
+                    (item) => item.row === rowIndex && item.col === colIndex
+                  );
+
+                  return (
+                    <Pressable
+                      key={`${rowIndex}-${colIndex}`}
+                      onPress={() => handleGridTap(rowIndex, colIndex, letter)}
+                      style={[styles.gridCell, selected && styles.gridCellSelected]}
+                    >
+                      <Text style={styles.gridLetter}>{letter}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+
+          {!!feedback && <Text style={styles.inlineFeedback}>{feedback}</Text>}
+
+          {found && (
+            <Pressable style={styles.primaryButton} onPress={goNextStep}>
+              <Text style={styles.primaryButtonText}>Continue</Text>
+            </Pressable>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (step.type === "conveyor") {
+    if (showClear) {
+      return (
+        <SafeAreaView style={styles.container}>
+          <View style={styles.center}>
+            <Text style={styles.kicker}>{step.label}</Text>
+            <Text style={styles.clearWord}>{step.word}</Text>
+            <Text style={styles.clearTitle}>WORD CLEARED</Text>
+            <Text style={styles.clearFeedback}>{feedback}</Text>
+            <Text style={styles.polly}>
+              🦜 {wordMistakes === 0 ? "Clean split." : "Still cleared. Sharpen the beak."}
+            </Text>
+
+            <Pressable style={styles.primaryButton} onPress={goNextStep}>
+              <Text style={styles.primaryButtonText}>Next</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
+
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.gameScreen}>
+          <TopBar score={score} streak={streak} stepIndex={stepIndex} />
+
+          <Text style={[styles.label, step.boss && styles.bossLabel]}>
+            {step.label}
+          </Text>
+
+          {step.polly && <Text style={styles.pollySmall}>🦜 {step.polly}</Text>}
+
+          <Text style={styles.word}>{step.word}</Text>
+
+          <View style={styles.clueCard}>
+            <Text style={styles.clueText}>{currentClue?.clue}</Text>
+          </View>
+
+          <View style={styles.timerTrack}>
+            <Animated.View
+              style={[
+                styles.timerFill,
+                {
+                  transform: [{ scaleX: timerScale }],
+                },
+              ]}
+            />
+          </View>
+
+          <View style={styles.conveyorWindow}>
+            <Animated.View
+              style={[
+                styles.conveyorRow,
+                {
+                  transform: [{ translateX: slideX }],
+                },
+              ]}
+            >
+              {currentClue?.choices.map((choice) => (
+                <Pressable
+                  key={choice}
+                  style={styles.movingTile}
+                  onPress={() => handleMeaningTap(choice)}
+                >
+                  <Text style={styles.movingTileText}>{choice}</Text>
+                </Pressable>
+              ))}
+            </Animated.View>
+          </View>
+
+          <Text style={styles.clueCounter}>
+            Clue {clueIndex + 1}/{step.clues.length}
+          </Text>
+
+          {!!feedback && <Text style={styles.inlineFeedback}>{feedback}</Text>}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return null;
+}
+
+function TopBar({
+  score,
+  streak,
+  stepIndex,
+}: {
+  score: number;
+  streak: number;
+  stepIndex: number;
+}) {
+  return (
+    <View style={styles.topBar}>
+      <Text style={styles.topText}>Score {score}</Text>
+      <Text style={styles.topText}>Streak x{streak}</Text>
+      <Text style={styles.topText}>{stepIndex + 1}/{STEPS.length}</Text>
+    </View>
   );
 }
 
-// ─── Styles ─────────────────────────────────────────────────────────────────
+function FeedbackBox({
+  text,
+  buttonText,
+  onPress,
+}: {
+  text: string;
+  buttonText: string;
+  onPress: () => void;
+}) {
+  return (
+    <View style={styles.feedbackBox}>
+      <Text style={styles.feedbackText}>🦜 {text}</Text>
+      <Pressable style={styles.primaryButton} onPress={onPress}>
+        <Text style={styles.primaryButtonText}>{buttonText}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const COLORS = {
+  bg: "#1A1040",
+  card: "#24175A",
+  card2: "#311F78",
+  gold: "#FFD700",
+  purple: "#8B5CF6",
+  white: "#FFFFFF",
+  muted: "#B8B3D9",
+  success: "#22C55E",
+  error: "#EF4444",
+  darkSuccess: "#143D2A",
+  darkError: "#421818",
+};
+
 const styles = StyleSheet.create({
-  rootWrap: { flex: 1 },
-  root: { flex: 1 },
-  scroll: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40, gap: 12 },
-
-  // Header
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  eventLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 2 },
-  wordCounter: { fontSize: 11, color: C.textMuted },
-  scoreBox: { alignItems: 'flex-end' },
-  scoreText: { fontSize: 16, fontWeight: '700', color: C.gold },
-  comboText: { fontSize: 11, color: C.orange, fontWeight: '700' },
-
-  // Lives
-  livesRow: { flexDirection: 'row', gap: 3 },
-  lifeIcon: { fontSize: 18, color: C.red },
-  lifeIconDead: { opacity: 0.2 },
-
-  // Timer
-  timerTrack: { height: 4, flexDirection: 'row', backgroundColor: C.bgCard },
-  timerFill: { height: 4 },
-
-  // Feedback
-  feedbackBar: { paddingHorizontal: 16, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
-  feedbackText: { color: C.text, fontSize: 13, fontWeight: '600', textAlign: 'center' },
-
-  // Shift Banner
-  bannerWrap: { position: 'absolute', top: 100, left: 0, right: 0, zIndex: 100, alignItems: 'center' },
-  shiftBanner: { borderWidth: 1.5, borderRadius: 30, paddingHorizontal: 24, paddingVertical: 10, backgroundColor: C.bgCard },
-  shiftBannerText: { fontSize: 15, fontWeight: '800', letterSpacing: 2 },
-
-  // XP Floats
-  xpWrap: { position: 'absolute', top: 120, right: 24, zIndex: 200 },
-  xpFloat: { fontSize: 18, fontWeight: '800', color: C.gold, textShadowColor: C.gold, textShadowRadius: 8 },
-
-  // Word Card
-  wordCard: { borderWidth: 1.5, borderRadius: 16, padding: 20, alignItems: 'center' },
-  bossLabel: { fontSize: 11, fontWeight: '700', color: C.pink, letterSpacing: 2, marginBottom: 8 },
-  mainWord: { fontSize: 48, fontWeight: '900', letterSpacing: -1 },
-  clueProgress: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  clueDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.border },
-  clueDotDone: { backgroundColor: C.green },
-  clueDotActive: { backgroundColor: C.gold, width: 20 },
-
-  // Clue Card
-  clueCard: { borderWidth: 1.5, borderRadius: 14, padding: 18, backgroundColor: C.bgCard },
-  clueEyebrow: { fontSize: 11, color: C.orange, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  clueText: { fontSize: 18, color: C.text, fontStyle: 'italic', lineHeight: 26, textAlign: 'center' },
-  clueBadge: { marginTop: 8, fontSize: 12, color: C.purple, fontWeight: '600', textAlign: 'center' },
-
-  // Tiles
-  tilesGrid: { gap: 10 },
-  tile: { borderWidth: 1.5, borderRadius: 12, overflow: 'hidden' },
-  tileInner: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
-  tileIcon: { fontSize: 22 },
-  tileLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
-  tileTick: { fontSize: 18, color: C.green, fontWeight: '700' },
-  tileCross: { fontSize: 18, color: C.red, fontWeight: '700' },
-  slangBadge: { backgroundColor: '#12082A', borderWidth: 1, borderColor: C.purple, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
-  slangBadgeText: { fontSize: 9, color: C.purple, fontWeight: '700', letterSpacing: 1 },
-  eraBadge: { backgroundColor: '#081A12', borderWidth: 1, borderColor: C.green, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
-  eraBadgeText: { fontSize: 9, color: C.green, fontWeight: '700', letterSpacing: 1 },
-
-  // Lore
-  loreCard: { borderWidth: 1, borderColor: C.gold, borderRadius: 14, padding: 16, backgroundColor: '#1A1200' },
-  loreTitle: { fontSize: 11, color: C.gold, fontWeight: '700', letterSpacing: 2, marginBottom: 6 },
-  loreText: { fontSize: 14, color: C.text, lineHeight: 22 },
-
-  // Phrase Break
-  phraseContainer: { flex: 1 },
-  phraseHeader: { padding: 20, alignItems: 'center', gap: 8 },
-  phraseEyebrow: { fontSize: 12, color: C.green, fontWeight: '700', letterSpacing: 2 },
-  phraseTitle: { fontSize: 28, fontWeight: '900', color: C.text, textAlign: 'center' },
-  phraseQuestion: { fontSize: 15, color: C.textMuted, textAlign: 'center', lineHeight: 22 },
-  phraseChoices: { gap: 10, paddingHorizontal: 16 },
-  phraseChoice: { borderWidth: 1.5, borderRadius: 14, padding: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  phraseChoiceText: { fontSize: 16, color: C.text, fontWeight: '600', flex: 1 },
-
-  // Results
-  resultsContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
-  gradeText: { fontSize: 96, fontWeight: '900', lineHeight: 100 },
-  resultsTitle: { fontSize: 24, fontWeight: '700', color: C.text, marginBottom: 32 },
-  statsGrid: { flexDirection: 'row', gap: 12, width: '100%', marginBottom: 24 },
-  statCard: { flex: 1, backgroundColor: C.bgCard, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 12, alignItems: 'center' },
-  statValue: { fontSize: 20, fontWeight: '900', color: C.text, marginBottom: 4 },
-  statLabel: { fontSize: 11, color: C.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
-  nearMissCard: { width: '100%', backgroundColor: '#1A1200', borderWidth: 1, borderColor: C.gold, borderRadius: 14, padding: 16, marginBottom: 24 },
-  nearMissText: { fontSize: 14, color: C.gold, lineHeight: 22, textAlign: 'center' },
-  restartBtn: { width: '100%', backgroundColor: C.purple, borderRadius: 14, paddingVertical: 18, alignItems: 'center' },
-  restartBtnText: { color: '#fff', fontSize: 17, fontWeight: '800', letterSpacing: 0.5 },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.bg,
+  },
+  scroll: {
+    padding: 24,
+    paddingTop: 54,
+    paddingBottom: 40,
+  },
+  gameScreen: {
+    flex: 1,
+    padding: 24,
+    paddingTop: 54,
+  },
+  center: {
+    flex: 1,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 24,
+  },
+  topText: {
+    color: COLORS.muted,
+    fontWeight: "900",
+    fontSize: 14,
+  },
+  kicker: {
+    color: COLORS.gold,
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 1.4,
+    textAlign: "center",
+  },
+  title: {
+    color: COLORS.white,
+    fontSize: 44,
+    fontWeight: "900",
+    textAlign: "center",
+    marginTop: 16,
+  },
+  stat: {
+    color: COLORS.muted,
+    fontSize: 18,
+    fontWeight: "700",
+    marginTop: 10,
+  },
+  introTitle: {
+    color: COLORS.gold,
+    fontSize: 40,
+    fontWeight: "900",
+    textAlign: "center",
+    marginTop: 18,
+  },
+  introRule: {
+    color: COLORS.white,
+    fontSize: 22,
+    lineHeight: 30,
+    fontWeight: "800",
+    textAlign: "center",
+    marginTop: 18,
+  },
+  countdown: {
+    color: COLORS.gold,
+    fontSize: 72,
+    fontWeight: "900",
+    marginTop: 38,
+  },
+  label: {
+    color: COLORS.gold,
+    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+  bossLabel: {
+    color: COLORS.gold,
+  },
+  polly: {
+    color: COLORS.white,
+    fontSize: 18,
+    textAlign: "center",
+    lineHeight: 26,
+    marginTop: 28,
+    fontWeight: "700",
+  },
+  pollySmall: {
+    color: COLORS.muted,
+    fontSize: 15,
+    textAlign: "center",
+    marginTop: 12,
+    fontWeight: "700",
+  },
+  word: {
+    color: COLORS.white,
+    textAlign: "center",
+    fontSize: 58,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginTop: 30,
+  },
+  clueCard: {
+    backgroundColor: COLORS.card,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 24,
+    marginTop: 34,
+    minHeight: 120,
+    justifyContent: "center",
+  },
+  clueText: {
+    color: COLORS.white,
+    fontSize: 25,
+    lineHeight: 34,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  timerTrack: {
+    height: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 99,
+    overflow: "hidden",
+    marginTop: 24,
+  },
+  timerFill: {
+    height: "100%",
+    width: "100%",
+    backgroundColor: COLORS.gold,
+    transformOrigin: "left",
+  },
+  conveyorWindow: {
+    height: 110,
+    marginTop: 40,
+    overflow: "hidden",
+    justifyContent: "center",
+  },
+  conveyorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    width: SCREEN_WIDTH * 3,
+  },
+  movingTile: {
+    backgroundColor: COLORS.card2,
+    borderColor: COLORS.gold,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    minWidth: 150,
+    alignItems: "center",
+  },
+  movingTileText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  clueCounter: {
+    color: COLORS.muted,
+    textAlign: "center",
+    fontSize: 15,
+    fontWeight: "800",
+    marginTop: 18,
+  },
+  inlineFeedback: {
+    color: COLORS.gold,
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "900",
+    marginTop: 18,
+  },
+  clearWord: {
+    color: COLORS.white,
+    fontSize: 60,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginTop: 18,
+  },
+  clearTitle: {
+    color: COLORS.gold,
+    fontSize: 28,
+    fontWeight: "900",
+    marginTop: 12,
+  },
+  clearFeedback: {
+    color: COLORS.muted,
+    fontSize: 19,
+    fontWeight: "800",
+    marginTop: 10,
+  },
+  switchClue: {
+    color: COLORS.white,
+    textAlign: "center",
+    fontSize: 26,
+    lineHeight: 34,
+    fontWeight: "900",
+    marginTop: 18,
+  },
+  choiceGrid: {
+    marginTop: 34,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 14,
+  },
+  staticChoice: {
+    width: "47%",
+    backgroundColor: COLORS.card,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingVertical: 22,
+    alignItems: "center",
+  },
+  selectedChoice: {
+    borderColor: COLORS.gold,
+  },
+  correctChoice: {
+    backgroundColor: COLORS.darkSuccess,
+    borderColor: COLORS.success,
+  },
+  wrongChoice: {
+    backgroundColor: COLORS.darkError,
+    borderColor: COLORS.error,
+  },
+  staticChoiceText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  feedbackBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 22,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    padding: 20,
+    marginTop: 28,
+  },
+  feedbackText: {
+    color: COLORS.white,
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  hiddenInstruction: {
+    color: COLORS.white,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "800",
+    marginTop: 22,
+  },
+  meaningBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 20,
+    padding: 18,
+    marginTop: 18,
+  },
+  meaningLine: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: "800",
+    marginVertical: 5,
+    textAlign: "center",
+  },
+  hiddenProgress: {
+    color: COLORS.gold,
+    fontSize: 26,
+    fontWeight: "900",
+    textAlign: "center",
+    marginTop: 26,
+    letterSpacing: 3,
+  },
+  grid: {
+    marginTop: 20,
+    alignItems: "center",
+    gap: 8,
+  },
+  gridRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  gridCell: {
+    width: 54,
+    height: 54,
+    backgroundColor: COLORS.card2,
+    borderColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gridCellSelected: {
+    backgroundColor: COLORS.gold,
+  },
+  gridLetter: {
+    color: COLORS.white,
+    fontSize: 22,
+    fontWeight: "900",
+  },
+  primaryButton: {
+    backgroundColor: COLORS.gold,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 28,
+    alignItems: "center",
+    marginTop: 28,
+    width: "100%",
+  },
+  primaryButtonText: {
+    color: COLORS.bg,
+    fontSize: 19,
+    fontWeight: "900",
+  },
 });
