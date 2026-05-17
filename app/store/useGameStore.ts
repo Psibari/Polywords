@@ -3,7 +3,7 @@ import {
   createGame,
   submitAnswer,
   submitPhraseAnswer,
-} from "../game/engine";
+} from "../game/polyRunEngine";
 
 type GameStore = {
   game: ReturnType<typeof createGame>;
