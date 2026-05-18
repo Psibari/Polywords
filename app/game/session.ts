@@ -4,7 +4,7 @@
 // Every clue engineered for the "wait... OH" moment.
 // ============================================================
 
-import { SessionStep, WordStep, Clue } from './types';
+import { SessionStep, WordStep, PhraseBreakStep, Clue } from './types';
 
 export const SESSION: SessionStep[] = [
 

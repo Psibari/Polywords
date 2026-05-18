@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir C:\\\\Users\\\\pdiba\\\\poly-words\\\\src /s /b)",
+      "Bash(npx tsc *)",
+      "Bash(npx expo *)"
+    ]
+  }
+}
