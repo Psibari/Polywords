@@ -16,6 +16,7 @@ import { GameState, currentStep } from '../game/polyRunEngine';
 import { SESSION } from '../game/session';
 import { Clue, Meaning, PhraseBreakStep, WordStep } from '../game/types';
 import ClueCard from '../components/ClueCard';
+import { PollyController } from '../components/PollyController';
 import { useGameStore } from '../store/useGameStore';
 
 const COLORS = {
@@ -156,39 +157,36 @@ export default function GameScreen() {
 
   const step = currentStep(game);
 
-  // ─── GAME OVER ───────────────────────────────────────────────
-  if (game.status === 'gameOver') {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.kicker}>GAME OVER</Text>
-          <Text style={styles.bigScore}>{game.score}</Text>
-          <Text style={styles.scoreSub}>points</Text>
-          <Text style={styles.statLine}>Reached word {game.stepIndex + 1} of {SESSION.length}</Text>
-          <Text style={styles.pollyLine}>🦜 Good run. Find the split next time.</Text>
-          <Pressable style={styles.primaryButton} onPress={startGame}>
-            <Text style={styles.primaryButtonText}>Try Again</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // ─── GAME OVER / COMPLETE ────────────────────────────────────
+  if (game.status === 'gameOver' || game.status === 'complete') {
+    const lastStep = SESSION[game.stepIndex];
+    const wasBoss = lastStep?.eventType === 'bossWord';
+    const failedBoss = wasBoss && game.mistakesOnWord > 0;
 
-  // ─── COMPLETE ────────────────────────────────────────────────
-  if (game.status === 'complete') {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text style={styles.kicker}>POLY RUN COMPLETE</Text>
-          <Text style={styles.bigScore}>{game.score}</Text>
-          <Text style={styles.scoreSub}>points</Text>
-          <Text style={styles.statLine}>Combo peak: x{game.combo}</Text>
-          <Text style={styles.pollyLine}>🦜 You split every meaning. That had shape.</Text>
-          <Pressable style={styles.primaryButton} onPress={startGame}>
-            <Text style={styles.primaryButtonText}>Run It Back</Text>
+      <View style={styles.endScreen}>
+        <Pressable onPress={startGame} style={styles.runItBack}>
+          <Text style={styles.runItBackText}>RUN IT BACK</Text>
+        </Pressable>
+
+        {game.nearMissClue && (
+          <Pressable onPress={startGame} style={styles.ghostTile}>
+            <Text style={styles.ghostLabel}>[TEMP: You missed this]</Text>
+            <Text style={styles.ghostClueText}>{game.nearMissClue.text}</Text>
           </Pressable>
-        </View>
-      </SafeAreaView>
+        )}
+
+        <Text style={styles.nextWord}>Next: {(SESSION[0] as WordStep).word}</Text>
+
+        {failedBoss && (
+          <Text style={styles.bossFailText}>
+            92% of players fail this first time. Run it back?
+          </Text>
+        )}
+
+        <Text style={styles.homeText}>home</Text>
+        <Text style={styles.pollyExit}>🦜 [TEMP: That had shape.]</Text>
+      </View>
     );
   }
 
@@ -279,6 +277,8 @@ export default function GameScreen() {
         {wordStep.pollyLine && (
           <Text style={styles.pollySmall}>🦜 {wordStep.pollyLine}</Text>
         )}
+
+        <PollyController />
 
         <View style={styles.clueTrack}>
           {clues.map((clue, i) => (
@@ -551,5 +551,82 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '900',
     textAlign: 'center',
+  },
+
+  // ─── End screen (gameOver + complete)
+  endScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    paddingHorizontal: 24,
+  },
+  runItBack: {
+    width: '80%',
+    height: 64,
+    backgroundColor: '#0ea5e9',
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  runItBackText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  ghostTile: {
+    marginTop: 20,
+    opacity: 0.4,
+    borderWidth: 1,
+    borderColor: '#555',
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    width: '80%',
+  },
+  ghostLabel: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  ghostClueText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  nextWord: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 28,
+    letterSpacing: 1,
+  },
+  bossFailText: {
+    color: '#f97316',
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginTop: 16,
+    paddingHorizontal: 24,
+    lineHeight: 22,
+  },
+  homeText: {
+    color: '#555',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 32,
+    letterSpacing: 1,
+  },
+  pollyExit: {
+    position: 'absolute',
+    bottom: 40,
+    color: '#B8B3D9',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
