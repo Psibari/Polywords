@@ -20,8 +20,8 @@ const COLORS = {
 };
 
 function clueBadge(clue: Clue): string | null {
-  if (clue.isSlangClue) return '💬 SLANG';
-  if (clue.isModernEraClue) return '🕰️ ERA SHIFT';
+  if (clue.trickType === 'equation') return '🧮 SOLVE';
+  if (clue.trickType === 'opposite') return '↩️ INVERSION';
   return null;
 }
 
@@ -52,8 +52,8 @@ export default function ClueCard({ clue, meanings, locked, onSubmit }: Props) {
               pressed && !locked && styles.meaningButtonPressed,
             ]}
           >
-            <Text style={styles.meaningIcon}>{m.icon}</Text>
-            <Text style={styles.meaningLabel}>{m.label}</Text>
+            <Text style={styles.meaningIcon}>{m.emoji ?? ''}</Text>
+            <Text style={styles.meaningLabel}>{m.text}</Text>
             {m.hidden && <Text style={styles.hiddenTag}>HIDDEN</Text>}
           </Pressable>
         ))}

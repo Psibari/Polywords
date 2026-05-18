@@ -1,13 +1,3 @@
-export type ClueType =
-  | 'vivid'
-  | 'opposite'
-  | 'negative'
-  | 'slang'
-  | 'context'
-  | 'emoji'
-  | 'era'
-  | 'misdirect';
-
 export type EventType =
   | 'normal'
   | 'speedRound'
@@ -27,12 +17,15 @@ export type EmotionalRole =
   | 'surprise'
   | 'boss'
   | 'relief'
-  | 'reward';
+  | 'reward'
+  | 'calibration'
+  | 'trap'
+  | 'switch';
 
 export type Meaning = {
   id: string;
-  label: string;
-  icon: string;
+  text: string;
+  emoji?: string;
   hidden?: boolean;
   isSlang?: boolean;
   era?: 'old' | 'modern';
@@ -41,17 +34,17 @@ export type Meaning = {
 export type Clue = {
   text: string;
   correctMeaningId: string;
-  clueType: ClueType;
-  difficulty: 1 | 2 | 3;
-  isSlangClue?: boolean;
-  isModernEraClue?: boolean;
+  isDecoy: boolean;
+  trickType: 'opposite' | 'emoji' | 'equation' | 'action' | 'rephrase' | 'none';
+  spawnDelayMs: number;
 };
 
 export type WordStep = {
   kind: 'word';
   word: string;
+  mode?: 'conveyorBlitz' | 'switchback' | 'boss';
   emotionalRole: EmotionalRole;
-  eventType: EventType;
+  eventType: EventType | null;
   meanings: Meaning[];
   clues: Clue[];
   pollyLine?: string;

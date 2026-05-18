@@ -31,7 +31,8 @@ function isWrongFeedback(text: string): boolean {
   return !text.includes('+');
 }
 
-function eventBadgeLabel(eventType: string): string | null {
+function eventBadgeLabel(eventType: string | null): string | null {
+  if (!eventType) return null;
   switch (eventType) {
     case 'bossWord': return 'BOSS WORD';
     case 'speedRound': return 'SPEED ROUND';

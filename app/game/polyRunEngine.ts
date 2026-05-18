@@ -23,6 +23,8 @@ export type GameState = {
   feedback: string | null;
   status: GameStatus;
   lastActionAt: number;
+  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'streak5';
+  nearMissClue: Clue | null;
 };
 
 export function createGame(): GameState {
@@ -42,6 +44,8 @@ export function createGame(): GameState {
     feedback: null,
     status: 'playing',
     lastActionAt: Date.now(),
+    pollyTrigger: null,
+    nearMissClue: null,
   };
 }
 
@@ -72,6 +76,7 @@ export function submitAnswer(state: GameState, meaningId: string): GameState {
       feedback: wrongFeedback(step),
       status: lives <= 0 ? 'gameOver' : 'playing',
       lastActionAt: now,
+      pollyTrigger: null,
     };
   }
 
@@ -105,7 +110,7 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
 function scoreCorrect(
   state: GameState,
   step: WordStep,
-  clue: WordStep['clues'][number],
+  clue: Clue,
   meaningId: string,
   now: number,
 ): GameState {
@@ -113,18 +118,17 @@ function scoreCorrect(
   const feedbackParts: string[] = [];
   const newRevealedHidden = { ...state.revealedHiddenMeanings };
 
+  if (clue.trickType === 'opposite') feedbackParts.push('INVERSION');
+  if (clue.trickType === 'emoji') feedbackParts.push('GLYPH');
+  if (clue.trickType === 'equation') feedbackParts.push('SOLVE');
+  if (clue.trickType === 'action') feedbackParts.push('ACT');
+
   // Hidden meaning discovery (+300 first time only)
   const meaning = step.meanings.find(m => m.id === meaningId);
   if (meaning?.hidden && !newRevealedHidden[meaningId]) {
     newRevealedHidden[meaningId] = true;
     points += 300;
     feedbackParts.push('HIDDEN +300');
-  }
-
-  // Modern era clue bonus (+300)
-  if (clue.isModernEraClue) {
-    points += 300;
-    feedbackParts.push('ERA SHIFT +300');
   }
 
   // Switch bonus (+50)
@@ -153,12 +157,6 @@ function scoreCorrect(
     feedbackParts.push('BOSS x2');
   }
 
-  // Slang clue multiplier (x2, stacks on top)
-  if (clue.isSlangClue) {
-    points = Math.round(points * 2);
-    feedbackParts.push('SLANG x2');
-  }
-
   const feedback = feedbackParts.length > 0
     ? feedbackParts.join(' · ')
     : `+${points}`;
@@ -169,7 +167,7 @@ function scoreCorrect(
 
   // Word complete — advance to next step
   if (nextClueIndex >= state.selectedClues[state.stepIndex].length) {
-    return advanceStep(state, {
+    const updatedState = advanceStep(state, {
       score,
       combo,
       consecutiveSwitches: consecSwitches,
@@ -178,6 +176,10 @@ function scoreCorrect(
       feedback,
       lastActionAt: now,
     });
+    if (state.mistakesOnWord === 0) {
+      return { ...updatedState, pollyTrigger: 'perfect' };
+    }
+    return updatedState;
   }
 
   return {
@@ -190,6 +192,7 @@ function scoreCorrect(
     revealedHiddenMeanings: newRevealedHidden,
     feedback,
     lastActionAt: now,
+    pollyTrigger: null,
   };
 }
 
@@ -229,4 +232,13 @@ function wrongFeedback(step: WordStep): string {
   if (step.eventType === 'bossWord') return 'BOSS HITS BACK';
   if (step.emotionalRole === 'hesitation') return 'Caught by the decoy';
   return 'Wrong meaning';
+}
+
+// ─── MARK TILE MISSED ────────────────────────────────────────
+
+export function markTileMissed(state: GameState, clue: Clue): GameState {
+  if (clue.correctMeaningId && state.status === 'playing') {
+    return { ...state, nearMissClue: clue, pollyTrigger: 'nearMiss' };
+  }
+  return state;
 }
