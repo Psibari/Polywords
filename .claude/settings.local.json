@@ -3,7 +3,8 @@
     "allow": [
       "Bash(dir C:\\\\Users\\\\pdiba\\\\poly-words\\\\src /s /b)",
       "Bash(npx tsc *)",
-      "Bash(npx expo *)"
+      "Bash(npx expo *)",
+      "Bash(npx ts-node *)"
     ]
   }
 }
