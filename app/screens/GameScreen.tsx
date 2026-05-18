@@ -7,9 +7,14 @@ import {
   Text,
   View,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { GameState, currentStep } from '../game/polyRunEngine';
 import { SESSION } from '../game/session';
-import { PhraseBreakStep, WordStep } from '../game/types';
+import { Clue, Meaning, PhraseBreakStep, WordStep } from '../game/types';
 import ClueCard from '../components/ClueCard';
 import { useGameStore } from '../store/useGameStore';
 
@@ -42,6 +47,57 @@ function eventBadgeLabel(eventType: string | null): string | null {
     case 'wordLore': return 'WORD LORE';
     default: return null;
   }
+}
+
+// ─── ANIMATED CLUE SLOT ──────────────────────────────────────
+// One per clue. Mounts fresh per step (key includes stepIndex),
+// so each remount gets a clean shared value and fires its timer.
+
+type ClueSlotProps = {
+  clue: Clue;
+  myIndex: number;
+  clueIndex: number;
+  meanings: Meaning[];
+  locked: boolean;
+  onSubmit: (id: string) => void;
+};
+
+function AnimatedClueSlot({
+  clue,
+  myIndex,
+  clueIndex,
+  meanings,
+  locked,
+  onSubmit,
+}: ClueSlotProps) {
+  const tx = useSharedValue(400);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: tx.value }],
+  }));
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      tx.value = withTiming(0, { duration: 350 });
+    }, clue.spawnDelayMs);
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isPast = myIndex < clueIndex;
+  const isActive = myIndex === clueIndex;
+
+  return (
+    <Animated.View style={[{ opacity: isPast ? 0.3 : 1 }, animStyle]}>
+      <ClueCard
+        clue={clue}
+        meanings={meanings}
+        locked={locked}
+        isActive={isActive}
+        onSubmit={onSubmit}
+      />
+    </Animated.View>
+  );
 }
 
 // ─── TOP BAR ─────────────────────────────────────────────────
@@ -196,8 +252,8 @@ export default function GameScreen() {
   if (step.kind !== 'word') return null;
 
   const wordStep = step as WordStep;
-  const clue = game.selectedClues[game.stepIndex][game.clueIndex];
-  const clueTotal = game.selectedClues[game.stepIndex].length;
+  const clues = game.selectedClues[game.stepIndex];
+  const clueTotal = clues.length;
   const eventBadge = eventBadgeLabel(wordStep.eventType);
   const isBoss = wordStep.eventType === 'bossWord';
 
@@ -224,12 +280,19 @@ export default function GameScreen() {
           <Text style={styles.pollySmall}>🦜 {wordStep.pollyLine}</Text>
         )}
 
-        <ClueCard
-          clue={clue}
-          meanings={wordStep.meanings}
-          locked={locked}
-          onSubmit={handleAnswer}
-        />
+        <View style={styles.clueTrack}>
+          {clues.map((clue, i) => (
+            <AnimatedClueSlot
+              key={`${game.stepIndex}-${i}`}
+              clue={clue}
+              myIndex={i}
+              clueIndex={game.clueIndex}
+              meanings={wordStep.meanings}
+              locked={locked}
+              onSubmit={handleAnswer}
+            />
+          ))}
+        </View>
 
         {game.feedback && (
           <Text style={[
@@ -348,6 +411,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontWeight: '700',
     lineHeight: 22,
+  },
+
+  // ─── Clue conveyor track
+  clueTrack: {
+    overflow: 'hidden',
   },
 
   // ─── Feedback

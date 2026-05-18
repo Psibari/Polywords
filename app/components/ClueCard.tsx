@@ -6,6 +6,7 @@ type Props = {
   clue: Clue;
   meanings: Meaning[];
   locked: boolean;
+  isActive: boolean;
   onSubmit: (meaningId: string) => void;
 };
 
@@ -25,7 +26,7 @@ function clueBadge(clue: Clue): string | null {
   return null;
 }
 
-export default function ClueCard({ clue, meanings, locked, onSubmit }: Props) {
+export default function ClueCard({ clue, meanings, locked, isActive, onSubmit }: Props) {
   const badge = clueBadge(clue);
 
   return (
@@ -40,24 +41,26 @@ export default function ClueCard({ clue, meanings, locked, onSubmit }: Props) {
 
       <Text style={styles.clueText}>{clue.text}</Text>
 
-      <View style={styles.meaningList}>
-        {meanings.map((m) => (
-          <Pressable
-            key={m.id}
-            onPress={() => !locked && onSubmit(m.id)}
-            style={({ pressed }) => [
-              styles.meaningButton,
-              m.hidden && styles.meaningButtonHidden,
-              locked && styles.meaningButtonLocked,
-              pressed && !locked && styles.meaningButtonPressed,
-            ]}
-          >
-            <Text style={styles.meaningIcon}>{m.emoji ?? ''}</Text>
-            <Text style={styles.meaningLabel}>{m.text}</Text>
-            {m.hidden && <Text style={styles.hiddenTag}>HIDDEN</Text>}
-          </Pressable>
-        ))}
-      </View>
+      {isActive && (
+        <View style={styles.meaningList}>
+          {meanings.map((m) => (
+            <Pressable
+              key={m.id}
+              onPress={() => !locked && onSubmit(m.id)}
+              style={({ pressed }) => [
+                styles.meaningButton,
+                m.hidden && styles.meaningButtonHidden,
+                locked && styles.meaningButtonLocked,
+                pressed && !locked && styles.meaningButtonPressed,
+              ]}
+            >
+              <Text style={styles.meaningIcon}>{m.emoji ?? ''}</Text>
+              <Text style={styles.meaningLabel}>{m.text}</Text>
+              {m.hidden && <Text style={styles.hiddenTag}>HIDDEN</Text>}
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
