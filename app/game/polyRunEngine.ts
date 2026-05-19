@@ -62,8 +62,26 @@ export function submitAnswer(state: GameState, meaningId: string): GameState {
   if (step.kind !== 'word') return state;
 
   const clue = state.selectedClues[state.stepIndex][state.clueIndex];
-  const correct = clue.correctMeaningId === meaningId;
   const now = Date.now();
+
+  // Decoys pass through silently — no points, no penalty
+  if (clue.isDecoy) {
+    const nextClueIndex = state.clueIndex + 1;
+    if (nextClueIndex >= state.selectedClues[state.stepIndex].length) {
+      return advanceStep(state, {
+        score: state.score,
+        combo: state.combo,
+        consecutiveSwitches: state.consecutiveSwitches,
+        previousMeaningId: state.previousMeaningId,
+        revealedHiddenMeanings: state.revealedHiddenMeanings,
+        feedback: state.feedback ?? '',
+        lastActionAt: now,
+      });
+    }
+    return { ...state, clueIndex: nextClueIndex, feedback: null, lastActionAt: now };
+  }
+
+  const correct = clue.correctMeaningId === meaningId;
 
   if (!correct) {
     const lives = state.lives - 1;

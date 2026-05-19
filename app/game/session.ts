@@ -128,7 +128,7 @@ export function isPhraseBreak(step: SessionStep): step is PhraseBreakStep {
 // Other modes: shuffle and guarantee at least one clue per meaning.
 export function pickClues(step: WordStep, count: number): Clue[] {
   if (step.mode === 'conveyorBlitz') {
-    return step.clues.filter(c => !c.isDecoy);
+    return step.clues; // all clues including decoys, in authored order
   }
 
   const shuffled = [...step.clues].sort(() => Math.random() - 0.5);
