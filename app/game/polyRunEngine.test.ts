@@ -4,13 +4,15 @@ import { WordStep } from './types';
 
 console.log('=== POLY RUN ENGINE TESTS ===\n');
 
-// Test 1: Perfect BANK run
+// Test 1: Perfect BANK run (includes 2 decoy auto-skips)
 let state = createGame();
 state = { ...state, stepIndex: 1 }; // BANK
-state = submitAnswer(state, 'bank_money'); // NOT RIVER
-state = submitAnswer(state, 'bank_money'); // 🏦
+state = submitAnswer(state, 'bank_money'); // NOT RIVER (opposite)
+state = submitAnswer(state, 'bank_money'); // 🏦 (emoji)
+state = submitAnswer(state, '');           // WALL BESIDE OCEAN (decoy skip)
 state = submitAnswer(state, 'bank_river'); // GROUND BY WATER
-state = submitAnswer(state, 'bank_rely'); // COUNT ON IT
+state = submitAnswer(state, '');           // POCKET FULL OF COINS (decoy skip)
+state = submitAnswer(state, 'bank_rely');  // COUNT ON IT → word complete
 console.log('TEST 1 - BANK perfect:', {
   score: state.score,
   pollyTrigger: state.pollyTrigger,
