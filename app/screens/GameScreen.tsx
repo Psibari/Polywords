@@ -1,220 +1,227 @@
-import React, { useEffect, useState } from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { currentStep } from '../game/polyRunEngine';
+import { SESSION } from '../game/session';
+import { WordStep } from '../game/types';
+import { useGameStore } from '../store/useGameStore';
+import { HeartbeatBackground } from '../components/HeartbeatBackground';
+import { TruthStream } from '../components/TruthStream';
+import { ReversedBuild } from '../components/ReversedBuild';
+import { PollyController } from '../components/PollyController';
+import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 
-const WORDS = [
-  {
-    clues: ['dog sound', 'tree outer layer'],
-    options: ['BARK', 'ROOT', 'LEAF', 'TRUNK'],
-    answer: 'BARK',
+// ─── TOP BAR ─────────────────────────────────────────────────
+
+function TopBar() {
+  const game = useGameStore(s => s.game);
+  const lives = '❤️'.repeat(Math.max(game.lives, 0));
+  const total = SESSION.length;
+
+  return (
+    <View style={tb.bar}>
+      <View style={tb.block}>
+        <Text style={tb.label}>SCORE</Text>
+        <Text style={tb.value}>{game.score}</Text>
+      </View>
+
+      <View style={tb.block}>
+        <Text style={tb.lives}>{lives || '💀'}</Text>
+        <Text style={tb.progress}>
+          {game.stepIndex + 1}/{total}
+        </Text>
+      </View>
+
+      <View style={tb.block}>
+        <Text style={tb.label}>COMBO</Text>
+        <Text style={tb.value}>x{game.combo}</Text>
+      </View>
+    </View>
+  );
+}
+
+const tb = StyleSheet.create({
+  bar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.07)',
   },
-  {
-    clues: ['calendar day', 'romantic outing'],
-    options: ['DATE', 'LOVE', 'TIME', 'ROSE'],
-    answer: 'DATE',
+  block: { alignItems: 'center', minWidth: 64 },
+  label: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '900', letterSpacing: 2 },
+  value: { color: '#FFFFFF', fontSize: 22, fontWeight: '900' },
+  lives: { fontSize: 18 },
+  progress: { color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: '700' },
+});
+
+// ─── RESULTS ─────────────────────────────────────────────────
+
+function ResultsScreen({ onRestart }: { onRestart: () => void }) {
+  const game = useGameStore(s => s.game);
+  const won = game.status === 'complete';
+
+  return (
+    <View style={rs.container}>
+      <Text style={rs.emoji}>{won ? '🏆' : '💀'}</Text>
+      <Text style={rs.headline}>{won ? 'SESSION COMPLETE' : 'GAME OVER'}</Text>
+      <Text style={rs.score}>{game.score}</Text>
+      <Text style={rs.scoreLabel}>POINTS</Text>
+      <Pressable onPress={onRestart} style={rs.btn}>
+        <Text style={rs.btnText}>PLAY AGAIN</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const rs = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  emoji: { fontSize: 64 },
+  headline: {
+    color: '#FFD700',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 3,
+    marginTop: 8,
   },
-  {
-    clues: ['electrical flow', 'formal accusation'],
-    options: ['POWER', 'CHARGE', 'CURRENT', 'COURT'],
-    answer: 'CHARGE',
+  score: { color: '#FFFFFF', fontSize: 64, fontWeight: '900' },
+  scoreLabel: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 3,
   },
-];
+  btn: {
+    marginTop: 32,
+    backgroundColor: '#FFD700',
+    borderRadius: 32,
+    paddingHorizontal: 40,
+    paddingVertical: 18,
+  },
+  btnText: { color: '#1A1040', fontSize: 18, fontWeight: '900', letterSpacing: 2 },
+});
 
-export default function PolywordsPrototype() {
-  const [index, setIndex] = useState(0);
-  const [beat, setBeat] = useState(false);
-  const [feedback, setFeedback] = useState('');
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [holding, setHolding] = useState<string | null>(null);
+// ─── INNER DIRECTOR (needs HeartbeatProvider above it) ───────
 
-  const current = WORDS[index];
+function GameDirector() {
+  const game = useGameStore(s => s.game);
+  const startGame = useGameStore(s => s.startGame);
+  const { setTension } = useHeartbeat();
+  const [missedCount, setMissedCount] = useState(0);
 
+  const handleMiss = useCallback(() => setMissedCount(c => c + 1), []);
+
+  // resolve tension from game state
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBeat(true);
+    const step = currentStep(game);
+    if (step.kind !== 'word') return;
 
-      setTimeout(() => {
-        setBeat(false);
-      }, 220);
-    }, 1100);
+    let t = 0;
+    if (step.eventType === 'bossWord') t = 3;
+    else if (step.eventType === 'speedRound') t = 2;
+    else if (step.emotionalRole === 'boss') t = 2;
 
-    return () => clearInterval(interval);
-  }, []);
+    if (game.lives === 1) t = Math.min(t + 1, 3);
+    if (missedCount >= 2) t = Math.min(t + 1, 3);
+    setTension(t);
+  }, [game.stepIndex, game.lives, missedCount, setTension]);
 
-  function handlePress(word: string) {
-    setHolding(word);
+  // reset miss counter on new word
+  useEffect(() => {
+    setMissedCount(0);
+  }, [game.stepIndex]);
 
-    const onBeat = beat;
-    const correct = word === current.answer;
-
-    if (correct && onBeat) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setFeedback('PERFECT SYNC');
-      setScore((s) => s + 200);
-      setStreak((s) => s + 1);
-    } else if (correct && !onBeat) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setFeedback('OFF BEAT');
-      setStreak(0);
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setFeedback('FALSE SIGNAL');
-      setStreak(0);
-    }
-
-    setTimeout(() => {
-      setHolding(null);
-    }, 160);
-
-    setTimeout(() => {
-      setIndex((prev) => (prev + 1) % WORDS.length);
-      setFeedback('');
-    }, 650);
+  function handleRestart() {
+    startGame();
+    setMissedCount(0);
   }
+
+  const isDone = game.status === 'complete' || game.status === 'gameOver';
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.topBar}>
-        <View>
-          <Text style={styles.label}>SCORE</Text>
-          <Text style={styles.score}>{score}</Text>
-        </View>
+      <HeartbeatBackground />
 
-        <View style={styles.centerTop}>
-          <View style={[styles.heartbeat, beat && styles.heartbeatActive]} />
-          <Text style={styles.label}>SYNC</Text>
-        </View>
+      <TopBar />
 
-        <View>
-          <Text style={styles.label}>STREAK</Text>
-          <Text style={styles.score}>x{streak}</Text>
-        </View>
-      </View>
-
-      <View style={styles.clueArea}>
-        {current.clues.map((clue) => (
-          <Text key={clue} style={styles.clue}>
-            {clue}
-          </Text>
-        ))}
-      </View>
-
-      <View style={styles.optionArea}>
-        {current.options.map((option) => {
-          const pressed = holding === option;
-
-          return (
-            <Pressable
-              key={option}
-              onPressIn={() => handlePress(option)}
-              style={[
-                styles.option,
-                pressed && styles.optionPressed,
-                beat && styles.optionBeat,
-              ]}
-            >
-              <Text style={styles.optionText}>{option}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <Text style={styles.feedback}>{feedback}</Text>
+      {isDone ? (
+        <ResultsScreen onRestart={handleRestart} />
+      ) : (
+        <>
+          <PollyController />
+          <GameContent onMiss={handleMiss} />
+        </>
+      )}
     </SafeAreaView>
   );
 }
 
-const COLORS = {
-  bg: '#16142B',
-  card: '#241F47',
-  purple: '#8D5CFF',
-  gold: '#FFD23F',
-  white: '#FFFFFF',
-  red: '#FF4E6A',
-  muted: '#B0AACF',
-};
+// ─── GAME CONTENT — switches mechanic per step ───────────────
+
+function GameContent({ onMiss }: { onMiss: () => void }) {
+  const game = useGameStore(s => s.game);
+  const step = currentStep(game);
+
+  if (step.kind !== 'word') {
+    // phraseBreak — placeholder (session currently has none)
+    return (
+      <View style={styles.placeholder}>
+        <Text style={styles.placeholderText}>PHRASE BREAK</Text>
+      </View>
+    );
+  }
+
+  // decoy word options for ReversedBuild (other session words)
+  const decoyWords = SESSION.filter(s => s.kind === 'word' && s.word !== step.word)
+    .map(s => (s as WordStep).word);
+
+  // conveyorBlitz → TruthStream; anything else → ReversedBuild
+  if (!step.mode || step.mode === 'conveyorBlitz') {
+    return (
+      <TruthStream
+        key={`stream-${game.stepIndex}`}
+        step={step}
+        onMiss={onMiss}
+      />
+    );
+  }
+
+  return (
+    <ReversedBuild
+      key={`reversed-${game.stepIndex}`}
+      step={step}
+      decoyWords={decoyWords}
+      onAnswer={() => {}}
+    />
+  );
+}
+
+// ─── ROOT EXPORT ─────────────────────────────────────────────
+
+export default function GameScreen() {
+  return (
+    <HeartbeatProvider>
+      <GameDirector />
+    </HeartbeatProvider>
+  );
+}
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: COLORS.bg,
-    padding: 24,
+    backgroundColor: '#1A1040',
   },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  centerTop: {
-    alignItems: 'center',
-  },
-  heartbeat: {
-    width: 24,
-    height: 24,
-    borderRadius: 999,
-    backgroundColor: '#4A348A',
-    marginBottom: 8,
-  },
-  heartbeatActive: {
-    backgroundColor: COLORS.gold,
-    transform: [{ scale: 1.6 }],
-  },
-  label: {
-    color: COLORS.muted,
-    fontWeight: '700',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  score: {
-    color: COLORS.white,
-    fontWeight: '900',
-    fontSize: 28,
-    textAlign: 'center',
-  },
-  clueArea: {
+  placeholder: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 18,
   },
-  clue: {
-    color: COLORS.white,
-    fontSize: 34,
+  placeholderText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 18,
     fontWeight: '900',
-    textAlign: 'center',
-  },
-  optionArea: {
-    gap: 14,
-    marginBottom: 36,
-  },
-  option: {
-    backgroundColor: COLORS.card,
-    borderRadius: 22,
-    paddingVertical: 22,
-    borderWidth: 2,
-    borderColor: 'rgba(141,92,255,0.25)',
-  },
-  optionBeat: {
-    borderColor: 'rgba(255,210,63,0.6)',
-  },
-  optionPressed: {
-    transform: [{ scale: 0.96 }],
-    backgroundColor: '#34275C',
-  },
-  optionText: {
-    color: COLORS.white,
-    textAlign: 'center',
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  feedback: {
-    color: COLORS.gold,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '900',
-    minHeight: 28,
-    marginBottom: 12,
+    letterSpacing: 3,
   },
 });

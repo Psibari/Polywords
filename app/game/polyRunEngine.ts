@@ -252,6 +252,52 @@ function wrongFeedback(step: WordStep): string {
   return 'Wrong meaning';
 }
 
+// ─── SKIP CLUE (missed without tapping) ──────────────────────
+
+export function skipClue(state: GameState): GameState {
+  if (state.status !== 'playing') return state;
+  const step = currentStep(state);
+  if (step.kind !== 'word') return state;
+
+  const clues = state.selectedClues[state.stepIndex];
+  const nextClueIndex = state.clueIndex + 1;
+  const lives = Math.max(state.lives - 1, 0);
+  const now = Date.now();
+
+  const shared = {
+    lives,
+    clueIndex: nextClueIndex,
+    combo: 0,
+    consecutiveSwitches: 0,
+    mistakesOnWord: state.mistakesOnWord + 1,
+    feedback: 'MISSED',
+    lastActionAt: now,
+    pollyTrigger: 'nearMiss' as const,
+  };
+
+  if (lives === 0) {
+    return { ...state, ...shared, status: 'gameOver' };
+  }
+
+  if (nextClueIndex >= clues.length) {
+    const nextStepIndex = state.stepIndex + 1;
+    if (nextStepIndex >= SESSION.length) {
+      return { ...state, ...shared, status: 'complete' };
+    }
+    const nextStep = SESSION[nextStepIndex];
+    return {
+      ...state,
+      ...shared,
+      stepIndex: nextStepIndex,
+      clueIndex: 0,
+      mistakesOnWord: 0,
+      status: nextStep.kind === 'phraseBreak' ? 'phraseBreak' : 'playing',
+    };
+  }
+
+  return { ...state, ...shared };
+}
+
 // ─── MARK TILE MISSED ────────────────────────────────────────
 
 export function markTileMissed(state: GameState, clue: Clue): GameState {

@@ -4,6 +4,7 @@ import {
   submitAnswer,
   submitPhraseAnswer,
   markTileMissed,
+  skipClue,
 } from "../game/polyRunEngine";
 import { Clue } from "../game/types";
 import { resetPollyBudget } from "../components/PollyController";
@@ -15,6 +16,7 @@ type GameStore = {
   submitPhraseAnswer: (choice: string) => void;
   clearPollyTrigger: () => void;
   markTileMissed: (clue: Clue) => void;
+  skipClue: () => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -40,4 +42,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
   markTileMissed: (clue) =>
     set((s) => ({ game: markTileMissed(s.game, clue) })),
+
+  skipClue: () =>
+    set((s) => ({ game: skipClue(s.game) })),
 }));
