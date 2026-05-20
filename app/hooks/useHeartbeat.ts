@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { Animated } from 'react-native';
 
-// ms per full beat cycle at each tension level
+// ms per full beat cycle at each tension level (0–3)
 const CYCLE_MS = [1100, 900, 700, 550] as const;
 
 export type HeartbeatValue = {
@@ -52,10 +52,10 @@ export function HeartbeatProvider({
     return () => loop.stop();
   }, [tension, pulseAnim]);
 
-  return (
-    <HeartbeatCtx.Provider value={{ pulseAnim, tension, setTension }}>
-      {children}
-    </HeartbeatCtx.Provider>
+  return React.createElement(
+    HeartbeatCtx.Provider,
+    { value: { pulseAnim, tension, setTension } },
+    children,
   );
 }
 
