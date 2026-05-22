@@ -10,211 +10,232 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { MASK_DRIFT_NORMAL, MASK_DRIFT_SPEED } from '../constants/animations';
-import { Clue, WordStep } from '../game/types';
+import { Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
-import { ScoreFloat } from './ScoreFloat';
+import { RevealSequence, RevealTileData } from './RevealSequence';
 
 const TILE_W = 180;
-const TILE_H = 64;
-const TRACK_H = 96;
+const TILE_H = 86;
+const LANE_H = 106;
+const LANE_COUNT = 2;
 
-type ActiveTile = {
-  clue: Clue;
-  clueIndex: number;
+type DriftTile = {
+  mask: Mask;
   xAnim: Animated.Value;
-  resolved: boolean;
-  tapped: boolean;
+  lane: number;
+  speedMs: number;
+  animRef: { current: Animated.CompositeAnimation | null };
 };
-
-type FloatEntry = { id: number; value: number; x: number; y: number };
 
 type Props = {
   step: WordStep;
-  /** called when a non-decoy clue drifts off untouched */
-  onMiss?: () => void;
 };
 
-export function TruthStream({ step, onMiss }: Props) {
+export function TruthStream({ step }: Props) {
   const { width: W, height: H } = useWindowDimensions();
-  const { game, submitAnswer, skipClue } = useGameStore();
-
-  const gameRef = useRef(game);
-  useEffect(() => { gameRef.current = game; }, [game]);
-
-  const [tile, setTile] = useState<ActiveTile | null>(null);
-  const tileRef = useRef<ActiveTile | null>(null);
-  const animRef = useRef<Animated.CompositeAnimation | null>(null);
-  const activeRef = useRef(true);
-  const [floats, setFloats] = useState<FloatEntry[]>([]);
-  const floatIdRef = useRef(0);
+  const { game, submitAnswer, lockRound } = useGameStore();
 
   const driftMs = step.eventType === 'speedRound' ? MASK_DRIFT_SPEED : MASK_DRIFT_NORMAL;
-  const trackY = H * 0.44; // vertical centre of the track
 
-  const spawnClue = useCallback(
-    (clueIndex: number) => {
-      if (!activeRef.current) return;
-      const clues = gameRef.current.selectedClues[gameRef.current.stepIndex];
-      if (!clues || clueIndex >= clues.length) return;
+  const [locked, setLocked] = useState(false);
+  const [revealData, setRevealData] = useState<RevealTileData[] | null>(null);
 
-      const clue = clues[clueIndex];
-      const xAnim = new Animated.Value(W + TILE_W);
-      const next: ActiveTile = { clue, clueIndex, xAnim, resolved: false, tapped: false };
-      tileRef.current = next;
-      setTile({ ...next });
+  // Keep selectedMaskIds readable in callbacks without stale closure issues
+  const selectedIdsRef = useRef(game.selectedMaskIds);
+  useEffect(() => { selectedIdsRef.current = game.selectedMaskIds; }, [game.selectedMaskIds]);
 
-      const drift = Animated.timing(xAnim, {
-        toValue: -(TILE_W + 80),
-        duration: driftMs,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      });
-      animRef.current = drift;
+  const revealTimeoutRef = useRef<number | null>(null);
+  const lockedRef = useRef(false);
 
-      drift.start(({ finished }) => {
-        if (!finished || !activeRef.current) return;
-        const t = tileRef.current;
-        if (t && !t.resolved) {
-          if (t.clue.isDecoy) {
-            // pass silently
-            submitAnswer('');
-          } else {
-            skipClue();
-            onMiss?.();
-          }
-        }
-        tileRef.current = null;
-        setTile(null);
-        setTimeout(() => {
-          if (activeRef.current) spawnClue(gameRef.current.clueIndex);
-        }, 350);
-      });
+  // ─── Build drift tiles once ─────────────────────────────────
+  const tilesRef = useRef<DriftTile[] | null>(null);
+  if (tilesRef.current === null) {
+    tilesRef.current = step.masks.map((mask, i) => {
+      const lane = i % LANE_COUNT;
+      // stagger initial X so tiles spread across lanes from the start
+      const laneIndex = Math.floor(i / LANE_COUNT);
+      const startX = W + TILE_W + laneIndex * (TILE_W + 50);
+      return {
+        mask,
+        xAnim: new Animated.Value(startX),
+        lane,
+        // vary speed per tile so they spread naturally after the first pass
+        speedMs: driftMs + i * 400,
+        animRef: { current: null },
+      };
+    });
+  }
+  const tiles = tilesRef.current;
+
+  // ─── Start/stop drift ──────────────────────────────────────
+  const startDrift = useCallback(
+    (tile: DriftTile) => {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(tile.xAnim, {
+            toValue: -(TILE_W + 80),
+            duration: tile.speedMs,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+          Animated.timing(tile.xAnim, {
+            toValue: W + TILE_W,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      tile.animRef.current = loop;
+      loop.start();
     },
-    // spawnClue is stable — deps in refs
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [W, driftMs],
+    [W],
   );
 
   useEffect(() => {
-    spawnClue(gameRef.current.clueIndex);
+    tiles.forEach(t => startDrift(t));
     return () => {
-      activeRef.current = false;
-      animRef.current?.stop();
+      tiles.forEach(t => t.animRef.current?.stop());
+      if (revealTimeoutRef.current !== null) clearTimeout(revealTimeoutRef.current);
     };
-    // run once per step mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleTap() {
-    const t = tileRef.current;
-    if (!t || t.resolved) return;
-
-    const updated: ActiveTile = { ...t, resolved: true, tapped: true };
-    tileRef.current = updated;
-    setTile({ ...updated });
-
-    submitAnswer(t.clue.correctMeaningId);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    if (!t.clue.isDecoy) {
-      const id = ++floatIdRef.current;
-      setFloats(prev => [...prev, { id, value: 100, x: W / 2, y: trackY }]);
-    }
-
-    animRef.current?.stop();
-    setTimeout(() => {
-      if (!activeRef.current) return;
-      tileRef.current = null;
-      setTile(null);
-      setTimeout(() => {
-        if (activeRef.current) spawnClue(gameRef.current.clueIndex);
-      }, 180);
-    }, 320);
+  // ─── Tap a tile — toggle selection ─────────────────────────
+  function handleTap(maskId: string) {
+    if (lockedRef.current) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    submitAnswer(maskId);
   }
 
-  // fade opacity near the left edge
-  const tileOpacity = tile
-    ? tile.xAnim.interpolate({
-        inputRange: [-(TILE_W), 0, 60, W],
-        outputRange: [0, 0, 1, 1],
-        extrapolate: 'clamp',
-      })
-    : 1;
+  // ─── Lock It In ────────────────────────────────────────────
+  function handleLock() {
+    if (lockedRef.current) return;
+    lockedRef.current = true;
+    setLocked(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-  const tileBgColor = tile?.tapped
-    ? '#22C55E'
-    : tile?.clue && !tile.tapped && tile.resolved
-    ? '#374151' // missed grey ghost
-    : '#311F78';
+    // stop all animations
+    tiles.forEach(t => t.animRef.current?.stop());
 
-  const tileBorderColor = tile?.tapped
-    ? '#22C55E'
-    : tile?.clue.isDecoy
-    ? 'rgba(255,255,255,0.08)'
-    : '#8B5CF6';
+    // snapshot selected IDs at lock time
+    const selected = selectedIdsRef.current;
+    const maskMap = new Map(step.masks.map(m => [m.id, m]));
 
+    // build reveal data — show correct/wrong/missed; skip unselected traps
+    const revealTiles: RevealTileData[] = step.masks.flatMap((mask) => {
+      const isSelected = selected.includes(mask.id);
+      if (!isSelected && !mask.isReal) return []; // silent unselected trap
+
+      let result: 'correct' | 'wrong' | 'missed';
+      if (isSelected && mask.isReal)   result = 'correct';
+      else if (isSelected && !mask.isReal) result = 'wrong';
+      else                              result = 'missed'; // isReal && !isSelected
+
+      const scoreValue =
+        result === 'correct'
+          ? mask.isRare || mask.isHidden ? 300 : 100
+          : 0;
+
+      return [{
+        mask: {
+          id: mask.id,
+          icon: mask.emoji,
+          phrase: mask.phrase,
+          isReal: mask.isReal,
+          isHidden: mask.isHidden,
+        },
+        result,
+        scoreValue,
+        position: { x: W / 2, y: H * 0.5 },
+      }];
+    });
+
+    setRevealData(revealTiles);
+  }
+
+  // ─── After reveal animation completes ──────────────────────
+  function handleRevealComplete() {
+    revealTimeoutRef.current = setTimeout(() => {
+      lockRound();
+    }, 1200);
+  }
+
+  // ─── Group tiles by lane ────────────────────────────────────
+  const lanes: DriftTile[][] = Array.from({ length: LANE_COUNT }, () => []);
+  tiles.forEach(t => lanes[t.lane].push(t));
+
+  const selectedIds = game.selectedMaskIds;
+  const lanesTop = H * 0.28;
+
+  // ─── Reveal mode ───────────────────────────────────────────
+  if (revealData) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.wordArea}>
+          <Text style={styles.wordSub}>WHAT DOES</Text>
+          <Text style={styles.wordMain}>{step.word}</Text>
+          <Text style={styles.wordSub}>MEAN?</Text>
+        </View>
+        <RevealSequence tiles={revealData} onComplete={handleRevealComplete} />
+      </View>
+    );
+  }
+
+  // ─── Drift mode ────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      {/* word label */}
+      {/* word header */}
       <View style={styles.wordArea}>
         <Text style={styles.wordSub}>WHAT DOES</Text>
         <Text style={styles.wordMain}>{step.word}</Text>
         <Text style={styles.wordSub}>MEAN?</Text>
       </View>
 
-      {/* horizontal track */}
-      <View style={[styles.track, { marginTop: trackY - TRACK_H / 2 - 120 }]}>
-        {/* left fade veil */}
-        <View style={styles.fadeLeft} pointerEvents="none" />
+      {/* instruction */}
+      <Text style={styles.instruction}>TAP ALL REAL MEANINGS</Text>
 
-        {tile && (
-          <Animated.View
-            style={[
-              styles.tileWrap,
-              {
-                transform: [{ translateX: tile.xAnim }],
-                opacity: tileOpacity,
-              },
-            ]}
-          >
-            <Pressable
-              onPress={handleTap}
-              style={[
-                styles.tileInner,
-                {
-                  backgroundColor: tileBgColor,
-                  borderColor: tileBorderColor,
-                },
-              ]}
-            >
-              <Text style={styles.clueText}>{tile.clue.text}</Text>
-            </Pressable>
-          </Animated.View>
-        )}
+      {/* drift lanes */}
+      <View style={[styles.lanesArea, { top: lanesTop }]}>
+        {lanes.map((laneTiles, laneIdx) => (
+          <View key={laneIdx} style={styles.lane}>
+            {laneTiles.map((tile) => {
+              const isSelected = selectedIds.includes(tile.mask.id);
+              return (
+                <Animated.View
+                  key={tile.mask.id}
+                  style={[
+                    styles.tileWrap,
+                    { transform: [{ translateX: tile.xAnim }] },
+                  ]}
+                >
+                  <Pressable
+                    onPress={() => handleTap(tile.mask.id)}
+                    style={[
+                      styles.tileInner,
+                      isSelected && styles.tileSelected,
+                    ]}
+                  >
+                    <Text style={styles.tileEmoji}>{tile.mask.emoji}</Text>
+                    <Text style={styles.tilePhrase} numberOfLines={2}>
+                      {tile.mask.phrase}
+                    </Text>
+                  </Pressable>
+                </Animated.View>
+              );
+            })}
+          </View>
+        ))}
       </View>
 
-      {/* meanings guide */}
-      <View style={styles.meaningsArea}>
-        <Text style={styles.meaningsLabel}>MEANINGS</Text>
-        <View style={styles.meaningsList}>
-          {step.meanings.map(m => (
-            <View key={m.id} style={styles.meaningChip}>
-              {m.emoji ? <Text style={styles.meaningEmoji}>{m.emoji}</Text> : null}
-              <Text style={styles.meaningText}>{m.text}</Text>
-            </View>
-          ))}
-        </View>
+      {/* lock button — fixed at bottom */}
+      <View style={styles.lockArea}>
+        <Pressable
+          onPress={handleLock}
+          style={[styles.lockButton, locked && styles.lockButtonDim]}
+        >
+          <Text style={styles.lockText}>LOCK IT IN</Text>
+        </Pressable>
       </View>
-
-      {/* score floats */}
-      {floats.map(f => (
-        <ScoreFloat
-          key={f.id}
-          value={f.value}
-          startPosition={{ x: f.x, y: f.y }}
-          onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
-        />
-      ))}
     </View>
   );
 }
@@ -226,7 +247,7 @@ const styles = StyleSheet.create({
   wordArea: {
     alignItems: 'center',
     paddingTop: 32,
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   wordSub: {
     color: 'rgba(255,255,255,0.45)',
@@ -241,76 +262,78 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     marginVertical: 4,
   },
-  track: {
-    height: TRACK_H,
-    backgroundColor: '#120A30',
-    justifyContent: 'center',
-    overflow: 'hidden',
+  instruction: {
+    color: 'rgba(255,255,255,0.25)',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 3,
+    textAlign: 'center',
+    marginBottom: 12,
   },
-  fadeLeft: {
+  lanesArea: {
     position: 'absolute',
     left: 0,
-    top: 0,
-    bottom: 0,
-    width: 60,
-    zIndex: 2,
-    // gradient-like fade handled by opacity on the tile itself
-    backgroundColor: 'transparent',
+    right: 0,
+    gap: 10,
+  },
+  lane: {
+    height: LANE_H,
+    backgroundColor: '#120A30',
+    overflow: 'hidden',
   },
   tileWrap: {
     position: 'absolute',
     width: TILE_W,
     height: TILE_H,
-    top: (TRACK_H - TILE_H) / 2,
+    top: (LANE_H - TILE_H) / 2,
   },
   tileInner: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1.5,
+    borderColor: 'rgba(139,92,246,0.5)',
+    backgroundColor: '#311F78',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
-  clueText: {
+  tileSelected: {
+    borderColor: '#FFD700',
+    borderWidth: 2,
+    backgroundColor: '#3D2590',
+  },
+  tileEmoji: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  tilePhrase: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  lockArea: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  lockButton: {
+    backgroundColor: '#8B5CF6',
+    borderRadius: 32,
+    paddingHorizontal: 48,
+    paddingVertical: 18,
+  },
+  lockButtonDim: {
+    opacity: 0.4,
+  },
+  lockText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '900',
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  meaningsArea: {
-    marginTop: 36,
-    paddingHorizontal: 24,
-  },
-  meaningsLabel: {
-    color: 'rgba(255,255,255,0.3)',
-    fontSize: 10,
-    fontWeight: '900',
     letterSpacing: 3,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  meaningsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    justifyContent: 'center',
-  },
-  meaningChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(139,92,246,0.15)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  meaningEmoji: {
-    fontSize: 16,
-  },
-  meaningText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-    fontWeight: '700',
   },
 });

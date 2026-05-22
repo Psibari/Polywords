@@ -1,22 +1,19 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import {
   createGame,
   submitAnswer,
   submitPhraseAnswer,
-  markTileMissed,
-  skipClue,
-} from "../game/polyRunEngine";
-import { Clue } from "../game/types";
-import { resetPollyBudget } from "../components/PollyController";
+  lockRound,
+} from '../game/polyRunEngine';
+import { resetPollyBudget } from '../components/PollyController';
 
 type GameStore = {
   game: ReturnType<typeof createGame>;
   startGame: () => void;
-  submitAnswer: (meaningId: string) => void;
+  submitAnswer: (maskId: string) => void;
   submitPhraseAnswer: (choice: string) => void;
+  lockRound: () => void;
   clearPollyTrigger: () => void;
-  markTileMissed: (clue: Clue) => void;
-  skipClue: () => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -27,9 +24,9 @@ export const useGameStore = create<GameStore>((set) => ({
     set({ game: createGame() });
   },
 
-  submitAnswer: (meaningId) =>
+  submitAnswer: (maskId) =>
     set((state) => ({
-      game: submitAnswer(state.game, meaningId),
+      game: submitAnswer(state.game, maskId),
     })),
 
   submitPhraseAnswer: (choice) =>
@@ -37,12 +34,11 @@ export const useGameStore = create<GameStore>((set) => ({
       game: submitPhraseAnswer(state.game, choice),
     })),
 
+  lockRound: () =>
+    set((state) => ({
+      game: lockRound(state.game),
+    })),
+
   clearPollyTrigger: () =>
     set((s) => ({ game: { ...s.game, pollyTrigger: null } })),
-
-  markTileMissed: (clue) =>
-    set((s) => ({ game: markTileMissed(s.game, clue) })),
-
-  skipClue: () =>
-    set((s) => ({ game: skipClue(s.game) })),
 }));

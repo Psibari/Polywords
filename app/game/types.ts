@@ -31,22 +31,36 @@ export type Meaning = {
   era?: 'old' | 'modern';
 };
 
-export type Clue = {
-  text: string;
-  correctMeaningId: string;
-  isDecoy: boolean;
-  trickType: 'opposite' | 'emoji' | 'equation' | 'action' | 'rephrase' | 'none';
-  spawnDelayMs: number;
+export type TrapType =
+  | 'associatedNeighbor'   // related concept, not a meaning
+  | 'domainNeighbor'       // same topic area, wrong word
+  | 'almostSynonym'        // crosses the semantic line
+  | 'visualNeighbor'       // shares imagery, not meaning
+  | 'commonMisconception'  // what players assume
+  | 'phraseTrap'           // from a phrase, not standalone
+  | 'morphologyTrap'       // related word form
+  | 'homophoneTrap';       // sounds connected, isn't
+
+export type Mask = {
+  id: string;
+  emoji: string;
+  phrase: string;          // 2-4 words max, feeling not definition
+  isReal: boolean;         // true = correct meaning, false = trap
+  isRare?: boolean;        // real meaning most players miss, +300
+  isHidden?: boolean;      // shows as ❓ until tapped correctly
+  isSlang?: boolean;       // slang meaning, x2 score
+  trapType?: TrapType;     // why it's wrong (traps only)
+  revealLabel?: string;    // shows after tap (optional longer label)
+  era?: 'old' | 'modern'; // for semanticEvolution words
 };
 
 export type WordStep = {
   kind: 'word';
   word: string;
-  mode?: 'conveyorBlitz' | 'switchback' | 'boss';
   emotionalRole: EmotionalRole;
   eventType: EventType | null;
   meanings: Meaning[];
-  clues: Clue[];
+  masks: Mask[];
   pollyLine?: string;
   lore?: {
     title: string;

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
@@ -111,8 +111,6 @@ function GameDirector() {
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
 
-  const handleMiss = useCallback(() => setMissedCount(c => c + 1), []);
-
   // resolve tension from game state
   useEffect(() => {
     const step = currentStep(game);
@@ -151,7 +149,7 @@ function GameDirector() {
       ) : (
         <>
           <PollyController />
-          <GameContent onMiss={handleMiss} />
+          <GameContent />
         </>
       )}
     </SafeAreaView>
@@ -160,7 +158,7 @@ function GameDirector() {
 
 // ─── GAME CONTENT — switches mechanic per step ───────────────
 
-function GameContent({ onMiss }: { onMiss: () => void }) {
+function GameContent() {
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
 
@@ -183,7 +181,6 @@ function GameContent({ onMiss }: { onMiss: () => void }) {
       <TruthStream
         key={`stream-${game.stepIndex}`}
         step={step}
-        onMiss={onMiss}
       />
     );
   }

@@ -1,9 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Clue } from '../game/types';
+import { Mask } from '../game/types';
 
 type Props = {
-  clue: Clue;
+  mask: Mask;
   isActive: boolean;
   isPassed: boolean;
 };
@@ -16,31 +16,16 @@ const COLORS = {
   blue: '#0ea5e9',
 };
 
-function clueBadge(clue: Clue): string | null {
-  if (clue.trickType === 'equation') return '🧮 SOLVE';
-  if (clue.trickType === 'opposite') return '↩️ INVERSION';
-  if (clue.isDecoy) return '⚠️ DECOY';
-  return null;
-}
-
-export default function ClueCard({ clue, isActive, isPassed }: Props) {
-  const badge = clueBadge(clue);
-
+export default function ClueCard({ mask, isActive, isPassed }: Props) {
   return (
     <View style={[
       styles.card,
       isActive && styles.cardActive,
       isPassed && styles.cardPassed,
     ]}>
-      {badge && (
-        <View style={styles.badgeRow}>
-          <View style={[styles.badge, clue.isDecoy && styles.badgeDecoy]}>
-            <Text style={styles.badgeText}>{badge}</Text>
-          </View>
-        </View>
-      )}
+      <Text style={styles.emoji}>{mask.emoji}</Text>
       <Text style={[styles.clueText, isPassed && styles.clueTextPassed]}>
-        {clue.text}
+        {mask.phrase}
       </Text>
     </View>
   );
@@ -53,6 +38,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 20,
     padding: 20,
+    alignItems: 'center',
   },
   cardActive: {
     borderColor: COLORS.blue,
@@ -61,30 +47,14 @@ const styles = StyleSheet.create({
   cardPassed: {
     opacity: 0.3,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  badge: {
-    backgroundColor: COLORS.purple,
-    borderRadius: 99,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  badgeDecoy: {
-    backgroundColor: '#6b7280',
-  },
-  badgeText: {
-    color: COLORS.white,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1,
+  emoji: {
+    fontSize: 28,
+    marginBottom: 8,
   },
   clueText: {
     color: COLORS.white,
-    fontSize: 24,
-    lineHeight: 32,
+    fontSize: 20,
+    lineHeight: 28,
     fontWeight: '900',
     textAlign: 'center',
   },

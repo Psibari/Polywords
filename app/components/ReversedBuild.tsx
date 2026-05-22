@@ -32,7 +32,7 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
   const [correct, setCorrect] = useState<boolean | null>(null);
 
   const clueAnims = useRef(
-    step.clues.filter(c => !c.isDecoy).map(() => new Animated.Value(-80)),
+    step.masks.filter(m => m.isReal).map(() => new Animated.Value(-80)),
   ).current;
 
   const optionsAnim = useRef(new Animated.Value(H)).current;
@@ -45,7 +45,7 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
       .map(x => x.w),
   ).current;
 
-  const realClues = step.clues.filter(c => !c.isDecoy);
+  const realClues = step.masks.filter(m => m.isReal);
   const multiplier = MULTIPLIERS[Math.min(revealedCount, MULTIPLIERS.length - 1)] ?? 1;
 
   // drop clues one at a time
@@ -108,16 +108,16 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
 
       {/* dropped clues */}
       <View style={styles.cluesList}>
-        {realClues.map((clue, i) => (
+        {realClues.map((mask, i) => (
           <Animated.View
-            key={i}
+            key={mask.id}
             style={[
               styles.clueRow,
               { opacity: clueAnims[i].interpolate({ inputRange: [-80, 0], outputRange: [0, 1] }) },
               { transform: [{ translateY: clueAnims[i] }] },
             ]}
           >
-            <Text style={styles.clueText}>{clue.text}</Text>
+            <Text style={styles.clueText}>{mask.emoji}  {mask.phrase}</Text>
           </Animated.View>
         ))}
       </View>
