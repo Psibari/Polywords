@@ -5,7 +5,8 @@
       "Bash(npx tsc *)",
       "Bash(npx expo *)",
       "Bash(npx ts-node *)",
-      "Bash(node -e \"require\\('react-native-reanimated'\\); console.log\\('reanimated ok'\\)\")"
+      "Bash(node -e \"require\\('react-native-reanimated'\\); console.log\\('reanimated ok'\\)\")",
+      "PowerShell(cd c:\\\\Users\\\\pdiba\\\\poly-words; npx tsc --noEmit 2>&1; echo \"EXIT:$LASTEXITCODE\")"
     ]
   }
 }
