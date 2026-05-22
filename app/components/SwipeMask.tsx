@@ -37,6 +37,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
   const onSwipeDownRef = useRef(onSwipeDown);
 
   const [showFragments, setShowFragments] = useState(false);
+  const [fragColor, setFragColor] = useState<'green' | 'red'>('green');
   const fragAnims = useRef([
     { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
     { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
@@ -64,28 +65,63 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
     goldLoopRef.current?.stop();
   }, [s]);
 
+  // ── shatter effect ────────────────────────────────────────────
+  function fireShatter() {
+    fragAnims.forEach(a => { a.x.setValue(0); a.y.setValue(0); a.op.setValue(1); });
+    const dirs = [
+      { tx: -38, ty: -42 },
+      { tx:  38, ty: -42 },
+      { tx: -38, ty:  42 },
+      { tx:  38, ty:  42 },
+    ];
+    Animated.parallel(
+      fragAnims.map((anim, i) =>
+        Animated.parallel([
+          Animated.timing(anim.x, { toValue: dirs[i].tx, duration: 360, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.y, { toValue: dirs[i].ty, duration: 360, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.op, { toValue: 0, duration: 300, useNativeDriver: true }),
+        ]),
+      ),
+    ).start(() => setShowFragments(false));
+  }
+
   // ── react to result state ─────────────────────────────────────
   useEffect(() => {
     if (s === 'correct') {
       flyAnimRef.current?.stop();
-      Animated.timing(tileOpacity, {
-        toValue: 0,
-        duration: 120,
-        useNativeDriver: true,
-      }).start();
+      if (swipeDirRef.current === 'down') {
+        tileOpacity.setValue(0);
+        setFragColor('green');
+        setShowFragments(true);
+        fireShatter();
+      } else {
+        Animated.timing(tileOpacity, {
+          toValue: 0,
+          duration: 120,
+          useNativeDriver: true,
+        }).start();
+      }
     }
 
     if (s === 'wrong') {
       flyAnimRef.current?.stop();
-      panY.setValue(0);
-      tileOpacity.setValue(1);
-      Animated.sequence([
-        Animated.timing(shakeX, { toValue: 14, duration: 55, useNativeDriver: true }),
-        Animated.timing(shakeX, { toValue: -14, duration: 55, useNativeDriver: true }),
-        Animated.timing(shakeX, { toValue: 9, duration: 55, useNativeDriver: true }),
-        Animated.timing(shakeX, { toValue: -9, duration: 55, useNativeDriver: true }),
-        Animated.timing(shakeX, { toValue: 0, duration: 55, useNativeDriver: true }),
-      ]).start();
+      if (swipeDirRef.current === 'down') {
+        panY.setValue(0);
+        tileOpacity.setValue(0);
+        setFragColor('red');
+        setShowFragments(true);
+        fireShatter();
+      } else {
+        panY.setValue(0);
+        tileOpacity.setValue(1);
+        Animated.sequence([
+          Animated.timing(shakeX, { toValue: 14, duration: 55, useNativeDriver: true }),
+          Animated.timing(shakeX, { toValue: -14, duration: 55, useNativeDriver: true }),
+          Animated.timing(shakeX, { toValue: 9, duration: 55, useNativeDriver: true }),
+          Animated.timing(shakeX, { toValue: -9, duration: 55, useNativeDriver: true }),
+          Animated.timing(shakeX, { toValue: 0, duration: 55, useNativeDriver: true }),
+        ]).start();
+      }
     }
 
     if (s === 'revealed') {
@@ -94,6 +130,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
       swipeDirRef.current = null;
       panY.setValue(0);
       tileOpacity.setValue(1);
+      setShowFragments(false);
     }
   }, [s]);
 
@@ -142,7 +179,8 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
         } else if (g.dy > SWIPE_THRESHOLD) {
           judgedRef.current = true;
           swipeDirRef.current = 'down';
-          flyOff('down');
+          // dim tile immediately; shatter fires when state resolves
+          Animated.timing(tileOpacity, { toValue: 0, duration: 80, useNativeDriver: true }).start();
           onSwipeDownRef.current();
         } else {
           Animated.spring(panY, {
@@ -190,25 +228,51 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
   const wrongLabel =
     swipeDirRef.current === 'up' ? 'Not a meaning.' : 'Actually a meaning.';
 
+  const fragBg = fragColor === 'green' ? '#22C55E' : '#EF4444';
+
   return (
-    <Animated.View
-      {...panResponder.panHandlers}
-      style={[
-        styles.tile,
-        { backgroundColor: bgColor, borderColor, opacity: tileOpacity },
-        { transform: [{ translateY: panY }, { translateX: shakeX }] },
-      ]}
-    >
-      <Text style={styles.emoji}>{mask.emoji}</Text>
-      <Text style={styles.phrase} numberOfLines={2}>{mask.phrase}</Text>
-      {s === 'wrong' && (
-        <Text style={styles.wrongLabel}>{wrongLabel}</Text>
+    <View style={styles.tileOuter} {...panResponder.panHandlers}>
+      <Animated.View
+        style={[
+          styles.tile,
+          { backgroundColor: bgColor, borderColor, opacity: tileOpacity },
+          { transform: [{ translateY: panY }, { translateX: shakeX }] },
+        ]}
+      >
+        <Text style={styles.emoji}>{mask.emoji}</Text>
+        <Text style={styles.phrase} numberOfLines={2}>{mask.phrase}</Text>
+        {s === 'wrong' && swipeDirRef.current !== 'down' && (
+          <Text style={styles.wrongLabel}>{wrongLabel}</Text>
+        )}
+      </Animated.View>
+
+      {showFragments && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+          {fragAnims.map((anim, i) => (
+            <Animated.View
+              key={i}
+              style={[
+                styles.fragment,
+                {
+                  top:  i < 2 ? 0 : '50%',
+                  left: i % 2 === 0 ? 0 : '50%',
+                  backgroundColor: fragBg,
+                  opacity: anim.op,
+                  transform: [{ translateX: anim.x }, { translateY: anim.y }],
+                },
+              ]}
+            />
+          ))}
+        </View>
       )}
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  tileOuter: {
+    overflow: 'visible',
+  },
   tile: {
     borderRadius: 16,
     borderWidth: 1.5,
@@ -220,6 +284,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 14,
     overflow: 'hidden',
+  },
+  fragment: {
+    position: 'absolute',
+    width: '50%',
+    height: '50%',
+    borderRadius: 8,
   },
   goldBorderOverlay: {
     borderRadius: 16,

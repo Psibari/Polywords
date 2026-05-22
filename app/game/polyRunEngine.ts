@@ -187,7 +187,7 @@ export function completeWord(state: GameState): GameState {
     combo: perfect ? state.combo : 0,
     feedback: state.feedback,
     lastActionAt: Date.now(),
-    pollyTrigger: perfect ? 'perfect' : null,
+    pollyTrigger: null,
     wordResults: [...state.wordResults, wordResult],
   });
 }

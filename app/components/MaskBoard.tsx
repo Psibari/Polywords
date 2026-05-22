@@ -28,7 +28,6 @@ function eventEyebrow(step: WordStep): string | null {
 
 export function MaskBoard({ step }: Props) {
   const store = useGameStore();
-  const game  = store.game;
 
   // ── tile state map ──────────────────────────────────────────
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => {
@@ -61,6 +60,9 @@ export function MaskBoard({ step }: Props) {
     wordScale.setValue(1);
   }, [wordPulsing]);
 
+  // ── container ref (for coordinate conversion) ───────────────
+  const containerRef = useRef<View>(null);
+
   // ── tile refs (for float spawn position) ─────────────────────
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
@@ -76,8 +78,22 @@ export function MaskBoard({ step }: Props) {
   const floatIdRef = useRef(0);
 
   function spawnFloat(value: number, maskId: string) {
-    const view = tileRefs.current.get(maskId)?.current;
-    if (view) {
+    const view      = tileRefs.current.get(maskId)?.current;
+    const container = containerRef.current;
+
+    if (view && container) {
+      container.measure((_cx, _cy, _cw, _ch, cPageX, cPageY) => {
+        view.measure((_x, _y, w, h, pageX, pageY) => {
+          const id = ++floatIdRef.current;
+          setFloats(prev => [...prev, {
+            id,
+            value,
+            x: pageX - cPageX + w / 2,
+            y: pageY - cPageY + h / 2,
+          }]);
+        });
+      });
+    } else if (view) {
       view.measure((_x, _y, w, h, pageX, pageY) => {
         const id = ++floatIdRef.current;
         setFloats(prev => [...prev, { id, value, x: pageX + w / 2, y: pageY + h / 2 }]);
@@ -103,11 +119,18 @@ export function MaskBoard({ step }: Props) {
     const perfect = wrongCountRef.current === 0;
     const hiddenMask = step.masks.find(m => m.isHidden);
 
-    if (perfect) store.setPollyTrigger('perfect');
-
     if (perfect && hiddenMask) {
-      // pulse word — player taps it to reveal hidden mask
-      setTimeout(() => setWordPulsing(true), 350);
+      // pulse word so player taps to reveal; fire Polly when word starts pulsing
+      setTimeout(() => {
+        setWordPulsing(true);
+        store.setPollyTrigger('perfect');
+      }, 350);
+    } else if (perfect) {
+      // no hidden mask — pulse word gold, fire Polly, then auto-complete
+      setWordPulsing(true);
+      store.setPollyTrigger('perfect');
+      completedRef.current = true;
+      setTimeout(() => store.completeWord(), 700);
     } else {
       completedRef.current = true;
       setTimeout(() => store.completeWord(), 700);
@@ -214,7 +237,7 @@ export function MaskBoard({ step }: Props) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} ref={containerRef}>
       {/* word header */}
       <View style={styles.header}>
         {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
