@@ -1,44 +1,84 @@
-import { createGame, submitAnswer, markTileMissed } from './polyRunEngine';
-import { SESSION } from './session';
-import { WordStep } from './types';
+import {
+  createGame,
+  submitSwipeUp,
+  submitSwipeDown,
+  revealHidden,
+  completeWord,
+} from './polyRunEngine';
 
 console.log('=== POLY RUN ENGINE TESTS ===\n');
 
-// Test 1: Perfect BANK run (includes 2 decoy auto-skips)
-let state = createGame();
-state = { ...state, stepIndex: 1 }; // BANK
-state = submitAnswer(state, 'bank_money'); // NOT RIVER (opposite)
-state = submitAnswer(state, 'bank_money'); // 🏦 (emoji)
-state = submitAnswer(state, '');           // WALL BESIDE OCEAN (decoy skip)
-state = submitAnswer(state, 'bank_river'); // GROUND BY WATER
-state = submitAnswer(state, '');           // POCKET FULL OF COINS (decoy skip)
-state = submitAnswer(state, 'bank_rely');  // COUNT ON IT → word complete
-console.log('TEST 1 - BANK perfect:', {
-  score: state.score,
-  pollyTrigger: state.pollyTrigger,
-  feedback: state.feedback,
+// Test 1: Swipe up on real mask → +100, combo rises
+let s1 = createGame(); // BARK
+s1 = submitSwipeUp(s1, 'bark_dog');
+console.log('TEST 1 - swipe up real:', {
+  score: s1.score,           // 100
+  combo: s1.combo,           // 1
+  lives: s1.lives,           // 3
+  feedback: s1.feedback,     // '+100'
 });
-// Expected: score > 0, pollyTrigger === 'perfect', feedback includes INVERSION/GLYPH
 
-// Test 2: Near miss
-let state2 = createGame();
-state2 = { ...state2, stepIndex: 1 };
-state2 = markTileMissed(state2, (SESSION[1] as WordStep).clues[0]);
-console.log('TEST 2 - Near miss:', {
-  nearMissText: state2.nearMissClue?.text,
-  pollyTrigger: state2.pollyTrigger,
+// Test 2: Swipe up on trap → -1 life, combo resets
+let s2 = createGame();
+s2 = submitSwipeUp(s2, 'bark_loud'); // trap
+console.log('TEST 2 - swipe up trap:', {
+  score: s2.score,           // 0
+  lives: s2.lives,           // 2
+  combo: s2.combo,           // 0
+  mistakes: s2.mistakesOnWord, // 1
 });
-// Expected: nearMissText === 'NOT RIVER', pollyTrigger === 'nearMiss'
 
-// Test 3: Boss SPRING multiplier
-let state3 = createGame();
-state3 = { ...state3, stepIndex: 4 }; // SPRING
-const beforeScore = state3.score;
-state3 = submitAnswer(state3, 'spring_season'); // WINTER + 90 DAYS
-console.log('TEST 3 - SPRING boss:', {
-  scoreGain: state3.score - beforeScore,
-  feedback: state3.feedback,
+// Test 3: Swipe down on trap → +50
+let s3 = createGame();
+s3 = submitSwipeDown(s3, 'bark_loud'); // trap
+console.log('TEST 3 - swipe down trap:', {
+  score: s3.score,  // 50
+  combo: s3.combo,  // 1
 });
-// Expected: scoreGain includes x2 from bossWord, feedback includes SOLVE
+
+// Test 4: Swipe down on real mask → -1 life
+let s4 = createGame();
+s4 = submitSwipeDown(s4, 'bark_dog'); // real
+console.log('TEST 4 - swipe down real:', {
+  lives: s4.lives,     // 2
+  mistakes: s4.mistakesOnWord, // 1
+});
+
+// Test 5: Boss word (DRAFT) doubles points on swipe up
+let s5 = createGame();
+s5 = { ...s5, stepIndex: 3 }; // DRAFT, eventType: bossWord
+s5 = submitSwipeUp(s5, 'draft_version');
+console.log('TEST 5 - boss swipe up real:', {
+  score: s5.score, // 200 (100 * 2)
+});
+
+// Test 6: completeWord advances stepIndex and records WordResult
+let s6 = createGame();
+s6 = submitSwipeUp(s6, 'bark_dog');
+s6 = submitSwipeUp(s6, 'bark_tree');
+s6 = submitSwipeDown(s6, 'bark_loud');
+s6 = submitSwipeDown(s6, 'bark_howl');
+s6 = submitSwipeDown(s6, 'bark_forest');
+const beforeComplete = s6.stepIndex;
+s6 = completeWord(s6);
+console.log('TEST 6 - completeWord:', {
+  stepAdvanced: s6.stepIndex > beforeComplete,  // true
+  wordResultsLen: s6.wordResults.length,        // 1
+  word: s6.wordResults[0]?.word,               // 'BARK'
+  correctUp: s6.wordResults[0]?.correctUp,     // 2
+  correctDown: s6.wordResults[0]?.correctDown, // 3
+  wrongSwipes: s6.wordResults[0]?.wrongSwipes, // 0
+  pollyTrigger: s6.pollyTrigger,               // 'perfect'
+});
+
+// Test 7: revealHidden gives +300 discovery
+let s7 = createGame();
+// inject a fake hidden mask id into session step for testing purposes
+// (none of our current session masks have isHidden, so score stays 0)
+const preReveal = s7.score;
+s7 = revealHidden(s7, 'bark_dog'); // not hidden — should be no-op
+console.log('TEST 7 - revealHidden no-op on non-hidden:', {
+  scoreUnchanged: s7.score === preReveal, // true
+});
 
 console.log('\n=== TESTS COMPLETE ===');

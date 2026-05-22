@@ -33,18 +33,18 @@ type Props = {
 
 export function TruthStream({ step }: Props) {
   const { width: W, height: H } = useWindowDimensions();
-  const { game, submitAnswer, lockRound } = useGameStore();
+  const { game, submitSwipeUp: submitAnswer, completeWord: lockRound } = useGameStore();
 
   const driftMs = step.eventType === 'speedRound' ? MASK_DRIFT_SPEED : MASK_DRIFT_NORMAL;
 
   const [locked, setLocked] = useState(false);
   const [revealData, setRevealData] = useState<RevealTileData[] | null>(null);
 
-  // Keep selectedMaskIds readable in callbacks without stale closure issues
-  const selectedIdsRef = useRef(game.selectedMaskIds);
-  useEffect(() => { selectedIdsRef.current = game.selectedMaskIds; }, [game.selectedMaskIds]);
+  // Keep swipedUpIds readable in callbacks without stale closure issues
+  const selectedIdsRef = useRef(game.swipedUpIds);
+  useEffect(() => { selectedIdsRef.current = game.swipedUpIds; }, [game.swipedUpIds]);
 
-  const revealTimeoutRef = useRef<number | null>(null);
+  const revealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lockedRef = useRef(false);
 
   // ─── Build drift tiles once ─────────────────────────────────
@@ -164,7 +164,7 @@ export function TruthStream({ step }: Props) {
   const lanes: DriftTile[][] = Array.from({ length: LANE_COUNT }, () => []);
   tiles.forEach(t => lanes[t.lane].push(t));
 
-  const selectedIds = game.selectedMaskIds;
+  const selectedIds = game.swipedUpIds;
   const lanesTop = H * 0.28;
 
   // ─── Reveal mode ───────────────────────────────────────────

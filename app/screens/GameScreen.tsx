@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { SESSION } from '../game/session';
-import { WordStep } from '../game/types';
+import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
 import { HeartbeatBackground } from '../components/HeartbeatBackground';
-import { TruthStream } from '../components/TruthStream';
-import { ReversedBuild } from '../components/ReversedBuild';
+import { MaskBoard } from '../components/MaskBoard';
 import { PollyController } from '../components/PollyController';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 
@@ -27,9 +26,7 @@ function TopBar() {
 
       <View style={tb.block}>
         <Text style={tb.lives}>{lives || '💀'}</Text>
-        <Text style={tb.progress}>
-          {game.stepIndex + 1}/{total}
-        </Text>
+        <Text style={tb.progress}>{game.stepIndex + 1}/{total}</Text>
       </View>
 
       <View style={tb.block}>
@@ -59,6 +56,27 @@ const tb = StyleSheet.create({
 
 // ─── RESULTS ─────────────────────────────────────────────────
 
+function WordResultRow({ result }: { result: WordResult }) {
+  const perfect = result.wrongSwipes === 0;
+  return (
+    <View style={rs.wordRow}>
+      <View style={rs.wordRowLeft}>
+        <Text style={[rs.wordLabel, perfect && rs.wordLabelPerfect]}>{result.word}</Text>
+        {perfect && <Text style={rs.perfectBadge}>PERFECT</Text>}
+      </View>
+      <View style={rs.wordRowRight}>
+        <Text style={rs.stat}>✓ {result.correctUp + result.correctDown}</Text>
+        {result.wrongSwipes > 0 && (
+          <Text style={rs.statWrong}>✗ {result.wrongSwipes}</Text>
+        )}
+        {result.hiddenFound && (
+          <Text style={rs.statHidden}>✨ hidden</Text>
+        )}
+      </View>
+    </View>
+  );
+}
+
 function ResultsScreen({ onRestart }: { onRestart: () => void }) {
   const game = useGameStore(s => s.game);
   const won = game.status === 'complete';
@@ -69,32 +87,80 @@ function ResultsScreen({ onRestart }: { onRestart: () => void }) {
       <Text style={rs.headline}>{won ? 'SESSION COMPLETE' : 'GAME OVER'}</Text>
       <Text style={rs.score}>{game.score}</Text>
       <Text style={rs.scoreLabel}>POINTS</Text>
+
+      {game.wordResults.length > 0 && (
+        <ScrollView
+          style={rs.wordList}
+          contentContainerStyle={rs.wordListContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {game.wordResults.map(r => (
+            <WordResultRow key={r.word} result={r} />
+          ))}
+        </ScrollView>
+      )}
+
       <Pressable onPress={onRestart} style={rs.btn}>
-        <Text style={rs.btnText}>PLAY AGAIN</Text>
+        <Text style={rs.btnText}>RUN IT BACK</Text>
       </Pressable>
     </View>
   );
 }
 
 const rs = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  emoji: { fontSize: 64 },
+  container: { flex: 1, alignItems: 'center', paddingTop: 40, gap: 6 },
+  emoji: { fontSize: 60 },
   headline: {
     color: '#FFD700',
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: 3,
-    marginTop: 8,
+    marginTop: 6,
   },
-  score: { color: '#FFFFFF', fontSize: 64, fontWeight: '900' },
+  score: { color: '#FFFFFF', fontSize: 60, fontWeight: '900' },
   scoreLabel: {
     color: 'rgba(255,255,255,0.4)',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 3,
   },
+  wordList: {
+    width: '100%',
+    maxHeight: 200,
+    marginTop: 16,
+  },
+  wordListContent: {
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  wordRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  wordRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  wordRowRight: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  wordLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
+  wordLabelPerfect: { color: '#FFD700' },
+  perfectBadge: {
+    color: '#FFD700',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 1,
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  stat: { color: '#22C55E', fontSize: 13, fontWeight: '900' },
+  statWrong: { color: '#EF4444', fontSize: 13, fontWeight: '900' },
+  statHidden: { color: '#A78BFA', fontSize: 13, fontWeight: '900' },
   btn: {
-    marginTop: 32,
+    marginTop: 24,
     backgroundColor: '#FFD700',
     borderRadius: 32,
     paddingHorizontal: 40,
@@ -103,33 +169,28 @@ const rs = StyleSheet.create({
   btnText: { color: '#1A1040', fontSize: 18, fontWeight: '900', letterSpacing: 2 },
 });
 
-// ─── INNER DIRECTOR (needs HeartbeatProvider above it) ───────
+// ─── INNER DIRECTOR ───────────────────────────────────────────
 
 function GameDirector() {
-  const game = useGameStore(s => s.game);
+  const game      = useGameStore(s => s.game);
   const startGame = useGameStore(s => s.startGame);
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
 
-  // resolve tension from game state
   useEffect(() => {
     const step = currentStep(game);
     if (step.kind !== 'word') return;
 
     let t = 0;
-    if (step.eventType === 'bossWord') t = 3;
+    if (step.eventType === 'bossWord')   t = 3;
     else if (step.eventType === 'speedRound') t = 2;
-    else if (step.emotionalRole === 'boss') t = 2;
-
+    else if (step.emotionalRole === 'boss')   t = 2;
     if (game.lives === 1) t = Math.min(t + 1, 3);
     if (missedCount >= 2) t = Math.min(t + 1, 3);
     setTension(t);
   }, [game.stepIndex, game.lives, missedCount, setTension]);
 
-  // reset miss counter on new word
-  useEffect(() => {
-    setMissedCount(0);
-  }, [game.stepIndex]);
+  useEffect(() => { setMissedCount(0); }, [game.stepIndex]);
 
   function handleRestart() {
     startGame();
@@ -141,9 +202,7 @@ function GameDirector() {
   return (
     <SafeAreaView style={styles.screen}>
       <HeartbeatBackground />
-
       <TopBar />
-
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} />
       ) : (
@@ -156,14 +215,13 @@ function GameDirector() {
   );
 }
 
-// ─── GAME CONTENT — switches mechanic per step ───────────────
+// ─── GAME CONTENT ─────────────────────────────────────────────
 
 function GameContent() {
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
 
   if (step.kind !== 'word') {
-    // phraseBreak — placeholder (session currently has none)
     return (
       <View style={styles.placeholder}>
         <Text style={styles.placeholderText}>PHRASE BREAK</Text>
@@ -171,26 +229,10 @@ function GameContent() {
     );
   }
 
-  // decoy word options for ReversedBuild (other session words)
-  const decoyWords = SESSION.filter(s => s.kind === 'word' && s.word !== step.word)
-    .map(s => (s as WordStep).word);
-
-  // conveyorBlitz → TruthStream; anything else → ReversedBuild
-  if (!step.mode || step.mode === 'conveyorBlitz') {
-    return (
-      <TruthStream
-        key={`stream-${game.stepIndex}`}
-        step={step}
-      />
-    );
-  }
-
   return (
-    <ReversedBuild
-      key={`reversed-${game.stepIndex}`}
+    <MaskBoard
+      key={`board-${game.stepIndex}`}
       step={step}
-      decoyWords={decoyWords}
-      onAnswer={() => {}}
     />
   );
 }

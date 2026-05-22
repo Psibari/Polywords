@@ -1,18 +1,22 @@
 import { create } from 'zustand';
 import {
   createGame,
-  submitAnswer,
+  submitSwipeUp,
+  submitSwipeDown,
+  revealHidden,
+  completeWord,
   submitPhraseAnswer,
-  lockRound,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../components/PollyController';
 
 type GameStore = {
   game: ReturnType<typeof createGame>;
   startGame: () => void;
-  submitAnswer: (maskId: string) => void;
+  submitSwipeUp: (maskId: string) => void;
+  submitSwipeDown: (maskId: string) => void;
+  revealHidden: (maskId: string) => void;
+  completeWord: () => void;
   submitPhraseAnswer: (choice: string) => void;
-  lockRound: () => void;
   clearPollyTrigger: () => void;
 };
 
@@ -24,20 +28,20 @@ export const useGameStore = create<GameStore>((set) => ({
     set({ game: createGame() });
   },
 
-  submitAnswer: (maskId) =>
-    set((state) => ({
-      game: submitAnswer(state.game, maskId),
-    })),
+  submitSwipeUp: (maskId) =>
+    set((s) => ({ game: submitSwipeUp(s.game, maskId) })),
+
+  submitSwipeDown: (maskId) =>
+    set((s) => ({ game: submitSwipeDown(s.game, maskId) })),
+
+  revealHidden: (maskId) =>
+    set((s) => ({ game: revealHidden(s.game, maskId) })),
+
+  completeWord: () =>
+    set((s) => ({ game: completeWord(s.game) })),
 
   submitPhraseAnswer: (choice) =>
-    set((state) => ({
-      game: submitPhraseAnswer(state.game, choice),
-    })),
-
-  lockRound: () =>
-    set((state) => ({
-      game: lockRound(state.game),
-    })),
+    set((s) => ({ game: submitPhraseAnswer(s.game, choice) })),
 
   clearPollyTrigger: () =>
     set((s) => ({ game: { ...s.game, pollyTrigger: null } })),
