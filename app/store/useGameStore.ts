@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import {
   createGame,
+  GameState,
   submitSwipeUp,
   submitSwipeDown,
   revealHidden,
@@ -18,6 +19,7 @@ type GameStore = {
   completeWord: () => void;
   submitPhraseAnswer: (choice: string) => void;
   clearPollyTrigger: () => void;
+  setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -45,4 +47,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
   clearPollyTrigger: () =>
     set((s) => ({ game: { ...s.game, pollyTrigger: null } })),
+
+  setPollyTrigger: (trigger) =>
+    set((s) => ({ game: { ...s.game, pollyTrigger: trigger } })),
 }));

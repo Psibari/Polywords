@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -35,6 +35,14 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
   const stateRef      = useRef(s);
   const onSwipeUpRef  = useRef(onSwipeUp);
   const onSwipeDownRef = useRef(onSwipeDown);
+
+  const [showFragments, setShowFragments] = useState(false);
+  const fragAnims = useRef([
+    { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
+    { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
+    { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
+    { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
+  ]).current;
 
   useEffect(() => { stateRef.current = s; }, [s]);
   useEffect(() => { onSwipeUpRef.current = onSwipeUp; }, [onSwipeUp]);

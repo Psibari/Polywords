@@ -61,13 +61,31 @@ export function MaskBoard({ step }: Props) {
     wordScale.setValue(1);
   }, [wordPulsing]);
 
+  // ── tile refs (for float spawn position) ─────────────────────
+  const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
+
+  function getTileRef(maskId: string): React.RefObject<View | null> {
+    if (!tileRefs.current.has(maskId)) {
+      tileRefs.current.set(maskId, React.createRef<View>());
+    }
+    return tileRefs.current.get(maskId)!;
+  }
+
   // ── score floats ────────────────────────────────────────────
   const [floats, setFloats] = useState<FloatEntry[]>([]);
   const floatIdRef = useRef(0);
 
-  function spawnFloat(value: number) {
-    const id = ++floatIdRef.current;
-    setFloats(prev => [...prev, { id, value, x: 180, y: 120 }]);
+  function spawnFloat(value: number, maskId: string) {
+    const view = tileRefs.current.get(maskId)?.current;
+    if (view) {
+      view.measure((_x, _y, w, h, pageX, pageY) => {
+        const id = ++floatIdRef.current;
+        setFloats(prev => [...prev, { id, value, x: pageX + w / 2, y: pageY + h / 2 }]);
+      });
+    } else {
+      const id = ++floatIdRef.current;
+      setFloats(prev => [...prev, { id, value, x: 180, y: 200 }]);
+    }
   }
 
   // ── completion check ─────────────────────────────────────────
@@ -85,6 +103,8 @@ export function MaskBoard({ step }: Props) {
     const perfect = wrongCountRef.current === 0;
     const hiddenMask = step.masks.find(m => m.isHidden);
 
+    if (perfect) store.setPollyTrigger('perfect');
+
     if (perfect && hiddenMask) {
       // pulse word — player taps it to reveal hidden mask
       setTimeout(() => setWordPulsing(true), 350);
@@ -101,7 +121,7 @@ export function MaskBoard({ step }: Props) {
 
     if (!correct) wrongCountRef.current++;
     store.submitSwipeUp(maskId);
-    if (correct) spawnFloat(mask.isRare ? 300 : 100);
+    if (correct) spawnFloat(mask.isRare ? 300 : 100, maskId);
 
     setTileStates(prev => new Map(prev).set(maskId, correct ? 'correct' : 'wrong'));
   }
@@ -112,21 +132,21 @@ export function MaskBoard({ step }: Props) {
 
     if (!correct) wrongCountRef.current++;
     store.submitSwipeDown(maskId);
-    if (correct) spawnFloat(50);
+    if (correct) spawnFloat(50, maskId);
 
     setTileStates(prev => new Map(prev).set(maskId, correct ? 'correct' : 'wrong'));
   }
 
   function handleTapReveal(maskId: string) {
     store.revealHidden(maskId);
-    spawnFloat(300);
+    spawnFloat(300, maskId);
     setTileStates(prev => new Map(prev).set(maskId, 'revealed'));
   }
 
   function handleSwipeUpHidden(maskId: string) {
     // revealed hidden masks are always real — treat same as correct swipe up
     store.submitSwipeUp(maskId);
-    spawnFloat(100);
+    spawnFloat(100, maskId);
     setTileStates(prev => new Map(prev).set(maskId, 'correct'));
 
     completedRef.current = true;
@@ -166,7 +186,7 @@ export function MaskBoard({ step }: Props) {
   const GridContent = (
     <View style={styles.grid}>
       {visibleMasks.map(mask => (
-        <View key={mask.id} style={styles.cell}>
+        <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
           <SwipeMask
             mask={mask}
             state={tileStates.get(mask.id) ?? 'idle'}
@@ -179,7 +199,7 @@ export function MaskBoard({ step }: Props) {
       {hiddenMasks.map(mask => {
         const ts = tileStates.get(mask.id)!;
         return (
-          <View key={mask.id} style={styles.cell}>
+          <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
             <SwipeMask
               mask={mask}
               state={ts}
