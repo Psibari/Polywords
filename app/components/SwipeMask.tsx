@@ -18,11 +18,12 @@ type Props = {
   onSwipeDown: () => void;
   onTapReveal: () => void;
   state: SwipeMaskState;
+  revealable?: boolean;
 };
 
 const SWIPE_THRESHOLD = 40;
 
-export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s }: Props) {
+export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s, revealable = false }: Props) {
   const panY        = useRef(new Animated.Value(0)).current;
   const tileOpacity = useRef(new Animated.Value(1)).current;
   const shakeX      = useRef(new Animated.Value(0)).current;
@@ -203,13 +204,13 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
   // ── hidden tile ───────────────────────────────────────────────
   if (s === 'hidden') {
     return (
-      <Pressable onPress={onTapReveal} style={styles.tile}>
+      <Pressable onPress={onTapReveal} disabled={!revealable} style={styles.tile}>
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, styles.goldBorderOverlay, { opacity: goldPulse }]}
         />
         <Text style={styles.hiddenIcon}>❓</Text>
-        <Text style={styles.tapHint}>tap to reveal</Text>
+        {revealable && <Text style={styles.tapHint}>tap to reveal</Text>}
       </Pressable>
     );
   }

@@ -5,11 +5,19 @@ import { SESSION } from '../game/session';
 import { getPollyBudgetState, trackPollyTime } from '../logic/pollyBudget';
 
 const BUDGET: Record<string, number> = {
-  intro: 1.5,
-  perfect: 0.8,
-  nearMiss: 1.0,
+  intro:     1.5,
+  perfect:   0.8,
+  nearMiss:  1.0,
   bossEntry: 0.5,
-  streak5: 0.3,
+  streak5:   0.3,
+};
+
+const POLLY_LINES: Record<string, string> = {
+  perfect:   "Something's hiding in this one.",
+  nearMiss:  'Close, but no cigar.',
+  intro:     "Let's see what you've got.",
+  bossEntry: 'This one bites back.',
+  streak5:   "You're on fire.",
 };
 
 export function PollyController() {
@@ -27,7 +35,7 @@ export function PollyController() {
 
     const dur = BUDGET[game.pollyTrigger];
     trackPollyTime(dur);
-    setText(`[TEMP: ${game.pollyTrigger.toUpperCase()}]`);
+    setText(POLLY_LINES[game.pollyTrigger] ?? game.pollyTrigger);
 
     const id = setTimeout(() => {
       setText(null);

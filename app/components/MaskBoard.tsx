@@ -269,6 +269,7 @@ export function MaskBoard({ step }: Props) {
             onTapReveal={mask.isHidden
               ? () => handleTapReveal(mask.id)
               : () => {}}
+            revealable={mask.isHidden ? wordPulsing : false}
           />
         </View>
       ))}
