@@ -34,7 +34,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
   const flyAnimRef    = useRef<Animated.CompositeAnimation | null>(null);
   const goldLoopRef   = useRef<Animated.CompositeAnimation | null>(null);
   const judgedRef     = useRef(false);
-  const swipeDirRef   = useRef<'up' | 'left' | null>(null);
+  const swipeDirRef   = useRef<'up' | 'right' | null>(null);
   const stateRef      = useRef(s);
   const onSwipeUpRef  = useRef(onSwipeUp);
   const onSwipeDownRef = useRef(onSwipeDown);
@@ -70,14 +70,21 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
   }, [s, revealable]);
 
   // ── shatter effect ────────────────────────────────────────────
-  function fireShatter(onDone?: () => void) {
+  function fireShatter(direction: 'symmetric' | 'right' = 'symmetric', onDone?: () => void) {
     fragAnims.forEach(a => { a.x.setValue(0); a.y.setValue(0); a.op.setValue(1); });
-    const dirs = [
-      { tx: -38, ty: -42 },
-      { tx:  38, ty: -42 },
-      { tx: -38, ty:  42 },
-      { tx:  38, ty:  42 },
-    ];
+    const dirs = direction === 'right'
+      ? [
+          { tx:  18, ty: -42 },
+          { tx:  58, ty: -28 },
+          { tx:  18, ty:  42 },
+          { tx:  58, ty:  28 },
+        ]
+      : [
+          { tx: -38, ty: -42 },
+          { tx:  38, ty: -42 },
+          { tx: -38, ty:  42 },
+          { tx:  38, ty:  42 },
+        ];
     Animated.parallel(
       fragAnims.map((anim, i) =>
         Animated.parallel([
@@ -93,12 +100,12 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
   useEffect(() => {
     if (s === 'correct') {
       flyAnimRef.current?.stop();
-      if (swipeDirRef.current === 'left') {
+      if (swipeDirRef.current === 'right') {
         panX.setValue(0);
         tileOpacity.setValue(0);
         setFragColor('green');
         setShowFragments(true);
-        fireShatter(() => {
+        fireShatter('right', () => {
           Animated.timing(tileOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
         });
       } else {
@@ -114,20 +121,20 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
       tileOpacity.setValue(0);
       setFragColor('green');
       setShowFragments(true);
-      fireShatter(() => {
+      fireShatter('right', () => {
         Animated.timing(tileOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
       });
     }
 
     if (s === 'wrong') {
       flyAnimRef.current?.stop();
-      if (swipeDirRef.current === 'left') {
+      if (swipeDirRef.current === 'right') {
         panY.setValue(0);
         panX.setValue(0);
         tileOpacity.setValue(0);
         setFragColor('red');
         setShowFragments(true);
-        fireShatter(() => {
+        fireShatter('right', () => {
           Animated.timing(tileOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
         });
       } else {
@@ -200,10 +207,13 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
           swipeDirRef.current = 'up';
           flyOff('up');
           onSwipeUpRef.current();
-        } else if (g.dx < -SWIPE_THRESHOLD && g.dy > -SWIPE_THRESHOLD && g.dy < SWIPE_THRESHOLD) {
+        } else if (g.dx > SWIPE_THRESHOLD && g.dy > -SWIPE_THRESHOLD && g.dy < SWIPE_THRESHOLD) {
           judgedRef.current = true;
-          swipeDirRef.current = 'left';
-          Animated.timing(tileOpacity, { toValue: 0, duration: 80, useNativeDriver: true }).start();
+          swipeDirRef.current = 'right';
+          Animated.parallel([
+            Animated.timing(panX, { toValue: 500, duration: 250, useNativeDriver: true }),
+            Animated.timing(tileOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+          ]).start();
           onSwipeDownRef.current();
         } else {
           Animated.spring(panY, { toValue: 0, useNativeDriver: true, speed: 22, bounciness: 8 }).start();
@@ -236,14 +246,14 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
   // ── swipeable tile ────────────────────────────────────────────
   const bgColor =
     s === 'trap-caught'                               ? '#374151'
-    : s === 'correct' && swipeDirRef.current === 'left' ? '#374151'
+    : s === 'correct' && swipeDirRef.current === 'right' ? '#374151'
     : s === 'correct'                                 ? '#22C55E'
     : s === 'wrong'                                   ? '#421818'
     : '#311F78';
 
   const borderColor =
     s === 'trap-caught'                               ? '#374151'
-    : s === 'correct' && swipeDirRef.current === 'left' ? '#374151'
+    : s === 'correct' && swipeDirRef.current === 'right' ? '#374151'
     : s === 'correct'                                 ? '#22C55E'
     : s === 'wrong'                                   ? '#EF4444'
     : 'rgba(139,92,246,0.5)';
@@ -265,7 +275,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
         ]}
       >
         <Text style={styles.emoji}>{mask.emoji}</Text>
-        {s !== 'trap-caught' && !(s === 'correct' && swipeDirRef.current === 'left') && (
+        {s !== 'trap-caught' && !(s === 'correct' && swipeDirRef.current === 'right') && (
           <Text style={styles.phrase} numberOfLines={2}>{mask.phrase}</Text>
         )}
         {(s === 'correct' || s === 'trap-caught' || s === 'wrong') && (

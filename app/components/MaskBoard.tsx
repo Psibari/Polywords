@@ -292,7 +292,7 @@ export function MaskBoard({ step }: Props) {
       {/* swipe hint */}
       <View style={styles.hintRow}>
         <Text style={styles.hint}>↑ real meaning</Text>
-        <Text style={styles.hint}>← trap</Text>
+        <Text style={styles.hint}>→ trap</Text>
       </View>
 
       {/* tile grid */}

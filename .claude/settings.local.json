@@ -9,7 +9,8 @@
       "PowerShell(cd c:\\\\Users\\\\pdiba\\\\poly-words; npx tsc --noEmit 2>&1; echo \"EXIT:$LASTEXITCODE\")",
       "PowerShell(Get-ChildItem \"c:\\\\Users\\\\pdiba\\\\poly-words\\\\app\" -Recurse | ForEach-Object { $_.FullName })",
       "Bash(cd /root/poly-words && npx tsc --noEmit 2>&1)",
-      "Read(//root/**)"
+      "Read(//root/**)",
+      "PowerShell(npx tsc --noEmit 2>&1)"
     ]
   }
 }
