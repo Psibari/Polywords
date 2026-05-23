@@ -17,7 +17,7 @@ export const SESSION: SessionStep[] = [
       { id: 'bark_tree',   emoji: '🌳', phrase: 'Rough coat on a log',    isReal: true },
       { id: 'bark_loud',   emoji: '🔊', phrase: 'Loud commanding sound',  isReal: false, trapType: 'associatedNeighbor' },
       { id: 'bark_howl',   emoji: '🐺', phrase: 'Howl at the moon',       isReal: false, trapType: 'domainNeighbor' },
-      { id: 'bark_forest', emoji: '🌲', phrase: 'Forest material',        isReal: false, trapType: 'almostSynonym' },
+      { id: 'bark_forest', emoji: '🌿', phrase: "Nature's outer armor",   isReal: false, trapType: 'visualNeighbor' },
     ],
   },
   {

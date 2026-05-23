@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -39,27 +38,23 @@ export function MaskBoard({ step }: Props) {
   const wrongCountRef  = useRef(0);
   const completedRef   = useRef(false);
 
-  // ── word pulse (perfect clear) ──────────────────────────────
-  const [wordPulsing, setWordPulsing] = useState(false);
-  const wordPulsingRef = useRef(false);
-  const wordScale = useRef(new Animated.Value(1)).current;
-  const wordPulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  // ── hidden mask activation state ───────────────────────────
+  const [hiddenActive, setHiddenActive] = useState(false);
+  const hiddenMask = step.masks.find(m => m.isHidden) ?? null;
+
+  // ── hidden tile entrance animation ──────────────────────────
+  const hiddenDropY       = useRef(new Animated.Value(0)).current;
+  const hiddenDropOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (wordPulsing) {
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(wordScale, { toValue: 1.06, duration: 500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(wordScale, { toValue: 1.0,  duration: 500, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        ]),
-      );
-      wordPulseLoopRef.current = loop;
-      loop.start();
-      return () => loop.stop();
-    }
-    wordPulseLoopRef.current?.stop();
-    wordScale.setValue(1);
-  }, [wordPulsing]);
+    if (!hiddenActive) return;
+    hiddenDropY.setValue(0);
+    hiddenDropOpacity.setValue(0);
+    Animated.parallel([
+      Animated.timing(hiddenDropOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.spring(hiddenDropY, { toValue: 220, useNativeDriver: true, speed: 6, bounciness: 14 }),
+    ]).start();
+  }, [hiddenActive]);
 
   // ── absorption animation (correct swipe up) ─────────────────
   const absorptionScale       = useRef(new Animated.Value(1)).current;
@@ -147,29 +142,16 @@ export function MaskBoard({ step }: Props) {
     if (!allVisibleJudged) return;
 
     const perfect = wrongCountRef.current === 0;
-    const hiddenMask = step.masks.find(m => m.isHidden);
 
     // if the hidden mask was already revealed, wait for the player to swipe it
     if (hiddenMask && tileStates.get(hiddenMask.id) === 'revealed') return;
 
-    console.log('[perfect-clear]', {
-      perfect,
-      hasHiddenMask: !!hiddenMask,
-      tileStates: [...tileStates.entries()].map(([k, v]) => `${k}:${v}`),
-    });
-
     if (perfect && hiddenMask) {
-      // pulse word so player taps to reveal; fire Polly when word starts pulsing
       setTimeout(() => {
-        console.log('[wordPulsing → true]');
-        wordPulsingRef.current = true;
-        setWordPulsing(true);
+        setHiddenActive(true);
         store.setPollyTrigger('perfect');
       }, 350);
     } else if (perfect) {
-      // no hidden mask — pulse word gold, fire Polly, then auto-complete
-      wordPulsingRef.current = true;
-      setWordPulsing(true);
       store.setPollyTrigger('perfect');
       completedRef.current = true;
       setTimeout(() => store.completeWord(), 700);
@@ -218,8 +200,6 @@ export function MaskBoard({ step }: Props) {
     setTileStates(prev => new Map(prev).set(maskId, 'correct'));
 
     completedRef.current = true;
-    wordPulsingRef.current = false;
-    setWordPulsing(false);
     setTimeout(() => store.completeWord(), 700);
   }
 
@@ -230,20 +210,7 @@ export function MaskBoard({ step }: Props) {
     setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
 
     completedRef.current = true;
-    wordPulsingRef.current = false;
-    setWordPulsing(false);
     setTimeout(() => store.completeWord(), 700);
-  }
-
-  function handleWordTap() {
-    console.log('[word tapped fired]', { wordPulsing, wordPulsingRef: wordPulsingRef.current });
-    const hiddenMask = step.masks.find(m => m.isHidden);
-    if (!hiddenMask || !wordPulsingRef.current) return;
-    wordPulseLoopRef.current?.stop();
-    wordScale.setValue(1);
-    wordPulsingRef.current = false;
-    setWordPulsing(false);
-    handleTapReveal(hiddenMask.id);
   }
 
   // ── layout ────────────────────────────────────────────────────
@@ -251,25 +218,20 @@ export function MaskBoard({ step }: Props) {
   const isBoss = step.eventType === 'bossWord';
   const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
 
-  const useScroll = step.masks.length > 10;
+  const visibleGridMasks = step.masks.filter(m => !m.isHidden);
+  const useScroll = visibleGridMasks.length > 10;
 
   const GridContent = (
     <View style={styles.grid}>
-      {step.masks.map(mask => (
+      {visibleGridMasks.map(mask => (
         <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
           <SwipeMask
             mask={mask}
             state={tileStates.get(mask.id) ?? 'idle'}
-            onSwipeUp={mask.isHidden
-              ? () => handleSwipeUpHidden(mask.id)
-              : () => handleSwipeUp(mask.id)}
-            onSwipeDown={mask.isHidden
-              ? () => handleSwipeDownHidden(mask.id)
-              : () => handleSwipeDown(mask.id)}
-            onTapReveal={mask.isHidden
-              ? () => handleTapReveal(mask.id)
-              : () => {}}
-            revealable={mask.isHidden ? wordPulsing : false}
+            onSwipeUp={() => handleSwipeUp(mask.id)}
+            onSwipeDown={() => handleSwipeDown(mask.id)}
+            onTapReveal={() => {}}
+            revealable={false}
           />
         </View>
       ))}
@@ -284,20 +246,14 @@ export function MaskBoard({ step }: Props) {
 
         {/* word + expanding ring container */}
         <View style={styles.wordContainer}>
-          <Pressable
-            onPress={handleWordTap}
-            disabled={!wordPulsing}
-            hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
+          <Animated.Text
+            style={[
+              styles.word,
+              { color: wordColor, transform: [{ scale: absorptionScale }] },
+            ]}
           >
-            <Animated.Text
-              style={[
-                styles.word,
-                { color: wordColor, transform: [{ scale: wordScale }, { scale: absorptionScale }] },
-              ]}
-            >
-              {step.word}
-            </Animated.Text>
-          </Pressable>
+            {step.word}
+          </Animated.Text>
 
           {/* gold ring — expands outward on correct swipe up */}
           <Animated.View
@@ -311,10 +267,6 @@ export function MaskBoard({ step }: Props) {
           <Animated.Text style={[styles.absorbedPhrase, { opacity: absorbedPhraseOpacity }]}>
             {absorbedPhrase}
           </Animated.Text>
-        )}
-
-        {wordPulsing && step.masks.some(m => m.isHidden) && (
-          <Text style={styles.tapWordHint}>TAP THE WORD</Text>
         )}
       </View>
 
@@ -346,6 +298,28 @@ export function MaskBoard({ step }: Props) {
           onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
         />
       ))}
+
+      {/* hidden tile — drops in from word area after perfect clear */}
+      {hiddenMask && hiddenActive && (
+        <Animated.View
+          pointerEvents="box-none"
+          style={[
+            styles.hiddenOverlay,
+            { opacity: hiddenDropOpacity, transform: [{ translateY: hiddenDropY }] },
+          ]}
+        >
+          <View style={styles.hiddenOverlayInner}>
+            <SwipeMask
+              mask={hiddenMask}
+              state={tileStates.get(hiddenMask.id) ?? 'hidden'}
+              onSwipeUp={() => handleSwipeUpHidden(hiddenMask.id)}
+              onSwipeDown={() => handleSwipeDownHidden(hiddenMask.id)}
+              onTapReveal={() => handleTapReveal(hiddenMask.id)}
+              revealable={hiddenActive}
+            />
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -407,6 +381,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 2,
     marginTop: 4,
+  },
+  hiddenOverlay: {
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  hiddenOverlayInner: {
+    width: 200,
   },
   wordContainer: {
     alignItems: 'center',

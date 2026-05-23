@@ -52,11 +52,11 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
 
   // ── gold border pulse for hidden ─────────────────────────────
   useEffect(() => {
-    if (s === 'hidden') {
+    if (s === 'hidden' && revealable) {
       const loop = Animated.loop(
         Animated.sequence([
-          Animated.timing(goldPulse, { toValue: 1, duration: 900, useNativeDriver: true }),
-          Animated.timing(goldPulse, { toValue: 0, duration: 900, useNativeDriver: true }),
+          Animated.timing(goldPulse, { toValue: 1, duration: 500, useNativeDriver: true }),
+          Animated.timing(goldPulse, { toValue: 0, duration: 500, useNativeDriver: true }),
         ]),
       );
       goldLoopRef.current = loop;
@@ -64,10 +64,11 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
       return () => loop.stop();
     }
     goldLoopRef.current?.stop();
-  }, [s]);
+    goldPulse.setValue(0);
+  }, [s, revealable]);
 
   // ── shatter effect ────────────────────────────────────────────
-  function fireShatter() {
+  function fireShatter(onDone?: () => void) {
     fragAnims.forEach(a => { a.x.setValue(0); a.y.setValue(0); a.op.setValue(1); });
     const dirs = [
       { tx: -38, ty: -42 },
@@ -83,7 +84,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
           Animated.timing(anim.op, { toValue: 0, duration: 300, useNativeDriver: true }),
         ]),
       ),
-    ).start(() => setShowFragments(false));
+    ).start(() => { setShowFragments(false); onDone?.(); });
   }
 
   // ── react to result state ─────────────────────────────────────
@@ -94,13 +95,13 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
         tileOpacity.setValue(0);
         setFragColor('green');
         setShowFragments(true);
-        fireShatter();
+        fireShatter(() => {
+          Animated.timing(tileOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+        });
       } else {
-        Animated.timing(tileOpacity, {
-          toValue: 0,
-          duration: 120,
-          useNativeDriver: true,
-        }).start();
+        // snap back from fly position, fade in green
+        Animated.spring(panY, { toValue: 0, useNativeDriver: true, speed: 30, bounciness: 0 }).start();
+        Animated.timing(tileOpacity, { toValue: 1, duration: 150, useNativeDriver: true }).start();
       }
     }
 
@@ -111,7 +112,9 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
         tileOpacity.setValue(0);
         setFragColor('red');
         setShowFragments(true);
-        fireShatter();
+        fireShatter(() => {
+          Animated.timing(tileOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+        });
       } else {
         panY.setValue(0);
         tileOpacity.setValue(1);
@@ -210,20 +213,21 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
           style={[StyleSheet.absoluteFill, styles.goldBorderOverlay, { opacity: goldPulse }]}
         />
         <Text style={styles.hiddenIcon}>❓</Text>
-        {revealable && <Text style={styles.tapHint}>tap to reveal</Text>}
       </Pressable>
     );
   }
 
   // ── swipeable tile ────────────────────────────────────────────
   const bgColor =
-    s === 'correct' ? '#22C55E'
-    : s === 'wrong'  ? '#EF4444'
+    s === 'correct' && swipeDirRef.current === 'down' ? '#374151'
+    : s === 'correct' ? '#22C55E'
+    : s === 'wrong'   ? '#EF4444'
     : '#311F78';
 
   const borderColor =
-    s === 'correct' ? '#22C55E'
-    : s === 'wrong'  ? '#EF4444'
+    s === 'correct' && swipeDirRef.current === 'down' ? '#374151'
+    : s === 'correct' ? '#22C55E'
+    : s === 'wrong'   ? '#EF4444'
     : 'rgba(139,92,246,0.5)';
 
   const wrongLabel =
@@ -241,8 +245,13 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
         ]}
       >
         <Text style={styles.emoji}>{mask.emoji}</Text>
-        <Text style={styles.phrase} numberOfLines={2}>{mask.phrase}</Text>
-        {s === 'wrong' && swipeDirRef.current !== 'down' && (
+        {!(s === 'correct' && swipeDirRef.current === 'down') && (
+          <Text style={styles.phrase} numberOfLines={2}>{mask.phrase}</Text>
+        )}
+        {(s === 'correct' || s === 'wrong') && (
+          <Text style={styles.resultIcon}>{s === 'correct' ? '✓' : '✗'}</Text>
+        )}
+        {s === 'wrong' && (
           <Text style={styles.wrongLabel}>{wrongLabel}</Text>
         )}
       </Animated.View>
@@ -324,5 +333,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1,
+  },
+  resultIcon: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginTop: 4,
   },
 });
