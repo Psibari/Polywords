@@ -232,6 +232,7 @@ export function MaskBoard({ step }: Props) {
 
   function handleWordTap() {
     const hiddenMask = step.masks.find(m => m.isHidden);
+    console.log('[word tapped]', { wordPulsing, hasHiddenMask: !!hiddenMask });
     if (!hiddenMask || !wordPulsing) return;
     wordPulseLoopRef.current?.stop();
     wordScale.setValue(1);

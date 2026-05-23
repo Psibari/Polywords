@@ -8,7 +8,7 @@ import {
   completeWord,
   submitPhraseAnswer,
 } from '../game/polyRunEngine';
-import { resetPollyBudget } from '../components/PollyController';
+import { resetPollyBudget } from '../logic/pollyBudget';
 
 type GameStore = {
   game: ReturnType<typeof createGame>;

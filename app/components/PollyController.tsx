@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useGameStore } from '../store/useGameStore';
 import { SESSION } from '../game/session';
+import { getPollyBudgetState, trackPollyTime } from '../logic/pollyBudget';
 
 const BUDGET: Record<string, number> = {
   intro: 1.5,
@@ -11,14 +12,6 @@ const BUDGET: Record<string, number> = {
   streak5: 0.3,
 };
 
-let totalShown = 0;
-let runStart = Date.now();
-
-export function resetPollyBudget() {
-  totalShown = 0;
-  runStart = Date.now();
-}
-
 export function PollyController() {
   const game = useGameStore(s => s.game);
   const clearTrigger = useGameStore(s => s.clearPollyTrigger);
@@ -27,12 +20,13 @@ export function PollyController() {
   useEffect(() => {
     if (!game.pollyTrigger) return;
 
+    const { totalShown, runStart } = getPollyBudgetState();
     const runtime = Math.max((Date.now() - runStart) / 1000, 0.001);
     if (totalShown / runtime > 0.15) { clearTrigger(); return; }
     if (SESSION[game.stepIndex].eventType === 'speedRound') { clearTrigger(); return; }
 
     const dur = BUDGET[game.pollyTrigger];
-    totalShown += dur;
+    trackPollyTime(dur);
     setText(`[TEMP: ${game.pollyTrigger.toUpperCase()}]`);
 
     const id = setTimeout(() => {
