@@ -4,7 +4,7 @@
 // ============================================================
 
 import { SESSION } from './session';
-import { SessionStep } from './types';
+import { Mask, SessionStep } from './types';
 
 export type GameStatus = 'playing' | 'phraseBreak' | 'gameOver' | 'complete';
 
@@ -30,9 +30,26 @@ export type GameState = {
   lastActionAt: number;
   pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'streak5';
   wordResults: WordResult[];
+  shuffledMasks: Record<number, Mask[]>;
 };
 
+function shuffleMasks(masks: Mask[]): Mask[] {
+  const arr = [...masks];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export function createGame(): GameState {
+  const shuffledMasks: Record<number, Mask[]> = {};
+  SESSION.forEach((step, i) => {
+    if (step.kind === 'word') {
+      shuffledMasks[i] = shuffleMasks(step.masks.filter(m => !m.isHidden));
+    }
+  });
+
   return {
     stepIndex: 0,
     swipedUpIds: [],
@@ -47,6 +64,7 @@ export function createGame(): GameState {
     lastActionAt: Date.now(),
     pollyTrigger: null,
     wordResults: [],
+    shuffledMasks,
   };
 }
 

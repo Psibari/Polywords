@@ -7,7 +7,9 @@
       "Bash(npx ts-node *)",
       "Bash(node -e \"require\\('react-native-reanimated'\\); console.log\\('reanimated ok'\\)\")",
       "PowerShell(cd c:\\\\Users\\\\pdiba\\\\poly-words; npx tsc --noEmit 2>&1; echo \"EXIT:$LASTEXITCODE\")",
-      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\pdiba\\\\poly-words\\\\app\" -Recurse | ForEach-Object { $_.FullName })"
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\pdiba\\\\poly-words\\\\app\" -Recurse | ForEach-Object { $_.FullName })",
+      "Bash(cd /root/poly-words && npx tsc --noEmit 2>&1)",
+      "Read(//root/**)"
     ]
   }
 }

@@ -232,7 +232,7 @@ export function MaskBoard({ step }: Props) {
   const isBoss = step.eventType === 'bossWord';
   const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
 
-  const visibleGridMasks = step.masks.filter(m => !m.isHidden);
+  const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex] ?? step.masks.filter(m => !m.isHidden);
   const useScroll = visibleGridMasks.length > 10;
 
   const GridContent = (
