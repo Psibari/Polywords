@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Mask } from '../game/types';
 
-export type SwipeMaskState = 'idle' | 'correct' | 'wrong' | 'hidden' | 'revealed';
+export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
 type Props = {
   mask: Mask;
@@ -19,11 +19,12 @@ type Props = {
   onTapReveal: () => void;
   state: SwipeMaskState;
   revealable?: boolean;
+  wrongReason?: 'claimed-trap' | 'rejected-real';
 };
 
 const SWIPE_THRESHOLD = 40;
 
-export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s, revealable = false }: Props) {
+export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s, revealable = false, wrongReason }: Props) {
   const panY        = useRef(new Animated.Value(0)).current;
   const panX        = useRef(new Animated.Value(0)).current;
   const tileOpacity = useRef(new Animated.Value(1)).current;
@@ -107,6 +108,17 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
       }
     }
 
+    if (s === 'trap-caught') {
+      flyAnimRef.current?.stop();
+      panX.setValue(0);
+      tileOpacity.setValue(0);
+      setFragColor('green');
+      setShowFragments(true);
+      fireShatter(() => {
+        Animated.timing(tileOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+      });
+    }
+
     if (s === 'wrong') {
       flyAnimRef.current?.stop();
       if (swipeDirRef.current === 'left') {
@@ -169,35 +181,28 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
       onStartShouldSetPanResponderCapture: () => !judgedRef.current,
 
       onMoveShouldSetPanResponder: (_, g) =>
-        !judgedRef.current && (Math.abs(g.dy) > 8 || g.dx < -8),
+        !judgedRef.current && (Math.abs(g.dy) > 6 || Math.abs(g.dx) > 6),
       onMoveShouldSetPanResponderCapture: (_, g) =>
-        !judgedRef.current && (Math.abs(g.dy) > 5 || g.dx < -5),
+        !judgedRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
 
       onPanResponderTerminationRequest: () => false,
 
       onPanResponderMove: (_, g) => {
         if (judgedRef.current) return;
-        // Track dominant axis: left swipe vs up swipe
-        if (g.dx < -8 && Math.abs(g.dx) > Math.abs(g.dy)) {
-          panX.setValue(g.dx);
-        } else {
-          panY.setValue(g.dy);
-        }
+        panX.setValue(g.dx);
+        panY.setValue(g.dy);
       },
 
       onPanResponderRelease: (_, g) => {
         if (judgedRef.current) return;
         if (g.dy < -SWIPE_THRESHOLD) {
-          // Swipe up — claim as real meaning
           judgedRef.current = true;
           swipeDirRef.current = 'up';
           flyOff('up');
           onSwipeUpRef.current();
-        } else if (g.dx < -SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
-          // Swipe left — reject as trap
+        } else if (g.dx < -SWIPE_THRESHOLD && g.dy > -SWIPE_THRESHOLD && g.dy < SWIPE_THRESHOLD) {
           judgedRef.current = true;
           swipeDirRef.current = 'left';
-          // Dim tile immediately; shatter fires when state resolves
           Animated.timing(tileOpacity, { toValue: 0, duration: 80, useNativeDriver: true }).start();
           onSwipeDownRef.current();
         } else {
@@ -230,19 +235,23 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
 
   // ── swipeable tile ────────────────────────────────────────────
   const bgColor =
-    s === 'correct' && swipeDirRef.current === 'left' ? '#374151'
-    : s === 'correct' ? '#22C55E'
-    : s === 'wrong'   ? '#EF4444'
+    s === 'trap-caught'                               ? '#374151'
+    : s === 'correct' && swipeDirRef.current === 'left' ? '#374151'
+    : s === 'correct'                                 ? '#22C55E'
+    : s === 'wrong'                                   ? '#421818'
     : '#311F78';
 
   const borderColor =
-    s === 'correct' && swipeDirRef.current === 'left' ? '#374151'
-    : s === 'correct' ? '#22C55E'
-    : s === 'wrong'   ? '#EF4444'
+    s === 'trap-caught'                               ? '#374151'
+    : s === 'correct' && swipeDirRef.current === 'left' ? '#374151'
+    : s === 'correct'                                 ? '#22C55E'
+    : s === 'wrong'                                   ? '#EF4444'
     : 'rgba(139,92,246,0.5)';
 
   const wrongLabel =
-    swipeDirRef.current === 'up' ? 'Not a meaning.' : 'Actually a meaning.';
+    wrongReason === 'claimed-trap' ? 'Not a meaning.'
+    : wrongReason === 'rejected-real' ? 'Actually a meaning.'
+    : swipeDirRef.current === 'up' ? 'Not a meaning.' : 'Actually a meaning.';
 
   const fragBg = fragColor === 'green' ? '#22C55E' : '#EF4444';
 
@@ -256,11 +265,11 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
         ]}
       >
         <Text style={styles.emoji}>{mask.emoji}</Text>
-        {!(s === 'correct' && swipeDirRef.current === 'left') && (
+        {s !== 'trap-caught' && !(s === 'correct' && swipeDirRef.current === 'left') && (
           <Text style={styles.phrase} numberOfLines={2}>{mask.phrase}</Text>
         )}
-        {(s === 'correct' || s === 'wrong') && (
-          <Text style={styles.resultIcon}>{s === 'correct' ? '✓' : '✗'}</Text>
+        {(s === 'correct' || s === 'trap-caught' || s === 'wrong') && (
+          <Text style={styles.resultIcon}>{s === 'wrong' ? '✗' : '✓'}</Text>
         )}
         {s === 'wrong' && (
           <Text style={styles.wrongLabel}>{wrongLabel}</Text>

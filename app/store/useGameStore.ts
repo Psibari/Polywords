@@ -4,6 +4,7 @@ import {
   GameState,
   submitSwipeUp,
   submitSwipeDown,
+  submitWrongSwipe,
   revealHidden,
   completeWord,
   submitPhraseAnswer,
@@ -15,6 +16,7 @@ type GameStore = {
   startGame: () => void;
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
+  submitWrongSwipe: () => void;
   revealHidden: (maskId: string) => void;
   completeWord: () => void;
   submitPhraseAnswer: (choice: string) => void;
@@ -35,6 +37,9 @@ export const useGameStore = create<GameStore>((set) => ({
 
   submitSwipeDown: (maskId) =>
     set((s) => ({ game: submitSwipeDown(s.game, maskId) })),
+
+  submitWrongSwipe: () =>
+    set((s) => ({ game: submitWrongSwipe(s.game) })),
 
   revealHidden: (maskId) =>
     set((s) => ({ game: revealHidden(s.game, maskId) })),

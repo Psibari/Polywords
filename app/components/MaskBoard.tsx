@@ -145,11 +145,14 @@ export function MaskBoard({ step }: Props) {
     const visibleMasks = step.masks.filter(m => !m.isHidden);
     const allVisibleJudged = visibleMasks.every(m => {
       const ts = tileStates.get(m.id);
-      return ts === 'correct' || ts === 'wrong';
+      return ts === 'correct' || ts === 'trap-caught' || ts === 'wrong';
     });
     if (!allVisibleJudged) return;
 
-    const perfect = wrongCountRef.current === 0;
+    const perfect = visibleMasks.every(m => {
+      const ts = tileStates.get(m.id);
+      return ts === 'correct' || ts === 'trap-caught';
+    });
 
     // if the hidden mask was already revealed, wait for the player to swipe it
     if (hiddenMask && tileStates.get(hiddenMask.id) === 'revealed') return;
@@ -171,27 +174,31 @@ export function MaskBoard({ step }: Props) {
   // ── swipe handlers ────────────────────────────────────────────
   function handleSwipeUp(maskId: string) {
     const mask = step.masks.find(m => m.id === maskId)!;
-    const correct = mask.isReal;
 
-    if (!correct) wrongCountRef.current++;
-    store.submitSwipeUp(maskId);
-    if (correct) {
+    if (mask.isReal) {
+      store.submitSwipeUp(maskId);
       spawnFloat(mask.isRare ? 300 : 100, maskId);
       triggerAbsorption(mask.phrase);
+      setTileStates(prev => new Map(prev).set(maskId, 'correct'));
+    } else {
+      store.submitWrongSwipe();
+      wrongCountRef.current++;
+      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
     }
-
-    setTileStates(prev => new Map(prev).set(maskId, correct ? 'correct' : 'wrong'));
   }
 
-  function handleSwipeDown(maskId: string) {
+  function handleSwipeLeft(maskId: string) {
     const mask = step.masks.find(m => m.id === maskId)!;
-    const correct = !mask.isReal;
 
-    if (!correct) wrongCountRef.current++;
-    store.submitSwipeDown(maskId);
-    if (correct) spawnFloat(50, maskId);
-
-    setTileStates(prev => new Map(prev).set(maskId, correct ? 'correct' : 'wrong'));
+    if (!mask.isReal) {
+      store.submitSwipeDown(maskId);
+      spawnFloat(50, maskId);
+      setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
+    } else {
+      store.submitWrongSwipe();
+      wrongCountRef.current++;
+      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+    }
   }
 
   function handleTapReveal(maskId: string) {
@@ -236,9 +243,14 @@ export function MaskBoard({ step }: Props) {
             mask={mask}
             state={tileStates.get(mask.id) ?? 'idle'}
             onSwipeUp={() => handleSwipeUp(mask.id)}
-            onSwipeDown={() => handleSwipeDown(mask.id)}
+            onSwipeDown={() => handleSwipeLeft(mask.id)}
             onTapReveal={() => {}}
             revealable={false}
+            wrongReason={
+              tileStates.get(mask.id) === 'wrong'
+                ? mask.isReal ? 'rejected-real' : 'claimed-trap'
+                : undefined
+            }
           />
         </View>
       ))}

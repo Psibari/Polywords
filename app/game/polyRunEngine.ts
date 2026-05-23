@@ -137,6 +137,21 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
   };
 }
 
+// ─── WRONG SWIPE — penalise without recording a specific mask ─
+
+export function submitWrongSwipe(state: GameState): GameState {
+  const lives = Math.max(state.lives - 1, 0);
+  return {
+    ...state,
+    lives,
+    combo: 0,
+    mistakesOnWord: state.mistakesOnWord + 1,
+    feedback: 'Wrong call.',
+    status: lives <= 0 ? 'gameOver' : 'playing',
+    lastActionAt: Date.now(),
+  };
+}
+
 // ─── REVEAL HIDDEN — player tapped word to expose hidden mask ─
 
 export function revealHidden(state: GameState, maskId: string): GameState {
