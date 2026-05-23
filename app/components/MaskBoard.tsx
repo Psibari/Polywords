@@ -251,37 +251,27 @@ export function MaskBoard({ step }: Props) {
   const isBoss = step.eventType === 'bossWord';
   const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
 
-  const visibleMasks = step.masks.filter(m => !m.isHidden);
-  const hiddenMasks  = step.masks.filter(m => m.isHidden);
-  const useScroll    = visibleMasks.length > 10;
+  const useScroll = step.masks.length > 10;
 
   const GridContent = (
     <View style={styles.grid}>
-      {visibleMasks.map(mask => (
+      {step.masks.map(mask => (
         <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
           <SwipeMask
             mask={mask}
             state={tileStates.get(mask.id) ?? 'idle'}
-            onSwipeUp={() => handleSwipeUp(mask.id)}
-            onSwipeDown={() => handleSwipeDown(mask.id)}
-            onTapReveal={() => {}} // visible masks don't use this
+            onSwipeUp={mask.isHidden
+              ? () => handleSwipeUpHidden(mask.id)
+              : () => handleSwipeUp(mask.id)}
+            onSwipeDown={mask.isHidden
+              ? () => handleSwipeDownHidden(mask.id)
+              : () => handleSwipeDown(mask.id)}
+            onTapReveal={mask.isHidden
+              ? () => handleTapReveal(mask.id)
+              : () => {}}
           />
         </View>
       ))}
-      {hiddenMasks.map(mask => {
-        const ts = tileStates.get(mask.id)!;
-        return (
-          <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
-            <SwipeMask
-              mask={mask}
-              state={ts}
-              onSwipeUp={() => handleSwipeUpHidden(mask.id)}
-              onSwipeDown={() => handleSwipeDownHidden(mask.id)}
-              onTapReveal={() => handleTapReveal(mask.id)}
-            />
-          </View>
-        );
-      })}
     </View>
   );
 
