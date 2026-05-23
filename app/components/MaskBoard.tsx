@@ -43,20 +43,20 @@ export function MaskBoard({ step }: Props) {
   const hiddenMask = step.masks.find(m => m.isHidden) ?? null;
 
   // ── hidden tile entrance animation ──────────────────────────
-  const hiddenDropY       = useRef(new Animated.Value(-150)).current;
+  const hiddenDropY       = useRef(new Animated.Value(80)).current;
   const hiddenDropOpacity = useRef(new Animated.Value(0)).current;
   const hiddenDropScale   = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
     if (!hiddenActive) return;
-    hiddenDropY.setValue(-150);
+    hiddenDropY.setValue(80);
     hiddenDropOpacity.setValue(0);
     hiddenDropScale.setValue(0.7);
     Animated.parallel([
       Animated.timing(hiddenDropOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
       Animated.timing(hiddenDropScale,   { toValue: 1, duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       Animated.spring(hiddenDropY, {
-        toValue: 200,
+        toValue: 240,
         useNativeDriver: true,
         damping: 14,
         stiffness: 120,
@@ -246,7 +246,7 @@ export function MaskBoard({ step }: Props) {
   );
 
   return (
-    <View style={styles.container} ref={containerRef}>
+    <View style={styles.container} ref={containerRef} onStartShouldSetResponder={() => true}>
       {/* word header */}
       <View style={styles.header}>
         {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
@@ -280,7 +280,7 @@ export function MaskBoard({ step }: Props) {
       {/* swipe hint */}
       <View style={styles.hintRow}>
         <Text style={styles.hint}>↑ real meaning</Text>
-        <Text style={styles.hint}>↓ trap</Text>
+        <Text style={styles.hint}>← trap</Text>
       </View>
 
       {/* tile grid */}
