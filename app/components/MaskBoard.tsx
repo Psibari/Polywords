@@ -41,6 +41,7 @@ export function MaskBoard({ step }: Props) {
 
   // ── word pulse (perfect clear) ──────────────────────────────
   const [wordPulsing, setWordPulsing] = useState(false);
+  const wordPulsingRef = useRef(false);
   const wordScale = useRef(new Animated.Value(1)).current;
   const wordPulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -161,11 +162,13 @@ export function MaskBoard({ step }: Props) {
       // pulse word so player taps to reveal; fire Polly when word starts pulsing
       setTimeout(() => {
         console.log('[wordPulsing → true]');
+        wordPulsingRef.current = true;
         setWordPulsing(true);
         store.setPollyTrigger('perfect');
       }, 350);
     } else if (perfect) {
       // no hidden mask — pulse word gold, fire Polly, then auto-complete
+      wordPulsingRef.current = true;
       setWordPulsing(true);
       store.setPollyTrigger('perfect');
       completedRef.current = true;
@@ -215,6 +218,7 @@ export function MaskBoard({ step }: Props) {
     setTileStates(prev => new Map(prev).set(maskId, 'correct'));
 
     completedRef.current = true;
+    wordPulsingRef.current = false;
     setWordPulsing(false);
     setTimeout(() => store.completeWord(), 700);
   }
@@ -226,16 +230,17 @@ export function MaskBoard({ step }: Props) {
     setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
 
     completedRef.current = true;
+    wordPulsingRef.current = false;
     setWordPulsing(false);
     setTimeout(() => store.completeWord(), 700);
   }
 
   function handleWordTap() {
     const hiddenMask = step.masks.find(m => m.isHidden);
-    console.log('[word tapped]', { wordPulsing, hasHiddenMask: !!hiddenMask });
-    if (!hiddenMask || !wordPulsing) return;
+    if (!hiddenMask || !wordPulsingRef.current) return;
     wordPulseLoopRef.current?.stop();
     wordScale.setValue(1);
+    wordPulsingRef.current = false;
     setWordPulsing(false);
     handleTapReveal(hiddenMask.id);
   }
