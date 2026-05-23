@@ -236,6 +236,7 @@ export function MaskBoard({ step }: Props) {
   }
 
   function handleWordTap() {
+    console.log('[word tapped fired]', { wordPulsing, wordPulsingRef: wordPulsingRef.current });
     const hiddenMask = step.masks.find(m => m.isHidden);
     if (!hiddenMask || !wordPulsingRef.current) return;
     wordPulseLoopRef.current?.stop();
@@ -295,7 +296,7 @@ export function MaskBoard({ step }: Props) {
           <Pressable
             onPress={handleWordTap}
             disabled={!wordPulsing}
-            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}
           >
             <Animated.Text
               style={[
