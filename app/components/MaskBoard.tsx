@@ -60,6 +60,35 @@ export function MaskBoard({ step }: Props) {
     wordScale.setValue(1);
   }, [wordPulsing]);
 
+  // ── absorption animation (correct swipe up) ─────────────────
+  const absorptionScale       = useRef(new Animated.Value(1)).current;
+  const ringScale             = useRef(new Animated.Value(1)).current;
+  const ringOpacity           = useRef(new Animated.Value(0)).current;
+  const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
+  const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
+
+  function triggerAbsorption(phrase: string) {
+    absorptionScale.setValue(1);
+    Animated.sequence([
+      Animated.timing(absorptionScale, { toValue: 1.12, duration: 120, useNativeDriver: true }),
+      Animated.timing(absorptionScale, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
+    ]).start();
+
+    ringScale.setValue(0.6);
+    ringOpacity.setValue(0.85);
+    Animated.parallel([
+      Animated.timing(ringScale,   { toValue: 2.2, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(ringOpacity, { toValue: 0,   duration: 380, useNativeDriver: true }),
+    ]).start();
+
+    setAbsorbedPhrase(phrase);
+    absorbedPhraseOpacity.setValue(1);
+    Animated.sequence([
+      Animated.delay(600),
+      Animated.timing(absorbedPhraseOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => setAbsorbedPhrase(null));
+  }
+
   // ── container ref (for coordinate conversion) ───────────────
   const containerRef = useRef<View>(null);
 
@@ -119,9 +148,19 @@ export function MaskBoard({ step }: Props) {
     const perfect = wrongCountRef.current === 0;
     const hiddenMask = step.masks.find(m => m.isHidden);
 
+    // if the hidden mask was already revealed, wait for the player to swipe it
+    if (hiddenMask && tileStates.get(hiddenMask.id) === 'revealed') return;
+
+    console.log('[perfect-clear]', {
+      perfect,
+      hasHiddenMask: !!hiddenMask,
+      tileStates: [...tileStates.entries()].map(([k, v]) => `${k}:${v}`),
+    });
+
     if (perfect && hiddenMask) {
       // pulse word so player taps to reveal; fire Polly when word starts pulsing
       setTimeout(() => {
+        console.log('[wordPulsing → true]');
         setWordPulsing(true);
         store.setPollyTrigger('perfect');
       }, 350);
@@ -144,7 +183,10 @@ export function MaskBoard({ step }: Props) {
 
     if (!correct) wrongCountRef.current++;
     store.submitSwipeUp(maskId);
-    if (correct) spawnFloat(mask.isRare ? 300 : 100, maskId);
+    if (correct) {
+      spawnFloat(mask.isRare ? 300 : 100, maskId);
+      triggerAbsorption(mask.phrase);
+    }
 
     setTileStates(prev => new Map(prev).set(maskId, correct ? 'correct' : 'wrong'));
   }
@@ -204,7 +246,7 @@ export function MaskBoard({ step }: Props) {
 
   const visibleMasks = step.masks.filter(m => !m.isHidden);
   const hiddenMasks  = step.masks.filter(m => m.isHidden);
-  const useScroll    = visibleMasks.length > 6;
+  const useScroll    = visibleMasks.length > 10;
 
   const GridContent = (
     <View style={styles.grid}>
@@ -241,16 +283,41 @@ export function MaskBoard({ step }: Props) {
       {/* word header */}
       <View style={styles.header}>
         {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-        <Pressable onPress={handleWordTap} disabled={!wordPulsing}>
-          <Animated.Text
-            style={[
-              styles.word,
-              { color: wordColor, transform: [{ scale: wordScale }] },
-            ]}
+
+        {/* word + expanding ring container */}
+        <View style={styles.wordContainer}>
+          <Pressable
+            onPress={handleWordTap}
+            disabled={!wordPulsing}
+            hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           >
-            {step.word}
+            <Animated.Text
+              style={[
+                styles.word,
+                { color: wordColor, transform: [{ scale: wordScale }, { scale: absorptionScale }] },
+              ]}
+            >
+              {step.word}
+            </Animated.Text>
+          </Pressable>
+
+          {/* gold ring — expands outward on correct swipe up */}
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.goldRing, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
+          />
+        </View>
+
+        {/* absorbed phrase fades in then out */}
+        {absorbedPhrase !== null && (
+          <Animated.Text style={[styles.absorbedPhrase, { opacity: absorbedPhraseOpacity }]}>
+            {absorbedPhrase}
           </Animated.Text>
-        </Pressable>
+        )}
+
+        {wordPulsing && step.masks.some(m => m.isHidden) && (
+          <Text style={styles.tapWordHint}>TAP THE WORD</Text>
+        )}
       </View>
 
       {/* swipe hint */}
@@ -335,5 +402,32 @@ const styles = StyleSheet.create({
   },
   cell: {
     width: '47%',
+  },
+  tapWordHint: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginTop: 4,
+  },
+  wordContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goldRing: {
+    position: 'absolute',
+    width: 160,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 2.5,
+    borderColor: '#FFD700',
+  },
+  absorbedPhrase: {
+    color: '#FFD700',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginTop: 2,
+    textAlign: 'center',
   },
 });

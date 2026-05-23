@@ -139,13 +139,13 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s 
     const anim = Animated.parallel([
       Animated.timing(panY, {
         toValue: direction === 'up' ? -700 : 700,
-        duration: 300,
+        duration: 200,
         easing: Easing.in(Easing.quad),
         useNativeDriver: true,
       }),
       Animated.timing(tileOpacity, {
         toValue: 0,
-        duration: 260,
+        duration: 160,
         useNativeDriver: true,
       }),
     ]);
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(139,92,246,0.5)',
     backgroundColor: '#311F78',
-    minHeight: 100,
+    minHeight: 110,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
@@ -297,12 +297,12 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
   },
   emoji: {
-    fontSize: 36,
+    fontSize: 40,
     marginBottom: 6,
   },
   phrase: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: 0.3,
