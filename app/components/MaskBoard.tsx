@@ -43,16 +43,24 @@ export function MaskBoard({ step }: Props) {
   const hiddenMask = step.masks.find(m => m.isHidden) ?? null;
 
   // ── hidden tile entrance animation ──────────────────────────
-  const hiddenDropY       = useRef(new Animated.Value(0)).current;
+  const hiddenDropY       = useRef(new Animated.Value(-150)).current;
   const hiddenDropOpacity = useRef(new Animated.Value(0)).current;
+  const hiddenDropScale   = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
     if (!hiddenActive) return;
-    hiddenDropY.setValue(0);
+    hiddenDropY.setValue(-150);
     hiddenDropOpacity.setValue(0);
+    hiddenDropScale.setValue(0.7);
     Animated.parallel([
-      Animated.timing(hiddenDropOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-      Animated.spring(hiddenDropY, { toValue: 220, useNativeDriver: true, speed: 6, bounciness: 14 }),
+      Animated.timing(hiddenDropOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+      Animated.timing(hiddenDropScale,   { toValue: 1, duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(hiddenDropY, {
+        toValue: 200,
+        useNativeDriver: true,
+        damping: 14,
+        stiffness: 120,
+      }),
     ]).start();
   }, [hiddenActive]);
 
@@ -152,7 +160,6 @@ export function MaskBoard({ step }: Props) {
         store.setPollyTrigger('perfect');
       }, 350);
     } else if (perfect) {
-      store.setPollyTrigger('perfect');
       completedRef.current = true;
       setTimeout(() => store.completeWord(), 700);
     } else {
@@ -305,7 +312,7 @@ export function MaskBoard({ step }: Props) {
           pointerEvents="box-none"
           style={[
             styles.hiddenOverlay,
-            { opacity: hiddenDropOpacity, transform: [{ translateY: hiddenDropY }] },
+            { opacity: hiddenDropOpacity, transform: [{ translateY: hiddenDropY }, { scale: hiddenDropScale }] },
           ]}
         >
           <View style={styles.hiddenOverlayInner}>
@@ -370,7 +377,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
   cell: {
     width: '47%',
@@ -384,7 +391,7 @@ const styles = StyleSheet.create({
   },
   hiddenOverlay: {
     position: 'absolute',
-    top: 80,
+    top: 0,
     left: 0,
     right: 0,
     alignItems: 'center',

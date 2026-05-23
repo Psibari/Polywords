@@ -160,13 +160,12 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
   // ── pan responder ─────────────────────────────────────────────
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () =>
-        !judgedRef.current && stateRef.current !== 'hidden',
+      onStartShouldSetPanResponder: () => !judgedRef.current,
 
       onMoveShouldSetPanResponder: (_, g) =>
-        !judgedRef.current &&
-        stateRef.current !== 'hidden' &&
-        Math.abs(g.dy) > 6,
+        !judgedRef.current && Math.abs(g.dy) > 8,
+
+      onPanResponderTerminationRequest: () => false,
 
       onPanResponderMove: (_, g) => {
         if (judgedRef.current) return;
@@ -288,11 +287,11 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(139,92,246,0.5)',
     backgroundColor: '#311F78',
-    minHeight: 110,
+    minHeight: 88,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 14,
+    paddingVertical: 10,
     overflow: 'hidden',
   },
   fragment: {
