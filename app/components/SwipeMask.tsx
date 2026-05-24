@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
@@ -101,6 +102,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
     if (s === 'correct') {
       flyAnimRef.current?.stop();
       if (swipeDirRef.current === 'right') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         panX.setValue(0);
         tileOpacity.setValue(0);
         setFragColor('green');
@@ -109,6 +111,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
           Animated.timing(tileOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
         });
       } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         // snap back from fly position, fade in green
         Animated.spring(panY, { toValue: 0, useNativeDriver: true, speed: 30, bounciness: 0 }).start();
         Animated.timing(tileOpacity, { toValue: 1, duration: 150, useNativeDriver: true }).start();
@@ -116,6 +119,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
     }
 
     if (s === 'trap-caught') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       flyAnimRef.current?.stop();
       panX.setValue(0);
       tileOpacity.setValue(0);
@@ -127,6 +131,7 @@ export function SwipeMask({ mask, onSwipeUp, onSwipeDown, onTapReveal, state: s,
     }
 
     if (s === 'wrong') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       flyAnimRef.current?.stop();
       if (swipeDirRef.current === 'right') {
         panY.setValue(0);
@@ -318,7 +323,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(139,92,246,0.5)',
     backgroundColor: '#311F78',
-    minHeight: 88,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
@@ -342,7 +346,7 @@ const styles = StyleSheet.create({
   },
   phrase: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: 0.3,

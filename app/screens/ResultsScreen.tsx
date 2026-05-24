@@ -359,6 +359,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         )}
 
         {/* ── GHOST SET — separate from missed section ── */}
+        {console.log('[results]', { allMissedMaskIds, hasMissed }) as unknown as null}
         {hasMissed && (
           <GhostSetCard firstMissedMaskId={allMissedMaskIds[0]} />
         )}

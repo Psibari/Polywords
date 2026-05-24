@@ -215,17 +215,28 @@ export function completeWord(state: GameState): GameState {
   const realMasks = step.masks.filter(m => m.isReal);
   const trapMasks = step.masks.filter(m => !m.isReal);
   const hiddenMask = step.masks.find(m => m.isHidden);
-
   const nonHiddenReal = realMasks.filter(m => !m.isHidden);
+
+  // Capture before advanceStep resets swipedUpIds / swipedDownIds
+  const missedMaskIds = nonHiddenReal
+    .filter(m => !state.swipedUpIds.includes(m.id))
+    .map(m => m.id);
+
+  console.log('[completeWord]', {
+    swipedUpIds: [...state.swipedUpIds],
+    allRealMaskIds: step.masks
+      .filter(m => m.isReal && !m.isHidden)
+      .map(m => m.id),
+    missedMaskIds,
+  });
+
   const wordResult: WordResult = {
     word: step.word,
     correctUp: nonHiddenReal.filter(m => state.swipedUpIds.includes(m.id)).length,
     correctDown: trapMasks.filter(m => state.swipedDownIds.includes(m.id)).length,
     wrongSwipes: state.mistakesOnWord,
     hiddenFound: hiddenMask ? !!state.revealedHiddenMasks[hiddenMask.id] : false,
-    missedMaskIds: nonHiddenReal
-      .filter(m => !state.swipedUpIds.includes(m.id))
-      .map(m => m.id),
+    missedMaskIds,
     wrongMaskIds: trapMasks
       .filter(m => state.swipedUpIds.includes(m.id))
       .map(m => m.id),
