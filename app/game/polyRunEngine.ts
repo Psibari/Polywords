@@ -14,6 +14,10 @@ export type WordResult = {
   correctDown: number;
   wrongSwipes: number;
   hiddenFound: boolean;
+  missedMaskIds: string[];   // real masks the player rejected (swiped down)
+  wrongMaskIds: string[];    // trap masks the player claimed as real (swiped up)
+  isBossWord: boolean;
+  totalRealMasks: number;    // non-hidden real masks available
 };
 
 export type GameState = {
@@ -24,6 +28,7 @@ export type GameState = {
   score: number;
   lives: number;
   combo: number;
+  bestCombo: number;
   mistakesOnWord: number;
   feedback: string | null;
   status: GameStatus;
@@ -58,6 +63,7 @@ export function createGame(): GameState {
     score: 0,
     lives: 3,
     combo: 0,
+    bestCombo: 0,
     mistakesOnWord: 0,
     feedback: null,
     status: 'playing',
@@ -88,11 +94,13 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
   if (mask.isReal) {
     let points = mask.isRare ? 300 : 100;
     if (step.eventType === 'bossWord') points *= 2;
+    const newCombo = state.combo + 1;
     return {
       ...state,
       swipedUpIds,
       score: state.score + points,
-      combo: state.combo + 1,
+      combo: newCombo,
+      bestCombo: Math.max(state.bestCombo, newCombo),
       feedback: `+${points}`,
       lastActionAt: now,
       pollyTrigger: null,
@@ -129,11 +137,13 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
 
   if (!mask.isReal) {
     const points = step.eventType === 'bossWord' ? 100 : 50;
+    const newCombo = state.combo + 1;
     return {
       ...state,
       swipedDownIds,
       score: state.score + points,
-      combo: state.combo + 1,
+      combo: newCombo,
+      bestCombo: Math.max(state.bestCombo, newCombo),
       feedback: `Trap spotted +${points}`,
       lastActionAt: now,
       pollyTrigger: null,
@@ -182,11 +192,13 @@ export function revealHidden(state: GameState, maskId: string): GameState {
   if (state.revealedHiddenMasks[maskId]) return state;
 
   const points = step.eventType === 'bossWord' ? 600 : 300;
+  const newCombo = state.combo + 1;
   return {
     ...state,
     revealedHiddenMasks: { ...state.revealedHiddenMasks, [maskId]: true },
     score: state.score + points,
-    combo: state.combo + 1,
+    combo: newCombo,
+    bestCombo: Math.max(state.bestCombo, newCombo),
     feedback: `Hidden found! +${points}`,
     lastActionAt: Date.now(),
     pollyTrigger: null,
@@ -204,12 +216,21 @@ export function completeWord(state: GameState): GameState {
   const trapMasks = step.masks.filter(m => !m.isReal);
   const hiddenMask = step.masks.find(m => m.isHidden);
 
+  const nonHiddenReal = realMasks.filter(m => !m.isHidden);
   const wordResult: WordResult = {
     word: step.word,
-    correctUp: realMasks.filter(m => state.swipedUpIds.includes(m.id)).length,
+    correctUp: nonHiddenReal.filter(m => state.swipedUpIds.includes(m.id)).length,
     correctDown: trapMasks.filter(m => state.swipedDownIds.includes(m.id)).length,
     wrongSwipes: state.mistakesOnWord,
     hiddenFound: hiddenMask ? !!state.revealedHiddenMasks[hiddenMask.id] : false,
+    missedMaskIds: nonHiddenReal
+      .filter(m => state.swipedDownIds.includes(m.id))
+      .map(m => m.id),
+    wrongMaskIds: trapMasks
+      .filter(m => state.swipedUpIds.includes(m.id))
+      .map(m => m.id),
+    isBossWord: step.eventType === 'bossWord',
+    totalRealMasks: nonHiddenReal.length,
   };
 
   const perfect = state.mistakesOnWord === 0;
@@ -241,6 +262,10 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
     correctDown: 0,
     wrongSwipes: correct ? 0 : 1,
     hiddenFound: false,
+    missedMaskIds: [],
+    wrongMaskIds: [],
+    isBossWord: false,
+    totalRealMasks: 1,
   };
 
   return advanceStep(state, {
