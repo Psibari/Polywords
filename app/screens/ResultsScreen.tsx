@@ -48,7 +48,7 @@ function derivePollyLine(
   if (ghostCleared) return '🦜 Revenge Snap. Felt that.';
 
   const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
-  if (hasMissed) return '🦜 That one\'s waiting for you.';
+  if (hasMissed) return "🦜 That one's waiting for you.";
 
   return null;
 }
@@ -112,15 +112,13 @@ function MissedMeaningCard({ maskId }: { maskId: string }) {
   const word = findWordForMaskId(maskId);
   if (!mask) return null;
 
-  const reveal = mask.revealLabel ?? `${mask.phrase}. You missed this one.`;
-
   return (
     <View style={mm.card}>
       <Text style={mm.phrase}>
-        {mask.emoji}  {mask.phrase}
+        {mask.emoji}{'  '}{mask.phrase}
       </Text>
-      <Text style={mm.reveal}>
-        {mask.isRare ? 'Rare meaning of ' : ''}{word.toUpperCase()}. {reveal}
+      <Text style={mm.pollyLine}>
+        {word.toUpperCase()} — Polly knew.
       </Text>
     </View>
   );
@@ -135,9 +133,14 @@ const mm = StyleSheet.create({
     padding: 14,
     marginBottom: 8,
   },
-  phrase: { color: '#FFFFFF', fontSize: 15, fontWeight: '600', marginBottom: 4 },
-  reveal: {
-    color: 'rgba(255,255,255,0.5)',
+  phrase: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  pollyLine: {
+    color: '#FFD700',
     fontSize: 12,
     fontStyle: 'italic',
   },
@@ -161,14 +164,22 @@ const gs = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255,215,0,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.2)',
+    borderColor: 'rgba(255,215,0,0.25)',
     borderRadius: 14,
     padding: 14,
-    marginTop: 4,
-    marginBottom: 16,
+    marginBottom: 24,
   },
-  header: { color: '#FFD700', fontSize: 13, fontWeight: '700', marginBottom: 4 },
-  body: { color: 'rgba(255,255,255,0.55)', fontSize: 13 },
+  header: {
+    color: '#FFD700',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  body: {
+    color: '#FFD700',
+    fontSize: 13,
+    opacity: 0.75,
+  },
 });
 
 // ─── TRAP CARD ───────────────────────────────────────────────
@@ -183,7 +194,7 @@ function TrapCard({ maskId }: { maskId: string }) {
       <Text style={tc.header}>The trap that got you</Text>
       <View style={tc.card}>
         <Text style={tc.phrase}>
-          {mask.emoji}  {mask.phrase}
+          {mask.emoji}{'  '}{mask.phrase}
         </Text>
         <Text style={tc.reveal}>
           Not a meaning of {word.toUpperCase()}. Just nearby.
@@ -194,8 +205,13 @@ function TrapCard({ maskId }: { maskId: string }) {
 }
 
 const tc = StyleSheet.create({
-  section: { marginBottom: 16 },
-  header: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', marginBottom: 8 },
+  section: { marginBottom: 24 },
+  header: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
   card: {
     backgroundColor: 'rgba(139,92,246,0.1)',
     borderWidth: 1,
@@ -203,7 +219,12 @@ const tc = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
   },
-  phrase: { color: '#FFFFFF', fontSize: 15, fontWeight: '600', marginBottom: 4 },
+  phrase: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
   reveal: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: 12,
@@ -229,12 +250,7 @@ function RunItBackButton({ onPress }: { onPress: () => void }) {
   const shadowRadius = glow.interpolate({ inputRange: [0, 1], outputRange: [8, 24] });
 
   return (
-    <Animated.View
-      style={[
-        btn.shadow,
-        { shadowOpacity, shadowRadius },
-      ]}
-    >
+    <Animated.View style={[btn.shadow, { shadowOpacity, shadowRadius }]}>
       <Pressable onPress={onPress} style={btn.btn}>
         <Text style={btn.label}>RUN IT BACK</Text>
       </Pressable>
@@ -287,8 +303,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   }, [enterY, enterOpacity]);
 
   // derived data
-  const totalWords = wordResults.filter(r => r.totalRealMasks > 0).length;
-  const perfectClears = wordResults.filter(r => r.wrongSwipes === 0 && r.totalRealMasks > 0).length;
+  const wordOnlyResults = wordResults.filter(r => r.totalRealMasks > 0);
+  const totalWords = wordOnlyResults.length;
+  const perfectClears = wordOnlyResults.filter(r => r.wrongSwipes === 0).length;
 
   const allMissedMaskIds = wordResults.flatMap(r => r.missedMaskIds);
   const allWrongMaskIds = wordResults.flatMap(r => r.wrongMaskIds);
@@ -303,7 +320,8 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
       style={[rs.container, { transform: [{ translateY: enterY }], opacity: enterOpacity }]}
     >
       <ScrollView
-        contentContainerStyle={rs.scroll}
+        style={rs.scroll}
+        contentContainerStyle={rs.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* ── POLLY LINE ── */}
@@ -337,8 +355,12 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             {allMissedMaskIds.map(id => (
               <MissedMeaningCard key={id} maskId={id} />
             ))}
-            <GhostSetCard firstMissedMaskId={allMissedMaskIds[0]} />
           </View>
+        )}
+
+        {/* ── GHOST SET — separate from missed section ── */}
+        {hasMissed && (
+          <GhostSetCard firstMissedMaskId={allMissedMaskIds[0]} />
         )}
 
         {/* ── TRAP THAT GOT YOU ── */}
@@ -361,12 +383,15 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 const rs = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1A1040',
   },
   scroll: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 48,
-    gap: 0,
+    paddingBottom: 40,
   },
   pollyLine: {
     color: '#FFD700',
@@ -403,7 +428,7 @@ const rs = StyleSheet.create({
     fontSize: 13,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionHeader: {
     color: '#FFFFFF',

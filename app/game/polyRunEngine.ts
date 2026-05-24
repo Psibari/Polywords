@@ -224,7 +224,7 @@ export function completeWord(state: GameState): GameState {
     wrongSwipes: state.mistakesOnWord,
     hiddenFound: hiddenMask ? !!state.revealedHiddenMasks[hiddenMask.id] : false,
     missedMaskIds: nonHiddenReal
-      .filter(m => state.swipedDownIds.includes(m.id))
+      .filter(m => !state.swipedUpIds.includes(m.id))
       .map(m => m.id),
     wrongMaskIds: trapMasks
       .filter(m => state.swipedUpIds.includes(m.id))
