@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 14,
     overflow: 'hidden',
   },
   fragment: {
@@ -341,12 +341,12 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
   },
   emoji: {
-    fontSize: 40,
+    fontSize: 32,
     marginBottom: 6,
   },
   phrase: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: 0.3,

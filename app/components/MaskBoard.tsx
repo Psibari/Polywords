@@ -235,23 +235,33 @@ export function MaskBoard({ step }: Props) {
   const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex] ?? step.masks.filter(m => !m.isHidden);
   const useScroll = visibleGridMasks.length > 10;
 
+  const maskRows: (typeof visibleGridMasks)[] = [];
+  for (let i = 0; i < visibleGridMasks.length; i += 2) {
+    maskRows.push(visibleGridMasks.slice(i, i + 2));
+  }
+
   const GridContent = (
     <View style={styles.grid}>
-      {visibleGridMasks.map(mask => (
-        <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
-          <SwipeMask
-            mask={mask}
-            state={tileStates.get(mask.id) ?? 'idle'}
-            onSwipeUp={() => handleSwipeUp(mask.id)}
-            onSwipeDown={() => handleSwipeLeft(mask.id)}
-            onTapReveal={() => {}}
-            revealable={false}
-            wrongReason={
-              tileStates.get(mask.id) === 'wrong'
-                ? mask.isReal ? 'rejected-real' : 'claimed-trap'
-                : undefined
-            }
-          />
+      {maskRows.map((row, rowIdx) => (
+        <View key={rowIdx} style={styles.gridRow}>
+          {row.map(mask => (
+            <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
+              <SwipeMask
+                mask={mask}
+                state={tileStates.get(mask.id) ?? 'idle'}
+                onSwipeUp={() => handleSwipeUp(mask.id)}
+                onSwipeDown={() => handleSwipeLeft(mask.id)}
+                onTapReveal={() => {}}
+                revealable={false}
+                wrongReason={
+                  tileStates.get(mask.id) === 'wrong'
+                    ? mask.isReal ? 'rejected-real' : 'claimed-trap'
+                    : undefined
+                }
+              />
+            </View>
+          ))}
+          {row.length === 1 && <View style={styles.cell} />}
         </View>
       ))}
     </View>
@@ -387,12 +397,15 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   grid: {
+    gap: 8,
+  },
+  gridRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'stretch',
     gap: 8,
   },
   cell: {
-    width: '47%',
+    flex: 1,
   },
   tapWordHint: {
     color: '#FFD700',
