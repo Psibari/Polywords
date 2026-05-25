@@ -10,7 +10,9 @@
       "PowerShell(Get-ChildItem \"c:\\\\Users\\\\pdiba\\\\poly-words\\\\app\" -Recurse | ForEach-Object { $_.FullName })",
       "Bash(cd /root/poly-words && npx tsc --noEmit 2>&1)",
       "Read(//root/**)",
-      "PowerShell(npx tsc --noEmit 2>&1)"
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\pdiba\\\\poly-words\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }

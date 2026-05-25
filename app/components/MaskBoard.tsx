@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -11,6 +10,11 @@ import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
+
+// ── Layout constants ──────────────────────────────────────────
+const TILE_GAP = 10;   // gap between tiles (each tile's marginTop)
+const MIN_TILE_H = 52; // minimum tile height — fits 8 tiles on iPhone SE
+const MAX_TILE_H = 72; // cap so tiles don't grow huge on large screens
 
 type FloatEntry = { id: number; value: number; x: number; y: number };
 
@@ -38,7 +42,22 @@ export function MaskBoard({ step }: Props) {
   const wrongCountRef  = useRef(0);
   const completedRef   = useRef(false);
 
-  // ── hidden mask activation state ───────────────────────────
+  // ── available height for tile stack ────────────────────────
+  const [gridHeight, setGridHeight] = useState(0);
+
+  const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex]
+    ?? step.masks.filter(m => !m.isHidden);
+  const tileCount = visibleGridMasks.length;
+
+  // Each tile occupies (tileHeight + TILE_GAP) in the layout.
+  // Solve: tileCount * (tileH + TILE_GAP) ≤ gridHeight
+  // → tileH = floor(gridHeight / tileCount - TILE_GAP)
+  // Clamped to [MIN_TILE_H, MAX_TILE_H].
+  const tileHeight: number = gridHeight > 0
+    ? Math.min(MAX_TILE_H, Math.max(MIN_TILE_H, Math.floor(gridHeight / tileCount - TILE_GAP)))
+    : MAX_TILE_H;
+
+  // ── hidden mask activation ──────────────────────────────────
   const [hiddenActive, setHiddenActive] = useState(false);
   const hiddenMask = step.masks.find(m => m.isHidden) ?? null;
 
@@ -56,15 +75,15 @@ export function MaskBoard({ step }: Props) {
       Animated.timing(hiddenDropOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
       Animated.timing(hiddenDropScale,   { toValue: 1, duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       Animated.spring(hiddenDropY, {
-        toValue: 240,
+        toValue: 200,
         useNativeDriver: true,
         damping: 14,
         stiffness: 120,
       }),
     ]).start();
-  }, [hiddenActive]);
+  }, [hiddenActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── absorption animation (correct swipe up) ─────────────────
+  // ── absorption animation ────────────────────────────────────
   const absorptionScale       = useRef(new Animated.Value(1)).current;
   const ringScale             = useRef(new Animated.Value(1)).current;
   const ringOpacity           = useRef(new Animated.Value(0)).current;
@@ -96,22 +115,24 @@ export function MaskBoard({ step }: Props) {
   // ── container ref (for coordinate conversion) ───────────────
   const containerRef = useRef<View>(null);
 
-  // ── tile refs (for float spawn position) ─────────────────────
+  // ── tile refs (for score float spawn position) ───────────────
+  // createRef<T>() in @types/react 19 returns RefObject<T | null>; map type matches.
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
-  function getTileRef(maskId: string): React.RefObject<View | null> {
+  function getTileRef(maskId: string): React.Ref<View> {
     if (!tileRefs.current.has(maskId)) {
-      tileRefs.current.set(maskId, React.createRef<View>());
+      tileRefs.current.set(maskId, React.createRef<View | null>());
     }
-    return tileRefs.current.get(maskId)!;
+    return tileRefs.current.get(maskId) as React.Ref<View>;
   }
 
-  // ── score floats ────────────────────────────────────────────
+  // ── score floats ─────────────────────────────────────────────
   const [floats, setFloats] = useState<FloatEntry[]>([]);
   const floatIdRef = useRef(0);
 
   function spawnFloat(value: number, maskId: string) {
-    const view      = tileRefs.current.get(maskId)?.current;
+    const refObj    = tileRefs.current.get(maskId);
+    const view      = refObj ? refObj.current : null;
     const container = containerRef.current;
 
     if (view && container) {
@@ -137,8 +158,7 @@ export function MaskBoard({ step }: Props) {
     }
   }
 
-  // ── completion check ─────────────────────────────────────────
-  // Runs after each tile-state update via useEffect
+  // ── completion check ──────────────────────────────────────────
   useEffect(() => {
     if (completedRef.current) return;
 
@@ -154,7 +174,6 @@ export function MaskBoard({ step }: Props) {
       return ts === 'correct' || ts === 'trap-caught';
     });
 
-    // if the hidden mask was already revealed, wait for the player to swipe it
     if (hiddenMask && tileStates.get(hiddenMask.id) === 'revealed') return;
 
     if (perfect && hiddenMask) {
@@ -162,19 +181,15 @@ export function MaskBoard({ step }: Props) {
         setHiddenActive(true);
         store.setPollyTrigger('perfect');
       }, 350);
-    } else if (perfect) {
-      completedRef.current = true;
-      setTimeout(() => store.completeWord(), 700);
     } else {
       completedRef.current = true;
       setTimeout(() => store.completeWord(), 700);
     }
-  }, [tileStates]);
+  }, [tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
   function handleSwipeUp(maskId: string) {
     const mask = step.masks.find(m => m.id === maskId)!;
-
     if (mask.isReal) {
       store.submitSwipeUp(maskId);
       spawnFloat(mask.isRare ? 300 : 100, maskId);
@@ -189,7 +204,6 @@ export function MaskBoard({ step }: Props) {
 
   function handleSwipeLeft(maskId: string) {
     const mask = step.masks.find(m => m.id === maskId)!;
-
     if (!mask.isReal) {
       store.submitSwipeDown(maskId);
       spawnFloat(50, maskId);
@@ -208,90 +222,46 @@ export function MaskBoard({ step }: Props) {
   }
 
   function handleSwipeUpHidden(maskId: string) {
-    // revealed hidden masks are always real — treat same as correct swipe up
     store.submitSwipeUp(maskId);
     spawnFloat(100, maskId);
     setTileStates(prev => new Map(prev).set(maskId, 'correct'));
-
     completedRef.current = true;
     setTimeout(() => store.completeWord(), 700);
   }
 
   function handleSwipeDownHidden(maskId: string) {
-    // swiping down a revealed hidden (which is always real) = wrong
     wrongCountRef.current++;
     store.submitSwipeDown(maskId);
     setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-
     completedRef.current = true;
     setTimeout(() => store.completeWord(), 700);
   }
 
-  // ── layout ────────────────────────────────────────────────────
-  const eyebrow = eventEyebrow(step);
-  const isBoss = step.eventType === 'bossWord';
+  // ── render ────────────────────────────────────────────────────
+  const eyebrow  = eventEyebrow(step);
+  const isBoss   = step.eventType === 'bossWord';
   const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
-
-  const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex] ?? step.masks.filter(m => !m.isHidden);
-  const useScroll = visibleGridMasks.length > 10;
-
-  const maskRows: (typeof visibleGridMasks)[] = [];
-  for (let i = 0; i < visibleGridMasks.length; i += 2) {
-    maskRows.push(visibleGridMasks.slice(i, i + 2));
-  }
-
-  const GridContent = (
-    <View style={styles.grid}>
-      {maskRows.map((row, rowIdx) => (
-        <View key={rowIdx} style={styles.gridRow}>
-          {row.map(mask => (
-            <View key={mask.id} style={styles.cell} ref={getTileRef(mask.id)}>
-              <SwipeMask
-                mask={mask}
-                state={tileStates.get(mask.id) ?? 'idle'}
-                onSwipeUp={() => handleSwipeUp(mask.id)}
-                onSwipeDown={() => handleSwipeLeft(mask.id)}
-                onTapReveal={() => {}}
-                revealable={false}
-                wrongReason={
-                  tileStates.get(mask.id) === 'wrong'
-                    ? mask.isReal ? 'rejected-real' : 'claimed-trap'
-                    : undefined
-                }
-              />
-            </View>
-          ))}
-          {row.length === 1 && <View style={styles.cell} />}
-        </View>
-      ))}
-    </View>
-  );
 
   return (
     <View style={styles.container} ref={containerRef} onStartShouldSetResponder={() => true}>
+
       {/* word header */}
       <View style={styles.header}>
         {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
 
-        {/* word + expanding ring container */}
         <View style={styles.wordContainer}>
           <Animated.Text
-            style={[
-              styles.word,
-              { color: wordColor, transform: [{ scale: absorptionScale }] },
-            ]}
+            style={[styles.word, { color: wordColor, transform: [{ scale: absorptionScale }] }]}
           >
             {step.word}
           </Animated.Text>
 
-          {/* gold ring — expands outward on correct swipe up */}
           <Animated.View
             pointerEvents="none"
             style={[styles.goldRing, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
           />
         </View>
 
-        {/* absorbed phrase fades in then out */}
         {absorbedPhrase !== null && (
           <Animated.Text style={[styles.absorbedPhrase, { opacity: absorbedPhraseOpacity }]}>
             {absorbedPhrase}
@@ -299,24 +269,31 @@ export function MaskBoard({ step }: Props) {
         )}
       </View>
 
-      {/* swipe hint */}
+      {/* swipe hints */}
       <View style={styles.hintRow}>
         <Text style={styles.hint}>↑ real meaning</Text>
         <Text style={styles.hint}>→ trap</Text>
       </View>
 
-      {/* tile grid */}
-      {useScroll ? (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {GridContent}
-        </ScrollView>
-      ) : (
-        <View style={styles.gridWrap}>{GridContent}</View>
-      )}
+      {/* tile stack — flex: 1, measured by onLayout */}
+      <View
+        style={styles.gridWrap}
+        onLayout={e => setGridHeight(e.nativeEvent.layout.height)}
+      >
+        {visibleGridMasks.map(mask => (
+          <View key={mask.id} ref={getTileRef(mask.id)}>
+            <SwipeMask
+              mask={mask}
+              state={tileStates.get(mask.id) ?? 'idle'}
+              onSwipeUp={() => handleSwipeUp(mask.id)}
+              onSwipeDown={() => handleSwipeLeft(mask.id)}
+              onTapReveal={() => {}}
+              revealable={false}
+              tileHeight={tileHeight}
+            />
+          </View>
+        ))}
+      </View>
 
       {/* score floats */}
       {floats.map(f => (
@@ -334,19 +311,21 @@ export function MaskBoard({ step }: Props) {
           pointerEvents="box-none"
           style={[
             styles.hiddenOverlay,
-            { opacity: hiddenDropOpacity, transform: [{ translateY: hiddenDropY }, { scale: hiddenDropScale }] },
+            {
+              opacity: hiddenDropOpacity,
+              transform: [{ translateY: hiddenDropY }, { scale: hiddenDropScale }],
+            },
           ]}
         >
-          <View style={styles.hiddenOverlayInner}>
-            <SwipeMask
-              mask={hiddenMask}
-              state={tileStates.get(hiddenMask.id) ?? 'hidden'}
-              onSwipeUp={() => handleSwipeUpHidden(hiddenMask.id)}
-              onSwipeDown={() => handleSwipeDownHidden(hiddenMask.id)}
-              onTapReveal={() => handleTapReveal(hiddenMask.id)}
-              revealable={hiddenActive}
-            />
-          </View>
+          <SwipeMask
+            mask={hiddenMask}
+            state={tileStates.get(hiddenMask.id) ?? 'hidden'}
+            onSwipeUp={() => handleSwipeUpHidden(hiddenMask.id)}
+            onSwipeDown={() => handleSwipeDownHidden(hiddenMask.id)}
+            onTapReveal={() => handleTapReveal(hiddenMask.id)}
+            revealable={hiddenActive}
+            tileHeight={64}
+          />
         </Animated.View>
       )}
     </View>
@@ -360,7 +339,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 28,
+    paddingTop: 12,      // reduced from 28 — makes room for tiles on small screens
     paddingBottom: 8,
   },
   eyebrow: {
@@ -368,62 +347,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 3,
-    marginBottom: 4,
+    marginBottom: 2,     // reduced from 4
   },
   word: {
     fontSize: 58,
     fontWeight: '900',
     letterSpacing: 3,
-  },
-  hintRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    marginBottom: 16,
-  },
-  hint: {
-    color: 'rgba(255,255,255,0.25)',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  gridWrap: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  grid: {
-    gap: 8,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 8,
-  },
-  cell: {
-    flex: 1,
-  },
-  tapWordHint: {
-    color: '#FFD700',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 2,
-    marginTop: 4,
-  },
-  hiddenOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  hiddenOverlayInner: {
-    width: 200,
   },
   wordContainer: {
     alignItems: 'center',
@@ -444,5 +373,28 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 2,
     textAlign: 'center',
+  },
+  hintRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    marginBottom: 8,     // reduced from 16
+  },
+  hint: {
+    color: 'rgba(255,255,255,0.25)',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  gridWrap: {
+    flex: 1,
+  },
+  // hidden tile drops in as a full-width overlay inside the container
+  hiddenOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
