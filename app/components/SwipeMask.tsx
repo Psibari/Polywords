@@ -129,11 +129,11 @@ export function SwipeMask({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       if (swipeDirRef.current === 'left') {
-        // Instantly hide tile, reset its position so fragments originate at rest center
+        // Instantly hide tile, reset position so fragments originate at rest center
         tileOpacity.setValue(0);
         panXY.setValue({ x: 0, y: 0 });
 
-        // Reset all fragment values before showing them
+        // Reset all fragment values before mounting them
         fragmentAnims.forEach(anim => {
           anim.x.setValue(0);
           anim.y.setValue(0);
@@ -141,6 +141,9 @@ export function SwipeMask({
           anim.opacity.setValue(1);
         });
 
+        console.log('[shatter] tileLayoutRef.width =', tileLayoutRef.current.width);
+
+        // Mount fragments first, then start animation
         setShowShatter(true);
 
         const fragmentParallels = fragmentAnims.map((anim, i) => {
@@ -154,13 +157,18 @@ export function SwipeMask({
           ]);
         });
 
-        Animated.sequence([
-          Animated.parallel(fragmentParallels),
+        // Phase 1 — fragments (useNativeDriver: true), runs independently
+        Animated.parallel(fragmentParallels).start();
+
+        // Phase 2 — height collapse (useNativeDriver: false), started after 350ms via setTimeout
+        // Cannot chain with Phase 1 in Animated.sequence — native/non-native driver mismatch
+        setTimeout(() => {
+          setShowShatter(false);
           Animated.parallel([
             Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
             Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-          ]),
-        ]).start(() => setShowShatter(false));
+          ]).start();
+        }, 350);
 
       } else {
         const flyX = swipeDirRef.current === 'right' ? 600 : -600;
@@ -310,6 +318,7 @@ export function SwipeMask({
           key={i}
           style={{
             position: 'absolute',
+            zIndex: 999,
             left: centerX,
             top:  centerY,
             width: fragW,
