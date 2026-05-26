@@ -8,6 +8,7 @@ import {
   revealHidden,
   completeWord,
   submitPhraseAnswer,
+  addBonusScore,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
 
@@ -22,6 +23,7 @@ type GameStore = {
   submitPhraseAnswer: (choice: string) => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
+  addBonusScore: (pts: number) => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -55,4 +57,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
   setPollyTrigger: (trigger) =>
     set((s) => ({ game: { ...s.game, pollyTrigger: trigger } })),
+
+  addBonusScore: (pts) =>
+    set((s) => ({ game: addBonusScore(s.game, pts) })),
 }));

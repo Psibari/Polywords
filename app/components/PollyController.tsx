@@ -5,19 +5,23 @@ import { SESSION } from '../game/session';
 import { getPollyBudgetState, trackPollyTime } from '../logic/pollyBudget';
 
 const BUDGET: Record<string, number> = {
-  intro:     1.5,
-  perfect:   0.8,
-  nearMiss:  1.0,
-  bossEntry: 0.5,
-  streak5:   0.3,
+  intro:      1.5,
+  perfect:    0.8,
+  nearMiss:   1.0,
+  bossEntry:  0.5,
+  streak5:    0.3,
+  locked:     1.0,
+  cleanSplit: 1.2,
 };
 
 const POLLY_LINES: Record<string, string> = {
-  perfect:   "Something's hiding in this one.",
-  nearMiss:  'Close, but no cigar.',
-  intro:     "Let's see what you've got.",
-  bossEntry: 'This one bites back.',
-  streak5:   "You're on fire.",
+  perfect:    "Something's hiding in this one.",
+  nearMiss:   'Close, but no cigar.',
+  intro:      "Let's see what you've got.",
+  bossEntry:  'This one bites back.',
+  streak5:    "You're on fire.",
+  locked:     'Locked.',
+  cleanSplit: 'Clean split.',
 };
 
 export function PollyController() {

@@ -33,7 +33,7 @@ export type GameState = {
   feedback: string | null;
   status: GameStatus;
   lastActionAt: number;
-  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'streak5';
+  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'streak5' | 'locked' | 'cleanSplit';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
 };
@@ -176,6 +176,17 @@ export function submitWrongSwipe(state: GameState): GameState {
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Wrong call.',
     status: lives <= 0 ? 'gameOver' : 'playing',
+    lastActionAt: Date.now(),
+  };
+}
+
+// ─── ADD BONUS SCORE — for split tile results ─────────────────
+
+export function addBonusScore(state: GameState, points: number): GameState {
+  return {
+    ...state,
+    score:        state.score + points,
+    feedback:     `+${points}`,
     lastActionAt: Date.now(),
   };
 }

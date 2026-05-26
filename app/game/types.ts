@@ -67,6 +67,10 @@ export type WordStep = {
     title: string;
     text: string;
   };
+  hiddenMeaning?:    string;
+  hiddenTrap?:       string;
+  hiddenEmoji?:      string;
+  hiddenTrapEmoji?:  string;
 };
 
 export type PhraseBreakStep = {

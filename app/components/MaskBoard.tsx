@@ -1,26 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Dimensions,
   Easing,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { WordStep } from '../game/types';
+import { Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 
 // ── Layout constants ──────────────────────────────────────────
-const TILE_GAP = 10;   // gap between tiles (each tile's marginTop)
-const MIN_TILE_H = 68; // minimum tile height for readable text (FIX 1)
-const MAX_TILE_H = 72; // cap so tiles don't grow huge on large screens
+const TILE_GAP   = 10;
+const MIN_TILE_H = 68;
+const MAX_TILE_H = 72;
 
 type FloatEntry = { id: number; value: number; x: number; y: number };
+type QPhase     = 'visible' | 'locked' | 'flying' | 'split';
+type SplitPair  = { left: SwipeMaskState; right: SwipeMaskState };
 
-type Props = {
-  step: WordStep;
-};
+type Props = { step: WordStep };
 
 function eventEyebrow(step: WordStep): string | null {
   if (step.eventType === 'speedRound') return 'SPEED ROUND';
@@ -35,53 +36,25 @@ export function MaskBoard({ step }: Props) {
   // ── tile state map ──────────────────────────────────────────
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => {
     const m = new Map<string, SwipeMaskState>();
-    step.masks.forEach(mask => m.set(mask.id, mask.isHidden ? 'hidden' : 'idle'));
+    step.masks.forEach(mask => m.set(mask.id, 'idle'));
     return m;
   });
 
-  const wrongCountRef  = useRef(0);
-  const completedRef   = useRef(false);
+  const wrongCountRef     = useRef(0);
+  const completedRef      = useRef(false);
+  const splitTriggeredRef = useRef(false);
 
-  // ── available height for tile stack ────────────────────────
-  const [gridHeight, setGridHeight] = useState(0);
+  // ── available height / width for tile stack ─────────────────
+  const [gridHeight, setGridHeight]         = useState(0);
+  const [containerWidth, setContainerWidth] = useState(350);
 
   const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex]
     ?? step.masks.filter(m => !m.isHidden);
   const tileCount = visibleGridMasks.length;
 
-  // Each tile occupies (tileHeight + TILE_GAP) in the layout.
-  // Solve: tileCount * (tileH + TILE_GAP) ≤ gridHeight
-  // → tileH = floor(gridHeight / tileCount - TILE_GAP)
-  // Clamped to [MIN_TILE_H, MAX_TILE_H].
   const tileHeight: number = gridHeight > 0
     ? Math.min(MAX_TILE_H, Math.max(MIN_TILE_H, Math.floor(gridHeight / tileCount - TILE_GAP)))
     : MAX_TILE_H;
-
-  // ── hidden mask activation ──────────────────────────────────
-  const [hiddenActive, setHiddenActive] = useState(false);
-  const hiddenMask = step.masks.find(m => m.isHidden) ?? null;
-
-  // ── hidden tile entrance animation ──────────────────────────
-  const hiddenDropY       = useRef(new Animated.Value(80)).current;
-  const hiddenDropOpacity = useRef(new Animated.Value(0)).current;
-  const hiddenDropScale   = useRef(new Animated.Value(0.7)).current;
-
-  useEffect(() => {
-    if (!hiddenActive) return;
-    hiddenDropY.setValue(80);
-    hiddenDropOpacity.setValue(0);
-    hiddenDropScale.setValue(0.7);
-    Animated.parallel([
-      Animated.timing(hiddenDropOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
-      Animated.timing(hiddenDropScale,   { toValue: 1, duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.spring(hiddenDropY, {
-        toValue: 200,
-        useNativeDriver: true,
-        damping: 14,
-        stiffness: 120,
-      }),
-    ]).start();
-  }, [hiddenActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── absorption animation ────────────────────────────────────
   const absorptionScale       = useRef(new Animated.Value(1)).current;
@@ -116,7 +89,6 @@ export function MaskBoard({ step }: Props) {
   const containerRef = useRef<View>(null);
 
   // ── tile refs (for score float spawn position) ───────────────
-  // createRef<T>() in @types/react 19 returns RefObject<T | null>; map type matches.
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
   function getTileRef(maskId: string): React.Ref<View> {
@@ -128,7 +100,7 @@ export function MaskBoard({ step }: Props) {
 
   // ── score floats ─────────────────────────────────────────────
   const [floats, setFloats] = useState<FloatEntry[]>([]);
-  const floatIdRef = useRef(0);
+  const floatIdRef          = useRef(0);
 
   function spawnFloat(value: number, maskId: string) {
     const refObj    = tileRefs.current.get(maskId);
@@ -140,8 +112,7 @@ export function MaskBoard({ step }: Props) {
         view.measure((_x, _y, w, h, pageX, pageY) => {
           const id = ++floatIdRef.current;
           setFloats(prev => [...prev, {
-            id,
-            value,
+            id, value,
             x: pageX - cPageX + w / 2,
             y: pageY - cPageY + h / 2,
           }]);
@@ -154,33 +125,210 @@ export function MaskBoard({ step }: Props) {
       });
     } else {
       const id = ++floatIdRef.current;
-      setFloats(prev => [...prev, { id, value, x: 180, y: 200 }]);
+      setFloats(prev => [...prev, { id, value, x: containerWidth / 2, y: 200 }]);
+    }
+  }
+
+  function spawnFloatAtSplit(value: number) {
+    const id = ++floatIdRef.current;
+    setFloats(prev => [...prev, {
+      id, value,
+      x: containerWidth / 2,
+      y: Math.max(splitContainerYRef.current, 80),
+    }]);
+  }
+
+  // ── ❓ tile system ────────────────────────────────────────────
+  const hasHidden = !!step.hiddenMeaning;
+
+  const [qPhase, setQPhase]             = useState<QPhase>('visible');
+  const [qBorderColor, setQBorderColor] = useState('#FFD700');
+  const [qFlying, setQFlying]           = useState(false);
+  const [showSplitBars, setShowSplitBars]   = useState(false);
+  const [splitContainerY, setSplitContainerY] = useState(0);
+  const [splitLeftIsReal, setSplitLeftIsReal] = useState(false);
+
+  // Ref versions to avoid stale closures in handlers
+  const splitContainerYRef  = useRef(0);
+  const splitLeftIsRealRef  = useRef(false);
+
+  const splitStatesRef = useRef<SplitPair>({ left: 'idle', right: 'idle' });
+  const [splitTileStates, setSplitTileStates] = useState<SplitPair>({ left: 'idle', right: 'idle' });
+
+  // ❓ animated values
+  const pulseAnim    = useRef(new Animated.Value(0.5)).current;
+  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const qOpacity     = useRef(new Animated.Value(1)).current;
+  const qFlyY        = useRef(new Animated.Value(0)).current;
+  const qScaleX      = useRef(new Animated.Value(1)).current;
+  const leftScaleX   = useRef(new Animated.Value(0)).current;
+  const rightScaleX  = useRef(new Animated.Value(0)).current;
+
+  const qTileRef      = useRef<View>(null);
+  const qAbsoluteYRef = useRef(0);
+
+  // Hidden split masks (created once per word)
+  const hiddenRealMask: Mask = {
+    id:     'hidden_real',
+    emoji:  step.hiddenEmoji     ?? '❓',
+    phrase: step.hiddenMeaning   ?? '',
+    isReal: true,
+  };
+  const hiddenTrapMask: Mask = {
+    id:     'hidden_trap',
+    emoji:  step.hiddenTrapEmoji ?? '❓',
+    phrase: step.hiddenTrap      ?? '',
+    isReal: false,
+  };
+
+  // ── pulse loop ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!hasHidden || qPhase !== 'visible') return;
+    pulseAnim.setValue(0.5);
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(pulseAnim, { toValue: 1.0, duration: 750, useNativeDriver: true }),
+      Animated.timing(pulseAnim, { toValue: 0.5, duration: 750, useNativeDriver: true }),
+    ]));
+    pulseLoopRef.current = loop;
+    loop.start();
+    return () => loop.stop();
+  }, [qPhase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── lock ❓ on first wrong swipe ─────────────────────────────
+  function lockQuestion() {
+    pulseLoopRef.current?.stop();
+    setQBorderColor('#444444');
+    setQPhase('locked');
+    Animated.timing(qOpacity, { toValue: 0.2, duration: 300, useNativeDriver: true }).start();
+    store.setPollyTrigger('locked');
+  }
+
+  // ── fly ❓ to vertical screen center ─────────────────────────
+  function triggerQuestionFly() {
+    pulseLoopRef.current?.stop();
+    const winH = Dimensions.get('window').height;
+
+    qTileRef.current?.measureInWindow((_, tilePageY) => {
+      containerRef.current?.measureInWindow((__, containerPageY) => {
+        const tileTopInContainer   = tilePageY - containerPageY;
+        const targetTopInContainer = winH / 2 - containerPageY - 28;
+
+        qAbsoluteYRef.current = tileTopInContainer;
+        qFlyY.setValue(0);
+        setQFlying(true);
+        setQPhase('flying');
+
+        Animated.spring(qFlyY, {
+          toValue:  targetTopInContainer - tileTopInContainer,
+          tension:  60,
+          friction: 8,
+          useNativeDriver: true,
+        }).start(() => {
+          setTimeout(() => startSplit(targetTopInContainer), 50);
+        });
+      });
+    });
+  }
+
+  // ── split into two bars ───────────────────────────────────────
+  function startSplit(centerY: number) {
+    const leftIsReal = Math.random() > 0.5;
+    setSplitLeftIsReal(leftIsReal);
+    splitLeftIsRealRef.current = leftIsReal;
+    splitContainerYRef.current = centerY;
+    setSplitContainerY(centerY);
+    leftScaleX.setValue(0);
+    rightScaleX.setValue(0);
+    qScaleX.setValue(1);
+    setShowSplitBars(true);
+
+    // One frame delay so React mounts the split bars before animating them
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(qScaleX,    { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(leftScaleX, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.timing(rightScaleX,{ toValue: 1, duration: 150, useNativeDriver: true }),
+      ]).start(() => {
+        setQFlying(false);
+        setQPhase('split');
+      });
+    }, 16);
+  }
+
+  // ── split tile state helpers ─────────────────────────────────
+  function updateSplitState(side: 'left' | 'right', state: SwipeMaskState) {
+    const next: SplitPair = { ...splitStatesRef.current, [side]: state };
+    splitStatesRef.current = next;
+    setSplitTileStates({ ...next });
+    checkSplitDone(next);
+  }
+
+  function checkSplitDone(states: SplitPair) {
+    const done = (s: SwipeMaskState) =>
+      s === 'correct' || s === 'trap-caught' || s === 'wrong';
+    if (!done(states.left) || !done(states.right)) return;
+
+    const allCorrect =
+      (states.left  === 'correct' || states.left  === 'trap-caught') &&
+      (states.right === 'correct' || states.right === 'trap-caught');
+
+    if (allCorrect) {
+      spawnFloatAtSplit(300);
+      store.addBonusScore(300);
+      store.setPollyTrigger('cleanSplit');
+    }
+
+    completedRef.current = true;
+    setTimeout(() => store.completeWord(), 900);
+  }
+
+  function handleSplitSwipeUp(side: 'left' | 'right') {
+    const sideIsReal = side === 'left'
+      ? splitLeftIsRealRef.current
+      : !splitLeftIsRealRef.current;
+    if (sideIsReal) {
+      spawnFloatAtSplit(100);
+      store.addBonusScore(100);
+      updateSplitState(side, 'correct');
+    } else {
+      store.submitWrongSwipe();
+      updateSplitState(side, 'wrong');
+    }
+  }
+
+  function handleSplitSwipeRight(side: 'left' | 'right') {
+    const sideIsReal = side === 'left'
+      ? splitLeftIsRealRef.current
+      : !splitLeftIsRealRef.current;
+    if (!sideIsReal) {
+      spawnFloatAtSplit(50);
+      store.addBonusScore(50);
+      updateSplitState(side, 'trap-caught');
+    } else {
+      store.submitWrongSwipe();
+      updateSplitState(side, 'wrong');
     }
   }
 
   // ── completion check ──────────────────────────────────────────
   useEffect(() => {
-    if (completedRef.current) return;
+    if (completedRef.current || splitTriggeredRef.current) return;
 
-    const visibleMasks = step.masks.filter(m => !m.isHidden);
-    const allVisibleJudged = visibleMasks.every(m => {
+    const allVisibleJudged = visibleGridMasks.every(m => {
       const ts = tileStates.get(m.id);
       return ts === 'correct' || ts === 'trap-caught' || ts === 'wrong';
     });
     if (!allVisibleJudged) return;
 
-    const perfect = visibleMasks.every(m => {
+    const perfect = visibleGridMasks.every(m => {
       const ts = tileStates.get(m.id);
       return ts === 'correct' || ts === 'trap-caught';
     });
 
-    if (hiddenMask && tileStates.get(hiddenMask.id) === 'revealed') return;
-
-    if (perfect && hiddenMask) {
-      setTimeout(() => {
-        setHiddenActive(true);
-        store.setPollyTrigger('perfect');
-      }, 350);
+    if (perfect && hasHidden) {
+      splitTriggeredRef.current = true;
+      store.setPollyTrigger('perfect');
+      setTimeout(() => triggerQuestionFly(), 350);
     } else {
       completedRef.current = true;
       setTimeout(() => store.completeWord(), 700);
@@ -198,11 +346,12 @@ export function MaskBoard({ step }: Props) {
     } else {
       store.submitWrongSwipe();
       wrongCountRef.current++;
+      if (wrongCountRef.current === 1 && hasHidden) lockQuestion();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
     }
   }
 
-  function handleSwipeLeft(maskId: string) {
+  function handleSwipeRight(maskId: string) {
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
       store.submitSwipeDown(maskId);
@@ -211,30 +360,9 @@ export function MaskBoard({ step }: Props) {
     } else {
       store.submitWrongSwipe();
       wrongCountRef.current++;
+      if (wrongCountRef.current === 1 && hasHidden) lockQuestion();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
     }
-  }
-
-  function handleTapReveal(maskId: string) {
-    store.revealHidden(maskId);
-    spawnFloat(300, maskId);
-    setTileStates(prev => new Map(prev).set(maskId, 'revealed'));
-  }
-
-  function handleSwipeUpHidden(maskId: string) {
-    store.submitSwipeUp(maskId);
-    spawnFloat(100, maskId);
-    setTileStates(prev => new Map(prev).set(maskId, 'correct'));
-    completedRef.current = true;
-    setTimeout(() => store.completeWord(), 700);
-  }
-
-  function handleSwipeDownHidden(maskId: string) {
-    wrongCountRef.current++;
-    store.submitSwipeDown(maskId);
-    setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-    completedRef.current = true;
-    setTimeout(() => store.completeWord(), 700);
   }
 
   // ── render ────────────────────────────────────────────────────
@@ -242,8 +370,15 @@ export function MaskBoard({ step }: Props) {
   const isBoss   = step.eventType === 'bossWord';
   const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
 
+  const splitTileW = (containerWidth - 4) / 2;
+
   return (
-    <View style={styles.container} ref={containerRef} onStartShouldSetResponder={() => true}>
+    <View
+      style={styles.container}
+      ref={containerRef}
+      onLayout={e => setContainerWidth(e.nativeEvent.layout.width)}
+      onStartShouldSetResponder={() => true}
+    >
 
       {/* word header */}
       <View style={styles.header}>
@@ -275,7 +410,41 @@ export function MaskBoard({ step }: Props) {
         <Text style={styles.hint}>→ trap</Text>
       </View>
 
-      {/* tile stack — flex: 1, measured by onLayout */}
+      {/* ❓ tile — inline (visible / locked phases) */}
+      {hasHidden && !qFlying && qPhase !== 'split' && (
+        <Animated.View
+          ref={qTileRef}
+          pointerEvents="none"
+          style={[styles.questionTile, { borderColor: qBorderColor, opacity: qOpacity }]}
+        >
+          <Animated.Text style={[styles.questionMark, { opacity: pulseAnim }]}>❓</Animated.Text>
+        </Animated.View>
+      )}
+
+      {/* ❓ tile — absolutely positioned during fly + collapse */}
+      {hasHidden && qFlying && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.questionTile,
+            {
+              position: 'absolute',
+              top:    qAbsoluteYRef.current,
+              left:   0,
+              right:  0,
+              marginTop:    0,
+              marginBottom: 0,
+              borderColor:  qBorderColor,
+              zIndex:       20,
+              transform: [{ translateY: qFlyY }, { scaleX: qScaleX }],
+            },
+          ]}
+        >
+          <Text style={styles.questionMark}>❓</Text>
+        </Animated.View>
+      )}
+
+      {/* tile stack */}
       <View
         style={styles.gridWrap}
         onLayout={e => setGridHeight(e.nativeEvent.layout.height)}
@@ -286,7 +455,7 @@ export function MaskBoard({ step }: Props) {
               mask={mask}
               state={tileStates.get(mask.id) ?? 'idle'}
               onSwipeUp={() => handleSwipeUp(mask.id)}
-              onSwipeDown={() => handleSwipeLeft(mask.id)}
+              onSwipeDown={() => handleSwipeRight(mask.id)}
               onTapReveal={() => {}}
               revealable={false}
               tileHeight={tileHeight}
@@ -294,6 +463,36 @@ export function MaskBoard({ step }: Props) {
           </View>
         ))}
       </View>
+
+      {/* split bars — absolutely positioned at screen center */}
+      {showSplitBars && (
+        <View
+          pointerEvents="box-none"
+          style={[styles.splitRow, { top: splitContainerY }]}
+        >
+          <Animated.View style={{ width: splitTileW, transform: [{ scaleX: leftScaleX }] }}>
+            <SwipeMask
+              mask={splitLeftIsReal ? hiddenRealMask : hiddenTrapMask}
+              state={splitTileStates.left}
+              onSwipeUp={() => handleSplitSwipeUp('left')}
+              onSwipeDown={() => handleSplitSwipeRight('left')}
+              onTapReveal={() => {}}
+              tileHeight={56}
+            />
+          </Animated.View>
+          <View style={{ width: 4 }} />
+          <Animated.View style={{ width: splitTileW, transform: [{ scaleX: rightScaleX }] }}>
+            <SwipeMask
+              mask={splitLeftIsReal ? hiddenTrapMask : hiddenRealMask}
+              state={splitTileStates.right}
+              onSwipeUp={() => handleSplitSwipeUp('right')}
+              onSwipeDown={() => handleSplitSwipeRight('right')}
+              onTapReveal={() => {}}
+              tileHeight={56}
+            />
+          </Animated.View>
+        </View>
+      )}
 
       {/* score floats */}
       {floats.map(f => (
@@ -304,30 +503,6 @@ export function MaskBoard({ step }: Props) {
           onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
         />
       ))}
-
-      {/* hidden tile — drops in from word area after perfect clear */}
-      {hiddenMask && hiddenActive && (
-        <Animated.View
-          pointerEvents="box-none"
-          style={[
-            styles.hiddenOverlay,
-            {
-              opacity: hiddenDropOpacity,
-              transform: [{ translateY: hiddenDropY }, { scale: hiddenDropScale }],
-            },
-          ]}
-        >
-          <SwipeMask
-            mask={hiddenMask}
-            state={tileStates.get(hiddenMask.id) ?? 'hidden'}
-            onSwipeUp={() => handleSwipeUpHidden(hiddenMask.id)}
-            onSwipeDown={() => handleSwipeDownHidden(hiddenMask.id)}
-            onTapReveal={() => handleTapReveal(hiddenMask.id)}
-            revealable={hiddenActive}
-            tileHeight={64}
-          />
-        </Animated.View>
-      )}
     </View>
   );
 }
@@ -339,7 +514,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 12,      // reduced from 28 — makes room for tiles on small screens
+    paddingTop: 12,
     paddingBottom: 8,
   },
   eyebrow: {
@@ -347,7 +522,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 3,
-    marginBottom: 2,     // reduced from 4
+    marginBottom: 2,
   },
   word: {
     fontSize: 58,
@@ -378,7 +553,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
-    marginBottom: 8,     // reduced from 16
+    marginBottom: 8,
   },
   hint: {
     color: 'rgba(255,255,255,0.25)',
@@ -386,15 +561,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
   },
+  questionTile: {
+    marginTop: 16,
+    marginBottom: 24,
+    height: 56,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  questionMark: {
+    fontSize: 24,
+    color: '#FFD700',
+  },
   gridWrap: {
     flex: 1,
   },
-  // hidden tile drops in as a full-width overlay inside the container
-  hiddenOverlay: {
+  splitRow: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
-    zIndex: 10,
+    flexDirection: 'row',
+    zIndex: 20,
   },
 });
