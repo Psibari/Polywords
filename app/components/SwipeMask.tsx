@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
+  LayoutChangeEvent,
   PanResponder,
   Pressable,
   StyleSheet,
@@ -25,6 +26,15 @@ type Props = {
   tileHeight?: number;
 };
 
+const FRAGMENT_OFFSETS = [
+  { dx: -80,  dy: -60 },
+  { dx:  80,  dy: -60 },
+  { dx: -100, dy:   0 },
+  { dx:  100, dy:   0 },
+  { dx: -60,  dy:  60 },
+  { dx:  60,  dy:  60 },
+] as const;
+
 export function SwipeMask({
   mask,
   onSwipeUp,
@@ -35,14 +45,28 @@ export function SwipeMask({
   tileHeight = 68,
 }: Props) {
   const [bgColor, setBgColor] = useState('#1E1A3A');
+  const [showShatter, setShowShatter] = useState(false);
 
   // Outer wrapper — controls layout height and gap (collapsed on exit)
   const outerHeightAnim    = useRef(new Animated.Value(tileHeight)).current;
   const outerMarginTopAnim = useRef(new Animated.Value(TILE_GAP)).current;
 
-  // FIX 2 — single ValueXY drives both finger tracking and exit animations
-  const panXY      = useRef(new Animated.ValueXY()).current;
+  // Single ValueXY drives both finger tracking and exit animations
+  const panXY       = useRef(new Animated.ValueXY()).current;
   const tileOpacity = useRef(new Animated.Value(1)).current;
+
+  // Tile layout for fragment positioning
+  const tileLayoutRef = useRef({ width: 300, height: tileHeight });
+
+  // 6 fragments × 4 animated values each
+  const fragmentAnims = useRef(
+    Array.from({ length: 6 }, () => ({
+      x:       new Animated.Value(0),
+      y:       new Animated.Value(0),
+      rotate:  new Animated.Value(0),
+      opacity: new Animated.Value(0),
+    }))
+  ).current;
 
   const judgedRef      = useRef(false);
   const swipeDirRef    = useRef<'up' | 'right' | 'left' | null>(null);
@@ -65,7 +89,6 @@ export function SwipeMask({
     if (s === 'correct') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setBgColor('#FFD700');
-      // Spring the tile back to its locked gold position
       Animated.spring(panXY, {
         toValue: { x: 0, y: 0 },
         useNativeDriver: false,
@@ -78,9 +101,7 @@ export function SwipeMask({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setBgColor('#CC2200');
       Animated.sequence([
-        // 1. Snap to centre so shake looks clean
         Animated.timing(panXY, { toValue: { x: 0, y: 0 }, duration: 80, useNativeDriver: false }),
-        // 2. Horizontal shake
         Animated.sequence([
           Animated.timing(panXY, { toValue: { x:  14, y: 0 }, duration: 50, useNativeDriver: false }),
           Animated.timing(panXY, { toValue: { x: -14, y: 0 }, duration: 55, useNativeDriver: false }),
@@ -88,7 +109,6 @@ export function SwipeMask({
           Animated.timing(panXY, { toValue: { x:  -9, y: 0 }, duration: 55, useNativeDriver: false }),
           Animated.timing(panXY, { toValue: { x:   0, y: 0 }, duration: 55, useNativeDriver: false }),
         ]),
-        // 3. Fly down off screen + fade out
         Animated.parallel([
           Animated.timing(panXY, {
             toValue: { x: 0, y: 800 },
@@ -98,7 +118,6 @@ export function SwipeMask({
           }),
           Animated.timing(tileOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]),
-        // 4. Collapse layout space (FIX 3)
         Animated.parallel([
           Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
           Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
@@ -108,38 +127,75 @@ export function SwipeMask({
 
     if (s === 'trap-caught') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // Fly off in the direction of the swipe, then collapse (FIX 3)
-      const flyX = swipeDirRef.current === 'left' ? -600 : 600;
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(panXY, {
-            toValue: { x: flyX, y: 0 },
-            duration: 250,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: false,
-          }),
-          Animated.timing(tileOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]),
-        Animated.parallel([
-          Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-          Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]),
-      ]).start();
+
+      if (swipeDirRef.current === 'left') {
+        // Instantly hide tile, reset its position so fragments originate at rest center
+        tileOpacity.setValue(0);
+        panXY.setValue({ x: 0, y: 0 });
+
+        // Reset all fragment values before showing them
+        fragmentAnims.forEach(anim => {
+          anim.x.setValue(0);
+          anim.y.setValue(0);
+          anim.rotate.setValue(0);
+          anim.opacity.setValue(1);
+        });
+
+        setShowShatter(true);
+
+        const fragmentParallels = fragmentAnims.map((anim, i) => {
+          const { dx, dy } = FRAGMENT_OFFSETS[i];
+          const rot = Math.random() * 60 - 30;
+          return Animated.parallel([
+            Animated.timing(anim.x,       { toValue: dx,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(anim.y,       { toValue: dy,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(anim.rotate,  { toValue: rot, duration: 350, useNativeDriver: true }),
+            Animated.timing(anim.opacity, { toValue: 0,   duration: 350, useNativeDriver: true }),
+          ]);
+        });
+
+        Animated.sequence([
+          Animated.parallel(fragmentParallels),
+          Animated.parallel([
+            Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+            Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+          ]),
+        ]).start(() => setShowShatter(false));
+
+      } else {
+        const flyX = swipeDirRef.current === 'right' ? 600 : -600;
+        Animated.sequence([
+          Animated.parallel([
+            Animated.timing(panXY, {
+              toValue: { x: flyX, y: 0 },
+              duration: 250,
+              easing: Easing.in(Easing.quad),
+              useNativeDriver: false,
+            }),
+            Animated.timing(tileOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
+          ]),
+          Animated.parallel([
+            Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+            Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+          ]),
+        ]).start();
+      }
     }
 
     if (s === 'revealed') {
-      judgedRef.current  = false;
+      judgedRef.current   = false;
       swipeDirRef.current = null;
       panXY.setValue({ x: 0, y: 0 });
       tileOpacity.setValue(1);
       outerHeightAnim.setValue(tileHeight);
       outerMarginTopAnim.setValue(TILE_GAP);
       setBgColor('#1E1A3A');
+      setShowShatter(false);
     }
 
   }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── PanResponder — FIX 2 ──────────────────────────────────────
+  // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder:        () => !judgedRef.current,
@@ -150,7 +206,6 @@ export function SwipeMask({
         !judgedRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
       onPanResponderTerminationRequest: () => false,
 
-      // FIX 2 — tile physically follows the finger
       onPanResponderMove: (_, g) => {
         if (judgedRef.current) return;
         panXY.setValue({ x: g.dx, y: g.dy });
@@ -175,7 +230,6 @@ export function SwipeMask({
           onSwipeDownRef.current();
 
         } else {
-          // Sub-threshold release — spring back to origin
           Animated.spring(panXY, {
             toValue: { x: 0, y: 0 },
             useNativeDriver: false,
@@ -218,6 +272,11 @@ export function SwipeMask({
   // ── Normal tile ───────────────────────────────────────────────
   const textColor = s === 'correct' ? '#1A1040' : '#FFFFFF';
 
+  const fragW   = tileLayoutRef.current.width * 0.4;
+  const fragH   = tileHeight * 0.45;
+  const centerX = tileLayoutRef.current.width / 2 - fragW / 2;
+  const centerY = tileHeight / 2 - fragH / 2;
+
   return (
     <Animated.View
       style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
@@ -229,18 +288,48 @@ export function SwipeMask({
             height: tileHeight,
             backgroundColor: bgColor,
             opacity: tileOpacity,
-            // FIX 2 — single ValueXY drives finger tracking AND exit animations
             transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
           },
         ]}
+        onLayout={(e: LayoutChangeEvent) => {
+          tileLayoutRef.current = {
+            width:  e.nativeEvent.layout.width,
+            height: e.nativeEvent.layout.height,
+          };
+        }}
         {...panResponder.panHandlers}
       >
         <Text style={styles.emoji}>{mask.emoji}</Text>
-        {/* FIX 1 — larger, bolder text; 2-line cap */}
         <Text style={[styles.phrase, { color: textColor }]} numberOfLines={2}>
           {mask.phrase}
         </Text>
       </Animated.View>
+
+      {showShatter && FRAGMENT_OFFSETS.map((_, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: centerX,
+            top:  centerY,
+            width: fragW,
+            height: fragH,
+            borderRadius: 8,
+            backgroundColor: '#CC2200',
+            opacity: fragmentAnims[i].opacity,
+            transform: [
+              { translateX: fragmentAnims[i].x },
+              { translateY: fragmentAnims[i].y },
+              {
+                rotate: fragmentAnims[i].rotate.interpolate({
+                  inputRange:  [-30, 0, 30],
+                  outputRange: ['-30deg', '0deg', '30deg'],
+                }),
+              },
+            ],
+          }}
+        />
+      ))}
     </Animated.View>
   );
 }
@@ -254,13 +343,11 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     overflow: 'hidden',
   },
-  // FIX 1 — emoji 32px
   emoji: {
     fontSize: 32,
     lineHeight: 38,
     marginRight: 12,
   },
-  // FIX 1 — 20px / 700 weight fills the bar visually
   phrase: {
     fontSize: 20,
     fontWeight: '700',
