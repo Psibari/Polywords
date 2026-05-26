@@ -13,7 +13,7 @@ import { ScoreFloat } from './ScoreFloat';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP = 10;   // gap between tiles (each tile's marginTop)
-const MIN_TILE_H = 52; // minimum tile height — fits 8 tiles on iPhone SE
+const MIN_TILE_H = 68; // minimum tile height for readable text (FIX 1)
 const MAX_TILE_H = 72; // cap so tiles don't grow huge on large screens
 
 type FloatEntry = { id: number; value: number; x: number; y: number };
