@@ -69,7 +69,7 @@ export function SwipeMask({
   ).current;
 
   const judgedRef      = useRef(false);
-  const swipeDirRef    = useRef<'up' | 'right' | 'left' | null>(null);
+  const swipeDirRef    = useRef<'up' | 'right' | null>(null);
   const onSwipeUpRef   = useRef(onSwipeUp);
   const onSwipeDownRef = useRef(onSwipeDown);
 
@@ -111,7 +111,9 @@ export function SwipeMask({
         ]),
         Animated.parallel([
           Animated.timing(panXY, {
-            toValue: { x: 0, y: 800 },
+            toValue: swipeDirRef.current === 'right'
+              ? { x: 600, y: 0 }
+              : { x: 0, y: -800 },
             duration: 250,
             easing: Easing.in(Easing.quad),
             useNativeDriver: false,
@@ -128,66 +130,46 @@ export function SwipeMask({
     if (s === 'trap-caught') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      if (swipeDirRef.current === 'left') {
-        // Instantly hide tile, reset position so fragments originate at rest center
-        tileOpacity.setValue(0);
-        panXY.setValue({ x: 0, y: 0 });
+      // Instantly hide tile, reset position so fragments originate at rest center
+      tileOpacity.setValue(0);
+      panXY.setValue({ x: 0, y: 0 });
 
-        // Reset all fragment values before mounting them
-        fragmentAnims.forEach(anim => {
-          anim.x.setValue(0);
-          anim.y.setValue(0);
-          anim.rotate.setValue(0);
-          anim.opacity.setValue(1);
-        });
+      // Reset all fragment values before mounting them
+      fragmentAnims.forEach(anim => {
+        anim.x.setValue(0);
+        anim.y.setValue(0);
+        anim.rotate.setValue(0);
+        anim.opacity.setValue(1);
+      });
 
-        console.log('[shatter] tileLayoutRef.width =', tileLayoutRef.current.width);
+      console.log('[shatter] tileLayoutRef.width =', tileLayoutRef.current.width);
 
-        // Mount fragments first, then start animation
-        setShowShatter(true);
+      // Mount fragments first, then start animation
+      setShowShatter(true);
 
-        const fragmentParallels = fragmentAnims.map((anim, i) => {
-          const { dx, dy } = FRAGMENT_OFFSETS[i];
-          const rot = Math.random() * 60 - 30;
-          return Animated.parallel([
-            Animated.timing(anim.x,       { toValue: dx,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-            Animated.timing(anim.y,       { toValue: dy,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-            Animated.timing(anim.rotate,  { toValue: rot, duration: 350, useNativeDriver: true }),
-            Animated.timing(anim.opacity, { toValue: 0,   duration: 350, useNativeDriver: true }),
-          ]);
-        });
+      const fragmentParallels = fragmentAnims.map((anim, i) => {
+        const { dx, dy } = FRAGMENT_OFFSETS[i];
+        const rot = Math.random() * 60 - 30;
+        return Animated.parallel([
+          Animated.timing(anim.x,       { toValue: dx,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.y,       { toValue: dy,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.rotate,  { toValue: rot, duration: 350, useNativeDriver: true }),
+          Animated.timing(anim.opacity, { toValue: 0,   duration: 350, useNativeDriver: true }),
+        ]);
+      });
 
-        // Phase 1 — fragments (useNativeDriver: true), runs independently
-        Animated.parallel(fragmentParallels).start();
+      // Phase 1 — fragments (useNativeDriver: true), runs independently
+      Animated.parallel(fragmentParallels).start();
 
-        // Phase 2 — height collapse (useNativeDriver: false), started after 350ms via setTimeout
-        // Cannot chain with Phase 1 in Animated.sequence — native/non-native driver mismatch
-        setTimeout(() => {
-          setShowShatter(false);
-          Animated.parallel([
-            Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-            Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-          ]).start();
-        }, 350);
-
-      } else {
-        const flyX = swipeDirRef.current === 'right' ? 600 : -600;
-        Animated.sequence([
-          Animated.parallel([
-            Animated.timing(panXY, {
-              toValue: { x: flyX, y: 0 },
-              duration: 250,
-              easing: Easing.in(Easing.quad),
-              useNativeDriver: false,
-            }),
-            Animated.timing(tileOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
-          ]),
-          Animated.parallel([
-            Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-            Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-          ]),
+      // Phase 2 — height collapse (useNativeDriver: false), started after 350ms via setTimeout
+      // Cannot chain with Phase 1 in Animated.sequence — native/non-native driver mismatch
+      setTimeout(() => {
+        setShowShatter(false);
+        Animated.parallel([
+          Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+          Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]).start();
-      }
+      }, 350);
     }
 
     if (s === 'revealed') {
@@ -230,11 +212,6 @@ export function SwipeMask({
         } else if (g.dx > SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
-          onSwipeDownRef.current();
-
-        } else if (g.dx < -SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
-          judgedRef.current   = true;
-          swipeDirRef.current = 'left';
           onSwipeDownRef.current();
 
         } else {
