@@ -379,7 +379,7 @@ export function MaskBoard({ step }: Props) {
             { borderColor: qBorderColor, opacity: qOpacity, transform: [{ scaleX: qScaleX }] },
           ]}
         >
-          <Animated.Text style={[styles.questionMark, { opacity: pulseAnim }]}>❓</Animated.Text>
+          <Animated.Text style={[styles.questionMark, { opacity: pulseAnim }]}>?</Animated.Text>
         </Animated.View>
       )}
 
@@ -498,9 +498,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   questionTile: {
-    marginTop: 16,
-    marginBottom: 24,
-    height: 56,
+    marginTop: 10,
+    marginBottom: 14,
+    height: 36,
     borderWidth: 2,
     borderStyle: 'dashed',
     borderRadius: 12,

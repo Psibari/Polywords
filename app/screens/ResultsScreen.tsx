@@ -338,7 +338,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             <Text style={rs.meta}>{perfectClears}/{totalWords} perfect</Text>
           </View>
         </View>
-s
+
         {/* ── WORD RESULTS ── */}
         {wordResults.length > 0 && (
           <View style={rs.section}>
