@@ -140,10 +140,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   pillText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.85)',
     fontSize: 14,
     fontWeight: '800',
     fontFamily: 'PlusJakartaSans_800ExtraBold',
+    flexShrink: 1,
   },
   meterRow: {
     gap: 4,
