@@ -11,6 +11,7 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import { PollyCard } from './PollyCard';
+import { playMeterTick, playSplitReveal } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 10;
@@ -191,6 +192,7 @@ export function MaskBoard({ step }: Props) {
   // ── collapse ❓ bar and drop two split tiles ───────────────────
   function startSplit() {
     pulseLoopRef.current?.stop();
+    playSplitReveal();
 
     const topIsReal = Math.random() > 0.5;
     setSplitTopIsReal(topIsReal);
@@ -298,6 +300,7 @@ export function MaskBoard({ step }: Props) {
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
       store.submitSwipeUp(maskId);
+      playMeterTick();
       spawnFloat(mask.isRare ? 300 : 100, maskId);
       triggerAbsorption(mask.phrase);
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));

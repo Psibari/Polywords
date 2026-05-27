@@ -8,6 +8,7 @@ import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
+import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 
 // ─── TOP BAR ─────────────────────────────────────────────────
 
@@ -101,6 +102,14 @@ function GameDirector({ navigation }: { navigation: any }) {
   const startGame = useGameStore(s => s.startGame);
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
+
+  useEffect(() => { initSounds(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (game.status === 'complete' || game.status === 'gameOver') {
+      playRoundComplete();
+    }
+  }, [game.status]);
 
   useEffect(() => {
     const step = currentStep(game);

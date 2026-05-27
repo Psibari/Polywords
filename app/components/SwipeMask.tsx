@@ -12,6 +12,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
+import { playCorrectTap, playWrongBuzz, playShatter } from '../utils/SoundEngine';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -85,6 +86,7 @@ export function SwipeMask({
 
     if (s === 'correct') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      playCorrectTap();
       setBgColor('#FFD700');
       Animated.spring(panXY, {
         toValue: { x: 0, y: 0 },
@@ -96,6 +98,7 @@ export function SwipeMask({
 
     if (s === 'wrong') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      playWrongBuzz();
       setBgColor('#CC2200');
       Animated.sequence([
         Animated.timing(panXY, { toValue: { x: 0, y: 0 }, duration: 80, useNativeDriver: false }),
@@ -126,7 +129,7 @@ export function SwipeMask({
 
     if (s === 'trap-caught') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
+      playShatter();
       tileOpacity.setValue(0);
       panXY.setValue({ x: 0, y: 0 });
 
