@@ -19,7 +19,7 @@ function computeIntroLine(step: WordStep): string {
   const realCount = visible.filter(m => m.isReal).length;
   const fakeCount = visible.filter(m => !m.isReal).length;
   const fakes = fakeCount === 1 ? 'fake' : 'fakes';
-  return `${numWord(realCount)} real, ${numWord(fakeCount)} ${fakes}.`;
+  return `${numWord(realCount)} real, ${numWord(fakeCount).toLowerCase()} ${fakes}.`;
 }
 
 function eventKicker(step: WordStep): string | null {
