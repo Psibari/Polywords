@@ -127,12 +127,6 @@ function buildShatter(): string {
   return toWAV([samples]);
 }
 
-function buildMeterTick(): string {
-  return toWAV([
-    makeSegment({ waveType: 'sine', startFreq: 660, durationMs: 60, attackMs: 2, decayMs: 58, volume: 0.4 }),
-  ]);
-}
-
 function buildSplitReveal(): string {
   return toWAV([
     makeSegment({ waveType: 'sine', startFreq: 440, endFreq: 880,  durationMs: 200, attackMs: 10, volume: 0.65 }),
@@ -152,13 +146,12 @@ function buildRoundComplete(): string {
 
 // ── Engine state ──────────────────────────────────────────────
 
-type SoundKey = 'correctTap' | 'wrongBuzz' | 'shatter' | 'meterTick' | 'splitReveal' | 'roundComplete';
+type SoundKey = 'correctTap' | 'wrongBuzz' | 'shatter' | 'splitReveal' | 'roundComplete';
 
 const sounds: Record<SoundKey, Audio.Sound | null> = {
   correctTap:    null,
   wrongBuzz:     null,
   shatter:       null,
-  meterTick:     null,
   splitReveal:   null,
   roundComplete: null,
 };
@@ -180,7 +173,6 @@ export async function initSounds(): Promise<void> {
     ['correctTap',    buildCorrectTap],
     ['wrongBuzz',     buildWrongBuzz],
     ['shatter',       buildShatter],
-    ['meterTick',     buildMeterTick],
     ['splitReveal',   buildSplitReveal],
     ['roundComplete', buildRoundComplete],
   ];
@@ -203,6 +195,5 @@ function play(sound: Audio.Sound | null): void {
 export function playCorrectTap():    void { play(sounds.correctTap); }
 export function playWrongBuzz():     void { play(sounds.wrongBuzz); }
 export function playShatter():       void { play(sounds.shatter); }
-export function playMeterTick():     void { play(sounds.meterTick); }
 export function playSplitReveal():   void { play(sounds.splitReveal); }
 export function playRoundComplete(): void { play(sounds.roundComplete); }
