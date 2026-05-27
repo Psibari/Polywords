@@ -10,6 +10,7 @@ import { Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
+import { PollyCard } from './PollyCard';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 10;
@@ -21,13 +22,6 @@ type QPhase     = 'visible' | 'locked' | 'split';
 type SplitPair  = { left: SwipeMaskState; right: SwipeMaskState };
 
 type Props = { step: WordStep };
-
-function eventEyebrow(step: WordStep): string | null {
-  if (step.eventType === 'speedRound') return 'SPEED ROUND';
-  if (step.eventType === 'bossWord')   return 'BOSS WORD';
-  if (step.eventType === 'slangDrop')  return 'SLANG DROP';
-  return null;
-}
 
 export function MaskBoard({ step }: Props) {
   const store = useGameStore();
@@ -54,6 +48,11 @@ export function MaskBoard({ step }: Props) {
   const tileHeight: number = gridHeight > 0
     ? Math.min(MAX_TILE_H, Math.max(MIN_TILE_H, Math.floor(gridHeight / tileCount - TILE_GAP)))
     : MAX_TILE_H;
+
+  // ── find-meter counts ────────────────────────────────────────
+  const realMasks  = visibleGridMasks.filter(m => m.isReal);
+  const totalReal  = realMasks.length;
+  const foundCount = realMasks.filter(m => tileStates.get(m.id) === 'correct').length;
 
   // ── absorption animation ────────────────────────────────────
   const absorptionScale       = useRef(new Animated.Value(1)).current;
@@ -201,12 +200,10 @@ export function MaskBoard({ step }: Props) {
     bottomScaleY.setValue(0);
     qScaleX.setValue(1);
 
-    // Phase 1: collapse ❓ bar horizontally
     Animated.timing(qScaleX, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
       setQPhase('split');
       setShowSplitBars(true);
 
-      // One frame so React mounts tiles before animating them
       setTimeout(() => {
         Animated.timing(topScaleY, { toValue: 1, duration: 150, useNativeDriver: true }).start();
         setTimeout(() => {
@@ -243,7 +240,6 @@ export function MaskBoard({ step }: Props) {
     setTimeout(() => store.completeWord(), 900);
   }
 
-  // top tile = 'left' in SplitPair; bottom tile = 'right'
   function handleSplitSwipeUp(side: 'left' | 'right') {
     const sideIsReal = side === 'left'
       ? splitTopIsRealRef.current
@@ -328,7 +324,6 @@ export function MaskBoard({ step }: Props) {
   }
 
   // ── render ────────────────────────────────────────────────────
-  const eyebrow   = eventEyebrow(step);
   const isBoss    = step.eventType === 'bossWord';
   const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
 
@@ -342,8 +337,6 @@ export function MaskBoard({ step }: Props) {
 
       {/* word header */}
       <View style={styles.header}>
-        {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-
         <View style={styles.wordContainer}>
           <Animated.Text
             style={[styles.word, { color: wordColor, transform: [{ scale: absorptionScale }] }]}
@@ -364,11 +357,8 @@ export function MaskBoard({ step }: Props) {
         )}
       </View>
 
-      {/* swipe hints */}
-      <View style={styles.hintRow}>
-        <Text style={styles.hint}>↑ real meaning</Text>
-        <Text style={styles.hint}>→ trap</Text>
-      </View>
+      {/* Polly Card strip — kicker + speech pill + find-meter */}
+      <PollyCard step={step} foundCount={foundCount} totalReal={totalReal} />
 
       {/* ❓ tile — collapses scaleX→0 when split fires */}
       {hasHidden && qPhase !== 'split' && (
@@ -451,18 +441,12 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingTop: 12,
-    paddingBottom: 8,
-  },
-  eyebrow: {
-    color: '#FFD700',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 3,
-    marginBottom: 2,
+    paddingBottom: 4,
   },
   word: {
     fontSize: 58,
-    fontWeight: '900',
+    fontWeight: '400',
+    fontFamily: 'BagelFatOne_400Regular',
     letterSpacing: 3,
   },
   wordContainer: {
@@ -478,24 +462,13 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
   },
   absorbedPhrase: {
-    color: '#FFD700',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
     letterSpacing: 0.5,
     marginTop: 2,
     textAlign: 'center',
-  },
-  hintRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    marginBottom: 8,
-  },
-  hint: {
-    color: 'rgba(255,255,255,0.25)',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
   },
   questionTile: {
     marginTop: 10,
@@ -510,6 +483,7 @@ const styles = StyleSheet.create({
   questionMark: {
     fontSize: 24,
     color: '#FFD700',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
   },
   gridWrap: {
     flex: 1,

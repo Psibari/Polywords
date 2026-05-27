@@ -7,9 +7,11 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
+import { FluentEmoji } from './FluentEmoji';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -42,23 +44,19 @@ export function SwipeMask({
   onTapReveal,
   state: s,
   revealable = false,
-  tileHeight = 68,
+  tileHeight = 64,
 }: Props) {
-  const [bgColor, setBgColor] = useState('#1E1A3A');
+  const [bgColor, setBgColor] = useState('#2A2560');
   const [showShatter, setShowShatter] = useState(false);
 
-  // Outer wrapper — controls layout height and gap (collapsed on exit)
   const outerHeightAnim    = useRef(new Animated.Value(tileHeight)).current;
   const outerMarginTopAnim = useRef(new Animated.Value(TILE_GAP)).current;
 
-  // Single ValueXY drives both finger tracking and exit animations
   const panXY       = useRef(new Animated.ValueXY()).current;
   const tileOpacity = useRef(new Animated.Value(1)).current;
 
-  // Tile layout for fragment positioning
   const tileLayoutRef = useRef({ width: 300, height: tileHeight });
 
-  // 6 fragments × 4 animated values each
   const fragmentAnims = useRef(
     Array.from({ length: 6 }, () => ({
       x:       new Animated.Value(0),
@@ -76,7 +74,6 @@ export function SwipeMask({
   useEffect(() => { onSwipeUpRef.current = onSwipeUp; }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current = onSwipeDown; }, [onSwipeDown]);
 
-  // Sync layout height when tileHeight prop changes before any swipe
   useEffect(() => {
     if (!judgedRef.current) {
       outerHeightAnim.setValue(tileHeight);
@@ -130,11 +127,9 @@ export function SwipeMask({
     if (s === 'trap-caught') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Instantly hide tile, reset position so fragments originate at rest center
       tileOpacity.setValue(0);
       panXY.setValue({ x: 0, y: 0 });
 
-      // Reset all fragment values before mounting them
       fragmentAnims.forEach(anim => {
         anim.x.setValue(0);
         anim.y.setValue(0);
@@ -142,9 +137,6 @@ export function SwipeMask({
         anim.opacity.setValue(1);
       });
 
-      console.log('[shatter] tileLayoutRef.width =', tileLayoutRef.current.width);
-
-      // Mount fragments first, then start animation
       setShowShatter(true);
 
       const fragmentParallels = fragmentAnims.map((anim, i) => {
@@ -158,11 +150,8 @@ export function SwipeMask({
         ]);
       });
 
-      // Phase 1 — fragments (useNativeDriver: true), runs independently
       Animated.parallel(fragmentParallels).start();
 
-      // Phase 2 — height collapse (useNativeDriver: false), started after 350ms via setTimeout
-      // Cannot chain with Phase 1 in Animated.sequence — native/non-native driver mismatch
       setTimeout(() => {
         setShowShatter(false);
         Animated.parallel([
@@ -179,7 +168,7 @@ export function SwipeMask({
       tileOpacity.setValue(1);
       outerHeightAnim.setValue(tileHeight);
       outerMarginTopAnim.setValue(TILE_GAP);
-      setBgColor('#1E1A3A');
+      setBgColor('#2A2560');
       setShowShatter(false);
     }
 
@@ -245,7 +234,7 @@ export function SwipeMask({
           onPress={revealable ? onTapReveal : undefined}
           style={[styles.tile, { height: tileHeight, backgroundColor: '#2A2060' }]}
         >
-          <Text style={styles.emoji}>❓</Text>
+          <FluentEmoji emoji="❓" size={32} />
           <Text style={[styles.phrase, { color: '#FFD700' }]} numberOfLines={2}>
             Hidden meaning
           </Text>
@@ -284,7 +273,9 @@ export function SwipeMask({
         }}
         {...panResponder.panHandlers}
       >
-        <Text style={styles.emoji}>{mask.emoji}</Text>
+        <View style={styles.emojiSlot}>
+          <FluentEmoji emoji={mask.emoji} size={32} />
+        </View>
         <Text style={[styles.phrase, { color: textColor }]} numberOfLines={2}>
           {mask.phrase}
         </Text>
@@ -327,16 +318,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 16,
     paddingRight: 16,
-    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#1A1830',
+    shadowColor: '#1A1830',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 5,
   },
-  emoji: {
-    fontSize: 32,
-    lineHeight: 38,
+  emojiSlot: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   phrase: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
     flex: 1,
   },
 });

@@ -6,7 +6,6 @@ import { SESSION } from '../game/session';
 import { useGameStore } from '../store/useGameStore';
 import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
-import { PollyController } from '../components/PollyController';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 
@@ -26,7 +25,7 @@ function TopBar() {
             key={i}
             style={[
               tb.dot,
-              i < current  ? tb.dotDone    :
+              i < current   ? tb.dotDone    :
               i === current ? tb.dotCurrent :
               tb.dotRemaining,
             ]}
@@ -79,12 +78,21 @@ const tb = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.07)',
   },
   block: { alignItems: 'center', minWidth: 64 },
-  label: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '900', letterSpacing: 2 },
-  value: { color: '#FFFFFF', fontSize: 22, fontWeight: '900' },
+  label: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    letterSpacing: 2,
+  },
+  value: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+  },
   lives: { fontSize: 18 },
 });
-
-// ResultsScreen is in its own file
 
 // ─── INNER DIRECTOR ───────────────────────────────────────────
 
@@ -127,10 +135,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : (
-        <>
-          <PollyController />
-          <GameContent />
-        </>
+        <GameContent />
       )}
     </SafeAreaView>
   );
@@ -181,7 +186,8 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: 'rgba(255,255,255,0.4)',
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
     letterSpacing: 3,
   },
 });
