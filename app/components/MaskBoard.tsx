@@ -13,8 +13,8 @@ import { ScoreFloat } from './ScoreFloat';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 10;
-const MIN_TILE_H = 68;
-const MAX_TILE_H = 72;
+const MIN_TILE_H = 48;
+const MAX_TILE_H = 64;
 
 type FloatEntry = { id: number; value: number; x: number; y: number };
 type QPhase     = 'visible' | 'locked' | 'split';

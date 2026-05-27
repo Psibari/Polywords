@@ -16,28 +16,59 @@ function TopBar() {
   const game = useGameStore(s => s.game);
   const lives = '❤️'.repeat(Math.max(game.lives, 0));
   const total = SESSION.length;
+  const current = game.stepIndex;
 
   return (
-    <View style={tb.bar}>
-      <View style={tb.block}>
-        <Text style={tb.label}>SCORE</Text>
-        <Text style={tb.value}>{game.score}</Text>
+    <View>
+      <View style={tb.dotsRow}>
+        {Array.from({ length: total }, (_, i) => (
+          <View
+            key={i}
+            style={[
+              tb.dot,
+              i < current  ? tb.dotDone    :
+              i === current ? tb.dotCurrent :
+              tb.dotRemaining,
+            ]}
+          />
+        ))}
       </View>
 
-      <View style={tb.block}>
-        <Text style={tb.lives}>{lives || '💀'}</Text>
-        <Text style={tb.progress}>{game.stepIndex + 1}/{total}</Text>
-      </View>
+      <View style={tb.bar}>
+        <View style={tb.block}>
+          <Text style={tb.label}>SCORE</Text>
+          <Text style={tb.value}>{game.score}</Text>
+        </View>
 
-      <View style={tb.block}>
-        <Text style={tb.label}>COMBO</Text>
-        <Text style={tb.value}>x{game.combo}</Text>
+        <View style={tb.block}>
+          <Text style={tb.lives}>{lives || '💀'}</Text>
+        </View>
+
+        <View style={tb.block}>
+          <Text style={tb.label}>COMBO</Text>
+          <Text style={tb.value}>x{game.combo}</Text>
+        </View>
       </View>
     </View>
   );
 }
 
 const tb = StyleSheet.create({
+  dotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 4,
+    gap: 4,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  dotDone:      { backgroundColor: '#FFD700' },
+  dotCurrent:   { backgroundColor: '#FFFFFF' },
+  dotRemaining: { backgroundColor: 'rgba(255,255,255,0.25)' },
   bar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -51,7 +82,6 @@ const tb = StyleSheet.create({
   label: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '900', letterSpacing: 2 },
   value: { color: '#FFFFFF', fontSize: 22, fontWeight: '900' },
   lives: { fontSize: 18 },
-  progress: { color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: '700' },
 });
 
 // ResultsScreen is in its own file
