@@ -178,11 +178,8 @@ export const SESSION: SessionStep[] = [
       { id: 'order_command',    emoji: '🎖️', phrase: "General's command",    isReal: true },
       { id: 'order_arrange',    emoji: '🧹', phrase: 'Chaos cleaned up',     isReal: true },
       { id: 'order_shopping',   emoji: '🛒', phrase: 'The shopping list',    isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'order_court',      emoji: '⛪', phrase: 'A holy brotherhood',   isReal: false, trapType: 'almostSynonym' },
       { id: 'order_restaurant', emoji: '🍽️', phrase: 'Restaurant request',  isReal: false, trapType: 'associatedNeighbor', borderline: true },
       { id: 'order_pattern',    emoji: '🔄', phrase: 'Repeating pattern',    isReal: false, trapType: 'almostSynonym' },
-      { id: 'order_law',        emoji: '🏛️', phrase: "Court's ruling",       isReal: false, trapType: 'phraseTrap' },
-      { id: 'order_military',   emoji: '👮', phrase: 'Law and order',        isReal: false, trapType: 'domainNeighbor' },
     ],
   },
 
