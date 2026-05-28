@@ -1,10 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
 import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SESSION } from '../game/session';
 import { getPollyBudgetState, trackPollyTime } from '../logic/pollyBudget';
 import { BUDGET, POLLY_LINES } from './PollyController';
+
+const POLLY_FACE: Record<string, ImageSourcePropType> = {
+  sessionStart:  require('../../assets/images/polly/polly_letsPlay.png'),
+  intro:         require('../../assets/images/polly/polly_knowing.png'),
+  correct:       require('../../assets/images/polly/polly_clever.png'),
+  wrong:         require('../../assets/images/polly/polly_thinking.png'),
+  wordUp:        require('../../assets/images/polly/polly_wordUp.png'),
+  bossWord:      require('../../assets/images/polly/polly_reading.png'),
+  hiddenReveal:  require('../../assets/images/polly/polly_clever.png'),
+  locked:        require('../../assets/images/polly/polly_thinking.png'),
+  cleanSplit:    require('../../assets/images/polly/polly_wordUp.png'),
+  default:       require('../../assets/images/polly/polly_knowing.png'),
+};
 
 const NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 
@@ -40,6 +53,7 @@ export function PollyCard({ step, foundCount, totalReal }: Props) {
   const setTrigger   = useGameStore(s => s.setPollyTrigger);
   const clearTrigger = useGameStore(s => s.clearPollyTrigger);
   const [pollyText, setPollyText] = useState<string | null>(null);
+  const [pollyFace, setPollyFace] = useState<ImageSourcePropType>(POLLY_FACE.sessionStart);
 
   const fillAnim = useRef(new Animated.Value(0)).current;
 
@@ -69,6 +83,8 @@ export function PollyCard({ step, foundCount, totalReal }: Props) {
     const { totalShown, runStart } = getPollyBudgetState();
     const runtime = Math.max((Date.now() - runStart) / 1000, 0.001);
     if (totalShown / runtime > 0.15) { clearTrigger(); return; }
+
+    setPollyFace(POLLY_FACE[game.pollyTrigger] ?? POLLY_FACE.default);
 
     const line = game.pollyTrigger === 'intro'
       ? computeIntroLine(step)
@@ -101,9 +117,8 @@ export function PollyCard({ step, foundCount, totalReal }: Props) {
       ) : null}
 
       <View style={styles.pill}>
-        <Text style={styles.pillText}>
-          {'🦜'}{pollyText ? `  ${pollyText}` : ''}
-        </Text>
+        <Image source={pollyFace} style={styles.pollyImage} />
+        {pollyText ? <Text style={styles.pillText}>{pollyText}</Text> : null}
       </View>
 
       <View style={styles.meterRow}>
@@ -134,11 +149,20 @@ const styles = StyleSheet.create({
   },
   pill: {
     alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 20,
+    borderRadius: 24,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
+  pollyImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    resizeMode: 'cover',
+  } as const,
   pillText: {
     color: 'rgba(255,255,255,0.85)',
     fontSize: 14,
