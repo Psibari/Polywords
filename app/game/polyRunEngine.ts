@@ -33,7 +33,7 @@ export type GameState = {
   feedback: string | null;
   status: GameStatus;
   lastActionAt: number;
-  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'hiddenReveal';
+  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'hiddenReveal' | 'phraseBreak';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
 };
@@ -275,8 +275,8 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
   const step = currentStep(state);
   if (step.kind !== 'phraseBreak') return state;
 
-  const correct = choice === step.correctChoice;
-  const bonus = correct ? 500 : 0;
+  const correct = step.answers.some(a => a.correct && a.text === choice);
+  const bonus = correct ? 150 : 0;
 
   const wordResult: WordResult = {
     word: step.phrase,

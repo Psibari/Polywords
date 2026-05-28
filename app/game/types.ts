@@ -79,9 +79,8 @@ export type PhraseBreakStep = {
   emotionalRole: 'reward';
   eventType: 'phraseBreak';
   question: string;
-  choices: string[];
-  correctChoice: string;
-  pollyLine: string;
+  answers: { text: string; correct: boolean }[];
+  pollyReveal: string;
 };
 
 export type SessionStep = WordStep | PhraseBreakStep;

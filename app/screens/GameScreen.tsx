@@ -6,6 +6,7 @@ import { SESSION } from '../game/session';
 import { useGameStore } from '../store/useGameStore';
 import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
+import { PhraseBreakScreen } from '../components/PhraseBreakScreen';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
@@ -156,12 +157,8 @@ function GameContent() {
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
 
-  if (step.kind !== 'word') {
-    return (
-      <View style={styles.placeholder}>
-        <Text style={styles.placeholderText}>PHRASE BREAK</Text>
-      </View>
-    );
+  if (step.kind === 'phraseBreak') {
+    return <PhraseBreakScreen step={step} />;
   }
 
   return (
@@ -186,17 +183,5 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#1A1040',
-  },
-  placeholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderText: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
-    letterSpacing: 3,
   },
 });

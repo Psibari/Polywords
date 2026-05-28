@@ -5,9 +5,64 @@
 
 import { SessionStep, WordStep, PhraseBreakStep } from './types';
 
+// ============================================================
+// PHRASE BREAK POOL
+// ============================================================
+
+export const phraseBreakPool: PhraseBreakStep[] = [
+  {
+    kind: 'phraseBreak',
+    emotionalRole: 'reward',
+    eventType: 'phraseBreak',
+    phrase: 'Spill the beans',
+    question: 'Where did this come from?',
+    answers: [
+      { text: 'Secret voting with beans', correct: true },
+      { text: 'Cooking accident',         correct: false },
+      { text: 'Farm market gossip',        correct: false },
+      { text: 'Sailor punishment',         correct: false },
+    ],
+    pollyReveal: 'Ancient Greeks voted with beans.',
+  },
+  {
+    kind: 'phraseBreak',
+    emotionalRole: 'reward',
+    eventType: 'phraseBreak',
+    phrase: 'Bite the bullet',
+    question: 'What did this literally mean?',
+    answers: [
+      { text: 'Chew metal to survive pain', correct: true },
+      { text: 'Face gunfire bravely',        correct: false },
+      { text: 'Load your weapon fast',       correct: false },
+      { text: 'Take the hit for someone',    correct: false },
+    ],
+    pollyReveal: 'Surgery before anaesthetic.',
+  },
+  {
+    kind: 'phraseBreak',
+    emotionalRole: 'reward',
+    eventType: 'phraseBreak',
+    phrase: 'Break a leg',
+    question: 'Why do actors say this?',
+    answers: [
+      { text: 'Saying luck brings bad luck', correct: true },
+      { text: 'Old dance move',              correct: false },
+      { text: 'Shakespeare wrote it first',  correct: false },
+      { text: 'Stage falling was common',    correct: false },
+    ],
+    pollyReveal: 'Reverse the curse.',
+  },
+];
+
+const _selected = phraseBreakPool[Math.floor(Math.random() * phraseBreakPool.length)];
+
+// ============================================================
+// SESSION — 9 steps (8 words + 1 phrase break at index 4)
+// ============================================================
+
 export const SESSION: SessionStep[] = [
 
-  // WORD 1 — BARK
+  // WORD 1 — BARK (index 0)
   {
     kind: 'word',
     word: 'BARK',
@@ -27,7 +82,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 2 — SPRING
+  // WORD 2 — SPRING (index 1)
   {
     kind: 'word',
     word: 'SPRING',
@@ -50,7 +105,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 3 — LIGHT
+  // WORD 3 — LIGHT (index 2)
   {
     kind: 'word',
     word: 'LIGHT',
@@ -72,7 +127,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 4 — BANK
+  // WORD 4 — BANK (index 3)
   {
     kind: 'word',
     word: 'BANK',
@@ -94,7 +149,10 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 5 — WAKE
+  // PHRASE BREAK (index 4) — randomly selected from phraseBreakPool
+  _selected,
+
+  // WORD 5 — WAKE (index 5)
   {
     kind: 'word',
     word: 'WAKE',
@@ -115,7 +173,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 6 — MATCH
+  // WORD 6 — MATCH (index 6)
   {
     kind: 'word',
     word: 'MATCH',
@@ -137,7 +195,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 7 — SOUND
+  // WORD 7 — SOUND (index 7)
   {
     kind: 'word',
     word: 'SOUND',
@@ -160,7 +218,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 8 — ORDER
+  // WORD 8 — ORDER (index 8)
   {
     kind: 'word',
     word: 'ORDER',
