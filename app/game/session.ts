@@ -23,8 +23,7 @@ export const SESSION: SessionStep[] = [
       { id: 'bark_dog',      emoji: '🔊', phrase: "Dog's sharp call",     isReal: true },
       { id: 'bark_orders',   emoji: '📢', phrase: 'Command sharply',      isReal: true },
       { id: 'bark_scratchy', emoji: '🫧', phrase: 'Scratchy to touch',    isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'bark_branch',   emoji: '🪵', phrase: 'Fallen branch',        isReal: false, trapType: 'domainNeighbor' },
-      { id: 'bark_animal',   emoji: '🐾', phrase: "Animal's loud call",   isReal: false, trapType: 'almostSynonym' },
+      { id: 'bark_surface',  emoji: '🪨', phrase: 'Rough and raw',        isReal: false, trapType: 'visualNeighbor' },
     ],
   },
 
