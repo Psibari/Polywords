@@ -60,6 +60,8 @@ export function MaskBoard({ step }: Props) {
   const absorptionScale       = useRef(new Animated.Value(1)).current;
   const ringScale             = useRef(new Animated.Value(1)).current;
   const ringOpacity           = useRef(new Animated.Value(0)).current;
+  const wordEntryOpacity      = useRef(new Animated.Value(0)).current;
+  const wordEntryScale        = useRef(new Animated.Value(0.85)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
 
@@ -155,6 +157,10 @@ export function MaskBoard({ step }: Props) {
   const hiddenTileScaleX    = useRef(new Animated.Value(1)).current;
   const dimOpacity          = useRef(new Animated.Value(0)).current;
 
+  const hiddenEntryOpacity  = useRef(new Animated.Value(0)).current;
+  const hiddenEntryTransY   = useRef(new Animated.Value(30)).current;
+  const hiddenEntryScaleY   = useRef(new Animated.Value(0.85)).current;
+
   // Split tile entrance + post-landing pulse
   const splitTopOpacity = useRef(new Animated.Value(0)).current;
   const splitTopTransY  = useRef(new Animated.Value(-40)).current;
@@ -197,6 +203,29 @@ export function MaskBoard({ step }: Props) {
     loop.start();
     return () => loop.stop();
   }, [hiddenPhase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Word title: fade + scale in whenever the word changes (and on mount)
+  useEffect(() => {
+    wordEntryOpacity.setValue(0);
+    wordEntryScale.setValue(0.85);
+    Animated.parallel([
+      Animated.timing(wordEntryOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(wordEntryScale,   { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Hidden tile: staggered entry after all regular tiles have appeared
+  useEffect(() => {
+    if (!hasHidden) return;
+    const id = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(hiddenEntryTransY,  { toValue: 0, tension: 160, friction: 14, useNativeDriver: true }),
+        Animated.spring(hiddenEntryScaleY,  { toValue: 1, tension: 160, friction: 14, useNativeDriver: true }),
+        Animated.timing(hiddenEntryOpacity, { toValue: 1, duration: 250,              useNativeDriver: true }),
+      ]).start();
+    }, visibleGridMasks.length * 80);
+    return () => clearTimeout(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Lock tile on first wrong swipe
   function lockHidden() {
@@ -426,7 +455,14 @@ export function MaskBoard({ step }: Props) {
       <View style={styles.header}>
         <View style={styles.wordContainer}>
           <Animated.Text
-            style={[styles.word, { color: wordColor, transform: [{ scale: absorptionScale }] }]}
+            style={[
+              styles.word,
+              {
+                color: wordColor,
+                opacity: wordEntryOpacity,
+                transform: [{ scale: absorptionScale }, { scale: wordEntryScale }],
+              },
+            ]}
           >
             {step.word}
           </Animated.Text>
@@ -450,24 +486,31 @@ export function MaskBoard({ step }: Props) {
       {/* HIDDEN MEANING tile — outer: native transforms, inner: non-native border color */}
       {hasHidden && hiddenPhase !== 'split' && (
         <Animated.View
-          pointerEvents="none"
           style={{
-            marginTop: 8,
-            opacity: hiddenTileOpacity,
-            transform: [
-              { scale:      hiddenTileScale  },
-              { translateY: hiddenTileTransY },
-              { scaleX:     hiddenTileScaleX },
-            ],
+            opacity: hiddenEntryOpacity,
+            transform: [{ translateY: hiddenEntryTransY }, { scaleY: hiddenEntryScaleY }],
           }}
         >
           <Animated.View
-            style={[
-              styles.hiddenTile,
-              { height: tileHeight, borderColor: hiddenBorderColor as any },
-            ]}
+            pointerEvents="none"
+            style={{
+              marginTop: 8,
+              opacity: hiddenTileOpacity,
+              transform: [
+                { scale:      hiddenTileScale  },
+                { translateY: hiddenTileTransY },
+                { scaleX:     hiddenTileScaleX },
+              ],
+            }}
           >
-            <Text style={styles.hiddenTileText}>✨ HIDDEN MEANING</Text>
+            <Animated.View
+              style={[
+                styles.hiddenTile,
+                { height: tileHeight, borderColor: hiddenBorderColor as any },
+              ]}
+            >
+              <Text style={styles.hiddenTileText}>✨ HIDDEN MEANING</Text>
+            </Animated.View>
           </Animated.View>
         </Animated.View>
       )}
@@ -477,7 +520,7 @@ export function MaskBoard({ step }: Props) {
         style={styles.gridWrap}
         onLayout={e => setGridHeight(e.nativeEvent.layout.height)}
       >
-        {visibleGridMasks.map(mask => (
+        {visibleGridMasks.map((mask, index) => (
           <View key={mask.id} ref={getTileRef(mask.id)}>
             <SwipeMask
               mask={mask}
@@ -487,6 +530,7 @@ export function MaskBoard({ step }: Props) {
               onTapReveal={() => {}}
               revealable={false}
               tileHeight={tileHeight}
+              entryDelay={index * 80}
             />
           </View>
         ))}

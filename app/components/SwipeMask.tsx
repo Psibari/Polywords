@@ -28,6 +28,7 @@ type Props = {
   revealable?: boolean;
   tileHeight?: number;
   isSpecialSplit?: boolean;
+  entryDelay?: number;
 };
 
 const FRAGMENT_OFFSETS = [
@@ -48,6 +49,7 @@ export function SwipeMask({
   revealable = false,
   tileHeight = 64,
   isSpecialSplit = false,
+  entryDelay = 0,
 }: Props) {
   const [bgColor, setBgColor] = useState(isSpecialSplit ? '#251F4A' : '#2A2560');
   const [showShatter, setShowShatter] = useState(false);
@@ -76,6 +78,22 @@ export function SwipeMask({
 
   useEffect(() => { onSwipeUpRef.current = onSwipeUp; }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current = onSwipeDown; }, [onSwipeDown]);
+
+  // ── Entry animation ───────────────────────────────────────────
+  const entryOpacity = useRef(new Animated.Value(0)).current;
+  const entryTransY  = useRef(new Animated.Value(30)).current;
+  const entryScaleY  = useRef(new Animated.Value(0.85)).current;
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(entryTransY,  { toValue: 0, tension: 180, friction: 12, useNativeDriver: true }),
+        Animated.spring(entryScaleY,  { toValue: 1, tension: 180, friction: 12, useNativeDriver: true }),
+        Animated.timing(entryOpacity, { toValue: 1, duration: 220,              useNativeDriver: true }),
+      ]).start();
+    }, entryDelay);
+    return () => clearTimeout(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!judgedRef.current) {
@@ -234,16 +252,24 @@ export function SwipeMask({
   // ── Hidden state ──────────────────────────────────────────────
   if (s === 'hidden') {
     return (
-      <Animated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
-        <Pressable
-          onPress={revealable ? onTapReveal : undefined}
-          style={[styles.tile, { height: tileHeight, backgroundColor: '#2A2060' }]}
-        >
-          <FluentEmoji emoji="❓" size={32} />
-          <Text style={[styles.phrase, { color: '#FFD700' }]} numberOfLines={2}>
-            Hidden meaning
-          </Text>
-        </Pressable>
+      <Animated.View
+        style={{
+          overflow: 'visible',
+          opacity: entryOpacity,
+          transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
+        }}
+      >
+        <Animated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
+          <Pressable
+            onPress={revealable ? onTapReveal : undefined}
+            style={[styles.tile, { height: tileHeight, backgroundColor: '#2A2060' }]}
+          >
+            <FluentEmoji emoji="❓" size={32} />
+            <Text style={[styles.phrase, { color: '#FFD700' }]} numberOfLines={2}>
+              Hidden meaning
+            </Text>
+          </Pressable>
+        </Animated.View>
       </Animated.View>
     );
   }
@@ -257,6 +283,13 @@ export function SwipeMask({
   const centerY = tileHeight / 2 - fragH / 2;
 
   return (
+    <Animated.View
+      style={{
+        overflow: 'visible',
+        opacity: entryOpacity,
+        transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
+      }}
+    >
     <Animated.View
       style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
     >
@@ -316,6 +349,7 @@ export function SwipeMask({
           }}
         />
       ))}
+    </Animated.View>
     </Animated.View>
   );
 }
