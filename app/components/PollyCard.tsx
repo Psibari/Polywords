@@ -2,21 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
 import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
-import { SESSION } from '../game/session';
 import { getPollyBudgetState, trackPollyTime } from '../logic/pollyBudget';
 import { BUDGET, POLLY_LINES } from './PollyController';
 
 const POLLY_FACE: Record<string, ImageSourcePropType> = {
-  sessionStart:  require('../../assets/images/polly/polly_letsPlay.png'),
-  intro:         require('../../assets/images/polly/polly_knowing.png'),
-  correct:       require('../../assets/images/polly/polly_clever.png'),
-  wrong:         require('../../assets/images/polly/polly_thinking.png'),
-  wordUp:        require('../../assets/images/polly/polly_wordUp.png'),
-  bossWord:      require('../../assets/images/polly/polly_reading.png'),
-  hiddenReveal:  require('../../assets/images/polly/polly_clever.png'),
-  locked:        require('../../assets/images/polly/polly_thinking.png'),
-  cleanSplit:    require('../../assets/images/polly/polly_wordUp.png'),
-  default:       require('../../assets/images/polly/polly_knowing.png'),
+  sessionStart:  require('../../assets/images/Polly/polly_excited.png'),   // swap for polly_letsPlay when available
+  intro:         require('../../assets/images/Polly/polly_knowing.png'),
+  correct:       require('../../assets/images/Polly/polly_clever.png'),
+  wrong:         require('../../assets/images/Polly/polly_thinking.png'),
+  wordUp:        require('../../assets/images/Polly/polly_pointing.png'),  // swap for polly_wordUp when available
+  bossWord:      require('../../assets/images/Polly/polly_angle.png'),     // swap for polly_reading when available
+  hiddenReveal:  require('../../assets/images/Polly/polly_clever.png'),
+  locked:        require('../../assets/images/Polly/polly_thinking.png'),
+  cleanSplit:    require('../../assets/images/Polly/polly_pointing.png'),  // swap for polly_wordUp when available
+  default:       require('../../assets/images/Polly/polly_knowing.png'),
 };
 
 const NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
