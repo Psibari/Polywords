@@ -27,6 +27,7 @@ type Props = {
   state: SwipeMaskState;
   revealable?: boolean;
   tileHeight?: number;
+  isSpecialSplit?: boolean;
 };
 
 const FRAGMENT_OFFSETS = [
@@ -46,8 +47,9 @@ export function SwipeMask({
   state: s,
   revealable = false,
   tileHeight = 64,
+  isSpecialSplit = false,
 }: Props) {
-  const [bgColor, setBgColor] = useState('#2A2560');
+  const [bgColor, setBgColor] = useState(isSpecialSplit ? '#251F4A' : '#2A2560');
   const [showShatter, setShowShatter] = useState(false);
 
   const outerHeightAnim    = useRef(new Animated.Value(tileHeight)).current;
@@ -266,6 +268,7 @@ export function SwipeMask({
             backgroundColor: bgColor,
             opacity: tileOpacity,
             transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
+            ...(isSpecialSplit ? { borderColor: '#FFD700' } : {}),
           },
         ]}
         onLayout={(e: LayoutChangeEvent) => {
@@ -282,6 +285,9 @@ export function SwipeMask({
         <Text style={[styles.phrase, { color: textColor }]} numberOfLines={2}>
           {mask.phrase}
         </Text>
+        {isSpecialSplit && (
+          <Text style={styles.specialBadge}>✨</Text>
+        )}
       </Animated.View>
 
       {showShatter && FRAGMENT_OFFSETS.map((_, i) => (
@@ -341,5 +347,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     flex: 1,
+  },
+  specialBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    fontSize: 10,
   },
 });

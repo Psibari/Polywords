@@ -33,7 +33,7 @@ export type GameState = {
   feedback: string | null;
   status: GameStatus;
   lastActionAt: number;
-  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'streak5' | 'locked' | 'cleanSplit';
+  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'streak5' | 'locked' | 'cleanSplit' | 'hiddenReveal';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
 };
