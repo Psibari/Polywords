@@ -215,6 +215,12 @@ export function MaskBoard({ step }: Props) {
     return () => loop.stop();
   }, [hiddenPhase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Reset boss animated values on mount — guards against native-layer residuals between words
+  useEffect(() => {
+    bossShakeX.setValue(0);
+    if (!isBoss) bossWordTranslateY.setValue(0);
+  }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Word title: fade + scale in on word change (boss skips — has own entrance)
   useEffect(() => {
     if (isBoss) return;
