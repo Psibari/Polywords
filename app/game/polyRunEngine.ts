@@ -61,7 +61,7 @@ export function createGame(): GameState {
     swipedDownIds: [],
     revealedHiddenMasks: {},
     score: 0,
-    lives: 3,
+    lives: 5,
     combo: 0,
     bestCombo: 0,
     mistakesOnWord: 0,
