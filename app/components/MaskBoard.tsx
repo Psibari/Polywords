@@ -26,7 +26,9 @@ type SplitPair    = { left: SwipeMaskState; right: SwipeMaskState };
 type Props = { step: WordStep };
 
 export function MaskBoard({ step }: Props) {
-  const store = useGameStore();
+  const store     = useGameStore();
+  const isBoss    = step.eventType === 'bossWord';
+  const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
 
   // ── tile state map ──────────────────────────────────────────
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => {
@@ -42,6 +44,7 @@ export function MaskBoard({ step }: Props) {
   // ── available height / width ─────────────────────────────────
   const [gridHeight, setGridHeight]         = useState(0);
   const [containerWidth, setContainerWidth] = useState(350);
+  const containerWidthRef                   = useRef(350);
 
   const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex]
     ?? step.masks.filter(m => !m.isHidden);
@@ -64,6 +67,12 @@ export function MaskBoard({ step }: Props) {
   const wordEntryScale        = useRef(new Animated.Value(0.85)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
+
+  // ── boss entrance animated values ────────────────────────────
+  const bossWordTranslateY = useRef(new Animated.Value(isBoss ? -300 : 0)).current;
+  const bossShakeX         = useRef(new Animated.Value(0)).current;
+  const bossSweepX         = useRef(new Animated.Value(-60)).current;
+  const bossSweepOpacity   = useRef(new Animated.Value(0)).current;
 
   function triggerAbsorption(phrase: string) {
     absorptionScale.setValue(1);
@@ -89,6 +98,12 @@ export function MaskBoard({ step }: Props) {
 
   // ── container ref ───────────────────────────────────────────
   const containerRef = useRef<View>(null);
+
+  // ── boss state ───────────────────────────────────────────────
+  const [bossReady, setBossReady]             = useState(!isBoss);
+  const [bossSweepActive, setBossSweepActive] = useState(false);
+  // boss words suppress the PollyCard intro — bossWord trigger fires after entrance instead
+  const bossSuppressIntro = isBoss;
 
   // ── tile refs (for score float spawn position) ───────────────
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
@@ -148,8 +163,7 @@ export function MaskBoard({ step }: Props) {
   const splitStatesRef    = useRef<SplitPair>({ left: 'idle', right: 'idle' });
   const [splitTileStates, setSplitTileStates] = useState<SplitPair>({ left: 'idle', right: 'idle' });
 
-  // Hidden tile animated values (outer = native, inner = non-native border color)
-  const hiddenBorderAnim    = useRef(new Animated.Value(0)).current; // 0=green, 1=gold
+  const hiddenBorderAnim    = useRef(new Animated.Value(0)).current;
   const hiddenBorderLoopRef = useRef<Animated.CompositeAnimation | null>(null);
   const hiddenTileOpacity   = useRef(new Animated.Value(1)).current;
   const hiddenTileScale     = useRef(new Animated.Value(1)).current;
@@ -157,11 +171,10 @@ export function MaskBoard({ step }: Props) {
   const hiddenTileScaleX    = useRef(new Animated.Value(1)).current;
   const dimOpacity          = useRef(new Animated.Value(0)).current;
 
-  const hiddenEntryOpacity  = useRef(new Animated.Value(0)).current;
-  const hiddenEntryTransY   = useRef(new Animated.Value(30)).current;
-  const hiddenEntryScaleY   = useRef(new Animated.Value(0.85)).current;
+  const hiddenEntryOpacity = useRef(new Animated.Value(0)).current;
+  const hiddenEntryTransY  = useRef(new Animated.Value(30)).current;
+  const hiddenEntryScaleY  = useRef(new Animated.Value(0.85)).current;
 
-  // Split tile entrance + post-landing pulse
   const splitTopOpacity = useRef(new Animated.Value(0)).current;
   const splitTopTransY  = useRef(new Animated.Value(-40)).current;
   const splitTopScaleY  = useRef(new Animated.Value(0)).current;
@@ -171,7 +184,6 @@ export function MaskBoard({ step }: Props) {
   const splitBotScaleY  = useRef(new Animated.Value(0)).current;
   const splitBotPulse   = useRef(new Animated.Value(1)).current;
 
-  // Hidden split masks
   const hiddenRealMask: Mask = {
     id:     'hidden_real',
     emoji:  step.hiddenEmoji     ?? '✨',
@@ -185,7 +197,6 @@ export function MaskBoard({ step }: Props) {
     isReal: false,
   };
 
-  // Border color interpolation: green ↔ gold, 2000ms per full cycle
   const hiddenBorderColor = hiddenBorderAnim.interpolate({
     inputRange:  [0, 1],
     outputRange: ['#4CAF50', '#FFD700'],
@@ -204,8 +215,9 @@ export function MaskBoard({ step }: Props) {
     return () => loop.stop();
   }, [hiddenPhase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Word title: fade + scale in whenever the word changes (and on mount)
+  // Word title: fade + scale in on word change (boss skips — has own entrance)
   useEffect(() => {
+    if (isBoss) return;
     wordEntryOpacity.setValue(0);
     wordEntryScale.setValue(0.85);
     Animated.parallel([
@@ -214,9 +226,9 @@ export function MaskBoard({ step }: Props) {
     ]).start();
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Hidden tile: staggered entry after all regular tiles have appeared
+  // Hidden tile staggered entry — skipped for boss (handled by bossReady effect)
   useEffect(() => {
-    if (!hasHidden) return;
+    if (!hasHidden || isBoss) return;
     const id = setTimeout(() => {
       Animated.parallel([
         Animated.spring(hiddenEntryTransY,  { toValue: 0, tension: 160, friction: 14, useNativeDriver: true }),
@@ -227,7 +239,88 @@ export function MaskBoard({ step }: Props) {
     return () => clearTimeout(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Lock tile on first wrong swipe
+  // Boss: animate hidden tile in after tiles have staggered
+  useEffect(() => {
+    if (!isBoss || !bossReady || !hasHidden) return;
+    const id = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(hiddenEntryTransY,  { toValue: 0, tension: 160, friction: 14, useNativeDriver: true }),
+        Animated.spring(hiddenEntryScaleY,  { toValue: 1, tension: 160, friction: 14, useNativeDriver: true }),
+        Animated.timing(hiddenEntryOpacity, { toValue: 1, duration: 250,              useNativeDriver: true }),
+      ]).start();
+    }, visibleGridMasks.length * 100);
+    return () => clearTimeout(id);
+  }, [bossReady]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Boss word entrance sequence
+  useEffect(() => {
+    if (!isBoss) return;
+
+    const t1 = setTimeout(() => {
+      // Make word visible — spring handles the translate from -300
+      wordEntryOpacity.setValue(1);
+      wordEntryScale.setValue(1);
+
+      Animated.spring(bossWordTranslateY, {
+        toValue: 0,
+        tension: 280,
+        friction: 6,
+        useNativeDriver: true,
+      }).start();
+
+      // Fire impact effects when word hits baseline (~300ms into the spring)
+      setTimeout(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+        // Screen shake: 0 → 4 → -4 → 3 → -3 → 1 → 0, 180ms total
+        Animated.sequence([
+          Animated.timing(bossShakeX, { toValue:  4, duration: 30, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue: -4, duration: 30, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue:  3, duration: 30, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue: -3, duration: 30, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue:  1, duration: 30, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue:  0, duration: 30, useNativeDriver: true }),
+        ]).start();
+
+        // Gold sweep starts 100ms after impact
+        setTimeout(() => {
+          setBossSweepActive(true);
+          bossSweepX.setValue(-60);
+          bossSweepOpacity.setValue(0.7);
+
+          Animated.timing(bossSweepX, {
+            toValue: containerWidthRef.current + 60,
+            duration: 500,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }).start(() => {
+            // Beam fades out
+            Animated.timing(bossSweepOpacity, {
+              toValue: 0,
+              duration: 150,
+              useNativeDriver: true,
+            }).start(() => {
+              setBossSweepActive(false);
+
+              // Reset hidden tile values before showing board so it animates in cleanly
+              if (hasHidden) {
+                hiddenEntryOpacity.setValue(0);
+                hiddenEntryTransY.setValue(30);
+                hiddenEntryScaleY.setValue(0.85);
+              }
+
+              // Fire Polly boss line, then show tiles
+              store.setPollyTrigger('bossWord');
+              setBossReady(true);
+            });
+          });
+        }, 100);
+      }, 300);
+    }, 600);
+
+    return () => clearTimeout(t1);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   function lockHidden() {
     hiddenBorderLoopRef.current?.stop();
     setHiddenPhase('locked');
@@ -238,14 +331,11 @@ export function MaskBoard({ step }: Props) {
   // ── Cinematic split sequence ──────────────────────────────────
   function startSplit() {
     hiddenBorderLoopRef.current?.stop();
-    hiddenBorderAnim.setValue(1); // snap border to gold
+    hiddenBorderAnim.setValue(1);
 
     const topIsReal = Math.random() > 0.5;
 
-    // Step 1 — 400ms pause
     setTimeout(() => {
-
-      // Step 2 — Pulse hidden tile 3× (gold border locked for duration)
       Animated.loop(
         Animated.sequence([
           Animated.timing(hiddenTileScale, { toValue: 1.06, duration: 180, useNativeDriver: true }),
@@ -254,19 +344,15 @@ export function MaskBoard({ step }: Props) {
         { iterations: 3 },
       ).start(() => {
 
-        // Step 3 — Float up (spring)
         Animated.spring(hiddenTileTransY, {
           toValue: -8, tension: 60, friction: 8, useNativeDriver: true,
         }).start(() => {
 
-          // Step 4 — Dim overlay fades in
           setDimVisible(true);
           Animated.timing(dimOpacity, { toValue: 0.25, duration: 150, useNativeDriver: true }).start(() => {
 
-            // Step 5 — Tile squeezes to nothing (scaleX → 0.05)
             Animated.timing(hiddenTileScaleX, { toValue: 0.05, duration: 120, useNativeDriver: true }).start(() => {
 
-              // Step 6 — Split tiles slam in
               setSplitTopIsReal(topIsReal);
               splitTopIsRealRef.current = topIsReal;
               setHiddenPhase('split');
@@ -295,11 +381,9 @@ export function MaskBoard({ step }: Props) {
                     Animated.spring(splitBotScaleY,  { toValue: 1, damping: 12, stiffness: 280, useNativeDriver: true }),
                   ]).start(() => {
 
-                    // Step 7 — Dim overlay fades out
                     Animated.timing(dimOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
                       setDimVisible(false);
 
-                      // Step 8 — Landing pulse on each split tile (2×)
                       Animated.loop(Animated.sequence([
                         Animated.timing(splitTopPulse, { toValue: 1.06, duration: 180, useNativeDriver: true }),
                         Animated.timing(splitTopPulse, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
@@ -310,20 +394,17 @@ export function MaskBoard({ step }: Props) {
                         Animated.timing(splitBotPulse, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
                       ]), { iterations: 2 }).start();
 
-                      // Step 9 — Sound
                       playSplitReveal();
-
-                      // Step 10 — Polly
                       store.setPollyTrigger('hiddenReveal');
                     });
                   });
-                }, 80); // stagger second tile by 80ms
+                }, 80);
               }, 16);
             });
           });
         });
       });
-    }, 400); // initial pause
+    }, 400);
   }
 
   // ── split tile state helpers ─────────────────────────────────
@@ -403,7 +484,7 @@ export function MaskBoard({ step }: Props) {
     if (perfect && hasHidden) {
       splitTriggeredRef.current = true;
       store.setPollyTrigger('perfect');
-      startSplit(); // 400ms internal pause replaces old 350ms delay
+      startSplit();
     } else {
       completedRef.current = true;
       setTimeout(() => store.completeWord(), 700);
@@ -440,15 +521,18 @@ export function MaskBoard({ step }: Props) {
     }
   }
 
-  // ── render ────────────────────────────────────────────────────
-  const isBoss    = step.eventType === 'bossWord';
-  const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
+  const showBoardContent = !isBoss || bossReady;
 
+  // ── render ────────────────────────────────────────────────────
   return (
-    <View
-      style={styles.container}
-      ref={containerRef}
-      onLayout={e => setContainerWidth(e.nativeEvent.layout.width)}
+    <Animated.View
+      style={[styles.container, { transform: [{ translateX: bossShakeX }] }]}
+      ref={containerRef as any}
+      onLayout={e => {
+        const w = e.nativeEvent.layout.width;
+        setContainerWidth(w);
+        containerWidthRef.current = w;
+      }}
       onStartShouldSetResponder={() => true}
     >
       {/* word header */}
@@ -457,10 +541,15 @@ export function MaskBoard({ step }: Props) {
           <Animated.Text
             style={[
               styles.word,
+              isBoss && styles.wordBoss,
               {
                 color: wordColor,
                 opacity: wordEntryOpacity,
-                transform: [{ scale: absorptionScale }, { scale: wordEntryScale }],
+                transform: [
+                  { scale: absorptionScale },
+                  { scale: wordEntryScale },
+                  { translateY: bossWordTranslateY },
+                ],
               },
             ]}
           >
@@ -478,13 +567,45 @@ export function MaskBoard({ step }: Props) {
             {absorbedPhrase}
           </Animated.Text>
         )}
+
+        {/* Boss gold sweep — absolutely positioned over the header */}
+        {bossSweepActive && (
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              overflow: 'hidden',
+            }}
+          >
+            <Animated.View
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                width: 60,
+                backgroundColor: '#FFD700',
+                opacity: bossSweepOpacity,
+                transform: [{ translateX: bossSweepX }],
+              }}
+            />
+          </View>
+        )}
       </View>
 
       {/* Polly Card strip */}
-      <PollyCard step={step} foundCount={foundCount} totalReal={totalReal} />
+      <PollyCard
+        step={step}
+        foundCount={foundCount}
+        totalReal={totalReal}
+        suppressIntro={bossSuppressIntro}
+      />
 
-      {/* HIDDEN MEANING tile — outer: native transforms, inner: non-native border color */}
-      {hasHidden && hiddenPhase !== 'split' && (
+      {/* HIDDEN MEANING tile — gated for boss until tiles are ready */}
+      {hasHidden && hiddenPhase !== 'split' && showBoardContent && (
         <Animated.View
           style={{
             opacity: hiddenEntryOpacity,
@@ -515,12 +636,12 @@ export function MaskBoard({ step }: Props) {
         </Animated.View>
       )}
 
-      {/* tile stack */}
+      {/* tile stack — gridWrap always renders to keep height measurement */}
       <View
         style={styles.gridWrap}
         onLayout={e => setGridHeight(e.nativeEvent.layout.height)}
       >
-        {visibleGridMasks.map((mask, index) => (
+        {showBoardContent && visibleGridMasks.map((mask, index) => (
           <View key={mask.id} ref={getTileRef(mask.id)}>
             <SwipeMask
               mask={mask}
@@ -530,13 +651,13 @@ export function MaskBoard({ step }: Props) {
               onTapReveal={() => {}}
               revealable={false}
               tileHeight={tileHeight}
-              entryDelay={index * 80}
+              entryDelay={index * (isBoss ? 100 : 80)}
             />
           </View>
         ))}
 
-        {/* split tiles — stagger entrance, landing pulse via wrapper scale */}
-        {showSplitBars && (
+        {/* split tiles */}
+        {showBoardContent && showSplitBars && (
           <View style={styles.splitStack}>
             <Animated.View
               style={{
@@ -595,7 +716,7 @@ export function MaskBoard({ step }: Props) {
         />
       ))}
 
-      {/* dim overlay — renders last so it sits above everything */}
+      {/* dim overlay */}
       {dimVisible && (
         <Animated.View
           pointerEvents="none"
@@ -605,7 +726,7 @@ export function MaskBoard({ step }: Props) {
           ]}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -624,6 +745,9 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontFamily: 'BagelFatOne_400Regular',
     letterSpacing: 3,
+  },
+  wordBoss: {
+    fontSize: 76,
   },
   wordContainer: {
     alignItems: 'center',

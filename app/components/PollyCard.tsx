@@ -45,9 +45,10 @@ type Props = {
   step: WordStep;
   foundCount: number;
   totalReal: number;
+  suppressIntro?: boolean;
 };
 
-export function PollyCard({ step, foundCount, totalReal }: Props) {
+export function PollyCard({ step, foundCount, totalReal, suppressIntro }: Props) {
   const game         = useGameStore(s => s.game);
   const setTrigger   = useGameStore(s => s.setPollyTrigger);
   const clearTrigger = useGameStore(s => s.clearPollyTrigger);
@@ -56,8 +57,9 @@ export function PollyCard({ step, foundCount, totalReal }: Props) {
 
   const fillAnim = useRef(new Animated.Value(0)).current;
 
-  // Fire intro on word mount
+  // Fire intro on word mount — boss words suppress this (bossWord trigger fires after entrance)
   useEffect(() => {
+    if (suppressIntro) return;
     setTrigger('intro');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
