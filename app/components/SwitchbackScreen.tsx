@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Pressable,
+  PanResponder,
   StyleSheet,
   Text,
   View,
@@ -26,23 +26,29 @@ type TileState = 'idle' | 'correct' | 'wrong';
 function AnswerTile({
   word,
   state,
-  onPress,
+  onCommit,
   entryDelay,
 }: {
   word: string;
   state: TileState;
-  onPress: () => void;
+  onCommit: () => void;
   entryDelay: number;
 }) {
-  const heightAnim  = useRef(new Animated.Value(TILE_H)).current;
-  const marginAnim  = useRef(new Animated.Value(TILE_GAP)).current;
-  const entryTransY = useRef(new Animated.Value(30)).current;
+  // Layer 1 (outermost): collapse — useNativeDriver: false
+  const heightAnim   = useRef(new Animated.Value(TILE_H)).current;
+  const marginAnim   = useRef(new Animated.Value(TILE_GAP)).current;
+
+  // Layer 2 (middle): entry — useNativeDriver: true
+  const entryTransY  = useRef(new Animated.Value(30)).current;
   const entryOpacity = useRef(new Animated.Value(0)).current;
 
-  const [bgColor, setBgColor]     = useState('#2A2560');
+  // Layer 3 (innermost): drag + fly-off — useNativeDriver: false
+  const dragTransY   = useRef(new Animated.Value(0)).current;
+
+  const committedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  // entry animation
+  // entry animation — useNativeDriver: true
   useEffect(() => {
     const id = setTimeout(() => {
       Animated.parallel([
@@ -53,41 +59,91 @@ function AnswerTile({
     return () => clearTimeout(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // state-driven animations
+  // state-driven sound + collapse — useNativeDriver: false
   useEffect(() => {
     if (state === 'correct') {
-      setBgColor('#FFD700');
       playCorrectTap();
+      Animated.parallel([
+        Animated.timing(heightAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+        Animated.timing(marginAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+      ]).start(() => setCollapsed(true));
     }
     if (state === 'wrong') {
-      setBgColor('#CC2200');
       playWrongBuzz();
       const id = setTimeout(() => {
-        setBgColor('#2A2560');
         Animated.parallel([
           Animated.timing(heightAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
           Animated.timing(marginAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]).start(() => setCollapsed(true));
-      }, 300);
+      }, 200);
       return () => clearTimeout(id);
     }
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder:        () => !committedRef.current,
+      onMoveShouldSetPanResponder:        (_, g) => !committedRef.current && g.dy < -5,
+      onMoveShouldSetPanResponderCapture: (_, g) => !committedRef.current && g.dy < -4,
+      onPanResponderTerminationRequest: () => false,
+
+      onPanResponderMove: (_, g) => {
+        if (committedRef.current) return;
+        // Only track upward movement (dy < 0)
+        dragTransY.setValue(g.dy < 0 ? g.dy : 0);
+      },
+
+      onPanResponderRelease: (_, g) => {
+        if (committedRef.current) return;
+        if (g.dy < -40) {
+          committedRef.current = true;
+          // Fly tile off top, then trigger correct/wrong logic
+          Animated.timing(dragTransY, {
+            toValue: -800,
+            duration: 300,
+            useNativeDriver: false,
+          }).start();
+          setTimeout(() => onCommit(), 300);
+        } else {
+          // Spring back to resting position
+          Animated.spring(dragTransY, {
+            toValue: 0,
+            tension: 200,
+            friction: 14,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+
+      onPanResponderTerminate: () => {
+        if (!committedRef.current) {
+          Animated.spring(dragTransY, {
+            toValue: 0,
+            tension: 200,
+            friction: 14,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
   if (collapsed) return null;
 
-  const textColor = state === 'correct' ? '#1A1040' : '#FFFFFF';
-
   return (
-    // outer: height animation — useNativeDriver: false
+    // outer: height/margin collapse — useNativeDriver: false
     <Animated.View style={{ height: heightAnim, marginTop: marginAnim, overflow: 'hidden' }}>
-      {/* inner: entry animation — useNativeDriver: true */}
+      {/* entry: translateY + opacity — useNativeDriver: true */}
       <Animated.View style={{ transform: [{ translateY: entryTransY }], opacity: entryOpacity }}>
-        <Pressable
-          style={[styles.answerTile, { backgroundColor: bgColor, height: TILE_H }]}
-          onPress={state === 'idle' ? onPress : undefined}
+        {/* drag + fly-off: translateY — useNativeDriver: false */}
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={{ transform: [{ translateY: dragTransY }] }}
         >
-          <Text style={[styles.answerText, { color: textColor }]}>{word}</Text>
-        </Pressable>
+          <View style={[styles.answerTile, { height: TILE_H }]}>
+            <Text style={styles.answerText}>{word}</Text>
+          </View>
+        </Animated.View>
       </Animated.View>
     </Animated.View>
   );
@@ -150,7 +206,6 @@ export function SwitchbackScreen({ step }: Props) {
 
   // ── Entrance sequence ─────────────────────────────────────────
   useEffect(() => {
-    // clues slide in simultaneously after CLUE_START
     const t1 = setTimeout(() => {
       clueOpacity.setValue(1);
       Animated.parallel([
@@ -159,12 +214,10 @@ export function SwitchbackScreen({ step }: Props) {
       ]).start();
     }, CLUE_START);
 
-    // polly line fades in after clues settle + 800ms
     const t2 = setTimeout(() => {
       showPolly('One word. Two lives.');
     }, POLLY_DELAY);
 
-    // tiles mount after polly starts
     const t3 = setTimeout(() => {
       setBoardReady(true);
     }, BOARD_DELAY);
@@ -176,8 +229,8 @@ export function SwitchbackScreen({ step }: Props) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Tap handler ───────────────────────────────────────────────
-  function handleTap(word: string, isCorrect: boolean) {
+  // ── Commit handler (called after tile flies off) ──────────────
+  function handleCommit(word: string, isCorrect: boolean) {
     if (completedRef.current) return;
     if (tileStates.get(word) !== 'idle') return;
 
@@ -195,16 +248,13 @@ export function SwitchbackScreen({ step }: Props) {
       setTileStates(prev => new Map(prev).set(word, 'wrong'));
 
       if (attemptsRef.current >= 2) {
-        // Both attempts used — fail
         completedRef.current = true;
         const correctWord = step.answers.find(a => a.correct)!.word;
-        // Reveal correct tile after wrong flash clears
         const t = setTimeout(() => {
           setTileStates(prev => new Map(prev).set(correctWord, 'correct'));
           showPolly(step.pollyReveal);
         }, 350);
         const u = setTimeout(() => store.completeSwitchback(0, false, attemptsRef.current), 2000);
-        // Capture timeouts for potential cleanup (component will unmount on advance anyway)
         void t; void u;
       }
     }
@@ -264,7 +314,7 @@ export function SwitchbackScreen({ step }: Props) {
               key={answer.word}
               word={answer.word}
               state={tileStates.get(answer.word) ?? 'idle'}
-              onPress={() => handleTap(answer.word, answer.correct)}
+              onCommit={() => handleCommit(answer.word, answer.correct)}
               entryDelay={index * 100}
             />
           ))}
@@ -344,6 +394,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: '#1A1830',
+    backgroundColor: '#2A2560',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
@@ -357,5 +408,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontFamily: 'BagelFatOne_400Regular',
     letterSpacing: 2,
+    color: '#FFFFFF',
   },
 });
