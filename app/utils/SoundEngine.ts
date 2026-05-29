@@ -134,6 +134,13 @@ function buildSplitReveal(): string {
   ]);
 }
 
+function buildScratch(): string {
+  return toWAV([
+    makeSegment({ waveType: 'noise', startFreq: 0, durationMs: 80,  attackMs: 2,  decayMs: 78,  volume: 0.55 }),
+    makeSegment({ waveType: 'sine', startFreq: 400, endFreq: 100,  durationMs: 200, attackMs: 5, decayMs: 195, volume: 0.5 }),
+  ]);
+}
+
 function buildRoundComplete(): string {
   const note = (freq: number, ms: number) =>
     makeSegment({ waveType: 'sine', startFreq: freq, durationMs: ms, attackMs: 5, decayMs: ms - 5, volume: 0.7 });
@@ -146,7 +153,7 @@ function buildRoundComplete(): string {
 
 // ── Engine state ──────────────────────────────────────────────
 
-type SoundKey = 'correctTap' | 'wrongBuzz' | 'shatter' | 'splitReveal' | 'roundComplete';
+type SoundKey = 'correctTap' | 'wrongBuzz' | 'shatter' | 'splitReveal' | 'roundComplete' | 'scratch';
 
 const sounds: Record<SoundKey, Audio.Sound | null> = {
   correctTap:    null,
@@ -154,6 +161,7 @@ const sounds: Record<SoundKey, Audio.Sound | null> = {
   shatter:       null,
   splitReveal:   null,
   roundComplete: null,
+  scratch:       null,
 };
 
 let ready = false;
@@ -175,6 +183,7 @@ export async function initSounds(): Promise<void> {
     ['shatter',       buildShatter],
     ['splitReveal',   buildSplitReveal],
     ['roundComplete', buildRoundComplete],
+    ['scratch',       buildScratch],
   ];
 
   await Promise.all(
@@ -197,3 +206,4 @@ export function playWrongBuzz():     void { play(sounds.wrongBuzz); }
 export function playShatter():       void { play(sounds.shatter); }
 export function playSplitReveal():   void { play(sounds.splitReveal); }
 export function playRoundComplete(): void { play(sounds.roundComplete); }
+export function playScratch():       void { play(sounds.scratch); }

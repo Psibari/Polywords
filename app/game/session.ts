@@ -57,6 +57,67 @@ export const phraseBreakPool: PhraseBreakStep[] = [
 const _selected = phraseBreakPool[Math.floor(Math.random() * phraseBreakPool.length)];
 
 // ============================================================
+// SLANG DROP POOL
+// ============================================================
+
+export const slangPool: WordStep[] = [
+
+  // SICK — OLD SCHOOL
+  {
+    kind: 'word',
+    word: 'SICK',
+    emotionalRole: 'surprise',
+    eventType: 'slangDrop',
+    slangEra: 'OLD SCHOOL',
+    slangMaskId: 'sick_impressive',
+    meanings: [],
+    masks: [
+      { id: 'sick_impressive', emoji: '🤙', phrase: 'That trick though',     isReal: true,  isSlang: true, era: 'modern' },
+      { id: 'sick_cool',       emoji: '😎', phrase: 'Really cool looking',   isReal: false, trapType: 'almostSynonym' },
+      { id: 'sick_nauseous',   emoji: '🤢', phrase: 'Nauseous, queasy',      isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'sick_hospital',   emoji: '💊', phrase: 'Needs a doctor',        isReal: false, trapType: 'domainNeighbor' },
+    ],
+  },
+
+  // BAD — OLD SCHOOL
+  {
+    kind: 'word',
+    word: 'BAD',
+    emotionalRole: 'surprise',
+    eventType: 'slangDrop',
+    slangEra: 'OLD SCHOOL',
+    slangMaskId: 'bad_slang',
+    meanings: [],
+    masks: [
+      { id: 'bad_slang',    emoji: '🤙', phrase: 'Michael said so',        isReal: true,  isSlang: true, era: 'modern' },
+      { id: 'bad_poor',     emoji: '👎', phrase: 'Needs improvement',      isReal: false, trapType: 'almostSynonym' },
+      { id: 'bad_danger',   emoji: '⚠️', phrase: 'Dangerous, watch out',   isReal: false, trapType: 'domainNeighbor' },
+      { id: 'bad_villain',  emoji: '🦹', phrase: 'The villain',            isReal: false, trapType: 'associatedNeighbor' },
+    ],
+  },
+
+  // CHILL — OLD SCHOOL
+  {
+    kind: 'word',
+    word: 'CHILL',
+    emotionalRole: 'surprise',
+    eventType: 'slangDrop',
+    slangEra: 'OLD SCHOOL',
+    slangMaskId: 'chill_relax',
+    meanings: [],
+    masks: [
+      { id: 'chill_relax',   emoji: '🛋️', phrase: 'What Fridays are for', isReal: true,  isSlang: true, era: 'modern' },
+      { id: 'chill_cold',    emoji: '🧊', phrase: 'Put it in the fridge',  isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'chill_feeling', emoji: '🥶', phrase: 'A slight cold feeling', isReal: false, trapType: 'domainNeighbor' },
+      { id: 'chill_phrase',  emoji: '😤', phrase: 'Keep your cool',        isReal: false, trapType: 'almostSynonym' },
+    ],
+  },
+
+];
+
+const _selectedSlang = slangPool[Math.floor(Math.random() * slangPool.length)];
+
+// ============================================================
 // SESSION — 9 steps (8 words + 1 phrase break at index 4)
 // ============================================================
 
@@ -173,7 +234,10 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 6 — MATCH (index 6)
+  // SLANG DROP (index 6) — randomly selected from slangPool
+  _selectedSlang,
+
+  // WORD 7 — MATCH (index 7)
   {
     kind: 'word',
     word: 'MATCH',
@@ -195,7 +259,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 7 — SOUND (index 7)
+  // WORD 8 — SOUND (index 8)
   {
     kind: 'word',
     word: 'SOUND',
@@ -218,7 +282,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 8 — ORDER (index 8)
+  // WORD 9 — ORDER (index 9)
   {
     kind: 'word',
     word: 'ORDER',

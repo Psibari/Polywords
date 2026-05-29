@@ -1,3 +1,5 @@
+export type SlangEra = 'CLASSIC' | 'RETRO' | 'OLD SCHOOL' | 'THROWBACK' | 'NOW' | 'FRESH';
+
 export type EventType =
   | 'normal'
   | 'speedRound'
@@ -71,6 +73,8 @@ export type WordStep = {
   hiddenTrap?:       string;
   hiddenEmoji?:      string;
   hiddenTrapEmoji?:  string;
+  slangEra?:         SlangEra;
+  slangMaskId?:      string;
 };
 
 export type PhraseBreakStep = {

@@ -7,6 +7,7 @@ import { useGameStore } from '../store/useGameStore';
 import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
 import { PhraseBreakScreen } from '../components/PhraseBreakScreen';
+import { SlangDropScreen } from '../components/SlangDropScreen';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
@@ -159,6 +160,15 @@ function GameContent() {
 
   if (step.kind === 'phraseBreak') {
     return <PhraseBreakScreen step={step} />;
+  }
+
+  if (step.eventType === 'slangDrop') {
+    return (
+      <SlangDropScreen
+        key={`slang-${game.stepIndex}`}
+        step={step}
+      />
+    );
   }
 
   return (

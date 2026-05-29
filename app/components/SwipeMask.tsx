@@ -29,6 +29,7 @@ type Props = {
   tileHeight?: number;
   isSpecialSplit?: boolean;
   entryDelay?: number;
+  eraBadge?: string;
 };
 
 const FRAGMENT_OFFSETS = [
@@ -50,6 +51,7 @@ export function SwipeMask({
   tileHeight = 64,
   isSpecialSplit = false,
   entryDelay = 0,
+  eraBadge,
 }: Props) {
   const [bgColor, setBgColor] = useState(isSpecialSplit ? '#251F4A' : '#2A2560');
   const [showShatter, setShowShatter] = useState(false);
@@ -70,6 +72,9 @@ export function SwipeMask({
       opacity: new Animated.Value(0),
     }))
   ).current;
+
+  const eraBadgeTransY  = useRef(new Animated.Value(20)).current;
+  const eraBadgeOpacity = useRef(new Animated.Value(0)).current;
 
   const judgedRef      = useRef(false);
   const swipeDirRef    = useRef<'up' | 'right' | null>(null);
@@ -114,6 +119,14 @@ export function SwipeMask({
         speed: 20,
         bounciness: 6,
       }).start();
+      if (eraBadge) {
+        setTimeout(() => {
+          Animated.parallel([
+            Animated.timing(eraBadgeTransY,  { toValue: 0, duration: 200, useNativeDriver: true }),
+            Animated.timing(eraBadgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+          ]).start();
+        }, 200);
+      }
     }
 
     if (s === 'wrong') {
@@ -321,6 +334,17 @@ export function SwipeMask({
         {isSpecialSplit && (
           <Text style={styles.specialBadge}>✨</Text>
         )}
+        {eraBadge && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.eraBadgeWrap,
+              { opacity: eraBadgeOpacity, transform: [{ translateY: eraBadgeTransY }] },
+            ]}
+          >
+            <Text style={styles.eraBadgeText}>{eraBadge}</Text>
+          </Animated.View>
+        )}
       </Animated.View>
 
       {showShatter && FRAGMENT_OFFSETS.map((_, i) => (
@@ -387,5 +411,20 @@ const styles = StyleSheet.create({
     top: 6,
     right: 8,
     fontSize: 10,
+  },
+  eraBadgeWrap: {
+    position: 'absolute',
+    bottom: 6,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  eraBadgeText: {
+    fontSize: 10,
+    color: '#FFD700',
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
   },
 });

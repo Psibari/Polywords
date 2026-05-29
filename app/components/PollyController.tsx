@@ -10,6 +10,9 @@ export const BUDGET: Record<string, number> = {
   locked:       1.0,
   cleanSplit:   1.2,
   hiddenReveal: 2.0,
+  slangDrop:    1.2,
+  slangCorrect: 1.0,
+  slangMiss:    1.0,
 };
 
 export const POLLY_LINES: Record<string, string> = {
@@ -22,4 +25,7 @@ export const POLLY_LINES: Record<string, string> = {
   locked:       'Locked.',
   cleanSplit:   'Two real, two fakes.',
   hiddenReveal: 'Hidden. Worth it.',
+  slangDrop:    'Slang check.',
+  slangCorrect: 'Language moves.',
+  slangMiss:    'Not quite street.',
 };
