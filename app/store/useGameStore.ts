@@ -9,6 +9,7 @@ import {
   completeWord,
   submitPhraseAnswer,
   addBonusScore,
+  completeSwitchback,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
 
@@ -21,6 +22,7 @@ type GameStore = {
   revealHidden: (maskId: string) => void;
   completeWord: () => void;
   submitPhraseAnswer: (choice: string) => void;
+  completeSwitchback: (bonusScore: number, correct: boolean, wrongSwipes: number) => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
   addBonusScore: (pts: number) => void;
@@ -51,6 +53,9 @@ export const useGameStore = create<GameStore>((set) => ({
 
   submitPhraseAnswer: (choice) =>
     set((s) => ({ game: submitPhraseAnswer(s.game, choice) })),
+
+  completeSwitchback: (bonusScore, correct, wrongSwipes) =>
+    set((s) => ({ game: completeSwitchback(s.game, bonusScore, correct, wrongSwipes) })),
 
   clearPollyTrigger: () =>
     set((s) => ({ game: { ...s.game, pollyTrigger: null } })),

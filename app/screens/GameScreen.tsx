@@ -8,6 +8,7 @@ import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
 import { PhraseBreakScreen } from '../components/PhraseBreakScreen';
 import { SlangDropScreen } from '../components/SlangDropScreen';
+import { SwitchbackScreen } from '../components/SwitchbackScreen';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
@@ -160,6 +161,15 @@ function GameContent() {
 
   if (step.kind === 'phraseBreak') {
     return <PhraseBreakScreen step={step} />;
+  }
+
+  if (step.kind === 'switchback') {
+    return (
+      <SwitchbackScreen
+        key={`switchback-${game.stepIndex}`}
+        step={step}
+      />
+    );
   }
 
   if (step.eventType === 'slangDrop') {

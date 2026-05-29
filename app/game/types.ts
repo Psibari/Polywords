@@ -87,4 +87,12 @@ export type PhraseBreakStep = {
   pollyReveal: string;
 };
 
-export type SessionStep = WordStep | PhraseBreakStep;
+export type SwitchbackStep = {
+  kind: 'switchback';
+  clue1: { emoji: string; text: string };
+  clue2: { emoji: string; text: string };
+  answers: { word: string; correct: boolean }[];
+  pollyReveal: string;
+};
+
+export type SessionStep = WordStep | PhraseBreakStep | SwitchbackStep;

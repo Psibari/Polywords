@@ -3,7 +3,7 @@
 // 15-word Poly Run session. Fixed order. No randomization.
 // ============================================================
 
-import { SessionStep, WordStep, PhraseBreakStep } from './types';
+import { SessionStep, WordStep, PhraseBreakStep, SwitchbackStep } from './types';
 
 // ============================================================
 // PHRASE BREAK POOL
@@ -118,7 +118,82 @@ export const slangPool: WordStep[] = [
 const _selectedSlang = slangPool[Math.floor(Math.random() * slangPool.length)];
 
 // ============================================================
-// SESSION — 9 steps (8 words + 1 phrase break at index 4)
+// SWITCHBACK POOL
+// ============================================================
+
+export const switchbackPool: SwitchbackStep[] = [
+
+  {
+    kind: 'switchback',
+    clue1: { emoji: '🏏', text: 'Swings in baseball' },
+    clue2: { emoji: '🦇', text: 'Sleeps upside down' },
+    answers: [
+      { word: 'BAT',   correct: true  },
+      { word: 'CLUB',  correct: false },
+      { word: 'SWING', correct: false },
+      { word: 'CAVE',  correct: false },
+    ],
+    pollyReveal: 'BAT swings. BAT sleeps.',
+  },
+
+  {
+    kind: 'switchback',
+    clue1: { emoji: '🏦', text: 'Holds your money' },
+    clue2: { emoji: '🌊', text: "River's edge" },
+    answers: [
+      { word: 'BANK',  correct: true  },
+      { word: 'SHORE', correct: false },
+      { word: 'VAULT', correct: false },
+      { word: 'LEDGE', correct: false },
+    ],
+    pollyReveal: 'BANK stores. BANK borders.',
+  },
+
+  {
+    kind: 'switchback',
+    clue1: { emoji: '🎣', text: 'Fishing line goes this way' },
+    clue2: { emoji: '🎭', text: 'Actors in a film' },
+    answers: [
+      { word: 'CAST',  correct: true  },
+      { word: 'THROW', correct: false },
+      { word: 'CREW',  correct: false },
+      { word: 'LINE',  correct: false },
+    ],
+    pollyReveal: 'CAST launches. CAST performs.',
+  },
+
+  {
+    kind: 'switchback',
+    clue1: { emoji: '⚡', text: 'Lightning does it' },
+    clue2: { emoji: '🎳', text: "Bowler's perfect throw" },
+    answers: [
+      { word: 'STRIKE', correct: true  },
+      { word: 'HIT',    correct: false },
+      { word: 'BOLT',   correct: false },
+      { word: 'BOWL',   correct: false },
+    ],
+    pollyReveal: 'STRIKE hits. STRIKE wins.',
+  },
+
+  {
+    kind: 'switchback',
+    clue1: { emoji: '👂', text: 'Ears catch it' },
+    clue2: { emoji: '🗺️', text: 'Water between two lands' },
+    answers: [
+      { word: 'SOUND',  correct: true  },
+      { word: 'NOISE',  correct: false },
+      { word: 'STRAIT', correct: false },
+      { word: 'ECHO',   correct: false },
+    ],
+    pollyReveal: 'SOUND is heard. SOUND is sailed.',
+  },
+
+];
+
+const _selectedSwitchback = switchbackPool[Math.floor(Math.random() * switchbackPool.length)];
+
+// ============================================================
+// SESSION — 11 steps
 // ============================================================
 
 export const SESSION: SessionStep[] = [
@@ -188,7 +263,10 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 4 — BANK (index 3)
+  // SWITCHBACK (index 3) — randomly selected from switchbackPool
+  _selectedSwitchback,
+
+  // WORD 4 — BANK (index 4)
   {
     kind: 'word',
     word: 'BANK',
@@ -210,10 +288,10 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // PHRASE BREAK (index 4) — randomly selected from phraseBreakPool
+  // PHRASE BREAK (index 5) — randomly selected from phraseBreakPool
   _selected,
 
-  // WORD 5 — WAKE (index 5)
+  // WORD 5 — WAKE (index 6)
   {
     kind: 'word',
     word: 'WAKE',
@@ -234,10 +312,10 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // SLANG DROP (index 6) — randomly selected from slangPool
+  // SLANG DROP (index 7) — randomly selected from slangPool
   _selectedSlang,
 
-  // WORD 7 — MATCH (index 7)
+  // WORD 7 — MATCH (index 8)
   {
     kind: 'word',
     word: 'MATCH',
@@ -259,7 +337,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 8 — SOUND (index 8)
+  // WORD 8 — SOUND (index 9)
   {
     kind: 'word',
     word: 'SOUND',
@@ -282,7 +360,7 @@ export const SESSION: SessionStep[] = [
     ],
   },
 
-  // WORD 9 — ORDER (index 9)
+  // WORD 9 — ORDER (index 10)
   {
     kind: 'word',
     word: 'ORDER',
@@ -325,4 +403,8 @@ export function isWordStep(step: SessionStep): step is WordStep {
 
 export function isPhraseBreak(step: SessionStep): step is PhraseBreakStep {
   return step.kind === 'phraseBreak';
+}
+
+export function isSwitchbackStep(step: SessionStep): step is SwitchbackStep {
+  return step.kind === 'switchback';
 }

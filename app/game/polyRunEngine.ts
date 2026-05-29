@@ -33,7 +33,7 @@ export type GameState = {
   feedback: string | null;
   status: GameStatus;
   lastActionAt: number;
-  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'hiddenReveal' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss';
+  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'hiddenReveal' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss' | 'switchback' | 'switchbackFirst' | 'switchbackSecond' | 'switchbackFail';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
 };
@@ -295,6 +295,56 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
     lives: state.lives,
     combo: correct ? state.combo + 1 : state.combo,
     feedback: correct ? 'COGNITIVE BREAKOUT +500' : 'Wrong origin story',
+    lastActionAt: Date.now(),
+    pollyTrigger: null,
+    wordResults: [...state.wordResults, wordResult],
+  });
+}
+
+// ─── COMPLETE SWITCHBACK ─────────────────────────────────────
+
+export function completeSwitchback(
+  state: GameState,
+  bonusScore: number,
+  correct: boolean,
+  wrongSwipes: number,
+): GameState {
+  if (state.status !== 'playing') return state;
+  const step = currentStep(state);
+  if (step.kind !== 'switchback') return state;
+
+  const lives = correct ? state.lives : Math.max(state.lives - 1, 0);
+
+  const wordResult: WordResult = {
+    word: step.answers.find(a => a.correct)?.word ?? '?',
+    correctUp: correct ? 1 : 0,
+    correctDown: 0,
+    wrongSwipes,
+    hiddenFound: false,
+    missedMaskIds: [],
+    wrongMaskIds: [],
+    isBossWord: false,
+    totalRealMasks: 1,
+  };
+
+  if (lives <= 0) {
+    return {
+      ...state,
+      lives: 0,
+      combo: 0,
+      score: state.score + bonusScore,
+      status: 'gameOver',
+      feedback: 'Game over',
+      lastActionAt: Date.now(),
+      wordResults: [...state.wordResults, wordResult],
+    };
+  }
+
+  return advanceStep(state, {
+    score: state.score + bonusScore,
+    lives,
+    combo: correct ? state.combo + 1 : 0,
+    feedback: correct ? `+${bonusScore}` : 'Missed it',
     lastActionAt: Date.now(),
     pollyTrigger: null,
     wordResults: [...state.wordResults, wordResult],
