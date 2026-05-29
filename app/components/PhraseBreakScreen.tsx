@@ -1,25 +1,123 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, PanResponder, StyleSheet, Text, View } from 'react-native';
 import { PhraseBreakStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
+
+const SWIPE_THRESHOLD = 40;
 
 type Props = { step: PhraseBreakStep };
 
 export function PhraseBreakScreen({ step }: Props) {
   const submitPhraseAnswer = useGameStore(s => s.submitPhraseAnswer);
 
+  // ── Phrase + content reveal (native driver) ───────────────────
   const phraseY        = useRef(new Animated.Value(300)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
-  const tileYAnims     = useRef(step.answers.map(() => new Animated.Value(60))).current;
-  const tileOpacities  = useRef(step.answers.map(() => new Animated.Value(0))).current;
 
-  const [answered,    setAnswered]    = useState(false);
-  const [tappedIdx,   setTappedIdx]   = useState<number | null>(null);
-  const [flashRedIdx, setFlashRedIdx] = useState<number | null>(null);
-  const [pollyText,   setPollyText]   = useState('');
+  // ── Per-tile entry: native driver (translateY + opacity) ──────
+  const entryYAnims    = useRef(step.answers.map(() => new Animated.Value(60))).current;
+  const entryOpacities = useRef(step.answers.map(() => new Animated.Value(0))).current;
 
-  const pendingRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // ── Per-tile drag + fly-off: JS driver ────────────────────────
+  const dragYAnims = useRef(step.answers.map(() => new Animated.Value(0))).current;
 
+  const [tileColors,     setTileColors]     = useState<string[]>(step.answers.map(() => '#2A2560'));
+  const [tileTextColors, setTileTextColors] = useState<string[]>(step.answers.map(() => '#FFFFFF'));
+  const [pollyText,      setPollyText]      = useState('');
+
+  const answeredRef = useRef(false);
+  const pendingRef  = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const correctIdx  = step.answers.findIndex(a => a.correct);
+
+  // ── PanResponders — one per answer tile ───────────────────────
+  // Closures capture stable refs: step, dragYAnims, answeredRef,
+  // correctIdx, pendingRef, submitPhraseAnswer, and state setters.
+  const panResponders = useRef(
+    step.answers.map((_, idx) =>
+      PanResponder.create({
+        onStartShouldSetPanResponder:        () => !answeredRef.current,
+        onStartShouldSetPanResponderCapture: () => !answeredRef.current,
+        onMoveShouldSetPanResponder:        (_, g) => !answeredRef.current && g.dy < -6,
+        onMoveShouldSetPanResponderCapture: (_, g) => !answeredRef.current && g.dy < -4,
+        onPanResponderTerminationRequest: () => false,
+
+        onPanResponderMove: (_, g) => {
+          if (answeredRef.current) return;
+          // Track upward drag only
+          dragYAnims[idx].setValue(g.dy < 0 ? g.dy : 0);
+        },
+
+        onPanResponderRelease: (_, g) => {
+          if (answeredRef.current) return;
+
+          if (g.dy < -SWIPE_THRESHOLD) {
+            answeredRef.current = true;
+            const isCorrect = step.answers[idx].correct;
+
+            if (isCorrect) {
+              // Snap back to resting position, flash gold
+              Animated.spring(dragYAnims[idx], {
+                toValue: 0,
+                speed: 20,
+                bounciness: 4,
+                useNativeDriver: false,
+              }).start();
+              setTileColors(step.answers.map((_, i) =>
+                i === idx ? '#FFD700' : '#2A2560'
+              ));
+              setTileTextColors(step.answers.map((_, i) =>
+                i === idx ? '#1E1A3A' : '#FFFFFF'
+              ));
+              setPollyText(step.pollyReveal);
+            } else {
+              // Flash red, fly off top; correct tile turns gold
+              setTileColors(step.answers.map((_, i) => {
+                if (i === idx)        return '#CC2200';
+                if (i === correctIdx) return '#FFD700';
+                return '#2A2560';
+              }));
+              setTileTextColors(step.answers.map((_, i) =>
+                i === correctIdx ? '#1E1A3A' : '#FFFFFF'
+              ));
+              setPollyText('Now you know.');
+              Animated.timing(dragYAnims[idx], {
+                toValue: -800,
+                duration: 300,
+                useNativeDriver: false,
+              }).start();
+            }
+
+            const t = setTimeout(() => {
+              submitPhraseAnswer(step.answers[idx].text);
+            }, 1500);
+            pendingRef.current.push(t);
+
+          } else {
+            // Snap back without committing
+            Animated.spring(dragYAnims[idx], {
+              toValue: 0,
+              speed: 22,
+              bounciness: 8,
+              useNativeDriver: false,
+            }).start();
+          }
+        },
+
+        onPanResponderTerminate: () => {
+          if (!answeredRef.current) {
+            Animated.spring(dragYAnims[idx], {
+              toValue: 0,
+              speed: 22,
+              bounciness: 8,
+              useNativeDriver: false,
+            }).start();
+          }
+        },
+      })
+    )
+  ).current;
+
+  // ── Mount sequence ────────────────────────────────────────────
   useEffect(() => {
     Animated.spring(phraseY, {
       toValue: 0,
@@ -39,13 +137,13 @@ export function PhraseBreakScreen({ step }: Props) {
         step.answers.forEach((_, i) => {
           const t2 = setTimeout(() => {
             Animated.parallel([
-              Animated.spring(tileYAnims[i], {
+              Animated.spring(entryYAnims[i], {
                 toValue: 0,
                 tension: 120,
                 friction: 12,
                 useNativeDriver: true,
               }),
-              Animated.timing(tileOpacities[i], {
+              Animated.timing(entryOpacities[i], {
                 toValue: 1,
                 duration: 200,
                 useNativeDriver: true,
@@ -62,40 +160,7 @@ export function PhraseBreakScreen({ step }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleTap(idx: number) {
-    if (answered) return;
-    setAnswered(true);
-    setTappedIdx(idx);
-
-    const isCorrect = step.answers[idx].correct;
-
-    if (isCorrect) {
-      setPollyText(step.pollyReveal);
-    } else {
-      setFlashRedIdx(idx);
-      setPollyText('Now you know.');
-      const tFlash = setTimeout(() => setFlashRedIdx(null), 400);
-      pendingRef.current.push(tFlash);
-    }
-
-    const tAdvance = setTimeout(() => {
-      submitPhraseAnswer(step.answers[idx].text);
-    }, 2000);
-    pendingRef.current.push(tAdvance);
-  }
-
-  function tileBg(idx: number): string {
-    if (!answered) return '#2A2560';
-    if (step.answers[idx].correct) return '#FFD700';
-    if (idx === tappedIdx && flashRedIdx === idx) return '#CC2200';
-    return '#2A2560';
-  }
-
-  function tileTextColor(idx: number): string {
-    if (answered && step.answers[idx].correct) return '#1E1A3A';
-    return '#FFFFFF';
-  }
-
+  // ── Render ────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
       <Text style={styles.kicker}>PHRASE BREAK</Text>
@@ -111,22 +176,25 @@ export function PhraseBreakScreen({ step }: Props) {
 
       <View style={styles.tileStack}>
         {step.answers.map((answer, i) => (
+          // Outer: entry animation — native driver (translateY + opacity)
           <Animated.View
             key={i}
             style={{
-              opacity: tileOpacities[i],
-              transform: [{ translateY: tileYAnims[i] }],
+              opacity:   entryOpacities[i],
+              transform: [{ translateY: entryYAnims[i] }],
             }}
           >
-            <Pressable
-              style={[styles.tile, { backgroundColor: tileBg(i) }]}
-              onPress={() => handleTap(i)}
-              disabled={answered}
+            {/* Inner: drag + fly-off — JS driver (translateY only) */}
+            <Animated.View
+              style={{ transform: [{ translateY: dragYAnims[i] }] }}
+              {...panResponders[i].panHandlers}
             >
-              <Text style={[styles.tileText, { color: tileTextColor(i) }]}>
-                {answer.text}
-              </Text>
-            </Pressable>
+              <View style={[styles.tile, { backgroundColor: tileColors[i] }]}>
+                <Text style={[styles.tileText, { color: tileTextColors[i] }]}>
+                  {answer.text}
+                </Text>
+              </View>
+            </Animated.View>
           </Animated.View>
         ))}
       </View>
