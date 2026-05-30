@@ -56,7 +56,7 @@ export function SwipeMask({
   const [bgColor, setBgColor] = useState(isSpecialSplit ? '#251F4A' : '#2A2560');
   const [showShatter, setShowShatter] = useState(false);
 
-  const outerHeightAnim    = useRef(new Animated.Value(tileHeight)).current;
+  const outerHeightAnim    = useRef(new Animated.Value(Math.max(tileHeight, 64))).current;
   const outerMarginTopAnim = useRef(new Animated.Value(TILE_GAP)).current;
 
   const panXY       = useRef(new Animated.ValueXY()).current;
@@ -102,7 +102,7 @@ export function SwipeMask({
 
   useEffect(() => {
     if (!judgedRef.current) {
-      outerHeightAnim.setValue(tileHeight);
+      outerHeightAnim.setValue(Math.max(tileHeight, 64));
     }
   }, [tileHeight]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -202,7 +202,7 @@ export function SwipeMask({
       swipeDirRef.current = null;
       panXY.setValue({ x: 0, y: 0 });
       tileOpacity.setValue(1);
-      outerHeightAnim.setValue(tileHeight);
+      outerHeightAnim.setValue(Math.max(tileHeight, 64));
       outerMarginTopAnim.setValue(TILE_GAP);
       setBgColor('#2A2560');
       setShowShatter(false);
@@ -275,7 +275,7 @@ export function SwipeMask({
         <Animated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
           <Pressable
             onPress={revealable ? onTapReveal : undefined}
-            style={[styles.tile, { height: tileHeight, backgroundColor: '#2A2060' }]}
+            style={[styles.tile, { backgroundColor: '#2A2060' }]}
           >
             <FluentEmoji emoji="❓" size={32} />
             <Text style={[styles.phrase, { color: '#FFD700' }]} numberOfLines={2}>
@@ -310,7 +310,6 @@ export function SwipeMask({
         style={[
           styles.tile,
           {
-            height: tileHeight,
             backgroundColor: bgColor,
             opacity: tileOpacity,
             transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
@@ -385,6 +384,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 16,
     paddingRight: 16,
+    paddingVertical: 8,
+    minHeight: 64,
     borderWidth: 2,
     borderColor: '#1A1830',
     shadowColor: '#000000',
@@ -401,10 +402,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   phrase: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '800',
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     flex: 1,
+    flexShrink: 1,
   },
   specialBadge: {
     position: 'absolute',
