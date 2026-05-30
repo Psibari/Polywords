@@ -10,6 +10,7 @@ import {
   submitPhraseAnswer,
   addBonusScore,
   completeSwitchback,
+  consumeMilestone as consumeMilestoneFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
 
@@ -26,6 +27,7 @@ type GameStore = {
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
   addBonusScore: (pts: number) => void;
+  consumeMilestone: () => void;
 };
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -65,4 +67,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
   addBonusScore: (pts) =>
     set((s) => ({ game: addBonusScore(s.game, pts) })),
+
+  consumeMilestone: () =>
+    set((s) => ({ game: consumeMilestoneFn(s.game) })),
 }));

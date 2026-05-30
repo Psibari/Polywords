@@ -29,6 +29,9 @@ export type GameState = {
   lives: number;
   combo: number;
   bestCombo: number;
+  streak: number;
+  streakMilestone: 3 | 5 | 7 | null;
+  chainMultiplier: number;
   mistakesOnWord: number;
   feedback: string | null;
   status: GameStatus;
@@ -64,6 +67,9 @@ export function createGame(): GameState {
     lives: 5,
     combo: 0,
     bestCombo: 0,
+    streak: 0,
+    streakMilestone: null,
+    chainMultiplier: 1,
     mistakesOnWord: 0,
     feedback: null,
     status: 'playing',
@@ -76,6 +82,20 @@ export function createGame(): GameState {
 
 export function currentStep(state: GameState): SessionStep {
   return SESSION[state.stepIndex];
+}
+
+// ─── STREAK HELPER ───────────────────────────────────────────
+
+function computeStreakUpdate(currentStreak: number): {
+  streak: number;
+  chainMultiplier: number;
+  streakMilestone: 3 | 5 | 7 | null;
+} {
+  const streak = currentStreak + 1;
+  const chainMultiplier = Math.min(1 + Math.floor(streak / 3) * 0.5, 3.0);
+  let streakMilestone: 3 | 5 | 7 | null = null;
+  if (streak === 3 || streak === 5 || streak === 7) streakMilestone = streak as 3 | 5 | 7;
+  return { streak, chainMultiplier, streakMilestone };
 }
 
 // ─── SWIPE UP — player claims mask as a real meaning ─────────
@@ -92,7 +112,8 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
   const swipedUpIds = [...state.swipedUpIds, maskId];
 
   if (mask.isReal) {
-    let points = mask.isRare ? 300 : 100;
+    const su = computeStreakUpdate(state.streak);
+    let points = Math.round((mask.isRare ? 300 : 100) * su.chainMultiplier);
     if (step.eventType === 'bossWord') points *= 2;
     const newCombo = state.combo + 1;
     return {
@@ -101,6 +122,9 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
       score: state.score + points,
       combo: newCombo,
       bestCombo: Math.max(state.bestCombo, newCombo),
+      streak: su.streak,
+      chainMultiplier: su.chainMultiplier,
+      streakMilestone: su.streakMilestone,
       feedback: `+${points}`,
       lastActionAt: now,
       pollyTrigger: null,
@@ -114,6 +138,9 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     swipedUpIds,
     lives,
     combo: 0,
+    streak: 0,
+    streakMilestone: null,
+    chainMultiplier: 1,
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Not a meaning',
     status: lives <= 0 ? 'gameOver' : 'playing',
@@ -136,7 +163,8 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
   const swipedDownIds = [...state.swipedDownIds, maskId];
 
   if (!mask.isReal) {
-    const points = step.eventType === 'bossWord' ? 100 : 50;
+    const su = computeStreakUpdate(state.streak);
+    const points = Math.round((step.eventType === 'bossWord' ? 100 : 50) * su.chainMultiplier);
     const newCombo = state.combo + 1;
     return {
       ...state,
@@ -144,6 +172,9 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
       score: state.score + points,
       combo: newCombo,
       bestCombo: Math.max(state.bestCombo, newCombo),
+      streak: su.streak,
+      chainMultiplier: su.chainMultiplier,
+      streakMilestone: su.streakMilestone,
       feedback: `Trap spotted +${points}`,
       lastActionAt: now,
       pollyTrigger: null,
@@ -157,6 +188,9 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     swipedDownIds,
     lives,
     combo: 0,
+    streak: 0,
+    streakMilestone: null,
+    chainMultiplier: 1,
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Actually a meaning',
     status: lives <= 0 ? 'gameOver' : 'playing',
@@ -173,11 +207,20 @@ export function submitWrongSwipe(state: GameState): GameState {
     ...state,
     lives,
     combo: 0,
+    streak: 0,
+    streakMilestone: null,
+    chainMultiplier: 1,
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Wrong call.',
     status: lives <= 0 ? 'gameOver' : 'playing',
     lastActionAt: Date.now(),
   };
+}
+
+// ─── CONSUME MILESTONE — clear milestone after UI has handled it ─
+
+export function consumeMilestone(state: GameState): GameState {
+  return { ...state, streakMilestone: null };
 }
 
 // ─── ADD BONUS SCORE — for split tile results ─────────────────

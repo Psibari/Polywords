@@ -6,6 +6,7 @@ import { SESSION } from '../game/session';
 import { useGameStore } from '../store/useGameStore';
 import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
+import { StreakDisplay } from '../components/StreakDisplay';
 import { PhraseBreakScreen } from '../components/PhraseBreakScreen';
 import { SlangDropScreen } from '../components/SlangDropScreen';
 import { SwitchbackScreen } from '../components/SwitchbackScreen';
@@ -42,6 +43,8 @@ function TopBar() {
           <Text style={tb.label}>SCORE</Text>
           <Text style={tb.value}>{game.score}</Text>
         </View>
+
+        <StreakDisplay />
 
         <View style={tb.block}>
           <Text style={tb.lives}>{lives || '💀'}</Text>
