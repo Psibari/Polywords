@@ -1,5 +1,12 @@
-import React, { useEffect, useRef } from 'react'
-import { Animated, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { StyleSheet, Text } from 'react-native'
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withSequence,
+} from 'react-native-reanimated'
 import { useGameStore } from '../store/useGameStore'
 
 function getColor(streak: number): string {
@@ -10,42 +17,34 @@ function getColor(streak: number): string {
 }
 
 export function StreakDisplay() {
-  const streak = useGameStore(s => s.game.streak)
-  const scale = useRef(new Animated.Value(1)).current
-  const opacity = useRef(new Animated.Value(1)).current
+  const streak    = useGameStore(s => s.game.streak)
+  const scaleSV   = useSharedValue(1)
+  const opacitySV = useSharedValue(0)
+  const [color, setColor] = useState(getColor(0))
 
   useEffect(() => {
+    setColor(getColor(streak))
+
     if (streak === 0) {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start()
+      opacitySV.value = withTiming(0, { duration: 200 })
       return
     }
 
-    opacity.setValue(1)
+    opacitySV.value = 1
+    scaleSV.value = withSequence(
+      withSpring(1.4, { damping: 6, stiffness: 300 }),
+      withSpring(1.0, { damping: 15, stiffness: 200 }),
+    )
+  }, [streak]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    Animated.sequence([
-      Animated.spring(scale, {
-        toValue: 1.4,
-        friction: 3,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scale, {
-        toValue: 1.0,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-    ]).start()
-  }, [streak])
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleSV.value }],
+    opacity: opacitySV.value,
+  }))
 
   return (
-    <Animated.View style={[styles.wrapper, {
-      transform: [{ scale }],
-      opacity
-    }]}>
-      <Text style={[styles.counter, { color: getColor(streak) }]}>
+    <Animated.View style={[styles.wrapper, animStyle]}>
+      <Text style={[styles.counter, { color }]}>
         ×{streak}
       </Text>
     </Animated.View>
