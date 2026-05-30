@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Dimensions,
   Easing,
   StyleSheet,
   Text,
@@ -17,8 +18,12 @@ import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 10;
-const MIN_TILE_H = 48;
-const MAX_TILE_H = 64;
+const MIN_TILE_H = 52;
+const MAX_TILE_H = 80;
+// Overhead for Dimensions-based pre-layout estimate:
+// TopBar + word header + PollyCard + safe areas + bottom padding
+const UI_OVERHEAD_BASE = 320;
+const HIDDEN_SLOT_H    = 74;   // hidden / ghost tile slot + gap
 
 type FloatEntry   = { id: number; value: number; x: number; y: number };
 type HiddenPhase  = 'visible' | 'locked' | 'split';
@@ -56,9 +61,13 @@ export function MaskBoard({ step }: Props) {
     ?? step.masks.filter(m => !m.isHidden);
   const tileCount = visibleGridMasks.length;
 
+  const screenHeight    = Dimensions.get('window').height;
+  const availableHeight = screenHeight - UI_OVERHEAD_BASE - (step.hiddenMeaning ? HIDDEN_SLOT_H : 0);
+  const dimsTileH       = Math.min(MAX_TILE_H, Math.max(MIN_TILE_H, Math.floor(availableHeight / tileCount)));
+
   const tileHeight: number = gridHeight > 0
     ? Math.min(MAX_TILE_H, Math.max(MIN_TILE_H, Math.floor(gridHeight / tileCount - TILE_GAP)))
-    : MAX_TILE_H;
+    : dimsTileH;
 
   // ── find-meter counts ────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
@@ -651,47 +660,46 @@ export function MaskBoard({ step }: Props) {
         suppressIntro={bossSuppressIntro}
       />
 
-      {/* HIDDEN MEANING tile — gated for boss until tiles are ready */}
+      {/* HIDDEN MEANING slot — ghost takes this slot when present */}
       {hasHidden && hiddenPhase !== 'split' && showBoardContent && (
-        <Animated.View
-          style={{
-            opacity: hiddenEntryOpacity,
-            transform: [{ translateY: hiddenEntryTransY }, { scaleY: hiddenEntryScaleY }],
-          }}
-        >
+        ghostVisible && ghost ? (
+          <GhostTile
+            ghost={ghost}
+            tileHeight={tileHeight}
+            onCorrect={handleGhostSwipeUp}
+            onWrong={handleGhostSwipeRight}
+            onDone={() => setGhostVisible(false)}
+          />
+        ) : (
           <Animated.View
-            pointerEvents="none"
             style={{
-              marginTop: 8,
-              opacity: hiddenTileOpacity,
-              transform: [
-                { scale:      hiddenTileScale  },
-                { translateY: hiddenTileTransY },
-                { scaleX:     hiddenTileScaleX },
-              ],
+              opacity: hiddenEntryOpacity,
+              transform: [{ translateY: hiddenEntryTransY }, { scaleY: hiddenEntryScaleY }],
             }}
           >
             <Animated.View
-              style={[
-                styles.hiddenTile,
-                { height: tileHeight, borderColor: hiddenBorderColor as any },
-              ]}
+              pointerEvents="none"
+              style={{
+                marginTop: 8,
+                opacity: hiddenTileOpacity,
+                transform: [
+                  { scale:      hiddenTileScale  },
+                  { translateY: hiddenTileTransY },
+                  { scaleX:     hiddenTileScaleX },
+                ],
+              }}
             >
-              <Text style={styles.hiddenTileText}>✨ HIDDEN MEANING</Text>
+              <Animated.View
+                style={[
+                  styles.hiddenTile,
+                  { height: tileHeight, borderColor: hiddenBorderColor as any },
+                ]}
+              >
+                <Text style={styles.hiddenTileText}>✨ HIDDEN MEANING</Text>
+              </Animated.View>
             </Animated.View>
           </Animated.View>
-        </Animated.View>
-      )}
-
-      {/* Ghost tile — appears above normal tile stack if ghost exists for this word */}
-      {ghostVisible && ghost && showBoardContent && (
-        <GhostTile
-          ghost={ghost}
-          tileHeight={tileHeight}
-          onCorrect={handleGhostSwipeUp}
-          onWrong={handleGhostSwipeRight}
-          onDone={() => setGhostVisible(false)}
-        />
+        )
       )}
 
       {/* tile stack — gridWrap always renders to keep height measurement */}

@@ -150,7 +150,6 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
         {...panResponder.panHandlers}
       >
         <Text style={styles.ghostEmoji}>👻</Text>
-        <Text style={styles.phrase} numberOfLines={2}>{ghost.hiddenMeaningReal}</Text>
         {/* Pulsing border overlay — native driver via opacity */}
         <Animated.View
           pointerEvents="none"
@@ -185,13 +184,5 @@ const styles = StyleSheet.create({
   },
   ghostEmoji: {
     fontSize: 14,
-    marginRight: 12,
-  },
-  phrase: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
-    flex: 1,
   },
 });
