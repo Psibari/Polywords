@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createGame,
   GameState,
@@ -13,9 +14,14 @@ import {
   consumeMilestone as consumeMilestoneFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
+import { GhostMeaning, GhostRevenge } from '../game/types';
+
+const GHOSTS_KEY = 'polywords_ghosts';
 
 type GameStore = {
   game: ReturnType<typeof createGame>;
+  ghosts: GhostMeaning[];
+  ghostRevenge: GhostRevenge;
   startGame: () => void;
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
@@ -28,14 +34,20 @@ type GameStore = {
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
+  addGhost: (ghost: GhostMeaning) => void;
+  clearGhost: (wordId: string) => void;
+  setGhostRevenge: (data: GhostRevenge) => void;
+  loadGhosts: () => Promise<void>;
 };
 
-export const useGameStore = create<GameStore>((set) => ({
+export const useGameStore = create<GameStore>((set, get) => ({
   game: createGame(),
+  ghosts: [],
+  ghostRevenge: null,
 
   startGame: () => {
     resetPollyBudget();
-    set({ game: createGame() });
+    set({ game: createGame(), ghostRevenge: null });
   },
 
   submitSwipeUp: (maskId) =>
@@ -70,4 +82,36 @@ export const useGameStore = create<GameStore>((set) => ({
 
   consumeMilestone: () =>
     set((s) => ({ game: consumeMilestoneFn(s.game) })),
+
+  addGhost: (ghost) => {
+    const existing = get().ghosts.find(g => g.wordId === ghost.wordId);
+    let next: GhostMeaning[];
+    if (existing) {
+      next = get().ghosts.map(g =>
+        g.wordId === ghost.wordId ? { ...g, runsMissed: g.runsMissed + 1 } : g
+      );
+    } else {
+      next = [...get().ghosts, { ...ghost, runsMissed: 1 }];
+    }
+    set({ ghosts: next });
+    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  clearGhost: (wordId) => {
+    const next = get().ghosts.filter(g => g.wordId !== wordId);
+    set({ ghosts: next });
+    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  setGhostRevenge: (data) => set({ ghostRevenge: data }),
+
+  loadGhosts: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(GHOSTS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as GhostMeaning[];
+        set({ ghosts: parsed });
+      }
+    } catch {}
+  },
 }));

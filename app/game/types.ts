@@ -1,5 +1,19 @@
 export type SlangEra = 'CLASSIC' | 'RETRO' | 'OLD SCHOOL' | 'THROWBACK' | 'NOW' | 'FRESH';
 
+export interface GhostMeaning {
+  wordId: string;
+  word: string;
+  hiddenMeaningReal: string;
+  hiddenMeaningTrap: string;
+  runsMissed: number;
+}
+
+export type GhostRevenge = {
+  result: 'correct' | 'wrong';
+  word: string;
+  meaningText: string;
+} | null;
+
 export type EventType =
   | 'normal'
   | 'speedRound'

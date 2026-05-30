@@ -16,6 +16,9 @@ const POLLY_FACE: Record<string, ImageSourcePropType> = {
   locked:        require('../../assets/images/Polly/polly_thinking.png'),
   cleanSplit:    require('../../assets/images/Polly/polly_pointing.png'),  // swap for polly_wordUp when available
   default:       require('../../assets/images/Polly/polly_knowing.png'),
+  ghostIntro:    require('../../assets/images/Polly/polly_thinking.png'),
+  ghostCorrect:  require('../../assets/images/Polly/polly_clever.png'),
+  ghostWrong:    require('../../assets/images/Polly/polly_thinking.png'),
 };
 
 const NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];

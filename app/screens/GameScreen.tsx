@@ -104,12 +104,16 @@ const tb = StyleSheet.create({
 // ─── INNER DIRECTOR ───────────────────────────────────────────
 
 function GameDirector({ navigation }: { navigation: any }) {
-  const game      = useGameStore(s => s.game);
-  const startGame = useGameStore(s => s.startGame);
+  const game       = useGameStore(s => s.game);
+  const startGame  = useGameStore(s => s.startGame);
+  const loadGhosts = useGameStore(s => s.loadGhosts);
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
 
-  useEffect(() => { initSounds(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    initSounds();
+    loadGhosts();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (game.status === 'complete' || game.status === 'gameOver') {

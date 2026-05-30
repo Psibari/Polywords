@@ -182,6 +182,42 @@ const gs = StyleSheet.create({
   },
 });
 
+// ─── GHOST REVENGE CARD ──────────────────────────────────────
+
+const gr = StyleSheet.create({
+  card: {
+    backgroundColor: 'rgba(123,47,190,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,47,190,0.35)',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+  },
+  header: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  word: {
+    color: '#FFD700',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  meaning: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginBottom: 4,
+  },
+  sub: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+  },
+});
+
 // ─── TRAP CARD ───────────────────────────────────────────────
 
 function TrapCard({ maskId }: { maskId: string }) {
@@ -288,7 +324,8 @@ type Props = {
 };
 
 export default function ResultsScreen({ onRestart, onHome }: Props) {
-  const game = useGameStore(s => s.game);
+  const game         = useGameStore(s => s.game);
+  const ghostRevenge = useGameStore(s => s.ghostRevenge);
   const { wordResults, score, bestCombo, status } = game;
   const isComplete = status === 'complete';
 
@@ -355,6 +392,23 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             {allMissedMaskIds.map(id => (
               <MissedMeaningCard key={id} maskId={id} />
             ))}
+          </View>
+        )}
+
+        {/* ── GHOST REVENGE RESULT ── */}
+        {ghostRevenge?.result === 'correct' && (
+          <View style={gr.card}>
+            <Text style={gr.header}>Ghost cleared 🔥</Text>
+            <Text style={gr.word}>{ghostRevenge.word}</Text>
+            <Text style={gr.sub}>You got it.</Text>
+          </View>
+        )}
+        {ghostRevenge?.result === 'wrong' && (
+          <View style={gr.card}>
+            <Text style={gr.header}>Still haunting you 👻</Text>
+            <Text style={gr.word}>{ghostRevenge.word}</Text>
+            <Text style={gr.meaning}>"{ghostRevenge.meaningText}"</Text>
+            <Text style={gr.sub}>It'll be back.</Text>
           </View>
         )}
 

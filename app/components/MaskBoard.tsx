@@ -7,9 +7,10 @@ import {
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Mask, WordStep } from '../game/types';
+import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
+import { GhostTile } from './GhostTile';
 import { ScoreFloat } from './ScoreFloat';
 import { PollyCard } from './PollyCard';
 import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
@@ -37,9 +38,14 @@ export function MaskBoard({ step }: Props) {
     return m;
   });
 
-  const wrongCountRef     = useRef(0);
-  const completedRef      = useRef(false);
-  const splitTriggeredRef = useRef(false);
+  const wrongCountRef          = useRef(0);
+  const completedRef           = useRef(false);
+  const splitTriggeredRef      = useRef(false);
+  const ghostJudgedCorrectRef  = useRef(false);
+
+  // ghost tile for this word (from previous run)
+  const ghost = store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null;
+  const [ghostVisible, setGhostVisible] = useState(!!ghost);
 
   // ── available height / width ─────────────────────────────────
   const [gridHeight, setGridHeight]         = useState(0);
@@ -103,7 +109,8 @@ export function MaskBoard({ step }: Props) {
   const [bossReady, setBossReady]             = useState(!isBoss);
   const [bossSweepActive, setBossSweepActive] = useState(false);
   // boss words suppress the PollyCard intro — bossWord trigger fires after entrance instead
-  const bossSuppressIntro = isBoss;
+  // ghost rounds also suppress intro — ghostIntro fires instead
+  const bossSuppressIntro = isBoss || !!ghost;
 
   // ── tile refs (for score float spawn position) ───────────────
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
@@ -327,6 +334,11 @@ export function MaskBoard({ step }: Props) {
     return () => clearTimeout(t1);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Ghost intro Polly trigger
+  useEffect(() => {
+    if (ghost) store.setPollyTrigger('ghostIntro');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   function lockHidden() {
     hiddenBorderLoopRef.current?.stop();
     setHiddenPhase('locked');
@@ -472,6 +484,23 @@ export function MaskBoard({ step }: Props) {
     }
   }
 
+  // ── ghost tile handlers ──────────────────────────────────────
+  function handleGhostSwipeUp() {
+    ghostJudgedCorrectRef.current = true;
+    store.clearGhost(step.word);
+    store.setGhostRevenge({ result: 'correct', word: step.word, meaningText: ghost?.hiddenMeaningReal ?? '' });
+    store.addBonusScore(250);
+    spawnFloatAtSplit(250);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    store.setPollyTrigger('ghostCorrect');
+  }
+
+  function handleGhostSwipeRight() {
+    store.setGhostRevenge({ result: 'wrong', word: step.word, meaningText: ghost?.hiddenMeaningReal ?? '' });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    store.setPollyTrigger('ghostWrong');
+  }
+
   // ── completion check ──────────────────────────────────────────
   useEffect(() => {
     if (completedRef.current || splitTriggeredRef.current) return;
@@ -488,10 +517,22 @@ export function MaskBoard({ step }: Props) {
     });
 
     if (perfect && hasHidden) {
+      // Perfect clear: clear any ghost for this word
+      if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
       splitTriggeredRef.current = true;
       store.setPollyTrigger('perfect');
       startSplit();
     } else {
+      // Not perfect clear: set ghost for next run (only if ghost wasn't already redeemed this round)
+      if (hasHidden && !ghostJudgedCorrectRef.current) {
+        store.addGhost({
+          wordId: step.word,
+          word: step.word,
+          hiddenMeaningReal: step.hiddenMeaning ?? '',
+          hiddenMeaningTrap: step.hiddenTrap ?? '',
+          runsMissed: 1,
+        });
+      }
       completedRef.current = true;
       setTimeout(() => store.completeWord(), 700);
     }
@@ -640,6 +681,17 @@ export function MaskBoard({ step }: Props) {
             </Animated.View>
           </Animated.View>
         </Animated.View>
+      )}
+
+      {/* Ghost tile — appears above normal tile stack if ghost exists for this word */}
+      {ghostVisible && ghost && showBoardContent && (
+        <GhostTile
+          ghost={ghost}
+          tileHeight={tileHeight}
+          onCorrect={handleGhostSwipeUp}
+          onWrong={handleGhostSwipeRight}
+          onDone={() => setGhostVisible(false)}
+        />
       )}
 
       {/* tile stack — gridWrap always renders to keep height measurement */}

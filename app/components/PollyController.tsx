@@ -17,6 +17,9 @@ export const BUDGET: Record<string, number> = {
   switchbackFirst:   0.8,
   switchbackSecond:  0.8,
   switchbackFail:    2.0,
+  ghostIntro:        1.8,
+  ghostCorrect:      1.0,
+  ghostWrong:        1.0,
 };
 
 export const POLLY_LINES: Record<string, string> = {
@@ -36,4 +39,7 @@ export const POLLY_LINES: Record<string, string> = {
   switchbackFirst:  'Sharp.',
   switchbackSecond: 'Got there.',
   switchbackFail:   '',
+  ghostIntro:       'This one followed you.',
+  ghostCorrect:     'Redeemed.',
+  ghostWrong:       'Still haunting you.',
 };
