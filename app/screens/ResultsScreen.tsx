@@ -31,6 +31,23 @@ function findWordForMaskId(maskId: string): string {
   return '';
 }
 
+// ─── GRADE COMPUTATION ───────────────────────────────────────
+
+function computeGrade(
+  lives: number,
+  wordResults: WordResult[],
+): { text: string; color: string } {
+  if (lives === 0) return { text: 'RATTLED.', color: '#CC2200' };
+  const wordRounds = wordResults.filter(r => r.roundKind === 'word');
+  if (wordRounds.length > 0 && wordRounds.every(r => r.hiddenFound)) {
+    return { text: 'WORD MASTER', color: '#FFD700' };
+  }
+  const ghostCount = wordResults.filter(r => r.missedMaskIds.length > 0).length;
+  if (ghostCount === 0) return { text: 'CLEAN RUN', color: '#4CAF50' };
+  if (ghostCount <= 2) return { text: 'CLOSE.', color: '#FFFFFF' };
+  return { text: 'HAUNTED.', color: '#7B2FBE' };
+}
+
 // ─── POLLY LINE ───────────────────────────────────────────────
 
 function derivePollyLine(
@@ -56,30 +73,36 @@ function derivePollyLine(
 // ─── WORD RESULT ROW ─────────────────────────────────────────
 
 function WordResultRow({ result }: { result: WordResult }) {
-  const perfect = result.wrongSwipes === 0;
-  const hasWrongSwipes = result.wrongSwipes > 0;
+  const allFound = result.correctUp === result.totalRealMasks && result.wrongSwipes === 0;
+  const isWordRound = result.roundKind === 'word';
+  const ghostCreated = result.missedMaskIds.length > 0;
 
   let resultText: string;
   let resultColor: string;
 
-  if (result.isBossWord && perfect) {
+  if (result.isBossWord && allFound) {
     resultText = 'Boss ✓';
     resultColor = '#FFD700';
-  } else if (perfect) {
+  } else if (allFound) {
     resultText = 'Perfect ✓';
-    resultColor = '#22C55E';
+    resultColor = '#4CAF50';
   } else {
-    resultText = `${result.correctUp}/${result.totalRealMasks} meanings`;
-    resultColor = 'rgba(255,255,255,0.45)';
+    resultText = `${result.correctUp}/${result.totalRealMasks}`;
+    resultColor = '#FFFFFF';
   }
 
   return (
     <View style={wr.row}>
       <View style={wr.left}>
         <Text style={wr.word}>{result.word}</Text>
-        {hasWrongSwipes && <View style={wr.redDot} />}
+        {ghostCreated && <Text style={wr.ghost}>👻</Text>}
       </View>
-      <Text style={[wr.result, { color: resultColor }]}>{resultText}</Text>
+      <View style={wr.right}>
+        {isWordRound && (
+          <Text style={wr.hidden}>{result.hiddenFound ? '✨' : '🔒'}</Text>
+        )}
+        <Text style={[wr.result, { color: resultColor }]}>{resultText}</Text>
+      </View>
     </View>
   );
 }
@@ -96,13 +119,10 @@ const wr = StyleSheet.create({
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   word: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  ghost: { fontSize: 14 },
+  right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  hidden: { fontSize: 14 },
   result: { fontSize: 13 },
-  redDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#EF4444',
-  },
 });
 
 // ─── MISSED MEANING CARD ─────────────────────────────────────
@@ -150,11 +170,13 @@ const mm = StyleSheet.create({
 
 function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
   const mask = findMaskById(firstMissedMaskId);
+  const word = findWordForMaskId(firstMissedMaskId);
   if (!mask) return null;
 
   return (
     <View style={gs.card}>
       <Text style={gs.header}>👻 Ghost set for next run</Text>
+      <Text style={gs.word}>{word.toUpperCase()}</Text>
       <Text style={gs.body}>"{mask.phrase}" is waiting.</Text>
     </View>
   );
@@ -163,34 +185,69 @@ function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
 const gs = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255,215,0,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.25)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#FFD700',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,215,0,0.25)',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,215,0,0.25)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,215,0,0.25)',
     borderRadius: 14,
-    padding: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
     marginBottom: 24,
   },
   header: {
     color: '#FFD700',
     fontSize: 13,
     fontWeight: '700',
+    marginBottom: 6,
+  },
+  word: {
+    color: '#FFD700',
+    fontSize: 22,
+    fontFamily: 'BagelFatOne_400Regular',
+    letterSpacing: 1,
     marginBottom: 4,
   },
   body: {
-    color: '#FFD700',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 13,
-    opacity: 0.75,
   },
 });
 
 // ─── GHOST REVENGE CARD ──────────────────────────────────────
 
 const gr = StyleSheet.create({
-  card: {
-    backgroundColor: 'rgba(123,47,190,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,47,190,0.35)',
+  cardCleared: {
+    backgroundColor: 'rgba(255,215,0,0.08)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#FFD700',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,215,0,0.25)',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,215,0,0.25)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,215,0,0.25)',
     borderRadius: 14,
-    padding: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    marginBottom: 16,
+  },
+  cardHaunting: {
+    backgroundColor: 'rgba(123,47,190,0.12)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#7B2FBE',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(123,47,190,0.35)',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(123,47,190,0.35)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(123,47,190,0.35)',
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
     marginBottom: 16,
   },
   header: {
@@ -202,7 +259,7 @@ const gr = StyleSheet.create({
   word: {
     color: '#FFD700',
     fontSize: 22,
-    fontWeight: '900',
+    fontFamily: 'BagelFatOne_400Regular',
     letterSpacing: 2,
     marginBottom: 4,
   },
@@ -326,31 +383,40 @@ type Props = {
 export default function ResultsScreen({ onRestart, onHome }: Props) {
   const game         = useGameStore(s => s.game);
   const ghostRevenge = useGameStore(s => s.ghostRevenge);
-  const { wordResults, score, bestCombo, status } = game;
+  const { wordResults, score, bestCombo, status, lives } = game;
   const isComplete = status === 'complete';
 
   // entrance animation
   const enterY = useRef(new Animated.Value(40)).current;
   const enterOpacity = useRef(new Animated.Value(0)).current;
+
+  // grade spring animation
+  const gradeScale = useRef(new Animated.Value(0.8)).current;
+  const gradeY = useRef(new Animated.Value(20)).current;
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(enterY, { toValue: 0, duration: 400, useNativeDriver: true }),
       Animated.timing(enterOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
     ]).start();
-  }, [enterY, enterOpacity]);
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(gradeScale, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }),
+        Animated.spring(gradeY, { toValue: 0, tension: 120, friction: 8, useNativeDriver: true }),
+      ]).start();
+    }, 150);
+  }, [enterY, enterOpacity, gradeScale, gradeY]);
 
   // derived data
   const wordOnlyResults = wordResults.filter(r => r.totalRealMasks > 0);
-  const totalWords = wordOnlyResults.length;
-  const perfectClears = wordOnlyResults.filter(r => r.wrongSwipes === 0).length;
-
   const allMissedMaskIds = wordResults.flatMap(r => r.missedMaskIds);
   const allWrongMaskIds = wordResults.flatMap(r => r.wrongMaskIds);
-
   const hasMissed = allMissedMaskIds.length > 0;
   const firstWrongMaskId = allWrongMaskIds[0] ?? null;
-
   const pollyLine = derivePollyLine(wordResults, isComplete);
+  const grade = computeGrade(lives, wordResults);
+
+  const formattedScore = score.toLocaleString();
 
   return (
     <Animated.View
@@ -366,21 +432,21 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           <Text style={rs.pollyLine}>{pollyLine}</Text>
         )}
 
-        {/* ── SCORE HEADER ── */}
-        <View style={rs.header}>
-          <Text style={rs.eyebrow}>RUN COMPLETE</Text>
-          <Text style={rs.score}>{score}</Text>
-          <View style={rs.metaRow}>
-            <Text style={rs.meta}>x{bestCombo} best combo</Text>
-            <Text style={rs.meta}>{perfectClears}/{totalWords} perfect</Text>
-          </View>
-        </View>
+        {/* ── GRADE VERDICT ── */}
+        <Animated.View
+          style={[rs.header, { transform: [{ scale: gradeScale }, { translateY: gradeY }] }]}
+        >
+          <Text style={[rs.grade, { color: grade.color }]}>{grade.text}</Text>
+          <Text style={rs.scoreLine}>
+            {formattedScore} pts  ·  ×{bestCombo} best combo
+          </Text>
+        </Animated.View>
 
         {/* ── WORD RESULTS ── */}
-        {wordResults.length > 0 && (
+        {wordOnlyResults.length > 0 && (
           <View style={rs.section}>
-            {wordResults.map((r, i) => (
-              <WordResultRow key={`${r.word}-${i}`} result={r} />
+            {wordOnlyResults.map((r, i) => (
+              <WordResultRow key={`${r.wordId ?? r.word}-${i}`} result={r} />
             ))}
           </View>
         )}
@@ -397,14 +463,14 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
         {/* ── GHOST REVENGE RESULT ── */}
         {ghostRevenge?.result === 'correct' && (
-          <View style={gr.card}>
+          <View style={gr.cardCleared}>
             <Text style={gr.header}>Ghost cleared 🔥</Text>
             <Text style={gr.word}>{ghostRevenge.word}</Text>
             <Text style={gr.sub}>You got it.</Text>
           </View>
         )}
         {ghostRevenge?.result === 'wrong' && (
-          <View style={gr.card}>
+          <View style={gr.cardHaunting}>
             <Text style={gr.header}>Still haunting you 👻</Text>
             <Text style={gr.word}>{ghostRevenge.word}</Text>
             <Text style={gr.meaning}>"{ghostRevenge.meaningText}"</Text>
@@ -413,7 +479,6 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         )}
 
         {/* ── GHOST SET — separate from missed section ── */}
-        {console.log('[results]', { allMissedMaskIds, hasMissed }) as unknown as null}
         {hasMissed && (
           <GhostSetCard firstMissedMaskId={allMissedMaskIds[0]} />
         )}
@@ -426,9 +491,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         {/* ── RUN IT BACK ── */}
         <RunItBackButton onPress={onRestart} />
 
-        {/* ── BACK TO PERCH ── */}
+        {/* ── HOME ── */}
         <Pressable onPress={onHome} style={rs.homeLink}>
-          <Text style={rs.homeLinkText}>Back to Perch</Text>
+          <Text style={rs.homeLinkText}>HOME</Text>
         </Pressable>
       </ScrollView>
     </Animated.View>
@@ -460,27 +525,18 @@ const rs = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 28,
   },
-  eyebrow: {
-    color: 'rgba(255,255,255,0.45)',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    marginBottom: 6,
-  },
-  score: {
-    color: '#FFD700',
+  grade: {
     fontSize: 52,
-    fontWeight: '900',
-    lineHeight: 60,
+    fontFamily: 'BagelFatOne_400Regular',
+    textAlign: 'center',
+    marginBottom: 10,
   },
-  metaRow: {
-    flexDirection: 'row',
-    gap: 24,
-    marginTop: 6,
-  },
-  meta: {
-    color: 'rgba(255,255,255,0.45)',
-    fontSize: 13,
+  scoreLine: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    opacity: 0.7,
   },
   section: {
     marginBottom: 16,
@@ -498,5 +554,7 @@ const rs = StyleSheet.create({
   homeLinkText: {
     color: 'rgba(255,255,255,0.35)',
     fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 2,
   },
 });

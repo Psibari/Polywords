@@ -9,6 +9,8 @@ import { Mask, SessionStep } from './types';
 export type GameStatus = 'playing' | 'phraseBreak' | 'gameOver' | 'complete';
 
 export type WordResult = {
+  wordId: string;
+  roundKind: 'word' | 'phraseBreak' | 'switchback';
   word: string;
   correctUp: number;
   correctDown: number;
@@ -284,7 +286,10 @@ export function completeWord(state: GameState): GameState {
     missedMaskIds,
   });
 
+  const wordId = String(state.stepIndex);
   const wordResult: WordResult = {
+    wordId,
+    roundKind: 'word',
     word: step.word,
     correctUp: nonHiddenReal.filter(m => state.swipedUpIds.includes(m.id)).length,
     correctDown: trapMasks.filter(m => state.swipedDownIds.includes(m.id)).length,
@@ -298,6 +303,11 @@ export function completeWord(state: GameState): GameState {
     totalRealMasks: nonHiddenReal.length,
   };
 
+  const alreadyRecorded = state.wordResults.some(r => r.wordId === wordId);
+  const newWordResults = alreadyRecorded
+    ? state.wordResults
+    : [...state.wordResults, wordResult];
+
   const perfect = state.mistakesOnWord === 0;
 
   return advanceStep(state, {
@@ -307,7 +317,7 @@ export function completeWord(state: GameState): GameState {
     feedback: state.feedback,
     lastActionAt: Date.now(),
     pollyTrigger: null,
-    wordResults: [...state.wordResults, wordResult],
+    wordResults: newWordResults,
   });
 }
 
@@ -321,7 +331,10 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
   const correct = step.answers.some(a => a.correct && a.text === choice);
   const bonus = correct ? 150 : 0;
 
+  const wordId = String(state.stepIndex);
   const wordResult: WordResult = {
+    wordId,
+    roundKind: 'phraseBreak',
     word: step.phrase,
     correctUp: correct ? 1 : 0,
     correctDown: 0,
@@ -333,6 +346,11 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
     totalRealMasks: 1,
   };
 
+  const alreadyRecorded = state.wordResults.some(r => r.wordId === wordId);
+  const newWordResults = alreadyRecorded
+    ? state.wordResults
+    : [...state.wordResults, wordResult];
+
   return advanceStep(state, {
     score: state.score + bonus,
     lives: state.lives,
@@ -340,7 +358,7 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
     feedback: correct ? 'COGNITIVE BREAKOUT +500' : 'Wrong origin story',
     lastActionAt: Date.now(),
     pollyTrigger: null,
-    wordResults: [...state.wordResults, wordResult],
+    wordResults: newWordResults,
   });
 }
 
@@ -358,7 +376,10 @@ export function completeSwitchback(
 
   const lives = correct ? state.lives : Math.max(state.lives - 1, 0);
 
+  const wordId = String(state.stepIndex);
   const wordResult: WordResult = {
+    wordId,
+    roundKind: 'switchback',
     word: step.answers.find(a => a.correct)?.word ?? '?',
     correctUp: correct ? 1 : 0,
     correctDown: 0,
@@ -370,6 +391,11 @@ export function completeSwitchback(
     totalRealMasks: 1,
   };
 
+  const alreadyRecorded = state.wordResults.some(r => r.wordId === wordId);
+  const newWordResults = alreadyRecorded
+    ? state.wordResults
+    : [...state.wordResults, wordResult];
+
   if (lives <= 0) {
     return {
       ...state,
@@ -379,7 +405,7 @@ export function completeSwitchback(
       status: 'gameOver',
       feedback: 'Game over',
       lastActionAt: Date.now(),
-      wordResults: [...state.wordResults, wordResult],
+      wordResults: newWordResults,
     };
   }
 
@@ -390,7 +416,7 @@ export function completeSwitchback(
     feedback: correct ? `+${bonusScore}` : 'Missed it',
     lastActionAt: Date.now(),
     pollyTrigger: null,
-    wordResults: [...state.wordResults, wordResult],
+    wordResults: newWordResults,
   });
 }
 

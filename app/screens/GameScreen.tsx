@@ -150,7 +150,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   return (
     <SafeAreaView style={styles.screen}>
       <HeartbeatBackground />
-      <TopBar />
+      {!isDone && <TopBar />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : (
