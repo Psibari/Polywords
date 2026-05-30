@@ -10,13 +10,6 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useGameStore } from '../store/useGameStore';
 
-function streakColor(streak: number): string {
-  'worklet';
-  if (streak >= 7) return '#FF4500';
-  if (streak >= 5) return '#FF9500';
-  if (streak >= 3) return '#FFD700';
-  return '#FFFFFF';
-}
 
 function milestoneLabel(milestone: 3 | 5 | 7): string {
   if (milestone === 3) return 'Keep moving.';
@@ -93,15 +86,17 @@ export function StreakDisplay() {
     consumeMilestone();
   }, [streakMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const animatedCounterStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    color: streakColor(streakSV.value),
-  }));
+  const animatedCounterStyle = useAnimatedStyle(() => {
+    const s = streakSV.value;
+    const color = s >= 7 ? '#FF4500' : s >= 5 ? '#FF9500' : s >= 3 ? '#FFD700' : '#FFFFFF';
+    return { transform: [{ scale: scale.value }], color };
+  });
 
-  const animatedGlowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
-    borderColor: streakColor(streakSV.value),
-  }));
+  const animatedGlowStyle = useAnimatedStyle(() => {
+    const s = streakSV.value;
+    const borderColor = s >= 7 ? '#FF4500' : s >= 5 ? '#FF9500' : s >= 3 ? '#FFD700' : '#FFFFFF';
+    return { opacity: glowOpacity.value, borderColor };
+  });
 
   const animatedLabelStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: labelTransY.value }],
