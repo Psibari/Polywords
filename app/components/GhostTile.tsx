@@ -4,7 +4,6 @@ import {
   PanResponder,
   StyleSheet,
   Text,
-  View,
 } from 'react-native';
 import { GhostMeaning } from '../game/types';
 
@@ -150,13 +149,8 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
         ]}
         {...panResponder.panHandlers}
       >
-        <Text style={styles.label}>GHOST MEANING</Text>
-        <View style={styles.content}>
-          <Text style={styles.ghostEmoji}>👻</Text>
-          <Text style={styles.phrase} numberOfLines={2}>
-            {ghost.hiddenMeaningReal}
-          </Text>
-        </View>
+        <Text style={styles.ghostEmoji}>👻</Text>
+        <Text style={styles.phrase} numberOfLines={2}>{ghost.hiddenMeaningReal}</Text>
         {/* Pulsing border overlay — native driver via opacity */}
         <Animated.View
           pointerEvents="none"
@@ -174,14 +168,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#7B2FBE',
     paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 6,
+    paddingVertical: 0,
     shadowColor: '#7B2FBE',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     overflow: 'visible',
   },
   borderOverlay: {
@@ -189,27 +183,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#7B2FBE',
   },
-  label: {
-    color: '#7B2FBE',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
-    letterSpacing: 3,
-    marginBottom: 4,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   ghostEmoji: {
     fontSize: 14,
-    marginRight: 10,
+    marginRight: 12,
   },
   phrase: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: 'BagelFatOne_400Regular',
-    fontWeight: '400',
+    fontSize: 20,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
     flex: 1,
   },
 });
