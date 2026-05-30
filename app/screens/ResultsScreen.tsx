@@ -125,59 +125,17 @@ const wr = StyleSheet.create({
   result: { fontSize: 13 },
 });
 
-// ─── MISSED MEANING CARD ─────────────────────────────────────
-
-function MissedMeaningCard({ maskId }: { maskId: string }) {
-  const mask = findMaskById(maskId);
-  const word = findWordForMaskId(maskId);
-  if (!mask) return null;
-
-  return (
-    <View style={mm.card}>
-      <Text style={mm.phrase}>
-        {mask.emoji}{'  '}{mask.phrase}
-      </Text>
-      <Text style={mm.pollyLine}>
-        {word.toUpperCase()} — Polly knew.
-      </Text>
-    </View>
-  );
-}
-
-const mm = StyleSheet.create({
-  card: {
-    backgroundColor: 'rgba(239,68,68,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(239,68,68,0.3)',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
-  },
-  phrase: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  pollyLine: {
-    color: '#FFD700',
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-});
-
 // ─── GHOST SET CARD ──────────────────────────────────────────
 
 function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
-  const mask = findMaskById(firstMissedMaskId);
   const word = findWordForMaskId(firstMissedMaskId);
-  if (!mask) return null;
+  if (!word) return null;
 
   return (
     <View style={gs.card}>
       <Text style={gs.header}>👻 Ghost set for next run</Text>
       <Text style={gs.word}>{word.toUpperCase()}</Text>
-      <Text style={gs.body}>"{mask.phrase}" is waiting.</Text>
+      <Text style={gs.body}>It'll find you.</Text>
     </View>
   );
 }
@@ -408,7 +366,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   }, [enterY, enterOpacity, gradeScale, gradeY]);
 
   // derived data
-  const wordOnlyResults = wordResults.filter(r => r.totalRealMasks > 0);
+  const wordOnlyResults = wordResults.filter(r => r.roundKind === 'word');
   const allMissedMaskIds = wordResults.flatMap(r => r.missedMaskIds);
   const allWrongMaskIds = wordResults.flatMap(r => r.wrongMaskIds);
   const hasMissed = allMissedMaskIds.length > 0;
@@ -447,16 +405,6 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           <View style={rs.section}>
             {wordOnlyResults.map((r, i) => (
               <WordResultRow key={`${r.wordId ?? r.word}-${i}`} result={r} />
-            ))}
-          </View>
-        )}
-
-        {/* ── MISSED MEANINGS ── */}
-        {hasMissed && (
-          <View style={rs.section}>
-            <Text style={rs.sectionHeader}>You missed</Text>
-            {allMissedMaskIds.map(id => (
-              <MissedMeaningCard key={id} maskId={id} />
             ))}
           </View>
         )}
@@ -540,12 +488,6 @@ const rs = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
-  },
-  sectionHeader: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 10,
   },
   homeLink: {
     alignItems: 'center',
