@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { useGameStore } from '../store/useGameStore';
 
 function streakColor(streak: number): string {
+  'worklet';
   if (streak >= 7) return '#FF4500';
   if (streak >= 5) return '#FF9500';
   if (streak >= 3) return '#FFD700';
@@ -28,10 +29,16 @@ export function StreakDisplay() {
   const streakMilestone = useGameStore(s => s.game.streakMilestone);
   const consumeMilestone = useGameStore(s => s.consumeMilestone);
 
+  const streakSV = useSharedValue(0);
+  const milestoneSV = useSharedValue<3 | 5 | 7 | null>(null);
+
   const scale = useSharedValue(0);
   const glowOpacity = useSharedValue(0);
   const labelTransY = useSharedValue(0);
   const labelOpacity = useSharedValue(0);
+
+  useEffect(() => { streakSV.value = streak; }, [streak]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { milestoneSV.value = streakMilestone; }, [streakMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [visible, setVisible] = useState(false);
   const [labelText, setLabelText] = useState('');
@@ -86,14 +93,14 @@ export function StreakDisplay() {
     consumeMilestone();
   }, [streakMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const color = streakColor(streak);
-
   const animatedCounterStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    color: streakColor(streakSV.value),
   }));
 
   const animatedGlowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
+    borderColor: streakColor(streakSV.value),
   }));
 
   const animatedLabelStyle = useAnimatedStyle(() => ({
@@ -107,9 +114,9 @@ export function StreakDisplay() {
     <View style={styles.container}>
       <Animated.View
         pointerEvents="none"
-        style={[styles.glowRing, { borderColor: color }, animatedGlowStyle]}
+        style={[styles.glowRing, animatedGlowStyle]}
       />
-      <Animated.Text style={[styles.counter, { color }, animatedCounterStyle]}>
+      <Animated.Text style={[styles.counter, animatedCounterStyle]}>
         ×{streak}
       </Animated.Text>
       <Animated.Text
