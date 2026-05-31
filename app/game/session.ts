@@ -266,6 +266,7 @@ export const SESSION: SessionStep[] = [
   },
 
   // STEP 3 — SPRING (Boss, tension)
+  // trueMeanings: 4 | traps: 3 | hiddenMeaning: "A mousetrap's big moment"
   {
     kind: 'word',
     word: 'SPRING',
@@ -275,44 +276,24 @@ export const SESSION: SessionStep[] = [
     bossModifier: 'reverseMountOrder',
     pollyLine: 'Boss word. More meanings. Same clock.',
     meanings: [],
-    hiddenMeaning:   "A hull's bad morning",
+    hiddenMeaning:   "A mousetrap's big moment",
     hiddenTrap:      'What beds hide inside',
-    hiddenEmoji:     '⛵',
+    hiddenEmoji:     '🐭',
     hiddenTrapEmoji: '🛏️',
     masks: [
-      { id: 'spring_coil',    emoji: '🔩', phrase: 'Bouncy metal squiggle',     isReal: true },
-      { id: 'spring_jump',    emoji: '🤸', phrase: 'Launched from a crouch',    isReal: true },
-      { id: 'spring_water',   emoji: '💦', phrase: 'Bubbling up from nowhere',  isReal: true },
-      { id: 'spring_season',  emoji: '☃️', phrase: 'What snowmen dread most',   isReal: true },
-      { id: 'spring_thaw',    emoji: '🌤️', phrase: "The thaw's first exhale",   isReal: false, trapType: 'domainNeighbor' },
-      { id: 'spring_rabbit',  emoji: '🐇', phrase: "A rabbit's getaway move",   isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'spring_blossom', emoji: '🌺', phrase: 'When cherry blossoms fall', isReal: false, trapType: 'visualNeighbor' },
-      { id: 'spring_trap',    emoji: '🐭', phrase: "A mousetrap's big moment",  isReal: false, trapType: 'domainNeighbor' },
+      // trueMeanings (4)
+      { id: 'spring_coil',    emoji: '🔩', phrase: 'Bouncy metal squiggle',    isReal: true },
+      { id: 'spring_jump',    emoji: '🤸', phrase: 'Launched from a crouch',   isReal: true },
+      { id: 'spring_water',   emoji: '💦', phrase: 'Bubbling up from nowhere', isReal: true },
+      { id: 'spring_season',  emoji: '☃️', phrase: 'What snowmen dread most',  isReal: true },
+      // traps (3)
+      { id: 'spring_mattress', emoji: '😴', phrase: "A mattress's bounce",     isReal: false, trapType: 'almostSynonym' },
+      { id: 'spring_rivers',   emoji: '🏔️', phrase: 'Where rivers begin',      isReal: false, trapType: 'domainNeighbor' },
+      { id: 'spring_cage',     emoji: '🔓', phrase: 'A cage door flying open', isReal: false, trapType: 'associatedNeighbor' },
     ],
   },
 
-  // STEP 4 — COLD (Switchback, brainGlitch)
-  // After resolve: 1500ms Polly buffer → "Back to meanings. Stay sharp."
-  {
-    kind: 'switchback',
-    emotionalRole: 'brainGlitch',
-    eventType: 'switchback',
-    switchbackId: 'switchback_cold',
-    maskA: { text: 'Left out on purpose' },
-    maskB: { text: "Fever's uninvited guest" },
-    answers: [
-      { word: 'COLD',  correct: true  },
-      { word: 'WARM',  correct: false },
-      { word: 'SICK',  correct: false },
-      { word: 'CHILL', correct: false },
-    ],
-    pollyReveal: 'Same word. Two completely different bad days.',
-    pollyLine:   'Same word. Two completely different bad days.',
-    pollyBufferDelay: 1500,
-    pollyBufferLine:  'Back to meanings. Stay sharp.',
-  },
-
-  // STEP 5 — PITCH (Standard, hesitation)
+  // STEP 4 — PITCH (Standard, hesitation) — exhale word after Boss
   {
     kind: 'word',
     word: 'PITCH',
@@ -334,6 +315,27 @@ export const SESSION: SessionStep[] = [
       { id: 'pitch_tent',     emoji: '⛺', phrase: "A tent's founding moment",   isReal: false, trapType: 'domainNeighbor' },
       { id: 'pitch_mound',    emoji: '🏟️', phrase: "The mound's main character", isReal: false, trapType: 'associatedNeighbor' },
     ],
+  },
+
+  // STEP 5 — COLD (Switchback, brainGlitch)
+  // After resolve: 1500ms Polly buffer → "Back to meanings. Stay sharp."
+  {
+    kind: 'switchback',
+    emotionalRole: 'brainGlitch',
+    eventType: 'switchback',
+    switchbackId: 'switchback_cold',
+    maskA: { text: 'Left out on purpose' },
+    maskB: { text: "Fever's uninvited guest" },
+    answers: [
+      { word: 'COLD',  correct: true  },
+      { word: 'WARM',  correct: false },
+      { word: 'SICK',  correct: false },
+      { word: 'CHILL', correct: false },
+    ],
+    pollyReveal: 'Same word. Two completely different bad days.',
+    pollyLine:   'Same word. Two completely different bad days.',
+    pollyBufferDelay: 1500,
+    pollyBufferLine:  'Back to meanings. Stay sharp.',
   },
 
   // STEP 6 — PHRASE BREAK: "Give it a shot" (recovery)
