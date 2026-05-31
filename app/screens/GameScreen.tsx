@@ -50,11 +50,6 @@ function TopBar() {
         <View style={tb.block}>
           <Text style={tb.lives}>{lives || '💀'}</Text>
         </View>
-
-        <View style={tb.block}>
-          <Text style={tb.label}>COMBO</Text>
-          <Text style={tb.value}>x{game.combo}</Text>
-        </View>
       </View>
     </View>
   );

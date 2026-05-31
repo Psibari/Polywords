@@ -4,9 +4,9 @@ import { useGameStore } from '../store/useGameStore'
 import { FONTS, FONT_SIZES } from '../constants/fonts'
 
 function getColor(streak: number): string {
-  if (streak >= 7) return '#FF4500'
-  if (streak >= 5) return '#FF9500'
-  if (streak >= 3) return '#FFD700'
+  if (streak >= 10) return '#FF4500'
+  if (streak >= 7)  return '#FF8C00'
+  if (streak >= 4)  return '#F5C842'
   return '#FFFFFF'
 }
 
