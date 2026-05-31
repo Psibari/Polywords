@@ -1,6 +1,6 @@
 // ============================================================
 // POLY WORDS — POLY RUN SESSION
-// 15-word Poly Run session. Fixed order. No randomization.
+// 12-word Poly Run session. Fixed order. No randomization.
 // ============================================================
 
 import { SessionStep, WordStep, PhraseBreakStep, SwitchbackStep } from './types';
@@ -53,8 +53,6 @@ export const phraseBreakPool: PhraseBreakStep[] = [
     pollyReveal: 'Reverse the curse.',
   },
 ];
-
-const _selected = phraseBreakPool[Math.floor(Math.random() * phraseBreakPool.length)];
 
 // ============================================================
 // SLANG DROP POOL
@@ -114,8 +112,6 @@ export const slangPool: WordStep[] = [
   },
 
 ];
-
-const _selectedSlang = slangPool[Math.floor(Math.random() * slangPool.length)];
 
 // ============================================================
 // SWITCHBACK POOL
@@ -190,183 +186,272 @@ export const switchbackPool: SwitchbackStep[] = [
 
 ];
 
-const _selectedSwitchback = switchbackPool[Math.floor(Math.random() * switchbackPool.length)];
-
 // ============================================================
-// SESSION — 11 steps
+// SESSION — 12 steps
 // ============================================================
 
 export const SESSION: SessionStep[] = [
 
-  // WORD 1 — BARK (index 0)
-  {
-    kind: 'word',
-    word: 'BARK',
-    emotionalRole: 'confidence',
-    eventType: 'normal',
-    meanings: [],
-    hiddenMeaning:   "A doorframe's parting gift",
-    hiddenTrap:      "A lemon's bitter coat",
-    hiddenEmoji:     '⛵',
-    hiddenTrapEmoji: '📣',
-    masks: [
-      { id: 'bark_tree',   emoji: '🪵', phrase: "What a tree wears in winter",  isReal: true },
-      { id: 'bark_dog',    emoji: '🐕', phrase: "What startles the mailman",    isReal: true },
-      { id: 'bark_order',  emoji: '🫵', phrase: "Boss's favorite verb",         isReal: true },
-      { id: 'bark_growl',  emoji: '🧱', phrase: "Dog's warning, not its bite",  isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'bark_wolf',   emoji: '📯', phrase: "A pack's night anthem",        isReal: false, trapType: 'visualNeighbor' },
-      { id: 'bark_pie',    emoji: '🥧', phrase: "Inside every apple pie",       isReal: false, trapType: 'domainNeighbor' },
-    ],
-  },
-
-  // WORD 2 — SPRING (index 1)
-  {
-    kind: 'word',
-    word: 'SPRING',
-    emotionalRole: 'curiosity',
-    eventType: 'normal',
-    meanings: [],
-    hiddenMeaning:   "A hull's bad morning",
-    hiddenTrap:      "What beds hide inside",
-    hiddenEmoji:     '⚡',
-    hiddenTrapEmoji: '🌈',
-    masks: [
-      { id: 'spring_season', emoji: '🌸', phrase: "What snowmen dread most",     isReal: true },
-      { id: 'spring_jump',   emoji: '🤸', phrase: "Launched from a crouch",      isReal: true },
-      { id: 'spring_water',  emoji: '💦', phrase: "Bubbling up from nowhere",    isReal: true },
-      { id: 'spring_coil',   emoji: '🪝', phrase: 'Bouncy metal squiggle',       isReal: true, isHidden: true },
-      { id: 'spring_warm',   emoji: '🌤️', phrase: 'First after the last freeze', isReal: false, trapType: 'domainNeighbor' },
-      { id: 'spring_new',    emoji: '🌱', phrase: 'When cherry blossoms fall',   isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'spring_bounce', emoji: '⚡', phrase: "A mousetrap's big moment",    isReal: false, trapType: 'almostSynonym' },
-      { id: 'spring_flower', emoji: '🌿', phrase: "A rabbit's getaway move",     isReal: false, trapType: 'domainNeighbor' },
-    ],
-  },
-
-  // WORD 3 — LIGHT (index 2)
+  // STEP 1 — LIGHT (Standard, opener)
   {
     kind: 'word',
     word: 'LIGHT',
-    emotionalRole: 'confidence',
-    eventType: 'speedRound',
+    emotionalRole: 'opener',
+    eventType: 'standard',
+    tileStagger: 100,
+    pollyLine: 'More than one kind of light.',
     meanings: [],
-    hiddenMeaning:   'Nothing too heavy',
-    hiddenTrap:      'The lamp itself',
-    hiddenEmoji:     '🛋️',
-    hiddenTrapEmoji: '🔦',
+    hiddenMeaning:   'Where the bird rested',
+    hiddenTrap:      "A traffic signal's job",
+    hiddenEmoji:     '🌿',
+    hiddenTrapEmoji: '🚦',
     masks: [
-      { id: 'light_glow',    emoji: '✨', phrase: 'What eyes drink in',   isReal: true },
-      { id: 'light_weight',  emoji: '🪶', phrase: 'Barely any weight',    isReal: true },
-      { id: 'light_tone',    emoji: '🫧', phrase: 'Pale, washed out',     isReal: true },
-      { id: 'light_switch',  emoji: '🔥', phrase: 'Set it burning',       isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'light_sun',     emoji: '☀️', phrase: 'Pure sunshine',        isReal: false, trapType: 'visualNeighbor' },
-      { id: 'light_feather', emoji: '🥊', phrase: 'Featherweight class',  isReal: false, trapType: 'almostSynonym' },
-      { id: 'light_soft',    emoji: '😮‍💨', phrase: 'Easy, no strain',    isReal: false, trapType: 'visualNeighbor' },
+      { id: 'light_darkness', emoji: '✨', phrase: 'What darkness surrenders to', isReal: true },
+      { id: 'light_weight',   emoji: '🪶', phrase: 'Easy on the shoulders',       isReal: true },
+      { id: 'light_wick',     emoji: '🕯️', phrase: 'Sets the wick going',          isReal: true },
+      { id: 'light_pale',     emoji: '🫧', phrase: 'Washed out, almost white',    isReal: true },
+      { id: 'light_monday',   emoji: '😌', phrase: "Monday's easier cousin",      isReal: false, trapType: 'almostSynonym' },
+      { id: 'light_green',    emoji: '🟢', phrase: 'Green means go',              isReal: false, trapType: 'domainNeighbor' },
+      { id: 'light_gentle',   emoji: '🌬️', phrase: 'A gentle kind of force',      isReal: false, trapType: 'visualNeighbor' },
     ],
   },
 
-  // SWITCHBACK (index 3) — randomly selected from switchbackPool
-  _selectedSwitchback,
+  // STEP 2 — STRIKE (Standard, flow)
+  {
+    kind: 'word',
+    word: 'STRIKE',
+    emotionalRole: 'flow',
+    eventType: 'standard',
+    tileStagger: 80,
+    pollyLine: 'Same word. Very different days.',
+    meanings: [],
+    hiddenMeaning:   'What prospectors prayed for',
+    hiddenTrap:      "Sky's electrical signature",
+    hiddenEmoji:     '⛏️',
+    hiddenTrapEmoji: '⚡',
+    masks: [
+      { id: 'strike_fist',      emoji: '👊', phrase: 'Fist finds its target',           isReal: true },
+      { id: 'strike_workers',   emoji: '🪧', phrase: 'Workers walk out',                isReal: true },
+      { id: 'strike_bowling',   emoji: '🎳', phrase: 'All ten, one ball',               isReal: true },
+      { id: 'strike_lands',     emoji: '💥', phrase: 'Lands differently than expected', isReal: true },
+      { id: 'strike_planes',    emoji: '💣', phrase: 'Planes arriving uninvited',        isReal: false, trapType: 'domainNeighbor' },
+      { id: 'strike_lightning', emoji: '🌩️', phrase: 'Where lightning touches down',    isReal: false, trapType: 'visualNeighbor' },
+      { id: 'strike_pitcher',   emoji: '⚾', phrase: "A pitcher's moment of truth",     isReal: false, trapType: 'almostSynonym' },
+    ],
+  },
 
-  // WORD 4 — BANK (index 4)
+  // STEP 3 — SPRING (Boss, tension)
+  {
+    kind: 'word',
+    word: 'SPRING',
+    emotionalRole: 'tension',
+    eventType: 'bossWord',
+    tileStagger: 100,
+    bossModifier: 'reverseMountOrder',
+    pollyLine: 'Boss word. More meanings. Same clock.',
+    meanings: [],
+    hiddenMeaning:   "A hull's bad morning",
+    hiddenTrap:      'What beds hide inside',
+    hiddenEmoji:     '⛵',
+    hiddenTrapEmoji: '🛏️',
+    masks: [
+      { id: 'spring_coil',    emoji: '🔩', phrase: 'Bouncy metal squiggle',     isReal: true },
+      { id: 'spring_jump',    emoji: '🤸', phrase: 'Launched from a crouch',    isReal: true },
+      { id: 'spring_water',   emoji: '💦', phrase: 'Bubbling up from nowhere',  isReal: true },
+      { id: 'spring_season',  emoji: '☃️', phrase: 'What snowmen dread most',   isReal: true },
+      { id: 'spring_thaw',    emoji: '🌤️', phrase: "The thaw's first exhale",   isReal: false, trapType: 'domainNeighbor' },
+      { id: 'spring_rabbit',  emoji: '🐇', phrase: "A rabbit's getaway move",   isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'spring_blossom', emoji: '🌺', phrase: 'When cherry blossoms fall', isReal: false, trapType: 'visualNeighbor' },
+      { id: 'spring_trap',    emoji: '🐭', phrase: "A mousetrap's big moment",  isReal: false, trapType: 'domainNeighbor' },
+    ],
+  },
+
+  // STEP 4 — COLD (Switchback, brainGlitch)
+  // After resolve: 1500ms Polly buffer → "Back to meanings. Stay sharp."
+  {
+    kind: 'switchback',
+    emotionalRole: 'brainGlitch',
+    eventType: 'switchback',
+    clue1: { emoji: '🥶', text: 'Left out on purpose' },
+    clue2: { emoji: '🤒', text: "Fever's uninvited guest" },
+    answers: [
+      { word: 'COLD',  correct: true  },
+      { word: 'WARM',  correct: false },
+      { word: 'SICK',  correct: false },
+      { word: 'CHILL', correct: false },
+    ],
+    pollyReveal: 'Same word. Two completely different bad days.',
+    pollyLine:   'Same word. Two completely different bad days.',
+    pollyBufferDelay: 1500,
+    pollyBufferLine:  'Back to meanings. Stay sharp.',
+  },
+
+  // STEP 5 — PITCH (Standard, hesitation)
+  {
+    kind: 'word',
+    word: 'PITCH',
+    emotionalRole: 'hesitation',
+    eventType: 'standard',
+    tileStagger: 80,
+    pollyLine: 'Four meanings. One word. Pick carefully.',
+    meanings: [],
+    hiddenMeaning:   "A roof's steepest secret",
+    hiddenTrap:      "A thrower's signature move",
+    hiddenEmoji:     '📐',
+    hiddenTrapEmoji: '🥎',
+    masks: [
+      { id: 'pitch_note',     emoji: '🎵', phrase: "A note's altitude",          isReal: true },
+      { id: 'pitch_sales',    emoji: '💼', phrase: 'Where the sales begin',      isReal: true },
+      { id: 'pitch_grass',    emoji: '⚽', phrase: 'British grass, match-ready', isReal: true },
+      { id: 'pitch_black',    emoji: '🖤', phrase: 'Blacker than black itself',  isReal: true },
+      { id: 'pitch_darkness', emoji: '🌑', phrase: 'What darkness is called',    isReal: false, trapType: 'almostSynonym' },
+      { id: 'pitch_tent',     emoji: '⛺', phrase: "A tent's founding moment",   isReal: false, trapType: 'domainNeighbor' },
+      { id: 'pitch_mound',    emoji: '🏟️', phrase: "The mound's main character", isReal: false, trapType: 'associatedNeighbor' },
+    ],
+  },
+
+  // STEP 6 — PHRASE BREAK: "Give it a shot" (recovery)
+  {
+    kind: 'phraseBreak',
+    emotionalRole: 'recovery',
+    eventType: 'phraseBreak',
+    phrase: 'Give it a shot',
+    question: 'Which of these capture its meaning?',
+    answers: [
+      { text: 'Try it once',   correct: true  },
+      { text: 'Take a chance', correct: true  },
+      { text: 'Pour a drink',  correct: false },
+      { text: 'Aim carefully', correct: false },
+    ],
+    pollyReveal: 'From firearms to slang — one word, four lives.',
+    pollyLine:   'One word. Four journeys.',
+  },
+
+  // STEP 7 — BANK (Standard, freshness)
   {
     kind: 'word',
     word: 'BANK',
-    emotionalRole: 'hesitation',
-    eventType: 'decoyTension',
+    emotionalRole: 'freshness',
+    eventType: 'standard',
+    tileStagger: 80,
+    pollyLine: 'Not just where money lives.',
     meanings: [],
     hiddenMeaning:   'What lighthouses argue with',
     hiddenTrap:      'Guarded by serious steel',
-    hiddenEmoji:     '☁️',
-    hiddenTrapEmoji: '🪨',
+    hiddenEmoji:     '🌫️',
+    hiddenTrapEmoji: '🔒',
     masks: [
-      { id: 'bank_money',    emoji: '🏦', phrase: "Where your cash hibernates",      isReal: true },
-      { id: 'bank_river',    emoji: '🏞️', phrase: "Where fishing lines land",        isReal: true },
-      { id: 'bank_tilt',     emoji: '🛩️', phrase: 'Sky tilted on purpose',           isReal: true },
-      { id: 'bank_frozen',   emoji: '🧊', phrase: 'Frozen just in case',             isReal: true },
-      { id: 'bank_teller',   emoji: '💳', phrase: "A teller's long queue",           isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'bank_interest', emoji: '🏺', phrase: 'Where interest quietly multiplies', isReal: false, trapType: 'almostSynonym' },
-      { id: 'bank_cliff',    emoji: '🌫️', phrase: 'A cliff face, not a slope',       isReal: false, trapType: 'domainNeighbor' },
+      { id: 'bank_tilt',     emoji: '✈️', phrase: 'Sky tilted on purpose',             isReal: true },
+      { id: 'bank_frozen',   emoji: '🧊', phrase: 'Frozen just in case',               isReal: true },
+      { id: 'bank_river',    emoji: '🏞️', phrase: "A river's grassy edge",             isReal: true },
+      { id: 'bank_money',    emoji: '🏦', phrase: 'Where your cash hibernates',        isReal: true },
+      { id: 'bank_interest', emoji: '📈', phrase: 'Where interest quietly multiplies', isReal: false, trapType: 'almostSynonym' },
+      { id: 'bank_cliff',    emoji: '🪨', phrase: 'Straight vertical drop',            isReal: false, trapType: 'domainNeighbor' },
+      { id: 'bank_teller',   emoji: '💳', phrase: "A teller's long queue",             isReal: false, trapType: 'associatedNeighbor' },
     ],
   },
 
-  // PHRASE BREAK (index 5) — randomly selected from phraseBreakPool
-  _selected,
+  // STEP 8 — RAW (Slang Drop, culturalSnap) — NOW era
+  // Tile order: traps first, slang real last
+  {
+    kind: 'word',
+    word: 'RAW',
+    emotionalRole: 'culturalSnap',
+    eventType: 'slangDrop',
+    slangEra: 'NOW',
+    slangMaskId: 'raw_slang',
+    tileStagger: 80,
+    pollyLine: 'Same word. Different century.',
+    meanings: [],
+    masks: [
+      { id: 'raw_uncooked', emoji: '🥩', phrase: 'Not yet cooked',        isReal: false, trapType: 'domainNeighbor' },
+      { id: 'raw_tender',   emoji: '🤕', phrase: 'Tender to the touch',   isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'raw_exposed',  emoji: '🫣', phrase: 'Exposed and unguarded', isReal: false, trapType: 'almostSynonym' },
+      { id: 'raw_slang',    emoji: '🔥', phrase: 'Uncut and electric',    isReal: true,  isSlang: true, era: 'modern' },
+    ],
+  },
 
-  // WORD 5 — WAKE (index 6)
+  // STEP 9 — WAKE (Standard, surprise) — hapticTier: light
   {
     kind: 'word',
     word: 'WAKE',
-    emotionalRole: 'curiosity',
-    eventType: 'normal',
+    emotionalRole: 'surprise',
+    eventType: 'standard',
+    tileStagger: 80,
+    hapticTier: 'light',
+    pollyLine: 'Three meanings. One carries more weight.',
     meanings: [],
     hiddenMeaning:   'The mess nobody chose',
     hiddenTrap:      'Water that has opinions',
-    hiddenEmoji:     '⚰️',
+    hiddenEmoji:     '💧',
     hiddenTrapEmoji: '🌙',
     masks: [
-      { id: 'wake_dawn',     emoji: '⏰', phrase: 'Eyelids lifting at dawn',         isReal: true },
-      { id: 'wake_boat',     emoji: '🚢', phrase: "A boat's churned-up road",        isReal: true },
-      { id: 'wake_funeral',  emoji: '🕯️', phrase: 'Goodbye before the ground',      isReal: true },
-      { id: 'wake_snooze',   emoji: '😪', phrase: 'Nine more minutes, always',       isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'wake_river',    emoji: '🌊', phrase: "A river's gentle push",           isReal: false, trapType: 'domainNeighbor' },
-      { id: 'wake_alarm',    emoji: '🌄', phrase: 'What alarm clocks wage war on',   isReal: false, trapType: 'almostSynonym' },
+      { id: 'wake_boat',    emoji: '🚢', phrase: "A boat's churned-up road",  isReal: true },
+      { id: 'wake_funeral', emoji: '🪦', phrase: 'Goodbye before the ground', isReal: true },
+      { id: 'wake_dawn',    emoji: '🌄', phrase: 'Eyelids lifting at dawn',   isReal: true },
+      { id: 'wake_alarm',   emoji: '⏰', phrase: "Alarm clocks' one purpose", isReal: false, trapType: 'almostSynonym' },
+      { id: 'wake_snooze',  emoji: '😴', phrase: 'Nine more minutes, always', isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'wake_river',   emoji: '🌊', phrase: "A river's gentle push",     isReal: false, trapType: 'domainNeighbor' },
     ],
   },
 
-  // SLANG DROP (index 7) — randomly selected from slangPool
-  _selectedSlang,
-
-  // WORD 7 — MATCH (index 8)
+  // STEP 10 — MATCH (Standard, adrenaline)
   {
     kind: 'word',
     word: 'MATCH',
-    emotionalRole: 'hesitation',
-    eventType: 'decoyTension',
+    emotionalRole: 'adrenaline',
+    eventType: 'standard',
+    tileStagger: 60,
+    pollyLine: 'One of these is ancient history.',
     meanings: [],
     hiddenMeaning:   'Slow-burning battle cord',
     hiddenTrap:      "Your reflection's nod back",
-    hiddenEmoji:     '💍',
-    hiddenTrapEmoji: '🥅',
+    hiddenEmoji:     '🧨',
+    hiddenTrapEmoji: '🪞',
     masks: [
-      { id: 'match_competition', emoji: '⚔️', phrase: 'Where rivals settle things',    isReal: true },
-      { id: 'match_fire',        emoji: '🪔', phrase: 'One scratch, instant light',    isReal: true },
-      { id: 'match_copy',        emoji: '🧩', phrase: 'Identical by accident',         isReal: true },
-      { id: 'match_pair',        emoji: '🤝', phrase: 'Two people, one verdict',       isReal: true },
-      { id: 'match_kindle',      emoji: '🕯️', phrase: 'Little sticks, big ambitions', isReal: false, trapType: 'domainNeighbor' },
-      { id: 'match_tie',         emoji: '💑', phrase: "The scoreboard's awkward tie",  isReal: false, trapType: 'almostSynonym' },
-      { id: 'match_trophy',      emoji: '⚽', phrase: "A winner's permanent record",   isReal: false, trapType: 'domainNeighbor' },
+      { id: 'match_rivals',  emoji: '⚔️', phrase: 'Where rivals settle things',    isReal: true },
+      { id: 'match_flame',   emoji: '🪔', phrase: 'One scratch, instant light',    isReal: true },
+      { id: 'match_pair',    emoji: '🤝', phrase: 'Two people, one verdict',       isReal: true },
+      { id: 'match_copy',    emoji: '🧩', phrase: 'Identical by accident',         isReal: true },
+      { id: 'match_tie',     emoji: '🎯', phrase: "The scoreboard's awkward tie",  isReal: false, trapType: 'almostSynonym' },
+      { id: 'match_trophy',  emoji: '🏅', phrase: "A winner's permanent record",   isReal: false, trapType: 'domainNeighbor' },
+      { id: 'match_sticks',  emoji: '🎋', phrase: 'Little sticks, big ambitions',  isReal: false, trapType: 'domainNeighbor' },
     ],
   },
 
-  // WORD 8 — SOUND (index 9)
+  // STEP 11 — BARK (Standard, nearMiss)
   {
     kind: 'word',
-    word: 'SOUND',
-    emotionalRole: 'surprise',
-    eventType: 'missingMeaning',
+    word: 'BARK',
+    emotionalRole: 'nearMiss',
+    eventType: 'standard',
+    tileStagger: 80,
+    pollyLine: "Don't rush. One of these bites.",
     meanings: [],
-    hiddenMeaning:   "A band's whole vibe",
-    hiddenTrap:      "A ping's patient echo",
-    hiddenEmoji:     '🗣️',
-    hiddenTrapEmoji: '🎙️',
+    hiddenMeaning:   "A doorframe's parting gift",
+    hiddenTrap:      "A lemon's bitter coat",
+    hiddenEmoji:     '🚪',
+    hiddenTrapEmoji: '🍋',
     masks: [
-      { id: 'sound_audio',   emoji: '👂', phrase: 'Ears have no off switch',        isReal: true },
-      { id: 'sound_valid',   emoji: '🏔️', phrase: "Advice you don't question",      isReal: true, isHidden: true },
-      { id: 'sound_strait',  emoji: '🗺️', phrase: "The sea's hallway",              isReal: true, isHidden: true },
-      { id: 'sound_seem',    emoji: '⚓', phrase: 'Comes across as right',          isReal: true },
-      { id: 'sound_speaker', emoji: '🎤', phrase: 'What a speaker pushes out',      isReal: false, trapType: 'almostSynonym' },
-      { id: 'sound_checkup', emoji: '🩺', phrase: "A note's place in the scale",    isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'sound_drum',    emoji: '🐬', phrase: "A drum's taut face",             isReal: false, trapType: 'domainNeighbor' },
+      { id: 'bark_order', emoji: '🫵', phrase: "Boss's favorite verb",      isReal: true },
+      { id: 'bark_tree',  emoji: '🌳', phrase: "A trunk's outer jacket",    isReal: true },
+      { id: 'bark_dog',   emoji: '🐕', phrase: 'What startles the mailman', isReal: true },
+      { id: 'bark_growl', emoji: '🐩', phrase: 'A low rumbling warning',    isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'bark_wolf',  emoji: '🐺', phrase: "A pack's night anthem",     isReal: false, trapType: 'domainNeighbor' },
+      { id: 'bark_pie',   emoji: '🥧', phrase: 'Inside every apple pie',    isReal: false, trapType: 'domainNeighbor' },
     ],
   },
 
-  // WORD 9 — ORDER (index 10)
+  // STEP 12 — ORDER (Boss, climax)
   {
     kind: 'word',
     word: 'ORDER',
-    emotionalRole: 'boss',
+    emotionalRole: 'climax',
     eventType: 'bossWord',
-    pollyLine: 'Final split. Stay sharp.',
+    tileStagger: 80,
+    bossModifier: 'reverseMountOrder',
+    postSessionPollyDuration: 3000,
+    pollyLine: "That's everything. Did any of those surprise you?",
     meanings: [],
     hiddenMeaning:   'Below class, above family',
     hiddenTrap:      "The bench's final document",
@@ -376,11 +461,11 @@ export const SESSION: SessionStep[] = [
       { id: 'order_monks',        emoji: '🧹', phrase: 'What monks answer to',              isReal: true },
       { id: 'order_command',      emoji: '🎖️', phrase: 'Said once, not twice',              isReal: true },
       { id: 'order_purchase',     emoji: '📬', phrase: 'Your choice made official',         isReal: true },
-      { id: 'order_arrange',      emoji: '📐', phrase: 'Chaos cleaned up',                  isReal: true },
-      { id: 'order_court',        emoji: '🍽️', phrase: "A courtroom's final word",         isReal: false, trapType: 'associatedNeighbor', borderline: true },
+      { id: 'order_arrange',      emoji: '🗂️', phrase: 'Chaos cleaned up',                  isReal: true },
+      { id: 'order_court',        emoji: '⚖️', phrase: "A judge's last ruling",            isReal: false, trapType: 'associatedNeighbor' },
       { id: 'order_queue',        emoji: '🛒', phrase: 'The British national pastime',      isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'order_checklist',    emoji: '🔄', phrase: 'Everything ticked, nothing missed', isReal: false, trapType: 'almostSynonym' },
       { id: 'order_instructions', emoji: '📋', phrase: 'The instructions, page one',        isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'order_checklist',    emoji: '🔄', phrase: 'Everything ticked, nothing missed', isReal: false, trapType: 'almostSynonym' },
     ],
   },
 

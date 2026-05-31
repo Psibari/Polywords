@@ -16,6 +16,7 @@ export type GhostRevenge = {
 
 export type EventType =
   | 'normal'
+  | 'standard'
   | 'speedRound'
   | 'decoyTension'
   | 'missingMeaning'
@@ -24,7 +25,8 @@ export type EventType =
   | 'wordLore'
   | 'decoyHeavy'
   | 'semanticEvolution'
-  | 'phraseBreak';
+  | 'phraseBreak'
+  | 'switchback';
 
 export type EmotionalRole =
   | 'confidence'
@@ -36,7 +38,17 @@ export type EmotionalRole =
   | 'reward'
   | 'calibration'
   | 'trap'
-  | 'switch';
+  | 'switch'
+  | 'opener'
+  | 'flow'
+  | 'tension'
+  | 'brainGlitch'
+  | 'recovery'
+  | 'freshness'
+  | 'culturalSnap'
+  | 'adrenaline'
+  | 'nearMiss'
+  | 'climax';
 
 export type Meaning = {
   id: string;
@@ -89,16 +101,21 @@ export type WordStep = {
   hiddenTrapEmoji?:  string;
   slangEra?:         SlangEra;
   slangMaskId?:      string;
+  tileStagger?:              number;
+  hapticTier?:               'light' | 'medium' | 'heavy';
+  bossModifier?:             'reverseMountOrder';
+  postSessionPollyDuration?: number;
 };
 
 export type PhraseBreakStep = {
   kind: 'phraseBreak';
   phrase: string;
-  emotionalRole: 'reward';
+  emotionalRole: EmotionalRole;
   eventType: 'phraseBreak';
   question: string;
   answers: { text: string; correct: boolean }[];
   pollyReveal: string;
+  pollyLine?: string;
 };
 
 export type SwitchbackStep = {
@@ -107,6 +124,11 @@ export type SwitchbackStep = {
   clue2: { emoji: string; text: string };
   answers: { word: string; correct: boolean }[];
   pollyReveal: string;
+  emotionalRole?:   EmotionalRole;
+  eventType?:       EventType | null;
+  pollyLine?:       string;
+  pollyBufferDelay?: number;
+  pollyBufferLine?:  string;
 };
 
 export type SessionStep = WordStep | PhraseBreakStep | SwitchbackStep;
