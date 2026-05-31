@@ -129,6 +129,14 @@ export type SwitchbackStep = {
   pollyLine?:       string;
   pollyBufferDelay?: number;
   pollyBufferLine?:  string;
+  // pool-entry metadata
+  id?:          string;
+  word?:        string;
+  clueA?:       string;
+  clueB?:       string;
+  senseA?:      string;
+  senseB?:      string;
+  switchbackId?: string;
 };
 
 export type SessionStep = WordStep | PhraseBreakStep | SwitchbackStep;

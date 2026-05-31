@@ -184,6 +184,31 @@ export const switchbackPool: SwitchbackStep[] = [
     pollyReveal: 'SOUND is heard. SOUND is sailed.',
   },
 
+  // COLD — both clues resolve to the same connecting word
+  {
+    kind: 'switchback',
+    id: 'switchback_cold',
+    word: 'COLD',
+    clueA: "Left out on purpose",
+    clueB: "Fever's uninvited guest",
+    senseA: "Emotionally distant",
+    senseB: "A common illness",
+    pollyLine: "Same word. Two completely different bad days.",
+    clue1: { emoji: '🥶', text: "Left out on purpose" },
+    clue2: { emoji: '🤒', text: "Fever's uninvited guest" },
+    answers: [
+      { word: 'COLD',  correct: true  },
+      { word: 'WARM',  correct: false },
+      { word: 'SICK',  correct: false },
+      { word: 'CHILL', correct: false },
+    ],
+    pollyReveal: "Same word. Two completely different bad days.",
+    emotionalRole: 'brainGlitch',
+    eventType: 'switchback',
+    pollyBufferDelay: 1500,
+    pollyBufferLine: 'Back to meanings. Stay sharp.',
+  },
+
 ];
 
 // ============================================================
@@ -272,6 +297,7 @@ export const SESSION: SessionStep[] = [
     kind: 'switchback',
     emotionalRole: 'brainGlitch',
     eventType: 'switchback',
+    switchbackId: 'switchback_cold',
     clue1: { emoji: '🥶', text: 'Left out on purpose' },
     clue2: { emoji: '🤒', text: "Fever's uninvited guest" },
     answers: [

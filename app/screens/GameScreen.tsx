@@ -146,9 +146,11 @@ function GameDirector({ navigation }: { navigation: any }) {
   }
 
   const isDone = game.status === 'complete' || game.status === 'gameOver';
+  const activeStep = !isDone ? currentStep(game) : null;
+  const screenBg = activeStep?.kind === 'switchback' ? '#1A1A4A' : '#1A1040';
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={[styles.screen, { backgroundColor: screenBg }]}>
       <HeartbeatBackground />
       {!isDone && <TopBar />}
       {isDone ? (
