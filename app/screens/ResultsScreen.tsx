@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Pressable,
@@ -344,6 +344,19 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const { wordResults, score, bestCombo, status, lives } = game;
   const isComplete = status === 'complete';
 
+  // Post-session Polly hold — read from final step
+  const lastStep     = SESSION[SESSION.length - 1];
+  const postDuration = lastStep.kind === 'word' ? (lastStep.postSessionPollyDuration ?? 0) : 0;
+  const postLine     = lastStep.kind === 'word' ? (lastStep.pollyLine ?? null) : null;
+  const [showResults, setShowResults] = useState(postDuration === 0);
+
+  useEffect(() => {
+    if (postDuration > 0) {
+      const t = setTimeout(() => setShowResults(true), postDuration);
+      return () => clearTimeout(t);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // entrance animation
   const enterY = useRef(new Animated.Value(40)).current;
   const enterOpacity = useRef(new Animated.Value(0)).current;
@@ -353,6 +366,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const gradeY = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
+    if (!showResults) return;
     Animated.parallel([
       Animated.timing(enterY, { toValue: 0, duration: 400, useNativeDriver: true }),
       Animated.timing(enterOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
@@ -363,7 +377,16 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         Animated.spring(gradeY, { toValue: 0, tension: 120, friction: 8, useNativeDriver: true }),
       ]).start();
     }, 150);
-  }, [enterY, enterOpacity, gradeScale, gradeY]);
+  }, [showResults]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Polly hold screen — shown before results when postDuration > 0
+  if (!showResults) {
+    return (
+      <View style={ph.container}>
+        <Text style={ph.line}>{postLine}</Text>
+      </View>
+    );
+  }
 
   // derived data
   const wordOnlyResults = wordResults.filter(r => r.roundKind === 'word');
@@ -447,6 +470,23 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     </Animated.View>
   );
 }
+
+const ph = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1A1040',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  line: {
+    color: '#4CAF50',
+    fontSize: 18,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    textAlign: 'center',
+  },
+});
 
 const rs = StyleSheet.create({
   container: {

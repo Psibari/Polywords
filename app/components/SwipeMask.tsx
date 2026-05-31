@@ -30,6 +30,7 @@ type Props = {
   isSpecialSplit?: boolean;
   entryDelay?: number;
   eraBadge?: string;
+  hapticCorrect?: () => void;
 };
 
 const FRAGMENT_OFFSETS = [
@@ -52,6 +53,7 @@ export function SwipeMask({
   isSpecialSplit = false,
   entryDelay = 0,
   eraBadge,
+  hapticCorrect,
 }: Props) {
   const [bgColor, setBgColor] = useState(isSpecialSplit ? '#251F4A' : '#2A2560');
   const [showShatter, setShowShatter] = useState(false);
@@ -110,7 +112,11 @@ export function SwipeMask({
   useEffect(() => {
 
     if (s === 'correct') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (hapticCorrect) {
+        hapticCorrect();
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       playCorrectTap();
       setBgColor('#FFD700');
       Animated.spring(panXY, {

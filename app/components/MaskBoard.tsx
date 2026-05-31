@@ -707,20 +707,30 @@ export function MaskBoard({ step }: Props) {
         style={styles.gridWrap}
         onLayout={e => setGridHeight(e.nativeEvent.layout.height)}
       >
-        {showBoardContent && visibleGridMasks.map((mask, index) => (
-          <View key={mask.id} ref={getTileRef(mask.id)}>
-            <SwipeMask
-              mask={mask}
-              state={tileStates.get(mask.id) ?? 'idle'}
-              onSwipeUp={() => handleSwipeUp(mask.id)}
-              onSwipeDown={() => handleSwipeRight(mask.id)}
-              onTapReveal={() => {}}
-              revealable={false}
-              tileHeight={tileHeight}
-              entryDelay={index * (isBoss ? 100 : 80)}
-            />
-          </View>
-        ))}
+        {showBoardContent && (() => {
+          const stagger = step.tileStagger ?? 80;
+          const orderedMasks = step.bossModifier === 'reverseMountOrder'
+            ? [...visibleGridMasks].reverse()
+            : visibleGridMasks;
+          const hapticCorrect = step.hapticTier === 'light'
+            ? () => Haptics.selectionAsync()
+            : undefined;
+          return orderedMasks.map((mask, index) => (
+            <View key={mask.id} ref={getTileRef(mask.id)}>
+              <SwipeMask
+                mask={mask}
+                state={tileStates.get(mask.id) ?? 'idle'}
+                onSwipeUp={() => handleSwipeUp(mask.id)}
+                onSwipeDown={() => handleSwipeRight(mask.id)}
+                onTapReveal={() => {}}
+                revealable={false}
+                tileHeight={tileHeight}
+                entryDelay={index * stagger}
+                hapticCorrect={hapticCorrect}
+              />
+            </View>
+          ));
+        })()}
 
         {/* split tiles */}
         {showBoardContent && showSplitBars && (

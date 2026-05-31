@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { SESSION } from '../game/session';
@@ -160,11 +160,65 @@ function GameDirector({ navigation }: { navigation: any }) {
   );
 }
 
+// ─── SWITCHBACK BUFFER VIEW ───────────────────────────────────
+
+function SwitchbackBufferView({ line }: { line: string }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <View style={sbuf.container}>
+      <Animated.Text style={[sbuf.line, { opacity }]}>{line}</Animated.Text>
+    </View>
+  );
+}
+
+const sbuf = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  line: {
+    color: '#4CAF50',
+    fontSize: 18,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    textAlign: 'center',
+  },
+});
+
 // ─── GAME CONTENT ─────────────────────────────────────────────
 
 function GameContent() {
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
+
+  // Switchback polly buffer — hold before mounting next step
+  const prevStepRef   = useRef(step);
+  const [bufferLine, setBufferLine]   = useState<string | null>(null);
+
+  useEffect(() => {
+    const prev = prevStepRef.current;
+    prevStepRef.current = step;
+
+    if (
+      prev.kind === 'switchback' &&
+      prev.pollyBufferDelay &&
+      prev.pollyBufferLine &&
+      step.kind !== 'switchback'
+    ) {
+      setBufferLine(prev.pollyBufferLine);
+      const t = setTimeout(() => setBufferLine(null), prev.pollyBufferDelay);
+      return () => clearTimeout(t);
+    }
+  }, [game.stepIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (bufferLine !== null) {
+    return <SwitchbackBufferView line={bufferLine} />;
+  }
 
   if (step.kind === 'phraseBreak') {
     return <PhraseBreakScreen step={step} />;
