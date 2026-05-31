@@ -117,6 +117,15 @@ export function MaskBoard({ step }: Props) {
   // ── boss state ───────────────────────────────────────────────
   const [bossReady, setBossReady]             = useState(!isBoss);
   const [bossSweepActive, setBossSweepActive] = useState(false);
+
+  // ── tilesReady: gates tile stagger until data is confirmed present ──
+  const [tilesReady, setTilesReady] = useState(false);
+  useEffect(() => {
+    if (visibleGridMasks.length > 0) {
+      const id = setTimeout(() => setTilesReady(true), 50);
+      return () => clearTimeout(id);
+    }
+  }, [visibleGridMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
   // boss words suppress the PollyCard intro — bossWord trigger fires after entrance instead
   // ghost rounds also suppress intro — ghostIntro fires instead
   const bossSuppressIntro = isBoss || !!ghost;
@@ -577,7 +586,7 @@ export function MaskBoard({ step }: Props) {
     }
   }
 
-  const showBoardContent = !isBoss || bossReady;
+  const showBoardContent = (!isBoss || bossReady) && tilesReady;
 
   // ── render ────────────────────────────────────────────────────
   return (
@@ -722,7 +731,7 @@ export function MaskBoard({ step }: Props) {
                 state={tileStates.get(mask.id) ?? 'idle'}
                 onSwipeUp={() => handleSwipeUp(mask.id)}
                 onSwipeDown={() => handleSwipeRight(mask.id)}
-                onTapReveal={() => {}}
+                onSwipeReveal={() => {}}
                 revealable={false}
                 tileHeight={tileHeight}
                 entryDelay={index * stagger}
@@ -750,7 +759,7 @@ export function MaskBoard({ step }: Props) {
                 state={splitTileStates.left}
                 onSwipeUp={() => handleSplitSwipeUp('left')}
                 onSwipeDown={() => handleSplitSwipeRight('left')}
-                onTapReveal={() => {}}
+                onSwipeReveal={() => {}}
                 tileHeight={tileHeight}
                 isSpecialSplit
               />
@@ -773,7 +782,7 @@ export function MaskBoard({ step }: Props) {
                 state={splitTileStates.right}
                 onSwipeUp={() => handleSplitSwipeUp('right')}
                 onSwipeDown={() => handleSplitSwipeRight('right')}
-                onTapReveal={() => {}}
+                onSwipeReveal={() => {}}
                 tileHeight={tileHeight}
                 isSpecialSplit
               />

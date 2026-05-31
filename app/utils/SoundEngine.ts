@@ -201,7 +201,7 @@ function play(sound: Audio.Sound | null): void {
   sound.replayAsync().catch(() => {});
 }
 
-export function playCorrectTap():    void { play(sounds.correctTap); }
+export function playCorrectSwipe():  void { play(sounds.correctTap); }
 export function playWrongBuzz():     void { play(sounds.wrongBuzz); }
 export function playShatter():       void { play(sounds.shatter); }
 export function playSplitReveal():   void { play(sounds.splitReveal); }

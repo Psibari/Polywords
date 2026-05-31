@@ -11,5 +11,5 @@ export const REVEAL_FLIP = 300;
 
 export const SCORE_FLY = 600;
 
-export const CLUE_DROP = 400;
-export const CLUE_PAUSE = 1200;
+export const MASK_DROP = 400;
+export const MASK_PAUSE = 1200;

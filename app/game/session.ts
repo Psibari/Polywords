@@ -121,8 +121,8 @@ export const switchbackPool: SwitchbackStep[] = [
 
   {
     kind: 'switchback',
-    clue1: { emoji: '🏏', text: 'Swings in baseball' },
-    clue2: { emoji: '🦇', text: 'Sleeps upside down' },
+    maskA: { text: 'Swings in baseball' },
+    maskB: { text: 'Sleeps upside down' },
     answers: [
       { word: 'BAT',   correct: true  },
       { word: 'CLUB',  correct: false },
@@ -134,8 +134,8 @@ export const switchbackPool: SwitchbackStep[] = [
 
   {
     kind: 'switchback',
-    clue1: { emoji: '🏦', text: 'Holds your money' },
-    clue2: { emoji: '🌊', text: "River's edge" },
+    maskA: { text: 'Holds your money' },
+    maskB: { text: "River's edge" },
     answers: [
       { word: 'BANK',  correct: true  },
       { word: 'SHORE', correct: false },
@@ -147,8 +147,8 @@ export const switchbackPool: SwitchbackStep[] = [
 
   {
     kind: 'switchback',
-    clue1: { emoji: '🎣', text: 'Fishing line goes this way' },
-    clue2: { emoji: '🎭', text: 'Actors in a film' },
+    maskA: { text: 'Fishing line goes this way' },
+    maskB: { text: 'Actors in a film' },
     answers: [
       { word: 'CAST',  correct: true  },
       { word: 'THROW', correct: false },
@@ -160,8 +160,8 @@ export const switchbackPool: SwitchbackStep[] = [
 
   {
     kind: 'switchback',
-    clue1: { emoji: '⚡', text: 'Lightning does it' },
-    clue2: { emoji: '🎳', text: "Bowler's perfect throw" },
+    maskA: { text: 'Lightning does it' },
+    maskB: { text: "Bowler's perfect throw" },
     answers: [
       { word: 'STRIKE', correct: true  },
       { word: 'HIT',    correct: false },
@@ -173,8 +173,8 @@ export const switchbackPool: SwitchbackStep[] = [
 
   {
     kind: 'switchback',
-    clue1: { emoji: '👂', text: 'Ears catch it' },
-    clue2: { emoji: '🗺️', text: 'Water between two lands' },
+    maskA: { text: 'Ears catch it' },
+    maskB: { text: 'Water between two lands' },
     answers: [
       { word: 'SOUND',  correct: true  },
       { word: 'NOISE',  correct: false },
@@ -184,18 +184,18 @@ export const switchbackPool: SwitchbackStep[] = [
     pollyReveal: 'SOUND is heard. SOUND is sailed.',
   },
 
-  // COLD — both clues resolve to the same connecting word
+  // COLD — both masks resolve to the same connecting word
   {
     kind: 'switchback',
     id: 'switchback_cold',
     word: 'COLD',
-    clueA: "Left out on purpose",
-    clueB: "Fever's uninvited guest",
+    labelA: "Left out on purpose",
+    labelB: "Fever's uninvited guest",
     senseA: "Emotionally distant",
     senseB: "A common illness",
     pollyLine: "Same word. Two completely different bad days.",
-    clue1: { emoji: '🥶', text: "Left out on purpose" },
-    clue2: { emoji: '🤒', text: "Fever's uninvited guest" },
+    maskA: { text: "Left out on purpose" },
+    maskB: { text: "Fever's uninvited guest" },
     answers: [
       { word: 'COLD',  correct: true  },
       { word: 'WARM',  correct: false },
@@ -298,8 +298,8 @@ export const SESSION: SessionStep[] = [
     emotionalRole: 'brainGlitch',
     eventType: 'switchback',
     switchbackId: 'switchback_cold',
-    clue1: { emoji: '🥶', text: 'Left out on purpose' },
-    clue2: { emoji: '🤒', text: "Fever's uninvited guest" },
+    maskA: { text: 'Left out on purpose' },
+    maskB: { text: "Fever's uninvited guest" },
     answers: [
       { word: 'COLD',  correct: true  },
       { word: 'WARM',  correct: false },
@@ -319,18 +319,18 @@ export const SESSION: SessionStep[] = [
     emotionalRole: 'hesitation',
     eventType: 'standard',
     tileStagger: 80,
-    pollyLine: 'Four meanings. One word. Pick carefully.',
+    pollyLine: 'Four meanings. One word. Stay sharp.',
     meanings: [],
-    hiddenMeaning:   "A roof's steepest secret",
+    hiddenMeaning:   'What darkness is called',
     hiddenTrap:      "A thrower's signature move",
-    hiddenEmoji:     '📐',
+    hiddenEmoji:     '🖤',
     hiddenTrapEmoji: '🥎',
     masks: [
       { id: 'pitch_note',     emoji: '🎵', phrase: "A note's altitude",          isReal: true },
       { id: 'pitch_sales',    emoji: '💼', phrase: 'Where the sales begin',      isReal: true },
       { id: 'pitch_grass',    emoji: '⚽', phrase: 'British grass, match-ready', isReal: true },
       { id: 'pitch_black',    emoji: '🖤', phrase: 'Blacker than black itself',  isReal: true },
-      { id: 'pitch_darkness', emoji: '🌑', phrase: 'What darkness is called',    isReal: false, trapType: 'almostSynonym' },
+      { id: 'pitch_darkness', emoji: '🌑', phrase: 'Blackness made absolute',    isReal: false, trapType: 'almostSynonym' },
       { id: 'pitch_tent',     emoji: '⛺', phrase: "A tent's founding moment",   isReal: false, trapType: 'domainNeighbor' },
       { id: 'pitch_mound',    emoji: '🏟️', phrase: "The mound's main character", isReal: false, trapType: 'associatedNeighbor' },
     ],

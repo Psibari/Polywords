@@ -75,7 +75,7 @@ export type Mask = {
   phrase: string;          // 2-4 words max, feeling not definition
   isReal: boolean;         // true = correct meaning, false = trap
   isRare?: boolean;        // real meaning most players miss, +300
-  isHidden?: boolean;      // shows as ❓ until tapped correctly
+  isHidden?: boolean;      // shows as ❓ until swiped correctly
   isSlang?: boolean;       // slang meaning, x2 score
   trapType?: TrapType;     // why it's wrong (traps only)
   revealLabel?: string;    // shows after tap (optional longer label)
@@ -120,8 +120,8 @@ export type PhraseBreakStep = {
 
 export type SwitchbackStep = {
   kind: 'switchback';
-  clue1: { emoji: string; text: string };
-  clue2: { emoji: string; text: string };
+  maskA: { text: string };
+  maskB: { text: string };
   answers: { word: string; correct: boolean }[];
   pollyReveal: string;
   emotionalRole?:   EmotionalRole;
@@ -132,8 +132,8 @@ export type SwitchbackStep = {
   // pool-entry metadata
   id?:          string;
   word?:        string;
-  clueA?:       string;
-  clueB?:       string;
+  labelA?:      string;
+  labelB?:      string;
   senseA?:      string;
   senseB?:      string;
   switchbackId?: string;

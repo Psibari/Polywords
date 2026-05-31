@@ -24,7 +24,7 @@ export default function ClueCard({ mask, isActive, isPassed }: Props) {
       isPassed && styles.cardPassed,
     ]}>
       <Text style={styles.emoji}>{mask.emoji}</Text>
-      <Text style={[styles.clueText, isPassed && styles.clueTextPassed]}>
+      <Text style={[styles.maskPhraseText, isPassed && styles.maskPhraseTextPassed]}>
         {mask.phrase}
       </Text>
     </View>
@@ -51,14 +51,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
     marginBottom: 8,
   },
-  clueText: {
+  maskPhraseText: {
     color: COLORS.white,
     fontSize: 20,
     lineHeight: 28,
     fontWeight: '900',
     textAlign: 'center',
   },
-  clueTextPassed: {
+  maskPhraseTextPassed: {
     color: 'rgba(255,255,255,0.6)',
   },
 });

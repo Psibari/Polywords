@@ -9,7 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
-import { playScratch, playCorrectTap } from '../utils/SoundEngine';
+import { playScratch, playCorrectSwipe } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_HEIGHT = 56;
@@ -161,7 +161,7 @@ export function SlangDropScreen({ step }: Props) {
               state={tileStates.get(mask.id) ?? 'idle'}
               onSwipeUp={() => handleSwipeUp(mask.id)}
               onSwipeDown={() => handleSwipeRight(mask.id)}
-              onTapReveal={() => {}}
+              onSwipeReveal={() => {}}
               tileHeight={TILE_HEIGHT}
               entryDelay={index * 80}
               eraBadge={mask.id === slangMaskId && slangEra ? slangEra : undefined}

@@ -12,7 +12,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
-import { playCorrectTap, playWrongBuzz, playShatter } from '../utils/SoundEngine';
+import { playCorrectSwipe, playWrongBuzz, playShatter } from '../utils/SoundEngine';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -23,7 +23,7 @@ type Props = {
   mask: Mask;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
-  onTapReveal: () => void;
+  onSwipeReveal: () => void;
   state: SwipeMaskState;
   revealable?: boolean;
   tileHeight?: number;
@@ -46,7 +46,7 @@ export function SwipeMask({
   mask,
   onSwipeUp,
   onSwipeDown,
-  onTapReveal,
+  onSwipeReveal,
   state: s,
   revealable = false,
   tileHeight = 64,
@@ -117,7 +117,7 @@ export function SwipeMask({
       } else {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
-      playCorrectTap();
+      playCorrectSwipe();
       setBgColor('#FFD700');
       Animated.spring(panXY, {
         toValue: { x: 0, y: 0 },
@@ -280,7 +280,7 @@ export function SwipeMask({
       >
         <Animated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
           <Pressable
-            onPress={revealable ? onTapReveal : undefined}
+            onPress={revealable ? onSwipeReveal : undefined}
             style={[styles.tile, { backgroundColor: '#2A2060' }]}
           >
             <FluentEmoji emoji="❓" size={32} />
@@ -336,9 +336,6 @@ export function SwipeMask({
         <Text style={[styles.phrase, { color: textColor }]} numberOfLines={2}>
           {mask.phrase}
         </Text>
-        {isSpecialSplit && (
-          <Text style={styles.specialBadge}>✨</Text>
-        )}
         {eraBadge && (
           <Animated.View
             pointerEvents="none"
@@ -413,12 +410,6 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     flex: 1,
     flexShrink: 1,
-  },
-  specialBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 8,
-    fontSize: 10,
   },
   eraBadgeWrap: {
     position: 'absolute',

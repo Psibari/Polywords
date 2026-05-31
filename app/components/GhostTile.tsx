@@ -4,6 +4,7 @@ import {
   PanResponder,
   StyleSheet,
   Text,
+  View,
 } from 'react-native';
 import { GhostMeaning } from '../game/types';
 
@@ -18,6 +19,10 @@ type Props = {
 };
 
 export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }: Props) {
+  if (__DEV__ && ghost.hiddenMeaningReal === '') {
+    console.error('Ghost tile missing label — every ghost tile requires text copy.');
+  }
+
   const judgedRef     = useRef(false);
   const onCorrectRef  = useRef(onCorrect);
   const onWrongRef    = useRef(onWrong);
@@ -26,15 +31,15 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
   useEffect(() => { onWrongRef.current    = onWrong;    }, [onWrong]);
   useEffect(() => { onDoneRef.current     = onDone;     }, [onDone]);
 
-  // Entry animation — native driver OK (transform/opacity)
+  // Entry animation — native driver (transform/opacity)
   const entryOpacity  = useRef(new Animated.Value(0)).current;
   const entryTransY   = useRef(new Animated.Value(24)).current;
 
-  // Border pulse — native driver OK (opacity)
-  const borderOpacity = useRef(new Animated.Value(0.4)).current;
-  const loopRef       = useRef<Animated.CompositeAnimation | null>(null);
+  // Tile opacity pulse — native driver, 0.75 ↔ 0.90 at 1400ms intervals
+  const tileOpacity = useRef(new Animated.Value(0.75)).current;
+  const pulsLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
-  // Pan — non-native (translate drives layout collision)
+  // Pan — non-native (translate drives layout)
   const panXY = useRef(new Animated.ValueXY()).current;
 
   useEffect(() => {
@@ -45,11 +50,11 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
 
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(borderOpacity, { toValue: 1.0, duration: 600, useNativeDriver: true }),
-        Animated.timing(borderOpacity, { toValue: 0.4, duration: 600, useNativeDriver: true }),
+        Animated.timing(tileOpacity, { toValue: 0.90, duration: 700, useNativeDriver: true }),
+        Animated.timing(tileOpacity, { toValue: 0.75, duration: 700, useNativeDriver: true }),
       ])
     );
-    loopRef.current = loop;
+    pulsLoopRef.current = loop;
     loop.start();
     return () => loop.stop();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -62,11 +67,10 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
 
   function handleCorrect() {
     judgedRef.current = true;
-    loopRef.current?.stop();
-    // Flash border gold
+    pulsLoopRef.current?.stop();
     Animated.sequence([
-      Animated.timing(borderOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
-      Animated.timing(borderOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      Animated.timing(tileOpacity, { toValue: 1,   duration: 100, useNativeDriver: true }),
+      Animated.timing(tileOpacity, { toValue: 0.75, duration: 300, useNativeDriver: true }),
     ]).start();
     panXY.setValue({ x: 0, y: 0 });
     onCorrectRef.current();
@@ -75,10 +79,10 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
 
   function handleWrong() {
     judgedRef.current = true;
-    loopRef.current?.stop();
+    pulsLoopRef.current?.stop();
     Animated.sequence([
-      Animated.timing(borderOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-      Animated.timing(borderOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      Animated.timing(tileOpacity, { toValue: 1,   duration: 80, useNativeDriver: true }),
+      Animated.timing(tileOpacity, { toValue: 0.75, duration: 300, useNativeDriver: true }),
     ]).start();
     panXY.setValue({ x: 0, y: 0 });
     onWrongRef.current();
@@ -138,23 +142,26 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
         marginBottom: 10,
       }}
     >
-      {/* Inner: pan tracking (non-native driver) */}
+      {/* Inner: opacity pulse + pan tracking */}
       <Animated.View
         style={[
           styles.tile,
           {
             height: tileHeight,
+            opacity: tileOpacity,
             transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
           },
         ]}
         {...panResponder.panHandlers}
       >
-        <Text style={styles.ghostEmoji}>👻</Text>
-        {/* Pulsing border overlay — native driver via opacity */}
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFillObject, styles.borderOverlay, { opacity: borderOpacity }]}
-        />
+        <View style={styles.textBlock}>
+          <Text style={styles.meaningText} numberOfLines={2}>
+            {ghost.hiddenMeaningReal}
+          </Text>
+          <Text style={styles.subLabel}>
+            {`Missed from ${ghost.word}`}
+          </Text>
+        </View>
       </Animated.View>
     </Animated.View>
   );
@@ -162,27 +169,35 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
 
 const styles = StyleSheet.create({
   tile: {
-    backgroundColor: '#1A0A2E',
+    backgroundColor: '#1A1830',
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#7B2FBE',
+    borderStyle: 'dashed',
+    borderColor: '#7B2D8B',
     paddingHorizontal: 16,
-    paddingVertical: 0,
-    shadowColor: '#7B2FBE',
+    paddingVertical: 8,
+    shadowColor: '#7B2D8B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'visible',
+    justifyContent: 'center',
   },
-  borderOverlay: {
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#7B2FBE',
+  textBlock: {
+    flex: 1,
+    justifyContent: 'center',
   },
-  ghostEmoji: {
-    fontSize: 14,
+  meaningText: {
+    color: 'rgba(255,255,255,0.70)',
+    fontSize: 17,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+  },
+  subLabel: {
+    color: '#7B2D8B',
+    fontSize: 10,
+    fontStyle: 'italic',
+    marginTop: 3,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
   },
 });

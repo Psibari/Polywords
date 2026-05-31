@@ -8,33 +8,38 @@ import {
 } from 'react-native';
 import { SwitchbackStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
-import { playCorrectTap, playWrongBuzz } from '../utils/SoundEngine';
+import { playCorrectSwipe, playWrongBuzz } from '../utils/SoundEngine';
 
 // ── Timing constants ──────────────────────────────────────────
-const CLUE_START    = 400;   // ms after mount before clues slide in
-const SPRING_SETTLE = 600;   // estimated spring settle duration
-const POLLY_DELAY   = CLUE_START + SPRING_SETTLE + 800; // clues + 800ms pause
-const BOARD_DELAY   = POLLY_DELAY + 300;  // after polly starts fading in
+const MASK_ENTRY_DELAY = 400;   // ms after mount before mask bars slide in
+const SPRING_SETTLE    = 600;   // estimated spring settle duration
+const POLLY_DELAY      = MASK_ENTRY_DELAY + SPRING_SETTLE + 800;
+const BOARD_DELAY      = POLLY_DELAY + 300;
 
-const TILE_H    = 60;
-const TILE_GAP  = 10;
+// Additional 50ms gate before masks render (matches tilesReady pattern)
+const MASK_READY_DELAY = 50;
+
+const TILE_H   = 60;
+const TILE_GAP = 10;
 
 // ── Answer tile ───────────────────────────────────────────────
 
-type TileState = 'idle' | 'correct' | 'wrong';
+type TileState = 'idle' | 'final-correct' | 'wrong-flash';
 
 function AnswerTile({
   word,
   state,
   onCommit,
   entryDelay,
+  disabled,
 }: {
   word: string;
   state: TileState;
   onCommit: () => void;
   entryDelay: number;
+  disabled: boolean;
 }) {
-  // Layer 1 (outermost): collapse — useNativeDriver: false
+  // Layer 1 (outermost): collapse on final-correct — useNativeDriver: false
   const heightAnim   = useRef(new Animated.Value(TILE_H)).current;
   const marginAnim   = useRef(new Animated.Value(TILE_GAP)).current;
 
@@ -42,13 +47,14 @@ function AnswerTile({
   const entryTransY  = useRef(new Animated.Value(30)).current;
   const entryOpacity = useRef(new Animated.Value(0)).current;
 
-  // Layer 3 (innermost): drag + fly-off — useNativeDriver: false
+  // Layer 3 (innermost): drag + flash — useNativeDriver: false
   const dragTransY   = useRef(new Animated.Value(0)).current;
+  const bgOpacity    = useRef(new Animated.Value(0)).current; // flash overlay
 
   const committedRef = useRef(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  // entry animation — useNativeDriver: true
+  // entry animation
   useEffect(() => {
     const id = setTimeout(() => {
       Animated.parallel([
@@ -59,24 +65,31 @@ function AnswerTile({
     return () => clearTimeout(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // state-driven sound + collapse — useNativeDriver: false
+  // state-driven effects
   useEffect(() => {
-    if (state === 'correct') {
-      playCorrectTap();
-      Animated.parallel([
-        Animated.timing(heightAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-        Animated.timing(marginAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-      ]).start(() => setCollapsed(true));
-    }
-    if (state === 'wrong') {
-      playWrongBuzz();
+    if (state === 'final-correct') {
+      playCorrectSwipe();
+      // Flash gold, then collapse
+      Animated.sequence([
+        Animated.timing(bgOpacity, { toValue: 1, duration: 80, useNativeDriver: false }),
+        Animated.timing(bgOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
+      ]).start();
       const id = setTimeout(() => {
         Animated.parallel([
           Animated.timing(heightAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
           Animated.timing(marginAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]).start(() => setCollapsed(true));
-      }, 200);
+      }, 300);
       return () => clearTimeout(id);
+    }
+
+    if (state === 'wrong-flash') {
+      playWrongBuzz();
+      // Flash red briefly — no collapse, stays visible
+      Animated.sequence([
+        Animated.timing(bgOpacity, { toValue: 1, duration: 60, useNativeDriver: false }),
+        Animated.timing(bgOpacity, { toValue: 0, duration: 250, useNativeDriver: false }),
+      ]).start();
     }
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -89,7 +102,6 @@ function AnswerTile({
 
       onPanResponderMove: (_, g) => {
         if (committedRef.current) return;
-        // Only track upward movement (dy < 0)
         dragTransY.setValue(g.dy < 0 ? g.dy : 0);
       },
 
@@ -97,15 +109,16 @@ function AnswerTile({
         if (committedRef.current) return;
         if (g.dy < -40) {
           committedRef.current = true;
-          // Fly tile off top, then trigger correct/wrong logic
           Animated.timing(dragTransY, {
             toValue: -800,
             duration: 300,
             useNativeDriver: false,
           }).start();
-          setTimeout(() => onCommit(), 300);
+          setTimeout(() => {
+            committedRef.current = false; // re-arm for phase B
+            onCommit();
+          }, 300);
         } else {
-          // Spring back to resting position
           Animated.spring(dragTransY, {
             toValue: 0,
             tension: 200,
@@ -130,18 +143,26 @@ function AnswerTile({
 
   if (collapsed) return null;
 
+  const flashColor = state === 'wrong-flash' ? '#CC2200' : '#FFD700';
+
   return (
-    // outer: height/margin collapse — useNativeDriver: false
     <Animated.View style={{ height: heightAnim, marginTop: marginAnim, overflow: 'hidden' }}>
-      {/* entry: translateY + opacity — useNativeDriver: true */}
       <Animated.View style={{ transform: [{ translateY: entryTransY }], opacity: entryOpacity }}>
-        {/* drag + fly-off: translateY — useNativeDriver: false */}
         <Animated.View
-          {...panResponder.panHandlers}
+          {...(disabled ? {} : panResponder.panHandlers)}
           style={{ transform: [{ translateY: dragTransY }] }}
         >
           <View style={[styles.answerTile, { height: TILE_H }]}>
             <Text style={styles.answerText}>{word}</Text>
+            {/* Flash overlay */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFillObject,
+                styles.flashOverlay,
+                { backgroundColor: flashColor, opacity: bgOpacity },
+              ]}
+            />
           </View>
         </Animated.View>
       </Animated.View>
@@ -152,6 +173,7 @@ function AnswerTile({
 // ── Main screen ───────────────────────────────────────────────
 
 type Props = { step: SwitchbackStep };
+type MaskPhase = 'A' | 'B';
 
 function shuffleAnswers(answers: SwitchbackStep['answers']): SwitchbackStep['answers'] {
   const arr = [...answers];
@@ -165,15 +187,17 @@ function shuffleAnswers(answers: SwitchbackStep['answers']): SwitchbackStep['ans
 export function SwitchbackScreen({ step }: Props) {
   const store = useGameStore();
 
-  const [shuffled]     = useState(() => shuffleAnswers(step.answers));
+  const [shuffled] = useState(() => shuffleAnswers(step.answers));
   const [tileStates, setTileStates] = useState<Map<string, TileState>>(() => {
     const m = new Map<string, TileState>();
     step.answers.forEach(a => m.set(a.word, 'idle'));
     return m;
   });
 
-  const attemptsRef  = useRef(0);
-  const completedRef = useRef(false);
+  const [maskPhase, setMaskPhase]   = useState<MaskPhase>('A');
+  const attemptsRef                 = useRef(0);
+  const completedRef                = useRef(false);
+  const transitioningRef            = useRef(false); // blocks input during A→B pause
 
   // ── Polly text ──────────────────────────────────────────────
   const [pollyText, setPollyText]   = useState<string | null>(null);
@@ -185,77 +209,107 @@ export function SwitchbackScreen({ step }: Props) {
     Animated.timing(pollyOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
   }
 
-  // ── Clue slide animations ───────────────────────────────────
-  const clue1TransX = useRef(new Animated.Value(-400)).current;
-  const clue2TransX = useRef(new Animated.Value(400)).current;
-  const clueOpacity = useRef(new Animated.Value(0)).current;
+  // ── Mask bar slide animations ─────────────────────────────────
+  const maskATransX  = useRef(new Animated.Value(-400)).current;
+  const maskBTransX  = useRef(new Animated.Value(400)).current;
+  const maskBarOpacity = useRef(new Animated.Value(0)).current;
 
-  // ── Clue flash on first-correct ─────────────────────────────
-  const clueFlash = useRef(new Animated.Value(0)).current;
+  // ── Mask bar flash on phase-A confirmation ────────────────────
+  const maskFlash = useRef(new Animated.Value(0)).current;
 
-  function flashClues() {
-    clueFlash.setValue(0);
+  function flashMaskBars() {
+    maskFlash.setValue(0);
     Animated.sequence([
-      Animated.timing(clueFlash, { toValue: 0.45, duration: 100, useNativeDriver: true }),
-      Animated.timing(clueFlash, { toValue: 0,    duration: 250, useNativeDriver: true }),
+      Animated.timing(maskFlash, { toValue: 0.45, duration: 100, useNativeDriver: true }),
+      Animated.timing(maskFlash, { toValue: 0,    duration: 250, useNativeDriver: true }),
     ]).start();
   }
 
-  // ── Board ready ─────────────────────────────────────────────
+  // ── maskReady: gate that ensures step data is available before rendering ──
+  const [maskReady, setMaskReady] = useState(false);
+
+  // ── boardReady: controls when answer tiles appear ─────────────
   const [boardReady, setBoardReady] = useState(false);
 
   // ── Entrance sequence ─────────────────────────────────────────
   useEffect(() => {
-    const t1 = setTimeout(() => {
-      clueOpacity.setValue(1);
-      Animated.parallel([
-        Animated.spring(clue1TransX, { toValue: 0, tension: 200, friction: 12, useNativeDriver: true }),
-        Animated.spring(clue2TransX, { toValue: 0, tension: 200, friction: 12, useNativeDriver: true }),
-      ]).start();
-    }, CLUE_START);
+    // Confirm mask data is present before rendering
+    if (step.maskA?.text && step.maskB?.text) {
+      const readyId = setTimeout(() => setMaskReady(true), MASK_READY_DELAY);
 
-    const t2 = setTimeout(() => {
-      showPolly('One word. Two lives.');
-    }, POLLY_DELAY);
+      const t1 = setTimeout(() => {
+        maskBarOpacity.setValue(1);
+        Animated.parallel([
+          Animated.spring(maskATransX, { toValue: 0, tension: 200, friction: 12, useNativeDriver: true }),
+          Animated.spring(maskBTransX, { toValue: 0, tension: 200, friction: 12, useNativeDriver: true }),
+        ]).start();
+      }, MASK_ENTRY_DELAY);
 
-    const t3 = setTimeout(() => {
-      setBoardReady(true);
-    }, BOARD_DELAY);
+      const t2 = setTimeout(() => {
+        showPolly('One word. Two lives.');
+      }, POLLY_DELAY);
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+      const t3 = setTimeout(() => {
+        setBoardReady(true);
+      }, BOARD_DELAY);
+
+      return () => {
+        clearTimeout(readyId);
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Commit handler (called after tile flies off) ──────────────
+  // ── Commit handler ────────────────────────────────────────────
   function handleCommit(word: string, isCorrect: boolean) {
     if (completedRef.current) return;
-    if (tileStates.get(word) !== 'idle') return;
+    if (transitioningRef.current) return;
 
     if (isCorrect) {
-      setTileStates(prev => new Map(prev).set(word, 'correct'));
-      const isFirst = attemptsRef.current === 0;
-      if (isFirst) flashClues();
-      showPolly(isFirst ? 'Sharp.' : 'Got there.');
-      completedRef.current = true;
-      const bonus = isFirst ? 200 : 100;
-      setTimeout(() => store.completeSwitchback(bonus, true, attemptsRef.current), 1500);
+      if (maskPhase === 'A') {
+        // Phase A confirmed: flash mask bars, Polly line, pause then activate Phase B
+        flashMaskBars();
+        showPolly(attemptsRef.current === 0 ? 'Sharp.' : 'Got there.');
+        transitioningRef.current = true;
+        setTimeout(() => {
+          transitioningRef.current = false;
+          setMaskPhase('B');
+          showPolly('Same word. Confirm it.');
+        }, 800);
+
+      } else {
+        // Phase B confirmed: complete the round — collapse this tile
+        setTileStates(prev => new Map(prev).set(word, 'final-correct'));
+        const bonus = attemptsRef.current === 0 ? 200 : 100;
+        completedRef.current = true;
+        setTimeout(() => store.completeSwitchback(bonus, true, attemptsRef.current), 1500);
+      }
 
     } else {
+      // Wrong swipe in either phase — flash tile, keep it visible, count attempt
       attemptsRef.current += 1;
-      setTileStates(prev => new Map(prev).set(word, 'wrong'));
+      setTileStates(prev => new Map(prev).set(word, 'wrong-flash'));
+      // Re-arm tile to idle after flash completes
+      setTimeout(() => {
+        setTileStates(prev => {
+          if (prev.get(word) === 'wrong-flash') {
+            return new Map(prev).set(word, 'idle');
+          }
+          return prev;
+        });
+      }, 400);
 
-      if (attemptsRef.current >= 2) {
+      // Two wrong guesses and still in Phase A → reveal correct word
+      if (attemptsRef.current >= 2 && maskPhase === 'A') {
         completedRef.current = true;
         const correctWord = step.answers.find(a => a.correct)!.word;
-        const t = setTimeout(() => {
-          setTileStates(prev => new Map(prev).set(correctWord, 'correct'));
+        setTimeout(() => {
+          setTileStates(prev => new Map(prev).set(correctWord, 'final-correct'));
           showPolly(step.pollyReveal);
-        }, 350);
-        const u = setTimeout(() => store.completeSwitchback(0, false, attemptsRef.current), 2000);
-        void t; void u;
+        }, 450);
+        setTimeout(() => store.completeSwitchback(0, false, attemptsRef.current), 2200);
       }
     }
   }
@@ -267,37 +321,50 @@ export function SwitchbackScreen({ step }: Props) {
       {/* Kicker */}
       <Text style={styles.kicker}>SWITCHBACK</Text>
 
-      {/* Clue 1 */}
-      <Text style={styles.clueLabel}>CLUE 1</Text>
-      <Animated.View
-        style={[
-          styles.clueBar,
-          { opacity: clueOpacity, transform: [{ translateX: clue1TransX }] },
-        ]}
-      >
-        <Text style={styles.clueEmoji}>{step.clue1.emoji}</Text>
-        <Text style={styles.clueText}>{step.clue1.text}</Text>
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFillObject, styles.clueFlashOverlay, { opacity: clueFlash }]}
-        />
-      </Animated.View>
+      {/* Phase indicator */}
+      <Text style={styles.phaseLabel}>
+        {maskPhase === 'A' ? 'MASK A' : 'MASK B'}
+      </Text>
 
-      {/* Clue 2 */}
-      <Text style={[styles.clueLabel, styles.clue2Label]}>CLUE 2</Text>
-      <Animated.View
-        style={[
-          styles.clueBar,
-          { opacity: clueOpacity, transform: [{ translateX: clue2TransX }] },
-        ]}
-      >
-        <Text style={styles.clueEmoji}>{step.clue2.emoji}</Text>
-        <Text style={styles.clueText}>{step.clue2.text}</Text>
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFillObject, styles.clueFlashOverlay, { opacity: clueFlash }]}
-        />
-      </Animated.View>
+      {/* Mask bars — only render when data is confirmed ready */}
+      {maskReady ? (
+        <>
+          {/* Mask A */}
+          <Text style={styles.maskLabel}>MASK A</Text>
+          <Animated.View
+            style={[
+              styles.maskBar,
+              { opacity: maskBarOpacity, transform: [{ translateX: maskATransX }] },
+            ]}
+          >
+            <Text style={styles.maskText}>{step.maskA.text}</Text>
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFillObject, styles.maskFlashOverlay, { opacity: maskFlash }]}
+            />
+          </Animated.View>
+
+          {/* Mask B */}
+          <Text style={[styles.maskLabel, styles.maskBLabel]}>MASK B</Text>
+          <Animated.View
+            style={[
+              styles.maskBar,
+              { opacity: maskBarOpacity, transform: [{ translateX: maskBTransX }] },
+            ]}
+          >
+            <Text style={styles.maskText}>{step.maskB.text}</Text>
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFillObject, styles.maskFlashOverlay, { opacity: maskFlash }]}
+            />
+          </Animated.View>
+        </>
+      ) : (
+        // Loading state while mask data is being confirmed
+        <View style={styles.loadingState}>
+          <Text style={styles.loadingText}>Get ready...</Text>
+        </View>
+      )}
 
       {/* Polly line */}
       {pollyText !== null && (
@@ -306,7 +373,7 @@ export function SwitchbackScreen({ step }: Props) {
         </Animated.Text>
       )}
 
-      {/* Answer tiles */}
+      {/* Answer tiles — all 4 always present; no tile is ever removed */}
       {boardReady && (
         <View style={styles.tileStack}>
           {shuffled.map((answer, index) => (
@@ -316,6 +383,7 @@ export function SwitchbackScreen({ step }: Props) {
               state={tileStates.get(answer.word) ?? 'idle'}
               onCommit={() => handleCommit(answer.word, answer.correct)}
               entryDelay={index * 100}
+              disabled={transitioningRef.current}
             />
           ))}
         </View>
@@ -337,9 +405,18 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     letterSpacing: 3,
     textAlign: 'center',
-    marginBottom: 14,
+    marginBottom: 6,
   },
-  clueLabel: {
+  phaseLabel: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  maskLabel: {
     color: 'rgba(255,255,255,0.4)',
     fontSize: 10,
     fontWeight: '800',
@@ -347,10 +424,10 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 4,
   },
-  clue2Label: {
+  maskBLabel: {
     marginTop: 24,
   },
-  clueBar: {
+  maskBar: {
     height: 72,
     borderRadius: 12,
     borderWidth: 2,
@@ -359,23 +436,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    gap: 14,
     overflow: 'hidden',
   },
-  clueEmoji: {
-    fontSize: 32,
-    lineHeight: 40,
-  },
-  clueText: {
+  maskText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800',
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     flex: 1,
   },
-  clueFlashOverlay: {
+  maskFlashOverlay: {
     backgroundColor: '#FFD700',
     borderRadius: 10,
+  },
+  loadingState: {
+    height: 168, // approximate height of two mask bars + labels
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 16,
+    fontWeight: '800',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
   },
   pollyLine: {
     color: '#4CAF50',
@@ -402,6 +485,7 @@ const styles = StyleSheet.create({
     elevation: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   answerText: {
     fontSize: 28,
@@ -409,5 +493,8 @@ const styles = StyleSheet.create({
     fontFamily: 'BagelFatOne_400Regular',
     letterSpacing: 2,
     color: '#FFFFFF',
+  },
+  flashOverlay: {
+    borderRadius: 10,
   },
 });

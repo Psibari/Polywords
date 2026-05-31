@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { CLUE_DROP, CLUE_PAUSE } from '../constants/animations';
+import { MASK_DROP, MASK_PAUSE } from '../constants/animations';
 import { WordStep } from '../game/types';
 
 type Props = {
@@ -19,19 +19,19 @@ type Props = {
   onAnswer: (word: string) => void;
 };
 
-type PhaseLabel = 'clues' | 'options';
+type PhaseLabel = 'masks' | 'options';
 
-// multiplier displayed before options appear, based on clues revealed so far
-const MULTIPLIERS = [4, 3, 2, 1]; // index = clues revealed so far - 1
+// multiplier displayed before options appear, based on masks revealed so far
+const MULTIPLIERS = [4, 3, 2, 1]; // index = masks revealed so far - 1
 
 export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
-  const { width: W, height: H } = useWindowDimensions();
+  const { height: H } = useWindowDimensions();
   const [revealedCount, setRevealedCount] = useState(0);
-  const [phase, setPhase] = useState<PhaseLabel>('clues');
+  const [phase, setPhase] = useState<PhaseLabel>('masks');
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [correct, setCorrect] = useState<boolean | null>(null);
 
-  const clueAnims = useRef(
+  const maskAnims = useRef(
     step.masks.filter(m => m.isReal).map(() => new Animated.Value(-80)),
   ).current;
 
@@ -45,15 +45,15 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
       .map(x => x.w),
   ).current;
 
-  const realClues = step.masks.filter(m => m.isReal);
+  const realMasks  = step.masks.filter(m => m.isReal);
   const multiplier = MULTIPLIERS[Math.min(revealedCount, MULTIPLIERS.length - 1)] ?? 1;
 
-  // drop clues one at a time
+  // drop masks one at a time
   useEffect(() => {
     let cancelled = false;
 
     const dropNext = (i: number) => {
-      if (cancelled || i >= realClues.length) {
+      if (cancelled || i >= realMasks.length) {
         if (!cancelled) {
           setTimeout(() => {
             if (!cancelled) {
@@ -65,20 +65,20 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
                 useNativeDriver: true,
               }).start();
             }
-          }, CLUE_PAUSE);
+          }, MASK_PAUSE);
         }
         return;
       }
 
-      Animated.timing(clueAnims[i], {
+      Animated.timing(maskAnims[i], {
         toValue: 0,
-        duration: CLUE_DROP,
+        duration: MASK_DROP,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start(() => {
         if (cancelled) return;
         setRevealedCount(i + 1);
-        setTimeout(() => dropNext(i + 1), CLUE_PAUSE);
+        setTimeout(() => dropNext(i + 1), MASK_PAUSE);
       });
     };
 
@@ -87,7 +87,7 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleWordTap(word: string) {
+  function handleWordSelect(word: string) {
     if (selectedWord !== null) return;
     setSelectedWord(word);
     const isCorrect = word === step.word;
@@ -98,7 +98,7 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
     setTimeout(() => onAnswer(word), 600);
   }
 
-  const multiplierLabel = phase === 'clues'
+  const multiplierLabel = phase === 'masks'
     ? `${multiplier}× MULTIPLIER READY`
     : '1× STANDARD';
 
@@ -106,18 +106,18 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
     <View style={styles.container}>
       <Text style={styles.header}>WHAT'S THE WORD?</Text>
 
-      {/* dropped clues */}
-      <View style={styles.cluesList}>
-        {realClues.map((mask, i) => (
+      {/* revealed masks */}
+      <View style={styles.maskList}>
+        {realMasks.map((mask, i) => (
           <Animated.View
             key={mask.id}
             style={[
-              styles.clueRow,
-              { opacity: clueAnims[i].interpolate({ inputRange: [-80, 0], outputRange: [0, 1] }) },
-              { transform: [{ translateY: clueAnims[i] }] },
+              styles.maskRow,
+              { opacity: maskAnims[i].interpolate({ inputRange: [-80, 0], outputRange: [0, 1] }) },
+              { transform: [{ translateY: maskAnims[i] }] },
             ]}
           >
-            <Text style={styles.clueText}>{mask.emoji}  {mask.phrase}</Text>
+            <Text style={styles.maskText}>{mask.phrase}</Text>
           </Animated.View>
         ))}
       </View>
@@ -139,7 +139,7 @@ export function ReversedBuild({ step, decoyWords, onAnswer }: Props) {
           return (
             <Pressable
               key={word}
-              onPress={() => handleWordTap(word)}
+              onPress={() => handleWordSelect(word)}
               style={[
                 styles.optionBtn,
                 isRight && styles.optionCorrect,
@@ -169,11 +169,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 28,
   },
-  cluesList: {
+  maskList: {
     gap: 12,
     minHeight: 180,
   },
-  clueRow: {
+  maskRow: {
     backgroundColor: '#24175A',
     borderRadius: 14,
     paddingVertical: 14,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(139,92,246,0.25)',
   },
-  clueText: {
+  maskText: {
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '900',
