@@ -9,6 +9,7 @@ import {
 import { SwitchbackStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { playCorrectSwipe, playWrongBuzz } from '../utils/SoundEngine';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 
 // ── Timing constants ──────────────────────────────────────────
 const MASK_ENTRY_DELAY = 400;   // ms after mount before mask bars slide in
@@ -400,27 +401,24 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: '#FFD700',
-    fontSize: 11,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.hudLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 3,
     textAlign: 'center',
     marginBottom: 6,
   },
   phaseLabel: {
     color: 'rgba(255,255,255,0.35)',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.ghostSubLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 2,
     textAlign: 'center',
     marginBottom: 10,
   },
   maskLabel: {
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.ghostSubLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 2,
     marginBottom: 4,
   },
@@ -440,9 +438,8 @@ const styles = StyleSheet.create({
   },
   maskText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.tileCopy,
     flex: 1,
   },
   maskFlashOverlay: {
@@ -456,15 +453,13 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 16,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.label,
   },
   pollyLine: {
     color: '#4CAF50',
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.brand,
     textAlign: 'center',
     marginTop: 20,
     marginBottom: 4,
@@ -489,8 +484,7 @@ const styles = StyleSheet.create({
   },
   answerText: {
     fontSize: 28,
-    fontWeight: '400',
-    fontFamily: 'BagelFatOne_400Regular',
+    fontFamily: FONTS.wordDisplay,
     letterSpacing: 2,
     color: '#FFFFFF',
   },

@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
 import { playCorrectSwipe, playWrongBuzz, playShatter } from '../utils/SoundEngine';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -405,9 +406,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   phrase: {
-    fontSize: 17,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.tileCopy,
     flex: 1,
     flexShrink: 1,
   },
@@ -421,9 +421,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   eraBadgeText: {
-    fontSize: 10,
+    fontSize: FONT_SIZES.ghostSubLabel,
     color: '#FFD700',
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontFamily: FONTS.label,
   },
 });

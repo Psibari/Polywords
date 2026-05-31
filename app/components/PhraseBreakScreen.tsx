@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, PanResponder, StyleSheet, Text, View } from 'react-native';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PhraseBreakStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 
@@ -210,15 +211,14 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: '#FFD700',
-    fontSize: 11,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.hudLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 3,
     textAlign: 'center',
     marginBottom: 16,
   },
   phrase: {
-    fontFamily: 'BagelFatOne_400Regular',
+    fontFamily: FONTS.wordDisplay,
     fontSize: 36,
     color: '#FFFFFF',
     textAlign: 'center',
@@ -231,17 +231,15 @@ const styles = StyleSheet.create({
   },
   pollyLine: {
     color: '#4CAF50',
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.brand,
     textAlign: 'center',
     marginBottom: 8,
   },
   question: {
     color: 'rgba(255,255,255,0.6)',
-    fontSize: 14,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.label,
     textAlign: 'center',
   },
   tileStack: {
@@ -263,9 +261,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   tileText: {
-    fontSize: 16,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.tileCopy,
     textAlign: 'center',
   },
 });

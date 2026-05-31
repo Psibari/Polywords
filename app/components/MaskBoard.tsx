@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
 import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
@@ -826,13 +827,15 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   word: {
-    fontSize: 58,
-    fontWeight: '400',
-    fontFamily: 'BagelFatOne_400Regular',
-    letterSpacing: 3,
+    fontSize: FONT_SIZES.wordDisplay,
+    fontFamily: FONTS.wordDisplay,
+    letterSpacing: 2,
   },
   wordBoss: {
-    fontSize: 76,
+    fontSize: FONT_SIZES.bossWordDisplay,
+    fontFamily: FONTS.bossWord,
+    letterSpacing: 4,
+    color: '#FFD700',
   },
   wordContainer: {
     alignItems: 'center',
@@ -848,9 +851,8 @@ const styles = StyleSheet.create({
   },
   absorbedPhrase: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.progressLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 0.5,
     marginTop: 2,
     textAlign: 'center',
@@ -864,9 +866,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   hiddenTileText: {
-    fontSize: 16,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.label,
     color: '#FFFFFF',
   },
   gridWrap: {

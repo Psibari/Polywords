@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SESSION } from '../game/session';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
@@ -165,7 +166,7 @@ const gs = StyleSheet.create({
   word: {
     color: '#FFD700',
     fontSize: 22,
-    fontFamily: 'BagelFatOne_400Regular',
+    fontFamily: FONTS.wordDisplay,
     letterSpacing: 1,
     marginBottom: 4,
   },
@@ -217,7 +218,7 @@ const gr = StyleSheet.create({
   word: {
     color: '#FFD700',
     fontSize: 22,
-    fontFamily: 'BagelFatOne_400Regular',
+    fontFamily: FONTS.wordDisplay,
     letterSpacing: 2,
     marginBottom: 4,
   },
@@ -325,8 +326,8 @@ const btn = StyleSheet.create({
   },
   label: {
     color: '#1A1040',
-    fontSize: 20,
-    fontWeight: '900',
+    fontSize: FONT_SIZES.hudScore,
+    fontFamily: FONTS.hud,
     letterSpacing: 2,
   },
 });
@@ -481,9 +482,8 @@ const ph = StyleSheet.create({
   },
   line: {
     color: '#4CAF50',
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.brand,
     textAlign: 'center',
   },
 });
@@ -503,8 +503,8 @@ const rs = StyleSheet.create({
   },
   pollyLine: {
     color: '#FFD700',
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.brand,
     textAlign: 'center',
     marginBottom: 16,
     letterSpacing: 0.5,
@@ -514,8 +514,8 @@ const rs = StyleSheet.create({
     marginBottom: 28,
   },
   grade: {
-    fontSize: 52,
-    fontFamily: 'BagelFatOne_400Regular',
+    fontSize: FONT_SIZES.brandTitle,
+    fontFamily: FONTS.wordDisplay,
     textAlign: 'center',
     marginBottom: 10,
   },

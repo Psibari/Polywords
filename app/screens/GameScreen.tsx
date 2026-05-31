@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { SESSION } from '../game/session';
@@ -87,16 +88,14 @@ const tb = StyleSheet.create({
   block: { alignItems: 'center', minWidth: 64 },
   label: {
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.hudLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 2,
   },
   value: {
     color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.hudScore,
+    fontFamily: FONTS.hud,
   },
   lives: { fontSize: 18 },
 });
@@ -185,9 +184,8 @@ const sbuf = StyleSheet.create({
   },
   line: {
     color: '#4CAF50',
-    fontSize: 18,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.brand,
     textAlign: 'center',
   },
 });

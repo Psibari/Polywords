@@ -17,7 +17,12 @@
       "Bash(rm \"c:/Users/pdiba/poly-words/babel.config.js\")",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Sort-Object)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(dir assets *)",
+      "Bash(find . -name \"Super*\" -not -path \"*/node_modules/*\")",
+      "Bash(find . -name \"gomarice*\" -not -path \"*/node_modules/*\")",
+      "Bash(find . -name \"BagelFatOne*\" -not -path \"*/node_modules/*\")",
+      "Bash(find . -name \"PlusJakarta*\" -not -path \"*/node_modules/*\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\pdiba\\poly-words"

@@ -13,7 +13,14 @@ LogBox.ignoreAllLogs();
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [fontsLoaded] = useFonts({ BagelFatOne_400Regular, PlusJakartaSans_800ExtraBold });
+  const [fontsLoaded] = useFonts({
+    BagelFatOne_400Regular,
+    PlusJakartaSans_800ExtraBold,
+    'SuperCartoon-6R791':    require('./assets/fonts/SuperCartoon-6R791.ttf'),
+    'SuperCarnival-j9Wq0':  require('./assets/fonts/SuperCarnival-j9Wq0.ttf'),
+    'SuperFrosting-R9z4o':  require('./assets/fonts/SuperFrosting-R9z4o.ttf'),
+    'gomarice_okuba_cloud': require('./assets/fonts/gomarice_okuba_cloud.ttf'),
+  });
   if (!fontsLoaded) return null;
 
   return (

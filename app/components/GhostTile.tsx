@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { GhostMeaning } from '../game/types';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 
 const SWIPE_THRESHOLD = 40;
 
@@ -189,15 +190,14 @@ const styles = StyleSheet.create({
   },
   meaningText: {
     color: 'rgba(255,255,255,0.70)',
-    fontSize: 17,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.tileCopy,
   },
   subLabel: {
     color: '#7B2D8B',
-    fontSize: 10,
+    fontSize: FONT_SIZES.ghostSubLabel,
+    fontFamily: FONTS.label,
     fontStyle: 'italic',
     marginTop: 3,
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
   },
 });

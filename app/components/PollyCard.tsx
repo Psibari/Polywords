@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { getPollyBudgetState, trackPollyTime } from '../logic/pollyBudget';
@@ -145,9 +146,8 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: '#FFD700',
-    fontSize: 11,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.hudLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 2,
     textAlign: 'center',
   },
@@ -169,9 +169,8 @@ const styles = StyleSheet.create({
   } as const,
   pillText: {
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.brand,
     flexShrink: 1,
   },
   meterRow: {
@@ -179,9 +178,8 @@ const styles = StyleSheet.create({
   },
   meterLabel: {
     color: 'rgba(255,255,255,0.4)',
-    fontSize: 10,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.progressLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 1.5,
     textAlign: 'center',
   },

@@ -10,6 +10,7 @@ import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { playScratch, playCorrectSwipe } from '../utils/SoundEngine';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_HEIGHT = 56;
@@ -181,25 +182,22 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: '#FFD700',
-    fontSize: 11,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: FONT_SIZES.hudLabel,
+    fontFamily: FONTS.label,
     letterSpacing: 2,
     textAlign: 'center',
     marginBottom: 8,
   },
   word: {
-    fontSize: 72,
-    fontWeight: '400',
-    fontFamily: 'BagelFatOne_400Regular',
+    fontSize: FONT_SIZES.wordDisplay,
+    fontFamily: FONTS.wordDisplay,
     letterSpacing: 3,
     color: '#FFFFFF',
     textAlign: 'center',
   },
   slangTag: {
     fontSize: 24,
-    fontWeight: '800',
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontFamily: FONTS.brand,
     color: '#4CAF50',
     textAlign: 'center',
     marginTop: 8,

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
 import { useGameStore } from '../store/useGameStore'
+import { FONTS, FONT_SIZES } from '../constants/fonts'
 
 function getColor(streak: number): string {
   if (streak >= 7) return '#FF4500'
@@ -52,5 +53,5 @@ export function StreakDisplay() {
 
 const styles = StyleSheet.create({
   wrapper: { width: 60, alignItems: 'center' },
-  counter: { fontFamily: 'BagelFatOne_400Regular', fontSize: 28 },
+  counter: { fontFamily: FONTS.hud, fontSize: FONT_SIZES.hudMultiplier },
 })

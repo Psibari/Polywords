@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 
 type Props = {
@@ -51,8 +52,8 @@ const s = StyleSheet.create({
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: '900',
+    fontSize: FONT_SIZES.brandTitle,
+    fontFamily: FONTS.brand,
     textAlign: 'center',
     letterSpacing: 3,
     marginBottom: 48,
@@ -66,8 +67,8 @@ const s = StyleSheet.create({
   },
   playLabel: {
     color: '#1A1040',
-    fontSize: 22,
-    fontWeight: '900',
+    fontSize: FONT_SIZES.hudScore,
+    fontFamily: FONTS.hud,
     letterSpacing: 3,
   },
 });

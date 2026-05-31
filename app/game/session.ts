@@ -276,10 +276,8 @@ export const SESSION: SessionStep[] = [
     bossModifier: 'reverseMountOrder',
     pollyLine: 'Boss word. More meanings. Same clock.',
     meanings: [],
-    hiddenMeaning:   "A mousetrap's big moment",
-    hiddenTrap:      'What beds hide inside',
-    hiddenEmoji:     '🐭',
-    hiddenTrapEmoji: '🛏️',
+    hiddenMeaning: "A mousetrap's big moment",
+    hiddenEmoji:   '🐭',
     masks: [
       // trueMeanings (4)
       { id: 'spring_coil',    emoji: '🔩', phrase: 'Bouncy metal squiggle',    isReal: true },
