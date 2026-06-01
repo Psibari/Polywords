@@ -144,10 +144,21 @@ export function SwipeMask({
 
     // ── CORRECT (swipe UP on real meaning) — Part C ────────────
     if (s === 'correct') {
-      if (hapticCorrectRef.current) hapticCorrectRef.current();
+      // Lift-off haptic — gated here, never in release
+      if (hapticCorrectRef.current) {
+        hapticCorrectRef.current();
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
       playCorrectSwipe();
 
-      // Phase 2: launch toward word after resistance dip (60ms buffer)
+      // Phase 1: resistance dip — only fires on confirmed correct UP
+      scale.value = withSequence(
+        withTiming(0.96, { duration: 40 }),
+        withSpring(1.04, { damping: 6, stiffness: 400 }),
+      );
+
+      // Phase 2: launch toward word after dip settles (60ms buffer)
       timers.push(setTimeout(() => {
         translateY.value  = withSpring(-140, { damping: 10, stiffness: 180 });
         scale.value       = withTiming(0.4,  { duration: 250 });
@@ -187,38 +198,19 @@ export function SwipeMask({
       setFlashRed(true);
       timers.push(setTimeout(() => setFlashRed(false), 250));
 
-      // Shake X sequence
-      translateX.value = withSequence(
-        withTiming( 14, { duration: 50 }),
-        withTiming(-14, { duration: 55 }),
-        withTiming(  9, { duration: 55 }),
-        withTiming( -9, { duration: 55 }),
-        withTiming(  0, { duration: 55 }),
-      );
+      // Clean snap-back — no shake, no fly-off, no drama
+      translateX.value       = withSpring(0,   { damping: 14, stiffness: 300 });
+      translateY.value       = withSpring(0,   { damping: 14, stiffness: 300 });
+      scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
+      rotation.value         = withSpring(0,   { damping: 14, stiffness: 300 });
+      borderOpacityVal.value = withTiming(0.08, { duration: 150 });
 
-      // Fly off after shake completes (~270ms total, use 300ms buffer)
+      // Tile is retryable once spring settles
       timers.push(setTimeout(() => {
-        if (swipeDirRef.current === 'right') {
-          translateX.value = withTiming(600, {
-            duration: 250,
-            easing: ReaEasing.in(ReaEasing.quad),
-          });
-        } else {
-          translateY.value = withTiming(-800, {
-            duration: 250,
-            easing: ReaEasing.in(ReaEasing.quad),
-          });
-        }
-        tileOpacity.value = withTiming(0, { duration: 200 });
+        judgedRef.current            = false;
+        swipeDirRef.current          = null;
+        hasThresholdFiredRef.current = false;
       }, 300));
-
-      // Collapse height
-      timers.push(setTimeout(() => {
-        RNAnimated.parallel([
-          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]).start();
-      }, 520));
     }
 
     // ── TRAP-CAUGHT (swipe RIGHT on fake meaning) ──────────────
@@ -368,17 +360,7 @@ export function SwipeMask({
         if (g.dy < -SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'up';
-          // Phase 1: resistance dip
-          scale.value = withSequence(
-            withTiming(0.96, { duration: 40 }),
-            withSpring(1.04, { damping: 6, stiffness: 400 }),
-          );
-          // Lift-off haptic (or hapticCorrect override)
-          if (hapticCorrectRef.current) {
-            hapticCorrectRef.current();
-          } else {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          }
+          // All outcome effects deferred to state handler — drag stays neutral
           onSwipeUpRef.current();
 
         // Swipe RIGHT — call trap (Part D)
