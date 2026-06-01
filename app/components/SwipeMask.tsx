@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
-  Easing,
   LayoutChangeEvent,
   PanResponder,
   Pressable,
@@ -42,14 +41,6 @@ type Props = {
   eraBadge?: string;
   hapticCorrect?: () => void;
 };
-
-// 4 fragment configs — bigger, faster, more spread
-const FRAG_CONFIGS = [
-  { finalX: -120, finalY:  -80, finalRot: -35, dur: 200 },
-  { finalX:  100, finalY:  -90, finalRot:  28, dur: 190 },
-  { finalX:  -30, finalY:   70, finalRot: -15, dur: 220 },
-  { finalX:   80, finalY:   60, finalRot:  42, dur: 210 },
-] as const;
 
 // Gold steps for word absorption (Part C Phase 4) — exported for MaskBoard
 export const GOLD_STEPS = [0, 0.25, 0.55, 0.80, 1.0] as const;
@@ -94,16 +85,6 @@ export function SwipeMask({
 
   // ── RN Animated: screen-level purple flash (native driver) ────
   const screenFlashOpacity = useRef(new RNAnimated.Value(0)).current;
-
-  // ── RN Animated: shatter fragments — always in tree, opacity=0 when idle ─
-  const fragAnims = useRef(
-    FRAG_CONFIGS.map(() => ({
-      x:   new RNAnimated.Value(0),
-      y:   new RNAnimated.Value(0),
-      rot: new RNAnimated.Value(0),
-      op:  new RNAnimated.Value(0),
-    }))
-  ).current;
 
   // ── Refs ──────────────────────────────────────────────────────
   const judgedRef             = useRef(false);
@@ -233,22 +214,6 @@ export function SwipeMask({
         // Beat 1: THROW
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-        // Fragment explosion — set values to start position THEN animate.
-        // Fragments are always in the tree (opacity=0 when idle); pre-setting
-        // to opacity=1 here means they're visible on the very first native frame.
-        fragAnims.forEach((fa, i) => {
-          fa.x.setValue(0);
-          fa.y.setValue(0);
-          fa.rot.setValue(0);
-          fa.op.setValue(1);
-          RNAnimated.parallel([
-            RNAnimated.timing(fa.x,   { toValue: FRAG_CONFIGS[i].finalX, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-            RNAnimated.timing(fa.y,   { toValue: FRAG_CONFIGS[i].finalY, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-            RNAnimated.timing(fa.rot, { toValue: 1,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-            RNAnimated.timing(fa.op,  { toValue: 0,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-          ]).start();
-        });
-
         // Beat 2: CRASH — heavy haptic + screen flash
         timers.push(setTimeout(() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -287,12 +252,6 @@ export function SwipeMask({
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
       screenFlashOpacity.setValue(0);
-      fragAnims.forEach(fa => {
-        fa.x.setValue(0);
-        fa.y.setValue(0);
-        fa.rot.setValue(0);
-        fa.op.setValue(0);
-      });
       setFlashRed(false);
     }
 
@@ -421,10 +380,6 @@ export function SwipeMask({
     );
   }
 
-  // ── Fragment spawn position (centered on tile) ────────────────
-  const fragLeft = tileLayoutRef.current.width * 0.5 - 40;
-  const fragTop  = Math.max(tileHeight, 58) * 0.5 - 10;
-
   // ── Main tile ─────────────────────────────────────────────────
   return (
     <RNAnimated.View
@@ -452,46 +407,6 @@ export function SwipeMask({
       <RNAnimated.View
         style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
       >
-        {/* Shatter fragments — always in tree so no mount/opacity race.
-            fa.op starts at 0 (invisible). Trap-caught sets it to 1 then
-            animates to 0. Solid backgroundColor is the visible surface;
-            LinearGradient layered on top for tile-matching depth. */}
-        {FRAG_CONFIGS.map((cfg, i) => (
-          <RNAnimated.View
-            key={i}
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              zIndex: 50,
-              left: fragLeft,
-              top:  fragTop,
-              width: 80,
-              height: 20,
-              borderRadius: 6,
-              overflow: 'hidden',
-              backgroundColor: '#2A2460',
-              opacity: fragAnims[i].op,
-              transform: [
-                { translateX: fragAnims[i].x },
-                { translateY: fragAnims[i].y },
-                {
-                  rotate: fragAnims[i].rot.interpolate({
-                    inputRange:  [0, 1],
-                    outputRange: ['0deg', `${cfg.finalRot}deg`],
-                  }),
-                },
-              ],
-            }}
-          >
-            <LinearGradient
-              colors={['#2D2B6E', '#252350']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </RNAnimated.View>
-        ))}
-
         {/* Main animated tile (Reanimated — native driver for transforms/opacity) */}
         <Animated.View
           style={[styles.tile, tileAnimStyle]}

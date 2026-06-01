@@ -26,9 +26,18 @@ const MAX_TILE_H = 80;
 const UI_OVERHEAD_BASE = 320;
 const HIDDEN_SLOT_H    = 74;   // hidden / ghost tile slot + gap
 
-type FloatEntry   = { id: number; value: number; x: number; y: number; color: string };
-type HiddenPhase  = 'visible' | 'locked' | 'split';
-type SplitPair    = { left: SwipeMaskState; right: SwipeMaskState };
+// ── Glass shard configs — rendered at screen root on trap-caught ─
+const SHARD_CONFIGS = [
+  { w:  90, h: 14, finalX: -120, finalY:  -80, finalRot: -35, dur: 200 },
+  { w:  60, h: 18, finalX:  100, finalY:  -90, finalRot:  28, dur: 190 },
+  { w: 110, h: 12, finalX:  -30, finalY:   70, finalRot: -15, dur: 220 },
+  { w:  75, h: 16, finalX:   80, finalY:   60, finalRot:  42, dur: 210 },
+] as const;
+
+type FloatEntry    = { id: number; value: number; x: number; y: number; color: string };
+type HiddenPhase   = 'visible' | 'locked' | 'split';
+type SplitPair     = { left: SwipeMaskState; right: SwipeMaskState };
+type ShatterOrigin = { x: number; y: number } | null;
 
 type Props = { step: WordStep };
 
@@ -43,6 +52,17 @@ export function MaskBoard({ step }: Props) {
     step.masks.forEach(mask => m.set(mask.id, 'idle'));
     return m;
   });
+
+  // ── shatter fragments — rendered at MaskBoard root to avoid overflow clipping ─
+  const [shatterOrigin, setShatterOrigin] = useState<ShatterOrigin>(null);
+  const shardAnims = useRef(
+    SHARD_CONFIGS.map(() => ({
+      x:   new Animated.Value(0),
+      y:   new Animated.Value(0),
+      rot: new Animated.Value(0),
+      op:  new Animated.Value(0),
+    }))
+  ).current;
 
   const wrongCountRef          = useRef(0);
   const completedRef           = useRef(false);
@@ -360,6 +380,25 @@ export function MaskBoard({ step }: Props) {
     if (ghost) store.setPollyTrigger('ghostIntro');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fire shard animations when a trap is correctly called
+  useEffect(() => {
+    if (!shatterOrigin) return;
+    shardAnims.forEach((fa, i) => {
+      fa.x.setValue(0);
+      fa.y.setValue(0);
+      fa.rot.setValue(0);
+      fa.op.setValue(1);
+      Animated.parallel([
+        Animated.timing(fa.x,   { toValue: SHARD_CONFIGS[i].finalX, duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fa.y,   { toValue: SHARD_CONFIGS[i].finalY, duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fa.rot, { toValue: 1,                       duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(fa.op,  { toValue: 0,                       duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]).start();
+    });
+    const tid = setTimeout(() => setShatterOrigin(null), 400);
+    return () => clearTimeout(tid);
+  }, [shatterOrigin]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function lockHidden() {
     hiddenBorderLoopRef.current?.stop();
     setHiddenPhase('locked');
@@ -594,6 +633,22 @@ export function MaskBoard({ step }: Props) {
     if (!mask.isReal) {
       store.submitSwipeDown(maskId);
       spawnFloat(50, maskId, '#7B2D8B');
+
+      // Measure tile screen position for shard origin — before tile starts moving
+      const refObj    = tileRefs.current.get(maskId);
+      const view      = refObj?.current;
+      const container = containerRef.current;
+      if (view && container) {
+        (container as any).measure((_cx: number, _cy: number, _cw: number, _ch: number, cPageX: number, cPageY: number) => {
+          (view as any).measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
+            setShatterOrigin({
+              x: pageX - cPageX + w / 2,
+              y: pageY - cPageY + TILE_GAP + tileHeight / 2,
+            });
+          });
+        });
+      }
+
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
     } else {
       store.submitWrongSwipe();
@@ -822,6 +877,42 @@ export function MaskBoard({ step }: Props) {
           </View>
         )}
       </View>
+
+      {/* Glass shards — screen-root overlay, never clipped by tile layout */}
+      {shatterOrigin && (
+        <View
+          pointerEvents="none"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
+        >
+          {SHARD_CONFIGS.map((cfg, i) => (
+            <Animated.View
+              key={i}
+              style={{
+                position: 'absolute',
+                left:         shatterOrigin.x - cfg.w / 2,
+                top:          shatterOrigin.y - cfg.h / 2,
+                width:        cfg.w,
+                height:       cfg.h,
+                borderRadius: 3,
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                borderWidth:  1.5,
+                borderColor:  'rgba(255,255,255,0.9)',
+                opacity: shardAnims[i].op,
+                transform: [
+                  { translateX: shardAnims[i].x },
+                  { translateY: shardAnims[i].y },
+                  {
+                    rotate: shardAnims[i].rot.interpolate({
+                      inputRange:  [0, 1],
+                      outputRange: ['0deg', `${cfg.finalRot}deg`],
+                    }),
+                  },
+                ],
+              }}
+            />
+          ))}
+        </View>
+      )}
 
       {/* score floats */}
       {floats.map(f => (
