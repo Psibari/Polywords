@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
+  Easing,
   LayoutChangeEvent,
   PanResponder,
   Pressable,
@@ -42,11 +43,12 @@ type Props = {
   hapticCorrect?: () => void;
 };
 
-// Part D — 3 fragment configs (spec values)
+// 4 fragment configs — bigger, faster, more spread
 const FRAG_CONFIGS = [
-  { finalX: -60, finalY: -40, finalRot: -25, dur: 280 },
-  { finalX:  50, finalY: -50, finalRot:  20, dur: 260 },
-  { finalX: -20, finalY:  40, finalRot: -10, dur: 300 },
+  { finalX: -120, finalY:  -80, finalRot: -35, dur: 200 },
+  { finalX:  100, finalY:  -90, finalRot:  28, dur: 190 },
+  { finalX:  -30, finalY:   70, finalRot: -15, dur: 220 },
+  { finalX:   80, finalY:   60, finalRot:  42, dur: 210 },
 ] as const;
 
 // Gold steps for word absorption (Part C Phase 4) — exported for MaskBoard
@@ -68,7 +70,6 @@ export function SwipeMask({
 
   // ── UI state ──────────────────────────────────────────────────
   const [showShatter, setShowShatter] = useState(false);
-  const [purpleFlash, setPurpleFlash] = useState(false);
   const [flashRed,    setFlashRed]    = useState(false);
 
   // ── Reanimated shared values (native driver: transform/opacity) ─
@@ -92,7 +93,10 @@ export function SwipeMask({
   const eraBadgeTransY  = useRef(new RNAnimated.Value(20)).current;
   const eraBadgeOpacity = useRef(new RNAnimated.Value(0)).current;
 
-  // ── RN Animated: shatter fragments (native driver, Part D) ────
+  // ── RN Animated: screen-level purple flash (native driver) ────
+  const screenFlashOpacity = useRef(new RNAnimated.Value(0)).current;
+
+  // ── RN Animated: shatter fragments (native driver) ────────────
   const fragAnims = useRef(
     FRAG_CONFIGS.map(() => ({
       x:   new RNAnimated.Value(0),
@@ -145,8 +149,8 @@ export function SwipeMask({
 
       // Phase 2: launch toward word after resistance dip (60ms buffer)
       timers.push(setTimeout(() => {
-        translateY.value = withSpring(-140, { damping: 10, stiffness: 180 });
-        scale.value      = withTiming(0.4,   { duration: 250 });
+        translateY.value  = withSpring(-140, { damping: 10, stiffness: 180 });
+        scale.value       = withTiming(0.4,  { duration: 250 });
         tileOpacity.value = withTiming(0,    { duration: 250 });
       }, 60));
 
@@ -217,52 +221,69 @@ export function SwipeMask({
       }, 520));
     }
 
-    // ── TRAP-CAUGHT (swipe RIGHT on fake meaning) — Part D ─────
+    // ── TRAP-CAUGHT (swipe RIGHT on fake meaning) ──────────────
     if (s === 'trap-caught') {
       playShatter();
 
-      // Phase 1: accelerate off screen right
-      translateX.value  = withSpring(500, { damping: 6, stiffness: 400 });
-      tileOpacity.value = withTiming(0, { duration: 200 });
+      // Scale punch — tile puffs before it flies (50ms)
+      scale.value = withTiming(1.15, { duration: 50 });
 
-      // Phase 4 + 3: impact at ~150ms → haptic + purple flash + fragments
       timers.push(setTimeout(() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        setPurpleFlash(true);
-        timers.push(setTimeout(() => setPurpleFlash(false), 60));
-        setShowShatter(true);
-      }, 150));
+        // Rocket exit — tile gone in under 150ms
+        translateX.value  = withSpring(600, { damping: 8, stiffness: 600, velocity: 40 });
+        tileOpacity.value = withTiming(0, { duration: 200 });
 
-      // Collapse height after shatter
+        // Beat 1: THROW
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+        // Fragment explosion fires with exit
+        setShowShatter(true);
+
+        // Beat 2: CRASH — heavy haptic + screen flash
+        timers.push(setTimeout(() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          RNAnimated.sequence([
+            RNAnimated.timing(screenFlashOpacity, { toValue: 0.35, duration:  40, useNativeDriver: true }),
+            RNAnimated.timing(screenFlashOpacity, { toValue: 0,    duration: 120, useNativeDriver: true }),
+          ]).start();
+        }, 80));
+
+        // Beat 3: YEAH
+        timers.push(setTimeout(() => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }, 140));
+      }, 50));
+
+      // Collapse height after explosion settles
       timers.push(setTimeout(() => {
         RNAnimated.parallel([
           RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
           RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]).start();
-      }, 520));
+      }, 500));
     }
 
     // ── REVEALED (reset — used for ghost tile re-entry) ────────
     if (s === 'revealed') {
-      judgedRef.current   = false;
-      swipeDirRef.current = null;
-      translateX.value    = 0;
-      translateY.value    = 0;
-      tileOpacity.value   = 1;
-      scale.value         = 1;
-      rotation.value      = 0;
+      judgedRef.current      = false;
+      swipeDirRef.current    = null;
+      translateX.value       = 0;
+      translateY.value       = 0;
+      tileOpacity.value      = 1;
+      scale.value            = 1;
+      rotation.value         = 0;
       borderOpacityVal.value = 0.08;
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
+      screenFlashOpacity.setValue(0);
       setShowShatter(false);
-      setPurpleFlash(false);
       setFlashRed(false);
     }
 
     return () => timers.forEach(clearTimeout);
   }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Shatter fragment animations (Part D Phase 3) ──────────────
+  // ── Shatter fragment animations ───────────────────────────────
   useEffect(() => {
     if (!showShatter) return;
 
@@ -272,10 +293,10 @@ export function SwipeMask({
       fa.rot.setValue(0);
       fa.op.setValue(1);
       RNAnimated.parallel([
-        RNAnimated.timing(fa.x,  { toValue: FRAG_CONFIGS[i].finalX, duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
-        RNAnimated.timing(fa.y,  { toValue: FRAG_CONFIGS[i].finalY, duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
-        RNAnimated.timing(fa.rot, { toValue: 1,                     duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
-        RNAnimated.timing(fa.op,  { toValue: 0,                     duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
+        RNAnimated.timing(fa.x,   { toValue: FRAG_CONFIGS[i].finalX, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        RNAnimated.timing(fa.y,   { toValue: FRAG_CONFIGS[i].finalY, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        RNAnimated.timing(fa.rot, { toValue: 1,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        RNAnimated.timing(fa.op,  { toValue: 0,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]).start();
     });
 
@@ -323,10 +344,10 @@ export function SwipeMask({
         translateY.value = g.dy;
 
         // Rotation follows dominant drag direction
-        const domRight = Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 0;
-        const domUp    = g.dy < 0 && Math.abs(g.dy) >= Math.abs(g.dx);
+        const domRight  = Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 0;
+        const domUp     = g.dy < 0 && Math.abs(g.dy) >= Math.abs(g.dx);
         const targetRot = domRight ? 4 : domUp ? -2 : 0;
-        rotation.value = withSpring(targetRot, { damping: 20, stiffness: 300 });
+        rotation.value  = withSpring(targetRot, { damping: 20, stiffness: 300 });
 
         // Scale breathes with velocity (vx/vy are px/ms; ×1000 → px/s estimate)
         const speed = Math.sqrt(g.vx * g.vx + g.vy * g.vy) * 1000;
@@ -416,8 +437,8 @@ export function SwipeMask({
   }
 
   // ── Fragment spawn position (centered on tile) ────────────────
-  const fragLeft = tileLayoutRef.current.width * 0.5 - 20;
-  const fragTop  = Math.max(tileHeight, 58) * 0.5 - 8;
+  const fragLeft = tileLayoutRef.current.width * 0.5 - 40;
+  const fragTop  = Math.max(tileHeight, 58) * 0.5 - 10;
 
   // ── Main tile ─────────────────────────────────────────────────
   return (
@@ -428,10 +449,25 @@ export function SwipeMask({
         transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
       }}
     >
+      {/* Screen-level purple flash — covers entire screen on trap caught */}
+      <RNAnimated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          zIndex: 999,
+          top: -1000,
+          left: -500,
+          width: 2000,
+          height: 3000,
+          backgroundColor: '#7B2D8B',
+          opacity: screenFlashOpacity,
+        }}
+      />
+
       <RNAnimated.View
         style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
       >
-        {/* Part D — shatter fragments (appear after tile flies right) */}
+        {/* Shatter fragments — 4 pieces, bigger, faster, more spread */}
         {showShatter && FRAG_CONFIGS.map((cfg, i) => (
           <RNAnimated.View
             key={i}
@@ -441,10 +477,10 @@ export function SwipeMask({
               zIndex: 50,
               left: fragLeft,
               top:  fragTop,
-              width: 40,
-              height: 16,
-              borderRadius: 4,
-              backgroundColor: '#2D2B6E',
+              width: 80,
+              height: 20,
+              borderRadius: 6,
+              overflow: 'hidden',
               opacity: fragAnims[i].op,
               transform: [
                 { translateX: fragAnims[i].x },
@@ -457,7 +493,14 @@ export function SwipeMask({
                 },
               ],
             }}
-          />
+          >
+            <LinearGradient
+              colors={['#2D2B6E', '#252350']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </RNAnimated.View>
         ))}
 
         {/* Main animated tile (Reanimated — native driver for transforms/opacity) */}
@@ -478,11 +521,6 @@ export function SwipeMask({
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
-
-          {/* Part D Phase 2 — purple flash at impact */}
-          {purpleFlash && (
-            <View style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: '#7B2D8B' }]} />
-          )}
 
           {/* Wrong flash */}
           {flashRed && (
