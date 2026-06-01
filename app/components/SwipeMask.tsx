@@ -308,9 +308,11 @@ export function SwipeMask({
       // Part B — Finger down: scale lift + border glow + shadow deepen
       onPanResponderGrant: () => {
         if (judgedRef.current) return;
-        scale.value            = withSpring(1.04, { damping: 12, stiffness: 400 });
+        scale.value            = withSpring(1.06, { damping: 10, stiffness: 500 });
         borderOpacityVal.value = withTiming(0.40, { duration: 60 });
-        Haptics.selectionAsync(); // JS thread — equivalent to runOnJS
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setTimeout(() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }, 40);
+        setTimeout(() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }, 85);
         hasThresholdFiredRef.current = false;
       },
 
