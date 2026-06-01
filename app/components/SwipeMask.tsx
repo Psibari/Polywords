@@ -78,8 +78,6 @@ export function SwipeMask({
   const rotation         = useSharedValue(0);
   const tileOpacity      = useSharedValue(1);
   const borderOpacityVal = useSharedValue(0.08);
-  const shadowRadiusVal  = useSharedValue(6);
-  const shadowOpacityVal = useSharedValue(0.4);
 
   // ── RN Animated: height/margin collapse (non-native) ──────────
   const outerHeightAnim    = useRef(new RNAnimated.Value(Math.max(tileHeight, 58))).current;
@@ -254,8 +252,6 @@ export function SwipeMask({
       scale.value         = 1;
       rotation.value      = 0;
       borderOpacityVal.value = 0.08;
-      shadowRadiusVal.value  = 6;
-      shadowOpacityVal.value = 0.4;
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
       setShowShatter(false);
@@ -295,10 +291,8 @@ export function SwipeMask({
       { scale:      scale.value      },
       { rotate:     `${rotation.value}deg` },
     ],
-    opacity:       tileOpacity.value,
-    borderColor:   isSpecialSplit ? '#FFD700' : `rgba(255,255,255,${borderOpacityVal.value})`,
-    shadowRadius:  shadowRadiusVal.value,
-    shadowOpacity: shadowOpacityVal.value,
+    opacity:     tileOpacity.value,
+    borderColor: isSpecialSplit ? '#FFD700' : `rgba(255,255,255,${borderOpacityVal.value})`,
   }));
 
   // ── PanResponder ──────────────────────────────────────────────
@@ -317,8 +311,6 @@ export function SwipeMask({
         if (judgedRef.current) return;
         scale.value            = withSpring(1.04, { damping: 12, stiffness: 400 });
         borderOpacityVal.value = withTiming(0.40, { duration: 60 });
-        shadowRadiusVal.value  = withTiming(10,   { duration: 80 });
-        shadowOpacityVal.value = withTiming(0.65, { duration: 80 });
         Haptics.selectionAsync(); // JS thread — equivalent to runOnJS
         hasThresholdFiredRef.current = false;
       },
@@ -338,10 +330,6 @@ export function SwipeMask({
         // Scale breathes with velocity (vx/vy are px/ms; ×1000 → px/s estimate)
         const speed = Math.sqrt(g.vx * g.vx + g.vy * g.vy) * 1000;
         scale.value = withSpring(speed > 300 ? 1.07 : 1.04, { damping: 12, stiffness: 400 });
-
-        // Shadow deepens proportional to displacement
-        const displacement = Math.abs(g.dx) + Math.abs(g.dy);
-        shadowRadiusVal.value = Math.min(6 + (displacement / 120) * 8, 14);
 
         // Threshold haptic — fires once at 60% of SWIPE_THRESHOLD in dominant axis
         const mainAxis = Math.max(g.dx > 0 ? g.dx : 0, -g.dy > 0 ? -g.dy : 0);
@@ -386,8 +374,6 @@ export function SwipeMask({
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
           borderOpacityVal.value = withTiming(0.08, { duration: 150 });
-          shadowRadiusVal.value  = withTiming(6, { duration: 150 });
-          shadowOpacityVal.value = withTiming(0.4, { duration: 150 });
         }
       },
 
@@ -398,8 +384,6 @@ export function SwipeMask({
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
           borderOpacityVal.value = withTiming(0.08, { duration: 150 });
-          shadowRadiusVal.value  = withTiming(6, { duration: 150 });
-          shadowOpacityVal.value = withTiming(0.4, { duration: 150 });
         }
       },
     })
@@ -540,9 +524,10 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     borderWidth: 1,
     // borderColor driven by Reanimated (tileAnimStyle)
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 3 },
-    // shadowRadius + shadowOpacity driven by Reanimated
+    shadowColor:   '#000000',
+    shadowOffset:  { width: 0, height: 3 },
+    shadowRadius:  6,
+    shadowOpacity: 0.4,
     elevation: 4,
     overflow: 'hidden',
   },
