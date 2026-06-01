@@ -26,7 +26,7 @@ const MAX_TILE_H = 80;
 const UI_OVERHEAD_BASE = 320;
 const HIDDEN_SLOT_H    = 74;   // hidden / ghost tile slot + gap
 
-type FloatEntry   = { id: number; value: number; x: number; y: number };
+type FloatEntry   = { id: number; value: number; x: number; y: number; color: string };
 type HiddenPhase  = 'visible' | 'locked' | 'split';
 type SplitPair    = { left: SwipeMaskState; right: SwipeMaskState };
 
@@ -145,7 +145,7 @@ export function MaskBoard({ step }: Props) {
   const [floats, setFloats] = useState<FloatEntry[]>([]);
   const floatIdRef          = useRef(0);
 
-  function spawnFloat(value: number, maskId: string) {
+  function spawnFloat(value: number, maskId: string, color: string) {
     const refObj    = tileRefs.current.get(maskId);
     const view      = refObj ? refObj.current : null;
     const container = containerRef.current;
@@ -155,7 +155,7 @@ export function MaskBoard({ step }: Props) {
         view.measure((_x, _y, w, h, pageX, pageY) => {
           const id = ++floatIdRef.current;
           setFloats(prev => [...prev, {
-            id, value,
+            id, value, color,
             x: pageX - cPageX + w / 2,
             y: pageY - cPageY + h / 2,
           }]);
@@ -164,17 +164,17 @@ export function MaskBoard({ step }: Props) {
     } else if (view) {
       view.measure((_x, _y, w, h, pageX, pageY) => {
         const id = ++floatIdRef.current;
-        setFloats(prev => [...prev, { id, value, x: pageX + w / 2, y: pageY + h / 2 }]);
+        setFloats(prev => [...prev, { id, value, color, x: pageX + w / 2, y: pageY + h / 2 }]);
       });
     } else {
       const id = ++floatIdRef.current;
-      setFloats(prev => [...prev, { id, value, x: containerWidth / 2, y: 200 }]);
+      setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 200 }]);
     }
   }
 
-  function spawnFloatAtSplit(value: number) {
+  function spawnFloatAtSplit(value: number, color = '#F5C842') {
     const id = ++floatIdRef.current;
-    setFloats(prev => [...prev, { id, value, x: containerWidth / 2, y: 300 }]);
+    setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 300 }]);
   }
 
   // ── hidden meaning tile system ────────────────────────────────
@@ -480,7 +480,7 @@ export function MaskBoard({ step }: Props) {
       ? splitTopIsRealRef.current
       : !splitTopIsRealRef.current;
     if (sideIsReal) {
-      spawnFloatAtSplit(100);
+      spawnFloatAtSplit(100, '#F5C842');
       store.addBonusScore(100);
       updateSplitState(side, 'correct');
     } else {
@@ -494,7 +494,7 @@ export function MaskBoard({ step }: Props) {
       ? splitTopIsRealRef.current
       : !splitTopIsRealRef.current;
     if (!sideIsReal) {
-      spawnFloatAtSplit(50);
+      spawnFloatAtSplit(50, '#7B2D8B');
       store.addBonusScore(50);
       updateSplitState(side, 'trap-caught');
     } else {
@@ -509,7 +509,7 @@ export function MaskBoard({ step }: Props) {
     store.clearGhost(step.word);
     store.setGhostRevenge({ result: 'correct', word: step.word, meaningText: ghost?.hiddenMeaningReal ?? '' });
     store.addBonusScore(250);
-    spawnFloatAtSplit(250);
+    spawnFloatAtSplit(250, '#F5C842');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     store.setPollyTrigger('ghostCorrect');
   }
@@ -562,7 +562,7 @@ export function MaskBoard({ step }: Props) {
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
       store.submitSwipeUp(maskId);
-      spawnFloat(mask.isRare ? 300 : 100, maskId);
+      spawnFloat(mask.isRare ? 300 : 100, maskId, '#F5C842');
       triggerAbsorption(mask.phrase);
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
     } else {
@@ -577,7 +577,7 @@ export function MaskBoard({ step }: Props) {
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
       store.submitSwipeDown(maskId);
-      spawnFloat(50, maskId);
+      spawnFloat(50, maskId, '#7B2D8B');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
     } else {
       store.submitWrongSwipe();
@@ -798,6 +798,7 @@ export function MaskBoard({ step }: Props) {
           key={f.id}
           value={f.value}
           startPosition={{ x: f.x, y: f.y }}
+          color={f.color}
           onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
         />
       ))}

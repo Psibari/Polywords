@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
@@ -23,6 +23,23 @@ function TopBar() {
   const total = SESSION.length;
   const current = game.stepIndex;
 
+  const animScore = useRef(new Animated.Value(game.score)).current;
+  const [displayScore, setDisplayScore] = useState(game.score);
+
+  useEffect(() => {
+    const id = animScore.addListener(({ value }) => setDisplayScore(Math.round(value)));
+    return () => animScore.removeListener(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    Animated.timing(animScore, {
+      toValue: game.score,
+      duration: 400,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [game.score]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <View>
       <View style={tb.dotsRow}>
@@ -42,7 +59,7 @@ function TopBar() {
       <View style={tb.bar}>
         <View style={tb.block}>
           <Text style={tb.label}>SCORE</Text>
-          <Text style={tb.value}>{game.score}</Text>
+          <Text style={tb.value}>{displayScore}</Text>
         </View>
 
         <StreakDisplay />

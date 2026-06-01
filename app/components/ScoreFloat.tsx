@@ -1,38 +1,32 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text } from 'react-native';
-import { SCORE_FLY } from '../constants/animations';
+import { Animated, StyleSheet, Text } from 'react-native';
+import { FONTS } from '../constants/fonts';
 
 type Props = {
   value: number;
   startPosition: { x: number; y: number };
-  /** y-position of the destination (score counter in top bar) */
-  destY?: number;
+  color?: string;
   onComplete: () => void;
 };
 
-export function ScoreFloat({ value, startPosition, destY = 60, onComplete }: Props) {
-  const progress = useRef(new Animated.Value(0)).current;
-  const travel = startPosition.y - destY;
+export function ScoreFloat({ value, startPosition, color = '#F5C842', onComplete }: Props) {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity    = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.timing(progress, {
-      toValue: 1,
-      duration: SCORE_FLY,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start(() => onComplete());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const translateY = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -travel],
-  });
-
-  const opacity = progress.interpolate({
-    inputRange: [0, 0.55, 1],
-    outputRange: [1, 0.9, 0],
-  });
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -44,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+    ]).start(() => onComplete());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Animated.View
@@ -47,7 +41,7 @@ export function ScoreFloat({ value, startPosition, destY = 60, onComplete }: Pro
         },
       ]}
     >
-      <Text style={styles.text}>+{value}</Text>
+      <Text style={[styles.text, { color }]}>+{value}</Text>
     </Animated.View>
   );
 }
@@ -58,9 +52,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    color: '#FFD700',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+    fontSize: 20,
+    fontFamily: FONTS.hud,
   },
 });
