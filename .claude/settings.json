@@ -14,7 +14,9 @@
       "PowerShell(npx expo install babel-preset-expo 2>&1; Write-Output \"babel-preset-expo install exit: $LASTEXITCODE\")",
       "PowerShell(npm list babel-preset-expo --depth=0 2>&1)",
       "PowerShell(npm list react-native-worklets react-native-reanimated --depth=0 2>&1)",
-      "Bash(echo \"EXIT:$?\")"
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(Remove-Item -Recurse -Force .expo -ErrorAction SilentlyContinue)",
+      "Bash(Remove-Item -Recurse -Force node_modules\\\\.cache -ErrorAction SilentlyContinue)"
     ]
   }
 }

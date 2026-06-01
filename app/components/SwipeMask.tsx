@@ -551,6 +551,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     paddingVertical: 0,
     borderWidth: 1,
+    backgroundColor: '#FF0000', // TEMP — remove after confirming fresh Metro
     // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor:   '#000000',
     shadowOffset:  { width: 0, height: 3 },
