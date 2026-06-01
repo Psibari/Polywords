@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm install *)",
-      "Bash(node -e \"require\\('@babel/plugin-proposal-class-properties'\\); require\\('@babel/plugin-proposal-private-methods'\\); require\\('@babel/plugin-proposal-private-property-in-object'\\); console.log\\('all 3 plugins resolve OK'\\)\")"
+      "Bash(node -e \"require\\('@babel/plugin-proposal-class-properties'\\); require\\('@babel/plugin-proposal-private-methods'\\); require\\('@babel/plugin-proposal-private-property-in-object'\\); console.log\\('all 3 plugins resolve OK'\\)\")",
+      "Bash(Get-ChildItem -Name node_modules, .expo, package-lock.json -ErrorAction SilentlyContinue)"
     ]
   }
 }
