@@ -69,8 +69,7 @@ export function SwipeMask({
 }: Props) {
 
   // ── UI state ──────────────────────────────────────────────────
-  const [showShatter, setShowShatter] = useState(false);
-  const [flashRed,    setFlashRed]    = useState(false);
+  const [flashRed, setFlashRed] = useState(false);
 
   // ── Reanimated shared values (native driver: transform/opacity) ─
   const translateX       = useSharedValue(0);
@@ -96,7 +95,7 @@ export function SwipeMask({
   // ── RN Animated: screen-level purple flash (native driver) ────
   const screenFlashOpacity = useRef(new RNAnimated.Value(0)).current;
 
-  // ── RN Animated: shatter fragments (native driver) ────────────
+  // ── RN Animated: shatter fragments — always in tree, opacity=0 when idle ─
   const fragAnims = useRef(
     FRAG_CONFIGS.map(() => ({
       x:   new RNAnimated.Value(0),
@@ -108,6 +107,7 @@ export function SwipeMask({
 
   // ── Refs ──────────────────────────────────────────────────────
   const judgedRef             = useRef(false);
+  const retryableRef          = useRef(true);
   const swipeDirRef           = useRef<'up' | 'right' | null>(null);
   const hasThresholdFiredRef  = useRef(false);
   const tileLayoutRef         = useRef({ width: 300, height: tileHeight });
@@ -198,19 +198,24 @@ export function SwipeMask({
       setFlashRed(true);
       timers.push(setTimeout(() => setFlashRed(false), 250));
 
+      // Disable gesture while snap-back plays
+      retryableRef.current = false;
+
       // Clean snap-back — no shake, no fly-off, no drama
       translateX.value       = withSpring(0,   { damping: 14, stiffness: 300 });
       translateY.value       = withSpring(0,   { damping: 14, stiffness: 300 });
       scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
       rotation.value         = withSpring(0,   { damping: 14, stiffness: 300 });
       borderOpacityVal.value = withTiming(0.08, { duration: 150 });
+      tileOpacity.value      = withTiming(1.0, { duration: 80 });
 
-      // Tile is retryable once spring settles
+      // Re-enable once spring has settled
       timers.push(setTimeout(() => {
         judgedRef.current            = false;
         swipeDirRef.current          = null;
         hasThresholdFiredRef.current = false;
-      }, 300));
+        retryableRef.current         = true;
+      }, 320));
     }
 
     // ── TRAP-CAUGHT (swipe RIGHT on fake meaning) ──────────────
@@ -228,8 +233,21 @@ export function SwipeMask({
         // Beat 1: THROW
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-        // Fragment explosion fires with exit
-        setShowShatter(true);
+        // Fragment explosion — set values to start position THEN animate.
+        // Fragments are always in the tree (opacity=0 when idle); pre-setting
+        // to opacity=1 here means they're visible on the very first native frame.
+        fragAnims.forEach((fa, i) => {
+          fa.x.setValue(0);
+          fa.y.setValue(0);
+          fa.rot.setValue(0);
+          fa.op.setValue(1);
+          RNAnimated.parallel([
+            RNAnimated.timing(fa.x,   { toValue: FRAG_CONFIGS[i].finalX, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            RNAnimated.timing(fa.y,   { toValue: FRAG_CONFIGS[i].finalY, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            RNAnimated.timing(fa.rot, { toValue: 1,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            RNAnimated.timing(fa.op,  { toValue: 0,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          ]).start();
+        });
 
         // Beat 2: CRASH — heavy haptic + screen flash
         timers.push(setTimeout(() => {
@@ -258,6 +276,7 @@ export function SwipeMask({
     // ── REVEALED (reset — used for ghost tile re-entry) ────────
     if (s === 'revealed') {
       judgedRef.current      = false;
+      retryableRef.current   = true;
       swipeDirRef.current    = null;
       translateX.value       = 0;
       translateY.value       = 0;
@@ -268,33 +287,17 @@ export function SwipeMask({
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
       screenFlashOpacity.setValue(0);
-      setShowShatter(false);
+      fragAnims.forEach(fa => {
+        fa.x.setValue(0);
+        fa.y.setValue(0);
+        fa.rot.setValue(0);
+        fa.op.setValue(0);
+      });
       setFlashRed(false);
     }
 
     return () => timers.forEach(clearTimeout);
   }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Shatter fragment animations ───────────────────────────────
-  useEffect(() => {
-    if (!showShatter) return;
-
-    fragAnims.forEach((fa, i) => {
-      fa.x.setValue(0);
-      fa.y.setValue(0);
-      fa.rot.setValue(0);
-      fa.op.setValue(1);
-      RNAnimated.parallel([
-        RNAnimated.timing(fa.x,   { toValue: FRAG_CONFIGS[i].finalX, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        RNAnimated.timing(fa.y,   { toValue: FRAG_CONFIGS[i].finalY, duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        RNAnimated.timing(fa.rot, { toValue: 1,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        RNAnimated.timing(fa.op,  { toValue: 0,                      duration: FRAG_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      ]).start();
-    });
-
-    const tid = setTimeout(() => setShowShatter(false), 320);
-    return () => clearTimeout(tid);
-  }, [showShatter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tileAnimStyle = useAnimatedStyle(() => ({
     transform: [
@@ -310,17 +313,17 @@ export function SwipeMask({
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder:        () => !judgedRef.current,
-      onStartShouldSetPanResponderCapture: () => !judgedRef.current,
+      onStartShouldSetPanResponder:        () => !judgedRef.current && retryableRef.current,
+      onStartShouldSetPanResponderCapture: () => !judgedRef.current && retryableRef.current,
       onMoveShouldSetPanResponder: (_, g) =>
-        !judgedRef.current && (Math.abs(g.dy) > 6 || Math.abs(g.dx) > 6),
+        !judgedRef.current && retryableRef.current && (Math.abs(g.dy) > 6 || Math.abs(g.dx) > 6),
       onMoveShouldSetPanResponderCapture: (_, g) =>
-        !judgedRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
+        !judgedRef.current && retryableRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
       onPanResponderTerminationRequest: () => false,
 
       // Part B — Finger down: scale lift + border glow + shadow deepen
       onPanResponderGrant: () => {
-        if (judgedRef.current) return;
+        if (judgedRef.current || !retryableRef.current) return;
         scale.value            = withSpring(1.06, { damping: 10, stiffness: 500 });
         borderOpacityVal.value = withTiming(0.40, { duration: 60 });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -449,8 +452,11 @@ export function SwipeMask({
       <RNAnimated.View
         style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
       >
-        {/* Shatter fragments — 4 pieces, bigger, faster, more spread */}
-        {showShatter && FRAG_CONFIGS.map((cfg, i) => (
+        {/* Shatter fragments — always in tree so no mount/opacity race.
+            fa.op starts at 0 (invisible). Trap-caught sets it to 1 then
+            animates to 0. Solid backgroundColor is the visible surface;
+            LinearGradient layered on top for tile-matching depth. */}
+        {FRAG_CONFIGS.map((cfg, i) => (
           <RNAnimated.View
             key={i}
             pointerEvents="none"
@@ -463,6 +469,7 @@ export function SwipeMask({
               height: 20,
               borderRadius: 6,
               overflow: 'hidden',
+              backgroundColor: '#2A2460',
               opacity: fragAnims[i].op,
               transform: [
                 { translateX: fragAnims[i].x },
