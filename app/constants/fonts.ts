@@ -6,7 +6,7 @@ export const FONTS = {
   bossWord: 'gomarice_okuba_cloud',
 
   // Tile copy — all masks and traps
-  tileCopy: 'SuperFrosting-R9z4o',
+  tileCopy: 'InterVariable',
 
   // Brand title + Polly speech lines
   brand: 'SuperCarnival-j9Wq0',
@@ -16,12 +16,18 @@ export const FONTS = {
 
   // Progress labels, sub-labels, ghost sub-label
   label: 'SuperFrosting-R9z4o',
+
+  // Registered, not yet used
+  poppinsBold:     'Poppins-Bold',
+  poppinsSemiBold: 'Poppins-SemiBold',
 } as const;
 
 export const FONT_SIZES = {
-  wordDisplay:     56,
-  bossWordDisplay: 64,
-  tileCopy:        18,
+  wordDisplay:            76,
+  wordDisplayLetterSpacing: 3,
+  bossWordDisplay:        80,
+  bossWordLetterSpacing:  4,
+  tileCopy:               20,
   brandTitle:      48,
   hudScore:        22,
   hudMultiplier:   32,

@@ -20,6 +20,9 @@ export default function App() {
     'SuperCarnival-j9Wq0':  require('./assets/fonts/SuperCarnival-j9Wq0.ttf'),
     'SuperFrosting-R9z4o':  require('./assets/fonts/SuperFrosting-R9z4o.ttf'),
     'gomarice_okuba_cloud': require('./assets/fonts/gomarice_okuba_cloud.ttf'),
+    'InterVariable':        require('./assets/fonts/InterVariable.ttf'),
+    'Poppins-Bold':         require('./assets/fonts/Poppins-Bold.ttf'),
+    'Poppins-SemiBold':     require('./assets/fonts/Poppins-SemiBold.ttf'),
   });
   if (!fontsLoaded) return null;
 
