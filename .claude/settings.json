@@ -4,7 +4,15 @@
       "Bash(npm install *)",
       "Bash(node -e \"require\\('@babel/plugin-proposal-class-properties'\\); require\\('@babel/plugin-proposal-private-methods'\\); require\\('@babel/plugin-proposal-private-property-in-object'\\); console.log\\('all 3 plugins resolve OK'\\)\")",
       "Bash(Get-ChildItem -Name node_modules, .expo, package-lock.json -ErrorAction SilentlyContinue)",
-      "PowerShell(npm cache clean --force)"
+      "PowerShell(npm cache clean --force)",
+      "PowerShell(Remove-Item -Recurse -Force node_modules -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force .expo -ErrorAction SilentlyContinue; Remove-Item -Force package-lock.json -ErrorAction SilentlyContinue; Write-Output \"Removed: node_modules=$\\(Test-Path node_modules\\) .expo=$\\(Test-Path .expo\\) lock=$\\(Test-Path package-lock.json\\)\")",
+      "PowerShell(npm install 2>&1; Write-Output \"npm install exit: $LASTEXITCODE\")",
+      "PowerShell(npx expo install 2>&1; Write-Output \"expo install exit: $LASTEXITCODE\")",
+      "PowerShell(npx expo install expo-linear-gradient 2>&1; Write-Output \"linear-gradient install exit: $LASTEXITCODE\")",
+      "PowerShell(npx tsc --noEmit 2>&1; Write-Output \"tsc exit: $LASTEXITCODE\")",
+      "PowerShell(npx expo start --clear 2>&1)",
+      "PowerShell(npx expo install babel-preset-expo 2>&1; Write-Output \"babel-preset-expo install exit: $LASTEXITCODE\")",
+      "PowerShell(npm list babel-preset-expo --depth=0 2>&1)"
     ]
   }
 }
