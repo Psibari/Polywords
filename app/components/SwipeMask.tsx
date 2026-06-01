@@ -8,12 +8,20 @@ import {
   Text,
   View,
 } from 'react-native';
-import Animated, {
+// DIAGNOSTIC STRIP — useAnimatedStyle removed to isolate worklet crash
+// import Animated, {
+//   useSharedValue,
+//   withSpring,
+//   withTiming,
+//   withSequence,
+//   useAnimatedStyle,
+//   Easing as ReaEasing,
+// } from 'react-native-reanimated';
+import {
   useSharedValue,
   withSpring,
   withTiming,
   withSequence,
-  useAnimatedStyle,
   Easing as ReaEasing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -283,17 +291,18 @@ export function SwipeMask({
     return () => clearTimeout(tid);
   }, [showShatter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Reanimated animated style (native driver: transform/opacity) ─
-  const tileAnimStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale:      scale.value      },
-      { rotate:     `${rotation.value}deg` },
-    ],
-    opacity:     tileOpacity.value,
-    borderColor: isSpecialSplit ? '#FFD700' : `rgba(255,255,255,${borderOpacityVal.value})`,
-  }));
+  // DIAGNOSTIC STRIP — useAnimatedStyle removed; replace with empty to test worklet crash
+  // const tileAnimStyle = useAnimatedStyle(() => ({
+  //   transform: [
+  //     { translateX: translateX.value },
+  //     { translateY: translateY.value },
+  //     { scale:      scale.value      },
+  //     { rotate:     `${rotation.value}deg` },
+  //   ],
+  //   opacity:     tileOpacity.value,
+  //   borderColor: isSpecialSplit ? '#FFD700' : `rgba(255,255,255,${borderOpacityVal.value})`,
+  // }));
+  const tileAnimStyle = {};
 
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
@@ -459,8 +468,8 @@ export function SwipeMask({
           />
         ))}
 
-        {/* Main animated tile (Reanimated — native driver for transforms/opacity) */}
-        <Animated.View
+        {/* DIAGNOSTIC STRIP — Animated.View → View to isolate worklet crash */}
+        <View
           style={[styles.tile, tileAnimStyle]}
           onLayout={(e: LayoutChangeEvent) => {
             tileLayoutRef.current = {
@@ -505,7 +514,7 @@ export function SwipeMask({
               <Text style={styles.eraBadgeText}>{eraBadge}</Text>
             </RNAnimated.View>
           )}
-        </Animated.View>
+        </View>
       </RNAnimated.View>
     </RNAnimated.View>
   );
