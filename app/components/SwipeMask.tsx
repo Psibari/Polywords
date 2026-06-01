@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Easing,
+  Animated as RNAnimated,
   LayoutChangeEvent,
   PanResponder,
   Pressable,
@@ -9,6 +8,15 @@ import {
   Text,
   View,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  withSpring,
+  withTiming,
+  withSequence,
+  useAnimatedStyle,
+  Easing as ReaEasing,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
@@ -34,14 +42,15 @@ type Props = {
   hapticCorrect?: () => void;
 };
 
-const FRAGMENT_OFFSETS = [
-  { dx: -80,  dy: -60 },
-  { dx:  80,  dy: -60 },
-  { dx: -100, dy:   0 },
-  { dx:  100, dy:   0 },
-  { dx: -60,  dy:  60 },
-  { dx:  60,  dy:  60 },
+// Part D — 3 fragment configs (spec values)
+const FRAG_CONFIGS = [
+  { finalX: -60, finalY: -40, finalRot: -25, dur: 280 },
+  { finalX:  50, finalY: -50, finalRot:  20, dur: 260 },
+  { finalX: -20, finalY:  40, finalRot: -10, dur: 300 },
 ] as const;
+
+// Gold steps for word absorption (Part C Phase 4) — exported for MaskBoard
+export const GOLD_STEPS = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
 export function SwipeMask({
   mask,
@@ -56,166 +65,241 @@ export function SwipeMask({
   eraBadge,
   hapticCorrect,
 }: Props) {
-  const [bgColor, setBgColor] = useState(isSpecialSplit ? '#251F4A' : '#2A2560');
+
+  // ── UI state ──────────────────────────────────────────────────
   const [showShatter, setShowShatter] = useState(false);
+  const [purpleFlash, setPurpleFlash] = useState(false);
+  const [flashRed,    setFlashRed]    = useState(false);
 
-  const outerHeightAnim    = useRef(new Animated.Value(Math.max(tileHeight, 64))).current;
-  const outerMarginTopAnim = useRef(new Animated.Value(TILE_GAP)).current;
+  // ── Reanimated shared values (native driver: transform/opacity) ─
+  const translateX       = useSharedValue(0);
+  const translateY       = useSharedValue(0);
+  const scale            = useSharedValue(1);
+  const rotation         = useSharedValue(0);
+  const tileOpacity      = useSharedValue(1);
+  const borderOpacityVal = useSharedValue(0.08);
+  const shadowRadiusVal  = useSharedValue(6);
+  const shadowOpacityVal = useSharedValue(0.4);
 
-  const panXY       = useRef(new Animated.ValueXY()).current;
-  const tileOpacity = useRef(new Animated.Value(1)).current;
+  // ── RN Animated: height/margin collapse (non-native) ──────────
+  const outerHeightAnim    = useRef(new RNAnimated.Value(Math.max(tileHeight, 58))).current;
+  const outerMarginTopAnim = useRef(new RNAnimated.Value(TILE_GAP)).current;
 
-  const tileLayoutRef = useRef({ width: 300, height: tileHeight });
+  // ── RN Animated: entry (native driver) ────────────────────────
+  const entryOpacity = useRef(new RNAnimated.Value(0)).current;
+  const entryTransY  = useRef(new RNAnimated.Value(30)).current;
+  const entryScaleY  = useRef(new RNAnimated.Value(0.85)).current;
 
-  const fragmentAnims = useRef(
-    Array.from({ length: 6 }, () => ({
-      x:       new Animated.Value(0),
-      y:       new Animated.Value(0),
-      rotate:  new Animated.Value(0),
-      opacity: new Animated.Value(0),
+  // ── RN Animated: era badge (native driver) ────────────────────
+  const eraBadgeTransY  = useRef(new RNAnimated.Value(20)).current;
+  const eraBadgeOpacity = useRef(new RNAnimated.Value(0)).current;
+
+  // ── RN Animated: shatter fragments (native driver, Part D) ────
+  const fragAnims = useRef(
+    FRAG_CONFIGS.map(() => ({
+      x:   new RNAnimated.Value(0),
+      y:   new RNAnimated.Value(0),
+      rot: new RNAnimated.Value(0),
+      op:  new RNAnimated.Value(0),
     }))
   ).current;
 
-  const eraBadgeTransY  = useRef(new Animated.Value(20)).current;
-  const eraBadgeOpacity = useRef(new Animated.Value(0)).current;
+  // ── Refs ──────────────────────────────────────────────────────
+  const judgedRef             = useRef(false);
+  const swipeDirRef           = useRef<'up' | 'right' | null>(null);
+  const hasThresholdFiredRef  = useRef(false);
+  const tileLayoutRef         = useRef({ width: 300, height: tileHeight });
+  const onSwipeUpRef          = useRef(onSwipeUp);
+  const onSwipeDownRef        = useRef(onSwipeDown);
+  const hapticCorrectRef      = useRef(hapticCorrect);
 
-  const judgedRef      = useRef(false);
-  const swipeDirRef    = useRef<'up' | 'right' | null>(null);
-  const onSwipeUpRef   = useRef(onSwipeUp);
-  const onSwipeDownRef = useRef(onSwipeDown);
-
-  useEffect(() => { onSwipeUpRef.current = onSwipeUp; }, [onSwipeUp]);
-  useEffect(() => { onSwipeDownRef.current = onSwipeDown; }, [onSwipeDown]);
+  useEffect(() => { onSwipeUpRef.current    = onSwipeUp;    }, [onSwipeUp]);
+  useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
+  useEffect(() => { hapticCorrectRef.current = hapticCorrect; }, [hapticCorrect]);
 
   // ── Entry animation ───────────────────────────────────────────
-  const entryOpacity = useRef(new Animated.Value(0)).current;
-  const entryTransY  = useRef(new Animated.Value(30)).current;
-  const entryScaleY  = useRef(new Animated.Value(0.85)).current;
-
   useEffect(() => {
     const id = setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(entryTransY,  { toValue: 0, tension: 180, friction: 12, useNativeDriver: true }),
-        Animated.spring(entryScaleY,  { toValue: 1, tension: 180, friction: 12, useNativeDriver: true }),
-        Animated.timing(entryOpacity, { toValue: 1, duration: 220,              useNativeDriver: true }),
+      RNAnimated.parallel([
+        RNAnimated.spring(entryTransY,  { toValue: 0, tension: 180, friction: 12, useNativeDriver: true }),
+        RNAnimated.spring(entryScaleY,  { toValue: 1, tension: 180, friction: 12, useNativeDriver: true }),
+        RNAnimated.timing(entryOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
       ]).start();
     }, entryDelay);
     return () => clearTimeout(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Outer height sync on tileHeight prop change ───────────────
   useEffect(() => {
     if (!judgedRef.current) {
-      outerHeightAnim.setValue(Math.max(tileHeight, 64));
+      outerHeightAnim.setValue(Math.max(tileHeight, 58));
     }
   }, [tileHeight]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── State-driven animations ───────────────────────────────────
   useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
+    // ── CORRECT (swipe UP on real meaning) — Part C ────────────
     if (s === 'correct') {
-      if (hapticCorrect) {
-        hapticCorrect();
-      } else {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
+      if (hapticCorrectRef.current) hapticCorrectRef.current();
       playCorrectSwipe();
-      setBgColor('#FFD700');
-      Animated.spring(panXY, {
-        toValue: { x: 0, y: 0 },
-        useNativeDriver: false,
-        speed: 20,
-        bounciness: 6,
-      }).start();
-      if (eraBadge) {
-        setTimeout(() => {
-          Animated.parallel([
-            Animated.timing(eraBadgeTransY,  { toValue: 0, duration: 200, useNativeDriver: true }),
-            Animated.timing(eraBadgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-          ]).start();
-        }, 200);
+
+      // Phase 2: launch toward word after resistance dip (60ms buffer)
+      timers.push(setTimeout(() => {
+        translateY.value = withSpring(-140, { damping: 10, stiffness: 180 });
+        scale.value      = withTiming(0.4,   { duration: 250 });
+        tileOpacity.value = withTiming(0,    { duration: 250 });
+      }, 60));
+
+      // Phase 5: absorption haptic (only for non-hapticCorrect tier)
+      if (!hapticCorrectRef.current) {
+        timers.push(setTimeout(() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }, 180));
       }
+
+      // Era badge briefly slides up before tile vanishes
+      if (eraBadge) {
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(eraBadgeTransY,  { toValue: 0, duration: 200, useNativeDriver: true }),
+            RNAnimated.timing(eraBadgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+          ]).start();
+        }, 80));
+      }
+
+      // Collapse height after tile is gone
+      timers.push(setTimeout(() => {
+        RNAnimated.parallel([
+          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+        ]).start();
+      }, 260));
     }
 
+    // ── WRONG (incorrect swipe in either direction) ────────────
     if (s === 'wrong') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       playWrongBuzz();
-      setBgColor('#CC2200');
-      Animated.sequence([
-        Animated.timing(panXY, { toValue: { x: 0, y: 0 }, duration: 80, useNativeDriver: false }),
-        Animated.sequence([
-          Animated.timing(panXY, { toValue: { x:  14, y: 0 }, duration: 50, useNativeDriver: false }),
-          Animated.timing(panXY, { toValue: { x: -14, y: 0 }, duration: 55, useNativeDriver: false }),
-          Animated.timing(panXY, { toValue: { x:   9, y: 0 }, duration: 55, useNativeDriver: false }),
-          Animated.timing(panXY, { toValue: { x:  -9, y: 0 }, duration: 55, useNativeDriver: false }),
-          Animated.timing(panXY, { toValue: { x:   0, y: 0 }, duration: 55, useNativeDriver: false }),
-        ]),
-        Animated.parallel([
-          Animated.timing(panXY, {
-            toValue: swipeDirRef.current === 'right'
-              ? { x: 600, y: 0 }
-              : { x: 0, y: -800 },
+      setFlashRed(true);
+      timers.push(setTimeout(() => setFlashRed(false), 250));
+
+      // Shake X sequence
+      translateX.value = withSequence(
+        withTiming( 14, { duration: 50 }),
+        withTiming(-14, { duration: 55 }),
+        withTiming(  9, { duration: 55 }),
+        withTiming( -9, { duration: 55 }),
+        withTiming(  0, { duration: 55 }),
+      );
+
+      // Fly off after shake completes (~270ms total, use 300ms buffer)
+      timers.push(setTimeout(() => {
+        if (swipeDirRef.current === 'right') {
+          translateX.value = withTiming(600, {
             duration: 250,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: false,
-          }),
-          Animated.timing(tileOpacity, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]),
-        Animated.parallel([
-          Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-          Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]),
-      ]).start();
-    }
+            easing: ReaEasing.in(ReaEasing.quad),
+          });
+        } else {
+          translateY.value = withTiming(-800, {
+            duration: 250,
+            easing: ReaEasing.in(ReaEasing.quad),
+          });
+        }
+        tileOpacity.value = withTiming(0, { duration: 200 });
+      }, 300));
 
-    if (s === 'trap-caught') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      playShatter();
-      tileOpacity.setValue(0);
-      panXY.setValue({ x: 0, y: 0 });
-
-      fragmentAnims.forEach(anim => {
-        anim.x.setValue(0);
-        anim.y.setValue(0);
-        anim.rotate.setValue(0);
-        anim.opacity.setValue(1);
-      });
-
-      setShowShatter(true);
-
-      const fragmentParallels = fragmentAnims.map((anim, i) => {
-        const { dx, dy } = FRAGMENT_OFFSETS[i];
-        const rot = Math.random() * 60 - 30;
-        return Animated.parallel([
-          Animated.timing(anim.x,       { toValue: dx,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.y,       { toValue: dy,  duration: 350, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.rotate,  { toValue: rot, duration: 350, useNativeDriver: true }),
-          Animated.timing(anim.opacity, { toValue: 0,   duration: 350, useNativeDriver: true }),
-        ]);
-      });
-
-      Animated.parallel(fragmentParallels).start();
-
-      setTimeout(() => {
-        setShowShatter(false);
-        Animated.parallel([
-          Animated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-          Animated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+      // Collapse height
+      timers.push(setTimeout(() => {
+        RNAnimated.parallel([
+          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]).start();
-      }, 350);
+      }, 520));
     }
 
+    // ── TRAP-CAUGHT (swipe RIGHT on fake meaning) — Part D ─────
+    if (s === 'trap-caught') {
+      playShatter();
+
+      // Phase 1: accelerate off screen right
+      translateX.value  = withSpring(500, { damping: 6, stiffness: 400 });
+      tileOpacity.value = withTiming(0, { duration: 200 });
+
+      // Phase 4 + 3: impact at ~150ms → haptic + purple flash + fragments
+      timers.push(setTimeout(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        setPurpleFlash(true);
+        timers.push(setTimeout(() => setPurpleFlash(false), 60));
+        setShowShatter(true);
+      }, 150));
+
+      // Collapse height after shatter
+      timers.push(setTimeout(() => {
+        RNAnimated.parallel([
+          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+        ]).start();
+      }, 520));
+    }
+
+    // ── REVEALED (reset — used for ghost tile re-entry) ────────
     if (s === 'revealed') {
       judgedRef.current   = false;
       swipeDirRef.current = null;
-      panXY.setValue({ x: 0, y: 0 });
-      tileOpacity.setValue(1);
-      outerHeightAnim.setValue(Math.max(tileHeight, 64));
+      translateX.value    = 0;
+      translateY.value    = 0;
+      tileOpacity.value   = 1;
+      scale.value         = 1;
+      rotation.value      = 0;
+      borderOpacityVal.value = 0.08;
+      shadowRadiusVal.value  = 6;
+      shadowOpacityVal.value = 0.4;
+      outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
-      setBgColor('#2A2560');
       setShowShatter(false);
+      setPurpleFlash(false);
+      setFlashRed(false);
     }
 
+    return () => timers.forEach(clearTimeout);
   }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Shatter fragment animations (Part D Phase 3) ──────────────
+  useEffect(() => {
+    if (!showShatter) return;
+
+    fragAnims.forEach((fa, i) => {
+      fa.x.setValue(0);
+      fa.y.setValue(0);
+      fa.rot.setValue(0);
+      fa.op.setValue(1);
+      RNAnimated.parallel([
+        RNAnimated.timing(fa.x,  { toValue: FRAG_CONFIGS[i].finalX, duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
+        RNAnimated.timing(fa.y,  { toValue: FRAG_CONFIGS[i].finalY, duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
+        RNAnimated.timing(fa.rot, { toValue: 1,                     duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
+        RNAnimated.timing(fa.op,  { toValue: 0,                     duration: FRAG_CONFIGS[i].dur, useNativeDriver: true }),
+      ]).start();
+    });
+
+    const tid = setTimeout(() => setShowShatter(false), 320);
+    return () => clearTimeout(tid);
+  }, [showShatter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Reanimated animated style (native driver: transform/opacity) ─
+  const tileAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale:      scale.value      },
+      { rotate:     `${rotation.value}deg` },
+    ],
+    opacity:       tileOpacity.value,
+    borderColor:   isSpecialSplit ? '#FFD700' : `rgba(255,255,255,${borderOpacityVal.value})`,
+    shadowRadius:  shadowRadiusVal.value,
+    shadowOpacity: shadowOpacityVal.value,
+  }));
 
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
@@ -228,188 +312,251 @@ export function SwipeMask({
         !judgedRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
       onPanResponderTerminationRequest: () => false,
 
+      // Part B — Finger down: scale lift + border glow + shadow deepen
+      onPanResponderGrant: () => {
+        if (judgedRef.current) return;
+        scale.value            = withSpring(1.04, { damping: 12, stiffness: 400 });
+        borderOpacityVal.value = withTiming(0.40, { duration: 60 });
+        shadowRadiusVal.value  = withTiming(10,   { duration: 80 });
+        shadowOpacityVal.value = withTiming(0.65, { duration: 80 });
+        Haptics.selectionAsync(); // JS thread — equivalent to runOnJS
+        hasThresholdFiredRef.current = false;
+      },
+
+      // Part B — Finger moving: track + rotation + scale breathing + threshold haptic
       onPanResponderMove: (_, g) => {
         if (judgedRef.current) return;
-        panXY.setValue({ x: g.dx, y: g.dy });
+        translateX.value = g.dx;
+        translateY.value = g.dy;
+
+        // Rotation follows dominant drag direction
+        const domRight = Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 0;
+        const domUp    = g.dy < 0 && Math.abs(g.dy) >= Math.abs(g.dx);
+        const targetRot = domRight ? 4 : domUp ? -2 : 0;
+        rotation.value = withSpring(targetRot, { damping: 20, stiffness: 300 });
+
+        // Scale breathes with velocity (vx/vy are px/ms; ×1000 → px/s estimate)
+        const speed = Math.sqrt(g.vx * g.vx + g.vy * g.vy) * 1000;
+        scale.value = withSpring(speed > 300 ? 1.07 : 1.04, { damping: 12, stiffness: 400 });
+
+        // Shadow deepens proportional to displacement
+        const displacement = Math.abs(g.dx) + Math.abs(g.dy);
+        shadowRadiusVal.value = Math.min(6 + (displacement / 120) * 8, 14);
+
+        // Threshold haptic — fires once at 60% of SWIPE_THRESHOLD in dominant axis
+        const mainAxis = Math.max(g.dx > 0 ? g.dx : 0, -g.dy > 0 ? -g.dy : 0);
+        if (mainAxis > SWIPE_THRESHOLD * 0.6 && !hasThresholdFiredRef.current) {
+          hasThresholdFiredRef.current = true;
+          Haptics.selectionAsync();
+        }
       },
 
       onPanResponderRelease: (_, g) => {
         if (judgedRef.current) return;
 
+        // Swipe UP — claim mask (Part C)
         if (g.dy < -SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'up';
+          // Phase 1: resistance dip
+          scale.value = withSequence(
+            withTiming(0.96, { duration: 40 }),
+            withSpring(1.04, { damping: 6, stiffness: 400 }),
+          );
+          // Lift-off haptic (or hapticCorrect override)
+          if (hapticCorrectRef.current) {
+            hapticCorrectRef.current();
+          } else {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
           onSwipeUpRef.current();
 
+        // Swipe RIGHT — call trap (Part D)
         } else if (g.dx > SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
+          // Full swipe extension haptic
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onSwipeDownRef.current();
 
+        // Spring home — Part B return to origin
         } else {
-          Animated.spring(panXY, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-            speed: 22,
-            bounciness: 8,
-          }).start();
+          translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
+          translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
+          scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
+          rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
+          borderOpacityVal.value = withTiming(0.08, { duration: 150 });
+          shadowRadiusVal.value  = withTiming(6, { duration: 150 });
+          shadowOpacityVal.value = withTiming(0.4, { duration: 150 });
         }
       },
 
       onPanResponderTerminate: () => {
         if (!judgedRef.current) {
-          Animated.spring(panXY, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-            speed: 22,
-            bounciness: 8,
-          }).start();
+          translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
+          translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
+          scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
+          rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
+          borderOpacityVal.value = withTiming(0.08, { duration: 150 });
+          shadowRadiusVal.value  = withTiming(6, { duration: 150 });
+          shadowOpacityVal.value = withTiming(0.4, { duration: 150 });
         }
       },
-    }),
+    })
   ).current;
 
-  // ── Hidden state ──────────────────────────────────────────────
+  // ── Hidden state (HIDDEN MEANING placeholder tile) ─────────────
   if (s === 'hidden') {
     return (
-      <Animated.View
+      <RNAnimated.View
         style={{
           overflow: 'visible',
           opacity: entryOpacity,
           transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
         }}
       >
-        <Animated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
+        <RNAnimated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
           <Pressable
             onPress={revealable ? onSwipeReveal : undefined}
-            style={[styles.tile, { backgroundColor: '#2A2060' }]}
+            style={[styles.hiddenTile]}
           >
             <FluentEmoji emoji="❓" size={32} />
-            <Text style={[styles.phrase, { color: '#FFD700' }]} numberOfLines={2}>
+            <Text style={styles.hiddenPhrase} numberOfLines={2}>
               Hidden meaning
             </Text>
           </Pressable>
-        </Animated.View>
-      </Animated.View>
+        </RNAnimated.View>
+      </RNAnimated.View>
     );
   }
 
-  // ── Normal tile ───────────────────────────────────────────────
-  const textColor = s === 'correct' ? '#1A1040' : '#FFFFFF';
+  // ── Fragment spawn position (centered on tile) ────────────────
+  const fragLeft = tileLayoutRef.current.width * 0.5 - 20;
+  const fragTop  = Math.max(tileHeight, 58) * 0.5 - 8;
 
-  const fragW   = tileLayoutRef.current.width * 0.4;
-  const fragH   = tileHeight * 0.45;
-  const centerX = tileLayoutRef.current.width / 2 - fragW / 2;
-  const centerY = tileHeight / 2 - fragH / 2;
-
+  // ── Main tile ─────────────────────────────────────────────────
   return (
-    <Animated.View
+    <RNAnimated.View
       style={{
         overflow: 'visible',
         opacity: entryOpacity,
         transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
       }}
     >
-    <Animated.View
-      style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
-    >
-      <Animated.View
-        style={[
-          styles.tile,
-          {
-            backgroundColor: bgColor,
-            opacity: tileOpacity,
-            transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
-            ...(isSpecialSplit ? { borderColor: '#FFD700' } : {}),
-          },
-        ]}
-        onLayout={(e: LayoutChangeEvent) => {
-          tileLayoutRef.current = {
-            width:  e.nativeEvent.layout.width,
-            height: e.nativeEvent.layout.height,
-          };
-        }}
-        {...panResponder.panHandlers}
+      <RNAnimated.View
+        style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
       >
-        <View style={styles.emojiSlot}>
-          <FluentEmoji emoji={mask.emoji} size={32} />
-        </View>
-        <Text style={[styles.phrase, { color: textColor }]} numberOfLines={2}>
-          {mask.phrase}
-        </Text>
-        {eraBadge && (
-          <Animated.View
+        {/* Part D — shatter fragments (appear after tile flies right) */}
+        {showShatter && FRAG_CONFIGS.map((cfg, i) => (
+          <RNAnimated.View
+            key={i}
             pointerEvents="none"
-            style={[
-              styles.eraBadgeWrap,
-              { opacity: eraBadgeOpacity, transform: [{ translateY: eraBadgeTransY }] },
-            ]}
-          >
-            <Text style={styles.eraBadgeText}>{eraBadge}</Text>
-          </Animated.View>
-        )}
-      </Animated.View>
+            style={{
+              position: 'absolute',
+              zIndex: 50,
+              left: fragLeft,
+              top:  fragTop,
+              width: 40,
+              height: 16,
+              borderRadius: 4,
+              backgroundColor: '#2D2B6E',
+              opacity: fragAnims[i].op,
+              transform: [
+                { translateX: fragAnims[i].x },
+                { translateY: fragAnims[i].y },
+                {
+                  rotate: fragAnims[i].rot.interpolate({
+                    inputRange:  [0, 1],
+                    outputRange: ['0deg', `${cfg.finalRot}deg`],
+                  }),
+                },
+              ],
+            }}
+          />
+        ))}
 
-      {showShatter && FRAGMENT_OFFSETS.map((_, i) => (
+        {/* Main animated tile (Reanimated — native driver for transforms/opacity) */}
         <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            zIndex: 999,
-            left: centerX,
-            top:  centerY,
-            width: fragW,
-            height: fragH,
-            borderRadius: 8,
-            backgroundColor: '#CC2200',
-            opacity: fragmentAnims[i].opacity,
-            transform: [
-              { translateX: fragmentAnims[i].x },
-              { translateY: fragmentAnims[i].y },
-              {
-                rotate: fragmentAnims[i].rotate.interpolate({
-                  inputRange:  [-30, 0, 30],
-                  outputRange: ['-30deg', '0deg', '30deg'],
-                }),
-              },
-            ],
+          style={[styles.tile, tileAnimStyle]}
+          onLayout={(e: LayoutChangeEvent) => {
+            tileLayoutRef.current = {
+              width:  e.nativeEvent.layout.width,
+              height: e.nativeEvent.layout.height,
+            };
           }}
-        />
-      ))}
-    </Animated.View>
-    </Animated.View>
+          {...panResponder.panHandlers}
+        >
+          {/* Part A — gradient background */}
+          <LinearGradient
+            colors={['#2D2B6E', '#252350']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+
+          {/* Part D Phase 2 — purple flash at impact */}
+          {purpleFlash && (
+            <View style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: '#7B2D8B' }]} />
+          )}
+
+          {/* Wrong flash */}
+          {flashRed && (
+            <View style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: '#CC2200' }]} />
+          )}
+
+          {/* Part A — text only, no emoji */}
+          <Text style={styles.phrase} numberOfLines={2}>
+            {mask.phrase}
+          </Text>
+
+          {/* Era badge (SlangDrop) */}
+          {eraBadge && (
+            <RNAnimated.View
+              pointerEvents="none"
+              style={[
+                styles.eraBadgeWrap,
+                { opacity: eraBadgeOpacity, transform: [{ translateY: eraBadgeTransY }] },
+              ]}
+            >
+              <Text style={styles.eraBadgeText}>{eraBadge}</Text>
+            </RNAnimated.View>
+          )}
+        </Animated.View>
+      </RNAnimated.View>
+    </RNAnimated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  // ── Main mask/trap tile ───────────────────────────────────────
   tile: {
-    borderRadius: 12,
+    borderRadius: 16,
+    minHeight: 58,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 16,
+    paddingLeft: 20,
     paddingRight: 16,
-    paddingVertical: 8,
-    minHeight: 64,
-    borderWidth: 2,
-    borderColor: '#1A1830',
+    paddingVertical: 0,
+    borderWidth: 1,
+    // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.5,
-    shadowRadius: 0,
-    elevation: 8,
-  },
-  emojiSlot: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    shadowOffset: { width: 0, height: 3 },
+    // shadowRadius + shadowOpacity driven by Reanimated
+    elevation: 4,
+    overflow: 'hidden',
   },
   phrase: {
     fontSize: FONT_SIZES.tileCopy,
     fontFamily: FONTS.tileCopy,
+    color: '#FFFFFF',
     flex: 1,
     flexShrink: 1,
+    textAlignVertical: 'center',
+  },
+  flashOverlay: {
+    borderRadius: 16,
+    zIndex: 10,
   },
   eraBadgeWrap: {
     position: 'absolute',
@@ -424,5 +571,24 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.ghostSubLabel,
     color: '#FFD700',
     fontFamily: FONTS.label,
+  },
+  // ── Hidden-state tile ─────────────────────────────────────────
+  hiddenTile: {
+    backgroundColor: '#2A2060',
+    borderRadius: 16,
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  hiddenPhrase: {
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.tileCopy,
+    color: '#FFD700',
+    marginLeft: 12,
+    flex: 1,
   },
 });

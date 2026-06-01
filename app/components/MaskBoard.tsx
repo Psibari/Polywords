@@ -82,6 +82,7 @@ export function MaskBoard({ step }: Props) {
   const wordEntryOpacity      = useRef(new Animated.Value(0)).current;
   const wordEntryScale        = useRef(new Animated.Value(0.85)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
+  const goldTextOpacity       = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
 
   // ── boss entrance animated values ────────────────────────────
@@ -245,6 +246,7 @@ export function MaskBoard({ step }: Props) {
   useEffect(() => {
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
+    goldTextOpacity.setValue(0); // reset gold absorption on new word
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title: fade + scale in on word change (boss skips — has own entrance)
@@ -558,12 +560,26 @@ export function MaskBoard({ step }: Props) {
   }, [tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
+  // Gold step values for word color absorption (Part C Phase 4)
+  const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
+
   function handleSwipeUp(maskId: string) {
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
       store.submitSwipeUp(maskId);
       spawnFloat(mask.isRare ? 300 : 100, maskId, '#F5C842');
       triggerAbsorption(mask.phrase);
+
+      // Gold word absorption: count how many real masks will be found after this swipe
+      const nextFound = realMasks.filter(m =>
+        tileStates.get(m.id) === 'correct' || m.id === maskId
+      ).length;
+      Animated.timing(goldTextOpacity, {
+        toValue: GOLD_STEPS_LOCAL[Math.min(nextFound, GOLD_STEPS_LOCAL.length - 1)],
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
     } else {
       store.submitWrongSwipe();
@@ -604,23 +620,38 @@ export function MaskBoard({ step }: Props) {
       {/* word header */}
       <View style={styles.header}>
         <View style={styles.wordContainer}>
-          <Animated.Text
-            style={[
-              styles.word,
-              isBoss && styles.wordBoss,
-              {
-                color: wordColor,
-                opacity: wordEntryOpacity,
-                transform: [
-                  { scale: absorptionScale },
-                  { scale: wordEntryScale },
-                  { translateY: bossWordTranslateY },
-                ],
-              },
-            ]}
+          {/* Part C Phase 4 — two text layers: white base + gold absorption overlay */}
+          <Animated.View
+            style={{
+              opacity: wordEntryOpacity,
+              transform: [
+                { scale: absorptionScale },
+                { scale: wordEntryScale },
+                { translateY: bossWordTranslateY },
+              ],
+            }}
           >
-            {step.word}
-          </Animated.Text>
+            <Text style={[styles.word, isBoss && styles.wordBoss, { color: wordColor }]}>
+              {step.word}
+            </Text>
+            <Animated.Text
+              pointerEvents="none"
+              style={[
+                styles.word,
+                isBoss && styles.wordBoss,
+                {
+                  color: '#F5C842',
+                  opacity: goldTextOpacity,
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  textAlign: 'center',
+                },
+              ]}
+            >
+              {step.word}
+            </Animated.Text>
+          </Animated.View>
 
           <Animated.View
             pointerEvents="none"
