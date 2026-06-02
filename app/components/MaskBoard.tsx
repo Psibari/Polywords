@@ -14,19 +14,18 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { GhostTile } from './GhostTile';
 import { ScoreFloat } from './ScoreFloat';
-import { PollyCard } from './PollyCard';
+import PollySprite from './ui/PollySprite';
+import { usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
-const TILE_GAP   = 10;
-const MIN_TILE_H = 52;
-const MAX_TILE_H = 80;
-// Overhead for Dimensions-based pre-layout estimate:
-// TopBar + word header + PollyCard + safe areas + bottom padding
-const UI_OVERHEAD_BASE = 320;
-const HIDDEN_SLOT_H    = 74;   // hidden / ghost tile slot + gap
+const TILE_GAP      = 10;
+const MIN_TILE_H    = 52;
+const MAX_TILE_H    = 80;
+const UI_OVERHEAD_BASE = 380; // TopBar + PollyZone + safe areas + bottom padding
+const HIDDEN_SLOT_H    = 74;
 
-// ── Glass shard configs — rendered at screen root on trap-caught ─
+// ── Glass shard configs ───────────────────────────────────────
 const SHARD_CONFIGS = [
   { w:  90, h: 14, finalX: -120, finalY:  -80, finalRot: -35, dur: 200 },
   { w:  60, h: 18, finalX:  100, finalY:  -90, finalRot:  28, dur: 190 },
@@ -41,19 +40,43 @@ type ShatterOrigin = { x: number; y: number } | null;
 
 type Props = { step: WordStep };
 
-export function MaskBoard({ step }: Props) {
-  const store     = useGameStore();
-  const isBoss    = step.eventType === 'bossWord';
-  const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
+function eventKicker(step: WordStep): string | null {
+  if (step.eventType === 'bossWord')   return 'BOSS WORD · 2× SCORE';
+  if (step.eventType === 'speedRound') return 'SPEED ROUND';
+  if (step.eventType === 'slangDrop')  return 'SLANG DROP';
+  return null;
+}
 
-  // ── tile state map ──────────────────────────────────────────
+export function MaskBoard({ step }: Props) {
+  const store  = useGameStore();
+  const isBoss = step.eventType === 'bossWord';
+  const wordColor = isBoss ? '#FFD700' : '#FFFFFF';
+  const kicker    = eventKicker(step);
+
+  // Stale-closure-safe refs for store state read inside callbacks
+  const streakRef = useRef(store.game.streak);
+  streakRef.current = store.game.streak;
+  const livesRef = useRef(store.game.lives);
+  livesRef.current = store.game.lives;
+
+  // ── Polly animator ────────────────────────────────────────────
+  const {
+    currentPose,
+    currentSpeechLine,
+    speechLineVisible,
+    pollyAnimatedStyle,
+    ghostTintOpacity,
+    firePollyEvent,
+  } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
+
+  // ── tile state map ───────────────────────────────────────────
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => {
     const m = new Map<string, SwipeMaskState>();
     step.masks.forEach(mask => m.set(mask.id, 'idle'));
     return m;
   });
 
-  // ── shatter fragments — rendered at MaskBoard root to avoid overflow clipping ─
+  // ── shatter ──────────────────────────────────────────────────
   const [shatterOrigin, setShatterOrigin] = useState<ShatterOrigin>(null);
   const shardAnims = useRef(
     SHARD_CONFIGS.map(() => ({
@@ -64,16 +87,15 @@ export function MaskBoard({ step }: Props) {
     }))
   ).current;
 
-  const wrongCountRef          = useRef(0);
-  const completedRef           = useRef(false);
-  const splitTriggeredRef      = useRef(false);
-  const ghostJudgedCorrectRef  = useRef(false);
+  const wrongCountRef         = useRef(0);
+  const completedRef          = useRef(false);
+  const splitTriggeredRef     = useRef(false);
+  const ghostJudgedCorrectRef = useRef(false);
 
-  // ghost tile for this word (from previous run)
   const ghost = store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null;
   const [ghostVisible, setGhostVisible] = useState(!!ghost);
 
-  // ── available height / width ─────────────────────────────────
+  // ── layout ───────────────────────────────────────────────────
   const [gridHeight, setGridHeight]         = useState(0);
   const [containerWidth, setContainerWidth] = useState(350);
   const containerWidthRef                   = useRef(350);
@@ -90,12 +112,12 @@ export function MaskBoard({ step }: Props) {
     ? Math.min(MAX_TILE_H, Math.max(MIN_TILE_H, Math.floor(gridHeight / tileCount - TILE_GAP)))
     : dimsTileH;
 
-  // ── find-meter counts ────────────────────────────────────────
+  // ── find counts ──────────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
   const totalReal  = realMasks.length;
   const foundCount = realMasks.filter(m => tileStates.get(m.id) === 'correct').length;
 
-  // ── absorption animation ────────────────────────────────────
+  // ── absorption ───────────────────────────────────────────────
   const absorptionScale       = useRef(new Animated.Value(1)).current;
   const ringScale             = useRef(new Animated.Value(1)).current;
   const ringOpacity           = useRef(new Animated.Value(0)).current;
@@ -105,7 +127,7 @@ export function MaskBoard({ step }: Props) {
   const goldTextOpacity       = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
 
-  // ── boss entrance animated values ────────────────────────────
+  // ── boss entrance ─────────────────────────────────────────────
   const bossWordTranslateY = useRef(new Animated.Value(isBoss ? -300 : 0)).current;
   const bossShakeX         = useRef(new Animated.Value(0)).current;
   const bossSweepX         = useRef(new Animated.Value(-60)).current;
@@ -133,26 +155,19 @@ export function MaskBoard({ step }: Props) {
     ]).start(() => setAbsorbedPhrase(null));
   }
 
-  // ── container ref ───────────────────────────────────────────
   const containerRef = useRef<View>(null);
 
-  // ── boss state ───────────────────────────────────────────────
   const [bossReady, setBossReady]             = useState(!isBoss);
   const [bossSweepActive, setBossSweepActive] = useState(false);
+  const [tilesReady, setTilesReady]           = useState(false);
 
-  // ── tilesReady: gates tile stagger until data is confirmed present ──
-  const [tilesReady, setTilesReady] = useState(false);
   useEffect(() => {
     if (visibleGridMasks.length > 0) {
       const id = setTimeout(() => setTilesReady(true), 50);
       return () => clearTimeout(id);
     }
   }, [visibleGridMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
-  // boss words suppress the PollyCard intro — bossWord trigger fires after entrance instead
-  // ghost rounds also suppress intro — ghostIntro fires instead
-  const bossSuppressIntro = isBoss || !!ghost;
 
-  // ── tile refs (for score float spawn position) ───────────────
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
   function getTileRef(maskId: string): React.Ref<View> {
@@ -198,7 +213,7 @@ export function MaskBoard({ step }: Props) {
     setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 300 }]);
   }
 
-  // ── hidden meaning tile system ────────────────────────────────
+  // ── hidden meaning ────────────────────────────────────────────
   const hasHidden = !!step.hiddenMeaning;
 
   const [hiddenPhase, setHiddenPhase]       = useState<HiddenPhase>('visible');
@@ -249,7 +264,54 @@ export function MaskBoard({ step }: Props) {
     outputRange: ['#4CAF50', '#FFD700'],
   });
 
-  // Border color loop — runs while tile is in 'visible' phase
+  // ── hesitation timers ─────────────────────────────────────────
+  const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hes2Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hes3Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function startHesitationTimers() {
+    if (hes1Ref.current !== null) { clearTimeout(hes1Ref.current); hes1Ref.current = null; }
+    if (hes2Ref.current !== null) { clearTimeout(hes2Ref.current); hes2Ref.current = null; }
+    if (hes3Ref.current !== null) { clearTimeout(hes3Ref.current); hes3Ref.current = null; }
+    hes1Ref.current = setTimeout(() => firePollyEvent('hesitation3s'), 3000);
+    hes2Ref.current = setTimeout(() => firePollyEvent('hesitation6s'), 6000);
+    hes3Ref.current = setTimeout(() => firePollyEvent('hesitation9s'), 9000);
+  }
+
+  function resetHesitation() {
+    firePollyEvent('hesitationCleared');
+    startHesitationTimers();
+  }
+
+  // Start hesitation timers when tiles become interactive
+  const showBoardContent = (!isBoss || bossReady) && tilesReady;
+
+  useEffect(() => {
+    if (!showBoardContent) return;
+    startHesitationTimers();
+    return () => {
+      if (hes1Ref.current !== null) clearTimeout(hes1Ref.current);
+      if (hes2Ref.current !== null) clearTimeout(hes2Ref.current);
+      if (hes3Ref.current !== null) clearTimeout(hes3Ref.current);
+    };
+  }, [showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Polly reactive triggers ───────────────────────────────────
+  useEffect(() => {
+    if (store.game.lives === 1) firePollyEvent('oneHeartLeft');
+  }, [store.game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (store.game.status === 'gameOver') firePollyEvent('gameOver');
+  }, [store.game.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (store.game.streak > 0 && store.game.streak % 10 === 0) {
+      firePollyEvent('streakX10');
+    }
+  }, [store.game.streak]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── border loop ──────────────────────────────────────────────
   useEffect(() => {
     if (!hasHidden || hiddenPhase !== 'visible') return;
     hiddenBorderAnim.setValue(0);
@@ -262,14 +324,14 @@ export function MaskBoard({ step }: Props) {
     return () => loop.stop();
   }, [hiddenPhase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset boss animated values on mount — guards against native-layer residuals between words
+  // Reset boss animated values on mount
   useEffect(() => {
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
-    goldTextOpacity.setValue(0); // reset gold absorption on new word
+    goldTextOpacity.setValue(0);
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Word title: fade + scale in on word change (boss skips — has own entrance)
+  // Word title fade + scale in (non-boss) + wordEntry Polly bob
   useEffect(() => {
     if (isBoss) return;
     wordEntryOpacity.setValue(0);
@@ -278,9 +340,15 @@ export function MaskBoard({ step }: Props) {
       Animated.timing(wordEntryOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
       Animated.timing(wordEntryScale,   { toValue: 1, duration: 200, useNativeDriver: true }),
     ]).start();
+    firePollyEvent('wordEntry');
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Hidden tile staggered entry — skipped for boss (handled by bossReady effect)
+  // Ghost Polly trigger
+  useEffect(() => {
+    if (ghost) firePollyEvent('ghostEntry');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Hidden tile entry (non-boss)
   useEffect(() => {
     if (!hasHidden || isBoss) return;
     const id = setTimeout(() => {
@@ -293,7 +361,7 @@ export function MaskBoard({ step }: Props) {
     return () => clearTimeout(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Boss: animate hidden tile in after tiles have staggered
+  // Hidden tile entry after boss entrance
   useEffect(() => {
     if (!isBoss || !bossReady || !hasHidden) return;
     const id = setTimeout(() => {
@@ -311,7 +379,6 @@ export function MaskBoard({ step }: Props) {
     if (!isBoss) return;
 
     const t1 = setTimeout(() => {
-      // Make word visible — spring handles the translate from -300
       wordEntryOpacity.setValue(1);
       wordEntryScale.setValue(1);
 
@@ -322,11 +389,9 @@ export function MaskBoard({ step }: Props) {
         useNativeDriver: true,
       }).start();
 
-      // Fire impact effects when word hits baseline (~300ms into the spring)
       setTimeout(() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-        // Screen shake: 0 → 4 → -4 → 3 → -3 → 1 → 0, 180ms total
         Animated.sequence([
           Animated.timing(bossShakeX, { toValue:  4, duration: 30, useNativeDriver: true }),
           Animated.timing(bossShakeX, { toValue: -4, duration: 30, useNativeDriver: true }),
@@ -336,7 +401,6 @@ export function MaskBoard({ step }: Props) {
           Animated.timing(bossShakeX, { toValue:  0, duration: 30, useNativeDriver: true }),
         ]).start();
 
-        // Gold sweep starts 100ms after impact
         setTimeout(() => {
           setBossSweepActive(true);
           bossSweepX.setValue(-60);
@@ -348,7 +412,6 @@ export function MaskBoard({ step }: Props) {
             easing: Easing.linear,
             useNativeDriver: true,
           }).start(() => {
-            // Beam fades out
             Animated.timing(bossSweepOpacity, {
               toValue: 0,
               duration: 150,
@@ -356,15 +419,13 @@ export function MaskBoard({ step }: Props) {
             }).start(() => {
               setBossSweepActive(false);
 
-              // Reset hidden tile values before showing board so it animates in cleanly
               if (hasHidden) {
                 hiddenEntryOpacity.setValue(0);
                 hiddenEntryTransY.setValue(30);
                 hiddenEntryScaleY.setValue(0.85);
               }
 
-              // Fire Polly boss line, then show tiles
-              store.setPollyTrigger('bossWord');
+              firePollyEvent('bossEntry');
               setBossReady(true);
             });
           });
@@ -375,12 +436,7 @@ export function MaskBoard({ step }: Props) {
     return () => clearTimeout(t1);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Ghost intro Polly trigger
-  useEffect(() => {
-    if (ghost) store.setPollyTrigger('ghostIntro');
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Fire shard animations when a trap is correctly called
+  // Shatter animation
   useEffect(() => {
     if (!shatterOrigin) return;
     shardAnims.forEach((fa, i) => {
@@ -403,7 +459,6 @@ export function MaskBoard({ step }: Props) {
     hiddenBorderLoopRef.current?.stop();
     setHiddenPhase('locked');
     Animated.timing(hiddenTileOpacity, { toValue: 0.2, duration: 300, useNativeDriver: true }).start();
-    store.setPollyTrigger('locked');
   }
 
   // ── Cinematic split sequence ──────────────────────────────────
@@ -473,7 +528,12 @@ export function MaskBoard({ step }: Props) {
                       ]), { iterations: 2 }).start();
 
                       playSplitReveal();
-                      store.setPollyTrigger('hiddenReveal');
+                      // Fire hiddenFound or streakX10 at the reveal moment
+                      if (streakRef.current > 0 && streakRef.current % 10 === 0) {
+                        firePollyEvent('streakX10');
+                      } else {
+                        firePollyEvent('hiddenFound');
+                      }
                     });
                   });
                 }, 80);
@@ -485,7 +545,7 @@ export function MaskBoard({ step }: Props) {
     }, 400);
   }
 
-  // ── split tile state helpers ─────────────────────────────────
+  // ── split tile helpers ────────────────────────────────────────
   function updateSplitState(side: 'left' | 'right', state: SwipeMaskState) {
     const next: SplitPair = { ...splitStatesRef.current, [side]: state };
     splitStatesRef.current = next;
@@ -507,7 +567,7 @@ export function MaskBoard({ step }: Props) {
       playRoundComplete();
       spawnFloatAtSplit(300);
       store.addBonusScore(300);
-      store.setPollyTrigger('cleanSplit');
+      firePollyEvent('cleanSweep');
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
@@ -552,16 +612,16 @@ export function MaskBoard({ step }: Props) {
     store.addBonusScore(250);
     spawnFloatAtSplit(250, '#F5C842');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    store.setPollyTrigger('ghostCorrect');
+    firePollyEvent('ghostFoundLate');
   }
 
   function handleGhostSwipeRight() {
     store.setGhostRevenge({ result: 'wrong', word: step.word, meaningText: ghost?.hiddenMeaningReal ?? '' });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    store.setPollyTrigger('ghostWrong');
+    firePollyEvent('ghostDissolved');
   }
 
-  // ── completion check ──────────────────────────────────────────
+  // ── completion check ─────────────────────────────────────────
   useEffect(() => {
     if (completedRef.current || splitTriggeredRef.current) return;
 
@@ -577,13 +637,11 @@ export function MaskBoard({ step }: Props) {
     });
 
     if (perfect && hasHidden) {
-      // Perfect clear: clear any ghost for this word
       if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
       splitTriggeredRef.current = true;
-      store.setPollyTrigger('perfect');
+      firePollyEvent('allMasksFound');
       startSplit();
     } else {
-      // Not perfect clear: set ghost for next run (only if ghost wasn't already redeemed this round)
       if (hasHidden && !ghostJudgedCorrectRef.current) {
         store.addGhost({
           wordId: step.word,
@@ -599,17 +657,16 @@ export function MaskBoard({ step }: Props) {
   }, [tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
-  // Gold step values for word color absorption (Part C Phase 4)
   const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
   function handleSwipeUp(maskId: string) {
+    resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
       store.submitSwipeUp(maskId);
       spawnFloat(mask.isRare ? 300 : 100, maskId, '#F5C842');
       triggerAbsorption(mask.phrase);
 
-      // Gold word absorption: count how many real masks will be found after this swipe
       const nextFound = realMasks.filter(m =>
         tileStates.get(m.id) === 'correct' || m.id === maskId
       ).length;
@@ -620,21 +677,23 @@ export function MaskBoard({ step }: Props) {
       }).start();
 
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
+      firePollyEvent('correct');
     } else {
       store.submitWrongSwipe();
       wrongCountRef.current++;
       if (wrongCountRef.current === 1 && hasHidden) lockHidden();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      firePollyEvent('wrong');
     }
   }
 
   function handleSwipeRight(maskId: string) {
+    resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
       store.submitSwipeDown(maskId);
       spawnFloat(50, maskId, '#7B2D8B');
 
-      // Measure tile screen position for shard origin — before tile starts moving
       const refObj    = tileRefs.current.get(maskId);
       const view      = refObj?.current;
       const container = containerRef.current;
@@ -655,10 +714,9 @@ export function MaskBoard({ step }: Props) {
       wrongCountRef.current++;
       if (wrongCountRef.current === 1 && hasHidden) lockHidden();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      firePollyEvent('wrong');
     }
   }
-
-  const showBoardContent = (!isBoss || bossReady) && tilesReady;
 
   // ── render ────────────────────────────────────────────────────
   return (
@@ -672,10 +730,58 @@ export function MaskBoard({ step }: Props) {
       }}
       onStartShouldSetResponder={() => true}
     >
-      {/* word header */}
-      <View style={styles.header}>
-        <View style={styles.wordContainer}>
-          {/* Part C Phase 4 — two text layers: white base + gold absorption overlay */}
+      {/* ── POLLY ZONE ────────────────────────────────────────── */}
+      <View style={styles.pollyZone}>
+
+        {/* ghost tint overlay */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: '#7B2D8B',
+              opacity: ghostTintOpacity,
+              borderRadius: 16,
+            },
+          ]}
+        />
+
+        {/* Polly sprite */}
+        <Animated.View
+          style={[
+            pollyAnimatedStyle,
+            { position: 'absolute', bottom: 0, alignSelf: 'center' },
+          ]}
+        >
+          <PollySprite pose={currentPose} size={240} />
+        </Animated.View>
+
+        {/* boss gold sweep */}
+        {bossSweepActive && (
+          <View
+            pointerEvents="none"
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}
+          >
+            <Animated.View
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                width: 60,
+                backgroundColor: '#FFD700',
+                opacity: bossSweepOpacity,
+                transform: [{ translateX: bossSweepX }],
+              }}
+            />
+          </View>
+        )}
+
+        {/* word overlay — sits across Polly body */}
+        <View style={styles.wordOverlay}>
+          {kicker ? (
+            <Text style={styles.kicker}>{kicker}</Text>
+          ) : null}
+
           <Animated.View
             style={{
               opacity: wordEntryOpacity,
@@ -706,57 +812,36 @@ export function MaskBoard({ step }: Props) {
             >
               {step.word}
             </Animated.Text>
+
+            {/* absorption ring */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.goldRing,
+                { opacity: ringOpacity, transform: [{ scale: ringScale }] },
+              ]}
+            />
           </Animated.View>
 
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.goldRing, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
-          />
+          {absorbedPhrase !== null && (
+            <Animated.Text style={[styles.absorbedPhrase, { opacity: absorbedPhraseOpacity }]}>
+              {absorbedPhrase}
+            </Animated.Text>
+          )}
+
+          {/* speech line replaces progress text when active */}
+          {speechLineVisible ? (
+            <Text style={styles.speechLine}>{currentSpeechLine}</Text>
+          ) : (
+            <Text style={styles.progressText}>
+              {foundCount} OF {totalReal} REAL MEANINGS FOUND
+            </Text>
+          )}
         </View>
 
-        {absorbedPhrase !== null && (
-          <Animated.Text style={[styles.absorbedPhrase, { opacity: absorbedPhraseOpacity }]}>
-            {absorbedPhrase}
-          </Animated.Text>
-        )}
-
-        {/* Boss gold sweep — absolutely positioned over the header */}
-        {bossSweepActive && (
-          <View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              overflow: 'hidden',
-            }}
-          >
-            <Animated.View
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                width: 60,
-                backgroundColor: '#FFD700',
-                opacity: bossSweepOpacity,
-                transform: [{ translateX: bossSweepX }],
-              }}
-            />
-          </View>
-        )}
       </View>
 
-      {/* Polly Card strip */}
-      <PollyCard
-        step={step}
-        foundCount={foundCount}
-        totalReal={totalReal}
-        suppressIntro={bossSuppressIntro}
-      />
-
-      {/* HIDDEN MEANING slot — ghost takes this slot when present */}
+      {/* HIDDEN MEANING slot */}
       {hasHidden && hiddenPhase !== 'split' && showBoardContent && (
         ghostVisible && ghost ? (
           <GhostTile
@@ -798,7 +883,7 @@ export function MaskBoard({ step }: Props) {
         )
       )}
 
-      {/* tile stack — gridWrap always renders to keep height measurement */}
+      {/* tile stack */}
       <View
         style={styles.gridWrap}
         onLayout={e => setGridHeight(e.nativeEvent.layout.height)}
@@ -878,7 +963,7 @@ export function MaskBoard({ step }: Props) {
         )}
       </View>
 
-      {/* Glass shards — screen-root overlay, never clipped by tile layout */}
+      {/* glass shards */}
       {shatterOrigin && (
         <View
           pointerEvents="none"
@@ -944,31 +1029,50 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-  header: {
+  // ── Polly Zone ────────────────────────────────────────────────
+  pollyZone: {
+    width: '100%',
+    height: 260,
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 4,
+    justifyContent: 'flex-end',
+    marginBottom: 4,
+  },
+  wordOverlay: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  kicker: {
+    color: '#FFD700',
+    fontSize: FONT_SIZES.hudLabel,
+    fontFamily: FONTS.label,
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: 4,
   },
   word: {
     fontSize: FONT_SIZES.wordDisplay,
     fontFamily: FONTS.wordDisplay,
-    letterSpacing: 2,
+    letterSpacing: FONT_SIZES.wordDisplayLetterSpacing,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
   },
   wordBoss: {
     fontSize: FONT_SIZES.bossWordDisplay,
     fontFamily: FONTS.bossWord,
-    letterSpacing: 4,
+    letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#FFD700',
-  },
-  wordContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   goldRing: {
     position: 'absolute',
-    width: 160,
-    height: 72,
-    borderRadius: 36,
+    alignSelf: 'center',
+    width: 200,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 2.5,
     borderColor: '#FFD700',
   },
@@ -980,6 +1084,25 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
   },
+  speechLine: {
+    fontFamily: FONTS.brand,
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.9)',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+    textAlign: 'center',
+    marginTop: 52,
+  },
+  progressText: {
+    fontFamily: FONTS.label,
+    fontSize: FONT_SIZES.progressLabel,
+    color: 'rgba(255,255,255,0.65)',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginTop: 52,
+  },
+  // ── hidden tile ───────────────────────────────────────────────
   hiddenTile: {
     marginBottom: 16,
     borderRadius: 12,
