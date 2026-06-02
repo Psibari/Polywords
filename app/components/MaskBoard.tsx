@@ -750,7 +750,7 @@ export function MaskBoard({ step }: Props) {
         <Animated.View
           style={[
             pollyAnimatedStyle,
-            { position: 'absolute', bottom: 0, alignSelf: 'center' },
+            { position: 'absolute', bottom: 0, alignSelf: 'center', backgroundColor: 'transparent' },
           ]}
         >
           <PollySprite pose={currentPose} size={240} />
@@ -1032,14 +1032,15 @@ const styles = StyleSheet.create({
   // ── Polly Zone ────────────────────────────────────────────────
   pollyZone: {
     width: '100%',
-    height: 260,
+    height: 240,
     alignItems: 'center',
     justifyContent: 'flex-end',
     marginBottom: 4,
+    backgroundColor: 'transparent',
   },
   wordOverlay: {
     position: 'absolute',
-    bottom: 16,
+    bottom: -8,
     left: 0,
     right: 0,
     alignItems: 'center',

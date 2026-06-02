@@ -32,16 +32,17 @@ export default function PollySprite({ pose, size, style }: PollySpriteProps) {
   const sheetDim   = SHEET_SIZE * (size / CELL_SIZE);
 
   return (
-    <View style={[{ width: size, height: size, overflow: 'hidden' }, style]}>
+    <View style={[{ width: size, height: size, overflow: 'hidden', backgroundColor: 'transparent' }, style]}>
       <Image
         source={require('../../../assets/images/polly_sprite.png')}
         style={{
-          width:      sheetDim,
-          height:     sheetDim,
-          marginLeft: -(col * size),
-          marginTop:  -(row * size),
+          width:           sheetDim,
+          height:          sheetDim,
+          marginLeft:      -(col * size),
+          marginTop:       -(row * size),
+          backgroundColor: 'transparent',
         }}
-        resizeMode="cover"
+        resizeMode="contain"
       />
     </View>
   );
