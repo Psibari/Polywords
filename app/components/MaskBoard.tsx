@@ -584,11 +584,11 @@ export function MaskBoard({ step }: Props) {
           />
         )}
 
-        {/* Polly sprite */}
+        {/* Polly sprite — red bg is a temporary bleed diagnostic; remove after confirming */}
         <Animated.View
           style={[
             pollyAnimatedStyle,
-            { position: 'absolute', bottom: 0, alignSelf: 'center', backgroundColor: 'transparent' },
+            { position: 'absolute', bottom: 0, alignSelf: 'center', backgroundColor: '#FF0000' },
           ]}
         >
           <PollySprite pose={currentPose} size={240} />
@@ -858,6 +858,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginBottom: 4,
     backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
   wordOverlay: {
     position: 'absolute',
