@@ -6,7 +6,7 @@
 
 ## 🎮 What Is POLYWORDS?
 
-A mobile-first semantic arcade word game built around **polysemy** — words with multiple real meanings. Players see a word, then tap tiles labeled with meanings — some real, some traps. Mechanics reward fast semantic thinking, punish overthinking, and create "wait... that's also right" moments.
+A mobile-first semantic arcade word game built around **polysemy** — words with multiple real meanings. Players see a word, then swipe tiles labeled with meanings — some real, some traps. Mechanics reward fast semantic thinking, punish overthinking, and create "wait... that's also right" moments.
 
 - **Game modes:** POLY RUN (primary), Meaning Mask Blitz
 - **Session length:** ~90 seconds / 15-word arc

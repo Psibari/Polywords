@@ -100,8 +100,8 @@ export function TruthStream({ step }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Tap a tile — toggle selection ─────────────────────────
-  function handleTap(maskId: string) {
+  // ─── Select a tile — toggle selection ──────────────────────
+  function handleSelect(maskId: string) {
     if (lockedRef.current) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     submitAnswer(maskId);
@@ -192,7 +192,7 @@ export function TruthStream({ step }: Props) {
       </View>
 
       {/* instruction */}
-      <Text style={styles.instruction}>TAP ALL REAL MEANINGS</Text>
+      <Text style={styles.instruction}>SWIPE ALL REAL MEANINGS</Text>
 
       {/* drift lanes */}
       <View style={[styles.lanesArea, { top: lanesTop }]}>
@@ -209,7 +209,7 @@ export function TruthStream({ step }: Props) {
                   ]}
                 >
                   <Pressable
-                    onPress={() => handleTap(tile.mask.id)}
+                    onPress={() => handleSelect(tile.mask.id)}
                     style={[
                       styles.tileInner,
                       isSelected && styles.tileSelected,

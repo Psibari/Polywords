@@ -236,7 +236,7 @@ export function addBonusScore(state: GameState, points: number): GameState {
   };
 }
 
-// ─── REVEAL HIDDEN — player tapped word to expose hidden mask ─
+// ─── REVEAL HIDDEN — player swiped to expose hidden mask ─
 
 export function revealHidden(state: GameState, maskId: string): GameState {
   if (state.status !== 'playing') return state;

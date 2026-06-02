@@ -78,7 +78,7 @@ export type Mask = {
   isHidden?: boolean;      // shows as ❓ until swiped correctly
   isSlang?: boolean;       // slang meaning, x2 score
   trapType?: TrapType;     // why it's wrong (traps only)
-  revealLabel?: string;    // shows after tap (optional longer label)
+  revealLabel?: string;    // shows after swipe (optional longer label)
   era?: 'old' | 'modern'; // for semanticEvolution words
   borderline?: boolean;  // trap that edges close to a real meaning
 };

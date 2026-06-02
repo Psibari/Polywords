@@ -1,5 +1,5 @@
 # POLYWORDS — Game Design Document v2
-### Living Reference · Updated May 28, 2026
+### Living Reference · Updated June 2, 2026
 
 ---
 
@@ -28,7 +28,7 @@ Animation:      React Native Animated API
 Haptics:        Expo Haptics
 Audio:          Expo AV (generated WAV synthesis)
 Navigation:     Expo Router
-Fonts:          Bagel Fat One (hero word) · Plus Jakarta Sans 800 (all UI)
+Fonts:          SuperCartoon-6R791 (hero word) · gomarice_okuba_cloud (boss word) · InterVariable (tiles) · SuperCarnival-j9Wq0 (brand) · SuperFrosting-R9z4o (labels)
 Testing:        Expo Go via QR code on physical device
 Version control: Git + GitHub
 Editor:         VS Code
@@ -59,21 +59,23 @@ Editor:         VS Code
 
 | Element | Font | Size |
 |---|---|---|
-| Hero word — normal | Bagel Fat One | ~52px |
-| Hero word — Boss/Slang | Bagel Fat One | 72-76px |
-| Switchback answer words | Bagel Fat One | 28px |
-| Phrase Break phrase | Bagel Fat One | 36px |
-| Tile text | Plus Jakarta Sans 800 | 20px |
-| Polly speech | Plus Jakarta Sans 800 | 18px |
-| Kicker labels | Plus Jakarta Sans 800 | 11px, letterSpacing 3 |
-| Find-meter label | Plus Jakarta Sans 800 | 10px |
+| Hero word — normal | SuperCartoon-6R791 | 76px, letterSpacing 3 |
+| Hero word — Boss | gomarice_okuba_cloud | 80px, letterSpacing 4 |
+| Switchback answer words | SuperCartoon-6R791 | 28px |
+| Phrase Break phrase | SuperCartoon-6R791 | 36px |
+| Tile text | InterVariable | 20px |
+| Polly speech / brand title | SuperCarnival-j9Wq0 | 48px title / 14px speech |
+| HUD score | SuperCartoon-6R791 | 22px |
+| HUD multiplier | SuperCartoon-6R791 | 32px |
+| Kicker / HUD labels | SuperFrosting-R9z4o | 11px, letterSpacing 3 |
+| Progress / ghost sub-label | SuperFrosting-R9z4o | 12px |
 
 ---
 
 ## Current Build Status
 
 ### ✅ Built and Working
-- 10-step session with all round types wired
+- 12-step session with all round types wired
 - Tile swipe system — UP = real meaning, RIGHT = trap
 - Tile states — gold lock, red buzz, shatter, collapse
 - Sticker tile treatment — 2px navy border, 5px hard shadow
@@ -82,12 +84,12 @@ Editor:         VS Code
 - Polly Card + Find-Meter
 - HIDDEN MEANING tile — pulsing green/gold border
 - 10-step cinematic split sequence on perfect clear
-- Boss Word — smash entrance, screen shake, gold sweep, 76px
+- Boss Word — smash entrance, screen shake, gold sweep, 80px
 - PHRASE BREAK — full screen, phrase rises, swipe-up answers, random rotation
 - SLANG DROP — record scratch, word from left, "Slang check." from right, era badge
 - SWITCHBACK — two clues from opposite sides, word tiles, 2-attempt logic (swipe fix in progress)
-- Sound system — correct tap, wrong buzz, shatter, scratch, split reveal, round complete
-- Mask language upgraded — all 8 session words with sharp 2-4 word masks
+- Sound system — correct swipe, wrong buzz, shatter, scratch, split reveal, round complete
+- Mask language upgraded — all session words with sharp 2-4 word scene-style masks
 - Emoji upgraded — 111 fields, no repeats
 - Staggered tile mount — 80ms per tile
 - Hero word fade+scale on transition
@@ -148,8 +150,8 @@ Triggered by `eventType: 'bossWord'` in session data.
 8. Polly reading expression fires
 9. Tiles mount at 100ms stagger (heavier than normal)
 
-**Words:** ORDER (word 8 in current session), SPRING
-**Font:** 76px Bagel Fat One, gold color
+**Words:** SPRING (step 3), ORDER (step 12 — final boss)
+**Font:** 80px gomarice_okuba_cloud, gold color
 
 ### 3. PHRASE BREAK
 Full screen palate cleanser. No tiles. Pure language curiosity.
@@ -204,6 +206,10 @@ Full screen. Cultural surprise. Tests slang knowledge only.
 - BAD — OLD SCHOOL — "Michael said so"
 - CHILL — OLD SCHOOL — "What Fridays are for"
 
+**Active in current session (step 8):**
+
+- RAW — NOW — "Uncut and electric"
+
 ### 5. SWITCHBACK
 Full screen. Puzzle flips — two clues, find the connecting word.
 
@@ -212,7 +218,7 @@ Full screen. Puzzle flips — two clues, find the connecting word.
 2. Two clue bars slide from OPPOSITE sides simultaneously
 3. 800ms pause — player reads both clues
 4. "One word. Two lives." fades in (Polly green)
-5. Four WORD tiles mount at 100ms stagger (Bagel Fat One 28px)
+5. Four WORD tiles mount at 100ms stagger (SuperCartoon-6R791 28px)
 
 **Rules:**
 - Swipe UP on the word that connects BOTH clues
@@ -258,20 +264,22 @@ Every word in the standard round has a hidden meaning pair — one real, one tra
 
 ---
 
-## Current 10-Step Session Structure
+## Current 12-Step Session Structure
 
 | Position | Word/Event | Round Type | Notes |
 |---|---|---|---|
-| 1 | BARK | Standard | Confidence opener |
-| 2 | SPRING | Boss | Boss word |
-| 3 | [SWITCHBACK] | Switchback | Random from pool |
-| 4 | BANK | Standard | Hesitation |
-| 5 | [PHRASE BREAK] | Phrase Break | Random from pool |
-| 6 | WAKE | Standard | Curiosity |
-| 7 | [SLANG DROP] | Slang Drop | Random from pool |
-| 8 | MATCH | Standard | Hesitation |
-| 9 | SOUND | Standard | Surprise/hidden |
-| 10 | ORDER | Boss | Final boss |
+| 1 | LIGHT | Standard | Opener — 4 real, 3 traps |
+| 2 | STRIKE | Standard | Flow — 4 real, 3 traps |
+| 3 | SPRING | Boss | Tension — 4 real, 3 traps, reverseMountOrder |
+| 4 | PITCH | Standard | Hesitation — exhale after boss |
+| 5 | COLD | Switchback | BrainGlitch — 1500ms Polly buffer after |
+| 6 | "Give it a shot" | Phrase Break | Recovery — multi-correct answers |
+| 7 | BANK | Standard | Freshness — 4 real, 3 traps |
+| 8 | RAW | Slang Drop | CulturalSnap — NOW era |
+| 9 | WAKE | Standard | Surprise — hapticTier: light |
+| 10 | MATCH | Standard | Adrenaline — 60ms stagger |
+| 11 | BARK | Standard | NearMiss — 80ms stagger |
+| 12 | ORDER | Boss | Climax — final boss, reverseMountOrder |
 
 ---
 
@@ -303,13 +311,16 @@ Instead of definitions, use social/cultural moments:
 
 ## Word Lists
 
-### Standard Session Words (8 active)
-BARK, SPRING, LIGHT, BANK, WAKE, MATCH, SOUND, ORDER
+### Standard Session Words (active in current session)
+
+LIGHT, STRIKE, PITCH, BANK, WAKE, MATCH, BARK — plus bosses SPRING and ORDER
 
 ### Switchback Pool (5 words)
+
 BAT, BANK, CAST, STRIKE, SOUND
 
 ### Phrase Break Pool (3 phrases, expanding)
+
 "Spill the beans", "Bite the bullet", "Break a leg"
 
 ---
@@ -409,15 +420,15 @@ BAT, BANK, CAST, STRIKE, SOUND
 
 **Who she is:** Green parrot, gold goggles, explorer hat, rainbow tail feathers, gold P-chain medallion. Smart, slightly smug, one step ahead. Adult-coded. Never childlike.
 
-**6 expression images:**
-| File | Expression | Used for |
-|---|---|---|
-| polly_letsPlay.png | Friendly gesture | Session start |
-| polly_knowing.png | Open beak, forward | Round start |
-| polly_clever.png | Finger to beak | Correct tap |
-| polly_thinking.png | Smug side-eye | Wrong tap |
-| polly_wordUp.png | Pointing up | Perfect clear |
-| polly_reading.png | Reading book | Boss word |
+**Current images (assets/images/):**
+
+| File | Use |
+|---|---|
+| polly_fullbody.png | Full-body illustration |
+| polly_sprite.png | Sprite sheet |
+
+**Planned expression set (not yet created):**
+polly_letsPlay, polly_knowing, polly_clever, polly_thinking, polly_wordUp, polly_reading
 
 **Future vision (not built):** Polly at top of screen, master word overlaid across her body. Perfect clear → she physically drops the ❓ tile down toward the stack.
 
@@ -437,7 +448,7 @@ All generated WAV via SoundEngine.ts:
 
 | Event | Function | Character |
 |---|---|---|
-| Correct swipe up | `playCorrectTap()` | 880→1100Hz sine sweep, 120ms |
+| Correct swipe up | `playCorrectSwipe()` | 880→1100Hz sine sweep, 120ms |
 | Wrong swipe | `playWrongBuzz()` | Square wave 120Hz, 180ms |
 | Trap shatter | `playShatter()` | White noise + pitch drop, 250ms |
 | Split reveal | `playSplitReveal()` | Two-tone ascending sweep, 350ms |
@@ -478,28 +489,55 @@ All generated WAV via SoundEngine.ts:
 poly-words/
 ├── app/
 │   ├── components/
+│   │   ├── ClueCard.tsx
 │   │   ├── FluentEmoji.tsx
+│   │   ├── GhostTile.tsx
+│   │   ├── HeartbeatBackground.tsx
 │   │   ├── MaskBoard.tsx
+│   │   ├── MaskGrid.tsx
+│   │   ├── MaskTile.tsx
+│   │   ├── MasterGateTile.tsx
+│   │   ├── PhraseBreakScreen.tsx
 │   │   ├── PollyCard.tsx
 │   │   ├── PollyController.tsx
+│   │   ├── RevealSequence.tsx
+│   │   ├── ReversedBuild.tsx
+│   │   ├── ScoreFloat.tsx
+│   │   ├── SlangDropScreen.tsx
+│   │   ├── StreakDisplay.tsx
 │   │   ├── SwipeMask.tsx
-│   │   ├── PhraseBreakScreen.tsx    ← NEW
-│   │   ├── SlangDropScreen.tsx      ← NEW
-│   │   └── SwitchbackScreen.tsx     ← NEW
+│   │   ├── SwitchbackScreen.tsx
+│   │   └── TruthStream.tsx
+│   ├── constants/
+│   │   ├── animations.ts
+│   │   └── fonts.ts
 │   ├── game/
 │   │   ├── polyRunEngine.ts
+│   │   ├── polyRunEngine.test.ts
 │   │   ├── session.ts
-│   │   ├── types.ts
+│   │   └── types.ts
+│   ├── hooks/
+│   │   ├── useHeartbeat.ts
+│   │   └── usePollyAnimator.ts
+│   ├── logic/
+│   │   ├── GameController.ts
+│   │   ├── pollyBudget.ts
+│   │   └── wordBank.ts
+│   ├── screens/
+│   │   ├── GameScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── ProfileScreen.tsx
+│   │   └── ResultsScreen.tsx
+│   ├── store/
 │   │   └── useGameStore.ts
-│   └── screens/
-│       ├── GameScreen.tsx
-│       ├── HomeScreen.tsx
-│       └── ResultsScreen.tsx
+│   └── utils/
+│       └── SoundEngine.ts
 ├── assets/
-│   ├── images/polly/                # 6 expression PNGs
-│   └── fonts/
-└── app/utils/
-    └── SoundEngine.ts
+│   ├── fonts/                       # SuperCartoon, gomarice, InterVariable, SuperCarnival, SuperFrosting, Poppins
+│   └── images/
+│       ├── polly_fullbody.png
+│       └── polly_sprite.png
+└── App.tsx
 ```
 
 ---
@@ -561,4 +599,4 @@ poly-words/
 
 ---
 
-*POLYWORDS GDD v2 · Pete Diba · May 28, 2026*
+*POLYWORDS GDD v2 · Pete Diba · June 2, 2026*
