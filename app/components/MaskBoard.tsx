@@ -476,11 +476,13 @@ export function MaskBoard({ step }: Props) {
     });
 
     if (perfect && hasHidden) {
+      console.log('[MaskBoard] perfect clear — triggering gate unlock');
       gateTriggeredRef.current = true;
       firePollyEvent('allMasksFound');
       playSplitReveal();
       setPerfectClear(true);
     } else {
+      console.log('[MaskBoard] word complete — perfect:', perfect, 'hasHidden:', hasHidden);
       if (hasHidden && !ghostJudgedCorrectRef.current) {
         store.addGhost({
           wordId: step.word,
@@ -563,23 +565,24 @@ export function MaskBoard({ step }: Props) {
         setContainerWidth(w);
         containerWidthRef.current = w;
       }}
-      onStartShouldSetResponder={() => true}
     >
       {/* ── POLLY ZONE ────────────────────────────────────────── */}
       <View style={styles.pollyZone}>
 
-        {/* ghost tint overlay */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: '#7B2D8B',
-              opacity: ghostTintOpacity,
-              borderRadius: 16,
-            },
-          ]}
-        />
+        {/* ghost tint overlay — only mounted when a ghost is active */}
+        {ghostVisible && ghost && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: '#7B2D8B',
+                opacity: ghostTintOpacity,
+                borderRadius: 16,
+              },
+            ]}
+          />
+        )}
 
         {/* Polly sprite */}
         <Animated.View
@@ -858,7 +861,7 @@ const styles = StyleSheet.create({
   },
   wordOverlay: {
     position: 'absolute',
-    bottom: -8,
+    bottom: -44,
     left: 0,
     right: 0,
     alignItems: 'center',

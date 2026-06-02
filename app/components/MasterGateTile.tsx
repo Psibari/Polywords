@@ -25,24 +25,25 @@ function LockShape() {
   );
 }
 
-export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 68 }: Props) {
-  const phaseRef     = useRef<Phase>('locked');
-  const judgedRef    = useRef(false);
-  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 76 }: Props) {
+  const phaseRef      = useRef<Phase>('locked');
+  const judgedRef     = useRef(false);
+  const pulseLoopRef  = useRef<Animated.CompositeAnimation | null>(null);
+  const breathLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Native-driver: opacity + transforms
-  const pulseOpacity = useRef(new Animated.Value(0.30)).current;
+  const pulseOpacity = useRef(new Animated.Value(1.0)).current;
   const lockScale    = useRef(new Animated.Value(1)).current;
   const lockRotate   = useRef(new Animated.Value(0)).current;
-  const textOpacity  = useRef(new Animated.Value(0.35)).current;
+  const textOpacity  = useRef(new Animated.Value(0.65)).current;
 
   // Non-native: border color sweep
   const borderColorAnim = useRef(new Animated.Value(0)).current;
 
-  // Locked = 0 → gold, sweeps green→orange→gold, settles at 1 = gold
+  // At 0 (locked): dim gold. Sweeps green→orange then settles at full gold (1).
   const animatedBorderColor = borderColorAnim.interpolate({
-    inputRange:  [0,         0.33,      0.66,      1],
-    outputRange: ['#F5C842', '#4CAF50', '#FF8C00', '#F5C842'],
+    inputRange:  [0,                       0.25,      0.55,      0.85,     1],
+    outputRange: ['rgba(245,200,66,0.45)', '#4CAF50', '#FF8C00', '#F5C842', '#F5C842'],
   });
 
   const lockRotateDeg = lockRotate.interpolate({
@@ -50,9 +51,26 @@ export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 68 
     outputRange: ['-20deg', '0deg', '20deg'],
   });
 
+  // Locked breathing pulse — 0.65 ↔ 0.45 at 2400ms cycle while locked
   useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(textOpacity, { toValue: 0.45, duration: 1200, useNativeDriver: true }),
+      Animated.timing(textOpacity, { toValue: 0.65, duration: 1200, useNativeDriver: true }),
+    ]));
+    breathLoopRef.current = loop;
+    loop.start();
+    return () => loop.stop();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    console.log('[MasterGateTile] perfectClear prop =', perfectClear, 'phase =', phaseRef.current);
     if (!perfectClear || phaseRef.current !== 'locked') return;
+
+    console.log('[MasterGateTile] starting unlock sequence');
     phaseRef.current = 'unlocking';
+
+    // Stop locked breathing pulse
+    breathLoopRef.current?.stop();
 
     // Phase 1 — T+0ms: lock icon bounce + rotate
     Animated.parallel([
@@ -67,24 +85,25 @@ export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 68 
     ]).start();
 
     // Phase 2 — T+200ms: text + overall tile opacity rise (native)
-    setTimeout(() => {
+    const t2 = setTimeout(() => {
       Animated.timing(textOpacity,  { toValue: 1.0, duration: 500, useNativeDriver: true }).start();
       Animated.timing(pulseOpacity, { toValue: 1.0, duration: 500, useNativeDriver: true }).start();
     }, 200);
 
     // Phase 3 — T+400ms: border color sweep (non-native)
-    setTimeout(() => {
+    const t3 = setTimeout(() => {
       borderColorAnim.setValue(0);
       Animated.timing(borderColorAnim, { toValue: 1, duration: 800, useNativeDriver: false }).start();
     }, 400);
 
     // Phase 4 — T+600ms: heavy haptic
-    setTimeout(() => {
+    const t4 = setTimeout(() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }, 600);
 
     // Phase 5 — T+800ms: mark unlocked, start pulse loop
-    setTimeout(() => {
+    const t5 = setTimeout(() => {
+      console.log('[MasterGateTile] phase now UNLOCKED — swipe enabled');
       phaseRef.current = 'unlocked';
       pulseLoopRef.current?.stop();
       const loop = Animated.loop(Animated.sequence([
@@ -95,7 +114,14 @@ export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 68 
       loop.start();
     }, 800);
 
-    return () => { pulseLoopRef.current?.stop(); };
+    return () => {
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+      clearTimeout(t5);
+      phaseRef.current = 'locked';
+      pulseLoopRef.current?.stop();
+    };
   }, [perfectClear]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const panResponder = useRef(
@@ -169,31 +195,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lockWrapper: {
-    width: 14,
-    height: 17,
+    width: 20,
+    height: 24,
     alignItems: 'center',
     marginRight: 10,
   },
   lockShackle: {
-    width: 8,
-    height: 7,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    borderWidth: 2,
+    width: 12,
+    height: 10,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    borderWidth: 2.5,
     borderColor: '#F5C842',
     borderBottomWidth: 0,
     marginBottom: -1,
   },
   lockBody: {
-    width: 14,
-    height: 10,
+    width: 20,
+    height: 14,
     backgroundColor: '#F5C842',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   label: {
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: FONTS.label,
     color: '#F5C842',
-    letterSpacing: 2,
+    letterSpacing: 3,
+    fontWeight: '800',
   },
 });

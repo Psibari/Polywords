@@ -135,7 +135,7 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
   ).current;
 
   return (
-    // Outer: entry anim (native driver)
+    // Layer A: entry animation — native driver (opacity + translateY)
     <Animated.View
       style={{
         opacity: entryOpacity,
@@ -143,26 +143,30 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
         marginBottom: 10,
       }}
     >
-      {/* Inner: opacity pulse + pan tracking */}
+      {/* Layer B: pulse opacity — native driver (opacity only) */}
       <Animated.View
-        style={[
-          styles.tile,
-          {
-            height: tileHeight,
-            opacity: tileOpacity,
-            transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
-          },
-        ]}
-        {...panResponder.panHandlers}
+        style={{ opacity: tileOpacity }}
       >
-        <View style={styles.textBlock}>
-          <Text style={styles.meaningText} numberOfLines={2}>
-            {ghost.hiddenMeaningReal}
-          </Text>
-          <Text style={styles.subLabel}>
-            {`Missed from ${ghost.word}`}
-          </Text>
-        </View>
+        {/* Layer C: pan translation — non-native driver (translateX/Y) */}
+        <Animated.View
+          style={[
+            styles.tile,
+            {
+              height: tileHeight,
+              transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
+            },
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <View style={styles.textBlock}>
+            <Text style={styles.meaningText} numberOfLines={2}>
+              {ghost.hiddenMeaningReal}
+            </Text>
+            <Text style={styles.subLabel}>
+              {`Missed from ${ghost.word}`}
+            </Text>
+          </View>
+        </Animated.View>
       </Animated.View>
     </Animated.View>
   );
