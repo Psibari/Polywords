@@ -21,7 +21,9 @@ export type PollyEvent =
   | 'streakX10'
   | 'switchbackEntry'
   | 'switchbackCorrect'
-  | 'gameOver';
+  | 'gameOver'
+  | 'gateIntro'
+  | 'gateMastered';
 
 type BreathingSpeed = 'slow' | 'building' | 'hot' | 'danger';
 
@@ -354,6 +356,18 @@ export function usePollyAnimator(
         setCurrentPose('BOT_RIGHT');
         animBigWin();
         setSpeech('AARRRGGHH');
+        break;
+
+      case 'gateIntro':
+        setCurrentPose('BOT_LEFT');
+        animWin();
+        setSpeech('Only with a perfect sweep — or it will come back to haunt you.', 4500);
+        break;
+
+      case 'gateMastered':
+        setCurrentPose('BOT_LEFT');
+        animBigWin();
+        setSpeech('Mastered.', 3000);
         break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

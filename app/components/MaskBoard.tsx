@@ -7,12 +7,14 @@ import {
   Text,
   View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
 import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { GhostTile } from './GhostTile';
+import { MasterGateTile } from './MasterGateTile';
 import { ScoreFloat } from './ScoreFloat';
 import PollySprite from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
@@ -34,8 +36,6 @@ const SHARD_CONFIGS = [
 ] as const;
 
 type FloatEntry    = { id: number; value: number; x: number; y: number; color: string };
-type HiddenPhase   = 'visible' | 'locked' | 'split';
-type SplitPair     = { left: SwipeMaskState; right: SwipeMaskState };
 type ShatterOrigin = { x: number; y: number } | null;
 
 type Props = { step: WordStep };
@@ -87,9 +87,8 @@ export function MaskBoard({ step }: Props) {
     }))
   ).current;
 
-  const wrongCountRef         = useRef(0);
   const completedRef          = useRef(false);
-  const splitTriggeredRef     = useRef(false);
+  const gateTriggeredRef      = useRef(false);
   const ghostJudgedCorrectRef = useRef(false);
 
   const ghost = store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null;
@@ -213,56 +212,20 @@ export function MaskBoard({ step }: Props) {
     setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 300 }]);
   }
 
-  // ── hidden meaning ────────────────────────────────────────────
+  // ── master gate ───────────────────────────────────────────────
   const hasHidden = !!step.hiddenMeaning;
 
-  const [hiddenPhase, setHiddenPhase]       = useState<HiddenPhase>('visible');
-  const [showSplitBars, setShowSplitBars]   = useState(false);
-  const [splitTopIsReal, setSplitTopIsReal] = useState(false);
-  const [dimVisible, setDimVisible]         = useState(false);
+  const [perfectClear, setPerfectClear] = useState(false);
+  const [dimVisible, setDimVisible]     = useState(false);
+  const [masteredVisible, setMasteredVisible] = useState(false);
 
-  const splitTopIsRealRef = useRef(false);
-  const splitStatesRef    = useRef<SplitPair>({ left: 'idle', right: 'idle' });
-  const [splitTileStates, setSplitTileStates] = useState<SplitPair>({ left: 'idle', right: 'idle' });
-
-  const hiddenBorderAnim    = useRef(new Animated.Value(0)).current;
-  const hiddenBorderLoopRef = useRef<Animated.CompositeAnimation | null>(null);
-  const hiddenTileOpacity   = useRef(new Animated.Value(1)).current;
-  const hiddenTileScale     = useRef(new Animated.Value(1)).current;
-  const hiddenTileTransY    = useRef(new Animated.Value(0)).current;
-  const hiddenTileScaleX    = useRef(new Animated.Value(1)).current;
-  const dimOpacity          = useRef(new Animated.Value(0)).current;
-
-  const hiddenEntryOpacity = useRef(new Animated.Value(0)).current;
-  const hiddenEntryTransY  = useRef(new Animated.Value(30)).current;
-  const hiddenEntryScaleY  = useRef(new Animated.Value(0.85)).current;
-
-  const splitTopOpacity = useRef(new Animated.Value(0)).current;
-  const splitTopTransY  = useRef(new Animated.Value(-40)).current;
-  const splitTopScaleY  = useRef(new Animated.Value(0)).current;
-  const splitTopPulse   = useRef(new Animated.Value(1)).current;
-  const splitBotOpacity = useRef(new Animated.Value(0)).current;
-  const splitBotTransY  = useRef(new Animated.Value(-40)).current;
-  const splitBotScaleY  = useRef(new Animated.Value(0)).current;
-  const splitBotPulse   = useRef(new Animated.Value(1)).current;
-
-  const hiddenRealMask: Mask = {
-    id:     'hidden_real',
-    emoji:  step.hiddenEmoji     ?? '✨',
-    phrase: step.hiddenMeaning   ?? '',
-    isReal: true,
-  };
-  const hiddenTrapMask: Mask = {
-    id:     'hidden_trap',
-    emoji:  step.hiddenTrapEmoji ?? '❓',
-    phrase: step.hiddenTrap      ?? '',
-    isReal: false,
-  };
-
-  const hiddenBorderColor = hiddenBorderAnim.interpolate({
-    inputRange:  [0, 1],
-    outputRange: ['#4CAF50', '#FFD700'],
-  });
+  const dimOpacity             = useRef(new Animated.Value(0)).current;
+  const masteredFlashOpacity   = useRef(new Animated.Value(0)).current;
+  const masteredWordScale      = useRef(new Animated.Value(1.0)).current;
+  const masteredWordTransY     = useRef(new Animated.Value(-120)).current;
+  const masteredTextScale      = useRef(new Animated.Value(0)).current;
+  const masteredTextOpacity    = useRef(new Animated.Value(0)).current;
+  const masteredOverlayOpacity = useRef(new Animated.Value(1)).current;
 
   // ── hesitation timers ─────────────────────────────────────────
   const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -311,18 +274,16 @@ export function MaskBoard({ step }: Props) {
     }
   }, [store.game.streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── border loop ──────────────────────────────────────────────
+  // ── Master Gate intro — fires once per player's lifetime ─────
   useEffect(() => {
-    if (!hasHidden || hiddenPhase !== 'visible') return;
-    hiddenBorderAnim.setValue(0);
-    const loop = Animated.loop(Animated.sequence([
-      Animated.timing(hiddenBorderAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
-      Animated.timing(hiddenBorderAnim, { toValue: 0, duration: 1000, useNativeDriver: false }),
-    ]));
-    hiddenBorderLoopRef.current = loop;
-    loop.start();
-    return () => loop.stop();
-  }, [hiddenPhase]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!hasHidden) return;
+    AsyncStorage.getItem('polywords_hasSeenGateIntro').then(val => {
+      if (val === null) {
+        AsyncStorage.setItem('polywords_hasSeenGateIntro', 'true').catch(() => {});
+        firePollyEvent('gateIntro');
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset boss animated values on mount
   useEffect(() => {
@@ -347,32 +308,6 @@ export function MaskBoard({ step }: Props) {
   useEffect(() => {
     if (ghost) firePollyEvent('ghostEntry');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Hidden tile entry (non-boss)
-  useEffect(() => {
-    if (!hasHidden || isBoss) return;
-    const id = setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(hiddenEntryTransY,  { toValue: 0, tension: 160, friction: 14, useNativeDriver: true }),
-        Animated.spring(hiddenEntryScaleY,  { toValue: 1, tension: 160, friction: 14, useNativeDriver: true }),
-        Animated.timing(hiddenEntryOpacity, { toValue: 1, duration: 250,              useNativeDriver: true }),
-      ]).start();
-    }, visibleGridMasks.length * 80);
-    return () => clearTimeout(id);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Hidden tile entry after boss entrance
-  useEffect(() => {
-    if (!isBoss || !bossReady || !hasHidden) return;
-    const id = setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(hiddenEntryTransY,  { toValue: 0, tension: 160, friction: 14, useNativeDriver: true }),
-        Animated.spring(hiddenEntryScaleY,  { toValue: 1, tension: 160, friction: 14, useNativeDriver: true }),
-        Animated.timing(hiddenEntryOpacity, { toValue: 1, duration: 250,              useNativeDriver: true }),
-      ]).start();
-    }, visibleGridMasks.length * 100);
-    return () => clearTimeout(id);
-  }, [bossReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Boss word entrance sequence
   useEffect(() => {
@@ -418,13 +353,6 @@ export function MaskBoard({ step }: Props) {
               useNativeDriver: true,
             }).start(() => {
               setBossSweepActive(false);
-
-              if (hasHidden) {
-                hiddenEntryOpacity.setValue(0);
-                hiddenEntryTransY.setValue(30);
-                hiddenEntryScaleY.setValue(0.85);
-              }
-
               firePollyEvent('bossEntry');
               setBossReady(true);
             });
@@ -455,153 +383,64 @@ export function MaskBoard({ step }: Props) {
     return () => clearTimeout(tid);
   }, [shatterOrigin]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function lockHidden() {
-    hiddenBorderLoopRef.current?.stop();
-    setHiddenPhase('locked');
-    Animated.timing(hiddenTileOpacity, { toValue: 0.2, duration: 300, useNativeDriver: true }).start();
-  }
+  // ── Mastered reveal cinematic ─────────────────────────────────
+  function handleMasteredSwipe() {
+    completedRef.current = true;
+    if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
 
-  // ── Cinematic split sequence ──────────────────────────────────
-  function startSplit() {
-    hiddenBorderLoopRef.current?.stop();
-    hiddenBorderAnim.setValue(1);
+    masteredFlashOpacity.setValue(0);
+    masteredWordScale.setValue(1.0);
+    masteredWordTransY.setValue(-120);
+    masteredTextScale.setValue(0);
+    masteredTextOpacity.setValue(0);
+    masteredOverlayOpacity.setValue(1);
+    dimOpacity.setValue(0);
+    setDimVisible(true);
+    setMasteredVisible(true);
 
-    const topIsReal = Math.random() > 0.5;
+    // T+0ms: gold flash
+    Animated.sequence([
+      Animated.timing(masteredFlashOpacity, { toValue: 0.2, duration: 80,  useNativeDriver: true }),
+      Animated.timing(masteredFlashOpacity, { toValue: 0,   duration: 300, useNativeDriver: true }),
+    ]).start();
 
+    // T+80ms: word zooms from above to center
     setTimeout(() => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(hiddenTileScale, { toValue: 1.06, duration: 180, useNativeDriver: true }),
-          Animated.timing(hiddenTileScale, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
-        ]),
-        { iterations: 3 },
-      ).start(() => {
+      Animated.parallel([
+        Animated.spring(masteredWordScale,  { toValue: 2.2, damping: 8, stiffness: 90, useNativeDriver: true }),
+        Animated.spring(masteredWordTransY, { toValue: 0,   damping: 8, stiffness: 90, useNativeDriver: true }),
+      ]).start();
+    }, 80);
 
-        Animated.spring(hiddenTileTransY, {
-          toValue: -8, tension: 60, friction: 8, useNativeDriver: true,
-        }).start(() => {
+    // T+300ms: dark dim covers tiles
+    setTimeout(() => {
+      Animated.timing(dimOpacity, { toValue: 0.85, duration: 300, useNativeDriver: true }).start();
+    }, 300);
 
-          setDimVisible(true);
-          Animated.timing(dimOpacity, { toValue: 0.25, duration: 150, useNativeDriver: true }).start(() => {
-
-            Animated.timing(hiddenTileScaleX, { toValue: 0.05, duration: 120, useNativeDriver: true }).start(() => {
-
-              setSplitTopIsReal(topIsReal);
-              splitTopIsRealRef.current = topIsReal;
-              setHiddenPhase('split');
-              setShowSplitBars(true);
-
-              splitTopOpacity.setValue(0);
-              splitTopTransY.setValue(-40);
-              splitTopScaleY.setValue(0);
-              splitTopPulse.setValue(1);
-              splitBotOpacity.setValue(0);
-              splitBotTransY.setValue(-40);
-              splitBotScaleY.setValue(0);
-              splitBotPulse.setValue(1);
-
-              setTimeout(() => {
-                Animated.parallel([
-                  Animated.timing(splitTopOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
-                  Animated.spring(splitTopTransY,  { toValue: 0, damping: 10, stiffness: 300, useNativeDriver: true }),
-                  Animated.spring(splitTopScaleY,  { toValue: 1, damping: 12, stiffness: 280, useNativeDriver: true }),
-                ]).start();
-
-                setTimeout(() => {
-                  Animated.parallel([
-                    Animated.timing(splitBotOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
-                    Animated.spring(splitBotTransY,  { toValue: 0, damping: 10, stiffness: 300, useNativeDriver: true }),
-                    Animated.spring(splitBotScaleY,  { toValue: 1, damping: 12, stiffness: 280, useNativeDriver: true }),
-                  ]).start(() => {
-
-                    Animated.timing(dimOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
-                      setDimVisible(false);
-
-                      Animated.loop(Animated.sequence([
-                        Animated.timing(splitTopPulse, { toValue: 1.06, duration: 180, useNativeDriver: true }),
-                        Animated.timing(splitTopPulse, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
-                      ]), { iterations: 2 }).start();
-
-                      Animated.loop(Animated.sequence([
-                        Animated.timing(splitBotPulse, { toValue: 1.06, duration: 180, useNativeDriver: true }),
-                        Animated.timing(splitBotPulse, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
-                      ]), { iterations: 2 }).start();
-
-                      playSplitReveal();
-                      // Fire hiddenFound or streakX10 at the reveal moment
-                      if (streakRef.current > 0 && streakRef.current % 10 === 0) {
-                        firePollyEvent('streakX10');
-                      } else {
-                        firePollyEvent('hiddenFound');
-                      }
-                    });
-                  });
-                }, 80);
-              }, 16);
-            });
-          });
-        });
-      });
-    }, 400);
-  }
-
-  // ── split tile helpers ────────────────────────────────────────
-  function updateSplitState(side: 'left' | 'right', state: SwipeMaskState) {
-    const next: SplitPair = { ...splitStatesRef.current, [side]: state };
-    splitStatesRef.current = next;
-    setSplitTileStates({ ...next });
-    checkSplitDone(next);
-  }
-
-  function checkSplitDone(states: SplitPair) {
-    const done = (s: SwipeMaskState) =>
-      s === 'correct' || s === 'trap-caught' || s === 'wrong';
-    if (!done(states.left) || !done(states.right)) return;
-
-    const allCorrect =
-      (states.left  === 'correct' || states.left  === 'trap-caught') &&
-      (states.right === 'correct' || states.right === 'trap-caught');
-
-    if (allCorrect) {
+    // T+480ms: MASTERED stamp + haptic + Polly
+    setTimeout(() => {
+      masteredTextOpacity.setValue(1);
+      Animated.sequence([
+        Animated.spring(masteredTextScale, { toValue: 1.15, damping: 10, stiffness: 200, useNativeDriver: true }),
+        Animated.spring(masteredTextScale, { toValue: 1.0,  damping: 10, stiffness: 200, useNativeDriver: true }),
+      ]).start();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       playRoundComplete();
-      spawnFloatAtSplit(300);
-      store.addBonusScore(300);
-      firePollyEvent('cleanSweep');
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
+      firePollyEvent('gateMastered');
+    }, 480);
 
-    completedRef.current = true;
-    setTimeout(() => store.completeWord(), 900);
-  }
+    // T+900ms: fade out overlay + dim
+    setTimeout(() => {
+      Animated.timing(masteredOverlayOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start();
+      Animated.timing(dimOpacity,             { toValue: 0, duration: 300, useNativeDriver: true }).start();
+    }, 900);
 
-  function handleSplitSwipeUp(side: 'left' | 'right') {
-    const sideIsReal = side === 'left'
-      ? splitTopIsRealRef.current
-      : !splitTopIsRealRef.current;
-    if (sideIsReal) {
-      spawnFloatAtSplit(100, '#F5C842');
-      store.addBonusScore(100);
-      updateSplitState(side, 'correct');
-    } else {
-      store.submitWrongSwipe();
-      updateSplitState(side, 'wrong');
-    }
-  }
-
-  function handleSplitSwipeRight(side: 'left' | 'right') {
-    const sideIsReal = side === 'left'
-      ? splitTopIsRealRef.current
-      : !splitTopIsRealRef.current;
-    if (!sideIsReal) {
-      spawnFloatAtSplit(50, '#7B2D8B');
-      store.addBonusScore(50);
-      updateSplitState(side, 'trap-caught');
-    } else {
-      store.submitWrongSwipe();
-      updateSplitState(side, 'wrong');
-    }
+    // T+1400ms: advance to next word
+    setTimeout(() => {
+      setMasteredVisible(false);
+      setDimVisible(false);
+      store.completeWord();
+    }, 1400);
   }
 
   // ── ghost tile handlers ──────────────────────────────────────
@@ -623,7 +462,7 @@ export function MaskBoard({ step }: Props) {
 
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
-    if (completedRef.current || splitTriggeredRef.current) return;
+    if (completedRef.current || gateTriggeredRef.current) return;
 
     const allVisibleJudged = visibleGridMasks.every(m => {
       const ts = tileStates.get(m.id);
@@ -637,10 +476,10 @@ export function MaskBoard({ step }: Props) {
     });
 
     if (perfect && hasHidden) {
-      if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
-      splitTriggeredRef.current = true;
+      gateTriggeredRef.current = true;
       firePollyEvent('allMasksFound');
-      startSplit();
+      playSplitReveal();
+      setPerfectClear(true);
     } else {
       if (hasHidden && !ghostJudgedCorrectRef.current) {
         store.addGhost({
@@ -680,8 +519,6 @@ export function MaskBoard({ step }: Props) {
       firePollyEvent('correct');
     } else {
       store.submitWrongSwipe();
-      wrongCountRef.current++;
-      if (wrongCountRef.current === 1 && hasHidden) lockHidden();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
     }
@@ -711,8 +548,6 @@ export function MaskBoard({ step }: Props) {
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
     } else {
       store.submitWrongSwipe();
-      wrongCountRef.current++;
-      if (wrongCountRef.current === 1 && hasHidden) lockHidden();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
     }
@@ -841,8 +676,8 @@ export function MaskBoard({ step }: Props) {
 
       </View>
 
-      {/* HIDDEN MEANING slot */}
-      {hasHidden && hiddenPhase !== 'split' && showBoardContent && (
+      {/* MASTER GATE slot */}
+      {hasHidden && showBoardContent && (
         ghostVisible && ghost ? (
           <GhostTile
             ghost={ghost}
@@ -852,34 +687,11 @@ export function MaskBoard({ step }: Props) {
             onDone={() => setGhostVisible(false)}
           />
         ) : (
-          <Animated.View
-            style={{
-              opacity: hiddenEntryOpacity,
-              transform: [{ translateY: hiddenEntryTransY }, { scaleY: hiddenEntryScaleY }],
-            }}
-          >
-            <Animated.View
-              pointerEvents="none"
-              style={{
-                marginTop: 8,
-                opacity: hiddenTileOpacity,
-                transform: [
-                  { scale:      hiddenTileScale  },
-                  { translateY: hiddenTileTransY },
-                  { scaleX:     hiddenTileScaleX },
-                ],
-              }}
-            >
-              <Animated.View
-                style={[
-                  styles.hiddenTile,
-                  { height: tileHeight, borderColor: hiddenBorderColor as any },
-                ]}
-              >
-                <Text style={styles.hiddenTileText}>✨ HIDDEN MEANING</Text>
-              </Animated.View>
-            </Animated.View>
-          </Animated.View>
+          <MasterGateTile
+            perfectClear={perfectClear}
+            onMasteredSwipe={handleMasteredSwipe}
+            tileHeight={tileHeight}
+          />
         )
       )}
 
@@ -913,54 +725,6 @@ export function MaskBoard({ step }: Props) {
           ));
         })()}
 
-        {/* split tiles */}
-        {showBoardContent && showSplitBars && (
-          <View style={styles.splitStack}>
-            <Animated.View
-              style={{
-                opacity: splitTopOpacity,
-                transform: [
-                  { translateY: splitTopTransY },
-                  { scaleY:     splitTopScaleY },
-                  { scale:      splitTopPulse  },
-                ],
-              }}
-            >
-              <SwipeMask
-                mask={splitTopIsReal ? hiddenRealMask : hiddenTrapMask}
-                state={splitTileStates.left}
-                onSwipeUp={() => handleSplitSwipeUp('left')}
-                onSwipeDown={() => handleSplitSwipeRight('left')}
-                onSwipeReveal={() => {}}
-                tileHeight={tileHeight}
-                isSpecialSplit
-              />
-            </Animated.View>
-
-            <View style={{ height: TILE_GAP }} />
-
-            <Animated.View
-              style={{
-                opacity: splitBotOpacity,
-                transform: [
-                  { translateY: splitBotTransY },
-                  { scaleY:     splitBotScaleY },
-                  { scale:      splitBotPulse  },
-                ],
-              }}
-            >
-              <SwipeMask
-                mask={splitTopIsReal ? hiddenTrapMask : hiddenRealMask}
-                state={splitTileStates.right}
-                onSwipeUp={() => handleSplitSwipeUp('right')}
-                onSwipeDown={() => handleSplitSwipeRight('right')}
-                onSwipeReveal={() => {}}
-                tileHeight={tileHeight}
-                isSpecialSplit
-              />
-            </Animated.View>
-          </View>
-        )}
       </View>
 
       {/* glass shards */}
@@ -1010,15 +774,69 @@ export function MaskBoard({ step }: Props) {
         />
       ))}
 
-      {/* dim overlay */}
+      {/* dim overlay — used by mastered reveal to cover tiles */}
       {dimVisible && (
         <Animated.View
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFillObject,
-            { backgroundColor: '#000000', opacity: dimOpacity, zIndex: 100 },
+            { backgroundColor: '#1E1A3A', opacity: dimOpacity, zIndex: 100 },
           ]}
         />
+      )}
+
+      {/* mastered reveal overlays */}
+      {masteredVisible && (
+        <>
+          {/* gold flash */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: '#F5C842', opacity: masteredFlashOpacity, zIndex: 999 },
+            ]}
+          />
+
+          {/* word zoom + MASTERED stamp */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              {
+                zIndex: 998,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: masteredOverlayOpacity,
+              },
+            ]}
+          >
+            <Animated.Text
+              style={[
+                isBoss ? styles.wordBoss : styles.word,
+                {
+                  color: '#FFFFFF',
+                  transform: [
+                    { scale: masteredWordScale },
+                    { translateY: masteredWordTransY },
+                  ],
+                },
+              ]}
+            >
+              {step.word}
+            </Animated.Text>
+            <Animated.Text
+              style={[
+                styles.masteredLabel,
+                {
+                  opacity: masteredTextOpacity,
+                  transform: [{ scale: masteredTextScale }],
+                },
+              ]}
+            >
+              MASTERED
+            </Animated.Text>
+          </Animated.View>
+        </>
       )}
     </Animated.View>
   );
@@ -1103,24 +921,19 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 52,
   },
-  // ── hidden tile ───────────────────────────────────────────────
-  hiddenTile: {
-    marginBottom: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    backgroundColor: '#1A1830',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hiddenTileText: {
-    fontSize: FONT_SIZES.tileCopy,
-    fontFamily: FONTS.label,
-    color: '#FFFFFF',
-  },
   gridWrap: {
     flex: 1,
   },
-  splitStack: {
-    marginTop: TILE_GAP,
+  // ── mastered reveal ───────────────────────────────────────────
+  masteredLabel: {
+    fontFamily: FONTS.brand,
+    fontSize: 36,
+    color: '#F5C842',
+    letterSpacing: 4,
+    marginTop: 12,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
 });
