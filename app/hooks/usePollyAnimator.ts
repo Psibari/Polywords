@@ -208,6 +208,8 @@ export function usePollyAnimator(
         setCurrentPose('TOP_LEFT');
         stopSwayLoops();
         setSpeech(null);
+        // Always clear ghost tint on new word — previous ghost state must not bleed through
+        Animated.timing(ghostTintOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start();
         wordBob();
         break;
 
@@ -338,6 +340,7 @@ export function usePollyAnimator(
         setCurrentPose('TOP_CENTER');
         stopSwayLoops();
         setSpeech(null);
+        Animated.timing(ghostTintOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start();
         wordBob();
         break;
 
