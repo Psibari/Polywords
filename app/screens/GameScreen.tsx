@@ -158,7 +158,7 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   const isDone = game.status === 'complete' || game.status === 'gameOver';
   const activeStep = !isDone ? currentStep(game) : null;
-  const screenBg = activeStep?.kind === 'switchback' ? '#1A1A4A' : '#1A1040';
+  const screenBg = activeStep?.kind === 'switchback' ? '#1A1A4A' : '#1A1830';
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: screenBg }]}>
@@ -275,6 +275,6 @@ export default function GameScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#1A1040',
+    backgroundColor: '#1A1830',
   },
 });
