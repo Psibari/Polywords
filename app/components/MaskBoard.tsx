@@ -584,11 +584,11 @@ export function MaskBoard({ step }: Props) {
           />
         )}
 
-        {/* Polly sprite — red bg is a temporary bleed diagnostic; remove after confirming */}
         <Animated.View
+          pointerEvents="none"
           style={[
             pollyAnimatedStyle,
-            { position: 'absolute', bottom: 0, alignSelf: 'center', backgroundColor: '#FF0000' },
+            { position: 'absolute', bottom: 0, alignSelf: 'center' },
           ]}
         >
           <PollySprite pose={currentPose} size={240} />
@@ -615,7 +615,7 @@ export function MaskBoard({ step }: Props) {
         )}
 
         {/* word overlay — sits across Polly body */}
-        <View style={styles.wordOverlay}>
+        <View style={styles.wordOverlay} pointerEvents="none">
           {kicker ? (
             <Text style={styles.kicker}>{kicker}</Text>
           ) : null}
