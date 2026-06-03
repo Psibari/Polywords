@@ -287,7 +287,7 @@ Every word in the standard round has a hidden meaning pair — one real, one tra
 
 **Must be:** 2-4 words, visual/tactile/emotional, slightly tricky but fair, built for hesitation, clear after reveal, distinct from decoys.
 
-**Must not be:** Long definitions, academic/clinical language, random or cheap, obvious enough to auto-tap.
+**Must not be:** Long definitions, academic/clinical language, random or cheap, obvious enough to auto-swipe.
 
 ### Scene-style masks (correct approach)
 Instead of definitions, use social/cultural moments:
@@ -489,25 +489,21 @@ All generated WAV via SoundEngine.ts:
 poly-words/
 ├── app/
 │   ├── components/
-│   │   ├── ClueCard.tsx
 │   │   ├── FluentEmoji.tsx
 │   │   ├── GhostTile.tsx
 │   │   ├── HeartbeatBackground.tsx
 │   │   ├── MaskBoard.tsx
-│   │   ├── MaskGrid.tsx
-│   │   ├── MaskTile.tsx
 │   │   ├── MasterGateTile.tsx
 │   │   ├── PhraseBreakScreen.tsx
 │   │   ├── PollyCard.tsx
 │   │   ├── PollyController.tsx
-│   │   ├── RevealSequence.tsx
-│   │   ├── ReversedBuild.tsx
 │   │   ├── ScoreFloat.tsx
 │   │   ├── SlangDropScreen.tsx
 │   │   ├── StreakDisplay.tsx
 │   │   ├── SwipeMask.tsx
 │   │   ├── SwitchbackScreen.tsx
-│   │   └── TruthStream.tsx
+│   │   └── ui/
+│   │       └── PollySprite.tsx
 │   ├── constants/
 │   │   ├── animations.ts
 │   │   └── fonts.ts
@@ -520,9 +516,7 @@ poly-words/
 │   │   ├── useHeartbeat.ts
 │   │   └── usePollyAnimator.ts
 │   ├── logic/
-│   │   ├── GameController.ts
-│   │   ├── pollyBudget.ts
-│   │   └── wordBank.ts
+│   │   └── pollyBudget.ts
 │   ├── screens/
 │   │   ├── GameScreen.tsx
 │   │   ├── HomeScreen.tsx
