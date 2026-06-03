@@ -495,13 +495,7 @@ export function MaskBoard({ step }: Props) {
       gateTriggeredRef.current = true;
       setTimeout(() => {
         if (hasHidden && !ghostJudgedCorrectRef.current) {
-          store.addGhost({
-            wordId: step.word,
-            word: step.word,
-            hiddenMeaningReal: step.hiddenMeaning ?? '',
-            hiddenMeaningTrap: step.hiddenTrap ?? '',
-            runsMissed: 1,
-          });
+          store.addGhostedMaster(step.word);
         }
         store.completeWord();
       }, 1200);
@@ -589,7 +583,6 @@ export function MaskBoard({ step }: Props) {
               {
                 backgroundColor: '#7B2D8B',
                 opacity: ghostTintOpacity,
-                borderRadius: 16,
               },
             ]}
           />
@@ -690,8 +683,8 @@ export function MaskBoard({ step }: Props) {
 
       </View>
 
-      {/* MASTER GATE slot */}
-      {hasHidden && showBoardContent && (
+      {/* MASTER GATE slot — always visible, not gated by showBoardContent */}
+      {hasHidden && (
         ghostVisible && ghost ? (
           <GhostTile
             ghost={ghost}

@@ -35,6 +35,7 @@ type GameStore = {
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
   addGhost: (ghost: GhostMeaning) => void;
+  addGhostedMaster: (word: string) => void;
   clearGhost: (wordId: string) => void;
   setGhostRevenge: (data: GhostRevenge) => void;
   loadGhosts: () => Promise<void>;
@@ -92,6 +93,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
       );
     } else {
       next = [...get().ghosts, { ...ghost, runsMissed: 1 }];
+    }
+    set({ ghosts: next });
+    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  addGhostedMaster: (word) => {
+    const existing = get().ghosts.find(g => g.wordId === word);
+    let next: GhostMeaning[];
+    if (existing) {
+      next = get().ghosts.map(g =>
+        g.wordId === word ? { ...g, runsMissed: g.runsMissed + 1 } : g
+      );
+    } else {
+      next = [...get().ghosts, {
+        wordId: word,
+        word,
+        hiddenMeaningReal: '',
+        hiddenMeaningTrap: '',
+        isGhostedMaster: true,
+        runsMissed: 1,
+      }];
     }
     set({ ghosts: next });
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});

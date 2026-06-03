@@ -6,6 +6,7 @@ export interface GhostMeaning {
   hiddenMeaningReal: string;
   hiddenMeaningTrap: string;
   runsMissed: number;
+  isGhostedMaster?: boolean;
 }
 
 export type GhostRevenge = {

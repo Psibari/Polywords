@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }: Props) {
-  if (__DEV__ && ghost.hiddenMeaningReal === '') {
+  if (__DEV__ && !ghost.isGhostedMaster && ghost.hiddenMeaningReal === '') {
     console.error('Ghost tile missing label — every ghost tile requires text copy.');
   }
 
@@ -150,7 +150,7 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
         {/* Layer C: pan translation — non-native driver (translateX/Y) */}
         <Animated.View
           style={[
-            styles.tile,
+            ghost.isGhostedMaster ? styles.masterTile : styles.tile,
             {
               height: tileHeight,
               transform: [{ translateX: panXY.x }, { translateY: panXY.y }],
@@ -158,14 +158,21 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
           ]}
           {...panResponder.panHandlers}
         >
-          <View style={styles.textBlock}>
-            <Text style={styles.meaningText} numberOfLines={2}>
-              {ghost.hiddenMeaningReal}
-            </Text>
-            <Text style={styles.subLabel}>
-              {`Missed from ${ghost.word}`}
-            </Text>
-          </View>
+          {ghost.isGhostedMaster ? (
+            <View style={styles.masterTextBlock}>
+              <Text style={styles.masterLabel}>MASTER THE WORD</Text>
+              <Text style={styles.masterSubLabel}>{`Missed from ${ghost.word}`}</Text>
+            </View>
+          ) : (
+            <View style={styles.textBlock}>
+              <Text style={styles.meaningText} numberOfLines={2}>
+                {ghost.hiddenMeaningReal}
+              </Text>
+              <Text style={styles.subLabel}>
+                {`Missed from ${ghost.word}`}
+              </Text>
+            </View>
+          )}
         </Animated.View>
       </Animated.View>
     </Animated.View>
@@ -203,5 +210,40 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.label,
     fontStyle: 'italic',
     marginTop: 3,
+  },
+  // ── ghosted master tile ───────────────────────────────────────
+  masterTile: {
+    backgroundColor: '#0F0D2A',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#9B2D6B',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    shadowColor: '#9B2D6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+    justifyContent: 'center',
+  },
+  masterTextBlock: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  masterLabel: {
+    color: '#9B2D6B',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.label,
+    letterSpacing: 3,
+    fontWeight: '800',
+  },
+  masterSubLabel: {
+    color: 'rgba(155,45,107,0.55)',
+    fontSize: FONT_SIZES.ghostSubLabel,
+    fontFamily: FONTS.label,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 });
