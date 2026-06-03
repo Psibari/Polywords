@@ -285,8 +285,11 @@ export function MaskBoard({ step }: Props) {
     }).catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset boss animated values on mount
+  // Reset completion guards and boss animated values on new word
   useEffect(() => {
+    completedRef.current          = false;
+    gateTriggeredRef.current      = false;
+    ghostJudgedCorrectRef.current = false;
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     goldTextOpacity.setValue(0);
@@ -462,7 +465,11 @@ export function MaskBoard({ step }: Props) {
 
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
-    if (completedRef.current || gateTriggeredRef.current) return;
+    console.log('[MaskBoard] completion check — completedRef:', completedRef.current, 'gateTriggeredRef:', gateTriggeredRef.current);
+    if (completedRef.current || gateTriggeredRef.current) {
+      console.log('[MaskBoard] gateTriggeredRef blocking re-entry — skipping');
+      return;
+    }
 
     const allVisibleJudged = visibleGridMasks.every(m => {
       const ts = tileStates.get(m.id);
@@ -475,6 +482,8 @@ export function MaskBoard({ step }: Props) {
       return ts === 'correct' || ts === 'trap-caught';
     });
 
+    console.log('[MaskBoard] last tile resolved — perfect:', perfect, 'hasHidden:', hasHidden, 'willUnlockGate:', perfect && hasHidden);
+
     if (perfect && hasHidden) {
       console.log('[MaskBoard] perfect clear — triggering gate unlock');
       gateTriggeredRef.current = true;
@@ -482,18 +491,20 @@ export function MaskBoard({ step }: Props) {
       playSplitReveal();
       setPerfectClear(true);
     } else {
-      console.log('[MaskBoard] word complete — perfect:', perfect, 'hasHidden:', hasHidden);
-      if (hasHidden && !ghostJudgedCorrectRef.current) {
-        store.addGhost({
-          wordId: step.word,
-          word: step.word,
-          hiddenMeaningReal: step.hiddenMeaning ?? '',
-          hiddenMeaningTrap: step.hiddenTrap ?? '',
-          runsMissed: 1,
-        });
-      }
-      completedRef.current = true;
-      setTimeout(() => store.completeWord(), 700);
+      console.log('[MaskBoard] non-perfect complete — auto-advancing in 1200ms');
+      gateTriggeredRef.current = true;
+      setTimeout(() => {
+        if (hasHidden && !ghostJudgedCorrectRef.current) {
+          store.addGhost({
+            wordId: step.word,
+            word: step.word,
+            hiddenMeaningReal: step.hiddenMeaning ?? '',
+            hiddenMeaningTrap: step.hiddenTrap ?? '',
+            runsMissed: 1,
+          });
+        }
+        store.completeWord();
+      }, 1200);
     }
   }, [tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 

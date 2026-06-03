@@ -139,7 +139,8 @@ export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 76 
       onPanResponderTerminationRequest: () => false,
       onPanResponderRelease: (_, gs) => {
         if (phaseRef.current !== 'unlocked' || judgedRef.current) return;
-        if (gs.dy < -30 && Math.abs(gs.dy) > Math.abs(gs.dx)) {
+        console.log('[MasterGateTile] release — dy:', gs.dy, 'dx:', gs.dx, 'phase:', phaseRef.current);
+        if (gs.dy < -40) {
           judgedRef.current = true;
           pulseLoopRef.current?.stop();
           onMasteredSwipe();
