@@ -89,6 +89,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
   const completedRef          = useRef(false);
   const gateTriggeredRef      = useRef(false);
   const ghostJudgedCorrectRef = useRef(false);
+  const wrongSwipeOccurred    = useRef(false);
 
   const ghost = store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null;
   const [ghostVisible, setGhostVisible] = useState(!!ghost);
@@ -277,6 +278,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
+    wrongSwipeOccurred.current    = false;
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     goldTextOpacity.setValue(0);
@@ -452,7 +454,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
       return ts === 'correct' || ts === 'trap-caught';
     });
 
-    if (perfect && hasHidden) {
+    if (perfect && hasHidden && !wrongSwipeOccurred.current) {
       gateTriggeredRef.current = true;
       firePollyEvent('allMasksFound');
       playSplitReveal();
@@ -491,6 +493,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
       firePollyEvent('correct');
     } else {
+      wrongSwipeOccurred.current = true;
       store.submitWrongSwipe();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
@@ -505,6 +508,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
       spawnFloat(50, maskId, '#7B2D8B');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
     } else {
+      wrongSwipeOccurred.current = true;
       store.submitWrongSwipe();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
