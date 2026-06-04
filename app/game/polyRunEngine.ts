@@ -439,6 +439,7 @@ function advanceStep(state: GameState, update: StepUpdate): GameState {
     swipedUpIds: [],
     swipedDownIds: [],
     mistakesOnWord: 0,
+    revealedHiddenMasks: {},
   };
 
   const nextStepIndex = state.stepIndex + 1;

@@ -137,9 +137,7 @@ function GameDirector({ navigation }: { navigation: any }) {
     if (step.kind !== 'word') return;
 
     let t = 0;
-    if (step.eventType === 'bossWord')   t = 3;
-    else if (step.eventType === 'speedRound') t = 2;
-    else if (step.emotionalRole === 'boss')   t = 2;
+    if (step.eventType === 'bossWord') t = 3;
     if (game.lives === 1) t = Math.min(t + 1, 3);
     if (missedCount >= 2) t = Math.min(t + 1, 3);
     setTension(t);
@@ -245,7 +243,7 @@ function GameContent() {
     );
   }
 
-  if (step.eventType === 'slangDrop') {
+  if (step.kind === 'word' && step.eventType === 'slangDrop') {
     return (
       <SlangDropScreen
         key={`slang-${game.stepIndex}`}
@@ -254,12 +252,16 @@ function GameContent() {
     );
   }
 
-  return (
-    <MaskBoard
-      key={`board-${game.stepIndex}`}
-      step={step}
-    />
-  );
+  if (step.kind === 'word') {
+    return (
+      <MaskBoard
+        key={`board-${game.stepIndex}`}
+        step={step}
+      />
+    );
+  }
+
+  return null;
 }
 
 // ─── ROOT EXPORT ─────────────────────────────────────────────

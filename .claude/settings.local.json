@@ -30,7 +30,9 @@
       "Bash(node -e \"const p = require\\('./package.json'\\); const d = {...p.dependencies,...p.devDependencies}; console.log\\('linear-gradient:', d['expo-linear-gradient'] || 'NOT INSTALLED'\\); console.log\\('reanimated:', d['react-native-reanimated']\\); console.log\\('gesture-handler:', d['react-native-gesture-handler'] || 'not installed'\\);\")",
       "Bash(cat babel.config.js)",
       "Bash(cat babel.config.ts)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.babel || p['babel-preset-expo'] || 'no babel key', null, 2\\)\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.babel || p['babel-preset-expo'] || 'no babel key', null, 2\\)\\)\")",
+      "Bash(xargs grep -l \"useNativeDriver\")",
+      "Bash(grep -v \"//\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\pdiba\\poly-words"

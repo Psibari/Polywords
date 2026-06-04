@@ -41,9 +41,8 @@ type ShatterOrigin = { x: number; y: number } | null;
 type Props = { step: WordStep };
 
 function eventKicker(step: WordStep): string | null {
-  if (step.eventType === 'bossWord')   return 'BOSS WORD · 2× SCORE';
-  if (step.eventType === 'speedRound') return 'SPEED ROUND';
-  if (step.eventType === 'slangDrop')  return 'SLANG DROP';
+  if (step.eventType === 'bossWord')  return 'BOSS WORD · 2× SCORE';
+  if (step.eventType === 'slangDrop') return 'SLANG DROP';
   return null;
 }
 
