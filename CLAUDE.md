@@ -1,11 +1,11 @@
-# POLYWORDS — Game Design Document v2
-### Living Reference · Updated June 2, 2026
+# POLYWORDS — CLAUDE.md
+### Ground Truth for Claude Code · Updated June 4, 2026
 
 ---
 
 ## The Game in One Sentence
 
-A word appears. Meaning masks appear — some real, some traps. Swipe UP on real meanings. Swipe RIGHT to call out traps. Find all real meanings to unlock the hidden one.
+A word appears. Meaning masks appear — some real, some traps. Swipe UP on real meanings. Swipe RIGHT to call out traps. Perfect clear unlocks the Master Gate, which drops two final tiles to play.
 
 ---
 
@@ -28,10 +28,10 @@ Animation:      React Native Animated API
 Haptics:        Expo Haptics
 Audio:          Expo AV (generated WAV synthesis)
 Navigation:     Expo Router
-Fonts:          SuperCartoon-6R791 (hero word) · gomarice_okuba_cloud (boss word) · InterVariable (tiles) · SuperCarnival-j9Wq0 (brand) · SuperFrosting-R9z4o (labels)
+Fonts:          Bagel Fat One (hero word) · Plus Jakarta Sans 800 (all UI)
 Testing:        Expo Go via QR code on physical device
 Version control: Git + GitHub
-Editor:         VS Code
+Editor:         VS Code (Windows — use forward-slash paths)
 ```
 
 ---
@@ -41,17 +41,19 @@ Editor:         VS Code
 | Token | Hex | Use |
 |---|---|---|
 | Indigo background | `#1E1A3A` | Screen background |
-| Tile idle | `#2A2560` | Unswiped tile |
-| Tile special | `#251F4A` | Hidden split tiles, Switchback clues |
-| Gold | `#FFD700` | Correct tiles, progress dots, kicker labels ONLY |
-| Polly green | `#4CAF50` | Polly mascot, HIDDEN MEANING border, "Slang check." text |
-| Wrong red | `#CC2200` | Wrong swipe flash |
-| Navy border | `#1A1830` | Tile sticker border + shadow |
+| Tile idle | `#1E1C4A` | Unswiped tile |
+| Tile special | `#251F4A` | Switchback clues, split tiles |
+| Gold | `#F5C842` | Correct tiles, reward moments, gate unlock |
+| Polly green | `#4CAF50` | Polly mascot + correct swipe particles ONLY |
+| Wrong red | `#CC2200` | Wrong swipe flash ONLY — never decorative |
+| Purple | `#7B2D8B` | Accent, trap shards, rare events |
+| Rose | `#9B2D6B` | Ghost gate border, trap shards |
+| Gate background | `#0F0D2A` | Master Gate tile ONLY |
+| Navy border | `#1A1830` | Tile border + shadow |
 | White text | `#FFFFFF` | All tile text |
-| White dim | `rgba(255,255,255,0.85)` | Polly speech text |
-| White ghost | `rgba(255,255,255,0.25)` | Remaining progress dots |
 
 **Two golds max per screen. No new colors without Pete's sign-off.**
+**Red is wrong-swipe flash only — never on a tile before it's swiped.**
 
 ---
 
@@ -59,450 +61,299 @@ Editor:         VS Code
 
 | Element | Font | Size |
 |---|---|---|
-| Hero word — normal | SuperCartoon-6R791 | 76px, letterSpacing 3 |
-| Hero word — Boss | gomarice_okuba_cloud | 80px, letterSpacing 4 |
-| Switchback answer words | SuperCartoon-6R791 | 28px |
-| Phrase Break phrase | SuperCartoon-6R791 | 36px |
-| Tile text | InterVariable | 20px |
-| Polly speech / brand title | SuperCarnival-j9Wq0 | 48px title / 14px speech |
-| HUD score | SuperCartoon-6R791 | 22px |
-| HUD multiplier | SuperCartoon-6R791 | 32px |
-| Kicker / HUD labels | SuperFrosting-R9z4o | 11px, letterSpacing 3 |
-| Progress / ghost sub-label | SuperFrosting-R9z4o | 12px |
+| Hero word — normal | Bagel Fat One | ~52px |
+| Hero word — Boss | Bagel Fat One | 72-76px |
+| Switchback answer words | Bagel Fat One | 28px |
+| Phrase Break phrase | Bagel Fat One | 36px |
+| Tile text | Plus Jakarta Sans 800 | 16px |
+| Polly speech | Plus Jakarta Sans 800 | 18px |
+| Kicker labels | Plus Jakarta Sans 800 | 11px, letterSpacing 3 |
+| Master Gate text | Bagel Fat One | 16px |
 
 ---
 
 ## Current Build Status
 
-### ✅ Built and Working
-- 12-step session with all round types wired
-- Tile swipe system — UP = real meaning, RIGHT = trap
-- Tile states — gold lock, red buzz, shatter, collapse
-- Sticker tile treatment — 2px navy border, 5px hard shadow
-- Progress dots — gold/white/dim, auto-scales to session length
-- Hearts (5 lives) separated from round counter
-- Polly Card + Find-Meter
-- HIDDEN MEANING tile — pulsing green/gold border
-- 10-step cinematic split sequence on perfect clear
-- Boss Word — smash entrance, screen shake, gold sweep, 80px
-- PHRASE BREAK — full screen, phrase rises, swipe-up answers, random rotation
-- SLANG DROP — record scratch, word from left, "Slang check." from right, era badge
-- SWITCHBACK — two clues from opposite sides, word tiles, 2-attempt logic, swipe-based drag input implemented
-- Sound system — correct swipe, wrong buzz, shatter, scratch, split reveal, round complete
-- Mask language upgraded — all session words with sharp 2-4 word scene-style masks
-- Emoji upgraded — 111 fields, no repeats
-- Staggered tile mount — 80ms per tile
-- Hero word fade+scale on transition
-- Ghost tile system — missed meanings carry to next run
-- Session data conflict-free — all 17 hidden meaning duplicates resolved
-- 5-life system
+### ✅ Built and Working — Passes 1–7
 
-### ⚠️ In Progress
+**Core mechanics**
+- 12-word session (updated from 10)
+- Swipe UP = real meaning, swipe RIGHT = trap — universal, no taps anywhere
+- Tile states: gold lock (correct), red buzz + shake (wrong), shatter + collapse (trap)
+- Staggered tile mount — 80ms per tile default, per-word overrides via `tileStagger`
+- Hero word fade + scale on transition
+- Progress dots — gold/white/dim, scales to session length
+- 5-life system (hearts)
+- Score + combo multiplier system
 
-- Polly image in pill — circular crop doesn't work, punted
-- Fluent 3D emoji — CDN fallback still firing
-- "Word up." protection — needs boss-only limiting
-- Streak feedback in-round
+**Round types — all built and swiping**
+- Standard Meaning Mask Blitz ✅
+- Boss Word (smash entrance, screen shake, gold sweep, 76px) ✅
+- Phrase Break (full screen, phrase rises, swipe-up answers) ✅
+- Slang Drop (record scratch, era badge, swipe mechanic) ✅
+- Switchback (two clues from opposite sides, 2-attempt logic) ✅
+
+**Master Gate (Pass 7) ✅**
+- Sits locked on board every word
+- On PERFECT CLEAR (all masks UP correct + all traps RIGHT correct + zero wrong swipes):
+  gate opens automatically — no player swipe needed
+- Gate drops TWO tiles to center of board: one real hidden meaning + one trap
+- Player swipes both tiles before word advances
+- Both correct → +300, haptic Success, Polly gateMastered
+- Wrong swipe → life penalty
+- Non-perfect → gate stays locked, auto-advance 1200ms, ghosted master stored
+- Polly intro line fires ONCE ever on first gate appearance: "Only with a Perfect sweep — or it will come back to haunt you." (AsyncStorage: `polywords_hasSeenGateIntro`)
+
+**Ghost system ✅**
+- Missed real meanings → regular ghost tiles (dashed rose border, definition visible)
+- Unmastered Master Gate → ghosted master (locked gate UI, `#9B2D6B` rose border, no definition ever visible)
+- Ghost gate haunts next word's board, player can master it there
+- Both ghost types are separate render paths — never mixed
+
+**Other**
+- Sound system via SoundEngine.ts (generated WAVs)
+- Polly 9-pose sprite (3×3 grid), 6 states wired to game events
+- WORD text overlays Polly's chest/lower body — face always visible above
+- Ghost tint overlay on Polly — purple tint when ghost present, default opacity 0
+- `gateTriggeredRef` resets on every new word mount
+- Repo cleaned — 8 dead files deleted (ClueCard, TruthStream, RevealSequence, ReversedBuild, MaskTile, MaskGrid, GameController, wordBank)
+
+### 🔴 Known Bugs (active)
+- Purple box sometimes visible behind Polly — source in MaskBoard ghost tint View, ghostVisible not resetting cleanly
+- Master meaning text occasionally leaking into ghost tile as readable text
+- Gate tile can disappear when regular tiles clear (render condition issue)
+
+### ⏳ In Progress (this session)
+- UI redesign — compact HUD, Polly bottom-left locked, maximized tile zone
+- Trap shatter effect — purple/rose crystal shards, radial burst
+- Correct swipe trail — green particle comet upward
+- Bug fixes: gate visibility, ghost text leak, purple box
 
 ### ❌ Not Yet Built
 - Timer / pressure system
 - Results screen redesign
-- Chip-stack collapse for solved tiles
-- Polly character animation / Rive sprite
-- Home screen with real Polly
-- Scholar's Cave / mastery system
-- Streak freeze / recovery window
+- Boss Entrance Choreography (Pass 8) — currently just a font change
+- Heartbeat System (Pass 9)
+- Full Polly Lines + Triggers (Pass 10) — 18 lines, full trigger map
+- Sound Design full implementation (Pass 11) — 15 audio files
+- Bottom Navigation (Pass 12) — 4 tabs
+- Home Screen + Splash (Pass 13)
+- Supabase persistence
+- The Garden
 
 ---
 
 ## Swipe System (Universal)
 
 - **Swipe UP** → claim as real meaning
-  - Correct: gold lock, stays on screen
-  - Wrong: red buzz + shake, flies off top
+  - Correct: gold lock, tile stays on screen
+  - Wrong: red buzz + shake, flies off top, life lost
 - **Swipe RIGHT** → call it a trap
-  - Correct: shatter + collapse
-  - Wrong: red buzz, flies right
+  - Correct: shatter + collapse (purple/rose shards)
+  - Wrong: red buzz, flies right, life lost
 - **No left swipe exists in this game**
 - **All screens use swipe — never tap**
+- **No directional arrows on tiles in live play** — onboarding only
 
 ---
 
-## Round Types
+## Master Gate — Full Spec
 
-### 1. STANDARD MEANING MASK BLITZ
-Normal word round. Word appears, tiles mount with 80ms stagger.
-- Swipe UP on real meanings, RIGHT on traps
-- Find all real meanings → HIDDEN MEANING unlocks
-- Scoring: +100 per correct × combo multiplier
+```
+LOCKED state:
+  backgroundColor: '#0F0D2A'
+  border: 2px solid rgba(245,200,66,0.45)
+  height: 76px
+  text: 'MASTER THE WORD' — Bagel Fat One 16px, gold 65% opacity
+  breathing pulse on text: 0.65→0.45, 2400ms loop
+  No swipe gesture. Dormant.
 
-### 2. BOSS WORD
-Triggered by `eventType: 'bossWord'` in session data.
+UNLOCK (auto on perfect clear):
+  Phase 1 T+0ms: lock icon bounces, rotates
+  Phase 2 T+200ms: border opacity → 100%, text → full opacity
+  Phase 3 T+400ms: Polly colors sweep border 360°, 800ms
+  Phase 4 T+600ms: Haptics.impactAsync(Heavy)
+  Phase 5 T+800ms: onGateOpened() fires automatically
 
-**Entrance:**
-1. 600ms silence
-2. "BOSS WORD · 2× SCORE" kicker appears
-3. Word SMASHES from off-screen top
-4. Heavy spring overshoot — word compresses on impact
-5. Screen shake — 3 rapid oscillations, 180ms
-6. Single heavy haptic
-7. Gold sweep passes through word left→right
-8. Polly reading expression fires
-9. Tiles mount at 100ms stagger (heavier than normal)
+TILE DROP (onGateOpened):
+  Two SwipeMask tiles spawn at gate position
+  Spring down to center of tile zone:
+    translateY: gateY → centerY
+    damping: 12, stiffness: 120
+    stagger: 80ms
+  Tile 1: real hidden meaning (swipe UP)
+  Tile 2: trap (swipe RIGHT)
+  Both swiped → store.completeWord() after 800ms
+  Both correct → +300, notificationAsync(Success), Polly gateMastered
 
-**Words:** SPRING (step 3), ORDER (step 12 — final boss)
-**Font:** 80px gomarice_okuba_cloud, gold color
+NON-PERFECT:
+  Gate stays locked.
+  store.addGhostedMaster(word) — word string only, no text
+  setTimeout 1200ms → store.completeWord()
 
-### 3. PHRASE BREAK
-Full screen palate cleanser. No tiles. Pure language curiosity.
-
-**Entrance:**
-1. "PHRASE BREAK" kicker fades in (gold)
-2. Phrase RISES from bottom — spring animation
-3. 600ms pause
-4. Polly: "Tiny detour. Big meaning."
-5. Question text fades in
-6. Four answer tiles mount with 80ms stagger
-
-**Rules:**
-- Swipe UP to select answer
-- Correct → gold, Polly reveal fires, +150 bonus, auto-advance 2s
-- Wrong → red flash, correct reveals gold, "Now you know.", no life lost
-- Always low stakes — curiosity round
-- Current session uses a fixed Phrase Break step (`Give it a shot`); the pool defines additional phrase-break content separately.
-
-**Phrase Break pool (3 fixed entries):**
-- "Spill the beans" → Ancient Greek bean voting
-- "Bite the bullet" → Pre-anaesthetic surgery
-- "Break a leg" → Theatre reverse superstition
-
-### 4. SLANG DROP
-Full screen. Cultural surprise. Tests slang knowledge only.
-
-**Entrance:**
-1. Record scratch sound fires
-2. Word scratches in from LEFT (translateX -500 → overshoot +15 → 0)
-3. 400ms pause — word sits alone
-4. "Slang check." slides in from RIGHT (Polly green #4CAF50)
-5. Tiles mount — ONLY slang meaning + traps
-
-**Rules:**
-- Same swipe mechanic — UP for real, RIGHT for trap
-- Correct slang meaning → gold lock + ERA BADGE slides up
-- Wrong → red buzz, life penalty
-- Tiles are slang meaning only — regular meanings not shown
-
-**Era badges:**
-| Label | Era |
-|---|---|
-| `CLASSIC` | 1920s-40s |
-| `RETRO` | 1950s-60s |
-| `OLD SCHOOL` | 1970s-80s |
-| `THROWBACK` | 1990s-2000s |
-| `NOW` | 2010s |
-| `FRESH` | 2020s |
-
-**Current slang pool (3 fixed entries):**
-- SICK — OLD SCHOOL — "That trick though"
-- BAD — OLD SCHOOL — "Michael said so"
-- CHILL — OLD SCHOOL — "What Fridays are for"
-
-**Active in current session (step 8):**
-
-- RAW — NOW — "Uncut and electric"
-
-### 5. SWITCHBACK
-Full screen. Puzzle flips — two clues, find the connecting word.
-
-**Entrance:**
-1. "SWITCHBACK" kicker drops in
-2. Two clue bars slide from OPPOSITE sides simultaneously
-3. 800ms pause — player reads both clues
-4. "One word. Two lives." fades in (Polly green)
-5. Four WORD tiles mount at 100ms stagger (SuperCartoon-6R791 28px)
-
-**Rules:**
-- Swipe UP on the word that connects BOTH clues
-- First attempt correct → +200, Polly: "Sharp."
-- Second attempt correct → +100, Polly: "Got there."
-- Both wrong → correct reveals, Polly reveal fires, -1 life
-
-**Clue bar style:**
-- Background: #251F4A
-- Border: 2px solid #FFD700
-- Labels: "CLUE 1" / "CLUE 2" above each bar
-
-**Switchback pool (5 fixed entries):**
-- BAT: "Swings in baseball" / "Sleeps upside down"
-- BANK: "Holds your money" / "River's edge"
-- CAST: "Fishing line goes this way" / "Actors in a film"
-- STRIKE: "Lightning does it" / "Bowler's perfect throw"
-- SOUND: "Ears catch it" / "Water between two lands"
-- The current run uses a fixed COLD switchback step; this pool defines additional switchback content separately.
+GHOST GATE (haunted):
+  backgroundColor: '#0F0D2A'
+  borderColor: '#9B2D6B' (rose)
+  borderStyle: 'dashed'
+  text: 'MASTER THE WORD'
+  NO definition text ever
+  Same unlock rules — perfect clear on this word unlocks it
+```
 
 ---
 
-## HIDDEN MEANING System
+## Layout Spec (Current Target)
 
-Every word in the standard round has a hidden meaning pair — one real, one trap.
+```
+HUD — single compact row:
+  Row 1: SCORE left · STREAK center · LIVES right
+  Row 2: progress dots full width
+  Total height: 44px
+  No card containers — transparent backgrounds
 
-**During round:** "✨ HIDDEN MEANING" tile sits above tile stack. Pulsing green→gold border. Untouchable.
+WORD ZONE:
+  Full width, centered
+  Font: Bagel Fat One, ~52px gold
+  No border/box around it
+  Fixed height: 80px
+  Nothing encroaches
 
-**Perfect clear missed:** Tile dims, greys out. Polly: "Locked."
+TILE ZONE:
+  Maximum available vertical space
+  Full width minus 32px padding
+  Tile height: 58px fixed
+  Gap between tiles: 6px
+  backgroundColor: #1E1C4A
+  border: 1px solid rgba(255,255,255,0.12)
+  borderRadius: 12
+  text: Plus Jakarta Sans 800, 16px, white
 
-**Perfect clear earned → 10-step cinematic:**
-1. 400ms silence
-2. Tile pulses 3x
-3. Floats up 8px
-4. Screen dims 20%
-5. ScaleX squeeze to 0
-6. Tile collapses height to 0
-7. Two split tiles slam in (staggered spring)
-8. Dim fades
-9. Both tiles pulse gold borders
-10. `playSplitReveal()` + Polly: "Hidden. Worth it."
+POLLY — permanently bottom-left:
+  position: absolute
+  bottom: 34
+  left: 12
+  width: 80, height: 80
+  overflow: 'hidden'
+  Never moves. Pose + dialogue bubble only.
 
-**Split tiles:** both live SwipeMask — UP for real, RIGHT for trap. +300 if both correct.
-
----
-
-## Current 12-Step Session Structure
-
-| Position | Word/Event | Round Type | Notes |
-|---|---|---|---|
-| 1 | LIGHT | Standard | Opener — 4 real, 3 traps |
-| 2 | STRIKE | Standard | Flow — 4 real, 3 traps |
-| 3 | SPRING | Boss | Tension — 4 real, 3 traps, reverseMountOrder |
-| 4 | PITCH | Standard | Hesitation — exhale after boss |
-| 5 | COLD | Switchback | BrainGlitch — 1500ms Polly buffer after |
-| 6 | "Give it a shot" | Phrase Break | Recovery — multi-correct answers |
-| 7 | BANK | Standard | Freshness — 4 real, 3 traps |
-| 8 | RAW | Slang Drop | CulturalSnap — NOW era |
-| 9 | WAKE | Standard | Surprise — hapticTier: light |
-| 10 | MATCH | Standard | Adrenaline — 60ms stagger |
-| 11 | BARK | Standard | NearMiss — 80ms stagger |
-| 12 | ORDER | Boss | Climax — final boss, reverseMountOrder |
-
----
-
-## Mask Language Standard
-
-**Must be:** 2-4 words, visual/tactile/emotional, slightly tricky but fair, built for hesitation, clear after reveal, distinct from decoys.
-
-**Must not be:** Long definitions, academic/clinical language, random or cheap, obvious enough to auto-swipe.
-
-### Scene-style masks (correct approach)
-Instead of definitions, use social/cultural moments:
-- ✅ "Michael said so" (BAD slang)
-- ✅ "Left on read forever" (GHOST slang)
-- ✅ "What Fridays are for" (CHILL slang)
-- ✅ "Your dad at the dance" (SQUARE slang)
-- ❌ "Excellent, impressive" (definition — wrong)
-- ❌ "Uncool, conventional person" (too long, too academic)
-
-### Tile trap types
-| Type | Description | Example |
-|---|---|---|
-| Standard meaning bleed | The word's normal meaning sounds close | "Fridge temperature" for CHILL |
-| Near-miss | Almost the right meaning but off | "Calm and collected" for COOL |
-| Domain neighbor | Same world, wrong word | "Rhythm in the hips" for JIVE |
-| Object trap | What the thing IS, not what it means | "Howls at the moon" for WOLF |
-| Phrase trap | A phrase that uses the word | "On the rocks" for ROCK |
+MASTER GATE — bottom of tile stack:
+  height: 76px
+  backgroundColor: '#0F0D2A'
+  border: 2px solid rgba(245,200,66,0.45)
+  borderRadius: 12
+```
 
 ---
 
-## Word Lists
+## Visual Effects Spec
 
-### Standard Session Words (active in current session)
+### Trap Shatter (swipe RIGHT correct)
+```
+Tile: translateX 0→400, opacity 1→0, 260ms ease-in
 
-LIGHT, STRIKE, PITCH, BANK, WAKE, MATCH, BARK — plus bosses SPRING and ORDER
+10 shards at tile position:
+  Colors: '#7B2D8B' and '#9B2D6B' alternating
+  Size: 8-16px × 4-8px, borderRadius: 2
+  Angles: radially distributed, bias right
+  Distance: 55-90px per shard
+  Rotation: 90-360deg
+  opacity: 1→0, scale: 1→0.1
+  Duration: 380ms ease-out, stagger 0-50ms
+  useNativeDriver: true
 
-### Switchback Pool (5 words)
+Haptics.impactAsync(Heavy) on shatter
+Auto-remove after 450ms
+```
 
-BAT, BANK, CAST, STRIKE, SOUND
+### Correct Swipe Trail (swipe UP correct)
+```
+12 particles at tile center:
+  color: '#4CAF50'
+  size: 4-7px, borderRadius: 50%
+  Direction: upward, spread ±50° from vertical
+  Distance: 50-80px
+  opacity: 1→0, scale: 1→0
+  Duration: 320ms ease-out, stagger 0-25ms
+  useNativeDriver: true
 
-### Phrase Break Pool (3 phrases, expanding)
+Tile brief flash: backgroundColor → #2d6e3a 80ms
+  then settles to #1a3520
+```
 
-"Spill the beans", "Bite the bullet", "Break a leg"
-
----
-
-### Slang Pool — 20 Words, 6 Eras
-
-**CLASSIC (1920s-40s)**
-| Word | Standard | Slang | Scene tile |
-|---|---|---|---|
-| WOLF | Wild animal | Flirtatious man | "Always at the bar" |
-| POWDER | Fine particles | Leave quickly | "Take it and run" |
-| BLOW | Air/wind | Lose your temper | "Top comes right off" |
-| DIG | Excavate | Understand/appreciate | "You feel it or you don't" |
-
-**RETRO (1950s-60s)**
-| Word | Standard | Slang | Scene tile |
-|---|---|---|---|
-| COOL | Low temperature | Stylish, excellent | "Every teen wanted it" |
-| SQUARE | Geometric shape | Uncool, boring | "Your dad at the dance" |
-| BREAD | Baked food | Money | "What the hustle is for" |
-| GROOVY | In a groove | Excellent, cool | "Woodstock approved it" |
-| PSYCH | Psychology | Gotcha, tricked you | "Said at the last second" |
-
-**OLD SCHOOL (1970s-80s)**
-| Word | Standard | Slang | Scene tile |
-|---|---|---|---|
-| JIVE | Swing music | Nonsense, lies | "Don't give me that" |
-| CHILL | Make cold | Relax, calm down | "What Fridays are for" |
-| BAD | Not good | Excellent, tough | "Michael said so" |
-| SICK | Unwell | Excellent | "That trick though" |
-| RAD | Radiation unit | Awesome, exciting | "Skate parks said it first" |
-
-**THROWBACK (1990s-2000s)**
-| Word | Standard | Slang | Scene tile |
-|---|---|---|---|
-| WHATEVER | Anything at all | Dismissive indifference | "Valley girl's favorite exit" |
-| GHOST | Spirit of dead | Cut off contact | "No text back. Ever." |
-
-**NOW (2010s)**
-| Word | Standard | Slang | Scene tile |
-|---|---|---|---|
-| WOKE | Past tense of wake | Socially aware | "Eyes open to the world" |
-| GHOST | Spirit of dead | Cut contact (peak) | "No text back. Ever." |
-
-**FRESH (2020s)**
-| Word | Standard | Slang | Scene tile |
-|---|---|---|---|
-| SLAY | Kill | Excel, dominate | "Beyoncé approved it" |
+### Shard Overlay Architecture
+```
+GameScreen: absolute View top/left/right/bottom 0
+  pointerEvents: 'none'
+  zIndex: 100
+All shards and particles render here only
+Never inside tile tree
+```
 
 ---
 
-### Full Switchback Word Pool (20 designed rounds)
+## Animation Rules — Non-Negotiable
 
-| Word | Clue 1 | Clue 2 |
-|---|---|---|
-| BAT | "Swings in baseball" | "Sleeps upside down" |
-| BARK | "Tree wears it" | "Dog does it" |
-| SPRING | "Follows the frost" | "Legs do it" |
-| BANK | "Holds your money" | "River's edge" |
-| LIGHT | "Eyes need it" | "Not heavy at all" |
-| MATCH | "Strikes a flame" | "Rivals play one" |
-| ROCK | "Music with an edge" | "Baby needs it" |
-| WELL | "Dug deep for water" | "How you feel after rest" |
-| WAVE | "Ocean does this" | "Goodbye does this" |
-| FINE | "Breaking rules costs this" | "Thin as a thread" |
-| COLD | "Nose runs with it" | "Winter morning feels it" |
-| PITCH | "Thrown by a pitcher" | "How high the note is" |
-| POOL | "Summer swimming" | "Cue and balls" |
-| SLIP | "Ice causes it" | "Paper left behind" |
-| DRAFT | "Cold air sneaking in" | "First version of writing" |
-| SCALE | "Weighs what you carry" | "Fish wears it" |
-| CAST | "Fishing line goes this way" | "Actors in a film" |
-| STRIKE | "Lightning does it" | "Bowler's perfect throw" |
-| CURRENT | "River moves with it" | "Electricity flows as it" |
-| SOUND | "Ears catch it" | "Water between two lands" |
+```
+useNativeDriver: true  → transform + opacity ONLY
+useNativeDriver: false → height, margin, backgroundColor ONLY
+NEVER mix on same Animated.Value
+Use setTimeout between animation phases — never chained .start() callbacks
+Never .start() callbacks for sequencing
+```
 
 ---
 
-### Full Phrase Break Pool (10 phrases designed)
+## Session Structure (12 words — Arc Law)
 
-| Phrase | Question | Correct Answer | Polly Reveal |
-|---|---|---|---|
-| Spill the beans | Where did this come from? | Secret voting with beans | "Ancient Greeks voted with beans." |
-| Bite the bullet | What did this literally mean? | Chew metal to survive pain | "Surgery before anaesthetic." |
-| Break a leg | Why do actors say this? | Saying luck brings bad luck | "Reverse the curse." |
-| Saved by the bell | This phrase came from... | Coffins with signal bells | "Victorian coffins had bells." |
-| Let the cat out of the bag | What was the original scam? | Swapping a pig for a cat | "Medieval market fraud." |
-| Rule of thumb | Where did brewers use their thumb? | Testing beer temperature | "Brewer's temperature check." |
-| Raining cats and dogs | What did heavy rain wash out? | Dead animals from gutters | "17th century street flooding." |
-| Kick the bucket | What was the bucket? | Something stood on, then kicked | "A grim stepping stool." |
-| Burning the midnight oil | What made midnight special then? | Oil lamps ran through the night | "No electricity. Real oil. Real work." |
-| The whole nine yards | What was exactly nine yards? | A fighter pilot's ammo belt | "WWII ammunition belts." |
+Session length: **12 words**. Follows strict emotional arc law — every position has a job.
 
----
+| # | Word | Type | Emotional Beat | Haptic | Stagger |
+|---|---|---|---|---|---|
+| 1 | LIGHT | Standard | CONFIDENCE — easy, introduces mechanic | light | 80ms |
+| 2 | BARK | Standard | FLOW — streak starts, rhythm sets | light | 80ms |
+| 3 | MATCH | Standard | FIRST TENSION — close traps, first hesitation | medium | 80ms |
+| 4 | COLD | Switchback | DISRUPTION — format flips, brain glitch | medium | — |
+| 5 | [PHRASE BREAK] | Phrase Break | RELIEF — curiosity, low stakes, breathe | light | — |
+| 6 | RAW | Slang Drop | FRESHNESS — cultural snap, guard down | medium | — |
+| 7 | WAKE | Standard | ESCALATION — streak rebuilding, traps closer | medium | 80ms |
+| 8 | PITCH | Standard | HESITATION — hardest traps, first near-miss | medium | 80ms |
+| 9 | SPRING | Boss | FIRST CLIMAX — earned, 2× score, full entrance | heavy | 100ms |
+| 10 | BANK | Standard | REBOUND — generous after Boss, riding high | medium | 80ms |
+| 11 | STRIKE | Switchback | LATE SHOCK — second format flip surprise | medium | — |
+| 12 | ORDER | Boss | FINAL BOSS — everything on the line | heavy | 100ms |
 
-## Polly — Brand & Character
+**Arc Law — non-negotiable:**
+- Bosses at positions 9 and 12 ONLY — never before position 9
+- Switchbacks at positions 4 and 11 — disruption bookends
+- Phrase Break at 5 — relief must follow disruption
+- Slang Drop at 6 — freshness while guard is down
+- Positions 1-3 are always easy/medium standard words
+- Positions 7-8 escalate difficulty before the first Boss
+- Position 10 is always generous — rebound after Boss pressure
 
-**Who she is:** Green parrot, gold goggles, explorer hat, rainbow tail feathers, gold P-chain medallion. Smart, slightly smug, one step ahead. Adult-coded. Never childlike.
-
-**Current images (assets/images/):**
-
-| File | Use |
-|---|---|
-| polly_fullbody.png | Full-body illustration |
-| polly_sprite.png | Sprite sheet |
-
-**Planned expression set (not yet created):**
-polly_letsPlay, polly_knowing, polly_clever, polly_thinking, polly_wordUp, polly_reading
-
-**Future vision (not built):** Polly at top of screen, master word overlaid across her body. Perfect clear → she physically drops the ❓ tile down toward the stack.
-
-**Polly line rules:**
-- Round start: "[N] real, [N] fake[s]." — always factual count
-- Never jargon ("Clean split", "Pick carefully")
-- "Word up." — max 0-2 per run, boss perfect only (not yet enforced)
-- Slang Drop: "Language moves."
-- Phrase Break: "Tiny detour. Big meaning."
-- Switchback intro: "One word. Two lives."
+**Switchback IDs:**
+- Position 4: `switchback_cold` — "Left out on purpose" / "Fever's uninvited guest"
+- Position 11: `switchback_strike` — "Lightning does it" / "Bowler's perfect throw"
 
 ---
 
-## Sound System
-
-All generated WAV via SoundEngine.ts:
-
-| Event | Function | Character |
-|---|---|---|
-| Correct swipe up | `playCorrectSwipe()` | 880→1100Hz sine sweep, 120ms |
-| Wrong swipe | `playWrongBuzz()` | Square wave 120Hz, 180ms |
-| Trap shatter | `playShatter()` | White noise + pitch drop, 250ms |
-| Split reveal | `playSplitReveal()` | Two-tone ascending sweep, 350ms |
-| Round complete | `playRoundComplete()` | 3-note C-E-G resolution |
-| Record scratch | `playScratch()` | Noise burst + 400→100Hz sweep, 280ms |
-
----
-
-## Haptics
-
-| Event | Haptic |
-|---|---|
-| Correct swipe | `Haptics.impactAsync(Medium)` |
-| Wrong swipe | `Haptics.impactAsync(Heavy)` |
-| Boss word impact | `Haptics.impactAsync(Heavy)` × 1 |
-| Hidden split correct | `Haptics.notificationAsync(Success)` |
-| Hidden split wrong | `Haptics.notificationAsync(Error)` |
-
----
-
-## Scoring
-
-| Event | Score |
-|---|---|
-| Correct meaning | +100 × combo |
-| Hidden split both correct | +300 bonus |
-| Phrase Break correct | +150 bonus |
-| Switchback first attempt | +200 bonus |
-| Switchback second attempt | +100 bonus |
-| Wrong swipe | Combo resets to x0 |
-| Boss Word | All scoring × 2 |
-
----
-
-## File Structure (Current)
+## File Structure (Current — dead files removed)
 
 ```
 poly-words/
 ├── app/
 │   ├── components/
-│   │   ├── FluentEmoji.tsx
 │   │   ├── GhostTile.tsx
 │   │   ├── HeartbeatBackground.tsx
-│   │   ├── MaskBoard.tsx
-│   │   ├── MasterGateTile.tsx
+│   │   ├── MaskBoard.tsx           ← main board
+│   │   ├── MasterGateTile.tsx      ← Pass 7
 │   │   ├── PhraseBreakScreen.tsx
 │   │   ├── PollyCard.tsx
 │   │   ├── PollyController.tsx
 │   │   ├── ScoreFloat.tsx
 │   │   ├── SlangDropScreen.tsx
 │   │   ├── StreakDisplay.tsx
-│   │   ├── SwipeMask.tsx
+│   │   ├── SwipeMask.tsx           ← tile component
 │   │   ├── SwitchbackScreen.tsx
 │   │   └── ui/
 │   │       └── PollySprite.tsx
@@ -512,7 +363,7 @@ poly-words/
 │   ├── game/
 │   │   ├── polyRunEngine.ts
 │   │   ├── polyRunEngine.test.ts
-│   │   ├── session.ts
+│   │   ├── session.ts              ← word data
 │   │   └── types.ts
 │   ├── hooks/
 │   │   ├── useHeartbeat.ts
@@ -524,17 +375,60 @@ poly-words/
 │   │   ├── HomeScreen.tsx
 │   │   ├── ProfileScreen.tsx
 │   │   └── ResultsScreen.tsx
-│   ├── store/
-│   │   └── useGameStore.ts
-│   └── utils/
-│       └── SoundEngine.ts
-├── assets/
-│   ├── fonts/                       # SuperCartoon, gomarice, InterVariable, SuperCarnival, SuperFrosting, Poppins
-│   └── images/
-│       ├── polly_fullbody.png
-│       └── polly_sprite.png
-└── App.tsx
+│   └── store/
+│       └── useGameStore.ts
+└── app/utils/
+    └── SoundEngine.ts
 ```
+
+**Dead files removed:** ClueCard, TruthStream, RevealSequence, ReversedBuild, MaskTile, MaskGrid, GameController, wordBank
+
+---
+
+## Polly — Character System
+
+**Who she is:** Green parrot, explorer hat, orange beak, purple bandana with W. Smart, slightly smug, one step ahead. Adult-coded. Never childlike.
+
+**Position:** Always bottom-left. Never moves. `position: absolute, bottom: 34, left: 12`
+
+**9-pose sprite (3×3 grid):**
+Each pose = 1/3 of sprite width and height.
+Crop via parent View overflow:hidden + Image offset.
+
+**State map:**
+| State | Pose | Trigger |
+|---|---|---|
+| Idle | BOT_LEFT | Default, between words |
+| Correct | BOT_LEFT bounce | First correct swipe per word |
+| Wrong | MID_CENTER recoil | Wrong swipe |
+| Way wrong | BOT_CENTER laugh | 3+ wrong same word |
+| Ghost entry | TOP_CENTER sway | Ghost tile appears |
+| Gate mastered | BOT_LEFT big bounce | Gate split both correct |
+| Boss entry | TOP_RIGHT scale pop | Boss word mounts |
+| 1 heart left | TOP_RIGHT alarmed | Hearts drop to 1 |
+| Game over | BOT_RIGHT mind blown | Lives exhausted |
+
+**Line rules:**
+- Never jargon ("Clean split", "Pick carefully")
+- "Word up." — max 0-2 per run, first correct swipe only
+- Slang Drop: "Language moves."
+- Phrase Break: "Tiny detour. Big meaning."
+- Switchback: "One word. Two lives."
+- Gate intro (once ever): "Only with a Perfect sweep — or it will come back to haunt you."
+
+---
+
+## Scoring
+
+| Event | Score |
+|---|---|
+| Correct meaning | +100 × combo |
+| Master Gate split both correct | +300 bonus |
+| Phrase Break correct | +150 bonus |
+| Switchback first attempt | +200 bonus |
+| Switchback second attempt | +100 bonus |
+| Wrong swipe | Combo resets to ×0 |
+| Boss Word | All scoring × 2 |
 
 ---
 
@@ -544,7 +438,7 @@ poly-words/
 2. Semantic tension — player must hold two meanings at once
 3. Mobile arcade pacing — fast, rhythmic, punchy
 4. Replayability — near-miss > grind > unlock
-5. Boss words — rare, elevated stakes
+5. Master Gate — earned, not given
 6. Ghost tiles — missed meanings haunt next run
 7. Sharp reveal — the "oh wait" snap must land
 8. Juice — haptics, sound, animation all sync
@@ -557,41 +451,34 @@ poly-words/
 
 - ❌ Left swipe — doesn't exist
 - ❌ Tap instead of swipe — all interaction is swipe
+- ❌ Directional arrows on tiles in live play — onboarding only
 - ❌ Jargon in Polly lines
-- ❌ More than 2 gold elements on screen
-- ❌ Red as primary color
-- ❌ Dashed borders
+- ❌ More than 2 gold elements on screen simultaneously
+- ❌ Red as primary color or tile state before swipe
+- ❌ Dashed borders on regular tiles
 - ❌ Circular Polly crop
-- ❌ useNativeDriver mixing between animation phases
-- ❌ Generic emoji repeated across tiles
-- ❌ Definition-style tile text
+- ❌ useNativeDriver mixing on same Animated.Value
+- ❌ Definition-style tile text (no dictionary language)
 - ❌ Vocabulary quiz framing
+- ❌ Master meaning text visible in ghost tiles
+- ❌ Polly moving position between game states
+- ❌ Gate as a swipeable tile — it auto-opens
 
 ---
 
 ## Claude Code Conventions
 
-- Always `tsc clean after fix` at end of every prompt
-- Reference exact mask IDs — always confirm IDs first
-- Height/margin: `useNativeDriver: false`
-- Transform/opacity: `useNativeDriver: true`
-- Never mix drivers in same animation chain
-- Use `setTimeout` to separate animation phases, not `.start()` callbacks
+- Always `tsc --noEmit` after every change — must exit 0
+- Confirm exact file paths before editing — never assume structure
+- `useNativeDriver: false` → height/margin/backgroundColor only
+- `useNativeDriver: true` → transform/opacity only
+- Never chain both drivers on same Animated.Value
+- Use `setTimeout` to separate animation phases — never `.start()` callbacks
 - All new screens: check `step.kind` or `step.eventType` for routing
 - Swipe mechanic only — never add tap handlers to answer tiles
+- Read the relevant file fully before touching it
+- Surgical prompts — one concern at a time
 
 ---
 
-## Next Priorities
-
-1. **Polly banner card** — half-body, not circular crop
-2. **Expand phrase pool** — add remaining 7 phrases
-3. **Expand slang pool** — add remaining 17 words
-4. **Expand switchback pool** — add remaining 15 rounds
-5. **Timer system** — Speed rounds need pressure
-6. **Home screen** — real Polly, proper branding
-7. **Results screen redesign** — polish end-of-run flow
-
----
-
-*POLYWORDS GDD v2 · Pete Diba · June 2, 2026*
+*POLYWORDS CLAUDE.md · Pete DiBari · June 4, 2026*
