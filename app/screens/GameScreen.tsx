@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,12 +15,153 @@ import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 
+// ─── SHARD ANGLES ────────────────────────────────────────────
+const SHARD_ANGLES = [0, 30, 60, 90, 120, 150, 180, 220, 270, 320];
+const SHARD_COLORS = ['#7B2D8B', '#9B2D6B'];
+
+// ─── SHARD EFFECT ─────────────────────────────────────────────
+function ShardEffect({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
+  const anims = useRef(
+    SHARD_ANGLES.map((_, i) => ({
+      tx:      new Animated.Value(0),
+      ty:      new Animated.Value(0),
+      rot:     new Animated.Value(0),
+      op:      new Animated.Value(1),
+      sc:      new Animated.Value(1),
+      color:   SHARD_COLORS[i % 2],
+      w:       8  + Math.random() * 8,   // 8–16
+      h:       4  + Math.random() * 4,   // 4–8
+      dist:    55 + Math.random() * 35,  // 55–90
+      rotEnd:  90 + Math.random() * 270, // 90–360
+      stagger: Math.random() * 50,       // 0–50ms
+    }))
+  ).current;
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    SHARD_ANGLES.forEach((angle, i) => {
+      const rad  = (angle * Math.PI) / 180;
+      const anim = anims[i];
+      timers.push(setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(anim.tx,  { toValue: Math.cos(rad) * anim.dist, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.ty,  { toValue: Math.sin(rad) * anim.dist, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.rot, { toValue: 1,                         duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.op,  { toValue: 0,                         duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.sc,  { toValue: 0.1,                       duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]).start();
+      }, anim.stagger));
+    });
+
+    timers.push(setTimeout(onDone, 450));
+    return () => timers.forEach(clearTimeout);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      {anims.map((anim, i) => {
+        const rotInterp = anim.rot.interpolate({
+          inputRange:  [0, 1],
+          outputRange: ['0deg', `${anim.rotEnd}deg`],
+        });
+        return (
+          <Animated.View
+            key={i}
+            style={{
+              position:        'absolute',
+              left:            x - anim.w / 2,
+              top:             y - anim.h / 2,
+              width:           anim.w,
+              height:          anim.h,
+              borderRadius:    2,
+              backgroundColor: anim.color,
+              transform: [
+                { translateX: anim.tx },
+                { translateY: anim.ty },
+                { rotate:     rotInterp },
+                { scale:      anim.sc  },
+              ],
+              opacity: anim.op,
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+// ─── TRAIL EFFECT ─────────────────────────────────────────────
+const TRAIL_COUNT = 12;
+
+function TrailEffect({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
+  const anims = useRef(
+    Array.from({ length: TRAIL_COUNT }, () => {
+      const angle = (-50 + Math.random() * 100) * (Math.PI / 180);
+      const dist  = 50 + Math.random() * 30;
+      return {
+        tx:      new Animated.Value(0),
+        ty:      new Animated.Value(0),
+        op:      new Animated.Value(1),
+        sc:      new Animated.Value(1),
+        size:    4 + Math.random() * 3,
+        dx:      Math.sin(angle) * dist,
+        dy:      -Math.cos(angle) * dist,
+        stagger: Math.random() * 25,
+      };
+    })
+  ).current;
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    anims.forEach(anim => {
+      timers.push(setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(anim.tx, { toValue: anim.dx, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.ty, { toValue: anim.dy, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.op, { toValue: 0,       duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(anim.sc, { toValue: 0,       duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]).start();
+      }, anim.stagger));
+    });
+
+    timers.push(setTimeout(onDone, 400));
+    return () => timers.forEach(clearTimeout);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      {anims.map((anim, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position:        'absolute',
+            left:            x - anim.size / 2,
+            top:             y - anim.size / 2,
+            width:           anim.size,
+            height:          anim.size,
+            borderRadius:    anim.size / 2,
+            backgroundColor: '#4CAF50',
+            transform: [
+              { translateX: anim.tx },
+              { translateY: anim.ty },
+              { scale:      anim.sc },
+            ],
+            opacity: anim.op,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
 // ─── TOP BAR ─────────────────────────────────────────────────
 
 function TopBar() {
-  const game = useGameStore(s => s.game);
+  const game  = useGameStore(s => s.game);
   const lives = '❤️'.repeat(Math.max(game.lives, 0));
-  const total = SESSION.length;
+  const total   = SESSION.length;
   const current = game.stepIndex;
 
   const animScore = useRef(new Animated.Value(game.score)).current;
@@ -41,7 +182,15 @@ function TopBar() {
   }, [game.score]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <View>
+    <View style={tb.root}>
+      {/* Row 1: Score · Streak · Lives */}
+      <View style={tb.statsRow}>
+        <Text style={tb.scoreVal}>{displayScore}</Text>
+        <StreakDisplay />
+        <Text style={tb.lives}>{lives || '💀'}</Text>
+      </View>
+
+      {/* Row 2: Progress dots */}
       <View style={tb.dotsRow}>
         {Array.from({ length: total }, (_, i) => (
           <View
@@ -55,64 +204,53 @@ function TopBar() {
           />
         ))}
       </View>
-
-      <View style={tb.bar}>
-        <View style={tb.block}>
-          <Text style={tb.label}>SCORE</Text>
-          <Text style={tb.value}>{displayScore}</Text>
-        </View>
-
-        <StreakDisplay />
-
-        <View style={tb.block}>
-          <Text style={tb.lives}>{lives || '💀'}</Text>
-        </View>
-      </View>
     </View>
   );
 }
 
 const tb = StyleSheet.create({
+  root: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 2,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 28,
+  },
+  scoreVal: {
+    color: '#FFFFFF',
+    fontSize: FONT_SIZES.hudScore,
+    fontFamily: FONTS.hud,
+    minWidth: 52,
+  },
+  lives: {
+    fontSize: 14,
+    textAlign: 'right',
+    minWidth: 52,
+  },
   dotsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 4,
+    height: 12,
     gap: 4,
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   dotDone:      { backgroundColor: '#FFD700' },
   dotCurrent:   { backgroundColor: '#FFFFFF' },
   dotRemaining: { backgroundColor: 'rgba(255,255,255,0.25)' },
-  bar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
-  },
-  block: { alignItems: 'center', minWidth: 64 },
-  label: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: FONT_SIZES.hudLabel,
-    fontFamily: FONTS.label,
-    letterSpacing: 2,
-  },
-  value: {
-    color: '#FFFFFF',
-    fontSize: FONT_SIZES.hudScore,
-    fontFamily: FONTS.hud,
-  },
-  lives: { fontSize: 18 },
 });
 
 // ─── INNER DIRECTOR ───────────────────────────────────────────
+
+type EffectEntry = { id: number; type: 'shard' | 'trail'; x: number; y: number };
 
 function GameDirector({ navigation }: { navigation: any }) {
   const game       = useGameStore(s => s.game);
@@ -120,6 +258,19 @@ function GameDirector({ navigation }: { navigation: any }) {
   const loadGhosts = useGameStore(s => s.loadGhosts);
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
+
+  // ── Effects overlay state ──────────────────────────────────
+  const [effects, setEffects] = useState<EffectEntry[]>([]);
+  const effectIdRef = useRef(0);
+
+  const spawnEffect = useCallback((type: 'shard' | 'trail', x: number, y: number) => {
+    const id = ++effectIdRef.current;
+    setEffects(prev => [...prev, { id, type, x, y }]);
+  }, []);
+
+  function removeEffect(id: number) {
+    setEffects(prev => prev.filter(e => e.id !== id));
+  }
 
   useEffect(() => {
     initSounds();
@@ -154,9 +305,9 @@ function GameDirector({ navigation }: { navigation: any }) {
     navigation.navigate('Home');
   }
 
-  const isDone = game.status === 'complete' || game.status === 'gameOver';
-  const activeStep = !isDone ? currentStep(game) : null;
-  const screenBg = activeStep?.kind === 'switchback' ? '#1A1A4A' : '#1A1830';
+  const isDone      = game.status === 'complete' || game.status === 'gameOver';
+  const activeStep  = !isDone ? currentStep(game) : null;
+  const screenBg    = activeStep?.kind === 'switchback' ? '#1A1A4A' : '#1A1830';
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: screenBg }]}>
@@ -165,8 +316,17 @@ function GameDirector({ navigation }: { navigation: any }) {
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : (
-        <GameContent />
+        <GameContent spawnEffect={spawnEffect} />
       )}
+
+      {/* ── Effects overlay — pointerEvents none, zIndex 100 ── */}
+      <View style={styles.effectsOverlay} pointerEvents="none">
+        {effects.map(e =>
+          e.type === 'shard'
+            ? <ShardEffect key={e.id} x={e.x} y={e.y} onDone={() => removeEffect(e.id)} />
+            : <TrailEffect key={e.id} x={e.x} y={e.y} onDone={() => removeEffect(e.id)} />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -202,13 +362,16 @@ const sbuf = StyleSheet.create({
 
 // ─── GAME CONTENT ─────────────────────────────────────────────
 
-function GameContent() {
+function GameContent({
+  spawnEffect,
+}: {
+  spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
+}) {
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
 
-  // Switchback polly buffer — hold before mounting next step
-  const prevStepRef   = useRef(step);
-  const [bufferLine, setBufferLine]   = useState<string | null>(null);
+  const prevStepRef = useRef(step);
+  const [bufferLine, setBufferLine] = useState<string | null>(null);
 
   useEffect(() => {
     const prev = prevStepRef.current;
@@ -248,6 +411,7 @@ function GameContent() {
       <SlangDropScreen
         key={`slang-${game.stepIndex}`}
         step={step}
+        spawnEffect={spawnEffect}
       />
     );
   }
@@ -257,6 +421,7 @@ function GameContent() {
       <MaskBoard
         key={`board-${game.stepIndex}`}
         step={step}
+        spawnEffect={spawnEffect}
       />
     );
   }
@@ -278,5 +443,13 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#1A1830',
+  },
+  effectsOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 100,
   },
 });

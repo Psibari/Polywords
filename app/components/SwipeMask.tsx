@@ -16,7 +16,6 @@ import Animated, {
   useAnimatedStyle,
   Easing as ReaEasing,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
@@ -26,7 +25,7 @@ import { FONTS, FONT_SIZES } from '../constants/fonts';
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
 const SWIPE_THRESHOLD = 40;
-const TILE_GAP        = 10;
+const TILE_GAP        = 6;
 
 type Props = {
   mask: Mask;
@@ -40,9 +39,10 @@ type Props = {
   entryDelay?: number;
   eraBadge?: string;
   hapticCorrect?: () => void;
+  onEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
 };
 
-// Gold steps for word absorption (Part C Phase 4) — exported for MaskBoard
+// Gold steps for word absorption — exported for MaskBoard
 export const GOLD_STEPS = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
 export function SwipeMask({
@@ -52,11 +52,12 @@ export function SwipeMask({
   onSwipeReveal,
   state: s,
   revealable = false,
-  tileHeight = 64,
+  tileHeight = 58,
   isSpecialSplit = false,
   entryDelay = 0,
   eraBadge,
   hapticCorrect,
+  onEffect,
 }: Props) {
 
   // ── UI state ──────────────────────────────────────────────────
@@ -68,11 +69,20 @@ export function SwipeMask({
   const scale            = useSharedValue(1);
   const rotation         = useSharedValue(0);
   const tileOpacity      = useSharedValue(1);
-  const borderOpacityVal = useSharedValue(0.08);
+  const borderOpacityVal = useSharedValue(0.12);
+  const isCorrectSV      = useSharedValue(0); // 1 when locked correct
 
   // ── RN Animated: height/margin collapse (non-native) ──────────
   const outerHeightAnim    = useRef(new RNAnimated.Value(Math.max(tileHeight, 58))).current;
   const outerMarginTopAnim = useRef(new RNAnimated.Value(TILE_GAP)).current;
+
+  // ── RN Animated: bg color (non-native) ───────────────────────
+  // 0 = #1E1C4A (default), 0.5 = #2d6e3a (correct flash), 1.0 = #1a3520 (locked)
+  const bgAnim = useRef(new RNAnimated.Value(0)).current;
+  const bgColor = bgAnim.interpolate({
+    inputRange:  [0,         0.5,       1.0      ],
+    outputRange: ['#1E1C4A', '#2d6e3a', '#1a3520'],
+  });
 
   // ── RN Animated: entry (native driver) ────────────────────────
   const entryOpacity = useRef(new RNAnimated.Value(0)).current;
@@ -83,9 +93,6 @@ export function SwipeMask({
   const eraBadgeTransY  = useRef(new RNAnimated.Value(20)).current;
   const eraBadgeOpacity = useRef(new RNAnimated.Value(0)).current;
 
-  // ── RN Animated: screen-level purple flash (native driver) ────
-  const screenFlashOpacity = useRef(new RNAnimated.Value(0)).current;
-
   // ── Refs ──────────────────────────────────────────────────────
   const judgedRef             = useRef(false);
   const retryableRef          = useRef(true);
@@ -95,10 +102,13 @@ export function SwipeMask({
   const onSwipeUpRef          = useRef(onSwipeUp);
   const onSwipeDownRef        = useRef(onSwipeDown);
   const hapticCorrectRef      = useRef(hapticCorrect);
+  const onEffectRef           = useRef(onEffect);
+  const outerRef              = useRef<any>(null);
 
   useEffect(() => { onSwipeUpRef.current    = onSwipeUp;    }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
   useEffect(() => { hapticCorrectRef.current = hapticCorrect; }, [hapticCorrect]);
+  useEffect(() => { onEffectRef.current      = onEffect;      }, [onEffect]);
 
   // ── Entry animation ───────────────────────────────────────────
   useEffect(() => {
@@ -123,9 +133,8 @@ export function SwipeMask({
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    // ── CORRECT (swipe UP on real meaning) — Part C ────────────
+    // ── CORRECT — tile locks gold, stays on board ─────────────
     if (s === 'correct') {
-      // Lift-off haptic — gated here, never in release
       if (hapticCorrectRef.current) {
         hapticCorrectRef.current();
       } else {
@@ -133,27 +142,27 @@ export function SwipeMask({
       }
       playCorrectSwipe();
 
-      // Phase 1: resistance dip — only fires on confirmed correct UP
+      // Measure tile for trail particle effect
+      outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
+        onEffectRef.current?.('trail', pageX + w / 2, pageY + h / 2);
+      });
+
+      // Quick lock pulse
       scale.value = withSequence(
-        withTiming(0.96, { duration: 40 }),
-        withSpring(1.04, { damping: 6, stiffness: 400 }),
+        withTiming(1.04, { duration: 80 }),
+        withSpring(1.0, { damping: 10, stiffness: 300 }),
       );
 
-      // Phase 2: launch toward word after dip settles (60ms buffer)
-      timers.push(setTimeout(() => {
-        translateY.value  = withSpring(-140, { damping: 10, stiffness: 180 });
-        scale.value       = withTiming(0.4,  { duration: 250 });
-        tileOpacity.value = withTiming(0,    { duration: 250 });
-      }, 60));
+      // Green border via tileAnimStyle
+      isCorrectSV.value = 1;
 
-      // Phase 5: absorption haptic (only for non-hapticCorrect tier)
-      if (!hapticCorrectRef.current) {
-        timers.push(setTimeout(() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }, 180));
-      }
+      // BG flash: burst green → settle to locked green (non-native)
+      RNAnimated.sequence([
+        RNAnimated.timing(bgAnim, { toValue: 0.5, duration: 80,  useNativeDriver: false }),
+        RNAnimated.timing(bgAnim, { toValue: 1.0, duration: 200, useNativeDriver: false }),
+      ]).start();
 
-      // Era badge briefly slides up before tile vanishes
+      // Era badge slides up briefly
       if (eraBadge) {
         timers.push(setTimeout(() => {
           RNAnimated.parallel([
@@ -162,35 +171,27 @@ export function SwipeMask({
           ]).start();
         }, 80));
       }
-
-      // Collapse height after tile is gone
-      timers.push(setTimeout(() => {
-        RNAnimated.parallel([
-          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]).start();
-      }, 260));
+      // Tile stays — no height collapse
     }
 
-    // ── WRONG (incorrect swipe in either direction) ────────────
+    // ── WRONG — snap back ────────────────────────────────────
     if (s === 'wrong') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       playWrongBuzz();
       setFlashRed(true);
       timers.push(setTimeout(() => setFlashRed(false), 250));
 
-      // Disable gesture while snap-back plays
       retryableRef.current = false;
 
-      // Clean snap-back — no shake, no fly-off, no drama
       translateX.value       = withSpring(0,   { damping: 14, stiffness: 300 });
       translateY.value       = withSpring(0,   { damping: 14, stiffness: 300 });
       scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
       rotation.value         = withSpring(0,   { damping: 14, stiffness: 300 });
-      borderOpacityVal.value = withTiming(0.08, { duration: 150 });
+      borderOpacityVal.value = withTiming(0.12, { duration: 150 });
       tileOpacity.value      = withTiming(1.0, { duration: 80 });
+      isCorrectSV.value      = 0;
+      bgAnim.setValue(0);
 
-      // Re-enable once spring has settled
       timers.push(setTimeout(() => {
         judgedRef.current            = false;
         swipeDirRef.current          = null;
@@ -199,46 +200,30 @@ export function SwipeMask({
       }, 320));
     }
 
-    // ── TRAP-CAUGHT (swipe RIGHT on fake meaning) ──────────────
+    // ── TRAP-CAUGHT — slide right + shards ───────────────────
     if (s === 'trap-caught') {
       playShatter();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-      // Scale punch — tile puffs before it flies (50ms)
-      scale.value = withTiming(1.15, { duration: 50 });
+      // Measure tile for shard effect in overlay
+      outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
+        onEffectRef.current?.('shard', pageX + w / 2, pageY + h / 2);
+      });
 
-      timers.push(setTimeout(() => {
-        // Rocket exit — tile gone in under 150ms
-        translateX.value  = withSpring(600, { damping: 8, stiffness: 600, velocity: 40 });
-        tileOpacity.value = withTiming(0, { duration: 200 });
+      // Tile slides right and fades (ease-in 260ms)
+      translateX.value  = withTiming(400, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
+      tileOpacity.value = withTiming(0,   { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
 
-        // Beat 1: THROW
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-        // Beat 2: CRASH — heavy haptic + screen flash
-        timers.push(setTimeout(() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          RNAnimated.sequence([
-            RNAnimated.timing(screenFlashOpacity, { toValue: 0.35, duration:  40, useNativeDriver: true }),
-            RNAnimated.timing(screenFlashOpacity, { toValue: 0,    duration: 120, useNativeDriver: true }),
-          ]).start();
-        }, 80));
-
-        // Beat 3: YEAH
-        timers.push(setTimeout(() => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }, 140));
-      }, 50));
-
-      // Collapse height after explosion settles
+      // Collapse height after tile is gone
       timers.push(setTimeout(() => {
         RNAnimated.parallel([
           RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
           RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]).start();
-      }, 500));
+      }, 300));
     }
 
-    // ── REVEALED (reset — used for ghost tile re-entry) ────────
+    // ── REVEALED — full reset ────────────────────────────────
     if (s === 'revealed') {
       judgedRef.current      = false;
       retryableRef.current   = true;
@@ -248,10 +233,11 @@ export function SwipeMask({
       tileOpacity.value      = 1;
       scale.value            = 1;
       rotation.value         = 0;
-      borderOpacityVal.value = 0.08;
+      borderOpacityVal.value = 0.12;
+      isCorrectSV.value      = 0;
+      bgAnim.setValue(0);
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
-      screenFlashOpacity.setValue(0);
       setFlashRed(false);
     }
 
@@ -266,7 +252,11 @@ export function SwipeMask({
       { rotate:     `${rotation.value}deg` },
     ],
     opacity:     tileOpacity.value,
-    borderColor: isSpecialSplit ? '#FFD700' : `rgba(255,255,255,${borderOpacityVal.value})`,
+    borderColor: isCorrectSV.value === 1
+      ? '#4CAF50'
+      : isSpecialSplit
+        ? '#FFD700'
+        : `rgba(255,255,255,${borderOpacityVal.value})`,
   }));
 
   // ── PanResponder ──────────────────────────────────────────────
@@ -280,7 +270,6 @@ export function SwipeMask({
         !judgedRef.current && retryableRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
       onPanResponderTerminationRequest: () => false,
 
-      // Part B — Finger down: scale lift + border glow + shadow deepen
       onPanResponderGrant: () => {
         if (judgedRef.current || !retryableRef.current) return;
         scale.value            = withSpring(1.06, { damping: 10, stiffness: 500 });
@@ -291,23 +280,19 @@ export function SwipeMask({
         hasThresholdFiredRef.current = false;
       },
 
-      // Part B — Finger moving: track + rotation + scale breathing + threshold haptic
       onPanResponderMove: (_, g) => {
         if (judgedRef.current) return;
         translateX.value = g.dx;
         translateY.value = g.dy;
 
-        // Rotation follows dominant drag direction
         const domRight  = Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 0;
         const domUp     = g.dy < 0 && Math.abs(g.dy) >= Math.abs(g.dx);
         const targetRot = domRight ? 4 : domUp ? -2 : 0;
         rotation.value  = withSpring(targetRot, { damping: 20, stiffness: 300 });
 
-        // Scale breathes with velocity (vx/vy are px/ms; ×1000 → px/s estimate)
         const speed = Math.sqrt(g.vx * g.vx + g.vy * g.vy) * 1000;
         scale.value = withSpring(speed > 300 ? 1.07 : 1.04, { damping: 12, stiffness: 400 });
 
-        // Threshold haptic — fires once at 60% of SWIPE_THRESHOLD in dominant axis
         const mainAxis = Math.max(g.dx > 0 ? g.dx : 0, -g.dy > 0 ? -g.dy : 0);
         if (mainAxis > SWIPE_THRESHOLD * 0.6 && !hasThresholdFiredRef.current) {
           hasThresholdFiredRef.current = true;
@@ -318,28 +303,23 @@ export function SwipeMask({
       onPanResponderRelease: (_, g) => {
         if (judgedRef.current) return;
 
-        // Swipe UP — claim mask (Part C)
         if (g.dy < -SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'up';
-          // All outcome effects deferred to state handler — drag stays neutral
           onSwipeUpRef.current();
 
-        // Swipe RIGHT — call trap (Part D)
         } else if (g.dx > SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
-          // Full swipe extension haptic
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onSwipeDownRef.current();
 
-        // Spring home — Part B return to origin
         } else {
           translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
           translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
-          borderOpacityVal.value = withTiming(0.08, { duration: 150 });
+          borderOpacityVal.value = withTiming(0.12, { duration: 150 });
         }
       },
 
@@ -349,13 +329,13 @@ export function SwipeMask({
           translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
-          borderOpacityVal.value = withTiming(0.08, { duration: 150 });
+          borderOpacityVal.value = withTiming(0.12, { duration: 150 });
         }
       },
     })
   ).current;
 
-  // ── Hidden state (HIDDEN MEANING placeholder tile) ─────────────
+  // ── Hidden state ──────────────────────────────────────────────
   if (s === 'hidden') {
     return (
       <RNAnimated.View
@@ -368,7 +348,7 @@ export function SwipeMask({
         <RNAnimated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
           <Pressable
             onPress={revealable ? onSwipeReveal : undefined}
-            style={[styles.hiddenTile]}
+            style={styles.hiddenTile}
           >
             <FluentEmoji emoji="❓" size={32} />
             <Text style={styles.hiddenPhrase} numberOfLines={2}>
@@ -389,25 +369,11 @@ export function SwipeMask({
         transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
       }}
     >
-      {/* Screen-level purple flash — covers entire screen on trap caught */}
       <RNAnimated.View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          zIndex: 999,
-          top: -1000,
-          left: -500,
-          width: 2000,
-          height: 3000,
-          backgroundColor: '#7B2D8B',
-          opacity: screenFlashOpacity,
-        }}
-      />
-
-      <RNAnimated.View
+        ref={outerRef}
         style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
       >
-        {/* Main animated tile (Reanimated — native driver for transforms/opacity) */}
+        {/* Main animated tile — Reanimated for transforms/opacity (native) */}
         <Animated.View
           style={[styles.tile, tileAnimStyle]}
           onLayout={(e: LayoutChangeEvent) => {
@@ -418,25 +384,27 @@ export function SwipeMask({
           }}
           {...panResponder.panHandlers}
         >
-          {/* Part A — gradient background */}
-          <LinearGradient
-            colors={['#2D2B6E', '#252350']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
+          {/* Non-native animated background */}
+          <RNAnimated.View
+            style={[StyleSheet.absoluteFill, { backgroundColor: bgColor }]}
           />
 
           {/* Wrong flash */}
           {flashRed && (
-            <View style={[StyleSheet.absoluteFill, styles.flashOverlay, { backgroundColor: '#CC2200' }]} />
+            <View style={[StyleSheet.absoluteFill, styles.flashOverlay]} />
           )}
 
-          {/* Part A — text only, no emoji */}
+          {/* Checkmark — shown when locked correct */}
+          {s === 'correct' && (
+            <Text style={styles.checkmark}>✓</Text>
+          )}
+
+          {/* Phrase text */}
           <Text style={styles.phrase} numberOfLines={2}>
             {mask.phrase}
           </Text>
 
-          {/* Era badge (SlangDrop) */}
+          {/* Era badge */}
           {eraBadge && (
             <RNAnimated.View
               pointerEvents="none"
@@ -455,36 +423,43 @@ export function SwipeMask({
 }
 
 const styles = StyleSheet.create({
-  // ── Main mask/trap tile ───────────────────────────────────────
   tile: {
-    borderRadius: 16,
+    borderRadius: 12,
     minHeight: 58,
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingLeft: 20,
-    paddingRight: 16,
+    paddingLeft: 16,
+    paddingRight: 12,
     paddingVertical: 0,
     borderWidth: 1,
     // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor:   '#000000',
-    shadowOffset:  { width: 0, height: 3 },
-    shadowRadius:  6,
-    shadowOpacity: 0.4,
-    elevation: 4,
+    shadowOffset:  { width: 0, height: 2 },
+    shadowRadius:  4,
+    shadowOpacity: 0.35,
+    elevation: 3,
     overflow: 'hidden',
   },
+  checkmark: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: '800',
+    marginRight: 10,
+  },
   phrase: {
-    fontSize: FONT_SIZES.tileCopy,
+    fontSize: 16,
     fontFamily: FONTS.tileCopy,
+    fontWeight: '800',
     color: '#FFFFFF',
     flex: 1,
     flexShrink: 1,
     textAlignVertical: 'center',
   },
   flashOverlay: {
-    borderRadius: 16,
+    borderRadius: 12,
     zIndex: 10,
+    backgroundColor: '#CC2200',
   },
   eraBadgeWrap: {
     position: 'absolute',
@@ -500,21 +475,21 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     fontFamily: FONTS.label,
   },
-  // ── Hidden-state tile ─────────────────────────────────────────
   hiddenTile: {
     backgroundColor: '#2A2060',
-    borderRadius: 16,
+    borderRadius: 12,
     minHeight: 58,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
   hiddenPhrase: {
-    fontSize: FONT_SIZES.tileCopy,
+    fontSize: 16,
     fontFamily: FONTS.tileCopy,
+    fontWeight: '800',
     color: '#FFD700',
     marginLeft: 12,
     flex: 1,

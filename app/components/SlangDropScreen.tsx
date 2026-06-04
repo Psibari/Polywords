@@ -16,9 +16,12 @@ import { FONTS, FONT_SIZES } from '../constants/fonts';
 const TILE_HEIGHT = 56;
 const TILE_GAP    = 10;
 
-type Props = { step: WordStep };
+type Props = {
+  step: WordStep;
+  spawnEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
+};
 
-export function SlangDropScreen({ step }: Props) {
+export function SlangDropScreen({ step, spawnEffect }: Props) {
   const store = useGameStore();
 
   const slangEra    = step.slangEra;
@@ -166,6 +169,7 @@ export function SlangDropScreen({ step }: Props) {
               tileHeight={TILE_HEIGHT}
               entryDelay={index * 80}
               eraBadge={mask.id === slangMaskId && slangEra ? slangEra : undefined}
+              onEffect={spawnEffect}
             />
           ))}
         </View>

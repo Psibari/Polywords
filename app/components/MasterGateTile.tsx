@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   tile: {
     marginTop: 8,
     backgroundColor: '#0F0D2A',
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 2,
     shadowColor: '#F5C842',
     shadowOffset: { width: 0, height: 2 },
