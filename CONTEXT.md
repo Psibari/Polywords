@@ -93,13 +93,13 @@ Word appears, tiles mount with 80ms stagger. Swipe UP on real meanings, RIGHT on
 `eventType: 'bossWord'` — smash entrance from top, screen shake, gold sweep, 80px gomarice font, all scoring × 2. Current boss words: SPRING (step 3), ORDER (step 12).
 
 ### Phrase Break
-Full screen. No tiles. Phrase rises from bottom. Four answer tiles. Swipe UP to select. Correct → +150, no life lost on wrong. Always low stakes — curiosity round.
+Full screen. No tiles. Phrase rises from bottom. Four answer tiles. Swipe UP to select. Correct → +150, no life lost on wrong. Always low stakes — curiosity round. The active session uses a fixed phrase break step (`Give it a shot`), while `phraseBreakPool` defines additional phrase-break content.
 
 ### Slang Drop
 Full screen. Record scratch. Word scratches in from left. "Slang check." from right in Polly green. Slang meaning + traps only. Era badge on correct.
 
 ### Switchback
-Full screen. Two clues from opposite sides. One word connects both. Swipe UP on answer word. First attempt +200, second +100. Both wrong → -1 life.
+Full screen. Two clues from opposite sides. One word connects both. Swipe UP on answer word. First attempt +200, second +100. Both wrong → -1 life. The active session uses a fixed COLD switchback step, while `switchbackPool` defines additional switchback content.
 
 ---
 
@@ -165,13 +165,12 @@ Every standard round word has a hidden pair. Tile sits above stack, pulsing gree
 - HIDDEN MEANING tile — pulsing green/gold border
 - 10-step cinematic split sequence on perfect clear
 - Boss Word entrance sequence (smash, shake, sweep)
-- PHRASE BREAK, SLANG DROP, SWITCHBACK (swipe fix in progress)
+- PHRASE BREAK, SLANG DROP, SWITCHBACK flow implemented
 - Full sound system, haptics, staggered tile mount (80ms)
 - Hero word fade+scale on transition, ghost tile system
 - Session data conflict-free — all hidden meaning duplicates resolved
 
 ### In Progress
-- **SWITCHBACK swipe fix** — currently tapping not swiping (top priority)
 - Polly image in pill — circular crop punted
 - Fluent 3D emoji — CDN fallback still firing
 - "Word up." protection — needs boss-only limiting
@@ -216,14 +215,13 @@ Every standard round word has a hidden pair. Tile sits above stack, pulsing gree
 
 ## Next Priorities
 
-1. **SWITCHBACK swipe fix** — tap to swipe
-2. **"Word up." protection** — boss perfect only
-3. **Polly banner card** — half-body, not circular crop
-4. **Expand phrase pool** — add remaining 7 phrases
-5. **Expand slang pool** — add remaining 17 words
-6. **Expand switchback pool** — add remaining 15 rounds
-7. **Timer system** — Speed rounds need pressure
-8. **Home screen** — real Polly, proper branding
+1. **Polly banner card** — half-body, not circular crop
+2. **Expand phrase pool** — add remaining 7 phrases
+3. **Expand slang pool** — add remaining 17 words
+4. **Expand switchback pool** — add remaining 15 rounds
+5. **Timer system** — Speed rounds need pressure
+6. **Home screen** — real Polly, proper branding
+7. **Results screen redesign** — polish end-of-run flow
 
 ---
 
@@ -242,7 +240,7 @@ Every standard round word has a hidden pair. Tile sits above stack, pulsing gree
 | Date | AI Used | What Was Done | Left Off At |
 |---|---|---|---|
 | May 31, 2026 | Claude | Initial CONTEXT.md created | Bug/polish list active |
-| Jun 3, 2026 | Claude | Updated CONTEXT.md to match GDD v2 — 12-step session, new fonts, new palette, all round types documented | SWITCHBACK swipe fix in progress (top priority) |
+| Jun 3, 2026 | Claude | Updated context.md and CLAUDE.md to match current code-backed session state | Docs synced to current run and switchback implementation |
 
 ---
 
