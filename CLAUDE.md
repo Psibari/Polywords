@@ -87,7 +87,7 @@ Editor:         VS Code
 - Boss Word — smash entrance, screen shake, gold sweep, 80px
 - PHRASE BREAK — full screen, phrase rises, swipe-up answers, random rotation
 - SLANG DROP — record scratch, word from left, "Slang check." from right, era badge
-- SWITCHBACK — two clues from opposite sides, word tiles, 2-attempt logic (swipe fix in progress)
+- SWITCHBACK — two clues from opposite sides, word tiles, 2-attempt logic, swipe-based drag input implemented
 - Sound system — correct swipe, wrong buzz, shatter, scratch, split reveal, round complete
 - Mask language upgraded — all session words with sharp 2-4 word scene-style masks
 - Emoji upgraded — 111 fields, no repeats
@@ -98,7 +98,7 @@ Editor:         VS Code
 - 5-life system
 
 ### ⚠️ In Progress
-- SWITCHBACK swipe fix — currently tapping not swiping
+
 - Polly image in pill — circular crop doesn't work, punted
 - Fluent 3D emoji — CDN fallback still firing
 - "Word up." protection — needs boss-only limiting
@@ -169,8 +169,9 @@ Full screen palate cleanser. No tiles. Pure language curiosity.
 - Correct → gold, Polly reveal fires, +150 bonus, auto-advance 2s
 - Wrong → red flash, correct reveals gold, "Now you know.", no life lost
 - Always low stakes — curiosity round
+- Current session uses a fixed Phrase Break step (`Give it a shot`); the pool defines additional phrase-break content separately.
 
-**Current phrase pool (3 entries, random per run):**
+**Phrase Break pool (3 fixed entries):**
 - "Spill the beans" → Ancient Greek bean voting
 - "Bite the bullet" → Pre-anaesthetic surgery
 - "Break a leg" → Theatre reverse superstition
@@ -231,12 +232,13 @@ Full screen. Puzzle flips — two clues, find the connecting word.
 - Border: 2px solid #FFD700
 - Labels: "CLUE 1" / "CLUE 2" above each bar
 
-**Current switchback pool (5 entries, random per run):**
+**Switchback pool (5 fixed entries):**
 - BAT: "Swings in baseball" / "Sleeps upside down"
 - BANK: "Holds your money" / "River's edge"
 - CAST: "Fishing line goes this way" / "Actors in a film"
 - STRIKE: "Lightning does it" / "Bowler's perfect throw"
 - SOUND: "Ears catch it" / "Water between two lands"
+- The current run uses a fixed COLD switchback step; this pool defines additional switchback content separately.
 
 ---
 
@@ -582,14 +584,13 @@ poly-words/
 
 ## Next Priorities
 
-1. **SWITCHBACK swipe fix** — tap to swipe, in progress
-2. **"Word up." protection** — boss perfect only
-3. **Polly banner card** — half-body, not circular crop
-4. **Expand phrase pool** — add remaining 7 phrases
-5. **Expand slang pool** — add remaining 17 words
-6. **Expand switchback pool** — add remaining 15 rounds
-7. **Timer system** — Speed rounds need pressure
-8. **Home screen** — real Polly, proper branding
+1. **Polly banner card** — half-body, not circular crop
+2. **Expand phrase pool** — add remaining 7 phrases
+3. **Expand slang pool** — add remaining 17 words
+4. **Expand switchback pool** — add remaining 15 rounds
+5. **Timer system** — Speed rounds need pressure
+6. **Home screen** — real Polly, proper branding
+7. **Results screen redesign** — polish end-of-run flow
 
 ---
 
