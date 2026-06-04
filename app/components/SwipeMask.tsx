@@ -147,6 +147,11 @@ export function SwipeMask({
         onEffectRef.current?.('trail', pageX + w / 2, pageY + h / 2);
       });
 
+      // Snap back to natural position (swipe may have had horizontal drift)
+      translateX.value = withSpring(0, { damping: 14, stiffness: 300 });
+      translateY.value = withSpring(0, { damping: 14, stiffness: 300 });
+      rotation.value   = withSpring(0, { damping: 14, stiffness: 300 });
+
       // Quick lock pulse
       scale.value = withSequence(
         withTiming(1.04, { duration: 80 }),
