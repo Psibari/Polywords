@@ -18,7 +18,7 @@ import { MasterGateTile } from './MasterGateTile';
 import { ScoreFloat } from './ScoreFloat';
 import PollySprite from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
-import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
+import { playSplitReveal } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP      = 10;
@@ -214,17 +214,21 @@ export function MaskBoard({ step }: Props) {
   // ── master gate ───────────────────────────────────────────────
   const hasHidden = !!step.hiddenMeaning;
 
-  const [perfectClear, setPerfectClear] = useState(false);
-  const [dimVisible, setDimVisible]     = useState(false);
-  const [masteredVisible, setMasteredVisible] = useState(false);
+  const hiddenRealMask: Mask | null = step.hiddenMeaning
+    ? { id: `${step.word}_hidden_real`, emoji: step.hiddenEmoji ?? '✨', phrase: step.hiddenMeaning, isReal: true }
+    : null;
+  const hiddenTrapMask: Mask | null = step.hiddenMeaning
+    ? { id: `${step.word}_hidden_trap`, emoji: step.hiddenTrapEmoji ?? '🪤', phrase: step.hiddenTrap ?? 'Not this one', isReal: false }
+    : null;
 
-  const dimOpacity             = useRef(new Animated.Value(0)).current;
-  const masteredFlashOpacity   = useRef(new Animated.Value(0)).current;
-  const masteredWordScale      = useRef(new Animated.Value(1.0)).current;
-  const masteredWordTransY     = useRef(new Animated.Value(-120)).current;
-  const masteredTextScale      = useRef(new Animated.Value(0)).current;
-  const masteredTextOpacity    = useRef(new Animated.Value(0)).current;
-  const masteredOverlayOpacity = useRef(new Animated.Value(1)).current;
+  const [perfectClear, setPerfectClear] = useState(false);
+  const [splitTilesVisible, setSplitTilesVisible] = useState(false);
+  const [splitStates, setSplitStates] = useState<Map<string, SwipeMaskState>>(new Map());
+
+  // Split tile drop animations — native driver only
+  const splitTile1TransY  = useRef(new Animated.Value(-100)).current;
+  const splitTile2TransY  = useRef(new Animated.Value(-100)).current;
+  const splitCompletedRef = useRef(false);
 
   // ── hesitation timers ─────────────────────────────────────────
   const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -289,9 +293,14 @@ export function MaskBoard({ step }: Props) {
     completedRef.current          = false;
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
+    splitCompletedRef.current     = false;
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     goldTextOpacity.setValue(0);
+    setSplitTilesVisible(false);
+    setSplitStates(new Map());
+    splitTile1TransY.setValue(-100);
+    splitTile2TransY.setValue(-100);
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss) + wordEntry Polly bob
@@ -385,64 +394,45 @@ export function MaskBoard({ step }: Props) {
     return () => clearTimeout(tid);
   }, [shatterOrigin]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Mastered reveal cinematic ─────────────────────────────────
-  function handleMasteredSwipe() {
-    completedRef.current = true;
-    if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
+  // ── Gate opened — spawn split tiles ──────────────────────────
+  function handleGateOpened() {
+    splitTile1TransY.setValue(-100);
+    splitTile2TransY.setValue(-100);
+    setSplitTilesVisible(true);
 
-    masteredFlashOpacity.setValue(0);
-    masteredWordScale.setValue(1.0);
-    masteredWordTransY.setValue(-120);
-    masteredTextScale.setValue(0);
-    masteredTextOpacity.setValue(0);
-    masteredOverlayOpacity.setValue(1);
-    dimOpacity.setValue(0);
-    setDimVisible(true);
-    setMasteredVisible(true);
+    Animated.spring(splitTile1TransY, {
+      toValue: 0, damping: 12, stiffness: 120, useNativeDriver: true,
+    }).start();
 
-    // T+0ms: gold flash
-    Animated.sequence([
-      Animated.timing(masteredFlashOpacity, { toValue: 0.2, duration: 80,  useNativeDriver: true }),
-      Animated.timing(masteredFlashOpacity, { toValue: 0,   duration: 300, useNativeDriver: true }),
-    ]).start();
-
-    // T+80ms: word zooms from above to center
     setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(masteredWordScale,  { toValue: 2.2, damping: 8, stiffness: 90, useNativeDriver: true }),
-        Animated.spring(masteredWordTransY, { toValue: 0,   damping: 8, stiffness: 90, useNativeDriver: true }),
-      ]).start();
+      Animated.spring(splitTile2TransY, {
+        toValue: 0, damping: 12, stiffness: 120, useNativeDriver: true,
+      }).start();
     }, 80);
+  }
 
-    // T+300ms: dark dim covers tiles
-    setTimeout(() => {
-      Animated.timing(dimOpacity, { toValue: 0.85, duration: 300, useNativeDriver: true }).start();
-    }, 300);
-
-    // T+480ms: MASTERED stamp + haptic + Polly
-    setTimeout(() => {
-      masteredTextOpacity.setValue(1);
-      Animated.sequence([
-        Animated.spring(masteredTextScale, { toValue: 1.15, damping: 10, stiffness: 200, useNativeDriver: true }),
-        Animated.spring(masteredTextScale, { toValue: 1.0,  damping: 10, stiffness: 200, useNativeDriver: true }),
-      ]).start();
+  function handleSplitSwipeUp(maskId: string) {
+    const isReal = maskId === `${step.word}_hidden_real`;
+    if (isReal) {
+      setSplitStates(prev => new Map(prev).set(maskId, 'correct'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      playRoundComplete();
-      firePollyEvent('gateMastered');
-    }, 480);
+    } else {
+      store.submitWrongSwipe();
+      setSplitStates(prev => new Map(prev).set(maskId, 'wrong'));
+      firePollyEvent('wrong');
+    }
+  }
 
-    // T+900ms: fade out overlay + dim
-    setTimeout(() => {
-      Animated.timing(masteredOverlayOpacity, { toValue: 0, duration: 300, useNativeDriver: true }).start();
-      Animated.timing(dimOpacity,             { toValue: 0, duration: 300, useNativeDriver: true }).start();
-    }, 900);
-
-    // T+1400ms: advance to next word
-    setTimeout(() => {
-      setMasteredVisible(false);
-      setDimVisible(false);
-      store.completeWord();
-    }, 1400);
+  function handleSplitSwipeRight(maskId: string) {
+    const isReal = maskId === `${step.word}_hidden_real`;
+    if (!isReal) {
+      setSplitStates(prev => new Map(prev).set(maskId, 'trap-caught'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      store.submitWrongSwipe();
+      setSplitStates(prev => new Map(prev).set(maskId, 'wrong'));
+      firePollyEvent('wrong');
+    }
   }
 
   // ── ghost tile handlers ──────────────────────────────────────
@@ -461,6 +451,33 @@ export function MaskBoard({ step }: Props) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     firePollyEvent('ghostDissolved');
   }
+
+  // ── split tile completion ────────────────────────────────────
+  useEffect(() => {
+    if (!splitTilesVisible || splitCompletedRef.current || !hiddenRealMask || !hiddenTrapMask) return;
+    const realState = splitStates.get(hiddenRealMask.id);
+    const trapState = splitStates.get(hiddenTrapMask.id);
+    const realJudged = realState === 'correct' || realState === 'wrong';
+    const trapJudged = trapState === 'trap-caught' || trapState === 'wrong';
+    if (!realJudged || !trapJudged) return;
+
+    splitCompletedRef.current = true;
+    completedRef.current = true;
+
+    if (realState === 'correct' && trapState === 'trap-caught') {
+      store.addBonusScore(300);
+      spawnFloatAtSplit(300, '#F5C842');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      firePollyEvent('gateMastered');
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+
+    setTimeout(() => {
+      if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
+      store.completeWord();
+    }, 800);
+  }, [splitStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
@@ -692,10 +709,37 @@ export function MaskBoard({ step }: Props) {
             onWrong={handleGhostSwipeRight}
             onDone={() => setGhostVisible(false)}
           />
+        ) : splitTilesVisible && hiddenRealMask && hiddenTrapMask ? (
+          <View style={styles.splitZone}>
+            <Animated.View style={{ transform: [{ translateY: splitTile1TransY }] }}>
+              <SwipeMask
+                mask={hiddenRealMask}
+                state={splitStates.get(hiddenRealMask.id) ?? 'idle'}
+                onSwipeUp={() => handleSplitSwipeUp(hiddenRealMask.id)}
+                onSwipeDown={() => handleSplitSwipeRight(hiddenRealMask.id)}
+                onSwipeReveal={() => {}}
+                revealable={false}
+                tileHeight={tileHeight}
+                entryDelay={0}
+              />
+            </Animated.View>
+            <Animated.View style={{ marginTop: TILE_GAP, transform: [{ translateY: splitTile2TransY }] }}>
+              <SwipeMask
+                mask={hiddenTrapMask}
+                state={splitStates.get(hiddenTrapMask.id) ?? 'idle'}
+                onSwipeUp={() => handleSplitSwipeUp(hiddenTrapMask.id)}
+                onSwipeDown={() => handleSplitSwipeRight(hiddenTrapMask.id)}
+                onSwipeReveal={() => {}}
+                revealable={false}
+                tileHeight={tileHeight}
+                entryDelay={0}
+              />
+            </Animated.View>
+          </View>
         ) : (
           <MasterGateTile
             perfectClear={perfectClear}
-            onMasteredSwipe={handleMasteredSwipe}
+            onGateOpened={handleGateOpened}
             tileHeight={tileHeight}
           />
         )
@@ -780,70 +824,6 @@ export function MaskBoard({ step }: Props) {
         />
       ))}
 
-      {/* dim overlay — used by mastered reveal to cover tiles */}
-      {dimVisible && (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFillObject,
-            { backgroundColor: '#1E1A3A', opacity: dimOpacity, zIndex: 100 },
-          ]}
-        />
-      )}
-
-      {/* mastered reveal overlays */}
-      {masteredVisible && (
-        <>
-          {/* gold flash */}
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              { backgroundColor: '#F5C842', opacity: masteredFlashOpacity, zIndex: 999 },
-            ]}
-          />
-
-          {/* word zoom + MASTERED stamp */}
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFillObject,
-              {
-                zIndex: 998,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: masteredOverlayOpacity,
-              },
-            ]}
-          >
-            <Animated.Text
-              style={[
-                isBoss ? styles.wordBoss : styles.word,
-                {
-                  color: '#FFFFFF',
-                  transform: [
-                    { scale: masteredWordScale },
-                    { translateY: masteredWordTransY },
-                  ],
-                },
-              ]}
-            >
-              {step.word}
-            </Animated.Text>
-            <Animated.Text
-              style={[
-                styles.masteredLabel,
-                {
-                  opacity: masteredTextOpacity,
-                  transform: [{ scale: masteredTextScale }],
-                },
-              ]}
-            >
-              MASTERED
-            </Animated.Text>
-          </Animated.View>
-        </>
-      )}
     </Animated.View>
   );
 }
@@ -931,16 +911,7 @@ const styles = StyleSheet.create({
   gridWrap: {
     flex: 1,
   },
-  // ── mastered reveal ───────────────────────────────────────────
-  masteredLabel: {
-    fontFamily: FONTS.brand,
-    fontSize: 36,
-    color: '#F5C842',
-    letterSpacing: 4,
-    marginTop: 12,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+  splitZone: {
+    marginTop: 8,
   },
 });

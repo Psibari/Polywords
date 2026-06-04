@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
-  PanResponder,
   StyleSheet,
   View,
 } from 'react-native';
@@ -12,7 +11,7 @@ type Phase = 'locked' | 'unlocking' | 'unlocked';
 
 interface Props {
   perfectClear: boolean;
-  onMasteredSwipe: () => void;
+  onGateOpened: () => void;
   tileHeight?: number;
 }
 
@@ -25,10 +24,8 @@ function LockShape() {
   );
 }
 
-export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 76 }: Props) {
+export function MasterGateTile({ perfectClear, onGateOpened, tileHeight = 76 }: Props) {
   const phaseRef      = useRef<Phase>('locked');
-  const judgedRef     = useRef(false);
-  const pulseLoopRef  = useRef<Animated.CompositeAnimation | null>(null);
   const breathLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Native-driver: opacity + transforms
@@ -101,17 +98,11 @@ export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 76 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }, 600);
 
-    // Phase 5 — T+800ms: mark unlocked, start pulse loop
+    // Phase 5 — T+800ms: gate opened — fire callback, no swipe needed
     const t5 = setTimeout(() => {
-      console.log('[MasterGateTile] phase now UNLOCKED — swipe enabled');
+      console.log('[MasterGateTile] gate opened — firing onGateOpened');
       phaseRef.current = 'unlocked';
-      pulseLoopRef.current?.stop();
-      const loop = Animated.loop(Animated.sequence([
-        Animated.timing(pulseOpacity, { toValue: 0.6, duration: 600, useNativeDriver: true }),
-        Animated.timing(pulseOpacity, { toValue: 1.0, duration: 600, useNativeDriver: true }),
-      ]));
-      pulseLoopRef.current = loop;
-      loop.start();
+      onGateOpened();
     }, 800);
 
     return () => {
@@ -120,41 +111,12 @@ export function MasterGateTile({ perfectClear, onMasteredSwipe, tileHeight = 76 
       clearTimeout(t4);
       clearTimeout(t5);
       phaseRef.current = 'locked';
-      pulseLoopRef.current?.stop();
     };
   }, [perfectClear]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () =>
-        phaseRef.current === 'unlocked' && !judgedRef.current,
-      onStartShouldSetPanResponderCapture: () =>
-        phaseRef.current === 'unlocked' && !judgedRef.current,
-      onMoveShouldSetPanResponder: (_, gs) =>
-        phaseRef.current === 'unlocked' && !judgedRef.current &&
-        (Math.abs(gs.dy) > 6 || Math.abs(gs.dx) > 6),
-      onMoveShouldSetPanResponderCapture: (_, gs) =>
-        phaseRef.current === 'unlocked' && !judgedRef.current &&
-        (Math.abs(gs.dy) > 4 || Math.abs(gs.dx) > 4),
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderRelease: (_, gs) => {
-        if (phaseRef.current !== 'unlocked' || judgedRef.current) return;
-        console.log('[MasterGateTile] release — dy:', gs.dy, 'dx:', gs.dx, 'phase:', phaseRef.current);
-        if (gs.dy < -40) {
-          judgedRef.current = true;
-          pulseLoopRef.current?.stop();
-          onMasteredSwipe();
-        }
-      },
-    })
-  ).current;
-
   return (
     // Outer: pulse opacity — native driver
-    <Animated.View
-      style={{ opacity: pulseOpacity }}
-      {...panResponder.panHandlers}
-    >
+    <Animated.View style={{ opacity: pulseOpacity }}>
       {/* Inner: border color sweep — non-native driver */}
       <Animated.View
         style={[styles.tile, { height: tileHeight, borderColor: animatedBorderColor as any }]}
