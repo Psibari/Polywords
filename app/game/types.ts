@@ -49,7 +49,14 @@ export type EmotionalRole =
   | 'culturalSnap'
   | 'adrenaline'
   | 'nearMiss'
-  | 'climax';
+  | 'climax'
+  | 'firstTension'
+  | 'disruption'
+  | 'escalation'
+  | 'firstBoss'
+  | 'rebound'
+  | 'lateShock'
+  | 'finalBoss';
 
 export type Meaning = {
   id: string;
@@ -102,9 +109,10 @@ export type WordStep = {
   hiddenTrapEmoji?:  string;
   slangEra?:         SlangEra;
   slangMaskId?:      string;
+  difficulty?:               'easy' | 'medium' | 'hard';
   tileStagger?:              number;
   hapticTier?:               'light' | 'medium' | 'heavy';
-  bossModifier?:             'reverseMountOrder';
+  bossModifier?:             boolean | 'reverseMountOrder';
   postSessionPollyDuration?: number;
 };
 
@@ -113,6 +121,7 @@ export type PhraseBreakStep = {
   phrase: string;
   emotionalRole: EmotionalRole;
   eventType: 'phraseBreak';
+  hapticTier?: 'light' | 'medium' | 'heavy';
   question: string;
   answers: { text: string; correct: boolean }[];
   pollyReveal: string;
@@ -127,6 +136,7 @@ export type SwitchbackStep = {
   pollyReveal: string;
   emotionalRole?:   EmotionalRole;
   eventType?:       EventType | null;
+  hapticTier?:      'light' | 'medium' | 'heavy';
   pollyLine?:       string;
   pollyBufferDelay?: number;
   pollyBufferLine?:  string;

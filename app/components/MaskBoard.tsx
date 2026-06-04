@@ -611,7 +611,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
       <View style={styles.gridWrap}>
         {showBoardContent && (() => {
           const stagger      = step.tileStagger ?? 80;
-          const orderedMasks = step.bossModifier === 'reverseMountOrder'
+          const orderedMasks = !!step.bossModifier
             ? [...visibleGridMasks].reverse()
             : visibleGridMasks;
           const hapticCorrect = step.hapticTier === 'light'
