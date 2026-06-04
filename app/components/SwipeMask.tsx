@@ -95,7 +95,6 @@ export function SwipeMask({
 
   // ── Refs ──────────────────────────────────────────────────────
   const judgedRef             = useRef(false);
-  const retryableRef          = useRef(true);
   const swipeDirRef           = useRef<'up' | 'right' | null>(null);
   const hasThresholdFiredRef  = useRef(false);
   const tileLayoutRef         = useRef({ width: 300, height: tileHeight });
@@ -179,30 +178,27 @@ export function SwipeMask({
       // Tile stays — no height collapse
     }
 
-    // ── WRONG — snap back ────────────────────────────────────
+    // ── WRONG — tile exits, never returns ────────────────────
     if (s === 'wrong') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       playWrongBuzz();
       setFlashRed(true);
-      timers.push(setTimeout(() => setFlashRed(false), 250));
 
-      retryableRef.current = false;
-
-      translateX.value       = withSpring(0,   { damping: 14, stiffness: 300 });
-      translateY.value       = withSpring(0,   { damping: 14, stiffness: 300 });
-      scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
-      rotation.value         = withSpring(0,   { damping: 14, stiffness: 300 });
-      borderOpacityVal.value = withTiming(0.12, { duration: 150 });
-      tileOpacity.value      = withTiming(1.0, { duration: 80 });
-      isCorrectSV.value      = 0;
-      bgAnim.setValue(0);
+      if (mask.isReal) {
+        // Real meaning swiped right (wrong) → fly off right
+        translateX.value  = withTiming( 500, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
+      } else {
+        // Trap swiped up (wrong) → fly off top
+        translateY.value  = withTiming(-500, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
+      }
+      tileOpacity.value = withTiming(0, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
 
       timers.push(setTimeout(() => {
-        judgedRef.current            = false;
-        swipeDirRef.current          = null;
-        hasThresholdFiredRef.current = false;
-        retryableRef.current         = true;
-      }, 320));
+        RNAnimated.parallel([
+          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+        ]).start();
+      }, 300));
     }
 
     // ── TRAP-CAUGHT — slide right + shards ───────────────────
@@ -231,7 +227,6 @@ export function SwipeMask({
     // ── REVEALED — full reset ────────────────────────────────
     if (s === 'revealed') {
       judgedRef.current      = false;
-      retryableRef.current   = true;
       swipeDirRef.current    = null;
       translateX.value       = 0;
       translateY.value       = 0;
@@ -267,16 +262,16 @@ export function SwipeMask({
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder:        () => !judgedRef.current && retryableRef.current,
-      onStartShouldSetPanResponderCapture: () => !judgedRef.current && retryableRef.current,
+      onStartShouldSetPanResponder:        () => !judgedRef.current,
+      onStartShouldSetPanResponderCapture: () => !judgedRef.current,
       onMoveShouldSetPanResponder: (_, g) =>
-        !judgedRef.current && retryableRef.current && (Math.abs(g.dy) > 6 || Math.abs(g.dx) > 6),
+        !judgedRef.current && (Math.abs(g.dy) > 6 || Math.abs(g.dx) > 6),
       onMoveShouldSetPanResponderCapture: (_, g) =>
-        !judgedRef.current && retryableRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
+        !judgedRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
       onPanResponderTerminationRequest: () => false,
 
       onPanResponderGrant: () => {
-        if (judgedRef.current || !retryableRef.current) return;
+        if (judgedRef.current) return;
         scale.value            = withSpring(1.06, { damping: 10, stiffness: 500 });
         borderOpacityVal.value = withTiming(0.40, { duration: 60 });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
