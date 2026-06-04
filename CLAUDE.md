@@ -202,7 +202,7 @@ Full screen. Cultural surprise. Tests slang knowledge only.
 | `NOW` | 2010s |
 | `FRESH` | 2020s |
 
-**Current slang pool (3 entries, random per run):**
+**Current slang pool (3 fixed entries):**
 - SICK — OLD SCHOOL — "That trick though"
 - BAD — OLD SCHOOL — "Michael said so"
 - CHILL — OLD SCHOOL — "What Fridays are for"
