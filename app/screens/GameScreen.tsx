@@ -156,6 +156,44 @@ function TrailEffect({ x, y, onDone }: { x: number; y: number; onDone: () => voi
   );
 }
 
+// ─── PURPLE FLASH — trap-caught confirmation ───────────────────
+function PurpleFlash({ flashKey }: { flashKey: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (flashKey === 0) return;
+    opacity.setValue(0);
+    Animated.sequence([
+      Animated.timing(opacity, { toValue: 0.50, duration: 69,  useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0,    duration: 391, useNativeDriver: true }),
+    ]).start();
+  }, [flashKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: '#7B2D8B', opacity }}
+    />
+  );
+}
+
+// ─── RED FLASH — wrong-swipe danger signal ─────────────────────
+function RedFlash({ flashKey }: { flashKey: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (flashKey === 0) return;
+    opacity.setValue(0);
+    Animated.sequence([
+      Animated.timing(opacity, { toValue: 0.45, duration: 50,  useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0,    duration: 370, useNativeDriver: true }),
+    ]).start();
+  }, [flashKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: '#CC2200', opacity }}
+    />
+  );
+}
+
 // ─── TOP BAR ─────────────────────────────────────────────────
 
 function TopBar() {
@@ -268,6 +306,13 @@ function GameDirector({ navigation }: { navigation: any }) {
     setEffects(prev => [...prev, { id, type, x, y }]);
   }, []);
 
+  // ── Flash overlay state ────────────────────────────────────
+  const [purpleFlashKey, setPurpleFlashKey] = useState(0);
+  const [redFlashKey,    setRedFlashKey]    = useState(0);
+
+  const handleTrapCaught = useCallback(() => setPurpleFlashKey(k => k + 1), []);
+  const handleWrongSwipe = useCallback(() => setRedFlashKey(k => k + 1),    []);
+
   function removeEffect(id: number) {
     setEffects(prev => prev.filter(e => e.id !== id));
   }
@@ -316,8 +361,16 @@ function GameDirector({ navigation }: { navigation: any }) {
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : (
-        <GameContent spawnEffect={spawnEffect} />
+        <GameContent
+          spawnEffect={spawnEffect}
+          onTrapCaught={handleTrapCaught}
+          onWrongSwipe={handleWrongSwipe}
+        />
       )}
+
+      {/* ── Flash overlays — zIndex 50, above game content ── */}
+      <PurpleFlash flashKey={purpleFlashKey} />
+      <RedFlash    flashKey={redFlashKey} />
 
       {/* ── Effects overlay — pointerEvents none, zIndex 100 ── */}
       <View style={styles.effectsOverlay} pointerEvents="none">
@@ -364,8 +417,12 @@ const sbuf = StyleSheet.create({
 
 function GameContent({
   spawnEffect,
+  onTrapCaught,
+  onWrongSwipe,
 }: {
   spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
+  onTrapCaught: () => void;
+  onWrongSwipe: () => void;
 }) {
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
@@ -422,6 +479,8 @@ function GameContent({
         key={`board-${game.stepIndex}`}
         step={step}
         spawnEffect={spawnEffect}
+        onTrapCaught={onTrapCaught}
+        onWrongSwipe={onWrongSwipe}
       />
     );
   }

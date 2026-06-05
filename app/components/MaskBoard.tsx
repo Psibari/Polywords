@@ -24,20 +24,24 @@ const TILE_GAP   = 6;
 const TILE_H     = 58;
 const HIDDEN_H   = 76;
 
-// ── Glass shard configs ───────────────────────────────────────
-const SHARD_CONFIGS = [
-  { w:  90, h: 14, finalX: -120, finalY:  -80, finalRot: -35, dur: 200 },
-  { w:  60, h: 18, finalX:  100, finalY:  -90, finalRot:  28, dur: 190 },
-  { w: 110, h: 12, finalX:  -30, finalY:   70, finalRot: -15, dur: 220 },
-  { w:  75, h: 16, finalX:   80, finalY:   60, finalRot:  42, dur: 210 },
-] as const;
+type FloatEntry = { id: number; value: number; x: number; y: number; color: string };
 
-type FloatEntry    = { id: number; value: number; x: number; y: number; color: string };
-type ShatterOrigin = { x: number; y: number } | null;
+type ShardData = {
+  anim: { x: Animated.Value; y: Animated.Value; op: Animated.Value };
+  finalX: number; finalY: number; rot: number; w: number; h: number;
+};
+type BurstEntry = {
+  id: number; ox: number; oy: number;
+  shards: ShardData[];
+  ringScale: Animated.Value;
+  ringOpacity: Animated.Value;
+};
 
 type Props = {
   step: WordStep;
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
+  onTrapCaught?: () => void;
+  onWrongSwipe?: () => void;
 };
 
 function eventKicker(step: WordStep): string | null {
@@ -46,7 +50,7 @@ function eventKicker(step: WordStep): string | null {
   return null;
 }
 
-export function MaskBoard({ step, spawnEffect }: Props) {
+export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Props) {
   const store  = useGameStore();
   const isBoss = step.eventType === 'bossWord';
   const wordColor = '#F5C842'; // always gold
@@ -74,16 +78,9 @@ export function MaskBoard({ step, spawnEffect }: Props) {
     return m;
   });
 
-  // ── shatter ──────────────────────────────────────────────────
-  const [shatterOrigin, setShatterOrigin] = useState<ShatterOrigin>(null);
-  const shardAnims = useRef(
-    SHARD_CONFIGS.map(() => ({
-      x:   new Animated.Value(0),
-      y:   new Animated.Value(0),
-      rot: new Animated.Value(0),
-      op:  new Animated.Value(0),
-    }))
-  ).current;
+  // ── 14-shard burst system ────────────────────────────────────
+  const [bursts, setBursts] = useState<BurstEntry[]>([]);
+  const burstIdRef = useRef(0);
 
   const completedRef          = useRef(false);
   const gateTriggeredRef      = useRef(false);
@@ -115,6 +112,48 @@ export function MaskBoard({ step, spawnEffect }: Props) {
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const goldTextOpacity       = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
+
+  // ── wrong-swipe word recoil ───────────────────────────────────
+  const wrongRecoilAnim = useRef(new Animated.Value(0)).current;  // direct px offset
+  const wordRedFlash    = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
+
+  // ── confetti ──────────────────────────────────────────────────
+  const CONFETTI_COLORS  = ['#FFD700', '#4CAF50', '#FFFFFF', '#F5C842'] as const;
+  const CONFETTI_COUNT   = 40;
+  const CONFETTI_WORD_Y  = 40; // center of 80px word zone in container coords
+
+  type ConfettiParticle = {
+    angle: number; speed: number; size: number; rot: number; color: string;
+  };
+
+  const confettiParticles = useRef<ConfettiParticle[]>(
+    Array.from({ length: CONFETTI_COUNT }, () => ({
+      angle: -Math.PI / 2 + (Math.random() - 0.5) * 2 * 0.8 * Math.PI,
+      speed: 180 + Math.random() * 360,
+      size:  6   + Math.random() * 9,
+      rot:   (Math.random() < 0.5 ? 1 : -1) * Math.random() * 360,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+    }))
+  ).current;
+
+  const confettiAnim    = useRef(new Animated.Value(0)).current;
+  const [confettiVisible, setConfettiVisible] = useState(false);
+
+  function triggerWrongWordRecoil() {
+    wrongRecoilAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(wrongRecoilAnim, { toValue: -9, duration: 63, useNativeDriver: true }),
+      Animated.timing(wrongRecoilAnim, { toValue: -4, duration: 63, useNativeDriver: true }),
+      Animated.timing(wrongRecoilAnim, { toValue:  3, duration: 63, useNativeDriver: true }),
+      Animated.timing(wrongRecoilAnim, { toValue:  0, duration: 63, useNativeDriver: true }),
+    ]).start();
+
+    wordRedFlash.setValue(0);
+    Animated.sequence([
+      Animated.timing(wordRedFlash, { toValue: 0.4, duration:  80, useNativeDriver: false }),
+      Animated.timing(wordRedFlash, { toValue: 0,   duration: 200, useNativeDriver: false }),
+    ]).start();
+  }
 
   // ── boss entrance ─────────────────────────────────────────────
   const bossWordTranslateY = useRef(new Animated.Value(isBoss ? -300 : 0)).current;
@@ -193,6 +232,65 @@ export function MaskBoard({ step, spawnEffect }: Props) {
   function spawnFloatAtSplit(value: number, color = '#F5C842') {
     const id = ++floatIdRef.current;
     setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 300 }]);
+  }
+
+  // ── 14-shard burst ────────────────────────────────────────────
+  function triggerShardBurst(ox: number, oy: number) {
+    const GRAVITY = 620;
+    const DURATION = 760;
+    const t = DURATION / 1000;
+
+    const shards: ShardData[] = Array.from({ length: 14 }, (_, i) => {
+      const col = i % 7;
+      const row = Math.floor(i / 7);
+      const angle = (col / 6) * Math.PI * 2 + (row === 1 ? Math.PI / 7 : 0);
+      const speed = 55 + Math.random() * 50;
+      const vx = speed * Math.cos(angle);
+      const vy = speed * Math.sin(angle);
+      const finalX = vx * t;
+      const finalY = vy * t + 0.5 * GRAVITY * t * t;
+      const rot = (Math.random() < 0.5 ? 1 : -1) * (180 + Math.random() * 160);
+      const w = 6 + Math.random() * 8;
+      const h = 3 + Math.random() * 5;
+      return {
+        anim: { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
+        finalX, finalY, rot, w, h,
+      };
+    });
+
+    const ringScale = new Animated.Value(0.3);
+    const ringOpacity = new Animated.Value(0.7);
+    const id = ++burstIdRef.current;
+
+    setBursts(prev => [...prev, { id, ox, oy, shards, ringScale, ringOpacity }]);
+
+    Animated.parallel([
+      Animated.timing(ringScale,   { toValue: 3.0, duration: 400, useNativeDriver: true }),
+      Animated.timing(ringOpacity, { toValue: 0,   duration: 400, useNativeDriver: true }),
+    ]).start();
+
+    shards.forEach(shard => {
+      const delay = Math.random() * 30;
+      Animated.parallel([
+        Animated.timing(shard.anim.x,  { toValue: shard.finalX, duration: DURATION, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(shard.anim.y,  { toValue: shard.finalY, duration: DURATION, delay, easing: Easing.in(Easing.quad),   useNativeDriver: true }),
+        Animated.timing(shard.anim.op, { toValue: 0,            duration: DURATION, delay, useNativeDriver: true }),
+      ]).start();
+    });
+
+    setTimeout(() => setBursts(prev => prev.filter(b => b.id !== id)), 820);
+  }
+
+  function handleEffect(type: 'shard' | 'trail', pageX: number, pageY: number) {
+    if (type === 'shard') {
+      (containerRef.current as any)?.measure(
+        (_x: number, _y: number, _w: number, _h: number, bx: number, by: number) => {
+          triggerShardBurst(pageX - bx, pageY - by);
+        }
+      );
+    } else {
+      spawnEffect?.(type, pageX, pageY);
+    }
   }
 
   // ── master gate ───────────────────────────────────────────────
@@ -409,22 +507,6 @@ export function MaskBoard({ step, spawnEffect }: Props) {
     return () => clearTimeout(t1);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Shatter animation (legacy glass shards inside board)
-  useEffect(() => {
-    if (!shatterOrigin) return;
-    shardAnims.forEach((fa, i) => {
-      fa.x.setValue(0); fa.y.setValue(0); fa.rot.setValue(0); fa.op.setValue(1);
-      Animated.parallel([
-        Animated.timing(fa.x,   { toValue: SHARD_CONFIGS[i].finalX, duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(fa.y,   { toValue: SHARD_CONFIGS[i].finalY, duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(fa.rot, { toValue: 1,                       duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(fa.op,  { toValue: 0,                       duration: SHARD_CONFIGS[i].dur, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      ]).start();
-    });
-    const tid = setTimeout(() => setShatterOrigin(null), 400);
-    return () => clearTimeout(tid);
-  }, [shatterOrigin]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── Gate sequence ─────────────────────────────────────────────
 
   function triggerDoorSplit() {
@@ -543,6 +625,16 @@ export function MaskBoard({ step, spawnEffect }: Props) {
         Animated.timing(masterStampOpacity, {
           toValue: 1.0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true,
         }).start();
+
+        // Confetti burst
+        setConfettiVisible(true);
+        confettiAnim.setValue(0);
+        Animated.timing(confettiAnim, {
+          toValue: 1, duration: 1500, useNativeDriver: true,
+        }).start(() => {
+          setConfettiVisible(false);
+          confettiAnim.setValue(0);
+        });
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         playRoundComplete();
@@ -687,6 +779,8 @@ export function MaskBoard({ step, spawnEffect }: Props) {
       store.submitWrongSwipe();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
+      triggerWrongWordRecoil();
+      onWrongSwipe?.();
     }
   }
 
@@ -697,11 +791,14 @@ export function MaskBoard({ step, spawnEffect }: Props) {
       store.submitSwipeDown(maskId);
       spawnFloat(50, maskId, '#7B2D8B');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
+      onTrapCaught?.();
     } else {
       wrongSwipeOccurred.current = true;
       store.submitWrongSwipe();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
+      triggerWrongWordRecoil();
+      onWrongSwipe?.();
     }
   }
 
@@ -764,6 +861,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
               { scale: masterHeroScale },
               { translateY: bossWordTranslateY },
               { translateY: masterHeroTransY },
+              { translateY: wrongRecoilAnim },
             ],
           }}
         >
@@ -779,6 +877,23 @@ export function MaskBoard({ step, spawnEffect }: Props) {
               {
                 color: '#F5C842',
                 opacity: goldTextOpacity,
+                position: 'absolute',
+                left: 0, right: 0,
+                textAlign: 'center',
+              },
+            ]}
+          >
+            {step.word}
+          </Animated.Text>
+          {/* Red flash overlay — wrong swipe danger signal */}
+          <Animated.Text
+            pointerEvents="none"
+            style={[
+              styles.word,
+              isBoss && styles.wordBoss,
+              {
+                color: '#CC2200',
+                opacity: wordRedFlash,
                 position: 'absolute',
                 left: 0, right: 0,
                 textAlign: 'center',
@@ -827,7 +942,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
                     tileHeight={TILE_H}
                     entryDelay={index * stagger}
                     hapticCorrect={hapticCorrect}
-                    onEffect={spawnEffect}
+                    onEffect={handleEffect}
                   />
                 </View>
               ));
@@ -891,7 +1006,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
                       revealable={false}
                       tileHeight={72}
                       entryDelay={0}
-                      onEffect={spawnEffect}
+                      onEffect={handleEffect}
                     />
                   </Animated.View>
                 </Animated.View>
@@ -913,7 +1028,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
                       revealable={false}
                       tileHeight={72}
                       entryDelay={0}
-                      onEffect={spawnEffect}
+                      onEffect={handleEffect}
                     />
                   </Animated.View>
                 </Animated.View>
@@ -989,41 +1104,54 @@ export function MaskBoard({ step, spawnEffect }: Props) {
         )}
       </View>
 
-      {/* Legacy glass shards (inside-board fallback) */}
-      {shatterOrigin && (
+      {/* 14-shard burst system */}
+      {bursts.map(burst => (
         <View
+          key={burst.id}
           pointerEvents="none"
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
         >
-          {SHARD_CONFIGS.map((cfg, i) => (
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: burst.ox - 30,
+              top: burst.oy - 30,
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              borderWidth: 1.5,
+              borderColor: 'rgba(255,255,255,0.8)',
+              opacity: burst.ringOpacity,
+              transform: [{ scale: burst.ringScale }],
+            }}
+          />
+          {burst.shards.map((shard, i) => (
             <Animated.View
               key={i}
               style={{
                 position: 'absolute',
-                left:         shatterOrigin.x - cfg.w / 2,
-                top:          shatterOrigin.y - cfg.h / 2,
-                width:        cfg.w,
-                height:       cfg.h,
-                borderRadius: 3,
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                borderWidth:  1.5,
-                borderColor:  'rgba(255,255,255,0.9)',
-                opacity: shardAnims[i].op,
+                left: burst.ox - shard.w / 2,
+                top: burst.oy - shard.h / 2,
+                width: shard.w,
+                height: shard.h,
+                borderRadius: 2,
+                backgroundColor: 'rgba(190,210,255,0.3)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,1)',
+                opacity: shard.anim.op,
                 transform: [
-                  { translateX: shardAnims[i].x },
-                  { translateY: shardAnims[i].y },
-                  {
-                    rotate: shardAnims[i].rot.interpolate({
-                      inputRange:  [0, 1],
-                      outputRange: ['0deg', `${cfg.finalRot}deg`],
-                    }),
-                  },
+                  { translateX: shard.anim.x },
+                  { translateY: shard.anim.y },
+                  { rotate: shard.anim.op.interpolate({
+                    inputRange:  [0, 1],
+                    outputRange: [`${shard.rot}deg`, '0deg'],
+                  }) },
                 ],
               }}
             />
           ))}
         </View>
-      )}
+      ))}
 
       {/* Score floats */}
       {floats.map(f => (
@@ -1056,6 +1184,50 @@ export function MaskBoard({ step, spawnEffect }: Props) {
           style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
           pointerEvents="none"
         >
+          {/* Confetti particles */}
+          {confettiVisible && confettiParticles.map((p, i) => {
+            const ox = containerWidth / 2 - p.size / 2;
+            const oy = CONFETTI_WORD_Y  - p.size / 2;
+            const dx = Math.cos(p.angle) * p.speed;
+            const dy = Math.sin(p.angle) * p.speed;
+            const xInterp = confettiAnim.interpolate({
+              inputRange:  [0, 1],
+              outputRange: [ox, ox + dx],
+            });
+            const yInterp = confettiAnim.interpolate({
+              inputRange:  [0,    0.25,                         0.5,                       0.75,                        1                      ],
+              outputRange: [oy,   oy + dy*0.25 + 520*0.0625,   oy + dy*0.5 + 520*0.25,   oy + dy*0.75 + 520*0.5625,  oy + dy + 520          ],
+            });
+            const opInterp = confettiAnim.interpolate({
+              inputRange:  [0, 0.7, 1],
+              outputRange: [1, 1,   0],
+            });
+            const rotInterp = confettiAnim.interpolate({
+              inputRange:  [0, 1],
+              outputRange: ['0deg', `${p.rot}deg`],
+            });
+            return (
+              <Animated.View
+                key={i}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  width: p.size,
+                  height: p.size,
+                  borderRadius: p.size / 4,
+                  backgroundColor: p.color,
+                  opacity: opInterp,
+                  transform: [
+                    { translateX: xInterp },
+                    { translateY: yInterp },
+                    { rotate: rotInterp },
+                  ],
+                }}
+              />
+            );
+          })}
+
           <Animated.Text style={{
             fontFamily: FONTS.wordDisplay,
             fontSize: 64,

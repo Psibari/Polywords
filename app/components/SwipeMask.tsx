@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
+  Dimensions,
   LayoutChangeEvent,
   PanResponder,
   Pressable,
@@ -26,6 +27,7 @@ export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hid
 
 const SWIPE_THRESHOLD = 40;
 const TILE_GAP        = 6;
+const WORD_Y          = 140; // approx screen-Y of hero word center
 
 type Props = {
   mask: Mask;
@@ -132,7 +134,7 @@ export function SwipeMask({
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    // ── CORRECT — tile locks gold, stays on board ─────────────
+    // ── CORRECT — tile absorbs into hero word ─────────────────
     if (s === 'correct') {
       if (hapticCorrectRef.current) {
         hapticCorrectRef.current();
@@ -141,41 +143,38 @@ export function SwipeMask({
       }
       playCorrectSwipe();
 
-      // Measure tile for trail particle effect
+      // BG flash: brief green burst (non-native, completes before absorption)
+      RNAnimated.timing(bgAnim, { toValue: 0.5, duration: 80, useNativeDriver: false }).start();
+
+      // Measure tile, then animate toward hero word center
       outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
-        onEffectRef.current?.('trail', pageX + w / 2, pageY + h / 2);
-      });
+        const screenWidth = Dimensions.get('window').width;
+        const targetX = screenWidth / 2 - pageX - w / 2;
+        const targetY = WORD_Y - pageY;
 
-      // Snap back to natural position (swipe may have had horizontal drift)
-      translateX.value = withSpring(0, { damping: 14, stiffness: 300 });
-      translateY.value = withSpring(0, { damping: 14, stiffness: 300 });
-      rotation.value   = withSpring(0, { damping: 14, stiffness: 300 });
+        translateX.value = withSpring(targetX, { damping: 10, stiffness: 120 });
+        translateY.value = withSpring(targetY, { damping: 10, stiffness: 120 });
+        rotation.value   = withSpring(0, { damping: 14, stiffness: 300 });
 
-      // Quick lock pulse
-      scale.value = withSequence(
-        withTiming(1.04, { duration: 80 }),
-        withSpring(1.0, { damping: 10, stiffness: 300 }),
-      );
+        // Scale → 0.15 and opacity → 0 starting at 60% of travel (~240ms)
+        timers.push(setTimeout(() => {
+          scale.value       = withTiming(0.15, { duration: 300 });
+          tileOpacity.value = withTiming(0,    { duration: 300 });
+        }, 240));
 
-      // Green border via tileAnimStyle
-      isCorrectSV.value = 1;
+        // Fire onAbsorb (trail) at 70% of spring duration estimate (~280ms)
+        timers.push(setTimeout(() => {
+          onEffectRef.current?.('trail', pageX + w / 2, pageY + h / 2);
+        }, 280));
 
-      // BG flash: burst green → settle to locked green (non-native)
-      RNAnimated.sequence([
-        RNAnimated.timing(bgAnim, { toValue: 0.5, duration: 80,  useNativeDriver: false }),
-        RNAnimated.timing(bgAnim, { toValue: 1.0, duration: 200, useNativeDriver: false }),
-      ]).start();
-
-      // Era badge slides up briefly
-      if (eraBadge) {
+        // Collapse outer height after absorption completes (~460ms)
         timers.push(setTimeout(() => {
           RNAnimated.parallel([
-            RNAnimated.timing(eraBadgeTransY,  { toValue: 0, duration: 200, useNativeDriver: true }),
-            RNAnimated.timing(eraBadgeOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
           ]).start();
-        }, 80));
-      }
-      // Tile stays — no height collapse
+        }, 460));
+      });
     }
 
     // ── WRONG — tile exits, never returns ────────────────────
