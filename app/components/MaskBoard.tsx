@@ -134,6 +134,80 @@ function Burst({ entry, onDone }: { entry: BurstEntry; onDone: () => void }) {
   );
 }
 
+function easeOutBack(t: number, overshoot: number): number {
+  const c3 = overshoot + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + overshoot * Math.pow(t - 1, 2);
+}
+
+type ShockwaveProps = { boardWidth: number; onDone: () => void };
+function BossShockwave({ boardWidth, onDone }: ShockwaveProps) {
+  const [p, setP]      = useState(0);
+  const startRef       = useRef<number | null>(null);
+  const rafRef         = useRef<number>(0);
+  const DURATION       = 600;
+  const cx             = boardWidth / 2;
+  const cy             = 76;
+
+  useEffect(() => {
+    function tick(now: number) {
+      if (startRef.current === null) startRef.current = now;
+      const np = Math.min((now - startRef.current) / DURATION, 1);
+      setP(np);
+      if (np < 1) rafRef.current = requestAnimationFrame(tick);
+      else onDone();
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const r1p     = Math.min(p / 0.8, 1);
+  const r1scale = 0.4 + r1p * 5.1;
+  const r1op    = (1 - r1p) * (1 - r1p);
+
+  const r2raw   = (p - 0.133) / 0.633;
+  const r2p     = Math.max(0, Math.min(r2raw, 1));
+  const r2scale = 0.4 + r2p * 2.8;
+  const r2op    = 0.6 * (1 - r2p * r2p);
+
+  const DUST_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315].map(a => a * Math.PI / 180);
+  const dustP    = Math.min(p / 0.75, 1);
+  const dustEase = dustP * (2 - dustP);
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 5 }}
+    >
+      <View style={{
+        position: 'absolute',
+        left: cx - 30, top: cy - 30,
+        width: 60, height: 60, borderRadius: 30,
+        borderWidth: 2.5, borderColor: 'rgba(255,215,0,0.9)',
+        opacity: r1op, transform: [{ scale: r1scale }],
+      }} />
+      {r2p > 0 && (
+        <View style={{
+          position: 'absolute',
+          left: cx - 30, top: cy - 30,
+          width: 60, height: 60, borderRadius: 30,
+          borderWidth: 1.5, borderColor: 'rgba(123,45,139,0.8)',
+          opacity: r2op, transform: [{ scale: r2scale }],
+        }} />
+      )}
+      {DUST_ANGLES.map((angle, i) => (
+        <View key={i} style={{
+          position: 'absolute',
+          left: cx + Math.cos(angle) * (50 + i * 8) * dustEase - 3,
+          top:  cy + Math.sin(angle) * (50 + i * 8) * dustEase - 3,
+          width: 6, height: 6, borderRadius: 3,
+          backgroundColor: i % 2 === 0 ? '#F5C842' : 'rgba(255,255,255,0.8)',
+          opacity: (1 - dustP) * 0.8,
+        }} />
+      ))}
+    </View>
+  );
+}
+
 type Props = {
   step: WordStep;
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
@@ -277,6 +351,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const bossShakeX         = useRef(new Animated.Value(0)).current;
   const bossSweepX         = useRef(new Animated.Value(-60)).current;
   const bossSweepOpacity   = useRef(new Animated.Value(0)).current;
+  // Boss squash/stretch (non-native, rAF setValue-driven)
+  const bossScaleX         = useRef(new Animated.Value(isBoss ? 0.86 : 1)).current;
+  const bossScaleY         = useRef(new Animated.Value(isBoss ? 1.16 : 1)).current;
+  const bossEntranceRafRef = useRef<number | null>(null);
+  const bossImpactRef      = useRef<number | null>(null);
+  const [bossWordColor, setBossWordColor] = useState('#FFD700');
+  const [bossShockwaveVisible, setBossShockwaveVisible] = useState(false);
 
   function triggerAbsorption(phrase: string) {
     absorptionScale.setValue(1);
@@ -516,6 +597,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     wrongSwipeOccurred.current    = false;
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
+    bossScaleX.setValue(isBoss ? 0.86 : 1);
+    bossScaleY.setValue(isBoss ? 1.16 : 1);
+    if (bossEntranceRafRef.current !== null) {
+      cancelAnimationFrame(bossEntranceRafRef.current);
+      bossEntranceRafRef.current = null;
+    }
+    bossImpactRef.current = null;
+    setBossWordColor('#FFD700');
+    setBossShockwaveVisible(false);
     goldTextOpacity.setValue(0);
     wordRecoilY.setValue(0);
     wordRecoilScale.setValue(1);
@@ -573,10 +663,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       wordEntryScale.setValue(1);
 
       Animated.spring(bossWordTranslateY, {
-        toValue: 0, tension: 280, friction: 6, useNativeDriver: true,
+        toValue: 0, tension: 280, friction: 6, useNativeDriver: false,
       }).start();
 
       setTimeout(() => {
+        // ── Impact ────────────────────────────────────────────────
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
         Animated.sequence([
@@ -587,6 +678,46 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           Animated.timing(bossShakeX, { toValue:  1, duration: 30, useNativeDriver: true }),
           Animated.timing(bossShakeX, { toValue:  0, duration: 30, useNativeDriver: true }),
         ]).start();
+
+        // ── Squash/stretch + ignite flash (single rAF loop) ───────
+        bossImpactRef.current = performance.now ? performance.now() : Date.now();
+        bossScaleX.setValue(1.32);
+        bossScaleY.setValue(0.66);
+        setBossShockwaveVisible(true);
+
+        const SQUASH_DUR = 520;
+        const IGNITE_DUR = 400;
+        const TOTAL_DUR  = Math.max(SQUASH_DUR, IGNITE_DUR);
+        let rafStart: number | null = null;
+
+        function squashIgniteTick(now: number) {
+          if (rafStart === null) rafStart = now;
+          const elapsed = now - rafStart;
+
+          if (elapsed <= SQUASH_DUR) {
+            const since = Math.min(elapsed / SQUASH_DUR, 1);
+            const k     = easeOutBack(since, 2.2);
+            bossScaleX.setValue(1.32 - 0.32 * k);
+            bossScaleY.setValue(0.66 + 0.34 * k);
+          }
+
+          if (elapsed <= IGNITE_DUR) {
+            const sweep = Math.min(elapsed / 150, 1);
+            const g     = Math.round(255 + (215 - 255) * sweep);
+            const b     = Math.round(255 + (0   - 255) * sweep);
+            setBossWordColor(`rgb(255,${g},${b})`);
+          }
+
+          if (elapsed < TOTAL_DUR) {
+            bossEntranceRafRef.current = requestAnimationFrame(squashIgniteTick);
+          } else {
+            bossScaleX.setValue(1);
+            bossScaleY.setValue(1);
+            setBossWordColor('#FFD700');
+            bossEntranceRafRef.current = null;
+          }
+        }
+        bossEntranceRafRef.current = requestAnimationFrame(squashIgniteTick);
 
         setTimeout(() => {
           setBossSweepActive(true);
@@ -611,7 +742,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       }, 300);
     }, 600);
 
-    return () => clearTimeout(t1);
+    return () => {
+      clearTimeout(t1);
+      if (bossEntranceRafRef.current !== null) {
+        cancelAnimationFrame(bossEntranceRafRef.current);
+        bossEntranceRafRef.current = null;
+      }
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Gate sequence ─────────────────────────────────────────────
@@ -979,6 +1116,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             ],
           }}
         >
+          {/* Boss squash/stretch wrapper — non-native, identity for non-boss */}
+          <Animated.View
+            style={{
+              transform: [
+                { translateY: bossWordTranslateY },
+                { scaleX: bossScaleX },
+                { scaleY: bossScaleY },
+              ],
+            }}
+          >
           {/* Inner: native-only transforms */}
           <Animated.View
             style={{
@@ -987,12 +1134,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 { scale: absorptionScale },
                 { scale: wordEntryScale },
                 { scale: masterHeroScale },
-                { translateY: bossWordTranslateY },
                 { translateY: masterHeroTransY },
               ],
             }}
           >
-            <Text style={[styles.word, isBoss && styles.wordBoss, { color: wordColor }]}>
+            <Text style={[styles.word, isBoss && styles.wordBoss, { color: isBoss ? bossWordColor : wordColor }]}>
               {step.word}
             </Text>
             {/* Gold overlay for absorption fill */}
@@ -1036,7 +1182,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               style={[styles.goldRing, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
             />
           </Animated.View>
+          </Animated.View>
         </Animated.View>
+
+        {/* Boss shockwave rings + dust */}
+        {bossShockwaveVisible && (
+          <BossShockwave
+            boardWidth={containerWidth}
+            onDone={() => setBossShockwaveVisible(false)}
+          />
+        )}
 
         {/* Absorbed phrase flash */}
         {absorbedPhrase !== null && (
