@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
@@ -23,19 +24,115 @@ import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 const TILE_GAP   = 6;
 const TILE_H     = 58;
 const HIDDEN_H   = 76;
+const TILE_INSET = 16;
+
+const CLIP_PATHS = [
+  'polygon(0 0,100% 22%,72% 100%)',
+  'polygon(0 18%,100% 0,100% 78%,30% 100%)',
+  'polygon(10% 0,100% 40%,55% 100%,0 70%)',
+  'polygon(0 0,78% 0,100% 100%,20% 86%)',
+  'polygon(0 30%,60% 0,100% 64%,40% 100%)',
+] as const;
+void CLIP_PATHS; // clipPath not supported in RN — kept for reference
 
 type FloatEntry = { id: number; value: number; x: number; y: number; color: string };
 
-type ShardData = {
-  anim: { x: Animated.Value; y: Animated.Value; op: Animated.Value };
-  finalX: number; finalY: number; rot: number; w: number; h: number;
+type ShardDef = {
+  sx: number; sy: number;
+  vx: number; vy: number;
+  rot: number;
+  c1: string; c2: string;
+  w: number; h: number;
 };
 type BurstEntry = {
-  id: number; ox: number; oy: number;
-  shards: ShardData[];
-  ringScale: Animated.Value;
-  ringOpacity: Animated.Value;
+  id: number;
+  top: number;
+  tileW: number;
+  shards: ShardDef[];
 };
+
+function Burst({ entry, onDone }: { entry: BurstEntry; onDone: () => void }) {
+  const [p, setP] = useState(0);
+  const startRef  = useRef<number | null>(null);
+  const rafRef    = useRef<number>(0);
+
+  useEffect(() => {
+    const DURATION = 760;
+    function tick(now: number) {
+      if (startRef.current === null) startRef.current = now;
+      const elapsed = now - startRef.current;
+      const np = Math.min(elapsed / DURATION, 1);
+      setP(np);
+      if (np < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        onDone();
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ease    = p * (2 - p);
+  const gravity = 620 * p * p;
+  const ringP   = Math.min(p / 0.4, 1);
+  const TW      = entry.tileW;
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: TILE_INSET,
+        top: entry.top,
+        width: TW,
+        height: TILE_H,
+        zIndex: 40,
+        overflow: 'visible',
+      }}
+    >
+      {/* Impact ring — centered in tile */}
+      <View
+        style={{
+          position: 'absolute',
+          left: TW / 2 - 60,
+          top: TILE_H / 2 - 60,
+          width: 120,
+          height: 120,
+          borderRadius: 60,
+          borderWidth: 2,
+          borderColor: 'rgba(255,255,255,0.8)',
+          opacity: 0.7 * (1 - ringP),
+          transform: [{ scale: 0.3 + ringP * 2.7 }],
+        }}
+      />
+      {/* Shards */}
+      {entry.shards.map((shard, i) => (
+        <LinearGradient
+          key={i}
+          colors={[shard.c1, shard.c2]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            position: 'absolute',
+            left: shard.sx,
+            top: shard.sy,
+            marginLeft: -shard.w / 2,
+            marginTop: -shard.h / 2,
+            width: shard.w,
+            height: shard.h,
+            opacity: (1 - p * p) * 0.92,
+            transform: [
+              { translateX: shard.vx * ease },
+              { translateY: shard.vy * ease + gravity },
+              { rotate: `${shard.rot * ease}deg` },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
 
 type Props = {
   step: WordStep;
@@ -235,50 +332,37 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   // ── 14-shard burst ────────────────────────────────────────────
-  function triggerShardBurst(ox: number, oy: number) {
-    const GRAVITY = 620;
-    const DURATION = 760;
-    const t = DURATION / 1000;
+  function triggerShardBurst(centerX: number, centerY: number) {
+    const tileW   = containerWidthRef.current - 2 * TILE_INSET;
+    const tileTop = centerY - TILE_H / 2;
+    const cellW   = tileW / 7;
+    const cellH   = TILE_H / 2;
 
-    const shards: ShardData[] = Array.from({ length: 14 }, (_, i) => {
-      const col = i % 7;
-      const row = Math.floor(i / 7);
-      const angle = (col / 6) * Math.PI * 2 + (row === 1 ? Math.PI / 7 : 0);
-      const speed = 55 + Math.random() * 50;
-      const vx = speed * Math.cos(angle);
-      const vy = speed * Math.sin(angle);
-      const finalX = vx * t;
-      const finalY = vy * t + 0.5 * GRAVITY * t * t;
-      const rot = (Math.random() < 0.5 ? 1 : -1) * (180 + Math.random() * 160);
-      const w = 6 + Math.random() * 8;
-      const h = 3 + Math.random() * 5;
+    const shards: ShardDef[] = Array.from({ length: 14 }, (_, i) => {
+      const col   = i % 7;
+      const row   = Math.floor(i / 7);
+      const sx    = col * cellW + cellW / 2;
+      const sy    = row * cellH + cellH / 2;
+      const dx    = sx - tileW / 2;
+      const dy    = sy - TILE_H / 2;
+      const len   = Math.hypot(dx, dy) || 1;
+      const speed = 90 + Math.random() * 200;
+      const vx    = (dx / len) * speed + 120 + Math.random() * 120;
+      const vy    = (dy / len) * speed - 90  - Math.random() * 90;
+      const rot   = (Math.random() - 0.5) * 680;
+      const tint  = 0.10 + Math.random() * 0.22;
+      const w     = 12 + Math.random() * 10;
+      const h     = 6  + Math.random() * 8;
       return {
-        anim: { x: new Animated.Value(0), y: new Animated.Value(0), op: new Animated.Value(1) },
-        finalX, finalY, rot, w, h,
+        sx, sy, vx, vy, rot,
+        c1: `rgba(190,210,255,${(tint + 0.18).toFixed(2)})`,
+        c2: `rgba(120,130,220,${tint.toFixed(2)})`,
+        w, h,
       };
     });
 
-    const ringScale = new Animated.Value(0.3);
-    const ringOpacity = new Animated.Value(0.7);
     const id = ++burstIdRef.current;
-
-    setBursts(prev => [...prev, { id, ox, oy, shards, ringScale, ringOpacity }]);
-
-    Animated.parallel([
-      Animated.timing(ringScale,   { toValue: 3.0, duration: 400, useNativeDriver: true }),
-      Animated.timing(ringOpacity, { toValue: 0,   duration: 400, useNativeDriver: true }),
-    ]).start();
-
-    shards.forEach(shard => {
-      const delay = Math.random() * 30;
-      Animated.parallel([
-        Animated.timing(shard.anim.x,  { toValue: shard.finalX, duration: DURATION, delay, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(shard.anim.y,  { toValue: shard.finalY, duration: DURATION, delay, easing: Easing.in(Easing.quad),   useNativeDriver: true }),
-        Animated.timing(shard.anim.op, { toValue: 0,            duration: DURATION, delay, useNativeDriver: true }),
-      ]).start();
-    });
-
-    setTimeout(() => setBursts(prev => prev.filter(b => b.id !== id)), 820);
+    setBursts(prev => [...prev, { id, top: tileTop, tileW, shards }]);
   }
 
   function handleEffect(type: 'shard' | 'trail', pageX: number, pageY: number) {
@@ -1106,51 +1190,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
       {/* 14-shard burst system */}
       {bursts.map(burst => (
-        <View
+        <Burst
           key={burst.id}
-          pointerEvents="none"
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
-        >
-          <Animated.View
-            style={{
-              position: 'absolute',
-              left: burst.ox - 30,
-              top: burst.oy - 30,
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              borderWidth: 1.5,
-              borderColor: 'rgba(255,255,255,0.8)',
-              opacity: burst.ringOpacity,
-              transform: [{ scale: burst.ringScale }],
-            }}
-          />
-          {burst.shards.map((shard, i) => (
-            <Animated.View
-              key={i}
-              style={{
-                position: 'absolute',
-                left: burst.ox - shard.w / 2,
-                top: burst.oy - shard.h / 2,
-                width: shard.w,
-                height: shard.h,
-                borderRadius: 2,
-                backgroundColor: 'rgba(190,210,255,0.3)',
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,1)',
-                opacity: shard.anim.op,
-                transform: [
-                  { translateX: shard.anim.x },
-                  { translateY: shard.anim.y },
-                  { rotate: shard.anim.op.interpolate({
-                    inputRange:  [0, 1],
-                    outputRange: [`${shard.rot}deg`, '0deg'],
-                  }) },
-                ],
-              }}
-            />
-          ))}
-        </View>
+          entry={burst}
+          onDone={() => setBursts(prev => prev.filter(b => b.id !== burst.id))}
+        />
       ))}
 
       {/* Score floats */}
