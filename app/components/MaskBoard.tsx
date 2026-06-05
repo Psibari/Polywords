@@ -213,8 +213,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
 
   // ── wrong-swipe word recoil ───────────────────────────────────
-  const wrongRecoilAnim = useRef(new Animated.Value(0)).current;  // direct px offset
-  const wordRedFlash    = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
+  const wordRecoilY     = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
+  const wordRecoilScale = useRef(new Animated.Value(1)).current;  // useNativeDriver:false
+  const wordRedOpacity  = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
+  const recoilRafRef    = useRef<number | null>(null);
 
   // ── confetti ──────────────────────────────────────────────────
   const CONFETTI_COLORS  = ['#FFD700', '#4CAF50', '#FFFFFF', '#F5C842'] as const;
@@ -239,19 +241,35 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [confettiVisible, setConfettiVisible] = useState(false);
 
   function triggerWrongWordRecoil() {
-    wrongRecoilAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(wrongRecoilAnim, { toValue: -9, duration: 63, useNativeDriver: true }),
-      Animated.timing(wrongRecoilAnim, { toValue: -4, duration: 63, useNativeDriver: true }),
-      Animated.timing(wrongRecoilAnim, { toValue:  3, duration: 63, useNativeDriver: true }),
-      Animated.timing(wrongRecoilAnim, { toValue:  0, duration: 63, useNativeDriver: true }),
-    ]).start();
+    if (recoilRafRef.current !== null) {
+      cancelAnimationFrame(recoilRafRef.current);
+    }
+    let t0: number | null = null;
 
-    wordRedFlash.setValue(0);
-    Animated.sequence([
-      Animated.timing(wordRedFlash, { toValue: 0.4, duration:  80, useNativeDriver: false }),
-      Animated.timing(wordRedFlash, { toValue: 0,   duration: 200, useNativeDriver: false }),
-    ]).start();
+    function tick(now: number) {
+      if (t0 === null) t0 = now;
+      const p = Math.min((now - t0) / 380, 1);
+      const y        = -Math.sin(p * Math.PI) * 9 * (1 - p * 0.2);
+      const red      = p < 0.22
+        ? p / 0.22
+        : Math.max(0, Math.min(1, 1 - (p - 0.22) / 0.6));
+      const scaleVal = 1 + Math.sin(p * Math.PI) * 0.04;
+
+      wordRecoilY.setValue(y);
+      wordRecoilScale.setValue(scaleVal);
+      wordRedOpacity.setValue(red * 0.4);
+
+      if (p < 1) {
+        recoilRafRef.current = requestAnimationFrame(tick);
+      } else {
+        wordRecoilY.setValue(0);
+        wordRecoilScale.setValue(1);
+        wordRedOpacity.setValue(0);
+        recoilRafRef.current = null;
+      }
+    }
+
+    recoilRafRef.current = requestAnimationFrame(tick);
   }
 
   // ── boss entrance ─────────────────────────────────────────────
@@ -499,6 +517,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     goldTextOpacity.setValue(0);
+    wordRecoilY.setValue(0);
+    wordRecoilScale.setValue(1);
+    wordRedOpacity.setValue(0);
 
     // Gate reset
     setGatePhase('locked');
@@ -949,62 +970,72 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         )}
 
         {/* Word with entry + boss animations */}
+        {/* Outer wrapper: non-native recoil transforms (RAF-driven setValue) */}
         <Animated.View
           style={{
-            opacity: wordEntryOpacity,
             transform: [
-              { scale: absorptionScale },
-              { scale: wordEntryScale },
-              { scale: masterHeroScale },
-              { translateY: bossWordTranslateY },
-              { translateY: masterHeroTransY },
-              { translateY: wrongRecoilAnim },
+              { translateY: wordRecoilY },
+              { scale: wordRecoilScale },
             ],
           }}
         >
-          <Text style={[styles.word, isBoss && styles.wordBoss, { color: wordColor }]}>
-            {step.word}
-          </Text>
-          {/* Gold overlay for absorption fill */}
-          <Animated.Text
-            pointerEvents="none"
-            style={[
-              styles.word,
-              isBoss && styles.wordBoss,
-              {
-                color: '#F5C842',
-                opacity: goldTextOpacity,
-                position: 'absolute',
-                left: 0, right: 0,
-                textAlign: 'center',
-              },
-            ]}
-          >
-            {step.word}
-          </Animated.Text>
-          {/* Red flash overlay — wrong swipe danger signal */}
-          <Animated.Text
-            pointerEvents="none"
-            style={[
-              styles.word,
-              isBoss && styles.wordBoss,
-              {
-                color: '#CC2200',
-                opacity: wordRedFlash,
-                position: 'absolute',
-                left: 0, right: 0,
-                textAlign: 'center',
-              },
-            ]}
-          >
-            {step.word}
-          </Animated.Text>
-
-          {/* Absorption ring */}
+          {/* Inner: native-only transforms */}
           <Animated.View
-            pointerEvents="none"
-            style={[styles.goldRing, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
-          />
+            style={{
+              opacity: wordEntryOpacity,
+              transform: [
+                { scale: absorptionScale },
+                { scale: wordEntryScale },
+                { scale: masterHeroScale },
+                { translateY: bossWordTranslateY },
+                { translateY: masterHeroTransY },
+              ],
+            }}
+          >
+            <Text style={[styles.word, isBoss && styles.wordBoss, { color: wordColor }]}>
+              {step.word}
+            </Text>
+            {/* Gold overlay for absorption fill */}
+            <Animated.Text
+              pointerEvents="none"
+              style={[
+                styles.word,
+                isBoss && styles.wordBoss,
+                {
+                  color: '#F5C842',
+                  opacity: goldTextOpacity,
+                  position: 'absolute',
+                  left: 0, right: 0,
+                  textAlign: 'center',
+                },
+              ]}
+            >
+              {step.word}
+            </Animated.Text>
+            {/* Red flash overlay — wrong swipe danger signal */}
+            <Animated.Text
+              pointerEvents="none"
+              style={[
+                styles.word,
+                isBoss && styles.wordBoss,
+                {
+                  color: '#CC2200',
+                  opacity: wordRedOpacity,
+                  position: 'absolute',
+                  left: 0, right: 0,
+                  textAlign: 'center',
+                },
+              ]}
+            >
+              {step.word}
+            </Animated.Text>
+
+            {/* Absorption ring */}
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.goldRing, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
+            />
+          </Animated.View>
         </Animated.View>
 
         {/* Absorbed phrase flash */}
