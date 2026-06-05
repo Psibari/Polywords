@@ -14,11 +14,10 @@ import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { GhostTile } from './GhostTile';
-import { MasterGateTile } from './MasterGateTile';
 import { ScoreFloat } from './ScoreFloat';
 import PollySprite from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
-import { playSplitReveal } from '../utils/SoundEngine';
+import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -206,14 +205,48 @@ export function MaskBoard({ step, spawnEffect }: Props) {
     ? { id: `${step.word}_hidden_trap`, emoji: step.hiddenTrapEmoji ?? '🪤', phrase: step.hiddenTrap ?? 'Not this one', isReal: false }
     : null;
 
-  const [perfectClear, setPerfectClear] = useState(false);
-  const [splitTilesVisible, setSplitTilesVisible] = useState(false);
-  const [splitStates, setSplitStates] = useState<Map<string, SwipeMaskState>>(new Map());
+  // Gate phase
+  const [gatePhase, setGatePhase] = useState<
+    'locked' | 'unlocking' | 'doorSplit' | 'tiles' | 'wrongFail' | 'mastered'
+  >('locked');
 
-  // Split tile drop animations — native driver only
-  const splitTile1TransY  = useRef(new Animated.Value(-100)).current;
-  const splitTile2TransY  = useRef(new Animated.Value(-100)).current;
+  // Final tile states (replaces splitStates)
+  const [finalTileStates, setFinalTileStates] = useState<Map<string, SwipeMaskState>>(new Map());
+
+  // Gate animated values — all useNativeDriver:false (border color requires it)
+  const gateScaleAnim       = useRef(new Animated.Value(1)).current;
+  const gateTranslateYAnim  = useRef(new Animated.Value(0)).current;
+  const gateBorderOpAnim    = useRef(new Animated.Value(0.25)).current;
+  const lockScaleAnim       = useRef(new Animated.Value(1)).current;
+  const lockRotAnim         = useRef(new Animated.Value(0)).current;
+  const doorLeftTransXAnim  = useRef(new Animated.Value(0)).current;
+  const doorRightTransXAnim = useRef(new Animated.Value(0)).current;
+  const doorsOpacityAnim    = useRef(new Animated.Value(1)).current;
+
+  // Final tile drop (native: transform only)
+  const splitTile1TransY  = useRef(new Animated.Value(-60)).current;
+  const splitTile2TransY  = useRef(new Animated.Value(-60)).current;
   const splitCompletedRef = useRef(false);
+
+  // Final tile border pulse (non-native)
+  const finalBorder1Anim = useRef(new Animated.Value(1)).current;
+  const finalBorder2Anim = useRef(new Animated.Value(1)).current;
+
+  // Wrong-fail: both tiles shrink + fade (native)
+  const wrongFailScaleAnim   = useRef(new Animated.Value(1)).current;
+  const wrongFailOpacityAnim = useRef(new Animated.Value(1)).current;
+  const [wrongGhostVisible, setWrongGhostVisible] = useState(false);
+
+  // Mastered celebration (native)
+  const masterHeroScale    = useRef(new Animated.Value(1)).current;
+  const masterHeroTransY   = useRef(new Animated.Value(0)).current;
+  const masterAllFadeAnim  = useRef(new Animated.Value(1)).current;
+  const masterStampScale   = useRef(new Animated.Value(2.4)).current;
+  const masterStampOpacity = useRef(new Animated.Value(0)).current;
+  const [masterStampVisible, setMasterStampVisible] = useState(false);
+
+  // Gate ref for measuring rise distance
+  const gateViewRef = useRef<View>(null);
 
   // ── hesitation timers ─────────────────────────────────────────
   const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -282,10 +315,31 @@ export function MaskBoard({ step, spawnEffect }: Props) {
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     goldTextOpacity.setValue(0);
-    setSplitTilesVisible(false);
-    setSplitStates(new Map());
-    splitTile1TransY.setValue(-100);
-    splitTile2TransY.setValue(-100);
+
+    // Gate reset
+    setGatePhase('locked');
+    setFinalTileStates(new Map());
+    setWrongGhostVisible(false);
+    setMasterStampVisible(false);
+    gateScaleAnim.setValue(1);
+    gateTranslateYAnim.setValue(0);
+    gateBorderOpAnim.setValue(0.25);
+    lockScaleAnim.setValue(1);
+    lockRotAnim.setValue(0);
+    doorLeftTransXAnim.setValue(0);
+    doorRightTransXAnim.setValue(0);
+    doorsOpacityAnim.setValue(1);
+    splitTile1TransY.setValue(-60);
+    splitTile2TransY.setValue(-60);
+    finalBorder1Anim.setValue(1);
+    finalBorder2Anim.setValue(1);
+    wrongFailScaleAnim.setValue(1);
+    wrongFailOpacityAnim.setValue(1);
+    masterHeroScale.setValue(1);
+    masterHeroTransY.setValue(0);
+    masterAllFadeAnim.setValue(1);
+    masterStampScale.setValue(2.4);
+    masterStampOpacity.setValue(0);
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss)
@@ -371,73 +425,210 @@ export function MaskBoard({ step, spawnEffect }: Props) {
     return () => clearTimeout(tid);
   }, [shatterOrigin]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Gate opened — spawn split tiles ──────────────────────────
-  function handleGateOpened() {
-    splitTile1TransY.setValue(-100);
-    splitTile2TransY.setValue(-100);
-    setSplitTilesVisible(true);
+  // ── Gate sequence ─────────────────────────────────────────────
+
+  function triggerDoorSplit() {
+    setGatePhase('doorSplit');
+    playSplitReveal();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+    const halfWidth = Dimensions.get('window').width / 2;
+
+    Animated.spring(doorLeftTransXAnim, {
+      toValue: -halfWidth, damping: 14, stiffness: 160, useNativeDriver: false,
+    }).start();
+    Animated.spring(doorRightTransXAnim, {
+      toValue: halfWidth, damping: 14, stiffness: 160, useNativeDriver: false,
+    }).start();
+    Animated.timing(doorsOpacityAnim, {
+      toValue: 0, duration: 200, useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) triggerFinalTilesDrop();
+    });
+  }
+
+  function triggerFinalTilesDrop() {
+    if (!hiddenRealMask || !hiddenTrapMask) return;
+    setGatePhase('tiles');
+    setFinalTileStates(new Map([
+      [hiddenRealMask.id, 'idle'],
+      [hiddenTrapMask.id, 'idle'],
+    ]));
+    splitTile1TransY.setValue(-60);
+    splitTile2TransY.setValue(-60);
 
     Animated.spring(splitTile1TransY, {
-      toValue: 0, damping: 12, stiffness: 120, useNativeDriver: true,
-    }).start();
+      toValue: 0, damping: 10, stiffness: 140, useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (!finished) return;
+      Animated.sequence([
+        Animated.timing(finalBorder1Anim, { toValue: 0.4, duration: 200, useNativeDriver: false }),
+        Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 400, useNativeDriver: false }),
+      ]).start();
+    });
 
     setTimeout(() => {
       Animated.spring(splitTile2TransY, {
-        toValue: 0, damping: 12, stiffness: 120, useNativeDriver: true,
-      }).start();
-    }, 80);
+        toValue: 0, damping: 10, stiffness: 140, useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished) return;
+        Animated.sequence([
+          Animated.timing(finalBorder2Anim, { toValue: 0.4, duration: 200, useNativeDriver: false }),
+          Animated.timing(finalBorder2Anim, { toValue: 1.0, duration: 400, useNativeDriver: false }),
+        ]).start();
+      });
+    }, 60);
   }
 
-  function handleSplitSwipeUp(maskId: string) {
-    const isReal = maskId === `${step.word}_hidden_real`;
-    if (isReal) {
-      setSplitStates(prev => new Map(prev).set(maskId, 'correct'));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      store.submitWrongSwipe();
-      setSplitStates(prev => new Map(prev).set(maskId, 'wrong'));
-      firePollyEvent('wrong');
-    }
-  }
-
-  function handleSplitSwipeRight(maskId: string) {
-    const isReal = maskId === `${step.word}_hidden_real`;
-    if (!isReal) {
-      setSplitStates(prev => new Map(prev).set(maskId, 'trap-caught'));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      store.submitWrongSwipe();
-      setSplitStates(prev => new Map(prev).set(maskId, 'wrong'));
-      firePollyEvent('wrong');
-    }
-  }
-
-  // ── split tile completion ─────────────────────────────────────
-  useEffect(() => {
-    if (!splitTilesVisible || splitCompletedRef.current || !hiddenRealMask || !hiddenTrapMask) return;
-    const realState = splitStates.get(hiddenRealMask.id);
-    const trapState = splitStates.get(hiddenTrapMask.id);
-    const realJudged = realState === 'correct' || realState === 'wrong';
-    const trapJudged = trapState === 'trap-caught' || trapState === 'wrong';
-    if (!realJudged || !trapJudged) return;
-
+  function triggerWrongFail() {
+    if (splitCompletedRef.current) return;
     splitCompletedRef.current = true;
     completedRef.current = true;
+    wrongSwipeOccurred.current = true;
+    setGatePhase('wrongFail');
 
-    if (realState === 'correct' && trapState === 'trap-caught') {
-      store.addBonusScore(300);
-      spawnFloatAtSplit(300, '#F5C842');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      firePollyEvent('gateMastered');
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
+    Animated.parallel([
+      Animated.timing(wrongFailScaleAnim, {
+        toValue: 0.94, duration: 120, useNativeDriver: true,
+      }),
+      Animated.timing(wrongFailOpacityAnim, {
+        toValue: 0, duration: 200, useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setWrongGhostVisible(true);
+    });
 
     setTimeout(() => {
-      if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
+      store.addGhostedMaster(step.word);
       store.completeWord();
-    }, 800);
-  }, [splitStates]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, 1200);
+  }
+
+  function triggerMastered() {
+    setGatePhase('mastered');
+    completedRef.current = true;
+    store.addBonusScore(300);
+    spawnFloatAtSplit(300, '#F5C842');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    firePollyEvent('gateMastered');
+
+    setTimeout(() => {
+      Animated.timing(masterAllFadeAnim, {
+        toValue: 0, duration: 300, useNativeDriver: true,
+      }).start();
+
+      containerRef.current?.measure((_x, _y, _w, _h, _px, cPageY) => {
+        const screenCenterY  = Dimensions.get('window').height / 2;
+        const wordCenterY    = cPageY + 40;
+        const targetTransY   = screenCenterY - wordCenterY;
+
+        Animated.parallel([
+          Animated.spring(masterHeroScale, {
+            toValue: 2.2, damping: 8, stiffness: 180, useNativeDriver: true,
+          }),
+          Animated.spring(masterHeroTransY, {
+            toValue: targetTransY, damping: 8, stiffness: 180, useNativeDriver: true,
+          }),
+        ]).start();
+      });
+
+      setTimeout(() => {
+        setMasterStampVisible(true);
+        masterStampScale.setValue(2.4);
+        masterStampOpacity.setValue(0);
+
+        Animated.timing(masterStampScale, {
+          toValue: 1.0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        }).start();
+        Animated.timing(masterStampOpacity, {
+          toValue: 1.0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+        }).start();
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        playRoundComplete();
+
+        setTimeout(() => {
+          if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
+          store.completeWord();
+        }, 1800);
+      }, 400);
+    }, 200);
+  }
+
+  function triggerGateUnlock() {
+    setGatePhase('unlocking');
+
+    lockScaleAnim.setValue(1);
+    lockRotAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(lockScaleAnim, { toValue: 1.4, duration: 150, useNativeDriver: false }),
+      Animated.timing(lockScaleAnim, { toValue: 1.0, duration: 150, useNativeDriver: false }),
+    ]).start();
+    Animated.timing(lockRotAnim, { toValue: -20, duration: 300, useNativeDriver: false }).start();
+
+    Animated.timing(gateBorderOpAnim, { toValue: 1, duration: 400, useNativeDriver: false }).start();
+
+    Animated.spring(gateScaleAnim, {
+      toValue: 1.15, damping: 10, stiffness: 120, useNativeDriver: false,
+    }).start();
+
+    setTimeout(() => {
+      const cont = containerRef.current;
+      const gate = gateViewRef.current;
+      if (cont && gate) {
+        (cont as any).measure((_cx: number, _cy: number, _cw: number, _ch: number, _cpx: number, cPageY: number) => {
+          (gate as any).measure((_gx: number, _gy: number, _gw: number, _gh: number, _gpx: number, gPageY: number) => {
+            const riseDistance = (cPageY + 84) - gPageY;
+            Animated.spring(gateTranslateYAnim, {
+              toValue: riseDistance, damping: 12, stiffness: 100, useNativeDriver: false,
+            }).start(({ finished }) => {
+              if (finished) triggerDoorSplit();
+            });
+          });
+        });
+      } else {
+        Animated.spring(gateTranslateYAnim, {
+          toValue: -350, damping: 12, stiffness: 100, useNativeDriver: false,
+        }).start(({ finished }) => {
+          if (finished) triggerDoorSplit();
+        });
+      }
+    }, 100);
+  }
+
+  function handleFinalTileSwipeUp(maskId: string) {
+    const isReal = maskId === hiddenRealMask?.id;
+    if (isReal) {
+      setFinalTileStates(prev => new Map(prev).set(maskId, 'correct'));
+      if (hiddenRealMask) triggerAbsorption(hiddenRealMask.phrase);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      triggerWrongFail();
+    }
+  }
+
+  function handleFinalTileSwipeRight(maskId: string) {
+    const isReal = maskId === hiddenRealMask?.id;
+    if (!isReal) {
+      setFinalTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      triggerWrongFail();
+    }
+  }
+
+  // ── Final tile completion ─────────────────────────────────────
+  useEffect(() => {
+    if (gatePhase !== 'tiles' || splitCompletedRef.current || !hiddenRealMask || !hiddenTrapMask) return;
+    const realState = finalTileStates.get(hiddenRealMask.id);
+    const trapState = finalTileStates.get(hiddenTrapMask.id);
+    if (realState === 'correct' && trapState === 'trap-caught') {
+      splitCompletedRef.current = true;
+      setTimeout(() => triggerMastered(), 200);
+    }
+  }, [finalTileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
@@ -457,8 +648,7 @@ export function MaskBoard({ step, spawnEffect }: Props) {
     if (perfect && hasHidden && !wrongSwipeOccurred.current) {
       gateTriggeredRef.current = true;
       firePollyEvent('allMasksFound');
-      playSplitReveal();
-      setPerfectClear(true);
+      triggerGateUnlock();
     } else {
       gateTriggeredRef.current = true;
       setTimeout(() => {
@@ -571,7 +761,9 @@ export function MaskBoard({ step, spawnEffect }: Props) {
             transform: [
               { scale: absorptionScale },
               { scale: wordEntryScale },
+              { scale: masterHeroScale },
               { translateY: bossWordTranslateY },
+              { translateY: masterHeroTransY },
             ],
           }}
         >
@@ -613,31 +805,35 @@ export function MaskBoard({ step, spawnEffect }: Props) {
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
       <View style={styles.gridWrap}>
-        {showBoardContent && (() => {
-          const stagger      = step.tileStagger ?? 80;
-          const orderedMasks = !!step.bossModifier
-            ? [...visibleGridMasks].reverse()
-            : visibleGridMasks;
-          const hapticCorrect = step.hapticTier === 'light'
-            ? () => Haptics.selectionAsync()
-            : undefined;
-          return orderedMasks.map((mask, index) => (
-            <View key={mask.id} ref={getTileRef(mask.id)}>
-              <SwipeMask
-                mask={mask}
-                state={tileStates.get(mask.id) ?? 'idle'}
-                onSwipeUp={() => handleSwipeUp(mask.id)}
-                onSwipeDown={() => handleSwipeRight(mask.id)}
-                onSwipeReveal={() => {}}
-                revealable={false}
-                tileHeight={TILE_H}
-                entryDelay={index * stagger}
-                hapticCorrect={hapticCorrect}
-                onEffect={spawnEffect}
-              />
-            </View>
-          ));
-        })()}
+        {showBoardContent && (
+          <Animated.View style={{ opacity: masterAllFadeAnim }}>
+            {(() => {
+              const stagger      = step.tileStagger ?? 80;
+              const orderedMasks = !!step.bossModifier
+                ? [...visibleGridMasks].reverse()
+                : visibleGridMasks;
+              const hapticCorrect = step.hapticTier === 'light'
+                ? () => Haptics.selectionAsync()
+                : undefined;
+              return orderedMasks.map((mask, index) => (
+                <View key={mask.id} ref={getTileRef(mask.id)}>
+                  <SwipeMask
+                    mask={mask}
+                    state={tileStates.get(mask.id) ?? 'idle'}
+                    onSwipeUp={() => handleSwipeUp(mask.id)}
+                    onSwipeDown={() => handleSwipeRight(mask.id)}
+                    onSwipeReveal={() => {}}
+                    revealable={false}
+                    tileHeight={TILE_H}
+                    entryDelay={index * stagger}
+                    hapticCorrect={hapticCorrect}
+                    onEffect={spawnEffect}
+                  />
+                </View>
+              ));
+            })()}
+          </Animated.View>
+        )}
 
         {/* ── MASTER GATE — bottom of tile stack ─────────── */}
         {hasHidden && (
@@ -649,41 +845,146 @@ export function MaskBoard({ step, spawnEffect }: Props) {
               onWrong={handleGhostSwipeRight}
               onDone={() => setGhostVisible(false)}
             />
-          ) : splitTilesVisible && hiddenRealMask && hiddenTrapMask ? (
-            <View style={styles.splitZone}>
-              <Animated.View style={{ transform: [{ translateY: splitTile1TransY }] }}>
-                <SwipeMask
-                  mask={hiddenRealMask}
-                  state={splitStates.get(hiddenRealMask.id) ?? 'idle'}
-                  onSwipeUp={() => handleSplitSwipeUp(hiddenRealMask.id)}
-                  onSwipeDown={() => handleSplitSwipeRight(hiddenRealMask.id)}
-                  onSwipeReveal={() => {}}
-                  revealable={false}
-                  tileHeight={TILE_H}
-                  entryDelay={0}
-                  onEffect={spawnEffect}
-                />
+          ) : (gatePhase === 'tiles' || gatePhase === 'wrongFail' || gatePhase === 'mastered') && hiddenRealMask && hiddenTrapMask ? (
+            wrongGhostVisible ? (
+              // Wrong-fail ghost placeholder
+              <View style={{
+                height: HIDDEN_H,
+                marginTop: TILE_GAP,
+                backgroundColor: '#0F0D2A',
+                borderRadius: 12,
+                borderWidth: 2,
+                borderStyle: 'dashed',
+                borderColor: '#9B2D6B',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Text style={{
+                  fontFamily: FONTS.wordDisplay,
+                  fontSize: 16,
+                  color: 'rgba(155,45,107,0.7)',
+                  letterSpacing: 2,
+                }}>MASTER THE WORD</Text>
+              </View>
+            ) : (
+              // Two final tiles
+              <Animated.View style={{
+                marginTop: TILE_GAP,
+                transform: [{ scale: wrongFailScaleAnim }],
+                opacity: wrongFailOpacityAnim,
+              }}>
+                <Animated.View style={{ transform: [{ translateY: splitTile1TransY }] }}>
+                  <Animated.View style={{
+                    borderWidth: 2,
+                    borderRadius: 14,
+                    borderColor: finalBorder1Anim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['rgba(255,215,0,0.4)', 'rgba(255,215,0,1.0)'],
+                    }),
+                  }}>
+                    <SwipeMask
+                      mask={hiddenRealMask}
+                      state={finalTileStates.get(hiddenRealMask.id) ?? 'idle'}
+                      onSwipeUp={() => handleFinalTileSwipeUp(hiddenRealMask.id)}
+                      onSwipeDown={() => handleFinalTileSwipeRight(hiddenRealMask.id)}
+                      onSwipeReveal={() => {}}
+                      revealable={false}
+                      tileHeight={72}
+                      entryDelay={0}
+                      onEffect={spawnEffect}
+                    />
+                  </Animated.View>
+                </Animated.View>
+                <Animated.View style={{ marginTop: 10, transform: [{ translateY: splitTile2TransY }] }}>
+                  <Animated.View style={{
+                    borderWidth: 2,
+                    borderRadius: 14,
+                    borderColor: finalBorder2Anim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['rgba(255,215,0,0.4)', 'rgba(255,215,0,1.0)'],
+                    }),
+                  }}>
+                    <SwipeMask
+                      mask={hiddenTrapMask}
+                      state={finalTileStates.get(hiddenTrapMask.id) ?? 'idle'}
+                      onSwipeUp={() => handleFinalTileSwipeUp(hiddenTrapMask.id)}
+                      onSwipeDown={() => handleFinalTileSwipeRight(hiddenTrapMask.id)}
+                      onSwipeReveal={() => {}}
+                      revealable={false}
+                      tileHeight={72}
+                      entryDelay={0}
+                      onEffect={spawnEffect}
+                    />
+                  </Animated.View>
+                </Animated.View>
               </Animated.View>
-              <Animated.View style={{ marginTop: TILE_GAP, transform: [{ translateY: splitTile2TransY }] }}>
-                <SwipeMask
-                  mask={hiddenTrapMask}
-                  state={splitStates.get(hiddenTrapMask.id) ?? 'idle'}
-                  onSwipeUp={() => handleSplitSwipeUp(hiddenTrapMask.id)}
-                  onSwipeDown={() => handleSplitSwipeRight(hiddenTrapMask.id)}
-                  onSwipeReveal={() => {}}
-                  revealable={false}
-                  tileHeight={TILE_H}
-                  entryDelay={0}
-                  onEffect={spawnEffect}
-                />
-              </Animated.View>
-            </View>
+            )
           ) : (
-            <MasterGateTile
-              perfectClear={perfectClear}
-              onGateOpened={handleGateOpened}
-              tileHeight={HIDDEN_H}
-            />
+            // Gate: locked / unlocking / doorSplit
+            <Animated.View
+              ref={gateViewRef as any}
+              style={{
+                height: HIDDEN_H,
+                marginTop: TILE_GAP,
+                borderRadius: 12,
+                borderWidth: 2,
+                backgroundColor: '#0F0D2A',
+                borderColor: gateBorderOpAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['rgba(245,200,66,0.25)', 'rgba(245,200,66,1.0)'],
+                }),
+                overflow: 'visible',
+                zIndex: gatePhase === 'locked' ? 0 : 100,
+                transform: [
+                  { scale: gateScaleAnim },
+                  { translateY: gateTranslateYAnim },
+                ],
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {/* Left door half */}
+              <Animated.View style={{
+                position: 'absolute',
+                left: 0, top: 0, bottom: 0,
+                width: '50%',
+                backgroundColor: '#0F0D2A',
+                borderRadius: 10,
+                transform: [{ translateX: doorLeftTransXAnim }],
+                opacity: doorsOpacityAnim,
+                zIndex: 1,
+              }} />
+              {/* Right door half */}
+              <Animated.View style={{
+                position: 'absolute',
+                right: 0, top: 0, bottom: 0,
+                width: '50%',
+                backgroundColor: '#0F0D2A',
+                borderRadius: 10,
+                transform: [{ translateX: doorRightTransXAnim }],
+                opacity: doorsOpacityAnim,
+                zIndex: 1,
+              }} />
+              {/* Content: lock icon + text */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 2 }} pointerEvents="none">
+                <Animated.Text style={{
+                  fontSize: 18,
+                  transform: [
+                    { scale: lockScaleAnim },
+                    { rotate: lockRotAnim.interpolate({
+                      inputRange: [-20, 0],
+                      outputRange: ['-20deg', '0deg'],
+                    })},
+                  ],
+                }}>🔒</Animated.Text>
+                <Text style={{
+                  fontFamily: FONTS.wordDisplay,
+                  fontSize: 16,
+                  color: 'rgba(245,200,66,0.65)',
+                  letterSpacing: 2,
+                }}>MASTER THE WORD</Text>
+              </View>
+            </Animated.View>
           )
         )}
       </View>
@@ -746,6 +1047,25 @@ export function MaskBoard({ step, spawnEffect }: Props) {
           <Text style={styles.speechText} numberOfLines={3}>
             {currentSpeechLine}
           </Text>
+        </View>
+      )}
+
+      {/* MASTER stamp — mastered celebration overlay */}
+      {masterStampVisible && (
+        <View
+          style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
+          pointerEvents="none"
+        >
+          <Animated.Text style={{
+            fontFamily: FONTS.wordDisplay,
+            fontSize: 64,
+            color: '#F5C842',
+            textAlign: 'center',
+            transform: [{ scale: masterStampScale }],
+            opacity: masterStampOpacity,
+          }}>
+            MASTER
+          </Animated.Text>
         </View>
       )}
     </Animated.View>
