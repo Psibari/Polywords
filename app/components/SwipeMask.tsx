@@ -97,16 +97,17 @@ export function SwipeMask({
   const eraBadgeOpacity = useRef(new RNAnimated.Value(0)).current;
 
   // ── Refs ──────────────────────────────────────────────────────
-  const judgedRef             = useRef(false);
-  const swipeDirRef           = useRef<'up' | 'right' | null>(null);
-  const hasThresholdFiredRef  = useRef(false);
-  const tileLayoutRef         = useRef({ width: 300, height: tileHeight });
-  const onSwipeUpRef          = useRef(onSwipeUp);
-  const onSwipeDownRef        = useRef(onSwipeDown);
-  const hapticCorrectRef      = useRef(hapticCorrect);
-  const onEffectRef           = useRef(onEffect);
-  const outerRef              = useRef<any>(null);
-  const absorbRafRef          = useRef<number | null>(null);
+  const judgedRef                = useRef(false);
+  const swipeDirRef              = useRef<'up' | 'right' | null>(null);
+  const hasThresholdFiredRef     = useRef(false);
+  const tileLayoutRef            = useRef({ width: 300, height: tileHeight });
+  const onSwipeUpRef             = useRef(onSwipeUp);
+  const onSwipeDownRef           = useRef(onSwipeDown);
+  const hapticCorrectRef         = useRef(hapticCorrect);
+  const onEffectRef              = useRef(onEffect);
+  const outerRef                 = useRef<any>(null);
+  const absorbRafRef             = useRef<number | null>(null);
+  const lastGestureVelocityRef   = useRef({ vx: 0, vy: 0 });
 
   useEffect(() => { onSwipeUpRef.current    = onSwipeUp;    }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
@@ -146,17 +147,20 @@ export function SwipeMask({
       playCorrectSwipe();
       RNAnimated.timing(bgAnim, { toValue: 0.5, duration: 80, useNativeDriver: false }).start();
 
+      const currentOffsetX = translateX.value;
+      const currentOffsetY = translateY.value;
+
       outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
         const screenWidth = Dimensions.get('window').width;
         const targetX  = screenWidth / 2;
         const targetY  = wordY;
 
-        let px = pageX + w / 2;
-        let py = pageY + h / 2;
-        const origCX   = px;
-        const origCY   = py;
-        let vX         = 0;
-        let vY         = -800;
+        const origCX = pageX + w / 2;
+        const origCY = pageY + h / 2;
+        let px = origCX + currentOffsetX;
+        let py = origCY + currentOffsetY;
+        let vX = Math.max(-1400, Math.min(1400,  lastGestureVelocityRef.current.vx * 1000));
+        let vY = Math.max(-2600, Math.min(-260,  lastGestureVelocityRef.current.vy * 1000));
         const startDist = Math.hypot(targetX - px, targetY - py) || 1;
         let elapsed    = 0;
         let bumped     = false;
@@ -320,6 +324,7 @@ export function SwipeMask({
 
       onPanResponderMove: (_, g) => {
         if (judgedRef.current) return;
+        lastGestureVelocityRef.current = { vx: g.vx, vy: g.vy };
         translateX.value = g.dx;
         translateY.value = g.dy;
 
