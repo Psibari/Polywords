@@ -27,7 +27,6 @@ export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hid
 
 const SWIPE_THRESHOLD = 40;
 const TILE_GAP        = 6;
-const WORD_Y          = 140; // approx screen-Y of hero word center
 
 type Props = {
   mask: Mask;
@@ -42,6 +41,7 @@ type Props = {
   eraBadge?: string;
   hapticCorrect?: () => void;
   onEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
+  wordY?: number;
 };
 
 // Gold steps for word absorption — exported for MaskBoard
@@ -60,6 +60,7 @@ export function SwipeMask({
   eraBadge,
   hapticCorrect,
   onEffect,
+  wordY = 180,
 }: Props) {
 
   // ── UI state ──────────────────────────────────────────────────
@@ -105,6 +106,7 @@ export function SwipeMask({
   const hapticCorrectRef      = useRef(hapticCorrect);
   const onEffectRef           = useRef(onEffect);
   const outerRef              = useRef<any>(null);
+  const absorbRafRef          = useRef<number | null>(null);
 
   useEffect(() => { onSwipeUpRef.current    = onSwipeUp;    }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
@@ -134,7 +136,7 @@ export function SwipeMask({
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    // ── CORRECT — tile absorbs into hero word ─────────────────
+    // ── CORRECT — magnetic absorb physics ────────────────────
     if (s === 'correct') {
       if (hapticCorrectRef.current) {
         hapticCorrectRef.current();
@@ -142,38 +144,69 @@ export function SwipeMask({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
       playCorrectSwipe();
-
-      // BG flash: brief green burst (non-native, completes before absorption)
       RNAnimated.timing(bgAnim, { toValue: 0.5, duration: 80, useNativeDriver: false }).start();
 
-      // Measure tile, then animate toward hero word center
       outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
         const screenWidth = Dimensions.get('window').width;
-        const targetX = screenWidth / 2 - pageX - w / 2;
-        const targetY = WORD_Y - pageY;
+        const targetX  = screenWidth / 2;
+        const targetY  = wordY;
 
-        translateX.value = withSpring(targetX, { damping: 10, stiffness: 120 });
-        translateY.value = withSpring(targetY, { damping: 10, stiffness: 120 });
-        rotation.value   = withSpring(0, { damping: 14, stiffness: 300 });
+        let px = pageX + w / 2;
+        let py = pageY + h / 2;
+        const origCX   = px;
+        const origCY   = py;
+        let vX         = 0;
+        let vY         = -800;
+        const startDist = Math.hypot(targetX - px, targetY - py) || 1;
+        let elapsed    = 0;
+        let bumped     = false;
+        let lastTime: number | null = null;
 
-        // Scale → 0.15 and opacity → 0 starting at 60% of travel (~240ms)
-        timers.push(setTimeout(() => {
-          scale.value       = withTiming(0.15, { duration: 300 });
-          tileOpacity.value = withTiming(0,    { duration: 300 });
-        }, 240));
+        function tick(now: number) {
+          if (lastTime === null) { lastTime = now; }
+          const dt = Math.min((now - lastTime) / 1000, 0.04);
+          lastTime = now;
+          elapsed += dt;
 
-        // Fire onAbsorb (trail) at 70% of spring duration estimate (~280ms)
-        timers.push(setTimeout(() => {
-          onEffectRef.current?.('trail', pageX + w / 2, pageY + h / 2);
-        }, 280));
+          const k = 34 + 340 * elapsed;
+          vX += (targetX - px) * k * dt;
+          vY += (targetY - py) * k * dt;
+          const damp = Math.pow(0.82, dt * 60);
+          vX *= damp;
+          vY *= damp;
+          px += vX * dt;
+          py += vY * dt;
+          if (py < targetY) { py = targetY; vY = 0; }
 
-        // Collapse outer height after absorption completes (~460ms)
-        timers.push(setTimeout(() => {
-          RNAnimated.parallel([
-            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-          ]).start();
-        }, 460));
+          const dist   = Math.hypot(targetX - px, targetY - py);
+          const closed = Math.max(0, Math.min(1, 1 - dist / startDist));
+
+          translateX.value  = px - origCX;
+          translateY.value  = py - origCY;
+          scale.value       = Math.max(0.1, Math.min(1.12, 1.06 - closed * 0.95));
+          tileOpacity.value = dist < startDist * 0.14
+            ? Math.max(0, Math.min(1, dist / (startDist * 0.14)))
+            : 1;
+
+          if (!bumped && closed > 0.72) {
+            bumped = true;
+            onEffectRef.current?.('trail', px, py);
+          }
+
+          if (dist < 14 || elapsed > 1.4) {
+            absorbRafRef.current = null;
+            tileOpacity.value = 0;
+            RNAnimated.parallel([
+              RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+              RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+            ]).start();
+            return;
+          }
+
+          absorbRafRef.current = requestAnimationFrame(tick);
+        }
+
+        absorbRafRef.current = requestAnimationFrame(tick);
       });
     }
 
@@ -240,7 +273,13 @@ export function SwipeMask({
       setFlashRed(false);
     }
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timers.forEach(clearTimeout);
+      if (absorbRafRef.current !== null) {
+        cancelAnimationFrame(absorbRafRef.current);
+        absorbRafRef.current = null;
+      }
+    };
   }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tileAnimStyle = useAnimatedStyle(() => ({

@@ -190,7 +190,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   // ── layout ───────────────────────────────────────────────────
   const [containerWidth, setContainerWidth] = useState(350);
   const containerWidthRef                   = useRef(350);
-  const containerRef = useRef<View>(null);
+  const containerRef  = useRef<View>(null);
+  const wordZoneRef   = useRef<View>(null);
+  const [wordScreenY, setWordScreenY] = useState(180);
 
   const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex]
     ?? step.masks.filter(m => !m.isHidden);
@@ -915,7 +917,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       }}
     >
       {/* ── WORD ZONE — 80px fixed ──────────────────────────── */}
-      <View style={styles.wordZone} pointerEvents="none">
+      <View
+        style={styles.wordZone}
+        pointerEvents="none"
+        ref={wordZoneRef as any}
+        onLayout={() => {
+          (wordZoneRef.current as any)?.measure(
+            (_x: number, _y: number, _w: number, _h: number, _px: number, pageY: number) => {
+              setWordScreenY(pageY + 40); // center of 80px word zone
+            }
+          );
+        }}
+      >
         {/* Boss gold sweep */}
         {bossSweepActive && (
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -1027,6 +1040,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     entryDelay={index * stagger}
                     hapticCorrect={hapticCorrect}
                     onEffect={handleEffect}
+                    wordY={wordScreenY}
                   />
                 </View>
               ));
@@ -1091,6 +1105,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       tileHeight={72}
                       entryDelay={0}
                       onEffect={handleEffect}
+                      wordY={wordScreenY}
                     />
                   </Animated.View>
                 </Animated.View>
@@ -1113,6 +1128,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       tileHeight={72}
                       entryDelay={0}
                       onEffect={handleEffect}
+                      wordY={wordScreenY}
                     />
                   </Animated.View>
                 </Animated.View>
