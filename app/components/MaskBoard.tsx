@@ -270,27 +270,29 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordRedOpacity  = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
   const recoilRafRef    = useRef<number | null>(null);
 
-  // ── confetti ──────────────────────────────────────────────────
-  const CONFETTI_COLORS  = ['#FFD700', '#4CAF50', '#FFFFFF', '#F5C842'] as const;
-  const CONFETTI_COUNT   = 40;
-  const CONFETTI_WORD_Y  = 40; // center of 80px word zone in container coords
-
-  type ConfettiParticle = {
-    angle: number; speed: number; size: number; rot: number; color: string;
+  // ── mastery shards ────────────────────────────────────────────
+  type MasteryShard = {
+    angle: number; speed: number;
+    w: number; h: number;
+    rot: number; rotSpeed: number;
+    color: string;
   };
 
-  const confettiParticles = useRef<ConfettiParticle[]>(
-    Array.from({ length: CONFETTI_COUNT }, () => ({
-      angle: -Math.PI / 2 + (Math.random() - 0.5) * 2 * 0.8 * Math.PI,
-      speed: 180 + Math.random() * 360,
-      size:  6   + Math.random() * 9,
-      rot:   (Math.random() < 0.5 ? 1 : -1) * Math.random() * 360,
-      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+  const masteryShards = useRef<MasteryShard[]>(
+    Array.from({ length: 16 }, (_, i) => ({
+      angle:    ((360 / 16) * i + (Math.random() - 0.5) * 20) * Math.PI / 180,
+      speed:    200 + Math.random() * 180,
+      w:        6   + Math.random() * 8,
+      h:        20  + Math.random() * 16,
+      rot:      Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 8,
+      color:    Math.random() > 0.5 ? '#7B2D8B' : '#9B2D6B',
     }))
   ).current;
 
-  const confettiAnim    = useRef(new Animated.Value(0)).current;
-  const [confettiVisible, setConfettiVisible] = useState(false);
+  const masteryRafRef      = useRef<number | null>(null);
+  const masteryStartRef    = useRef<number | null>(null);
+  const [masteryProgress, setMasteryProgress] = useState(-1);
 
   function triggerWrongWordRecoil() {
     if (recoilRafRef.current !== null) {
@@ -821,15 +823,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           toValue: 1.0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true,
         }).start();
 
-        // Confetti burst
-        setConfettiVisible(true);
-        confettiAnim.setValue(0);
-        Animated.timing(confettiAnim, {
-          toValue: 1, duration: 1500, useNativeDriver: true,
-        }).start(() => {
-          setConfettiVisible(false);
-          confettiAnim.setValue(0);
-        });
+        // Mastery shard burst — 900ms rAF loop
+        masteryStartRef.current = null;
+        setMasteryProgress(0);
+        function masteryTick(now: number) {
+          if (masteryStartRef.current === null) masteryStartRef.current = now;
+          const mp = Math.min((now - masteryStartRef.current) / 900, 1);
+          setMasteryProgress(mp);
+          if (mp < 1) masteryRafRef.current = requestAnimationFrame(masteryTick);
+          else { masteryRafRef.current = null; setMasteryProgress(-1); }
+        }
+        masteryRafRef.current = requestAnimationFrame(masteryTick);
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         playRoundComplete();
@@ -1377,45 +1381,30 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
           pointerEvents="none"
         >
-          {/* Confetti particles */}
-          {confettiVisible && confettiParticles.map((p, i) => {
-            const ox = containerWidth / 2 - p.size / 2;
-            const oy = CONFETTI_WORD_Y  - p.size / 2;
-            const dx = Math.cos(p.angle) * p.speed;
-            const dy = Math.sin(p.angle) * p.speed;
-            const xInterp = confettiAnim.interpolate({
-              inputRange:  [0, 1],
-              outputRange: [ox, ox + dx],
-            });
-            const yInterp = confettiAnim.interpolate({
-              inputRange:  [0,    0.25,                         0.5,                       0.75,                        1                      ],
-              outputRange: [oy,   oy + dy*0.25 + 520*0.0625,   oy + dy*0.5 + 520*0.25,   oy + dy*0.75 + 520*0.5625,  oy + dy + 520          ],
-            });
-            const opInterp = confettiAnim.interpolate({
-              inputRange:  [0, 0.7, 1],
-              outputRange: [1, 1,   0],
-            });
-            const rotInterp = confettiAnim.interpolate({
-              inputRange:  [0, 1],
-              outputRange: ['0deg', `${p.rot}deg`],
-            });
+          {/* Mastery shards */}
+          {masteryProgress >= 0 && masteryShards.map((s, i) => {
+            const originX = containerWidthRef.current / 2;
+            const originY = 40;
+            const px      = originX + Math.cos(s.angle) * s.speed * masteryProgress;
+            const py      = originY + Math.sin(s.angle) * s.speed * masteryProgress
+                            + 160 * masteryProgress * masteryProgress;
+            const opacity = masteryProgress < 0.3
+              ? 1
+              : 1 - (masteryProgress - 0.3) / 0.7;
+            const rotation = s.rot + s.rotSpeed * masteryProgress * 60;
             return (
-              <Animated.View
+              <View
                 key={i}
                 style={{
                   position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  width: p.size,
-                  height: p.size,
-                  borderRadius: p.size / 4,
-                  backgroundColor: p.color,
-                  opacity: opInterp,
-                  transform: [
-                    { translateX: xInterp },
-                    { translateY: yInterp },
-                    { rotate: rotInterp },
-                  ],
+                  left: px - s.w / 2,
+                  top:  py - s.h / 2,
+                  width:        s.w,
+                  height:       s.h,
+                  borderRadius: 2,
+                  backgroundColor: s.color,
+                  opacity,
+                  transform: [{ rotate: `${rotation}deg` }],
                 }}
               />
             );
