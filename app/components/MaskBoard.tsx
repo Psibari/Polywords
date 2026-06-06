@@ -992,7 +992,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           store.addGhostedMaster(step.word);
         }
         store.completeWord();
-      }, 1200);
+      }, 1400);
     }
   }, [tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 

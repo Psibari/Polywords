@@ -90,20 +90,23 @@ export function SlangDropScreen({ step, spawnEffect }: Props) {
   // ── completion check ──────────────────────────────────────────
   useEffect(() => {
     if (completedRef.current) return;
-    const allJudged = masks.every(m => {
-      const ts = tileStates.get(m.id);
-      return ts === 'correct' || ts === 'trap-caught' || ts === 'wrong';
-    });
-    if (!allJudged) return;
+    setTimeout(() => {
+      if (completedRef.current) return;
+      const allJudged = masks.every(m => {
+        const ts = tileStates.get(m.id);
+        return ts === 'correct' || ts === 'trap-caught' || ts === 'wrong';
+      });
+      if (!allJudged) return;
 
-    completedRef.current = true;
+      completedRef.current = true;
 
-    const slangCorrect = slangMaskId
-      ? tileStates.get(slangMaskId) === 'correct'
-      : false;
+      const slangCorrect = slangMaskId
+        ? tileStates.get(slangMaskId) === 'correct'
+        : false;
 
-    store.setPollyTrigger(slangCorrect ? 'slangCorrect' : 'slangMiss');
-    setTimeout(() => store.completeWord(), 800);
+      store.setPollyTrigger(slangCorrect ? 'slangCorrect' : 'slangMiss');
+      setTimeout(() => store.completeWord(), 1400);
+    }, 200);
   }, [tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
