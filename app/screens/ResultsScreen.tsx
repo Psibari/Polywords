@@ -422,6 +422,10 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           <Text style={rs.scoreLine}>
             {formattedScore} pts  ·  ×{bestCombo} best combo
           </Text>
+          <Text style={rs.perfectLine}>
+            {wordOnlyResults.filter(r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0).length}
+            /{wordOnlyResults.length} perfect
+          </Text>
         </Animated.View>
 
         {/* ── WORD RESULTS ── */}
