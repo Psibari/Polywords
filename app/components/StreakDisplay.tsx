@@ -4,9 +4,7 @@ import { useGameStore } from '../store/useGameStore'
 import { FONTS, FONT_SIZES } from '../constants/fonts'
 
 function getColor(streak: number): string {
-  if (streak >= 10) return '#FF4500'
-  if (streak >= 7)  return '#FF8C00'
-  if (streak >= 4)  return '#F5C842'
+  if (streak >= 4) return '#F5C842'
   return '#FFFFFF'
 }
 
@@ -53,5 +51,12 @@ export function StreakDisplay() {
 
 const styles = StyleSheet.create({
   wrapper: { width: 60, alignItems: 'center' },
-  counter: { fontFamily: FONTS.hud, fontSize: FONT_SIZES.hudMultiplier },
+  counter: {
+    fontFamily: FONTS.hud,
+    fontSize: FONT_SIZES.hudMultiplier,
+    color: '#F5C842',
+    textShadowColor: 'rgba(245,200,66,0.45)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
 })
