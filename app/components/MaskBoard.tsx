@@ -473,13 +473,21 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wrongFailOpacityAnim = useRef(new Animated.Value(1)).current;
   const [wrongGhostVisible, setWrongGhostVisible] = useState(false);
 
-  // Mastered celebration (native)
-  const masterHeroScale    = useRef(new Animated.Value(1)).current;
-  const masterHeroTransY   = useRef(new Animated.Value(0)).current;
-  const masterAllFadeAnim  = useRef(new Animated.Value(1)).current;
-  const masterStampScale   = useRef(new Animated.Value(2.4)).current;
-  const masterStampOpacity = useRef(new Animated.Value(0)).current;
-  const [masterStampVisible, setMasterStampVisible] = useState(false);
+  // Mastered celebration
+  const masterHeroScale      = useRef(new Animated.Value(1)).current;
+  const masterHeroTransY     = useRef(new Animated.Value(0)).current;
+  const masterAllFadeAnim    = useRef(new Animated.Value(1)).current;
+  // Phase-based mastery sequence
+  const masteredLabelOpacity = useRef(new Animated.Value(0)).current;
+  const goldSeedScale        = useRef(new Animated.Value(0)).current;
+  const goldSeedTransY       = useRef(new Animated.Value(0)).current;
+  const goldSeedTrailOpacity = useRef(new Animated.Value(0)).current;
+  const goldBloomScale       = useRef(new Animated.Value(1)).current;
+  const goldBloomOpacity     = useRef(new Animated.Value(0)).current;
+  const [masterStampVisible, setMasterStampVisible]   = useState(false);
+  const [masteredLabelVisible, setMasteredLabelVisible] = useState(false);
+  const [goldSeedVisible, setGoldSeedVisible]           = useState(false);
+  const [goldBloomVisible, setGoldBloomVisible]         = useState(false);
 
   // Gate ref for measuring rise distance
   const gateViewRef = useRef<View>(null);
@@ -586,8 +594,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     masterHeroScale.setValue(1);
     masterHeroTransY.setValue(0);
     masterAllFadeAnim.setValue(1);
-    masterStampScale.setValue(2.4);
-    masterStampOpacity.setValue(0);
+    masteredLabelOpacity.setValue(0);
+    goldSeedScale.setValue(0);
+    goldSeedTransY.setValue(0);
+    goldSeedTrailOpacity.setValue(0);
+    goldBloomScale.setValue(1);
+    goldBloomOpacity.setValue(0);
+    setMasteredLabelVisible(false);
+    setGoldSeedVisible(false);
+    setGoldBloomVisible(false);
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss)
@@ -788,62 +803,119 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     completedRef.current = true;
     store.addBonusScore(300);
     spawnFloatAtSplit(300, '#F5C842');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     firePollyEvent('gateMastered');
+    setMasterStampVisible(true);
 
+    const screenH = Dimensions.get('window').height;
+
+    // Phase 1 — T+0ms: Screen dims — tiles to 15% opacity
+    Animated.timing(masterAllFadeAnim, {
+      toValue: 0.15, duration: 300, useNativeDriver: false,
+    }).start();
+
+    // Phase 2 — T+500ms: Word pulse
     setTimeout(() => {
-      Animated.timing(masterAllFadeAnim, {
-        toValue: 0, duration: 300, useNativeDriver: true,
+      Animated.sequence([
+        Animated.timing(masterHeroScale, { toValue: 1.06, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(masterHeroScale, { toValue: 1.0,  duration: 250, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      ]).start();
+    }, 500);
+
+    // Phase 3 — T+800ms: MASTERED label appears below word
+    setTimeout(() => {
+      setMasteredLabelVisible(true);
+      masteredLabelOpacity.setValue(0);
+      Animated.timing(masteredLabelOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+    }, 800);
+
+    // Fade label before word swells — NEVER simultaneous
+    setTimeout(() => {
+      Animated.timing(masteredLabelOpacity, { toValue: 0, duration: 80, useNativeDriver: true }).start();
+    }, 1000);
+
+    // Phase 4 — T+1050ms: Word swells 1.0→2.8
+    setTimeout(() => {
+      Animated.timing(masterHeroScale, {
+        toValue: 2.8, duration: 800, easing: Easing.in(Easing.quad), useNativeDriver: true,
       }).start();
+    }, 1050);
 
-      containerRef.current?.measure((_x, _y, _w, _h, _px, cPageY) => {
-        const screenCenterY  = Dimensions.get('window').height / 2;
-        const wordCenterY    = cPageY + 40;
-        const targetTransY   = screenCenterY - wordCenterY;
+    // Phase 5 — T+1300ms: Crystal shard burst + Polly + haptic
+    setTimeout(() => {
+      triggerShardBurst(containerWidthRef.current / 2, 40, 16);
+      masteryStartRef.current = null;
+      setMasteryProgress(0);
+      function masteryTick(now: number) {
+        if (masteryStartRef.current === null) masteryStartRef.current = now;
+        const mp = Math.min((now - masteryStartRef.current) / 900, 1);
+        setMasteryProgress(mp);
+        if (mp < 1) masteryRafRef.current = requestAnimationFrame(masteryTick);
+        else { masteryRafRef.current = null; setMasteryProgress(-1); }
+      }
+      masteryRafRef.current = requestAnimationFrame(masteryTick);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      playRoundComplete();
+    }, 1300);
 
-        Animated.parallel([
-          Animated.spring(masterHeroScale, {
-            toValue: 2.2, damping: 8, stiffness: 180, useNativeDriver: true,
-          }),
-          Animated.spring(masterHeroTransY, {
-            toValue: targetTransY, damping: 8, stiffness: 180, useNativeDriver: true,
-          }),
-        ]).start();
-      });
+    // Phase 6 — T+1900ms: Gold seed appears at word center
+    setTimeout(() => {
+      setGoldSeedVisible(true);
+      goldSeedScale.setValue(0);
+      goldSeedTransY.setValue(0);
+      goldSeedTrailOpacity.setValue(0);
+      Animated.spring(goldSeedScale, {
+        toValue: 1.2, damping: 6, stiffness: 400, useNativeDriver: true,
+      }).start();
+    }, 1900);
 
-      setTimeout(() => {
-        setMasterStampVisible(true);
-        masterStampScale.setValue(2.4);
-        masterStampOpacity.setValue(0);
+    // Seed settles
+    setTimeout(() => {
+      Animated.spring(goldSeedScale, {
+        toValue: 1.0, damping: 8, stiffness: 300, useNativeDriver: true,
+      }).start();
+    }, 2000);
 
-        Animated.timing(masterStampScale, {
-          toValue: 1.0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true,
-        }).start();
-        Animated.timing(masterStampOpacity, {
-          toValue: 1.0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true,
-        }).start();
+    // Phase 7 — T+2100ms: Seed drops to screen bottom
+    setTimeout(() => {
+      const dropDist = screenH - wordScreenY;
+      goldSeedTrailOpacity.setValue(1);
+      Animated.parallel([
+        Animated.timing(goldSeedTransY, {
+          toValue: dropDist, duration: 500, easing: Easing.in(Easing.quad), useNativeDriver: true,
+        }),
+        Animated.timing(goldSeedTrailOpacity, {
+          toValue: 0, duration: 500, useNativeDriver: true,
+        }),
+      ]).start();
+    }, 2100);
 
-        // Mastery shard burst — 900ms rAF loop
-        masteryStartRef.current = null;
-        setMasteryProgress(0);
-        function masteryTick(now: number) {
-          if (masteryStartRef.current === null) masteryStartRef.current = now;
-          const mp = Math.min((now - masteryStartRef.current) / 900, 1);
-          setMasteryProgress(mp);
-          if (mp < 1) masteryRafRef.current = requestAnimationFrame(masteryTick);
-          else { masteryRafRef.current = null; setMasteryProgress(-1); }
-        }
-        masteryRafRef.current = requestAnimationFrame(masteryTick);
+    // Phase 8 — T+2400ms: Seed landing bloom
+    setTimeout(() => {
+      Haptics.selectionAsync();
+      setGoldSeedVisible(false);
+      setGoldBloomVisible(true);
+      goldBloomScale.setValue(1);
+      goldBloomOpacity.setValue(1);
+      Animated.parallel([
+        Animated.timing(goldBloomScale, { toValue: 3.5, duration: 300, useNativeDriver: true }),
+        Animated.timing(goldBloomOpacity, { toValue: 0,   duration: 300, useNativeDriver: true }),
+      ]).start();
+      setTimeout(() => setGoldBloomVisible(false), 350);
+    }, 2400);
 
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        playRoundComplete();
+    // Restore dim before transition
+    setTimeout(() => {
+      Animated.timing(masterAllFadeAnim, { toValue: 1, duration: 200, useNativeDriver: false }).start();
+    }, 2600);
 
-        setTimeout(() => {
-          if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
-          store.completeWord();
-        }, 1800);
-      }, 400);
-    }, 200);
+    // Phase 9 — T+2700ms: Hold (silence)
+
+    // Phase 10 — T+3000ms: Transition
+    setTimeout(() => {
+      setMasteredLabelVisible(false);
+      if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
+      store.completeWord();
+    }, 3000);
   }
 
   function triggerGateUnlock() {
@@ -1375,32 +1447,27 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         </View>
       )}
 
-      {/* MASTER stamp — mastered celebration overlay */}
+      {/* Mastery celebration — phase-based elements */}
       {masterStampVisible && (
-        <View
-          style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
-          pointerEvents="none"
-        >
-          {/* Mastery shards */}
+        <>
+          {/* Mastery shards — rAF driven */}
           {masteryProgress >= 0 && masteryShards.map((s, i) => {
-            const originX = containerWidthRef.current / 2;
-            const originY = 40;
-            const px      = originX + Math.cos(s.angle) * s.speed * masteryProgress;
-            const py      = originY + Math.sin(s.angle) * s.speed * masteryProgress
-                            + 160 * masteryProgress * masteryProgress;
-            const opacity = masteryProgress < 0.3
-              ? 1
-              : 1 - (masteryProgress - 0.3) / 0.7;
+            const originX  = containerWidthRef.current / 2;
+            const originY  = 40;
+            const px       = originX + Math.cos(s.angle) * s.speed * masteryProgress;
+            const py       = originY + Math.sin(s.angle) * s.speed * masteryProgress
+                             + 160 * masteryProgress * masteryProgress;
+            const opacity  = masteryProgress < 0.3 ? 1 : 1 - (masteryProgress - 0.3) / 0.7;
             const rotation = s.rot + s.rotSpeed * masteryProgress * 60;
             return (
               <View
                 key={i}
+                pointerEvents="none"
                 style={{
                   position: 'absolute',
                   left: px - s.w / 2,
                   top:  py - s.h / 2,
-                  width:        s.w,
-                  height:       s.h,
+                  width: s.w, height: s.h,
                   borderRadius: 2,
                   backgroundColor: s.color,
                   opacity,
@@ -1410,17 +1477,82 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             );
           })}
 
-          <Animated.Text style={{
-            fontFamily: FONTS.wordDisplay,
-            fontSize: 64,
-            color: '#F5C842',
-            textAlign: 'center',
-            transform: [{ scale: masterStampScale }],
-            opacity: masterStampOpacity,
-          }}>
-            MASTER
-          </Animated.Text>
-        </View>
+          {/* MASTERED label — directly below word zone */}
+          {masteredLabelVisible && (
+            <Animated.Text
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: 84,
+                left: 0, right: 0,
+                textAlign: 'center',
+                fontFamily: FONTS.label,
+                fontWeight: '800',
+                fontSize: 13,
+                color: '#F5C842',
+                letterSpacing: 6,
+                opacity: masteredLabelOpacity,
+              }}
+            >
+              MASTERED
+            </Animated.Text>
+          )}
+
+          {/* Gold seed + trail */}
+          {goldSeedVisible && (
+            <>
+              <Animated.View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: containerWidth / 2 - 1,
+                  top: 40,
+                  width: 2,
+                  height: 60,
+                  backgroundColor: '#F5C842',
+                  opacity: goldSeedTrailOpacity,
+                  transform: [{ translateY: goldSeedTransY }],
+                }}
+              />
+              <Animated.View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  left: containerWidth / 2 - 6,
+                  top: 34,
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: '#F5C842',
+                  shadowColor: '#F5C842',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.8,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  transform: [{ scale: goldSeedScale }, { translateY: goldSeedTransY }],
+                }}
+              />
+            </>
+          )}
+
+          {/* Gold bloom on landing */}
+          {goldBloomVisible && (
+            <Animated.View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: containerWidth / 2 - 30,
+                width: 60,
+                height: 60,
+                borderRadius: 30,
+                backgroundColor: '#F5C842',
+                transform: [{ scale: goldBloomScale }],
+                opacity: goldBloomOpacity,
+              }}
+            />
+          )}
+        </>
       )}
     </Animated.View>
   );
