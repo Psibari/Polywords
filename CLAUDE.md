@@ -1,5 +1,5 @@
 # POLYWORDS — CLAUDE.md
-### Ground Truth for Claude Code · Updated June 5, 2026
+### Ground Truth for Claude Code · Updated June 6, 2026
 
 ---
 
@@ -90,9 +90,9 @@ Editor:         VS Code (Windows — use forward-slash paths)
 - Standard Meaning Mask Blitz ✅
 - Boss Word (smash entrance, screen shake, gold sweep, 76px) ✅
 - Boss Entrance Choreography (Pass 8) ✅ — squash/stretch on fall + impact (bossScaleX/bossScaleY, non-native rAF), ignite flash white→gold over 150ms (setState), shockwave rings + dust overlay (BossShockwave component, rAF-driven)
-- Phrase Break (full screen, phrase rises, swipe-up answers) ✅
+- Phrase Break (full screen, phrase rises, swipe-up answers) ✅ — correct swipe: gold tile + pollyReveal fades in below tiles after 400ms, advances after 1000ms. Wrong swipe: red flash, snap back, retryable — never auto-advances.
 - Slang Drop (record scratch, era badge, swipe mechanic) ✅
-- Switchback (two clues from opposite sides, 2-attempt logic) ✅
+- Switchback (two clues visible from start, single-phase: swipe correct word up = done) ✅ — first attempt +200, second attempt +100, 2 wrong = reveal correct + completeSwitchback(0, false). No phase A/B, no confirm step.
 
 **Master Gate (Pass 7) ✅**
 - Sits locked on board every word
@@ -187,7 +187,7 @@ TILE DROP (onGateOpened):
 NON-PERFECT:
   Gate stays locked.
   store.addGhostedMaster(word) — word string only, no text
-  setTimeout 1200ms → store.completeWord()
+  setTimeout 1400ms → store.completeWord()
 
 GHOST GATE (haunted):
   backgroundColor: '#0F0D2A'
