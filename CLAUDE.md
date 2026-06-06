@@ -125,10 +125,11 @@ Editor:         VS Code (Windows — use forward-slash paths)
 - Purple box sometimes visible behind Polly — source in MaskBoard ghost tint View, ghostVisible not resetting cleanly
 - Master meaning text occasionally leaking into ghost tile as readable text
 - Gate tile can disappear when regular tiles clear (render condition issue)
+- `wrongSwipeOccurred` bleed-over suspected: `triggerWrongFail()` (line 782) sets `.current = true` outside main swipe handlers; if `[step.word]` useEffect reset doesn't fire, flag carries into next word's gate check. `console.log('wrongSwipeOccurred reset')` added at line 555 to confirm on device.
 
 ### ⏳ In Progress (this session)
 
-- (none — carrying into next session)
+- Investigating `wrongSwipeOccurred` reset reliability — console.log added, needs device confirmation that reset fires on every word transition
 
 ### ❌ Not Yet Built
 - Timer / pressure system
