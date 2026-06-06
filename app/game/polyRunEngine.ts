@@ -275,7 +275,7 @@ export function completeWord(state: GameState): GameState {
 
   // Capture before advanceStep resets swipedUpIds / swipedDownIds
   const missedMaskIds = nonHiddenReal
-    .filter(m => !state.swipedUpIds.includes(m.id))
+    .filter(m => !state.swipedUpIds.includes(m.id) && !state.swipedDownIds.includes(m.id))
     .map(m => m.id);
 
   console.log('[completeWord]', {
