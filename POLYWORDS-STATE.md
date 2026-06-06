@@ -167,6 +167,7 @@ Arc law: Bosses at 11 and 12 only. Positions 1–3 easy. 4–9 continuous escala
 - 🔴 Purple box visible behind Polly — `ghostVisible` not resetting cleanly in MaskBoard ghost tint View
 - 🔴 Master meaning text occasionally leaking into ghost tile as readable text
 - 🔴 Gate tile can disappear when regular tiles clear (render condition issue)
+- 🔴 `wrongSwipeOccurred` bleed-over — `triggerWrongFail()` (MaskBoard.tsx:782) sets `.current = true` outside main swipe handlers; if reset useEffect (`[step.word]` dep, line 554) skips for any reason, flag stays `true` into next word and blocks the gate from opening. `console.log('wrongSwipeOccurred reset')` added at line 555 — **needs device confirmation that it fires on every word transition**.
 
 ---
 
@@ -206,6 +207,9 @@ Arc law: Bosses at 11 and 12 only. Positions 1–3 easy. 4–9 continuous escala
 ## 9. SESSION LOG
 
 *Add to top. Keep last 5 sessions.*
+
+---
+**June 6, 2026 (later)** — `wrongSwipeOccurred` ref audit in MaskBoard.tsx. Six locations mapped: declaration (237), reset (554), set in `triggerWrongFail` (782 — outside main swipe handlers), set in `handleSwipeUp` (1050), set in `handleSwipeRight` (1068), read in gate completion check (1012). Key risk: `triggerWrongFail` sets flag from gate tile wrong swipe path — potential bleed into next word's gate check. `console.log('wrongSwipeOccurred reset')` added at line 555, awaiting device confirmation. CLAUDE.md and POLYWORDS-STATE.md updated.
 
 ---
 **June 6, 2026** — Full session rebuild. Stripped to pure standard Meaning Mask Blitz. New 12-word arc: LIGHT → BARK → RING → MATCH → RAW → BEAR → WAKE → PITCH → PRESS → BANK → SPRING → ORDER. Bosses moved to positions 11 and 12 (SPRING, ORDER). Switchback, PhraseBreak, and SlangDrop disconnected from GameScreen routing — component files kept, no-op stubs replace removed store calls. `submitPhraseAnswer` and `completeSwitchback` removed from engine and store. `GameStatus` simplified (phraseBreak removed). `EventType` simplified (phraseBreak, switchback removed). `emoji` made optional on Mask type. `panic` added to EmotionalRole. `tsc --noEmit` clean. CLAUDE.md and POLYWORDS-STATE.md updated.
