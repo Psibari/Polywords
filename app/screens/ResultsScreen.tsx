@@ -38,7 +38,7 @@ function computeGrade(
   lives: number,
   wordResults: WordResult[],
 ): { text: string; color: string } {
-  if (lives === 0) return { text: 'RATTLED.', color: '#CC2200' };
+  if (lives === 0) return { text: 'RATTLED.', color: '#FFFFFF' };
   const wordRounds = wordResults.filter(r => r.roundKind === 'word');
   if (wordRounds.length > 0 && wordRounds.every(r => r.hiddenFound)) {
     return { text: 'WORD MASTER', color: '#FFD700' };

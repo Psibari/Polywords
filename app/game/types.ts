@@ -112,7 +112,7 @@ export type WordStep = {
   difficulty?:               'easy' | 'medium' | 'hard';
   tileStagger?:              number;
   hapticTier?:               'light' | 'medium' | 'heavy';
-  bossModifier?:             boolean | 'reverseMountOrder';
+  bossModifier?:             boolean;
   postSessionPollyDuration?: number;
 };
 

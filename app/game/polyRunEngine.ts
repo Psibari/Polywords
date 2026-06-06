@@ -355,7 +355,7 @@ export function submitPhraseAnswer(state: GameState, choice: string): GameState 
     score: state.score + bonus,
     lives: state.lives,
     combo: correct ? state.combo + 1 : state.combo,
-    feedback: correct ? 'COGNITIVE BREAKOUT +500' : 'Wrong origin story',
+    feedback: correct ? `COGNITIVE BREAKOUT +${bonus}` : 'Wrong origin story',
     lastActionAt: Date.now(),
     pollyTrigger: null,
     wordResults: newWordResults,

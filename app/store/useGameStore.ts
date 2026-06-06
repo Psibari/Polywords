@@ -85,7 +85,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((s) => ({ game: consumeMilestoneFn(s.game) })),
 
   addGhost: (ghost) => {
-    const existing = get().ghosts.find(g => g.wordId === ghost.wordId);
+    const existing = get().ghosts.find(g => g.word === ghost.word);
     let next: GhostMeaning[];
     if (existing) {
       next = get().ghosts.map(g =>
