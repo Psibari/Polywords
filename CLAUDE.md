@@ -1,5 +1,5 @@
 # POLYWORDS — CLAUDE.md
-### Ground Truth for Claude Code · Updated June 4, 2026
+### Ground Truth for Claude Code · Updated June 5, 2026
 
 ---
 
@@ -89,6 +89,7 @@ Editor:         VS Code (Windows — use forward-slash paths)
 **Round types — all built and swiping**
 - Standard Meaning Mask Blitz ✅
 - Boss Word (smash entrance, screen shake, gold sweep, 76px) ✅
+- Boss Entrance Choreography (Pass 8) ✅ — squash/stretch on fall + impact (bossScaleX/bossScaleY, non-native rAF), ignite flash white→gold over 150ms (setState), shockwave rings + dust overlay (BossShockwave component, rAF-driven)
 - Phrase Break (full screen, phrase rises, swipe-up answers) ✅
 - Slang Drop (record scratch, era badge, swipe mechanic) ✅
 - Switchback (two clues from opposite sides, 2-attempt logic) ✅
@@ -101,7 +102,7 @@ Editor:         VS Code (Windows — use forward-slash paths)
 - Player swipes both tiles before word advances
 - Both correct → +300, haptic Success, Polly gateMastered
 - Wrong swipe → life penalty
-- Non-perfect → gate stays locked, auto-advance 1200ms, ghosted master stored
+- Non-perfect → gate stays locked, auto-advance 1400ms, ghosted master stored
 - Polly intro line fires ONCE ever on first gate appearance: "Only with a Perfect sweep — or it will come back to haunt you." (AsyncStorage: `polywords_hasSeenGateIntro`)
 
 **Ghost system ✅**
@@ -124,15 +125,12 @@ Editor:         VS Code (Windows — use forward-slash paths)
 - Gate tile can disappear when regular tiles clear (render condition issue)
 
 ### ⏳ In Progress (this session)
-- UI redesign — compact HUD, Polly bottom-left locked, maximized tile zone
-- Trap shatter effect — purple/rose crystal shards, radial burst
-- Correct swipe trail — green particle comet upward
-- Bug fixes: gate visibility, ghost text leak, purple box
+
+- (none — carrying into next session)
 
 ### ❌ Not Yet Built
 - Timer / pressure system
 - Results screen redesign
-- Boss Entrance Choreography (Pass 8) — currently just a font change
 - Heartbeat System (Pass 9)
 - Full Polly Lines + Triggers (Pass 10) — 18 lines, full trigger map
 - Sound Design full implementation (Pass 11) — 15 audio files
