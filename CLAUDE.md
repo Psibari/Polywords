@@ -297,6 +297,10 @@ useNativeDriver: false → height, margin, backgroundColor ONLY
 NEVER mix on same Animated.Value
 Use setTimeout between animation phases — never chained .start() callbacks
 Never .start() callbacks for sequencing
+
+Reanimated is locked to SwipeMask.tsx ONLY.
+No new Reanimated usage anywhere else — ever.
+All other animation work uses React Native Animated API.
 ```
 
 ---
