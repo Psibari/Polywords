@@ -10,9 +10,7 @@
 
 **Emotional core:** *"Wait… what? … Shit, that's right."*
 
-**Session format:** POLY RUN — 12-word curated session. Words 1–4 onboarding, 5–9 rhythm, 10–13 tension, 14 pre-boss buildup, 15 boss word climax. Results screen = emotional resolution + hunger for more.
-
-**Word database:** 739 polysemous words — LOCKED. No additions without Pete's sign-off.
+**Session format:** POLY RUN — 12-word curated session. Pure standard Meaning Mask Blitz arc. All positions standard, Bosses close at 11 and 12. Results screen = emotional resolution + hunger for more.
 
 ---
 
@@ -20,149 +18,200 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Expo SDK |
+| Framework | Expo SDK (managed workflow) |
 | UI | React Native Animated API (primary) · Reanimated (SwipeMask.tsx ONLY — frozen) |
 | Language | TypeScript strict mode |
-| State | Zustand + immer |
+| State | Zustand |
 | Haptics | Expo Haptics |
-| Audio | Expo AV |
+| Audio | Expo AV (generated WAV synthesis via SoundEngine.ts) |
 | Navigation | Expo Router |
 | Fonts | Bagel Fat One (hero word) · Plus Jakarta Sans 800 (UI) |
 
 **Animation rules:**
 - `useNativeDriver:true` — transform, opacity only
-- `useNativeDriver:false` — height, margin only
-- NEVER chain these — keep them in separate `Animated.timing` calls
+- `useNativeDriver:false` — height, margin, backgroundColor only
+- NEVER mix drivers on same Animated.Value
 - NEVER use `.start()` callbacks between phases — use `setTimeout`
 - Reanimated is LOCKED to SwipeMask.tsx only — no new usage anywhere else, ever
-- Always end code output with `tsc --noEmit` clean confirmation
+- Always run `tsc --noEmit` after every change — must exit 0
 
 ---
 
 ## 3. BRAND BIBLE (locked)
 
-**Palette:** Indigo / Gold / Purple — "Royal Word Game" scheme. Strict 3-color + Polly green. No deviations.
+**Palette — Royal Word Game:**
+
+| Token | Hex | Use |
+| --- | --- | --- |
+| Indigo bg | `#1E1A3A` | Screen background |
+| Tile idle | `#1E1C4A` | Unswiped tile |
+| Tile special | `#251F4A` | Split tiles |
+| Gold | `#F5C842` | Correct tiles, reward moments, gate unlock |
+| Polly green | `#4CAF50` | Polly mascot + correct swipe particles ONLY |
+| Wrong red | `#CC2200` | Wrong swipe flash ONLY — never decorative |
+| Purple | `#7B2D8B` | Trap shards, rare events |
+| Rose | `#9B2D6B` | Ghost gate border, trap shards |
+| Gate bg | `#0F0D2A` | Master Gate tile ONLY |
+| Navy border | `#1A1830` | Tile border + shadow |
+| White | `#FFFFFF` | All tile text |
+
+Two golds max per screen. Red is wrong-swipe flash only — never on a tile before it's swiped.
 
 **Polly (mascot):**
-- Green parrot, oversized eyes, orange curved beak, explorer hat
-- Personality: smartass but welcoming — adult/stylized, NEVER Sesame Street
-- No circular crop on Polly cards — full illustrated banner format
-- Polly green is the ONLY accent color outside the core 3
-
-**Voice/tone:** Confident, slightly sarcastic, arcade energy. Not educational. Not friendly-app.
+- Green parrot, explorer hat, orange beak, purple bandana with W
+- Personality: smart, slightly smug, one step ahead — adult-coded, never childlike
+- Always bottom-left: `position: absolute, bottom: 34, left: 12` — never moves
+- 9-pose sprite (3×3 grid) — crop via overflow:hidden + Image offset
+- Line rules: no jargon, no childlike tone, "Word up." max twice per run
+- Gate intro (once ever, `polywords_hasSeenGateIntro`): *"Only with a Perfect sweep — or it will come back to haunt you."*
 
 ---
 
-## 4. LIVE MECHANICS (current build)
+## 4. 12-WORD SESSION ARC (current)
+
+Pure standard Meaning Mask Blitz — one mechanic, clean arc.
+
+| # | Word | Type | Emotional Beat | Haptic | Stagger |
+| --- | --- | --- | --- | --- | --- |
+| 1 | LIGHT | Standard | CONFIDENCE — easy, introduces mechanic | light | 80ms |
+| 2 | BARK | Standard | FLOW — streak starts, rhythm sets | light | 80ms |
+| 3 | RING | Standard | FIRST TENSION — close traps, first hesitation | light | 80ms |
+| 4 | MATCH | Standard | ESCALATION — difficulty rises | medium | 80ms |
+| 5 | RAW | Standard | FRESHNESS — guard down, slang tile present | medium | 80ms |
+| 6 | BEAR | Standard | HESITATION — semantic overlap, pause moment | medium | 80ms |
+| 7 | WAKE | Standard | TENSION — streak pressure builds | medium | 80ms |
+| 8 | PITCH | Standard | NEAR MISS — hardest standard traps | medium | 80ms |
+| 9 | PRESS | Standard | PANIC — most tiles, highest pressure | medium | 80ms |
+| 10 | BANK | Standard | REBOUND — generous after pressure peak | medium | 80ms |
+| 11 | SPRING | Boss | FIRST CLIMAX — 2× score, full entrance | heavy | 120ms |
+| 12 | ORDER | Boss | FINAL BOSS — everything on the line | heavy | 120ms |
+
+Arc law: Bosses at 11 and 12 only. Positions 1–3 easy. 4–9 continuous escalation. 10 generous. 11–12 Boss.
+
+---
+
+## 5. LIVE MECHANICS (current build)
 
 **Swipe system:**
+
 - Swipe UP = claim as real meaning ✅
 - Swipe RIGHT = call it a trap ✅
-- Tap-and-submit: CUT — does not exist
+- No left swipe. No tap on answer tiles. Ever.
 
 **Session engine:**
+
 - `polyRunEngine.ts` — pure function state machine
 - `useGameStore.ts` — Zustand store
-- 12-word session fully wired and playable
+- `GameStatus`: `'playing' | 'gameOver' | 'complete'`
 
 **Tile system:**
-- Real meaning tiles — claim with UP swipe
-- Trap tiles — call with RIGHT swipe
-- Hidden meaning tiles — unlock system active
-- Ghost tiles — carry missed meanings forward into next encounter
 
-**Boss word (word 15):**
-- Highest difficulty, highest payoff
-- "Word up." message: ONLY on boss word perfect clears (not every word) — FIX PENDING
+- Real meaning tiles — gold lock on correct UP
+- Trap tiles — shatter + collapse (purple/rose shards) on correct RIGHT
+- Wrong swipe — red buzz + shake, flies off, −1 life
+- Staggered mount: 80ms default, 120ms on Boss
+- Master Gate tile — dormant locked tile at bottom of every board
 
-**Scoring/timing constants:**
-- [Pete: fill in from current build]
+**Master Gate:**
 
-**Components built:**
-- HeartbeatBackground · MaskBoard · MasterGateTile
-- SwipeMask · GhostTile · SlangDropScreen
-- SwitchbackScreen · PhraseBreakScreen
-- StreakDisplay · ScoreFloat · PollyCard · PollyController
-- ResultsScreen
+- Auto-opens on PERFECT CLEAR (zero wrong swipes, all masks judged)
+- Drops two live SwipeMask tiles: one real hidden meaning (UP) + one trap (RIGHT)
+- Both correct → +300 bonus, haptic Success, Polly gateMastered
+- Non-perfect → gate stays locked, word auto-advances after 1400ms, ghost stored
 
-**Audio:** WAV synthesis via Expo AV — generated, not sampled
+**Ghost system:**
 
-**Haptics:** Expo Haptics — full haptic map (confirm current map with Pete)
+- Missed real meanings → regular ghost tiles (dashed rose border) on next word
+- Unmastered Master Gate → ghosted master gate (rose dashed locked gate, no text ever)
+- Both ghost types are separate render paths — never mixed
+
+**Boss Word:**
+
+- `eventType: 'bossWord'` — smash entrance from top, screen shake, gold sweep, 76px font
+- Squash/stretch fall + impact, ignite flash white→gold, shockwave rings + dust overlay
+- All scoring × 2
+
+**Scoring:**
+
+| Event | Score |
+| --- | --- |
+| Correct meaning | +100 × combo |
+| Trap caught | +50 × combo (+100 on Boss) |
+| Master Gate both correct | +300 bonus |
+| Wrong swipe | Combo resets, −1 life |
+| Boss Word | All scoring × 2 |
+
+**Active component files:**
+
+- `MaskBoard.tsx` — main board
+- `MasterGateTile.tsx` — gate tile
+- `SwipeMask.tsx` — tile component (Reanimated lives here only)
+- `GhostTile.tsx` — ghost render path
+- `PollyCard.tsx` · `PollyController.tsx` · `PollySprite.tsx`
+- `StreakDisplay.tsx` · `ScoreFloat.tsx`
+- `HeartbeatBackground.tsx` · `useHeartbeat.ts`
+- `GameScreen.tsx` · `ResultsScreen.tsx` · `HomeScreen.tsx`
+
+**Built but disconnected from active flow:**
+
+- `PhraseBreakScreen.tsx` — phrase-swipe round (not routed from GameScreen)
+- `SlangDropScreen.tsx` — slang era reveal round (not routed)
+- `SwitchbackScreen.tsx` — two-clue word-match round (not routed); `completeSwitchback` removed from store/engine
+
+**Audio:** WAV synthesis via SoundEngine.ts — generated, not sampled
 
 ---
 
-## 5. CUT LIST — ✂️ (PERMANENT — never suggest, never revive)
+## 6. KNOWN BUGS (active)
+
+- 🔴 Purple box visible behind Polly — `ghostVisible` not resetting cleanly in MaskBoard ghost tint View
+- 🔴 Master meaning text occasionally leaking into ghost tile as readable text
+- 🔴 Gate tile can disappear when regular tiles clear (render condition issue)
+
+---
+
+## 7. NOT YET BUILT
+
+- Timer / pressure system
+- Results screen redesign
+- Heartbeat System (Pass 9)
+- Full Polly Lines + Triggers (Pass 10) — 18 lines, full trigger map
+- Sound Design full pass (Pass 11) — 15 audio files
+- Bottom Navigation (Pass 12) — 4 tabs
+- Home Screen + Splash (Pass 13)
+- Supabase persistence
+- The Garden
+
+---
+
+## 8. CUT LIST ✂️ (permanent — never suggest, never revive)
 
 - ❌ Tap-and-submit mechanic (replaced by swipe)
-- ❌ Pencil icon / any pencil branding
-- ❌ "Word up." on every correct word (boss-only now)
+- ❌ Left swipe — does not exist in this game
+- ❌ Directional arrows on tiles in live play — onboarding only
 - ❌ Circular crop on Polly card
-- ❌ SPRING word with full tile count (trim to 6 tiles — fix pending)
-- ❌ Generic vocabulary quiz mechanics
-- ❌ Definition matching (word → definition, no reinterpretation)
-- ❌ Crossword-style / clue matching
-- ❌ Word search / letter patterns / spelling / anagram
-- ❌ Homophone mode (unless creates direct meaning-shift snap)
-- ❌ Educational trivia framing
-- ❌ Educational app aesthetic (too bright, too friendly, too rounded)
-- ❌ Reanimated anywhere except SwipeMask.tsx — that file is the sole exception, frozen
-- ❌ [Pete: add anything else that's been killed]
+- ❌ Jargon in Polly lines ("Clean split", "Pick carefully")
+- ❌ More than 2 gold elements on screen simultaneously
+- ❌ Red as primary color or tile state before swipe
+- ❌ Dashed borders on regular tiles
+- ❌ Definition-style tile text — scene-style phrases only (≤4 words)
+- ❌ Vocabulary quiz framing or educational app aesthetic
+- ❌ Master meaning text visible in ghost tiles
+- ❌ Gate as a swipeable tile — it auto-opens
+- ❌ Reanimated anywhere except SwipeMask.tsx
+- ❌ useNativeDriver mixing on same Animated.Value
 
 ---
 
-## 6. LOCKED DECISIONS (final — not up for revisit)
+## 9. SESSION LOG
 
-- 12-word Poly Run session length ✅
-- UP = real / RIGHT = trap swipe directions ✅
-- 739-word database count ✅
-- Royal Word Game palette (indigo/gold/purple) ✅
-- Polly's character design ✅
-- Two-step card pipeline: polysemy-specialist FIRST → mask-writer SECOND ✅
-- Mask tile standard: ≤4 words, witty not flat, 3+ traps minimum per word ✅
+*Add to top. Keep last 5 sessions.*
 
 ---
-
-## 7. ACTIVE PRIORITIES (ordered)
-
-*Update this section every session. Top = fix first.*
-
-1. 🔴 Results screen — red dot on complete words (bug)
-2. 🔴 Results screen — perfect count display (bug)
-3. 🔴 Results screen — near-miss reveal copy (missing)
-4. 🟠 Tile shuffle randomization (not random enough)
-5. 🟠 "Word up." — limit to boss perfect clears only
-6. 🟠 Polly hiddenReveal trigger — wired in engine, verify PollyCard handles the case
-7. 🟠 expo-av → expo-audio migration (deferred)
-8. 🟡 In-round streak feedback
-9. 🟡 SICK slang pool trap replacement (sick_waiting swap)
+**June 6, 2026** — Full session rebuild. Stripped to pure standard Meaning Mask Blitz. New 12-word arc: LIGHT → BARK → RING → MATCH → RAW → BEAR → WAKE → PITCH → PRESS → BANK → SPRING → ORDER. Bosses moved to positions 11 and 12 (SPRING, ORDER). Switchback, PhraseBreak, and SlangDrop disconnected from GameScreen routing — component files kept, no-op stubs replace removed store calls. `submitPhraseAnswer` and `completeSwitchback` removed from engine and store. `GameStatus` simplified (phraseBreak removed). `EventType` simplified (phraseBreak, switchback removed). `emoji` made optional on Mask type. `panic` added to EmotionalRole. `tsc --noEmit` clean. CLAUDE.md and POLYWORDS-STATE.md updated.
 
 ---
-
-## 8. SKILLS REGISTRY (installed)
-
-| Skill | Role |
-|-------|------|
-| `polywords-warroom` | Master command — load FIRST for any design/mechanics/feel work |
-| `polywords-coder` | All implementation — React Native / Expo / TypeScript |
-| `polywords-game-design` | Defers to warroom. Execution layer for design decisions. |
-| `polywords-feel-engine` | Haptics · sound · animation specs |
-| `polywords-ui-master` | Visual layout — requires screenshot |
-| `polywords-mask-writer` | Tile copy — always run AFTER polysemy-specialist |
-| `polysemy-specialist` | Word analysis — always run BEFORE mask-writer |
-| `polywords-video-analyst` | Gameplay video / screen recording review |
+**June 6, 2026 (earlier)** — Full repo audit. 11 fixes across 6 Claude Code prompts: content (RAW/SICK/BAD/CHILL slang fairness, PITCH hidden meaning, SPRING hiddenTrap), engine (revealHidden pollyTrigger, ghost wordId normalization, phraseAnswer feedback), UI (RATTLED color), codebase (dead pools deleted, dead types cleaned, typecheck script, Reanimated boundary locked). tsc clean.
 
 ---
-
-## 9. SESSION LOG (recent decisions)
-
-*Add to top. Keep last 5 sessions. Archive older ones.*
-
----
-**June 6 2026** — Full repo audit via warroom. 11 fixes shipped across 6 Claude Code prompts: content (RAW/SICK/BAD/CHILL slang fairness fix, PITCH hidden meaning replaced with tar meaning, SPRING hiddenTrap added), engine (revealHidden now fires pollyTrigger hiddenReveal, ghost wordId key normalized to word string, phraseAnswer feedback string fixed), UI (RATTLED color white), codebase (dead pools deleted, dead types cleaned, typecheck script added, Reanimated boundary locked to SwipeMask.tsx only). tsc clean.
-
----
-**[DATE]** — [previous session]
-
----
-
-*[Archive older sessions below this line or delete when log exceeds 10 entries]*
+**June 3, 2026** — context.md and CLAUDE.md synced to code-backed state. Switchback implementation complete.
