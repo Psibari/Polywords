@@ -71,9 +71,9 @@ export const slangPool: WordStep[] = [
     meanings: [],
     masks: [
       { id: 'sick_impressive', emoji: '🤙', phrase: 'That trick though',     isReal: true,  isSlang: true, era: 'modern' },
-      { id: 'sick_cool',       emoji: '😎', phrase: 'Really cool looking',   isReal: false, trapType: 'almostSynonym' },
-      { id: 'sick_nauseous',   emoji: '🤢', phrase: 'Nauseous, queasy',      isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'sick_hospital',   emoji: '💊', phrase: 'Needs a doctor',        isReal: false, trapType: 'domainNeighbor' },
+      { id: 'sick_waiting',    emoji: '🏥', phrase: "Doctor's waiting room", isReal: false, trapType: 'domainNeighbor' },
+      { id: 'sick_nauseous',   emoji: '🤢', phrase: 'Nauseous, queasy',      isReal: true },
+      { id: 'sick_hospital',   emoji: '💊', phrase: 'Needs a doctor',        isReal: true },
     ],
   },
 
@@ -88,9 +88,9 @@ export const slangPool: WordStep[] = [
     meanings: [],
     masks: [
       { id: 'bad_slang',    emoji: '🤙', phrase: 'Michael said so',        isReal: true,  isSlang: true, era: 'modern' },
-      { id: 'bad_poor',     emoji: '👎', phrase: 'Needs improvement',      isReal: false, trapType: 'almostSynonym' },
-      { id: 'bad_danger',   emoji: '⚠️', phrase: 'Dangerous, watch out',   isReal: false, trapType: 'domainNeighbor' },
-      { id: 'bad_villain',  emoji: '🦹', phrase: 'The villain',            isReal: false, trapType: 'associatedNeighbor' },
+      { id: 'bad_poor',     emoji: '👎', phrase: 'Needs improvement',      isReal: true },
+      { id: 'bad_danger',   emoji: '⚠️', phrase: 'Dangerous, watch out',   isReal: true },
+      { id: 'bad_villain',  emoji: '🦹', phrase: 'The villain',            isReal: true },
     ],
   },
 
@@ -105,9 +105,9 @@ export const slangPool: WordStep[] = [
     meanings: [],
     masks: [
       { id: 'chill_relax',   emoji: '🛋️', phrase: 'What Fridays are for', isReal: true,  isSlang: true, era: 'modern' },
-      { id: 'chill_cold',    emoji: '🧊', phrase: 'Put it in the fridge',  isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'chill_feeling', emoji: '🥶', phrase: 'A slight cold feeling', isReal: false, trapType: 'domainNeighbor' },
-      { id: 'chill_phrase',  emoji: '😤', phrase: 'Keep your cool',        isReal: false, trapType: 'almostSynonym' },
+      { id: 'chill_cold',    emoji: '🧊', phrase: 'Put it in the fridge',  isReal: true },
+      { id: 'chill_feeling', emoji: '🥶', phrase: 'A slight cold feeling', isReal: true },
+      { id: 'chill_phrase',  emoji: '😤', phrase: 'Keep your cool',        isReal: true },
     ],
   },
 
@@ -350,9 +350,9 @@ export const SESSION: SessionStep[] = [
     pollyLine: 'Same word. Different century.',
     meanings: [],
     masks: [
-      { id: 'raw_uncooked', emoji: '🥩', phrase: 'Not yet cooked',        isReal: false, trapType: 'domainNeighbor' },
-      { id: 'raw_tender',   emoji: '🤕', phrase: 'Tender to the touch',   isReal: false, trapType: 'associatedNeighbor' },
-      { id: 'raw_exposed',  emoji: '🫣', phrase: 'Exposed and unguarded', isReal: false, trapType: 'almostSynonym' },
+      { id: 'raw_uncooked', emoji: '🥩', phrase: 'Not yet cooked',        isReal: true },
+      { id: 'raw_tender',   emoji: '🤕', phrase: 'Tender to the touch',   isReal: true },
+      { id: 'raw_exposed',  emoji: '🫣', phrase: 'Exposed and unguarded', isReal: true },
       { id: 'raw_slang',    emoji: '🔥', phrase: 'Uncut and electric',    isReal: true,  isSlang: true, era: 'modern' },
     ],
   },
@@ -393,9 +393,9 @@ export const SESSION: SessionStep[] = [
     tileStagger: 80,
     pollyLine: 'Four meanings. One word. Stay sharp.',
     meanings: [],
-    hiddenMeaning:   'What darkness is called',
+    hiddenMeaning:   'Sailors sealed hulls with this',
     hiddenTrap:      "A thrower's signature move",
-    hiddenEmoji:     '🖤',
+    hiddenEmoji:     '⛵',
     hiddenTrapEmoji: '🥎',
     masks: [
       { id: 'pitch_note',     emoji: '🎵', phrase: "A note's altitude",          isReal: true },
@@ -420,8 +420,10 @@ export const SESSION: SessionStep[] = [
     bossModifier: true,
     pollyLine: 'Boss word. More meanings. Same clock.',
     meanings: [],
-    hiddenMeaning: "A mousetrap's big moment",
-    hiddenEmoji:   '🐭',
+    hiddenMeaning:   "A mousetrap's big moment",
+    hiddenTrap:      'A water source bubbling up',
+    hiddenEmoji:     '🐭',
+    hiddenTrapEmoji: '💦',
     masks: [
       { id: 'spring_coil',     emoji: '🔩', phrase: 'Bouncy metal squiggle',    isReal: true },
       { id: 'spring_jump',     emoji: '🤸', phrase: 'Launched from a crouch',   isReal: true },
