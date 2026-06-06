@@ -590,11 +590,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // Reset guards and animated values on new word
   useEffect(() => {
+    wrongSwipeOccurred.current    = false;
     completedRef.current          = false;
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
-    wrongSwipeOccurred.current    = false;
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     bossScaleX.setValue(isBoss ? 0.86 : 1);
