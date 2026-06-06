@@ -6,7 +6,7 @@
 import { SESSION } from './session';
 import { Mask, SessionStep } from './types';
 
-export type GameStatus = 'playing' | 'phraseBreak' | 'gameOver' | 'complete';
+export type GameStatus = 'playing' | 'gameOver' | 'complete';
 
 export type WordResult = {
   wordId: string;
@@ -321,105 +321,6 @@ export function completeWord(state: GameState): GameState {
   });
 }
 
-// ─── SUBMIT PHRASE ANSWER ────────────────────────────────────
-
-export function submitPhraseAnswer(state: GameState, choice: string): GameState {
-  if (state.status !== 'phraseBreak') return state;
-  const step = currentStep(state);
-  if (step.kind !== 'phraseBreak') return state;
-
-  const correct = step.answers.some(a => a.correct && a.text === choice);
-  const bonus = correct ? 150 : 0;
-
-  const wordId = String(state.stepIndex);
-  const wordResult: WordResult = {
-    wordId,
-    roundKind: 'phraseBreak',
-    word: step.phrase,
-    correctUp: correct ? 1 : 0,
-    correctDown: 0,
-    wrongSwipes: correct ? 0 : 1,
-    hiddenFound: false,
-    missedMaskIds: [],
-    wrongMaskIds: [],
-    isBossWord: false,
-    totalRealMasks: 1,
-  };
-
-  const alreadyRecorded = state.wordResults.some(r => r.wordId === wordId);
-  const newWordResults = alreadyRecorded
-    ? state.wordResults
-    : [...state.wordResults, wordResult];
-
-  return advanceStep(state, {
-    score: state.score + bonus,
-    lives: state.lives,
-    combo: correct ? state.combo + 1 : state.combo,
-    feedback: correct ? `COGNITIVE BREAKOUT +${bonus}` : 'Wrong origin story',
-    lastActionAt: Date.now(),
-    pollyTrigger: null,
-    wordResults: newWordResults,
-  });
-}
-
-// ─── COMPLETE SWITCHBACK ─────────────────────────────────────
-
-export function completeSwitchback(
-  state: GameState,
-  bonusScore: number,
-  correct: boolean,
-  wrongSwipes: number,
-): GameState {
-  if (state.status !== 'playing') return state;
-  const step = currentStep(state);
-  if (step.kind !== 'switchback') return state;
-
-  const lives = correct ? state.lives : Math.max(state.lives - 1, 0);
-
-  const wordId = String(state.stepIndex);
-  const wordResult: WordResult = {
-    wordId,
-    roundKind: 'switchback',
-    word: step.answers.find(a => a.correct)?.word ?? '?',
-    correctUp: correct ? 1 : 0,
-    correctDown: 0,
-    wrongSwipes,
-    hiddenFound: false,
-    missedMaskIds: [],
-    wrongMaskIds: [],
-    isBossWord: false,
-    totalRealMasks: 1,
-  };
-
-  const alreadyRecorded = state.wordResults.some(r => r.wordId === wordId);
-  const newWordResults = alreadyRecorded
-    ? state.wordResults
-    : [...state.wordResults, wordResult];
-
-  if (lives <= 0) {
-    return {
-      ...state,
-      lives: 0,
-      combo: 0,
-      score: state.score + bonusScore,
-      status: 'gameOver',
-      feedback: 'Game over',
-      lastActionAt: Date.now(),
-      wordResults: newWordResults,
-    };
-  }
-
-  return advanceStep(state, {
-    score: state.score + bonusScore,
-    lives,
-    combo: correct ? state.combo + 1 : 0,
-    feedback: correct ? `+${bonusScore}` : 'Missed it',
-    lastActionAt: Date.now(),
-    pollyTrigger: null,
-    wordResults: newWordResults,
-  });
-}
-
 // ─── STEP ADVANCEMENT ────────────────────────────────────────
 
 type StepUpdate = {
@@ -451,6 +352,6 @@ function advanceStep(state: GameState, update: StepUpdate): GameState {
   return {
     ...base,
     stepIndex: nextStepIndex,
-    status: nextStep.kind === 'phraseBreak' ? 'phraseBreak' : 'playing',
+    status: 'playing',
   };
 }

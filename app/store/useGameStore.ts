@@ -8,9 +8,7 @@ import {
   submitWrongSwipe,
   revealHidden,
   completeWord,
-  submitPhraseAnswer,
   addBonusScore,
-  completeSwitchback,
   consumeMilestone as consumeMilestoneFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
@@ -28,8 +26,6 @@ type GameStore = {
   submitWrongSwipe: () => void;
   revealHidden: (maskId: string) => void;
   completeWord: () => void;
-  submitPhraseAnswer: (choice: string) => void;
-  completeSwitchback: (bonusScore: number, correct: boolean, wrongSwipes: number) => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
   addBonusScore: (pts: number) => void;
@@ -65,12 +61,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   completeWord: () =>
     set((s) => ({ game: completeWord(s.game) })),
-
-  submitPhraseAnswer: (choice) =>
-    set((s) => ({ game: submitPhraseAnswer(s.game, choice) })),
-
-  completeSwitchback: (bonusScore, correct, wrongSwipes) =>
-    set((s) => ({ game: completeSwitchback(s.game, bonusScore, correct, wrongSwipes) })),
 
   clearPollyTrigger: () =>
     set((s) => ({ game: { ...s.game, pollyTrigger: null } })),

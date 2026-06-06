@@ -9,7 +9,8 @@ const SWIPE_THRESHOLD = 40;
 type Props = { step: PhraseBreakStep };
 
 export function PhraseBreakScreen({ step }: Props) {
-  const submitPhraseAnswer = useGameStore(s => s.submitPhraseAnswer);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const submitPhraseAnswer = (_choice: string) => {};
 
   // ── Phrase + content reveal (native driver) ───────────────────
   const phraseY        = useRef(new Animated.Value(300)).current;

@@ -182,6 +182,7 @@ function shuffleAnswers(answers: SwitchbackStep['answers']): SwitchbackStep['ans
 
 export function SwitchbackScreen({ step }: Props) {
   const store = useGameStore();
+  const completeSwitchback = (_bonus: number, _correct: boolean, _wrongs: number) => {};
 
   const [shuffled] = useState(() => shuffleAnswers(step.answers));
   const [tileStates, setTileStates] = useState<Map<string, TileState>>(() => {
@@ -251,7 +252,7 @@ export function SwitchbackScreen({ step }: Props) {
       setTileStates(prev => new Map(prev).set(word, 'final-correct'));
       showPolly(step.pollyReveal);
       setTimeout(() => {
-        store.completeSwitchback(
+        completeSwitchback(
           attemptsRef.current === 0 ? 200 : 100,
           true,
           attemptsRef.current,
@@ -276,7 +277,7 @@ export function SwitchbackScreen({ step }: Props) {
           setTileStates(prev => new Map(prev).set(correctWord, 'final-correct'));
           showPolly(step.pollyReveal);
         }, 450);
-        setTimeout(() => store.completeSwitchback(0, false, attemptsRef.current), 1400);
+        setTimeout(() => completeSwitchback(0, false, attemptsRef.current), 1400);
       }
     }
   }

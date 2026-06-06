@@ -25,9 +25,7 @@ export type EventType =
   | 'slangDrop'
   | 'wordLore'
   | 'decoyHeavy'
-  | 'semanticEvolution'
-  | 'phraseBreak'
-  | 'switchback';
+  | 'semanticEvolution';
 
 export type EmotionalRole =
   | 'confidence'
@@ -56,7 +54,8 @@ export type EmotionalRole =
   | 'firstBoss'
   | 'rebound'
   | 'lateShock'
-  | 'finalBoss';
+  | 'finalBoss'
+  | 'panic';
 
 export type Meaning = {
   id: string;
@@ -79,7 +78,7 @@ export type TrapType =
 
 export type Mask = {
   id: string;
-  emoji: string;
+  emoji?: string;
   phrase: string;          // 2-4 words max, feeling not definition
   isReal: boolean;         // true = correct meaning, false = trap
   isRare?: boolean;        // real meaning most players miss, +300
