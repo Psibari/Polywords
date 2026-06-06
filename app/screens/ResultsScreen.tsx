@@ -130,12 +130,16 @@ const wr = StyleSheet.create({
 
 function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
   const word = findWordForMaskId(firstMissedMaskId);
+  const mask = findMaskById(firstMissedMaskId);
   if (!word) return null;
 
   return (
     <View style={gs.card}>
       <Text style={gs.header}>👻 Ghost set for next run</Text>
       <Text style={gs.word}>{word.toUpperCase()}</Text>
+      {mask && (
+        <Text style={gs.missed}>You missed: "{mask.phrase}"</Text>
+      )}
       <Text style={gs.body}>It'll find you.</Text>
     </View>
   );
@@ -169,6 +173,13 @@ const gs = StyleSheet.create({
     fontFamily: FONTS.wordDisplay,
     letterSpacing: 1,
     marginBottom: 4,
+  },
+  missed: {
+    color: 'rgba(255,215,0,0.85)',
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginBottom: 4,
+    marginTop: 2,
   },
   body: {
     color: 'rgba(255,255,255,0.7)',
@@ -529,6 +540,14 @@ const rs = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     opacity: 0.7,
+  },
+  perfectLine: {
+    color: '#FFD700',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    opacity: 0.75,
+    marginTop: 4,
   },
   section: {
     marginBottom: 16,
