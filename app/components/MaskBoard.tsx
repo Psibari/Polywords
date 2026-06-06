@@ -552,6 +552,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   // Reset guards and animated values on new word
   useEffect(() => {
     wrongSwipeOccurred.current    = false;
+    console.log('wrongSwipeOccurred reset');
     completedRef.current          = false;
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
