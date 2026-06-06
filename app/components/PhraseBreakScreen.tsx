@@ -25,6 +25,8 @@ export function PhraseBreakScreen({ step }: Props) {
   const [tileColors,     setTileColors]     = useState<string[]>(step.answers.map(() => '#2A2560'));
   const [tileTextColors, setTileTextColors] = useState<string[]>(step.answers.map(() => '#FFFFFF'));
   const [pollyText,      setPollyText]      = useState('');
+  const [revealVisible,  setRevealVisible]  = useState(false);
+  const revealOpacity = useRef(new Animated.Value(0)).current;
 
   const answeredRef = useRef(false);
   const pendingRef  = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -52,11 +54,10 @@ export function PhraseBreakScreen({ step }: Props) {
           if (answeredRef.current) return;
 
           if (g.dy < -SWIPE_THRESHOLD) {
-            answeredRef.current = true;
             const isCorrect = step.answers[idx].correct;
 
             if (isCorrect) {
-              // Snap back to resting position, flash gold
+              answeredRef.current = true;
               Animated.spring(dragYAnims[idx], {
                 toValue: 0,
                 speed: 20,
@@ -70,28 +71,39 @@ export function PhraseBreakScreen({ step }: Props) {
                 i === idx ? '#1E1A3A' : '#FFFFFF'
               ));
               setPollyText(step.pollyReveal);
+
+              // Fade in reveal below tiles after 400ms
+              const tr = setTimeout(() => {
+                setRevealVisible(true);
+                Animated.timing(revealOpacity, {
+                  toValue: 1, duration: 250, useNativeDriver: true,
+                }).start();
+              }, 400);
+              pendingRef.current.push(tr);
+
+              // Advance only on correct answer after 1000ms
+              const t = setTimeout(() => {
+                if (answeredRef.current) submitPhraseAnswer(step.answers[idx].text);
+              }, 1000);
+              pendingRef.current.push(t);
+
             } else {
-              // Flash red, fly off top; correct tile turns gold
-              setTileColors(step.answers.map((_, i) => {
-                if (i === idx)        return '#CC2200';
-                if (i === correctIdx) return '#FFD700';
-                return '#2A2560';
-              }));
-              setTileTextColors(step.answers.map((_, i) =>
-                i === correctIdx ? '#1E1A3A' : '#FFFFFF'
-              ));
-              setPollyText('Now you know.');
-              Animated.timing(dragYAnims[idx], {
-                toValue: -800,
-                duration: 300,
+              // Flash red, snap back — re-arm for retry
+              answeredRef.current = true;
+              setTileColors(prev => prev.map((c, i) => i === idx ? '#CC2200' : c));
+              Animated.spring(dragYAnims[idx], {
+                toValue: 0,
+                speed: 20,
+                bounciness: 4,
                 useNativeDriver: false,
               }).start();
+              const t = setTimeout(() => {
+                answeredRef.current = false;
+                setTileColors(step.answers.map(() => '#2A2560'));
+                setTileTextColors(step.answers.map(() => '#FFFFFF'));
+              }, 400);
+              pendingRef.current.push(t);
             }
-
-            const t = setTimeout(() => {
-              submitPhraseAnswer(step.answers[idx].text);
-            }, 1500);
-            pendingRef.current.push(t);
 
           } else {
             // Snap back without committing
@@ -199,6 +211,13 @@ export function PhraseBreakScreen({ step }: Props) {
           </Animated.View>
         ))}
       </View>
+
+      {/* Completion reveal — fades in below tiles after correct swipe */}
+      {revealVisible && (
+        <Animated.Text style={[styles.revealLine, { opacity: revealOpacity }]}>
+          {step.pollyReveal}
+        </Animated.Text>
+      )}
     </View>
   );
 }
@@ -264,5 +283,12 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.tileCopy,
     fontFamily: FONTS.tileCopy,
     textAlign: 'center',
+  },
+  revealLine: {
+    color: '#4CAF50',
+    fontSize: FONT_SIZES.pollyLine,
+    fontFamily: FONTS.brand,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
