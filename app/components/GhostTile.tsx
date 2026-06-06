@@ -40,6 +40,9 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
   const tileOpacity = useRef(new Animated.Value(0.75)).current;
   const pulsLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
+  // Pulsing dot for ghosted master tile — native driver
+  const dotPulse = useRef(new Animated.Value(1)).current;
+
   // Pan — non-native (translate drives layout)
   const panXY = useRef(new Animated.ValueXY()).current;
 
@@ -58,6 +61,18 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
     pulsLoopRef.current = loop;
     loop.start();
     return () => loop.stop();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!ghost.isGhostedMaster) return;
+    const dotLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dotPulse, { toValue: 0.3, duration: 900, useNativeDriver: true }),
+        Animated.timing(dotPulse, { toValue: 1.0, duration: 900, useNativeDriver: true }),
+      ])
+    );
+    dotLoop.start();
+    return () => dotLoop.stop();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function exitTile() {
@@ -159,10 +174,13 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
           {...panResponder.panHandlers}
         >
           {ghost.isGhostedMaster ? (
-            <View style={styles.masterTextBlock}>
-              <Text style={styles.masterLabel}>MASTER THE WORD</Text>
-              <Text style={styles.masterSubLabel}>{`Missed from ${ghost.word}`}</Text>
-            </View>
+            <>
+              <View style={styles.masterTextBlock}>
+                <Text style={styles.masterLabel}>MASTER THE WORD</Text>
+                <Text style={styles.masterSubLabel}>{`Missed from ${ghost.word}`}</Text>
+              </View>
+              <Animated.View style={[styles.pulseDot, { opacity: dotPulse }]} />
+            </>
           ) : (
             <View style={styles.textBlock}>
               <Text style={styles.meaningText} numberOfLines={2}>
@@ -213,14 +231,14 @@ const styles = StyleSheet.create({
   },
   // ── ghosted master tile ───────────────────────────────────────
   masterTile: {
-    backgroundColor: '#0F0D2A',
+    backgroundColor: 'rgba(123,45,139,0.06)',
     borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#9B2D6B',
+    borderWidth: 1.5,
+    borderStyle: 'solid',
+    borderColor: 'rgba(123,45,139,0.55)',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    shadowColor: '#9B2D6B',
+    shadowColor: '#7B2D8B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
@@ -233,17 +251,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   masterLabel: {
-    color: '#9B2D6B',
+    color: 'rgba(255,255,255,0.70)',
     fontSize: FONT_SIZES.tileCopy,
     fontFamily: FONTS.label,
     letterSpacing: 3,
     fontWeight: '800',
   },
   masterSubLabel: {
-    color: 'rgba(155,45,107,0.55)',
+    color: 'rgba(123,45,139,0.7)',
     fontSize: FONT_SIZES.ghostSubLabel,
     fontFamily: FONTS.label,
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  pulseDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#7B2D8B',
   },
 });
