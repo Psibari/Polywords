@@ -257,7 +257,7 @@ export function revealHidden(state: GameState, maskId: string): GameState {
     bestCombo: Math.max(state.bestCombo, newCombo),
     feedback: `Hidden found! +${points}`,
     lastActionAt: Date.now(),
-    pollyTrigger: null,
+    pollyTrigger: 'hiddenReveal',
   };
 }
 
