@@ -86,13 +86,15 @@ Editor:         VS Code (Windows — use forward-slash paths)
 - 5-life system (hearts)
 - Score + combo multiplier system
 
-**Round types — all built and swiping**
-- Standard Meaning Mask Blitz ✅
-- Boss Word (smash entrance, screen shake, gold sweep, 76px) ✅
+**Round types — active in game flow**
+- Standard Meaning Mask Blitz ✅ — active in all 12 session steps
+- Boss Word (smash entrance, screen shake, gold sweep, 76px) ✅ — active at positions 11 and 12
+
+**Round types — built but disconnected from active flow**
 - Boss Entrance Choreography (Pass 8) ✅ — squash/stretch on fall + impact (bossScaleX/bossScaleY, non-native rAF), ignite flash white→gold over 150ms (setState), shockwave rings + dust overlay (BossShockwave component, rAF-driven)
-- Phrase Break (full screen, phrase rises, swipe-up answers) ✅ — correct swipe: gold tile + pollyReveal fades in below tiles after 400ms, advances after 1000ms. Wrong swipe: red flash, snap back, retryable — never auto-advances.
-- Slang Drop (record scratch, era badge, swipe mechanic) ✅
-- Switchback (two clues visible from start, single-phase: swipe correct word up = done) ✅ — first attempt +200, second attempt +100, 2 wrong = reveal correct + completeSwitchback(0, false). No phase A/B, no confirm step.
+- Phrase Break ⏸ — PhraseBreakScreen.tsx built, disconnected from GameScreen routing
+- Slang Drop ⏸ — SlangDropScreen.tsx built, disconnected from GameScreen routing
+- Switchback ⏸ — SwitchbackScreen.tsx built, disconnected from GameScreen routing; completeSwitchback removed from store/engine
 
 **Master Gate (Pass 7) ✅**
 - Sits locked on board every word
@@ -307,35 +309,29 @@ All other animation work uses React Native Animated API.
 
 ## Session Structure (12 words — Arc Law)
 
-Session length: **12 words**. Follows strict emotional arc law — every position has a job.
+Session length: **12 words**. Pure standard Meaning Mask Blitz — one mechanic, clean arc.
 
 | # | Word | Type | Emotional Beat | Haptic | Stagger |
 |---|---|---|---|---|---|
 | 1 | LIGHT | Standard | CONFIDENCE — easy, introduces mechanic | light | 80ms |
 | 2 | BARK | Standard | FLOW — streak starts, rhythm sets | light | 80ms |
-| 3 | MATCH | Standard | FIRST TENSION — close traps, first hesitation | medium | 80ms |
-| 4 | COLD | Switchback | DISRUPTION — format flips, brain glitch | medium | — |
-| 5 | [PHRASE BREAK] | Phrase Break | RELIEF — curiosity, low stakes, breathe | light | — |
-| 6 | RAW | Slang Drop | FRESHNESS — cultural snap, guard down | medium | — |
-| 7 | WAKE | Standard | ESCALATION — streak rebuilding, traps closer | medium | 80ms |
-| 8 | PITCH | Standard | HESITATION — hardest traps, first near-miss | medium | 80ms |
-| 9 | SPRING | Boss | FIRST CLIMAX — earned, 2× score, full entrance | heavy | 100ms |
-| 10 | BANK | Standard | REBOUND — generous after Boss, riding high | medium | 80ms |
-| 11 | STRIKE | Switchback | LATE SHOCK — second format flip surprise | medium | — |
-| 12 | ORDER | Boss | FINAL BOSS — everything on the line | heavy | 100ms |
+| 3 | RING | Standard | FIRST TENSION — close traps, first hesitation | light | 80ms |
+| 4 | MATCH | Standard | ESCALATION — difficulty rises, traps closer | medium | 80ms |
+| 5 | RAW | Standard | FRESHNESS — guard down, slang tile present | medium | 80ms |
+| 6 | BEAR | Standard | HESITATION — semantic overlap, pause moment | medium | 80ms |
+| 7 | WAKE | Standard | TENSION — streak pressure builds | medium | 80ms |
+| 8 | PITCH | Standard | NEAR MISS — hardest standard traps | medium | 80ms |
+| 9 | PRESS | Standard | PANIC — most tiles, highest pressure | medium | 80ms |
+| 10 | BANK | Standard | REBOUND — generous after pressure peak | medium | 80ms |
+| 11 | SPRING | Boss | FIRST CLIMAX — earned, 2× score, full entrance | heavy | 120ms |
+| 12 | ORDER | Boss | FINAL BOSS — everything on the line | heavy | 120ms |
 
 **Arc Law — non-negotiable:**
-- Bosses at positions 9 and 12 ONLY — never before position 9
-- Switchbacks at positions 4 and 11 — disruption bookends
-- Phrase Break at 5 — relief must follow disruption
-- Slang Drop at 6 — freshness while guard is down
-- Positions 1-3 are always easy/medium standard words
-- Positions 7-8 escalate difficulty before the first Boss
-- Position 10 is always generous — rebound after Boss pressure
-
-**Switchback IDs:**
-- Position 4: `switchback_cold` — "Left out on purpose" / "Fever's uninvited guest"
-- Position 11: `switchback_strike` — "Lightning does it" / "Bowler's perfect throw"
+- Bosses at positions 11 and 12 ONLY
+- All positions 1–10 are standard Meaning Mask Blitz
+- Positions 1–3 are easy — confidence and flow
+- Positions 4–9 escalate continuously through panic peak
+- Position 10 is always generous — rebound before the final push
 
 ---
 
@@ -413,9 +409,6 @@ Crop via parent View overflow:hidden + Image offset.
 **Line rules:**
 - Never jargon ("Clean split", "Pick carefully")
 - "Word up." — max 0-2 per run, first correct swipe only
-- Slang Drop: "Language moves."
-- Phrase Break: "Tiny detour. Big meaning."
-- Switchback: "One word. Two lives."
 - Gate intro (once ever): "Only with a Perfect sweep — or it will come back to haunt you."
 
 ---
@@ -426,9 +419,6 @@ Crop via parent View overflow:hidden + Image offset.
 |---|---|
 | Correct meaning | +100 × combo |
 | Master Gate split both correct | +300 bonus |
-| Phrase Break correct | +150 bonus |
-| Switchback first attempt | +200 bonus |
-| Switchback second attempt | +100 bonus |
 | Wrong swipe | Combo resets to ×0 |
 | Boss Word | All scoring × 2 |
 
@@ -483,4 +473,4 @@ Crop via parent View overflow:hidden + Image offset.
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · June 4, 2026*
+*POLYWORDS CLAUDE.md · Pete DiBari · June 6, 2026*
