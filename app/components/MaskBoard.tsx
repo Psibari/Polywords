@@ -1101,15 +1101,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         containerWidthRef.current = w;
       }}
     >
-      {/* ── WORD ZONE — 80px fixed ──────────────────────────── */}
+      {/* ── WORD ZONE — dominant upper arena ────────────────── */}
       <View
-        style={styles.wordZone}
+        style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
         pointerEvents="none"
         ref={wordZoneRef as any}
-        onLayout={() => {
+        onLayout={e => {
+          const zoneHeight = e.nativeEvent.layout.height;
           (wordZoneRef.current as any)?.measure(
             (_x: number, _y: number, _w: number, _h: number, _px: number, pageY: number) => {
-              setWordScreenY(pageY + 40); // center of 80px word zone
+              setWordScreenY(pageY + zoneHeight / 2);
             }
           );
         }}
@@ -1165,7 +1166,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
-            <Text style={[styles.word, isBoss && styles.wordBoss, { color: isBoss ? bossWordColor : wordColor }]}>
+            <Text
+              style={[styles.word, isBoss && styles.wordBoss, { color: isBoss ? bossWordColor : wordColor }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+            >
               {step.word}
             </Text>
             {/* Gold overlay for absorption fill */}
@@ -1182,6 +1188,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   textAlign: 'center',
                 },
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
             >
               {step.word}
             </Animated.Text>
@@ -1199,6 +1208,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   textAlign: 'center',
                 },
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
             >
               {step.word}
             </Animated.Text>
@@ -1229,9 +1241,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       </View>
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
+      <View style={styles.swipeLane} pointerEvents="none" />
+
       <View style={styles.gridWrap}>
+        <View style={styles.tileStackArea}>
         {showBoardContent && (
-          <Animated.View style={{ opacity: masterAllFadeAnim }}>
+          <Animated.View style={[styles.tileStack, { opacity: masterAllFadeAnim }]}>
             {(() => {
               const stagger      = step.tileStagger ?? 80;
               const orderedMasks = !!step.bossModifier
@@ -1262,6 +1277,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         )}
 
         {/* ── MASTER GATE — bottom of tile stack ─────────── */}
+        </View>
+
+        <View style={styles.gateArea}>
         {hasHidden && (
           ghostVisible && ghost ? (
             <GhostTile
@@ -1424,6 +1442,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           )
         )}
       </View>
+      </View>
 
       {/* Shard burst system */}
       {bursts.map(burst => (
@@ -1573,12 +1592,16 @@ const styles = StyleSheet.create({
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
-    height: 80,
+    height: 142,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
-    marginBottom: 4,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  wordZoneBoss: {
+    height: 156,
   },
   kicker: {
     color: '#FFD700',
@@ -1592,17 +1615,18 @@ const styles = StyleSheet.create({
     right: 0,
   },
   word: {
-    fontSize: FONT_SIZES.wordDisplay,
+    fontSize: 88,
     fontFamily: FONTS.wordDisplay,
     letterSpacing: FONT_SIZES.wordDisplayLetterSpacing,
     color: '#F5C842',
     textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    textShadowRadius: 16,
     textAlign: 'center',
+    maxWidth: '100%',
   },
   wordBoss: {
-    fontSize: FONT_SIZES.bossWordDisplay,
+    fontSize: 96,
     fontFamily: FONTS.bossWord,
     letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#FFD700',
@@ -1628,10 +1652,29 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  swipeLane: {
+    height: 34,
+  },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
     flex: 1,
-    paddingBottom: 110,
+    justifyContent: 'space-between',
+    paddingBottom: 128,
+    minHeight: 0,
+  },
+  tileStackArea: {
+    flexShrink: 1,
+    justifyContent: 'flex-start',
+    minHeight: 0,
+  },
+  tileStack: {
+    width: '86%',
+    alignSelf: 'flex-start',
+    paddingRight: 8,
+  },
+  gateArea: {
+    width: '100%',
+    paddingTop: 18,
   },
   splitZone: {
     marginTop: TILE_GAP,
