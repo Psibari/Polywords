@@ -55,6 +55,42 @@ Windows dev: forward-slash paths only
 
 ## Current Session (12 words — test harness)
 
+## Locked Play Screen Design
+
+POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the active mask tile is the challenger, the Master Gate is Polly's locked cage/vault, and the player steals mastery one swipe at a time.
+
+**Hierarchy:** HERO WORD -> ACTIVE MASK TILE -> MASTER GATE -> HUD / SCORE / FEATHERS / STREAK -> POLLY POP-IN ONLY.
+
+**Polly:** Not permanent on the gameplay screen. She appears only at high-emotion moments: 1 pop-in per word round, 2 max for a major event, always at end-of-round win/loss. She pops from bottom-left and never blocks the active tile, right shatter lane, or Master Gate. Mastery line: "BINGO BANGO ZZZZINGO!" Normal ghost failure: "Not yours yet." Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
+
+**Layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile in lower-middle thumb zone. Clear right toss/shatter lane. MASTER THE WORD gate low on board above nav safe area. Bottom nav reserves Home / Ranks / Vault / Profile.
+
+**Hero word:** Dominates screen, sits top-center during normal play, absorbs correct UP swipes, and crashes down to center during MASTERED celebration.
+
+**Active mask tile:** One active tile at a time. Large, premium, tactile, readable. Text must pop with size, weight, contrast, and spacing. All mask tiles look and behave the same until release. No real/trap tells before swipe. Press-hold wakes tile, gives tiny haptic, lifts slightly, follows finger, and release commits.
+
+**Swipe motion:** UP claims real meaning; RIGHT rejects trap. No left swipe and no tap-submit. Correct UP feeds the tile into the hero word, which absorbs and pulses. Wrong UP rejects, wrong-flashes, and plucks a feather. Correct RIGHT flings the false meaning right with a "get outta here" feel and purple/rose glass shatter. Wrong RIGHT wrong-flashes and plucks a feather.
+
+**Master Gate:** Text is MASTER THE WORD. It belongs to Polly, not the player. It is a low board bird cage / vault hybrid with subtle tension, `#0F0D2A` surface, faint cage bars, small lock, and quiet gold charge only when earned. The player's Vault is never on the game board; it is a nav/page destination.
+
+**Master Gate unlock:** Last real visible tile absorbs into hero word -> gate border charges gold -> cage bars split slightly left/right -> lock snaps open -> two hidden tiles fly up into active tile position.
+
+**MASTERED celebration:** Hidden tiles judged correctly -> hero word crashes down center -> diagonal MASTER stamp slams over word -> word cracks open -> Word Core jumps out -> Core grows/glows/spins center-screen -> Core shoots toward Vault nav icon -> Polly pops in: "BINGO BANGO ZZZZINGO!"
+
+**Word Core:** Mastery trophy. It does not go into the Master Gate. It belongs in the player's Vault page. The Master Gate is Polly's cage, not storage.
+
+**Ghost loss:** Wrong hidden/master swipe makes failed tile leave, remaining hidden tile stay, failed tile glitch and lose substance, failed tile pulled back, both hidden tiles merge, hero word flickers dull, ghostly presence fades into merged tile, and Ghost Tile forms with MASTER THE WORD / From [WORD]. Microcopy: THE HAUNT BEGINS.
+
+**Ghost return / Haunt Words:** Ghosted words return late in future Hunts, best at word 10 or 11, never replacing Boss Word 12. Entrance copy: REMEMBER ME? If mastered: HAUNT BROKEN. If failed again: STILL HAUNTED. Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
+
+**Feathers:** Hearts are replaced by Feathers. Player starts with 5. Wrong swipe plucks 1. 0 feathers ends run. Score milestones can restore a Life Feather. If full, player can hold 1 reserve feather max.
+
+**Score:** Competition system for personal bests, Polly target score, Hunt rank, and future daily/friend/global rankings. Score does not replace mastery. Word Cores are permanent mastery trophies.
+
+**Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core. `#7B2D8B` for UI/gate/shards. `#9B2D6B` for trap/ghost shard accents. `#4CAF50` only Polly character. `#0F0D2A` only Master Gate locked surface. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
+
+**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue -> press-hold tile behavior -> UP absorb and RIGHT toss/shatter -> Master Gate visual overhaul -> hidden tile unlock -> MASTERED celebration -> ghost merge loss -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
+
 ```
 1  LIGHT   Standard  Confidence
 2  BARK    Standard  Flow
@@ -124,7 +160,7 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 | Word 6→7 struggling | "Want this word? Show me something." |
 | Word 9→10 | "Not yet." |
 | Word 11→12 | "Last one. Then it's just you and me." |
-| Boss mastered | "BINGO BANGO ZZZINGOO" |
+| Boss mastered | "BINGO BANGO ZZZZINGO!" |
 | Boss failed | "Thought so." |
 
 ---
@@ -185,7 +221,7 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 - Ghost wordId = WORD STRING always (e.g. "BARK") not stepIndex
 - Boss position 12 always — non-negotiable
 - "Thought so." — never change
-- "BINGO BANGO ZZZINGOO" — never change
+- "BINGO BANGO ZZZZINGO!" — never change
 
 ---
 

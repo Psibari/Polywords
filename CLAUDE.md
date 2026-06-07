@@ -259,7 +259,7 @@ T+800ms  "MASTERED" appears BELOW word — 13px, gold, letter-spacing 6px
 T+1050ms Word begins to SWELL
 T+1300ms Word at 1.6× width. 16 CRYSTAL SHARDS BURST radially.
          Purple #7B2D8B + rose #9B2D6B. Gravity-affected.
-T+1300ms Polly: "BINGO BANGO ZZZINGOO". notificationAsync(Success).
+T+1300ms Polly: "BINGO BANGO ZZZZINGO!". notificationAsync(Success).
 T+1900ms GOLD SEED at word center. 12px, inner glow, single pulse.
 T+2100ms Seed DROPS with 60px gold trail.
 T+2400ms Seed hits bottom. selectionAsync(). Bloom. Naturalistic tone.
@@ -297,7 +297,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Word 6→7, struggling | "Want this word? Show me something." |
 | Word 9→10 | "Not yet." |
 | Word 11→12 | "Last one. Then it's just you and me." |
-| Boss mastered | "BINGO BANGO ZZZINGOO" |
+| Boss mastered | "BINGO BANGO ZZZZINGO!" |
 | Boss failed | "Thought so." |
 
 ### In-Round Lines (max 2 per round)
@@ -305,7 +305,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Trigger | Line |
 |---|---|
 | First correct swipe (rare) | "Word up." |
-| Mastery / hidden / ×10 | "BINGO BANGO ZZZINGOO" |
+| Mastery / hidden / ×10 | "BINGO BANGO ZZZZINGO!" |
 | Wrong swipe | "Nope." / "Hard no." |
 | 3+ wrong same word | "BLAHH HA HA HA" |
 | Perfect clear | "Clean sweep." |
@@ -320,7 +320,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Hidden meaning found | "Deep cut. Most miss that one." |
 
 🔒 "Thought so." — never change it.
-🔒 "BINGO BANGO ZZZINGOO" — never change it.
+🔒 "BINGO BANGO ZZZZINGO!" — never change it.
 🔒 Max 2 Polly in-round appearances per word. Hunt-level = separate system.
 🔒 Boss word drops FROM Polly's direction — she throws it.
 
@@ -485,7 +485,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 - MASTERED text below word, not screen center
 - Ghost tile never reveals missed phrase
 - "Thought so." — never change
-- "BINGO BANGO ZZZINGOO" — never change
+- "BINGO BANGO ZZZZINGO!" — never change
 - Database grows over time — no finish line, no endgame
 - All tiles identical until swiped — Polly gives nothing away
 - Vault replaces Garden — permanent
@@ -523,6 +523,199 @@ app/screens/GameScreen.tsx           Main game screen
 app/screens/ResultsScreen.tsx        End-of-run results
 app/utils/SoundEngine.ts             WAV synthesis
 ```
+
+---
+
+## Locked Play Screen Design
+
+**Official source of truth for future implementation.**
+
+### Core Identity
+
+POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The active mask tile is the challenger. The Master Gate is Polly's locked cage/vault. The player steals mastery one swipe at a time.
+
+### Main Hierarchy
+
+1. HERO WORD
+2. ACTIVE MASK TILE
+3. MASTER GATE
+4. HUD / SCORE / FEATHERS / STREAK
+5. POLLY POP-IN ONLY
+
+### Polly Presence
+
+- Polly is not a permanent gameplay presence.
+- Polly appears only at high-emotion moments.
+- 1 pop-in per word round.
+- 2 max if the round has a major event.
+- Polly always appears at end of round win/loss.
+- Polly pops from bottom-left and never blocks the active tile, right shatter lane, or Master Gate.
+- Mastery line: "BINGO BANGO ZZZZINGO!"
+- Normal ghost failure line: "Not yours yet."
+- Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
+
+### Screen Layout
+
+- Top: quiet HUD with score, feathers, streak.
+- Upper center: giant hero word, dominant, top-center, absorb target.
+- Middle: empty swipe lane for UP motion.
+- Lower-middle: one active mask tile only.
+- Right side: clear toss/shatter lane.
+- Low board: MASTER THE WORD gate, Polly's cage/vault hybrid.
+- Bottom: nav bar room for Home / Ranks / Vault / Profile.
+
+### Hero Word
+
+- Must dominate screen.
+- Sits top-center during normal play.
+- Acts as absorb target for UP swipes.
+- During MASTERED celebration, crashes down to center.
+
+### Active Mask Tile
+
+- One active tile at a time.
+- Tile sits in lower-middle thumb-comfort zone.
+- Tile is large, premium, tactile, readable.
+- Text must pop with size, weight, contrast, and spacing.
+- All mask tiles look and behave the same until release.
+- No real/trap tells before swipe.
+- Press-hold interaction:
+  - tile wakes up
+  - tiny haptic
+  - tile lifts slightly
+  - tile follows player finger
+  - release commits decision
+
+### Swipe Motion
+
+- UP = claim real meaning.
+- RIGHT = reject trap.
+- No left swipe.
+- No tap-submit.
+- Correct UP feeds real meaning into hero word.
+- Tile travels upward into word.
+- Word absorbs tile and pulses.
+- Wrong UP on trap causes rejection, wrong flash, feather loss.
+- Correct RIGHT tosses false meaning out.
+- Tile flings right with "get outta here" feel.
+- Trap shatters like glass because false meaning has no substance.
+- Shards use purple/rose crystal language.
+- Wrong RIGHT on real meaning fails, wrong flash, feather loss.
+
+### Master Gate
+
+- Text: MASTER THE WORD.
+- Gate belongs to Polly, not the player.
+- Low on board, above nav bar safe area.
+- Bird cage / vault hybrid.
+- Subtle tension, never overbearing.
+- Surface uses `#0F0D2A`.
+- Faint cage bars.
+- Small lock.
+- Quiet gold charge only when earned.
+- The player's Vault is not on the game board. It is a nav/page destination.
+
+### Master Gate Unlock
+
+1. Last real visible tile absorbs into hero word.
+2. Gate border charges gold.
+3. Cage bars split slightly left/right.
+4. Lock snaps open.
+5. Two hidden tiles fly up into active tile position.
+
+### MASTERED Celebration
+
+1. Hidden tiles judged correctly.
+2. Hero word crashes down to center with impact.
+3. Diagonal MASTER stamp slams over word.
+4. Word cracks open.
+5. Word Core jumps out of cracked word.
+6. Core grows, glows, and spins center-screen.
+7. Core shoots toward Vault nav icon.
+8. Polly pops in: "BINGO BANGO ZZZZINGO!"
+
+### Word Core
+
+- Word Core is the mastery trophy.
+- It does not go into the Master Gate.
+- It belongs in the player's Vault page.
+- The Master Gate is Polly's cage, not storage.
+
+### Ghost Loss
+
+- Triggered by wrong hidden/master swipe.
+- Wrong swiped hidden tile begins leaving.
+- Remaining hidden tile stays on board.
+- Failed tile glitches and loses substance.
+- Failed tile is pulled back.
+- Both hidden tiles merge.
+- Hero word flickers dull and loses life essence.
+- Ghostly presence fades into merged tile.
+- Ghost Tile forms:
+  - MASTER THE WORD
+  - From [WORD]
+- Microcopy: THE HAUNT BEGINS
+
+### Ghost Return / Haunt Words
+
+- Ghosted words return late in future Hunts.
+- Best placement: word 10 or 11.
+- Never replace Boss Word at position 12.
+- Returning ghost word entrance copy: REMEMBER ME?
+- If mastered: HAUNT BROKEN
+- If failed again: STILL HAUNTED
+- Returning Haunt failure Polly taunt: "BBBLAAAAHHAHAHA!"
+
+### Life System
+
+- Hearts are replaced by Feathers.
+- Player starts with 5 feathers.
+- Wrong swipe plucks 1 feather.
+- 0 feathers ends run.
+- Score milestones can restore a Life Feather.
+- If feathers are full, player can hold 1 reserve feather max.
+
+### Score Purpose
+
+- Score is competition, not decoration.
+- Score supports:
+  - beat your personal best
+  - beat Polly's target score
+  - earn Hunt rank
+  - future daily/friend/global rankings
+- Score does not replace mastery.
+- Word Cores are permanent mastery trophies.
+
+### Play Screen Color Rules
+
+- Background: `#1A1830`
+- Gold: `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core
+- Purple: `#7B2D8B` for UI/gate/shards
+- Rose: `#9B2D6B` for trap/ghost shard accents
+- Polly Green: `#4CAF50` only Polly character
+- Deep Dark: `#0F0D2A` only Master Gate locked surface
+- Wrong Flash: `#CC2200` only wrong swipe flash
+- White: `#FFFFFF` readable text
+- No pink/magenta.
+- No orange in UI.
+- No green in UI.
+- No red except wrong flash.
+- Gold max 2 visible elements at once.
+
+### Implementation Order
+
+1. Main gameplay layout
+2. Hero word dominance
+3. One active tile queue
+4. Press-hold tile behavior
+5. UP absorb and RIGHT toss/shatter
+6. Master Gate visual overhaul
+7. Hidden tile unlock
+8. MASTERED celebration
+9. Ghost merge loss
+10. Feathers and score targets
+11. Haunt Word return system
+12. Vault / Ranks / Profile pages
 
 ---
 
