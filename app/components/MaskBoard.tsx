@@ -1078,7 +1078,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   function handleGhostSwipeUp() {
     ghostJudgedCorrectRef.current = true;
     store.clearGhost(step.word);
-    store.setGhostRevenge({ result: 'correct', word: step.word, meaningText: ghost?.hiddenMeaningReal ?? '' });
+    store.setGhostRevenge({ result: 'correct', word: step.word, meaningText: '' });
     store.addBonusScore(250);
     spawnFloatAtSplit(250, '#F5C842');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -1086,7 +1086,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function handleGhostSwipeRight() {
-    store.setGhostRevenge({ result: 'wrong', word: step.word, meaningText: ghost?.hiddenMeaningReal ?? '' });
+    store.setGhostRevenge({ result: 'wrong', word: step.word, meaningText: '' });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     firePollyEvent('ghostDissolved');
   }
@@ -1278,20 +1278,28 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               <View style={{
                 height: HIDDEN_H,
                 marginTop: TILE_GAP,
-                backgroundColor: '#0F0D2A',
+                backgroundColor: 'rgba(123,45,139,0.06)',
                 borderRadius: 12,
-                borderWidth: 2,
-                borderStyle: 'dashed',
-                borderColor: '#9B2D6B',
+                borderWidth: 1.5,
+                borderStyle: 'solid',
+                borderColor: 'rgba(123,45,139,0.55)',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
                 <Text style={{
-                  fontFamily: FONTS.wordDisplay,
-                  fontSize: 16,
-                  color: 'rgba(155,45,107,0.7)',
-                  letterSpacing: 2,
+                  fontFamily: FONTS.label,
+                  fontSize: FONT_SIZES.tileCopy,
+                  color: 'rgba(255,255,255,0.70)',
+                  letterSpacing: 3,
+                  fontWeight: '800',
                 }}>MASTER THE WORD</Text>
+                <Text style={{
+                  fontFamily: FONTS.label,
+                  fontSize: FONT_SIZES.ghostSubLabel,
+                  color: 'rgba(123,45,139,0.7)',
+                  fontStyle: 'italic',
+                  marginTop: 4,
+                }}>{`From ${step.word}`}</Text>
               </View>
             ) : (
               // Two final tiles

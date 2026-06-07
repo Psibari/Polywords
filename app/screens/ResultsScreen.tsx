@@ -460,7 +460,6 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           <View style={gr.cardHaunting}>
             <Text style={gr.header}>Still haunting you 👻</Text>
             <Text style={gr.word}>{ghostRevenge.word}</Text>
-            <Text style={gr.meaning}>"{ghostRevenge.meaningText}"</Text>
             <Text style={gr.sub}>It'll be back.</Text>
           </View>
         )}

@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }: Props) {
-  if (__DEV__ && !ghost.isGhostedMaster && ghost.hiddenMeaningReal === '') {
+  if (__DEV__ && false) {
     console.error('Ghost tile missing label — every ghost tile requires text copy.');
   }
 
@@ -64,7 +64,6 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!ghost.isGhostedMaster) return;
     const dotLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(dotPulse, { toValue: 0.3, duration: 900, useNativeDriver: true }),
@@ -173,24 +172,11 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
           ]}
           {...panResponder.panHandlers}
         >
-          {ghost.isGhostedMaster ? (
-            <>
-              <View style={styles.masterTextBlock}>
-                <Text style={styles.masterLabel}>MASTER THE WORD</Text>
-                <Text style={styles.masterSubLabel}>{`Missed from ${ghost.word}`}</Text>
-              </View>
-              <Animated.View style={[styles.pulseDot, { opacity: dotPulse }]} />
-            </>
-          ) : (
-            <View style={styles.textBlock}>
-              <Text style={styles.meaningText} numberOfLines={2}>
-                {ghost.hiddenMeaningReal}
-              </Text>
-              <Text style={styles.subLabel}>
-                {`Missed from ${ghost.word}`}
-              </Text>
-            </View>
-          )}
+          <View style={styles.masterTextBlock}>
+            <Text style={styles.masterLabel}>MASTER THE WORD</Text>
+            <Text style={styles.masterSubLabel}>{`From ${ghost.word}`}</Text>
+          </View>
+          <Animated.View style={[styles.pulseDot, { opacity: dotPulse }]} />
         </Animated.View>
       </Animated.View>
     </Animated.View>
@@ -199,35 +185,19 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
 
 const styles = StyleSheet.create({
   tile: {
-    backgroundColor: '#1A1830',
+    backgroundColor: 'rgba(123,45,139,0.06)',
     borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#7B2D8B',
+    borderWidth: 1.5,
+    borderStyle: 'solid',
+    borderColor: 'rgba(123,45,139,0.55)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     shadowColor: '#7B2D8B',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 8,
     justifyContent: 'center',
-  },
-  textBlock: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  meaningText: {
-    color: 'rgba(255,255,255,0.70)',
-    fontSize: FONT_SIZES.tileCopy,
-    fontFamily: FONTS.tileCopy,
-  },
-  subLabel: {
-    color: '#7B2D8B',
-    fontSize: FONT_SIZES.ghostSubLabel,
-    fontFamily: FONTS.label,
-    fontStyle: 'italic',
-    marginTop: 3,
   },
   // ── ghosted master tile ───────────────────────────────────────
   masterTile: {
