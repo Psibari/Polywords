@@ -202,9 +202,9 @@ function eventKicker(step: WordStep): string | null {
 type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
 
 const ACTIVE_TILE_ADVANCE_DELAY_MS: Record<ResolvedTileState, number> = {
-  correct: 1450,
-  'trap-caught': 560,
-  wrong: 560,
+  correct: 900,
+  'trap-caught': 320,
+  wrong: 360,
 };
 
 function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileState | null {
@@ -212,6 +212,12 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
     return state;
   }
   return null;
+}
+
+function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
+  const states = new Map<string, SwipeMaskState>();
+  step.masks.forEach(mask => states.set(mask.id, 'idle'));
+  return states;
 }
 
 export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Props) {
@@ -236,11 +242,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
 
   // ── tile state map ───────────────────────────────────────────
-  const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => {
-    const m = new Map<string, SwipeMaskState>();
-    step.masks.forEach(mask => m.set(mask.id, 'idle'));
-    return m;
-  });
+  const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => buildInitialTileStates(step));
 
   // ── 14-shard burst system ────────────────────────────────────
   const [bursts, setBursts] = useState<BurstEntry[]>([]);
@@ -253,6 +255,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   const ghost = store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null;
   const [ghostVisible, setGhostVisible] = useState(!!ghost);
+
+  useEffect(() => {
+    setGhostVisible(!!ghost);
+  }, [step.word, ghost?.wordId]);
 
   // ── layout ───────────────────────────────────────────────────
   const [containerWidth, setContainerWidth] = useState(350);
@@ -577,6 +583,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
     setActiveTileIndex(0);
+    setTileStates(buildInitialTileStates(step));
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     bossScaleX.setValue(isBoss ? 0.86 : 1);
