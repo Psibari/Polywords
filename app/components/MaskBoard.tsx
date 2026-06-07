@@ -199,6 +199,21 @@ function eventKicker(step: WordStep): string | null {
   return null;
 }
 
+type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
+
+const ACTIVE_TILE_ADVANCE_DELAY_MS: Record<ResolvedTileState, number> = {
+  correct: 1450,
+  'trap-caught': 560,
+  wrong: 560,
+};
+
+function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileState | null {
+  if (state === 'correct' || state === 'trap-caught' || state === 'wrong') {
+    return state;
+  }
+  return null;
+}
+
 export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Props) {
   const store  = useGameStore();
   const isBoss = step.eventType === 'bossWord';
@@ -248,6 +263,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex]
     ?? step.masks.filter(m => !m.isHidden);
+  const orderedVisibleMasks = !!step.bossModifier
+    ? [...visibleGridMasks].reverse()
+    : visibleGridMasks;
+  const [activeTileIndex, setActiveTileIndex] = useState(0);
+  const activeVisibleMask = orderedVisibleMasks[activeTileIndex] ?? null;
 
   // ── find counts ──────────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
@@ -556,6 +576,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
+    setActiveTileIndex(0);
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     bossScaleX.setValue(isBoss ? 0.86 : 1);
@@ -993,9 +1014,30 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }
   }, [finalTileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!activeVisibleMask) return;
+
+    const resolvedState = getResolvedTileState(tileStates.get(activeVisibleMask.id));
+    if (!resolvedState) return;
+
+    const timeoutId = setTimeout(() => {
+      setActiveTileIndex(prev => {
+        if (orderedVisibleMasks[prev]?.id !== activeVisibleMask.id) return prev;
+        return Math.min(prev + 1, orderedVisibleMasks.length);
+      });
+    }, ACTIVE_TILE_ADVANCE_DELAY_MS[resolvedState]);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeVisibleMask?.id, tileStates, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
     if (completedRef.current || gateTriggeredRef.current) return;
+
+    const visibleQueueResolved =
+      orderedVisibleMasks.length === 0 || activeTileIndex >= orderedVisibleMasks.length;
+
+    if (!visibleQueueResolved) return;
 
     const allVisibleJudged = visibleGridMasks.every(m => {
       const ts = tileStates.get(m.id);
@@ -1021,7 +1063,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         store.completeWord();
       }, 1400);
     }
-  }, [tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tileStates, activeTileIndex, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
   const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
@@ -1248,30 +1290,26 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         {showBoardContent && (
           <Animated.View style={[styles.tileStack, { opacity: masterAllFadeAnim }]}>
             {(() => {
-              const stagger      = step.tileStagger ?? 80;
-              const orderedMasks = !!step.bossModifier
-                ? [...visibleGridMasks].reverse()
-                : visibleGridMasks;
               const hapticCorrect = step.hapticTier === 'light'
                 ? () => Haptics.selectionAsync()
                 : undefined;
-              return orderedMasks.map((mask, index) => (
-                <View key={mask.id} ref={getTileRef(mask.id)}>
+              return activeVisibleMask && (
+                <View key={activeVisibleMask.id} ref={getTileRef(activeVisibleMask.id)}>
                   <SwipeMask
-                    mask={mask}
-                    state={tileStates.get(mask.id) ?? 'idle'}
-                    onSwipeUp={() => handleSwipeUp(mask.id)}
-                    onSwipeDown={() => handleSwipeRight(mask.id)}
+                    mask={activeVisibleMask}
+                    state={tileStates.get(activeVisibleMask.id) ?? 'idle'}
+                    onSwipeUp={() => handleSwipeUp(activeVisibleMask.id)}
+                    onSwipeDown={() => handleSwipeRight(activeVisibleMask.id)}
                     onSwipeReveal={() => {}}
                     revealable={false}
                     tileHeight={TILE_H}
-                    entryDelay={index * stagger}
+                    entryDelay={0}
                     hapticCorrect={hapticCorrect}
                     onEffect={handleEffect}
                     wordY={wordScreenY}
                   />
                 </View>
-              ));
+              );
             })()}
           </Animated.View>
         )}
