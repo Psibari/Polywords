@@ -833,10 +833,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       Animated.timing(masteredLabelOpacity, { toValue: 0, duration: 80, useNativeDriver: true }).start();
     }, 1000);
 
-    // Phase 4 — T+1050ms: Word swells 1.0→2.8
+    // Phase 4 — T+1050ms: Word swells 1.0→1.6
     setTimeout(() => {
       Animated.timing(masterHeroScale, {
-        toValue: 2.8, duration: 800, easing: Easing.in(Easing.quad), useNativeDriver: true,
+        toValue: 1.6, duration: 800, easing: Easing.in(Easing.quad), useNativeDriver: true,
       }).start();
     }, 1050);
 
