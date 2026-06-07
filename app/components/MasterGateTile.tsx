@@ -37,10 +37,16 @@ export function MasterGateTile({ perfectClear, onGateOpened, tileHeight = 76 }: 
   // Non-native: border color sweep
   const borderColorAnim = useRef(new Animated.Value(0)).current;
 
-  // At 0 (locked): dim gold. Sweeps green→orange then settles at full gold (1).
+  // At 0 (locked): dim gold. Unlock sweep increases gold opacity only.
   const animatedBorderColor = borderColorAnim.interpolate({
     inputRange:  [0,                       0.25,      0.55,      0.85,     1],
-    outputRange: ['rgba(245,200,66,0.45)', '#4CAF50', '#FF8C00', '#F5C842', '#F5C842'],
+    outputRange: [
+      'rgba(245,200,66,0.45)',
+      'rgba(245,200,66,0.62)',
+      'rgba(245,200,66,0.82)',
+      'rgba(245,200,66,1.0)',
+      '#F5C842',
+    ],
   });
 
   const lockRotateDeg = lockRotate.interpolate({
