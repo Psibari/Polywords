@@ -15,6 +15,7 @@ import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 // ─── SHARD ANGLES ────────────────────────────────────────────
 const SHARD_ANGLES = [0, 30, 60, 90, 120, 150, 180, 220, 270, 320];
 const SHARD_COLORS = ['#7B2D8B', '#9B2D6B'];
+const MAX_FEATHERS = 5;
 
 // ─── SHARD EFFECT ─────────────────────────────────────────────
 function ShardEffect({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
@@ -195,7 +196,7 @@ function RedFlash({ flashKey }: { flashKey: number }) {
 
 function TopBar() {
   const game  = useGameStore(s => s.game);
-  const lives = '❤️'.repeat(Math.max(game.lives, 0));
+  const filledFeathers = Math.max(0, Math.min(MAX_FEATHERS, game.lives));
   const total   = SESSION.length;
   const current = game.stepIndex;
 
@@ -218,11 +219,19 @@ function TopBar() {
 
   return (
     <View style={tb.root}>
-      {/* Row 1: Score · Streak · Lives */}
+      {/* Row 1: Score · Streak · Feathers */}
       <View style={tb.statsRow}>
         <Text style={tb.scoreVal}>{displayScore}</Text>
         <StreakDisplay />
-        <Text style={tb.lives}>{lives || '💀'}</Text>
+        <View
+          style={tb.featherRow}
+          accessible
+          accessibilityLabel={`${filledFeathers} feathers remaining`}
+        >
+          {Array.from({ length: MAX_FEATHERS }, (_, i) => (
+            <FeatherIcon key={i} filled={i < filledFeathers} />
+          ))}
+        </View>
       </View>
 
       {/* Row 2: Progress dots */}
@@ -239,6 +248,17 @@ function TopBar() {
           />
         ))}
       </View>
+    </View>
+  );
+}
+
+function FeatherIcon({ filled }: { filled: boolean }) {
+  return (
+    <View style={tb.featherBox}>
+      <View style={[tb.featherBlade, filled ? tb.featherBladeFilled : tb.featherBladeEmpty]}>
+        <View style={[tb.featherHighlight, filled ? tb.featherHighlightFilled : tb.featherHighlightEmpty]} />
+      </View>
+      <View style={[tb.featherShaft, filled ? tb.featherShaftFilled : tb.featherShaftEmpty]} />
     </View>
   );
 }
@@ -261,10 +281,71 @@ const tb = StyleSheet.create({
     fontFamily: FONTS.hud,
     minWidth: 52,
   },
-  lives: {
-    fontSize: 14,
-    textAlign: 'right',
-    minWidth: 52,
+  featherRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 3,
+    minWidth: 58,
+    height: 22,
+  },
+  featherBox: {
+    width: 10,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featherBlade: {
+    position: 'absolute',
+    width: 8,
+    height: 15,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 2,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    borderWidth: 1,
+    transform: [{ rotate: '-22deg' }],
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  featherBladeFilled: {
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderColor: 'rgba(123,45,139,0.75)',
+    shadowOpacity: 0.35,
+  },
+  featherBladeEmpty: {
+    backgroundColor: 'rgba(123,45,139,0.12)',
+    borderColor: 'rgba(118,101,135,0.45)',
+    shadowOpacity: 0,
+  },
+  featherHighlight: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 2,
+    height: 9,
+    borderRadius: 1,
+  },
+  featherHighlightFilled: {
+    backgroundColor: 'rgba(123,45,139,0.22)',
+  },
+  featherHighlightEmpty: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  featherShaft: {
+    position: 'absolute',
+    width: 1.25,
+    height: 14,
+    borderRadius: 1,
+    transform: [{ rotate: '-22deg' }],
+  },
+  featherShaftFilled: {
+    backgroundColor: 'rgba(123,45,139,0.65)',
+  },
+  featherShaftEmpty: {
+    backgroundColor: 'rgba(118,101,135,0.55)',
   },
   dotsRow: {
     flexDirection: 'row',
