@@ -22,7 +22,7 @@ import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
-const TILE_H     = 128;
+const TILE_H     = 148;
 const HIDDEN_H   = 76;
 const TILE_INSET = 16;
 
@@ -1716,7 +1716,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tileStack: {
-    width: '86%',
+    width: '94%',
     alignSelf: 'center',
     paddingRight: 0,
   },

@@ -71,8 +71,9 @@ export function SwipeMask({
   const translateY       = useSharedValue(0);
   const scale            = useSharedValue(1);
   const rotation         = useSharedValue(0);
+  const grabLift         = useSharedValue(0);
   const tileOpacity      = useSharedValue(1);
-  const borderOpacityVal = useSharedValue(0.12);
+  const borderOpacityVal = useSharedValue(0.18);
   const isCorrectSV      = useSharedValue(0); // 1 when locked correct
 
   // ── RN Animated: height/margin collapse (non-native) ──────────
@@ -80,11 +81,11 @@ export function SwipeMask({
   const outerMarginTopAnim = useRef(new RNAnimated.Value(TILE_GAP)).current;
 
   // ── RN Animated: bg color (non-native) ───────────────────────
-  // 0 = #1E1C4A (default), 0.5 = #2d6e3a (correct flash), 1.0 = #1a3520 (locked)
+  // 0 = dark glass, 0.5 = resolved pulse, 1.0 = locked dark
   const bgAnim = useRef(new RNAnimated.Value(0)).current;
   const bgColor = bgAnim.interpolate({
     inputRange:  [0,         0.5,       1.0      ],
-    outputRange: ['#1E1A5E', '#2d6e3a', '#1a3520'],
+    outputRange: ['#19143F', '#27205D', '#171833'],
   });
 
   // ── RN Animated: entry (native driver) ────────────────────────
@@ -139,6 +140,7 @@ export function SwipeMask({
 
     // ── CORRECT — magnetic absorb physics ────────────────────
     if (s === 'correct') {
+      grabLift.value = withTiming(0, { duration: 120 });
       if (hapticCorrectRef.current) {
         hapticCorrectRef.current();
       } else {
@@ -216,6 +218,7 @@ export function SwipeMask({
 
     // ── WRONG — tile exits, never returns ────────────────────
     if (s === 'wrong') {
+      grabLift.value = withTiming(0, { duration: 120 });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       playWrongBuzz();
       setFlashRed(true);
@@ -239,6 +242,7 @@ export function SwipeMask({
 
     // ── TRAP-CAUGHT — slide right + shards ───────────────────
     if (s === 'trap-caught') {
+      grabLift.value = withTiming(0, { duration: 120 });
       playShatter();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
@@ -268,8 +272,9 @@ export function SwipeMask({
       translateY.value       = 0;
       tileOpacity.value      = 1;
       scale.value            = 1;
+      grabLift.value         = 0;
       rotation.value         = 0;
-      borderOpacityVal.value = 0.12;
+      borderOpacityVal.value = 0.18;
       isCorrectSV.value      = 0;
       bgAnim.setValue(0);
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
@@ -289,13 +294,13 @@ export function SwipeMask({
   const tileAnimStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
-      { translateY: translateY.value },
+      { translateY: translateY.value + grabLift.value },
       { scale:      scale.value      },
       { rotate:     `${rotation.value}deg` },
     ],
     opacity:     tileOpacity.value,
     borderColor: isCorrectSV.value === 1
-      ? '#4CAF50'
+      ? 'rgba(255,255,255,0.5)'
       : isSpecialSplit
         ? '#FFD700'
         : `rgba(255,255,255,${borderOpacityVal.value})`,
@@ -314,11 +319,10 @@ export function SwipeMask({
 
       onPanResponderGrant: () => {
         if (judgedRef.current) return;
-        scale.value            = withSpring(1.06, { damping: 10, stiffness: 500 });
-        borderOpacityVal.value = withTiming(0.40, { duration: 60 });
+        grabLift.value         = withSpring(-5, { damping: 14, stiffness: 420 });
+        scale.value            = withSpring(1.045, { damping: 12, stiffness: 440 });
+        borderOpacityVal.value = withTiming(0.48, { duration: 80 });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setTimeout(() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }, 40);
-        setTimeout(() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }, 85);
         hasThresholdFiredRef.current = false;
       },
 
@@ -334,7 +338,7 @@ export function SwipeMask({
         rotation.value  = withSpring(targetRot, { damping: 20, stiffness: 300 });
 
         const speed = Math.sqrt(g.vx * g.vx + g.vy * g.vy) * 1000;
-        scale.value = withSpring(speed > 300 ? 1.07 : 1.04, { damping: 12, stiffness: 400 });
+        scale.value = withSpring(speed > 300 ? 1.055 : 1.035, { damping: 14, stiffness: 380 });
 
         const mainAxis = Math.max(g.dx > 0 ? g.dx : 0, -g.dy > 0 ? -g.dy : 0);
         if (mainAxis > SWIPE_THRESHOLD * 0.6 && !hasThresholdFiredRef.current) {
@@ -349,20 +353,23 @@ export function SwipeMask({
         if (g.dy < -SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'up';
+          grabLift.value      = withTiming(0, { duration: 80 });
           onSwipeUpRef.current();
 
         } else if (g.dx > SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
+          grabLift.value      = withTiming(0, { duration: 80 });
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           onSwipeDownRef.current();
 
         } else {
           translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
           translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
+          grabLift.value         = withSpring(0, { damping: 14, stiffness: 300 });
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
-          borderOpacityVal.value = withTiming(0.12, { duration: 150 });
+          borderOpacityVal.value = withTiming(0.18, { duration: 150 });
         }
       },
 
@@ -370,9 +377,10 @@ export function SwipeMask({
         if (!judgedRef.current) {
           translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
           translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
+          grabLift.value         = withSpring(0, { damping: 14, stiffness: 300 });
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
-          borderOpacityVal.value = withTiming(0.12, { duration: 150 });
+          borderOpacityVal.value = withTiming(0.18, { duration: 150 });
         }
       },
     })
@@ -473,39 +481,39 @@ export function SwipeMask({
 
 const styles = StyleSheet.create({
   tile: {
-    borderRadius: 26,
-    minHeight: 96,
+    borderRadius: 28,
+    minHeight: 122,
     height: '100%',
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 2,
     // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor:   '#000000',
-    shadowOffset:  { width: 0, height: 12 },
-    shadowRadius:  28,
-    shadowOpacity: 0.55,
-    elevation: 10,
+    shadowOffset:  { width: 0, height: 16 },
+    shadowRadius:  34,
+    shadowOpacity: 0.62,
+    elevation: 14,
     overflow: 'hidden',
   },
   phrasePanel: {
     width: '100%',
-    minHeight: 88,
-    borderRadius: 18,
+    minHeight: 104,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: 'rgba(0,0,0,0.22)',
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(7,6,28,0.46)',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.35)',
+    borderColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    shadowOpacity: 0.48,
     overflow: 'hidden',
   },
   checkmark: {
@@ -513,23 +521,23 @@ const styles = StyleSheet.create({
     top: 12,
     right: 16,
     fontSize: 20,
-    color: '#4CAF50',
+    color: '#FFFFFF',
     fontWeight: '800',
     zIndex: 3,
   },
   phrase: {
-    fontSize: 28,
+    fontSize: 31,
     fontFamily: FONTS.tileCopy,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#FFFFFF',
     flexShrink: 1,
     textAlign: 'center',
     textAlignVertical: 'center',
-    lineHeight: 34,
-    letterSpacing: 0.6,
-    textShadowColor: 'rgba(255,255,255,0.2)',
+    lineHeight: 37,
+    letterSpacing: 0.8,
+    textShadowColor: 'rgba(255,255,255,0.18)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 8,
+    textShadowRadius: 10,
   },
   splitTile: {
     borderRadius: 14,
@@ -564,7 +572,7 @@ const styles = StyleSheet.create({
   },
   splitCheckmark: {
     fontSize: 16,
-    color: '#4CAF50',
+    color: '#FFFFFF',
     fontWeight: '800',
     marginRight: 10,
   },
@@ -584,7 +592,7 @@ const styles = StyleSheet.create({
   },
   eraBadgeText: {
     fontSize: FONT_SIZES.ghostSubLabel,
-    color: '#FFD700',
+    color: 'rgba(255,255,255,0.82)',
     fontFamily: FONTS.label,
   },
   hiddenTile: {
@@ -609,21 +617,21 @@ const styles = StyleSheet.create({
   tileTopShine: {
     position: 'absolute',
     top: 0,
-    left: 20,
-    right: 20,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 1,
+    left: 24,
+    right: 24,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderRadius: 2,
     zIndex: 2,
   },
   tileInnerGlow: {
     position: 'absolute',
-    bottom: -16,
-    left: '20%',
-    right: '20%',
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(90,70,200,0.18)',
+    bottom: -22,
+    left: '10%',
+    right: '10%',
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(123,45,139,0.20)',
     zIndex: 1,
   },
 });
