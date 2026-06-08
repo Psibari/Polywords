@@ -1336,7 +1336,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               onWrong={handleGhostSwipeRight}
               onDone={() => setGhostVisible(false)}
             />
-          ) : (gatePhase === 'tiles' || gatePhase === 'wrongFail' || gatePhase === 'mastered') && hiddenRealMask && hiddenTrapMask ? (
+          ) : (gatePhase === 'tiles' || gatePhase === 'wrongFail') && hiddenRealMask && hiddenTrapMask ? (
             wrongGhostVisible ? (
               // Wrong-fail ghost placeholder
               <View style={{
@@ -1388,6 +1388,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       onSwipeDown={() => handleFinalTileSwipeRight(hiddenRealMask.id)}
                       onSwipeReveal={() => {}}
                       revealable={false}
+                      isSpecialSplit={true}
                       tileHeight={72}
                       entryDelay={0}
                       onEffect={handleEffect}
@@ -1411,6 +1412,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       onSwipeDown={() => handleFinalTileSwipeRight(hiddenTrapMask.id)}
                       onSwipeReveal={() => {}}
                       revealable={false}
+                      isSpecialSplit={true}
                       tileHeight={72}
                       entryDelay={0}
                       onEffect={handleEffect}

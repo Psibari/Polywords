@@ -418,7 +418,7 @@ export function SwipeMask({
       >
         {/* Main animated tile — Reanimated for transforms/opacity (native) */}
         <Animated.View
-          style={[styles.tile, tileAnimStyle]}
+          style={[isSpecialSplit ? styles.splitTile : styles.tile, tileAnimStyle]}
           onLayout={(e: LayoutChangeEvent) => {
             tileLayoutRef.current = {
               width:  e.nativeEvent.layout.width,
@@ -439,13 +439,15 @@ export function SwipeMask({
 
           {/* Checkmark — shown when locked correct */}
           {s === 'correct' && (
-            <Text style={styles.checkmark}>✓</Text>
+            <Text style={isSpecialSplit ? styles.splitCheckmark : styles.checkmark}>✓</Text>
           )}
 
           {/* Phrase text */}
-          <Text style={styles.phrase} numberOfLines={2}>
-            {mask.phrase}
-          </Text>
+          <View style={isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel} pointerEvents="none">
+            <Text style={isSpecialSplit ? styles.splitPhrase : styles.phrase} numberOfLines={2}>
+              {mask.phrase}
+            </Text>
+          </View>
 
           {/* Era badge */}
           {eraBadge && (
@@ -467,41 +469,93 @@ export function SwipeMask({
 
 const styles = StyleSheet.create({
   tile: {
-    borderRadius: 18,
-    minHeight: 58,
+    borderRadius: 26,
+    minHeight: 96,
+    height: '100%',
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderWidth: 1.5,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 2,
     // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor:   '#000000',
-    shadowOffset:  { width: 0, height: 8 },
-    shadowRadius:  18,
-    shadowOpacity: 0.42,
-    elevation: 6,
+    shadowOffset:  { width: 0, height: 10 },
+    shadowRadius:  22,
+    shadowOpacity: 0.46,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  phrasePanel: {
+    width: '100%',
+    minHeight: 88,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
     overflow: 'hidden',
   },
   checkmark: {
     position: 'absolute',
-    top: 10,
-    right: 14,
-    fontSize: 18,
+    top: 12,
+    right: 16,
+    fontSize: 20,
     color: '#4CAF50',
     fontWeight: '800',
+    zIndex: 3,
   },
   phrase: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: FONTS.tileCopy,
     fontWeight: '800',
     color: '#FFFFFF',
     flexShrink: 1,
     textAlign: 'center',
     textAlignVertical: 'center',
-    lineHeight: 31,
-    letterSpacing: 0.4,
+    lineHeight: 34,
+    letterSpacing: 0.6,
+  },
+  splitTile: {
+    borderRadius: 14,
+    minHeight: 58,
+    height: '100%',
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+    paddingRight: 12,
+    paddingVertical: 0,
+    borderWidth: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    shadowOpacity: 0.35,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  splitPhrasePanel: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  splitPhrase: {
+    fontSize: 16,
+    fontFamily: FONTS.tileCopy,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    flex: 1,
+    flexShrink: 1,
+    textAlignVertical: 'center',
+  },
+  splitCheckmark: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: '800',
+    marginRight: 10,
   },
   flashOverlay: {
     borderRadius: 12,
