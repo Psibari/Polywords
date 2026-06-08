@@ -1328,15 +1328,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
         <View style={styles.gateArea}>
         {hasHidden && (
-          ghostVisible && ghost ? (
-            <GhostTile
-              ghost={ghost}
-              tileHeight={HIDDEN_H}
-              onCorrect={handleGhostSwipeUp}
-              onWrong={handleGhostSwipeRight}
-              onDone={() => setGhostVisible(false)}
-            />
-          ) : (gatePhase === 'tiles' || gatePhase === 'wrongFail') && hiddenRealMask && hiddenTrapMask ? (
+          (gatePhase === 'tiles' || gatePhase === 'wrongFail') && hiddenRealMask && hiddenTrapMask ? (
             wrongGhostVisible ? (
               // Wrong-fail ghost placeholder
               <View style={{
