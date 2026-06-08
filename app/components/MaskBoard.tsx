@@ -201,11 +201,7 @@ function eventKicker(step: WordStep): string | null {
 
 type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
 
-const ACTIVE_TILE_ADVANCE_DELAY_MS: Record<ResolvedTileState, number> = {
-  correct: 900,
-  'trap-caught': 320,
-  wrong: 360,
-};
+const ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS = 450;
 
 function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileState | null {
   if (state === 'correct' || state === 'trap-caught' || state === 'wrong') {
@@ -269,13 +265,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordZoneRef   = useRef<View>(null);
   const [wordScreenY, setWordScreenY] = useState(180);
 
-  const visibleGridMasks = store.game.shuffledMasks[store.game.stepIndex]
-    ?? step.masks.filter(m => !m.isHidden);
-  const orderedVisibleMasks = !!step.bossModifier
-    ? [...visibleGridMasks].reverse()
-    : visibleGridMasks;
-  const [activeTileIndex, setActiveTileIndex] = useState(0);
-  const activeVisibleMask = orderedVisibleMasks[activeTileIndex] ?? null;
+  const visibleGridMasks = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
+    .filter(m => !m.isHidden);
+  const orderedVisibleMasks = visibleGridMasks;
+  const [activeVisibleTileIndex, setActiveVisibleTileIndex] = useState(0);
+  const activeVisibleAdvanceRef = useRef<string | null>(null);
+  const activeVisibleMask = orderedVisibleMasks[activeVisibleTileIndex] ?? null;
 
   // ── find counts ──────────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
@@ -584,7 +579,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
-    setActiveTileIndex(0);
+    activeVisibleAdvanceRef.current = null;
+    setActiveVisibleTileIndex(0);
     setTileStates(buildInitialTileStates(step));
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
@@ -1028,15 +1024,24 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
     const resolvedState = getResolvedTileState(tileStates.get(activeVisibleMask.id));
     if (!resolvedState) return;
+    if (activeVisibleAdvanceRef.current === activeVisibleMask.id) return;
+
+    activeVisibleAdvanceRef.current = activeVisibleMask.id;
 
     const timeoutId = setTimeout(() => {
-      setActiveTileIndex(prev => {
+      setActiveVisibleTileIndex(prev => {
         if (orderedVisibleMasks[prev]?.id !== activeVisibleMask.id) return prev;
+        activeVisibleAdvanceRef.current = null;
         return Math.min(prev + 1, orderedVisibleMasks.length);
       });
-    }, ACTIVE_TILE_ADVANCE_DELAY_MS[resolvedState]);
+    }, ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      if (activeVisibleAdvanceRef.current === activeVisibleMask.id) {
+        activeVisibleAdvanceRef.current = null;
+      }
+    };
   }, [activeVisibleMask?.id, tileStates, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── completion check ─────────────────────────────────────────
@@ -1044,7 +1049,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     if (completedRef.current || gateTriggeredRef.current) return;
 
     const visibleQueueResolved =
-      orderedVisibleMasks.length === 0 || activeTileIndex >= orderedVisibleMasks.length;
+      orderedVisibleMasks.length === 0 || activeVisibleTileIndex >= orderedVisibleMasks.length;
 
     if (!visibleQueueResolved) return;
 
@@ -1072,7 +1077,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         store.completeWord();
       }, 1400);
     }
-  }, [tileStates, activeTileIndex, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tileStates, activeVisibleTileIndex, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
   const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
