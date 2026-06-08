@@ -24,7 +24,8 @@ export type PollyEvent =
   | 'gameOver'
   | 'gateIntro'
   | 'gateMastered'
-  | 'gateMasteredBoss';
+  | 'gateMasteredBoss'
+  | 'hiddenMasterFailed';
 
 type BreathingSpeed = 'slow' | 'building' | 'hot' | 'danger';
 
@@ -375,6 +376,12 @@ export function usePollyAnimator(
         setCurrentPose('BOT_LEFT');
         animBigWin();
         setSpeech('Fine. Take it.', 3000);
+        break;
+
+      case 'hiddenMasterFailed':
+        setCurrentPose('BOT_LEFT');
+        animWin();
+        setSpeech('Not yours yet.', 3000);
         break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

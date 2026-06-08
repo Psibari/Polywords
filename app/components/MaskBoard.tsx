@@ -476,6 +476,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [finalTileStates, setFinalTileStates] = useState<Map<string, SwipeMaskState>>(new Map());
   const [releasedHiddenTileCount, setReleasedHiddenTileCount] = useState(0);
   const [landedHiddenTileCount, setLandedHiddenTileCount] = useState(0);
+  const [failedHiddenTileId, setFailedHiddenTileId] = useState<string | null>(null);
+  const [ghostMergeVisible, setGhostMergeVisible] = useState(false);
 
   // Gate animated values: transforms/opacity use native driver; border color stays non-native.
   const gateScaleAnim       = useRef(new Animated.Value(1)).current;
@@ -499,6 +501,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   // Wrong-fail: both tiles shrink + fade (native)
   const wrongFailScaleAnim   = useRef(new Animated.Value(1)).current;
   const wrongFailOpacityAnim = useRef(new Animated.Value(1)).current;
+  const failedHiddenTransX   = useRef(new Animated.Value(0)).current;
+  const failedHiddenTransY   = useRef(new Animated.Value(0)).current;
+  const failedHiddenJitterX  = useRef(new Animated.Value(0)).current;
+  const failedHiddenScale    = useRef(new Animated.Value(1)).current;
+  const failedHiddenOpacity  = useRef(new Animated.Value(1)).current;
+  const remainingHiddenTransY = useRef(new Animated.Value(0)).current;
+  const remainingHiddenScale = useRef(new Animated.Value(1)).current;
+  const remainingHiddenOpacity = useRef(new Animated.Value(1)).current;
+  const ghostMergeOpacity    = useRef(new Animated.Value(0)).current;
+  const ghostMergeScale      = useRef(new Animated.Value(0.82)).current;
+  const hauntCopyOpacity     = useRef(new Animated.Value(0)).current;
+  const wordGhostOpacity     = useRef(new Animated.Value(0)).current;
 
   // Mastered celebration
   const masterHeroScale      = useRef(new Animated.Value(1)).current;
@@ -616,6 +630,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setFinalTileStates(new Map());
     setReleasedHiddenTileCount(0);
     setLandedHiddenTileCount(0);
+    setFailedHiddenTileId(null);
+    setGhostMergeVisible(false);
     setMasterStampVisible(false);
     gateScaleAnim.setValue(1);
     gateTranslateYAnim.setValue(0);
@@ -631,6 +647,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     finalBorder2Anim.setValue(0);
     wrongFailScaleAnim.setValue(1);
     wrongFailOpacityAnim.setValue(1);
+    failedHiddenTransX.setValue(0);
+    failedHiddenTransY.setValue(0);
+    failedHiddenJitterX.setValue(0);
+    failedHiddenScale.setValue(1);
+    failedHiddenOpacity.setValue(1);
+    remainingHiddenTransY.setValue(0);
+    remainingHiddenScale.setValue(1);
+    remainingHiddenOpacity.setValue(1);
+    ghostMergeOpacity.setValue(0);
+    ghostMergeScale.setValue(0.82);
+    hauntCopyOpacity.setValue(0);
+    wordGhostOpacity.setValue(0);
     masterHeroScale.setValue(1);
     masterHeroTransY.setValue(0);
     masterAllFadeAnim.setValue(1);
@@ -830,17 +858,114 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }, 150);
   }
 
-  function triggerWrongFail() {
+  function triggerWrongFail(failedMaskId: string) {
     if (splitCompletedRef.current) return;
     splitCompletedRef.current = true;
     completedRef.current = true;
     wrongSwipeOccurred.current = true;
     setGatePhase('wrongFail');
+    setFailedHiddenTileId(failedMaskId);
+    setGhostMergeVisible(false);
+
+    const failedIsFirst = failedMaskId === hiddenRealMask?.id;
+    const mergeOffset = (FINAL_TILE_H + FINAL_TILE_GAP) / 2;
+    const failedMergeY = failedIsFirst ? mergeOffset : -mergeOffset;
+    const remainingMergeY = failedIsFirst ? -mergeOffset : mergeOffset;
+
+    failedHiddenTransX.setValue(0);
+    failedHiddenTransY.setValue(0);
+    failedHiddenJitterX.setValue(0);
+    failedHiddenScale.setValue(1);
+    failedHiddenOpacity.setValue(1);
+    remainingHiddenTransY.setValue(0);
+    remainingHiddenScale.setValue(1);
+    remainingHiddenOpacity.setValue(1);
+    ghostMergeOpacity.setValue(0);
+    ghostMergeScale.setValue(0.82);
+    hauntCopyOpacity.setValue(0);
+    wordGhostOpacity.setValue(0);
+    firePollyEvent('hiddenMasterFailed');
+
+    Animated.parallel([
+      Animated.timing(failedHiddenTransX, {
+        toValue: failedIsFirst ? 94 : 112, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true,
+      }),
+      Animated.timing(failedHiddenOpacity, {
+        toValue: 0.74, duration: 220, useNativeDriver: true,
+      }),
+      Animated.timing(failedHiddenScale, {
+        toValue: 0.96, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true,
+      }),
+    ]).start();
+
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(failedHiddenJitterX, { toValue: -9, duration: 45, useNativeDriver: true }),
+          Animated.timing(failedHiddenJitterX, { toValue: 12, duration: 45, useNativeDriver: true }),
+          Animated.timing(failedHiddenJitterX, { toValue: -6, duration: 45, useNativeDriver: true }),
+          Animated.timing(failedHiddenJitterX, { toValue: 0, duration: 45, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(failedHiddenOpacity, { toValue: 0.28, duration: 65, useNativeDriver: true }),
+          Animated.timing(failedHiddenOpacity, { toValue: 0.82, duration: 60, useNativeDriver: true }),
+          Animated.timing(failedHiddenOpacity, { toValue: 0.38, duration: 70, useNativeDriver: true }),
+          Animated.timing(failedHiddenOpacity, { toValue: 0.66, duration: 80, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(failedHiddenScale, { toValue: 1.04, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(failedHiddenScale, { toValue: 0.91, duration: 110, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]),
+      ]).start();
+      triggerShardBurst(containerWidthRef.current / 2, wordScreenY + 110, 14);
+    }, 260);
+
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(failedHiddenTransX, {
+          toValue: 0, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+        }),
+        Animated.timing(failedHiddenTransY, {
+          toValue: failedMergeY, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+        }),
+        Animated.timing(remainingHiddenTransY, {
+          toValue: remainingMergeY, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+        }),
+        Animated.timing(failedHiddenScale, {
+          toValue: 0.82, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+        }),
+        Animated.timing(remainingHiddenScale, {
+          toValue: 0.88, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
+        }),
+        Animated.timing(failedHiddenOpacity, { toValue: 0.42, duration: 360, useNativeDriver: true }),
+        Animated.timing(remainingHiddenOpacity, { toValue: 0.56, duration: 360, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(wordGhostOpacity, { toValue: 0.46, duration: 80, useNativeDriver: true }),
+          Animated.timing(wordGhostOpacity, { toValue: 0.12, duration: 80, useNativeDriver: true }),
+          Animated.timing(wordGhostOpacity, { toValue: 0.52, duration: 90, useNativeDriver: true }),
+          Animated.timing(wordGhostOpacity, { toValue: 0.24, duration: 130, useNativeDriver: true }),
+        ]),
+      ]).start();
+    }, 660);
+
+    setTimeout(() => {
+      setGhostMergeVisible(true);
+      Animated.parallel([
+        Animated.timing(failedHiddenOpacity, { toValue: 0, duration: 160, useNativeDriver: true }),
+        Animated.timing(remainingHiddenOpacity, { toValue: 0, duration: 160, useNativeDriver: true }),
+        Animated.timing(ghostMergeOpacity, { toValue: 1, duration: 170, useNativeDriver: true }),
+        Animated.spring(ghostMergeScale, { toValue: 1, damping: 7, stiffness: 190, useNativeDriver: true }),
+      ]).start();
+    }, 1080);
+
+    setTimeout(() => {
+      Animated.timing(hauntCopyOpacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    }, 1420);
 
     setTimeout(() => {
       store.addGhostedMaster(step.word);
       store.completeWord();
-    }, 1200);
+    }, 2900);
   }
 
   function playSystemStingerWord(word: string, peakScale: number) {
@@ -1074,7 +1199,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       firePollyEvent('wrong');
       triggerWrongWordRecoil();
       onWrongSwipe?.();
-      triggerWrongFail();
+      triggerWrongFail(maskId);
     }
   }
 
@@ -1091,7 +1216,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       firePollyEvent('wrong');
       triggerWrongWordRecoil();
       onWrongSwipe?.();
-      triggerWrongFail();
+      triggerWrongFail(maskId);
     }
   }
 
@@ -1240,6 +1365,30 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   });
   const masteryWordCenterY = Math.max(170, Dimensions.get('window').height * 0.48);
   const vaultBloomX = Math.max(28, containerWidth - 86);
+  const firstHiddenFailed = failedHiddenTileId === hiddenRealMask?.id;
+  const secondHiddenFailed = failedHiddenTileId === hiddenTrapMask?.id;
+  const firstHiddenWrongTransforms = gatePhase === 'wrongFail' && failedHiddenTileId
+    ? [
+        { translateY: splitTile1TransY },
+        { translateY: firstHiddenFailed ? failedHiddenTransY : remainingHiddenTransY },
+        ...(firstHiddenFailed ? [{ translateX: failedHiddenTransX }, { translateX: failedHiddenJitterX }] : []),
+        { scale: firstHiddenFailed ? failedHiddenScale : remainingHiddenScale },
+      ]
+    : [{ translateY: splitTile1TransY }];
+  const secondHiddenWrongTransforms = gatePhase === 'wrongFail' && failedHiddenTileId
+    ? [
+        { translateY: splitTile2TransY },
+        { translateY: secondHiddenFailed ? failedHiddenTransY : remainingHiddenTransY },
+        ...(secondHiddenFailed ? [{ translateX: failedHiddenTransX }, { translateX: failedHiddenJitterX }] : []),
+        { scale: secondHiddenFailed ? failedHiddenScale : remainingHiddenScale },
+      ]
+    : [{ translateY: splitTile2TransY }];
+  const firstHiddenWrongOpacity = gatePhase === 'wrongFail' && failedHiddenTileId
+    ? (firstHiddenFailed ? failedHiddenOpacity : remainingHiddenOpacity)
+    : 1;
+  const secondHiddenWrongOpacity = gatePhase === 'wrongFail' && failedHiddenTileId
+    ? (secondHiddenFailed ? failedHiddenOpacity : remainingHiddenOpacity)
+    : 1;
 
   return (
     <Animated.View
@@ -1364,6 +1513,29 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             >
               {step.word}
             </Animated.Text>
+            {/* Ghost birth dull flicker */}
+            <Animated.Text
+              pointerEvents="none"
+              style={[
+                styles.word,
+                isBoss && styles.wordBoss,
+                {
+                  color: '#8D86B8',
+                  opacity: wordGhostOpacity,
+                  position: 'absolute',
+                  left: 0, right: 0,
+                  textAlign: 'center',
+                  textShadowColor: 'rgba(123,45,139,0.55)',
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 14,
+                },
+              ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+            >
+              {step.word}
+            </Animated.Text>
 
             {/* Absorption ring */}
             <Animated.View
@@ -1430,8 +1602,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ]}>
                 {releasedHiddenTileCount >= 1 && (
                   <Animated.View
-                    pointerEvents={landedHiddenTileCount >= 1 ? 'auto' : 'none'}
-                    style={{ transform: [{ translateY: splitTile1TransY }] }}
+                    pointerEvents={gatePhase === 'wrongFail' ? 'none' : landedHiddenTileCount >= 1 ? 'auto' : 'none'}
+                    style={{
+                      opacity: firstHiddenWrongOpacity,
+                      transform: firstHiddenWrongTransforms,
+                    }}
                   >
                     <Animated.View style={[
                       styles.finalHiddenTileFrame,
@@ -1468,10 +1643,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
                 {releasedHiddenTileCount >= 2 && (
                   <Animated.View
-                    pointerEvents={landedHiddenTileCount >= 2 ? 'auto' : 'none'}
+                    pointerEvents={gatePhase === 'wrongFail' ? 'none' : landedHiddenTileCount >= 2 ? 'auto' : 'none'}
                     style={{
                       marginTop: FINAL_TILE_GAP,
-                      transform: [{ translateY: splitTile2TransY }],
+                      opacity: secondHiddenWrongOpacity,
+                      transform: secondHiddenWrongTransforms,
                     }}
                   >
                     <Animated.View style={[
@@ -1504,6 +1680,26 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                         splitBackgroundColor="#0F0D2A"
                       />
                     </Animated.View>
+                  </Animated.View>
+                )}
+
+                {ghostMergeVisible && (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.hauntBirthTile,
+                      {
+                        opacity: ghostMergeOpacity,
+                        transform: [{ scale: ghostMergeScale }],
+                      },
+                    ]}
+                  >
+                    <View style={styles.hauntBirthHaze} />
+                    <Text style={styles.hauntBirthTitle}>MASTER THE WORD</Text>
+                    <Text style={styles.hauntBirthFrom}>{`From ${step.word}`}</Text>
+                    <Animated.Text style={[styles.hauntBirthCopy, { opacity: hauntCopyOpacity }]}>
+                      THE HAUNT BEGINS
+                    </Animated.Text>
                   </Animated.View>
                 )}
               </Animated.View>
@@ -1936,6 +2132,7 @@ const styles = StyleSheet.create({
   finalHiddenTileStack: {
     width: '100%',
     alignSelf: 'center',
+    position: 'relative',
   },
   finalHiddenTileFrame: {
     borderWidth: 1.5,
@@ -1945,6 +2142,61 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 10,
     elevation: 7,
+  },
+  hauntBirthTile: {
+    position: 'absolute',
+    top: (FINAL_TILE_H + FINAL_TILE_GAP) / 2 - 8,
+    left: 0,
+    right: 0,
+    height: 92,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(123,45,139,0.92)',
+    backgroundColor: '#0F0D2A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  hauntBirthHaze: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    top: 10,
+    bottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(155,45,107,0.28)',
+    backgroundColor: 'rgba(123,45,139,0.12)',
+  },
+  hauntBirthTitle: {
+    color: '#FFFFFF',
+    fontSize: FONT_SIZES.tileCopy,
+    fontFamily: FONTS.label,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  hauntBirthFrom: {
+    marginTop: 4,
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: FONT_SIZES.ghostSubLabel,
+    fontFamily: FONTS.label,
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  hauntBirthCopy: {
+    marginTop: 8,
+    color: '#9B2D6B',
+    fontSize: FONT_SIZES.progressLabel,
+    fontFamily: FONTS.label,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textAlign: 'center',
   },
   gateArea: {
     width: '86%',
