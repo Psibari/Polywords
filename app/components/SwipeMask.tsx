@@ -161,8 +161,8 @@ export function SwipeMask({
         const origCY = pageY + h / 2;
         let px = origCX + currentOffsetX;
         let py = origCY + currentOffsetY;
-        let vX = Math.max(-1400, Math.min(1400,  lastGestureVelocityRef.current.vx * 1000));
-        let vY = Math.max(-2600, Math.min(-260,  lastGestureVelocityRef.current.vy * 1000));
+        let vX = Math.max(-1500, Math.min(1500,  lastGestureVelocityRef.current.vx * 1000));
+        let vY = Math.max(-3200, Math.min(-420,  lastGestureVelocityRef.current.vy * 1000));
         const startDist = Math.hypot(targetX - px, targetY - py) || 1;
         let elapsed    = 0;
         let bumped     = false;
@@ -174,10 +174,10 @@ export function SwipeMask({
           lastTime = now;
           elapsed += dt;
 
-          const k = 34 + 340 * elapsed;
+          const k = 44 + 390 * elapsed;
           vX += (targetX - px) * k * dt;
           vY += (targetY - py) * k * dt;
-          const damp = Math.pow(0.82, dt * 60);
+          const damp = Math.pow(0.84, dt * 60);
           vX *= damp;
           vY *= damp;
           px += vX * dt;
@@ -189,9 +189,9 @@ export function SwipeMask({
 
           translateX.value  = px - origCX;
           translateY.value  = py - origCY;
-          scale.value       = Math.max(0.1, Math.min(1.12, 1.06 - closed * 0.95));
-          tileOpacity.value = dist < startDist * 0.14
-            ? Math.max(0, Math.min(1, dist / (startDist * 0.14)))
+          scale.value       = Math.max(0.08, Math.min(1.08, 1.04 - closed * 0.96));
+          tileOpacity.value = dist < startDist * 0.20
+            ? Math.max(0, Math.min(1, dist / (startDist * 0.20)))
             : 1;
 
           if (!bumped && closed > 0.72) {
@@ -199,7 +199,7 @@ export function SwipeMask({
             onEffectRef.current?.('trail', px, py);
           }
 
-          if (dist < 14 || elapsed > 1.4) {
+          if (dist < 12 || elapsed > 1.15) {
             absorbRafRef.current = null;
             tileOpacity.value = 0;
             RNAnimated.parallel([
@@ -216,7 +216,7 @@ export function SwipeMask({
       });
     }
 
-    // ── WRONG — tile exits, never returns ────────────────────
+    // ── WRONG — failed move, then tile exits ─────────────────
     if (s === 'wrong') {
       grabLift.value = withTiming(0, { duration: 120 });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -224,44 +224,75 @@ export function SwipeMask({
       setFlashRed(true);
 
       if (mask.isReal) {
-        // Real meaning swiped right (wrong) → fly off right
-        translateX.value  = withTiming( 500, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
+        // Real meaning swiped right: visibly reject instead of looking successful.
+        translateX.value = withSequence(
+          withTiming(92, { duration: 90, easing: ReaEasing.out(ReaEasing.ease) }),
+          withSpring(0, { damping: 9, stiffness: 260 })
+        );
+        translateY.value = withSequence(
+          withTiming(8, { duration: 90, easing: ReaEasing.out(ReaEasing.ease) }),
+          withSpring(0, { damping: 10, stiffness: 260 })
+        );
+        rotation.value = withSequence(
+          withTiming(7, { duration: 85, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(-5, { duration: 110, easing: ReaEasing.inOut(ReaEasing.ease) }),
+          withSpring(0, { damping: 10, stiffness: 260 })
+        );
+        scale.value = withSequence(
+          withTiming(0.98, { duration: 90, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(1.02, { duration: 110, easing: ReaEasing.inOut(ReaEasing.ease) }),
+          withTiming(0.94, { duration: 160, easing: ReaEasing.in(ReaEasing.ease) })
+        );
+        borderOpacityVal.value = withSequence(
+          withTiming(0.65, { duration: 80 }),
+          withTiming(0.24, { duration: 260 })
+        );
+        timers.push(setTimeout(() => {
+          tileOpacity.value = withTiming(0, { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
+        }, 380));
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+          ]).start();
+        }, 560));
       } else {
-        // Trap swiped up (wrong) → fly off top
+        // Trap swiped up (wrong) -> keep existing wrong behavior.
         translateY.value  = withTiming(-500, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
-      }
-      tileOpacity.value = withTiming(0, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
+        tileOpacity.value = withTiming(0, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
 
-      timers.push(setTimeout(() => {
-        RNAnimated.parallel([
-          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]).start();
-      }, 300));
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+          ]).start();
+        }, 300));
+      }
     }
 
-    // ── TRAP-CAUGHT — slide right + shards ───────────────────
+    // ── TRAP-CAUGHT — hard right toss + shards ───────────────
     if (s === 'trap-caught') {
       grabLift.value = withTiming(0, { duration: 120 });
       playShatter();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-      // Measure tile for shard effect in overlay
       outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
-        onEffectRef.current?.('shard', pageX + w / 2, pageY + h / 2);
+        onEffectRef.current?.('shard', pageX + w + 88, pageY + h / 2 - 6);
       });
 
-      // Tile slides right and fades (ease-in 260ms)
-      translateX.value  = withTiming(400, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
-      tileOpacity.value = withTiming(0,   { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
+      const shatterLaneX = Dimensions.get('window').width + 180;
+      translateX.value  = withTiming(shatterLaneX, { duration: 340, easing: ReaEasing.in(ReaEasing.ease) });
+      translateY.value  = withTiming(-16,          { duration: 300, easing: ReaEasing.out(ReaEasing.ease) });
+      rotation.value    = withTiming(26,           { duration: 340, easing: ReaEasing.in(ReaEasing.ease) });
+      scale.value       = withTiming(0.76,         { duration: 320, easing: ReaEasing.in(ReaEasing.ease) });
+      tileOpacity.value = withTiming(0,            { duration: 320, easing: ReaEasing.in(ReaEasing.ease) });
 
-      // Collapse height after tile is gone
       timers.push(setTimeout(() => {
         RNAnimated.parallel([
           RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
           RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
         ]).start();
-      }, 300));
+      }, 380));
     }
 
     // ── REVEALED — full reset ────────────────────────────────

@@ -201,7 +201,7 @@ function eventKicker(step: WordStep): string | null {
 
 type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
 
-const ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS = 450;
+const ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS = 650;
 
 function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileState | null {
   if (state === 'correct' || state === 'trap-caught' || state === 'wrong') {
@@ -446,7 +446,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     if (type === 'shard') {
       (containerRef.current as any)?.measure(
         (_x: number, _y: number, _w: number, _h: number, bx: number, by: number) => {
-          triggerShardBurst(pageX - bx, pageY - by);
+          triggerShardBurst(pageX - bx, pageY - by, 18);
         }
       );
     } else {
