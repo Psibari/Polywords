@@ -327,6 +327,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Hesitation 9s | "Hard no." |
 | Results / ghost set | "That one's waiting for you." |
 | Hidden meaning found | "Deep cut. Most miss that one." |
+| Ghost birth | "Not yours yet." |
 
 🔒 "Thought so." — never change it.
 🔒 "BINGO BANGO ZZZINGOO" — never change it.
@@ -379,6 +380,33 @@ Tab: "VAULT" · Icon: heavy vault door, partially open, gold light spilling
 - `useGameStore.runStartGhostWordIds` snapshots which ghosts existed at run start.
 - `GhostTile` is currently disabled from the Master Gate slot so it cannot block normal gate unlock/release flow.
 - Proper returning Haunt placement remains pending.
+
+### Ghost Loss Sequence — 7 Acts (Locked)
+
+Triggered when player wrong-swipes a hidden split tile.
+NOTE: Hidden split tile wrong exit OVERRIDES standard wrong swipe physics. Tile does NOT complete normal exit.
+
+```
+T+0ms    Wrong hidden swipe released
+T+120ms  Wrong tile GLITCHES — edges blur, text flickers,
+         one red flash. Does NOT complete normal exit.
+T+160ms  Remaining hidden tile FREEZES — border dims,
+         text fades ghostly white, purple mist leaks
+T+260ms  Failed tile PULLED BACK — curves from swipe path,
+         shrinks, semi-transparent, purple trail
+T+520ms  TILE MERGE — soft purple pulse, glassy crack ring,
+         medium haptic, reverse-chime sound. Both texts blur.
+         Tiles overlap and compress. Purple vapor curls inward.
+T+520ms  HERO WORD LOSES LIFE ESSENCE — letters desaturate,
+         glow dims, outline thins, wisps drain downward.
+         Faint ghost of word peels backward into forming tile.
+T+760ms  GHOST TILE REFORMS: "MASTER THE WORD / From [WORD]"
+         dark purple glass, solid purple border, mist inside
+T+920ms  "THE HAUNT BEGINS" — small text overlay, one beat
+T+1300ms Ghost tile compresses → fades to purple mist
+T+1500ms Polly: "Not yours yet."
+T+1900ms Exit to next word
+```
 
 ---
 
@@ -445,6 +473,18 @@ T+1400ms Tiles stagger in at 120ms intervals
 
 **Combo counter: GOLD #F5C842 with glow — NEVER orange, never red.**
 
+### Polly Target Score System
+
+- Polly's target: 15,000 pts (fixed MVP, scales Phase 2)
+- Rank scale: D (below 8k) · C (8k) · B (11k) · A (14k) · S (18k) · MASTER (22k+)
+- "BEAT POLLY" is separate from rank — coexists independently
+- "YOU BEAT POLLY" shown on results when score ≥ 15,000
+- "POLLY HUNT COMPLETE" is the results screen session header
+- Suppress mid-run "POLLY BEATEN" flash — reveal on results only
+- Pre-hunt display shows 2 numbers only: Polly's Score + Your Best
+- Life Feather milestones: 8,000 pts and 16,000 pts restore 1 feather
+- Score ≠ Mastery — explicitly separate systems
+
 ---
 
 ## Pending Fixes
@@ -505,6 +545,15 @@ T+1400ms Tiles stagger in at 120ms intervals
 - Database grows over time — no finish line, no endgame
 - All tiles identical until swiped — Polly gives nothing away
 - Vault replaces Garden — permanent
+- "POLLY CLIPPED YOUR RUN." replaces GAME OVER at zero feathers
+- "POLLY HUNT COMPLETE" is the results screen session header
+- "YOU BEAT POLLY" fires on results when score ≥ 15,000
+- Polly's target score: 15,000 pts (MVP fixed)
+- Rank scale: D / C / B / A / S / MASTER
+- Life Feather milestones: 8,000 and 16,000 pts
+- Ghost Loss Sequence: hidden split tile wrong swipe overrides standard exit — tile intercepted at T+120ms into merge sequence
+- "THE HAUNT BEGINS" — micro-copy on ghost birth
+- "Not yours yet." — Polly line on ghost exit
 
 ---
 
@@ -695,6 +744,20 @@ Current implementation:
 - HUD renders five custom feather slots in `GameScreen.tsx`.
 - Internal engine/store state is still named `lives`; do not rename it until a dedicated state migration.
 - Reserve feathers and score milestone restore are not implemented yet.
+
+### Feather Visual Spec
+
+- Full feather: white fill, purple outer glow 0 0 8px rgba(123,45,139,0.5), subtle purple quill line
+- Lost feather: rgba(123,45,139,0.25) — dim ghost, stays in slot
+- Reserve feather: smaller (12px), gold "+" mark above, max 1
+- Wrong swipe pluck sequence:
+  T+0ms    Red flash on tile
+  T+80ms   Rightmost feather SHAKES ±8deg
+  T+200ms  Feather launches upward translateY -40px
+  T+280ms  Feather dissolves into 6 purple dust particles
+  T+580ms  Dim purple silhouette remains in slot
+- Earned feather: spins in from above, lands with 50ms gold flash, "+1 FEATHER" floats up in gold, selectionAsync() haptic
+- Zero feathers: "POLLY CLIPPED YOUR RUN." replaces GAME OVER
 
 ### Score Purpose
 
