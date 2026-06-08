@@ -795,21 +795,21 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         Animated.timing(finalBorder1Anim, { toValue: 0.55, duration: 120, useNativeDriver: false }),
         Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
       ]).start();
-
-      setTimeout(() => {
-        setReleasedHiddenTileCount(2);
-        Animated.spring(splitTile2TransY, {
-          toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
-        }).start(({ finished: secondFinished }) => {
-          if (!secondFinished) return;
-          setLandedHiddenTileCount(2);
-          Animated.sequence([
-            Animated.timing(finalBorder2Anim, { toValue: 0.5, duration: 120, useNativeDriver: false }),
-            Animated.timing(finalBorder2Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
-          ]).start();
-        });
-      }, 150);
     });
+
+    setTimeout(() => {
+      setReleasedHiddenTileCount(2);
+      Animated.spring(splitTile2TransY, {
+        toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
+      }).start(({ finished: secondFinished }) => {
+        if (!secondFinished) return;
+        setLandedHiddenTileCount(2);
+        Animated.sequence([
+          Animated.timing(finalBorder2Anim, { toValue: 0.5, duration: 120, useNativeDriver: false }),
+          Animated.timing(finalBorder2Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
+        ]).start();
+      });
+    }, 150);
   }
 
   function triggerWrongFail() {
