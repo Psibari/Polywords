@@ -22,7 +22,7 @@ import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
-const TILE_H     = 58;
+const TILE_H     = 128;
 const HIDDEN_H   = 76;
 const TILE_INSET = 16;
 
@@ -1698,14 +1698,14 @@ const styles = StyleSheet.create({
     right: 0,
   },
   swipeLane: {
-    height: 14,
+    height: 76,
   },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 108,
+    paddingBottom: 118,
     minHeight: 0,
   },
   tileStackArea: {
@@ -1722,7 +1722,7 @@ const styles = StyleSheet.create({
   gateArea: {
     width: '86%',
     alignSelf: 'center',
-    paddingTop: 10,
+    paddingTop: 44,
   },
   splitZone: {
     marginTop: TILE_GAP,
