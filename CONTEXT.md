@@ -63,11 +63,11 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Polly pop-in design:** Polly is not permanent on the gameplay screen. She appears only at high-emotion moments: 1 pop-in per word round, 2 max for a major event, always at end-of-round win/loss. She pops from bottom-left and never blocks the active tile, right shatter lane, or Master Gate. Mastery line: "BINGO BANGO ZZZZINGO!" Normal ghost failure: "Not yours yet." Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!" This pop-in budget is locked but not implemented yet.
 
-**Layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile in lower-middle thumb zone. Clear right toss/shatter lane. MASTER THE WORD gate low on board above nav safe area. Bottom nav reserves Home / Ranks / Vault / Profile. The locked hierarchy is documented; Patch 3 is still needed for the one-active visible mask tile queue.
+**Layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile in lower-middle thumb zone. Clear right toss/shatter lane. MASTER THE WORD gate low on board above nav safe area. Bottom nav reserves Home / Ranks / Vault / Profile. Patch 3 implemented the one-active visible mask tile queue.
 
 **Hero word:** Dominates screen, sits top-center during normal play, absorbs correct UP swipes, and crashes down to center during MASTERED celebration.
 
-**Active mask tile design:** One active tile at a time. Large, premium, tactile, readable. Text must pop with size, weight, contrast, and spacing. All mask tiles look and behave the same until release. No real/trap tells before swipe. Press-hold wakes tile, gives tiny haptic, lifts slightly, follows finger, and release commits. One-active queue and press-hold polish are pending.
+**Active mask tile design:** One active tile at a time. Large, premium, tactile, readable. Text must pop with size, weight, contrast, and spacing. All mask tiles look and behave the same until release. No real/trap tells before swipe. Press-hold wakes tile, gives tiny haptic, lifts slightly, follows finger, and release commits. One-active queue is implemented; press-hold polish is pending.
 
 **Swipe motion:** UP claims real meaning; RIGHT rejects trap. No left swipe and no tap-submit. Correct UP feeds the tile into the hero word, which absorbs and pulses. Wrong UP rejects, wrong-flashes, and plucks a feather. Correct RIGHT flings the false meaning right with a "get outta here" feel and purple/rose glass shatter. Wrong RIGHT wrong-flashes and plucks a feather.
 
@@ -91,7 +91,7 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 **Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core. `#7B2D8B` for UI/gate/shards. `#9B2D6B` for trap/ghost shard accents. `#4CAF50` only Polly character. `#0F0D2A` only Master Gate locked surface. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
 
-**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 pending) -> press-hold tile behavior -> UP absorb and RIGHT toss/shatter -> Master Gate visual overhaul -> hidden tile unlock -> MASTERED celebration -> ghost merge loss -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
+**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior -> UP absorb and RIGHT toss/shatter -> Master Gate visual overhaul -> hidden tile unlock -> MASTERED celebration -> ghost merge loss -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
 
 ```
 1  LIGHT   Standard  Confidence
@@ -121,7 +121,7 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 ---
 
-## One-at-a-Time Tile Queue (Design locked - Patch 3 pending)
+## One-at-a-Time Tile Queue (Design locked - Patch 3 complete)
 
 - One tile flies in at a time. Player swipes. Next tile arrives.
 - ALL TILES LOOK IDENTICAL UNTIL SWIPED - Polly gives nothing away
@@ -133,9 +133,11 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 - Landing position: vertical center of battlefield
 
 Current implementation:
-- Patch 3 is still pending: render only one active visible mask tile at a time.
-- Keep existing shuffled mask order and advance only after the current tile resolves.
-- Preserve scoring, swipe grammar, `SwipeMask` behavior, current Master Gate logic, Ghost tile behavior, and hidden tile flow unless absolutely required.
+- Patch 3 complete: `MaskBoard.tsx` renders only one active visible mask tile at a time.
+- The queue keeps existing shuffled mask order from `store.game.shuffledMasks`.
+- The active visible tile advances after the current tile resolves as correct, trap-caught, or wrong.
+- A guarded 450ms delay prevents duplicate advances from repeated renders.
+- Scoring, swipe grammar, `SwipeMask.tsx`, current Master Gate logic, Ghost tile behavior, and hidden tile flow are preserved.
 - Press-hold polish, UP absorb tuning, RIGHT toss/shatter tuning, and proper returning Haunt placement are still pending after the one-active queue.
 
 ---
@@ -200,21 +202,21 @@ Completed and committed:
 - MasterGateTile forbidden colors complete: removed Polly Green `#4CAF50` and Polly Orange `#FF8C00`; gate sweep uses gold opacity values only.
 - `wrongSwipeOccurred.current` reset verified correct and stale debug `console.log` removed.
 - Mastery word swell scale complete: target changed from 2.8 to 1.6.
+- Patch 3 complete: one active visible mask tile queue implemented in `app/components/MaskBoard.tsx`; it preserves scoring, swipe grammar, `SwipeMask.tsx`, Master Gate logic, hidden tile flow, and Ghost tile behavior.
 
 Remaining pending:
-1. Patch 3: one active visible mask tile queue.
-2. Press-hold tile polish after one-active queue.
-3. UP absorb and RIGHT toss/shatter tuning for the single-tile arena.
-4. Master Gate visual overhaul: Polly cage/vault hybrid, low on board, faint cage bars, small lock, subtle tension.
-5. Hidden tiles flying up into active tile position.
-6. MASTERED celebration rewrite: hero word crashes center, diagonal MASTER stamp, word cracks open, Word Core jumps out/grows/glows/spins, Core shoots toward Vault nav icon, Polly says "BINGO BANGO ZZZZINGO!".
-7. Ghost merge loss sequence: wrong hidden tile merges with remaining hidden tile, hero word loses life essence, Ghost Tile forms, "THE HAUNT BEGINS".
-8. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
-9. Polly pop-in budget: not permanent, 1 per word round, 2 max for major moments, always at end-of-round win/loss.
-10. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
-11. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-12. Vault / Ranks / Profile pages.
-13. `expo-av` to `expo-audio` migration.
+1. Press-hold tile polish after one-active queue.
+2. UP absorb and RIGHT toss/shatter tuning for the single-tile arena.
+3. Master Gate visual overhaul: Polly cage/vault hybrid, low on board, faint cage bars, small lock, subtle tension.
+4. Hidden tiles flying up into active tile position.
+5. MASTERED celebration rewrite: hero word crashes center, diagonal MASTER stamp, word cracks open, Word Core jumps out/grows/glows/spins, Core shoots toward Vault nav icon, Polly says "BINGO BANGO ZZZZINGO!".
+6. Ghost merge loss sequence: wrong hidden tile merges with remaining hidden tile, hero word loses life essence, Ghost Tile forms, "THE HAUNT BEGINS".
+7. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
+8. Polly pop-in budget: not permanent, 1 per word round, 2 max for major moments, always at end-of-round win/loss.
+9. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
+10. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
+11. Vault / Ranks / Profile pages.
+12. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List (Never Suggest These)

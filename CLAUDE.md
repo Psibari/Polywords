@@ -168,21 +168,22 @@ Tile starts flying right â†’ gets less than halfway â†’ RUBBER-BANDS b
 
 ## One-at-a-Time Tile Queue System
 
-**LOCKED DESIGN - Patch 3 pending.**
+**LOCKED DESIGN - Patch 3 complete.**
 
 ### Fundamentals
 One tile enters at a time. Player makes one binary decision. Next tile arrives after resolution. Feels like a fight, not a quiz.
 
 ### Current Implementation Notes
-- Patch 3 is still pending: render only one active visible mask tile at a time.
-- Keep the existing shuffled mask order.
-- Advance to the next visible tile only after the current tile resolves.
-- Preserve scoring.
-- Preserve swipe grammar.
-- Preserve `SwipeMask` behavior unless absolutely required.
-- Preserve current Master Gate logic for now.
-- Preserve Ghost tile behavior for now.
-- Preserve hidden tile flow for now.
+- Patch 3 complete: `MaskBoard.tsx` renders only one active visible mask tile at a time.
+- The active visible queue uses the existing shuffled mask order from `store.game.shuffledMasks`.
+- Hidden split tiles are excluded from the visible queue and keep their existing flow.
+- The active visible tile advances after the current tile resolves as correct, trap-caught, or wrong.
+- A guarded 450ms delay prevents duplicate advances from repeated renders.
+- Existing scoring is preserved.
+- Existing swipe grammar is preserved.
+- `SwipeMask.tsx` behavior is unchanged.
+- Current Master Gate logic is preserved.
+- Ghost tile behavior is preserved.
 - Press-hold tile polish, UP absorb tuning, RIGHT toss/shatter tuning, and final Haunt placement are still pending after the one-active queue.
 
 ### Queue Build Rules
@@ -513,29 +514,25 @@ T+1400ms Tiles stagger in at 120ms intervals
 - MasterGateTile forbidden colors patch complete: removed Polly Green `#4CAF50` and Polly Orange `#FF8C00` from gate border animation; gate color sweep now uses gold opacity values only.
 - `wrongSwipeOccurred.current` reset verified as already correct: it resets on new word, and the stale debug `console.log` was removed.
 - Mastery word swell scale patch complete: target changed from 2.8 to 1.6.
+- Patch 3 complete: one active visible mask tile queue implemented in `app/components/MaskBoard.tsx`.
+  - Renders only one active visible mask tile at a time.
+  - Keeps existing shuffled mask order from `store.game.shuffledMasks`.
+  - Advances after the current visible tile resolves.
+  - Uses a guarded 450ms advance delay.
+  - Preserves scoring, swipe grammar, `SwipeMask.tsx`, Master Gate logic, hidden tile flow, and Ghost tile behavior.
 
 ### Remaining Pending Work
 
-1. Patch 3: one active visible mask tile queue.
-   - Render only one active visible mask tile at a time.
-   - Keep existing shuffled mask order.
-   - Advance to next visible tile only after current tile resolves.
-   - Preserve scoring.
-   - Preserve swipe grammar.
-   - Preserve `SwipeMask` behavior unless absolutely required.
-   - Preserve current Master Gate logic for now.
-   - Preserve Ghost tile behavior for now.
-   - Preserve hidden tile flow for now.
-2. Press-hold tile polish, after one-active queue.
-3. UP absorb and RIGHT toss/shatter tuning for the single-tile arena.
-4. Master Gate visual overhaul:
+1. Press-hold tile polish, after one-active queue.
+2. UP absorb and RIGHT toss/shatter tuning for the single-tile arena.
+3. Master Gate visual overhaul:
    - Polly cage/vault hybrid.
    - Low on board.
    - Faint cage bars.
    - Small lock.
    - Subtle tension.
-5. Hidden tiles flying up into active tile position.
-6. MASTERED celebration rewrite:
+4. Hidden tiles flying up into active tile position.
+5. MASTERED celebration rewrite:
    - Hero word crashes center.
    - Diagonal MASTER stamp.
    - Word cracks open.
@@ -543,12 +540,12 @@ T+1400ms Tiles stagger in at 120ms intervals
    - Core grows/glows/spins center-screen.
    - Core shoots toward Vault nav icon.
    - Polly line: "BINGO BANGO ZZZZINGO!"
-7. Ghost merge loss sequence:
+6. Ghost merge loss sequence:
    - Wrong hidden tile merges with remaining hidden tile.
    - Hero word flickers dull and loses life essence.
    - Ghost Tile forms: MASTER THE WORD / From [WORD].
    - Microcopy: THE HAUNT BEGINS.
-8. Haunt Word return system:
+7. Haunt Word return system:
    - Ghosted words return late in future Hunts.
    - Preferred placement: word 10 or 11.
    - Never replace Boss Word at position 12.
@@ -556,18 +553,18 @@ T+1400ms Tiles stagger in at 120ms intervals
    - Cleared copy: HAUNT BROKEN.
    - Failed again copy: STILL HAUNTED.
    - Polly taunt: "BBBLAAAAHHAHAHA!"
-9. Polly pop-in budget:
+8. Polly pop-in budget:
    - Polly is not permanent during gameplay.
    - 1 pop-in per word round.
    - 2 max for major moments.
    - Always appears at end of round win/loss.
-10. Score target/rank system:
+9. Score target/rank system:
    - Score should support personal best, Polly target score, Hunt rank, and future daily/friend/global rankings.
-11. Life Feather milestone/reserve system:
+10. Life Feather milestone/reserve system:
    - UI feathers exist.
    - Score milestone restore and 1 reserve feather are not implemented yet.
-12. Vault / Ranks / Profile pages.
-13. `expo-av` to `expo-audio` migration.
+11. Vault / Ranks / Profile pages.
+12. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -858,7 +855,7 @@ Current implementation:
 
 1. Main gameplay layout
 2. Hero word dominance
-3. One active tile queue (Patch 3 pending)
+3. One active tile queue (Patch 3 complete)
 4. Press-hold tile behavior
 5. UP absorb and RIGHT toss/shatter
 6. Master Gate visual overhaul
