@@ -20,6 +20,7 @@ type GameStore = {
   game: ReturnType<typeof createGame>;
   ghosts: GhostMeaning[];
   ghostRevenge: GhostRevenge;
+  runStartGhostWordIds: string[];
   startGame: () => void;
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
@@ -41,10 +42,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   game: createGame(),
   ghosts: [],
   ghostRevenge: null,
+  runStartGhostWordIds: [],
 
   startGame: () => {
     resetPollyBudget();
-    set({ game: createGame(), ghostRevenge: null });
+    const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
+    set({ game: createGame(), ghostRevenge: null, runStartGhostWordIds });
   },
 
   submitSwipeUp: (maskId) =>
@@ -122,7 +125,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const raw = await AsyncStorage.getItem(GHOSTS_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as GhostMeaning[];
-        set({ ghosts: parsed });
+        set(s => ({
+          ghosts: parsed,
+          runStartGhostWordIds: s.runStartGhostWordIds.length === 0
+            ? parsed.map(g => g.wordId)
+            : s.runStartGhostWordIds,
+        }));
       }
     } catch {}
   },

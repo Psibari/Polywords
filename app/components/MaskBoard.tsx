@@ -253,7 +253,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const ghostJudgedCorrectRef = useRef(false);
   const wrongSwipeOccurred    = useRef(false);
 
-  const ghost = store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null;
+  const ghost = store.runStartGhostWordIds.includes(step.word)
+    ? store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
+    : null;
   const [ghostVisible, setGhostVisible] = useState(!!ghost);
 
   useEffect(() => {
