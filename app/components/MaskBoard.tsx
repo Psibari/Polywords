@@ -23,8 +23,10 @@ import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
 const TILE_H     = 148;
-const HIDDEN_H   = 76;
 const GATE_H     = 64;
+const FINAL_TILE_H = 72;
+const FINAL_TILE_GAP = 10;
+const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
 
 const CLIP_PATHS = [
@@ -472,6 +474,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // Final tile states (replaces splitStates)
   const [finalTileStates, setFinalTileStates] = useState<Map<string, SwipeMaskState>>(new Map());
+  const [releasedHiddenTileCount, setReleasedHiddenTileCount] = useState(0);
+  const [landedHiddenTileCount, setLandedHiddenTileCount] = useState(0);
 
   // Gate animated values: transforms/opacity use native driver; border color stays non-native.
   const gateScaleAnim       = useRef(new Animated.Value(1)).current;
@@ -484,18 +488,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const doorsOpacityAnim    = useRef(new Animated.Value(1)).current;
 
   // Final tile drop (native: transform only)
-  const splitTile1TransY  = useRef(new Animated.Value(-60)).current;
-  const splitTile2TransY  = useRef(new Animated.Value(-60)).current;
+  const splitTile1TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
+  const splitTile2TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
   const splitCompletedRef = useRef(false);
 
   // Final tile border pulse (non-native)
-  const finalBorder1Anim = useRef(new Animated.Value(1)).current;
-  const finalBorder2Anim = useRef(new Animated.Value(1)).current;
+  const finalBorder1Anim = useRef(new Animated.Value(0)).current;
+  const finalBorder2Anim = useRef(new Animated.Value(0)).current;
 
   // Wrong-fail: both tiles shrink + fade (native)
   const wrongFailScaleAnim   = useRef(new Animated.Value(1)).current;
   const wrongFailOpacityAnim = useRef(new Animated.Value(1)).current;
-  const [wrongGhostVisible, setWrongGhostVisible] = useState(false);
 
   // Mastered celebration
   const masterHeroScale      = useRef(new Animated.Value(1)).current;
@@ -602,7 +605,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     // Gate reset
     setGatePhase('locked');
     setFinalTileStates(new Map());
-    setWrongGhostVisible(false);
+    setReleasedHiddenTileCount(0);
+    setLandedHiddenTileCount(0);
     setMasterStampVisible(false);
     gateScaleAnim.setValue(1);
     gateTranslateYAnim.setValue(0);
@@ -612,10 +616,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     doorLeftTransXAnim.setValue(0);
     doorRightTransXAnim.setValue(0);
     doorsOpacityAnim.setValue(1);
-    splitTile1TransY.setValue(-60);
-    splitTile2TransY.setValue(-60);
-    finalBorder1Anim.setValue(1);
-    finalBorder2Anim.setValue(1);
+    splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
+    splitTile2TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
+    finalBorder1Anim.setValue(0);
+    finalBorder2Anim.setValue(0);
     wrongFailScaleAnim.setValue(1);
     wrongFailOpacityAnim.setValue(1);
     masterHeroScale.setValue(1);
@@ -775,30 +779,37 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       [hiddenRealMask.id, 'idle'],
       [hiddenTrapMask.id, 'idle'],
     ]));
-    splitTile1TransY.setValue(-60);
-    splitTile2TransY.setValue(-60);
+    setReleasedHiddenTileCount(1);
+    setLandedHiddenTileCount(0);
+    splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
+    splitTile2TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
+    finalBorder1Anim.setValue(0);
+    finalBorder2Anim.setValue(0);
 
     Animated.spring(splitTile1TransY, {
-      toValue: 0, damping: 10, stiffness: 140, useNativeDriver: true,
+      toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
     }).start(({ finished }) => {
       if (!finished) return;
+      setLandedHiddenTileCount(1);
       Animated.sequence([
-        Animated.timing(finalBorder1Anim, { toValue: 0.4, duration: 200, useNativeDriver: false }),
-        Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 400, useNativeDriver: false }),
+        Animated.timing(finalBorder1Anim, { toValue: 0.55, duration: 120, useNativeDriver: false }),
+        Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
       ]).start();
-    });
 
-    setTimeout(() => {
-      Animated.spring(splitTile2TransY, {
-        toValue: 0, damping: 10, stiffness: 140, useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (!finished) return;
-        Animated.sequence([
-          Animated.timing(finalBorder2Anim, { toValue: 0.4, duration: 200, useNativeDriver: false }),
-          Animated.timing(finalBorder2Anim, { toValue: 1.0, duration: 400, useNativeDriver: false }),
-        ]).start();
-      });
-    }, 60);
+      setTimeout(() => {
+        setReleasedHiddenTileCount(2);
+        Animated.spring(splitTile2TransY, {
+          toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
+        }).start(({ finished: secondFinished }) => {
+          if (!secondFinished) return;
+          setLandedHiddenTileCount(2);
+          Animated.sequence([
+            Animated.timing(finalBorder2Anim, { toValue: 0.5, duration: 120, useNativeDriver: false }),
+            Animated.timing(finalBorder2Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
+          ]).start();
+        });
+      }, 150);
+    });
   }
 
   function triggerWrongFail() {
@@ -807,17 +818,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     completedRef.current = true;
     wrongSwipeOccurred.current = true;
     setGatePhase('wrongFail');
-
-    Animated.parallel([
-      Animated.timing(wrongFailScaleAnim, {
-        toValue: 0.94, duration: 120, useNativeDriver: true,
-      }),
-      Animated.timing(wrongFailOpacityAnim, {
-        toValue: 0, duration: 200, useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setWrongGhostVisible(true);
-    });
 
     setTimeout(() => {
       store.addGhostedMaster(step.word);
@@ -987,24 +987,36 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function handleFinalTileSwipeUp(maskId: string) {
+    resetHesitation();
     const isReal = maskId === hiddenRealMask?.id;
     if (isReal) {
       setFinalTileStates(prev => new Map(prev).set(maskId, 'correct'));
       if (hiddenRealMask) triggerAbsorption(hiddenRealMask.phrase);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
+      wrongSwipeOccurred.current = true;
+      store.submitWrongSwipe();
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      firePollyEvent('wrong');
+      triggerWrongWordRecoil();
+      onWrongSwipe?.();
       triggerWrongFail();
     }
   }
 
   function handleFinalTileSwipeRight(maskId: string) {
+    resetHesitation();
     const isReal = maskId === hiddenRealMask?.id;
     if (!isReal) {
       setFinalTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
+      wrongSwipeOccurred.current = true;
+      store.submitWrongSwipe();
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      firePollyEvent('wrong');
+      triggerWrongWordRecoil();
+      onWrongSwipe?.();
       triggerWrongFail();
     }
   }
@@ -1308,7 +1320,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               const hapticCorrect = step.hapticTier === 'light'
                 ? () => Haptics.selectionAsync()
                 : undefined;
-              return activeVisibleMask && (
+              return gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && activeVisibleMask && (
                 <View key={activeVisibleMask.id} ref={getTileRef(activeVisibleMask.id)}>
                   <SwipeMask
                     mask={activeVisibleMask}
@@ -1326,6 +1338,95 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 </View>
               );
             })()}
+
+            {(gatePhase === 'tiles' || gatePhase === 'wrongFail') && hiddenRealMask && hiddenTrapMask && (
+              <Animated.View style={[
+                styles.finalHiddenTileStack,
+                {
+                  transform: [{ scale: wrongFailScaleAnim }],
+                  opacity: wrongFailOpacityAnim,
+                },
+              ]}>
+                {releasedHiddenTileCount >= 1 && (
+                  <Animated.View
+                    pointerEvents={landedHiddenTileCount >= 1 ? 'auto' : 'none'}
+                    style={{ transform: [{ translateY: splitTile1TransY }] }}
+                  >
+                    <Animated.View style={[
+                      styles.finalHiddenTileFrame,
+                      {
+                        borderColor: finalBorder1Anim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['rgba(245,200,66,0.35)', 'rgba(245,200,66,1.0)'],
+                        }),
+                        shadowOpacity: finalBorder1Anim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.08, 0.26],
+                        }),
+                      },
+                    ]}>
+                      <SwipeMask
+                        mask={hiddenRealMask}
+                        state={finalTileStates.get(hiddenRealMask.id) ?? 'idle'}
+                        onSwipeUp={() => handleFinalTileSwipeUp(hiddenRealMask.id)}
+                        onSwipeDown={() => handleFinalTileSwipeRight(hiddenRealMask.id)}
+                        onSwipeReveal={() => {}}
+                        revealable={false}
+                        isSpecialSplit={true}
+                        tileHeight={FINAL_TILE_H}
+                        entryDelay={0}
+                        onEffect={handleEffect}
+                        wordY={wordScreenY}
+                        splitBorderColor="rgba(245,200,66,1.0)"
+                        splitTextColor="rgba(255,248,230,1)"
+                        splitBackgroundColor="#0F0D2A"
+                      />
+                    </Animated.View>
+                  </Animated.View>
+                )}
+
+                {releasedHiddenTileCount >= 2 && (
+                  <Animated.View
+                    pointerEvents={landedHiddenTileCount >= 2 ? 'auto' : 'none'}
+                    style={{
+                      marginTop: FINAL_TILE_GAP,
+                      transform: [{ translateY: splitTile2TransY }],
+                    }}
+                  >
+                    <Animated.View style={[
+                      styles.finalHiddenTileFrame,
+                      {
+                        borderColor: finalBorder2Anim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['rgba(245,200,66,0.30)', 'rgba(245,200,66,0.80)'],
+                        }),
+                        shadowOpacity: finalBorder2Anim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.06, 0.20],
+                        }),
+                      },
+                    ]}>
+                      <SwipeMask
+                        mask={hiddenTrapMask}
+                        state={finalTileStates.get(hiddenTrapMask.id) ?? 'idle'}
+                        onSwipeUp={() => handleFinalTileSwipeUp(hiddenTrapMask.id)}
+                        onSwipeDown={() => handleFinalTileSwipeRight(hiddenTrapMask.id)}
+                        onSwipeReveal={() => {}}
+                        revealable={false}
+                        isSpecialSplit={true}
+                        tileHeight={FINAL_TILE_H}
+                        entryDelay={0}
+                        onEffect={handleEffect}
+                        wordY={wordScreenY}
+                        splitBorderColor="rgba(245,200,66,0.80)"
+                        splitTextColor="#FFFFFF"
+                        splitBackgroundColor="#0F0D2A"
+                      />
+                    </Animated.View>
+                  </Animated.View>
+                )}
+              </Animated.View>
+            )}
           </Animated.View>
         )}
 
@@ -1334,93 +1435,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
         <View style={styles.gateArea}>
         {hasHidden && (
-          (gatePhase === 'tiles' || gatePhase === 'wrongFail') && hiddenRealMask && hiddenTrapMask ? (
-            wrongGhostVisible ? (
-              // Wrong-fail ghost placeholder
-              <View style={{
-                height: HIDDEN_H,
-                marginTop: TILE_GAP,
-                backgroundColor: 'rgba(123,45,139,0.06)',
-                borderRadius: 12,
-                borderWidth: 1.5,
-                borderStyle: 'solid',
-                borderColor: 'rgba(123,45,139,0.55)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <Text style={{
-                  fontFamily: FONTS.label,
-                  fontSize: FONT_SIZES.tileCopy,
-                  color: 'rgba(255,255,255,0.70)',
-                  letterSpacing: 3,
-                  fontWeight: '800',
-                }}>MASTER THE WORD</Text>
-                <Text style={{
-                  fontFamily: FONTS.label,
-                  fontSize: FONT_SIZES.ghostSubLabel,
-                  color: 'rgba(123,45,139,0.7)',
-                  fontStyle: 'italic',
-                  marginTop: 4,
-                }}>{`From ${step.word}`}</Text>
-              </View>
-            ) : (
-              // Two final tiles
-              <Animated.View style={{
-                marginTop: TILE_GAP,
-                transform: [{ scale: wrongFailScaleAnim }],
-                opacity: wrongFailOpacityAnim,
-              }}>
-                <Animated.View style={{ transform: [{ translateY: splitTile1TransY }] }}>
-                  <Animated.View style={{
-                    borderWidth: 2,
-                    borderRadius: 14,
-                    borderColor: finalBorder1Anim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['rgba(255,215,0,0.4)', 'rgba(255,215,0,1.0)'],
-                    }),
-                  }}>
-                    <SwipeMask
-                      mask={hiddenRealMask}
-                      state={finalTileStates.get(hiddenRealMask.id) ?? 'idle'}
-                      onSwipeUp={() => handleFinalTileSwipeUp(hiddenRealMask.id)}
-                      onSwipeDown={() => handleFinalTileSwipeRight(hiddenRealMask.id)}
-                      onSwipeReveal={() => {}}
-                      revealable={false}
-                      isSpecialSplit={true}
-                      tileHeight={72}
-                      entryDelay={0}
-                      onEffect={handleEffect}
-                      wordY={wordScreenY}
-                    />
-                  </Animated.View>
-                </Animated.View>
-                <Animated.View style={{ marginTop: 10, transform: [{ translateY: splitTile2TransY }] }}>
-                  <Animated.View style={{
-                    borderWidth: 2,
-                    borderRadius: 14,
-                    borderColor: finalBorder2Anim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['rgba(255,215,0,0.4)', 'rgba(255,215,0,1.0)'],
-                    }),
-                  }}>
-                    <SwipeMask
-                      mask={hiddenTrapMask}
-                      state={finalTileStates.get(hiddenTrapMask.id) ?? 'idle'}
-                      onSwipeUp={() => handleFinalTileSwipeUp(hiddenTrapMask.id)}
-                      onSwipeDown={() => handleFinalTileSwipeRight(hiddenTrapMask.id)}
-                      onSwipeReveal={() => {}}
-                      revealable={false}
-                      isSpecialSplit={true}
-                      tileHeight={72}
-                      entryDelay={0}
-                      onEffect={handleEffect}
-                      wordY={wordScreenY}
-                    />
-                  </Animated.View>
-                </Animated.View>
-              </Animated.View>
-            )
-          ) : (
+          gatePhase === 'tiles' || gatePhase === 'wrongFail' || gatePhase === 'mastered' ? null : (
             // Gate: locked / unlocking / doorSplit
             <Animated.View
               ref={gateViewRef as any}
@@ -1739,6 +1754,19 @@ const styles = StyleSheet.create({
     width: '94%',
     alignSelf: 'center',
     paddingRight: 0,
+  },
+  finalHiddenTileStack: {
+    width: '100%',
+    alignSelf: 'center',
+  },
+  finalHiddenTileFrame: {
+    borderWidth: 1.5,
+    borderRadius: 14,
+    backgroundColor: '#0F0D2A',
+    shadowColor: '#F5C842',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 10,
+    elevation: 7,
   },
   gateArea: {
     width: '86%',

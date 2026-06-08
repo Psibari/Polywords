@@ -42,6 +42,9 @@ type Props = {
   hapticCorrect?: () => void;
   onEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
   wordY?: number;
+  splitBorderColor?: string;
+  splitTextColor?: string;
+  splitBackgroundColor?: string;
 };
 
 // Gold steps for word absorption — exported for MaskBoard
@@ -61,6 +64,9 @@ export function SwipeMask({
   hapticCorrect,
   onEffect,
   wordY = 180,
+  splitBorderColor = '#FFD700',
+  splitTextColor = '#FFFFFF',
+  splitBackgroundColor,
 }: Props) {
 
   // ── UI state ──────────────────────────────────────────────────
@@ -333,7 +339,7 @@ export function SwipeMask({
     borderColor: isCorrectSV.value === 1
       ? 'rgba(255,255,255,0.5)'
       : isSpecialSplit
-        ? '#FFD700'
+        ? splitBorderColor
         : `rgba(255,255,255,${borderOpacityVal.value})`,
   }));
 
@@ -472,7 +478,10 @@ export function SwipeMask({
           <View style={styles.tileInnerGlow} />
           {/* Non-native animated background */}
           <RNAnimated.View
-            style={[StyleSheet.absoluteFill, { backgroundColor: bgColor }]}
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: isSpecialSplit && splitBackgroundColor ? splitBackgroundColor : bgColor },
+            ]}
           />
 
           {/* Wrong flash */}
@@ -487,7 +496,13 @@ export function SwipeMask({
 
           {/* Phrase text */}
           <View style={isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel} pointerEvents="none">
-            <Text style={isSpecialSplit ? styles.splitPhrase : styles.phrase} numberOfLines={2}>
+            <Text
+              style={[
+                isSpecialSplit ? styles.splitPhrase : styles.phrase,
+                isSpecialSplit && { color: splitTextColor },
+              ]}
+              numberOfLines={2}
+            >
               {mask.phrase}
             </Text>
           </View>
