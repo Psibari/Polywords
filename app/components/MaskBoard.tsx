@@ -24,6 +24,7 @@ import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
 const TILE_GAP   = 6;
 const TILE_H     = 148;
 const HIDDEN_H   = 76;
+const GATE_H     = 64;
 const TILE_INSET = 16;
 
 const CLIP_PATHS = [
@@ -472,10 +473,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   // Final tile states (replaces splitStates)
   const [finalTileStates, setFinalTileStates] = useState<Map<string, SwipeMaskState>>(new Map());
 
-  // Gate animated values — all useNativeDriver:false (border color requires it)
+  // Gate animated values: transforms/opacity use native driver; border color stays non-native.
   const gateScaleAnim       = useRef(new Animated.Value(1)).current;
   const gateTranslateYAnim  = useRef(new Animated.Value(0)).current;
-  const gateBorderOpAnim    = useRef(new Animated.Value(0.25)).current;
+  const gateBorderOpAnim    = useRef(new Animated.Value(0)).current;
   const lockScaleAnim       = useRef(new Animated.Value(1)).current;
   const lockRotAnim         = useRef(new Animated.Value(0)).current;
   const doorLeftTransXAnim  = useRef(new Animated.Value(0)).current;
@@ -605,7 +606,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setMasterStampVisible(false);
     gateScaleAnim.setValue(1);
     gateTranslateYAnim.setValue(0);
-    gateBorderOpAnim.setValue(0.25);
+    gateBorderOpAnim.setValue(0);
     lockScaleAnim.setValue(1);
     lockRotAnim.setValue(0);
     doorLeftTransXAnim.setValue(0);
@@ -755,13 +756,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     const halfWidth = Dimensions.get('window').width / 2;
 
     Animated.spring(doorLeftTransXAnim, {
-      toValue: -halfWidth, damping: 14, stiffness: 160, useNativeDriver: false,
+      toValue: -halfWidth, damping: 14, stiffness: 160, useNativeDriver: true,
     }).start();
     Animated.spring(doorRightTransXAnim, {
-      toValue: halfWidth, damping: 14, stiffness: 160, useNativeDriver: false,
+      toValue: halfWidth, damping: 14, stiffness: 160, useNativeDriver: true,
     }).start();
     Animated.timing(doorsOpacityAnim, {
-      toValue: 0, duration: 200, useNativeDriver: false,
+      toValue: 0, duration: 200, useNativeDriver: true,
     }).start(({ finished }) => {
       if (finished) triggerFinalTilesDrop();
     });
@@ -950,15 +951,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     lockScaleAnim.setValue(1);
     lockRotAnim.setValue(0);
     Animated.sequence([
-      Animated.timing(lockScaleAnim, { toValue: 1.4, duration: 150, useNativeDriver: false }),
-      Animated.timing(lockScaleAnim, { toValue: 1.0, duration: 150, useNativeDriver: false }),
+      Animated.timing(lockScaleAnim, { toValue: 1.4, duration: 150, useNativeDriver: true }),
+      Animated.timing(lockScaleAnim, { toValue: 1.0, duration: 150, useNativeDriver: true }),
     ]).start();
-    Animated.timing(lockRotAnim, { toValue: -20, duration: 300, useNativeDriver: false }).start();
+    Animated.timing(lockRotAnim, { toValue: -20, duration: 300, useNativeDriver: true }).start();
 
     Animated.timing(gateBorderOpAnim, { toValue: 1, duration: 400, useNativeDriver: false }).start();
 
     Animated.spring(gateScaleAnim, {
-      toValue: 1.15, damping: 10, stiffness: 120, useNativeDriver: false,
+      toValue: 1.15, damping: 10, stiffness: 120, useNativeDriver: true,
     }).start();
 
     setTimeout(() => {
@@ -969,7 +970,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           (gate as any).measure((_gx: number, _gy: number, _gw: number, _gh: number, _gpx: number, gPageY: number) => {
             const riseDistance = (cPageY + 84) - gPageY;
             Animated.spring(gateTranslateYAnim, {
-              toValue: riseDistance, damping: 12, stiffness: 100, useNativeDriver: false,
+              toValue: riseDistance, damping: 12, stiffness: 100, useNativeDriver: true,
             }).start(({ finished }) => {
               if (finished) triggerDoorSplit();
             });
@@ -977,7 +978,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         });
       } else {
         Animated.spring(gateTranslateYAnim, {
-          toValue: -350, damping: 12, stiffness: 100, useNativeDriver: false,
+          toValue: -350, damping: 12, stiffness: 100, useNativeDriver: true,
         }).start(({ finished }) => {
           if (finished) triggerDoorSplit();
         });
@@ -1423,52 +1424,69 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             // Gate: locked / unlocking / doorSplit
             <Animated.View
               ref={gateViewRef as any}
-              style={{
-                height: HIDDEN_H,
-                marginTop: TILE_GAP,
-                borderRadius: 12,
-                borderWidth: 2,
-                backgroundColor: '#0F0D2A',
-                borderColor: gateBorderOpAnim.interpolate({
+              style={[
+                styles.masterGate,
+                {
+                  borderColor: gateBorderOpAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: ['rgba(245,200,66,0.25)', 'rgba(245,200,66,1.0)'],
-                }),
-                overflow: 'visible',
-                zIndex: gatePhase === 'locked' ? 0 : 100,
-                transform: [
-                  { scale: gateScaleAnim },
-                  { translateY: gateTranslateYAnim },
-                ],
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+                    outputRange: ['rgba(123,45,139,0.38)', 'rgba(245,200,66,0.95)'],
+                  }),
+                  zIndex: gatePhase === 'locked' ? 0 : 100,
+                  transform: [
+                    { scale: gateScaleAnim },
+                    { translateY: gateTranslateYAnim },
+                  ],
+                },
+              ]}
             >
+              <View style={styles.gateBackPlate} pointerEvents="none" />
+              <View style={styles.gateInnerShadow} pointerEvents="none" />
+
               {/* Left door half */}
-              <Animated.View style={{
-                position: 'absolute',
-                left: 0, top: 0, bottom: 0,
-                width: '50%',
-                backgroundColor: '#0F0D2A',
-                borderRadius: 10,
-                transform: [{ translateX: doorLeftTransXAnim }],
-                opacity: doorsOpacityAnim,
-                zIndex: 1,
-              }} />
+              <Animated.View style={[
+                styles.gateDoorHalf,
+                styles.gateDoorLeft,
+                {
+                  transform: [{ translateX: doorLeftTransXAnim }],
+                  opacity: doorsOpacityAnim,
+                },
+              ]}>
+                <View style={styles.gateDoorTopShade} pointerEvents="none" />
+                {[0, 1, 2].map(i => (
+                  <View
+                    key={`left-bar-${i}`}
+                    pointerEvents="none"
+                    style={[styles.gateBar, { left: `${24 + i * 24}%` }]}
+                  />
+                ))}
+                <View style={styles.gateCenterRibLeft} pointerEvents="none" />
+              </Animated.View>
               {/* Right door half */}
-              <Animated.View style={{
-                position: 'absolute',
-                right: 0, top: 0, bottom: 0,
-                width: '50%',
-                backgroundColor: '#0F0D2A',
-                borderRadius: 10,
-                transform: [{ translateX: doorRightTransXAnim }],
-                opacity: doorsOpacityAnim,
-                zIndex: 1,
-              }} />
-              {/* Content: lock icon + text */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 2 }} pointerEvents="none">
-                <Animated.Text style={{
-                  fontSize: 18,
+              <Animated.View style={[
+                styles.gateDoorHalf,
+                styles.gateDoorRight,
+                {
+                  transform: [{ translateX: doorRightTransXAnim }],
+                  opacity: doorsOpacityAnim,
+                },
+              ]}>
+                <View style={styles.gateDoorTopShade} pointerEvents="none" />
+                {[0, 1, 2].map(i => (
+                  <View
+                    key={`right-bar-${i}`}
+                    pointerEvents="none"
+                    style={[styles.gateBar, { left: `${18 + i * 24}%` }]}
+                  />
+                ))}
+                <View style={styles.gateCenterRibRight} pointerEvents="none" />
+              </Animated.View>
+
+              <View style={styles.gateBoltLeft} pointerEvents="none" />
+              <View style={styles.gateBoltRight} pointerEvents="none" />
+
+              {/* Content: custom lock + text */}
+              <View style={styles.gateContent} pointerEvents="none">
+                <Animated.View style={{
                   transform: [
                     { scale: lockScaleAnim },
                     { rotate: lockRotAnim.interpolate({
@@ -1476,13 +1494,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       outputRange: ['-20deg', '0deg'],
                     })},
                   ],
-                }}>🔒</Animated.Text>
-                <Text style={{
-                  fontFamily: FONTS.wordDisplay,
-                  fontSize: 16,
-                  color: 'rgba(245,200,66,0.65)',
-                  letterSpacing: 2,
-                }}>MASTER THE WORD</Text>
+                }}>
+                  <View style={styles.gateLock}>
+                    <View style={styles.gateLockShackle} />
+                    <View style={styles.gateLockBody}>
+                      <View style={styles.gateLockKeyhole} />
+                    </View>
+                  </View>
+                </Animated.View>
+                <Text style={styles.gateLabel}>MASTER THE WORD</Text>
               </View>
             </Animated.View>
           )
@@ -1724,6 +1744,168 @@ const styles = StyleSheet.create({
     width: '86%',
     alignSelf: 'center',
     paddingTop: 44,
+  },
+  masterGate: {
+    height: GATE_H,
+    marginTop: TILE_GAP,
+    borderRadius: 8,
+    borderWidth: 1.25,
+    backgroundColor: '#0F0D2A',
+    overflow: 'visible',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  gateBackPlate: {
+    position: 'absolute',
+    left: 5,
+    right: 5,
+    top: 5,
+    bottom: 5,
+    borderRadius: 6,
+    backgroundColor: '#0F0D2A',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.14)',
+  },
+  gateInnerShadow: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    top: 13,
+    bottom: 10,
+    borderRadius: 4,
+    backgroundColor: 'rgba(7,6,28,0.54)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.035)',
+  },
+  gateDoorHalf: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    width: '50%',
+    backgroundColor: '#0F0D2A',
+    borderColor: 'rgba(123,45,139,0.22)',
+    overflow: 'hidden',
+    zIndex: 1,
+  },
+  gateDoorLeft: {
+    left: 3,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
+    borderRightWidth: 1,
+  },
+  gateDoorRight: {
+    right: 3,
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+    borderLeftWidth: 1,
+  },
+  gateDoorTopShade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 14,
+    backgroundColor: 'rgba(123,45,139,0.10)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(123,45,139,0.10)',
+  },
+  gateBar: {
+    position: 'absolute',
+    top: 8,
+    bottom: 8,
+    width: 2,
+    borderRadius: 2,
+    backgroundColor: 'rgba(123,45,139,0.34)',
+  },
+  gateCenterRibLeft: {
+    position: 'absolute',
+    right: -1,
+    top: 5,
+    bottom: 5,
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(123,45,139,0.42)',
+  },
+  gateCenterRibRight: {
+    position: 'absolute',
+    left: -1,
+    top: 5,
+    bottom: 5,
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(123,45,139,0.42)',
+  },
+  gateBoltLeft: {
+    position: 'absolute',
+    left: 9,
+    top: 8,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(123,45,139,0.58)',
+    zIndex: 2,
+  },
+  gateBoltRight: {
+    position: 'absolute',
+    right: 9,
+    top: 8,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(123,45,139,0.58)',
+    zIndex: 2,
+  },
+  gateContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    zIndex: 3,
+  },
+  gateLock: {
+    width: 17,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  gateLockShackle: {
+    position: 'absolute',
+    top: 0,
+    width: 12,
+    height: 12,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+    borderColor: 'rgba(123,45,139,0.88)',
+  },
+  gateLockBody: {
+    width: 17,
+    height: 13,
+    borderRadius: 3,
+    backgroundColor: 'rgba(123,45,139,0.88)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gateLockKeyhole: {
+    width: 3,
+    height: 6,
+    borderRadius: 2,
+    backgroundColor: '#0F0D2A',
+  },
+  gateLabel: {
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.68)',
+    letterSpacing: 2,
+    textAlign: 'center',
   },
   splitZone: {
     marginTop: TILE_GAP,
