@@ -1698,28 +1698,31 @@ const styles = StyleSheet.create({
     right: 0,
   },
   swipeLane: {
-    height: 34,
+    height: 14,
   },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingBottom: 128,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingBottom: 108,
     minHeight: 0,
   },
   tileStackArea: {
-    flexShrink: 1,
+    width: '100%',
+    minHeight: TILE_H + TILE_GAP,
     justifyContent: 'flex-start',
-    minHeight: 0,
+    alignItems: 'center',
   },
   tileStack: {
     width: '86%',
-    alignSelf: 'flex-start',
-    paddingRight: 8,
+    alignSelf: 'center',
+    paddingRight: 0,
   },
   gateArea: {
-    width: '100%',
-    paddingTop: 18,
+    width: '86%',
+    alignSelf: 'center',
+    paddingTop: 10,
   },
   splitZone: {
     marginTop: TILE_GAP,
