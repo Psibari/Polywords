@@ -237,18 +237,37 @@ Completed and committed:
   - Reanimated stays in `SwipeMask.tsx`; hidden release motion uses React Native Animated in `MaskBoard.tsx`.
   - `npx.cmd tsc --noEmit` passed.
   - Device sanity passed.
+- Patch 8 complete: MASTERED celebration rewrite implemented.
+  - Changed `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts`.
+  - Hero word crashes toward center with impact after hidden tiles resolve correctly.
+  - Diagonal MASTER stamp slams over the word.
+  - Word cracks open, Word Core appears, grows, glows, spins, then shoots toward Vault nav icon.
+  - Normal mastery does not trigger `BINGO BANGO ZZZZINGO!`.
+  - Boss mastery may trigger rare game/system stinger: BINGO → BANGO → ZZZZINGO!
+  - `BINGO BANGO ZZZZINGO!` is not Polly dialogue.
+  - Normal mastery Polly opponent line: "That was mine."
+  - Boss mastery Polly opponent line: "Fine. Take it."
+  - `npx.cmd tsc --noEmit` passed. Device sanity passed.
+- Patch 9 complete: Ghost merge loss sequence implemented.
+  - Changed `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts`.
+  - Wrong hidden/master swipes trigger full ghost birth sequence instead of old placeholder.
+  - Failed hidden tile glitches, loses opacity/substance, gets pulled back.
+  - Remaining hidden tile merges with failed tile.
+  - Hero word flickers dull/lifeless during merge.
+  - Ghost Tile forms: "MASTER THE WORD" / "From [WORD]".
+  - Microcopy appears: "THE HAUNT BEGINS".
+  - Polly opponent line on hidden/master failure: "Not yours yet."
+  - `npx.cmd tsc --noEmit` passed. Device sanity passed.
 - Patch 10 complete: Polly pop-in budget enforced and sprite size increased to 160. Polly is not in the tree during ordinary play. Per-word budget resets on word change. End-of-round pop-in always fires. `npx.cmd tsc --noEmit` passed. Device sanity passed.
 
 Remaining pending:
-Current next patch: **Patch 8 - MASTERED celebration rewrite.**
+Current next patch: **Patch 11.**
 
-1. Patch 8: MASTERED celebration rewrite: hidden tiles judged correctly, hero word crashes center, diagonal MASTER stamp, word cracks open, Word Core jumps out/grows/glows/spins, Core shoots toward Vault nav icon. Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`. Boss mastery may additionally trigger rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting.
-2. Ghost merge loss sequence: wrong hidden tile merges with remaining hidden tile, hero word loses life essence, Ghost Tile forms, "THE HAUNT BEGINS".
-3. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
-4. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
-5. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-6. Vault / Ranks / Profile pages.
-7. `expo-av` to `expo-audio` migration.
+1. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
+2. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
+3. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
+4. Vault / Ranks / Profile pages.
+5. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List (Never Suggest These)
