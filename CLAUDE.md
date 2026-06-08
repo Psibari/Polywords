@@ -630,6 +630,26 @@ T+1400ms Tiles stagger in at 120ms intervals
   - `BINGO BANGO ZZZZINGO!` behavior unchanged and still not Polly dialogue.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
+- Patch 10 complete: Polly pop-in budget and larger opponent presentation implemented.
+  - Changed `app/hooks/usePollyAnimator.ts` and `app/components/MaskBoard.tsx`.
+  - `usePollyAnimator.ts` fully rewritten with per-word pop-in budget system.
+  - Added `pollyPopInVisible` state/ref, `pollyEnterAnim` slide, `pollyHideTimerRef`, `popInCountRef`.
+  - `tryMidRoundPopIn()` silently skips if 1 mid-round pop-in already used for the current word.
+  - `endOfRoundPopIn()` always fires for: `gateMastered`, `gateMasteredBoss`, `hiddenMasterFailed`, `gameOver`, `cleanSweep`, `bossEntry`, `gateIntro`, ghost resolution.
+  - `wrong` event: reacts without consuming budget if Polly already visible; otherwise tries budget.
+  - `hesitation6s`/`9s`: updates speech only if Polly already visible — no new pop-in, no budget consumed.
+  - `oneHeartLeft`: always fires, bypasses budget and end-of-round wrapper.
+  - `wordEntry`/`switchbackEntry`: reset `popInCountRef` per word.
+  - Non-gate perfect completion now fires `cleanSweep` end-of-round pop-in in `MaskBoard.tsx`.
+  - Polly render is conditional on `pollyPopInVisible` — not in the tree during ordinary play.
+  - Two-layer Animated.View: outer gets `pollyPopInStyle` (enter/exit slide), inner gets `pollyAnimatedStyle` (reactions).
+  - Polly sprite size increased from 80 to 160. Position: `left: -6`, `bottom: 16`, no `overflow: hidden`.
+  - Speech bubble repositioned: `bottom: 186`, `left: 78`, `maxWidth: 210`, 13px text.
+  - Existing opponent lines preserved: "That was mine." / "Fine. Take it." / "Not yours yet."
+  - `BINGO BANGO ZZZZINGO!` remains game/system stinger only — not Polly dialogue.
+  - Scoring, swipe grammar, active tile queue, gate logic, hidden tile release, Patch 8 mastery celebration, and Patch 9 ghost merge sequence unchanged.
+  - TypeScript passed with `npx.cmd tsc --noEmit`.
+  - Device sanity passed.
 
 ### Remaining Pending Work
 
@@ -642,14 +662,6 @@ Current next work lane has two valid options:
 - Rewrite weak masks/traps.
 - Improve hidden meanings.
 - Tag gameplay quality.
-
-**Option B - Patch 10: Polly pop-in budget / remove permanent gameplay Polly**
-- Polly is already design-locked as pop-in only.
-- 1 time during a big moment in a word round.
-- Always at the end of every round.
-- Bottom-left entrance.
-- Never blocks active tile, right shatter lane, or Master Gate.
-- Opponent tone, not friendly mascot.
 
 Other remaining work:
 

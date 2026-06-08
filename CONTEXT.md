@@ -237,6 +237,7 @@ Completed and committed:
   - Reanimated stays in `SwipeMask.tsx`; hidden release motion uses React Native Animated in `MaskBoard.tsx`.
   - `npx.cmd tsc --noEmit` passed.
   - Device sanity passed.
+- Patch 10 complete: Polly pop-in budget enforced and sprite size increased to 160. Polly is not in the tree during ordinary play. Per-word budget resets on word change. End-of-round pop-in always fires. `npx.cmd tsc --noEmit` passed. Device sanity passed.
 
 Remaining pending:
 Current next patch: **Patch 8 - MASTERED celebration rewrite.**
@@ -244,11 +245,10 @@ Current next patch: **Patch 8 - MASTERED celebration rewrite.**
 1. Patch 8: MASTERED celebration rewrite: hidden tiles judged correctly, hero word crashes center, diagonal MASTER stamp, word cracks open, Word Core jumps out/grows/glows/spins, Core shoots toward Vault nav icon. Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`. Boss mastery may additionally trigger rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting.
 2. Ghost merge loss sequence: wrong hidden tile merges with remaining hidden tile, hero word loses life essence, Ghost Tile forms, "THE HAUNT BEGINS".
 3. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
-4. Polly pop-in budget: not permanent, 1 per word round, 2 max for major moments, always at end-of-round win/loss.
-5. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
-6. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-7. Vault / Ranks / Profile pages.
-8. `expo-av` to `expo-audio` migration.
+4. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
+5. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
+6. Vault / Ranks / Profile pages.
+7. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List (Never Suggest These)
