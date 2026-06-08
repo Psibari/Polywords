@@ -1,5 +1,5 @@
-# POLYWORDS — CONTEXT.md
-### Quick-Reference Session Briefing · June 7, 2026
+﻿# POLYWORDS â€” CONTEXT.md
+### Quick-Reference Session Briefing Â· June 8, 2026
 
 Paste this at the start of any Claude Code session to restore full context.
 
@@ -7,19 +7,19 @@ Paste this at the start of any Claude Code session to restore full context.
 
 ## What POLYWORDS Is
 
-Polly is the Master of Words. She holds 700+ words in her vault. She set every trap. The player challenges her one word at a time to take the title. Every session is a HUNT — 12 words, a designed difficulty arc, and Polly's boss word waiting at position 12.
+Polly is the Master of Words. She holds 700+ words in her vault. She set every trap. The player challenges her one word at a time to take the title. Every session is a HUNT â€” 12 words, a designed difficulty arc, and Polly's boss word waiting at position 12.
 
-**North star:** *"Wait… what? … Shit, that's right."*
+**North star:** *"Waitâ€¦ what? â€¦ Shit, that's right."*
 
 ---
 
 ## Stack
 
 ```
-Expo SDK · React Native · TypeScript strict · Zustand+immer
+Expo SDK Â· React Native Â· TypeScript strict Â· Zustand+immer
 React Native Animated API (Reanimated = SwipeMask.tsx ONLY, frozen)
-Expo Haptics · Expo AV (→ expo-audio pending) · Expo Router
-Fonts: Bagel Fat One (hero word) · Plus Jakarta Sans 800 (UI)
+Expo Haptics Â· Expo AV (â†’ expo-audio pending) Â· Expo Router
+Fonts: Bagel Fat One (hero word) Â· Plus Jakarta Sans 800 (UI)
 Windows dev: forward-slash paths only
 ```
 
@@ -29,12 +29,12 @@ Windows dev: forward-slash paths only
 
 ```
 #1A1830  Background (always)
-#F5C842  Gold — score, reward, gate, boss word (MAX 2 on screen)
-#7B2D8B  Purple — trap shards, ghost border, rare events
-#9B2D6B  Rose — shard gradient partner
-#4CAF50  Polly Green — Polly mascot ONLY
-#0F0D2A  Deep Dark — Master Gate background only
-#CC2200  Wrong Flash — wrong swipe only, never decoration
+#F5C842  Gold â€” score, reward, gate, boss word (MAX 2 on screen)
+#7B2D8B  Purple â€” trap shards, ghost border, rare events
+#9B2D6B  Rose â€” shard gradient partner
+#4CAF50  Polly Green â€” Polly mascot ONLY
+#0F0D2A  Deep Dark â€” Master Gate background only
+#CC2200  Wrong Flash â€” wrong swipe only, never decoration
 #FFFFFF  All UI text
 ```
 
@@ -46,14 +46,14 @@ Windows dev: forward-slash paths only
 |---|---|---|
 | UP | Real meaning | Magnetic absorb into word |
 | RIGHT | Trap | Crystal shard burst |
-| Wrong UP | Claimed a trap | Word REJECTS tile — shakes, tile exits downward |
+| Wrong UP | Claimed a trap | Word REJECTS tile â€” shakes, tile exits downward |
 | Wrong RIGHT | Rejected real meaning | Tile rubber-bands back, buzzes red, dissolves |
 
 **No left swipe. No tap. No tap-and-submit. Swipe only. Always.**
 
 ---
 
-## Current Session (12 words — test harness)
+## Current Session (12 words â€” test harness)
 
 ## Locked Play Screen Design
 
@@ -105,54 +105,52 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 9  PRESS   Standard  Panic
 10 BANK    Standard  Rebound
 11 SPRING  Boss      First climax
-12 ORDER   Boss      Final boss — Polly's word
+12 ORDER   Boss      Final boss â€” Polly's word
 ```
 
 ---
 
-## Living Pool Model (Phase 2 — design locked)
+## Living Pool Model (Phase 2 â€” design locked)
 
 - Always 12 fresh words from Unmastered Pool
-- Mastered words permanently graduate to Vault — never in standard run again
+- Mastered words permanently graduate to Vault â€” never in standard run again
 - Ghost words get priority placement in difficulty tier
 - RUN IT BACK = fresh 12-word draw with ghost priority
-- Boss always position 12 — one per session
+- Boss always position 12 â€” one per session
 - Daily Challenge = only curated fixed session
 
 ---
 
-## One-at-a-Time Tile Queue (Design locked — partially implemented)
+## One-at-a-Time Tile Queue (Design locked - Patch 3 pending)
 
 - One tile flies in at a time. Player swipes. Next tile arrives.
-- ALL TILES LOOK IDENTICAL UNTIL SWIPED — Polly gives nothing away
+- ALL TILES LOOK IDENTICAL UNTIL SWIPED - Polly gives nothing away
 - Ghost tile always first, enters from LEFT
-- Ghost unresolvable until perfect clear — merges into split tile sequence
-- Random queue order · Speed escalates -20ms per tile (floor 280ms)
+- Ghost unresolvable until perfect clear - merges into split tile sequence
+- Random queue order - Speed escalates -20ms per tile (floor 280ms)
 - Gap = skill-based: base 350ms, combo reduces, wrong swipe +150ms
-- Between tiles: pure silence — emptiness is tension
+- Between tiles: pure silence - emptiness is tension
 - Landing position: vertical center of battlefield
 
 Current implementation:
-- Normal visible masks render one active tile at a time using the existing shuffled order.
-- The active visible mask is a large centered arcade mask vessel.
-- Hidden final split tiles remain compact.
-- Queue advances only after the active tile resolves, and gate/complete waits until the queue advances past the final visible tile.
-- Press-hold grab feel, entry physics, swipe instruction labels, and proper returning Haunt placement are still pending.
+- Patch 3 is still pending: render only one active visible mask tile at a time.
+- Keep existing shuffled mask order and advance only after the current tile resolves.
+- Preserve scoring, swipe grammar, `SwipeMask` behavior, current Master Gate logic, Ghost tile behavior, and hidden tile flow unless absolutely required.
+- Press-hold polish, UP absorb tuning, RIGHT toss/shatter tuning, and proper returning Haunt placement are still pending after the one-active queue.
 
 ---
-
 ## Master Gate (Auto-opens on perfect clear)
 
 **wrongSwipeOccurred.current MUST reset to false at start of every new word.**
 
-Sequence: Last tile absorbs → border charges clockwise → lock cracks → gate opens → two split tiles drop.
+Sequence: Last tile absorbs â†’ border charges clockwise â†’ lock cracks â†’ gate opens â†’ two split tiles drop.
 
 Split tiles: real hidden meaning (UP) + hidden trap (RIGHT).
 
-Both correct → MASTERY SEQUENCE:
-MASTERED text first → word swells → crystal shards → seed drops → word compresses → flies to vault icon.
+Both correct â†’ MASTERY SEQUENCE:
+MASTERED text first â†’ word swells â†’ crystal shards â†’ seed drops â†’ word compresses â†’ flies to vault icon.
 
-Missed → GHOST (solid purple border, no dashes, phrase NEVER revealed).
+Missed â†’ GHOST (solid purple border, no dashes, phrase NEVER revealed).
 
 Current ghost behavior:
 - Ghosts created during the current run are stored but cannot appear until the next run starts.
@@ -161,66 +159,78 @@ Current ghost behavior:
 
 ---
 
-## Polly Hunt System (Design locked — not yet built)
+## Polly Hunt System (Design locked â€” not yet built)
 
 Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 
 | Trigger | Line |
 |---|---|
 | Before word 1 | "I've got a word you need to earn." |
-| Word 3→4 well | "You're moving. I've seen better." |
-| Word 3→4 struggling | "You'll need more than that." |
-| Word 6→7 well | "Getting warmer. Keep going." |
-| Word 6→7 struggling | "Want this word? Show me something." |
-| Word 9→10 | "Not yet." |
-| Word 11→12 | "Last one. Then it's just you and me." |
+| Word 3â†’4 well | "You're moving. I've seen better." |
+| Word 3â†’4 struggling | "You'll need more than that." |
+| Word 6â†’7 well | "Getting warmer. Keep going." |
+| Word 6â†’7 struggling | "Want this word? Show me something." |
+| Word 9â†’10 | "Not yet." |
+| Word 11â†’12 | "Last one. Then it's just you and me." |
 | Boss mastered | "BINGO BANGO ZZZZINGO!" |
 | Boss failed | "Thought so." |
 
 ---
 
-## The Vault (Replaces Garden — permanent)
+## The Vault (Replaces Garden â€” permanent)
 
 - Mastered words = trophies taken from Polly
-- Hidden meaning permanently visible here — ONLY place in the game
+- Hidden meaning permanently visible here â€” ONLY place in the game
 - Boss tiles: full gold border + purple glow + breathing pulse
 - Empty state: "Polly has them all." / "Go take one."
-- Mastery ends with word compressing → launching to vault nav icon
+- Mastery ends with word compressing â†’ launching to vault nav icon
 - Paywall at word 21: "Vault Full / Unlock unlimited"
-- Polly has NO presence in vault — player's domain only
+- Polly has NO presence in vault â€” player's domain only
 
 ---
 
-## Key Bugs Pending
+## Current Repo State
 
-```
-🟠 Polly Hunt System — not built yet
-🟠 expo-av → expo-audio migration deferred
-🟡 Press-hold tile grab feel — pending
-🟡 Swipe instruction labels — pending
-🟡 Master Gate visual overhaul — pending
-🟡 Returning Haunt placement — pending
-🟡 Vault — implementation pending
-🟡 Living Pool Model — requires Supabase (Phase 2)
-```
+Completed and committed:
+- Locked gameplay screen design added to `CLAUDE.md` and `CONTEXT.md`.
+- Patch 1 complete: HUD hearts replaced with custom feather lives in `app/screens/GameScreen.tsx`.
+- Patch 2 complete: `app/components/MaskBoard.tsx` layout hierarchy strengthened. Hero word zones and sizes increased, overlays use single-line fitting, `wordScreenY` targets the word-zone center, a 34px swipe lane was added, tile/gate bands were separated, stacked mask area is 86% width and left-biased, and the gate remains low with spacing/reserve.
+- Ghost tile styling complete: solid purple border, locked dark/purple treatment, no dashed styling.
+- MasterGateTile forbidden colors complete: removed Polly Green `#4CAF50` and Polly Orange `#FF8C00`; gate sweep uses gold opacity values only.
+- `wrongSwipeOccurred.current` reset verified correct and stale debug `console.log` removed.
+- Mastery word swell scale complete: target changed from 2.8 to 1.6.
+
+Remaining pending:
+1. Patch 3: one active visible mask tile queue.
+2. Press-hold tile polish after one-active queue.
+3. UP absorb and RIGHT toss/shatter tuning for the single-tile arena.
+4. Master Gate visual overhaul: Polly cage/vault hybrid, low on board, faint cage bars, small lock, subtle tension.
+5. Hidden tiles flying up into active tile position.
+6. MASTERED celebration rewrite: hero word crashes center, diagonal MASTER stamp, word cracks open, Word Core jumps out/grows/glows/spins, Core shoots toward Vault nav icon, Polly says "BINGO BANGO ZZZZINGO!".
+7. Ghost merge loss sequence: wrong hidden tile merges with remaining hidden tile, hero word loses life essence, Ghost Tile forms, "THE HAUNT BEGINS".
+8. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
+9. Polly pop-in budget: not permanent, 1 per word round, 2 max for major moments, always at end-of-round win/loss.
+10. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
+11. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
+12. Vault / Ranks / Profile pages.
+13. `expo-av` to `expo-audio` migration.
 
 ---
-
 ## Cut List (Never Suggest These)
 
 ```
-☠️ Garden (dead — Vault replaced it)
-☠️ Simultaneous tile render (dead — one-at-a-time queue)
-☠️ Switchback / Phrase Break / SlangDropScreen in main session
-☠️ Left swipe / tap interactions
-☠️ Dashed borders / pink / magenta colors
-☠️ Red for text or decoration
-☠️ Visual tells on tiles before swipe
-☠️ Reanimated outside SwipeMask.tsx
-☠️ Rectangle/square particles
-☠️ RATTLED. in any color except white
-☠️ Circular Polly crop
-☠️ More than 2 gold elements simultaneously
+â˜ ï¸ Garden (dead â€” Vault replaced it)
+â˜ ï¸ Simultaneous tile render (dead â€” one-at-a-time queue)
+â˜ ï¸ Switchback / Phrase Break / SlangDropScreen in main session
+â˜ ï¸ Left swipe / tap interactions
+â˜ ï¸ Dashed borders / pink / magenta colors
+â˜ ï¸ Red for text or decoration
+â˜ ï¸ Visual tells on tiles before swipe
+â˜ ï¸ Reanimated outside SwipeMask.tsx
+â˜ ï¸ Rectangle/square particles
+â˜ ï¸ RATTLED. in any color except white
+â˜ ï¸ Circular Polly crop
+â˜ ï¸ More than 2 gold elements simultaneously
 ```
 
 ---
@@ -228,23 +238,23 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 ## Non-Negotiable Rules
 
 - tsc --noEmit must exit 0 before device test
-- One prompt, one concern — surgical always
-- useNativeDriver: true → transform/opacity only
-- useNativeDriver: false → height/margin/backgroundColor only
+- One prompt, one concern â€” surgical always
+- useNativeDriver: true â†’ transform/opacity only
+- useNativeDriver: false â†’ height/margin/backgroundColor only
 - Never chain both drivers on same Animated.Value
-- setTimeout between phases — never .start() callbacks
+- setTimeout between phases â€” never .start() callbacks
 - Ghost wordId = WORD STRING always (e.g. "BARK") not stepIndex
-- Boss position 12 always — non-negotiable
-- "Thought so." — never change
-- "BINGO BANGO ZZZZINGO!" — never change
+- Boss position 12 always â€” non-negotiable
+- "Thought so." â€” never change
+- "BINGO BANGO ZZZZINGO!" â€” never change
 
 ---
 
 ## File Map (Key Files)
 
 ```
-app/components/MaskBoard.tsx         Main game board — primary file
-app/components/SwipeMask.tsx         Tile + swipe physics (Reanimated — frozen)
+app/components/MaskBoard.tsx         Main game board â€” primary file
+app/components/SwipeMask.tsx         Tile + swipe physics (Reanimated â€” frozen)
 app/components/MasterGateTile.tsx    Gate: locked / unlock / split tiles
 app/components/PollyCard.tsx         Polly sprite + speech
 app/components/PollyController.tsx   Polly trigger system
@@ -259,4 +269,5 @@ app/utils/SoundEngine.ts             WAV synthesis
 
 ---
 
-*POLYWORDS CONTEXT.md · Pete DiBari · June 7, 2026*
+*POLYWORDS CONTEXT.md Â· Pete DiBari Â· June 8, 2026*
+
