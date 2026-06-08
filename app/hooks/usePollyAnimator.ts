@@ -23,7 +23,8 @@ export type PollyEvent =
   | 'switchbackCorrect'
   | 'gameOver'
   | 'gateIntro'
-  | 'gateMastered';
+  | 'gateMastered'
+  | 'gateMasteredBoss';
 
 type BreathingSpeed = 'slow' | 'building' | 'hot' | 'danger';
 
@@ -335,7 +336,7 @@ export function usePollyAnimator(
       case 'streakX10':
         setCurrentPose('MID_LEFT');
         animBigWin();
-        setSpeech('BINGO BANGO ZZZINGOO');
+        setSpeech("You're moving. I've seen better.");
         break;
 
       case 'switchbackEntry':
@@ -367,7 +368,13 @@ export function usePollyAnimator(
       case 'gateMastered':
         setCurrentPose('BOT_LEFT');
         animBigWin();
-        setSpeech('Mastered.', 3000);
+        setSpeech('That was mine.', 3000);
+        break;
+
+      case 'gateMasteredBoss':
+        setCurrentPose('BOT_LEFT');
+        animBigWin();
+        setSpeech('Fine. Take it.', 3000);
         break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

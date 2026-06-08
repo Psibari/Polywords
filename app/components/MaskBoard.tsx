@@ -508,13 +508,22 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const masteredLabelOpacity = useRef(new Animated.Value(0)).current;
   const goldSeedScale        = useRef(new Animated.Value(0)).current;
   const goldSeedTransY       = useRef(new Animated.Value(0)).current;
+  const goldSeedTransX       = useRef(new Animated.Value(0)).current;
+  const goldSeedRotate       = useRef(new Animated.Value(0)).current;
   const goldSeedTrailOpacity = useRef(new Animated.Value(0)).current;
   const goldBloomScale       = useRef(new Animated.Value(1)).current;
   const goldBloomOpacity     = useRef(new Animated.Value(0)).current;
+  const masterCrackOpacity   = useRef(new Animated.Value(0)).current;
+  const masterStampScale     = useRef(new Animated.Value(0.6)).current;
+  const masterCoreOpacity    = useRef(new Animated.Value(0)).current;
+  const systemStingerOpacity = useRef(new Animated.Value(0)).current;
+  const systemStingerScale   = useRef(new Animated.Value(0.75)).current;
   const [masterStampVisible, setMasterStampVisible]   = useState(false);
   const [masteredLabelVisible, setMasteredLabelVisible] = useState(false);
   const [goldSeedVisible, setGoldSeedVisible]           = useState(false);
   const [goldBloomVisible, setGoldBloomVisible]         = useState(false);
+  const [masterCracksVisible, setMasterCracksVisible]   = useState(false);
+  const [systemStingerWord, setSystemStingerWord]       = useState<string | null>(null);
 
   // Gate ref for measuring rise distance
   const gateViewRef = useRef<View>(null);
@@ -628,12 +637,21 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     masteredLabelOpacity.setValue(0);
     goldSeedScale.setValue(0);
     goldSeedTransY.setValue(0);
+    goldSeedTransX.setValue(0);
+    goldSeedRotate.setValue(0);
     goldSeedTrailOpacity.setValue(0);
     goldBloomScale.setValue(1);
     goldBloomOpacity.setValue(0);
+    masterCrackOpacity.setValue(0);
+    masterStampScale.setValue(0.6);
+    masterCoreOpacity.setValue(0);
+    systemStingerOpacity.setValue(0);
+    systemStingerScale.setValue(0.75);
     setMasteredLabelVisible(false);
     setGoldSeedVisible(false);
     setGoldBloomVisible(false);
+    setMasterCracksVisible(false);
+    setSystemStingerWord(null);
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss)
@@ -825,45 +843,83 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }, 1200);
   }
 
+  function playSystemStingerWord(word: string, peakScale: number) {
+    setSystemStingerWord(word);
+    systemStingerOpacity.setValue(0);
+    systemStingerScale.setValue(0.75);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(systemStingerOpacity, { toValue: 1, duration: 70, useNativeDriver: true }),
+        Animated.spring(systemStingerScale, { toValue: peakScale, damping: 5, stiffness: 320, useNativeDriver: true }),
+      ]),
+      Animated.timing(systemStingerOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+    ]).start();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  }
+
   function triggerMastered() {
     setGatePhase('mastered');
     completedRef.current = true;
     store.addBonusScore(300);
     spawnFloatAtSplit(300, '#F5C842');
-    firePollyEvent('gateMastered');
     setMasterStampVisible(true);
+    setMasteredLabelVisible(false);
+    setMasterCracksVisible(false);
+    setGoldSeedVisible(false);
+    setGoldBloomVisible(false);
+    setSystemStingerWord(null);
 
     const screenH = Dimensions.get('window').height;
+    const crashDistance = Math.max(150, screenH * 0.48 - wordScreenY);
+    const vaultTargetX = Math.max(120, containerWidthRef.current / 2 - 34);
+    const vaultTargetY = Math.max(250, screenH * 0.42);
 
     // Phase 1 — T+0ms: Screen dims — tiles to 15% opacity
     Animated.timing(masterAllFadeAnim, {
       toValue: 0.15, duration: 300, useNativeDriver: false,
     }).start();
+    Animated.spring(masterHeroTransY, {
+      toValue: crashDistance, damping: 8, stiffness: 170, mass: 0.8, useNativeDriver: true,
+    }).start();
+    Animated.sequence([
+      Animated.timing(masterHeroScale, { toValue: 1.22, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.spring(masterHeroScale, { toValue: 1.0, damping: 8, stiffness: 190, useNativeDriver: true }),
+    ]).start();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     // Phase 2 — T+500ms: Word pulse
     setTimeout(() => {
+      setMasteredLabelVisible(true);
       Animated.sequence([
-        Animated.timing(masterHeroScale, { toValue: 1.06, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.timing(masterHeroScale, { toValue: 1.0,  duration: 250, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.parallel([
+          Animated.timing(masteredLabelOpacity, { toValue: 1, duration: 110, useNativeDriver: true }),
+          Animated.spring(masterStampScale, { toValue: 1.18, damping: 6, stiffness: 260, useNativeDriver: true }),
+        ]),
+        Animated.spring(masterStampScale, { toValue: 1.0, damping: 8, stiffness: 220, useNativeDriver: true }),
       ]).start();
-    }, 500);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }, 360);
 
     // Phase 3 — T+800ms: MASTERED label appears below word
     setTimeout(() => {
-      setMasteredLabelVisible(true);
-      masteredLabelOpacity.setValue(0);
-      Animated.timing(masteredLabelOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+      setMasterCracksVisible(true);
+      masterCrackOpacity.setValue(0);
+      Animated.timing(masterCrackOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+      triggerShardBurst(containerWidthRef.current / 2, wordScreenY + crashDistance, 16);
     }, 800);
 
     // Fade label before word swells — NEVER simultaneous
     setTimeout(() => {
-      Animated.timing(masteredLabelOpacity, { toValue: 0, duration: 80, useNativeDriver: true }).start();
+      Animated.sequence([
+        Animated.timing(masterHeroScale, { toValue: 1.08, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(masterHeroScale, { toValue: 0.96, duration: 160, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
     }, 1000);
 
     // Phase 4 — T+1050ms: Word swells 1.0→1.6
     setTimeout(() => {
       Animated.timing(masterHeroScale, {
-        toValue: 1.6, duration: 800, easing: Easing.in(Easing.quad), useNativeDriver: true,
+        toValue: 1.0, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true,
       }).start();
     }, 1050);
 
@@ -887,38 +943,43 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     // Phase 6 — T+1900ms: Gold seed appears at word center
     setTimeout(() => {
       setGoldSeedVisible(true);
-      goldSeedScale.setValue(0);
+      masterCoreOpacity.setValue(1);
+      goldSeedScale.setValue(0.15);
+      goldSeedTransX.setValue(0);
       goldSeedTransY.setValue(0);
+      goldSeedRotate.setValue(0);
       goldSeedTrailOpacity.setValue(0);
-      Animated.spring(goldSeedScale, {
-        toValue: 1.2, damping: 6, stiffness: 400, useNativeDriver: true,
-      }).start();
+      Animated.parallel([
+        Animated.spring(goldSeedScale, { toValue: 2.6, damping: 7, stiffness: 150, useNativeDriver: true }),
+        Animated.timing(goldSeedRotate, { toValue: 1, duration: 820, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(goldSeedTrailOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+      ]).start();
     }, 1900);
 
     // Seed settles
     setTimeout(() => {
-      Animated.spring(goldSeedScale, {
-        toValue: 1.0, damping: 8, stiffness: 300, useNativeDriver: true,
-      }).start();
+      Animated.spring(goldSeedScale, { toValue: 2.15, damping: 8, stiffness: 220, useNativeDriver: true }).start();
     }, 2000);
 
     // Phase 7 — T+2100ms: Seed drops to screen bottom
     setTimeout(() => {
-      const dropDist = screenH - wordScreenY;
-      goldSeedTrailOpacity.setValue(1);
       Animated.parallel([
+        Animated.timing(goldSeedTransX, {
+          toValue: vaultTargetX, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
+        }),
         Animated.timing(goldSeedTransY, {
-          toValue: dropDist, duration: 500, easing: Easing.in(Easing.quad), useNativeDriver: true,
+          toValue: vaultTargetY, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
         }),
-        Animated.timing(goldSeedTrailOpacity, {
-          toValue: 0, duration: 500, useNativeDriver: true,
+        Animated.timing(goldSeedScale, {
+          toValue: 0.62, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
         }),
+        Animated.timing(masterCoreOpacity, { toValue: 0.95, duration: 620, useNativeDriver: true }),
       ]).start();
     }, 2100);
 
     // Phase 8 — T+2400ms: Seed landing bloom
     setTimeout(() => {
-      Haptics.selectionAsync();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       setGoldSeedVisible(false);
       setGoldBloomVisible(true);
       goldBloomScale.setValue(1);
@@ -930,19 +991,32 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => setGoldBloomVisible(false), 350);
     }, 2400);
 
+    setTimeout(() => {
+      firePollyEvent(isBoss ? 'gateMasteredBoss' : 'gateMastered');
+      if (isBoss) {
+        playSystemStingerWord('BINGO', 1.0);
+        setTimeout(() => playSystemStingerWord('BANGO', 1.08), 430);
+        setTimeout(() => playSystemStingerWord('ZZZZINGO!', 1.28), 900);
+      }
+    }, 2600);
+
     // Restore dim before transition
     setTimeout(() => {
+      Animated.timing(masteredLabelOpacity, { toValue: 0, duration: 180, useNativeDriver: true }).start();
+      Animated.timing(masterCrackOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
       Animated.timing(masterAllFadeAnim, { toValue: 1, duration: 200, useNativeDriver: false }).start();
-    }, 2600);
+    }, isBoss ? 4050 : 3200);
 
     // Phase 9 — T+2700ms: Hold (silence)
 
     // Phase 10 — T+3000ms: Transition
     setTimeout(() => {
       setMasteredLabelVisible(false);
+      setMasterCracksVisible(false);
+      setSystemStingerWord(null);
       if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
       store.completeWord();
-    }, 3000);
+    }, isBoss ? 4300 : 3450);
   }
 
   function triggerGateUnlock() {
@@ -1160,6 +1234,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   // ── render ────────────────────────────────────────────────────
+  const wordCoreRotate = goldSeedRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '720deg'],
+  });
+  const masteryWordCenterY = Math.max(170, Dimensions.get('window').height * 0.48);
+  const vaultBloomX = Math.max(28, containerWidth - 86);
+
   return (
     <Animated.View
       style={[styles.container, { transform: [{ translateX: bossShakeX }] }]}
@@ -1585,72 +1666,143 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             );
           })}
 
-          {/* MASTERED label — directly below word zone */}
+          {/* Diagonal MASTER stamp over the crashed word */}
           {masteredLabelVisible && (
             <Animated.Text
               pointerEvents="none"
               style={{
                 position: 'absolute',
-                top: 84,
+                top: masteryWordCenterY - 54,
                 left: 0, right: 0,
                 textAlign: 'center',
                 fontFamily: FONTS.label,
-                fontWeight: '800',
-                fontSize: 13,
+                fontWeight: '900',
+                fontSize: 44,
                 color: '#F5C842',
-                letterSpacing: 6,
+                letterSpacing: 0,
                 opacity: masteredLabelOpacity,
+                textShadowColor: 'rgba(245,200,66,0.55)',
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 12,
+                transform: [
+                  { rotate: '-14deg' },
+                  { scale: masterStampScale },
+                ],
               }}
             >
-              MASTERED
+              MASTER
             </Animated.Text>
           )}
 
-          {/* Gold seed + trail */}
+          {/* Cracked word energy */}
+          {masterCracksVisible && (
+            <Animated.View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: masteryWordCenterY - 36,
+                left: containerWidth / 2 - 118,
+                width: 236,
+                height: 94,
+                opacity: masterCrackOpacity,
+              }}
+            >
+              {[
+                { left: 22, top: 26, width: 86, rotate: '-24deg', color: '#7B2D8B' },
+                { left: 78, top: 42, width: 74, rotate: '18deg', color: '#9B2D6B' },
+                { left: 126, top: 24, width: 92, rotate: '-15deg', color: '#7B2D8B' },
+                { left: 44, top: 58, width: 54, rotate: '34deg', color: '#F5C842' },
+                { left: 144, top: 60, width: 58, rotate: '-32deg', color: '#9B2D6B' },
+              ].map((crack, i) => (
+                <View
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    left: crack.left,
+                    top: crack.top,
+                    width: crack.width,
+                    height: i === 3 ? 3 : 4,
+                    borderRadius: 3,
+                    backgroundColor: crack.color,
+                    opacity: i === 3 ? 0.72 : 0.9,
+                    transform: [{ rotate: crack.rotate }],
+                  }}
+                />
+              ))}
+            </Animated.View>
+          )}
+
+          {/* Word Core + trail */}
           {goldSeedVisible && (
             <>
               <Animated.View
                 pointerEvents="none"
                 style={{
                   position: 'absolute',
-                  left: containerWidth / 2 - 1,
-                  top: 40,
-                  width: 2,
-                  height: 60,
+                  left: containerWidth / 2 - 2,
+                  top: masteryWordCenterY - 2,
+                  width: 4,
+                  height: 74,
+                  borderRadius: 2,
                   backgroundColor: '#F5C842',
                   opacity: goldSeedTrailOpacity,
-                  transform: [{ translateY: goldSeedTransY }],
+                  transform: [
+                    { translateX: goldSeedTransX },
+                    { translateY: goldSeedTransY },
+                    { rotate: '28deg' },
+                  ],
                 }}
               />
               <Animated.View
                 pointerEvents="none"
                 style={{
                   position: 'absolute',
-                  left: containerWidth / 2 - 6,
-                  top: 34,
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
+                  left: containerWidth / 2 - 12,
+                  top: masteryWordCenterY - 12,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
                   backgroundColor: '#F5C842',
+                  borderWidth: 2,
+                  borderColor: 'rgba(255,255,255,0.65)',
+                  opacity: masterCoreOpacity,
                   shadowColor: '#F5C842',
                   shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.8,
-                  shadowRadius: 8,
-                  elevation: 8,
-                  transform: [{ scale: goldSeedScale }, { translateY: goldSeedTransY }],
+                  shadowOpacity: 0.95,
+                  shadowRadius: 14,
+                  elevation: 10,
+                  transform: [
+                    { translateX: goldSeedTransX },
+                    { translateY: goldSeedTransY },
+                    { scale: goldSeedScale },
+                    { rotate: wordCoreRotate },
+                  ],
                 }}
-              />
+              >
+                <View
+                  style={{
+                    position: 'absolute',
+                    left: 6,
+                    top: 5,
+                    width: 7,
+                    height: 7,
+                    borderRadius: 4,
+                    backgroundColor: '#FFFFFF',
+                    opacity: 0.72,
+                  }}
+                />
+              </Animated.View>
             </>
           )}
 
-          {/* Gold bloom on landing */}
+          {/* Vault nav impact bloom */}
           {goldBloomVisible && (
             <Animated.View
               pointerEvents="none"
               style={{
                 position: 'absolute',
-                bottom: 0,
-                left: containerWidth / 2 - 30,
+                bottom: 34,
+                left: vaultBloomX,
                 width: 60,
                 height: 60,
                 borderRadius: 30,
@@ -1659,6 +1811,32 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 opacity: goldBloomOpacity,
               }}
             />
+          )}
+
+          {/* Boss-only game/system stinger */}
+          {systemStingerWord && (
+            <Animated.Text
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: masteryWordCenterY - 22,
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                fontFamily: FONTS.label,
+                fontWeight: '900',
+                fontSize: systemStingerWord === 'ZZZZINGO!' ? 42 : 50,
+                color: '#FFFFFF',
+                letterSpacing: 0,
+                opacity: systemStingerOpacity,
+                textShadowColor: '#F5C842',
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 14,
+                transform: [{ scale: systemStingerScale }],
+              }}
+            >
+              {systemStingerWord}
+            </Animated.Text>
           )}
         </>
       )}
