@@ -67,9 +67,9 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Hero word:** Dominates screen, sits top-center during normal play, absorbs correct UP swipes, and crashes down to center during MASTERED celebration.
 
-**Active mask tile design:** One active tile at a time. Large, premium, tactile, readable. Text must pop with size, weight, contrast, and spacing. All mask tiles look and behave the same until release. No real/trap tells before swipe. Press-hold wakes tile, gives tiny haptic, lifts slightly, follows finger, and release commits. One-active queue is implemented; press-hold polish is pending.
+**Active mask tile design:** One active tile at a time. Large, premium, tactile, readable. Text must pop with size, weight, contrast, and spacing. All mask tiles look and behave the same until release. No real/trap tells before swipe. Press-hold wakes tile, gives tiny haptic, lifts slightly, follows finger, and release commits. One-active queue is implemented; Patch 4 press-hold polish is complete.
 
-**Swipe motion:** UP claims real meaning; RIGHT rejects trap. No left swipe and no tap-submit. Correct UP feeds the tile into the hero word, which absorbs and pulses. Wrong UP rejects, wrong-flashes, and plucks a feather. Correct RIGHT flings the false meaning right with a "get outta here" feel and purple/rose glass shatter. Wrong RIGHT wrong-flashes and plucks a feather.
+**Swipe motion:** UP claims real meaning; RIGHT rejects trap. No left swipe and no tap-submit. Patch 5 tuned the single-tile arena motion: correct UP pulls harder into the hero word, shrinks/fades near impact, and triggers the existing word absorb pulse; correct RIGHT traps fling farther into the right shatter lane with stronger rotation, shrink, fade, and a larger purple/rose burst; wrong RIGHT on a real meaning visibly fails with `#CC2200` wrong flash, reject wobble, bounce-back, fade/collapse, and existing feather loss.
 
 **Master Gate:** Text is MASTER THE WORD. It belongs to Polly, not the player. It is a low board bird cage / vault hybrid with subtle tension, `#0F0D2A` surface, faint cage bars, small lock, and quiet gold charge only when earned. The player's Vault is never on the game board; it is a nav/page destination.
 
@@ -91,7 +91,7 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 **Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core. `#7B2D8B` for UI/gate/shards. `#9B2D6B` for trap/ghost shard accents. `#4CAF50` only Polly character. `#0F0D2A` only Master Gate locked surface. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
 
-**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior -> UP absorb and RIGHT toss/shatter -> Master Gate visual overhaul -> hidden tile unlock -> MASTERED celebration -> ghost merge loss -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
+**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 next) -> hidden tile unlock -> MASTERED celebration -> ghost merge loss -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
 
 ```
 1  LIGHT   Standard  Confidence
@@ -136,9 +136,10 @@ Current implementation:
 - Patch 3 complete: `MaskBoard.tsx` renders only one active visible mask tile at a time.
 - The queue keeps existing shuffled mask order from `store.game.shuffledMasks`.
 - The active visible tile advances after the current tile resolves as correct, trap-caught, or wrong.
-- A guarded 450ms delay prevents duplicate advances from repeated renders.
-- Scoring, swipe grammar, `SwipeMask.tsx`, current Master Gate logic, Ghost tile behavior, and hidden tile flow are preserved.
-- Press-hold polish, UP absorb tuning, RIGHT toss/shatter tuning, and proper returning Haunt placement are still pending after the one-active queue.
+- A guarded 650ms delay prevents duplicate advances from repeated renders and lets Patch 5 motion finish cleanly.
+- Scoring, swipe grammar, current Master Gate logic, Ghost tile behavior, hidden tile flow, Polly logic, and store architecture are preserved.
+- Patch 4 press-hold polish and Patch 5 UP absorb / RIGHT toss-shatter tuning are complete.
+- Proper returning Haunt placement remains pending.
 
 ---
 ## Master Gate (Auto-opens on perfect clear)
@@ -203,20 +204,34 @@ Completed and committed:
 - `wrongSwipeOccurred.current` reset verified correct and stale debug `console.log` removed.
 - Mastery word swell scale complete: target changed from 2.8 to 1.6.
 - Patch 3 complete: one active visible mask tile queue implemented in `app/components/MaskBoard.tsx`; it preserves scoring, swipe grammar, `SwipeMask.tsx`, Master Gate logic, hidden tile flow, and Ghost tile behavior.
+- Patch 4 complete: active mask tile presentation and press-hold polish implemented in `app/components/MaskBoard.tsx` and `app/components/SwipeMask.tsx`.
+- Patch 5 complete: UP absorb and RIGHT toss/shatter tuned for the single-tile arena.
+  - Correct UP real meanings now pull harder into the hero word, shrink/fade near impact, and trigger the existing word absorb pulse.
+  - Correct RIGHT traps now fling farther into the right-side shatter lane with stronger rotation, shrink, fade, and larger purple/rose shard burst.
+  - Shard burst count is now 18.
+  - Shard colors remain only `#7B2D8B` and `#9B2D6B`.
+  - Wrong RIGHT on a real meaning now visibly fails with `#CC2200` wrong flash, reject wobble, bounce-back, and fade/collapse.
+  - Existing wrong-swipe logic still handles feather loss.
+  - Active visible tile advance delay changed from 450ms to 650ms.
+  - Scoring unchanged.
+  - Swipe grammar unchanged.
+  - One-active-visible-tile queue unchanged.
+  - Master Gate, hidden tile flow, ghost logic, Polly logic, and store architecture unchanged.
+  - TypeScript passed with `npx.cmd tsc --noEmit`.
 
 Remaining pending:
-1. Press-hold tile polish after one-active queue.
-2. UP absorb and RIGHT toss/shatter tuning for the single-tile arena.
-3. Master Gate visual overhaul: Polly cage/vault hybrid, low on board, faint cage bars, small lock, subtle tension.
-4. Hidden tiles flying up into active tile position.
-5. MASTERED celebration rewrite: hero word crashes center, diagonal MASTER stamp, word cracks open, Word Core jumps out/grows/glows/spins, Core shoots toward Vault nav icon, Polly says "BINGO BANGO ZZZZINGO!".
-6. Ghost merge loss sequence: wrong hidden tile merges with remaining hidden tile, hero word loses life essence, Ghost Tile forms, "THE HAUNT BEGINS".
-7. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
-8. Polly pop-in budget: not permanent, 1 per word round, 2 max for major moments, always at end-of-round win/loss.
-9. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
-10. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-11. Vault / Ranks / Profile pages.
-12. `expo-av` to `expo-audio` migration.
+Current next patch: **Patch 6 - Master Gate cage/vault visual overhaul.**
+
+1. Patch 6: Master Gate visual overhaul: text remains MASTER THE WORD; gate belongs to Polly, not the player; low on board above nav safe area; bird cage / vault hybrid; locked surface `#0F0D2A`; faint cage bars; small lock; subtle tension; quiet gold charge only when earned; no player Vault storage on game board. Do not change unlock logic unless visual-only wiring requires it. Do not change scoring, swipe grammar, hidden tile flow, ghost logic, or store architecture.
+2. Hidden tiles flying up into active tile position.
+3. MASTERED celebration rewrite: hero word crashes center, diagonal MASTER stamp, word cracks open, Word Core jumps out/grows/glows/spins, Core shoots toward Vault nav icon, Polly says "BINGO BANGO ZZZZINGO!".
+4. Ghost merge loss sequence: wrong hidden tile merges with remaining hidden tile, hero word loses life essence, Ghost Tile forms, "THE HAUNT BEGINS".
+5. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
+6. Polly pop-in budget: not permanent, 1 per word round, 2 max for major moments, always at end-of-round win/loss.
+7. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
+8. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
+9. Vault / Ranks / Profile pages.
+10. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List (Never Suggest These)
