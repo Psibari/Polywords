@@ -41,7 +41,7 @@ Exception:      Reanimated — SwipeMask.tsx ONLY — frozen, no new usage ever
 Haptics:        Expo Haptics
 Audio:          Expo AV → migrating to expo-audio
 Navigation:     Expo Router
-Fonts:          Bagel Fat One (hero word) · Plus Jakarta Sans 800 (all UI)
+Fonts:          Gomarice Okuba (hero word + all UI) · Inter Medium (tile text) · Poppins Bold (HUD score/combo) · SuperCartoon (Polly big reactions)
 Testing:        Expo Go via QR code on physical device
 Version control: Git + GitHub
 Editor:         VS Code (Windows — use forward-slash paths)
@@ -81,13 +81,15 @@ Reanimated locked to SwipeMask.tsx ONLY — never import elsewhere
 
 | Element | Font | Size |
 |---|---|---|
-| Hero word — normal | Bagel Fat One | 62px+ |
-| Hero word — Boss | Bagel Fat One | 80px, gold |
-| Tile mask text | Plus Jakarta Sans 800 | 15px |
-| HUD score | Plus Jakarta Sans 800 | 18px |
-| Combo multiplier | Plus Jakarta Sans 800 | 22px — GOLD #F5C842 only |
-| Grade text (RATTLED etc) | Plus Jakarta Sans 800 | 48px — WHITE only |
-| MASTERED label | Plus Jakarta Sans 800 | 13px, letter-spacing 6px, gold |
+| Hero word — normal | Gomarice Okuba | 108px |
+| Hero word — Boss | Gomarice Okuba | 118px, gold |
+| All UI labels, gate text, HUD labels | Gomarice Okuba | varies |
+| Tile mask text | Inter Medium | 22px |
+| HUD score | Poppins Bold | 18px |
+| Combo multiplier | Poppins Bold | 26px — GOLD #F5C842 only |
+| Grade text (RATTLED etc) | Gomarice Okuba | 48px — WHITE only |
+| MASTERED label | Gomarice Okuba | 13px, letter-spacing 6px, gold |
+| Polly big reaction lines | SuperCartoon | varies |
 
 ---
 
@@ -266,7 +268,7 @@ T+800ms  "MASTERED" appears BELOW word — 13px, gold, letter-spacing 6px
 T+1050ms Word begins to SWELL
 T+1300ms Word at 1.6× width. 16 CRYSTAL SHARDS BURST radially.
          Purple #7B2D8B + rose #9B2D6B. Gravity-affected.
-T+1300ms Polly: "BINGO BANGO ZZZZINGO!". notificationAsync(Success).
+T+1300ms Polly: "BINGO BANGO ZZZINGOO". notificationAsync(Success).
 T+1900ms GOLD SEED at word center. 12px, inner glow, single pulse.
 T+2100ms Seed DROPS with 60px gold trail.
 T+2400ms Seed hits bottom. selectionAsync(). Bloom. Naturalistic tone.
@@ -304,7 +306,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Word 6→7, struggling | "Want this word? Show me something." |
 | Word 9→10 | "Not yet." |
 | Word 11→12 | "Last one. Then it's just you and me." |
-| Boss mastered | "BINGO BANGO ZZZZINGO!" |
+| Boss mastered | "BINGO BANGO ZZZINGOO" |
 | Boss failed | "Thought so." |
 
 ### In-Round Lines (max 2 per round)
@@ -312,7 +314,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Trigger | Line |
 |---|---|
 | First correct swipe (rare) | "Word up." |
-| Mastery / hidden / ×10 | "BINGO BANGO ZZZZINGO!" |
+| Mastery / hidden / ×10 | "BINGO BANGO ZZZINGOO" |
 | Wrong swipe | "Nope." / "Hard no." |
 | 3+ wrong same word | "BLAHH HA HA HA" |
 | Perfect clear | "Clean sweep." |
@@ -327,7 +329,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Hidden meaning found | "Deep cut. Most miss that one." |
 
 🔒 "Thought so." — never change it.
-🔒 "BINGO BANGO ZZZZINGO!" — never change it.
+🔒 "BINGO BANGO ZZZINGOO" — never change it.
 🔒 Max 2 Polly in-round appearances per word. Hunt-level = separate system.
 🔒 Boss word drops FROM Polly's direction — she throws it.
 
@@ -499,7 +501,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 - MASTERED text below word, not screen center
 - Ghost tile never reveals missed phrase
 - "Thought so." — never change
-- "BINGO BANGO ZZZZINGO!" — never change
+- "BINGO BANGO ZZZINGOO" — never change
 - Database grows over time — no finish line, no endgame
 - All tiles identical until swiped — Polly gives nothing away
 - Vault replaces Garden — permanent
@@ -564,7 +566,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 - 2 max if the round has a major event.
 - Polly always appears at end of round win/loss.
 - Polly pops from bottom-left and never blocks the active tile, right shatter lane, or Master Gate.
-- Mastery line: "BINGO BANGO ZZZZINGO!"
+- Mastery line: "BINGO BANGO ZZZINGOO"
 - Normal ghost failure line: "Not yours yet."
 - Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
 
@@ -646,7 +648,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 5. Word Core jumps out of cracked word.
 6. Core grows, glows, and spins center-screen.
 7. Core shoots toward Vault nav icon.
-8. Polly pops in: "BINGO BANGO ZZZZINGO!"
+8. Polly pops in: "BINGO BANGO ZZZINGOO"
 
 ### Word Core
 
