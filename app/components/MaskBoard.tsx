@@ -238,6 +238,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     speechLineVisible,
     firePollyEvent,
     ghostTintOpacity,
+    pollyAnimatedStyle,
+    pollyPopInVisible,
+    pollyPopInStyle,
   } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
 
   // ── tile state map ───────────────────────────────────────────
@@ -1282,6 +1285,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       triggerGateUnlock();
     } else {
       gateTriggeredRef.current = true;
+      if (perfect && !hasHidden) firePollyEvent('cleanSweep');
       setTimeout(() => {
         if (hasHidden && !ghostJudgedCorrectRef.current) {
           store.addGhostedMaster(step.word);
@@ -1818,13 +1822,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         />
       ))}
 
-      {/* Polly — locked absolute bottom-left */}
-      <View style={styles.pollyAnchor} pointerEvents="none">
-        <PollySprite pose={currentPose} size={80} />
-      </View>
+      {/* Polly — bottom-left pop-in only, hidden during ordinary play */}
+      {pollyPopInVisible && (
+        <Animated.View style={[styles.pollyAnchor, pollyPopInStyle]} pointerEvents="none">
+          <Animated.View style={pollyAnimatedStyle}>
+            <PollySprite pose={currentPose} size={160} />
+          </Animated.View>
+        </Animated.View>
+      )}
 
-      {/* Speech bubble — above Polly */}
-      {speechLineVisible && currentSpeechLine && (
+      {/* Speech bubble — above-right of Polly, only during pop-in */}
+      {pollyPopInVisible && speechLineVisible && currentSpeechLine && (
         <View style={styles.speechBubble} pointerEvents="none">
           <Text style={styles.speechText} numberOfLines={3}>
             {currentSpeechLine}
@@ -2368,30 +2376,29 @@ const styles = StyleSheet.create({
   splitZone: {
     marginTop: TILE_GAP,
   },
-  // ── Polly — absolute bottom-left ──────────────────────────────
+  // ── Polly — absolute bottom-left pop-in ───────────────────────
   pollyAnchor: {
     position: 'absolute',
-    bottom: 34,
-    left: 12,
-    width: 80,
-    height: 80,
-    overflow: 'hidden',
+    bottom: 16,
+    left: -6,
+    width: 160,
+    height: 160,
   },
   speechBubble: {
     position: 'absolute',
-    bottom: 128,
-    left: 8,
-    maxWidth: 180,
-    backgroundColor: 'rgba(20,18,56,0.92)',
-    borderRadius: 8,
+    bottom: 186,
+    left: 78,
+    maxWidth: 210,
+    backgroundColor: 'rgba(20,18,56,0.94)',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   speechText: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 12,
+    color: 'rgba(255,255,255,0.88)',
+    fontSize: 13,
     fontFamily: FONTS.label,
     letterSpacing: 0.3,
   },
