@@ -88,7 +88,7 @@ Reanimated locked to SwipeMask.tsx ONLY â€” never import elsewhere
 | HUD score | Poppins Bold | 18px |
 | Combo multiplier | Poppins Bold | 26px â€” GOLD #F5C842 only |
 | Grade text (RATTLED etc) | Gomarice Okuba | 48px â€” WHITE only |
-| MASTERED label | Gomarice Okuba | 13px, letter-spacing 6px, gold |
+| MASTER stamp | Gomarice Okuba | 44px, diagonal, gold |
 | Polly big reaction lines | SuperCartoon | varies |
 
 ---
@@ -263,29 +263,26 @@ T+900ms: First split tile drops Â· T+1050ms: Second split tile (150ms stagger)
 ### ACT 4 â€” THE JUDGMENT
 - Correct UP: magnetic absorb, word FLARES gold, Polly hiddenReveal
 - Correct RIGHT: 18 shards, faster, double bloom
-- Wrong swipe: life lost, ghost created, advances 1500ms
+- Wrong hidden/master swipe: life lost through existing wrong-swipe logic, ghost merge loss sequence begins
 
-### ACT 5 â€” MASTERY SEQUENCE (Sequential â€” Never Simultaneous)
+### ACT 5 â€” MASTERY SEQUENCE (Patch 8 complete)
 ```
-T+0ms    Both correct. Silence.
-T+200ms  Screen dims 15% â€” word zone full brightness
-T+500ms  Word PULSES 1.0â†’1.06â†’1.0
-T+800ms  "MASTERED" appears BELOW word â€” 13px, gold, letter-spacing 6px
-T+1050ms Word begins to SWELL
-T+1300ms Word at 1.6Ã— width. 16 CRYSTAL SHARDS BURST radially.
-         Purple #7B2D8B + rose #9B2D6B. Gravity-affected.
-T+1300ms notificationAsync(Success). Polly is not the achievement voice.
-T+1900ms GOLD SEED at word center. 12px, inner glow, single pulse.
-T+2100ms Seed DROPS with 60px gold trail.
-T+2400ms Seed hits bottom. selectionAsync(). Bloom. Naturalistic tone.
-T+2700ms Silence. Hold.
-T+3000ms Word compresses â†’ gold tile â†’ launches to VAULT nav icon.
-T+3900ms Vault icon blooms. impactAsync(Heavy). THUNK sound.
-T+4100ms Next word loads.
+T+0ms    Both hidden tiles judged correctly.
+T+0ms    Hero word crashes toward center with impact.
+T+360ms  Diagonal MASTER stamp slams over the word.
+T+800ms  Word cracks / energy effect appears.
+T+1900ms Word Core appears, grows, glows, and spins center-screen.
+T+2100ms Word Core shoots toward the Vault nav area.
+T+2400ms Vault impact bloom and heavy haptic.
+T+2600ms Normal mastery: Polly opponent line "That was mine."
+T+2600ms Boss mastery: Polly opponent line "Fine. Take it."
+T+2600ms Boss mastery may additionally trigger GAME/SYSTEM stinger:
+         BINGO -> BANGO -> ZZZZINGO!
 ```
 
-ðŸ”’ MASTERED text BELOW the word â€” never screen center.
-ðŸ”’ Word zoom and MASTERED text SEQUENTIAL â€” MASTERED first, then word swells.
+ðŸ”’ Diagonal MASTER stamp over the word â€” not the old "MASTERED" label below the word.
+ðŸ”’ Word Core goes toward the Vault nav icon, never into the Master Gate.
+ðŸ”’ Polly is not the achievement voice.
 ðŸ”’ Crystal shards are POLYGON geometry â€” never rectangles or squares.
 
 ### BINGO BANGO ZZZZINGO! â€” System Stinger
@@ -493,7 +490,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 | Boss word entrance | impactAsync(Heavy) Ã— 3 at 0/180/360ms |
 | Hidden meaning reveal | notificationAsync(Success) â†’ 120ms â†’ impactAsync(Medium) |
 | Mastery celebration | notificationAsync(Success) |
-| Seed landing | selectionAsync() |
+| Vault impact / core landing | impactAsync(Heavy) |
 | Vault arrival | impactAsync(Heavy) |
 
 ---
@@ -594,35 +591,69 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Hidden trap tile uses 80% gold border, white text, and `#0F0D2A` surface.
   - Hidden tiles reuse `SwipeMask`, so press-hold, UP/RIGHT swipes, absorb, wrong flash, and trap shatter stay on the existing path.
   - Wrong hidden swipes now call `submitWrongSwipe` and lose a feather.
-  - No ghost-merge visuals are shown yet.
   - Old ghost placeholder rendering for hidden wrong was removed from this path.
-  - After both hidden tiles resolve correctly, the existing mastery handoff still triggers for Patch 8 to replace/refine.
   - Scoring model, swipe grammar, one-active visible queue, gate unlock/perfect-clear logic, and ghost/store/Polly architecture preserved.
   - Reanimated stays in `SwipeMask.tsx`.
   - Hidden release motion uses React Native Animated in `MaskBoard.tsx`.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
+- Patch 8 complete: MASTERED celebration rewrite implemented.
+  - Changed `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts`.
+  - Reworked mastery handoff after hidden tiles resolve correctly.
+  - Hero word crashes toward center.
+  - Diagonal MASTER stamp slams over the word.
+  - Crack/energy effect appears.
+  - Word Core appears, grows, glows, spins, then shoots toward the Vault nav area.
+  - Normal mastery does not show `BINGO BANGO ZZZZINGO!`.
+  - Boss mastery can show boss-only GAME/SYSTEM stinger: BINGO, BANGO, ZZZZINGO!.
+  - `BINGO BANGO ZZZZINGO!` is not Polly dialogue.
+  - Polly's old BINGO-style dialogue removed.
+  - Normal mastery Polly line is now: "That was mine."
+  - Boss mastery Polly line is now: "Fine. Take it."
+  - `SwipeMask.tsx` unchanged.
+  - Scoring, swipe grammar, active visible tile queue, hidden tile release flow, Master Gate unlock logic, and ghost/store architecture unchanged.
+  - TypeScript passed with `npx.cmd tsc --noEmit`.
+  - Device sanity passed.
+- Patch 9 complete: Ghost merge loss sequence implemented.
+  - Changed `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts`.
+  - Wrong hidden/master swipes now trigger the full ghost birth sequence instead of the old placeholder.
+  - Failed hidden tile starts leaving, glitches, loses opacity/substance, then gets pulled back.
+  - Remaining hidden tile stays visible and merges with the failed tile.
+  - Hero word flickers dull/lifeless during the merge.
+  - Ghost Tile forms with exact copy: `MASTER THE WORD` / `From [WORD]`.
+  - Microcopy appears: `THE HAUNT BEGINS`.
+  - Existing `store.addGhostedMaster(step.word)` and `store.completeWord()` behavior preserved, delayed until the sequence is readable.
+  - Wrong hidden swipe still uses `submitWrongSwipe()` and loses exactly one feather.
+  - Added safe opponent Polly pop-in line for hidden/master failure: "Not yours yet."
+  - `SwipeMask.tsx` unchanged.
+  - Scoring, swipe grammar, visible tile queue, Master Gate unlock logic, hidden tile release timing, and Patch 8 mastery celebration unchanged.
+  - `BINGO BANGO ZZZZINGO!` behavior unchanged and still not Polly dialogue.
+  - TypeScript passed with `npx.cmd tsc --noEmit`.
+  - Device sanity passed.
 
 ### Remaining Pending Work
 
-Current next patch: **Patch 8 - MASTERED celebration rewrite.**
+Current next work lane has two valid options:
 
-1. Patch 8: MASTERED celebration rewrite:
-   - Hidden tiles judged correctly.
-   - Hero word crashes center.
-   - Diagonal MASTER stamp.
-   - Word cracks open.
-   - Word Core jumps out.
-   - Core grows/glows/spins center-screen.
-   - Core shoots toward Vault nav icon.
-   - Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`.
-   - Boss mastery may additionally trigger the rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting.
-2. Ghost merge loss sequence:
-   - Wrong hidden tile merges with remaining hidden tile.
-   - Hero word flickers dull and loses life essence.
-   - Ghost Tile forms: MASTER THE WORD / From [WORD].
-   - Microcopy: THE HAUNT BEGINS.
-3. Haunt Word return system:
+**Option A - Database audit + selective masks/traps rewrite pass**
+- Content quality lane, not a gameplay code patch.
+- Analyze the word database.
+- Keep strong entries.
+- Rewrite weak masks/traps.
+- Improve hidden meanings.
+- Tag gameplay quality.
+
+**Option B - Patch 10: Polly pop-in budget / remove permanent gameplay Polly**
+- Polly is already design-locked as pop-in only.
+- 1 time during a big moment in a word round.
+- Always at the end of every round.
+- Bottom-left entrance.
+- Never blocks active tile, right shatter lane, or Master Gate.
+- Opponent tone, not friendly mascot.
+
+Other remaining work:
+
+1. Haunt Word return system:
    - Ghosted words return late in future Hunts.
    - Preferred placement: word 10 or 11.
    - Never replace Boss Word at position 12.
@@ -630,18 +661,13 @@ Current next patch: **Patch 8 - MASTERED celebration rewrite.**
    - Cleared copy: HAUNT BROKEN.
    - Failed again copy: STILL HAUNTED.
    - Polly taunt: "BBBLAAAAHHAHAHA!"
-4. Polly pop-in budget:
-   - Polly is not permanent during gameplay.
-   - 1 pop-in per word round.
-   - 2 max for major moments.
-   - Always appears at end of round win/loss.
-5. Score target/rank system:
+2. Score target/rank system:
    - Score should support personal best, Polly target score, Hunt rank, and future daily/friend/global rankings.
-6. Life Feather milestone/reserve system:
+3. Life Feather milestone/reserve system:
    - UI feathers exist.
    - Score milestone restore and 1 reserve feather are not implemented yet.
-7. Vault / Ranks / Profile pages.
-8. `expo-av` to `expo-audio` migration.
+4. Vault / Ranks / Profile pages.
+5. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -661,7 +687,7 @@ Current next patch: **Patch 8 - MASTERED celebration rewrite.**
 - â˜ ï¸ RATTLED. in any color except white
 - â˜ ï¸ Reanimated outside SwipeMask.tsx
 - â˜ ï¸ Rectangle/square particles
-- â˜ ï¸ Simultaneous MASTER text + word zoom
+- â˜ ï¸ Old "MASTERED" label-below-word celebration
 - â˜ ï¸ Visual tells on tiles before swipe
 - â˜ ï¸ phraseBreakPool, slangPool, switchbackPool
 - â˜ ï¸ expo-av (migrating)
