@@ -84,7 +84,7 @@ export function SwipeMask({
   const bgAnim = useRef(new RNAnimated.Value(0)).current;
   const bgColor = bgAnim.interpolate({
     inputRange:  [0,         0.5,       1.0      ],
-    outputRange: ['#1E1C4A', '#2d6e3a', '#1a3520'],
+    outputRange: ['#1E1A5E', '#2d6e3a', '#1a3520'],
   });
 
   // ── RN Animated: entry (native driver) ────────────────────────
@@ -427,6 +427,10 @@ export function SwipeMask({
           }}
           {...panResponder.panHandlers}
         >
+          {/* Top edge shine */}
+          <View style={styles.tileTopShine} />
+          {/* Inner ambient glow */}
+          <View style={styles.tileInnerGlow} />
           {/* Non-native animated background */}
           <RNAnimated.View
             style={[StyleSheet.absoluteFill, { backgroundColor: bgColor }]}
@@ -481,10 +485,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor:   '#000000',
-    shadowOffset:  { width: 0, height: 10 },
-    shadowRadius:  22,
-    shadowOpacity: 0.46,
-    elevation: 8,
+    shadowOffset:  { width: 0, height: 12 },
+    shadowRadius:  28,
+    shadowOpacity: 0.55,
+    elevation: 10,
     overflow: 'hidden',
   },
   phrasePanel: {
@@ -494,10 +498,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    paddingVertical: 14,
+    backgroundColor: 'rgba(0,0,0,0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(0,0,0,0.35)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    shadowOpacity: 0.4,
     overflow: 'hidden',
   },
   checkmark: {
@@ -519,6 +527,9 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     lineHeight: 34,
     letterSpacing: 0.6,
+    textShadowColor: 'rgba(255,255,255,0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
   },
   splitTile: {
     borderRadius: 14,
@@ -594,5 +605,25 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     marginLeft: 12,
     flex: 1,
+  },
+  tileTopShine: {
+    position: 'absolute',
+    top: 0,
+    left: 20,
+    right: 20,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 1,
+    zIndex: 2,
+  },
+  tileInnerGlow: {
+    position: 'absolute',
+    bottom: -16,
+    left: '20%',
+    right: '20%',
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(90,70,200,0.18)',
+    zIndex: 1,
   },
 });
