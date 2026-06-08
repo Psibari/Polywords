@@ -274,7 +274,7 @@ T+800ms  "MASTERED" appears BELOW word â€” 13px, gold, letter-spacing 6px
 T+1050ms Word begins to SWELL
 T+1300ms Word at 1.6Ã— width. 16 CRYSTAL SHARDS BURST radially.
          Purple #7B2D8B + rose #9B2D6B. Gravity-affected.
-T+1300ms Polly: "BINGO BANGO ZZZINGOO". notificationAsync(Success).
+T+1300ms notificationAsync(Success). Polly is not the achievement voice.
 T+1900ms GOLD SEED at word center. 12px, inner glow, single pulse.
 T+2100ms Seed DROPS with 60px gold trail.
 T+2400ms Seed hits bottom. selectionAsync(). Bloom. Naturalistic tone.
@@ -287,6 +287,39 @@ T+4100ms Next word loads.
 ðŸ”’ MASTERED text BELOW the word â€” never screen center.
 ðŸ”’ Word zoom and MASTERED text SEQUENTIAL â€” MASTERED first, then word swells.
 ðŸ”’ Crystal shards are POLYGON geometry â€” never rectangles or squares.
+
+### BINGO BANGO ZZZZINGO! â€” System Stinger
+
+`BINGO BANGO ZZZZINGO!` is NOT Polly dialogue.
+
+Use it only as a rare GAME/SYSTEM achievement stinger:
+- Trigger only when a Boss Word is fully mastered and the Word Core is vaulted.
+- Do not use it for every mastered word.
+- Do not use it as Polly dialogue.
+- Presentation: one word at a time, hard entrance for each word, each word lands with a BOOM-style impact.
+- Rhythm:
+  - BINGO
+  - BANGO
+  - ZZZZINGO!
+- `ZZZZINGO!` gets the biggest impact.
+
+This is the game acknowledging a major achievement, not Polly celebrating the player.
+
+### Polly Mastery Reaction
+
+Polly is the opponent, not a friendly celebration mascot. The hierarchy is:
+- Game celebrates the player.
+- Polly resents it.
+
+Normal word mastered:
+- Word Core goes to Vault.
+- Polly may pop in as opponent.
+- Suggested line: "That was mine."
+
+Boss word mastered:
+- Game/system may trigger `BINGO BANGO ZZZZINGO!` after Word Core vault impact.
+- Polly may pop in separately with an annoyed opponent line.
+- Suggested line: "Fine. Take it."
 
 ### ACT 6 â€” THE GHOST
 - Background: rgba(123,45,139,0.06) Â· Border: SOLID 1.5px rgba(123,45,139,0.55)
@@ -312,7 +345,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Word 6â†’7, struggling | "Want this word? Show me something." |
 | Word 9â†’10 | "Not yet." |
 | Word 11â†’12 | "Last one. Then it's just you and me." |
-| Boss mastered | "BINGO BANGO ZZZINGOO" |
+| Boss mastered | "Fine. Take it." |
 | Boss failed | "Thought so." |
 
 ### In-Round Lines (max 2 per round)
@@ -320,7 +353,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Trigger | Line |
 |---|---|
 | First correct swipe (rare) | "Word up." |
-| Mastery / hidden / Ã—10 | "BINGO BANGO ZZZINGOO" |
+| Mastery | "That was mine." |
 | Wrong swipe | "Nope." / "Hard no." |
 | 3+ wrong same word | "BLAHH HA HA HA" |
 | Perfect clear | "Clean sweep." |
@@ -336,7 +369,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 | Ghost birth | "Not yours yet." |
 
 ðŸ”’ "Thought so." â€” never change it.
-ðŸ”’ "BINGO BANGO ZZZINGOO" â€” never change it.
+ðŸ”’ `BINGO BANGO ZZZZINGO!` is game/system achievement text only, never Polly dialogue.
 ðŸ”’ Max 2 Polly in-round appearances per word. Hunt-level = separate system.
 ðŸ”’ Boss word drops FROM Polly's direction â€” she throws it.
 
@@ -535,39 +568,61 @@ T+1400ms Tiles stagger in at 120ms intervals
   - One-active-visible-tile queue unchanged.
   - Master Gate, hidden tile flow, ghost logic, Polly logic, and store architecture unchanged.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
+- Patch 6 complete: Master Gate cage/vault visual overhaul.
+  - Changed only `app/components/MaskBoard.tsx`.
+  - Removed emoji lock.
+  - Added custom lock built from React Native `View` shapes.
+  - Rebuilt locked gate as a darker cage/vault mechanism using `#0F0D2A`.
+  - Reduced locked-state gold: border starts as muted purple and only charges toward gold during unlock.
+  - Added faint purple cage bars, center ribs, bolts, dark inset depth, and layered door halves.
+  - `MASTER THE WORD` text remains exact.
+  - Text is readable white, not reward-like gold.
+  - Gate height shortened to 64px.
+  - Gate remains below active tile and quieter than tile.
+  - Existing perfect-clear/unlock flow preserved.
+  - Door split and hidden tile flow preserved.
+  - Scoring, swipe grammar, active tile queue, ghost logic, Polly logic, and store architecture unchanged.
+  - TypeScript passed with `npx.cmd tsc --noEmit`.
+- Patch 7 complete: hidden tiles release into active play band.
+  - Changed `app/components/MaskBoard.tsx` and `app/components/SwipeMask.tsx`.
+  - Hidden tiles now release after gate unlock into the active tile band, not the gate area.
+  - First hidden tile rises from the gate offset and becomes swipeable only after landing.
+  - Second hidden tile starts release 150ms after the first tile starts releasing.
+  - Hidden release now feels like quick "bop-bop," not long-gap "bop...bop."
+  - Each tile becomes swipeable only after its own landing animation finishes.
+  - Real hidden tile uses full gold border, warm cream text, and `#0F0D2A` surface.
+  - Hidden trap tile uses 80% gold border, white text, and `#0F0D2A` surface.
+  - Hidden tiles reuse `SwipeMask`, so press-hold, UP/RIGHT swipes, absorb, wrong flash, and trap shatter stay on the existing path.
+  - Wrong hidden swipes now call `submitWrongSwipe` and lose a feather.
+  - No ghost-merge visuals are shown yet.
+  - Old ghost placeholder rendering for hidden wrong was removed from this path.
+  - After both hidden tiles resolve correctly, the existing mastery handoff still triggers for Patch 8 to replace/refine.
+  - Scoring model, swipe grammar, one-active visible queue, gate unlock/perfect-clear logic, and ghost/store/Polly architecture preserved.
+  - Reanimated stays in `SwipeMask.tsx`.
+  - Hidden release motion uses React Native Animated in `MaskBoard.tsx`.
+  - TypeScript passed with `npx.cmd tsc --noEmit`.
+  - Device sanity passed.
 
 ### Remaining Pending Work
 
-Current next patch: **Patch 6 - Master Gate cage/vault visual overhaul.**
+Current next patch: **Patch 8 - MASTERED celebration rewrite.**
 
-1. Patch 6: Master Gate cage/vault visual overhaul:
-   - Master Gate text remains MASTER THE WORD.
-   - Gate belongs to Polly, not the player.
-   - Low on board above nav safe area.
-   - Bird cage / vault hybrid.
-   - Locked surface uses `#0F0D2A`.
-   - Faint cage bars.
-   - Small lock.
-   - Subtle tension.
-   - Quiet gold charge only when earned.
-   - No player Vault storage on game board.
-   - Do not change Master Gate unlock logic yet unless visual-only wiring requires it.
-   - Do not change scoring, swipe grammar, hidden tile flow, ghost logic, or store architecture.
-2. Hidden tiles flying up into active tile position.
-3. MASTERED celebration rewrite:
+1. Patch 8: MASTERED celebration rewrite:
+   - Hidden tiles judged correctly.
    - Hero word crashes center.
    - Diagonal MASTER stamp.
    - Word cracks open.
    - Word Core jumps out.
    - Core grows/glows/spins center-screen.
    - Core shoots toward Vault nav icon.
-   - Polly line: "BINGO BANGO ZZZZINGO!"
-4. Ghost merge loss sequence:
+   - Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`.
+   - Boss mastery may additionally trigger the rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting.
+2. Ghost merge loss sequence:
    - Wrong hidden tile merges with remaining hidden tile.
    - Hero word flickers dull and loses life essence.
    - Ghost Tile forms: MASTER THE WORD / From [WORD].
    - Microcopy: THE HAUNT BEGINS.
-5. Haunt Word return system:
+3. Haunt Word return system:
    - Ghosted words return late in future Hunts.
    - Preferred placement: word 10 or 11.
    - Never replace Boss Word at position 12.
@@ -575,18 +630,18 @@ Current next patch: **Patch 6 - Master Gate cage/vault visual overhaul.**
    - Cleared copy: HAUNT BROKEN.
    - Failed again copy: STILL HAUNTED.
    - Polly taunt: "BBBLAAAAHHAHAHA!"
-6. Polly pop-in budget:
+4. Polly pop-in budget:
    - Polly is not permanent during gameplay.
    - 1 pop-in per word round.
    - 2 max for major moments.
    - Always appears at end of round win/loss.
-7. Score target/rank system:
+5. Score target/rank system:
    - Score should support personal best, Polly target score, Hunt rank, and future daily/friend/global rankings.
-8. Life Feather milestone/reserve system:
+6. Life Feather milestone/reserve system:
    - UI feathers exist.
    - Score milestone restore and 1 reserve feather are not implemented yet.
-9. Vault / Ranks / Profile pages.
-10. `expo-av` to `expo-audio` migration.
+7. Vault / Ranks / Profile pages.
+8. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -628,7 +683,8 @@ Current next patch: **Patch 6 - Master Gate cage/vault visual overhaul.**
 - MASTERED text below word, not screen center
 - Ghost tile never reveals missed phrase
 - "Thought so." â€” never change
-- "BINGO BANGO ZZZINGOO" â€” never change
+- "BINGO BANGO ZZZZINGO!" spelling â€” never change
+- "BINGO BANGO ZZZZINGO!" is rare game/system achievement text only, never Polly dialogue
 - Database grows over time â€” no finish line, no endgame
 - All tiles identical until swiped â€” Polly gives nothing away
 - Vault replaces Garden â€” permanent
@@ -697,14 +753,16 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 ### Polly Presence
 
 - Polly is not a permanent gameplay presence.
-- Polly appears only at high-emotion moments.
-- 1 pop-in per word round.
-- 2 max if the round has a major event.
+- Polly is the opponent, not a friendly celebration mascot.
+- Polly appears only as a pop-in.
+- 1 pop-in during a big moment in a word round.
 - Polly always appears at end of round win/loss.
 - Polly pops from bottom-left and never blocks the active tile, right shatter lane, or Master Gate.
-- Mastery line: "BINGO BANGO ZZZINGOO"
+- Normal mastery opponent line: "That was mine."
+- Boss mastery opponent line: "Fine. Take it."
 - Normal ghost failure line: "Not yours yet."
 - Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
+- `BINGO BANGO ZZZZINGO!` is not Polly dialogue.
 
 ### Screen Layout
 
@@ -784,7 +842,8 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 5. Word Core jumps out of cracked word.
 6. Core grows, glows, and spins center-screen.
 7. Core shoots toward Vault nav icon.
-8. Polly pops in: "BINGO BANGO ZZZINGOO"
+8. Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`.
+9. Boss mastery may additionally trigger the rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting.
 
 ### Word Core
 
@@ -880,9 +939,9 @@ Current implementation:
 3. One active tile queue (Patch 3 complete)
 4. Press-hold tile behavior (Patch 4 complete)
 5. UP absorb and RIGHT toss/shatter (Patch 5 complete)
-6. Master Gate visual overhaul (Patch 6 next)
-7. Hidden tile unlock
-8. MASTERED celebration
+6. Master Gate visual overhaul (Patch 6 complete)
+7. Hidden tile unlock (Patch 7 complete)
+8. MASTERED celebration (Patch 8 next)
 9. Ghost merge loss
 10. Feathers and score targets
 11. Haunt Word return system
