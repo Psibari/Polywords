@@ -85,6 +85,8 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Feathers:** Hearts are replaced by Feathers. Player starts with 5. Wrong swipe plucks 1. 0 feathers ends run. Score milestones can restore a Life Feather. If full, player can hold 1 reserve feather max.
 
+Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/store state remains named `lives`. Reserve feathers and score milestone restore are not implemented yet.
+
 **Score:** Competition system for personal bests, Polly target score, Hunt rank, and future daily/friend/global rankings. Score does not replace mastery. Word Cores are permanent mastery trophies.
 
 **Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core. `#7B2D8B` for UI/gate/shards. `#9B2D6B` for trap/ghost shard accents. `#4CAF50` only Polly character. `#0F0D2A` only Master Gate locked surface. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
@@ -119,7 +121,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 ---
 
-## One-at-a-Time Tile Queue (Design locked — not yet built)
+## One-at-a-Time Tile Queue (Design locked — partially implemented)
 
 - One tile flies in at a time. Player swipes. Next tile arrives.
 - ALL TILES LOOK IDENTICAL UNTIL SWIPED — Polly gives nothing away
@@ -129,6 +131,13 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 - Gap = skill-based: base 350ms, combo reduces, wrong swipe +150ms
 - Between tiles: pure silence — emptiness is tension
 - Landing position: vertical center of battlefield
+
+Current implementation:
+- Normal visible masks render one active tile at a time using the existing shuffled order.
+- The active visible mask is a large centered arcade mask vessel.
+- Hidden final split tiles remain compact.
+- Queue advances only after the active tile resolves, and gate/complete waits until the queue advances past the final visible tile.
+- Press-hold grab feel, entry physics, swipe instruction labels, and proper returning Haunt placement are still pending.
 
 ---
 
@@ -144,6 +153,11 @@ Both correct → MASTERY SEQUENCE:
 MASTERED text first → word swells → crystal shards → seed drops → word compresses → flies to vault icon.
 
 Missed → GHOST (solid purple border, no dashes, phrase NEVER revealed).
+
+Current ghost behavior:
+- Ghosts created during the current run are stored but cannot appear until the next run starts.
+- The store snapshots `runStartGhostWordIds` at run start.
+- `GhostTile` is currently disabled from the Master Gate slot so it cannot block gate unlock/release flow.
 
 ---
 
@@ -180,11 +194,12 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 ## Key Bugs Pending
 
 ```
-🔴 wrongSwipeOccurred.current not resetting between words
-🟠 Mastery celebration word zoom over-scales (target 1.6×)
 🟠 Polly Hunt System — not built yet
 🟠 expo-av → expo-audio migration deferred
-🟡 One-at-a-time queue — implementation pending
+🟡 Press-hold tile grab feel — pending
+🟡 Swipe instruction labels — pending
+🟡 Master Gate visual overhaul — pending
+🟡 Returning Haunt placement — pending
 🟡 Vault — implementation pending
 🟡 Living Pool Model — requires Supabase (Phase 2)
 ```

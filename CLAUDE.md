@@ -166,10 +166,17 @@ Tile starts flying right → gets less than halfway → RUBBER-BANDS back → bu
 
 ## One-at-a-Time Tile Queue System
 
-**LOCKED DESIGN — Not yet built. Implementation Phase 1.**
+**LOCKED DESIGN — Partially implemented.**
 
 ### Fundamentals
 One tile enters at a time. Player makes one binary decision. Next tile arrives after resolution. Feels like a fight, not a quiz.
+
+### Current Implementation Notes
+- Normal visible masks now render one active tile at a time in `MaskBoard.tsx`.
+- The queue uses the existing shuffled mask order and advances only after the active tile resolves.
+- The active visible mask is styled as a large centered arcade mask vessel in `SwipeMask.tsx`.
+- Hidden final split tiles stay compact via `isSpecialSplit`.
+- Press-hold grab feel, entry physics, swipe instruction labels, and final Haunt placement are still pending.
 
 ### Queue Build Rules
 1. Ghost tile always first (if exists) — enters from LEFT
@@ -365,6 +372,12 @@ Tab: "VAULT" · Icon: heavy vault door, partially open, gold light spilling
 
 **Ghost wordId:** Always use WORD STRING (e.g. "BARK") — not stepIndex.
 
+**Current implementation note:**
+- Ghosts created during the current run are stored but do not appear until a new run starts.
+- `useGameStore.runStartGhostWordIds` snapshots which ghosts existed at run start.
+- `GhostTile` is currently disabled from the Master Gate slot so it cannot block normal gate unlock/release flow.
+- Proper returning Haunt placement remains pending.
+
 ---
 
 ## Visual Effects
@@ -435,11 +448,12 @@ T+1400ms Tiles stagger in at 120ms intervals
 ## Pending Fixes
 
 ```
-🔴 wrongSwipeOccurred.current not resetting between words
-🟠 Mastery celebration word zoom over-scales (target 1.6×)
 🟠 Polly Hunt System — not yet built
 🟠 expo-av → expo-audio migration deferred
-🟡 One-at-a-time queue — design locked, implementation pending
+🟡 Press-hold tile grab feel — pending
+🟡 Swipe instruction labels — pending
+🟡 Master Gate visual overhaul — pending
+🟡 Returning Haunt placement — pending
 🟡 Vault — design locked, implementation pending (Phase 3)
 🟡 Living Pool Model — requires Supabase (Phase 2)
 ```
@@ -674,6 +688,11 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 - 0 feathers ends run.
 - Score milestones can restore a Life Feather.
 - If feathers are full, player can hold 1 reserve feather max.
+
+Current implementation:
+- HUD renders five custom feather slots in `GameScreen.tsx`.
+- Internal engine/store state is still named `lives`; do not rename it until a dedicated state migration.
+- Reserve feathers and score milestone restore are not implemented yet.
 
 ### Score Purpose
 
