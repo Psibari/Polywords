@@ -295,6 +295,7 @@ export default function MaskRewriter() {
   const [importWarnings, setImportWarnings] = useState([]);
   const [creativity, setCreativity] = useState("balanced");
   const [freshRerun, setFreshRerun] = useState(false);
+  const [mockMode, setMockMode] = useState(false);
   const [variationId, setVariationId] = useState("");
   const [tweakNotes, setTweakNotes] = useState("");
   const pauseRef = useRef(false);
@@ -410,6 +411,7 @@ export default function MaskRewriter() {
         creativity,
         temperature,
         freshRerun,
+        mockMode,
         variationId: runVariationId,
         tweakNotes,
       }),
@@ -734,6 +736,15 @@ export default function MaskRewriter() {
                 onChange={e => setFreshRerun(e.target.checked)}
               />
               Fresh rerun: avoid sounding like the last pass
+            </label>
+            <label style={{fontSize:11, color:"rgba(240,237,255,0.78)", display:"flex", gap:7, alignItems:"center", marginBottom:9}}>
+              <input
+                type="checkbox"
+                checked={mockMode}
+                disabled={phase === "running"}
+                onChange={e => setMockMode(e.target.checked)}
+              />
+              Local mock mode (skip Anthropic)
             </label>
             <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", lineHeight:1.4}}>
               Variation ID<br/>

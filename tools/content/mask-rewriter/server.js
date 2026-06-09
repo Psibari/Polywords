@@ -6,6 +6,16 @@ dotenv.config();
 
 const PORT = 8787;
 const MODEL = "claude-sonnet-4-20250514";
+const MOCK_MODE = process.env.MOCK_MODE === "true";
+
+const createMockResponse = (batch) => batch.map((word, index) => ({
+  w: String(word.w || `WORD${index + 1}`).toUpperCase(),
+  tiles: [
+    { t: "REAL", sense: "Common meaning", mask: "Real meaning" },
+    { t: "HIDDEN", sense: "Surprising sense", mask: "Hidden meaning" },
+    { t: "TRAP", mask: "Tempting trap", why: "Seems close to a real meaning", pull: "Common confusion" },
+  ],
+}));
 
 const SYSTEM = `You write tile copy for POLYWORDS, a mobile arcade word game about polysemy. Players swipe tiles UP for real meanings and RIGHT for traps.
 
@@ -100,7 +110,7 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json({ limit: "1mb" }));
 
 app.post("/api/rewrite-batch", async (req, res) => {
-  const { batch, batchIndex, testMode, creativity, temperature, freshRerun, variationId, tweakNotes } = req.body ?? {};
+  const { batch, batchIndex, testMode, creativity, temperature, freshRerun, variationId, tweakNotes, mockMode } = req.body ?? {};
 
   if (!Array.isArray(batch) || batch.length === 0) {
     return res.status(400).json({ error: "Request body must include a non-empty batch array." });
@@ -108,6 +118,10 @@ app.post("/api/rewrite-batch", async (req, res) => {
 
   if (testMode !== true) {
     return res.status(400).json({ error: "TEST_MODE is required for this local tool patch." });
+  }
+
+  if (mockMode || MOCK_MODE) {
+    return res.json({ batchIndex, words: createMockResponse(batch), warning: "Local mock mode enabled." });
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -162,10 +176,14 @@ app.post("/api/rewrite-batch", async (req, res) => {
 
     return res.json({ batchIndex, words });
   } catch (error) {
+    if (MOCK_MODE) {
+      const words = createMockResponse(batch);
+      return res.json({ batchIndex, words, warning: "Local mock mode enabled due to Anthropic failure." });
+    }
     return res.status(500).json({ error: error.message });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`POLYWORDS mask rewriter API listening on http://localhost:${PORT}`);
+  console.log(`POLYWORDS mask rewriter API listening on http://localhost:${PORT}${MOCK_MODE ? " (MOCK_MODE enabled)" : ""}`);
 });

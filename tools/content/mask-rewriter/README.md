@@ -39,6 +39,11 @@ http://localhost:8787/api/rewrite-batch
 
 The Express server reads `ANTHROPIC_API_KEY` from `.env`.
 
+### Mock mode
+
+If you do not have Anthropic credits, enable mock mode by setting `MOCK_MODE=true` in `.env` or by turning on "Local mock mode" in the UI.
+Mock mode returns placeholder tile responses so the frontend can be tested without an actual Anthropic call.
+
 ## Build
 
 ```bash
