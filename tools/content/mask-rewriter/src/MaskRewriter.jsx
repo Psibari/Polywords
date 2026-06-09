@@ -195,11 +195,12 @@ export default function MaskRewriter() {
   const [specificWordsText, setSpecificWordsText] = useState("");
   const [fullConfirmed, setFullConfirmed] = useState(false);
   const [selectedWords, setSelectedWords] = useState([]);
-  const [creativity, setCreativity] = useState("balanced");
-  const [freshRerun, setFreshRerun] = useState(false);
-  const [variationId, setVariationId] = useState("");
-  const pauseRef = useRef(false);
-  const timerRef = useRef(null);
+const [creativity, setCreativity] = useState("balanced");
+const [freshRerun, setFreshRerun] = useState(false);
+const [variationId, setVariationId] = useState("");
+const [tweakNotes, setTweakNotes] = useState("");
+const pauseRef = useRef(false);
+const timerRef = useRef(null);
 
   const addLog = (msg) => setLog(p => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p.slice(0, 49)]);
 
@@ -269,6 +270,7 @@ export default function MaskRewriter() {
         temperature,
         freshRerun,
         variationId: runVariationId,
+        tweakNotes,
       }),
     });
 
@@ -288,7 +290,7 @@ export default function MaskRewriter() {
     }, new Map());
 
     return [...groups.values()].flatMap(validateRowsForWord);
-  }, [creativity, freshRerun]);
+  }, [creativity, freshRerun, tweakNotes]);
 
   const runAll = useCallback(async (wordsForRun, startIdx = 0, runVariationId = variationId) => {
     const totalBatches = Math.ceil(wordsForRun.length / BATCH_SIZE);
@@ -546,6 +548,55 @@ export default function MaskRewriter() {
                 {variationId || "created on start"}
               </span>
             </div>
+          </div>
+          <div style={{
+            minWidth: 260,
+            background:"rgba(255,255,255,0.04)",
+            border:"1px solid rgba(255,255,255,0.08)",
+            borderRadius:8,
+            padding:"10px 12px",
+          }}>
+            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
+              Tweak Notes
+            </div>
+            <textarea
+              value={tweakNotes}
+              disabled={phase === "running"}
+              onChange={e => setTweakNotes(e.target.value)}
+              placeholder={`Make traps closer to real meanings.\nAvoid weird phrases nobody says.\nUse SPRING = opposite of Autumn style.`}
+              style={{
+                width:"100%",
+                minHeight:82,
+                boxSizing:"border-box",
+                resize:"vertical",
+                background:"rgba(15,13,42,0.82)",
+                border:"1px solid rgba(245,200,66,0.25)",
+                borderRadius:6,
+                color:"#F0EDFF",
+                padding:"8px",
+                fontFamily:"inherit",
+                fontSize:12,
+                lineHeight:1.35,
+                marginBottom:7,
+              }}
+            />
+            <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", lineHeight:1.4, marginBottom:8}}>
+              These notes apply only to the next generation run.
+            </div>
+            <button
+              type="button"
+              disabled={phase === "running" || !tweakNotes}
+              onClick={() => setTweakNotes("")}
+              style={{
+                ...btnStyle("rgba(255,255,255,0.08)", "#F0EDFF", true),
+                padding:"6px 10px",
+                fontSize:10,
+                opacity: phase === "running" || !tweakNotes ? 0.45 : 1,
+                cursor: phase === "running" || !tweakNotes ? "not-allowed" : "pointer",
+              }}
+            >
+              CLEAR TWEAK NOTES
+            </button>
           </div>
           <div style={{display:"flex", gap:10}}>
           {phase === "idle" && (

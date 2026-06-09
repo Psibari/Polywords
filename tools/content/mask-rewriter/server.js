@@ -88,7 +88,7 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json({ limit: "1mb" }));
 
 app.post("/api/rewrite-batch", async (req, res) => {
-  const { batch, batchIndex, testMode, creativity, temperature, freshRerun, variationId } = req.body ?? {};
+  const { batch, batchIndex, testMode, creativity, temperature, freshRerun, variationId, tweakNotes } = req.body ?? {};
 
   if (!Array.isArray(batch) || batch.length === 0) {
     return res.status(400).json({ error: "Request body must include a non-empty batch array." });
@@ -111,8 +111,12 @@ app.post("/api/rewrite-batch", async (req, res) => {
       ? "Fresh rerun instruction: avoid sounding like the last pass. Prefer genuinely different masks/traps while preserving the same POLYWORDS tone and rules."
       : "Fresh rerun instruction: none.",
   ].join("\n");
+  const cleanedTweakNotes = String(tweakNotes || "").trim();
+  const tweakNotesBlock = cleanedTweakNotes
+    ? `\n\nTweak notes for this run:\n${cleanedTweakNotes}`
+    : "";
 
-  const userMsg = `${variationNotes}\n\nWrite POLYWORDS tile copy for these ${batch.length} words:\n${JSON.stringify(batch)}`;
+  const userMsg = `${variationNotes}${tweakNotesBlock}\n\nWrite POLYWORDS tile copy for these ${batch.length} words:\n${JSON.stringify(batch)}`;
 
   try {
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
