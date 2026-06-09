@@ -10,7 +10,6 @@ const ARC_MAP  = { E: "Confidence", M: "Flow", H: "Tension", V: "Climax" };
 const BATCH_SIZE = 10;
 const TOTAL_BATCHES = Math.ceil(WORDS.length / BATCH_SIZE);
 const TEST_MODE = true;
-const ACTIVE_TOTAL_BATCHES = TEST_MODE ? 1 : TOTAL_BATCHES;
 
 const DICTIONARY_FLAT_PHRASES = [
   "a type of",
@@ -88,6 +87,13 @@ function validateRowsForWord(rows) {
       "AUDIT ISSUES": issues.join("; "),
     };
   });
+}
+
+function parseSpecificWordList(text) {
+  return String(text || "")
+    .split(/[,\n]/)
+    .map(w => w.trim())
+    .filter(Boolean);
 }
 
 const SYSTEM = `You write tile copy for POLYWORDS, a mobile arcade word game about polysemy. Players swipe tiles UP (real meaning) or RIGHT (trap). Your job is to manufacture brain-glitch moments.
@@ -180,10 +186,46 @@ export default function MaskRewriter() {
   const [results, setResults]   = useState([]);        // flat tile rows
   const [errors, setErrors]     = useState([]);
   const [log, setLog]           = useState([]);
+  const [runMode, setRunMode]   = useState("test");    // test | specific | full
+  const [specificWordsText, setSpecificWordsText] = useState("");
+  const [fullConfirmed, setFullConfirmed] = useState(false);
+  const [selectedWords, setSelectedWords] = useState([]);
   const pauseRef = useRef(false);
   const timerRef = useRef(null);
 
   const addLog = (msg) => setLog(p => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p.slice(0, 49)]);
+
+  const getWordsForRunMode = useCallback(() => {
+    if (runMode === "test") {
+      return { words: WORDS.slice(0, BATCH_SIZE), missing: [], blocked: false };
+    }
+
+    if (runMode === "specific") {
+      const requested = parseSpecificWordList(specificWordsText);
+      const seen = new Set();
+      const words = [];
+      const missing = [];
+
+      for (const raw of requested) {
+        const key = raw.toUpperCase();
+        const match = WORDS.find(entry => entry.w.toUpperCase() === key);
+        if (match && !seen.has(match.w)) {
+          seen.add(match.w);
+          words.push(match);
+        } else if (!match) {
+          missing.push(raw);
+        }
+      }
+
+      return { words, missing, blocked: words.length === 0 };
+    }
+
+    return {
+      words: WORDS,
+      missing: [],
+      blocked: !fullConfirmed,
+    };
+  }, [runMode, specificWordsText, fullConfirmed]);
 
   const flattenResult = (wordObj) => {
     const entry = WORDS.find(x => x.w === wordObj.w);
@@ -204,8 +246,8 @@ export default function MaskRewriter() {
     }));
   };
 
-  const processBatch = useCallback(async (idx) => {
-    const batch = WORDS.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE);
+  const processBatch = useCallback(async (idx, wordsForRun) => {
+    const batch = wordsForRun.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE);
 
     const res = await fetch("http://localhost:8787/api/rewrite-batch", {
       method: "POST",
@@ -235,20 +277,21 @@ export default function MaskRewriter() {
     return [...groups.values()].flatMap(validateRowsForWord);
   }, []);
 
-  const runAll = useCallback(async (startIdx = 0) => {
+  const runAll = useCallback(async (wordsForRun, startIdx = 0) => {
+    const totalBatches = Math.ceil(wordsForRun.length / BATCH_SIZE);
     pauseRef.current = false;
     setPhase("running");
 
     let idx = startIdx;
-    while (idx < ACTIVE_TOTAL_BATCHES) {
+    while (idx < totalBatches) {
       if (pauseRef.current) { setPhase("paused"); return; }
 
-      const words = WORDS.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE)
+      const words = wordsForRun.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE)
         .map(x => x.w).join(", ");
-      addLog(`Batch ${idx + 1}/${ACTIVE_TOTAL_BATCHES}: ${words}`);
+      addLog(`Batch ${idx + 1}/${totalBatches}: ${words}`);
 
       try {
-        const rows = await processBatch(idx);
+        const rows = await processBatch(idx, wordsForRun);
         setResults(p => [...p, ...rows]);
         setBatchIdx(idx + 1);
         addLog(`✓ ${rows.length} tiles written`);
@@ -264,16 +307,37 @@ export default function MaskRewriter() {
     }
 
     setPhase("done");
-    addLog(TEST_MODE ? "✓ Test batch complete. TEST_MODE stopped before full run." : "🎉 All batches complete!");
-  }, [processBatch]);
+    addLog(runMode === "test" ? "✓ Test batch complete." : `✓ ${runMode === "specific" ? "Specific words" : "Full database"} run complete.`);
+  }, [processBatch, runMode]);
 
-  const handleStart  = () => runAll(batchIdx);
+  const handleStart  = () => {
+    const selection = getWordsForRunMode();
+
+    if (selection.blocked) {
+      if (runMode === "full") addLog("Full database run requires confirmation checkbox.");
+      else addLog("Specific Words mode needs at least one matched word.");
+      return;
+    }
+
+    if (selection.missing.length) {
+      addLog(`Words not found: ${selection.missing.join(", ")}`);
+    }
+
+    setBatchIdx(0);
+    setResults([]);
+    setErrors([]);
+    setSelectedWords(selection.words);
+    runAll(selection.words, 0);
+  };
   const handlePause  = () => { pauseRef.current = true; };
-  const handleResume = () => runAll(batchIdx);
+  const handleResume = () => {
+    const wordsForRun = selectedWords.length ? selectedWords : getWordsForRunMode().words;
+    runAll(wordsForRun, batchIdx);
+  };
   const handleReset  = () => {
     pauseRef.current = true;
     clearTimeout(timerRef.current);
-    setPhase("idle"); setBatchIdx(0); setResults([]); setErrors([]); setLog([]);
+    setPhase("idle"); setBatchIdx(0); setResults([]); setErrors([]); setLog([]); setSelectedWords([]);
   };
 
   const downloadCSV = () => {
@@ -290,8 +354,17 @@ export default function MaskRewriter() {
     a.click(); URL.revokeObjectURL(url);
   };
 
-  const pct       = Math.round((batchIdx / ACTIVE_TOTAL_BATCHES) * 100);
-  const totalWords = Math.min(batchIdx * BATCH_SIZE, WORDS.length);
+  const previewSelection = getWordsForRunMode();
+  const wordsForProgress = selectedWords.length ? selectedWords : previewSelection.words;
+  const totalBatchesForProgress = Math.max(1, Math.ceil(wordsForProgress.length / BATCH_SIZE));
+  const startBlocked = phase === "idle" && previewSelection.blocked;
+  const runButtonLabel = runMode === "test"
+    ? "▶ START TEST BATCH"
+    : runMode === "specific"
+      ? "▶ START SPECIFIC WORDS"
+      : "▶ START FULL DATABASE";
+  const pct       = Math.round((batchIdx / totalBatchesForProgress) * 100);
+  const totalWords = Math.min(batchIdx * BATCH_SIZE, wordsForProgress.length);
   const totalTiles = results.length;
   const realCount  = results.filter(r => r["TILE TYPE"] === "✓ REAL").length;
   const hiddenCount= results.filter(r => r["TILE TYPE"] === "✦ HIDDEN").length;
@@ -323,10 +396,103 @@ export default function MaskRewriter() {
             Full 739-word database · Tone-matched batch generator
           </div>
         </div>
-        <div style={{marginLeft:"auto", display:"flex", gap:10}}>
+        <div style={{marginLeft:"auto", display:"flex", alignItems:"flex-start", gap:14}}>
+          <div style={{
+            minWidth: 300,
+            background:"rgba(255,255,255,0.04)",
+            border:"1px solid rgba(255,255,255,0.08)",
+            borderRadius:8,
+            padding:"10px 12px",
+          }}>
+            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
+              RUN MODE
+            </div>
+            <div style={{display:"flex", flexWrap:"wrap", gap:8, marginBottom:8}}>
+              {[
+                ["test", "Test Batch"],
+                ["specific", "Specific Words"],
+                ["full", "Full Loaded Database"],
+              ].map(([mode, label]) => (
+                <label key={mode} style={{
+                  fontSize:11,
+                  color: runMode === mode ? "#F5C842" : "rgba(240,237,255,0.72)",
+                  display:"flex",
+                  alignItems:"center",
+                  gap:5,
+                  cursor:"pointer",
+                }}>
+                  <input
+                    type="radio"
+                    name="runMode"
+                    value={mode}
+                    checked={runMode === mode}
+                    disabled={phase === "running"}
+                    onChange={() => {
+                      setRunMode(mode);
+                      setBatchIdx(0);
+                      setSelectedWords([]);
+                    }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            {runMode === "specific" && (
+              <textarea
+                value={specificWordsText}
+                disabled={phase === "running"}
+                onChange={e => {
+                  setSpecificWordsText(e.target.value);
+                  setBatchIdx(0);
+                  setSelectedWords([]);
+                }}
+                placeholder="spring, light, bank"
+                style={{
+                  width:"100%",
+                  minHeight:54,
+                  boxSizing:"border-box",
+                  resize:"vertical",
+                  background:"rgba(15,13,42,0.82)",
+                  border:"1px solid rgba(245,200,66,0.25)",
+                  borderRadius:6,
+                  color:"#F0EDFF",
+                  padding:"8px",
+                  fontFamily:"inherit",
+                  fontSize:12,
+                }}
+              />
+            )}
+            {runMode === "full" && (
+              <label style={{fontSize:11, color:"rgba(240,237,255,0.75)", display:"flex", gap:7, alignItems:"center"}}>
+                <input
+                  type="checkbox"
+                  checked={fullConfirmed}
+                  disabled={phase === "running"}
+                  onChange={e => setFullConfirmed(e.target.checked)}
+                />
+                I understand this will run every loaded word.
+              </label>
+            )}
+            {startBlocked && (
+              <div style={{fontSize:11, color:"#CC2200", marginTop:7}}>
+                {runMode === "full"
+                  ? "Check the confirmation box to enable the full database run."
+                  : "Enter at least one loaded word to run Specific Words."}
+              </div>
+            )}
+          </div>
+          <div style={{display:"flex", gap:10}}>
           {phase === "idle" && (
-            <button onClick={handleStart} style={btnStyle("#F5C842","#1E1A3A")}>
-              ▶ START TEST BATCH
+            <button
+              onClick={handleStart}
+              disabled={startBlocked}
+              style={{
+                ...btnStyle("#F5C842","#1E1A3A"),
+                opacity: startBlocked ? 0.45 : 1,
+                cursor: startBlocked ? "not-allowed" : "pointer",
+              }}
+            >
+              {runButtonLabel}
             </button>
           )}
           {phase === "running" && (
@@ -343,6 +509,7 @@ export default function MaskRewriter() {
           {phase !== "idle" && (
             <button onClick={handleReset} style={btnStyle("rgba(255,255,255,0.08)","#aaa")}>✕ RESET</button>
           )}
+          </div>
         </div>
       </div>
 
@@ -354,7 +521,7 @@ export default function MaskRewriter() {
             <div style={{display:"flex", justifyContent:"space-between", marginBottom:10}}>
               <span style={{fontWeight:600, fontSize:13, color:"#F5C842"}}>PROGRESS</span>
               <span style={{fontSize:13, color:"rgba(240,237,255,0.6)"}}>
-                {batchIdx}/{ACTIVE_TOTAL_BATCHES} batches · {totalWords}/{TEST_MODE ? Math.min(BATCH_SIZE, WORDS.length) : WORDS.length} words
+                {batchIdx}/{totalBatchesForProgress} batches · {totalWords}/{wordsForProgress.length} words
               </span>
             </div>
             <div style={{background:"rgba(255,255,255,0.06)", borderRadius:6, height:12, overflow:"hidden"}}>
@@ -367,8 +534,8 @@ export default function MaskRewriter() {
               }}/>
             </div>
             <div style={{marginTop:8, fontSize:13, color:"rgba(240,237,255,0.5)"}}>
-              {phase === "idle"    && (TEST_MODE ? "TEST_MODE is on — one batch only" : "Ready to run — press Start")}
-              {phase === "running" && `Processing batch ${batchIdx + 1}... (~${Math.ceil((ACTIVE_TOTAL_BATCHES - batchIdx) * 1.2)} seconds remaining)`}
+              {phase === "idle"    && (runMode === "test" ? "TEST_MODE is on — first batch only" : "Ready to run selected words")}
+              {phase === "running" && `Processing batch ${batchIdx + 1}... (~${Math.ceil((totalBatchesForProgress - batchIdx) * 1.2)} seconds remaining)`}
               {phase === "paused"  && `Paused at batch ${batchIdx} — press Resume to continue`}
               {phase === "done"    && `✓ Complete — ${totalTiles} tiles written across ${totalWords} words`}
             </div>
@@ -483,8 +650,8 @@ export default function MaskRewriter() {
                 ✗ Metal coil<br/>
                 ✓ Used in cheap mattresses<br/><br/>
                 <strong style={{color:"#F5C842"}}>EST. TIME</strong><br/>
-                TEST_MODE: one batch only by default<br/>
-                Full run batches available only after changing TEST_MODE<br/><br/>
+                Default mode runs the first safe test batch<br/>
+                Specific/full modes use the Run Mode controls above<br/><br/>
                 <strong style={{color:"#F5C842"}}>SAFE TO PAUSE</strong><br/>
                 Download partial results anytime.
               </div>
