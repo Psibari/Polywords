@@ -12,6 +12,84 @@ const TOTAL_BATCHES = Math.ceil(WORDS.length / BATCH_SIZE);
 const TEST_MODE = true;
 const ACTIVE_TOTAL_BATCHES = TEST_MODE ? 1 : TOTAL_BATCHES;
 
+const DICTIONARY_FLAT_PHRASES = [
+  "a type of",
+  "one of",
+  "the act of",
+  "the process of",
+  "a person who",
+  "a thing that",
+  "means",
+  "definition of",
+];
+
+function countWords(text) {
+  return String(text || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function normalize(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function validateTile(row) {
+  const issues = [];
+  const mask = row["MASK (player reads)"] || "";
+  const normalizedMask = normalize(mask);
+  const normalizedWord = normalize(row.WORD);
+
+  if (!normalizedMask) {
+    issues.push("missing mask");
+  }
+
+  if (countWords(mask) > 4) {
+    issues.push("mask over 4 words");
+  }
+
+  if (normalizedWord && normalizedMask.split(" ").includes(normalizedWord)) {
+    issues.push("mask uses the boss/headword");
+  }
+
+  for (const phrase of DICTIONARY_FLAT_PHRASES) {
+    if (normalizedMask.includes(phrase)) {
+      issues.push(`dictionary-flat phrasing: ${phrase}`);
+    }
+  }
+
+  return issues;
+}
+
+function validateRowsForWord(rows) {
+  const maskCounts = new Map();
+
+  for (const row of rows) {
+    const key = normalize(row["MASK (player reads)"]);
+    if (!key) continue;
+    maskCounts.set(key, (maskCounts.get(key) || 0) + 1);
+  }
+
+  return rows.map(row => {
+    const issues = validateTile(row);
+    const key = normalize(row["MASK (player reads)"]);
+
+    if (key && maskCounts.get(key) > 1) {
+      issues.push("duplicate mask within the same word");
+    }
+
+    return {
+      ...row,
+      "AUDIT STATUS": issues.length ? "REVIEW" : "OK",
+      "AUDIT ISSUES": issues.join("; "),
+    };
+  });
+}
+
 const SYSTEM = `You write tile copy for POLYWORDS, a mobile arcade word game about polysemy. Players swipe tiles UP (real meaning) or RIGHT (trap). Your job is to manufacture brain-glitch moments.
 
 ━━━ THE PRODUCT ━━━
@@ -146,7 +224,15 @@ export default function MaskRewriter() {
 
     const data = await res.json();
     const parsed = data.words || [];
-    return parsed.flatMap(flattenResult);
+    const rows = parsed.flatMap(flattenResult);
+    const groups = rows.reduce((acc, row) => {
+      const key = row.WORD || "";
+      if (!acc.has(key)) acc.set(key, []);
+      acc.get(key).push(row);
+      return acc;
+    }, new Map());
+
+    return [...groups.values()].flatMap(validateRowsForWord);
   }, []);
 
   const runAll = useCallback(async (startIdx = 0) => {
