@@ -4,9 +4,18 @@ import express from "express";
 
 dotenv.config();
 
-const PORT = 8787;
-const MODEL = "claude-sonnet-4-20250514";
+const PORT = Number(process.env.PORT) || 8787;
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const MOCK_MODE = process.env.MOCK_MODE === "true";
+
+const sanitizeErrorDetail = (value) => String(value || "")
+  .replace(/x-api-key["':\s]+[^"',}\s]+/gi, "x-api-key: [redacted]")
+  .replace(/authorization["':\s]+bearer\s+[^"',}\s]+/gi, "authorization: Bearer [redacted]")
+  .replace(/anthropic-api-key["':\s]+[^"',}\s]+/gi, "anthropic-api-key: [redacted]")
+  .replace(/sk-ant-[A-Za-z0-9_-]+/g, "[redacted-api-key]")
+  .replace(/sk-[A-Za-z0-9_-]{20,}/g, "[redacted-api-key]")
+  .slice(0, 500);
 
 const createMockResponse = (batch) => batch.map((word, index) => ({
   w: String(word.w || `WORD${index + 1}`).toUpperCase(),
@@ -110,7 +119,8 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json({ limit: "1mb" }));
 
 app.post("/api/rewrite-batch", async (req, res) => {
-  const { batch, batchIndex, testMode, creativity, temperature, freshRerun, variationId, tweakNotes, mockMode } = req.body ?? {};
+  const { batch, batchIndex, testMode, creativity, temperature, freshRerun, variationId, tweakNotes, mockMode, provider } = req.body ?? {};
+  const selectedProvider = String(provider || "anthropic").toLowerCase() === "openai" ? "openai" : "anthropic";
 
   if (!Array.isArray(batch) || batch.length === 0) {
     return res.status(400).json({ error: "Request body must include a non-empty batch array." });
@@ -124,8 +134,12 @@ app.post("/api/rewrite-batch", async (req, res) => {
     return res.json({ batchIndex, words: createMockResponse(batch), warning: "Local mock mode enabled." });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY in .env." });
+  if (selectedProvider === "openai" && !process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: "Missing OPENAI_API_KEY." });
+  }
+
+  if (selectedProvider === "anthropic" && !process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY." });
   }
 
   const safeTemperature = Math.max(0.2, Math.min(1.0, Number(temperature) || 0.75));
@@ -145,6 +159,39 @@ app.post("/api/rewrite-batch", async (req, res) => {
   const userMsg = `${variationNotes}${tweakNotesBlock}\n\nWrite POLYWORDS tile copy for these ${batch.length} words:\n${JSON.stringify(batch)}`;
 
   try {
+    if (selectedProvider === "openai") {
+      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: OPENAI_MODEL,
+          temperature: safeTemperature,
+          messages: [
+            { role: "system", content: SYSTEM },
+            { role: "user", content: `${userMsg}\n\nReturn JSON only. No markdown, no prose.` },
+          ],
+        }),
+      });
+
+      if (!openaiRes.ok) {
+        const err = await openaiRes.text();
+        return res.status(openaiRes.status).json({
+          error: `OpenAI API ${openaiRes.status}`,
+          detail: sanitizeErrorDetail(err),
+        });
+      }
+
+      const data = await openaiRes.json();
+      const raw = data.choices?.[0]?.message?.content || "";
+      const clean = raw.replace(/```json\s*|\s*```/g, "").trim();
+      const words = JSON.parse(clean);
+
+      return res.json({ batchIndex, words });
+    }
+
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -153,7 +200,7 @@ app.post("/api/rewrite-batch", async (req, res) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: ANTHROPIC_MODEL,
         max_tokens: 6000,
         temperature: safeTemperature,
         system: SYSTEM,
@@ -165,7 +212,7 @@ app.post("/api/rewrite-batch", async (req, res) => {
       const err = await anthropicRes.text();
       return res.status(anthropicRes.status).json({
         error: `Anthropic API ${anthropicRes.status}`,
-        detail: err.slice(0, 500),
+        detail: sanitizeErrorDetail(err),
       });
     }
 
@@ -180,7 +227,7 @@ app.post("/api/rewrite-batch", async (req, res) => {
       const words = createMockResponse(batch);
       return res.json({ batchIndex, words, warning: "Local mock mode enabled due to Anthropic failure." });
     }
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: sanitizeErrorDetail(error.message) });
   }
 });
 

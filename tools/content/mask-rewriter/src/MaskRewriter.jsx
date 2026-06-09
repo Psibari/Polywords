@@ -23,8 +23,10 @@ const RUN_MODE_LABELS = {
 
 const sanitizeErrorSummary = (value) => String(value || "")
   .replace(/x-api-key["':\s]+[^"',}\s]+/gi, "x-api-key: [redacted]")
+  .replace(/authorization["':\s]+bearer\s+[^"',}\s]+/gi, "authorization: Bearer [redacted]")
   .replace(/anthropic-api-key["':\s]+[^"',}\s]+/gi, "anthropic-api-key: [redacted]")
   .replace(/sk-ant-[A-Za-z0-9_-]+/g, "[redacted-api-key]")
+  .replace(/sk-[A-Za-z0-9_-]{20,}/g, "[redacted-api-key]")
   .slice(0, 360);
 
 const classifyGenerationError = (error) => {
@@ -32,9 +34,15 @@ const classifyGenerationError = (error) => {
   const lower = raw.toLowerCase();
   let likelyCause = "Generation request failed.";
 
-  if (lower.includes("credit") || lower.includes("billing") || lower.includes("balance")) {
+  if (lower.includes("openai") && (lower.includes("credit") || lower.includes("quota") || lower.includes("billing") || lower.includes("insufficient_quota"))) {
+    likelyCause = "OpenAI credits, quota, or billing appear unavailable.";
+  } else if (lower.includes("openai") && (lower.includes("401") || lower.includes("unauthorized") || lower.includes("invalid api key") || lower.includes("incorrect api key") || lower.includes("missing openai_api_key"))) {
+    likelyCause = "OpenAI API key may be missing or invalid.";
+  } else if (lower.includes("openai") && (lower.includes("429") || lower.includes("rate limit"))) {
+    likelyCause = "OpenAI rate limit hit.";
+  } else if (lower.includes("credit") || lower.includes("billing") || lower.includes("balance")) {
     likelyCause = "Anthropic credits or billing appear unavailable.";
-  } else if (lower.includes("401") || lower.includes("unauthorized")) {
+  } else if (lower.includes("401") || lower.includes("unauthorized") || lower.includes("missing anthropic_api_key")) {
     likelyCause = "Anthropic API key may be missing or invalid.";
   } else if (lower.includes("429") || lower.includes("rate limit")) {
     likelyCause = "Anthropic rate limit hit.";
@@ -332,6 +340,7 @@ export default function MaskRewriter() {
   const [creativity, setCreativity] = useState("balanced");
   const [freshRerun, setFreshRerun] = useState(false);
   const [mockMode, setMockMode] = useState(false);
+  const [provider, setProvider] = useState("anthropic");
   const [variationId, setVariationId] = useState("");
   const [tweakNotes, setTweakNotes] = useState("");
   const pauseRef = useRef(false);
@@ -450,6 +459,7 @@ export default function MaskRewriter() {
           temperature,
           freshRerun,
           mockMode,
+          provider,
           variationId: runVariationId,
           tweakNotes,
         }),
@@ -479,7 +489,7 @@ export default function MaskRewriter() {
     }, new Map());
 
     return [...groups.values()].flatMap(validateRowsForWord);
-  }, [activeWords, creativity, freshRerun, mockMode, tweakNotes]);
+  }, [activeWords, creativity, freshRerun, mockMode, provider, tweakNotes]);
 
   const runAll = useCallback(async (wordsForRun, startIdx = 0, runVariationId = variationId) => {
     const totalBatches = Math.ceil(wordsForRun.length / BATCH_SIZE);
@@ -582,12 +592,13 @@ export default function MaskRewriter() {
   const trapCount  = results.filter(r => r["TILE TYPE"] === "✗ TRAP").length;
 
   const sourceLabel = uploadedFileName ? `Uploaded CSV: ${uploadedFileName}` : "Built-in database";
-  const apiModeLabel = mockMode ? "Local mock mode ON" : "Real Anthropic mode";
+  const providerLabel = provider === "openai" ? "OpenAI" : "Anthropic";
+  const apiModeLabel = mockMode ? "Local mock mode ON" : `Real ${providerLabel} mode`;
   const runModeLabel = RUN_MODE_LABELS[runMode] || runMode;
   const paidWarning = !mockMode
     ? runMode === "full"
-      ? "Full database + real Anthropic mode can use significant API credits."
-      : "Real Anthropic mode may use API credits."
+      ? `Full database + real ${providerLabel} mode can use significant API credits.`
+      : `Real ${providerLabel} mode may use API credits.`
     : "";
 
   const recentWords = [...new Set(results.slice(-60).map(r => r.WORD))].slice(-5).reverse();
@@ -764,6 +775,28 @@ export default function MaskRewriter() {
               VARIATION CONTROLS
             </div>
             <label style={{display:"block", fontSize:11, color:"rgba(240,237,255,0.62)", marginBottom:5}}>
+              Provider
+            </label>
+            <select
+              value={provider}
+              disabled={phase === "running"}
+              onChange={e => setProvider(e.target.value)}
+              style={{
+                width:"100%",
+                background:"rgba(15,13,42,0.82)",
+                border:"1px solid rgba(245,200,66,0.25)",
+                borderRadius:6,
+                color:"#F0EDFF",
+                padding:"7px 8px",
+                fontFamily:"inherit",
+                fontSize:12,
+                marginBottom:9,
+              }}
+            >
+              <option value="anthropic">Anthropic</option>
+              <option value="openai">OpenAI</option>
+            </select>
+            <label style={{display:"block", fontSize:11, color:"rgba(240,237,255,0.62)", marginBottom:5}}>
               Creativity
             </label>
             <select
@@ -802,7 +835,7 @@ export default function MaskRewriter() {
                 disabled={phase === "running"}
                 onChange={e => setMockMode(e.target.checked)}
               />
-              Local mock mode (skip Anthropic)
+              Local mock mode (skip paid APIs)
             </label>
             <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", lineHeight:1.4}}>
               Variation ID<br/>
