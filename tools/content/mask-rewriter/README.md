@@ -47,8 +47,22 @@ The Express server reads `ANTHROPIC_API_KEY` from `.env`.
 
 ### Mock mode
 
-If you do not have Anthropic credits, enable mock mode by setting `MOCK_MODE=true` in `.env` or by turning on "Local mock mode" in the UI.
+If you do not have Anthropic credits, enable mock mode by setting `MOCK_MODE=true` in `.env` or by turning on "Local mock mode (skip Anthropic)" in the UI.
 Mock mode returns placeholder tile responses so the frontend can be tested without an actual Anthropic call.
+
+### Real Anthropic mode
+
+When mock mode is off, the tool uses real Anthropic generation and may use API credits.
+If credits are low or billing is not enabled, use mock mode or add Anthropic billing/credits before running generation.
+Full Loaded Database runs in real Anthropic mode can use significant API credits, so keep the full-run confirmation checkbox as an intentional safety step.
+
+### Common errors
+
+- `Anthropic credits or billing appear unavailable.` means the Anthropic account likely needs credits or billing enabled.
+- `Anthropic API key may be missing or invalid.` usually means `.env` is missing `ANTHROPIC_API_KEY` or the key is invalid.
+- `Anthropic rate limit hit.` means retry later or reduce request volume.
+- `Local API server may not be running.` means the Express backend is probably not available at `http://localhost:8787`; run `npm.cmd run dev`.
+- `Model returned invalid JSON.` means the model response could not be parsed as the strict JSON format the tool expects.
 
 ## Build
 

@@ -15,6 +15,41 @@ const TEMPERATURE_BY_CREATIVITY = {
   balanced: 0.75,
   wild: 1.0,
 };
+const RUN_MODE_LABELS = {
+  test: "Test Batch",
+  specific: "Specific Words",
+  full: "Full Loaded Database",
+};
+
+const sanitizeErrorSummary = (value) => String(value || "")
+  .replace(/x-api-key["':\s]+[^"',}\s]+/gi, "x-api-key: [redacted]")
+  .replace(/anthropic-api-key["':\s]+[^"',}\s]+/gi, "anthropic-api-key: [redacted]")
+  .replace(/sk-ant-[A-Za-z0-9_-]+/g, "[redacted-api-key]")
+  .slice(0, 360);
+
+const classifyGenerationError = (error) => {
+  const raw = sanitizeErrorSummary(error?.message || error);
+  const lower = raw.toLowerCase();
+  let likelyCause = "Generation request failed.";
+
+  if (lower.includes("credit") || lower.includes("billing") || lower.includes("balance")) {
+    likelyCause = "Anthropic credits or billing appear unavailable.";
+  } else if (lower.includes("401") || lower.includes("unauthorized")) {
+    likelyCause = "Anthropic API key may be missing or invalid.";
+  } else if (lower.includes("429") || lower.includes("rate limit")) {
+    likelyCause = "Anthropic rate limit hit.";
+  } else if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("load failed")) {
+    likelyCause = "Local API server may not be running.";
+  } else if (lower.includes("invalid json") || lower.includes("unexpected token") || lower.includes("json.parse")) {
+    likelyCause = "Model returned invalid JSON.";
+  }
+
+  return {
+    title: "Request failed",
+    likelyCause,
+    rawSummary: raw || "No error message was provided.",
+  };
+};
 
 const DICTIONARY_FLAT_PHRASES = [
   "a type of",
@@ -285,6 +320,7 @@ export default function MaskRewriter() {
   const [batchIdx, setBatchIdx] = useState(0);
   const [results, setResults]   = useState([]);        // flat tile rows
   const [errors, setErrors]     = useState([]);
+  const [latestError, setLatestError] = useState(null);
   const [log, setLog]           = useState([]);
   const [runMode, setRunMode]   = useState("test");    // test | specific | full
   const [specificWordsText, setSpecificWordsText] = useState("");
@@ -401,28 +437,38 @@ export default function MaskRewriter() {
     const batch = wordsForRun.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE);
     const temperature = TEMPERATURE_BY_CREATIVITY[creativity] ?? TEMPERATURE_BY_CREATIVITY.balanced;
 
-    const res = await fetch("http://localhost:8787/api/rewrite-batch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        batch,
-        batchIndex: idx + 1,
-        testMode: TEST_MODE,
-        creativity,
-        temperature,
-        freshRerun,
-        mockMode,
-        variationId: runVariationId,
-        tweakNotes,
-      }),
-    });
+    let res;
+    try {
+      res = await fetch("http://localhost:8787/api/rewrite-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          batch,
+          batchIndex: idx + 1,
+          testMode: TEST_MODE,
+          creativity,
+          temperature,
+          freshRerun,
+          mockMode,
+          variationId: runVariationId,
+          tweakNotes,
+        }),
+      });
+    } catch (error) {
+      throw new Error(`Network request failed: ${error.message}`);
+    }
 
     if (!res.ok) {
       const err = await res.text();
-      throw new Error(`API ${res.status}: ${err.slice(0, 200)}`);
+      throw new Error(`API ${res.status}: ${sanitizeErrorSummary(err)}`);
     }
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (error) {
+      throw new Error(`Invalid JSON response: ${error.message}`);
+    }
     const parsed = data.words || [];
     const rows = parsed.flatMap(flattenResult);
     const groups = rows.reduce((acc, row) => {
@@ -455,7 +501,9 @@ export default function MaskRewriter() {
         addLog(`✓ ${rows.length} tiles written`);
       } catch (e) {
         addLog(`✗ Batch ${idx + 1} failed: ${e.message}`);
-        setErrors(p => [...p, { batch: idx + 1, error: e.message }]);
+        const classified = classifyGenerationError(e);
+        setLatestError({ batch: idx + 1, ...classified });
+        setErrors(p => [...p, { batch: idx + 1, error: classified.rawSummary, likelyCause: classified.likelyCause }]);
         // skip and continue
       }
 
@@ -488,6 +536,7 @@ export default function MaskRewriter() {
     setBatchIdx(0);
     setResults([]);
     setErrors([]);
+    setLatestError(null);
     setSelectedWords(selection.words);
     runAll(selection.words, 0, nextVariationId);
   };
@@ -499,7 +548,7 @@ export default function MaskRewriter() {
   const handleReset  = () => {
     pauseRef.current = true;
     clearTimeout(timerRef.current);
-    setPhase("idle"); setBatchIdx(0); setResults([]); setErrors([]); setLog([]); setSelectedWords([]);
+    setPhase("idle"); setBatchIdx(0); setResults([]); setErrors([]); setLatestError(null); setLog([]); setSelectedWords([]);
   };
 
   const downloadCSV = () => {
@@ -531,6 +580,15 @@ export default function MaskRewriter() {
   const realCount  = results.filter(r => r["TILE TYPE"] === "✓ REAL").length;
   const hiddenCount= results.filter(r => r["TILE TYPE"] === "✦ HIDDEN").length;
   const trapCount  = results.filter(r => r["TILE TYPE"] === "✗ TRAP").length;
+
+  const sourceLabel = uploadedFileName ? `Uploaded CSV: ${uploadedFileName}` : "Built-in database";
+  const apiModeLabel = mockMode ? "Local mock mode ON" : "Real Anthropic mode";
+  const runModeLabel = RUN_MODE_LABELS[runMode] || runMode;
+  const paidWarning = !mockMode
+    ? runMode === "full"
+      ? "Full database + real Anthropic mode can use significant API credits."
+      : "Real Anthropic mode may use API credits."
+    : "";
 
   const recentWords = [...new Set(results.slice(-60).map(r => r.WORD))].slice(-5).reverse();
   const recentSample = recentWords.map(w => ({
@@ -832,6 +890,101 @@ export default function MaskRewriter() {
           )}
           </div>
         </div>
+      </div>
+
+      <div style={{padding:"16px 28px 0"}}>
+        <div style={{
+          ...cardStyle,
+          display:"grid",
+          gridTemplateColumns:"repeat(5, minmax(150px, 1fr))",
+          gap:12,
+          borderColor: mockMode ? "rgba(76,175,80,0.32)" : "rgba(245,200,66,0.28)",
+          background:"rgba(15,13,42,0.34)",
+        }}>
+          {[
+            ["WORD SOURCE", sourceLabel],
+            ["LOADED WORDS", activeWords.length],
+            ["API MODE", apiModeLabel],
+            ["RUN MODE", runModeLabel],
+            ["CREATIVITY", creativity],
+            ["FRESH RERUN", freshRerun ? "On" : "Off"],
+          ].map(([label, value]) => (
+            <div key={label} style={{
+              background:"rgba(255,255,255,0.035)",
+              border:"1px solid rgba(255,255,255,0.07)",
+              borderRadius:8,
+              padding:"10px 12px",
+              minHeight:48,
+            }}>
+              <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", fontWeight:700, letterSpacing:1.4, marginBottom:5}}>
+                {label}
+              </div>
+              <div style={{
+                fontSize:13,
+                color: label === "API MODE" && mockMode ? "#4CAF50" : "#F0EDFF",
+                fontWeight:700,
+                lineHeight:1.35,
+                overflowWrap:"anywhere",
+                textTransform: label === "CREATIVITY" ? "capitalize" : "none",
+              }}>
+                {value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {paidWarning && (
+          <div style={{
+            marginTop:12,
+            background: runMode === "full" ? "rgba(204,34,0,0.12)" : "rgba(245,200,66,0.08)",
+            border: runMode === "full" ? "1px solid rgba(204,34,0,0.38)" : "1px solid rgba(245,200,66,0.28)",
+            borderRadius:8,
+            padding:"11px 14px",
+            color: runMode === "full" ? "#FFB4A8" : "#F5C842",
+            fontSize:12,
+            fontWeight:700,
+            letterSpacing:0.4,
+          }}>
+            {paidWarning}
+          </div>
+        )}
+
+        {latestError && (
+          <div style={{
+            marginTop:12,
+            background:"rgba(204,34,0,0.12)",
+            border:"1px solid rgba(204,34,0,0.42)",
+            borderRadius:8,
+            padding:"14px 16px",
+            display:"flex",
+            gap:14,
+            alignItems:"flex-start",
+          }}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:12, color:"#FFB4A8", fontWeight:800, letterSpacing:1.4, marginBottom:7}}>
+                {latestError.title} {latestError.batch ? `(batch ${latestError.batch})` : ""}
+              </div>
+              <div style={{fontSize:13, color:"#F0EDFF", fontWeight:700, marginBottom:5}}>
+                {latestError.likelyCause}
+              </div>
+              <div style={{fontSize:11, color:"rgba(240,237,255,0.66)", lineHeight:1.45, overflowWrap:"anywhere"}}>
+                Raw message summary: {latestError.rawSummary}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLatestError(null)}
+              style={{
+                ...btnStyle("rgba(255,255,255,0.08)", "#F0EDFF", true),
+                padding:"7px 10px",
+                fontSize:10,
+                whiteSpace:"nowrap",
+              }}
+            >
+              CLEAR ERROR
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{padding:"20px 28px", display:"grid", gridTemplateColumns:"1fr 380px", gap:20}}>
