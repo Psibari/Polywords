@@ -101,6 +101,101 @@ function parseSpecificWordList(text) {
     .filter(Boolean);
 }
 
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      field += '"';
+      i++;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      row.push(field);
+      field = "";
+    } else if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") i++;
+      row.push(field);
+      if (row.some(cell => cell.trim())) rows.push(row);
+      row = [];
+      field = "";
+    } else {
+      field += char;
+    }
+  }
+
+  row.push(field);
+  if (row.some(cell => cell.trim())) rows.push(row);
+  return rows;
+}
+
+function normalizeHeader(header) {
+  return String(header || "").trim().toLowerCase();
+}
+
+function findHeader(headers, names) {
+  const wanted = names.map(normalizeHeader);
+  return headers.find(header => wanted.includes(normalizeHeader(header)));
+}
+
+function getCell(record, header) {
+  return header ? String(record[header] || "").trim() : "";
+}
+
+function parseWordCsv(text) {
+  const rows = parseCsv(text);
+  if (rows.length < 2) {
+    return { words: [], skipped: rows.length, warnings: ["CSV needs a header row and at least one data row."] };
+  }
+
+  const headers = rows[0].map(header => String(header || "").trim());
+  const wordHeader = findHeader(headers, ["Word", "word", "WORD", "Headword", "headword"]);
+  if (!wordHeader) {
+    return { words: [], skipped: rows.length - 1, warnings: ["CSV needs a Word or Headword column."] };
+  }
+
+  const typeHeader = findHeader(headers, ["Type"]);
+  const themeHeader = findHeader(headers, ["Theme"]);
+  const difficultyHeader = findHeader(headers, ["Difficulty"]);
+  const meaningHeaders = [1, 2, 3, 4].map(i => findHeader(headers, [`Meaning ${i}`]));
+  const exampleHeaders = [1, 2, 3, 4].map(i => findHeader(headers, [`Example ${i}`]));
+  const seen = new Set();
+  const words = [];
+  let skipped = 0;
+
+  for (const cells of rows.slice(1)) {
+    const record = headers.reduce((acc, header, index) => {
+      acc[header] = cells[index] || "";
+      return acc;
+    }, {});
+    const word = getCell(record, wordHeader);
+    const key = word.toUpperCase();
+
+    if (!word || seen.has(key)) {
+      skipped++;
+      continue;
+    }
+
+    seen.add(key);
+    words.push({
+      w: word,
+      type: getCell(record, typeHeader),
+      theme: getCell(record, themeHeader),
+      difficulty: getCell(record, difficultyHeader),
+      meanings: meaningHeaders.map(header => getCell(record, header)).filter(Boolean),
+      examples: exampleHeaders.map(header => getCell(record, header)).filter(Boolean),
+    });
+  }
+
+  return { words, skipped, warnings: [] };
+}
+
 const SYSTEM = `You write tile copy for POLYWORDS, a mobile arcade word game about polysemy. Players swipe tiles UP (real meaning) or RIGHT (trap). Your job is to manufacture brain-glitch moments.
 
 ━━━ THE PRODUCT ━━━
@@ -195,18 +290,64 @@ export default function MaskRewriter() {
   const [specificWordsText, setSpecificWordsText] = useState("");
   const [fullConfirmed, setFullConfirmed] = useState(false);
   const [selectedWords, setSelectedWords] = useState([]);
-const [creativity, setCreativity] = useState("balanced");
-const [freshRerun, setFreshRerun] = useState(false);
-const [variationId, setVariationId] = useState("");
-const [tweakNotes, setTweakNotes] = useState("");
-const pauseRef = useRef(false);
-const timerRef = useRef(null);
+  const [activeWords, setActiveWords] = useState(WORDS);
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const [importWarnings, setImportWarnings] = useState([]);
+  const [creativity, setCreativity] = useState("balanced");
+  const [freshRerun, setFreshRerun] = useState(false);
+  const [variationId, setVariationId] = useState("");
+  const [tweakNotes, setTweakNotes] = useState("");
+  const pauseRef = useRef(false);
+  const timerRef = useRef(null);
+  const csvInputRef = useRef(null);
 
   const addLog = (msg) => setLog(p => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p.slice(0, 49)]);
 
+  const handleCsvImport = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = parseWordCsv(text);
+
+      if (!parsed.words.length) {
+        const warnings = parsed.warnings.length ? parsed.warnings : ["No valid words found in uploaded CSV."];
+        setImportWarnings(warnings);
+        addLog(`CSV import failed: ${warnings.join(" ")}`);
+        if (csvInputRef.current) csvInputRef.current.value = "";
+        return;
+      }
+
+      setActiveWords(parsed.words);
+      setUploadedFileName(file.name);
+      setImportWarnings([]);
+      setSelectedWords([]);
+      setBatchIdx(0);
+      setFullConfirmed(false);
+      addLog(`CSV loaded: ${parsed.words.length} words active, ${parsed.skipped} rows skipped.`);
+    } catch (error) {
+      const message = `CSV import failed: ${error.message}`;
+      setImportWarnings([message]);
+      addLog(message);
+      if (csvInputRef.current) csvInputRef.current.value = "";
+    }
+  };
+
+  const handleResetWordSource = () => {
+    setActiveWords(WORDS);
+    setUploadedFileName("");
+    setImportWarnings([]);
+    setSelectedWords([]);
+    setBatchIdx(0);
+    setFullConfirmed(false);
+    if (csvInputRef.current) csvInputRef.current.value = "";
+    addLog(`Word source reset to built-in database (${WORDS.length} words).`);
+  };
+
   const getWordsForRunMode = useCallback(() => {
     if (runMode === "test") {
-      return { words: WORDS.slice(0, BATCH_SIZE), missing: [], blocked: false };
+      return { words: activeWords.slice(0, BATCH_SIZE), missing: [], blocked: false };
     }
 
     if (runMode === "specific") {
@@ -217,9 +358,9 @@ const timerRef = useRef(null);
 
       for (const raw of requested) {
         const key = raw.toUpperCase();
-        const match = WORDS.find(entry => entry.w.toUpperCase() === key);
-        if (match && !seen.has(match.w)) {
-          seen.add(match.w);
+        const match = activeWords.find(entry => entry.w.toUpperCase() === key);
+        if (match && !seen.has(match.w.toUpperCase())) {
+          seen.add(match.w.toUpperCase());
           words.push(match);
         } else if (!match) {
           missing.push(raw);
@@ -230,18 +371,18 @@ const timerRef = useRef(null);
     }
 
     return {
-      words: WORDS,
+      words: activeWords,
       missing: [],
       blocked: !fullConfirmed,
     };
-  }, [runMode, specificWordsText, fullConfirmed]);
+  }, [activeWords, runMode, specificWordsText, fullConfirmed]);
 
   const flattenResult = (wordObj) => {
-    const entry = WORDS.find(x => x.w === wordObj.w);
+    const entry = activeWords.find(x => x.w.toUpperCase() === String(wordObj.w || "").toUpperCase());
     if (!entry) return [];
-    const type = TYPE_MAP[entry.t] || entry.t;
-    const diff = DIFF_MAP[entry.d] || entry.d;
-    const arc  = ARC_MAP[entry.d]  || "Flow";
+    const type = TYPE_MAP[entry.t] || entry.type || entry.t || "";
+    const diff = DIFF_MAP[entry.d] || entry.difficulty || entry.d || "";
+    const arc  = entry.theme || ARC_MAP[entry.d] || "Flow";
     return (wordObj.tiles || []).map(tile => ({
       WORD:             wordObj.w,
       TYPE:             type,
@@ -290,7 +431,7 @@ const timerRef = useRef(null);
     }, new Map());
 
     return [...groups.values()].flatMap(validateRowsForWord);
-  }, [creativity, freshRerun, tweakNotes]);
+  }, [activeWords, creativity, freshRerun, tweakNotes]);
 
   const runAll = useCallback(async (wordsForRun, startIdx = 0, runVariationId = variationId) => {
     const totalBatches = Math.ceil(wordsForRun.length / BATCH_SIZE);
@@ -416,6 +557,58 @@ const timerRef = useRef(null);
           </div>
         </div>
         <div style={{marginLeft:"auto", display:"flex", alignItems:"flex-start", gap:14}}>
+          <div style={{
+            minWidth: 250,
+            background:"rgba(255,255,255,0.04)",
+            border:"1px solid rgba(255,255,255,0.08)",
+            borderRadius:8,
+            padding:"10px 12px",
+          }}>
+            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
+              Word Source
+            </div>
+            <div style={{fontSize:11, color:"rgba(240,237,255,0.62)", lineHeight:1.45, marginBottom:8}}>
+              Current source<br/>
+              <span style={{color:"#F0EDFF", fontWeight:700}}>
+                {uploadedFileName ? `Uploaded CSV: ${uploadedFileName}` : "Built-in database"}
+              </span>
+            </div>
+            <div style={{fontSize:11, color:"rgba(240,237,255,0.62)", marginBottom:9}}>
+              Loaded words: <span style={{color:"#F5C842", fontWeight:700}}>{activeWords.length}</span>
+            </div>
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              disabled={phase === "running"}
+              onChange={handleCsvImport}
+              style={{
+                width:"100%",
+                color:"rgba(240,237,255,0.78)",
+                fontSize:11,
+                marginBottom:8,
+              }}
+            />
+            <button
+              type="button"
+              disabled={phase === "running" || !uploadedFileName}
+              onClick={handleResetWordSource}
+              style={{
+                ...btnStyle("rgba(255,255,255,0.08)", "#F0EDFF", true),
+                padding:"6px 10px",
+                fontSize:10,
+                opacity: phase === "running" || !uploadedFileName ? 0.45 : 1,
+                cursor: phase === "running" || !uploadedFileName ? "not-allowed" : "pointer",
+              }}
+            >
+              RESET TO BUILT-IN DATABASE
+            </button>
+            {importWarnings.length > 0 && (
+              <div style={{fontSize:10, color:"#CC2200", lineHeight:1.35, marginTop:8}}>
+                {importWarnings.join(" ")}
+              </div>
+            )}
+          </div>
           <div style={{
             minWidth: 300,
             background:"rgba(255,255,255,0.04)",
