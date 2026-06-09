@@ -433,7 +433,7 @@ export default function MaskRewriter() {
     }, new Map());
 
     return [...groups.values()].flatMap(validateRowsForWord);
-  }, [activeWords, creativity, freshRerun, tweakNotes]);
+  }, [activeWords, creativity, freshRerun, mockMode, tweakNotes]);
 
   const runAll = useCallback(async (wordsForRun, startIdx = 0, runVariationId = variationId) => {
     const totalBatches = Math.ceil(wordsForRun.length / BATCH_SIZE);
