@@ -61,7 +61,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Hierarchy:** HERO WORD -> ACTIVE MASK TILE -> MASTER GATE -> HUD / SCORE / FEATHERS / STREAK -> POLLY POP-IN ONLY.
 
-**Polly pop-in design:** Polly is the opponent, not a friendly celebration mascot. She is not permanent on the gameplay screen. She appears only as a pop-in: 1 time during a big moment in a word round, always at end-of-round win/loss, entering from bottom-left. She never blocks the active tile, right shatter lane, or Master Gate. Normal mastery opponent line: "That was mine." Boss mastery opponent line: "Fine. Take it." Normal ghost failure: "Not yours yet." Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!" This pop-in budget is locked but not implemented yet.
+**Polly pop-in design:** Patch 10 complete. Polly is the opponent, not a friendly celebration mascot. She is not permanent on the gameplay screen. She appears only as a pop-in: 1 time during a big moment in a word round, always at end-of-round win/loss, entering from bottom-left. She never blocks the active tile, right shatter lane, Master Gate, or hidden tiles. Sprite size is now 160 with a larger bottom-left opponent presentation. Normal mastery opponent line: "That was mine." Boss mastery opponent line: "Fine. Take it." Normal ghost failure: "Not yours yet." Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
 
 **Layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile in lower-middle thumb zone. Clear right toss/shatter lane. MASTER THE WORD gate low on board above nav safe area. Bottom nav reserves Home / Ranks / Vault / Profile. Patch 3 implemented the one-active visible mask tile queue.
 
@@ -75,13 +75,13 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Master Gate unlock:** Last real visible tile absorbs into hero word -> gate border charges gold -> cage bars split slightly left/right -> lock snaps open -> two hidden tiles fly up into active tile position.
 
-**MASTERED celebration design:** Hidden tiles judged correctly -> hero word crashes down center -> diagonal MASTER stamp slams over word -> word cracks open -> Word Core jumps out -> Core grows/glows/spins center-screen -> Core shoots toward Vault nav icon. Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`. Boss mastery may additionally trigger the rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting. This rewrite is locked but not implemented yet.
+**MASTERED celebration design:** Patch 8 complete. Hidden tiles judged correctly -> hero word crashes down center -> diagonal MASTER stamp slams over word -> word cracks open -> Word Core jumps out -> Core grows/glows/spins center-screen -> Core shoots toward Vault nav icon. Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`. Boss mastery may additionally trigger the rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting.
 
 **BINGO BANGO ZZZZINGO! rule:** This is not Polly dialogue. Use only as a rare GAME/SYSTEM achievement stinger when a Boss Word is fully mastered and the Word Core is vaulted. It fires one word at a time with BOOM-style impacts: BINGO -> BANGO -> ZZZZINGO!, with `ZZZZINGO!` biggest.
 
 **Word Core:** Mastery trophy. It does not go into the Master Gate. It belongs in the player's Vault page. The Master Gate is Polly's cage, not storage.
 
-**Ghost loss design:** Wrong hidden/master swipe makes failed tile leave, remaining hidden tile stay, failed tile glitch and lose substance, failed tile pulled back, both hidden tiles merge, hero word flickers dull, ghostly presence fades into merged tile, and Ghost Tile forms with MASTER THE WORD / From [WORD]. Microcopy: THE HAUNT BEGINS. The full ghost merge loss sequence is locked but not implemented yet.
+**Ghost loss design:** Patch 9 complete. Wrong hidden/master swipe makes failed tile leave, remaining hidden tile stay, failed tile glitch and lose substance, failed tile pulled back, both hidden tiles merge, hero word flickers dull, ghostly presence fades into merged tile, and Ghost Tile forms with MASTER THE WORD / From [WORD]. Microcopy: THE HAUNT BEGINS.
 
 **Ghost return / Haunt Words design:** Ghosted words return late in future Hunts, best at word 10 or 11, never replacing Boss Word 12. Entrance copy: REMEMBER ME? If mastered: HAUNT BROKEN. If failed again: STILL HAUNTED. Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!" Haunt return is locked but not implemented yet.
 
@@ -93,7 +93,7 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 **Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core. `#7B2D8B` for UI/gate/shards. `#9B2D6B` for trap/ghost shard accents. `#4CAF50` only Polly character. `#0F0D2A` only Master Gate locked surface. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
 
-**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 complete) -> hidden tile unlock (Patch 7 complete) -> MASTERED celebration (Patch 8 next) -> ghost merge loss -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
+**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 complete) -> hidden tile unlock (Patch 7 complete) -> MASTERED celebration (Patch 8 complete) -> ghost merge loss (Patch 9 complete) -> Polly pop-in budget (Patch 10 complete) -> database audit + selective masks/traps rewrite (next lane) -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
 
 ```
 1  LIGHT   Standard  Confidence
@@ -153,7 +153,7 @@ Sequence: Last tile absorbs â†’ border charges clockwise â†’ lock crac
 Split tiles: real hidden meaning (UP) + hidden trap (RIGHT).
 
 Both correct â†’ MASTERY SEQUENCE:
-MASTERED text first â†’ word swells â†’ crystal shards â†’ seed drops â†’ word compresses â†’ flies to vault icon.
+Hero word crashes center â†’ diagonal MASTER stamp â†’ cracks/energy â†’ Word Core grows/spins â†’ Core shoots to Vault nav icon.
 
 Missed â†’ GHOST (solid purple border, no dashes, phrase NEVER revealed).
 
@@ -231,8 +231,7 @@ Completed and committed:
   - Hidden trap tile uses 80% gold border, white text, and `#0F0D2A` surface.
   - Hidden tiles reuse `SwipeMask`, preserving press-hold, UP/RIGHT swipes, absorb, wrong flash, and trap shatter.
   - Wrong hidden swipes call `submitWrongSwipe` and lose a feather.
-  - No ghost-merge visuals yet; old hidden-wrong ghost placeholder rendering was removed from this path.
-  - After both hidden tiles resolve correctly, the existing mastery handoff still triggers for Patch 8 to replace/refine.
+  - Old hidden-wrong ghost placeholder rendering was removed from this path.
   - Scoring model, swipe grammar, one-active visible queue, gate unlock/perfect-clear logic, and ghost/store/Polly architecture preserved.
   - Reanimated stays in `SwipeMask.tsx`; hidden release motion uses React Native Animated in `MaskBoard.tsx`.
   - `npx.cmd tsc --noEmit` passed.
@@ -258,11 +257,52 @@ Completed and committed:
   - Microcopy appears: "THE HAUNT BEGINS".
   - Polly opponent line on hidden/master failure: "Not yours yet."
   - `npx.cmd tsc --noEmit` passed. Device sanity passed.
-- Patch 10 complete: Polly pop-in budget enforced and sprite size increased to 160. Polly is not in the tree during ordinary play. Per-word budget resets on word change. End-of-round pop-in always fires. `npx.cmd tsc --noEmit` passed. Device sanity passed.
+- Patch 10 complete: Polly pop-in budget and larger opponent presentation implemented.
+  - Changed `app/hooks/usePollyAnimator.ts` and `app/components/MaskBoard.tsx`.
+  - Polly is no longer rendered permanently during ordinary gameplay.
+  - Polly render is conditional on `pollyPopInVisible`.
+  - Added `pollyPopInVisible` state/ref.
+  - Added `pollyEnterAnim` and `pollyPopInStyle` for enter/exit slide.
+  - Added `pollyHideTimerRef` cleanup on unmount.
+  - Added `popInCountRef` for per-word budget.
+  - `tryMidRoundPopIn()` silently skips if one mid-round pop-in was already used for the word.
+  - `endOfRoundPopIn()` always fires for round-end events.
+  - Wrong event reacts without consuming budget if Polly is already visible; otherwise it tries the budget.
+  - `hesitation6s`/`hesitation9s` only update speech if Polly is already visible and do not summon a new pop-in.
+  - `oneHeartLeft` / one-feather-left critical warning still fires as a special urgent event.
+  - `wordEntry`/`switchbackEntry` reset `popInCountRef`.
+  - `MaskBoard.tsx` applies both `pollyPopInStyle` and `pollyAnimatedStyle`: outer `Animated.View` handles enter/exit; inner `Animated.View` handles reaction animation.
+  - Polly pop-in size increased from 80 to 160.
+  - Polly remains bottom-left.
+  - Speech bubble repositioned above/above-right of Polly: `bottom: 186`, `left: 78`, `maxWidth: 210`, with slightly larger text/padding.
+  - Polly now reads as a larger opponent reaction character, not a small sticker.
+  - Non-gate perfect completion now fires `cleanSweep` end-of-round pop-in.
+  - Existing opponent lines preserved: "That was mine." / "Fine. Take it." / "Not yours yet." / "BBBLAAAAHHAHAHA!"
+  - `BINGO BANGO ZZZZINGO!` remains game/system stinger only and is not Polly dialogue.
+  - Scoring, swipe grammar, active visible queue, Master Gate, hidden tile release, Patch 8 mastery celebration, and Patch 9 ghost merge sequence unchanged.
+  - `npx.cmd tsc --noEmit` passed.
+  - Device sanity passed.
 
 Remaining pending:
-Current next patch: **Patch 11.**
+Current next lane: **Database audit + selective masks/traps rewrite.**
 
+- Content quality lane, not a gameplay code patch.
+- Analyze the word database.
+- Keep strong entries.
+- Rewrite weak masks/traps.
+- Improve hidden meanings.
+- Add gameplay quality notes/tags where useful.
+- Do not rewrite every entry blindly.
+- Keep strong masks and sharpen weak masks.
+- Replace traps that feel fake, random, too easy, too vague, too dictionary-like, or not tempting.
+- Maintain POLYWORDS style:
+  - Real Meaning Masks: actual meanings, compact, creative, recognizable, not flat.
+  - Trap Masks: tempting nearby decoys, not random.
+  - Hidden/Rare Masks: real overlooked meanings that create discovery.
+  - Mask/trap text should be 2-4 words where possible, punchy and readable.
+  - Avoid dictionary-definition tone.
+
+Other remaining work:
 1. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
 2. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
 3. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
@@ -325,4 +365,3 @@ app/utils/SoundEngine.ts             WAV synthesis
 ---
 
 *POLYWORDS CONTEXT.md Â· Pete DiBari Â· June 8, 2026*
-

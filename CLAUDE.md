@@ -632,18 +632,20 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Device sanity passed.
 - Patch 10 complete: Polly pop-in budget and larger opponent presentation implemented.
   - Changed `app/hooks/usePollyAnimator.ts` and `app/components/MaskBoard.tsx`.
-  - `usePollyAnimator.ts` fully rewritten with per-word pop-in budget system.
+  - Added/tightened per-word pop-in budget system.
   - Added `pollyPopInVisible` state/ref, `pollyEnterAnim` slide, `pollyHideTimerRef`, `popInCountRef`.
   - `tryMidRoundPopIn()` silently skips if 1 mid-round pop-in already used for the current word.
   - `endOfRoundPopIn()` always fires for: `gateMastered`, `gateMasteredBoss`, `hiddenMasterFailed`, `gameOver`, `cleanSweep`, `bossEntry`, `gateIntro`, ghost resolution.
   - `wrong` event: reacts without consuming budget if Polly already visible; otherwise tries budget.
   - `hesitation6s`/`9s`: updates speech only if Polly already visible — no new pop-in, no budget consumed.
-  - `oneHeartLeft`: always fires, bypasses budget and end-of-round wrapper.
+  - `oneHeartLeft` / one-feather-left critical warning still fires as a special urgent event.
   - `wordEntry`/`switchbackEntry`: reset `popInCountRef` per word.
   - Non-gate perfect completion now fires `cleanSweep` end-of-round pop-in in `MaskBoard.tsx`.
   - Polly render is conditional on `pollyPopInVisible` — not in the tree during ordinary play.
-  - Two-layer Animated.View: outer gets `pollyPopInStyle` (enter/exit slide), inner gets `pollyAnimatedStyle` (reactions).
-  - Polly sprite size increased from 80 to 160. Position: `left: -6`, `bottom: 16`, no `overflow: hidden`.
+  - `MaskBoard.tsx` applies both `pollyPopInStyle` and `pollyAnimatedStyle`.
+  - Two-layer `Animated.View`: outer gets `pollyPopInStyle` for enter/exit slide; inner gets `pollyAnimatedStyle` for reactions.
+  - Polly sprite size increased from 80 to 160.
+  - Polly remains bottom-left and reads as a larger opponent reaction character, not a small sticker.
   - Speech bubble repositioned: `bottom: 186`, `left: 78`, `maxWidth: 210`, 13px text.
   - Existing opponent lines preserved: "That was mine." / "Fine. Take it." / "Not yours yet."
   - `BINGO BANGO ZZZZINGO!` remains game/system stinger only — not Polly dialogue.
@@ -653,15 +655,24 @@ T+1400ms Tiles stagger in at 120ms intervals
 
 ### Remaining Pending Work
 
-Current next work lane has two valid options:
+Current next lane: **Database audit + selective masks/traps rewrite pass.**
 
-**Option A - Database audit + selective masks/traps rewrite pass**
 - Content quality lane, not a gameplay code patch.
 - Analyze the word database.
 - Keep strong entries.
 - Rewrite weak masks/traps.
 - Improve hidden meanings.
-- Tag gameplay quality.
+- Add gameplay quality notes/tags where useful.
+- Do not rewrite every entry blindly.
+- Keep strong masks.
+- Sharpen weak masks.
+- Replace traps that feel fake, random, too easy, too vague, too dictionary-like, or not tempting.
+- Maintain POLYWORDS style:
+  - Real Meaning Masks: actual meanings, compact, creative, recognizable, not flat.
+  - Trap Masks: tempting nearby decoys, not random.
+  - Hidden/Rare Masks: real overlooked meanings that create discovery.
+  - Mask/trap text should be 2-4 words where possible, punchy and readable.
+  - Avoid dictionary-definition tone.
 
 Other remaining work:
 
@@ -718,7 +729,7 @@ Other remaining work:
 - Gate auto-opens on perfect clear â€” never swipe to open
 - wrongSwipeOccurred.current resets at start of every new word
 - Crystal shards: polygon, purple/rose, radial burst â€” never rectangles
-- MASTERED text below word, not screen center
+- Diagonal MASTER stamp over crashed word during mastery celebration
 - Ghost tile never reveals missed phrase
 - "Thought so." â€” never change
 - "BINGO BANGO ZZZZINGO!" spelling â€” never change
@@ -790,12 +801,15 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 
 ### Polly Presence
 
+- Patch 10 complete: gameplay Polly render is conditional on `pollyPopInVisible`; Polly is not in the tree during ordinary active play.
 - Polly is not a permanent gameplay presence.
 - Polly is the opponent, not a friendly celebration mascot.
 - Polly appears only as a pop-in.
 - 1 pop-in during a big moment in a word round.
 - Polly always appears at end of round win/loss.
-- Polly pops from bottom-left and never blocks the active tile, right shatter lane, or Master Gate.
+- Polly pops from bottom-left and never blocks the active tile, right shatter lane, Master Gate, or hidden tiles.
+- Polly sprite size is now 160 for a larger opponent reaction presentation.
+- Speech bubble sits above/above-right of Polly.
 - Normal mastery opponent line: "That was mine."
 - Boss mastery opponent line: "Fine. Take it."
 - Normal ghost failure line: "Not yours yet."
@@ -979,13 +993,14 @@ Current implementation:
 5. UP absorb and RIGHT toss/shatter (Patch 5 complete)
 6. Master Gate visual overhaul (Patch 6 complete)
 7. Hidden tile unlock (Patch 7 complete)
-8. MASTERED celebration (Patch 8 next)
-9. Ghost merge loss
-10. Feathers and score targets
-11. Haunt Word return system
-12. Vault / Ranks / Profile pages
+8. MASTERED celebration (Patch 8 complete)
+9. Ghost merge loss (Patch 9 complete)
+10. Polly pop-in budget / larger opponent presentation (Patch 10 complete)
+11. Database audit + selective masks/traps rewrite (next lane)
+12. Feathers and score targets
+13. Haunt Word return system
+14. Vault / Ranks / Profile pages
 
 ---
 
 *POLYWORDS CLAUDE.md Â· Pete DiBari Â· June 8, 2026*
-
