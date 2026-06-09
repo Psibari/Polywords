@@ -11,6 +11,10 @@ Polly is the Master of Words. She holds 700+ words in her vault. She set every t
 
 **North star:** *"Waitâ€¦ what? â€¦ Shit, that's right."*
 
+**Golden Pacing System:** `docs/GOLDEN_PACING_SYSTEM.md` is the source of truth for Hunt emotional rhythm, Semantic Snap Rate, future content metadata, and content selection. Target cycle: Recognition -> Doubt -> Discovery -> Confidence -> Tension -> Mastery. This is docs-only architecture for now; do not hardcode pacing logic or automated Hunt generation until a manually tagged test set exists.
+
+**Hidden Truth Rule:** Before a swipe, all ordinary masks are equal. The player must never know whether a mask is real, trap, rare, hidden-worthy, or important before commitment. Truth is revealed only after commitment.
+
 ---
 
 ## Stack

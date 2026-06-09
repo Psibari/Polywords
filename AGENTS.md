@@ -29,10 +29,17 @@ The Word Vault page is the player's reclaimed meaning archive and trophy room. I
 - No left swipe.
 - No tap-submit.
 - Ordinary mask tiles must not reveal whether they are real/trap by style.
+- Preserve the Hidden Truth Rule from `docs/GOLDEN_PACING_SYSTEM.md`: no ordinary mask may reveal real/trap/rare/hidden-worthy/important status before commitment.
 - Do not change scoring unless explicitly requested.
 - Do not change swipe grammar unless explicitly requested.
 - Do not change Master Gate logic unless explicitly requested.
 - Do not change `SwipeMask` behavior unless explicitly requested.
+
+## Golden Pacing System
+
+- `docs/GOLDEN_PACING_SYSTEM.md` is source of truth for Hunt emotional rhythm, Semantic Snap Rate, future content metadata, and content selection.
+- Do not implement pacing logic, metadata schema, or automated Hunt generation unless explicitly requested.
+- Golden Pacing is documentation/content architecture until a manually tagged test set exists.
 
 ## Locked Screen Hierarchy
 

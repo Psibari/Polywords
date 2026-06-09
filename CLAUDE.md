@@ -101,6 +101,12 @@ Every POLY RUN is a HUNT. Always 12 words. Always a designed difficulty arc. Alw
 
 **Lives are session lives â€” 5 lives for the entire 12-word hunt.**
 
+### Golden Pacing System
+
+`docs/GOLDEN_PACING_SYSTEM.md` is the durable source of truth for Hunt emotional rhythm, Semantic Snap Rate, content selection, and future content metadata. It defines the target cycle: Recognition -> Doubt -> Discovery -> Confidence -> Tension -> Mastery.
+
+The system is documentation only for now. Do not hardcode pacing logic or automated Hunt generation until a manually tagged test set exists.
+
 | Position | Phase | Difficulty | Emotional Target |
 |---|---|---|---|
 | 1â€“2 | Confidence Zone | Easy | Player feels capable immediately |
