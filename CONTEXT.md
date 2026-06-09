@@ -1,5 +1,5 @@
 ﻿# POLYWORDS â€” CONTEXT.md
-### Quick-Reference Session Briefing Â· June 8, 2026
+### Quick-Reference Session Briefing Â· June 9, 2026
 
 Paste this at the start of any Claude Code session to restore full context.
 
@@ -282,11 +282,20 @@ Completed and committed:
   - Scoring, swipe grammar, active visible queue, Master Gate, hidden tile release, Patch 8 mastery celebration, and Patch 9 ghost merge sequence unchanged.
   - `npx.cmd tsc --noEmit` passed.
   - Device sanity passed.
+- Content tool added: local POLYWORDS Mask Rewriter at `tools/content/mask-rewriter`.
+  - Local-only React/Vite frontend plus Express server.
+  - Server endpoint: `POST http://localhost:8787/api/rewrite-batch`.
+  - Uses Anthropic through `ANTHROPIC_API_KEY` in `tools/content/mask-rewriter/.env`.
+  - `.env` and real API keys must never be committed.
+  - `.env.example` is placeholder-only and includes `TEST_MODE=true`.
+  - Generated output is draft-only and requires human audit before any database import.
+  - Exports include `AUDIT STATUS` and `AUDIT ISSUES`.
 
 Remaining pending:
-Current next lane: **Database audit + selective masks/traps rewrite.**
+Current next lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**
 
 - Content quality lane, not a gameplay code patch.
+- Use `tools/content/mask-rewriter` for draft generation only; never wire it into the player-facing app.
 - Analyze the word database.
 - Keep strong entries.
 - Rewrite weak masks/traps.
@@ -360,8 +369,9 @@ app/store/useGameStore.ts            Zustand store
 app/screens/GameScreen.tsx           Main game screen
 app/screens/ResultsScreen.tsx        End-of-run results
 app/utils/SoundEngine.ts             WAV synthesis
+tools/content/mask-rewriter          Local-only content rewrite/audit tool; never wire into player app
 ```
 
 ---
 
-*POLYWORDS CONTEXT.md Â· Pete DiBari Â· June 8, 2026*
+*POLYWORDS CONTEXT.md Â· Pete DiBari Â· June 9, 2026*

@@ -1,5 +1,5 @@
 ﻿# POLYWORDS â€” CLAUDE.md
-### Ground Truth for Claude Code Â· Updated June 8, 2026
+### Ground Truth for Claude Code Â· Updated June 9, 2026
 
 ---
 
@@ -652,10 +652,21 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Scoring, swipe grammar, active tile queue, gate logic, hidden tile release, Patch 8 mastery celebration, and Patch 9 ghost merge sequence unchanged.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
+- Content tool added: local POLYWORDS Mask Rewriter at `tools/content/mask-rewriter`.
+  - It is a local-only writing/audit tool, not part of the player-facing app.
+  - React/Vite frontend plus local Express server.
+  - Server endpoint: `POST http://localhost:8787/api/rewrite-batch`.
+  - Uses Anthropic via `ANTHROPIC_API_KEY` in `tools/content/mask-rewriter/.env`.
+  - Never commit `.env` or real API keys.
+  - `.env.example` must contain placeholders only.
+  - `TEST_MODE=true` is required by the current local server guard.
+  - Generated output is draft-only and must be human-audited before entering the game database.
+  - Exported rows include `AUDIT STATUS` and `AUDIT ISSUES` review metadata.
+  - Supports built-in 739-word database, uploaded CSV source, test/specific/full run modes, variation controls, tweak notes, pause/resume, live preview, run log, and CSV download.
 
 ### Remaining Pending Work
 
-Current next lane: **Database audit + selective masks/traps rewrite pass.**
+Current next lane: **Database audit + selective masks/traps rewrite pass using the local Mask Rewriter tool.**
 
 - Content quality lane, not a gameplay code patch.
 - Analyze the word database.
@@ -779,6 +790,7 @@ app/store/useGameStore.ts            Zustand store
 app/screens/GameScreen.tsx           Main game screen
 app/screens/ResultsScreen.tsx        End-of-run results
 app/utils/SoundEngine.ts             WAV synthesis
+tools/content/mask-rewriter          Local-only content rewrite/audit tool; never wire into player app
 ```
 
 ---
@@ -1003,4 +1015,4 @@ Current implementation:
 
 ---
 
-*POLYWORDS CLAUDE.md Â· Pete DiBari Â· June 8, 2026*
+*POLYWORDS CLAUDE.md Â· Pete DiBari Â· June 9, 2026*
