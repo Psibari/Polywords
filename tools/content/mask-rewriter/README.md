@@ -19,22 +19,28 @@ npm.cmd install
 
 ## Run
 
-Start the local Express server:
-
-```bash
-npm.cmd run server
-```
-
-Start the Vite frontend:
+Start the local Express backend and Vite frontend together:
 
 ```bash
 npm.cmd run dev
 ```
 
+This starts:
+
+- Backend: `http://localhost:8787`
+- Frontend: `http://localhost:5173`
+
 The frontend calls the local Express server at:
 
 ```text
 http://localhost:8787/api/rewrite-batch
+```
+
+You can also run either side separately:
+
+```bash
+npm.cmd run server
+npm.cmd run client
 ```
 
 The Express server reads `ANTHROPIC_API_KEY` from `.env`.

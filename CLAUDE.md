@@ -653,16 +653,19 @@ T+1400ms Tiles stagger in at 120ms intervals
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
 - Content tool added: local POLYWORDS Mask Rewriter at `tools/content/mask-rewriter`.
-  - It is a local-only writing/audit tool, not part of the player-facing app.
+  - It is local internal tooling, not player-facing gameplay code, and must never be wired into the live app UI.
   - React/Vite frontend plus local Express server.
+  - `npm.cmd run dev` starts both backend and frontend.
+  - Backend: `http://localhost:8787`.
+  - Frontend: `http://localhost:5173`.
   - Server endpoint: `POST http://localhost:8787/api/rewrite-batch`.
   - Uses Anthropic via `ANTHROPIC_API_KEY` in `tools/content/mask-rewriter/.env`.
-  - Never commit `.env` or real API keys.
+  - Never commit `.env`, real API keys, or generated CSV output.
   - `.env.example` must contain placeholders only.
   - `TEST_MODE=true` is required by the current local server guard.
   - Generated output is draft-only and must be human-audited before entering the game database.
   - Exported rows include `AUDIT STATUS` and `AUDIT ISSUES` review metadata.
-  - Supports built-in 739-word database, uploaded CSV source, test/specific/full run modes, variation controls, tweak notes, pause/resume, live preview, run log, and CSV download.
+  - Supports Test Batch, Specific Words, Full Loaded Database with confirmation, creativity controls, Fresh rerun, Tweak Notes, CSV word source import, pause/resume, live preview, run log, CSV download, and audit columns (`AUDIT STATUS`, `AUDIT ISSUES`).
 
 ### Remaining Pending Work
 

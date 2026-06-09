@@ -283,13 +283,15 @@ Completed and committed:
   - `npx.cmd tsc --noEmit` passed.
   - Device sanity passed.
 - Content tool added: local POLYWORDS Mask Rewriter at `tools/content/mask-rewriter`.
-  - Local-only React/Vite frontend plus Express server.
+  - Local internal tooling only, not player-facing gameplay code.
+  - React/Vite frontend plus Express server.
+  - `npm.cmd run dev` starts backend `http://localhost:8787` and frontend `http://localhost:5173`.
   - Server endpoint: `POST http://localhost:8787/api/rewrite-batch`.
   - Uses Anthropic through `ANTHROPIC_API_KEY` in `tools/content/mask-rewriter/.env`.
-  - `.env` and real API keys must never be committed.
+  - `.env`, real API keys, and generated CSVs must never be committed.
   - `.env.example` is placeholder-only and includes `TEST_MODE=true`.
   - Generated output is draft-only and requires human audit before any database import.
-  - Exports include `AUDIT STATUS` and `AUDIT ISSUES`.
+  - Supports Test Batch, Specific Words, Full Loaded Database with confirmation, creativity controls, Fresh rerun, Tweak Notes, CSV word source import, and audit columns `AUDIT STATUS` / `AUDIT ISSUES`.
 
 Remaining pending:
 Current next lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**
