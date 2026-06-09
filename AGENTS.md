@@ -4,6 +4,8 @@
 
 POLYWORDS is a mobile word arena game, not a quiz list. The hero word is the boss. The active mask tile is the challenger. The Master Gate is Polly's locked cage/vault. The player steals mastery one swipe at a time.
 
+The Word Vault page is the player's reclaimed meaning archive and trophy room. It is not Polly's cage, not Polly's lair, and should avoid cage/prison visuals.
+
 ## Workflow
 
 - User uses VS Code with Codex extension.
@@ -62,7 +64,7 @@ POLYWORDS is a mobile word arena game, not a quiz list. The hero word is the bos
 - Purple: `#7B2D8B` for UI/gate/shards/ghost energy
 - Rose: `#9B2D6B` for trap/ghost shard accents
 - Polly Green: `#4CAF50` only Polly character
-- Deep Dark: `#0F0D2A` only Master Gate locked surface
+- Deep Dark: `#0F0D2A` for Master Gate locked surface and player Vault archive/card surfaces
 - Wrong Flash: `#CC2200` only wrong swipe flash
 - White: `#FFFFFF` readable text
 - No pink/magenta.

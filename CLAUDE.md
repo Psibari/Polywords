@@ -67,7 +67,7 @@ Reanimated locked to SwipeMask.tsx ONLY â€” never import elsewhere
 | Purple | `#7B2D8B` | Trap shatter, rare events, ghost tile border, Polly accent |
 | Rose | `#9B2D6B` | Crystal shard gradient partner with purple |
 | Polly Green | `#4CAF50` | Polly mascot ONLY â€” never as UI chrome |
-| Deep Dark | `#0F0D2A` | Master Gate locked background â€” darkest surface |
+| Deep Dark | `#0F0D2A` | Master Gate locked background and player Vault archive/card surfaces |
 | Wrong Flash | `#CC2200` | Wrong-swipe flash ONLY â€” never decoration, never text |
 | White | `#FFFFFF` | All UI text on dark surfaces |
 
@@ -372,18 +372,29 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 
 ---
 
-## The Vault â€” Replaces Garden Permanently
+## The Word Vault — Player Archive
 
-Mastered words are TROPHIES taken from Polly. They live here permanently.
+The Word Vault is the player's reclaimed meaning archive and trophy room. It is distinct from Polly's Master Gate cage/vault in gameplay.
+
+Patch 12A added the first page shell in `app/screens/VaultScreen.tsx` and registered a `Vault` stack route in `App.tsx`. It is not wired into bottom nav yet and uses static placeholder data only.
+
+Mastered Words, Ghost Words, Hidden Meanings, and future Stats live here. The page must feel player-owned: dark magical archive, trophy-card shelves, word plaques, subtle vault/archive geometry. Avoid cage, prison, chain, or Polly-lair visuals.
 
 ### Vault Design
-- Background: #0F0D2A â€” dark, heavy, earned
-- 2-column grid, most recent top-left
-- Standard tile: gradient bg, 1.5px gold border 55%, word Bagel Fat One 28px gold, hidden meaning below (ONLY place in game), date mastered
-- Boss tile: full gold border 100%, outer glow, purple inner accent, breathing border pulse
+- Background: `#1A1830`.
+- Archive/card surfaces: `#0F0D2A`.
+- Gold `#F5C842` restrained for WORD VAULT title and important stat accents.
+- Purple `#7B2D8B` for section frames, archive marks, and shelf UI.
+- Rose `#9B2D6B` only for Ghost Words accents.
+- Standard future tile: trophy-card/plaque treatment, hidden meaning below when real data exists, date mastered.
+- Boss future tile: restrained gold border, purple inner accent, earned glow.
 
 ### Empty State
-"Polly has them all." / "Go take one."
+Use archive/collection language, not Polly ownership language. Current shell copy:
+- Mastered Words: "Fully reclaimed words live here."
+- Ghost Words: "Missed meanings waiting for a rematch."
+- Hidden Meanings: "Rare meanings you cracked open."
+- Stats: "Your mastery trail will live here."
 
 ### Arrival Animation
 Word compresses â†’ gold tile â†’ launches to vault nav icon â†’ vault icon blooms â†’ impactAsync(Heavy) â†’ THUNK sound
@@ -703,7 +714,7 @@ Other remaining work:
 3. Life Feather milestone/reserve system:
    - UI feathers exist.
    - Score milestone restore and 1 reserve feather are not implemented yet.
-4. Vault / Ranks / Profile pages.
+4. Word Vault real data/nav wiring plus Ranks / Profile pages.
 5. `expo-av` to `expo-audio` migration.
 
 ---
@@ -1014,7 +1025,7 @@ Current implementation:
 11. Database audit + selective masks/traps rewrite (next lane)
 12. Feathers and score targets
 13. Haunt Word return system
-14. Vault / Ranks / Profile pages
+14. Word Vault real data/nav wiring plus Ranks / Profile pages
 
 ---
 

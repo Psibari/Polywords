@@ -91,9 +91,9 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 **Score target/rank design:** Competition system for personal bests, Polly target score, Hunt rank, and future daily/friend/global rankings. Score does not replace mastery. Word Cores are permanent mastery trophies. The score target/rank system is pending.
 
-**Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core. `#7B2D8B` for UI/gate/shards. `#9B2D6B` for trap/ghost shard accents. `#4CAF50` only Polly character. `#0F0D2A` only Master Gate locked surface. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
+**Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core, and restrained Vault stat/title accents. `#7B2D8B` for UI/gate/shards/Vault frames. `#9B2D6B` for trap/ghost shard accents and Ghost Words accents. `#4CAF50` only Polly character. `#0F0D2A` for Master Gate locked surface and player Vault archive/card surfaces. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
 
-**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 complete) -> hidden tile unlock (Patch 7 complete) -> MASTERED celebration (Patch 8 complete) -> ghost merge loss (Patch 9 complete) -> Polly pop-in budget (Patch 10 complete) -> database audit + selective masks/traps rewrite (next lane) -> feathers and score targets -> Haunt Word return system -> Vault / Ranks / Profile pages.
+**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 complete) -> hidden tile unlock (Patch 7 complete) -> MASTERED celebration (Patch 8 complete) -> ghost merge loss (Patch 9 complete) -> Polly pop-in budget (Patch 10 complete) -> database audit + selective masks/traps rewrite -> Word Vault page shell (Patch 12A complete) -> feathers and score targets -> Haunt Word return system -> Ranks / Profile pages and full nav wiring.
 
 ```
 1  LIGHT   Standard  Confidence
@@ -182,16 +182,18 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 
 ---
 
-## The Vault (Replaces Garden â€” permanent; page pending)
+## The Word Vault (Player Archive — shell implemented)
 
-- Mastered words = trophies taken from Polly
-- Hidden meaning permanently visible here â€” ONLY place in the game
-- Boss tiles: full gold border + purple glow + breathing pulse
-- Empty state: "Polly has them all." / "Go take one."
-- Mastery ends with word compressing â†’ launching to vault nav icon
+- Player-owned reclaimed meaning archive, not Polly's cage/lair.
+- Trophy room for mastered words, ghost words, hidden discoveries, and future stats.
+- Patch 12A added `app/screens/VaultScreen.tsx` and the `Vault` stack route in `App.tsx`.
+- Current page uses static placeholder data only; no real save/progress state wiring yet.
+- Sections: Mastered Words, Ghost Words, Hidden Meanings, Stats.
+- Empty-state direction: archive/collection language, not cage/prison language.
+- Mastery ends with word compressing -> launching to vault nav icon.
 - Paywall at word 21: "Vault Full / Unlock unlimited"
-- Polly has NO presence in vault â€” player's domain only
-- Vault / Ranks / Profile pages are pending.
+- Polly has NO presence in Vault — player's domain only.
+- Ranks / Profile pages and full bottom nav wiring are still pending.
 
 ---
 
@@ -317,7 +319,7 @@ Other remaining work:
 1. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
 2. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
 3. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-4. Vault / Ranks / Profile pages.
+4. Word Vault real data/nav wiring plus Ranks / Profile pages.
 5. `expo-av` to `expo-audio` migration.
 
 ---

@@ -7,6 +7,7 @@ import { BagelFatOne_400Regular } from '@expo-google-fonts/bagel-fat-one';
 import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
 import HomeScreen from './app/screens/HomeScreen';
 import GameScreen from './app/screens/GameScreen';
+import VaultScreen from './app/screens/VaultScreen';
 
 LogBox.ignoreAllLogs();
 
@@ -36,6 +37,7 @@ export default function App() {
       >
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Game" component={GameScreen} />
+        <Stack.Screen name="Vault" component={VaultScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
