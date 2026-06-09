@@ -10,6 +10,11 @@ const ARC_MAP  = { E: "Confidence", M: "Flow", H: "Tension", V: "Climax" };
 const BATCH_SIZE = 10;
 const TOTAL_BATCHES = Math.ceil(WORDS.length / BATCH_SIZE);
 const TEST_MODE = true;
+const TEMPERATURE_BY_CREATIVITY = {
+  conservative: 0.45,
+  balanced: 0.75,
+  wild: 1.0,
+};
 
 const DICTIONARY_FLAT_PHRASES = [
   "a type of",
@@ -190,6 +195,9 @@ export default function MaskRewriter() {
   const [specificWordsText, setSpecificWordsText] = useState("");
   const [fullConfirmed, setFullConfirmed] = useState(false);
   const [selectedWords, setSelectedWords] = useState([]);
+  const [creativity, setCreativity] = useState("balanced");
+  const [freshRerun, setFreshRerun] = useState(false);
+  const [variationId, setVariationId] = useState("");
   const pauseRef = useRef(false);
   const timerRef = useRef(null);
 
@@ -246,8 +254,9 @@ export default function MaskRewriter() {
     }));
   };
 
-  const processBatch = useCallback(async (idx, wordsForRun) => {
+  const processBatch = useCallback(async (idx, wordsForRun, runVariationId) => {
     const batch = wordsForRun.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE);
+    const temperature = TEMPERATURE_BY_CREATIVITY[creativity] ?? TEMPERATURE_BY_CREATIVITY.balanced;
 
     const res = await fetch("http://localhost:8787/api/rewrite-batch", {
       method: "POST",
@@ -256,6 +265,10 @@ export default function MaskRewriter() {
         batch,
         batchIndex: idx + 1,
         testMode: TEST_MODE,
+        creativity,
+        temperature,
+        freshRerun,
+        variationId: runVariationId,
       }),
     });
 
@@ -275,9 +288,9 @@ export default function MaskRewriter() {
     }, new Map());
 
     return [...groups.values()].flatMap(validateRowsForWord);
-  }, []);
+  }, [creativity, freshRerun]);
 
-  const runAll = useCallback(async (wordsForRun, startIdx = 0) => {
+  const runAll = useCallback(async (wordsForRun, startIdx = 0, runVariationId = variationId) => {
     const totalBatches = Math.ceil(wordsForRun.length / BATCH_SIZE);
     pauseRef.current = false;
     setPhase("running");
@@ -291,7 +304,7 @@ export default function MaskRewriter() {
       addLog(`Batch ${idx + 1}/${totalBatches}: ${words}`);
 
       try {
-        const rows = await processBatch(idx, wordsForRun);
+        const rows = await processBatch(idx, wordsForRun, runVariationId);
         setResults(p => [...p, ...rows]);
         setBatchIdx(idx + 1);
         addLog(`✓ ${rows.length} tiles written`);
@@ -308,7 +321,7 @@ export default function MaskRewriter() {
 
     setPhase("done");
     addLog(runMode === "test" ? "✓ Test batch complete." : `✓ ${runMode === "specific" ? "Specific words" : "Full database"} run complete.`);
-  }, [processBatch, runMode]);
+  }, [processBatch, runMode, variationId]);
 
   const handleStart  = () => {
     const selection = getWordsForRunMode();
@@ -323,16 +336,20 @@ export default function MaskRewriter() {
       addLog(`Words not found: ${selection.missing.join(", ")}`);
     }
 
+    const nextVariationId = typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : String(Date.now());
+    setVariationId(nextVariationId);
     setBatchIdx(0);
     setResults([]);
     setErrors([]);
     setSelectedWords(selection.words);
-    runAll(selection.words, 0);
+    runAll(selection.words, 0, nextVariationId);
   };
   const handlePause  = () => { pauseRef.current = true; };
   const handleResume = () => {
     const wordsForRun = selectedWords.length ? selectedWords : getWordsForRunMode().words;
-    runAll(wordsForRun, batchIdx);
+    runAll(wordsForRun, batchIdx, variationId);
   };
   const handleReset  = () => {
     pauseRef.current = true;
@@ -480,6 +497,55 @@ export default function MaskRewriter() {
                   : "Enter at least one loaded word to run Specific Words."}
               </div>
             )}
+          </div>
+          <div style={{
+            minWidth: 240,
+            background:"rgba(255,255,255,0.04)",
+            border:"1px solid rgba(255,255,255,0.08)",
+            borderRadius:8,
+            padding:"10px 12px",
+          }}>
+            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
+              VARIATION CONTROLS
+            </div>
+            <label style={{display:"block", fontSize:11, color:"rgba(240,237,255,0.62)", marginBottom:5}}>
+              Creativity
+            </label>
+            <select
+              value={creativity}
+              disabled={phase === "running"}
+              onChange={e => setCreativity(e.target.value)}
+              style={{
+                width:"100%",
+                background:"rgba(15,13,42,0.82)",
+                border:"1px solid rgba(245,200,66,0.25)",
+                borderRadius:6,
+                color:"#F0EDFF",
+                padding:"7px 8px",
+                fontFamily:"inherit",
+                fontSize:12,
+                marginBottom:9,
+              }}
+            >
+              <option value="conservative">Conservative</option>
+              <option value="balanced">Balanced</option>
+              <option value="wild">Wild</option>
+            </select>
+            <label style={{fontSize:11, color:"rgba(240,237,255,0.78)", display:"flex", gap:7, alignItems:"center", marginBottom:9}}>
+              <input
+                type="checkbox"
+                checked={freshRerun}
+                disabled={phase === "running"}
+                onChange={e => setFreshRerun(e.target.checked)}
+              />
+              Fresh rerun: avoid sounding like the last pass
+            </label>
+            <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", lineHeight:1.4}}>
+              Variation ID<br/>
+              <span style={{color:"#F0EDFF", fontFamily:"'Courier New', monospace"}}>
+                {variationId || "created on start"}
+              </span>
+            </div>
           </div>
           <div style={{display:"flex", gap:10}}>
           {phase === "idle" && (
