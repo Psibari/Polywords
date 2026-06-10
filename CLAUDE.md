@@ -27,7 +27,7 @@ Patch 13 refreshed active Polly dialogue in `app/hooks/usePollyAnimator.ts`, `ap
 
 Patch 15 polished the active Play/Game screen as a premium semantic combat arena: compact glass HUD, staged hero word, framed active tile lane, and stronger Master Gate dock. GameScreen remains nav-free and gameplay logic is unchanged.
 
-Patch 16 polished the active mask tile as the top slab in a concealed heavy tile stack. Under-tiles are only dark slab edges/shadows, never readable, never truth-signaling. Press-hold now feels like gripping and peeling a heavy arcade tile without changing swipe grammar, scoring, queue logic, hidden release, gate logic, or Polly timing.
+Patch 16 polished the active mask/trap tile as the top slab in a concealed heavy POLYWORDS meaning-tile stack, not a flimsy paper-card deck. Up to 2 under-tiles may be visually implied with thick dark edges, shadow, offset, and depth only; they must stay unreadable and must never reveal truth/type/status. Press-hold now feels like gripping/pulling a heavy tile off the stack. The active tile has a heavier slab/bevel treatment; pre-swipe masks feel like solid meaning tiles. Trap identity as brittle false-meaning glass is revealed only after RIGHT commitment/shatter; real meanings remain weighty and absorb upward when claimed. Scoring, swipe grammar, one-active queue logic, tile resolution, hidden tile release, Master Gate logic, Polly timing/budget, and navigation unchanged.
 
 docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
 
@@ -1060,7 +1060,8 @@ Current implementation:
 20. Polly dialogue tone cleanup (Patch 13 complete)
 21. Premium gameplay screen shell polish (Patch 15 complete)
 22. Heavy active tile stack / weighted peel polish (Patch 16 complete)
-23. Word Vault real data wiring plus future Ranks work
+23. Device sanity polish for gameplay arena (Patch 17 recommended next)
+24. Word Vault real data wiring plus future Ranks work
 
 ---
 
