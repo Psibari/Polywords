@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import BottomNav from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 
 type VaultSectionKey = 'mastered' | 'ghosts' | 'hidden' | 'stats';
@@ -49,7 +50,11 @@ const stats = [
 
 const plaques = ['SPRING', 'LIGHT', 'BANK'];
 
-export default function VaultScreen() {
+type Props = {
+  navigation: any;
+};
+
+export default function VaultScreen({ navigation }: Props) {
   const [activeSection, setActiveSection] = useState<VaultSectionKey>('mastered');
   const currentSection = sections.find(section => section.key === activeSection) ?? sections[0];
 
@@ -132,6 +137,7 @@ export default function VaultScreen() {
           </View>
         </View>
       </ScrollView>
+      <BottomNav active="Vault" navigation={navigation} />
     </SafeAreaView>
   );
 }
@@ -144,7 +150,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 40,
+    paddingBottom: 24,
   },
   hero: {
     minHeight: 166,

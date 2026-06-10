@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import BottomNav from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 
@@ -106,6 +107,7 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.footerText}>Home is the lobby. Play is the arena. Vault is yours.</Text>
         </View>
       </ScrollView>
+      <BottomNav active="Home" navigation={navigation} />
     </SafeAreaView>
   );
 }
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 36,
+    paddingBottom: 24,
   },
   hero: {
     minHeight: 254,

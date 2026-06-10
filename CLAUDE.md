@@ -13,11 +13,13 @@ Polly is the Master of Words. She holds every word in her vault. The player chal
 
 ## App Shell Identity
 
-Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Settings is utility for player/account/preferences/about. Profile belongs inside Settings for MVP and should not be a main nav tab.
+Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Settings is utility for player/account/preferences/about. Profile belongs inside Settings for MVP and should not be a main nav tab. Bottom nav tabs are Home / Play / Vault / Settings, visible outside active gameplay only.
 
-Patch 12C rebuilt `app/screens/HomeScreen.tsx` as a polished lobby shell with PLAY, Daily Challenge placeholder, Word Vault preview, Continue Run placeholder, and footer flavor. It preserves the existing `startGame()` -> `Game` play route and does not wire bottom nav yet.
+Patch 12C rebuilt `app/screens/HomeScreen.tsx` as a polished lobby shell with PLAY, Daily Challenge placeholder, Word Vault preview, Continue Run placeholder, and footer flavor. It preserves the existing `startGame()` -> `Game` play route.
 
 Patch 12D added `app/screens/SettingsScreen.tsx` and registered a `Settings` stack route. The page has a static Profile card at top, visual-only Sound/Haptics toggles, placeholder Game/Account/About rows, and a disabled Reset Progress row.
+
+Patch 12E added `app/components/BottomNav.tsx` and wired it into Home, Vault, and Settings. The Play tab uses the same `startGame()` -> `Game` path and the dock is not visible during active gameplay.
 
 ---
 
@@ -864,7 +866,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 - Lower-middle: one active mask tile only.
 - Right side: clear toss/shatter lane.
 - Low board: MASTER THE WORD gate, Polly's cage/vault hybrid.
-- Bottom: nav bar room for Home / Ranks / Vault / Profile.
+- Bottom: nav bar room for Home / Play / Vault / Settings outside active gameplay only.
 
 ### Hero Word
 
@@ -1043,7 +1045,8 @@ Current implementation:
 15. Settings/Profile shell (Patch 12D complete)
 16. Feathers and score targets
 17. Haunt Word return system
-18. Word Vault real data/nav wiring plus Ranks page, Settings wiring, and full bottom nav
+18. Bottom navigation app shell (Patch 12E complete)
+19. Word Vault real data wiring plus future Ranks work
 
 ---
 

@@ -11,7 +11,7 @@ Polly is the Master of Words. She holds 700+ words in her vault. She set every t
 
 **North star:** *"Waitâ€¦ what? â€¦ Shit, that's right."*
 
-**App shell identity:** Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Settings is utility for player/account/preferences/about. Profile belongs inside Settings for MVP and should not be a main nav tab.
+**App shell identity:** Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Settings is utility for player/account/preferences/about. Profile belongs inside Settings for MVP and should not be a main nav tab. Bottom nav tabs are Home / Play / Vault / Settings, visible outside active gameplay only.
 
 **Golden Pacing System:** `docs/GOLDEN_PACING_SYSTEM.md` is the source of truth for Hunt emotional rhythm, Semantic Snap Rate, future content metadata, and content selection. Target cycle: Recognition -> Doubt -> Discovery -> Confidence -> Tension -> Mastery. This is docs-only architecture for now; do not hardcode pacing logic or automated Hunt generation until a manually tagged test set exists.
 
@@ -69,7 +69,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Polly pop-in design:** Patch 10 complete. Polly is the opponent, not a friendly celebration mascot. She is not permanent on the gameplay screen. She appears only as a pop-in: 1 time during a big moment in a word round, always at end-of-round win/loss, entering from bottom-left. She never blocks the active tile, right shatter lane, Master Gate, or hidden tiles. Sprite size is now 160 with a larger bottom-left opponent presentation. Normal mastery opponent line: "That was mine." Boss mastery opponent line: "Fine. Take it." Normal ghost failure: "Not yours yet." Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
 
-**Layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile in lower-middle thumb zone. Clear right toss/shatter lane. MASTER THE WORD gate low on board above nav safe area. Bottom nav reserves Home / Ranks / Vault / Profile. Patch 3 implemented the one-active visible mask tile queue.
+**Gameplay layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile in lower-middle thumb zone. Clear right toss/shatter lane. MASTER THE WORD gate low on board above nav safe area. Bottom nav is not visible during active gameplay. Patch 3 implemented the one-active visible mask tile queue.
 
 **Hero word:** Dominates screen, sits top-center during normal play, absorbs correct UP swipes, and crashes down to center during MASTERED celebration.
 
@@ -99,7 +99,7 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 **Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core, and restrained Vault stat/title accents. `#7B2D8B` for UI/gate/shards/Vault frames. `#9B2D6B` for trap/ghost shard accents and Ghost Words accents. `#4CAF50` only Polly character. `#0F0D2A` for Master Gate locked surface and player Vault archive/card surfaces. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
 
-**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 complete) -> hidden tile unlock (Patch 7 complete) -> MASTERED celebration (Patch 8 complete) -> ghost merge loss (Patch 9 complete) -> Polly pop-in budget (Patch 10 complete) -> database audit + selective masks/traps rewrite -> Word Vault page shell (Patch 12A complete) -> Home arcade lobby shell (Patch 12C complete) -> Settings/Profile shell (Patch 12D complete) -> feathers and score targets -> Haunt Word return system -> Ranks page and full nav wiring.
+**Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 complete) -> hidden tile unlock (Patch 7 complete) -> MASTERED celebration (Patch 8 complete) -> ghost merge loss (Patch 9 complete) -> Polly pop-in budget (Patch 10 complete) -> database audit + selective masks/traps rewrite -> Word Vault page shell (Patch 12A complete) -> Home arcade lobby shell (Patch 12C complete) -> Settings/Profile shell (Patch 12D complete) -> bottom navigation app shell (Patch 12E complete) -> feathers and score targets -> Haunt Word return system -> Ranks page and real data wiring.
 
 ```
 1  LIGHT   Standard  Confidence
@@ -199,7 +199,7 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 - Mastery ends with word compressing -> launching to vault nav icon.
 - Paywall at word 21: "Vault Full / Unlock unlimited"
 - Polly has NO presence in Vault — player's domain only.
-- Ranks / Profile pages and full bottom nav wiring are still pending.
+- Real Vault data wiring and future Ranks work are still pending. Profile stays inside Settings for MVP.
 
 ---
 
@@ -325,7 +325,7 @@ Other remaining work:
 1. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
 2. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
 3. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-4. Word Vault real data/nav wiring plus Ranks page, Settings wiring, and full bottom nav.
+4. Word Vault real data wiring plus future Ranks work.
 5. `expo-av` to `expo-audio` migration.
 
 ---

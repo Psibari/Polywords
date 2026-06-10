@@ -10,6 +10,8 @@ Home is the arcade lobby / launchpad. Play is the arena. Home should communicate
 
 Settings is the utility page for player/account/preferences/about. Profile belongs inside Settings for MVP and should not be a main nav tab.
 
+Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible outside active gameplay only and must not overlay or clutter `GameScreen`.
+
 ## Workflow
 
 - User uses VS Code with Codex extension.

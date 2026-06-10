@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import BottomNav from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 
 type ToggleRowProps = {
@@ -12,6 +13,10 @@ type PlaceholderRowProps = {
   label: string;
   note?: string;
   accent?: 'purple' | 'rose' | 'gold';
+};
+
+type Props = {
+  navigation: any;
 };
 
 function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
@@ -47,7 +52,7 @@ function PlaceholderRow({ label, note = 'Coming soon', accent = 'purple' }: Plac
   );
 }
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }: Props) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
 
@@ -124,6 +129,7 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
+      <BottomNav active="Settings" navigation={navigation} />
     </SafeAreaView>
   );
 }
@@ -136,7 +142,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 40,
+    paddingBottom: 24,
   },
   header: {
     minHeight: 150,
