@@ -13,9 +13,11 @@ Polly is the Master of Words. She holds every word in her vault. The player chal
 
 ## App Shell Identity
 
-Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Home should quickly communicate that POLYWORDS is about stealing meanings back from Polly.
+Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Settings is utility for player/account/preferences/about. Profile belongs inside Settings for MVP and should not be a main nav tab.
 
 Patch 12C rebuilt `app/screens/HomeScreen.tsx` as a polished lobby shell with PLAY, Daily Challenge placeholder, Word Vault preview, Continue Run placeholder, and footer flavor. It preserves the existing `startGame()` -> `Game` play route and does not wire bottom nav yet.
+
+Patch 12D added `app/screens/SettingsScreen.tsx` and registered a `Settings` stack route. The page has a static Profile card at top, visual-only Sound/Haptics toggles, placeholder Game/Account/About rows, and a disabled Reset Progress row.
 
 ---
 
@@ -1038,9 +1040,10 @@ Current implementation:
 12. Word Vault page shell (Patch 12A complete)
 13. Golden Pacing System docs (Patch 12B complete)
 14. Home arcade lobby shell (Patch 12C complete)
-15. Feathers and score targets
-16. Haunt Word return system
-17. Word Vault real data/nav wiring plus Ranks / Profile pages
+15. Settings/Profile shell (Patch 12D complete)
+16. Feathers and score targets
+17. Haunt Word return system
+18. Word Vault real data/nav wiring plus Ranks page, Settings wiring, and full bottom nav
 
 ---
 

@@ -8,6 +8,7 @@ import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sa
 import HomeScreen from './app/screens/HomeScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
+import SettingsScreen from './app/screens/SettingsScreen';
 
 LogBox.ignoreAllLogs();
 
@@ -38,6 +39,7 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Game" component={GameScreen} />
         <Stack.Screen name="Vault" component={VaultScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

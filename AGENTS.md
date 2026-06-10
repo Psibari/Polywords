@@ -8,6 +8,8 @@ The Word Vault page is the player's reclaimed meaning archive and trophy room. I
 
 Home is the arcade lobby / launchpad. Play is the arena. Home should communicate that POLYWORDS is about stealing meanings back from Polly without implying unfinished placeholder features are live.
 
+Settings is the utility page for player/account/preferences/about. Profile belongs inside Settings for MVP and should not be a main nav tab.
+
 ## Workflow
 
 - User uses VS Code with Codex extension.
