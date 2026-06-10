@@ -5,6 +5,8 @@ import { useGameStore } from '../store/useGameStore';
 
 export type BottomNavRoute = 'Home' | 'Vault' | 'Settings';
 
+export const bottomNavContentPadding = 118;
+
 type BottomNavProps = {
   active: BottomNavRoute;
   navigation: any;
@@ -65,13 +67,13 @@ const styles = StyleSheet.create({
   wrap: {
     backgroundColor: '#1A1830',
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 10,
+    paddingTop: 6,
+    paddingBottom: 12,
   },
   dock: {
-    minHeight: 68,
-    borderRadius: 24,
-    backgroundColor: 'rgba(15,13,42,0.96)',
+    minHeight: 64,
+    borderRadius: 22,
+    backgroundColor: 'rgba(15,13,42,0.98)',
     borderWidth: 1,
     borderColor: 'rgba(123,45,139,0.50)',
     flexDirection: 'row',
@@ -82,19 +84,22 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    minHeight: 48,
-    borderRadius: 16,
+    minHeight: 46,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
   },
   activeTab: {
-    backgroundColor: 'rgba(245,200,66,0.10)',
+    backgroundColor: 'rgba(245,200,66,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.24)',
   },
   playTab: {
-    backgroundColor: 'rgba(123,45,139,0.26)',
+    flex: 1.08,
+    backgroundColor: 'rgba(123,45,139,0.18)',
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.22)',
+    borderColor: 'rgba(123,45,139,0.52)',
   },
   pressed: {
     opacity: 0.82,
@@ -109,7 +114,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5C842',
   },
   playMark: {
-    backgroundColor: '#F5C842',
+    backgroundColor: 'rgba(245,200,66,0.62)',
   },
   tabLabel: {
     color: 'rgba(255,255,255,0.62)',
@@ -120,7 +125,7 @@ const styles = StyleSheet.create({
     color: '#F5C842',
   },
   playLabel: {
-    color: '#FFFFFF',
+    color: 'rgba(255,255,255,0.88)',
     fontFamily: FONTS.hud,
     fontSize: 12,
     letterSpacing: 1,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import BottomNav from '../components/BottomNav';
+import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 
 type VaultSectionKey = 'mastered' | 'ghosts' | 'hidden' | 'stats';
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 24,
+    paddingBottom: bottomNavContentPadding,
   },
   hero: {
     minHeight: 166,
