@@ -163,7 +163,7 @@ function BossShockwave({ boardWidth, onDone }: ShockwaveProps) {
         position: 'absolute',
         left: cx - 30, top: cy - 30,
         width: 60, height: 60, borderRadius: 30,
-        borderWidth: 2.5, borderColor: 'rgba(255,215,0,0.9)',
+        borderWidth: 2.5, borderColor: 'rgba(245,200,66,0.9)',
         opacity: r1op, transform: [{ scale: r1scale }],
       }} />
       {r2p > 0 && (
@@ -365,7 +365,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const bossScaleY         = useRef(new Animated.Value(isBoss ? 1.16 : 1)).current;
   const bossEntranceRafRef = useRef<number | null>(null);
   const bossImpactRef      = useRef<number | null>(null);
-  const [bossWordColor, setBossWordColor] = useState('#FFD700');
+  const [bossWordColor, setBossWordColor] = useState('#F5C842');
   const [bossShockwaveVisible, setBossShockwaveVisible] = useState(false);
 
   function triggerAbsorption(phrase: string) {
@@ -621,7 +621,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       bossEntranceRafRef.current = null;
     }
     bossImpactRef.current = null;
-    setBossWordColor('#FFD700');
+    setBossWordColor('#F5C842');
     setBossShockwaveVisible(false);
     goldTextOpacity.setValue(0);
     wordRecoilY.setValue(0);
@@ -761,7 +761,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           } else {
             bossScaleX.setValue(1);
             bossScaleY.setValue(1);
-            setBossWordColor('#FFD700');
+            setBossWordColor('#F5C842');
             bossEntranceRafRef.current = null;
           }
         }
@@ -1434,7 +1434,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             <Animated.View
               style={{
                 position: 'absolute', top: 0, bottom: 0, width: 60,
-                backgroundColor: '#FFD700',
+                backgroundColor: '#F5C842',
                 opacity: bossSweepOpacity,
                 transform: [{ translateX: bossSweepX }],
               }}
@@ -2156,7 +2156,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(123,45,139,0.18)',
   },
   kicker: {
-    color: '#FFD700',
+    color: '#F5C842',
     fontSize: FONT_SIZES.hudLabel,
     fontFamily: FONTS.label,
     letterSpacing: 2,
@@ -2181,7 +2181,7 @@ const styles = StyleSheet.create({
     fontSize: 96,
     fontFamily: FONTS.bossWord,
     letterSpacing: FONT_SIZES.bossWordLetterSpacing,
-    color: '#FFD700',
+    color: '#F5C842',
   },
   goldRing: {
     position: 'absolute',
@@ -2190,7 +2190,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 2.5,
-    borderColor: '#FFD700',
+    borderColor: '#F5C842',
   },
   absorbedPhrase: {
     color: 'rgba(255,255,255,0.7)',
@@ -2228,15 +2228,15 @@ const styles = StyleSheet.create({
     top: 0,
     left: 2,
     right: 2,
-    height: TILE_H + 26,
+    height: TILE_H + 30,
     borderRadius: 28,
-    backgroundColor: 'rgba(15,13,42,0.46)',
+    backgroundColor: 'rgba(15,13,42,0.42)',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.26)',
+    borderColor: 'rgba(123,45,139,0.22)',
     shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.13,
-    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.10,
+    shadowRadius: 18,
     elevation: 4,
   },
   tileArenaRailTop: {
@@ -2257,12 +2257,12 @@ const styles = StyleSheet.create({
   },
   tileArenaRightLane: {
     position: 'absolute',
-    top: 24,
-    bottom: 24,
-    right: 13,
-    width: 2,
+    top: 30,
+    bottom: 30,
+    right: 11,
+    width: 1,
     borderRadius: 2,
-    backgroundColor: 'rgba(155,45,107,0.22)',
+    backgroundColor: 'rgba(155,45,107,0.14)',
   },
   tileStack: {
     width: '92%',
@@ -2277,40 +2277,38 @@ const styles = StyleSheet.create({
   },
   heavyUnderTile: {
     position: 'absolute',
-    left: 10,
-    right: 10,
+    left: 12,
+    right: 12,
     height: TILE_H,
     borderRadius: 30,
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.28)',
+    borderColor: 'rgba(123,45,139,0.32)',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.38,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.42,
+    shadowRadius: 26,
     elevation: 4,
     overflow: 'hidden',
   },
   heavyUnderTileBack: {
-    top: 22,
-    left: 24,
-    right: 24,
-    opacity: 0.36,
-    transform: [{ rotate: '-0.8deg' }],
+    top: 26,
+    left: 22,
+    right: 22,
+    opacity: 0.44,
   },
   heavyUnderTileMid: {
-    top: 12,
-    left: 16,
-    right: 16,
-    opacity: 0.62,
-    transform: [{ rotate: '0.45deg' }],
+    top: 14,
+    left: 15,
+    right: 15,
+    opacity: 0.68,
   },
   heavyUnderTileEdge: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: 18,
+    height: 22,
     backgroundColor: 'rgba(5,4,18,0.72)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.05)',
@@ -2391,19 +2389,19 @@ const styles = StyleSheet.create({
   gateArea: {
     width: '88%',
     alignSelf: 'center',
-    paddingTop: 34,
+    paddingTop: 42,
     position: 'relative',
   },
   gateDockPlate: {
     position: 'absolute',
     left: -12,
     right: -12,
-    top: 22,
-    height: GATE_H + 24,
+    top: 30,
+    height: GATE_H + 20,
     borderRadius: 18,
-    backgroundColor: 'rgba(15,13,42,0.54)',
+    backgroundColor: 'rgba(15,13,42,0.48)',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.22)',
+    borderColor: 'rgba(123,45,139,0.18)',
   },
   masterGate: {
     height: GATE_H,
@@ -2415,10 +2413,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.24,
-    shadowRadius: 18,
-    elevation: 7,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.20,
+    shadowRadius: 16,
+    elevation: 6,
   },
   gateBackPlate: {
     position: 'absolute',

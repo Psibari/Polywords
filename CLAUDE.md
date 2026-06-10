@@ -29,6 +29,8 @@ Patch 15 polished the active Play/Game screen as a premium semantic combat arena
 
 Patch 16 polished the active mask/trap tile as the top slab in a concealed heavy POLYWORDS meaning-tile stack, not a flimsy paper-card deck. Up to 2 under-tiles may be visually implied with thick dark edges, shadow, offset, and depth only; they must stay unreadable and must never reveal truth/type/status. Press-hold now feels like gripping/pulling a heavy tile off the stack. The active tile has a heavier slab/bevel treatment; pre-swipe masks feel like solid meaning tiles. Trap identity as brittle false-meaning glass is revealed only after RIGHT commitment/shatter; real meanings remain weighty and absorb upward when claimed. Scoring, swipe grammar, one-active queue logic, tile resolution, hidden tile release, Master Gate logic, Polly timing/budget, and navigation unchanged.
 
+Patch 17 completed device-sanity visual polish for the active gameplay arena: slimmer HUD chrome, cleaner/heavier concealed under-tile slab offsets, less visually loud right shatter-lane marker, more breathing room above the Master Gate dock, and locked gold normalization in the gameplay surface. Gameplay mechanics, scoring, swipe grammar, one-active queue, tile resolution, hidden release, Master Gate logic, Polly timing/budget, navigation, and content data unchanged.
+
 docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
 
 ---
@@ -1060,7 +1062,7 @@ Current implementation:
 20. Polly dialogue tone cleanup (Patch 13 complete)
 21. Premium gameplay screen shell polish (Patch 15 complete)
 22. Heavy active tile stack / weighted peel polish (Patch 16 complete)
-23. Device sanity polish for gameplay arena (Patch 17 recommended next)
+23. Device sanity polish for gameplay arena (Patch 17 complete)
 24. Word Vault real data wiring plus future Ranks work
 
 ---
