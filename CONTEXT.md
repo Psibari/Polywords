@@ -17,6 +17,8 @@ Polly is the Master of Words. She holds 700+ words in her vault. She set every t
 
 **Hidden Truth Rule:** Before a swipe, all ordinary masks are equal. The player must never know whether a mask is real, trap, rare, hidden-worthy, or important before commitment. Truth is revealed only after commitment.
 
+**Polly dialogue bank:** docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, boss-word taunts, ghost/system copy, and lines to avoid.
+
 ---
 
 ## Stack

@@ -25,6 +25,8 @@ Patch 12F polished bottom nav spacing and active states. Home, Vault, and Settin
 
 Patch 13 refreshed active Polly dialogue in `app/hooks/usePollyAnimator.ts`, `app/screens/ResultsScreen.tsx`, and `app/game/session.ts` so Polly reads as a smug polysemous word thief/opponent instead of a friendly helper. Dormant/legacy dialogue paths were left untouched.
 
+docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
+
 ---
 
 ## Polly â€” Master of Words
