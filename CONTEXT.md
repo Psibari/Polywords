@@ -75,7 +75,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Hero word:** Dominates screen, sits top-center during normal play, absorbs correct UP swipes, and crashes down to center during MASTERED celebration.
 
-**Active mask tile design:** One active tile at a time. Large, premium, tactile, readable. Text must pop with size, weight, contrast, and spacing. All mask tiles look and behave the same until release. No real/trap tells before swipe. Press-hold wakes tile, gives tiny haptic, lifts slightly, follows finger, and release commits. One-active queue is implemented; Patch 4 press-hold polish is complete.
+**Active mask tile design:** One active tile at a time. Large, premium, tactile, readable. The active tile is presented as the top slab in a concealed heavy tile stack: 1-2 under-tiles may imply depth with dark edges/shadow only, but upcoming tiles remain unreadable and truth-hidden. Text must pop with size, weight, contrast, and spacing. All mask tiles look and behave the same until release. No real/trap tells before swipe. Press-hold wakes tile, gives haptic feedback, lifts with weighted separation, follows finger, and release commits. One-active queue is implemented; Patch 4 press-hold polish is complete; Patch 16 heavy stack/weighted peel polish is complete.
 
 **Swipe motion:** UP claims real meaning; RIGHT rejects trap. No left swipe and no tap-submit. Patch 5 tuned the single-tile arena motion: correct UP pulls harder into the hero word, shrinks/fades near impact, and triggers the existing word absorb pulse; correct RIGHT traps fling farther into the right shatter lane with stronger rotation, shrink, fade, and a larger purple/rose burst; wrong RIGHT on a real meaning visibly fails with `#CC2200` wrong flash, reject wobble, bounce-back, fade/collapse, and existing feather loss.
 
@@ -315,6 +315,7 @@ Completed and committed:
 - Patch 12F complete: Bottom nav spacing and active-state polish. Home, Vault, and Settings use bottom padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
 - Patch 13 complete: active Polly dialogue refreshed in `app/hooks/usePollyAnimator.ts`, `app/screens/ResultsScreen.tsx`, and `app/game/session.ts` so she reads as a smug polysemous word thief/opponent instead of a friendly helper. Pop-in budget/timing and dormant legacy dialogue paths unchanged.
 - Patch 15 complete: premium gameplay screen shell polish in GameScreen.tsx and MaskBoard.tsx; HUD, hero stage, active tile arena frame, and Master Gate dock were visually strengthened with no gameplay, swipe, queue, scoring, nav, Polly timing, or gate logic changes.
+- Patch 16 complete: heavy active tile stack and weighted peel polish in MaskBoard.tsx and SwipeMask.tsx. The active visible tile now sits as the readable top slab above concealed dark under-tiles; press-hold feels heavier; upcoming tiles remain unreadable and truth-hidden. Gameplay mechanics, scoring, swipe grammar, queue logic, hidden release, gate logic, Polly timing, and navigation unchanged.
 
 Remaining pending:
 Future content lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**

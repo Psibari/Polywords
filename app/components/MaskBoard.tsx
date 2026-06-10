@@ -1593,20 +1593,28 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 ? () => Haptics.selectionAsync()
                 : undefined;
               return gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && activeVisibleMask && (
-                <View key={activeVisibleMask.id} ref={getTileRef(activeVisibleMask.id)}>
-                  <SwipeMask
-                    mask={activeVisibleMask}
-                    state={tileStates.get(activeVisibleMask.id) ?? 'idle'}
-                    onSwipeUp={() => handleSwipeUp(activeVisibleMask.id)}
-                    onSwipeDown={() => handleSwipeRight(activeVisibleMask.id)}
-                    onSwipeReveal={() => {}}
-                    revealable={false}
-                    tileHeight={TILE_H}
-                    entryDelay={0}
-                    hapticCorrect={hapticCorrect}
-                    onEffect={handleEffect}
-                    wordY={wordScreenY}
-                  />
+                <View key={activeVisibleMask.id} ref={getTileRef(activeVisibleMask.id)} style={styles.heavyTileStackWrap}>
+                  <View style={[styles.heavyUnderTile, styles.heavyUnderTileBack]} pointerEvents="none">
+                    <View style={styles.heavyUnderTileEdge} />
+                  </View>
+                  <View style={[styles.heavyUnderTile, styles.heavyUnderTileMid]} pointerEvents="none">
+                    <View style={styles.heavyUnderTileEdge} />
+                  </View>
+                  <View style={styles.heavyTopTileSlot}>
+                    <SwipeMask
+                      mask={activeVisibleMask}
+                      state={tileStates.get(activeVisibleMask.id) ?? 'idle'}
+                      onSwipeUp={() => handleSwipeUp(activeVisibleMask.id)}
+                      onSwipeDown={() => handleSwipeRight(activeVisibleMask.id)}
+                      onSwipeReveal={() => {}}
+                      revealable={false}
+                      tileHeight={TILE_H}
+                      entryDelay={0}
+                      hapticCorrect={hapticCorrect}
+                      onEffect={handleEffect}
+                      wordY={wordScreenY}
+                    />
+                  </View>
                 </View>
               );
             })()}
@@ -2261,6 +2269,55 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingRight: 0,
     zIndex: 2,
+  },
+  heavyTileStackWrap: {
+    position: 'relative',
+    minHeight: TILE_H + 26,
+    paddingBottom: 22,
+  },
+  heavyUnderTile: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    height: TILE_H,
+    borderRadius: 30,
+    backgroundColor: '#0F0D2A',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.28)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.38,
+    shadowRadius: 24,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  heavyUnderTileBack: {
+    top: 22,
+    left: 24,
+    right: 24,
+    opacity: 0.36,
+    transform: [{ rotate: '-0.8deg' }],
+  },
+  heavyUnderTileMid: {
+    top: 12,
+    left: 16,
+    right: 16,
+    opacity: 0.62,
+    transform: [{ rotate: '0.45deg' }],
+  },
+  heavyUnderTileEdge: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 18,
+    backgroundColor: 'rgba(5,4,18,0.72)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  heavyTopTileSlot: {
+    position: 'relative',
+    zIndex: 4,
   },
   finalHiddenTileStack: {
     width: '100%',

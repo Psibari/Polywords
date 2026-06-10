@@ -27,6 +27,8 @@ Patch 13 refreshed active Polly dialogue in `app/hooks/usePollyAnimator.ts`, `ap
 
 Patch 15 polished the active Play/Game screen as a premium semantic combat arena: compact glass HUD, staged hero word, framed active tile lane, and stronger Master Gate dock. GameScreen remains nav-free and gameplay logic is unchanged.
 
+Patch 16 polished the active mask tile as the top slab in a concealed heavy tile stack. Under-tiles are only dark slab edges/shadows, never readable, never truth-signaling. Press-hold now feels like gripping and peeling a heavy arcade tile without changing swipe grammar, scoring, queue logic, hidden release, gate logic, or Polly timing.
+
 docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
 
 ---
@@ -1057,7 +1059,8 @@ Current implementation:
 19. Bottom nav spacing / active-state polish (Patch 12F complete)
 20. Polly dialogue tone cleanup (Patch 13 complete)
 21. Premium gameplay screen shell polish (Patch 15 complete)
-22. Word Vault real data wiring plus future Ranks work
+22. Heavy active tile stack / weighted peel polish (Patch 16 complete)
+23. Word Vault real data wiring plus future Ranks work
 
 ---
 

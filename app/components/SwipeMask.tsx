@@ -356,10 +356,10 @@ export function SwipeMask({
 
       onPanResponderGrant: () => {
         if (judgedRef.current) return;
-        grabLift.value         = withSpring(-5, { damping: 14, stiffness: 420 });
-        scale.value            = withSpring(1.045, { damping: 12, stiffness: 440 });
-        borderOpacityVal.value = withTiming(0.48, { duration: 80 });
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        grabLift.value         = withSpring(-8, { damping: 18, stiffness: 360 });
+        scale.value            = withSpring(1.026, { damping: 18, stiffness: 360 });
+        borderOpacityVal.value = withTiming(0.56, { duration: 100 });
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         hasThresholdFiredRef.current = false;
       },
 
@@ -371,11 +371,11 @@ export function SwipeMask({
 
         const domRight  = Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 0;
         const domUp     = g.dy < 0 && Math.abs(g.dy) >= Math.abs(g.dx);
-        const targetRot = domRight ? 4 : domUp ? -2 : 0;
+        const targetRot = domRight ? 3 : domUp ? -1.5 : 0;
         rotation.value  = withSpring(targetRot, { damping: 20, stiffness: 300 });
 
         const speed = Math.sqrt(g.vx * g.vx + g.vy * g.vy) * 1000;
-        scale.value = withSpring(speed > 300 ? 1.055 : 1.035, { damping: 14, stiffness: 380 });
+        scale.value = withSpring(speed > 300 ? 1.038 : 1.026, { damping: 18, stiffness: 340 });
 
         const mainAxis = Math.max(g.dx > 0 ? g.dx : 0, -g.dy > 0 ? -g.dy : 0);
         if (mainAxis > SWIPE_THRESHOLD * 0.6 && !hasThresholdFiredRef.current) {
@@ -476,6 +476,7 @@ export function SwipeMask({
           <View style={styles.tileTopShine} />
           {/* Inner ambient glow */}
           <View style={styles.tileInnerGlow} />
+          <View style={styles.tileBottomBevel} />
           {/* Non-native animated background */}
           <RNAnimated.View
             style={[
@@ -679,5 +680,16 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     backgroundColor: 'rgba(123,45,139,0.20)',
     zIndex: 1,
+  },
+  tileBottomBevel: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 16,
+    backgroundColor: 'rgba(5,4,18,0.42)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    zIndex: 2,
   },
 });
