@@ -314,6 +314,7 @@ Completed and committed:
 - Patch 12E complete: Bottom navigation shell added with Home / Play / Vault / Settings. Nav is visible outside active gameplay only and hidden on `GameScreen`. Play uses `startGame()` then `navigation.navigate('Game')`.
 - Patch 12F complete: Bottom nav spacing and active-state polish. Home, Vault, and Settings use bottom padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
 - Patch 13 complete: active Polly dialogue refreshed in `app/hooks/usePollyAnimator.ts`, `app/screens/ResultsScreen.tsx`, and `app/game/session.ts` so she reads as a smug polysemous word thief/opponent instead of a friendly helper. Pop-in budget/timing and dormant legacy dialogue paths unchanged.
+- Patch 15 complete: premium gameplay screen shell polish in GameScreen.tsx and MaskBoard.tsx; HUD, hero stage, active tile arena frame, and Master Gate dock were visually strengthened with no gameplay, swipe, queue, scoring, nav, Polly timing, or gate logic changes.
 
 Remaining pending:
 Future content lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**

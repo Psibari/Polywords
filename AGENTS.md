@@ -4,6 +4,8 @@
 
 POLYWORDS is a mobile word arena game, not a quiz list. The hero word is the boss. The active mask tile is the challenger. The Master Gate is Polly's locked cage/vault. The player steals mastery one swipe at a time.
 
+The Play screen uses a premium semantic combat arena shell. Keep GameScreen nav-free, protect the Hidden Truth Rule, and treat HUD/hero/tile/gate polish as visual shell work unless a patch explicitly changes mechanics.
+
 The Word Vault page is the player's reclaimed meaning archive and trophy room. It is not Polly's cage, not Polly's lair, and should avoid cage/prison visuals.
 
 Home is the arcade lobby / launchpad. Play is the arena. Home should communicate that POLYWORDS is about stealing meanings back from Polly without implying unfinished placeholder features are live.

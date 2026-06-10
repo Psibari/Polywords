@@ -1404,6 +1404,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         containerWidthRef.current = w;
       }}
     >
+      <View style={styles.arenaBackdrop} pointerEvents="none">
+        <View style={styles.arenaTopGlow} />
+        <View style={styles.arenaCenterRail} />
+        <View style={styles.arenaFloorGlow} />
+      </View>
+
       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
       <View
         style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
@@ -1418,6 +1424,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           );
         }}
       >
+        <View style={styles.wordStageFrame} pointerEvents="none" />
+        <View style={styles.wordStageHalo} pointerEvents="none" />
+        <View style={styles.wordStageUnderlight} pointerEvents="none" />
+
         {/* Boss gold sweep */}
         {bossSweepActive && (
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -1571,6 +1581,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
       <View style={styles.gridWrap}>
         <View style={styles.tileStackArea}>
+          <View style={styles.tileArenaFrame} pointerEvents="none">
+            <View style={styles.tileArenaRailTop} />
+            <View style={styles.tileArenaRailBottom} />
+            <View style={styles.tileArenaRightLane} />
+          </View>
         {showBoardContent && (
           <Animated.View style={[styles.tileStack, { opacity: masterAllFadeAnim }]}>
             {(() => {
@@ -1715,6 +1730,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         </View>
 
         <View style={styles.gateArea}>
+        <View style={styles.gateDockPlate} pointerEvents="none" />
         {hasHidden && (
           gatePhase === 'tiles' || gatePhase === 'wrongFail' || gatePhase === 'mastered' ? null : (
             // Gate: locked / unlocking / doorSplit
@@ -2051,7 +2067,42 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
+    backgroundColor: '#1A1830',
+    overflow: 'hidden',
+  },
+  arenaBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  arenaTopGlow: {
+    position: 'absolute',
+    top: 12,
+    left: 18,
+    right: 18,
+    height: 150,
+    borderRadius: 28,
+    backgroundColor: 'rgba(15,13,42,0.46)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.18)',
+  },
+  arenaCenterRail: {
+    position: 'absolute',
+    top: 178,
+    left: 28,
+    right: 28,
+    height: 1,
+    backgroundColor: 'rgba(123,45,139,0.28)',
+  },
+  arenaFloorGlow: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 18,
+    height: 190,
+    borderRadius: 28,
+    backgroundColor: 'rgba(15,13,42,0.62)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.20)',
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
@@ -2062,9 +2113,39 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     paddingTop: 8,
     paddingBottom: 12,
+    position: 'relative',
+    marginTop: 2,
   },
   wordZoneBoss: {
     height: 156,
+  },
+  wordStageFrame: {
+    position: 'absolute',
+    left: 6,
+    right: 6,
+    top: 9,
+    bottom: 5,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.24)',
+    backgroundColor: 'rgba(15,13,42,0.18)',
+  },
+  wordStageHalo: {
+    position: 'absolute',
+    width: 244,
+    height: 86,
+    borderRadius: 48,
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.32)',
+    backgroundColor: 'rgba(123,45,139,0.055)',
+  },
+  wordStageUnderlight: {
+    position: 'absolute',
+    bottom: 16,
+    width: 176,
+    height: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(123,45,139,0.18)',
   },
   kicker: {
     color: '#FFD700',
@@ -2116,26 +2197,70 @@ const styles = StyleSheet.create({
     right: 0,
   },
   swipeLane: {
-    height: 76,
+    height: 54,
   },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 118,
+    paddingBottom: 108,
     minHeight: 0,
   },
   tileStackArea: {
     width: '100%',
-    minHeight: TILE_H + TILE_GAP,
+    minHeight: TILE_H + 28,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    position: 'relative',
+    paddingTop: 10,
+  },
+  tileArenaFrame: {
+    position: 'absolute',
+    top: 0,
+    left: 2,
+    right: 2,
+    height: TILE_H + 26,
+    borderRadius: 28,
+    backgroundColor: 'rgba(15,13,42,0.46)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.26)',
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.13,
+    shadowRadius: 22,
+    elevation: 4,
+  },
+  tileArenaRailTop: {
+    position: 'absolute',
+    top: 12,
+    left: 24,
+    right: 24,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  tileArenaRailBottom: {
+    position: 'absolute',
+    bottom: 13,
+    left: 36,
+    right: 36,
+    height: 1,
+    backgroundColor: 'rgba(123,45,139,0.30)',
+  },
+  tileArenaRightLane: {
+    position: 'absolute',
+    top: 24,
+    bottom: 24,
+    right: 13,
+    width: 2,
+    borderRadius: 2,
+    backgroundColor: 'rgba(155,45,107,0.22)',
   },
   tileStack: {
-    width: '94%',
+    width: '92%',
     alignSelf: 'center',
     paddingRight: 0,
+    zIndex: 2,
   },
   finalHiddenTileStack: {
     width: '100%',
@@ -2207,24 +2332,36 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   gateArea: {
-    width: '86%',
+    width: '88%',
     alignSelf: 'center',
-    paddingTop: 44,
+    paddingTop: 34,
+    position: 'relative',
+  },
+  gateDockPlate: {
+    position: 'absolute',
+    left: -12,
+    right: -12,
+    top: 22,
+    height: GATE_H + 24,
+    borderRadius: 18,
+    backgroundColor: 'rgba(15,13,42,0.54)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.22)',
   },
   masterGate: {
     height: GATE_H,
     marginTop: TILE_GAP,
-    borderRadius: 8,
-    borderWidth: 1.25,
+    borderRadius: 14,
+    borderWidth: 1.5,
     backgroundColor: '#0F0D2A',
     overflow: 'visible',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.24,
+    shadowRadius: 18,
+    elevation: 7,
   },
   gateBackPlate: {
     position: 'absolute',
@@ -2232,10 +2369,10 @@ const styles = StyleSheet.create({
     right: 5,
     top: 5,
     bottom: 5,
-    borderRadius: 6,
+    borderRadius: 11,
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.14)',
+    borderColor: 'rgba(123,45,139,0.20)',
   },
   gateInnerShadow: {
     position: 'absolute',
@@ -2369,9 +2506,12 @@ const styles = StyleSheet.create({
   gateLabel: {
     fontFamily: FONTS.wordDisplay,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.68)',
+    color: 'rgba(255,255,255,0.76)',
     letterSpacing: 2,
     textAlign: 'center',
+    textShadowColor: 'rgba(123,45,139,0.45)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   splitZone: {
     marginTop: TILE_GAP,
