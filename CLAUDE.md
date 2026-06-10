@@ -11,6 +11,12 @@ Polly is the Master of Words. She holds every word in her vault. The player chal
 
 > *"The word is the puzzle. The masks are Polly's traps. The reveal is what she's been hiding. The near miss is her winning. The vault is yours to fill. And Polly has been Master of Words long enough."*
 
+## App Shell Identity
+
+Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Home should quickly communicate that POLYWORDS is about stealing meanings back from Polly.
+
+Patch 12C rebuilt `app/screens/HomeScreen.tsx` as a polished lobby shell with PLAY, Daily Challenge placeholder, Word Vault preview, Continue Run placeholder, and footer flavor. It preserves the existing `startGame()` -> `Game` play route and does not wire bottom nav yet.
+
 ---
 
 ## Polly â€” Master of Words
@@ -1029,9 +1035,12 @@ Current implementation:
 9. Ghost merge loss (Patch 9 complete)
 10. Polly pop-in budget / larger opponent presentation (Patch 10 complete)
 11. Database audit + selective masks/traps rewrite (next lane)
-12. Feathers and score targets
-13. Haunt Word return system
-14. Word Vault real data/nav wiring plus Ranks / Profile pages
+12. Word Vault page shell (Patch 12A complete)
+13. Golden Pacing System docs (Patch 12B complete)
+14. Home arcade lobby shell (Patch 12C complete)
+15. Feathers and score targets
+16. Haunt Word return system
+17. Word Vault real data/nav wiring plus Ranks / Profile pages
 
 ---
 

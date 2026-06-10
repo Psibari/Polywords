@@ -6,6 +6,8 @@ POLYWORDS is a mobile word arena game, not a quiz list. The hero word is the bos
 
 The Word Vault page is the player's reclaimed meaning archive and trophy room. It is not Polly's cage, not Polly's lair, and should avoid cage/prison visuals.
 
+Home is the arcade lobby / launchpad. Play is the arena. Home should communicate that POLYWORDS is about stealing meanings back from Polly without implying unfinished placeholder features are live.
+
 ## Workflow
 
 - User uses VS Code with Codex extension.
