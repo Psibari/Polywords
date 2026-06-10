@@ -135,12 +135,12 @@ function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
 
   return (
     <View style={gs.card}>
-      <Text style={gs.header}>👻 Ghost set for next run</Text>
+      <Text style={gs.header}>👻 Ghost ready for rematch</Text>
       <Text style={gs.word}>{word.toUpperCase()}</Text>
       {mask && (
-        <Text style={gs.missed}>You missed: "{mask.phrase}"</Text>
+        <Text style={gs.missed}>Left behind: "{mask.phrase}"</Text>
       )}
-      <Text style={gs.body}>It'll find you.</Text>
+      <Text style={gs.body}>Guess who's back next run.</Text>
     </View>
   );
 }
@@ -451,16 +451,16 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         {/* ── GHOST REVENGE RESULT ── */}
         {ghostRevenge?.result === 'correct' && (
           <View style={gr.cardCleared}>
-            <Text style={gr.header}>Ghost cleared 🔥</Text>
+            <Text style={gr.header}>Haunt broken 🔥</Text>
             <Text style={gr.word}>{ghostRevenge.word}</Text>
-            <Text style={gr.sub}>You got it.</Text>
+            <Text style={gr.sub}>Rematch won.</Text>
           </View>
         )}
         {ghostRevenge?.result === 'wrong' && (
           <View style={gr.cardHaunting}>
             <Text style={gr.header}>Still haunting you 👻</Text>
             <Text style={gr.word}>{ghostRevenge.word}</Text>
-            <Text style={gr.sub}>It'll be back.</Text>
+            <Text style={gr.sub}>Missed me?</Text>
           </View>
         )}
 

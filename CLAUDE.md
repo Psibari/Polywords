@@ -471,7 +471,7 @@ T+520ms  HERO WORD LOSES LIFE ESSENCE â€” letters desaturate,
          Faint ghost of word peels backward into forming tile.
 T+760ms  GHOST TILE REFORMS: "MASTER THE WORD / From [WORD]"
          dark purple glass, solid purple border, mist inside
-T+920ms  "THE HAUNT BEGINS" â€” small text overlay, one beat
+T+920ms  "You left me behind." â€” small text overlay, one beat
 T+1300ms Ghost tile compresses â†’ fades to purple mist
 T+1500ms Polly: "Not yours yet."
 T+1900ms Exit to next word
@@ -654,7 +654,7 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Remaining hidden tile stays visible and merges with the failed tile.
   - Hero word flickers dull/lifeless during the merge.
   - Ghost Tile forms with exact copy: `MASTER THE WORD` / `From [WORD]`.
-  - Microcopy appears: `THE HAUNT BEGINS`.
+  - Microcopy appears: `You left me behind.`
   - Existing `store.addGhostedMaster(step.word)` and `store.completeWord()` behavior preserved, delayed until the sequence is readable.
   - Wrong hidden swipe still uses `submitWrongSwipe()` and loses exactly one feather.
   - Added safe opponent Polly pop-in line for hidden/master failure: "Not yours yet."
@@ -727,8 +727,8 @@ Other remaining work:
    - Ghosted words return late in future Hunts.
    - Preferred placement: word 10 or 11.
    - Never replace Boss Word at position 12.
-   - Entrance copy: REMEMBER ME?
-   - Cleared copy: HAUNT BROKEN.
+   - Entrance copy: Guess who's back.
+   - Cleared copy: Haunt broken.
    - Failed again copy: STILL HAUNTED.
    - Polly taunt: "BBBLAAAAHHAHAHA!"
 2. Score target/rank system:
@@ -791,7 +791,7 @@ Other remaining work:
 - Rank scale: D / C / B / A / S / MASTER
 - Life Feather milestones: 8,000 and 16,000 pts
 - Ghost Loss Sequence: hidden split tile wrong swipe overrides standard exit â€” tile intercepted at T+120ms into merge sequence
-- "THE HAUNT BEGINS" â€” micro-copy on ghost birth
+- "You left me behind." â€” micro-copy on ghost birth
 - "Not yours yet." â€” Polly line on ghost exit
 
 ---
@@ -965,14 +965,14 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 - Ghost Tile forms:
   - MASTER THE WORD
   - From [WORD]
-- Microcopy: THE HAUNT BEGINS
+- Microcopy: You left me behind.
 
 ### Ghost Return / Haunt Words
 
 - Ghosted words return late in future Hunts.
 - Best placement: word 10 or 11.
 - Never replace Boss Word at position 12.
-- Returning ghost word entrance copy: REMEMBER ME?
+- Returning ghost word entrance copy: Guess who's back.
 - If mastered: HAUNT BROKEN
 - If failed again: STILL HAUNTED
 - Returning Haunt failure Polly taunt: "BBBLAAAAHHAHAHA!"

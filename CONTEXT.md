@@ -89,9 +89,9 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Word Core:** Mastery trophy. It does not go into the Master Gate. It belongs in the player's Vault page. The Master Gate is Polly's cage, not storage.
 
-**Ghost loss design:** Patch 9 complete. Wrong hidden/master swipe makes failed tile leave, remaining hidden tile stay, failed tile glitch and lose substance, failed tile pulled back, both hidden tiles merge, hero word flickers dull, ghostly presence fades into merged tile, and Ghost Tile forms with MASTER THE WORD / From [WORD]. Microcopy: THE HAUNT BEGINS.
+**Ghost loss design:** Patch 9 complete. Wrong hidden/master swipe makes failed tile leave, remaining hidden tile stay, failed tile glitch and lose substance, failed tile pulled back, both hidden tiles merge, hero word flickers dull, ghostly presence fades into merged tile, and Ghost Tile forms with MASTER THE WORD / From [WORD]. Microcopy: You left me behind.
 
-**Ghost return / Haunt Words design:** Ghosted words return late in future Hunts, best at word 10 or 11, never replacing Boss Word 12. Entrance copy: REMEMBER ME? If mastered: HAUNT BROKEN. If failed again: STILL HAUNTED. Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!" Haunt return is locked but not implemented yet.
+**Ghost return / Haunt Words design:** Ghosted words return late in future Hunts, best at word 10 or 11, never replacing Boss Word 12. Entrance copy: Guess who's back. If mastered: Haunt broken. If failed again: STILL HAUNTED. Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!" Haunt return is locked but not implemented yet.
 
 **Feathers:** Hearts are replaced by Feathers. Player starts with 5. Wrong swipe plucks 1. 0 feathers ends run. Score milestones can restore a Life Feather. If full, player can hold 1 reserve feather max.
 
@@ -264,7 +264,7 @@ Completed and committed:
   - Remaining hidden tile merges with failed tile.
   - Hero word flickers dull/lifeless during merge.
   - Ghost Tile forms: "MASTER THE WORD" / "From [WORD]".
-  - Microcopy appears: "THE HAUNT BEGINS".
+  - Microcopy appears: "You left me behind."
   - Polly opponent line on hidden/master failure: "Not yours yet."
   - `npx.cmd tsc --noEmit` passed. Device sanity passed.
 - Patch 10 complete: Polly pop-in budget and larger opponent presentation implemented.
@@ -336,7 +336,7 @@ Future content lane: **Database audit + selective masks/traps rewrite using the 
   - Avoid dictionary-definition tone.
 
 Other remaining work:
-1. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, REMEMBER ME? / HAUNT BROKEN / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
+1. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, Guess who's back. / Haunt broken. / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
 2. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
 3. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
 4. Word Vault real data wiring plus future Ranks work.

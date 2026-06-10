@@ -173,6 +173,7 @@ export function GhostTile({ ghost, tileHeight = 64, onCorrect, onWrong, onDone }
           {...panResponder.panHandlers}
         >
           <View style={styles.masterTextBlock}>
+            <Text style={styles.masterPrompt}>Guess who's back.</Text>
             <Text style={styles.masterLabel}>MASTER THE WORD</Text>
             <Text style={styles.masterSubLabel}>{`From ${ghost.word}`}</Text>
           </View>
@@ -219,6 +220,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  masterPrompt: {
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: 10,
+    fontFamily: FONTS.label,
+    letterSpacing: 1.2,
+    fontWeight: '800',
+    marginBottom: 2,
   },
   masterLabel: {
     color: 'rgba(255,255,255,0.70)',

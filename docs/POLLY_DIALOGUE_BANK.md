@@ -62,9 +62,9 @@ Notes:
 ## Ghost Tile Copy Seeds
 
 Use these as ghost tile/system copy, not necessarily Polly dialogue:
-- Guess who's back.
+- Guess who's back. (used on returning Ghost Tile)
 - Remember me?
-- You left me behind.
+- You left me behind. (used on ghost birth reveal)
 - Still haunting you.
 - Missed me?
 

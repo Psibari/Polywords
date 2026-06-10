@@ -372,7 +372,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('BOT_LEFT');
           animWin();
-          setSpeech('That meaning nearly escaped.', 2500);
+          setSpeech('Rematch won.', 2500);
         }, 2500);
         break;
 
@@ -383,7 +383,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('MID_RIGHT');
           animHeadShake();
-          setSpeech("Gone. I clipped its wings.", 2500);
+          setSpeech("Still haunting you.", 2500);
         }, 2500);
         break;
 

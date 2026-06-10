@@ -1702,7 +1702,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     <Text style={styles.hauntBirthTitle}>MASTER THE WORD</Text>
                     <Text style={styles.hauntBirthFrom}>{`From ${step.word}`}</Text>
                     <Animated.Text style={[styles.hauntBirthCopy, { opacity: hauntCopyOpacity }]}>
-                      THE HAUNT BEGINS
+                      You left me behind.
                     </Animated.Text>
                   </Animated.View>
                 )}
