@@ -21,6 +21,8 @@ Patch 12D added `app/screens/SettingsScreen.tsx` and registered a `Settings` sta
 
 Patch 12E added `app/components/BottomNav.tsx` and wired it into Home, Vault, and Settings. The Play tab uses the same `startGame()` -> `Game` path and the dock is not visible during active gameplay.
 
+Patch 12F polished bottom nav spacing and active states. Home, Vault, and Settings use shared bottom content padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
+
 ---
 
 ## Polly â€” Master of Words
@@ -392,7 +394,7 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 
 The Word Vault is the player's reclaimed meaning archive and trophy room. It is distinct from Polly's Master Gate cage/vault in gameplay.
 
-Patch 12A added the first page shell in `app/screens/VaultScreen.tsx` and registered a `Vault` stack route in `App.tsx`. It is not wired into bottom nav yet and uses static placeholder data only.
+Patch 12A added the first page shell in `app/screens/VaultScreen.tsx` and registered a `Vault` stack route in `App.tsx`. It is wired into bottom nav and uses static placeholder data only. Real Vault data wiring remains pending.
 
 Mastered Words, Ghost Words, Hidden Meanings, and future Stats live here. The page must feel player-owned: dark magical archive, trophy-card shelves, word plaques, subtle vault/archive geometry. Avoid cage, prison, chain, or Polly-lair visuals.
 
@@ -696,7 +698,22 @@ T+1400ms Tiles stagger in at 120ms intervals
 
 ### Remaining Pending Work
 
-Current next lane: **Database audit + selective masks/traps rewrite pass using the local Mask Rewriter tool.**
+Current recommended next patch: **Patch 13 — Polly dialogue tone cleanup.**
+
+- Make Polly sound like a polysemous word thief, not a friendly helper.
+- Polly is a parrot mimic, hoarder of stolen meanings, and taunting language burglar.
+- Use double-meaning taunts where possible.
+- Preserve Polly pop-in budget and timing.
+- Do not touch gameplay mechanics.
+- Example taunt lane:
+  - "Can't beat that with a BAT."
+  - "You can't bank on that."
+  - "You missed the point."
+  - "That doesn't sound right."
+  - "I banked that meaning."
+  - "Rough draft. Sharp trap."
+
+Future content lane: **Database audit + selective masks/traps rewrite pass using the local Mask Rewriter tool.**
 
 - Content quality lane, not a gameplay code patch.
 - Analyze the word database.
@@ -730,7 +747,7 @@ Other remaining work:
 3. Life Feather milestone/reserve system:
    - UI feathers exist.
    - Score milestone restore and 1 reserve feather are not implemented yet.
-4. Word Vault real data/nav wiring plus Ranks / Profile pages.
+4. Word Vault real data wiring plus future Ranks work.
 5. `expo-av` to `expo-audio` migration.
 
 ---
@@ -1038,7 +1055,7 @@ Current implementation:
 8. MASTERED celebration (Patch 8 complete)
 9. Ghost merge loss (Patch 9 complete)
 10. Polly pop-in budget / larger opponent presentation (Patch 10 complete)
-11. Database audit + selective masks/traps rewrite (next lane)
+11. Database audit + selective masks/traps rewrite
 12. Word Vault page shell (Patch 12A complete)
 13. Golden Pacing System docs (Patch 12B complete)
 14. Home arcade lobby shell (Patch 12C complete)
@@ -1046,7 +1063,9 @@ Current implementation:
 16. Feathers and score targets
 17. Haunt Word return system
 18. Bottom navigation app shell (Patch 12E complete)
-19. Word Vault real data wiring plus future Ranks work
+19. Bottom nav spacing / active-state polish (Patch 12F complete)
+20. Polly dialogue tone cleanup (Patch 13 next)
+21. Word Vault real data wiring plus future Ranks work
 
 ---
 

@@ -300,9 +300,30 @@ Completed and committed:
   - `.env.example` is placeholder-only and includes `TEST_MODE=true`.
   - Generated output is draft-only and requires human audit before any database import.
   - Supports Test Batch, Specific Words, Full Loaded Database with confirmation, creativity controls, Fresh rerun, Tweak Notes, CSV word source import, and audit columns `AUDIT STATUS` / `AUDIT ISSUES`.
+- Patch 12A complete: Word Vault screen shell added at `app/screens/VaultScreen.tsx`.
+  - Word Vault is the player's reclaimed meaning archive, distinct from Polly's Master Gate cage/vault.
+  - It uses static placeholder data only; real Vault data wiring remains pending.
+- Patch 12B complete: Golden Pacing System documented at `docs/GOLDEN_PACING_SYSTEM.md`.
+  - Semantic Snap Rate is the primary content success metric.
+  - Hidden Truth Rule is sacred.
+  - Full pacing automation must not be implemented until metadata/test words exist.
+- Patch 12C complete: Home screen rebuilt as polished arcade lobby with PLAY, Daily Challenge placeholder, Vault preview, and Continue Run placeholder.
+- Patch 12D complete: Settings/Profile shell added. Profile belongs inside Settings for MVP and should not be a bottom nav tab. Settings rows are static placeholders.
+- Patch 12E complete: Bottom navigation shell added with Home / Play / Vault / Settings. Nav is visible outside active gameplay only and hidden on `GameScreen`. Play uses `startGame()` then `navigation.navigate('Game')`.
+- Patch 12F complete: Bottom nav spacing and active-state polish. Home, Vault, and Settings use bottom padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
 
 Remaining pending:
-Current next lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**
+Current recommended next patch: **Patch 13 — Polly dialogue tone cleanup.**
+
+- Make Polly sound like a polysemous word thief, not a friendly helper.
+- Polly is a parrot mimic and polysemous word thief who steals meanings by mimicking human words.
+- She is a hoarder of stolen meanings and a taunting language burglar.
+- Use double-meaning taunts where possible.
+- Preserve Polly pop-in budget and timing.
+- Do not touch gameplay mechanics.
+- Example taunt lane: "Can't beat that with a BAT." / "You can't bank on that." / "You missed the point." / "That doesn't sound right." / "I banked that meaning." / "Rough draft. Sharp trap."
+
+Future content lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**
 
 - Content quality lane, not a gameplay code patch.
 - Use `tools/content/mask-rewriter` for draft generation only; never wire it into the player-facing app.

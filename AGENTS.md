@@ -59,6 +59,7 @@ Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible ou
 
 - Polly is the opponent, not a friendly mascot.
 - Polly is a polysemous word thief: a mimic, hoarder of stolen meanings, and taunting language burglar.
+- Polly steals meanings by mimicking human words.
 - Polly is not permanent on the play screen.
 - Polly appears only as a pop-in.
 - 1 time during a big moment in a word round.
@@ -68,6 +69,7 @@ Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible ou
 - Never blocks active tile, right shatter lane, hidden tiles, or Master Gate.
 - Polly dialogue should use polysemous/double-meaning taunts where possible.
 - Polly should never sound warmly supportive.
+- Preferred taunt lane: "Can't beat that with a BAT.", "You can't bank on that.", "You missed the point.", "That doesn't sound right.", "I banked that meaning.", "Rough draft. Sharp trap."
 - `BINGO BANGO ZZZZINGO!` is not Polly dialogue. It is a rare game/system stinger only for Boss Word mastered and vaulted.
 
 ## Locked Colors
