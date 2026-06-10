@@ -283,7 +283,7 @@ export const SESSION: SessionStep[] = [
     tileStagger: 120,
     bossModifier: true,
     postSessionPollyDuration: 3000,
-    pollyLine: "That's everything. Did any of those surprise you?",
+    pollyLine: 'I gave the ORDER first.',
     meanings: [],
     hiddenMeaning:   'Below class, above family',
     hiddenTrap:      "The bench's final word",

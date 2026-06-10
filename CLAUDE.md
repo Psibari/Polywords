@@ -23,6 +23,8 @@ Patch 12E added `app/components/BottomNav.tsx` and wired it into Home, Vault, an
 
 Patch 12F polished bottom nav spacing and active states. Home, Vault, and Settings use shared bottom content padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
 
+Patch 13 refreshed active Polly dialogue in `app/hooks/usePollyAnimator.ts`, `app/screens/ResultsScreen.tsx`, and `app/game/session.ts` so Polly reads as a smug polysemous word thief/opponent instead of a friendly helper. Dormant/legacy dialogue paths were left untouched.
+
 ---
 
 ## Polly â€” Master of Words
@@ -698,21 +700,6 @@ T+1400ms Tiles stagger in at 120ms intervals
 
 ### Remaining Pending Work
 
-Current recommended next patch: **Patch 13 — Polly dialogue tone cleanup.**
-
-- Make Polly sound like a polysemous word thief, not a friendly helper.
-- Polly is a parrot mimic, hoarder of stolen meanings, and taunting language burglar.
-- Use double-meaning taunts where possible.
-- Preserve Polly pop-in budget and timing.
-- Do not touch gameplay mechanics.
-- Example taunt lane:
-  - "Can't beat that with a BAT."
-  - "You can't bank on that."
-  - "You missed the point."
-  - "That doesn't sound right."
-  - "I banked that meaning."
-  - "Rough draft. Sharp trap."
-
 Future content lane: **Database audit + selective masks/traps rewrite pass using the local Mask Rewriter tool.**
 
 - Content quality lane, not a gameplay code patch.
@@ -1064,7 +1051,7 @@ Current implementation:
 17. Haunt Word return system
 18. Bottom navigation app shell (Patch 12E complete)
 19. Bottom nav spacing / active-state polish (Patch 12F complete)
-20. Polly dialogue tone cleanup (Patch 13 next)
+20. Polly dialogue tone cleanup (Patch 13 complete)
 21. Word Vault real data wiring plus future Ranks work
 
 ---

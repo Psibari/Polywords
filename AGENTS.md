@@ -68,6 +68,7 @@ Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible ou
 - Bottom-left entrance.
 - Never blocks active tile, right shatter lane, hidden tiles, or Master Gate.
 - Polly dialogue should use polysemous/double-meaning taunts where possible.
+- Active Polly dialogue was refreshed in Patch 13; keep future edits in the smug word-thief/opponent voice.
 - Polly should never sound warmly supportive.
 - Preferred taunt lane: "Can't beat that with a BAT.", "You can't bank on that.", "You missed the point.", "That doesn't sound right.", "I banked that meaning.", "Rough draft. Sharp trap."
 - `BINGO BANGO ZZZZINGO!` is not Polly dialogue. It is a rare game/system stinger only for Boss Word mastered and vaulted.

@@ -311,18 +311,9 @@ Completed and committed:
 - Patch 12D complete: Settings/Profile shell added. Profile belongs inside Settings for MVP and should not be a bottom nav tab. Settings rows are static placeholders.
 - Patch 12E complete: Bottom navigation shell added with Home / Play / Vault / Settings. Nav is visible outside active gameplay only and hidden on `GameScreen`. Play uses `startGame()` then `navigation.navigate('Game')`.
 - Patch 12F complete: Bottom nav spacing and active-state polish. Home, Vault, and Settings use bottom padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
+- Patch 13 complete: active Polly dialogue refreshed in `app/hooks/usePollyAnimator.ts`, `app/screens/ResultsScreen.tsx`, and `app/game/session.ts` so she reads as a smug polysemous word thief/opponent instead of a friendly helper. Pop-in budget/timing and dormant legacy dialogue paths unchanged.
 
 Remaining pending:
-Current recommended next patch: **Patch 13 — Polly dialogue tone cleanup.**
-
-- Make Polly sound like a polysemous word thief, not a friendly helper.
-- Polly is a parrot mimic and polysemous word thief who steals meanings by mimicking human words.
-- She is a hoarder of stolen meanings and a taunting language burglar.
-- Use double-meaning taunts where possible.
-- Preserve Polly pop-in budget and timing.
-- Do not touch gameplay mechanics.
-- Example taunt lane: "Can't beat that with a BAT." / "You can't bank on that." / "You missed the point." / "That doesn't sound right." / "I banked that meaning." / "Rough draft. Sharp trap."
-
 Future content lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**
 
 - Content quality lane, not a gameplay code patch.

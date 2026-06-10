@@ -57,16 +57,16 @@ function derivePollyLine(
 ): string | null {
   const allPerfect =
     isComplete && wordResults.every(r => r.wrongSwipes === 0);
-  if (allPerfect) return '🦜 Clean sweep. Locked in.';
+  if (allPerfect) return '🦜 You emptied my little vault.';
 
   const bossCleared = wordResults.some(r => r.isBossWord && r.wrongSwipes === 0);
-  if (bossCleared) return '🦜 Mask Master.';
+  if (bossCleared) return '🦜 Fine. Keep the word.';
 
   const ghostCleared = wordResults.some(r => r.hiddenFound);
-  if (ghostCleared) return '🦜 Revenge Snap. Felt that.';
+  if (ghostCleared) return '🦜 You cracked more than locks.';
 
   const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
-  if (hasMissed) return "🦜 That one's waiting for you.";
+  if (hasMissed) return "🦜 Some meanings still haunt you.";
 
   return null;
 }

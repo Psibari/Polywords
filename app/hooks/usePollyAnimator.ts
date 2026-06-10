@@ -282,7 +282,7 @@ export function usePollyAnimator(
           tryMidRoundPopIn(() => {
             setCurrentPose('BOT_LEFT');
             animWin();
-            setSpeech('Word up.', 2000);
+            setSpeech('Put that meaning back.', 2000);
           }, 2000);
         } else if (pollyPopInVisibleRef.current) {
           // Already visible — just react, no new pop-in
@@ -295,7 +295,7 @@ export function usePollyAnimator(
         tryMidRoundPopIn(() => {
           setCurrentPose('MID_LEFT');
           animBigWin();
-          setSpeech("That's what I'm talking about.", 2500);
+          setSpeech("Stop picking my locks.", 2500);
         }, 2500);
         break;
 
@@ -303,7 +303,7 @@ export function usePollyAnimator(
         tryMidRoundPopIn(() => {
           setCurrentPose('BOT_RIGHT');
           animBigWin();
-          setSpeech('Brain glitch', 2000);
+          setSpeech('That meaning was buried.', 2000);
         }, 2000);
         break;
 
@@ -311,7 +311,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('BOT_LEFT');
           animWin();
-          setSpeech('CLEAN SWEEP', 2000);
+          setSpeech('My stash is empty.', 2000);
         }, 2000);
         break;
 
@@ -322,15 +322,15 @@ export function usePollyAnimator(
           if (wc >= 3) {
             setCurrentPose('BOT_CENTER');
             animWayWrong();
-            setSpeech(wc === 3 ? 'BLAHH HA HA HA' : 'What was that?', 2000);
+            setSpeech(wc === 3 ? 'That swipe was butter-knife sharp.' : 'My trap had more bite.', 2000);
           } else if (wc === 2) {
             setCurrentPose('MID_CENTER');
             animWrong();
-            setSpeech('Hard no.', 2000);
+            setSpeech('Close enough to fool you.', 2000);
           } else {
             setCurrentPose('MID_CENTER');
             animWrong();
-            setSpeech('Nope.', 2000);
+            setSpeech('That one almost belonged.', 2000);
           }
         };
         if (pollyPopInVisibleRef.current) {
@@ -347,7 +347,7 @@ export function usePollyAnimator(
         // Boss entrance — always show, major moment
         endOfRoundPopIn(() => {
           setCurrentPose('TOP_RIGHT');
-          animBossSnap(() => setSpeech('Did you just—'));
+          animBossSnap(() => setSpeech('This word stays mine.'));
         }, 3500);
         break;
 
@@ -372,7 +372,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('BOT_LEFT');
           animWin();
-          setSpeech('You almost left that one behind.', 2500);
+          setSpeech('That meaning nearly escaped.', 2500);
         }, 2500);
         break;
 
@@ -383,7 +383,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('MID_RIGHT');
           animHeadShake();
-          setSpeech("That one's gone. You won't see it again.", 2500);
+          setSpeech("Gone. I clipped its wings.", 2500);
         }, 2500);
         break;
 
@@ -393,7 +393,7 @@ export function usePollyAnimator(
         setCurrentPose('TOP_RIGHT');
         showPollyPopIn();
         animBossSnap();
-        setSpeech('Oh. NOOOooo', 2500);
+        setSpeech('One feather left. Delicious.', 2500);
         schedulePollyHide(3500);
         break;
 
@@ -407,21 +407,21 @@ export function usePollyAnimator(
             Animated.timing(translateX, { toValue:  0, duration: 500,  useNativeDriver: true }),
           ]));
           hesLoopRef.current.start();
-          setSpeech('You sure about that.', 3000);
+          setSpeech('That one looks guilty.', 3000);
         }, 6000);
         break;
 
       case 'hesitation6s':
         // Only update speech if Polly is already visible from hesitation3s
         if (pollyPopInVisibleRef.current) {
-          setSpeech('Really. That one.', 3000);
+          setSpeech('Almost real. Almost.', 3000);
           schedulePollyHide(3800);
         }
         break;
 
       case 'hesitation9s':
         if (pollyPopInVisibleRef.current) {
-          setSpeech('Hard no.', 2000);
+          setSpeech('Trust that swipe?', 2000);
           schedulePollyHide(2800);
         }
         break;
@@ -436,7 +436,7 @@ export function usePollyAnimator(
         tryMidRoundPopIn(() => {
           setCurrentPose('MID_LEFT');
           animBigWin();
-          setSpeech("You're moving. I've seen better.", 2500);
+          setSpeech("Cute streak. Still mine.", 2500);
         }, 2500);
         break;
 
@@ -453,7 +453,7 @@ export function usePollyAnimator(
         tryMidRoundPopIn(() => {
           setCurrentPose('BOT_LEFT');
           animWin();
-          setSpeech('Sharp.', 1800);
+          setSpeech('Borrowed brains.', 1800);
         }, 1800);
         break;
 
@@ -461,7 +461,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('BOT_RIGHT');
           animBigWin();
-          setSpeech('AARRRGGHH', 2500);
+          setSpeech('Mine. Every meaning.', 2500);
         }, 2500);
         break;
 
@@ -469,7 +469,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('BOT_LEFT');
           animWin();
-          setSpeech('Only with a perfect sweep — or it will come back to haunt you.', 4500);
+          setSpeech('Miss one, and it haunts you.', 4500);
         }, 4500);
         break;
 
@@ -485,7 +485,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('BOT_LEFT');
           animBigWin();
-          setSpeech('Fine. Take it.', 3000);
+          setSpeech('The word betrayed me.', 3000);
         }, 3000);
         break;
 
@@ -493,7 +493,7 @@ export function usePollyAnimator(
         endOfRoundPopIn(() => {
           setCurrentPose('BOT_LEFT');
           animWin();
-          setSpeech('Not yours yet.', 3000);
+          setSpeech('Not yours. Yet.', 3000);
         }, 3000);
         break;
     }
