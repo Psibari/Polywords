@@ -18,14 +18,14 @@ type SfxConfig = {
 };
 
 const SFX: Record<SfxName, SfxConfig> = {
-  uiClick:        { source: require('../../assets/sfx/ui_click.mp3'),        volume: 0.25, cooldownMs: 80 },
-  tileSwipe:      { source: require('../../assets/sfx/tile_swipe.mp3'),      volume: 0.25, cooldownMs: 80 },
-  trapWrong:      { source: require('../../assets/sfx/trap_wrong.mp3'),      volume: 0.35, cooldownMs: 120 },
-  trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),    volume: 0.40, cooldownMs: 140 },
-  mastered:       { source: require('../../assets/sfx/mastered_chime.mp3'),  volume: 0.45, cooldownMs: 2200 },
-  haunted:        { source: require('../../assets/sfx/haunted_moan.mp3'),    volume: 0.30, cooldownMs: 2600 },
-  pollyCall:      { source: require('../../assets/sfx/polly_call.mp3'),      volume: 0.25, cooldownMs: 1500 },
-  gateOpen:       { source: require('../../assets/sfx/gate_open.mp3'),       volume: 0.35, cooldownMs: 700 },
+  uiClick:        { source: require('../../assets/sfx/ui_click.mp3'),         volume: 0.25, cooldownMs: 80 },
+  tileSwipe:      { source: require('../../assets/sfx/tile_swipe.mp3'),       volume: 0.25, cooldownMs: 80 },
+  trapWrong:      { source: require('../../assets/sfx/trap_wrong.mp3'),       volume: 0.35, cooldownMs: 120 },
+  trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140 },
+  mastered:       { source: require('../../assets/sfx/mastered_chime.mp3'),   volume: 0.45, cooldownMs: 2200 },
+  haunted:        { source: require('../../assets/sfx/haunted_moan.mp3'),     volume: 0.30, cooldownMs: 2600 },
+  pollyCall:      { source: require('../../assets/sfx/polly_call.mp3'),       volume: 0.25, cooldownMs: 1500 },
+  gateOpen:       { source: require('../../assets/sfx/gate_open.mp3'),        volume: 0.35, cooldownMs: 700 },
   pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300 },
 };
 
@@ -55,7 +55,7 @@ export function preloadSfx(): Promise<void> {
             });
             sounds[name] = sound;
           } catch {
-            sounds[name] = undefined;
+            // leave key absent — will retry on next preload call
           }
         })
       );
@@ -77,9 +77,7 @@ export function playSfx(name: SfxName): void {
     const sound = sounds[name];
     if (!sound) return;
     lastPlayedAt[name] = Date.now();
-    sound.setVolumeAsync(config.volume)
-      .then(() => sound.replayAsync())
-      .catch(() => {});
+    sound.replayAsync().catch(() => {});
   };
 
   if (sounds[name]) {
@@ -93,9 +91,10 @@ export function playSfx(name: SfxName): void {
 }
 
 export async function unloadSfx(): Promise<void> {
-  const loadedSounds = Object.values(sounds);
   await Promise.all(
-    loadedSounds.map(sound => sound.unloadAsync().catch(() => {}))
+    (Object.entries(sounds) as [SfxName, Audio.Sound | undefined][]).map(
+      ([, sound]) => (sound ? sound.unloadAsync().catch(() => {}) : Promise.resolve())
+    )
   );
 
   (Object.keys(sounds) as SfxName[]).forEach(name => {
