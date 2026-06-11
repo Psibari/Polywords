@@ -2028,6 +2028,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   style={styles.deckTopCardSlot}
                 >
                   <SwipeMask
+                    key={topMask.id}
                     mask={topMask}
                     state={tileStates.get(topMask.id) ?? 'idle'}
                     onSwipeUp={() => handleSwipeUp(topMask.id)}

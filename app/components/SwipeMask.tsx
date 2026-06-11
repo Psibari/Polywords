@@ -133,6 +133,16 @@ export function SwipeMask({
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
 
+  // ── Cleanup rAF on unmount ────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (absorbRafRef.current !== null) {
+        cancelAnimationFrame(absorbRafRef.current);
+        absorbRafRef.current = null;
+      }
+    };
+  }, []);
+
   // ── Entry animation ───────────────────────────────────────────
   useEffect(() => {
     const id = setTimeout(() => {
