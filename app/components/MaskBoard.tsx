@@ -1552,36 +1552,33 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
     if (completedRef.current || gateTriggeredRef.current) return;
-    if (remainingMaskIds.length > 0) return; // deck not empty
-    const allJudged = visibleGridMasks.every(m => {
-      const ts = tileStates.get(m.id);
-      return ts === 'correct' || ts === 'trap-caught';
-    });
-    if (!allJudged) return; // snap-backs still in progress
+    if (remainingMaskIds.length > 0) return;
+
+    // Deck empty — all tiles judged (correct, trap-caught, or wrong)
     const perfect = !wrongSwipeOccurred.current;
-    if (perfect && hasHidden) {
-      gateTriggeredRef.current = true;
-      firePollyEvent('allMasksFound');
-      triggerGateUnlock();
+
+    if (isBoss) {
+      if (perfect && hasHidden) {
+        // Perfect boss clear — open the gate
+        gateTriggeredRef.current = true;
+        firePollyEvent('allMasksFound');
+        triggerGateUnlock();
+      } else {
+        // Boss escaped — wrong swipes closed the gate
+        // Silent: no overlay, no ghost, just advance
+        gateTriggeredRef.current = true;
+        completedRef.current = true;
+        store.completeWord();
+      }
     } else {
+      // Non-boss words 1–11: always just complete, no gate ever
       gateTriggeredRef.current = true;
-      if (perfect && !hasHidden) firePollyEvent('cleanSweep');
+      if (perfect) firePollyEvent('cleanSweep');
       setTimeout(() => {
-        if (hasHidden) {
-          showWordOutcome(
-            'haunted',
-            { detail: buildHauntedDetail() },
-            () => {
-              if (!ghostJudgedCorrectRef.current) store.addGhostedMaster(step.word);
-              store.completeWord();
-            }
-          );
-        } else {
-          store.completeWord();
-        }
-      }, 1400);
+        store.completeWord();
+      }, 900);
     }
-  }, [remainingMaskIds, tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [remainingMaskIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
   const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
@@ -1617,33 +1614,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       firePollyEvent('wrong');
       triggerWrongWordRecoil();
       onWrongSwipe?.();
-      if (store.game.lives <= 1) {
-        setTimeout(() => {
-          const currentLives  = useGameStore.getState().game.lives;
-          const currentStatus = useGameStore.getState().game.status;
-          if (currentLives === 0 && currentStatus === 'playing' && !completedRef.current) {
-            completedRef.current   = true;
-            gateTriggeredRef.current = true;
-            showWordOutcome(
-              'haunted',
-              { detail: buildHauntedDetail() },
-              () => {
-                store.addGhostedMaster(step.word);
-                store.completeWord();
-              }
-            );
-          }
-        }, 0);
-      } else {
-        setTileStates(prev => new Map(prev).set(maskId, 'snap-back'));
-        setTimeout(() => {
-          setTileStates(prev => {
-            const next = new Map(prev);
-            if (next.get(maskId) === 'snap-back') next.set(maskId, 'idle');
-            return next;
-          });
-        }, 520);
-      }
+      // Tile exits permanently — no retry
+      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      setTimeout(() => {
+        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
+      }, 400);
     }
   }
 
@@ -1668,33 +1643,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       firePollyEvent('wrong');
       triggerWrongWordRecoil();
       onWrongSwipe?.();
-      if (store.game.lives <= 1) {
-        setTimeout(() => {
-          const currentLives  = useGameStore.getState().game.lives;
-          const currentStatus = useGameStore.getState().game.status;
-          if (currentLives === 0 && currentStatus === 'playing' && !completedRef.current) {
-            completedRef.current   = true;
-            gateTriggeredRef.current = true;
-            showWordOutcome(
-              'haunted',
-              { detail: buildHauntedDetail() },
-              () => {
-                store.addGhostedMaster(step.word);
-                store.completeWord();
-              }
-            );
-          }
-        }, 0);
-      } else {
-        setTileStates(prev => new Map(prev).set(maskId, 'snap-back'));
-        setTimeout(() => {
-          setTileStates(prev => {
-            const next = new Map(prev);
-            if (next.get(maskId) === 'snap-back') next.set(maskId, 'idle');
-            return next;
-          });
-        }, 520);
-      }
+      // Tile exits permanently — no retry
+      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
+      setTimeout(() => {
+        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
+      }, 400);
     }
   }
 

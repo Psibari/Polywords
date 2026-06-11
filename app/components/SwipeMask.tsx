@@ -23,7 +23,7 @@ import { FluentEmoji } from './FluentEmoji';
 import { playCorrectSwipe, playWrongBuzz, playShatter } from '../utils/SoundEngine';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 
-export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'snap-back' | 'hidden' | 'revealed';
+export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
 const SWIPE_THRESHOLD = 40;
 const TILE_GAP        = 6;
@@ -296,25 +296,6 @@ export function SwipeMask({
           ]).start();
         }, 300));
       }
-    }
-
-    // ── SNAP-BACK — wrong swipe in deck mode, tile stays ────
-    if (s === 'snap-back') {
-      grabLift.value = withTiming(0, { duration: 100 });
-      translateX.value = withSpring(0, { damping: 12, stiffness: 280 });
-      translateY.value = withSpring(0, { damping: 12, stiffness: 280 });
-      rotation.value   = withSpring(0, { damping: 12, stiffness: 280 });
-      scale.value      = withSpring(1.0, { damping: 12, stiffness: 280 });
-      borderOpacityVal.value = withSequence(
-        withTiming(0.8,  { duration: 60 }),
-        withTiming(0.18, { duration: 300 })
-      );
-      setFlashRed(true);
-      const clearFlash  = setTimeout(() => setFlashRed(false), 280);
-      const resetJudged = setTimeout(() => { judgedRef.current = false; }, 320);
-      timers.push(clearFlash, resetJudged);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // Do NOT collapse height/marginTop — tile stays in deck
     }
 
     // ── TRAP-CAUGHT — hard right toss + shards ───────────────
