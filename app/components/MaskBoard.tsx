@@ -1498,6 +1498,28 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }, 100);
   }
 
+  function triggerWordExit(onComplete: () => void) {
+    // Hold: let the cleared word sit as confirmation
+    setTimeout(() => {
+      // Exit: word scales up slightly and fades out
+      Animated.parallel([
+        Animated.timing(wordEntryOpacity, {
+          toValue: 0,
+          duration: 280,
+          useNativeDriver: true,
+        }),
+        Animated.timing(wordEntryScale, {
+          toValue: 1.08,
+          duration: 280,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 600);
+
+    // Advance after exit completes + brief silence
+    setTimeout(onComplete, 1050);
+  }
+
   function handleFinalTileSwipeUp(maskId: string) {
     if (wordOutcome !== 'none') return;
     resetHesitation();
@@ -1574,9 +1596,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       // Non-boss words 1–11: always just complete, no gate ever
       gateTriggeredRef.current = true;
       if (perfect) firePollyEvent('cleanSweep');
-      setTimeout(() => {
-        store.completeWord();
-      }, 900);
+      triggerWordExit(() => store.completeWord());
     }
   }, [remainingMaskIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
