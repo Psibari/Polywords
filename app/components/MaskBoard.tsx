@@ -1966,7 +1966,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             <View style={styles.tileArenaRightLane} />
           </View>
         {showBoardContent && (
-          <Animated.View style={[styles.tileStack, { opacity: masterAllFadeAnim, transform: [{ translateY: deckSlamY }] }]}>
+          <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
+            <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
               <View style={styles.deckWrap}>
                 {/* ── DEPTH CARD 3 — deepest, visible only if 3+ remaining ── */}
@@ -2166,6 +2167,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 )}
               </Animated.View>
             )}
+            </Animated.View>
           </Animated.View>
         )}
 
