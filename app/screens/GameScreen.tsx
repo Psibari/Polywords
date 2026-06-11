@@ -11,6 +11,7 @@ import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
+import { preloadSfx, unloadSfx } from '../audio/sfx';
 
 // ─── SHARD ANGLES ────────────────────────────────────────────
 const SHARD_ANGLES = [0, 30, 60, 90, 120, 150, 180, 220, 270, 320];
@@ -416,7 +417,11 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   useEffect(() => {
     initSounds();
+    preloadSfx();
     loadGhosts();
+    return () => {
+      unloadSfx();
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

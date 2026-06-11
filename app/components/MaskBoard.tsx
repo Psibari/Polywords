@@ -19,7 +19,8 @@ import { GhostTile } from './GhostTile';
 import { ScoreFloat } from './ScoreFloat';
 import PollySprite from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
-import { playSplitReveal, playRoundComplete } from '../utils/SoundEngine';
+import { playRoundComplete } from '../utils/SoundEngine';
+import { playSfx } from '../audio/sfx';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -225,6 +226,11 @@ function MasteredOutcomeOverlay({ word, bonusLabel, onContinue }: OutcomeOverlay
     onContinue();
   }
 
+  function handlePress() {
+    playSfx('uiClick');
+    resolve();
+  }
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
@@ -244,7 +250,7 @@ function MasteredOutcomeOverlay({ word, bonusLabel, onContinue }: OutcomeOverlay
   const pulseOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.62] });
 
   return (
-    <Pressable style={styles.outcomeOverlay} onPress={resolve}>
+    <Pressable style={styles.outcomeOverlay} onPress={handlePress}>
       <Animated.View style={[styles.outcomePanel, styles.masteredOutcomePanel, { opacity, transform: [{ scale }] }]}>
         <Animated.View
           pointerEvents="none"
@@ -277,6 +283,11 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
     onContinue();
   }
 
+  function handlePress() {
+    playSfx('uiClick');
+    resolve();
+  }
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
@@ -296,7 +307,7 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
   const hazeOpacity = drift.interpolate({ inputRange: [0, 1], outputRange: [0.24, 0.48] });
 
   return (
-    <Pressable style={styles.outcomeOverlay} onPress={resolve}>
+    <Pressable style={styles.outcomeOverlay} onPress={handlePress}>
       <Animated.View style={[styles.outcomePanel, styles.hauntedOutcomePanel, { opacity, transform: [{ scale }] }]}>
         <Animated.View
           pointerEvents="none"
@@ -658,6 +669,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [outcomeDetail, setOutcomeDetail] = useState<string | undefined>(undefined);
   const [outcomeBonusLabel, setOutcomeBonusLabel] = useState<string | undefined>(undefined);
   const outcomeContinueRef = useRef<(() => void) | null>(null);
+  const outcomeActiveRef = useRef(false);
 
   // Gate ref for measuring rise distance
   const gateViewRef = useRef<View>(null);
@@ -804,6 +816,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setOutcomeDetail(undefined);
     setOutcomeBonusLabel(undefined);
     outcomeContinueRef.current = null;
+    outcomeActiveRef.current = false;
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss)
@@ -924,7 +937,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   function triggerDoorSplit() {
     setGatePhase('doorSplit');
-    playSplitReveal();
+    playSfx('gateOpen');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     const halfWidth = Dimensions.get('window').width / 2;
@@ -1005,11 +1018,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     options: { detail?: string; bonusLabel?: string },
     onContinue: () => void
   ) {
+    if (outcomeActiveRef.current) return;
+    outcomeActiveRef.current = true;
+    playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
     setOutcomeDetail(options.detail);
     setOutcomeBonusLabel(options.bonusLabel);
     setWordOutcome(outcome);
     outcomeContinueRef.current = () => {
       outcomeContinueRef.current = null;
+      outcomeActiveRef.current = false;
       setWordOutcome('none');
       setOutcomeDetail(undefined);
       setOutcomeBonusLabel(undefined);
@@ -1370,6 +1387,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       wrongSwipeOccurred.current = true;
+      playSfx('trapWrong');
       store.submitWrongSwipe();
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
@@ -1384,10 +1402,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     resetHesitation();
     const isReal = maskId === hiddenRealMask?.id;
     if (!isReal) {
+      playSfx('trapShatter');
       setFinalTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       wrongSwipeOccurred.current = true;
+      playSfx('trapWrong');
       store.submitWrongSwipe();
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
@@ -1504,6 +1524,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       firePollyEvent('correct');
     } else {
       wrongSwipeOccurred.current = true;
+      playSfx('trapWrong');
       store.submitWrongSwipe();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
@@ -1517,12 +1538,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
+      playSfx('trapShatter');
       store.submitSwipeDown(maskId);
       spawnFloat(50, maskId, '#7B2D8B');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       onTrapCaught?.();
     } else {
       wrongSwipeOccurred.current = true;
+      playSfx('trapWrong');
       store.submitWrongSwipe();
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');

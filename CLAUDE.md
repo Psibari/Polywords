@@ -33,6 +33,8 @@ Patch 17 completed device-sanity visual polish for the active gameplay arena: sl
 
 Patch 18 added Mastered / Haunted outcome drama in `app/components/MaskBoard.tsx`: Master Word success now pauses on a MASTERED overlay after the existing ceremony, and Master Word failure now pauses on a HAUNTED overlay with return promise and an available missed/trap detail. Input is locked while either overlay is visible, and word advancement waits for the overlay auto-complete or tap-to-continue. Scoring math, swipe grammar, Master Gate logic, mask/trap data, and one-active-tile queue behavior are unchanged.
 
+Patch 19 added `app/audio/sfx.ts`, a centralized cleaned-SFX helper on the existing `expo-av` stack. It preloads, plays, cools down, and unloads the files in `assets/sfx/` with per-sound volumes and silent failure. `GameScreen.tsx` preloads/unloads the SFX set, and `MaskBoard.tsx` uses cleaned SFX for Mastered/Haunted overlays, overlay continue taps, Master Gate open, trap shatter, and wrong trap/meaning feedback. Tile-swipe-start and press-hold SFX remain unwired because no clean `MaskBoard` event surface exists for those starts.
+
 docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
 
 ---
