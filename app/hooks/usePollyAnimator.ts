@@ -26,7 +26,8 @@ export type PollyEvent =
   | 'gateMastered'
   | 'gateMasteredBoss'
   | 'hiddenMasterFailed'
-  | 'hauntFailed';
+  | 'hauntFailed'
+  | 'oneWrongMove';
 
 type BreathingSpeed = 'slow' | 'building' | 'hot' | 'danger';
 
@@ -76,10 +77,11 @@ export function usePollyAnimator(
   const hesLoopRef       = useRef<Animated.CompositeAnimation | null>(null);
 
   // Mutable state refs
-  const breathSpeedRef      = useRef<BreathingSpeed>('slow');
-  const isBossFrozenRef     = useRef(false);
-  const wordFirstCorrectRef = useRef(false);
-  const wrongCountRef       = useRef(0);
+  const breathSpeedRef        = useRef<BreathingSpeed>('slow');
+  const isBossFrozenRef       = useRef(false);
+  const wordFirstCorrectRef   = useRef(false);
+  const wrongCountRef         = useRef(0);
+  const oneWrongMoveFiredRef  = useRef(false);
   const speechTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
   const livesRef            = useRef(lives);
   livesRef.current          = lives;
@@ -270,6 +272,7 @@ export function usePollyAnimator(
         wordFirstCorrectRef.current = false;
         wrongCountRef.current = 0;
         popInCountRef.current = 0;
+        oneWrongMoveFiredRef.current = false;
         setCurrentPose('TOP_LEFT');
         stopSwayLoops();
         setSpeech(null);
@@ -398,6 +401,17 @@ export function usePollyAnimator(
         schedulePollyHide(3500);
         break;
 
+      case 'oneWrongMove':
+        if (!oneWrongMoveFiredRef.current) {
+          oneWrongMoveFiredRef.current = true;
+          endOfRoundPopIn(() => {
+            setCurrentPose('MID_CENTER');
+            animWrong();
+            setSpeech('One wrong move.', 2000);
+          }, 2000);
+        }
+        break;
+
       case 'hesitation3s':
         tryMidRoundPopIn(() => {
           setCurrentPose('TOP_CENTER');
@@ -443,6 +457,7 @@ export function usePollyAnimator(
 
       case 'switchbackEntry':
         popInCountRef.current = 0;
+        oneWrongMoveFiredRef.current = false;
         setCurrentPose('TOP_CENTER');
         stopSwayLoops();
         setSpeech(null);

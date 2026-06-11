@@ -328,8 +328,6 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
   );
 }
 
-const ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS = 650;
-
 function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileState | null {
   if (state === 'correct' || state === 'trap-caught' || state === 'wrong') {
     return state;
@@ -398,10 +396,21 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   const visibleGridMasks = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
     .filter(m => !m.isHidden);
-  const orderedVisibleMasks = visibleGridMasks;
-  const [activeVisibleTileIndex, setActiveVisibleTileIndex] = useState(0);
-  const activeVisibleAdvanceRef = useRef<string | null>(null);
-  const activeVisibleMask = orderedVisibleMasks[activeVisibleTileIndex] ?? null;
+
+  // ── Deck state ────────────────────────────────────────────────
+  const [remainingMaskIds, setRemainingMaskIds] = useState<string[]>(() =>
+    visibleGridMasks.map(m => m.id)
+  );
+  const topMaskId    = remainingMaskIds[0] ?? null;
+  const topMask      = topMaskId
+    ? visibleGridMasks.find(m => m.id === topMaskId) ?? null
+    : null;
+  const deckSize     = remainingMaskIds.length;
+
+  // Deck entrance animation (native: translateY / transform only)
+  const deckSlamY    = useRef(new Animated.Value(-52)).current;
+  // Zero-feather red tint on depth cards (non-native: backgroundColor)
+  const deckRedTint  = useRef(new Animated.Value(0)).current;
 
   // ── find counts ──────────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
@@ -723,6 +732,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     if (store.game.lives === 1) firePollyEvent('oneHeartLeft');
   }, [store.game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Zero-feather red tint on deck depth cards
+  useEffect(() => {
+    if (store.game.lives === 0 && !completedRef.current) {
+      Animated.timing(deckRedTint, {
+        toValue: 1, duration: 300, useNativeDriver: false,
+      }).start();
+      firePollyEvent('oneWrongMove');
+    }
+  }, [store.game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (store.game.status === 'gameOver') firePollyEvent('gameOver');
   }, [store.game.status]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -751,9 +770,24 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
-    activeVisibleAdvanceRef.current = null;
-    setActiveVisibleTileIndex(0);
     setTileStates(buildInitialTileStates(step));
+    // Deck reset
+    const freshIds = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
+      .filter((m: Mask) => !m.isHidden)
+      .map((m: Mask) => m.id);
+    setRemainingMaskIds(freshIds);
+    deckRedTint.setValue(0);
+    deckSlamY.setValue(-52);
+    const slamDelay = isBoss ? 1200 : 80;
+    const slamTimer = setTimeout(() => {
+      Animated.spring(deckSlamY, {
+        toValue: 0,
+        damping: 14,
+        stiffness: 200,
+        useNativeDriver: true,
+      }).start();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }, slamDelay);
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     bossScaleX.setValue(isBoss ? 0.86 : 1);
@@ -842,6 +876,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     hauntBrokenScale.setValue(0.7);
     stillHauntedOpacity.setValue(0);
     stillHauntedScale.setValue(0.7);
+    return () => clearTimeout(slamTimer);
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss)
@@ -1514,52 +1549,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }
   }, [finalTileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (!activeVisibleMask) return;
-
-    const resolvedState = getResolvedTileState(tileStates.get(activeVisibleMask.id));
-    if (!resolvedState) return;
-    if (activeVisibleAdvanceRef.current === activeVisibleMask.id) return;
-
-    activeVisibleAdvanceRef.current = activeVisibleMask.id;
-
-    const timeoutId = setTimeout(() => {
-      setActiveVisibleTileIndex(prev => {
-        if (orderedVisibleMasks[prev]?.id !== activeVisibleMask.id) return prev;
-        activeVisibleAdvanceRef.current = null;
-        return Math.min(prev + 1, orderedVisibleMasks.length);
-      });
-    }, ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (activeVisibleAdvanceRef.current === activeVisibleMask.id) {
-        activeVisibleAdvanceRef.current = null;
-      }
-    };
-  }, [activeVisibleMask?.id, tileStates, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
     if (completedRef.current || gateTriggeredRef.current) return;
-
-    const visibleQueueResolved =
-      orderedVisibleMasks.length === 0 || activeVisibleTileIndex >= orderedVisibleMasks.length;
-
-    if (!visibleQueueResolved) return;
-
-    const allVisibleJudged = visibleGridMasks.every(m => {
-      const ts = tileStates.get(m.id);
-      return ts === 'correct' || ts === 'trap-caught' || ts === 'wrong';
-    });
-    if (!allVisibleJudged) return;
-
-    const perfect = visibleGridMasks.every(m => {
+    if (remainingMaskIds.length > 0) return; // deck not empty
+    const allJudged = visibleGridMasks.every(m => {
       const ts = tileStates.get(m.id);
       return ts === 'correct' || ts === 'trap-caught';
     });
-
-    if (perfect && hasHidden && !wrongSwipeOccurred.current) {
+    if (!allJudged) return; // snap-backs still in progress
+    const perfect = !wrongSwipeOccurred.current;
+    if (perfect && hasHidden) {
       gateTriggeredRef.current = true;
       firePollyEvent('allMasksFound');
       triggerGateUnlock();
@@ -1572,9 +1572,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             'haunted',
             { detail: buildHauntedDetail() },
             () => {
-              if (!ghostJudgedCorrectRef.current) {
-                store.addGhostedMaster(step.word);
-              }
+              if (!ghostJudgedCorrectRef.current) store.addGhostedMaster(step.word);
               store.completeWord();
             }
           );
@@ -1583,7 +1581,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         }
       }, 1400);
     }
-  }, [tileStates, activeVisibleTileIndex, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [remainingMaskIds, tileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── swipe handlers ────────────────────────────────────────────
   const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
@@ -1608,14 +1606,44 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
       firePollyEvent('correct');
+      setTimeout(() => {
+        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
+      }, 180);
     } else {
+      // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
       playSfx('trapWrong');
       store.submitWrongSwipe();
-      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
       triggerWrongWordRecoil();
       onWrongSwipe?.();
+      if (store.game.lives <= 1) {
+        setTimeout(() => {
+          const currentLives  = useGameStore.getState().game.lives;
+          const currentStatus = useGameStore.getState().game.status;
+          if (currentLives === 0 && currentStatus === 'playing' && !completedRef.current) {
+            completedRef.current   = true;
+            gateTriggeredRef.current = true;
+            showWordOutcome(
+              'haunted',
+              { detail: buildHauntedDetail() },
+              () => {
+                store.addGhostedMaster(step.word);
+                store.completeWord();
+              }
+            );
+          }
+        }, 0);
+      } else {
+        setTileStates(prev => new Map(prev).set(maskId, 'snap-back'));
+        setTimeout(() => {
+          setTileStates(prev => {
+            const next = new Map(prev);
+            if (next.get(maskId) === 'snap-back') next.set(maskId, 'idle');
+            return next;
+          });
+        }, 520);
+      }
     }
   }
 
@@ -1629,14 +1657,44 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       spawnFloat(50, maskId, '#7B2D8B');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       onTrapCaught?.();
+      setTimeout(() => {
+        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
+      }, 180);
     } else {
+      // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
       playSfx('trapWrong');
       store.submitWrongSwipe();
-      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       firePollyEvent('wrong');
       triggerWrongWordRecoil();
       onWrongSwipe?.();
+      if (store.game.lives <= 1) {
+        setTimeout(() => {
+          const currentLives  = useGameStore.getState().game.lives;
+          const currentStatus = useGameStore.getState().game.status;
+          if (currentLives === 0 && currentStatus === 'playing' && !completedRef.current) {
+            completedRef.current   = true;
+            gateTriggeredRef.current = true;
+            showWordOutcome(
+              'haunted',
+              { detail: buildHauntedDetail() },
+              () => {
+                store.addGhostedMaster(step.word);
+                store.completeWord();
+              }
+            );
+          }
+        }, 0);
+      } else {
+        setTileStates(prev => new Map(prev).set(maskId, 'snap-back'));
+        setTimeout(() => {
+          setTileStates(prev => {
+            const next = new Map(prev);
+            if (next.get(maskId) === 'snap-back') next.set(maskId, 'idle');
+            return next;
+          });
+        }, 520);
+      }
     }
   }
 
@@ -1908,40 +1966,86 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             <View style={styles.tileArenaRightLane} />
           </View>
         {showBoardContent && (
-          <Animated.View style={[styles.tileStack, { opacity: masterAllFadeAnim }]}>
-            {(() => {
-              const hapticCorrect = step.hapticTier === 'light'
-                ? () => Haptics.selectionAsync()
-                : undefined;
-              return gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && activeVisibleMask && (
-                <View key={activeVisibleMask.id} ref={getTileRef(activeVisibleMask.id)} style={styles.heavyTileStackWrap}>
-                  <View style={[styles.heavyUnderTile, styles.heavyUnderTileBack]} pointerEvents="none">
-                    <View style={styles.heavyUnderTileEdge} />
+          <Animated.View style={[styles.tileStack, { opacity: masterAllFadeAnim, transform: [{ translateY: deckSlamY }] }]}>
+            {gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
+              <View style={styles.deckWrap}>
+                {/* ── DEPTH CARD 3 — deepest, visible only if 3+ remaining ── */}
+                {deckSize >= 3 && (
+                  <View style={[
+                    styles.deckDepthCard,
+                    styles.deckDepthCard3,
+                    isHaunt && styles.deckDepthCardHaunt,
+                  ]} pointerEvents="none" />
+                )}
+
+                {/* ── DEPTH CARD 2 — mid layer, visible if 2+ remaining ── */}
+                {deckSize >= 2 && (
+                  <Animated.View style={[
+                    styles.deckDepthCard,
+                    styles.deckDepthCard2,
+                    isHaunt && styles.deckDepthCardHaunt,
+                    {
+                      backgroundColor: deckRedTint.interpolate({
+                        inputRange:  [0, 1],
+                        outputRange: ['#0F0D2A', '#2A0808'],
+                      }),
+                    },
+                  ]} pointerEvents="none">
+                    <View style={styles.deckDepthEdge} />
+                  </Animated.View>
+                )}
+
+                {/* ── DEPTH CARD 1 — one behind top, visible if 2+ remaining ── */}
+                {deckSize >= 2 && (
+                  <Animated.View style={[
+                    styles.deckDepthCard,
+                    styles.deckDepthCard1,
+                    isHaunt && styles.deckDepthCardHaunt,
+                    {
+                      backgroundColor: deckRedTint.interpolate({
+                        inputRange:  [0, 1],
+                        outputRange: ['#0F0D2A', '#2A0808'],
+                      }),
+                    },
+                  ]} pointerEvents="none">
+                    <View style={styles.deckDepthEdge} />
+                  </Animated.View>
+                )}
+
+                {/* ── FACE-DOWN HIDDEN CARD — when hasHidden and gate locked ── */}
+                {hasHidden && (gatePhase === 'locked' || gatePhase === 'unlocking') && (
+                  <View style={[
+                    styles.deckDepthCard,
+                    styles.deckHiddenCard,
+                  ]} pointerEvents="none">
+                    <Text style={styles.deckHiddenCardEmoji}>❓</Text>
                   </View>
-                  <View style={[styles.heavyUnderTile, styles.heavyUnderTileMid]} pointerEvents="none">
-                    <View style={styles.heavyUnderTileEdge} />
-                  </View>
-                  <View style={styles.heavyTopTileSlot}>
-                    <SwipeMask
-                      mask={activeVisibleMask}
-                      state={tileStates.get(activeVisibleMask.id) ?? 'idle'}
-                      onSwipeUp={() => handleSwipeUp(activeVisibleMask.id)}
-                      onSwipeDown={() => handleSwipeRight(activeVisibleMask.id)}
-                      onSwipeReveal={() => {}}
-                      revealable={false}
-                      disabled={inputLocked}
-                      tileHeight={TILE_H}
-                      entryDelay={0}
-                      hapticCorrect={hapticCorrect}
-                      onEffect={handleEffect}
-                      onSwipeStart={() => playSfx('tileSwipe')}
-                      onPressHoldStart={() => playSfx('pressHoldStart')}
-                      wordY={wordScreenY}
-                    />
-                  </View>
+                )}
+
+                {/* ── TOP CARD — interactive ── */}
+                <View
+                  ref={getTileRef(topMask.id)}
+                  style={styles.deckTopCardSlot}
+                >
+                  <SwipeMask
+                    mask={topMask}
+                    state={tileStates.get(topMask.id) ?? 'idle'}
+                    onSwipeUp={() => handleSwipeUp(topMask.id)}
+                    onSwipeDown={() => handleSwipeRight(topMask.id)}
+                    onSwipeReveal={() => {}}
+                    revealable={false}
+                    disabled={inputLocked}
+                    tileHeight={TILE_H}
+                    entryDelay={0}
+                    hapticCorrect={step.hapticTier === 'light' ? () => Haptics.selectionAsync() : undefined}
+                    onEffect={handleEffect}
+                    onSwipeStart={() => playSfx('tileSwipe')}
+                    onPressHoldStart={() => playSfx('pressHoldStart')}
+                    wordY={wordScreenY}
+                  />
                 </View>
-              );
-            })()}
+              </View>
+            )}
 
             {(gatePhase === 'tiles' || gatePhase === 'wrongFail') && hiddenRealMask && hiddenTrapMask && (
               <Animated.View style={[
@@ -2653,52 +2757,85 @@ const styles = StyleSheet.create({
     paddingRight: 0,
     zIndex: 2,
   },
-  heavyTileStackWrap: {
+  deckWrap: {
     position: 'relative',
-    minHeight: TILE_H + 26,
-    paddingBottom: 22,
+    width: '100%',
+    alignItems: 'center',
+    minHeight: TILE_H + 40,
+    paddingBottom: 36,
   },
-  heavyUnderTile: {
+  deckTopCardSlot: {
+    position: 'relative',
+    zIndex: 10,
+    width: '100%',
+  },
+  deckDepthCard: {
     position: 'absolute',
-    left: 12,
-    right: 12,
+    left: 0,
+    right: 0,
     height: TILE_H,
     borderRadius: 30,
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.32)',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.42,
-    shadowRadius: 26,
-    elevation: 4,
+    borderColor: 'rgba(123,45,139,0.30)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.38,
+    shadowRadius: 22,
+    elevation: 3,
     overflow: 'hidden',
   },
-  heavyUnderTileBack: {
-    top: 26,
+  deckDepthCard1: {
+    top: 12,
+    left: 8,
+    right: 8,
+    opacity: 0.72,
+    zIndex: 7,
+    transform: [{ rotate: '1.2deg' }],
+  },
+  deckDepthCard2: {
+    top: 22,
+    left: 16,
+    right: 16,
+    opacity: 0.46,
+    zIndex: 5,
+    transform: [{ rotate: '-0.8deg' }],
+  },
+  deckDepthCard3: {
+    top: 30,
     left: 22,
     right: 22,
+    opacity: 0.28,
+    zIndex: 3,
+  },
+  deckHiddenCard: {
+    top: 30,
+    left: 22,
+    right: 22,
+    opacity: 0.35,
+    zIndex: 2,
+    backgroundColor: '#0A0820',
+    borderColor: 'rgba(123,45,139,0.50)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deckHiddenCardEmoji: {
+    fontSize: 18,
     opacity: 0.44,
   },
-  heavyUnderTileMid: {
-    top: 14,
-    left: 15,
-    right: 15,
-    opacity: 0.68,
-  },
-  heavyUnderTileEdge: {
+  deckDepthEdge: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: 22,
-    backgroundColor: 'rgba(5,4,18,0.72)',
+    height: 18,
+    backgroundColor: 'rgba(5,4,18,0.55)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: 'rgba(255,255,255,0.04)',
   },
-  heavyTopTileSlot: {
-    position: 'relative',
-    zIndex: 4,
+  deckDepthCardHaunt: {
+    borderColor: 'rgba(123,45,139,0.52)',
+    backgroundColor: '#130D2A',
   },
   finalHiddenTileStack: {
     width: '100%',
