@@ -3,6 +3,7 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -203,6 +204,118 @@ function eventKicker(step: WordStep): string | null {
 }
 
 type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
+type WordOutcomeState = 'none' | 'mastered' | 'haunted';
+
+type OutcomeOverlayProps = {
+  word: string;
+  bonusLabel?: string;
+  detail?: string;
+  onContinue: () => void;
+};
+
+function MasteredOutcomeOverlay({ word, bonusLabel, onContinue }: OutcomeOverlayProps) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.88)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
+  const resolvedRef = useRef(false);
+
+  function resolve() {
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
+    onContinue();
+  }
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, damping: 8, stiffness: 160, useNativeDriver: true }),
+    ]).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ])
+    ).start();
+    const auto = setTimeout(resolve, 2800);
+    return () => clearTimeout(auto);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const pulseOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.62] });
+
+  return (
+    <Pressable style={styles.outcomeOverlay} onPress={resolve}>
+      <Animated.View style={[styles.outcomePanel, styles.masteredOutcomePanel, { opacity, transform: [{ scale }] }]}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.masteredPulseRing, { opacity: pulseOpacity, transform: [{ scale: pulseScale }] }]}
+        />
+        <Text style={[styles.outcomeHeadline, styles.masteredOutcomeHeadline]}>MASTERED</Text>
+        <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
+          {word}
+        </Text>
+        <View style={styles.outcomeCopyBlock}>
+          <Text style={styles.outcomeCopy}>Every meaning reclaimed.</Text>
+          <Text style={styles.outcomeCopy}>Vault strengthened.</Text>
+        </View>
+        {bonusLabel && <Text style={styles.outcomeBonus}>{bonusLabel}</Text>}
+        <Text style={styles.outcomeContinue}>CONTINUE</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.94)).current;
+  const drift = useRef(new Animated.Value(0)).current;
+  const resolvedRef = useRef(false);
+
+  function resolve() {
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
+    onContinue();
+  }
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, damping: 9, stiffness: 120, useNativeDriver: true }),
+    ]).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(drift, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(drift, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ])
+    ).start();
+    const auto = setTimeout(resolve, 3200);
+    return () => clearTimeout(auto);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hazeY = drift.interpolate({ inputRange: [0, 1], outputRange: [0, -10] });
+  const hazeOpacity = drift.interpolate({ inputRange: [0, 1], outputRange: [0.24, 0.48] });
+
+  return (
+    <Pressable style={styles.outcomeOverlay} onPress={resolve}>
+      <Animated.View style={[styles.outcomePanel, styles.hauntedOutcomePanel, { opacity, transform: [{ scale }] }]}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.hauntedHaze, { opacity: hazeOpacity, transform: [{ translateY: hazeY }] }]}
+        />
+        <Text style={[styles.outcomeHeadline, styles.hauntedOutcomeHeadline]}>HAUNTED</Text>
+        <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
+          {word}
+        </Text>
+        <View style={styles.outcomeCopyBlock}>
+          <Text style={styles.outcomeCopy}>Polly stole a meaning.</Text>
+          <Text style={styles.outcomeCopy}>Returns in 3 rounds.</Text>
+        </View>
+        {detail && <Text style={styles.hauntedDetail} numberOfLines={2}>{detail}</Text>}
+        <Text style={styles.outcomeContinue}>CONTINUE</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
 
 const ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS = 650;
 
@@ -541,6 +654,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [goldBloomVisible, setGoldBloomVisible]         = useState(false);
   const [masterCracksVisible, setMasterCracksVisible]   = useState(false);
   const [systemStingerWord, setSystemStingerWord]       = useState<string | null>(null);
+  const [wordOutcome, setWordOutcome] = useState<WordOutcomeState>('none');
+  const [outcomeDetail, setOutcomeDetail] = useState<string | undefined>(undefined);
+  const [outcomeBonusLabel, setOutcomeBonusLabel] = useState<string | undefined>(undefined);
+  const outcomeContinueRef = useRef<(() => void) | null>(null);
 
   // Gate ref for measuring rise distance
   const gateViewRef = useRef<View>(null);
@@ -683,6 +800,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setGoldBloomVisible(false);
     setMasterCracksVisible(false);
     setSystemStingerWord(null);
+    setWordOutcome('none');
+    setOutcomeDetail(undefined);
+    setOutcomeBonusLabel(undefined);
+    outcomeContinueRef.current = null;
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss)
@@ -861,6 +982,45 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }, 150);
   }
 
+  function buildHauntedDetail(failedMaskId?: string): string | undefined {
+    if (failedMaskId === hiddenRealMask?.id && hiddenRealMask) {
+      return `Missed: ${hiddenRealMask.phrase}`;
+    }
+    if (failedMaskId === hiddenTrapMask?.id && hiddenTrapMask) {
+      return `Trap claimed: ${hiddenTrapMask.phrase}`;
+    }
+
+    const missedReal = visibleGridMasks.find(m => m.isReal && tileStates.get(m.id) === 'wrong');
+    if (missedReal) return `Missed: ${missedReal.phrase}`;
+
+    const acceptedTrap = visibleGridMasks.find(m => !m.isReal && tileStates.get(m.id) === 'wrong');
+    if (acceptedTrap) return `Trap claimed: ${acceptedTrap.phrase}`;
+
+    if (ghost?.isGhostedMaster) return 'Still haunted.';
+    return undefined;
+  }
+
+  function showWordOutcome(
+    outcome: Exclude<WordOutcomeState, 'none'>,
+    options: { detail?: string; bonusLabel?: string },
+    onContinue: () => void
+  ) {
+    setOutcomeDetail(options.detail);
+    setOutcomeBonusLabel(options.bonusLabel);
+    setWordOutcome(outcome);
+    outcomeContinueRef.current = () => {
+      outcomeContinueRef.current = null;
+      setWordOutcome('none');
+      setOutcomeDetail(undefined);
+      setOutcomeBonusLabel(undefined);
+      onContinue();
+    };
+  }
+
+  function continueOutcome() {
+    outcomeContinueRef.current?.();
+  }
+
   function triggerWrongFail(failedMaskId: string) {
     if (splitCompletedRef.current) return;
     splitCompletedRef.current = true;
@@ -966,8 +1126,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }, 1420);
 
     setTimeout(() => {
-      store.addGhostedMaster(step.word);
-      store.completeWord();
+      showWordOutcome(
+        'haunted',
+        { detail: buildHauntedDetail(failedMaskId) },
+        () => {
+          store.addGhostedMaster(step.word);
+          store.completeWord();
+        }
+      );
     }, 2900);
   }
 
@@ -1142,8 +1308,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setMasteredLabelVisible(false);
       setMasterCracksVisible(false);
       setSystemStingerWord(null);
-      if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
-      store.completeWord();
+      showWordOutcome(
+        'mastered',
+        { bonusLabel: isBoss ? 'BOSS BONUS +300' : undefined },
+        () => {
+          if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
+          store.completeWord();
+        }
+      );
     }, isBoss ? 4300 : 3450);
   }
 
@@ -1189,6 +1361,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function handleFinalTileSwipeUp(maskId: string) {
+    if (wordOutcome !== 'none') return;
     resetHesitation();
     const isReal = maskId === hiddenRealMask?.id;
     if (isReal) {
@@ -1207,6 +1380,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function handleFinalTileSwipeRight(maskId: string) {
+    if (wordOutcome !== 'none') return;
     resetHesitation();
     const isReal = maskId === hiddenRealMask?.id;
     if (!isReal) {
@@ -1287,10 +1461,20 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       gateTriggeredRef.current = true;
       if (perfect && !hasHidden) firePollyEvent('cleanSweep');
       setTimeout(() => {
-        if (hasHidden && !ghostJudgedCorrectRef.current) {
-          store.addGhostedMaster(step.word);
+        if (hasHidden) {
+          showWordOutcome(
+            'haunted',
+            { detail: buildHauntedDetail() },
+            () => {
+              if (!ghostJudgedCorrectRef.current) {
+                store.addGhostedMaster(step.word);
+              }
+              store.completeWord();
+            }
+          );
+        } else {
+          store.completeWord();
         }
-        store.completeWord();
       }, 1400);
     }
   }, [tileStates, activeVisibleTileIndex, orderedVisibleMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1299,6 +1483,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
   function handleSwipeUp(maskId: string) {
+    if (wordOutcome !== 'none') return;
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
@@ -1328,6 +1513,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function handleSwipeRight(maskId: string) {
+    if (wordOutcome !== 'none') return;
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
@@ -1347,6 +1533,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // ── ghost tile handlers ──────────────────────────────────────
   function handleGhostSwipeUp() {
+    if (wordOutcome !== 'none') return;
     ghostJudgedCorrectRef.current = true;
     store.clearGhost(step.word);
     store.setGhostRevenge({ result: 'correct', word: step.word, meaningText: '' });
@@ -1357,6 +1544,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function handleGhostSwipeRight() {
+    if (wordOutcome !== 'none') return;
     store.setGhostRevenge({ result: 'wrong', word: step.word, meaningText: '' });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     firePollyEvent('ghostDissolved');
@@ -2068,6 +2256,22 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           )}
         </>
       )}
+
+      {wordOutcome === 'mastered' && (
+        <MasteredOutcomeOverlay
+          word={step.word}
+          bonusLabel={outcomeBonusLabel}
+          onContinue={continueOutcome}
+        />
+      )}
+
+      {wordOutcome === 'haunted' && (
+        <HauntedOutcomeOverlay
+          word={step.word}
+          detail={outcomeDetail}
+          onContinue={continueOutcome}
+        />
+      )}
     </Animated.View>
   );
 }
@@ -2570,6 +2774,130 @@ const styles = StyleSheet.create({
   },
   splitZone: {
     marginTop: TILE_GAP,
+  },
+  outcomeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 300,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    backgroundColor: 'rgba(15,13,42,0.78)',
+  },
+  outcomePanel: {
+    width: '100%',
+    maxWidth: 360,
+    minHeight: 300,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 26,
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 22,
+    elevation: 14,
+  },
+  masteredOutcomePanel: {
+    borderColor: 'rgba(245,200,66,0.92)',
+    backgroundColor: 'rgba(15,13,42,0.96)',
+    shadowColor: '#F5C842',
+    shadowOpacity: 0.34,
+  },
+  hauntedOutcomePanel: {
+    borderColor: 'rgba(155,45,107,0.92)',
+    backgroundColor: 'rgba(15,13,42,0.97)',
+    shadowColor: '#7B2D8B',
+    shadowOpacity: 0.42,
+  },
+  masteredPulseRing: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 2,
+    borderColor: '#F5C842',
+    backgroundColor: 'rgba(245,200,66,0.08)',
+  },
+  hauntedHaze: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    top: 24,
+    bottom: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(155,45,107,0.36)',
+    backgroundColor: 'rgba(123,45,139,0.18)',
+  },
+  outcomeHeadline: {
+    fontFamily: FONTS.label,
+    fontWeight: '900',
+    fontSize: 38,
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  masteredOutcomeHeadline: {
+    color: '#F5C842',
+    textShadowColor: 'rgba(245,200,66,0.62)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
+  hauntedOutcomeHeadline: {
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(155,45,107,0.74)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
+  outcomeWord: {
+    marginTop: 8,
+    color: '#F5C842',
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 54,
+    letterSpacing: 0,
+    textAlign: 'center',
+    maxWidth: '100%',
+  },
+  outcomeCopyBlock: {
+    marginTop: 12,
+    gap: 5,
+  },
+  outcomeCopy: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.label,
+    fontSize: FONT_SIZES.progressLabel,
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  outcomeBonus: {
+    marginTop: 16,
+    color: '#F5C842',
+    fontFamily: FONTS.hud,
+    fontSize: FONT_SIZES.hudScore,
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  hauntedDetail: {
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(155,45,107,0.46)',
+    backgroundColor: 'rgba(123,45,139,0.20)',
+    color: '#FFFFFF',
+    fontFamily: FONTS.label,
+    fontSize: FONT_SIZES.progressLabel,
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  outcomeContinue: {
+    marginTop: 20,
+    color: 'rgba(255,255,255,0.72)',
+    fontFamily: FONTS.label,
+    fontSize: FONT_SIZES.hudLabel,
+    letterSpacing: 1,
+    textAlign: 'center',
   },
   // ── Polly — absolute bottom-left pop-in ───────────────────────
   pollyAnchor: {

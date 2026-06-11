@@ -31,6 +31,8 @@ Patch 16 polished the active mask/trap tile as the top slab in a concealed heavy
 
 Patch 17 completed device-sanity visual polish for the active gameplay arena: slimmer HUD chrome, cleaner/heavier concealed under-tile slab offsets, less visually loud right shatter-lane marker, more breathing room above the Master Gate dock, and locked gold normalization in the gameplay surface. Gameplay mechanics, scoring, swipe grammar, one-active queue, tile resolution, hidden release, Master Gate logic, Polly timing/budget, navigation, and content data unchanged.
 
+Patch 18 added Mastered / Haunted outcome drama in `app/components/MaskBoard.tsx`: Master Word success now pauses on a MASTERED overlay after the existing ceremony, and Master Word failure now pauses on a HAUNTED overlay with return promise and an available missed/trap detail. Input is locked while either overlay is visible, and word advancement waits for the overlay auto-complete or tap-to-continue. Scoring math, swipe grammar, Master Gate logic, mask/trap data, and one-active-tile queue behavior are unchanged.
+
 docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
 
 ---
