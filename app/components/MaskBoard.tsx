@@ -1604,6 +1604,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const secondHiddenWrongOpacity = gatePhase === 'wrongFail' && failedHiddenTileId
     ? (secondHiddenFailed ? failedHiddenOpacity : remainingHiddenOpacity)
     : 1;
+  const inputLocked = wordOutcome !== 'none';
 
   return (
     <Animated.View
@@ -1819,10 +1820,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       onSwipeDown={() => handleSwipeRight(activeVisibleMask.id)}
                       onSwipeReveal={() => {}}
                       revealable={false}
+                      disabled={inputLocked}
                       tileHeight={TILE_H}
                       entryDelay={0}
                       hapticCorrect={hapticCorrect}
                       onEffect={handleEffect}
+                      onSwipeStart={() => playSfx('tileSwipe')}
+                      onPressHoldStart={() => playSfx('pressHoldStart')}
                       wordY={wordScreenY}
                     />
                   </View>
@@ -1866,10 +1870,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                         onSwipeDown={() => handleFinalTileSwipeRight(hiddenRealMask.id)}
                         onSwipeReveal={() => {}}
                         revealable={false}
+                        disabled={inputLocked}
                         isSpecialSplit={true}
                         tileHeight={FINAL_TILE_H}
                         entryDelay={0}
                         onEffect={handleEffect}
+                        onSwipeStart={() => playSfx('tileSwipe')}
+                        onPressHoldStart={() => playSfx('pressHoldStart')}
                         wordY={wordScreenY}
                         splitBorderColor="rgba(245,200,66,1.0)"
                         splitTextColor="rgba(255,248,230,1)"
@@ -1908,10 +1915,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                         onSwipeDown={() => handleFinalTileSwipeRight(hiddenTrapMask.id)}
                         onSwipeReveal={() => {}}
                         revealable={false}
+                        disabled={inputLocked}
                         isSpecialSplit={true}
                         tileHeight={FINAL_TILE_H}
                         entryDelay={0}
                         onEffect={handleEffect}
+                        onSwipeStart={() => playSfx('tileSwipe')}
+                        onPressHoldStart={() => playSfx('pressHoldStart')}
                         wordY={wordScreenY}
                         splitBorderColor="rgba(245,200,66,0.80)"
                         splitTextColor="#FFFFFF"

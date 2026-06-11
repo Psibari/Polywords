@@ -41,6 +41,9 @@ type Props = {
   eraBadge?: string;
   hapticCorrect?: () => void;
   onEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
+  onSwipeStart?: () => void;
+  onPressHoldStart?: () => void;
+  disabled?: boolean;
   wordY?: number;
   splitBorderColor?: string;
   splitTextColor?: string;
@@ -63,6 +66,9 @@ export function SwipeMask({
   eraBadge,
   hapticCorrect,
   onEffect,
+  onSwipeStart,
+  onPressHoldStart,
+  disabled = false,
   wordY = 180,
   splitBorderColor = '#FFD700',
   splitTextColor = '#FFFFFF',
@@ -112,6 +118,9 @@ export function SwipeMask({
   const onSwipeDownRef           = useRef(onSwipeDown);
   const hapticCorrectRef         = useRef(hapticCorrect);
   const onEffectRef              = useRef(onEffect);
+  const onSwipeStartRef          = useRef(onSwipeStart);
+  const onPressHoldStartRef      = useRef(onPressHoldStart);
+  const disabledRef              = useRef(disabled);
   const outerRef                 = useRef<any>(null);
   const absorbRafRef             = useRef<number | null>(null);
   const lastGestureVelocityRef   = useRef({ vx: 0, vy: 0 });
@@ -120,6 +129,9 @@ export function SwipeMask({
   useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
   useEffect(() => { hapticCorrectRef.current = hapticCorrect; }, [hapticCorrect]);
   useEffect(() => { onEffectRef.current      = onEffect;      }, [onEffect]);
+  useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
+  useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
+  useEffect(() => { disabledRef.current = disabled; }, [disabled]);
 
   // ── Entry animation ───────────────────────────────────────────
   useEffect(() => {
@@ -346,25 +358,26 @@ export function SwipeMask({
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder:        () => !judgedRef.current,
-      onStartShouldSetPanResponderCapture: () => !judgedRef.current,
+      onStartShouldSetPanResponder:        () => !disabledRef.current && !judgedRef.current,
+      onStartShouldSetPanResponderCapture: () => !disabledRef.current && !judgedRef.current,
       onMoveShouldSetPanResponder: (_, g) =>
-        !judgedRef.current && (Math.abs(g.dy) > 6 || Math.abs(g.dx) > 6),
+        !disabledRef.current && !judgedRef.current && (Math.abs(g.dy) > 6 || Math.abs(g.dx) > 6),
       onMoveShouldSetPanResponderCapture: (_, g) =>
-        !judgedRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
+        !disabledRef.current && !judgedRef.current && (Math.abs(g.dy) > 4 || Math.abs(g.dx) > 4),
       onPanResponderTerminationRequest: () => false,
 
       onPanResponderGrant: () => {
-        if (judgedRef.current) return;
+        if (disabledRef.current || judgedRef.current) return;
         grabLift.value         = withSpring(-8, { damping: 18, stiffness: 360 });
         scale.value            = withSpring(1.026, { damping: 18, stiffness: 360 });
         borderOpacityVal.value = withTiming(0.56, { duration: 100 });
+        onPressHoldStartRef.current?.();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         hasThresholdFiredRef.current = false;
       },
 
       onPanResponderMove: (_, g) => {
-        if (judgedRef.current) return;
+        if (disabledRef.current || judgedRef.current) return;
         lastGestureVelocityRef.current = { vx: g.vx, vy: g.vy };
         translateX.value = g.dx;
         translateY.value = g.dy;
@@ -380,12 +393,13 @@ export function SwipeMask({
         const mainAxis = Math.max(g.dx > 0 ? g.dx : 0, -g.dy > 0 ? -g.dy : 0);
         if (mainAxis > SWIPE_THRESHOLD * 0.6 && !hasThresholdFiredRef.current) {
           hasThresholdFiredRef.current = true;
+          onSwipeStartRef.current?.();
           Haptics.selectionAsync();
         }
       },
 
       onPanResponderRelease: (_, g) => {
-        if (judgedRef.current) return;
+        if (disabledRef.current || judgedRef.current) return;
 
         if (g.dy < -SWIPE_THRESHOLD) {
           judgedRef.current   = true;
