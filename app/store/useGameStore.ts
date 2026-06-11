@@ -59,7 +59,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startGame: () => {
     resetPollyBudget();
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
-    set({ game: createGame(), ghostRevenge: null, runStartGhostWordIds });
+    set({ game: createGame(runStartGhostWordIds), ghostRevenge: null, runStartGhostWordIds });
   },
 
   submitSwipeUp: (maskId) =>

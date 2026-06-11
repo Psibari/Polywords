@@ -113,6 +113,7 @@ export type WordStep = {
   hapticTier?:               'light' | 'medium' | 'heavy';
   bossModifier?:             boolean;
   postSessionPollyDuration?: number;
+  isHauntReturn?:            boolean;
 };
 
 export type PhraseBreakStep = {

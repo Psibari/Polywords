@@ -3,7 +3,7 @@
 // Pure function state machine. No side effects.
 // ============================================================
 
-import { SESSION } from './session';
+import { buildRunSession } from './session';
 import { Mask, SessionStep } from './types';
 
 export type GameStatus = 'playing' | 'gameOver' | 'complete';
@@ -23,6 +23,7 @@ export type WordResult = {
 };
 
 export type GameState = {
+  session: SessionStep[];
   stepIndex: number;
   swipedUpIds: string[];
   swipedDownIds: string[];
@@ -52,15 +53,17 @@ function shuffleMasks(masks: Mask[]): Mask[] {
   return arr;
 }
 
-export function createGame(): GameState {
+export function createGame(ghostWordIds: string[] = []): GameState {
+  const session = buildRunSession(ghostWordIds);
   const shuffledMasks: Record<number, Mask[]> = {};
-  SESSION.forEach((step, i) => {
+  session.forEach((step, i) => {
     if (step.kind === 'word') {
       shuffledMasks[i] = shuffleMasks(step.masks.filter(m => !m.isHidden));
     }
   });
 
   return {
+    session,
     stepIndex: 0,
     swipedUpIds: [],
     swipedDownIds: [],
@@ -83,7 +86,7 @@ export function createGame(): GameState {
 }
 
 export function currentStep(state: GameState): SessionStep {
-  return SESSION[state.stepIndex];
+  return state.session[state.stepIndex];
 }
 
 // ─── STREAK HELPER ───────────────────────────────────────────
@@ -344,11 +347,10 @@ function advanceStep(state: GameState, update: StepUpdate): GameState {
   };
 
   const nextStepIndex = state.stepIndex + 1;
-  if (nextStepIndex >= SESSION.length) {
+  if (nextStepIndex >= state.session.length) {
     return { ...base, status: 'complete' };
   }
 
-  const nextStep = SESSION[nextStepIndex];
   return {
     ...base,
     stepIndex: nextStepIndex,

@@ -3,7 +3,6 @@ import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
-import { SESSION } from '../game/session';
 import { useGameStore } from '../store/useGameStore';
 import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
@@ -198,7 +197,7 @@ function RedFlash({ flashKey }: { flashKey: number }) {
 function TopBar() {
   const game  = useGameStore(s => s.game);
   const filledFeathers = Math.max(0, Math.min(MAX_FEATHERS, game.lives));
-  const total   = SESSION.length;
+  const total   = game.session.length;
   const current = game.stepIndex;
 
   const animScore = useRef(new Animated.Value(game.score)).current;

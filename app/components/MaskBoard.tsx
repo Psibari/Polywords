@@ -344,8 +344,9 @@ function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
 }
 
 export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Props) {
-  const store  = useGameStore();
-  const isBoss = step.eventType === 'bossWord';
+  const store   = useGameStore();
+  const isBoss  = step.eventType === 'bossWord';
+  const isHaunt = step.isHauntReturn === true;
   const wordColor = '#F5C842'; // always gold
   const kicker    = eventKicker(step);
 
@@ -517,6 +518,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [bossReady, setBossReady]             = useState(!isBoss);
   const [bossSweepActive, setBossSweepActive] = useState(false);
   const [tilesReady, setTilesReady]           = useState(false);
+
+  // ── haunt entrance ────────────────────────────────────────────
+  const [hauntReady, setHauntReady]           = useState(!isHaunt);
+  const [hauntBannerVisible, setHauntBannerVisible] = useState(false);
+  const [hauntBrokenVisible, setHauntBrokenVisible] = useState(false);
+  const [stillHauntedVisible, setStillHauntedVisible] = useState(false);
+  const wordHauntTintOpacity = useRef(new Animated.Value(0)).current;
+  const hauntBannerOpacity   = useRef(new Animated.Value(0)).current;
+  const hauntBrokenOpacity   = useRef(new Animated.Value(0)).current;
+  const hauntBrokenScale     = useRef(new Animated.Value(0.7)).current;
+  const stillHauntedOpacity  = useRef(new Animated.Value(0)).current;
+  const stillHauntedScale    = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
     if (visibleGridMasks.length > 0) {
@@ -693,7 +706,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     startHesitationTimers();
   }
 
-  const showBoardContent = (!isBoss || bossReady) && tilesReady;
+  const showBoardContent = (!isBoss || bossReady) && tilesReady && (!isHaunt || hauntReady);
 
   useEffect(() => {
     if (!showBoardContent) return;
@@ -817,6 +830,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setOutcomeBonusLabel(undefined);
     outcomeContinueRef.current = null;
     outcomeActiveRef.current = false;
+
+    // Haunt resets
+    setHauntReady(!isHaunt);
+    setHauntBannerVisible(false);
+    setHauntBrokenVisible(false);
+    setStillHauntedVisible(false);
+    wordHauntTintOpacity.setValue(0);
+    hauntBannerOpacity.setValue(0);
+    hauntBrokenOpacity.setValue(0);
+    hauntBrokenScale.setValue(0.7);
+    stillHauntedOpacity.setValue(0);
+    stillHauntedScale.setValue(0.7);
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Word title fade + scale in (non-boss)
@@ -824,10 +849,35 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     if (isBoss) return;
     wordEntryOpacity.setValue(0);
     wordEntryScale.setValue(0.85);
-    Animated.parallel([
-      Animated.timing(wordEntryOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-      Animated.timing(wordEntryScale,   { toValue: 1, duration: 200, useNativeDriver: true }),
-    ]).start();
+
+    if (isHaunt) {
+      // Haunt entrance: double haptic + purple word tint + banner
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 180);
+
+      wordHauntTintOpacity.setValue(0.75);
+      Animated.parallel([
+        Animated.timing(wordEntryOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(wordEntryScale,   { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+      Animated.timing(wordHauntTintOpacity, { toValue: 0, duration: 800, useNativeDriver: true }).start();
+
+      setHauntBannerVisible(true);
+      hauntBannerOpacity.setValue(0);
+      Animated.timing(hauntBannerOpacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+      setTimeout(() => {
+        Animated.timing(hauntBannerOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+      }, 1200);
+      setTimeout(() => {
+        setHauntBannerVisible(false);
+        setHauntReady(true);
+      }, 1400);
+    } else {
+      Animated.parallel([
+        Animated.timing(wordEntryOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(wordEntryScale,   { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }
     firePollyEvent('wordEntry');
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1142,6 +1192,23 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       Animated.timing(hauntCopyOpacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
     }, 1420);
 
+    if (isHaunt) {
+      setTimeout(() => {
+        setStillHauntedVisible(true);
+        stillHauntedOpacity.setValue(0);
+        stillHauntedScale.setValue(0.7);
+        Animated.parallel([
+          Animated.timing(stillHauntedOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
+          Animated.spring(stillHauntedScale, { toValue: 1.0, damping: 7, stiffness: 280, useNativeDriver: true }),
+        ]).start();
+        firePollyEvent('hauntFailed');
+        setTimeout(() => {
+          Animated.timing(stillHauntedOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start();
+          setTimeout(() => setStillHauntedVisible(false), 240);
+        }, 1400);
+      }, 1500);
+    }
+
     setTimeout(() => {
       showWordOutcome(
         'haunted',
@@ -1170,6 +1237,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   function triggerMastered() {
     store.recordMastery(step.word, isBoss, step.hiddenMeaning ?? '');
+    if (isHaunt) store.clearGhost(step.word);
     setGatePhase('mastered');
     completedRef.current = true;
     store.addBonusScore(300);
@@ -1211,6 +1279,23 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       ]).start();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }, 360);
+
+    // Haunt broken stinger — T+460ms (after stamp slam at T+360ms)
+    if (isHaunt) {
+      setTimeout(() => {
+        setHauntBrokenVisible(true);
+        hauntBrokenOpacity.setValue(0);
+        hauntBrokenScale.setValue(0.7);
+        Animated.parallel([
+          Animated.timing(hauntBrokenOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
+          Animated.spring(hauntBrokenScale, { toValue: 1.0, damping: 6, stiffness: 300, useNativeDriver: true }),
+        ]).start();
+        setTimeout(() => {
+          Animated.timing(hauntBrokenOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+          setTimeout(() => setHauntBrokenVisible(false), 220);
+        }, 560);
+      }, 460);
+    }
 
     // Phase 3 — T+800ms: MASTERED label appears below word
     setTimeout(() => {
@@ -1764,6 +1849,29 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               {step.word}
             </Animated.Text>
 
+            {/* Haunt entrance purple tint — fades out as tiles appear */}
+            {isHaunt && (
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.word,
+                  isBoss && styles.wordBoss,
+                  {
+                    color: '#7B2D8B',
+                    opacity: wordHauntTintOpacity,
+                    position: 'absolute',
+                    left: 0, right: 0,
+                    textAlign: 'center',
+                  },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {step.word}
+              </Animated.Text>
+            )}
+
             {/* Absorption ring */}
             <Animated.View
               pointerEvents="none"
@@ -2289,6 +2397,43 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             </Animated.Text>
           )}
         </>
+      )}
+
+      {/* ── Haunt entrance banner ─────────────────────────────── */}
+      {hauntBannerVisible && (
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.hauntEntranceBanner, { opacity: hauntBannerOpacity }]}
+        >
+          <Text style={styles.hauntEntranceBannerText}>Guess who's back.</Text>
+        </Animated.View>
+      )}
+
+      {/* ── HAUNT BROKEN stamp ────────────────────────────────── */}
+      {hauntBrokenVisible && (
+        <Animated.Text
+          pointerEvents="none"
+          style={[styles.hauntBrokenText, {
+            top: masteryWordCenterY + 38,
+            opacity: hauntBrokenOpacity,
+            transform: [{ scale: hauntBrokenScale }],
+          }]}
+        >
+          HAUNT BROKEN
+        </Animated.Text>
+      )}
+
+      {/* ── STILL HAUNTED stamp ───────────────────────────────── */}
+      {stillHauntedVisible && (
+        <Animated.Text
+          pointerEvents="none"
+          style={[styles.stillHauntedText, {
+            opacity: stillHauntedOpacity,
+            transform: [{ scale: stillHauntedScale }],
+          }]}
+        >
+          STILL HAUNTED
+        </Animated.Text>
       )}
 
       {wordOutcome === 'mastered' && (
@@ -2958,5 +3103,61 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONTS.label,
     letterSpacing: 0.3,
+  },
+  // ── Haunt system ─────────────────────────────────────────────
+  hauntEntranceBanner: {
+    position: 'absolute',
+    left: 28,
+    right: 28,
+    top: 218,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#7B2D8B',
+    backgroundColor: '#0F0D2A',
+    alignItems: 'center',
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  hauntEntranceBannerText: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.label,
+    fontWeight: '900',
+    fontSize: 20,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  hauntBrokenText: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: FONTS.label,
+    fontWeight: '900',
+    fontSize: 26,
+    color: '#FFFFFF',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(123,45,139,0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  stillHauntedText: {
+    position: 'absolute',
+    top: 230,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: FONTS.label,
+    fontWeight: '900',
+    fontSize: 30,
+    color: '#7B2D8B',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(123,45,139,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
   },
 });

@@ -8,15 +8,14 @@ import {
   View,
 } from 'react-native';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
-import { SESSION } from '../game/session';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
-import { Mask } from '../game/types';
+import { Mask, SessionStep } from '../game/types';
 
 // ─── HELPERS ─────────────────────────────────────────────────
 
-function findMaskById(maskId: string): Mask | undefined {
-  for (const step of SESSION) {
+function findMaskById(maskId: string, session: SessionStep[]): Mask | undefined {
+  for (const step of session) {
     if (step.kind !== 'word') continue;
     const found = step.masks.find(m => m.id === maskId);
     if (found) return found;
@@ -24,8 +23,8 @@ function findMaskById(maskId: string): Mask | undefined {
   return undefined;
 }
 
-function findWordForMaskId(maskId: string): string {
-  for (const step of SESSION) {
+function findWordForMaskId(maskId: string, session: SessionStep[]): string {
+  for (const step of session) {
     if (step.kind !== 'word') continue;
     if (step.masks.some(m => m.id === maskId)) return step.word;
   }
@@ -129,8 +128,9 @@ const wr = StyleSheet.create({
 // ─── GHOST SET CARD ──────────────────────────────────────────
 
 function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
-  const word = findWordForMaskId(firstMissedMaskId);
-  const mask = findMaskById(firstMissedMaskId);
+  const session = useGameStore(s => s.game.session);
+  const word = findWordForMaskId(firstMissedMaskId, session);
+  const mask = findMaskById(firstMissedMaskId, session);
   if (!word) return null;
 
   return (
@@ -248,8 +248,9 @@ const gr = StyleSheet.create({
 // ─── TRAP CARD ───────────────────────────────────────────────
 
 function TrapCard({ maskId }: { maskId: string }) {
-  const mask = findMaskById(maskId);
-  const word = findWordForMaskId(maskId);
+  const session = useGameStore(s => s.game.session);
+  const mask = findMaskById(maskId, session);
+  const word = findWordForMaskId(maskId, session);
   if (!mask) return null;
 
   return (
@@ -365,7 +366,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Post-session Polly hold — read from final step
-  const lastStep     = SESSION[SESSION.length - 1];
+  const lastStep     = game.session[game.session.length - 1];
   const postDuration = lastStep.kind === 'word' ? (lastStep.postSessionPollyDuration ?? 0) : 0;
   const postLine     = lastStep.kind === 'word' ? (lastStep.pollyLine ?? null) : null;
   const [showResults, setShowResults] = useState(postDuration === 0);

@@ -25,7 +25,8 @@ export type PollyEvent =
   | 'gateIntro'
   | 'gateMastered'
   | 'gateMasteredBoss'
-  | 'hiddenMasterFailed';
+  | 'hiddenMasterFailed'
+  | 'hauntFailed';
 
 type BreathingSpeed = 'slow' | 'building' | 'hot' | 'danger';
 
@@ -494,6 +495,14 @@ export function usePollyAnimator(
           setCurrentPose('BOT_LEFT');
           animWin();
           setSpeech('Not yours. Yet.', 3000);
+        }, 3000);
+        break;
+
+      case 'hauntFailed':
+        endOfRoundPopIn(() => {
+          setCurrentPose('BOT_CENTER');
+          animWayWrong();
+          setSpeech('BBBLAAAAHHAHAHA!', 3000);
         }, 3000);
         break;
     }

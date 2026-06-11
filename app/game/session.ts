@@ -303,6 +303,38 @@ export const SESSION: SessionStep[] = [
 
 ];
 
+// ─── HAUNT WORD SWAP ─────────────────────────────────────────
+// Inserts the first matching ghost word at index 9 (word 10, 1-based).
+// Boss positions (indexes 10, 11) are never displaced.
+export function buildRunSession(ghostWordIds: string[]): SessionStep[] {
+  const sessionCopy: SessionStep[] = SESSION.map(step => ({ ...step }));
+  if (ghostWordIds.length === 0) return sessionCopy;
+
+  const HAUNT_INDEX = 9;
+  let ghostOriginalIndex = -1;
+  for (const wid of ghostWordIds) {
+    const idx = sessionCopy.findIndex(
+      s => s.kind === 'word' && s.word === wid && s.eventType !== 'bossWord'
+    );
+    if (idx !== -1) { ghostOriginalIndex = idx; break; }
+  }
+  if (ghostOriginalIndex === -1) return sessionCopy;
+
+  if (ghostOriginalIndex === HAUNT_INDEX) {
+    const step = sessionCopy[HAUNT_INDEX];
+    if (step.kind === 'word') {
+      sessionCopy[HAUNT_INDEX] = { ...step, isHauntReturn: true };
+    }
+  } else {
+    const ghostStep = sessionCopy[ghostOriginalIndex];
+    sessionCopy[ghostOriginalIndex] = { ...sessionCopy[HAUNT_INDEX] };
+    sessionCopy[HAUNT_INDEX] = ghostStep.kind === 'word'
+      ? { ...ghostStep, isHauntReturn: true }
+      : { ...ghostStep };
+  }
+  return sessionCopy;
+}
+
 export function getStep(index: number): SessionStep | null {
   return SESSION[index] ?? null;
 }
