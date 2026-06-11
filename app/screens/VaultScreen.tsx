@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
+import { useGameStore } from '../store/useGameStore';
+import { MasteredWordRecord } from '../game/types';
 
 type VaultSectionKey = 'mastered' | 'ghosts' | 'hidden' | 'stats';
 
@@ -9,46 +11,43 @@ const sections: Array<{
   key: VaultSectionKey;
   label: string;
   title: string;
-  copy: string;
+  emptyCopy: string;
   accent: string;
 }> = [
   {
     key: 'mastered',
     label: 'Mastered Words',
     title: 'Mastered Words',
-    copy: 'Fully reclaimed words live here.',
+    emptyCopy: 'Fully reclaimed words live here.',
     accent: '#F5C842',
   },
   {
     key: 'ghosts',
     label: 'Ghost Words',
     title: 'Ghost Words',
-    copy: 'Missed meanings waiting for a rematch.',
+    emptyCopy: 'Missed meanings waiting for a rematch.',
     accent: '#9B2D6B',
   },
   {
     key: 'hidden',
     label: 'Hidden Meanings',
     title: 'Hidden Meanings',
-    copy: 'Rare meanings you cracked open.',
+    emptyCopy: 'Rare meanings you cracked open.',
     accent: '#7B2D8B',
   },
   {
     key: 'stats',
     label: 'Stats',
     title: 'Stats',
-    copy: 'Your mastery trail will live here.',
+    emptyCopy: '',
     accent: '#F5C842',
   },
 ];
 
-const stats = [
-  { label: 'Mastered', value: '12', accent: '#F5C842' },
-  { label: 'Ghosts', value: '3', accent: '#9B2D6B' },
-  { label: 'Hidden Found', value: '8', accent: '#7B2D8B' },
-];
-
-const plaques = ['SPRING', 'LIGHT', 'BANK'];
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 type Props = {
   navigation: any;
@@ -56,7 +55,106 @@ type Props = {
 
 export default function VaultScreen({ navigation }: Props) {
   const [activeSection, setActiveSection] = useState<VaultSectionKey>('mastered');
-  const currentSection = sections.find(section => section.key === activeSection) ?? sections[0];
+  const currentSection = sections.find(s => s.key === activeSection) ?? sections[0];
+
+  const progress = useGameStore(s => s.progress);
+  const ghosts   = useGameStore(s => s.ghosts);
+
+  const masteredCount     = progress.masteredWords.length;
+  const ghostCount        = ghosts.length;
+  const hiddenFoundCount  = progress.masteredWords.filter(m => m.hiddenMeaningFound).length;
+
+  const masteredNewestFirst = [...progress.masteredWords].reverse();
+  const hiddenFound = progress.masteredWords.filter(m => m.hiddenMeaningFound);
+
+  const statsRow = [
+    { label: 'Mastered', value: String(masteredCount), accent: '#F5C842' },
+    { label: 'Ghosts',   value: String(ghostCount),    accent: '#9B2D6B' },
+    { label: 'Hidden Found', value: String(hiddenFoundCount), accent: '#7B2D8B' },
+  ];
+
+  function renderSectionContent() {
+    if (activeSection === 'mastered') {
+      if (masteredNewestFirst.length === 0) {
+        return <EmptyState copy={currentSection.emptyCopy} />;
+      }
+      return (
+        <View style={styles.plaqueShelf}>
+          {masteredNewestFirst.map((record: MasteredWordRecord) => (
+            <View
+              key={record.word}
+              style={[styles.wordPlaque, record.isBoss && styles.wordPlaqueBoss]}
+            >
+              {record.isBoss && <View style={styles.wordPlaqueBossAccent} />}
+              <View style={styles.wordPlaqueRow}>
+                <Text style={styles.wordPlaqueText}>{record.word}</Text>
+                <Text style={styles.wordPlaqueDate}>{formatDate(record.dateMastered)}</Text>
+              </View>
+              {record.hiddenMeaningFound ? (
+                <Text style={styles.wordPlaqueSub}>{record.hiddenMeaningFound}</Text>
+              ) : (
+                <Text style={styles.wordPlaqueSub}>Core vaulted</Text>
+              )}
+            </View>
+          ))}
+        </View>
+      );
+    }
+
+    if (activeSection === 'ghosts') {
+      if (ghosts.length === 0) {
+        return <EmptyState copy={currentSection.emptyCopy} />;
+      }
+      return (
+        <View style={styles.plaqueShelf}>
+          {ghosts.map(ghost => (
+            <View key={ghost.wordId} style={styles.ghostCard}>
+              <View style={styles.ghostCardRow}>
+                <Text style={styles.ghostCardWord}>{ghost.word}</Text>
+                <Text style={styles.ghostCardMissed}>Missed ×{ghost.runsMissed}</Text>
+              </View>
+              <Text style={styles.ghostCardHint}>Returns in a future hunt.</Text>
+            </View>
+          ))}
+        </View>
+      );
+    }
+
+    if (activeSection === 'hidden') {
+      if (hiddenFound.length === 0) {
+        return <EmptyState copy={currentSection.emptyCopy} />;
+      }
+      return (
+        <View style={styles.plaqueShelf}>
+          {hiddenFound.map((record: MasteredWordRecord) => (
+            <View key={record.word} style={styles.hiddenCard}>
+              <Text style={styles.hiddenCardWord}>{record.word}</Text>
+              <Text style={styles.hiddenCardMeaning}>{record.hiddenMeaningFound}</Text>
+            </View>
+          ))}
+        </View>
+      );
+    }
+
+    if (activeSection === 'stats') {
+      return (
+        <View style={styles.statsBlock}>
+          <View style={styles.statBlockRow}>
+            <Text style={styles.statBlockLabel}>Personal Best</Text>
+            <Text style={[styles.statBlockValue, { color: '#F5C842' }]}>
+              {progress.personalBest.toLocaleString()}
+            </Text>
+          </View>
+          <View style={[styles.statBlockRow, styles.statBlockRowLast]}>
+            <Text style={styles.statBlockLabel}>Runs Completed</Text>
+            <Text style={styles.statBlockValue}>{progress.runsCompleted}</Text>
+          </View>
+        </View>
+      );
+    }
+
+    return null;
+  }
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -69,7 +167,7 @@ export default function VaultScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.statsRow}>
-          {stats.map(stat => (
+          {statsRow.map(stat => (
             <View key={stat.label} style={styles.statCard}>
               <Text style={[styles.statValue, { color: stat.accent }]}>{stat.value}</Text>
               <Text style={styles.statLabel}>{stat.label}</Text>
@@ -101,44 +199,21 @@ export default function VaultScreen({ navigation }: Props) {
             </View>
             <View style={styles.featureTitleWrap}>
               <Text style={styles.featureTitle}>{currentSection.title}</Text>
-              <Text style={styles.featureCopy}>{currentSection.copy}</Text>
             </View>
           </View>
-
-          {activeSection === 'mastered' && (
-            <View style={styles.plaqueShelf}>
-              {plaques.map(word => (
-                <View key={word} style={styles.wordPlaque}>
-                  <Text style={styles.wordPlaqueText}>{word}</Text>
-                  <Text style={styles.wordPlaqueSub}>Core vaulted</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {activeSection !== 'mastered' && (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>Archive drawer ready</Text>
-              <Text style={styles.emptyCopy}>
-                Progress wiring lands later. This shelf is reserved for reclaimed meaning records.
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.archiveGrid}>
-          <View style={styles.drawerCard}>
-            <Text style={styles.drawerTitle}>Meaning Cores</Text>
-            <Text style={styles.drawerCopy}>Collected mastery trophies will stack into this archive.</Text>
-          </View>
-          <View style={[styles.drawerCard, styles.ghostDrawer]}>
-            <Text style={styles.drawerTitle}>Rematch Shelf</Text>
-            <Text style={styles.drawerCopy}>Ghost words will wait here until the haunt breaks.</Text>
-          </View>
+          {renderSectionContent()}
         </View>
       </ScrollView>
       <BottomNav active="Vault" navigation={navigation} />
     </SafeAreaView>
+  );
+}
+
+function EmptyState({ copy }: { copy: string }) {
+  return (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyCopy}>{copy}</Text>
+    </View>
   );
 }
 
@@ -251,11 +326,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
     padding: 18,
+    marginBottom: 14,
   },
   featureHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    marginBottom: 4,
   },
   archiveMark: {
     width: 50,
@@ -281,16 +358,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     letterSpacing: 1,
   },
-  featureCopy: {
-    color: 'rgba(255,255,255,0.68)',
-    fontFamily: FONTS.tileCopy,
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 4,
-  },
   plaqueShelf: {
     gap: 10,
-    marginTop: 18,
+    marginTop: 14,
   },
   wordPlaque: {
     borderRadius: 14,
@@ -299,6 +369,25 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(245,200,66,0.22)',
     paddingHorizontal: 14,
     paddingVertical: 12,
+    overflow: 'hidden',
+  },
+  wordPlaqueBoss: {
+    borderColor: 'rgba(245,200,66,0.55)',
+  },
+  wordPlaqueBossAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+    backgroundColor: 'rgba(123,45,139,0.7)',
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+  },
+  wordPlaqueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   wordPlaqueText: {
     color: '#FFFFFF',
@@ -306,11 +395,92 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 1.5,
   },
+  wordPlaqueDate: {
+    color: 'rgba(255,255,255,0.40)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 11,
+  },
   wordPlaqueSub: {
     color: 'rgba(245,200,66,0.78)',
     fontFamily: FONTS.tileCopy,
     fontSize: 12,
     marginTop: 3,
+  },
+  ghostCard: {
+    borderRadius: 14,
+    backgroundColor: 'rgba(26,24,48,0.86)',
+    borderWidth: 1,
+    borderColor: 'rgba(155,45,107,0.42)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  ghostCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  ghostCardWord: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.hud,
+    fontSize: 16,
+    letterSpacing: 1.5,
+  },
+  ghostCardMissed: {
+    color: '#9B2D6B',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 12,
+  },
+  ghostCardHint: {
+    color: 'rgba(255,255,255,0.40)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 11,
+    marginTop: 3,
+  },
+  hiddenCard: {
+    borderRadius: 14,
+    backgroundColor: 'rgba(26,24,48,0.86)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.42)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  hiddenCardWord: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.hud,
+    fontSize: 16,
+    letterSpacing: 1.5,
+  },
+  hiddenCardMeaning: {
+    color: '#7B2D8B',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 13,
+    marginTop: 4,
+  },
+  statsBlock: {
+    marginTop: 14,
+    gap: 2,
+  },
+  statBlockRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.07)',
+  },
+  statBlockRowLast: {
+    borderBottomWidth: 0,
+  },
+  statBlockLabel: {
+    color: 'rgba(255,255,255,0.72)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 14,
+  },
+  statBlockValue: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.hud,
+    fontSize: 20,
+    letterSpacing: 1,
   },
   emptyState: {
     marginTop: 18,
@@ -320,47 +490,10 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(123,45,139,0.24)',
     padding: 16,
   },
-  emptyTitle: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 15,
-    letterSpacing: 1,
-  },
   emptyCopy: {
     color: 'rgba(255,255,255,0.62)',
     fontFamily: FONTS.tileCopy,
     fontSize: 13,
     lineHeight: 19,
-    marginTop: 6,
-  },
-  archiveGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 14,
-  },
-  drawerCard: {
-    flex: 1,
-    minHeight: 118,
-    borderRadius: 18,
-    backgroundColor: '#0F0D2A',
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.35)',
-    padding: 14,
-  },
-  ghostDrawer: {
-    borderColor: 'rgba(155,45,107,0.44)',
-  },
-  drawerTitle: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 14,
-    letterSpacing: 1,
-  },
-  drawerCopy: {
-    color: 'rgba(255,255,255,0.62)',
-    fontFamily: FONTS.tileCopy,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 8,
   },
 });

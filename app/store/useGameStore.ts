@@ -12,9 +12,16 @@ import {
   consumeMilestone as consumeMilestoneFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
-import { GhostMeaning, GhostRevenge } from '../game/types';
+import { GhostMeaning, GhostRevenge, MasteredWordRecord, PlayerProgress } from '../game/types';
 
 const GHOSTS_KEY = 'polywords_ghosts';
+const PROGRESS_KEY = 'polywords_progress';
+
+const DEFAULT_PROGRESS: PlayerProgress = {
+  masteredWords: [],
+  personalBest: 0,
+  runsCompleted: 0,
+};
 
 type GameStore = {
   game: ReturnType<typeof createGame>;
@@ -36,6 +43,10 @@ type GameStore = {
   clearGhost: (wordId: string) => void;
   setGhostRevenge: (data: GhostRevenge) => void;
   loadGhosts: () => Promise<void>;
+  progress: PlayerProgress;
+  recordMastery: (word: string, isBoss: boolean, hiddenMeaningFound: string) => void;
+  recordRunComplete: (finalScore: number) => void;
+  loadProgress: () => Promise<void>;
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -43,6 +54,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   ghosts: [],
   ghostRevenge: null,
   runStartGhostWordIds: [],
+  progress: { ...DEFAULT_PROGRESS },
 
   startGame: () => {
     resetPollyBudget();
@@ -119,6 +131,51 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   setGhostRevenge: (data) => set({ ghostRevenge: data }),
+
+  recordMastery: (word, isBoss, hiddenMeaningFound) => {
+    const current = get().progress;
+    const existing = current.masteredWords.find(m => m.word === word);
+    let masteredWords: MasteredWordRecord[];
+    if (existing) {
+      masteredWords = current.masteredWords.map(m =>
+        m.word === word
+          ? { ...m, dateMastered: new Date().toISOString(), hiddenMeaningFound }
+          : m
+      );
+    } else {
+      masteredWords = [...current.masteredWords, {
+        word,
+        isBoss,
+        hiddenMeaningFound,
+        dateMastered: new Date().toISOString(),
+      }];
+    }
+    const next = { ...current, masteredWords };
+    set({ progress: next });
+    AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  recordRunComplete: (finalScore) => {
+    const current = get().progress;
+    const next: PlayerProgress = {
+      ...current,
+      runsCompleted: current.runsCompleted + 1,
+      personalBest: finalScore > current.personalBest ? finalScore : current.personalBest,
+    };
+    set({ progress: next });
+    AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  loadProgress: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(PROGRESS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const merged: PlayerProgress = { ...DEFAULT_PROGRESS, ...parsed };
+        set({ progress: merged });
+      }
+    } catch {}
+  },
 
   loadGhosts: async () => {
     try {

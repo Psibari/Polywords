@@ -351,10 +351,18 @@ type Props = {
 };
 
 export default function ResultsScreen({ onRestart, onHome }: Props) {
-  const game         = useGameStore(s => s.game);
-  const ghostRevenge = useGameStore(s => s.ghostRevenge);
+  const game              = useGameStore(s => s.game);
+  const ghostRevenge      = useGameStore(s => s.ghostRevenge);
+  const recordRunComplete = useGameStore(s => s.recordRunComplete);
   const { wordResults, score, bestCombo, status, lives } = game;
   const isComplete = status === 'complete';
+
+  const recordedRef = useRef(false);
+  useEffect(() => {
+    if (recordedRef.current) return;
+    recordedRef.current = true;
+    recordRunComplete(score);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Post-session Polly hold — read from final step
   const lastStep     = SESSION[SESSION.length - 1];

@@ -1169,6 +1169,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function triggerMastered() {
+    store.recordMastery(step.word, isBoss, step.hiddenMeaning ?? '');
     setGatePhase('mastered');
     completedRef.current = true;
     store.addBonusScore(300);

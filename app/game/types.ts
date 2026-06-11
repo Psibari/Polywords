@@ -150,3 +150,16 @@ export type SwitchbackStep = {
 };
 
 export type SessionStep = WordStep | PhraseBreakStep | SwitchbackStep;
+
+export type MasteredWordRecord = {
+  word: string;
+  isBoss: boolean;
+  hiddenMeaningFound: string;
+  dateMastered: string;
+};
+
+export type PlayerProgress = {
+  masteredWords: MasteredWordRecord[];
+  personalBest: number;
+  runsCompleted: number;
+};
