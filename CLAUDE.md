@@ -1,5 +1,5 @@
 ﻿# POLYWORDS â€” CLAUDE.md
-### Ground Truth for Claude Code Â· Updated June 9, 2026
+### Ground Truth for Claude Code Â· Updated June 11, 2026
 
 ---
 
@@ -36,6 +36,8 @@ Patch 18 added Mastered / Haunted outcome drama in `app/components/MaskBoard.tsx
 Patch 19 added `app/audio/sfx.ts`, a centralized cleaned-SFX helper on the existing `expo-av` stack. It preloads, plays, cools down, and unloads the files in `assets/sfx/` with per-sound volumes and silent failure. `GameScreen.tsx` preloads/unloads the SFX set, and `MaskBoard.tsx` uses cleaned SFX for Mastered/Haunted overlays, overlay continue taps, Master Gate open, trap shatter, and wrong trap/meaning feedback. Tile-swipe-start and press-hold SFX remain unwired because no clean `MaskBoard` event surface exists for those starts.
 
 Patch 20 wired the remaining supported SFX names through clean tile gesture hooks. `SwipeMask.tsx` now exposes optional `onSwipeStart`, `onPressHoldStart`, and `disabled` props; `MaskBoard.tsx` passes them for active and final hidden tiles. `pressHoldStart` plays once on PanResponder grant, `tileSwipe` plays once when drag crosses the existing intentional-swipe threshold, and both are blocked when Mastered/Haunted overlays lock input. Gameplay behavior, scoring, swipe grammar, Master Gate logic, mask/trap data, and queue behavior are unchanged.
+
+Patch 23 replaced the sequential one-tile-at-a-time delivery model with a card deck system in `app/components/MaskBoard.tsx` and `app/components/SwipeMask.tsx`. All tiles for a word arrive simultaneously as a stacked deck; only the top card is interactive. Wrong swipes now snap the tile back into the deck (tile stays, life drains) instead of removing it — the player must keep trying the same tile. If lives hit 0 mid-word the word immediately haunts and the run continues at zero tolerance. A new `'snap-back'` SwipeMaskState was added to `SwipeMask.tsx` for the spring-return + red flash without height collapse. `usePollyAnimator.ts` gained a new `'oneWrongMove'` event (fires once per word when lives reach 0, Polly line: "One wrong move."). Deck renders up to 3 visible depth cards with distinct `#2E2870` purple backgrounds, a face-down hidden-card indicator when the gate is locked, and a `deckSlamY` spring entrance animation per word. A `deckRedTint` animated value shifts depth cards toward `#2A0808` when lives reach zero. The old `activeVisibleTileIndex`, `activeVisibleAdvanceRef`, `orderedVisibleMasks`, and `ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS` were fully removed. The gate sequence, hidden tile flow, ghost logic, boss entrance, haunt entrance, Polly budget architecture, and swipe grammar are unchanged.
 
 docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
 
@@ -711,6 +713,25 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Generated output is draft-only and must be human-audited before entering the game database.
   - Exported rows include `AUDIT STATUS` and `AUDIT ISSUES` review metadata.
   - Supports Test Batch, Specific Words, Full Loaded Database with confirmation, creativity controls, Fresh rerun, Tweak Notes, CSV word source import, pause/resume, live preview, run log, CSV download, and audit columns (`AUDIT STATUS`, `AUDIT ISSUES`).
+- Patch 23 complete: card deck tile system implemented.
+  - Changed `app/components/MaskBoard.tsx`, `app/components/SwipeMask.tsx`, and `app/hooks/usePollyAnimator.ts`.
+  - All tiles for a word arrive as a stacked deck; only the top card is interactive.
+  - Wrong swipes snap the tile back into the top position (tile stays in deck, life drains). The player must keep trying.
+  - `'snap-back'` added to `SwipeMaskState` in `SwipeMask.tsx`: springs all transform values to origin, red flash, resets `judgedRef` at 320ms, does NOT collapse height.
+  - `key={topMask.id}` added to top-card `SwipeMask` so React fully remounts on card change (prevents frozen judgedRef / stale rAF).
+  - Unmount cleanup useEffect added to `SwipeMask.tsx` to cancel absorb rAF on unmount.
+  - `activeVisibleTileIndex`, `activeVisibleAdvanceRef`, `orderedVisibleMasks`, and `ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS` fully removed from `MaskBoard.tsx`.
+  - New `remainingMaskIds` state drives deck membership; top card is `remainingMaskIds[0]`.
+  - Correct swipes remove card from deck at 180ms (gives animation a head start).
+  - Completion check watches `remainingMaskIds` (empty + all judged correct/trap-caught) instead of tile index.
+  - `deckSlamY` (useNativeDriver: true) animates deck entrance per word — spring from -52 to 0, with delay 80ms normal / 1200ms boss.
+  - `deckRedTint` (useNativeDriver: false) tints depth card backgrounds toward `#2A0808` when lives reach 0.
+  - Zero-feather path: if lives were already 1 before a wrong swipe, after dispatch reads fresh store state and immediately haunts the word (run continues at 0 lives).
+  - Deck renders up to 3 depth cards (`#2E2870`, purple border) at staggered offsets/rotations, plus a face-down hidden-card indicator when gate is locked.
+  - `deckSlamY` (native) and `masterAllFadeAnim` (JS) are split across two nested `Animated.View`s to avoid mixed-driver crash.
+  - `'oneWrongMove'` event added to `usePollyAnimator.ts`: fires at most once per word when lives hit 0, Polly says "One wrong move." via `endOfRoundPopIn`.
+  - Gate sequence, hidden tile flow, ghost logic, boss entrance, haunt entrance, Polly budget architecture, swipe grammar, and scoring unchanged.
+  - TypeScript passed with `npx.cmd tsc --noEmit`.
 
 ### Remaining Pending Work
 
@@ -1069,7 +1090,8 @@ Current implementation:
 21. Premium gameplay screen shell polish (Patch 15 complete)
 22. Heavy active tile stack / weighted peel polish (Patch 16 complete)
 23. Device sanity polish for gameplay arena (Patch 17 complete)
-24. Word Vault real data wiring plus future Ranks work
+24. Card deck tile system — snap-back wrong swipes, zero-feather mid-word haunt, deck depth cards (Patch 23 complete)
+25. Word Vault real data wiring plus future Ranks work
 
 ---
 
