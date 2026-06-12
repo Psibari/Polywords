@@ -6,6 +6,8 @@
 import { buildRunSession } from './session';
 import { Mask, SessionStep } from './types';
 
+const FEATHER_MILESTONES = [8000, 16000] as const;
+
 export type GameStatus = 'playing' | 'gameOver' | 'complete';
 
 export type WordResult = {
@@ -42,6 +44,8 @@ export type GameState = {
   pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'hiddenReveal' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss' | 'switchback' | 'switchbackFirst' | 'switchbackSecond' | 'switchbackFail' | 'ghostIntro' | 'ghostCorrect' | 'ghostWrong';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
+  featherMilestone:     8000 | 16000 | null;
+  featherMilestonesHit: number[];
 };
 
 function shuffleMasks(masks: Mask[]): Mask[] {
@@ -82,6 +86,8 @@ export function createGame(ghostWordIds: string[] = []): GameState {
     pollyTrigger: null,
     wordResults: [],
     shuffledMasks,
+    featherMilestone:     null,
+    featherMilestonesHit: [],
   };
 }
 
@@ -121,15 +127,28 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     let points = Math.round((mask.isRare ? 300 : 100) * su.chainMultiplier);
     if (step.eventType === 'bossWord') points *= 2;
     const newCombo = state.combo + 1;
+    const newScore = state.score + points;
+    const hitMilestone = FEATHER_MILESTONES.find(
+      m => newScore >= m && !state.featherMilestonesHit.includes(m)
+    ) ?? null;
+    const newLives = hitMilestone
+      ? Math.min(state.lives + 1, 6)
+      : state.lives;
+    const newMilestonesHit = hitMilestone
+      ? [...state.featherMilestonesHit, hitMilestone]
+      : state.featherMilestonesHit;
     return {
       ...state,
       swipedUpIds,
-      score: state.score + points,
+      score: newScore,
+      lives: newLives,
       combo: newCombo,
       bestCombo: Math.max(state.bestCombo, newCombo),
       streak: su.streak,
       chainMultiplier: su.chainMultiplier,
       streakMilestone: su.streakMilestone,
+      featherMilestone:     hitMilestone as 8000 | 16000 | null,
+      featherMilestonesHit: newMilestonesHit,
       feedback: `+${points}`,
       lastActionAt: now,
       pollyTrigger: null,
@@ -171,15 +190,28 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     const su = computeStreakUpdate(state.streak);
     const points = Math.round((step.eventType === 'bossWord' ? 100 : 50) * su.chainMultiplier);
     const newCombo = state.combo + 1;
+    const newScore = state.score + points;
+    const hitMilestone = FEATHER_MILESTONES.find(
+      m => newScore >= m && !state.featherMilestonesHit.includes(m)
+    ) ?? null;
+    const newLives = hitMilestone
+      ? Math.min(state.lives + 1, 6)
+      : state.lives;
+    const newMilestonesHit = hitMilestone
+      ? [...state.featherMilestonesHit, hitMilestone]
+      : state.featherMilestonesHit;
     return {
       ...state,
       swipedDownIds,
-      score: state.score + points,
+      score: newScore,
+      lives: newLives,
       combo: newCombo,
       bestCombo: Math.max(state.bestCombo, newCombo),
       streak: su.streak,
       chainMultiplier: su.chainMultiplier,
       streakMilestone: su.streakMilestone,
+      featherMilestone:     hitMilestone as 8000 | 16000 | null,
+      featherMilestonesHit: newMilestonesHit,
       feedback: `Trap spotted +${points}`,
       lastActionAt: now,
       pollyTrigger: null,
@@ -226,6 +258,10 @@ export function submitWrongSwipe(state: GameState): GameState {
 
 export function consumeMilestone(state: GameState): GameState {
   return { ...state, streakMilestone: null };
+}
+
+export function consumeFeatherMilestone(state: GameState): GameState {
+  return { ...state, featherMilestone: null };
 }
 
 // ─── ADD BONUS SCORE — for split tile results ─────────────────

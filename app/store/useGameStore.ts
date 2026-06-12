@@ -10,6 +10,7 @@ import {
   completeWord,
   addBonusScore,
   consumeMilestone as consumeMilestoneFn,
+  consumeFeatherMilestone as consumeFeatherMilestoneFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
 import { GhostMeaning, GhostRevenge, MasteredWordRecord, PlayerProgress } from '../game/types';
@@ -38,6 +39,7 @@ type GameStore = {
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
+  consumeFeatherMilestone: () => void;
   addGhost: (ghost: GhostMeaning) => void;
   addGhostedMaster: (word: string) => void;
   clearGhost: (wordId: string) => void;
@@ -88,6 +90,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   consumeMilestone: () =>
     set((s) => ({ game: consumeMilestoneFn(s.game) })),
+
+  consumeFeatherMilestone: () =>
+    set((s) => ({ game: consumeFeatherMilestoneFn(s.game) })),
 
   addGhost: (ghost) => {
     const existing = get().ghosts.find(g => g.word === ghost.word);

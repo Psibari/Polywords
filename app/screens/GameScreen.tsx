@@ -11,6 +11,7 @@ import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { preloadSfx, unloadSfx } from '../audio/sfx';
+import * as Haptics from 'expo-haptics';
 
 // ─── SHARD ANGLES ────────────────────────────────────────────
 const SHARD_ANGLES = [0, 30, 60, 90, 120, 150, 180, 220, 270, 320];
@@ -197,6 +198,7 @@ function RedFlash({ flashKey }: { flashKey: number }) {
 function TopBar() {
   const game  = useGameStore(s => s.game);
   const filledFeathers = Math.max(0, Math.min(MAX_FEATHERS, game.lives));
+  const hasReserve     = game.lives > MAX_FEATHERS;
   const total   = game.session.length;
   const current = game.stepIndex;
 
@@ -231,6 +233,15 @@ function TopBar() {
           {Array.from({ length: MAX_FEATHERS }, (_, i) => (
             <FeatherIcon key={i} filled={i < filledFeathers} />
           ))}
+          {hasReserve && (
+            <View style={tb.reserveFeatherWrap}>
+              <View style={[tb.featherBlade, tb.featherBladeFilled, tb.reserveBlade]}>
+                <View style={[tb.featherHighlight, tb.featherHighlightFilled]} />
+              </View>
+              <View style={[tb.featherShaft, tb.featherShaftFilled, tb.reserveShaft]} />
+              <Text style={tb.reservePlus}>+</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -381,6 +392,32 @@ const tb = StyleSheet.create({
   dotDone:      { backgroundColor: '#F5C842' },
   dotCurrent:   { backgroundColor: '#FFFFFF', shadowColor: '#FFFFFF', shadowOpacity: 0.5, shadowRadius: 5 },
   dotRemaining: { backgroundColor: 'rgba(255,255,255,0.18)' },
+  reserveFeatherWrap: {
+    width:          8,
+    height:         14,
+    alignItems:     'center',
+    justifyContent: 'center',
+    marginLeft:     2,
+  },
+  reserveBlade: {
+    width:  6,
+    height: 11,
+    borderColor: 'rgba(245,200,66,0.85)',
+    backgroundColor: 'rgba(245,200,66,0.25)',
+  },
+  reserveShaft: {
+    backgroundColor: 'rgba(245,200,66,0.75)',
+    height: 10,
+  },
+  reservePlus: {
+    position:   'absolute',
+    top:        -5,
+    right:      -3,
+    color:      '#F5C842',
+    fontSize:   7,
+    fontWeight: '700',
+    lineHeight: 8,
+  },
 });
 
 // ─── INNER DIRECTOR ───────────────────────────────────────────
@@ -392,8 +429,14 @@ function GameDirector({ navigation }: { navigation: any }) {
   const startGame  = useGameStore(s => s.startGame);
   const loadGhosts   = useGameStore(s => s.loadGhosts);
   const loadProgress = useGameStore(s => s.loadProgress);
+  const consumeFeatherMilestone = useGameStore(s => s.consumeFeatherMilestone);
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
+
+  // ── Feather float animation ────────────────────────────────
+  const featherFloatY       = useRef(new Animated.Value(0)).current;
+  const featherFloatOpacity = useRef(new Animated.Value(0)).current;
+  const [showFeatherFloat, setShowFeatherFloat] = useState(false);
 
   // ── Effects overlay state ──────────────────────────────────
   const [effects, setEffects] = useState<EffectEntry[]>([]);
@@ -444,6 +487,34 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   useEffect(() => { setMissedCount(0); }, [game.stepIndex]);
 
+  useEffect(() => {
+    if (!game.featherMilestone) return;
+    consumeFeatherMilestone();
+    Haptics.selectionAsync();
+    featherFloatY.setValue(0);
+    featherFloatOpacity.setValue(0);
+    setShowFeatherFloat(true);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(featherFloatOpacity, {
+          toValue: 1, duration: 200, useNativeDriver: true,
+        }),
+        Animated.timing(featherFloatY, {
+          toValue: -12, duration: 200, useNativeDriver: true,
+        }),
+      ]),
+      Animated.delay(600),
+      Animated.parallel([
+        Animated.timing(featherFloatOpacity, {
+          toValue: 0, duration: 300, useNativeDriver: true,
+        }),
+        Animated.timing(featherFloatY, {
+          toValue: -44, duration: 300, useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => setShowFeatherFloat(false));
+  }, [game.featherMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleRestart() {
     startGame();
     setMissedCount(0);
@@ -476,6 +547,19 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       {/* ── Effects overlay — pointerEvents none, zIndex 100 ── */}
       <View style={styles.effectsOverlay} pointerEvents="none">
+        {showFeatherFloat && (
+          <Animated.Text
+            style={[
+              gs.featherFloat,
+              {
+                opacity:   featherFloatOpacity,
+                transform: [{ translateY: featherFloatY }],
+              },
+            ]}
+          >
+            +1 FEATHER
+          </Animated.Text>
+        )}
         {effects.map(e =>
           e.type === 'shard'
             ? <ShardEffect key={e.id} x={e.x} y={e.y} onDone={() => removeEffect(e.id)} />
@@ -537,5 +621,21 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 100,
+  },
+});
+
+const gs = StyleSheet.create({
+  featherFloat: {
+    position:   'absolute',
+    top:        72,
+    right:      20,
+    color:      '#F5C842',
+    fontSize:   13,
+    fontFamily: FONTS.wordDisplay,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textShadowColor:  'rgba(245,200,66,0.55)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
 });
