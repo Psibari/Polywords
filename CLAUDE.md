@@ -755,12 +755,9 @@ Other remaining work:
 
 1. Score target/rank system:
    - Score should support personal best, Polly target score, Hunt rank, and future daily/friend/global rankings.
-2. Life Feather milestone/reserve system:
-   - UI feathers exist.
-   - Score milestone restore and 1 reserve feather are not implemented yet.
-3. Word Vault Ranks page.
-4. `expo-av` to `expo-audio` migration.
-5. Full 739-word database GPS metadata tagging and Hunt generation.
+2. Word Vault Ranks page.
+3. `expo-av` to `expo-audio` migration.
+4. Full 739-word database GPS metadata tagging and Hunt generation.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -817,7 +814,7 @@ Other remaining work:
 - "YOU BEAT POLLY" fires on results when score â‰¥ 15,000
 - Polly's target score: 15,000 pts (MVP fixed)
 - Rank scale: D / C / B / A / S / MASTER
-- Life Feather milestones: 8,000 and 16,000 pts
+- Life Feather milestones: 8,000 and 16,000 pts restore 1 feather; 1 reserve feather max is implemented
 - “You left me behind.” â€” micro-copy on ghost birth
 - “Not yours yet.” â€” Polly line on ghost exit
 - Wrong swipes are permanent â€” tile flies away, no snap-back, no retry
@@ -1020,16 +1017,18 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 ### Life System
 
 - Hearts are replaced by Feathers.
-- Player starts with 5 feathers.
+- Player normally has 5 feathers.
 - Wrong swipe plucks 1 feather.
 - 0 feathers ends run.
-- Score milestones can restore a Life Feather.
-- If feathers are full, player can hold 1 reserve feather max.
+- Score milestones exist at 8,000 and 16,000 points.
+- Crossing a milestone can restore 1 feather.
+- If feathers are full, player can hold 1 reserve feather max, so lives can reach 6.
 
 Current implementation:
 - HUD renders five custom feather slots in `GameScreen.tsx`.
+- Reserve feather is rendered separately in the HUD.
+- `+1 FEATHER` milestone feedback exists.
 - Internal engine/store state is still named `lives`; do not rename it until a dedicated state migration.
-- Reserve feathers and score milestone restore are not implemented yet.
 
 ### Feather Visual Spec
 
@@ -1089,7 +1088,7 @@ Current implementation:
 13. Golden Pacing System docs (Patch 12B complete)
 14. Home arcade lobby shell (Patch 12C complete)
 15. Settings/Profile shell (Patch 12D complete)
-16. Feathers and score targets
+16. Life Feather milestone/reserve system (complete) and score targets
 17. Haunt Word return system
 18. Bottom navigation app shell (Patch 12E complete)
 19. Bottom nav spacing / active-state polish (Patch 12F complete)

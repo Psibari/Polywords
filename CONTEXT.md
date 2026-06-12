@@ -102,9 +102,9 @@ Patch 20 complete: `SwipeMask.tsx` exposes optional tile interaction hooks and `
 
 **Ghost return / Haunt Words design:** Ghosted boss words return late in future Hunts at position 10 / index 9, never replacing Boss Word 12. Entrance copy: Guess who's back. If mastered: HAUNT BROKEN. If failed again: STILL HAUNTED. Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
 
-**Feathers:** Hearts are replaced by Feathers. Player starts with 5. Wrong swipe plucks 1. 0 feathers ends run. Score milestones can restore a Life Feather. If full, player can hold 1 reserve feather max.
+**Feathers:** Hearts are replaced by Feathers. Player normally has 5. Wrong swipe plucks 1. 0 feathers ends run. Score milestones exist at 8,000 and 16,000 points. Crossing a milestone can restore 1 feather. If feathers are full, player can hold 1 reserve feather max, so lives can reach 6.
 
-Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/store state remains named `lives`. Reserve feathers and score milestone restore are not implemented yet.
+Current HUD: `GameScreen.tsx` renders five custom feather slots plus a separate reserve feather. `+1 FEATHER` milestone feedback exists. Engine/store state may still be named `lives`; do not rename it.
 
 **Score target/rank design:** Competition system for personal bests, Polly target score, Hunt rank, and future daily/friend/global rankings. Score does not replace mastery. Word Cores are permanent mastery trophies. The score target/rank system is pending.
 
@@ -343,10 +343,9 @@ Future content lane: **Database audit + selective masks/traps rewrite using the 
 Other remaining work:
 
 1. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
-2. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-3. Word Vault Ranks page and leaderboard.
-4. `expo-av` to `expo-audio` migration.
-5. Full 739-word database GPS metadata tagging.
+2. Word Vault Ranks page and leaderboard.
+3. `expo-av` to `expo-audio` migration.
+4. Full 739-word database GPS metadata tagging.
 
 ---
 ## Cut List (Never Suggest These)
