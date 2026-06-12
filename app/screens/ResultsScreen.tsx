@@ -106,7 +106,6 @@ function WordResultRow({ result }: { result: WordResult }) {
     <View style={wr.row}>
       <View style={wr.left}>
         <Text style={wr.word}>{result.word}</Text>
-        {ghostCreated && <Text style={wr.ghost}>👻</Text>}
       </View>
       <View style={wr.right}>
         {isWordRound && (
@@ -130,7 +129,6 @@ const wr = StyleSheet.create({
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   word: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
-  ghost: { fontSize: 14 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hidden: { fontSize: 14 },
   result: { fontSize: 13 },
