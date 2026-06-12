@@ -17,6 +17,8 @@ export default function HomeScreen({ navigation }: Props) {
 
   const challengeNumber = getChallengeNumber(getTodayDateString());
   const alreadyPlayed   = dailyResult?.date === getTodayDateString();
+  const canReplayDailyInDev = __DEV__;
+  const dailyLocked = alreadyPlayed && !canReplayDailyInDev;
   const pollyY = useRef(new Animated.Value(0)).current;
   const playPulse = useRef(new Animated.Value(0)).current;
 
@@ -44,7 +46,7 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   function handleDaily() {
-    if (alreadyPlayed) return;
+    if (dailyLocked) return;
     startDailyChallenge();
     navigation.navigate('Daily');
   }
@@ -89,11 +91,12 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.cardGrid}>
           <Pressable
             onPress={handleDaily}
+            disabled={dailyLocked}
             style={({ pressed }) => [
               styles.destinationCard,
               styles.dailyCard,
-              alreadyPlayed && styles.disabledCard,
-              pressed && !alreadyPlayed && styles.pressed,
+              dailyLocked && styles.disabledCard,
+              pressed && !dailyLocked && styles.pressed,
             ]}
           >
             <View style={styles.cardHeader}>
@@ -106,7 +109,8 @@ export default function HomeScreen({ navigation }: Props) {
               <>
                 <Text style={styles.cardTitle}>{dailyResult?.title}</Text>
                 <Text style={styles.cardCopy}>
-                  {dailyResult?.solvedCount}/3 words · Come back tomorrow.
+                  {dailyResult?.solvedCount}/3 words ·{' '}
+                  {canReplayDailyInDev ? 'Dev replay enabled.' : 'Come back tomorrow.'}
                 </Text>
               </>
             ) : (
