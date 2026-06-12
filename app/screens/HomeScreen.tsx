@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
 import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
@@ -9,9 +10,17 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
-  const startGame = useGameStore(s => s.startGame);
+  const startGame           = useGameStore(s => s.startGame);
+  const loadDailyResult     = useGameStore(s => s.loadDailyResult);
+  const dailyResult         = useGameStore(s => s.dailyResult);
+  const startDailyChallenge = useGameStore(s => s.startDailyChallenge);
+
+  const challengeNumber = getChallengeNumber(getTodayDateString());
+  const alreadyPlayed   = dailyResult?.date === getTodayDateString();
   const pollyY = useRef(new Animated.Value(0)).current;
   const playPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => { loadDailyResult(); }, []); // eslint-disable-line
 
   useEffect(() => {
     Animated.loop(
@@ -32,6 +41,12 @@ export default function HomeScreen({ navigation }: Props) {
   function handlePlay() {
     startGame();
     navigation.navigate('Game');
+  }
+
+  function handleDaily() {
+    if (alreadyPlayed) return;
+    startDailyChallenge();
+    navigation.navigate('Daily');
   }
 
   function handleVaultPress() {
@@ -72,14 +87,37 @@ export default function HomeScreen({ navigation }: Props) {
         </Animated.View>
 
         <View style={styles.cardGrid}>
-          <View style={[styles.destinationCard, styles.disabledCard]}>
+          <Pressable
+            onPress={handleDaily}
+            style={({ pressed }) => [
+              styles.destinationCard,
+              styles.dailyCard,
+              alreadyPlayed && styles.disabledCard,
+              pressed && !alreadyPlayed && styles.pressed,
+            ]}
+          >
             <View style={styles.cardHeader}>
-              <View style={styles.cardMark} />
-              <Text style={styles.cardEyebrow}>PLACEHOLDER</Text>
+              <View style={[styles.cardMark, styles.dailyMark]} />
+              <Text style={styles.cardEyebrow}>
+                DAILY #{challengeNumber}
+              </Text>
             </View>
-            <Text style={styles.cardTitle}>DAILY CHALLENGE</Text>
-            <Text style={styles.cardCopy}>One stolen word. One shot.</Text>
-          </View>
+            {alreadyPlayed ? (
+              <>
+                <Text style={styles.cardTitle}>{dailyResult?.title}</Text>
+                <Text style={styles.cardCopy}>
+                  {dailyResult?.solvedCount}/3 words · Come back tomorrow.
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.cardTitle}>DAILY CHALLENGE</Text>
+                <Text style={styles.cardCopy}>
+                  Find the word. Three meanings. Two lives.
+                </Text>
+              </>
+            )}
+          </Pressable>
 
           <Pressable
             onPress={handleVaultPress}
@@ -236,6 +274,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(123,45,139,0.40)',
     padding: 16,
     justifyContent: 'space-between',
+  },
+  dailyCard: {
+    borderColor: 'rgba(123,45,139,0.55)',
+  },
+  dailyMark: {
+    backgroundColor: '#7B2D8B',
   },
   vaultCard: {
     borderColor: 'rgba(245,200,66,0.26)',

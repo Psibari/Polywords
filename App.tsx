@@ -9,6 +9,7 @@ import HomeScreen from './app/screens/HomeScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
+import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 
 LogBox.ignoreAllLogs();
 
@@ -40,6 +41,11 @@ export default function App() {
         <Stack.Screen name="Game" component={GameScreen} />
         <Stack.Screen name="Vault" component={VaultScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen
+          name="Daily"
+          component={DailyChallengeScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
