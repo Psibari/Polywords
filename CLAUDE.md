@@ -27,7 +27,7 @@ Patch 13 refreshed active Polly dialogue in `app/hooks/usePollyAnimator.ts`, `ap
 
 Patch 15 polished the active Play/Game screen as a premium semantic combat arena: compact glass HUD, staged hero word, framed active tile lane, and stronger Master Gate dock. GameScreen remains nav-free and gameplay logic is unchanged.
 
-Patch 16 polished the active mask/trap tile as the top slab in a concealed heavy POLYWORDS meaning-tile stack, not a flimsy paper-card deck. Up to 2 under-tiles may be visually implied with thick dark edges, shadow, offset, and depth only; they must stay unreadable and must never reveal truth/type/status. Press-hold now feels like gripping/pulling a heavy tile off the stack. The active tile has a heavier slab/bevel treatment; pre-swipe masks feel like solid meaning tiles. Trap identity as brittle false-meaning glass is revealed only after RIGHT commitment/shatter; real meanings remain weighty and absorb upward when claimed. Scoring, swipe grammar, one-active queue logic, tile resolution, hidden tile release, Master Gate logic, Polly timing/budget, and navigation unchanged.
+Patch 16 polished the active mask/trap tile as the top slab in a concealed heavy POLYWORDS meaning-tile stack, not a flimsy paper-card deck. Up to 2 under-tiles may be visually implied with thick dark edges, shadow, offset, and depth only; they must stay unreadable and must never reveal truth/type/status. Press-hold now feels like gripping/pulling a heavy tile off the stack. The active tile has a heavier slab/bevel treatment; pre-swipe masks feel like solid meaning tiles. Trap identity as brittle false-meaning glass is revealed only after RIGHT commitment/shatter; real meanings remain weighty and absorb upward when claimed. Scoring, swipe grammar, tile resolution, Master Gate logic, Polly timing/budget, and navigation unchanged.
 
 Patch 17 completed device-sanity visual polish for the active gameplay arena: slimmer HUD chrome, cleaner/heavier concealed under-tile slab offsets, less visually loud right shatter-lane marker, more breathing room above the Master Gate dock, and locked gold normalization in the gameplay surface. Gameplay mechanics, scoring, swipe grammar, one-active queue, tile resolution, hidden release, Master Gate logic, Polly timing/budget, navigation, and content data unchanged.
 
@@ -35,11 +35,11 @@ Patch 18 added Mastered / Haunted outcome drama in `app/components/MaskBoard.tsx
 
 Patch 19 added `app/audio/sfx.ts`, a centralized cleaned-SFX helper on the existing `expo-av` stack. It preloads, plays, cools down, and unloads the files in `assets/sfx/` with per-sound volumes and silent failure. `GameScreen.tsx` preloads/unloads the SFX set, and `MaskBoard.tsx` uses cleaned SFX for Mastered/Haunted overlays, overlay continue taps, Master Gate open, trap shatter, and wrong trap/meaning feedback. Tile-swipe-start and press-hold SFX remain unwired because no clean `MaskBoard` event surface exists for those starts.
 
-Patch 20 wired the remaining supported SFX names through clean tile gesture hooks. `SwipeMask.tsx` now exposes optional `onSwipeStart`, `onPressHoldStart`, and `disabled` props; `MaskBoard.tsx` passes them for active and final hidden tiles. `pressHoldStart` plays once on PanResponder grant, `tileSwipe` plays once when drag crosses the existing intentional-swipe threshold, and both are blocked when Mastered/Haunted overlays lock input. Gameplay behavior, scoring, swipe grammar, Master Gate logic, mask/trap data, and queue behavior are unchanged.
+Patch 20 wired the remaining supported SFX names through clean tile gesture hooks. `SwipeMask.tsx` now exposes optional `onSwipeStart`, `onPressHoldStart`, and `disabled` props; `MaskBoard.tsx` passes them for active tiles and the boss mystery tile. `pressHoldStart` plays once on PanResponder grant, `tileSwipe` plays once when drag crosses the existing intentional-swipe threshold, and both are blocked when Mastered/Haunted overlays lock input. Gameplay behavior, scoring, swipe grammar, Master Gate logic, mask/trap data, and queue behavior are unchanged.
 
 Patch 21 complete: player progress persistence and Word Vault real data wiring implemented. `app/store/useGameStore.ts` gained `PROGRESS_KEY = 'polywords_progress'`, a `progress: PlayerProgress` state slice (`masteredWords[]`, `personalBest`, `runsCompleted`), and actions `recordMastery`, `recordRunComplete`, `loadProgress`. All progress persists via AsyncStorage using the same pattern as the ghost system. `app/screens/VaultScreen.tsx` was rewired to read real persisted data: Mastered Words section renders real plaque entries with hidden meaning found and date mastered, Ghost Words section renders real ghosts with runsMissed count (phrase never shown), Hidden Meanings section renders entries with non-empty `hiddenMeaningFound`, Stats section shows personal best and runs completed. `app/game/types.ts` gained `MasteredWordRecord` type. `app/App.tsx` loads both `loadGhosts()` and `loadProgress()` on mount. TypeScript passed. Device sanity passed.
 
-Patch 22 complete: Haunt Word return system implemented. `app/game/session.ts` gained `buildRunSession(ghostWordIds: string[]): SessionStep[]` which deep-copies `SESSION`, identifies the first matching non-boss ghost word, swaps it into index 9 (word position 10, 1-based), sets `isHauntReturn: true` on that step, and leaves boss positions 10 and 11 (indexes 10–11) untouched. Boss is always position 12. `app/store/useGameStore.ts` `startGame()` now passes run-start ghost word ids into `createGame()` which calls `buildRunSession()`. `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts` gained haunt entrance banner ("Guess who's back."), HAUNT BROKEN stamp on mastery of a haunt word, STILL HAUNTED stamp when a haunt word ghosts again, and `'hauntFailed'` event which fires Polly pop-in "BBBLAAAAHHAHAHA!" via `endOfRoundPopIn`. Double `impactAsync(Medium)` haptic fires at haunt word entrance. Haunt depth cards tinted purple (`#130D2A`). TypeScript passed.
+Patch 22 complete: Haunt Word return system implemented. `app/game/session.ts` gained `buildRunSession(ghostWordIds: string[]): SessionStep[]` which deep-copies `SESSION`, identifies the first matching ghost word, swaps it into index 9 (word position 10, 1-based), sets `isHauntReturn: true` on that step, and never replaces the boss at position 12. `app/store/useGameStore.ts` `startGame()` now passes run-start ghost word ids into `createGame()` which calls `buildRunSession()`. `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts` gained haunt entrance banner ("Guess who's back."), HAUNT BROKEN stamp on mastery of a haunt word, STILL HAUNTED stamp when a haunt word ghosts again, and `'hauntFailed'` event which fires Polly pop-in "BBBLAAAAHHAHAHA!" via `endOfRoundPopIn`. Double `impactAsync(Medium)` haptic fires at haunt word entrance. Haunt depth cards tinted purple (`#130D2A`). TypeScript passed.
 
 Patch 28B complete: Daily Challenge screen implemented.
 - New file `app/screens/DailyChallengeScreen.tsx`: 3-round identify-the-word mode. Three meanings are shown in a card; shuffled candidate word tiles are stacked using the same `SwipeMask` deck system as the main arena. UP claims the correct word, RIGHT rejects a distractor. Two shared lives span all 3 rounds. Results overlay shows title (WORD MASTER / SHARP / SURVIVED / HAUNTED), solved/missed pills per word, and a native Share sheet.
@@ -203,19 +203,21 @@ Hunt 1 is GPS-compliant: 2 Confidence + 3 Flow + 3 Tension + 3 Panic + 1 Boss. W
 |---|---|---|
 | Swipe UP | This IS a real meaning | Correct: magnetic absorb into word |
 | Swipe RIGHT | This is a TRAP | Correct: purple/rose crystal shard burst |
-| Wrong UP (trap swiped up) | Claimed a trap | Life lost, tile flies off top, red flash |
-| Wrong RIGHT (real swiped right) | Rejected a real meaning | Life lost, tile rubber-bands back, red flash |
+| Wrong UP (trap swiped up) | Claimed a trap | Feather lost, tile exits permanently, red flash |
+| Wrong RIGHT (real swiped right) | Rejected a real meaning | Feather lost, tile exits permanently, red flash |
 
 ðŸ”’ UP = real. RIGHT = trap. Sacred. Permanent. Never change.
 ðŸ”’ No left swipe. No tap. No tap-and-submit. Swipe only.
 
 ### Wrong Swipe Behaviors â€” Locked
 
-**Wrong UP (trap claimed as real):**
-Tile flies toward word â†’ word SHAKES and REJECTS it â†’ tile buzzes red â†’ disappears downward.
+Wrong swipes are permanent. The tile exits immediately, the player loses 1 feather, and the same tile is never retried.
 
-**Wrong RIGHT (real meaning rejected):**
-Tile starts flying right â†’ gets less than halfway â†’ RUBBER-BANDS back â†’ buzzes red â†’ dissolves.
+- No snap-back.
+- No rubber-band return.
+- No tile staying in the deck after a wrong swipe.
+- No retrying the same tile after a wrong swipe.
+- The word continues when feathers remain; run/haunt logic handles zero-feather or boss failure outcomes.
 
 ---
 
@@ -227,24 +229,25 @@ Tile starts flying right â†’ gets less than halfway â†’ RUBBER-BANDS b
 One tile enters at a time. Player makes one binary decision. Next tile arrives after resolution. Feels like a fight, not a quiz.
 
 ### Current Implementation Notes
-- Patch 3 complete: `MaskBoard.tsx` renders only one active visible mask tile at a time.
-- The active visible queue uses the existing shuffled mask order from `store.game.shuffledMasks`.
-- Hidden split tiles are excluded from the visible queue and keep their existing flow.
-- The active visible tile advances after the current tile resolves as correct, trap-caught, or wrong.
-- A guarded 650ms delay prevents duplicate advances from repeated renders and lets Patch 5 motion finish cleanly.
-- Existing scoring is preserved.
-- Existing swipe grammar is preserved.
-- Current Master Gate logic is preserved.
-- Ghost tile behavior is preserved.
-- Patch 4 complete: active mask tile presentation and press-hold polish are implemented.
-- Patch 5 complete: UP absorb and RIGHT toss/shatter are tuned for the single-tile arena.
-- Final Haunt placement remains pending.
+- Patch 23 revised is the current source of truth.
+- All visible tiles for a word arrive as a stacked deck; only the top tile is interactive.
+- Correct real meanings and caught traps leave the deck after judgment.
+- Wrong swipes are permanent: the tile exits, 1 feather is lost, and the same tile is never retried.
+- No snap-back, no rubber-band return, and no wrong tile staying in the deck.
+- Words 1-11 have no hidden tile, no gate opening, no mastery overlay, and no ghost creation.
+- Non-boss deck empty -> `triggerWordExit()` -> `store.completeWord()`.
+- Boss perfect visible clear opens the gate and drops exactly one mystery tile.
+- Boss mystery tile is randomly either the real hidden meaning or hidden trap.
+- Boss mystery correct judgment = MASTERED. Boss mystery wrong judgment = GHOST.
+- Boss visible-mask wrong swipe locks the gate and the boss word advances without mastery or ghost.
+- Existing scoring and UP/RIGHT swipe grammar are preserved.
 
-### Queue Build Rules
-1. Ghost tile always first (if exists) - enters from LEFT
-2. Remaining tiles shuffled randomly
-3. Final 2 tiles tagged nearMastery
-4. Queue locked on word load
+### Deck Build Rules
+1. Remaining visible masks are shuffled into the per-word deck.
+2. Only the top tile is interactive.
+3. Wrong tiles leave permanently after judgment.
+4. Haunt return, when present, is injected at index 9 (position 10) before the run starts.
+5. Boss word remains position 12 and is never replaced by haunt placement.
 
 ### Gap System (Skill-Based)
 ```
@@ -289,14 +292,15 @@ Pure silence. Nothing fires. Emptiness is tension. Polly gives nothing away.
 Polly gives nothing away. No visual tells. No color hints. No speed variation by type.
 
 ---
-## Master the Word â€” Full Sequence (6 Acts)
+## Master the Word â€” Boss-Only Sequence (Patch 23 Revised)
 
 ### ACT 1 â€” LOCKED STATE
 - Background: #0F0D2A Â· Border: 1.5px gold 22% Â· Lock breathing pulse Â· Height: 72px
 - Zero player interaction ever
+- Words 1-11 never open the gate.
 
 ### ACT 2 â€” THE BREAK (Perfect Clear â€” Auto)
-wrongSwipeOccurred.current must be false. Player NEVER swipes gate.
+Boss word only. `wrongSwipeOccurred.current` must be false. Player NEVER swipes gate.
 ```
 T+0ms    Last tile absorbed
 T+0ms    Gold light clockwise around border, 600ms
@@ -309,25 +313,27 @@ T+700ms  Polly (first-time): "Only with a perfect sweep"
 ```
 
 ### ACT 3 â€” THE RELEASE
-T+900ms: First split tile drops Â· T+1050ms: Second split tile (150ms stagger)
-- Real hidden meaning tile: gold border 100%, text warm rgba(255,248,230,1)
-- Hidden trap tile: gold border 80%, text pure white
+T+900ms: ONE mystery tile drops into the active tile position.
+- Mystery tile is randomly either the real hidden meaning or the hidden trap.
+- No two hidden split tiles.
+- No second hidden tile.
 
 ### ACT 4 â€” THE JUDGMENT
 - Correct UP: magnetic absorb, word FLARES gold, Polly hiddenReveal
 - Correct RIGHT: 18 shards, faster, double bloom
-- Wrong hidden/master swipe: life lost through existing wrong-swipe logic, ghost merge loss sequence begins
+- Correct judgment on the mystery tile: MASTERED
+- Wrong judgment on the mystery tile: GHOST
+- Wrong mystery swipe loses 1 feather and triggers the simplified boss failure path.
 
 ### ACT 5 â€” MASTERY SEQUENCE (Patch 8 complete)
 ```
-T+0ms    Both hidden tiles judged correctly.
+T+0ms    Boss mystery tile judged correctly.
 T+0ms    Hero word crashes toward center with impact.
 T+360ms  Diagonal MASTER stamp slams over the word.
 T+800ms  Word cracks / energy effect appears.
 T+1900ms Word Core appears, grows, glows, and spins center-screen.
 T+2100ms Word Core shoots toward the Vault nav area.
 T+2400ms Vault impact bloom and heavy haptic.
-T+2600ms Normal mastery: Polly opponent line "That was mine."
 T+2600ms Boss mastery: Polly opponent line "Fine. Take it."
 T+2600ms Boss mastery may additionally trigger GAME/SYSTEM stinger:
          BINGO -> BANGO -> ZZZZINGO!
@@ -361,22 +367,19 @@ Polly is the opponent, not a friendly celebration mascot. The hierarchy is:
 - Game celebrates the player.
 - Polly resents it.
 
-Normal word mastered:
-- Word Core goes to Vault.
-- Polly may pop in as opponent.
-- Suggested line: "That was mine."
-
 Boss word mastered:
 - Game/system may trigger `BINGO BANGO ZZZZINGO!` after Word Core vault impact.
 - Polly may pop in separately with an annoyed opponent line.
 - Suggested line: "Fine. Take it."
 
-### ACT 6 â€” THE GHOST
+### ACT 6 â€” THE GHOST (Boss Only)
 - Background: rgba(123,45,139,0.06) Â· Border: SOLID 1.5px rgba(123,45,139,0.55)
 - NO DASHES, NO PINK, NO MAGENTA
 - Purple dot top-right: 6px slow pulse
 - Text: "MASTER THE WORD" â€” white 70% Â· Subtitle: "From [WORD]" â€” dim purple
 - The phrase is NEVER revealed.
+- Triggered only by boss failure.
+- Ghost `wordId` is always the word string, never `stepIndex`.
 
 ---
 
@@ -463,7 +466,7 @@ Tab: "VAULT" Â· Icon: heavy vault door, partially open, gold light spilling
 
 ## Ghost System
 
-**Creates a ghost:** Wrong swipe on split tile OR lives run out before gate opens.
+**Creates a ghost:** Boss-only failure after the boss gate mystery tile is judged wrong. Non-boss words never create true ghosts.
 
 **Ghost tile styling â€” LOCKED:**
 - Background: rgba(123,45,139,0.06)
@@ -478,34 +481,19 @@ Tab: "VAULT" Â· Icon: heavy vault door, partially open, gold light spilling
 **Current implementation note:**
 - Ghosts created during the current run are stored but do not appear until a new run starts.
 - `useGameStore.runStartGhostWordIds` snapshots which ghosts existed at run start.
-- `GhostTile` is currently disabled from the Master Gate slot so it cannot block normal gate unlock/release flow.
-- Proper returning Haunt placement remains pending.
+- Haunt return placement is position 10 / index 9.
+- Haunt return never replaces boss position 12.
 
-### Ghost Loss Sequence â€” 7 Acts (Locked)
+### Boss Ghost Loss Sequence â€” Patch 23 Revised
 
-Triggered when player wrong-swipes a hidden split tile.
-NOTE: Hidden split tile wrong exit OVERRIDES standard wrong swipe physics. Tile does NOT complete normal exit.
+Triggered when the boss mystery tile is judged wrong.
 
 ```
-T+0ms    Wrong hidden swipe released
-T+120ms  Wrong tile GLITCHES â€” edges blur, text flickers,
-         one red flash. Does NOT complete normal exit.
-T+160ms  Remaining hidden tile FREEZES â€” border dims,
-         text fades ghostly white, purple mist leaks
-T+260ms  Failed tile PULLED BACK â€” curves from swipe path,
-         shrinks, semi-transparent, purple trail
-T+520ms  TILE MERGE â€” soft purple pulse, glassy crack ring,
-         medium haptic, reverse-chime sound. Both texts blur.
-         Tiles overlap and compress. Purple vapor curls inward.
-T+520ms  HERO WORD LOSES LIFE ESSENCE â€” letters desaturate,
-         glow dims, outline thins, wisps drain downward.
-         Faint ghost of word peels backward into forming tile.
-T+760ms  GHOST TILE REFORMS: "MASTER THE WORD / From [WORD]"
-         dark purple glass, solid purple border, mist inside
-T+920ms  "You left me behind." â€” small text overlay, one beat
-T+1300ms Ghost tile compresses â†’ fades to purple mist
-T+1500ms Polly: "Not yours yet."
-T+1900ms Exit to next word
+T+0ms    Wrong mystery swipe released
+T+0ms    Tile exits permanently through the wrong-swipe path.
+T+800ms  HAUNTED overlay appears.
+T+1500ms Polly may answer as opponent: "Not yours yet."
+T+1900ms Exit to next word/results flow.
 ```
 
 ---
@@ -614,20 +602,20 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Keeps existing shuffled mask order from `store.game.shuffledMasks`.
   - Advances after the current visible tile resolves.
   - Uses a guarded advance delay.
-  - Preserves scoring, swipe grammar, `SwipeMask.tsx`, Master Gate logic, hidden tile flow, and Ghost tile behavior.
+  - Patch 23 revised later replaced the old hidden tile flow with boss-only one mystery tile while preserving scoring and UP/RIGHT swipe grammar.
 - Patch 4 complete: active mask tile presentation and press-hold polish implemented in `app/components/MaskBoard.tsx` and `app/components/SwipeMask.tsx`.
 - Patch 5 complete: UP absorb and RIGHT toss/shatter tuned for the single-tile arena.
   - Correct UP real meanings now pull harder into the hero word, shrink/fade near impact, and trigger the existing word absorb pulse.
   - Correct RIGHT traps now fling farther into the right-side shatter lane with stronger rotation, shrink, fade, and larger purple/rose shard burst.
   - Shard burst count is now 18.
   - Shard colors remain only `#7B2D8B` and `#9B2D6B`.
-  - Wrong RIGHT on a real meaning now visibly fails with `#CC2200` wrong flash, reject wobble, bounce-back, and fade/collapse.
+  - Patch 23 revised superseded the old bounce-back: wrong RIGHT now loses 1 feather and exits permanently.
   - Existing wrong-swipe logic still handles feather loss.
   - Active visible tile advance delay changed from 450ms to 650ms.
   - Scoring unchanged.
   - Swipe grammar unchanged.
   - One-active-visible-tile queue unchanged.
-  - Master Gate, hidden tile flow, ghost logic, Polly logic, and store architecture unchanged.
+  - Patch 23 revised later replaced the old hidden tile flow with boss-only one mystery tile.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
 - Patch 6 complete: Master Gate cage/vault visual overhaul.
   - Changed only `app/components/MaskBoard.tsx`.
@@ -641,56 +629,47 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Gate height shortened to 64px.
   - Gate remains below active tile and quieter than tile.
   - Existing perfect-clear/unlock flow preserved.
-  - Door split and hidden tile flow preserved.
+  - Patch 23 revised later replaced door split/hidden tile flow with boss-only one mystery tile.
   - Scoring, swipe grammar, active tile queue, ghost logic, Polly logic, and store architecture unchanged.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
-- Patch 7 complete: hidden tiles release into active play band.
+- Patch 7 original two-hidden-tile release was superseded by Patch 23 revised single boss mystery tile.
   - Changed `app/components/MaskBoard.tsx` and `app/components/SwipeMask.tsx`.
-  - Hidden tiles now release after gate unlock into the active tile band, not the gate area.
-  - First hidden tile rises from the gate offset and becomes swipeable only after landing.
-  - Second hidden tile starts release 150ms after the first tile starts releasing.
-  - Hidden release now feels like quick "bop-bop," not long-gap "bop...bop."
-  - Each tile becomes swipeable only after its own landing animation finishes.
-  - Real hidden tile uses full gold border, warm cream text, and `#0F0D2A` surface.
-  - Hidden trap tile uses 80% gold border, white text, and `#0F0D2A` surface.
-  - Hidden tiles reuse `SwipeMask`, so press-hold, UP/RIGHT swipes, absorb, wrong flash, and trap shatter stay on the existing path.
-  - Wrong hidden swipes now call `submitWrongSwipe` and lose a feather.
-  - Old ghost placeholder rendering for hidden wrong was removed from this path.
-  - Scoring model, swipe grammar, one-active visible queue, gate unlock/perfect-clear logic, and ghost/store/Polly architecture preserved.
+  - Current rule: boss perfect clear drops one mystery tile into the active tile position.
+  - Current rule: mystery tile is randomly real hidden meaning or hidden trap.
+  - Current rule: wrong mystery swipe loses 1 feather and creates a boss-only GHOST.
+  - Words 1-11 never release hidden tiles, open the gate, master, or ghost.
+  - Scoring model and UP/RIGHT swipe grammar are preserved.
   - Reanimated stays in `SwipeMask.tsx`.
   - Hidden release motion uses React Native Animated in `MaskBoard.tsx`.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
-- Patch 8 complete: MASTERED celebration rewrite implemented.
+- Patch 8 MASTERED celebration remains, but Patch 23 revised made MASTERED boss-only.
   - Changed `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts`.
-  - Reworked mastery handoff after hidden tiles resolve correctly.
+  - Reworked mastery handoff after the boss mystery tile resolves correctly.
   - Hero word crashes toward center.
   - Diagonal MASTER stamp slams over the word.
   - Crack/energy effect appears.
   - Word Core appears, grows, glows, spins, then shoots toward the Vault nav area.
-  - Normal mastery does not show `BINGO BANGO ZZZZINGO!`.
+  - Non-boss words never show MASTERED/HAUNTED overlays.
   - Boss mastery can show boss-only GAME/SYSTEM stinger: BINGO, BANGO, ZZZZINGO!.
   - `BINGO BANGO ZZZZINGO!` is not Polly dialogue.
   - Polly's old BINGO-style dialogue removed.
-  - Normal mastery Polly line is now: "That was mine."
   - Boss mastery Polly line is now: "Fine. Take it."
   - `SwipeMask.tsx` unchanged.
-  - Scoring, swipe grammar, active visible tile queue, hidden tile release flow, Master Gate unlock logic, and ghost/store architecture unchanged.
+  - Scoring and swipe grammar unchanged.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
-- Patch 9 complete: Ghost merge loss sequence implemented.
+- Patch 9 two-hidden-tile ghost merge was superseded by Patch 23 revised boss-only ghost failure.
   - Changed `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts`.
-  - Wrong hidden/master swipes now trigger the full ghost birth sequence instead of the old placeholder.
-  - Failed hidden tile starts leaving, glitches, loses opacity/substance, then gets pulled back.
-  - Remaining hidden tile stays visible and merges with the failed tile.
-  - Hero word flickers dull/lifeless during the merge.
+  - Current rule: wrong boss mystery judgment triggers the simplified GHOST path.
+  - Current rule: no two hidden tiles merge.
   - Ghost Tile forms with exact copy: `MASTER THE WORD` / `From [WORD]`.
   - Microcopy appears: `You left me behind.`
-  - Existing `store.addGhostedMaster(step.word)` and `store.completeWord()` behavior preserved, delayed until the sequence is readable.
-  - Wrong hidden swipe still uses `submitWrongSwipe()` and loses exactly one feather.
-  - Added safe opponent Polly pop-in line for hidden/master failure: "Not yours yet."
+  - Existing `store.addGhostedMaster(step.word)` and `store.completeWord()` behavior preserved.
+  - Wrong mystery swipe loses exactly one feather.
+  - Added safe opponent Polly pop-in line for boss ghost failure: "Not yours yet."
   - `SwipeMask.tsx` unchanged.
-  - Scoring, swipe grammar, visible tile queue, Master Gate unlock logic, hidden tile release timing, and Patch 8 mastery celebration unchanged.
+  - Scoring, swipe grammar, and Patch 8 boss mastery celebration unchanged.
   - `BINGO BANGO ZZZZINGO!` behavior unchanged and still not Polly dialogue.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
@@ -699,12 +678,12 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Added/tightened per-word pop-in budget system.
   - Added `pollyPopInVisible` state/ref, `pollyEnterAnim` slide, `pollyHideTimerRef`, `popInCountRef`.
   - `tryMidRoundPopIn()` silently skips if 1 mid-round pop-in already used for the current word.
-  - `endOfRoundPopIn()` always fires for: `gateMastered`, `gateMasteredBoss`, `hiddenMasterFailed`, `gameOver`, `cleanSweep`, `bossEntry`, `gateIntro`, ghost resolution.
+  - `endOfRoundPopIn()` always fires for boss mastery/failure, `gameOver`, `bossEntry`, `gateIntro`, and ghost resolution.
   - `wrong` event: reacts without consuming budget if Polly already visible; otherwise tries budget.
   - `hesitation6s`/`9s`: updates speech only if Polly already visible — no new pop-in, no budget consumed.
   - `oneHeartLeft` / one-feather-left critical warning still fires as a special urgent event.
   - `wordEntry`/`switchbackEntry`: reset `popInCountRef` per word.
-  - Non-gate perfect completion now fires `cleanSweep` end-of-round pop-in in `MaskBoard.tsx`.
+  - Non-boss completion now uses the normal word exit/transition, not MASTERED/HAUNTED overlays.
   - Polly render is conditional on `pollyPopInVisible` — not in the tree during ordinary play.
   - `MaskBoard.tsx` applies both `pollyPopInStyle` and `pollyAnimatedStyle`.
   - Two-layer `Animated.View`: outer gets `pollyPopInStyle` for enter/exit slide; inner gets `pollyAnimatedStyle` for reactions.
@@ -713,7 +692,7 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Speech bubble repositioned: `bottom: 186`, `left: 78`, `maxWidth: 210`, 13px text.
   - Existing opponent lines preserved: "That was mine." / "Fine. Take it." / "Not yours yet."
   - `BINGO BANGO ZZZZINGO!` remains game/system stinger only — not Polly dialogue.
-  - Scoring, swipe grammar, active tile queue, gate logic, hidden tile release, Patch 8 mastery celebration, and Patch 9 ghost merge sequence unchanged.
+  - Patch 23 revised later replaced hidden tile release and ghost merge with boss-only one mystery tile and simplified ghost failure.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
   - Device sanity passed.
 - Content tool added: local POLYWORDS Mask Rewriter at `tools/content/mask-rewriter`.
@@ -730,24 +709,25 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Generated output is draft-only and must be human-audited before entering the game database.
   - Exported rows include `AUDIT STATUS` and `AUDIT ISSUES` review metadata.
   - Supports Test Batch, Specific Words, Full Loaded Database with confirmation, creativity controls, Fresh rerun, Tweak Notes, CSV word source import, pause/resume, live preview, run log, CSV download, and audit columns (`AUDIT STATUS`, `AUDIT ISSUES`).
-- Patch 23 complete: card deck tile system implemented.
+- Patch 23 original snap-back behavior was superseded by Patch 23 revised.
   - Changed `app/components/MaskBoard.tsx`, `app/components/SwipeMask.tsx`, and `app/hooks/usePollyAnimator.ts`.
   - All tiles for a word arrive as a stacked deck; only the top card is interactive.
-  - Wrong swipes snap the tile back into the top position (tile stays in deck, life drains). The player must keep trying.
-  - `'snap-back'` added to `SwipeMaskState` in `SwipeMask.tsx`: springs all transform values to origin, red flash, resets `judgedRef` at 320ms, does NOT collapse height.
+  - Wrong swipes are permanent: tile exits, 1 feather is lost, no snap-back, no retry.
+  - `'snap-back'` was removed from `SwipeMaskState` in Patch 23 revised.
   - `key={topMask.id}` added to top-card `SwipeMask` so React fully remounts on card change (prevents frozen judgedRef / stale rAF).
   - Unmount cleanup useEffect added to `SwipeMask.tsx` to cancel absorb rAF on unmount.
   - `activeVisibleTileIndex`, `activeVisibleAdvanceRef`, `orderedVisibleMasks`, and `ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS` fully removed from `MaskBoard.tsx`.
   - New `remainingMaskIds` state drives deck membership; top card is `remainingMaskIds[0]`.
   - Correct swipes remove card from deck at 180ms (gives animation a head start).
-  - Completion check watches `remainingMaskIds` (empty + all judged correct/trap-caught) instead of tile index.
+  - Wrong swipes remove card from deck at 400ms after the exit animation starts.
+  - Completion check watches `remainingMaskIds` instead of tile index.
   - `deckSlamY` (useNativeDriver: true) animates deck entrance per word — spring from -52 to 0, with delay 80ms normal / 1200ms boss.
   - `deckRedTint` (useNativeDriver: false) tints depth card backgrounds toward `#2A0808` when lives reach 0.
-  - Zero-feather path: if lives were already 1 before a wrong swipe, after dispatch reads fresh store state and immediately haunts the word (run continues at 0 lives).
-  - Deck renders up to 3 depth cards (`#2E2870`, purple border) at staggered offsets/rotations, plus a face-down hidden-card indicator when gate is locked.
+  - Zero-feather/run-failure handling follows the current run/haunt logic; wrong swipes do not leave the tile in deck.
+  - Deck renders up to 3 depth cards (`#2E2870`, purple border) at staggered offsets/rotations.
   - `deckSlamY` (native) and `masterAllFadeAnim` (JS) are split across two nested `Animated.View`s to avoid mixed-driver crash.
   - `'oneWrongMove'` event added to `usePollyAnimator.ts`: fires at most once per word when lives hit 0, Polly says "One wrong move." via `endOfRoundPopIn`.
-  - Gate sequence, hidden tile flow, ghost logic, boss entrance, haunt entrance, Polly budget architecture, swipe grammar, and scoring unchanged.
+  - Patch 23 revised changed gate sequence to boss-only, one mystery tile, boss-only mastery/ghost, and non-boss word exit transitions.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
 
 ### Remaining Pending Work
@@ -821,7 +801,7 @@ Other remaining work:
 - RUN IT BACK = fresh draw, ghost priority
 - Boss position 12 = confrontation endpoint
 - Polly throws boss word at position 12
-- Gate auto-opens on perfect clear â€” never swipe to open
+- Gate auto-opens only on boss perfect clear â€” never swipe to open
 - wrongSwipeOccurred.current resets at start of every new word
 - Crystal shards: polygon, purple/rose, radial burst â€” never rectangles
 - Diagonal MASTER stamp over crashed word during mastery celebration
@@ -838,7 +818,6 @@ Other remaining work:
 - Polly's target score: 15,000 pts (MVP fixed)
 - Rank scale: D / C / B / A / S / MASTER
 - Life Feather milestones: 8,000 and 16,000 pts
-- Ghost Loss Sequence: hidden split tile wrong swipe overrides standard exit â€” tile intercepted at T+120ms into merge sequence
 - “You left me behind.” â€” micro-copy on ghost birth
 - “Not yours yet.” â€” Polly line on ghost exit
 - Wrong swipes are permanent â€” tile flies away, no snap-back, no retry
@@ -872,7 +851,7 @@ Other remaining work:
 ```
 app/components/MaskBoard.tsx         Main game board
 app/components/SwipeMask.tsx         Tile + swipe physics (Reanimated â€” frozen)
-app/components/MasterGateTile.tsx    Gate: locked / unlock / split tiles
+app/components/MasterGateTile.tsx    Gate: locked / unlock / boss mystery tile
 app/components/PollyCard.tsx         Polly sprite + speech
 app/components/PollyController.tsx   Polly trigger system
 app/game/session.ts                  12-word session data
@@ -914,12 +893,12 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 - Polly appears only as a pop-in.
 - 1 pop-in during a big moment in a word round.
 - Polly always appears at end of round win/loss.
-- Polly pops from bottom-left and never blocks the active tile, right shatter lane, Master Gate, or hidden tiles.
+- Polly pops from bottom-left and never blocks the active tile, right shatter lane, Master Gate, or boss mystery tile.
 - Polly sprite size is now 160 for a larger opponent reaction presentation.
 - Speech bubble sits above/above-right of Polly.
-- Normal mastery opponent line: "That was mine."
+- Non-boss words do not show mastery/ghost overlays.
 - Boss mastery opponent line: "Fine. Take it."
-- Normal ghost failure line: "Not yours yet."
+- Boss ghost failure line: "Not yours yet."
 - Returning Haunt failure taunt: "BBBLAAAAHHAHAHA!"
 - `BINGO BANGO ZZZZINGO!` is not Polly dialogue.
 
@@ -975,6 +954,8 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 
 - Text: MASTER THE WORD.
 - Gate belongs to Polly, not the player.
+- Gate opens only on boss word perfect clear.
+- Words 1-11 never open the gate.
 - Low on board, above nav bar safe area.
 - Bird cage / vault hybrid.
 - Subtle tension, never overbearing.
@@ -986,22 +967,23 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 
 ### Master Gate Unlock
 
-1. Last real visible tile absorbs into hero word.
+1. Boss word only: last real visible tile absorbs into hero word.
 2. Gate border charges gold.
 3. Cage bars split slightly left/right.
 4. Lock snaps open.
-5. Two hidden tiles fly up into active tile position.
+5. One mystery tile drops into active tile position.
+6. Mystery tile is randomly the real hidden meaning or hidden trap.
 
 ### MASTERED Celebration
 
-1. Hidden tiles judged correctly.
+1. Boss mystery tile judged correctly.
 2. Hero word crashes down to center with impact.
 3. Diagonal MASTER stamp slams over word.
 4. Word cracks open.
 5. Word Core jumps out of cracked word.
 6. Core grows, glows, and spins center-screen.
 7. Core shoots toward Vault nav icon.
-8. Normal mastery ends with opponent Polly reaction, not `BINGO BANGO ZZZZINGO!`.
+8. Boss mastery ends with opponent Polly reaction, not Polly celebration.
 9. Boss mastery may additionally trigger the rare game/system `BINGO BANGO ZZZZINGO!` stinger after vaulting.
 
 ### Word Core
@@ -1013,14 +995,12 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 
 ### Ghost Loss
 
-- Triggered by wrong hidden/master swipe.
-- Wrong swiped hidden tile begins leaving.
-- Remaining hidden tile stays on board.
-- Failed tile glitches and loses substance.
-- Failed tile is pulled back.
-- Both hidden tiles merge.
-- Hero word flickers dull and loses life essence.
-- Ghostly presence fades into merged tile.
+- Boss-only.
+- Triggered by wrong judgment on the boss mystery tile.
+- Wrong swiped tile exits permanently.
+- No two hidden tiles merge.
+- No hidden split tile sequence.
+- HAUNTED overlay appears after the boss failure beat.
 - Ghost Tile forms:
   - MASTER THE WORD
   - From [WORD]
@@ -1029,8 +1009,9 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss. The activ
 ### Ghost Return / Haunt Words
 
 - Ghosted words return late in future Hunts.
-- Best placement: word 10 or 11.
+- Haunt slot is position 10 / index 9.
 - Never replace Boss Word at position 12.
+- Ghost `wordId` is always the word string, never `stepIndex`.
 - Returning ghost word entrance copy: Guess who's back.
 - If mastered: HAUNT BROKEN
 - If failed again: STILL HAUNTED
@@ -1116,7 +1097,7 @@ Current implementation:
 21. Premium gameplay screen shell polish (Patch 15 complete)
 22. Heavy active tile stack / weighted peel polish (Patch 16 complete)
 23. Device sanity polish for gameplay arena (Patch 17 complete)
-24. Card deck tile system — snap-back wrong swipes, zero-feather mid-word haunt, deck depth cards (Patch 23 complete)
+24. Card deck tile system original snap-back behavior (superseded by Patch 23 revised)
 25. Patch 21 persistence + Vault real data (complete)
 26. Patch 22 Haunt Word return system (complete)
 27. Patch 23 revised: permanent wrong swipes, boss-only gate, single mystery tile, non-boss word exit transition (complete)
