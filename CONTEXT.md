@@ -1,5 +1,5 @@
 ﻿# POLYWORDS â€” CONTEXT.md
-### Quick-Reference Session Briefing Â· June 9, 2026
+### Quick-Reference Session Briefing Â· June 11, 2026
 
 Paste this at the start of any Claude Code session to restore full context.
 
@@ -111,20 +111,25 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 **Implementation order:** Main gameplay layout -> hero word dominance -> one active tile queue (Patch 3 complete) -> press-hold tile behavior (Patch 4 complete) -> UP absorb and RIGHT toss/shatter (Patch 5 complete) -> Master Gate visual overhaul (Patch 6 complete) -> hidden tile unlock (Patch 7 complete) -> MASTERED celebration (Patch 8 complete) -> ghost merge loss (Patch 9 complete) -> Polly pop-in budget (Patch 10 complete) -> database audit + selective masks/traps rewrite -> Word Vault page shell (Patch 12A complete) -> Home arcade lobby shell (Patch 12C complete) -> Settings/Profile shell (Patch 12D complete) -> bottom navigation app shell (Patch 12E complete) -> feathers and score targets -> Haunt Word return system -> Ranks page and real data wiring.
 
-```
-1  LIGHT   Standard  Confidence
-2  BARK    Standard  Flow
-3  RING    Standard  First tension
-4  MATCH   Standard  Escalation
-5  RAW     Standard  Freshness
-6  BEAR    Standard  Hesitation
-7  WAKE    Standard  Tension
-8  PITCH   Standard  Near miss
-9  PRESS   Standard  Panic
-10 BANK    Standard  Rebound
-11 SPRING  Boss      First climax
-12 ORDER   Boss      Final boss â€” Polly's word
-```
+Hunt 1 â€” GPS Compliant (2 Confidence + 3 Flow + 3 Tension + 3 Panic + 1 Boss)
+
+| # | Word | Phase | Emotional Beat |
+|---|---|---|---|
+| 1 | WAVE | Confidence | Opener |
+| 2 | FINE | Confidence | Build trust |
+| 3 | CHARGE | Flow | Rhythm begins |
+| 4 | PLANT | Flow | Spy snap |
+| 5 | TABLE | Flow | Brain glitch |
+| 6 | CAPITAL | Tension | First tension |
+| 7 | SENTENCE | Tension | Dual domain |
+| 8 | SPELL | Tension | Multi-domain |
+| 9 | DRAFT | Panic | Three domains |
+| 10 | RANK | Panic | Smell snap |
+| 11 | SOUND | Panic | Geographic snap |
+| 12 | CAST | Boss | Polly's word |
+
+Words 1â€”11: no hidden meaning, no gate, no mastery.
+CAST: hiddenMeaning 'Molten metal takes shape', hiddenTrap 'Spell gets thrown on you'.
 
 ---
 
@@ -139,44 +144,36 @@ Current HUD: `GameScreen.tsx` renders five custom feather slots while engine/sto
 
 ---
 
-## One-at-a-Time Tile Queue (Design locked - Patch 3 complete)
+## Card Deck Tile System (Patch 23 complete)
 
-- One tile flies in at a time. Player swipes. Next tile arrives.
-- ALL TILES LOOK IDENTICAL UNTIL SWIPED - Polly gives nothing away
-- Ghost tile always first, enters from LEFT
-- Ghost unresolvable until perfect clear - merges into split tile sequence
-- Random queue order - Speed escalates -20ms per tile (floor 280ms)
-- Gap = skill-based: base 350ms, combo reduces, wrong swipe +150ms
-- Between tiles: pure silence - emptiness is tension
-- Landing position: vertical center of battlefield
+All tiles for a word arrive simultaneously as a stacked deck. Only the top card is interactive. Wrong swipes are PERMANENT â€" tile flies away, life drains, no retry, no snap-back. Correct and trap-caught tiles remove from deck at 180ms. Wrong tiles remove at 400ms. Deck empty = word complete.
 
-Current implementation:
-- Patch 3 complete: `MaskBoard.tsx` renders only one active visible mask tile at a time.
-- The queue keeps existing shuffled mask order from `store.game.shuffledMasks`.
-- The active visible tile advances after the current tile resolves as correct, trap-caught, or wrong.
-- A guarded 650ms delay prevents duplicate advances from repeated renders and lets Patch 5 motion finish cleanly.
-- Scoring, swipe grammar, current Master Gate logic, Ghost tile behavior, hidden tile flow, Polly logic, and store architecture are preserved.
-- Patch 4 press-hold polish and Patch 5 UP absorb / RIGHT toss-shatter tuning are complete.
-- Proper returning Haunt placement remains pending.
+ALL TILES LOOK IDENTICAL UNTIL SWIPED â€" Polly gives nothing away.
+
+Deck entrance: `deckSlamY` spring animation per word (-52 â†' 0).
+Depth cards: up to 3 visible at `#2E2870` purple, staggered offsets.
+Haunt depth cards: `#130D2A` purple tint.
+Zero-feather red tint: `deckRedTint` shifts depth cards to `#2A0808`.
+
+`key={topMask.id}` on top `SwipeMask` forces full remount on card change â€" prevents stale `judgedRef` / frozen input.
 
 ---
-## Master Gate (Auto-opens on perfect clear)
 
+## Master Gate (Boss-only — auto-opens on perfect boss clear)
+
+Gate is BOSS ONLY. Words 1â€"11 never open the gate.
 **wrongSwipeOccurred.current MUST reset to false at start of every new word.**
 
-Sequence: Last tile absorbs â†’ border charges clockwise â†’ lock cracks â†’ gate opens â†’ two split tiles drop.
+Boss gate sequence: Last visible tile exits â†’ gate opens only if `wrongSwipeOccurred` is false â†’ ONE mystery tile drops (randomly `hiddenRealMask` or `hiddenTrapMask`, set by `mysteryIsRealRef`) â†’ player judges the tile â†’ correct judgment = MASTERED â†’ wrong judgment = GHOST.
 
-Split tiles: real hidden meaning (UP) + hidden trap (RIGHT).
+Boss with any wrong swipe on visible masks: gate never opens, word advances silently.
+
+Non-boss completion: deck empty â†’ word exits with scale/fade (1050ms) â†’ `store.completeWord()`. No overlay. No gate.
 
 Both correct â†’ MASTERY SEQUENCE:
 Hero word crashes center â†’ diagonal MASTER stamp â†’ cracks/energy â†’ Word Core grows/spins â†’ Core shoots to Vault nav icon.
 
 Missed â†’ GHOST (solid purple border, no dashes, phrase NEVER revealed).
-
-Current ghost behavior:
-- Ghosts created during the current run are stored but cannot appear until the next run starts.
-- The store snapshots `runStartGhostWordIds` at run start.
-- `GhostTile` is currently disabled from the Master Gate slot so it cannot block gate unlock/release flow.
 
 ---
 
@@ -325,6 +322,9 @@ Completed and committed:
 - Patch 15 complete: premium gameplay screen shell polish in GameScreen.tsx and MaskBoard.tsx; HUD, hero stage, active tile arena frame, and Master Gate dock were visually strengthened with no gameplay, swipe, queue, scoring, nav, Polly timing, or gate logic changes.
 - Patch 16 complete: heavy active tile stack and weighted peel polish in MaskBoard.tsx and SwipeMask.tsx. Active mask/trap tile is the readable top slab above up to 2 concealed under-tiles; under-tiles are unreadable and truth-hidden. Press-hold feels like gripping/pulling a heavy slab. Active tile has heavier bevel/slab treatment. Trap brittleness is revealed only after RIGHT shatter; real meanings remain weighty and absorb upward. Scoring, swipe grammar, one-active queue logic, tile resolution, hidden release, Master Gate logic, Polly timing/budget, and navigation unchanged.
 - Patch 17 complete: device sanity polish for gameplay arena in GameScreen.tsx and MaskBoard.tsx. Slimmed HUD chrome, cleaned/hefted concealed under-tile slab offsets, quieted the right shatter-lane marker, added Master Gate dock breathing room, and normalized gameplay gold to `#F5C842`. Mechanics, scoring, swipe grammar, one-active queue, tile resolution, hidden release, Master Gate logic, Polly timing/budget, navigation, Golden Pacing, and content data unchanged.
+- Patch 21 complete: AsyncStorage persistence for `masteredWords`, `personalBest`, `runsCompleted`. `VaultScreen.tsx` reads real data. `MasteredWordRecord` type added to `types.ts`. `loadProgress()` called at boot alongside `loadGhosts()`.
+- Patch 22 complete: `buildRunSession(ghostWordIds)` in `session.ts` injects first matching ghost word at index 9 (position 10), never touching indexes 10–11 (boss zone). `isHauntReturn` flag drives entrance banner ("Guess who's back."), HAUNT BROKEN stamp, STILL HAUNTED stamp, and "BBBLAAAAHHAHAHA!" Polly line. Double haptic on haunt entrance. Haunt depth cards tinted `#130D2A`.
+- Patch 23 revised complete: wrong swipes permanent (no snap-back), gate boss-only, mastery boss-only, ghost boss-only, single mystery tile replaces two-tile split, `triggerWordExit()` for non-boss transitions, two-tile merge animation removed, `hiddenEmoji` / `hiddenTrapEmoji` cut from types. Session updated to Hunt 1 GPS-compliant 12-word arc (WAVE → CAST). TypeScript passed.
 
 Remaining pending:
 Future content lane: **Database audit + selective masks/traps rewrite using the local Mask Rewriter tool.**
@@ -347,11 +347,13 @@ Future content lane: **Database audit + selective masks/traps rewrite using the 
   - Avoid dictionary-definition tone.
 
 Other remaining work:
-1. Haunt Word return system: late Hunt return at word 10 or 11, never Boss 12, Guess who's back. / Haunt broken. / STILL HAUNTED / "BBBLAAAAHHAHAHA!".
-2. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
-3. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
-4. Word Vault real data wiring plus future Ranks work.
-5. `expo-av` to `expo-audio` migration.
+
+1. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
+2. Life Feather milestone/reserve system: UI feathers exist; score milestone restore and 1 reserve feather are not implemented yet.
+3. Word Vault Ranks page and leaderboard.
+4. `expo-av` to `expo-audio` migration.
+5. Full 739-word database GPS metadata tagging.
+6. Daily Challenge (date-seeded, one attempt per day, shareable result).
 
 ---
 ## Cut List (Never Suggest These)
@@ -369,6 +371,10 @@ Other remaining work:
 â˜ ï¸ RATTLED. in any color except white
 â˜ ï¸ Circular Polly crop
 â˜ ï¸ More than 2 gold elements simultaneously
+â˜ ï¸ Snap-back wrong swipes
+â˜ ï¸ Two-tile hidden gate
+â˜ ï¸ Ghost/mastery for non-boss words
+â˜ ï¸ hiddenEmoji / hiddenTrapEmoji
 ```
 
 ---
@@ -409,4 +415,4 @@ tools/content/mask-rewriter          Local-only content rewrite/audit tool; neve
 
 ---
 
-*POLYWORDS CONTEXT.md Â· Pete DiBari Â· June 9, 2026*
+*POLYWORDS CONTEXT.md Â· Pete DiBari Â· June 11, 2026*

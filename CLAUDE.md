@@ -1105,8 +1105,11 @@ Current implementation:
 22. Heavy active tile stack / weighted peel polish (Patch 16 complete)
 23. Device sanity polish for gameplay arena (Patch 17 complete)
 24. Card deck tile system — snap-back wrong swipes, zero-feather mid-word haunt, deck depth cards (Patch 23 complete)
-25. Word Vault real data wiring plus future Ranks work
+25. Patch 21 persistence + Vault real data (complete)
+26. Patch 22 Haunt Word return system (complete)
+27. Patch 23 revised: permanent wrong swipes, boss-only gate, single mystery tile, non-boss word exit transition (complete)
+28. Hunt 1 GPS-compliant session content (complete)
 
 ---
 
-*POLYWORDS CLAUDE.md Â· Pete DiBari Â· June 9, 2026*
+*POLYWORDS CLAUDE.md Â· Pete DiBari Â· June 11, 2026*
