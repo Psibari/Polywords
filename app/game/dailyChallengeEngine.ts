@@ -50,6 +50,38 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
   return a;
 }
 
+function buildCandidateBoard(
+  target: DailyWord,
+  allWords: DailyWord[],
+  seed: number,
+  offset: number,
+): string[] {
+  const board: string[] = [target.word];
+  const addUnique = (word: string) => {
+    if (!board.includes(word)) board.push(word);
+  };
+
+  seededShuffle(
+    allWords
+      .map(w => w.word)
+      .filter(word => word !== target.word),
+    seed + offset,
+  ).forEach(addUnique);
+
+  if (board.length < 9) {
+    seededShuffle(
+      target.candidates.filter(word => word !== target.word),
+      seed + offset + 37,
+    ).forEach(addUnique);
+  }
+
+  while (board.length < 9 && allWords.length > 0) {
+    board.push(allWords[(seed + offset + board.length) % allWords.length].word);
+  }
+
+  return seededShuffle(board.slice(0, 9), seed + offset + 101);
+}
+
 // ── Session builder ──────────────────────────────────────────
 
 export function buildDailySession(dateStr: string): DailyWord[] {
@@ -63,15 +95,15 @@ export function buildDailySession(dateStr: string): DailyWord[] {
   const word2 = tier2[((seed >> 4) >>> 0) % tier2.length];
   const word3 = tier3[((seed >> 8) >>> 0) % tier3.length];
 
-  const shuffle = (word: DailyWord, offset: number): DailyWord => ({
+  const withBoard = (word: DailyWord, offset: number): DailyWord => ({
     ...word,
-    candidates: seededShuffle(word.candidates, seed + offset),
+    candidates: buildCandidateBoard(word, DAILY_POOL, seed, offset),
   });
 
   return [
-    shuffle(word1, 0),
-    shuffle(word2, 1),
-    shuffle(word3, 2),
+    withBoard(word1, 0),
+    withBoard(word2, 1),
+    withBoard(word3, 2),
   ];
 }
 
@@ -122,64 +154,6 @@ export function submitDailyWrongSwipe(
     ...state,
     lives:               newLives,
     remainingCandidates: remaining,
-  };
-}
-
-// ── Target rejected ──────────────────────────────────────────
-
-function appendMissedDailyResult(
-  results: DailyRoundResult[],
-  round: DailyWord,
-  wrongSwipes: number,
-): DailyRoundResult[] {
-  const alreadyRecorded = results.some(r => r.word === round.word && r.tier === round.tier);
-  if (alreadyRecorded) return results;
-
-  return [
-    ...results,
-    {
-      word: round.word,
-      tier: round.tier,
-      status: 'missed',
-      wrongSwipes,
-    },
-  ];
-}
-
-export function submitDailyTargetRejected(
-  state: DailyChallengeState,
-): DailyChallengeState {
-  if (state.status !== 'playing') return state;
-
-  const round = state.rounds[state.currentRound];
-  if (!round) return state;
-
-  const newLives = Math.max(state.lives - 1, 0);
-  let results = appendMissedDailyResult(state.results, round, 1);
-
-  if (newLives === 0) {
-    for (let i = state.currentRound + 1; i < state.rounds.length; i++) {
-      results = appendMissedDailyResult(results, state.rounds[i], 0);
-    }
-
-    return {
-      ...state,
-      lives: newLives,
-      results,
-      status: 'complete',
-      currentRound: Math.min(state.currentRound, state.rounds.length - 1),
-    };
-  }
-
-  const nextRound = state.currentRound + 1;
-  const isComplete = nextRound >= state.rounds.length;
-
-  return {
-    ...state,
-    lives: newLives,
-    results,
-    currentRound: isComplete ? state.currentRound : nextRound,
-    status: isComplete ? 'complete' : 'playing',
   };
 }
 

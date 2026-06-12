@@ -168,7 +168,7 @@ export type DailyTier = 1 | 2 | 3;
 export type DailyWord = {
   word:       string;
   meanings:   [string, string, string]; // exactly 3, hardest → easiest
-  candidates: string[];                 // 4 words: 1 correct + 3 distractors
+  candidates: string[];                 // 9 word board: 1 correct + 8 distractors
   tier:       DailyTier;
 };
 

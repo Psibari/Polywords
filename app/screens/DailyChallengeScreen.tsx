@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  PanResponder,
   Pressable,
   SafeAreaView,
   Share,
@@ -10,15 +11,15 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { FONTS } from '../constants/fonts';
-import { Mask } from '../game/types';
 import { getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
 import { useGameStore } from '../store/useGameStore';
-import { SwipeMask, SwipeMaskState } from '../components/SwipeMask';
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 const MAX_LIVES   = 2;
-const TILE_H      = 148;
 const ROUND_COUNT = 3;
+const CLAIM_THRESHOLD = -40;
+
+type DailyCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
 // ─── FEATHER ICON ─────────────────────────────────────────────
 function FeatherIcon({ filled }: { filled: boolean }) {
@@ -86,6 +87,137 @@ function MeaningsZone({
           <Text style={mz.meaning}>{m}</Text>
         </View>
       ))}
+    </Animated.View>
+  );
+}
+
+// ─── DAILY CANDIDATE CARD ────────────────────────────────────
+// Daily uses word cards, not the main POLY RUN mask tile.
+function DailyCandidateCard({
+  word,
+  state,
+  disabled,
+  onClaim,
+}: {
+  word: string;
+  state: DailyCardState;
+  disabled: boolean;
+  onClaim: () => void;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity    = useRef(new Animated.Value(1)).current;
+  const scale      = useRef(new Animated.Value(1)).current;
+  const claimedRef = useRef(false);
+
+  useEffect(() => {
+    claimedRef.current = false;
+    translateX.setValue(0);
+    translateY.setValue(0);
+    opacity.setValue(1);
+    scale.setValue(1);
+  }, [word]); // eslint-disable-line
+
+  useEffect(() => {
+    if (state === 'correct') {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: -48, duration: 220, useNativeDriver: true,
+        }),
+        Animated.spring(scale, {
+          toValue: 1.04, friction: 7, tension: 120, useNativeDriver: true,
+        }),
+      ]).start();
+      return;
+    }
+
+    if (state === 'wrong') {
+      Animated.sequence([
+        Animated.timing(translateX, { toValue: -8, duration: 45, useNativeDriver: true }),
+        Animated.timing(translateX, { toValue: 8, duration: 45, useNativeDriver: true }),
+        Animated.timing(translateX, { toValue: -5, duration: 45, useNativeDriver: true }),
+        Animated.timing(translateX, { toValue: 0, duration: 45, useNativeDriver: true }),
+      ]).start();
+      return;
+    }
+
+    if (state === 'disabled') {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 0, duration: 180, useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 0.92, duration: 180, useNativeDriver: true,
+        }),
+      ]).start();
+      return;
+    }
+
+    Animated.parallel([
+      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
+      Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
+    ]).start();
+  }, [state]); // eslint-disable-line
+
+  const springBack = () => {
+    Animated.parallel([
+      Animated.spring(translateX, { toValue: 0, friction: 6, useNativeDriver: true }),
+      Animated.spring(translateY, { toValue: 0, friction: 6, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const interactive = !disabled && state === 'idle';
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) =>
+      interactive &&
+      Math.abs(gesture.dy) > 6 &&
+      Math.abs(gesture.dy) > Math.abs(gesture.dx) * 0.7,
+    onPanResponderMove: (_, gesture) => {
+      if (!interactive || claimedRef.current) return;
+      translateY.setValue(Math.min(14, gesture.dy));
+      translateX.setValue(gesture.dx * 0.08);
+    },
+    onPanResponderRelease: (_, gesture) => {
+      if (!interactive || claimedRef.current) return;
+
+      if (
+        gesture.dy <= CLAIM_THRESHOLD &&
+        Math.abs(gesture.dy) >= Math.abs(gesture.dx) * 0.7
+      ) {
+        claimedRef.current = true;
+        onClaim();
+        return;
+      }
+
+      springBack();
+    },
+    onPanResponderTerminate: springBack,
+  });
+
+  return (
+    <Animated.View
+      {...panResponder.panHandlers}
+      style={[
+        styles.dailyCard,
+        state === 'correct' && styles.cardCorrect,
+        state === 'wrong' && styles.cardWrong,
+        state === 'disabled' && styles.cardDisabled,
+        {
+          opacity,
+          transform: [{ translateX }, { translateY }, { scale }],
+        },
+      ]}
+    >
+      <Text
+        style={styles.cardText}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.62}
+      >
+        {word.toUpperCase()}
+      </Text>
     </Animated.View>
   );
 }
@@ -162,11 +294,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const dailyResult       = useGameStore(s => s.dailyResult);
   const storeWrongSwipe   = useGameStore(s => s.submitDailyWrongSwipe);
   const storeCorrectSwipe = useGameStore(s => s.submitDailyCorrectSwipe);
-  const storeTargetRejected = useGameStore(s => s.submitDailyTargetRejected);
 
   // ── local deck state ────────────────────────────────────────
   const [remaining, setRemaining]     = useState<string[]>([]);
-  const [tileStates, setTileStates]   = useState<Map<string, SwipeMaskState>>(new Map());
+  const [tileStates, setTileStates]   = useState<Map<string, DailyCardState>>(new Map());
   const [inputLocked, setInputLocked] = useState(false);
   const completedRef                  = useRef(false);
 
@@ -182,9 +313,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     completedRef.current = false;
     setInputLocked(false);
 
-    const ids = round.candidates;
+    const ids = daily.remainingCandidates[daily.currentRound] ?? round.candidates;
     setRemaining([...ids]);
-    const stateMap = new Map<string, SwipeMaskState>();
+    const stateMap = new Map<string, DailyCardState>();
     ids.forEach(c => stateMap.set(c, 'idle'));
     setTileStates(stateMap);
 
@@ -199,60 +330,32 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const isComplete = daily.status === 'complete' || !!dailyResult;
   const round      = daily.rounds[daily.currentRound];
 
-  function makeMask(candidate: string): Mask {
-    return {
-      id:     `daily_${daily!.date}_r${daily!.currentRound}_${candidate}`,
-      phrase: candidate,
-      isReal: candidate === round.word,
-    };
-  }
-
   // ── Correct claim (UP on the target word) ───────────────────
-  function handleCorrect() {
+  function handleClaim(candidate: string) {
     if (completedRef.current || inputLocked) return;
-    completedRef.current = true;
-    setInputLocked(true);
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (candidate === round.word) {
+      completedRef.current = true;
+      setInputLocked(true);
+      setTileStates(prev => new Map(prev).set(candidate, 'correct'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    const others = remaining.filter(c => c !== round.word);
-    others.forEach(c => {
-      setTileStates(prev => new Map(prev).set(c, 'wrong'));
-    });
+      setTimeout(() => {
+        storeCorrectSwipe();
+      }, 560);
+      return;
+    }
 
-    setTimeout(() => {
-      storeCorrectSwipe();
-    }, 600);
-  }
-
-  // ── Wrong claim (UP on distractor OR RIGHT on target word) ──
-  function handleWrong(candidate: string) {
-    if (completedRef.current || inputLocked) return;
-    setTileStates(prev => new Map(prev).set(candidate, 'wrong'));
-    setTimeout(() => {
-      setRemaining(prev => prev.filter(c => c !== candidate));
-      storeWrongSwipe(candidate);
-    }, 400);
-  }
-
-  // ── Correct rejection (RIGHT on distractor) ──────────────────
-  function handleTargetRejected(candidate: string) {
-    if (completedRef.current || inputLocked) return;
-    completedRef.current = true;
     setInputLocked(true);
     setTileStates(prev => new Map(prev).set(candidate, 'wrong'));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    setTimeout(() => {
-      storeTargetRejected();
-    }, 400);
-  }
 
-  function handleReject(candidate: string) {
-    if (completedRef.current || inputLocked) return;
-    setTileStates(prev => new Map(prev).set(candidate, 'trap-caught'));
     setTimeout(() => {
+      setTileStates(prev => new Map(prev).set(candidate, 'disabled'));
       setRemaining(prev => prev.filter(c => c !== candidate));
-    }, 260);
+      storeWrongSwipe(candidate);
+      setInputLocked(false);
+    }, 360);
   }
 
   // ── Share ────────────────────────────────────────────────────
@@ -284,39 +387,23 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       )}
 
       {!isComplete && (
-        <View style={styles.tileGrid}>
-          {remaining.map(candidate => (
-            <View key={candidate} style={styles.tileSlot}>
-              <SwipeMask
+        <>
+          <View style={styles.instructionStrip}>
+            <Text style={styles.instructionText}>SWIPE UP TO CLAIM THE WORD</Text>
+          </View>
+
+          <View style={styles.cardGrid}>
+            {remaining.slice(0, 9).map(candidate => (
+              <DailyCandidateCard
                 key={candidate}
-                mask={makeMask(candidate)}
+                word={candidate}
                 state={tileStates.get(candidate) ?? 'idle'}
-                onSwipeUp={() => {
-                  if (candidate === round.word) {
-                    setTileStates(prev =>
-                      new Map(prev).set(candidate, 'correct'));
-                    setTimeout(() => handleCorrect(), 120);
-                  } else {
-                    handleWrong(candidate);
-                  }
-                }}
-                onSwipeDown={() => {
-                  if (candidate !== round.word) {
-                    handleReject(candidate);
-                  } else {
-                    handleTargetRejected(candidate);
-                  }
-                }}
-                onSwipeReveal={() => {}}
-                revealable={false}
                 disabled={inputLocked}
-                tileHeight={TILE_H}
-                entryDelay={0}
-                wordY={200}
+                onClaim={() => handleClaim(candidate)}
               />
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        </>
       )}
 
       {isComplete && (
@@ -401,14 +488,14 @@ const hud = StyleSheet.create({
 const mz = StyleSheet.create({
   root: {
     marginHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 16,
-    padding: 20,
+    marginTop: 18,
+    marginBottom: 12,
+    padding: 16,
     borderRadius: 20,
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
     borderColor: 'rgba(123,45,139,0.50)',
-    gap: 14,
+    gap: 10,
   },
   label: {
     color: 'rgba(255,255,255,0.45)',
@@ -434,8 +521,8 @@ const mz = StyleSheet.create({
   meaning: {
     color: '#FFFFFF',
     fontFamily: FONTS.brand,
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 18,
+    lineHeight: 23,
     flex: 1,
   },
 });
@@ -530,14 +617,63 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1A1830',
   },
-  tileGrid: {
+  instructionStrip: {
     marginHorizontal: 20,
-    marginTop: 12,
+    marginBottom: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(15,13,42,0.70)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.32)',
+    alignItems: 'center',
+  },
+  instructionText: {
+    color: 'rgba(255,255,255,0.62)',
+    fontFamily: FONTS.hud,
+    fontSize: 11,
+    letterSpacing: 1.4,
+  },
+  cardGrid: {
+    marginHorizontal: 20,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
+    justifyContent: 'center',
   },
-  tileSlot: {
-    width: '47%',
+  dailyCard: {
+    width: '30.5%',
+    height: 80,
+    borderRadius: 18,
+    backgroundColor: '#0F0D2A',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.62)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    shadowColor: '#7B2D8B',
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  cardCorrect: {
+    borderColor: '#F5C842',
+    backgroundColor: 'rgba(245,200,66,0.16)',
+    shadowColor: '#F5C842',
+    shadowOpacity: 0.38,
+    shadowRadius: 12,
+  },
+  cardWrong: {
+    borderColor: '#CC2200',
+    backgroundColor: 'rgba(204,34,0,0.18)',
+  },
+  cardDisabled: {
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  cardText: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.hud,
+    fontSize: 15,
+    letterSpacing: 0,
+    textAlign: 'center',
   },
 });
