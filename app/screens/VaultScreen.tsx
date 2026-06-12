@@ -5,7 +5,37 @@ import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 import { MasteredWordRecord } from '../game/types';
 
-type VaultSectionKey = 'mastered' | 'ghosts' | 'hidden' | 'stats';
+type RankTier = {
+  letter:      string;
+  label:       string;
+  threshold:   number;
+  nextAt:      number | null;
+  color:       string;
+  description: string;
+};
+
+const RANK_TIERS: RankTier[] = [
+  { letter: 'D',      label: 'D',      threshold: 0,     nextAt: 8000,  color: 'rgba(255,255,255,0.45)', description: 'Just getting started.'   },
+  { letter: 'C',      label: 'C',      threshold: 8000,  nextAt: 11000, color: '#FFFFFF',                description: 'Warming up.'             },
+  { letter: 'B',      label: 'B',      threshold: 11000, nextAt: 14000, color: '#FFFFFF',                description: 'Getting sharper.'        },
+  { letter: 'A',      label: 'A',      threshold: 14000, nextAt: 18000, color: '#FFFFFF',                description: 'Polly noticed.'          },
+  { letter: 'S',      label: 'S',      threshold: 18000, nextAt: 22000, color: '#F5C842',                description: 'Better than Polly.'      },
+  { letter: 'MASTER', label: 'MASTER', threshold: 22000, nextAt: null,  color: '#F5C842',                description: 'The title is yours.'     },
+];
+
+function getRankTier(score: number): RankTier {
+  const reversed = [...RANK_TIERS].reverse();
+  return reversed.find(t => score >= t.threshold) ?? RANK_TIERS[0];
+}
+
+function getRankProgress(score: number, tier: RankTier): number {
+  if (!tier.nextAt) return 1;
+  const range = tier.nextAt - tier.threshold;
+  if (range <= 0) return 1;
+  return Math.min((score - tier.threshold) / range, 1);
+}
+
+type VaultSectionKey = 'mastered' | 'ghosts' | 'hidden' | 'ranks';
 
 const sections: Array<{
   key: VaultSectionKey;
@@ -36,11 +66,11 @@ const sections: Array<{
     accent: '#7B2D8B',
   },
   {
-    key: 'stats',
-    label: 'Stats',
-    title: 'Stats',
+    key:       'ranks',
+    label:     'Ranks',
+    title:     'Ranks',
     emptyCopy: '',
-    accent: '#F5C842',
+    accent:    '#F5C842',
   },
 ];
 
@@ -136,19 +166,103 @@ export default function VaultScreen({ navigation }: Props) {
       );
     }
 
-    if (activeSection === 'stats') {
+    if (activeSection === 'ranks') {
+      const tier      = getRankTier(progress.personalBest);
+      const progress_ = getRankProgress(progress.personalBest, tier);
+      const beatPolly = progress.personalBest >= 15000;
+
       return (
-        <View style={styles.statsBlock}>
-          <View style={styles.statBlockRow}>
-            <Text style={styles.statBlockLabel}>Personal Best</Text>
-            <Text style={[styles.statBlockValue, { color: '#F5C842' }]}>
-              {progress.personalBest.toLocaleString()}
+        <View style={rk.container}>
+
+          {/* ── Current rank badge ── */}
+          <View style={rk.badgeRow}>
+            <Text style={[rk.rankLetter, { color: tier.color }]}>
+              {tier.letter}
             </Text>
+            <View style={rk.badgeRight}>
+              <Text style={rk.rankDescription}>{tier.description}</Text>
+              <Text style={rk.personalBest}>
+                {progress.personalBest > 0
+                  ? `${progress.personalBest.toLocaleString()} pts personal best`
+                  : 'No runs yet'}
+              </Text>
+            </View>
           </View>
-          <View style={[styles.statBlockRow, styles.statBlockRowLast]}>
-            <Text style={styles.statBlockLabel}>Runs Completed</Text>
-            <Text style={styles.statBlockValue}>{progress.runsCompleted}</Text>
+
+          {/* ── Rank ladder ── */}
+          <View style={rk.ladderRow}>
+            {RANK_TIERS.map(t => {
+              const isCurrent  = t.letter === tier.letter;
+              const isAchieved = progress.personalBest >= t.threshold;
+              return (
+                <View
+                  key={t.letter}
+                  style={[
+                    rk.ladderPill,
+                    isCurrent  && rk.ladderPillCurrent,
+                    isAchieved && !isCurrent && rk.ladderPillDone,
+                  ]}
+                >
+                  <Text style={[
+                    rk.ladderPillText,
+                    { color: isCurrent ? tier.color : isAchieved ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.28)' },
+                  ]}>
+                    {t.letter}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
+
+          {/* ── Progress to next rank ── */}
+          {tier.nextAt ? (
+            <View style={rk.progressBlock}>
+              <View style={rk.progressBar}>
+                <View style={[rk.progressFill, {
+                  width:           `${Math.round(progress_ * 100)}%` as any,
+                  backgroundColor: tier.color,
+                }]} />
+              </View>
+              <Text style={rk.progressLabel}>
+                {(tier.nextAt - progress.personalBest).toLocaleString()} pts to {
+                  RANK_TIERS[RANK_TIERS.findIndex(t => t.letter === tier.letter) + 1]?.letter
+                }
+              </Text>
+            </View>
+          ) : (
+            <View style={rk.progressBlock}>
+              <View style={rk.progressBar}>
+                <View style={[rk.progressFill, { width: '100%', backgroundColor: '#F5C842' }]} />
+              </View>
+              <Text style={rk.progressLabel}>Rank ceiling reached.</Text>
+            </View>
+          )}
+
+          {/* ── Polly target ── */}
+          <View style={rk.pollyRow}>
+            <View style={rk.pollyLeft}>
+              <Text style={rk.pollyLabel}>Polly's score</Text>
+              <Text style={rk.pollyScore}>15,000 pts</Text>
+            </View>
+            <View style={[rk.pollyStatus, beatPolly && rk.pollyStatusBeaten]}>
+              <Text style={[rk.pollyStatusText, beatPolly && rk.pollyStatusTextBeaten]}>
+                {beatPolly ? 'BEATEN' : 'NOT YET'}
+              </Text>
+            </View>
+          </View>
+
+          {/* ── Stats footer ── */}
+          <View style={rk.statsFooter}>
+            <View style={rk.statsFooterRow}>
+              <Text style={rk.statsFooterLabel}>Runs completed</Text>
+              <Text style={rk.statsFooterValue}>{progress.runsCompleted}</Text>
+            </View>
+            <View style={[rk.statsFooterRow, { borderBottomWidth: 0 }]}>
+              <Text style={rk.statsFooterLabel}>Words mastered</Text>
+              <Text style={rk.statsFooterValue}>{progress.masteredWords.length}</Text>
+            </View>
+          </View>
+
         </View>
       );
     }
@@ -495,5 +609,165 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.tileCopy,
     fontSize: 13,
     lineHeight: 19,
+  },
+});
+
+const rk = StyleSheet.create({
+  container: {
+    marginTop: 14,
+    gap: 16,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    backgroundColor: 'rgba(15,13,42,0.78)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.42)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  rankLetter: {
+    fontSize: 52,
+    fontFamily: FONTS.wordDisplay,
+    letterSpacing: 1,
+    lineHeight: 58,
+    minWidth: 52,
+    textAlign: 'center',
+  },
+  badgeRight: {
+    flex: 1,
+    gap: 4,
+  },
+  rankDescription: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 14,
+  },
+  personalBest: {
+    color: 'rgba(255,255,255,0.45)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 12,
+  },
+  ladderRow: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+  },
+  ladderPill: {
+    flex: 1,
+    borderRadius: 10,
+    backgroundColor: 'rgba(15,13,42,0.78)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  ladderPillCurrent: {
+    borderColor: 'rgba(245,200,66,0.55)',
+    backgroundColor: 'rgba(245,200,66,0.08)',
+  },
+  ladderPillDone: {
+    borderColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  ladderPillText: {
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 12,
+    letterSpacing: 0.5,
+  },
+  progressBlock: {
+    gap: 6,
+  },
+  progressBar: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  progressLabel: {
+    color: 'rgba(255,255,255,0.45)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 12,
+  },
+  pollyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(15,13,42,0.78)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.42)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  pollyLeft: {
+    gap: 2,
+  },
+  pollyLabel: {
+    color: 'rgba(255,255,255,0.45)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+  pollyScore: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.hud,
+    fontSize: 18,
+    letterSpacing: 1,
+  },
+  pollyStatus: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  pollyStatusBeaten: {
+    borderColor: 'rgba(245,200,66,0.55)',
+    backgroundColor: 'rgba(245,200,66,0.10)',
+  },
+  pollyStatusText: {
+    color: 'rgba(255,255,255,0.45)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+  },
+  pollyStatusTextBeaten: {
+    color: '#F5C842',
+  },
+  statsFooter: {
+    backgroundColor: 'rgba(15,13,42,0.78)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.42)',
+    paddingHorizontal: 16,
+    paddingTop: 2,
+    paddingBottom: 2,
+  },
+  statsFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.07)',
+  },
+  statsFooterLabel: {
+    color: 'rgba(255,255,255,0.60)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 13,
+  },
+  statsFooterValue: {
+    color: '#FFFFFF',
+    fontFamily: FONTS.hud,
+    fontSize: 18,
+    letterSpacing: 1,
   },
 });
