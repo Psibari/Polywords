@@ -57,17 +57,17 @@ function shuffleMasks(masks: Mask[]): Mask[] {
   return arr;
 }
 
-export function createGame(ghostWordIds: string[] = []): GameState {
-  const session = buildRunSession(ghostWordIds);
+export function createGame(ghostWordIds: string[] = [], session?: SessionStep[]): GameState {
+  const steps = session ?? buildRunSession(ghostWordIds);
   const shuffledMasks: Record<number, Mask[]> = {};
-  session.forEach((step, i) => {
+  steps.forEach((step, i) => {
     if (step.kind === 'word') {
       shuffledMasks[i] = shuffleMasks(step.masks.filter(m => !m.isHidden));
     }
   });
 
   return {
-    session,
+    session: steps,
     stepIndex: 0,
     swipedUpIds: [],
     swipedDownIds: [],

@@ -14,6 +14,7 @@ import {
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
 import { GhostMeaning, GhostRevenge, MasteredWordRecord, PlayerProgress, DailyChallengeState, DailyResult } from '../game/types';
+import { generateHunt } from '../game/huntGenerator';
 import {
   createDailyState,
   submitDailyWrongSwipe as dailyWrongFn,
@@ -78,7 +79,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startGame: () => {
     resetPollyBudget();
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
-    set({ game: createGame(runStartGhostWordIds), ghostRevenge: null, runStartGhostWordIds });
+    const steps = generateHunt({
+      masteredWords: get().progress.masteredWords.map(m => m.word),
+      ghostWordIds: runStartGhostWordIds,
+    });
+    set({ game: createGame(runStartGhostWordIds, steps), ghostRevenge: null, runStartGhostWordIds });
   },
 
   submitSwipeUp: (maskId) =>
