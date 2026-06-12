@@ -15,8 +15,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'light',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'Stadium crowd ripple',
-    hiddenTrap:    'Sea breeze arrives',
     masks: [
       { id: 'wave_hand',       phrase: 'Goodbye and hello',           isReal: true  },
       { id: 'wave_surfer',     phrase: "Surfer's perfect ride",        isReal: true  },
@@ -38,8 +36,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'light',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'Not a cloud above',
-    hiddenTrap:    'Top of the class',
     masks: [
       { id: 'fine_soso',       phrase: "So-so, it'll do",    isReal: true  },
       { id: 'fine_courthouse', phrase: 'Courthouse payment', isReal: true  },
@@ -61,8 +57,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'light',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'Under the supervision of',
-    hiddenTrap:    'Register drawer opens',
     masks: [
       { id: 'charge_phone',    phrase: 'Phones always need it',  isReal: true  },
       { id: 'charge_price',    phrase: 'Price gets added',       isReal: true  },
@@ -84,8 +78,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'light',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'Placement of strategy',
-    hiddenTrap:    'Grows toward light',
     masks: [
       { id: 'plant_water',     phrase: 'Best results when watered', isReal: true  },
       { id: 'plant_nuclear',   phrase: 'Nuclear factory floor',     isReal: true  },
@@ -107,8 +99,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'medium',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: "Ping-pong's little court",
-    hiddenTrap:    'Meeting gets cancelled',
     masks: [
       { id: 'table_elbows',    phrase: 'Elbows get judged here', isReal: true  },
       { id: 'table_multi',     phrase: 'Multiplication chart',   isReal: true  },
@@ -129,8 +119,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'medium',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: "Column's decorative crown",
-    hiddenTrap:    'Mayor makes speech',
     masks: [
       { id: 'capital_states',  phrase: 'All states have one',        isReal: true  },
       { id: 'capital_money',   phrase: 'Money starts a business',    isReal: true  },
@@ -152,8 +140,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'medium',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: "Logic's true-or-false unit",
-    hiddenTrap:    'Written essay',
     masks: [
       { id: 'sentence_period',   phrase: 'Ends with a period',    isReal: true  },
       { id: 'sentence_criminal', phrase: 'Criminal consequence',  isReal: true  },
@@ -174,8 +160,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'medium',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'Take the wheel awhile',
-    hiddenTrap:    'Dark clouds gather',
     masks: [
       { id: 'spell_letters',  phrase: 'Letters fall in place', isReal: true  },
       { id: 'spell_cold',     phrase: 'Cold snap',             isReal: true  },
@@ -197,8 +181,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'medium',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'Heavy hauler breed',
-    hiddenTrap:    'Rider mounts a stallion',
     masks: [
       { id: 'draft_rough',    phrase: 'Rough written version',    isReal: true  },
       { id: 'draft_window',   phrase: 'Window open feeling',      isReal: true  },
@@ -220,8 +202,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'medium',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'One slip, whole drop',
-    hiddenTrap:    'Fancy job title',
     masks: [
       { id: 'rank_general',  phrase: 'General above colonel',  isReal: true  },
       { id: 'rank_soldiers', phrase: 'Soldiers in a row',      isReal: true  },
@@ -243,8 +223,6 @@ export const SESSION: SessionStep[] = [
     hapticTier: 'heavy',
     tileStagger: 80,
     meanings: [],
-    hiddenMeaning: 'Sleeping without stirring',
-    hiddenTrap:    'Pillow swallows noise',
     masks: [
       { id: 'sound_silence', phrase: 'Breaks the silence',        isReal: true  },
       { id: 'sound_advice',  phrase: 'Great advice',              isReal: true  },

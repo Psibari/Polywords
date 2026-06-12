@@ -104,8 +104,6 @@ export type WordStep = {
   };
   hiddenMeaning?:    string;
   hiddenTrap?:       string;
-  hiddenEmoji?:      string;
-  hiddenTrapEmoji?:  string;
   slangEra?:         SlangEra;
   slangMaskId?:      string;
   difficulty?:               'easy' | 'medium' | 'hard';

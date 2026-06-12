@@ -377,6 +377,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const gateTriggeredRef      = useRef(false);
   const ghostJudgedCorrectRef = useRef(false);
   const wrongSwipeOccurred    = useRef(false);
+  const mysteryIsRealRef      = useRef(true);
 
   const ghost = store.runStartGhostWordIds.includes(step.word)
     ? store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
@@ -610,10 +611,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const hasHidden = !!step.hiddenMeaning;
 
   const hiddenRealMask: Mask | null = step.hiddenMeaning
-    ? { id: `${step.word}_hidden_real`, emoji: step.hiddenEmoji ?? '✨', phrase: step.hiddenMeaning, isReal: true }
+    ? { id: `${step.word}_hidden_real`, phrase: step.hiddenMeaning, isReal: true }
     : null;
   const hiddenTrapMask: Mask | null = step.hiddenMeaning
-    ? { id: `${step.word}_hidden_trap`, emoji: step.hiddenTrapEmoji ?? '🪤', phrase: step.hiddenTrap ?? 'Not this one', isReal: false }
+    ? { id: `${step.word}_hidden_trap`, phrase: step.hiddenTrap ?? 'Not this one', isReal: false }
     : null;
 
   // Gate phase
@@ -626,7 +627,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [releasedHiddenTileCount, setReleasedHiddenTileCount] = useState(0);
   const [landedHiddenTileCount, setLandedHiddenTileCount] = useState(0);
   const [failedHiddenTileId, setFailedHiddenTileId] = useState<string | null>(null);
-  const [ghostMergeVisible, setGhostMergeVisible] = useState(false);
 
   // Gate animated values: transforms/opacity use native driver; border color stays non-native.
   const gateScaleAnim       = useRef(new Animated.Value(1)).current;
@@ -640,28 +640,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // Final tile drop (native: transform only)
   const splitTile1TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
-  const splitTile2TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
   const splitCompletedRef = useRef(false);
 
   // Final tile border pulse (non-native)
   const finalBorder1Anim = useRef(new Animated.Value(0)).current;
-  const finalBorder2Anim = useRef(new Animated.Value(0)).current;
-
-  // Wrong-fail: both tiles shrink + fade (native)
-  const wrongFailScaleAnim   = useRef(new Animated.Value(1)).current;
-  const wrongFailOpacityAnim = useRef(new Animated.Value(1)).current;
-  const failedHiddenTransX   = useRef(new Animated.Value(0)).current;
-  const failedHiddenTransY   = useRef(new Animated.Value(0)).current;
-  const failedHiddenJitterX  = useRef(new Animated.Value(0)).current;
-  const failedHiddenScale    = useRef(new Animated.Value(1)).current;
-  const failedHiddenOpacity  = useRef(new Animated.Value(1)).current;
-  const remainingHiddenTransY = useRef(new Animated.Value(0)).current;
-  const remainingHiddenScale = useRef(new Animated.Value(1)).current;
-  const remainingHiddenOpacity = useRef(new Animated.Value(1)).current;
-  const ghostMergeOpacity    = useRef(new Animated.Value(0)).current;
-  const ghostMergeScale      = useRef(new Animated.Value(0.82)).current;
-  const hauntCopyOpacity     = useRef(new Animated.Value(0)).current;
-  const wordGhostOpacity     = useRef(new Animated.Value(0)).current;
 
   // Mastered celebration
   const masterHeroScale      = useRef(new Animated.Value(1)).current;
@@ -770,6 +752,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     gateTriggeredRef.current      = false;
     ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
+    mysteryIsRealRef.current      = true;
     setTileStates(buildInitialTileStates(step));
     // Deck reset
     const freshIds = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
@@ -810,7 +793,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setReleasedHiddenTileCount(0);
     setLandedHiddenTileCount(0);
     setFailedHiddenTileId(null);
-    setGhostMergeVisible(false);
     setMasterStampVisible(false);
     gateScaleAnim.setValue(1);
     gateTranslateYAnim.setValue(0);
@@ -821,23 +803,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     doorRightTransXAnim.setValue(0);
     doorsOpacityAnim.setValue(1);
     splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
-    splitTile2TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
     finalBorder1Anim.setValue(0);
-    finalBorder2Anim.setValue(0);
-    wrongFailScaleAnim.setValue(1);
-    wrongFailOpacityAnim.setValue(1);
-    failedHiddenTransX.setValue(0);
-    failedHiddenTransY.setValue(0);
-    failedHiddenJitterX.setValue(0);
-    failedHiddenScale.setValue(1);
-    failedHiddenOpacity.setValue(1);
-    remainingHiddenTransY.setValue(0);
-    remainingHiddenScale.setValue(1);
-    remainingHiddenOpacity.setValue(1);
-    ghostMergeOpacity.setValue(0);
-    ghostMergeScale.setValue(0.82);
-    hauntCopyOpacity.setValue(0);
-    wordGhostOpacity.setValue(0);
     masterHeroScale.setValue(1);
     masterHeroTransY.setValue(0);
     masterAllFadeAnim.setValue(1);
@@ -1042,17 +1008,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   function triggerFinalTilesDrop() {
     if (!hiddenRealMask || !hiddenTrapMask) return;
+    const useReal = Math.random() < 0.5;
+    mysteryIsRealRef.current = useReal;
+    const mysteryMask = useReal ? hiddenRealMask : hiddenTrapMask;
+
     setGatePhase('tiles');
-    setFinalTileStates(new Map([
-      [hiddenRealMask.id, 'idle'],
-      [hiddenTrapMask.id, 'idle'],
-    ]));
+    setFinalTileStates(new Map([[mysteryMask.id, 'idle']]));
     setReleasedHiddenTileCount(1);
     setLandedHiddenTileCount(0);
     splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
-    splitTile2TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
     finalBorder1Anim.setValue(0);
-    finalBorder2Anim.setValue(0);
 
     Animated.spring(splitTile1TransY, {
       toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
@@ -1064,20 +1029,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
       ]).start();
     });
-
-    setTimeout(() => {
-      setReleasedHiddenTileCount(2);
-      Animated.spring(splitTile2TransY, {
-        toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
-      }).start(({ finished: secondFinished }) => {
-        if (!secondFinished) return;
-        setLandedHiddenTileCount(2);
-        Animated.sequence([
-          Animated.timing(finalBorder2Anim, { toValue: 0.5, duration: 120, useNativeDriver: false }),
-          Animated.timing(finalBorder2Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
-        ]).start();
-      });
-    }, 150);
   }
 
   function buildHauntedDetail(failedMaskId?: string): string | undefined {
@@ -1130,102 +1081,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     wrongSwipeOccurred.current = true;
     setGatePhase('wrongFail');
     setFailedHiddenTileId(failedMaskId);
-    setGhostMergeVisible(false);
-
-    const failedIsFirst = failedMaskId === hiddenRealMask?.id;
-    const mergeOffset = (FINAL_TILE_H + FINAL_TILE_GAP) / 2;
-    const failedMergeY = failedIsFirst ? mergeOffset : -mergeOffset;
-    const remainingMergeY = failedIsFirst ? -mergeOffset : mergeOffset;
-
-    failedHiddenTransX.setValue(0);
-    failedHiddenTransY.setValue(0);
-    failedHiddenJitterX.setValue(0);
-    failedHiddenScale.setValue(1);
-    failedHiddenOpacity.setValue(1);
-    remainingHiddenTransY.setValue(0);
-    remainingHiddenScale.setValue(1);
-    remainingHiddenOpacity.setValue(1);
-    ghostMergeOpacity.setValue(0);
-    ghostMergeScale.setValue(0.82);
-    hauntCopyOpacity.setValue(0);
-    wordGhostOpacity.setValue(0);
     firePollyEvent('hiddenMasterFailed');
-
-    Animated.parallel([
-      Animated.timing(failedHiddenTransX, {
-        toValue: failedIsFirst ? 94 : 112, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true,
-      }),
-      Animated.timing(failedHiddenOpacity, {
-        toValue: 0.74, duration: 220, useNativeDriver: true,
-      }),
-      Animated.timing(failedHiddenScale, {
-        toValue: 0.96, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true,
-      }),
-    ]).start();
-
-    setTimeout(() => {
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(failedHiddenJitterX, { toValue: -9, duration: 45, useNativeDriver: true }),
-          Animated.timing(failedHiddenJitterX, { toValue: 12, duration: 45, useNativeDriver: true }),
-          Animated.timing(failedHiddenJitterX, { toValue: -6, duration: 45, useNativeDriver: true }),
-          Animated.timing(failedHiddenJitterX, { toValue: 0, duration: 45, useNativeDriver: true }),
-        ]),
-        Animated.sequence([
-          Animated.timing(failedHiddenOpacity, { toValue: 0.28, duration: 65, useNativeDriver: true }),
-          Animated.timing(failedHiddenOpacity, { toValue: 0.82, duration: 60, useNativeDriver: true }),
-          Animated.timing(failedHiddenOpacity, { toValue: 0.38, duration: 70, useNativeDriver: true }),
-          Animated.timing(failedHiddenOpacity, { toValue: 0.66, duration: 80, useNativeDriver: true }),
-        ]),
-        Animated.sequence([
-          Animated.timing(failedHiddenScale, { toValue: 1.04, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(failedHiddenScale, { toValue: 0.91, duration: 110, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        ]),
-      ]).start();
-      triggerShardBurst(containerWidthRef.current / 2, wordScreenY + 110, 14);
-    }, 260);
-
-    setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(failedHiddenTransX, {
-          toValue: 0, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(failedHiddenTransY, {
-          toValue: failedMergeY, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(remainingHiddenTransY, {
-          toValue: remainingMergeY, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(failedHiddenScale, {
-          toValue: 0.82, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(remainingHiddenScale, {
-          toValue: 0.88, duration: 360, easing: Easing.inOut(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(failedHiddenOpacity, { toValue: 0.42, duration: 360, useNativeDriver: true }),
-        Animated.timing(remainingHiddenOpacity, { toValue: 0.56, duration: 360, useNativeDriver: true }),
-        Animated.sequence([
-          Animated.timing(wordGhostOpacity, { toValue: 0.46, duration: 80, useNativeDriver: true }),
-          Animated.timing(wordGhostOpacity, { toValue: 0.12, duration: 80, useNativeDriver: true }),
-          Animated.timing(wordGhostOpacity, { toValue: 0.52, duration: 90, useNativeDriver: true }),
-          Animated.timing(wordGhostOpacity, { toValue: 0.24, duration: 130, useNativeDriver: true }),
-        ]),
-      ]).start();
-    }, 660);
-
-    setTimeout(() => {
-      setGhostMergeVisible(true);
-      Animated.parallel([
-        Animated.timing(failedHiddenOpacity, { toValue: 0, duration: 160, useNativeDriver: true }),
-        Animated.timing(remainingHiddenOpacity, { toValue: 0, duration: 160, useNativeDriver: true }),
-        Animated.timing(ghostMergeOpacity, { toValue: 1, duration: 170, useNativeDriver: true }),
-        Animated.spring(ghostMergeScale, { toValue: 1, damping: 7, stiffness: 190, useNativeDriver: true }),
-      ]).start();
-    }, 1080);
-
-    setTimeout(() => {
-      Animated.timing(hauntCopyOpacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
-    }, 1420);
+    triggerShardBurst(containerWidthRef.current / 2, wordScreenY + 110, 14);
 
     if (isHaunt) {
       setTimeout(() => {
@@ -1241,7 +1098,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           Animated.timing(stillHauntedOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start();
           setTimeout(() => setStillHauntedVisible(false), 240);
         }, 1400);
-      }, 1500);
+      }, 400);
     }
 
     setTimeout(() => {
@@ -1253,7 +1110,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           store.completeWord();
         }
       );
-    }, 2900);
+    }, 800);
   }
 
   function playSystemStingerWord(word: string, peakScale: number) {
@@ -1523,11 +1380,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   function handleFinalTileSwipeUp(maskId: string) {
     if (wordOutcome !== 'none') return;
     resetHesitation();
-    const isReal = maskId === hiddenRealMask?.id;
+    const isReal = mysteryIsRealRef.current;
     if (isReal) {
+      splitCompletedRef.current = true;
       setFinalTileStates(prev => new Map(prev).set(maskId, 'correct'));
       if (hiddenRealMask) triggerAbsorption(hiddenRealMask.phrase);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => triggerMastered(), 200);
     } else {
       wrongSwipeOccurred.current = true;
       playSfx('trapWrong');
@@ -1543,11 +1402,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   function handleFinalTileSwipeRight(maskId: string) {
     if (wordOutcome !== 'none') return;
     resetHesitation();
-    const isReal = maskId === hiddenRealMask?.id;
+    const isReal = mysteryIsRealRef.current;
     if (!isReal) {
+      splitCompletedRef.current = true;
       playSfx('trapShatter');
       setFinalTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => triggerMastered(), 200);
     } else {
       wrongSwipeOccurred.current = true;
       playSfx('trapWrong');
@@ -1559,17 +1420,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       triggerWrongFail(maskId);
     }
   }
-
-  // ── Final tile completion ─────────────────────────────────────
-  useEffect(() => {
-    if (gatePhase !== 'tiles' || splitCompletedRef.current || !hiddenRealMask || !hiddenTrapMask) return;
-    const realState = finalTileStates.get(hiddenRealMask.id);
-    const trapState = finalTileStates.get(hiddenTrapMask.id);
-    if (realState === 'correct' && trapState === 'trap-caught') {
-      splitCompletedRef.current = true;
-      setTimeout(() => triggerMastered(), 200);
-    }
-  }, [finalTileStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── completion check ─────────────────────────────────────────
   useEffect(() => {
@@ -1697,30 +1547,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   });
   const masteryWordCenterY = Math.max(170, Dimensions.get('window').height * 0.48);
   const vaultBloomX = Math.max(28, containerWidth - 86);
-  const firstHiddenFailed = failedHiddenTileId === hiddenRealMask?.id;
-  const secondHiddenFailed = failedHiddenTileId === hiddenTrapMask?.id;
-  const firstHiddenWrongTransforms = gatePhase === 'wrongFail' && failedHiddenTileId
-    ? [
-        { translateY: splitTile1TransY },
-        { translateY: firstHiddenFailed ? failedHiddenTransY : remainingHiddenTransY },
-        ...(firstHiddenFailed ? [{ translateX: failedHiddenTransX }, { translateX: failedHiddenJitterX }] : []),
-        { scale: firstHiddenFailed ? failedHiddenScale : remainingHiddenScale },
-      ]
-    : [{ translateY: splitTile1TransY }];
-  const secondHiddenWrongTransforms = gatePhase === 'wrongFail' && failedHiddenTileId
-    ? [
-        { translateY: splitTile2TransY },
-        { translateY: secondHiddenFailed ? failedHiddenTransY : remainingHiddenTransY },
-        ...(secondHiddenFailed ? [{ translateX: failedHiddenTransX }, { translateX: failedHiddenJitterX }] : []),
-        { scale: secondHiddenFailed ? failedHiddenScale : remainingHiddenScale },
-      ]
-    : [{ translateY: splitTile2TransY }];
-  const firstHiddenWrongOpacity = gatePhase === 'wrongFail' && failedHiddenTileId
-    ? (firstHiddenFailed ? failedHiddenOpacity : remainingHiddenOpacity)
-    : 1;
-  const secondHiddenWrongOpacity = gatePhase === 'wrongFail' && failedHiddenTileId
-    ? (secondHiddenFailed ? failedHiddenOpacity : remainingHiddenOpacity)
-    : 1;
+  const mysteryMask = mysteryIsRealRef.current ? hiddenRealMask : hiddenTrapMask;
   const inputLocked = wordOutcome !== 'none';
 
   return (
@@ -1848,29 +1675,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   position: 'absolute',
                   left: 0, right: 0,
                   textAlign: 'center',
-                },
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {step.word}
-            </Animated.Text>
-            {/* Ghost birth dull flicker */}
-            <Animated.Text
-              pointerEvents="none"
-              style={[
-                styles.word,
-                isBoss && styles.wordBoss,
-                {
-                  color: '#8D86B8',
-                  opacity: wordGhostOpacity,
-                  position: 'absolute',
-                  left: 0, right: 0,
-                  textAlign: 'center',
-                  textShadowColor: 'rgba(123,45,139,0.55)',
-                  textShadowOffset: { width: 0, height: 0 },
-                  textShadowRadius: 14,
                 },
               ]}
               numberOfLines={1}
@@ -2022,21 +1826,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               </View>
             )}
 
-            {(gatePhase === 'tiles' || gatePhase === 'wrongFail') && hiddenRealMask && hiddenTrapMask && (
-              <Animated.View style={[
-                styles.finalHiddenTileStack,
-                {
-                  transform: [{ scale: wrongFailScaleAnim }],
-                  opacity: wrongFailOpacityAnim,
-                },
-              ]}>
+            {(gatePhase === 'tiles' || gatePhase === 'wrongFail') && mysteryMask && (
+              <View style={styles.finalHiddenTileStack}>
                 {releasedHiddenTileCount >= 1 && (
                   <Animated.View
                     pointerEvents={gatePhase === 'wrongFail' ? 'none' : landedHiddenTileCount >= 1 ? 'auto' : 'none'}
-                    style={{
-                      opacity: firstHiddenWrongOpacity,
-                      transform: firstHiddenWrongTransforms,
-                    }}
+                    style={{ transform: [{ translateY: splitTile1TransY }] }}
                   >
                     <Animated.View style={[
                       styles.finalHiddenTileFrame,
@@ -2052,10 +1847,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       },
                     ]}>
                       <SwipeMask
-                        mask={hiddenRealMask}
-                        state={finalTileStates.get(hiddenRealMask.id) ?? 'idle'}
-                        onSwipeUp={() => handleFinalTileSwipeUp(hiddenRealMask.id)}
-                        onSwipeDown={() => handleFinalTileSwipeRight(hiddenRealMask.id)}
+                        mask={mysteryMask}
+                        state={finalTileStates.get(mysteryMask.id) ?? 'idle'}
+                        onSwipeUp={() => handleFinalTileSwipeUp(mysteryMask.id)}
+                        onSwipeDown={() => handleFinalTileSwipeRight(mysteryMask.id)}
                         onSwipeReveal={() => {}}
                         revealable={false}
                         disabled={inputLocked}
@@ -2073,72 +1868,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     </Animated.View>
                   </Animated.View>
                 )}
-
-                {releasedHiddenTileCount >= 2 && (
-                  <Animated.View
-                    pointerEvents={gatePhase === 'wrongFail' ? 'none' : landedHiddenTileCount >= 2 ? 'auto' : 'none'}
-                    style={{
-                      marginTop: FINAL_TILE_GAP,
-                      opacity: secondHiddenWrongOpacity,
-                      transform: secondHiddenWrongTransforms,
-                    }}
-                  >
-                    <Animated.View style={[
-                      styles.finalHiddenTileFrame,
-                      {
-                        borderColor: finalBorder2Anim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['rgba(245,200,66,0.30)', 'rgba(245,200,66,0.80)'],
-                        }),
-                        shadowOpacity: finalBorder2Anim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.06, 0.20],
-                        }),
-                      },
-                    ]}>
-                      <SwipeMask
-                        mask={hiddenTrapMask}
-                        state={finalTileStates.get(hiddenTrapMask.id) ?? 'idle'}
-                        onSwipeUp={() => handleFinalTileSwipeUp(hiddenTrapMask.id)}
-                        onSwipeDown={() => handleFinalTileSwipeRight(hiddenTrapMask.id)}
-                        onSwipeReveal={() => {}}
-                        revealable={false}
-                        disabled={inputLocked}
-                        isSpecialSplit={true}
-                        tileHeight={FINAL_TILE_H}
-                        entryDelay={0}
-                        onEffect={handleEffect}
-                        onSwipeStart={() => playSfx('tileSwipe')}
-                        onPressHoldStart={() => playSfx('pressHoldStart')}
-                        wordY={wordScreenY}
-                        splitBorderColor="rgba(245,200,66,0.80)"
-                        splitTextColor="#FFFFFF"
-                        splitBackgroundColor="#0F0D2A"
-                      />
-                    </Animated.View>
-                  </Animated.View>
-                )}
-
-                {ghostMergeVisible && (
-                  <Animated.View
-                    pointerEvents="none"
-                    style={[
-                      styles.hauntBirthTile,
-                      {
-                        opacity: ghostMergeOpacity,
-                        transform: [{ scale: ghostMergeScale }],
-                      },
-                    ]}
-                  >
-                    <View style={styles.hauntBirthHaze} />
-                    <Text style={styles.hauntBirthTitle}>MASTER THE WORD</Text>
-                    <Text style={styles.hauntBirthFrom}>{`From ${step.word}`}</Text>
-                    <Animated.Text style={[styles.hauntBirthCopy, { opacity: hauntCopyOpacity }]}>
-                      You left me behind.
-                    </Animated.Text>
-                  </Animated.View>
-                )}
-              </Animated.View>
+              </View>
             )}
             </Animated.View>
           </Animated.View>
