@@ -162,6 +162,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const dailyResult       = useGameStore(s => s.dailyResult);
   const storeWrongSwipe   = useGameStore(s => s.submitDailyWrongSwipe);
   const storeCorrectSwipe = useGameStore(s => s.submitDailyCorrectSwipe);
+  const storeTargetRejected = useGameStore(s => s.submitDailyTargetRejected);
 
   // ── local deck state ────────────────────────────────────────
   const [remaining, setRemaining]     = useState<string[]>([]);
@@ -235,6 +236,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   // ── Correct rejection (RIGHT on distractor) ──────────────────
+  function handleTargetRejected(candidate: string) {
+    if (completedRef.current || inputLocked) return;
+    completedRef.current = true;
+    setInputLocked(true);
+    setTileStates(prev => new Map(prev).set(candidate, 'wrong'));
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    setTimeout(() => {
+      storeTargetRejected();
+    }, 400);
+  }
+
   function handleReject(candidate: string) {
     if (completedRef.current || inputLocked) return;
     setTileStates(prev => new Map(prev).set(candidate, 'trap-caught'));
@@ -292,13 +304,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                   if (candidate !== round.word) {
                     handleReject(candidate);
                   } else {
-                    setTileStates(prev =>
-                      new Map(prev).set(candidate, 'wrong'));
-                    setTimeout(() => {
-                      setRemaining(prev =>
-                        prev.filter(c => c !== candidate));
-                      storeWrongSwipe(candidate);
-                    }, 400);
+                    handleTargetRejected(candidate);
                   }
                 }}
                 onSwipeReveal={() => {}}

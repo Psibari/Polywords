@@ -125,6 +125,64 @@ export function submitDailyWrongSwipe(
   };
 }
 
+// ── Target rejected ──────────────────────────────────────────
+
+function appendMissedDailyResult(
+  results: DailyRoundResult[],
+  round: DailyWord,
+  wrongSwipes: number,
+): DailyRoundResult[] {
+  const alreadyRecorded = results.some(r => r.word === round.word && r.tier === round.tier);
+  if (alreadyRecorded) return results;
+
+  return [
+    ...results,
+    {
+      word: round.word,
+      tier: round.tier,
+      status: 'missed',
+      wrongSwipes,
+    },
+  ];
+}
+
+export function submitDailyTargetRejected(
+  state: DailyChallengeState,
+): DailyChallengeState {
+  if (state.status !== 'playing') return state;
+
+  const round = state.rounds[state.currentRound];
+  if (!round) return state;
+
+  const newLives = Math.max(state.lives - 1, 0);
+  let results = appendMissedDailyResult(state.results, round, 1);
+
+  if (newLives === 0) {
+    for (let i = state.currentRound + 1; i < state.rounds.length; i++) {
+      results = appendMissedDailyResult(results, state.rounds[i], 0);
+    }
+
+    return {
+      ...state,
+      lives: newLives,
+      results,
+      status: 'complete',
+      currentRound: Math.min(state.currentRound, state.rounds.length - 1),
+    };
+  }
+
+  const nextRound = state.currentRound + 1;
+  const isComplete = nextRound >= state.rounds.length;
+
+  return {
+    ...state,
+    lives: newLives,
+    results,
+    currentRound: isComplete ? state.currentRound : nextRound,
+    status: isComplete ? 'complete' : 'playing',
+  };
+}
+
 // ── Correct swipe ────────────────────────────────────────────
 
 export function submitDailyCorrectSwipe(

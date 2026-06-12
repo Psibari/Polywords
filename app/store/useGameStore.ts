@@ -18,6 +18,7 @@ import {
   createDailyState,
   submitDailyWrongSwipe as dailyWrongFn,
   submitDailyCorrectSwipe as dailyCorrectFn,
+  submitDailyTargetRejected as dailyTargetRejectedFn,
   buildDailyResult,
   getTodayDateString,
 } from '../game/dailyChallengeEngine';
@@ -62,6 +63,7 @@ type GameStore = {
   startDailyChallenge:      () => void;
   submitDailyWrongSwipe:    (candidate: string) => void;
   submitDailyCorrectSwipe:  () => void;
+  submitDailyTargetRejected: () => void;
   completeDailyChallenge:   () => void;
   loadDailyResult:          () => Promise<void>;
 };
@@ -234,6 +236,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const daily = get().daily;
     if (!daily || daily.status !== 'playing') return;
     const next = dailyCorrectFn(daily);
+    set({ daily: next });
+    if (next.status === 'complete') {
+      get().completeDailyChallenge();
+    }
+  },
+
+  submitDailyTargetRejected: () => {
+    const daily = get().daily;
+    if (!daily || daily.status !== 'playing') return;
+    const next = dailyTargetRejectedFn(daily);
     set({ daily: next });
     if (next.status === 'complete') {
       get().completeDailyChallenge();
