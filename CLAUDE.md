@@ -1,5 +1,5 @@
 ﻿# POLYWORDS â€” CLAUDE.md
-### Ground Truth for Claude Code Â· Updated June 11, 2026
+### Ground Truth for Claude Code · Updated June 12, 2026
 
 ---
 
@@ -40,6 +40,15 @@ Patch 20 wired the remaining supported SFX names through clean tile gesture hook
 Patch 21 complete: player progress persistence and Word Vault real data wiring implemented. `app/store/useGameStore.ts` gained `PROGRESS_KEY = 'polywords_progress'`, a `progress: PlayerProgress` state slice (`masteredWords[]`, `personalBest`, `runsCompleted`), and actions `recordMastery`, `recordRunComplete`, `loadProgress`. All progress persists via AsyncStorage using the same pattern as the ghost system. `app/screens/VaultScreen.tsx` was rewired to read real persisted data: Mastered Words section renders real plaque entries with hidden meaning found and date mastered, Ghost Words section renders real ghosts with runsMissed count (phrase never shown), Hidden Meanings section renders entries with non-empty `hiddenMeaningFound`, Stats section shows personal best and runs completed. `app/game/types.ts` gained `MasteredWordRecord` type. `app/App.tsx` loads both `loadGhosts()` and `loadProgress()` on mount. TypeScript passed. Device sanity passed.
 
 Patch 22 complete: Haunt Word return system implemented. `app/game/session.ts` gained `buildRunSession(ghostWordIds: string[]): SessionStep[]` which deep-copies `SESSION`, identifies the first matching non-boss ghost word, swaps it into index 9 (word position 10, 1-based), sets `isHauntReturn: true` on that step, and leaves boss positions 10 and 11 (indexes 10–11) untouched. Boss is always position 12. `app/store/useGameStore.ts` `startGame()` now passes run-start ghost word ids into `createGame()` which calls `buildRunSession()`. `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts` gained haunt entrance banner ("Guess who's back."), HAUNT BROKEN stamp on mastery of a haunt word, STILL HAUNTED stamp when a haunt word ghosts again, and `'hauntFailed'` event which fires Polly pop-in "BBBLAAAAHHAHAHA!" via `endOfRoundPopIn`. Double `impactAsync(Medium)` haptic fires at haunt word entrance. Haunt depth cards tinted purple (`#130D2A`). TypeScript passed.
+
+Patch 28B complete: Daily Challenge screen implemented.
+- New file `app/screens/DailyChallengeScreen.tsx`: 3-round identify-the-word mode. Three meanings are shown in a card; shuffled candidate word tiles are stacked using the same `SwipeMask` deck system as the main arena. UP claims the correct word, RIGHT rejects a distractor. Two shared lives span all 3 rounds. Results overlay shows title (WORD MASTER / SHARP / SURVIVED / HAUNTED), solved/missed pills per word, and a native Share sheet.
+- `App.tsx` gained `Daily` stack route (`headerShown: false`).
+- `HomeScreen.tsx` Daily Challenge card is now a live `Pressable` wired to `startDailyChallenge()` + `navigation.navigate('Daily')`. It reads `challengeNumber` and `alreadyPlayed` state from the store and shows result copy when already played.
+- All daily engine logic (`app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`) and store actions (`startDailyChallenge`, `submitDailyWrongSwipe`, `submitDailyCorrectSwipe`, `completeDailyChallenge`, `loadDailyResult`) were already complete before this patch.
+- `key={topId}` on `SwipeMask` forces remount per card change — same pattern as MaskBoard.
+- Only React Native `Animated` used in the new screen; no new Reanimated imports.
+- TypeScript passed with `npx.cmd tsc --noEmit`.
 
 Patch 23 revised: card deck tile system fully rebuilt. WRONG SWIPES ARE NOW PERMANENT — tile flies away immediately, no snap-back, no retry. One decision per tile, permanent consequence. `'snap-back'` state REMOVED from `SwipeMaskState` in `SwipeMask.tsx` and all snap-back handler code removed from `MaskBoard.tsx`. The deck model is unchanged: all tiles arrive simultaneously stacked, top card only is interactive, correct/trap-caught tiles remove from deck at 180ms, wrong tiles remove from deck at 400ms (after exit animation has started). Gate is now BOSS ONLY — words 1–11 never open the Master Gate and never have a hidden tile. MASTERED is BOSS ONLY — only word 12 (boss) can be vaulted per hunt. GHOST is BOSS ONLY — only the boss word can create a true ghost. Non-boss words 1–11: deck empty → `triggerWordExit()` (word scales up and fades, 1050ms total) → `store.completeWord()`. No overlay. No gate. No mastery. No ghost. Boss word: perfect visible clear → gate opens → ONE mystery tile drops (randomly the real hidden meaning or the hidden trap, determined by `mysteryIsRealRef`) → correct judgment = MASTERED → wrong = GHOST. Boss with any wrong swipe on visible masks → gate permanently locked → silent advance. The old two-tile split gate system is replaced by a single mystery tile. The complex ghost merge animation (`ghostMergeOpacity`, `splitTile2TransY`, `ghostMergeVisible`, etc.) was removed. `triggerWrongFail` simplified to: shard burst → HAUNTED overlay at 800ms. `triggerWordExit()` added as a new function for non-boss word transitions. TypeScript passed. Device sanity passed.
 
@@ -872,6 +881,9 @@ app/game/types.ts                    All TypeScript types
 app/store/useGameStore.ts            Zustand store
 app/screens/GameScreen.tsx           Main game screen
 app/screens/ResultsScreen.tsx        End-of-run results
+app/screens/DailyChallengeScreen.tsx Daily Challenge screen
+app/game/dailyChallengeEngine.ts     Daily session builder, engine functions, result builder
+app/game/dailyPool.ts                Daily word pool (tiered)
 app/utils/SoundEngine.ts             WAV synthesis
 tools/content/mask-rewriter          Local-only content rewrite/audit tool; never wire into player app
 ```
@@ -1109,7 +1121,8 @@ Current implementation:
 26. Patch 22 Haunt Word return system (complete)
 27. Patch 23 revised: permanent wrong swipes, boss-only gate, single mystery tile, non-boss word exit transition (complete)
 28. Hunt 1 GPS-compliant session content (complete)
+29. Daily Challenge screen — HomeScreen card wired, DailyChallengeScreen.tsx, Daily route (Patch 28B complete)
 
 ---
 
-*POLYWORDS CLAUDE.md Â· Pete DiBari Â· June 11, 2026*
+*POLYWORDS CLAUDE.md · Pete DiBari · June 12, 2026*

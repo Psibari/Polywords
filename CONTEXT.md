@@ -1,5 +1,5 @@
 ﻿# POLYWORDS â€” CONTEXT.md
-### Quick-Reference Session Briefing Â· June 11, 2026
+### Quick-Reference Session Briefing · June 12, 2026
 
 Paste this at the start of any Claude Code session to restore full context.
 
@@ -315,6 +315,7 @@ Completed and committed:
   - Hidden Truth Rule is sacred.
   - Full pacing automation must not be implemented until metadata/test words exist.
 - Patch 12C complete: Home screen rebuilt as polished arcade lobby with PLAY, Daily Challenge placeholder, Vault preview, and Continue Run placeholder.
+- Patch 28B complete: Daily Challenge screen wired and implemented. `HomeScreen.tsx` Daily card is now a live `Pressable` showing challenge number, played/unplayed state, and today's result. `App.tsx` gained a `Daily` stack route. New `app/screens/DailyChallengeScreen.tsx`: 3-round identify-the-word mode — three meanings shown per round, candidate word tiles stacked using the same `SwipeMask` deck system, UP claims the correct word, RIGHT rejects a distractor, two lives shared across all rounds. Results overlay shows title (WORD MASTER / SHARP / SURVIVED / HAUNTED), per-word pills, and native share sheet. Daily engine and store actions were pre-existing.
 - Patch 12D complete: Settings/Profile shell added. Profile belongs inside Settings for MVP and should not be a bottom nav tab. Settings rows are static placeholders.
 - Patch 12E complete: Bottom navigation shell added with Home / Play / Vault / Settings. Nav is visible outside active gameplay only and hidden on `GameScreen`. Play uses `startGame()` then `navigation.navigate('Game')`.
 - Patch 12F complete: Bottom nav spacing and active-state polish. Home, Vault, and Settings use bottom padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
@@ -353,7 +354,6 @@ Other remaining work:
 3. Word Vault Ranks page and leaderboard.
 4. `expo-av` to `expo-audio` migration.
 5. Full 739-word database GPS metadata tagging.
-6. Daily Challenge (date-seeded, one attempt per day, shareable result).
 
 ---
 ## Cut List (Never Suggest These)
@@ -409,10 +409,13 @@ app/game/types.ts                    All TypeScript types
 app/store/useGameStore.ts            Zustand store
 app/screens/GameScreen.tsx           Main game screen
 app/screens/ResultsScreen.tsx        End-of-run results
+app/screens/DailyChallengeScreen.tsx Daily Challenge screen
+app/game/dailyChallengeEngine.ts     Daily session builder, engine functions, result builder
+app/game/dailyPool.ts                Daily word pool (tiered)
 app/utils/SoundEngine.ts             WAV synthesis
 tools/content/mask-rewriter          Local-only content rewrite/audit tool; never wire into player app
 ```
 
 ---
 
-*POLYWORDS CONTEXT.md Â· Pete DiBari Â· June 11, 2026*
+*POLYWORDS CONTEXT.md · Pete DiBari · June 12, 2026*
