@@ -45,7 +45,8 @@
             "./assets/fonts/Poppins-SemiBold.ttf"
           ]
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "extra": {
       "eas": {

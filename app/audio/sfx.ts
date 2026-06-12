@@ -1,4 +1,4 @@
-import { Audio, AVPlaybackSource } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
 export type SfxName =
   | 'uiClick'
@@ -12,94 +12,74 @@ export type SfxName =
   | 'pressHoldStart';
 
 type SfxConfig = {
-  source: AVPlaybackSource;
+  source: Parameters<typeof createAudioPlayer>[0];
   volume: number;
   cooldownMs: number;
 };
 
 const SFX: Record<SfxName, SfxConfig> = {
-  uiClick:        { source: require('../../assets/sfx/ui_click.mp3'),         volume: 0.25, cooldownMs: 80 },
-  tileSwipe:      { source: require('../../assets/sfx/tile_swipe.mp3'),       volume: 0.25, cooldownMs: 80 },
-  trapWrong:      { source: require('../../assets/sfx/trap_wrong.mp3'),       volume: 0.35, cooldownMs: 120 },
-  trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140 },
+  uiClick:        { source: require('../../assets/sfx/ui_click.mp3'),         volume: 0.25, cooldownMs: 80   },
+  tileSwipe:      { source: require('../../assets/sfx/tile_swipe.mp3'),       volume: 0.25, cooldownMs: 80   },
+  trapWrong:      { source: require('../../assets/sfx/trap_wrong.mp3'),       volume: 0.35, cooldownMs: 120  },
+  trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140  },
   mastered:       { source: require('../../assets/sfx/mastered_chime.mp3'),   volume: 0.45, cooldownMs: 2200 },
   haunted:        { source: require('../../assets/sfx/haunted_moan.mp3'),     volume: 0.30, cooldownMs: 2600 },
   pollyCall:      { source: require('../../assets/sfx/polly_call.mp3'),       volume: 0.25, cooldownMs: 1500 },
-  gateOpen:       { source: require('../../assets/sfx/gate_open.mp3'),        volume: 0.35, cooldownMs: 700 },
-  pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300 },
+  gateOpen:       { source: require('../../assets/sfx/gate_open.mp3'),        volume: 0.35, cooldownMs: 700  },
+  pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300  },
 };
 
-const sounds: Partial<Record<SfxName, Audio.Sound>> = {};
+const players: Partial<Record<SfxName, AudioPlayer>> = {};
 const lastPlayedAt: Partial<Record<SfxName, number>> = {};
 
-let preloadPromise: Promise<void> | null = null;
+let audioModeSet = false;
 
-export function preloadSfx(): Promise<void> {
-  if (preloadPromise) return preloadPromise;
+export function preloadSfx(): void {
+  if (!audioModeSet) {
+    audioModeSet = true;
+    setAudioModeAsync({
+      playsInSilentMode:    true,
+      shouldPlayInBackground: false,
+      interruptionMode:     'duckOthers',
+    }).catch(() => {});
+  }
 
-  preloadPromise = (async () => {
+  (Object.entries(SFX) as [SfxName, SfxConfig][]).forEach(([name, config]) => {
+    if (players[name]) return;
     try {
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
-      });
-
-      await Promise.all(
-        (Object.entries(SFX) as [SfxName, SfxConfig][]).map(async ([name, config]) => {
-          if (sounds[name]) return;
-          try {
-            const { sound } = await Audio.Sound.createAsync(config.source, {
-              shouldPlay: false,
-              volume: config.volume,
-            });
-            sounds[name] = sound;
-          } catch {
-            // leave key absent — will retry on next preload call
-          }
-        })
-      );
+      const player = createAudioPlayer(config.source);
+      player.volume = config.volume;
+      players[name] = player;
     } catch {
-      preloadPromise = null;
+      // leave absent — playSfx will skip silently
     }
-  })();
-
-  return preloadPromise;
+  });
 }
 
 export function playSfx(name: SfxName): void {
   const config = SFX[name];
   const now = Date.now();
-  const lastPlayed = lastPlayedAt[name] ?? 0;
-  if (now - lastPlayed < config.cooldownMs) return;
+  if ((now - (lastPlayedAt[name] ?? 0)) < config.cooldownMs) return;
 
-  const playLoaded = () => {
-    const sound = sounds[name];
-    if (!sound) return;
+  if (!players[name]) preloadSfx();
+
+  const player = players[name];
+  if (!player) return;
+
+  try {
     lastPlayedAt[name] = Date.now();
-    sound.replayAsync().catch(() => {});
-  };
-
-  if (sounds[name]) {
-    playLoaded();
-    return;
+    player.seekTo(0).catch(() => {});
+    player.play();
+  } catch {
+    // silent failure
   }
-
-  preloadSfx()
-    .then(playLoaded)
-    .catch(() => {});
 }
 
-export async function unloadSfx(): Promise<void> {
-  await Promise.all(
-    (Object.entries(sounds) as [SfxName, Audio.Sound | undefined][]).map(
-      ([, sound]) => (sound ? sound.unloadAsync().catch(() => {}) : Promise.resolve())
-    )
-  );
-
-  (Object.keys(sounds) as SfxName[]).forEach(name => {
-    delete sounds[name];
+export function unloadSfx(): void {
+  (Object.keys(players) as SfxName[]).forEach(name => {
+    try { players[name]?.remove(); } catch {}
+    delete players[name];
     delete lastPlayedAt[name];
   });
-  preloadPromise = null;
+  audioModeSet = false;
 }

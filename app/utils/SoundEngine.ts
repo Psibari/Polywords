@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
 const SAMPLE_RATE = 44100;
 
@@ -155,7 +155,7 @@ function buildRoundComplete(): string {
 
 type SoundKey = 'correctSwipe' | 'wrongBuzz' | 'shatter' | 'splitReveal' | 'roundComplete' | 'scratch';
 
-const sounds: Record<SoundKey, Audio.Sound | null> = {
+const sounds: Record<SoundKey, AudioPlayer | null> = {
   correctSwipe:  null,
   wrongBuzz:     null,
   shatter:       null,
@@ -171,10 +171,10 @@ let ready = false;
 export async function initSounds(): Promise<void> {
   if (ready) return;
 
-  await Audio.setAudioModeAsync({
-    playsInSilentModeIOS: true,
-    staysActiveInBackground: false,
-    shouldDuckAndroid: true,
+  await setAudioModeAsync({
+    playsInSilentMode:      true,
+    shouldPlayInBackground: false,
+    interruptionMode:       'duckOthers',
   });
 
   const builders: [SoundKey, () => string][] = [
@@ -186,19 +186,22 @@ export async function initSounds(): Promise<void> {
     ['scratch',       buildScratch],
   ];
 
-  await Promise.all(
-    builders.map(async ([key, build]) => {
-      const { sound } = await Audio.Sound.createAsync({ uri: build() });
-      sounds[key] = sound;
-    }),
-  );
+  builders.forEach(([key, build]) => {
+    try {
+      const player = createAudioPlayer({ uri: build() });
+      sounds[key] = player;
+    } catch {}
+  });
 
   ready = true;
 }
 
-function play(sound: Audio.Sound | null): void {
-  if (!sound) return;
-  sound.replayAsync().catch(() => {});
+function play(player: AudioPlayer | null): void {
+  if (!player) return;
+  try {
+    player.seekTo(0).catch(() => {});
+    player.play();
+  } catch {}
 }
 
 export function playCorrectSwipe():  void { play(sounds.correctSwipe); }
