@@ -48,6 +48,17 @@ function computeGrade(
   return { text: 'HAUNTED.', color: '#7B2FBE' };
 }
 
+// ─── RANK COMPUTATION ────────────────────────────────────────
+
+function computeRank(score: number): { letter: string; color: string } {
+  if (score >= 22000) return { letter: 'MASTER', color: '#F5C842' };
+  if (score >= 18000) return { letter: 'S',      color: '#F5C842' };
+  if (score >= 14000) return { letter: 'A',      color: '#FFFFFF' };
+  if (score >= 11000) return { letter: 'B',      color: '#FFFFFF' };
+  if (score >= 8000)  return { letter: 'C',      color: '#FFFFFF' };
+  return               { letter: 'D',            color: 'rgba(255,255,255,0.5)' };
+}
+
 // ─── POLLY LINE ───────────────────────────────────────────────
 
 function derivePollyLine(
@@ -56,16 +67,16 @@ function derivePollyLine(
 ): string | null {
   const allPerfect =
     isComplete && wordResults.every(r => r.wrongSwipes === 0);
-  if (allPerfect) return '🦜 You emptied my little vault.';
+  if (allPerfect) return 'You emptied my little vault.';
 
   const bossCleared = wordResults.some(r => r.isBossWord && r.wrongSwipes === 0);
-  if (bossCleared) return '🦜 Fine. Keep the word.';
+  if (bossCleared) return 'Fine. Keep the word.';
 
   const ghostCleared = wordResults.some(r => r.hiddenFound);
-  if (ghostCleared) return '🦜 You cracked more than locks.';
+  if (ghostCleared) return 'You cracked more than locks.';
 
   const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
-  if (hasMissed) return "🦜 Some meanings still haunt you.";
+  if (hasMissed) return 'Some meanings still haunt you.';
 
   return null;
 }
@@ -130,16 +141,12 @@ const wr = StyleSheet.create({
 function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
   const session = useGameStore(s => s.game.session);
   const word = findWordForMaskId(firstMissedMaskId, session);
-  const mask = findMaskById(firstMissedMaskId, session);
   if (!word) return null;
 
   return (
     <View style={gs.card}>
-      <Text style={gs.header}>👻 Ghost ready for rematch</Text>
+      <Text style={gs.header}>Ghost ready for rematch</Text>
       <Text style={gs.word}>{word.toUpperCase()}</Text>
-      {mask && (
-        <Text style={gs.missed}>Left behind: "{mask.phrase}"</Text>
-      )}
       <Text style={gs.body}>Guess who's back next run.</Text>
     </View>
   );
@@ -173,13 +180,6 @@ const gs = StyleSheet.create({
     fontFamily: FONTS.wordDisplay,
     letterSpacing: 1,
     marginBottom: 4,
-  },
-  missed: {
-    color: 'rgba(255,215,0,0.85)',
-    fontSize: 13,
-    fontStyle: 'italic',
-    marginBottom: 4,
-    marginTop: 2,
   },
   body: {
     color: 'rgba(255,255,255,0.7)',
@@ -257,9 +257,7 @@ function TrapCard({ maskId }: { maskId: string }) {
     <View style={tc.section}>
       <Text style={tc.header}>The trap that got you</Text>
       <View style={tc.card}>
-        <Text style={tc.phrase}>
-          {mask.emoji}{'  '}{mask.phrase}
-        </Text>
+        <Text style={tc.phrase}>{mask.phrase}</Text>
         <Text style={tc.reveal}>
           Not a meaning of {word.toUpperCase()}. Just nearby.
         </Text>
@@ -355,8 +353,14 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const game              = useGameStore(s => s.game);
   const ghostRevenge      = useGameStore(s => s.ghostRevenge);
   const recordRunComplete = useGameStore(s => s.recordRunComplete);
+  const progress          = useGameStore(s => s.progress);
   const { wordResults, score, bestCombo, status, lives } = game;
   const isComplete = status === 'complete';
+
+  const [prevBest] = useState(() => progress.personalBest);
+  const isNewBest = score > prevBest && score > 0;
+  const beatPolly = score >= 15000;
+  const rank = computeRank(score);
 
   const recordedRef = useRef(false);
   useEffect(() => {
@@ -438,15 +442,47 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         <Animated.View
           style={[rs.header, { transform: [{ scale: gradeScale }, { translateY: gradeY }] }]}
         >
-          <Text style={[rs.grade, { color: grade.color }]}>{grade.text}</Text>
+
+          {/* Grade */}
+          <Text style={[rs.grade, { color: beatPolly && grade.text === 'WORD MASTER' ? '#FFFFFF' : grade.color }]}>
+            {grade.text}
+          </Text>
+
+          {/* Rank */}
+          <View style={rs.rankRow}>
+            <Text style={rs.rankLabel}>RANK</Text>
+            <Text style={[rs.rankLetter, { color: rank.color }]}>{rank.letter}</Text>
+          </View>
+
+          {/* Score line */}
           <Text style={rs.scoreLine}>
             {formattedScore} pts  ·  ×{bestCombo} best combo
           </Text>
+
+          {/* Perfect line */}
           <Text style={rs.perfectLine}>
-            {wordOnlyResults.filter(r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0).length}
-            /{wordOnlyResults.length} perfect
+            {wordOnlyResults.filter(r =>
+              r.correctUp === r.totalRealMasks && r.wrongSwipes === 0
+            ).length}/{wordOnlyResults.length} perfect
           </Text>
+
+          {/* Personal best */}
+          {isNewBest ? (
+            <Text style={rs.newBest}>NEW BEST</Text>
+          ) : (
+            <Text style={rs.prevBest}>
+              Best: {prevBest > 0 ? prevBest.toLocaleString() : '—'}
+            </Text>
+          )}
+
         </Animated.View>
+
+        {/* YOU BEAT POLLY banner */}
+        {beatPolly && (
+          <View style={rs.beatPollyBanner}>
+            <Text style={rs.beatPollyText}>YOU BEAT POLLY</Text>
+          </View>
+        )}
 
         {/* ── WORD RESULTS ── */}
         {wordOnlyResults.length > 0 && (
@@ -556,6 +592,53 @@ const rs = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.75,
     marginTop: 4,
+  },
+  rankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  rankLabel: {
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
+  rankLetter: {
+    fontSize: 28,
+    fontFamily: FONTS.wordDisplay,
+    letterSpacing: 1,
+  },
+  newBest: {
+    color: '#F5C842',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 2,
+    marginTop: 6,
+  },
+  prevBest: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  beatPollyBanner: {
+    backgroundColor: 'rgba(245,200,66,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.45)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  beatPollyText: {
+    color: '#F5C842',
+    fontSize: 16,
+    fontFamily: FONTS.wordDisplay,
+    letterSpacing: 2,
   },
   section: {
     marginBottom: 16,
