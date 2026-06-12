@@ -106,7 +106,7 @@ Patch 20 complete: `SwipeMask.tsx` exposes optional tile interaction hooks and `
 
 Current HUD: `GameScreen.tsx` renders five custom feather slots plus a separate reserve feather. `+1 FEATHER` milestone feedback exists. Engine/store state may still be named `lives`; do not rename it.
 
-**Score target/rank design:** Competition system for personal bests, Polly target score, Hunt rank, and future daily/friend/global rankings. Score does not replace mastery. Word Cores are permanent mastery trophies. The score target/rank system is pending.
+**Score target/rank design:** Local personal best, Polly target status, Hunt rank ladder, and Vault Ranks display are implemented. Score does not replace mastery. Word Cores are permanent mastery trophies. Future daily/friend/global leaderboards and deeper social ranking systems remain future work.
 
 **Color rules:** `#1A1830` background. `#F5C842` only for score, boss word, reward, unlock, MASTER stamp, Word Core, and restrained Vault stat/title accents. `#7B2D8B` for UI/gate/shards/Vault frames. `#9B2D6B` for trap/ghost shard accents and Ghost Words accents. `#4CAF50` only Polly character. `#0F0D2A` for Master Gate locked surface and player Vault archive/card surfaces. `#CC2200` only wrong swipe flash. `#FFFFFF` readable text. No pink/magenta, no orange UI, no green UI, no red except wrong flash, max 2 visible gold elements.
 
@@ -196,18 +196,22 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 
 ---
 
-## The Word Vault (Player Archive — shell implemented)
+## The Word Vault (Player Archive — real data + Ranks implemented)
 
 - Player-owned reclaimed meaning archive, not Polly's cage/lair.
-- Trophy room for mastered words, ghost words, hidden discoveries, and future stats.
+- Trophy room for mastered words, ghost words, hidden discoveries, and local ranks.
 - Patch 12A added `app/screens/VaultScreen.tsx` and the `Vault` stack route in `App.tsx`.
-- Current page uses static placeholder data only; no real save/progress state wiring yet.
-- Sections: Mastered Words, Ghost Words, Hidden Meanings, Stats.
+- `VaultScreen.tsx` reads real persisted progress from `useGameStore`.
+- Progress persistence exists through `masteredWords`, `personalBest`, `runsCompleted`, `recordMastery`, `recordRunComplete`, and `loadProgress`.
+- Sections: Mastered Words, Ghost Words, Hidden Meanings, Ranks.
+- Ghost Words reads real ghost data.
+- Ranks tab is implemented: personal best, rank ladder, progress to next rank, Polly target status, runs completed, and words mastered.
+- Rank tiers: D below 8,000; C at 8,000; B at 11,000; A at 14,000; S at 18,000; MASTER at 22,000.
 - Empty-state direction: archive/collection language, not cage/prison language.
 - Mastery ends with word compressing -> launching to vault nav icon.
 - Paywall at word 21: "Vault Full / Unlock unlimited"
 - Polly has NO presence in Vault — player's domain only.
-- Real Vault data wiring and future Ranks work are still pending. Profile stays inside Settings for MVP.
+- Future daily/friend/global leaderboards are still future. Profile stays inside Settings for MVP.
 
 ---
 
@@ -302,7 +306,7 @@ Completed and committed:
   - Supports Test Batch, Specific Words, Full Loaded Database with confirmation, creativity controls, Fresh rerun, Tweak Notes, CSV word source import, and audit columns `AUDIT STATUS` / `AUDIT ISSUES`.
 - Patch 12A complete: Word Vault screen shell added at `app/screens/VaultScreen.tsx`.
   - Word Vault is the player's reclaimed meaning archive, distinct from Polly's Master Gate cage/vault.
-  - It uses static placeholder data only; real Vault data wiring remains pending.
+- Patch 21 later completed real Vault data wiring and the Ranks tab.
 - Patch 12B complete: Golden Pacing System documented at `docs/GOLDEN_PACING_SYSTEM.md`.
   - Semantic Snap Rate is the primary content success metric.
   - Hidden Truth Rule is sacred.
@@ -316,7 +320,7 @@ Completed and committed:
 - Patch 15 complete: premium gameplay screen shell polish in GameScreen.tsx and MaskBoard.tsx; HUD, hero stage, active tile arena frame, and Master Gate dock were visually strengthened with no gameplay, swipe, queue, scoring, nav, Polly timing, or gate logic changes.
 - Patch 16 complete: heavy active tile stack and weighted peel polish in MaskBoard.tsx and SwipeMask.tsx. Active mask/trap tile is the readable top slab above up to 2 concealed under-tiles; under-tiles are unreadable and truth-hidden. Press-hold feels like gripping/pulling a heavy slab. Active tile has heavier bevel/slab treatment. Trap brittleness is revealed only after RIGHT shatter; real meanings remain weighty and absorb upward. Scoring, swipe grammar, one-active queue logic, tile resolution, hidden release, Master Gate logic, Polly timing/budget, and navigation unchanged.
 - Patch 17 complete: device sanity polish for gameplay arena in GameScreen.tsx and MaskBoard.tsx. Slimmed HUD chrome, cleaned/hefted concealed under-tile slab offsets, quieted the right shatter-lane marker, added Master Gate dock breathing room, and normalized gameplay gold to `#F5C842`. Mechanics, scoring, swipe grammar, one-active queue, tile resolution, hidden release, Master Gate logic, Polly timing/budget, navigation, Golden Pacing, and content data unchanged.
-- Patch 21 complete: AsyncStorage persistence for `masteredWords`, `personalBest`, `runsCompleted`. `VaultScreen.tsx` reads real data. `MasteredWordRecord` type added to `types.ts`. `loadProgress()` called at boot alongside `loadGhosts()`.
+- Patch 21 complete: AsyncStorage persistence for `masteredWords`, `personalBest`, `runsCompleted`. `recordMastery`, `recordRunComplete`, and `loadProgress` persist local progress. `VaultScreen.tsx` reads real data for Mastered Words, Ghost Words, Hidden Meanings, and Ranks. Ranks shows personal best, rank ladder, progress to next rank, Polly target status, runs completed, and words mastered. `MasteredWordRecord` type added to `types.ts`. `loadProgress()` called at boot alongside `loadGhosts()`.
 - Patch 22 complete: `buildRunSession(ghostWordIds)` in `session.ts` injects first matching ghost word at index 9 (position 10), never touching indexes 10–11 (boss zone). `isHauntReturn` flag drives entrance banner ("Guess who's back."), HAUNT BROKEN stamp, STILL HAUNTED stamp, and "BBBLAAAAHHAHAHA!" Polly line. Double haptic on haunt entrance. Haunt depth cards tinted `#130D2A`.
 - Patch 23 revised complete: wrong swipes permanent (no snap-back), gate boss-only, mastery boss-only, ghost boss-only, single mystery tile replaces two-tile split, `triggerWordExit()` for non-boss transitions, two-tile merge animation removed, `hiddenEmoji` / `hiddenTrapEmoji` cut from types. Session updated to Hunt 1 GPS-compliant 12-word arc (WAVE → CAST). TypeScript passed.
 
@@ -342,10 +346,9 @@ Future content lane: **Database audit + selective masks/traps rewrite using the 
 
 Other remaining work:
 
-1. Score target/rank system for personal best, Polly target, Hunt rank, future daily/friend/global rankings.
-2. Word Vault Ranks page and leaderboard.
-3. `expo-av` to `expo-audio` migration.
-4. Full 739-word database GPS metadata tagging.
+1. Future daily/friend/global leaderboards and deeper social ranking systems.
+2. `expo-av` to `expo-audio` migration.
+3. Full 739-word database GPS metadata tagging.
 
 ---
 ## Cut List (Never Suggest These)

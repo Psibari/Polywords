@@ -37,7 +37,7 @@ Patch 19 added `app/audio/sfx.ts`, a centralized cleaned-SFX helper on the exist
 
 Patch 20 wired the remaining supported SFX names through clean tile gesture hooks. `SwipeMask.tsx` now exposes optional `onSwipeStart`, `onPressHoldStart`, and `disabled` props; `MaskBoard.tsx` passes them for active tiles and the boss mystery tile. `pressHoldStart` plays once on PanResponder grant, `tileSwipe` plays once when drag crosses the existing intentional-swipe threshold, and both are blocked when Mastered/Haunted overlays lock input. Gameplay behavior, scoring, swipe grammar, Master Gate logic, mask/trap data, and queue behavior are unchanged.
 
-Patch 21 complete: player progress persistence and Word Vault real data wiring implemented. `app/store/useGameStore.ts` gained `PROGRESS_KEY = 'polywords_progress'`, a `progress: PlayerProgress` state slice (`masteredWords[]`, `personalBest`, `runsCompleted`), and actions `recordMastery`, `recordRunComplete`, `loadProgress`. All progress persists via AsyncStorage using the same pattern as the ghost system. `app/screens/VaultScreen.tsx` was rewired to read real persisted data: Mastered Words section renders real plaque entries with hidden meaning found and date mastered, Ghost Words section renders real ghosts with runsMissed count (phrase never shown), Hidden Meanings section renders entries with non-empty `hiddenMeaningFound`, Stats section shows personal best and runs completed. `app/game/types.ts` gained `MasteredWordRecord` type. `app/App.tsx` loads both `loadGhosts()` and `loadProgress()` on mount. TypeScript passed. Device sanity passed.
+Patch 21 complete: player progress persistence, Word Vault real data wiring, and Vault Ranks implemented. `app/store/useGameStore.ts` gained `PROGRESS_KEY = 'polywords_progress'`, a `progress: PlayerProgress` state slice (`masteredWords[]`, `personalBest`, `runsCompleted`), and actions `recordMastery`, `recordRunComplete`, `loadProgress`. All progress persists via AsyncStorage using the same pattern as the ghost system. `app/screens/VaultScreen.tsx` reads real persisted progress from `useGameStore`: Mastered Words renders real plaque entries with hidden meaning found and date mastered, Ghost Words reads real ghost data, Hidden Meanings renders entries with non-empty `hiddenMeaningFound`, and Ranks shows personal best, rank ladder, progress to next rank, Polly target status, runs completed, and words mastered. `app/game/types.ts` gained `MasteredWordRecord` type. `app/App.tsx` loads both `loadGhosts()` and `loadProgress()` on mount. TypeScript passed. Device sanity passed.
 
 Patch 22 complete: Haunt Word return system implemented. `app/game/session.ts` gained `buildRunSession(ghostWordIds: string[]): SessionStep[]` which deep-copies `SESSION`, identifies the first matching ghost word, swaps it into index 9 (word position 10, 1-based), sets `isHauntReturn: true` on that step, and never replaces the boss at position 12. `app/store/useGameStore.ts` `startGame()` now passes run-start ghost word ids into `createGame()` which calls `buildRunSession()`. `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts` gained haunt entrance banner ("Guess who's back."), HAUNT BROKEN stamp on mastery of a haunt word, STILL HAUNTED stamp when a haunt word ghosts again, and `'hauntFailed'` event which fires Polly pop-in "BBBLAAAAHHAHAHA!" via `endOfRoundPopIn`. Double `impactAsync(Medium)` haptic fires at haunt word entrance. Haunt depth cards tinted purple (`#130D2A`). TypeScript passed.
 
@@ -428,13 +428,31 @@ Hunt-level appearances fire in word TRANSITIONS (400-600ms). Max 4 per session. 
 
 ---
 
-## The Word Vault — Player Archive
+## The Word Vault — Player Archive (Real Data + Ranks Implemented)
 
 The Word Vault is the player's reclaimed meaning archive and trophy room. It is distinct from Polly's Master Gate cage/vault in gameplay.
 
-Patch 12A added the first page shell in `app/screens/VaultScreen.tsx` and registered a `Vault` stack route in `App.tsx`. It is wired into bottom nav and uses static placeholder data only. Real Vault data wiring remains pending.
+Patch 12A added the first page shell in `app/screens/VaultScreen.tsx` and registered a `Vault` stack route in `App.tsx`. Patch 21 completed real persisted progress wiring and Vault Ranks.
 
-Mastered Words, Ghost Words, Hidden Meanings, and future Stats live here. The page must feel player-owned: dark magical archive, trophy-card shelves, word plaques, subtle vault/archive geometry. Avoid cage, prison, chain, or Polly-lair visuals.
+Current Vault sections:
+- Mastered Words
+- Ghost Words
+- Hidden Meanings
+- Ranks
+
+`VaultScreen.tsx` reads real persisted progress from `useGameStore`: `masteredWords`, `personalBest`, and `runsCompleted`. Progress writes through `recordMastery`, `recordRunComplete`, and loads through `loadProgress`. Ghost Words reads real ghost data.
+
+Vault Ranks are implemented. Rank tiers:
+- D below 8,000
+- C at 8,000
+- B at 11,000
+- A at 14,000
+- S at 18,000
+- MASTER at 22,000
+
+The Ranks tab shows personal best, rank ladder, progress to next rank, Polly target status, runs completed, and words mastered.
+
+Mastered Words, Ghost Words, Hidden Meanings, and Ranks live here. The page must feel player-owned: dark magical archive, trophy-card shelves, word plaques, subtle vault/archive geometry. Avoid cage, prison, chain, or Polly-lair visuals.
 
 ### Vault Design
 - Background: `#1A1830`.
@@ -450,7 +468,7 @@ Use archive/collection language, not Polly ownership language. Current shell cop
 - Mastered Words: "Fully reclaimed words live here."
 - Ghost Words: "Missed meanings waiting for a rematch."
 - Hidden Meanings: "Rare meanings you cracked open."
-- Stats: "Your mastery trail will live here."
+- Ranks: local personal best, rank ladder, Polly target status, runs completed, and words mastered.
 
 ### Arrival Animation
 Word compresses â†’ gold tile â†’ launches to vault nav icon â†’ vault icon blooms â†’ impactAsync(Heavy) â†’ THUNK sound
@@ -564,7 +582,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 ### Polly Target Score System
 
 - Polly's target: 15,000 pts (fixed MVP, scales Phase 2)
-- Rank scale: D (below 8k) Â· C (8k) Â· B (11k) Â· A (14k) Â· S (18k) Â· MASTER (22k+)
+- Rank scale: D below 8,000 Â· C at 8,000 Â· B at 11,000 Â· A at 14,000 Â· S at 18,000 Â· MASTER at 22,000
 - "BEAT POLLY" is separate from rank â€” coexists independently
 - "YOU BEAT POLLY" shown on results when score â‰¥ 15,000
 - "POLLY HUNT COMPLETE" is the results screen session header
@@ -753,11 +771,9 @@ Future content lane: **Database audit + selective masks/traps rewrite pass using
 
 Other remaining work:
 
-1. Score target/rank system:
-   - Score should support personal best, Polly target score, Hunt rank, and future daily/friend/global rankings.
-2. Word Vault Ranks page.
-3. `expo-av` to `expo-audio` migration.
-4. Full 739-word database GPS metadata tagging and Hunt generation.
+1. Future daily/friend/global leaderboards and deeper social ranking systems.
+2. `expo-av` to `expo-audio` migration.
+3. Full 739-word database GPS metadata tagging and Hunt generation.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -813,7 +829,7 @@ Other remaining work:
 - "POLLY HUNT COMPLETE" is the results screen session header
 - "YOU BEAT POLLY" fires on results when score â‰¥ 15,000
 - Polly's target score: 15,000 pts (MVP fixed)
-- Rank scale: D / C / B / A / S / MASTER
+- Rank scale: D below 8,000 / C at 8,000 / B at 11,000 / A at 14,000 / S at 18,000 / MASTER at 22,000
 - Life Feather milestones: 8,000 and 16,000 pts restore 1 feather; 1 reserve feather max is implemented
 - “You left me behind.” â€” micro-copy on ghost birth
 - “Not yours yet.” â€” Polly line on ghost exit
@@ -1097,7 +1113,7 @@ Current implementation:
 22. Heavy active tile stack / weighted peel polish (Patch 16 complete)
 23. Device sanity polish for gameplay arena (Patch 17 complete)
 24. Card deck tile system original snap-back behavior (superseded by Patch 23 revised)
-25. Patch 21 persistence + Vault real data (complete)
+25. Patch 21 persistence + Vault real data + Ranks tab (complete)
 26. Patch 22 Haunt Word return system (complete)
 27. Patch 23 revised: permanent wrong swipes, boss-only gate, single mystery tile, non-boss word exit transition (complete)
 28. Hunt 1 GPS-compliant session content (complete)
