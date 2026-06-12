@@ -162,3 +162,47 @@ export type PlayerProgress = {
   personalBest: number;
   runsCompleted: number;
 };
+
+export type DailyTier = 1 | 2 | 3;
+
+export type DailyWord = {
+  word:       string;
+  meanings:   [string, string, string]; // exactly 3, hardest → easiest
+  candidates: string[];                 // 4 words: 1 correct + 3 distractors
+  tier:       DailyTier;
+};
+
+export type DailyRoundStatus = 'solved' | 'missed' | 'pending';
+
+export type DailyRoundResult = {
+  word:        string;
+  tier:        DailyTier;
+  status:      DailyRoundStatus;
+  wrongSwipes: number;
+};
+
+export type DailyTitle =
+  | 'WORD MASTER'
+  | 'SHARP'
+  | 'SURVIVED'
+  | 'HAUNTED';
+
+export type DailyChallengeState = {
+  date:                string;             // YYYY-MM-DD
+  rounds:              DailyWord[];        // 3 rounds, one per tier
+  currentRound:        number;             // 0 | 1 | 2
+  lives:               number;             // starts at 2
+  remainingCandidates: string[][];         // [round][candidate] — shrinks as tiles exit
+  results:             DailyRoundResult[];
+  status:              'playing' | 'complete';
+};
+
+export type DailyResult = {
+  date:            string;
+  challengeNumber: number;
+  title:           DailyTitle;
+  solvedCount:     number;     // 0–3
+  livesLeft:       number;
+  wordResults:     DailyRoundResult[];
+  shareText:       string;
+};

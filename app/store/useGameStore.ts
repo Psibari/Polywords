@@ -13,10 +13,18 @@ import {
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
-import { GhostMeaning, GhostRevenge, MasteredWordRecord, PlayerProgress } from '../game/types';
+import { GhostMeaning, GhostRevenge, MasteredWordRecord, PlayerProgress, DailyChallengeState, DailyResult } from '../game/types';
+import {
+  createDailyState,
+  submitDailyWrongSwipe as dailyWrongFn,
+  submitDailyCorrectSwipe as dailyCorrectFn,
+  buildDailyResult,
+  getTodayDateString,
+} from '../game/dailyChallengeEngine';
 
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
+const DAILY_KEY_PREFIX = 'polywords_daily_';
 
 const DEFAULT_PROGRESS: PlayerProgress = {
   masteredWords: [],
@@ -49,6 +57,13 @@ type GameStore = {
   recordMastery: (word: string, isBoss: boolean, hiddenMeaningFound: string) => void;
   recordRunComplete: (finalScore: number) => void;
   loadProgress: () => Promise<void>;
+  daily:                    DailyChallengeState | null;
+  dailyResult:              DailyResult | null;
+  startDailyChallenge:      () => void;
+  submitDailyWrongSwipe:    (candidate: string) => void;
+  submitDailyCorrectSwipe:  () => void;
+  completeDailyChallenge:   () => void;
+  loadDailyResult:          () => Promise<void>;
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -56,7 +71,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   ghosts: [],
   ghostRevenge: null,
   runStartGhostWordIds: [],
-  progress: { ...DEFAULT_PROGRESS },
+  progress:    { ...DEFAULT_PROGRESS },
+  daily:       null,
+  dailyResult: null,
 
   startGame: () => {
     resetPollyBudget();
@@ -193,6 +210,55 @@ export const useGameStore = create<GameStore>((set, get) => ({
             ? parsed.map(g => g.wordId)
             : s.runStartGhostWordIds,
         }));
+      }
+    } catch {}
+  },
+
+  startDailyChallenge: () => {
+    const today = getTodayDateString();
+    const state = createDailyState(today);
+    set({ daily: state, dailyResult: null });
+  },
+
+  submitDailyWrongSwipe: (candidate: string) => {
+    const daily = get().daily;
+    if (!daily || daily.status !== 'playing') return;
+    const next = dailyWrongFn(daily, candidate);
+    set({ daily: next });
+    if (next.status === 'complete') {
+      get().completeDailyChallenge();
+    }
+  },
+
+  submitDailyCorrectSwipe: () => {
+    const daily = get().daily;
+    if (!daily || daily.status !== 'playing') return;
+    const next = dailyCorrectFn(daily);
+    set({ daily: next });
+    if (next.status === 'complete') {
+      get().completeDailyChallenge();
+    }
+  },
+
+  completeDailyChallenge: () => {
+    const daily = get().daily;
+    if (!daily) return;
+    const result = buildDailyResult(daily);
+    set({ dailyResult: result });
+    const key = DAILY_KEY_PREFIX + daily.date;
+    AsyncStorage.setItem(key, JSON.stringify(result)).catch(() => {});
+  },
+
+  loadDailyResult: async () => {
+    const today = getTodayDateString();
+    const key   = DAILY_KEY_PREFIX + today;
+    try {
+      const raw = await AsyncStorage.getItem(key);
+      if (raw) {
+        const result = JSON.parse(raw) as DailyResult;
+        set({ dailyResult: result });
+      } else {
+        set({ dailyResult: null });
       }
     } catch {}
   },
