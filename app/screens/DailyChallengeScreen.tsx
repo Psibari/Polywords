@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Pressable,
@@ -170,7 +170,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const completedRef                  = useRef(false);
 
   // ── animation values ────────────────────────────────────────
-  const deckSlamY    = useRef(new Animated.Value(-52)).current;
   const meaningsFade = useRef(new Animated.Value(0)).current;
 
   const challengeNumber = getChallengeNumber(getTodayDateString());
@@ -192,22 +191,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     Animated.timing(meaningsFade, {
       toValue: 1, duration: 320, useNativeDriver: true,
     }).start();
-
-    deckSlamY.setValue(-52);
-    setTimeout(() => {
-      Animated.spring(deckSlamY, {
-        toValue: 0, damping: 14, stiffness: 200, useNativeDriver: true,
-      }).start();
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }, 360);
   }, [daily?.currentRound]); // eslint-disable-line
 
   if (!daily) return null;
 
   const isComplete = daily.status === 'complete' || !!dailyResult;
   const round      = daily.rounds[daily.currentRound];
-  const topId      = remaining[0] ?? null;
-  const deckSize   = remaining.length;
 
   function makeMask(candidate: string): Mask {
     return {
@@ -225,7 +214,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    const others = remaining.slice(1);
+    const others = remaining.filter(c => c !== round.word);
     others.forEach(c => {
       setTileStates(prev => new Map(prev).set(c, 'wrong'));
     });
@@ -252,30 +241,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setTimeout(() => {
       setRemaining(prev => prev.filter(c => c !== candidate));
     }, 260);
-  }
-
-  // ── Swipe handlers for top tile ──────────────────────────────
-  function handleSwipeUp() {
-    if (!topId) return;
-    if (topId === round.word) {
-      setTileStates(prev => new Map(prev).set(topId, 'correct'));
-      setTimeout(() => handleCorrect(), 120);
-    } else {
-      handleWrong(topId);
-    }
-  }
-
-  function handleSwipeRight() {
-    if (!topId) return;
-    if (topId !== round.word) {
-      handleReject(topId);
-    } else {
-      setTileStates(prev => new Map(prev).set(topId, 'wrong'));
-      setTimeout(() => {
-        setRemaining(prev => prev.filter(c => c !== topId));
-        storeWrongSwipe(topId);
-      }, 400);
-    }
   }
 
   // ── Share ────────────────────────────────────────────────────
@@ -306,32 +271,46 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         />
       )}
 
-      {!isComplete && topId && (
-        <Animated.View
-          style={[styles.deckWrap, { transform: [{ translateY: deckSlamY }] }]}
-        >
-          {deckSize >= 3 && (
-            <View style={[styles.depthCard, styles.depth2]} pointerEvents="none" />
-          )}
-          {deckSize >= 2 && (
-            <View style={[styles.depthCard, styles.depth1]} pointerEvents="none" />
-          )}
-          <View style={styles.topSlot}>
-            <SwipeMask
-              key={topId}
-              mask={makeMask(topId)}
-              state={tileStates.get(topId) ?? 'idle'}
-              onSwipeUp={handleSwipeUp}
-              onSwipeDown={handleSwipeRight}
-              onSwipeReveal={() => {}}
-              revealable={false}
-              disabled={inputLocked}
-              tileHeight={TILE_H}
-              entryDelay={0}
-              wordY={200}
-            />
-          </View>
-        </Animated.View>
+      {!isComplete && (
+        <View style={styles.tileGrid}>
+          {remaining.map(candidate => (
+            <View key={candidate} style={styles.tileSlot}>
+              <SwipeMask
+                key={candidate}
+                mask={makeMask(candidate)}
+                state={tileStates.get(candidate) ?? 'idle'}
+                onSwipeUp={() => {
+                  if (candidate === round.word) {
+                    setTileStates(prev =>
+                      new Map(prev).set(candidate, 'correct'));
+                    setTimeout(() => handleCorrect(), 120);
+                  } else {
+                    handleWrong(candidate);
+                  }
+                }}
+                onSwipeDown={() => {
+                  if (candidate !== round.word) {
+                    handleReject(candidate);
+                  } else {
+                    setTileStates(prev =>
+                      new Map(prev).set(candidate, 'wrong'));
+                    setTimeout(() => {
+                      setRemaining(prev =>
+                        prev.filter(c => c !== candidate));
+                      storeWrongSwipe(candidate);
+                    }, 400);
+                  }
+                }}
+                onSwipeReveal={() => {}}
+                revealable={false}
+                disabled={inputLocked}
+                tileHeight={TILE_H}
+                entryDelay={0}
+                wordY={200}
+              />
+            </View>
+          ))}
+        </View>
       )}
 
       {isComplete && (
@@ -545,37 +524,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1A1830',
   },
-  deckWrap: {
+  tileGrid: {
     marginHorizontal: 20,
-    marginTop: 8,
-    position: 'relative',
-    minHeight: TILE_H + 40,
-    paddingBottom: 36,
+    marginTop: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
-  depthCard: {
-    position:     'absolute',
-    left: 0, right: 0,
-    height:       TILE_H,
-    borderRadius: 30,
-    backgroundColor: '#2E2870',
-    borderWidth: 1.5,
-    borderColor: 'rgba(155,120,255,0.45)',
-  },
-  depth1: {
-    top: 8, left: 5, right: 5,
-    opacity: 1.0,
-    zIndex:  7,
-    transform: [{ rotate: '2deg' }],
-  },
-  depth2: {
-    top: 16, left: 12, right: 12,
-    opacity: 0.75,
-    zIndex:  5,
-    transform: [{ rotate: '-1.4deg' }],
-  },
-  topSlot: {
-    position: 'relative',
-    zIndex:   10,
-    width:    '100%',
+  tileSlot: {
+    width: '47%',
   },
 });
