@@ -37,7 +37,11 @@ Patch 19 added `app/audio/sfx.ts`, a centralized cleaned-SFX helper on the exist
 
 Patch 20 wired the remaining supported SFX names through clean tile gesture hooks. `SwipeMask.tsx` now exposes optional `onSwipeStart`, `onPressHoldStart`, and `disabled` props; `MaskBoard.tsx` passes them for active and final hidden tiles. `pressHoldStart` plays once on PanResponder grant, `tileSwipe` plays once when drag crosses the existing intentional-swipe threshold, and both are blocked when Mastered/Haunted overlays lock input. Gameplay behavior, scoring, swipe grammar, Master Gate logic, mask/trap data, and queue behavior are unchanged.
 
-Patch 23 replaced the sequential one-tile-at-a-time delivery model with a card deck system in `app/components/MaskBoard.tsx` and `app/components/SwipeMask.tsx`. All tiles for a word arrive simultaneously as a stacked deck; only the top card is interactive. Wrong swipes now snap the tile back into the deck (tile stays, life drains) instead of removing it — the player must keep trying the same tile. If lives hit 0 mid-word the word immediately haunts and the run continues at zero tolerance. A new `'snap-back'` SwipeMaskState was added to `SwipeMask.tsx` for the spring-return + red flash without height collapse. `usePollyAnimator.ts` gained a new `'oneWrongMove'` event (fires once per word when lives reach 0, Polly line: "One wrong move."). Deck renders up to 3 visible depth cards with distinct `#2E2870` purple backgrounds, a face-down hidden-card indicator when the gate is locked, and a `deckSlamY` spring entrance animation per word. A `deckRedTint` animated value shifts depth cards toward `#2A0808` when lives reach zero. The old `activeVisibleTileIndex`, `activeVisibleAdvanceRef`, `orderedVisibleMasks`, and `ACTIVE_VISIBLE_TILE_ADVANCE_DELAY_MS` were fully removed. The gate sequence, hidden tile flow, ghost logic, boss entrance, haunt entrance, Polly budget architecture, and swipe grammar are unchanged.
+Patch 21 complete: player progress persistence and Word Vault real data wiring implemented. `app/store/useGameStore.ts` gained `PROGRESS_KEY = 'polywords_progress'`, a `progress: PlayerProgress` state slice (`masteredWords[]`, `personalBest`, `runsCompleted`), and actions `recordMastery`, `recordRunComplete`, `loadProgress`. All progress persists via AsyncStorage using the same pattern as the ghost system. `app/screens/VaultScreen.tsx` was rewired to read real persisted data: Mastered Words section renders real plaque entries with hidden meaning found and date mastered, Ghost Words section renders real ghosts with runsMissed count (phrase never shown), Hidden Meanings section renders entries with non-empty `hiddenMeaningFound`, Stats section shows personal best and runs completed. `app/game/types.ts` gained `MasteredWordRecord` type. `app/App.tsx` loads both `loadGhosts()` and `loadProgress()` on mount. TypeScript passed. Device sanity passed.
+
+Patch 22 complete: Haunt Word return system implemented. `app/game/session.ts` gained `buildRunSession(ghostWordIds: string[]): SessionStep[]` which deep-copies `SESSION`, identifies the first matching non-boss ghost word, swaps it into index 9 (word position 10, 1-based), sets `isHauntReturn: true` on that step, and leaves boss positions 10 and 11 (indexes 10–11) untouched. Boss is always position 12. `app/store/useGameStore.ts` `startGame()` now passes run-start ghost word ids into `createGame()` which calls `buildRunSession()`. `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts` gained haunt entrance banner ("Guess who's back."), HAUNT BROKEN stamp on mastery of a haunt word, STILL HAUNTED stamp when a haunt word ghosts again, and `'hauntFailed'` event which fires Polly pop-in "BBBLAAAAHHAHAHA!" via `endOfRoundPopIn`. Double `impactAsync(Medium)` haptic fires at haunt word entrance. Haunt depth cards tinted purple (`#130D2A`). TypeScript passed.
+
+Patch 23 revised: card deck tile system fully rebuilt. WRONG SWIPES ARE NOW PERMANENT — tile flies away immediately, no snap-back, no retry. One decision per tile, permanent consequence. `'snap-back'` state REMOVED from `SwipeMaskState` in `SwipeMask.tsx` and all snap-back handler code removed from `MaskBoard.tsx`. The deck model is unchanged: all tiles arrive simultaneously stacked, top card only is interactive, correct/trap-caught tiles remove from deck at 180ms, wrong tiles remove from deck at 400ms (after exit animation has started). Gate is now BOSS ONLY — words 1–11 never open the Master Gate and never have a hidden tile. MASTERED is BOSS ONLY — only word 12 (boss) can be vaulted per hunt. GHOST is BOSS ONLY — only the boss word can create a true ghost. Non-boss words 1–11: deck empty → `triggerWordExit()` (word scales up and fades, 1050ms total) → `store.completeWord()`. No overlay. No gate. No mastery. No ghost. Boss word: perfect visible clear → gate opens → ONE mystery tile drops (randomly the real hidden meaning or the hidden trap, determined by `mysteryIsRealRef`) → correct judgment = MASTERED → wrong = GHOST. Boss with any wrong swipe on visible masks → gate permanently locked → silent advance. The old two-tile split gate system is replaced by a single mystery tile. The complex ghost merge animation (`ghostMergeOpacity`, `splitTile2TransY`, `ghostMergeVisible`, etc.) was removed. `triggerWrongFail` simplified to: shard burst → HAUNTED overlay at 800ms. `triggerWordExit()` added as a new function for non-boss word transitions. TypeScript passed. Device sanity passed.
 
 docs/POLLY_DIALOGUE_BANK.md is the source-of-truth bank for future Polly dialogue ideas, approved tone examples, raw seeds, ghost/system copy, boss-word taunts, and lines to avoid.
 
@@ -137,6 +141,8 @@ Every POLY RUN is a HUNT. Always 12 words. Always a designed difficulty arc. Alw
 
 The system is documentation only for now. Do not hardcode pacing logic or automated Hunt generation until a manually tagged test set exists.
 
+Golden Pacing System documentation is locked in `docs/GOLDEN_PACING_SYSTEM.md`. The GPS defines the target emotional arc: 2 Confidence + 3 Flow + 3 Tension + 3 Panic + 1 Boss per Hunt. Core principle: POLYWORDS is a semantic combat game â€" the word is the boss, masks are Polly's defenses, mastery is taking the word away from her. Primary success metric: Semantic Snap Rate. The Semantic Snap is the "Waitâ€¦ what? Oh. Right." moment. Implementation is documentation-only until a manually tagged word set exists.
+
 | Position | Phase | Difficulty | Emotional Target |
 |---|---|---|---|
 | 1â€“2 | Confidence Zone | Easy | Player feels capable immediately |
@@ -163,20 +169,22 @@ The 700+ word database is divided into:
 
 ### Test Session (Current â€” 12 words)
 
-| # | Word | Type | Emotional Beat |
+| # | Word | Phase | Emotional Beat |
 |---|---|---|---|
-| 1 | LIGHT | Standard | Confidence |
-| 2 | BARK | Standard | Flow |
-| 3 | RING | Standard | First tension |
-| 4 | MATCH | Standard | Escalation |
-| 5 | RAW | Standard | Freshness |
-| 6 | BEAR | Standard | Hesitation |
-| 7 | WAKE | Standard | Tension |
-| 8 | PITCH | Standard | Near miss |
-| 9 | PRESS | Standard | Panic |
-| 10 | BANK | Standard | Rebound |
-| 11 | SPRING | Boss | First climax |
-| 12 | ORDER | Boss | Final boss |
+| 1 | WAVE | Confidence | Opener |
+| 2 | FINE | Confidence | Build trust |
+| 3 | CHARGE | Flow | Rhythm begins |
+| 4 | PLANT | Flow | Spy snap |
+| 5 | TABLE | Flow | Brain glitch |
+| 6 | CAPITAL | Tension | First tension |
+| 7 | SENTENCE | Tension | Dual domain |
+| 8 | SPELL | Tension | Multi-domain |
+| 9 | DRAFT | Panic | Three domains |
+| 10 | RANK | Panic | Smell snap |
+| 11 | SOUND | Panic | Geographic snap |
+| 12 | CAST | Boss | Final boss â€” Polly's word |
+
+Hunt 1 is GPS-compliant: 2 Confidence + 3 Flow + 3 Tension + 3 Panic + 1 Boss. Words 1â€”11 carry no hidden meaning â€” gate and mastery are boss-only. CAST carries hiddenMeaning: 'Molten metal takes shape' and hiddenTrap: 'Spell gets thrown on you'. Mystery tile is randomly either the real hidden or the trap.
 
 ---
 
@@ -756,21 +764,14 @@ Future content lane: **Database audit + selective masks/traps rewrite pass using
 
 Other remaining work:
 
-1. Haunt Word return system:
-   - Ghosted words return late in future Hunts.
-   - Preferred placement: word 10 or 11.
-   - Never replace Boss Word at position 12.
-   - Entrance copy: Guess who's back.
-   - Cleared copy: Haunt broken.
-   - Failed again copy: STILL HAUNTED.
-   - Polly taunt: "BBBLAAAAHHAHAHA!"
-2. Score target/rank system:
+1. Score target/rank system:
    - Score should support personal best, Polly target score, Hunt rank, and future daily/friend/global rankings.
-3. Life Feather milestone/reserve system:
+2. Life Feather milestone/reserve system:
    - UI feathers exist.
    - Score milestone restore and 1 reserve feather are not implemented yet.
-4. Word Vault real data wiring plus future Ranks work.
-5. `expo-av` to `expo-audio` migration.
+3. Word Vault Ranks page.
+4. `expo-av` to `expo-audio` migration.
+5. Full 739-word database GPS metadata tagging and Hunt generation.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -795,6 +796,11 @@ Other remaining work:
 - â˜ ï¸ phraseBreakPool, slangPool, switchbackPool
 - â˜ ï¸ expo-av (migrating)
 - â˜ ï¸ "reverseMountOrder" bossModifier
+- â˜ ï¸ Snap-back wrong swipes — replaced by permanent tile exit
+- â˜ ï¸ Two-tile hidden gate split — replaced by single mystery tile
+- â˜ ï¸ Ghost system for non-boss words — ghosts are boss-only
+- â˜ ï¸ MASTERED/HAUNTED overlays for non-boss words
+- â˜ ï¸ hiddenEmoji and hiddenTrapEmoji fields on WordStep
 
 ---
 
@@ -824,8 +830,16 @@ Other remaining work:
 - Rank scale: D / C / B / A / S / MASTER
 - Life Feather milestones: 8,000 and 16,000 pts
 - Ghost Loss Sequence: hidden split tile wrong swipe overrides standard exit â€” tile intercepted at T+120ms into merge sequence
-- "You left me behind." â€” micro-copy on ghost birth
-- "Not yours yet." â€” Polly line on ghost exit
+- “You left me behind.” â€” micro-copy on ghost birth
+- “Not yours yet.” â€” Polly line on ghost exit
+- Wrong swipes are permanent â€” tile flies away, no snap-back, no retry
+- Gate opens on boss word perfect clear only â€” words 1â€”11 never open the gate
+- MASTERED is boss-only â€” only word 12 (boss) can be vaulted per hunt
+- GHOST is boss-only â€” only boss failure creates a true ghost
+- Boss gate uses one mystery tile â€” randomly real or trap â€” one shot
+- Non-boss words advance via triggerWordExit() â€” no overlay, no gate
+- Haunt slot is index 9 (position 10) â€” never indexes 10 or 11 (boss zone)
+- Ghost wordId = word string always â€” never stepIndex
 
 ---
 
