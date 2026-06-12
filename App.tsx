@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LogBox } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,6 +10,7 @@ import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
+import { useGameStore } from './app/store/useGameStore';
 
 LogBox.ignoreAllLogs();
 
@@ -27,6 +28,17 @@ export default function App() {
     'Poppins-Bold':         require('./assets/fonts/Poppins-Bold.ttf'),
     'Poppins-SemiBold':     require('./assets/fonts/Poppins-SemiBold.ttf'),
   });
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    const { loadGhosts, loadProgress, loadDailyResult } = useGameStore.getState();
+
+    loadGhosts();
+    loadProgress();
+    loadDailyResult();
+  }, [fontsLoaded]);
+
   if (!fontsLoaded) return null;
 
   return (

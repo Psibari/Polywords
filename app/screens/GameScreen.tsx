@@ -427,8 +427,6 @@ type EffectEntry = { id: number; type: 'shard' | 'trail'; x: number; y: number }
 function GameDirector({ navigation }: { navigation: any }) {
   const game       = useGameStore(s => s.game);
   const startGame  = useGameStore(s => s.startGame);
-  const loadGhosts   = useGameStore(s => s.loadGhosts);
-  const loadProgress = useGameStore(s => s.loadProgress);
   const consumeFeatherMilestone = useGameStore(s => s.consumeFeatherMilestone);
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
@@ -461,8 +459,6 @@ function GameDirector({ navigation }: { navigation: any }) {
   useEffect(() => {
     initSounds();
     preloadSfx();
-    loadGhosts();
-    loadProgress();
     return () => {
       unloadSfx();
     };
