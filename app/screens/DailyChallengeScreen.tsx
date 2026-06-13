@@ -16,7 +16,7 @@ import { useGameStore } from '../store/useGameStore';
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 const MAX_LIVES   = 2;
-const ROUND_COUNT = 3;
+const ROUND_COUNT = 5;
 const CLAIM_THRESHOLD = -40;
 
 type DailyCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
@@ -80,7 +80,7 @@ function MeaningsZone({
 }) {
   return (
     <Animated.View style={[mz.root, { opacity: fadeAnim }]}>
-      <Text style={mz.label}>FIND THE WORD THAT FITS</Text>
+      <Text style={mz.label}>ONE WORD FITS ALL</Text>
       {meanings.map((m, i) => (
         <View key={i} style={mz.meaningRow}>
           <View style={mz.bullet} />
@@ -213,8 +213,8 @@ function DailyCandidateCard({
       <Text
         style={styles.cardText}
         numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.62}
+        adjustsFontSizeToFit={true}
+        minimumFontScale={0.55}
       >
         {word.toUpperCase()}
       </Text>
@@ -388,9 +388,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       {!isComplete && (
         <>
-          <View style={styles.instructionStrip}>
-            <Text style={styles.instructionText}>SWIPE UP TO CLAIM THE WORD</Text>
-          </View>
+          <Text style={styles.instructionText}>
+            SWIPE UP TO CLAIM THE WORD
+          </Text>
 
           <View style={styles.cardGrid}>
             {remaining.slice(0, 9).map(candidate => (
@@ -435,8 +435,8 @@ const hud = StyleSheet.create({
   number: {
     color: '#F5C842',
     fontFamily: FONTS.hud,
-    fontSize: 13,
-    letterSpacing: 1,
+    fontSize: 16,
+    letterSpacing: 2,
     minWidth: 90,
   },
   dots: {
@@ -488,20 +488,20 @@ const hud = StyleSheet.create({
 const mz = StyleSheet.create({
   root: {
     marginHorizontal: 20,
-    marginTop: 18,
-    marginBottom: 12,
-    padding: 16,
+    marginTop: 24,
+    marginBottom: 16,
+    padding: 22,
     borderRadius: 20,
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
     borderColor: 'rgba(123,45,139,0.50)',
-    gap: 10,
+    gap: 14,
   },
   label: {
     color: 'rgba(255,255,255,0.45)',
-    fontFamily: FONTS.tileCopy,
-    fontSize: 10,
-    letterSpacing: 2,
+    fontFamily: FONTS.label,
+    fontSize: 11,
+    letterSpacing: 3,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
@@ -520,9 +520,10 @@ const mz = StyleSheet.create({
   },
   meaning: {
     color: '#FFFFFF',
-    fontFamily: FONTS.brand,
-    fontSize: 18,
-    lineHeight: 23,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 20,
+    lineHeight: 27,
+    fontWeight: '700',
     flex: 1,
   },
 });
@@ -553,9 +554,9 @@ const res = StyleSheet.create({
     letterSpacing: 2,
   },
   title: {
-    fontFamily: FONTS.brand,
-    fontSize: 42,
-    letterSpacing: 2,
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 52,
+    letterSpacing: 3,
     textAlign: 'center',
   },
   stat: {
@@ -617,32 +618,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1A1830',
   },
-  instructionStrip: {
-    marginHorizontal: 20,
-    marginBottom: 10,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(15,13,42,0.70)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.32)',
-    alignItems: 'center',
-  },
   instructionText: {
-    color: 'rgba(255,255,255,0.62)',
-    fontFamily: FONTS.hud,
+    color: 'rgba(255,255,255,0.35)',
+    fontFamily: FONTS.label,
     fontSize: 11,
-    letterSpacing: 1.4,
+    letterSpacing: 3,
+    textAlign: 'center',
+    marginBottom: 14,
+    textTransform: 'uppercase',
   },
   cardGrid: {
     marginHorizontal: 20,
+    marginTop: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
     justifyContent: 'center',
+    paddingBottom: 16,
   },
   dailyCard: {
     width: '30.5%',
-    height: 80,
+    height: 100,
     borderRadius: 18,
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
@@ -671,9 +667,9 @@ const styles = StyleSheet.create({
   },
   cardText: {
     color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 15,
-    letterSpacing: 0,
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 20,
+    letterSpacing: 2,
     textAlign: 'center',
   },
 });
