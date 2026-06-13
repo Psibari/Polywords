@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#F5C842',
-    fontFamily: FONTS.brand,
+    fontFamily: FONTS.wordDisplay,
     fontSize: 44,
     letterSpacing: 2,
   },
