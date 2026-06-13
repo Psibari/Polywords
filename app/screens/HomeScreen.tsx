@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#F5C842',
-    fontFamily: FONTS.brand,
+    fontFamily: FONTS.wordDisplay,
     fontSize: 48,
     letterSpacing: 2,
   },
@@ -222,7 +222,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: FONTS.hud,
     fontSize: 24,
-    letterSpacing: 0.5,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
     marginTop: 28,
   },
   heroCopy: {

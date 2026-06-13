@@ -128,7 +128,7 @@ const wr = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.07)',
   },
   left: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  word: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  word: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', fontFamily: FONTS.hud },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hidden: { fontSize: 14 },
   result: { fontSize: 13 },
@@ -169,6 +169,7 @@ const gs = StyleSheet.create({
   header: {
     color: '#FFD700',
     fontSize: 13,
+    fontFamily: FONTS.hud,
     fontWeight: '700',
     marginBottom: 6,
   },
@@ -269,6 +270,7 @@ const tc = StyleSheet.create({
   header: {
     color: '#FFFFFF',
     fontSize: 13,
+    fontFamily: FONTS.hud,
     fontWeight: '700',
     marginBottom: 8,
   },
@@ -540,7 +542,7 @@ const ph = StyleSheet.create({
   line: {
     color: '#4CAF50',
     fontSize: FONT_SIZES.pollyLine,
-    fontFamily: FONTS.brand,
+    fontFamily: FONTS.polly,
     textAlign: 'center',
   },
 });
@@ -561,7 +563,7 @@ const rs = StyleSheet.create({
   pollyLine: {
     color: '#FFD700',
     fontSize: FONT_SIZES.pollyLine,
-    fontFamily: FONTS.brand,
+    fontFamily: FONTS.polly,
     textAlign: 'center',
     marginBottom: 16,
     letterSpacing: 0.5,
@@ -579,6 +581,7 @@ const rs = StyleSheet.create({
   scoreLine: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontFamily: FONTS.hud,
     fontWeight: '600',
     textAlign: 'center',
     opacity: 0.7,
@@ -586,6 +589,7 @@ const rs = StyleSheet.create({
   perfectLine: {
     color: '#FFD700',
     fontSize: 13,
+    fontFamily: FONTS.hud,
     fontWeight: '600',
     textAlign: 'center',
     opacity: 0.75,
@@ -601,6 +605,7 @@ const rs = StyleSheet.create({
   rankLabel: {
     color: 'rgba(255,255,255,0.45)',
     fontSize: 12,
+    fontFamily: FONTS.hud,
     fontWeight: '700',
     letterSpacing: 2,
   },
@@ -612,6 +617,7 @@ const rs = StyleSheet.create({
   newBest: {
     color: '#F5C842',
     fontSize: 13,
+    fontFamily: FONTS.hud,
     fontWeight: '700',
     letterSpacing: 2,
     marginTop: 6,
@@ -619,6 +625,7 @@ const rs = StyleSheet.create({
   prevBest: {
     color: 'rgba(255,255,255,0.35)',
     fontSize: 12,
+    fontFamily: FONTS.hud,
     fontWeight: '600',
     marginTop: 4,
   },
@@ -648,6 +655,7 @@ const rs = StyleSheet.create({
   homeLinkText: {
     color: 'rgba(255,255,255,0.35)',
     fontSize: 14,
+    fontFamily: FONTS.hud,
     fontWeight: '700',
     letterSpacing: 2,
   },
