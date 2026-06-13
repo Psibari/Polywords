@@ -1635,47 +1635,39 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
-            <View style={{ position: 'relative', overflow: 'visible', minHeight: isBoss ? 116 : 108, width: '100%' }}>
+            <View style={{ alignSelf: 'center', width: '100%', position: 'relative', overflow: 'visible' }}>
+              {[
+                { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
+                { dx: -1, dy:  1 }, { dx: 1, dy:  1 },
+              ].map(({ dx, dy }, i) => (
+                <Text
+                  key={i}
+                  style={{
+                    fontFamily: FONTS.wordDisplay,
+                    fontSize: isBoss ? 114 : 102,
+                    letterSpacing: 6,
+                    textAlign: 'center',
+                    position: 'absolute',
+                    left: 0, right: 0, top: 0,
+                    color: 'rgba(100,60,0,0.95)',
+                    transform: [{ translateX: dx }, { translateY: dy }],
+                  }}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.72}
+                >{step.word}</Text>
+              ))}
               <Text
-                style={[styles.word, isBoss && styles.wordBoss, {
-                  position: 'absolute', top: 0, left: 0, right: 0,
-                  color: 'rgba(100,65,0,0.6)',
-                  transform: [{ translateY: isBoss ? 8 : 6 }],
-                }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >{step.word}</Text>
-              <Text
-                style={[styles.word, isBoss && styles.wordBoss, {
-                  position: 'absolute', top: 0, left: 0, right: 0,
-                  color: 'rgba(140,95,0,0.75)',
-                  transform: [{ translateY: isBoss ? 6 : 4 }],
-                }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >{step.word}</Text>
-              <Text
-                style={[styles.word, isBoss && styles.wordBoss, {
-                  position: 'absolute', top: 0, left: 0, right: 0,
-                  color: 'rgba(180,125,0,0.85)',
-                  transform: [{ translateY: isBoss ? 4 : 2 }],
-                }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >{step.word}</Text>
-              <Text
-                style={[styles.word, isBoss && styles.wordBoss, {
-                  color: isBoss ? bossWordColor : wordColor,
-                  transform: [{ translateY: isBoss ? 2 : 0 }],
-                  ...(isBoss ? {
-                    textShadowColor: 'rgba(245,200,66,0.5)',
-                    textShadowOffset: { width: 0, height: 0 },
-                    textShadowRadius: 20,
-                  } : {}),
-                }]}
+                style={{
+                  fontFamily: FONTS.wordDisplay,
+                  fontSize: isBoss ? 114 : 102,
+                  letterSpacing: 6,
+                  textAlign: 'center',
+                  color: '#F5C842',
+                  textShadowColor: 'rgba(245,200,66,0.4)',
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: isBoss ? 28 : 16,
+                }}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.72}
@@ -2399,7 +2391,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   word: {
-    fontSize: 88,
+    fontSize: FONT_SIZES.wordDisplay,
     fontFamily: FONTS.wordDisplay,
     letterSpacing: FONT_SIZES.wordDisplayLetterSpacing,
     color: '#F5C842',
@@ -2410,7 +2402,7 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   wordBoss: {
-    fontSize: 96,
+    fontSize: FONT_SIZES.bossWordDisplay,
     fontFamily: FONTS.bossWord,
     letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#F5C842',
