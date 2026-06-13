@@ -17,7 +17,7 @@ import { useGameStore } from '../store/useGameStore';
 // ─── CONSTANTS ────────────────────────────────────────────────
 const MAX_LIVES   = 2;
 const ROUND_COUNT = 5;
-const CLAIM_THRESHOLD = -40;
+const CLAIM_THRESHOLD = -25;
 
 type DailyCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
