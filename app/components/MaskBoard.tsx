@@ -1635,14 +1635,53 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
-            <Text
-              style={[styles.word, isBoss && styles.wordBoss, { color: isBoss ? bossWordColor : wordColor }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {step.word}
-            </Text>
+            <View style={{ height: isBoss ? 106 : 98, width: '100%' }}>
+              <Text
+                style={[styles.word, isBoss && styles.wordBoss, {
+                  position: 'absolute', left: 0, right: 0,
+                  color: 'rgba(100,65,0,0.6)',
+                  transform: [{ translateY: isBoss ? 8 : 6 }],
+                }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >{step.word}</Text>
+              <Text
+                style={[styles.word, isBoss && styles.wordBoss, {
+                  position: 'absolute', left: 0, right: 0,
+                  color: 'rgba(140,95,0,0.75)',
+                  transform: [{ translateY: isBoss ? 6 : 4 }],
+                }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >{step.word}</Text>
+              <Text
+                style={[styles.word, isBoss && styles.wordBoss, {
+                  position: 'absolute', left: 0, right: 0,
+                  color: 'rgba(180,125,0,0.85)',
+                  transform: [{ translateY: isBoss ? 4 : 2 }],
+                }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >{step.word}</Text>
+              <Text
+                style={[styles.word, isBoss && styles.wordBoss, {
+                  position: 'absolute', left: 0, right: 0,
+                  color: isBoss ? bossWordColor : wordColor,
+                  transform: [{ translateY: isBoss ? 2 : 0 }],
+                  ...(isBoss ? {
+                    textShadowColor: 'rgba(245,200,66,0.5)',
+                    textShadowOffset: { width: 0, height: 0 },
+                    textShadowRadius: 20,
+                  } : {}),
+                }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >{step.word}</Text>
+            </View>
             {/* Gold overlay for absorption fill */}
             <Animated.Text
               pointerEvents="none"
@@ -1805,6 +1844,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   ref={getTileRef(topMask.id)}
                   style={styles.deckTopCardSlot}
                 >
+                  <View style={styles.deckTopCardGloss} pointerEvents="none" />
                   <SwipeMask
                     key={topMask.id}
                     mask={topMask}
@@ -2474,6 +2514,27 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 10,
     width: '100%',
+    minHeight: 96,
+    paddingVertical: 28,
+    paddingHorizontal: 32,
+    borderWidth: 2,
+    borderColor: 'rgba(123,45,139,0.6)',
+    borderRadius: 18,
+    backgroundColor: 'rgba(22,18,58,0.97)',
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  deckTopCardGloss: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1.5,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.07)',
   },
   deckDepthCard: {
     position: 'absolute',

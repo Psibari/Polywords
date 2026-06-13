@@ -1,38 +1,35 @@
 export const FONTS = {
-  // Master word display — normal words
-  wordDisplay: 'SuperCartoon-6R791',
+  // Hero word — normal and boss
+  wordDisplay: 'BebasNeue-Regular',
+  bossWord:    'BebasNeue-Regular',
 
-  // Boss word ONLY — never use anywhere else
-  bossWord: 'gomarice_okuba_cloud',
+  // All UI — HUD, badges, tile text, labels, results, stamps
+  // Always use with textTransform: 'uppercase' except Polly
+  ui: 'BarlowCondensed-Bold',
+  hud: 'BarlowCondensed-Bold',
+  tileCopy: 'BarlowCondensed-Bold',
+  label: 'BarlowCondensed-Bold',
+  brand: 'BarlowCondensed-Bold',
 
-  // Tile copy — all masks and traps
-  tileCopy: 'InterVariable',
+  // Polly speech only — mixed case, never uppercase
+  polly: 'LilitaOne-Regular',
 
-  // Brand title + Polly speech lines
-  brand: 'SuperCarnival-j9Wq0',
-
-  // HUD — score, multiplier numbers
-  hud: 'SuperCartoon-6R791',
-
-  // Progress labels, sub-labels, ghost sub-label
-  label: 'SuperFrosting-R9z4o',
-
-  // Registered, not yet used
-  poppinsBold:     'Poppins-Bold',
-  poppinsSemiBold: 'Poppins-SemiBold',
+  // Legacy aliases — keep to avoid breaking existing imports
+  poppinsBold:     'BarlowCondensed-Bold',
+  poppinsSemiBold: 'BarlowCondensed-Bold',
 } as const;
 
 export const FONT_SIZES = {
-  wordDisplay:            76,
-  wordDisplayLetterSpacing: 3,
-  bossWordDisplay:        80,
-  bossWordLetterSpacing:  4,
-  tileCopy:               20,
-  brandTitle:      48,
-  hudScore:        22,
-  hudMultiplier:   32,
-  hudLabel:        11,
-  progressLabel:   12,
-  pollyLine:       14,
-  ghostSubLabel:   10,
+  wordDisplay:              102,
+  wordDisplayLetterSpacing:   6,
+  bossWordDisplay:           114,
+  bossWordLetterSpacing:       6,
+  tileCopy:                   28,
+  brandTitle:                 48,
+  hudScore:                   26,
+  hudMultiplier:              32,
+  hudLabel:                   11,
+  progressLabel:              12,
+  pollyLine:                  17,
+  ghostSubLabel:              10,
 } as const;
