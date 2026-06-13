@@ -748,31 +748,49 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Patch 23 revised changed gate sequence to boss-only, one mystery tile, boss-only mastery/ghost, and non-boss word exit transitions.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
 - Patch 29 complete: Live Hunt generation from tile database.
-  - `assets/data/huntData.json`: 232-word tile database (208KB), GPS-tagged by difficulty. 31 valid boss candidates.
-  - `app/game/huntGenerator.ts`: Mulberry32 seeded PRNG, GPS tier sampling (2 easy / 3 medium / 2 medium-hard tension / 3 hard panic / 1 hard boss), boss selected first to prevent pool bleed, ghost priority at index 9, fallback tiers if pool runs short.
-  - `app/game/polyRunEngine.ts`: `createGame()` accepts optional session parameter, falls back to `buildRunSession()` if not provided.
-  - `app/store/useGameStore.ts`: `startGame()` calls `generateHunt()` with mastered words and ghost ids, passes result to `createGame()`.
-  - Hunt 1 SESSION constant preserved as fallback.
-  - Every new run generates a fresh 12-word arc. Replayability unlocked.
-- Patch 30 in progress: Game screen visual redesign.
-  - Font stack replaced: Bebas Neue (hero word), Barlow Condensed Bold (all UI), Lilita One (Polly speech only).
-  - All UI text uppercase except Polly lines.
-  - Hero word: layered stroke technique (8 offset layers at ±3px, color rgba(80,45,0,1.0)) + gold top layer + outer glow.
-  - Tile slab: full-width pill, minHeight 80, paddingVertical 28, thick purple border, purple glow shadow, gloss top-edge highlight.
-  - Gate removed from non-boss words — isBoss condition restored.
-  - Tile text truncation fix in progress (SwipeMask.tsx).
-  - `app/constants/fonts.ts` fully replaced with new font stack.
+  - assets/data/huntData.json: 232-word tile database (208KB).
+  - app/game/huntGenerator.ts: GPS tier sampling, Mulberry32 PRNG, ghost priority at index 9, boss-first selection, fallback tiers.
+  - app/game/polyRunEngine.ts: createGame() accepts optional session param.
+  - app/store/useGameStore.ts: startGame() calls generateHunt().
+  - SESSION fallback preserved. Every run generates a fresh 12-word arc.
+- Patch 30 complete: Game screen visual redesign.
+  - Font stack: Bungee Shade (hero word), Barlow Condensed Bold (all UI), Lilita One (Polly speech only). All UI uppercase except Polly.
+  - Hero word: 12-layer diagonal extrusion, gold face, dark amber depth, outer glow shadow. Bungee Shade at 96px normal / 114px boss.
+  - Tile slab: full-width, purple glow border, gloss highlight, adjustsFontSizeToFit on phrase text (26px, min scale 0.65, 2 lines).
+  - Gate restricted to boss-only (isBoss condition restored).
+  - POLLY'S WORD replaces BOSS WORD in all player-facing copy.
+  - Font rollout to HomeScreen, ResultsScreen, VaultScreen, SettingsScreen.
+  - POLYWORDS / WORD VAULT / SETTINGS titles use FONTS.wordDisplay.
+  - Polly speech lines use FONTS.polly (Lilita One) on all screens.
+- Patch 31 complete: Daily Challenge redesign.
+  - 5 rounds (was 3). ROUND_COUNT = 5.
+  - Layout fills full screen. Cards height 100px. 3x3 grid.
+  - Instruction label: ONE WORD FITS ALL.
+  - CLAIM_THRESHOLD reduced to -25 (was -40) — bottom row tiles now register.
+  - Font system applied throughout DailyChallengeScreen.
+  - adjustsFontSizeToFit on candidate word cards.
 
 ### Remaining Pending Work
 
-1. Tile text truncation fix (`SwipeMask.tsx` — in progress)
-2. Hero word depth/weight refinement (in progress)
-3. POLLY'S WORD badge copy update (kicker label in `MaskBoard.tsx`)
-4. Daily Challenge redesign: 5 rounds, 2 lives, 9 tiles, UP swipe only, full-screen layout, font system applied
-5. Game screen font system rollout to all other screens
-6. Continue running Mask Rewriter sessions to grow `huntData.json` beyond 232 words (target 400+)
-7. Future daily/friend/global leaderboards and deeper social ranking systems.
-8. `expo-av` to `expo-audio` migration.
+1. Continue running Mask Rewriter sessions to grow `huntData.json` beyond 232 words (target 400+)
+2. Future daily/friend/global leaderboards and deeper social ranking systems.
+3. `expo-av` to `expo-audio` migration.
+
+### Pinned / Pending
+
+- Polly redesign blocked — needs new bird-like sprite sheet.
+  Current design is too humanoid for the planned flight animation system.
+  New animation design: mid-round fly-through (enter bottom-left, hover,
+  exit bottom-right), end-of-round perch (land on branch bottom-right,
+  stay until next word, branch pulled off screen on exit).
+  No code work until new sprite delivered.
+
+### Content Pipeline State
+
+- 232 words tiled, 1838 tiles total (614 real / 1047 trap / 151 hidden).
+- huntData.json live in game. 507 words still at zero tiles.
+- Target: 400+ tiled words before next huntData.json regeneration.
+- Mask Rewriter V4 artifact available in project files.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -1118,6 +1136,9 @@ Current implementation:
 27. Patch 23 revised: permanent wrong swipes, boss-only gate, single mystery tile, non-boss word exit transition (complete)
 28. Hunt 1 GPS-compliant session content (complete)
 29. Daily Challenge screen — HomeScreen card wired, DailyChallengeScreen.tsx, Daily route (Patch 28B complete)
+30. Live Hunt generation — huntData.json + huntGenerator.ts, GPS tier sampling (Patch 29 complete)
+31. Game screen visual redesign — font stack, hero word extrusion, tile slab, font rollout to all screens (Patch 30 complete)
+32. Daily Challenge redesign — 5 rounds, full-screen layout, font system applied (Patch 31 complete)
 
 ---
 
