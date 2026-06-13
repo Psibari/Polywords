@@ -747,33 +747,32 @@ T+1400ms Tiles stagger in at 120ms intervals
   - `'oneWrongMove'` event added to `usePollyAnimator.ts`: fires at most once per word when lives hit 0, Polly says "One wrong move." via `endOfRoundPopIn`.
   - Patch 23 revised changed gate sequence to boss-only, one mystery tile, boss-only mastery/ghost, and non-boss word exit transitions.
   - TypeScript passed with `npx.cmd tsc --noEmit`.
+- Patch 29 complete: Live Hunt generation from tile database.
+  - `assets/data/huntData.json`: 232-word tile database (208KB), GPS-tagged by difficulty. 31 valid boss candidates.
+  - `app/game/huntGenerator.ts`: Mulberry32 seeded PRNG, GPS tier sampling (2 easy / 3 medium / 2 medium-hard tension / 3 hard panic / 1 hard boss), boss selected first to prevent pool bleed, ghost priority at index 9, fallback tiers if pool runs short.
+  - `app/game/polyRunEngine.ts`: `createGame()` accepts optional session parameter, falls back to `buildRunSession()` if not provided.
+  - `app/store/useGameStore.ts`: `startGame()` calls `generateHunt()` with mastered words and ghost ids, passes result to `createGame()`.
+  - Hunt 1 SESSION constant preserved as fallback.
+  - Every new run generates a fresh 12-word arc. Replayability unlocked.
+- Patch 30 in progress: Game screen visual redesign.
+  - Font stack replaced: Bebas Neue (hero word), Barlow Condensed Bold (all UI), Lilita One (Polly speech only).
+  - All UI text uppercase except Polly lines.
+  - Hero word: layered stroke technique (8 offset layers at ±3px, color rgba(80,45,0,1.0)) + gold top layer + outer glow.
+  - Tile slab: full-width pill, minHeight 80, paddingVertical 28, thick purple border, purple glow shadow, gloss top-edge highlight.
+  - Gate removed from non-boss words — isBoss condition restored.
+  - Tile text truncation fix in progress (SwipeMask.tsx).
+  - `app/constants/fonts.ts` fully replaced with new font stack.
 
 ### Remaining Pending Work
 
-Future content lane: **Database audit + selective masks/traps rewrite pass using the local Mask Rewriter tool.**
-
-- Content quality lane, not a gameplay code patch.
-- Analyze the word database.
-- Keep strong entries.
-- Rewrite weak masks/traps.
-- Improve hidden meanings.
-- Add gameplay quality notes/tags where useful.
-- Do not rewrite every entry blindly.
-- Keep strong masks.
-- Sharpen weak masks.
-- Replace traps that feel fake, random, too easy, too vague, too dictionary-like, or not tempting.
-- Maintain POLYWORDS style:
-  - Real Meaning Masks: actual meanings, compact, creative, recognizable, not flat.
-  - Trap Masks: tempting nearby decoys, not random.
-  - Hidden/Rare Masks: real overlooked meanings that create discovery.
-  - Mask/trap text should be 2-4 words where possible, punchy and readable.
-  - Avoid dictionary-definition tone.
-
-Other remaining work:
-
-1. Future daily/friend/global leaderboards and deeper social ranking systems.
-2. `expo-av` to `expo-audio` migration.
-3. Full 739-word database GPS metadata tagging and Hunt generation.
+1. Tile text truncation fix (`SwipeMask.tsx` — in progress)
+2. Hero word depth/weight refinement (in progress)
+3. POLLY'S WORD badge copy update (kicker label in `MaskBoard.tsx`)
+4. Daily Challenge redesign: 5 rounds, 2 lives, 9 tiles, UP swipe only, full-screen layout, font system applied
+5. Game screen font system rollout to all other screens
+6. Continue running Mask Rewriter sessions to grow `huntData.json` beyond 232 words (target 400+)
+7. Future daily/friend/global leaderboards and deeper social ranking systems.
+8. `expo-av` to `expo-audio` migration.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -841,6 +840,7 @@ Other remaining work:
 - Non-boss words advance via triggerWordExit() â€” no overlay, no gate
 - Haunt slot is index 9 (position 10) â€” never indexes 10 or 11 (boss zone)
 - Ghost wordId = word string always â€” never stepIndex
+- Boss word player-facing display name: “POLLY'S WORD” (replaces “BOSS WORD” in all UI copy). Engine flags (eventType: 'bossWord', bossModifier) unchanged.
 
 ---
 
