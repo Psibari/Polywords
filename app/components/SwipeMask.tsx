@@ -526,8 +526,7 @@ export function SwipeMask({
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
               ]}
-              numberOfLines={2}
-            >
+              >
               {mask.phrase}
             </Text>
           </View>
@@ -568,7 +567,6 @@ const styles = StyleSheet.create({
     shadowRadius:  34,
     shadowOpacity: 0.62,
     elevation: 14,
-    overflow: 'hidden',
   },
   phrasePanel: {
     width: '100%',

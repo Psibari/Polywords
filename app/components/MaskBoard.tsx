@@ -1910,7 +1910,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
         <View style={styles.gateArea}>
         <View style={styles.gateDockPlate} pointerEvents="none" />
-        {hasHidden && (
+        {isBoss && hasHidden && (
           gatePhase === 'tiles' || gatePhase === 'wrongFail' || gatePhase === 'mastered' ? null : (
             // Gate: locked / unlocking / doorSplit
             <Animated.View
@@ -2505,9 +2505,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 10,
     width: '100%',
-    minHeight: 96,
+    minHeight: 80,
     paddingVertical: 28,
-    paddingHorizontal: 32,
     borderWidth: 2,
     borderColor: 'rgba(123,45,139,0.6)',
     borderRadius: 18,
