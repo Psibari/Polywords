@@ -2354,7 +2354,7 @@ const styles = StyleSheet.create({
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
-    height: 142,
+    height: 130,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2445,14 +2445,14 @@ const styles = StyleSheet.create({
     right: 0,
   },
   swipeLane: {
-    height: 54,
+    height: 90,
   },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 108,
+    paddingBottom: 72,
     minHeight: 0,
   },
   tileStackArea: {
@@ -2521,8 +2521,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 10,
     width: '100%',
-    minHeight: 80,
-    paddingVertical: 28,
+    minHeight: 110,
+    paddingVertical: 36,
     borderWidth: 2,
     borderColor: 'rgba(123,45,139,0.6)',
     borderRadius: 18,
