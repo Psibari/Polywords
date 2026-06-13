@@ -1642,25 +1642,29 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               overflow: 'visible',
               shadowColor: '#F5C842',
               shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: isBoss ? 0.65 : 0.45,
-              shadowRadius: isBoss ? 44 : 28,
+              shadowOpacity: isBoss ? 0.85 : 0.65,
+              shadowRadius: isBoss ? 52 : 36,
             }}>
-              {[
-                { dx: -3, dy:  0 }, { dx:  3, dy:  0 },
-                { dx:  0, dy: -3 }, { dx:  0, dy:  3 },
-                { dx: -2, dy: -2 }, { dx:  2, dy: -2 },
-                { dx: -2, dy:  2 }, { dx:  2, dy:  2 },
-              ].map(({ dx, dy }, i) => (
+              {Array.from({ length: 12 }, (_, i) => {
+                const depth = 12 - i;
+                const dx = depth * 1.5;
+                const dy = depth * 2.0;
+                const r = Math.round(8 + (depth < 6 ? 0 : (12 - depth) * 16));
+                const g = Math.round(4 + (depth < 6 ? 0 : (12 - depth) * 8));
+                return { dx, dy, color: `rgba(${r},${g},0,1.0)` };
+              }).map(({ dx, dy, color }, i) => (
                 <Text
-                  key={i}
+                  key={`ext_${i}`}
                   style={{
                     fontFamily: FONTS.wordDisplay,
                     fontSize: isBoss ? 114 : 102,
                     letterSpacing: 6,
                     textAlign: 'center',
                     position: 'absolute',
-                    left: 0, right: 0, top: 0,
-                    color: 'rgba(80,45,0,1.0)',
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    color,
                     transform: [{ translateX: dx }, { translateY: dy }],
                   }}
                   numberOfLines={1}
