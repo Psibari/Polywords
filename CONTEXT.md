@@ -215,39 +215,39 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 
 ---
 
-## Current Repo State — June 13, 2026
+## BUILD STATE — June 13, 2026
 
-Completed and committed:
-- Patches 1–28B: complete (see CLAUDE.md for full history)
-- Patch 29 complete: Live Hunt generation. `huntData.json` bundled at `assets/data/`. `generateHunt()` in `app/game/huntGenerator.ts` samples fresh 12-word GPS arc on every run. `createGame()` accepts optional session param. `startGame()` in `useGameStore.ts` calls `generateHunt()` with mastered words + ghost ids. SESSION fallback preserved.
-- Patch 30 in progress: Game screen visual redesign.
-  - Fonts: Bebas Neue / Barlow Condensed Bold / Lilita One installed at `assets/fonts/`, registered in `app.json`, wired in `app/constants/fonts.ts`.
-  - Hero word stroke layering implemented in `MaskBoard.tsx`.
-  - Tile slab styling updated. Gate non-boss condition restored.
-  - Open items: tile text truncation in `SwipeMask.tsx`, hero word weight refinement, POLLY'S WORD kicker copy update.
+Patches 1–28B: complete (see CLAUDE.md for full history)
 
-Content pipeline state:
-- 232 words have full tile sets (audited, culled, type-flipped).
-- 1,838 tiles total: 614 real, 1,047 trap, 151 hidden.
-- 7 thin words filled: SPELL, COURT, FOLD, COPY, FLAG, COAST, BEAM.
-- 507 words in master database still have zero tiles.
-- Mask Rewriter V4 artifact in project files — use for ongoing session runs. Merge CSVs after each batch.
-- `huntData.json` regeneration needed when word count reaches 400+.
+Patch 29 complete: Live Hunt generation. huntData.json at
+assets/data/ (232 words, 208KB). generateHunt() in
+app/game/huntGenerator.ts samples fresh GPS arc every run.
+createGame() accepts optional session. SESSION fallback preserved.
 
-Locked product decisions added this session:
-- Boss word UI name: POLLY'S WORD (engine flags eventType: 'bossWord' and bossModifier unchanged)
-- Font stack locked: Bebas Neue / Barlow Condensed Bold / Lilita One
-- All game UI uppercase except Polly speech lines
+Patch 30 complete: Game screen visual redesign. Font stack:
+Bungee Shade / Barlow Condensed Bold / Lilita One. Hero word
+12-layer extrusion at 96/114px. Tile text adjustsFontSizeToFit.
+POLLY'S WORD copy locked. Font rollout complete to all screens.
 
-Remaining pending:
-1. Tile text truncation fix (`SwipeMask.tsx` — in progress)
-2. Hero word depth/weight refinement (in progress)
-3. POLLY'S WORD badge copy update (kicker label in `MaskBoard.tsx`)
-4. Daily Challenge redesign: 5 rounds, 2 lives, 9 tiles, UP swipe only, full-screen layout, font system applied
-5. Game screen font system rollout to all other screens
-6. Continue running Mask Rewriter sessions to grow `huntData.json` beyond 232 words (target 400+)
-7. Future daily/friend/global leaderboards and deeper social ranking systems
-8. `expo-av` to `expo-audio` migration
+Patch 31 complete: Daily Challenge redesign. 5 rounds, full screen
+layout, CLAIM_THRESHOLD -25, font system applied.
+
+Pinned:
+- Polly redesign: bird-like sprite needed before flight animation.
+  Mid-round fly-through + end-of-round perch system designed,
+  implementation blocked on asset.
+
+Content pipeline:
+- 232 words tiled (1838 tiles). 507 at zero.
+- Mask Rewriter V4 in project files for ongoing sessions.
+- Regenerate huntData.json when word count reaches 400+.
+
+Next priorities:
+1. Content pipeline — run more Mask Rewriter sessions
+2. Polly sprite redesign (Pete)
+3. Polly flight animation system (after sprite)
+4. Daily Challenge result screen polish
+5. App Store launch prep
 
 ---
 ## Cut List (Never Suggest These)
