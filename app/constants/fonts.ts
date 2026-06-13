@@ -20,9 +20,9 @@ export const FONTS = {
 } as const;
 
 export const FONT_SIZES = {
-  wordDisplay:              102,
+  wordDisplay:               80,
   wordDisplayLetterSpacing:   6,
-  bossWordDisplay:           114,
+  bossWordDisplay:            96,
   bossWordLetterSpacing:       6,
   tileCopy:                   28,
   brandTitle:                 48,

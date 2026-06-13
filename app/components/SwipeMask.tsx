@@ -553,7 +553,7 @@ export function SwipeMask({
 const styles = StyleSheet.create({
   tile: {
     borderRadius: 28,
-    minHeight: 122,
+    minHeight: 148,
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
@@ -603,6 +603,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flexShrink: 1,
     flexWrap: 'wrap',
+    width: '100%',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

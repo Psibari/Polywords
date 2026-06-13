@@ -1658,7 +1658,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   key={`ext_${i}`}
                   style={{
                     fontFamily: FONTS.wordDisplay,
-                    fontSize: isBoss ? 114 : 102,
+                    fontSize: isBoss ? 96 : 80,
                     letterSpacing: 6,
                     textAlign: 'center',
                     position: 'absolute',
@@ -2354,7 +2354,7 @@ const styles = StyleSheet.create({
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
-    height: 130,
+    height: 142,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
