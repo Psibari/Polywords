@@ -476,6 +476,7 @@ export function SwipeMask({
   return (
     <RNAnimated.View
       style={{
+        width: '100%',
         overflow: 'visible',
         opacity: entryOpacity,
         transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
@@ -572,7 +573,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 18,
+    paddingHorizontal: 24,
     paddingVertical: 16,
     backgroundColor: 'rgba(7,6,28,0.46)',
     borderWidth: 1,
@@ -600,7 +601,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     color: '#FFFFFF',
     textAlign: 'center',
-    flexShrink: 0,
+    flexShrink: 1,
     flexWrap: 'wrap',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
