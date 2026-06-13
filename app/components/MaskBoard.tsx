@@ -1649,8 +1649,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 const depth = 12 - i;
                 const dx = depth * 1.5;
                 const dy = depth * 2.0;
-                const r = Math.round(8 + (depth < 6 ? 0 : (12 - depth) * 16));
-                const g = Math.round(4 + (depth < 6 ? 0 : (12 - depth) * 8));
+                const t = i / 11;
+                const r = Math.round(20 + t * 140);
+                const g = Math.round(10 + t * 70);
                 return { dx, dy, color: `rgba(${r},${g},0,1.0)` };
               }).map(({ dx, dy, color }, i) => (
                 <Text
