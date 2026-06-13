@@ -527,6 +527,9 @@ export function SwipeMask({
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
               ]}
+              numberOfLines={2}
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.65}
               >
               {mask.phrase}
             </Text>
@@ -594,7 +597,7 @@ const styles = StyleSheet.create({
     zIndex: 3,
   },
   phrase: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',
