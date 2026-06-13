@@ -572,7 +572,6 @@ const styles = StyleSheet.create({
   },
   phrasePanel: {
     width: '100%',
-    minHeight: 104,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
@@ -585,7 +584,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10,
     shadowOpacity: 0.48,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   checkmark: {
     position: 'absolute',
@@ -604,6 +603,8 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     color: '#FFFFFF',
     textAlign: 'center',
+    flexShrink: 0,
+    flexWrap: 'wrap',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

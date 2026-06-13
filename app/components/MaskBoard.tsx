@@ -1635,10 +1635,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
-            <View style={{ height: isBoss ? 106 : 98, width: '100%' }}>
+            <View style={{ position: 'relative', overflow: 'visible', minHeight: isBoss ? 116 : 108, width: '100%' }}>
               <Text
                 style={[styles.word, isBoss && styles.wordBoss, {
-                  position: 'absolute', left: 0, right: 0,
+                  position: 'absolute', top: 0, left: 0, right: 0,
                   color: 'rgba(100,65,0,0.6)',
                   transform: [{ translateY: isBoss ? 8 : 6 }],
                 }]}
@@ -1648,7 +1648,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               >{step.word}</Text>
               <Text
                 style={[styles.word, isBoss && styles.wordBoss, {
-                  position: 'absolute', left: 0, right: 0,
+                  position: 'absolute', top: 0, left: 0, right: 0,
                   color: 'rgba(140,95,0,0.75)',
                   transform: [{ translateY: isBoss ? 6 : 4 }],
                 }]}
@@ -1658,7 +1658,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               >{step.word}</Text>
               <Text
                 style={[styles.word, isBoss && styles.wordBoss, {
-                  position: 'absolute', left: 0, right: 0,
+                  position: 'absolute', top: 0, left: 0, right: 0,
                   color: 'rgba(180,125,0,0.85)',
                   transform: [{ translateY: isBoss ? 4 : 2 }],
                 }]}
@@ -1668,7 +1668,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               >{step.word}</Text>
               <Text
                 style={[styles.word, isBoss && styles.wordBoss, {
-                  position: 'absolute', left: 0, right: 0,
                   color: isBoss ? bossWordColor : wordColor,
                   transform: [{ translateY: isBoss ? 2 : 0 }],
                   ...(isBoss ? {
