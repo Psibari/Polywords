@@ -1658,7 +1658,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   key={`ext_${i}`}
                   style={{
                     fontFamily: FONTS.wordDisplay,
-                    fontSize: isBoss ? 96 : 80,
+                    fontSize: isBoss ? 114 : 96,
                     letterSpacing: 6,
                     textAlign: 'center',
                     position: 'absolute',
@@ -1676,7 +1676,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               <Text
                 style={{
                   fontFamily: FONTS.wordDisplay,
-                  fontSize: isBoss ? 114 : 102,
+                  fontSize: isBoss ? 114 : 96,
                   letterSpacing: 6,
                   textAlign: 'center',
                   color: '#F5C842',

@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
   phrasePanel: {
     width: '100%',
     borderRadius: 22,
-    alignItems: 'center',
+    alignItems: 'stretch',
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
