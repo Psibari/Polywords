@@ -199,7 +199,7 @@ type Props = {
 };
 
 function eventKicker(step: WordStep): string | null {
-  if (step.eventType === 'bossWord')  return 'BOSS WORD · 2× SCORE';
+  if (step.eventType === 'bossWord')  return "POLLY'S WORD · 2× SCORE";
   if (step.eventType === 'slangDrop') return 'SLANG DROP';
   return null;
 }
