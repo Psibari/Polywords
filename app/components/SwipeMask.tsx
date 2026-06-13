@@ -553,7 +553,6 @@ const styles = StyleSheet.create({
   tile: {
     borderRadius: 28,
     minHeight: 122,
-    height: '100%',
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',

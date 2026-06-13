@@ -1635,10 +1635,21 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
-            <View style={{ alignSelf: 'center', width: '100%', position: 'relative', overflow: 'visible' }}>
+            <View style={{
+              alignSelf: 'center',
+              width: '100%',
+              position: 'relative',
+              overflow: 'visible',
+              shadowColor: '#F5C842',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: isBoss ? 0.65 : 0.45,
+              shadowRadius: isBoss ? 44 : 28,
+            }}>
               {[
-                { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
-                { dx: -1, dy:  1 }, { dx: 1, dy:  1 },
+                { dx: -3, dy:  0 }, { dx:  3, dy:  0 },
+                { dx:  0, dy: -3 }, { dx:  0, dy:  3 },
+                { dx: -2, dy: -2 }, { dx:  2, dy: -2 },
+                { dx: -2, dy:  2 }, { dx:  2, dy:  2 },
               ].map(({ dx, dy }, i) => (
                 <Text
                   key={i}
@@ -1649,7 +1660,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     textAlign: 'center',
                     position: 'absolute',
                     left: 0, right: 0, top: 0,
-                    color: 'rgba(100,60,0,0.95)',
+                    color: 'rgba(80,45,0,1.0)',
                     transform: [{ translateX: dx }, { translateY: dy }],
                   }}
                   numberOfLines={1}
@@ -1664,9 +1675,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   letterSpacing: 6,
                   textAlign: 'center',
                   color: '#F5C842',
-                  textShadowColor: 'rgba(245,200,66,0.4)',
+                  textShadowColor: 'rgba(245,200,66,0.6)',
                   textShadowOffset: { width: 0, height: 0 },
-                  textShadowRadius: isBoss ? 28 : 16,
+                  textShadowRadius: isBoss ? 36 : 24,
                 }}
                 numberOfLines={1}
                 adjustsFontSizeToFit
