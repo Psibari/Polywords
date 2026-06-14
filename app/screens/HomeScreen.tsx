@@ -312,10 +312,10 @@ const styles = StyleSheet.create({
   },
   logoSlogan: {
     marginTop: 2,
-    color: 'rgba(255,255,255,0.46)',
+    color: 'rgba(255,255,255,0.68)',
     fontFamily: FONTS.label,
-    fontSize: 9,
-    letterSpacing: 2,
+    fontSize: 10,
+    letterSpacing: 1.6,
     textAlign: 'center',
   },
   polly: {
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#9B2D6B',
   },
   cardEyebrow: {
-    color: 'rgba(255,255,255,0.48)',
+    color: 'rgba(255,255,255,0.62)',
     fontFamily: FONTS.tileCopy,
     fontSize: 9,
     letterSpacing: 1.2,
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   cardCopy: {
-    color: 'rgba(255,255,255,0.64)',
+    color: 'rgba(255,255,255,0.74)',
     fontFamily: FONTS.tileCopy,
     fontSize: 13,
     lineHeight: 18,

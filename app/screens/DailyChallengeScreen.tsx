@@ -498,7 +498,7 @@ const mz = StyleSheet.create({
     gap: 14,
   },
   label: {
-    color: 'rgba(255,255,255,0.45)',
+    color: 'rgba(255,255,255,0.64)',
     fontFamily: FONTS.label,
     fontSize: 11,
     letterSpacing: 3,
@@ -554,9 +554,10 @@ const res = StyleSheet.create({
     letterSpacing: 2,
   },
   title: {
-    fontFamily: FONTS.wordDisplay,
-    fontSize: 52,
-    letterSpacing: 3,
+    fontFamily: FONTS.hud,
+    fontSize: 46,
+    lineHeight: 50,
+    letterSpacing: 1.5,
     textAlign: 'center',
   },
   stat: {
@@ -619,7 +620,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1830',
   },
   instructionText: {
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.58)',
     fontFamily: FONTS.label,
     fontSize: 11,
     letterSpacing: 3,
@@ -640,9 +641,9 @@ const styles = StyleSheet.create({
     width: '30.5%',
     height: 100,
     borderRadius: 18,
-    backgroundColor: '#0F0D2A',
+    backgroundColor: '#141038',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.62)',
+    borderColor: 'rgba(123,45,139,0.74)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
@@ -667,9 +668,11 @@ const styles = StyleSheet.create({
   },
   cardText: {
     color: '#FFFFFF',
-    fontFamily: FONTS.wordDisplay,
-    fontSize: 20,
-    letterSpacing: 2,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 24,
+    lineHeight: 28,
+    letterSpacing: 0.6,
+    fontWeight: '800',
     textAlign: 'center',
   },
 });

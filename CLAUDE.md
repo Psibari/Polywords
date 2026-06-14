@@ -799,6 +799,12 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Under-cards are plain dark slab views with subtle offsets, borders, shadows, and no text/content/truth hints.
   - The active top card remains the only interactive `SwipeMask`; permanent exits and card advancement behavior are unchanged.
   - Daily, Hunt generation, scoring, swipe grammar, Master Gate logic, ghost logic, Home logo behavior, and Bungee font loading were not changed.
+- Patch 32E-FIX complete: Visual recovery for deck stack, hero word face, and Daily readability.
+  - Deck stack visibility was corrected after the first stack patch rendered hidden/too-subtle slabs; under-cards are wider, brighter dark-purple visual-only lips behind a narrower active top card.
+  - Main Play hero/boss words now use Bungee Shade as shadow/extrusion behind a solid `BebasNeue-Regular` foreground face.
+  - Daily readable words/results now use solid Barlow text instead of Bungee Shade, with improved contrast and line height.
+  - Home logo behavior stayed unchanged; only small supporting copy contrast was raised.
+  - No gameplay, Daily logic, Hunt generation, scoring, swipe grammar, Master Gate logic, ghost logic, or wrong-swipe permanence changed.
 
 ### Remaining Pending Work
 
@@ -1203,6 +1209,7 @@ Current implementation:
 37. First Hunt word hero treatment fix — Bungee font preloaded before first gameplay render (Patch 32D complete)
 38. Premium wrong-swipe feedback restore — brief recoil/flash, no red slab, permanent exit preserved (Patch 32E complete)
 39. Visible meaning-card deck stack restore — visual-only under-cards, top card remains interactive (Patch 32E-STACK complete)
+40. Visual recovery — visible deck lips, solid hero foreground, Daily readable foreground text (Patch 32E-FIX complete)
 
 ---
 

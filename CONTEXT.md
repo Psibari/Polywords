@@ -275,6 +275,15 @@ content, and no truth/status hints. The top card remains the only
 interactive `SwipeMask`, and permanent tile exit/advancement behavior is
 unchanged. Daily was not changed.
 
+Patch 32E-FIX complete: Visual recovery after the first stack patch failed
+device sanity. The Main Play deck now uses a narrower active top card with
+wider/brighter dark-purple under-card lips so the stack is visibly real
+without revealing content. Hero/boss words keep Bungee Shade as the
+extrusion/shadow treatment behind a solid `BebasNeue-Regular` foreground
+face. Daily cards/results use solid Barlow foreground text with stronger
+contrast and line height. Home logo behavior stayed unchanged; only small
+supporting copy contrast was raised. No gameplay logic changed.
+
 Pinned:
 - Polly redesign: bird-like sprite needed before flight animation.
   Mid-round fly-through + end-of-round perch system designed,

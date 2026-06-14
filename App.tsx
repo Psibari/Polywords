@@ -28,6 +28,8 @@ export default function App() {
     'Poppins-Bold':         require('./assets/fonts/Poppins-Bold.ttf'),
     'Poppins-SemiBold':     require('./assets/fonts/Poppins-SemiBold.ttf'),
     'BungeeShade-Regular':  require('./assets/fonts/BungeeShade-Regular.ttf'),
+    'BebasNeue-Regular':    require('./assets/fonts/BebasNeue-Regular.ttf'),
+    'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
   });
 
   useEffect(() => {
