@@ -65,16 +65,16 @@ function buildCandidateBoard(
   };
 
   seededShuffle(
-    allWords
-      .map(w => w.word)
-      .filter(word => word !== target.word),
-    seed + offset,
+    target.candidates.filter(word => word !== target.word),
+    seed + offset + 37,
   ).forEach(addUnique);
 
   if (board.length < 9) {
     seededShuffle(
-      target.candidates.filter(word => word !== target.word),
-      seed + offset + 37,
+      allWords
+        .map(w => w.word)
+        .filter(word => word !== target.word),
+      seed + offset,
     ).forEach(addUnique);
   }
 
@@ -85,25 +85,74 @@ function buildCandidateBoard(
   return seededShuffle(board.slice(0, 9), seed + offset + 101);
 }
 
+function getNearbyTiers(tier: DailyTier): DailyTier[] {
+  if (tier === 1) return [1, 2, 3];
+  if (tier === 2) return [2, 1, 3];
+  return [3, 2, 1];
+}
+
+function pickDailyWord(
+  targetTier: DailyTier,
+  selected: Set<string>,
+  seed: number,
+): DailyWord {
+  for (const tier of getNearbyTiers(targetTier)) {
+    const candidates = DAILY_POOL.filter(w => w.tier === tier && !selected.has(w.word));
+    if (candidates.length > 0) {
+      return seededShuffle(candidates, seed)[0]!;
+    }
+  }
+
+  const unused = DAILY_POOL.filter(w => !selected.has(w.word));
+  if (unused.length > 0) {
+    return seededShuffle(unused, seed + 503)[0]!;
+  }
+
+  if (DAILY_POOL.length === 0) {
+    throw new Error('Daily Challenge pool is empty.');
+  }
+
+  return seededShuffle(DAILY_POOL, seed + 997)[0]!;
+}
+
+function assertDailyRoundCount(rounds: DailyWord[]): DailyWord[] {
+  if (rounds.length !== DAILY_ROUND_COUNT) {
+    throw new Error(`Daily Challenge expected ${DAILY_ROUND_COUNT} rounds, got ${rounds.length}.`);
+  }
+  return rounds;
+}
+
+function assertDailyBoard(word: DailyWord): DailyWord {
+  if (
+    word.meanings.length !== 3 ||
+    word.candidates.length !== 9 ||
+    new Set(word.candidates).size !== 9 ||
+    !word.candidates.includes(word.word)
+  ) {
+    throw new Error(`Daily Challenge word ${word.word} must have 3 meanings and a 9-card candidate board.`);
+  }
+  return word;
+}
+
 // ── Session builder ──────────────────────────────────────────
 
 export function buildDailySession(dateStr: string): DailyWord[] {
   const seed = getDailySeed(dateStr);
 
-  const withBoard = (word: DailyWord, offset: number): DailyWord => ({
+  const withBoard = (word: DailyWord, offset: number): DailyWord => assertDailyBoard({
     ...word,
     candidates: buildCandidateBoard(word, DAILY_POOL, seed, offset),
   });
 
   const selected = new Set<string>();
-  return DAILY_TIER_CURVE.map((tier, roundIndex) => {
-    const tierPool = DAILY_POOL.filter(w => w.tier === tier);
-    const available = tierPool.filter(w => !selected.has(w.word));
-    const source = available.length > 0 ? available : tierPool;
-    const word = seededShuffle(source, seed + roundIndex * 101)[0];
+  const rounds = Array.from({ length: DAILY_ROUND_COUNT }, (_, roundIndex) => {
+    const tier = DAILY_TIER_CURVE[roundIndex] ?? DAILY_TIER_CURVE[DAILY_TIER_CURVE.length - 1]!;
+    const word = pickDailyWord(tier, selected, seed + roundIndex * 101);
     selected.add(word.word);
     return withBoard(word, roundIndex);
   });
+
+  return assertDailyRoundCount(rounds);
 }
 
 export function createDailyState(dateStr: string): DailyChallengeState {

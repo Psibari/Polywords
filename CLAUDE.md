@@ -42,7 +42,7 @@ Patch 21 complete: player progress persistence, Word Vault real data wiring, and
 Patch 22 complete: Haunt Word return system implemented. `app/game/session.ts` gained `buildRunSession(ghostWordIds: string[]): SessionStep[]` which deep-copies `SESSION`, identifies the first matching ghost word, swaps it into index 9 (word position 10, 1-based), sets `isHauntReturn: true` on that step, and never replaces the boss at position 12. `app/store/useGameStore.ts` `startGame()` now passes run-start ghost word ids into `createGame()` which calls `buildRunSession()`. `app/components/MaskBoard.tsx` and `app/hooks/usePollyAnimator.ts` gained haunt entrance banner ("Guess who's back."), HAUNT BROKEN stamp on mastery of a haunt word, STILL HAUNTED stamp when a haunt word ghosts again, and `'hauntFailed'` event which fires Polly pop-in "BBBLAAAAHHAHAHA!" via `endOfRoundPopIn`. Double `impactAsync(Medium)` haptic fires at haunt word entrance. Haunt depth cards tinted purple (`#130D2A`). TypeScript passed.
 
 Patch 28B complete: Daily Challenge screen implemented.
-- New file `app/screens/DailyChallengeScreen.tsx`: 3-round identify-the-word mode. Three meanings are shown in a card; shuffled candidate word tiles are stacked using the same `SwipeMask` deck system as the main arena. UP claims the correct word, RIGHT rejects a distractor. Two shared lives span all 3 rounds. Results overlay shows title (WORD MASTER / SHARP / SURVIVED / HAUNTED), solved/missed pills per word, and a native Share sheet.
+- New file `app/screens/DailyChallengeScreen.tsx`: identify-the-word Daily mode, originally introduced before the later 5-round redesign. Three meanings are shown in a card; shuffled candidate word tiles are stacked using the same `SwipeMask` deck system as the main arena. UP claims the correct word, RIGHT rejects a distractor. Two shared lives span the Daily. Results overlay shows title (WORD MASTER / SHARP / SURVIVED / HAUNTED), solved/missed pills per word, and a native Share sheet.
 - `App.tsx` gained `Daily` stack route (`headerShown: false`).
 - `HomeScreen.tsx` Daily Challenge card is now a live `Pressable` wired to `startDailyChallenge()` + `navigation.navigate('Daily')`. It reads `challengeNumber` and `alreadyPlayed` state from the store and shows result copy when already played.
 - All daily engine logic (`app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`) and store actions (`startDailyChallenge`, `submitDailyWrongSwipe`, `submitDailyCorrectSwipe`, `completeDailyChallenge`, `loadDailyResult`) were already complete before this patch.
@@ -774,9 +774,13 @@ T+1400ms Tiles stagger in at 120ms intervals
   - `app/constants/fonts.ts` maps `FONTS.wordDisplay` and `FONTS.bossWord` to `BungeeShade-Regular`.
   - Bebas Neue remains registered for now; no gameplay, Daily Challenge, Hunt generation, content, scoring, swipe grammar, ghost logic, or Master Gate logic changed.
 - Patch 32B complete: Daily Challenge is truly 5 rounds end-to-end.
-  - `buildDailySession()` now returns 5 seeded rounds from the existing Daily pool with a 1/1/2/2/3 tier curve.
+  - `buildDailySession()` now returns 5 seeded rounds from the existing Daily pool with a 1, 1, 2, 2, 3 tier curve.
   - Daily results, share text, title thresholds, type comments, results overlay, and Home preview all count out of 5.
   - Two shared lives and the 9-candidate board are preserved; main Hunt gameplay, Master Gate, ghosts, Hunt generation, SFX, and hero font wiring unchanged.
+- Patch 32B-FIX complete: Daily Challenge content bootstrap.
+  - `app/game/dailyPool.ts` now has 10 entries per tier, and every DailyWord has exactly 3 meanings plus a 9-word candidate board containing the correct word.
+  - `buildDailySession()` now always deals exactly 5 rounds, prefers the 1, 1, 2, 2, 3 tier curve, falls back deterministically through nearby tiers, and validates the 9-card board contract.
+  - Daily still uses 2 shared lives and the existing 9-card screen; main Hunt gameplay, Master Gate, ghosts, Hunt generation, SFX, and hero font wiring unchanged.
 
 ### Remaining Pending Work
 
@@ -1176,6 +1180,7 @@ Current implementation:
 32. Daily Challenge redesign — 5 rounds, full-screen layout, font system applied (Patch 31 complete)
 33. Bungee Shade hero/boss font wiring — registered font asset + FONTS aliases (Patch 32A complete)
 34. Daily Challenge 5-round engine wiring — session/result/share flow out of 5 (Patch 32B complete)
+35. Daily Challenge content bootstrap — valid 9-card pool boards + guarded 5-round deal (Patch 32B-FIX complete)
 
 ---
 

@@ -239,8 +239,14 @@ word font. `assets/fonts/BungeeShade-Regular.ttf` is registered in
 
 Patch 32B complete: Daily Challenge now truly plays and scores 5 rounds
 end-to-end. `buildDailySession()` returns 5 seeded rounds from the existing
-Daily pool on a 1/1/2/2/3 tier curve, and result/share/Home preview copy
+Daily pool on a 1, 1, 2, 2, 3 tier curve, and result/share/Home preview copy
 counts out of 5. Two shared lives and the 9-candidate board are preserved.
+
+Patch 32B-FIX complete: Daily Challenge now has enough valid seeded pool
+content to actually complete 5 rounds. `dailyPool.ts` has 10 entries per
+tier, each with exactly 3 meanings and a 9-word candidate board containing
+the correct word. `buildDailySession()` validates the board contract and
+always returns exactly 5 rounds with deterministic nearby-tier fallback.
 
 Pinned:
 - Polly redesign: bird-like sprite needed before flight animation.
