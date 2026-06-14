@@ -490,6 +490,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     recoilRafRef.current = requestAnimationFrame(tick);
   }
 
+  function triggerWrongSwipeFeedback() {
+    playSfx('trapWrong');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    firePollyEvent('wrong');
+    triggerWrongWordRecoil();
+    onWrongSwipe?.();
+  }
+
   // ── boss entrance ─────────────────────────────────────────────
   const bossWordTranslateY = useRef(new Animated.Value(isBoss ? -300 : 0)).current;
   const bossShakeX         = useRef(new Animated.Value(0)).current;
@@ -1389,12 +1397,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => triggerMastered(), 200);
     } else {
       wrongSwipeOccurred.current = true;
-      playSfx('trapWrong');
+      triggerWrongSwipeFeedback();
       store.submitWrongSwipe();
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      firePollyEvent('wrong');
-      triggerWrongWordRecoil();
-      onWrongSwipe?.();
       triggerWrongFail(maskId);
     }
   }
@@ -1411,12 +1416,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => triggerMastered(), 200);
     } else {
       wrongSwipeOccurred.current = true;
-      playSfx('trapWrong');
+      triggerWrongSwipeFeedback();
       store.submitWrongSwipe();
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      firePollyEvent('wrong');
-      triggerWrongWordRecoil();
-      onWrongSwipe?.();
       triggerWrongFail(maskId);
     }
   }
@@ -1479,11 +1481,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     } else {
       // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
-      playSfx('trapWrong');
+      triggerWrongSwipeFeedback();
       store.submitWrongSwipe();
-      firePollyEvent('wrong');
-      triggerWrongWordRecoil();
-      onWrongSwipe?.();
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       setTimeout(() => {
@@ -1508,11 +1507,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     } else {
       // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
-      playSfx('trapWrong');
+      triggerWrongSwipeFeedback();
       store.submitWrongSwipe();
-      firePollyEvent('wrong');
-      triggerWrongWordRecoil();
-      onWrongSwipe?.();
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       setTimeout(() => {
@@ -1793,17 +1789,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
               <View style={styles.deckWrap}>
-                {/* ── DEPTH CARD 3 — deepest, visible only if 3+ remaining ── */}
+                {/* ── DEPTH CARD 2 — deeper visual-only under-card, visible if 3+ remaining ── */}
                 {deckSize >= 3 && (
-                  <View style={[
-                    styles.deckDepthCard,
-                    styles.deckDepthCard3,
-                    isHaunt && styles.deckDepthCardHaunt,
-                  ]} pointerEvents="none" />
-                )}
-
-                {/* ── DEPTH CARD 2 — mid layer, visible if 2+ remaining ── */}
-                {deckSize >= 2 && (
                   <Animated.View style={[
                     styles.deckDepthCard,
                     styles.deckDepthCard2,
@@ -1834,16 +1821,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   ]} pointerEvents="none">
                     <View style={styles.deckDepthEdge} />
                   </Animated.View>
-                )}
-
-                {/* ── FACE-DOWN HIDDEN CARD — when hasHidden and gate locked ── */}
-                {hasHidden && (gatePhase === 'locked' || gatePhase === 'unlocking') && (
-                  <View style={[
-                    styles.deckDepthCard,
-                    styles.deckHiddenCard,
-                  ]} pointerEvents="none">
-                    <Text style={styles.deckHiddenCardEmoji}>❓</Text>
-                  </View>
                 )}
 
                 {/* ── TOP CARD — interactive ── */}
@@ -2514,23 +2491,22 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     alignItems: 'center',
-    minHeight: TILE_H + 40,
-    paddingBottom: 52,
+    minHeight: TILE_H + 54,
+    paddingBottom: 44,
   },
   deckTopCardSlot: {
     position: 'relative',
-    zIndex: 10,
+    zIndex: 20,
     width: '100%',
-    minHeight: 110,
-    paddingVertical: 36,
-    borderWidth: 2,
-    borderColor: 'rgba(123,45,139,0.6)',
-    borderRadius: 18,
-    backgroundColor: 'rgba(22,18,58,0.97)',
-    shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 18,
+    minHeight: TILE_H,
+    paddingVertical: 0,
+    borderWidth: 0,
+    borderRadius: 30,
+    backgroundColor: 'transparent',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.24,
+    shadowRadius: 22,
     elevation: 12,
   },
   deckTopCardGloss: {
@@ -2538,63 +2514,41 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 1.5,
+    height: 0,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: 'transparent',
   },
   deckDepthCard: {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: TILE_H,
+    height: TILE_H - 4,
     borderRadius: 30,
-    backgroundColor: '#2E2870',
+    backgroundColor: '#0F0D2A',
     borderWidth: 1.5,
-    borderColor: 'rgba(155,120,255,0.45)',
+    borderColor: 'rgba(123,45,139,0.34)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.55,
-    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.62,
+    shadowRadius: 24,
     elevation: 6,
     overflow: 'hidden',
   },
   deckDepthCard1: {
-    top: 8,
-    left: 5,
-    right: 5,
-    opacity: 1.0,
+    top: 20,
+    left: 10,
+    right: 10,
+    opacity: 0.74,
     zIndex: 7,
-    transform: [{ rotate: '2deg' }],
+    transform: [{ scaleX: 0.98 }, { rotate: '1deg' }],
   },
   deckDepthCard2: {
-    top: 16,
-    left: 12,
-    right: 12,
-    opacity: 0.75,
-    zIndex: 5,
-    transform: [{ rotate: '-1.4deg' }],
-  },
-  deckDepthCard3: {
-    top: 24,
-    left: 19,
-    right: 19,
-    opacity: 0.50,
-    zIndex: 3,
-  },
-  deckHiddenCard: {
-    top: 30,
+    top: 34,
     left: 22,
     right: 22,
-    opacity: 0.35,
-    zIndex: 2,
-    backgroundColor: '#0A0820',
-    borderColor: 'rgba(123,45,139,0.50)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deckHiddenCardEmoji: {
-    fontSize: 18,
-    opacity: 0.44,
+    opacity: 0.50,
+    zIndex: 5,
+    transform: [{ scaleX: 0.95 }, { rotate: '-0.8deg' }],
   },
   deckDepthEdge: {
     position: 'absolute',
@@ -2602,9 +2556,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 18,
-    backgroundColor: 'rgba(155,120,255,0.12)',
+    backgroundColor: 'rgba(123,45,139,0.13)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.04)',
+    borderTopColor: 'rgba(255,255,255,0.05)',
   },
   deckDepthCardHaunt: {
     borderColor: 'rgba(123,45,139,0.52)',

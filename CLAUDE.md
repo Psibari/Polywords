@@ -789,6 +789,16 @@ T+1400ms Tiles stagger in at 120ms intervals
   - `App.tsx` now preloads `BungeeShade-Regular` through the existing `useFonts` gate before any screen renders, preventing word 1 from flashing a fallback font.
   - `MaskBoard` continues to use the shared Bungee hero render path for words 1-11; boss still uses `FONTS.bossWord`.
   - No gameplay, Daily logic, Hunt generation, scoring, swipe grammar, Master Gate, ghost logic, SFX, or Home logo behavior changed.
+- Patch 32E complete: Premium wrong-swipe feedback restored.
+  - Wrong swipes still exit permanently and lose a feather, but feedback is now a sharp hero recoil/red flash plus a brief translucent tile accent.
+  - The heavy full-screen red wash was reduced to a faint blink, and the old duplicate wrong buzz/error haptic path was removed from `SwipeMask`.
+  - `MaskBoard` now owns the single `trapWrong` cue plus one crisp mistake haptic for wrong UP/RIGHT and final hidden-tile wrong swipes.
+  - No gameplay, Daily logic, Hunt generation, scoring, swipe grammar, Master Gate, ghost logic, Home logo behavior, or Bungee font loading changed.
+- Patch 32E-STACK complete: Visible meaning-card deck stack restored.
+  - Main Play now shows up to two visual-only under-card layers beneath the active meaning tile based on `deckSize`.
+  - Under-cards are plain dark slab views with subtle offsets, borders, shadows, and no text/content/truth hints.
+  - The active top card remains the only interactive `SwipeMask`; permanent exits and card advancement behavior are unchanged.
+  - Daily, Hunt generation, scoring, swipe grammar, Master Gate logic, ghost logic, Home logo behavior, and Bungee font loading were not changed.
 
 ### Remaining Pending Work
 
@@ -1191,6 +1201,8 @@ Current implementation:
 35. Daily Challenge content bootstrap — valid 9-card pool boards + guarded 5-round deal (Patch 32B-FIX complete)
 36. Native Home POLYWORDS logo treatment — Bungee text mark, no image asset (Patch 32C complete)
 37. First Hunt word hero treatment fix — Bungee font preloaded before first gameplay render (Patch 32D complete)
+38. Premium wrong-swipe feedback restore — brief recoil/flash, no red slab, permanent exit preserved (Patch 32E complete)
+39. Visible meaning-card deck stack restore — visual-only under-cards, top card remains interactive (Patch 32E-STACK complete)
 
 ---
 

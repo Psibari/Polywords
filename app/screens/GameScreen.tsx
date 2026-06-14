@@ -181,8 +181,8 @@ function RedFlash({ flashKey }: { flashKey: number }) {
     if (flashKey === 0) return;
     opacity.setValue(0);
     Animated.sequence([
-      Animated.timing(opacity, { toValue: 0.45, duration: 50,  useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0,    duration: 370, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0.10, duration: 35,  useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0,    duration: 145, useNativeDriver: true }),
     ]).start();
   }, [flashKey]); // eslint-disable-line react-hooks/exhaustive-deps
   return (

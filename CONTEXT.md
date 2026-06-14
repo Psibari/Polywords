@@ -260,6 +260,21 @@ screen renders, so word 1 cannot flash a fallback font. No gameplay,
 Daily, Hunt generation, scoring, swipe grammar, Master Gate, ghost logic,
 SFX, or Home logo behavior changed.
 
+Patch 32E complete: Main Play wrong-swipe feedback is restored to a
+sharp premium recoil/flash while preserving permanent tile exit and feather
+loss. The heavy full-screen red wash is now a faint blink, the tile uses a
+brief translucent wrong accent instead of a flat red slab, and `MaskBoard`
+owns the single `trapWrong` cue plus one crisp mistake haptic for wrong
+swipes. Daily, Hunt generation, scoring, swipe grammar, Master Gate, ghost
+logic, Home logo behavior, and Bungee font loading were not changed.
+
+Patch 32E-STACK complete: Visible meaning-card deck stack restored in
+Main Play. `MaskBoard` renders up to two visual-only dark under-card slabs
+behind the active tile based on `deckSize`; they have no text, no future
+content, and no truth/status hints. The top card remains the only
+interactive `SwipeMask`, and permanent tile exit/advancement behavior is
+unchanged. Daily was not changed.
+
 Pinned:
 - Polly redesign: bird-like sprite needed before flight animation.
   Mid-round fly-through + end-of-round perch system designed,

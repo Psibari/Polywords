@@ -20,7 +20,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
-import { playCorrectSwipe, playWrongBuzz, playShatter } from '../utils/SoundEngine';
+import { playCorrectSwipe, playShatter } from '../utils/SoundEngine';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
@@ -247,54 +247,55 @@ export function SwipeMask({
     // ── WRONG — failed move, then tile exits ─────────────────
     if (s === 'wrong') {
       grabLift.value = withTiming(0, { duration: 120 });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      playWrongBuzz();
       setFlashRed(true);
+      timers.push(setTimeout(() => setFlashRed(false), 105));
 
       if (mask.isReal) {
-        // Real meaning swiped right: visibly reject instead of looking successful.
+        // Real meaning swiped right: brief error recoil, then permanent exit.
         translateX.value = withSequence(
-          withTiming(92, { duration: 90, easing: ReaEasing.out(ReaEasing.ease) }),
-          withSpring(0, { damping: 9, stiffness: 260 })
+          withTiming(54, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(Dimensions.get('window').width + 160, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
         );
         translateY.value = withSequence(
-          withTiming(8, { duration: 90, easing: ReaEasing.out(ReaEasing.ease) }),
-          withSpring(0, { damping: 10, stiffness: 260 })
+          withTiming(6, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(18, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
         );
         rotation.value = withSequence(
-          withTiming(7, { duration: 85, easing: ReaEasing.out(ReaEasing.ease) }),
-          withTiming(-5, { duration: 110, easing: ReaEasing.inOut(ReaEasing.ease) }),
-          withSpring(0, { damping: 10, stiffness: 260 })
+          withTiming(5, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(17, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
         );
         scale.value = withSequence(
-          withTiming(0.98, { duration: 90, easing: ReaEasing.out(ReaEasing.ease) }),
-          withTiming(1.02, { duration: 110, easing: ReaEasing.inOut(ReaEasing.ease) }),
-          withTiming(0.94, { duration: 160, easing: ReaEasing.in(ReaEasing.ease) })
+          withTiming(0.98, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(0.86, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
         );
         borderOpacityVal.value = withSequence(
-          withTiming(0.65, { duration: 80 }),
-          withTiming(0.24, { duration: 260 })
+          withTiming(0.46, { duration: 60 }),
+          withTiming(0.18, { duration: 170 })
         );
         timers.push(setTimeout(() => {
-          tileOpacity.value = withTiming(0, { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
-        }, 380));
+          tileOpacity.value = withTiming(0, { duration: 160, easing: ReaEasing.in(ReaEasing.ease) });
+        }, 140));
         timers.push(setTimeout(() => {
           RNAnimated.parallel([
-            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
           ]).start();
-        }, 560));
+        }, 320));
       } else {
-        // Trap swiped up (wrong) -> keep existing wrong behavior.
-        translateY.value  = withTiming(-500, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
-        tileOpacity.value = withTiming(0, { duration: 260, easing: ReaEasing.in(ReaEasing.ease) });
+        // Trap swiped up: quick mistake flash, then permanent upward exit.
+        scale.value       = withSequence(
+          withTiming(0.98, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(0.84, { duration: 210, easing: ReaEasing.in(ReaEasing.ease) })
+        );
+        translateY.value  = withTiming(-500, { duration: 240, easing: ReaEasing.in(ReaEasing.ease) });
+        tileOpacity.value = withTiming(0, { duration: 230, easing: ReaEasing.in(ReaEasing.ease) });
 
         timers.push(setTimeout(() => {
           RNAnimated.parallel([
-            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
           ]).start();
-        }, 300));
+        }, 260));
       }
     }
 
@@ -302,7 +303,7 @@ export function SwipeMask({
     if (s === 'trap-caught') {
       grabLift.value = withTiming(0, { duration: 120 });
       playShatter();
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
         onEffectRef.current?.('shard', pageX + w + 88, pageY + h / 2 - 6);
@@ -649,9 +650,11 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   flashOverlay: {
-    borderRadius: 12,
+    borderRadius: 28,
     zIndex: 10,
-    backgroundColor: '#CC2200',
+    borderWidth: 1,
+    borderColor: 'rgba(204,34,0,0.52)',
+    backgroundColor: 'rgba(204,34,0,0.16)',
   },
   eraBadgeWrap: {
     position: 'absolute',
