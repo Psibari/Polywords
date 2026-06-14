@@ -248,6 +248,11 @@ tier, each with exactly 3 meanings and a 9-word candidate board containing
 the correct word. `buildDailySession()` validates the board contract and
 always returns exactly 5 rounds with deterministic nearby-tier fallback.
 
+Patch 32C complete: Home now uses a Native Bungee Shade POLYWORDS logo
+treatment because the image asset route was blocked. `POLY` renders gold,
+`WORDS` renders purple, and the mark is a centered no-wrap row with dark
+extrusion layers plus subtle gold/purple glow. No downloaded assets.
+
 Pinned:
 - Polly redesign: bird-like sprite needed before flight animation.
   Mid-round fly-through + end-of-round perch system designed,

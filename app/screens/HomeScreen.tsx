@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { DAILY_ROUND_COUNT, getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
-import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
@@ -8,6 +8,53 @@ import { useGameStore } from '../store/useGameStore';
 type Props = {
   navigation: any;
 };
+
+function HomeLogoMark() {
+  const { width } = useWindowDimensions();
+  const logoWidth = Math.min(width - 84, 318);
+  const logoFontSize = Math.max(30, Math.min(44, logoWidth / 7.2));
+  const logoLineHeight = Math.ceil(logoFontSize * 1.12);
+  const logoHeight = Math.ceil(logoLineHeight + 10);
+  const logoLetterSpacing = Math.max(0.5, logoFontSize * 0.035);
+  const baseTextStyle = {
+    fontSize: logoFontSize,
+    lineHeight: logoLineHeight,
+    letterSpacing: logoLetterSpacing,
+  };
+
+  function renderLogoLayer(
+    key: string,
+    polyColor: string,
+    wordsColor: string,
+    layerStyle: object,
+  ) {
+    return (
+      <Text
+        key={key}
+        accessible={key === 'face'}
+        accessibilityLabel={key === 'face' ? 'POLYWORDS' : undefined}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.68}
+        style={[styles.logoTextLayer, baseTextStyle, layerStyle]}
+      >
+        <Text style={{ color: polyColor }}>POLY</Text>
+        <Text style={{ color: wordsColor }}>WORDS</Text>
+      </Text>
+    );
+  }
+
+  return (
+    <View style={[styles.logoMark, { width: logoWidth, height: logoHeight }]}>
+      <View style={styles.logoGlowGold} />
+      <View style={styles.logoGlowPurple} />
+      {renderLogoLayer('extrude3', '#09071E', '#09071E', styles.logoExtrude3)}
+      {renderLogoLayer('extrude2', '#1A1236', '#150E31', styles.logoExtrude2)}
+      {renderLogoLayer('extrude1', '#55321A', '#32134D', styles.logoExtrude1)}
+      {renderLogoLayer('face', '#F5C842', '#7B2D8B', styles.logoFace)}
+    </View>
+  );
+}
 
 export default function HomeScreen({ navigation }: Props) {
   const startGame           = useGameStore(s => s.startGame);
@@ -67,9 +114,10 @@ export default function HomeScreen({ navigation }: Props) {
           <View style={styles.heroRing} />
           <View style={styles.heroShard} />
           <View style={styles.topRow}>
-            <View>
+            <View style={styles.logoHeader}>
               <Text style={styles.kicker}>ARCADE LOBBY</Text>
-              <Text style={styles.title}>POLYWORDS</Text>
+              <HomeLogoMark />
+              <Text style={styles.logoSlogan}>WORDS HAVE MEANING...SSSSS</Text>
             </View>
             <Animated.Text style={[styles.polly, { transform: [{ translateY: pollyY }] }]}>
               🦜
@@ -196,10 +244,15 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '18deg' }],
   },
   topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 12,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 92,
+  },
+  logoHeader: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   kicker: {
     color: 'rgba(255,255,255,0.56)',
@@ -208,15 +261,68 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 8,
   },
-  title: {
-    color: '#F5C842',
+  logoMark: {
+    position: 'relative',
+    alignSelf: 'center',
+    overflow: 'visible',
+  },
+  logoTextLayer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
     fontFamily: FONTS.wordDisplay,
-    fontSize: 48,
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
+  logoExtrude3: {
+    transform: [{ translateX: 5 }, { translateY: 6 }],
+    opacity: 0.92,
+  },
+  logoExtrude2: {
+    transform: [{ translateX: 3 }, { translateY: 4 }],
+    opacity: 0.94,
+  },
+  logoExtrude1: {
+    transform: [{ translateX: 1.5 }, { translateY: 2 }],
+    opacity: 0.84,
+  },
+  logoFace: {
+    textShadowColor: 'rgba(245,200,66,0.34)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  logoGlowGold: {
+    position: 'absolute',
+    left: 0,
+    top: 8,
+    width: '46%',
+    height: 28,
+    borderRadius: 18,
+    backgroundColor: 'rgba(245,200,66,0.12)',
+  },
+  logoGlowPurple: {
+    position: 'absolute',
+    right: 2,
+    top: 10,
+    width: '55%',
+    height: 28,
+    borderRadius: 18,
+    backgroundColor: 'rgba(123,45,139,0.18)',
+  },
+  logoSlogan: {
+    marginTop: 2,
+    color: 'rgba(255,255,255,0.46)',
+    fontFamily: FONTS.label,
+    fontSize: 9,
     letterSpacing: 2,
+    textAlign: 'center',
   },
   polly: {
+    position: 'absolute',
+    right: -4,
+    top: -4,
     fontSize: 62,
-    marginTop: -6,
   },
   tagline: {
     color: '#FFFFFF',

@@ -781,6 +781,10 @@ T+1400ms Tiles stagger in at 120ms intervals
   - `app/game/dailyPool.ts` now has 10 entries per tier, and every DailyWord has exactly 3 meanings plus a 9-word candidate board containing the correct word.
   - `buildDailySession()` now always deals exactly 5 rounds, prefers the 1, 1, 2, 2, 3 tier curve, falls back deterministically through nearby tiers, and validates the 9-card board contract.
   - Daily still uses 2 shared lives and the existing 9-card screen; main Hunt gameplay, Master Gate, ghosts, Hunt generation, SFX, and hero font wiring unchanged.
+- Patch 32C complete: Native POLYWORDS Home logo treatment.
+  - Home now renders a centered native Bungee Shade wordmark instead of the old wrapping title text because the image asset route was blocked.
+  - `POLY` renders gold and `WORDS` renders purple in one no-wrap row with dark extrusion layers and subtle gold/purple glow.
+  - No downloaded assets, gameplay, Daily logic, Hunt generation, SFX, navigation, scoring, swipe grammar, ghost logic, or Master Gate logic changed.
 
 ### Remaining Pending Work
 
@@ -1181,6 +1185,7 @@ Current implementation:
 33. Bungee Shade hero/boss font wiring — registered font asset + FONTS aliases (Patch 32A complete)
 34. Daily Challenge 5-round engine wiring — session/result/share flow out of 5 (Patch 32B complete)
 35. Daily Challenge content bootstrap — valid 9-card pool boards + guarded 5-round deal (Patch 32B-FIX complete)
+36. Native Home POLYWORDS logo treatment — Bungee text mark, no image asset (Patch 32C complete)
 
 ---
 
