@@ -27,6 +27,7 @@ export default function App() {
     'InterVariable':        require('./assets/fonts/InterVariable.ttf'),
     'Poppins-Bold':         require('./assets/fonts/Poppins-Bold.ttf'),
     'Poppins-SemiBold':     require('./assets/fonts/Poppins-SemiBold.ttf'),
+    'BungeeShade-Regular':  require('./assets/fonts/BungeeShade-Regular.ttf'),
   });
 
   useEffect(() => {

@@ -253,6 +253,13 @@ treatment because the image asset route was blocked. `POLY` renders gold,
 `WORDS` renders purple, and the mark is a centered no-wrap row with dark
 extrusion layers plus subtle gold/purple glow. No downloaded assets.
 
+Patch 32D complete: First Hunt word now uses the same Bungee hero
+treatment/render path as later Hunt words from the first frame. `App.tsx`
+preloads `BungeeShade-Regular` through the existing font gate before any
+screen renders, so word 1 cannot flash a fallback font. No gameplay,
+Daily, Hunt generation, scoring, swipe grammar, Master Gate, ghost logic,
+SFX, or Home logo behavior changed.
+
 Pinned:
 - Polly redesign: bird-like sprite needed before flight animation.
   Mid-round fly-through + end-of-round perch system designed,

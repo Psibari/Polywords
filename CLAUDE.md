@@ -785,6 +785,10 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Home now renders a centered native Bungee Shade wordmark instead of the old wrapping title text because the image asset route was blocked.
   - `POLY` renders gold and `WORDS` renders purple in one no-wrap row with dark extrusion layers and subtle gold/purple glow.
   - No downloaded assets, gameplay, Daily logic, Hunt generation, SFX, navigation, scoring, swipe grammar, ghost logic, or Master Gate logic changed.
+- Patch 32D complete: First Hunt word hero treatment normalized.
+  - `App.tsx` now preloads `BungeeShade-Regular` through the existing `useFonts` gate before any screen renders, preventing word 1 from flashing a fallback font.
+  - `MaskBoard` continues to use the shared Bungee hero render path for words 1-11; boss still uses `FONTS.bossWord`.
+  - No gameplay, Daily logic, Hunt generation, scoring, swipe grammar, Master Gate, ghost logic, SFX, or Home logo behavior changed.
 
 ### Remaining Pending Work
 
@@ -1186,6 +1190,7 @@ Current implementation:
 34. Daily Challenge 5-round engine wiring — session/result/share flow out of 5 (Patch 32B complete)
 35. Daily Challenge content bootstrap — valid 9-card pool boards + guarded 5-round deal (Patch 32B-FIX complete)
 36. Native Home POLYWORDS logo treatment — Bungee text mark, no image asset (Patch 32C complete)
+37. First Hunt word hero treatment fix — Bungee font preloaded before first gameplay render (Patch 32D complete)
 
 ---
 
