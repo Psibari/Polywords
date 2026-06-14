@@ -232,6 +232,11 @@ POLLY'S WORD copy locked. Font rollout complete to all screens.
 Patch 31 complete: Daily Challenge redesign. 5 rounds, full screen
 layout, CLAIM_THRESHOLD -25, font system applied.
 
+Patch 32A complete: Bungee Shade is now wired as the actual hero/boss
+word font. `assets/fonts/BungeeShade-Regular.ttf` is registered in
+`app.json`, and `FONTS.wordDisplay` / `FONTS.bossWord` both resolve to
+`BungeeShade-Regular`. Bebas Neue remains registered for now.
+
 Pinned:
 - Polly redesign: bird-like sprite needed before flight animation.
   Mid-round fly-through + end-of-round perch system designed,

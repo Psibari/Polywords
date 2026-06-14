@@ -769,6 +769,10 @@ T+1400ms Tiles stagger in at 120ms intervals
   - CLAIM_THRESHOLD reduced to -25 (was -40) — bottom row tiles now register.
   - Font system applied throughout DailyChallengeScreen.
   - adjustsFontSizeToFit on candidate word cards.
+- Patch 32A complete: Bungee Shade wired as the real hero/boss word font.
+  - `assets/fonts/BungeeShade-Regular.ttf` is registered in the Expo font plugin.
+  - `app/constants/fonts.ts` maps `FONTS.wordDisplay` and `FONTS.bossWord` to `BungeeShade-Regular`.
+  - Bebas Neue remains registered for now; no gameplay, Daily Challenge, Hunt generation, content, scoring, swipe grammar, ghost logic, or Master Gate logic changed.
 
 ### Remaining Pending Work
 
@@ -1166,6 +1170,7 @@ Current implementation:
 30. Live Hunt generation — huntData.json + huntGenerator.ts, GPS tier sampling (Patch 29 complete)
 31. Game screen visual redesign — font stack, hero word extrusion, tile slab, font rollout to all screens (Patch 30 complete)
 32. Daily Challenge redesign — 5 rounds, full-screen layout, font system applied (Patch 31 complete)
+33. Bungee Shade hero/boss font wiring — registered font asset + FONTS aliases (Patch 32A complete)
 
 ---
 

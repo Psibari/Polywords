@@ -1,7 +1,7 @@
 export const FONTS = {
   // Hero word — normal and boss
-  wordDisplay: 'BebasNeue-Regular',
-  bossWord:    'BebasNeue-Regular',
+  wordDisplay: 'BungeeShade-Regular',
+  bossWord:    'BungeeShade-Regular',
 
   // All UI — HUD, badges, tile text, labels, results, stamps
   // Always use with textTransform: 'uppercase' except Polly
