@@ -237,6 +237,11 @@ word font. `assets/fonts/BungeeShade-Regular.ttf` is registered in
 `app.json`, and `FONTS.wordDisplay` / `FONTS.bossWord` both resolve to
 `BungeeShade-Regular`. Bebas Neue remains registered for now.
 
+Patch 32B complete: Daily Challenge now truly plays and scores 5 rounds
+end-to-end. `buildDailySession()` returns 5 seeded rounds from the existing
+Daily pool on a 1/1/2/2/3 tier curve, and result/share/Home preview copy
+counts out of 5. Two shared lives and the 9-candidate board are preserved.
+
 Pinned:
 - Polly redesign: bird-like sprite needed before flight animation.
   Mid-round fly-through + end-of-round perch system designed,

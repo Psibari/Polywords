@@ -773,6 +773,10 @@ T+1400ms Tiles stagger in at 120ms intervals
   - `assets/fonts/BungeeShade-Regular.ttf` is registered in the Expo font plugin.
   - `app/constants/fonts.ts` maps `FONTS.wordDisplay` and `FONTS.bossWord` to `BungeeShade-Regular`.
   - Bebas Neue remains registered for now; no gameplay, Daily Challenge, Hunt generation, content, scoring, swipe grammar, ghost logic, or Master Gate logic changed.
+- Patch 32B complete: Daily Challenge is truly 5 rounds end-to-end.
+  - `buildDailySession()` now returns 5 seeded rounds from the existing Daily pool with a 1/1/2/2/3 tier curve.
+  - Daily results, share text, title thresholds, type comments, results overlay, and Home preview all count out of 5.
+  - Two shared lives and the 9-candidate board are preserved; main Hunt gameplay, Master Gate, ghosts, Hunt generation, SFX, and hero font wiring unchanged.
 
 ### Remaining Pending Work
 
@@ -1171,6 +1175,7 @@ Current implementation:
 31. Game screen visual redesign — font stack, hero word extrusion, tile slab, font rollout to all screens (Patch 30 complete)
 32. Daily Challenge redesign — 5 rounds, full-screen layout, font system applied (Patch 31 complete)
 33. Bungee Shade hero/boss font wiring — registered font asset + FONTS aliases (Patch 32A complete)
+34. Daily Challenge 5-round engine wiring — session/result/share flow out of 5 (Patch 32B complete)
 
 ---
 

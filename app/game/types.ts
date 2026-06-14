@@ -189,8 +189,8 @@ export type DailyTitle =
 
 export type DailyChallengeState = {
   date:                string;             // YYYY-MM-DD
-  rounds:              DailyWord[];        // 3 rounds, one per tier
-  currentRound:        number;             // 0 | 1 | 2
+  rounds:              DailyWord[];        // 5 rounds, seeded daily tier curve
+  currentRound:        number;             // 0 through rounds.length - 1
   lives:               number;             // starts at 2
   remainingCandidates: string[][];         // [round][candidate] — shrinks as tiles exit
   results:             DailyRoundResult[];
@@ -201,7 +201,7 @@ export type DailyResult = {
   date:            string;
   challengeNumber: number;
   title:           DailyTitle;
-  solvedCount:     number;     // 0–3
+  solvedCount:     number;     // 0–5
   livesLeft:       number;
   wordResults:     DailyRoundResult[];
   shareText:       string;

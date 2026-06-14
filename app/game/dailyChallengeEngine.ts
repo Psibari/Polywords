@@ -4,11 +4,14 @@ import {
   DailyChallengeState,
   DailyResult,
   DailyRoundResult,
+  DailyTier,
   DailyTitle,
 } from './types';
 
 // ── Challenge epoch — Day 1 ──────────────────────────────────
 const EPOCH_DATE = '2026-06-12';
+export const DAILY_ROUND_COUNT = 5;
+const DAILY_TIER_CURVE: DailyTier[] = [1, 1, 2, 2, 3];
 
 // ── Date helpers ─────────────────────────────────────────────
 
@@ -87,24 +90,20 @@ function buildCandidateBoard(
 export function buildDailySession(dateStr: string): DailyWord[] {
   const seed = getDailySeed(dateStr);
 
-  const tier1 = DAILY_POOL.filter(w => w.tier === 1);
-  const tier2 = DAILY_POOL.filter(w => w.tier === 2);
-  const tier3 = DAILY_POOL.filter(w => w.tier === 3);
-
-  const word1 = tier1[seed % tier1.length];
-  const word2 = tier2[((seed >> 4) >>> 0) % tier2.length];
-  const word3 = tier3[((seed >> 8) >>> 0) % tier3.length];
-
   const withBoard = (word: DailyWord, offset: number): DailyWord => ({
     ...word,
     candidates: buildCandidateBoard(word, DAILY_POOL, seed, offset),
   });
 
-  return [
-    withBoard(word1, 0),
-    withBoard(word2, 1),
-    withBoard(word3, 2),
-  ];
+  const selected = new Set<string>();
+  return DAILY_TIER_CURVE.map((tier, roundIndex) => {
+    const tierPool = DAILY_POOL.filter(w => w.tier === tier);
+    const available = tierPool.filter(w => !selected.has(w.word));
+    const source = available.length > 0 ? available : tierPool;
+    const word = seededShuffle(source, seed + roundIndex * 101)[0];
+    selected.add(word.word);
+    return withBoard(word, roundIndex);
+  });
 }
 
 export function createDailyState(dateStr: string): DailyChallengeState {
@@ -133,12 +132,17 @@ export function submitDailyWrongSwipe(
 
   if (newLives === 0) {
     const completedResults: DailyRoundResult[] = [...state.results];
+    const currentWrongSwipes =
+      state.rounds[state.currentRound].candidates.length
+      - state.remainingCandidates[state.currentRound].length
+      + 1;
+
     for (let i = state.currentRound; i < state.rounds.length; i++) {
       completedResults.push({
         word:        state.rounds[i].word,
         tier:        state.rounds[i].tier,
         status:      'missed',
-        wrongSwipes: i === state.currentRound ? 1 : 0,
+        wrongSwipes: i === state.currentRound ? currentWrongSwipes : 0,
       });
     }
     return {
@@ -189,26 +193,26 @@ export function submitDailyCorrectSwipe(
 
 export function computeDailyTitle(
   solvedCount: number,
-  livesLeft: number,
 ): DailyTitle {
-  if (solvedCount < 3)  return 'HAUNTED';
-  if (livesLeft === 2)  return 'WORD MASTER';
-  if (livesLeft === 1)  return 'SHARP';
-  return                       'SURVIVED';
+  if (solvedCount === 5) return 'WORD MASTER';
+  if (solvedCount === 4) return 'SHARP';
+  if (solvedCount >= 2) return 'SURVIVED';
+  return                     'HAUNTED';
 }
 
 export function buildDailyResult(
   state: DailyChallengeState,
 ): DailyResult {
   const solvedCount = state.results.filter(r => r.status === 'solved').length;
-  const title       = computeDailyTitle(solvedCount, state.lives);
+  const title       = computeDailyTitle(solvedCount);
   const number      = getChallengeNumber(state.date);
+  const totalRounds = state.rounds.length;
 
   const words = state.results.map(r => r.word).join(' · ');
   const share = [
     `POLYWORDS Daily #${number}`,
     `${words}`,
-    `${solvedCount}/3 words · ${state.lives} ${state.lives === 1 ? 'life' : 'lives'} left`,
+    `${solvedCount}/${totalRounds} words · ${state.lives} ${state.lives === 1 ? 'life' : 'lives'} left`,
     title,
     'polywords.app',
   ].join('\n');

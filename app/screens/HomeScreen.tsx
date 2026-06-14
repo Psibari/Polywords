@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
+import { DAILY_ROUND_COUNT, getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
 import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
@@ -109,7 +109,7 @@ export default function HomeScreen({ navigation }: Props) {
               <>
                 <Text style={styles.cardTitle}>{dailyResult?.title}</Text>
                 <Text style={styles.cardCopy}>
-                  {dailyResult?.solvedCount}/3 words ·{' '}
+                  {dailyResult?.solvedCount}/{DAILY_ROUND_COUNT} words ·{' '}
                   {canReplayDailyInDev ? 'Dev replay enabled.' : 'Come back tomorrow.'}
                 </Text>
               </>
@@ -117,7 +117,7 @@ export default function HomeScreen({ navigation }: Props) {
               <>
                 <Text style={styles.cardTitle}>DAILY CHALLENGE</Text>
                 <Text style={styles.cardCopy}>
-                  Find the word. Three meanings. Two lives.
+                  Five words. Three clues each. Two lives.
                 </Text>
               </>
             )}

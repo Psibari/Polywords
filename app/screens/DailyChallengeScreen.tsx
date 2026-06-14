@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { FONTS } from '../constants/fonts';
-import { getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
+import { DAILY_ROUND_COUNT, getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
 import { useGameStore } from '../store/useGameStore';
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 const MAX_LIVES   = 2;
-const ROUND_COUNT = 5;
+const ROUND_COUNT = DAILY_ROUND_COUNT;
 const CLAIM_THRESHOLD = -25;
 
 type DailyCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
@@ -254,7 +254,7 @@ function ResultsOverlay({
           {dailyResult.title}
         </Text>
         <Text style={res.stat}>
-          {dailyResult.solvedCount}/3 words · {dailyResult.livesLeft}{' '}
+          {dailyResult.solvedCount}/{ROUND_COUNT} words · {dailyResult.livesLeft}{' '}
           {dailyResult.livesLeft === 1 ? 'life' : 'lives'} left
         </Text>
 
