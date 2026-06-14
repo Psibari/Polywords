@@ -859,6 +859,33 @@ T+1400ms Tiles stagger in at 120ms intervals
 - Haunt slot is index 9 (position 10) â€” never indexes 10 or 11 (boss zone)
 - Ghost wordId = word string always â€” never stepIndex
 - Boss word player-facing display name: “POLLY'S WORD” (replaces “BOSS WORD” in all UI copy). Engine flags (eventType: 'bossWord', bossModifier) unchanged.
+- Live Content Engine is POST-LAUNCH ONLY — do not build pre-launch
+- Content law locked: min 2 reals per word, max 3 traps per real
+
+---
+
+## Pinned / Blocked
+
+### Polly Redesign — BLOCKED until new sprite delivered
+- Current sprite too humanoid for planned flight animation system.
+- File: assets/images/polly_sprite.png — 3×3 PNG, 418×418 cells.
+- New animation design (do not build yet):
+  Mid-round: flies in bottom-left, hovers with comment, exits right.
+  End-of-round: lands on branch bottom-right, stays until next word,
+  branch + Polly pulled off screen right on exit.
+- No code work until new bird-like sprite is delivered.
+
+### Live Content Engine — POST-LAUNCH ONLY. DO NOT BUILD BEFORE LAUNCH.
+After launch, this system keeps content fresh for returning players.
+What it does:
+- Finds words with zero tiles and generates them automatically
+- Periodically rewrites existing tile sets to refresh content
+- Generates GPS-compliant Hunt arcs from updated database
+- Game fetches huntData.json from CDN instead of bundled JSON
+Built on tools/content/mask-rewriter (Node/Express).
+Content laws enforced: min 2 reals, max 3 traps per real, GPS arc rules.
+Hosting TBD: Cloudflare Workers / Railway / Render.
+This is a v2 post-launch feature. Do not design or build pre-launch.
 
 ---
 
