@@ -66,11 +66,11 @@ Windows dev: forward-slash paths only
 
 POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the active mask tile is the challenger, the Master Gate is Polly's locked cage/vault, and the player steals mastery one swipe at a time.
 
-**Hierarchy:** HERO WORD -> ACTIVE MASK TILE -> MASTER GATE -> HUD / SCORE / FEATHERS / STREAK -> POLLY POP-IN ONLY.
+**Hierarchy:** HERO WORD -> ACTIVE MASK TILE -> HUD / SCORE / FEATHERS / STREAK -> POLLY POP-IN ONLY.
 
 **Polly pop-in design:** Patch 10 complete. Polly is the opponent, not a friendly celebration mascot. She is not permanent on the gameplay screen. She appears only as a pop-in: 1 time during a big moment in a word, always at end of round win/loss.
 
-**Gameplay layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile in lower-middle thumb zone. Clear right-side shatter lane for trap flicks. Master Gate below tile. Polly pops bottom-left on big moments.
+**Gameplay layout:** Top quiet HUD for score, feathers, streak. Giant hero word top-center as UP absorb target. Empty middle swipe lane. One active mask tile on top of tile deck in lower-middle thumb zone. Clear right-side shatter lane for trap flicks. Master Gate below tile. Polly pops bottom-left on big moments.
 
 **Hero word:** Dominates screen, sits top-center during normal play, absorbs correct UP swipes, and crashes down to center during MASTERED celebration.
 
@@ -78,7 +78,7 @@ POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the activ
 
 **Swipe motion:** UP claims real meaning; RIGHT rejects trap. No left swipe and no tap-submit. Correct UP pulls into hero word, shrinks/fades near impact. Correct RIGHT flings into shatter lane with rotation/fade and 18 purple/rose polygon shards.
 
-**Master Gate:** Text is MASTER THE WORD. It belongs to Polly, not the player. It is a low board bird cage / vault hybrid with subtle tension, `#0F0D2A` surface, faint cage bars, small lock, and quiet breathing pulse. Gate is BOSS ONLY.
+**Master Gate:** Text is {POLLY's WORD). It belongs to Polly, not the player. It is a low board bird cage / vault hybrid with subtle tension, `#0F0D2A` surface, faint cage bars, small lock, and quiet breathing pulse. Gate is BOSS ONLY.
 
 **Master Gate unlock:** Boss word only. Last real visible boss tile absorbs into hero word -> gate border charges gold -> cage bars split slightly left/right -> lock snaps open -> one mystery tile drops into the active tile position (randomly real hidden meaning or hidden trap).
 
