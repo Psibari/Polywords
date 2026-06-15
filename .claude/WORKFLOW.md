@@ -70,7 +70,7 @@ npx.cmd tsc --noEmit
    ```
 
 4. Open `CONTEXT.md`
-5. Find `## BUILD STATE — June 13, 2026` (update date)
+5. Find `## BUILD STATE` (update date if needed)
 6. Add new line to BUILD STATE section:
    ```markdown
    Patch XX complete: [PATCH NAME]. [1-2 sentence summary].
@@ -88,6 +88,105 @@ npx.cmd tsc --noEmit
    ✅ Docs synced: [hash]
    ✅ Ready to push
    ```
+
+---
+
+## Codex Integration (Token Overflow Handoff)
+
+**When Claude reaches token limits mid-patch:**
+
+### Claude's Handoff Checklist
+
+Before switching to Codex, provide:
+
+```markdown
+## CLAUDE → CODEX HANDOFF
+
+Patch: [NAME]
+Status: [e.g., "60% complete", "ready for implementation"]
+
+### ✅ Design is LOCKED
+- [Design detail 1]
+- [Design detail 2]
+- [Design detail 3]
+
+### ✅ Files to Change
+- app/components/MaskBoard.tsx (lines X-Y)
+- app/screens/GameScreen.tsx (lines A-B)
+- [others]
+
+### 🔧 Code Changes Needed
+1. [Exact change 1 with context]
+2. [Exact change 2 with context]
+3. [Exact change 3 with context]
+
+### ⚠️ CODEX MUST NOT
+- ❌ Broaden scope or add features
+- ❌ Change gameplay/swipe grammar/colors
+- ❌ Touch CLAUDE.md, CONTEXT.md, or AGENTS.md
+- ❌ Commit without explicit approval
+- ❌ Change Sacred Rules from AGENTS.md
+
+### ✅ CODEX MUST DO
+- ✅ Run: npx.cmd tsc --noEmit (report result)
+- ✅ Test on device if possible
+- ✅ Use forward-slash paths (Windows)
+- ✅ Add // PATCH_XX comments in code
+- ✅ Keep files readable (no over-refactoring)
+
+### 📝 When Done
+Codex reports:
+- TypeScript: PASS/FAIL
+- Device sanity: PASS/FAIL/UNTESTED
+- Files changed: [list]
+
+Claude then:
+1. Reviews changes
+2. Updates CLAUDE.md + CONTEXT.md
+3. Commits docs sync
+4. Declares patch complete
+```
+
+### Codex's Rules During Handoff
+
+**Codex must follow these STRICTLY:**
+
+1. **Scope is locked.** Do not add features. Do not refactor. Do not "improve" unrelated code.
+2. **Sacred Rules are sacred.** If Claude's design violates AGENTS.md, STOP and report to user.
+3. **No docs.** Never touch CLAUDE.md, CONTEXT.md, AGENTS.md, or .claude/WORKFLOW.md.
+4. **TypeScript must pass.** Run `npx.cmd tsc --noEmit` before declaring done. If it fails, fix it.
+5. **Device sanity.** If you can test on Expo Go, do it. Report the result.
+6. **Forward slashes only.** Windows: use `/` not `\` in paths.
+7. **No commits without approval.** Ask user before committing.
+8. **Surgical edits.** One file, one concern. Use `// PATCH_XX` comment markers.
+
+---
+
+## Codex → Claude Handback
+
+**When Codex finishes, report:**
+
+```markdown
+## CODEX → CLAUDE HANDBACK
+
+Patch: [NAME]
+
+✅ Code complete
+- Files changed: [list]
+- TypeScript: PASS
+- Device sanity: [PASS/FAIL/UNTESTED]
+
+🔍 Changes made:
+1. [brief summary]
+2. [brief summary]
+
+📋 Ready for:
+- Docs sync (CLAUDE.md + CONTEXT.md)
+- Final verification
+- Commit + push
+```
+
+Claude then completes Phase 5 (Docs Sync) and declares patch complete.
 
 ---
 
@@ -185,13 +284,17 @@ When leaving, provide user with:
 
 ## External AI Tools (Codex/Copilot)
 
-**Role:** Code review only. Never implementation.
+**Role:** Code mechanic + code review. Never design.
 
-- Codex: "Does this follow AGENTS.md conventions?"
-- Copilot: "Review this for TypeScript + performance"
-- Claude: Implementation owner (this workflow)
+- **Codex:** Implements code from Claude's checklist. No design changes.
+- **Copilot:** "Does this follow conventions?" + performance review.
+- **Claude:** Implementation owner + design architect.
 
-**Before merging:** Code review → Claude confirms no regressions → device sanity → merge
+**Before merging:** 
+1. Codex reports changes
+2. Claude reviews + updates docs
+3. Device sanity check
+4. Merge when TypeScript passes + device sanity passes
 
 ---
 
@@ -213,6 +316,7 @@ Do NOT guess. Do NOT broaden scope. Do NOT commit broken code.
 CLAUDE.md                       👈 Ground truth game design + patches
 CONTEXT.md                      👈 Quick-ref + build state (READ FIRST)
 AGENTS.md                       👈 Agent instructions (this file references it)
+.claude/WORKFLOW.md             👈 This file
 
 app/components/MaskBoard.tsx    Main game board (primary file)
 app/components/SwipeMask.tsx    Tile + swipe (Reanimated ONLY)
@@ -220,8 +324,7 @@ app/screens/GameScreen.tsx      Main play screen
 app/game/session.ts             12-word hunt data
 app/store/useGameStore.ts       Zustand store
 
-.claude/WORKFLOW.md             👈 This file
-.claude/PROJECT_CONTEXT.md      📋 TODO: Create next session
+.claude/                        📁 AI collaboration docs (this directory)
 ```
 
 ---
