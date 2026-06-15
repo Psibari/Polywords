@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { LogBox } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
@@ -11,8 +10,6 @@ import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import { useGameStore } from './app/store/useGameStore';
-
-LogBox.ignoreAllLogs();
 
 const Stack = createNativeStackNavigator();
 
