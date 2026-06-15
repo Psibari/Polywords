@@ -1,5 +1,5 @@
 ﻿# POLYWORDS â€” CLAUDE.md
-### Ground Truth for Claude Code · Updated June 12, 2026
+### Ground Truth for Claude Code · Updated June 15, 2026
 
 ---
 
@@ -84,7 +84,7 @@ Exception:      Reanimated â€” SwipeMask.tsx ONLY â€” frozen, no new u
 Haptics:        Expo Haptics
 Audio:          Expo AV â†’ migrating to expo-audio
 Navigation:     Expo Router
-Fonts:          Gomarice Okuba (hero word + all UI) Â· Inter Medium (tile text) Â· Poppins Bold (HUD score/combo) Â· SuperCartoon (Polly big reactions)
+Fonts:          Bungee Shade (hero word extrusion) Â· BebasNeue-Regular (hero word face) Â· Barlow Condensed Bold (all UI) Â· Lilita One (Polly speech)
 Testing:        Expo Go via QR code on physical device
 Version control: Git + GitHub
 Editor:         VS Code (Windows â€” use forward-slash paths)
@@ -124,15 +124,15 @@ Reanimated locked to SwipeMask.tsx ONLY â€” never import elsewhere
 
 | Element | Font | Size |
 |---|---|---|
-| Hero word â€” normal | Gomarice Okuba | 108px |
-| Hero word â€” Boss | Gomarice Okuba | 118px, gold |
-| All UI labels, gate text, HUD labels | Gomarice Okuba | varies |
-| Tile mask text | Inter Medium | 22px |
-| HUD score | Poppins Bold | 18px |
-| Combo multiplier | Poppins Bold | 26px â€” GOLD #F5C842 only |
-| Grade text (RATTLED etc) | Gomarice Okuba | 48px â€” WHITE only |
-| MASTER stamp | Gomarice Okuba | 44px, diagonal, gold |
-| Polly big reaction lines | SuperCartoon | varies |
+| Hero word â€” normal | Bungee Shade (extrusion) + BebasNeue-Regular (face) | 96px |
+| Hero word â€” Boss | Bungee Shade (extrusion) + BebasNeue-Regular (face) | 114px, gold |
+| All UI labels, gate text, HUD labels | Barlow Condensed Bold | varies, uppercase |
+| Tile mask text | Barlow Condensed Bold | 26px, adjustsFontSizeToFit |
+| HUD score | Barlow Condensed Bold | 18px |
+| Combo multiplier | Barlow Condensed Bold | 26px â€” GOLD #F5C842 only |
+| Grade text (RATTLED etc) | Barlow Condensed Bold | 48px â€” WHITE only |
+| MASTER stamp | Barlow Condensed Bold | 44px, diagonal, gold |
+| Polly speech lines | Lilita One | varies |
 
 ---
 
@@ -826,7 +826,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 - 232 words tiled, 1838 tiles total (614 real / 1047 trap / 151 hidden).
 - huntData.json live in game. 507 words still at zero tiles.
 - Target: 400+ tiled words before next huntData.json regeneration.
-- Mask Rewriter V4 artifact available in project files.
+- Mask Rewriter V5 artifact available in project files.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
