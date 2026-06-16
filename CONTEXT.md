@@ -62,6 +62,28 @@ Windows dev: forward-slash paths only
 
 ---
 
+## Scoring System (Patch 33 — locked)
+
+| Action | Points | Notes |
+|---|---|---|
+| Correct real (UP) | 100 × chainMultiplier | |
+| Correct rare real (UP) | 300 × chainMultiplier | isRare flag on mask |
+| Correct trap (RIGHT) | 50 × chainMultiplier | |
+| Boss correct real | 200 × chainMultiplier | 2× applied |
+| Boss correct trap | 100 × chainMultiplier | 2× applied |
+| Boss mystery tile correct | 600 × chainMultiplier | submitBossMastery() — chain-scaled climax |
+| Wrong swipe | 0 — feather lost, combo reset | |
+| Ghost tile correct (UP) | +250 flat | addBonusScore — bonus on top of word |
+
+Chain multiplier: starts 1.0, +0.5 every 3 consecutive correct swipes, caps at 3.0. Resets on any wrong swipe.
+Score floats show actual earned points — mirrors engine formula including boss 2×.
+Feather milestones: 8,000 and 16,000 pts restore 1 feather.
+Polly target: 15,000 pts. Rank scale: D/8k · C/8k · B/11k · A/14k · S/18k · MASTER/22k.
+
+Dead / removed: revealHidden() removed. hiddenFound in WordResult removed. pollyTrigger 'hiddenReveal' replaced by 'bossMastery'.
+
+---
+
 ## Locked Play Screen Design
 
 POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the active mask tile is the challenger, the Master Gate is Polly's locked cage/vault, and the player steals mastery one swipe at a time.
@@ -205,7 +227,7 @@ Polly is the MASTER OF WORDS. Every trap is her move. Boss word is hers.
 
 ## BUILD STATE — June 15, 2026
 
-**Latest completed patch: Patch 32E-FIX (Visual recovery)**
+**Latest completed patch: Patch 33 (Scoring system overhaul)**
 
 Patches 1–28B: complete (see CLAUDE.md for full history)
 
@@ -231,6 +253,8 @@ Patches 1–28B: complete (see CLAUDE.md for full history)
 
 **Patch 32E-FIX** complete: Visual recovery. Main Play deck uses narrower active top card with wider/brighter dark-purple under-card lips. Hero/boss words keep Bungee extrusion behind solid BebasNeue foreground face. Daily uses solid Barlow text. No gameplay logic changed.
 
+**Patch 33** complete: Scoring system overhaul. `submitBossMastery()` added to engine (600 × chainMultiplier, feather-milestone aware, sets `pollyTrigger: 'bossMastery'`). `revealHidden()` removed. `hiddenFound` removed from `WordResult`. `pollyTrigger 'hiddenReveal'` replaced by `'bossMastery'` throughout. Score floats in `MaskBoard` now mirror the engine formula — streak captured before store action, boss 2× applied where applicable. `tsc --noEmit` exits 0.
+
 **Pinned:**
 - Polly redesign: bird-like sprite needed before flight animation. Mid-round fly-through + end-of-round perch system designed, implementation blocked on asset.
 
@@ -241,10 +265,11 @@ Patches 1–28B: complete (see CLAUDE.md for full history)
 
 **Next priorities:**
 1. Content pipeline — run more Mask Rewriter sessions
-2. Polly sprite redesign (Pete)
-3. Polly flight animation system (after sprite)
-4. Daily Challenge result screen polish
-5. App Store launch prep
+2. Adaptive audio / music system
+3. Polly sprite redesign (Pete)
+4. Polly flight animation system (after sprite)
+5. Daily Challenge result screen polish
+6. App Store launch prep
 
 ---
 
@@ -267,6 +292,7 @@ Patches 1–28B: complete (see CLAUDE.md for full history)
 ☑️ Two-tile hidden gate
 ☑️ Ghost/mastery for non-boss words
 ☑️ hiddenEmoji / hiddenTrapEmoji
+☑️ revealHidden() / hiddenFound in WordResult / pollyTrigger 'hiddenReveal' / addBonusScore(300) in triggerMastered — all removed Patch 33
 ```
 
 ---
@@ -291,6 +317,8 @@ Patches 1–28B: complete (see CLAUDE.md for full history)
 - "Thought so." – never change
 - "BINGO BANGO ZZZZINGO!" spelling – never change
 - "BINGO BANGO ZZZZINGO!" is rare game/system achievement text only, never Polly dialogue
+- Boss mastery scoring uses submitBossMastery() — never addBonusScore() for this event
+- Score floats must mirror engine formula — read streak before store action, apply boss 2× where applicable
 
 ---
 
