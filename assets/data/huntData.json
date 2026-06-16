@@ -2070,7 +2070,7 @@
   },
   "COAST": {
     "difficulty": "medium",
-    "hiddenMeaning": "Nobody watching — now's your moment",
+    "hiddenMeaning": "Nobody watching \u2014 now's your moment",
     "hiddenTrap": null,
     "masks": [
       {
@@ -3952,7 +3952,7 @@
       },
       {
         "id": "fine_r1",
-        "phrase": "\"How are you?\" — \"...\"",
+        "phrase": "\"How are you?\" \u2014 \"...\"",
         "isReal": true
       },
       {
@@ -6195,7 +6195,7 @@
     "masks": [
       {
         "id": "mine_r0",
-        "phrase": "Hands off — already claimed",
+        "phrase": "Hands off \u2014 already claimed",
         "isReal": true
       },
       {
@@ -6868,7 +6868,7 @@
     "masks": [
       {
         "id": "order_r0",
-        "phrase": "First, second, third — someone cared",
+        "phrase": "First, second, third \u2014 someone cared",
         "isReal": true
       },
       {
@@ -9469,7 +9469,7 @@
       },
       {
         "id": "sign_r2",
-        "phrase": "Something's coming — read the sky",
+        "phrase": "Something's coming \u2014 read the sky",
         "isReal": true
       },
       {
@@ -9820,7 +9820,7 @@
       },
       {
         "id": "spirit_t1",
-        "phrase": "A séance's whole point",
+        "phrase": "A s\u00e9ance's whole point",
         "isReal": false
       },
       {
@@ -11508,7 +11508,7 @@
   },
   "WELL": {
     "difficulty": "easy",
-    "hiddenMeaning": "Inexhaustible — grief, talent, charm",
+    "hiddenMeaning": "Inexhaustible \u2014 grief, talent, charm",
     "hiddenTrap": null,
     "masks": [
       {
@@ -11623,6 +11623,1257 @@
       {
         "id": "yard_t4",
         "phrase": "Picket fence's territory",
+        "isReal": false
+      }
+    ]
+  },
+  "COUNTER": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "counter_r0",
+        "phrase": "WHERE CASHIER STANDS",
+        "isReal": true
+      },
+      {
+        "id": "counter_t0",
+        "phrase": "CASH REGISTER DRAWER",
+        "isReal": false
+      },
+      {
+        "id": "counter_r1",
+        "phrase": "ARGUES THE OTHER SIDE",
+        "isReal": true
+      },
+      {
+        "id": "counter_t1",
+        "phrase": "DODGES THE PUNCH",
+        "isReal": false
+      },
+      {
+        "id": "counter_t2",
+        "phrase": "CHANGES THE SUBJECT",
+        "isReal": false
+      },
+      {
+        "id": "counter_r2",
+        "phrase": "CLICKER AT THE DOOR",
+        "isReal": true
+      },
+      {
+        "id": "counter_t3",
+        "phrase": "TICKET TAKER WAVES YOU IN",
+        "isReal": false
+      },
+      {
+        "id": "counter_t4",
+        "phrase": "TURNSTILE SPINS ON ENTRY",
+        "isReal": false
+      },
+      {
+        "id": "counter_t5",
+        "phrase": "STOOL TUCKS UNDERNEATH",
+        "isReal": false
+      }
+    ]
+  },
+  "PROJECT": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "project_r0",
+        "phrase": "SCHOOL ASSIGNMENT DUE FRIDAY",
+        "isReal": true
+      },
+      {
+        "id": "project_t0",
+        "phrase": "HOMEWORK WORKSHEET TONIGHT",
+        "isReal": false
+      },
+      {
+        "id": "project_t1",
+        "phrase": "GROUP MEETING AFTER CLASS",
+        "isReal": false
+      },
+      {
+        "id": "project_r1",
+        "phrase": "MOVIE HITS THE WALL",
+        "isReal": true
+      },
+      {
+        "id": "project_t2",
+        "phrase": "SCREEN HANGS IN FRONT",
+        "isReal": false
+      },
+      {
+        "id": "project_t3",
+        "phrase": "LAMP BRIGHTENS THE ROOM",
+        "isReal": false
+      },
+      {
+        "id": "project_r2",
+        "phrase": "SALES GUESS NEXT YEAR",
+        "isReal": true
+      },
+      {
+        "id": "project_t4",
+        "phrase": "BUDGET CUTS THIS MONTH",
+        "isReal": false
+      },
+      {
+        "id": "project_t5",
+        "phrase": "CALENDAR MARKS THE DEADLINE",
+        "isReal": false
+      },
+      {
+        "id": "project_r3",
+        "phrase": "BALCONY JUTS OVER STREET",
+        "isReal": true
+      },
+      {
+        "id": "project_t6",
+        "phrase": "SHADOW FALLS ON SIDEWALK",
+        "isReal": false
+      },
+      {
+        "id": "project_t7",
+        "phrase": "RAILING LINES THE EDGE",
+        "isReal": false
+      },
+      {
+        "id": "project_r4",
+        "phrase": "BACK ROW HEARS YOU",
+        "isReal": true
+      },
+      {
+        "id": "project_t8",
+        "phrase": "MICROPHONE MAKES IT LOUDER",
+        "isReal": false
+      },
+      {
+        "id": "project_t9",
+        "phrase": "AUDIENCE LEANS FORWARD",
+        "isReal": false
+      }
+    ]
+  },
+  "REFRAIN": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "refrain_r0",
+        "phrase": "CHORUS COMES BACK AGAIN",
+        "isReal": true
+      },
+      {
+        "id": "refrain_t0",
+        "phrase": "BRIDGE CHANGES THE MOOD",
+        "isReal": false
+      },
+      {
+        "id": "refrain_t1",
+        "phrase": "VERSE SETS UP THE HOOK",
+        "isReal": false
+      },
+      {
+        "id": "refrain_r1",
+        "phrase": "DOESN\u2019T SAY THE COMMENT",
+        "isReal": true
+      },
+      {
+        "id": "refrain_t2",
+        "phrase": "FORGETS WHAT TO SAY",
+        "isReal": false
+      },
+      {
+        "id": "refrain_t3",
+        "phrase": "GETS INTERRUPTED MID-SENTENCE",
+        "isReal": false
+      }
+    ]
+  },
+  "BATTERY": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "battery_r0",
+        "phrase": "REMOTE DIES WITHOUT THESE",
+        "isReal": true
+      },
+      {
+        "id": "battery_t0",
+        "phrase": "CHARGING CABLE UNDER COUCH",
+        "isReal": false
+      },
+      {
+        "id": "battery_t1",
+        "phrase": "WALL OUTLET BY THE BED",
+        "isReal": false
+      },
+      {
+        "id": "battery_r1",
+        "phrase": "UNWANTED PUNCH IN COURT",
+        "isReal": true
+      },
+      {
+        "id": "battery_t2",
+        "phrase": "THREAT SHOUTED ACROSS STREET",
+        "isReal": false
+      },
+      {
+        "id": "battery_t3",
+        "phrase": "INSULTS FLY DURING ARGUMENT",
+        "isReal": false
+      },
+      {
+        "id": "battery_r2",
+        "phrase": "CANNONS LINED ON HILL",
+        "isReal": true
+      },
+      {
+        "id": "battery_t4",
+        "phrase": "SOLDIERS DIG THE TRENCH",
+        "isReal": false
+      },
+      {
+        "id": "battery_t5",
+        "phrase": "RIFLES WAIT IN RACKS",
+        "isReal": false
+      },
+      {
+        "id": "battery_r3",
+        "phrase": "DOCTOR ORDERS FULL TEST SET",
+        "isReal": true
+      },
+      {
+        "id": "battery_t6",
+        "phrase": "SINGLE BLOOD TEST RETURNS",
+        "isReal": false
+      },
+      {
+        "id": "battery_t7",
+        "phrase": "CLIPBOARD HOLDS THE RESULTS",
+        "isReal": false
+      },
+      {
+        "id": "battery_r4",
+        "phrase": "PITCHER AND CATCHER TOGETHER",
+        "isReal": true
+      },
+      {
+        "id": "battery_t8",
+        "phrase": "UMPIRE CROUCHES BEHIND PLATE",
+        "isReal": false
+      },
+      {
+        "id": "battery_t9",
+        "phrase": "BATTER WAITS IN BOX",
+        "isReal": false
+      }
+    ]
+  },
+  "BRIEF": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "brief_r0",
+        "phrase": "MEETING STAYS UNDER TEN MINUTES",
+        "isReal": true
+      },
+      {
+        "id": "brief_t0",
+        "phrase": "AGENDA SKIPS HARD TOPICS",
+        "isReal": false
+      },
+      {
+        "id": "brief_t1",
+        "phrase": "CLOCK RUNS OUT FAST",
+        "isReal": false
+      },
+      {
+        "id": "brief_r1",
+        "phrase": "LAWYER SUBMITS THE ARGUMENT",
+        "isReal": true
+      },
+      {
+        "id": "brief_t2",
+        "phrase": "JUDGE WRITES FINAL RULING",
+        "isReal": false
+      },
+      {
+        "id": "brief_t3",
+        "phrase": "CONTRACT WAITS FOR SIGNATURE",
+        "isReal": false
+      },
+      {
+        "id": "brief_r2",
+        "phrase": "MANAGER EXPLAINS THE MISSION",
+        "isReal": true
+      },
+      {
+        "id": "brief_t4",
+        "phrase": "MEMO SITS UNREAD",
+        "isReal": false
+      },
+      {
+        "id": "brief_t5",
+        "phrase": "TRAINING STARTS TOMORROW",
+        "isReal": false
+      },
+      {
+        "id": "brief_r3",
+        "phrase": "SNUG UNDERWEAR UNDER SUIT",
+        "isReal": true
+      },
+      {
+        "id": "brief_t6",
+        "phrase": "BOXERS RIDE LOWER",
+        "isReal": false
+      },
+      {
+        "id": "brief_t7",
+        "phrase": "BELT HOLDS WAISTLINE",
+        "isReal": false
+      }
+    ]
+  },
+  "CONCENTRATION": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "concentration_r0",
+        "phrase": "MIND STAYS ON ONE THING",
+        "isReal": true
+      },
+      {
+        "id": "concentration_t0",
+        "phrase": "DEADLINE CREATES PANIC",
+        "isReal": false
+      },
+      {
+        "id": "concentration_t1",
+        "phrase": "NOTES COVER THE DESK",
+        "isReal": false
+      },
+      {
+        "id": "concentration_r1",
+        "phrase": "BLEACH GETS TOO STRONG",
+        "isReal": true
+      },
+      {
+        "id": "concentration_t2",
+        "phrase": "BOTTLE LABEL WARNS DANGER",
+        "isReal": false
+      },
+      {
+        "id": "concentration_t3",
+        "phrase": "WATER DILUTES THE MIX",
+        "isReal": false
+      },
+      {
+        "id": "concentration_r2",
+        "phrase": "TROOPS PACK ONE VALLEY",
+        "isReal": true
+      },
+      {
+        "id": "concentration_t4",
+        "phrase": "MAP SHOWS THE FRONT LINE",
+        "isReal": false
+      },
+      {
+        "id": "concentration_t5",
+        "phrase": "CAMP SPREADS ACROSS HILLS",
+        "isReal": false
+      },
+      {
+        "id": "concentration_r3",
+        "phrase": "FACE-DOWN CARDS TEST MEMORY",
+        "isReal": true
+      },
+      {
+        "id": "concentration_t6",
+        "phrase": "PAIRS WAIT TO BE MATCHED",
+        "isReal": false
+      },
+      {
+        "id": "concentration_t7",
+        "phrase": "PLAYER FORGETS THE CORNER",
+        "isReal": false
+      }
+    ]
+  },
+  "CRAFT": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "craft_r0",
+        "phrase": "HANDS KNOW THE TRADE",
+        "isReal": true
+      },
+      {
+        "id": "craft_t0",
+        "phrase": "TOOLS COVER THE BENCH",
+        "isReal": false
+      },
+      {
+        "id": "craft_t1",
+        "phrase": "APPRENTICE WATCHES CLOSELY",
+        "isReal": false
+      },
+      {
+        "id": "craft_r1",
+        "phrase": "WRITER SHAPES EVERY LINE",
+        "isReal": true
+      },
+      {
+        "id": "craft_t2",
+        "phrase": "DRAFT WAITS FOR EDITS",
+        "isReal": false
+      },
+      {
+        "id": "craft_t3",
+        "phrase": "IDEA ARRIVES IN SHOWER",
+        "isReal": false
+      },
+      {
+        "id": "craft_r2",
+        "phrase": "SMALL VESSEL CROSSES HARBOR",
+        "isReal": true
+      },
+      {
+        "id": "craft_t4",
+        "phrase": "DOCK HOLDS THE ROPES",
+        "isReal": false
+      },
+      {
+        "id": "craft_t5",
+        "phrase": "ENGINE STARTS BELOW DECK",
+        "isReal": false
+      },
+      {
+        "id": "craft_r3",
+        "phrase": "CLEVERNESS HIDES IN THE PLAN",
+        "isReal": true
+      },
+      {
+        "id": "craft_t6",
+        "phrase": "LUCK SAVES THE SCHEME",
+        "isReal": false
+      },
+      {
+        "id": "craft_t7",
+        "phrase": "LIE SOUNDS POLISHED",
+        "isReal": false
+      }
+    ]
+  },
+  "ENGAGED": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "engaged_r0",
+        "phrase": "WEDDING DATE IS NOW REAL",
+        "isReal": true
+      },
+      {
+        "id": "engaged_t0",
+        "phrase": "FIRST DATE GOES WELL",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t1",
+        "phrase": "RING BOX STAYS HIDDEN",
+        "isReal": false
+      },
+      {
+        "id": "engaged_r1",
+        "phrase": "PHONE LINE STAYS BUSY",
+        "isReal": true
+      },
+      {
+        "id": "engaged_t2",
+        "phrase": "VOICEMAIL PICKS UP",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t3",
+        "phrase": "CALENDAR LOOKS FULL",
+        "isReal": false
+      },
+      {
+        "id": "engaged_r2",
+        "phrase": "STUDENTS STAY WITH LESSON",
+        "isReal": true
+      },
+      {
+        "id": "engaged_t4",
+        "phrase": "ATTENDANCE SHEET FILLS UP",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t5",
+        "phrase": "TEXTBOOKS OPEN ON DESKS",
+        "isReal": false
+      },
+      {
+        "id": "engaged_r3",
+        "phrase": "TROOPS ENTER THE FIGHT",
+        "isReal": true
+      },
+      {
+        "id": "engaged_t6",
+        "phrase": "ORDERS COME OVER RADIO",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t7",
+        "phrase": "CEASEFIRE STARTS AT DAWN",
+        "isReal": false
+      },
+      {
+        "id": "engaged_r4",
+        "phrase": "GEARS LOCK INTO PLACE",
+        "isReal": true
+      },
+      {
+        "id": "engaged_t8",
+        "phrase": "ENGINE IDLES IN NEUTRAL",
+        "isReal": false
+      },
+      {
+        "id": "engaged_t9",
+        "phrase": "CLUTCH PEDAL DROPS",
+        "isReal": false
+      }
+    ]
+  },
+  "EXCHANGE": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "exchange_r0",
+        "phrase": "TWO KIDS TRADE LUNCHES",
+        "isReal": true
+      },
+      {
+        "id": "exchange_t0",
+        "phrase": "ONE KID SHARES CHIPS",
+        "isReal": false
+      },
+      {
+        "id": "exchange_t1",
+        "phrase": "LUNCHBOX OPENS AT NOON",
+        "isReal": false
+      },
+      {
+        "id": "exchange_r1",
+        "phrase": "STOCKS CHANGE HANDS DOWNTOWN",
+        "isReal": true
+      },
+      {
+        "id": "exchange_t2",
+        "phrase": "BANK APPROVES THE LOAN",
+        "isReal": false
+      },
+      {
+        "id": "exchange_t3",
+        "phrase": "BROKER CHECKS THE SCREEN",
+        "isReal": false
+      },
+      {
+        "id": "exchange_r2",
+        "phrase": "WORDS PASS BACK AND FORTH",
+        "isReal": true
+      },
+      {
+        "id": "exchange_t4",
+        "phrase": "SPEECH RUNS WITHOUT ANSWER",
+        "isReal": false
+      },
+      {
+        "id": "exchange_t5",
+        "phrase": "QUESTION HANGS IN SILENCE",
+        "isReal": false
+      },
+      {
+        "id": "exchange_r3",
+        "phrase": "AIRPORT BOOTH CHANGES MONEY",
+        "isReal": true
+      },
+      {
+        "id": "exchange_t6",
+        "phrase": "PASSPORT WAITS IN HAND",
+        "isReal": false
+      },
+      {
+        "id": "exchange_t7",
+        "phrase": "ATM SPITS LOCAL CASH",
+        "isReal": false
+      },
+      {
+        "id": "exchange_r4",
+        "phrase": "WRONG SIZE GOES BACK",
+        "isReal": true
+      },
+      {
+        "id": "exchange_t8",
+        "phrase": "RECEIPT HIDES IN BAG",
+        "isReal": false
+      },
+      {
+        "id": "exchange_t9",
+        "phrase": "REFUND HITS THE CARD",
+        "isReal": false
+      }
+    ]
+  },
+  "FIGURE": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "figure_r0",
+        "phrase": "BUDGET SHOWS SIX DIGITS",
+        "isReal": true
+      },
+      {
+        "id": "figure_t0",
+        "phrase": "DOLLAR SIGN LEADS THE TOTAL",
+        "isReal": false
+      },
+      {
+        "id": "figure_t1",
+        "phrase": "SPREADSHEET ADDS THE COLUMN",
+        "isReal": false
+      },
+      {
+        "id": "figure_r1",
+        "phrase": "DRESS FOLLOWS BODY SHAPE",
+        "isReal": true
+      },
+      {
+        "id": "figure_t2",
+        "phrase": "MIRROR CHECKS THE OUTFIT",
+        "isReal": false
+      },
+      {
+        "id": "figure_t3",
+        "phrase": "WAISTBAND FEELS TOO TIGHT",
+        "isReal": false
+      },
+      {
+        "id": "figure_r2",
+        "phrase": "HISTORY BOOK NAMES THEM",
+        "isReal": true
+      },
+      {
+        "id": "figure_t4",
+        "phrase": "CROWD CHEERS THEIR SPEECH",
+        "isReal": false
+      },
+      {
+        "id": "figure_t5",
+        "phrase": "PORTRAIT HANGS IN HALL",
+        "isReal": false
+      },
+      {
+        "id": "figure_r3",
+        "phrase": "DIAGRAM SITS UNDER CAPTION",
+        "isReal": true
+      },
+      {
+        "id": "figure_t6",
+        "phrase": "FOOTNOTE EXPLAINS THE SOURCE",
+        "isReal": false
+      },
+      {
+        "id": "figure_t7",
+        "phrase": "CHART SHOWS THE TREND",
+        "isReal": false
+      },
+      {
+        "id": "figure_r4",
+        "phrase": "MATH GETS WORKED OUT",
+        "isReal": true
+      },
+      {
+        "id": "figure_t8",
+        "phrase": "ANSWER KEY HIDES BELOW",
+        "isReal": false
+      },
+      {
+        "id": "figure_t9",
+        "phrase": "CALCULATOR NEEDS BATTERIES",
+        "isReal": false
+      },
+      {
+        "id": "figure_r5",
+        "phrase": "WORDS DON\u2019T MEAN THEMSELVES",
+        "isReal": true
+      },
+      {
+        "id": "figure_t10",
+        "phrase": "RHYME LANDS AT LINE END",
+        "isReal": false
+      },
+      {
+        "id": "figure_t11",
+        "phrase": "JOKE NEEDS A PUNCHLINE",
+        "isReal": false
+      }
+    ]
+  },
+  "GROSS": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "gross_r0",
+        "phrase": "Your salary before the government's cut",
+        "isReal": true
+      },
+      {
+        "id": "gross_r1",
+        "phrase": "A smell that clears the elevator",
+        "isReal": true
+      },
+      {
+        "id": "gross_t0",
+        "phrase": "What the tax man keeps",
+        "isReal": false
+      },
+      {
+        "id": "gross_t1",
+        "phrase": "Rotten food's final verdict",
+        "isReal": false
+      }
+    ]
+  },
+  "WEAVE": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "weave_r0",
+        "phrase": "What a loom does all day",
+        "isReal": true
+      },
+      {
+        "id": "weave_r1",
+        "phrase": "How a cyclist survives traffic",
+        "isReal": true
+      },
+      {
+        "id": "weave_r2",
+        "phrase": "Extensions braided into the mix",
+        "isReal": true
+      },
+      {
+        "id": "weave_t0",
+        "phrase": "Two threads knotted tight",
+        "isReal": false
+      }
+    ]
+  },
+  "SCHOOL": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "school_r0",
+        "phrase": "Where summers go to die",
+        "isReal": true
+      },
+      {
+        "id": "school_r1",
+        "phrase": "Hundreds moving like one",
+        "isReal": true
+      },
+      {
+        "id": "school_t0",
+        "phrase": "A teacher's red pen",
+        "isReal": false
+      },
+      {
+        "id": "school_t1",
+        "phrase": "Salmon heading upstream",
+        "isReal": false
+      }
+    ]
+  },
+  "MERCURY": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "mercury_r0",
+        "phrase": "Thermometer's silver secret",
+        "isReal": true
+      },
+      {
+        "id": "mercury_r1",
+        "phrase": "Gets the worst of the heat",
+        "isReal": true
+      },
+      {
+        "id": "mercury_r2",
+        "phrase": "Winged sandals, urgent errand",
+        "isReal": true
+      },
+      {
+        "id": "mercury_t0",
+        "phrase": "A car built for speed",
+        "isReal": false
+      },
+      {
+        "id": "mercury_t1",
+        "phrase": "Poison slipped in water",
+        "isReal": false
+      }
+    ]
+  },
+  "CONTEST": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "contest_r0",
+        "phrase": "One trophy, many egos",
+        "isReal": true
+      },
+      {
+        "id": "contest_r1",
+        "phrase": "Lawyer's favorite word",
+        "isReal": true
+      },
+      {
+        "id": "contest_r2",
+        "phrase": "Throwing your hat in",
+        "isReal": true
+      },
+      {
+        "id": "contest_t0",
+        "phrase": "Judges holding numbered paddles",
+        "isReal": false
+      },
+      {
+        "id": "contest_t1",
+        "phrase": "Refusing to sign quietly",
+        "isReal": false
+      }
+    ]
+  },
+  "RACE": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "race_r0",
+        "phrase": "A census box to tick",
+        "isReal": true
+      },
+      {
+        "id": "race_r1",
+        "phrase": "Heart doing it during a scare",
+        "isReal": true
+      },
+      {
+        "id": "race_t0",
+        "phrase": "Winning the gold medal",
+        "isReal": false
+      },
+      {
+        "id": "race_t1",
+        "phrase": "A nationality on a passport",
+        "isReal": false
+      },
+      {
+        "id": "race_t2",
+        "phrase": "Sprinting past a stop sign",
+        "isReal": false
+      }
+    ]
+  },
+  "RIDER": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "rider_r0",
+        "phrase": "Never touches the ground voluntarily",
+        "isReal": true
+      },
+      {
+        "id": "rider_t0",
+        "phrase": "Holds on for dear life",
+        "isReal": false
+      },
+      {
+        "id": "rider_t1",
+        "phrase": "A bill's sneaky amendment",
+        "isReal": false
+      }
+    ]
+  },
+  "CURE": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "cure_r0",
+        "phrase": "Doctor's holy grail",
+        "isReal": true
+      },
+      {
+        "id": "cure_r1",
+        "phrase": "Bacon's debt to salt and smoke",
+        "isReal": true
+      },
+      {
+        "id": "cure_r2",
+        "phrase": "What fixes the unfixable",
+        "isReal": true
+      },
+      {
+        "id": "cure_t0",
+        "phrase": "Bandage applied with confidence",
+        "isReal": false
+      }
+    ]
+  },
+  "NUT": {
+    "difficulty": "easy",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "nut_r0",
+        "phrase": "Squirrels are obsessed with it",
+        "isReal": true
+      },
+      {
+        "id": "nut_r1",
+        "phrase": "Keeps the bolt honest",
+        "isReal": true
+      },
+      {
+        "id": "nut_t0",
+        "phrase": "Cracks under pressure",
+        "isReal": false
+      },
+      {
+        "id": "nut_t1",
+        "phrase": "A wrench's reason for existing",
+        "isReal": false
+      }
+    ]
+  },
+  "CABIN": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "cabin_r0",
+        "phrase": "No Wi-Fi, on purpose",
+        "isReal": true
+      },
+      {
+        "id": "cabin_r1",
+        "phrase": "Where the seasick sleep it off",
+        "isReal": true
+      },
+      {
+        "id": "cabin_r2",
+        "phrase": "Recline one inch, make an enemy",
+        "isReal": true
+      },
+      {
+        "id": "cabin_t0",
+        "phrase": "Captain's wheel room",
+        "isReal": false
+      },
+      {
+        "id": "cabin_t1",
+        "phrase": "Smoke rising through pine trees",
+        "isReal": false
+      }
+    ]
+  },
+  "SERVICE": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "service_r0",
+        "phrase": "What you tip for",
+        "isReal": true
+      },
+      {
+        "id": "service_t0",
+        "phrase": "Tennis ball mid-air",
+        "isReal": false
+      },
+      {
+        "id": "service_t1",
+        "phrase": "Car waiting in the garage bay",
+        "isReal": false
+      },
+      {
+        "id": "service_t2",
+        "phrase": "Collection plate passed around",
+        "isReal": false
+      }
+    ]
+  },
+  "TARGET": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "target_r0",
+        "phrase": "Bullseye's whole reason for being",
+        "isReal": true
+      },
+      {
+        "id": "target_t0",
+        "phrase": "Arrow already in flight",
+        "isReal": false
+      },
+      {
+        "id": "target_t1",
+        "phrase": "Quarterly review's favourite word",
+        "isReal": false
+      }
+    ]
+  },
+  "ANCHOR": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "anchor_r0",
+        "phrase": "Iron habit of the harbor",
+        "isReal": true
+      },
+      {
+        "id": "anchor_r1",
+        "phrase": "Keeps the broadcast from drifting",
+        "isReal": true
+      },
+      {
+        "id": "anchor_r2",
+        "phrase": "Bolted to the wall, going nowhere",
+        "isReal": true
+      },
+      {
+        "id": "anchor_t0",
+        "phrase": "Ropes the vessel to the dock",
+        "isReal": false
+      },
+      {
+        "id": "anchor_t1",
+        "phrase": "The first price you see",
+        "isReal": false
+      },
+      {
+        "id": "anchor_t2",
+        "phrase": "Face of the network",
+        "isReal": false
+      }
+    ]
+  },
+  "CEILING": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "ceiling_r0",
+        "phrase": "What you stare at, sleepless",
+        "isReal": true
+      },
+      {
+        "id": "ceiling_r1",
+        "phrase": "The raise that isn't coming",
+        "isReal": true
+      },
+      {
+        "id": "ceiling_r2",
+        "phrase": "Where the plane refuses to climb",
+        "isReal": true
+      },
+      {
+        "id": "ceiling_t0",
+        "phrase": "Glass stopping certain people",
+        "isReal": false
+      },
+      {
+        "id": "ceiling_t1",
+        "phrase": "Plaster, paint, and crown molding",
+        "isReal": false
+      },
+      {
+        "id": "ceiling_t2",
+        "phrase": "Cloud base measured in feet",
+        "isReal": false
+      }
+    ]
+  },
+  "POLISH": {
+    "difficulty": "easy",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "polish_r0",
+        "phrase": "Shoes demand it monthly",
+        "isReal": true
+      },
+      {
+        "id": "polish_r1",
+        "phrase": "Rough edges, meet their fate",
+        "isReal": true
+      },
+      {
+        "id": "polish_t0",
+        "phrase": "A country east of Germany",
+        "isReal": false
+      },
+      {
+        "id": "polish_r2",
+        "phrase": "Lives next to the shoes",
+        "isReal": true
+      },
+      {
+        "id": "polish_r3",
+        "phrase": "Buffed until you see yourself",
+        "isReal": true
+      },
+      {
+        "id": "polish_t1",
+        "phrase": "Scrubs the grime off",
+        "isReal": false
+      }
+    ]
+  },
+  "TOLL": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "toll_r0",
+        "phrase": "What the bridge charges to cross",
+        "isReal": true
+      },
+      {
+        "id": "toll_r1",
+        "phrase": "The war's final count",
+        "isReal": true
+      },
+      {
+        "id": "toll_t0",
+        "phrase": "A bell's long goodbye",
+        "isReal": false
+      },
+      {
+        "id": "toll_t1",
+        "phrase": "Price of a speeding ticket",
+        "isReal": false
+      }
+    ]
+  },
+  "STORE": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "store_r0",
+        "phrase": "Where your errands end up",
+        "isReal": true
+      },
+      {
+        "id": "store_r1",
+        "phrase": "Squirrel behavior, applied to humans",
+        "isReal": true
+      },
+      {
+        "id": "store_r2",
+        "phrase": "What a bunker is full of",
+        "isReal": true
+      },
+      {
+        "id": "store_t0",
+        "phrase": "Arranges goods on a shelf",
+        "isReal": false
+      },
+      {
+        "id": "store_t1",
+        "phrase": "Checks out at the register",
+        "isReal": false
+      }
+    ]
+  },
+  "PRESERVE": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "preserve_r0",
+        "phrase": "What museums do to old things",
+        "isReal": true
+      },
+      {
+        "id": "preserve_r1",
+        "phrase": "Jam's chunkier cousin",
+        "isReal": true
+      },
+      {
+        "id": "preserve_t0",
+        "phrase": "Pickles a cucumber",
+        "isReal": false
+      },
+      {
+        "id": "preserve_t1",
+        "phrase": "Restores a crumbling building",
+        "isReal": false
+      },
+      {
+        "id": "preserve_t2",
+        "phrase": "Smeared on buttered toast",
         "isReal": false
       }
     ]
