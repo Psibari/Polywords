@@ -805,6 +805,13 @@ T+1400ms Tiles stagger in at 120ms intervals
   - Daily readable words/results now use solid Barlow text instead of Bungee Shade, with improved contrast and line height.
   - Home logo behavior stayed unchanged; only small supporting copy contrast was raised.
   - No gameplay, Daily logic, Hunt generation, scoring, swipe grammar, Master Gate logic, ghost logic, or wrong-swipe permanence changed.
+- Patch 33 complete: Scoring system overhaul.
+  - `submitBossMastery()` added to polyRunEngine.ts (600 × chainMultiplier, feather-milestone aware, sets pollyTrigger: 'bossMastery').
+  - `revealHidden()` removed from engine.
+  - `hiddenFound` removed from WordResult type.
+  - pollyTrigger 'hiddenReveal' replaced by 'bossMastery' throughout.
+  - Score floats in MaskBoard now mirror the engine formula — streak captured before store action, boss 2× applied where applicable.
+  - tsc --noEmit exits 0.
 
 ### Remaining Pending Work
 
@@ -826,7 +833,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 - 232 words tiled, 1838 tiles total (614 real / 1047 trap / 151 hidden).
 - huntData.json live in game. 507 words still at zero tiles.
 - Target: 400+ tiled words before next huntData.json regeneration.
-- Mask Rewriter V5 artifact available in project files.
+- Mask Rewriter V7 artifact available in project files.
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -856,6 +863,10 @@ T+1400ms Tiles stagger in at 120ms intervals
 - â˜ ï¸ Ghost system for non-boss words — ghosts are boss-only
 - â˜ ï¸ MASTERED/HAUNTED overlays for non-boss words
 - â˜ ï¸ hiddenEmoji and hiddenTrapEmoji fields on WordStep
+- â˜ ï¸ revealHidden() — removed Patch 33
+- â˜ ï¸ hiddenFound in WordResult — removed Patch 33
+- â˜ ï¸ pollyTrigger 'hiddenReveal' — replaced by 'bossMastery' Patch 33
+- â˜ ï¸ addBonusScore(300) in triggerMastered — removed Patch 33
 
 ---
 
