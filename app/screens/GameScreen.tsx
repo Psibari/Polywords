@@ -11,6 +11,7 @@ import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { preloadSfx, unloadSfx } from '../audio/sfx';
+import { initMusicEngine, startMusic, stopMusic, setMusicState, triggerChainBreak, disposeMusicEngine, MusicState } from '../audio/MusicEngine';
 import * as Haptics from 'expo-haptics';
 
 // ─── SHARD ANGLES ────────────────────────────────────────────
@@ -447,7 +448,8 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   // ── Effects overlay state ──────────────────────────────────
   const [effects, setEffects] = useState<EffectEntry[]>([]);
-  const effectIdRef = useRef(0);
+  const effectIdRef   = useRef(0);
+  const prevChainRef  = useRef<number>(1);
 
   const spawnEffect = useCallback((type: 'shard' | 'trail', x: number, y: number) => {
     const id = ++effectIdRef.current;
@@ -519,6 +521,51 @@ function GameDirector({ navigation }: { navigation: any }) {
       ]),
     ]).start(() => setShowFeatherFloat(false));
   }, [game.featherMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Music Engine lifecycle ────────────────────────────────────
+  useEffect(() => {
+    initMusicEngine().then(() => startMusic());
+    return () => {
+      stopMusic();
+      disposeMusicEngine();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Music state machine ───────────────────────────────────────
+  useEffect(() => {
+    if (game.status !== 'playing') {
+      stopMusic();
+      return;
+    }
+    let state: MusicState;
+    if (game.stepIndex === 11) {
+      state = 'boss';
+    } else if (game.lives <= 2) {
+      state = 'crisis';
+    } else if (game.chainMultiplier >= 2.5) {
+      state = 'onARun';
+    } else if (game.chainMultiplier >= 1.5) {
+      state = 'rhythm';
+    } else {
+      state = 'neutral';
+    }
+    setMusicState(state);
+  }, [game.chainMultiplier, game.lives, game.stepIndex, game.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Chain break detection ─────────────────────────────────────
+  useEffect(() => {
+    if (prevChainRef.current >= 2.5 && game.chainMultiplier === 1.0) {
+      triggerChainBreak();
+    }
+    prevChainRef.current = game.chainMultiplier;
+  }, [game.chainMultiplier]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Stop music on run end ─────────────────────────────────────
+  useEffect(() => {
+    if (game.status === 'gameOver' || game.status === 'complete') {
+      stopMusic();
+    }
+  }, [game.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleRestart() {
     startGame();
