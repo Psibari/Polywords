@@ -1140,8 +1140,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     if (isHaunt) store.clearGhost(step.word);
     setGatePhase('mastered');
     completedRef.current = true;
-    store.addBonusScore(300);
-    spawnFloatAtSplit(300, '#F5C842');
+    const masteryPoints = Math.round(600 * store.game.chainMultiplier);
+    store.submitBossMastery();
+    spawnFloatAtSplit(masteryPoints, '#F5C842');
     setMasterStampVisible(true);
     setMasteredLabelVisible(false);
     setMasterCracksVisible(false);
@@ -1313,7 +1314,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setSystemStingerWord(null);
       showWordOutcome(
         'mastered',
-        { bonusLabel: isBoss ? 'BOSS BONUS +300' : undefined },
+        { bonusLabel: isBoss ? `BOSS MASTERY +${masteryPoints}` : undefined },
         () => {
           if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
           store.completeWord();
@@ -1460,8 +1461,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
+      const baseUp = mask.isRare ? 300 : 100;
+      const chainMult = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
+      const upPoints = Math.round(baseUp * chainMult * (isBoss ? 2 : 1));
       store.submitSwipeUp(maskId);
-      spawnFloat(mask.isRare ? 300 : 100, maskId, '#F5C842');
+      spawnFloat(upPoints, maskId, '#F5C842');
       triggerAbsorption(mask.phrase);
 
       const nextFound = realMasks.filter(m =>
@@ -1497,8 +1501,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
       playSfx('trapShatter');
+      const chainMultTrap = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
+      const trapPoints = Math.round((isBoss ? 100 : 50) * chainMultTrap);
       store.submitSwipeDown(maskId);
-      spawnFloat(50, maskId, '#7B2D8B');
+      spawnFloat(trapPoints, maskId, '#7B2D8B');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       onTrapCaught?.();
       setTimeout(() => {
