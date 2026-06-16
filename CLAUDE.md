@@ -833,7 +833,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 - 232 words tiled, 1838 tiles total (614 real / 1047 trap / 151 hidden).
 - huntData.json live in game. 507 words still at zero tiles.
 - Target: 400+ tiled words before next huntData.json regeneration.
-- Mask Rewriter V7 artifact available in project files.
+- Mask Rewriter V7 artifact available in project files. huntData.json at 400 words (threshold reached June 15 2026).
 
 ---
 ## Cut List â˜ ï¸ â€” Permanent
@@ -867,6 +867,7 @@ T+1400ms Tiles stagger in at 120ms intervals
 - â˜ ï¸ hiddenFound in WordResult — removed Patch 33
 - â˜ ï¸ pollyTrigger 'hiddenReveal' — replaced by 'bossMastery' Patch 33
 - â˜ ï¸ addBonusScore(300) in triggerMastered — removed Patch 33
+- â˜ ï¸ HIDDEN tile type — removed from content pipeline entirely
 
 ---
 
