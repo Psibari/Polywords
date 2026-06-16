@@ -6,7 +6,7 @@ import {
   submitSwipeUp,
   submitSwipeDown,
   submitWrongSwipe,
-  revealHidden,
+  submitBossMastery,
   completeWord,
   addBonusScore,
   consumeMilestone as consumeMilestoneFn,
@@ -42,7 +42,7 @@ type GameStore = {
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
   submitWrongSwipe: () => void;
-  revealHidden: (maskId: string) => void;
+  submitBossMastery: () => void;
   completeWord: () => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
@@ -95,8 +95,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   submitWrongSwipe: () =>
     set((s) => ({ game: submitWrongSwipe(s.game) })),
 
-  revealHidden: (maskId) =>
-    set((s) => ({ game: revealHidden(s.game, maskId) })),
+  submitBossMastery: () =>
+    set((s) => ({ game: submitBossMastery(s.game) })),
 
   completeWord: () =>
     set((s) => ({ game: completeWord(s.game) })),

@@ -17,7 +17,6 @@ export type WordResult = {
   correctUp: number;
   correctDown: number;
   wrongSwipes: number;
-  hiddenFound: boolean;
   missedMaskIds: string[];   // real masks the player rejected (swiped down)
   wrongMaskIds: string[];    // trap masks the player claimed as real (swiped up)
   isBossWord: boolean;
@@ -41,7 +40,7 @@ export type GameState = {
   feedback: string | null;
   status: GameStatus;
   lastActionAt: number;
-  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'hiddenReveal' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss' | 'switchback' | 'switchbackFirst' | 'switchbackSecond' | 'switchbackFail' | 'ghostIntro' | 'ghostCorrect' | 'ghostWrong';
+  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'bossMastery' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss' | 'switchback' | 'switchbackFirst' | 'switchbackSecond' | 'switchbackFail' | 'ghostIntro' | 'ghostCorrect' | 'ghostWrong';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
   featherMilestone:     8000 | 16000 | null;
@@ -236,6 +235,35 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
   };
 }
 
+// ─── BOSS MASTERY — scoring for the boss mystery tile judged correctly ─
+
+export function submitBossMastery(state: GameState): GameState {
+  const points = Math.round(600 * state.chainMultiplier);
+  const newCombo = state.combo + 1;
+  const newScore = state.score + points;
+  const hitMilestone = FEATHER_MILESTONES.find(
+    m => newScore >= m && !state.featherMilestonesHit.includes(m)
+  ) ?? null;
+  const newLives = hitMilestone ? Math.min(state.lives + 1, 6) : state.lives;
+  return {
+    ...state,
+    score: newScore,
+    lives: newLives,
+    combo: newCombo,
+    bestCombo: Math.max(state.bestCombo, newCombo),
+    streak: state.streak + 1,
+    chainMultiplier: Math.min(1 + Math.floor((state.streak + 1) / 3) * 0.5, 3.0),
+    streakMilestone: null,
+    featherMilestone: hitMilestone as 8000 | 16000 | null,
+    featherMilestonesHit: hitMilestone
+      ? [...state.featherMilestonesHit, hitMilestone]
+      : state.featherMilestonesHit,
+    feedback: `+${points}`,
+    lastActionAt: Date.now(),
+    pollyTrigger: 'bossMastery',
+  };
+}
+
 // ─── WRONG SWIPE — penalise without recording a specific mask ─
 
 export function submitWrongSwipe(state: GameState): GameState {
@@ -275,31 +303,6 @@ export function addBonusScore(state: GameState, points: number): GameState {
   };
 }
 
-// ─── REVEAL HIDDEN — player swiped to expose hidden mask ─
-
-export function revealHidden(state: GameState, maskId: string): GameState {
-  if (state.status !== 'playing') return state;
-  const step = currentStep(state);
-  if (step.kind !== 'word') return state;
-
-  const mask = step.masks.find(m => m.id === maskId);
-  if (!mask?.isHidden) return state;
-  if (state.revealedHiddenMasks[maskId]) return state;
-
-  const points = step.eventType === 'bossWord' ? 600 : 300;
-  const newCombo = state.combo + 1;
-  return {
-    ...state,
-    revealedHiddenMasks: { ...state.revealedHiddenMasks, [maskId]: true },
-    score: state.score + points,
-    combo: newCombo,
-    bestCombo: Math.max(state.bestCombo, newCombo),
-    feedback: `Hidden found! +${points}`,
-    lastActionAt: Date.now(),
-    pollyTrigger: 'hiddenReveal',
-  };
-}
-
 // ─── COMPLETE WORD — called by UI after all tiles are judged ─
 
 export function completeWord(state: GameState): GameState {
@@ -309,7 +312,6 @@ export function completeWord(state: GameState): GameState {
 
   const realMasks = step.masks.filter(m => m.isReal);
   const trapMasks = step.masks.filter(m => !m.isReal);
-  const hiddenMask = step.masks.find(m => m.isHidden);
   const nonHiddenReal = realMasks.filter(m => !m.isHidden);
 
   // Capture before advanceStep resets swipedUpIds / swipedDownIds
@@ -333,7 +335,6 @@ export function completeWord(state: GameState): GameState {
     correctUp: nonHiddenReal.filter(m => state.swipedUpIds.includes(m.id)).length,
     correctDown: trapMasks.filter(m => state.swipedDownIds.includes(m.id)).length,
     wrongSwipes: state.mistakesOnWord,
-    hiddenFound: hiddenMask ? !!state.revealedHiddenMasks[hiddenMask.id] : false,
     missedMaskIds,
     wrongMaskIds: trapMasks
       .filter(m => state.swipedUpIds.includes(m.id))

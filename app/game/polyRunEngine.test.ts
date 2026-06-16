@@ -2,7 +2,6 @@ import {
   createGame,
   submitSwipeUp,
   submitSwipeDown,
-  revealHidden,
   completeWord,
 } from './polyRunEngine';
 
@@ -69,16 +68,6 @@ console.log('TEST 6 - completeWord:', {
   correctDown: s6.wordResults[0]?.correctDown, // 3
   wrongSwipes: s6.wordResults[0]?.wrongSwipes, // 0
   pollyTrigger: s6.pollyTrigger,               // 'perfect'
-});
-
-// Test 7: revealHidden gives +300 discovery
-let s7 = createGame();
-// inject a fake hidden mask id into session step for testing purposes
-// (none of our current session masks have isHidden, so score stays 0)
-const preReveal = s7.score;
-s7 = revealHidden(s7, 'bark_dog'); // not hidden — should be no-op
-console.log('TEST 7 - revealHidden no-op on non-hidden:', {
-  scoreUnchanged: s7.score === preReveal, // true
 });
 
 console.log('\n=== TESTS COMPLETE ===');

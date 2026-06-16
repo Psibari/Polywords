@@ -39,9 +39,6 @@ function computeGrade(
 ): { text: string; color: string } {
   if (lives === 0) return { text: 'RATTLED.', color: '#FFFFFF' };
   const wordRounds = wordResults.filter(r => r.roundKind === 'word');
-  if (wordRounds.length > 0 && wordRounds.every(r => r.hiddenFound)) {
-    return { text: 'WORD MASTER', color: '#FFD700' };
-  }
   const ghostCount = wordResults.filter(r => r.missedMaskIds.length > 0).length;
   if (ghostCount === 0) return { text: 'CLEAN RUN', color: '#4CAF50' };
   if (ghostCount <= 2) return { text: 'CLOSE.', color: '#FFFFFF' };
@@ -71,9 +68,6 @@ function derivePollyLine(
 
   const bossCleared = wordResults.some(r => r.isBossWord && r.wrongSwipes === 0);
   if (bossCleared) return 'Fine. Keep the word.';
-
-  const ghostCleared = wordResults.some(r => r.hiddenFound);
-  if (ghostCleared) return 'You cracked more than locks.';
 
   const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
   if (hasMissed) return 'Some meanings still haunt you.';
@@ -109,7 +103,7 @@ function WordResultRow({ result }: { result: WordResult }) {
       </View>
       <View style={wr.right}>
         {isWordRound && (
-          <Text style={wr.hidden}>{result.hiddenFound ? '✨' : '🔒'}</Text>
+          <Text style={wr.hidden}>{'🔒'}</Text>
         )}
         <Text style={[wr.result, { color: resultColor }]}>{resultText}</Text>
       </View>

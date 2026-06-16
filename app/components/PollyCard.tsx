@@ -13,7 +13,7 @@ const POLLY_FACE: Record<string, ImageSourcePropType> = {
   wrong:         require('../../assets/images/Polly/polly_thinking.png'),
   wordUp:        require('../../assets/images/Polly/polly_pointing.png'),  // swap for polly_wordUp when available
   bossWord:      require('../../assets/images/Polly/polly_angle.png'),     // swap for polly_reading when available
-  hiddenReveal:  require('../../assets/images/Polly/polly_clever.png'),
+  bossMastery:   require('../../assets/images/Polly/polly_clever.png'),
   locked:        require('../../assets/images/Polly/polly_thinking.png'),
   cleanSplit:    require('../../assets/images/Polly/polly_pointing.png'),  // swap for polly_wordUp when available
   default:       require('../../assets/images/Polly/polly_knowing.png'),
