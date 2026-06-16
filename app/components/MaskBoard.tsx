@@ -412,6 +412,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const deckSlamY    = useRef(new Animated.Value(-52)).current;
   // Zero-feather red tint on depth cards (non-native: backgroundColor)
   const deckRedTint  = useRef(new Animated.Value(0)).current;
+  // Per-card deal-in (native: translateY / rotate / opacity)
+  const deckDeepY    = useRef(new Animated.Value(400)).current;
+  const deckMidY     = useRef(new Animated.Value(400)).current;
+  const deckActiveY  = useRef(new Animated.Value(400)).current;
+  const deckDeepRot  = useRef(new Animated.Value(-4)).current;
+  const deckMidRot   = useRef(new Animated.Value(3)).current;
+  const deckActiveRot= useRef(new Animated.Value(-2)).current;
+  const deckDeepOp   = useRef(new Animated.Value(0)).current;
+  const deckMidOp    = useRef(new Animated.Value(0)).current;
+  const deckActiveOp = useRef(new Animated.Value(0)).current;
 
   // ── find counts ──────────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
@@ -424,6 +434,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const ringOpacity           = useRef(new Animated.Value(0)).current;
   const wordEntryOpacity      = useRef(new Animated.Value(0)).current;
   const wordEntryScale        = useRef(new Animated.Value(0.85)).current;
+  const wordEntryTranslateY   = useRef(new Animated.Value(0)).current;
+  const wordLockPulse         = useRef(new Animated.Value(1)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const goldTextOpacity       = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
@@ -564,6 +576,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }
     return tileRefs.current.get(maskId) as React.Ref<View>;
   }
+
+  // ── word transition label ────────────────────────────────────
+  const [transitionLabel, setTransitionLabel] = useState<string | null>(null);
+  const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
 
   // ── score floats ─────────────────────────────────────────────
   const [floats, setFloats] = useState<FloatEntry[]>([]);
@@ -768,17 +784,41 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       .map((m: Mask) => m.id);
     setRemainingMaskIds(freshIds);
     deckRedTint.setValue(0);
-    deckSlamY.setValue(-52);
-    const slamDelay = isBoss ? 1200 : 80;
+    deckSlamY.setValue(0);  // outer wrapper stays static
+    const CARD_DEAL = Easing.bezier(0.18, 1.10, 0.30, 1.00);
+    const cardDelay = isBoss ? 1200 : 80;
+
+    // Reset all card values
+    [deckDeepY, deckMidY, deckActiveY].forEach(v => v.setValue(400));
+    deckDeepRot.setValue(-4); deckMidRot.setValue(3); deckActiveRot.setValue(-2);
+    [deckDeepOp, deckMidOp, deckActiveOp].forEach(v => v.setValue(0));
+
+    // Deep card (back) — arrives first
     const slamTimer = setTimeout(() => {
-      Animated.spring(deckSlamY, {
-        toValue: 0,
-        damping: 14,
-        stiffness: 200,
-        useNativeDriver: true,
-      }).start();
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }, slamDelay);
+      Animated.parallel([
+        Animated.timing(deckDeepY,  { toValue: 0, duration: 180, easing: CARD_DEAL, useNativeDriver: true }),
+        Animated.timing(deckDeepRot,{ toValue: 0, duration: 180, useNativeDriver: true }),
+        Animated.timing(deckDeepOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
+      ]).start();
+
+      // Mid card — 90ms after deep
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(deckMidY,  { toValue: 0, duration: 180, easing: CARD_DEAL, useNativeDriver: true }),
+          Animated.timing(deckMidRot,{ toValue: 0, duration: 180, useNativeDriver: true }),
+          Animated.timing(deckMidOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
+        ]).start();
+      }, 90);
+
+      // Active card — 180ms after deep, heaviest haptic on land
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(deckActiveY,  { toValue: 0, duration: 200, easing: CARD_DEAL, useNativeDriver: true }),
+          Animated.timing(deckActiveRot,{ toValue: 0, duration: 200, useNativeDriver: true }),
+          Animated.timing(deckActiveOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
+        ]).start(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
+      }, 180);
+    }, cardDelay);
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
     bossScaleX.setValue(isBoss ? 0.86 : 1);
@@ -882,10 +922,68 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         setHauntReady(true);
       }, 1400);
     } else {
+      // ── SLAM ENTRANCE ─────────────────────────────────────
+      wordEntryOpacity.setValue(0);
+      wordEntryScale.setValue(1.42);
+      wordEntryTranslateY.setValue(-290);
+      wordLockPulse.setValue(1);
+
+      const SLAM = Easing.bezier(0.12, 0.90, 0.10, 1.06);
+
       Animated.parallel([
-        Animated.timing(wordEntryOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(wordEntryScale,   { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]).start();
+        // Opacity: flash visible immediately
+        Animated.timing(wordEntryOpacity, {
+          toValue: 1, duration: 60,
+          easing: Easing.linear, useNativeDriver: true,
+        }),
+        // Y: drop + bounce settle
+        Animated.sequence([
+          Animated.timing(wordEntryTranslateY, {
+            toValue: 11, duration: 420, easing: SLAM, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryTranslateY, {
+            toValue: -5, duration: 100, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryTranslateY, {
+            toValue: 3, duration: 80, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryTranslateY, {
+            toValue: -1, duration: 60, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryTranslateY, {
+            toValue: 0, duration: 40, useNativeDriver: true,
+          }),
+        ]),
+        // Scale: compress + bounce settle
+        Animated.sequence([
+          Animated.timing(wordEntryScale, {
+            toValue: 0.95, duration: 420, easing: SLAM, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryScale, {
+            toValue: 1.01, duration: 100, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryScale, {
+            toValue: 0.99, duration: 80, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryScale, {
+            toValue: 1.00, duration: 100, useNativeDriver: true,
+          }),
+        ]),
+      ]).start(() => {
+        // On lock: pulse + shake + haptic
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        Animated.sequence([
+          Animated.timing(wordLockPulse, { toValue: 1.04, duration: 100, useNativeDriver: true }),
+          Animated.timing(wordLockPulse, { toValue: 0.98, duration: 80, useNativeDriver: true }),
+          Animated.timing(wordLockPulse, { toValue: 1.00, duration: 80, useNativeDriver: true }),
+        ]).start();
+        Animated.sequence([
+          Animated.timing(bossShakeX, { toValue: -3, duration: 35, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue:  3, duration: 35, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue: -2, duration: 35, useNativeDriver: true }),
+          Animated.timing(bossShakeX, { toValue:  0, duration: 35, useNativeDriver: true }),
+        ]).start();
+      });
     }
     firePollyEvent('wordEntry');
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -902,6 +1000,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     const t1 = setTimeout(() => {
       wordEntryOpacity.setValue(1);
       wordEntryScale.setValue(1);
+      wordLockPulse.setValue(1);
+      deckDeepY.setValue(0);    deckDeepRot.setValue(0);    deckDeepOp.setValue(1);
+      deckMidY.setValue(0);     deckMidRot.setValue(0);     deckMidOp.setValue(1);
+      deckActiveY.setValue(0);  deckActiveRot.setValue(0);  deckActiveOp.setValue(1);
 
       Animated.spring(bossWordTranslateY, {
         toValue: 0, tension: 280, friction: 6, useNativeDriver: false,
@@ -1364,26 +1466,38 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }, 100);
   }
 
-  function triggerWordExit(onComplete: () => void) {
-    // Hold: let the cleared word sit as confirmation
+  function triggerWordExit(onComplete: () => void, perfect?: boolean) {
+    if (perfect) {
+      setTransitionLabel('CLEAR');
+      transitionLabelOpacity.setValue(0);
+      Animated.timing(transitionLabelOpacity, {
+        toValue: 1, duration: 100, useNativeDriver: true,
+      }).start();
+    }
+
+    // Hold 320ms then shoot up
+    const EXIT_IN = Easing.bezier(0.36, 0.00, 0.66, 0.00);
     setTimeout(() => {
-      // Exit: word scales up slightly and fades out
       Animated.parallel([
         Animated.timing(wordEntryOpacity, {
-          toValue: 0,
-          duration: 280,
-          useNativeDriver: true,
+          toValue: 0, duration: 260, easing: EXIT_IN, useNativeDriver: true,
         }),
         Animated.timing(wordEntryScale, {
-          toValue: 1.08,
-          duration: 280,
-          useNativeDriver: true,
+          toValue: 1.38, duration: 300, easing: EXIT_IN, useNativeDriver: true,
+        }),
+        Animated.timing(wordEntryTranslateY, {
+          toValue: -310, duration: 300, easing: EXIT_IN, useNativeDriver: true,
+        }),
+        Animated.timing(transitionLabelOpacity, {
+          toValue: 0, duration: 160, useNativeDriver: true,
         }),
       ]).start();
-    }, 600);
+    }, 320);
 
-    // Advance after exit completes + brief silence
-    setTimeout(onComplete, 1050);
+    setTimeout(() => {
+      setTransitionLabel(null);
+      onComplete();
+    }, 700);
   }
 
   function handleFinalTileSwipeUp(maskId: string) {
@@ -1449,7 +1563,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       // Non-boss words 1–11: always just complete, no gate ever
       gateTriggeredRef.current = true;
       if (perfect) firePollyEvent('cleanSweep');
-      triggerWordExit(() => store.completeWord());
+      triggerWordExit(() => store.completeWord(), perfect);
     }
   }, [remainingMaskIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1552,6 +1666,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const mysteryMask = mysteryIsRealRef.current ? hiddenRealMask : hiddenTrapMask;
   const inputLocked = wordOutcome !== 'none';
 
+  const deckDeepRotDeg   = deckDeepRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
+  const deckMidRotDeg    = deckMidRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
+  const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
+
   return (
     <Animated.View
       style={[styles.container, { transform: [{ translateX: bossShakeX }] }]}
@@ -1632,8 +1750,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               transform: [
                 { scale: absorptionScale },
                 { scale: wordEntryScale },
+                { scale: wordLockPulse },
                 { scale: masterHeroScale },
                 { translateY: masterHeroTransY },
+                { translateY: wordEntryTranslateY },
               ],
             }}
           >
@@ -1797,39 +1917,59 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               <View style={styles.deckWrap}>
                 {/* ── DEPTH CARD 2 — deeper visual-only under-card, visible if 3+ remaining ── */}
                 {deckSize >= 3 && (
-                  <Animated.View style={[
-                    styles.deckDepthCard,
-                    styles.deckDepthCard2,
-                    isHaunt && styles.deckDepthCardHaunt,
-                    {
-                      backgroundColor: deckRedTint.interpolate({
-                        inputRange:  [0, 1],
-                        outputRange: ['#0F0D2A', '#2A0808'],
-                      }),
-                    },
-                  ]} pointerEvents="none">
-                    <View style={styles.deckDepthEdge} />
+                  <Animated.View
+                    pointerEvents="none"
+                    style={{
+                      transform: [{ translateY: deckDeepY }, { rotate: deckDeepRotDeg }],
+                      opacity: deckDeepOp,
+                    }}
+                  >
+                    <Animated.View style={[
+                      styles.deckDepthCard,
+                      styles.deckDepthCard2,
+                      isHaunt && styles.deckDepthCardHaunt,
+                      {
+                        backgroundColor: deckRedTint.interpolate({
+                          inputRange:  [0, 1],
+                          outputRange: ['#0F0D2A', '#2A0808'],
+                        }),
+                      },
+                    ]} pointerEvents="none">
+                      <View style={styles.deckDepthEdge} />
+                    </Animated.View>
                   </Animated.View>
                 )}
 
                 {/* ── DEPTH CARD 1 — one behind top, visible if 2+ remaining ── */}
                 {deckSize >= 2 && (
-                  <Animated.View style={[
-                    styles.deckDepthCard,
-                    styles.deckDepthCard1,
-                    isHaunt && styles.deckDepthCardHaunt,
-                    {
-                      backgroundColor: deckRedTint.interpolate({
-                        inputRange:  [0, 1],
-                        outputRange: ['#0F0D2A', '#2A0808'],
-                      }),
-                    },
-                  ]} pointerEvents="none">
-                    <View style={styles.deckDepthEdge} />
+                  <Animated.View
+                    pointerEvents="none"
+                    style={{
+                      transform: [{ translateY: deckMidY }, { rotate: deckMidRotDeg }],
+                      opacity: deckMidOp,
+                    }}
+                  >
+                    <Animated.View style={[
+                      styles.deckDepthCard,
+                      styles.deckDepthCard1,
+                      isHaunt && styles.deckDepthCardHaunt,
+                      {
+                        backgroundColor: deckRedTint.interpolate({
+                          inputRange:  [0, 1],
+                          outputRange: ['#0F0D2A', '#2A0808'],
+                        }),
+                      },
+                    ]} pointerEvents="none">
+                      <View style={styles.deckDepthEdge} />
+                    </Animated.View>
                   </Animated.View>
                 )}
 
                 {/* ── TOP CARD — interactive ── */}
+                <Animated.View style={{
+                  transform: [{ translateY: deckActiveY }, { rotate: deckActiveRotDeg }],
+                  opacity: deckActiveOp,
+                }}>
                 <View
                   ref={getTileRef(topMask.id)}
                   style={styles.deckTopCardSlot}
@@ -1853,6 +1993,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     wordY={wordScreenY}
                   />
                 </View>
+                </Animated.View>
               </View>
             )}
 
@@ -2239,6 +2380,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         </>
       )}
 
+      {/* ── Word transition label (CLEAR on perfect non-boss exit) ── */}
+      {transitionLabel && (
+        <Animated.Text
+          pointerEvents="none"
+          style={[styles.transitionLabel, { opacity: transitionLabelOpacity }]}
+        >
+          {transitionLabel}
+        </Animated.Text>
+      )}
+
       {/* ── Haunt entrance banner ─────────────────────────────── */}
       {hauntBannerVisible && (
         <Animated.View
@@ -2388,6 +2539,22 @@ const styles = StyleSheet.create({
     top: -18,
     left: 0,
     right: 0,
+  },
+  transitionLabel: {
+    position: 'absolute',
+    top: 150,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: FONTS.label,
+    fontWeight: '900',
+    fontSize: 30,
+    letterSpacing: 4,
+    color: 'rgba(245,200,66,0.9)',
+    textShadowColor: 'rgba(245,200,66,0.45)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+    zIndex: 50,
   },
   word: {
     fontSize: 100,
