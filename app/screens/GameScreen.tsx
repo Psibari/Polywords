@@ -264,13 +264,104 @@ function TopBar() {
   );
 }
 
-function FeatherIcon({ filled }: { filled: boolean }) {
+const FEATHER_DUST_ANGLES = [0, 60, 120, 180, 240, 300].map(
+  a => (a * Math.PI) / 180,
+);
+
+function FeatherDustParticle({
+  angle,
+  progress,
+}: {
+  angle: number;
+  progress: Animated.Value;
+}) {
+  const tx = progress.interpolate({
+    inputRange:  [0, 1],
+    outputRange: [0, Math.cos(angle) * 16],
+  });
+  const ty = progress.interpolate({
+    inputRange:  [0, 1],
+    outputRange: [0, Math.sin(angle) * 16],
+  });
+  const op = progress.interpolate({
+    inputRange:  [0, 0.35, 1],
+    outputRange: [0.9, 0.6, 0],
+  });
   return (
-    <View style={tb.featherBox}>
-      <View style={[tb.featherBlade, filled ? tb.featherBladeFilled : tb.featherBladeEmpty]}>
-        <View style={[tb.featherHighlight, filled ? tb.featherHighlightFilled : tb.featherHighlightEmpty]} />
-      </View>
-      <View style={[tb.featherShaft, filled ? tb.featherShaftFilled : tb.featherShaftEmpty]} />
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        top: 6,
+        left: 5,
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: '#9B59B6',
+        transform: [{ translateX: tx }, { translateY: ty }],
+        opacity: op,
+      }}
+    />
+  );
+}
+
+function FeatherIcon({ filled }: { filled: boolean }) {
+  const prevFilled    = useRef(filled);
+  const shakeRotate   = useRef(new Animated.Value(0)).current;
+  const launchY       = useRef(new Animated.Value(0)).current;
+  const launchOpacity = useRef(new Animated.Value(1)).current;
+  const dustProgress  = useRef(new Animated.Value(0)).current;
+  const [dustVisible, setDustVisible] = useState(false);
+
+  useEffect(() => {
+    if (prevFilled.current === true && filled === false) {
+      // Phase 1 — Shake (80ms)
+      Animated.sequence([
+        Animated.timing(shakeRotate, { toValue:  8, duration: 22, useNativeDriver: true }),
+        Animated.timing(shakeRotate, { toValue: -8, duration: 22, useNativeDriver: true }),
+        Animated.timing(shakeRotate, { toValue:  5, duration: 20, useNativeDriver: true }),
+        Animated.timing(shakeRotate, { toValue:  0, duration: 16, useNativeDriver: true }),
+      ]).start(() => {
+        // Phase 2 — Launch up + dust burst (200ms)
+        setDustVisible(true);
+        dustProgress.setValue(0);
+        Animated.parallel([
+          Animated.timing(launchY,       { toValue: -40, duration: 140, useNativeDriver: true }),
+          Animated.timing(launchOpacity, { toValue: 0,   duration: 140, useNativeDriver: true }),
+          Animated.timing(dustProgress,  { toValue: 1,   duration: 300, useNativeDriver: true }),
+        ]).start(() => {
+          // Reset — slot now shows dim silhouette (empty styles)
+          launchY.setValue(0);
+          launchOpacity.setValue(1);
+          setDustVisible(false);
+          dustProgress.setValue(0);
+        });
+      });
+    }
+    prevFilled.current = filled;
+  }, [filled]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const rotate = shakeRotate.interpolate({
+    inputRange:  [-8, 8],
+    outputRange: ['-8deg', '8deg'],
+  });
+
+  return (
+    <View style={[tb.featherBox, { overflow: 'visible' }]}>
+      <Animated.View
+        style={{
+          transform: [{ rotate }, { translateY: launchY }],
+          opacity: launchOpacity,
+        }}
+      >
+        <View style={[tb.featherBlade, filled ? tb.featherBladeFilled : tb.featherBladeEmpty]}>
+          <View style={[tb.featherHighlight, filled ? tb.featherHighlightFilled : tb.featherHighlightEmpty]} />
+        </View>
+        <View style={[tb.featherShaft, filled ? tb.featherShaftFilled : tb.featherShaftEmpty]} />
+      </Animated.View>
+      {dustVisible && FEATHER_DUST_ANGLES.map((angle, i) => (
+        <FeatherDustParticle key={i} angle={angle} progress={dustProgress} />
+      ))}
     </View>
   );
 }
@@ -324,6 +415,7 @@ const tb = StyleSheet.create({
     gap: 3,
     minWidth: 58,
     height: 22,
+    overflow: 'visible',
   },
   featherBox: {
     width: 10,
@@ -352,7 +444,7 @@ const tb = StyleSheet.create({
     shadowOpacity: 0.35,
   },
   featherBladeEmpty: {
-    backgroundColor: 'rgba(123,45,139,0.12)',
+    backgroundColor: 'rgba(155,89,182,0.18)',
     borderColor: 'rgba(118,101,135,0.45)',
     shadowOpacity: 0,
   },
@@ -381,7 +473,7 @@ const tb = StyleSheet.create({
     backgroundColor: 'rgba(123,45,139,0.65)',
   },
   featherShaftEmpty: {
-    backgroundColor: 'rgba(118,101,135,0.55)',
+    backgroundColor: 'rgba(155,89,182,0.14)',
   },
   dotsRow: {
     flexDirection: 'row',
