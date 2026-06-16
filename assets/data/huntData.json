@@ -29,7 +29,9 @@
         "phrase": "The footnotes nobody reads",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "ADDRESS": {
     "difficulty": "medium",
@@ -71,7 +73,9 @@
         "phrase": "Directions to your door",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "ARMS": {
     "difficulty": "medium",
@@ -108,7 +112,9 @@
         "phrase": "Smuggled across three borders",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "ARROW": {
     "difficulty": "easy",
@@ -130,10 +136,12 @@
         "phrase": "A hunter's patience",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "ARTICULATE": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Connected at the joint",
     "hiddenTrap": null,
     "masks": [
@@ -162,7 +170,9 @@
         "phrase": "Enunciating with extra care",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "BALANCE": {
     "difficulty": "medium",
@@ -214,7 +224,9 @@
         "phrase": "Invoice stamped and settled",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "BALL": {
     "difficulty": "easy",
@@ -256,7 +268,9 @@
         "phrase": "Pitcher's worst nightmare",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BANK": {
     "difficulty": "medium",
@@ -338,7 +352,9 @@
         "phrase": "Interest, accumulating quietly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "BARK": {
     "difficulty": "easy",
@@ -405,7 +421,9 @@
         "phrase": "Hull below the waterline",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "BASS": {
     "difficulty": "medium",
@@ -432,7 +450,9 @@
         "phrase": "Catch of the day at dawn",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "BAT": {
     "difficulty": "easy",
@@ -504,7 +524,9 @@
         "phrase": "Pitcher's least favorite visitor",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "BEAM": {
     "difficulty": "medium",
@@ -561,7 +583,9 @@
         "phrase": "Grinning at nothing in particular",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "BEAR": {
     "difficulty": "easy",
@@ -608,7 +632,9 @@
         "phrase": "Roams the Yellowstone backcountry",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BED": {
     "difficulty": "easy",
@@ -640,7 +666,9 @@
         "phrase": "Needs watering twice a week",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "BELT": {
     "difficulty": "medium",
@@ -672,7 +700,9 @@
         "phrase": "A boxer's knockout sequence",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "BERRY": {
     "difficulty": "easy",
@@ -694,7 +724,9 @@
         "phrase": "Autumn's most photogenic leaf pile",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BILL": {
     "difficulty": "medium",
@@ -751,7 +783,9 @@
         "phrase": "Jingling in your pocket",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "BLADE": {
     "difficulty": "medium",
@@ -788,7 +822,9 @@
         "phrase": "The current pulls the hull",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "BLOCK": {
     "difficulty": "medium",
@@ -825,10 +861,12 @@
         "phrase": "Bricks stacked into a wall",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "BLUFF": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Rough around the edges, warmly",
     "hiddenTrap": null,
     "masks": [
@@ -852,7 +890,9 @@
         "phrase": "A poker player's face",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "BOLT": {
     "difficulty": "easy",
@@ -914,7 +954,9 @@
         "phrase": "Pairs with a wing nut",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "BOOK": {
     "difficulty": "easy",
@@ -941,7 +983,9 @@
         "phrase": "Reads every review before choosing",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "BOOT": {
     "difficulty": "hard",
@@ -978,7 +1022,9 @@
         "phrase": "Luggage stacked in the back",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "BOTTOM": {
     "difficulty": "easy",
@@ -1015,10 +1061,12 @@
         "phrase": "When the market finally stops sliding",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "BOUND": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Wrists together, rope tight",
     "hiddenTrap": null,
     "masks": [
@@ -1047,7 +1095,9 @@
         "phrase": "Chained to the outcome",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "BOW": {
     "difficulty": "hard",
@@ -1084,7 +1134,9 @@
         "phrase": "Tied neatly around a bouquet",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "BOWL": {
     "difficulty": "easy",
@@ -1131,7 +1183,9 @@
         "phrase": "Hurls a fastball past the batter",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BRANCH": {
     "difficulty": "medium",
@@ -1168,7 +1222,9 @@
         "phrase": "Roots pushing through pavement",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "BRIDGE": {
     "difficulty": "medium",
@@ -1200,7 +1256,9 @@
         "phrase": "Shuffled, dealt, and argued over",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "BUCKLE": {
     "difficulty": "medium",
@@ -1232,7 +1290,9 @@
         "phrase": "Knuckling under pressure",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "BULB": {
     "difficulty": "easy",
@@ -1254,7 +1314,9 @@
         "phrase": "Powers a lamp",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BUTT": {
     "difficulty": "medium",
@@ -1286,7 +1348,9 @@
         "phrase": "Punchline lands perfectly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "CAMPAIGN": {
     "difficulty": "medium",
@@ -1308,7 +1372,9 @@
         "phrase": "A politician's broken promise",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CAN": {
     "difficulty": "easy",
@@ -1355,7 +1421,9 @@
         "phrase": "Allowed by the rulebook",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CAPE": {
     "difficulty": "medium",
@@ -1382,7 +1450,9 @@
         "phrase": "Waves crashing against a cliff",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CAPITAL": {
     "difficulty": "medium",
@@ -1424,7 +1494,9 @@
         "phrase": "A line of credit approved",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CARPET": {
     "difficulty": "easy",
@@ -1446,7 +1518,9 @@
         "phrase": "Vacuum's entire reason for existing",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CAST": {
     "difficulty": "easy",
@@ -1493,7 +1567,9 @@
         "phrase": "Counts the votes",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CHAMBER": {
     "difficulty": "hard",
@@ -1525,7 +1601,9 @@
         "phrase": "Safety clicked on",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "CHARACTER": {
     "difficulty": "medium",
@@ -1582,10 +1660,12 @@
         "phrase": "Town gossip, beloved and exhausting",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "CHARGE": {
-    "difficulty": "hard",
+    "difficulty": "medium",
     "hiddenMeaning": "Lion on a knight's shield",
     "hiddenTrap": null,
     "masks": [
@@ -1654,7 +1734,9 @@
         "phrase": "Babysitter shows up at seven",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "CHEST": {
     "difficulty": "medium",
@@ -1701,7 +1783,9 @@
         "phrase": "What a moving van swallows",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CHIP": {
     "difficulty": "easy",
@@ -1738,7 +1822,9 @@
         "phrase": "Connects to the internet",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CIRCUIT": {
     "difficulty": "hard",
@@ -1770,7 +1856,9 @@
         "phrase": "Rest time between sets",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "CLAP": {
     "difficulty": "easy",
@@ -1797,7 +1885,9 @@
         "phrase": "Sky's percussion section",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CLAW": {
     "difficulty": "easy",
@@ -1819,7 +1909,9 @@
         "phrase": "Leaves a mark on leather",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CLEAR": {
     "difficulty": "easy",
@@ -1856,10 +1948,12 @@
         "phrase": "Dishes stacked by the sink",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "CLEAVE": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -1888,7 +1982,9 @@
         "phrase": "The hatchet raised overhead",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "CLICK": {
     "difficulty": "easy",
@@ -1945,7 +2041,9 @@
         "phrase": "Highlighted and ready to go",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "CLIP": {
     "difficulty": "easy",
@@ -1967,7 +2065,9 @@
         "phrase": "A staple's whole personality",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CLOSE": {
     "difficulty": "medium",
@@ -2004,7 +2104,9 @@
         "phrase": "Almost missed the deadline",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CLUB": {
     "difficulty": "medium",
@@ -2066,7 +2168,9 @@
         "phrase": "Blunt force, zero elegance",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "COAST": {
     "difficulty": "medium",
@@ -2113,7 +2217,9 @@
         "phrase": "A lighthouse keeping its promise",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "COMB": {
     "difficulty": "easy",
@@ -2135,7 +2241,9 @@
         "phrase": "Honey's hexagonal housing",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "COMMISSION": {
     "difficulty": "hard",
@@ -2167,7 +2275,9 @@
         "phrase": "The unveiling of a new artwork",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "COMPANY": {
     "difficulty": "medium",
@@ -2214,7 +2324,9 @@
         "phrase": "Quarterly earnings, celebrated quietly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "COMPOUND": {
     "difficulty": "medium",
@@ -2251,7 +2363,9 @@
         "phrase": "Embassy's backyard arrangement",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CONDUCT": {
     "difficulty": "hard",
@@ -2283,7 +2397,9 @@
         "phrase": "Rubber gloves on both hands",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "CONTENT": {
     "difficulty": "medium",
@@ -2320,7 +2436,9 @@
         "phrase": "Quietly unbothered by everything",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CONVICTION": {
     "difficulty": "hard",
@@ -2347,7 +2465,9 @@
         "phrase": "Being sent to prison",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "COPY": {
     "difficulty": "medium",
@@ -2394,7 +2514,9 @@
         "phrase": "Carbon paper's one great achievement",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "CORD": {
     "difficulty": "easy",
@@ -2436,7 +2558,9 @@
         "phrase": "Slides into the socket",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CORNER": {
     "difficulty": "medium",
@@ -2463,7 +2587,9 @@
         "phrase": "Blocked by a defender",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "COURT": {
     "difficulty": "medium",
@@ -2510,7 +2636,9 @@
         "phrase": "Fault called from the baseline",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "CRANE": {
     "difficulty": "easy",
@@ -2572,7 +2700,9 @@
         "phrase": "Demolishes the old building",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "CROWN": {
     "difficulty": "medium",
@@ -2604,7 +2734,9 @@
         "phrase": "Raises a scepter aloft",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "CRUST": {
     "difficulty": "easy",
@@ -2631,7 +2763,9 @@
         "phrase": "Dough before the oven",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "CUE": {
     "difficulty": "medium",
@@ -2668,7 +2802,9 @@
         "phrase": "Chalk on the tip",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CURRENT": {
     "difficulty": "medium",
@@ -2735,7 +2871,9 @@
         "phrase": "Wind pushing against your face",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "DATE": {
     "difficulty": "easy",
@@ -2822,7 +2960,9 @@
         "phrase": "Pitted, pressed into a snack bar",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "DEGREE": {
     "difficulty": "medium",
@@ -2869,7 +3009,9 @@
         "phrase": "A minor in philosophy",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "DESERT": {
     "difficulty": "medium",
@@ -2901,7 +3043,9 @@
         "phrase": "Sun bakes the canyon floor",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "DIGEST": {
     "difficulty": "medium",
@@ -2933,7 +3077,9 @@
         "phrase": "Sitting with something difficult",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "DIRECT": {
     "difficulty": "easy",
@@ -2955,7 +3101,9 @@
         "phrase": "Blunt to the point of rude",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "DISCHARGE": {
     "difficulty": "hard",
@@ -2987,7 +3135,9 @@
         "phrase": "A task finally completed",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "DISPATCH": {
     "difficulty": "hard",
@@ -3024,7 +3174,9 @@
         "phrase": "Telegraph clicking through the night",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "DOCK": {
     "difficulty": "medium",
@@ -3056,7 +3208,9 @@
         "phrase": "The judge's gavel drops",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "DOUBLE": {
     "difficulty": "easy",
@@ -3078,7 +3232,9 @@
         "phrase": "Espresso with an extra shot",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "DOWN": {
     "difficulty": "easy",
@@ -3130,7 +3286,9 @@
         "phrase": "Cancelled plans and closed curtains",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "DRAFT": {
     "difficulty": "medium",
@@ -3167,7 +3325,9 @@
         "phrase": "A finished manuscript, polished",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "DRAIN": {
     "difficulty": "easy",
@@ -3194,7 +3354,9 @@
         "phrase": "Pipes carrying clean water in",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "DRIFT": {
     "difficulty": "easy",
@@ -3221,7 +3383,9 @@
         "phrase": "Tide pulling a swimmer sideways",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "DRILL": {
     "difficulty": "medium",
@@ -3258,7 +3422,9 @@
         "phrase": "Scores on the first attempt",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "DROP": {
     "difficulty": "medium",
@@ -3320,7 +3486,9 @@
         "phrase": "Soaks straight through",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "DRUM": {
     "difficulty": "medium",
@@ -3357,7 +3525,9 @@
         "phrase": "Bass line keeping the beat",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "DUCK": {
     "difficulty": "easy",
@@ -3404,7 +3574,9 @@
         "phrase": "Waddles toward the pond",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "DULL": {
     "difficulty": "medium",
@@ -3441,7 +3613,9 @@
         "phrase": "A voice worth sleeping to",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "DUST": {
     "difficulty": "easy",
@@ -3468,7 +3642,9 @@
         "phrase": "Mote drifting through sunlight",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "EXHAUST": {
     "difficulty": "hard",
@@ -3500,7 +3676,9 @@
         "phrase": "Engine heat rising in traffic",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "EXPLOIT": {
     "difficulty": "hard",
@@ -3547,7 +3725,9 @@
         "phrase": "Turns raw materials into revenue",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "EXPRESS": {
     "difficulty": "medium",
@@ -3584,7 +3764,9 @@
         "phrase": "Three items or fewer",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "EXTRACT": {
     "difficulty": "hard",
@@ -3646,7 +3828,9 @@
         "phrase": "Confessing under enough pressure",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "FACE": {
     "difficulty": "medium",
@@ -3708,7 +3892,9 @@
         "phrase": "Ticking behind glass",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "FAIR": {
     "difficulty": "medium",
@@ -3740,7 +3926,9 @@
         "phrase": "Cotton candy's sticky kingdom",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "FAN": {
     "difficulty": "medium",
@@ -3817,7 +4005,9 @@
         "phrase": "Search party splits at the treeline",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "FAST": {
     "difficulty": "easy",
@@ -3839,7 +4029,9 @@
         "phrase": "Knot that won't budge",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "FIELD": {
     "difficulty": "hard",
@@ -3871,7 +4063,9 @@
         "phrase": "Dirt between the bases",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "FILE": {
     "difficulty": "medium",
@@ -3938,10 +4132,12 @@
         "phrase": "Saved to the desktop, never opened",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "FINE": {
-    "difficulty": "hard",
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -3985,7 +4181,9 @@
         "phrase": "A judge's final ruling",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "FLAG": {
     "difficulty": "medium",
@@ -4022,7 +4220,9 @@
         "phrase": "Unfurled before the anthems start",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "FLAT": {
     "difficulty": "medium",
@@ -4054,7 +4254,9 @@
         "phrase": "Completely broke and penniless",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "FLUSH": {
     "difficulty": "medium",
@@ -4091,7 +4293,9 @@
         "phrase": "A perfectly painted wall",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "FLY": {
     "difficulty": "medium",
@@ -4178,7 +4382,9 @@
         "phrase": "Buzzes around your ear at 2am",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "FOAM": {
     "difficulty": "easy",
@@ -4205,7 +4411,9 @@
         "phrase": "Waves collapsing onshore",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "FOIL": {
     "difficulty": "medium",
@@ -4237,10 +4445,12 @@
         "phrase": "Catches the thief red-handed",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "FOLD": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -4284,7 +4494,9 @@
         "phrase": "Bluffed and got caught",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "FOOT": {
     "difficulty": "medium",
@@ -4341,7 +4553,9 @@
         "phrase": "Tab arrives, everyone studies the ceiling",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "FORGE": {
     "difficulty": "hard",
@@ -4373,7 +4587,9 @@
         "phrase": "Pushing relentlessly through opposition",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "FORK": {
     "difficulty": "medium",
@@ -4415,7 +4631,9 @@
         "phrase": "Tipping the waiter generously",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "FOSTER": {
     "difficulty": "hard",
@@ -4442,7 +4660,9 @@
         "phrase": "Raises money for a cause",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "FOUL": {
     "difficulty": "medium",
@@ -4469,7 +4689,9 @@
         "phrase": "A chicken's evening stroll",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "FROST": {
     "difficulty": "medium",
@@ -4501,7 +4723,9 @@
         "phrase": "Piped roses around the edge",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "GRACE": {
     "difficulty": "hard",
@@ -4533,7 +4757,9 @@
         "phrase": "Filing an extension request",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "GRAVE": {
     "difficulty": "medium",
@@ -4560,7 +4786,9 @@
         "phrase": "Frowning at bad news",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "GROUND": {
     "difficulty": "medium",
@@ -4592,7 +4820,9 @@
         "phrase": "Roots drink from it",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "GUIDE": {
     "difficulty": "medium",
@@ -4619,7 +4849,9 @@
         "phrase": "Points to the exit sign",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "GUM": {
     "difficulty": "easy",
@@ -4656,7 +4888,9 @@
         "phrase": "A dentist's main target",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "HAMPER": {
     "difficulty": "medium",
@@ -4683,7 +4917,9 @@
         "phrase": "Tumbles warm from the dryer",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "HANDLE": {
     "difficulty": "medium",
@@ -4715,7 +4951,9 @@
         "phrase": "Coping with loss",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "HARBOR": {
     "difficulty": "hard",
@@ -4747,7 +4985,9 @@
         "phrase": "The feeling building slowly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "HEAD": {
     "difficulty": "medium",
@@ -4784,7 +5024,9 @@
         "phrase": "Veered off the main road",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "HEDGE": {
     "difficulty": "hard",
@@ -4816,7 +5058,9 @@
         "phrase": "Mumbles something noncommittal",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "HIGHLIGHT": {
     "difficulty": "medium",
@@ -4843,7 +5087,9 @@
         "phrase": "The crowd goes absolutely wild",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "HOLLOW": {
     "difficulty": "medium",
@@ -4875,7 +5121,9 @@
         "phrase": "Promises made on a first date",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "HOOD": {
     "difficulty": "medium",
@@ -4917,7 +5165,9 @@
         "phrase": "Corner store, same faces daily",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "HORN": {
     "difficulty": "medium",
@@ -4974,7 +5224,9 @@
         "phrase": "Where a Viking might drink",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "INDEX": {
     "difficulty": "medium",
@@ -5011,7 +5263,9 @@
         "phrase": "Thumb's neighbor",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "INTEREST": {
     "difficulty": "medium",
@@ -5063,7 +5317,9 @@
         "phrase": "Splitting profits down the middle",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "IRON": {
     "difficulty": "medium",
@@ -5120,7 +5376,9 @@
         "phrase": "Button-down finally behaves",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "ISSUE": {
     "difficulty": "hard",
@@ -5162,7 +5420,9 @@
         "phrase": "Glossy pages, famous face on front",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "JACK": {
     "difficulty": "medium",
@@ -5204,7 +5464,9 @@
         "phrase": "How a gambler reads the room",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "JAM": {
     "difficulty": "medium",
@@ -5241,7 +5503,9 @@
         "phrase": "Crams a suitcase shut",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "KERNEL": {
     "difficulty": "hard",
@@ -5298,7 +5562,9 @@
         "phrase": "What the reboot wakes up",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "KEY": {
     "difficulty": "medium",
@@ -5365,7 +5631,9 @@
         "phrase": "The star of every scene",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "KICK": {
     "difficulty": "easy",
@@ -5387,7 +5655,9 @@
         "phrase": "A goalie's big moment",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "KIND": {
     "difficulty": "easy",
@@ -5424,7 +5694,9 @@
         "phrase": "Species listed in the register",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "LAP": {
     "difficulty": "medium",
@@ -5471,7 +5743,9 @@
         "phrase": "What armrests exist to protect",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LAUNCH": {
     "difficulty": "medium",
@@ -5498,7 +5772,9 @@
         "phrase": "App hits the top charts",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LEAD": {
     "difficulty": "medium",
@@ -5575,7 +5851,9 @@
         "phrase": "Rope trick at a rodeo",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "LEAN": {
     "difficulty": "medium",
@@ -5612,7 +5890,9 @@
         "phrase": "Skips dessert every night",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LEFT": {
     "difficulty": "medium",
@@ -5644,7 +5924,9 @@
         "phrase": "A boxer's dominant jab",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LEMON": {
     "difficulty": "easy",
@@ -5671,7 +5953,9 @@
         "phrase": "What a bitter rivalry tastes like",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "LETTER": {
     "difficulty": "medium",
@@ -5718,7 +6002,9 @@
         "phrase": "What the mailbox waits for",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LIGHT": {
     "difficulty": "easy",
@@ -5775,7 +6061,9 @@
         "phrase": "Struck and held to a wick",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "LIME": {
     "difficulty": "medium",
@@ -5802,7 +6090,9 @@
         "phrase": "Freshly painted white walls",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LINE": {
     "difficulty": "medium",
@@ -5859,7 +6149,9 @@
         "phrase": "Sold out before the doors open",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "LITTER": {
     "difficulty": "medium",
@@ -5896,7 +6188,9 @@
         "phrase": "A mother cat's whole family",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LOAF": {
     "difficulty": "medium",
@@ -5923,7 +6217,9 @@
         "phrase": "Butter's favorite surface",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LOBE": {
     "difficulty": "hard",
@@ -5955,7 +6251,9 @@
         "phrase": "Skull's curved outer ridge",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "LOCK": {
     "difficulty": "medium",
@@ -5992,7 +6290,9 @@
         "phrase": "Braid pulled tight at the nape",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "LOG": {
     "difficulty": "easy",
@@ -6014,7 +6314,9 @@
         "phrase": "A beaver's whole personality",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "LOOM": {
     "difficulty": "hard",
@@ -6041,7 +6343,9 @@
         "phrase": "Fog swallowing the harbor slowly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "LOT": {
     "difficulty": "easy",
@@ -6063,7 +6367,9 @@
         "phrase": "Wins the highest bid",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MARBLE": {
     "difficulty": "easy",
@@ -6085,7 +6391,9 @@
         "phrase": "Chiseled into a statue",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MATCH": {
     "difficulty": "medium",
@@ -6137,7 +6445,9 @@
         "phrase": "A rematch, scheduled",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "MEAN": {
     "difficulty": "medium",
@@ -6164,7 +6474,9 @@
         "phrase": "Exactly halfway between two points",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "MESS": {
     "difficulty": "easy",
@@ -6186,7 +6498,9 @@
         "phrase": "Roommate's side of the dorm",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MINE": {
     "difficulty": "medium",
@@ -6233,7 +6547,9 @@
         "phrase": "Fuse lit, run fast",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "MINOR": {
     "difficulty": "medium",
@@ -6260,7 +6576,9 @@
         "phrase": "A sad-sounding chord",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "MINT": {
     "difficulty": "medium",
@@ -6292,10 +6610,12 @@
         "phrase": "Restored to like-new condition",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "MOLD": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -6334,7 +6654,9 @@
         "phrase": "Fired in a kiln for hours",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MOLE": {
     "difficulty": "easy",
@@ -6361,10 +6683,12 @@
         "phrase": "Rich Mexican sauce with chili",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "MOOR": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Othello's adjective",
     "hiddenTrap": null,
     "masks": [
@@ -6408,10 +6732,12 @@
         "phrase": "Reading the harbor's depths",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "MORTAR": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Lobbed over the wall",
     "hiddenTrap": null,
     "masks": [
@@ -6440,7 +6766,9 @@
         "phrase": "Pestle grinding at the base",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "MOTION": {
     "difficulty": "medium",
@@ -6472,7 +6800,9 @@
         "phrase": "Arms doing the talking",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "MOUSE": {
     "difficulty": "easy",
@@ -6504,7 +6834,9 @@
         "phrase": "A cursor's reason to exist",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MUG": {
     "difficulty": "medium",
@@ -6536,7 +6868,9 @@
         "phrase": "Dark alley, no witnesses",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "MUSTER": {
     "difficulty": "hard",
@@ -6563,7 +6897,9 @@
         "phrase": "A general's barked command",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "MUTE": {
     "difficulty": "medium",
@@ -6590,7 +6926,9 @@
         "phrase": "The button that kills a ringtone",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "MUZZLE": {
     "difficulty": "hard",
@@ -6632,7 +6970,9 @@
         "phrase": "Drowned out by louder voices",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "NAIL": {
     "difficulty": "easy",
@@ -6699,7 +7039,9 @@
         "phrase": "Caught red-handed, empty pockets",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "NEEDLE": {
     "difficulty": "medium",
@@ -6731,7 +7073,9 @@
         "phrase": "Draws blood on purpose",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "NERVE": {
     "difficulty": "medium",
@@ -6758,7 +7102,9 @@
         "phrase": "Refusing to flinch under pressure",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "NOVEL": {
     "difficulty": "medium",
@@ -6800,7 +7146,9 @@
         "phrase": "Trending on every platform right now",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "OBJECTIVE": {
     "difficulty": "hard",
@@ -6822,7 +7170,9 @@
         "phrase": "A critic with very strong opinions",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "OPERATION": {
     "difficulty": "medium",
@@ -6859,7 +7209,9 @@
         "phrase": "Factory floor on a Monday",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "ORDER": {
     "difficulty": "medium",
@@ -6926,7 +7278,9 @@
         "phrase": "Delivery truck finds your street",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "ORGAN": {
     "difficulty": "medium",
@@ -6978,7 +7332,9 @@
         "phrase": "Prints the day's gossip",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "PACK": {
     "difficulty": "medium",
@@ -7005,7 +7361,9 @@
         "phrase": "A hiker's trusty frame",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "PALM": {
     "difficulty": "medium",
@@ -7037,7 +7395,9 @@
         "phrase": "Slipped into a stranger's pocket",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "PARK": {
     "difficulty": "easy",
@@ -7084,7 +7444,9 @@
         "phrase": "The meter already expired",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "PARTY": {
     "difficulty": "easy",
@@ -7111,7 +7473,9 @@
         "phrase": "Wins the popular vote",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "PASS": {
     "difficulty": "medium",
@@ -7143,7 +7507,9 @@
         "phrase": "Hiking trail through a valley",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "PATIENT": {
     "difficulty": "medium",
@@ -7180,7 +7546,9 @@
         "phrase": "Lets everyone go first",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "PATRON": {
     "difficulty": "hard",
@@ -7212,7 +7580,9 @@
         "phrase": "Runs the fundraiser every year",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "PEAK": {
     "difficulty": "medium",
@@ -7249,7 +7619,9 @@
         "phrase": "Leveling off at last",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "PEN": {
     "difficulty": "medium",
@@ -7301,7 +7673,9 @@
         "phrase": "Orange jumpsuit required",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PEPPER": {
     "difficulty": "easy",
@@ -7323,7 +7697,9 @@
         "phrase": "Sliced into a stir-fry",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "PERCH": {
     "difficulty": "medium",
@@ -7355,10 +7731,12 @@
         "phrase": "Reeling in something slippery",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "PITCH": {
-    "difficulty": "easy",
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7412,7 +7790,9 @@
         "phrase": "Striker lines up the free kick",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PITCHER": {
     "difficulty": "medium",
@@ -7449,7 +7829,9 @@
         "phrase": "Keeps the wine cold",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "PLANE": {
     "difficulty": "easy",
@@ -7496,7 +7878,9 @@
         "phrase": "A horizon with ambition",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "PLANT": {
     "difficulty": "medium",
@@ -7558,7 +7942,9 @@
         "phrase": "Pots a cutting in soil",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PLAY": {
     "difficulty": "easy",
@@ -7585,7 +7971,9 @@
         "phrase": "Memorized lines, nervous actor",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Triple"
   },
   "PLOT": {
     "difficulty": "medium",
@@ -7637,7 +8025,9 @@
         "phrase": "Everyone swore to keep quiet",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "PLUG": {
     "difficulty": "medium",
@@ -7664,10 +8054,12 @@
         "phrase": "Your dentist's least favorite finding",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "POINT": {
-    "difficulty": "hard",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7736,7 +8128,9 @@
         "phrase": "Rocks battered white by the Atlantic",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "POT": {
     "difficulty": "medium",
@@ -7788,7 +8182,9 @@
         "phrase": "The winner rakes it all in",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "POUND": {
     "difficulty": "medium",
@@ -7855,7 +8251,9 @@
         "phrase": "Coins jingling in a tourist's pocket",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "POWDER": {
     "difficulty": "medium",
@@ -7887,7 +8285,9 @@
         "phrase": "Black ice on the mountain road",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "PRESS": {
     "difficulty": "medium",
@@ -7929,7 +8329,9 @@
         "phrase": "A button on the elevator",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PRIME": {
     "difficulty": "medium",
@@ -7951,10 +8353,12 @@
         "phrase": "A politician's top job",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "PROSPECT": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7993,10 +8397,12 @@
         "phrase": "A company's annual report",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "PRUNE": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Cut down to the essentials",
     "hiddenTrap": null,
     "masks": [
@@ -8025,7 +8431,9 @@
         "phrase": "Trimming back the fat",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "PUPIL": {
     "difficulty": "easy",
@@ -8072,10 +8480,12 @@
         "phrase": "Blinks when startled",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "QUARRY": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Red clay on the kitchen floor",
     "hiddenTrap": null,
     "masks": [
@@ -8104,7 +8514,9 @@
         "phrase": "A diamond-shaped floor pattern",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "RACKET": {
     "difficulty": "medium",
@@ -8141,10 +8553,12 @@
         "phrase": "A siren's second cousin",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "RAIL": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Heard before it was seen",
     "hiddenTrap": null,
     "masks": [
@@ -8173,7 +8587,9 @@
         "phrase": "Commuter's morning route",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "REEF": {
     "difficulty": "medium",
@@ -8195,7 +8611,9 @@
         "phrase": "Anchor dropped, engines off",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "RESIGN": {
     "difficulty": "hard",
@@ -8232,7 +8650,9 @@
         "phrase": "Hands back the badge and keys",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "RESOLUTION": {
     "difficulty": "hard",
@@ -8264,7 +8684,9 @@
         "phrase": "A compromise between two sides",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "RESOLVE": {
     "difficulty": "hard",
@@ -8301,7 +8723,9 @@
         "phrase": "Changes plans at the last minute",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "RETREAT": {
     "difficulty": "hard",
@@ -8328,7 +8752,9 @@
         "phrase": "A monk's daily schedule",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "REVOLUTION": {
     "difficulty": "hard",
@@ -8395,7 +8821,9 @@
         "phrase": "What a new product promises",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "RIFLE": {
     "difficulty": "medium",
@@ -8432,7 +8860,9 @@
         "phrase": "Pickpocket's crowded commute",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "RIG": {
     "difficulty": "hard",
@@ -8469,7 +8899,9 @@
         "phrase": "Stuffs a ballot quietly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "RING": {
     "difficulty": "medium",
@@ -8526,7 +8958,9 @@
         "phrase": "Smugglers with matching tattoos",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "ROCK": {
     "difficulty": "medium",
@@ -8618,7 +9052,9 @@
         "phrase": "Three chords and attitude",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "ROOT": {
     "difficulty": "medium",
@@ -8650,7 +9086,9 @@
         "phrase": "The spark that lit everything",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "ROW": {
     "difficulty": "easy",
@@ -8697,7 +9135,9 @@
         "phrase": "Current drags the hull sideways",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "RULER": {
     "difficulty": "easy",
@@ -8734,7 +9174,9 @@
         "phrase": "Commands a large army",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "RUN": {
     "difficulty": "medium",
@@ -8771,7 +9213,9 @@
         "phrase": "Sprint's slower cousin",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "RUST": {
     "difficulty": "hard",
@@ -8803,7 +9247,9 @@
         "phrase": "Copper's dramatic weather face",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "SACK": {
     "difficulty": "medium",
@@ -8830,7 +9276,9 @@
         "phrase": "Pink slip's ugly cousin",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SAFE": {
     "difficulty": "medium",
@@ -8857,10 +9305,12 @@
         "phrase": "A helmet snapped on tight",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SAGE": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "The best thing anyone said",
     "hiddenTrap": null,
     "masks": [
@@ -8889,10 +9339,12 @@
         "phrase": "An oracle speaking cryptically",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "SANCTION": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -8921,7 +9373,9 @@
         "phrase": "A ratified constitutional amendment",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "SAW": {
     "difficulty": "medium",
@@ -8958,7 +9412,9 @@
         "phrase": "Noticed something was off",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SCALE": {
     "difficulty": "medium",
@@ -9025,7 +9481,9 @@
         "phrase": "Hard water's quiet revenge",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SCORE": {
     "difficulty": "medium",
@@ -9057,7 +9515,9 @@
         "phrase": "Two full decades passing",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SEAL": {
     "difficulty": "medium",
@@ -9109,7 +9569,9 @@
         "phrase": "Classified mission, no details given",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SEASON": {
     "difficulty": "medium",
@@ -9146,7 +9608,9 @@
         "phrase": "Marinates overnight in the fridge",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SECOND": {
     "difficulty": "medium",
@@ -9218,7 +9682,9 @@
         "phrase": "Leftovers boxed for tomorrow",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SERVE": {
     "difficulty": "medium",
@@ -9265,7 +9731,9 @@
         "phrase": "Racket meets the ball mid-rally",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SETTLE": {
     "difficulty": "medium",
@@ -9292,10 +9760,12 @@
         "phrase": "Picking the cheaper option",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SHARP": {
-    "difficulty": "hard",
+    "difficulty": "medium",
     "hiddenMeaning": "Legal, technically, and deeply suspicious",
     "hiddenTrap": null,
     "masks": [
@@ -9364,7 +9834,9 @@
         "phrase": "Key signature crowded with them",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SHED": {
     "difficulty": "medium",
@@ -9396,7 +9868,9 @@
         "phrase": "Tools hanging on the wall",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SHELTER": {
     "difficulty": "easy",
@@ -9423,7 +9897,9 @@
         "phrase": "Raises abandoned kittens",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "SHOW": {
     "difficulty": "medium",
@@ -9450,7 +9926,9 @@
         "phrase": "Flashier than everyone else",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SIGN": {
     "difficulty": "medium",
@@ -9507,7 +9985,9 @@
         "phrase": "Interpreter on the news corner",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SINK": {
     "difficulty": "easy",
@@ -9554,7 +10034,9 @@
         "phrase": "Capsizes in a sudden squall",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "SLIDE": {
     "difficulty": "easy",
@@ -9591,7 +10073,9 @@
         "phrase": "Slipped without meaning to",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "SOCKET": {
     "difficulty": "medium",
@@ -9618,7 +10102,9 @@
         "phrase": "The switch beside your front door",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SOLE": {
     "difficulty": "medium",
@@ -9655,10 +10141,12 @@
         "phrase": "Winning the race wire to wire",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SOUND": {
-    "difficulty": "hard",
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -9707,7 +10195,9 @@
         "phrase": "Dropping anchor to test the bottom",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SPARE": {
     "difficulty": "medium",
@@ -9744,7 +10234,9 @@
         "phrase": "Hungry enough to count ribs",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SPELL": {
     "difficulty": "medium",
@@ -9791,7 +10283,9 @@
         "phrase": "Bee champion at eleven years old",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SPIRIT": {
     "difficulty": "medium",
@@ -9828,7 +10322,9 @@
         "phrase": "Aged oak turns wine dark",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SPOT": {
     "difficulty": "medium",
@@ -9860,7 +10356,9 @@
         "phrase": "Saved a table in advance",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SPRING": {
     "difficulty": "medium",
@@ -9922,7 +10420,9 @@
         "phrase": "Ambush, fully prepared",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "STABLE": {
     "difficulty": "medium",
@@ -9969,7 +10469,9 @@
         "phrase": "Interest rates hold steady",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "STAFF": {
     "difficulty": "medium",
@@ -10026,7 +10528,9 @@
         "phrase": "What a conductor waves",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "STALL": {
     "difficulty": "medium",
@@ -10058,7 +10562,9 @@
         "phrase": "Traffic at rush hour",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "STAMP": {
     "difficulty": "easy",
@@ -10100,7 +10606,9 @@
         "phrase": "Rubber meets paper",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "STAR": {
     "difficulty": "medium",
@@ -10172,7 +10680,9 @@
         "phrase": "Cookie cutters at the holidays",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "STEEP": {
     "difficulty": "hard",
@@ -10204,7 +10714,9 @@
         "phrase": "A shot of very strong espresso",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "STICK": {
     "difficulty": "medium",
@@ -10276,7 +10788,9 @@
         "phrase": "Twig snapping underfoot",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "STING": {
     "difficulty": "medium",
@@ -10313,7 +10827,9 @@
         "phrase": "Unmarked car outside",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "STOCK": {
     "difficulty": "medium",
@@ -10355,7 +10871,9 @@
         "phrase": "Broth from a soup packet",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "STORY": {
     "difficulty": "medium",
@@ -10422,10 +10940,12 @@
         "phrase": "Memoir gathers dust on a shelf",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "STRIKE": {
-    "difficulty": "easy",
+    "difficulty": "medium",
     "hiddenMeaning": "Friction's brief moment of glory",
     "hiddenTrap": null,
     "masks": [
@@ -10479,7 +10999,9 @@
         "phrase": "Collateral damage on the news",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SUIT": {
     "difficulty": "hard",
@@ -10511,7 +11033,9 @@
         "phrase": "A costume for Halloween",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "SUSPEND": {
     "difficulty": "hard",
@@ -10558,7 +11082,9 @@
         "phrase": "Ornament dangling from a branch",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "SWALLOW": {
     "difficulty": "medium",
@@ -10590,7 +11116,9 @@
         "phrase": "Chewed but not yet done",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SWING": {
     "difficulty": "medium",
@@ -10617,7 +11145,9 @@
         "phrase": "A boxer's opening move",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "TACKLE": {
     "difficulty": "medium",
@@ -10659,7 +11189,9 @@
         "phrase": "Scores a goal from the wing",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "TERMINAL": {
     "difficulty": "hard",
@@ -10691,7 +11223,9 @@
         "phrase": "Pulls the plug on the project",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "THREAD": {
     "difficulty": "easy",
@@ -10728,7 +11262,9 @@
         "phrase": "Weaves through a loom",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "TIMBER": {
     "difficulty": "medium",
@@ -10755,7 +11291,9 @@
         "phrase": "Chainsaw's satisfying first bite",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "TIP": {
     "difficulty": "medium",
@@ -10822,7 +11360,9 @@
         "phrase": "Split evenly down the middle",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TIRE": {
     "difficulty": "easy",
@@ -10869,7 +11409,9 @@
         "phrase": "Eyes glazed, coffee untouched",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "TITLE": {
     "difficulty": "medium",
@@ -10906,7 +11448,9 @@
         "phrase": "Mortgage finally paid off",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "TOAST": {
     "difficulty": "medium",
@@ -10943,7 +11487,9 @@
         "phrase": "Best man's sweaty moment",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "TOKEN": {
     "difficulty": "medium",
@@ -10995,7 +11541,9 @@
         "phrase": "Bare minimum apology offered",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "TRAIN": {
     "difficulty": "easy",
@@ -11042,10 +11590,12 @@
         "phrase": "Coach blows the whistle twice",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "TRIP": {
-    "difficulty": "easy",
+    "difficulty": "medium",
     "hiddenMeaning": "Fully in love with the narrator",
     "hiddenTrap": null,
     "masks": [
@@ -11094,7 +11644,9 @@
         "phrase": "Pressure plate in the hallway",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TRUNK": {
     "difficulty": "easy",
@@ -11131,7 +11683,9 @@
         "phrase": "Slams shut on your fingers",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "TUBE": {
     "difficulty": "medium",
@@ -11158,7 +11712,9 @@
         "phrase": "Stockholm's underground network",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "TURN": {
     "difficulty": "medium",
@@ -11185,7 +11741,9 @@
         "phrase": "Dealer shuffles the deck",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "VESSEL": {
     "difficulty": "hard",
@@ -11217,7 +11775,9 @@
         "phrase": "A captain's weathered log",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "VICE": {
     "difficulty": "hard",
@@ -11249,7 +11809,9 @@
         "phrase": "The deputy taking charge",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "VOLUME": {
     "difficulty": "medium",
@@ -11296,10 +11858,12 @@
         "phrase": "Pitch that shatters glass",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "WAKE": {
-    "difficulty": "hard",
+    "difficulty": "very hard",
     "hiddenMeaning": "Churning white behind the vessel",
     "hiddenTrap": null,
     "masks": [
@@ -11323,7 +11887,9 @@
         "phrase": "Debris floating in a current",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Double"
   },
   "WARRANT": {
     "difficulty": "hard",
@@ -11355,10 +11921,12 @@
         "phrase": "Guilty until proven otherwise",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "WATCH": {
-    "difficulty": "easy",
+    "difficulty": "medium",
     "hiddenMeaning": "A flock of nightingales, officially",
     "hiddenTrap": null,
     "masks": [
@@ -11407,7 +11975,9 @@
         "phrase": "Mind your step on the ice",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "WAVE": {
     "difficulty": "easy",
@@ -11504,7 +12074,9 @@
         "phrase": "Tight curls from a perm",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "WELL": {
     "difficulty": "easy",
@@ -11551,7 +12123,9 @@
         "phrase": "Bubbles up from underground",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "WIND": {
     "difficulty": "hard",
@@ -11583,7 +12157,9 @@
         "phrase": "Tightening a watch mechanism",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "YARD": {
     "difficulty": "easy",
@@ -11625,10 +12201,12 @@
         "phrase": "Picket fence's territory",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "COUNTER": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -11677,10 +12255,12 @@
         "phrase": "STOOL TUCKS UNDERNEATH",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "PROJECT": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -11759,10 +12339,12 @@
         "phrase": "AUDIENCE LEANS FORWARD",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "REFRAIN": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -11796,10 +12378,12 @@
         "phrase": "GETS INTERRUPTED MID-SENTENCE",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "BATTERY": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -11878,10 +12462,12 @@
         "phrase": "BATTER WAITS IN BOX",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "BRIEF": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -11945,10 +12531,12 @@
         "phrase": "BELT HOLDS WAISTLINE",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "CONCENTRATION": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12012,10 +12600,12 @@
         "phrase": "PLAYER FORGETS THE CORNER",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "CRAFT": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12079,10 +12669,12 @@
         "phrase": "LIE SOUNDS POLISHED",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "ENGAGED": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12161,10 +12753,12 @@
         "phrase": "CLUTCH PEDAL DROPS",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "EXCHANGE": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12243,7 +12837,9 @@
         "phrase": "REFUND HITS THE CARD",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "boss",
+    "wordType": "Quadruple"
   },
   "FIGURE": {
     "difficulty": "medium",
@@ -12340,7 +12936,9 @@
         "phrase": "JOKE NEEDS A PUNCHLINE",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "GROSS": {
     "difficulty": "medium",
@@ -12367,7 +12965,9 @@
         "phrase": "Rotten food's final verdict",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "WEAVE": {
     "difficulty": "medium",
@@ -12394,7 +12994,9 @@
         "phrase": "Two threads knotted tight",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SCHOOL": {
     "difficulty": "medium",
@@ -12421,7 +13023,9 @@
         "phrase": "Salmon heading upstream",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "MERCURY": {
     "difficulty": "hard",
@@ -12453,7 +13057,9 @@
         "phrase": "Poison slipped in water",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Triple"
   },
   "CONTEST": {
     "difficulty": "medium",
@@ -12485,7 +13091,9 @@
         "phrase": "Refusing to sign quietly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "RACE": {
     "difficulty": "medium",
@@ -12517,7 +13125,9 @@
         "phrase": "Sprinting past a stop sign",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "RIDER": {
     "difficulty": "medium",
@@ -12539,7 +13149,9 @@
         "phrase": "A bill's sneaky amendment",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "CURE": {
     "difficulty": "medium",
@@ -12566,7 +13178,9 @@
         "phrase": "Bandage applied with confidence",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "NUT": {
     "difficulty": "easy",
@@ -12593,7 +13207,9 @@
         "phrase": "A wrench's reason for existing",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CABIN": {
     "difficulty": "medium",
@@ -12625,7 +13241,9 @@
         "phrase": "Smoke rising through pine trees",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SERVICE": {
     "difficulty": "hard",
@@ -12652,7 +13270,9 @@
         "phrase": "Collection plate passed around",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "TARGET": {
     "difficulty": "medium",
@@ -12674,7 +13294,9 @@
         "phrase": "Quarterly review's favourite word",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "ANCHOR": {
     "difficulty": "medium",
@@ -12711,7 +13333,9 @@
         "phrase": "Face of the network",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "CEILING": {
     "difficulty": "medium",
@@ -12748,7 +13372,9 @@
         "phrase": "Cloud base measured in feet",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "POLISH": {
     "difficulty": "easy",
@@ -12785,7 +13411,9 @@
         "phrase": "Scrubs the grime off",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "TOLL": {
     "difficulty": "medium",
@@ -12812,7 +13440,9 @@
         "phrase": "Price of a speeding ticket",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "STORE": {
     "difficulty": "medium",
@@ -12844,7 +13474,9 @@
         "phrase": "Checks out at the register",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "PRESERVE": {
     "difficulty": "hard",
@@ -12876,7 +13508,9 @@
         "phrase": "Smeared on buttered toast",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Double"
   },
   "DEAL": {
     "difficulty": "medium",
@@ -12943,7 +13577,9 @@
         "phrase": "SALE SIGN HANGS OUTSIDE",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "COUNT": {
     "difficulty": "medium",
@@ -13010,7 +13646,9 @@
         "phrase": "VERDICT COMES LATER",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "DIE": {
     "difficulty": "medium",
@@ -13077,7 +13715,9 @@
         "phrase": "FABRIC SOAKS OVERNIGHT",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "HIDE": {
     "difficulty": "medium",
@@ -13129,7 +13769,9 @@
         "phrase": "BRUISES SHOW NEXT DAY",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "MARCH": {
     "difficulty": "medium",
@@ -13196,7 +13838,9 @@
         "phrase": "CLOCK HAND CREEPS ON",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "NET": {
     "difficulty": "medium",
@@ -13263,7 +13907,9 @@
         "phrase": "CROWD STARTS CHEERING",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PEER": {
     "difficulty": "medium",
@@ -13315,7 +13961,9 @@
         "phrase": "HOUSE TITLE PASSES DOWN",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "RANGE": {
     "difficulty": "medium",
@@ -13382,7 +14030,9 @@
         "phrase": "SNOWCAPS SHOW FAR AWAY",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "REST": {
     "difficulty": "medium",
@@ -13449,7 +14099,9 @@
         "phrase": "VIOLIN WAITS QUIETLY",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SHIELD": {
     "difficulty": "medium",
@@ -13501,7 +14153,9 @@
         "phrase": "SECRET STAYS PROTECTED",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "SHOOT": {
     "difficulty": "medium",
@@ -13583,7 +14237,9 @@
         "phrase": "NET SNAPS AFTERWARD",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SKIP": {
     "difficulty": "medium",
@@ -13650,7 +14306,9 @@
         "phrase": "CAPTAIN TAKES THE FIELD",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SLIP": {
     "difficulty": "medium",
@@ -13732,7 +14390,9 @@
         "phrase": "MARINA LIGHTS COME ON",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SPOKE": {
     "difficulty": "medium",
@@ -13784,7 +14444,9 @@
         "phrase": "FOOT MISSES THE STEP",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "STAKE": {
     "difficulty": "medium",
@@ -13866,7 +14528,9 @@
         "phrase": "COFFIN LID CREAKS",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TANK": {
     "difficulty": "medium",
@@ -13933,7 +14597,9 @@
         "phrase": "SHORTS MATCH THE COLOR",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TEMPLE": {
     "difficulty": "medium",
@@ -13985,7 +14651,9 @@
         "phrase": "SOUL GETS MENTIONED",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "CHECK": {
     "difficulty": "medium",
@@ -14067,7 +14735,9 @@
         "phrase": "STRIPES RUN DOWN SLEEVE",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "CABINET": {
     "difficulty": "medium",
@@ -14119,7 +14789,9 @@
         "phrase": "SHELF HOLDS THE CUP",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "tension",
+    "wordType": "Triple"
   },
   "CELL": {
     "difficulty": "medium",
@@ -14201,7 +14873,9 @@
         "phrase": "PLAN STAYS HIDDEN",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "CHANNEL": {
     "difficulty": "medium",
@@ -14268,7 +14942,9 @@
         "phrase": "PIPE GUIDES WATER",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "COACH": {
     "difficulty": "medium",
@@ -14335,7 +15011,9 @@
         "phrase": "TICKET GETS PUNCHED",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "CROSS": {
     "difficulty": "medium",
@@ -14417,7 +15095,9 @@
         "phrase": "VET CHECKS PAPERS",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "DECK": {
     "difficulty": "medium",
@@ -14499,7 +15179,9 @@
         "phrase": "CROWD GASPS LOUDLY",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "LAST": {
     "difficulty": "medium",
@@ -14566,7 +15248,9 @@
         "phrase": "FORMER BOSS CALLS",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "MODEL": {
     "difficulty": "medium",
@@ -14648,7 +15332,9 @@
         "phrase": "GRAPH COMES OUT",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "NOTE": {
     "difficulty": "medium",
@@ -14730,7 +15416,9 @@
         "phrase": "AWARD SITS ON SHELF",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "OBJECT": {
     "difficulty": "medium",
@@ -14797,7 +15485,9 @@
         "phrase": "LAWYER STANDS UP",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PAGE": {
     "difficulty": "medium",
@@ -14864,7 +15554,9 @@
         "phrase": "NURSE STATION BUZZES",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PATCH": {
     "difficulty": "medium",
@@ -14946,7 +15638,9 @@
         "phrase": "DISPATCH CALLS AGAIN",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PRESENT": {
     "difficulty": "medium",
@@ -15028,7 +15722,9 @@
         "phrase": "SENTENCE STAYS CURRENT",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "RESERVE": {
     "difficulty": "medium",
@@ -15110,7 +15806,9 @@
         "phrase": "ANSWER STAYS CAREFUL",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "ROLL": {
     "difficulty": "medium",
@@ -15192,7 +15890,9 @@
         "phrase": "RUBBER BAND HOLDS BILLS",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SHELL": {
     "difficulty": "medium",
@@ -15274,7 +15974,9 @@
         "phrase": "FINGERS SPLIT GREEN SKIN",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SHOWER": {
     "difficulty": "medium",
@@ -15341,7 +16043,9 @@
         "phrase": "CONFETTI FILLS AIR",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SPACE": {
     "difficulty": "medium",
@@ -15423,7 +16127,9 @@
         "phrase": "LAYOUT GETS APPROVED",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "STEP": {
     "difficulty": "medium",
@@ -15505,7 +16211,9 @@
         "phrase": "PARTNER MISSES BEAT",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "SWITCH": {
     "difficulty": "medium",
@@ -15572,7 +16280,9 @@
         "phrase": "ENGINE SLOWS DOWN",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TAP": {
     "difficulty": "medium",
@@ -15654,7 +16364,9 @@
         "phrase": "AGENT TAKES NOTES",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TEAR": {
     "difficulty": "medium",
@@ -15721,7 +16433,9 @@
         "phrase": "NEEDLE WAITS",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TRACK": {
     "difficulty": "medium",
@@ -15803,7 +16517,9 @@
         "phrase": "SIGNAL LIGHT CHANGES",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "TYPE": {
     "difficulty": "medium",
@@ -15870,7 +16586,9 @@
         "phrase": "BOX GETS CHECKED",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "WILL": {
     "difficulty": "medium",
@@ -15937,7 +16655,9 @@
         "phrase": "HEART LEANS ONE WAY",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "WING": {
     "difficulty": "medium",
@@ -16019,7 +16739,9 @@
         "phrase": "SPEECH STARTS ANYWAY",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "BACK": {
     "difficulty": "medium",
@@ -16056,7 +16778,9 @@
         "phrase": "Standing ovation from the crowd",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "BATTER": {
     "difficulty": "easy",
@@ -16093,7 +16817,9 @@
         "phrase": "On-deck circle waits its turn",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BENCH": {
     "difficulty": "easy",
@@ -16130,7 +16856,9 @@
         "phrase": "Jury deliberates upstairs",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BITTER": {
     "difficulty": "easy",
@@ -16167,7 +16895,9 @@
         "phrase": "Apology landed but nothing shifted",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BLANK": {
     "difficulty": "easy",
@@ -16204,7 +16934,9 @@
         "phrase": "Stare fixed somewhere past the wall",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BLOOM": {
     "difficulty": "easy",
@@ -16241,7 +16973,9 @@
         "phrase": "Confidence finally arrives uninvited",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BOIL": {
     "difficulty": "easy",
@@ -16278,7 +17012,9 @@
         "phrase": "Rash spreads across the neck",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "BRIGHT": {
     "difficulty": "easy",
@@ -16315,7 +17051,9 @@
         "phrase": "Scholarship follows without asking",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CHILL": {
     "difficulty": "easy",
@@ -16352,7 +17090,9 @@
         "phrase": "TV on, nobody watching",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CLEAN": {
     "difficulty": "easy",
@@ -16389,10 +17129,12 @@
         "phrase": "Pure accident from first to last",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "CRICKET": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -16426,7 +17168,9 @@
         "phrase": "Oval pitch needs no diamond",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "DEEP": {
     "difficulty": "easy",
@@ -16463,7 +17207,9 @@
         "phrase": "Poetry that needs a second read",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "DOVE": {
     "difficulty": "easy",
@@ -16500,7 +17246,9 @@
         "phrase": "Cannonball from the high board",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "DUMP": {
     "difficulty": "easy",
@@ -16537,7 +17285,9 @@
         "phrase": "Trash can receives everything quietly",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "FOCUS": {
     "difficulty": "easy",
@@ -16574,7 +17324,9 @@
         "phrase": "Squint before the blur clears",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "GLOBE": {
     "difficulty": "easy",
@@ -16611,7 +17363,9 @@
         "phrase": "Crystal ball predicts nothing useful",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "GREEN": {
     "difficulty": "easy",
@@ -16648,7 +17402,9 @@
         "phrase": "Rookie mistake gets forgiven once",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "LATCH": {
     "difficulty": "easy",
@@ -16685,10 +17441,12 @@
         "phrase": "Fan follows every appearance",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MARKET": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -16722,7 +17480,9 @@
         "phrase": "Focus group decides what ships next",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MELT": {
     "difficulty": "easy",
@@ -16759,7 +17519,9 @@
         "phrase": "Crying at the commercial again",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MIRROR": {
     "difficulty": "easy",
@@ -16796,7 +17558,9 @@
         "phrase": "Shadow stays one step behind",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "MYSTERY": {
     "difficulty": "easy",
@@ -16833,10 +17597,12 @@
         "phrase": "Whodunit becomes obvious in hindsight",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "NIP": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -16870,7 +17636,9 @@
         "phrase": "Shot ordered at the bar",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "PEEL": {
     "difficulty": "easy",
@@ -16907,7 +17675,9 @@
         "phrase": "Label stuck to the wrong bottle",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "POOL": {
     "difficulty": "medium",
@@ -16944,10 +17714,12 @@
         "phrase": "Committee vote decides together",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "flow",
+    "wordType": "Double"
   },
   "SCATTER": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -16981,7 +17753,9 @@
         "phrase": "Hallway empties at the bell",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "SEAT": {
     "difficulty": "easy",
@@ -17018,7 +17792,9 @@
         "phrase": "Caucus meets on Tuesday morning",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "SHOULDER": {
     "difficulty": "easy",
@@ -17055,7 +17831,9 @@
         "phrase": "Breakdown lane fills on long weekends",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "SLOT": {
     "difficulty": "easy",
@@ -17092,7 +17870,9 @@
         "phrase": "Waiting list moves one at a time",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "SMART": {
     "difficulty": "easy",
@@ -17129,7 +17909,9 @@
         "phrase": "Salt rubbed where it already hurts",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "STORM": {
     "difficulty": "easy",
@@ -17166,10 +17948,12 @@
         "phrase": "Siege holds for several weeks",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "STRESS": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -17203,7 +17987,9 @@
         "phrase": "Italics lean into the same idea",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "STUMP": {
     "difficulty": "easy",
@@ -17240,7 +18026,9 @@
         "phrase": "Math problem passed back without comment",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "TASTE": {
     "difficulty": "easy",
@@ -17277,7 +18065,9 @@
         "phrase": "Playlist reveals more than intended",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "TOOL": {
     "difficulty": "easy",
@@ -17314,7 +18104,9 @@
         "phrase": "Intern runs the errand without asking",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "VENT": {
     "difficulty": "easy",
@@ -17351,7 +18143,9 @@
         "phrase": "Apology comes after the outburst",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "VIEW": {
     "difficulty": "easy",
@@ -17388,10 +18182,12 @@
         "phrase": "Poll captures what the average thinks",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "WAX": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -17425,7 +18221,9 @@
         "phrase": "Interest compounds without anyone noticing",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   },
   "WRAP": {
     "difficulty": "easy",
@@ -17462,6 +18260,8 @@
         "phrase": "Pita pocket holds the falafel",
         "isReal": false
       }
-    ]
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Double"
   }
 }
