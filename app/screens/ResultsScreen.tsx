@@ -363,17 +363,12 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     recordRunComplete(score);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Post-session Polly hold — read from final step
-  const lastStep     = game.session[game.session.length - 1];
-  const postDuration = lastStep.kind === 'word' ? (lastStep.postSessionPollyDuration ?? 0) : 0;
-  const postLine     = lastStep.kind === 'word' ? (lastStep.pollyLine ?? null) : null;
-  const [showResults, setShowResults] = useState(postDuration === 0);
-
+  // Post-session ceremony hold
+  const HOLD_DURATION = isComplete ? 1800 : 1400;
+  const [showResults, setShowResults] = useState(false);
   useEffect(() => {
-    if (postDuration > 0) {
-      const t = setTimeout(() => setShowResults(true), postDuration);
-      return () => clearTimeout(t);
-    }
+    const t = setTimeout(() => setShowResults(true), HOLD_DURATION);
+    return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // entrance animation
@@ -398,11 +393,22 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     }, 150);
   }, [showResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Polly hold screen — shown before results when postDuration > 0
+  // Ceremony hold screen — shown before results
   if (!showResults) {
+    const holdHeadline = !isComplete
+      ? 'POLLY CLIPPED YOUR RUN.'
+      : score >= 15000
+      ? 'YOU BEAT POLLY'
+      : 'POLLY HUNT COMPLETE';
+    const holdSub = !isComplete
+      ? 'Out of feathers.'
+      : score >= 15000
+      ? 'Thought so.'
+      : null;
     return (
       <View style={ph.container}>
-        <Text style={ph.line}>{postLine}</Text>
+        <Text style={ph.line}>{holdHeadline}</Text>
+        {holdSub && <Text style={ph.sub}>{holdSub}</Text>}
       </View>
     );
   }
@@ -438,9 +444,10 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         >
 
           {/* Grade */}
-          <Text style={[rs.grade, { color: beatPolly && grade.text === 'WORD MASTER' ? '#FFFFFF' : grade.color }]}>
-            {grade.text}
+          <Text style={[rs.grade, { color: beatPolly ? '#F5C842' : grade.color }]}>
+            {!isComplete ? 'POLLY CLIPPED YOUR RUN.' : beatPolly ? 'YOU BEAT POLLY' : 'POLLY HUNT COMPLETE'}
           </Text>
+          <Text style={[rs.gradeSub, { color: grade.color }]}>{grade.text}</Text>
 
           {/* Rank */}
           <View style={rs.rankRow}>
@@ -539,6 +546,15 @@ const ph = StyleSheet.create({
     fontFamily: FONTS.polly,
     textAlign: 'center',
   },
+  sub: {
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: 15,
+    fontFamily: FONTS.label,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    marginTop: 12,
+    textAlign: 'center',
+  },
 });
 
 const rs = StyleSheet.create({
@@ -571,6 +587,15 @@ const rs = StyleSheet.create({
     fontFamily: FONTS.wordDisplay,
     textAlign: 'center',
     marginBottom: 10,
+  },
+  gradeSub: {
+    fontFamily: FONTS.label,
+    fontSize: 13,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    marginTop: 6,
+    textAlign: 'center',
+    opacity: 0.7,
   },
   scoreLine: {
     color: '#FFFFFF',
