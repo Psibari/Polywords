@@ -436,6 +436,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordEntryScale        = useRef(new Animated.Value(0.85)).current;
   const wordEntryTranslateY   = useRef(new Animated.Value(0)).current;
   const wordLockPulse         = useRef(new Animated.Value(1)).current;
+  const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const goldTextOpacity       = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
@@ -579,7 +580,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // ── word transition label ────────────────────────────────────
   const [transitionLabel, setTransitionLabel] = useState<string | null>(null);
-  const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
 
   // ── score floats ─────────────────────────────────────────────
   const [floats, setFloats] = useState<FloatEntry[]>([]);
@@ -1723,6 +1723,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           <Text style={styles.kicker}>{kicker}</Text>
         )}
 
+        {transitionLabel && (
+          <Animated.Text
+            pointerEvents="none"
+            style={[styles.kicker, { opacity: transitionLabelOpacity, color: '#4CAF50', letterSpacing: 5 }]}
+          >
+            {transitionLabel}
+          </Animated.Text>
+        )}
+
         {/* Word with entry + boss animations */}
         {/* Outer wrapper: non-native recoil transforms (RAF-driven setValue) */}
         <Animated.View
@@ -2380,16 +2389,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         </>
       )}
 
-      {/* ── Word transition label (CLEAR on perfect non-boss exit) ── */}
-      {transitionLabel && (
-        <Animated.Text
-          pointerEvents="none"
-          style={[styles.transitionLabel, { opacity: transitionLabelOpacity }]}
-        >
-          {transitionLabel}
-        </Animated.Text>
-      )}
-
       {/* ── Haunt entrance banner ─────────────────────────────── */}
       {hauntBannerVisible && (
         <Animated.View
@@ -2539,22 +2538,6 @@ const styles = StyleSheet.create({
     top: -18,
     left: 0,
     right: 0,
-  },
-  transitionLabel: {
-    position: 'absolute',
-    top: 150,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontFamily: FONTS.label,
-    fontWeight: '900',
-    fontSize: 30,
-    letterSpacing: 4,
-    color: 'rgba(245,200,66,0.9)',
-    textShadowColor: 'rgba(245,200,66,0.45)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-    zIndex: 50,
   },
   word: {
     fontSize: 100,
