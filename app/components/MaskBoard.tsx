@@ -1726,7 +1726,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         {transitionLabel && (
           <Animated.Text
             pointerEvents="none"
-            style={[styles.kicker, { opacity: transitionLabelOpacity, color: '#4CAF50', letterSpacing: 5 }]}
+            style={[styles.kicker, { opacity: transitionLabelOpacity, color: '#F5C842', letterSpacing: 5 }]}
           >
             {transitionLabel}
           </Animated.Text>
