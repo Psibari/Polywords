@@ -13,6 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { FONTS } from '../constants/fonts';
 import { DAILY_ROUND_COUNT, getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
 import { useGameStore } from '../store/useGameStore';
+import { playSfx } from '../audio/sfx';
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 const MAX_LIVES   = 2;
@@ -109,6 +110,7 @@ function DailyCandidateCard({
   const opacity    = useRef(new Animated.Value(1)).current;
   const scale      = useRef(new Animated.Value(1)).current;
   const claimedRef = useRef(false);
+  const thresholdCrossedRef = useRef(false);
 
   useEffect(() => {
     claimedRef.current = false;
@@ -162,9 +164,11 @@ function DailyCandidateCard({
   }, [state]); // eslint-disable-line
 
   const springBack = () => {
+    thresholdCrossedRef.current = false;
     Animated.parallel([
       Animated.spring(translateX, { toValue: 0, friction: 6, useNativeDriver: true }),
       Animated.spring(translateY, { toValue: 0, friction: 6, useNativeDriver: true }),
+      Animated.spring(scale,      { toValue: 1, friction: 6, useNativeDriver: true }),
     ]).start();
   };
 
@@ -178,6 +182,19 @@ function DailyCandidateCard({
       if (!interactive || claimedRef.current) return;
       translateY.setValue(Math.min(14, gesture.dy));
       translateX.setValue(gesture.dx * 0.08);
+
+      // Scale up as card lifts — more pull = bigger scale
+      const lift = Math.max(0, -gesture.dy);
+      scale.setValue(1 + Math.min(lift / 180, 0.07));
+
+      // One haptic + sound when threshold first crossed
+      if (gesture.dy <= CLAIM_THRESHOLD && !thresholdCrossedRef.current) {
+        thresholdCrossedRef.current = true;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        playSfx('tileSwipe');
+      } else if (gesture.dy > CLAIM_THRESHOLD) {
+        thresholdCrossedRef.current = false;
+      }
     },
     onPanResponderRelease: (_, gesture) => {
       if (!interactive || claimedRef.current) return;
@@ -338,6 +355,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       completedRef.current = true;
       setInputLocked(true);
       setTileStates(prev => new Map(prev).set(candidate, 'correct'));
+      playSfx('uiClick');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
       setTimeout(() => {
@@ -348,6 +366,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
     setInputLocked(true);
     setTileStates(prev => new Map(prev).set(candidate, 'wrong'));
+    playSfx('trapWrong');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
     setTimeout(() => {
