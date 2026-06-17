@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
 import { GhostMeaning, Mask, WordStep } from '../game/types';
@@ -519,6 +520,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const bossShakeX         = useRef(new Animated.Value(0)).current;
   const bossSweepX         = useRef(new Animated.Value(-60)).current;
   const bossSweepOpacity   = useRef(new Animated.Value(0)).current;
+  const badgeOpacity      = useRef(new Animated.Value(0)).current;
+  const underlineProgress = useRef(new Animated.Value(0)).current;
+  const [bossUnderlineVisible, setBossUnderlineVisible] = useState(false);
   // Boss squash/stretch (non-native, rAF setValue-driven)
   const bossScaleX         = useRef(new Animated.Value(isBoss ? 0.86 : 1)).current;
   const bossScaleY         = useRef(new Animated.Value(isBoss ? 1.16 : 1)).current;
@@ -1002,7 +1006,20 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   useEffect(() => {
     if (!isBoss) return;
 
+    badgeOpacity.setValue(0);
+    underlineProgress.setValue(0);
+    setBossUnderlineVisible(false);
+
+    // T+400ms — Shockwave + 3 heavy haptics
     const t1 = setTimeout(() => {
+      setBossShockwaveVisible(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 120);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 260);
+    }, 400);
+
+    // T+800ms — Boss word drops in + squash/stretch ignite
+    const t2 = setTimeout(() => {
       wordEntryOpacity.setValue(1);
       wordEntryScale.setValue(1);
       wordLockPulse.setValue(1);
@@ -1014,24 +1031,20 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         toValue: 0, tension: 280, friction: 6, useNativeDriver: false,
       }).start();
 
+      // Shake on land
       setTimeout(() => {
-        // ── Impact ────────────────────────────────────────────────
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
         Animated.sequence([
           Animated.timing(bossShakeX, { toValue:  4, duration: 30, useNativeDriver: true }),
           Animated.timing(bossShakeX, { toValue: -4, duration: 30, useNativeDriver: true }),
           Animated.timing(bossShakeX, { toValue:  3, duration: 30, useNativeDriver: true }),
           Animated.timing(bossShakeX, { toValue: -3, duration: 30, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue:  1, duration: 30, useNativeDriver: true }),
           Animated.timing(bossShakeX, { toValue:  0, duration: 30, useNativeDriver: true }),
         ]).start();
 
-        // ── Squash/stretch + ignite flash (single rAF loop) ───────
+        // Squash/stretch + ignite
         bossImpactRef.current = performance.now ? performance.now() : Date.now();
         bossScaleX.setValue(1.32);
         bossScaleY.setValue(0.66);
-        setBossShockwaveVisible(true);
 
         const SQUASH_DUR = 520;
         const IGNITE_DUR = 400;
@@ -1041,57 +1054,74 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         function squashIgniteTick(now: number) {
           if (rafStart === null) rafStart = now;
           const elapsed = now - rafStart;
-
           if (elapsed <= SQUASH_DUR) {
-            const since = Math.min(elapsed / SQUASH_DUR, 1);
-            const k     = easeOutBack(since, 2.2);
+            const k = easeOutBack(Math.min(elapsed / SQUASH_DUR, 1), 2.2);
             bossScaleX.setValue(1.32 - 0.32 * k);
             bossScaleY.setValue(0.66 + 0.34 * k);
           }
-
           if (elapsed <= IGNITE_DUR) {
             const sweep = Math.min(elapsed / 150, 1);
-            const g     = Math.round(255 + (215 - 255) * sweep);
-            const b     = Math.round(255 + (0   - 255) * sweep);
+            const g = Math.round(255 + (215 - 255) * sweep);
+            const b = Math.round(255 + (0   - 255) * sweep);
             setBossWordColor(`rgb(255,${g},${b})`);
           }
-
           if (elapsed < TOTAL_DUR) {
             bossEntranceRafRef.current = requestAnimationFrame(squashIgniteTick);
           } else {
-            bossScaleX.setValue(1);
-            bossScaleY.setValue(1);
+            bossScaleX.setValue(1); bossScaleY.setValue(1);
             setBossWordColor('#F5C842');
             bossEntranceRafRef.current = null;
           }
         }
         bossEntranceRafRef.current = requestAnimationFrame(squashIgniteTick);
+      }, 200);
+    }, 800);
 
-        setTimeout(() => {
-          setBossSweepActive(true);
-          bossSweepX.setValue(-60);
-          bossSweepOpacity.setValue(0.7);
+    // T+1000ms — Bloom sweep starts
+    const t3 = setTimeout(() => {
+      setBossSweepActive(true);
+      bossSweepX.setValue(-80);
+      bossSweepOpacity.setValue(1);
 
-          Animated.timing(bossSweepX, {
-            toValue: containerWidthRef.current + 60,
-            duration: 500,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }).start(() => {
-            Animated.timing(bossSweepOpacity, {
-              toValue: 0, duration: 150, useNativeDriver: true,
-            }).start(() => {
-              setBossSweepActive(false);
-              firePollyEvent('bossEntry');
-              setBossReady(true);
-            });
-          });
-        }, 100);
-      }, 300);
-    }, 600);
+      // Badge reveals 200ms into sweep (bloom crosses badge position)
+      setTimeout(() => {
+        Animated.timing(badgeOpacity, {
+          toValue: 1, duration: 180, useNativeDriver: true,
+        }).start();
+      }, 200);
+
+      // Underline starts tracing 100ms into sweep
+      setTimeout(() => {
+        setBossUnderlineVisible(true);
+        underlineProgress.setValue(0);
+        Animated.timing(underlineProgress, {
+          toValue: 1, duration: 420,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: false,
+        }).start(() => {
+          // Slight haptic on underline complete
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        });
+      }, 100);
+
+      Animated.timing(bossSweepX, {
+        toValue: containerWidthRef.current + 80,
+        duration: 520,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }).start(() => {
+        Animated.timing(bossSweepOpacity, {
+          toValue: 0, duration: 120, useNativeDriver: true,
+        }).start(() => {
+          setBossSweepActive(false);
+          firePollyEvent('bossEntry');
+          setBossReady(true);
+        });
+      });
+    }, 1000);
 
     return () => {
-      clearTimeout(t1);
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
       if (bossEntranceRafRef.current !== null) {
         cancelAnimationFrame(bossEntranceRafRef.current);
         bossEntranceRafRef.current = null;
@@ -1472,6 +1502,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function triggerWordExit(onComplete: () => void, perfect?: boolean) {
+    badgeOpacity.setValue(0);
+    underlineProgress.setValue(0);
+    setBossUnderlineVisible(false);
     if (perfect) {
       setTransitionLabel('CLEAR');
       transitionLabelOpacity.setValue(0);
@@ -1754,18 +1787,59 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <Animated.View
               style={{
-                position: 'absolute', top: 0, bottom: 0, width: 60,
-                backgroundColor: '#F5C842',
+                position: 'absolute', top: 0, bottom: 0, width: 160,
                 opacity: bossSweepOpacity,
                 transform: [{ translateX: bossSweepX }],
               }}
-            />
+            >
+              <LinearGradient
+                colors={[
+                  'transparent',
+                  'rgba(245,200,66,0.10)',
+                  'rgba(245,200,66,0.22)',
+                  'rgba(245,200,66,0.10)',
+                  'transparent',
+                ]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={{ flex: 1 }}
+              />
+            </Animated.View>
           </View>
         )}
 
         {/* Kicker — floats above word zone */}
         {kicker && (
-          <Text style={styles.kicker}>{kicker}</Text>
+          isBoss ? (
+            <Animated.Text style={[styles.kicker, { opacity: badgeOpacity }]}>
+              {kicker}
+            </Animated.Text>
+          ) : (
+            <Text style={styles.kicker}>{kicker}</Text>
+          )
+        )}
+
+        {bossUnderlineVisible && (
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              bottom: 8,
+              left: 14,
+              height: 2.5,
+              borderRadius: 2,
+              backgroundColor: '#F5C842',
+              width: underlineProgress.interpolate({
+                inputRange:  [0, 1],
+                outputRange: [0, containerWidthRef.current - 28],
+              }),
+              shadowColor: '#F5C842',
+              shadowOpacity: 0.6,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 0 },
+              elevation: 4,
+            }}
+          />
         )}
 
         {transitionLabel && (
