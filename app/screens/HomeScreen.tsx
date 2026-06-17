@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { DAILY_ROUND_COUNT, getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
-import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
@@ -116,17 +116,18 @@ export default function HomeScreen({ navigation }: Props) {
           <View style={styles.topRow}>
             <View style={styles.logoHeader}>
               <Text style={styles.kicker}>ARCADE LOBBY</Text>
-              <HomeLogoMark />
+              <Image
+                source={require('../../assets/images/polywords_logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+                accessibilityLabel="POLYWORDS"
+              />
               <Text style={styles.logoSlogan}>WORDS HAVE MEANING...SSSSS</Text>
             </View>
             <Animated.Text style={[styles.polly, { transform: [{ translateY: pollyY }] }]}>
               🦜
             </Animated.Text>
           </View>
-          <Text style={styles.tagline}>Steal back every meaning.</Text>
-          <Text style={styles.heroCopy}>
-            Polly stole the meanings. Take them back.
-          </Text>
         </View>
 
         <Animated.View style={{ transform: [{ scale: playScale }] }}>
@@ -310,12 +311,18 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: 'rgba(123,45,139,0.18)',
   },
+  logoImage: {
+    width: '100%',
+    height: 80,
+    marginTop: 4,
+    marginBottom: 2,
+  },
   logoSlogan: {
-    marginTop: 2,
-    color: 'rgba(255,255,255,0.68)',
+    marginTop: 8,
+    color: 'rgba(255,255,255,0.75)',
     fontFamily: FONTS.label,
-    fontSize: 10,
-    letterSpacing: 1.6,
+    fontSize: 15,
+    letterSpacing: 3,
     textAlign: 'center',
   },
   polly: {
