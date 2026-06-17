@@ -2038,6 +2038,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     onSwipeReveal={() => {}}
                     revealable={false}
                     disabled={inputLocked}
+                    nearMastery={nearMastery}
                     tileHeight={TILE_H}
                     entryDelay={0}
                     hapticCorrect={step.hapticTier === 'light' ? () => Haptics.selectionAsync() : undefined}

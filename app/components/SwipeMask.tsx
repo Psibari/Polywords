@@ -44,6 +44,7 @@ type Props = {
   onSwipeStart?: () => void;
   onPressHoldStart?: () => void;
   disabled?: boolean;
+  nearMastery?: boolean;
   wordY?: number;
   splitBorderColor?: string;
   splitTextColor?: string;
@@ -69,6 +70,7 @@ export function SwipeMask({
   onSwipeStart,
   onPressHoldStart,
   disabled = false,
+  nearMastery = false,
   wordY = 180,
   splitBorderColor = '#FFD700',
   splitTextColor = '#FFFFFF',
@@ -422,7 +424,11 @@ export function SwipeMask({
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
           grabLift.value      = withTiming(0, { duration: 80 });
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          Haptics.impactAsync(
+            nearMastery
+              ? Haptics.ImpactFeedbackStyle.Medium
+              : Haptics.ImpactFeedbackStyle.Light
+          );
           onSwipeDownRef.current();
 
         } else {
