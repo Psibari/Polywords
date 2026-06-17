@@ -378,6 +378,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const ghostJudgedCorrectRef = useRef(false);
   const wrongSwipeOccurred    = useRef(false);
   const mysteryIsRealRef      = useRef(true);
+  const gapLockedRef          = useRef(false);
+  const tileIndexInWordRef    = useRef(0);
 
   const ghost = store.runStartGhostWordIds.includes(step.word)
     ? store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
@@ -407,6 +409,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     ? visibleGridMasks.find(m => m.id === topMaskId) ?? null
     : null;
   const deckSize     = remainingMaskIds.length;
+  const nearMastery  = !isBoss && deckSize <= 2 && deckSize > 0;
 
   // Deck entrance animation (native: translateY / transform only)
   const deckSlamY    = useRef(new Animated.Value(-52)).current;
@@ -895,6 +898,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // Word title fade + scale in (non-boss)
   useEffect(() => {
+    tileIndexInWordRef.current = 0;
+    gapLockedRef.current = false;
     if (isBoss) return;
     wordEntryOpacity.setValue(0);
     wordEntryScale.setValue(0.85);
@@ -1570,8 +1575,31 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   // ── swipe handlers ────────────────────────────────────────────
   const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
+  function computeGapMs(
+    combo: number,
+    resolution: 'up' | 'right' | 'wrong',
+    bossWord: boolean,
+    tileIndex: number,
+  ): number {
+    let gap = 350;
+    // Combo modifier
+    if      (combo <= 3)  gap += 100;
+    else if (combo <= 6)  gap += 0;
+    else if (combo <= 9)  gap -= 80;
+    else                  gap -= 150;
+    // Resolution type
+    if      (resolution === 'right') gap -= 50;
+    else if (resolution === 'wrong') gap += 150;
+    // Boss modifier
+    if (bossWord) gap -= 100;
+    // Per-tile escalation: each tile within a word tightens the gap
+    gap -= Math.min(tileIndex * 18, 90);
+    return Math.min(Math.max(gap, 150), 500);
+  }
+
   function handleSwipeUp(maskId: string) {
     if (wordOutcome !== 'none') return;
+    if (gapLockedRef.current) return;
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
@@ -1596,6 +1624,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => {
         setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
       }, 180);
+      const gapUp = computeGapMs(store.game.combo, 'up', isBoss, tileIndexInWordRef.current);
+      tileIndexInWordRef.current += 1;
+      gapLockedRef.current = true;
+      setTimeout(() => { gapLockedRef.current = false; }, gapUp);
     } else {
       // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
@@ -1606,11 +1638,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => {
         setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
       }, 400);
+      const gapWrong = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);
+      tileIndexInWordRef.current += 1;
+      gapLockedRef.current = true;
+      setTimeout(() => { gapLockedRef.current = false; }, gapWrong);
     }
   }
 
   function handleSwipeRight(maskId: string) {
     if (wordOutcome !== 'none') return;
+    if (gapLockedRef.current) return;
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
@@ -1624,6 +1661,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => {
         setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
       }, 180);
+      const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current);
+      tileIndexInWordRef.current += 1;
+      gapLockedRef.current = true;
+      setTimeout(() => { gapLockedRef.current = false; }, gapRight);
     } else {
       // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
@@ -1634,6 +1675,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => {
         setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
       }, 400);
+      const gapWrongR = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);
+      tileIndexInWordRef.current += 1;
+      gapLockedRef.current = true;
+      setTimeout(() => { gapLockedRef.current = false; }, gapWrongR);
     }
   }
 
