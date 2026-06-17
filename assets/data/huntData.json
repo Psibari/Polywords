@@ -135,6 +135,21 @@
         "id": "arrow_t0",
         "phrase": "A hunter's patience",
         "isReal": false
+      },
+      {
+        "id": "arrow_t1",
+        "phrase": "Bowstring held too long",
+        "isReal": false
+      },
+      {
+        "id": "arrow_t2",
+        "phrase": "Compass needle points north",
+        "isReal": false
+      },
+      {
+        "id": "arrow_t3",
+        "phrase": "Quiver full, aim empty",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
@@ -142,37 +157,57 @@
   },
   "ARTICULATE": {
     "difficulty": "very hard",
-    "hiddenMeaning": "Connected at the joint",
+    "hiddenMeaning": "Jointed where it bends",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "articulate_r0",
-        "phrase": "Never at a loss for words",
+        "phrase": "Words arrive cleanly",
         "isReal": true
       },
       {
         "id": "articulate_r1",
-        "phrase": "Every syllable, perfectly placed",
+        "phrase": "Every syllable lands sharp",
+        "isReal": true
+      },
+      {
+        "id": "articulate_r2",
+        "phrase": "Jointed where it bends",
         "isReal": true
       },
       {
         "id": "articulate_t0",
-        "phrase": "Confident and charismatic in speech",
+        "phrase": "Confidence fills the microphone",
         "isReal": false
       },
       {
         "id": "articulate_t1",
-        "phrase": "Mechanical joints in a robot arm",
+        "phrase": "Long speech, no clear point",
         "isReal": false
       },
       {
         "id": "articulate_t2",
-        "phrase": "Enunciating with extra care",
+        "phrase": "Accent hides the ending",
+        "isReal": false
+      },
+      {
+        "id": "articulate_t3",
+        "phrase": "Robot arm simply moves",
+        "isReal": false
+      },
+      {
+        "id": "articulate_t4",
+        "phrase": "Dictionary page gets longer",
+        "isReal": false
+      },
+      {
+        "id": "articulate_t5",
+        "phrase": "Charm covers the stumble",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Double"
+    "wordType": "Triple"
   },
   "BALANCE": {
     "difficulty": "medium",
@@ -250,7 +285,7 @@
       },
       {
         "id": "ball_t1",
-        "phrase": "What a juggler keeps airborne",
+        "phrase": "Puck slides across the ice",
         "isReal": false
       },
       {
@@ -275,7 +310,7 @@
   "BANK": {
     "difficulty": "medium",
     "hiddenMeaning": "The one the house always beats",
-    "hiddenTrap": "Pool's most satisfying ricochet",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "bank_r0",
@@ -359,71 +394,71 @@
   "BARK": {
     "difficulty": "easy",
     "hiddenMeaning": "Orders snapped, not requested",
-    "hiddenTrap": "Three masts, pre-steam, fully loaded",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "bark_r0",
-        "phrase": "What the beetles tunnel under",
+        "phrase": "Beetles tunnel underneath",
         "isReal": true
       },
       {
         "id": "bark_r1",
-        "phrase": "Dog's opinion, loudly",
+        "phrase": "Dog warning at the door",
         "isReal": true
       },
       {
         "id": "bark_r2",
-        "phrase": "Three masts, open water, gone",
+        "phrase": "Orders snapped, not requested",
+        "isReal": true
+      },
+      {
+        "id": "bark_r3",
+        "phrase": "Three masts before steam",
         "isReal": true
       },
       {
         "id": "bark_t0",
-        "phrase": "An orange's armor",
+        "phrase": "Orange peel comes off",
         "isReal": false
       },
       {
         "id": "bark_t1",
-        "phrase": "Leaves turning in October",
+        "phrase": "Growl stays in throat",
         "isReal": false
       },
       {
         "id": "bark_t2",
-        "phrase": "A growl at the mail carrier",
+        "phrase": "Command written politely",
         "isReal": false
       },
       {
         "id": "bark_t3",
-        "phrase": "A tail wagging at the door",
+        "phrase": "Hull below the waterline",
         "isReal": false
       },
       {
         "id": "bark_t4",
-        "phrase": "A sailor mapping the coast",
+        "phrase": "Leaves turn in October",
         "isReal": false
       },
       {
         "id": "bark_t5",
-        "phrase": "Sap moving toward the light",
+        "phrase": "Tail wags at the door",
         "isReal": false
       },
       {
         "id": "bark_t6",
-        "phrase": "Tail doing the opposite",
+        "phrase": "Request sent by email",
         "isReal": false
       },
       {
         "id": "bark_t7",
-        "phrase": "A growl with less commitment",
-        "isReal": false
-      },
-      {
-        "id": "bark_t8",
-        "phrase": "Hull below the waterline",
+        "phrase": "Sailor maps the coast",
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
-    "wordType": "Triple"
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "BASS": {
     "difficulty": "medium",
@@ -432,96 +467,116 @@
     "masks": [
       {
         "id": "bass_r0",
-        "phrase": "Trophy on a cabin wall",
+        "phrase": "Trophy fish on cabin wall",
         "isReal": true
       },
       {
         "id": "bass_r1",
-        "phrase": "What rattles your car windows",
+        "phrase": "Car windows start rattling",
+        "isReal": true
+      },
+      {
+        "id": "bass_r2",
+        "phrase": "Strings handle the low end",
         "isReal": true
       },
       {
         "id": "bass_t0",
-        "phrase": "Strings tuned low, played loud",
+        "phrase": "Trout hooked at dawn",
         "isReal": false
       },
       {
         "id": "bass_t1",
-        "phrase": "Catch of the day at dawn",
+        "phrase": "Treble cuts through speakers",
+        "isReal": false
+      },
+      {
+        "id": "bass_t2",
+        "phrase": "Drums shake the floor",
+        "isReal": false
+      },
+      {
+        "id": "bass_t3",
+        "phrase": "Guitar solo steals spotlight",
+        "isReal": false
+      },
+      {
+        "id": "bass_t4",
+        "phrase": "Catch photographed before sunrise",
+        "isReal": false
+      },
+      {
+        "id": "bass_t5",
+        "phrase": "Speaker volume turned high",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Double"
+    "wordType": "Triple"
   },
   "BAT": {
     "difficulty": "easy",
-    "hiddenMeaning": "Never did it innocently",
+    "hiddenMeaning": "Eyelashes make their move",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "bat_r0",
-        "phrase": "Only mammal the night truly owns",
+        "phrase": "Only mammal in true flight",
         "isReal": true
       },
       {
         "id": "bat_r1",
-        "phrase": "What connects pitcher to bleachers",
+        "phrase": "Pine waits near home plate",
         "isReal": true
       },
       {
         "id": "bat_r2",
-        "phrase": "Sleeps upside-down, zero regrets",
+        "phrase": "Eyelashes make their move",
         "isReal": true
       },
       {
         "id": "bat_r3",
-        "phrase": "Pine and grip tape, ready",
+        "phrase": "Soft middle of the quilt",
         "isReal": true
       },
       {
         "id": "bat_t0",
-        "phrase": "Swoops through your attic uninvited",
+        "phrase": "Owl owns the night",
         "isReal": false
       },
       {
         "id": "bat_t1",
-        "phrase": "Echolocation in complete darkness",
+        "phrase": "Glove waits at first",
         "isReal": false
       },
       {
         "id": "bat_t2",
-        "phrase": "Gripped tight near the bottom",
+        "phrase": "Wink across the table",
         "isReal": false
       },
       {
         "id": "bat_t3",
-        "phrase": "Pine tar on the handle",
+        "phrase": "Thread holds the squares",
         "isReal": false
       },
       {
         "id": "bat_t4",
-        "phrase": "Stitched leather, waiting for contact",
+        "phrase": "Stitched leather takes flight",
         "isReal": false
       },
       {
         "id": "bat_t5",
-        "phrase": "Swoops at your head in July",
+        "phrase": "Swooping shadow in costume",
         "isReal": false
       },
       {
         "id": "bat_t6",
-        "phrase": "Only comes out after dark",
+        "phrase": "Pitcher starts the argument",
         "isReal": false
       },
       {
         "id": "bat_t7",
-        "phrase": "Sends the ball somewhere distant",
-        "isReal": false
-      },
-      {
-        "id": "bat_t8",
-        "phrase": "Pitcher's least favorite visitor",
+        "phrase": "Pillow stuffing spills out",
         "isReal": false
       }
     ],
@@ -545,7 +600,7 @@
       },
       {
         "id": "beam_r2",
-        "phrase": "Lit up before she said a word",
+        "phrase": "Smile takes over the face",
         "isReal": true
       },
       {
@@ -588,8 +643,8 @@
     "wordType": "Triple"
   },
   "BEAR": {
-    "difficulty": "easy",
-    "hiddenMeaning": "Columns do this for roofs",
+    "difficulty": "medium",
+    "hiddenMeaning": "Columns keep the roof honest",
     "hiddenTrap": null,
     "masks": [
       {
@@ -599,42 +654,62 @@
       },
       {
         "id": "bear_r1",
-        "phrase": "Gritting your teeth through it",
+        "phrase": "Grit teeth through it",
+        "isReal": true
+      },
+      {
+        "id": "bear_r2",
+        "phrase": "Columns keep the roof honest",
+        "isReal": true
+      },
+      {
+        "id": "bear_r3",
+        "phrase": "Name carried on paperwork",
         "isReal": true
       },
       {
         "id": "bear_t0",
-        "phrase": "Hibernates through the cold months",
+        "phrase": "Wolf raids the campsite",
         "isReal": false
       },
       {
         "id": "bear_t1",
-        "phrase": "Mauls a campsite at midnight",
+        "phrase": "Complaint swallowed politely",
         "isReal": false
       },
       {
         "id": "bear_t2",
-        "phrase": "Suffers through a long queue",
+        "phrase": "Scaffold holds the frame",
         "isReal": false
       },
       {
         "id": "bear_t3",
-        "phrase": "Shrugs off every setback",
+        "phrase": "Signature waits at bottom",
         "isReal": false
       },
       {
         "id": "bear_t4",
-        "phrase": "Wakes hungry in early spring",
+        "phrase": "Paw prints by the river",
         "isReal": false
       },
       {
         "id": "bear_t5",
-        "phrase": "Roams the Yellowstone backcountry",
+        "phrase": "Shrug after bad news",
+        "isReal": false
+      },
+      {
+        "id": "bear_t6",
+        "phrase": "Beam across the ceiling",
+        "isReal": false
+      },
+      {
+        "id": "bear_t7",
+        "phrase": "Birth certificate gets filed",
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
-    "wordType": "Double"
+    "gpsTag": "flow",
+    "wordType": "Quadruple"
   },
   "BED": {
     "difficulty": "easy",
@@ -723,6 +798,21 @@
         "id": "berry_t0",
         "phrase": "Autumn's most photogenic leaf pile",
         "isReal": false
+      },
+      {
+        "id": "berry_t1",
+        "phrase": "Cherry pit between teeth",
+        "isReal": false
+      },
+      {
+        "id": "berry_t2",
+        "phrase": "Jam stains the toast",
+        "isReal": false
+      },
+      {
+        "id": "berry_t3",
+        "phrase": "Raisin hiding in oatmeal",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
@@ -755,7 +845,7 @@
       },
       {
         "id": "bill_t0",
-        "phrase": "Overdue by thirty days",
+        "phrase": "Late fee joins the party",
         "isReal": false
       },
       {
@@ -770,7 +860,7 @@
       },
       {
         "id": "bill_t3",
-        "phrase": "Debated loudly on the floor",
+        "phrase": "Filibuster eats the afternoon",
         "isReal": false
       },
       {
@@ -896,8 +986,8 @@
   },
   "BOLT": {
     "difficulty": "easy",
-    "hiddenMeaning": "What a spooked horse does",
-    "hiddenTrap": "Medieval archer's answer to reload speed",
+    "hiddenMeaning": "Medieval archer's answer to reload speed",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "bolt_r0",
@@ -926,7 +1016,7 @@
       },
       {
         "id": "bolt_t1",
-        "phrase": "Holds the door shut at night",
+        "phrase": "Chain catches before opening",
         "isReal": false
       },
       {
@@ -981,6 +1071,21 @@
       {
         "id": "book_t0",
         "phrase": "Reads every review before choosing",
+        "isReal": false
+      },
+      {
+        "id": "book_t1",
+        "phrase": "Library card finally used",
+        "isReal": false
+      },
+      {
+        "id": "book_t2",
+        "phrase": "Calendar reminder for dinner",
+        "isReal": false
+      },
+      {
+        "id": "book_t3",
+        "phrase": "Handcuffs before paperwork",
         "isReal": false
       }
     ],
@@ -1140,12 +1245,12 @@
   },
   "BOWL": {
     "difficulty": "easy",
-    "hiddenMeaning": "The valley held a whole town",
+    "hiddenMeaning": "Valley holds the town",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "bowl_r0",
-        "phrase": "Soup's favorite address",
+        "phrase": "Soup without the plate",
         "isReal": true
       },
       {
@@ -1154,38 +1259,58 @@
         "isReal": true
       },
       {
+        "id": "bowl_r2",
+        "phrase": "Valley holds the town",
+        "isReal": true
+      },
+      {
+        "id": "bowl_r3",
+        "phrase": "Fastball leaves the hand",
+        "isReal": true
+      },
+      {
         "id": "bowl_t0",
-        "phrase": "Cereal floating in cold milk",
+        "phrase": "Spoon waits beside breakfast",
         "isReal": false
       },
       {
         "id": "bowl_t1",
-        "phrase": "Strikes every pin at once",
+        "phrase": "Strike lights the screen",
         "isReal": false
       },
       {
         "id": "bowl_t2",
-        "phrase": "Slides down a waxed lane",
+        "phrase": "Hill surrounds the village",
         "isReal": false
       },
       {
         "id": "bowl_t3",
-        "phrase": "Holds the morning's first coffee",
+        "phrase": "Pitcher starts the inning",
         "isReal": false
       },
       {
         "id": "bowl_t4",
-        "phrase": "Stacks neatly in the cupboard",
+        "phrase": "Cup handles the coffee",
         "isReal": false
       },
       {
         "id": "bowl_t5",
-        "phrase": "Hurls a fastball past the batter",
+        "phrase": "Lane waxed for sliding",
+        "isReal": false
+      },
+      {
+        "id": "bowl_t6",
+        "phrase": "Canyon cuts the road",
+        "isReal": false
+      },
+      {
+        "id": "bowl_t7",
+        "phrase": "Batter swings too late",
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
-    "wordType": "Double"
+    "gpsTag": "flow",
+    "wordType": "Quadruple"
   },
   "BRANCH": {
     "difficulty": "medium",
@@ -1253,7 +1378,7 @@
       },
       {
         "id": "bridge_t1",
-        "phrase": "Shuffled, dealt, and argued over",
+        "phrase": "Poker chips wait quietly",
         "isReal": false
       }
     ],
@@ -1311,7 +1436,22 @@
       },
       {
         "id": "bulb_t0",
-        "phrase": "Powers a lamp",
+        "phrase": "Shade hides the glare",
+        "isReal": false
+      },
+      {
+        "id": "bulb_t1",
+        "phrase": "Lamp shade gathers dust",
+        "isReal": false
+      },
+      {
+        "id": "bulb_t2",
+        "phrase": "Switch beside the doorway",
+        "isReal": false
+      },
+      {
+        "id": "bulb_t3",
+        "phrase": "Seed buried too deep",
         "isReal": false
       }
     ],
@@ -1371,6 +1511,21 @@
         "id": "campaign_t0",
         "phrase": "A politician's broken promise",
         "isReal": false
+      },
+      {
+        "id": "campaign_t1",
+        "phrase": "Election night victory speech",
+        "isReal": false
+      },
+      {
+        "id": "campaign_t2",
+        "phrase": "Yard sign after rain",
+        "isReal": false
+      },
+      {
+        "id": "campaign_t3",
+        "phrase": "Slogan printed on stickers",
+        "isReal": false
       }
     ],
     "gpsTag": "flow",
@@ -1378,12 +1533,12 @@
   },
   "CAN": {
     "difficulty": "easy",
-    "hiddenMeaning": "Shown the door, officially",
+    "hiddenMeaning": "Desk cleared by Friday",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "can_r0",
-        "phrase": "Soup lives here until you're ready",
+        "phrase": "Opener required",
         "isReal": true
       },
       {
@@ -1392,38 +1547,58 @@
         "isReal": true
       },
       {
+        "id": "can_r2",
+        "phrase": "Allowed by the rulebook",
+        "isReal": true
+      },
+      {
+        "id": "can_r3",
+        "phrase": "Desk cleared by Friday",
+        "isReal": true
+      },
+      {
         "id": "can_t0",
-        "phrase": "Glass jar's cheaper cousin",
+        "phrase": "Glass jar with peaches",
         "isReal": false
       },
       {
         "id": "can_t1",
-        "phrase": "Preserves what's inside it",
+        "phrase": "Wanted badly enough",
         "isReal": false
       },
       {
         "id": "can_t2",
-        "phrase": "Might, possibly, perhaps",
+        "phrase": "Suggested by the handbook",
         "isReal": false
       },
       {
         "id": "can_t3",
-        "phrase": "Permission slipped through",
+        "phrase": "Final warning from HR",
         "isReal": false
       },
       {
         "id": "can_t4",
-        "phrase": "Twist-off, pop-top, or pull-ring",
+        "phrase": "Plastic bottle of soda",
         "isReal": false
       },
       {
         "id": "can_t5",
-        "phrase": "Allowed by the rulebook",
+        "phrase": "Promised before trying",
+        "isReal": false
+      },
+      {
+        "id": "can_t6",
+        "phrase": "Knowing where it is",
+        "isReal": false
+      },
+      {
+        "id": "can_t7",
+        "phrase": "Resignation letter submitted",
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
-    "wordType": "Double"
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "CAPE": {
     "difficulty": "medium",
@@ -1437,17 +1612,37 @@
       },
       {
         "id": "cape_r1",
-        "phrase": "Lambs doing it across a meadow",
+        "phrase": "Land juts into water",
         "isReal": true
       },
       {
         "id": "cape_t0",
-        "phrase": "A superhero's whole deal",
+        "phrase": "Superhero mask and tights",
         "isReal": false
       },
       {
         "id": "cape_t1",
-        "phrase": "Waves crashing against a cliff",
+        "phrase": "Waves hitting the cliff",
+        "isReal": false
+      },
+      {
+        "id": "cape_t2",
+        "phrase": "Coast bends around town",
+        "isReal": false
+      },
+      {
+        "id": "cape_t3",
+        "phrase": "Blanket tied at shoulders",
+        "isReal": false
+      },
+      {
+        "id": "cape_t4",
+        "phrase": "Island waits offshore",
+        "isReal": false
+      },
+      {
+        "id": "cape_t5",
+        "phrase": "Hood pulled against rain",
         "isReal": false
       }
     ],
@@ -1517,59 +1712,124 @@
         "id": "carpet_t0",
         "phrase": "Vacuum's entire reason for existing",
         "isReal": false
+      },
+      {
+        "id": "carpet_t1",
+        "phrase": "Welcome mat at doorway",
+        "isReal": false
+      },
+      {
+        "id": "carpet_t2",
+        "phrase": "Bare floor after removal",
+        "isReal": false
+      },
+      {
+        "id": "carpet_t3",
+        "phrase": "Vacuum bag fills fast",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
     "wordType": "Double"
   },
   "CAST": {
-    "difficulty": "easy",
-    "hiddenMeaning": "Six weeks of strangers signing it",
+    "difficulty": "medium",
+    "hiddenMeaning": "Friends sign the armor",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "cast_r0",
-        "phrase": "Shadows, clouds, and doubt",
+        "phrase": "Fishing line leaves hand",
         "isReal": true
       },
       {
         "id": "cast_r1",
-        "phrase": "Everyone listed after the movie title",
+        "phrase": "Names after the movie title",
+        "isReal": true
+      },
+      {
+        "id": "cast_r2",
+        "phrase": "Shadow crosses the wall",
+        "isReal": true
+      },
+      {
+        "id": "cast_r3",
+        "phrase": "One per voter",
+        "isReal": true
+      },
+      {
+        "id": "cast_r4",
+        "phrase": "Molten metal takes shape",
+        "isReal": true
+      },
+      {
+        "id": "cast_r5",
+        "phrase": "Friends sign the armor",
         "isReal": true
       },
       {
         "id": "cast_t0",
-        "phrase": "Baits a hook at dawn",
+        "phrase": "Bait lures the fish",
         "isReal": false
       },
       {
         "id": "cast_t1",
-        "phrase": "A pitcher's whole wind-up",
+        "phrase": "Hero gets the poster",
         "isReal": false
       },
       {
         "id": "cast_t2",
-        "phrase": "A hero in a blockbuster",
+        "phrase": "Lamp blocks the hallway",
         "isReal": false
       },
       {
         "id": "cast_t3",
-        "phrase": "The director's final cut",
+        "phrase": "Ballot box gets counted",
         "isReal": false
       },
       {
         "id": "cast_t4",
-        "phrase": "Baits a fish",
+        "phrase": "Mold waits on table",
         "isReal": false
       },
       {
         "id": "cast_t5",
-        "phrase": "Counts the votes",
+        "phrase": "X-ray sees the break",
+        "isReal": false
+      },
+      {
+        "id": "cast_t6",
+        "phrase": "Pitcher starts the windup",
+        "isReal": false
+      },
+      {
+        "id": "cast_t7",
+        "phrase": "Director calls action",
+        "isReal": false
+      },
+      {
+        "id": "cast_t8",
+        "phrase": "Curtains darken the room",
+        "isReal": false
+      },
+      {
+        "id": "cast_t9",
+        "phrase": "Campaign signs crowd lawns",
+        "isReal": false
+      },
+      {
+        "id": "cast_t10",
+        "phrase": "Forge fire heats ore",
+        "isReal": false
+      },
+      {
+        "id": "cast_t11",
+        "phrase": "Bandage wraps the wrist",
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
-    "wordType": "Double"
+    "gpsTag": "panic",
+    "wordType": "Sextuple"
   },
   "CHAMBER": {
     "difficulty": "hard",
@@ -1607,7 +1867,7 @@
   },
   "CHARACTER": {
     "difficulty": "medium",
-    "hiddenMeaning": "Your landlord's reluctant endorsement",
+    "hiddenMeaning": "Reference letter vouches hard",
     "hiddenTrap": null,
     "masks": [
       {
@@ -1626,43 +1886,68 @@
         "isReal": true
       },
       {
+        "id": "character_r3",
+        "phrase": "Imperfections can give it",
+        "isReal": true
+      },
+      {
+        "id": "character_r4",
+        "phrase": "Reference letter vouches hard",
+        "isReal": true
+      },
+      {
         "id": "character_t0",
-        "phrase": "The lead actor's biggest night",
+        "phrase": "Actor waits offstage",
         "isReal": false
       },
       {
         "id": "character_t1",
-        "phrase": "Plot twist nobody saw coming",
+        "phrase": "Reputation around town",
         "isReal": false
       },
       {
         "id": "character_t2",
-        "phrase": "How a villain smiles",
+        "phrase": "Typeface chosen for menu",
         "isReal": false
       },
       {
         "id": "character_t3",
-        "phrase": "Built over many hard years",
+        "phrase": "Damage lowers resale value",
         "isReal": false
       },
       {
         "id": "character_t4",
-        "phrase": "Typeface chosen for the menu",
+        "phrase": "Resume lists old jobs",
         "isReal": false
       },
       {
         "id": "character_t5",
-        "phrase": "Wears a hat indoors, always",
+        "phrase": "Plot twist nobody saw",
         "isReal": false
       },
       {
         "id": "character_t6",
-        "phrase": "Town gossip, beloved and exhausting",
+        "phrase": "Mood after bad sleep",
+        "isReal": false
+      },
+      {
+        "id": "character_t7",
+        "phrase": "Font selected for style",
+        "isReal": false
+      },
+      {
+        "id": "character_t8",
+        "phrase": "Factory finish, no dents",
+        "isReal": false
+      },
+      {
+        "id": "character_t9",
+        "phrase": "Transcript shows final grades",
         "isReal": false
       }
     ],
-    "gpsTag": "tension",
-    "wordType": "Triple"
+    "gpsTag": "panic",
+    "wordType": "Quintuple"
   },
   "CHARGE": {
     "difficulty": "medium",
@@ -1721,7 +2006,7 @@
       },
       {
         "id": "charge_t6",
-        "phrase": "Lawyer reads the indictment aloud",
+        "phrase": "Evidence waits in folders",
         "isReal": false
       },
       {
@@ -1733,6 +2018,11 @@
         "id": "charge_t8",
         "phrase": "Babysitter shows up at seven",
         "isReal": false
+      },
+      {
+        "id": "charge_r4",
+        "phrase": "Accusation enters the record",
+        "isReal": true
       }
     ],
     "gpsTag": "panic",
@@ -1908,6 +2198,21 @@
         "id": "claw_t0",
         "phrase": "Leaves a mark on leather",
         "isReal": false
+      },
+      {
+        "id": "claw_t1",
+        "phrase": "Scratch left on leather",
+        "isReal": false
+      },
+      {
+        "id": "claw_t2",
+        "phrase": "Paw pressed to glass",
+        "isReal": false
+      },
+      {
+        "id": "claw_t3",
+        "phrase": "Nail sharpened on couch",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
@@ -2064,6 +2369,21 @@
         "id": "clip_t0",
         "phrase": "A staple's whole personality",
         "isReal": false
+      },
+      {
+        "id": "clip_t1",
+        "phrase": "Staple through the corner",
+        "isReal": false
+      },
+      {
+        "id": "clip_t2",
+        "phrase": "Scissors open on counter",
+        "isReal": false
+      },
+      {
+        "id": "clip_t3",
+        "phrase": "Binder ring snapped shut",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
@@ -2174,7 +2494,7 @@
   },
   "COAST": {
     "difficulty": "medium",
-    "hiddenMeaning": "Nobody watching \u2014 now's your moment",
+    "hiddenMeaning": "Nobody watching — now's your moment",
     "hiddenTrap": null,
     "masks": [
       {
@@ -2238,7 +2558,27 @@
       },
       {
         "id": "comb_t0",
+        "phrase": "Beehive dripping at breakfast",
+        "isReal": false
+      },
+      {
+        "id": "comb_r2",
         "phrase": "Honey's hexagonal housing",
+        "isReal": true
+      },
+      {
+        "id": "comb_t1",
+        "phrase": "Brush with softer bristles",
+        "isReal": false
+      },
+      {
+        "id": "comb_t2",
+        "phrase": "Barber's electric buzz",
+        "isReal": false
+      },
+      {
+        "id": "comb_t3",
+        "phrase": "Feathers above the beak",
         "isReal": false
       }
     ],
@@ -2248,7 +2588,7 @@
   "COMMISSION": {
     "difficulty": "hard",
     "hiddenMeaning": "Ordered from the artist directly",
-    "hiddenTrap": "Saluted upon receiving it",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "commission_r0",
@@ -2457,7 +2797,7 @@
       },
       {
         "id": "conviction_t0",
-        "phrase": "A religious faith or devotion",
+        "phrase": "Church pew every Sunday",
         "isReal": false
       },
       {
@@ -2481,7 +2821,7 @@
       },
       {
         "id": "copy_r1",
-        "phrase": "Five hundred words, deadline in an hour",
+        "phrase": "Ad words due by noon",
         "isReal": true
       },
       {
@@ -2762,6 +3102,21 @@
         "id": "crust_t0",
         "phrase": "Dough before the oven",
         "isReal": false
+      },
+      {
+        "id": "crust_t1",
+        "phrase": "Toast crumbs on counter",
+        "isReal": false
+      },
+      {
+        "id": "crust_t2",
+        "phrase": "Mantle under the plates",
+        "isReal": false
+      },
+      {
+        "id": "crust_t3",
+        "phrase": "Filling under the pie",
+        "isReal": false
       }
     ],
     "gpsTag": "flow",
@@ -2808,22 +3163,22 @@
   },
   "CURRENT": {
     "difficulty": "medium",
-    "hiddenMeaning": "Hiding in a scone, spelled differently",
-    "hiddenTrap": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": "Tiny fruit in scone",
     "masks": [
       {
         "id": "current_r0",
-        "phrase": "This week's version of events",
+        "phrase": "This week's version",
         "isReal": true
       },
       {
         "id": "current_r1",
-        "phrase": "What pulls swimmers sideways",
+        "phrase": "Swimmer pulled sideways",
         "isReal": true
       },
       {
         "id": "current_r2",
-        "phrase": "What moves through the wire, invisibly",
+        "phrase": "Wire carries it invisibly",
         "isReal": true
       },
       {
@@ -2833,42 +3188,42 @@
       },
       {
         "id": "current_t1",
-        "phrase": "Trend that already peaked",
+        "phrase": "Riverbank catches debris",
         "isReal": false
       },
       {
         "id": "current_t2",
-        "phrase": "A river's quickest lane",
-        "isReal": false
-      },
-      {
-        "id": "current_t3",
-        "phrase": "Voltage's travel companion",
-        "isReal": false
-      },
-      {
-        "id": "current_t4",
-        "phrase": "Tiny fruit in a scone",
-        "isReal": false
-      },
-      {
-        "id": "current_t5",
         "phrase": "Measured in volts",
         "isReal": false
       },
       {
+        "id": "current_t3",
+        "phrase": "Trend already peaked",
+        "isReal": false
+      },
+      {
+        "id": "current_t4",
+        "phrase": "Wind pushes your face",
+        "isReal": false
+      },
+      {
+        "id": "current_t5",
+        "phrase": "Tiny fruit in scone",
+        "isReal": false
+      },
+      {
         "id": "current_t6",
-        "phrase": "Swept the debris downstream",
+        "phrase": "Old news still circulating",
         "isReal": false
       },
       {
         "id": "current_t7",
-        "phrase": "Spins a turbine",
+        "phrase": "Turbine spins downstream",
         "isReal": false
       },
       {
         "id": "current_t8",
-        "phrase": "Wind pushing against your face",
+        "phrase": "Battery waits in drawer",
         "isReal": false
       }
     ],
@@ -3074,7 +3429,7 @@
       },
       {
         "id": "digest_t1",
-        "phrase": "Sitting with something difficult",
+        "phrase": "Bad news sits heavy",
         "isReal": false
       }
     ],
@@ -3098,7 +3453,27 @@
       },
       {
         "id": "direct_t0",
-        "phrase": "Blunt to the point of rude",
+        "phrase": "Rude without the honesty",
+        "isReal": false
+      },
+      {
+        "id": "direct_r2",
+        "phrase": "No filter, no cushion",
+        "isReal": true
+      },
+      {
+        "id": "direct_t1",
+        "phrase": "Shortcut across the lawn",
+        "isReal": false
+      },
+      {
+        "id": "direct_t2",
+        "phrase": "Manager gives suggestions",
+        "isReal": false
+      },
+      {
+        "id": "direct_t3",
+        "phrase": "Map with fewer turns",
         "isReal": false
       }
     ],
@@ -3108,7 +3483,7 @@
   "DISCHARGE": {
     "difficulty": "hard",
     "hiddenMeaning": "Pulled the trigger",
-    "hiddenTrap": "The duty now completed",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "discharge_r0",
@@ -3127,7 +3502,7 @@
       },
       {
         "id": "discharge_t1",
-        "phrase": "A spark jumping across a gap",
+        "phrase": "Breaker trips downstairs",
         "isReal": false
       },
       {
@@ -3231,6 +3606,21 @@
         "id": "double_t0",
         "phrase": "Espresso with an extra shot",
         "isReal": false
+      },
+      {
+        "id": "double_t1",
+        "phrase": "Twin standing beside you",
+        "isReal": false
+      },
+      {
+        "id": "double_t2",
+        "phrase": "Photocopy from the printer",
+        "isReal": false
+      },
+      {
+        "id": "double_t3",
+        "phrase": "Second cup before noon",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
@@ -3263,7 +3653,7 @@
       },
       {
         "id": "down_t1",
-        "phrase": "Stock market has a bad Tuesday",
+        "phrase": "Broker refreshes the screen",
         "isReal": false
       },
       {
@@ -3285,6 +3675,11 @@
         "id": "down_t5",
         "phrase": "Cancelled plans and closed curtains",
         "isReal": false
+      },
+      {
+        "id": "down_r3",
+        "phrase": "Stocks turn red again",
+        "isReal": true
       }
     ],
     "gpsTag": "flow",
@@ -3317,13 +3712,18 @@
       },
       {
         "id": "draft_t1",
-        "phrase": "Picking players for your team",
+        "phrase": "Fantasy roster still empty",
         "isReal": false
       },
       {
         "id": "draft_t2",
         "phrase": "A finished manuscript, polished",
         "isReal": false
+      },
+      {
+        "id": "draft_r3",
+        "phrase": "Team picks the rookie",
+        "isReal": true
       }
     ],
     "gpsTag": "tension",
@@ -3381,6 +3781,21 @@
       {
         "id": "drift_t0",
         "phrase": "Tide pulling a swimmer sideways",
+        "isReal": false
+      },
+      {
+        "id": "drift_t1",
+        "phrase": "Anchor dropped too late",
+        "isReal": false
+      },
+      {
+        "id": "drift_t2",
+        "phrase": "Plow piles it high",
+        "isReal": false
+      },
+      {
+        "id": "drift_t3",
+        "phrase": "Point missed completely",
         "isReal": false
       }
     ],
@@ -3458,7 +3873,7 @@
       },
       {
         "id": "drop_t1",
-        "phrase": "Gravity's favorite demonstration",
+        "phrase": "Shelf edge loses balance",
         "isReal": false
       },
       {
@@ -3546,12 +3961,12 @@
       },
       {
         "id": "duck_t0",
-        "phrase": "Waddles up for your breadcrumbs",
+        "phrase": "Goose demands your breadcrumbs",
         "isReal": false
       },
       {
         "id": "duck_t1",
-        "phrase": "Feathers shed every raindrop",
+        "phrase": "Rain beads on feathers",
         "isReal": false
       },
       {
@@ -3571,7 +3986,7 @@
       },
       {
         "id": "duck_t5",
-        "phrase": "Waddles toward the pond",
+        "phrase": "Goose heads for pond",
         "isReal": false
       }
     ],
@@ -3639,7 +4054,7 @@
       },
       {
         "id": "dust_t1",
-        "phrase": "Mote drifting through sunlight",
+        "phrase": "Broom waits in corner",
         "isReal": false
       }
     ],
@@ -3805,7 +4220,7 @@
       },
       {
         "id": "extract_t0",
-        "phrase": "Squeezing an orange over a glass",
+        "phrase": "Juicer hums on counter",
         "isReal": false
       },
       {
@@ -3815,7 +4230,7 @@
       },
       {
         "id": "extract_t2",
-        "phrase": "Pressing juice from crushed fruit",
+        "phrase": "Pulp fills the strainer",
         "isReal": false
       },
       {
@@ -3825,7 +4240,7 @@
       },
       {
         "id": "extract_t4",
-        "phrase": "Confessing under enough pressure",
+        "phrase": "Interrogation room goes quiet",
         "isReal": false
       }
     ],
@@ -3879,12 +4294,12 @@
       },
       {
         "id": "face_t4",
-        "phrase": "A pyramid's triangular side",
+        "phrase": "Pyramid casts triangle shadow",
         "isReal": false
       },
       {
         "id": "face_t5",
-        "phrase": "Second hand doing all the work",
+        "phrase": "Clock ticks behind glass",
         "isReal": false
       },
       {
@@ -3957,12 +4372,12 @@
       },
       {
         "id": "fan_t0",
-        "phrase": "Wobbles on a hot ceiling",
+        "phrase": "Ceiling hook hangs empty",
         "isReal": false
       },
       {
         "id": "fan_t1",
-        "phrase": "Pushes heat around the room",
+        "phrase": "Thermostat works overtime",
         "isReal": false
       },
       {
@@ -3982,12 +4397,12 @@
       },
       {
         "id": "fan_t5",
-        "phrase": "Spins loudly above the stove",
+        "phrase": "Range hood hums above",
         "isReal": false
       },
       {
         "id": "fan_t6",
-        "phrase": "Waited twelve hours for tickets",
+        "phrase": "Ticket line wraps the block",
         "isReal": false
       },
       {
@@ -4026,7 +4441,27 @@
       },
       {
         "id": "fast_t0",
-        "phrase": "Knot that won't budge",
+        "phrase": "Laces pulled too tight",
+        "isReal": false
+      },
+      {
+        "id": "fast_r2",
+        "phrase": "Stuck hard, going nowhere",
+        "isReal": true
+      },
+      {
+        "id": "fast_t1",
+        "phrase": "Ticket in the glovebox",
+        "isReal": false
+      },
+      {
+        "id": "fast_t2",
+        "phrase": "Skipped breakfast by accident",
+        "isReal": false
+      },
+      {
+        "id": "fast_t3",
+        "phrase": "Diet starts on Monday",
         "isReal": false
       }
     ],
@@ -4070,7 +4505,7 @@
   "FILE": {
     "difficulty": "medium",
     "hiddenMeaning": "Your desktop's invisible drawer",
-    "hiddenTrap": "Blacksmith's answer to sandpaper",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "file_r0",
@@ -4148,7 +4583,7 @@
       },
       {
         "id": "fine_r1",
-        "phrase": "\"How are you?\" \u2014 \"...\"",
+        "phrase": "\"How are you?\" — \"...\"",
         "isReal": true
       },
       {
@@ -4207,17 +4642,17 @@
       },
       {
         "id": "flag_t0",
-        "phrase": "Waved to slow a car down",
+        "phrase": "Stop sign flashes red",
         "isReal": false
       },
       {
         "id": "flag_t1",
-        "phrase": "Planted on the summit, finally",
+        "phrase": "Summit photo gets framed",
         "isReal": false
       },
       {
         "id": "flag_t2",
-        "phrase": "Unfurled before the anthems start",
+        "phrase": "Anthem starts too early",
         "isReal": false
       }
     ],
@@ -4227,7 +4662,7 @@
   "FLAT": {
     "difficulty": "medium",
     "hiddenMeaning": "One step below natural",
-    "hiddenTrap": "Sitting on the rim",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "flat_r0",
@@ -4241,18 +4676,28 @@
       },
       {
         "id": "flat_t0",
-        "phrase": "A plain and featureless landscape",
+        "phrase": "Level road across Kansas",
         "isReal": false
       },
       {
         "id": "flat_t1",
-        "phrase": "A pancake off the griddle",
+        "phrase": "Crepe lies on plate",
         "isReal": false
       },
       {
         "id": "flat_t2",
-        "phrase": "Completely broke and penniless",
+        "phrase": "Empty wallet, rent due",
         "isReal": false
+      },
+      {
+        "id": "flat_r2",
+        "phrase": "Wallet has nothing left",
+        "isReal": true
+      },
+      {
+        "id": "flat_r3",
+        "phrase": "Soda lost its bite",
+        "isReal": true
       }
     ],
     "gpsTag": "flow",
@@ -4261,7 +4706,7 @@
   "FLUSH": {
     "difficulty": "medium",
     "hiddenMeaning": "All five hearts, unbeatable",
-    "hiddenTrap": "After a very good week",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "flush_r0",
@@ -4280,17 +4725,17 @@
       },
       {
         "id": "flush_t0",
-        "phrase": "Water draining in a spiral",
+        "phrase": "Handle jiggles after use",
         "isReal": false
       },
       {
         "id": "flush_t1",
-        "phrase": "A blush across the cheeks",
+        "phrase": "Mascara hides red cheeks",
         "isReal": false
       },
       {
         "id": "flush_t2",
-        "phrase": "A perfectly painted wall",
+        "phrase": "Cabinet sticks out slightly",
         "isReal": false
       }
     ],
@@ -4432,17 +4877,17 @@
       },
       {
         "id": "foil_t0",
-        "phrase": "Wraps around a baked potato",
+        "phrase": "Plastic wrap saves leftovers",
         "isReal": false
       },
       {
         "id": "foil_t1",
-        "phrase": "Keeps the sandwich from drying out",
+        "phrase": "Bread crust turns stale",
         "isReal": false
       },
       {
         "id": "foil_t2",
-        "phrase": "Catches the thief red-handed",
+        "phrase": "Villain trips on cape",
         "isReal": false
       }
     ],
@@ -4471,7 +4916,7 @@
       },
       {
         "id": "fold_r3",
-        "phrase": "Where the flock waits out the dark",
+        "phrase": "Sheep wait out the dark",
         "isReal": true
       },
       {
@@ -4481,17 +4926,17 @@
       },
       {
         "id": "fold_t0",
-        "phrase": "Map refusing to cooperate",
+        "phrase": "Crease shows in daylight",
         "isReal": false
       },
       {
         "id": "fold_t1",
-        "phrase": "Gently pressed into thirds",
+        "phrase": "Laundry pile waits sadly",
         "isReal": false
       },
       {
         "id": "fold_t2",
-        "phrase": "Bluffed and got caught",
+        "phrase": "Poker face gives nothing",
         "isReal": false
       }
     ],
@@ -4560,7 +5005,7 @@
   "FORGE": {
     "difficulty": "hard",
     "hiddenMeaning": "Pressing on regardless",
-    "hiddenTrap": "Built between two rivals",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "forge_r0",
@@ -4579,12 +5024,12 @@
       },
       {
         "id": "forge_t1",
-        "phrase": "Counterfeiting paper money",
+        "phrase": "Printer spits fake cash",
         "isReal": false
       },
       {
         "id": "forge_t2",
-        "phrase": "Pushing relentlessly through opposition",
+        "phrase": "Roadblock slows the convoy",
         "isReal": false
       }
     ],
@@ -4652,7 +5097,7 @@
       },
       {
         "id": "foster_t0",
-        "phrase": "Adopting a rescue dog",
+        "phrase": "Adoption papers finally signed",
         "isReal": false
       },
       {
@@ -4688,6 +5133,21 @@
         "id": "foul_t0",
         "phrase": "A chicken's evening stroll",
         "isReal": false
+      },
+      {
+        "id": "foul_t1",
+        "phrase": "Referee reaches pocket",
+        "isReal": false
+      },
+      {
+        "id": "foul_t2",
+        "phrase": "Oil slick spreads downstream",
+        "isReal": false
+      },
+      {
+        "id": "foul_t3",
+        "phrase": "Chicken coop at dusk",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
@@ -4720,7 +5180,7 @@
       },
       {
         "id": "frost_t1",
-        "phrase": "Piped roses around the edge",
+        "phrase": "Cake decorator starts piping",
         "isReal": false
       }
     ],
@@ -4744,12 +5204,12 @@
       },
       {
         "id": "grace_t0",
-        "phrase": "A dancer's perfect poise",
+        "phrase": "Ballet shoes tied tight",
         "isReal": false
       },
       {
         "id": "grace_t1",
-        "phrase": "A blessing before the meal",
+        "phrase": "Forks wait during prayer",
         "isReal": false
       },
       {
@@ -4778,12 +5238,12 @@
       },
       {
         "id": "grave_t0",
-        "phrase": "Dug six feet under",
+        "phrase": "Shovel rests by headstone",
         "isReal": false
       },
       {
         "id": "grave_t1",
-        "phrase": "Frowning at bad news",
+        "phrase": "Bad news lowers voices",
         "isReal": false
       }
     ],
@@ -4807,17 +5267,17 @@
       },
       {
         "id": "ground_t0",
-        "phrase": "Mud after heavy rainfall",
+        "phrase": "Boots sink in mud",
         "isReal": false
       },
       {
         "id": "ground_t1",
-        "phrase": "Crushed beneath a heel",
+        "phrase": "Heel crushes dry leaves",
         "isReal": false
       },
       {
         "id": "ground_t2",
-        "phrase": "Roots drink from it",
+        "phrase": "Sprinkler soaks the lawn",
         "isReal": false
       }
     ],
@@ -4916,6 +5376,21 @@
         "id": "hamper_t0",
         "phrase": "Tumbles warm from the dryer",
         "isReal": false
+      },
+      {
+        "id": "hamper_t1",
+        "phrase": "Speed bump before driveway",
+        "isReal": false
+      },
+      {
+        "id": "hamper_t2",
+        "phrase": "Closet full of towels",
+        "isReal": false
+      },
+      {
+        "id": "hamper_t3",
+        "phrase": "Ribbon around picnic basket",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
@@ -4943,7 +5418,7 @@
       },
       {
         "id": "handle_t0",
-        "phrase": "A nickname used between friends",
+        "phrase": "Inside joke becomes name",
         "isReal": false
       },
       {
@@ -5050,12 +5525,12 @@
       },
       {
         "id": "hedge_t0",
-        "phrase": "Trimmed into an animal shape",
+        "phrase": "Shears work all afternoon",
         "isReal": false
       },
       {
         "id": "hedge_t1",
-        "phrase": "Mumbles something noncommittal",
+        "phrase": "Question dodged with maybe",
         "isReal": false
       }
     ],
@@ -5196,32 +5671,32 @@
       },
       {
         "id": "horn_t0",
-        "phrase": "Sharp enough to gore",
+        "phrase": "Antlers branch overhead",
         "isReal": false
       },
       {
         "id": "horn_t1",
-        "phrase": "A bull's warning system",
+        "phrase": "Hooves scrape before charge",
         "isReal": false
       },
       {
         "id": "horn_t2",
-        "phrase": "Jazz club's star player",
+        "phrase": "Saxophone takes the solo",
         "isReal": false
       },
       {
         "id": "horn_t3",
-        "phrase": "Soundtrack to a traffic jam",
+        "phrase": "Brake lights flare red",
         "isReal": false
       },
       {
         "id": "horn_t4",
-        "phrase": "Polished to a sheen",
+        "phrase": "Ivory carved smooth",
         "isReal": false
       },
       {
         "id": "horn_t5",
-        "phrase": "Where a Viking might drink",
+        "phrase": "Goblet raised after battle",
         "isReal": false
       }
     ],
@@ -5255,12 +5730,12 @@
       },
       {
         "id": "index_t1",
-        "phrase": "Stock crashing into red",
+        "phrase": "One stock crashes red",
         "isReal": false
       },
       {
         "id": "index_t2",
-        "phrase": "Thumb's neighbor",
+        "phrase": "Middle finger gets blamed",
         "isReal": false
       }
     ],
@@ -5353,27 +5828,27 @@
       },
       {
         "id": "iron_t1",
-        "phrase": "Periodic table row four resident",
+        "phrase": "Rust stains the railing",
         "isReal": false
       },
       {
         "id": "iron_t2",
-        "phrase": "Steam hisses from the heel",
+        "phrase": "Laundry board unfolds",
         "isReal": false
       },
       {
         "id": "iron_t3",
-        "phrase": "Hung on a board between outfits",
+        "phrase": "Wrinkle spray promises miracles",
         "isReal": false
       },
       {
         "id": "iron_t4",
-        "phrase": "Caddy hands it over hopefully",
+        "phrase": "Driver waits in golf bag",
         "isReal": false
       },
       {
         "id": "iron_t5",
-        "phrase": "Button-down finally behaves",
+        "phrase": "Collar refuses to behave",
         "isReal": false
       }
     ],
@@ -5392,7 +5867,7 @@
       },
       {
         "id": "issue_r1",
-        "phrase": "Dog-eared on the waiting room table",
+        "phrase": "Waiting room copy, dog-eared",
         "isReal": true
       },
       {
@@ -5446,7 +5921,7 @@
       },
       {
         "id": "jack_t1",
-        "phrase": "Shuffled into a 52-card deck",
+        "phrase": "Dealer shuffles too loudly",
         "isReal": false
       },
       {
@@ -5456,7 +5931,7 @@
       },
       {
         "id": "jack_t3",
-        "phrase": "The suit nobody wants to hold",
+        "phrase": "Ace gets all attention",
         "isReal": false
       },
       {
@@ -5593,32 +6068,32 @@
       },
       {
         "id": "key_t0",
-        "phrase": "Deadbolt's best friend",
+        "phrase": "Door lock waits quietly",
         "isReal": false
       },
       {
         "id": "key_t1",
-        "phrase": "A locksmith's whole career",
+        "phrase": "Locksmith cuts another blank",
         "isReal": false
       },
       {
         "id": "key_t2",
-        "phrase": "The make-or-break moment",
+        "phrase": "Tiny detail saves plan",
         "isReal": false
       },
       {
         "id": "key_t3",
-        "phrase": "Absolutely cannot be missed",
+        "phrase": "Agenda item gets starred",
         "isReal": false
       },
       {
         "id": "key_t4",
-        "phrase": "Rattles in your pocket",
+        "phrase": "Coins rattle in pocket",
         "isReal": false
       },
       {
         "id": "key_t5",
-        "phrase": "Sharp note in a chord",
+        "phrase": "Conductor lifts the baton",
         "isReal": false
       },
       {
@@ -5654,6 +6129,21 @@
         "id": "kick_t0",
         "phrase": "A goalie's big moment",
         "isReal": false
+      },
+      {
+        "id": "kick_t1",
+        "phrase": "Cleat meets empty air",
+        "isReal": false
+      },
+      {
+        "id": "kick_t2",
+        "phrase": "Foot raised before contact",
+        "isReal": false
+      },
+      {
+        "id": "kick_t3",
+        "phrase": "Adrenaline after the jump",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
@@ -5681,17 +6171,17 @@
       },
       {
         "id": "kind_t0",
-        "phrase": "Gentle and patient with everyone",
+        "phrase": "Compliment softens the room",
         "isReal": false
       },
       {
         "id": "kind_t1",
-        "phrase": "Sorted into separate groups",
+        "phrase": "Boxes get labeled neatly",
         "isReal": false
       },
       {
         "id": "kind_t2",
-        "phrase": "Species listed in the register",
+        "phrase": "Genus printed in italics",
         "isReal": false
       }
     ],
@@ -5720,17 +6210,17 @@
       },
       {
         "id": "lap_t1",
-        "phrase": "A toddler climbing somewhere warm",
+        "phrase": "Toddler climbs onto knees",
         "isReal": false
       },
       {
         "id": "lap_t2",
-        "phrase": "Overtaking on the final straight",
+        "phrase": "Runner passes near finish",
         "isReal": false
       },
       {
         "id": "lap_t3",
-        "phrase": "Stopwatch clicking at the same cone",
+        "phrase": "Stopwatch clicks at cone",
         "isReal": false
       },
       {
@@ -5764,12 +6254,12 @@
       },
       {
         "id": "launch_t0",
-        "phrase": "A missile finds its mark",
+        "phrase": "Rocket fuel waits below",
         "isReal": false
       },
       {
         "id": "launch_t1",
-        "phrase": "App hits the top charts",
+        "phrase": "Download count climbs fast",
         "isReal": false
       }
     ],
@@ -5813,7 +6303,7 @@
       },
       {
         "id": "lead_t2",
-        "phrase": "Pencil's dark secret",
+        "phrase": "Graphite stains the finger",
         "isReal": false
       },
       {
@@ -5823,17 +6313,17 @@
       },
       {
         "id": "lead_t4",
-        "phrase": "Understudy's nightmare",
+        "phrase": "Understudy waits backstage",
         "isReal": false
       },
       {
         "id": "lead_t5",
-        "phrase": "Curtain call, solo",
+        "phrase": "Spotlight finds the actor",
         "isReal": false
       },
       {
         "id": "lead_t6",
-        "phrase": "Heel's tether on a stroll",
+        "phrase": "Leash clips to collar",
         "isReal": false
       },
       {
@@ -5877,7 +6367,7 @@
       },
       {
         "id": "lean_t1",
-        "phrase": "Tipping toward one side",
+        "phrase": "Wall catches the shoulder",
         "isReal": false
       },
       {
@@ -6313,6 +6803,21 @@
         "id": "log_t0",
         "phrase": "A beaver's whole personality",
         "isReal": false
+      },
+      {
+        "id": "log_t1",
+        "phrase": "Bark still attached",
+        "isReal": false
+      },
+      {
+        "id": "log_t2",
+        "phrase": "Diary under a pillow",
+        "isReal": false
+      },
+      {
+        "id": "log_t3",
+        "phrase": "Entry never written down",
+        "isReal": false
       }
     ],
     "gpsTag": "confidence",
@@ -6364,7 +6869,27 @@
       },
       {
         "id": "lot_t0",
-        "phrase": "Wins the highest bid",
+        "phrase": "Gavel falls too late",
+        "isReal": false
+      },
+      {
+        "id": "lot_r2",
+        "phrase": "Auctioneer's next prize",
+        "isReal": true
+      },
+      {
+        "id": "lot_t1",
+        "phrase": "Garage full of cars",
+        "isReal": false
+      },
+      {
+        "id": "lot_t2",
+        "phrase": "Ticket drawn from bowl",
+        "isReal": false
+      },
+      {
+        "id": "lot_t3",
+        "phrase": "Fence around empty grass",
         "isReal": false
       }
     ],
@@ -6388,7 +6913,22 @@
       },
       {
         "id": "marble_t0",
-        "phrase": "Chiseled into a statue",
+        "phrase": "Sculptor's dusty chisel",
+        "isReal": false
+      },
+      {
+        "id": "marble_t1",
+        "phrase": "Granite countertop shine",
+        "isReal": false
+      },
+      {
+        "id": "marble_t2",
+        "phrase": "Toy rolled under couch",
+        "isReal": false
+      },
+      {
+        "id": "marble_t3",
+        "phrase": "Statue's dusty pedestal",
         "isReal": false
       }
     ],
@@ -6398,7 +6938,7 @@
   "MATCH": {
     "difficulty": "medium",
     "hiddenMeaning": "Families shook hands over dinner",
-    "hiddenTrap": "The wall you finally ran into",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "match_r0",
@@ -6495,7 +7035,22 @@
       },
       {
         "id": "mess_t0",
-        "phrase": "Roommate's side of the dorm",
+        "phrase": "Broom waiting in the corner",
+        "isReal": false
+      },
+      {
+        "id": "mess_t1",
+        "phrase": "Spill spreading on counter",
+        "isReal": false
+      },
+      {
+        "id": "mess_t2",
+        "phrase": "Laundry chair before guests",
+        "isReal": false
+      },
+      {
+        "id": "mess_t3",
+        "phrase": "Lunch tray left behind",
         "isReal": false
       }
     ],
@@ -6509,7 +7064,7 @@
     "masks": [
       {
         "id": "mine_r0",
-        "phrase": "Hands off \u2014 already claimed",
+        "phrase": "Hands off — already claimed",
         "isReal": true
       },
       {
@@ -6573,7 +7128,27 @@
       },
       {
         "id": "minor_t0",
-        "phrase": "A sad-sounding chord",
+        "phrase": "Piano key held too long",
+        "isReal": false
+      },
+      {
+        "id": "minor_r3",
+        "phrase": "Chord makes daylight sad",
+        "isReal": true
+      },
+      {
+        "id": "minor_t1",
+        "phrase": "Adult signs the waiver",
+        "isReal": false
+      },
+      {
+        "id": "minor_t2",
+        "phrase": "Footnote nobody remembers",
+        "isReal": false
+      },
+      {
+        "id": "minor_t3",
+        "phrase": "Elective outside the degree",
         "isReal": false
       }
     ],
@@ -6583,7 +7158,7 @@
   "MINT": {
     "difficulty": "medium",
     "hiddenMeaning": "Never been opened, ever",
-    "hiddenTrap": "Paid way too much for it",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "mint_r0",
@@ -6636,7 +7211,7 @@
       },
       {
         "id": "mold_t1",
-        "phrase": "Poured into a bundt pan",
+        "phrase": "Bundt pan waits greased",
         "isReal": false
       },
       {
@@ -6646,7 +7221,7 @@
       },
       {
         "id": "mold_t3",
-        "phrase": "Spreads through a damp basement",
+        "phrase": "Dehumidifier runs all night",
         "isReal": false
       },
       {
@@ -6680,7 +7255,27 @@
       },
       {
         "id": "mole_t0",
-        "phrase": "Rich Mexican sauce with chili",
+        "phrase": "Tortilla chips beside salsa",
+        "isReal": false
+      },
+      {
+        "id": "mole_r3",
+        "phrase": "Rich sauce over chicken",
+        "isReal": true
+      },
+      {
+        "id": "mole_t1",
+        "phrase": "Groundhog steals the garden",
+        "isReal": false
+      },
+      {
+        "id": "mole_t2",
+        "phrase": "Freckle darkens in sun",
+        "isReal": false
+      },
+      {
+        "id": "mole_t3",
+        "phrase": "Spy changes phones nightly",
         "isReal": false
       }
     ],
@@ -6709,12 +7304,12 @@
       },
       {
         "id": "moor_t1",
-        "phrase": "Heather and peat underfoot",
+        "phrase": "Boots sink in peat",
         "isReal": false
       },
       {
         "id": "moor_t2",
-        "phrase": "Where the anchor drops",
+        "phrase": "Anchor hits bottom",
         "isReal": false
       },
       {
@@ -6763,7 +7358,7 @@
       },
       {
         "id": "mortar_t2",
-        "phrase": "Pestle grinding at the base",
+        "phrase": "Pestle rests beside it",
         "isReal": false
       }
     ],
@@ -6821,17 +7416,17 @@
       },
       {
         "id": "mouse_t0",
-        "phrase": "What cheese famously attracts",
+        "phrase": "Cheese waits in trap",
         "isReal": false
       },
       {
         "id": "mouse_t1",
-        "phrase": "A trap's only purpose",
+        "phrase": "Spring trap snaps shut",
         "isReal": false
       },
       {
         "id": "mouse_t2",
-        "phrase": "A cursor's reason to exist",
+        "phrase": "Cursor blinks on screen",
         "isReal": false
       }
     ],
@@ -6865,7 +7460,7 @@
       },
       {
         "id": "mug_t2",
-        "phrase": "Dark alley, no witnesses",
+        "phrase": "Alley lights go out",
         "isReal": false
       }
     ],
@@ -6975,18 +7570,18 @@
     "wordType": "Double"
   },
   "NAIL": {
-    "difficulty": "easy",
-    "hiddenMeaning": "Stuck the landing, no wobble",
-    "hiddenTrap": "Tudor tailors measured cloth in these",
+    "difficulty": "medium",
+    "hiddenMeaning": "Tiny old cloth measure",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "nail_r0",
-        "phrase": "Holds the frame together, silently",
+        "phrase": "Hammer drives it home",
         "isReal": true
       },
       {
         "id": "nail_r1",
-        "phrase": "Canvas for ten tiny opinions",
+        "phrase": "Polish needs somewhere to live",
         "isReal": true
       },
       {
@@ -6996,52 +7591,67 @@
       },
       {
         "id": "nail_r3",
-        "phrase": "Cops had him before noon",
+        "phrase": "Caught with fingerprints everywhere",
+        "isReal": true
+      },
+      {
+        "id": "nail_r4",
+        "phrase": "Tiny old cloth measure",
         "isReal": true
       },
       {
         "id": "nail_t0",
-        "phrase": "Screw's less-threaded cousin",
+        "phrase": "Twisted into the wood",
         "isReal": false
       },
       {
         "id": "nail_t1",
-        "phrase": "Polish needs somewhere to live",
-        "isReal": false
-      },
-      {
-        "id": "nail_t2",
-        "phrase": "Timber splits under pressure",
-        "isReal": false
-      },
-      {
-        "id": "nail_t3",
         "phrase": "Cuticle pushed back gently",
         "isReal": false
       },
       {
+        "id": "nail_t2",
+        "phrase": "Almost kept balance",
+        "isReal": false
+      },
+      {
+        "id": "nail_t3",
+        "phrase": "Suspicious but no evidence",
+        "isReal": false
+      },
+      {
         "id": "nail_t4",
-        "phrase": "Polish chips by Tuesday",
+        "phrase": "Inch marked on ruler",
         "isReal": false
       },
       {
         "id": "nail_t5",
-        "phrase": "Every carpenter's favorite sound",
+        "phrase": "Staple through loose papers",
         "isReal": false
       },
       {
         "id": "nail_t6",
-        "phrase": "Painted bright red on date night",
+        "phrase": "Ring stuck on finger",
         "isReal": false
       },
       {
         "id": "nail_t7",
-        "phrase": "Caught red-handed, empty pockets",
+        "phrase": "Finished late but complete",
+        "isReal": false
+      },
+      {
+        "id": "nail_t8",
+        "phrase": "Rumor about the suspect",
+        "isReal": false
+      },
+      {
+        "id": "nail_t9",
+        "phrase": "Yard cut from fabric",
         "isReal": false
       }
     ],
-    "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "gpsTag": "panic",
+    "wordType": "Quintuple"
   },
   "NEEDLE": {
     "difficulty": "medium",
@@ -7070,7 +7680,7 @@
       },
       {
         "id": "needle_t2",
-        "phrase": "Draws blood on purpose",
+        "phrase": "Nurse ties the band",
         "isReal": false
       }
     ],
@@ -7099,7 +7709,7 @@
       },
       {
         "id": "nerve_t1",
-        "phrase": "Refusing to flinch under pressure",
+        "phrase": "Jaw stays locked",
         "isReal": false
       }
     ],
@@ -7169,6 +7779,21 @@
         "id": "objective_t0",
         "phrase": "A critic with very strong opinions",
         "isReal": false
+      },
+      {
+        "id": "objective_t1",
+        "phrase": "Finish line without plan",
+        "isReal": false
+      },
+      {
+        "id": "objective_t2",
+        "phrase": "Personal grudge in review",
+        "isReal": false
+      },
+      {
+        "id": "objective_t3",
+        "phrase": "Microscope eyepiece",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
@@ -7220,7 +7845,7 @@
     "masks": [
       {
         "id": "order_r0",
-        "phrase": "First, second, third \u2014 someone cared",
+        "phrase": "First, second, third — someone cared",
         "isReal": true
       },
       {
@@ -7240,7 +7865,7 @@
       },
       {
         "id": "order_t0",
-        "phrase": "Alphabetical, by last name",
+        "phrase": "Labels sort the files",
         "isReal": false
       },
       {
@@ -7250,22 +7875,22 @@
       },
       {
         "id": "order_t2",
-        "phrase": "Kitchen ticket, clipped and spinning",
+        "phrase": "Chef reads the ticket",
         "isReal": false
       },
       {
         "id": "order_t3",
-        "phrase": "Catalogue page already dog-eared",
+        "phrase": "Catalogue page gets folded",
         "isReal": false
       },
       {
         "id": "order_t4",
-        "phrase": "Obeyed before it's understood",
+        "phrase": "Boots move on command",
         "isReal": false
       },
       {
         "id": "order_t5",
-        "phrase": "Drawer sorted by a Sunday mood",
+        "phrase": "Drawer dividers line up",
         "isReal": false
       },
       {
@@ -7275,7 +7900,7 @@
       },
       {
         "id": "order_t7",
-        "phrase": "Delivery truck finds your street",
+        "phrase": "Delivery truck idles outside",
         "isReal": false
       }
     ],
@@ -7284,52 +7909,52 @@
   },
   "ORGAN": {
     "difficulty": "medium",
-    "hiddenMeaning": "Each pipe earns its own voice",
+    "hiddenMeaning": "Party's official mouthpiece",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "organ_r0",
-        "phrase": "Does one job, does it forever",
+        "phrase": "Heart doing its job",
         "isReal": true
       },
       {
         "id": "organ_r1",
-        "phrase": "Fills a cathedral with one note",
+        "phrase": "Cathedral pipes fill Sunday",
         "isReal": true
       },
       {
         "id": "organ_r2",
-        "phrase": "The party's official mouthpiece",
+        "phrase": "Party's official mouthpiece",
         "isReal": true
       },
       {
         "id": "organ_t0",
-        "phrase": "Surgeon's sharpest tool",
+        "phrase": "Scalpel waits on tray",
         "isReal": false
       },
       {
         "id": "organ_t1",
-        "phrase": "Pumps blood on command",
+        "phrase": "Piano keys under fingers",
         "isReal": false
       },
       {
         "id": "organ_t2",
-        "phrase": "Keys under a pianist's fingers",
+        "phrase": "Newspaper prints the gossip",
         "isReal": false
       },
       {
         "id": "organ_t3",
-        "phrase": "Concert hall's grand centerpiece",
+        "phrase": "Surgeon scrubs before work",
         "isReal": false
       },
       {
         "id": "organ_t4",
-        "phrase": "Headlines the morning edition",
+        "phrase": "Choir owns the balcony",
         "isReal": false
       },
       {
         "id": "organ_t5",
-        "phrase": "Prints the day's gossip",
+        "phrase": "Press release says enough",
         "isReal": false
       }
     ],
@@ -7359,6 +7984,21 @@
       {
         "id": "pack_t0",
         "phrase": "A hiker's trusty frame",
+        "isReal": false
+      },
+      {
+        "id": "pack_t1",
+        "phrase": "Suitcase rolled to gate",
+        "isReal": false
+      },
+      {
+        "id": "pack_t2",
+        "phrase": "Lone wolf at dusk",
+        "isReal": false
+      },
+      {
+        "id": "pack_t3",
+        "phrase": "Empty seats on subway",
         "isReal": false
       }
     ],
@@ -7494,18 +8134,33 @@
       },
       {
         "id": "pass_t0",
-        "phrase": "Free ticket, velvet rope",
+        "phrase": "Bouncer checks the wristband",
         "isReal": false
       },
       {
         "id": "pass_t1",
-        "phrase": "Quarterback's best option",
+        "phrase": "Receiver breaks open",
         "isReal": false
       },
       {
         "id": "pass_t2",
-        "phrase": "Hiking trail through a valley",
+        "phrase": "Trail climbs the ridge",
         "isReal": false
+      },
+      {
+        "id": "pass_r2",
+        "phrase": "Ticket gets you inside",
+        "isReal": true
+      },
+      {
+        "id": "pass_r3",
+        "phrase": "Quarterback lets it fly",
+        "isReal": true
+      },
+      {
+        "id": "pass_r4",
+        "phrase": "Mountains leave one opening",
+        "isReal": true
       }
     ],
     "gpsTag": "flow",
@@ -7694,7 +8349,27 @@
       },
       {
         "id": "pepper_t0",
-        "phrase": "Sliced into a stir-fry",
+        "phrase": "Salt waiting beside it",
+        "isReal": false
+      },
+      {
+        "id": "pepper_r2",
+        "phrase": "Sliced into stir-fry",
+        "isReal": true
+      },
+      {
+        "id": "pepper_t1",
+        "phrase": "Sneeze after the shaker",
+        "isReal": false
+      },
+      {
+        "id": "pepper_t2",
+        "phrase": "Reporter raises hand",
+        "isReal": false
+      },
+      {
+        "id": "pepper_t3",
+        "phrase": "Spice rack gets dusty",
         "isReal": false
       }
     ],
@@ -7767,7 +8442,7 @@
       },
       {
         "id": "pitch_t1",
-        "phrase": "Batter swings and misses",
+        "phrase": "Catcher frames the throw",
         "isReal": false
       },
       {
@@ -7777,18 +8452,33 @@
       },
       {
         "id": "pitch_t3",
-        "phrase": "Architect draws the roofline",
+        "phrase": "Roofline angles upward",
         "isReal": false
       },
       {
         "id": "pitch_t4",
-        "phrase": "Seasick passengers grip the railing",
+        "phrase": "Deck tilts underfoot",
         "isReal": false
       },
       {
         "id": "pitch_t5",
-        "phrase": "Striker lines up the free kick",
+        "phrase": "Goal net waits tense",
         "isReal": false
+      },
+      {
+        "id": "pitch_r4",
+        "phrase": "Catcher waits for it",
+        "isReal": true
+      },
+      {
+        "id": "pitch_r5",
+        "phrase": "Roof leans at angle",
+        "isReal": true
+      },
+      {
+        "id": "pitch_r6",
+        "phrase": "Ship makes stomachs turn",
+        "isReal": true
       }
     ],
     "gpsTag": "panic",
@@ -7919,12 +8609,12 @@
       },
       {
         "id": "plant_t2",
-        "phrase": "Buries something in the garden",
+        "phrase": "Shovel breaks soil",
         "isReal": false
       },
       {
         "id": "plant_t3",
-        "phrase": "Smokestack on the skyline",
+        "phrase": "Factory whistle blows",
         "isReal": false
       },
       {
@@ -7934,12 +8624,12 @@
       },
       {
         "id": "plant_t5",
-        "phrase": "Grows tall in a forest",
+        "phrase": "Seedling reaches sunlight",
         "isReal": false
       },
       {
         "id": "plant_t6",
-        "phrase": "Pots a cutting in soil",
+        "phrase": "Trowel fills the pot",
         "isReal": false
       }
     ],
@@ -7969,6 +8659,21 @@
       {
         "id": "play_t0",
         "phrase": "Memorized lines, nervous actor",
+        "isReal": false
+      },
+      {
+        "id": "play_t1",
+        "phrase": "Movie trailer before credits",
+        "isReal": false
+      },
+      {
+        "id": "play_t2",
+        "phrase": "Homework after recess bell",
+        "isReal": false
+      },
+      {
+        "id": "play_t3",
+        "phrase": "Wheel tightened by mechanic",
         "isReal": false
       }
     ],
@@ -8046,7 +8751,7 @@
       },
       {
         "id": "plug_t0",
-        "phrase": "Stops a leaking pipe",
+        "phrase": "Pipe tape wraps tight",
         "isReal": false
       },
       {
@@ -8070,7 +8775,7 @@
       },
       {
         "id": "point_r1",
-        "phrase": "What an hour-long meeting rarely has",
+        "phrase": "Meeting somehow has one",
         "isReal": true
       },
       {
@@ -8100,7 +8805,7 @@
       },
       {
         "id": "point_t2",
-        "phrase": "Forty-five minutes you won't get back",
+        "phrase": "Meeting that went nowhere",
         "isReal": false
       },
       {
@@ -8351,6 +9056,21 @@
       {
         "id": "prime_t0",
         "phrase": "A politician's top job",
+        "isReal": false
+      },
+      {
+        "id": "prime_t1",
+        "phrase": "Steakhouse menu brags",
+        "isReal": false
+      },
+      {
+        "id": "prime_t2",
+        "phrase": "Even number after two",
+        "isReal": false
+      },
+      {
+        "id": "prime_t3",
+        "phrase": "Vice president's big dream",
         "isReal": false
       }
     ],
@@ -8610,6 +9330,21 @@
         "id": "reef_t0",
         "phrase": "Anchor dropped, engines off",
         "isReal": false
+      },
+      {
+        "id": "reef_t1",
+        "phrase": "Sandbar at low tide",
+        "isReal": false
+      },
+      {
+        "id": "reef_t2",
+        "phrase": "Wreck rusting offshore",
+        "isReal": false
+      },
+      {
+        "id": "reef_t3",
+        "phrase": "Anchor rope gone slack",
+        "isReal": false
       }
     ],
     "gpsTag": "flow",
@@ -8657,7 +9392,7 @@
   "RESOLUTION": {
     "difficulty": "hard",
     "hiddenMeaning": "The argument finally over",
-    "hiddenTrap": "That satisfying final note",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "resolution_r0",
@@ -8739,7 +9474,7 @@
       },
       {
         "id": "retreat_r1",
-        "phrase": "No Wi-Fi, no agenda, no apologies",
+        "phrase": "No signal, no agenda",
         "isReal": true
       },
       {
@@ -8905,17 +9640,17 @@
   },
   "RING": {
     "difficulty": "medium",
-    "hiddenMeaning": "Two sleepless nights, visible",
-    "hiddenTrap": "How an oak keeps its diary",
+    "hiddenMeaning": "Oak keeps its diary",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "ring_r0",
-        "phrase": "Operates quietly, charges heavily",
+        "phrase": "Proposed with it, terrified",
         "isReal": true
       },
       {
         "id": "ring_r1",
-        "phrase": "What a doorbell threatens",
+        "phrase": "Doorbell makes its threat",
         "isReal": true
       },
       {
@@ -8925,47 +9660,72 @@
       },
       {
         "id": "ring_r3",
-        "phrase": "Proposed with it, terrified",
+        "phrase": "Oak keeps its diary",
         "isReal": true
       },
       {
         "id": "ring_r4",
-        "phrase": "Calling before dropping by, barely",
+        "phrase": "Smugglers move as one",
         "isReal": true
       },
       {
         "id": "ring_t0",
-        "phrase": "Alarm ignored three times over",
+        "phrase": "Diamond sits in velvet",
         "isReal": false
       },
       {
         "id": "ring_t1",
-        "phrase": "Diamond's favorite setting",
+        "phrase": "Alarm ignored again",
         "isReal": false
       },
       {
         "id": "ring_t2",
-        "phrase": "Referee stops it in round three",
+        "phrase": "Referee stops round three",
         "isReal": false
       },
       {
         "id": "ring_t3",
-        "phrase": "Steeple, rope, and Sunday morning",
+        "phrase": "Bark marks the trunk",
         "isReal": false
       },
       {
         "id": "ring_t4",
-        "phrase": "Smugglers with matching tattoos",
+        "phrase": "Tattoos match every wrist",
+        "isReal": false
+      },
+      {
+        "id": "ring_t5",
+        "phrase": "Wedding vows get nervous",
+        "isReal": false
+      },
+      {
+        "id": "ring_t6",
+        "phrase": "Knocker waits on brass",
+        "isReal": false
+      },
+      {
+        "id": "ring_t7",
+        "phrase": "Gloves touch before fighting",
+        "isReal": false
+      },
+      {
+        "id": "ring_t8",
+        "phrase": "Leaves fall every autumn",
+        "isReal": false
+      },
+      {
+        "id": "ring_t9",
+        "phrase": "Gang meets after midnight",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "ROCK": {
     "difficulty": "medium",
     "hiddenMeaning": "Steadiest thing in any storm",
-    "hiddenTrap": "Shuffleboard's icy, heavier cousin",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "rock_r0",
@@ -9304,6 +10064,21 @@
         "id": "safe_t0",
         "phrase": "A helmet snapped on tight",
         "isReal": false
+      },
+      {
+        "id": "safe_t1",
+        "phrase": "Password under the keyboard",
+        "isReal": false
+      },
+      {
+        "id": "safe_t2",
+        "phrase": "Lock clicks on locker",
+        "isReal": false
+      },
+      {
+        "id": "safe_t3",
+        "phrase": "Runner tagged before bag",
+        "isReal": false
       }
     ],
     "gpsTag": "tension",
@@ -9399,17 +10174,17 @@
       },
       {
         "id": "saw_t1",
-        "phrase": "Splits the log in two",
+        "phrase": "Woodpile grows fast",
         "isReal": false
       },
       {
         "id": "saw_t2",
-        "phrase": "Watched the whole thing happen",
+        "phrase": "Witness stays silent",
         "isReal": false
       },
       {
         "id": "saw_t3",
-        "phrase": "Noticed something was off",
+        "phrase": "Gut feeling wakes up",
         "isReal": false
       }
     ],
@@ -9419,7 +10194,7 @@
   "SCALE": {
     "difficulty": "medium",
     "hiddenMeaning": "Every pianist's morning warm-up",
-    "hiddenTrap": "Blindfolded and still judging you",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "scale_r0",
@@ -9487,37 +10262,72 @@
   },
   "SCORE": {
     "difficulty": "medium",
-    "hiddenMeaning": "Marked across the five lines",
-    "hiddenTrap": "Four times five, a long time",
+    "hiddenMeaning": "Marked across five lines",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "score_r0",
-        "phrase": "Final buzzer, up by three",
+        "phrase": "Final buzzer, up three",
         "isReal": true
       },
       {
         "id": "score_r1",
-        "phrase": "Got exactly what was needed",
+        "phrase": "Got what was needed",
+        "isReal": true
+      },
+      {
+        "id": "score_r2",
+        "phrase": "Twenty years, old style",
+        "isReal": true
+      },
+      {
+        "id": "score_r3",
+        "phrase": "Marked across five lines",
         "isReal": true
       },
       {
         "id": "score_t0",
-        "phrase": "Points tallied at the table",
+        "phrase": "Scorekeeper sharpens pencil",
         "isReal": false
       },
       {
         "id": "score_t1",
-        "phrase": "A conductor's marked pages",
+        "phrase": "Handshake almost happens",
         "isReal": false
       },
       {
         "id": "score_t2",
-        "phrase": "Two full decades passing",
+        "phrase": "Old calendar turns twenty",
+        "isReal": false
+      },
+      {
+        "id": "score_t3",
+        "phrase": "Orchestra waits on cue",
+        "isReal": false
+      },
+      {
+        "id": "score_t4",
+        "phrase": "Referee checks the clock",
+        "isReal": false
+      },
+      {
+        "id": "score_t5",
+        "phrase": "Wish list stays open",
+        "isReal": false
+      },
+      {
+        "id": "score_t6",
+        "phrase": "Math problem says twenty",
+        "isReal": false
+      },
+      {
+        "id": "score_t7",
+        "phrase": "Singer follows the staff",
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
-    "wordType": "Double"
+    "gpsTag": "tension",
+    "wordType": "Quadruple"
   },
   "SEAL": {
     "difficulty": "medium",
@@ -9947,7 +10757,7 @@
       },
       {
         "id": "sign_r2",
-        "phrase": "Something's coming \u2014 read the sky",
+        "phrase": "Something's coming — read the sky",
         "isReal": true
       },
       {
@@ -9992,7 +10802,7 @@
   "SINK": {
     "difficulty": "easy",
     "hiddenMeaning": "Fortunes vanish into bad ventures",
-    "hiddenTrap": "Buries the story before it runs",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "sink_r0",
@@ -10100,6 +10910,21 @@
       {
         "id": "socket_t0",
         "phrase": "The switch beside your front door",
+        "isReal": false
+      },
+      {
+        "id": "socket_t1",
+        "phrase": "Plug hanging loose",
+        "isReal": false
+      },
+      {
+        "id": "socket_t2",
+        "phrase": "Power strip under desk",
+        "isReal": false
+      },
+      {
+        "id": "socket_t3",
+        "phrase": "Knee brace after injury",
         "isReal": false
       }
     ],
@@ -10314,7 +11139,7 @@
       },
       {
         "id": "spirit_t1",
-        "phrase": "A s\u00e9ance's whole point",
+        "phrase": "A séance's whole point",
         "isReal": false
       },
       {
@@ -10362,67 +11187,87 @@
   },
   "SPRING": {
     "difficulty": "medium",
-    "hiddenMeaning": "Popped the question on a Tuesday",
+    "hiddenMeaning": "Surprise party, no warning",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "spring_r0",
-        "phrase": "Autumn's opposite",
+        "phrase": "Winter finally loses its grip",
         "isReal": true
       },
       {
         "id": "spring_r1",
-        "phrase": "Bubbles up uninvited from the ground",
+        "phrase": "Cold water from the earth",
         "isReal": true
       },
       {
         "id": "spring_r2",
-        "phrase": "Cheap mattress's dirty secret",
+        "phrase": "Inside a cheap mattress",
         "isReal": true
       },
       {
         "id": "spring_r3",
-        "phrase": "Off the starting block, suddenly",
+        "phrase": "Off the block, suddenly",
+        "isReal": true
+      },
+      {
+        "id": "spring_r4",
+        "phrase": "Surprise party, no warning",
         "isReal": true
       },
       {
         "id": "spring_t0",
-        "phrase": "Squeezes back when pushed",
+        "phrase": "Leaves falling in piles",
         "isReal": false
       },
       {
         "id": "spring_t1",
-        "phrase": "Inside every ballpoint pen",
+        "phrase": "Well dug behind the house",
         "isReal": false
       },
       {
         "id": "spring_t2",
-        "phrase": "Tension released in a click",
+        "phrase": "Rubber band pulled tight",
         "isReal": false
       },
       {
         "id": "spring_t3",
-        "phrase": "Pollen's annual revenge",
+        "phrase": "Running before the jump",
         "isReal": false
       },
       {
         "id": "spring_t4",
-        "phrase": "Clocks losing an hour overnight",
+        "phrase": "Invitation sent weeks early",
         "isReal": false
       },
       {
         "id": "spring_t5",
-        "phrase": "Bottled at the source",
+        "phrase": "Longest afternoon of year",
         "isReal": false
       },
       {
         "id": "spring_t6",
-        "phrase": "Ambush, fully prepared",
+        "phrase": "Fountain in the courtyard",
+        "isReal": false
+      },
+      {
+        "id": "spring_t7",
+        "phrase": "Foam cushion under fabric",
+        "isReal": false
+      },
+      {
+        "id": "spring_t8",
+        "phrase": "Landing hard on pavement",
+        "isReal": false
+      },
+      {
+        "id": "spring_t9",
+        "phrase": "Secret kept forever",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "STABLE": {
     "difficulty": "medium",
@@ -10637,17 +11482,17 @@
       },
       {
         "id": "star_t0",
-        "phrase": "Cut from gold foil",
+        "phrase": "Gold foil catches light",
         "isReal": false
       },
       {
         "id": "star_t1",
-        "phrase": "Stuck on the good behavior chart",
+        "phrase": "Teacher opens sticker sheet",
         "isReal": false
       },
       {
         "id": "star_t2",
-        "phrase": "Sun's distant cousin",
+        "phrase": "Planet shines after dusk",
         "isReal": false
       },
       {
@@ -10657,7 +11502,7 @@
       },
       {
         "id": "star_t4",
-        "phrase": "Telescope's only obsession",
+        "phrase": "Astronomer adjusts lens",
         "isReal": false
       },
       {
@@ -10672,7 +11517,7 @@
       },
       {
         "id": "star_t7",
-        "phrase": "Stitched onto a sheriff's jacket",
+        "phrase": "Badge catches hallway light",
         "isReal": false
       },
       {
@@ -10701,12 +11546,12 @@
       },
       {
         "id": "steep_t0",
-        "phrase": "A cliff face looming vertical",
+        "phrase": "Trail climbs brutally upward",
         "isReal": false
       },
       {
         "id": "steep_t1",
-        "phrase": "Soaking for too long",
+        "phrase": "Tea bag stays forgotten",
         "isReal": false
       },
       {
@@ -10819,12 +11664,12 @@
       },
       {
         "id": "sting_t1",
-        "phrase": "Vinegar on a cut",
+        "phrase": "Cut meets vinegar",
         "isReal": false
       },
       {
         "id": "sting_t2",
-        "phrase": "Unmarked car outside",
+        "phrase": "Undercover van waits outside",
         "isReal": false
       }
     ],
@@ -10863,12 +11708,12 @@
       },
       {
         "id": "stock_t1",
-        "phrase": "A market crash and recovery",
+        "phrase": "Ticker bleeds red",
         "isReal": false
       },
       {
         "id": "stock_t2",
-        "phrase": "Broth from a soup packet",
+        "phrase": "Bouillon cube dissolves",
         "isReal": false
       }
     ],
@@ -10976,12 +11821,12 @@
       },
       {
         "id": "strike_t0",
-        "phrase": "Picket signs at dawn",
+        "phrase": "Union hall fills early",
         "isReal": false
       },
       {
         "id": "strike_t1",
-        "phrase": "A boxer's best combination",
+        "phrase": "Glove grazes the chin",
         "isReal": false
       },
       {
@@ -10991,7 +11836,7 @@
       },
       {
         "id": "strike_t3",
-        "phrase": "Pitcher's favorite scorebook mark",
+        "phrase": "Umpire checks the zone",
         "isReal": false
       },
       {
@@ -11006,7 +11851,7 @@
   "SUIT": {
     "difficulty": "hard",
     "hiddenMeaning": "All four in a deck",
-    "hiddenTrap": "The color works on you",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "suit_r0",
@@ -11020,7 +11865,7 @@
       },
       {
         "id": "suit_t0",
-        "phrase": "A tie and briefcase combination",
+        "phrase": "Briefcase waits by door",
         "isReal": false
       },
       {
@@ -11137,12 +11982,12 @@
       },
       {
         "id": "swing_t0",
-        "phrase": "Jazz's looser cousin",
+        "phrase": "Saxophone loosens the room",
         "isReal": false
       },
       {
         "id": "swing_t1",
-        "phrase": "A boxer's opening move",
+        "phrase": "Glove cuts the air",
         "isReal": false
       }
     ],
@@ -11166,12 +12011,12 @@
       },
       {
         "id": "tackle_t0",
-        "phrase": "Reels in the big one",
+        "phrase": "Reel screams at dawn",
         "isReal": false
       },
       {
         "id": "tackle_t1",
-        "phrase": "Baits the hook carefully",
+        "phrase": "Worm waits on hook",
         "isReal": false
       },
       {
@@ -11181,7 +12026,7 @@
       },
       {
         "id": "tackle_t3",
-        "phrase": "Blocks the opposing lineman",
+        "phrase": "Lineman absorbs the hit",
         "isReal": false
       },
       {
@@ -11322,7 +12167,7 @@
       },
       {
         "id": "tip_t0",
-        "phrase": "Needle's business end",
+        "phrase": "Needle glints at end",
         "isReal": false
       },
       {
@@ -11332,7 +12177,7 @@
       },
       {
         "id": "tip_t2",
-        "phrase": "Cash left under the coffee mug",
+        "phrase": "Receipt hides under cash",
         "isReal": false
       },
       {
@@ -11342,7 +12187,7 @@
       },
       {
         "id": "tip_t4",
-        "phrase": "Printed at the recipe's bottom",
+        "phrase": "Recipe note in margin",
         "isReal": false
       },
       {
@@ -11352,7 +12197,7 @@
       },
       {
         "id": "tip_t6",
-        "phrase": "Gravity winning a small argument",
+        "phrase": "Glass leans too far",
         "isReal": false
       },
       {
@@ -11367,7 +12212,7 @@
   "TIRE": {
     "difficulty": "easy",
     "hiddenMeaning": "Wagons wore iron rings once",
-    "hiddenTrap": "What Shakespeare's ladies pinned up top",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "tire_r0",
@@ -11474,18 +12319,28 @@
       },
       {
         "id": "toast_t1",
-        "phrase": "Pops up when ready",
+        "phrase": "Toaster lever jumps",
         "isReal": false
       },
       {
         "id": "toast_t2",
-        "phrase": "Clinking glasses at midnight",
+        "phrase": "Glasses meet at midnight",
         "isReal": false
       },
       {
         "id": "toast_t3",
-        "phrase": "Best man's sweaty moment",
+        "phrase": "Best man clears throat",
         "isReal": false
+      },
+      {
+        "id": "toast_r2",
+        "phrase": "Pops up when ready",
+        "isReal": true
+      },
+      {
+        "id": "toast_r3",
+        "phrase": "Glasses meet after speech",
+        "isReal": true
       }
     ],
     "gpsTag": "flow",
@@ -11518,7 +12373,7 @@
       },
       {
         "id": "token_t1",
-        "phrase": "Password sent to your phone",
+        "phrase": "Login code arrives late",
         "isReal": false
       },
       {
@@ -11528,17 +12383,17 @@
       },
       {
         "id": "token_t3",
-        "phrase": "Subway's entry fare collected",
+        "phrase": "Turnstile swallows fare",
         "isReal": false
       },
       {
         "id": "token_t4",
-        "phrase": "A souvenir from somewhere visited",
+        "phrase": "Keychain from vacation",
         "isReal": false
       },
       {
         "id": "token_t5",
-        "phrase": "Bare minimum apology offered",
+        "phrase": "Apology barely lands",
         "isReal": false
       }
     ],
@@ -11577,7 +12432,7 @@
       },
       {
         "id": "train_t3",
-        "phrase": "Repetition until the body forgets effort",
+        "phrase": "Coach starts another set",
         "isReal": false
       },
       {
@@ -11621,7 +12476,7 @@
       },
       {
         "id": "trip_t0",
-        "phrase": "Delayed three hours at the gate",
+        "phrase": "Gate change ruins morning",
         "isReal": false
       },
       {
@@ -11631,7 +12486,7 @@
       },
       {
         "id": "trip_t2",
-        "phrase": "Knees meet concrete, dignity exits",
+        "phrase": "Shoelace catches first",
         "isReal": false
       },
       {
@@ -11767,12 +12622,12 @@
       },
       {
         "id": "vessel_t0",
-        "phrase": "Drops anchor in the bay",
+        "phrase": "Anchor chain rattles down",
         "isReal": false
       },
       {
         "id": "vessel_t1",
-        "phrase": "A captain's weathered log",
+        "phrase": "Captain opens the logbook",
         "isReal": false
       }
     ],
@@ -11796,7 +12651,7 @@
       },
       {
         "id": "vice_t0",
-        "phrase": "A sin on the conscience",
+        "phrase": "Confessional booth waits",
         "isReal": false
       },
       {
@@ -11806,7 +12661,7 @@
       },
       {
         "id": "vice_t2",
-        "phrase": "The deputy taking charge",
+        "phrase": "Deputy steps forward",
         "isReal": false
       }
     ],
@@ -11830,12 +12685,12 @@
       },
       {
         "id": "volume_t0",
-        "phrase": "Cranked past the red line",
+        "phrase": "Neighbor pounds the wall",
         "isReal": false
       },
       {
         "id": "volume_t1",
-        "phrase": "Bass that rattles the windows",
+        "phrase": "Subwoofer shakes the glass",
         "isReal": false
       },
       {
@@ -11850,12 +12705,12 @@
       },
       {
         "id": "volume_t4",
-        "phrase": "What a speaker cone does",
+        "phrase": "Speaker cone vibrates hard",
         "isReal": false
       },
       {
         "id": "volume_t5",
-        "phrase": "Pitch that shatters glass",
+        "phrase": "Singer reaches high note",
         "isReal": false
       }
     ],
@@ -11952,27 +12807,27 @@
       },
       {
         "id": "watch_t0",
-        "phrase": "Ticks away on a dresser",
+        "phrase": "Dresser drawer stays shut",
         "isReal": false
       },
       {
         "id": "watch_t1",
-        "phrase": "Swiss-made, gift-wrapped",
+        "phrase": "Jeweler wraps the box",
         "isReal": false
       },
       {
         "id": "watch_t2",
-        "phrase": "Staring without blinking",
+        "phrase": "Eyes refuse to blink",
         "isReal": false
       },
       {
         "id": "watch_t3",
-        "phrase": "Second hand sweeps in silence",
+        "phrase": "Clock face stays quiet",
         "isReal": false
       },
       {
         "id": "watch_t4",
-        "phrase": "Mind your step on the ice",
+        "phrase": "Ice warns nobody",
         "isReal": false
       }
     ],
@@ -11981,106 +12836,91 @@
   },
   "WAVE": {
     "difficulty": "easy",
-    "hiddenMeaning": "Heat arrived without an invitation",
+    "hiddenMeaning": "Heat arrived without warning",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "wave_r0",
-        "phrase": "The ocean's slow exhale",
+        "phrase": "Surfer's perfect ride",
         "isReal": true
       },
       {
         "id": "wave_r1",
-        "phrase": "Spotted across a crowded room",
+        "phrase": "Heads up from across room",
         "isReal": true
       },
       {
         "id": "wave_r2",
-        "phrase": "How radio travels without a road",
+        "phrase": "Radio travels without roads",
         "isReal": true
       },
       {
         "id": "wave_r3",
-        "phrase": "What panic arrives in",
+        "phrase": "Panic arrives all at once",
         "isReal": true
       },
       {
         "id": "wave_r4",
-        "phrase": "A curl that hasn't committed",
+        "phrase": "Hair refuses to lie flat",
         "isReal": true
       },
       {
         "id": "wave_t0",
-        "phrase": "Foam collecting at the shore",
+        "phrase": "Tide's highs and lows",
         "isReal": false
       },
       {
         "id": "wave_t1",
-        "phrase": "A surfer's best morning",
+        "phrase": "A gentleman's greeting",
         "isReal": false
       },
       {
         "id": "wave_t2",
-        "phrase": "A nod between old friends",
+        "phrase": "Signal from the tower",
         "isReal": false
       },
       {
         "id": "wave_t3",
-        "phrase": "Blowing a kiss goodbye",
+        "phrase": "First cases get reported",
         "isReal": false
       },
       {
         "id": "wave_t4",
-        "phrase": "Foam retreating from the sand",
+        "phrase": "Curling iron did work",
         "isReal": false
       },
       {
         "id": "wave_t5",
-        "phrase": "Surfer's whole personality",
+        "phrase": "Foam left on sand",
         "isReal": false
       },
       {
         "id": "wave_t6",
-        "phrase": "Goodbye at a departure gate",
+        "phrase": "Handshake before leaving",
         "isReal": false
       },
       {
         "id": "wave_t7",
-        "phrase": "A flag caught in the breeze",
+        "phrase": "Antenna blinks red",
         "isReal": false
       },
       {
         "id": "wave_t8",
-        "phrase": "Salt water's top floor",
+        "phrase": "Rumor spreads by lunch",
         "isReal": false
       },
       {
         "id": "wave_t9",
-        "phrase": "A friendly nod across the room",
-        "isReal": false
-      },
-      {
-        "id": "wave_t10",
-        "phrase": "Signal sent from a tower",
-        "isReal": false
-      },
-      {
-        "id": "wave_t11",
-        "phrase": "Epidemic's first reported cases",
-        "isReal": false
-      },
-      {
-        "id": "wave_t12",
-        "phrase": "Tight curls from a perm",
+        "phrase": "Tight perm from salon",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "WELL": {
     "difficulty": "easy",
-    "hiddenMeaning": "Inexhaustible \u2014 grief, talent, charm",
+    "hiddenMeaning": "Inexhaustible — grief, talent, charm",
     "hiddenTrap": null,
     "masks": [
       {
@@ -12095,27 +12935,27 @@
       },
       {
         "id": "well_t0",
-        "phrase": "Fever finally broke last night",
+        "phrase": "Thermometer finally drops",
         "isReal": false
       },
       {
         "id": "well_t1",
-        "phrase": "Wishes tossed in by strangers",
+        "phrase": "Coins sink in water",
         "isReal": false
       },
       {
         "id": "well_t2",
-        "phrase": "Dug deep in dry country",
+        "phrase": "Drill hits dry stone",
         "isReal": false
       },
       {
         "id": "well_t3",
-        "phrase": "Fully rested, color returned",
+        "phrase": "Color returns by morning",
         "isReal": false
       },
       {
         "id": "well_t4",
-        "phrase": "Doctor said nothing alarming",
+        "phrase": "Doctor closes the chart",
         "isReal": false
       },
       {
@@ -12130,7 +12970,7 @@
   "WIND": {
     "difficulty": "hard",
     "hiddenMeaning": "Couldn't breathe for a moment",
-    "hiddenTrap": "Road curving through the hills",
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "wind_r0",
@@ -12144,17 +12984,17 @@
       },
       {
         "id": "wind_t0",
-        "phrase": "A storm's force at sea",
+        "phrase": "Sails snap in storm",
         "isReal": false
       },
       {
         "id": "wind_t1",
-        "phrase": "Breathless after the sprint",
+        "phrase": "Chest heaves after sprint",
         "isReal": false
       },
       {
         "id": "wind_t2",
-        "phrase": "Tightening a watch mechanism",
+        "phrase": "Watch crown twists slowly",
         "isReal": false
       }
     ],
@@ -12183,12 +13023,12 @@
       },
       {
         "id": "yard_t1",
-        "phrase": "A meter, roughly speaking",
+        "phrase": "Tape measure nearly agrees",
         "isReal": false
       },
       {
         "id": "yard_t2",
-        "phrase": "What a tailor measures twice",
+        "phrase": "Tailor marks the cloth",
         "isReal": false
       },
       {
@@ -12198,7 +13038,7 @@
       },
       {
         "id": "yard_t4",
-        "phrase": "Picket fence's territory",
+        "phrase": "Fence circles the lawn",
         "isReal": false
       }
     ],
@@ -12365,7 +13205,7 @@
       },
       {
         "id": "refrain_r1",
-        "phrase": "DOESN\u2019T SAY THE COMMENT",
+        "phrase": "DOESN’T SAY THE COMMENT",
         "isReal": true
       },
       {
@@ -12923,7 +13763,7 @@
       },
       {
         "id": "figure_r5",
-        "phrase": "WORDS DON\u2019T MEAN THEMSELVES",
+        "phrase": "WORDS DON’T MEAN THEMSELVES",
         "isReal": true
       },
       {
@@ -12992,6 +13832,21 @@
       {
         "id": "weave_t0",
         "phrase": "Two threads knotted tight",
+        "isReal": false
+      },
+      {
+        "id": "weave_t1",
+        "phrase": "Needle pulls thread through",
+        "isReal": false
+      },
+      {
+        "id": "weave_t2",
+        "phrase": "Driver changes lanes once",
+        "isReal": false
+      },
+      {
+        "id": "weave_t3",
+        "phrase": "Fabric cut from bolt",
         "isReal": false
       }
     ],
@@ -13136,22 +13991,42 @@
     "masks": [
       {
         "id": "rider_r0",
-        "phrase": "Never touches the ground voluntarily",
+        "phrase": "Saddle has a passenger",
+        "isReal": true
+      },
+      {
+        "id": "rider_r1",
+        "phrase": "Bill gets extra baggage",
+        "isReal": true
+      },
+      {
+        "id": "rider_r2",
+        "phrase": "Policy adds fine print",
         "isReal": true
       },
       {
         "id": "rider_t0",
-        "phrase": "Holds on for dear life",
+        "phrase": "Horse waiting at the rail",
         "isReal": false
       },
       {
         "id": "rider_t1",
-        "phrase": "A bill's sneaky amendment",
+        "phrase": "Sponsor signs the bill",
+        "isReal": false
+      },
+      {
+        "id": "rider_t2",
+        "phrase": "Footnote explains the cost",
+        "isReal": false
+      },
+      {
+        "id": "rider_t3",
+        "phrase": "Passenger buys the ticket",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Double"
+    "wordType": "Triple"
   },
   "CURE": {
     "difficulty": "medium",
@@ -13176,6 +14051,21 @@
       {
         "id": "cure_t0",
         "phrase": "Bandage applied with confidence",
+        "isReal": false
+      },
+      {
+        "id": "cure_t1",
+        "phrase": "Painkiller after dinner",
+        "isReal": false
+      },
+      {
+        "id": "cure_t2",
+        "phrase": "Diagnosis after three visits",
+        "isReal": false
+      },
+      {
+        "id": "cure_t3",
+        "phrase": "Salt rubbed too late",
         "isReal": false
       }
     ],
@@ -13256,23 +14146,58 @@
         "isReal": true
       },
       {
+        "id": "service_r1",
+        "phrase": "First shot over the net",
+        "isReal": true
+      },
+      {
+        "id": "service_r2",
+        "phrase": "Oil change before vacation",
+        "isReal": true
+      },
+      {
+        "id": "service_r3",
+        "phrase": "Pews fill before hymns",
+        "isReal": true
+      },
+      {
+        "id": "service_r4",
+        "phrase": "Uniform years on record",
+        "isReal": true
+      },
+      {
         "id": "service_t0",
-        "phrase": "Tennis ball mid-air",
+        "phrase": "Tip left on the table",
         "isReal": false
       },
       {
         "id": "service_t1",
-        "phrase": "Car waiting in the garage bay",
+        "phrase": "Tennis ball mid-air",
         "isReal": false
       },
       {
         "id": "service_t2",
-        "phrase": "Collection plate passed around",
+        "phrase": "Mechanic hands back keys",
+        "isReal": false
+      },
+      {
+        "id": "service_t3",
+        "phrase": "Collection plate passes quietly",
+        "isReal": false
+      },
+      {
+        "id": "service_t4",
+        "phrase": "Parade thanks the veterans",
+        "isReal": false
+      },
+      {
+        "id": "service_t5",
+        "phrase": "Reservation waits at seven",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Double"
+    "wordType": "Quintuple"
   },
   "TARGET": {
     "difficulty": "medium",
@@ -13281,7 +14206,22 @@
     "masks": [
       {
         "id": "target_r0",
-        "phrase": "Bullseye's whole reason for being",
+        "phrase": "Bullseye waits in the middle",
+        "isReal": true
+      },
+      {
+        "id": "target_r1",
+        "phrase": "Quarterly number everyone chases",
+        "isReal": true
+      },
+      {
+        "id": "target_r2",
+        "phrase": "Ad built for teenagers",
+        "isReal": true
+      },
+      {
+        "id": "target_r3",
+        "phrase": "Criticism keeps landing there",
         "isReal": true
       },
       {
@@ -13291,12 +14231,27 @@
       },
       {
         "id": "target_t1",
-        "phrase": "Quarterly review's favourite word",
+        "phrase": "Goalpost moved again",
+        "isReal": false
+      },
+      {
+        "id": "target_t2",
+        "phrase": "Audience scrolling past ads",
+        "isReal": false
+      },
+      {
+        "id": "target_t3",
+        "phrase": "Complaint misses the manager",
+        "isReal": false
+      },
+      {
+        "id": "target_t4",
+        "phrase": "Sales chart turns green",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Double"
+    "wordType": "Quadruple"
   },
   "ANCHOR": {
     "difficulty": "medium",
@@ -13603,7 +14558,7 @@
       },
       {
         "id": "count_r1",
-        "phrase": "DRACULA\u2019S TITLE BEFORE VAMPIRE",
+        "phrase": "DRACULA’S TITLE BEFORE VAMPIRE",
         "isReal": true
       },
       {
@@ -13864,7 +14819,7 @@
       },
       {
         "id": "net_r1",
-        "phrase": "WHAT\u2019S LEFT AFTER TAX",
+        "phrase": "WHAT’S LEFT AFTER TAX",
         "isReal": true
       },
       {
@@ -14278,7 +15233,7 @@
       },
       {
         "id": "skip_r2",
-        "phrase": "DOESN\u2019T GO TO CLASS",
+        "phrase": "DOESN’T GO TO CLASS",
         "isReal": true
       },
       {
@@ -14761,7 +15716,7 @@
       },
       {
         "id": "cabinet_r1",
-        "phrase": "PRESIDENT\u2019S INNER ADVISERS",
+        "phrase": "PRESIDENT’S INNER ADVISERS",
         "isReal": true
       },
       {
@@ -15338,87 +16293,87 @@
   },
   "NOTE": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
+    "hiddenMeaning": "Person worth mentioning",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "note_r0",
-        "phrase": "SMALL MESSAGE ON PAPER",
+        "phrase": "Small message on paper",
+        "isReal": true
+      },
+      {
+        "id": "note_r1",
+        "phrase": "Piano gives one sound",
+        "isReal": true
+      },
+      {
+        "id": "note_r2",
+        "phrase": "Detail worth attention",
+        "isReal": true
+      },
+      {
+        "id": "note_r3",
+        "phrase": "IOU with official terms",
+        "isReal": true
+      },
+      {
+        "id": "note_r4",
+        "phrase": "Person worth mentioning",
         "isReal": true
       },
       {
         "id": "note_t0",
-        "phrase": "STICKY SQUARE ON FRIDGE",
+        "phrase": "Sticky square on fridge",
         "isReal": false
       },
       {
         "id": "note_t1",
-        "phrase": "PEN RUNS OUT",
+        "phrase": "Singer holds the breath",
         "isReal": false
       },
       {
-        "id": "note_r1",
-        "phrase": "PIANO PLAYS ONE SOUND",
-        "isReal": true
-      },
-      {
         "id": "note_t2",
-        "phrase": "SINGER HOLDS IT LONG",
+        "phrase": "Asterisk points below",
         "isReal": false
       },
       {
         "id": "note_t3",
-        "phrase": "STAFF SHOWS POSITION",
+        "phrase": "Signature line waits",
         "isReal": false
       },
       {
-        "id": "note_r2",
-        "phrase": "PLEASE NOTE THIS DETAIL",
-        "isReal": true
-      },
-      {
         "id": "note_t4",
-        "phrase": "ASTERISK POINTS BELOW",
+        "phrase": "Award sits on shelf",
         "isReal": false
       },
       {
         "id": "note_t5",
-        "phrase": "WARNING BOX APPEARS",
+        "phrase": "Pen runs out",
         "isReal": false
       },
       {
-        "id": "note_r3",
-        "phrase": "IOU WITH OFFICIAL TERMS",
-        "isReal": true
-      },
-      {
         "id": "note_t6",
-        "phrase": "SIGNATURE LINE WAITS",
+        "phrase": "Staff shows position",
         "isReal": false
       },
       {
         "id": "note_t7",
-        "phrase": "LENDER KEEPS COPY",
+        "phrase": "Warning box appears",
         "isReal": false
       },
       {
-        "id": "note_r4",
-        "phrase": "PERSON OF SOME IMPORTANCE",
-        "isReal": true
-      },
-      {
         "id": "note_t8",
-        "phrase": "HISTORY BOOK MENTIONS THEM",
+        "phrase": "Lender keeps copy",
         "isReal": false
       },
       {
         "id": "note_t9",
-        "phrase": "AWARD SITS ON SHELF",
+        "phrase": "History book mentions them",
         "isReal": false
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Quintuple"
   },
   "OBJECT": {
     "difficulty": "medium",
@@ -15457,7 +16412,7 @@
       },
       {
         "id": "object_r2",
-        "phrase": "VERB\u2019S ACTION LANDS HERE",
+        "phrase": "VERB’S ACTION LANDS HERE",
         "isReal": true
       },
       {
@@ -15595,7 +16550,7 @@
       },
       {
         "id": "patch_r2",
-        "phrase": "GARDEN\u2019S LITTLE SPOT",
+        "phrase": "GARDEN’S LITTLE SPOT",
         "isReal": true
       },
       {
@@ -15625,7 +16580,7 @@
       },
       {
         "id": "patch_r4",
-        "phrase": "COP\u2019S REGULAR BEAT",
+        "phrase": "COP’S REGULAR BEAT",
         "isReal": true
       },
       {
@@ -16069,7 +17024,7 @@
       },
       {
         "id": "space_r1",
-        "phrase": "BEYOND EARTH\u2019S SKY",
+        "phrase": "BEYOND EARTH’S SKY",
         "isReal": true
       },
       {
@@ -16405,7 +17360,7 @@
       },
       {
         "id": "tear_r2",
-        "phrase": "CAR TEARS DOWN STREET",
+        "phrase": "CAR RIPS DOWN STREET",
         "isReal": true
       },
       {
@@ -16681,7 +17636,7 @@
       },
       {
         "id": "wing_r1",
-        "phrase": "HOSPITAL\u2019S NEW SIDE",
+        "phrase": "HOSPITAL’S NEW SIDE",
         "isReal": true
       },
       {
@@ -16711,7 +17666,7 @@
       },
       {
         "id": "wing_r3",
-        "phrase": "PARTY\u2019S LEFT OR RIGHT SIDE",
+        "phrase": "PARTY’S LEFT OR RIGHT SIDE",
         "isReal": true
       },
       {
@@ -17096,42 +18051,72 @@
   },
   "CLEAN": {
     "difficulty": "easy",
-    "hiddenMeaning": null,
+    "hiddenMeaning": "No drugs in the test",
     "hiddenTrap": null,
     "masks": [
       {
         "id": "clean_r0",
-        "phrase": "Dishes that passed inspection",
+        "phrase": "Dishes passed inspection",
         "isReal": true
       },
       {
         "id": "clean_r1",
-        "phrase": "Forgot clean about it",
+        "phrase": "Completely forgot it happened",
+        "isReal": true
+      },
+      {
+        "id": "clean_r2",
+        "phrase": "No drugs in the test",
+        "isReal": true
+      },
+      {
+        "id": "clean_r3",
+        "phrase": "Won without a scratch",
         "isReal": true
       },
       {
         "id": "clean_t0",
-        "phrase": "Sponge moves across the counter",
+        "phrase": "Sponge crosses the counter",
         "isReal": false
       },
       {
         "id": "clean_t1",
-        "phrase": "Soap dissolves what was there",
+        "phrase": "Missed the point entirely",
         "isReal": false
       },
       {
         "id": "clean_t2",
-        "phrase": "Entirely missed the point",
+        "phrase": "Prescription bottle stays closed",
         "isReal": false
       },
       {
         "id": "clean_t3",
-        "phrase": "Pure accident from first to last",
+        "phrase": "Opponent made one mistake",
+        "isReal": false
+      },
+      {
+        "id": "clean_t4",
+        "phrase": "Soap bubbles in sink",
+        "isReal": false
+      },
+      {
+        "id": "clean_t5",
+        "phrase": "Accident from start to finish",
+        "isReal": false
+      },
+      {
+        "id": "clean_t6",
+        "phrase": "Gym bag smells fine",
+        "isReal": false
+      },
+      {
+        "id": "clean_t7",
+        "phrase": "Scoreboard shows a shutout",
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
-    "wordType": "Double"
+    "gpsTag": "flow",
+    "wordType": "Quadruple"
   },
   "CRICKET": {
     "difficulty": "easy",
@@ -17194,7 +18179,7 @@
       },
       {
         "id": "deep_t1",
-        "phrase": "Submarine loses signal on the way down",
+        "phrase": "Submarine signal fades below",
         "isReal": false
       },
       {
@@ -17355,7 +18340,7 @@
       },
       {
         "id": "globe_t2",
-        "phrase": "Snow dome with a tiny city inside",
+        "phrase": "Wall map covers everything",
         "isReal": false
       },
       {
@@ -17462,7 +18447,7 @@
       },
       {
         "id": "market_t0",
-        "phrase": "Supermarket sells every day of the week",
+        "phrase": "Shopping cart blocks aisle",
         "isReal": false
       },
       {
@@ -17540,7 +18525,7 @@
       },
       {
         "id": "mirror_t0",
-        "phrase": "Puddle catches the sky for a moment",
+        "phrase": "Photo shows the outfit",
         "isReal": false
       },
       {
@@ -17574,7 +18559,7 @@
       },
       {
         "id": "mystery_r1",
-        "phrase": "Shelf lined with bodies by chapter two",
+        "phrase": "Bodies by chapter two",
         "isReal": true
       },
       {
@@ -17608,7 +18593,7 @@
     "masks": [
       {
         "id": "nip_r0",
-        "phrase": "Puppy tests its teeth on a finger",
+        "phrase": "Puppy teeth on fingers",
         "isReal": true
       },
       {
@@ -17662,7 +18647,7 @@
       },
       {
         "id": "peel_t1",
-        "phrase": "Skin blistered a week after the beach",
+        "phrase": "Apple sliced, skin intact",
         "isReal": false
       },
       {
@@ -17701,7 +18686,7 @@
       },
       {
         "id": "pool_t1",
-        "phrase": "Diving board waits at the deep end",
+        "phrase": "Diving board waits nearby",
         "isReal": false
       },
       {
@@ -17867,7 +18852,7 @@
       },
       {
         "id": "slot_t3",
-        "phrase": "Waiting list moves one at a time",
+        "phrase": "Queue moves one by one",
         "isReal": false
       }
     ],
@@ -18018,7 +19003,7 @@
       },
       {
         "id": "stump_t2",
-        "phrase": "Riddle that clears on the third read",
+        "phrase": "Riddle solves itself later",
         "isReal": false
       },
       {
@@ -18125,7 +19110,7 @@
       },
       {
         "id": "vent_t0",
-        "phrase": "Chimney lets the smoke find its way out",
+        "phrase": "Fan pushes stale air",
         "isReal": false
       },
       {
