@@ -99,7 +99,7 @@ export function SwipeMask({
   const bgAnim = useRef(new RNAnimated.Value(0)).current;
   const bgColor = bgAnim.interpolate({
     inputRange:  [0,         0.5,       1.0      ],
-    outputRange: ['#19143F', '#27205D', '#171833'],
+    outputRange: ['#100B34', '#24185A', '#171833'],
   });
 
   // ── RN Animated: entry (native driver) ────────────────────────
@@ -506,9 +506,6 @@ export function SwipeMask({
         >
           {/* Top edge shine */}
           <View style={styles.tileTopShine} />
-          {/* Inner ambient glow */}
-          <View style={styles.tileInnerGlow} />
-          <View style={styles.tileBottomBevel} />
           {/* Non-native animated background */}
           <RNAnimated.View
             style={[
@@ -562,37 +559,39 @@ export function SwipeMask({
 
 const styles = StyleSheet.create({
   tile: {
-    borderRadius: 28,
+    borderRadius: 26,
     minHeight: 148,
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 14,
     borderWidth: 2,
     // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor:   '#000000',
-    shadowOffset:  { width: 0, height: 16 },
-    shadowRadius:  34,
-    shadowOpacity: 0.62,
+    shadowOffset:  { width: 0, height: 18 },
+    shadowRadius:  30,
+    shadowOpacity: 0.68,
     elevation: 14,
+    overflow: 'hidden',
   },
   phrasePanel: {
     width: '100%',
-    borderRadius: 22,
+    borderRadius: 18,
     alignItems: 'stretch',
     justifyContent: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(7,6,28,0.46)',
+    paddingHorizontal: 12,
+    paddingVertical: 15,
+    backgroundColor: 'rgba(3,2,16,0.54)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(245,200,66,0.12)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    shadowOpacity: 0.48,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+    shadowOpacity: 0.52,
     overflow: 'visible',
+    zIndex: 2,
   },
   checkmark: {
     position: 'absolute',
@@ -604,7 +603,7 @@ const styles = StyleSheet.create({
     zIndex: 3,
   },
   phrase: {
-    fontSize: 26,
+    fontSize: 27,
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -614,9 +613,9 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexWrap: 'wrap',
     width: '100%',
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowColor: 'rgba(0,0,0,0.76)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    textShadowRadius: 6,
   },
   splitTile: {
     borderRadius: 14,
@@ -656,7 +655,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   flashOverlay: {
-    borderRadius: 28,
+    borderRadius: 26,
     zIndex: 10,
     borderWidth: 1,
     borderColor: 'rgba(204,34,0,0.52)',
@@ -697,33 +696,12 @@ const styles = StyleSheet.create({
   },
   tileTopShine: {
     position: 'absolute',
-    top: 0,
-    left: 24,
-    right: 24,
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.20)',
-    borderRadius: 2,
-    zIndex: 2,
-  },
-  tileInnerGlow: {
-    position: 'absolute',
-    bottom: -22,
-    left: '10%',
-    right: '10%',
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(123,45,139,0.20)',
-    zIndex: 1,
-  },
-  tileBottomBevel: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 16,
-    backgroundColor: 'rgba(5,4,18,0.42)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    top: 1,
+    left: 22,
+    right: 22,
+    height: 3,
+    backgroundColor: 'rgba(245,200,66,0.36)',
+    borderRadius: 3,
     zIndex: 2,
   },
 });

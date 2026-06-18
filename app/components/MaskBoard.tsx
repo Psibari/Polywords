@@ -1743,9 +1743,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const vaultBloomX = Math.max(28, containerWidth - 86);
   const mysteryMask = mysteryIsRealRef.current ? hiddenRealMask : hiddenTrapMask;
   const inputLocked = wordOutcome !== 'none';
+  const showMasterGateShell =
+    isBoss &&
+    hasHidden &&
+    gatePhase !== 'tiles' &&
+    gatePhase !== 'wrongFail' &&
+    gatePhase !== 'mastered';
 
-  const deckDeepRotDeg   = deckDeepRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
-  const deckMidRotDeg    = deckMidRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
 
   return (
@@ -1758,12 +1762,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         containerWidthRef.current = w;
       }}
     >
-      <View style={styles.arenaBackdrop} pointerEvents="none">
-        <View style={styles.arenaTopGlow} />
-        <View style={styles.arenaCenterRail} />
-        <View style={styles.arenaFloorGlow} />
-      </View>
-
       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
       <View
         style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
@@ -1779,8 +1777,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         }}
       >
         <View style={styles.wordStageFrame} pointerEvents="none" />
-        <View style={styles.wordStageHalo} pointerEvents="none" />
-        <View style={styles.wordStageUnderlight} pointerEvents="none" />
 
         {/* Boss gold sweep */}
         {bossSweepActive && (
@@ -1885,60 +1881,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
-            <View style={{
-              alignSelf: 'center',
-              width: '100%',
-              position: 'relative',
-              overflow: 'visible',
-              shadowColor: '#F5C842',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: isBoss ? 0.85 : 0.65,
-              shadowRadius: isBoss ? 52 : 36,
-            }}>
-              {Array.from({ length: 12 }, (_, i) => {
-                const depth = 12 - i;
-                const dx = depth * 1.5;
-                const dy = depth * 2.0;
-                const t = i / 11;
-                const r = Math.round(20 + t * 140);
-                const g = Math.round(10 + t * 70);
-                return { dx, dy, color: `rgba(${r},${g},0,1.0)` };
-              }).map(({ dx, dy, color }, i) => (
-                <Text
-                  key={`ext_${i}`}
-                  style={{
-                    fontFamily: FONTS.wordDisplay,
-                    fontSize: isBoss ? 114 : 96,
-                    letterSpacing: 6,
-                    textAlign: 'center',
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    color,
-                    transform: [{ translateX: dx }, { translateY: dy }],
-                  }}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.72}
-                >{step.word}</Text>
-              ))}
-              <Text
-                style={{
-                  fontFamily: FONTS.heroFace,
-                  fontSize: isBoss ? 118 : 100,
-                  letterSpacing: 4,
-                  textAlign: 'center',
-                  color: '#FFE27A',
-                  textShadowColor: 'rgba(15,8,0,0.78)',
-                  textShadowOffset: { width: 0, height: 3 },
-                  textShadowRadius: isBoss ? 12 : 9,
-                }}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >{step.word}</Text>
-            </View>
+            <Text
+              style={[styles.word, isBoss && styles.wordBoss]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+            >
+              {step.word}
+            </Text>
             {/* Gold overlay for absorption fill */}
             <Animated.Text
               pointerEvents="none"
@@ -2029,70 +1979,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       </View>
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
-      <View style={styles.swipeLane} pointerEvents="none" />
-
       <View style={styles.gridWrap}>
         <View style={styles.tileStackArea}>
-          <View style={styles.tileArenaFrame} pointerEvents="none">
-            <View style={styles.tileArenaRailTop} />
-            <View style={styles.tileArenaRailBottom} />
-            <View style={styles.tileArenaRightLane} />
-          </View>
         {showBoardContent && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
               <View style={styles.deckWrap}>
-                {/* ── DEPTH CARD 2 — deeper visual-only under-card, visible if 3+ remaining ── */}
-                {deckSize >= 3 && (
-                  <Animated.View
-                    pointerEvents="none"
-                    style={{
-                      transform: [{ translateY: deckDeepY }, { rotate: deckDeepRotDeg }],
-                      opacity: deckDeepOp,
-                    }}
-                  >
-                    <Animated.View style={[
-                      styles.deckDepthCard,
-                      styles.deckDepthCard2,
-                      isHaunt && styles.deckDepthCardHaunt,
-                      {
-                        backgroundColor: deckRedTint.interpolate({
-                          inputRange:  [0, 1],
-                          outputRange: ['#0F0D2A', '#2A0808'],
-                        }),
-                      },
-                    ]} pointerEvents="none">
-                      <View style={styles.deckDepthEdge} />
-                    </Animated.View>
-                  </Animated.View>
-                )}
-
-                {/* ── DEPTH CARD 1 — one behind top, visible if 2+ remaining ── */}
-                {deckSize >= 2 && (
-                  <Animated.View
-                    pointerEvents="none"
-                    style={{
-                      transform: [{ translateY: deckMidY }, { rotate: deckMidRotDeg }],
-                      opacity: deckMidOp,
-                    }}
-                  >
-                    <Animated.View style={[
-                      styles.deckDepthCard,
-                      styles.deckDepthCard1,
-                      isHaunt && styles.deckDepthCardHaunt,
-                      {
-                        backgroundColor: deckRedTint.interpolate({
-                          inputRange:  [0, 1],
-                          outputRange: ['#0F0D2A', '#2A0808'],
-                        }),
-                      },
-                    ]} pointerEvents="none">
-                      <View style={styles.deckDepthEdge} />
-                    </Animated.View>
-                  </Animated.View>
-                )}
-
                 {/* ── TOP CARD — interactive ── */}
                 <Animated.View style={{
                   transform: [{ translateY: deckActiveY }, { rotate: deckActiveRotDeg }],
@@ -2102,7 +1995,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                   ref={getTileRef(topMask.id)}
                   style={styles.deckTopCardSlot}
                 >
-                  <View style={styles.deckTopCardGloss} pointerEvents="none" />
                   <SwipeMask
                     key={topMask.id}
                     mask={topMask}
@@ -2177,11 +2069,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         {/* ── MASTER GATE — bottom of tile stack ─────────── */}
         </View>
 
-        <View style={styles.gateArea}>
-        <View style={styles.gateDockPlate} pointerEvents="none" />
-        {isBoss && hasHidden && (
-          gatePhase === 'tiles' || gatePhase === 'wrongFail' || gatePhase === 'mastered' ? null : (
-            // Gate: locked / unlocking / doorSplit
+        {showMasterGateShell && (
+          <View style={styles.gateArea}>
             <Animated.View
               ref={gateViewRef as any}
               style={[
@@ -2265,9 +2154,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 <Text style={styles.gateLabel}>MASTER THE WORD</Text>
               </View>
             </Animated.View>
-          )
+          </View>
         )}
-      </View>
       </View>
 
       {/* Shard burst system */}
@@ -2569,84 +2457,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 14,
-    backgroundColor: '#1A1830',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
-  },
-  arenaBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  arenaTopGlow: {
-    position: 'absolute',
-    top: 12,
-    left: 18,
-    right: 18,
-    height: 150,
-    borderRadius: 28,
-    backgroundColor: 'rgba(15,13,42,0.46)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.18)',
-  },
-  arenaCenterRail: {
-    position: 'absolute',
-    top: 178,
-    left: 28,
-    right: 28,
-    height: 1,
-    backgroundColor: 'rgba(123,45,139,0.28)',
-  },
-  arenaFloorGlow: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: 18,
-    height: 190,
-    borderRadius: 28,
-    backgroundColor: 'rgba(15,13,42,0.62)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.20)',
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
-    height: 142,
+    height: 138,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingTop: 6,
+    paddingBottom: 10,
     position: 'relative',
-    marginTop: 2,
+    marginTop: 4,
   },
   wordZoneBoss: {
-    height: 156,
+    height: 150,
   },
   wordStageFrame: {
     position: 'absolute',
-    left: 6,
-    right: 6,
-    top: 9,
-    bottom: 5,
-    borderRadius: 24,
+    left: 8,
+    right: 8,
+    top: 8,
+    bottom: 6,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.24)',
-    backgroundColor: 'rgba(15,13,42,0.18)',
-  },
-  wordStageHalo: {
-    position: 'absolute',
-    width: 244,
-    height: 86,
-    borderRadius: 48,
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.32)',
-    backgroundColor: 'rgba(123,45,139,0.055)',
-  },
-  wordStageUnderlight: {
-    position: 'absolute',
-    bottom: 16,
-    width: 176,
-    height: 12,
-    borderRadius: 8,
-    backgroundColor: 'rgba(123,45,139,0.18)',
+    borderColor: 'rgba(245,200,66,0.24)',
+    backgroundColor: 'rgba(7,5,24,0.58)',
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.26,
+    shadowRadius: 18,
+    elevation: 8,
   },
   kicker: {
     color: '#F5C842',
@@ -2660,20 +2503,20 @@ const styles = StyleSheet.create({
     right: 0,
   },
   word: {
-    fontSize: 100,
+    fontSize: 96,
     fontFamily: FONTS.heroFace,
-    letterSpacing: 4,
+    letterSpacing: 2,
     color: '#F5C842',
-    textShadowColor: 'rgba(0,0,0,0.7)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 16,
+    textShadowColor: 'rgba(245,200,66,0.38)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
     textAlign: 'center',
     maxWidth: '100%',
   },
   wordBoss: {
-    fontSize: 118,
+    fontSize: 112,
     fontFamily: FONTS.heroFace,
-    letterSpacing: 4,
+    letterSpacing: 2,
     color: '#F5C842',
   },
   goldRing: {
@@ -2697,69 +2540,25 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  swipeLane: {
-    height: 90,
-  },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 72,
+    paddingBottom: 26,
     minHeight: 0,
   },
   tileStackArea: {
     width: '100%',
-    minHeight: TILE_H + 28,
+    minHeight: TILE_H + 10,
     justifyContent: 'flex-start',
     alignItems: 'center',
     position: 'relative',
-    paddingTop: 10,
+    paddingTop: 4,
     overflow: 'visible',
   },
-  tileArenaFrame: {
-    position: 'absolute',
-    top: 0,
-    left: 2,
-    right: 2,
-    height: TILE_H + 30,
-    borderRadius: 28,
-    backgroundColor: 'rgba(15,13,42,0.42)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.22)',
-    shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.10,
-    shadowRadius: 18,
-    elevation: 4,
-  },
-  tileArenaRailTop: {
-    position: 'absolute',
-    top: 12,
-    left: 24,
-    right: 24,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  tileArenaRailBottom: {
-    position: 'absolute',
-    bottom: 13,
-    left: 36,
-    right: 36,
-    height: 1,
-    backgroundColor: 'rgba(123,45,139,0.30)',
-  },
-  tileArenaRightLane: {
-    position: 'absolute',
-    top: 30,
-    bottom: 30,
-    right: 11,
-    width: 1,
-    borderRadius: 2,
-    backgroundColor: 'rgba(155,45,107,0.14)',
-  },
   tileStack: {
-    width: '92%',
+    width: '94%',
     alignSelf: 'center',
     paddingRight: 0,
     zIndex: 2,
@@ -2769,79 +2568,24 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     alignItems: 'center',
-    minHeight: TILE_H + 66,
-    paddingBottom: 54,
+    minHeight: TILE_H + 14,
+    paddingBottom: 12,
     overflow: 'visible',
   },
   deckTopCardSlot: {
     position: 'relative',
     zIndex: 20,
-    width: '94%',
+    width: '100%',
     minHeight: TILE_H,
     paddingVertical: 0,
     borderWidth: 0,
-    borderRadius: 30,
+    borderRadius: 28,
     backgroundColor: 'transparent',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.24,
     shadowRadius: 22,
     elevation: 12,
-  },
-  deckTopCardGloss: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 0,
-    borderRadius: 18,
-    backgroundColor: 'transparent',
-  },
-  deckDepthCard: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: TILE_H,
-    borderRadius: 30,
-    backgroundColor: '#221657',
-    borderWidth: 2,
-    borderColor: 'rgba(123,45,139,0.62)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.62,
-    shadowRadius: 24,
-    elevation: 6,
-    overflow: 'hidden',
-  },
-  deckDepthCard1: {
-    top: 18,
-    left: -3,
-    right: -3,
-    opacity: 0.86,
-    zIndex: 7,
-    transform: [{ scaleX: 1.02 }, { rotate: '1deg' }],
-  },
-  deckDepthCard2: {
-    top: 34,
-    left: -11,
-    right: -11,
-    opacity: 0.58,
-    zIndex: 5,
-    transform: [{ scaleX: 1.04 }, { rotate: '-0.8deg' }],
-  },
-  deckDepthEdge: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 18,
-    backgroundColor: 'rgba(123,45,139,0.28)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  deckDepthCardHaunt: {
-    borderColor: 'rgba(123,45,139,0.72)',
-    backgroundColor: '#1A123F',
   },
   finalHiddenTileStack: {
     width: '100%',
@@ -2915,34 +2659,23 @@ const styles = StyleSheet.create({
   gateArea: {
     width: '88%',
     alignSelf: 'center',
-    paddingTop: 42,
+    paddingTop: 18,
     position: 'relative',
-  },
-  gateDockPlate: {
-    position: 'absolute',
-    left: -12,
-    right: -12,
-    top: 30,
-    height: GATE_H + 20,
-    borderRadius: 18,
-    backgroundColor: 'rgba(15,13,42,0.48)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.18)',
   },
   masterGate: {
     height: GATE_H,
     marginTop: TILE_GAP,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    backgroundColor: '#0F0D2A',
+    borderRadius: 18,
+    borderWidth: 2,
+    backgroundColor: 'rgba(8,6,30,0.96)',
     overflow: 'visible',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.20,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowColor: '#F5C842',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.28,
+    shadowRadius: 20,
+    elevation: 10,
   },
   gateBackPlate: {
     position: 'absolute',
@@ -2950,10 +2683,10 @@ const styles = StyleSheet.create({
     right: 5,
     top: 5,
     bottom: 5,
-    borderRadius: 11,
+    borderRadius: 14,
     backgroundColor: '#0F0D2A',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.20)',
+    borderColor: 'rgba(245,200,66,0.18)',
   },
   gateInnerShadow: {
     position: 'absolute',
@@ -2964,7 +2697,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: 'rgba(7,6,28,0.54)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.035)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   gateDoorHalf: {
     position: 'absolute',
