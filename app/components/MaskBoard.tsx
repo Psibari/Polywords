@@ -1654,9 +1654,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
       firePollyEvent('correct');
-      setTimeout(() => {
-        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
-      }, 180);
       const gapUp = computeGapMs(store.game.combo, 'up', isBoss, tileIndexInWordRef.current);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
@@ -1668,9 +1665,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       store.submitWrongSwipe();
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      setTimeout(() => {
-        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
-      }, 400);
       const gapWrong = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
@@ -1691,9 +1685,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       spawnFloat(trapPoints, maskId, '#7B2D8B');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       onTrapCaught?.();
-      setTimeout(() => {
-        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
-      }, 180);
       const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
@@ -1705,9 +1696,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       store.submitWrongSwipe();
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      setTimeout(() => {
-        setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
-      }, 400);
       const gapWrongR = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
@@ -2011,6 +1999,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     onEffect={handleEffect}
                     onSwipeStart={() => playSfx('tileSwipe')}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
+                    onExitComplete={() => {
+                      setRemainingMaskIds(prev => prev.filter(id => id !== topMask.id));
+                    }}
                     wordY={wordScreenY}
                   />
                 </View>

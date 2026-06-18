@@ -43,6 +43,7 @@ type Props = {
   onEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
   onSwipeStart?: () => void;
   onPressHoldStart?: () => void;
+  onExitComplete?: () => void;
   disabled?: boolean;
   nearMastery?: boolean;
   wordY?: number;
@@ -69,6 +70,7 @@ export function SwipeMask({
   onEffect,
   onSwipeStart,
   onPressHoldStart,
+  onExitComplete,
   disabled = false,
   nearMastery = false,
   wordY = 180,
@@ -104,8 +106,8 @@ export function SwipeMask({
 
   // ── RN Animated: entry (native driver) ────────────────────────
   const entryOpacity = useRef(new RNAnimated.Value(0)).current;
-  const entryTransY  = useRef(new RNAnimated.Value(30)).current;
-  const entryScaleY  = useRef(new RNAnimated.Value(0.85)).current;
+  const entryTransY  = useRef(new RNAnimated.Value(10)).current;
+  const entryScale   = useRef(new RNAnimated.Value(0.95)).current;
 
   // ── RN Animated: era badge (native driver) ────────────────────
   const eraBadgeTransY  = useRef(new RNAnimated.Value(20)).current;
@@ -122,10 +124,12 @@ export function SwipeMask({
   const onEffectRef              = useRef(onEffect);
   const onSwipeStartRef          = useRef(onSwipeStart);
   const onPressHoldStartRef      = useRef(onPressHoldStart);
+  const onExitCompleteRef        = useRef(onExitComplete);
   const disabledRef              = useRef(disabled);
   const outerRef                 = useRef<any>(null);
   const absorbRafRef             = useRef<number | null>(null);
   const lastGestureVelocityRef   = useRef({ vx: 0, vy: 0 });
+  const exitCompleteFiredRef     = useRef(false);
 
   useEffect(() => { onSwipeUpRef.current    = onSwipeUp;    }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
@@ -133,7 +137,14 @@ export function SwipeMask({
   useEffect(() => { onEffectRef.current      = onEffect;      }, [onEffect]);
   useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
+  useEffect(() => { onExitCompleteRef.current = onExitComplete; }, [onExitComplete]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
+
+  function fireExitCompleteOnce() {
+    if (exitCompleteFiredRef.current) return;
+    exitCompleteFiredRef.current = true;
+    onExitCompleteRef.current?.();
+  }
 
   // ── Cleanup rAF on unmount ────────────────────────────────────
   useEffect(() => {
@@ -149,9 +160,9 @@ export function SwipeMask({
   useEffect(() => {
     const id = setTimeout(() => {
       RNAnimated.parallel([
-        RNAnimated.spring(entryTransY,  { toValue: 0, tension: 180, friction: 12, useNativeDriver: true }),
-        RNAnimated.spring(entryScaleY,  { toValue: 1, tension: 180, friction: 12, useNativeDriver: true }),
-        RNAnimated.timing(entryOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        RNAnimated.spring(entryTransY,  { toValue: 0, tension: 230, friction: 15, useNativeDriver: true }),
+        RNAnimated.spring(entryScale,   { toValue: 1, tension: 260, friction: 14, useNativeDriver: true }),
+        RNAnimated.timing(entryOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
       ]).start();
     }, entryDelay);
     return () => clearTimeout(id);
@@ -170,6 +181,7 @@ export function SwipeMask({
 
     // ── CORRECT — magnetic absorb physics ────────────────────
     if (s === 'correct') {
+      exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
       if (hapticCorrectRef.current) {
         hapticCorrectRef.current();
@@ -235,7 +247,9 @@ export function SwipeMask({
             RNAnimated.parallel([
               RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
               RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-            ]).start();
+            ]).start(({ finished }) => {
+              if (finished) fireExitCompleteOnce();
+            });
             return;
           }
 
@@ -243,11 +257,13 @@ export function SwipeMask({
         }
 
         absorbRafRef.current = requestAnimationFrame(tick);
+        timers.push(setTimeout(fireExitCompleteOnce, 1350));
       });
     }
 
     // ── WRONG — failed move, then tile exits ─────────────────
     if (s === 'wrong') {
+      exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
       setFlashRed(true);
       timers.push(setTimeout(() => setFlashRed(false), 105));
@@ -281,7 +297,9 @@ export function SwipeMask({
           RNAnimated.parallel([
             RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
             RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
-          ]).start();
+          ]).start(({ finished }) => {
+            if (finished) fireExitCompleteOnce();
+          });
         }, 320));
       } else {
         // Trap swiped up: quick mistake flash, then permanent upward exit.
@@ -296,13 +314,16 @@ export function SwipeMask({
           RNAnimated.parallel([
             RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
             RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
-          ]).start();
+          ]).start(({ finished }) => {
+            if (finished) fireExitCompleteOnce();
+          });
         }, 260));
       }
     }
 
     // ── TRAP-CAUGHT — hard right toss + shards ───────────────
     if (s === 'trap-caught') {
+      exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
       playShatter();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -322,7 +343,9 @@ export function SwipeMask({
         RNAnimated.parallel([
           RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
           RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
-        ]).start();
+        ]).start(({ finished }) => {
+          if (finished) fireExitCompleteOnce();
+        });
       }, 380));
     }
 
@@ -341,6 +364,7 @@ export function SwipeMask({
       bgAnim.setValue(0);
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
+      exitCompleteFiredRef.current = false;
       setFlashRed(false);
     }
 
@@ -381,12 +405,12 @@ export function SwipeMask({
 
       onPanResponderGrant: () => {
         if (disabledRef.current || judgedRef.current) return;
-        grabLift.value         = withSpring(-8, { damping: 18, stiffness: 360 });
-        scale.value            = withSpring(1.026, { damping: 18, stiffness: 360 });
-        borderOpacityVal.value = withTiming(0.56, { duration: 100 });
+        hasThresholdFiredRef.current = false;
+        grabLift.value         = withSpring(-10, { damping: 16, stiffness: 420 });
+        scale.value            = withSpring(1.04, { damping: 16, stiffness: 420 });
+        borderOpacityVal.value = withTiming(0.68, { duration: 85 });
         onPressHoldStartRef.current?.();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        hasThresholdFiredRef.current = false;
       },
 
       onPanResponderMove: (_, g) => {
@@ -461,7 +485,7 @@ export function SwipeMask({
         style={{
           overflow: 'visible',
           opacity: entryOpacity,
-          transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
+          transform: [{ translateY: entryTransY }, { scale: entryScale }],
         }}
       >
         <RNAnimated.View style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim }}>
@@ -486,7 +510,7 @@ export function SwipeMask({
         width: '100%',
         overflow: 'visible',
         opacity: entryOpacity,
-        transform: [{ translateY: entryTransY }, { scaleY: entryScaleY }],
+        transform: [{ translateY: entryTransY }, { scale: entryScale }],
       }}
     >
       <RNAnimated.View
