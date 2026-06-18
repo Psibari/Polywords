@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -31,6 +32,11 @@ const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
 const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
+const HUD_CONTENT_OFFSET = 72;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
 const CLIP_PATHS = [
   'polygon(0 0,100% 22%,72% 100%)',
@@ -343,6 +349,9 @@ function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
 }
 
 export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Props) {
+  const { height: screenHeight } = useWindowDimensions();
+  const heroTop = clamp(screenHeight * 0.22, 165, 220) - HUD_CONTENT_OFFSET;
+  const tileTop = clamp(screenHeight * 0.50, 380, 460) - HUD_CONTENT_OFFSET;
   const store   = useGameStore();
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
@@ -1752,7 +1761,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     >
       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
       <View
-        style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
+        style={[styles.wordZone, isBoss && styles.wordZoneBoss, { top: heroTop }]}
         pointerEvents="none"
         ref={wordZoneRef as any}
         onLayout={e => {
@@ -1967,7 +1976,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       </View>
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
-      <View style={styles.gridWrap}>
+      <View style={[styles.gridWrap, { top: tileTop }]}>
         <View style={styles.tileStackArea}>
         {showBoardContent && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
@@ -2450,6 +2459,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     backgroundColor: 'transparent',
     overflow: 'hidden',
+    position: 'relative',
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
@@ -2460,8 +2470,9 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     paddingTop: 6,
     paddingBottom: 10,
-    position: 'relative',
-    marginTop: 4,
+    position: 'absolute',
+    left: 0,
+    right: 0,
   },
   wordZoneBoss: {
     height: 150,
@@ -2533,10 +2544,11 @@ const styles = StyleSheet.create({
   },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 62,
     paddingBottom: 26,
     minHeight: 0,
   },
