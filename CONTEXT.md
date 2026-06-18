@@ -347,6 +347,9 @@ app/utils/SoundEngine.ts        WAV synthesis
 assets/brand/polywords-logo.png Production Home logo layer
 assets/home/home-hero-bg.png    Production Home cinematic background layer
 app/screens/HomeScreen.tsx      Home lobby: asset-layered jungle-neon menu with premium glass/gold controls
+app/screens/GameScreen.tsx      Play HUD shell: compact dark glass arcade status panel
+app/components/MaskBoard.tsx    Play arena shell: darkened Home background layer, hero word, tile stack, gate, Polly speech
+Play active chain              Home/BottomNav -> GameScreen -> TopBar + MaskBoard -> SwipeMask; visible Master Gate is inline in MaskBoard
 tools/content/mask-rewriter     Local-only content rewrite/audit tool; never wire into player app
 ```
 

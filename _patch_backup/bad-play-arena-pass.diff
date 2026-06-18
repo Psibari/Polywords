@@ -1,0 +1,978 @@
+diff --git a/app/components/HeartbeatBackground.tsx b/app/components/HeartbeatBackground.tsx
+index 7842134..84ba8bf 100644
+--- a/app/components/HeartbeatBackground.tsx
++++ b/app/components/HeartbeatBackground.tsx
+@@ -29,6 +29,6 @@ export function HeartbeatBackground() {
+ 
+ const styles = StyleSheet.create({
+   bg: {
+-    backgroundColor: '#1A1040',
++    backgroundColor: 'rgba(26,16,64,0.30)',
+   },
+ });
+diff --git a/app/components/MaskBoard.tsx b/app/components/MaskBoard.tsx
+index fa25072..095aa0a 100644
+--- a/app/components/MaskBoard.tsx
++++ b/app/components/MaskBoard.tsx
+@@ -3,6 +3,7 @@ import {
+   Animated,
+   Dimensions,
+   Easing,
++  ImageBackground,
+   Pressable,
+   StyleSheet,
+   Text,
+@@ -1759,9 +1760,27 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
+       }}
+     >
+       <View style={styles.arenaBackdrop} pointerEvents="none">
+-        <View style={styles.arenaTopGlow} />
+-        <View style={styles.arenaCenterRail} />
+-        <View style={styles.arenaFloorGlow} />
++        <ImageBackground
++          source={require('../../assets/home/home-hero-bg.png')}
++          style={styles.arenaBackdrop}
++          imageStyle={styles.arenaBackdropImage}
++          resizeMode="cover"
++        >
++          <LinearGradient
++            colors={['rgba(4,3,16,0.92)', 'rgba(15,13,42,0.70)', 'rgba(4,3,16,0.94)']}
++            locations={[0, 0.46, 1]}
++            style={styles.arenaBackdropShade}
++          />
++          <LinearGradient
++            colors={['rgba(15,13,42,0.82)', 'rgba(15,13,42,0.18)', 'rgba(15,13,42,0.84)']}
++            start={{ x: 0, y: 0 }}
++            end={{ x: 1, y: 0 }}
++            style={styles.arenaBackdropShade}
++          />
++          <View style={styles.arenaTopGlow} />
++          <View style={styles.arenaCenterRail} />
++          <View style={styles.arenaFloorGlow} />
++        </ImageBackground>
+       </View>
+ 
+       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
+@@ -1779,6 +1798,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
+         }}
+       >
+         <View style={styles.wordStageFrame} pointerEvents="none" />
++        <View style={styles.wordStageSheen} pointerEvents="none" />
++        <View style={styles.wordStageLeftPillar} pointerEvents="none" />
++        <View style={styles.wordStageRightPillar} pointerEvents="none" />
+         <View style={styles.wordStageHalo} pointerEvents="none" />
+         <View style={styles.wordStageUnderlight} pointerEvents="none" />
+ 
+@@ -1892,8 +1914,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
+               overflow: 'visible',
+               shadowColor: '#F5C842',
+               shadowOffset: { width: 0, height: 0 },
+-              shadowOpacity: isBoss ? 0.85 : 0.65,
+-              shadowRadius: isBoss ? 52 : 36,
++              shadowOpacity: isBoss ? 0.95 : 0.74,
++              shadowRadius: isBoss ? 58 : 42,
+             }}>
+               {Array.from({ length: 12 }, (_, i) => {
+                 const depth = 12 - i;
+@@ -1930,9 +1952,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
+                   letterSpacing: 4,
+                   textAlign: 'center',
+                   color: '#FFE27A',
+-                  textShadowColor: 'rgba(15,8,0,0.78)',
+-                  textShadowOffset: { width: 0, height: 3 },
+-                  textShadowRadius: isBoss ? 12 : 9,
++                  textShadowColor: 'rgba(245,200,66,0.34)',
++                  textShadowOffset: { width: 0, height: 0 },
++                  textShadowRadius: isBoss ? 18 : 14,
+                 }}
+                 numberOfLines={1}
+                 adjustsFontSizeToFit
+@@ -2034,9 +2056,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
+       <View style={styles.gridWrap}>
+         <View style={styles.tileStackArea}>
+           <View style={styles.tileArenaFrame} pointerEvents="none">
++            <LinearGradient
++              colors={['rgba(255,255,255,0.06)', 'rgba(123,45,139,0.10)', 'rgba(5,4,18,0.16)']}
++              style={styles.tileArenaSheen}
++            />
+             <View style={styles.tileArenaRailTop} />
+             <View style={styles.tileArenaRailBottom} />
+             <View style={styles.tileArenaRightLane} />
++            <View style={styles.tileArenaPitGlow} />
+           </View>
+         {showBoardContent && (
+           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
+@@ -2178,7 +2205,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
+         </View>
+ 
+         <View style={styles.gateArea}>
+-        <View style={styles.gateDockPlate} pointerEvents="none" />
++        {isBoss && hasHidden && <View style={styles.gateDockPlate} pointerEvents="none" />}
++        {isBoss && hasHidden && <View style={styles.gateDockGlow} pointerEvents="none" />}
+         {isBoss && hasHidden && (
+           gatePhase === 'tiles' || gatePhase === 'wrongFail' || gatePhase === 'mastered' ? null : (
+             // Gate: locked / unlocking / doorSplit
+@@ -2569,22 +2597,33 @@ const styles = StyleSheet.create({
+   container: {
+     flex: 1,
+     paddingHorizontal: 14,
+-    backgroundColor: '#1A1830',
++    backgroundColor: 'transparent',
+     overflow: 'hidden',
+   },
+   arenaBackdrop: {
+     ...StyleSheet.absoluteFillObject,
+   },
++  arenaBackdropImage: {
++    opacity: 0.66,
++    transform: [{ scale: 1.14 }],
++  },
++  arenaBackdropShade: {
++    ...StyleSheet.absoluteFillObject,
++  },
+   arenaTopGlow: {
+     position: 'absolute',
+-    top: 12,
+-    left: 18,
+-    right: 18,
+-    height: 150,
+-    borderRadius: 28,
+-    backgroundColor: 'rgba(15,13,42,0.46)',
++    top: 8,
++    left: 12,
++    right: 12,
++    height: 166,
++    borderRadius: 30,
++    backgroundColor: 'rgba(8,6,26,0.52)',
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.18)',
++    borderColor: 'rgba(193,136,255,0.14)',
++    shadowColor: '#7B2D8B',
++    shadowOpacity: 0.20,
++    shadowRadius: 24,
++    shadowOffset: { width: 0, height: 0 },
+   },
+   arenaCenterRail: {
+     position: 'absolute',
+@@ -2592,18 +2631,22 @@ const styles = StyleSheet.create({
+     left: 28,
+     right: 28,
+     height: 1,
+-    backgroundColor: 'rgba(123,45,139,0.28)',
++    backgroundColor: 'rgba(245,200,66,0.14)',
+   },
+   arenaFloorGlow: {
+     position: 'absolute',
+-    left: 12,
+-    right: 12,
+-    bottom: 18,
+-    height: 190,
+-    borderRadius: 28,
+-    backgroundColor: 'rgba(15,13,42,0.62)',
++    left: 4,
++    right: 4,
++    bottom: 10,
++    height: 218,
++    borderRadius: 34,
++    backgroundColor: 'rgba(7,5,24,0.58)',
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.20)',
++    borderColor: 'rgba(123,45,139,0.30)',
++    shadowColor: '#7B2D8B',
++    shadowOpacity: 0.26,
++    shadowRadius: 28,
++    shadowOffset: { width: 0, height: 0 },
+   },
+   // ── Word zone ─────────────────────────────────────────────────
+   wordZone: {
+@@ -2622,31 +2665,73 @@ const styles = StyleSheet.create({
+   },
+   wordStageFrame: {
+     position: 'absolute',
+-    left: 6,
+-    right: 6,
++    left: 2,
++    right: 2,
+     top: 9,
+     bottom: 5,
+-    borderRadius: 24,
++    borderRadius: 26,
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.24)',
+-    backgroundColor: 'rgba(15,13,42,0.18)',
++    borderColor: 'rgba(193,136,255,0.18)',
++    backgroundColor: 'rgba(7,5,24,0.34)',
++    shadowColor: '#7B2D8B',
++    shadowOpacity: 0.24,
++    shadowRadius: 22,
++    shadowOffset: { width: 0, height: 0 },
++  },
++  wordStageSheen: {
++    position: 'absolute',
++    left: 18,
++    right: 18,
++    top: 15,
++    height: 1,
++    backgroundColor: 'rgba(255,255,255,0.10)',
++  },
++  wordStageLeftPillar: {
++    position: 'absolute',
++    left: 10,
++    top: 22,
++    bottom: 18,
++    width: 5,
++    borderRadius: 4,
++    backgroundColor: 'rgba(123,45,139,0.44)',
++    shadowColor: '#7B2D8B',
++    shadowOpacity: 0.62,
++    shadowRadius: 12,
++    shadowOffset: { width: 0, height: 0 },
++  },
++  wordStageRightPillar: {
++    position: 'absolute',
++    right: 10,
++    top: 22,
++    bottom: 18,
++    width: 5,
++    borderRadius: 4,
++    backgroundColor: 'rgba(245,200,66,0.28)',
++    shadowColor: '#F5C842',
++    shadowOpacity: 0.44,
++    shadowRadius: 12,
++    shadowOffset: { width: 0, height: 0 },
+   },
+   wordStageHalo: {
+     position: 'absolute',
+-    width: 244,
+-    height: 86,
+-    borderRadius: 48,
++    width: 268,
++    height: 94,
++    borderRadius: 52,
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.32)',
+-    backgroundColor: 'rgba(123,45,139,0.055)',
++    borderColor: 'rgba(245,200,66,0.18)',
++    backgroundColor: 'rgba(123,45,139,0.10)',
+   },
+   wordStageUnderlight: {
+     position: 'absolute',
+     bottom: 16,
+-    width: 176,
+-    height: 12,
+-    borderRadius: 8,
+-    backgroundColor: 'rgba(123,45,139,0.18)',
++    width: 206,
++    height: 14,
++    borderRadius: 9,
++    backgroundColor: 'rgba(245,200,66,0.12)',
++    shadowColor: '#F5C842',
++    shadowOpacity: 0.36,
++    shadowRadius: 16,
++    shadowOffset: { width: 0, height: 0 },
+   },
+   kicker: {
+     color: '#F5C842',
+@@ -2664,9 +2749,9 @@ const styles = StyleSheet.create({
+     fontFamily: FONTS.heroFace,
+     letterSpacing: 4,
+     color: '#F5C842',
+-    textShadowColor: 'rgba(0,0,0,0.7)',
+-    textShadowOffset: { width: 0, height: 2 },
+-    textShadowRadius: 16,
++    textShadowColor: 'rgba(245,200,66,0.42)',
++    textShadowOffset: { width: 0, height: 0 },
++    textShadowRadius: 18,
+     textAlign: 'center',
+     maxWidth: '100%',
+   },
+@@ -2684,6 +2769,11 @@ const styles = StyleSheet.create({
+     borderRadius: 40,
+     borderWidth: 2.5,
+     borderColor: '#F5C842',
++    backgroundColor: 'rgba(245,200,66,0.04)',
++    shadowColor: '#F5C842',
++    shadowOpacity: 0.42,
++    shadowRadius: 18,
++    shadowOffset: { width: 0, height: 0 },
+   },
+   absorbedPhrase: {
+     color: 'rgba(255,255,255,0.7)',
+@@ -2724,14 +2814,18 @@ const styles = StyleSheet.create({
+     right: 2,
+     height: TILE_H + 30,
+     borderRadius: 28,
+-    backgroundColor: 'rgba(15,13,42,0.42)',
++    backgroundColor: 'rgba(7,5,24,0.66)',
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.22)',
++    borderColor: 'rgba(193,136,255,0.18)',
+     shadowColor: '#7B2D8B',
+-    shadowOffset: { width: 0, height: 8 },
+-    shadowOpacity: 0.10,
+-    shadowRadius: 18,
+-    elevation: 4,
++    shadowOffset: { width: 0, height: 12 },
++    shadowOpacity: 0.24,
++    shadowRadius: 24,
++    elevation: 7,
++    overflow: 'hidden',
++  },
++  tileArenaSheen: {
++    ...StyleSheet.absoluteFillObject,
+   },
+   tileArenaRailTop: {
+     position: 'absolute',
+@@ -2739,7 +2833,7 @@ const styles = StyleSheet.create({
+     left: 24,
+     right: 24,
+     height: 1,
+-    backgroundColor: 'rgba(255,255,255,0.06)',
++    backgroundColor: 'rgba(255,255,255,0.10)',
+   },
+   tileArenaRailBottom: {
+     position: 'absolute',
+@@ -2747,7 +2841,7 @@ const styles = StyleSheet.create({
+     left: 36,
+     right: 36,
+     height: 1,
+-    backgroundColor: 'rgba(123,45,139,0.30)',
++    backgroundColor: 'rgba(245,200,66,0.16)',
+   },
+   tileArenaRightLane: {
+     position: 'absolute',
+@@ -2756,7 +2850,20 @@ const styles = StyleSheet.create({
+     right: 11,
+     width: 1,
+     borderRadius: 2,
+-    backgroundColor: 'rgba(155,45,107,0.14)',
++    backgroundColor: 'rgba(155,45,107,0.22)',
++  },
++  tileArenaPitGlow: {
++    position: 'absolute',
++    left: 22,
++    right: 22,
++    bottom: 18,
++    height: 34,
++    borderRadius: 18,
++    backgroundColor: 'rgba(123,45,139,0.18)',
++    shadowColor: '#7B2D8B',
++    shadowOpacity: 0.44,
++    shadowRadius: 22,
++    shadowOffset: { width: 0, height: 0 },
+   },
+   tileStack: {
+     width: '92%',
+@@ -2784,9 +2891,9 @@ const styles = StyleSheet.create({
+     backgroundColor: 'transparent',
+     shadowColor: '#000000',
+     shadowOffset: { width: 0, height: 16 },
+-    shadowOpacity: 0.24,
+-    shadowRadius: 22,
+-    elevation: 12,
++    shadowOpacity: 0.34,
++    shadowRadius: 28,
++    elevation: 14,
+   },
+   deckTopCardGloss: {
+     position: 'absolute',
+@@ -2803,13 +2910,13 @@ const styles = StyleSheet.create({
+     right: 0,
+     height: TILE_H,
+     borderRadius: 30,
+-    backgroundColor: '#221657',
++    backgroundColor: '#120C38',
+     borderWidth: 2,
+-    borderColor: 'rgba(123,45,139,0.62)',
++    borderColor: 'rgba(123,45,139,0.74)',
+     shadowColor: '#000',
+     shadowOffset: { width: 0, height: 16 },
+-    shadowOpacity: 0.62,
+-    shadowRadius: 24,
++    shadowOpacity: 0.70,
++    shadowRadius: 28,
+     elevation: 6,
+     overflow: 'hidden',
+   },
+@@ -2835,13 +2942,13 @@ const styles = StyleSheet.create({
+     right: 0,
+     bottom: 0,
+     height: 18,
+-    backgroundColor: 'rgba(123,45,139,0.28)',
++    backgroundColor: 'rgba(123,45,139,0.36)',
+     borderTopWidth: 1,
+     borderTopColor: 'rgba(255,255,255,0.05)',
+   },
+   deckDepthCardHaunt: {
+-    borderColor: 'rgba(123,45,139,0.72)',
+-    backgroundColor: '#1A123F',
++    borderColor: 'rgba(155,45,107,0.78)',
++    backgroundColor: '#120B34',
+   },
+   finalHiddenTileStack: {
+     width: '100%',
+@@ -2849,13 +2956,14 @@ const styles = StyleSheet.create({
+     position: 'relative',
+   },
+   finalHiddenTileFrame: {
+-    borderWidth: 1.5,
+-    borderRadius: 14,
++    borderWidth: 2,
++    borderRadius: 16,
+     backgroundColor: '#0F0D2A',
+     shadowColor: '#F5C842',
+     shadowOffset: { width: 0, height: 0 },
+-    shadowRadius: 10,
+-    elevation: 7,
++    shadowOpacity: 0.22,
++    shadowRadius: 18,
++    elevation: 9,
+   },
+   hauntBirthTile: {
+     position: 'absolute',
+@@ -2924,25 +3032,38 @@ const styles = StyleSheet.create({
+     right: -12,
+     top: 30,
+     height: GATE_H + 20,
+-    borderRadius: 18,
+-    backgroundColor: 'rgba(15,13,42,0.48)',
++    borderRadius: 20,
++    backgroundColor: 'rgba(7,5,24,0.72)',
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.18)',
++    borderColor: 'rgba(245,200,66,0.16)',
++  },
++  gateDockGlow: {
++    position: 'absolute',
++    left: 12,
++    right: 12,
++    top: 43,
++    height: 24,
++    borderRadius: 14,
++    backgroundColor: 'rgba(245,200,66,0.08)',
++    shadowColor: '#F5C842',
++    shadowOpacity: 0.24,
++    shadowRadius: 16,
++    shadowOffset: { width: 0, height: 0 },
+   },
+   masterGate: {
+     height: GATE_H,
+     marginTop: TILE_GAP,
+-    borderRadius: 14,
+-    borderWidth: 1.5,
+-    backgroundColor: '#0F0D2A',
++    borderRadius: 16,
++    borderWidth: 2,
++    backgroundColor: '#08061E',
+     overflow: 'visible',
+     alignItems: 'center',
+     justifyContent: 'center',
+     shadowColor: '#7B2D8B',
+-    shadowOffset: { width: 0, height: 8 },
+-    shadowOpacity: 0.20,
+-    shadowRadius: 16,
+-    elevation: 6,
++    shadowOffset: { width: 0, height: 10 },
++    shadowOpacity: 0.36,
++    shadowRadius: 22,
++    elevation: 9,
+   },
+   gateBackPlate: {
+     position: 'absolute',
+@@ -2950,10 +3071,10 @@ const styles = StyleSheet.create({
+     right: 5,
+     top: 5,
+     bottom: 5,
+-    borderRadius: 11,
+-    backgroundColor: '#0F0D2A',
++    borderRadius: 13,
++    backgroundColor: '#08061E',
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.20)',
++    borderColor: 'rgba(245,200,66,0.12)',
+   },
+   gateInnerShadow: {
+     position: 'absolute',
+@@ -2962,7 +3083,7 @@ const styles = StyleSheet.create({
+     top: 13,
+     bottom: 10,
+     borderRadius: 4,
+-    backgroundColor: 'rgba(7,6,28,0.54)',
++    backgroundColor: 'rgba(0,0,0,0.26)',
+     borderWidth: 1,
+     borderColor: 'rgba(255,255,255,0.035)',
+   },
+@@ -2971,8 +3092,8 @@ const styles = StyleSheet.create({
+     top: 3,
+     bottom: 3,
+     width: '50%',
+-    backgroundColor: '#0F0D2A',
+-    borderColor: 'rgba(123,45,139,0.22)',
++    backgroundColor: '#0B0825',
++    borderColor: 'rgba(123,45,139,0.32)',
+     overflow: 'hidden',
+     zIndex: 1,
+   },
+@@ -2994,9 +3115,9 @@ const styles = StyleSheet.create({
+     right: 0,
+     top: 0,
+     height: 14,
+-    backgroundColor: 'rgba(123,45,139,0.10)',
++    backgroundColor: 'rgba(245,200,66,0.08)',
+     borderBottomWidth: 1,
+-    borderBottomColor: 'rgba(123,45,139,0.10)',
++    borderBottomColor: 'rgba(245,200,66,0.10)',
+   },
+   gateBar: {
+     position: 'absolute',
+@@ -3004,7 +3125,7 @@ const styles = StyleSheet.create({
+     bottom: 8,
+     width: 2,
+     borderRadius: 2,
+-    backgroundColor: 'rgba(123,45,139,0.34)',
++    backgroundColor: 'rgba(123,45,139,0.48)',
+   },
+   gateCenterRibLeft: {
+     position: 'absolute',
+@@ -3013,7 +3134,7 @@ const styles = StyleSheet.create({
+     bottom: 5,
+     width: 3,
+     borderRadius: 2,
+-    backgroundColor: 'rgba(123,45,139,0.42)',
++    backgroundColor: 'rgba(245,200,66,0.22)',
+   },
+   gateCenterRibRight: {
+     position: 'absolute',
+@@ -3022,7 +3143,7 @@ const styles = StyleSheet.create({
+     bottom: 5,
+     width: 3,
+     borderRadius: 2,
+-    backgroundColor: 'rgba(123,45,139,0.42)',
++    backgroundColor: 'rgba(245,200,66,0.22)',
+   },
+   gateBoltLeft: {
+     position: 'absolute',
+@@ -3031,7 +3152,7 @@ const styles = StyleSheet.create({
+     width: 5,
+     height: 5,
+     borderRadius: 2.5,
+-    backgroundColor: 'rgba(123,45,139,0.58)',
++    backgroundColor: 'rgba(245,200,66,0.52)',
+     zIndex: 2,
+   },
+   gateBoltRight: {
+@@ -3041,7 +3162,7 @@ const styles = StyleSheet.create({
+     width: 5,
+     height: 5,
+     borderRadius: 2.5,
+-    backgroundColor: 'rgba(123,45,139,0.58)',
++    backgroundColor: 'rgba(245,200,66,0.52)',
+     zIndex: 2,
+   },
+   gateContent: {
+@@ -3066,13 +3187,13 @@ const styles = StyleSheet.create({
+     borderTopRightRadius: 6,
+     borderWidth: 2,
+     borderBottomWidth: 0,
+-    borderColor: 'rgba(123,45,139,0.88)',
++    borderColor: 'rgba(245,200,66,0.88)',
+   },
+   gateLockBody: {
+     width: 17,
+     height: 13,
+     borderRadius: 3,
+-    backgroundColor: 'rgba(123,45,139,0.88)',
++    backgroundColor: 'rgba(245,200,66,0.88)',
+     borderWidth: 1,
+     borderColor: 'rgba(255,255,255,0.12)',
+     alignItems: 'center',
+@@ -3087,10 +3208,10 @@ const styles = StyleSheet.create({
+   gateLabel: {
+     fontFamily: FONTS.wordDisplay,
+     fontSize: 13,
+-    color: 'rgba(255,255,255,0.76)',
++    color: '#F5C842',
+     letterSpacing: 2,
+     textAlign: 'center',
+-    textShadowColor: 'rgba(123,45,139,0.45)',
++    textShadowColor: 'rgba(245,200,66,0.55)',
+     textShadowOffset: { width: 0, height: 0 },
+     textShadowRadius: 8,
+   },
+@@ -3234,18 +3355,26 @@ const styles = StyleSheet.create({
+     bottom: 186,
+     left: 78,
+     maxWidth: 210,
+-    backgroundColor: 'rgba(20,18,56,0.94)',
+-    borderRadius: 10,
++    backgroundColor: 'rgba(7,5,24,0.92)',
++    borderRadius: 14,
+     borderWidth: 1,
+-    borderColor: 'rgba(255,255,255,0.18)',
+-    paddingHorizontal: 12,
+-    paddingVertical: 8,
++    borderColor: 'rgba(193,136,255,0.26)',
++    paddingHorizontal: 13,
++    paddingVertical: 9,
++    shadowColor: '#7B2D8B',
++    shadowOpacity: 0.34,
++    shadowRadius: 14,
++    shadowOffset: { width: 0, height: 0 },
++    elevation: 8,
+   },
+   speechText: {
+-    color: 'rgba(255,255,255,0.88)',
++    color: 'rgba(255,255,255,0.92)',
+     fontSize: 13,
+     fontFamily: FONTS.label,
+     letterSpacing: 0.3,
++    textShadowColor: 'rgba(123,45,139,0.52)',
++    textShadowOffset: { width: 0, height: 0 },
++    textShadowRadius: 6,
+   },
+   // ── Haunt system ─────────────────────────────────────────────
+   hauntEntranceBanner: {
+diff --git a/app/components/SwipeMask.tsx b/app/components/SwipeMask.tsx
+index b6ba1ca..fba8035 100644
+--- a/app/components/SwipeMask.tsx
++++ b/app/components/SwipeMask.tsx
+@@ -99,7 +99,7 @@ export function SwipeMask({
+   const bgAnim = useRef(new RNAnimated.Value(0)).current;
+   const bgColor = bgAnim.interpolate({
+     inputRange:  [0,         0.5,       1.0      ],
+-    outputRange: ['#19143F', '#27205D', '#171833'],
++    outputRange: ['#100B34', '#25195A', '#14102F'],
+   });
+ 
+   // ── RN Animated: entry (native driver) ────────────────────────
+@@ -506,6 +506,7 @@ export function SwipeMask({
+         >
+           {/* Top edge shine */}
+           <View style={styles.tileTopShine} />
++          <View style={styles.tileGoldAccent} />
+           {/* Inner ambient glow */}
+           <View style={styles.tileInnerGlow} />
+           <View style={styles.tileBottomBevel} />
+@@ -523,6 +524,9 @@ export function SwipeMask({
+           )}
+ 
+           {/* Checkmark — shown when locked correct */}
++          {s === 'correct' && <View pointerEvents="none" style={styles.rewardGlow} />}
++          {(s === 'wrong' || s === 'trap-caught') && <View pointerEvents="none" style={styles.cursedGlow} />}
++
+           {s === 'correct' && (
+             <Text style={isSpecialSplit ? styles.splitCheckmark : styles.checkmark}>✓</Text>
+           )}
+@@ -574,9 +578,9 @@ const styles = StyleSheet.create({
+     // borderColor driven by Reanimated (tileAnimStyle)
+     shadowColor:   '#000000',
+     shadowOffset:  { width: 0, height: 16 },
+-    shadowRadius:  34,
+-    shadowOpacity: 0.62,
+-    elevation: 14,
++    shadowRadius:  38,
++    shadowOpacity: 0.72,
++    elevation: 16,
+   },
+   phrasePanel: {
+     width: '100%',
+@@ -585,13 +589,13 @@ const styles = StyleSheet.create({
+     justifyContent: 'center',
+     paddingHorizontal: 10,
+     paddingVertical: 16,
+-    backgroundColor: 'rgba(7,6,28,0.46)',
++    backgroundColor: 'rgba(3,2,16,0.42)',
+     borderWidth: 1,
+-    borderColor: 'rgba(255,255,255,0.08)',
++    borderColor: 'rgba(193,136,255,0.14)',
+     shadowColor: '#000',
+     shadowOffset: { width: 0, height: 4 },
+-    shadowRadius: 10,
+-    shadowOpacity: 0.48,
++    shadowRadius: 14,
++    shadowOpacity: 0.56,
+     overflow: 'visible',
+   },
+   checkmark: {
+@@ -599,7 +603,7 @@ const styles = StyleSheet.create({
+     top: 12,
+     right: 16,
+     fontSize: 20,
+-    color: '#FFFFFF',
++    color: 'rgba(255,255,255,0.96)',
+     fontWeight: '800',
+     zIndex: 3,
+   },
+@@ -614,9 +618,9 @@ const styles = StyleSheet.create({
+     flexShrink: 1,
+     flexWrap: 'wrap',
+     width: '100%',
+-    textShadowColor: 'rgba(0,0,0,0.5)',
+-    textShadowOffset: { width: 0, height: 1 },
+-    textShadowRadius: 4,
++    textShadowColor: 'rgba(0,0,0,0.72)',
++    textShadowOffset: { width: 0, height: 2 },
++    textShadowRadius: 7,
+   },
+   splitTile: {
+     borderRadius: 14,
+@@ -631,9 +635,9 @@ const styles = StyleSheet.create({
+     borderWidth: 1,
+     shadowColor: '#000000',
+     shadowOffset: { width: 0, height: 2 },
+-    shadowRadius: 4,
+-    shadowOpacity: 0.35,
+-    elevation: 3,
++    shadowRadius: 10,
++    shadowOpacity: 0.48,
++    elevation: 5,
+     overflow: 'hidden',
+   },
+   splitPhrasePanel: {
+@@ -659,8 +663,8 @@ const styles = StyleSheet.create({
+     borderRadius: 28,
+     zIndex: 10,
+     borderWidth: 1,
+-    borderColor: 'rgba(204,34,0,0.52)',
+-    backgroundColor: 'rgba(204,34,0,0.16)',
++    borderColor: 'rgba(204,34,0,0.62)',
++    backgroundColor: 'rgba(204,34,0,0.18)',
+   },
+   eraBadgeWrap: {
+     position: 'absolute',
+@@ -677,15 +681,15 @@ const styles = StyleSheet.create({
+     fontFamily: FONTS.label,
+   },
+   hiddenTile: {
+-    backgroundColor: '#2A2060',
+-    borderRadius: 12,
++    backgroundColor: '#100B34',
++    borderRadius: 14,
+     minHeight: 58,
+     flexDirection: 'row',
+     alignItems: 'center',
+     paddingHorizontal: 16,
+     paddingVertical: 8,
+     borderWidth: 1,
+-    borderColor: 'rgba(255,255,255,0.08)',
++    borderColor: 'rgba(123,45,139,0.50)',
+   },
+   hiddenPhrase: {
+     fontSize: 16,
+@@ -701,10 +705,24 @@ const styles = StyleSheet.create({
+     left: 24,
+     right: 24,
+     height: 2,
+-    backgroundColor: 'rgba(255,255,255,0.20)',
++    backgroundColor: 'rgba(255,255,255,0.26)',
+     borderRadius: 2,
+     zIndex: 2,
+   },
++  tileGoldAccent: {
++    position: 'absolute',
++    top: 7,
++    left: 38,
++    right: 38,
++    height: 1,
++    backgroundColor: 'rgba(245,200,66,0.32)',
++    borderRadius: 1,
++    shadowColor: '#F5C842',
++    shadowOpacity: 0.42,
++    shadowRadius: 8,
++    shadowOffset: { width: 0, height: 0 },
++    zIndex: 2,
++  },
+   tileInnerGlow: {
+     position: 'absolute',
+     bottom: -22,
+@@ -712,7 +730,7 @@ const styles = StyleSheet.create({
+     right: '10%',
+     height: 70,
+     borderRadius: 35,
+-    backgroundColor: 'rgba(123,45,139,0.20)',
++    backgroundColor: 'rgba(123,45,139,0.28)',
+     zIndex: 1,
+   },
+   tileBottomBevel: {
+@@ -720,10 +738,26 @@ const styles = StyleSheet.create({
+     left: 0,
+     right: 0,
+     bottom: 0,
+-    height: 16,
+-    backgroundColor: 'rgba(5,4,18,0.42)',
++    height: 18,
++    backgroundColor: 'rgba(0,0,0,0.34)',
+     borderTopWidth: 1,
+-    borderTopColor: 'rgba(255,255,255,0.06)',
++    borderTopColor: 'rgba(245,200,66,0.08)',
++    zIndex: 2,
++  },
++  rewardGlow: {
++    ...StyleSheet.absoluteFillObject,
++    borderRadius: 28,
++    borderWidth: 2,
++    borderColor: 'rgba(245,200,66,0.56)',
++    backgroundColor: 'rgba(245,200,66,0.08)',
++    zIndex: 2,
++  },
++  cursedGlow: {
++    ...StyleSheet.absoluteFillObject,
++    borderRadius: 28,
++    borderWidth: 2,
++    borderColor: 'rgba(204,34,0,0.46)',
++    backgroundColor: 'rgba(155,45,107,0.16)',
+     zIndex: 2,
+   },
+ });
+diff --git a/app/screens/GameScreen.tsx b/app/screens/GameScreen.tsx
+index b40eebf..bbd6544 100644
+--- a/app/screens/GameScreen.tsx
++++ b/app/screens/GameScreen.tsx
+@@ -1,5 +1,6 @@
+ import React, { useCallback, useEffect, useRef, useState } from 'react';
+-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
++import { LinearGradient } from 'expo-linear-gradient';
++import { Animated, Easing, ImageBackground, StyleSheet, Text, View } from 'react-native';
+ import { FONTS, FONT_SIZES } from '../constants/fonts';
+ import { SafeAreaView } from 'react-native-safe-area-context';
+ import { currentStep } from '../game/polyRunEngine';
+@@ -222,6 +223,12 @@ function TopBar() {
+ 
+   return (
+     <View style={tb.root}>
++      <LinearGradient
++        pointerEvents="none"
++        colors={['rgba(255,255,255,0.10)', 'rgba(123,45,139,0.10)', 'rgba(0,0,0,0.20)']}
++        locations={[0, 0.42, 1]}
++        style={tb.hudSheen}
++      />
+       {/* Row 1: Score · Streak · Feathers */}
+       <View style={tb.statsRow}>
+         <Text style={tb.scoreVal}>{displayScore}</Text>
+@@ -374,15 +381,19 @@ const tb = StyleSheet.create({
+     paddingHorizontal: 14,
+     paddingTop: 7,
+     paddingBottom: 6,
+-    borderRadius: 16,
+-    backgroundColor: 'rgba(15,13,42,0.78)',
++    borderRadius: 18,
++    backgroundColor: 'rgba(7,5,24,0.86)',
+     borderWidth: 1,
+-    borderColor: 'rgba(123,45,139,0.36)',
+-    shadowColor: '#000000',
+-    shadowOffset: { width: 0, height: 6 },
+-    shadowOpacity: 0.22,
+-    shadowRadius: 14,
+-    elevation: 6,
++    borderColor: 'rgba(193,136,255,0.20)',
++    overflow: 'hidden',
++    shadowColor: '#7B2D8B',
++    shadowOffset: { width: 0, height: 8 },
++    shadowOpacity: 0.32,
++    shadowRadius: 18,
++    elevation: 9,
++  },
++  hudSheen: {
++    ...StyleSheet.absoluteFillObject,
+   },
+   statsRow: {
+     flexDirection: 'row',
+@@ -397,9 +408,9 @@ const tb = StyleSheet.create({
+     letterSpacing: 1,
+     textTransform: 'uppercase',
+     minWidth: 62,
+-    textShadowColor: 'rgba(245,200,66,0.25)',
++    textShadowColor: 'rgba(245,200,66,0.62)',
+     textShadowOffset: { width: 0, height: 0 },
+-    textShadowRadius: 8,
++    textShadowRadius: 12,
+   },
+   label: {
+     fontFamily: FONTS.label,
+@@ -439,9 +450,9 @@ const tb = StyleSheet.create({
+     elevation: 2,
+   },
+   featherBladeFilled: {
+-    backgroundColor: 'rgba(255,255,255,0.92)',
+-    borderColor: 'rgba(123,45,139,0.75)',
+-    shadowOpacity: 0.35,
++    backgroundColor: 'rgba(255,255,255,0.96)',
++    borderColor: 'rgba(245,200,66,0.54)',
++    shadowOpacity: 0.46,
+   },
+   featherBladeEmpty: {
+     backgroundColor: 'rgba(155,89,182,0.18)',
+@@ -484,16 +495,18 @@ const tb = StyleSheet.create({
+     marginTop: 3,
+     paddingHorizontal: 6,
+     borderRadius: 8,
+-    backgroundColor: 'rgba(255,255,255,0.035)',
++    backgroundColor: 'rgba(0,0,0,0.18)',
++    borderWidth: 1,
++    borderColor: 'rgba(123,45,139,0.16)',
+   },
+   dot: {
+     width: 6,
+     height: 6,
+     borderRadius: 3,
+   },
+-  dotDone:      { backgroundColor: '#F5C842' },
+-  dotCurrent:   { backgroundColor: '#FFFFFF', shadowColor: '#FFFFFF', shadowOpacity: 0.5, shadowRadius: 5 },
+-  dotRemaining: { backgroundColor: 'rgba(255,255,255,0.18)' },
++  dotDone:      { backgroundColor: '#F5C842', shadowColor: '#F5C842', shadowOpacity: 0.62, shadowRadius: 5 },
++  dotCurrent:   { backgroundColor: '#FFFFFF', shadowColor: '#FFFFFF', shadowOpacity: 0.72, shadowRadius: 6 },
++  dotRemaining: { backgroundColor: 'rgba(196,185,218,0.22)' },
+   reserveFeatherWrap: {
+     width:          8,
+     height:         14,
+@@ -669,10 +682,29 @@ function GameDirector({ navigation }: { navigation: any }) {
+   }
+ 
+   const isDone      = game.status === 'complete' || game.status === 'gameOver';
+-  const screenBg = '#1A1830';
+ 
+   return (
+-    <SafeAreaView style={[styles.screen, { backgroundColor: screenBg }]}>
++    <SafeAreaView style={styles.screen}>
++      <ImageBackground
++        source={require('../../assets/home/home-hero-bg.png')}
++        style={styles.screenBackdrop}
++        imageStyle={styles.screenBackdropImage}
++        resizeMode="cover"
++      >
++        <LinearGradient
++          pointerEvents="none"
++          colors={['rgba(4,3,16,0.52)', 'rgba(15,13,42,0.30)', 'rgba(4,3,16,0.76)']}
++          locations={[0, 0.44, 1]}
++          style={styles.screenBackdropShade}
++        />
++        <LinearGradient
++          pointerEvents="none"
++          colors={['rgba(15,13,42,0.70)', 'rgba(15,13,42,0.12)', 'rgba(15,13,42,0.70)']}
++          start={{ x: 0, y: 0 }}
++          end={{ x: 1, y: 0 }}
++          style={styles.screenBackdropShade}
++        />
++      </ImageBackground>
+       <HeartbeatBackground />
+       {!isDone && <TopBar />}
+       {isDone ? (
+@@ -756,7 +788,17 @@ export default function GameScreen({ navigation }: { navigation: any }) {
+ const styles = StyleSheet.create({
+   screen: {
+     flex: 1,
+-    backgroundColor: '#1A1830',
++    backgroundColor: '#09071E',
++  },
++  screenBackdrop: {
++    ...StyleSheet.absoluteFillObject,
++  },
++  screenBackdropImage: {
++    opacity: 0.82,
++    transform: [{ scale: 1.08 }],
++  },
++  screenBackdropShade: {
++    ...StyleSheet.absoluteFillObject,
+   },
+   effectsOverlay: {
+     position: 'absolute',

@@ -1224,6 +1224,8 @@ Current implementation:
 40. Visual recovery — visible deck lips, solid hero foreground, Daily readable foreground text (Patch 32E-FIX complete)
 41. Home production asset lobby — branded logo image, jungle-neon background layer, glossy Play/card/nav polish (Patch 32F complete)
 42. Home polish pass 2 — premium glass copy plate, dimensional Play button, deeper mode cards/nav (Patch 32G complete)
+43. Play screen premium arena pass — darkened Home background layer, glass HUD, hero word/gate/tile polish (Patch 32H complete)
+44. Play arena fix pass — active route verified, root temple background exposed, heartbeat tint reduced, lower gate dock scoped to boss (Patch 32I complete)
 
 ---
 
