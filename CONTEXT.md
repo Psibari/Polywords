@@ -13,6 +13,10 @@ Polly is the Master of Words. She holds 700+ words in her vault. She set every t
 
 **App shell identity:** Home is the arcade lobby / launchpad. Play is the arena. Word Vault is the player's reclaimed meaning archive. Settings is utility for player/account/preferences/about. Profile belongs inside Settings for MVP.
 
+**Stable Home status:** main has the cinematic Home screen upgrade. Home uses production asset layers `assets/brand/polywords-logo.png` and `assets/home/home-hero-bg.png`. `HomeScreen.tsx` and `BottomNav.tsx` are upgraded to the premium cinematic jungle-neon arcade direction. Home is stable and should not be touched during Play screen work unless explicitly requested.
+
+**Current Play branch:** `play-screen-overhaul`. Active render chain: `HomeScreen/BottomNav -> App.tsx Game route -> GameScreen -> MaskBoard -> SwipeMask`.
+
 **Golden Pacing System:** `docs/GOLDEN_PACING_SYSTEM.md` is the source of truth for Hunt emotional rhythm, Semantic Snap Rate, future content metadata, and content selection. Target cycle: Recognition + Flow + Tension + Panic + Boss.
 
 **Hidden Truth Rule:** Before a swipe, all ordinary masks are equal. The player must never know whether a mask is real, trap, rare, hidden-worthy, or important before commitment. Truth is revealed only after swiping.
@@ -87,6 +91,18 @@ Dead / removed: revealHidden() removed. hiddenFound in WordResult removed. polly
 ## Locked Play Screen Design
 
 POLYWORDS is a word arena, not a quiz list. The hero word is the boss, the active mask tile is the challenger, the Master Gate is Polly's locked cage/vault, and the player steals mastery one swipe at a time.
+
+**Current branch overhaul state:** `GameScreen.tsx` owns the cinematic play background using `assets/home/home-hero-bg.png` with one dark overlay. `MaskBoard.tsx` was simplified into a cleaner layout with compact HUD, cleaner word plaque, single active tile zone, and conditional Master Gate area. `SwipeMask.tsx` was simplified into the active swipe tile surface.
+
+**Removed old visual shells:** `arenaBackdrop` / top glow / center rail / floor glow; duplicate word halo / underlight / heavy word extrusion; `swipeLane`; `tileArenaFrame` rails / right lane wrapper; visual-only deck depth cards and gloss overlay; always-rendered `gateArea` / `gateDockPlate` empty lower placeholder.
+
+**Interaction repair:** Commit `8cc2deb` repaired tile swipe timing and pop-in feel. Press/hold tile feel was restored. `SwipeMask` now fires `onExitComplete` after the outgoing tile exit/collapse animation finishes, and `MaskBoard` waits for that completion before advancing/removing the visible tile. The next tile mounts with a quick pop-in: slight scale start around `0.95`, opacity fade-in, spring to scale `1`, and small settle where implemented. Existing `pressHoldStart` SFX and haptic feel should fire once per grab. Gameplay logic, scoring, swipe grammar, Master/Haunted behavior, and data/content were not intentionally changed.
+
+**Future Play work warning:** Do not run giant Play screen visual passes anymore. Future Play work should be tiny surgical passes only. Tile art/card styling is not final. Rejected tile direction: violet/magenta gradient shell, diagonal side rail, battery-meter-looking edge, noisy back-card layers. Desired future tile direction: physical deck-stack clue tile, top card with clue text, 4 to 6 thin card-edge layers underneath, dark top face, muted violet/gold rim, no side rail, no gradient shell, no full-width banner, responsive width `Math.min(screenWidth - 56, 340)`.
+
+**Stash warning:** Preserve the Ghost Haunt Loop stash. Current stash list should include `stash@{0}: On main: wip haunt loop type scaffolding`. Do not drop that stash unless explicitly instructed.
+
+**Verification:** `npx.cmd tsc --noEmit` passed after the interaction repair. `npm lint` is not available unless a lint script is later added.
 
 **Hierarchy:** HERO WORD -> ACTIVE MASK TILE -> HUD / SCORE / FEATHERS / STREAK -> POLLY POP-IN ONLY.
 

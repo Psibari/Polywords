@@ -23,6 +23,51 @@ Patch 12E added `app/components/BottomNav.tsx` and wired it into Home, Vault, an
 
 Patch 12F polished bottom nav spacing and active states. Home, Vault, and Settings use shared bottom content padding so content clears the dock. Play remains a center action but no longer looks permanently selected.
 
+### Current Home / Play Branch State — June 18, 2026
+
+**Home is stable on main.** The current Home screen uses production asset layers:
+- `assets/brand/polywords-logo.png`
+- `assets/home/home-hero-bg.png`
+
+`HomeScreen.tsx` and `BottomNav.tsx` have been upgraded to the premium cinematic jungle-neon arcade direction. Home is the stable arcade lobby / launchpad and should not be touched during Play screen work unless explicitly requested.
+
+**Current branch:** `play-screen-overhaul`.
+
+This branch contains the Play/Game screen visual overhaul. Active render chain:
+
+`HomeScreen/BottomNav -> App.tsx Game route -> GameScreen -> MaskBoard -> SwipeMask`
+
+Play screen overhaul state:
+- `GameScreen.tsx` owns the cinematic play background using `assets/home/home-hero-bg.png` with one dark overlay.
+- `MaskBoard.tsx` was simplified into a cleaner layout with compact HUD, cleaner word plaque, single active tile zone, and conditional Master Gate area.
+- `SwipeMask.tsx` was simplified into the active swipe tile surface.
+- Removed old visual shells: `arenaBackdrop` / top glow / center rail / floor glow; duplicate word halo / underlight / heavy word extrusion; `swipeLane`; `tileArenaFrame` rails / right lane wrapper; visual-only deck depth cards and gloss overlay; always-rendered `gateArea` / `gateDockPlate` empty lower placeholder.
+
+Interaction repair state:
+- Commit `8cc2deb` repaired tile swipe timing and pop-in feel.
+- Press/hold tile feel was restored.
+- `SwipeMask` now fires `onExitComplete` after the outgoing tile exit/collapse animation finishes.
+- `MaskBoard` waits for `onExitComplete` before advancing/removing the visible tile.
+- Next tile mounts with a quick pop-in: slight scale start around `0.95`, opacity fade-in, spring to scale `1`, and a small settle where implemented.
+- Existing `pressHoldStart` SFX and haptic feel should fire once per grab.
+- Gameplay logic, scoring, swipe grammar, Master/Haunted behavior, and data/content were not intentionally changed.
+
+Future Play work warning:
+- Do not run giant Play screen visual passes anymore.
+- Future Play work should be tiny surgical passes only.
+- Tile art/card styling is not final.
+- Rejected tile direction: violet/magenta gradient shell, diagonal side rail, battery-meter-looking edge, noisy back-card layers.
+- Desired future tile direction: physical deck-stack clue tile, top card with clue text, 4 to 6 thin card-edge layers underneath, dark top face, muted violet/gold rim, no side rail, no gradient shell, no full-width banner, responsive width `Math.min(screenWidth - 56, 340)`.
+
+Stash warning:
+- Preserve the Ghost Haunt Loop stash.
+- Current stash list should include `stash@{0}: On main: wip haunt loop type scaffolding`.
+- Do not drop that stash unless explicitly instructed.
+
+Verification:
+- `npx.cmd tsc --noEmit` passed after the interaction repair.
+- `npm lint` is not available unless a lint script is later added.
+
 Patch 13 refreshed active Polly dialogue in `app/hooks/usePollyAnimator.ts`, `app/screens/ResultsScreen.tsx`, and `app/game/session.ts` so Polly reads as a smug polysemous word thief/opponent instead of a friendly helper. Dormant/legacy dialogue paths were left untouched.
 
 Patch 15 polished the active Play/Game screen as a premium semantic combat arena: compact glass HUD, staged hero word, framed active tile lane, and stronger Master Gate dock. GameScreen remains nav-free and gameplay logic is unchanged.
