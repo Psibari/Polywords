@@ -1222,6 +1222,7 @@ Current implementation:
 38. Premium wrong-swipe feedback restore — brief recoil/flash, no red slab, permanent exit preserved (Patch 32E complete)
 39. Visible meaning-card deck stack restore — visual-only under-cards, top card remains interactive (Patch 32E-STACK complete)
 40. Visual recovery — visible deck lips, solid hero foreground, Daily readable foreground text (Patch 32E-FIX complete)
+41. Home production asset lobby — branded logo image, jungle-neon background layer, glossy Play/card/nav polish (Patch 32F complete)
 
 ---
 

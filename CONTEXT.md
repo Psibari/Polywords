@@ -344,6 +344,8 @@ app/screens/DailyChallengeScreen.tsx Daily Challenge screen
 app/game/dailyChallengeEngine.ts     Daily session builder, engine functions, result builder
 app/game/dailyPool.ts           Daily word pool (tiered)
 app/utils/SoundEngine.ts        WAV synthesis
+assets/brand/polywords-logo.png Production Home logo layer
+assets/home/home-hero-bg.png    Production Home cinematic background layer
 tools/content/mask-rewriter     Local-only content rewrite/audit tool; never wire into player app
 ```
 
