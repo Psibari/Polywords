@@ -21,7 +21,6 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
-import { playCorrectSwipe, playShatter } from '../utils/SoundEngine';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
@@ -192,7 +191,6 @@ export function SwipeMask({
       } else {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
-      playCorrectSwipe();
       RNAnimated.timing(bgAnim, { toValue: 0.5, duration: 80, useNativeDriver: false }).start();
 
       const currentOffsetX = translateX.value;
@@ -329,7 +327,6 @@ export function SwipeMask({
     if (s === 'trap-caught') {
       exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
-      playShatter();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {

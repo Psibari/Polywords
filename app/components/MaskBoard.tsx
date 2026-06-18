@@ -6,7 +6,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -32,7 +31,11 @@ const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
 const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
-const HUD_CONTENT_OFFSET = 72;
+const HERO_CENTER_RATIO = 0.245;
+const TILE_CENTER_RATIO = 0.46;
+const HERO_ZONE_H = 138;
+const HERO_ZONE_BOSS_H = 150;
+const TILE_ZONE_H = TILE_H + 18;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -349,9 +352,6 @@ function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
 }
 
 export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Props) {
-  const { height: screenHeight } = useWindowDimensions();
-  const heroTop = clamp(screenHeight * 0.22, 165, 220) - HUD_CONTENT_OFFSET;
-  const tileTop = clamp(screenHeight * 0.50, 380, 460) - HUD_CONTENT_OFFSET;
   const store   = useGameStore();
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
@@ -402,10 +402,26 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // ── layout ───────────────────────────────────────────────────
   const [containerWidth, setContainerWidth] = useState(350);
+  const [boardHeight, setBoardHeight] = useState(0);
   const containerWidthRef                   = useRef(350);
   const containerRef  = useRef<View>(null);
   const wordZoneRef   = useRef<View>(null);
   const [wordScreenY, setWordScreenY] = useState(180);
+  const measuredBoardHeight = boardHeight || Dimensions.get('window').height;
+  const heroZoneHeight = isBoss ? HERO_ZONE_BOSS_H : HERO_ZONE_H;
+  const heroCenterY = measuredBoardHeight * HERO_CENTER_RATIO;
+  const heroTop = clamp(
+    heroCenterY - heroZoneHeight / 2,
+    12,
+    Math.max(12, measuredBoardHeight - heroZoneHeight - 12)
+  );
+  const tileCenterY = measuredBoardHeight * TILE_CENTER_RATIO;
+  const tileMinTop = heroTop + heroZoneHeight + 28;
+  const tileTop = clamp(
+    tileCenterY - TILE_ZONE_H / 2,
+    tileMinTop,
+    Math.max(tileMinTop, measuredBoardHeight - TILE_ZONE_H - 24)
+  );
 
   const visibleGridMasks = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
     .filter(m => !m.isHidden);
@@ -1754,9 +1770,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       style={[styles.container, { transform: [{ translateX: bossShakeX }] }]}
       ref={containerRef as any}
       onLayout={e => {
-        const w = e.nativeEvent.layout.width;
-        setContainerWidth(w);
-        containerWidthRef.current = w;
+        const { width, height } = e.nativeEvent.layout;
+        setContainerWidth(width);
+        setBoardHeight(height);
+        containerWidthRef.current = width;
       }}
     >
       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
