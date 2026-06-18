@@ -40,10 +40,11 @@ export default function BottomNav({ active, navigation }: BottomNavProps) {
       <View style={styles.dock}>
         <LinearGradient
           pointerEvents="none"
-          colors={['rgba(255,255,255,0.08)', 'rgba(123,45,139,0.12)', 'rgba(15,13,42,0.96)']}
-          locations={[0, 0.34, 1]}
+          colors={['rgba(255,255,255,0.10)', 'rgba(123,45,139,0.16)', 'rgba(5,4,18,0.98)']}
+          locations={[0, 0.38, 1]}
           style={styles.dockSheen}
         />
+        <View pointerEvents="none" style={styles.dockLowerShade} />
         {tabs.map(tab => {
           const isActive = tab.key === active;
           const isPlay = tab.key === 'Play';
@@ -78,11 +79,11 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   dock: {
-    minHeight: 64,
-    borderRadius: 22,
+    minHeight: 66,
+    borderRadius: 24,
     backgroundColor: 'rgba(15,13,42,0.98)',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.68)',
+    borderColor: 'rgba(193,136,255,0.20)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -90,13 +91,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     overflow: 'hidden',
     shadowColor: '#7B2D8B',
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 10,
+    shadowOpacity: 0.36,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 12,
   },
   dockSheen: {
     ...StyleSheet.absoluteFillObject,
+  },
+  dockLowerShade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 24,
+    backgroundColor: 'rgba(0,0,0,0.18)',
   },
   tab: {
     flex: 1,
@@ -107,19 +116,19 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   activeTab: {
-    backgroundColor: 'rgba(245,200,66,0.14)',
+    backgroundColor: 'rgba(245,200,66,0.16)',
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.38)',
+    borderColor: 'rgba(245,200,66,0.46)',
     shadowColor: '#F5C842',
-    shadowOpacity: 0.30,
-    shadowRadius: 10,
+    shadowOpacity: 0.42,
+    shadowRadius: 13,
     shadowOffset: { width: 0, height: 0 },
   },
   playTab: {
     flex: 1.08,
-    backgroundColor: 'rgba(123,45,139,0.20)',
+    backgroundColor: 'rgba(123,45,139,0.16)',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.62)',
+    borderColor: 'rgba(123,45,139,0.46)',
   },
   pressed: {
     opacity: 0.82,
@@ -141,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(245,200,66,0.62)',
   },
   tabLabel: {
-    color: 'rgba(196,185,218,0.68)',
+    color: 'rgba(196,185,218,0.60)',
     fontFamily: FONTS.tileCopy,
     fontSize: 11,
   },

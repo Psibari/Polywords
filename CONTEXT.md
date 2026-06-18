@@ -346,6 +346,7 @@ app/game/dailyPool.ts           Daily word pool (tiered)
 app/utils/SoundEngine.ts        WAV synthesis
 assets/brand/polywords-logo.png Production Home logo layer
 assets/home/home-hero-bg.png    Production Home cinematic background layer
+app/screens/HomeScreen.tsx      Home lobby: asset-layered jungle-neon menu with premium glass/gold controls
 tools/content/mask-rewriter     Local-only content rewrite/audit tool; never wire into player app
 ```
 

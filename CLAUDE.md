@@ -1223,6 +1223,7 @@ Current implementation:
 39. Visible meaning-card deck stack restore — visual-only under-cards, top card remains interactive (Patch 32E-STACK complete)
 40. Visual recovery — visible deck lips, solid hero foreground, Daily readable foreground text (Patch 32E-FIX complete)
 41. Home production asset lobby — branded logo image, jungle-neon background layer, glossy Play/card/nav polish (Patch 32F complete)
+42. Home polish pass 2 — premium glass copy plate, dimensional Play button, deeper mode cards/nav (Patch 32G complete)
 
 ---
 

@@ -109,6 +109,11 @@ export default function HomeScreen({ navigation }: Props) {
                 accessibilityLabel="POLYWORDS"
               />
               <View style={styles.copyPlate}>
+                <LinearGradient
+                  pointerEvents="none"
+                  colors={['rgba(255,255,255,0.07)', 'rgba(123,45,139,0.10)', 'rgba(15,13,42,0.02)']}
+                  style={styles.copySheen}
+                />
                 <Text style={styles.logoSlogan}>WORDS HAVE MEANING...SSSSS</Text>
                 <Text style={styles.storyLine}>Polly stole the meanings. Take them back.</Text>
               </View>
@@ -122,6 +127,7 @@ export default function HomeScreen({ navigation }: Props) {
                   style={styles.playButton}
                 >
                   <View style={styles.playInnerGlow} />
+                  <View style={styles.playBottomShade} />
                   <Text style={styles.playLabel}>PLAY</Text>
                   <Text style={styles.playSubcopy}>Enter the arena</Text>
                 </LinearGradient>
@@ -145,7 +151,9 @@ export default function HomeScreen({ navigation }: Props) {
                   style={styles.cardSheen}
                 />
                 <View style={styles.cardHeader}>
-                  <View style={[styles.cardMark, styles.dailyMark]} />
+                  <View style={[styles.modeIcon, styles.dailyIcon]}>
+                    <View style={[styles.modeIconCore, styles.dailyIconCore]} />
+                  </View>
                   <Text style={styles.cardEyebrow}>DAILY #{challengeNumber}</Text>
                 </View>
                 {alreadyPlayed ? (
@@ -174,7 +182,9 @@ export default function HomeScreen({ navigation }: Props) {
                   style={styles.cardSheen}
                 />
                 <View style={styles.cardHeader}>
-                  <View style={[styles.cardMark, styles.vaultMark]} />
+                  <View style={[styles.modeIcon, styles.vaultIcon]}>
+                    <View style={[styles.modeIconCore, styles.vaultIconCore]} />
+                  </View>
                   <Text style={styles.cardEyebrow}>PLAYER ARCHIVE</Text>
                 </View>
                 <Text style={styles.cardTitle}>WORD VAULT</Text>
@@ -189,7 +199,9 @@ export default function HomeScreen({ navigation }: Props) {
                 style={styles.cardSheen}
               />
               <View style={styles.cardHeader}>
-                <View style={[styles.cardMark, styles.roseMark]} />
+                <View style={[styles.modeIcon, styles.lockedIcon]}>
+                  <View style={[styles.modeIconCore, styles.lockedIconCore]} />
+                </View>
                 <Text style={styles.cardEyebrow}>LOCKED</Text>
               </View>
               <Text style={styles.cardTitle}>Continue Run</Text>
@@ -220,14 +232,14 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 24,
+    paddingTop: 14,
+    paddingBottom: 22,
   },
   hero: {
-    minHeight: 330,
+    minHeight: 318,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: 34,
+    paddingTop: 28,
   },
   logoGlow: {
     position: 'absolute',
@@ -249,16 +261,24 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
   },
   copyPlate: {
-    marginTop: -4,
+    marginTop: -8,
     width: '100%',
     maxWidth: 380,
-    borderRadius: 18,
-    backgroundColor: 'rgba(15,13,42,0.48)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(8,6,26,0.66)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: 'rgba(193,136,255,0.18)',
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
+    overflow: 'hidden',
+    shadowColor: '#7B2D8B',
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  copySheen: {
+    ...StyleSheet.absoluteFillObject,
   },
   logoSlogan: {
     color: '#FFFFFF',
@@ -271,8 +291,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   storyLine: {
-    marginTop: 8,
-    color: 'rgba(255,255,255,0.82)',
+    marginTop: 6,
+    color: 'rgba(255,255,255,0.80)',
     fontFamily: FONTS.tileCopy,
     fontSize: 14,
     lineHeight: 19,
@@ -289,37 +309,48 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   playWrap: {
-    marginTop: -4,
+    marginTop: 0,
     marginHorizontal: 10,
     shadowColor: '#F5C842',
-    shadowOpacity: 0.42,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 10,
+    shadowOpacity: 0.58,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 14,
   },
   playButtonShell: {
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.38)',
-    backgroundColor: 'rgba(245,200,66,0.24)',
+    borderRadius: 27,
+    borderWidth: 2,
+    borderColor: 'rgba(255,244,175,0.46)',
+    backgroundColor: 'rgba(245,200,66,0.30)',
     overflow: 'hidden',
   },
   playButton: {
-    minHeight: 88,
-    borderRadius: 25,
+    minHeight: 90,
+    borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.20)',
+    borderTopColor: 'rgba(255,255,255,0.42)',
+    borderLeftColor: 'rgba(255,255,255,0.26)',
+    borderRightColor: 'rgba(93,54,8,0.28)',
+    borderBottomColor: 'rgba(77,44,7,0.46)',
   },
   playInnerGlow: {
     position: 'absolute',
-    left: 22,
-    right: 22,
-    top: 8,
-    height: 22,
+    left: 20,
+    right: 20,
+    top: 7,
+    height: 24,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.28)',
+    backgroundColor: 'rgba(255,255,255,0.34)',
+  },
+  playBottomShade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 30,
+    backgroundColor: 'rgba(76,43,5,0.16)',
   },
   pressed: {
     opacity: 0.84,
@@ -343,41 +374,42 @@ const styles = StyleSheet.create({
   cardGrid: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 18,
+    marginTop: 16,
   },
   destinationCard: {
     flex: 1,
-    minHeight: 142,
+    minHeight: 140,
     borderRadius: 18,
-    backgroundColor: 'rgba(15,13,42,0.86)',
+    backgroundColor: 'rgba(7,5,24,0.88)',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.64)',
-    padding: 16,
+    borderColor: 'rgba(123,45,139,0.72)',
+    padding: 15,
     justifyContent: 'space-between',
     overflow: 'hidden',
     shadowColor: '#7B2D8B',
-    shadowOpacity: 0.34,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
+    shadowOpacity: 0.42,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
   },
   dailyCard: {
-    borderColor: 'rgba(123,45,139,0.82)',
-  },
-  dailyMark: {
-    backgroundColor: '#7B2D8B',
+    borderColor: 'rgba(245,200,66,0.36)',
+    shadowColor: '#F5C842',
+    shadowOpacity: 0.22,
   },
   vaultCard: {
-    borderColor: 'rgba(245,200,66,0.46)',
+    borderColor: 'rgba(123,45,139,0.86)',
+    shadowColor: '#7B2D8B',
   },
   continueCard: {
-    minHeight: 112,
+    minHeight: 104,
     marginTop: 12,
-    borderColor: 'rgba(155,45,107,0.44)',
-    shadowOpacity: 0.20,
+    backgroundColor: 'rgba(7,5,24,0.66)',
+    borderColor: 'rgba(169,154,196,0.18)',
+    shadowOpacity: 0.10,
   },
   disabledCard: {
-    opacity: 0.70,
+    opacity: 0.60,
   },
   cardSheen: {
     ...StyleSheet.absoluteFillObject,
@@ -387,23 +419,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  cardMark: {
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: '#7B2D8B',
-    shadowColor: '#7B2D8B',
-    shadowOpacity: 0.9,
-    shadowRadius: 8,
+  modeIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  modeIconCore: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+  dailyIcon: {
+    backgroundColor: 'rgba(245,200,66,0.13)',
+    borderColor: 'rgba(245,200,66,0.46)',
+    shadowColor: '#F5C842',
+    shadowOpacity: 0.46,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },
-  vaultMark: {
+  dailyIconCore: {
     backgroundColor: '#F5C842',
-    shadowColor: '#F5C842',
   },
-  roseMark: {
+  vaultIcon: {
+    backgroundColor: 'rgba(123,45,139,0.26)',
+    borderColor: 'rgba(245,200,66,0.26)',
+    shadowColor: '#7B2D8B',
+    shadowOpacity: 0.62,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  vaultIconCore: {
+    backgroundColor: '#7B2D8B',
+  },
+  lockedIcon: {
+    backgroundColor: 'rgba(155,45,107,0.10)',
+    borderColor: 'rgba(169,154,196,0.20)',
+  },
+  lockedIconCore: {
     backgroundColor: '#9B2D6B',
-    shadowColor: '#9B2D6B',
+    opacity: 0.58,
   },
   cardEyebrow: {
     color: 'rgba(255,255,255,0.68)',
@@ -417,7 +474,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.hud,
     fontSize: 17,
     letterSpacing: 1,
-    marginTop: 18,
+    marginTop: 16,
     textShadowColor: 'rgba(123,45,139,0.80)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
