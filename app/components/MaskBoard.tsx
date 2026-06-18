@@ -25,7 +25,7 @@ import { playSfx } from '../audio/sfx';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
-const TILE_H     = 148;
+const TILE_H     = 108;
 const GATE_H     = 64;
 const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
@@ -2536,16 +2536,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 62,
     paddingBottom: 26,
     minHeight: 0,
   },
   tileStackArea: {
     width: '100%',
-    minHeight: TILE_H + 10,
+    minHeight: TILE_H + 16,
     justifyContent: 'flex-start',
     alignItems: 'center',
     position: 'relative',
-    paddingTop: 4,
+    paddingTop: 0,
     overflow: 'visible',
   },
   tileStack: {
@@ -2559,8 +2560,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     alignItems: 'center',
-    minHeight: TILE_H + 14,
-    paddingBottom: 12,
+    minHeight: TILE_H + 18,
+    paddingBottom: 14,
     overflow: 'visible',
   },
   deckTopCardSlot: {

@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, {
@@ -78,6 +79,9 @@ export function SwipeMask({
   splitTextColor = '#FFFFFF',
   splitBackgroundColor,
 }: Props) {
+  const { width: screenWidth } = useWindowDimensions();
+  const cardWidth = Math.min(screenWidth - 56, 340);
+  const cardHeight = Math.min(Math.max(tileHeight, 96), 124);
 
   // ── UI state ──────────────────────────────────────────────────
   const [flashRed, setFlashRed] = useState(false);
@@ -386,10 +390,10 @@ export function SwipeMask({
     ],
     opacity:     tileOpacity.value,
     borderColor: isCorrectSV.value === 1
-      ? 'rgba(255,255,255,0.5)'
+      ? 'rgba(245,200,66,0.72)'
       : isSpecialSplit
         ? splitBorderColor
-        : `rgba(255,255,255,${borderOpacityVal.value})`,
+        : `rgba(123,45,139,${Math.max(0.42, borderOpacityVal.value)})`,
   }));
 
   // ── PanResponder ──────────────────────────────────────────────
@@ -508,6 +512,7 @@ export function SwipeMask({
     <RNAnimated.View
       style={{
         width: '100%',
+        alignItems: 'center',
         overflow: 'visible',
         opacity: entryOpacity,
         transform: [{ translateY: entryTransY }, { scale: entryScale }],
@@ -515,11 +520,21 @@ export function SwipeMask({
     >
       <RNAnimated.View
         ref={outerRef}
-        style={{ height: outerHeightAnim, marginTop: outerMarginTopAnim, overflow: 'visible' }}
+        style={{
+          width: isSpecialSplit ? '100%' : cardWidth,
+          alignItems: 'center',
+          height: outerHeightAnim,
+          marginTop: outerMarginTopAnim,
+          overflow: 'visible',
+        }}
       >
         {/* Main animated tile — Reanimated for transforms/opacity (native) */}
         <Animated.View
-          style={[isSpecialSplit ? styles.splitTile : styles.tile, tileAnimStyle]}
+          style={[
+            isSpecialSplit ? styles.splitTile : styles.tile,
+            !isSpecialSplit && { width: cardWidth, height: cardHeight },
+            tileAnimStyle,
+          ]}
           onLayout={(e: LayoutChangeEvent) => {
             tileLayoutRef.current = {
               width:  e.nativeEvent.layout.width,
@@ -557,7 +572,7 @@ export function SwipeMask({
               ]}
               numberOfLines={2}
               adjustsFontSizeToFit={true}
-              minimumFontScale={0.65}
+              minimumFontScale={isSpecialSplit ? 0.65 : 0.8}
               >
               {mask.phrase}
             </Text>
@@ -583,38 +598,37 @@ export function SwipeMask({
 
 const styles = StyleSheet.create({
   tile: {
-    borderRadius: 26,
-    minHeight: 148,
-    width: '100%',
+    borderRadius: 24,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderWidth: 2,
+    paddingHorizontal: 3,
+    paddingVertical: 3,
+    borderWidth: 1.5,
     // borderColor driven by Reanimated (tileAnimStyle)
     shadowColor:   '#000000',
-    shadowOffset:  { width: 0, height: 18 },
-    shadowRadius:  30,
-    shadowOpacity: 0.68,
+    shadowOffset:  { width: 0, height: 12 },
+    shadowRadius:  20,
+    shadowOpacity: 0.5,
     elevation: 14,
     overflow: 'hidden',
   },
   phrasePanel: {
     width: '100%',
-    borderRadius: 18,
+    flex: 1,
+    borderRadius: 21,
     alignItems: 'stretch',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 15,
-    backgroundColor: 'rgba(3,2,16,0.54)',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(3,2,16,0.62)',
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.12)',
+    borderColor: 'rgba(245,200,66,0.16)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 12,
     shadowOpacity: 0.52,
-    overflow: 'visible',
+    overflow: 'hidden',
     zIndex: 2,
   },
   checkmark: {
@@ -627,7 +641,7 @@ const styles = StyleSheet.create({
     zIndex: 3,
   },
   phrase: {
-    fontSize: 27,
+    fontSize: 24,
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -635,7 +649,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     flexShrink: 1,
-    flexWrap: 'wrap',
+    lineHeight: 27,
     width: '100%',
     textShadowColor: 'rgba(0,0,0,0.76)',
     textShadowOffset: { width: 0, height: 1 },
