@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
-import { HeartbeatBackground } from '../components/HeartbeatBackground';
 import { MaskBoard } from '../components/MaskBoard';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
@@ -669,11 +668,15 @@ function GameDirector({ navigation }: { navigation: any }) {
   }
 
   const isDone      = game.status === 'complete' || game.status === 'gameOver';
-  const screenBg = '#1A1830';
-
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: screenBg }]}>
-      <HeartbeatBackground />
+    <SafeAreaView style={styles.screen}>
+      <ImageBackground
+        source={require('../../assets/home/home-hero-bg.png')}
+        resizeMode="cover"
+        style={styles.backgroundImage}
+      >
+        <View pointerEvents="none" style={styles.backgroundOverlay} />
+      </ImageBackground>
       {!isDone && <TopBar />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
@@ -757,6 +760,13 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#1A1830',
+  },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  backgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(9,7,30,0.66)',
   },
   effectsOverlay: {
     position: 'absolute',
