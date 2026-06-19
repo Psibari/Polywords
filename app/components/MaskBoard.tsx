@@ -31,15 +31,6 @@ const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
 const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
-const HERO_CENTER_RATIO = 0.245;
-const TILE_CENTER_RATIO = 0.46;
-const HERO_ZONE_H = 138;
-const HERO_ZONE_BOSS_H = 150;
-const TILE_ZONE_H = TILE_H + 18;
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
 
 const CLIP_PATHS = [
   'polygon(0 0,100% 22%,72% 100%)',
@@ -402,26 +393,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // ── layout ───────────────────────────────────────────────────
   const [containerWidth, setContainerWidth] = useState(350);
-  const [boardHeight, setBoardHeight] = useState(0);
   const containerWidthRef                   = useRef(350);
   const containerRef  = useRef<View>(null);
   const wordZoneRef   = useRef<View>(null);
   const [wordScreenY, setWordScreenY] = useState(180);
-  const measuredBoardHeight = boardHeight || Dimensions.get('window').height;
-  const heroZoneHeight = isBoss ? HERO_ZONE_BOSS_H : HERO_ZONE_H;
-  const heroCenterY = measuredBoardHeight * HERO_CENTER_RATIO;
-  const heroTop = clamp(
-    heroCenterY - heroZoneHeight / 2,
-    12,
-    Math.max(12, measuredBoardHeight - heroZoneHeight - 12)
-  );
-  const tileCenterY = measuredBoardHeight * TILE_CENTER_RATIO;
-  const tileMinTop = heroTop + heroZoneHeight + 28;
-  const tileTop = clamp(
-    tileCenterY - TILE_ZONE_H / 2,
-    tileMinTop,
-    Math.max(tileMinTop, measuredBoardHeight - TILE_ZONE_H - 24)
-  );
 
   const visibleGridMasks = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
     .filter(m => !m.isHidden);
@@ -1770,15 +1745,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       style={[styles.container, { transform: [{ translateX: bossShakeX }] }]}
       ref={containerRef as any}
       onLayout={e => {
-        const { width, height } = e.nativeEvent.layout;
-        setContainerWidth(width);
-        setBoardHeight(height);
-        containerWidthRef.current = width;
+        const w = e.nativeEvent.layout.width;
+        setContainerWidth(w);
+        containerWidthRef.current = w;
       }}
     >
       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
       <View
-        style={[styles.wordZone, isBoss && styles.wordZoneBoss, { top: heroTop }]}
+        style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
         pointerEvents="none"
         ref={wordZoneRef as any}
         onLayout={e => {
@@ -1993,7 +1967,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       </View>
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
-      <View style={[styles.gridWrap, { top: tileTop }]}>
+      <View style={styles.gridWrap}>
         <View style={styles.tileStackArea}>
         {showBoardContent && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
@@ -2476,7 +2450,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     backgroundColor: 'transparent',
     overflow: 'hidden',
-    position: 'relative',
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
@@ -2487,9 +2460,8 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     paddingTop: 6,
     paddingBottom: 10,
-    position: 'absolute',
-    left: 0,
-    right: 0,
+    position: 'relative',
+    marginTop: 4,
   },
   wordZoneBoss: {
     height: 150,
@@ -2561,11 +2533,10 @@ const styles = StyleSheet.create({
   },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
+    flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 62,
     paddingBottom: 26,
     minHeight: 0,
   },
