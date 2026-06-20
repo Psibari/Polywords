@@ -9,14 +9,12 @@ import {
   View,
 } from 'react-native';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
 import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
-import { GhostTile } from './GhostTile';
 import { ScoreFloat } from './ScoreFloat';
 import PollySprite from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
@@ -26,7 +24,6 @@ import { playSfx } from '../audio/sfx';
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
 const TILE_H     = 108;
-const GATE_H     = 64;
 const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
 const FINAL_TILE_RELEASE_OFFSET_Y = 190;
@@ -45,15 +42,6 @@ const DECK_BACKING_BORDER_COLORS = [
   'rgba(245,200,66,0.10)',
   'rgba(255,255,255,0.05)',
 ] as const;
-
-const CLIP_PATHS = [
-  'polygon(0 0,100% 22%,72% 100%)',
-  'polygon(0 18%,100% 0,100% 78%,30% 100%)',
-  'polygon(10% 0,100% 40%,55% 100%,0 70%)',
-  'polygon(0 0,78% 0,100% 100%,20% 86%)',
-  'polygon(0 30%,60% 0,100% 64%,40% 100%)',
-] as const;
-void CLIP_PATHS; // clipPath not supported in RN — kept for reference
 
 type FloatEntry = { id: number; value: number; x: number; y: number; color: string };
 
@@ -334,7 +322,7 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
         </Text>
         <View style={styles.outcomeCopyBlock}>
           <Text style={styles.outcomeCopy}>Polly stole a meaning.</Text>
-          <Text style={styles.outcomeCopy}>Returns in 3 rounds.</Text>
+          <Text style={styles.outcomeCopy}>It'll be back.</Text>
         </View>
         {detail && <Text style={styles.hauntedDetail} numberOfLines={2}>{detail}</Text>}
         <Text style={styles.outcomeContinue}>CONTINUE</Text>
@@ -360,7 +348,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const store   = useGameStore();
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
-  const wordColor = '#F5C842'; // always gold
   const kicker    = eventKicker(step);
 
   // Stale-closure-safe refs
@@ -399,11 +386,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const ghost = store.runStartGhostWordIds.includes(step.word)
     ? store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
     : null;
-  const [ghostVisible, setGhostVisible] = useState(!!ghost);
-
-  useEffect(() => {
-    setGhostVisible(!!ghost);
-  }, [step.word, ghost?.wordId]);
 
   // ── layout ───────────────────────────────────────────────────
   const [containerWidth, setContainerWidth] = useState(350);
@@ -454,7 +436,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // ── find counts ──────────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
-  const totalReal  = realMasks.length;
   const foundCount = realMasks.filter(m => tileStates.get(m.id) === 'correct').length;
 
   // ── word absorption ──────────────────────────────────────────
@@ -677,7 +658,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // Gate phase
   const [gatePhase, setGatePhase] = useState<
-    'locked' | 'unlocking' | 'doorSplit' | 'tiles' | 'wrongFail' | 'mastered'
+    'locked' | 'tiles' | 'wrongFail' | 'mastered'
   >('locked');
 
   // Final tile states (replaces splitStates)
@@ -685,16 +666,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [releasedHiddenTileCount, setReleasedHiddenTileCount] = useState(0);
   const [landedHiddenTileCount, setLandedHiddenTileCount] = useState(0);
   const [failedHiddenTileId, setFailedHiddenTileId] = useState<string | null>(null);
-
-  // Gate animated values: transforms/opacity use native driver; border color stays non-native.
-  const gateScaleAnim       = useRef(new Animated.Value(1)).current;
-  const gateTranslateYAnim  = useRef(new Animated.Value(0)).current;
-  const gateBorderOpAnim    = useRef(new Animated.Value(0)).current;
-  const lockScaleAnim       = useRef(new Animated.Value(1)).current;
-  const lockRotAnim         = useRef(new Animated.Value(0)).current;
-  const doorLeftTransXAnim  = useRef(new Animated.Value(0)).current;
-  const doorRightTransXAnim = useRef(new Animated.Value(0)).current;
-  const doorsOpacityAnim    = useRef(new Animated.Value(1)).current;
 
   // Final tile drop (native: transform only)
   const splitTile1TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
@@ -732,9 +703,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [outcomeBonusLabel, setOutcomeBonusLabel] = useState<string | undefined>(undefined);
   const outcomeContinueRef = useRef<(() => void) | null>(null);
   const outcomeActiveRef = useRef(false);
-
-  // Gate ref for measuring rise distance
-  const gateViewRef = useRef<View>(null);
 
   // ── hesitation timers ─────────────────────────────────────────
   const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -791,17 +759,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       firePollyEvent('streakX10');
     }
   }, [store.game.streak]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Master Gate intro — fires once per player's lifetime ─────
-  useEffect(() => {
-    if (!hasHidden) return;
-    AsyncStorage.getItem('polywords_hasSeenGateIntro').then(val => {
-      if (val === null) {
-        AsyncStorage.setItem('polywords_hasSeenGateIntro', 'true').catch(() => {});
-        firePollyEvent('gateIntro');
-      }
-    }).catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset guards and animated values on new word
   useEffect(() => {
@@ -891,14 +848,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setLandedHiddenTileCount(0);
     setFailedHiddenTileId(null);
     setMasterStampVisible(false);
-    gateScaleAnim.setValue(1);
-    gateTranslateYAnim.setValue(0);
-    gateBorderOpAnim.setValue(0);
-    lockScaleAnim.setValue(1);
-    lockRotAnim.setValue(0);
-    doorLeftTransXAnim.setValue(0);
-    doorRightTransXAnim.setValue(0);
-    doorsOpacityAnim.setValue(1);
     splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
     finalBorder1Anim.setValue(0);
     masterHeroScale.setValue(1);
@@ -1175,26 +1124,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Gate sequence ─────────────────────────────────────────────
-
-  function triggerDoorSplit() {
-    setGatePhase('doorSplit');
-    playSfx('gateOpen');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-    const halfWidth = Dimensions.get('window').width / 2;
-
-    Animated.spring(doorLeftTransXAnim, {
-      toValue: -halfWidth, damping: 14, stiffness: 160, useNativeDriver: true,
-    }).start();
-    Animated.spring(doorRightTransXAnim, {
-      toValue: halfWidth, damping: 14, stiffness: 160, useNativeDriver: true,
-    }).start();
-    Animated.timing(doorsOpacityAnim, {
-      toValue: 0, duration: 200, useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) triggerFinalTilesDrop();
-    });
-  }
 
   function triggerFinalTilesDrop() {
     if (!hiddenRealMask || !hiddenTrapMask) return;
@@ -1505,47 +1434,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }, isBoss ? 4300 : 3450);
   }
 
-  function triggerGateUnlock() {
-    setGatePhase('unlocking');
-
-    lockScaleAnim.setValue(1);
-    lockRotAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(lockScaleAnim, { toValue: 1.4, duration: 150, useNativeDriver: true }),
-      Animated.timing(lockScaleAnim, { toValue: 1.0, duration: 150, useNativeDriver: true }),
-    ]).start();
-    Animated.timing(lockRotAnim, { toValue: -20, duration: 300, useNativeDriver: true }).start();
-
-    Animated.timing(gateBorderOpAnim, { toValue: 1, duration: 400, useNativeDriver: false }).start();
-
-    Animated.spring(gateScaleAnim, {
-      toValue: 1.15, damping: 10, stiffness: 120, useNativeDriver: true,
-    }).start();
-
-    setTimeout(() => {
-      const cont = containerRef.current;
-      const gate = gateViewRef.current;
-      if (cont && gate) {
-        (cont as any).measure((_cx: number, _cy: number, _cw: number, _ch: number, _cpx: number, cPageY: number) => {
-          (gate as any).measure((_gx: number, _gy: number, _gw: number, _gh: number, _gpx: number, gPageY: number) => {
-            const riseDistance = (cPageY + 84) - gPageY;
-            Animated.spring(gateTranslateYAnim, {
-              toValue: riseDistance, damping: 12, stiffness: 100, useNativeDriver: true,
-            }).start(({ finished }) => {
-              if (finished) triggerDoorSplit();
-            });
-          });
-        });
-      } else {
-        Animated.spring(gateTranslateYAnim, {
-          toValue: -350, damping: 12, stiffness: 100, useNativeDriver: true,
-        }).start(({ finished }) => {
-          if (finished) triggerDoorSplit();
-        });
-      }
-    }, 100);
-  }
-
   function triggerWordExit(onComplete: () => void, perfect?: boolean) {
     badgeOpacity.setValue(0);
     underlineProgress.setValue(0);
@@ -1631,10 +1519,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
     if (isBoss) {
       if (perfect && hasHidden) {
-        // Perfect boss clear — open the gate
         gateTriggeredRef.current = true;
         firePollyEvent('allMasksFound');
-        triggerGateUnlock();
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        setTimeout(() => {
+          triggerFinalTilesDrop();
+        }, 600);
       } else {
         // Boss escaped — wrong swipes closed the gate
         // Silent: no overlay, no ghost, just advance
@@ -1748,25 +1638,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     }
   }
 
-  // ── ghost tile handlers ──────────────────────────────────────
-  function handleGhostSwipeUp() {
-    if (wordOutcome !== 'none') return;
-    ghostJudgedCorrectRef.current = true;
-    store.clearGhost(step.word);
-    store.setGhostRevenge({ result: 'correct', word: step.word, meaningText: '' });
-    store.addBonusScore(250);
-    spawnFloatAtSplit(250, '#F5C842');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    firePollyEvent('ghostFoundLate');
-  }
-
-  function handleGhostSwipeRight() {
-    if (wordOutcome !== 'none') return;
-    store.setGhostRevenge({ result: 'wrong', word: step.word, meaningText: '' });
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    firePollyEvent('ghostDissolved');
-  }
-
   // ── render ────────────────────────────────────────────────────
   const wordCoreRotate = goldSeedRotate.interpolate({
     inputRange: [0, 1],
@@ -1776,12 +1647,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const vaultBloomX = Math.max(28, containerWidth - 86);
   const mysteryMask = mysteryIsRealRef.current ? hiddenRealMask : hiddenTrapMask;
   const inputLocked = wordOutcome !== 'none';
-  const showMasterGateShell =
-    isBoss &&
-    hasHidden &&
-    gatePhase !== 'tiles' &&
-    gatePhase !== 'wrongFail' &&
-    gatePhase !== 'mastered';
 
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
   const wordEntryTiltDeg = wordEntryTilt.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-5deg', '0deg', '5deg'] });
@@ -2127,96 +1992,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           </Animated.View>
         )}
 
-        {/* ── MASTER GATE — bottom of tile stack ─────────── */}
         </View>
-
-        {showMasterGateShell && (
-          <View style={styles.gateArea}>
-            <Animated.View
-              ref={gateViewRef as any}
-              style={[
-                styles.masterGate,
-                {
-                  borderColor: gateBorderOpAnim.interpolate({
-                  inputRange: [0, 1],
-                    outputRange: ['rgba(123,45,139,0.38)', 'rgba(245,200,66,0.95)'],
-                  }),
-                  zIndex: gatePhase === 'locked' ? 0 : 100,
-                  transform: [
-                    { scale: gateScaleAnim },
-                    { translateY: gateTranslateYAnim },
-                  ],
-                },
-              ]}
-            >
-              <View style={styles.gateBackPlate} pointerEvents="none" />
-              <View style={styles.gateInnerShadow} pointerEvents="none" />
-
-              {/* Left door half */}
-              <Animated.View style={[
-                styles.gateDoorHalf,
-                styles.gateDoorLeft,
-                {
-                  transform: [{ translateX: doorLeftTransXAnim }],
-                  opacity: doorsOpacityAnim,
-                },
-              ]}>
-                <View style={styles.gateDoorTopShade} pointerEvents="none" />
-                {[0, 1, 2].map(i => (
-                  <View
-                    key={`left-bar-${i}`}
-                    pointerEvents="none"
-                    style={[styles.gateBar, { left: `${24 + i * 24}%` }]}
-                  />
-                ))}
-                <View style={styles.gateCenterRibLeft} pointerEvents="none" />
-              </Animated.View>
-              {/* Right door half */}
-              <Animated.View style={[
-                styles.gateDoorHalf,
-                styles.gateDoorRight,
-                {
-                  transform: [{ translateX: doorRightTransXAnim }],
-                  opacity: doorsOpacityAnim,
-                },
-              ]}>
-                <View style={styles.gateDoorTopShade} pointerEvents="none" />
-                {[0, 1, 2].map(i => (
-                  <View
-                    key={`right-bar-${i}`}
-                    pointerEvents="none"
-                    style={[styles.gateBar, { left: `${18 + i * 24}%` }]}
-                  />
-                ))}
-                <View style={styles.gateCenterRibRight} pointerEvents="none" />
-              </Animated.View>
-
-              <View style={styles.gateBoltLeft} pointerEvents="none" />
-              <View style={styles.gateBoltRight} pointerEvents="none" />
-
-              {/* Content: custom lock + text */}
-              <View style={styles.gateContent} pointerEvents="none">
-                <Animated.View style={{
-                  transform: [
-                    { scale: lockScaleAnim },
-                    { rotate: lockRotAnim.interpolate({
-                      inputRange: [-20, 0],
-                      outputRange: ['-20deg', '0deg'],
-                    })},
-                  ],
-                }}>
-                  <View style={styles.gateLock}>
-                    <View style={styles.gateLockShackle} />
-                    <View style={styles.gateLockBody}>
-                      <View style={styles.gateLockKeyhole} />
-                    </View>
-                  </View>
-                </Animated.View>
-                <Text style={styles.gateLabel}>MASTER THE WORD</Text>
-              </View>
-            </Animated.View>
-          </View>
-        )}
       </View>
 
       {/* Shard burst system */}
@@ -2680,235 +2456,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 7,
   },
-  hauntBirthTile: {
-    position: 'absolute',
-    top: (FINAL_TILE_H + FINAL_TILE_GAP) / 2 - 8,
-    left: 0,
-    right: 0,
-    height: 92,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(123,45,139,0.92)',
-    backgroundColor: '#0F0D2A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.32,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  hauntBirthHaze: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    top: 10,
-    bottom: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(155,45,107,0.28)',
-    backgroundColor: 'rgba(123,45,139,0.12)',
-  },
-  hauntBirthTitle: {
-    color: '#FFFFFF',
-    fontSize: FONT_SIZES.tileCopy,
-    fontFamily: FONTS.label,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textAlign: 'center',
-  },
-  hauntBirthFrom: {
-    marginTop: 4,
-    color: 'rgba(255,255,255,0.82)',
-    fontSize: FONT_SIZES.ghostSubLabel,
-    fontFamily: FONTS.label,
-    letterSpacing: 0,
-    textAlign: 'center',
-  },
-  hauntBirthCopy: {
-    marginTop: 8,
-    color: '#9B2D6B',
-    fontSize: FONT_SIZES.progressLabel,
-    fontFamily: FONTS.label,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  gateArea: {
-    width: '88%',
-    alignSelf: 'center',
-    paddingTop: 18,
-    position: 'relative',
-  },
-  masterGate: {
-    height: GATE_H,
-    marginTop: TILE_GAP,
-    borderRadius: 18,
-    borderWidth: 2,
-    backgroundColor: 'rgba(8,6,30,0.96)',
-    overflow: 'visible',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#F5C842',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  gateBackPlate: {
-    position: 'absolute',
-    left: 5,
-    right: 5,
-    top: 5,
-    bottom: 5,
-    borderRadius: 14,
-    backgroundColor: '#0F0D2A',
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.18)',
-  },
-  gateInnerShadow: {
-    position: 'absolute',
-    left: 10,
-    right: 10,
-    top: 13,
-    bottom: 10,
-    borderRadius: 4,
-    backgroundColor: 'rgba(7,6,28,0.54)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  gateDoorHalf: {
-    position: 'absolute',
-    top: 3,
-    bottom: 3,
-    width: '50%',
-    backgroundColor: '#0F0D2A',
-    borderColor: 'rgba(123,45,139,0.22)',
-    overflow: 'hidden',
-    zIndex: 1,
-  },
-  gateDoorLeft: {
-    left: 3,
-    borderTopLeftRadius: 6,
-    borderBottomLeftRadius: 6,
-    borderRightWidth: 1,
-  },
-  gateDoorRight: {
-    right: 3,
-    borderTopRightRadius: 6,
-    borderBottomRightRadius: 6,
-    borderLeftWidth: 1,
-  },
-  gateDoorTopShade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 14,
-    backgroundColor: 'rgba(123,45,139,0.10)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(123,45,139,0.10)',
-  },
-  gateBar: {
-    position: 'absolute',
-    top: 8,
-    bottom: 8,
-    width: 2,
-    borderRadius: 2,
-    backgroundColor: 'rgba(123,45,139,0.34)',
-  },
-  gateCenterRibLeft: {
-    position: 'absolute',
-    right: -1,
-    top: 5,
-    bottom: 5,
-    width: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(123,45,139,0.42)',
-  },
-  gateCenterRibRight: {
-    position: 'absolute',
-    left: -1,
-    top: 5,
-    bottom: 5,
-    width: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(123,45,139,0.42)',
-  },
-  gateBoltLeft: {
-    position: 'absolute',
-    left: 9,
-    top: 8,
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: 'rgba(123,45,139,0.58)',
-    zIndex: 2,
-  },
-  gateBoltRight: {
-    position: 'absolute',
-    right: 9,
-    top: 8,
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: 'rgba(123,45,139,0.58)',
-    zIndex: 2,
-  },
-  gateContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    zIndex: 3,
-  },
-  gateLock: {
-    width: 17,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  gateLockShackle: {
-    position: 'absolute',
-    top: 0,
-    width: 12,
-    height: 12,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    borderWidth: 2,
-    borderBottomWidth: 0,
-    borderColor: 'rgba(123,45,139,0.88)',
-  },
-  gateLockBody: {
-    width: 17,
-    height: 13,
-    borderRadius: 3,
-    backgroundColor: 'rgba(123,45,139,0.88)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gateLockKeyhole: {
-    width: 3,
-    height: 6,
-    borderRadius: 2,
-    backgroundColor: '#0F0D2A',
-  },
-  gateLabel: {
-    fontFamily: FONTS.wordDisplay,
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.76)',
-    letterSpacing: 2,
-    textAlign: 'center',
-    textShadowColor: 'rgba(123,45,139,0.45)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-  splitZone: {
-    marginTop: TILE_GAP,
-  },
   outcomeOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 300,
@@ -3056,7 +2603,7 @@ const styles = StyleSheet.create({
   speechText: {
     color: 'rgba(255,255,255,0.88)',
     fontSize: 13,
-    fontFamily: FONTS.label,
+    fontFamily: FONTS.polly,
     letterSpacing: 0.3,
   },
   // ── Haunt system ─────────────────────────────────────────────
