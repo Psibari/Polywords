@@ -31,6 +31,20 @@ const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
 const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
+const MAX_DECK_BACKING_CARDS = 4;
+const DECK_BACKING_OFFSET = 6;
+const DECK_BACKING_COLORS = [
+  'rgba(24,19,54,0.9)',
+  'rgba(20,16,48,0.84)',
+  'rgba(16,13,41,0.78)',
+  'rgba(12,10,34,0.72)',
+] as const;
+const DECK_BACKING_BORDER_COLORS = [
+  'rgba(123,45,139,0.34)',
+  'rgba(123,45,139,0.24)',
+  'rgba(245,200,66,0.10)',
+  'rgba(255,255,255,0.05)',
+] as const;
 
 const CLIP_PATHS = [
   'polygon(0 0,100% 22%,72% 100%)',
@@ -411,6 +425,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     : null;
   const deckSize     = remainingMaskIds.length;
   const nearMastery  = !isBoss && deckSize <= 2 && deckSize > 0;
+  const topMaskState = topMask ? tileStates.get(topMask.id) ?? 'idle' : 'idle';
+  const showBackingCards =
+    topMaskState === 'idle' || topMaskState === 'hidden' || topMaskState === 'revealed';
+  const backingCardCount =
+    topMask && showBackingCards
+      ? Math.min(MAX_DECK_BACKING_CARDS, Math.max(0, deckSize - 1))
+      : 0;
+  const backingCardWidth = Math.min(Math.max(containerWidth - 56, 0), 340);
 
   // Deck entrance animation (native: translateY / transform only)
   const deckSlamY    = useRef(new Animated.Value(-52)).current;
@@ -1974,11 +1996,34 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
               <View style={styles.deckWrap}>
+                {Array.from({ length: backingCardCount }, (_, index) => {
+                  const depth = backingCardCount - index;
+                  return (
+                    <Animated.View
+                      key={`deck-backing-${depth}`}
+                      pointerEvents="none"
+                      style={[
+                        styles.deckBackingCard,
+                        {
+                          top: depth * DECK_BACKING_OFFSET,
+                          width: backingCardWidth,
+                          backgroundColor: DECK_BACKING_COLORS[depth - 1],
+                          borderColor: DECK_BACKING_BORDER_COLORS[depth - 1],
+                          opacity: deckActiveOp,
+                          transform: [{ scale: 1 - depth * 0.006 }],
+                        },
+                      ]}
+                    />
+                  );
+                })}
                 {/* ── TOP CARD — interactive ── */}
-                <Animated.View style={{
-                  transform: [{ translateY: deckActiveY }, { rotate: deckActiveRotDeg }],
-                  opacity: deckActiveOp,
-                }}>
+                <Animated.View style={[
+                  styles.deckActiveCardLayer,
+                  {
+                    transform: [{ translateY: deckActiveY }, { rotate: deckActiveRotDeg }],
+                    opacity: deckActiveOp,
+                  },
+                ]}>
                 <View
                   ref={getTileRef(topMask.id)}
                   style={styles.deckTopCardSlot}
@@ -2563,6 +2608,23 @@ const styles = StyleSheet.create({
     minHeight: TILE_H + 18,
     paddingBottom: 14,
     overflow: 'visible',
+  },
+  deckBackingCard: {
+    position: 'absolute',
+    height: TILE_H,
+    borderRadius: 24,
+    borderWidth: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 1,
+    zIndex: 1,
+  },
+  deckActiveCardLayer: {
+    position: 'relative',
+    zIndex: 30,
+    elevation: 30,
   },
   deckTopCardSlot: {
     position: 'relative',
