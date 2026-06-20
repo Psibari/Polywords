@@ -2606,8 +2606,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 62,
-    paddingBottom: 26,
+    paddingTop: 84,
+    paddingBottom: 12,
     minHeight: 0,
   },
   tileStackArea: {
