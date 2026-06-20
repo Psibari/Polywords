@@ -442,6 +442,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const deckDeepY    = useRef(new Animated.Value(400)).current;
   const deckMidY     = useRef(new Animated.Value(400)).current;
   const deckActiveY  = useRef(new Animated.Value(400)).current;
+  const deckBackingY = useRef(new Animated.Value(28)).current;
+  const deckBackingOp = useRef(new Animated.Value(0)).current;
+  const deckEntranceHapticRef = useRef<string | null>(null);
   const deckDeepRot  = useRef(new Animated.Value(-4)).current;
   const deckMidRot   = useRef(new Animated.Value(3)).current;
   const deckActiveRot= useRef(new Animated.Value(-2)).current;
@@ -816,39 +819,53 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setRemainingMaskIds(freshIds);
     deckRedTint.setValue(0);
     deckSlamY.setValue(0);  // outer wrapper stays static
-    const CARD_DEAL = Easing.bezier(0.18, 1.10, 0.30, 1.00);
-    const cardDelay = isBoss ? 1200 : 80;
+    const CARD_DEAL = Easing.bezier(0.18, 1.04, 0.26, 1.00);
+    const CARD_SNAP = Easing.bezier(0.16, 0.95, 0.22, 1.00);
+    const cardDelay = isBoss ? 1200 : 520;
 
     // Reset all card values
     [deckDeepY, deckMidY, deckActiveY].forEach(v => v.setValue(400));
+    deckBackingY.setValue(28);
+    deckBackingOp.setValue(0);
     deckDeepRot.setValue(-4); deckMidRot.setValue(3); deckActiveRot.setValue(-2);
     [deckDeepOp, deckMidOp, deckActiveOp].forEach(v => v.setValue(0));
 
     // Deep card (back) — arrives first
     const slamTimer = setTimeout(() => {
       Animated.parallel([
-        Animated.timing(deckDeepY,  { toValue: 0, duration: 180, easing: CARD_DEAL, useNativeDriver: true }),
+        Animated.timing(deckBackingY, { toValue: 0, duration: 220, easing: CARD_DEAL, useNativeDriver: true }),
+        Animated.timing(deckBackingOp, { toValue: 1, duration: 120, useNativeDriver: true }),
+        Animated.timing(deckDeepY,  { toValue: 0, duration: 210, easing: CARD_DEAL, useNativeDriver: true }),
         Animated.timing(deckDeepRot,{ toValue: 0, duration: 180, useNativeDriver: true }),
-        Animated.timing(deckDeepOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
+        Animated.timing(deckDeepOp, { toValue: 1, duration: 100,  useNativeDriver: true }),
       ]).start();
 
       // Mid card — 90ms after deep
       setTimeout(() => {
         Animated.parallel([
-          Animated.timing(deckMidY,  { toValue: 0, duration: 180, easing: CARD_DEAL, useNativeDriver: true }),
-          Animated.timing(deckMidRot,{ toValue: 0, duration: 180, useNativeDriver: true }),
+          Animated.timing(deckMidY,  { toValue: 0, duration: 190, easing: CARD_DEAL, useNativeDriver: true }),
+          Animated.timing(deckMidRot,{ toValue: 0, duration: 190, useNativeDriver: true }),
           Animated.timing(deckMidOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
         ]).start();
-      }, 90);
+      }, 70);
 
       // Active card — 180ms after deep, heaviest haptic on land
       setTimeout(() => {
         Animated.parallel([
-          Animated.timing(deckActiveY,  { toValue: 0, duration: 200, easing: CARD_DEAL, useNativeDriver: true }),
-          Animated.timing(deckActiveRot,{ toValue: 0, duration: 200, useNativeDriver: true }),
+          Animated.sequence([
+            Animated.timing(deckActiveY, { toValue: -6, duration: 130, easing: CARD_SNAP, useNativeDriver: true }),
+            Animated.timing(deckActiveY, { toValue: 0, duration: 90, useNativeDriver: true }),
+          ]),
+          Animated.timing(deckActiveRot,{ toValue: 0, duration: 160, useNativeDriver: true }),
           Animated.timing(deckActiveOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
-        ]).start(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
-      }, 180);
+        ]).start(() => {
+          const deckEntranceKey = `${store.game.stepIndex}:${step.word}`;
+          if (deckEntranceHapticRef.current !== deckEntranceKey) {
+            deckEntranceHapticRef.current = deckEntranceKey;
+            Haptics.selectionAsync();
+          }
+        });
+      }, 120);
     }, cardDelay);
     bossShakeX.setValue(0);
     if (!isBoss) bossWordTranslateY.setValue(0);
@@ -1053,6 +1070,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       deckDeepY.setValue(0);    deckDeepRot.setValue(0);    deckDeepOp.setValue(1);
       deckMidY.setValue(0);     deckMidRot.setValue(0);     deckMidOp.setValue(1);
       deckActiveY.setValue(0);  deckActiveRot.setValue(0);  deckActiveOp.setValue(1);
+      deckBackingY.setValue(0); deckBackingOp.setValue(1);
 
       Animated.spring(bossWordTranslateY, {
         toValue: 0, tension: 280, friction: 6, useNativeDriver: false,
@@ -2016,8 +2034,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                           width: backingCardWidth,
                           backgroundColor: DECK_BACKING_COLORS[depth - 1],
                           borderColor: DECK_BACKING_BORDER_COLORS[depth - 1],
-                          opacity: deckActiveOp,
-                          transform: [{ scale: 1 - depth * 0.006 }],
+                          opacity: deckBackingOp,
+                          transform: [{ translateY: deckBackingY }, { scale: 1 - depth * 0.006 }],
                         },
                       ]}
                     />
