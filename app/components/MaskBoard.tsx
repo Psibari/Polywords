@@ -461,7 +461,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordEntryOpacity      = useRef(new Animated.Value(0)).current;
   const wordEntryScale        = useRef(new Animated.Value(0.85)).current;
   const wordEntryTranslateY   = useRef(new Animated.Value(0)).current;
+  const wordEntryTilt         = useRef(new Animated.Value(0)).current;
   const wordLockPulse         = useRef(new Animated.Value(1)).current;
+  const wordEntranceHapticRef = useRef<string | null>(null);
   const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const goldTextOpacity       = useRef(new Animated.Value(0)).current;
@@ -860,6 +862,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setBossWordColor('#F5C842');
     setBossShockwaveVisible(false);
     goldTextOpacity.setValue(0);
+    wordEntryTilt.setValue(0);
     wordRecoilY.setValue(0);
     wordRecoilScale.setValue(1);
     wordRedOpacity.setValue(0);
@@ -929,6 +932,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     if (isBoss) return;
     wordEntryOpacity.setValue(0);
     wordEntryScale.setValue(0.85);
+    wordEntryTranslateY.setValue(0);
+    wordEntryTilt.setValue(0);
+    wordLockPulse.setValue(1);
 
     if (isHaunt) {
       // Haunt entrance: double haptic + purple word tint + banner
@@ -953,66 +959,65 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         setHauntReady(true);
       }, 1400);
     } else {
-      // ── SLAM ENTRANCE ─────────────────────────────────────
+      // ── HERO LOCK-IN ENTRANCE ─────────────────────────────
       wordEntryOpacity.setValue(0);
-      wordEntryScale.setValue(1.42);
-      wordEntryTranslateY.setValue(-290);
+      wordEntryScale.setValue(0.96);
+      wordEntryTranslateY.setValue(-54);
+      wordEntryTilt.setValue(-1);
       wordLockPulse.setValue(1);
 
-      const SLAM = Easing.bezier(0.12, 0.90, 0.10, 1.06);
+      const ZIP = Easing.bezier(0.16, 0.95, 0.20, 1.00);
 
       Animated.parallel([
         // Opacity: flash visible immediately
         Animated.timing(wordEntryOpacity, {
-          toValue: 1, duration: 60,
+          toValue: 1, duration: 90,
           easing: Easing.linear, useNativeDriver: true,
         }),
         // Y: drop + bounce settle
         Animated.sequence([
           Animated.timing(wordEntryTranslateY, {
-            toValue: 11, duration: 420, easing: SLAM, useNativeDriver: true,
+            toValue: 7, duration: 260, easing: ZIP, useNativeDriver: true,
           }),
           Animated.timing(wordEntryTranslateY, {
-            toValue: -5, duration: 100, useNativeDriver: true,
+            toValue: -2, duration: 90, useNativeDriver: true,
           }),
           Animated.timing(wordEntryTranslateY, {
-            toValue: 3, duration: 80, useNativeDriver: true,
-          }),
-          Animated.timing(wordEntryTranslateY, {
-            toValue: -1, duration: 60, useNativeDriver: true,
-          }),
-          Animated.timing(wordEntryTranslateY, {
-            toValue: 0, duration: 40, useNativeDriver: true,
+            toValue: 0, duration: 70, useNativeDriver: true,
           }),
         ]),
         // Scale: compress + bounce settle
         Animated.sequence([
           Animated.timing(wordEntryScale, {
-            toValue: 0.95, duration: 420, easing: SLAM, useNativeDriver: true,
+            toValue: 1.035, duration: 260, easing: ZIP, useNativeDriver: true,
           }),
           Animated.timing(wordEntryScale, {
-            toValue: 1.01, duration: 100, useNativeDriver: true,
+            toValue: 0.995, duration: 90, useNativeDriver: true,
           }),
           Animated.timing(wordEntryScale, {
-            toValue: 0.99, duration: 80, useNativeDriver: true,
+            toValue: 1.00, duration: 70, useNativeDriver: true,
           }),
-          Animated.timing(wordEntryScale, {
-            toValue: 1.00, duration: 100, useNativeDriver: true,
+        ]),
+        Animated.sequence([
+          Animated.timing(wordEntryTilt, {
+            toValue: 0.16, duration: 260, easing: ZIP, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryTilt, {
+            toValue: -0.06, duration: 90, useNativeDriver: true,
+          }),
+          Animated.timing(wordEntryTilt, {
+            toValue: 0, duration: 70, useNativeDriver: true,
           }),
         ]),
       ]).start(() => {
-        // On lock: pulse + shake + haptic
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        // On lock: single haptic + tight rim pulse
+        if (wordEntranceHapticRef.current !== step.word) {
+          wordEntranceHapticRef.current = step.word;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
         Animated.sequence([
-          Animated.timing(wordLockPulse, { toValue: 1.04, duration: 100, useNativeDriver: true }),
-          Animated.timing(wordLockPulse, { toValue: 0.98, duration: 80, useNativeDriver: true }),
-          Animated.timing(wordLockPulse, { toValue: 1.00, duration: 80, useNativeDriver: true }),
-        ]).start();
-        Animated.sequence([
-          Animated.timing(bossShakeX, { toValue: -3, duration: 35, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue:  3, duration: 35, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue: -2, duration: 35, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue:  0, duration: 35, useNativeDriver: true }),
+          Animated.timing(wordLockPulse, { toValue: 1.025, duration: 90, useNativeDriver: true }),
+          Animated.timing(wordLockPulse, { toValue: 1.00, duration: 110, useNativeDriver: true }),
         ]).start();
       });
     }
@@ -1761,6 +1766,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     gatePhase !== 'mastered';
 
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
+  const wordEntryTiltDeg = wordEntryTilt.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-5deg', '0deg', '5deg'] });
 
   return (
     <Animated.View
@@ -1888,6 +1894,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 { scale: masterHeroScale },
                 { translateY: masterHeroTransY },
                 { translateY: wordEntryTranslateY },
+                { rotate: wordEntryTiltDeg },
               ],
             }}
           >
