@@ -1,49 +1,43 @@
 import React from 'react';
-import { Image, View, ViewStyle } from 'react-native';
+import { Image, ImageStyle } from 'react-native';
 
 export type PollyPose =
-  | 'TOP_LEFT' | 'TOP_CENTER' | 'TOP_RIGHT'
-  | 'MID_LEFT' | 'MID_CENTER' | 'MID_RIGHT'
-  | 'BOT_LEFT' | 'BOT_CENTER' | 'BOT_RIGHT';
+  | 'flyExcited'       // polly_01 — mid-round fly-in entrance
+  | 'flyRelaxed'       // polly_02 — end-of-round fly-in
+  | 'perchNeutral'     // polly_03 — default perch / idle
+  | 'perchDismissive'  // polly_04 — trap rejected, Polly annoyed
+  | 'perchLaughing'    // polly_05 — haunt created / run clipped, Polly wins
+  | 'perchSmug'        // polly_06 — wrong swipe, "Thought so."
+  | 'perchPointing'    // polly_07 — boss word throw, master tile drops
+  | 'perchShocked'     // polly_08 — player perfect clear, Polly surprised
+  | 'perchSulking'     // polly_09 — player masters word, Polly loses
+  | 'flyAngry'         // polly_10 — "YOU BEAT POLLY"
+
+const POSE_IMAGES: Record<PollyPose, ReturnType<typeof require>> = {
+  flyExcited:      require('../../../assets/images/polly/polly_01.png'),
+  flyRelaxed:      require('../../../assets/images/polly/polly_02.png'),
+  perchNeutral:    require('../../../assets/images/polly/polly_03.png'),
+  perchDismissive: require('../../../assets/images/polly/polly_04.png'),
+  perchLaughing:   require('../../../assets/images/polly/polly_05.png'),
+  perchSmug:       require('../../../assets/images/polly/polly_06.png'),
+  perchPointing:   require('../../../assets/images/polly/polly_07.png'),
+  perchShocked:    require('../../../assets/images/polly/polly_08.png'),
+  perchSulking:    require('../../../assets/images/polly/polly_09.png'),
+  flyAngry:        require('../../../assets/images/polly/polly_10.png'),
+};
 
 interface PollySpriteProps {
   pose: PollyPose;
   size: number;
-  style?: ViewStyle;
+  style?: ImageStyle;
 }
 
-const CELL_SIZE = 418;
-const SHEET_SIZE = 1254;
-
-const POSE_MAP: Record<PollyPose, [number, number]> = {
-  TOP_LEFT:   [0, 0],
-  TOP_CENTER: [0, 1],
-  TOP_RIGHT:  [0, 2],
-  MID_LEFT:   [1, 0],
-  MID_CENTER: [1, 1],
-  MID_RIGHT:  [1, 2],
-  BOT_LEFT:   [2, 0],
-  BOT_CENTER: [2, 1],
-  BOT_RIGHT:  [2, 2],
-};
-
 export default function PollySprite({ pose, size, style }: PollySpriteProps) {
-  const [row, col] = POSE_MAP[pose];
-  const sheetDim   = SHEET_SIZE * (size / CELL_SIZE);
-
   return (
-    <View style={[{ width: size, height: size, overflow: 'hidden', backgroundColor: 'transparent' }, style]}>
-      <Image
-        source={require('../../../assets/images/polly_sprite.png')}
-        style={{
-          width:           sheetDim,
-          height:          sheetDim,
-          marginLeft:      -(col * size),
-          marginTop:       -(row * size),
-          backgroundColor: 'transparent',
-        }}
-        resizeMode="contain"
-      />
-    </View>
+    <Image
+      source={POSE_IMAGES[pose]}
+      style={[{ width: size, height: size }, style]}
+      resizeMode="contain"
+    />
   );
 }

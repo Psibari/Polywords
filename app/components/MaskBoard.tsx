@@ -364,8 +364,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     firePollyEvent,
     ghostTintOpacity,
     pollyAnimatedStyle,
-    pollyPopInVisible,
-    pollyPopInStyle,
+    pollyVisible,
+    perchSide,
+    pollyPositionStyle,
   } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
 
   // ── tile state map ───────────────────────────────────────────
@@ -2122,18 +2123,21 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         />
       ))}
 
-      {/* Polly — bottom-left pop-in only, hidden during ordinary play */}
-      {pollyPopInVisible && (
-        <Animated.View style={[styles.pollyAnchor, pollyPopInStyle]} pointerEvents="none">
+      {/* Polly — flies up in an arc to a left or right perch, hidden during ordinary play */}
+      {pollyVisible && (
+        <Animated.View style={[styles.pollyAnchor, pollyPositionStyle]} pointerEvents="none">
           <Animated.View style={pollyAnimatedStyle}>
-            <PollySprite pose={currentPose} size={160} />
+            <PollySprite pose={currentPose} size={140} />
           </Animated.View>
         </Animated.View>
       )}
 
-      {/* Speech bubble — above-right of Polly, only during pop-in */}
-      {pollyPopInVisible && speechLineVisible && currentSpeechLine && (
-        <View style={styles.speechBubble} pointerEvents="none">
+      {/* Speech bubble — above Polly's current perch */}
+      {pollyVisible && speechLineVisible && currentSpeechLine && (
+        <View
+          style={[styles.speechBubble, perchSide === 'right' ? styles.speechBubbleRight : styles.speechBubbleLeft]}
+          pointerEvents="none"
+        >
           <Text style={styles.speechText} numberOfLines={3}>
             {currentSpeechLine}
           </Text>
@@ -2801,13 +2805,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     left: -6,
-    width: 160,
-    height: 160,
+    width: 140,
+    height: 140,
   },
   speechBubble: {
     position: 'absolute',
-    bottom: 186,
-    left: 78,
     maxWidth: 210,
     backgroundColor: 'rgba(20,18,56,0.94)',
     borderRadius: 10,
@@ -2815,6 +2817,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.18)',
     paddingHorizontal: 12,
     paddingVertical: 8,
+  },
+  speechBubbleLeft: {
+    bottom: 164,
+    left: 78,
+  },
+  speechBubbleRight: {
+    bottom: 164,
+    right: 78,
   },
   speechText: {
     color: 'rgba(255,255,255,0.88)',

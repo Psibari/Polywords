@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated } from 'react-native';
+import { Animated, Easing } from 'react-native';
 import type { PollyPose } from '../components/ui/PollySprite';
 
 export type PollyEvent =
@@ -19,16 +19,14 @@ export type PollyEvent =
   | 'hesitation9s'
   | 'hesitationCleared'
   | 'streakX10'
-  | 'switchbackEntry'
-  | 'switchbackCorrect'
   | 'gameOver'
-  | 'gateIntro'
   | 'gateMastered'
   | 'gateMasteredBoss'
   | 'hiddenMasterFailed'
   | 'hauntFailed'
   | 'oneWrongMove';
 
+type PerchSide = 'left' | 'right';
 type BreathingSpeed = 'slow' | 'building' | 'hot' | 'danger';
 
 const BREATH_DURATIONS: Record<BreathingSpeed, [number, number]> = {
@@ -38,96 +36,150 @@ const BREATH_DURATIONS: Record<BreathingSpeed, [number, number]> = {
   danger:   [400,  400],
 };
 
-// Max 1 mid-round pop-in per word. End-of-round events always fire.
 const MID_ROUND_BUDGET = 1;
+
+// Screen layout constants — adjust if layout changes
+const SCREEN_W = 390;
+const POLLY_SIZE = 140;
+// Left perch: bottom-left area
+const PERCH_LEFT_X  = -10;
+const PERCH_LEFT_Y  = 0;   // relative — 0 means at perch base
+// Right perch: bottom-right area
+const PERCH_RIGHT_X = SCREEN_W - POLLY_SIZE - 10;
+const PERCH_RIGHT_Y = 0;
+// Off-screen start: bottom-left
+const START_X = -POLLY_SIZE - 20;
+const START_Y = 120; // below the perch, positive = down
 
 export function usePollyAnimator(
   streakCount: number,
   lives: number,
   _stepIndex: number,
 ) {
-  const [currentPose, setCurrentPose] = useState<PollyPose>('TOP_LEFT');
+  const [currentPose, setCurrentPose] = useState<PollyPose>('flyExcited');
   const [currentSpeechLine, setCurrentSpeechLine] = useState<string | null>(null);
+  const [pollyVisible, _setPollyVisible] = useState(false);
+  const pollyVisibleRef = useRef(false);
+  const [perchSide, setPerchSide] = useState<PerchSide>('left');
 
-  // ── Pop-in visibility ─────────────────────────────────────────
-  const [pollyPopInVisible, _setPollyPopInVisible] = useState(false);
-  const pollyPopInVisibleRef = useRef(false);
-  function setPollyPopInVisible(v: boolean) {
-    pollyPopInVisibleRef.current = v;
-    _setPollyPopInVisible(v);
+  function setPollyVisible(v: boolean) {
+    pollyVisibleRef.current = v;
+    _setPollyVisible(v);
   }
 
-  // Enter/exit animation (native driver: opacity + translateY)
-  const pollyEnterAnim    = useRef(new Animated.Value(0)).current;
-  const pollyHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Position animated values — useNativeDriver: true (transform only)
+  const pollyX = useRef(new Animated.Value(START_X)).current;
+  const pollyY = useRef(new Animated.Value(START_Y)).current;
+  const pollyOpacity = useRef(new Animated.Value(0)).current;
 
-  // Per-word mid-round budget — resets on word entry / component remount
-  const popInCountRef = useRef(0);
-
-  // Animated values — all native-driver compatible (transform + opacity only)
+  // Secondary animations
   const scale            = useRef(new Animated.Value(1)).current;
-  const translateX       = useRef(new Animated.Value(0)).current;
-  const translateY       = useRef(new Animated.Value(0)).current;
   const rotate           = useRef(new Animated.Value(0)).current;
   const ghostTintOpacity = useRef(new Animated.Value(0)).current;
 
-  // Loop refs
   const breathLoopRef    = useRef<Animated.CompositeAnimation | null>(null);
-  const ghostSwayLoopRef = useRef<Animated.CompositeAnimation | null>(null);
-  const hesLoopRef       = useRef<Animated.CompositeAnimation | null>(null);
+  const speechTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const breathSpeedRef   = useRef<BreathingSpeed>('slow');
+  const isBossFrozenRef  = useRef(false);
+  const popInCountRef    = useRef(0);
+  const wordFirstCorrectRef  = useRef(false);
+  const wrongCountRef        = useRef(0);
+  const oneWrongMoveFiredRef = useRef(false);
+  const livesRef = useRef(lives);
+  livesRef.current = lives;
 
-  // Mutable state refs
-  const breathSpeedRef        = useRef<BreathingSpeed>('slow');
-  const isBossFrozenRef       = useRef(false);
-  const wordFirstCorrectRef   = useRef(false);
-  const wrongCountRef         = useRef(0);
-  const oneWrongMoveFiredRef  = useRef(false);
-  const speechTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const livesRef            = useRef(lives);
-  livesRef.current          = lives;
+  // ── Fly-in animation ──────────────────────────────────────────
 
-  // ── pop-in helpers ─────────────────────────────────────────────
+  function flyInToPerch(side: PerchSide, onLand?: () => void) {
+    const targetX = side === 'left' ? PERCH_LEFT_X  : PERCH_RIGHT_X;
+    const targetY = side === 'left' ? PERCH_LEFT_Y  : PERCH_RIGHT_Y;
 
-  function showPollyPopIn() {
-    if (pollyHideTimerRef.current !== null) {
-      clearTimeout(pollyHideTimerRef.current);
-      pollyHideTimerRef.current = null;
-    }
-    setPollyPopInVisible(true);
-    Animated.spring(pollyEnterAnim, {
-      toValue: 1, damping: 18, stiffness: 280, useNativeDriver: true,
-    }).start();
+    // Reset to start position, make visible
+    pollyX.setValue(START_X);
+    pollyY.setValue(START_Y);
+    pollyOpacity.setValue(1);
+    setPollyVisible(true);
+    setPerchSide(side);
+
+    Animated.parallel([
+      Animated.timing(pollyX, {
+        toValue: targetX,
+        duration: 520,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.spring(pollyY, {
+        toValue: targetY,
+        damping: 14,
+        stiffness: 160,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onLand?.();
+    });
   }
 
-  function schedulePollyHide(afterMs: number) {
-    if (pollyHideTimerRef.current !== null) clearTimeout(pollyHideTimerRef.current);
-    pollyHideTimerRef.current = setTimeout(() => {
-      pollyHideTimerRef.current = null;
-      Animated.timing(pollyEnterAnim, {
-        toValue: 0, duration: 300, useNativeDriver: true,
-      }).start();
-      // Unmount after fade completes
-      setTimeout(() => setPollyPopInVisible(false), 320);
+  function exitPerch(side: PerchSide, onDone?: () => void) {
+    const exitX = side === 'left' ? -(POLLY_SIZE + 40) : SCREEN_W + 40;
+    Animated.timing(pollyX, {
+      toValue: exitX,
+      duration: 300,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      setPollyVisible(false);
+      pollyOpacity.setValue(0);
+      onDone?.();
+    });
+  }
+
+  function scheduleExit(afterMs: number, side: PerchSide) {
+    if (exitTimerRef.current !== null) clearTimeout(exitTimerRef.current);
+    exitTimerRef.current = setTimeout(() => {
+      exitTimerRef.current = null;
+      exitPerch(side);
     }, afterMs);
   }
 
-  /** One mid-round pop-in per word. Silently skipped if budget is used. */
-  function tryMidRoundPopIn(action: () => void, speechDuration: number) {
+  // ── Mid-round and end-of-round helpers ────────────────────────
+
+  function tryMidRound(flyPose: PollyPose, perchPose: PollyPose, speech: string, speechMs: number) {
     if (popInCountRef.current >= MID_ROUND_BUDGET) return;
     popInCountRef.current += 1;
-    action();
-    showPollyPopIn();
-    schedulePollyHide(speechDuration + 600);
+    setCurrentPose(flyPose);
+    flyInToPerch('left', () => {
+      setCurrentPose(perchPose);
+      startBreathing();
+    });
+    setSpeech(speech, speechMs);
+    scheduleExit(speechMs + 600, 'left');
   }
 
-  /** End-of-round or major event — always fires regardless of budget. */
-  function endOfRoundPopIn(action: () => void, speechDuration: number) {
-    action();
-    showPollyPopIn();
-    schedulePollyHide(speechDuration + 800);
+  function endOfRound(flyPose: PollyPose, perchPose: PollyPose, speech: string, speechMs: number, side: PerchSide = 'right') {
+    if (exitTimerRef.current !== null) clearTimeout(exitTimerRef.current);
+    setCurrentPose(flyPose);
+    flyInToPerch(side, () => {
+      setCurrentPose(perchPose);
+      startBreathing();
+    });
+    setSpeech(speech, speechMs);
+    scheduleExit(speechMs + 800, side);
   }
 
-  // ── helpers ───────────────────────────────────────────────────
+  function forceMidRound(flyPose: PollyPose, perchPose: PollyPose, speech: string, speechMs: number) {
+    // Always fires — ignores budget
+    if (exitTimerRef.current !== null) clearTimeout(exitTimerRef.current);
+    setCurrentPose(flyPose);
+    flyInToPerch('left', () => {
+      setCurrentPose(perchPose);
+      startBreathing();
+    });
+    setSpeech(speech, speechMs);
+    scheduleExit(speechMs + 600, 'left');
+  }
+
+  // ── Speech ────────────────────────────────────────────────────
 
   function setSpeech(line: string | null, ms = 2000) {
     if (speechTimerRef.current !== null) clearTimeout(speechTimerRef.current);
@@ -136,6 +188,8 @@ export function usePollyAnimator(
       speechTimerRef.current = setTimeout(() => setCurrentSpeechLine(null), ms);
     }
   }
+
+  // ── Breathing ─────────────────────────────────────────────────
 
   function startBreathing() {
     breathLoopRef.current?.stop();
@@ -149,99 +203,36 @@ export function usePollyAnimator(
     loop.start();
   }
 
-  function stopSwayLoops() {
-    ghostSwayLoopRef.current?.stop();
-    hesLoopRef.current?.stop();
-    Animated.timing(translateX, { toValue: 0, duration: 150, useNativeDriver: true }).start();
-  }
+  // ── Secondary animations ──────────────────────────────────────
 
   function animWin() {
     breathLoopRef.current?.stop();
     Animated.sequence([
-      Animated.spring(translateY, { toValue: -16, damping: 10, stiffness: 280, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0,   damping: 10, stiffness: 280, useNativeDriver: true }),
-    ]).start(() => startBreathing());
-    Animated.sequence([
       Animated.spring(scale, { toValue: 1.10, damping: 10, stiffness: 280, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1.0,  damping: 10, stiffness: 280, useNativeDriver: true }),
-    ]).start();
-  }
-
-  function animWinMicro() {
-    breathLoopRef.current?.stop();
-    Animated.sequence([
-      Animated.spring(scale, { toValue: 1.06, damping: 10, stiffness: 280, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1.0,  damping: 10, stiffness: 280, useNativeDriver: true }),
     ]).start(() => startBreathing());
-  }
-
-  function animBigWin() {
-    breathLoopRef.current?.stop();
-    stopSwayLoops();
-    Animated.sequence([
-      Animated.spring(translateY, { toValue: -24, damping: 6, stiffness: 200, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0,   damping: 6, stiffness: 200, useNativeDriver: true }),
-    ]).start(() => startBreathing());
-    Animated.sequence([
-      Animated.spring(scale, { toValue: 1.20, damping: 6, stiffness: 200, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 0.95, damping: 6, stiffness: 200, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1.0,  damping: 6, stiffness: 200, useNativeDriver: true }),
-    ]).start();
-    Animated.sequence([
-      Animated.timing(rotate, { toValue: -5, duration: 150, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue:  5, duration: 150, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue:  0, duration: 150, useNativeDriver: true }),
-    ]).start();
   }
 
   function animWrong() {
     breathLoopRef.current?.stop();
     Animated.sequence([
-      Animated.spring(translateX, { toValue: -12, damping: 10, stiffness: 300, useNativeDriver: true }),
-      Animated.spring(translateX, { toValue: 0,   damping: 10, stiffness: 300, useNativeDriver: true }),
+      Animated.timing(rotate, { toValue: -4, duration: 120, useNativeDriver: true }),
+      Animated.timing(rotate, { toValue:  0, duration: 120, useNativeDriver: true }),
     ]).start(() => startBreathing());
-    Animated.sequence([
-      Animated.timing(rotate, { toValue: -4, duration: 150, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue:  0, duration: 150, useNativeDriver: true }),
-    ]).start();
   }
 
-  function animWayWrong() {
+  function animBigWin() {
     breathLoopRef.current?.stop();
     Animated.sequence([
-      Animated.timing(translateX, { toValue: -10, duration: 80, useNativeDriver: true }),
-      Animated.timing(translateX, { toValue:  10, duration: 80, useNativeDriver: true }),
-      Animated.timing(translateX, { toValue:  -8, duration: 80, useNativeDriver: true }),
-      Animated.timing(translateX, { toValue:   0, duration: 80, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1.20, damping: 6, stiffness: 200, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 0.95, damping: 6, stiffness: 200, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1.0,  damping: 6, stiffness: 200, useNativeDriver: true }),
     ]).start(() => startBreathing());
-    Animated.sequence([
-      Animated.spring(scale, { toValue: 1.05, damping: 10, stiffness: 300, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1.0,  damping: 10, stiffness: 300, useNativeDriver: true }),
-    ]).start();
-  }
-
-  function animBossSnap(onFreezeEnd?: () => void) {
-    breathLoopRef.current?.stop();
-    isBossFrozenRef.current = true;
-    Animated.sequence([
-      Animated.timing(scale, { toValue: 1.12, duration: 100, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1.0,  duration: 100, useNativeDriver: true }),
-    ]).start(() => {
-      setTimeout(() => {
-        isBossFrozenRef.current = false;
-        startBreathing();
-        onFreezeEnd?.();
-      }, 800);
-    });
-  }
-
-  function animHeadShake() {
-    breathLoopRef.current?.stop();
     Animated.sequence([
       Animated.timing(rotate, { toValue: -5, duration: 150, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue:  5, duration: 300, useNativeDriver: true }),
+      Animated.timing(rotate, { toValue:  5, duration: 150, useNativeDriver: true }),
       Animated.timing(rotate, { toValue:  0, duration: 150, useNativeDriver: true }),
-    ]).start(() => startBreathing());
+    ]).start();
   }
 
   function setGhostTint(level: 0 | 1 | 2 | 3) {
@@ -253,17 +244,7 @@ export function usePollyAnimator(
     }).start();
   }
 
-  function wordBob() {
-    breathLoopRef.current?.stop();
-    translateY.setValue(12);
-    scale.setValue(0.92);
-    Animated.parallel([
-      Animated.spring(translateY, { toValue: 0, damping: 12, stiffness: 200, useNativeDriver: true }),
-      Animated.spring(scale,      { toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true }),
-    ]).start(() => startBreathing());
-  }
-
-  // ── main event dispatcher ─────────────────────────────────────
+  // ── Main event dispatcher ─────────────────────────────────────
 
   const firePollyEvent = useCallback((event: PollyEvent) => {
     switch (event) {
@@ -273,318 +254,168 @@ export function usePollyAnimator(
         wrongCountRef.current = 0;
         popInCountRef.current = 0;
         oneWrongMoveFiredRef.current = false;
-        setCurrentPose('TOP_LEFT');
-        stopSwayLoops();
         setSpeech(null);
+        if (exitTimerRef.current !== null) { clearTimeout(exitTimerRef.current); exitTimerRef.current = null; }
         Animated.timing(ghostTintOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start();
-        wordBob();
         break;
 
       case 'correct':
         if (!wordFirstCorrectRef.current) {
           wordFirstCorrectRef.current = true;
-          tryMidRoundPopIn(() => {
-            setCurrentPose('BOT_LEFT');
-            animWin();
-            setSpeech('Put that meaning back.', 2000);
-          }, 2000);
-        } else if (pollyPopInVisibleRef.current) {
-          // Already visible — just react, no new pop-in
-          setCurrentPose('BOT_LEFT');
-          animWinMicro();
+          tryMidRound('flyExcited', 'perchDismissive', 'Put that meaning back.', 2000);
+        } else if (pollyVisibleRef.current) {
+          setCurrentPose('perchDismissive');
+          animWin();
         }
         break;
 
       case 'allMasksFound':
-        tryMidRoundPopIn(() => {
-          setCurrentPose('MID_LEFT');
-          animBigWin();
-          setSpeech("Stop picking my locks.", 2500);
-        }, 2500);
+        tryMidRound('flyExcited', 'perchShocked', 'Stop picking my locks.', 2500);
         break;
 
       case 'hiddenFound':
-        tryMidRoundPopIn(() => {
-          setCurrentPose('BOT_RIGHT');
-          animBigWin();
-          setSpeech('That meaning was buried.', 2000);
-        }, 2000);
+        tryMidRound('flyExcited', 'perchShocked', 'That meaning was buried.', 2000);
         break;
 
       case 'cleanSweep':
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_LEFT');
-          animWin();
-          setSpeech('My stash is empty.', 2000);
-        }, 2000);
+        endOfRound('flyRelaxed', 'perchSulking', 'My stash is empty.', 2000, 'right');
         break;
 
       case 'wrong': {
         wrongCountRef.current++;
         const wc = wrongCountRef.current;
-        const doWrongAnim = () => {
-          if (wc >= 3) {
-            setCurrentPose('BOT_CENTER');
-            animWayWrong();
-            setSpeech(wc === 3 ? 'That swipe was butter-knife sharp.' : 'My trap had more bite.', 2000);
-          } else if (wc === 2) {
-            setCurrentPose('MID_CENTER');
-            animWrong();
-            setSpeech('Close enough to fool you.', 2000);
-          } else {
-            setCurrentPose('MID_CENTER');
-            animWrong();
-            setSpeech('That one almost belonged.', 2000);
-          }
-        };
-        if (pollyPopInVisibleRef.current) {
-          // Already visible — react without consuming budget again
-          doWrongAnim();
-          schedulePollyHide(2600);
+        const speech = wc >= 3 ? 'BBBLAAAAHHAHAHA!' : wc === 2 ? 'Close enough to fool you.' : 'Thought so.';
+        const pose: PollyPose = wc >= 3 ? 'perchLaughing' : 'perchSmug';
+        if (pollyVisibleRef.current) {
+          setCurrentPose(pose);
+          animWrong();
+          setSpeech(speech, 2000);
+          scheduleExit(2600, perchSide);
         } else {
-          tryMidRoundPopIn(doWrongAnim, 2000);
+          tryMidRound('flyExcited', pose, speech, 2000);
         }
         break;
       }
 
       case 'bossEntry':
-        // Boss entrance — always show, major moment
-        endOfRoundPopIn(() => {
-          setCurrentPose('TOP_RIGHT');
-          animBossSnap(() => setSpeech('This word stays mine.'));
-        }, 3500);
+        endOfRound('flyExcited', 'perchPointing', 'This word stays mine.', 3500, 'left');
         break;
 
       case 'ghostEntry':
-        tryMidRoundPopIn(() => {
-          setCurrentPose('TOP_CENTER');
-          setGhostTint(1);
-          ghostSwayLoopRef.current?.stop();
-          ghostSwayLoopRef.current = Animated.loop(Animated.sequence([
-            Animated.timing(translateX, { toValue:  8, duration: 750,  useNativeDriver: true }),
-            Animated.timing(translateX, { toValue: -8, duration: 1500, useNativeDriver: true }),
-            Animated.timing(translateX, { toValue:  0, duration: 750,  useNativeDriver: true }),
-          ]));
-          ghostSwayLoopRef.current.start();
-        }, 4000);
+        tryMidRound('flyExcited', 'perchSmug', "It's still here.", 4000);
+        setGhostTint(1);
         break;
 
       case 'ghostFoundLate':
-        ghostSwayLoopRef.current?.stop();
-        Animated.timing(translateX, { toValue: 0, duration: 150, useNativeDriver: true }).start();
         setGhostTint(0);
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_LEFT');
-          animWin();
-          setSpeech('Rematch won.', 2500);
-        }, 2500);
+        endOfRound('flyRelaxed', 'perchSulking', 'Rematch won.', 2500, 'right');
         break;
 
       case 'ghostDissolved':
-        ghostSwayLoopRef.current?.stop();
-        Animated.timing(translateX, { toValue: 0, duration: 150, useNativeDriver: true }).start();
         setGhostTint(0);
-        endOfRoundPopIn(() => {
-          setCurrentPose('MID_RIGHT');
-          animHeadShake();
-          setSpeech("Still haunting you.", 2500);
-        }, 2500);
+        endOfRound('flyExcited', 'perchSmug', 'Still haunting you.', 2500, 'left');
         break;
 
       case 'oneHeartLeft':
-        // Critical — always show regardless of budget
-        breathSpeedRef.current = 'danger';
-        setCurrentPose('TOP_RIGHT');
-        showPollyPopIn();
-        animBossSnap();
-        setSpeech('One feather left. Delicious.', 2500);
-        schedulePollyHide(3500);
+        forceMidRound('flyExcited', 'perchSmug', 'One feather left. Delicious.', 2500);
         break;
 
       case 'oneWrongMove':
         if (!oneWrongMoveFiredRef.current) {
           oneWrongMoveFiredRef.current = true;
-          endOfRoundPopIn(() => {
-            setCurrentPose('MID_CENTER');
-            animWrong();
-            setSpeech('One wrong move.', 2000);
-          }, 2000);
+          endOfRound('flyExcited', 'perchSmug', 'One wrong move.', 2000, 'left');
         }
         break;
 
       case 'hesitation3s':
-        tryMidRoundPopIn(() => {
-          setCurrentPose('TOP_CENTER');
-          hesLoopRef.current?.stop();
-          hesLoopRef.current = Animated.loop(Animated.sequence([
-            Animated.timing(translateX, { toValue:  6, duration: 500,  useNativeDriver: true }),
-            Animated.timing(translateX, { toValue: -6, duration: 1000, useNativeDriver: true }),
-            Animated.timing(translateX, { toValue:  0, duration: 500,  useNativeDriver: true }),
-          ]));
-          hesLoopRef.current.start();
-          setSpeech('That one looks guilty.', 3000);
-        }, 6000);
+        tryMidRound('flyExcited', 'perchSmug', 'That one looks guilty.', 6000);
         break;
 
       case 'hesitation6s':
-        // Only update speech if Polly is already visible from hesitation3s
-        if (pollyPopInVisibleRef.current) {
-          setSpeech('Almost real. Almost.', 3000);
-          schedulePollyHide(3800);
-        }
+        if (pollyVisibleRef.current) setSpeech('Almost real. Almost.', 3000);
         break;
 
       case 'hesitation9s':
-        if (pollyPopInVisibleRef.current) {
-          setSpeech('Trust that swipe?', 2000);
-          schedulePollyHide(2800);
-        }
+        if (pollyVisibleRef.current) setSpeech('Trust that swipe?', 2000);
         break;
 
       case 'hesitationCleared':
-        hesLoopRef.current?.stop();
-        hesLoopRef.current = null;
-        Animated.timing(translateX, { toValue: 0, duration: 150, useNativeDriver: true }).start();
         break;
 
       case 'streakX10':
-        tryMidRoundPopIn(() => {
-          setCurrentPose('MID_LEFT');
-          animBigWin();
-          setSpeech("Cute streak. Still mine.", 2500);
-        }, 2500);
-        break;
-
-      case 'switchbackEntry':
-        popInCountRef.current = 0;
-        oneWrongMoveFiredRef.current = false;
-        setCurrentPose('TOP_CENTER');
-        stopSwayLoops();
-        setSpeech(null);
-        Animated.timing(ghostTintOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start();
-        wordBob();
-        break;
-
-      case 'switchbackCorrect':
-        tryMidRoundPopIn(() => {
-          setCurrentPose('BOT_LEFT');
-          animWin();
-          setSpeech('Borrowed brains.', 1800);
-        }, 1800);
+        tryMidRound('flyExcited', 'perchDismissive', 'Cute streak. Still mine.', 2500);
         break;
 
       case 'gameOver':
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_RIGHT');
-          animBigWin();
-          setSpeech('Mine. Every meaning.', 2500);
-        }, 2500);
-        break;
-
-      case 'gateIntro':
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_LEFT');
-          animWin();
-          setSpeech('Miss one, and it haunts you.', 4500);
-        }, 4500);
+        endOfRound('flyAngry', 'perchLaughing', 'POLLY CLIPPED YOUR RUN.', 3000, 'right');
         break;
 
       case 'gateMastered':
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_LEFT');
-          animBigWin();
-          setSpeech('That was mine.', 3000);
-        }, 3000);
+        endOfRound('flyRelaxed', 'perchSulking', 'YOU BEAT POLLY', 3000, 'right');
+        animBigWin();
         break;
 
       case 'gateMasteredBoss':
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_LEFT');
-          animBigWin();
-          setSpeech('The word betrayed me.', 3000);
-        }, 3000);
+        endOfRound('flyRelaxed', 'perchSulking', 'The word betrayed me.', 3000, 'right');
         break;
 
       case 'hiddenMasterFailed':
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_LEFT');
-          animWin();
-          setSpeech('Not yours. Yet.', 3000);
-        }, 3000);
+        endOfRound('flyExcited', 'perchLaughing', 'Not yours. Yet.', 3000, 'left');
         break;
 
       case 'hauntFailed':
-        endOfRoundPopIn(() => {
-          setCurrentPose('BOT_CENTER');
-          animWayWrong();
-          setSpeech('BBBLAAAAHHAHAHA!', 3000);
-        }, 3000);
+        endOfRound('flyAngry', 'perchLaughing', 'BBBLAAAAHHAHAHA!', 3000, 'right');
+        animBigWin();
         break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── breathing speed — streak ──────────────────────────────────
+  // ── Breathing speed — streak ──────────────────────────────────
   useEffect(() => {
     if (livesRef.current === 1) return;
-    if (streakCount >= 7) {
-      breathSpeedRef.current = 'hot';
-    } else if (streakCount >= 3) {
-      breathSpeedRef.current = 'building';
-    } else {
-      breathSpeedRef.current = 'slow';
-    }
+    breathSpeedRef.current = streakCount >= 7 ? 'hot' : streakCount >= 3 ? 'building' : 'slow';
     startBreathing();
   }, [streakCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── breathing speed — lives ───────────────────────────────────
   useEffect(() => {
-    if (lives === 1) {
-      breathSpeedRef.current = 'danger';
-      startBreathing();
-    }
+    if (lives === 1) { breathSpeedRef.current = 'danger'; startBreathing(); }
   }, [lives]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── mount / unmount ───────────────────────────────────────────
+  // ── Mount / unmount ───────────────────────────────────────────
   useEffect(() => {
     startBreathing();
     return () => {
       breathLoopRef.current?.stop();
-      ghostSwayLoopRef.current?.stop();
-      hesLoopRef.current?.stop();
       if (speechTimerRef.current !== null) clearTimeout(speechTimerRef.current);
-      if (pollyHideTimerRef.current !== null) clearTimeout(pollyHideTimerRef.current);
+      if (exitTimerRef.current !== null) clearTimeout(exitTimerRef.current);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── composed styles ───────────────────────────────────────────
+  // ── Composed style ────────────────────────────────────────────
   const rotateStr = rotate.interpolate({
-    inputRange:  [-10, 0, 10],
+    inputRange: [-10, 0, 10],
     outputRange: ['-10deg', '0deg', '10deg'],
-  });
-
-  const pollyEnterTranslateY = pollyEnterAnim.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [40, 0],
   });
 
   return {
     currentPose,
     currentSpeechLine,
     speechLineVisible: currentSpeechLine !== null,
+    pollyVisible,
+    perchSide,
+    pollyPositionStyle: {
+      transform: [
+        { translateX: pollyX },
+        { translateY: pollyY },
+      ],
+    },
     pollyAnimatedStyle: {
       transform: [
-        { translateX },
-        { translateY },
         { scale },
         { rotate: rotateStr },
       ],
     },
     ghostTintOpacity,
     firePollyEvent,
-    pollyPopInVisible,
-    pollyPopInStyle: {
-      opacity: pollyEnterAnim,
-      transform: [{ translateY: pollyEnterTranslateY }],
-    },
   };
 }
