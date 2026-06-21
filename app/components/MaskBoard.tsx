@@ -23,7 +23,7 @@ import { playSfx } from '../audio/sfx';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
-const TILE_H     = 108;
+const TILE_H     = 152;
 const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
 const FINAL_TILE_RELEASE_OFFSET_Y = 190;
@@ -401,6 +401,28 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [remainingMaskIds, setRemainingMaskIds] = useState<string[]>(() =>
     visibleGridMasks.map(m => m.id)
   );
+  const prevTopIdRef = useRef<string | null>(null);
+  const cardPopCountRef = useRef(0);
+
+  useEffect(() => {
+    const newTopId = remainingMaskIds[0] ?? null;
+    if (newTopId && newTopId !== prevTopIdRef.current) {
+      prevTopIdRef.current = newTopId;
+      cardPopCountRef.current += 1;
+      if (cardPopCountRef.current > 1) {
+        cardPopY.setValue(18);
+        Animated.spring(cardPopY, {
+          toValue: 0,
+          damping: 14,
+          stiffness: 220,
+          useNativeDriver: true,
+        }).start(() => {
+          Haptics.selectionAsync();
+        });
+      }
+    }
+  }, [remainingMaskIds]);
+
   const topMaskId    = remainingMaskIds[0] ?? null;
   const topMask      = topMaskId
     ? visibleGridMasks.find(m => m.id === topMaskId) ?? null
@@ -433,6 +455,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const deckDeepOp   = useRef(new Animated.Value(0)).current;
   const deckMidOp    = useRef(new Animated.Value(0)).current;
   const deckActiveOp = useRef(new Animated.Value(0)).current;
+  const cardPopY     = useRef(new Animated.Value(0)).current;
 
   // ── find counts ──────────────────────────────────────────────
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
@@ -447,6 +470,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordEntryTranslateY   = useRef(new Animated.Value(0)).current;
   const wordEntryTilt         = useRef(new Animated.Value(0)).current;
   const wordLockPulse         = useRef(new Animated.Value(1)).current;
+  const bookOpenAnim          = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const wordEntranceHapticRef = useRef<string | null>(null);
   const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
@@ -539,7 +563,26 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [bossWordColor, setBossWordColor] = useState('#F5C842');
   const [bossShockwaveVisible, setBossShockwaveVisible] = useState(false);
 
+  function triggerBookOpen() {
+    bookOpenAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(bookOpenAnim, {
+        toValue: 1,
+        duration: 90,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(bookOpenAnim, {
+        toValue: 0,
+        duration: 110,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }
+
   function triggerAbsorption(phrase: string) {
+    triggerBookOpen();
     absorptionScale.setValue(1);
     Animated.sequence([
       Animated.timing(absorptionScale, { toValue: 1.12, duration: 120, useNativeDriver: true }),
@@ -774,6 +817,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       .filter((m: Mask) => !m.isHidden)
       .map((m: Mask) => m.id);
     setRemainingMaskIds(freshIds);
+    cardPopY.setValue(0);
+    prevTopIdRef.current = null;
+    cardPopCountRef.current = 0;
     deckRedTint.setValue(0);
     deckSlamY.setValue(0);  // outer wrapper stays static
     const CARD_DEAL = Easing.bezier(0.18, 1.04, 0.26, 1.00);
@@ -837,6 +883,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setBossShockwaveVisible(false);
     goldTextOpacity.setValue(0);
     wordEntryTilt.setValue(0);
+    bookOpenAnim.setValue(0);
     wordRecoilY.setValue(0);
     wordRecoilScale.setValue(1);
     wordRedOpacity.setValue(0);
@@ -1675,7 +1722,67 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           );
         }}
       >
+        <View style={styles.wordStageOuterFrame} pointerEvents="none" />
         <View style={styles.wordStageFrame} pointerEvents="none" />
+        <View style={styles.wordStageInnerBevel} pointerEvents="none" />
+        <View style={styles.wordStageChamferTL} pointerEvents="none" />
+        <View style={styles.wordStageChamferTR} pointerEvents="none" />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.wordStageChamferBL, {
+            transform: [{
+              translateY: bookOpenAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 8],
+              }),
+            }],
+          }]}
+        />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.wordStageChamferBR, {
+            transform: [{
+              translateY: bookOpenAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 8],
+              }),
+            }],
+          }]}
+        />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.wordStagePageEdge1, {
+            transform: [{
+              translateY: bookOpenAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 10],
+              }),
+            }],
+          }]}
+        />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.wordStagePageEdge2, {
+            transform: [{
+              translateY: bookOpenAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 14],
+              }),
+            }],
+          }]}
+        />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.wordStagePageEdge3, {
+            transform: [{
+              translateY: bookOpenAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 18],
+              }),
+            }],
+          }]}
+        />
+        <View style={styles.wordStageUnderlight} pointerEvents="none" />
 
         {/* Boss gold sweep */}
         {bossSweepActive && (
@@ -1900,7 +2007,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                           backgroundColor: DECK_BACKING_COLORS[depth - 1],
                           borderColor: DECK_BACKING_BORDER_COLORS[depth - 1],
                           opacity: deckBackingOp,
-                          transform: [{ translateY: deckBackingY }, { scale: 1 - depth * 0.006 }],
+                          transform: [
+                            { translateY: deckBackingY },
+                            { scale: 1 - depth * 0.006 },
+                            { rotate: `${depth * -2.2}deg` },
+                          ],
                         },
                       ]}
                     />
@@ -1910,7 +2021,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 <Animated.View style={[
                   styles.deckActiveCardLayer,
                   {
-                    transform: [{ translateY: deckActiveY }, { rotate: deckActiveRotDeg }],
+                    transform: [{ translateY: deckActiveY }, { translateY: cardPopY }, { rotate: deckActiveRotDeg }],
                     opacity: deckActiveOp,
                   },
                 ]}>
@@ -2299,34 +2410,139 @@ const styles = StyleSheet.create({
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
-    height: 138,
+    height: 172,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
-    paddingTop: 6,
-    paddingBottom: 10,
+    paddingTop: 8,
+    paddingBottom: 0,
     position: 'relative',
     marginTop: 4,
   },
   wordZoneBoss: {
-    height: 150,
+    height: 186,
   },
   wordStageFrame: {
     position: 'absolute',
-    left: 8,
-    right: 8,
-    top: 8,
-    bottom: 6,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.24)',
-    backgroundColor: 'rgba(7,5,24,0.58)',
+    left: 6,
+    right: 6,
+    top: 6,
+    bottom: 0,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(245,200,66,0.55)',
+    backgroundColor: '#08061E',
     shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.26,
-    shadowRadius: 18,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.55,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  wordStageOuterFrame: {
+    position: 'absolute',
+    left: 2,
+    right: 2,
+    top: 2,
+    bottom: -2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#3D1F6B',
+    backgroundColor: '#0A0820',
+  },
+  wordStageInnerBevel: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    top: 12,
+    bottom: 6,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.22)',
+    backgroundColor: 'transparent',
+  },
+  wordStageChamferTL: {
+    position: 'absolute',
+    left: 6,
+    top: 6,
+    width: 10,
+    height: 10,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderColor: '#F5C842',
+    opacity: 0.85,
+  },
+  wordStageChamferTR: {
+    position: 'absolute',
+    right: 6,
+    top: 6,
+    width: 10,
+    height: 10,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    borderColor: '#F5C842',
+    opacity: 0.85,
+  },
+  wordStageChamferBL: {
+    position: 'absolute',
+    left: 6,
+    bottom: 4,
+    width: 10,
+    height: 10,
+    borderBottomWidth: 2,
+    borderLeftWidth: 2,
+    borderColor: '#F5C842',
+    opacity: 0.85,
+  },
+  wordStageChamferBR: {
+    position: 'absolute',
+    right: 6,
+    bottom: 4,
+    width: 10,
+    height: 10,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderColor: '#F5C842',
+    opacity: 0.85,
+  },
+  wordStagePageEdge1: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: 0,
+    height: 1,
+    backgroundColor: 'rgba(245,200,66,0.18)',
+  },
+  wordStagePageEdge2: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: -3,
+    height: 1,
+    backgroundColor: 'rgba(245,200,66,0.11)',
+  },
+  wordStagePageEdge3: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: -6,
+    height: 1,
+    backgroundColor: 'rgba(245,200,66,0.06)',
+  },
+  wordStageUnderlight: {
+    position: 'absolute',
+    left: 30,
+    right: 30,
+    bottom: -18,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#7B2D8B',
+    opacity: 0.35,
+    shadowColor: '#7B2D8B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 16,
+    elevation: 0,
   },
   kicker: {
     color: '#F5C842',

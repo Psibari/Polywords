@@ -15,9 +15,12 @@ import Animated, {
   withSpring,
   withTiming,
   withSequence,
+  withRepeat,
+  cancelAnimation,
   useAnimatedStyle,
   Easing as ReaEasing,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
@@ -94,6 +97,8 @@ export function SwipeMask({
   const tileOpacity      = useSharedValue(1);
   const borderOpacityVal = useSharedValue(0.18);
   const isCorrectSV      = useSharedValue(0); // 1 when locked correct
+  const rimOpacity       = useSharedValue(0);
+  const rimRotation      = useSharedValue(0);
 
   // ── RN Animated: height/margin collapse (non-native) ──────────
   const outerHeightAnim    = useRef(new RNAnimated.Value(Math.max(tileHeight, 58))).current;
@@ -393,6 +398,11 @@ export function SwipeMask({
         : `rgba(123,45,139,${Math.max(0.42, borderOpacityVal.value)})`,
   }));
 
+  const rimAnimStyle = useAnimatedStyle(() => ({
+    opacity: rimOpacity.value,
+    transform: [{ rotate: `${rimRotation.value}deg` }],
+  }));
+
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
     PanResponder.create({
@@ -412,6 +422,8 @@ export function SwipeMask({
         borderOpacityVal.value = withTiming(0.68, { duration: 85 });
         onPressHoldStartRef.current?.();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        rimOpacity.value = withTiming(1, { duration: 180 });
+        rimRotation.value = withRepeat(withTiming(360, { duration: 1100, easing: ReaEasing.linear }), -1, false);
       },
 
       onPanResponderMove: (_, g) => {
@@ -437,6 +449,8 @@ export function SwipeMask({
       },
 
       onPanResponderRelease: (_, g) => {
+        rimOpacity.value = withTiming(0, { duration: 140 });
+        cancelAnimation(rimRotation);
         if (disabledRef.current || judgedRef.current) return;
 
         if (g.dy < -SWIPE_THRESHOLD) {
@@ -467,6 +481,8 @@ export function SwipeMask({
       },
 
       onPanResponderTerminate: () => {
+        rimOpacity.value = withTiming(0, { duration: 140 });
+        cancelAnimation(rimRotation);
         if (!judgedRef.current) {
           translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
           translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
@@ -525,6 +541,29 @@ export function SwipeMask({
           overflow: 'visible',
         }}
       >
+        {/* Press-hold spinning rim wrapper */}
+        <View style={{ position: 'relative' }}>
+        {/* Press-hold spinning rim — bleeds 3px outside the tile edge */}
+        <Animated.View
+          pointerEvents="none"
+          style={[{
+            position: 'absolute',
+            top: -3,
+            left: -3,
+            right: -3,
+            bottom: -3,
+            borderRadius: 29,
+            overflow: 'hidden',
+            zIndex: -1,
+          }, rimAnimStyle]}
+        >
+          <LinearGradient
+            colors={['#F5C842', '#7B2D8B', '#9B2D6B', '#F5C842']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1 }}
+          />
+        </Animated.View>
         {/* Main animated tile — Reanimated for transforms/opacity (native) */}
         <Animated.View
           style={[
@@ -549,6 +588,12 @@ export function SwipeMask({
               { backgroundColor: isSpecialSplit && splitBackgroundColor ? splitBackgroundColor : bgColor },
             ]}
           />
+
+          {/* Corner pips — decorative */}
+          <View style={styles.tilePipTL} pointerEvents="none" />
+          <View style={styles.tilePipTR} pointerEvents="none" />
+          <View style={styles.tilePipBL} pointerEvents="none" />
+          <View style={styles.tilePipBR} pointerEvents="none" />
 
           {/* Wrong flash */}
           {flashRed && (
@@ -588,6 +633,7 @@ export function SwipeMask({
             </RNAnimated.View>
           )}
         </Animated.View>
+        </View>
       </RNAnimated.View>
     </RNAnimated.View>
   );
@@ -595,7 +641,10 @@ export function SwipeMask({
 
 const styles = StyleSheet.create({
   tile: {
-    borderRadius: 24,
+    borderRadius: 26,
+    minHeight: 148,
+    alignSelf: 'center',
+    width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
@@ -739,4 +788,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     zIndex: 2,
   },
+  tilePipTL: { position: 'absolute', top: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
+  tilePipTR: { position: 'absolute', top: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
+  tilePipBL: { position: 'absolute', bottom: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
+  tilePipBR: { position: 'absolute', bottom: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
 });
