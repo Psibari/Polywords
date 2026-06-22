@@ -1,5 +1,5 @@
 # POLYWORDS — CLAUDE.md
-### Ground truth for Claude Code · Updated June 21, 2026
+### Ground truth for Claude Code · Updated June 22, 2026
 
 ---
 
@@ -116,28 +116,34 @@ Ghosted boss words return at index 9 (position 10), never replacing boss 12. Ent
 
 ## Play Screen Visual System (current)
 
-**Hero plaque** — dominant stage. Chamfered corner accents, multi-layer gold border (outer dark frame + gold frame + inner bevel), deep `#08061E` surface, purple underlight glow below. Spine at top, page edges at bottom. On correct UP swipe the bottom fans open like a book to absorb the tile (`triggerBookOpen` + `triggerAbsorption`), then snaps shut. Word never moves.
+**Token system** - `app/ui/pwTheme.ts` and `app/ui/pwMaterials.ts` define the premium POLYWORDS visual language. Token sections: color, opacity, space, radius, font, motion, z, shadow. Material recipes: `cardMaterial`, `deckBackMaterial`, `heroPlaqueMaterial`, `panelMaterial`, `affordanceText`. The token system is now partially wired into gameplay materials.
 
-**Tile card** — landscape playing card. `borderRadius: 26`, corner pips, dark `#0F0D2A` face. On press-hold a gold→purple gradient rim spins around the tile edge (Reanimated, in SwipeMask). Card compresses slightly on grab.
+**Hero plaque** - dominant word altar. The plaque face, rim, bevel, chamfers, page-edge accents, shadows, and underlight use tokenized hero material. Size/position, hero word font size/line height, and hero entrance animation unchanged. On correct UP swipe the bottom fans open like a book to absorb the tile (`triggerBookOpen` + `triggerAbsorption`), then snaps shut. Word never moves.
 
-**Deck stack** — backing cards fan behind the active card at rotation angles to show stack depth. Stack stays visible mid-word; only the top card is interactive and exits per swipe. After a swipe the next card springs up from the stack with a selection haptic (`cardPopY`, first card gated — deal-in handles word entry).
+**Tile card** - landscape playing card using tokenized card material in `SwipeMask.tsx`. On press-hold a gold-to-purple gradient rim spins around the tile edge (Reanimated, in SwipeMask). Swipe logic, PanResponder, Reanimated timings/shared values, card size, and positioning unchanged.
 
-**SFX** (`assets/sfx/`): `tile_swipe.mp3` = sword whoosh, `press_hold_start.mp3` = card pickup. `trap_shatter`, `trap_wrong`, `mastered`, `haunted`, `ui_click`, `polly_call` in use. `gate_open.mp3` orphaned (gate removed) — cleanup candidate.
+**Deck stack** - backing cards in `MaskBoard.tsx` use tokenized deck material. Backing card colors/rims/radius/shadow are tokenized; a subtle lower edge makes the stack read as physical cards. Stack count and offsets unchanged; active card still owns attention.
+
+**Locked visual grammar** - Center = active card/deck gameplay. Up lane = claim toward hero. Right side = reject lane, keep clean during active gameplay. Left side = Polly heckle/perch zone. Hero plaque = word altar. Active card + deck backs = same card-material family. Direction cues are help only, not correctness feedback.
+
+**SFX** (`assets/sfx/`): `tile_swipe.mp3` = sword whoosh, `press_hold_start.mp3` = card pickup. `trap_shatter`, `trap_wrong`, `mastered`, `haunted`, `ui_click`, `polly_call` in use. `gate_open.mp3` orphaned (gate removed) - cleanup candidate.
 
 ### Play-screen-overhaul safe branch state
 Active branch: `play-screen-overhaul`. Do not merge to main yet.
 
-New safe head: `1ce8add Add swipe direction affordances`.
+New safe head: `9caf626 Anchor gameplay Polly to left side`.
 
 Recent safe commits:
-1. `1ce8add Add swipe direction affordances`
-2. `e9a78d8 Add tile deck entrance`
-3. `492accc Add hero word lock-in entrance`
-4. `a64bd7a Add stacked clue deck visuals`
-5. `8fc5696 Restore stable play screen layout`
-6. `92c727f Restore centralized tile SFX wiring`
+1. `9caf626 Anchor gameplay Polly to left side`
+2. `22c35c2 Apply tokenized hero plaque material`
+3. `b0f123f Apply tokenized deck material to MaskBoard`
+4. `f6f8668 Apply tokenized card material to SwipeMask`
+5. `06a0318 Add Polywords visual token system`
+6. `c333b6e Update hunt data trap rewrites`
+7. `802546d Update docs for swipe affordance checkpoint`
+8. `1ce8add Add swipe direction affordances`
 
-Current build state: TypeScript passed before the affordance commit. Device screenshot approved after readability tune. Working tree clean after push.
+Current build state: TypeScript passed before the left-Polly checkpoint. Working tree clean after push.
 
 Shipped play-screen branch additions:
 1. Centralized tile SFX restored
@@ -146,6 +152,11 @@ Shipped play-screen branch additions:
 4. Hero word lock-in entrance
 5. Tile deck entrance
 6. Swipe direction affordances
+7. Polywords visual token system
+8. Tokenized active clue card material
+9. Tokenized deck backing material
+10. Tokenized hero plaque material
+11. Gameplay Polly anchored left
 
 ### Swipe direction affordances
 Implemented in `app/components/MaskBoard.tsx`. Commit: `1ce8add Add swipe direction affordances`.
@@ -160,6 +171,13 @@ RIGHT cue: placed outside active tile body, lower-right/right side of clue deck 
 
 Overlay uses `pointerEvents="none"`. Cues do not block swipes/touches. Cues are direction help only: no correctness feedback, no hero glow during drag, no target validation during drag, and no buttons, boxes, pills, or tutorial panels.
 
+### Shipped material passes
+
+1. Active clue card in `SwipeMask.tsx` now uses tokenized card material. Commit: `f6f8668`. Style/material only; swipe logic, PanResponder, Reanimated timings/shared values, card size, and positioning unchanged.
+2. Deck backing cards in `MaskBoard.tsx` now use tokenized deck material. Commit: `b0f123f`. Backing card colors/rims/radius/shadow tokenized; subtle lower edge added to make stack read as physical cards. Stack count and offsets unchanged; active card still owns attention.
+3. Hero plaque in `MaskBoard.tsx` now uses tokenized hero material. Commit: `22c35c2`. Plaque face/rim/bevel/chamfers/page-edge accents/shadows/underlight tokenized. Hero plaque size/position, hero word font size/line height, and hero entrance animation unchanged.
+4. Gameplay Polly anchored left. Commit: `9caf626`. Gameplay Polly size increased to 210 via `POLLY_GAMEPLAY_SIZE`. Active gameplay Polly now enters/perches from left only. Right side is reserved as the `SWIPE RIGHT TO REJECT` lane. Polly speech bubble narrowed/contained left so it does not crowd the reject cue. Pose mapping and dialogue unchanged. Results/home/cinematic Polly size not changed.
+
 ---
 
 ## Polly — Master of Words
@@ -172,10 +190,11 @@ The antagonist, not a mascot. Every trap is her move. The boss word is hers. Whe
 Poses: `flyExcited` (01), `flyRelaxed` (02), `perchNeutral` (03), `perchDismissive` (04), `perchLaughing` (05), `perchSmug` (06), `perchPointing` (07), `perchShocked` (08), `perchSulking` (09), `flyAngry` (10).
 
 ### Animation behavior
-Fly-up entrances, not pop-ins. `POLLY_SIZE = 190`.
-- Mid-round: flies in from bottom-left, perches, delivers speech, exits (branch pull off screen).
-- End-of-round: same entrance, flies to the perch side, delivers speech, exits.
-- Perch side is derived from the pose's facing direction: only `perchSmug` faces left (→ right perch); all other poses face right (→ left perch).
+Fly-up entrances, not pop-ins. Gameplay Polly size is `POLLY_GAMEPLAY_SIZE = 210`.
+- Mid-round: flies in from bottom-left, perches left, delivers speech, exits left.
+- End-of-round: same entrance, left perch, delivers speech, exits left.
+- Active gameplay right side is reserved as the `SWIPE RIGHT TO REJECT` lane: no Polly perch, settle point, speech bubble, body/crown, or fly-in destination there.
+- Speech bubble stays with left-side Polly and is narrowed/contained left so it does not crowd the reject cue.
 - One mid-round pop-in budget per word; end-of-round always fires.
 
 ### Trigger → pose map
@@ -251,6 +270,9 @@ Garden (→ Vault) · simultaneous tile render (→ one-at-a-time) · Switchback
 
 - Session always 12 words, boss always position 12
 - UP = real, RIGHT = trap, always
+- Wrong swipe is permanent
+- No left swipe and no tap interaction
+- No hero glow during drag, no target validation during drag, no correctness hints before swipe release
 - Mastered words graduate permanently; RUN IT BACK = fresh draw with ghost priority
 - Master Gate removed — boss perfect clear drops the mystery tile directly
 - MASTERED and GHOST are boss-only
@@ -266,6 +288,7 @@ Garden (→ Vault) · simultaneous tile render (→ one-at-a-time) · Switchback
 - Boss mastery uses `submitBossMastery()` — never `addBonusScore()`
 - Max 2 gold elements on screen
 - Polly Green is Polly only; red is wrong-swipe flash only
+- Polly's Word / boss internal naming stays as-is for now
 - Boss player-facing name = "Polly's Word"; engine `bossWord` flags unchanged
 - Live Content Engine is POST-LAUNCH only
 
@@ -291,6 +314,8 @@ app/components/MaskBoard.tsx      Main game board (warroom-gated)
 app/components/SwipeMask.tsx      Tile + swipe physics (Reanimated — frozen, warroom-gated)
 app/components/ui/PollySprite.tsx 10-pose PNG sprite component
 app/hooks/usePollyAnimator.ts     Polly fly-up arc system
+app/ui/pwTheme.ts                 Polywords visual tokens
+app/ui/pwMaterials.ts             Tokenized material recipes
 app/game/huntGenerator.ts         GPS arc sampling, ghost priority
 app/game/polyRunEngine.ts         Game state engine
 app/game/types.ts                 TypeScript types
@@ -314,13 +339,16 @@ tools/content/mask-rewriter       Local-only content tool — never wire into th
 
 ## On the Horizon
 
+- Polly speech bubble final polish later if needed
+- HUD material consistency pass
+- Background readability/contrast overlay tuning
 - `gate_open.mp3` cleanup from sfx folder
 - GPS metadata tagging audit across all words before next huntData regeneration
 - `isRare` flag database audit (confirm 300pt rare branch is reachable)
-- Cosmetic rename `submitSwipeDown` → `submitSwipeRight` (deferred, post-launch)
-- Gold Feather reward (earned by beating Daily, redo one tile that cost the last life) — analysis done, not built
-- `expo-av` → `expo-audio` migration finalization
+- Cosmetic rename `submitSwipeDown` -> `submitSwipeRight` (deferred, post-launch)
+- Gold Feather reward (earned by beating Daily, redo one tile that cost the last life) - analysis done, not built
+- `expo-av` -> `expo-audio` migration finalization
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · June 21, 2026*
+*POLYWORDS CLAUDE.md · Pete DiBari · June 22, 2026*

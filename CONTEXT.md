@@ -1,5 +1,5 @@
 # POLYWORDS — CONTEXT.md
-### Session briefing · June 21, 2026
+### Session briefing · June 22, 2026
 
 Read this at the start of any session. `CLAUDE.md` has full detail; this is the quick-reference and current build state.
 
@@ -51,17 +51,19 @@ UP = real (absorb into word). RIGHT = trap (shard burst). Wrong either way = fea
 
 **Active branch: `play-screen-overhaul`. Do not merge to main yet.**
 
-New safe head: `1ce8add Add swipe direction affordances`.
+New safe head: `9caf626 Anchor gameplay Polly to left side`.
 
 Recent safe commits:
-1. `1ce8add Add swipe direction affordances`
-2. `e9a78d8 Add tile deck entrance`
-3. `492accc Add hero word lock-in entrance`
-4. `a64bd7a Add stacked clue deck visuals`
-5. `8fc5696 Restore stable play screen layout`
-6. `92c727f Restore centralized tile SFX wiring`
+1. `9caf626 Anchor gameplay Polly to left side`
+2. `22c35c2 Apply tokenized hero plaque material`
+3. `b0f123f Apply tokenized deck material to MaskBoard`
+4. `f6f8668 Apply tokenized card material to SwipeMask`
+5. `06a0318 Add Polywords visual token system`
+6. `c333b6e Update hunt data trap rewrites`
+7. `802546d Update docs for swipe affordance checkpoint`
+8. `1ce8add Add swipe direction affordances`
 
-TypeScript passed before the affordance commit. Device screenshot approved after readability tune. Working tree clean after push.
+TypeScript passed before the left-Polly checkpoint. Working tree clean after push.
 
 Shipped play-screen branch additions:
 1. Centralized tile SFX restored
@@ -70,6 +72,33 @@ Shipped play-screen branch additions:
 4. Hero word lock-in entrance
 5. Tile deck entrance
 6. Swipe direction affordances
+7. Polywords visual token system
+8. Tokenized active clue card material
+9. Tokenized deck backing material
+10. Tokenized hero plaque material
+11. Gameplay Polly anchored left
+
+Visual token system:
+- `app/ui/pwTheme.ts` created
+- `app/ui/pwMaterials.ts` created
+- Token sections: color, opacity, space, radius, font, motion, z, shadow
+- Material recipes: `cardMaterial`, `deckBackMaterial`, `heroPlaqueMaterial`, `panelMaterial`, `affordanceText`
+- Token system exists and is partially wired into gameplay materials
+
+Shipped material passes:
+- Active clue card in `SwipeMask.tsx` uses tokenized card material. Commit: `f6f8668`. Style/material only; swipe logic, PanResponder, Reanimated timings/shared values, card size, and positioning unchanged.
+- Deck backing cards in `MaskBoard.tsx` use tokenized deck material. Commit: `b0f123f`. Backing card colors/rims/radius/shadow tokenized; subtle lower edge added; stack count and offsets unchanged; active card still owns attention.
+- Hero plaque in `MaskBoard.tsx` uses tokenized hero material. Commit: `22c35c2`. Plaque face/rim/bevel/chamfers/page-edge accents/shadows/underlight tokenized; hero plaque size/position, hero word font size/line height, and hero entrance animation unchanged.
+- Gameplay Polly anchored left. Commit: `9caf626`. Gameplay Polly size increased to 210 via `POLLY_GAMEPLAY_SIZE`; active gameplay Polly enters/perches from left only; right side reserved as the `SWIPE RIGHT TO REJECT` lane; speech bubble narrowed/contained left; pose mapping and dialogue unchanged; results/home/cinematic Polly size not changed.
+
+Locked visual grammar:
+- Center = active card/deck gameplay
+- Up lane = claim toward hero
+- Right side = reject lane, keep clean during active gameplay
+- Left side = Polly heckle/perch zone
+- Hero plaque = word altar
+- Active card + deck backs = same card-material family
+- Direction cues are help only, not correctness feedback
 
 Swipe direction affordances:
 - Implemented in `app/components/MaskBoard.tsx`
@@ -81,18 +110,19 @@ Swipe direction affordances:
 - Direction help only: no correctness feedback, no hero glow during drag, no target validation during drag, no buttons, boxes, pills, or tutorial panels
 
 Current visual/gameplay systems still in force:
-- **Master Gate removed entirely** — boss perfect clear now: Polly fires → heavy haptic → 600ms → mystery tile drops direct via `triggerFinalTilesDrop()`. `gatePhase` = `'locked' | 'tiles' | 'wrongFail' | 'mastered'`.
-- **Hero plaque redesign** — chamfered stage, multi-layer gold border, deep `#08061E` surface, page edges at bottom, purple underlight. Bottom fans open like a book on correct UP swipe (`triggerBookOpen`).
-- **Tile card redesign** — landscape playing card, `borderRadius: 26`, corner pips, spinning gold→purple rim on press-hold (Reanimated, in SwipeMask).
-- **New Polly system** — 10 individual PNGs in `assets/images/Polly/` (`polly_01-10.png`). `PollySprite.tsx` named poses; `usePollyAnimator.ts` is a fly-up arc system. `POLLY_SIZE = 190`.
+- **Master Gate removed entirely** - boss perfect clear now: Polly fires -> heavy haptic -> 600ms -> mystery tile drops direct via `triggerFinalTilesDrop()`. `gatePhase` = `'locked' | 'tiles' | 'wrongFail' | 'mastered'`.
+- **Hero plaque tokenized** - word altar material uses tokenized face/rim/bevel/chamfers/page edges/shadows/underlight. Bottom fans open like a book on correct UP swipe (`triggerBookOpen`).
+- **Tile card tokenized** - landscape playing card, `borderRadius: 26`, corner pips, spinning gold-to-purple rim on press-hold (Reanimated, in SwipeMask).
+- **Deck stack tokenized** - backing cards use tokenized deck material and physical lower edge.
+- **Polly gameplay left lane** - 10 individual PNGs in `assets/images/Polly/` (`polly_01-10.png`). `PollySprite.tsx` named poses; `usePollyAnimator.ts` fly-up arc; gameplay size `POLLY_GAMEPLAY_SIZE = 210`; active gameplay perches left only.
 
 **Polly poses:** flyExcited(01) flyRelaxed(02) perchNeutral(03) perchDismissive(04) perchLaughing(05) perchSmug(06) perchPointing(07) perchShocked(08) perchSulking(09) flyAngry(10).
 
-**Polly behavior:** fly-up entrances (not pop-ins). Mid-round perches, delivers speech, exits via branch pull. Perch side derived from pose facing — only `perchSmug` faces left (right perch), all others face right (left perch).
+**Polly behavior:** fly-up entrances (not pop-ins). Mid-round and end-of-round Polly enters/perches/exits from the left during active gameplay. Right side stays reserved for `SWIPE RIGHT TO REJECT`; speech bubble stays narrowed/contained left.
 
-**Trigger map:** trap rejected → perchDismissive · wrong swipe → perchSmug "Thought so." · haunt created / run clipped → perchLaughing · player masters → perchSulking · beats Polly → flyAngry · boss throw → perchPointing · perfect clear → perchShocked.
+**Trigger map:** trap rejected -> perchDismissive; wrong swipe -> perchSmug "Thought so."; haunt created / run clipped -> perchLaughing; player masters -> perchSulking; beats Polly -> flyAngry; boss throw -> perchPointing; perfect clear -> perchShocked.
 
-**Stash:** Ghost Haunt Loop stash preserved (`stash@{0}: On main: wip haunt loop type scaffolding`) — do not drop.
+**Stash:** Ghost Haunt Loop stash preserved (`stash@{0}: On main: wip haunt loop type scaffolding`) - do not drop.
 
 **Cleanup candidate:** `gate_open.mp3` still in sfx folder, gate removed.
 
@@ -146,13 +176,16 @@ Removed: revealHidden(), hiddenFound in WordResult, pollyTrigger 'hiddenReveal' 
 - setTimeout between phases, never .start() callbacks
 - Ghost wordId = word string, never stepIndex
 - Boss position 12 always · haunt slot index 9, never boss zone
-- Wrong swipes permanent · no snap-back
-- Master Gate removed — mystery tile drops direct on perfect boss clear
+- Wrong swipes permanent - no snap-back, no retry
+- No left swipe and no tap interaction
+- No hero glow during drag, no target validation during drag, no correctness hints before swipe release
+- Master Gate remains removed - mystery tile drops direct on perfect boss clear
 - MASTERED and GHOST boss-only · boss mystery randomly real or trap
 - Words 1–11 advance via triggerWordExit(), no overlay
 - wrongSwipeOccurred.current resets every new word
 - "Thought so." / "BINGO BANGO ZZZZINGO!" never change · ZZZZINGO is game/system, not Polly
 - Boss mastery uses submitBossMastery()
+- Polly's Word / boss internal naming stays as-is for now
 - MaskBoard.tsx and SwipeMask.tsx need warroom analysis before any prompt
 - Preserve Ghost Haunt Loop stash
 - play-screen-overhaul — do not merge to main
@@ -166,6 +199,8 @@ app/components/MaskBoard.tsx          Main board (warroom-gated)
 app/components/SwipeMask.tsx          Tile + swipe (Reanimated, frozen, warroom-gated)
 app/components/ui/PollySprite.tsx     10-pose PNG component
 app/hooks/usePollyAnimator.ts         Polly fly-up arc system
+app/ui/pwTheme.ts                     Polywords visual tokens
+app/ui/pwMaterials.ts                 Tokenized material recipes
 app/game/huntGenerator.ts             GPS arc sampling
 app/game/polyRunEngine.ts             Engine
 app/game/types.ts                     Types
@@ -187,8 +222,8 @@ tools/content/mask-rewriter           Local-only — never wire into app
 
 ## Next
 
-`gate_open.mp3` cleanup from sfx folder · GPS metadata tagging audit · `isRare` reachability audit · cosmetic `submitSwipeDown`→`submitSwipeRight` rename later, post-launch · Gold Feather reward · `expo-av`→`expo-audio` finalization.
+Polly speech bubble final polish later if needed; HUD material consistency pass; background readability/contrast overlay tuning; `gate_open.mp3` cleanup from sfx folder; GPS metadata tagging audit; `isRare` reachability audit; cosmetic `submitSwipeDown`->`submitSwipeRight` rename later, post-launch; Gold Feather reward; `expo-av`->`expo-audio` finalization.
 
 ---
 
-*POLYWORDS CONTEXT.md · Pete DiBari · June 21, 2026*
+*POLYWORDS CONTEXT.md · Pete DiBari · June 22, 2026*
