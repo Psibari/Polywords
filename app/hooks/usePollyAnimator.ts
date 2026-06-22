@@ -66,6 +66,7 @@ export function usePollyAnimator(
   const [pollyVisible, _setPollyVisible] = useState(false);
   const pollyVisibleRef = useRef(false);
   const [perchSide, setPerchSide] = useState<PerchSide>('left');
+  const perchSideRef = useRef<PerchSide>('left');
 
   function setPollyVisible(v: boolean) {
     pollyVisibleRef.current = v;
@@ -106,6 +107,7 @@ export function usePollyAnimator(
     pollyOpacity.setValue(1);
     setPollyVisible(true);
     setPerchSide(side);
+    perchSideRef.current = side;
 
     Animated.parallel([
       Animated.timing(pollyX, {
@@ -293,11 +295,26 @@ export function usePollyAnimator(
         const wc = wrongCountRef.current;
         const speech = wc >= 3 ? 'BBBLAAAAHHAHAHA!' : wc === 2 ? 'Close enough to fool you.' : 'Thought so.';
         const pose: PollyPose = wc >= 3 ? 'perchLaughing' : 'perchSmug';
+        const targetSide = perchSideForPose(pose, false);
         if (pollyVisibleRef.current) {
-          setCurrentPose(pose);
-          animWrong();
-          setSpeech(speech, 2000);
-          scheduleExit(2600, perchSide);
+          if (targetSide !== perchSideRef.current) {
+            // Pose needs the other perch — fly out, then fly back to correct side
+            if (exitTimerRef.current !== null) { clearTimeout(exitTimerRef.current); exitTimerRef.current = null; }
+            exitPerch(perchSideRef.current, () => {
+              setCurrentPose('flyExcited');
+              flyInToPerch(targetSide, () => {
+                setCurrentPose(pose);
+                startBreathing();
+              });
+            });
+            setSpeech(speech, 2000);
+            scheduleExit(2600 + 300, targetSide);
+          } else {
+            setCurrentPose(pose);
+            animWrong();
+            setSpeech(speech, 2000);
+            scheduleExit(2600, targetSide);
+          }
         } else {
           tryMidRound('flyExcited', pose, speech, 2000);
         }
