@@ -2127,7 +2127,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       {pollyVisible && (
         <Animated.View style={[styles.pollyAnchor, pollyPositionStyle]} pointerEvents="none">
           <Animated.View style={pollyAnimatedStyle}>
-            <PollySprite pose={currentPose} size={140} />
+            <PollySprite pose={currentPose} size={190} />
           </Animated.View>
         </Animated.View>
       )}
@@ -2804,9 +2804,9 @@ const styles = StyleSheet.create({
   pollyAnchor: {
     position: 'absolute',
     bottom: 16,
-    left: -6,
-    width: 140,
-    height: 140,
+    left: -10,
+    width: 190,
+    height: 190,
   },
   speechBubble: {
     position: 'absolute',
