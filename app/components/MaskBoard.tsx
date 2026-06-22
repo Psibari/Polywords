@@ -21,7 +21,7 @@ import { usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
-import { deckBackMaterial } from '../ui/pwMaterials';
+import { deckBackMaterial, heroPlaqueMaterial } from '../ui/pwMaterials';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -1725,9 +1725,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           );
         }}
       >
-        <View style={styles.wordStageOuterFrame} pointerEvents="none" />
-        <View style={styles.wordStageFrame} pointerEvents="none" />
-        <View style={styles.wordStageInnerBevel} pointerEvents="none" />
+        <View style={[styles.wordStageOuterFrame, heroPlaqueMaterial.rim]} pointerEvents="none" />
+        <View style={[styles.wordStageFrame, heroPlaqueMaterial.base]} pointerEvents="none" />
+        <View style={[styles.wordStageInnerBevel, heroPlaqueMaterial.rim]} pointerEvents="none" />
         <View style={styles.wordStageChamferTL} pointerEvents="none" />
         <View style={styles.wordStageChamferTR} pointerEvents="none" />
         <Animated.View
@@ -1785,7 +1785,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             }],
           }]}
         />
-        <View style={styles.wordStageUnderlight} pointerEvents="none" />
+        <View style={[heroPlaqueMaterial.underGlow, styles.wordStageUnderlight]} pointerEvents="none" />
 
         {/* Boss gold sweep */}
         {bossSweepActive && (
@@ -2451,9 +2451,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: 'rgba(245,200,66,0.55)',
-    backgroundColor: '#08061E',
-    shadowColor: '#7B2D8B',
+    borderColor: PW.color.goldSoft,
+    backgroundColor: PW.color.bgDeep,
+    shadowColor: PW.color.shadow,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.55,
     shadowRadius: 24,
@@ -2467,8 +2467,8 @@ const styles = StyleSheet.create({
     bottom: -2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#3D1F6B',
-    backgroundColor: '#0A0820',
+    borderColor: PW.color.purpleSoft,
+    backgroundColor: PW.color.surfaceDeep,
   },
   wordStageInnerBevel: {
     position: 'absolute',
@@ -2478,7 +2478,7 @@ const styles = StyleSheet.create({
     bottom: 6,
     borderRadius: 2,
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.22)',
+    borderColor: PW.color.cardRim,
     backgroundColor: 'transparent',
   },
   wordStageChamferTL: {
@@ -2489,8 +2489,8 @@ const styles = StyleSheet.create({
     height: 10,
     borderTopWidth: 2,
     borderLeftWidth: 2,
-    borderColor: '#F5C842',
-    opacity: 0.85,
+    borderColor: PW.color.goldSoft,
+    opacity: 0.68,
   },
   wordStageChamferTR: {
     position: 'absolute',
@@ -2500,8 +2500,8 @@ const styles = StyleSheet.create({
     height: 10,
     borderTopWidth: 2,
     borderRightWidth: 2,
-    borderColor: '#F5C842',
-    opacity: 0.85,
+    borderColor: PW.color.goldSoft,
+    opacity: 0.68,
   },
   wordStageChamferBL: {
     position: 'absolute',
@@ -2511,8 +2511,8 @@ const styles = StyleSheet.create({
     height: 10,
     borderBottomWidth: 2,
     borderLeftWidth: 2,
-    borderColor: '#F5C842',
-    opacity: 0.85,
+    borderColor: PW.color.goldSoft,
+    opacity: 0.68,
   },
   wordStageChamferBR: {
     position: 'absolute',
@@ -2522,8 +2522,8 @@ const styles = StyleSheet.create({
     height: 10,
     borderBottomWidth: 2,
     borderRightWidth: 2,
-    borderColor: '#F5C842',
-    opacity: 0.85,
+    borderColor: PW.color.goldSoft,
+    opacity: 0.68,
   },
   wordStagePageEdge1: {
     position: 'absolute',
@@ -2531,7 +2531,7 @@ const styles = StyleSheet.create({
     right: 14,
     bottom: 0,
     height: 1,
-    backgroundColor: 'rgba(245,200,66,0.18)',
+    backgroundColor: PW.color.cardRim,
   },
   wordStagePageEdge2: {
     position: 'absolute',
@@ -2539,7 +2539,8 @@ const styles = StyleSheet.create({
     right: 14,
     bottom: -3,
     height: 1,
-    backgroundColor: 'rgba(245,200,66,0.11)',
+    backgroundColor: PW.color.goldGlow,
+    opacity: 0.62,
   },
   wordStagePageEdge3: {
     position: 'absolute',
@@ -2547,7 +2548,8 @@ const styles = StyleSheet.create({
     right: 14,
     bottom: -6,
     height: 1,
-    backgroundColor: 'rgba(245,200,66,0.06)',
+    backgroundColor: PW.color.cardRim,
+    opacity: 0.28,
   },
   wordStageUnderlight: {
     position: 'absolute',
@@ -2556,9 +2558,9 @@ const styles = StyleSheet.create({
     bottom: -18,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#7B2D8B',
-    opacity: 0.35,
-    shadowColor: '#7B2D8B',
+    backgroundColor: PW.color.purple,
+    opacity: PW.opacity.subtle,
+    shadowColor: PW.color.purple,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 16,
