@@ -124,6 +124,42 @@ Ghosted boss words return at index 9 (position 10), never replacing boss 12. Ent
 
 **SFX** (`assets/sfx/`): `tile_swipe.mp3` = sword whoosh, `press_hold_start.mp3` = card pickup. `trap_shatter`, `trap_wrong`, `mastered`, `haunted`, `ui_click`, `polly_call` in use. `gate_open.mp3` orphaned (gate removed) — cleanup candidate.
 
+### Play-screen-overhaul safe branch state
+Active branch: `play-screen-overhaul`. Do not merge to main yet.
+
+New safe head: `1ce8add Add swipe direction affordances`.
+
+Recent safe commits:
+1. `1ce8add Add swipe direction affordances`
+2. `e9a78d8 Add tile deck entrance`
+3. `492accc Add hero word lock-in entrance`
+4. `a64bd7a Add stacked clue deck visuals`
+5. `8fc5696 Restore stable play screen layout`
+6. `92c727f Restore centralized tile SFX wiring`
+
+Current build state: TypeScript passed before the affordance commit. Device screenshot approved after readability tune. Working tree clean after push.
+
+Shipped play-screen branch additions:
+1. Centralized tile SFX restored
+2. Stable layout restored after bad play layout commit was neutralized
+3. True stacked clue deck visuals
+4. Hero word lock-in entrance
+5. Tile deck entrance
+6. Swipe direction affordances
+
+### Swipe direction affordances
+Implemented in `app/components/MaskBoard.tsx`. Commit: `1ce8add Add swipe direction affordances`.
+
+Text:
+- `SWIPE UP TO CLAIM`
+- `SWIPE RIGHT TO REJECT`
+
+UP cue: placed above active tile, centered in the open gap between hero word and deck. Style: `color: '#F5C842'`, `opacity: 0.72`, `fontSize: 14`, `top: -48`.
+
+RIGHT cue: placed outside active tile body, lower-right/right side of clue deck area. Style: `color: '#B98ADE'`, `opacity: 0.74`, `fontSize: 14`, `top: TILE_H + 44`, `right: 8`, `width: 190`.
+
+Overlay uses `pointerEvents="none"`. Cues do not block swipes/touches. Cues are direction help only: no correctness feedback, no hero glow during drag, no target validation during drag, and no buttons, boxes, pills, or tutorial panels.
+
 ---
 
 ## Polly — Master of Words
@@ -278,7 +314,6 @@ tools/content/mask-rewriter       Local-only content tool — never wire into th
 
 ## On the Horizon
 
-- P5B swipe direction affordances (SWIPE UP TO CLAIM above tile, faint gold ~13px; SWIPE RIGHT TO REJECT right-lower of deck, faint purple ~13px) — no buttons, no correctness feedback, no hero glow during drag
 - `gate_open.mp3` cleanup from sfx folder
 - GPS metadata tagging audit across all words before next huntData regeneration
 - `isRare` flag database audit (confirm 300pt rare branch is reachable)

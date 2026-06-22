@@ -49,16 +49,42 @@ UP = real (absorb into word). RIGHT = trap (shard burst). Wrong either way = fea
 
 ## CURRENT BUILD STATE
 
-**Active branch: `play-screen-overhaul`. Do not merge to main. `tsc --noEmit` exits 0. Device tested and approved.**
+**Active branch: `play-screen-overhaul`. Do not merge to main yet.**
 
-Shipped this branch, in order:
-1. Dead code + font fixes (speechText → Lilita One, haunt copy, removed CLIP_PATHS, GhostTile import, ghostVisible, unused vars/styles, AsyncStorage gateIntro)
-2. **Master Gate removed entirely** — boss perfect clear now: Polly fires → heavy haptic → 600ms → mystery tile drops direct via `triggerFinalTilesDrop()`. `gatePhase` = `'locked' | 'tiles' | 'wrongFail' | 'mastered'`.
-3. **Hero plaque redesign** — chamfered stage, multi-layer gold border, deep `#08061E` surface, page edges at bottom, purple underlight. Bottom fans open like a book on correct UP swipe (`triggerBookOpen`).
-4. **Tile card redesign** — landscape playing card, `borderRadius: 26`, corner pips, spinning gold→purple rim on press-hold (Reanimated, in SwipeMask).
-5. **Deck fan + card pop** — backing cards rotate to show stack depth; next card springs up from stack with haptic after each swipe (`cardPopY`, first card gated). Stack stays visible mid-word, only top card interactive.
-6. **SFX** — `tile_swipe.mp3` = sword whoosh, `press_hold_start.mp3` = card pickup.
-7. **New Polly system** — replaced sprite-sheet with 10 individual PNGs in `assets/images/Polly/` (`polly_01-10.png`). `PollySprite.tsx` named poses; `usePollyAnimator.ts` rewritten as fly-up arc system. `POLLY_SIZE = 190`.
+New safe head: `1ce8add Add swipe direction affordances`.
+
+Recent safe commits:
+1. `1ce8add Add swipe direction affordances`
+2. `e9a78d8 Add tile deck entrance`
+3. `492accc Add hero word lock-in entrance`
+4. `a64bd7a Add stacked clue deck visuals`
+5. `8fc5696 Restore stable play screen layout`
+6. `92c727f Restore centralized tile SFX wiring`
+
+TypeScript passed before the affordance commit. Device screenshot approved after readability tune. Working tree clean after push.
+
+Shipped play-screen branch additions:
+1. Centralized tile SFX restored
+2. Stable layout restored after bad play layout commit was neutralized
+3. True stacked clue deck visuals
+4. Hero word lock-in entrance
+5. Tile deck entrance
+6. Swipe direction affordances
+
+Swipe direction affordances:
+- Implemented in `app/components/MaskBoard.tsx`
+- Commit: `1ce8add Add swipe direction affordances`
+- Text: `SWIPE UP TO CLAIM` and `SWIPE RIGHT TO REJECT`
+- UP cue: above active tile, centered in open gap between hero word and deck; `color: '#F5C842'`, `opacity: 0.72`, `fontSize: 14`, `top: -48`
+- RIGHT cue: outside active tile body, lower-right/right side of clue deck area; `color: '#B98ADE'`, `opacity: 0.74`, `fontSize: 14`, `top: TILE_H + 44`, `right: 8`, `width: 190`
+- Overlay uses `pointerEvents="none"` and does not block swipes/touches
+- Direction help only: no correctness feedback, no hero glow during drag, no target validation during drag, no buttons, boxes, pills, or tutorial panels
+
+Current visual/gameplay systems still in force:
+- **Master Gate removed entirely** — boss perfect clear now: Polly fires → heavy haptic → 600ms → mystery tile drops direct via `triggerFinalTilesDrop()`. `gatePhase` = `'locked' | 'tiles' | 'wrongFail' | 'mastered'`.
+- **Hero plaque redesign** — chamfered stage, multi-layer gold border, deep `#08061E` surface, page edges at bottom, purple underlight. Bottom fans open like a book on correct UP swipe (`triggerBookOpen`).
+- **Tile card redesign** — landscape playing card, `borderRadius: 26`, corner pips, spinning gold→purple rim on press-hold (Reanimated, in SwipeMask).
+- **New Polly system** — 10 individual PNGs in `assets/images/Polly/` (`polly_01-10.png`). `PollySprite.tsx` named poses; `usePollyAnimator.ts` is a fly-up arc system. `POLLY_SIZE = 190`.
 
 **Polly poses:** flyExcited(01) flyRelaxed(02) perchNeutral(03) perchDismissive(04) perchLaughing(05) perchSmug(06) perchPointing(07) perchShocked(08) perchSulking(09) flyAngry(10).
 
@@ -161,7 +187,7 @@ tools/content/mask-rewriter           Local-only — never wire into app
 
 ## Next
 
-P5B swipe direction affordances (SWIPE UP TO CLAIM above tile gesture gap, faint gold ~13px; SWIPE RIGHT TO REJECT right-lower of deck, faint purple ~13px — no buttons, no correctness feedback, no hero glow during drag). Then: gate_open.mp3 cleanup · GPS metadata tagging audit · isRare reachability audit · submitSwipeDown→submitSwipeRight rename (post-launch) · Gold Feather reward · expo-av→expo-audio finalization.
+`gate_open.mp3` cleanup from sfx folder · GPS metadata tagging audit · `isRare` reachability audit · cosmetic `submitSwipeDown`→`submitSwipeRight` rename later, post-launch · Gold Feather reward · `expo-av`→`expo-audio` finalization.
 
 ---
 
