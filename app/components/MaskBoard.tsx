@@ -1989,7 +1989,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       {/* ── TILE ZONE ───────────────────────────────────────── */}
       <View style={styles.gridWrap}>
         <View style={styles.tileStackArea}>
-        {showBoardContent && (
+          {showBoardContent && gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
+            <View pointerEvents="none" style={styles.swipeCueOverlay}>
+              <Text style={[styles.swipeCueText, styles.swipeUpCue]}>
+                SWIPE UP TO CLAIM
+              </Text>
+              <Text style={[styles.swipeCueText, styles.swipeRightCue]}>
+                SWIPE RIGHT TO REJECT
+              </Text>
+            </View>
+          )}
+          {showBoardContent && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
@@ -2102,7 +2112,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             )}
             </Animated.View>
           </Animated.View>
-        )}
+          )}
 
         </View>
       </View>
@@ -2614,6 +2624,41 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingTop: 0,
     overflow: 'visible',
+  },
+  swipeCueOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    minHeight: TILE_H + 96,
+    zIndex: 3,
+    elevation: 3,
+  },
+  swipeCueText: {
+    position: 'absolute',
+    fontFamily: FONTS.label,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.9,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.42)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 3,
+  },
+  swipeUpCue: {
+    top: -48,
+    left: 0,
+    right: 0,
+    color: '#F5C842',
+    opacity: 0.72,
+  },
+  swipeRightCue: {
+    top: TILE_H + 44,
+    right: 8,
+    width: 190,
+    color: '#B98ADE',
+    opacity: 0.74,
+    textAlign: 'right',
   },
   tileStack: {
     width: '94%',
