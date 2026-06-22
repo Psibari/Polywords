@@ -14,16 +14,16 @@ export type PollyPose =
   | 'flyAngry'         // polly_10 — "YOU BEAT POLLY"
 
 const POSE_IMAGES: Record<PollyPose, ReturnType<typeof require>> = {
-  flyExcited:      require('../../../assets/images/polly/polly_01.png'),
-  flyRelaxed:      require('../../../assets/images/polly/polly_02.png'),
-  perchNeutral:    require('../../../assets/images/polly/polly_03.png'),
-  perchDismissive: require('../../../assets/images/polly/polly_04.png'),
-  perchLaughing:   require('../../../assets/images/polly/polly_05.png'),
-  perchSmug:       require('../../../assets/images/polly/polly_06.png'),
-  perchPointing:   require('../../../assets/images/polly/polly_07.png'),
-  perchShocked:    require('../../../assets/images/polly/polly_08.png'),
-  perchSulking:    require('../../../assets/images/polly/polly_09.png'),
-  flyAngry:        require('../../../assets/images/polly/polly_10.png'),
+  flyExcited:      require('../../../assets/images/Polly/polly_01.png'),
+  flyRelaxed:      require('../../../assets/images/Polly/polly_02.png'),
+  perchNeutral:    require('../../../assets/images/Polly/polly_03.png'),
+  perchDismissive: require('../../../assets/images/Polly/polly_04.png'),
+  perchLaughing:   require('../../../assets/images/Polly/polly_05.png'),
+  perchSmug:       require('../../../assets/images/Polly/polly_06.png'),
+  perchPointing:   require('../../../assets/images/Polly/polly_07.png'),
+  perchShocked:    require('../../../assets/images/Polly/polly_08.png'),
+  perchSulking:    require('../../../assets/images/Polly/polly_09.png'),
+  flyAngry:        require('../../../assets/images/Polly/polly_10.png'),
 };
 
 interface PollySpriteProps {
