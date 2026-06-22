@@ -17,7 +17,7 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import PollySprite from './ui/PollySprite';
-import { usePollyAnimator } from '../hooks/usePollyAnimator';
+import { POLLY_GAMEPLAY_SIZE, usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
@@ -2143,7 +2143,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       {pollyVisible && (
         <Animated.View style={[styles.pollyAnchor, pollyPositionStyle]} pointerEvents="none">
           <Animated.View style={pollyAnimatedStyle}>
-            <PollySprite pose={currentPose} size={190} />
+            <PollySprite pose={currentPose} size={POLLY_GAMEPLAY_SIZE} />
           </Animated.View>
         </Animated.View>
       )}
@@ -2869,12 +2869,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     left: -10,
-    width: 190,
-    height: 190,
+    width: POLLY_GAMEPLAY_SIZE,
+    height: POLLY_GAMEPLAY_SIZE,
   },
   speechBubble: {
     position: 'absolute',
-    maxWidth: 210,
+    maxWidth: 168,
     backgroundColor: 'rgba(20,18,56,0.94)',
     borderRadius: 10,
     borderWidth: 1,
@@ -2883,8 +2883,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   speechBubbleLeft: {
-    bottom: 164,
-    left: 78,
+    bottom: 184,
+    left: 20,
   },
   speechBubbleRight: {
     bottom: 164,

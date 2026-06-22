@@ -40,7 +40,8 @@ const MID_ROUND_BUDGET = 1;
 
 // Screen layout constants — adjust if layout changes
 const SCREEN_W = 390;
-const POLLY_SIZE = 190;
+export const POLLY_GAMEPLAY_SIZE = 210;
+const POLLY_SIZE = POLLY_GAMEPLAY_SIZE;
 const PERCH_LEFT_X  = -16;
 const PERCH_LEFT_Y  = 0;
 const PERCH_RIGHT_X = SCREEN_W - POLLY_SIZE + 16;
@@ -48,11 +49,7 @@ const PERCH_RIGHT_Y = 0;
 const START_X = -POLLY_SIZE - 20;
 const START_Y = 120;
 
-const LEFT_FACING_POSES: PollyPose[] = ['perchSmug'];
-
-function perchSideForPose(pose: PollyPose, isEndOfRound: boolean): PerchSide {
-  if (LEFT_FACING_POSES.includes(pose)) return 'right';
-  if (isEndOfRound) return 'right';
+function perchSideForPose(_pose: PollyPose, _isEndOfRound: boolean): PerchSide {
   return 'left';
 }
 
