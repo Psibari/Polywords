@@ -25,6 +25,8 @@ import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
+import { PW } from '../ui/pwTheme';
+import { cardMaterial } from '../ui/pwMaterials';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -109,7 +111,7 @@ export function SwipeMask({
   const bgAnim = useRef(new RNAnimated.Value(0)).current;
   const bgColor = bgAnim.interpolate({
     inputRange:  [0,         0.5,       1.0      ],
-    outputRange: ['#100B34', '#24185A', '#171833'],
+    outputRange: [PW.color.cardFace, PW.color.surfaceRaised, PW.color.surfaceBase],
   });
 
   // ── RN Animated: entry (native driver) ────────────────────────
@@ -581,6 +583,9 @@ export function SwipeMask({
         >
           {/* Top edge shine */}
           <View style={styles.tileTopShine} />
+          {!isSpecialSplit && (
+            <View pointerEvents="none" style={styles.tileBottomEdge} />
+          )}
           {/* Non-native animated background */}
           <RNAnimated.View
             style={[
@@ -641,7 +646,7 @@ export function SwipeMask({
 
 const styles = StyleSheet.create({
   tile: {
-    borderRadius: 26,
+    borderRadius: PW.radius.card,
     minHeight: 148,
     alignSelf: 'center',
     width: '100%',
@@ -652,11 +657,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderWidth: 1.5,
     // borderColor driven by Reanimated (tileAnimStyle)
-    shadowColor:   '#000000',
-    shadowOffset:  { width: 0, height: 12 },
-    shadowRadius:  20,
-    shadowOpacity: 0.5,
-    elevation: 14,
+    ...PW.shadow.cardLifted,
     overflow: 'hidden',
   },
   phrasePanel: {
@@ -667,13 +668,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: 'rgba(3,2,16,0.62)',
+    backgroundColor: PW.color.surfaceDeep,
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.16)',
-    shadowColor: '#000',
+    borderColor: PW.color.cardInner,
+    shadowColor: PW.color.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 12,
-    shadowOpacity: 0.52,
+    shadowOpacity: 0.44,
     overflow: 'hidden',
     zIndex: 2,
   },
@@ -739,10 +740,10 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   flashOverlay: {
-    borderRadius: 26,
+    borderRadius: PW.radius.card,
     zIndex: 10,
     borderWidth: 1,
-    borderColor: 'rgba(204,34,0,0.52)',
+    borderColor: PW.color.wrong,
     backgroundColor: 'rgba(204,34,0,0.16)',
   },
   eraBadgeWrap: {
@@ -784,12 +785,18 @@ const styles = StyleSheet.create({
     left: 22,
     right: 22,
     height: 3,
-    backgroundColor: 'rgba(245,200,66,0.36)',
+    backgroundColor: PW.color.cardInner,
     borderRadius: 3,
     zIndex: 2,
   },
-  tilePipTL: { position: 'absolute', top: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
-  tilePipTR: { position: 'absolute', top: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
-  tilePipBL: { position: 'absolute', bottom: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
-  tilePipBR: { position: 'absolute', bottom: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,200,66,0.14)' },
+  tileBottomEdge: {
+    ...cardMaterial.bottomEdge,
+    left: 22,
+    right: 22,
+    zIndex: 1,
+  },
+  tilePipTL: { position: 'absolute', top: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
+  tilePipTR: { position: 'absolute', top: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
+  tilePipBL: { position: 'absolute', bottom: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
+  tilePipBR: { position: 'absolute', bottom: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
 });
