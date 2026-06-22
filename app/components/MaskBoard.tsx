@@ -20,6 +20,8 @@ import PollySprite from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
+import { PW } from '../ui/pwTheme';
+import { deckBackMaterial } from '../ui/pwMaterials';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -31,16 +33,16 @@ const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 6;
 const DECK_BACKING_COLORS = [
-  'rgba(24,19,54,0.9)',
-  'rgba(20,16,48,0.84)',
-  'rgba(16,13,41,0.78)',
-  'rgba(12,10,34,0.72)',
+  PW.color.surfaceRaised,
+  PW.color.surfaceBase,
+  'rgba(15,13,42,0.88)',
+  'rgba(11,9,32,0.82)',
 ] as const;
 const DECK_BACKING_BORDER_COLORS = [
-  'rgba(123,45,139,0.34)',
-  'rgba(123,45,139,0.24)',
-  'rgba(245,200,66,0.10)',
-  'rgba(255,255,255,0.05)',
+  PW.color.purpleSoft,
+  'rgba(123,45,139,0.30)',
+  'rgba(245,200,66,0.14)',
+  'rgba(255,255,255,0.07)',
 ] as const;
 
 type FloatEntry = { id: number; value: number; x: number; y: number; color: string };
@@ -2011,6 +2013,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       key={`deck-backing-${depth}`}
                       pointerEvents="none"
                       style={[
+                        deckBackMaterial.base,
+                        deckBackMaterial.rim,
                         styles.deckBackingCard,
                         {
                           top: depth * DECK_BACKING_OFFSET,
@@ -2025,7 +2029,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                           ],
                         },
                       ]}
-                    />
+                    >
+                      <View style={styles.deckBackingLowerEdge} />
+                    </Animated.View>
                   );
                 })}
                 {/* ── TOP CARD — interactive ── */}
@@ -2678,14 +2684,25 @@ const styles = StyleSheet.create({
   deckBackingCard: {
     position: 'absolute',
     height: TILE_H,
-    borderRadius: 24,
+    borderRadius: PW.radius.card,
     borderWidth: 1,
-    shadowColor: '#000000',
+    shadowColor: PW.color.shadow,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 1,
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    elevation: 2,
+    overflow: 'hidden',
     zIndex: 1,
+  },
+  deckBackingLowerEdge: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 6,
+    height: 2,
+    borderRadius: 2,
+    backgroundColor: PW.color.cardBottomEdge,
+    opacity: 0.42,
   },
   deckActiveCardLayer: {
     position: 'relative',
