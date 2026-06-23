@@ -14,7 +14,7 @@ type HuntDB = Record<string, HuntWordData>;
 
 const db = rawHuntData as unknown as HuntDB;
 
-export const SESSION_LENGTH = 12;
+export const SESSION_LENGTH = 10;
 
 type GpsDistribution = {
   confidence: number;
