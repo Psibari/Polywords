@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
@@ -7,6 +7,7 @@ import { useGameStore } from '../store/useGameStore';
 import { MaskBoard } from '../components/MaskBoard';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
+import { PW } from '../ui/pwTheme';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { preloadSfx, unloadSfx } from '../audio/sfx';
@@ -223,10 +224,14 @@ function TopBar() {
     <View style={tb.root}>
       {/* Row 1: Score · Streak · Feathers */}
       <View style={tb.statsRow}>
-        <Text style={tb.scoreVal}>{displayScore}</Text>
-        <StreakDisplay />
+        <View style={[tb.hudChip, tb.scoreChip]}>
+          <Text style={tb.scoreVal}>{displayScore}</Text>
+        </View>
+        <View style={[tb.hudChip, tb.streakChip]}>
+          <StreakDisplay />
+        </View>
         <View
-          style={tb.featherRow}
+          style={[tb.hudChip, tb.featherRow]}
           accessible
           accessibilityLabel={`${filledFeathers} feathers remaining`}
         >
@@ -353,10 +358,15 @@ function FeatherIcon({ filled }: { filled: boolean }) {
           opacity: launchOpacity,
         }}
       >
-        <View style={[tb.featherBlade, filled ? tb.featherBladeFilled : tb.featherBladeEmpty]}>
-          <View style={[tb.featherHighlight, filled ? tb.featherHighlightFilled : tb.featherHighlightEmpty]} />
-        </View>
-        <View style={[tb.featherShaft, filled ? tb.featherShaftFilled : tb.featherShaftEmpty]} />
+        <Image
+          source={
+            filled
+              ? require('../../assets/ui/feather-life-filled.png')
+              : require('../../assets/ui/feather-life-empty.png')
+          }
+          style={tb.featherImg}
+          resizeMode="contain"
+        />
       </Animated.View>
       {dustVisible && FEATHER_DUST_ANGLES.map((angle, i) => (
         <FeatherDustParticle key={i} angle={angle} progress={dustProgress} />
@@ -367,112 +377,124 @@ function FeatherIcon({ filled }: { filled: boolean }) {
 
 const tb = StyleSheet.create({
   root: {
-    marginHorizontal: 14,
+    marginHorizontal: PW.space.screenX,
     marginTop: 4,
     marginBottom: 0,
-    paddingHorizontal: 14,
-    paddingTop: 7,
-    paddingBottom: 6,
-    borderRadius: 18,
-    backgroundColor: 'rgba(7,5,24,0.84)',
+    paddingHorizontal: PW.space.md,
+    paddingTop: 6,
+    paddingBottom: 7,
+    borderRadius: PW.radius.lg,
+    backgroundColor: PW.color.surfaceDeep,
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.16)',
-    shadowColor: '#7B2D8B',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.26,
-    shadowRadius: 18,
-    elevation: 8,
+    borderColor: 'rgba(123,45,139,0.30)',
+    ...PW.shadow.panel,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: 28,
+    height: 34,
+  },
+  hudChip: {
+    height: 34,
+    borderRadius: PW.radius.pill,
+    borderWidth: 1,
+    backgroundColor: PW.color.bgDeep,
+    borderColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreChip: {
+    minWidth: 92,
+    paddingHorizontal: PW.space.md,
+    borderColor: 'rgba(245,200,66,0.24)',
+  },
+  streakChip: {
+    minWidth: 76,
+    paddingHorizontal: PW.space.sm,
+    borderColor: 'rgba(123,45,139,0.34)',
   },
   scoreVal: {
-    color: '#F5C842',
+    color: PW.color.gold,
     fontSize: FONT_SIZES.hudScore,
     fontFamily: FONTS.hud,
+    lineHeight: 28,
     letterSpacing: 1,
     textTransform: 'uppercase',
-    minWidth: 62,
-    textShadowColor: 'rgba(245,200,66,0.46)',
+    textShadowColor: PW.color.goldGlow,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowRadius: 6,
   },
   label: {
     fontFamily: FONTS.label,
     fontSize: 11,
     letterSpacing: 3,
     textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.35)',
+    color: PW.color.faintWhite,
   },
   featherRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 3,
-    minWidth: 58,
-    height: 22,
+    minWidth: 78,
+    paddingHorizontal: PW.space.sm,
+    borderColor: 'rgba(123,45,139,0.34)',
     overflow: 'visible',
   },
   featherBox: {
-    width: 10,
-    height: 18,
+    width: 14,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  featherImg: {
+    width: 14,
+    height: 28,
+  },
   featherBlade: {
     position: 'absolute',
-    width: 8,
-    height: 15,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 2,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    width: 7,
+    height: 17,
+    borderTopLeftRadius: 7,
+    borderTopRightRadius: 1,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 7,
     borderWidth: 1,
-    transform: [{ rotate: '-22deg' }],
-    shadowColor: '#7B2D8B',
+    transform: [{ rotate: '-24deg' }],
+    shadowColor: PW.color.purple,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 3,
+    shadowRadius: 2,
     elevation: 2,
   },
   featherBladeFilled: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderColor: 'rgba(123,45,139,0.75)',
-    shadowOpacity: 0.35,
-  },
-  featherBladeEmpty: {
-    backgroundColor: 'rgba(155,89,182,0.18)',
-    borderColor: 'rgba(118,101,135,0.45)',
-    shadowOpacity: 0,
+    backgroundColor: PW.color.softWhite,
+    borderColor: 'rgba(185,138,222,0.62)',
+    shadowOpacity: 0.12,
   },
   featherHighlight: {
     position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 2,
-    height: 9,
+    top: 4,
+    right: 1.5,
+    width: 1.25,
+    height: 7,
     borderRadius: 1,
+    transform: [{ rotate: '28deg' }],
   },
   featherHighlightFilled: {
-    backgroundColor: 'rgba(123,45,139,0.22)',
-  },
-  featherHighlightEmpty: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(123,45,139,0.34)',
   },
   featherShaft: {
     position: 'absolute',
-    width: 1.25,
-    height: 14,
+    top: 1,
+    left: 4.25,
+    width: 1,
+    height: 17,
     borderRadius: 1,
-    transform: [{ rotate: '-22deg' }],
+    transform: [{ rotate: '-24deg' }],
   },
   featherShaftFilled: {
-    backgroundColor: 'rgba(123,45,139,0.65)',
-  },
-  featherShaftEmpty: {
-    backgroundColor: 'rgba(155,89,182,0.14)',
+    backgroundColor: 'rgba(123,45,139,0.70)',
   },
   dotsRow: {
     flexDirection: 'row',
@@ -480,19 +502,21 @@ const tb = StyleSheet.create({
     alignItems: 'center',
     height: 12,
     gap: 5,
-    marginTop: 3,
+    marginTop: 7,
     paddingHorizontal: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(3,2,16,0.32)',
+    borderRadius: PW.radius.pill,
+    backgroundColor: 'rgba(11,9,32,0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.055)',
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
   },
-  dotDone:      { backgroundColor: '#F5C842', shadowColor: '#F5C842', shadowOpacity: 0.35, shadowRadius: 4 },
-  dotCurrent:   { backgroundColor: '#FFFFFF', shadowColor: '#FFFFFF', shadowOpacity: 0.5, shadowRadius: 5 },
-  dotRemaining: { backgroundColor: 'rgba(255,255,255,0.18)' },
+  dotDone:      { backgroundColor: PW.color.gold, shadowColor: PW.color.gold, shadowOpacity: 0.24, shadowRadius: 3 },
+  dotCurrent:   { backgroundColor: PW.color.softWhite, shadowColor: PW.color.white, shadowOpacity: 0.35, shadowRadius: 4 },
+  dotRemaining: { backgroundColor: PW.color.faintWhite, opacity: PW.opacity.disabled },
   reserveFeatherWrap: {
     width:          8,
     height:         14,
@@ -502,19 +526,19 @@ const tb = StyleSheet.create({
   },
   reserveBlade: {
     width:  6,
-    height: 11,
-    borderColor: 'rgba(245,200,66,0.85)',
-    backgroundColor: 'rgba(245,200,66,0.25)',
+    height: 13,
+    borderColor: PW.color.goldSoft,
+    backgroundColor: PW.color.goldGlow,
   },
   reserveShaft: {
-    backgroundColor: 'rgba(245,200,66,0.75)',
-    height: 10,
+    backgroundColor: PW.color.goldSoft,
+    height: 12,
   },
   reservePlus: {
     position:   'absolute',
     top:        -5,
     right:      -3,
-    color:      '#F5C842',
+    color:      PW.color.gold,
     fontSize:   7,
     fontWeight: '700',
     lineHeight: 8,
