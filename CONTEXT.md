@@ -7,7 +7,7 @@ Read this at the start of any session. `CLAUDE.md` has full detail; this is the 
 
 ## What POLYWORDS Is
 
-Polly is the Master of Words. She holds the word vault and set every trap. The player challenges her one word at a time. Every run is a HUNT: 12 words, GPS difficulty arc, boss at position 12. North star: *"Wait… what? … Oh. Right."*
+Polly is the Master of Words. She holds the word vault and set every trap. The player challenges her one word at a time. Every run is a HUNT: 10 rounds, GPS difficulty arc, boss at Round 10. North star: *"Wait… what? … Oh. Right."*
 
 App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. Bottom nav shows outside gameplay only.
 
@@ -140,7 +140,7 @@ MASTERED celebration: hero crashes center → diagonal MASTER stamp → cracks �
 
 GHOST: wrong mystery → tile exits → HAUNTED overlay +800ms. Ghost tile solid purple border, phrase NEVER revealed, wordId = word string.
 
-Haunt return: index 9 / position 10, never boss 12. "Guess who's back." → HAUNT BROKEN / STILL HAUNTED.
+Haunt return: index 7 / Round 8, never Round 10 boss. "Guess who's back." → HAUNT BROKEN / STILL HAUNTED.
 
 ---
 
@@ -148,7 +148,7 @@ Haunt return: index 9 / position 10, never boss 12. "Guess who's back." → HAUN
 
 WAVE · FINE (Confidence) · CHARGE · PLANT · TABLE (Flow) · CAPITAL · SENTENCE · SPELL (Tension) · DRAFT · RANK · SOUND (Panic) · CAST (Boss). Words 1–11 no hidden meaning. CAST: hiddenMeaning 'Molten metal takes shape', hiddenTrap 'Spell gets thrown on you'.
 
-GPS arc: 2 Confidence + 3 Flow + 3 Tension + 3 Panic + 1 Boss. `generateHunt()` samples fresh arc every run from `huntData.json` (403 words).
+GPS arc: 2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss. `generateHunt()` samples fresh arc every run from `huntData.json` (403 words).
 
 ---
 
@@ -175,7 +175,7 @@ Removed: revealHidden(), hiddenFound in WordResult, pollyTrigger 'hiddenReveal' 
 - useNativeDriver true → transform/opacity · false → height/margin/backgroundColor · never mix on one value
 - setTimeout between phases, never .start() callbacks
 - Ghost wordId = word string, never stepIndex
-- Boss position 12 always · haunt slot index 9, never boss zone
+- Boss Round 10 always · haunt slot index 7 / Round 8, never boss zone
 - Wrong swipes permanent - no snap-back, no retry
 - No left swipe and no tap interaction
 - No hero glow during drag, no target validation during drag, no correctness hints before swipe release

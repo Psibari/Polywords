@@ -5,7 +5,7 @@
 
 ## The Game
 
-Polly is the Master of Words. She holds every word in her vault and set every trap. The player challenges her one word at a time to take the title. Every run is a HUNT: 12 words, a designed difficulty arc, a boss confrontation at position 12.
+Polly is the Master of Words. She holds every word in her vault and set every trap. The player challenges her one word at a time to take the title. Every run is a HUNT: 10 rounds, a designed difficulty arc, and a boss confrontation at Round 10.
 
 North star: *"Wait… what? … Oh. Right."* — the Semantic Snap.
 
@@ -68,19 +68,19 @@ Wrong swipes are permanent — no snap-back, no retry, no wrong tile staying in 
 
 ## Session Model — THE HUNT
 
-Always 12 words, always a boss at position 12, 5 feathers (lives) for the whole hunt.
+Always 10 rounds, always a boss at Round 10, 5 feathers (lives) for the whole hunt.
 
-GPS arc (`docs/GOLDEN_PACING_SYSTEM.md` is source of truth): 2 Confidence + 3 Flow + 3 Tension + 3 Panic + 1 Boss.
+GPS arc (`docs/GOLDEN_PACING_SYSTEM.md` is source of truth): 2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss.
 
 | Position | Phase | Difficulty |
 |---|---|---|
 | 1–2 | Confidence | Easy |
 | 3–5 | Flow | Medium |
 | 6–8 | Tension | Medium-Hard |
-| 9–11 | Panic | Hard |
-| 12 | Boss | Maximum |
+| 8–9 | Panic | Hard |
+| 10 | Boss | Maximum |
 
-Living pool: mastered words graduate permanently to the Vault and never return in a standard run. Ghost (haunt) words get priority placement at index 9 (position 10). RUN IT BACK = fresh 12-word draw with ghost priority. Daily Challenge is the one curated fixed session.
+Living pool: mastered words graduate permanently to the Vault and never return in a standard run. Ghost (haunt) words get priority placement at index 7 (Round 8) in the current 10-round Hunt. RUN IT BACK = fresh 10-round draw with ghost priority. Daily Challenge is the one curated fixed session.
 
 Hunt generation: `generateHunt()` in `app/game/huntGenerator.ts` samples a fresh GPS arc every run from `assets/data/huntData.json` (403 words). `SESSION` fallback preserved.
 
@@ -110,7 +110,7 @@ Hero word crashes center → diagonal MASTER stamp → cracks/energy → Word Co
 Wrong boss mystery judgment → tile exits permanently → HAUNTED overlay at +800ms. Ghost tile: solid purple border (no dashes), shows only "MASTER THE WORD" / "From [WORD]" — phrase NEVER revealed. Ghost `wordId` = word string always, never stepIndex.
 
 ### Haunt return
-Ghosted boss words return at index 9 (position 10), never replacing boss 12. Entrance: "Guess who's back." Mastered → HAUNT BROKEN. Failed again → STILL HAUNTED.
+Ghosted boss words return at index 7 (Round 8), never replacing the Round 10 boss. Entrance: "Guess who's back." Mastered → HAUNT BROKEN. Failed again → STILL HAUNTED.
 
 ---
 
@@ -268,7 +268,7 @@ Garden (→ Vault) · simultaneous tile render (→ one-at-a-time) · Switchback
 
 ## Locked Decisions — non-negotiable
 
-- Session always 12 words, boss always position 12
+- Session always 10 rounds, boss always Round 10
 - UP = real, RIGHT = trap, always
 - Wrong swipe is permanent
 - No left swipe and no tap interaction
@@ -278,7 +278,7 @@ Garden (→ Vault) · simultaneous tile render (→ one-at-a-time) · Switchback
 - MASTERED and GHOST are boss-only
 - Boss mystery tile is randomly real or trap — one shot
 - Non-boss words advance via `triggerWordExit()` — no overlay
-- Haunt slot is index 9 (position 10), never boss zone
+- Haunt slot is index 7 (Round 8) in a 10-round Hunt, never boss zone
 - Ghost wordId = word string, never stepIndex
 - `wrongSwipeOccurred.current` resets at the start of every new word
 - Crystal shards: polygon, purple/rose, never rectangles
