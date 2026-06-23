@@ -14,20 +14,64 @@ type HuntDB = Record<string, HuntWordData>;
 
 const db = rawHuntData as unknown as HuntDB;
 
-const EMOTIONAL_ROLES: EmotionalRole[] = [
-  'confidence', 'confidence',               // 0–1
-  'flow',       'flow',       'flow',        // 2–4
-  'firstTension', 'tension',  'tension',    // 5–7
-  'panic',      'panic',                    // 8–9
-  'adrenaline',                             // 10
-  'finalBoss',                              // 11
-];
+export const SESSION_LENGTH = 12;
 
-const HAPTIC_TIERS: ('light' | 'medium' | 'heavy')[] = [
-  'light',  'light',  'light',  'light',  'light',  // 0–4
-  'medium', 'medium', 'medium', 'medium',            // 5–8
-  'heavy',  'heavy',  'heavy',                       // 9–11
-];
+type GpsDistribution = {
+  confidence: number;
+  flow: number;
+  tension: number;
+  panic: number;
+  boss: number;
+};
+
+const GPS_ARCS: Record<number, GpsDistribution> = {
+  8:  { confidence: 1, flow: 2, tension: 2, panic: 2, boss: 1 },
+  10: { confidence: 2, flow: 2, tension: 3, panic: 2, boss: 1 },
+  12: { confidence: 2, flow: 3, tension: 3, panic: 3, boss: 1 },
+  15: { confidence: 2, flow: 4, tension: 4, panic: 4, boss: 1 },
+};
+
+type Phase = 'confidence' | 'flow' | 'tension' | 'panic' | 'boss';
+
+function buildPhasePlan(length: number): Phase[] {
+  const dist = GPS_ARCS[length];
+  if (!dist) {
+    throw new Error(`[huntGenerator] No GPS arc defined for length ${length}. Supported: ${Object.keys(GPS_ARCS).join(', ')}`);
+  }
+  const plan: Phase[] = [];
+  for (let i = 0; i < dist.confidence; i++) plan.push('confidence');
+  for (let i = 0; i < dist.flow; i++)       plan.push('flow');
+  for (let i = 0; i < dist.tension; i++)    plan.push('tension');
+  for (let i = 0; i < dist.panic; i++)      plan.push('panic');
+  plan.push('boss'); // always last
+  return plan;
+}
+
+function rolesFromPlan(plan: Phase[]): EmotionalRole[] {
+  const firstTensionIdx = plan.indexOf('tension');
+  const lastPanicIdx = plan.lastIndexOf('panic');
+  return plan.map((phase, idx) => {
+    switch (phase) {
+      case 'confidence': return 'confidence';
+      case 'flow':       return 'flow';
+      case 'tension':    return idx === firstTensionIdx ? 'firstTension' : 'tension';
+      case 'panic':      return idx === lastPanicIdx ? 'adrenaline' : 'panic';
+      case 'boss':       return 'finalBoss';
+    }
+  });
+}
+
+function hapticsFromPlan(plan: Phase[]): ('light' | 'medium' | 'heavy')[] {
+  return plan.map((phase) => {
+    switch (phase) {
+      case 'confidence':
+      case 'flow':    return 'light';
+      case 'tension': return 'medium';
+      case 'panic':
+      case 'boss':    return 'heavy';
+    }
+  });
+}
 
 // Mulberry32 seeded PRNG — deterministic shuffle per seed
 function seededRng(seed: number): () => number {
@@ -52,7 +96,8 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 
 function buildWordStep(
   word: string,
-  posIndex: number,
+  emotionalRole: EmotionalRole,
+  hapticTier: 'light' | 'medium' | 'heavy',
   isHauntReturn: boolean,
   isBoss: boolean,
 ): WordStep {
@@ -60,10 +105,10 @@ function buildWordStep(
   const step: WordStep = {
     kind: 'word',
     word,
-    emotionalRole: EMOTIONAL_ROLES[posIndex],
+    emotionalRole,
     eventType: isBoss ? 'bossWord' : 'standard',
     difficulty: data.difficulty as WordStep['difficulty'],
-    hapticTier: HAPTIC_TIERS[posIndex],
+    hapticTier,
     tileStagger: isBoss ? 120 : 80,
     meanings: [],
     masks: data.masks,
@@ -78,11 +123,16 @@ function buildWordStep(
 export function generateHunt(opts: {
   masteredWords?: string[];
   ghostWordIds?: string[];
+  length?: number;
 }): SessionStep[] {
-  const { masteredWords = [], ghostWordIds = [] } = opts;
+  const { masteredWords = [], ghostWordIds = [], length = SESSION_LENGTH } = opts;
   const mastered = new Set(masteredWords.map(w => w.toUpperCase()));
   const selected = new Set<string>();
   const rng = seededRng(Date.now());
+
+  const plan = buildPhasePlan(length);
+  const roles = rolesFromPlan(plan);
+  const haptics = hapticsFromPlan(plan);
 
   const available = Object.keys(db).filter(w => !mastered.has(w));
   const confidencePool = shuffle(available.filter(w => db[w].gpsTag === 'confidence'), rng);
@@ -95,17 +145,25 @@ export function generateHunt(opts: {
   function next(pools: string[][]): string {
     for (const pool of pools) {
       for (const w of pool) {
-        if (!selected.has(w)) {
-          selected.add(w);
-          return w;
-        }
+        if (!selected.has(w)) { selected.add(w); return w; }
       }
     }
     throw new Error('[huntGenerator] Word pool exhausted — add more words to huntData.json');
   }
 
-  // Boss chosen first so it is excluded from panic/tension picks
-  const bossWord = next([bossPool, panicPool, tensionPool]);
+  // Fallback chain per phase — own pool first, then adjacent tiers
+  function pickForPhase(phase: Phase): string {
+    switch (phase) {
+      case 'confidence': return next([confidencePool, flowPool]);
+      case 'flow':       return next([flowPool, confidencePool, tensionPool]);
+      case 'tension':    return next([tensionPool, flowPool, panicPool]);
+      case 'panic':      return next([panicPool, tensionPool]);
+      case 'boss':       return next([bossPool, panicPool, tensionPool]);
+    }
+  }
+
+  // Boss chosen FIRST so it is excluded from other picks
+  const bossWord = pickForPhase('boss');
 
   // Ghost priority: first ghost word that fits the hard/panic tier
   let ghostWord: string | null = null;
@@ -118,36 +176,21 @@ export function generateHunt(opts: {
     }
   }
 
-  const slots: { word: string; isHauntReturn?: true }[] = [
-    // 0–1: Confidence
-    { word: next([confidencePool, flowPool]) },
-    { word: next([confidencePool, flowPool]) },
-    // 2–4: Flow
-    { word: next([flowPool, confidencePool]) },
-    { word: next([flowPool, tensionPool]) },
-    { word: next([flowPool, tensionPool]) },
-    // 5–7: Tension
-    { word: next([tensionPool, flowPool]) },
-    { word: next([tensionPool, panicPool]) },
-    { word: next([tensionPool, panicPool]) },
-    // 8: Panic
-    { word: next([panicPool, tensionPool]) },
-  ];
+  const hauntIdx = length - 3; // ghost slot, then one panic word, then boss last
+  const bossIdx = length - 1;
 
-  // 9: Ghost at index 9 (position 10) if available, otherwise panic
-  if (ghostWord) {
-    slots.push({ word: ghostWord, isHauntReturn: true });
-  } else {
-    slots.push({ word: next([panicPool, tensionPool]) });
+  const slots: { word: string; isHauntReturn?: true }[] = [];
+  for (let i = 0; i < length; i++) {
+    if (i === bossIdx) {
+      slots.push({ word: bossWord });
+    } else if (i === hauntIdx && ghostWord) {
+      slots.push({ word: ghostWord, isHauntReturn: true });
+    } else {
+      slots.push({ word: pickForPhase(plan[i]) });
+    }
   }
 
-  // 10: Panic
-  slots.push({ word: next([panicPool, tensionPool]) });
-
-  // 11: Boss — always last
-  slots.push({ word: bossWord });
-
   return slots.map(({ word, isHauntReturn }, idx) =>
-    buildWordStep(word, idx, !!isHauntReturn, idx === 11),
+    buildWordStep(word, roles[idx], haptics[idx], !!isHauntReturn, idx === bossIdx),
   );
 }
