@@ -2579,8 +2579,8 @@ const styles = StyleSheet.create({
   },
   word: {
     fontSize: 96,
-    fontFamily: FONTS.heroFace,
-    letterSpacing: 2,
+    fontFamily: FONTS.wordDisplay,
+    letterSpacing: FONT_SIZES.wordDisplayLetterSpacing,
     color: '#F5C842',
     textShadowColor: 'rgba(245,200,66,0.38)',
     textShadowOffset: { width: 0, height: 0 },
@@ -2590,8 +2590,8 @@ const styles = StyleSheet.create({
   },
   wordBoss: {
     fontSize: 112,
-    fontFamily: FONTS.heroFace,
-    letterSpacing: 2,
+    fontFamily: FONTS.bossWord,
+    letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#F5C842',
   },
   goldRing: {
