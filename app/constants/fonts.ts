@@ -1,7 +1,7 @@
 export const FONTS = {
   // Hero word — normal and boss
-  wordDisplay: 'BungeeShade-Regular',
-  bossWord:    'BungeeShade-Regular',
+  wordDisplay: 'BebasNeue-Regular',
+  bossWord:    'BebasNeue-Regular',
   heroFace:    'BebasNeue-Regular',
 
   // All UI — HUD, badges, tile text, labels, results, stamps
@@ -22,9 +22,9 @@ export const FONTS = {
 
 export const FONT_SIZES = {
   wordDisplay:               96,
-  wordDisplayLetterSpacing:   6,
+  wordDisplayLetterSpacing:   2,
   bossWordDisplay:           114,
-  bossWordLetterSpacing:       6,
+  bossWordLetterSpacing:       2,
   tileCopy:                   28,
   brandTitle:                 48,
   hudScore:                   26,
