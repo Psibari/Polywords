@@ -473,6 +473,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordEntryTranslateY   = useRef(new Animated.Value(0)).current;
   const wordEntryTilt         = useRef(new Animated.Value(0)).current;
   const wordLockPulse         = useRef(new Animated.Value(1)).current;
+  const wordSwingX            = useRef(new Animated.Value(0)).current; // rotateX degrees, native driver
   const bookOpenAnim          = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const wordEntranceHapticRef = useRef<string | null>(null);
   const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
@@ -886,6 +887,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setBossShockwaveVisible(false);
     goldTextOpacity.setValue(0);
     wordEntryTilt.setValue(0);
+    wordSwingX.setValue(0);
     bookOpenAnim.setValue(0);
     wordRecoilY.setValue(0);
     wordRecoilScale.setValue(1);
@@ -975,58 +977,33 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         setHauntReady(true);
       }, 1400);
     } else {
-      // ── HERO LOCK-IN ENTRANCE ─────────────────────────────
+      // ── HERO BOOK COVER — LEAN SHUT (word stays readable) ──
       wordEntryOpacity.setValue(0);
-      wordEntryScale.setValue(0.96);
-      wordEntryTranslateY.setValue(-54);
-      wordEntryTilt.setValue(-1);
+      wordEntryScale.setValue(1);
+      wordEntryTranslateY.setValue(0);
+      wordEntryTilt.setValue(0);
       wordLockPulse.setValue(1);
+      wordSwingX.setValue(-22); // cover starts slightly tilted toward player on top-spine pivot
 
-      const ZIP = Easing.bezier(0.16, 0.95, 0.20, 1.00);
+      const SWING = Easing.bezier(0.22, 1.00, 0.30, 1.00);
 
       Animated.parallel([
-        // Opacity: flash visible immediately
         Animated.timing(wordEntryOpacity, {
-          toValue: 1, duration: 90,
-          easing: Easing.linear, useNativeDriver: true,
+          toValue: 1, duration: 110, easing: Easing.linear, useNativeDriver: true,
         }),
-        // Y: drop + bounce settle
+        // Lean shut: -22deg → small overshoot past flat → settle at 0deg
         Animated.sequence([
-          Animated.timing(wordEntryTranslateY, {
-            toValue: 7, duration: 260, easing: ZIP, useNativeDriver: true,
+          Animated.timing(wordSwingX, {
+            toValue: 4, duration: 280, easing: SWING, useNativeDriver: true,
           }),
-          Animated.timing(wordEntryTranslateY, {
-            toValue: -2, duration: 90, useNativeDriver: true,
+          Animated.timing(wordSwingX, {
+            toValue: -2, duration: 95, useNativeDriver: true,
           }),
-          Animated.timing(wordEntryTranslateY, {
-            toValue: 0, duration: 70, useNativeDriver: true,
-          }),
-        ]),
-        // Scale: compress + bounce settle
-        Animated.sequence([
-          Animated.timing(wordEntryScale, {
-            toValue: 1.035, duration: 260, easing: ZIP, useNativeDriver: true,
-          }),
-          Animated.timing(wordEntryScale, {
-            toValue: 0.995, duration: 90, useNativeDriver: true,
-          }),
-          Animated.timing(wordEntryScale, {
-            toValue: 1.00, duration: 70, useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(wordEntryTilt, {
-            toValue: 0.16, duration: 260, easing: ZIP, useNativeDriver: true,
-          }),
-          Animated.timing(wordEntryTilt, {
-            toValue: -0.06, duration: 90, useNativeDriver: true,
-          }),
-          Animated.timing(wordEntryTilt, {
-            toValue: 0, duration: 70, useNativeDriver: true,
+          Animated.timing(wordSwingX, {
+            toValue: 0, duration: 85, useNativeDriver: true,
           }),
         ]),
       ]).start(() => {
-        // On lock: single haptic + tight rim pulse
         if (wordEntranceHapticRef.current !== step.word) {
           wordEntranceHapticRef.current = step.word;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -1503,11 +1480,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         Animated.timing(wordEntryOpacity, {
           toValue: 0, duration: 260, easing: EXIT_IN, useNativeDriver: true,
         }),
-        Animated.timing(wordEntryScale, {
-          toValue: 1.38, duration: 300, easing: EXIT_IN, useNativeDriver: true,
-        }),
-        Animated.timing(wordEntryTranslateY, {
-          toValue: -310, duration: 300, easing: EXIT_IN, useNativeDriver: true,
+        // Reverse lean: cover tilts back open on the top-spine pivot as it fades
+        Animated.timing(wordSwingX, {
+          toValue: -22, duration: 280, easing: EXIT_IN, useNativeDriver: true,
         }),
         Animated.timing(transitionLabelOpacity, {
           toValue: 0, duration: 160, useNativeDriver: true,
@@ -1700,6 +1675,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
   const wordEntryTiltDeg = wordEntryTilt.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-5deg', '0deg', '5deg'] });
+  const wordSwingXDeg = wordSwingX.interpolate({
+    inputRange: [-22, 0, 4],
+    outputRange: ['-22deg', '0deg', '4deg'],
+  });
 
   return (
     <Animated.View
@@ -1881,6 +1860,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             style={{
               opacity: wordEntryOpacity,
               transform: [
+                { perspective: 1000 },
                 { scale: absorptionScale },
                 { scale: wordEntryScale },
                 { scale: wordLockPulse },
@@ -1888,6 +1868,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 { translateY: masterHeroTransY },
                 { translateY: wordEntryTranslateY },
                 { rotate: wordEntryTiltDeg },
+                { rotateX: wordSwingXDeg },
               ],
             }}
           >
