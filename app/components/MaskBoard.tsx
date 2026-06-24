@@ -1708,9 +1708,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
         {/* Page block — cream pages, peek out at bottom */}
         <View style={styles.pageBlock} pointerEvents="none">
+          <View style={styles.pageTopLip} />
           <View style={[styles.pageEdge, styles.pageEdge1]} />
           <View style={[styles.pageEdge, styles.pageEdge2]} />
           <View style={[styles.pageEdge, styles.pageEdge3]} />
+          <View style={[styles.pageEdge, styles.pageEdge4]} />
+          <View style={[styles.pageEdge, styles.pageEdge5]} />
         </View>
 
         {/* Tile intake slot — reserved empty band between pages and cover for Pass 2.
@@ -1791,8 +1794,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         <Animated.View style={styles.bookCoverPlane}>
           {/* navy cover face */}
           <View style={styles.coverSurface} pointerEvents="none" />
+          <View style={styles.coverSheen} pointerEvents="none" />
+          <View style={styles.coverInnerShade} pointerEvents="none" />
           {/* gold trim border */}
           <View style={styles.coverTrim} pointerEvents="none" />
+          <View style={styles.coverTrimInner} pointerEvents="none" />
           {/* top spine / hinge band */}
           <View style={styles.spineDetail} pointerEvents="none">
             <View style={styles.spineLine1} />
@@ -1833,6 +1839,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
+            <Text style={[styles.word, isBoss && styles.wordBoss, styles.wordEmboss]} numberOfLines={1} adjustsFontSizeToFit>
+              {step.word}
+            </Text>
             <Text
               style={[styles.word, isBoss && styles.wordBoss]}
               numberOfLines={1}
@@ -2391,7 +2400,7 @@ const styles = StyleSheet.create({
     left: 6,
     right: 6,
     top: 4,
-    height: 148,
+    height: 140,
     borderRadius: 14,
     overflow: 'visible',
     alignItems: 'center',
@@ -2400,8 +2409,8 @@ const styles = StyleSheet.create({
   coverSurface: {
     position: 'absolute',
     left: 0, right: 0, top: 0, bottom: 0,
-    borderRadius: 14,
-    backgroundColor: '#15123A',
+    borderRadius: 10,
+    backgroundColor: '#191541',
     borderBottomLeftRadius: 22,
     borderBottomRightRadius: 22,
     shadowColor: '#000000',
@@ -2410,65 +2419,104 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 12,
   },
+  coverSheen: {
+    position: 'absolute',
+    left: 4, right: 4, top: 4, bottom: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.025)',
+  },
+  coverInnerShade: {
+    position: 'absolute',
+    left: 4, right: 4, bottom: 4,
+    height: 46,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+  },
   coverTrim: {
     position: 'absolute',
-    left: 5, right: 5, top: 5, bottom: 5,
-    borderRadius: 11,
+    left: 4, right: 4, top: 4, bottom: 4,
+    borderRadius: 9,
     borderWidth: 2,
     borderColor: PW.color.gold,
-    opacity: 0.92,
+    opacity: 0.95,
+  },
+  coverTrimInner: {
+    position: 'absolute',
+    left: 9, right: 9, top: 9, bottom: 9,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.30)',
   },
   spineDetail: {
     position: 'absolute',
-    left: 14, right: 14, top: 12,
-    height: 12,
-    justifyContent: 'space-between',
+    left: 10,
+    right: 10,
+    top: 6,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#1E1A4A',
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.35)',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
   },
   spineLine1: {
     height: 1.5,
     backgroundColor: PW.color.gold,
-    opacity: 0.55,
+    opacity: 0.6,
     borderRadius: 1,
+    marginVertical: 1.5,
   },
   spineLine2: {
     height: 1.5,
-    marginTop: 3,
     backgroundColor: PW.color.gold,
-    opacity: 0.30,
+    opacity: 0.3,
     borderRadius: 1,
+    marginVertical: 1.5,
   },
   pageBlock: {
     position: 'absolute',
-    left: 18,
-    right: 18,
-    top: 138,
-    height: 34,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    backgroundColor: '#E8E2D0',
+    left: 20,
+    right: 20,
+    top: 132,
+    height: 24,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    backgroundColor: '#EDE7D4',
     overflow: 'hidden',
+  },
+  pageTopLip: {
+    position: 'absolute',
+    left: 0, right: 0, top: 0,
+    height: 2,
+    backgroundColor: '#FBF7EC',
   },
   pageEdge: {
     position: 'absolute',
-    left: 0, right: 0,
+    left: 0,
+    right: 0,
     height: 1,
-    backgroundColor: 'rgba(120,110,90,0.45)',
+    backgroundColor: 'rgba(150,138,108,0.30)',
   },
-  pageEdge1: { top: 8 },
-  pageEdge2: { top: 16 },
-  pageEdge3: { top: 24 },
+  pageEdge1: { top: 4 },
+  pageEdge2: { top: 8, backgroundColor: 'rgba(150,138,108,0.18)' },
+  pageEdge3: { top: 12 },
+  pageEdge4: { top: 16, backgroundColor: 'rgba(150,138,108,0.18)' },
+  pageEdge5: { top: 20 },
   tileIntakeSlot: {
     position: 'absolute',
     left: 14,
     right: 14,
-    top: 130,
+    top: 124,
     height: 14,
   },
   coverUnderShadow: {
     position: 'absolute',
     left: 20,
     right: 20,
-    top: 168,
+    top: 160,
     height: 18,
     borderRadius: 12,
     backgroundColor: '#000000',
@@ -2505,6 +2553,11 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bossWord,
     letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#F5C842',
+  },
+  wordEmboss: {
+    position: 'absolute',
+    color: 'rgba(0,0,0,0.45)',
+    transform: [{ translateY: 2 }],
   },
   goldRing: {
     position: 'absolute',
