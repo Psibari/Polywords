@@ -128,35 +128,15 @@ Ghosted boss words return at index 7 (Round 8), never replacing the Round 10 bos
 
 **SFX** (`assets/sfx/`): `tile_swipe.mp3` = sword whoosh, `press_hold_start.mp3` = card pickup. `trap_shatter`, `trap_wrong`, `mastered`, `haunted`, `ui_click`, `polly_call` in use. `gate_open.mp3` orphaned (gate removed) - cleanup candidate.
 
-### Play-screen-overhaul safe branch state
-Active branch: `play-screen-overhaul`. Do not merge to main yet.
+### Play-screen-overhaul current state
 
-New safe head: `9caf626 Anchor gameplay Polly to left side`.
+Active branch: `play-screen-overhaul`.
 
-Recent safe commits:
-1. `9caf626 Anchor gameplay Polly to left side`
-2. `22c35c2 Apply tokenized hero plaque material`
-3. `b0f123f Apply tokenized deck material to MaskBoard`
-4. `f6f8668 Apply tokenized card material to SwipeMask`
-5. `06a0318 Add Polywords visual token system`
-6. `c333b6e Update hunt data trap rewrites`
-7. `802546d Update docs for swipe affordance checkpoint`
-8. `1ce8add Add swipe direction affordances`
+Patch history belongs in `CHANGELOG.md`.
+Current build state belongs in `CONTEXT.md`.
+Canonical workflow lives in `docs/WORKFLOW.md`.
 
-Current build state: TypeScript passed before the left-Polly checkpoint. Working tree clean after push.
-
-Shipped play-screen branch additions:
-1. Centralized tile SFX restored
-2. Stable layout restored after bad play layout commit was neutralized
-3. True stacked clue deck visuals
-4. Hero word lock-in entrance
-5. Tile deck entrance
-6. Swipe direction affordances
-7. Polywords visual token system
-8. Tokenized active clue card material
-9. Tokenized deck backing material
-10. Tokenized hero plaque material
-11. Gameplay Polly anchored left
+Do not use stale safe-commit lists in this file as source of truth.
 
 ### Swipe direction affordances
 Implemented in `app/components/MaskBoard.tsx`. Commit: `1ce8add Add swipe direction affordances`.
