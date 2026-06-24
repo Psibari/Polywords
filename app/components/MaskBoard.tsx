@@ -22,6 +22,15 @@ import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
 import { deckBackMaterial, heroPlaqueMaterial } from '../ui/pwMaterials';
+import {
+  HERO_BOOK_PERSPECTIVE,
+  HERO_BOOK_SWING_INPUT_RANGE,
+  HERO_BOOK_SWING_OUTPUT_RANGE,
+  HERO_BOOK_FADE_IN_MS,
+  heroBookSetOpen,
+  heroBookSwingShut,
+  heroBookSwingOpen,
+} from '../ui/heroBookMotion';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -977,32 +986,19 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         setHauntReady(true);
       }, 1400);
     } else {
-      // ── HERO BOOK COVER — LEAN SHUT (word stays readable) ──
+      // ── HERO BOOK COVER — SWING SHUT (word stays readable) ──
       wordEntryOpacity.setValue(0);
       wordEntryScale.setValue(1);
       wordEntryTranslateY.setValue(0);
       wordEntryTilt.setValue(0);
       wordLockPulse.setValue(1);
-      wordSwingX.setValue(-22); // cover starts slightly tilted toward player on top-spine pivot
-
-      const SWING = Easing.bezier(0.22, 1.00, 0.30, 1.00);
+      heroBookSetOpen(wordSwingX);
 
       Animated.parallel([
         Animated.timing(wordEntryOpacity, {
-          toValue: 1, duration: 110, easing: Easing.linear, useNativeDriver: true,
+          toValue: 1, duration: HERO_BOOK_FADE_IN_MS, easing: Easing.linear, useNativeDriver: true,
         }),
-        // Lean shut: -22deg → small overshoot past flat → settle at 0deg
-        Animated.sequence([
-          Animated.timing(wordSwingX, {
-            toValue: 4, duration: 280, easing: SWING, useNativeDriver: true,
-          }),
-          Animated.timing(wordSwingX, {
-            toValue: -2, duration: 95, useNativeDriver: true,
-          }),
-          Animated.timing(wordSwingX, {
-            toValue: 0, duration: 85, useNativeDriver: true,
-          }),
-        ]),
+        heroBookSwingShut(wordSwingX),
       ]).start(() => {
         if (wordEntranceHapticRef.current !== step.word) {
           wordEntranceHapticRef.current = step.word;
@@ -1480,10 +1476,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         Animated.timing(wordEntryOpacity, {
           toValue: 0, duration: 260, easing: EXIT_IN, useNativeDriver: true,
         }),
-        // Reverse lean: cover tilts back open on the top-spine pivot as it fades
-        Animated.timing(wordSwingX, {
-          toValue: -22, duration: 280, easing: EXIT_IN, useNativeDriver: true,
-        }),
+        heroBookSwingOpen(wordSwingX, EXIT_IN),
         Animated.timing(transitionLabelOpacity, {
           toValue: 0, duration: 160, useNativeDriver: true,
         }),
@@ -1676,8 +1669,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
   const wordEntryTiltDeg = wordEntryTilt.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-5deg', '0deg', '5deg'] });
   const wordSwingXDeg = wordSwingX.interpolate({
-    inputRange: [-22, 0, 4],
-    outputRange: ['-22deg', '0deg', '4deg'],
+    inputRange: [...HERO_BOOK_SWING_INPUT_RANGE],
+    outputRange: [...HERO_BOOK_SWING_OUTPUT_RANGE],
   });
 
   return (
@@ -1836,6 +1829,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         )}
 
         {/* Word with entry + boss animations */}
+        {/* Static perspective context for the hero book cover's rotateX swing */}
+        <View style={{ transform: [{ perspective: HERO_BOOK_PERSPECTIVE }] }}>
         {/* Outer wrapper: non-native recoil transforms (RAF-driven setValue) */}
         <Animated.View
           style={{
@@ -1860,7 +1855,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             style={{
               opacity: wordEntryOpacity,
               transform: [
-                { perspective: 1000 },
                 { scale: absorptionScale },
                 { scale: wordEntryScale },
                 { scale: wordLockPulse },
@@ -1952,6 +1946,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           </Animated.View>
           </Animated.View>
         </Animated.View>
+        </View>
 
         {/* Boss shockwave rings + dust */}
         {bossShockwaveVisible && (

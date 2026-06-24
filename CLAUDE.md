@@ -151,13 +151,6 @@ RIGHT cue: placed outside active tile body, lower-right/right side of clue deck 
 
 Overlay uses `pointerEvents="none"`. Cues do not block swipes/touches. Cues are direction help only: no correctness feedback, no hero glow during drag, no target validation during drag, and no buttons, boxes, pills, or tutorial panels.
 
-### Shipped material passes
-
-1. Active clue card in `SwipeMask.tsx` now uses tokenized card material. Commit: `f6f8668`. Style/material only; swipe logic, PanResponder, Reanimated timings/shared values, card size, and positioning unchanged.
-2. Deck backing cards in `MaskBoard.tsx` now use tokenized deck material. Commit: `b0f123f`. Backing card colors/rims/radius/shadow tokenized; subtle lower edge added to make stack read as physical cards. Stack count and offsets unchanged; active card still owns attention.
-3. Hero plaque in `MaskBoard.tsx` now uses tokenized hero material. Commit: `22c35c2`. Plaque face/rim/bevel/chamfers/page-edge accents/shadows/underlight tokenized. Hero plaque size/position, hero word font size/line height, and hero entrance animation unchanged.
-4. Gameplay Polly anchored left. Commit: `9caf626`. Gameplay Polly size increased to 210 via `POLLY_GAMEPLAY_SIZE`. Active gameplay Polly now enters/perches from left only. Right side is reserved as the `SWIPE RIGHT TO REJECT` lane. Polly speech bubble narrowed/contained left so it does not crowd the reject cue. Pose mapping and dialogue unchanged. Results/home/cinematic Polly size not changed.
-
 ---
 
 ## Polly — Master of Words
@@ -242,7 +235,7 @@ Content standard — "meaning hidden, not meaning lost": tiles create a "Wait…
 
 ## Cut List ☠️ — permanent
 
-Garden (→ Vault) · simultaneous tile render (→ one-at-a-time) · Switchback / Phrase Break / SlangDrop in main session · left swipe · tap interactions · dashed borders · pink/magenta · red for text or decoration · Polly Green for UI · >2 gold elements · RATTLED in any color but white · Reanimated outside SwipeMask · rectangle/square particles · old "MASTERED" label-below-word · visual tells before swipe · snap-back wrong swipes · two-tile hidden gate split · the Master Gate entirely (removed) · ghost/mastery for non-boss words · hiddenEmoji/hiddenTrapEmoji · revealHidden() · hiddenFound in WordResult · pollyTrigger 'hiddenReveal' · HIDDEN tile type · sprite-sheet Polly (→ 10 individual PNGs).
+Left swipe · tap interactions · snap-back wrong swipes · two-tile hidden gate split · the Master Gate · ghost/mastery for non-boss words · Reanimated outside SwipeMask · rectangle/square particles · red for text or decoration · Polly Green for UI · >2 gold elements on screen · hiddenEmoji/hiddenTrapEmoji · revealHidden() · hiddenFound in WordResult · pollyTrigger 'hiddenReveal' · HIDDEN tile type · sprite-sheet Polly · visual tells before swipe · dashed borders · pink/magenta.
 
 ---
 
@@ -282,7 +275,7 @@ Garden (→ Vault) · simultaneous tile render (→ one-at-a-time) · Switchback
 - Never add tap handlers to tiles — swipe only
 - `MaskBoard.tsx` and `SwipeMask.tsx` require warroom analysis before any prompt touches them
 - Tag known-good states after device confirmation: `git tag v0.working-YYYYMMDD`
-- Preserve the Ghost Haunt Loop stash (`stash@{0}: On main: wip haunt loop type scaffolding`) — never drop it
+- Preserve stash named `wip haunt loop type scaffolding` — reference by NAME only, never by index, never pop/drop/clear it.
 - Current work branch: `play-screen-overhaul` — do not merge to main
 
 ---
@@ -317,35 +310,4 @@ tools/content/mask-rewriter       Local-only content tool — never wire into th
 
 ---
 
-## On the Horizon
-
-- Polly speech bubble final polish later if needed
-- HUD material consistency pass
-- Background readability/contrast overlay tuning
-- `gate_open.mp3` cleanup from sfx folder
-- GPS metadata tagging audit across all words before next huntData regeneration
-- `isRare` flag database audit (confirm 300pt rare branch is reachable)
-- Cosmetic rename `submitSwipeDown` -> `submitSwipeRight` (deferred, post-launch)
-- Gold Feather reward (earned by beating Daily, redo one tile that cost the last life) - analysis done, not built
-- `expo-av` -> `expo-audio` migration finalization
-
----
-
 *POLYWORDS CLAUDE.md · Pete DiBari · June 22, 2026*
-
-## Hero Word-Book Interaction System
-
-Full approved interaction spec lives in `docs/HERO_WORD_BOOK_SYSTEM.md`.
-
-Read that doc only for play-screen hero word, swipe feedback, or visual interaction patches.
-
-Current identity:
-- Correct UP = sacred book intake.
-- Correct RIGHT = glass / crystal shatter rejection.
-- Wrong swipe = buzzer punishment.
-- Hero entrance = swing-shut impact.
-- Hero exit = reverse swing.
-
-Implementation status:
-- Approved conceptually.
-- Not yet fully / correctly implemented.

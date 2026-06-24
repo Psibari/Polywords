@@ -1,7 +1,7 @@
 # POLYWORDS — CONTEXT.md
-### Session briefing · June 22, 2026
+### Session briefing · June 2026
 
-Read this at the start of any session. `CLAUDE.md` has full detail; this is the quick-reference and current build state.
+Read this at the start of any session. Full canonical detail lives in `CLAUDE.md`.
 
 ---
 
@@ -13,72 +13,46 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 
 ---
 
-## Stack
+## Current Build State
 
-```
-Expo SDK · React Native · TypeScript strict · Zustand+immer
-React Native Animated API (Reanimated = SwipeMask.tsx ONLY, frozen)
-Expo Haptics · expo-audio · Expo Router
-Fonts: Bungee Shade (hero extrusion) · BebasNeue-Regular (hero face) · Barlow Condensed Bold (UI) · Lilita One (Polly)
-Windows dev, forward-slash paths
-babel.config.js frozen — presets only, no plugins
-```
+**Active branch:** `play-screen-overhaul` (never merge to main).
+**Known-good tag:** `v0.working-20260621`
+**tsc:** exits 0.
 
----
-
-## Colors (strict)
-
-```
-#1A1830  Background
-#F5C842  Gold — score/reward/boss/mastery (MAX 2 on screen)
-#7B2D8B  Purple — trap shards, ghost border, Polly accent
-#9B2D6B  Rose — shard partner
-#4CAF50  Polly Green — Polly ONLY
-#0F0D2A  Deep Dark — hero plaque / tile / Vault surfaces
-#CC2200  Wrong Flash — wrong swipe only
-#FFFFFF  UI text
-```
+**Two stashes — reference by NAME only, never index, never pop/drop/clear:**
+- `wip hud material pass needs feather asset`
+- `wip haunt loop type scaffolding`
 
 ---
 
-## Swipe Grammar (sacred)
+## What's Implemented
 
-UP = real (absorb into word). RIGHT = trap (shard burst). Wrong either way = feather lost, tile exits permanently, red flash. No left swipe, no tap. Wrong swipes permanent — no snap-back, no retry.
+- Session length: 10 rounds. Boss always Round 10 (index 9).
+- Arc generator live in `huntGenerator.ts`: `SESSION_LENGTH` + `GPS_ARCS` table. `buildPhasePlan` / `rolesFromPlan` / `hapticsFromPlan` replace hardcoded arrays.
+- Haunt slot: index 7 (Round 8).
+- Visual token system: `app/ui/pwTheme.ts` + `app/ui/pwMaterials.ts`.
+- Hero plaque, tile card, deck stack: all on tokenized materials.
+- Gameplay Polly: left-only at `POLLY_GAMEPLAY_SIZE=210`. Right side reserved for SWIPE RIGHT TO REJECT.
+- Swipe affordances shipped (P5B).
+- HUD: quiet control strip, feather Image assets live (`feather-life-filled/empty.png`).
+- `tile_swipe.mp3` = sword whoosh. `press_hold_start.mp3` = card pickup.
+- Polly sprite system: 10 individual PNGs, `PollySprite.tsx` + `usePollyAnimator.ts` fly-up arc.
 
 ---
 
-## CURRENT BUILD STATE
+## Stale Docs
 
-**Active branch:** `play-screen-overhaul`.
+`CLAUDE.md` still references some legacy values — treat this file as current build state override.
 
-Current live state:
-- Hunt law is 10 rounds.
-- Round 10 is POLLY'S WORD / boss word.
-- Returning Haunt slot is Round 8 / index 7.
-- Hero Word-Book spec is documented in `docs/HERO_WORD_BOOK_SYSTEM.md`.
-- Hero cover font has been restored to a solid readable face.
-- Hero Word-Book interaction system is approved but not fully / correctly implemented.
+---
 
-Next recommended implementation order:
+## Next Implementation Order
+
 1. Wrong swipe punishment package.
 2. Correct RIGHT glass / crystal shatter.
 3. Correct UP sacred book intake.
 4. Hero entrance swing-shut / reverse exit.
 
-Patch history lives in `CHANGELOG.md`.
-Canonical workflow lives in `docs/WORKFLOW.md`.
-
-## Hero Word-Book Current Status
-
-Full approved interaction spec lives in `docs/HERO_WORD_BOOK_SYSTEM.md`.
-
-Current status:
-- Docs are locked.
-- Hero font was restored to solid cover font.
-- Code still needs implementation for wrong swipe punishment, correct RIGHT glass shatter, correct UP sacred book intake, and hero swing entrance / reverse exit.
-
-Next recommended implementation order:
-1. Wrong swipe punishment package.
-2. Correct RIGHT glass / crystal shatter.
-3. Correct UP sacred book intake.
-4. Hero entrance swing-shut / reverse exit.
+Full Hero Word-Book spec: `docs/HERO_WORD_BOOK_SYSTEM.md`.
+Patch history: `CHANGELOG.md`.
+Canonical workflow: `docs/WORKFLOW.md`.
