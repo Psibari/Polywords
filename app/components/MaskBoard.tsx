@@ -21,7 +21,7 @@ import { POLLY_GAMEPLAY_SIZE, usePollyAnimator } from '../hooks/usePollyAnimator
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
-import { deckBackMaterial, heroPlaqueMaterial } from '../ui/pwMaterials';
+import { deckBackMaterial } from '../ui/pwMaterials';
 import {
   HERO_BOOK_PERSPECTIVE,
   HERO_BOOK_SWING_INPUT_RANGE,
@@ -986,19 +986,20 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         setHauntReady(true);
       }, 1400);
     } else {
-      // ── HERO BOOK COVER — SWING SHUT (word stays readable) ──
+      // ── HERO WORD ENTRANCE — fade + gentle scale settle ──
       wordEntryOpacity.setValue(0);
-      wordEntryScale.setValue(1);
+      wordEntryScale.setValue(0.96);
       wordEntryTranslateY.setValue(0);
       wordEntryTilt.setValue(0);
       wordLockPulse.setValue(1);
-      heroBookSetOpen(wordSwingX);
 
       Animated.parallel([
         Animated.timing(wordEntryOpacity, {
-          toValue: 1, duration: HERO_BOOK_FADE_IN_MS, easing: Easing.linear, useNativeDriver: true,
+          toValue: 1, duration: 140, easing: Easing.linear, useNativeDriver: true,
         }),
-        heroBookSwingShut(wordSwingX),
+        Animated.spring(wordEntryScale, {
+          toValue: 1.0, damping: 10, stiffness: 180, useNativeDriver: true,
+        }),
       ]).start(() => {
         if (wordEntranceHapticRef.current !== step.word) {
           wordEntranceHapticRef.current = step.word;
@@ -1476,7 +1477,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         Animated.timing(wordEntryOpacity, {
           toValue: 0, duration: 260, easing: EXIT_IN, useNativeDriver: true,
         }),
-        heroBookSwingOpen(wordSwingX, EXIT_IN),
+        Animated.timing(wordEntryScale, {
+          toValue: 1.38, duration: 300, easing: EXIT_IN, useNativeDriver: true,
+        }),
+        Animated.timing(wordEntryTranslateY, {
+          toValue: -310, duration: 300, easing: EXIT_IN, useNativeDriver: true,
+        }),
         Animated.timing(transitionLabelOpacity, {
           toValue: 0, duration: 160, useNativeDriver: true,
         }),
@@ -1697,67 +1703,19 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           );
         }}
       >
-        <View style={[styles.wordStageOuterFrame, heroPlaqueMaterial.rim]} pointerEvents="none" />
-        <View style={[styles.wordStageFrame, heroPlaqueMaterial.base]} pointerEvents="none" />
-        <View style={[styles.wordStageInnerBevel, heroPlaqueMaterial.rim]} pointerEvents="none" />
-        <View style={styles.wordStageChamferTL} pointerEvents="none" />
-        <View style={styles.wordStageChamferTR} pointerEvents="none" />
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.wordStageChamferBL, {
-            transform: [{
-              translateY: bookOpenAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 8],
-              }),
-            }],
-          }]}
-        />
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.wordStageChamferBR, {
-            transform: [{
-              translateY: bookOpenAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 8],
-              }),
-            }],
-          }]}
-        />
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.wordStagePageEdge1, {
-            transform: [{
-              translateY: bookOpenAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 10],
-              }),
-            }],
-          }]}
-        />
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.wordStagePageEdge2, {
-            transform: [{
-              translateY: bookOpenAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 14],
-              }),
-            }],
-          }]}
-        />
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.wordStagePageEdge3, {
-            transform: [{
-              translateY: bookOpenAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 18],
-              }),
-            }],
-          }]}
-        />
-        <View style={[heroPlaqueMaterial.underGlow, styles.wordStageUnderlight]} pointerEvents="none" />
+        {/* Book under-shadow */}
+        <View style={styles.coverUnderShadow} pointerEvents="none" />
+
+        {/* Page block — cream pages, peek out at bottom */}
+        <View style={styles.pageBlock} pointerEvents="none">
+          <View style={[styles.pageEdge, styles.pageEdge1]} />
+          <View style={[styles.pageEdge, styles.pageEdge2]} />
+          <View style={[styles.pageEdge, styles.pageEdge3]} />
+        </View>
+
+        {/* Tile intake slot — reserved empty band between pages and cover for Pass 2.
+            Intentionally empty now. Do not remove. */}
+        <View style={styles.tileIntakeSlot} pointerEvents="none" />
 
         {/* Boss gold sweep */}
         {bossSweepActive && (
@@ -1829,8 +1787,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         )}
 
         {/* Word with entry + boss animations */}
-        {/* Static perspective context for the hero book cover's rotateX swing */}
-        <View style={{ transform: [{ perspective: HERO_BOOK_PERSPECTIVE }] }}>
+        {/* BOOK COVER PLANE — rigid front object. Later receives rotateX (not this pass). */}
+        <Animated.View style={styles.bookCoverPlane}>
+          {/* navy cover face */}
+          <View style={styles.coverSurface} pointerEvents="none" />
+          {/* gold trim border */}
+          <View style={styles.coverTrim} pointerEvents="none" />
+          {/* top spine / hinge band */}
+          <View style={styles.spineDetail} pointerEvents="none">
+            <View style={styles.spineLine1} />
+            <View style={styles.spineLine2} />
+          </View>
+
         {/* Outer wrapper: non-native recoil transforms (RAF-driven setValue) */}
         <Animated.View
           style={{
@@ -1862,7 +1830,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 { translateY: masterHeroTransY },
                 { translateY: wordEntryTranslateY },
                 { rotate: wordEntryTiltDeg },
-                { rotateX: wordSwingXDeg },
               ],
             }}
           >
@@ -1946,7 +1913,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           </Animated.View>
           </Animated.View>
         </Animated.View>
-        </View>
+        </Animated.View>
 
         {/* Boss shockwave rings + dust */}
         {bossShockwaveVisible && (
@@ -2419,128 +2386,97 @@ const styles = StyleSheet.create({
   wordZoneBoss: {
     height: 186,
   },
-  wordStageFrame: {
+  bookCoverPlane: {
     position: 'absolute',
     left: 6,
     right: 6,
-    top: 6,
-    bottom: 0,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: PW.color.goldSoft,
-    backgroundColor: PW.color.bgDeep,
-    shadowColor: PW.color.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.55,
-    shadowRadius: 24,
+    top: 4,
+    height: 148,
+    borderRadius: 14,
+    overflow: 'visible',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coverSurface: {
+    position: 'absolute',
+    left: 0, right: 0, top: 0, bottom: 0,
+    borderRadius: 14,
+    backgroundColor: '#15123A',
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
     elevation: 12,
   },
-  wordStageOuterFrame: {
+  coverTrim: {
     position: 'absolute',
-    left: 2,
-    right: 2,
-    top: 2,
-    bottom: -2,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: PW.color.purpleSoft,
-    backgroundColor: PW.color.surfaceDeep,
+    left: 5, right: 5, top: 5, bottom: 5,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: PW.color.gold,
+    opacity: 0.92,
   },
-  wordStageInnerBevel: {
+  spineDetail: {
     position: 'absolute',
-    left: 12,
-    right: 12,
-    top: 12,
-    bottom: 6,
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: PW.color.cardRim,
-    backgroundColor: 'transparent',
+    left: 14, right: 14, top: 12,
+    height: 12,
+    justifyContent: 'space-between',
   },
-  wordStageChamferTL: {
+  spineLine1: {
+    height: 1.5,
+    backgroundColor: PW.color.gold,
+    opacity: 0.55,
+    borderRadius: 1,
+  },
+  spineLine2: {
+    height: 1.5,
+    marginTop: 3,
+    backgroundColor: PW.color.gold,
+    opacity: 0.30,
+    borderRadius: 1,
+  },
+  pageBlock: {
     position: 'absolute',
-    left: 6,
-    top: 6,
-    width: 10,
-    height: 10,
-    borderTopWidth: 2,
-    borderLeftWidth: 2,
-    borderColor: PW.color.goldSoft,
-    opacity: 0.68,
+    left: 18,
+    right: 18,
+    top: 138,
+    height: 34,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    backgroundColor: '#E8E2D0',
+    overflow: 'hidden',
   },
-  wordStageChamferTR: {
+  pageEdge: {
     position: 'absolute',
-    right: 6,
-    top: 6,
-    width: 10,
-    height: 10,
-    borderTopWidth: 2,
-    borderRightWidth: 2,
-    borderColor: PW.color.goldSoft,
-    opacity: 0.68,
+    left: 0, right: 0,
+    height: 1,
+    backgroundColor: 'rgba(120,110,90,0.45)',
   },
-  wordStageChamferBL: {
-    position: 'absolute',
-    left: 6,
-    bottom: 4,
-    width: 10,
-    height: 10,
-    borderBottomWidth: 2,
-    borderLeftWidth: 2,
-    borderColor: PW.color.goldSoft,
-    opacity: 0.68,
-  },
-  wordStageChamferBR: {
-    position: 'absolute',
-    right: 6,
-    bottom: 4,
-    width: 10,
-    height: 10,
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-    borderColor: PW.color.goldSoft,
-    opacity: 0.68,
-  },
-  wordStagePageEdge1: {
+  pageEdge1: { top: 8 },
+  pageEdge2: { top: 16 },
+  pageEdge3: { top: 24 },
+  tileIntakeSlot: {
     position: 'absolute',
     left: 14,
     right: 14,
-    bottom: 0,
-    height: 1,
-    backgroundColor: PW.color.cardRim,
+    top: 130,
+    height: 14,
   },
-  wordStagePageEdge2: {
+  coverUnderShadow: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: -3,
-    height: 1,
-    backgroundColor: PW.color.goldGlow,
-    opacity: 0.62,
-  },
-  wordStagePageEdge3: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: -6,
-    height: 1,
-    backgroundColor: PW.color.cardRim,
-    opacity: 0.28,
-  },
-  wordStageUnderlight: {
-    position: 'absolute',
-    left: 30,
-    right: 30,
-    bottom: -18,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: PW.color.purple,
-    opacity: PW.opacity.subtle,
-    shadowColor: PW.color.purple,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 16,
-    elevation: 0,
+    left: 20,
+    right: 20,
+    top: 168,
+    height: 18,
+    borderRadius: 12,
+    backgroundColor: '#000000',
+    opacity: 0.32,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
   },
   kicker: {
     color: '#F5C842',
