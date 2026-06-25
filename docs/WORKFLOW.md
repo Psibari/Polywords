@@ -16,17 +16,6 @@ CONTEXT.md is for current build state.
 WORKFLOW.md is for how we work.
 CHANGELOG.md is for completed patch history.
 
-## Current Hunt Law
-
-POLYWORDS standard Hunts are 10 rounds.
-
-- Rounds 1-9 are normal Hunt words.
-- Round 10 is POLLY'S WORD / boss word.
-- Mastery and haunt outcomes are boss-only.
-- Returning Haunt slot is Round 8 / index 7 in a 10-round Hunt.
-- Returning Haunt never replaces Round 10.
-- Default GPS arc: 2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss.
-
 ## Work Lanes
 
 Every task must belong to exactly one lane.

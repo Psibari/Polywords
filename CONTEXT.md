@@ -19,9 +19,10 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 **Known-good tag:** `v0.working-20260621`
 **tsc:** exits 0.
 
-**Two stashes — reference by NAME only, never index, never pop/drop/clear:**
+**Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
 - `wip haunt loop type scaffolding`
+- `wip intake sliver not approved — needs SwipeMask handoff`
 
 ---
 
@@ -40,18 +41,12 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 
 ---
 
-## Stale Docs
-
-`CLAUDE.md` still references some legacy values — treat this file as current build state override.
-
----
-
 ## Next Implementation Order
 
-1. Wrong swipe punishment package.
-2. Correct RIGHT glass / crystal shatter.
-3. Correct UP sacred book intake.
-4. Hero entrance swing-shut / reverse exit.
+1. Daily Challenge visual redesign (spec: `docs/DAILY_CHALLENGE_SPEC.md`).
+2. Hero Word-Book Pass 1 — cover swing entrance/exit.
+3. Correct UP book intake — SwipeMask handoff required (see parked stash).
+4. Wrong swipe buzzer + haptic + red flash.
 
 Full Hero Word-Book spec: `docs/HERO_WORD_BOOK_SYSTEM.md`.
 Daily Challenge full spec: `docs/DAILY_CHALLENGE_SPEC.md`.

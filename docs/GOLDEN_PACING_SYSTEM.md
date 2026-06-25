@@ -73,10 +73,12 @@ All ordinary masks must look, move, animate, and enter identically. Truth is rev
 ## Standard Hunt Rhythm
 
 - 2 Confidence Words
-- 3 Flow Words
+- 2 Flow Words
 - 3 Tension Words
-- 3 Panic Words
+- 2 Panic Words
 - 1 Boss Word
+
+Total: 10 rounds. Boss always Round 10.
 
 This rhythm is emotional architecture, not a hardcoded implementation yet.
 
@@ -157,23 +159,6 @@ The player collects words.
 The Vault is more important than score.
 
 A mastered word should feel rescued/reclaimed, not merely completed.
-
-## First-Time Player Timing
-
-Within the first 20 seconds, the player should experience:
-
-- Seeing a boss word.
-- Swiping a real meaning up.
-- Swiping a trap right.
-- At least one Semantic Snap.
-
-Within the first 45-60 seconds, the player should experience:
-
-- Gate unlock.
-- Hidden meaning.
-- Mastery reward.
-
-Do not state that the full game fantasy must happen inside exactly 20 seconds. That is too compressed for onboarding.
 
 ## Anti-Repetition Rule
 

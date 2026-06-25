@@ -138,19 +138,6 @@ Canonical workflow lives in `docs/WORKFLOW.md`.
 
 Do not use stale safe-commit lists in this file as source of truth.
 
-### Swipe direction affordances
-Implemented in `app/components/MaskBoard.tsx`. Commit: `1ce8add Add swipe direction affordances`.
-
-Text:
-- `SWIPE UP TO CLAIM`
-- `SWIPE RIGHT TO REJECT`
-
-UP cue: placed above active tile, centered in the open gap between hero word and deck. Style: `color: '#F5C842'`, `opacity: 0.72`, `fontSize: 14`, `top: -48`.
-
-RIGHT cue: placed outside active tile body, lower-right/right side of clue deck area. Style: `color: '#B98ADE'`, `opacity: 0.74`, `fontSize: 14`, `top: TILE_H + 44`, `right: 8`, `width: 190`.
-
-Overlay uses `pointerEvents="none"`. Cues do not block swipes/touches. Cues are direction help only: no correctness feedback, no hero glow during drag, no target validation during drag, and no buttons, boxes, pills, or tutorial panels.
-
 ---
 
 ## Polly — Master of Words
