@@ -19,7 +19,7 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 **Known-good tag:** `v0.working-20260621`
 **tsc:** exits 0.
 
-**Daily Challenge:** The approved spec now locks UP-only controls, persistent on-screen Polly behavior, gold-rim word relic cards, and explicit win/loss language. Daily remains doc-only, and the stale coded Daily scaffold remains quarantined. `docs/DAILY_CHALLENGE_SPEC.md` is the source of truth; the next Daily work requires an approved implementation patch.
+**Daily Challenge:** The approved spec locks UP-only controls, persistent on-screen Polly behavior, gold-rim word relic cards, and explicit win/loss language. The UI materials foundation now exists in `app/ui/pwDailyMaterials.ts`, including subtle illustrated-shrine backdrop direction, dark purple veil and center glow tokens, faint scanline tokens, relic-card materials, and Polly reaction copy. Daily remains doc-only and unimplemented; the stale coded Daily scaffold remains quarantined. `docs/DAILY_CHALLENGE_SPEC.md` is the source of truth.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`

@@ -1,5 +1,13 @@
 # POLYWORDS Changelog
 
+## 2026-06-25 - Daily UI materials foundation
+
+- Added `app/ui/pwDailyMaterials.ts` as the Daily UI materials foundation.
+- Locked subtle Daily backdrop veil, center-glow, and future scanline tokens.
+- Locked gold-rim dark-purple word relic card and Clue Vault tokens.
+- Locked approved Daily copy and Polly reaction constants.
+- Added no Daily gameplay implementation.
+
 ## 2026-06-25 - Daily Challenge design lock
 
 - Locked the updated Polly's Daily Challenge layout and control spec.
