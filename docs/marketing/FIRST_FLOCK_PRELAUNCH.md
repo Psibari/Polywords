@@ -4,6 +4,8 @@
 
 POLYWORDS is not in full launch mode yet. This plan is for the stage before the app is ready: prove that strangers enjoy the core puzzle, collect early testers, and build a small waitlist without pretending the game is finished.
 
+This is a **public-first plan**. Do not DM or text personal contacts unless someone already asks about the game. No contact scraping. No awkward friend spam. Let the puzzle pull people in.
+
 ## North-star goal
 
 Get 100 people to say: **tell me when I can play this.**
@@ -110,14 +112,34 @@ Best post structure:
 
 ## Audience order
 
-Start with warm and adjacent audiences before chasing strangers.
+Start with public and semi-public places where people already like puzzles, words, teaching, or indie games.
 
-1. Personal Facebook / Instagram / text messages
-2. Friends who like games or puzzles
-3. Teachers, tutors, homeschool parents
-4. Indie game communities
-5. Word game / puzzle communities
-6. Reddit feedback posts, not promotion posts
+1. Personal public social posts, if comfortable
+2. Indie game feedback spaces
+3. Word game / puzzle communities
+4. Teacher, tutor, homeschool, and ESL groups where feedback posts are allowed
+5. Reddit feedback posts, not promotion posts
+6. Product directories or beta directories once a landing page/demo exists
+7. Short-form video posts built around one playable puzzle at a time
+
+## No-DM rule
+
+Do not DM or text people from Contacts as a growth tactic.
+
+Allowed:
+
+- replying when someone comments or asks about POLYWORDS
+- sharing the waitlist link when someone requests it
+- posting publicly in your own feed
+- posting in groups only when the rules allow feedback or project posts
+- inviting people through an opt-in form
+
+Avoid:
+
+- cold texting friends/family
+- scraping contacts
+- sending bulk Gmail outreach
+- pretending a promo post is a personal message
 
 ## Reddit posture
 
@@ -133,10 +155,10 @@ Bad:
 
 ## Weekly target
 
-- Week 1: landing page/form live, first 10 puzzle posts written, first 20 personal outreach messages sent
-- Week 2: post 1 puzzle/day, ask for feedback in 3 communities, collect first 25 waitlist names
-- Week 3: run Polly's 7-Day Meaning Challenge, collect 50 total names
-- Week 4: invite first tester batch, collect feedback, improve the vertical slice
+- Week 1: landing page/form live, first 10 puzzle posts written, first public post live
+- Week 2: post 1 puzzle/day, ask for feedback in 3 allowed public/semi-public communities, collect first 10-25 waitlist names
+- Week 3: run Polly's 7-Day Meaning Challenge, collect 25-50 total names
+- Week 4: invite first tester batch from people who opted in, collect feedback, improve the vertical slice
 
 ## Success metrics
 
@@ -146,7 +168,7 @@ Track these weekly:
 - People who ask to play
 - Comments per puzzle
 - Confusing clues flagged
-- Teachers/tutors interested
+- Teachers/tutors interested through opt-in comments/forms
 - Number of testers ready for iOS/Android
 
 ## Do not do yet
@@ -157,13 +179,15 @@ Track these weekly:
 - Do not overbuild a Discord.
 - Do not sell the full app before the vertical slice feels premium.
 - Do not hide the idea until launch day.
+- Do not DM/text personal contacts as a marketing tactic.
 
 ## Immediate task checklist
 
 - [ ] Create Google Form called POLYWORDS First Flock Waitlist
 - [ ] Add the fields listed above
 - [ ] Create a short link for the form
-- [ ] Post Day 1 puzzle
-- [ ] DM 20 people with the tester outreach script
+- [ ] Post Day 1 puzzle publicly
+- [ ] Share Day 1 puzzle in one allowed feedback community
 - [ ] Save every confusing comment as content QA feedback
-- [ ] Pick first 10 testers only after the latest build feels stable enough
+- [ ] Reply with the waitlist link only when someone asks or reacts positively
+- [ ] Pick first 10 testers only from opt-in waitlist people after the latest build feels stable enough
