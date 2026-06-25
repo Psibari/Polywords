@@ -54,5 +54,6 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 4. Hero entrance swing-shut / reverse exit.
 
 Full Hero Word-Book spec: `docs/HERO_WORD_BOOK_SYSTEM.md`.
+Daily Challenge full spec: `docs/DAILY_CHALLENGE_SPEC.md`.
 Patch history: `CHANGELOG.md`.
 Canonical workflow: `docs/WORKFLOW.md`.

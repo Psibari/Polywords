@@ -304,6 +304,7 @@ assets/data/huntData.json         403-word tile database
 assets/images/Polly/polly_01-10.png   Polly poses
 assets/sfx/                       Game SFX
 docs/GOLDEN_PACING_SYSTEM.md      GPS source of truth
+docs/DAILY_CHALLENGE_SPEC.md      Daily Challenge approved spec
 docs/POLLY_DIALOGUE_BANK.md       Polly dialogue source of truth
 tools/content/mask-rewriter       Local-only content tool — never wire into the app
 ```
