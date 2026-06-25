@@ -3,15 +3,30 @@
 
 Full implementation source of truth for the Daily Challenge mode.
 Do not implement anything not described here.
-Standard Hunt rules are unchanged — see CLAUDE.md.
+Standard Hunt rules are unchanged — see `CLAUDE.md`.
+
+Daily is currently documentation-only. Existing coded Daily files are stale, unapproved scaffold and must remain quarantined until an approved implementation patch.
+
+---
+
+## Title and Promise
+
+Player-facing title:
+
+**POLLY'S DAILY CHALLENGE**
+
+Player-facing promise:
+
+**ONE word · FIVE rounds · TWO chances · ONE gold feather**
 
 ---
 
 ## Overview
 
-A curated 5-round daily puzzle. Same puzzle for every player, seeded by date.
+A curated five-round daily puzzle. The same puzzle is presented to every player, seeded by date.
 One attempt per day. No replays.
-Player-facing name: **Polly's Daily Challenge**.
+
+The player studies the visible clues and claims the single candidate word that represents them all.
 
 ---
 
@@ -21,48 +36,134 @@ Player-facing name: **Polly's Daily Challenge**.
 - Tier curve: `[1, 1, 2, 2, 3]`
 - Seeded by date — deterministic, same for all players
 - One attempt per day, no replays
-- Engine: `app/game/dailyChallengeEngine.ts`
-- Word pool: `app/game/dailyPool.ts`
+- 2 Chances for the full challenge
+- Win by solving all 5 rounds before losing both Chances
+- Engine target: `app/game/dailyChallengeEngine.ts`
+- Word pool target: `app/game/dailyPool.ts`
 
 ---
 
-## Lives — Word Senses
+## Daily Control Rule — UP Only
 
-- 2 Word Senses per session (not Hunt feathers)
-- Wrong swipe = lose 1 Word Sense AND trigger next clue reveal
-- 0 Word Senses = session ends immediately, remaining rounds skipped
-- No HAUNTED system in Daily — if session ends at 0 lives, result is HAUNTED title only
-- Timed clue reveals do NOT spend Word Senses
+Daily does not use Hunt's reject action.
+
+- Player swipes UP on the word they believe represents all visible clues.
+- There is no RIGHT swipe in Daily.
+- There are no taps.
+- A correct UP claim completes the round.
+- A wrong UP claim costs 1 Chance and reveals the next clue.
+- Timed clue reveals do not cost Chances.
+- Losing the second Chance ends the Daily immediately.
+
+This UP-only rule is specific to Daily. Standard Hunt swipe grammar remains unchanged.
+
+---
+
+## Approved Layout Labels
+
+### Zone 3
+
+**ONE REPRESENTS ALL**
+
+This label frames the six candidate words as one semantic choice across all visible clues.
+
+### Zone 4
+
+**SWIPE UP TO CLAIM**
+
+This is the only Daily action instruction.
 
 ---
 
 ## Candidate Board
 
 - 6 cards per round
-- 2-column grid layout
+- 2-column grid
 - All 6 are curated near-misses from the word's own `candidates` array
 - No random pool padding — every card must be a plausible answer
-- Swipe UP to claim (real meaning)
-- Swipe RIGHT to reject (trap / wrong word)
-- No taps anywhere — swipe only
+- One candidate represents all visible clues
+- Player claims a candidate with an intentional UP swipe
+
+---
+
+## Daily Answer Tile Visual Direction
+
+Daily answer tiles are gold-rimmed dark-purple word relic cards.
+
+- Outer gradient frame: `#F5C842` to `#9B2D6B`
+- Inner face: `#1A1830`
+- Centered uppercase word
+- Compact mobile card shape
+- Premium rounded corners
+- Soft shadow and physical depth
+- Interaction glow for press, drag, correct, and wrong states
+- No hover behavior
+- No web CSS implementation details
+
+All six cards share the same neutral resting treatment. The tile must not reveal correctness before commitment.
+
+---
+
+## Press-and-Hold and Swipe Feel
+
+Daily answer tiles use the same press-and-hold feel and swipe confidence as regular gameplay where practical.
+
+- Press and hold wakes the tile.
+- The player gets grip and control before swiping.
+- Releasing without enough movement returns the tile home.
+- An intentional UP swipe claims the word.
+- Use the same general control feel and confidence threshold as regular gameplay where practical.
+- Daily remains UP-only even when borrowing the regular gameplay feel.
+- Do not change `SwipeMask.tsx` as part of the Daily docs lock.
 
 ---
 
 ## Clue Reveal — Sequential
 
-Three clues per round. Revealed one at a time.
+Three clues are available per round and reveal one at a time.
 
 | Clue | Unlocks |
 |---|---|
 | Clue 1 | Visible immediately on round load |
-| Clue 2 | After 4 seconds OR first wrong swipe — whichever comes first |
-| Clue 3 | After 8 seconds OR second wrong swipe — whichever comes first |
+| Clue 2 | After 4 seconds OR first wrong UP claim — whichever comes first |
+| Clue 3 | After 8 seconds OR next wrong UP claim — whichever comes first |
 
-- Locked clues show placeholder bar rows + a timing tag ("AFTER 4s", "AFTER 8s")
-- Player can see that more clues are coming
-- Timed unlocks do NOT cost Word Senses
-- Wrong swipe unlocks next clue AND costs 1 Word Sense
-- If both Word Senses are lost: all clues become visible, session ends
+- Locked clues show placeholder bar rows and a timing tag: `AFTER 4s` or `AFTER 8s`.
+- The player can see that more clues are coming.
+- Timed unlocks do not cost Chances.
+- A wrong UP claim unlocks the next clue and costs 1 Chance.
+- Losing both Chances reveals the loss result and ends the session immediately.
+
+---
+
+## Polly — Persistent Daily Opponent
+
+Polly is perched on screen for the entire Daily Challenge.
+
+- Polly is mostly silent.
+- Polly only reacts when the player loses a Chance, loses the challenge, or wins the challenge.
+- Polly must not obstruct clues, answer tiles, or the UP claim lane.
+
+### First lost Chance
+
+- Polly uses a happy/smug pose.
+- Polly says: **“Sharp as a butter knife.”**
+
+### Second lost Chance
+
+- Daily ends immediately.
+- Result: **YOU LOSE**
+- No HAUNTED language.
+- Polly laughs.
+- Polly says: **“CAN’T BEAT THAT WITH A BAT.”**
+
+### Challenge win
+
+- Result: **YOU BEAT POLLY’S CHALLENGE**
+- Gold Feather is awarded.
+- No WORD MASTER language.
+- Polly gives the feather with annoyed/shocked energy.
+- Polly says: **“WON’T HAPPEN TOMORROW.”**
 
 ---
 
@@ -70,23 +171,34 @@ Three clues per round. Revealed one at a time.
 
 Between rounds after a correct claim:
 
-1. Correct card holds gold border — 800ms
-2. Meanings zone wipes up and fades out
-3. `ROUND X OF 5` stamp appears center screen — 600ms
-4. New meanings fade in
+1. Correct card holds its gold confirmation border — 800ms.
+2. Meanings zone wipes up and fades out.
+3. `ROUND X OF 5` stamp appears center screen — 600ms.
+4. New meanings fade in.
 
-Total target: ~1.8s
+Total target: approximately 1.8 seconds.
 
 ---
 
-## Result Titles
+## Results Language
 
-| Title | Condition | Presentation |
-|---|---|---|
-| WORD MASTER | 5/5 solved, lives remaining | Gold, large, full entrance ceremony |
-| SHARP | 4/5 solved | White, clean, no ceremony |
-| SURVIVED | 2–3/5 solved | Muted, small |
-| HAUNTED | 0–1/5 solved OR 0 lives hit mid-session | Deep purple, slow bleed in, no celebration |
+Do not use `WORD MASTER`, `SHARP`, `SURVIVED`, or `HAUNTED` in Daily results.
+
+### Win
+
+**YOU BEAT POLLY’S CHALLENGE**
+
+**GOLD FEATHER EARNED**
+
+Polly: **“WON’T HAPPEN TOMORROW.”**
+
+### Loss
+
+**YOU LOSE**
+
+**NO FEATHER TODAY**
+
+Polly: **“CAN’T BEAT THAT WITH A BAT.”**
 
 ---
 
@@ -94,71 +206,86 @@ Total target: ~1.8s
 
 Share text surfaces how the player played, not just the score.
 
-Format example:Got STREAM from 1 clue. Burned a sense on PITCH. 5/5.
+Example:
 
-WORD MASTER · POLYWORDS Daily #142
+```text
+Got STREAM from 1 clue. Burned a chance on PITCH. 5/5.
 
-polywords.appRules:
-- Name the word that cost a sense (if any)
-- Name words solved from clue 1 alone if notable
-- End with score fraction and title
-- Never just a stat line
+YOU BEAT POLLY'S CHALLENGE · POLYWORDS Daily #142
+
+polywords.app
+```
+
+Rules:
+
+- Name the word that cost a Chance, if any.
+- Name words solved from Clue 1 alone when notable.
+- End with the score fraction and the Daily win/loss result.
+- Never use the removed graded result titles.
+- Never publish only a stat line.
 
 ---
 
 ## Gold Feather Reward
 
-Awarded at end of session if player completed all 5 rounds with at least 1 Word Sense remaining.
+The Gold Feather is awarded when the player wins the Daily by completing all 5 rounds before losing both Chances.
 
 | Condition | Feather |
 |---|---|
-| Completed 5 rounds, lives > 0 | Earned |
-| HAUNTED (0 lives, session ended early) | Not earned |
+| Daily won | Earned |
+| Second Chance lost before completion | Not earned |
 
 ### Feather rules
-- One feather max — cannot stack
+
+- One feather maximum — cannot stack
 - One day only — expires at midnight
-- If player already holds a feather, today's win does not add a second
+- If the player already holds a feather, today's win does not add a second
 - Feather persists in Zustand store with a date stamp
 
 ### Feather visibility
-- Results screen: feather shown as prize reveal if earned
+
+- Results screen: feather shown as the win prize reveal
 - Hunt HUD: feather visible as a spendable slot when held
 
 ### Feather spend
-- Player activates manually at any point during a Hunt
-- Burns to respawn the last tile that exited (the one that cost the life)
-- One-time use — gone after spent
+
+- Player activates it manually at any point during a Hunt
+- Burns to respawn the last tile that exited and cost a life
+- One-time use — gone after spending
 - Spend is the player's choice — no auto-activation
 
 ### Store implications
+
 - Zustand slice needs: `featherHeld: boolean`, `featherDate: string | null`
-- Expiry check: on Daily load and on Hunt load, compare `featherDate` to today's date string
-- If `featherDate !== today` → clear feather
+- On Daily load and Hunt load, compare `featherDate` with today's date string
+- If `featherDate !== today`, clear the feather
 
 ---
 
 ## What Daily Does NOT Change
 
-- Standard Hunt: always 10 rounds, boss always Round 10
-- Hunt feathers (lives): 5 per hunt, unchanged
-- Swipe grammar: UP = real, RIGHT = trap — same as Hunt
-- HAUNTED / Ghost system: Hunt-only, not in Daily
-- MASTERED / boss mystery tile: Hunt-only
-- Polly's Word / boss word: Hunt-only
-- No left swipe, no taps — applies everywhere
+- Standard Hunt remains 10 rounds with the boss at Round 10.
+- Hunt feathers remain 5 per Hunt.
+- Hunt swipe grammar remains UP = real and RIGHT = trap.
+- Daily alone is UP-only and has no reject gesture.
+- HAUNTED and Ghost systems remain Hunt-only.
+- MASTERED and the boss mystery tile remain Hunt-only.
+- Polly's Word remains Hunt-only.
+- No left swipe and no taps apply everywhere.
 
 ---
 
 ## Key Files
 
-| File | Role |
+These are future implementation targets only. Their current coded versions are stale, unapproved scaffold.
+
+| File | Intended role |
 |---|---|
-| `app/screens/DailyChallengeScreen.tsx` | UI, swipe interaction, clue reveal, round transition |
-| `app/game/dailyChallengeEngine.ts` | Session builder, correct/wrong swipe handlers, result builder |
+| `app/screens/DailyChallengeScreen.tsx` | UI, UP-only interaction, clue reveal, Polly, and transitions |
+| `app/game/dailyChallengeEngine.ts` | Session builder, claim handling, and result builder |
 | `app/game/dailyPool.ts` | Tiered word pool with curated candidates |
-| `app/store/useGameStore.ts` | Daily state slice + Gold Feather state |
-| `assets/images/feather-gold-reward.png` | Gold Feather prize asset (exists, unused) |
+| `app/store/useGameStore.ts` | Daily state slice and Gold Feather state |
+| `assets/images/feather-gold-reward.png` | Gold Feather prize asset |
 
 ---
 

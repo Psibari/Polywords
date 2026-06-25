@@ -1,5 +1,13 @@
 # POLYWORDS Changelog
 
+## 2026-06-25 - Daily Challenge design lock
+
+- Locked the updated Polly's Daily Challenge layout and control spec.
+- Defined Daily as UP-only with Polly perched for the full challenge.
+- Approved gold-rim dark-purple word relic cards as the Daily answer-tile direction.
+- Replaced graded Daily outcomes with explicit win/loss and Gold Feather language.
+- Added no Daily implementation.
+
 ## 2026-06-25 - Daily Challenge quarantine
 
 - Removed the stale Daily Challenge route and startup result load from the live app shell.
