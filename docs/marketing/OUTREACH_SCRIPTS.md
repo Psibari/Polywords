@@ -1,34 +1,46 @@
-# POLYWORDS Outreach Scripts
+# POLYWORDS Public Feedback Scripts
 
 Use these before the app is fully ready. The ask is feedback and early interest, not downloads.
+
+This file is intentionally **not** a cold-DM or contact-texting plan. Use public posts, group posts where allowed, opt-in comments, and waitlist forms.
 
 ## Core one-liner
 
 POLYWORDS is a swipe-based word puzzle game where one word has many meanings, and you have to spot which clues are real meanings and which are traps.
 
-## Text message to friends
+## Main public post
 
 I am building a mobile word puzzle game called POLYWORDS.
 
 The idea is simple: one word can have multiple real meanings. You get short clue tiles and decide if each one is a REAL meaning or a TRAP.
 
-I am not trying to hype it yet. I need honest feedback on whether the puzzles feel fair, fun, or confusing.
+WORD: BANK
 
-Want to try a few sample puzzles and tell me what feels good or bad?
+Which clues are REAL meanings?
 
-## Short DM
+1. river's muddy shoulder
+2. paychecks go quiet there
+3. airplane's side lean
+4. money sleeps in drawers
 
-I am building POLYWORDS, a word puzzle game about words with multiple meanings.
+In the game, you swipe UP for REAL and RIGHT for TRAP.
 
-Can I send you one sample puzzle and ask if it feels fair or annoying?
+Would this feel fair, too easy, or annoying?
 
-## Teacher / tutor message
+## Short public post
 
-I am building a mobile word puzzle game called POLYWORDS. It is built around multiple-meaning words, context clues, and close-but-wrong decoys.
+Can you spot the fake meaning?
 
-Before I launch anything, I am looking for a few teachers, tutors, and reading/vocabulary people to tell me whether the clues feel fair and useful.
+WORD: CAST
 
-Would you be open to looking at a few sample puzzles and giving quick feedback?
+1. actors chosen for a show
+2. fishing line's flying throw
+3. broken bone's hard jacket
+4. candle's tired smoke trail
+
+POLYWORDS is a swipe word puzzle game I am building. UP = real meaning. RIGHT = trap.
+
+Which one would make you protest?
 
 ## Indie game dev feedback post
 
@@ -64,7 +76,26 @@ Which are REAL meanings?
 
 Would this be fair as a puzzle, or would any clue make you protest?
 
-## Waitlist invitation after someone reacts positively
+## Teacher / tutor group post
+
+I am building a word puzzle game called POLYWORDS. It is built around multiple-meaning words, context clues, and close-but-wrong decoys.
+
+Before I launch anything, I am testing whether the clue style feels fair and useful for vocabulary/reading practice.
+
+Sample:
+
+WORD: SPRING
+
+Which clues are real meanings?
+
+1. opposite of autumn
+2. cheap mattress machinery
+3. water escapes the ground
+4. creek pretending to be young
+
+Would students understand the logic after reveal, or would any clue feel unfair?
+
+## Waitlist comment when someone reacts positively
 
 Glad that clicked. I am collecting a small early group called the First Flock.
 
@@ -72,7 +103,7 @@ I will send occasional sample puzzles and beta access when the build is ready en
 
 Here is the waitlist: [WAITLIST LINK]
 
-## First tester invite
+## First tester invite for opt-in waitlist only
 
 POLYWORDS is ready for a tiny tester batch.
 
@@ -83,7 +114,7 @@ This is not the public launch. I am looking for honest feedback on:
 - where the game feels cheap or confusing
 - whether Polly feels like a fun opponent
 
-Want to be in the first tester group?
+Reply if you want to be in the first tester group.
 
 ## Follow-up after someone tests
 
@@ -96,6 +127,24 @@ Three questions:
 3. Did you want to keep playing after the first few words?
 
 Even one blunt sentence helps.
+
+## Inbound-only sharing rules
+
+Allowed:
+
+- Replying to comments
+- Sharing the waitlist when someone asks
+- Posting publicly on your own account
+- Posting in communities where feedback posts are allowed
+- Sending updates only to people who joined the waitlist
+
+Avoid:
+
+- Cold DMs
+- Texting personal contacts
+- Bulk Gmail outreach
+- Scraping contact lists
+- Posting in groups that ban self-promotion or feedback requests
 
 ## Launch-tone rules
 
