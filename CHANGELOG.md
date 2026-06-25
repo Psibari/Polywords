@@ -1,5 +1,12 @@
 # POLYWORDS Changelog
 
+## 2026-06-25 - Daily Challenge quarantine
+
+- Removed the stale Daily Challenge route and startup result load from the live app shell.
+- Disabled the Home Daily card as a navigation entry point while keeping it visible as coming soon.
+- Marked the existing coded Daily files as stale, unapproved scaffold; `docs/DAILY_CHALLENGE_SPEC.md` remains the only approved Daily source of truth.
+- Added no Daily gameplay implementation.
+
 ## 2026-06-23 - play-screen-overhaul docs/context diet
 
 - Added `docs/HERO_WORD_BOOK_SYSTEM.md` as the full approved Hero Word-Book interaction spec.

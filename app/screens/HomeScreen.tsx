@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import BottomNav from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
-import { DAILY_ROUND_COUNT, getChallengeNumber, getTodayDateString } from '../game/dailyChallengeEngine';
 import { useGameStore } from '../store/useGameStore';
 
 type Props = {
@@ -22,22 +21,12 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
-  const startGame           = useGameStore(s => s.startGame);
-  const loadDailyResult     = useGameStore(s => s.loadDailyResult);
-  const dailyResult         = useGameStore(s => s.dailyResult);
-  const startDailyChallenge = useGameStore(s => s.startDailyChallenge);
-
-  const challengeNumber = getChallengeNumber(getTodayDateString());
-  const alreadyPlayed   = dailyResult?.date === getTodayDateString();
-  const canReplayDailyInDev = __DEV__;
-  const dailyLocked = alreadyPlayed && !canReplayDailyInDev;
+  const startGame = useGameStore(s => s.startGame);
   const pollyY = useRef(new Animated.Value(0)).current;
   const playPulse = useRef(new Animated.Value(0)).current;
   const { width } = useWindowDimensions();
   const logoWidth = Math.min(width - 34, 390);
   const logoHeight = Math.max(112, Math.min(152, logoWidth * 0.39));
-
-  useEffect(() => { loadDailyResult(); }, []); // eslint-disable-line
 
   useEffect(() => {
     Animated.loop(
@@ -58,12 +47,6 @@ export default function HomeScreen({ navigation }: Props) {
   function handlePlay() {
     startGame();
     navigation.navigate('Game');
-  }
-
-  function handleDaily() {
-    if (dailyLocked) return;
-    startDailyChallenge();
-    navigation.navigate('Daily');
   }
 
   function handleVaultPress() {
@@ -136,13 +119,11 @@ export default function HomeScreen({ navigation }: Props) {
 
             <View style={styles.cardGrid}>
               <Pressable
-                onPress={handleDaily}
-                disabled={dailyLocked}
-                style={({ pressed }) => [
+                disabled
+                style={[
                   styles.destinationCard,
                   styles.dailyCard,
-                  dailyLocked && styles.disabledCard,
-                  pressed && !dailyLocked && styles.pressed,
+                  styles.disabledCard,
                 ]}
               >
                 <LinearGradient
@@ -154,22 +135,10 @@ export default function HomeScreen({ navigation }: Props) {
                   <View style={[styles.modeIcon, styles.dailyIcon]}>
                     <View style={[styles.modeIconCore, styles.dailyIconCore]} />
                   </View>
-                  <Text style={styles.cardEyebrow}>DAILY #{challengeNumber}</Text>
+                  <Text style={styles.cardEyebrow}>DAILY CHALLENGE</Text>
                 </View>
-                {alreadyPlayed ? (
-                  <>
-                    <Text style={styles.cardTitle}>{dailyResult?.title}</Text>
-                    <Text style={styles.cardCopy}>
-                      {dailyResult?.solvedCount}/{DAILY_ROUND_COUNT} words -{' '}
-                      {canReplayDailyInDev ? 'Dev replay enabled.' : 'Come back tomorrow.'}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.cardTitle}>DAILY CHALLENGE</Text>
-                    <Text style={styles.cardCopy}>Five words. Two lives.</Text>
-                  </>
-                )}
+                <Text style={styles.cardTitle}>POLLY'S DAILY CHALLENGE</Text>
+                <Text style={styles.cardCopy}>Coming soon. Five words. Two senses.</Text>
               </Pressable>
 
               <Pressable

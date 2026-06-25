@@ -8,7 +8,6 @@ import HomeScreen from './app/screens/HomeScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
-import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import { useGameStore } from './app/store/useGameStore';
 
 const Stack = createNativeStackNavigator();
@@ -32,11 +31,10 @@ export default function App() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
-    const { loadGhosts, loadProgress, loadDailyResult } = useGameStore.getState();
+    const { loadGhosts, loadProgress } = useGameStore.getState();
 
     loadGhosts();
     loadProgress();
-    loadDailyResult();
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;
@@ -53,11 +51,6 @@ export default function App() {
         <Stack.Screen name="Game" component={GameScreen} />
         <Stack.Screen name="Vault" component={VaultScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen
-          name="Daily"
-          component={DailyChallengeScreen}
-          options={{ headerShown: false }}
-        />
       </Stack.Navigator>
     </NavigationContainer>
   );
