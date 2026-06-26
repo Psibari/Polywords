@@ -1,5 +1,11 @@
 # POLYWORDS Changelog
 
+## 2026-06-25 - Daily navigation activation
+
+- Re-enabled Polly's Daily Challenge route and Home card entry for device sanity testing.
+- Connected the existing Daily engine, store, and screen through navigation.
+- Changed no Daily gameplay, store, screen, or Hunt logic.
+
 ## 2026-06-25 - Daily screen shell
 
 - Replaced the stale Daily screen with the real Daily Challenge screen shell.

@@ -15,6 +15,7 @@ import {
 import BottomNav from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
+import { DAILY_PROMISE, DAILY_TITLE } from '../ui/pwDailyMaterials';
 
 type Props = {
   navigation: any;
@@ -51,6 +52,10 @@ export default function HomeScreen({ navigation }: Props) {
 
   function handleVaultPress() {
     navigation.navigate('Vault');
+  }
+
+  function handleDailyPress() {
+    navigation.navigate('Daily');
   }
 
   const playScale = playPulse.interpolate({
@@ -119,11 +124,11 @@ export default function HomeScreen({ navigation }: Props) {
 
             <View style={styles.cardGrid}>
               <Pressable
-                disabled
-                style={[
+                onPress={handleDailyPress}
+                style={({ pressed }) => [
                   styles.destinationCard,
                   styles.dailyCard,
-                  styles.disabledCard,
+                  pressed && styles.pressed,
                 ]}
               >
                 <LinearGradient
@@ -137,8 +142,8 @@ export default function HomeScreen({ navigation }: Props) {
                   </View>
                   <Text style={styles.cardEyebrow}>DAILY CHALLENGE</Text>
                 </View>
-                <Text style={styles.cardTitle}>POLLY'S DAILY CHALLENGE</Text>
-                <Text style={styles.cardCopy}>Coming soon. Five words. Two senses.</Text>
+                <Text style={styles.cardTitle}>{DAILY_TITLE}</Text>
+                <Text style={styles.cardCopy}>{DAILY_PROMISE}</Text>
               </Pressable>
 
               <Pressable
