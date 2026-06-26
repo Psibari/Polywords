@@ -1,5 +1,12 @@
 # POLYWORDS Changelog
 
+## 2026-06-25 - Daily engine foundation
+
+- Replaced the stale Daily data and engine foundation with the locked UP-only model.
+- Added deterministic 5-round sessions with 2 shared Chances, 3 clues, and exactly 6 candidates per round.
+- Replaced graded/HAUNTED outcomes with explicit Daily win/loss results and Gold Feather eligibility.
+- Added no Daily UI, navigation, store persistence, reward spending, or Hunt changes.
+
 ## 2026-06-25 - Daily UI materials foundation
 
 - Added `app/ui/pwDailyMaterials.ts` as the Daily UI materials foundation.

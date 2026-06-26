@@ -1,278 +1,330 @@
 import { DAILY_POOL } from './dailyPool';
 import {
-  DailyWord,
+  DailyCandidates,
   DailyChallengeState,
+  DailyClaimResult,
   DailyResult,
+  DailyRound,
   DailyRoundResult,
+  DailySession,
   DailyTier,
-  DailyTitle,
+  DailyWord,
 } from './types';
 
-// ── Challenge epoch — Day 1 ──────────────────────────────────
 const EPOCH_DATE = '2026-06-12';
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export const DAILY_ROUND_COUNT = 5;
-const DAILY_TIER_CURVE: DailyTier[] = [1, 1, 2, 2, 3];
+export const DAILY_CHANCES = 2;
+export const DAILY_CANDIDATE_COUNT = 6;
+export const DAILY_TIER_CURVE: readonly DailyTier[] = [1, 1, 2, 2, 3];
+export const DAILY_CLUE_2_DELAY_MS = 4000;
+export const DAILY_CLUE_3_DELAY_MS = 8000;
 
-// ── Date helpers ─────────────────────────────────────────────
-
-export function getTodayDateString(): string {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+export function getTodayDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-export function getChallengeNumber(dateStr: string): number {
-  const epoch  = new Date(EPOCH_DATE).getTime();
-  const target = new Date(dateStr).getTime();
-  const diff   = Math.floor((target - epoch) / (1000 * 60 * 60 * 24));
-  return Math.max(1, diff + 1);
+export function getChallengeNumber(dateString: string): number {
+  const epoch = Date.parse(`${EPOCH_DATE}T00:00:00Z`);
+  const target = Date.parse(`${dateString}T00:00:00Z`);
+  if (!Number.isFinite(target)) {
+    throw new Error(`Invalid Daily Challenge date: ${dateString}`);
+  }
+  return Math.max(1, Math.floor((target - epoch) / DAY_MS) + 1);
 }
 
-// ── Seeded random ────────────────────────────────────────────
-
-function getDailySeed(dateStr: string): number {
-  let hash = 0;
-  for (let i = 0; i < dateStr.length; i++) {
-    const c = dateStr.charCodeAt(i);
-    hash = ((hash << 5) - hash) + c;
-    hash = hash & hash;
+function getDailySeed(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
-  return Math.abs(hash);
+  return hash >>> 0;
 }
 
-function seededShuffle<T>(arr: T[], seed: number): T[] {
-  const a = [...arr];
-  let s = seed;
-  for (let i = a.length - 1; i > 0; i--) {
-    s = Math.abs((s * 1664525 + 1013904223) & 0x7fffffff);
-    const j = s % (i + 1);
-    [a[i], a[j]] = [a[j], a[i]];
+function seededShuffle<T>(values: readonly T[], initialSeed: number): T[] {
+  const shuffled = [...values];
+  let seed = initialSeed >>> 0;
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const swapIndex = seed % (index + 1);
+    [shuffled[index], shuffled[swapIndex]] = [
+      shuffled[swapIndex]!,
+      shuffled[index]!,
+    ];
   }
-  return a;
+
+  return shuffled;
 }
 
-function buildCandidateBoard(
-  target: DailyWord,
-  allWords: DailyWord[],
-  seed: number,
-  offset: number,
-): string[] {
-  const board: string[] = [target.word];
-  const addUnique = (word: string) => {
-    if (!board.includes(word)) board.push(word);
-  };
-
-  seededShuffle(
-    target.candidates.filter(word => word !== target.word),
-    seed + offset + 37,
-  ).forEach(addUnique);
-
-  if (board.length < 9) {
-    seededShuffle(
-      allWords
-        .map(w => w.word)
-        .filter(word => word !== target.word),
-      seed + offset,
-    ).forEach(addUnique);
+function assertDailyWord(word: DailyWord): DailyWord {
+  if (word.clues.length !== 3) {
+    throw new Error(`Daily word ${word.id} must have exactly 3 clues.`);
   }
-
-  while (board.length < 9 && allWords.length > 0) {
-    board.push(allWords[(seed + offset + board.length) % allWords.length].word);
+  if (word.candidates.length !== DAILY_CANDIDATE_COUNT) {
+    throw new Error(`Daily word ${word.id} must have exactly 6 candidates.`);
   }
-
-  return seededShuffle(board.slice(0, 9), seed + offset + 101);
-}
-
-function getNearbyTiers(tier: DailyTier): DailyTier[] {
-  if (tier === 1) return [1, 2, 3];
-  if (tier === 2) return [2, 1, 3];
-  return [3, 2, 1];
-}
-
-function pickDailyWord(
-  targetTier: DailyTier,
-  selected: Set<string>,
-  seed: number,
-): DailyWord {
-  for (const tier of getNearbyTiers(targetTier)) {
-    const candidates = DAILY_POOL.filter(w => w.tier === tier && !selected.has(w.word));
-    if (candidates.length > 0) {
-      return seededShuffle(candidates, seed)[0]!;
-    }
+  if (new Set(word.candidates).size !== DAILY_CANDIDATE_COUNT) {
+    throw new Error(`Daily word ${word.id} candidates must be unique.`);
   }
-
-  const unused = DAILY_POOL.filter(w => !selected.has(w.word));
-  if (unused.length > 0) {
-    return seededShuffle(unused, seed + 503)[0]!;
-  }
-
-  if (DAILY_POOL.length === 0) {
-    throw new Error('Daily Challenge pool is empty.');
-  }
-
-  return seededShuffle(DAILY_POOL, seed + 997)[0]!;
-}
-
-function assertDailyRoundCount(rounds: DailyWord[]): DailyWord[] {
-  if (rounds.length !== DAILY_ROUND_COUNT) {
-    throw new Error(`Daily Challenge expected ${DAILY_ROUND_COUNT} rounds, got ${rounds.length}.`);
-  }
-  return rounds;
-}
-
-function assertDailyBoard(word: DailyWord): DailyWord {
-  if (
-    word.meanings.length !== 3 ||
-    word.candidates.length !== 9 ||
-    new Set(word.candidates).size !== 9 ||
-    !word.candidates.includes(word.word)
-  ) {
-    throw new Error(`Daily Challenge word ${word.word} must have 3 meanings and a 9-card candidate board.`);
+  if (word.candidates.filter(candidate => candidate === word.answer).length !== 1) {
+    throw new Error(`Daily word ${word.id} must include its answer exactly once.`);
   }
   return word;
 }
 
-// ── Session builder ──────────────────────────────────────────
-
-export function buildDailySession(dateStr: string): DailyWord[] {
-  const seed = getDailySeed(dateStr);
-
-  const withBoard = (word: DailyWord, offset: number): DailyWord => assertDailyBoard({
-    ...word,
-    candidates: buildCandidateBoard(word, DAILY_POOL, seed, offset),
-  });
-
-  const selected = new Set<string>();
-  const rounds = Array.from({ length: DAILY_ROUND_COUNT }, (_, roundIndex) => {
-    const tier = DAILY_TIER_CURVE[roundIndex] ?? DAILY_TIER_CURVE[DAILY_TIER_CURVE.length - 1]!;
-    const word = pickDailyWord(tier, selected, seed + roundIndex * 101);
-    selected.add(word.word);
-    return withBoard(word, roundIndex);
-  });
-
-  return assertDailyRoundCount(rounds);
+function pickDailyWord(
+  tier: DailyTier,
+  selectedIds: Set<string>,
+  seed: number,
+): DailyWord {
+  const available = DAILY_POOL.filter(
+    word => word.tier === tier && !selectedIds.has(word.id),
+  );
+  if (available.length === 0) {
+    throw new Error(`Daily Challenge needs more unused tier ${tier} words.`);
+  }
+  return assertDailyWord(seededShuffle(available, seed)[0]!);
 }
 
-export function createDailyState(dateStr: string): DailyChallengeState {
-  const rounds = buildDailySession(dateStr);
+function shuffleCandidates(word: DailyWord, seed: number): DailyCandidates {
+  return seededShuffle(word.candidates, seed) as DailyCandidates;
+}
+
+export function buildDailySession(dateString = getTodayDateString()): DailySession {
+  const seed = getDailySeed(dateString);
+  const selectedIds = new Set<string>();
+
+  const rounds: DailyRound[] = DAILY_TIER_CURVE.map((tier, roundIndex) => {
+    const word = pickDailyWord(tier, selectedIds, seed + roundIndex * 101);
+    selectedIds.add(word.id);
+
+    return {
+      roundIndex,
+      word,
+      candidates: shuffleCandidates(word, seed + roundIndex * 313),
+      revealedClueCount: 1,
+      solved: false,
+      wrongClaims: [],
+    };
+  });
+
+  if (rounds.length !== DAILY_ROUND_COUNT) {
+    throw new Error(`Daily Challenge expected ${DAILY_ROUND_COUNT} rounds.`);
+  }
+
   return {
-    date:                dateStr,
+    date: dateString,
+    challengeNumber: getChallengeNumber(dateString),
     rounds,
-    currentRound:        0,
-    lives:               2,
-    remainingCandidates: rounds.map(r => [...r.candidates]),
-    results:             [],
-    status:              'playing',
+    currentRoundIndex: 0,
+    chancesRemaining: DAILY_CHANCES,
+    status: 'active',
+    solvedCount: 0,
+    startedAt: Date.now(),
   };
 }
 
-// ── Wrong swipe ──────────────────────────────────────────────
+export function claimDailyWord(
+  session: DailySession,
+  claimedWord: string,
+  now = Date.now(),
+): { session: DailySession; result: DailyClaimResult } {
+  const currentRound = session.rounds[session.currentRoundIndex];
+  if (session.status !== 'active' || !currentRound) {
+    return {
+      session,
+      result: {
+        isCorrect: false,
+        status: session.status,
+        chancesRemaining: session.chancesRemaining,
+        revealedClueCount: currentRound?.revealedClueCount ?? 3,
+        solvedCount: session.solvedCount,
+        roundAdvanced: false,
+      },
+    };
+  }
 
+  const normalizedClaim = claimedWord.trim().toUpperCase();
+  const isCorrect = normalizedClaim === currentRound.word.answer.toUpperCase();
+  const rounds = [...session.rounds];
+
+  if (isCorrect) {
+    rounds[session.currentRoundIndex] = { ...currentRound, solved: true };
+    const solvedCount = session.solvedCount + 1;
+    const won = solvedCount === DAILY_ROUND_COUNT;
+    const nextSession: DailySession = {
+      ...session,
+      rounds,
+      currentRoundIndex: won
+        ? session.currentRoundIndex
+        : session.currentRoundIndex + 1,
+      solvedCount,
+      status: won ? 'won' : 'active',
+      ...(won ? { completedAt: now } : {}),
+    };
+
+    return {
+      session: nextSession,
+      result: {
+        isCorrect: true,
+        status: nextSession.status,
+        chancesRemaining: nextSession.chancesRemaining,
+        revealedClueCount: currentRound.revealedClueCount,
+        solvedCount,
+        roundAdvanced: !won,
+        ...(won ? { pollyReaction: 'win' as const } : {}),
+      },
+    };
+  }
+
+  const chancesRemaining = session.chancesRemaining === 2 ? 1 : 0;
+  const lost = chancesRemaining === 0;
+  const revealedClueCount = lost
+    ? 3
+    : Math.min(3, currentRound.revealedClueCount + 1) as 1 | 2 | 3;
+
+  rounds[session.currentRoundIndex] = {
+    ...currentRound,
+    wrongClaims: [...currentRound.wrongClaims, normalizedClaim],
+    revealedClueCount,
+  };
+
+  const nextSession: DailySession = {
+    ...session,
+    rounds,
+    chancesRemaining,
+    status: lost ? 'lost' : 'active',
+    ...(lost ? { completedAt: now } : {}),
+  };
+
+  return {
+    session: nextSession,
+    result: {
+      isCorrect: false,
+      status: nextSession.status,
+      chancesRemaining,
+      revealedClueCount,
+      solvedCount: nextSession.solvedCount,
+      roundAdvanced: false,
+      pollyReaction: lost ? 'loss' : 'firstMiss',
+    },
+  };
+}
+
+export function revealDailyCluesByElapsed(
+  session: DailySession,
+  elapsedMs: number,
+): DailySession {
+  if (session.status !== 'active') return session;
+
+  const currentRound = session.rounds[session.currentRoundIndex];
+  if (!currentRound) return session;
+
+  const timedClueCount = elapsedMs >= DAILY_CLUE_3_DELAY_MS
+    ? 3
+    : elapsedMs >= DAILY_CLUE_2_DELAY_MS
+      ? 2
+      : 1;
+
+  if (timedClueCount <= currentRound.revealedClueCount) return session;
+
+  const rounds = [...session.rounds];
+  rounds[session.currentRoundIndex] = {
+    ...currentRound,
+    revealedClueCount: timedClueCount,
+  };
+  return { ...session, rounds };
+}
+
+export function createDailyResult(session: DailySession): DailyResult {
+  if (session.status === 'active') {
+    throw new Error('Cannot create a Daily result while the session is active.');
+  }
+
+  const completedAt = session.completedAt ?? Date.now();
+  const won = session.status === 'won';
+  const title = won ? "YOU BEAT POLLY'S CHALLENGE" : 'YOU LOSE';
+  const wordResults: DailyRoundResult[] = session.rounds.map(round => ({
+    word: round.word.answer,
+    tier: round.word.tier,
+    status: round.solved ? 'solved' : 'missed',
+    wrongClaims: round.wrongClaims.length,
+  }));
+
+  return {
+    date: session.date,
+    challengeNumber: session.challengeNumber,
+    status: session.status,
+    solvedCount: session.solvedCount,
+    chancesRemaining: session.chancesRemaining,
+    goldFeatherEarned: won,
+    completedAt,
+    title,
+    livesLeft: session.chancesRemaining,
+    wordResults,
+    shareText: [
+      `POLYWORDS Daily #${session.challengeNumber}`,
+      `${session.solvedCount}/${DAILY_ROUND_COUNT}`,
+      title,
+      'polywords.app',
+    ].join('\n'),
+  };
+}
+
+function toLegacyState(session: DailySession): DailyChallengeState {
+  return {
+    session,
+    date: session.date,
+    rounds: session.rounds.map(round => ({
+      ...round.word,
+      word: round.word.answer,
+      meanings: round.word.clues,
+      candidates: round.candidates,
+    })),
+    currentRound: session.currentRoundIndex,
+    lives: session.chancesRemaining,
+    remainingCandidates: session.rounds.map(round => [...round.candidates]),
+    results: session.rounds
+      .filter(round => round.solved)
+      .map(round => ({
+        word: round.word.answer,
+        tier: round.word.tier,
+        status: 'solved' as const,
+        wrongClaims: round.wrongClaims.length,
+      })),
+    status: session.status === 'active' ? 'playing' : 'complete',
+  };
+}
+
+/** @deprecated Quarantined store adapter. Use buildDailySession. */
+export function createDailyState(dateString: string): DailyChallengeState {
+  return toLegacyState(buildDailySession(dateString));
+}
+
+/** @deprecated Quarantined store adapter. Claims are UP-only. */
 export function submitDailyWrongSwipe(
   state: DailyChallengeState,
   candidate: string,
 ): DailyChallengeState {
-  const newLives  = Math.max(state.lives - 1, 0);
-  const remaining = state.remainingCandidates.map((arr, i) =>
-    i === state.currentRound ? arr.filter(c => c !== candidate) : arr
-  );
-
-  if (newLives === 0) {
-    const completedResults: DailyRoundResult[] = [...state.results];
-    const currentWrongSwipes =
-      state.rounds[state.currentRound].candidates.length
-      - state.remainingCandidates[state.currentRound].length
-      + 1;
-
-    for (let i = state.currentRound; i < state.rounds.length; i++) {
-      completedResults.push({
-        word:        state.rounds[i].word,
-        tier:        state.rounds[i].tier,
-        status:      'missed',
-        wrongSwipes: i === state.currentRound ? currentWrongSwipes : 0,
-      });
-    }
-    return {
-      ...state,
-      lives:               0,
-      remainingCandidates: remaining,
-      results:             completedResults,
-      status:              'complete',
-    };
-  }
-
-  return {
-    ...state,
-    lives:               newLives,
-    remainingCandidates: remaining,
-  };
+  return toLegacyState(claimDailyWord(state.session, candidate).session);
 }
 
-// ── Correct swipe ────────────────────────────────────────────
-
+/** @deprecated Quarantined store adapter. Claims are UP-only. */
 export function submitDailyCorrectSwipe(
   state: DailyChallengeState,
 ): DailyChallengeState {
-  const round       = state.rounds[state.currentRound];
-  const wrongSwipes = round.candidates.length
-    - state.remainingCandidates[state.currentRound].length;
-
-  const roundResult: DailyRoundResult = {
-    word:        round.word,
-    tier:        round.tier,
-    status:      'solved',
-    wrongSwipes,
-  };
-
-  const newResults = [...state.results, roundResult];
-  const nextRound  = state.currentRound + 1;
-  const isComplete = nextRound >= state.rounds.length;
-
-  return {
-    ...state,
-    currentRound: isComplete ? state.currentRound : nextRound,
-    results:      newResults,
-    status:       isComplete ? 'complete' : 'playing',
-  };
+  const round = state.session.rounds[state.session.currentRoundIndex];
+  if (!round) return state;
+  return toLegacyState(claimDailyWord(state.session, round.word.answer).session);
 }
 
-// ── Result builder ───────────────────────────────────────────
-
-export function computeDailyTitle(
-  solvedCount: number,
-): DailyTitle {
-  if (solvedCount === 5) return 'WORD MASTER';
-  if (solvedCount === 4) return 'SHARP';
-  if (solvedCount >= 2) return 'SURVIVED';
-  return                     'HAUNTED';
-}
-
-export function buildDailyResult(
-  state: DailyChallengeState,
-): DailyResult {
-  const solvedCount = state.results.filter(r => r.status === 'solved').length;
-  const title       = computeDailyTitle(solvedCount);
-  const number      = getChallengeNumber(state.date);
-  const totalRounds = state.rounds.length;
-
-  const words = state.results.map(r => r.word).join(' · ');
-  const share = [
-    `POLYWORDS Daily #${number}`,
-    `${words}`,
-    `${solvedCount}/${totalRounds} words · ${state.lives} ${state.lives === 1 ? 'life' : 'lives'} left`,
-    title,
-    'polywords.app',
-  ].join('\n');
-
-  return {
-    date:            state.date,
-    challengeNumber: number,
-    title,
-    solvedCount,
-    livesLeft:       state.lives,
-    wordResults:     state.results,
-    shareText:       share,
-  };
+/** @deprecated Quarantined store adapter. Use createDailyResult. */
+export function buildDailyResult(state: DailyChallengeState): DailyResult {
+  return createDailyResult(state.session);
 }

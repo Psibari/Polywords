@@ -165,44 +165,94 @@ export type PlayerProgress = {
 
 export type DailyTier = 1 | 2 | 3;
 
+export type DailyCandidates = [
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+];
+
+export type DailyClues = [string, string, string];
+
 export type DailyWord = {
-  word:       string;
-  meanings:   [string, string, string]; // exactly 3, hardest → easiest
-  candidates: string[];                 // 9 word board: 1 correct + 8 distractors
-  tier:       DailyTier;
+  id: string;
+  answer: string;
+  tier: DailyTier;
+  clues: DailyClues;
+  candidates: DailyCandidates;
 };
 
-export type DailyRoundStatus = 'solved' | 'missed' | 'pending';
+export type DailyRevealedClueCount = 1 | 2 | 3;
+export type DailyChanceCount = 0 | 1 | 2;
+export type DailySessionStatus = 'active' | 'won' | 'lost';
+export type DailyPollyReaction = 'firstMiss' | 'loss' | 'win';
+
+export type DailyRound = {
+  roundIndex: number;
+  word: DailyWord;
+  candidates: DailyCandidates;
+  revealedClueCount: DailyRevealedClueCount;
+  solved: boolean;
+  wrongClaims: string[];
+};
+
+export type DailySession = {
+  date: string;
+  challengeNumber: number;
+  rounds: DailyRound[];
+  currentRoundIndex: number;
+  chancesRemaining: DailyChanceCount;
+  status: DailySessionStatus;
+  solvedCount: number;
+  startedAt: number;
+  completedAt?: number;
+};
+
+export type DailyClaimResult = {
+  isCorrect: boolean;
+  status: DailySessionStatus;
+  chancesRemaining: DailyChanceCount;
+  revealedClueCount: DailyRevealedClueCount;
+  solvedCount: number;
+  roundAdvanced: boolean;
+  pollyReaction?: DailyPollyReaction;
+};
 
 export type DailyRoundResult = {
-  word:        string;
-  tier:        DailyTier;
-  status:      DailyRoundStatus;
-  wrongSwipes: number;
-};
-
-export type DailyTitle =
-  | 'WORD MASTER'
-  | 'SHARP'
-  | 'SURVIVED'
-  | 'HAUNTED';
-
-export type DailyChallengeState = {
-  date:                string;             // YYYY-MM-DD
-  rounds:              DailyWord[];        // 5 rounds, seeded daily tier curve
-  currentRound:        number;             // 0 through rounds.length - 1
-  lives:               number;             // starts at 2
-  remainingCandidates: string[][];         // [round][candidate] — shrinks as tiles exit
-  results:             DailyRoundResult[];
-  status:              'playing' | 'complete';
+  word: string;
+  tier: DailyTier;
+  status: 'solved' | 'missed';
+  wrongClaims: number;
 };
 
 export type DailyResult = {
-  date:            string;
+  date: string;
   challengeNumber: number;
-  title:           DailyTitle;
-  solvedCount:     number;     // 0–5
-  livesLeft:       number;
-  wordResults:     DailyRoundResult[];
-  shareText:       string;
+  status: 'won' | 'lost';
+  solvedCount: number;
+  chancesRemaining: DailyChanceCount;
+  goldFeatherEarned: boolean;
+  completedAt: number;
+  // Temporary read-only fields for the quarantined stale screen/store.
+  title: string;
+  livesLeft: DailyChanceCount;
+  wordResults: DailyRoundResult[];
+  shareText: string;
+};
+
+// Temporary adapter shape for quarantined stale store/screen imports.
+export type DailyChallengeState = {
+  session: DailySession;
+  date: string;
+  rounds: Array<DailyWord & {
+    word: string;
+    meanings: DailyClues;
+  }>;
+  currentRound: number;
+  lives: DailyChanceCount;
+  remainingCandidates: string[][];
+  results: DailyRoundResult[];
+  status: 'playing' | 'complete';
 };
