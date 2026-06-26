@@ -428,7 +428,7 @@ function ResultsOverlay({
         )}
 
         <Text style={res.stat}>
-          {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words · ${dailyResult.chancesRemaining} chances left`}
+          {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words · ${dailyResult.chancesRemaining} chances left`.toUpperCase()}
         </Text>
 
         <View style={res.pills}>
@@ -439,7 +439,7 @@ function ResultsOverlay({
                 key={`${result.word}-${i}`}
                 style={[res.pill, solved ? res.pillSolved : res.pillMissed]}
               >
-                <Text style={res.pillText}>{result.word}</Text>
+                <Text style={res.pillText}>{result.word.toUpperCase()}</Text>
               </View>
             );
           })}
@@ -767,10 +767,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   resultPollyImage: {
-    width: 160,
-    height: 160,
+    width: 180,
+    height: 180,
     alignSelf: 'center',
-    marginBottom: 4,
+    marginBottom: 0,
   },
   devResetBtn: {
     position: 'absolute',
@@ -948,10 +948,11 @@ const res = StyleSheet.create({
   },
   title: {
     fontFamily: FONTS.hud,
-    fontSize: 32,
-    lineHeight: 36,
-    letterSpacing: 1.2,
+    fontSize: 36,
+    lineHeight: 40,
+    letterSpacing: 1,
     textAlign: 'center',
+    marginTop: 6,
   },
   rewardRow: {
     flexDirection: 'row',

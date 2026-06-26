@@ -268,12 +268,36 @@ export function createDailyResult(session: DailySession): DailyResult {
     title,
     livesLeft: session.chancesRemaining,
     wordResults,
-    shareText: [
-      `POLYWORDS Daily #${session.challengeNumber}`,
-      `${session.solvedCount}/${DAILY_ROUND_COUNT}`,
-      title,
-      'polywords.app',
-    ].join('\n'),
+    shareText: (() => {
+      const tag = `POLYWORDS Daily #${session.challengeNumber} 🦜`;
+      const score = `${session.solvedCount}/${DAILY_ROUND_COUNT} words.`;
+      const link = 'polywords.app';
+
+      if (!won) {
+        return [
+          tag,
+          score,
+          `"CAN'T BEAT THAT WITH A BAT." — Polly`,
+          link,
+        ].join('\n');
+      }
+
+      let story: string;
+      if (session.chancesRemaining === DAILY_CHANCES) {
+        story = '5/5. Polly never saw it coming.';
+      } else if (session.chancesRemaining === 1) {
+        story = '5/5. Polly drew first blood.';
+      } else {
+        story = '5/5. Last chance. Still won.';
+      }
+
+      return [
+        tag,
+        story,
+        `"WON'T HAPPEN TOMORROW." — Polly`,
+        link,
+      ].join('\n');
+    })(),
   };
 }
 
