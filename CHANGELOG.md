@@ -1,5 +1,12 @@
 # POLYWORDS Changelog
 
+## 2026-06-25 - Daily screen shell
+
+- Replaced the stale Daily screen with the real Daily Challenge screen shell.
+- Added a six-card, two-column, UP-only claim board with press-and-hold grip.
+- Added the timed Clue Vault, persistent Polly reaction states, and explicit win/loss overlay.
+- Kept Daily quarantined from navigation and made no Hunt changes.
+
 ## 2026-06-25 - Daily store/session foundation
 
 - Added Daily store/session state backed by the real Daily engine.

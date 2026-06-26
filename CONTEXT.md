@@ -19,7 +19,7 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 **Known-good tag:** `v0.working-20260621`
 **tsc:** exits 0.
 
-**Daily Challenge:** The real Daily engine/data foundation and store/session state now support 5 rounds, 2 shared Chances, 3 clues, 6 candidates, deterministic date seeding, UP-only claim results, one attempt per day, and persisted win/loss results. Daily remains quarantined from navigation; the screen and Gold Feather inventory/spend are not implemented. The UI materials foundation lives in `app/ui/pwDailyMaterials.ts`, and `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
+**Daily Challenge:** `DailyChallengeScreen.tsx` is now the real UP-only screen shell behind quarantined navigation. It uses the real store/engine state, six-card two-column board, timed Clue Vault, persistent Polly reactions, Daily materials, and explicit win/loss overlay. Navigation remains disabled pending device sanity approval; Gold Feather inventory/spend is not implemented. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
