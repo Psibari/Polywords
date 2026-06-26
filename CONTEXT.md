@@ -19,7 +19,7 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 **Known-good tag:** `v0.working-20260621`
 **tsc:** exits 0.
 
-**Daily Challenge:** The Daily route and Home entry are enabled for device sanity testing, connecting the real engine/store state to the UP-only screen, six-card board, timed Clue Vault, Polly reactions, and win/loss overlay. Gold Feather inventory/spend remains unimplemented. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
+**Daily Challenge:** The Daily route and Home entry are enabled for device sanity testing, connecting the real engine/store state to the UP-only screen, six-card board, timed Clue Vault, Polly reactions, and win/loss overlay. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
@@ -40,15 +40,15 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 - HUD: quiet control strip, feather Image assets live (`feather-life-filled/empty.png`).
 - `tile_swipe.mp3` = sword whoosh. `press_hold_start.mp3` = card pickup.
 - Polly sprite system: 10 individual PNGs, `PollySprite.tsx` + `usePollyAnimator.ts` fly-up arc.
+- Daily Challenge: Fully rewritten. 6-card grid, clue timer, round transition ceremony, PollyDailyPerch idle cycle, story share text, results overlay. Gold Feather system complete — store, midnight expiry, hunt game-over choice panel.
 
 ---
 
 ## Next Implementation Order
 
-1. Daily Challenge visual redesign (spec: `docs/DAILY_CHALLENGE_SPEC.md`).
-2. Hero Word-Book Pass 1 — cover swing entrance/exit.
-3. Correct UP book intake — SwipeMask handoff required (see parked stash).
-4. Wrong swipe buzzer + haptic + red flash.
+1. Hero Word-Book Pass 1 — cover swing entrance/exit.
+2. Correct UP book intake — SwipeMask handoff required (see parked stash).
+3. Wrong swipe buzzer + haptic + red flash.
 
 Full Hero Word-Book spec: `docs/HERO_WORD_BOOK_SYSTEM.md`.
 Daily Challenge full spec: `docs/DAILY_CHALLENGE_SPEC.md`.

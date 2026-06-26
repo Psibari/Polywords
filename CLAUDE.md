@@ -203,6 +203,8 @@ Dead/removed: `revealHidden()`, `hiddenFound` in WordResult, `pollyTrigger 'hidd
 
 5 feathers per hunt. Wrong swipe plucks 1. 0 ends run. Milestones at 8,000 / 16,000 restore 1 (max 1 reserve). HUD renders five feather slots + separate reserve in `GameScreen.tsx`. Engine/store state is still named `lives` — do not rename without a dedicated migration.
 
+Gold Feather: earned on Daily win, expires midnight, used on hunt game-over to restore 1 life. `applyGoldFeather()` engine · `useGoldFeatherInHunt()` store.
+
 ---
 
 ## Content Rules
@@ -273,6 +275,7 @@ Left swipe · tap interactions · snap-back wrong swipes · two-tile hidden gate
 app/components/MaskBoard.tsx      Main game board (warroom-gated)
 app/components/SwipeMask.tsx      Tile + swipe physics (Reanimated — frozen, warroom-gated)
 app/components/ui/PollySprite.tsx 10-pose PNG sprite component
+app/components/PollyDailyPerch.tsx    Polly branch + idle cycle (Daily)
 app/hooks/usePollyAnimator.ts     Polly fly-up arc system
 app/ui/pwTheme.ts                 Polywords visual tokens
 app/ui/pwMaterials.ts             Tokenized material recipes
@@ -298,4 +301,4 @@ tools/content/mask-rewriter       Local-only content tool — never wire into th
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · June 22, 2026*
+*POLYWORDS CLAUDE.md · Pete DiBari · June 26, 2026*
