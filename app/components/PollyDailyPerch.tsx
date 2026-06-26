@@ -203,9 +203,6 @@ export default function PollyDailyPerch({ reaction }: Props) {
           style={[styles.pollyImage, styles.pollyImageB, { opacity: opacityB }]}
         />
       </View>
-
-      {/* Branch */}
-      <View style={styles.branchBody} />
     </View>
   );
 }
@@ -217,17 +214,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 220,
-  },
-  // ── Branch ──
-  branchBody: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 10,
-    backgroundColor: '#2C1A0E',
-    borderTopWidth: 2,
-    borderTopColor: '#5C3418',
+    pointerEvents: 'none',
   },
   // ── Polly ──
   pollyWrap: {

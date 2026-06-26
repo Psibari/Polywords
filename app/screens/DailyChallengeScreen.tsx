@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import {
   Animated,
+  Image,
   PanResponder,
   Pressable,
   SafeAreaView,
@@ -28,7 +28,6 @@ import {
   DAILY_CLUE_TITLE,
   DAILY_ACTION_RULE,
   dailyBackdrop,
-  dailyCardMaterial,
   dailyClueVaultMaterial,
   DailyPollyReaction as PerchReaction,
 } from '../ui/pwDailyMaterials';
@@ -184,6 +183,9 @@ function DailyCandidateCard({
   disabled: boolean;
   onClaim: () => void;
 }) {
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
+
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
@@ -292,12 +294,12 @@ function DailyCandidateCard({
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
-        !disabled &&
+        !disabledRef.current &&
         state === 'idle' &&
         Math.abs(g.dy) > 6 &&
         Math.abs(g.dy) > Math.abs(g.dx) * 0.7,
       onPanResponderMove: (_, g) => {
-        if (disabled || claimedRef.current) return;
+        if (disabledRef.current || claimedRef.current) return;
         translateY.setValue(Math.min(14, g.dy));
         translateX.setValue(g.dx * 0.08);
         const lift = Math.max(0, -g.dy);
@@ -322,51 +324,25 @@ function DailyCandidateCard({
     }),
   ).current;
 
-  const outerShadow =
-    state === 'correct'
-      ? card.shadowCorrect
-      : state === 'wrong'
-        ? card.shadowWrong
-        : card.shadowIdle;
-
-  const gradientColors: readonly [string, string] =
-    state === 'correct'
-      ? ['#F5C842', '#F5C842']
-      : state === 'wrong'
-        ? ['#CC2200', '#CC2200']
-        : state === 'disabled'
-          ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']
-          : dailyCardMaterial.outerGradient;
-
   return (
     <Animated.View
       {...panResponder.panHandlers}
       style={[
-        card.cardOuter,
-        outerShadow,
-        {
-          opacity,
-          transform: [{ translateX }, { translateY }, { scale }],
-        },
+        styles.cardOuter,
+        state === 'correct' && styles.cardCorrect,
+        state === 'wrong'   && styles.cardWrong,
+        state === 'disabled' && styles.cardDisabled,
+        { opacity, transform: [{ translateX }, { translateY }, { scale }] },
       ]}
     >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={card.cardGradient}
+      <Text
+        style={styles.cardText}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
       >
-        <View style={card.cardInner}>
-          <Text
-            style={card.cardText}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.6}
-          >
-            {word.toUpperCase()}
-          </Text>
-        </View>
-      </LinearGradient>
+        {word.toUpperCase()}
+      </Text>
     </Animated.View>
   );
 }
@@ -399,6 +375,15 @@ function ResultsOverlay({
   return (
     <Animated.View style={[res.fill, { opacity: fadeIn }]}>
       <View style={res.card}>
+        <Image
+          source={
+            isWin
+              ? require('../../assets/images/Polly/polly_08.png')
+              : require('../../assets/images/Polly/polly_05.png')
+          }
+          style={styles.resultPollyImage}
+          resizeMode="contain"
+        />
         <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
 
         <Text style={[res.title, { color: isWin ? '#F5C842' : '#FFFFFF' }]}>
@@ -598,7 +583,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
           <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
 
-          <View style={styles.cardGrid}>
+          <View
+            key={`grid-${dailySession.currentRoundIndex}`}
+            style={styles.cardGrid}
+          >
             {currentRound &&
               [...currentRound.candidates].map((candidate) => (
                 <DailyCandidateCard
@@ -656,7 +644,57 @@ const styles = StyleSheet.create({
     gap: 12,
     marginHorizontal: 20,
     justifyContent: 'center',
-    paddingBottom: 180,
+    paddingBottom: 230,
+  },
+  cardOuter: {
+    width: '47%',
+    height: 88,
+    borderRadius: 16,
+    backgroundColor: '#141038',
+    borderWidth: 2,
+    borderColor: 'rgba(245,200,66,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    shadowColor: '#000000',
+    shadowOpacity: 0.34,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  cardCorrect: {
+    borderColor: '#F5C842',
+    backgroundColor: 'rgba(245,200,66,0.14)',
+    shadowColor: '#F5C842',
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 10,
+  },
+  cardWrong: {
+    borderColor: '#CC2200',
+    backgroundColor: 'rgba(204,34,0,0.14)',
+    shadowColor: '#CC2200',
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 10,
+  },
+  cardDisabled: {
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  cardText: {
+    color: '#FFF7D6',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  resultPollyImage: {
+    width: 160,
+    height: 160,
+    alignSelf: 'center',
+    marginBottom: 4,
   },
   devResetBtn: {
     position: 'absolute',
@@ -673,55 +711,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.label,
     fontSize: 9,
     letterSpacing: 1.5,
-  },
-});
-
-const card = StyleSheet.create({
-  cardOuter: {
-    width: '47%',
-    height: 80,
-    borderRadius: dailyCardMaterial.outerRadius,
-  },
-  shadowIdle: {
-    shadowColor: '#000000',
-    shadowOpacity: 0.34,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 10,
-  },
-  shadowCorrect: {
-    shadowColor: '#F5C842',
-    shadowOpacity: 0.42,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  shadowWrong: {
-    shadowColor: '#CC2200',
-    shadowOpacity: 0.42,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  cardGradient: {
-    borderRadius: dailyCardMaterial.outerRadius,
-    padding: 2,
-    flex: 1,
-  },
-  cardInner: {
-    borderRadius: dailyCardMaterial.innerRadius,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: dailyCardMaterial.innerFace,
-    paddingHorizontal: 8,
-  },
-  cardText: {
-    color: dailyCardMaterial.text,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 0.5,
   },
 });
 
@@ -860,7 +849,7 @@ const cv = StyleSheet.create({
 const res = StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(26,24,48,0.94)',
+    backgroundColor: 'rgba(26,24,48,0.98)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
