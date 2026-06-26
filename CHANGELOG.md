@@ -1,5 +1,12 @@
 # POLYWORDS Changelog
 
+## 2026-06-25 - Daily store/session foundation
+
+- Added Daily store/session state backed by the real Daily engine.
+- Enforced one Daily attempt per day when the session starts.
+- Persisted Daily attempt markers and explicit win/loss result state.
+- Added no Daily UI, navigation, Hunt changes, or Gold Feather inventory/spend.
+
 ## 2026-06-25 - Daily engine foundation
 
 - Replaced the stale Daily data and engine foundation with the locked UP-only model.

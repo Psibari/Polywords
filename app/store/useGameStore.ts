@@ -13,25 +13,60 @@ import {
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
-import { GhostMeaning, GhostRevenge, MasteredWordRecord, PlayerProgress, DailyChallengeState, DailyResult } from '../game/types';
+import {
+  DailyChallengeState,
+  DailyClaimResult,
+  DailyResult,
+  DailySession,
+  GhostMeaning,
+  GhostRevenge,
+  MasteredWordRecord,
+  PlayerProgress,
+} from '../game/types';
 import { generateHunt } from '../game/huntGenerator';
 import {
-  createDailyState,
-  submitDailyWrongSwipe as dailyWrongFn,
-  submitDailyCorrectSwipe as dailyCorrectFn,
-  buildDailyResult,
+  buildDailySession,
+  claimDailyWord,
+  createDailyResult,
   getTodayDateString,
+  revealDailyCluesByElapsed,
 } from '../game/dailyChallengeEngine';
 
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
-const DAILY_KEY_PREFIX = 'polywords_daily_';
+const DAILY_ATTEMPT_KEY_PREFIX = 'polywords_daily_attempt_';
+const DAILY_RESULT_KEY_PREFIX = 'polywords_daily_result_';
 
 const DEFAULT_PROGRESS: PlayerProgress = {
   masteredWords: [],
   personalBest: 0,
   runsCompleted: 0,
 };
+
+function toQuarantinedDailyState(session: DailySession): DailyChallengeState {
+  return {
+    session,
+    date: session.date,
+    rounds: session.rounds.map(round => ({
+      ...round.word,
+      word: round.word.answer,
+      meanings: round.word.clues,
+      candidates: round.candidates,
+    })),
+    currentRound: session.currentRoundIndex,
+    lives: session.chancesRemaining,
+    remainingCandidates: session.rounds.map(round => [...round.candidates]),
+    results: session.rounds
+      .filter(round => round.solved)
+      .map(round => ({
+        word: round.word.answer,
+        tier: round.word.tier,
+        status: 'solved' as const,
+        wrongClaims: round.wrongClaims.length,
+      })),
+    status: session.status === 'active' ? 'playing' : 'complete',
+  };
+}
 
 type GameStore = {
   game: ReturnType<typeof createGame>;
@@ -58,13 +93,19 @@ type GameStore = {
   recordMastery: (word: string, isBoss: boolean, hiddenMeaningFound: string) => void;
   recordRunComplete: (finalScore: number) => void;
   loadProgress: () => Promise<void>;
-  daily:                    DailyChallengeState | null;
-  dailyResult:              DailyResult | null;
-  startDailyChallenge:      () => void;
-  submitDailyWrongSwipe:    (candidate: string) => void;
-  submitDailyCorrectSwipe:  () => void;
-  completeDailyChallenge:   () => void;
-  loadDailyResult:          () => Promise<void>;
+  dailySession: DailySession | null;
+  dailyResult: DailyResult | null;
+  dailyAttemptDate: string | null;
+  dailyLastClaimResult: DailyClaimResult | null;
+  loadDailyResult: (date?: string) => Promise<void>;
+  startDailyChallenge: (date?: string) => Promise<boolean>;
+  claimDailyAnswer: (answer: string) => void;
+  revealDailyClues: (elapsedMs: number) => void;
+  clearDailyReaction: () => void;
+  // Quarantined stale screen adapters. Do not use for new Daily work.
+  daily: DailyChallengeState | null;
+  submitDailyWrongSwipe: (candidate: string) => void;
+  submitDailyCorrectSwipe: () => void;
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -73,8 +114,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   ghostRevenge: null,
   runStartGhostWordIds: [],
   progress:    { ...DEFAULT_PROGRESS },
+  dailySession: null,
   daily:       null,
   dailyResult: null,
+  dailyAttemptDate: null,
+  dailyLastClaimResult: null,
 
   startGame: () => {
     resetPollyBudget();
@@ -219,52 +263,104 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {}
   },
 
-  startDailyChallenge: () => {
-    const today = getTodayDateString();
-    const state = createDailyState(today);
-    set({ daily: state, dailyResult: null });
+  loadDailyResult: async (date = getTodayDateString()) => {
+    const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
+    const resultKey = DAILY_RESULT_KEY_PREFIX + date;
+
+    try {
+      const [attempt, rawResult] = await Promise.all([
+        AsyncStorage.getItem(attemptKey),
+        AsyncStorage.getItem(resultKey),
+      ]);
+      const dailyResult = rawResult
+        ? JSON.parse(rawResult) as DailyResult
+        : null;
+
+      set({
+        dailyAttemptDate: attempt === date ? date : null,
+        dailyResult,
+      });
+    } catch {
+      set({
+        dailyAttemptDate: null,
+        dailyResult: null,
+      });
+    }
+  },
+
+  startDailyChallenge: async (date = getTodayDateString()) => {
+    if (get().dailyAttemptDate === date) return false;
+
+    const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
+    try {
+      const existingAttempt = await AsyncStorage.getItem(attemptKey);
+      if (existingAttempt === date) {
+        set({ dailyAttemptDate: date });
+        return false;
+      }
+
+      await AsyncStorage.setItem(attemptKey, date);
+      const dailySession = buildDailySession(date);
+      set({
+        dailySession,
+        daily: toQuarantinedDailyState(dailySession),
+        dailyResult: null,
+        dailyAttemptDate: date,
+        dailyLastClaimResult: null,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  claimDailyAnswer: (answer: string) => {
+    const dailySession = get().dailySession;
+    if (!dailySession || dailySession.status !== 'active') return;
+
+    const claim = claimDailyWord(dailySession, answer);
+    const dailyResult = claim.session.status === 'active'
+      ? null
+      : createDailyResult(claim.session);
+
+    set({
+      dailySession: claim.session,
+      daily: toQuarantinedDailyState(claim.session),
+      dailyLastClaimResult: claim.result,
+      ...(dailyResult ? { dailyResult } : {}),
+    });
+
+    if (dailyResult) {
+      const resultKey = DAILY_RESULT_KEY_PREFIX + dailyResult.date;
+      AsyncStorage.setItem(resultKey, JSON.stringify(dailyResult)).catch(() => {});
+    }
+  },
+
+  revealDailyClues: (elapsedMs: number) => {
+    const dailySession = get().dailySession;
+    if (!dailySession || dailySession.status !== 'active') return;
+
+    const nextSession = revealDailyCluesByElapsed(dailySession, elapsedMs);
+    if (nextSession === dailySession) return;
+
+    set({
+      dailySession: nextSession,
+      daily: toQuarantinedDailyState(nextSession),
+    });
+  },
+
+  clearDailyReaction: () => {
+    set({ dailyLastClaimResult: null });
   },
 
   submitDailyWrongSwipe: (candidate: string) => {
-    const daily = get().daily;
-    if (!daily || daily.status !== 'playing') return;
-    const next = dailyWrongFn(daily, candidate);
-    set({ daily: next });
-    if (next.status === 'complete') {
-      get().completeDailyChallenge();
-    }
+    get().claimDailyAnswer(candidate);
   },
 
   submitDailyCorrectSwipe: () => {
-    const daily = get().daily;
-    if (!daily || daily.status !== 'playing') return;
-    const next = dailyCorrectFn(daily);
-    set({ daily: next });
-    if (next.status === 'complete') {
-      get().completeDailyChallenge();
-    }
-  },
-
-  completeDailyChallenge: () => {
-    const daily = get().daily;
-    if (!daily) return;
-    const result = buildDailyResult(daily);
-    set({ dailyResult: result });
-    const key = DAILY_KEY_PREFIX + daily.date;
-    AsyncStorage.setItem(key, JSON.stringify(result)).catch(() => {});
-  },
-
-  loadDailyResult: async () => {
-    const today = getTodayDateString();
-    const key   = DAILY_KEY_PREFIX + today;
-    try {
-      const raw = await AsyncStorage.getItem(key);
-      if (raw) {
-        const result = JSON.parse(raw) as DailyResult;
-        set({ dailyResult: result });
-      } else {
-        set({ dailyResult: null });
-      }
-    } catch {}
+    const dailySession = get().dailySession;
+    const round = dailySession?.rounds[dailySession.currentRoundIndex];
+    if (!round) return;
+    get().claimDailyAnswer(round.word.answer);
   },
 }));
