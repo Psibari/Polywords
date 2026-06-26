@@ -292,6 +292,15 @@ export function consumeFeatherMilestone(state: GameState): GameState {
   return { ...state, featherMilestone: null };
 }
 
+export function applyGoldFeather(state: GameState): GameState {
+  if (state.status !== 'gameOver') return state;
+  return {
+    ...state,
+    lives: 1,
+    status: 'playing',
+  };
+}
+
 // ─── ADD BONUS SCORE — for split tile results ─────────────────
 
 export function addBonusScore(state: GameState, points: number): GameState {
