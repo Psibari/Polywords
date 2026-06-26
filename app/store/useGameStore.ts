@@ -36,6 +36,22 @@ const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
 const DAILY_ATTEMPT_KEY_PREFIX = 'polywords_daily_attempt_';
 const DAILY_RESULT_KEY_PREFIX = 'polywords_daily_result_';
+const GOLD_FEATHER_KEY = 'polywords_gold_feather';
+
+type GoldFeatherRecord = {
+  available: boolean;
+  expiresAt: number;
+};
+
+function getLocalMidnight(): number {
+  const now = new Date();
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 0, 0,
+  ).getTime();
+}
 
 const DEFAULT_PROGRESS: PlayerProgress = {
   masteredWords: [],
@@ -103,6 +119,12 @@ type GameStore = {
   revealDailyClues: (elapsedMs: number) => void;
   clearDailyReaction: () => void;
   resetDailyForDev: () => Promise<void>;
+  goldFeatherAvailable: boolean;
+  goldFeatherExpiresAt: number | null;
+  grantGoldFeather: () => Promise<void>;
+  spendGoldFeather: () => Promise<void>;
+  checkGoldFeatherExpiry: () => Promise<void>;
+  loadGoldFeather: () => Promise<void>;
   // Quarantined stale screen adapters. Do not use for new Daily work.
   daily: DailyChallengeState | null;
   submitDailyWrongSwipe: (candidate: string) => void;
@@ -120,6 +142,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   dailyResult: null,
   dailyAttemptDate: null,
   dailyLastClaimResult: null,
+  goldFeatherAvailable: false,
+  goldFeatherExpiresAt: null,
 
   startGame: () => {
     resetPollyBudget();
@@ -281,6 +305,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         dailyAttemptDate: attempt === date ? date : null,
         dailyResult,
       });
+
+      get().loadGoldFeather();
     } catch {
       set({
         dailyAttemptDate: null,
@@ -335,6 +361,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const resultKey = DAILY_RESULT_KEY_PREFIX + dailyResult.date;
       AsyncStorage.setItem(resultKey, JSON.stringify(dailyResult)).catch(() => {});
     }
+
+    if (dailyResult?.goldFeatherEarned) {
+      get().grantGoldFeather();
+    }
   },
 
   revealDailyClues: (elapsedMs: number) => {
@@ -371,6 +401,50 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dailyAttemptDate:      null,
       dailyLastClaimResult:  null,
     });
+  },
+
+  grantGoldFeather: async () => {
+    const expiresAt = getLocalMidnight();
+    const record: GoldFeatherRecord = { available: true, expiresAt };
+    set({ goldFeatherAvailable: true, goldFeatherExpiresAt: expiresAt });
+    try {
+      await AsyncStorage.setItem(GOLD_FEATHER_KEY, JSON.stringify(record));
+    } catch {}
+  },
+
+  spendGoldFeather: async () => {
+    set({ goldFeatherAvailable: false, goldFeatherExpiresAt: null });
+    try {
+      await AsyncStorage.removeItem(GOLD_FEATHER_KEY);
+    } catch {}
+  },
+
+  checkGoldFeatherExpiry: async () => {
+    const { goldFeatherAvailable, goldFeatherExpiresAt } = get();
+    if (!goldFeatherAvailable || !goldFeatherExpiresAt) return;
+    if (Date.now() >= goldFeatherExpiresAt) {
+      set({ goldFeatherAvailable: false, goldFeatherExpiresAt: null });
+      try {
+        await AsyncStorage.removeItem(GOLD_FEATHER_KEY);
+      } catch {}
+    }
+  },
+
+  loadGoldFeather: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(GOLD_FEATHER_KEY);
+      if (!raw) return;
+      const record = JSON.parse(raw) as GoldFeatherRecord;
+      if (!record.available || Date.now() >= record.expiresAt) {
+        await AsyncStorage.removeItem(GOLD_FEATHER_KEY);
+        set({ goldFeatherAvailable: false, goldFeatherExpiresAt: null });
+        return;
+      }
+      set({
+        goldFeatherAvailable: record.available,
+        goldFeatherExpiresAt: record.expiresAt,
+      });
+    } catch {}
   },
 
   submitDailyWrongSwipe: (candidate: string) => {

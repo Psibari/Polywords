@@ -388,8 +388,13 @@ function ResultsOverlay({
   onHome: () => void;
   onShare: () => void;
 }) {
+  const FEATHER_IMG = require('../../assets/ui/feather-gold-reward.png');
+
   const dailyResult = useGameStore((s) => s.dailyResult);
   const fadeIn = useRef(new Animated.Value(0)).current;
+  const featherY     = useRef(new Animated.Value(-120)).current;
+  const featherScale = useRef(new Animated.Value(0.6)).current;
+  const featherGlow  = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeIn, {
@@ -398,6 +403,49 @@ function ResultsOverlay({
       useNativeDriver: true,
     }).start();
   }, [fadeIn]);
+
+  useEffect(() => {
+    if (!dailyResult?.goldFeatherEarned) return;
+
+    // Drop in after card fades in
+    const t = setTimeout(() => {
+      Animated.sequence([
+        // Drop + overshoot
+        Animated.spring(featherY, {
+          toValue: 0,
+          friction: 5,
+          tension: 80,
+          useNativeDriver: true,
+        }),
+        // Settle scale
+        Animated.spring(featherScale, {
+          toValue: 1,
+          friction: 4,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // Glow pulse loop after landing
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(featherGlow, {
+              toValue: 1,
+              duration: 900,
+              useNativeDriver: true,
+            }),
+            Animated.timing(featherGlow, {
+              toValue: 0.3,
+              duration: 900,
+              useNativeDriver: true,
+            }),
+          ]),
+        ).start();
+      });
+    }, 300);
+
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!dailyResult) return null;
 
@@ -422,9 +470,28 @@ function ResultsOverlay({
         </Text>
 
         {isWin && (
-          <View style={res.rewardRow}>
-            <Text style={res.rewardText}>{DAILY_WIN_REWARD}</Text>
-          </View>
+          <Animated.View
+            style={[
+              styles.featherWrap,
+              {
+                opacity: featherGlow.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.75, 1],
+                }),
+                transform: [
+                  { translateY: featherY },
+                  { scale: featherScale },
+                ],
+              },
+            ]}
+          >
+            <Image
+              source={FEATHER_IMG}
+              style={styles.featherImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.featherLabel}>GOLD FEATHER EARNED</Text>
+          </Animated.View>
         )}
 
         <Text style={res.stat}>
@@ -771,6 +838,23 @@ const styles = StyleSheet.create({
     height: 180,
     alignSelf: 'center',
     marginBottom: 0,
+  },
+  featherWrap: {
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  featherImage: {
+    width: 72,
+    height: 72,
+  },
+  featherLabel: {
+    color: '#F5C842',
+    fontFamily: FONTS.label,
+    fontSize: 11,
+    letterSpacing: 2.5,
+    marginTop: 4,
+    textAlign: 'center',
   },
   devResetBtn: {
     position: 'absolute',
