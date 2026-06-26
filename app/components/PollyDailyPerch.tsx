@@ -17,6 +17,7 @@ import {
 
 type Props = {
   reaction: DailyPollyReaction | null;
+  show?: boolean;
 };
 
 // Idle pool — cycles while silent
@@ -42,7 +43,7 @@ function getLine(reaction: DailyPollyReaction | null): string {
   return '';
 }
 
-export default function PollyDailyPerch({ reaction }: Props) {
+export default function PollyDailyPerch({ reaction, show = true }: Props) {
   // A/B image crossfade
   const [poseA, setPoseA] = useState<ImageSourcePropType>(IDLE_POSES[0]!);
   const [poseB, setPoseB] = useState<ImageSourcePropType>(IDLE_POSES[0]!);
@@ -52,6 +53,9 @@ export default function PollyDailyPerch({ reaction }: Props) {
 
   // Bubble
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
+
+  // Show/hide slide
+  const slideY = useRef(new Animated.Value(280)).current;
 
   // Interval + timeout refs for cleanup
   const idleIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -133,6 +137,24 @@ export default function PollyDailyPerch({ reaction }: Props) {
   }, []);
 
   useEffect(() => {
+    if (show) {
+      Animated.spring(slideY, {
+        toValue: 0,
+        friction: 7,
+        tension: 60,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideY, {
+        toValue: 280,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show]);
+
+  useEffect(() => {
     const isSpeaking =
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked';
 
@@ -181,7 +203,9 @@ export default function PollyDailyPerch({ reaction }: Props) {
   }, [reaction]);
 
   return (
-    <View style={styles.root}>
+    <Animated.View
+      style={[styles.root, { transform: [{ translateY: slideY }] }]}
+    >
       {/* Speech bubble */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
         <View style={styles.bubble}>
@@ -203,7 +227,7 @@ export default function PollyDailyPerch({ reaction }: Props) {
           style={[styles.pollyImage, styles.pollyImageB, { opacity: opacityB }]}
         />
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

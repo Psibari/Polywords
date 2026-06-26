@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import {
   Animated,
+  Dimensions,
   Image,
   PanResponder,
   Pressable,
@@ -34,6 +35,10 @@ import {
 import PollyDailyPerch from '../components/PollyDailyPerch';
 
 const CLAIM_THRESHOLD = -28; // dy for UP swipe commit
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+const CARD_ENTER_DELAYS = [300, 300, 380, 380, 460, 460];
 
 // Maps store claim result reaction → PollyDailyPerch prop
 function toPerchReaction(
@@ -151,17 +156,17 @@ function ClueVault({
 
       <View style={cv.cvRow}>
         <View style={cv.cvBullet} />
-        <Text style={cv.cvText}>{clues[0]}</Text>
+        <Text style={cv.cvText}>{clues[0].toUpperCase()}</Text>
       </View>
 
       <Animated.View style={[cv.cvRow, { opacity: fade2 }]}>
         <View style={cv.cvBullet} />
-        <Text style={cv.cvText}>{clues[1]}</Text>
+        <Text style={cv.cvText}>{clues[1].toUpperCase()}</Text>
       </Animated.View>
 
       <Animated.View style={[cv.cvRow, { opacity: fade3 }]}>
         <View style={cv.cvBullet} />
-        <Text style={cv.cvText}>{clues[2]}</Text>
+        <Text style={cv.cvText}>{clues[2].toUpperCase()}</Text>
       </Animated.View>
     </View>
   );
@@ -177,11 +182,15 @@ function DailyCandidateCard({
   state,
   disabled,
   onClaim,
+  enterFromLeft,
+  enterDelay,
 }: {
   word: string;
   state: DailyCardState;
   disabled: boolean;
   onClaim: () => void;
+  enterFromLeft: boolean;
+  enterDelay: number;
 }) {
   const disabledRef = useRef(disabled);
   disabledRef.current = disabled;
@@ -269,6 +278,28 @@ function DailyCandidateCard({
       ]).start();
     }
   }, [state, translateX, translateY, opacity, scale]);
+
+  useEffect(() => {
+    translateX.setValue(enterFromLeft ? -SCREEN_WIDTH * 0.7 : SCREEN_WIDTH * 0.7);
+    opacity.setValue(0);
+    const t = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(translateX, {
+          toValue: 0,
+          friction: 8,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 140,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, enterDelay);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const springBack = () => {
     thresholdCrossedRef.current = false;
@@ -454,6 +485,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setInputLocked(val);
   }
 
+  const vaultX        = useRef(new Animated.Value(0)).current;
+  const [pollyVisible, setPollyVisible] = useState(true);
+
   const completedRef = useRef(false);
   const roundStartRef = useRef<number>(Date.now());
 
@@ -521,12 +555,48 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     if (isCorrect) {
       completedRef.current = true;
       setLocked(true);
-      setCardStates((prev) => new Map(prev).set(candidate, 'correct'));
+      setCardStates(prev => new Map(prev).set(candidate, 'correct'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       playSfx('uiClick');
+
+      // Remaining cards fade out
+      setTimeout(() => {
+        setCardStates(prev => {
+          const next = new Map(prev);
+          next.forEach((v, k) => {
+            if (k !== candidate) next.set(k, 'disabled');
+          });
+          return next;
+        });
+      }, 100);
+
+      // Polly exits + vault slides left
+      setTimeout(() => {
+        setPollyVisible(false);
+        Animated.timing(vaultX, {
+          toValue: -SCREEN_WIDTH,
+          duration: 260,
+          useNativeDriver: true,
+        }).start();
+      }, 240);
+
+      // Advance round, snap vault to right, slide vault in
       setTimeout(() => {
         claimDailyAnswer(candidate);
-      }, 500);
+        vaultX.setValue(SCREEN_WIDTH);
+        Animated.spring(vaultX, {
+          toValue: 0,
+          friction: 7,
+          tension: 80,
+          useNativeDriver: true,
+        }).start();
+      }, 480);
+
+      // Polly enters after cards are settling
+      setTimeout(() => {
+        setPollyVisible(true);
+      }, 780);
+
       return;
     }
 
@@ -574,34 +644,40 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             chances={dailySession.chancesRemaining}
           />
 
-          {currentRound && (
-            <ClueVault
-              clues={currentRound.word.clues}
-              revealedCount={revealedCount}
-            />
-          )}
-
-          <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
+          <Animated.View style={{ transform: [{ translateX: vaultX }] }}>
+            {currentRound && (
+              <ClueVault
+                clues={currentRound.word.clues}
+                revealedCount={revealedCount}
+              />
+            )}
+            <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
+          </Animated.View>
 
           <View
             key={`grid-${dailySession.currentRoundIndex}`}
             style={styles.cardGrid}
           >
             {currentRound &&
-              [...currentRound.candidates].map((candidate) => (
+              [...currentRound.candidates].map((candidate, index) => (
                 <DailyCandidateCard
                   key={candidate}
                   word={candidate}
                   state={cardStates.get(candidate) ?? 'idle'}
                   disabled={inputLocked}
                   onClaim={() => handleClaim(candidate)}
+                  enterFromLeft={index % 2 === 0}
+                  enterDelay={CARD_ENTER_DELAYS[index] ?? 300}
                 />
               ))}
           </View>
         </>
       )}
 
-      <PollyDailyPerch reaction={pollyPose} />
+      <PollyDailyPerch
+        reaction={pollyPose}
+        show={pollyVisible}
+      />
 
       {isComplete && (
         <ResultsOverlay onHome={handleHome} onShare={handleShare} />
