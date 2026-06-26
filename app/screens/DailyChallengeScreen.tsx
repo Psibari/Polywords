@@ -1,208 +1,367 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import {
   Animated,
   PanResponder,
   Pressable,
   SafeAreaView,
-  ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
-
-import { playSfx } from '../audio/sfx';
-import PollySprite, { PollyPose } from '../components/ui/PollySprite';
 import { FONTS } from '../constants/fonts';
-import { DAILY_CHANCES, DAILY_ROUND_COUNT, getTodayDateString } from '../game/dailyChallengeEngine';
+import {
+  DAILY_ROUND_COUNT,
+  DAILY_CHANCES,
+  getChallengeNumber,
+  getTodayDateString,
+} from '../game/dailyChallengeEngine';
 import { DailyClaimResult } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
+import { playSfx } from '../audio/sfx';
 import {
-  DAILY_ACTION_RULE,
-  DAILY_CLUE_TITLE,
-  DAILY_FIRST_MISS_LINE,
-  DAILY_LOSS_LINE,
-  DAILY_LOSS_TITLE,
-  DAILY_NO_FEATHER,
-  DAILY_PROMISE,
-  DAILY_TITLE,
-  DAILY_WIN_LINE,
-  DAILY_WIN_REWARD,
   DAILY_WIN_TITLE,
+  DAILY_WIN_REWARD,
+  DAILY_LOSS_TITLE,
+  DAILY_CLUE_TITLE,
+  DAILY_ACTION_RULE,
   dailyBackdrop,
   dailyCardMaterial,
   dailyClueVaultMaterial,
+  DailyPollyReaction as PerchReaction,
 } from '../ui/pwDailyMaterials';
+import PollyDailyPerch from '../components/PollyDailyPerch';
 
-const CLAIM_THRESHOLD = -48;
-const POLLY_SIZE = 122;
+const CLAIM_THRESHOLD = -28; // dy for UP swipe commit
 
-type Props = {
-  navigation: {
-    goBack?: () => void;
-    navigate?: (screen: string) => void;
-  };
-};
+// Maps store claim result reaction → PollyDailyPerch prop
+function toPerchReaction(
+  r: DailyClaimResult['pollyReaction'] | undefined,
+): PerchReaction {
+  if (r === 'firstMiss') return 'happy';
+  if (r === 'loss') return 'laughing';
+  if (r === 'win') return 'shocked';
+  return 'perched';
+}
 
-type DailyCardProps = {
-  disabled: boolean;
-  outcome: 'idle' | 'correct' | 'wrong';
-  word: string;
-  onClaim: (word: string) => void;
-};
+// ─────────────────────────────────────────
+// FeatherIcon
+// ─────────────────────────────────────────
+function FeatherIcon({ filled }: { filled: boolean }) {
+  return (
+    <View style={feather.wrap}>
+      <View
+        style={[
+          feather.blade,
+          filled ? feather.bladeFilled : feather.bladeEmpty,
+        ]}
+      />
+      <View
+        style={[
+          feather.shaft,
+          filled ? feather.shaftFilled : feather.shaftEmpty,
+        ]}
+      />
+      <View style={feather.highlight} />
+    </View>
+  );
+}
 
-function DailyAnswerCard({
-  disabled,
-  outcome,
-  word,
-  onClaim,
-}: DailyCardProps) {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1)).current;
-  const grip = useRef(new Animated.Value(0)).current;
-  const claimedRef = useRef(false);
-  const thresholdRef = useRef(false);
+// ─────────────────────────────────────────
+// DailyHUD
+// ─────────────────────────────────────────
+function DailyHUD({
+  challengeNumber,
+  currentRound,
+  chances,
+}: {
+  challengeNumber: number;
+  currentRound: number;
+  chances: number;
+}) {
+  return (
+    <View style={hud.row}>
+      <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
+
+      <View style={hud.dots}>
+        {Array.from({ length: DAILY_ROUND_COUNT }).map((_, i) => {
+          const isDone = i < currentRound;
+          const isCurrent = i === currentRound;
+          return (
+            <View
+              key={i}
+              style={[
+                hud.dot,
+                isDone && hud.dotDone,
+                isCurrent && hud.dotCurrent,
+                !isDone && !isCurrent && hud.dotPending,
+              ]}
+            />
+          );
+        })}
+      </View>
+
+      <View style={hud.feathers}>
+        {Array.from({ length: DAILY_CHANCES }).map((_, i) => (
+          <FeatherIcon key={i} filled={i < chances} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
+// ClueVault
+// ─────────────────────────────────────────
+function ClueVault({
+  clues,
+  revealedCount,
+}: {
+  clues: [string, string, string];
+  revealedCount: 1 | 2 | 3;
+}) {
+  const fade2 = useRef(new Animated.Value(0)).current;
+  const fade3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    claimedRef.current = false;
-    thresholdRef.current = false;
-    translateY.setValue(0);
-    translateX.setValue(0);
-    scale.setValue(1);
-    grip.setValue(0);
-  }, [grip, scale, translateX, translateY, word]);
-
-  const returnHome = () => {
-    thresholdRef.current = false;
-    Animated.parallel([
-      Animated.spring(translateY, {
-        toValue: 0,
-        friction: 7,
-        tension: 110,
+    if (revealedCount >= 2) {
+      Animated.timing(fade2, {
+        toValue: 1,
+        duration: 280,
         useNativeDriver: true,
-      }),
+      }).start();
+    } else {
+      fade2.setValue(0);
+    }
+    if (revealedCount >= 3) {
+      Animated.timing(fade3, {
+        toValue: 1,
+        duration: 280,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      fade3.setValue(0);
+    }
+  }, [revealedCount, fade2, fade3]);
+
+  return (
+    <View style={cv.cvRoot}>
+      <Text style={cv.cvLabel}>{DAILY_CLUE_TITLE}</Text>
+
+      <View style={cv.cvRow}>
+        <View style={cv.cvBullet} />
+        <Text style={cv.cvText}>{clues[0]}</Text>
+      </View>
+
+      <Animated.View style={[cv.cvRow, { opacity: fade2 }]}>
+        <View style={cv.cvBullet} />
+        <Text style={cv.cvText}>{clues[1]}</Text>
+      </Animated.View>
+
+      <Animated.View style={[cv.cvRow, { opacity: fade3 }]}>
+        <View style={cv.cvBullet} />
+        <Text style={cv.cvText}>{clues[2]}</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────
+// DailyCandidateCard
+// ─────────────────────────────────────────
+type DailyCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
+
+function DailyCandidateCard({
+  word,
+  state,
+  disabled,
+  onClaim,
+}: {
+  word: string;
+  state: DailyCardState;
+  disabled: boolean;
+  onClaim: () => void;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const claimedRef = useRef(false);
+  const thresholdCrossedRef = useRef(false);
+
+  // Reset on word change
+  useEffect(() => {
+    translateX.setValue(0);
+    translateY.setValue(0);
+    opacity.setValue(1);
+    scale.setValue(1);
+    claimedRef.current = false;
+    thresholdCrossedRef.current = false;
+  }, [word, translateX, translateY, opacity, scale]);
+
+  // State-driven animations
+  useEffect(() => {
+    if (state === 'correct') {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: -52,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scale, {
+          toValue: 1.05,
+          friction: 7,
+          tension: 120,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (state === 'wrong') {
+      Animated.sequence([
+        Animated.timing(translateX, {
+          toValue: -9,
+          duration: 45,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateX, {
+          toValue: 9,
+          duration: 45,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateX, {
+          toValue: -5,
+          duration: 45,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration: 45,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (state === 'disabled') {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 0.92,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
+        Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [state, translateX, translateY, opacity, scale]);
+
+  const springBack = () => {
+    thresholdCrossedRef.current = false;
+    Animated.parallel([
       Animated.spring(translateX, {
         toValue: 0,
-        friction: 7,
-        tension: 110,
+        friction: 6,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateY, {
+        toValue: 0,
+        friction: 6,
         useNativeDriver: true,
       }),
       Animated.spring(scale, {
         toValue: 1,
-        friction: 7,
-        tension: 110,
-        useNativeDriver: true,
-      }),
-      Animated.timing(grip, {
-        toValue: 0,
-        duration: dailyCardMaterial.motion.pressOutMs,
+        friction: 6,
         useNativeDriver: true,
       }),
     ]).start();
   };
 
-  const panResponder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => !disabled,
-    onMoveShouldSetPanResponder: (_, gesture) =>
-      !disabled && Math.abs(gesture.dy) > 4,
-    onPanResponderGrant: () => {
-      if (disabled) return;
-      claimedRef.current = false;
-      Animated.parallel([
-        Animated.timing(grip, {
-          toValue: 1,
-          duration: dailyCardMaterial.motion.pressInMs,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: dailyCardMaterial.liftScale,
-          friction: 8,
-          tension: 130,
-          useNativeDriver: true,
-        }),
-      ]).start();
-      playSfx('pressHoldStart');
-    },
-    onPanResponderMove: (_, gesture) => {
-      if (disabled || claimedRef.current) return;
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        !disabled &&
+        state === 'idle' &&
+        Math.abs(g.dy) > 6 &&
+        Math.abs(g.dy) > Math.abs(g.dx) * 0.7,
+      onPanResponderMove: (_, g) => {
+        if (disabled || claimedRef.current) return;
+        translateY.setValue(Math.min(14, g.dy));
+        translateX.setValue(g.dx * 0.08);
+        const lift = Math.max(0, -g.dy);
+        scale.setValue(1 + Math.min(lift / 180, 0.07));
+        if (g.dy <= CLAIM_THRESHOLD && !thresholdCrossedRef.current) {
+          thresholdCrossedRef.current = true;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          playSfx('tileSwipe');
+        } else if (g.dy > CLAIM_THRESHOLD) {
+          thresholdCrossedRef.current = false;
+        }
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dy <= CLAIM_THRESHOLD && Math.abs(g.dy) >= Math.abs(g.dx) * 0.7) {
+          claimedRef.current = true;
+          onClaim();
+          return;
+        }
+        springBack();
+      },
+      onPanResponderTerminate: () => springBack(),
+    }),
+  ).current;
 
-      translateY.setValue(Math.min(10, gesture.dy));
-      translateX.setValue(gesture.dx * 0.08);
+  const outerShadow =
+    state === 'correct'
+      ? card.shadowCorrect
+      : state === 'wrong'
+        ? card.shadowWrong
+        : card.shadowIdle;
 
-      if (gesture.dy <= CLAIM_THRESHOLD && !thresholdRef.current) {
-        thresholdRef.current = true;
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        playSfx('tileSwipe');
-      } else if (gesture.dy > CLAIM_THRESHOLD) {
-        thresholdRef.current = false;
-      }
-    },
-    onPanResponderRelease: (_, gesture) => {
-      if (disabled || claimedRef.current) return;
-
-      const intentionalUp =
-        gesture.dy <= CLAIM_THRESHOLD &&
-        Math.abs(gesture.dy) > Math.abs(gesture.dx) * 1.1;
-
-      if (intentionalUp) {
-        claimedRef.current = true;
-        Animated.parallel([
-          Animated.timing(translateY, {
-            toValue: -64,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(grip, {
-            toValue: 0,
-            duration: 120,
-            useNativeDriver: true,
-          }),
-        ]).start();
-        onClaim(word);
-        return;
-      }
-
-      returnHome();
-    },
-    onPanResponderTerminate: returnHome,
-  }), [disabled, grip, onClaim, scale, translateX, translateY, word]);
-
-  const glowOpacity = grip.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-
-  const borderColors: readonly [string, string] =
-    outcome === 'correct'
+  const gradientColors: readonly [string, string] =
+    state === 'correct'
       ? ['#F5C842', '#F5C842']
-      : outcome === 'wrong'
-        ? ['#CC2200', '#9B2D6B']
-        : dailyCardMaterial.outerGradient;
+      : state === 'wrong'
+        ? ['#CC2200', '#CC2200']
+        : state === 'disabled'
+          ? ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']
+          : dailyCardMaterial.outerGradient;
 
   return (
     <Animated.View
       {...panResponder.panHandlers}
       style={[
-        styles.cardOuter,
-        disabled && outcome === 'idle' && styles.cardDisabled,
+        card.cardOuter,
+        outerShadow,
         {
+          opacity,
           transform: [{ translateX }, { translateY }, { scale }],
         },
       ]}
     >
-      <LinearGradient colors={borderColors} style={styles.cardFrame}>
-        <View style={styles.cardFace}>
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.cardGripGlow, { opacity: glowOpacity }]}
-          />
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={card.cardGradient}
+      >
+        <View style={card.cardInner}>
           <Text
-            adjustsFontSizeToFit
-            minimumFontScale={0.68}
+            style={card.cardText}
             numberOfLines={1}
-            style={styles.cardWord}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
           >
             {word.toUpperCase()}
           </Text>
@@ -212,735 +371,591 @@ function DailyAnswerCard({
   );
 }
 
-function ProgressDots({
-  currentRound,
-  solvedCount,
+// ─────────────────────────────────────────
+// ResultsOverlay
+// ─────────────────────────────────────────
+function ResultsOverlay({
+  onHome,
+  onShare,
 }: {
-  currentRound: number;
-  solvedCount: number;
+  onHome: () => void;
+  onShare: () => void;
 }) {
-  return (
-    <View style={styles.progressDots}>
-      {Array.from({ length: DAILY_ROUND_COUNT }, (_, index) => (
-        <View
-          key={index}
-          style={[
-            styles.progressDot,
-            index < solvedCount && styles.progressDotDone,
-            index === currentRound && index >= solvedCount && styles.progressDotCurrent,
-          ]}
-        />
-      ))}
-    </View>
-  );
-}
-
-function ClueRow({
-  clue,
-  index,
-  revealed,
-}: {
-  clue: string;
-  index: number;
-  revealed: boolean;
-}) {
-  if (revealed) {
-    return (
-      <View style={styles.clueRow}>
-        <View style={styles.clueNumber}>
-          <Text style={styles.clueNumberText}>{index + 1}</Text>
-        </View>
-        <Text style={styles.clueText}>{clue}</Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.clueRow}>
-      <View style={styles.clueNumber}>
-        <Text style={styles.clueNumberText}>{index + 1}</Text>
-      </View>
-      <View style={styles.lockedClue}>
-        <View style={styles.lockedBarLong} />
-        <View style={styles.lockedBarShort} />
-      </View>
-      <Text style={styles.timerTag}>{index === 1 ? 'AFTER 4s' : 'AFTER 8s'}</Text>
-    </View>
-  );
-}
-
-function getPollyPresentation(
-  claim: DailyClaimResult | null,
-  resultStatus?: 'won' | 'lost',
-): { line: string | null; pose: PollyPose; stateLabel: string } {
-  if (resultStatus === 'won') {
-    return { line: DAILY_WIN_LINE, pose: 'perchShocked', stateLabel: 'SHOCKED' };
-  }
-  if (resultStatus === 'lost') {
-    return { line: DAILY_LOSS_LINE, pose: 'perchLaughing', stateLabel: 'LAUGHING' };
-  }
-  if (claim?.pollyReaction === 'firstMiss') {
-    return { line: DAILY_FIRST_MISS_LINE, pose: 'perchSmug', stateLabel: 'SMUG' };
-  }
-  return { line: null, pose: 'perchNeutral', stateLabel: 'PERCHED' };
-}
-
-function ResultOverlay({
-  onExit,
-}: {
-  onExit: () => void;
-}) {
-  const dailyResult = useGameStore(state => state.dailyResult);
-  const fade = useRef(new Animated.Value(0)).current;
+  const dailyResult = useGameStore((s) => s.dailyResult);
+  const fadeIn = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fade, {
+    Animated.timing(fadeIn, {
       toValue: 1,
-      duration: 320,
+      duration: 420,
       useNativeDriver: true,
     }).start();
-  }, [fade]);
+  }, [fadeIn]);
 
   if (!dailyResult) return null;
 
-  const won = dailyResult.status === 'won';
+  const isWin = dailyResult.status === 'won';
 
   return (
-    <Animated.View style={[styles.resultOverlay, { opacity: fade }]}>
-      <View style={styles.resultCard}>
-        <Text style={styles.resultNumber}>DAILY #{dailyResult.challengeNumber}</Text>
-        <PollySprite
-          pose={won ? 'perchShocked' : 'perchLaughing'}
-          size={156}
-        />
-        <Text style={[styles.resultTitle, won && styles.resultTitleWon]}>
-          {won ? DAILY_WIN_TITLE : DAILY_LOSS_TITLE}
+    <Animated.View style={[res.fill, { opacity: fadeIn }]}>
+      <View style={res.card}>
+        <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
+
+        <Text style={[res.title, { color: isWin ? '#F5C842' : '#FFFFFF' }]}>
+          {isWin ? DAILY_WIN_TITLE : DAILY_LOSS_TITLE}
         </Text>
-        <Text style={styles.resultReward}>
-          {won ? DAILY_WIN_REWARD : DAILY_NO_FEATHER}
+
+        {isWin && (
+          <View style={res.rewardRow}>
+            <Text style={res.rewardText}>{DAILY_WIN_REWARD}</Text>
+          </View>
+        )}
+
+        <Text style={res.stat}>
+          {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words · ${dailyResult.chancesRemaining} chances left`}
         </Text>
-        <View style={styles.resultLinePlate}>
-          <Text style={styles.resultLine}>
-            {won ? DAILY_WIN_LINE : DAILY_LOSS_LINE}
-          </Text>
+
+        <View style={res.pills}>
+          {dailyResult.wordResults.map((result, i) => {
+            const solved = result.status === 'solved';
+            return (
+              <View
+                key={`${result.word}-${i}`}
+                style={[res.pill, solved ? res.pillSolved : res.pillMissed]}
+              >
+                <Text style={res.pillText}>{result.word}</Text>
+              </View>
+            );
+          })}
         </View>
-        <Text style={styles.resultStat}>
-          {dailyResult.solvedCount}/{DAILY_ROUND_COUNT} ROUNDS ·{' '}
-          {dailyResult.chancesRemaining}/{DAILY_CHANCES} CHANCES
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onExit}
-          style={({ pressed }) => [
-            styles.exitButton,
-            pressed && styles.exitButtonPressed,
-          ]}
-        >
-          <Text style={styles.exitButtonText}>BACK</Text>
+
+        <Pressable style={res.shareBtn} onPress={onShare}>
+          <Text style={res.shareText}>SHARE RESULT</Text>
+        </Pressable>
+
+        <Pressable style={res.homeBtn} onPress={onHome}>
+          <Text style={res.homeText}>HOME</Text>
         </Pressable>
       </View>
     </Animated.View>
   );
 }
 
+// ─────────────────────────────────────────
+// MAIN SCREEN
+// ─────────────────────────────────────────
+type Props = { navigation: any };
+
 export default function DailyChallengeScreen({ navigation }: Props) {
-  const dailySession = useGameStore(state => state.dailySession);
-  const dailyResult = useGameStore(state => state.dailyResult);
-  const dailyLastClaimResult = useGameStore(state => state.dailyLastClaimResult);
-  const loadDailyResult = useGameStore(state => state.loadDailyResult);
-  const startDailyChallenge = useGameStore(state => state.startDailyChallenge);
-  const claimDailyAnswer = useGameStore(state => state.claimDailyAnswer);
-  const revealDailyClues = useGameStore(state => state.revealDailyClues);
-  const clearDailyReaction = useGameStore(state => state.clearDailyReaction);
+  const dailySession = useGameStore((s) => s.dailySession);
+  const dailyResult = useGameStore((s) => s.dailyResult);
+  const dailyLastClaimResult = useGameStore((s) => s.dailyLastClaimResult);
+  const startDailyChallenge = useGameStore((s) => s.startDailyChallenge);
+  const claimDailyAnswer = useGameStore((s) => s.claimDailyAnswer);
+  const revealDailyClues = useGameStore((s) => s.revealDailyClues);
+  const clearDailyReaction = useGameStore((s) => s.clearDailyReaction);
+  const loadDailyResult = useGameStore((s) => s.loadDailyResult);
+  const resetDailyForDev = useGameStore((s) => s.resetDailyForDev);
 
-  const [booting, setBooting] = useState(true);
-  const [claimedWord, setClaimedWord] = useState<string | null>(null);
-  const roundTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    const date = getTodayDateString();
-
-    async function bootDaily() {
-      await loadDailyResult(date);
-      await startDailyChallenge(date);
-      if (active) setBooting(false);
-    }
-
-    bootDaily();
-    return () => {
-      active = false;
-    };
-  }, [loadDailyResult, startDailyChallenge]);
-
-  const currentRoundIndex = dailySession?.currentRoundIndex ?? 0;
-
-  useEffect(() => {
-    if (!dailySession || dailySession.status !== 'active') return;
-
-    setClaimedWord(null);
-    clearDailyReaction();
-    const startedAt = Date.now();
-
-    const clueTwoTimer = setTimeout(() => {
-      revealDailyClues(Date.now() - startedAt);
-    }, 4000);
-    const clueThreeTimer = setTimeout(() => {
-      revealDailyClues(Date.now() - startedAt);
-    }, 8000);
-
-    roundTimerRef.current = clueThreeTimer as unknown as number;
-    return () => {
-      clearTimeout(clueTwoTimer);
-      clearTimeout(clueThreeTimer);
-      roundTimerRef.current = null;
-    };
-  }, [
-    clearDailyReaction,
-    currentRoundIndex,
-    dailySession?.status,
-    revealDailyClues,
-  ]);
-
-  useEffect(() => {
-    if (dailyLastClaimResult?.pollyReaction !== 'firstMiss') return;
-    const timer = setTimeout(() => clearDailyReaction(), 2200);
-    return () => clearTimeout(timer);
-  }, [clearDailyReaction, dailyLastClaimResult]);
-
-  const currentRound = dailySession?.rounds[currentRoundIndex];
-  const polly = getPollyPresentation(
-    dailyLastClaimResult,
-    dailyResult?.status,
+  const [cardStates, setCardStates] = useState<Map<string, DailyCardState>>(
+    new Map(),
   );
+  const [pollyPose, setPollyPose] = useState<PerchReaction>('perched');
+  const [inputLocked, setInputLocked] = useState(false);
+  const inputLockedRef = useRef(false);
 
-  function handleClaim(word: string) {
-    if (!dailySession || dailySession.status !== 'active') return;
-    setClaimedWord(word);
-    claimDailyAnswer(word);
-    const correct = word.toUpperCase() === currentRound?.word.answer.toUpperCase();
-    Haptics.notificationAsync(
-      correct
-        ? Haptics.NotificationFeedbackType.Success
-        : Haptics.NotificationFeedbackType.Error,
-    );
-    playSfx(correct ? 'uiClick' : 'trapWrong');
+  function setLocked(val: boolean) {
+    inputLockedRef.current = val;
+    setInputLocked(val);
   }
 
-  function handleExit() {
-    if (navigation.goBack) {
-      navigation.goBack();
+  const completedRef = useRef(false);
+  const roundStartRef = useRef<number>(Date.now());
+
+  // INIT
+  useEffect(() => {
+    async function init() {
+      await loadDailyResult();
+      await startDailyChallenge();
+    }
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ROUND CHANGE
+  useEffect(() => {
+    if (!dailySession || dailySession.status !== 'active') return;
+    completedRef.current = false;
+    setLocked(false);
+    roundStartRef.current = Date.now();
+
+    const round = dailySession.rounds[dailySession.currentRoundIndex];
+    if (!round) return;
+    const candidates = [...round.candidates];
+    const map = new Map<string, DailyCardState>();
+    candidates.forEach((c) => map.set(c, 'idle'));
+    setCardStates(map);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailySession?.currentRoundIndex]);
+
+  // CLUE TIMER
+  useEffect(() => {
+    if (!dailySession) return;
+    const id = setInterval(() => {
+      revealDailyClues(Date.now() - roundStartRef.current);
+    }, 500);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailySession?.currentRoundIndex]);
+
+  // CLAIM RESULT → Polly reaction
+  useEffect(() => {
+    if (!dailyLastClaimResult) return;
+    const pose = toPerchReaction(dailyLastClaimResult.pollyReaction);
+    if (pose !== 'perched') {
+      setPollyPose(pose);
+      setTimeout(() => {
+        setPollyPose('perched');
+        clearDailyReaction();
+      }, 2800);
+    } else {
+      clearDailyReaction();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailyLastClaimResult]);
+
+  function handleClaim(candidate: string) {
+    if (completedRef.current || inputLockedRef.current) return;
+    if (!dailySession) return;
+    const round = dailySession.rounds[dailySession.currentRoundIndex];
+    if (!round) return;
+
+    const isCorrect =
+      candidate.trim().toUpperCase() === round.word.answer.toUpperCase();
+
+    if (isCorrect) {
+      completedRef.current = true;
+      setLocked(true);
+      setCardStates((prev) => new Map(prev).set(candidate, 'correct'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      playSfx('uiClick');
+      setTimeout(() => {
+        claimDailyAnswer(candidate);
+      }, 500);
       return;
     }
-    navigation.navigate?.('Home');
+
+    // Wrong
+    setLocked(true);
+    setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    playSfx('trapWrong');
+    setTimeout(() => {
+      setCardStates((prev) => new Map(prev).set(candidate, 'disabled'));
+      claimDailyAnswer(candidate);
+      setLocked(false);
+    }, 380);
   }
 
-  if (booting) {
-    return (
-      <SafeAreaView style={styles.screen}>
-        <View style={styles.loadingWrap}>
-          <Text style={styles.loadingText}>OPENING TODAY'S CHALLENGE…</Text>
-        </View>
-      </SafeAreaView>
-    );
+  async function handleShare() {
+    if (!dailyResult) return;
+    try {
+      await Share.share({ message: dailyResult.shareText });
+    } catch {}
   }
 
-  if (!dailySession && !dailyResult) {
-    return (
-      <SafeAreaView style={styles.screen}>
-        <View style={styles.loadingWrap}>
-          <Text style={styles.unavailableTitle}>TODAY'S ATTEMPT IS LOCKED</Text>
-          <Text style={styles.unavailableCopy}>
-            Polly only gives you one shot each day.
-          </Text>
-          <Pressable onPress={handleExit} style={styles.exitButton}>
-            <Text style={styles.exitButtonText}>BACK</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
+  function handleHome() {
+    navigation.navigate('Home');
   }
 
-  const claimOutcome = (word: string): 'idle' | 'correct' | 'wrong' => {
-    if (claimedWord !== word || !dailyLastClaimResult) return 'idle';
-    return dailyLastClaimResult.isCorrect ? 'correct' : 'wrong';
-  };
+  const isComplete = !!dailyResult || dailySession?.status !== 'active';
+  const challengeNumber = dailySession
+    ? dailySession.challengeNumber
+    : getChallengeNumber(getTodayDateString());
+  const currentRound =
+    dailySession?.rounds[dailySession.currentRoundIndex] ?? null;
+  const revealedCount = currentRound?.revealedClueCount ?? 1;
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View pointerEvents="none" style={styles.centerGlow} />
-      <View pointerEvents="none" style={styles.veil} />
-
-      {dailySession && (
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.hud}>
-            <Text style={styles.hudNumber}>
-              DAILY #{dailySession.challengeNumber}
-            </Text>
-            <ProgressDots
-              currentRound={dailySession.currentRoundIndex}
-              solvedCount={dailySession.solvedCount}
-            />
-            <Text style={styles.chances}>
-              {dailySession.chancesRemaining}/{DAILY_CHANCES}
-            </Text>
-          </View>
-
-          <View style={styles.modeStrip}>
-            <Text style={styles.modeTitle}>{DAILY_TITLE}</Text>
-            <Text style={styles.modePromise}>{DAILY_PROMISE}</Text>
-          </View>
+      {!isComplete && dailySession && (
+        <>
+          <DailyHUD
+            challengeNumber={challengeNumber}
+            currentRound={Math.min(
+              dailySession.currentRoundIndex,
+              DAILY_ROUND_COUNT - 1,
+            )}
+            chances={dailySession.chancesRemaining}
+          />
 
           {currentRound && (
-            <>
-              <View style={styles.encounterRow}>
-                <View style={styles.pollyZone}>
-                  <Text style={styles.pollyState}>{polly.stateLabel}</Text>
-                  <PollySprite pose={polly.pose} size={POLLY_SIZE} />
-                  <View style={[
-                    styles.pollyLinePlate,
-                    !polly.line && styles.pollyLinePlateSilent,
-                  ]}>
-                    <Text style={styles.pollyLine}>
-                      {polly.line ?? ' '}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.clueVault}>
-                  <View style={styles.clueTrim} />
-                  <Text style={styles.clueTitle}>{DAILY_CLUE_TITLE}</Text>
-                  {currentRound.word.clues.map((clue, index) => (
-                    <ClueRow
-                      clue={clue}
-                      index={index}
-                      key={`${currentRound.word.id}-${index}`}
-                      revealed={index < currentRound.revealedClueCount}
-                    />
-                  ))}
-                </View>
-              </View>
-
-              <Text style={styles.actionRule}>{DAILY_ACTION_RULE}</Text>
-
-              <View style={styles.cardGrid}>
-                {currentRound.candidates.map(word => (
-                  <DailyAnswerCard
-                    disabled={
-                      dailySession.status !== 'active' ||
-                      (claimedWord !== null &&
-                        dailyLastClaimResult?.status !== 'active')
-                    }
-                    key={word}
-                    onClaim={handleClaim}
-                    outcome={claimOutcome(word)}
-                    word={word}
-                  />
-                ))}
-              </View>
-            </>
+            <ClueVault
+              clues={currentRound.word.clues}
+              revealedCount={revealedCount}
+            />
           )}
-        </ScrollView>
+
+          <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
+
+          <View style={styles.cardGrid}>
+            {currentRound &&
+              [...currentRound.candidates].map((candidate) => (
+                <DailyCandidateCard
+                  key={candidate}
+                  word={candidate}
+                  state={cardStates.get(candidate) ?? 'idle'}
+                  disabled={inputLocked}
+                  onClaim={() => handleClaim(candidate)}
+                />
+              ))}
+          </View>
+        </>
       )}
 
-      {dailyResult && <ResultOverlay onExit={handleExit} />}
+      <PollyDailyPerch reaction={pollyPose} />
+
+      {isComplete && (
+        <ResultsOverlay onHome={handleHome} onShare={handleShare} />
+      )}
+
+      <Pressable
+        onPress={async () => {
+          await resetDailyForDev();
+          await startDailyChallenge();
+        }}
+        style={styles.devResetBtn}
+      >
+        <Text style={styles.devResetText}>DEV · RESET DAILY</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
 
+// ─────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: dailyBackdrop.base,
   },
-  centerGlow: {
-    position: 'absolute',
-    left: '14%',
-    right: '14%',
-    top: '12%',
-    height: '58%',
-    borderRadius: 180,
-    backgroundColor: dailyBackdrop.centerGlow,
-    opacity: 0.22,
-    shadowColor: dailyBackdrop.centerGlow,
-    shadowOpacity: 0.38,
-    shadowRadius: 52,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  veil: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: dailyBackdrop.veil,
-  },
-  content: {
-    paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 28,
-  },
-  hud: {
-    minHeight: 48,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    backgroundColor: 'rgba(15, 13, 42, 0.84)',
-    borderWidth: 1,
-    borderColor: 'rgba(123, 45, 139, 0.52)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  hudNumber: {
-    color: '#F5C842',
-    fontFamily: FONTS.hud,
-    fontSize: 14,
-    letterSpacing: 1.5,
-  },
-  progressDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
-  },
-  progressDotDone: {
-    backgroundColor: '#F5C842',
-  },
-  progressDotCurrent: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#FFFFFF',
-    shadowOpacity: 0.6,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  chances: {
-    minWidth: 42,
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 16,
-    letterSpacing: 1,
-    textAlign: 'right',
-  },
-  modeStrip: {
-    marginTop: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
-    backgroundColor: 'rgba(15, 13, 42, 0.72)',
-    alignItems: 'center',
-  },
-  modeTitle: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 19,
-    letterSpacing: 1.1,
+  actionLabel: {
+    color: 'rgba(255,255,255,0.45)',
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 3,
     textAlign: 'center',
+    textTransform: 'uppercase',
+    marginTop: 16,
+    marginBottom: 10,
   },
-  modePromise: {
-    marginTop: 3,
-    color: 'rgba(255, 255, 255, 0.72)',
-    fontFamily: FONTS.tileCopy,
-    fontSize: 11,
-    letterSpacing: 0.35,
-    textAlign: 'center',
-  },
-  encounterRow: {
-    marginTop: 12,
+  cardGrid: {
     flexDirection: 'row',
-    gap: 10,
-    alignItems: 'stretch',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginHorizontal: 20,
+    justifyContent: 'center',
+    paddingBottom: 180,
   },
-  pollyZone: {
-    width: 128,
-    minHeight: 250,
-    borderRadius: 20,
-    backgroundColor: 'rgba(15, 13, 42, 0.68)',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(123, 45, 139, 0.42)',
-  },
-  pollyState: {
+  devResetBtn: {
     position: 'absolute',
-    top: 10,
-    color: 'rgba(255, 255, 255, 0.42)',
+    top: 52,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    zIndex: 99,
+  },
+  devResetText: {
+    color: 'rgba(255,255,255,0.35)',
     fontFamily: FONTS.label,
     fontSize: 9,
     letterSpacing: 1.5,
   },
-  pollyLinePlate: {
-    minHeight: 58,
-    width: '100%',
-    paddingHorizontal: 9,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(7, 5, 24, 0.92)',
+});
+
+const card = StyleSheet.create({
+  cardOuter: {
+    width: '47%',
+    height: 80,
+    borderRadius: dailyCardMaterial.outerRadius,
+  },
+  shadowIdle: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.34,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
+  },
+  shadowCorrect: {
+    shadowColor: '#F5C842',
+    shadowOpacity: 0.42,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  shadowWrong: {
+    shadowColor: '#CC2200',
+    shadowOpacity: 0.42,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  cardGradient: {
+    borderRadius: dailyCardMaterial.outerRadius,
+    padding: 2,
+    flex: 1,
+  },
+  cardInner: {
+    borderRadius: dailyCardMaterial.innerRadius,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: dailyCardMaterial.innerFace,
+    paddingHorizontal: 8,
+  },
+  cardText: {
+    color: dailyCardMaterial.text,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+});
+
+const hud = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  label: {
+    color: '#F5C842',
+    fontFamily: FONTS.hud,
+    fontSize: 16,
+    letterSpacing: 2,
+  },
+  dots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  dotDone: {
+    backgroundColor: '#F5C842',
+  },
+  dotCurrent: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  dotPending: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  feathers: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+});
+
+const feather = StyleSheet.create({
+  wrap: {
+    width: 14,
+    height: 18,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  pollyLinePlateSilent: {
-    opacity: 0.36,
+  blade: {
+    width: 9,
+    height: 13,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 2,
+    transform: [{ rotate: '-22deg' }],
   },
-  pollyLine: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.polly,
-    fontSize: 13,
-    lineHeight: 17,
-    textAlign: 'center',
+  bladeFilled: {
+    backgroundColor: '#FFFFFF',
   },
-  clueVault: {
-    flex: 1,
-    minHeight: 250,
+  bladeEmpty: {
+    backgroundColor: 'rgba(123,45,139,0.45)',
+  },
+  shaft: {
+    position: 'absolute',
+    width: 2,
+    height: 12,
+    bottom: 1,
+    transform: [{ rotate: '-22deg' }],
+  },
+  shaftFilled: {
+    backgroundColor: '#7B2D8B',
+  },
+  shaftEmpty: {
+    backgroundColor: 'rgba(123,45,139,0.3)',
+  },
+  highlight: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+  },
+});
+
+const cv = StyleSheet.create({
+  cvRoot: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    padding: 22,
     borderRadius: dailyClueVaultMaterial.radius,
     backgroundColor: dailyClueVaultMaterial.panelBackground,
     borderWidth: dailyClueVaultMaterial.borderWidth,
     borderColor: dailyClueVaultMaterial.borderColor,
-    paddingHorizontal: 13,
-    paddingTop: 17,
-    paddingBottom: 12,
-    overflow: 'hidden',
   },
-  clueTrim: {
-    position: 'absolute',
-    top: 0,
-    left: 20,
-    right: 20,
-    height: 2,
-    backgroundColor: dailyClueVaultMaterial.goldTrimColor,
-    opacity: 0.74,
+  cvLabel: {
+    color: 'rgba(255,255,255,0.55)',
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    marginBottom: 12,
   },
-  clueTitle: {
-    color: dailyClueVaultMaterial.titleColor,
+  cvRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 12,
+  },
+  cvBullet: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#7B2D8B',
+    marginTop: 8,
+    flexShrink: 0,
+  },
+  cvText: {
+    color: dailyClueVaultMaterial.clueTextColor,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 19,
+    lineHeight: 26,
+    fontWeight: '700',
+    flex: 1,
+  },
+});
+
+const res = StyleSheet.create({
+  fill: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(26,24,48,0.94)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  card: {
+    width: '100%',
+    backgroundColor: '#0F0D2A',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.55)',
+    padding: 28,
+    alignItems: 'center',
+    gap: 4,
+  },
+  challenge: {
+    color: 'rgba(255,255,255,0.4)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 11,
+    letterSpacing: 2,
+  },
+  title: {
     fontFamily: FONTS.hud,
-    fontSize: 15,
-    letterSpacing: 1.4,
+    fontSize: 32,
+    lineHeight: 36,
+    letterSpacing: 1.2,
     textAlign: 'center',
-    marginBottom: 10,
   },
-  clueRow: {
-    minHeight: 57,
+  rewardRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.07)',
+    marginTop: 4,
   },
-  clueNumber: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(123, 45, 139, 0.34)',
-  },
-  clueNumberText: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 11,
-  },
-  clueText: {
-    flex: 1,
-    color: dailyClueVaultMaterial.clueTextColor,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 15,
-    lineHeight: 19,
-  },
-  lockedClue: {
-    flex: 1,
-    gap: 6,
-  },
-  lockedBarLong: {
-    height: 7,
-    width: '82%',
-    borderRadius: 4,
-    backgroundColor: dailyClueVaultMaterial.lockedClueBarColor,
-  },
-  lockedBarShort: {
-    height: 7,
-    width: '55%',
-    borderRadius: 4,
-    backgroundColor: dailyClueVaultMaterial.lockedClueBarColor,
-    opacity: 0.7,
-  },
-  timerTag: {
-    color: dailyClueVaultMaterial.timerTagColor,
-    fontFamily: FONTS.label,
-    fontSize: 8,
-    letterSpacing: 0.6,
-  },
-  actionRule: {
-    marginTop: 14,
+  rewardText: {
     color: '#F5C842',
-    fontFamily: FONTS.hud,
-    fontSize: 14,
-    letterSpacing: 2.2,
-    textAlign: 'center',
+    fontFamily: FONTS.label,
+    fontSize: 11,
+    letterSpacing: 2.5,
   },
-  cardGrid: {
-    marginTop: 10,
+  stat: {
+    color: 'rgba(255,255,255,0.55)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 13,
+    marginTop: 4,
+  },
+  pills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 10,
-  },
-  cardOuter: {
-    width: '48.5%',
-    minHeight: dailyCardMaterial.minHeight,
-    maxHeight: dailyCardMaterial.maxHeight,
-    borderRadius: dailyCardMaterial.outerRadius,
-    shadowColor: dailyCardMaterial.shadowColor,
-    shadowOpacity: dailyCardMaterial.shadowOpacity,
-    shadowRadius: dailyCardMaterial.shadowRadius,
-    shadowOffset: dailyCardMaterial.shadowOffset,
-    elevation: dailyCardMaterial.elevation,
-  },
-  cardDisabled: {
-    opacity: dailyCardMaterial.disabledOpacity,
-  },
-  cardFrame: {
-    flex: 1,
-    padding: dailyCardMaterial.frameWidth,
-    borderRadius: dailyCardMaterial.outerRadius,
-  },
-  cardFace: {
-    flex: 1,
-    minHeight: dailyCardMaterial.minHeight - dailyCardMaterial.frameWidth * 2,
-    borderRadius: dailyCardMaterial.innerRadius,
-    backgroundColor: dailyCardMaterial.innerFace,
-    alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  pill: {
+    borderRadius: 10,
+    borderWidth: 1,
     paddingHorizontal: 12,
-    overflow: 'hidden',
+    paddingVertical: 6,
   },
-  cardGripGlow: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: dailyCardMaterial.pressGlow,
+  pillSolved: {
+    borderColor: 'rgba(245,200,66,0.55)',
+    backgroundColor: 'rgba(245,200,66,0.10)',
   },
-  cardWord: {
-    color: dailyCardMaterial.text,
-    fontFamily: FONTS.hud,
-    fontSize: 22,
-    letterSpacing: 1.1,
-    textAlign: 'center',
+  pillMissed: {
+    borderColor: 'rgba(155,45,107,0.55)',
+    backgroundColor: 'rgba(155,45,107,0.10)',
   },
-  resultOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10, 8, 24, 0.94)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 22,
-    zIndex: 100,
-  },
-  resultCard: {
-    width: '100%',
-    maxWidth: 420,
-    borderRadius: 26,
-    backgroundColor: '#0F0D2A',
-    borderWidth: 1.5,
-    borderColor: 'rgba(123, 45, 139, 0.72)',
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOpacity: 0.46,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 16 },
-    elevation: 18,
-  },
-  resultNumber: {
-    color: 'rgba(255, 255, 255, 0.48)',
-    fontFamily: FONTS.label,
-    fontSize: 10,
-    letterSpacing: 1.8,
-  },
-  resultTitle: {
+  pillText: {
     color: '#FFFFFF',
     fontFamily: FONTS.hud,
-    fontSize: 34,
-    lineHeight: 39,
-    letterSpacing: 1.1,
-    textAlign: 'center',
+    fontSize: 12,
+    letterSpacing: 1,
   },
-  resultTitleWon: {
-    color: '#F5C842',
-  },
-  resultReward: {
-    marginTop: 5,
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 16,
-    letterSpacing: 1.4,
-  },
-  resultLinePlate: {
-    marginTop: 14,
-    width: '100%',
-    borderRadius: 14,
-    backgroundColor: 'rgba(123, 45, 139, 0.18)',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  resultLine: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.polly,
-    fontSize: 17,
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  resultStat: {
-    marginTop: 14,
-    color: 'rgba(255, 255, 255, 0.58)',
-    fontFamily: FONTS.label,
-    fontSize: 10,
-    letterSpacing: 1.1,
-    textAlign: 'center',
-  },
-  exitButton: {
-    marginTop: 18,
-    minWidth: 132,
-    borderRadius: 14,
+  shareBtn: {
     backgroundColor: '#F5C842',
-    paddingHorizontal: 24,
-    paddingVertical: 13,
+    borderRadius: 14,
+    paddingVertical: 14,
+    width: '100%',
     alignItems: 'center',
+    marginTop: 12,
   },
-  exitButtonPressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.98 }],
-  },
-  exitButtonText: {
+  shareText: {
     color: '#0F0D2A',
     fontFamily: FONTS.hud,
     fontSize: 14,
-    letterSpacing: 1.8,
+    letterSpacing: 2,
   },
-  loadingWrap: {
-    flex: 1,
+  homeBtn: {
+    paddingVertical: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 28,
   },
-  loadingText: {
-    color: '#FFFFFF',
+  homeText: {
+    color: 'rgba(255,255,255,0.35)',
     fontFamily: FONTS.hud,
-    fontSize: 16,
-    letterSpacing: 1.4,
-    textAlign: 'center',
-  },
-  unavailableTitle: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 24,
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  unavailableCopy: {
-    marginTop: 10,
-    color: 'rgba(255, 255, 255, 0.64)',
-    fontFamily: FONTS.tileCopy,
-    fontSize: 15,
-    lineHeight: 21,
-    textAlign: 'center',
+    fontSize: 13,
+    letterSpacing: 2,
   },
 });

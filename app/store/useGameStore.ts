@@ -102,6 +102,7 @@ type GameStore = {
   claimDailyAnswer: (answer: string) => void;
   revealDailyClues: (elapsedMs: number) => void;
   clearDailyReaction: () => void;
+  resetDailyForDev: () => Promise<void>;
   // Quarantined stale screen adapters. Do not use for new Daily work.
   daily: DailyChallengeState | null;
   submitDailyWrongSwipe: (candidate: string) => void;
@@ -351,6 +352,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   clearDailyReaction: () => {
     set({ dailyLastClaimResult: null });
+  },
+
+  resetDailyForDev: async () => {
+    const date = getTodayDateString();
+    const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
+    const resultKey  = DAILY_RESULT_KEY_PREFIX  + date;
+    try {
+      await Promise.all([
+        AsyncStorage.removeItem(attemptKey),
+        AsyncStorage.removeItem(resultKey),
+      ]);
+    } catch {}
+    set({
+      dailySession:          null,
+      daily:                 null,
+      dailyResult:           null,
+      dailyAttemptDate:      null,
+      dailyLastClaimResult:  null,
+    });
   },
 
   submitDailyWrongSwipe: (candidate: string) => {
