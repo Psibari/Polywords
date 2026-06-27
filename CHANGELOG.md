@@ -1,5 +1,11 @@
 # POLYWORDS Changelog
 
+## 2026-06-27 - Hunt Gold Feather consumption quarantine
+
+- Quarantined the Hunt Gold Feather revive/spend prompt.
+- Preserved Daily Gold Feather reward/storage.
+- Made no MaskBoard, SwipeMask, Hunt scoring, or Daily screen changes.
+
 ## 2026-06-25 - Daily navigation activation
 
 - Re-enabled Polly's Daily Challenge route and Home card entry for device sanity testing.

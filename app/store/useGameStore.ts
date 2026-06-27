@@ -11,7 +11,6 @@ import {
   addBonusScore,
   consumeMilestone as consumeMilestoneFn,
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
-  applyGoldFeather,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
 import {
@@ -126,7 +125,6 @@ type GameStore = {
   spendGoldFeather: () => Promise<void>;
   checkGoldFeatherExpiry: () => Promise<void>;
   loadGoldFeather: () => Promise<void>;
-  useGoldFeatherInHunt: () => void;
   // Quarantined stale screen adapters. Do not use for new Daily work.
   daily: DailyChallengeState | null;
   submitDailyWrongSwipe: (candidate: string) => void;
@@ -447,13 +445,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         goldFeatherExpiresAt: record.expiresAt,
       });
     } catch {}
-  },
-
-  useGoldFeatherInHunt: () => {
-    const { goldFeatherAvailable } = get();
-    if (!goldFeatherAvailable) return;
-    get().spendGoldFeather();
-    set(s => ({ game: applyGoldFeather(s.game) }));
   },
 
   submitDailyWrongSwipe: (candidate: string) => {

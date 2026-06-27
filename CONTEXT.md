@@ -40,7 +40,9 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 - HUD: quiet control strip, feather Image assets live (`feather-life-filled/empty.png`).
 - `tile_swipe.mp3` = sword whoosh. `press_hold_start.mp3` = card pickup.
 - Polly sprite system: 10 individual PNGs, `PollySprite.tsx` + `usePollyAnimator.ts` fly-up arc.
-- Daily Challenge: Fully rewritten. 6-card grid, clue timer, round transition ceremony, PollyDailyPerch idle cycle, story share text, results overlay. Gold Feather system complete — store, midnight expiry, hunt game-over choice panel.
+- Daily Challenge: Fully rewritten. 6-card grid, clue timer, round transition ceremony, PollyDailyPerch idle cycle, story share text, results overlay. Daily Gold Feather reward/storage remains.
+- Hunt-side Gold Feather consumption/revival is quarantined because revival was unsafe with the current MaskBoard tile lifecycle and Results accounting.
+- Hunt Gold Feather spend will be rebuilt later only after a safe resume-state design is approved.
 
 ---
 
