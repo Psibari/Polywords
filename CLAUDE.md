@@ -1,304 +1,676 @@
 # POLYWORDS — CLAUDE.md
-### Ground truth for Claude Code · Updated June 22, 2026
+
+### Ground truth for Claude Code · Updated June 27, 2026
 
 ---
 
 ## The Game
 
-Polly is the Master of Words. She holds every word in her vault and set every trap. The player challenges her one word at a time to take the title. Every run is a HUNT: 10 rounds, a designed difficulty arc, and a boss confrontation at Round 10.
+POLYWORDS is a mobile word puzzle game about polysemous words. Polly is the Master of Words. She holds every word in her vault and set every trap. The player challenges her one word at a time to take the title.
+
+Every run is a **HUNT**: 10 rounds, a designed difficulty arc, and a boss confrontation at Round 10.
 
 North star: *"Wait… what? … Oh. Right."* — the Semantic Snap.
 
-App shell: Home is the arcade lobby. Play is the arena. Word Vault is the player's reclaimed-meaning archive. Settings holds player/account/preferences/about (Profile lives inside Settings for MVP). Bottom nav (Home / Play / Vault / Settings) shows outside active gameplay only.
+App shell: Home is the arcade lobby. Play is the arena. Word Vault is the player's reclaimed meaning archive. Settings holds player/account/preferences/about. Profile lives inside Settings for MVP. Bottom nav shows outside active gameplay only: Home / Play / Vault / Settings.
+
+---
+
+## Active Branch
+
+Current work branch: `play-screen-overhaul`
+
+Rules:
+
+* `play-screen-overhaul` is active source of truth.
+* `main` is stale/stable only until overhaul is merged.
+* Do not merge to `main` during feature work.
+* Do not pull stale systems from `main` unless explicitly approved.
 
 ---
 
 ## Tech Stack
 
-```
-Runtime:    Expo SDK (managed)
-Language:   TypeScript (strict)
+```text
+Runtime:    Expo SDK managed workflow
+Language:   TypeScript strict
 Framework:  React Native
 State:      Zustand + immer
-Animation:  React Native Animated API. Reanimated = SwipeMask.tsx ONLY, frozen, never imported elsewhere.
+Animation:  React Native Animated API
+SVG:        react-native-svg 15.12.1 for custom vector UI objects
 Haptics:    Expo Haptics
 Audio:      expo-audio
 Navigation: Expo Router
-Fonts:      Bungee Shade (hero word extrusion) · BebasNeue-Regular (hero word face) · Barlow Condensed Bold (all UI) · Lilita One (Polly speech)
+Fonts:      Bungee Shade, BebasNeue-Regular, Barlow Condensed Bold, Lilita One
 Dev:        Windows, VS Code, forward-slash paths, Expo Go via QR
 ```
 
-### Animation rules — non-negotiable
-- `useNativeDriver: true` → transform, opacity ONLY
-- `useNativeDriver: false` → height, margin, backgroundColor ONLY
-- Never mix drivers on the same Animated.Value
-- `setTimeout` between animation phases — never `.start()` callbacks
-- `babel.config.js` frozen — presets only, no plugins (duplicate Reanimated plugin causes silent failure)
+### Animation rules
+
+* `useNativeDriver: true` → transform and opacity only
+* `useNativeDriver: false` → height, margin, backgroundColor only
+* Never mix drivers on the same Animated.Value
+* Use `setTimeout` between animation phases, not `.start()` callbacks
+* Reanimated is locked to `SwipeMask.tsx` only
+* Do not import Reanimated anywhere else
+* `babel.config.js` frozen: presets only, no plugins
 
 ---
 
-## Palette — strict
+## Palette
 
-| Token | Hex | Use |
-|---|---|---|
-| Background | `#1A1830` | Every screen |
-| Gold | `#F5C842` | Score, boss word, reward, mastery — MAX 2 gold elements on screen |
-| Purple | `#7B2D8B` | Trap shards, ghost border, Polly accent |
-| Rose | `#9B2D6B` | Crystal shard gradient partner |
-| Polly Green | `#4CAF50` | Polly mascot ONLY |
-| Deep Dark | `#0F0D2A` | Hero plaque + tile + Vault surfaces |
-| Wrong Flash | `#CC2200` | Wrong-swipe flash ONLY — never text, never decoration |
-| White | `#FFFFFF` | UI text |
+| Token       | Hex       | Use                                      |
+| ----------- | --------- | ---------------------------------------- |
+| Background  | `#1A1830` | Every screen                             |
+| Gold        | `#F5C842` | Score, boss word, reward, mastery, trims |
+| Purple      | `#7B2D8B` | Trap shards, ghost border, Polly accent  |
+| Rose        | `#9B2D6B` | Crystal shard gradient partner           |
+| Polly Green | `#4CAF50` | Polly mascot only                        |
+| Deep Dark   | `#0F0D2A` | Hero surfaces, tiles, Vault surfaces     |
+| Wrong Flash | `#CC2200` | Wrong-swipe flash only                   |
+| White       | `#FFFFFF` | UI text                                  |
 
----
+Strict rules:
 
-## Swipe Grammar — sacred
-
-| Gesture | Meaning | Result |
-|---|---|---|
-| UP | Real meaning | Magnetic absorb into hero word |
-| RIGHT | Trap | Purple/rose crystal shard burst (glass shatter) |
-| Wrong UP (trap) | Claimed a trap | Feather lost, tile exits permanently, red flash |
-| Wrong RIGHT (real) | Rejected a real meaning | Feather lost, tile exits permanently, red flash |
-
-UP = real. RIGHT = trap. Permanent. Never change. No left swipe, no tap, swipe only.
-Wrong swipes are permanent — no snap-back, no retry, no wrong tile staying in the deck.
+* Max 2 gold focus elements on screen.
+* Polly Green is Polly only, never UI chrome.
+* Wrong Flash red is never decoration and never text.
 
 ---
 
-## Session Model — THE HUNT
+## Swipe Grammar
 
-Always 10 rounds, always a boss at Round 10, 5 feathers (lives) for the whole hunt.
+| Gesture     | Meaning         | Result                              |
+| ----------- | --------------- | ----------------------------------- |
+| UP          | Real meaning    | Claim / absorb into hero word       |
+| RIGHT       | Trap            | Reject / purple-rose shatter        |
+| Wrong UP    | Claimed a trap  | Feather lost, tile exits, red flash |
+| Wrong RIGHT | Rejected a real | Feather lost, tile exits, red flash |
 
-GPS arc (`docs/GOLDEN_PACING_SYSTEM.md` is source of truth): 2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss.
+Locked:
 
-| Position | Phase | Difficulty |
-|---|---|---|
-| 1–2 | Confidence | Easy |
-| 3–5 | Flow | Medium |
-| 6–8 | Tension | Medium-Hard |
-| 8–9 | Panic | Hard |
-| 10 | Boss | Maximum |
-
-Living pool: mastered words graduate permanently to the Vault and never return in a standard run. Ghost (haunt) words get priority placement at index 7 (Round 8) in the current 10-round Hunt. RUN IT BACK = fresh 10-round draw with ghost priority. Daily Challenge is the one curated fixed session.
-
-Hunt generation: `generateHunt()` in `app/game/huntGenerator.ts` samples a fresh GPS arc every run from `assets/data/huntData.json` (403 words). `SESSION` fallback preserved.
-
-### Hunt 1 (locked test session)
-WAVE · FINE (Confidence) · CHARGE · PLANT · TABLE (Flow) · CAPITAL · SENTENCE · SPELL (Tension) · DRAFT · RANK · SOUND (Panic) · CAST (Boss).
-Words 1–11 carry no hidden meaning. CAST: `hiddenMeaning: 'Molten metal takes shape'`, `hiddenTrap: 'Spell gets thrown on you'`.
+* UP = real
+* RIGHT = trap
+* Swipe only
+* No tap interaction
+* No left swipe
+* Wrong swipes are permanent
+* No snap-back, retry, or wrong tile staying in deck
+* No correctness hints before swipe release
 
 ---
 
-## Boss Word — "Polly's Word"
+## Session Model: The Hunt
 
-Player-facing name is **Polly's Word**. (Engine still uses `bossWord` / `eventType: 'bossWord'` internally — do not rename yet.)
+Always:
 
-The Master Gate has been REMOVED. On a perfect boss clear (no wrong swipes on visible masks), Polly fires → heavy haptic → 600ms pause → one mystery tile drops directly into the active tile position via `triggerFinalTilesDrop()`. No gate, no door split, no lock.
+* 10 rounds
+* 5 feathers for the whole hunt
+* Round 10 = POLLY'S WORD / boss word
+* Returning Haunt slot = index 7 / Round 8
+* Returning Haunt never replaces Round 10 boss
 
-- Mystery tile is randomly the real hidden meaning OR the hidden trap (`mysteryIsRealRef`).
-- Correct judgment = MASTERED. Wrong judgment = GHOST.
-- Boss with any wrong swipe on visible masks: no mystery tile, word advances silently.
-- `gatePhase` states: `'locked' | 'tiles' | 'wrongFail' | 'mastered'`.
+GPS arc:
 
-MASTERED is boss-only. GHOST is boss-only. Words 1–11 clear via `triggerWordExit()` → `completeWord()` with no overlay.
+```text
+2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss
+```
 
-### MASTERED celebration
-Hero word crashes center → diagonal MASTER stamp → cracks/energy → Word Core grows/spins → shoots to Vault nav icon → impact bloom. Boss mastery may fire the rare game/system stinger **BINGO BANGO ZZZZINGO!** (one word at a time, ZZZZINGO! biggest). This is NOT Polly dialogue.
+| Position | Phase      | Difficulty  |
+| -------- | ---------- | ----------- |
+| 1–2      | Confidence | Easy        |
+| 3–4      | Flow       | Medium      |
+| 5–7      | Tension    | Medium-Hard |
+| 8–9      | Panic      | Hard        |
+| 10       | Boss       | Maximum     |
 
-### GHOST loss
-Wrong boss mystery judgment → tile exits permanently → HAUNTED overlay at +800ms. Ghost tile: solid purple border (no dashes), shows only "MASTER THE WORD" / "From [WORD]" — phrase NEVER revealed. Ghost `wordId` = word string always, never stepIndex.
+Generation:
 
-### Haunt return
-Ghosted boss words return at index 7 (Round 8), never replacing the Round 10 boss. Entrance: "Guess who's back." Mastered → HAUNT BROKEN. Failed again → STILL HAUNTED.
-
----
-
-## Play Screen Visual System (current)
-
-**Token system** - `app/ui/pwTheme.ts` and `app/ui/pwMaterials.ts` define the premium POLYWORDS visual language. Token sections: color, opacity, space, radius, font, motion, z, shadow. Material recipes: `cardMaterial`, `deckBackMaterial`, `heroPlaqueMaterial`, `panelMaterial`, `affordanceText`. The token system is now partially wired into gameplay materials.
-
-**Hero plaque** - dominant word altar. The plaque face, rim, bevel, chamfers, page-edge accents, shadows, and underlight use tokenized hero material. Size/position, hero word font size/line height, and hero entrance animation unchanged. On correct UP swipe the bottom fans open like a book to absorb the tile (`triggerBookOpen` + `triggerAbsorption`), then snaps shut. Word never moves.
-
-**Tile card** - landscape playing card using tokenized card material in `SwipeMask.tsx`. On press-hold a gold-to-purple gradient rim spins around the tile edge (Reanimated, in SwipeMask). Swipe logic, PanResponder, Reanimated timings/shared values, card size, and positioning unchanged.
-
-**Deck stack** - backing cards in `MaskBoard.tsx` use tokenized deck material. Backing card colors/rims/radius/shadow are tokenized; a subtle lower edge makes the stack read as physical cards. Stack count and offsets unchanged; active card still owns attention.
-
-**Locked visual grammar** - Center = active card/deck gameplay. Up lane = claim toward hero. Right side = reject lane, keep clean during active gameplay. Left side = Polly heckle/perch zone. Hero plaque = word altar. Active card + deck backs = same card-material family. Direction cues are help only, not correctness feedback.
-
-**SFX** (`assets/sfx/`): `tile_swipe.mp3` = sword whoosh, `press_hold_start.mp3` = card pickup. `trap_shatter`, `trap_wrong`, `mastered`, `haunted`, `ui_click`, `polly_call` in use. `gate_open.mp3` orphaned (gate removed) - cleanup candidate.
-
-### Play-screen-overhaul current state
-
-Active branch: `play-screen-overhaul`.
-
-Patch history belongs in `CHANGELOG.md`.
-Current build state belongs in `CONTEXT.md`.
-Canonical workflow lives in `docs/WORKFLOW.md`.
-
-Do not use stale safe-commit lists in this file as source of truth.
+* `generateHunt()` in `app/game/huntGenerator.ts`
+* Samples from `assets/data/huntData.json`
+* Mastered words graduate to Vault and never return in standard Hunt
+* Ghost words get priority placement at index 7
+* RUN IT BACK = fresh 10-round draw with ghost priority
+* Daily Challenge is separate curated/fixed mode
 
 ---
 
-## Polly — Master of Words
+## Boss Word: Polly's Word
 
-The antagonist, not a mascot. Every trap is her move. The boss word is hers. When a word is mastered it leaves her vault permanently.
+Player-facing name: **Polly's Word**
 
-### Sprite system (current)
-10 individual PNGs in `assets/images/Polly/` (capital-P folder, `polly_01.png`–`polly_10.png`). `PollySprite.tsx` maps named poses; `usePollyAnimator.ts` is a fly-up arc system.
+Internal names still use `bossWord` / `eventType: 'bossWord'`. Do not rename without a dedicated migration.
 
-Poses: `flyExcited` (01), `flyRelaxed` (02), `perchNeutral` (03), `perchDismissive` (04), `perchLaughing` (05), `perchSmug` (06), `perchPointing` (07), `perchShocked` (08), `perchSulking` (09), `flyAngry` (10).
+Boss rules:
 
-### Animation behavior
-Fly-up entrances, not pop-ins. Gameplay Polly size is `POLLY_GAMEPLAY_SIZE = 210`.
-- Mid-round: flies in from bottom-left, perches left, delivers speech, exits left.
-- End-of-round: same entrance, left perch, delivers speech, exits left.
-- Active gameplay right side is reserved as the `SWIPE RIGHT TO REJECT` lane: no Polly perch, settle point, speech bubble, body/crown, or fly-in destination there.
-- Speech bubble stays with left-side Polly and is narrowed/contained left so it does not crowd the reject cue.
-- One mid-round pop-in budget per word; end-of-round always fires.
+* Boss is Round 10 only
+* MASTERED is boss-only
+* GHOST is boss-only
+* Non-boss words advance via `triggerWordExit()` / `completeWord()`
+* Boss mystery tile is randomly real hidden meaning or hidden trap
+* Boss mystery is one shot
 
-### Trigger → pose map
-- Trap correctly rejected → `perchDismissive` (Polly annoyed she got caught)
-- Wrong swipe → `perchSmug`, "Thought so."
-- Haunt created / run clipped → `perchLaughing` (Polly wins)
-- Player masters the word → `perchSulking` (Polly loses)
-- Player beats Polly → `flyAngry`
-- Boss throw → `perchPointing`
-- Perfect clear → `perchShocked`
+Master Gate is removed. On perfect boss visible clear:
 
-### Locked lines
-"Thought so." · "BINGO BANGO ZZZZINGO!" · "BBBLAAAAHHAHAHA!" · "YOU BEAT POLLY" · "POLLY HUNT COMPLETE" · "POLLY CLIPPED YOUR RUN." — never change any of these.
+```text
+Polly fires → heavy haptic → 600ms pause → mystery tile drops into active tile position
+```
 
-`docs/POLLY_DIALOGUE_BANK.md` is the dialogue source of truth.
+No gate, no door split, no lock.
+
+Boss outcomes:
+
+* Correct mystery judgment = MASTERED
+* Wrong mystery judgment = GHOST
+* Boss with any wrong visible swipe = no mystery tile, word advances silently
+
+Haunt return:
+
+* Ghosted boss words return at index 7 / Round 8
+* Mastered on return = HAUNT BROKEN
+* Failed again = STILL HAUNTED
+* Ghost tile never reveals missed phrase
+* Ghost `wordId` = word string, never stepIndex
 
 ---
 
-## Word Vault — player archive
+## Active Work: Hunt HeroBook V5
 
-Player-owned reclaimed-meaning archive, not Polly's cage. Sections: Mastered Words, Ghost Words, Hidden Meanings, Ranks. `VaultScreen.tsx` reads real persisted progress from `useGameStore` (`masteredWords`, `personalBest`, `runsCompleted` via `recordMastery` / `recordRunComplete` / `loadProgress`). Archive/collection language, never cage/prison. No Polly presence.
+### Current state
+
+* `react-native-svg@15.12.1` installed and committed.
+* SVG HeroBook exists at `app/components/ui/HeroBook.tsx`.
+* `MaskBoard.tsx` uses HeroBook and passes the animated hero word subtree as children.
+* Current SVG direction is correct.
+* Current issue: proportions still read too rectangular/banner-like.
+* Next patch should touch only `app/components/ui/HeroBook.tsx`.
+
+Do not pop stash:
+
+```text
+wip failed View-based Hunt hero book V5
+```
+
+That stash contains failed View-based book work. Do not pop, drop, clear, or reuse as active code.
+
+### HeroBook V5 system
+
+HeroBook must read as a full thick book, not a plaque.
+
+Source geometry:
+
+* Purple = full book cover
+* Gold = trim, bevel, hero word glow, magic accents
+* Off-white/parchment = pages only
+* Right side = visible page side plane
+* Bottom side = visible bottom page plane
+* Full object = one connected book
+
+Required read:
+
+* Chunky purple-gold word-book
+* Bigger/heavier than the active tile
+* Full cover face, not a flat rectangle sign
+* Longer left/right cover sides
+* Visible layered pages under the cover
+* Visible right page plane
+* Top hinge/spine cue
+* Opens from top using `rotateX`
+* Correct tile slides in like a missing page returning
+* Tile vanishes only after entering
+* Cover snaps shut after absorption
+
+Forbidden HeroBook looks:
+
+* plaque
+* flat rectangle
+* signboard
+* drawer
+* tray
+* shelf
+* notebook
+* file cabinet
+* black bar
+* giant cream slab
+* solid page block
+* View-rectangle book anatomy
+
+HeroBook owns:
+
+* SVG cover geometry
+* page planes
+* page lines
+* gold trims
+* spine/hinge visual
+* intake seam
+* book visual styling
+
+MaskBoard owns:
+
+* gameplay
+* hero word content
+* animation values/state
+* tile intake paths
+* scoring/lives/results flow
+
+Next patch:
+
+```text
+Fix only app/components/ui/HeroBook.tsx.
+Adjust SVG proportions so the book stops reading like a rectangle/banner.
+Make cover sides longer, cover more book-like, pages connected, and full-book shape stronger.
+Do not touch MaskBoard unless a compile error requires an import/type fix.
+```
+
+---
+
+## Play Screen Visual System
+
+Token source:
+
+* `app/ui/pwTheme.ts`
+* `app/ui/pwMaterials.ts`
+* `app/ui/pwEffects.ts`
+
+HeroBook:
+
+* SVG/vector book in `app/components/ui/HeroBook.tsx`
+* Replaces old View-based hero plaque/book anatomy
+* Must follow HeroBook V5 above
+
+Tile card:
+
+* `SwipeMask.tsx`
+* Landscape playing card
+* Swipe physics frozen
+* Reanimated allowed here only
+* Press-hold rim and swipe logic stay local to SwipeMask
+
+Deck stack:
+
+* Rendered in `MaskBoard.tsx`
+* Uses tokenized deck/card material
+* Active card owns attention
+
+Locked play-screen grammar:
+
+* Center = active card/deck gameplay
+* Up lane = claim toward HeroBook
+* Right side = reject lane
+* Left side = Polly perch/heckle zone
+* Direction cues are help only, never correctness feedback
+
+---
+
+## Feedback / SFX
+
+Current SFX:
+
+* `tile_swipe.mp3`
+* `press_hold_start.mp3`
+* `trap_shatter`
+* `trap_wrong`
+* `mastered`
+* `haunted`
+* `ui_click`
+* `polly_call`
+
+`gate_open.mp3` is orphaned because Master Gate was removed. Cleanup candidate only.
+
+Future system need:
+
+* Shards, red buzz, audio, intake, and overlays should eventually be centralized into a Feedback Event System.
+* Do not mix that work into HeroBook patches.
+
+---
+
+## Polly
+
+Polly is the antagonist, not a mascot. Every trap is her move. The boss word is hers. When a word is mastered, it leaves Polly's vault.
+
+Sprites:
+
+* `assets/images/Polly/polly_01.png` through `polly_10.png`
+* Component: `app/components/ui/PollySprite.tsx`
+* Animator: `app/hooks/usePollyAnimator.ts`
+* Gameplay size: `POLLY_GAMEPLAY_SIZE = 210`
+
+Pose map:
+
+* `flyExcited` = 01
+* `flyRelaxed` = 02
+* `perchNeutral` = 03
+* `perchDismissive` = 04
+* `perchLaughing` = 05
+* `perchSmug` = 06
+* `perchPointing` = 07
+* `perchShocked` = 08
+* `perchSulking` = 09
+* `flyAngry` = 10
+
+Behavior:
+
+* Fly-up entrances, not pop-ins
+* Mid-round: fly in from bottom-left, perch left, speak, exit left
+* End-round: same
+* Right side is reserved for reject lane
+* One mid-round pop-in budget per word
+* End-of-round always fires
+
+Trigger map:
+
+* Trap correctly rejected → `perchDismissive`
+* Wrong swipe → `perchSmug`, "Thought so."
+* Haunt/run clipped → `perchLaughing`
+* Player masters word → `perchSulking`
+* Player beats Polly → `flyAngry`
+* Boss throw → `perchPointing`
+* Perfect clear → `perchShocked`
+
+Locked lines:
+
+* "Thought so."
+* "BINGO BANGO ZZZZINGO!"
+* "BBBLAAAAHHAHAHA!"
+* "YOU BEAT POLLY"
+* "POLLY HUNT COMPLETE"
+* "POLLY CLIPPED YOUR RUN."
+
+`docs/POLLY_DIALOGUE_BANK.md` is dialogue source of truth.
+
+---
+
+## Word Vault
+
+Player-owned reclaimed meaning archive. Not Polly's cage.
+
+Sections:
+
+* Mastered Words
+* Ghost Words
+* Hidden Meanings
+* Ranks
+
+`VaultScreen.tsx` reads real persisted progress from `useGameStore`.
+
+Use archive/collection language. No cage/prison language. No Polly presence.
 
 ---
 
 ## Scoring
 
-| Action | Points |
-|---|---|
-| Correct real (UP) | 100 × chainMultiplier |
-| Correct rare real (UP) | 300 × chainMultiplier (isRare flag) |
-| Correct trap (RIGHT) | 50 × chainMultiplier |
-| Boss correct real | 200 × chainMultiplier (2×) |
-| Boss correct trap | 100 × chainMultiplier (2×) |
-| Boss mystery correct | 600 × chainMultiplier via `submitBossMastery()` |
-| Wrong swipe | 0 — feather lost, combo reset |
+| Action               | Points                       |
+| -------------------- | ---------------------------- |
+| Correct real UP      | 100 × chainMultiplier        |
+| Correct rare real UP | 300 × chainMultiplier        |
+| Correct trap RIGHT   | 50 × chainMultiplier         |
+| Boss correct real    | 200 × chainMultiplier        |
+| Boss correct trap    | 100 × chainMultiplier        |
+| Boss mystery correct | 600 × chainMultiplier        |
+| Wrong swipe          | 0, feather lost, combo reset |
 
-Chain multiplier: starts 1.0, +0.5 every 3 consecutive correct, caps 3.0, resets on wrong. Score floats mirror the engine formula (read streak before store action, apply boss 2× where applicable). Combo counter is GOLD only.
+Chain multiplier:
 
-Polly target: 15,000 pts. Ranks: D <8k · C 8k · B 11k · A 14k · S 18k · MASTER 22k. Feather milestones at 8,000 and 16,000 restore 1 feather (max 1 reserve, lives can reach 6). "YOU BEAT POLLY" on results when score ≥ 15,000. "POLLY HUNT COMPLETE" is the results header. "POLLY CLIPPED YOUR RUN." replaces GAME OVER at zero feathers.
+* Starts 1.0
+* +0.5 every 3 consecutive correct
+* Caps 3.0
+* Resets on wrong
 
-Dead/removed: `revealHidden()`, `hiddenFound` in WordResult, `pollyTrigger 'hiddenReveal'` (→ `'bossMastery'`), `addBonusScore(300)` in triggerMastered.
+Polly target: 15,000 pts
+
+Ranks:
+
+```text
+D < 8k
+C 8k
+B 11k
+A 14k
+S 18k
+MASTER 22k
+```
+
+Feather milestones:
+
+* 8,000 restores 1 feather
+* 16,000 restores 1 feather
+* max 1 reserve
+* lives can reach 6
+
+Locked result lines:
+
+* Score ≥ 15,000: "YOU BEAT POLLY"
+* Results header: "POLLY HUNT COMPLETE"
+* Zero feathers: "POLLY CLIPPED YOUR RUN."
+
+Dead/removed:
+
+* `revealHidden()`
+* `hiddenFound` in WordResult
+* `pollyTrigger 'hiddenReveal'`
+* `addBonusScore(300)` in boss mastery
 
 ---
 
-## Feathers (lives)
+## Feathers
 
-5 feathers per hunt. Wrong swipe plucks 1. 0 ends run. Milestones at 8,000 / 16,000 restore 1 (max 1 reserve). HUD renders five feather slots + separate reserve in `GameScreen.tsx`. Engine/store state is still named `lives` — do not rename without a dedicated migration.
+* 5 feathers per Hunt
+* Wrong swipe plucks 1
+* 0 feathers ends run
+* Milestones restore 1 at 8,000 / 16,000
+* Store/engine state still named `lives`; do not rename without migration
 
-Gold Feather: earned on Daily win, expires midnight, used on hunt game-over to restore 1 life. `applyGoldFeather()` engine · `useGoldFeatherInHunt()` store.
+Gold Feather:
+
+* Earned on Daily win
+* Expires midnight
+* Used on Hunt game-over to restore 1 life
+* Engine: `applyGoldFeather()`
+* Store: `useGoldFeatherInHunt()`
+
+---
+
+## Daily Challenge
+
+Daily Challenge is separate from standard Hunt.
+
+Current daily status:
+
+* DailyAnswerCard control system committed
+* Daily result reward visuals fixed
+* Daily entrance animations restored
+* Hunt Gold Feather revive quarantined
+* Hunt wrong-swipe result tracking fixed
+
+Do not touch Daily files during Hunt HeroBook work.
+
+Daily source docs:
+
+* `docs/DAILY_CHALLENGE_SPEC.md`
 
 ---
 
 ## Content Rules
 
-Content standard — "meaning hidden, not meaning lost": tiles create a "Wait… what? → Oh. Right." experience. Scene-language, never dictionary voice. Register Parity: all tile types indistinguishable by tone.
+Content standard:
 
-- Tile length: 5–6 words acceptable
-- Hidden tiles CUT from the pipeline entirely
-- 1 real per meaning, 2–3 traps per meaning, hard cap 8 traps per word
-- No trap-to-trap duplicate words; trap sharing vocab with reals is allowed
-- No headword or derived forms in any tile
-- No trap may share a meaning direction with another trap on the same word
+```text
+meaning hidden, not meaning lost
+```
 
-`huntData.json` = 403 words, QA-clean (all trap-is-real / real-is-trap fixed, ALL CAPS normalized). Loaded via `require()` at import. Mask Rewriter V7 in project files (`claude-sonnet-4-6`, `tiles[]` output). GPS metadata tagging pending before next regeneration.
+Tile goal:
 
----
+```text
+Wait… what? → Oh. Right.
+```
 
-## Cut List ☠️ — permanent
+Rules:
 
-Left swipe · tap interactions · snap-back wrong swipes · two-tile hidden gate split · the Master Gate · ghost/mastery for non-boss words · Reanimated outside SwipeMask · rectangle/square particles · red for text or decoration · Polly Green for UI · >2 gold elements on screen · hiddenEmoji/hiddenTrapEmoji · revealHidden() · hiddenFound in WordResult · pollyTrigger 'hiddenReveal' · HIDDEN tile type · sprite-sheet Polly · visual tells before swipe · dashed borders · pink/magenta.
+* Scene-language, never dictionary voice
+* Register parity across real/trap tiles
+* 5–6 words acceptable
+* Hidden tiles cut from pipeline entirely
+* 1 real per meaning
+* 2–3 traps per meaning
+* hard cap 8 traps per word
+* No headword or derived forms in any tile
+* No trap-to-trap duplicate words
+* Trap sharing vocabulary with real is allowed
+* No trap may share a meaning direction with another trap on same word
 
----
+Data:
 
-## Locked Decisions — non-negotiable
+* `assets/data/huntData.json`
+* 403 words
+* QA-clean
+* ALL CAPS normalized
+* Loaded via `require()` at import
 
-- Session always 10 rounds, boss always Round 10
-- UP = real, RIGHT = trap, always
-- Wrong swipe is permanent
-- No left swipe and no tap interaction
-- No hero glow during drag, no target validation during drag, no correctness hints before swipe release
-- Mastered words graduate permanently; RUN IT BACK = fresh draw with ghost priority
-- Master Gate removed — boss perfect clear drops the mystery tile directly
-- MASTERED and GHOST are boss-only
-- Boss mystery tile is randomly real or trap — one shot
-- Non-boss words advance via `triggerWordExit()` — no overlay
-- Haunt slot is index 7 (Round 8) in a 10-round Hunt, never boss zone
-- Ghost wordId = word string, never stepIndex
-- `wrongSwipeOccurred.current` resets at the start of every new word
-- Crystal shards: polygon, purple/rose, never rectangles
-- Diagonal MASTER stamp over the crashed word
-- Ghost tile never reveals the missed phrase
-- "Thought so." / "BINGO BANGO ZZZZINGO!" — never change; ZZZZINGO is game/system text, never Polly dialogue
-- Boss mastery uses `submitBossMastery()` — never `addBonusScore()`
-- Max 2 gold elements on screen
-- Polly Green is Polly only; red is wrong-swipe flash only
-- Polly's Word / boss internal naming stays as-is for now
-- Boss player-facing name = "Polly's Word"; engine `bossWord` flags unchanged
-- Live Content Engine is POST-LAUNCH only
+Content tool:
+
+* `tools/content/mask-rewriter`
+* Local-only
+* Never wire into app
 
 ---
 
-## Claude Code Conventions
+## Cut List
 
-- `tsc --noEmit` after every change — must exit 0
-- One prompt, one concern — surgical only
-- Read the relevant file fully before editing; confirm exact paths
-- Never add tap handlers to tiles — swipe only
-- `MaskBoard.tsx` and `SwipeMask.tsx` require warroom analysis before any prompt touches them
-- Tag known-good states after device confirmation: `git tag v0.working-YYYYMMDD`
-- Preserve stash named `wip haunt loop type scaffolding` — reference by NAME only, never by index, never pop/drop/clear it.
-- Current work branch: `play-screen-overhaul` — do not merge to main
+Permanent cuts:
+
+* left swipe
+* tap interactions
+* snap-back wrong swipes
+* two-tile hidden gate split
+* Master Gate
+* ghost/mastery for non-boss words
+* Reanimated outside SwipeMask
+* rectangle/square particles
+* red text/decor
+* Polly Green UI chrome
+* > 2 gold focus elements
+* hiddenEmoji / hiddenTrapEmoji
+* revealHidden()
+* hiddenFound in WordResult
+* pollyTrigger hiddenReveal
+* HIDDEN tile type
+* sprite-sheet Polly
+* visual tells before swipe
+* dashed borders
+* pink/magenta
+
+---
+
+## Locked Decisions
+
+* Standard Hunt = 10 rounds
+* Round 10 = Polly's Word / boss word
+* Returning Haunt slot = Round 8 / index 7
+* Default GPS arc = 2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss
+* UP = real
+* RIGHT = trap
+* Wrong swipe is permanent
+* No left swipe
+* No tap interaction
+* No correctness hints before swipe release
+* Mastered words graduate permanently
+* RUN IT BACK = fresh draw with ghost priority
+* Master Gate removed
+* MASTERED and GHOST are boss-only
+* Boss mystery tile is randomly real or trap
+* Non-boss words advance with no overlay
+* Ghost wordId = word string
+* `wrongSwipeOccurred.current` resets on every new word
+* Crystal shards are polygon, purple/rose, never rectangles
+* Diagonal MASTER stamp over crashed word
+* Ghost tile never reveals missed phrase
+* "Thought so." never changes
+* "BINGO BANGO ZZZZINGO!" never changes
+* ZZZZINGO is game/system text, never Polly dialogue
+* Boss mastery uses `submitBossMastery()`, never `addBonusScore()`
+* Boss player-facing name = Polly's Word
+* Internal `bossWord` flags stay as-is for now
+* Live Content Engine is post-launch only
+
+---
+
+## Claude Code Workflow
+
+Use `docs/WORKFLOW.md`.
+
+Hard rules:
+
+* One prompt, one concern
+* Surgical patches only
+* Read relevant file fully before editing
+* Confirm exact paths before patching
+* `MaskBoard.tsx` and `SwipeMask.tsx` are warroom-gated
+* Visual work must use approved UI system/map before code
+* Codex does not invent style
+* Do not build HeroBook anatomy from React Native `View` rectangles
+* Do not pop/drop/clear stashes unless explicitly instructed by name
+* Preserve stash: `wip haunt loop type scaffolding`
+* Preserve stash: `wip failed View-based Hunt hero book V5`
+
+After every patch:
+
+```text
+npx.cmd tsc --noEmit
+git diff --check
+git status --short
+```
+
+Device screenshot required before visual commits.
+
+Known-good states may be tagged after device confirmation:
+
+```text
+git tag v0.working-YYYYMMDD
+```
 
 ---
 
 ## Key Files
 
-```
-app/components/MaskBoard.tsx      Main game board (warroom-gated)
-app/components/SwipeMask.tsx      Tile + swipe physics (Reanimated — frozen, warroom-gated)
-app/components/ui/PollySprite.tsx 10-pose PNG sprite component
-app/components/PollyDailyPerch.tsx    Polly branch + idle cycle (Daily)
-app/hooks/usePollyAnimator.ts     Polly fly-up arc system
-app/ui/pwTheme.ts                 Polywords visual tokens
-app/ui/pwMaterials.ts             Tokenized material recipes
-app/game/huntGenerator.ts         GPS arc sampling, ghost priority
-app/game/polyRunEngine.ts         Game state engine
-app/game/types.ts                 TypeScript types
-app/store/useGameStore.ts         Zustand store
-app/screens/GameScreen.tsx        Play HUD + background
-app/screens/HomeScreen.tsx        Arcade lobby
-app/screens/VaultScreen.tsx       Player archive + Ranks
-app/screens/ResultsScreen.tsx     End-of-run results
-app/screens/DailyChallengeScreen.tsx  Daily Challenge (5 rounds)
-app/game/dailyChallengeEngine.ts  Daily session builder
-app/game/dailyPool.ts             Daily word pool (tiered)
-assets/data/huntData.json         403-word tile database
-assets/images/Polly/polly_01-10.png   Polly poses
-assets/sfx/                       Game SFX
-docs/GOLDEN_PACING_SYSTEM.md      GPS source of truth
-docs/DAILY_CHALLENGE_SPEC.md      Daily Challenge approved spec
-docs/POLLY_DIALOGUE_BANK.md       Polly dialogue source of truth
-tools/content/mask-rewriter       Local-only content tool — never wire into the app
+```text
+app/components/MaskBoard.tsx              Main game board, warroom-gated
+app/components/SwipeMask.tsx              Tile + swipe physics, frozen Reanimated area
+app/components/ui/HeroBook.tsx            SVG HeroBook V5 visual system
+app/components/ui/PollySprite.tsx         Polly PNG sprite component
+app/components/PollyDailyPerch.tsx        Daily Polly perch
+app/hooks/usePollyAnimator.ts             Polly fly-up arc system
+
+app/ui/pwTheme.ts                         Visual tokens
+app/ui/pwMaterials.ts                     Material recipes
+app/ui/pwEffects.ts                       FX helpers
+app/ui/heroBookMotion.ts                  Legacy/partial helper, do not expand without approval
+
+app/game/huntGenerator.ts                 GPS arc sampling, ghost priority
+app/game/polyRunEngine.ts                 Game state engine
+app/game/types.ts                         TypeScript types
+app/store/useGameStore.ts                 Zustand store
+
+app/screens/GameScreen.tsx                Play HUD + background
+app/screens/HomeScreen.tsx                Arcade lobby
+app/screens/VaultScreen.tsx               Player archive + ranks
+app/screens/ResultsScreen.tsx             End-of-run results
+app/screens/DailyChallengeScreen.tsx      Daily Challenge
+
+app/game/dailyChallengeEngine.ts          Daily session builder
+app/game/dailyPool.ts                     Daily word pool
+
+assets/data/huntData.json                 403-word tile database
+assets/images/Polly/polly_01-10.png       Polly poses
+assets/sfx/                               Game SFX
+
+docs/WORKFLOW.md                          Patch workflow source of truth
+docs/GOLDEN_PACING_SYSTEM.md              GPS source of truth
+docs/DAILY_CHALLENGE_SPEC.md              Daily spec
+docs/POLLY_DIALOGUE_BANK.md               Polly dialogue source of truth
+
+tools/content/mask-rewriter               Local-only content tool
 ```
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · June 26, 2026*
+*POLYWORDS CLAUDE.md · Pete DiBari · June 27, 2026*
+

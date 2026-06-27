@@ -16,21 +16,13 @@ import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
+import HeroBook from './ui/HeroBook';
 import PollySprite from './ui/PollySprite';
 import { POLLY_GAMEPLAY_SIZE, usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
 import { deckBackMaterial } from '../ui/pwMaterials';
-import {
-  HERO_BOOK_PERSPECTIVE,
-  HERO_BOOK_SWING_INPUT_RANGE,
-  HERO_BOOK_SWING_OUTPUT_RANGE,
-  HERO_BOOK_FADE_IN_MS,
-  heroBookSetOpen,
-  heroBookSwingShut,
-  heroBookSwingOpen,
-} from '../ui/heroBookMotion';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -404,8 +396,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordEntryTranslateY   = useRef(new Animated.Value(0)).current;
   const wordEntryTilt         = useRef(new Animated.Value(0)).current;
   const wordLockPulse         = useRef(new Animated.Value(1)).current;
-  const wordSwingX            = useRef(new Animated.Value(0)).current; // rotateX degrees, native driver
   const bookOpenAnim          = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
+  const bookIntakeGlowAnim    = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const bookSlideX            = useRef(new Animated.Value(SCREEN_WIDTH)).current; // book entrance/exit slide, native driver
   const bossBookGlow          = useRef(new Animated.Value(0)).current;
   const vaultStampOpacity     = useRef(new Animated.Value(0)).current;
@@ -503,20 +495,41 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [bossShockwaveVisible, setBossShockwaveVisible] = useState(false);
 
   function triggerBookOpen() {
+    bookOpenAnim.stopAnimation();
+    bookIntakeGlowAnim.stopAnimation();
     bookOpenAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(bookOpenAnim, {
-        toValue: 1,
-        duration: 90,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(bookOpenAnim, {
-        toValue: 0,
-        duration: 110,
-        easing: Easing.in(Easing.quad),
-        useNativeDriver: true,
-      }),
+    bookIntakeGlowAnim.setValue(0);
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(bookOpenAnim, {
+          toValue: 1,
+          duration: 120,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.delay(420),
+        Animated.timing(bookOpenAnim, {
+          toValue: 0,
+          duration: 120,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(bookIntakeGlowAnim, {
+          toValue: 0.9,
+          duration: 120,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(300),
+        Animated.timing(bookIntakeGlowAnim, {
+          toValue: 0,
+          duration: 180,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
     ]).start();
   }
 
@@ -808,8 +821,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setBossShockwaveVisible(false);
     goldTextOpacity.setValue(0);
     wordEntryTilt.setValue(0);
-    wordSwingX.setValue(0);
     bookOpenAnim.setValue(0);
+    bookIntakeGlowAnim.setValue(0);
     bookSlideX.setValue(SCREEN_WIDTH);
     bossBookGlow.setValue(0);
     vaultStampOpacity.setValue(0);
@@ -1630,9 +1643,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
   const wordEntryTiltDeg = wordEntryTilt.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-5deg', '0deg', '5deg'] });
-  const wordSwingXDeg = wordSwingX.interpolate({
-    inputRange: [...HERO_BOOK_SWING_INPUT_RANGE],
-    outputRange: [...HERO_BOOK_SWING_OUTPUT_RANGE],
+  const bookIntakeRotateX = bookOpenAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '65deg'],
+  });
+  const bookIntakeGlowScale = bookOpenAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.86, 1],
   });
 
   return (
@@ -1734,38 +1751,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { transform: [{ translateX: bookSlideX }] }]}
         >
-        {/* Book under-shadow */}
-        <View style={styles.coverUnderShadow} pointerEvents="none" />
-
-        {/* Page block — cream pages, peek out at bottom */}
-        <View style={styles.pageBlock} pointerEvents="none">
-          <View style={styles.pageTopLip} />
-          <View style={[styles.pageEdge, styles.pageEdge1]} />
-          <View style={[styles.pageEdge, styles.pageEdge2]} />
-          <View style={[styles.pageEdge, styles.pageEdge3]} />
-          <View style={[styles.pageEdge, styles.pageEdge4]} />
-          <View style={[styles.pageEdge, styles.pageEdge5]} />
-        </View>
-
-        {/* Tile intake slot — reserved empty band between pages and cover for Pass 2.
-            Intentionally empty now. Do not remove. */}
-        <View style={styles.tileIntakeSlot} pointerEvents="none" />
-
-        {/* Word with entry + boss animations */}
-        {/* BOOK COVER PLANE — rigid front object. Later receives rotateX (not this pass). */}
-        <Animated.View style={styles.bookCoverPlane}>
-          {/* navy cover face */}
-          <View style={styles.coverSurface} pointerEvents="none" />
-          <View style={styles.coverSheen} pointerEvents="none" />
-          <View style={styles.coverInnerShade} pointerEvents="none" />
-          {/* gold trim border */}
-          <View style={styles.coverTrim} pointerEvents="none" />
-          <View style={styles.coverTrimInner} pointerEvents="none" />
-          {/* top spine / hinge band */}
-          <View style={styles.spineDetail} pointerEvents="none">
-            <View style={styles.spineLine1} />
-            <View style={styles.spineLine2} />
-          </View>
+        {/* SVG Hero Book V5; MaskBoard retains the animated hero-word content. */}
+        <HeroBook
+          coverRotateX={bookIntakeRotateX}
+          intakeOpacity={bookIntakeGlowAnim}
+          intakeScaleY={bookIntakeGlowScale}
+        >
 
         {/* Outer wrapper: non-native recoil transforms (RAF-driven setValue) */}
         <Animated.View
@@ -1884,7 +1875,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           </Animated.View>
           </Animated.View>
         </Animated.View>
-        </Animated.View>
+        </HeroBook>
 
         {/* Boss gold cover glow — flashes on spring land */}
         {isBoss && (
@@ -2412,137 +2403,6 @@ const styles = StyleSheet.create({
   },
   wordZoneBoss: {
     height: 186,
-  },
-  bookCoverPlane: {
-    position: 'absolute',
-    left: 6,
-    right: 6,
-    top: 4,
-    height: 140,
-    borderRadius: 14,
-    overflow: 'visible',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  coverSurface: {
-    position: 'absolute',
-    left: 0, right: 0, top: 0, bottom: 0,
-    borderRadius: 10,
-    backgroundColor: '#191541',
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  coverSheen: {
-    position: 'absolute',
-    left: 4, right: 4, top: 4, bottom: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.025)',
-  },
-  coverInnerShade: {
-    position: 'absolute',
-    left: 4, right: 4, bottom: 4,
-    height: 46,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.18)',
-  },
-  coverTrim: {
-    position: 'absolute',
-    left: 4, right: 4, top: 4, bottom: 4,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: PW.color.gold,
-    opacity: 0.95,
-  },
-  coverTrimInner: {
-    position: 'absolute',
-    left: 9, right: 9, top: 9, bottom: 9,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.30)',
-  },
-  spineDetail: {
-    position: 'absolute',
-    left: 10,
-    right: 10,
-    top: 6,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#1E1A4A',
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.35)',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  spineLine1: {
-    height: 1.5,
-    backgroundColor: PW.color.gold,
-    opacity: 0.6,
-    borderRadius: 1,
-    marginVertical: 1.5,
-  },
-  spineLine2: {
-    height: 1.5,
-    backgroundColor: PW.color.gold,
-    opacity: 0.3,
-    borderRadius: 1,
-    marginVertical: 1.5,
-  },
-  pageBlock: {
-    position: 'absolute',
-    left: 20,
-    right: 20,
-    top: 132,
-    height: 24,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    backgroundColor: '#EDE7D4',
-    overflow: 'hidden',
-  },
-  pageTopLip: {
-    position: 'absolute',
-    left: 0, right: 0, top: 0,
-    height: 2,
-    backgroundColor: '#FBF7EC',
-  },
-  pageEdge: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: 'rgba(150,138,108,0.30)',
-  },
-  pageEdge1: { top: 4 },
-  pageEdge2: { top: 8, backgroundColor: 'rgba(150,138,108,0.18)' },
-  pageEdge3: { top: 12 },
-  pageEdge4: { top: 16, backgroundColor: 'rgba(150,138,108,0.18)' },
-  pageEdge5: { top: 20 },
-  tileIntakeSlot: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    top: 124,
-    height: 14,
-  },
-  coverUnderShadow: {
-    position: 'absolute',
-    left: 20,
-    right: 20,
-    top: 160,
-    height: 18,
-    borderRadius: 12,
-    backgroundColor: '#000000',
-    opacity: 0.32,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
   },
   kicker: {
     color: '#F5C842',
