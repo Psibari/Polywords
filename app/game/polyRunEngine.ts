@@ -94,6 +94,47 @@ export function currentStep(state: GameState): SessionStep {
   return state.session[state.stepIndex];
 }
 
+function buildCurrentWordResult(state: GameState): WordResult | null {
+  const step = currentStep(state);
+  if (step.kind !== 'word') return null;
+
+  const realMasks = step.masks.filter(mask => mask.isReal);
+  const trapMasks = step.masks.filter(mask => !mask.isReal);
+  const nonHiddenReal = realMasks.filter(mask => !mask.isHidden);
+
+  return {
+    wordId: String(state.stepIndex),
+    roundKind: 'word',
+    word: step.word,
+    correctUp: nonHiddenReal.filter(mask => state.swipedUpIds.includes(mask.id)).length,
+    correctDown: trapMasks.filter(mask => state.swipedDownIds.includes(mask.id)).length,
+    wrongSwipes: state.mistakesOnWord,
+    missedMaskIds: realMasks
+      .filter(mask => state.swipedDownIds.includes(mask.id))
+      .map(mask => mask.id),
+    wrongMaskIds: trapMasks
+      .filter(mask => state.swipedUpIds.includes(mask.id))
+      .map(mask => mask.id),
+    isBossWord: step.eventType === 'bossWord',
+    totalRealMasks: nonHiddenReal.length,
+  };
+}
+
+function finalizeCurrentWordResult(state: GameState): GameState {
+  const wordResult = buildCurrentWordResult(state);
+  if (!wordResult) return state;
+
+  const alreadyRecorded = state.wordResults.some(
+    result => result.wordId === wordResult.wordId,
+  );
+  if (alreadyRecorded) return state;
+
+  return {
+    ...state,
+    wordResults: [...state.wordResults, wordResult],
+  };
+}
+
 // ─── STREAK HELPER ───────────────────────────────────────────
 
 function computeStreakUpdate(currentStreak: number): {
@@ -156,7 +197,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
 
   // wrong: claimed a trap as real
   const lives = Math.max(state.lives - 1, 0);
-  return {
+  const nextState: GameState = {
     ...state,
     swipedUpIds,
     lives,
@@ -170,6 +211,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
+  return lives <= 0 ? finalizeCurrentWordResult(nextState) : nextState;
 }
 
 // ─── SWIPE DOWN — player rejects mask as a trap ───────────────
@@ -219,7 +261,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
 
   // wrong: rejected a real meaning
   const lives = Math.max(state.lives - 1, 0);
-  return {
+  const nextState: GameState = {
     ...state,
     swipedDownIds,
     lives,
@@ -233,6 +275,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
+  return lives <= 0 ? finalizeCurrentWordResult(nextState) : nextState;
 }
 
 // ─── BOSS MASTERY — scoring for the boss mystery tile judged correctly ─
@@ -310,54 +353,17 @@ export function completeWord(state: GameState): GameState {
   const step = currentStep(state);
   if (step.kind !== 'word') return state;
 
-  const realMasks = step.masks.filter(m => m.isReal);
-  const trapMasks = step.masks.filter(m => !m.isReal);
-  const nonHiddenReal = realMasks.filter(m => !m.isHidden);
-
-  // Capture before advanceStep resets swipedUpIds / swipedDownIds
-  const missedMaskIds = nonHiddenReal
-    .filter(m => !state.swipedUpIds.includes(m.id) && !state.swipedDownIds.includes(m.id))
-    .map(m => m.id);
-
-  console.log('[completeWord]', {
-    swipedUpIds: [...state.swipedUpIds],
-    allRealMaskIds: step.masks
-      .filter(m => m.isReal && !m.isHidden)
-      .map(m => m.id),
-    missedMaskIds,
-  });
-
-  const wordId = String(state.stepIndex);
-  const wordResult: WordResult = {
-    wordId,
-    roundKind: 'word',
-    word: step.word,
-    correctUp: nonHiddenReal.filter(m => state.swipedUpIds.includes(m.id)).length,
-    correctDown: trapMasks.filter(m => state.swipedDownIds.includes(m.id)).length,
-    wrongSwipes: state.mistakesOnWord,
-    missedMaskIds,
-    wrongMaskIds: trapMasks
-      .filter(m => state.swipedUpIds.includes(m.id))
-      .map(m => m.id),
-    isBossWord: step.eventType === 'bossWord',
-    totalRealMasks: nonHiddenReal.length,
-  };
-
-  const alreadyRecorded = state.wordResults.some(r => r.wordId === wordId);
-  const newWordResults = alreadyRecorded
-    ? state.wordResults
-    : [...state.wordResults, wordResult];
-
+  const finalizedState = finalizeCurrentWordResult(state);
   const perfect = state.mistakesOnWord === 0;
 
-  return advanceStep(state, {
+  return advanceStep(finalizedState, {
     score: state.score,
     lives: state.lives,
     combo: perfect ? state.combo : 0,
     feedback: state.feedback,
     lastActionAt: Date.now(),
     pollyTrigger: null,
-    wordResults: newWordResults,
+    wordResults: finalizedState.wordResults,
   });
 }
 

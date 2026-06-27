@@ -45,6 +45,7 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 - `DailyChallengeScreen` no longer owns raw candidate gesture code; Hunt `SwipeMask` remains untouched.
 - Each Daily round restores the right-side Clue Vault entrance and staggered left/right answer-card entrances without mixing entry motion into drag translation.
 - Daily win/loss results keep Polly and the Gold Feather reward in a compact, scroll-safe visual stack.
+- Hunt wrong swipes now preserve mask ID and UP/RIGHT direction, and fatal wrong swipes finalize the current WordResult before Results.
 - Hunt-side Gold Feather consumption/revival is quarantined because revival was unsafe with the current MaskBoard tile lifecycle and Results accounting.
 - Hunt Gold Feather spend will be rebuilt later only after a safe resume-state design is approved.
 

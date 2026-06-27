@@ -1464,7 +1464,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     } else {
       wrongSwipeOccurred.current = true;
       triggerWrongSwipeFeedback();
-      store.submitWrongSwipe();
+      store.submitSwipeUp(maskId);
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       triggerWrongFail(maskId);
     }
@@ -1483,7 +1483,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     } else {
       wrongSwipeOccurred.current = true;
       triggerWrongSwipeFeedback();
-      store.submitWrongSwipe();
+      store.submitSwipeDown(maskId);
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       triggerWrongFail(maskId);
     }
@@ -1577,7 +1577,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
       triggerWrongSwipeFeedback();
-      store.submitWrongSwipe();
+      store.submitSwipeUp(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       const gapWrong = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);
@@ -1608,7 +1608,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
       triggerWrongSwipeFeedback();
-      store.submitWrongSwipe();
+      store.submitSwipeDown(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       const gapWrongR = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);

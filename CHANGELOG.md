@@ -1,5 +1,12 @@
 # POLYWORDS Changelog
 
+## 2026-06-27 - Hunt wrong-swipe result tracking
+
+- Routed visible and final hidden wrong swipes through mask-aware UP/RIGHT engine submissions.
+- Finalized the current Hunt WordResult before a fatal wrong swipe enters game-over.
+- Recorded claimed trap IDs and rejected real-meaning IDs accurately, including hidden boss tiles.
+- Removed leftover `completeWord` debug logging without changing scoring or visuals.
+
 ## 2026-06-27 - Daily round entrance restoration
 
 - Restored the Clue Vault slide-in from the right on every Daily round.
