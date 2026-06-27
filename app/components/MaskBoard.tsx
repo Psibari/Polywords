@@ -58,81 +58,6 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 type FloatEntry = { id: number; value: number; x: number; y: number; color: string };
 
-type BurstEntry = { id: number; x: number; y: number; count?: number };
-
-function Burst({ x, y, count = 14 }: { x: number; y: number; count?: number }) {
-  const shards = useRef(
-    Array.from({ length: count }, (_, i) => {
-      const baseAngle = (360 / count) * i + (Math.random() - 0.5) * 30;
-      const rightBias = 30;
-      const angle = ((baseAngle + rightBias) * Math.PI) / 180;
-      const speed = 180 + Math.random() * 160;
-      return {
-        angle,
-        speed,
-        w: 6 + Math.random() * 8,
-        h: 18 + Math.random() * 18,
-        rot: Math.random() * 360,
-        rotSpeed: (Math.random() - 0.5) * 6,
-        color: Math.random() > 0.5 ? '#7B2D8B' : '#9B2D6B',
-        anim: new Animated.Value(0),
-      };
-    })
-  ).current;
-
-  useEffect(() => {
-    Animated.parallel(
-      shards.map(s =>
-        Animated.timing(s.anim, {
-          toValue: 1,
-          duration: 800 + Math.random() * 100,
-          useNativeDriver: true,
-        })
-      )
-    ).start();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return (
-    <>
-      {shards.map((s, i) => {
-        const translateX = s.anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, Math.cos(s.angle) * s.speed],
-        });
-        const translateY = s.anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, Math.sin(s.angle) * s.speed + 120],
-        });
-        const opacity = s.anim.interpolate({
-          inputRange: [0, 0.3, 1],
-          outputRange: [1, 1, 0],
-        });
-        const rotate = s.anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [`${s.rot}deg`, `${s.rot + s.rotSpeed * 60}deg`],
-        });
-        return (
-          <Animated.View
-            key={i}
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              left: x - s.w / 2,
-              top: y - s.h / 2,
-              width: s.w,
-              height: s.h,
-              borderRadius: 2,
-              backgroundColor: s.color,
-              opacity,
-              transform: [{ translateX }, { translateY }, { rotate }],
-            }}
-          />
-        );
-      })}
-    </>
-  );
-}
-
 function easeOutBack(t: number, overshoot: number): number {
   const c3 = overshoot + 1;
   return 1 + c3 * Math.pow(t - 1, 3) + overshoot * Math.pow(t - 1, 2);
@@ -386,8 +311,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => buildInitialTileStates(step));
 
   // ── 14-shard burst system ────────────────────────────────────
-  const [bursts, setBursts] = useState<BurstEntry[]>([]);
-  const burstIdRef = useRef(0);
 
   const completedRef          = useRef(false);
   const gateTriggeredRef      = useRef(false);
@@ -444,12 +367,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const deckSize     = remainingMaskIds.length;
   const nearMastery  = !isBoss && deckSize <= 2 && deckSize > 0;
   const topMaskState = topMask ? tileStates.get(topMask.id) ?? 'idle' : 'idle';
-  const showBackingCards =
-    topMaskState === 'idle' || topMaskState === 'hidden' || topMaskState === 'revealed';
-  const backingCardCount =
-    topMask && showBackingCards
-      ? Math.min(MAX_DECK_BACKING_CARDS, Math.max(0, deckSize - 1))
-      : 0;
+  const backingCardCount = topMask
+    ? Math.min(MAX_DECK_BACKING_CARDS, Math.max(0, deckSize - 1))
+    : 0;
   const backingCardWidth = Math.min(Math.max(containerWidth - 56, 0), 340);
 
   // Deck entrance animation (native: translateY / transform only)
@@ -689,23 +609,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 300 }]);
   }
 
-  // ── Shard burst ───────────────────────────────────────────────
-  function triggerShardBurst(centerX: number, centerY: number, count = 14) {
-    const id = ++burstIdRef.current;
-    setBursts(prev => [...prev, { id, x: centerX, y: centerY, count }]);
-    setTimeout(() => setBursts(prev => prev.filter(b => b.id !== id)), 1000);
-  }
-
   function handleEffect(type: 'shard' | 'trail', pageX: number, pageY: number) {
-    if (type === 'shard') {
-      (containerRef.current as any)?.measure(
-        (_x: number, _y: number, _w: number, _h: number, bx: number, by: number) => {
-          triggerShardBurst(pageX - bx, pageY - by, 18);
-        }
-      );
-    } else {
-      spawnEffect?.(type, pageX, pageY);
-    }
+    spawnEffect?.(type, pageX, pageY);
   }
 
   // ── master gate ───────────────────────────────────────────────
@@ -1285,7 +1190,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     setGatePhase('wrongFail');
     setFailedHiddenTileId(failedMaskId);
     firePollyEvent('hiddenMasterFailed');
-    triggerShardBurst(containerWidthRef.current / 2, wordScreenY + 110, 14);
+    spawnEffect?.('shard', containerWidthRef.current / 2, wordScreenY + 110);
 
     if (isHaunt) {
       setTimeout(() => {
@@ -1398,7 +1303,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setMasterCracksVisible(true);
       masterCrackOpacity.setValue(0);
       Animated.timing(masterCrackOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
-      triggerShardBurst(containerWidthRef.current / 2, wordScreenY + crashDistance, 16);
+      spawnEffect?.('shard', containerWidthRef.current / 2, wordScreenY + crashDistance);
     }, 800);
 
     // Fade label before word swells — NEVER simultaneous
@@ -1418,7 +1323,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
     // Phase 5 — T+1300ms: Crystal shard burst + Polly + haptic
     setTimeout(() => {
-      triggerShardBurst(containerWidthRef.current / 2, 40, 16);
+      spawnEffect?.('shard', containerWidthRef.current / 2, 40);
       masteryStartRef.current = null;
       setMasteryProgress(0);
       function masteryTick(now: number) {
@@ -2133,6 +2038,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                       setRemainingMaskIds(prev => prev.filter(id => id !== topMask.id));
                     }}
                     wordY={wordScreenY}
+                    intakeY={wordScreenY + 49}
                   />
                 </View>
                 </Animated.View>
@@ -2174,6 +2080,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                         onSwipeStart={() => playSfx('tileSwipe')}
                         onPressHoldStart={() => playSfx('pressHoldStart')}
                         wordY={wordScreenY}
+                        intakeY={wordScreenY + 49}
                         splitBorderColor="rgba(245,200,66,1.0)"
                         splitTextColor="rgba(255,248,230,1)"
                         splitBackgroundColor="#0F0D2A"
@@ -2190,10 +2097,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         </View>
       </View>
 
-      {/* Shard burst system */}
-      {bursts.map(burst => (
-        <Burst key={burst.id} x={burst.x} y={burst.y} count={burst.count} />
-      ))}
 
       {/* Score floats */}
       {floats.map(f => (

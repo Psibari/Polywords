@@ -15,12 +15,9 @@ import Animated, {
   withSpring,
   withTiming,
   withSequence,
-  withRepeat,
-  cancelAnimation,
   useAnimatedStyle,
   Easing as ReaEasing,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
@@ -52,6 +49,7 @@ type Props = {
   disabled?: boolean;
   nearMastery?: boolean;
   wordY?: number;
+  intakeY?: number;
   splitBorderColor?: string;
   splitTextColor?: string;
   splitBackgroundColor?: string;
@@ -79,6 +77,7 @@ export function SwipeMask({
   disabled = false,
   nearMastery = false,
   wordY = 180,
+  intakeY,
   splitBorderColor = '#FFD700',
   splitTextColor = '#FFFFFF',
   splitBackgroundColor,
@@ -99,8 +98,6 @@ export function SwipeMask({
   const tileOpacity      = useSharedValue(1);
   const borderOpacityVal = useSharedValue(0.18);
   const isCorrectSV      = useSharedValue(0); // 1 when locked correct
-  const rimOpacity       = useSharedValue(0);
-  const rimRotation      = useSharedValue(0);
 
   // ── RN Animated: height/margin collapse (non-native) ──────────
   const outerHeightAnim    = useRef(new RNAnimated.Value(Math.max(tileHeight, 58))).current;
@@ -206,7 +203,7 @@ export function SwipeMask({
       outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
         const screenWidth = Dimensions.get('window').width;
         const targetX  = screenWidth / 2;
-        const targetY  = wordY;
+        const targetY  = intakeY ?? wordY;
 
         const origCX = pageX + w / 2;
         const origCY = pageY + h / 2;
@@ -240,7 +237,9 @@ export function SwipeMask({
 
           translateX.value  = px - origCX;
           translateY.value  = py - origCY;
-          scale.value       = Math.max(0.08, Math.min(1.08, 1.04 - closed * 0.96));
+          scale.value       = closed < 0.8
+            ? Math.max(0.55, Math.min(1.08, 1.04 - closed * 0.6125))
+            : Math.max(0.05, 0.55 - ((closed - 0.8) / 0.2) * 0.5);
           tileOpacity.value = dist < startDist * 0.20
             ? Math.max(0, Math.min(1, dist / (startDist * 0.20)))
             : 1;
@@ -334,27 +333,31 @@ export function SwipeMask({
     if (s === 'trap-caught') {
       exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-      outerRef.current?.measure((_x: number, _y: number, w: number, h: number, pageX: number, pageY: number) => {
-        onEffectRef.current?.('shard', pageX + w + 88, pageY + h / 2 - 6);
+      outerRef.current?.measure((_x: number, _y: number, _w: number, h: number, _pageX: number, pageY: number) => {
+        onEffectRef.current?.(
+          'shard',
+          Dimensions.get('window').width - 20,
+          pageY + h / 2
+        );
       });
 
       const shatterLaneX = Dimensions.get('window').width + 180;
-      translateX.value  = withTiming(shatterLaneX, { duration: 340, easing: ReaEasing.in(ReaEasing.ease) });
-      translateY.value  = withTiming(-16,          { duration: 300, easing: ReaEasing.out(ReaEasing.ease) });
-      rotation.value    = withTiming(26,           { duration: 340, easing: ReaEasing.in(ReaEasing.ease) });
-      scale.value       = withTiming(0.76,         { duration: 320, easing: ReaEasing.in(ReaEasing.ease) });
-      tileOpacity.value = withTiming(0,            { duration: 320, easing: ReaEasing.in(ReaEasing.ease) });
+      translateX.value  = withTiming(shatterLaneX, { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
+      translateY.value  = withTiming(-10,          { duration: 160, easing: ReaEasing.out(ReaEasing.ease) });
+      rotation.value    = withTiming(18,           { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
+      scale.value       = withTiming(0.9,          { duration: 160, easing: ReaEasing.in(ReaEasing.ease) });
+      tileOpacity.value = withTiming(0,            { duration: 170, easing: ReaEasing.in(ReaEasing.ease) });
 
       timers.push(setTimeout(() => {
         RNAnimated.parallel([
-          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
-          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 160, useNativeDriver: false }),
+          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 160, useNativeDriver: false }),
         ]).start(({ finished }) => {
           if (finished) fireExitCompleteOnce();
         });
-      }, 380));
+      }, 200));
     }
 
     // ── REVEALED — full reset ────────────────────────────────
@@ -400,11 +403,6 @@ export function SwipeMask({
         : `rgba(123,45,139,${Math.max(0.42, borderOpacityVal.value)})`,
   }));
 
-  const rimAnimStyle = useAnimatedStyle(() => ({
-    opacity: rimOpacity.value,
-    transform: [{ rotate: `${rimRotation.value}deg` }],
-  }));
-
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
     PanResponder.create({
@@ -424,8 +422,6 @@ export function SwipeMask({
         borderOpacityVal.value = withTiming(0.68, { duration: 85 });
         onPressHoldStartRef.current?.();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        rimOpacity.value = withTiming(1, { duration: 180 });
-        rimRotation.value = withRepeat(withTiming(360, { duration: 1100, easing: ReaEasing.linear }), -1, false);
       },
 
       onPanResponderMove: (_, g) => {
@@ -451,8 +447,6 @@ export function SwipeMask({
       },
 
       onPanResponderRelease: (_, g) => {
-        rimOpacity.value = withTiming(0, { duration: 140 });
-        cancelAnimation(rimRotation);
         if (disabledRef.current || judgedRef.current) return;
 
         if (g.dy < -SWIPE_THRESHOLD) {
@@ -483,8 +477,6 @@ export function SwipeMask({
       },
 
       onPanResponderTerminate: () => {
-        rimOpacity.value = withTiming(0, { duration: 140 });
-        cancelAnimation(rimRotation);
         if (!judgedRef.current) {
           translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
           translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
@@ -543,29 +535,6 @@ export function SwipeMask({
           overflow: 'visible',
         }}
       >
-        {/* Press-hold spinning rim wrapper */}
-        <View style={{ position: 'relative' }}>
-        {/* Press-hold spinning rim — bleeds 3px outside the tile edge */}
-        <Animated.View
-          pointerEvents="none"
-          style={[{
-            position: 'absolute',
-            top: -3,
-            left: -3,
-            right: -3,
-            bottom: -3,
-            borderRadius: 29,
-            overflow: 'hidden',
-            zIndex: -1,
-          }, rimAnimStyle]}
-        >
-          <LinearGradient
-            colors={['#F5C842', '#7B2D8B', '#9B2D6B', '#F5C842']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ flex: 1 }}
-          />
-        </Animated.View>
         {/* Main animated tile — Reanimated for transforms/opacity (native) */}
         <Animated.View
           style={[
@@ -590,28 +559,30 @@ export function SwipeMask({
           <RNAnimated.View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: isSpecialSplit && splitBackgroundColor ? splitBackgroundColor : bgColor },
+              { backgroundColor: isSpecialSplit && splitBackgroundColor
+                  ? splitBackgroundColor : bgColor },
             ]}
           />
-
           {/* Corner pips — decorative */}
           <View style={styles.tilePipTL} pointerEvents="none" />
           <View style={styles.tilePipTR} pointerEvents="none" />
           <View style={styles.tilePipBL} pointerEvents="none" />
           <View style={styles.tilePipBR} pointerEvents="none" />
-
           {/* Wrong flash */}
           {flashRed && (
             <View style={[StyleSheet.absoluteFill, styles.flashOverlay]} />
           )}
-
-          {/* Checkmark — shown when locked correct */}
+          {/* Checkmark */}
           {s === 'correct' && (
-            <Text style={isSpecialSplit ? styles.splitCheckmark : styles.checkmark}>✓</Text>
+            <Text style={isSpecialSplit ? styles.splitCheckmark : styles.checkmark}>
+              ✓
+            </Text>
           )}
-
           {/* Phrase text */}
-          <View style={isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel} pointerEvents="none">
+          <View
+            style={isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel}
+            pointerEvents="none"
+          >
             <Text
               style={[
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
@@ -620,25 +591,24 @@ export function SwipeMask({
               numberOfLines={2}
               adjustsFontSizeToFit={true}
               minimumFontScale={isSpecialSplit ? 0.65 : 0.8}
-              >
+            >
               {mask.phrase}
             </Text>
           </View>
-
           {/* Era badge */}
           {eraBadge && (
             <RNAnimated.View
               pointerEvents="none"
               style={[
                 styles.eraBadgeWrap,
-                { opacity: eraBadgeOpacity, transform: [{ translateY: eraBadgeTransY }] },
+                { opacity: eraBadgeOpacity,
+                  transform: [{ translateY: eraBadgeTransY }] },
               ]}
             >
               <Text style={styles.eraBadgeText}>{eraBadge}</Text>
             </RNAnimated.View>
           )}
         </Animated.View>
-        </View>
       </RNAnimated.View>
     </RNAnimated.View>
   );

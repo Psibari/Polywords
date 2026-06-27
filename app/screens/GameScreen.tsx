@@ -13,148 +13,9 @@ import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { preloadSfx, unloadSfx } from '../audio/sfx';
 import { initMusicEngine, startMusic, stopMusic, setMusicState, triggerChainBreak, disposeMusicEngine, MusicState } from '../audio/MusicEngine';
 import * as Haptics from 'expo-haptics';
+import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 
-// ─── SHARD ANGLES ────────────────────────────────────────────
-const SHARD_ANGLES = [0, 30, 60, 90, 120, 150, 180, 220, 270, 320];
-const SHARD_COLORS = ['#7B2D8B', '#9B2D6B'];
 const MAX_FEATHERS = 5;
-
-// ─── SHARD EFFECT ─────────────────────────────────────────────
-function ShardEffect({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
-  const anims = useRef(
-    SHARD_ANGLES.map((_, i) => ({
-      tx:      new Animated.Value(0),
-      ty:      new Animated.Value(0),
-      rot:     new Animated.Value(0),
-      op:      new Animated.Value(1),
-      sc:      new Animated.Value(1),
-      color:   SHARD_COLORS[i % 2],
-      w:       8  + Math.random() * 8,   // 8–16
-      h:       4  + Math.random() * 4,   // 4–8
-      dist:    55 + Math.random() * 35,  // 55–90
-      rotEnd:  90 + Math.random() * 270, // 90–360
-      stagger: Math.random() * 50,       // 0–50ms
-    }))
-  ).current;
-
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    SHARD_ANGLES.forEach((angle, i) => {
-      const rad  = (angle * Math.PI) / 180;
-      const anim = anims[i];
-      timers.push(setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(anim.tx,  { toValue: Math.cos(rad) * anim.dist, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.ty,  { toValue: Math.sin(rad) * anim.dist, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.rot, { toValue: 1,                         duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.op,  { toValue: 0,                         duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.sc,  { toValue: 0.1,                       duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        ]).start();
-      }, anim.stagger));
-    });
-
-    timers.push(setTimeout(onDone, 450));
-    return () => timers.forEach(clearTimeout);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return (
-    <>
-      {anims.map((anim, i) => {
-        const rotInterp = anim.rot.interpolate({
-          inputRange:  [0, 1],
-          outputRange: ['0deg', `${anim.rotEnd}deg`],
-        });
-        return (
-          <Animated.View
-            key={i}
-            style={{
-              position:        'absolute',
-              left:            x - anim.w / 2,
-              top:             y - anim.h / 2,
-              width:           anim.w,
-              height:          anim.h,
-              borderRadius:    2,
-              backgroundColor: anim.color,
-              transform: [
-                { translateX: anim.tx },
-                { translateY: anim.ty },
-                { rotate:     rotInterp },
-                { scale:      anim.sc  },
-              ],
-              opacity: anim.op,
-            }}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-// ─── TRAIL EFFECT ─────────────────────────────────────────────
-const TRAIL_COUNT = 12;
-
-function TrailEffect({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
-  const anims = useRef(
-    Array.from({ length: TRAIL_COUNT }, () => {
-      const angle = (-50 + Math.random() * 100) * (Math.PI / 180);
-      const dist  = 50 + Math.random() * 30;
-      return {
-        tx:      new Animated.Value(0),
-        ty:      new Animated.Value(0),
-        op:      new Animated.Value(1),
-        sc:      new Animated.Value(1),
-        size:    4 + Math.random() * 3,
-        dx:      Math.sin(angle) * dist,
-        dy:      -Math.cos(angle) * dist,
-        stagger: Math.random() * 25,
-      };
-    })
-  ).current;
-
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    anims.forEach(anim => {
-      timers.push(setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(anim.tx, { toValue: anim.dx, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.ty, { toValue: anim.dy, duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.op, { toValue: 0,       duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(anim.sc, { toValue: 0,       duration: 320, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        ]).start();
-      }, anim.stagger));
-    });
-
-    timers.push(setTimeout(onDone, 400));
-    return () => timers.forEach(clearTimeout);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return (
-    <>
-      {anims.map((anim, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position:        'absolute',
-            left:            x - anim.size / 2,
-            top:             y - anim.size / 2,
-            width:           anim.size,
-            height:          anim.size,
-            borderRadius:    anim.size / 2,
-            backgroundColor: '#F5C842',
-            transform: [
-              { translateX: anim.tx },
-              { translateY: anim.ty },
-              { scale:      anim.sc },
-            ],
-            opacity: anim.op,
-          }}
-        />
-      ))}
-    </>
-  );
-}
 
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
@@ -547,8 +408,6 @@ const tb = StyleSheet.create({
 
 // ─── INNER DIRECTOR ───────────────────────────────────────────
 
-type EffectEntry = { id: number; type: 'shard' | 'trail'; x: number; y: number };
-
 function GameDirector({ navigation }: { navigation: any }) {
   const game       = useGameStore(s => s.game);
   const startGame  = useGameStore(s => s.startGame);
@@ -561,15 +420,16 @@ function GameDirector({ navigation }: { navigation: any }) {
   const featherFloatOpacity = useRef(new Animated.Value(0)).current;
   const [showFeatherFloat, setShowFeatherFloat] = useState(false);
 
-  // ── Effects overlay state ──────────────────────────────────
-  const [effects, setEffects] = useState<EffectEntry[]>([]);
-  const effectIdRef   = useRef(0);
+  // ── Effects overlay ────────────────────────────────────────
+  const fxLayerRef    = useRef<FXLayerHandle>(null);
   const prevChainRef  = useRef<number>(1);
 
-  const spawnEffect = useCallback((type: 'shard' | 'trail', x: number, y: number) => {
-    const id = ++effectIdRef.current;
-    setEffects(prev => [...prev, { id, type, x, y }]);
-  }, []);
+  const spawnEffect = useCallback(
+    (type: 'shard' | 'trail', x: number, y: number) => {
+      fxLayerRef.current?.spawn({ type, x, y });
+    },
+    []
+  );
 
   // ── Flash overlay state ────────────────────────────────────
   const [purpleFlashKey, setPurpleFlashKey] = useState(0);
@@ -577,10 +437,6 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   const handleTrapCaught = useCallback(() => setPurpleFlashKey(k => k + 1), []);
   const handleWrongSwipe = useCallback(() => setRedFlashKey(k => k + 1),    []);
-
-  function removeEffect(id: number) {
-    setEffects(prev => prev.filter(e => e.id !== id));
-  }
 
   useEffect(() => {
     initSounds();
@@ -731,12 +587,9 @@ function GameDirector({ navigation }: { navigation: any }) {
             +1 FEATHER
           </Animated.Text>
         )}
-        {effects.map(e =>
-          e.type === 'shard'
-            ? <ShardEffect key={e.id} x={e.x} y={e.y} onDone={() => removeEffect(e.id)} />
-            : <TrailEffect key={e.id} x={e.x} y={e.y} onDone={() => removeEffect(e.id)} />
-        )}
       </View>
+
+      <FXLayer ref={fxLayerRef} />
     </SafeAreaView>
   );
 }
