@@ -18,6 +18,7 @@ import Animated, {
   useAnimatedStyle,
   Easing as ReaEasing,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
@@ -58,6 +59,14 @@ type Props = {
 // Gold steps for word absorption — exported for MaskBoard
 export const GOLD_STEPS = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
+function tileGradient(
+  state: SwipeMaskState
+): readonly [string, string] {
+  if (state === 'correct')  return ['#F5C842', '#F5C842'] as const;
+  if (state === 'wrong')    return ['#CC2200', '#CC2200'] as const;
+  return ['#F5C842', '#9B2D6B'] as const;
+}
+
 export function SwipeMask({
   mask,
   onSwipeUp,
@@ -96,20 +105,10 @@ export function SwipeMask({
   const rotation         = useSharedValue(0);
   const grabLift         = useSharedValue(0);
   const tileOpacity      = useSharedValue(1);
-  const borderOpacityVal = useSharedValue(0.18);
-  const isCorrectSV      = useSharedValue(0); // 1 when locked correct
 
   // ── RN Animated: height/margin collapse (non-native) ──────────
   const outerHeightAnim    = useRef(new RNAnimated.Value(Math.max(tileHeight, 58))).current;
   const outerMarginTopAnim = useRef(new RNAnimated.Value(TILE_GAP)).current;
-
-  // ── RN Animated: bg color (non-native) ───────────────────────
-  // 0 = dark glass, 0.5 = resolved pulse, 1.0 = locked dark
-  const bgAnim = useRef(new RNAnimated.Value(0)).current;
-  const bgColor = bgAnim.interpolate({
-    inputRange:  [0,         0.5,       1.0      ],
-    outputRange: [PW.color.cardFace, PW.color.surfaceRaised, PW.color.surfaceBase],
-  });
 
   // ── RN Animated: entry (native driver) ────────────────────────
   const entryOpacity = useRef(new RNAnimated.Value(0)).current;
@@ -195,7 +194,6 @@ export function SwipeMask({
       } else {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
-      RNAnimated.timing(bgAnim, { toValue: 0.5, duration: 80, useNativeDriver: false }).start();
 
       const currentOffsetX = translateX.value;
       const currentOffsetY = translateY.value;
@@ -294,10 +292,6 @@ export function SwipeMask({
           withTiming(0.98, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
           withTiming(0.86, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
         );
-        borderOpacityVal.value = withSequence(
-          withTiming(0.46, { duration: 60 }),
-          withTiming(0.18, { duration: 170 })
-        );
         timers.push(setTimeout(() => {
           tileOpacity.value = withTiming(0, { duration: 160, easing: ReaEasing.in(ReaEasing.ease) });
         }, 140));
@@ -370,9 +364,6 @@ export function SwipeMask({
       scale.value            = 1;
       grabLift.value         = 0;
       rotation.value         = 0;
-      borderOpacityVal.value = 0.18;
-      isCorrectSV.value      = 0;
-      bgAnim.setValue(0);
       outerHeightAnim.setValue(Math.max(tileHeight, 58));
       outerMarginTopAnim.setValue(TILE_GAP);
       exitCompleteFiredRef.current = false;
@@ -396,11 +387,6 @@ export function SwipeMask({
       { rotate:     `${rotation.value}deg` },
     ],
     opacity:     tileOpacity.value,
-    borderColor: isCorrectSV.value === 1
-      ? 'rgba(245,200,66,0.72)'
-      : isSpecialSplit
-        ? splitBorderColor
-        : `rgba(123,45,139,${Math.max(0.42, borderOpacityVal.value)})`,
   }));
 
   // ── PanResponder ──────────────────────────────────────────────
@@ -419,7 +405,6 @@ export function SwipeMask({
         hasThresholdFiredRef.current = false;
         grabLift.value         = withSpring(-10, { damping: 16, stiffness: 420 });
         scale.value            = withSpring(1.04, { damping: 16, stiffness: 420 });
-        borderOpacityVal.value = withTiming(0.68, { duration: 85 });
         onPressHoldStartRef.current?.();
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       },
@@ -472,7 +457,6 @@ export function SwipeMask({
           grabLift.value         = withSpring(0, { damping: 14, stiffness: 300 });
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
-          borderOpacityVal.value = withTiming(0.18, { duration: 150 });
         }
       },
 
@@ -483,7 +467,6 @@ export function SwipeMask({
           grabLift.value         = withSpring(0, { damping: 14, stiffness: 300 });
           scale.value            = withSpring(1.0, { damping: 14, stiffness: 300 });
           rotation.value         = withSpring(0, { damping: 14, stiffness: 300 });
-          borderOpacityVal.value = withTiming(0.18, { duration: 150 });
         }
       },
     })
@@ -555,14 +538,21 @@ export function SwipeMask({
           {!isSpecialSplit && (
             <View pointerEvents="none" style={styles.tileBottomEdge} />
           )}
-          {/* Non-native animated background */}
-          <RNAnimated.View
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: isSpecialSplit && splitBackgroundColor
-                  ? splitBackgroundColor : bgColor },
-            ]}
-          />
+          {/* Outer gradient bezel — double bezel construction */}
+          {!isSpecialSplit && (
+            <LinearGradient
+              colors={tileGradient(s)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
+          {/* Split tile background */}
+          {isSpecialSplit && splitBackgroundColor && (
+            <View
+              style={[StyleSheet.absoluteFill, { backgroundColor: splitBackgroundColor }]}
+            />
+          )}
           {/* Corner pips — decorative */}
           <View style={styles.tilePipTL} pointerEvents="none" />
           <View style={styles.tilePipTR} pointerEvents="none" />
@@ -616,35 +606,30 @@ export function SwipeMask({
 
 const styles = StyleSheet.create({
   tile: {
-    borderRadius: PW.radius.card,
+    borderRadius: 20,
     minHeight: 148,
     alignSelf: 'center',
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 3,
-    paddingVertical: 3,
-    borderWidth: 1.5,
-    // borderColor driven by Reanimated (tileAnimStyle)
-    ...PW.shadow.cardLifted,
+    padding: 2,
     overflow: 'hidden',
+    shadowColor: '#9B2D6B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
   },
   phrasePanel: {
     width: '100%',
     flex: 1,
-    borderRadius: 21,
+    borderRadius: 18,
     alignItems: 'stretch',
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: PW.color.surfaceDeep,
-    borderWidth: 1,
-    borderColor: PW.color.cardInner,
-    shadowColor: PW.color.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
-    shadowOpacity: 0.44,
+    backgroundColor: '#141038',
     overflow: 'hidden',
     zIndex: 2,
   },
