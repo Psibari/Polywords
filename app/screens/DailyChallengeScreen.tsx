@@ -6,6 +6,7 @@ import {
   Image,
   Pressable,
   SafeAreaView,
+  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -187,9 +188,6 @@ function ResultsOverlay({
 
   const dailyResult = useGameStore((s) => s.dailyResult);
   const fadeIn = useRef(new Animated.Value(0)).current;
-  const featherY     = useRef(new Animated.Value(-120)).current;
-  const featherScale = useRef(new Animated.Value(0.6)).current;
-  const featherGlow  = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeIn, {
@@ -199,56 +197,18 @@ function ResultsOverlay({
     }).start();
   }, [fadeIn]);
 
-  useEffect(() => {
-    if (!dailyResult?.goldFeatherEarned) return;
-
-    // Drop in after card fades in
-    const t = setTimeout(() => {
-      Animated.sequence([
-        // Drop + overshoot
-        Animated.spring(featherY, {
-          toValue: 0,
-          friction: 5,
-          tension: 80,
-          useNativeDriver: true,
-        }),
-        // Settle scale
-        Animated.spring(featherScale, {
-          toValue: 1,
-          friction: 4,
-          tension: 100,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        // Glow pulse loop after landing
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(featherGlow, {
-              toValue: 1,
-              duration: 900,
-              useNativeDriver: true,
-            }),
-            Animated.timing(featherGlow, {
-              toValue: 0.3,
-              duration: 900,
-              useNativeDriver: true,
-            }),
-          ]),
-        ).start();
-      });
-    }, 300);
-
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   if (!dailyResult) return null;
 
   const isWin = dailyResult.status === 'won';
 
   return (
     <Animated.View style={[res.fill, { opacity: fadeIn }]}>
-      <View style={res.card}>
+      <ScrollView
+        style={res.scroll}
+        contentContainerStyle={res.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={res.card}>
         <Image
           source={
             isWin
@@ -265,28 +225,14 @@ function ResultsOverlay({
         </Text>
 
         {isWin && (
-          <Animated.View
-            style={[
-              styles.featherWrap,
-              {
-                opacity: featherGlow.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.75, 1],
-                }),
-                transform: [
-                  { translateY: featherY },
-                  { scale: featherScale },
-                ],
-              },
-            ]}
-          >
+          <View style={styles.featherWrap}>
             <Image
               source={FEATHER_IMG}
               style={styles.featherImage}
               resizeMode="contain"
             />
-            <Text style={styles.featherLabel}>GOLD FEATHER EARNED</Text>
-          </Animated.View>
+            <Text style={styles.featherLabel}>{DAILY_WIN_REWARD}</Text>
+          </View>
         )}
 
         <Text style={res.stat}>
@@ -311,10 +257,11 @@ function ResultsOverlay({
           <Text style={res.shareText}>SHARE RESULT</Text>
         </Pressable>
 
-        <Pressable style={res.homeBtn} onPress={onHome}>
-          <Text style={res.homeText}>HOME</Text>
-        </Pressable>
-      </View>
+          <Pressable style={res.homeBtn} onPress={onHome}>
+            <Text style={res.homeText}>HOME</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </Animated.View>
   );
 }
@@ -584,8 +531,8 @@ const styles = StyleSheet.create({
     paddingBottom: 230,
   },
   resultPollyImage: {
-    width: 180,
-    height: 180,
+    width: 140,
+    height: 140,
     alignSelf: 'center',
     marginBottom: 0,
   },
@@ -760,9 +707,16 @@ const res = StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(26,24,48,0.98)',
-    alignItems: 'center',
+    zIndex: 20,
+  },
+  scroll: {
+    width: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   card: {
     width: '100%',
@@ -770,7 +724,7 @@ const res = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(123,45,139,0.55)',
-    padding: 28,
+    padding: 20,
     alignItems: 'center',
     gap: 4,
   },

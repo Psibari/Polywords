@@ -1,5 +1,11 @@
 # POLYWORDS Changelog
 
+## 2026-06-27 - Daily result reward visual fix
+
+- Kept Daily result Polly visible on win and loss with a compact, scroll-safe result card.
+- Restored a stable in-flow Gold Feather image and preserved the approved reward label.
+- Changed no Daily gameplay, reward logic, Gold Feather storage, or Hunt files.
+
 ## 2026-06-27 - Daily answer-card control foundation
 
 - Added `DailyAnswerCard` as the owner of Daily tile press/grip and gesture control.
