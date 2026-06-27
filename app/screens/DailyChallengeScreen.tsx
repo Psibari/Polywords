@@ -38,6 +38,7 @@ import DailyAnswerCard, {
 import PollyDailyPerch from '../components/PollyDailyPerch';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
 // Maps store claim result reaction → PollyDailyPerch prop
 function toPerchReaction(
@@ -323,6 +324,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const map = new Map<string, DailyAnswerCardState>();
     candidates.forEach((c) => map.set(c, 'idle'));
     setCardStates(map);
+
+    vaultX.stopAnimation();
+    vaultX.setValue(SCREEN_WIDTH);
+    Animated.spring(vaultX, {
+      toValue: 0,
+      friction: 7,
+      tension: 80,
+      useNativeDriver: true,
+    }).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.currentRoundIndex]);
 
@@ -392,13 +402,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // Advance round, snap vault to right, slide vault in
       setTimeout(() => {
         claimDailyAnswer(candidate);
-        vaultX.setValue(SCREEN_WIDTH);
-        Animated.spring(vaultX, {
-          toValue: 0,
-          friction: 7,
-          tension: 80,
-          useNativeDriver: true,
-        }).start();
       }, 480);
 
       // Polly enters after cards are settling
@@ -476,6 +479,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                   disabled={inputLocked}
                   onClaim={handleClaim}
                   testID={`daily-answer-${index}`}
+                  enterFromLeft={index % 2 === 0}
+                  enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
+                  roundKey={dailySession.currentRoundIndex}
                 />
               ))}
           </View>

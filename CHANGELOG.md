@@ -1,5 +1,11 @@
 # POLYWORDS Changelog
 
+## 2026-06-27 - Daily round entrance restoration
+
+- Restored the Clue Vault slide-in from the right on every Daily round.
+- Restored staggered answer-card entrances from the left and right columns.
+- Kept DailyAnswerCard free X/Y drag, snap-back, and UP-only claim behavior unchanged.
+
 ## 2026-06-27 - Daily result reward visual fix
 
 - Kept Daily result Polly visible on win and loss with a compact, scroll-safe result card.

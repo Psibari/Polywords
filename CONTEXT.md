@@ -43,6 +43,7 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 - Daily Challenge: Fully rewritten. 6-card grid, clue timer, round transition ceremony, PollyDailyPerch idle cycle, story share text, results overlay. Daily Gold Feather reward/storage remains.
 - `DailyAnswerCard` now owns Daily tile press/grip, free X/Y drag, snap-back, and UP-only claim control.
 - `DailyChallengeScreen` no longer owns raw candidate gesture code; Hunt `SwipeMask` remains untouched.
+- Each Daily round restores the right-side Clue Vault entrance and staggered left/right answer-card entrances without mixing entry motion into drag translation.
 - Daily win/loss results keep Polly and the Gold Feather reward in a compact, scroll-safe visual stack.
 - Hunt-side Gold Feather consumption/revival is quarantined because revival was unsafe with the current MaskBoard tile lifecycle and Results accounting.
 - Hunt Gold Feather spend will be rebuilt later only after a safe resume-state design is approved.

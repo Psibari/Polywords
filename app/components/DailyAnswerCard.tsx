@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
+  Dimensions,
   PanResponder,
   StyleSheet,
   Text,
@@ -20,6 +21,9 @@ type Props = {
   state?: DailyAnswerCardState;
   onClaim: (label: string) => void;
   testID?: string;
+  enterFromLeft?: boolean;
+  enterDelay?: number;
+  roundKey?: string | number;
 };
 
 const CLAIM_THRESHOLD = -80;
@@ -40,11 +44,16 @@ export default function DailyAnswerCard({
   state = 'idle',
   onClaim,
   testID,
+  enterFromLeft = false,
+  enterDelay = 0,
+  roundKey = 0,
 }: Props) {
+  const entryTranslateX = useRef(new Animated.Value(0)).current;
+  const entryOpacity = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
   const gripGlow = useRef(new Animated.Value(0)).current;
 
   const labelRef = useRef(label);
@@ -87,10 +96,42 @@ export default function DailyAnswerCard({
   }
 
   useEffect(() => {
+    const entryDistance = Dimensions.get('window').width * 0.7;
+    entryTranslateX.stopAnimation();
+    entryOpacity.stopAnimation();
+    entryTranslateX.setValue(enterFromLeft ? -entryDistance : entryDistance);
+    entryOpacity.setValue(0);
+
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.spring(entryTranslateX, {
+          toValue: 0,
+          friction: 8,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(entryOpacity, {
+          toValue: 1,
+          duration: 160,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, enterDelay);
+
+    return () => clearTimeout(timer);
+  }, [
+    enterDelay,
+    enterFromLeft,
+    entryOpacity,
+    entryTranslateX,
+    roundKey,
+  ]);
+
+  useEffect(() => {
     translateX.setValue(0);
     translateY.setValue(0);
     scale.setValue(0.96);
-    opacity.setValue(0);
+    opacity.setValue(1);
     gripGlow.setValue(0);
     claimedRef.current = false;
     thresholdCrossedRef.current = false;
@@ -100,11 +141,6 @@ export default function DailyAnswerCard({
         toValue: 1,
         friction: 8,
         tension: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 140,
         useNativeDriver: true,
       }),
     ]).start();
@@ -297,57 +333,71 @@ export default function DailyAnswerCard({
 
   return (
     <Animated.View
-      testID={testID}
-      accessibilityLabel={label}
-      {...panResponder.panHandlers}
       style={[
-        styles.shell,
-        state === 'correct' && styles.shellCorrect,
-        state === 'wrong' && styles.shellWrong,
+        styles.entryShell,
         {
-          opacity,
-          transform: [{ translateX }, { translateY }, { scale }],
+          opacity: entryOpacity,
+          transform: [{ translateX: entryTranslateX }],
         },
       ]}
     >
-      <LinearGradient
-        colors={rimColors(state)}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.rim}
+      <Animated.View
+        testID={testID}
+        accessibilityLabel={label}
+        {...panResponder.panHandlers}
+        style={[
+          styles.shell,
+          state === 'correct' && styles.shellCorrect,
+          state === 'wrong' && styles.shellWrong,
+          {
+            opacity,
+            transform: [{ translateX }, { translateY }, { scale }],
+          },
+        ]}
       >
-        <View style={styles.face}>
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.gripGlow, { opacity: gripGlow }]}
-          />
-          {state === 'correct' && (
-            <View pointerEvents="none" style={styles.correctOverlay} />
-          )}
-          {state === 'wrong' && (
-            <View pointerEvents="none" style={styles.wrongOverlay} />
-          )}
-          {state === 'disabled' && (
-            <View pointerEvents="none" style={styles.disabledOverlay} />
-          )}
-          <Text
-            style={styles.label}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.6}
-          >
-            {label.toUpperCase()}
-          </Text>
-        </View>
-      </LinearGradient>
+        <LinearGradient
+          colors={rimColors(state)}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.rim}
+        >
+          <View style={styles.face}>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.gripGlow, { opacity: gripGlow }]}
+            />
+            {state === 'correct' && (
+              <View pointerEvents="none" style={styles.correctOverlay} />
+            )}
+            {state === 'wrong' && (
+              <View pointerEvents="none" style={styles.wrongOverlay} />
+            )}
+            {state === 'disabled' && (
+              <View pointerEvents="none" style={styles.disabledOverlay} />
+            )}
+            <Text
+              style={styles.label}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+            >
+              {label.toUpperCase()}
+            </Text>
+          </View>
+        </LinearGradient>
+      </Animated.View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  shell: {
+  entryShell: {
     width: '47%',
     height: 88,
+  },
+  shell: {
+    width: '100%',
+    height: '100%',
     borderRadius: dailyCardMaterial.outerRadius,
     shadowColor: dailyCardMaterial.shadowColor,
     shadowOpacity: dailyCardMaterial.shadowOpacity,
