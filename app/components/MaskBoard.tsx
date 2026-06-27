@@ -54,6 +54,8 @@ const DECK_BACKING_BORDER_COLORS = [
   'rgba(255,255,255,0.07)',
 ] as const;
 
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
 type FloatEntry = { id: number; value: number; x: number; y: number; color: string };
 
 type BurstEntry = { id: number; x: number; y: number; count?: number };
@@ -484,6 +486,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordLockPulse         = useRef(new Animated.Value(1)).current;
   const wordSwingX            = useRef(new Animated.Value(0)).current; // rotateX degrees, native driver
   const bookOpenAnim          = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
+  const bookSlideX            = useRef(new Animated.Value(SCREEN_WIDTH)).current; // book entrance/exit slide, native driver
+  const bossBookGlow          = useRef(new Animated.Value(0)).current;
+  const vaultStampOpacity     = useRef(new Animated.Value(0)).current;
+  const [vaultStampVisible, setVaultStampVisible] = useState(false);
   const wordEntranceHapticRef = useRef<string | null>(null);
   const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
@@ -884,7 +890,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       }, 120);
     }, cardDelay);
     bossShakeX.setValue(0);
-    if (!isBoss) bossWordTranslateY.setValue(0);
+    // Book slide is the entrance now — word rides the cover in position for all words
+    bossWordTranslateY.setValue(0);
     bossScaleX.setValue(isBoss ? 0.86 : 1);
     bossScaleY.setValue(isBoss ? 1.16 : 1);
     if (bossEntranceRafRef.current !== null) {
@@ -898,6 +905,65 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     wordEntryTilt.setValue(0);
     wordSwingX.setValue(0);
     bookOpenAnim.setValue(0);
+    bookSlideX.setValue(SCREEN_WIDTH);
+    bossBookGlow.setValue(0);
+    vaultStampOpacity.setValue(0);
+    setVaultStampVisible(false);
+
+    // Book slides in from right — heavier spring with overshoot
+    bookSlideX.setValue(SCREEN_WIDTH);
+    Animated.spring(bookSlideX, {
+      toValue: 0,
+      friction: isBoss ? 2 : 5,
+      tension:  isBoss ? 25 : 60,
+      useNativeDriver: true,
+    }).start(() => {
+      if (!isBoss) return;
+
+      // Triple heavy haptic — BOOM · BOOM · BOOM
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 80);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 160);
+
+      // Book shudder — locks into position
+      Animated.sequence([
+        Animated.timing(bookSlideX, { toValue:  4, duration: 30, useNativeDriver: true }),
+        Animated.timing(bookSlideX, { toValue: -4, duration: 30, useNativeDriver: true }),
+        Animated.timing(bookSlideX, { toValue:  3, duration: 30, useNativeDriver: true }),
+        Animated.timing(bookSlideX, { toValue: -3, duration: 30, useNativeDriver: true }),
+        Animated.timing(bookSlideX, { toValue:  0, duration: 30, useNativeDriver: true }),
+      ]).start();
+
+      // Gold cover glow flash
+      bossBookGlow.setValue(0);
+      Animated.sequence([
+        Animated.timing(bossBookGlow, {
+          toValue: 0.35, duration: 160, useNativeDriver: true,
+        }),
+        Animated.timing(bossBookGlow, {
+          toValue: 0, duration: 280, useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Vault stamp — appears on cover, fades before shockwave
+      setVaultStampVisible(true);
+      vaultStampOpacity.setValue(0);
+      Animated.timing(vaultStampOpacity, {
+        toValue: 1, duration: 200, useNativeDriver: true,
+      }).start();
+      setTimeout(() => {
+        Animated.timing(vaultStampOpacity, {
+          toValue: 0, duration: 180, useNativeDriver: true,
+        }).start(() => setVaultStampVisible(false));
+      }, 800);
+    });
+
+    // Boss word rides the book cover — already visible & in position; drama fires on top
+    if (isBoss) {
+      wordEntryOpacity.setValue(1);
+      wordEntryScale.setValue(1);
+      wordLockPulse.setValue(1);
+    }
     wordRecoilY.setValue(0);
     wordRecoilScale.setValue(1);
     wordRedOpacity.setValue(0);
@@ -969,10 +1035,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 180);
 
       wordHauntTintOpacity.setValue(0.75);
-      Animated.parallel([
-        Animated.timing(wordEntryOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(wordEntryScale,   { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]).start();
+      // Word already visible on cover — book slide handles reveal
+      wordEntryOpacity.setValue(1);
+      wordEntryScale.setValue(1);
       Animated.timing(wordHauntTintOpacity, { toValue: 0, duration: 800, useNativeDriver: true }).start();
 
       setHauntBannerVisible(true);
@@ -986,30 +1051,28 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         setHauntReady(true);
       }, 1400);
     } else {
-      // ── HERO WORD ENTRANCE — fade + gentle scale settle ──
-      wordEntryOpacity.setValue(0);
-      wordEntryScale.setValue(0.96);
+      // Word is already on the cover — book slide is the reveal.
+      wordEntryOpacity.setValue(1);
+      wordEntryScale.setValue(1);
       wordEntryTranslateY.setValue(0);
       wordEntryTilt.setValue(0);
       wordLockPulse.setValue(1);
 
-      Animated.parallel([
-        Animated.timing(wordEntryOpacity, {
-          toValue: 1, duration: 140, easing: Easing.linear, useNativeDriver: true,
-        }),
-        Animated.spring(wordEntryScale, {
-          toValue: 1.0, damping: 10, stiffness: 180, useNativeDriver: true,
-        }),
-      ]).start(() => {
+      // Subtle lock pulse fires after spring settles
+      setTimeout(() => {
         if (wordEntranceHapticRef.current !== step.word) {
           wordEntranceHapticRef.current = step.word;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
         Animated.sequence([
-          Animated.timing(wordLockPulse, { toValue: 1.025, duration: 90, useNativeDriver: true }),
-          Animated.timing(wordLockPulse, { toValue: 1.00, duration: 110, useNativeDriver: true }),
+          Animated.timing(wordLockPulse, {
+            toValue: 1.025, duration: 90, useNativeDriver: true,
+          }),
+          Animated.timing(wordLockPulse, {
+            toValue: 1.00, duration: 110, useNativeDriver: true,
+          }),
         ]).start();
-      });
+      }, 380);
     }
     firePollyEvent('wordEntry');
   }, [step.word]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1037,9 +1100,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
     // T+800ms — Boss word drops in + squash/stretch ignite
     const t2 = setTimeout(() => {
-      wordEntryOpacity.setValue(1);
-      wordEntryScale.setValue(1);
-      wordLockPulse.setValue(1);
       deckDeepY.setValue(0);    deckDeepRot.setValue(0);    deckDeepOp.setValue(1);
       deckMidY.setValue(0);     deckMidRot.setValue(0);     deckMidOp.setValue(1);
       deckActiveY.setValue(0);  deckActiveRot.setValue(0);  deckActiveOp.setValue(1);
@@ -1462,37 +1522,28 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     badgeOpacity.setValue(0);
     underlineProgress.setValue(0);
     setBossUnderlineVisible(false);
+
     if (perfect) {
       setTransitionLabel('CLEAR');
       transitionLabelOpacity.setValue(0);
       Animated.timing(transitionLabelOpacity, {
-        toValue: 1, duration: 100, useNativeDriver: true,
+        toValue: 1, duration: 80, useNativeDriver: true,
       }).start();
     }
 
-    // Hold 320ms then shoot up
-    const EXIT_IN = Easing.bezier(0.36, 0.00, 0.66, 0.00);
-    setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(wordEntryOpacity, {
-          toValue: 0, duration: 260, easing: EXIT_IN, useNativeDriver: true,
-        }),
-        Animated.timing(wordEntryScale, {
-          toValue: 1.38, duration: 300, easing: EXIT_IN, useNativeDriver: true,
-        }),
-        Animated.timing(wordEntryTranslateY, {
-          toValue: -310, duration: 300, easing: EXIT_IN, useNativeDriver: true,
-        }),
-        Animated.timing(transitionLabelOpacity, {
-          toValue: 0, duration: 160, useNativeDriver: true,
-        }),
-      ]).start();
-    }, 320);
+    // Book slides left off screen — ease-out weight
+    Animated.timing(bookSlideX, {
+      toValue: -SCREEN_WIDTH,
+      duration: isBoss ? 380 : 280,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start();
 
     setTimeout(() => {
       setTransitionLabel(null);
+      transitionLabelOpacity.setValue(0);
       onComplete();
-    }, 700);
+    }, 290);
   }
 
   function handleFinalTileSwipeUp(maskId: string) {
@@ -1703,23 +1754,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           );
         }}
       >
-        {/* Book under-shadow */}
-        <View style={styles.coverUnderShadow} pointerEvents="none" />
-
-        {/* Page block — cream pages, peek out at bottom */}
-        <View style={styles.pageBlock} pointerEvents="none">
-          <View style={styles.pageTopLip} />
-          <View style={[styles.pageEdge, styles.pageEdge1]} />
-          <View style={[styles.pageEdge, styles.pageEdge2]} />
-          <View style={[styles.pageEdge, styles.pageEdge3]} />
-          <View style={[styles.pageEdge, styles.pageEdge4]} />
-          <View style={[styles.pageEdge, styles.pageEdge5]} />
-        </View>
-
-        {/* Tile intake slot — reserved empty band between pages and cover for Pass 2.
-            Intentionally empty now. Do not remove. */}
-        <View style={styles.tileIntakeSlot} pointerEvents="none" />
-
         {/* Boss gold sweep */}
         {bossSweepActive && (
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -1788,6 +1822,29 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             {transitionLabel}
           </Animated.Text>
         )}
+
+        {/* Book slide wrapper — entire book (shadow, pages, intake, cover) slides in/out as one unit.
+            absoluteFill keeps the absolutely-positioned book children aligned to the word zone. */}
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { transform: [{ translateX: bookSlideX }] }]}
+        >
+        {/* Book under-shadow */}
+        <View style={styles.coverUnderShadow} pointerEvents="none" />
+
+        {/* Page block — cream pages, peek out at bottom */}
+        <View style={styles.pageBlock} pointerEvents="none">
+          <View style={styles.pageTopLip} />
+          <View style={[styles.pageEdge, styles.pageEdge1]} />
+          <View style={[styles.pageEdge, styles.pageEdge2]} />
+          <View style={[styles.pageEdge, styles.pageEdge3]} />
+          <View style={[styles.pageEdge, styles.pageEdge4]} />
+          <View style={[styles.pageEdge, styles.pageEdge5]} />
+        </View>
+
+        {/* Tile intake slot — reserved empty band between pages and cover for Pass 2.
+            Intentionally empty now. Do not remove. */}
+        <View style={styles.tileIntakeSlot} pointerEvents="none" />
 
         {/* Word with entry + boss animations */}
         {/* BOOK COVER PLANE — rigid front object. Later receives rotateX (not this pass). */}
@@ -1922,6 +1979,64 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           </Animated.View>
           </Animated.View>
         </Animated.View>
+        </Animated.View>
+
+        {/* Boss gold cover glow — flashes on spring land */}
+        {isBoss && (
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              borderRadius: 14,
+              backgroundColor: '#F5C842',
+              opacity: bossBookGlow,
+            }}
+          />
+        )}
+
+        {/* Vault stamp — POLLY'S VAULT seal on cover */}
+        {isBoss && vaultStampVisible && (
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 80,
+              alignItems: 'center',
+              opacity: vaultStampOpacity,
+            }}
+          >
+            <Text style={{
+              color: 'rgba(245,200,66,0.9)',
+              fontFamily: FONTS.label,
+              fontSize: 10,
+              letterSpacing: 4,
+              textTransform: 'uppercase' as const,
+              textAlign: 'center',
+            }}>
+              POLLY'S VAULT
+            </Text>
+            <View style={{
+              marginTop: 5,
+              height: 1,
+              width: 100,
+              backgroundColor: 'rgba(245,200,66,0.45)',
+              borderRadius: 1,
+            }} />
+            <Text style={{
+              marginTop: 4,
+              color: 'rgba(245,200,66,0.55)',
+              fontFamily: FONTS.label,
+              fontSize: 8,
+              letterSpacing: 3,
+              textTransform: 'uppercase' as const,
+              textAlign: 'center',
+            }}>
+              FINAL GATE
+            </Text>
+          </Animated.View>
+        )}
         </Animated.View>
 
         {/* Boss shockwave rings + dust */}
