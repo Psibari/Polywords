@@ -4,7 +4,6 @@ import {
   Animated,
   Dimensions,
   Image,
-  PanResponder,
   Pressable,
   SafeAreaView,
   Share,
@@ -32,13 +31,12 @@ import {
   dailyClueVaultMaterial,
   DailyPollyReaction as PerchReaction,
 } from '../ui/pwDailyMaterials';
+import DailyAnswerCard, {
+  DailyAnswerCardState,
+} from '../components/DailyAnswerCard';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 
-const CLAIM_THRESHOLD = -28; // dy for UP swipe commit
-
 const SCREEN_WIDTH = Dimensions.get('window').width;
-
-const CARD_ENTER_DELAYS = [300, 300, 380, 380, 460, 460];
 
 // Maps store claim result reaction → PollyDailyPerch prop
 function toPerchReaction(
@@ -173,211 +171,8 @@ function ClueVault({
 }
 
 // ─────────────────────────────────────────
-// DailyCandidateCard
+// Daily answer-card control lives in components/DailyAnswerCard.
 // ─────────────────────────────────────────
-type DailyCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
-
-function DailyCandidateCard({
-  word,
-  state,
-  disabled,
-  onClaim,
-  enterFromLeft,
-  enterDelay,
-}: {
-  word: string;
-  state: DailyCardState;
-  disabled: boolean;
-  onClaim: () => void;
-  enterFromLeft: boolean;
-  enterDelay: number;
-}) {
-  const disabledRef = useRef(disabled);
-  disabledRef.current = disabled;
-
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const claimedRef = useRef(false);
-  const thresholdCrossedRef = useRef(false);
-
-  // Reset on word change
-  useEffect(() => {
-    translateX.setValue(0);
-    translateY.setValue(0);
-    opacity.setValue(1);
-    scale.setValue(1);
-    claimedRef.current = false;
-    thresholdCrossedRef.current = false;
-  }, [word, translateX, translateY, opacity, scale]);
-
-  // State-driven animations
-  useEffect(() => {
-    if (state === 'correct') {
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: -52,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: 1.05,
-          friction: 7,
-          tension: 120,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (state === 'wrong') {
-      Animated.sequence([
-        Animated.timing(translateX, {
-          toValue: -9,
-          duration: 45,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateX, {
-          toValue: 9,
-          duration: 45,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateX, {
-          toValue: -5,
-          duration: 45,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateX, {
-          toValue: 0,
-          duration: 45,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (state === 'disabled') {
-      Animated.parallel([
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scale, {
-          toValue: 0.92,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-        Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 120,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [state, translateX, translateY, opacity, scale]);
-
-  useEffect(() => {
-    translateX.setValue(enterFromLeft ? -SCREEN_WIDTH * 0.7 : SCREEN_WIDTH * 0.7);
-    opacity.setValue(0);
-    const t = setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(translateX, {
-          toValue: 0,
-          friction: 8,
-          tension: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 140,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, enterDelay);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const springBack = () => {
-    thresholdCrossedRef.current = false;
-    Animated.parallel([
-      Animated.spring(translateX, {
-        toValue: 0,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateY, {
-        toValue: 0,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) =>
-        !disabledRef.current &&
-        state === 'idle' &&
-        Math.abs(g.dy) > 6 &&
-        Math.abs(g.dy) > Math.abs(g.dx) * 0.7,
-      onPanResponderMove: (_, g) => {
-        if (disabledRef.current || claimedRef.current) return;
-        translateY.setValue(Math.min(14, g.dy));
-        translateX.setValue(g.dx * 0.08);
-        const lift = Math.max(0, -g.dy);
-        scale.setValue(1 + Math.min(lift / 180, 0.07));
-        if (g.dy <= CLAIM_THRESHOLD && !thresholdCrossedRef.current) {
-          thresholdCrossedRef.current = true;
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          playSfx('tileSwipe');
-        } else if (g.dy > CLAIM_THRESHOLD) {
-          thresholdCrossedRef.current = false;
-        }
-      },
-      onPanResponderRelease: (_, g) => {
-        if (g.dy <= CLAIM_THRESHOLD && Math.abs(g.dy) >= Math.abs(g.dx) * 0.7) {
-          claimedRef.current = true;
-          onClaim();
-          return;
-        }
-        springBack();
-      },
-      onPanResponderTerminate: () => springBack(),
-    }),
-  ).current;
-
-  return (
-    <Animated.View
-      {...panResponder.panHandlers}
-      style={[
-        styles.cardOuter,
-        state === 'correct' && styles.cardCorrect,
-        state === 'wrong'   && styles.cardWrong,
-        state === 'disabled' && styles.cardDisabled,
-        { opacity, transform: [{ translateX }, { translateY }, { scale }] },
-      ]}
-    >
-      <Text
-        style={styles.cardText}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.6}
-      >
-        {word.toUpperCase()}
-      </Text>
-    </Animated.View>
-  );
-}
-
 // ─────────────────────────────────────────
 // ResultsOverlay
 // ─────────────────────────────────────────
@@ -540,7 +335,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const loadDailyResult = useGameStore((s) => s.loadDailyResult);
   const resetDailyForDev = useGameStore((s) => s.resetDailyForDev);
 
-  const [cardStates, setCardStates] = useState<Map<string, DailyCardState>>(
+  const [cardStates, setCardStates] = useState<Map<string, DailyAnswerCardState>>(
     new Map(),
   );
   const [pollyPose, setPollyPose] = useState<PerchReaction>('perched');
@@ -578,7 +373,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const round = dailySession.rounds[dailySession.currentRoundIndex];
     if (!round) return;
     const candidates = [...round.candidates];
-    const map = new Map<string, DailyCardState>();
+    const map = new Map<string, DailyAnswerCardState>();
     candidates.forEach((c) => map.set(c, 'idle'));
     setCardStates(map);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -727,14 +522,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           >
             {currentRound &&
               [...currentRound.candidates].map((candidate, index) => (
-                <DailyCandidateCard
+                <DailyAnswerCard
                   key={candidate}
-                  word={candidate}
+                  label={candidate}
                   state={cardStates.get(candidate) ?? 'idle'}
                   disabled={inputLocked}
-                  onClaim={() => handleClaim(candidate)}
-                  enterFromLeft={index % 2 === 0}
-                  enterDelay={CARD_ENTER_DELAYS[index] ?? 300}
+                  onClaim={handleClaim}
+                  testID={`daily-answer-${index}`}
                 />
               ))}
           </View>
@@ -788,50 +582,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     justifyContent: 'center',
     paddingBottom: 230,
-  },
-  cardOuter: {
-    width: '47%',
-    height: 88,
-    borderRadius: 16,
-    backgroundColor: '#141038',
-    borderWidth: 2,
-    borderColor: 'rgba(245,200,66,0.55)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-    shadowColor: '#000000',
-    shadowOpacity: 0.34,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  cardCorrect: {
-    borderColor: '#F5C842',
-    backgroundColor: 'rgba(245,200,66,0.14)',
-    shadowColor: '#F5C842',
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 10,
-  },
-  cardWrong: {
-    borderColor: '#CC2200',
-    backgroundColor: 'rgba(204,34,0,0.14)',
-    shadowColor: '#CC2200',
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 10,
-  },
-  cardDisabled: {
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  cardText: {
-    color: '#FFF7D6',
-    fontFamily: FONTS.tileCopy,
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textAlign: 'center',
   },
   resultPollyImage: {
     width: 180,

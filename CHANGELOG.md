@@ -1,5 +1,12 @@
 # POLYWORDS Changelog
 
+## 2026-06-27 - Daily answer-card control foundation
+
+- Added `DailyAnswerCard` as the owner of Daily tile press/grip and gesture control.
+- Added free X/Y drag, snap-back below threshold, and UP-only claim behavior.
+- Removed raw candidate gesture code from `DailyChallengeScreen`.
+- Made no `SwipeMask`, Hunt gameplay, Daily engine/store, navigation, or Gold Feather changes.
+
 ## 2026-06-27 - Hunt Gold Feather consumption quarantine
 
 - Quarantined the Hunt Gold Feather revive/spend prompt.
