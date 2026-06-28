@@ -412,6 +412,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const wordRecoilY     = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
   const wordRecoilScale = useRef(new Animated.Value(1)).current;  // useNativeDriver:false
   const wordRedOpacity  = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
+  const cueOpacityAnim = useRef(new Animated.Value(1)).current;
   const recoilRafRef    = useRef<number | null>(null);
 
   // ── mastery shards ────────────────────────────────────────────
@@ -721,6 +722,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       if (hes3Ref.current !== null) clearTimeout(hes3Ref.current);
     };
   }, [showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Swipe cues fade permanently after round 3
+  useEffect(() => {
+    if (store.game.stepIndex >= 3) {
+      Animated.timing(cueOpacityAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [store.game.stepIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Polly reactive triggers ───────────────────────────────────
   useEffect(() => {
@@ -1884,6 +1896,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         </Animated.View>
         </HeroBook>
 
+        {/* Vault brand on spine — slides in with the book every round */}
+        <Text
+          pointerEvents="none"
+          style={styles.vaultLabel}
+        >
+          POLLY'S VAULT
+        </Text>
+
         {/* Boss gold cover glow — flashes on spring land */}
         {isBoss && (
           <Animated.View
@@ -1962,14 +1982,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       <View style={styles.gridWrap}>
         <View style={styles.tileStackArea}>
           {showBoardContent && gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
-            <View pointerEvents="none" style={styles.swipeCueOverlay}>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.swipeCueOverlay, { opacity: cueOpacityAnim }]}
+            >
               <Text style={[styles.swipeCueText, styles.swipeUpCue]}>
                 SWIPE UP TO CLAIM
               </Text>
               <Text style={[styles.swipeCueText, styles.swipeRightCue]}>
                 SWIPE RIGHT TO REJECT
               </Text>
-            </View>
+            </Animated.View>
           )}
           {showBoardContent && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
@@ -2484,12 +2507,23 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  vaultLabel: {
+    position: 'absolute',
+    top: 13,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: 'rgba(245,200,66,0.72)',
+    fontFamily: FONTS.label,
+    fontSize: 9,
+    letterSpacing: 4,
+  },
   // ── Tile zone ─────────────────────────────────────────────────
   gridWrap: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 52,
+    paddingTop: 88,
     paddingBottom: 12,
     minHeight: 0,
   },
@@ -2530,7 +2564,7 @@ const styles = StyleSheet.create({
     opacity: 0.72,
   },
   swipeRightCue: {
-    top: TILE_H + 44,
+    top: TILE_H + 16,
     right: 8,
     width: 190,
     color: 'rgba(155,45,107,0.88)',
