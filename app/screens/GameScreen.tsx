@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
@@ -68,6 +69,19 @@ function TopBar() {
   const animScore = useRef(new Animated.Value(game.score)).current;
   const [displayScore, setDisplayScore] = useState(game.score);
 
+  const progressAnim = useRef(new Animated.Value(
+    total > 0 ? current / total : 0
+  )).current;
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue:  total > 0 ? current / total : 0,
+      duration: 380,
+      easing:   Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [current, total]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const id = animScore.addListener(({ value }) => setDisplayScore(Math.round(value)));
     return () => animScore.removeListener(id);
@@ -84,16 +98,11 @@ function TopBar() {
 
   return (
     <View style={tb.root}>
-      {/* Row 1: Score · Streak · Feathers */}
       <View style={tb.statsRow}>
-        <View style={[tb.hudChip, tb.scoreChip]}>
-          <Text style={tb.scoreVal}>{displayScore}</Text>
-        </View>
-        <View style={[tb.hudChip, tb.streakChip]}>
-          <StreakDisplay />
-        </View>
+        <Text style={tb.scoreVal}>{displayScore}</Text>
+        <StreakDisplay />
         <View
-          style={[tb.hudChip, tb.featherRow]}
+          style={tb.featherRow}
           accessible
           accessibilityLabel={`${filledFeathers} feathers remaining`}
         >
@@ -111,20 +120,15 @@ function TopBar() {
           )}
         </View>
       </View>
-
-      {/* Row 2: Progress dots */}
-      <View style={tb.dotsRow}>
-        {Array.from({ length: total }, (_, i) => (
-          <View
-            key={i}
-            style={[
-              tb.dot,
-              i < current   ? tb.dotDone    :
-              i === current ? tb.dotCurrent :
-              tb.dotRemaining,
-            ]}
-          />
-        ))}
+      <View style={tb.progressTrack}>
+        <Animated.View
+          style={[tb.progressFill, {
+            width: progressAnim.interpolate({
+              inputRange:  [0, 1],
+              outputRange: ['0%', '100%'],
+            }),
+          }]}
+        />
       </View>
     </View>
   );
@@ -243,65 +247,36 @@ const tb = StyleSheet.create({
     marginTop: 4,
     marginBottom: 0,
     paddingHorizontal: PW.space.md,
-    paddingTop: 6,
-    paddingBottom: 7,
-    borderRadius: PW.radius.lg,
-    backgroundColor: PW.color.surfaceDeep,
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.30)',
-    ...PW.shadow.panel,
+    paddingTop: 5,
+    paddingBottom: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(11,9,32,0.86)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(123,45,139,0.22)',
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: 34,
-  },
-  hudChip: {
-    height: 34,
-    borderRadius: PW.radius.pill,
-    borderWidth: 1,
-    backgroundColor: PW.color.bgDeep,
-    borderColor: 'rgba(255,255,255,0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreChip: {
-    minWidth: 92,
-    paddingHorizontal: PW.space.md,
-    borderColor: 'rgba(245,200,66,0.24)',
-  },
-  streakChip: {
-    minWidth: 76,
-    paddingHorizontal: PW.space.sm,
-    borderColor: 'rgba(123,45,139,0.34)',
   },
   scoreVal: {
     color: PW.color.gold,
     fontSize: FONT_SIZES.hudScore,
     fontFamily: FONTS.hud,
-    lineHeight: 28,
+    lineHeight: 34,
     letterSpacing: 1,
     textTransform: 'uppercase',
     textShadowColor: PW.color.goldGlow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
-  },
-  label: {
-    fontFamily: FONTS.label,
-    fontSize: 11,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    color: PW.color.faintWhite,
+    minWidth: 72,
   },
   featherRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 3,
-    minWidth: 78,
-    paddingHorizontal: PW.space.sm,
-    borderColor: 'rgba(123,45,139,0.34)',
+    minWidth: 82,
     overflow: 'visible',
   },
   featherBox: {
@@ -358,27 +333,18 @@ const tb = StyleSheet.create({
   featherShaftFilled: {
     backgroundColor: 'rgba(123,45,139,0.70)',
   },
-  dotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 12,
-    gap: 5,
+  progressTrack: {
+    height: 3,
     marginTop: 7,
-    paddingHorizontal: 6,
-    borderRadius: PW.radius.pill,
-    backgroundColor: 'rgba(11,9,32,0.72)',
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.12)',
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    overflow: 'hidden',
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  progressFill: {
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: PW.color.gold,
   },
-  dotDone:      { backgroundColor: PW.color.gold, shadowColor: PW.color.gold, shadowOpacity: 0.24, shadowRadius: 3 },
-  dotCurrent:   { backgroundColor: PW.color.softWhite, shadowColor: PW.color.white, shadowOpacity: 0.35, shadowRadius: 4 },
-  dotRemaining: { backgroundColor: PW.color.faintWhite, opacity: PW.opacity.disabled },
   reserveFeatherWrap: {
     width:          8,
     height:         14,
@@ -560,7 +526,13 @@ function GameDirector({ navigation }: { navigation: any }) {
         resizeMode="cover"
         style={styles.backgroundImage}
       >
-        <View pointerEvents="none" style={styles.backgroundOverlay} />
+        <LinearGradient
+          colors={['rgba(6,4,22,0.90)', 'rgba(8,5,24,0.36)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFillObject}
+        />
       </ImageBackground>
       {!isDone && <TopBar />}
       {isDone ? (
@@ -645,10 +617,6 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
-  },
-  backgroundOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(9,7,30,0.62)',
   },
   effectsOverlay: {
     position: 'absolute',
