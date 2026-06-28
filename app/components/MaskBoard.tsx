@@ -42,7 +42,7 @@ const DECK_BACKING_COLORS = [
 const DECK_BACKING_BORDER_COLORS = [
   PW.color.purpleSoft,
   'rgba(123,45,139,0.30)',
-  'rgba(245,200,66,0.14)',
+  'rgba(155,45,107,0.20)',
   'rgba(255,255,255,0.07)',
 ] as const;
 
@@ -194,8 +194,8 @@ function MasteredOutcomeOverlay({ word, bonusLabel, onContinue }: OutcomeOverlay
           {word}
         </Text>
         <View style={styles.outcomeCopyBlock}>
-          <Text style={styles.outcomeCopy}>Every meaning reclaimed.</Text>
-          <Text style={styles.outcomeCopy}>Vault strengthened.</Text>
+          <Text style={styles.outcomeCopy}>Taken from Polly's vault.</Text>
+          <Text style={styles.outcomeCopy}>Hers no longer.</Text>
         </View>
         {bonusLabel && <Text style={styles.outcomeBonus}>{bonusLabel}</Text>}
         <Text style={styles.outcomeContinue}>CONTINUE</Text>
@@ -1712,7 +1712,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         {/* Kicker — floats above word zone */}
         {kicker && (
           isBoss ? (
-            <Animated.Text style={[styles.kicker, { opacity: badgeOpacity }]}>
+            <Animated.Text style={[styles.kickerBoss, { opacity: badgeOpacity }]}>
               {kicker}
             </Animated.Text>
           ) : (
@@ -2424,14 +2424,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  kickerBoss: {
+    color: '#F5C842',
+    fontSize: FONT_SIZES.hudLabel,
+    fontFamily: FONTS.label,
+    letterSpacing: 2,
+    textAlign: 'center',
+    position: 'absolute',
+    top: -24,
+    left: 20,
+    right: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.55)',
+    backgroundColor: 'rgba(15,13,42,0.88)',
+  },
   word: {
     fontSize: 96,
     fontFamily: FONTS.wordDisplay,
     letterSpacing: FONT_SIZES.wordDisplayLetterSpacing,
     color: '#F5C842',
-    textShadowColor: 'rgba(245,200,66,0.38)',
+    textShadowColor: 'rgba(245,200,66,0.62)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
+    textShadowRadius: 8,
     textAlign: 'center',
     maxWidth: '100%',
   },
@@ -2444,12 +2461,12 @@ const styles = StyleSheet.create({
   wordEmboss: {
     position: 'absolute',
     color: 'rgba(0,0,0,0.45)',
-    transform: [{ translateY: 2 }],
+    transform: [{ translateY: 3 }],
   },
   goldRing: {
     position: 'absolute',
     alignSelf: 'center',
-    width: 200,
+    width: '85%',
     height: 80,
     borderRadius: 40,
     borderWidth: 2.5,
@@ -2472,7 +2489,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 84,
+    paddingTop: 52,
     paddingBottom: 12,
     minHeight: 0,
   },
@@ -2506,7 +2523,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   swipeUpCue: {
-    top: -48,
+    top: -32,
     left: 0,
     right: 0,
     color: '#F5C842',
@@ -2516,7 +2533,7 @@ const styles = StyleSheet.create({
     top: TILE_H + 44,
     right: 8,
     width: 190,
-    color: '#B98ADE',
+    color: 'rgba(155,45,107,0.88)',
     opacity: 0.74,
     textAlign: 'right',
   },
