@@ -19,11 +19,13 @@ export type HeroBookProps = {
 
 const CH = M.coverHeight;
 
-const COVER_PLANE = 'M 13 9 L 337 3 L 356 125 L 21 135 Z';
-const COVER_REAR = 'M 10 7 L 339 0 L 360 127 L 18 139 Z';
-const COVER_INSET = 'M 24 18 L 327 12 L 344 117 L 31 127 Z';
-const HINGE_BAND = 'M 13 9 L 337 3 L 339 17 L 15 23 Z';
-const HINGE_EDGE = 'M 15 23 L 339 17';
+const SPINE_FACE  = 'M 12 13 L 30 8 L 29 157 L 12 161 Z';
+const COVER_PLANE = 'M 30 8 L 352 1 L 355 152 L 29 157 Z';
+const COVER_REAR  = 'M 8 11 L 354 0 L 358 153 L 16 161 Z';
+const COVER_INSET = 'M 44 19 L 336 12 L 339 141 L 40 148 Z';
+const HINGE_BAND  = 'M 12 13 L 352 1 L 354 17 L 14 24 Z';
+const HINGE_EDGE  = 'M 14 24 L 354 17';
+const SPINE_LINE  = 'M 30 8 L 29 157';
 
 export default function HeroBook({
   coverRotateX,
@@ -44,7 +46,7 @@ export default function HeroBook({
         <Defs>
           <SvgGrad id="pageTop" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={M.pagesCreamTop} />
-            <Stop offset="0.58" stopColor={M.pagesCream} />
+            <Stop offset="0.55" stopColor={M.pagesCream} />
             <Stop offset="1" stopColor={M.pagesCreamBot} />
           </SvgGrad>
           <SvgGrad id="pageRight" x1="0" y1="0" x2="1" y2="0">
@@ -61,46 +63,62 @@ export default function HeroBook({
             <Stop offset="0" stopColor={M.coverPurple} />
             <Stop offset="1" stopColor={M.coverPurpleBot} />
           </SvgGrad>
+          <SvgGrad id="spineFace" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor={M.spineColor} />
+            <Stop offset="1" stopColor={M.hingeDark} />
+          </SvgGrad>
         </Defs>
 
-        {/* Purple lower cover: the page block is visibly bound, not floating. */}
+        {/* Lower cover cap — bottommost layer */}
         <Path
-          d="M 20 178 L 350 165 L 354 176 L 28 190 L 18 184 Z"
+          d="M 18 200 L 351 193 L 355 205 L 27 210 L 16 205 Z"
           fill="url(#lowerCover)"
           stroke={M.goldTrim}
           strokeOpacity={0.44}
           strokeWidth={1.5}
         />
 
-        {/* Right page side plane, attached to the cover's full right edge. */}
-        <Path d="M 337 3 L 356 125 L 350 169 L 331 47 Z" fill="url(#pageRight)" />
-        <Path d="M 335.8 12 L 354.8 134" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 334.5 21 L 353.5 143" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 333.2 30 L 352.2 152" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 332 39 L 351 161" stroke={M.pagesLine} strokeWidth={1} />
-
-        {/* Bottom page plane, attached to the cover's complete lower edge. */}
-        <Path d="M 21 135 L 356 125 L 350 169 L 27 181 Z" fill="url(#pageBottom)" />
-        <Path d="M 22 143 L 355 133" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 23 151 L 354 141" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 24 159 L 353 149" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 25 167 L 352 157" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 26 175 L 351 165" stroke={M.pagesLine} strokeWidth={1} />
+        {/* Left spine band — always visible, dark binding edge */}
+        <Path d="M 12 8 L 30 3 L 30 206 L 12 204 Z" fill="url(#spineFace)" />
         <Path
-          d="M 27 181 L 350 169"
+          d="M 30 3 L 30 206"
+          fill="none"
+          stroke={M.goldTrim}
+          strokeOpacity={0.50}
+          strokeWidth={1.5}
+        />
+
+        {/* Right page side plane */}
+        <Path d="M 352 1 L 355 152 L 350 206 L 334 50 Z" fill="url(#pageRight)" />
+        <Path d="M 340 50 L 354 62" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 338 80 L 353 92" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 336 110 L 352 122" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 335 140 L 351 152" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 334 170 L 350 182" stroke={M.pagesLine} strokeWidth={1} />
+
+        {/* Bottom page plane */}
+        <Path d="M 29 157 L 355 152 L 350 206 L 26 208 Z" fill="url(#pageBottom)" />
+        <Path d="M 29 164 L 354 159" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 28 171 L 353 166" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 27 178 L 352 173" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 26 185 L 351 180" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 25 192 L 350 187" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 24 199 L 349 194" stroke={M.pagesLine} strokeWidth={1} />
+        <Path
+          d="M 26 208 L 350 206"
           stroke={M.goldTrim}
           strokeOpacity={0.72}
           strokeWidth={2}
         />
 
-        {/* Parchment top block, revealed when the purple cover opens. */}
+        {/* Parchment top — revealed when cover swings open */}
         <Path d={COVER_PLANE} fill="url(#pageTop)" />
-        <Path d="M 18 34 L 340 27" stroke={M.pagesLine} strokeWidth={1} />
-        <Path d="M 19 52 L 343 45" stroke={M.pagesLine} strokeOpacity={0.82} strokeWidth={1} />
-        <Path d="M 20 70 L 346 62" stroke={M.pagesLine} strokeOpacity={0.65} strokeWidth={1} />
-        <Path d="M 21 88 L 349 80" stroke={M.pagesLine} strokeOpacity={0.48} strokeWidth={1} />
-        <Path d="M 22 106 L 352 97" stroke={M.pagesLine} strokeOpacity={0.34} strokeWidth={1} />
-        <Path d="M 23 123 L 354 114" stroke={M.pagesLine} strokeOpacity={0.24} strokeWidth={1} />
+        <Path d="M 30 30 L 352 23" stroke={M.pagesLine} strokeWidth={1} />
+        <Path d="M 30 52 L 352 45" stroke={M.pagesLine} strokeOpacity={0.82} strokeWidth={1} />
+        <Path d="M 30 74 L 352 67" stroke={M.pagesLine} strokeOpacity={0.65} strokeWidth={1} />
+        <Path d="M 30 96 L 352 89" stroke={M.pagesLine} strokeOpacity={0.48} strokeWidth={1} />
+        <Path d="M 30 118 L 352 111" stroke={M.pagesLine} strokeOpacity={0.34} strokeWidth={1} />
+        <Path d="M 30 140 L 352 133" stroke={M.pagesLine} strokeOpacity={0.22} strokeWidth={1} />
       </Svg>
 
       {/* Purple cover swings around its top hinge; all cover anatomy stays in SVG. */}
@@ -130,6 +148,10 @@ export default function HeroBook({
               <Stop offset="0.5" stopColor={M.coverPurple} />
               <Stop offset="1" stopColor={M.coverPurpleBot} />
             </SvgGrad>
+            <SvgGrad id="spineCover" x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor={M.spineColor} />
+              <Stop offset="1" stopColor={M.hingeDark} />
+            </SvgGrad>
             <SvgGrad id="sheen" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.07} />
               <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity={0} />
@@ -142,13 +164,16 @@ export default function HeroBook({
             </RadialGradient>
           </Defs>
 
-          {/* Rear, face, material sheen, and glow share the perspective silhouette. */}
+          {/* Spine face on cover — swings with cover */}
+          <Path d={SPINE_FACE} fill="url(#spineCover)" />
+
+          {/* Cover rear, face, sheen, glow */}
           <Path d={COVER_REAR} fill={M.hingeRail} />
           <Path d={COVER_PLANE} fill="url(#face)" />
           <Path d={COVER_PLANE} fill="url(#sheen)" />
           <Path d={COVER_PLANE} fill="url(#glow)" />
 
-          {/* Gold trim follows the cover instead of framing a rectangle. */}
+          {/* Gold trim follows cover silhouette */}
           <Path d={COVER_PLANE} fill="none" stroke={M.goldTrim} strokeWidth={3} />
           <Path
             d={COVER_INSET}
@@ -158,7 +183,16 @@ export default function HeroBook({
             strokeWidth={1}
           />
 
-          {/* Spine/hinge band and binding marks follow the skewed top edge. */}
+          {/* Spine separator — gold line between spine and cover face */}
+          <Path
+            d={SPINE_LINE}
+            fill="none"
+            stroke={M.goldTrim}
+            strokeOpacity={0.60}
+            strokeWidth={1.5}
+          />
+
+          {/* Hinge band and rail */}
           <Path d={HINGE_BAND} fill={M.hingeDark} />
           <Path
             d={HINGE_EDGE}
@@ -167,9 +201,11 @@ export default function HeroBook({
             strokeOpacity={0.55}
             strokeWidth={1.5}
           />
-          <Path d="M 119 7 L 120 21" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
-          <Path d="M 179 6 L 180 20" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
-          <Path d="M 239 5 L 240 19" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
+
+          {/* Hinge binding marks */}
+          <Path d="M 119 7 L 120 22" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
+          <Path d="M 179 6 L 180 21" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
+          <Path d="M 239 5 L 240 20" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
         </Svg>
 
         {/* Intake is an embedded glow seam along the cover's slanted lower edge. */}
