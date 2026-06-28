@@ -4,14 +4,14 @@ export const FX = {
     trap: {
       // Layer 2: tile chunks
       chunkCount: 5,
-      chunkColors: ['#141038', '#1A1248'] as const,
+      chunkColors: ['#191541', '#2A1C5C'] as const,
       chunkEdgeColor: '#9B2D6B' as const,
       chunkSpeedMin: 180,
       chunkSpeedRange: 140,
       chunkDuration: 620,
       // Layer 3: crystal gem shards
       gemCount: 14,
-      gemColors: ['#7B2D8B', '#9B2D6B', '#9B2D6B', '#F5C842'] as const,
+      gemColors: ['#7B2D8B', '#9B2D6B', '#2A1C5C', '#9B2D6B'] as const,
       gemSpeedMin: 220,
       gemSpeedRange: 200,
       gemDuration: 700,
@@ -19,7 +19,7 @@ export const FX = {
       coneCenter: 180,  // degrees — straight left
       coneSpread: 80,   // degrees total spread
       // Layer 1: impact glow
-      glowColor: '#F5C842' as const,
+      glowColor: '#7B2D8B' as const,
       glowFadeColor: '#9B2D6B' as const,
       glowDuration: 300,
     },

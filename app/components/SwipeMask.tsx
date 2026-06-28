@@ -25,6 +25,7 @@ import { FluentEmoji } from './FluentEmoji';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { cardMaterial } from '../ui/pwMaterials';
+import { ShardVariant } from '../ui/pwEffects';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -43,7 +44,7 @@ type Props = {
   entryDelay?: number;
   eraBadge?: string;
   hapticCorrect?: () => void;
-  onEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
+  onEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: ShardVariant) => void;
   onSwipeStart?: () => void;
   onPressHoldStart?: () => void;
   onExitComplete?: () => void;
@@ -333,7 +334,8 @@ export function SwipeMask({
         onEffectRef.current?.(
           'shard',
           Dimensions.get('window').width - 20,
-          pageY + h / 2
+          pageY + h / 2,
+          'trap'
         );
       });
 

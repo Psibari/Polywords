@@ -5,6 +5,7 @@ import React, {
   useState,
 } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
+import Svg, { Polygon } from 'react-native-svg';
 import { FX, FXEvent, ShardVariant } from '../ui/pwEffects';
 
 export interface FXLayerHandle {
@@ -30,11 +31,11 @@ function TrapShatter({
 
   // ── Layer 2: Tile chunks ──────────────────────────────────
   const CHUNK_SHAPES = [
-    { w: 72, h: 52, br: { tl: 2,  tr: 18, br: 4,  bl: 10 } },
-    { w: 58, h: 44, br: { tl: 14, tr: 2,  br: 10, bl: 2  } },
-    { w: 80, h: 36, br: { tl: 2,  tr: 6,  br: 22, bl: 4  } },
-    { w: 48, h: 58, br: { tl: 10, tr: 2,  br: 2,  bl: 16 } },
-    { w: 64, h: 40, br: { tl: 2,  tr: 10, br: 6,  bl: 2  } },
+    { w: 72, h: 52, points: '0,8 54,0 72,18 59,52 12,45', facet: '8,10 52,5 36,24 12,39' },
+    { w: 58, h: 44, points: '5,0 58,9 49,39 18,44 0,20', facet: '8,5 50,11 30,22 5,19' },
+    { w: 80, h: 36, points: '0,7 61,0 80,19 70,36 16,31', facet: '7,9 59,5 43,19 15,27' },
+    { w: 48, h: 58, points: '12,0 48,13 42,50 21,58 0,32', facet: '14,6 42,15 25,29 5,30' },
+    { w: 64, h: 40, points: '0,14 18,0 64,8 57,34 25,40', facet: '18,5 57,10 39,22 7,15' },
   ];
 
   const chunks = useRef(
@@ -64,11 +65,13 @@ function TrapShatter({
           Math.PI) /
         180;
       const speed = cfg.gemSpeedMin + Math.random() * cfg.gemSpeedRange;
-      const size   = 8 + Math.random() * 16;
+      const width  = 6 + Math.random() * 9;
+      const height = 15 + Math.random() * 18;
       return {
         angle: angleRad,
         speed,
-        size,
+        width,
+        height,
         color: cfg.gemColors[i % cfg.gemColors.length] as string,
         rot: Math.random() * 360,
         anim: new Animated.Value(0),
@@ -185,13 +188,6 @@ function TrapShatter({
               top: y - c.h / 2,
               width: c.w,
               height: c.h,
-              backgroundColor: cfg.chunkColors[i % cfg.chunkColors.length] as string,
-              borderTopLeftRadius: c.br.tl,
-              borderTopRightRadius: c.br.tr,
-              borderBottomRightRadius: c.br.br,
-              borderBottomLeftRadius: c.br.bl,
-              borderWidth: 1.5,
-              borderColor: cfg.chunkEdgeColor,
               opacity: op,
               transform: [{ translateX: tx }, { translateY: ty }, { rotate }],
               shadowColor: cfg.chunkEdgeColor,
@@ -199,11 +195,21 @@ function TrapShatter({
               shadowOpacity: 0.6,
               shadowRadius: 6,
             }}
-          />
+          >
+            <Svg width={c.w} height={c.h} viewBox={`0 0 ${c.w} ${c.h}`}>
+              <Polygon
+                points={c.points}
+                fill={cfg.chunkColors[i % cfg.chunkColors.length] as string}
+                stroke={cfg.chunkEdgeColor}
+                strokeWidth={1.5}
+              />
+              <Polygon points={c.facet} fill="rgba(255,255,255,0.12)" />
+            </Svg>
+          </Animated.View>
         );
       })}
 
-      {/* Layer 3 — Crystal gem shards (rotated squares with inner facet) */}
+      {/* Layer 3 — pointed crystal shards with glass facets */}
       {gems.map((g, i) => {
         const tx = g.anim.interpolate({
           inputRange: [0, 1],
@@ -227,18 +233,15 @@ function TrapShatter({
             pointerEvents="none"
             style={{
               position: 'absolute',
-              left: x - g.size / 2,
-              top: y - g.size / 2,
-              width: g.size,
-              height: g.size,
-              backgroundColor: g.color,
-              borderRadius: 2,
+              left: x - g.width / 2,
+              top: y - g.height / 2,
+              width: g.width,
+              height: g.height,
               opacity: op,
               transform: [
                 { translateX: tx },
                 { translateY: ty },
                 { rotate },
-                { rotate: '45deg' },
               ],
               shadowColor: g.color,
               shadowOffset: { width: 0, height: 0 },
@@ -246,18 +249,29 @@ function TrapShatter({
               shadowRadius: 4,
             }}
           >
-            {/* Inner facet highlight */}
-            <View
-              style={{
-                position: 'absolute',
-                top: '12%',
-                left: '12%',
-                width: '38%',
-                height: '38%',
-                backgroundColor: 'rgba(255,255,255,0.50)',
-                borderRadius: 1,
-              }}
-            />
+            <Svg width={g.width} height={g.height} viewBox={`0 0 ${g.width} ${g.height}`}>
+              <Polygon
+                points={[
+                  `${g.width * 0.5},0`,
+                  `${g.width},${g.height * 0.3}`,
+                  `${g.width * 0.66},${g.height}`,
+                  `${g.width * 0.12},${g.height * 0.72}`,
+                  `0,${g.height * 0.22}`,
+                ].join(' ')}
+                fill={g.color}
+                stroke="rgba(255,255,255,0.32)"
+                strokeWidth={0.8}
+              />
+              <Polygon
+                points={[
+                  `${g.width * 0.5},${g.height * 0.08}`,
+                  `${g.width * 0.82},${g.height * 0.31}`,
+                  `${g.width * 0.48},${g.height * 0.55}`,
+                  `${g.width * 0.16},${g.height * 0.25}`,
+                ].join(' ')}
+                fill="rgba(255,255,255,0.42)"
+              />
+            </Svg>
           </Animated.View>
         );
       })}
@@ -340,12 +354,32 @@ function ShardBurst({
               top: y - s.h / 2,
               width: s.w,
               height: s.h,
-              borderRadius: 2,
-              backgroundColor: s.color,
               opacity,
               transform: [{ translateX }, { translateY }, { rotate }],
             }}
-          />
+          >
+            <Svg width={s.w} height={s.h} viewBox={`0 0 ${s.w} ${s.h}`}>
+              <Polygon
+                points={[
+                  `${s.w * 0.5},0`,
+                  `${s.w},${s.h * 0.28}`,
+                  `${s.w * 0.65},${s.h}`,
+                  `${s.w * 0.08},${s.h * 0.7}`,
+                  `0,${s.h * 0.2}`,
+                ].join(' ')}
+                fill={s.color}
+              />
+              <Polygon
+                points={[
+                  `${s.w * 0.5},${s.h * 0.08}`,
+                  `${s.w * 0.8},${s.h * 0.3}`,
+                  `${s.w * 0.46},${s.h * 0.54}`,
+                  `${s.w * 0.14},${s.h * 0.24}`,
+                ].join(' ')}
+                fill="rgba(255,255,255,0.28)"
+              />
+            </Svg>
+          </Animated.View>
         );
       })}
     </>
