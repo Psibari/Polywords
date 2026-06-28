@@ -534,7 +534,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function triggerAbsorption(phrase: string) {
-    triggerBookOpen();
     absorptionScale.setValue(1);
     Animated.sequence([
       Animated.timing(absorptionScale, { toValue: 1.12, duration: 120, useNativeDriver: true }),
@@ -554,6 +553,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       Animated.delay(600),
       Animated.timing(absorbedPhraseOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
     ]).start(() => setAbsorbedPhrase(null));
+  }
+
+  function handleNearTarget() {
+    triggerBookOpen();
   }
 
   const [bossReady, setBossReady]             = useState(!isBoss);
@@ -2032,8 +2035,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                     onExitComplete={() => {
                       setRemainingMaskIds(prev => prev.filter(id => id !== topMask.id));
                     }}
+                    onNearTarget={handleNearTarget}
                     wordY={wordScreenY}
-                    intakeY={wordScreenY + 49}
+                    intakeY={wordScreenY + 73}
                   />
                 </View>
                 </Animated.View>
@@ -2074,8 +2078,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                         onEffect={handleEffect}
                         onSwipeStart={() => playSfx('tileSwipe')}
                         onPressHoldStart={() => playSfx('pressHoldStart')}
+                        onNearTarget={handleNearTarget}
                         wordY={wordScreenY}
-                        intakeY={wordScreenY + 49}
+                        intakeY={wordScreenY + 73}
                         splitBorderColor="rgba(245,200,66,1.0)"
                         splitTextColor="rgba(255,248,230,1)"
                         splitBackgroundColor="#0F0D2A"

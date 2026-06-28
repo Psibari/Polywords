@@ -44,8 +44,8 @@ function RedFlash({ flashKey }: { flashKey: number }) {
     if (flashKey === 0) return;
     opacity.setValue(0);
     Animated.sequence([
-      Animated.timing(opacity, { toValue: 0.10, duration: 35,  useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0,    duration: 145, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0.32, duration: 55,  useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0,    duration: 180, useNativeDriver: true }),
     ]).start();
   }, [flashKey]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
@@ -369,7 +369,7 @@ const tb = StyleSheet.create({
     borderRadius: PW.radius.pill,
     backgroundColor: 'rgba(11,9,32,0.72)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(245,200,66,0.12)',
   },
   dot: {
     width: 6,

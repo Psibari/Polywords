@@ -48,6 +48,7 @@ type Props = {
   onSwipeStart?: () => void;
   onPressHoldStart?: () => void;
   onExitComplete?: () => void;
+  onNearTarget?: () => void;
   disabled?: boolean;
   nearMastery?: boolean;
   wordY?: number;
@@ -84,6 +85,7 @@ export function SwipeMask({
   onSwipeStart,
   onPressHoldStart,
   onExitComplete,
+  onNearTarget,
   disabled = false,
   nearMastery = false,
   wordY = 180,
@@ -145,6 +147,8 @@ export function SwipeMask({
   useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
   useEffect(() => { onExitCompleteRef.current = onExitComplete; }, [onExitComplete]);
+  const onNearTargetRef = useRef(onNearTarget);
+  useEffect(() => { onNearTargetRef.current = onNearTarget; }, [onNearTarget]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
 
   function fireExitCompleteOnce() {
@@ -246,6 +250,7 @@ export function SwipeMask({
           if (!bumped && closed > 0.72) {
             bumped = true;
             onEffectRef.current?.('trail', px, py);
+            onNearTargetRef.current?.();
           }
 
           if (dist < 12 || elapsed > 1.15) {
@@ -625,7 +630,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: '#141038',
+    backgroundColor: '#1C1548',
     overflow: 'hidden',
     zIndex: 2,
   },
@@ -695,7 +700,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     borderWidth: 1,
     borderColor: PW.color.wrong,
-    backgroundColor: 'rgba(204,34,0,0.16)',
+    backgroundColor: 'rgba(204,34,0,0.24)',
   },
   eraBadgeWrap: {
     position: 'absolute',
