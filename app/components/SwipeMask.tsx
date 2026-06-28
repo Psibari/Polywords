@@ -273,55 +273,49 @@ export function SwipeMask({
       exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
       setFlashRed(true);
-      timers.push(setTimeout(() => setFlashRed(false), 105));
+      timers.push(setTimeout(() => setFlashRed(false), 145));
 
-      if (mask.isReal) {
-        // Real meaning swiped right: brief error recoil, then permanent exit.
-        translateX.value = withSequence(
-          withTiming(54, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-          withTiming(Dimensions.get('window').width + 160, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
-        );
-        translateY.value = withSequence(
-          withTiming(6, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-          withTiming(18, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
-        );
-        rotation.value = withSequence(
-          withTiming(5, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-          withTiming(17, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
-        );
-        scale.value = withSequence(
-          withTiming(0.98, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-          withTiming(0.86, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) })
-        );
-        timers.push(setTimeout(() => {
-          tileOpacity.value = withTiming(0, { duration: 160, easing: ReaEasing.in(ReaEasing.ease) });
-        }, 140));
-        timers.push(setTimeout(() => {
-          RNAnimated.parallel([
-            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
-            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
-          ]).start(({ finished }) => {
-            if (finished) fireExitCompleteOnce();
-          });
-        }, 320));
-      } else {
-        // Trap swiped up: quick mistake flash, then permanent upward exit.
-        scale.value       = withSequence(
-          withTiming(0.98, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-          withTiming(0.84, { duration: 210, easing: ReaEasing.in(ReaEasing.ease) })
-        );
-        translateY.value  = withTiming(-500, { duration: 240, easing: ReaEasing.in(ReaEasing.ease) });
-        tileOpacity.value = withTiming(0, { duration: 230, easing: ReaEasing.in(ReaEasing.ease) });
+      const fallDistance = Dimensions.get('window').height + 180;
 
-        timers.push(setTimeout(() => {
-          RNAnimated.parallel([
-            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
-            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
-          ]).start(({ finished }) => {
-            if (finished) fireExitCompleteOnce();
-          });
-        }, 260));
-      }
+      // Both wrong directions fail the same way: false reject, buzz, then a shameful drop.
+      translateX.value = withSequence(
+        withTiming(56, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+        withTiming(26, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+        withTiming(40, { duration: 420, easing: ReaEasing.in(ReaEasing.quad) })
+      );
+      translateY.value = withSequence(
+        withTiming(4, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+        withTiming(10, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+        withTiming(fallDistance, { duration: 420, easing: ReaEasing.in(ReaEasing.quad) })
+      );
+      rotation.value = withSequence(
+        withTiming(5, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+        withTiming(-4, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+        withTiming(18, { duration: 420, easing: ReaEasing.in(ReaEasing.ease) })
+      );
+      scale.value = withSequence(
+        withTiming(0.99, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+        withTiming(0.96, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+        withTiming(0.88, { duration: 420, easing: ReaEasing.in(ReaEasing.ease) })
+      );
+
+      timers.push(setTimeout(() => {
+        tileOpacity.value = withTiming(0, {
+          duration: 260,
+          easing: ReaEasing.in(ReaEasing.ease),
+        });
+      }, 280));
+
+      timers.push(setTimeout(() => {
+        RNAnimated.parallel([
+          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
+          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
+        ]).start(({ finished }) => {
+          if (finished) fireExitCompleteOnce();
+        });
+      }, 560));
+
+      timers.push(setTimeout(fireExitCompleteOnce, 780));
     }
 
     // ── TRAP-CAUGHT — hard right toss + shards ───────────────

@@ -4,6 +4,7 @@ export type SfxName =
   | 'uiClick'
   | 'tileSwipe'
   | 'trapWrong'
+  | 'wrongLame'
   | 'trapShatter'
   | 'mastered'
   | 'haunted'
@@ -21,6 +22,7 @@ const SFX: Record<SfxName, SfxConfig> = {
   uiClick:        { source: require('../../assets/sfx/ui_click.mp3'),         volume: 0.25, cooldownMs: 80   },
   tileSwipe:      { source: require('../../assets/sfx/tile_swipe.mp3'),       volume: 0.25, cooldownMs: 80   },
   trapWrong:      { source: require('../../assets/sfx/trap_wrong.mp3'),       volume: 0.35, cooldownMs: 120  },
+  wrongLame:      { source: require('../../assets/sfx/wrong_lame_whistle.mp3'), volume: 0.42, cooldownMs: 120 },
   trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140  },
   mastered:       { source: require('../../assets/sfx/mastered_chime.mp3'),   volume: 0.45, cooldownMs: 2200 },
   haunted:        { source: require('../../assets/sfx/haunted_moan.mp3'),     volume: 0.30, cooldownMs: 2600 },
