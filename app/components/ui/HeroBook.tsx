@@ -1,14 +1,9 @@
 import React from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import Svg, {
-  Defs,
-  LinearGradient,
-  Path,
-  RadialGradient,
-  Stop,
-} from 'react-native-svg';
-
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Defs, LinearGradient as SvgGrad, Rect, Stop, Path, RadialGradient } from 'react-native-svg';
 import { HERO_BOOK_PERSPECTIVE } from '../../ui/heroBookMotion';
+import { heroBookMaterial as M } from '../../ui/pwMaterials';
 
 export type HeroBookProps = {
   coverRotateX: Animated.AnimatedInterpolation<string>;
@@ -17,10 +12,7 @@ export type HeroBookProps = {
   children: React.ReactNode;
 };
 
-const BOOK_VIEWBOX_WIDTH = 360;
-const BOOK_VIEWBOX_HEIGHT = 172;
-const COVER_VIEWBOX_WIDTH = 342;
-const COVER_HEIGHT = 140;
+const CH = M.coverHeight;   // 138 — cover height
 
 export default function HeroBook({
   coverRotateX,
@@ -29,209 +21,224 @@ export default function HeroBook({
   children,
 }: HeroBookProps) {
   return (
-    <View pointerEvents="none" style={styles.root}>
-      {/* V5 body: grounded violet mass with connected right and bottom page planes. */}
-      <Svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${BOOK_VIEWBOX_WIDTH} ${BOOK_VIEWBOX_HEIGHT}`}
-        preserveAspectRatio="none"
-        style={styles.bodySvg}
-      >
-        <Defs>
-          <LinearGradient id="bodyDepth" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#21184A" />
-            <Stop offset="0.58" stopColor="#171233" />
-            <Stop offset="1" stopColor="#0F0D2A" />
-          </LinearGradient>
-          <LinearGradient id="rightPages" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#E2D8BC" />
-            <Stop offset="0.55" stopColor="#C9BB96" />
-            <Stop offset="1" stopColor="#9F8B61" />
-          </LinearGradient>
-          <LinearGradient id="bottomPages" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#DED3B5" />
-            <Stop offset="0.5" stopColor="#C5B58E" />
-            <Stop offset="1" stopColor="#927D55" />
-          </LinearGradient>
-        </Defs>
+    /*
+     * .book equivalent — the page body, always visible behind the cover.
+     * perspective lives here so the cover's rotateX has 3D depth.
+     * Background = cream pages showing through when cover opens.
+     */
+    <View style={styles.book}>
 
-        <Path
-          d="M24 154 L350 146 L358 158 L28 168 Z"
-          fill="#0F0D2A"
-          opacity={0.72}
+      {/* ── PAGE BODY (always visible, revealed when cover opens) ── */}
+      <View style={styles.pageBody}>
+        <LinearGradient
+          colors={[M.pagesCreamTop, M.pagesCream, M.pagesCreamBot]}
+          style={StyleSheet.absoluteFill}
         />
-        <Path
-          d="M10 10 L340 10 L356 28 L356 148 L24 160 L10 142 Z"
-          fill="url(#bodyDepth)"
-          stroke="rgba(123,45,139,0.46)"
-          strokeWidth={2}
+        {/* Page lines */}
+        <View style={[styles.pageLine, { top: '20%' }]} />
+        <View style={[styles.pageLine, { top: '38%', opacity: 0.7 }]} />
+        <View style={[styles.pageLine, { top: '56%', opacity: 0.55 }]} />
+        <View style={[styles.pageLine, { top: '74%', opacity: 0.4 }]} />
+        <View style={[styles.pageLine, { top: '88%', opacity: 0.28 }]} />
+        {/* Gold top frame */}
+        <View style={styles.pageTopGold} />
+        {/* Gold bottom frame */}
+        <View style={styles.pageBottomGold} />
+      </View>
+
+      {/* Cream page interior — revealed when cover opens */}
+      <View style={styles.pageInterior}>
+        <LinearGradient
+          colors={[M.pagesCreamTop, M.pagesCream, M.pagesCreamBot]}
+          style={StyleSheet.absoluteFill}
         />
+        <View style={[styles.pageLine, { top: '15%' }]} />
+        <View style={[styles.pageLine, { top: '30%', opacity: 0.75 }]} />
+        <View style={[styles.pageLine, { top: '45%', opacity: 0.60 }]} />
+        <View style={[styles.pageLine, { top: '60%', opacity: 0.45 }]} />
+        <View style={[styles.pageLine, { top: '75%', opacity: 0.30 }]} />
+        <View style={[styles.pageLine, { top: '88%', opacity: 0.20 }]} />
+      </View>
 
-        <Path
-          d="M338 14 L354 30 L354 148 L338 136 Z"
-          fill="url(#rightPages)"
-          stroke="rgba(245,200,66,0.28)"
-          strokeWidth={1.25}
-        />
-        <Path d="M340 48 L353 58" stroke="rgba(104,86,52,0.30)" strokeWidth={1} />
-        <Path d="M340 78 L353 88" stroke="rgba(104,86,52,0.26)" strokeWidth={1} />
-        <Path d="M340 108 L353 118" stroke="rgba(104,86,52,0.30)" strokeWidth={1} />
-
-        <Path
-          d="M12 140 L338 136 L354 148 L24 158 Z"
-          fill="url(#bottomPages)"
-          stroke="rgba(245,200,66,0.24)"
-          strokeWidth={1.25}
-        />
-        <Path d="M20 146 L344 142" stroke="rgba(104,86,52,0.32)" strokeWidth={1} />
-        <Path d="M23 151 L349 147" stroke="rgba(104,86,52,0.24)" strokeWidth={1} />
-      </Svg>
-
-      {/* V5 intake: a recessed page-return seam inside the violet book body. */}
-      <Animated.View
-        style={[
-          styles.intake,
-          {
-            opacity: intakeOpacity,
-            transform: [{ scaleY: intakeScaleY }],
-          },
-        ]}
-      >
-        <Svg width="100%" height="100%" viewBox="0 0 272 34" preserveAspectRatio="none">
-          <Defs>
-            <LinearGradient id="intakeDepth" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#0F0D2A" />
-              <Stop offset="0.52" stopColor="#4A1D66" />
-              <Stop offset="1" stopColor="#7B2D8B" />
-            </LinearGradient>
-            <LinearGradient id="intakeGold" x1="0" y1="0" x2="1" y2="0">
-              <Stop offset="0" stopColor="#7B2D8B" stopOpacity={0} />
-              <Stop offset="0.5" stopColor="#F5C842" stopOpacity={0.62} />
-              <Stop offset="1" stopColor="#7B2D8B" stopOpacity={0} />
-            </LinearGradient>
-          </Defs>
-          <Path
-            d="M8 7 L264 7 L270 16 L264 27 L8 27 L2 18 Z"
-            fill="url(#intakeDepth)"
-            stroke="rgba(245,200,66,0.34)"
-            strokeWidth={1.25}
-          />
-          <Path d="M18 17 L254 17" stroke="url(#intakeGold)" strokeWidth={2} />
-        </Svg>
-      </Animated.View>
-
-      {/* V5 cover: top-hinged purple-gold face and solid underside. */}
+      {/*
+       * .cover equivalent — absolute over the book body.
+       * transform-origin: top  →  translateY(-CH/2) + rotateX + translateY(+CH/2)
+       * rotateX(80deg)         →  bottom edge swings toward the viewer
+       *                            (equivalent to CSS rotateY(-80deg) from left)
+       */}
       <Animated.View
         style={[
           styles.cover,
           {
             transform: [
               { perspective: HERO_BOOK_PERSPECTIVE },
-              { translateY: -COVER_HEIGHT / 2 },
-              { rotateX: coverRotateX },
-              { translateY: COVER_HEIGHT / 2 },
+              { translateY: -(CH / 2) },   // set pivot to top edge
+              { rotateX: coverRotateX },    // open from bottom
+              { translateY: CH / 2 },       // restore position
             ],
           },
         ]}
       >
+        {/* Cover SVG — purple face + gold trim */}
         <Svg
           width="100%"
           height="100%"
-          viewBox={`0 0 ${COVER_VIEWBOX_WIDTH} ${COVER_HEIGHT}`}
+          viewBox={`0 0 360 ${CH}`}
           preserveAspectRatio="none"
-          style={styles.coverSvg}
+          style={StyleSheet.absoluteFill}
         >
           <Defs>
-            <LinearGradient id="coverFace" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#2A1C59" />
-              <Stop offset="0.55" stopColor="#191541" />
-              <Stop offset="1" stopColor="#120F32" />
-            </LinearGradient>
-            <RadialGradient id="wordGlow" cx="50%" cy="52%" rx="58%" ry="62%">
-              <Stop offset="0" stopColor="#F5C842" stopOpacity={0.14} />
-              <Stop offset="0.62" stopColor="#7B2D8B" stopOpacity={0.06} />
-              <Stop offset="1" stopColor="#0F0D2A" stopOpacity={0} />
+            <SvgGrad id="face" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0"   stopColor={M.coverPurpleTop} />
+              <Stop offset="0.5" stopColor={M.coverPurple} />
+              <Stop offset="1"   stopColor={M.coverPurpleBot} />
+            </SvgGrad>
+            <SvgGrad id="sheen" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0"   stopColor="#FFFFFF" stopOpacity={0.07} />
+              <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity={0} />
+              <Stop offset="1"   stopColor="#000000" stopOpacity={0.06} />
+            </SvgGrad>
+            <RadialGradient id="glow" cx="50%" cy="50%" rx="52%" ry="48%">
+              <Stop offset="0"   stopColor={M.goldTrim}    stopOpacity={0.13} />
+              <Stop offset="0.6" stopColor={M.intakeGlow}  stopOpacity={0.05} />
+              <Stop offset="1"   stopColor="#0F0D2A"        stopOpacity={0} />
             </RadialGradient>
           </Defs>
 
-          <Path
-            d="M2 6 L336 4 L340 134 L10 140 L2 132 Z"
-            fill="#0F0D2A"
-            stroke="rgba(245,200,66,0.34)"
-            strokeWidth={2}
-          />
-          <Path
-            d="M0 2 L330 0 L334 10 L334 132 L8 136 L0 128 Z"
-            fill="url(#coverFace)"
-            stroke="#7B2D8B"
-            strokeWidth={2.5}
-          />
-          <Path
-            d="M0 2 L330 0 L334 10 L334 132 L8 136 L0 128 Z"
-            fill="url(#wordGlow)"
-          />
-          <Path
-            d="M8 10 L322 8 L326 16 L326 124 L14 128 L8 122 Z"
-            fill="none"
-            stroke="#F5C842"
-            strokeWidth={2.5}
-          />
-          <Path
-            d="M14 16 L316 14 L320 20 L320 118 L20 122 L14 116 Z"
-            fill="none"
-            stroke="rgba(245,200,66,0.30)"
-            strokeWidth={1}
-          />
-          <Path
-            d="M12 12 L320 10 L322 26 L14 28 Z"
-            fill="#1E1A4A"
-            stroke="rgba(245,200,66,0.42)"
-            strokeWidth={1.25}
-          />
-          <Path d="M20 17 L314 15" stroke="#F5C842" strokeOpacity={0.56} strokeWidth={1.5} />
-          <Path d="M20 23 L315 21" stroke="#F5C842" strokeOpacity={0.26} strokeWidth={1} />
+          {/* Cover rear face (dark, shows when open) */}
+          <Rect x={0} y={0} width={360} height={CH} fill={M.hingeRail} />
+
+          {/* Cover front face */}
+          <Rect x={3} y={0} width={354} height={CH} fill="url(#face)" />
+          <Rect x={3} y={0} width={354} height={CH} fill="url(#sheen)" />
+          <Rect x={3} y={0} width={354} height={CH} fill="url(#glow)" />
+
+          {/* Outer gold trim */}
+          <Rect x={3} y={0} width={354} height={CH}
+            fill="none" stroke={M.goldTrim} strokeWidth={3} />
+
+          {/* Inner gold hairline */}
+          <Rect x={12} y={8} width={336} height={CH - 16}
+            fill="none" stroke={M.goldTrim} strokeOpacity={0.32} strokeWidth={1} />
+
+          {/* Spine band at top of cover */}
+          <Rect x={3} y={0} width={354} height={14} fill={M.hingeDark} />
+          <Path d={`M 3 14 L 357 14`}
+            stroke={M.goldTrim} strokeOpacity={0.55} strokeWidth={1.5} />
+          {/* Spine binding marks */}
+          <Path d="M 120 2 L 120 12" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
+          <Path d="M 180 2 L 180 12" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
+          <Path d="M 240 2 L 240 12" stroke={M.goldTrim} strokeOpacity={0.22} strokeWidth={1} />
         </Svg>
 
+        {/* Hero word content */}
         <View pointerEvents="none" style={styles.coverContent}>
           {children}
         </View>
       </Animated.View>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  bodySvg: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1,
-  },
-  intake: {
+  /*
+   * .book — the page body container.
+   * Width: full container. Height: cover + pages below.
+   * No perspective here — perspective is on the cover transform directly.
+   */
+  book: {
     position: 'absolute',
-    left: 40,
-    right: 48,
-    top: 108,
-    height: 34,
-    zIndex: 2,
+    left: 0,
+    right: 0,
+    top: 0,
+    height: M.bookHeight,          // 190 total
+    overflow: 'visible',
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 8 },
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    elevation: 14,
   },
+
+  /*
+   * Page body — sits at the bottom of the book zone.
+   * Cream, always visible. Revealed when cover lifts.
+   */
+  pageBody: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: M.coverHeight,            // sits below the cover
+    height: M.pageHeight,          // 36px of page edges
+    overflow: 'hidden',
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+  },
+
+  pageInterior: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: M.coverHeight,
+    overflow: 'hidden',
+  },
+
+  pageLine: {
+    position: 'absolute',
+    left: 6,
+    right: 6,
+    height: 1,
+    backgroundColor: M.pagesLine,
+  },
+
+  pageTopGold: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2.5,
+    backgroundColor: M.pagesCreamTop,
+  },
+
+  pageBottomGold: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: M.goldTrim,
+    opacity: 0.8,
+  },
+
+  /*
+   * Intake seam — the gap between cover bottom and pages.
+   * Purple-gold glow visible during tile absorption (Pass 2).
+   */
+  /*
+   * .cover equivalent — absolute, same size as the whole book top zone.
+   * transform-origin: top replicated via translateY trick.
+   */
   cover: {
     position: 'absolute',
-    left: 4,
-    right: 14,
-    top: 4,
-    height: COVER_HEIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 3,
+    left: 0,
+    right: 0,
+    top: 0,
+    height: M.coverHeight,
+    shadowColor: '#000',
+    shadowOffset: { width: 1, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 10,
   },
-  coverSvg: {
-    ...StyleSheet.absoluteFillObject,
-  },
+
   coverContent: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 14,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },

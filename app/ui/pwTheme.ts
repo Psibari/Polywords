@@ -76,11 +76,11 @@ export const PW = {
     wordEntranceMs: 520,
     deckEntranceMs: 620,
     heroBook: {
-      openAngle: -38,      // cover tilted toward player at start (deg)
+      openAngle: 80,      // cover tilted toward player at start (deg)
       closedAngle: 0,      // flat, front-facing
-      overshootAngle: 4,   // slight past-flat overshoot on close
-      settleAngle: -2,     // tiny recoil after overshoot
-      perspective: 700,    // 3D depth for the cover swing
+      overshootAngle: -4,   // slight past-flat overshoot on close
+      settleAngle: 2,     // tiny recoil after overshoot
+      perspective: 2000,    // 3D depth for the cover swing
       swingInMs: 360,      // open → overshoot
       overshootMs: 95,     // overshoot → settle
       settleMs: 85,        // settle → closed

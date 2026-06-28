@@ -114,3 +114,24 @@ export const affordanceText = StyleSheet.create({
     textShadowRadius: 3,
   },
 });
+
+export const heroBookMaterial = {
+  coverPurple:    '#191541',
+  coverPurpleTop: '#2A1C5C',
+  coverPurpleBot: '#120F32',
+  hingeDark:      '#141038',
+  hingeRail:      '#0F0D2A',
+  pagesCreamTop:  '#F8F3EC',
+  pagesCream:     '#EDE6D4',
+  pagesCreamBot:  '#C8BCA0',
+  pagesLine:      'rgba(160,140,100,0.28)',
+  goldTrim:       '#F5C842',
+  goldHairline:   'rgba(245,200,66,0.32)',
+  goldPin:        '#F5C842',
+  goldPinInner:   '#C8920E',
+  intakeGlow:     '#7B2D8B',
+  bookHeight:     190,
+  hingeHeight:    16,
+  coverHeight:    138,
+  pageHeight:     36,
+} as const;
