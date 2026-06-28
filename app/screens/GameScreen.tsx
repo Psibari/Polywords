@@ -14,6 +14,7 @@ import { preloadSfx, unloadSfx } from '../audio/sfx';
 import { initMusicEngine, startMusic, stopMusic, setMusicState, triggerChainBreak, disposeMusicEngine, MusicState } from '../audio/MusicEngine';
 import * as Haptics from 'expo-haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
+import { ShardVariant } from '../ui/pwEffects';
 
 const MAX_FEATHERS = 5;
 
@@ -425,8 +426,12 @@ function GameDirector({ navigation }: { navigation: any }) {
   const prevChainRef  = useRef<number>(1);
 
   const spawnEffect = useCallback(
-    (type: 'shard' | 'trail', x: number, y: number) => {
-      fxLayerRef.current?.spawn({ type, x, y });
+    (type: 'shard' | 'trail', x: number, y: number, variant?: ShardVariant) => {
+      if (type === 'shard') {
+        fxLayerRef.current?.spawn({ type, x, y, variant });
+      } else {
+        fxLayerRef.current?.spawn({ type, x, y });
+      }
     },
     []
   );

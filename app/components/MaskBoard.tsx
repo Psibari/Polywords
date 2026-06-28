@@ -126,7 +126,7 @@ function BossShockwave({ boardWidth, onDone }: ShockwaveProps) {
 
 type Props = {
   step: WordStep;
-  spawnEffect?: (type: 'shard' | 'trail', x: number, y: number) => void;
+  spawnEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: string) => void;
   onTrapCaught?: () => void;
   onWrongSwipe?: () => void;
 };
@@ -623,7 +623,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function handleEffect(type: 'shard' | 'trail', pageX: number, pageY: number) {
-    spawnEffect?.(type, pageX, pageY);
+    if (type === 'shard') {
+      spawnEffect?.('shard', pageX, pageY, 'trap');
+    } else {
+      spawnEffect?.(type, pageX, pageY);
+    }
   }
 
   // ── master gate ───────────────────────────────────────────────
