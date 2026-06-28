@@ -15,7 +15,7 @@
         "isReal": true
       },
       {
-        "id": "abstract_t0",
+        "id": "abstract_r2",
         "phrase": "Splashed on a gallery wall",
         "isReal": true
       },
@@ -259,7 +259,7 @@
         "isReal": false
       },
       {
-        "id": "ball_t2",
+        "id": "ball_r2",
         "phrase": "A waltz on a grand staircase",
         "isReal": true
       },
@@ -269,7 +269,7 @@
         "isReal": false
       },
       {
-        "id": "ball_t4",
+        "id": "ball_r3",
         "phrase": "Pitcher's worst nightmare",
         "isReal": true
       }
@@ -1733,28 +1733,8 @@
         "isReal": false
       },
       {
-        "id": "cast_t7",
-        "phrase": "Director calls action",
-        "isReal": false
-      },
-      {
-        "id": "cast_t8",
-        "phrase": "Curtains darken the room",
-        "isReal": false
-      },
-      {
         "id": "cast_t9",
         "phrase": "Campaign signs crowd lawns",
-        "isReal": false
-      },
-      {
-        "id": "cast_t10",
-        "phrase": "Forge fire heats ore",
-        "isReal": false
-      },
-      {
-        "id": "cast_t11",
-        "phrase": "Bandage wraps the wrist",
         "isReal": false
       }
     ],
@@ -1861,16 +1841,6 @@
         "isReal": false
       },
       {
-        "id": "character_t7",
-        "phrase": "Font selected for style",
-        "isReal": false
-      },
-      {
-        "id": "character_t8",
-        "phrase": "Factory finish, no dents",
-        "isReal": false
-      },
-      {
         "id": "character_t9",
         "phrase": "Transcript shows final grades",
         "isReal": false
@@ -1907,11 +1877,6 @@
       {
         "id": "charge_t0",
         "phrase": "Outlet does its quiet work",
-        "isReal": false
-      },
-      {
-        "id": "charge_t1",
-        "phrase": "Battery percentage climbing",
         "isReal": false
       },
       {
@@ -2614,7 +2579,7 @@
         "isReal": true
       },
       {
-        "id": "compound_t0",
+        "id": "compound_r2",
         "phrase": "Molecules holding hands",
         "isReal": true
       },
@@ -3142,11 +3107,6 @@
         "isReal": false
       },
       {
-        "id": "current_t6",
-        "phrase": "Old news still circulating",
-        "isReal": false
-      },
-      {
         "id": "current_t7",
         "phrase": "Turbine spins downstream",
         "isReal": false
@@ -3201,11 +3161,6 @@
         "isReal": false
       },
       {
-        "id": "date_t3",
-        "phrase": "Split the bill, maybe",
-        "isReal": false
-      },
-      {
         "id": "date_t4",
         "phrase": "Palm tree's famous offering",
         "isReal": false
@@ -3226,23 +3181,8 @@
         "isReal": false
       },
       {
-        "id": "date_t8",
-        "phrase": "Stamped before it ships",
-        "isReal": false
-      },
-      {
         "id": "date_t9",
         "phrase": "Sweaty palms across a candlelit table",
-        "isReal": false
-      },
-      {
-        "id": "date_t10",
-        "phrase": "Matched by an algorithm",
-        "isReal": false
-      },
-      {
-        "id": "date_t11",
-        "phrase": "Pitted, pressed into a snack bar",
         "isReal": false
       }
     ],
@@ -3265,7 +3205,7 @@
         "isReal": true
       },
       {
-        "id": "degree_t0",
+        "id": "degree_r2",
         "phrase": "Boiling point, exactly",
         "isReal": true
       },
@@ -4301,16 +4241,6 @@
         "isReal": false
       },
       {
-        "id": "fan_t4",
-        "phrase": "AC unit's humble cousin",
-        "isReal": false
-      },
-      {
-        "id": "fan_t5",
-        "phrase": "Range hood hums above",
-        "isReal": false
-      },
-      {
         "id": "fan_t6",
         "phrase": "Ticket line wraps the block",
         "isReal": false
@@ -4698,11 +4628,6 @@
         "isReal": false
       },
       {
-        "id": "fly_t4",
-        "phrase": "Where the button meets the waistband",
-        "isReal": false
-      },
-      {
         "id": "fly_t5",
         "phrase": "Web built in a corner",
         "isReal": false
@@ -4720,21 +4645,6 @@
       {
         "id": "fly_t8",
         "phrase": "Turbulence over the Atlantic",
-        "isReal": false
-      },
-      {
-        "id": "fly_t9",
-        "phrase": "Belt doing overtime",
-        "isReal": false
-      },
-      {
-        "id": "fly_t10",
-        "phrase": "Stolen base, crowd erupts",
-        "isReal": false
-      },
-      {
-        "id": "fly_t11",
-        "phrase": "Buzzes around your ear at 2am",
         "isReal": false
       }
     ],
@@ -6240,16 +6150,6 @@
         "id": "lead_t7",
         "phrase": "What gold pretends not to be",
         "isReal": false
-      },
-      {
-        "id": "lead_t8",
-        "phrase": "Bulletproof vest's dense layer",
-        "isReal": false
-      },
-      {
-        "id": "lead_t9",
-        "phrase": "Rope trick at a rodeo",
-        "isReal": false
       }
     ],
     "gpsTag": "panic",
@@ -7535,11 +7435,6 @@
         "isReal": false
       },
       {
-        "id": "nail_t6",
-        "phrase": "Ring stuck on finger",
-        "isReal": false
-      },
-      {
         "id": "nail_t7",
         "phrase": "Finished late but complete",
         "isReal": false
@@ -7547,11 +7442,6 @@
       {
         "id": "nail_t8",
         "phrase": "Rumor about the suspect",
-        "isReal": false
-      },
-      {
-        "id": "nail_t9",
-        "phrase": "Yard cut from fabric",
         "isReal": false
       }
     ],
@@ -8852,11 +8742,6 @@
         "isReal": false
       },
       {
-        "id": "pound_t7",
-        "phrase": "Vet's waiting room, sadder version",
-        "isReal": false
-      },
-      {
         "id": "pound_t8",
         "phrase": "Coins jingling in a tourist's pocket",
         "isReal": false
@@ -9574,11 +9459,6 @@
         "isReal": false
       },
       {
-        "id": "ring_t4",
-        "phrase": "Tattoos match every wrist",
-        "isReal": false
-      },
-      {
         "id": "ring_t5",
         "phrase": "Wedding vows get nervous",
         "isReal": false
@@ -9591,11 +9471,6 @@
       {
         "id": "ring_t7",
         "phrase": "Gloves touch before fighting",
-        "isReal": false
-      },
-      {
-        "id": "ring_t8",
-        "phrase": "Leaves fall every autumn",
         "isReal": false
       },
       {
@@ -9643,11 +9518,6 @@
         "isReal": false
       },
       {
-        "id": "rock_t1",
-        "phrase": "Pebble's bigger, grumpier cousin",
-        "isReal": false
-      },
-      {
         "id": "rock_t2",
         "phrase": "Jazz's louder rival",
         "isReal": false
@@ -9675,21 +9545,6 @@
       {
         "id": "rock_t7",
         "phrase": "Rolls down a hill",
-        "isReal": false
-      },
-      {
-        "id": "rock_t8",
-        "phrase": "Gravel's big sibling",
-        "isReal": false
-      },
-      {
-        "id": "rock_t9",
-        "phrase": "Keeps a boat from drifting",
-        "isReal": false
-      },
-      {
-        "id": "rock_t10",
-        "phrase": "Drums, amps, and pyrotechnics",
         "isReal": false
       },
       {
@@ -10370,11 +10225,6 @@
       {
         "id": "second_t7",
         "phrase": "Dessert after a big dinner",
-        "isReal": false
-      },
-      {
-        "id": "second_t8",
-        "phrase": "Leftovers boxed for tomorrow",
         "isReal": false
       }
     ],
@@ -11126,16 +10976,6 @@
         "isReal": false
       },
       {
-        "id": "spring_t5",
-        "phrase": "Longest afternoon of year",
-        "isReal": false
-      },
-      {
-        "id": "spring_t6",
-        "phrase": "Fountain in the courtyard",
-        "isReal": false
-      },
-      {
         "id": "spring_t7",
         "phrase": "Foam cushion under fabric",
         "isReal": false
@@ -11404,11 +11244,6 @@
         "id": "star_t7",
         "phrase": "Badge catches hallway light",
         "isReal": false
-      },
-      {
-        "id": "star_t8",
-        "phrase": "Cookie cutters at the holidays",
-        "isReal": false
       }
     ],
     "gpsTag": "panic",
@@ -11653,11 +11488,6 @@
       {
         "id": "story_t5",
         "phrase": "Eyewitness points at the camera",
-        "isReal": false
-      },
-      {
-        "id": "story_t6",
-        "phrase": "Staircase earns its keep",
         "isReal": false
       },
       {
@@ -12775,18 +12605,8 @@
         "isReal": false
       },
       {
-        "id": "wave_t6",
-        "phrase": "Handshake before leaving",
-        "isReal": false
-      },
-      {
         "id": "wave_t7",
         "phrase": "Antenna blinks red",
-        "isReal": false
-      },
-      {
-        "id": "wave_t8",
-        "phrase": "Rumor spreads by lunch",
         "isReal": false
       },
       {
@@ -12995,11 +12815,6 @@
         "isReal": false
       },
       {
-        "id": "project_t1",
-        "phrase": "GROUP MEETING AFTER CLASS",
-        "isReal": false
-      },
-      {
         "id": "project_r1",
         "phrase": "MOVIE HITS THE WALL",
         "isReal": true
@@ -13022,11 +12837,6 @@
       {
         "id": "project_t4",
         "phrase": "BUDGET CUTS THIS MONTH",
-        "isReal": false
-      },
-      {
-        "id": "project_t5",
-        "phrase": "CALENDAR MARKS THE DEADLINE",
         "isReal": false
       },
       {
@@ -13170,11 +12980,6 @@
       {
         "id": "battery_t8",
         "phrase": "UMPIRE CROUCHES BEHIND PLATE",
-        "isReal": false
-      },
-      {
-        "id": "battery_t9",
-        "phrase": "BATTER WAITS IN BOX",
         "isReal": false
       }
     ],
@@ -13473,11 +13278,6 @@
         "isReal": false
       },
       {
-        "id": "exchange_t1",
-        "phrase": "LUNCHBOX OPENS AT NOON",
-        "isReal": false
-      },
-      {
         "id": "exchange_r1",
         "phrase": "STOCKS CHANGE HANDS DOWNTOWN",
         "isReal": true
@@ -13511,11 +13311,6 @@
         "id": "exchange_r3",
         "phrase": "AIRPORT BOOTH CHANGES MONEY",
         "isReal": true
-      },
-      {
-        "id": "exchange_t6",
-        "phrase": "PASSPORT WAITS IN HAND",
-        "isReal": false
       },
       {
         "id": "exchange_t7",
@@ -13557,11 +13352,6 @@
         "isReal": false
       },
       {
-        "id": "figure_t1",
-        "phrase": "SPREADSHEET ADDS THE COLUMN",
-        "isReal": false
-      },
-      {
         "id": "figure_r1",
         "phrase": "DRESS FOLLOWS BODY SHAPE",
         "isReal": true
@@ -13572,11 +13362,6 @@
         "isReal": false
       },
       {
-        "id": "figure_t3",
-        "phrase": "WAISTBAND FEELS TOO TIGHT",
-        "isReal": false
-      },
-      {
         "id": "figure_r2",
         "phrase": "HISTORY BOOK NAMES THEM",
         "isReal": true
@@ -13584,11 +13369,6 @@
       {
         "id": "figure_t4",
         "phrase": "CROWD CHEERS THEIR SPEECH",
-        "isReal": false
-      },
-      {
-        "id": "figure_t5",
-        "phrase": "PORTRAIT HANGS IN HALL",
         "isReal": false
       },
       {
@@ -13614,11 +13394,6 @@
       {
         "id": "figure_t8",
         "phrase": "ANSWER KEY HIDES BELOW",
-        "isReal": false
-      },
-      {
-        "id": "figure_t9",
-        "phrase": "CALCULATOR NEEDS BATTERIES",
         "isReal": false
       },
       {
@@ -15018,11 +14793,6 @@
         "isReal": false
       },
       {
-        "id": "shoot_t5",
-        "phrase": "LEAF UNFURLS LATER",
-        "isReal": false
-      },
-      {
         "id": "shoot_r3",
         "phrase": "CAR SPEEDS THROUGH GAP",
         "isReal": true
@@ -15045,11 +14815,6 @@
       {
         "id": "shoot_t8",
         "phrase": "DEFENDER RAISES HANDS",
-        "isReal": false
-      },
-      {
-        "id": "shoot_t9",
-        "phrase": "NET SNAPS AFTERWARD",
         "isReal": false
       }
     ],
@@ -15141,11 +14906,6 @@
         "isReal": false
       },
       {
-        "id": "slip_t1",
-        "phrase": "SHOE SKIDS SIDEWAYS",
-        "isReal": false
-      },
-      {
         "id": "slip_r1",
         "phrase": "SMALL ERROR GETS THROUGH",
         "isReal": true
@@ -15168,11 +14928,6 @@
       {
         "id": "slip_t4",
         "phrase": "STRAP SHOWS AT SHOULDER",
-        "isReal": false
-      },
-      {
-        "id": "slip_t5",
-        "phrase": "LAUNDRY FOLDS SILK",
         "isReal": false
       },
       {
@@ -15279,11 +15034,6 @@
         "isReal": false
       },
       {
-        "id": "stake_t1",
-        "phrase": "ROPE PULLS TIGHT",
-        "isReal": false
-      },
-      {
         "id": "stake_r1",
         "phrase": "MONEY RIDES ON OUTCOME",
         "isReal": true
@@ -15321,11 +15071,6 @@
       {
         "id": "stake_t6",
         "phrase": "BET FEELS TOO BIG",
-        "isReal": false
-      },
-      {
-        "id": "stake_t7",
-        "phrase": "PRIDE GETS INVOLVED",
         "isReal": false
       },
       {
@@ -15486,11 +15231,6 @@
         "isReal": false
       },
       {
-        "id": "check_t1",
-        "phrase": "PENCIL HOVERS ABOVE BOX",
-        "isReal": false
-      },
-      {
         "id": "check_r1",
         "phrase": "PAPER PAYMENT FROM BANK",
         "isReal": true
@@ -15513,11 +15253,6 @@
       {
         "id": "check_t4",
         "phrase": "LEASH PULLS TIGHT",
-        "isReal": false
-      },
-      {
-        "id": "check_t5",
-        "phrase": "BRAKES SQUEAL EARLY",
         "isReal": false
       },
       {
@@ -15624,11 +15359,6 @@
         "isReal": false
       },
       {
-        "id": "cell_t1",
-        "phrase": "COT BOLTS TO WALL",
-        "isReal": false
-      },
-      {
         "id": "cell_r1",
         "phrase": "TINY UNIT OF LIFE",
         "isReal": true
@@ -15666,11 +15396,6 @@
       {
         "id": "cell_t6",
         "phrase": "COLUMN LETTER SITS ABOVE",
-        "isReal": false
-      },
-      {
-        "id": "cell_t7",
-        "phrase": "ROW NUMBER RUNS LEFT",
         "isReal": false
       },
       {
@@ -15846,11 +15571,6 @@
         "isReal": false
       },
       {
-        "id": "cross_t1",
-        "phrase": "CORNER STORE OPENS",
-        "isReal": false
-      },
-      {
         "id": "cross_r1",
         "phrase": "IN A BAD MOOD",
         "isReal": true
@@ -15858,11 +15578,6 @@
       {
         "id": "cross_t2",
         "phrase": "VOICE GETS SHARP",
-        "isReal": false
-      },
-      {
-        "id": "cross_t3",
-        "phrase": "DOOR SHUTS HARD",
         "isReal": false
       },
       {
@@ -15945,11 +15660,6 @@
         "isReal": false
       },
       {
-        "id": "deck_t3",
-        "phrase": "CABIN DOOR SLAMS",
-        "isReal": false
-      },
-      {
         "id": "deck_r2",
         "phrase": "BACKYARD PLATFORM FOR CHAIRS",
         "isReal": true
@@ -15972,11 +15682,6 @@
       {
         "id": "deck_t6",
         "phrase": "PROJECTOR WARMS UP",
-        "isReal": false
-      },
-      {
-        "id": "deck_t7",
-        "phrase": "CLICKER STOPS WORKING",
         "isReal": false
       },
       {
@@ -16083,11 +15788,6 @@
         "isReal": false
       },
       {
-        "id": "model_t1",
-        "phrase": "SAMPLE GETS COPIED",
-        "isReal": false
-      },
-      {
         "id": "model_r1",
         "phrase": "CAMERA LOVES THIS FACE",
         "isReal": true
@@ -16110,11 +15810,6 @@
       {
         "id": "model_t4",
         "phrase": "GLUE DRIES ON WING",
-        "isReal": false
-      },
-      {
-        "id": "model_t5",
-        "phrase": "BOX SHOWS THE PICTURE",
         "isReal": false
       },
       {
@@ -16207,18 +15902,8 @@
         "isReal": false
       },
       {
-        "id": "note_t5",
-        "phrase": "Pen runs out",
-        "isReal": false
-      },
-      {
         "id": "note_t6",
         "phrase": "Staff shows position",
-        "isReal": false
-      },
-      {
-        "id": "note_t7",
-        "phrase": "Warning box appears",
         "isReal": false
       },
       {
@@ -16389,11 +16074,6 @@
         "isReal": false
       },
       {
-        "id": "patch_t1",
-        "phrase": "JEANS GET SAVED",
-        "isReal": false
-      },
-      {
         "id": "patch_r1",
         "phrase": "UPDATE FIXES THE BUG",
         "isReal": true
@@ -16416,11 +16096,6 @@
       {
         "id": "patch_t4",
         "phrase": "WEEDS GROW FAST",
-        "isReal": false
-      },
-      {
-        "id": "patch_t5",
-        "phrase": "FENCE MARKS EDGE",
         "isReal": false
       },
       {
@@ -16473,11 +16148,6 @@
         "isReal": false
       },
       {
-        "id": "present_t1",
-        "phrase": "CARD COMES WITH IT",
-        "isReal": false
-      },
-      {
         "id": "present_r1",
         "phrase": "HAPPENING RIGHT NOW",
         "isReal": true
@@ -16518,11 +16188,6 @@
         "isReal": false
       },
       {
-        "id": "present_t7",
-        "phrase": "AWARD GETS ANNOUNCED",
-        "isReal": false
-      },
-      {
         "id": "present_r4",
         "phrase": "VERB LIVES IN NOW",
         "isReal": true
@@ -16554,11 +16219,6 @@
       {
         "id": "reserve_t0",
         "phrase": "EXTRA SEAT STAYS EMPTY",
-        "isReal": false
-      },
-      {
-        "id": "reserve_t1",
-        "phrase": "BOX GOES ON SHELF",
         "isReal": false
       },
       {
@@ -16615,11 +16275,6 @@
         "id": "reserve_t8",
         "phrase": "FACE GIVES NOTHING AWAY",
         "isReal": false
-      },
-      {
-        "id": "reserve_t9",
-        "phrase": "ANSWER STAYS CAREFUL",
-        "isReal": false
       }
     ],
     "gpsTag": "panic",
@@ -16634,11 +16289,6 @@
         "id": "roll_r0",
         "phrase": "WHEEL TURNS ALONG GROUND",
         "isReal": true
-      },
-      {
-        "id": "roll_t0",
-        "phrase": "BALL MOVES DOWNHILL",
-        "isReal": false
       },
       {
         "id": "roll_t1",
@@ -16668,11 +16318,6 @@
       {
         "id": "roll_t4",
         "phrase": "ATTENDANCE SHEET FILLS",
-        "isReal": false
-      },
-      {
-        "id": "roll_t5",
-        "phrase": "STUDENT ANSWERS HERE",
         "isReal": false
       },
       {
@@ -16755,11 +16400,6 @@
         "isReal": false
       },
       {
-        "id": "shell_t5",
-        "phrase": "CRATER OPENS",
-        "isReal": false
-      },
-      {
         "id": "shell_r3",
         "phrase": "COMMAND LINE WAITS",
         "isReal": true
@@ -16778,11 +16418,6 @@
         "id": "shell_r4",
         "phrase": "PEAS COME OUT OF POD",
         "isReal": true
-      },
-      {
-        "id": "shell_t8",
-        "phrase": "BOWL FILLS SLOWLY",
-        "isReal": false
       },
       {
         "id": "shell_t9",
@@ -16878,11 +16513,6 @@
         "isReal": false
       },
       {
-        "id": "space_t1",
-        "phrase": "GAP STAYS OPEN",
-        "isReal": false
-      },
-      {
         "id": "space_r1",
         "phrase": "BEYOND EARTH’S SKY",
         "isReal": true
@@ -16936,11 +16566,6 @@
         "id": "space_t8",
         "phrase": "AD GETS PLACED",
         "isReal": false
-      },
-      {
-        "id": "space_t9",
-        "phrase": "LAYOUT GETS APPROVED",
-        "isReal": false
       }
     ],
     "gpsTag": "panic",
@@ -16959,11 +16584,6 @@
       {
         "id": "step_t0",
         "phrase": "RAILING RUNS BESIDE IT",
-        "isReal": false
-      },
-      {
-        "id": "step_t1",
-        "phrase": "FOOT LANDS HIGHER",
         "isReal": false
       },
       {
@@ -16989,11 +16609,6 @@
       {
         "id": "step_t4",
         "phrase": "SHOE HITS FLOOR",
-        "isReal": false
-      },
-      {
-        "id": "step_t5",
-        "phrase": "PACE GETS QUICKER",
         "isReal": false
       },
       {
@@ -17115,11 +16730,6 @@
         "isReal": false
       },
       {
-        "id": "tap_t1",
-        "phrase": "HANDLE TURNS SLOWLY",
-        "isReal": false
-      },
-      {
         "id": "tap_r1",
         "phrase": "GENTLE TOUCH ON SHOULDER",
         "isReal": true
@@ -17127,11 +16737,6 @@
       {
         "id": "tap_t2",
         "phrase": "FINGER LANDS TWICE",
-        "isReal": false
-      },
-      {
-        "id": "tap_t3",
-        "phrase": "KNOCK SOUNDS LOUDER",
         "isReal": false
       },
       {
@@ -17268,11 +16873,6 @@
         "isReal": false
       },
       {
-        "id": "track_t1",
-        "phrase": "TRAIL MARKER POINTS",
-        "isReal": false
-      },
-      {
         "id": "track_r1",
         "phrase": "RUNNERS CIRCLE THIS",
         "isReal": true
@@ -17295,11 +16895,6 @@
       {
         "id": "track_t4",
         "phrase": "PLAYLIST MOVES NEXT",
-        "isReal": false
-      },
-      {
-        "id": "track_t5",
-        "phrase": "HEADPHONES LEAK SOUND",
         "isReal": false
       },
       {
@@ -17490,11 +17085,6 @@
         "isReal": false
       },
       {
-        "id": "wing_t1",
-        "phrase": "NEST SITS HIGH",
-        "isReal": false
-      },
-      {
         "id": "wing_r1",
         "phrase": "HOSPITAL’S NEW SIDE",
         "isReal": true
@@ -17502,11 +17092,6 @@
       {
         "id": "wing_t2",
         "phrase": "STAFF ENTER THROUGH HALL",
-        "isReal": false
-      },
-      {
-        "id": "wing_t3",
-        "phrase": "ELEVATOR SERVES IT",
         "isReal": false
       },
       {
@@ -18043,7 +17628,7 @@
         "isReal": false
       },
       {
-        "id": "deep_t2",
+        "id": "deep_r2",
         "phrase": "Philosopher takes the long way home",
         "isReal": true
       },
