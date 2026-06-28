@@ -21,6 +21,13 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 
 **Daily Challenge:** The Daily route and Home entry are enabled for device sanity testing, connecting the real engine/store state to the UP-only screen, six-card board, timed Clue Vault, Polly reactions, and win/loss overlay. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
 
+### Completed June 27, 2026
+
+- HeroBook V5 geometry was refined in `app/components/ui/HeroBook.tsx`: SVG Path/Polygon-style perspective geometry replaces rectangle cover anatomy, so the connected page planes and purple/gold cover read as one thick book.
+- Trap shatter FX was polished across `app/components/SwipeMask.tsx`, `app/components/FXLayer.tsx`, and `app/ui/pwEffects.ts`. Correct trap rejection now passes shard variant `'trap'`, rendering SVG polygon/crystal pieces in purple, deep-purple, and rose.
+- HeroBook and shatter work stayed in separate lanes.
+- Checks passed: `npx.cmd tsc --noEmit`; `git diff --check` (line-ending warnings only).
+
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
 - `wip haunt loop type scaffolding`
