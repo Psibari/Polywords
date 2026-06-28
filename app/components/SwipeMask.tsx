@@ -247,7 +247,7 @@ export function SwipeMask({
             ? Math.max(0, Math.min(1, dist / (startDist * 0.20)))
             : 1;
 
-          if (!bumped && closed > 0.72) {
+          if (!bumped && closed > 0.45) {
             bumped = true;
             onEffectRef.current?.('trail', px, py);
             onNearTargetRef.current?.();
