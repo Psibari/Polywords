@@ -15,7 +15,7 @@
         "isReal": true
       },
       {
-        "id": "abstract_t0",
+        "id": "abstract_r2",
         "phrase": "Splashed on a gallery wall",
         "isReal": true
       },
@@ -259,7 +259,7 @@
         "isReal": false
       },
       {
-        "id": "ball_t2",
+        "id": "ball_r2",
         "phrase": "A waltz on a grand staircase",
         "isReal": true
       },
@@ -269,7 +269,7 @@
         "isReal": false
       },
       {
-        "id": "ball_t4",
+        "id": "ball_r3",
         "phrase": "Pitcher's worst nightmare",
         "isReal": true
       }
@@ -2614,7 +2614,7 @@
         "isReal": true
       },
       {
-        "id": "compound_t0",
+        "id": "compound_r2",
         "phrase": "Molecules holding hands",
         "isReal": true
       },
@@ -3265,7 +3265,7 @@
         "isReal": true
       },
       {
-        "id": "degree_t0",
+        "id": "degree_r2",
         "phrase": "Boiling point, exactly",
         "isReal": true
       },
@@ -18043,7 +18043,7 @@
         "isReal": false
       },
       {
-        "id": "deep_t2",
+        "id": "deep_r2",
         "phrase": "Philosopher takes the long way home",
         "isReal": true
       },
