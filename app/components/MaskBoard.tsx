@@ -48,7 +48,99 @@ const DECK_BACKING_BORDER_COLORS = [
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-type FloatEntry = { id: number; value: number; x: number; y: number; color: string };
+type FloatKind = 'real' | 'trap' | 'mastery';
+type FloatEntry = {
+  id: number;
+  value: number;
+  x: number;
+  y: number;
+  color: string;
+  kind: FloatKind;
+};
+
+type SwipeScoreFloatProps = {
+  value: number;
+  color: string;
+  kind: Exclude<FloatKind, 'mastery'>;
+  onComplete: () => void;
+};
+
+function SwipeScoreFloat({
+  value,
+  color,
+  kind,
+  onComplete,
+}: SwipeScoreFloatProps) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.timing(progress, {
+      toValue: 1,
+      duration: 940,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    animation.start(({ finished }) => {
+      if (finished) onComplete();
+    });
+    return () => animation.stop();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.62, 0.82, 1],
+    outputRange: [1, 1, 0.92, 0],
+  });
+  const scale = progress.interpolate({
+    inputRange: [0, 0.18, 0.42, 1],
+    outputRange: [1.2, 1.08, 1, 1],
+  });
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, kind === 'trap' ? 8 : 0],
+  });
+  const translateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, kind === 'trap' ? -44 : -48],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        ...(kind === 'trap'
+          ? { right: 24, top: -18 }
+          : { alignSelf: 'center', top: -34 }),
+        minWidth: 64,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 11,
+        paddingVertical: 5,
+        borderRadius: 10,
+        backgroundColor: 'rgba(15,13,42,0.92)',
+        borderWidth: 1,
+        borderColor: color,
+        zIndex: PW.z.overlay,
+        opacity,
+        transform: [{ translateX }, { translateY }, { scale }],
+      }}
+    >
+      <Text
+        style={{
+          color,
+          fontFamily: FONTS.hud,
+          fontSize: 26,
+          lineHeight: 29,
+          textShadowColor: PW.color.shadow,
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 2,
+        }}
+      >
+        +{value}
+      </Text>
+    </Animated.View>
+  );
+}
 
 function easeOutBack(t: number, overshoot: number): number {
   const c3 = overshoot + 1;
@@ -599,31 +691,22 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const [floats, setFloats] = useState<FloatEntry[]>([]);
   const floatIdRef          = useRef(0);
 
-  function spawnFloat(value: number, maskId: string, color: string) {
-    const refObj    = tileRefs.current.get(maskId);
-    const view      = refObj ? refObj.current : null;
-    const container = containerRef.current;
-
-    if (view && container) {
-      container.measure((_cx, _cy, _cw, _ch, cPageX, cPageY) => {
-        view.measure((_x, _y, w, h, pageX, pageY) => {
-          const id = ++floatIdRef.current;
-          setFloats(prev => [...prev, {
-            id, value, color,
-            x: pageX - cPageX + w / 2,
-            y: pageY - cPageY + h / 2,
-          }]);
-        });
-      });
-    } else {
-      const id = ++floatIdRef.current;
-      setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 200 }]);
-    }
+  function spawnFloat(value: number, kind: Exclude<FloatKind, 'mastery'>) {
+    const color = kind === 'real' ? PW.color.gold : '#9B2D6B';
+    const id = ++floatIdRef.current;
+    setFloats(prev => [...prev, { id, value, color, kind, x: 0, y: 0 }]);
   }
 
   function spawnFloatAtSplit(value: number, color = '#F5C842') {
     const id = ++floatIdRef.current;
-    setFloats(prev => [...prev, { id, value, color, x: containerWidth / 2, y: 300 }]);
+    setFloats(prev => [...prev, {
+      id,
+      value,
+      color,
+      kind: 'mastery',
+      x: containerWidth / 2,
+      y: 300,
+    }]);
   }
 
   function handleEffect(type: 'shard' | 'trail', pageX: number, pageY: number) {
@@ -1589,7 +1672,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       const chainMult = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
       const upPoints = Math.round(baseUp * chainMult * (isBoss ? 2 : 1));
       store.submitSwipeUp(maskId);
-      spawnFloat(upPoints, maskId, '#F5C842');
+      spawnFloat(upPoints, 'real');
       triggerAbsorption(mask.phrase);
 
       const nextFound = realMasks.filter(m =>
@@ -1631,7 +1714,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       const chainMultTrap = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
       const trapPoints = Math.round((isBoss ? 100 : 50) * chainMultTrap);
       store.submitSwipeDown(maskId);
-      spawnFloat(trapPoints, maskId, '#7B2D8B');
+      spawnFloat(trapPoints, 'trap');
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       onTrapCaught?.();
       const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current);
@@ -2119,19 +2202,31 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           </Animated.View>
           )}
 
+          <View pointerEvents="none" style={styles.scoreFloatOverlay}>
+            {floats.filter(f => f.kind !== 'mastery').map(f => (
+              <SwipeScoreFloat
+                key={f.id}
+                value={f.value}
+                color={f.color}
+                kind={f.kind as Exclude<FloatKind, 'mastery'>}
+                onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
+              />
+            ))}
+          </View>
+
         </View>
       </View>
 
 
-      {/* Score floats */}
-      {floats.map(f => (
-        <ScoreFloat
-          key={f.id}
-          value={f.value}
-          startPosition={{ x: f.x, y: f.y }}
-          color={f.color}
-          onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
-        />
+      {/* Mastery score float */}
+      {floats.filter(f => f.kind === 'mastery').map(f => (
+          <ScoreFloat
+            key={f.id}
+            value={f.value}
+            startPosition={{ x: f.x, y: f.y }}
+            color={f.color}
+            onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
+          />
       ))}
 
       {/* Polly — flies up in an arc to a left or right perch, hidden during ordinary play */}
@@ -2537,6 +2632,11 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingTop: 0,
     overflow: 'visible',
+  },
+  scoreFloatOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: PW.z.overlay,
+    elevation: PW.z.overlay,
   },
   swipeCueOverlay: {
     position: 'absolute',
