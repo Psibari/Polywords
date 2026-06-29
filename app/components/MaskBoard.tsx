@@ -473,7 +473,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   function triggerWrongSwipeFeedback() {
     playSfx('wrongLame');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     firePollyEvent('wrong');
     triggerWrongWordRecoil();
     onWrongSwipe?.();
