@@ -95,7 +95,7 @@ export function SwipeMask({
   splitBackgroundColor,
 }: Props) {
   const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = Math.min(screenWidth - 56, 340);
+  const cardWidth = Math.min(screenWidth - 80, 290);
   const cardHeight = Math.min(Math.max(tileHeight, 96), 124);
 
   // ── UI state ──────────────────────────────────────────────────

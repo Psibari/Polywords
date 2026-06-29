@@ -362,7 +362,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const backingCardCount = topMask
     ? Math.min(MAX_DECK_BACKING_CARDS, Math.max(0, deckSize - 1))
     : 0;
-  const backingCardWidth = Math.min(Math.max(containerWidth - 56, 0), 340);
+  const backingCardWidth = Math.min(Math.max(containerWidth - 80, 0), 290);
 
   // Deck entrance animation (native: translateY / transform only)
   const deckSlamY    = useRef(new Animated.Value(-52)).current;
