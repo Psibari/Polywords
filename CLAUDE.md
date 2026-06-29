@@ -1,6 +1,6 @@
 # POLYWORDS — CLAUDE.md
 
-### Ground truth for Claude Code · Updated June 27, 2026
+### Ground truth for Claude Code · Updated June 29, 2026
 
 ---
 
@@ -19,6 +19,12 @@ App shell: Home is the arcade lobby. Play is the arena. Word Vault is the player
 ## Active Branch
 
 Current work branch: `play-screen-overhaul`
+
+Latest clean checkpoint:
+
+* Commit: `36bff63`
+* Tag: `v0.working-20260629b`
+* Feel: make score floats readable badge stamps
 
 Rules:
 
@@ -329,6 +335,21 @@ Current SFX:
 * `polly_call`
 
 `gate_open.mp3` is orphaned because Master Gate was removed. Cleanup candidate only.
+
+Recent completed feel patches:
+
+* Reliable SFX playback and correct-claim vault-lock sound
+* Wrong-swipe error haptic in the trinity path
+* Multiplier pulse on chain increase
+* Score floats fixed as compact readable badge stamps
+
+Score-float behavior:
+
+* Correct REAL UP shows a compact readable gold `+points` badge.
+* Correct TRAP RIGHT shows a compact readable rose `+points` badge.
+* Wrong swipes show no score badge.
+* Badge V2 values: `minWidth: 64`, padding `11 × 5`, radius `10`, dark `rgba(15,13,42,0.92)` backing, `1px` matching border, font size `26`, duration `940ms`, and a tight black text shadow.
+* Fixed cause: the REAL badge used `left: 0` plus `right: 0`, stretching its background into a wide bar.
 
 Future system need:
 
@@ -695,5 +716,4 @@ tools/content/mask-rewriter               Local-only content tool
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · June 27, 2026*
-
+*POLYWORDS CLAUDE.md · Pete DiBari · June 29, 2026*

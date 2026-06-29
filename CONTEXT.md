@@ -1,5 +1,5 @@
 # POLYWORDS — CONTEXT.md
-### Session briefing · June 2026
+### Session briefing · June 29, 2026
 
 Read this at the start of any session. Full canonical detail lives in `CLAUDE.md`.
 
@@ -16,12 +16,14 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 ## Current Build State
 
 **Active branch:** `play-screen-overhaul` (never merge to main).
-**Known-good tag:** `v0.working-20260621`
+**Latest clean commit:** `36bff63`
+**Known-good tag:** `v0.working-20260629b`
+**Checkpoint feel:** make score floats readable badge stamps.
 **tsc:** exits 0.
 
 **Daily Challenge:** The Daily route and Home entry are enabled for device sanity testing, connecting the real engine/store state to the UP-only screen, six-card board, timed Clue Vault, Polly reactions, and win/loss overlay. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
 
-**Current visual state (June 28 evening):**
+**Current visual state (June 29):**
 Play screen design overhaul complete for this sprint.
 - HUD: single flat strip, chainMultiplier, gold fill bar progress
 - Background: two-zone LinearGradient overlay
@@ -36,6 +38,11 @@ Play screen design overhaul complete for this sprint.
 - HUD gold hairline bottom border.
 - Page block pagesCreamBot: #8A7A68.
 - Score letterSpacing: 2.
+- Correct REAL UP shows a compact readable gold `+points` badge.
+- Correct TRAP RIGHT shows a compact readable rose `+points` badge.
+- Wrong swipes show no score badge.
+- Score badge V2: minWidth 64, padding 11×5, radius 10, dark rgba(15,13,42,0.92) backing, 1px matching border, font 26, duration 940ms, tight black text shadow.
+- Fixed cause: REAL used left:0 + right:0, stretching the badge into a wide bar.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
@@ -64,18 +71,20 @@ Play screen design overhaul complete for this sprint.
 - Hunt wrong swipes now preserve mask ID and UP/RIGHT direction, and fatal wrong swipes finalize the current WordResult before Results.
 - Hunt-side Gold Feather consumption/revival is quarantined because revival was unsafe with the current MaskBoard tile lifecycle and Results accounting.
 - Hunt Gold Feather spend will be rebuilt later only after a safe resume-state design is approved.
+- Reliable SFX playback and the correct-claim vault-lock sound are complete.
+- Wrong swipes fire the error haptic through the trinity path.
+- Chain increases pulse the multiplier display.
+- Correct REAL/TRAP score floats use compact readable badge stamps; wrong swipes show none.
 
 ---
 
 ## On the horizon (priority order)
 
-1. **IMMEDIATE NEXT:** Wrong swipe buzzer + haptic + Polly <300ms (trinity not fully wired)
-2. Correct claim SFX (audio asset needed)
-3. Score floats + mastery shards → FXLayer
-4. Swipe cues: RIGHT cue fine-tune if needed
-5. Polly persistent anchor audit (pollyVisible stays true between events — investigate usePollyAnimator)
-6. HeroBook proportions review on device after full session
-7. Onboarding / first-run experience
+1. Swipe cues: RIGHT cue fine-tune if needed
+2. Polly persistent anchor audit (pollyVisible stays true between events — investigate usePollyAnimator)
+3. HeroBook proportions review on device after full session
+4. Mastery shards → FXLayer
+5. Onboarding / first-run experience
 
 Full Hero Word-Book spec: `docs/HERO_WORD_BOOK_SYSTEM.md`.
 Daily Challenge full spec: `docs/DAILY_CHALLENGE_SPEC.md`.
