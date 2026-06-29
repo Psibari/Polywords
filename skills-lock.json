@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "svg-precision-skill": {
+      "source": "dkyazzentwatwa/chatgpt-skills",
+      "sourceType": "github",
+      "skillPath": "svg-precision-skill/SKILL.md",
+      "computedHash": "d3da5e4d782223dabaf78347f43a9983dda9250b1b452857d7380019f60e35ee"
+    }
+  }
+}
