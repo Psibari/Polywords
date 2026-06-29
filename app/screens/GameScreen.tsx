@@ -253,6 +253,8 @@ const tb = StyleSheet.create({
     backgroundColor: 'rgba(11,9,32,0.86)',
     borderWidth: 0.5,
     borderColor: 'rgba(123,45,139,0.22)',
+    borderBottomColor: 'rgba(245,200,66,0.22)',
+    borderBottomWidth: 0.5,
   },
   statsRow: {
     flexDirection: 'row',
@@ -264,7 +266,7 @@ const tb = StyleSheet.create({
     fontSize: FONT_SIZES.hudScore,
     fontFamily: FONTS.hud,
     lineHeight: 34,
-    letterSpacing: 1,
+    letterSpacing: 2,
     textTransform: 'uppercase',
     textShadowColor: PW.color.goldGlow,
     textShadowOffset: { width: 0, height: 0 },

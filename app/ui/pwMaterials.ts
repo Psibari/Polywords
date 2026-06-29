@@ -123,7 +123,7 @@ export const heroBookMaterial = {
   hingeRail:      '#0F0D2A',
   pagesCreamTop:  '#9A8E7A',
   pagesCream:     '#887868',
-  pagesCreamBot:  '#706050',
+  pagesCreamBot:  '#8A7A68',
   pagesLine:      'rgba(55,42,22,0.42)',
   goldTrim:       '#F5C842',
   goldHairline:   'rgba(245,200,66,0.32)',
