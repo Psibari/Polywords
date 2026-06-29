@@ -3,6 +3,7 @@ import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 export type SfxName =
   | 'uiClick'
   | 'tileSwipe'
+  | 'correctClaim'
   | 'trapWrong'
   | 'wrongLame'
   | 'trapShatter'
@@ -18,9 +19,15 @@ type SfxConfig = {
   cooldownMs: number;
 };
 
+type SfxPlayerPool = {
+  players: AudioPlayer[];
+  nextIndex: number;
+};
+
 const SFX: Record<SfxName, SfxConfig> = {
   uiClick:        { source: require('../../assets/sfx/ui_click.mp3'),         volume: 0.25, cooldownMs: 80   },
   tileSwipe:      { source: require('../../assets/sfx/tile_swipe.mp3'),       volume: 0.25, cooldownMs: 80   },
+  correctClaim:   { source: require('../../assets/sfx/correct_claim.mp3'),    volume: 0.35, cooldownMs: 120  },
   trapWrong:      { source: require('../../assets/sfx/trap_wrong.mp3'),       volume: 0.35, cooldownMs: 120  },
   wrongLame:      { source: require('../../assets/sfx/wrong_lame_whistle.mp3'), volume: 0.42, cooldownMs: 120 },
   trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140  },
@@ -31,10 +38,104 @@ const SFX: Record<SfxName, SfxConfig> = {
   pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300  },
 };
 
-const players: Partial<Record<SfxName, AudioPlayer>> = {};
+const PLAYER_POOL_SIZE = 2;
+const MAX_ANTI_DOUBLE_FIRE_MS = 35;
+const LOAD_RETRY_DELAY_MS = 50;
+const LOAD_RETRY_ATTEMPTS = 4;
+
+const playerPools: Partial<Record<SfxName, SfxPlayerPool>> = {};
 const lastPlayedAt: Partial<Record<SfxName, number>> = {};
+const reservedPlayers = new Set<AudioPlayer>();
+const pendingLoadRetryTimers = new Set<ReturnType<typeof setTimeout>>();
 
 let audioModeSet = false;
+
+function warnDev(message: string, error?: unknown): void {
+  if (!__DEV__) return;
+  if (error === undefined) {
+    console.warn(`[SFX] ${message}`);
+  } else {
+    console.warn(`[SFX] ${message}`, error);
+  }
+}
+
+function createPlayerPool(name: SfxName, config: SfxConfig): SfxPlayerPool | null {
+  const players: AudioPlayer[] = [];
+
+  for (let i = 0; i < PLAYER_POOL_SIZE; i++) {
+    try {
+      const player = createAudioPlayer(config.source, { keepAudioSessionActive: true });
+      player.volume = config.volume;
+      players.push(player);
+    } catch (error) {
+      warnDev(`Failed to preload "${name}" player ${i + 1}.`, error);
+    }
+  }
+
+  return players.length > 0 ? { players, nextIndex: 0 } : null;
+}
+
+function takePlayer(pool: SfxPlayerPool): AudioPlayer | null {
+  const { players } = pool;
+
+  for (let offset = 0; offset < players.length; offset++) {
+    const index = (pool.nextIndex + offset) % players.length;
+    const player = players[index];
+    if (player.isLoaded && !player.playing && !reservedPlayers.has(player)) {
+      pool.nextIndex = (index + 1) % players.length;
+      reservedPlayers.add(player);
+      return player;
+    }
+  }
+
+  for (let offset = 0; offset < players.length; offset++) {
+    const index = (pool.nextIndex + offset) % players.length;
+    const player = players[index];
+    if (player.isLoaded && !reservedPlayers.has(player)) {
+      pool.nextIndex = (index + 1) % players.length;
+      reservedPlayers.add(player);
+      return player;
+    }
+  }
+
+  return null;
+}
+
+async function restartPlayer(name: SfxName, player: AudioPlayer): Promise<void> {
+  try {
+    player.pause();
+    await player.seekTo(0, 0, 0);
+    player.play();
+  } catch (error) {
+    warnDev(`Failed to play "${name}" from the beginning.`, error);
+  } finally {
+    reservedPlayers.delete(player);
+  }
+}
+
+function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void {
+  const player = takePlayer(pool);
+  if (player) {
+    void restartPlayer(name, player);
+    return;
+  }
+
+  if (loadAttempt === 0) {
+    warnDev(`"${name}" was requested before any pooled player finished loading; retrying.`);
+  }
+  if (loadAttempt >= LOAD_RETRY_ATTEMPTS) {
+    warnDev(`"${name}" could not play because its pooled players did not load.`);
+    return;
+  }
+
+  const timer = setTimeout(() => {
+    pendingLoadRetryTimers.delete(timer);
+    if (playerPools[name] === pool) {
+      playFromPool(name, pool, loadAttempt + 1);
+    }
+  }, LOAD_RETRY_DELAY_MS);
+  pendingLoadRetryTimers.add(timer);
+}
 
 export function preloadSfx(): void {
   if (!audioModeSet) {
@@ -43,17 +144,16 @@ export function preloadSfx(): void {
       playsInSilentMode:    true,
       shouldPlayInBackground: false,
       interruptionMode:     'duckOthers',
-    }).catch(() => {});
+    }).catch(error => warnDev('Failed to configure audio mode.', error));
   }
 
   (Object.entries(SFX) as [SfxName, SfxConfig][]).forEach(([name, config]) => {
-    if (players[name]) return;
-    try {
-      const player = createAudioPlayer(config.source);
-      player.volume = config.volume;
-      players[name] = player;
-    } catch {
-      // leave absent — playSfx will skip silently
+    if (playerPools[name]) return;
+    const pool = createPlayerPool(name, config);
+    if (pool) {
+      playerPools[name] = pool;
+    } else {
+      warnDev(`No players loaded for "${name}".`);
     }
   });
 }
@@ -61,26 +161,30 @@ export function preloadSfx(): void {
 export function playSfx(name: SfxName): void {
   const config = SFX[name];
   const now = Date.now();
-  if ((now - (lastPlayedAt[name] ?? 0)) < config.cooldownMs) return;
+  const antiDoubleFireMs = Math.min(config.cooldownMs, MAX_ANTI_DOUBLE_FIRE_MS);
+  if ((now - (lastPlayedAt[name] ?? 0)) < antiDoubleFireMs) return;
 
-  if (!players[name]) preloadSfx();
+  if (!playerPools[name]) preloadSfx();
 
-  const player = players[name];
-  if (!player) return;
-
-  try {
-    lastPlayedAt[name] = Date.now();
-    player.seekTo(0).catch(() => {});
-    player.play();
-  } catch {
-    // silent failure
+  const pool = playerPools[name];
+  if (!pool) {
+    warnDev(`"${name}" was requested but its player pool is unavailable.`);
+    return;
   }
+
+  lastPlayedAt[name] = now;
+  playFromPool(name, pool);
 }
 
 export function unloadSfx(): void {
-  (Object.keys(players) as SfxName[]).forEach(name => {
-    try { players[name]?.remove(); } catch {}
-    delete players[name];
+  pendingLoadRetryTimers.forEach(timer => clearTimeout(timer));
+  pendingLoadRetryTimers.clear();
+  reservedPlayers.clear();
+  (Object.keys(playerPools) as SfxName[]).forEach(name => {
+    playerPools[name]?.players.forEach(player => {
+      try { player.remove(); } catch {}
+    });
+    delete playerPools[name];
     delete lastPlayedAt[name];
   });
   audioModeSet = false;

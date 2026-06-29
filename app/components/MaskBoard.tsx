@@ -1488,6 +1488,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     resetHesitation();
     const isReal = mysteryIsRealRef.current;
     if (isReal) {
+      playSfx('correctClaim');
       splitCompletedRef.current = true;
       setFinalTileStates(prev => new Map(prev).set(maskId, 'correct'));
       if (hiddenRealMask) triggerAbsorption(hiddenRealMask.phrase);
@@ -1583,6 +1584,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
+      playSfx('correctClaim');
       const baseUp = mask.isRare ? 300 : 100;
       const chainMult = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
       const upPoints = Math.round(baseUp * chainMult * (isBoss ? 2 : 1));
