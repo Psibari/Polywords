@@ -309,6 +309,9 @@ Design locks:
 * "POLLY'S VAULT" label lives on the hinge band — always visible, slides in with book.
 * Swipe cues fade permanently at stepIndex >= 3.
 * Two-zone background overlay: LinearGradient rgba(6,4,22,0.90) top → rgba(8,5,24,0.36) bottom. Never flat overlay.
+* Tile width: SwipeMask cardWidth = screenWidth-80 max 290. backingCardWidth in MaskBoard = containerWidth-80 max 290. Always keep in sync.
+* HUD bottom hairline: borderBottomColor rgba(245,200,66,0.22), borderBottomWidth 0.5.
+* Score numeral letterSpacing: 2.
 
 ---
 
