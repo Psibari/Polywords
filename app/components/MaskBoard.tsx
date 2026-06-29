@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native';
 
-import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
 import { GhostMeaning, Mask, WordStep } from '../game/types';
@@ -139,80 +138,6 @@ function SwipeScoreFloat({
         +{value}
       </Text>
     </Animated.View>
-  );
-}
-
-function easeOutBack(t: number, overshoot: number): number {
-  const c3 = overshoot + 1;
-  return 1 + c3 * Math.pow(t - 1, 3) + overshoot * Math.pow(t - 1, 2);
-}
-
-type ShockwaveProps = { boardWidth: number; onDone: () => void };
-function BossShockwave({ boardWidth, onDone }: ShockwaveProps) {
-  const [p, setP]      = useState(0);
-  const startRef       = useRef<number | null>(null);
-  const rafRef         = useRef<number>(0);
-  const DURATION       = 600;
-  const cx             = boardWidth / 2;
-  const cy             = 76;
-
-  useEffect(() => {
-    function tick(now: number) {
-      if (startRef.current === null) startRef.current = now;
-      const np = Math.min((now - startRef.current) / DURATION, 1);
-      setP(np);
-      if (np < 1) rafRef.current = requestAnimationFrame(tick);
-      else onDone();
-    }
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const r1p     = Math.min(p / 0.8, 1);
-  const r1scale = 0.4 + r1p * 5.1;
-  const r1op    = (1 - r1p) * (1 - r1p);
-
-  const r2raw   = (p - 0.133) / 0.633;
-  const r2p     = Math.max(0, Math.min(r2raw, 1));
-  const r2scale = 0.4 + r2p * 2.8;
-  const r2op    = 0.6 * (1 - r2p * r2p);
-
-  const DUST_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315].map(a => a * Math.PI / 180);
-  const dustP    = Math.min(p / 0.75, 1);
-  const dustEase = dustP * (2 - dustP);
-
-  return (
-    <View
-      pointerEvents="none"
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 5 }}
-    >
-      <View style={{
-        position: 'absolute',
-        left: cx - 30, top: cy - 30,
-        width: 60, height: 60, borderRadius: 30,
-        borderWidth: 2.5, borderColor: 'rgba(245,200,66,0.9)',
-        opacity: r1op, transform: [{ scale: r1scale }],
-      }} />
-      {r2p > 0 && (
-        <View style={{
-          position: 'absolute',
-          left: cx - 30, top: cy - 30,
-          width: 60, height: 60, borderRadius: 30,
-          borderWidth: 1.5, borderColor: 'rgba(123,45,139,0.8)',
-          opacity: r2op, transform: [{ scale: r2scale }],
-        }} />
-      )}
-      {DUST_ANGLES.map((angle, i) => (
-        <View key={i} style={{
-          position: 'absolute',
-          left: cx + Math.cos(angle) * (50 + i * 8) * dustEase - 3,
-          top:  cy + Math.sin(angle) * (50 + i * 8) * dustEase - 3,
-          width: 6, height: 6, borderRadius: 3,
-          backgroundColor: i % 2 === 0 ? '#F5C842' : 'rgba(255,255,255,0.8)',
-          opacity: (1 - dustP) * 0.8,
-        }} />
-      ))}
-    </View>
   );
 }
 
@@ -491,9 +416,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const bookOpenAnim          = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const bookIntakeGlowAnim    = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const bookSlideX            = useRef(new Animated.Value(SCREEN_WIDTH)).current; // book entrance/exit slide, native driver
-  const bossBookGlow          = useRef(new Animated.Value(0)).current;
-  const vaultStampOpacity     = useRef(new Animated.Value(0)).current;
-  const [vaultStampVisible, setVaultStampVisible] = useState(false);
   const wordEntranceHapticRef = useRef<string | null>(null);
   const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
@@ -572,21 +494,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   // ── boss entrance ─────────────────────────────────────────────
-  const bossWordTranslateY = useRef(new Animated.Value(isBoss ? -300 : 0)).current;
-  const bossShakeX         = useRef(new Animated.Value(0)).current;
-  const bossSweepX         = useRef(new Animated.Value(-60)).current;
-  const bossSweepOpacity   = useRef(new Animated.Value(0)).current;
-  const badgeOpacity      = useRef(new Animated.Value(0)).current;
-  const underlineProgress = useRef(new Animated.Value(0)).current;
-  const [bossUnderlineVisible, setBossUnderlineVisible] = useState(false);
-  // Boss squash/stretch (non-native, rAF setValue-driven)
-  const bossScaleX         = useRef(new Animated.Value(isBoss ? 0.86 : 1)).current;
-  const bossScaleY         = useRef(new Animated.Value(isBoss ? 1.16 : 1)).current;
-  const bossEntranceRafRef = useRef<number | null>(null);
-  const bossImpactRef      = useRef<number | null>(null);
-  const [bossWordColor, setBossWordColor] = useState('#F5C842');
-  const [bossShockwaveVisible, setBossShockwaveVisible] = useState(false);
-
   function triggerBookOpen() {
     bookOpenAnim.stopAnimation();
     bookIntakeGlowAnim.stopAnimation();
@@ -653,7 +560,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   const [bossReady, setBossReady]             = useState(!isBoss);
-  const [bossSweepActive, setBossSweepActive] = useState(false);
   const [tilesReady, setTilesReady]           = useState(false);
 
   // ── haunt entrance ────────────────────────────────────────────
@@ -909,74 +815,23 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         });
       }, 120);
     }, cardDelay);
-    bossShakeX.setValue(0);
-    // Book slide is the entrance now — word rides the cover in position for all words
-    bossWordTranslateY.setValue(0);
-    bossScaleX.setValue(isBoss ? 0.86 : 1);
-    bossScaleY.setValue(isBoss ? 1.16 : 1);
-    if (bossEntranceRafRef.current !== null) {
-      cancelAnimationFrame(bossEntranceRafRef.current);
-      bossEntranceRafRef.current = null;
-    }
-    bossImpactRef.current = null;
-    setBossWordColor('#F5C842');
-    setBossShockwaveVisible(false);
     goldTextOpacity.setValue(0);
     wordEntryTilt.setValue(0);
     bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.setValue(0);
     bookSlideX.setValue(SCREEN_WIDTH);
-    bossBookGlow.setValue(0);
-    vaultStampOpacity.setValue(0);
-    setVaultStampVisible(false);
 
-    // Book slides in from right — heavier spring with overshoot
-    bookSlideX.setValue(SCREEN_WIDTH);
-    Animated.spring(bookSlideX, {
-      toValue: 0,
-      friction: isBoss ? 2 : 5,
-      tension:  isBoss ? 25 : 60,
-      useNativeDriver: true,
-    }).start(() => {
-      if (!isBoss) return;
-
-      // Triple heavy haptic — BOOM · BOOM · BOOM
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 80);
-      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 160);
-
-      // Book shudder — locks into position
-      Animated.sequence([
-        Animated.timing(bookSlideX, { toValue:  4, duration: 30, useNativeDriver: true }),
-        Animated.timing(bookSlideX, { toValue: -4, duration: 30, useNativeDriver: true }),
-        Animated.timing(bookSlideX, { toValue:  3, duration: 30, useNativeDriver: true }),
-        Animated.timing(bookSlideX, { toValue: -3, duration: 30, useNativeDriver: true }),
-        Animated.timing(bookSlideX, { toValue:  0, duration: 30, useNativeDriver: true }),
-      ]).start();
-
-      // Gold cover glow flash
-      bossBookGlow.setValue(0);
-      Animated.sequence([
-        Animated.timing(bossBookGlow, {
-          toValue: 0.35, duration: 160, useNativeDriver: true,
-        }),
-        Animated.timing(bossBookGlow, {
-          toValue: 0, duration: 280, useNativeDriver: true,
-        }),
-      ]).start();
-
-      // Vault stamp — appears on cover, fades before shockwave
-      setVaultStampVisible(true);
-      vaultStampOpacity.setValue(0);
-      Animated.timing(vaultStampOpacity, {
-        toValue: 1, duration: 200, useNativeDriver: true,
+    if (isBoss) {
+      bookSlideX.setValue(0);
+    } else {
+      // Normal words keep the existing book entrance.
+      Animated.spring(bookSlideX, {
+        toValue: 0,
+        friction: 5,
+        tension: 60,
+        useNativeDriver: true,
       }).start();
-      setTimeout(() => {
-        Animated.timing(vaultStampOpacity, {
-          toValue: 0, duration: 180, useNativeDriver: true,
-        }).start(() => setVaultStampVisible(false));
-      }, 800);
-    });
+    }
 
     // Boss word rides the book cover — already visible & in position; drama fires on top
     if (isBoss) {
@@ -1102,128 +957,24 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     if (ghost) firePollyEvent('ghostEntry');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Boss entrance sequence
+  // Boss V1 entrance: stable hero word, then reveal the real tile stack.
   useEffect(() => {
     if (!isBoss) return;
 
-    badgeOpacity.setValue(0);
-    underlineProgress.setValue(0);
-    setBossUnderlineVisible(false);
-
-    // T+400ms — Shockwave + 3 heavy haptics
-    const t1 = setTimeout(() => {
-      setBossShockwaveVisible(true);
+    const impactTimer = setTimeout(() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 120);
       setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 260);
     }, 400);
 
-    // T+800ms — Boss word drops in + squash/stretch ignite
-    const t2 = setTimeout(() => {
-      deckDeepY.setValue(0);    deckDeepRot.setValue(0);    deckDeepOp.setValue(1);
-      deckMidY.setValue(0);     deckMidRot.setValue(0);     deckMidOp.setValue(1);
-      deckActiveY.setValue(0);  deckActiveRot.setValue(0);  deckActiveOp.setValue(1);
-      deckBackingY.setValue(0); deckBackingOp.setValue(1);
-
-      Animated.spring(bossWordTranslateY, {
-        toValue: 0, tension: 280, friction: 6, useNativeDriver: false,
-      }).start();
-
-      // Shake on land
-      setTimeout(() => {
-        Animated.sequence([
-          Animated.timing(bossShakeX, { toValue:  4, duration: 30, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue: -4, duration: 30, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue:  3, duration: 30, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue: -3, duration: 30, useNativeDriver: true }),
-          Animated.timing(bossShakeX, { toValue:  0, duration: 30, useNativeDriver: true }),
-        ]).start();
-
-        // Squash/stretch + ignite
-        bossImpactRef.current = performance.now ? performance.now() : Date.now();
-        bossScaleX.setValue(1.32);
-        bossScaleY.setValue(0.66);
-
-        const SQUASH_DUR = 520;
-        const IGNITE_DUR = 400;
-        const TOTAL_DUR  = Math.max(SQUASH_DUR, IGNITE_DUR);
-        let rafStart: number | null = null;
-
-        function squashIgniteTick(now: number) {
-          if (rafStart === null) rafStart = now;
-          const elapsed = now - rafStart;
-          if (elapsed <= SQUASH_DUR) {
-            const k = easeOutBack(Math.min(elapsed / SQUASH_DUR, 1), 2.2);
-            bossScaleX.setValue(1.32 - 0.32 * k);
-            bossScaleY.setValue(0.66 + 0.34 * k);
-          }
-          if (elapsed <= IGNITE_DUR) {
-            const sweep = Math.min(elapsed / 150, 1);
-            const g = Math.round(255 + (215 - 255) * sweep);
-            const b = Math.round(255 + (0   - 255) * sweep);
-            setBossWordColor(`rgb(255,${g},${b})`);
-          }
-          if (elapsed < TOTAL_DUR) {
-            bossEntranceRafRef.current = requestAnimationFrame(squashIgniteTick);
-          } else {
-            bossScaleX.setValue(1); bossScaleY.setValue(1);
-            setBossWordColor('#F5C842');
-            bossEntranceRafRef.current = null;
-          }
-        }
-        bossEntranceRafRef.current = requestAnimationFrame(squashIgniteTick);
-      }, 200);
-    }, 800);
-
-    // T+1000ms — Bloom sweep starts
-    const t3 = setTimeout(() => {
-      setBossSweepActive(true);
-      bossSweepX.setValue(-80);
-      bossSweepOpacity.setValue(1);
-
-      // Badge reveals 200ms into sweep (bloom crosses badge position)
-      setTimeout(() => {
-        Animated.timing(badgeOpacity, {
-          toValue: 1, duration: 180, useNativeDriver: true,
-        }).start();
-      }, 200);
-
-      // Underline starts tracing 100ms into sweep
-      setTimeout(() => {
-        setBossUnderlineVisible(true);
-        underlineProgress.setValue(0);
-        Animated.timing(underlineProgress, {
-          toValue: 1, duration: 420,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: false,
-        }).start(() => {
-          // Slight haptic on underline complete
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        });
-      }, 100);
-
-      Animated.timing(bossSweepX, {
-        toValue: containerWidthRef.current + 80,
-        duration: 520,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }).start(() => {
-        Animated.timing(bossSweepOpacity, {
-          toValue: 0, duration: 120, useNativeDriver: true,
-        }).start(() => {
-          setBossSweepActive(false);
-          firePollyEvent('bossEntry');
-          setBossReady(true);
-        });
-      });
-    }, 1000);
+    const readyTimer = setTimeout(() => {
+      firePollyEvent('bossEntry');
+      setBossReady(true);
+    }, 1200);
 
     return () => {
-      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
-      if (bossEntranceRafRef.current !== null) {
-        cancelAnimationFrame(bossEntranceRafRef.current);
-        bossEntranceRafRef.current = null;
-      }
+      clearTimeout(impactTimer);
+      clearTimeout(readyTimer);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1539,10 +1290,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function triggerWordExit(onComplete: () => void, perfect?: boolean) {
-    badgeOpacity.setValue(0);
-    underlineProgress.setValue(0);
-    setBossUnderlineVisible(false);
-
     if (perfect) {
       setTransitionLabel('CLEAR');
       transitionLabelOpacity.setValue(0);
@@ -1758,7 +1505,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   return (
     <Animated.View
-      style={[styles.container, { transform: [{ translateX: bossShakeX }] }]}
+      style={styles.container}
       ref={containerRef as any}
       onLayout={e => {
         const w = e.nativeEvent.layout.width;
@@ -1780,64 +1527,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           );
         }}
       >
-        {/* Boss gold sweep */}
-        {bossSweepActive && (
-          <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            <Animated.View
-              style={{
-                position: 'absolute', top: 0, bottom: 0, width: 160,
-                opacity: bossSweepOpacity,
-                transform: [{ translateX: bossSweepX }],
-              }}
-            >
-              <LinearGradient
-                colors={[
-                  'transparent',
-                  'rgba(245,200,66,0.10)',
-                  'rgba(245,200,66,0.22)',
-                  'rgba(245,200,66,0.10)',
-                  'transparent',
-                ]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={{ flex: 1 }}
-              />
-            </Animated.View>
-          </View>
-        )}
-
         {/* Kicker — floats above word zone */}
         {kicker && (
           isBoss ? (
-            <Animated.Text style={[styles.kickerBoss, { opacity: badgeOpacity }]}>
-              {kicker}
-            </Animated.Text>
+            <Text style={styles.kickerBoss}>{kicker}</Text>
           ) : (
             <Text style={styles.kicker}>{kicker}</Text>
           )
-        )}
-
-        {bossUnderlineVisible && (
-          <Animated.View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              bottom: 8,
-              left: 14,
-              height: 2.5,
-              borderRadius: 2,
-              backgroundColor: '#F5C842',
-              width: underlineProgress.interpolate({
-                inputRange:  [0, 1],
-                outputRange: [0, containerWidthRef.current - 28],
-              }),
-              shadowColor: '#F5C842',
-              shadowOpacity: 0.6,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 0 },
-              elevation: 4,
-            }}
-          />
         )}
 
         {transitionLabel && (
@@ -1871,20 +1567,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
             ],
           }}
         >
-          {/* Boss squash/stretch wrapper — non-native, identity for non-boss */}
+          {/* Hero word transforms */}
           <Animated.View
             style={{
-              transform: [
-                { translateY: bossWordTranslateY },
-                { scaleX: bossScaleX },
-                { scaleY: bossScaleY },
-              ],
-            }}
-          >
-          {/* Inner: native-only transforms */}
-          <Animated.View
-            style={{
-              opacity: wordEntryOpacity,
+              opacity: wordOutcome === 'none' ? wordEntryOpacity : 0,
               transform: [
                 { scale: absorptionScale },
                 { scale: wordEntryScale },
@@ -1896,9 +1582,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               ],
             }}
           >
-            <Text style={[styles.word, isBoss && styles.wordBoss, styles.wordEmboss]} numberOfLines={1} adjustsFontSizeToFit>
-              {step.word}
-            </Text>
+            {!isBoss && (
+              <Text
+                style={[styles.word, styles.wordEmboss]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {step.word}
+              </Text>
+            )}
             <Text
               style={[styles.word, isBoss && styles.wordBoss]}
               numberOfLines={1}
@@ -1908,45 +1600,47 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               {step.word}
             </Text>
             {/* Gold overlay for absorption fill */}
-            <Animated.Text
-              pointerEvents="none"
-              style={[
-                styles.word,
-                isBoss && styles.wordBoss,
-                {
-                  color: '#F5C842',
-                  opacity: goldTextOpacity,
-                  position: 'absolute',
-                  left: 0, right: 0,
-                  textAlign: 'center',
-                },
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {step.word}
-            </Animated.Text>
+            {!isBoss && (
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.word,
+                  {
+                    color: '#F5C842',
+                    opacity: goldTextOpacity,
+                    position: 'absolute',
+                    left: 0, right: 0,
+                    textAlign: 'center',
+                  },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {step.word}
+              </Animated.Text>
+            )}
             {/* Red flash overlay — wrong swipe danger signal */}
-            <Animated.Text
-              pointerEvents="none"
-              style={[
-                styles.word,
-                isBoss && styles.wordBoss,
-                {
-                  color: '#CC2200',
-                  opacity: wordRedOpacity,
-                  position: 'absolute',
-                  left: 0, right: 0,
-                  textAlign: 'center',
-                },
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {step.word}
-            </Animated.Text>
+            {!isBoss && (
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.word,
+                  {
+                    color: '#CC2200',
+                    opacity: wordRedOpacity,
+                    position: 'absolute',
+                    left: 0, right: 0,
+                    textAlign: 'center',
+                  },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {step.word}
+              </Animated.Text>
+            )}
 
             {/* Haunt entrance purple tint — fades out as tiles appear */}
             {isHaunt && (
@@ -1977,7 +1671,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
               style={[styles.goldRing, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
             />
           </Animated.View>
-          </Animated.View>
         </Animated.View>
         </HeroBook>
 
@@ -1988,72 +1681,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         >
           POLLY'S VAULT
         </Text>
-
-        {/* Boss gold cover glow — flashes on spring land */}
-        {isBoss && (
-          <Animated.View
-            pointerEvents="none"
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              borderRadius: 14,
-              backgroundColor: '#F5C842',
-              opacity: bossBookGlow,
-            }}
-          />
-        )}
-
-        {/* Vault stamp — POLLY'S VAULT seal on cover */}
-        {isBoss && vaultStampVisible && (
-          <Animated.View
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: 80,
-              alignItems: 'center',
-              opacity: vaultStampOpacity,
-            }}
-          >
-            <Text style={{
-              color: 'rgba(245,200,66,0.9)',
-              fontFamily: FONTS.label,
-              fontSize: 10,
-              letterSpacing: 4,
-              textTransform: 'uppercase' as const,
-              textAlign: 'center',
-            }}>
-              POLLY'S VAULT
-            </Text>
-            <View style={{
-              marginTop: 5,
-              height: 1,
-              width: 100,
-              backgroundColor: 'rgba(245,200,66,0.45)',
-              borderRadius: 1,
-            }} />
-            <Text style={{
-              marginTop: 4,
-              color: 'rgba(245,200,66,0.55)',
-              fontFamily: FONTS.label,
-              fontSize: 8,
-              letterSpacing: 3,
-              textTransform: 'uppercase' as const,
-              textAlign: 'center',
-            }}>
-              FINAL GATE
-            </Text>
-          </Animated.View>
-        )}
         </Animated.View>
-
-        {/* Boss shockwave rings + dust */}
-        {bossShockwaveVisible && (
-          <BossShockwave
-            boardWidth={containerWidth}
-            onDone={() => setBossShockwaveVisible(false)}
-          />
-        )}
 
         {/* Absorbed phrase flash */}
         {absorbedPhrase !== null && (

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -520,22 +520,97 @@ function GameDirector({ navigation }: { navigation: any }) {
     navigation.navigate('Home');
   }
 
-  const isDone      = game.status === 'complete' || game.status === 'gameOver';
+  function handleDevJumpToBoss() {
+    if (!__DEV__) return;
+
+    const currentGame = useGameStore.getState().game;
+    const bossStep = currentGame.session[9];
+    if (
+      !bossStep ||
+      bossStep.kind !== 'word' ||
+      bossStep.eventType !== 'bossWord'
+    ) {
+      return;
+    }
+
+    useGameStore.setState({
+      game: {
+        ...currentGame,
+        stepIndex: 9,
+        swipedUpIds: [],
+        swipedDownIds: [],
+        revealedHiddenMasks: {},
+        mistakesOnWord: 0,
+        feedback: null,
+        lastActionAt: Date.now(),
+        pollyTrigger: null,
+        streakMilestone: null,
+        featherMilestone: null,
+      },
+    });
+    setMissedCount(0);
+    setShowFeatherFloat(false);
+  }
+
+  const isDone = game.status === 'complete' || game.status === 'gameOver';
+  const activeStep = currentStep(game);
+  const isBossRound =
+    !isDone &&
+    game.stepIndex === 9 &&
+    activeStep.kind === 'word' &&
+    activeStep.eventType === 'bossWord';
+
   return (
     <SafeAreaView style={styles.screen}>
       <ImageBackground
-        source={require('../../assets/home/home-hero-bg.png')}
+        source={
+          isBossRound
+            ? require('../../assets/backgrounds/boss-round-bg.png')
+            : require('../../assets/home/home-hero-bg.png')
+        }
         resizeMode="cover"
         style={styles.backgroundImage}
       >
         <LinearGradient
-          colors={['rgba(6,4,22,0.90)', 'rgba(8,5,24,0.36)']}
+          colors={isBossRound
+            ? ['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']
+            : ['rgba(6,4,22,0.90)', 'rgba(8,5,24,0.36)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           pointerEvents="none"
           style={StyleSheet.absoluteFillObject}
         />
       </ImageBackground>
+      {isBossRound && (
+        <View pointerEvents="none" style={styles.bossBackground}>
+          <View style={styles.bossBookGlow}>
+            <View style={styles.bossBookGlowCore} />
+          </View>
+          <LinearGradient
+            colors={[
+              'rgba(15,13,42,0.30)',
+              'rgba(15,13,42,0.00)',
+              'rgba(15,13,42,0.04)',
+              'rgba(15,13,42,0.34)',
+            ]}
+            locations={[0, 0.30, 0.70, 1]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <LinearGradient
+            colors={[
+              'rgba(15,13,42,0.22)',
+              'rgba(15,13,42,0.00)',
+              'rgba(15,13,42,0.22)',
+            ]}
+            locations={[0, 0.5, 1]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+        </View>
+      )}
       {!isDone && <TopBar />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
@@ -545,6 +620,16 @@ function GameDirector({ navigation }: { navigation: any }) {
           onTrapCaught={handleTrapCaught}
           onWrongSwipe={handleWrongSwipe}
         />
+      )}
+      {__DEV__ && !isDone && game.stepIndex !== 9 && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Jump to boss round"
+          onPress={handleDevJumpToBoss}
+          style={styles.devBossButton}
+        >
+          <Text style={styles.devBossButtonText}>BOSS</Text>
+        </Pressable>
       )}
 
       {/* ── Flash overlays — zIndex 50, above game content ── */}
@@ -619,6 +704,46 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
+  },
+  bossBackground: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  bossBookGlow: {
+    position: 'absolute',
+    top: 72,
+    left: '6%',
+    right: '6%',
+    height: 230,
+    borderRadius: 150,
+    backgroundColor: 'rgba(155,45,107,0.08)',
+  },
+  bossBookGlowCore: {
+    position: 'absolute',
+    top: 48,
+    bottom: 48,
+    left: '16%',
+    right: '16%',
+    borderRadius: 90,
+    backgroundColor: 'rgba(245,200,66,0.04)',
+  },
+  devBossButton: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    zIndex: 200,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: PW.color.purpleSoft,
+    backgroundColor: PW.color.surfaceDeep,
+    opacity: 0.72,
+  },
+  devBossButtonText: {
+    color: PW.color.gold,
+    fontFamily: FONTS.label,
+    fontSize: 9,
+    letterSpacing: 1.2,
   },
   effectsOverlay: {
     position: 'absolute',
