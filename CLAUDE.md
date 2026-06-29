@@ -300,6 +300,16 @@ Locked play-screen grammar:
 * Left side = Polly perch/heckle zone
 * Direction cues are help only, never correctness feedback
 
+Design locks:
+
+* HeroBook spine is TOP (hinge band). Pages open from BOTTOM to accept tile. Never add left spine band.
+* HeroBook cover is flat rectangle geometry — no parallelogram skew. Tile and book share same geometry language.
+* Page block colors: dark aged parchment (#A8A090 range). Never near-white cream.
+* HUD is a single flat strip (no pill chips). Score left, multiplier center (hidden at ×1.0), feathers right, gold fill bar below.
+* "POLLY'S VAULT" label lives on the hinge band — always visible, slides in with book.
+* Swipe cues fade permanently at stepIndex >= 3.
+* Two-zone background overlay: LinearGradient rgba(6,4,22,0.90) top → rgba(8,5,24,0.36) bottom. Never flat overlay.
+
 ---
 
 ## Feedback / SFX
@@ -669,6 +679,16 @@ docs/POLLY_DIALOGUE_BANK.md               Polly dialogue source of truth
 
 tools/content/mask-rewriter               Local-only content tool
 ```
+
+---
+
+## Key Learnings — Architecture
+
+* StreakDisplay shows chainMultiplier (×1.5 format), not raw streak count. Hides at 1.0.
+* Progress is a gold fill bar (Animated width), not dots. useNativeDriver: false for width animation.
+* onNearTarget callback on SwipeMask fires at closed > 0.45, triggers triggerBookOpen() in MaskBoard. Book opens when tile arrives, not on swipe.
+* intakeY = wordScreenY + 73 for coverHeight 162.
+* gridWrap paddingTop must account for book overflow: (bookHeight - wordZoneHeight) + desired visual gap. Current: (210-172) + 50 = 88.
 
 ---
 

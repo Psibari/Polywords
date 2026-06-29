@@ -21,12 +21,17 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 
 **Daily Challenge:** The Daily route and Home entry are enabled for device sanity testing, connecting the real engine/store state to the UP-only screen, six-card board, timed Clue Vault, Polly reactions, and win/loss overlay. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
 
-### Completed June 27, 2026
-
-- HeroBook V5 geometry was refined in `app/components/ui/HeroBook.tsx`: SVG Path/Polygon-style perspective geometry replaces rectangle cover anatomy, so the connected page planes and purple/gold cover read as one thick book.
-- Trap shatter FX was polished across `app/components/SwipeMask.tsx`, `app/components/FXLayer.tsx`, and `app/ui/pwEffects.ts`. Correct trap rejection now passes shard variant `'trap'`, rendering SVG polygon/crystal pieces in purple, deep-purple, and rose.
-- HeroBook and shatter work stayed in separate lanes.
-- Checks passed: `npx.cmd tsc --noEmit`; `git diff --check` (line-ending warnings only).
+**Current visual state (June 28 evening):**
+Play screen design overhaul complete for this sprint.
+- HUD: single flat strip, chainMultiplier, gold fill bar progress
+- Background: two-zone LinearGradient overlay
+- HeroBook: flat rect cover, top spine/hinge, dark parchment pages, POLLY'S VAULT label on hinge
+- Book intake (Pass 2): tile travels to book, book opens on arrival via onNearTarget handoff
+- intakeY = wordScreenY + 73 (calibrated for coverHeight 162)
+- gridWrap paddingTop: 88
+- Swipe cues fade at stepIndex >= 3
+- Red flash: 0.32 opacity, 55ms
+- Tile inner face: #1C1548
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
@@ -58,11 +63,16 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 
 ---
 
-## Next Implementation Order
+## On the horizon (priority order)
 
-1. Hero Word-Book Pass 1 — cover swing entrance/exit.
-2. Correct UP book intake — SwipeMask handoff required (see parked stash).
-3. Wrong swipe buzzer + haptic + red flash.
+1. Wrong swipe buzzer + haptic + Polly <300ms (trinity not fully wired)
+2. Tile width narrowing (SwipeMask: screenWidth - 80, max 290) — needs SwipeMask warroom session, backingCardWidth in MaskBoard must match
+3. Correct claim SFX (audio asset needed)
+4. Score floats + mastery shards → FXLayer
+5. Swipe cues: RIGHT cue fine-tune if needed
+6. Polly persistent anchor audit (pollyVisible stays true between events — investigate usePollyAnimator)
+7. HeroBook proportions review on device after full session
+8. Onboarding / first-run experience
 
 Full Hero Word-Book spec: `docs/HERO_WORD_BOOK_SYSTEM.md`.
 Daily Challenge full spec: `docs/DAILY_CHALLENGE_SPEC.md`.
