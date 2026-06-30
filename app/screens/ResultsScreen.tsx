@@ -42,7 +42,7 @@ function computeGrade(
   const ghostCount = wordResults.filter(r => r.missedMaskIds.length > 0).length;
   if (ghostCount === 0) return { text: 'CLEAN RUN', color: '#4CAF50' };
   if (ghostCount <= 2) return { text: 'CLOSE.', color: '#FFFFFF' };
-  return { text: 'HAUNTED.', color: '#7B2FBE' };
+  return { text: 'MEANINGS MISSED.', color: '#7B2FBE' };
 }
 
 // ─── RANK COMPUTATION ────────────────────────────────────────
@@ -70,7 +70,7 @@ function derivePollyLine(
   if (bossCleared) return 'Fine. Keep the word.';
 
   const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
-  if (hasMissed) return 'Some meanings still haunt you.';
+  if (hasMissed) return 'Some meanings got past you.';
 
   return null;
 }
@@ -137,9 +137,9 @@ function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
 
   return (
     <View style={gs.card}>
-      <Text style={gs.header}>Ghost ready for rematch</Text>
+      <Text style={gs.header}>Meaning missed</Text>
       <Text style={gs.word}>{word.toUpperCase()}</Text>
-      <Text style={gs.body}>Guess who's back next run.</Text>
+      <Text style={gs.body}>You left this one behind.</Text>
     </View>
   );
 }
