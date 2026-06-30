@@ -1,6 +1,6 @@
 # POLYWORDS — CLAUDE.md
 
-### Ground truth for Claude Code · Updated June 29, 2026
+### Ground truth for Claude Code · Updated June 30, 2026
 
 ---
 
@@ -22,9 +22,14 @@ Current work branch: `play-screen-overhaul`
 
 Latest clean checkpoint:
 
-* Commit: `ec8e841`
-* Tag: `v0.working-20260629c`
-* Feel: add boss-round final chamber polish
+* Commit: `c4a6c31`
+* Tag: `v0.working-20260630b`
+* Feel: Ghost Haunt Return Loop V1 with Results copy cleanup
+
+Checkpoint commits:
+
+* Ghost loop: `badc9f0` / `v0.working-20260630a`
+* Copy cleanup: `c4a6c31` / `v0.working-20260630b`
 
 Rules:
 
@@ -112,9 +117,13 @@ Always:
 
 * 10 rounds
 * 5 feathers for the whole hunt
-* Round 10 = POLLY'S WORD / boss word
+* Round 10 / index 9 = POLLY'S WORD / `bossWord`
 * Returning Haunt slot = index 7 / Round 8
 * Returning Haunt never replaces Round 10 boss
+* Returning Haunt stays `eventType: 'standard'` with `isHauntReturn: true`
+* Round 8 Haunt Return never activates the boss background or boss-only effects
+* Only boss words can become HAUNTED
+* Normal word failures never enter the ghost queue
 
 GPS arc:
 
@@ -175,16 +184,20 @@ No gate, no door split, no lock.
 Boss outcomes:
 
 * Correct mystery judgment = MASTERED
-* Wrong mystery judgment = GHOST
-* Boss with any wrong visible swipe = no mystery tile, word advances silently
+* Wrong mystery judgment = HAUNTED and queued once
+* Boss failure before the mystery tile also becomes HAUNTED and queues once
+* Repeated failure updates the existing ghost instead of duplicating it
 
 Haunt return:
 
 * Ghosted boss words return at index 7 / Round 8
-* Mastered on return = HAUNT BROKEN
-* Failed again = STILL HAUNTED
+* Return remains `eventType: 'standard'` and does not trigger boss presentation
+* Cleared return = BANISHED / HAUNT BROKEN and removed from the queue
+* Failed return = STILL HAUNTED, retained, and rotated in the queue
 * Ghost tile never reveals missed phrase
 * Ghost `wordId` = word string, never stepIndex
+* Results copy describes ordinary misses as missed meanings; haunt/rematch language is reserved for real haunt results
+* Daily Challenge remains separate
 
 ---
 
@@ -724,4 +737,4 @@ tools/content/mask-rewriter               Local-only content tool
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · June 29, 2026*
+*POLYWORDS CLAUDE.md · Pete DiBari · June 30, 2026*

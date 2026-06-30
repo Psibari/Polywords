@@ -1,5 +1,5 @@
 # POLYWORDS — CONTEXT.md
-### Session briefing · June 29, 2026
+### Session briefing · June 30, 2026
 
 Read this at the start of any session. Full canonical detail lives in `CLAUDE.md`.
 
@@ -16,14 +16,16 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 ## Current Build State
 
 **Active branch:** `play-screen-overhaul` (never merge to main).
-**Latest clean commit:** `ec8e841`
-**Known-good tag:** `v0.working-20260629c`
-**Checkpoint feel:** add boss-round final chamber polish.
+**Latest clean commit:** `c4a6c31`
+**Known-good tag:** `v0.working-20260630b`
+**Checkpoint feel:** Ghost Haunt Return Loop V1 with Results copy cleanup.
+**Ghost loop checkpoint:** `badc9f0` / `v0.working-20260630a`.
+**Copy cleanup checkpoint:** `c4a6c31` / `v0.working-20260630b`.
 **tsc:** exits 0.
 
 **Daily Challenge:** The Daily route and Home entry are enabled for device sanity testing, connecting the real engine/store state to the UP-only screen, six-card board, timed Clue Vault, Polly reactions, and win/loss overlay. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
 
-**Current visual state (June 29):**
+**Current visual state (June 30):**
 Play screen design overhaul complete for this sprint.
 - HUD: single flat strip, chainMultiplier, gold fill bar progress
 - Background: two-zone LinearGradient overlay
@@ -60,6 +62,14 @@ Play screen design overhaul complete for this sprint.
 - Session length: 10 rounds. Boss always Round 10 (index 9).
 - Arc generator live in `huntGenerator.ts`: `SESSION_LENGTH` + `GPS_ARCS` table. `buildPhasePlan` / `rolesFromPlan` / `hapticsFromPlan` replace hardcoded arrays.
 - Haunt slot: index 7 (Round 8).
+- Only boss words become HAUNTED; normal word failures never enter the ghost queue.
+- Returning Haunts use Round 8/index 7 as `eventType: 'standard'` with `isHauntReturn: true`.
+- Round 8 Haunt Returns do not activate the boss background or boss-only effects.
+- Round 10/index 9 remains the separate POLLY'S WORD / `bossWord`.
+- Clearing a returning Haunt shows BANISHED / HAUNT BROKEN and removes it from the queue.
+- Failing a returning Haunt shows STILL HAUNTED and keeps/rotates it in the queue.
+- Results copy separates ordinary missed meanings from real haunt/rematch results.
+- Daily Challenge remains separate from the Hunt and Haunt Return loop.
 - Visual token system: `app/ui/pwTheme.ts` + `app/ui/pwMaterials.ts`.
 - Hero plaque, tile card, deck stack: all on tokenized materials.
 - Gameplay Polly: left-only at `POLLY_GAMEPLAY_SIZE=210`. Right side reserved for SWIPE RIGHT TO REJECT.
