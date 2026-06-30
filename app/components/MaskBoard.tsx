@@ -159,12 +159,13 @@ type WordOutcomeState = 'none' | 'mastered' | 'haunted';
 
 type OutcomeOverlayProps = {
   word: string;
+  headline?: string;
   bonusLabel?: string;
   detail?: string;
   onContinue: () => void;
 };
 
-function MasteredOutcomeOverlay({ word, bonusLabel, onContinue }: OutcomeOverlayProps) {
+function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onContinue }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
   const pulse = useRef(new Animated.Value(0)).current;
@@ -206,7 +207,7 @@ function MasteredOutcomeOverlay({ word, bonusLabel, onContinue }: OutcomeOverlay
           pointerEvents="none"
           style={[styles.masteredPulseRing, { opacity: pulseOpacity, transform: [{ scale: pulseScale }] }]}
         />
-        <Text style={[styles.outcomeHeadline, styles.masteredOutcomeHeadline]}>MASTERED</Text>
+        <Text style={[styles.outcomeHeadline, styles.masteredOutcomeHeadline]}>{headline}</Text>
         <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
           {word}
         </Text>
@@ -295,6 +296,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const store   = useGameStore();
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
+  const isFinalGateStep = isBoss || isHaunt;
   const kicker    = eventKicker(step);
 
   // Stale-closure-safe refs
@@ -323,7 +325,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   const completedRef          = useRef(false);
   const gateTriggeredRef      = useRef(false);
-  const ghostJudgedCorrectRef = useRef(false);
   const wrongSwipeOccurred    = useRef(false);
   const mysteryIsRealRef      = useRef(true);
   const gapLockedRef          = useRef(false);
@@ -753,7 +754,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     wrongSwipeOccurred.current    = false;
     completedRef.current          = false;
     gateTriggeredRef.current      = false;
-    ghostJudgedCorrectRef.current = false;
     splitCompletedRef.current     = false;
     mysteryIsRealRef.current      = true;
     setTileStates(buildInitialTileStates(step));
@@ -1059,6 +1059,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     spawnEffect?.('shard', containerWidthRef.current / 2, wordScreenY + 110);
 
     if (isHaunt) {
+      store.retainFailedHaunt(step);
       setTimeout(() => {
         setStillHauntedVisible(true);
         stillHauntedOpacity.setValue(0);
@@ -1073,6 +1074,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           setTimeout(() => setStillHauntedVisible(false), 240);
         }, 1400);
       }, 400);
+    } else {
+      store.queueFailedBoss(step);
     }
 
     setTimeout(() => {
@@ -1080,7 +1083,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
         'haunted',
         { detail: buildHauntedDetail(failedMaskId) },
         () => {
-          store.addGhostedMaster(step.word);
           store.completeWord();
         }
       );
@@ -1102,13 +1104,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   }
 
   function triggerMastered() {
-    store.recordMastery(step.word, isBoss, step.hiddenMeaning ?? '');
-    if (isHaunt) store.clearGhost(step.word);
+    if (isHaunt) {
+      store.banishHaunt(step);
+    } else {
+      store.recordMastery(step.word, isBoss, step.hiddenMeaning ?? '');
+    }
     setGatePhase('mastered');
     completedRef.current = true;
-    const masteryPoints = Math.round(600 * store.game.chainMultiplier);
-    store.submitBossMastery();
-    spawnFloatAtSplit(masteryPoints, '#F5C842');
+    const masteryPoints = isHaunt ? 0 : Math.round(600 * store.game.chainMultiplier);
+    if (!isHaunt) {
+      store.submitBossMastery();
+      spawnFloatAtSplit(masteryPoints, '#F5C842');
+    }
     setMasterStampVisible(true);
     setMasteredLabelVisible(false);
     setMasterCracksVisible(false);
@@ -1280,9 +1287,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       setSystemStingerWord(null);
       showWordOutcome(
         'mastered',
-        { bonusLabel: isBoss ? `BOSS MASTERY +${masteryPoints}` : undefined },
+        {
+          bonusLabel: isHaunt
+            ? 'HAUNT BROKEN'
+            : isBoss
+              ? `BOSS MASTERY +${masteryPoints}`
+              : undefined,
+        },
         () => {
-          if (!ghostJudgedCorrectRef.current) store.clearGhost(step.word);
           store.completeWord();
         }
       );
@@ -1360,7 +1372,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     // Deck empty — all tiles judged (correct, trap-caught, or wrong)
     const perfect = !wrongSwipeOccurred.current;
 
-    if (isBoss) {
+    if (isFinalGateStep) {
       if (perfect && hasHidden) {
         gateTriggeredRef.current = true;
         firePollyEvent('allMasksFound');
@@ -1369,14 +1381,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           triggerFinalTilesDrop();
         }, 600);
       } else {
-        // Boss escaped — wrong swipes closed the gate
-        // Silent: no overlay, no ghost, just advance
+        // A failed boss enters the queue; a failed return stays haunted.
         gateTriggeredRef.current = true;
-        completedRef.current = true;
-        store.completeWord();
+        const failedMaskId = visibleGridMasks.find(
+          mask => tileStates.get(mask.id) === 'wrong',
+        )?.id ?? `${step.word}_gate_fail`;
+        triggerWrongFail(failedMaskId);
       }
     } else {
-      // Non-boss words 1–11: always just complete, no gate ever
+      // Ordinary words always complete without touching the ghost queue.
       gateTriggeredRef.current = true;
       if (perfect) firePollyEvent('cleanSweep');
       triggerWordExit(() => store.completeWord(), perfect);
@@ -1932,7 +1945,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                 ],
               }}
             >
-              MASTER
+              {isHaunt ? 'BANISHED' : 'MASTER'}
             </Animated.Text>
           )}
 
@@ -2123,6 +2136,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
       {wordOutcome === 'mastered' && (
         <MasteredOutcomeOverlay
           word={step.word}
+          headline={isHaunt ? 'BANISHED' : 'MASTERED'}
           bonusLabel={outcomeBonusLabel}
           onContinue={continueOutcome}
         />

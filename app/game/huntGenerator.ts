@@ -162,10 +162,7 @@ export function generateHunt(opts: {
     }
   }
 
-  // Boss chosen FIRST so it is excluded from other picks
-  const bossWord = pickForPhase('boss');
-
-  // Ghost priority: first ghost word that fits the hard/panic tier
+  // Reserve the returning haunt before choosing a separate Round 10 boss.
   let ghostWord: string | null = null;
   for (const gid of ghostWordIds) {
     const w = gid.toUpperCase();
@@ -175,6 +172,8 @@ export function generateHunt(opts: {
       break;
     }
   }
+
+  const bossWord = pickForPhase('boss');
 
   const hauntIdx = length - 3; // ghost slot, then one panic word, then boss last
   const bossIdx = length - 1;

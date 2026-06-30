@@ -22,6 +22,7 @@ import {
   GhostRevenge,
   MasteredWordRecord,
   PlayerProgress,
+  WordStep,
 } from '../game/types';
 import { generateHunt } from '../game/huntGenerator';
 import {
@@ -42,6 +43,13 @@ type GoldFeatherRecord = {
   available: boolean;
   expiresAt: number;
 };
+
+type FailedBossStep = Pick<
+  WordStep,
+  'word' | 'eventType' | 'isHauntReturn' | 'hiddenMeaning' | 'hiddenTrap'
+>;
+
+type HauntReturnStep = Pick<WordStep, 'word' | 'isHauntReturn'>;
 
 function getLocalMidnight(): number {
   const now = new Date();
@@ -100,9 +108,9 @@ type GameStore = {
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
   consumeFeatherMilestone: () => void;
-  addGhost: (ghost: GhostMeaning) => void;
-  addGhostedMaster: (word: string) => void;
-  clearGhost: (wordId: string) => void;
+  queueFailedBoss: (step: FailedBossStep) => void;
+  banishHaunt: (step: HauntReturnStep) => void;
+  retainFailedHaunt: (step: HauntReturnStep) => void;
   setGhostRevenge: (data: GhostRevenge) => void;
   loadGhosts: () => Promise<void>;
   progress: PlayerProgress;
@@ -185,33 +193,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
   consumeFeatherMilestone: () =>
     set((s) => ({ game: consumeFeatherMilestoneFn(s.game) })),
 
-  addGhost: (ghost) => {
-    const existing = get().ghosts.find(g => g.word === ghost.word);
-    let next: GhostMeaning[];
-    if (existing) {
-      next = get().ghosts.map(g =>
-        g.wordId === ghost.wordId ? { ...g, runsMissed: g.runsMissed + 1 } : g
-      );
-    } else {
-      next = [...get().ghosts, { ...ghost, runsMissed: 1 }];
-    }
-    set({ ghosts: next });
-    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
-  },
+  queueFailedBoss: (step) => {
+    if (step.eventType !== 'bossWord' || step.isHauntReturn === true) return;
 
-  addGhostedMaster: (word) => {
-    const existing = get().ghosts.find(g => g.wordId === word);
+    const wordId = step.word.trim().toUpperCase();
+    const existing = get().ghosts.find(g => g.wordId === wordId);
     let next: GhostMeaning[];
     if (existing) {
       next = get().ghosts.map(g =>
-        g.wordId === word ? { ...g, runsMissed: g.runsMissed + 1 } : g
+        g.wordId === wordId
+          ? {
+              ...g,
+              word: wordId,
+              hiddenMeaningReal: step.hiddenMeaning ?? g.hiddenMeaningReal,
+              hiddenMeaningTrap: step.hiddenTrap ?? g.hiddenMeaningTrap,
+              runsMissed: g.runsMissed + 1,
+            }
+          : g
       );
     } else {
       next = [...get().ghosts, {
-        wordId: word,
-        word,
-        hiddenMeaningReal: '',
-        hiddenMeaningTrap: '',
+        wordId,
+        word: wordId,
+        hiddenMeaningReal: step.hiddenMeaning ?? '',
+        hiddenMeaningTrap: step.hiddenTrap ?? '',
         isGhostedMaster: true,
         runsMissed: 1,
       }];
@@ -220,8 +225,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
   },
 
-  clearGhost: (wordId) => {
+  banishHaunt: (step) => {
+    if (step.isHauntReturn !== true) return;
+
+    const wordId = step.word.trim().toUpperCase();
     const next = get().ghosts.filter(g => g.wordId !== wordId);
+    if (next.length === get().ghosts.length) return;
+    set({ ghosts: next });
+    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  retainFailedHaunt: (step) => {
+    if (step.isHauntReturn !== true) return;
+
+    const wordId = step.word.trim().toUpperCase();
+    const current = get().ghosts;
+    const existing = current.find(g => g.wordId === wordId);
+    if (!existing) return;
+
+    const next = [
+      ...current.filter(g => g.wordId !== wordId),
+      { ...existing, runsMissed: existing.runsMissed + 1 },
+    ];
     set({ ghosts: next });
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
   },
