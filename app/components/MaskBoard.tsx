@@ -17,7 +17,7 @@ import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
 import PollySprite from './ui/PollySprite';
-import { POLLY_GAMEPLAY_SIZE, usePollyAnimator } from '../hooks/usePollyAnimator';
+import { usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
@@ -313,8 +313,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     firePollyEvent,
     ghostTintOpacity,
     pollyAnimatedStyle,
-    pollyVisible,
-    perchSide,
+    currentSize,
     pollyPositionStyle,
   } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
 
@@ -488,6 +487,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   function triggerWrongSwipeFeedback() {
     playSfx('wrongLame');
+    playSfx('pollySqwawkShort');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     firePollyEvent('wrong');
     triggerWrongWordRecoil();
@@ -1870,25 +1870,31 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           />
       ))}
 
-      {/* Polly — flies up in an arc to a left or right perch, hidden during ordinary play */}
-      {pollyVisible && (
-        <Animated.View style={[styles.pollyAnchor, pollyPositionStyle]} pointerEvents="none">
-          <Animated.View style={pollyAnimatedStyle}>
-            <PollySprite pose={currentPose} size={POLLY_GAMEPLAY_SIZE} />
-          </Animated.View>
+      {/* Polly — always present, wandering the branch, scales with state */}
+      <Animated.View style={[styles.pollyAnchor, pollyPositionStyle]} pointerEvents="none">
+        <Animated.View style={pollyAnimatedStyle}>
+          <PollySprite pose={currentPose} size={currentSize} />
         </Animated.View>
-      )}
+      </Animated.View>
 
-      {/* Speech bubble — above Polly's current perch */}
-      {pollyVisible && speechLineVisible && currentSpeechLine && (
-        <View
-          style={[styles.speechBubble, perchSide === 'right' ? styles.speechBubbleRight : styles.speechBubbleLeft]}
+      {/* Speech bubble — tracks Polly's current branch position */}
+      {speechLineVisible && currentSpeechLine && (
+        <Animated.View
           pointerEvents="none"
+          style={[
+            styles.speechBubble,
+            {
+              transform: [
+                { translateX: Animated.add(pollyPositionStyle.transform[0].translateX!, new Animated.Value(-40)) },
+                { translateY: Animated.add(pollyPositionStyle.transform[1].translateY!, new Animated.Value(-160)) },
+              ],
+            },
+          ]}
         >
-          <Text style={styles.speechText} numberOfLines={3}>
+          <Text style={styles.speechText} numberOfLines={2}>
             {currentSpeechLine}
           </Text>
-        </View>
+        </Animated.View>
       )}
 
       {/* Mastery celebration — phase-based elements */}
@@ -2263,7 +2269,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingTop: 88,
-    paddingBottom: 12,
+    paddingBottom: 48,
     minHeight: 0,
   },
   tileStackArea: {
@@ -2511,37 +2517,34 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: 'center',
   },
-  // ── Polly — absolute bottom-left pop-in ───────────────────────
+  // ── Polly branch system ───────────────────────────────────────
   pollyAnchor: {
     position: 'absolute',
-    bottom: 16,
-    left: -10,
-    width: POLLY_GAMEPLAY_SIZE,
-    height: POLLY_GAMEPLAY_SIZE,
+    bottom: 18,
+    left: 0,
+    width: 130,
+    height: 130,
+    zIndex: 6,
   },
   speechBubble: {
     position: 'absolute',
-    maxWidth: 168,
-    backgroundColor: 'rgba(20,18,56,0.94)',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  speechBubbleLeft: {
-    bottom: 184,
-    left: 20,
-  },
-  speechBubbleRight: {
-    bottom: 164,
-    right: 78,
+    bottom: 0,
+    left: 0,
+    maxWidth: 220,
+    backgroundColor: 'rgba(20,18,56,0.96)',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.22)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    zIndex: 7,
   },
   speechText: {
-    color: 'rgba(255,255,255,0.88)',
-    fontSize: 13,
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 18,
+    fontWeight: '700',
     fontFamily: FONTS.polly,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
   // ── Haunt system ─────────────────────────────────────────────
   hauntEntranceBanner: {

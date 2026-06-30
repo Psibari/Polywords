@@ -11,7 +11,9 @@ export type SfxName =
   | 'haunted'
   | 'pollyCall'
   | 'gateOpen'
-  | 'pressHoldStart';
+  | 'pressHoldStart'
+  | 'pollySqwawkShort'
+  | 'pollySqwawkLaugh';
 
 type SfxConfig = {
   source: Parameters<typeof createAudioPlayer>[0];
@@ -36,6 +38,8 @@ const SFX: Record<SfxName, SfxConfig> = {
   pollyCall:      { source: require('../../assets/sfx/polly_call.mp3'),       volume: 0.25, cooldownMs: 1500 },
   gateOpen:       { source: require('../../assets/sfx/gate_open.mp3'),        volume: 0.35, cooldownMs: 700  },
   pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300  },
+  pollySqwawkShort: { source: require('../../assets/audio/sfx/pollySqwawkShort.wav'), volume: 0.42, cooldownMs: 120  },
+  pollySqwawkLaugh: { source: require('../../assets/audio/sfx/pollySqwawkLaugh.wav'), volume: 0.42, cooldownMs: 600  },
 };
 
 const PLAYER_POOL_SIZE = 2;
