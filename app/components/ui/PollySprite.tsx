@@ -2,29 +2,39 @@ import React from 'react';
 import { Image, ImageStyle } from 'react-native';
 
 export type PollyPose =
-  | 'flyExcited'       // polly_01 — mid-round fly-in entrance
-  | 'flyRelaxed'       // polly_02 — end-of-round fly-in
-  | 'perchNeutral'     // polly_03 — default perch / idle
-  | 'perchDismissive'  // polly_04 — trap rejected, Polly annoyed
-  | 'perchLaughing'    // polly_05 — haunt created / run clipped, Polly wins
-  | 'perchSmug'        // polly_06 — wrong swipe, "Thought so."
-  | 'perchPointing'    // polly_07 — boss word throw, master tile drops
-  | 'perchShocked'     // polly_08 — player perfect clear, Polly surprised
-  | 'perchSulking'     // polly_09 — player masters word, Polly loses
-  | 'flyAngry'         // polly_10 — "YOU BEAT POLLY"
+  | 'smug'
+  | 'angry'
+  | 'shocked'
+  | 'shockedAlt'
+  | 'shockedStartle'
+  | 'neutral'
+  | 'furious'
+  | 'sulking'
+  | 'dismissive'
+  | 'guarding'
+  | 'pointing'
+  | 'laughing';
 
-const POSE_IMAGES: Record<PollyPose, ReturnType<typeof require>> = {
-  flyExcited:      require('../../../assets/images/Polly/polly_01.png'),
-  flyRelaxed:      require('../../../assets/images/Polly/polly_02.png'),
-  perchNeutral:    require('../../../assets/images/Polly/polly_03.png'),
-  perchDismissive: require('../../../assets/images/Polly/polly_04.png'),
-  perchLaughing:   require('../../../assets/images/Polly/polly_05.png'),
-  perchSmug:       require('../../../assets/images/Polly/polly_06.png'),
-  perchPointing:   require('../../../assets/images/Polly/polly_07.png'),
-  perchShocked:    require('../../../assets/images/Polly/polly_08.png'),
-  perchSulking:    require('../../../assets/images/Polly/polly_09.png'),
-  flyAngry:        require('../../../assets/images/Polly/polly_10.png'),
+const POLLY_IMAGES: Record<PollyPose, ReturnType<typeof require>> = {
+  smug:           require('../../../assets/images/Polly/polly_smug.png'),
+  angry:          require('../../../assets/images/Polly/polly_angry.png'),
+  shocked:        require('../../../assets/images/Polly/polly_shocked.png'),
+  shockedAlt:     require('../../../assets/images/Polly/polly_shocked_alt.png'),
+  shockedStartle: require('../../../assets/images/Polly/polly_shocked_startle.png'),
+  neutral:        require('../../../assets/images/Polly/polly_neutral.png'),
+  furious:        require('../../../assets/images/Polly/polly_furious.png'),
+  sulking:        require('../../../assets/images/Polly/polly_sulking.png'),
+  dismissive:     require('../../../assets/images/Polly/polly_dismissive.png'),
+  guarding:       require('../../../assets/images/Polly/polly_guarding.png'),
+  pointing:       require('../../../assets/images/Polly/polly_pointing.png'),
+  laughing:       require('../../../assets/images/Polly/polly_laughing.png'),
 };
+
+// Branch bottom-edge sits at a locked, measured 77.5% down each sprite's
+// canvas height (verified via pixel analysis, 480x460 canvas, all 12 poses).
+export const POLLY_BRANCH_BOTTOM_FRACTION = 0.775;
+
+const ASPECT_RATIO = 480 / 460;
 
 interface PollySpriteProps {
   pose: PollyPose;
@@ -35,8 +45,8 @@ interface PollySpriteProps {
 export default function PollySprite({ pose, size, style }: PollySpriteProps) {
   return (
     <Image
-      source={POSE_IMAGES[pose]}
-      style={[{ width: size, height: size }, style]}
+      source={POLLY_IMAGES[pose]}
+      style={[{ width: size * ASPECT_RATIO, height: size }, style]}
       resizeMode="contain"
     />
   );

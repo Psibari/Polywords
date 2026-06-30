@@ -58,7 +58,7 @@ export function usePollyAnimator(
   lives: number,
   _stepIndex: number,
 ) {
-  const [currentPose, setCurrentPose] = useState<PollyPose>('flyExcited');
+  const [currentPose, setCurrentPose] = useState<PollyPose>('neutral');
   const [currentSpeechLine, setCurrentSpeechLine] = useState<string | null>(null);
   const [pollyVisible, _setPollyVisible] = useState(false);
   const pollyVisibleRef = useRef(false);
@@ -268,37 +268,37 @@ export function usePollyAnimator(
       case 'correct':
         if (!wordFirstCorrectRef.current) {
           wordFirstCorrectRef.current = true;
-          tryMidRound('flyExcited', 'perchDismissive', 'Put that meaning back.', 2000);
+          tryMidRound('neutral', 'dismissive', 'Put that meaning back.', 2000);
         } else if (pollyVisibleRef.current) {
-          setCurrentPose('perchDismissive');
+          setCurrentPose('dismissive');
           animWin();
         }
         break;
 
       case 'allMasksFound':
-        tryMidRound('flyExcited', 'perchShocked', 'Stop picking my locks.', 2500);
+        tryMidRound('neutral', 'shocked', 'Stop picking my locks.', 2500);
         break;
 
       case 'hiddenFound':
-        tryMidRound('flyExcited', 'perchShocked', 'That meaning was buried.', 2000);
+        tryMidRound('neutral', 'shocked', 'That meaning was buried.', 2000);
         break;
 
       case 'cleanSweep':
-        endOfRound('flyRelaxed', 'perchSulking', 'My stash is empty.', 2000);
+        endOfRound('neutral', 'sulking', 'My stash is empty.', 2000);
         break;
 
       case 'wrong': {
         wrongCountRef.current++;
         const wc = wrongCountRef.current;
         const speech = wc >= 3 ? 'BBBLAAAAHHAHAHA!' : wc === 2 ? 'Close enough to fool you.' : 'Thought so.';
-        const pose: PollyPose = wc >= 3 ? 'perchLaughing' : 'perchSmug';
+        const pose: PollyPose = wc >= 3 ? 'laughing' : 'smug';
         const targetSide = perchSideForPose(pose, false);
         if (pollyVisibleRef.current) {
           if (targetSide !== perchSideRef.current) {
             // Pose needs the other perch — fly out, then fly back to correct side
             if (exitTimerRef.current !== null) { clearTimeout(exitTimerRef.current); exitTimerRef.current = null; }
             exitPerch(perchSideRef.current, () => {
-              setCurrentPose('flyExcited');
+              setCurrentPose('neutral');
               flyInToPerch(targetSide, () => {
                 setCurrentPose(pose);
                 startBreathing();
@@ -313,43 +313,43 @@ export function usePollyAnimator(
             scheduleExit(2600, targetSide);
           }
         } else {
-          tryMidRound('flyExcited', pose, speech, 2000);
+          tryMidRound('neutral', pose, speech, 2000);
         }
         break;
       }
 
       case 'bossEntry':
-        endOfRound('flyExcited', 'perchPointing', 'This word stays mine.', 3500);
+        endOfRound('neutral', 'guarding', 'This word stays mine.', 3500);
         break;
 
       case 'ghostEntry':
-        tryMidRound('flyExcited', 'perchSmug', "It's still here.", 4000);
+        tryMidRound('neutral', 'smug', "It's still here.", 4000);
         setGhostTint(1);
         break;
 
       case 'ghostFoundLate':
         setGhostTint(0);
-        endOfRound('flyRelaxed', 'perchSulking', 'Rematch won.', 2500);
+        endOfRound('neutral', 'sulking', 'Rematch won.', 2500);
         break;
 
       case 'ghostDissolved':
         setGhostTint(0);
-        endOfRound('flyExcited', 'perchSmug', 'Still haunting you.', 2500);
+        endOfRound('neutral', 'smug', 'Still haunting you.', 2500);
         break;
 
       case 'oneHeartLeft':
-        forceMidRound('flyExcited', 'perchSmug', 'One feather left. Delicious.', 2500);
+        forceMidRound('neutral', 'smug', 'One feather left. Delicious.', 2500);
         break;
 
       case 'oneWrongMove':
         if (!oneWrongMoveFiredRef.current) {
           oneWrongMoveFiredRef.current = true;
-          endOfRound('flyExcited', 'perchSmug', 'One wrong move.', 2000);
+          endOfRound('neutral', 'smug', 'One wrong move.', 2000);
         }
         break;
 
       case 'hesitation3s':
-        tryMidRound('flyExcited', 'perchSmug', 'That one looks guilty.', 6000);
+        tryMidRound('neutral', 'smug', 'That one looks guilty.', 6000);
         break;
 
       case 'hesitation6s':
@@ -364,28 +364,28 @@ export function usePollyAnimator(
         break;
 
       case 'streakX10':
-        tryMidRound('flyExcited', 'perchDismissive', 'Cute streak. Still mine.', 2500);
+        tryMidRound('neutral', 'dismissive', 'Cute streak. Still mine.', 2500);
         break;
 
       case 'gameOver':
-        endOfRound('flyAngry', 'perchLaughing', 'POLLY CLIPPED YOUR RUN.', 3000);
+        endOfRound('neutral', 'laughing', 'POLLY CLIPPED YOUR RUN.', 3000);
         break;
 
       case 'gateMastered':
-        endOfRound('flyRelaxed', 'perchSulking', 'YOU BEAT POLLY', 3000);
+        endOfRound('neutral', 'sulking', 'YOU BEAT POLLY', 3000);
         animBigWin();
         break;
 
       case 'gateMasteredBoss':
-        endOfRound('flyRelaxed', 'perchSulking', 'The word betrayed me.', 3000);
+        endOfRound('neutral', 'sulking', 'The word betrayed me.', 3000);
         break;
 
       case 'hiddenMasterFailed':
-        endOfRound('flyExcited', 'perchLaughing', 'Not yours. Yet.', 3000);
+        endOfRound('neutral', 'laughing', 'Not yours. Yet.', 3000);
         break;
 
       case 'hauntFailed':
-        endOfRound('flyAngry', 'perchLaughing', 'BBBLAAAAHHAHAHA!', 3000);
+        endOfRound('neutral', 'laughing', 'BBBLAAAAHHAHAHA!', 3000);
         animBigWin();
         break;
     }
