@@ -16,9 +16,9 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 ## Current Build State
 
 **Active branch:** `play-screen-overhaul` (never merge to main).
-**Latest clean commit:** `36bff63`
-**Known-good tag:** `v0.working-20260629b`
-**Checkpoint feel:** make score floats readable badge stamps.
+**Latest clean commit:** `ec8e841`
+**Known-good tag:** `v0.working-20260629c`
+**Checkpoint feel:** add boss-round final chamber polish.
 **tsc:** exits 0.
 
 **Daily Challenge:** The Daily route and Home entry are enabled for device sanity testing, connecting the real engine/store state to the UP-only screen, six-card board, timed Clue Vault, Polly reactions, and win/loss overlay. `docs/DAILY_CHALLENGE_SPEC.md` remains the source of truth.
@@ -43,6 +43,10 @@ Play screen design overhaul complete for this sprint.
 - Wrong swipes show no score badge.
 - Score badge V2: minWidth 64, padding 11×5, radius 10, dark rgba(15,13,42,0.92) backing, 1px matching border, font 26, duration 940ms, tight black text shadow.
 - Fixed cause: REAL used left:0 + right:0, stretching the badge into a wide bar.
+- Round 10 uses the boss-only final chamber background.
+- The dev-only `BOSS` shortcut jumps directly to the real index 9 boss step.
+- Boss word intro is clean and stable; duplicate text, shake, sweep, underline, and shockwave/ring clutter are removed.
+- The long-word fit experiment was reverted and is not active.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`

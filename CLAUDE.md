@@ -22,9 +22,9 @@ Current work branch: `play-screen-overhaul`
 
 Latest clean checkpoint:
 
-* Commit: `36bff63`
-* Tag: `v0.working-20260629b`
-* Feel: make score floats readable badge stamps
+* Commit: `ec8e841`
+* Tag: `v0.working-20260629c`
+* Feel: add boss-round final chamber polish
 
 Rules:
 
@@ -155,6 +155,14 @@ Boss rules:
 * Non-boss words advance via `triggerWordExit()` / `completeWord()`
 * Boss mystery tile is randomly real hidden meaning or hidden trap
 * Boss mystery is one shot
+
+Current boss-round presentation:
+
+* Round 10 uses the boss-only final chamber background.
+* A dev-only `BOSS` shortcut jumps to the real index 9 `bossWord` step.
+* Boss word intro is clean and stable before the first tile.
+* Duplicate text, shake, sweep, underline, and shockwave/ring clutter are removed from the boss intro.
+* The long-word fit experiment was reverted and is not active.
 
 Master Gate is removed. On perfect boss visible clear:
 
