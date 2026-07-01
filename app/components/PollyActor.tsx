@@ -52,15 +52,16 @@ export function PollyActor({ state, renderer = 'flipbook' }: PollyActorProps) {
 const styles = StyleSheet.create({
   overlay: {
     position: 'absolute',
-    left: 4,
-    bottom: 4,
     zIndex: 0,
   },
   rigOverlay: {
+    left: 4,
+    bottom: 16,
     width: POLLY_RIG_SIZE,
     height: POLLY_RIG_SIZE,
   },
   flipbookOverlay: {
+    left: 4,
     bottom: -4,
     width: 120,
     height: 240,

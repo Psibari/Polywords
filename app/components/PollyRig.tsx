@@ -18,7 +18,8 @@ type PollyRigProps = {
   state: PollyRigState;
 };
 
-export const POLLY_RIG_SIZE = 108;
+export const POLLY_RIG_SIZE = 210;
+export const POLLY_RIG_INNER_SCALE = 1.45;
 
 const HEAD_PARTS = new Set<PollyRigPartName>([
   'head',
@@ -263,25 +264,37 @@ export function PollyRig({ state }: PollyRigProps) {
   return (
     <Animated.View
       pointerEvents="none"
-      style={[styles.container, { transform: [{ translateY: bodyBob }] }]}
+      style={styles.container}
       testID={`polly-rig-${state}`}
     >
-      {POLLY_RIG_LAYER_ORDER.map((partName) => (
-        <Animated.View
-          key={partName}
-          style={[
-            styles.partLayer,
-            pivotStyle(partName),
-            animatedPartStyle(partName),
-          ]}
-        >
-          <Image
-            source={POLLY_RIG_PARTS[partName]}
-            style={styles.partImage}
-            contentFit="contain"
-          />
-        </Animated.View>
-      ))}
+      <Animated.View
+        style={[
+          styles.innerRig,
+          {
+            transform: [
+              { translateY: bodyBob },
+              { scale: POLLY_RIG_INNER_SCALE },
+            ],
+          },
+        ]}
+      >
+        {POLLY_RIG_LAYER_ORDER.map((partName) => (
+          <Animated.View
+            key={partName}
+            style={[
+              styles.partLayer,
+              pivotStyle(partName),
+              animatedPartStyle(partName),
+            ]}
+          >
+            <Image
+              source={POLLY_RIG_PARTS[partName]}
+              style={styles.partImage}
+              contentFit="contain"
+            />
+          </Animated.View>
+        ))}
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -291,6 +304,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: POLLY_RIG_SIZE,
     height: POLLY_RIG_SIZE,
+    overflow: 'visible',
+  },
+  innerRig: {
+    ...StyleSheet.absoluteFillObject,
   },
   partLayer: {
     ...StyleSheet.absoluteFillObject,
@@ -303,21 +320,45 @@ const styles = StyleSheet.create({
     height: POLLY_RIG_SIZE,
   },
   headPivot: {
-    transformOrigin: [53, 40, 0],
+    transformOrigin: [
+      (POLLY_RIG_SIZE * 250) / 512,
+      (POLLY_RIG_SIZE * 190) / 512,
+      0,
+    ],
   },
   crownPivot: {
-    transformOrigin: [52, 32, 0],
+    transformOrigin: [
+      (POLLY_RIG_SIZE * 245) / 512,
+      (POLLY_RIG_SIZE * 150) / 512,
+      0,
+    ],
   },
   eyePivot: {
-    transformOrigin: [51, 43, 0],
+    transformOrigin: [
+      (POLLY_RIG_SIZE * 240) / 512,
+      (POLLY_RIG_SIZE * 205) / 512,
+      0,
+    ],
   },
   tailPivot: {
-    transformOrigin: [39, 72, 0],
+    transformOrigin: [
+      (POLLY_RIG_SIZE * 185) / 512,
+      (POLLY_RIG_SIZE * 340) / 512,
+      0,
+    ],
   },
   wingLeftPivot: {
-    transformOrigin: [34, 52, 0],
+    transformOrigin: [
+      (POLLY_RIG_SIZE * 160) / 512,
+      (POLLY_RIG_SIZE * 245) / 512,
+      0,
+    ],
   },
   wingRightPivot: {
-    transformOrigin: [66, 55, 0],
+    transformOrigin: [
+      (POLLY_RIG_SIZE * 315) / 512,
+      (POLLY_RIG_SIZE * 260) / 512,
+      0,
+    ],
   },
 });
