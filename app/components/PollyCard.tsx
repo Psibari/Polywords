@@ -5,21 +5,22 @@ import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { getPollyBudgetState, trackPollyTime } from '../logic/pollyBudget';
 import { BUDGET, POLLY_LINES } from './PollyController';
+import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
 
 const POLLY_FACE: Record<string, ImageSourcePropType> = {
-  sessionStart:  require('../../assets/images/Polly/polly_excited.png'),   // swap for polly_letsPlay when available
-  intro:         require('../../assets/images/Polly/polly_knowing.png'),
-  correct:       require('../../assets/images/Polly/polly_clever.png'),
-  wrong:         require('../../assets/images/Polly/polly_thinking.png'),
-  wordUp:        require('../../assets/images/Polly/polly_pointing.png'),  // swap for polly_wordUp when available
-  bossWord:      require('../../assets/images/Polly/polly_angle.png'),     // swap for polly_reading when available
-  bossMastery:   require('../../assets/images/Polly/polly_clever.png'),
-  locked:        require('../../assets/images/Polly/polly_thinking.png'),
-  cleanSplit:    require('../../assets/images/Polly/polly_pointing.png'),  // swap for polly_wordUp when available
-  default:       require('../../assets/images/Polly/polly_knowing.png'),
-  ghostIntro:    require('../../assets/images/Polly/polly_thinking.png'),
-  ghostCorrect:  require('../../assets/images/Polly/polly_clever.png'),
-  ghostWrong:    require('../../assets/images/Polly/polly_thinking.png'),
+  sessionStart: POLLY_ANIMATIONS.idle,
+  intro: POLLY_ANIMATIONS.idle,
+  correct: POLLY_ANIMATIONS.idle,
+  wrong: POLLY_ANIMATIONS.laugh,
+  wordUp: POLLY_ANIMATIONS.tauntPoint,
+  bossWord: POLLY_ANIMATIONS.bossWarning,
+  bossMastery: POLLY_ANIMATIONS.idle,
+  locked: POLLY_ANIMATIONS.sulk,
+  cleanSplit: POLLY_ANIMATIONS.tauntPoint,
+  default: POLLY_ANIMATIONS.idle,
+  ghostIntro: POLLY_ANIMATIONS.sulk,
+  ghostCorrect: POLLY_ANIMATIONS.idle,
+  ghostWrong: POLLY_ANIMATIONS.laugh,
 };
 
 const NUM_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];

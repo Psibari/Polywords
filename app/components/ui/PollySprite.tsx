@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image, ImageStyle } from 'react-native';
+import { POLLY_ANIMATIONS } from '../../animations/pollyAnimations';
 
 export type PollyPose =
   | 'flyExcited'       // polly_fly_excited — big reaction launch
@@ -23,16 +24,16 @@ export const FLYING_POSES = new Set<PollyPose>([
 ]);
 
 const POSE_IMAGES: Record<PollyPose, ReturnType<typeof require>> = {
-  flyExcited:      require('../../../assets/images/Polly/polly_fly_excited.png'),
-  flyRelaxed:      require('../../../assets/images/Polly/polly_fly_relaxed.png'),
-  flyAngry:        require('../../../assets/images/Polly/polly_fly_angry.png'),
-  perchNeutral:    require('../../../assets/images/Polly/polly_neutral.png'),
-  perchDismissive: require('../../../assets/images/Polly/polly_dismissive.png'),
-  perchLaughing:   require('../../../assets/images/Polly/polly_laughing.png'),
-  perchSmug:       require('../../../assets/images/Polly/polly_smug.png'),
-  perchPointing:   require('../../../assets/images/Polly/polly_pointing.png'),
-  perchShocked:    require('../../../assets/images/Polly/polly_shocked.png'),
-  perchSulking:    require('../../../assets/images/Polly/polly_sulking.png'),
+  flyExcited: POLLY_ANIMATIONS.flyIn,
+  flyRelaxed: POLLY_ANIMATIONS.flyIn,
+  flyAngry: POLLY_ANIMATIONS.flyIn,
+  perchNeutral: POLLY_ANIMATIONS.idle,
+  perchDismissive: POLLY_ANIMATIONS.sulk,
+  perchLaughing: POLLY_ANIMATIONS.laugh,
+  perchSmug: POLLY_ANIMATIONS.idle,
+  perchPointing: POLLY_ANIMATIONS.tauntPoint,
+  perchShocked: POLLY_ANIMATIONS.bossWarning,
+  perchSulking: POLLY_ANIMATIONS.sulk,
 };
 
 interface PollySpriteProps {

@@ -14,6 +14,7 @@ import {
   DAILY_WIN_LINE,
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
+import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
 
 type Props = {
   reaction: DailyPollyReaction | null;
@@ -22,18 +23,18 @@ type Props = {
 
 // Idle pool — cycles while silent
 const IDLE_POSES: ImageSourcePropType[] = [
-  require('../../assets/images/Polly/polly_03.png'), // perchNeutral
-  require('../../assets/images/Polly/polly_04.png'), // perchDismissive
-  require('../../assets/images/Polly/polly_06.png'), // perchSmug
-  require('../../assets/images/Polly/polly_07.png'), // perchPointing
-  require('../../assets/images/Polly/polly_09.png'), // perchSulking
+  POLLY_ANIMATIONS.idle,
+  POLLY_ANIMATIONS.sulk,
+  POLLY_ANIMATIONS.idle,
+  POLLY_ANIMATIONS.tauntPoint,
+  POLLY_ANIMATIONS.sulk,
 ];
 
 // Trigger poses — reserved, never appear in idle cycle
 const TRIGGER_POSE: Partial<Record<DailyPollyReaction, ImageSourcePropType>> = {
-  happy: require('../../assets/images/Polly/polly_06.png'), // firstMiss
-  laughing: require('../../assets/images/Polly/polly_05.png'), // loss
-  shocked: require('../../assets/images/Polly/polly_08.png'), // win
+  happy: POLLY_ANIMATIONS.idle,
+  laughing: POLLY_ANIMATIONS.laugh,
+  shocked: POLLY_ANIMATIONS.bossWarning,
 };
 
 function getLine(reaction: DailyPollyReaction | null): string {

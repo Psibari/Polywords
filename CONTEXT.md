@@ -77,7 +77,7 @@ Play screen design overhaul complete for this sprint.
 - Swipe affordances shipped (P5B).
 - HUD: quiet control strip, feather Image assets live (`feather-life-filled/empty.png`).
 - `tile_swipe.mp3` = sword whoosh. `press_hold_start.mp3` = card pickup.
-- Polly sprite system: 10 individual PNGs, `PollySprite.tsx` + `usePollyAnimator.ts` fly-up arc.
+- Polly compatibility sprite system: lowercase `assets/images/polly/*.webp`, `PollySprite.tsx`, and the existing `usePollyAnimator.ts` fly-up arc.
 - Daily Challenge: Fully rewritten. 6-card grid, clue timer, round transition ceremony, PollyDailyPerch idle cycle, story share text, results overlay. Daily Gold Feather reward/storage remains.
 - `DailyAnswerCard` now owns Daily tile press/grip, free X/Y drag, snap-back, and UP-only claim control.
 - `DailyChallengeScreen` no longer owns raw candidate gesture code; Hunt `SwipeMask` remains untouched.

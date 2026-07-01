@@ -386,23 +386,19 @@ Polly is the antagonist, not a mascot. Every trap is her move. The boss word is 
 
 Sprites:
 
-* `assets/images/Polly/polly_01.png` through `polly_10.png`
+* Canonical runtime assets: `assets/images/polly/*.webp`
 * Component: `app/components/ui/PollySprite.tsx`
 * Animator: `app/hooks/usePollyAnimator.ts`
 * Gameplay size: `POLLY_GAMEPLAY_SIZE = 210`
 
-Pose map:
+Temporary compatibility pose map:
 
-* `flyExcited` = 01
-* `flyRelaxed` = 02
-* `perchNeutral` = 03
-* `perchDismissive` = 04
-* `perchLaughing` = 05
-* `perchSmug` = 06
-* `perchPointing` = 07
-* `perchShocked` = 08
-* `perchSulking` = 09
-* `flyAngry` = 10
+* Flying poses â†’ `polly_fly_in.webp`
+* Neutral/smug poses â†’ `polly_idle.webp`
+* Dismissive/sulking poses â†’ `polly_sulk.webp`
+* Laughing poses â†’ `polly_laugh.webp`
+* Pointing poses â†’ `polly_taunt_point.webp`
+* Shocked/boss poses â†’ `polly_boss_warning.webp`
 
 Behavior:
 
@@ -691,7 +687,7 @@ git tag v0.working-YYYYMMDD
 app/components/MaskBoard.tsx              Main game board, warroom-gated
 app/components/SwipeMask.tsx              Tile + swipe physics, frozen Reanimated area
 app/components/ui/HeroBook.tsx            SVG HeroBook V5 visual system
-app/components/ui/PollySprite.tsx         Polly PNG sprite component
+app/components/ui/PollySprite.tsx         Polly compatibility pose component
 app/components/PollyDailyPerch.tsx        Daily Polly perch
 app/hooks/usePollyAnimator.ts             Polly fly-up arc system
 
@@ -715,7 +711,7 @@ app/game/dailyChallengeEngine.ts          Daily session builder
 app/game/dailyPool.ts                     Daily word pool
 
 assets/data/huntData.json                 403-word tile database
-assets/images/Polly/polly_01-10.png       Polly poses
+assets/images/polly/*.webp                 Canonical Polly runtime poses
 assets/sfx/                               Game SFX
 
 docs/WORKFLOW.md                          Patch workflow source of truth

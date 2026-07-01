@@ -36,6 +36,7 @@ import DailyAnswerCard, {
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
 import PollyDailyPerch from '../components/PollyDailyPerch';
+import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
@@ -213,8 +214,8 @@ function ResultsOverlay({
         <Image
           source={
             isWin
-              ? require('../../assets/images/Polly/polly_08.png')
-              : require('../../assets/images/Polly/polly_05.png')
+              ? POLLY_ANIMATIONS.bossWarning
+              : POLLY_ANIMATIONS.laugh
           }
           style={styles.resultPollyImage}
           resizeMode="contain"
