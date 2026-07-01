@@ -49,7 +49,7 @@ Play screen design overhaul complete for this sprint.
 - The dev-only `BOSS` shortcut jumps directly to the real index 9 boss step.
 - Boss word intro is clean and stable; duplicate text, shake, sweep, underline, and shockwave/ring clutter are removed.
 - The long-word fit experiment was reverted and is not active.
-- Temporary Polly device-test architecture remains available, but `SHOW_POLLY_DEVICE_TEST = false` keeps `PollyActor` hidden on GameScreen pending clean animation art. Its branch and the legacy MaskBoard Polly visuals remain disabled.
+- Polly Phase 2A/2B rig v0 is available through `PollyActor`: `PollyRig` stacks 13 mapped 512px PNG parts on a 108px square canvas and runs restrained code-driven idle motion. Both `SHOW_POLLY_DEVICE_TEST` and `SHOW_POLLY_RIG_TEST` are false, so Polly remains hidden on GameScreen; legacy MaskBoard Polly visuals remain disabled.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`

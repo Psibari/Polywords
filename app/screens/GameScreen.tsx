@@ -24,6 +24,7 @@ import {
 
 const MAX_FEATHERS = 5;
 const SHOW_POLLY_DEVICE_TEST = false;
+const SHOW_POLLY_RIG_TEST = false;
 const SHOW_DEV_BOSS_BUTTON = false;
 
 function PollyDeviceTestOverlay() {
@@ -632,7 +633,12 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
-      {SHOW_POLLY_DEVICE_TEST && !isDone && <PollyDeviceTestOverlay />}
+      {SHOW_POLLY_RIG_TEST && !isDone && (
+        <PollyActor state="idle" renderer="rig" />
+      )}
+      {SHOW_POLLY_DEVICE_TEST && !SHOW_POLLY_RIG_TEST && !isDone && (
+        <PollyDeviceTestOverlay />
+      )}
       {!isDone && <TopBar />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />

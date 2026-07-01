@@ -339,7 +339,7 @@ Design locks:
 * Tile width: SwipeMask cardWidth = screenWidth-80 max 290. backingCardWidth in MaskBoard = containerWidth-80 max 290. Always keep in sync.
 * HUD bottom hairline: borderBottomColor rgba(245,200,66,0.22), borderBottomWidth 0.5.
 * Score numeral letterSpacing: 2.
-* Temporary device-test architecture remains available, but `SHOW_POLLY_DEVICE_TEST = false` keeps `PollyActor` hidden on GameScreen pending clean animation art. Its branch and the legacy MaskBoard Polly visuals remain disabled.
+* Polly Phase 2A/2B rig v0 is available through `PollyActor`: `PollyRig` stacks 13 mapped 512px PNG parts on a 108px square canvas and runs restrained code-driven idle motion. Both `SHOW_POLLY_DEVICE_TEST` and `SHOW_POLLY_RIG_TEST` are false, so Polly remains hidden on GameScreen; legacy MaskBoard Polly visuals remain disabled.
 
 ---
 
@@ -688,8 +688,12 @@ app/components/MaskBoard.tsx              Main game board, warroom-gated
 app/components/SwipeMask.tsx              Tile + swipe physics, frozen Reanimated area
 app/components/ui/HeroBook.tsx            SVG HeroBook V5 visual system
 app/components/ui/PollySprite.tsx         Polly compatibility pose component
+app/components/PollyActor.tsx             Polly renderer shell and rig route
+app/components/PollyRig.tsx               Layered idle rig scaffold
 app/components/PollyDailyPerch.tsx        Daily Polly perch
 app/hooks/usePollyAnimator.ts             Polly fly-up arc system
+
+app/animations/pollyRigParts.ts           Rig part requires and stack order
 
 app/ui/pwTheme.ts                         Visual tokens
 app/ui/pwMaterials.ts                     Material recipes

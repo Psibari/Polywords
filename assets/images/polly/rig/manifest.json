@@ -1,0 +1,67 @@
+{
+  "name": "polly_rig_v0_from_sprite4",
+  "canvas": "512x512 transparent for every layer",
+  "source": "/mnt/data/sprite4.png flattened raster, purple background removed approximately",
+  "status": "rough technical rig cut, not final art; missing pixels hidden behind overlaps cannot be recovered from flat source",
+  "parts": [
+    "tail.png",
+    "wing_left.png",
+    "wing_right.png",
+    "body.png",
+    "head.png",
+    "bandana.png",
+    "crown.png",
+    "brow.png",
+    "eye_white.png",
+    "pupil.png",
+    "beak_upper.png",
+    "beak_lower.png",
+    "feet.png"
+  ],
+  "recommendedStackOrder": [
+    "tail",
+    "wing_left",
+    "wing_right",
+    "body",
+    "head",
+    "bandana",
+    "crown",
+    "brow",
+    "eye_white",
+    "pupil",
+    "beak_upper",
+    "beak_lower",
+    "feet"
+  ],
+  "notes": [
+    "All parts share the same 512x512 canvas and can be stacked at top=0,left=0.",
+    "This is suitable for Phase 2 scaffolding and motion proof only.",
+    "For final art, export proper layers from a master drawing or PSD/vector source."
+  ],
+  "approxPivots": {
+    "head": [
+      250,
+      190
+    ],
+    "crown": [
+      245,
+      150
+    ],
+    "tail": [
+      185,
+      340
+    ],
+    "wing_left": [
+      160,
+      245
+    ],
+    "wing_right": [
+      315,
+      260
+    ],
+    "beak_lower": [
+      290,
+      220
+    ]
+  }
+}
