@@ -16,7 +16,6 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
-import PollySprite, { POLLY_BRANCH_BOTTOM_FRACTION } from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
@@ -307,15 +306,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
 
   // ── Polly animator ────────────────────────────────────────────
   const {
-    currentPose,
-    currentSpeechLine,
-    speechLineVisible,
     firePollyEvent,
-    ghostTintOpacity,
-    pollyAnimatedStyle,
-    currentSize,
-    isFlying,
-    pollyPositionStyle,
   } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
 
   // ── tile state map ───────────────────────────────────────────
@@ -1871,44 +1862,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           />
       ))}
 
-      {/* Fixed background branch — hidden when Polly is airborne */}
-      {!isFlying && (
-        <View
-          pointerEvents="none"
-          style={[
-            styles.pollyFixedBranch,
-            { bottom: 18 + currentSize * (1 - POLLY_BRANCH_BOTTOM_FRACTION) },
-          ]}
-        />
-      )}
-
-      {/* Polly — always present, wandering the branch, scales with state */}
-      <Animated.View style={[styles.pollyAnchor, pollyPositionStyle]} pointerEvents="none">
-        <Animated.View style={pollyAnimatedStyle}>
-          <PollySprite pose={currentPose} size={currentSize} />
-        </Animated.View>
-      </Animated.View>
-
-      {/* Speech bubble — tracks Polly's current branch position */}
-      {speechLineVisible && currentSpeechLine && (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.speechBubble,
-            {
-              transform: [
-                { translateX: Animated.add(pollyPositionStyle.transform[0].translateX!, new Animated.Value(-40)) },
-                { translateY: Animated.add(pollyPositionStyle.transform[1].translateY!, new Animated.Value(-160)) },
-              ],
-            },
-          ]}
-        >
-          <Text style={styles.speechText} numberOfLines={2}>
-            {currentSpeechLine}
-          </Text>
-        </Animated.View>
-      )}
-
       {/* Mastery celebration — phase-based elements */}
       {masterStampVisible && (
         <>
@@ -2528,46 +2481,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.hudLabel,
     letterSpacing: 1,
     textAlign: 'center',
-  },
-  // ── Polly branch system ───────────────────────────────────────
-  pollyAnchor: {
-    position: 'absolute',
-    bottom: 18,
-    left: 0,
-    width: 130,
-    height: 130,
-    zIndex: 6,
-  },
-  pollyFixedBranch: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#8A5A2E',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.25)',
-    zIndex: 5,
-  },
-  speechBubble: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    maxWidth: 220,
-    backgroundColor: 'rgba(20,18,56,0.96)',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.22)',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    zIndex: 7,
-  },
-  speechText: {
-    color: 'rgba(255,255,255,0.92)',
-    fontSize: 18,
-    fontWeight: '700',
-    fontFamily: FONTS.polly,
-    letterSpacing: 0.4,
   },
   // ── Haunt system ─────────────────────────────────────────────
   hauntEntranceBanner: {

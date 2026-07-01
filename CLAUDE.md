@@ -339,7 +339,7 @@ Design locks:
 * Tile width: SwipeMask cardWidth = screenWidth-80 max 290. backingCardWidth in MaskBoard = containerWidth-80 max 290. Always keep in sync.
 * HUD bottom hairline: borderBottomColor rgba(245,200,66,0.22), borderBottomWidth 0.5.
 * Score numeral letterSpacing: 2.
-* Temporary device test: `PollyActor` uses `expo-image` animated WebP above a static branch in an absolute bottom-left overlay; `GameScreen` runs one isolated visual-only state cycle and ends on idle.
+* Temporary device-test architecture remains available, but `SHOW_POLLY_DEVICE_TEST = false` keeps `PollyActor` hidden on GameScreen pending clean animation art. Its branch and the legacy MaskBoard Polly visuals remain disabled.
 
 ---
 

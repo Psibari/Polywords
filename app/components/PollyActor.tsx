@@ -7,6 +7,8 @@ import {
   PollyAnimationState,
 } from '../animations/pollyAnimations';
 
+const SHOW_POLLY_BRANCH = false;
+
 type PollyActorProps = {
   state: PollyAnimationState;
 };
@@ -14,11 +16,13 @@ type PollyActorProps = {
 export function PollyActor({ state }: PollyActorProps) {
   return (
     <View pointerEvents="none" style={styles.overlay}>
-      <Image
-        source={POLLY_BRANCH}
-        style={styles.branch}
-        contentFit="contain"
-      />
+      {SHOW_POLLY_BRANCH && (
+        <Image
+          source={POLLY_BRANCH}
+          style={styles.branch}
+          contentFit="contain"
+        />
+      )}
       <Image
         key={state}
         source={POLLY_ANIMATIONS[state]}
@@ -34,17 +38,18 @@ export function PollyActor({ state }: PollyActorProps) {
 const styles = StyleSheet.create({
   overlay: {
     position: 'absolute',
-    left: -8,
-    bottom: -6,
-    width: 170,
-    height: 340,
+    left: 4,
+    bottom: -4,
+    width: 120,
+    height: 240,
+    zIndex: 0,
   },
   branch: {
     position: 'absolute',
-    left: -4,
-    bottom: 75,
-    width: 190,
-    height: 20,
+    left: -20,
+    bottom: 52,
+    width: 170,
+    height: 18,
   },
   polly: {
     ...StyleSheet.absoluteFillObject,

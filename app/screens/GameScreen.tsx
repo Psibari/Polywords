@@ -23,37 +23,21 @@ import {
 } from '../animations/pollyAnimations';
 
 const MAX_FEATHERS = 5;
-
-// Temporary first-device-test sequence. Remove this component and its render
-// call when Polly is connected to approved gameplay presentation events.
-const POLLY_DEVICE_TEST_SEQUENCE: ReadonlyArray<{
-  state: PollyAnimationState;
-  durationMs: number;
-}> = [
-  { state: 'flyIn', durationMs: POLLY_ANIMATION_DURATIONS_MS.flyIn },
-  { state: 'idle', durationMs: POLLY_ANIMATION_DURATIONS_MS.idle * 2 },
-  { state: 'tauntPoint', durationMs: POLLY_ANIMATION_DURATIONS_MS.tauntPoint },
-  { state: 'laugh', durationMs: POLLY_ANIMATION_DURATIONS_MS.laugh },
-  { state: 'bossWarning', durationMs: POLLY_ANIMATION_DURATIONS_MS.bossWarning },
-  { state: 'sulk', durationMs: POLLY_ANIMATION_DURATIONS_MS.sulk },
-  { state: 'idle', durationMs: 0 },
-];
+const SHOW_POLLY_DEVICE_TEST = false;
+const SHOW_DEV_BOSS_BUTTON = false;
 
 function PollyDeviceTestOverlay() {
-  const [sequenceIndex, setSequenceIndex] = useState(0);
-  const current = POLLY_DEVICE_TEST_SEQUENCE[sequenceIndex];
+  const [state, setState] = useState<PollyAnimationState>('flyIn');
 
   useEffect(() => {
-    if (sequenceIndex === POLLY_DEVICE_TEST_SEQUENCE.length - 1) return;
-
     const timeout = setTimeout(
-      () => setSequenceIndex(index => index + 1),
-      current.durationMs
+      () => setState('idle'),
+      POLLY_ANIMATION_DURATIONS_MS.flyIn
     );
     return () => clearTimeout(timeout);
-  }, [current.durationMs, sequenceIndex]);
+  }, []);
 
-  return <PollyActor state={current.state} />;
+  return <PollyActor state={state} />;
 }
 
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
@@ -648,8 +632,8 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
+      {SHOW_POLLY_DEVICE_TEST && !isDone && <PollyDeviceTestOverlay />}
       {!isDone && <TopBar />}
-      {!isDone && <PollyDeviceTestOverlay />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : (
@@ -659,7 +643,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           onWrongSwipe={handleWrongSwipe}
         />
       )}
-      {__DEV__ && !isDone && game.stepIndex !== 9 && (
+      {SHOW_DEV_BOSS_BUTTON && __DEV__ && !isDone && game.stepIndex !== 9 && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Jump to boss round"
