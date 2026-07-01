@@ -16,8 +16,45 @@ import { initMusicEngine, startMusic, stopMusic, setMusicState, triggerChainBrea
 import * as Haptics from 'expo-haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
+import { PollyActor } from '../components/PollyActor';
+import {
+  POLLY_ANIMATION_DURATIONS_MS,
+  PollyAnimationState,
+} from '../animations/pollyAnimations';
 
 const MAX_FEATHERS = 5;
+
+// Temporary first-device-test sequence. Remove this component and its render
+// call when Polly is connected to approved gameplay presentation events.
+const POLLY_DEVICE_TEST_SEQUENCE: ReadonlyArray<{
+  state: PollyAnimationState;
+  durationMs: number;
+}> = [
+  { state: 'flyIn', durationMs: POLLY_ANIMATION_DURATIONS_MS.flyIn },
+  { state: 'idle', durationMs: POLLY_ANIMATION_DURATIONS_MS.idle * 2 },
+  { state: 'tauntPoint', durationMs: POLLY_ANIMATION_DURATIONS_MS.tauntPoint },
+  { state: 'laugh', durationMs: POLLY_ANIMATION_DURATIONS_MS.laugh },
+  { state: 'bossWarning', durationMs: POLLY_ANIMATION_DURATIONS_MS.bossWarning },
+  { state: 'sulk', durationMs: POLLY_ANIMATION_DURATIONS_MS.sulk },
+  { state: 'idle', durationMs: 0 },
+];
+
+function PollyDeviceTestOverlay() {
+  const [sequenceIndex, setSequenceIndex] = useState(0);
+  const current = POLLY_DEVICE_TEST_SEQUENCE[sequenceIndex];
+
+  useEffect(() => {
+    if (sequenceIndex === POLLY_DEVICE_TEST_SEQUENCE.length - 1) return;
+
+    const timeout = setTimeout(
+      () => setSequenceIndex(index => index + 1),
+      current.durationMs
+    );
+    return () => clearTimeout(timeout);
+  }, [current.durationMs, sequenceIndex]);
+
+  return <PollyActor state={current.state} />;
+}
 
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
@@ -612,6 +649,7 @@ function GameDirector({ navigation }: { navigation: any }) {
         </View>
       )}
       {!isDone && <TopBar />}
+      {!isDone && <PollyDeviceTestOverlay />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : (

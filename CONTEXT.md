@@ -49,6 +49,7 @@ Play screen design overhaul complete for this sprint.
 - The dev-only `BOSS` shortcut jumps directly to the real index 9 boss step.
 - Boss word intro is clean and stable; duplicate text, shake, sweep, underline, and shockwave/ring clutter are removed.
 - The long-word fit experiment was reverted and is not active.
+- Temporary Polly device test: an absolute bottom-left `PollyActor` uses `expo-image` animated WebP above a static branch, runs one isolated visual-only state cycle, then remains idle.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
