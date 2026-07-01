@@ -16,7 +16,7 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
-import PollySprite from './ui/PollySprite';
+import PollySprite, { POLLY_BRANCH_BOTTOM_FRACTION } from './ui/PollySprite';
 import { usePollyAnimator } from '../hooks/usePollyAnimator';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
@@ -314,6 +314,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
     ghostTintOpacity,
     pollyAnimatedStyle,
     currentSize,
+    isFlying,
     pollyPositionStyle,
   } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
 
@@ -1870,6 +1871,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
           />
       ))}
 
+      {/* Fixed background branch — hidden when Polly is airborne */}
+      {!isFlying && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.pollyFixedBranch,
+            { bottom: 18 + currentSize * (1 - POLLY_BRANCH_BOTTOM_FRACTION) },
+          ]}
+        />
+      )}
+
       {/* Polly — always present, wandering the branch, scales with state */}
       <Animated.View style={[styles.pollyAnchor, pollyPositionStyle]} pointerEvents="none">
         <Animated.View style={pollyAnimatedStyle}>
@@ -2525,6 +2537,17 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     zIndex: 6,
+  },
+  pollyFixedBranch: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#8A5A2E',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.25)',
+    zIndex: 5,
   },
   speechBubble: {
     position: 'absolute',

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Dimensions } from 'react-native';
 import type { PollyPose } from '../components/ui/PollySprite';
+import { FLYING_POSES } from '../components/ui/PollySprite';
 import { playSfx } from '../audio/sfx';
 
 export type PollyEvent =
@@ -37,11 +38,11 @@ const BRANCH_MIN_X = SCREEN_W * 0.08;
 const BRANCH_MAX_X = SCREEN_W * 0.78; // leaves room for her own width
 
 const STATE_SIZE: Record<PollyState, number> = {
-  idle:        120,
-  interested:  130,
-  taunting:    130,
-  aggressive:  140,
-  defeated:    110,
+  idle:        150,
+  interested:  160,
+  taunting:    165,
+  aggressive:  170,
+  defeated:    135,
 };
 
 const STATE_BREATH_MS: Record<PollyState, number> = {
@@ -53,13 +54,13 @@ const STATE_BREATH_MS: Record<PollyState, number> = {
 };
 
 const REACTION_SIZE = {
-  wrong1:     150,
-  wrong2:     155,
-  wrong3:     165,
-  shocked:    145,
-  laugh:      155,
+  wrong1:     168,
+  wrong2:     172,
+  wrong3:     175,
+  shocked:    162,
+  laugh:      172,
   bossFail:   175,
-  bossMaster: 110,
+  bossMaster: 140,
 } as const;
 
 function clampBranchX(x: number) {
@@ -95,6 +96,7 @@ export function usePollyAnimator(
   const pollyX = useRef(new Animated.Value(SCREEN_W * 0.2)).current;
   const facingLeftToRight = useRef(true); // true = scaleX 1, false = scaleX -1
   const [facingFlip, setFacingFlip] = useState(1);
+  const [isFlying, setIsFlying] = useState(false);
 
   // ── Hop (Y offset from branch) ──────────────────────────────────
   const hopY = useRef(new Animated.Value(0)).current;
@@ -138,21 +140,25 @@ export function usePollyAnimator(
   // ── Wander (idle drift along branch) ─────────────────────────────
   function scheduleWander() {
     if (wanderTimerRef.current !== null) clearTimeout(wanderTimerRef.current);
-    const delay = 3000 + Math.random() * 4000;
+    // Pause at current position — long rest, short travel
+    const pauseMs = 2200 + Math.random() * 3000;
     wanderTimerRef.current = setTimeout(() => {
       if (wanderingPausedRef.current) { scheduleWander(); return; }
-      const targetX = clampBranchX(Math.random() * SCREEN_W);
+      const targetX = clampBranchX(
+        BRANCH_MIN_X + Math.random() * (BRANCH_MAX_X - BRANCH_MIN_X),
+      );
       const goingRight = targetX > (pollyX as any)._value;
       facingLeftToRight.current = goingRight;
       setFacingFlip(goingRight ? 1 : -1);
-      const dur = 1800 + Math.random() * 1400;
+      // Quick decisive step — not a slide
+      const travelMs = 280 + Math.random() * 320;
       Animated.timing(pollyX, {
         toValue: targetX,
-        duration: dur,
-        easing: Easing.inOut(Easing.quad),
+        duration: travelMs,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start(() => scheduleWander());
-    }, delay);
+    }, pauseMs);
   }
 
   function pauseWander() {
@@ -193,6 +199,18 @@ export function usePollyAnimator(
       Animated.timing(rotate, { toValue: 4,  duration: 200, useNativeDriver: true }),
       Animated.timing(rotate, { toValue: 0,  duration: 200, useNativeDriver: true }),
     ]).start();
+  }
+
+  // Launch off the branch using fly pose, land back on returnPose
+  function launchReact(returnPose: PollyPose, holdMs: number) {
+    breathLoopRef.current?.stop();
+    setCurrentPose('flyExcited');
+    setIsFlying(true);
+    setTimeout(() => {
+      setCurrentPose(returnPose);
+      setIsFlying(false);
+      startBreathing();
+    }, holdMs);
   }
 
   function hopBig(shake?: boolean) {
@@ -325,11 +343,10 @@ export function usePollyAnimator(
           hopSmall();
         } else {
           advanceState('aggressive');
-          setCurrentPose('perchLaughing');
           setSpeech('BBBLAAAAHHAHAHA!', 2400);
           bumpSize(REACTION_SIZE.wrong3, 2400);
           playSfx('pollySqwawkLaugh');
-          hopBig(true);
+          launchReact('perchLaughing', 900);
         }
         setTimeout(resumeWander, 2600);
         break;
@@ -354,10 +371,9 @@ export function usePollyAnimator(
 
       case 'ghostFoundLate':
         setGhostTint(0);
-        setCurrentPose('perchLaughing');
         setSpeech('LUCKY.', 2000);
         bumpSize(REACTION_SIZE.laugh, 2000);
-        hopBig();
+        launchReact('perchLaughing', 900);
         break;
 
       case 'ghostDissolved':
@@ -414,11 +430,10 @@ export function usePollyAnimator(
 
       case 'gameOver':
         advanceState('aggressive');
-        setCurrentPose('perchLaughing');
         setSpeech('BBBLAAAAHHAHAHA!', 2600);
         bumpSize(REACTION_SIZE.laugh, 2600);
         playSfx('pollySqwawkLaugh');
-        laughBob();
+        launchReact('perchLaughing', 900);
         break;
 
       case 'gateMastered':
@@ -438,19 +453,17 @@ export function usePollyAnimator(
         break;
 
       case 'hiddenMasterFailed':
-        setCurrentPose('perchLaughing');
         setSpeech('I WIN', 2400);
         bumpSize(REACTION_SIZE.bossFail, 2400);
         playSfx('pollySqwawkLaugh');
-        hopBig();
+        launchReact('perchLaughing', 900);
         break;
 
       case 'hauntFailed':
-        setCurrentPose('perchLaughing');
         setSpeech('BBBLAAAAHHAHAHA!', 2600);
         bumpSize(REACTION_SIZE.laugh, 2600);
         playSfx('pollySqwawkLaugh');
-        laughBob();
+        launchReact('perchLaughing', 900);
         break;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -500,6 +513,7 @@ export function usePollyAnimator(
       ],
     },
     ghostTintOpacity,
+    isFlying,
     firePollyEvent,
   };
 
