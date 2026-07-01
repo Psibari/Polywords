@@ -339,7 +339,7 @@ Design locks:
 * Tile width: SwipeMask cardWidth = screenWidth-80 max 290. backingCardWidth in MaskBoard = containerWidth-80 max 290. Always keep in sync.
 * HUD bottom hairline: borderBottomColor rgba(245,200,66,0.22), borderBottomWidth 0.5.
 * Score numeral letterSpacing: 2.
-* Polly Rig device sizing uses one shared 210px outer canvas with a 1.45 inner scale to compensate for transparent source padding, placed at left 4px / bottom 16px. Both `SHOW_POLLY_DEVICE_TEST` and `SHOW_POLLY_RIG_TEST` are false, so Polly remains hidden on GameScreen; legacy MaskBoard Polly visuals remain disabled.
+* Polly Rig v1 idle uses a quiet 3.2s breath, lagged crown, quick 5.475s blink cycle, restrained glance, and occasional tail/wing accents. Device sizing remains one shared 210px outer canvas with a 1.45 inner scale at left 4px / bottom 16px. Both test flags are false, so Polly remains hidden on GameScreen; legacy MaskBoard Polly visuals remain disabled.
 
 ---
 

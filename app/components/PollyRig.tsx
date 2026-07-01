@@ -45,141 +45,145 @@ export function PollyRig({ state }: PollyRigProps) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(bodyBob, {
-            toValue: -1.5,
-            duration: 1400,
+            toValue: -1.25,
+            duration: 1600,
             easing: Easing.inOut(Easing.quad),
             useNativeDriver: true,
           }),
           Animated.timing(bodyBob, {
             toValue: 0,
+            duration: 1600,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ])
+      ),
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(700),
+          Animated.timing(headTilt, {
+            toValue: 1,
             duration: 1400,
             easing: Easing.inOut(Easing.quad),
             useNativeDriver: true,
           }),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
+          Animated.delay(900),
           Animated.timing(headTilt, {
-            toValue: 1,
-            duration: 1800,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(headTilt, {
-            toValue: -1,
-            duration: 2200,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(headTilt, {
-            toValue: 0,
-            duration: 1800,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(180),
-          Animated.timing(crownBob, {
-            toValue: -2,
-            duration: 1200,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(crownBob, {
             toValue: 0,
             duration: 1200,
             easing: Easing.inOut(Easing.quad),
             useNativeDriver: true,
           }),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(1200),
-          Animated.timing(pupilGlance, {
-            toValue: 1.5,
-            duration: 240,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(600),
-          Animated.timing(pupilGlance, {
+          Animated.delay(1300),
+          Animated.timing(headTilt, {
             toValue: -1,
-            duration: 280,
+            duration: 1400,
             easing: Easing.inOut(Easing.quad),
             useNativeDriver: true,
           }),
           Animated.delay(900),
+          Animated.timing(headTilt, {
+            toValue: 0,
+            duration: 1200,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ])
+      ),
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(320),
+          Animated.timing(crownBob, {
+            toValue: -1.75,
+            duration: 1450,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(crownBob, {
+            toValue: 0,
+            duration: 1250,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.delay(180),
+        ])
+      ),
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(2600),
+          Animated.timing(pupilGlance, {
+            toValue: 1.25,
+            duration: 220,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.delay(750),
           Animated.timing(pupilGlance, {
             toValue: 0,
-            duration: 240,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(1400),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(2400),
-          Animated.timing(blinkScaleY, {
-            toValue: 0.08,
-            duration: 70,
-            useNativeDriver: true,
-          }),
-          Animated.delay(70),
-          Animated.timing(blinkScaleY, {
-            toValue: 1,
-            duration: 90,
-            useNativeDriver: true,
-          }),
-          Animated.delay(2800),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(600),
-          Animated.timing(tailFlick, {
-            toValue: 1,
-            duration: 450,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(tailFlick, {
-            toValue: -1,
-            duration: 550,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(tailFlick, {
-            toValue: 0,
-            duration: 450,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(1500),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(1800),
-          Animated.timing(wingTwitch, {
-            toValue: 1,
-            duration: 180,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(wingTwitch, {
-            toValue: 0,
             duration: 260,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.delay(3600),
+        ])
+      ),
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(3200),
+          Animated.timing(blinkScaleY, {
+            toValue: 0.06,
+            duration: 55,
+            useNativeDriver: true,
+          }),
+          Animated.delay(45),
+          Animated.timing(blinkScaleY, {
+            toValue: 1,
+            duration: 75,
+            useNativeDriver: true,
+          }),
+          Animated.delay(2100),
+        ])
+      ),
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(4300),
+          Animated.timing(tailFlick, {
+            toValue: 1,
+            duration: 280,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(tailFlick, {
+            toValue: -0.35,
+            duration: 320,
             easing: Easing.inOut(Easing.quad),
             useNativeDriver: true,
           }),
-          Animated.delay(2800),
+          Animated.timing(tailFlick, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.delay(2200),
+        ])
+      ),
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(6200),
+          Animated.timing(wingTwitch, {
+            toValue: 1,
+            duration: 130,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(wingTwitch, {
+            toValue: 0,
+            duration: 220,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.delay(3100),
         ])
       ),
     ];
@@ -199,19 +203,19 @@ export function PollyRig({ state }: PollyRigProps) {
 
   const headRotate = headTilt.interpolate({
     inputRange: [-1, 1],
-    outputRange: ['-2deg', '2deg'],
+    outputRange: ['-1.5deg', '1.5deg'],
   });
   const tailRotate = tailFlick.interpolate({
     inputRange: [-1, 1],
-    outputRange: ['-1.5deg', '1.5deg'],
+    outputRange: ['-1.25deg', '1.25deg'],
   });
   const wingLeftRotate = wingTwitch.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '-1.5deg'],
+    outputRange: ['0deg', '-1deg'],
   });
   const wingRightRotate = wingTwitch.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '1.5deg'],
+    outputRange: ['0deg', '1deg'],
   });
 
   function animatedPartStyle(partName: PollyRigPartName) {
