@@ -34,7 +34,6 @@ function getLine(reaction: DailyPollyReaction | null): string {
 
 export default function PollyDailyPerch({ reaction, show = true }: Props) {
   const [performance, setPerformance] = useState<PerformanceName>('idle');
-  const [speaking, setSpeaking] = useState(false);
 
   // Bubble
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
@@ -73,7 +72,6 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
 
     if (!isReacting) {
       setPerformance('idle');
-      setSpeaking(false);
       Animated.timing(bubbleOpacity, {
         toValue: 0,
         duration: 220,
@@ -82,9 +80,8 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       return;
     }
 
-    // Fire the matching performance + laugh SFX, and talk while the bubble is up.
+    // Fire the matching performance + laugh SFX; the reaction carries the beak snap.
     setPerformance(REACTION_TO_PERFORMANCE[reaction]);
-    setSpeaking(true);
     if (reaction === 'laughing') playSfx('pollySqwawkLaugh');
     else playSfx('pollySqwawkShort'); // happy + shocked jab
 
@@ -102,7 +99,6 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
         useNativeDriver: true,
       }).start(() => {
         setPerformance('idle');
-        setSpeaking(false);
       });
     }, 2500);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,7 +118,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
 
       {/* Polly — living rig, anchored bottom-right */}
       <View style={styles.pollyWrap}>
-        <PollyRig performance={performance} speaking={speaking} />
+        <PollyRig performance={performance} />
       </View>
     </Animated.View>
   );

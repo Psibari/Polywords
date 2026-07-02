@@ -55,13 +55,13 @@ export function PollyRig({ performance, speaking = false }: PollyRigProps) {
     pupilGlance: new Animated.Value(0),
     blink: new Animated.Value(0),
     tailFlick: new Animated.Value(0),
-    wingTwitch: new Animated.Value(0),
     headThrow: new Animated.Value(0),
     beakOpen: new Animated.Value(0),
     bodyShake: new Animated.Value(0),
     wingSpread: new Animated.Value(0),
     scalePop: new Animated.Value(0),
     recoil: new Animated.Value(0),
+    eyeNarrow: new Animated.Value(0),
   }).current;
 
   const trackToAnim = useMemo(
@@ -125,51 +125,47 @@ export function PollyRig({ performance, speaking = false }: PollyRigProps) {
   // ── Interpolations (stacked transforms compose additively) ──
   const headTiltDeg = drivers.headTilt.interpolate({
     inputRange: [-1, 1],
-    outputRange: ['-1.5deg', '1.5deg'],
+    outputRange: ['-5deg', '5deg'],
   });
   const headThrowDeg = drivers.headThrow.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '-14deg'],
+    outputRange: ['0deg', '-22deg'],
   });
   const beakLowerY = drivers.beakOpen.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, POLLY_RIG_SIZE * 0.045],
+    outputRange: [0, POLLY_RIG_SIZE * 0.07],
   });
   const blinkScaleY = drivers.blink.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 0.06],
   });
+  const eyeNarrowScaleY = drivers.eyeNarrow.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.5],
+  });
   const tailDeg = drivers.tailFlick.interpolate({
     inputRange: [-1, 1],
-    outputRange: ['-1.25deg', '1.25deg'],
-  });
-  const wingLeftTwitchDeg = drivers.wingTwitch.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '-1deg'],
+    outputRange: ['-5deg', '5deg'],
   });
   const wingLeftSpreadDeg = drivers.wingSpread.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '-10deg'],
-  });
-  const wingRightTwitchDeg = drivers.wingTwitch.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '1deg'],
+    outputRange: ['0deg', '-16deg'],
   });
   const wingRightSpreadDeg = drivers.wingSpread.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '10deg'],
+    outputRange: ['0deg', '16deg'],
   });
   const bodyShakeX = drivers.bodyShake.interpolate({
     inputRange: [-1, 1],
-    outputRange: [-3, 3],
+    outputRange: [-6, 6],
   });
   const recoilY = drivers.recoil.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 6],
+    outputRange: [0, 12],
   });
   const rigScale = drivers.scalePop.interpolate({
     inputRange: [0, 1],
-    outputRange: [POLLY_RIG_INNER_SCALE, POLLY_RIG_INNER_SCALE * 1.06],
+    outputRange: [POLLY_RIG_INNER_SCALE, POLLY_RIG_INNER_SCALE * 1.09],
   });
 
   function animatedPartStyle(partName: PollyRigPartName): any {
@@ -188,6 +184,7 @@ export function PollyRig({ performance, speaking = false }: PollyRigProps) {
           { rotate: headTiltDeg },
           { rotate: headThrowDeg },
           { scaleY: blinkScaleY },
+          { scaleY: eyeNarrowScaleY },
         ],
       };
     }
@@ -198,6 +195,7 @@ export function PollyRig({ performance, speaking = false }: PollyRigProps) {
           { rotate: headThrowDeg },
           { translateX: drivers.pupilGlance },
           { scaleY: blinkScaleY },
+          { scaleY: eyeNarrowScaleY },
         ],
       };
     }
@@ -214,10 +212,10 @@ export function PollyRig({ performance, speaking = false }: PollyRigProps) {
       return { transform: [{ rotate: tailDeg }] };
     }
     if (partName === 'wingLeft') {
-      return { transform: [{ rotate: wingLeftTwitchDeg }, { rotate: wingLeftSpreadDeg }] };
+      return { transform: [{ rotate: wingLeftSpreadDeg }] };
     }
     if (partName === 'wingRight') {
-      return { transform: [{ rotate: wingRightTwitchDeg }, { rotate: wingRightSpreadDeg }] };
+      return { transform: [{ rotate: wingRightSpreadDeg }] };
     }
     if (HEAD_PARTS.has(partName)) {
       return { transform: [{ rotate: headTiltDeg }, { rotate: headThrowDeg }] };
