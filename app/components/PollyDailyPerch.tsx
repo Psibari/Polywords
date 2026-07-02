@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Image,
+  ImageSourcePropType,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { FONTS } from '../constants/fonts';
 import {
   DAILY_FIRST_MISS_LINE,
@@ -8,21 +16,20 @@ import {
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
-import { PollyRig } from './PollyRig';
-import { PerformanceName } from '../animations/pollyPerformances';
+import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
 
 type Props = {
   reaction: DailyPollyReaction | null;
   show?: boolean;
 };
 
-const REACTION_TO_PERFORMANCE: Record<
-  'happy' | 'laughing' | 'shocked',
-  PerformanceName
-> = {
-  happy: 'smug',
-  laughing: 'laugh',
-  shocked: 'shocked',
+// Clean full-pose drawings (no rig seams). The expression lives in the art;
+// life + menace come from whole-image motion + the SFX.
+const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropType> = {
+  idle: POLLY_ANIMATIONS.idle,
+  happy: POLLY_ANIMATIONS.tauntPoint,
+  laughing: POLLY_ANIMATIONS.laugh,
+  shocked: POLLY_ANIMATIONS.bossWarning,
 };
 
 function getLine(reaction: DailyPollyReaction | null): string {
@@ -33,12 +40,16 @@ function getLine(reaction: DailyPollyReaction | null): string {
 }
 
 export default function PollyDailyPerch({ reaction, show = true }: Props) {
-  const [performance, setPerformance] = useState<PerformanceName>('idle');
+  const [pose, setPose] = useState<ImageSourcePropType>(POSE.idle);
 
-  // Bubble
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
-  // Show/hide slide
   const slideY = useRef(new Animated.Value(280)).current;
+
+  // Whole-image drivers (no part seams possible — we only move the whole image).
+  const breatheY = useRef(new Animated.Value(0)).current;
+  const reactX = useRef(new Animated.Value(0)).current;
+  const reactY = useRef(new Animated.Value(0)).current;
+  const reactScale = useRef(new Animated.Value(1)).current;
 
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -47,6 +58,28 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
     };
   }, []);
+
+  // Slow, continuous breath — always alive but quiet (menacing).
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breatheY, {
+          toValue: -6,
+          duration: 1900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breatheY, {
+          toValue: 0,
+          duration: 1900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [breatheY]);
 
   useEffect(() => {
     if (show) {
@@ -71,7 +104,10 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked';
 
     if (!isReacting) {
-      setPerformance('idle');
+      setPose(POSE.idle);
+      reactX.setValue(0);
+      reactY.setValue(0);
+      reactScale.setValue(1);
       Animated.timing(bubbleOpacity, {
         toValue: 0,
         duration: 220,
@@ -80,10 +116,43 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       return;
     }
 
-    // Fire the matching performance + laugh SFX; the reaction carries the beak snap.
-    setPerformance(REACTION_TO_PERFORMANCE[reaction]);
+    setPose(POSE[reaction]);
     if (reaction === 'laughing') playSfx('pollySqwawkLaugh');
-    else playSfx('pollySqwawkShort'); // happy + shocked jab
+    else playSfx('pollySqwawkShort');
+
+    reactX.setValue(0);
+    reactY.setValue(0);
+    reactScale.setValue(1);
+
+    if (reaction === 'laughing') {
+      // Sharp bark: quick pop + hard shake.
+      Animated.sequence([
+        Animated.timing(reactScale, { toValue: 1.08, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactScale, { toValue: 1, duration: 220, useNativeDriver: true }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(reactX, { toValue: 9, duration: 55, useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: -9, duration: 60, useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: 6, duration: 60, useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: 0, duration: 70, useNativeDriver: true }),
+      ]).start();
+    } else if (reaction === 'happy') {
+      // Cold, slow lean toward the puzzle (she's on the right → lean left).
+      Animated.sequence([
+        Animated.timing(reactX, { toValue: -12, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: 0, duration: 540, delay: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
+    } else {
+      // Shocked: fast recoil pop.
+      Animated.sequence([
+        Animated.timing(reactScale, { toValue: 1.1, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactScale, { toValue: 1, duration: 320, delay: 60, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(reactY, { toValue: -10, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactY, { toValue: 0, duration: 400, delay: 80, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
+    }
 
     Animated.timing(bubbleOpacity, {
       toValue: 1,
@@ -98,7 +167,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
         duration: 220,
         useNativeDriver: true,
       }).start(() => {
-        setPerformance('idle');
+        setPose(POSE.idle);
       });
     }, 2500);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,20 +175,31 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
 
   return (
     <Animated.View style={[styles.root, { transform: [{ translateY: slideY }] }]}>
-      {/* Speech bubble */}
+      {/* Speech bubble — to Polly's left, tail points right at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
         <View style={styles.bubble}>
           <Text style={styles.bubbleText}>{getLine(reaction)}</Text>
         </View>
-        {/* Tail — two-layer: border then fill */}
         <View style={styles.tailBorder} />
         <View style={styles.tailFill} />
       </Animated.View>
 
-      {/* Polly — living rig, anchored bottom-right */}
-      <View style={styles.pollyWrap}>
-        <PollyRig performance={performance} />
-      </View>
+      {/* Polly — clean full pose, whole-image motion, bottom-right facing left */}
+      <Animated.View
+        style={[
+          styles.pollyWrap,
+          {
+            transform: [
+              { translateX: reactX },
+              { translateY: breatheY },
+              { translateY: reactY },
+              { scale: reactScale },
+            ],
+          },
+        ]}
+      >
+        <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -133,19 +213,21 @@ const styles = StyleSheet.create({
     height: 220,
     pointerEvents: 'none',
   },
-  // ── Polly ──
   pollyWrap: {
     position: 'absolute',
-    left: 4,
-    bottom: -34,
-    width: 210,
-    height: 210,
+    right: 0,
+    bottom: 0,
+    width: 220,
+    height: 220,
   },
-  // ── Speech bubble ── (to Polly's right, tail points left at her)
+  pollyImage: {
+    width: 220,
+    height: 220,
+  },
   bubbleWrap: {
     position: 'absolute',
-    left: 196,
-    bottom: 130,
+    right: 212,
+    bottom: 120,
   },
   bubble: {
     backgroundColor: '#1A1055',
@@ -165,7 +247,7 @@ const styles = StyleSheet.create({
   },
   tailBorder: {
     position: 'absolute',
-    left: -9,
+    right: -9,
     bottom: 12,
     width: 0,
     height: 0,
@@ -173,12 +255,12 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomWidth: 8,
     borderBottomColor: 'transparent',
-    borderRightWidth: 9,
-    borderRightColor: 'rgba(245,200,66,0.55)',
+    borderLeftWidth: 9,
+    borderLeftColor: 'rgba(245,200,66,0.55)',
   },
   tailFill: {
     position: 'absolute',
-    left: -7,
+    right: -7,
     bottom: 12,
     width: 0,
     height: 0,
@@ -186,7 +268,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomWidth: 8,
     borderBottomColor: 'transparent',
-    borderRightWidth: 9,
-    borderRightColor: '#1A1055',
+    borderLeftWidth: 9,
+    borderLeftColor: '#1A1055',
   },
 });
