@@ -16,6 +16,7 @@ import {
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
+import { POLLY_POSES } from '../ui/pollyPoses';
 
 type Props = {
   reaction: DailyPollyReaction | null;
@@ -25,12 +26,12 @@ type Props = {
 // Clean full-pose drawings (background stripped to transparent). The expression
 // lives in the art; life + menace come from whole-image motion + the SFX.
 const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropType> = {
-  idle: require('../../assets/images/polly/poses/sprite4.png'), // smug perched — watchful
-  happy: require('../../assets/images/polly/poses/sprite7.png'), // pointing taunt (wrong)
-  laughing: require('../../assets/images/polly/poses/sprite5.png'), // laughing wide (out of lives)
-  shocked: require('../../assets/images/polly/poses/sprite8.png'), // shocked (win)
+  idle: POLLY_POSES.idle,        // smug perched — watchful
+  happy: POLLY_POSES.point,      // pointing taunt (wrong)
+  laughing: POLLY_POSES.laugh,   // laughing wide (out of lives)
+  shocked: POLLY_POSES.shocked,  // shocked (win)
 };
-const POSE_FLY = require('../../assets/images/polly/poses/sprite2.png'); // fly-in entrance
+const POSE_FLY = POLLY_POSES.fly; // fly-in entrance
 
 function getLine(reaction: DailyPollyReaction | null): string {
   if (reaction === 'happy') return DAILY_FIRST_MISS_LINE;
