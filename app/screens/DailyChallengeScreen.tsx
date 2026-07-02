@@ -557,13 +557,13 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     borderWidth: 1,
     borderColor: 'rgba(245,200,66,0.14)',
-    padding: 12,
+    padding: 10,
     overflow: 'visible',
   },
   cardGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 9,
     justifyContent: 'center',
   },
   resultPollyImage: {
@@ -672,8 +672,8 @@ const feather = StyleSheet.create({
 const cv = StyleSheet.create({
   cvRoot: {
     marginHorizontal: 20,
-    marginTop: 16,
-    padding: 22,
+    marginTop: 10,
+    padding: 16,
     borderRadius: dailyClueVaultMaterial.radius,
     backgroundColor: dailyClueVaultMaterial.panelBackground,
     borderWidth: dailyClueVaultMaterial.borderWidth,
@@ -691,7 +691,7 @@ const cv = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   cvBullet: {
     width: 5,

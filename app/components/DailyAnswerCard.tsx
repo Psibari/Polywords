@@ -393,7 +393,7 @@ export default function DailyAnswerCard({
 const styles = StyleSheet.create({
   entryShell: {
     width: '47%',
-    height: 88,
+    height: 64,
   },
   shell: {
     width: '100%',
