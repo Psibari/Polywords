@@ -386,9 +386,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         });
       }, 100);
 
-      // Polly exits + vault slides left
+      // Board slides left; Polly stays perched (no per-round pop-in).
       setTimeout(() => {
-        setPollyVisible(false);
         Animated.timing(vaultX, {
           toValue: -SCREEN_WIDTH,
           duration: 260,
@@ -400,11 +399,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setTimeout(() => {
         claimDailyAnswer(candidate);
       }, 480);
-
-      // Polly enters after cards are settling
-      setTimeout(() => {
-        setPollyVisible(true);
-      }, 780);
 
       return;
     }
@@ -592,7 +586,7 @@ const styles = StyleSheet.create({
   devResetBtn: {
     position: 'absolute',
     bottom: 36,
-    left: 14,
+    right: 14,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 8,
     paddingHorizontal: 10,

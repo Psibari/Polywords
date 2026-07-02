@@ -47,6 +47,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
 
   // Whole-image drivers (no part seams possible — we only move the whole image).
   const breatheY = useRef(new Animated.Value(0)).current;
+  const breatheX = useRef(new Animated.Value(0)).current;
   const reactX = useRef(new Animated.Value(0)).current;
   const reactY = useRef(new Animated.Value(0)).current;
   const reactScale = useRef(new Animated.Value(1)).current;
@@ -59,27 +60,28 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
     };
   }, []);
 
-  // Slow, continuous breath — always alive but quiet (menacing).
+  // Slow, continuous breath + gentle sway (offset periods = organic, never a
+  // mechanical nod). Always alive but quiet — menacing.
   useEffect(() => {
-    const loop = Animated.loop(
+    const bob = Animated.loop(
       Animated.sequence([
-        Animated.timing(breatheY, {
-          toValue: -6,
-          duration: 1900,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(breatheY, {
-          toValue: 0,
-          duration: 1900,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
+        Animated.timing(breatheY, { toValue: -6, duration: 1900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(breatheY, { toValue: 0, duration: 1900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]),
     );
-    loop.start();
-    return () => loop.stop();
-  }, [breatheY]);
+    const sway = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breatheX, { toValue: 3, duration: 2600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(breatheX, { toValue: -3, duration: 2600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
+    );
+    bob.start();
+    sway.start();
+    return () => {
+      bob.stop();
+      sway.stop();
+    };
+  }, [breatheY, breatheX]);
 
   useEffect(() => {
     if (show) {
@@ -137,9 +139,9 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
         Animated.timing(reactX, { toValue: 0, duration: 70, useNativeDriver: true }),
       ]).start();
     } else if (reaction === 'happy') {
-      // Cold, slow lean toward the puzzle (she's on the right → lean left).
+      // Cold, slow lean toward the puzzle (she's on the left → lean right).
       Animated.sequence([
-        Animated.timing(reactX, { toValue: -12, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: 12, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         Animated.timing(reactX, { toValue: 0, duration: 540, delay: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
     } else {
@@ -191,6 +193,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
           {
             transform: [
               { translateX: reactX },
+              { translateX: breatheX },
               { translateY: breatheY },
               { translateY: reactY },
               { scale: reactScale },
@@ -215,19 +218,19 @@ const styles = StyleSheet.create({
   },
   pollyWrap: {
     position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 220,
-    height: 220,
+    left: -6,
+    bottom: -12,
+    width: 300,
+    height: 300,
   },
   pollyImage: {
-    width: 220,
-    height: 220,
+    width: 300,
+    height: 300,
   },
   bubbleWrap: {
     position: 'absolute',
-    right: 212,
-    bottom: 120,
+    left: 268,
+    bottom: 190,
   },
   bubble: {
     backgroundColor: '#1A1055',
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
   },
   tailBorder: {
     position: 'absolute',
-    right: -9,
+    left: -9,
     bottom: 12,
     width: 0,
     height: 0,
@@ -255,12 +258,12 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomWidth: 8,
     borderBottomColor: 'transparent',
-    borderLeftWidth: 9,
-    borderLeftColor: 'rgba(245,200,66,0.55)',
+    borderRightWidth: 9,
+    borderRightColor: 'rgba(245,200,66,0.55)',
   },
   tailFill: {
     position: 'absolute',
-    right: -7,
+    left: -7,
     bottom: 12,
     width: 0,
     height: 0,
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomWidth: 8,
     borderBottomColor: 'transparent',
-    borderLeftWidth: 9,
-    borderLeftColor: '#1A1055',
+    borderRightWidth: 9,
+    borderRightColor: '#1A1055',
   },
 });
