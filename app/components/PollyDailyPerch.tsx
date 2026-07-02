@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
   },
   pollyWrap: {
     position: 'absolute',
-    left: -46,
-    bottom: -12,
+    left: -74,
+    bottom: -26,
     width: 300,
     height: 300,
   },
@@ -239,8 +239,8 @@ const styles = StyleSheet.create({
   },
   bubbleWrap: {
     position: 'absolute',
-    left: 190,
-    bottom: 172,
+    left: 162,
+    bottom: 158,
   },
   bubble: {
     backgroundColor: '#1A1055',
