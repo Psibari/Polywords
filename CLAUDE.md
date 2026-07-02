@@ -324,6 +324,12 @@ Sprites:
 * Animator: `app/hooks/usePollyAnimator.ts`
 * Gameplay size: `POLLY_GAMEPLAY_SIZE = 210`
 
+Living rig (performance layer):
+
+* `PollyRig` is a 13-part puppet driven by declarative choreography in `app/animations/pollyPerformances.ts` (idle / smug / laugh / shocked + a silent talk beak-flap). Reaction drivers rest at 0 over a forever-looping idle; a new performance interrupts and returns to idle.
+* Daily perch (`PollyDailyPerch`) renders the living rig: reaction→performance (happy→smug, laughing→laugh, shocked→shocked), `speaking` flaps the beak while the bubble is up, laugh SFX on the beat (`pollySqwawkShort` wrong, `pollySqwawkLaugh` out-of-lives).
+* Tune feel in `pollyPerformances.ts` (timings/amounts) and rig pivots in `PollyRig.tsx`. Hunt fly-in/out reuse is a future pass. Spec + plan: `docs/superpowers/{specs,plans}/2026-07-02-polly-*`.
+
 Temporary compatibility pose map:
 
 * Flying poses â†’ `polly_fly_in.webp`
