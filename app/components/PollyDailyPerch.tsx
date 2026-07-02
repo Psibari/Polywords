@@ -40,7 +40,8 @@ function getLine(reaction: DailyPollyReaction | null): string {
 }
 
 export default function PollyDailyPerch({ reaction, show = true }: Props) {
-  const [pose, setPose] = useState<ImageSourcePropType>(POSE.idle);
+  const [pose, setPose] = useState<ImageSourcePropType>(POLLY_ANIMATIONS.flyIn);
+  const enteredRef = useRef(false);
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(280)).current;
@@ -58,6 +59,15 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
     return () => {
       if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
     };
+  }, []);
+
+  // Fly in when Daily opens, then settle onto the perch.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      enteredRef.current = true;
+      setPose(POSE.idle);
+    }, 600);
+    return () => clearTimeout(t);
   }, []);
 
   // Slow, continuous breath + gentle sway (offset periods = organic, never a
@@ -106,7 +116,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked';
 
     if (!isReacting) {
-      setPose(POSE.idle);
+      if (enteredRef.current) setPose(POSE.idle);
       reactX.setValue(0);
       reactY.setValue(0);
       reactScale.setValue(1);
