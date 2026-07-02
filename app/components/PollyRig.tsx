@@ -1,21 +1,23 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Image } from 'expo-image';
-import {
-  Animated,
-  Easing,
-  StyleSheet,
-  ViewStyle,
-} from 'react-native';
+import { Animated, Easing, StyleSheet, ViewStyle } from 'react-native';
 import {
   POLLY_RIG_LAYER_ORDER,
   POLLY_RIG_PARTS,
   PollyRigPartName,
 } from '../animations/pollyRigParts';
-
-export type PollyRigState = 'idle';
+import {
+  IDLE_TRACKS,
+  PERFORMANCES,
+  TALK_TRACK,
+  PollyDriver,
+  PerformanceName,
+  Track,
+} from '../animations/pollyPerformances';
 
 type PollyRigProps = {
-  state: PollyRigState;
+  performance: PerformanceName;
+  speaking?: boolean;
 };
 
 export const POLLY_RIG_SIZE = 210;
@@ -29,234 +31,203 @@ const HEAD_PARTS = new Set<PollyRigPartName>([
   'beakLower',
 ]);
 
-export function PollyRig({ state }: PollyRigProps) {
-  const bodyBob = useRef(new Animated.Value(0)).current;
-  const headTilt = useRef(new Animated.Value(0)).current;
-  const crownBob = useRef(new Animated.Value(0)).current;
-  const pupilGlance = useRef(new Animated.Value(0)).current;
-  const blinkScaleY = useRef(new Animated.Value(1)).current;
-  const tailFlick = useRef(new Animated.Value(0)).current;
-  const wingTwitch = useRef(new Animated.Value(0)).current;
+// Reaction drivers snap back to 0 when a performance ends or is interrupted.
+const REACTION_DRIVERS: PollyDriver[] = [
+  'headThrow',
+  'bodyShake',
+  'wingSpread',
+  'scalePop',
+  'recoil',
+  'beakOpen',
+];
 
+const EASINGS = {
+  linear: Easing.linear,
+  inOut: Easing.inOut(Easing.quad),
+  out: Easing.out(Easing.quad),
+};
+
+export function PollyRig({ performance, speaking = false }: PollyRigProps) {
+  const drivers = useRef<Record<PollyDriver, Animated.Value>>({
+    bodyBob: new Animated.Value(0),
+    headTilt: new Animated.Value(0),
+    crownBob: new Animated.Value(0),
+    pupilGlance: new Animated.Value(0),
+    blink: new Animated.Value(0),
+    tailFlick: new Animated.Value(0),
+    wingTwitch: new Animated.Value(0),
+    headThrow: new Animated.Value(0),
+    beakOpen: new Animated.Value(0),
+    bodyShake: new Animated.Value(0),
+    wingSpread: new Animated.Value(0),
+    scalePop: new Animated.Value(0),
+    recoil: new Animated.Value(0),
+  }).current;
+
+  const trackToAnim = useMemo(
+    () =>
+      (track: Track): Animated.CompositeAnimation => {
+        const value = drivers[track.driver];
+        const seq = track.keys.map((k) =>
+          Animated.timing(value, {
+            toValue: k.to,
+            duration: k.dur,
+            delay: k.delay ?? 0,
+            easing: EASINGS[k.easing ?? 'inOut'],
+            useNativeDriver: true,
+          }),
+        );
+        const chain = Animated.sequence(seq);
+        return track.loop ? Animated.loop(chain) : chain;
+      },
+    [drivers],
+  );
+
+  // Ambient idle — always running underneath.
   useEffect(() => {
-    if (state !== 'idle') return;
+    const anims = IDLE_TRACKS.map(trackToAnim);
+    anims.forEach((a) => a.start());
+    return () => anims.forEach((a) => a.stop());
+  }, [trackToAnim]);
 
-    const idleAnimations = [
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(bodyBob, {
-            toValue: -1.25,
-            duration: 1600,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(bodyBob, {
-            toValue: 0,
-            duration: 1600,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(700),
-          Animated.timing(headTilt, {
-            toValue: 1,
-            duration: 1400,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(900),
-          Animated.timing(headTilt, {
-            toValue: 0,
-            duration: 1200,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(1300),
-          Animated.timing(headTilt, {
-            toValue: -1,
-            duration: 1400,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(900),
-          Animated.timing(headTilt, {
-            toValue: 0,
-            duration: 1200,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(320),
-          Animated.timing(crownBob, {
-            toValue: -1.75,
-            duration: 1450,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(crownBob, {
-            toValue: 0,
-            duration: 1250,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(180),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(2600),
-          Animated.timing(pupilGlance, {
-            toValue: 1.25,
-            duration: 220,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(750),
-          Animated.timing(pupilGlance, {
-            toValue: 0,
-            duration: 260,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(3600),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(3200),
-          Animated.timing(blinkScaleY, {
-            toValue: 0.06,
-            duration: 55,
-            useNativeDriver: true,
-          }),
-          Animated.delay(45),
-          Animated.timing(blinkScaleY, {
-            toValue: 1,
-            duration: 75,
-            useNativeDriver: true,
-          }),
-          Animated.delay(2100),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(4300),
-          Animated.timing(tailFlick, {
-            toValue: 1,
-            duration: 280,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(tailFlick, {
-            toValue: -0.35,
-            duration: 320,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(tailFlick, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(2200),
-        ])
-      ),
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(6200),
-          Animated.timing(wingTwitch, {
-            toValue: 1,
-            duration: 130,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(wingTwitch, {
-            toValue: 0,
-            duration: 220,
-            easing: Easing.inOut(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.delay(3100),
-        ])
-      ),
-    ];
+  // One-shot performances layered on top; reset reaction drivers on exit/interrupt.
+  useEffect(() => {
+    if (performance === 'idle') return;
+    const anims = PERFORMANCES[performance].map(trackToAnim);
+    anims.forEach((a) => a.start());
+    return () => {
+      anims.forEach((a) => a.stop());
+      REACTION_DRIVERS.forEach((d) =>
+        Animated.timing(drivers[d], {
+          toValue: 0,
+          duration: 140,
+          useNativeDriver: true,
+        }).start(),
+      );
+    };
+  }, [performance, trackToAnim, drivers]);
 
-    idleAnimations.forEach((animation) => animation.start());
-    return () => idleAnimations.forEach((animation) => animation.stop());
-  }, [
-    blinkScaleY,
-    bodyBob,
-    crownBob,
-    headTilt,
-    pupilGlance,
-    state,
-    tailFlick,
-    wingTwitch,
-  ]);
+  // Silent talk loop — beak flap while a bubble is up.
+  useEffect(() => {
+    if (!speaking) return;
+    const anim = trackToAnim(TALK_TRACK);
+    anim.start();
+    return () => {
+      anim.stop();
+      Animated.timing(drivers.beakOpen, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }).start();
+    };
+  }, [speaking, trackToAnim, drivers]);
 
-  const headRotate = headTilt.interpolate({
+  // ── Interpolations (stacked transforms compose additively) ──
+  const headTiltDeg = drivers.headTilt.interpolate({
     inputRange: [-1, 1],
     outputRange: ['-1.5deg', '1.5deg'],
   });
-  const tailRotate = tailFlick.interpolate({
+  const headThrowDeg = drivers.headThrow.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '-14deg'],
+  });
+  const beakLowerY = drivers.beakOpen.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, POLLY_RIG_SIZE * 0.045],
+  });
+  const blinkScaleY = drivers.blink.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.06],
+  });
+  const tailDeg = drivers.tailFlick.interpolate({
     inputRange: [-1, 1],
     outputRange: ['-1.25deg', '1.25deg'],
   });
-  const wingLeftRotate = wingTwitch.interpolate({
+  const wingLeftTwitchDeg = drivers.wingTwitch.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '-1deg'],
   });
-  const wingRightRotate = wingTwitch.interpolate({
+  const wingLeftSpreadDeg = drivers.wingSpread.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '-10deg'],
+  });
+  const wingRightTwitchDeg = drivers.wingTwitch.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '1deg'],
   });
+  const wingRightSpreadDeg = drivers.wingSpread.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '10deg'],
+  });
+  const bodyShakeX = drivers.bodyShake.interpolate({
+    inputRange: [-1, 1],
+    outputRange: [-3, 3],
+  });
+  const recoilY = drivers.recoil.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 6],
+  });
+  const rigScale = drivers.scalePop.interpolate({
+    inputRange: [0, 1],
+    outputRange: [POLLY_RIG_INNER_SCALE, POLLY_RIG_INNER_SCALE * 1.06],
+  });
 
-  function animatedPartStyle(partName: PollyRigPartName) {
+  function animatedPartStyle(partName: PollyRigPartName): any {
     if (partName === 'crown') {
       return {
-        transform: [{ rotate: headRotate }, { translateY: crownBob }],
+        transform: [
+          { rotate: headTiltDeg },
+          { rotate: headThrowDeg },
+          { translateY: drivers.crownBob },
+        ],
       };
     }
     if (partName === 'eyeWhite') {
       return {
-        transform: [{ rotate: headRotate }, { scaleY: blinkScaleY }],
+        transform: [
+          { rotate: headTiltDeg },
+          { rotate: headThrowDeg },
+          { scaleY: blinkScaleY },
+        ],
       };
     }
     if (partName === 'pupil') {
       return {
         transform: [
-          { rotate: headRotate },
-          { translateX: pupilGlance },
+          { rotate: headTiltDeg },
+          { rotate: headThrowDeg },
+          { translateX: drivers.pupilGlance },
           { scaleY: blinkScaleY },
         ],
       };
     }
+    if (partName === 'beakLower') {
+      return {
+        transform: [
+          { rotate: headTiltDeg },
+          { rotate: headThrowDeg },
+          { translateY: beakLowerY },
+        ],
+      };
+    }
     if (partName === 'tail') {
-      return { transform: [{ rotate: tailRotate }] };
+      return { transform: [{ rotate: tailDeg }] };
     }
     if (partName === 'wingLeft') {
-      return { transform: [{ rotate: wingLeftRotate }] };
+      return { transform: [{ rotate: wingLeftTwitchDeg }, { rotate: wingLeftSpreadDeg }] };
     }
     if (partName === 'wingRight') {
-      return { transform: [{ rotate: wingRightRotate }] };
+      return { transform: [{ rotate: wingRightTwitchDeg }, { rotate: wingRightSpreadDeg }] };
     }
     if (HEAD_PARTS.has(partName)) {
-      return { transform: [{ rotate: headRotate }] };
+      return { transform: [{ rotate: headTiltDeg }, { rotate: headThrowDeg }] };
     }
     return undefined;
   }
 
   function pivotStyle(partName: PollyRigPartName): ViewStyle | undefined {
-    if (partName === 'head' || HEAD_PARTS.has(partName)) {
-      return styles.headPivot;
-    }
+    if (partName === 'beakLower') return styles.beakPivot;
+    if (partName === 'head' || HEAD_PARTS.has(partName)) return styles.headPivot;
     if (partName === 'crown') return styles.crownPivot;
     if (partName === 'eyeWhite' || partName === 'pupil') return styles.eyePivot;
     if (partName === 'tail') return styles.tailPivot;
@@ -269,15 +240,17 @@ export function PollyRig({ state }: PollyRigProps) {
     <Animated.View
       pointerEvents="none"
       style={styles.container}
-      testID={`polly-rig-${state}`}
+      testID={`polly-rig-${performance}`}
     >
       <Animated.View
         style={[
           styles.innerRig,
           {
             transform: [
-              { translateY: bodyBob },
-              { scale: POLLY_RIG_INNER_SCALE },
+              { translateX: bodyShakeX },
+              { translateY: drivers.bodyBob },
+              { translateY: recoilY },
+              { scale: rigScale },
             ],
           },
         ]}
@@ -285,11 +258,7 @@ export function PollyRig({ state }: PollyRigProps) {
         {POLLY_RIG_LAYER_ORDER.map((partName) => (
           <Animated.View
             key={partName}
-            style={[
-              styles.partLayer,
-              pivotStyle(partName),
-              animatedPartStyle(partName),
-            ]}
+            style={[styles.partLayer, pivotStyle(partName), animatedPartStyle(partName)]}
           >
             <Image
               source={POLLY_RIG_PARTS[partName]}
@@ -327,6 +296,13 @@ const styles = StyleSheet.create({
     transformOrigin: [
       (POLLY_RIG_SIZE * 250) / 512,
       (POLLY_RIG_SIZE * 190) / 512,
+      0,
+    ],
+  },
+  beakPivot: {
+    transformOrigin: [
+      (POLLY_RIG_SIZE * 250) / 512,
+      (POLLY_RIG_SIZE * 235) / 512,
       0,
     ],
   },

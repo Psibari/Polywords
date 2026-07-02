@@ -38,7 +38,7 @@ function PollyDeviceTestOverlay() {
     return () => clearTimeout(timeout);
   }, []);
 
-  return <PollyActor state={state} />;
+  return <PollyActor performance="idle" renderer="flipbook" flipbookState={state} />;
 }
 
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
@@ -635,7 +635,7 @@ function GameDirector({ navigation }: { navigation: any }) {
         </View>
       )}
       {SHOW_POLLY_RIG_TEST && !isDone && (
-        <PollyActor state="idle" renderer="rig" />
+        <PollyActor performance="idle" renderer="rig" />
       )}
       {SHOW_POLLY_DEVICE_TEST && !SHOW_POLLY_RIG_TEST && !isDone && (
         <PollyDeviceTestOverlay />

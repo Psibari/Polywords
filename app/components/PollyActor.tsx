@@ -6,16 +6,24 @@ import {
   POLLY_BRANCH,
   PollyAnimationState,
 } from '../animations/pollyAnimations';
+import { PerformanceName } from '../animations/pollyPerformances';
 import { POLLY_RIG_SIZE, PollyRig } from './PollyRig';
 
 const SHOW_POLLY_BRANCH = false;
 
 type PollyActorProps = {
-  state: PollyAnimationState;
+  performance: PerformanceName;
+  speaking?: boolean;
   renderer?: 'flipbook' | 'rig';
+  flipbookState?: PollyAnimationState;
 };
 
-export function PollyActor({ state, renderer = 'flipbook' }: PollyActorProps) {
+export function PollyActor({
+  performance,
+  speaking = false,
+  renderer = 'rig',
+  flipbookState = 'idle',
+}: PollyActorProps) {
   return (
     <View
       pointerEvents="none"
@@ -25,7 +33,7 @@ export function PollyActor({ state, renderer = 'flipbook' }: PollyActorProps) {
       ]}
     >
       {renderer === 'rig' ? (
-        <PollyRig state="idle" />
+        <PollyRig performance={performance} speaking={speaking} />
       ) : (
         <>
           {SHOW_POLLY_BRANCH && (
@@ -36,12 +44,12 @@ export function PollyActor({ state, renderer = 'flipbook' }: PollyActorProps) {
             />
           )}
           <Image
-            key={state}
-            source={POLLY_ANIMATIONS[state]}
+            key={flipbookState}
+            source={POLLY_ANIMATIONS[flipbookState]}
             style={styles.polly}
             contentFit="contain"
             autoplay
-            recyclingKey={state}
+            recyclingKey={flipbookState}
           />
         </>
       )}
