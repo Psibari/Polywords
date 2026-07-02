@@ -269,8 +269,8 @@ const tb = StyleSheet.create({
     marginTop: 4,
     marginBottom: 0,
     paddingHorizontal: PW.space.md,
-    paddingTop: 5,
-    paddingBottom: 6,
+    paddingTop: 8,
+    paddingBottom: 9,
     borderRadius: 6,
     backgroundColor: 'rgba(11,9,32,0.86)',
     borderWidth: 0.5,
@@ -285,33 +285,33 @@ const tb = StyleSheet.create({
   },
   scoreVal: {
     color: PW.color.gold,
-    fontSize: FONT_SIZES.hudScore,
+    fontSize: 42,
     fontFamily: FONTS.hud,
-    lineHeight: 34,
+    lineHeight: 44,
     letterSpacing: 2,
     textTransform: 'uppercase',
     textShadowColor: PW.color.goldGlow,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
-    minWidth: 72,
+    textShadowRadius: 8,
+    minWidth: 96,
   },
   featherRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 3,
-    minWidth: 82,
+    gap: 5,
+    minWidth: 108,
     overflow: 'visible',
   },
   featherBox: {
-    width: 14,
-    height: 28,
+    width: 18,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
   },
   featherImg: {
-    width: 14,
-    height: 28,
+    width: 18,
+    height: 34,
   },
   featherBlade: {
     position: 'absolute',
@@ -358,14 +358,14 @@ const tb = StyleSheet.create({
     backgroundColor: 'rgba(123,45,139,0.70)',
   },
   progressTrack: {
-    height: 3,
-    marginTop: 7,
+    height: 4,
+    marginTop: 8,
     borderRadius: 2,
     backgroundColor: 'rgba(255,255,255,0.07)',
     overflow: 'hidden',
   },
   progressFill: {
-    height: 3,
+    height: 4,
     borderRadius: 2,
     backgroundColor: PW.color.gold,
   },
@@ -596,7 +596,8 @@ function GameDirector({ navigation }: { navigation: any }) {
         <LinearGradient
           colors={isBossRound
             ? ['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']
-            : ['rgba(6,4,22,0.90)', 'rgba(8,5,24,0.36)']}
+            : ['rgba(6,4,22,0.93)', 'rgba(9,6,26,0.55)', 'rgba(7,5,23,0.82)']}
+          locations={isBossRound ? undefined : [0, 0.5, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           pointerEvents="none"

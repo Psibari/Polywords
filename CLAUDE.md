@@ -205,12 +205,8 @@ Haunt return:
 
 ### Current state
 
-* `react-native-svg@15.12.1` installed and committed.
-* SVG HeroBook exists at `app/components/ui/HeroBook.tsx`.
-* `MaskBoard.tsx` uses HeroBook and passes the animated hero word subtree as children.
-* Current SVG direction is correct.
-* Current issue: proportions still read too rectangular/banner-like.
-* Next patch should touch only `app/components/ui/HeroBook.tsx`.
+* Shipped. SVG book at `app/components/ui/HeroBook.tsx`; `MaskBoard.tsx` passes the hero-word subtree as children.
+* Reads as a full bound book: rounded purple cover with gold trim, matching purple spine (top hinge) with gold tooling, wrapped rounded page base, opens from top via `rotateX`.
 
 Do not pop stash:
 
@@ -220,74 +216,11 @@ wip failed View-based Hunt hero book V5
 
 That stash contains failed View-based book work. Do not pop, drop, clear, or reuse as active code.
 
-### HeroBook V5 system
+### Ownership + guardrails
 
-HeroBook must read as a full thick book, not a plaque.
-
-Source geometry:
-
-* Purple = full book cover
-* Gold = trim, bevel, hero word glow, magic accents
-* Off-white/parchment = pages only
-* Right side = visible page side plane
-* Bottom side = visible bottom page plane
-* Full object = one connected book
-
-Required read:
-
-* Chunky purple-gold word-book
-* Bigger/heavier than the active tile
-* Full cover face, not a flat rectangle sign
-* Longer left/right cover sides
-* Visible layered pages under the cover
-* Visible right page plane
-* Top hinge/spine cue
-* Opens from top using `rotateX`
-* Correct tile slides in like a missing page returning
-* Tile vanishes only after entering
-* Cover snaps shut after absorption
-
-Forbidden HeroBook looks:
-
-* plaque
-* flat rectangle
-* signboard
-* drawer
-* tray
-* shelf
-* notebook
-* file cabinet
-* black bar
-* giant cream slab
-* solid page block
-* View-rectangle book anatomy
-
-HeroBook owns:
-
-* SVG cover geometry
-* page planes
-* page lines
-* gold trims
-* spine/hinge visual
-* intake seam
-* book visual styling
-
-MaskBoard owns:
-
-* gameplay
-* hero word content
-* animation values/state
-* tile intake paths
-* scoring/lives/results flow
-
-Next patch:
-
-```text
-Fix only app/components/ui/HeroBook.tsx.
-Adjust SVG proportions so the book stops reading like a rectangle/banner.
-Make cover sides longer, cover more book-like, pages connected, and full-book shape stronger.
-Do not touch MaskBoard unless a compile error requires an import/type fix.
-```
+* HeroBook owns cover/spine/page SVG geometry, gold trims, intake seam, book styling.
+* MaskBoard owns gameplay, hero-word content, animation, tile intake, scoring.
+* Must read as a full bound book, bigger/heavier than the tile. Never: plaque, flat banner, signboard, black bar, View-rectangle anatomy.
 
 ---
 
@@ -316,7 +249,7 @@ Tile card:
 Deck stack:
 
 * Rendered in `MaskBoard.tsx`
-* Uses tokenized deck/card material
+* Reads as a real stack: receding purple faces, warm gold→rose rims, gold peeking edge (part of the book palette). Offset 9, squared (~1.3° fan).
 * Active card owns attention
 
 Locked play-screen grammar:
@@ -329,13 +262,13 @@ Locked play-screen grammar:
 
 Design locks:
 
-* HeroBook spine is TOP (hinge band). Pages open from BOTTOM to accept tile. Never add left spine band.
-* HeroBook cover is flat rectangle geometry — no parallelogram skew. Tile and book share same geometry language.
+* HeroBook spine is TOP (hinge band), cover-family purple + gold tooling. Pages open from BOTTOM to accept tile. Never add left spine band.
+* HeroBook cover is a rounded rectangle (corners match the tile card) — no parallelogram skew. Tile and book share same geometry language.
 * Page block colors: dark aged parchment (#A8A090 range). Never near-white cream.
-* HUD is a single flat strip (no pill chips). Score left, multiplier center (hidden at ×1.0), feathers right, gold fill bar below.
+* HUD is a single flat strip (no pill chips). Score left (42px), multiplier center (hidden at ×1.0), feathers right (18×34), gold fill bar below.
 * "POLLY'S VAULT" label lives on the hinge band — always visible, slides in with book.
 * Swipe cues fade permanently at stepIndex >= 3.
-* Two-zone background overlay: LinearGradient rgba(6,4,22,0.90) top → rgba(8,5,24,0.36) bottom. Never flat overlay.
+* Background overlay: 3-stop LinearGradient rgba(6,4,22,0.93) → rgba(9,6,26,0.55) @0.5 → rgba(7,5,23,0.82). Mid viewing window, tamed floor. Never flat overlay.
 * Tile width: SwipeMask cardWidth = screenWidth-80 max 290. backingCardWidth in MaskBoard = containerWidth-80 max 290. Always keep in sync.
 * HUD bottom hairline: borderBottomColor rgba(245,200,66,0.22), borderBottomWidth 0.5.
 * Score numeral letterSpacing: 2.
@@ -734,7 +667,7 @@ tools/content/mask-rewriter               Local-only content tool
 * Progress is a gold fill bar (Animated width), not dots. useNativeDriver: false for width animation.
 * onNearTarget callback on SwipeMask fires at closed > 0.45, triggers triggerBookOpen() in MaskBoard. Book opens when tile arrives, not on swipe.
 * intakeY = wordScreenY + 73 for coverHeight 162.
-* gridWrap paddingTop must account for book overflow: (bookHeight - wordZoneHeight) + desired visual gap. Current: (210-172) + 50 = 88.
+* gridWrap paddingTop drops the tile onto the arena floor (grounded, clear of Polly's bottom-left lane). Current: 180.
 
 ---
 

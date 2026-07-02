@@ -30,18 +30,18 @@ const FINAL_TILE_GAP = 10;
 const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
-const DECK_BACKING_OFFSET = 6;
+const DECK_BACKING_OFFSET = 9;
 const DECK_BACKING_COLORS = [
-  PW.color.surfaceRaised,
-  PW.color.surfaceBase,
-  'rgba(15,13,42,0.88)',
-  'rgba(11,9,32,0.82)',
+  '#2A2352',
+  '#231D48',
+  '#1C173E',
+  '#161234',
 ] as const;
 const DECK_BACKING_BORDER_COLORS = [
-  PW.color.purpleSoft,
-  'rgba(123,45,139,0.30)',
-  'rgba(155,45,107,0.20)',
-  'rgba(255,255,255,0.07)',
+  'rgba(245,200,66,0.45)',
+  'rgba(198,130,95,0.34)',
+  'rgba(158,62,104,0.26)',
+  'rgba(124,52,96,0.18)',
 ] as const;
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -1735,8 +1735,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
                           opacity: deckBackingOp,
                           transform: [
                             { translateY: deckBackingY },
-                            { scale: 1 - depth * 0.006 },
-                            { rotate: `${depth * -2.2}deg` },
+                            { scale: 1 - depth * 0.01 },
+                            { rotate: `${depth * -1.3}deg` },
                           ],
                         },
                       ]}
@@ -2233,7 +2233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 88,
+    paddingTop: 180,
     paddingBottom: 48,
     minHeight: 0,
   },
@@ -2316,13 +2316,13 @@ const styles = StyleSheet.create({
   },
   deckBackingLowerEdge: {
     position: 'absolute',
-    left: 18,
-    right: 18,
-    bottom: 6,
-    height: 2,
+    left: 14,
+    right: 14,
+    bottom: 5,
+    height: 2.5,
     borderRadius: 2,
-    backgroundColor: PW.color.cardBottomEdge,
-    opacity: 0.42,
+    backgroundColor: 'rgba(245,200,66,0.5)',
+    opacity: 0.85,
   },
   deckActiveCardLayer: {
     position: 'relative',
