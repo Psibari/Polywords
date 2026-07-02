@@ -4,6 +4,7 @@ import {
   Animated,
   Dimensions,
   Image,
+  ImageBackground,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -12,6 +13,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS } from '../constants/fonts';
 import {
   DAILY_ROUND_COUNT,
@@ -56,21 +58,15 @@ function toPerchReaction(
 // ─────────────────────────────────────────
 function FeatherIcon({ filled }: { filled: boolean }) {
   return (
-    <View style={feather.wrap}>
-      <View
-        style={[
-          feather.blade,
-          filled ? feather.bladeFilled : feather.bladeEmpty,
-        ]}
-      />
-      <View
-        style={[
-          feather.shaft,
-          filled ? feather.shaftFilled : feather.shaftEmpty,
-        ]}
-      />
-      <View style={feather.highlight} />
-    </View>
+    <Image
+      source={
+        filled
+          ? require('../../assets/ui/feather-life-filled.png')
+          : require('../../assets/ui/feather-life-empty.png')
+      }
+      style={feather.img}
+      resizeMode="contain"
+    />
   );
 }
 
@@ -446,6 +442,22 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
+      {/* Polly's turf — her boss chamber, tamed so clues + cards stay readable */}
+      <ImageBackground
+        source={require('../../assets/backgrounds/boss-round-bg.png')}
+        resizeMode="cover"
+        style={StyleSheet.absoluteFill}
+      >
+        <LinearGradient
+          colors={['rgba(12,9,32,0.80)', 'rgba(13,10,34,0.42)', 'rgba(11,8,28,0.66)']}
+          locations={[0, 0.55, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFillObject}
+        />
+      </ImageBackground>
+
       {!isComplete && dailySession && (
         <>
           <DailyHUD
@@ -467,24 +479,30 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
           </Animated.View>
 
-          <View
-            key={`grid-${dailySession.currentRoundIndex}`}
-            style={styles.cardGrid}
-          >
-            {currentRound &&
-              [...currentRound.candidates].map((candidate, index) => (
-                <DailyAnswerCard
-                  key={candidate}
-                  label={candidate}
-                  state={cardStates.get(candidate) ?? 'idle'}
-                  disabled={inputLocked}
-                  onClaim={handleClaim}
-                  testID={`daily-answer-${index}`}
-                  enterFromLeft={index % 2 === 0}
-                  enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
-                  roundKey={dailySession.currentRoundIndex}
-                />
-              ))}
+          <View style={styles.cardArea}>
+            {/* Candidate board — the surface the six cards rest on, so they
+                read as laid out on Polly's board instead of floating. */}
+            <View style={styles.cardBoard}>
+              <View
+                key={`grid-${dailySession.currentRoundIndex}`}
+                style={styles.cardGrid}
+              >
+                {currentRound &&
+                  [...currentRound.candidates].map((candidate, index) => (
+                    <DailyAnswerCard
+                      key={candidate}
+                      label={candidate}
+                      state={cardStates.get(candidate) ?? 'idle'}
+                      disabled={inputLocked}
+                      onClaim={handleClaim}
+                      testID={`daily-answer-${index}`}
+                      enterFromLeft={index % 2 === 0}
+                      enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
+                      roundKey={dailySession.currentRoundIndex}
+                    />
+                  ))}
+              </View>
+            </View>
           </View>
         </>
       )}
@@ -529,13 +547,24 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 10,
   },
+  cardArea: {
+    marginHorizontal: 20,
+    marginTop: 6,
+    paddingBottom: 210,
+  },
+  cardBoard: {
+    backgroundColor: 'rgba(10,7,26,0.45)',
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.14)',
+    padding: 12,
+    overflow: 'visible',
+  },
   cardGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginHorizontal: 20,
     justifyContent: 'center',
-    paddingBottom: 230,
   },
   resultPollyImage: {
     width: 140,
@@ -562,8 +591,8 @@ const styles = StyleSheet.create({
   },
   devResetBtn: {
     position: 'absolute',
-    top: 52,
-    right: 12,
+    bottom: 36,
+    left: 14,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -583,24 +612,35 @@ const hud = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    marginHorizontal: 20,
+    marginTop: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 8,
+    backgroundColor: 'rgba(11,9,32,0.80)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(123,45,139,0.28)',
+    borderBottomColor: 'rgba(245,200,66,0.22)',
+    borderBottomWidth: 0.5,
   },
   label: {
     color: '#F5C842',
     fontFamily: FONTS.hud,
-    fontSize: 16,
+    fontSize: 24,
     letterSpacing: 2,
+    textShadowColor: 'rgba(245,200,66,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 7,
   },
   dots: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   dotDone: {
     backgroundColor: '#F5C842',
@@ -618,53 +658,14 @@ const hud = StyleSheet.create({
   feathers: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
 });
 
 const feather = StyleSheet.create({
-  wrap: {
-    width: 14,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  blade: {
-    width: 9,
-    height: 13,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 2,
-    transform: [{ rotate: '-22deg' }],
-  },
-  bladeFilled: {
-    backgroundColor: '#FFFFFF',
-  },
-  bladeEmpty: {
-    backgroundColor: 'rgba(123,45,139,0.45)',
-  },
-  shaft: {
-    position: 'absolute',
-    width: 2,
-    height: 12,
-    bottom: 1,
-    transform: [{ rotate: '-22deg' }],
-  },
-  shaftFilled: {
-    backgroundColor: '#7B2D8B',
-  },
-  shaftEmpty: {
-    backgroundColor: 'rgba(123,45,139,0.3)',
-  },
-  highlight: {
-    position: 'absolute',
-    top: 3,
-    right: 3,
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+  img: {
+    width: 20,
+    height: 36,
   },
 });
 
@@ -703,8 +704,8 @@ const cv = StyleSheet.create({
   cvText: {
     color: dailyClueVaultMaterial.clueTextColor,
     fontFamily: FONTS.tileCopy,
-    fontSize: 19,
-    lineHeight: 26,
+    fontSize: 23,
+    lineHeight: 30,
     fontWeight: '700',
     flex: 1,
   },

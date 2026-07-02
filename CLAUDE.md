@@ -465,8 +465,7 @@ Current daily status:
 * Daily entrance animations restored
 * Hunt Gold Feather revive quarantined
 * Hunt wrong-swipe result tracking fixed
-
-Do not touch Daily files during Hunt HeroBook work.
+* Play-screen visual pass: boss-chamber backdrop (her turf) + tamed 3-stop overlay, HUD in a strip matching Hunt (feather PNG chances), 6 cards grounded on a candidate board with gold→rose frames.
 
 Daily source docs:
 

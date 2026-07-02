@@ -37,7 +37,7 @@ export const dailyCardMaterial = {
   maxHeight: 84,
   pressScale: 0.98,
   liftScale: 1.02,
-  frameWidth: 2,
+  frameWidth: 3,
   shadowOpacity: 0.34,
   shadowRadius: 16,
   shadowOffset: { width: 0, height: 10 },

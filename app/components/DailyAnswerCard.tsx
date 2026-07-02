@@ -35,7 +35,7 @@ function rimColors(
   if (state === 'correct') return ['#F5C842', '#F5C842'];
   if (state === 'wrong') return ['#CC2200', '#CC2200'];
   if (state === 'disabled') return ['#3C315E', '#7B2D8B'];
-  return [dailyCardMaterial.outerGradient[0], '#7B2D8B'];
+  return [dailyCardMaterial.outerGradient[0], dailyCardMaterial.outerGradient[1]];
 }
 
 export default function DailyAnswerCard({
@@ -358,7 +358,7 @@ export default function DailyAnswerCard({
         <LinearGradient
           colors={rimColors(state)}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 1, y: 0 }}
           style={styles.rim}
         >
           <View style={styles.face}>
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   label: {
     color: dailyCardMaterial.text,
     fontFamily: FONTS.tileCopy,
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '800',
     letterSpacing: 0.5,
     textAlign: 'center',
