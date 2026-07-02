@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   devResetBtn: {
     position: 'absolute',
     bottom: 36,
-    left: 14,
+    right: 14,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 8,
     paddingHorizontal: 10,

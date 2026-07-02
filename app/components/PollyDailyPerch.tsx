@@ -136,16 +136,16 @@ const styles = StyleSheet.create({
   // ── Polly ──
   pollyWrap: {
     position: 'absolute',
-    right: 4,
+    left: 4,
     bottom: -34,
     width: 210,
     height: 210,
   },
-  // ── Speech bubble ──
+  // ── Speech bubble ── (to Polly's right, tail points left at her)
   bubbleWrap: {
     position: 'absolute',
-    right: 212,
-    bottom: 120,
+    left: 196,
+    bottom: 130,
   },
   bubble: {
     backgroundColor: '#1A1055',
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   tailBorder: {
     position: 'absolute',
-    right: -9,
+    left: -9,
     bottom: 12,
     width: 0,
     height: 0,
@@ -173,12 +173,12 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomWidth: 8,
     borderBottomColor: 'transparent',
-    borderLeftWidth: 9,
-    borderLeftColor: 'rgba(245,200,66,0.55)',
+    borderRightWidth: 9,
+    borderRightColor: 'rgba(245,200,66,0.55)',
   },
   tailFill: {
     position: 'absolute',
-    right: -7,
+    left: -7,
     bottom: 12,
     width: 0,
     height: 0,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomWidth: 8,
     borderBottomColor: 'transparent',
-    borderLeftWidth: 9,
-    borderLeftColor: '#1A1055',
+    borderRightWidth: 9,
+    borderRightColor: '#1A1055',
   },
 });

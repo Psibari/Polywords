@@ -131,9 +131,11 @@ export function PollyRig({ performance, speaking = false }: PollyRigProps) {
     inputRange: [0, 1],
     outputRange: ['0deg', '-22deg'],
   });
-  const beakLowerY = drivers.beakOpen.interpolate({
+  // Hinge the lower beak open (rotate around the jaw joint) rather than sliding it
+  // down — a translate reads as a duplicate "double beak".
+  const beakOpenDeg = drivers.beakOpen.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, POLLY_RIG_SIZE * 0.07],
+    outputRange: ['0deg', '15deg'],
   });
   const blinkScaleY = drivers.blink.interpolate({
     inputRange: [0, 1],
@@ -204,7 +206,7 @@ export function PollyRig({ performance, speaking = false }: PollyRigProps) {
         transform: [
           { rotate: headTiltDeg },
           { rotate: headThrowDeg },
-          { translateY: beakLowerY },
+          { rotate: beakOpenDeg },
         ],
       };
     }
