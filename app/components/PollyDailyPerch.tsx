@@ -16,21 +16,21 @@ import {
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
-import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
 
 type Props = {
   reaction: DailyPollyReaction | null;
   show?: boolean;
 };
 
-// Clean full-pose drawings (no rig seams). The expression lives in the art;
-// life + menace come from whole-image motion + the SFX.
+// Clean full-pose drawings (background stripped to transparent). The expression
+// lives in the art; life + menace come from whole-image motion + the SFX.
 const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropType> = {
-  idle: POLLY_ANIMATIONS.idle,
-  happy: POLLY_ANIMATIONS.tauntPoint,
-  laughing: POLLY_ANIMATIONS.laugh,
-  shocked: POLLY_ANIMATIONS.bossWarning,
+  idle: require('../../assets/images/polly/poses/sprite4.png'), // smug perched — watchful
+  happy: require('../../assets/images/polly/poses/sprite7.png'), // pointing taunt (wrong)
+  laughing: require('../../assets/images/polly/poses/sprite5.png'), // laughing wide (out of lives)
+  shocked: require('../../assets/images/polly/poses/sprite8.png'), // shocked (win)
 };
+const POSE_FLY = require('../../assets/images/polly/poses/sprite2.png'); // fly-in entrance
 
 function getLine(reaction: DailyPollyReaction | null): string {
   if (reaction === 'happy') return DAILY_FIRST_MISS_LINE;
@@ -40,7 +40,8 @@ function getLine(reaction: DailyPollyReaction | null): string {
 }
 
 export default function PollyDailyPerch({ reaction, show = true }: Props) {
-  const [pose, setPose] = useState<ImageSourcePropType>(POSE.idle);
+  const [pose, setPose] = useState<ImageSourcePropType>(POSE_FLY);
+  const enteredRef = useRef(false);
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(280)).current;
@@ -58,6 +59,15 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
     return () => {
       if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
     };
+  }, []);
+
+  // Fly in when Daily opens, then settle onto the perch.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      enteredRef.current = true;
+      setPose(POSE.idle);
+    }, 650);
+    return () => clearTimeout(t);
   }, []);
 
   // Slow, continuous breath + gentle sway (offset periods = organic, never a
@@ -106,7 +116,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked';
 
     if (!isReacting) {
-      setPose(POSE.idle);
+      if (enteredRef.current) setPose(POSE.idle);
       reactX.setValue(0);
       reactY.setValue(0);
       reactScale.setValue(1);
