@@ -40,10 +40,13 @@ trigger system with no body; Daily has the body with a 3-reaction map.
 
 - **`app/hooks/usePollyVisits.ts`** — the director. Exposes
   `firePollyEvent(event: PollyEvent)` with the **same signature and event names** as
-  `usePollyAnimator`, plus visit state for the render component. Owns the event→visit
-  map, per-word budget, interruption rules, and visit timing. Visit decision logic is a
-  **pure exported function** `resolveVisit(event, budgetState)` so policy gets a plain
-  unit test with no RN mocking.
+  `usePollyAnimator`, plus visit state for the render component. Owns the visit queue,
+  per-word budget flags, and interruption rules.
+
+- **`app/game/pollyVisitPolicy.ts`** — the decision logic: a **pure, RN-free**
+  `resolveVisit(event, budgetState)` plus the event→visit spec map. Separate module
+  (not inside the hook file) so the test runs under plain Node via `npx tsx` — the repo
+  has no jest, and importing the hook would drag in react-native.
 
 - **`app/components/PollyHuntVisit.tsx`** — the body. Renders the active visit using
   `PollyDailyPerch`'s Animated idioms: native-driver transforms + opacity only,
