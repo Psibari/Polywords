@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   pollyWrap: {
     position: 'absolute',
-    left: -6,
+    left: -46,
     bottom: -12,
     width: 300,
     height: 300,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   bubbleWrap: {
     position: 'absolute',
-    left: 150,
+    left: 110,
     bottom: 214,
   },
   bubble: {
