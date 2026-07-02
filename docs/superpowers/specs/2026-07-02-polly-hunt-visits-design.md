@@ -97,27 +97,31 @@ One fixed arc, ~3.2s for heckles, longer for guaranteed beats:
   if she is on screen or the budget is spent, they are dropped silently.
 - **Word advance** while a heckle visit is active → fast fly-out. `wordEntry` resets the
   per-word budget and never cuts a guaranteed visit.
-- **Terminal visits hold the perch:** `gameOver`/`hauntFailed` (laugh) and
-  `gateMasteredBoss` (sulk) do not fly out; they stay until the Results transition
-  unmounts the board.
+- **Terminal visits hold the perch:** `gameOver` (laugh) and `gateMasteredBoss` (sulk) do
+  not fly out; they stay until the Results transition unmounts the board. `gameOver`'s
+  on-board hold is mapped but currently de-scoped in practice — the board unmounts to
+  Results instantly, so the perch never actually renders; a Polly gloat beat on
+  ResultsScreen is a follow-up. `hauntFailed` is NOT terminal — the run continues, so she
+  laughs and flies out (~2.2s) like any other guaranteed beat.
 - **Speed rounds** suppress heckle visits; guaranteed beats still fire.
 
 ## Trigger map
 
 ### Guaranteed (always fly in, ignore budget)
 
-| Event | Pose | Line | SFX |
-|---|---|---|---|
-| `bossEntry` | fly `flyAngry` → perch `point` | "This word stays mine." | `pollySqwawkShort` |
-| `gateMasteredBoss` | fly `flyAngry` → perch `sulk` | *silent* | — |
-| `gameOver` / `hauntFailed` | perch `laugh` | "BBBLAAAAHHAHAHA!" | `pollySqwawkLaugh` |
-| `cleanSweep` — **first of the run only** | perch `shocked` | "Bet you can't do that again." | `pollySqwawkShort` |
+| Event | Pose | Line | SFX | Notes |
+|---|---|---|---|---|
+| `bossEntry` | fly `flyAngry` → perch `point` | "This word stays mine." | `pollySqwawkShort` | flies out |
+| `gateMasteredBoss` | fly `flyAngry` → perch `sulk` | *silent* | — | holds perch |
+| `gameOver` | perch `laugh` | "BBBLAAAAHHAHAHA!" | `pollySqwawkLaugh` | holds perch (on-board render de-scoped — board unmounts to Results instantly; ResultsScreen Polly gloat is a follow-up) |
+| `hauntFailed` | perch `laugh` | "BBBLAAAAHHAHAHA!" | `pollySqwawkLaugh` | flies out ~2.2s — the run continues |
+| `cleanSweep` — **first of the run only** | perch `shocked` | "Bet you can't do that again." | `pollySqwawkShort` | flies out |
 
 ### Budgeted heckles (max one visit per word, first-come; dropped if busy/spent)
 
 | Event | Pose | Line | SFX |
 |---|---|---|---|
-| `wrong` (first wrong swipe of the word) | `smug` | "Thought so." | `pollySqwawkShort` |
+| `wrong` (first wrong swipe of the word) | `smug` | "Thought so." | — (swipe already squawks) |
 | `hesitation6s` (3s/9s ignored) | `point` | "YES... NO... MAYBE SO..." | — |
 | `ghostEntry` | `smug` | "Remember me." | — |
 | `cleanSweep` (second and later of the run) | `shocked` | "Bet you can't do that again." | `pollySqwawkShort` |

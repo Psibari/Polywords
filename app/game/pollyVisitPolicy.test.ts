@@ -44,13 +44,24 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.holdPerch, true, 'gateMasteredBoss.holdPerch');
 }
 
-// gameOver and hauntFailed: laugh, never-change line, laugh squawk, holds perch
-for (const ev of ['gameOver', 'hauntFailed'] as const) {
-  const s = visitSpec(resolveVisit(ev, idle), ev);
-  eq(s.perchPose, 'laugh', `${ev}.perchPose`);
-  eq(s.line, 'BBBLAAAAHHAHAHA!', `${ev}.line`);
-  eq(s.sfx, 'pollySqwawkLaugh', `${ev}.sfx`);
-  eq(s.holdPerch, true, `${ev}.holdPerch`);
+// gameOver: laugh, never-change line, laugh squawk, holds perch (terminal beat)
+{
+  const s = visitSpec(resolveVisit('gameOver', idle), 'gameOver');
+  eq(s.perchPose, 'laugh', 'gameOver.perchPose');
+  eq(s.line, 'BBBLAAAAHHAHAHA!', 'gameOver.line');
+  eq(s.sfx, 'pollySqwawkLaugh', 'gameOver.sfx');
+  eq(s.holdPerch, true, 'gameOver.holdPerch');
+}
+
+// hauntFailed: same laugh beat, but the run continues — does NOT hold the
+// perch. Regression guard for the fix that split this off from gameOver.
+{
+  const s = visitSpec(resolveVisit('hauntFailed', idle), 'hauntFailed');
+  eq(s.kind, 'guaranteed', 'hauntFailed.kind');
+  eq(s.perchPose, 'laugh', 'hauntFailed.perchPose');
+  eq(s.line, 'BBBLAAAAHHAHAHA!', 'hauntFailed.line');
+  eq(s.sfx, 'pollySqwawkLaugh', 'hauntFailed.sfx');
+  eq(s.holdPerch, false, 'hauntFailed.holdPerch');
 }
 
 // Guaranteed beats fire even when busy, mid-heckle-budget, or in speed rounds
@@ -100,7 +111,7 @@ eq(
   eq(s.kind, 'heckle', 'wrong.kind');
   eq(s.perchPose, 'smug', 'wrong.perchPose');
   eq(s.line, 'Thought so.', 'wrong.line');
-  eq(s.sfx, 'pollySqwawkShort', 'wrong.sfx');
+  eq(s.sfx, null, 'wrong.sfx'); // the wrong swipe itself already squawks in MaskBoard
 }
 
 // wrong: second wrong of the same word is ignored

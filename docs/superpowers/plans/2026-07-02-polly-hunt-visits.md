@@ -1065,7 +1065,10 @@ Start: `npx.cmd expo start` and open on device via QR. This is a human-in-the-lo
 4. First perfect word clear of the run → shocked visit, "Bet you can't do that again."
 5. Reach Round 10 (dev BOSS button) → angry fly-in, pointing, "This word stays mine."
 6. Master the boss → angry fly-in, sulk, silent, stays perched until Results.
-7. Lose all feathers → laugh visit "BBBLAAAAHHAHAHA!" + laugh squawk, stays perched until Results.
+7. Fail the Returning Haunt (Round 8) → laugh visit "BBBLAAAAHHAHAHA!" + laugh squawk, flies
+   out ~2.2s, run continues. (Note: `gameOver`'s "stays perched until Results" on-board beat
+   is de-scoped — the board unmounts to Results instantly, so it is not observable on device;
+   skip checking it for this pass.)
 8. During any visit, tiles remain fully swipeable (she never blocks touches).
 9. Screenshot at least the smug heckle and boss entry for the commit record.
 
@@ -1091,3 +1094,26 @@ Run: `git tag v0.working-20260702-hunt-polly` (adjust date to the actual confirm
 - If the sulk pose renders soft/blurry at 260px (sprite9 source is lower-res than the others), accept it — it's placeholder art until the proper layered Polly set exists.
 - If pose swaps visibly "jump" in size on device, that's the known per-pose normalization follow-up from memory — a separate task, do not fix inline.
 - `docs/GAME_REFERENCE.md`'s "Hunt behavior (not yet wired to the new poses)" paragraph becomes stale after Task 6 — update it in a docs-only follow-up commit if Pete confirms the device pass.
+
+## Post-review amendments (2026-07-02)
+
+Final-review found three issues after Task 3 landed. Task 3's trigger-map table and code
+listing above are illustrative plan text and were left as originally written; the approved
+fixes below are what actually shipped in `app/game/pollyVisitPolicy.ts` /
+`.test.ts` — see the design spec's Trigger map for the corrected tables.
+
+1. **`hauntFailed` no longer shares `GAME_OVER_LAUGH`.** A failed haunt does not end the run,
+   so it must not hold the perch. Added a dedicated `HAUNT_FAILED_LAUGH` spec (same laugh
+   pose/line/SFX as game-over, `holdPerch: false`, `perchMs: 2200`) and split the combined
+   `if (event === 'gameOver' || event === 'hauntFailed')` branch in `resolveVisit` so each
+   event maps to its own spec.
+2. **`WRONG_SMUG`'s `sfx` changed from `'pollySqwawkShort'` to `null`.** The wrong swipe
+   itself already plays `pollySqwawkShort` in MaskBoard; the heckle visit playing it again
+   was a double squawk on every mistake.
+3. **Test file updated to match:** `gameOver` and `hauntFailed` are asserted separately
+   (`gameOver` keeps `holdPerch: true`; `hauntFailed` asserts `holdPerch: false` as the
+   regression guard), and the `wrong` heckle assertion now expects `sfx: null`.
+
+Task 6's device checklist item 7 above reflects this: it now checks the Round 8 haunt-failed
+fly-out instead of the game-over "stays perched" beat, which is on-board-de-scoped (see the
+design spec's Terminal-visits rule).
