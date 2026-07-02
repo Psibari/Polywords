@@ -40,8 +40,7 @@ function getLine(reaction: DailyPollyReaction | null): string {
 }
 
 export default function PollyDailyPerch({ reaction, show = true }: Props) {
-  const [pose, setPose] = useState<ImageSourcePropType>(POLLY_ANIMATIONS.flyIn);
-  const enteredRef = useRef(false);
+  const [pose, setPose] = useState<ImageSourcePropType>(POSE.idle);
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(280)).current;
@@ -59,15 +58,6 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
     return () => {
       if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
     };
-  }, []);
-
-  // Fly in when Daily opens, then settle onto the perch.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      enteredRef.current = true;
-      setPose(POSE.idle);
-    }, 600);
-    return () => clearTimeout(t);
   }, []);
 
   // Slow, continuous breath + gentle sway (offset periods = organic, never a
@@ -116,7 +106,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked';
 
     if (!isReacting) {
-      if (enteredRef.current) setPose(POSE.idle);
+      setPose(POSE.idle);
       reactX.setValue(0);
       reactY.setValue(0);
       reactScale.setValue(1);
@@ -239,8 +229,8 @@ const styles = StyleSheet.create({
   },
   bubbleWrap: {
     position: 'absolute',
-    left: 110,
-    bottom: 214,
+    left: 190,
+    bottom: 172,
   },
   bubble: {
     backgroundColor: '#1A1055',
@@ -249,7 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    maxWidth: 200,
+    maxWidth: 185,
   },
   bubbleText: {
     fontFamily: FONTS.brand,
@@ -260,28 +250,28 @@ const styles = StyleSheet.create({
   },
   tailBorder: {
     position: 'absolute',
-    left: 12,
-    bottom: -9,
+    left: -9,
+    bottom: 10,
     width: 0,
     height: 0,
-    borderLeftWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightWidth: 8,
-    borderRightColor: 'transparent',
-    borderTopWidth: 9,
-    borderTopColor: 'rgba(245,200,66,0.55)',
+    borderTopWidth: 8,
+    borderTopColor: 'transparent',
+    borderBottomWidth: 8,
+    borderBottomColor: 'transparent',
+    borderRightWidth: 9,
+    borderRightColor: 'rgba(245,200,66,0.55)',
   },
   tailFill: {
     position: 'absolute',
-    left: 14,
-    bottom: -7,
+    left: -7,
+    bottom: 10,
     width: 0,
     height: 0,
-    borderLeftWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightWidth: 8,
-    borderRightColor: 'transparent',
-    borderTopWidth: 9,
-    borderTopColor: '#1A1055',
+    borderTopWidth: 8,
+    borderTopColor: 'transparent',
+    borderBottomWidth: 8,
+    borderBottomColor: 'transparent',
+    borderRightWidth: 9,
+    borderRightColor: '#1A1055',
   },
 });
