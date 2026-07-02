@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   pollyWrap: {
     position: 'absolute',
     right: 4,
-    bottom: 0,
+    bottom: -34,
     width: 210,
     height: 210,
   },

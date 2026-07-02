@@ -18,29 +18,30 @@ export type Track = {
   loop?: boolean;
 };
 
-// Ambient life — a watchful predator, not a busy mascot. Slow, deliberate, quiet.
-// Idle drivers are DISJOINT from reaction drivers so reactions layer cleanly on top.
+// Ambient life — a watchful predator: slow and deliberate, but always visibly
+// alive (never a frozen statue). Idle drivers are DISJOINT from reaction drivers
+// so reactions layer cleanly on top.
 export const IDLE_TRACKS: Track[] = [
-  // Slow breath
+  // Visible slow breath / body sway
   { driver: 'bodyBob', loop: true, keys: [
-    { to: -2, dur: 2200, easing: 'inOut' }, { to: 0, dur: 2200, easing: 'inOut' } ] },
-  // Occasional slow, deliberate head-cock toward the player
+    { to: -7, dur: 1900, easing: 'inOut' }, { to: 0, dur: 1900, easing: 'inOut' } ] },
+  // Continuous slow, deliberate head sway (watchful)
   { driver: 'headTilt', loop: true, keys: [
-    { to: 1, dur: 1600, delay: 1600, easing: 'inOut' }, { to: 0, dur: 1400, delay: 1500, easing: 'inOut' },
-    { to: -0.6, dur: 1500, delay: 2800, easing: 'inOut' }, { to: 0, dur: 1400, delay: 1400, easing: 'inOut' } ] },
+    { to: 1, dur: 2000, easing: 'inOut' }, { to: -1, dur: 2000, delay: 600, easing: 'inOut' },
+    { to: 0, dur: 1800, delay: 400, easing: 'inOut' } ] },
   { driver: 'crownBob', loop: true, keys: [
-    { to: -1.5, dur: 1700, delay: 400, easing: 'inOut' }, { to: 0, dur: 1500, easing: 'inOut' },
-    { to: 0, dur: 400 } ] },
+    { to: -3, dur: 1800, delay: 300, easing: 'inOut' }, { to: 0, dur: 1600, easing: 'inOut' } ] },
   // Watchful side-eye
   { driver: 'pupilGlance', loop: true, keys: [
-    { to: 1.5, dur: 300, delay: 2000, easing: 'out' }, { to: 0, dur: 320, delay: 1600, easing: 'out' },
-    { to: 0, dur: 3200 } ] },
+    { to: 2, dur: 320, delay: 2400, easing: 'out' }, { to: 0, dur: 340, delay: 1800, easing: 'out' },
+    { to: 0, dur: 2600 } ] },
+  // Regular blink
   { driver: 'blink', loop: true, keys: [
-    { to: 1, dur: 55, delay: 3600 }, { to: 0, dur: 85, delay: 45 }, { to: 0, dur: 2600 } ] },
-  // Rare, slow tail sway
+    { to: 1, dur: 55, delay: 3000 }, { to: 0, dur: 90, delay: 45 }, { to: 0, dur: 300 } ] },
+  // Occasional slow tail sway
   { driver: 'tailFlick', loop: true, keys: [
-    { to: 1, dur: 520, delay: 7000, easing: 'out' }, { to: 0, dur: 520, easing: 'inOut' },
-    { to: 0, dur: 5200 } ] },
+    { to: 1, dur: 560, delay: 5000, easing: 'out' }, { to: 0, dur: 560, easing: 'inOut' },
+    { to: 0, dur: 3600 } ] },
 ];
 
 // One-shot reactions — SHARP and deliberate, not bouncy. Rest at 0, return to 0.
