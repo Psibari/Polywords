@@ -16,7 +16,6 @@ type Props = {
   word: string;
   kind: 'mastered' | 'ghost';
   isBoss?: boolean;
-  hiddenFound?: boolean; // gold pin near the head — hidden meaning cracked
   raised?: boolean;      // slid up out of the row (selected)
   onPress?: () => void;
 };
@@ -24,7 +23,7 @@ type Props = {
 // One reclaimed word as a standing book: leather slab, gold tooling bands,
 // foil title reading down the spine. Ghost variant: translucent, purple-
 // tinted, faded lavender title, feather claim tag — Polly's grip.
-export function BookSpine({ word, kind, isBoss, hiddenFound, raised, onPress }: Props) {
+export function BookSpine({ word, kind, isBoss, raised, onPress }: Props) {
   const { widthTier, leanDeg } = spineVariantFor(word);
   const width = SPINE_WIDTHS[widthTier];
   const isGhost = kind === 'ghost';
@@ -82,13 +81,6 @@ export function BookSpine({ word, kind, isBoss, hiddenFound, raised, onPress }: 
             <>
               <Rect x={3} y={15} width={width - 6} height={1.5} fill={libraryMaterial.spineAmber} />
               <Rect x={3} y={SPINE_HEIGHT - 18} width={width - 6} height={1.5} fill={libraryMaterial.spineAmber} />
-            </>
-          )}
-          {/* Hidden-meaning pin — gold head, amber core */}
-          {hiddenFound && !isGhost && (
-            <>
-              <Path d={`M ${width / 2} 5 a 3 3 0 1 0 0.001 0`} fill={libraryMaterial.spineTooling} />
-              <Path d={`M ${width / 2} 6.5 a 1.5 1.5 0 1 0 0.001 0`} fill={libraryMaterial.spineAmber} />
             </>
           )}
           {/* Ghost feather claim tag at the tail — her signature */}

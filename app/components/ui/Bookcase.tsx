@@ -63,16 +63,29 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
       style={styles.case}
       onLayout={e => setInnerWidth(e.nativeEvent.layout.width)}
     >
+      {/* Paneled backboard — vertical seams in the wood */}
+      {innerWidth > 0 && (
+        <View pointerEvents="none" style={styles.backboardPanels}>
+          {Array.from({ length: Math.max(3, Math.round(innerWidth / 56)) }, (_, i) => (
+            <View key={i} style={styles.panelSeam} />
+          ))}
+        </View>
+      )}
+      {/* Face frame — the cabinet's structure: posts + header/footer beams */}
+      <View pointerEvents="none" style={styles.caseBeamTop} />
+      <View pointerEvents="none" style={styles.caseBeamBottom} />
+      <View pointerEvents="none" style={styles.casePostLeft} />
+      <View pointerEvents="none" style={styles.casePostRight} />
+
       {masteredRows.map((row, i) => (
         <View key={`shelf-${i}`}>
-          <View style={styles.shelfBooks}>
+          <View style={[styles.shelfBooks, row.length === 0 && styles.shelfBooksEmpty]}>
             {row.map(record => (
               <View key={record.word} style={{ marginRight: SPINE_GAP }}>
                 <BookSpine
                   word={record.word}
                   kind="mastered"
                   isBoss={record.isBoss}
-                  hiddenFound={record.hiddenMeaningFound.length > 0}
                   raised={selectedWord === record.word}
                   onPress={() =>
                     onSelect(selectedWord === record.word ? null : record.word)
@@ -83,6 +96,10 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
           </View>
           <View style={styles.rail}>
             <View style={styles.railHairline} />
+            <View style={styles.railTop} />
+            <View style={styles.railFront} />
+            <View style={[styles.bracket, styles.bracketLeft]} />
+            <View style={[styles.bracket, styles.bracketRight]} />
           </View>
         </View>
       ))}
@@ -134,15 +151,97 @@ const styles = StyleSheet.create({
     minHeight: SPINE_HEIGHT + 14, // headroom for the raise animation
     paddingTop: 14,
   },
+  shelfBooksEmpty: {
+    // An empty shelf is a shallow vacant slot, not a full-height void
+    minHeight: 34,
+    paddingTop: 0,
+  },
   rail: {
-    height: SHELF_RAIL_H,
-    backgroundColor: libraryMaterial.wood,
-    borderRadius: 2,
-    marginBottom: 4,
+    height: SHELF_RAIL_H + 2,
+    marginBottom: 8,
+    // Boards socket into the posts — run edge-to-edge past the padding
+    marginHorizontal: -(SHELF_PAD_X - 10),
   },
   railHairline: {
     height: 1,
     backgroundColor: libraryMaterial.shelfHairline,
+  },
+  railTop: {
+    // Lit top face of the shelf board
+    height: 5,
+    backgroundColor: libraryMaterial.wood,
+  },
+  railFront: {
+    // Darker front face — the board's thickness
+    height: 8,
+    backgroundColor: libraryMaterial.woodShadow,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+  backboardPanels: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+  panelSeam: {
+    width: 1,
+    backgroundColor: libraryMaterial.woodShadow,
+    opacity: 0.5,
+  },
+  caseBeamTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 9,
+    backgroundColor: libraryMaterial.wood,
+    borderBottomWidth: 1,
+    borderBottomColor: libraryMaterial.woodShadow,
+  },
+  caseBeamBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 9,
+    backgroundColor: libraryMaterial.wood,
+    borderTopWidth: 1,
+    borderTopColor: libraryMaterial.woodShadow,
+  },
+  casePostLeft: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 10,
+    backgroundColor: libraryMaterial.wood,
+    borderRightWidth: 1,
+    borderRightColor: libraryMaterial.woodShadow,
+  },
+  casePostRight: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: 10,
+    backgroundColor: libraryMaterial.wood,
+    borderLeftWidth: 1,
+    borderLeftColor: libraryMaterial.woodShadow,
+  },
+  bracket: {
+    position: 'absolute',
+    bottom: -5,
+    width: 8,
+    height: 6,
+    backgroundColor: libraryMaterial.woodShadow,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+  },
+  bracketLeft: {
+    left: '12%',
+  },
+  bracketRight: {
+    right: '12%',
   },
   hauntedLabel: {
     fontFamily: FONTS.label,
