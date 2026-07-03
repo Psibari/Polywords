@@ -101,7 +101,27 @@ consumer.
 ### Settings
 
 - One quiet hairline text link (`SETTINGS`, label type, low opacity), bottom-right
-  under the doors → existing Settings screen.
+  under the doors → existing Settings screen. Quiet means low opacity, NOT tiny —
+  the legibility clause below still applies.
+
+## Legibility clause (standing rule, non-gameplay UI)
+
+Menu/meta screens are read at arm's length, not mid-swipe. Everything that is not a
+gameplay mechanic sizes UP — no more 9–12px whisper text (today's Home has 9px
+eyebrows, 11px nav labels, 12px subcopy). This clause applies to Home now and is
+the standing rule for every future non-gameplay conversion (Results, Settings);
+Daily already moved this way ("bigger legible text"). Gameplay surfaces (tiles,
+HUD, swipe cues) keep their locked sizes — this clause never touches them.
+
+- **Floor: 14px.** No text on a non-gameplay screen below 14px, including labels,
+  eyebrows, and the settings link. Small-role text differentiates by opacity,
+  letterspacing, and case — not by shrinking.
+- **Home scale (target, tune on device):** wordmark = width-driven (largest thing
+  on screen) · tagline 17–18 · dare label 30–34 · door titles 20–22 · door copy
+  15–16 · door eyebrows 14 (wide letterspacing) · greeting bubble 15–16 ·
+  settings link 14.
+- Sizes land as tokens (`pwTheme` font scale or `pwHomeMaterials`), not inline
+  numbers, per binding rule #1.
 
 ## Polly behavior
 
