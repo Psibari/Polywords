@@ -143,6 +143,11 @@ Top to bottom:
    away to slide it back.
 6. **Empty state:** honest empty shelves + one line: "Your first reclaimed word will
    stand here."
+7. **No tabs.** The old four-tab Vault (Mastered / Ghosts / Hidden / Ranks) collapses
+   into the one library screen: mastered + ghost shelves replace the first two;
+   **Hidden Meanings** fold in as a small gold pin on spines whose word has a hidden
+   meaning found (detail panel shows the meaning); **Ranks** fold into the bookplate —
+   it shows the tier seal, tapping it opens the rank ladder in a CARD-material panel.
 
 ## Polly in the language
 
