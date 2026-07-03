@@ -97,7 +97,7 @@ export function BookSpine({ word, kind, isBoss, hiddenFound, raised, onPress }: 
               d={`M ${width / 2 - 4} ${SPINE_HEIGHT - 24}
                   q 4 -10 8 -2 q -2 8 -8 10 q 2 -5 0 -8 z`}
               fill={libraryMaterial.ghostTint}
-              stroke="rgba(185,138,222,0.5)"
+              stroke={libraryMaterial.ghostFeatherEdge}
               strokeWidth={0.6}
             />
           )}
@@ -155,6 +155,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: 'center',
     maxWidth: '100%',
-    color: 'rgba(185,138,222,0.75)', // PW.color.lavender, faded
+    color: libraryMaterial.ghostTitle,
   },
 });

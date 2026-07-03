@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.label,
     fontSize: FONT_SIZES.progressLabel,
     letterSpacing: 3,
-    color: 'rgba(185,138,222,0.6)', // faded lavender — her hold
+    color: libraryMaterial.hauntedLabel,
     textAlign: 'center',
     marginTop: 14,
     marginBottom: 2,

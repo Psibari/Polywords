@@ -161,6 +161,9 @@ export const libraryMaterial = {
   spineAmber: PW.color.amber,
   ghostLeather: 'rgba(42,28,92,0.45)', // coverPurpleTop, faded — her grip
   ghostTint: 'rgba(123,45,139,0.35)',
+  ghostTitle: 'rgba(185,138,222,0.75)',   // PW.color.lavender, faded
+  ghostFeatherEdge: 'rgba(185,138,222,0.5)',
+  hauntedLabel: 'rgba(185,138,222,0.6)',
   parchment: heroBookMaterial.pagesCreamTop,
   parchmentDeep: heroBookMaterial.pagesCream,
 } as const;
