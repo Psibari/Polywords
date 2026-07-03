@@ -56,9 +56,17 @@ trigger system with no body; Daily has the body with a 3-reaction map.
 ### Changed (surgical)
 
 - **`app/components/MaskBoard.tsx`** (warroom-gated): swap
-  `usePollyAnimator(streak, lives, stepIndex)` → `usePollyVisits(...)` (adds an
-  `isSpeedRound` flag), render `<PollyHuntVisit …/>` once at board root. Zero changes to
-  the `firePollyEvent` call sites.
+  `usePollyAnimator(streak, lives, stepIndex)` → `firePollyEvent` received as a prop
+  (owned by `GameContent`, not the board). Zero changes to the `firePollyEvent` call
+  sites inside MaskBoard.
+- **`app/screens/GameScreen.tsx`**: `GameContent` owns `usePollyVisits` and renders
+  `<PollyHuntVisit …/>` above the board's per-word remount boundary
+  (`key={`board-${stepIndex}`}`), so a visit's arc survives a word-completion
+  advance instead of dying when the board remounts. `firePollyEvent` is passed down
+  to `MaskBoard` as a prop.
+- **`app/screens/ResultsScreen.tsx`**: plays the `gameOver` laugh SFX
+  (`pollySqwawkLaugh`) on mount when `status === 'gameOver'`, since the board (and
+  its visit layer) unmounts to Results instantly and never gets to play it.
 - **`app/components/PollyDailyPerch.tsx`**: import poses from `pollyPoses.ts`
   (import-only; no behavior change).
 
@@ -113,9 +121,9 @@ One fixed arc, ~3.2s for heckles, longer for guaranteed beats:
 |---|---|---|---|---|
 | `bossEntry` | fly `flyAngry` → perch `point` | "This word stays mine." | `pollySqwawkShort` | flies out |
 | `gateMasteredBoss` | fly `flyAngry` → perch `sulk` | *silent* | — | holds perch |
-| `gameOver` | perch `laugh` | "BBBLAAAAHHAHAHA!" | `pollySqwawkLaugh` | holds perch (on-board render de-scoped — board unmounts to Results instantly; ResultsScreen Polly gloat is a follow-up) |
+| `gameOver` | perch `laugh` | "BBBLAAAAHHAHAHA!" | `pollySqwawkLaugh` | holds perch (on-board render de-scoped — board unmounts to Results instantly; ResultsScreen Polly gloat is a follow-up); laugh SFX now plays from ResultsScreen on mount (sound restored; visual gloat still a follow-up) |
 | `hauntFailed` | perch `laugh` | "BBBLAAAAHHAHAHA!" | `pollySqwawkLaugh` | flies out ~2.2s — the run continues |
-| `cleanSweep` — **first of the run only** | perch `shocked` | "Bet you can't do that again." | `pollySqwawkShort` | flies out |
+| `cleanSweep` — **first of the run only** | perch `shocked` | "Bet you can't do that again." | — | flies out |
 
 ### Budgeted heckles (max one visit per word, first-come; dropped if busy/spent)
 
@@ -124,7 +132,7 @@ One fixed arc, ~3.2s for heckles, longer for guaranteed beats:
 | `wrong` (first wrong swipe of the word) | `smug` | "Thought so." | — (swipe already squawks) |
 | `hesitation6s` (3s/9s ignored) | `point` | "YES... NO... MAYBE SO..." | — |
 | `ghostEntry` | `smug` | "Remember me." | — |
-| `cleanSweep` (second and later of the run) | `shocked` | "Bet you can't do that again." | `pollySqwawkShort` |
+| `cleanSweep` (second and later of the run) | `shocked` | "Bet you can't do that again." | — |
 
 ### Ignored (call sites untouched; hook accepts and no-ops)
 

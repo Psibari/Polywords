@@ -88,7 +88,7 @@ const CLEAN_SWEEP_LINE = "Bet you can't do that again.";
 
 const CLEAN_SWEEP_FIRST: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'shocked',
-  line: CLEAN_SWEEP_LINE, sfx: 'pollySqwawkShort',
+  line: CLEAN_SWEEP_LINE, sfx: null, // silent recoil — the squawk was overused
   holdPerch: false, perchMs: 2000,
 };
 

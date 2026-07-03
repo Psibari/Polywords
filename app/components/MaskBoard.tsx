@@ -16,7 +16,7 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
-import { usePollyAnimator } from '../hooks/usePollyAnimator';
+import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
@@ -145,6 +145,9 @@ type Props = {
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: string) => void;
   onTrapCaught?: () => void;
   onWrongSwipe?: () => void;
+  // Owned by GameContent — the visit layer must outlive this board's
+  // per-word remount (key={stepIndex}), or word-completion beats die mid-arc.
+  firePollyEvent: (event: PollyEvent) => void;
 };
 
 function eventKicker(step: WordStep): string | null {
@@ -291,7 +294,7 @@ function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
   return states;
 }
 
-export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Props) {
+export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, firePollyEvent }: Props) {
   const store   = useGameStore();
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
@@ -304,10 +307,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe }: Pro
   const livesRef = useRef(store.game.lives);
   livesRef.current = store.game.lives;
 
-  // ── Polly animator ────────────────────────────────────────────
-  const {
-    firePollyEvent,
-  } = usePollyAnimator(store.game.streak, store.game.lives, store.game.stepIndex);
 
   // ── tile state map ───────────────────────────────────────────
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => buildInitialTileStates(step));

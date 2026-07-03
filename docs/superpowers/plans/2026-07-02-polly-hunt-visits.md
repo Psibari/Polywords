@@ -1117,3 +1117,19 @@ fixes below are what actually shipped in `app/game/pollyVisitPolicy.ts` /
 Task 6's device checklist item 7 above reflects this: it now checks the Round 8 haunt-failed
 fly-out instead of the game-over "stays perched" beat, which is on-board-de-scoped (see the
 design spec's Terminal-visits rule).
+
+## Post-review amendments (2026-07-02, device-pass fix)
+
+Device pass found the visit layer dying mid-arc and no game-over laugh. Fixes:
+
+1. **Visit layer lifted to `GameContent` (`app/screens/GameScreen.tsx`).** MaskBoard is
+   keyed `board-${stepIndex}` and remounts every word; a perfect word clear advances the
+   round ~290ms after the `cleanSweep` event, killing any visit mid-arc (a 3.1s arc got
+   ~1s) and resetting the supposedly run-level `cleanSweepSeenThisRun` flag along with it.
+   `usePollyVisits` + `<PollyHuntVisit>` now live in `GameContent`, above the board's
+   per-word remount boundary, and `firePollyEvent` is passed into `MaskBoard` as a prop.
+2. **Game-over laugh SFX moved to `ResultsScreen.tsx` mount.** The board unmounts to
+   Results the instant the run ends, so the on-board `gameOver` visit never got to play
+   `pollySqwawkLaugh`. ResultsScreen now plays it directly when `status === 'gameOver'`.
+3. **`cleanSweep` visits silenced (squawk overuse).** Both the first-of-run and
+   later-of-run `cleanSweep` specs now carry `sfx: null` instead of `pollySqwawkShort`.

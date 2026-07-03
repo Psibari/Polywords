@@ -21,6 +21,8 @@ import {
   POLLY_ANIMATION_DURATIONS_MS,
   PollyAnimationState,
 } from '../animations/pollyAnimations';
+import { usePollyVisits } from '../hooks/usePollyVisits';
+import { PollyHuntVisit } from '../components/PollyHuntVisit';
 
 const MAX_FEATHERS = 5;
 const SHOW_POLLY_DEVICE_TEST = false;
@@ -701,15 +703,25 @@ function GameContent({
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
 
+  // Visit layer lives HERE, above MaskBoard's per-word remount boundary
+  // (key={stepIndex}) — word-completion beats must outlive the board.
+  const { visit, onVisitDone, firePollyEvent } = usePollyVisits(
+    step.kind === 'word' && step.eventType === 'speedRound',
+  );
+
   if (step.kind === 'word') {
     return (
-      <MaskBoard
-        key={`board-${game.stepIndex}`}
-        step={step}
-        spawnEffect={spawnEffect}
-        onTrapCaught={onTrapCaught}
-        onWrongSwipe={onWrongSwipe}
-      />
+      <View style={{ flex: 1 }}>
+        <MaskBoard
+          key={`board-${game.stepIndex}`}
+          step={step}
+          spawnEffect={spawnEffect}
+          onTrapCaught={onTrapCaught}
+          onWrongSwipe={onWrongSwipe}
+          firePollyEvent={firePollyEvent}
+        />
+        <PollyHuntVisit visit={visit} onDone={onVisitDone} />
+      </View>
     );
   }
 

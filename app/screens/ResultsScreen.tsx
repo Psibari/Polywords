@@ -11,6 +11,7 @@ import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
 import { Mask, SessionStep } from '../game/types';
+import { playSfx } from '../audio/sfx';
 
 // ─── HELPERS ─────────────────────────────────────────────────
 
@@ -361,6 +362,12 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     if (recordedRef.current) return;
     recordedRef.current = true;
     recordRunComplete(score);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Polly gloats over a lost run — the on-board laugh can't render because
+  // the board unmounts to Results the instant the run ends.
+  useEffect(() => {
+    if (status === 'gameOver') playSfx('pollySqwawkLaugh');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Post-session ceremony hold

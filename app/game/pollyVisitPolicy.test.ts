@@ -83,6 +83,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.kind, 'guaranteed', 'cleanSweep first.kind');
   eq(s.perchPose, 'shocked', 'cleanSweep first.perchPose');
   eq(s.line, "Bet you can't do that again.", 'cleanSweep first.line');
+  eq(s.sfx, null, 'cleanSweep first.sfx'); // shocked recoil is silent — squawk was overused
   eq(s.holdPerch, false, 'cleanSweep first.holdPerch');
 }
 
@@ -94,6 +95,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   );
   eq(s.kind, 'heckle', 'cleanSweep repeat.kind');
   eq(s.perchPose, 'shocked', 'cleanSweep repeat.perchPose');
+  eq(s.sfx, null, 'cleanSweep repeat.sfx');
 }
 
 // Later ones are dropped when the word's heckle budget is spent
