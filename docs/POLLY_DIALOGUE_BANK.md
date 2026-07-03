@@ -139,6 +139,17 @@ Notes:
 - Some meanings still haunt you.
 - My traps remember you.
 
+## Home Greeting Lines (threshold, one per app open)
+
+Rotating; delivered once per app session after Polly's fly-in; silent after.
+
+- Back again?
+- Miss me?
+- Still missing a few meanings, aren’t you.
+- Come to lose some feathers?
+- The words asked about you. I lied.
+- Take your time. They’re mine either way.
+
 ## Lines To Avoid Or Use Carefully
 
 Avoid:

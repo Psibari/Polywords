@@ -1,0 +1,61 @@
+import { PW } from './pwTheme';
+import { heroBookMaterial, libraryMaterial } from './pwMaterials';
+
+// ── Copy ──
+export const HOME_TAGLINE = 'Polly stole the meanings. Take them back.';
+
+// Polly speech: mixed case, never uppercase. One line per app open, rotating.
+export const HOME_GREETING_LINES = [
+  'Back again?',
+  'Miss me?',
+  'Still missing a few meanings, aren’t you.',
+  'Come to lose some feathers?',
+  'The words asked about you. I lied.',
+  'Take your time. They’re mine either way.',
+] as const;
+
+// ── Type scale (legibility clause: floor 14, tune on device) ──
+export const homeType = {
+  wordmark: 68, // width-driven via adjustsFontSizeToFit
+  wordmarkTracking: 3,
+  tagline: 18,
+  dareLabel: 32,
+  doorEyebrow: 14,
+  doorTitle: 21,
+  doorCopy: 15,
+  greeting: 16,
+  settingsLink: 14,
+} as const;
+
+// ── ENTER THE HUNT — gold dare in BOOK vocabulary ──
+export const homeDare = {
+  faceGradient: [PW.color.foilLight, PW.color.gold, PW.color.amber] as const,
+  faceLocations: [0, 0.52, 1] as const,
+  rim: PW.color.goldSoft,
+  bottomEdge: PW.color.amber,
+  label: PW.color.surfaceDeep,
+  labelHighlight: 'rgba(255,255,255,0.38)',
+  minHeight: 84,
+} as const;
+
+// ── Doors (CARD material trims) ──
+export const homeDoor = {
+  dailyTrim: PW.color.cardRim, // gold at hairline strength only
+  vaultTrim: heroBookMaterial.coverPurpleTop, // purple leather
+  title: PW.color.white,
+  copy: PW.color.softWhite,
+  eyebrow: PW.color.mutedWhite,
+  minHeight: 150,
+} as const;
+
+// ── Polly's stone ledge + perch geometry ──
+export const homePerch = {
+  ledgeTop: libraryMaterial.wood, // warm stone family (Warmth clause)
+  ledgeFace: libraryMaterial.woodDark,
+  ledgeShadow: libraryMaterial.woodShadow,
+  bottomOffset: 310, // clears dare + doors + settings stack
+  pollySize: 240,
+  bubbleFace: '#1A1055', // matches Daily bubble material
+  bubbleRim: 'rgba(245,200,66,0.55)',
+  bubbleText: PW.color.foilLight,
+} as const;
