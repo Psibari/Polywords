@@ -59,6 +59,7 @@ const classifyGenerationError = (error) => {
   };
 };
 
+const MAX_MASK_WORDS = 8;
 const DICTIONARY_FLAT_PHRASES = [
   "a type of",
   "one of",
@@ -95,8 +96,8 @@ function validateTile(row) {
     issues.push("missing mask");
   }
 
-  if (countWords(mask) > 4) {
-    issues.push("mask over 4 words");
+  if (countWords(mask) > MAX_MASK_WORDS) {
+    issues.push(`mask over ${MAX_MASK_WORDS} words`);
   }
 
   if (normalizedWord && normalizedMask.split(" ").includes(normalizedWord)) {
@@ -303,7 +304,7 @@ Merge minor variations. Ask: "Would a dictionary give this its own numbered sens
 If not, merge it.
 
 ━━━ HARD RULES ━━━
-- MAX 4 WORDS PER TILE. Count every single word. Hard limit. Never exceed.
+- Target 5-6 words per tile. HARD MAX ${MAX_MASK_WORDS} WORDS PER TILE. Count every single word. Never exceed.
 - Never use the headword inside its own tile
 - No content word repeated across any two tiles for the same word
 - Minimum 3 TRAP tiles per word, from 3 different meaning directions
@@ -317,9 +318,9 @@ PREFER tiles that are: distinctive • emotional • visual • human • slight
 Return ONLY a valid JSON array. No markdown fences. No explanation. Pure JSON only.
 
 [{"w":"WORD","tiles":[
-  {"t":"REAL","sense":"brief meaning label","mask":"tile text max 4 words"},
-  {"t":"HIDDEN","sense":"brief meaning label","mask":"tile text max 4 words"},
-  {"t":"TRAP","mask":"tile text max 4 words","why":"why player reaches for this","pull":"which real meaning this baits"}
+  {"t":"REAL","sense":"brief meaning label","mask":"tile text max ${MAX_MASK_WORDS} words"},
+  {"t":"HIDDEN","sense":"brief meaning label","mask":"tile text max ${MAX_MASK_WORDS} words"},
+  {"t":"TRAP","mask":"tile text max ${MAX_MASK_WORDS} words","why":"why player reaches for this","pull":"which real meaning this baits"}
 ]}]`;
 
 // ─── Component ────────────────────────────────────────────────────────────────

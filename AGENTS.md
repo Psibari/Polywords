@@ -1,5 +1,27 @@
 # POLYWORDS Agent Instructions
 
+## Required Reading and Authority
+
+`AGENTS.md` is the front door for every coding agent working in this repository.
+Before planning or changing files:
+
+1. Read this file completely.
+2. Read `CLAUDE.md` for architecture, locked implementation decisions, and the
+   project document map.
+3. Read `CONTEXT.md` for the current branch state, shipped work, and next priorities.
+4. Read the focused source document for the area being changed, such as:
+   - `docs/GAME_REFERENCE.md` for Hunt, scoring, Vault, SFX, and gameplay systems.
+   - `docs/GOLDEN_PACING_SYSTEM.md` for Hunt pacing and content selection.
+   - `docs/DAILY_CHALLENGE_SPEC.md` for Daily Challenge.
+   - `docs/POLLY_DIALOGUE_BANK.md` for Polly dialogue.
+   - `docs/WORKFLOW.md` for patch and verification workflow.
+
+Instruction authority is: the user's current request, then `AGENTS.md`, then the
+focused source document, then `CLAUDE.md`, then `CONTEXT.md`. If lower-authority
+documentation conflicts with a higher-authority instruction, follow the
+higher-authority instruction and report the mismatch instead of silently combining
+the two.
+
 ## Project Identity
 
 POLYWORDS is a mobile word arena game, not a quiz list. The hero word is the boss. The active mask tile is the challenger. The Master Gate is Polly's locked cage/vault. The player steals mastery one swipe at a time.
@@ -97,6 +119,7 @@ Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible ou
 - Meaning hidden, not meaning lost.
 - Real Meaning Masks describe actual meanings of the boss word.
 - They should be masked, creative, human-readable, and clear after reveal.
+- Target 5-6 words per mask; 8 words is the hard maximum.
 - Avoid flat dictionary labels.
 - Avoid weird poetic phrases nobody would say.
 - Avoid predictable direct extensions.

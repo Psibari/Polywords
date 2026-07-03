@@ -105,7 +105,8 @@ Dead/removed: `revealHidden()`, `hiddenFound` in WordResult, `pollyTrigger 'hidd
 
 Standard: *"meaning hidden, not meaning lost."* Tile goal: *Wait… what? → Oh. Right.*
 
-- Scene-language, never dictionary voice. Register parity across real/trap tiles. 5–6 words ok.
+- Scene-language, never dictionary voice. Register parity across real/trap tiles. Target 5–6
+  words; 8 words is the hard maximum.
 - Hidden tiles cut from pipeline entirely. 1 real per meaning; 2–3 traps per meaning; hard cap
   8 traps per word. No headword or derived forms in any tile. No trap-to-trap duplicate words.
   Trap sharing vocabulary with real is allowed. No trap may share a meaning direction with
