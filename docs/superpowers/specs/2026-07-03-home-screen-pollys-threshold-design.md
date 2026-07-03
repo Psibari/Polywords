@@ -14,7 +14,8 @@ consumer.
 ## Decisions (settled in brainstorming, 2026-07-03)
 
 1. **Concept: Polly's threshold.** Home is her territory, not the player's room and
-   not a marquee. PLAY becomes a dare — `CHALLENGE POLLY`.
+   not a marquee. PLAY becomes a dare — `ENTER THE HUNT`. ("Challenge" is reserved
+   vocabulary for Daily Challenge; the main button never uses it.)
 2. **Polly: watcher + greeting.** One fly-in per app session, one greeting line,
    then silent menace. No ongoing heckling, no state-aware lines (candidates for a
    future spec).
@@ -44,7 +45,7 @@ consumer.
 │      open torch-lit plaza  │
 │                            │
 │  ╔══════════════════════╗  │
-│  ║   CHALLENGE POLLY    ║  │ ← the gold dare (was PLAY)
+│  ║    ENTER THE HUNT    ║  │ ← the gold dare (was PLAY)
 │  ╚══════════════════════╝  │
 │  ┌─ DAILY ──┐ ┌─ VAULT ─┐  │ ← CARD-material doors
 │  └──────────┘ └─────────┘  │
@@ -82,7 +83,7 @@ consumer.
 
 ### The dare
 
-- `CHALLENGE POLLY` — the gold button re-tooled in BOOK vocabulary: gold face,
+- `ENTER THE HUNT` — the gold button re-tooled in BOOK vocabulary: gold face,
   amber (`PW` amber `#C8920E`) bottom edge, gold hairline rim. Keeps the existing
   slow pulse (scale 1→1.018, native driver). Subcopy cut. Fires `startGame()` →
   `Game`, unchanged.
@@ -94,7 +95,7 @@ consumer.
 - Daily: `DAILY_TITLE` / `DAILY_PROMISE` (from `pwDailyMaterials`), gold trim at
   hairline strength only.
 - Vault: `WORD VAULT` / `Reclaimed meanings.`, purple leather trim.
-- **Gold budget (max 2):** wordmark foil + CHALLENGE POLLY. Everything else gold
+- **Gold budget (max 2):** wordmark foil + ENTER THE HUNT. Everything else gold
   stays hairline.
 
 ### Settings
@@ -153,6 +154,6 @@ Reuses the shipped whole-image perch system (see `PollyDailyPerch.tsx`); no rig.
 
 - Per patch: `npx.cmd tsc --noEmit` · `git diff --check` · `git status --short`.
 - Device pass (Expo Go) before visual commits: fly-in entrance, greeting bubble
-  timing, no re-entrance on Home→Vault→Home, both doors navigate, CHALLENGE POLLY
+  timing, no re-entrance on Home→Vault→Home, both doors navigate, ENTER THE HUNT
   starts a run, settings link, small-screen fit (wordmark scaling, Polly clear of
   title and buttons). Tag `v0.working-YYYYMMDD` after device confirmation.
