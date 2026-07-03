@@ -58,8 +58,28 @@ rims), declared part of the language as-is.
 
 ### STAGE — the room the drama happens in
 
-Dark backdrop (`bgDeep`) + the 3-stop vignette gradient recipe + purple ambient glow.
-Backgrounds only — STAGE is never a panel material.
+Dark backdrop (`bgDeep`), the 3-stop vignette gradient recipe, purple ambient glow,
+and a warm light pool (see Warmth clause). Backgrounds only — STAGE is never a panel
+material.
+
+### Warmth clause — the world is candle-lit, not void
+
+Diagnosis (2026-07-02): ~90% of pixels sat in the cold violet-navy family (`bgDeep`,
+cover purples, `surfaceDeep`, deck backs); gold was trim-only. A library at midnight
+with the lights off. The fix is a rule, not a new hue — the warm family already
+exists: parchment `#9A8E7A`/`#887868`, wood `#6A5A48`, deep amber `#C8920E`, the
+deck's copper-rose rims.
+
+1. **Every room gets a candle.** STAGE includes a `candleGlow` token — a low-alpha
+   warm gold/amber radial pool placed somewhere meaningful on every screen (on the
+   bookcase in the Vault, on the book on the play screen). Purple is the night air;
+   the light says someone lives here.
+2. **The midground goes warm.** Cold purple is reserved for backdrop and leather
+   only. Shelf rails, bookcase backboards, parchment insets, seals, and tooling
+   shadows come from the warm family. Rule of thumb: no screen where more than ~70%
+   of visible surface sits in the cold purple family.
+3. **Amber is promoted.** `#C8920E` graduates from pin-detail to a real tone: spine
+   bands, bookplate seals, the dark half of gold gradients.
 
 ### Binding rules
 
@@ -93,8 +113,9 @@ hero word (now), Vault spine titles (this spec), Results best-word and Daily rev
 
 ### `Bookcase.tsx` — the shelf system
 
-- Shelf rails in the warm wood brown already present in HeroBook's family
-  (`#6A5A48`), gold hairline edge.
+- Shelf rails AND the bookcase's inside backboard in the warm wood family
+  (`#6A5A48`, darkened variants), gold hairline edges — purple leather spines stand
+  against warm wood, never purple-on-purple (Warmth clause).
 - Takes spine data, flows spines left→right across shelves, wraps, scrolls
   vertically. Newest reclaim stands last — the shelf visibly grows as you play.
 - Empty shelf space is honest: sparse shelves early on show what's left to reclaim.
@@ -104,7 +125,8 @@ hero word (now), Vault spine titles (this spec), Results best-word and Daily rev
 Top to bottom:
 
 1. **Stage:** STAGE material — `bgDeep`, 3-stop vignette, faint purple ambient glow
-   low in the room. The bookcase sits in a dark study, same air as the play screen.
+   low in the room, and the `candleGlow` warm pool centered on the bookcase. The
+   bookcase sits in a candle-lit study, same air as the play screen.
 2. **Header:** archive language, current title kept; counts strip beneath in label
    type — `14 RECLAIMED · 3 HAUNTED`. The existing rank/tier mark becomes a
    **bookplate**: parchment inset, gold tooling, tier color as its seal (BOOK
