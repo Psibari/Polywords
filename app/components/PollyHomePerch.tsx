@@ -8,7 +8,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import Svg, { Rect } from 'react-native-svg';
 import { FONTS } from '../constants/fonts';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { HOME_GREETING_LINES, homePerch, homeType } from '../ui/pwHomeMaterials';
@@ -78,14 +77,8 @@ export default function PollyHomePerch() {
 
   return (
     <Animated.View style={[styles.root, { transform: [{ translateY: slideY }] }]}>
-      {/* Stone ledge — rooted off the left edge, warm stone family */}
-      <Svg width={210} height={36} style={styles.ledge}>
-        <Rect x={0} y={0} width={206} height={12} rx={5} fill={homePerch.ledgeTop} />
-        <Rect x={0} y={11} width={198} height={16} rx={4} fill={homePerch.ledgeFace} />
-        <Rect x={0} y={26} width={188} height={8} rx={3} fill={homePerch.ledgeShadow} />
-      </Svg>
-
-      {/* Polly — whole-image motion only */}
+      {/* Polly — whole-image motion only; her branch is part of the pose art,
+          rooted off the left edge */}
       <Animated.View
         style={[
           styles.pollyWrap,
@@ -113,18 +106,13 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: homePerch.bottomOffset,
     width: 300,
-    height: homePerch.pollySize + 40,
+    height: homePerch.pollySize,
     pointerEvents: 'none',
-  },
-  ledge: {
-    position: 'absolute',
-    left: -28,
-    bottom: 0,
   },
   pollyWrap: {
     position: 'absolute',
     left: -56,
-    bottom: 18,
+    bottom: 0,
     width: homePerch.pollySize,
     height: homePerch.pollySize,
   },

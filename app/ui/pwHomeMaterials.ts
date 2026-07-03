@@ -1,5 +1,5 @@
 import { PW } from './pwTheme';
-import { heroBookMaterial, libraryMaterial } from './pwMaterials';
+import { heroBookMaterial } from './pwMaterials';
 
 // ── Copy ──
 export const HOME_TAGLINE = 'Polly stole the meanings. Take them back.';
@@ -48,12 +48,9 @@ export const homeDoor = {
   minHeight: 150,
 } as const;
 
-// ── Polly's stone ledge + perch geometry ──
+// ── Polly perch geometry (the branch is part of the pose art) ──
 export const homePerch = {
-  ledgeTop: libraryMaterial.wood, // warm stone family (Warmth clause)
-  ledgeFace: libraryMaterial.woodDark,
-  ledgeShadow: libraryMaterial.woodShadow,
-  bottomOffset: 310, // clears dare + doors + settings stack
+  bottomOffset: 366, // clears dare + doors + settings stack (doors render ~175pt)
   pollySize: 240,
   bubbleFace: '#1A1055', // matches Daily bubble material
   bubbleRim: 'rgba(245,200,66,0.55)',
