@@ -216,6 +216,124 @@ Recommended phase meanings:
 - `panic`: high trap sharpness and higher pressure.
 - `boss`: high snap, high reward, fair hidden meaning, strong Polly taunt potential.
 
+## Practical Arc Generator Profile
+
+The first Arc Generator implementation should be driven by manually authored word profiles,
+not inferred from mask copy.
+
+```ts
+type ArcPhase =
+  | 'confidence'
+  | 'flow'
+  | 'tension'
+  | 'panic'
+  | 'boss';
+
+type Rating = 1 | 2 | 3 | 4 | 5;
+
+type WordArcProfile = {
+  word: string;
+  realMeaningCount: number;
+  trapCount: number;
+  snapStrength: Rating;
+  trapSharpness: Rating;
+  hiddenFairness: Rating;
+  familiarity: Rating;
+  wordComplexity: Rating;
+  bossEligible: boolean;
+  tutorialEligible: boolean;
+  pollyTauntPotential: Rating;
+  recommendedPhase: ArcPhase;
+};
+```
+
+`realMeaningCount` and `trapCount` describe the audited content pool for a word. The remaining
+fields are human-authored editorial judgments. The generator must not guess these ratings from
+phrase length, mask IDs, or other superficial properties.
+
+## Practical Phase Eligibility
+
+### Confidence
+
+- `realMeaningCount`: 2–3
+- `trapSharpness`: 1–2
+- `familiarity`: 4–5
+- `snapStrength`: 1–3
+
+### Flow
+
+- `realMeaningCount`: 2–4
+- `trapSharpness`: 2–3
+- `familiarity`: 3–5
+- `snapStrength`: 2–3
+
+### Tension
+
+- `realMeaningCount`: 3–4
+- `trapSharpness`: 3–4
+- `familiarity`: 2–4
+- `snapStrength`: 3–4
+
+### Panic
+
+- `realMeaningCount`: 3–5
+- `trapSharpness`: 4–5
+- `familiarity`: 2–4
+- `snapStrength`: 3–5
+
+### Boss
+
+- `realMeaningCount`: 4+
+- `trapSharpness`: 4–5
+- `snapStrength`: 4–5
+- `hiddenFairness`: 3–5
+- `pollyTauntPotential`: 4–5
+- `bossEligible`: true
+
+`recommendedPhase` is the editorial placement recommendation. The numeric ranges are validation
+guardrails, not permission for the generator to silently retag a word.
+
+## Default Arc Generator Output
+
+```ts
+const DEFAULT_GPS_ARC = [
+  'confidence',
+  'confidence',
+  'flow',
+  'flow',
+  'tension',
+  'tension',
+  'tension',
+  'panic', // returning haunt slot if available
+  'panic',
+  'boss',
+] as const;
+```
+
+Round 8 / index 7 is reserved for a returning haunt when one exists. Without a returning haunt,
+that slot uses a normal panic-phase word. Round 10 / index 9 remains the boss.
+
+## Tile Budget Is Not Yet Locked
+
+The Arc profile selects and validates words. It does not yet define how many masks from a word's
+full content pool appear in one round.
+
+Before implementing mask subset selection, the manually tagged test set must establish:
+
+- total visible tiles per phase;
+- visible real meanings per phase;
+- visible traps per phase;
+- whether every selected real meaning needs a linked trap direction;
+- how meaning families and trap styles are represented without repetition;
+- whether a returning haunt keeps its original tile budget or uses the current panic budget;
+- how the boss mystery tile sits outside the visible-tile budget.
+
+Do not derive these budgets from the current database averages. The current data has not been
+approved as the balancing source of truth.
+
+`wordToTileTextRatio = 2.65` is a visual/UI sizing rule. It is not an Arc Generator selection or
+content ratio.
+
 ## Boss Word Definition
 
 A Boss Word should ideally have:
@@ -235,7 +353,7 @@ Future order:
 
 1. Add docs.
 2. Define metadata schema.
-3. Manually tag 20 test words.
-4. Build one curated Hunt.
+3. Manually tag 20–30 test words.
+4. Build one curated 10-round Hunt.
 5. Playtest the curve.
 6. Only then automate Hunt generation.
