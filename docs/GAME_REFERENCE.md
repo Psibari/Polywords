@@ -196,7 +196,8 @@ board with gold→rose frames); Polly on transparent pose images (see CLAUDE.md)
 - `intakeY = wordScreenY + 73` for `coverHeight 162`.
 - `gridWrap paddingTop` drops the tile onto the arena floor (grounded, clear of Polly's
   bottom-left lane). Current: 180.
-- Hero word = gold-foil stamp, three Text layers (MaskBoard `styles.word*`): dark deboss
+- Hero word = gold-foil stamp, three Text layers rendered by the shared `FoilWord` component
+  (`app/components/ui/FoilWord.tsx`); MaskBoard passes `styles.word` as baseStyle: dark deboss
   +4px below, warm `#FFF7D6` catch-light rim −2.5px above, gold fill with tight 1px amber
   edge (radius 2). Never a wide zero-offset glow — radius 8 hazed the glyphs.
 - Hunt Polly visit layer lives in GameScreen's `GameContent`, NOT MaskBoard — the board

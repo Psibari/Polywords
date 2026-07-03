@@ -16,6 +16,7 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
+import { FoilWord } from './ui/FoilWord';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
@@ -1586,33 +1587,23 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
               ],
             }}
           >
-            {!isBoss && (
+            {!isBoss ? (
+              <FoilWord
+                word={step.word}
+                baseStyle={styles.word}
+                fontSize={96}
+                minimumFontScale={0.72}
+              />
+            ) : (
               <Text
-                style={[styles.word, styles.wordEmboss]}
+                style={[styles.word, styles.wordBoss]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
+                minimumFontScale={0.72}
               >
                 {step.word}
               </Text>
             )}
-            {/* Foil catch-light — warm rim peeking above the gold fill */}
-            {!isBoss && (
-              <Text
-                style={[styles.word, styles.wordTopLight]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                {step.word}
-              </Text>
-            )}
-            <Text
-              style={[styles.word, isBoss && styles.wordBoss]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {step.word}
-            </Text>
             {/* Gold overlay for absorption fill */}
             {!isBoss && (
               <Animated.Text
@@ -2200,23 +2191,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bossWord,
     letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#F5C842',
-  },
-  wordEmboss: {
-    position: 'absolute',
-    color: 'rgba(0,0,0,0.72)',
-    // No inherited glow — the emboss must be a crisp dark drop edge
-    textShadowColor: 'transparent',
-    textShadowRadius: 0,
-    transform: [{ translateY: 4 }],
-  },
-  wordTopLight: {
-    position: 'absolute',
-    // Foil-stamp physics: light catches the top edge of raised gold.
-    // #FFF7D6 = the warm white already used for Polly's bubble text.
-    color: 'rgba(255,247,214,0.95)',
-    textShadowColor: 'transparent',
-    textShadowRadius: 0,
-    transform: [{ translateY: -2.5 }],
   },
   goldRing: {
     position: 'absolute',
