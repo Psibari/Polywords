@@ -135,3 +135,41 @@ export const heroBookMaterial = {
   coverHeight:    162,
   pageHeight:     52,
 } as const;
+
+// ── Material language (spec: 2026-07-02 material-language-and-vault-library) ──
+
+// Foil-stamped lettering — the trophy-word treatment. Rendered by FoilWord.
+export const foilMaterial = {
+  fill: PW.color.gold,
+  edge: 'rgba(245,200,66,0.62)',      // tight warm edge on the fill
+  deboss: 'rgba(0,0,0,0.72)',          // pressed-in shadow below
+  catchLight: 'rgba(255,247,214,0.95)',// PW.color.foilLight at 0.95
+} as const;
+
+// Library wood + spine leather (Warmth clause: spines stand against warm
+// wood, never purple-on-purple).
+export const libraryMaterial = {
+  wood: '#6A5A48',
+  woodDark: '#4A3E30',
+  woodShadow: '#332A20',
+  shelfHairline: 'rgba(245,200,66,0.30)',
+  spineLeather: heroBookMaterial.coverPurple,
+  spineLeatherTop: heroBookMaterial.coverPurpleTop,
+  spineLeatherBot: heroBookMaterial.coverPurpleBot,
+  spineTooling: heroBookMaterial.goldTrim,
+  spineToolingHairline: heroBookMaterial.goldHairline,
+  spineAmber: PW.color.amber,
+  ghostLeather: 'rgba(42,28,92,0.45)', // coverPurpleTop, faded — her grip
+  ghostTint: 'rgba(123,45,139,0.35)',
+  parchment: heroBookMaterial.pagesCreamTop,
+  parchmentDeep: heroBookMaterial.pagesCream,
+} as const;
+
+// STAGE — the room the drama happens in. Backgrounds only, never panels.
+export const stageMaterial = {
+  base: PW.color.bgDeep,
+  vignette: ['rgba(6,4,22,0.93)', 'rgba(9,6,26,0.55)', 'rgba(7,5,23,0.82)'] as const,
+  vignetteLocations: [0, 0.5, 1] as const,
+  purpleAmbient: 'rgba(123,45,139,0.14)',
+  candleGlow: 'rgba(245,200,66,0.09)', // every room gets a candle
+} as const;

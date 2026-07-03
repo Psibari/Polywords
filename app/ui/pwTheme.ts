@@ -21,6 +21,8 @@ export const PW = {
     goldSoft: 'rgba(245,200,66,0.58)',
     goldDark: '#8F6F18',
     goldGlow: 'rgba(245,200,66,0.30)',
+    amber: '#C8920E',
+    foilLight: '#FFF7D6',
     purple: '#7B2D8B',
     purpleSoft: 'rgba(123,45,139,0.46)',
     lavender: '#B98ADE',
