@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     zIndex: 3,
   },
   phrase: {
-    fontSize: 24,
+    fontSize: 27,
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     flexShrink: 1,
-    lineHeight: 27,
+    lineHeight: 31,
     width: '100%',
     textShadowColor: 'rgba(0,0,0,0.76)',
     textShadowOffset: { width: 0, height: 1 },

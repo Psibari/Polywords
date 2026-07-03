@@ -1595,6 +1595,16 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
                 {step.word}
               </Text>
             )}
+            {/* Foil catch-light — warm rim peeking above the gold fill */}
+            {!isBoss && (
+              <Text
+                style={[styles.word, styles.wordTopLight]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {step.word}
+              </Text>
+            )}
             <Text
               style={[styles.word, isBoss && styles.wordBoss]}
               numberOfLines={1}
@@ -2178,9 +2188,10 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.wordDisplay,
     letterSpacing: FONT_SIZES.wordDisplayLetterSpacing,
     color: '#F5C842',
+    // Tight warm edge only — a wide zero-offset glow (radius 8) hazed the glyphs
     textShadowColor: 'rgba(245,200,66,0.62)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
     textAlign: 'center',
     maxWidth: '100%',
   },
@@ -2192,8 +2203,20 @@ const styles = StyleSheet.create({
   },
   wordEmboss: {
     position: 'absolute',
-    color: 'rgba(0,0,0,0.45)',
-    transform: [{ translateY: 3 }],
+    color: 'rgba(0,0,0,0.72)',
+    // No inherited glow — the emboss must be a crisp dark drop edge
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+    transform: [{ translateY: 4 }],
+  },
+  wordTopLight: {
+    position: 'absolute',
+    // Foil-stamp physics: light catches the top edge of raised gold.
+    // #FFF7D6 = the warm white already used for Polly's bubble text.
+    color: 'rgba(255,247,214,0.95)',
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+    transform: [{ translateY: -2.5 }],
   },
   goldRing: {
     position: 'absolute',
