@@ -107,10 +107,14 @@ Standard: *"meaning hidden, not meaning lost."* Tile goal: *Wait… what? → Oh
 
 - Scene-language, never dictionary voice. Register parity across real/trap tiles. Target 5–6
   words; 8 words is the hard maximum.
-- Hidden tiles cut from pipeline entirely. 1 real per meaning; 2–3 traps per meaning; hard cap
-  8 traps per word. No headword or derived forms in any tile. No trap-to-trap duplicate words.
-  Trap sharing vocabulary with real is allowed. No trap may share a meaning direction with
-  another trap on the same word.
+- Hidden tiles cut from the ordinary visible pipeline. An active round normally selects 1 real
+  mask variant per chosen meaning and no more than 8 traps for the word. No headword or derived
+  forms in any tile. No trap-to-trap duplicate words. Trap sharing vocabulary with real is
+  allowed. No selected trap may share a meaning direction with another selected trap.
+- Future Arc Generator banks may hold 2+ alternate real masks and an expanded trap pool per
+  meaning. The generator selects a fair phase-appropriate subset and prefers unseen or
+  least-seen tiles only after correctness, phase fit, and fairness. Full rules:
+  `docs/GOLDEN_PACING_SYSTEM.md`.
 - Data: `assets/data/huntData.json` — 403 words, QA-clean, ALL CAPS normalized, loaded via
   `require()` at import.
 - Content tool `tools/content/mask-rewriter` — local-only, never wire into the app.

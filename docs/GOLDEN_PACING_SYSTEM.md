@@ -334,6 +334,96 @@ approved as the balancing source of truth.
 `wordToTileTextRatio = 2.65` is a visual/UI sizing rule. It is not an Arc Generator selection or
 content ratio.
 
+## Future Meaning and Tile Banks
+
+Arc Generator content should be organized as a reusable bank:
+
+```text
+word
+└── meaning
+    ├── realMasks[]
+    └── traps[]
+```
+
+Each meaning is one genuine semantic direction. Its `realMasks[]` are alternate masked
+expressions of that same truth, not additional meanings. Its `traps[]` are fair false options
+linked to that meaning direction.
+
+### Real Mask Bank Rules
+
+- Each meaning should support at least 2 real masks where content quality permits.
+- Alternate real masks exist to make replays feel fresh without changing the underlying truth.
+- A generated round should normally select no more than 1 real mask from the same meaning.
+- Multiple real masks for one meaning must never be counted as multiple meanings in
+  `realMeaningCount`.
+- A hidden meaning must remain outside the visible real-mask selection for that round.
+- If a second real mask is weaker, vaguer, or less fair than the first, do not bank it merely
+  to satisfy the preferred count.
+
+### Trap Bank Rules
+
+- Each meaning should support an expanded pool of traps across different trap styles.
+- Traps should be linked to the meaning direction they bait.
+- The content bank may contain more traps than one round will display.
+- A generated round selects only a phase-appropriate trap subset.
+- Do not select duplicate trap directions merely to fill a tile budget.
+- Every chosen trap must remain close enough to tempt and wrong enough to reject.
+
+### Phase-Appropriate Subset Selection
+
+The generator should select a subset from the full meaning and tile banks rather than replaying
+every stored tile or always choosing the same tiles.
+
+Selection must respect, in order:
+
+1. truth correctness and Hidden Truth Rule safety;
+2. phase eligibility and the active tile budget;
+3. required meaning-family and trap-style coverage;
+4. fairness and post-reveal clarity;
+5. replay freshness.
+
+Freshness is a tie-breaker after correctness, phase fit, and fairness. The generator must never
+choose a worse, vaguer, misleading, or unfair tile merely because it has been shown less often.
+
+### Replay Tile Cycling
+
+When multiple equally valid tiles are eligible, replay selection should:
+
+1. prefer never-shown tiles;
+2. then prefer least-seen tiles;
+3. then prefer tiles not shown in the most recent Hunt;
+4. randomize only among otherwise equal candidates.
+
+Stable word, meaning, and tile IDs are required so usage can be tracked without treating
+rewritten copy as a new semantic direction.
+
+### Future Tile Metadata
+
+Static editorial metadata should support:
+
+- `difficulty`;
+- `snapStrength`;
+- `trapSharpness`;
+- `familiarity`;
+- `hiddenFairness`;
+- `phaseFit`;
+- meaning-family identity;
+- trap style and baited meaning;
+- stable tile identity.
+
+Dynamic per-player usage tracking should support:
+
+- times shown;
+- last shown time;
+- last Hunt shown;
+- times judged correctly or incorrectly.
+
+Editorial quality ratings belong in content data. Player-specific usage history belongs in
+runtime persistence and must not be written back into the shared content bank.
+
+These are future Arc Generator rules. Do not implement the bank schema, usage persistence, or
+automated cycling until the manually tagged test set and curated Hunt have been approved.
+
 ## Boss Word Definition
 
 A Boss Word should ideally have:
