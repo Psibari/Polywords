@@ -49,6 +49,10 @@ const LOAD_RETRY_ATTEMPTS = 4;
 
 const playerPools: Partial<Record<SfxName, SfxPlayerPool>> = {};
 const lastPlayedAt: Partial<Record<SfxName, number>> = {};
+// Self-heal: pools whose players never reach isLoaded (wedged audio session
+// after stacked dev reloads) are torn down and rebuilt, bounded per sound.
+const poolRebuilds: Partial<Record<SfxName, number>> = {};
+const MAX_POOL_REBUILDS = 2;
 const reservedPlayers = new Set<AudioPlayer>();
 const pendingLoadRetryTimers = new Set<ReturnType<typeof setTimeout>>();
 
@@ -120,6 +124,7 @@ async function restartPlayer(name: SfxName, player: AudioPlayer): Promise<void> 
 function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void {
   const player = takePlayer(pool);
   if (player) {
+    poolRebuilds[name] = 0;
     void restartPlayer(name, player);
     return;
   }
@@ -128,6 +133,19 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void
     warnDev(`"${name}" was requested before any pooled player finished loading; retrying.`);
   }
   if (loadAttempt >= LOAD_RETRY_ATTEMPTS) {
+    const rebuilds = poolRebuilds[name] ?? 0;
+    if (rebuilds < MAX_POOL_REBUILDS) {
+      poolRebuilds[name] = rebuilds + 1;
+      warnDev(`"${name}" players never loaded; rebuilding pool (attempt ${rebuilds + 1}).`);
+      pool.players.forEach(p => { try { p.remove(); } catch {} });
+      delete playerPools[name];
+      const fresh = createPlayerPool(name, SFX[name]);
+      if (fresh) {
+        playerPools[name] = fresh;
+        playFromPool(name, fresh);
+      }
+      return;
+    }
     warnDev(`"${name}" could not play because its pooled players did not load.`);
     return;
   }
@@ -190,6 +208,7 @@ export function unloadSfx(): void {
     });
     delete playerPools[name];
     delete lastPlayedAt[name];
+    delete poolRebuilds[name];
   });
   audioModeSet = false;
 }
