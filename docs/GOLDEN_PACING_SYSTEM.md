@@ -313,23 +313,30 @@ const DEFAULT_GPS_ARC = [
 Round 8 / index 7 is reserved for a returning haunt when one exists. Without a returning haunt,
 that slot uses a normal panic-phase word. Round 10 / index 9 remains the boss.
 
-## Tile Budget Is Not Yet Locked
+## Initial Manual-Test Tile Budgets
 
-The Arc profile selects and validates words. It does not yet define how many masks from a word's
-full content pool appear in one round.
+Use the following values when building the first manually tagged test set and curated Hunt:
 
-Before implementing mask subset selection, the manually tagged test set must establish:
+| Phase | Visible real masks | Visible traps | Visible total |
+| --- | ---: | ---: | ---: |
+| Confidence | 2 | 3 | 5 |
+| Flow | 3 | 3 | 6 |
+| Tension | 3 | 4 | 7 |
+| Panic | 4 | 4 | 8 |
+| Boss | 4 | 6 | 10 |
 
-- total visible tiles per phase;
-- visible real meanings per phase;
-- visible traps per phase;
-- whether every selected real meaning needs a linked trap direction;
-- how meaning families and trap styles are represented without repetition;
-- whether a returning haunt keeps its original tile budget or uses the current panic budget;
-- how the boss mystery tile sits outside the visible-tile budget.
+These counts apply per selected word and round, not per meaning. Each visible real mask must
+represent one distinct selected meaning. Alternate real masks for those meanings remain in the
+content bank for future replays; they do not increase the visible real count for the round.
 
-Do not derive these budgets from the current database averages. The current data has not been
-approved as the balancing source of truth.
+For the initial curated test, a returning haunt in Round 8 uses the Panic budget. The boss
+mystery tile sits outside the Boss visible total, so a boss round presents 10 ordinary visible
+tiles before the separate mystery tile.
+
+These are initial playtest values, not production balancing guarantees. Validate the emotional
+curve, round duration, trap fairness, and replay quality with the manually tagged set before
+automating mask subset selection. Do not derive replacement budgets from current database
+averages; the current data has not been approved as the balancing source of truth.
 
 `wordToTileTextRatio = 2.65` is a visual/UI sizing rule. It is not an Arc Generator selection or
 content ratio.

@@ -115,6 +115,11 @@ Standard: *"meaning hidden, not meaning lost."* Tile goal: *Wait… what? → Oh
   meaning. The generator selects a fair phase-appropriate subset and prefers unseen or
   least-seen tiles only after correctness, phase fit, and fairness. Full rules:
   `docs/GOLDEN_PACING_SYSTEM.md`.
+- Initial Arc Generator test budgets are per selected word and round: Confidence has 2 real +
+  3 traps, Flow has 3 + 3, Tension has 3 + 4, Panic has 4 + 4, and Boss has 4 + 6. Each
+  selected real represents a distinct meaning. The separate boss mystery tile is outside the
+  Boss total. These values are for the manually tagged test set and curated Hunt, not production
+  automation.
 - Data: `assets/data/huntData.json` — 403 words, QA-clean, ALL CAPS normalized, loaded via
   `require()` at import.
 - Content tool `tools/content/mask-rewriter` — local-only, never wire into the app.
