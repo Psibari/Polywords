@@ -1,1186 +1,844 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ARC_PHASES,
+  PILOT_WORDS,
+  REVIEW_CHECKS,
+  TRAP_STYLES,
+  canApproveWord,
+  createEmptyWord,
+  slugify,
+  synchronizeDerivedFields,
+  validateWord,
+} from './contentWorkflow.js';
 
-// ─── Full 739-word database ───────────────────────────────────────────────────
-const WORDS = [{"w":"BANK","t":"Q","d":"M","m":["A financial institution","The side of a river","To tilt an aircraft","A reserve supply"]},{"w":"BAT","t":"D","d":"E","m":["A flying mammal","Sports equipment for hitting a ball"]},{"w":"LIGHT","t":"Q","d":"E","m":["Illumination","Not heavy","To ignite","Pale in color"]},{"w":"DUCK","t":"D","d":"E","m":["A waterfowl","To lower the head quickly"]},{"w":"JAM","t":"Q","d":"M","m":["A fruit preserve","A traffic blockage","To play music informally","To force into a space"]},{"w":"CAN","t":"D","d":"E","m":["A metal container","To be able to do something"]},{"w":"WATCH","t":"Q","d":"M","m":["A wrist timepiece","To observe","A guard period","To be careful"]},{"w":"SPRING","t":"Q","d":"M","m":["A season","A coiled metal device","A natural water source","To jump suddenly"]},{"w":"WELL","t":"D","d":"E","m":["In good health","A deep hole for drawing water"]},{"w":"DATE","t":"Q","d":"E","m":["A calendar day","A romantic outing","A sweet fruit","To determine the age of"]},{"w":"MATCH","t":"Q","d":"M","m":["A sports competition","A stick for lighting fire","Something equal or similar","To correspond or equal"]},{"w":"NAIL","t":"D","d":"E","m":["A metal fastener hammered into wood","The hard covering on a fingertip"]},{"w":"SEAL","t":"Q","d":"M","m":["A marine mammal","To close tightly","A stamp of authenticity","To finalize"]},{"w":"TRAIN","t":"D","d":"E","m":["A rail vehicle for transport","To teach or coach someone"]},{"w":"ROW","t":"D","d":"E","m":["A line of things arranged side by side","To propel a boat with oars"]},{"w":"PARK","t":"D","d":"E","m":["A public green space","To leave a vehicle in a spot"]},{"w":"FLY","t":"Q","d":"M","m":["An insect","To travel through air","A trouser opening","A high baseball hit"]},{"w":"WAVE","t":"D","d":"E","m":["A moving swell of water","To move the hand in greeting"]},{"w":"BARK","t":"T","d":"E","m":["The outer covering of a tree","The sound a dog makes","A type of small sailing ship"]},{"w":"RING","t":"Q","d":"M","m":["Circular jewelry","The sound of a bell","An enclosed area for boxing","A criminal group"]},{"w":"CRANE","t":"T","d":"E","m":["A tall wading bird","A machine for lifting","To stretch the neck to see"]},{"w":"BEAR","t":"D","d":"E","m":["A large furry mammal","To tolerate or endure something"]},{"w":"SINK","t":"D","d":"E","m":["A basin for washing in a kitchen","To go below the surface of water"]},{"w":"TIRE","t":"D","d":"E","m":["A rubber covering on a wheel","To become weary or fatigued"]},{"w":"BOWL","t":"D","d":"E","m":["A round dish for food","To roll a ball in a sport"]},{"w":"PEN","t":"Q","d":"M","m":["A writing instrument","An animal enclosure","A prison","To write or compose"]},{"w":"PALM","t":"Q","d":"M","m":["The inner hand surface","A tropical tree","To conceal in hand","To pass off deceptively"]},{"w":"PLANE","t":"D","d":"E","m":["An aircraft","A flat, level surface"]},{"w":"STAR","t":"Q","d":"M","m":["A celestial body","A famous person","To have the main role","A pointed shape"]},{"w":"FAN","t":"Q","d":"M","m":["An airflow device","An enthusiast","To spread out","To intensify"]},{"w":"KEY","t":"Q","d":"M","m":["A tool for locks","Crucial","A musical tonality","A keyboard button"]},{"w":"YARD","t":"D","d":"E","m":["An area of land next to a house","A unit of measurement equal to three feet"]},{"w":"BALL","t":"D","d":"E","m":["A round object used in games","A formal dance event"]},{"w":"MOLE","t":"D","d":"E","m":["A small burrowing mammal","A dark spot on the skin"]},{"w":"CAST","t":"D","d":"E","m":["To throw or fling something","The actors in a film or play"]},{"w":"GUM","t":"D","d":"E","m":["A chewy candy","The tissue surrounding the teeth"]},{"w":"CLIP","t":"D","d":"E","m":["A fastener for holding things together","To cut or trim something"]},{"w":"ROCK","t":"Q","d":"M","m":["A piece of stone","A music genre","To sway gently","A diamond in slang"]},{"w":"MOUSE","t":"D","d":"E","m":["A small rodent","A computer input device"]},{"w":"LOG","t":"D","d":"E","m":["A thick piece of cut wood","A record of events or data"]},{"w":"CHIP","t":"D","d":"E","m":["A thin slice of fried potato","A small piece of computer circuitry"]},{"w":"PUPIL","t":"D","d":"E","m":["A student in school","The dark center of the eye"]},{"w":"RULER","t":"D","d":"E","m":["A measuring stick","A person who governs"]},{"w":"STAMP","t":"D","d":"E","m":["A small adhesive label for postage","To bring the foot down heavily"]},{"w":"TRUNK","t":"D","d":"E","m":["The main stem of a tree","A storage compartment in a car"]},{"w":"HORN","t":"Q","d":"M","m":["An animal growth","A musical instrument","A vehicle honker","A material substance"]},{"w":"BOLT","t":"D","d":"E","m":["A metal fastener used with a nut","A flash of lightning"]},{"w":"CORD","t":"D","d":"E","m":["A length of rope or string","An electrical wire with a plug"]},{"w":"SCALE","t":"Q","d":"M","m":["A weighing device","A thin plate on fish","To climb","Relative size"]},{"w":"SLIDE","t":"D","d":"E","m":["A playground structure for children","To move smoothly along a surface"]},{"w":"LEAD","t":"Q","d":"M","m":["To guide","A metallic element","The main role","A dog leash"]},{"w":"CURRENT","t":"D","d":"M","m":["Happening now; present","A flow of water, air, or electricity"]},{"w":"DRAFT","t":"Q","d":"M","m":["A preliminary version","A cool air current","Military selection","Beer from a cask"]},{"w":"CAPITAL","t":"D","d":"M","m":["A city where government is based","Wealth or money available for investment"]},{"w":"COMPOUND","t":"D","d":"M","m":["A mixture of chemical elements","An enclosed area with buildings"]},{"w":"CLOSE","t":"D","d":"M","m":["To shut something","Near in distance or time"]},{"w":"SEASON","t":"D","d":"M","m":["A division of the year","To add flavor with spices"]},{"w":"FOIL","t":"D","d":"M","m":["A thin sheet of metal","To prevent someone from succeeding"]},{"w":"LITTER","t":"D","d":"M","m":["Trash scattered in a public place","A group of baby animals born together"]},{"w":"VOLUME","t":"D","d":"M","m":["The loudness of a sound","A single book in a series"]},{"w":"PITCHER","t":"D","d":"M","m":["A container for pouring liquids","The player who throws in baseball"]},{"w":"ORGAN","t":"T","d":"M","m":["A body part with a function","A large keyboard instrument","A newspaper or publication"]},{"w":"RACKET","t":"D","d":"M","m":["Equipment used to hit a ball in tennis","A loud, disturbing noise"]},{"w":"DRILL","t":"D","d":"M","m":["A tool for making holes","A practice exercise or rehearsal"]},{"w":"TACKLE","t":"D","d":"M","m":["Fishing or sports equipment","To physically bring someone down"]},{"w":"PLOT","t":"T","d":"M","m":["The storyline of a book or film","A small piece of land","To plan secretly"]},{"w":"SOLE","t":"D","d":"M","m":["The bottom of a shoe","The only one"]},{"w":"ARMS","t":"D","d":"M","m":["Body parts from shoulder to hand","Weapons or firearms"]},{"w":"BEAM","t":"D","d":"M","m":["A ray of light","A long sturdy piece of timber or metal"]},{"w":"COAST","t":"D","d":"M","m":["The land along the sea","To move without effort or power"]},{"w":"MUG","t":"D","d":"M","m":["A large drinking cup with a handle","To rob someone by force in public"]},{"w":"TOAST","t":"D","d":"M","m":["Bread browned by heat","A tribute spoken while raising glasses"]},{"w":"SWALLOW","t":"D","d":"M","m":["A small migratory bird","To pass food or drink down the throat"]},{"w":"HOOD","t":"T","d":"M","m":["A head covering on a garment","The cover over a car engine","A neighborhood in slang"]},{"w":"STABLE","t":"D","d":"M","m":["Steady and not likely to change","A building where horses are kept"]},{"w":"NOVEL","t":"D","d":"M","m":["A long fictional book","New and original"]},{"w":"SIGN","t":"Q","d":"M","m":["A display board","To write a signature","An indication","Communicating in sign language"]},{"w":"POUND","t":"Q","d":"M","m":["A weight unit","British currency","To hit repeatedly","An animal enclosure"]},{"w":"TIP","t":"Q","d":"M","m":["A pointed end","A service payment","A piece of advice","To tilt over"]},{"w":"ORDER","t":"Q","d":"M","m":["A sequence","A request for goods","A command","Proper arrangement"]},{"w":"FILE","t":"Q","d":"M","m":["A document folder","A smoothing tool","To walk in line","To submit officially"]},{"w":"MINE","t":"Q","d":"M","m":["Belonging to me","A mineral excavation","An explosive device","To extract resources"]},{"w":"CHEST","t":"D","d":"M","m":["The front of the body below the neck","A large strong box for storage"]},{"w":"BASS","t":"T","d":"M","m":["A freshwater fish","The lowest range of musical notes","Deep and low in sound"]},{"w":"BILL","t":"Q","d":"M","m":["A statement of charges","A bird's beak","A proposed law","Paper money"]},{"w":"STALL","t":"D","d":"M","m":["A booth or stand for selling goods","To delay or stop progress"]},{"w":"ROOT","t":"D","d":"M","m":["The underground part of a plant","The basic cause or origin of something"]},{"w":"INTEREST","t":"Q","d":"M","m":["Curiosity","Money on savings","A share in something","To engage attention"]},{"w":"ADDRESS","t":"D","d":"M","m":["A location where someone lives","To speak to an audience"]},{"w":"LAP","t":"D","d":"M","m":["The flat area formed by the thighs when sitting","One circuit of a track"]},{"w":"CONTENT","t":"D","d":"M","m":["The material inside something","Feeling satisfied and happy"]},{"w":"PATIENT","t":"D","d":"M","m":["A person receiving medical treatment","Able to wait calmly without complaint"]},{"w":"EXPRESS","t":"D","d":"M","m":["To communicate thoughts or feelings","A fast service with few stops"]},{"w":"SAW","t":"D","d":"M","m":["A cutting tool with a toothed blade","Past tense of see"]},{"w":"SECOND","t":"Q","d":"M","m":["A time unit","After the first","To support formally","Another helping"]},{"w":"STORY","t":"Q","d":"M","m":["A narrative","A building floor","A news report","A personal account"]},{"w":"IRON","t":"Q","d":"M","m":["A metallic element","A pressing device","A golf club type","To smooth clothes"]},{"w":"LETTER","t":"D","d":"M","m":["A character of the alphabet","A written message sent by mail"]},{"w":"DOWN","t":"T","d":"E","m":["Toward a lower position","Soft fine feathers","Feeling sad or depressed"]},{"w":"FOOT","t":"Q","d":"M","m":["The body part below the ankle","A measurement unit","The base of something","To pay the bill"]},{"w":"SPOT","t":"Q","d":"M","m":["A location","A mark or stain","To notice","A brief advertisement"]},{"w":"STAFF","t":"Q","d":"M","m":["Employees","A walking stick","Music notation lines","To provide workers"]},{"w":"BLOCK","t":"D","d":"M","m":["A solid piece of hard material","To obstruct or prevent passage"]},{"w":"BRANCH","t":"D","d":"M","m":["A part of a tree growing from the trunk","A division of a larger organization"]},{"w":"DROP","t":"Q","d":"M","m":["A tiny amount of liquid","To let fall","A decrease","To quit or abandon"]},{"w":"POOL","t":"D","d":"M","m":["A man-made body of water for swimming","A shared supply of resources"]},{"w":"BACK","t":"D","d":"M","m":["The rear part of the body","To support or endorse"]},{"w":"CHANGE","t":"Q","d":"E","m":["To become different","Coins","Fresh clothes","To replace"]},{"w":"COMPANY","t":"D","d":"M","m":["A business organization","The presence of another person"]},{"w":"DEAL","t":"Q","d":"M","m":["An agreement","To distribute cards","A large amount","To handle"]},{"w":"LEFT","t":"D","d":"M","m":["The opposite direction of right","Past tense of leave"]},{"w":"COUNT","t":"D","d":"M","m":["To determine the total number","A nobleman's title in some countries"]},{"w":"DIE","t":"D","d":"M","m":["To cease living","A single cube used in games"]},{"w":"GRAVE","t":"D","d":"M","m":["A burial place","Very serious or solemn"]},{"w":"HIDE","t":"D","d":"M","m":["To conceal from view","The skin of an animal"]},{"w":"LEAN","t":"D","d":"M","m":["To incline the body against something","Having little fat; thin"]},{"w":"MARCH","t":"D","d":"M","m":["The third month of the year","To walk in a military manner"]},{"w":"NET","t":"D","d":"M","m":["A mesh material for catching things","Remaining after deductions"]},{"w":"PEER","t":"D","d":"M","m":["A person of equal status","To look closely or squint"]},{"w":"RACE","t":"Q","d":"M","m":["A speed competition","An ethnic group","To move fast","A water channel"]},{"w":"RANGE","t":"D","d":"M","m":["The extent or scope of something","A large area of open land"]},{"w":"REST","t":"D","d":"M","m":["To relax or cease activity","The remaining part"]},{"w":"SAFE","t":"D","d":"M","m":["Free from danger or harm","A lockable metal box for valuables"]},{"w":"SHARP","t":"D","d":"M","m":["Having a keen cutting edge","Intellectually quick or clever"]},{"w":"SHED","t":"D","d":"M","m":["A small outbuilding for storage","To lose or discard naturally"]},{"w":"SHIELD","t":"D","d":"M","m":["Protective armor carried in battle","To protect or guard from harm"]},{"w":"SHOOT","t":"D","d":"M","m":["To fire a weapon or kick a ball","A new growth on a plant"]},{"w":"SKIP","t":"D","d":"M","m":["To move with light bouncing steps","To pass over or omit"]},{"w":"SLIP","t":"D","d":"M","m":["To lose one's footing","A small piece of paper"]},{"w":"SPELL","t":"Q","d":"M","m":["To form words with letters","A time period","A magic incantation","To relieve someone"]},{"w":"SPOKE","t":"D","d":"M","m":["Past tense of speak","A rod connecting a wheel's hub to its rim"]},{"w":"STAKE","t":"D","d":"M","m":["A wooden post driven into the ground","Something risked in a bet or venture"]},{"w":"TANK","t":"Q","d":"M","m":["A liquid container","A military vehicle","To fail badly","To lose deliberately"]},{"w":"TEMPLE","t":"D","d":"M","m":["A place of worship","The flat area on the side of the forehead"]},{"w":"FLAT","t":"D","d":"M","m":["Smooth and level with no raised areas","An apartment on one floor"]},{"w":"CHECK","t":"Q","d":"M","m":["To examine","A bank payment order","A pattern of squares","A chess threat"]},{"w":"CABINET","t":"D","d":"M","m":["A cupboard for storage","A group of senior government ministers"]},{"w":"CELL","t":"D","d":"M","m":["The basic unit of living organisms","A small room in a prison"]},{"w":"CHANNEL","t":"D","d":"M","m":["A TV or radio station","A passage for water to flow through"]},{"w":"CLUB","t":"Q","d":"M","m":["A social organization","A heavy weapon","A card suit","A nightlife venue"]},{"w":"COACH","t":"D","d":"M","m":["A person who trains athletes","A large horse-drawn carriage"]},{"w":"CROSS","t":"Q","d":"M","m":["To go across","An intersecting shape","Angry or annoyed","A hybrid mixture"]},{"w":"DECK","t":"D","d":"M","m":["A flat surface forming a floor outdoors","A set of playing cards"]},{"w":"FLAG","t":"D","d":"M","m":["A piece of cloth with a design representing a country","To mark or signal for attention"]},{"w":"JACK","t":"D","d":"M","m":["A device for lifting heavy objects","A playing card with a knight's image"]},{"w":"KIND","t":"T","d":"E","m":["Caring and generous","A type or category","To some extent"]},{"w":"LAST","t":"D","d":"M","m":["Coming after all others in time or order","To continue for a period of time"]},{"w":"LINE","t":"Q","d":"M","m":["A narrow mark","A queue","Text in a row","A transport route"]},{"w":"LOCK","t":"T","d":"M","m":["A device for securing a door","A section of hair","A section of a canal"]},{"w":"MODEL","t":"Q","d":"M","m":["A small replica","A fashion model","An example to follow","A product version"]},{"w":"NOTE","t":"Q","d":"M","m":["A written message","A musical tone","To observe","Paper currency"]},{"w":"OBJECT","t":"D","d":"M","m":["A physical thing you can see or touch","To express disapproval or opposition"]},{"w":"PAGE","t":"D","d":"M","m":["One side of a leaf of paper","A young attendant or helper"]},{"w":"PASS","t":"D","d":"M","m":["To move beyond or go past","A narrow route through mountains"]},{"w":"PATCH","t":"D","d":"M","m":["A piece of material used to mend a hole","A small area of ground"]},{"w":"PERCH","t":"D","d":"M","m":["A place where a bird sits","A freshwater fish"]},{"w":"PRESENT","t":"D","d":"M","m":["A gift","Currently existing or occurring"]},{"w":"PRESS","t":"Q","d":"M","m":["To push firmly","Journalists collectively","A printing machine","To iron fabric"]},{"w":"RESERVE","t":"D","d":"M","m":["To arrange to have something kept for you","A supply kept for future use"]},{"w":"ROLL","t":"D","d":"M","m":["A small round piece of bread","To move by turning over and over"]},{"w":"SCORE","t":"D","d":"M","m":["The number of points in a game","To achieve or gain something"]},{"w":"SERVE","t":"D","d":"M","m":["To bring food or drink to someone","To hit a ball to start play in tennis"]},{"w":"SHELL","t":"D","d":"M","m":["A hard outer covering of an animal or egg","A projectile fired from a large gun"]},{"w":"SHOWER","t":"D","d":"M","m":["A device for bathing in a spray of water","A brief fall of rain"]},{"w":"SPACE","t":"D","d":"M","m":["An empty area or gap","The vast expanse beyond Earth's atmosphere"]},{"w":"STEP","t":"D","d":"M","m":["A single movement of the foot","One in a series of actions toward a goal"]},{"w":"STICK","t":"D","d":"M","m":["A thin piece of wood","To attach or affix with adhesive"]},{"w":"STORE","t":"D","d":"M","m":["A shop where goods are sold","To keep something for future use"]},{"w":"SWITCH","t":"D","d":"M","m":["A device for turning something on or off","To change from one thing to another"]},{"w":"TAP","t":"D","d":"M","m":["A device for controlling water flow","To strike lightly"]},{"w":"TEAR","t":"D","d":"M","m":["A drop of liquid from the eye","To rip or pull apart"]},{"w":"TRACK","t":"D","d":"M","m":["A path or route","To follow the trail or movement of something"]},{"w":"TRIP","t":"D","d":"M","m":["A journey or excursion","To stumble or fall"]},{"w":"TYPE","t":"D","d":"M","m":["A category or classification","To write using a keyboard"]},{"w":"WILL","t":"D","d":"M","m":["A legal document for distributing possessions after death","Determination or desire"]},{"w":"WING","t":"D","d":"M","m":["A body part used for flying","A section of a building"]},{"w":"MINT","t":"D","d":"M","m":["A fragrant herb used in cooking","A facility where coins are produced"]},{"w":"FORGE","t":"D","d":"H","m":["A workshop where metal is heated and shaped","To create a fraudulent copy"]},{"w":"VESSEL","t":"D","d":"H","m":["A ship or large boat","A container for holding liquids"]},{"w":"VICE","t":"D","d":"H","m":["Immoral or wicked behavior","A clamping tool used in workshops"]},{"w":"STEEP","t":"D","d":"H","m":["Having a sharp slope or incline","To soak in liquid to extract flavor"]},{"w":"COUNTER","t":"D","d":"H","m":["A flat surface for working or serving","Contrary or in opposition to"]},{"w":"PROJECT","t":"D","d":"H","m":["A planned piece of work","To estimate or forecast for the future"]},{"w":"REFRAIN","t":"D","d":"H","m":["To stop oneself from doing something","A repeated section of a song"]},{"w":"ABSTRACT","t":"D","d":"H","m":["Existing in thought or as an idea","A summary of a research paper"]},{"w":"BATTERY","t":"D","d":"H","m":["A device that stores electrical energy","The crime of physically attacking someone"]},{"w":"BRIEF","t":"D","d":"H","m":["Short in duration or length","A set of instructions or summary for a task"]},{"w":"COMMISSION","t":"D","d":"H","m":["An official group charged with a task","A fee paid to an agent for a service"]},{"w":"CONCENTRATION","t":"D","d":"H","m":["The ability to focus attention","The amount of a substance in a mixture"]},{"w":"CONDUCT","t":"D","d":"H","m":["Behavior or manner of acting","To direct or manage an activity"]},{"w":"CONVICTION","t":"D","d":"H","m":["A firmly held belief","A formal declaration of guilt in court"]},{"w":"CRAFT","t":"D","d":"H","m":["A skilled activity involving making things by hand","A boat, ship, or aircraft"]},{"w":"DIGEST","t":"T","d":"M","m":["To break down food in the body","A summary of information","To absorb mentally"]},{"w":"DISCHARGE","t":"D","d":"H","m":["To release or allow to leave","The release of a substance or energy"]},{"w":"ENGAGED","t":"D","d":"H","m":["Busy or occupied with something","Having agreed to marry"]},{"w":"EXCHANGE","t":"D","d":"H","m":["The act of giving and receiving reciprocally","A marketplace for trading stocks"]},{"w":"FIGURE","t":"Q","d":"M","m":["A number","A body shape","To calculate","An illustration"]},{"w":"GRACE","t":"D","d":"H","m":["Elegance or beauty of movement","A short prayer before a meal"]},{"w":"HANDLE","t":"T","d":"M","m":["The part used to hold something","To manage or deal with","A username online"]},{"w":"HARBOR","t":"D","d":"H","m":["A sheltered body of water for ships","To secretly hold a feeling or thought"]},{"w":"ISSUE","t":"D","d":"H","m":["A topic or problem for discussion","A particular edition of a magazine"]},{"w":"LACE","t":"D","d":"H","m":["A delicate decorative fabric","A string for tying a shoe"]},{"w":"MANUAL","t":"D","d":"H","m":["Done by hand rather than machine","A handbook of instructions"]},{"w":"MARGIN","t":"D","d":"H","m":["The blank border on a page","The difference between two amounts"]},{"w":"MASS","t":"D","d":"H","m":["A large amount or body of matter","A Christian ceremony of worship"]},{"w":"MINUTE","t":"D","d":"H","m":["A unit of time equal to sixty seconds","Extremely small or tiny"]},{"w":"MONITOR","t":"D","d":"H","m":["A display screen for a computer","To watch and check over a period of time"]},{"w":"OFFSET","t":"D","d":"H","m":["To counterbalance or compensate for","A method of printing"]},{"w":"OUTLET","t":"D","d":"H","m":["A shop selling goods at reduced prices","An electrical socket in a wall"]},{"w":"PANEL","t":"D","d":"H","m":["A flat section forming part of a surface","A group of experts assembled for discussion"]},{"w":"PERIOD","t":"D","d":"H","m":["A length or portion of time","A punctuation mark at the end of a sentence"]},{"w":"POST","t":"Q","d":"M","m":["An upright pole","A job position","To send by mail","A social media entry"]},{"w":"PRODUCE","t":"D","d":"H","m":["Fresh fruits and vegetables","To create or manufacture something"]},{"w":"RECORD","t":"Q","d":"M","m":["A documented account","A vinyl disc","The best achieved","To capture media"]},{"w":"REMOTE","t":"D","d":"H","m":["Far away in distance or time","A wireless device for controlling electronics"]},{"w":"RESIGN","t":"D","d":"H","m":["To voluntarily leave a position","To accept something undesirable but inevitable"]},{"w":"RESOLUTION","t":"D","d":"H","m":["A firm decision to do something","The sharpness or clarity of an image"]},{"w":"SENTENCE","t":"D","d":"H","m":["A grammatical unit of words","A punishment assigned by a court"]},{"w":"SERVICE","t":"D","d":"H","m":["Assistance or work done for others","A religious ceremony"]},{"w":"SUIT","t":"D","d":"H","m":["A set of matching jacket and trousers","A legal action brought to court"]},{"w":"TABLE","t":"Q","d":"M","m":["Furniture","To postpone","A data chart","A flat land formation"]},{"w":"TENDER","t":"D","d":"H","m":["Soft or gentle","A formal offer or bid for a contract"]},{"w":"TERMINAL","t":"D","d":"H","m":["A building at an airport for passengers","Leading ultimately to death; incurable"]},{"w":"LOOM","t":"D","d":"H","m":["A machine for weaving fabric","To appear as a threatening or large shape"]},{"w":"BOW","t":"D","d":"H","m":["A weapon for shooting arrows","To bend the upper body as a greeting"]},{"w":"WIND","t":"D","d":"H","m":["Moving air in the atmosphere","To turn or twist something around"]},{"w":"BOOT","t":"D","d":"H","m":["A sturdy type of footwear","To start up a computer"]},{"w":"ARTICULATE","t":"D","d":"V","m":["Able to express ideas fluently","To pronounce words clearly"]},{"w":"CLEAVE","t":"D","d":"V","m":["To split or sever","To cling or adhere closely"]},{"w":"SANCTION","t":"D","d":"V","m":["Official permission or approval","A penalty imposed for breaking a rule"]},{"w":"OVERLOOK","t":"D","d":"V","m":["To fail to notice","To have a view from above"]},{"w":"CUSTOM","t":"D","d":"V","m":["A traditional practice or behavior","Made to individual order"]},{"w":"BOUND","t":"D","d":"V","m":["Headed in a particular direction","To leap or spring"]},{"w":"SOW","t":"D","d":"V","m":["To plant seeds in the ground","An adult female pig"]},{"w":"PRUNE","t":"D","d":"V","m":["A dried plum","To trim branches from a tree or bush"]},{"w":"BASE","t":"D","d":"V","m":["The bottom support of something","Morally low or without principles"]},{"w":"SAGE","t":"D","d":"V","m":["A wise person","An aromatic herb used in cooking"]},{"w":"YIELD","t":"D","d":"V","m":["To produce or provide a return","To give way to another"]},{"w":"POLE","t":"D","d":"V","m":["A long slender rounded piece of wood or metal","Either extremity of Earth's axis"]},{"w":"MOOR","t":"D","d":"V","m":["An open area of uncultivated upland","To secure a boat with ropes"]},{"w":"FAWN","t":"D","d":"V","m":["A young deer","To seek favor by flattering"]},{"w":"WAKE","t":"D","d":"V","m":["To stop sleeping","A gathering held after a funeral"]},{"w":"SQUASH","t":"D","d":"V","m":["A gourd-like vegetable","To crush or squeeze into a flat shape"]},{"w":"RAIL","t":"D","d":"V","m":["A bar forming part of a fence or barrier","To complain or protest strongly"]},{"w":"BLUFF","t":"D","d":"V","m":["A steep cliff or bank","To deceive by pretending strength"]},{"w":"QUARRY","t":"D","d":"V","m":["An open pit for extracting stone","An animal being hunted"]},{"w":"GORGE","t":"D","d":"V","m":["A narrow steep-sided valley","To eat greedily"]},{"w":"PITCH","t":"Q","d":"M","m":["To throw","Sound frequency","A sales presentation","A sports field"]},{"w":"RELAY","t":"D","d":"V","m":["A race between teams where each member runs part of the distance","To pass along information or a message"]},{"w":"MORTAR","t":"D","d":"V","m":["A mixture used to bind bricks","A bowl in which substances are ground with a pestle"]},{"w":"STOCK","t":"Q","d":"M","m":["A supply of goods","Company shares","Soup base liquid","Standard and regular"]},{"w":"BUCKLE","t":"D","d":"M","m":["A clasp for fastening a belt or strap","To bend or collapse under pressure"]},{"w":"BUTTER","t":"D","d":"M","m":["A dairy spread","To flatter someone excessively"]},{"w":"CAP","t":"D","d":"M","m":["A type of hat","An upper limit on something"]},{"w":"CHARGE","t":"Q","d":"M","m":["To ask a price","To rush forward","To supply electricity","A criminal accusation"]},{"w":"COAT","t":"D","d":"M","m":["An outer garment worn for warmth","A layer of paint or covering"]},{"w":"COOK","t":"D","d":"M","m":["A person who prepares food","To prepare food by heating"]},{"w":"COOL","t":"D","d":"M","m":["Moderately cold in temperature","Calm and composed under pressure"]},{"w":"COPY","t":"D","d":"M","m":["A duplicate of something","To imitate or reproduce"]},{"w":"CORK","t":"D","d":"M","m":["Bark material used as a bottle stopper","A city in southern Ireland"]},{"w":"CORNER","t":"D","d":"M","m":["The point where two lines or walls meet","To trap in a difficult position"]},{"w":"COURSE","t":"D","d":"M","m":["A series of lessons or lectures","The path or direction of movement"]},{"w":"COURT","t":"Q","d":"M","m":["A legal venue","A sports area","A royal residence","To seek favor"]},{"w":"COVER","t":"Q","d":"M","m":["A protective layer","To report on","A song version","To be sufficient"]},{"w":"CRIB","t":"D","d":"M","m":["A baby's bed with high sides","To copy dishonestly"]},{"w":"CROWN","t":"Q","d":"M","m":["A royal headdress","The top of the head","To declare champion","A dental cap"]},{"w":"CUE","t":"D","d":"M","m":["A signal to begin or act","A long stick used in billiards"]},{"w":"DASH","t":"D","d":"M","m":["To run or move quickly","A small amount added"]},{"w":"DEGREE","t":"D","d":"M","m":["A unit of temperature or angle","An academic qualification"]},{"w":"DESERT","t":"D","d":"M","m":["A dry barren area of land","To abandon or leave behind"]},{"w":"DOCK","t":"T","d":"M","m":["A platform for loading ships","To deduct from wages","The area in court for the accused"]},{"w":"DRIVE","t":"D","d":"M","m":["To operate a vehicle","A strong urge or motivation"]},{"w":"EDGE","t":"D","d":"M","m":["The outer boundary of something","A slight advantage"]},{"w":"EXIT","t":"D","d":"M","m":["A way out of a building","To leave a place"]},{"w":"FACE","t":"Q","d":"M","m":["The front of the head","To confront","A geometric surface","A clock display"]},{"w":"FIRE","t":"Q","d":"M","m":["Flame and heat","To dismiss","To shoot","To inspire"]},{"w":"FIT","t":"D","d":"M","m":["In good physical condition","To be the right size or shape"]},{"w":"FIX","t":"D","d":"M","m":["To repair something broken","A difficult or awkward situation"]},{"w":"FLOOR","t":"D","d":"M","m":["The lower surface of a room","To surprise or shock someone completely"]},{"w":"FLUSH","t":"T","d":"M","m":["To cleanse with a rush of water","Level and even with a surface","A reddening of the face"]},{"w":"FORK","t":"Q","d":"M","m":["An eating utensil","Where a road divides","To split into branches","To pay reluctantly"]},{"w":"FRAME","t":"Q","d":"M","m":["A picture border","A body structure","To falsely incriminate","A single image in film"]},{"w":"FROST","t":"D","d":"M","m":["A thin layer of ice crystals","To decorate a cake with icing"]},{"w":"GAME","t":"Q","d":"M","m":["A competitive activity","Wild hunted animals","Willing and ready","A strategic scheme"]},{"w":"GLASS","t":"T","d":"E","m":["A transparent material","A drinking vessel","A mirror"]},{"w":"GRADE","t":"D","d":"M","m":["A level or rank in school","The quality or standard of something"]},{"w":"GRANT","t":"D","d":"M","m":["A sum of money given for a purpose","To give or allow something formally"]},{"w":"GRATE","t":"D","d":"M","m":["A framework of metal bars","To shred food into small pieces"]},{"w":"GROUND","t":"Q","d":"M","m":["The earth's surface","Past tense of grind","To restrict from going out","The basis for something"]},{"w":"GUARD","t":"Q","d":"M","m":["A protective person","To protect","A sports position","A protective device"]},{"w":"GUIDE","t":"D","d":"M","m":["A person who shows the way","To direct or lead along a path"]},{"w":"HATCH","t":"D","d":"M","m":["A door in a floor or ceiling","To emerge from an egg"]},{"w":"HEAD","t":"Q","d":"M","m":["The upper body part","A leader","To move toward","The top of a nail"]},{"w":"HOLD","t":"D","d":"M","m":["To grasp in one's hands","The cargo area of a ship or aircraft"]},{"w":"HOOK","t":"D","d":"M","m":["A curved piece of metal for catching","To catch or attach with a hook"]},{"w":"JOINT","t":"D","d":"M","m":["A place where bones connect","Shared by two or more people"]},{"w":"LAUNCH","t":"D","d":"M","m":["To send a vessel into water or space","The start of a new product or venture"]},{"w":"LEVEL","t":"D","d":"M","m":["A position on a scale or in a hierarchy","Flat and even with no slope"]},{"w":"LIME","t":"D","d":"M","m":["A green citrus fruit","A calcium-based substance used in building"]},{"w":"LIST","t":"D","d":"M","m":["A series of items written down","To lean to one side like a ship"]},{"w":"LOAF","t":"D","d":"M","m":["A quantity of bread baked in one piece","To idle or spend time doing nothing"]},{"w":"MAIL","t":"D","d":"M","m":["Letters and packages sent by post","Armor made of interlocking metal rings"]},{"w":"MAJOR","t":"D","d":"M","m":["Greater in importance or rank","A military rank above captain"]},{"w":"MARK","t":"D","d":"M","m":["A visible impression or stain","A unit of currency formerly used in Germany"]},{"w":"MISS","t":"D","d":"M","m":["To fail to hit or catch","A title for an unmarried woman"]},{"w":"MOUNT","t":"D","d":"M","m":["A mountain or hill","To climb up or get on top of"]},{"w":"MUTE","t":"D","d":"M","m":["Unable or unwilling to speak","A device that softens an instrument's sound"]},{"w":"PACK","t":"Q","d":"M","m":["A carrying bag","A group of animals","To fill tightly","A product bundle"]},{"w":"PICK","t":"D","d":"M","m":["To choose or select","A tool for breaking ground"]},{"w":"PILE","t":"D","d":"M","m":["A heap of things stacked up","A heavy beam driven into the ground"]},{"w":"PILOT","t":"T","d":"M","m":["A person who flies aircraft","A trial or test version","To navigate or guide"]},{"w":"PINE","t":"D","d":"M","m":["An evergreen tree with needle-like leaves","To yearn or long for something deeply"]},{"w":"PLANT","t":"Q","d":"M","m":["A living organism in soil","A factory","To place seeds","To hide evidence"]},{"w":"PLATE","t":"D","d":"M","m":["A flat dish for serving food","A thin flat sheet of metal or glass"]},{"w":"PLUG","t":"D","d":"M","m":["A device for connecting to an electrical socket","To promote or advertise something"]},{"w":"PLUM","t":"D","d":"M","m":["A sweet round purple fruit","Highly desirable or valuable"]},{"w":"POP","t":"D","d":"M","m":["A short explosive sound","A genre of popular music"]},{"w":"PORT","t":"T","d":"M","m":["A harbor for ships","A sweet fortified wine","The left side of a ship"]},{"w":"POT","t":"T","d":"M","m":["A container for cooking","The total money wagered","To plant in a container"]},{"w":"PRIME","t":"D","d":"M","m":["Of the highest quality or importance","To prepare something for use"]},{"w":"PUMP","t":"D","d":"M","m":["A device for moving liquid or air","A flat lightweight shoe"]},{"w":"PUNCH","t":"D","d":"M","m":["To strike with the fist","A fruity mixed drink"]},{"w":"QUARTER","t":"D","d":"M","m":["One fourth of something","A district or area of a city"]},{"w":"QUILL","t":"D","d":"M","m":["A writing pen made from a feather","A sharp spine on a porcupine"]},{"w":"RAFT","t":"D","d":"M","m":["A flat floating structure","A large number of things"]},{"w":"RANK","t":"D","d":"M","m":["A position in a hierarchy","Having a very unpleasant smell"]},{"w":"REEL","t":"D","d":"M","m":["A cylinder on which thread is wound","To stagger or feel dizzy"]},{"w":"RENT","t":"D","d":"M","m":["Payment for using property","A large tear in fabric"]},{"w":"ROSE","t":"D","d":"M","m":["A flowering shrub with thorns","Past tense of rise"]},{"w":"SCHOOL","t":"D","d":"M","m":["A place of learning","A group of fish swimming together"]},{"w":"SEED","t":"D","d":"M","m":["The reproductive part of a plant","A ranked player in a tournament"]},{"w":"SETTLE","t":"D","d":"M","m":["To resolve a dispute","To establish a home in a new place"]},{"w":"SHADE","t":"D","d":"M","m":["An area sheltered from direct sunlight","A slight variation of a color"]},{"w":"SHIFT","t":"D","d":"M","m":["To move or change position","A period of work time"]},{"w":"SHOW","t":"D","d":"M","m":["A performance or exhibition","To display or make visible"]},{"w":"SNAP","t":"D","d":"M","m":["To break suddenly with a sharp sound","A quick photograph"]},{"w":"SOUND","t":"D","d":"M","m":["Vibrations heard through the ear","In good condition; reliable"]},{"w":"STAGE","t":"Q","d":"M","m":["A performance platform","A process phase","To organize an event","A journey segment"]},{"w":"STAND","t":"D","d":"M","m":["To be on one's feet upright","A small booth for selling goods"]},{"w":"STATE","t":"Q","d":"M","m":["A condition","A political region","To express clearly","Formal and ceremonial"]},{"w":"STAY","t":"D","d":"M","m":["To remain in a place","A period of living somewhere temporarily"]},{"w":"STEM","t":"D","d":"M","m":["The main body of a plant","To stop or restrict the flow of"]},{"w":"STILL","t":"D","d":"M","m":["Not moving; calm","Up to and including the present time"]},{"w":"STOP","t":"D","d":"M","m":["To cease movement or activity","A place where a bus or train halts"]},{"w":"STRAIN","t":"D","d":"M","m":["To exert effort beyond comfort","A particular breed or variety"]},{"w":"STRIKE","t":"Q","d":"M","m":["To hit","A work stoppage","A missed swing","To discover"]},{"w":"STRIP","t":"D","d":"M","m":["A long narrow piece","To remove covering or clothing"]},{"w":"STROKE","t":"D","d":"M","m":["A movement of the hand or brush","A sudden medical condition in the brain"]},{"w":"SWING","t":"D","d":"M","m":["A seat suspended for swaying back and forth","To move in a curving arc"]},{"w":"TICK","t":"D","d":"M","m":["A blood-sucking parasite","A small check mark"]},{"w":"TOLL","t":"D","d":"M","m":["A fee paid for using a road or bridge","The number of deaths or casualties"]},{"w":"TOP","t":"D","d":"M","m":["The highest point of something","A spinning toy"]},{"w":"TUBE","t":"D","d":"M","m":["A hollow cylinder","The underground railway in London"]},{"w":"TURN","t":"D","d":"M","m":["To rotate or change direction","An opportunity to do something in sequence"]},{"w":"VAULT","t":"D","d":"M","m":["A secure room for valuables","To jump over something using hands or a pole"]},{"w":"WEB","t":"D","d":"M","m":["A network spun by a spider","The World Wide Web"]},{"w":"WEDGE","t":"D","d":"M","m":["A piece of wood or metal thick at one end","To force into a narrow space"]},{"w":"BLIGHT","t":"D","d":"H","m":["A plant disease causing withering","Something that impairs or destroys"]},{"w":"BROKER","t":"D","d":"H","m":["An agent arranging transactions","To arrange or negotiate a deal"]},{"w":"BUFFER","t":"D","d":"H","m":["A person or thing that reduces shock","A temporary data storage area in computing"]},{"w":"CANON","t":"D","d":"H","m":["An accepted rule or principle","A type of musical composition in rounds"]},{"w":"CAVALIER","t":"D","d":"V","m":["Showing a lack of proper concern","A mounted soldier or knight"]},{"w":"CEDE","t":"D","d":"V","m":["To give up power or territory","To yield or surrender"]},{"w":"CHAMPION","t":"D","d":"H","m":["A winner of a competition","To support or defend a cause"]},{"w":"CIPHER","t":"D","d":"V","m":["A code or system of encryption","A person or thing of no importance"]},{"w":"COMPROMISE","t":"D","d":"H","m":["An agreement reached by mutual concession","To weaken or damage"]},{"w":"CONSOLE","t":"T","d":"M","m":["A gaming or control panel","To comfort someone in grief","A cabinet or table"]},{"w":"CONTRACT","t":"T","d":"M","m":["A legal agreement","To shrink or tighten","To acquire or catch"]},{"w":"CONVERT","t":"D","d":"H","m":["To change from one form to another","A person who has changed beliefs"]},{"w":"CREDIT","t":"D","d":"H","m":["The ability to borrow money","Recognition or praise"]},{"w":"CULTURE","t":"D","d":"H","m":["The arts and customs of a society","The growing of organisms in a lab"]},{"w":"DECLINE","t":"D","d":"H","m":["To politely refuse","A gradual decrease or deterioration"]},{"w":"ECONOMY","t":"D","d":"H","m":["The system of producing and consuming goods","Careful management of resources"]},{"w":"ELABORATE","t":"D","d":"H","m":["Involving many details or complex","To add more detail to an explanation"]},{"w":"ENDURE","t":"D","d":"H","m":["To suffer through patiently","To last or remain in existence"]},{"w":"ENGAGE","t":"D","d":"H","m":["To participate or become involved","To hire or employ someone"]},{"w":"EXECUTE","t":"D","d":"H","m":["To carry out a plan or task","To put to death as legal punishment"]},{"w":"EXERCISE","t":"D","d":"H","m":["Physical activity for fitness","To use or apply a right or power"]},{"w":"FACULTY","t":"D","d":"H","m":["The teaching staff of a school","An inherent mental or physical ability"]},{"w":"FIELD","t":"D","d":"H","m":["An open area of land","An area of study or expertise"]},{"w":"FIRM","t":"D","d":"H","m":["A business or company","Solid and unyielding to pressure"]},{"w":"FOSTER","t":"D","d":"H","m":["To encourage the development of","Involving temporary care of a child"]},{"w":"FOUNDATION","t":"D","d":"H","m":["The base on which a building stands","An organization established to fund causes"]},{"w":"FRONT","t":"T","d":"M","m":["The forward-facing part","A weather boundary","A false appearance"]},{"w":"FUNCTION","t":"D","d":"H","m":["The purpose of something","A social gathering or ceremony"]},{"w":"HEDGE","t":"D","d":"H","m":["A row of bushes forming a boundary","To avoid committing to a direct answer"]},{"w":"HOST","t":"T","d":"M","m":["Someone who entertains guests","A large number of things","An organism a parasite lives on"]},{"w":"INDUSTRY","t":"D","d":"H","m":["Economic activity involving manufacturing","Hard work and diligence"]},{"w":"LAY","t":"D","d":"H","m":["To put something down carefully","Past tense of lie (to recline)"]},{"w":"LEAGUE","t":"D","d":"H","m":["A group of sports teams competing","A unit of distance (about three miles)"]},{"w":"LEVY","t":"D","d":"V","m":["To impose a tax or fine","An amount of tax imposed"]},{"w":"LIBERAL","t":"D","d":"H","m":["Open to new ideas and willing to change","Given or giving generously"]},{"w":"LICENSE","t":"D","d":"H","m":["Official permission to do something","Freedom to deviate from rules"]},{"w":"LOBE","t":"D","d":"H","m":["The soft lower part of the ear","A rounded part of an organ like the brain"]},{"w":"MANDATE","t":"D","d":"V","m":["An official order or command","The authority granted by voters"]},{"w":"MEDIUM","t":"D","d":"H","m":["An intermediate size or degree","A means of communication"]},{"w":"MERCURY","t":"D","d":"H","m":["A liquid metallic element","The planet closest to the sun"]},{"w":"MOVEMENT","t":"D","d":"H","m":["The act of moving","A group working toward a shared goal"]},{"w":"MUSTER","t":"D","d":"H","m":["To assemble troops or resources","To summon up courage or strength"]},{"w":"OBJECTIVE","t":"D","d":"H","m":["A goal or aim","Based on facts rather than feelings"]},{"w":"PASSAGE","t":"D","d":"H","m":["A corridor or hallway","A section of text or music"]},{"w":"PATRON","t":"D","d":"H","m":["A customer of a shop or restaurant","A person who supports an artist or cause"]},{"w":"PETITION","t":"D","d":"H","m":["A formal written request signed by many","To make a formal request"]},{"w":"PLATFORM","t":"D","d":"H","m":["A raised flat structure to stand on","A set of political principles"]},{"w":"POLICY","t":"D","d":"H","m":["A plan of action adopted by a group","An insurance contract"]},{"w":"PRACTICE","t":"D","d":"H","m":["Repeated exercise to gain skill","The business of a doctor or lawyer"]},{"w":"PRESERVE","t":"D","d":"H","m":["To maintain in its original state","A sweet spread made from fruit"]},{"w":"PROFILE","t":"D","d":"H","m":["The outline of a face from the side","A description of a person's background"]},{"w":"PROSPECT","t":"D","d":"H","m":["The possibility of future success","To search for mineral deposits"]},{"w":"RADICAL","t":"D","d":"V","m":["Relating to fundamental change","A root or base in mathematics or chemistry"]},{"w":"RALLY","t":"D","d":"H","m":["A large public gathering","To recover strength or spirits"]},{"w":"REFINE","t":"D","d":"H","m":["To purify or improve a substance","To improve by making small changes"]},{"w":"REFLECT","t":"D","d":"H","m":["To throw back light or heat","To think deeply or carefully"]},{"w":"REGISTER","t":"D","d":"H","m":["An official list or record","To enroll or record formally"]},{"w":"RELIEF","t":"D","d":"H","m":["A feeling of reassurance after worry","A design raised from a flat surface"]},{"w":"REVOLUTION","t":"D","d":"H","m":["A forcible overthrow of a government","One complete orbit or rotation"]},{"w":"RIG","t":"D","d":"H","m":["A large truck or vehicle","To dishonestly arrange a result"]},{"w":"SAMPLE","t":"T","d":"M","m":["A small representative portion","To try a small amount of","A short extract of music"]},{"w":"SCREEN","t":"D","d":"H","m":["A flat surface for displaying images","To test or examine for a condition"]},{"w":"SPUR","t":"D","d":"H","m":["A pointed device worn on a rider's heel","To encourage or stimulate action"]},{"w":"STRAND","t":"D","d":"H","m":["A thin thread or fiber","To leave someone in a difficult situation"]},{"w":"SUBJECT","t":"D","d":"H","m":["A topic being discussed or studied","A person under the rule of a monarch"]},{"w":"SUPPLEMENT","t":"D","d":"H","m":["Something added to complete or enhance","An additional section of a newspaper"]},{"w":"SUSPEND","t":"D","d":"H","m":["To temporarily prevent from continuing","To hang from above"]},{"w":"WARRANT","t":"D","d":"H","m":["A document authorizing an action like an arrest","To justify or call for"]},{"w":"WEATHER","t":"D","d":"H","m":["Atmospheric conditions like rain or sun","To withstand or survive something difficult"]},{"w":"RUN","t":"Q","d":"M","m":["To move swiftly on foot","To operate or manage","A continuous sequence","A tear in stockings"]},{"w":"BOARD","t":"Q","d":"M","m":["A flat piece of wood","To get on a vehicle","A managing group","Meals provided for payment"]},{"w":"POINT","t":"Q","d":"E","m":["A sharp tip","A detail or argument","A unit of scoring","To aim a finger"]},{"w":"TIE","t":"T","d":"E","m":["A piece of neckwear","To fasten with string or rope","An equal score in a competition"]},{"w":"FAIR","t":"Q","d":"M","m":["Just and impartial","A carnival","Moderately good","Light in complexion"]},{"w":"FINE","t":"Q","d":"M","m":["High quality","A monetary penalty","Thin or delicate","Satisfactory"]},{"w":"FALL","t":"Q","d":"E","m":["To drop downward","The autumn season","A decrease in value","A waterfall"]},{"w":"SET","t":"Q","d":"M","m":["To place in a specific position","A collection of related items","To go below the horizon","A group of games in tennis"]},{"w":"CASE","t":"Q","d":"M","m":["An instance or example","A container or covering","A legal matter in court","A form of a letter"]},{"w":"ROUND","t":"Q","d":"M","m":["Circular","Drinks for everyone","A competition stage","Ammunition"]},{"w":"BREAK","t":"T","d":"M","m":["To shatter into pieces","A pause or rest","A fortunate opportunity"]},{"w":"BRIDGE","t":"T","d":"M","m":["A structure over water or a road","A card game for four players","The upper bony ridge of the nose"]},{"w":"DRAW","t":"T","d":"M","m":["To make a picture with a pencil","To pull or drag something","A game that ends with equal scores"]},{"w":"DRESS","t":"T","d":"M","m":["A one-piece garment for women","To put on clothes","To clean and prepare food"]},{"w":"SPIRIT","t":"T","d":"M","m":["The non-physical part of a person","A ghost or supernatural being","An alcoholic drink"]},{"w":"ACCOUNT","t":"T","d":"M","m":["A record of financial transactions","A description or report of events","To explain or justify"]},{"w":"BAND","t":"T","d":"M","m":["A musical group","A strip of material","A range of frequencies"]},{"w":"BLOW","t":"T","d":"M","m":["A hard hit or strike","To push air out of the mouth","A sudden shock or disappointment"]},{"w":"BOX","t":"T","d":"M","m":["A container with flat sides","To fight with fists as a sport","A small enclosed area in a theater"]},{"w":"CARD","t":"T","d":"M","m":["A piece of stiff paper for messages","A small plastic payment device","An amusing or eccentric person"]},{"w":"COMPACT","t":"T","d":"M","m":["Small and efficiently designed","A small case for face powder","A formal agreement or contract"]},{"w":"DISPATCH","t":"T","d":"H","m":["To send something on its way","Prompt efficiency","A written message sent in haste"]},{"w":"EXHAUST","t":"T","d":"H","m":["To use up completely","To tire out thoroughly","Waste gases emitted from an engine"]},{"w":"EXPLOIT","t":"T","d":"H","m":["To take unfair advantage of","To make productive use of","A bold or daring achievement"]},{"w":"EXTRACT","t":"T","d":"H","m":["To remove or pull out","A concentrated preparation of a substance","A passage taken from a text"]},{"w":"RESOLVE","t":"T","d":"H","m":["To find a solution to a problem","Firm determination","To decide firmly on a course of action"]},{"w":"RETREAT","t":"T","d":"H","m":["To withdraw from a position","A quiet and peaceful place","A period of seclusion for reflection"]},{"w":"RUST","t":"T","d":"H","m":["A reddish-brown coating on iron","To deteriorate from disuse","A reddish-brown color"]},{"w":"WAGE","t":"T","d":"H","m":["Payment for work","To carry on or conduct","To bet or gamble"]},{"w":"ANCHOR","t":"T","d":"M","m":["A heavy device to moor a ship","A news presenter on TV","To secure or fasten firmly"]},{"w":"APPEAL","t":"T","d":"M","m":["An earnest request for help","Attractiveness or charm","To challenge a legal decision"]},{"w":"APPLICATION","t":"T","d":"M","m":["A formal written request","A software program","The act of putting something to use"]},{"w":"ARCH","t":"T","d":"M","m":["A curved structure in architecture","The curved part of the foot","Chief or principal"]},{"w":"ARM","t":"T","d":"M","m":["The upper limb of the body","To supply with weapons","A branch of an organization"]},{"w":"ATMOSPHERE","t":"T","d":"H","m":["The gases surrounding Earth","The mood or feeling of a place","A unit of pressure"]},{"w":"BAIL","t":"T","d":"M","m":["Money paid for temporary release from jail","To scoop water out of a boat","To abandon or leave suddenly"]},{"w":"BALANCE","t":"T","d":"M","m":["Stability of body or object","The remainder of an amount owed","A device for weighing"]},{"w":"BARREL","t":"T","d":"M","m":["A cylindrical container","The tube of a gun","To move at high speed"]},{"w":"BASIN","t":"T","d":"M","m":["A bowl for washing","An area of land drained by a river","A sheltered area of water for boats"]},{"w":"BEAT","t":"T","d":"M","m":["To strike repeatedly","To defeat in a competition","The rhythmic pulse of music"]},{"w":"BED","t":"T","d":"E","m":["A piece of furniture for sleeping","An area of ground for planting","The bottom of a river or sea"]},{"w":"BELT","t":"T","d":"M","m":["A strip worn around the waist","A geographic region or zone","To hit hard"]},{"w":"BEND","t":"T","d":"M","m":["A curve in a road or river","To curve or flex something","A type of decompression sickness"]},{"w":"BERRY","t":"T","d":"E","m":["A small round fruit","A type of fish egg","To search for berries"]},{"w":"BIT","t":"T","d":"E","m":["A small piece or amount","The metal mouthpiece of a bridle","Past tense of bite"]},{"w":"BLADE","t":"T","d":"M","m":["The flat cutting part of a knife","A leaf of grass","The flat part of an oar or propeller"]},{"w":"BLANKET","t":"T","d":"M","m":["A covering for warmth on a bed","A thick layer covering an area","Applying to all cases without exception"]},{"w":"BLAST","t":"T","d":"M","m":["A strong gust of air or wind","An explosion","To have a great time informally"]},{"w":"BLAZE","t":"T","d":"M","m":["A large fierce fire","A bright display of light or color","To mark a trail"]},{"w":"BLIND","t":"T","d":"M","m":["Unable to see","A window covering","A hiding place for hunters"]},{"w":"BOND","t":"T","d":"M","m":["An emotional connection between people","A financial investment certificate","To join things securely together"]},{"w":"BOOK","t":"T","d":"E","m":["A written or printed work","To reserve or arrange in advance","To officially record a charge"]},{"w":"BOTTOM","t":"T","d":"E","m":["The lowest part of something","The buttocks","To reach the lowest point"]},{"w":"BREATH","t":"T","d":"E","m":["Air taken into the lungs","A slight movement of air","A very brief moment"]},{"w":"BRUSH","t":"T","d":"M","m":["A tool with bristles for cleaning or painting","A brief encounter","Light vegetation or undergrowth"]},{"w":"BUCK","t":"T","d":"M","m":["A male deer","A dollar in slang","To resist or oppose"]},{"w":"BUG","t":"T","d":"M","m":["A small insect","A flaw in computer software","To secretly listen with a hidden device"]},{"w":"BULB","t":"T","d":"E","m":["A glass globe that produces light","The rounded underground part of a plant","A rounded swelling at the end of something"]},{"w":"BURN","t":"T","d":"M","m":["To be on fire or feel heat","An injury caused by heat","To record data onto a disc"]},{"w":"BUST","t":"T","d":"M","m":["A sculpture of the head and shoulders","To break or smash","A police raid or arrest"]},{"w":"BUTT","t":"T","d":"M","m":["The thicker end of something","The target of jokes or criticism","To push with the head"]},{"w":"CABIN","t":"T","d":"M","m":["A small wooden house","A room on a ship","The passenger area of an aircraft"]},{"w":"CAKE","t":"T","d":"E","m":["A sweet baked dessert","A flat compact mass","To cover with a thick layer"]},{"w":"CAMPAIGN","t":"T","d":"M","m":["A series of military operations","An organized effort to achieve a goal","To work toward a particular goal"]},{"w":"CANAL","t":"T","d":"M","m":["An artificial waterway","A tube-like passage in the body","A channel on the surface of Mars"]},{"w":"CAPE","t":"T","d":"M","m":["A sleeveless cloak","A piece of land jutting into the sea","To skip and frolic"]},{"w":"CATCH","t":"T","d":"E","m":["To capture or grab","A device for fastening a door or lid","A hidden drawback"]},{"w":"CEILING","t":"T","d":"M","m":["The overhead surface of a room","An upper limit on prices or wages","The maximum altitude of an aircraft"]},{"w":"CHAIN","t":"T","d":"M","m":["A series of connected metal links","A group of stores under one brand","A series of connected events"]},{"w":"CHAMBER","t":"T","d":"H","m":["A room used for a particular purpose","An enclosed space in the body or machine","A compartment in a firearm"]},{"w":"CHOP","t":"T","d":"M","m":["To cut with a sharp tool","A cut of meat on the bone","A short sharp wave"]},{"w":"CIRCUIT","t":"T","d":"H","m":["A complete path for electric current","A regular journey around a territory","A series of exercises done in rotation"]},{"w":"CLAW","t":"T","d":"E","m":["A sharp curved nail on an animal","The pincer of a crab or lobster","To scratch or tear with claws"]},{"w":"CLAY","t":"T","d":"M","m":["A type of earth used for pottery","A tennis court surface","A type of pigeon target"]},{"w":"CLEAR","t":"T","d":"E","m":["Transparent or easy to see through","Free from obstruction","To remove or tidy away"]},{"w":"CLICK","t":"T","d":"E","m":["A short sharp sound","To press a computer mouse button","To suddenly understand something"]},{"w":"CLOUD","t":"T","d":"M","m":["A mass of water vapor in the sky","A network of remote servers","To make unclear or confused"]},{"w":"CLUTCH","t":"T","d":"M","m":["To grasp tightly","A small handbag","The pedal that engages a car's gears"]},{"w":"COIN","t":"T","d":"M","m":["A flat round piece of metal currency","To invent a new word or phrase","The opposite side of a situation"]},{"w":"COLD","t":"T","d":"E","m":["Having a low temperature","A common viral illness","Lacking warmth or friendliness"]},{"w":"COLUMN","t":"T","d":"M","m":["A pillar supporting a building","A vertical section of text","A formation of soldiers or vehicles"]},{"w":"CONCRETE","t":"T","d":"M","m":["A building material","Specific and definite","To solidify or make real"]},{"w":"CONDITION","t":"T","d":"M","m":["The state of something","A requirement or stipulation","To train or accustom"]},{"w":"CORE","t":"T","d":"M","m":["The central part of something","The most important part","To remove the center of a fruit"]},{"w":"CRASH","t":"T","d":"M","m":["A violent collision","A sudden failure of a computer system","To sleep somewhere informally"]},{"w":"CROP","t":"T","d":"M","m":["Plants grown for food","To cut something short","A riding whip"]},{"w":"CRUSH","t":"T","d":"M","m":["To press with force until broken","A brief intense infatuation","A crowd pressed tightly together"]},{"w":"CRYSTAL","t":"T","d":"M","m":["A clear transparent mineral","Fine quality glass","Very clear and obvious"]},{"w":"CURE","t":"T","d":"M","m":["A remedy or treatment for illness","To preserve food by smoking or salting","To solve a problem"]},{"w":"CUT","t":"Q","d":"E","m":["To divide with a blade","A wound","A reduction","A piece of meat"]},{"w":"DAM","t":"T","d":"M","m":["A barrier across a river","The mother of an animal","To block or obstruct"]},{"w":"DEN","t":"T","d":"M","m":["A room for relaxation or study","The shelter of a wild animal","A place of secret activity"]},{"w":"DRUM","t":"T","d":"M","m":["A percussion instrument","A cylindrical container","To tap rhythmically"]},{"w":"DULL","t":"T","d":"M","m":["Not bright or shiny","Not sharp or cutting","Boring or uninteresting"]},{"w":"EAR","t":"T","d":"E","m":["The organ of hearing","A spike of grain on a plant","An ability to appreciate sound"]},{"w":"EVEN","t":"T","d":"E","m":["Flat and smooth","Divisible by two","Equal or balanced"]},{"w":"EYE","t":"T","d":"E","m":["The organ of sight","The hole in a needle","The calm center of a storm"]},{"w":"FAST","t":"T","d":"E","m":["Moving at high speed","To abstain from eating","Firmly fixed or attached"]},{"w":"FILM","t":"T","d":"E","m":["A thin layer or coating","A movie","To record on camera"]},{"w":"FLIGHT","t":"T","d":"M","m":["A journey by air","A set of stairs","The act of fleeing"]},{"w":"FLOAT","t":"T","d":"M","m":["To rest on the surface of a liquid","A decorated platform in a parade","Money kept for making change"]},{"w":"FLOUR","t":"T","d":"E","m":["Ground grain for baking","The fine powder produced by grinding","To dust with flour"]},{"w":"FOLD","t":"T","d":"E","m":["To bend something over on itself","A crease or wrinkle","An enclosure for sheep"]},{"w":"FORM","t":"T","d":"M","m":["A document with spaces for information","The shape or structure of something","To create or establish"]},{"w":"FOUL","t":"T","d":"M","m":["Offensive or disgusting","Against the rules of a game","To make dirty or polluted"]},{"w":"FREE","t":"T","d":"E","m":["Not imprisoned or enslaved","Available without charge","To release or liberate"]},{"w":"GLOW","t":"T","d":"E","m":["A steady light without flame","A warm feeling of satisfaction","To emit steady light"]},{"w":"GRAIN","t":"T","d":"M","m":["Seeds of cereal plants","The texture of wood or stone","A tiny particle"]},{"w":"GRAND","t":"T","d":"M","m":["Impressive in size or scope","A thousand dollars in slang","Highest in rank"]},{"w":"GRIP","t":"T","d":"M","m":["A firm hold on something","A small travel bag","To capture the attention of"]},{"w":"GROSS","t":"T","d":"M","m":["Total before deductions","Disgusting or repulsive","Twelve dozen or 144"]},{"w":"GUT","t":"T","d":"M","m":["The stomach or intestines","The inner parts of something","Courageous or determined"]},{"w":"HABIT","t":"T","d":"M","m":["A regular tendency or practice","Clothing worn by a nun","The typical condition of a plant"]},{"w":"HAIL","t":"T","d":"M","m":["Frozen rain pellets","To call out to get attention","To come from or originate"]},{"w":"HANG","t":"T","d":"E","m":["To suspend from above","To spend time casually","To drape or fall in a certain way"]},{"w":"HARD","t":"T","d":"E","m":["Firm and solid","Requiring great effort","With great force"]},{"w":"HEAT","t":"T","d":"M","m":["High temperature","A preliminary round of a competition","To make something warm"]},{"w":"HEEL","t":"T","d":"M","m":["The back part of the foot","The raised base of a shoe","An untrustworthy person"]},{"w":"HIGHLIGHT","t":"T","d":"M","m":["The most exciting part","To mark text for emphasis","A lighter streak in hair"]},{"w":"HIKE","t":"T","d":"M","m":["A long walk in the countryside","To increase sharply","To pull up clothing"]},{"w":"HIP","t":"T","d":"M","m":["The joint between leg and torso","Trendy and fashionable","The fruit of a rose plant"]},{"w":"HIT","t":"T","d":"E","m":["To strike with force","A successful song or movie","To reach or arrive at"]},{"w":"HOLLOW","t":"T","d":"M","m":["Having an empty space inside","A small valley","Lacking sincerity"]},{"w":"KERNEL","t":"T","d":"H","m":["A seed inside a nut or fruit","The core part of an operating system","The essential part of an idea"]},{"w":"KICK","t":"T","d":"E","m":["To strike with the foot","A thrill or feeling of excitement","The recoil of a gun"]},{"w":"LEAF","t":"T","d":"E","m":["A flat green part of a plant","A page of a book","A hinged section of a table"]},{"w":"LEMON","t":"T","d":"E","m":["A sour yellow citrus fruit","A defective product","A pale yellow color"]},{"w":"LIFT","t":"T","d":"E","m":["To raise to a higher position","A ride in someone's vehicle","An elevator"]},{"w":"LINK","t":"T","d":"M","m":["A connection between things","A ring of a chain","To connect or join"]},{"w":"LODGE","t":"T","d":"M","m":["A small country house","To become firmly stuck","To formally register a complaint"]},{"w":"LOT","t":"T","d":"E","m":["A large amount or number","A piece of land","An item at an auction"]},{"w":"MASTER","t":"T","d":"M","m":["A person with great skill","An original from which copies are made","To become skilled at something"]},{"w":"MEAN","t":"T","d":"M","m":["Unkind or cruel","To intend or signify","An average value"]},{"w":"MESS","t":"T","d":"E","m":["A state of disorder","A place where soldiers eat","To interfere or tamper with"]},{"w":"MILL","t":"T","d":"M","m":["A factory for processing materials","One-tenth of a cent","To move around in a confused way"]},{"w":"MINOR","t":"T","d":"M","m":["Of lesser importance","A person under the legal age","A secondary field of academic study"]},{"w":"NERVE","t":"T","d":"M","m":["A fiber transmitting impulses in the body","Courage or boldness","Audacious rudeness"]},{"w":"NUT","t":"T","d":"E","m":["A hard-shelled fruit","A small metal fastener used with a bolt","A crazy person informally"]},{"w":"OLIVE","t":"T","d":"E","m":["A small oval fruit","A yellowish-green color","An offer of peace"]},{"w":"PEAK","t":"T","d":"M","m":["The top of a mountain","The highest point or level","To reach the maximum"]},{"w":"PLAY","t":"T","d":"E","m":["A theatrical performance","To engage in games or recreation","Movement or flexibility"]},{"w":"POCKET","t":"T","d":"M","m":["A small pouch in clothing","A small isolated area","To take dishonestly"]},{"w":"POWDER","t":"T","d":"M","m":["A fine dry substance of tiny particles","Cosmetic face powder","Fresh fallen snow for skiing"]},{"w":"POWER","t":"T","d":"M","m":["The ability or capacity to do something","Electrical energy","A country with great influence"]},{"w":"MOTION","t":"T","d":"M","m":["The act of moving","A formal proposal at a meeting","To signal with a gesture"]},{"w":"MOULD","t":"T","d":"M","m":["A container for shaping liquid material","A type of fungus","To shape or influence"]},{"w":"MOVE","t":"T","d":"E","m":["To change position","A calculated action or step","To cause strong emotion"]},{"w":"MUZZLE","t":"T","d":"H","m":["The snout of an animal","A guard placed over an animal's mouth","To prevent from speaking freely"]},{"w":"NUMBER","t":"T","d":"E","m":["A mathematical value","A quantity or amount","To assign a figure to"]},{"w":"OPERATION","t":"T","d":"M","m":["A surgical procedure","A planned activity or campaign","The functioning of a machine"]},{"w":"PAD","t":"T","d":"E","m":["A cushion or thick piece of soft material","A block of paper sheets","A person's home informally"]},{"w":"PAN","t":"T","d":"M","m":["A cooking vessel","To criticize harshly","To move a camera horizontally"]},{"w":"PAPER","t":"T","d":"E","m":["Material for writing on","A newspaper","An academic essay or report"]},{"w":"PARTY","t":"T","d":"E","m":["A social gathering","A political organization","A person involved in an agreement"]},{"w":"PEPPER","t":"T","d":"E","m":["A spicy seasoning","A colorful vegetable","To shower with questions or projectiles"]},{"w":"PICTURE","t":"T","d":"E","m":["A visual image or photograph","A movie or film","To imagine or visualize"]},{"w":"PIPE","t":"T","d":"M","m":["A tube for conveying liquid","A device for smoking tobacco","To convey by electronic signal"]},{"w":"PIT","t":"T","d":"M","m":["A large hole in the ground","The stone inside a fruit","An area for servicing race cars"]},{"w":"PLACE","t":"T","d":"E","m":["A particular location","A position in a race or contest","To put something in a specific position"]},{"w":"RATE","t":"T","d":"M","m":["The speed of something","A charge or price","To evaluate or judge quality"]},{"w":"RATTLE","t":"T","d":"E","m":["A baby's toy that makes noise","To make a rapid series of sounds","To unnerve or fluster"]},{"w":"RIDER","t":"T","d":"M","m":["A person who rides a horse or vehicle","An additional clause to a document","A condition or qualification"]},{"w":"RIFLE","t":"T","d":"M","m":["A long-barreled firearm","To search hastily through things","To steal or plunder"]},{"w":"ROUGH","t":"T","d":"M","m":["Having an uneven surface","Approximate but not exact","Violent or turbulent"]},{"w":"RULE","t":"T","d":"E","m":["A regulation or principle","To govern or control","A measuring stick"]},{"w":"RUSH","t":"T","d":"M","m":["To move with urgent speed","A sudden surge of activity","A tall grass growing near water"]},{"w":"SACK","t":"T","d":"M","m":["A large bag","To dismiss from a job","To tackle the quarterback"]},{"w":"SCREW","t":"T","d":"M","m":["A metal fastener with spiral threads","To attach using screws","To cheat or swindle"]},{"w":"SHAPE","t":"T","d":"E","m":["The external form of something","Physical condition or fitness","To form or mold something"]},{"w":"SHEET","t":"T","d":"E","m":["A large piece of cloth for a bed","A flat piece of paper or material","A broad expanse of something"]},{"w":"SILVER","t":"T","d":"M","m":["A precious metallic element","A shiny gray color","Cutlery or tableware"]},{"w":"SPARE","t":"T","d":"M","m":["Extra or surplus","To refrain from harming","Lean or thin in build"]},{"w":"STING","t":"T","d":"M","m":["A wound from an insect","To cause a sharp pain","A police operation to catch criminals"]},{"w":"SUPPLY","t":"T","d":"M","m":["A stock of something available","To provide something needed","School materials"]},{"w":"SURFACE","t":"T","d":"M","m":["The outer layer of something","To come up from underwater","To become apparent"]},{"w":"TAG","t":"T","d":"E","m":["A label attached to something","A children's chasing game","To label or identify"]},{"w":"TARGET","t":"T","d":"M","m":["An object aimed at","A goal or objective","To direct attention toward"]},{"w":"TITLE","t":"T","d":"M","m":["The name of a book or work","A word indicating rank or status","Legal ownership of property"]},{"w":"TOKEN","t":"T","d":"M","m":["A sign or symbol of something","A disk used as currency substitute","Done as a symbolic gesture only"]},{"w":"WARE","t":"T","d":"M","m":["Manufactured goods","Aware or conscious of","Software or hardware"]},{"w":"WIRE","t":"T","d":"M","m":["A thin strand of metal","A telegram","To install electrical wiring"]},{"w":"RIGHT","t":"Q","d":"E","m":["Correct or accurate","The opposite direction of left","A moral or legal entitlement","Immediately or directly"]},{"w":"CHARACTER","t":"Q","d":"M","m":["A person in a story or play","The qualities of a person","A letter or symbol","An eccentric person"]},{"w":"TERM","t":"Q","d":"M","m":["A word or phrase","A fixed period of time","A condition of an agreement","To call or name something"]},{"w":"ALMOND","t":"D","d":"E","m":["A type of nut","An oval shape"]},{"w":"AMBER","t":"D","d":"M","m":["A yellowish fossilized resin","A yellow-orange color"]},{"w":"ANGLE","t":"D","d":"E","m":["The space between two lines meeting at a point","A perspective or approach"]},{"w":"APRON","t":"D","d":"M","m":["A garment worn over clothes while cooking","A hard surface area at an airport"]},{"w":"BADGE","t":"D","d":"E","m":["An emblem worn to show identity","A symbol of achievement"]},{"w":"BATTER","t":"D","d":"E","m":["A mixture for baking","A player at bat in baseball"]},{"w":"BAY","t":"D","d":"M","m":["A body of water partly enclosed by land","A recessed area in a wall or building"]},{"w":"BRACE","t":"D","d":"M","m":["A device that supports","To prepare for impact"]},{"w":"ARROW","t":"D","d":"E","m":["A projectile shot from a bow","A directional symbol"]},{"w":"CHARM","t":"T","d":"E","m":["An attractive quality","A small trinket on a bracelet","To delight or enchant"]},{"w":"CLASS","t":"T","d":"E","m":["A group of students","Elegance and style","A category or division"]},{"w":"LAYER","t":"D","d":"M","m":["A sheet of material over a surface","A hen that produces eggs"]},{"w":"MELT","t":"D","d":"E","m":["To change from solid to liquid","To soften emotionally"]},{"w":"PLASTER","t":"D","d":"M","m":["Material for coating walls","A sticky bandage"]},{"w":"SCENE","t":"T","d":"E","m":["The place where an event occurs","A division of a play or movie","A public display of emotion"]},{"w":"SOCKET","t":"D","d":"M","m":["An electrical outlet","A hollow for a bone to fit"]},{"w":"STITCH","t":"D","d":"M","m":["A loop of thread in sewing","A sharp pain in the side"]},{"w":"WEAVE","t":"D","d":"M","m":["To interlace threads","To move in and out"]},{"w":"WRECK","t":"D","d":"M","m":["A destroyed ship or vehicle","To destroy"]},{"w":"ATTIC","t":"D","d":"H","m":["A space under the roof","Relating to ancient Athens"]},{"w":"BENCH","t":"D","d":"E","m":["A long seat","A judge or magistrate collectively"]},{"w":"BITTER","t":"D","d":"E","m":["Having a sharp taste","Feeling angry or resentful"]},{"w":"BLANK","t":"D","d":"E","m":["Not written on","Showing no emotion"]},{"w":"BLISTER","t":"D","d":"M","m":["A bubble on the skin","A raised bubble on a surface"]},{"w":"BLOOM","t":"D","d":"E","m":["A flower in blossom","A state of health and beauty"]},{"w":"BOIL","t":"D","d":"E","m":["To heat liquid to bubbling","A painful swelling on the skin"]},{"w":"BRAND","t":"D","d":"M","m":["A product's trademark","To mark with a hot iron"]},{"w":"BRIGHT","t":"D","d":"E","m":["Giving off light","Intelligent"]},{"w":"BRONZE","t":"D","d":"M","m":["A metal alloy","A third-place medal"]},{"w":"BROOK","t":"D","d":"M","m":["A small stream","To tolerate"]},{"w":"BULK","t":"D","d":"M","m":["Large size or mass","To increase in size"]},{"w":"CABLE","t":"D","d":"M","m":["A thick wire or rope","A message sent by telegraph"]},{"w":"CALENDAR","t":"D","d":"E","m":["A chart of days and months","A schedule of events"]},{"w":"CALF","t":"T","d":"E","m":["A young cow","The back of the lower leg","Young of other large animals"]},{"w":"CANOPY","t":"D","d":"M","m":["An overhead covering","The uppermost layer of trees"]},{"w":"CARGO","t":"D","d":"M","m":["Goods carried by transport","Loose-fitting trousers with pockets"]},{"w":"CARPET","t":"D","d":"E","m":["A floor covering","To cover thickly"]},{"w":"CATALOG","t":"D","d":"M","m":["A list of items","To classify systematically"]},{"w":"CEMENT","t":"D","d":"M","m":["A building material","To strengthen or make firm"]},{"w":"CHAIR","t":"T","d":"M","m":["A seat with a back and legs","To preside over a meeting","An academic professorship"]},{"w":"CHERRY","t":"T","d":"E","m":["A small red fruit","A deep red color","The best or most desirable"]},{"w":"CHILL","t":"D","d":"E","m":["A feeling of cold","To relax"]},{"w":"CHORUS","t":"D","d":"M","m":["A group of singers","The recurring part of a song"]},{"w":"CLAP","t":"D","d":"E","m":["To strike palms together","A sudden loud sound"]},{"w":"CLEAN","t":"D","d":"E","m":["Free from dirt","Completely or totally"]},{"w":"CLIFF","t":"D","d":"M","m":["A steep rock face","A critical situation"]},{"w":"COLLAR","t":"T","d":"E","m":["The part of a shirt around the neck","To apprehend or catch","A band around an animal's neck"]},{"w":"COMB","t":"D","d":"E","m":["A tool for styling hair","A fleshy crest on a rooster"]},{"w":"COMPLEX","t":"T","d":"M","m":["Having many interconnected parts","A group of related buildings","A psychological condition"]},{"w":"CONTEST","t":"T","d":"M","m":["A competition","To dispute or challenge","To compete for something"]},{"w":"CRICKET","t":"D","d":"E","m":["An insect that chirps","A bat-and-ball sport"]},{"w":"CRUST","t":"D","d":"E","m":["The outer layer of bread","The outer layer of Earth"]},{"w":"CUBE","t":"D","d":"E","m":["A six-sided 3D shape","To cut into small squares"]},{"w":"DART","t":"T","d":"M","m":["A small pointed missile","To move quickly and suddenly","A fold sewn into fabric"]},{"w":"DEEP","t":"D","d":"E","m":["Extending far down","Profound or intense"]},{"w":"DEPOSIT","t":"D","d":"M","m":["Money placed in a bank","A layer of sediment"]},{"w":"DIAMOND","t":"D","d":"E","m":["A precious gemstone","A shape with four equal sides"]},{"w":"DIRECT","t":"D","d":"E","m":["In a straight line","To manage or guide"]},{"w":"DOUBLE","t":"T","d":"E","m":["Twice the amount","A person who looks identical","To fold in half"]},{"w":"DOVE","t":"D","d":"E","m":["A type of pigeon","Past tense of dive"]},{"w":"DRAIN","t":"D","d":"E","m":["A channel for carrying off water","To exhaust energy"]},{"w":"DRIFT","t":"D","d":"E","m":["To be carried by current","A pile of snow or sand"]},{"w":"DRY","t":"T","d":"E","m":["Free from moisture","Humorous in a subtle way","To remove moisture"]},{"w":"DUMP","t":"D","d":"E","m":["A site for waste disposal","To discard carelessly"]},{"w":"DUST","t":"T","d":"E","m":["Fine dry particles","To remove dust from surfaces","To sprinkle with a fine powder"]},{"w":"ELASTIC","t":"D","d":"M","m":["A stretchable material","Able to recover quickly"]},{"w":"FENCE","t":"T","d":"M","m":["A barrier enclosing an area","To fight with swords","To sell stolen goods"]},{"w":"FERN","t":"D","d":"M","m":["A leafy plant","The curved scroll of a violin head"]},{"w":"FLOCK","t":"D","d":"E","m":["A group of birds or sheep","To gather in large numbers"]},{"w":"FOAM","t":"D","d":"E","m":["A mass of small bubbles","To produce froth"]},{"w":"FOCUS","t":"D","d":"E","m":["A center of attention","To adjust for clear vision"]},{"w":"FROG","t":"D","d":"M","m":["An amphibian","A decorative braided fastener on a coat"]},{"w":"FUSE","t":"D","d":"M","m":["A safety device in an electrical circuit","To join together by melting"]},{"w":"GALLERY","t":"D","d":"M","m":["A room for displaying art","The upper floor of a theater"]},{"w":"GEARS","t":"D","d":"E","m":["Toothed wheels in machinery","Equipment or belongings"]},{"w":"GLAZE","t":"D","d":"M","m":["A shiny coating on pottery","To become glassy or dull"]},{"w":"GLOBE","t":"D","d":"E","m":["The Earth","A spherical object"]},{"w":"GRAFT","t":"D","d":"H","m":["A shoot inserted into a plant","Corruption or bribery"]},{"w":"GREEN","t":"D","d":"E","m":["A color","Inexperienced"]},{"w":"HAMPER","t":"D","d":"M","m":["A basket for laundry","To hinder or obstruct"]},{"w":"HAZE","t":"D","d":"M","m":["A slight fog","To bully or harass newcomers"]},{"w":"INDEX","t":"T","d":"M","m":["An alphabetical list in a book","A measure or indicator","The pointer finger"]},{"w":"IVORY","t":"D","d":"M","m":["The hard white material from tusks","A creamy white color"]},{"w":"KNOT","t":"T","d":"M","m":["A fastening made by tying","A unit of speed at sea","A hard mass in wood"]},{"w":"LATCH","t":"D","d":"E","m":["A door fastener","To attach oneself"]},{"w":"LOAD","t":"T","d":"E","m":["A quantity being carried","To fill or pack with cargo","A large amount informally"]},{"w":"MARBLE","t":"T","d":"E","m":["A metamorphic stone","A small glass ball for games","To create a swirled pattern"]},{"w":"MARKET","t":"D","d":"E","m":["A place for buying and selling","The demand for a product"]},{"w":"MIRROR","t":"D","d":"E","m":["A reflective glass surface","To reflect or copy"]},{"w":"MOLD","t":"D","d":"E","m":["A container for shaping","A type of fungus"]},{"w":"MOUTH","t":"T","d":"E","m":["The opening in the face for eating","Where a river meets the sea","To say without sincerity"]},{"w":"MUSCLE","t":"D","d":"M","m":["Body tissue for movement","Power or influence"]},{"w":"MYSTERY","t":"D","d":"E","m":["Something unexplained","A genre of fiction"]},{"w":"NARROW","t":"T","d":"E","m":["Not wide","To reduce in scope","By a very small margin"]},{"w":"NATURE","t":"T","d":"E","m":["The natural world","The basic character of something","A type or kind"]},{"w":"NEEDLE","t":"T","d":"M","m":["A thin pointed sewing tool","A leaf of a pine tree","To tease or provoke"]},{"w":"NEST","t":"T","d":"E","m":["A bird's home","To fit one inside another","A cozy retreat"]},{"w":"NIP","t":"D","d":"E","m":["A small bite","A small drink of spirits"]},{"w":"OAK","t":"D","d":"E","m":["A hardwood tree","Made of oak wood"]},{"w":"PADDLE","t":"T","d":"E","m":["A broad tool for rowing","To wade in shallow water","To spank lightly"]},{"w":"PEEL","t":"D","d":"E","m":["The skin of a fruit","To remove the skin"]},{"w":"POLISH","t":"D","d":"E","m":["A substance for making things shiny","To make smooth and shiny"]},{"w":"RAW","t":"T","d":"E","m":["Uncooked food","Inexperienced or untrained","Exposed and painful"]},{"w":"REEF","t":"D","d":"M","m":["A ridge of rock or coral underwater","To reduce the area of a sail"]},{"w":"REIN","t":"D","d":"M","m":["A strap for controlling a horse","To restrain or control"]},{"w":"RIDGE","t":"D","d":"M","m":["A long narrow hilltop","A raised line on a surface"]},{"w":"ROCKET","t":"T","d":"M","m":["A spacecraft or firework","A salad leaf","To increase rapidly"]},{"w":"SCATTER","t":"D","d":"E","m":["To throw in various directions","To separate and go in different directions"]},{"w":"SEAT","t":"D","d":"E","m":["Something to sit on","A place in a legislative body"]},{"w":"SHELTER","t":"D","d":"E","m":["A place giving protection","To protect from danger"]},{"w":"SHOULDER","t":"D","d":"E","m":["The body part between neck and arm","The edge of a road"]},{"w":"SIREN","t":"D","d":"M","m":["A warning device","An alluring woman"]},{"w":"SLOT","t":"D","d":"E","m":["A narrow opening","A scheduled time or position"]},{"w":"SMART","t":"D","d":"E","m":["Intelligent","Causing a stinging pain"]},{"w":"STORM","t":"D","d":"E","m":["A violent weather event","To attack suddenly"]},{"w":"STRESS","t":"D","d":"E","m":["Mental tension","Emphasis on a syllable"]},{"w":"STUMP","t":"D","d":"E","m":["The base of a cut tree","To puzzle or confuse"]},{"w":"TASTE","t":"D","d":"E","m":["The sense of flavor","A preference or liking"]},{"w":"THREAD","t":"D","d":"E","m":["A thin strand for sewing","A connected series of messages"]},{"w":"TIMBER","t":"D","d":"M","m":["Wood for building","A warning shout when a tree is falling"]},{"w":"TOOL","t":"D","d":"E","m":["A device for doing work","A person used by another"]},{"w":"TREASURE","t":"D","d":"E","m":["Valuable items","To value highly"]},{"w":"VENT","t":"D","d":"E","m":["An opening for air","To express pent-up emotion"]},{"w":"VIEW","t":"D","d":"E","m":["What can be seen","An opinion"]},{"w":"VIOLET","t":"D","d":"E","m":["A small purple flower","A blue-purple color"]},{"w":"WAIST","t":"D","d":"M","m":["The narrow part of the torso","The middle part of a ship"]},{"w":"WAX","t":"D","d":"E","m":["A waxy substance","To increase in size"]},{"w":"WITNESS","t":"D","d":"M","m":["A person who sees an event","To observe something happening"]},{"w":"WRAP","t":"D","d":"E","m":["To cover with material","A tortilla-based sandwich"]}];
+const STORAGE_KEY = 'polywords-content-workflow-v2';
+const API = 'http://localhost:8787/api';
+const PROVIDER_TIMEOUT_MS = 90000;
 
-const TYPE_MAP = { D: "Double", T: "Triple", Q: "Quadruple" };
-const DIFF_MAP = { E: "Easy", M: "Medium", H: "Hard", V: "Very Hard" };
-const ARC_MAP  = { E: "Confidence", M: "Flow", H: "Tension", V: "Climax" };
-
-const BATCH_SIZE = 10;
-const TOTAL_BATCHES = Math.ceil(WORDS.length / BATCH_SIZE);
-const TEST_MODE = true;
-const TEMPERATURE_BY_CREATIVITY = {
-  conservative: 0.45,
-  balanced: 0.75,
-  wild: 1.0,
-};
-const RUN_MODE_LABELS = {
-  test: "Test Batch",
-  specific: "Specific Words",
-  full: "Full Loaded Database",
-};
-
-const sanitizeErrorSummary = (value) => String(value || "")
-  .replace(/x-api-key["':\s]+[^"',}\s]+/gi, "x-api-key: [redacted]")
-  .replace(/authorization["':\s]+bearer\s+[^"',}\s]+/gi, "authorization: Bearer [redacted]")
-  .replace(/anthropic-api-key["':\s]+[^"',}\s]+/gi, "anthropic-api-key: [redacted]")
-  .replace(/sk-ant-[A-Za-z0-9_-]+/g, "[redacted-api-key]")
-  .replace(/sk-[A-Za-z0-9_-]{20,}/g, "[redacted-api-key]")
-  .slice(0, 360);
-
-const classifyGenerationError = (error) => {
-  const raw = sanitizeErrorSummary(error?.message || error);
-  const lower = raw.toLowerCase();
-  let likelyCause = "Generation request failed.";
-
-  if (lower.includes("openai") && (lower.includes("credit") || lower.includes("quota") || lower.includes("billing") || lower.includes("insufficient_quota"))) {
-    likelyCause = "OpenAI credits, quota, or billing appear unavailable.";
-  } else if (lower.includes("openai") && (lower.includes("401") || lower.includes("unauthorized") || lower.includes("invalid api key") || lower.includes("incorrect api key") || lower.includes("missing openai_api_key"))) {
-    likelyCause = "OpenAI API key may be missing or invalid.";
-  } else if (lower.includes("openai") && (lower.includes("429") || lower.includes("rate limit"))) {
-    likelyCause = "OpenAI rate limit hit.";
-  } else if (lower.includes("credit") || lower.includes("billing") || lower.includes("balance")) {
-    likelyCause = "Anthropic credits or billing appear unavailable.";
-  } else if (lower.includes("401") || lower.includes("unauthorized") || lower.includes("missing anthropic_api_key")) {
-    likelyCause = "Anthropic API key may be missing or invalid.";
-  } else if (lower.includes("429") || lower.includes("rate limit")) {
-    likelyCause = "Anthropic rate limit hit.";
-  } else if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("load failed")) {
-    likelyCause = "Local API server may not be running.";
-  } else if (lower.includes("invalid json") || lower.includes("unexpected token") || lower.includes("json.parse")) {
-    likelyCause = "Model returned invalid JSON.";
-  }
-
-  return {
-    title: "Request failed",
-    likelyCause,
-    rawSummary: raw || "No error message was provided.",
-  };
+const REVIEW_LABELS = {
+  realMeaningsTrue: 'Every REAL is legally true',
+  meaningFamiliesDistinct: 'Meaning families are distinct',
+  trapsLegallyWrong: 'Every trap is legally wrong and guilty-close',
+  wordingHuman: 'Wording sounds human',
+  noAnswerLeak: 'No tile leaks the answer',
+  noFakeObjectActing: 'No fake object acting',
+  noRoleTell: 'No wording pattern reveals tile roles',
+  semanticSnapPresent: 'At least one Semantic Snap exists',
+  sourcesVerified: 'Meaning sources were checked',
 };
 
-const MAX_MASK_WORDS = 8;
-const DICTIONARY_FLAT_PHRASES = [
-  "a type of",
-  "one of",
-  "the act of",
-  "the process of",
-  "a person who",
-  "a thing that",
-  "means",
-  "definition of",
-];
-
-function countWords(text) {
-  return String(text || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
-}
-
-function normalize(text) {
-  return String(text || "")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function validateTile(row) {
-  const issues = [];
-  const mask = row["MASK (player reads)"] || "";
-  const normalizedMask = normalize(mask);
-  const normalizedWord = normalize(row.WORD);
-
-  if (!normalizedMask) {
-    issues.push("missing mask");
-  }
-
-  if (countWords(mask) > MAX_MASK_WORDS) {
-    issues.push(`mask over ${MAX_MASK_WORDS} words`);
-  }
-
-  if (normalizedWord && normalizedMask.split(" ").includes(normalizedWord)) {
-    issues.push("mask uses the boss/headword");
-  }
-
-  for (const phrase of DICTIONARY_FLAT_PHRASES) {
-    if (normalizedMask.includes(phrase)) {
-      issues.push(`dictionary-flat phrasing: ${phrase}`);
-    }
-  }
-
-  return issues;
-}
-
-function validateRowsForWord(rows) {
-  const maskCounts = new Map();
-
-  for (const row of rows) {
-    const key = normalize(row["MASK (player reads)"]);
-    if (!key) continue;
-    maskCounts.set(key, (maskCounts.get(key) || 0) + 1);
-  }
-
-  return rows.map(row => {
-    const issues = validateTile(row);
-    const key = normalize(row["MASK (player reads)"]);
-
-    if (key && maskCounts.get(key) > 1) {
-      issues.push("duplicate mask within the same word");
-    }
-
-    return {
-      ...row,
-      "AUDIT STATUS": issues.length ? "REVIEW" : "OK",
-      "AUDIT ISSUES": issues.join("; "),
-    };
-  });
-}
-
-function parseSpecificWordList(text) {
-  return String(text || "")
-    .split(/[,\n]/)
-    .map(w => w.trim())
-    .filter(Boolean);
-}
-
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let field = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (char === '"' && inQuotes && next === '"') {
-      field += '"';
-      i++;
-    } else if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      row.push(field);
-      field = "";
-    } else if ((char === "\n" || char === "\r") && !inQuotes) {
-      if (char === "\r" && next === "\n") i++;
-      row.push(field);
-      if (row.some(cell => cell.trim())) rows.push(row);
-      row = [];
-      field = "";
-    } else {
-      field += char;
-    }
-  }
-
-  row.push(field);
-  if (row.some(cell => cell.trim())) rows.push(row);
-  return rows;
-}
-
-function normalizeHeader(header) {
-  return String(header || "").trim().toLowerCase();
-}
-
-function findHeader(headers, names) {
-  const wanted = names.map(normalizeHeader);
-  return headers.find(header => wanted.includes(normalizeHeader(header)));
-}
-
-function getCell(record, header) {
-  return header ? String(record[header] || "").trim() : "";
-}
-
-function parseWordCsv(text) {
-  const rows = parseCsv(text);
-  if (rows.length < 2) {
-    return { words: [], skipped: rows.length, warnings: ["CSV needs a header row and at least one data row."] };
-  }
-
-  const headers = rows[0].map(header => String(header || "").trim());
-  const wordHeader = findHeader(headers, ["Word", "word", "WORD", "Headword", "headword"]);
-  if (!wordHeader) {
-    return { words: [], skipped: rows.length - 1, warnings: ["CSV needs a Word or Headword column."] };
-  }
-
-  const typeHeader = findHeader(headers, ["Type"]);
-  const themeHeader = findHeader(headers, ["Theme"]);
-  const difficultyHeader = findHeader(headers, ["Difficulty"]);
-  const meaningHeaders = [1, 2, 3, 4].map(i => findHeader(headers, [`Meaning ${i}`]));
-  const exampleHeaders = [1, 2, 3, 4].map(i => findHeader(headers, [`Example ${i}`]));
-  const seen = new Set();
-  const words = [];
-  let skipped = 0;
-
-  for (const cells of rows.slice(1)) {
-    const record = headers.reduce((acc, header, index) => {
-      acc[header] = cells[index] || "";
-      return acc;
-    }, {});
-    const word = getCell(record, wordHeader);
-    const key = word.toUpperCase();
-
-    if (!word || seen.has(key)) {
-      skipped++;
-      continue;
-    }
-
-    seen.add(key);
-    words.push({
-      w: word,
-      type: getCell(record, typeHeader),
-      theme: getCell(record, themeHeader),
-      difficulty: getCell(record, difficultyHeader),
-      meanings: meaningHeaders.map(header => getCell(record, header)).filter(Boolean),
-      examples: exampleHeaders.map(header => getCell(record, header)).filter(Boolean),
-    });
-  }
-
-  return { words, skipped, warnings: [] };
-}
-
-const SYSTEM = `You write tile copy for POLYWORDS, a mobile arcade word game about polysemy. Players swipe tiles UP (real meaning) or RIGHT (trap). Your job is to manufacture brain-glitch moments.
-
-━━━ THE PRODUCT ━━━
-Every tile must create this exact sequence in the player's mind:
-  1. Curiosity — the tile pulls them in
-  2. Recognition search — they hunt for the connection to the word
-  3. Commitment — they make a call
-  4. Instant reveal click — they need to see if they were right
-  5. Desire for another word — "Ohhh."
-Goal: "Ohhh." Not: "Huh?"
-
-━━━ MASK LANGUAGE STANDARD ━━━
-A mask is a playable representation of a real meaning.
-The word is already known. The challenge is meaning recognition.
-
-THE ONE BAR:
-"Wait... what?" → "Oh. Right."
-That half-second is the game. Buy it with indirection.
-
-HOW TO WRITE A MASK:
-DO NOT describe the meaning. EVOKE it from an unexpected angle.
-Think sideways from the meaning — approach it through scene, context, consequence, or association — never head-on.
-
-STRONG masks feel like moments:
-  • situations • memories • snapshots • experiences • narrative fragments
-
-EXAMPLES OF THE RIGHT APPROACH:
-  SPRING (season):     ✗ "One of the four seasons"    ✓ "Opposite of Autumn"
-  SPRING (coil):       ✗ "Metal coil"                 ✓ "Used in cheap mattresses"
-  BARK (tree):         ✗ "Tree's outer covering"      ✓ "Rough tree skin"
-  BARK (dog):          ✗ "Sound a dog makes"          ✓ "Dog's warning"
-  SPRING (water):      ✗ "Natural water source"       ✓ "Bubbles up from the ground"
-
-AVOID:
-  • dictionary definitions • textbook wording • explanations
-  • synonym substitution • clinical or academic voice
-  • anything so obvious it clicks instantly with zero pause
-
-━━━ TRAP LANGUAGE STANDARD ━━━
-A trap is a playable representation of a tempting non-meaning.
-Traps are NOT random. They attract mistakes through:
-  • association • context • common assumptions • cultural connections • semantic proximity
-
-TRAPS must use language semantically adjacent to a real meaning — close enough to blur, not close enough to be right.
-
-EXAMPLES OF THE RIGHT TRAP APPROACH:
-  SPRING (water source): TRAP = "Creeks stream" ✓ (creek is near a spring, not the spring itself)
-  SPRING (water source): TRAP = "Water flow" ✗ (too generic, no specificity, no pull)
-  BARK (tree):           TRAP = "An orange's tough peel" ✓ (fruit skin ≠ bark but lives right next to it)
-  BARK (tree):           TRAP = "A leaf falling" ✗ (random, not proximate)
-
-A trap must be explainable after reveal. If it feels random before AND after reveal, reject it.
-
-━━━ HIDDEN MEANINGS ━━━
-Hidden = the most surprising real meaning that most players never knew.
-Player reaction must be: "I didn't know that." NOT "Nobody would know that."
-Can go beyond the meanings list — add a genuine obscure sense you know is real.
-
-━━━ MEANINGS ━━━
-Use genuinely distinct meaning families only.
-Merge minor variations. Ask: "Would a dictionary give this its own numbered sense?"
-If not, merge it.
-
-━━━ HARD RULES ━━━
-- Target 5-6 words per tile. HARD MAX ${MAX_MASK_WORDS} WORDS PER TILE. Count every single word. Never exceed.
-- Never use the headword inside its own tile
-- No content word repeated across any two tiles for the same word
-- Minimum 3 TRAP tiles per word, from 3 different meaning directions
-- All tile types must sound like the same voice — no trap should be identifiable by tone alone
-
-━━━ QUALITY FILTER ━━━
-REJECT tiles that are: vague • generic • random • definition-heavy • confusing after reveal • auto-solve obvious
-PREFER tiles that are: distinctive • emotional • visual • human • slightly indirect • clear after reveal
-
-━━━ OUTPUT ━━━
-Return ONLY a valid JSON array. No markdown fences. No explanation. Pure JSON only.
-
-[{"w":"WORD","tiles":[
-  {"t":"REAL","sense":"brief meaning label","mask":"tile text max ${MAX_MASK_WORDS} words"},
-  {"t":"HIDDEN","sense":"brief meaning label","mask":"tile text max ${MAX_MASK_WORDS} words"},
-  {"t":"TRAP","mask":"tile text max ${MAX_MASK_WORDS} words","why":"why player reaches for this","pull":"which real meaning this baits"}
-]}]`;
-
-// ─── Component ────────────────────────────────────────────────────────────────
-export default function MaskRewriter() {
-  const [phase, setPhase]       = useState("idle");   // idle | running | paused | done | error
-  const [batchIdx, setBatchIdx] = useState(0);
-  const [results, setResults]   = useState([]);        // flat tile rows
-  const [errors, setErrors]     = useState([]);
-  const [latestError, setLatestError] = useState(null);
-  const [log, setLog]           = useState([]);
-  const [runMode, setRunMode]   = useState("test");    // test | specific | full
-  const [specificWordsText, setSpecificWordsText] = useState("");
-  const [fullConfirmed, setFullConfirmed] = useState(false);
-  const [selectedWords, setSelectedWords] = useState([]);
-  const [activeWords, setActiveWords] = useState(WORDS);
-  const [uploadedFileName, setUploadedFileName] = useState("");
-  const [importWarnings, setImportWarnings] = useState([]);
-  const [creativity, setCreativity] = useState("balanced");
-  const [freshRerun, setFreshRerun] = useState(false);
-  const [mockMode, setMockMode] = useState(false);
-  const [provider, setProvider] = useState("anthropic");
-  const [variationId, setVariationId] = useState("");
-  const [tweakNotes, setTweakNotes] = useState("");
-  const pauseRef = useRef(false);
-  const timerRef = useRef(null);
-  const csvInputRef = useRef(null);
-
-  const addLog = (msg) => setLog(p => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p.slice(0, 49)]);
-
-  const handleCsvImport = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const parsed = parseWordCsv(text);
-
-      if (!parsed.words.length) {
-        const warnings = parsed.warnings.length ? parsed.warnings : ["No valid words found in uploaded CSV."];
-        setImportWarnings(warnings);
-        addLog(`CSV import failed: ${warnings.join(" ")}`);
-        if (csvInputRef.current) csvInputRef.current.value = "";
-        return;
-      }
-
-      setActiveWords(parsed.words);
-      setUploadedFileName(file.name);
-      setImportWarnings([]);
-      setSelectedWords([]);
-      setBatchIdx(0);
-      setFullConfirmed(false);
-      addLog(`CSV loaded: ${parsed.words.length} words active, ${parsed.skipped} rows skipped.`);
-    } catch (error) {
-      const message = `CSV import failed: ${error.message}`;
-      setImportWarnings([message]);
-      addLog(message);
-      if (csvInputRef.current) csvInputRef.current.value = "";
-    }
-  };
-
-  const handleResetWordSource = () => {
-    setActiveWords(WORDS);
-    setUploadedFileName("");
-    setImportWarnings([]);
-    setSelectedWords([]);
-    setBatchIdx(0);
-    setFullConfirmed(false);
-    if (csvInputRef.current) csvInputRef.current.value = "";
-    addLog(`Word source reset to built-in database (${WORDS.length} words).`);
-  };
-
-  const getWordsForRunMode = useCallback(() => {
-    if (runMode === "test") {
-      return { words: activeWords.slice(0, BATCH_SIZE), missing: [], blocked: false };
-    }
-
-    if (runMode === "specific") {
-      const requested = parseSpecificWordList(specificWordsText);
-      const seen = new Set();
-      const words = [];
-      const missing = [];
-
-      for (const raw of requested) {
-        const key = raw.toUpperCase();
-        const match = activeWords.find(entry => entry.w.toUpperCase() === key);
-        if (match && !seen.has(match.w.toUpperCase())) {
-          seen.add(match.w.toUpperCase());
-          words.push(match);
-        } else if (!match) {
-          missing.push(raw);
-        }
-      }
-
-      return { words, missing, blocked: words.length === 0 };
-    }
-
-    return {
-      words: activeWords,
-      missing: [],
-      blocked: !fullConfirmed,
-    };
-  }, [activeWords, runMode, specificWordsText, fullConfirmed]);
-
-  const flattenResult = (wordObj) => {
-    const entry = activeWords.find(x => x.w.toUpperCase() === String(wordObj.w || "").toUpperCase());
-    if (!entry) return [];
-    const type = TYPE_MAP[entry.t] || entry.type || entry.t || "";
-    const diff = DIFF_MAP[entry.d] || entry.difficulty || entry.d || "";
-    const arc  = entry.theme || ARC_MAP[entry.d] || "Flow";
-    return (wordObj.tiles || []).map(tile => ({
-      WORD:             wordObj.w,
-      TYPE:             type,
-      DIFFICULTY:       diff,
-      ARC:              arc,
-      "TILE TYPE":      tile.t === "REAL" ? "✓ REAL" : tile.t === "HIDDEN" ? "✦ HIDDEN" : "✗ TRAP",
-      "MEANING (truth)":tile.sense || "",
-      "MASK (player reads)": tile.mask || "",
-      "WHY TEMPTING":   tile.why || "",
-      "PULL DIRECTION": tile.pull || "",
-    }));
-  };
-
-  const processBatch = useCallback(async (idx, wordsForRun, runVariationId) => {
-    const batch = wordsForRun.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE);
-    const temperature = TEMPERATURE_BY_CREATIVITY[creativity] ?? TEMPERATURE_BY_CREATIVITY.balanced;
-
-    let res;
-    try {
-      res = await fetch("http://localhost:8787/api/rewrite-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          batch,
-          batchIndex: idx + 1,
-          testMode: TEST_MODE,
-          creativity,
-          temperature,
-          freshRerun,
-          mockMode,
-          provider,
-          variationId: runVariationId,
-          tweakNotes,
-        }),
-      });
-    } catch (error) {
-      throw new Error(`Network request failed: ${error.message}`);
-    }
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`API ${res.status}: ${sanitizeErrorSummary(err)}`);
-    }
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (error) {
-      throw new Error(`Invalid JSON response: ${error.message}`);
-    }
-    const parsed = data.words || [];
-    const rows = parsed.flatMap(flattenResult);
-    const groups = rows.reduce((acc, row) => {
-      const key = row.WORD || "";
-      if (!acc.has(key)) acc.set(key, []);
-      acc.get(key).push(row);
-      return acc;
-    }, new Map());
-
-    return [...groups.values()].flatMap(validateRowsForWord);
-  }, [activeWords, creativity, freshRerun, mockMode, provider, tweakNotes]);
-
-  const runAll = useCallback(async (wordsForRun, startIdx = 0, runVariationId = variationId) => {
-    const totalBatches = Math.ceil(wordsForRun.length / BATCH_SIZE);
-    pauseRef.current = false;
-    setPhase("running");
-
-    let idx = startIdx;
-    while (idx < totalBatches) {
-      if (pauseRef.current) { setPhase("paused"); return; }
-
-      const words = wordsForRun.slice(idx * BATCH_SIZE, (idx + 1) * BATCH_SIZE)
-        .map(x => x.w).join(", ");
-      addLog(`Batch ${idx + 1}/${totalBatches}: ${words}`);
-
-      try {
-        const rows = await processBatch(idx, wordsForRun, runVariationId);
-        setResults(p => [...p, ...rows]);
-        setBatchIdx(idx + 1);
-        addLog(`✓ ${rows.length} tiles written`);
-      } catch (e) {
-        addLog(`✗ Batch ${idx + 1} failed: ${e.message}`);
-        const classified = classifyGenerationError(e);
-        setLatestError({ batch: idx + 1, ...classified });
-        setErrors(p => [...p, { batch: idx + 1, error: classified.rawSummary, likelyCause: classified.likelyCause }]);
-        // skip and continue
-      }
-
-      idx++;
-      // small delay to avoid rate limit bursts
-      await new Promise(r => { timerRef.current = setTimeout(r, 800); });
-    }
-
-    setPhase("done");
-    addLog(runMode === "test" ? "✓ Test batch complete." : `✓ ${runMode === "specific" ? "Specific words" : "Full database"} run complete.`);
-  }, [processBatch, runMode, variationId]);
-
-  const handleStart  = () => {
-    const selection = getWordsForRunMode();
-
-    if (selection.blocked) {
-      if (runMode === "full") addLog("Full database run requires confirmation checkbox.");
-      else addLog("Specific Words mode needs at least one matched word.");
-      return;
-    }
-
-    if (selection.missing.length) {
-      addLog(`Words not found: ${selection.missing.join(", ")}`);
-    }
-
-    const nextVariationId = typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : String(Date.now());
-    setVariationId(nextVariationId);
-    setBatchIdx(0);
-    setResults([]);
-    setErrors([]);
-    setLatestError(null);
-    setSelectedWords(selection.words);
-    runAll(selection.words, 0, nextVariationId);
-  };
-  const handlePause  = () => { pauseRef.current = true; };
-  const handleResume = () => {
-    const wordsForRun = selectedWords.length ? selectedWords : getWordsForRunMode().words;
-    runAll(wordsForRun, batchIdx, variationId);
-  };
-  const handleReset  = () => {
-    pauseRef.current = true;
-    clearTimeout(timerRef.current);
-    setPhase("idle"); setBatchIdx(0); setResults([]); setErrors([]); setLatestError(null); setLog([]); setSelectedWords([]);
-  };
-
-  const downloadCSV = () => {
-    if (!results.length) return;
-    const headers = Object.keys(results[0]);
-    const escape  = v => `"${String(v).replace(/"/g, '""')}"`;
-    const lines   = [
-      headers.map(escape).join(","),
-      ...results.map(r => headers.map(h => escape(r[h])).join(",")),
-    ];
-    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-    const url  = URL.createObjectURL(blob);
-    const a    = Object.assign(document.createElement("a"), { href: url, download: "POLYWORDS_ALL_MASKS.csv" });
-    a.click(); URL.revokeObjectURL(url);
-  };
-
-  const previewSelection = getWordsForRunMode();
-  const wordsForProgress = selectedWords.length ? selectedWords : previewSelection.words;
-  const totalBatchesForProgress = Math.max(1, Math.ceil(wordsForProgress.length / BATCH_SIZE));
-  const startBlocked = phase === "idle" && previewSelection.blocked;
-  const runButtonLabel = runMode === "test"
-    ? "▶ START TEST BATCH"
-    : runMode === "specific"
-      ? "▶ START SPECIFIC WORDS"
-      : "▶ START FULL DATABASE";
-  const pct       = Math.round((batchIdx / totalBatchesForProgress) * 100);
-  const totalWords = Math.min(batchIdx * BATCH_SIZE, wordsForProgress.length);
-  const totalTiles = results.length;
-  const realCount  = results.filter(r => r["TILE TYPE"] === "✓ REAL").length;
-  const hiddenCount= results.filter(r => r["TILE TYPE"] === "✦ HIDDEN").length;
-  const trapCount  = results.filter(r => r["TILE TYPE"] === "✗ TRAP").length;
-
-  const sourceLabel = uploadedFileName ? `Uploaded CSV: ${uploadedFileName}` : "Built-in database";
-  const providerLabel = provider === "openai" ? "OpenAI" : "Anthropic";
-  const apiModeLabel = mockMode ? "Local mock mode ON" : `Real ${providerLabel} mode`;
-  const runModeLabel = RUN_MODE_LABELS[runMode] || runMode;
-  const paidWarning = !mockMode
-    ? runMode === "full"
-      ? `Full database + real ${providerLabel} mode can use significant API credits.`
-      : `Real ${providerLabel} mode may use API credits.`
-    : "";
-
-  const recentWords = [...new Set(results.slice(-60).map(r => r.WORD))].slice(-5).reverse();
-  const recentSample = recentWords.map(w => ({
-    word: w,
-    tiles: results.filter(r => r.WORD === w)
-  }));
-
-  return (
-    <div style={{
-      background: "#1E1A3A", minHeight: "100vh", padding: "0",
-      fontFamily: "'Inter', system-ui, sans-serif", color: "#F0EDFF"
-    }}>
-      {/* Header */}
-      <div style={{
-        background: "linear-gradient(135deg,#2D2660,#1E1A3A)",
-        borderBottom: "1px solid rgba(245,200,66,0.2)",
-        padding: "20px 28px", display: "flex", alignItems: "center", gap: 14
-      }}>
-        <div style={{fontSize:28}}>🦜</div>
-        <div>
-          <div style={{fontSize:20, fontWeight:700, color:"#F5C842", letterSpacing:2}}>
-            POLYWORDS — MASK REWRITER
-          </div>
-          <div style={{fontSize:12, color:"rgba(240,237,255,0.5)", marginTop:2}}>
-            Full 739-word database · Tone-matched batch generator
-          </div>
-        </div>
-        <div style={{marginLeft:"auto", display:"flex", alignItems:"flex-start", gap:14}}>
-          <div style={{
-            minWidth: 250,
-            background:"rgba(255,255,255,0.04)",
-            border:"1px solid rgba(255,255,255,0.08)",
-            borderRadius:8,
-            padding:"10px 12px",
-          }}>
-            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
-              Word Source
-            </div>
-            <div style={{fontSize:11, color:"rgba(240,237,255,0.62)", lineHeight:1.45, marginBottom:8}}>
-              Current source<br/>
-              <span style={{color:"#F0EDFF", fontWeight:700}}>
-                {uploadedFileName ? `Uploaded CSV: ${uploadedFileName}` : "Built-in database"}
-              </span>
-            </div>
-            <div style={{fontSize:11, color:"rgba(240,237,255,0.62)", marginBottom:9}}>
-              Loaded words: <span style={{color:"#F5C842", fontWeight:700}}>{activeWords.length}</span>
-            </div>
-            <input
-              ref={csvInputRef}
-              type="file"
-              accept=".csv,text/csv"
-              disabled={phase === "running"}
-              onChange={handleCsvImport}
-              style={{
-                width:"100%",
-                color:"rgba(240,237,255,0.78)",
-                fontSize:11,
-                marginBottom:8,
-              }}
-            />
-            <button
-              type="button"
-              disabled={phase === "running" || !uploadedFileName}
-              onClick={handleResetWordSource}
-              style={{
-                ...btnStyle("rgba(255,255,255,0.08)", "#F0EDFF", true),
-                padding:"6px 10px",
-                fontSize:10,
-                opacity: phase === "running" || !uploadedFileName ? 0.45 : 1,
-                cursor: phase === "running" || !uploadedFileName ? "not-allowed" : "pointer",
-              }}
-            >
-              RESET TO BUILT-IN DATABASE
-            </button>
-            {importWarnings.length > 0 && (
-              <div style={{fontSize:10, color:"#CC2200", lineHeight:1.35, marginTop:8}}>
-                {importWarnings.join(" ")}
-              </div>
-            )}
-          </div>
-          <div style={{
-            minWidth: 300,
-            background:"rgba(255,255,255,0.04)",
-            border:"1px solid rgba(255,255,255,0.08)",
-            borderRadius:8,
-            padding:"10px 12px",
-          }}>
-            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
-              RUN MODE
-            </div>
-            <div style={{display:"flex", flexWrap:"wrap", gap:8, marginBottom:8}}>
-              {[
-                ["test", "Test Batch"],
-                ["specific", "Specific Words"],
-                ["full", "Full Loaded Database"],
-              ].map(([mode, label]) => (
-                <label key={mode} style={{
-                  fontSize:11,
-                  color: runMode === mode ? "#F5C842" : "rgba(240,237,255,0.72)",
-                  display:"flex",
-                  alignItems:"center",
-                  gap:5,
-                  cursor:"pointer",
-                }}>
-                  <input
-                    type="radio"
-                    name="runMode"
-                    value={mode}
-                    checked={runMode === mode}
-                    disabled={phase === "running"}
-                    onChange={() => {
-                      setRunMode(mode);
-                      setBatchIdx(0);
-                      setSelectedWords([]);
-                    }}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-            {runMode === "specific" && (
-              <textarea
-                value={specificWordsText}
-                disabled={phase === "running"}
-                onChange={e => {
-                  setSpecificWordsText(e.target.value);
-                  setBatchIdx(0);
-                  setSelectedWords([]);
-                }}
-                placeholder="spring, light, bank"
-                style={{
-                  width:"100%",
-                  minHeight:54,
-                  boxSizing:"border-box",
-                  resize:"vertical",
-                  background:"rgba(15,13,42,0.82)",
-                  border:"1px solid rgba(245,200,66,0.25)",
-                  borderRadius:6,
-                  color:"#F0EDFF",
-                  padding:"8px",
-                  fontFamily:"inherit",
-                  fontSize:12,
-                }}
-              />
-            )}
-            {runMode === "full" && (
-              <label style={{fontSize:11, color:"rgba(240,237,255,0.75)", display:"flex", gap:7, alignItems:"center"}}>
-                <input
-                  type="checkbox"
-                  checked={fullConfirmed}
-                  disabled={phase === "running"}
-                  onChange={e => setFullConfirmed(e.target.checked)}
-                />
-                I understand this will run every loaded word.
-              </label>
-            )}
-            {startBlocked && (
-              <div style={{fontSize:11, color:"#CC2200", marginTop:7}}>
-                {runMode === "full"
-                  ? "Check the confirmation box to enable the full database run."
-                  : "Enter at least one loaded word to run Specific Words."}
-              </div>
-            )}
-          </div>
-          <div style={{
-            minWidth: 240,
-            background:"rgba(255,255,255,0.04)",
-            border:"1px solid rgba(255,255,255,0.08)",
-            borderRadius:8,
-            padding:"10px 12px",
-          }}>
-            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
-              VARIATION CONTROLS
-            </div>
-            <label style={{display:"block", fontSize:11, color:"rgba(240,237,255,0.62)", marginBottom:5}}>
-              Provider
-            </label>
-            <select
-              value={provider}
-              disabled={phase === "running"}
-              onChange={e => setProvider(e.target.value)}
-              style={{
-                width:"100%",
-                background:"rgba(15,13,42,0.82)",
-                border:"1px solid rgba(245,200,66,0.25)",
-                borderRadius:6,
-                color:"#F0EDFF",
-                padding:"7px 8px",
-                fontFamily:"inherit",
-                fontSize:12,
-                marginBottom:9,
-              }}
-            >
-              <option value="anthropic">Anthropic</option>
-              <option value="openai">OpenAI</option>
-            </select>
-            <label style={{display:"block", fontSize:11, color:"rgba(240,237,255,0.62)", marginBottom:5}}>
-              Creativity
-            </label>
-            <select
-              value={creativity}
-              disabled={phase === "running"}
-              onChange={e => setCreativity(e.target.value)}
-              style={{
-                width:"100%",
-                background:"rgba(15,13,42,0.82)",
-                border:"1px solid rgba(245,200,66,0.25)",
-                borderRadius:6,
-                color:"#F0EDFF",
-                padding:"7px 8px",
-                fontFamily:"inherit",
-                fontSize:12,
-                marginBottom:9,
-              }}
-            >
-              <option value="conservative">Conservative</option>
-              <option value="balanced">Balanced</option>
-              <option value="wild">Wild</option>
-            </select>
-            <label style={{fontSize:11, color:"rgba(240,237,255,0.78)", display:"flex", gap:7, alignItems:"center", marginBottom:9}}>
-              <input
-                type="checkbox"
-                checked={freshRerun}
-                disabled={phase === "running"}
-                onChange={e => setFreshRerun(e.target.checked)}
-              />
-              Fresh rerun: avoid sounding like the last pass
-            </label>
-            <label style={{fontSize:11, color:"rgba(240,237,255,0.78)", display:"flex", gap:7, alignItems:"center", marginBottom:9}}>
-              <input
-                type="checkbox"
-                checked={mockMode}
-                disabled={phase === "running"}
-                onChange={e => setMockMode(e.target.checked)}
-              />
-              Local mock mode (skip paid APIs)
-            </label>
-            <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", lineHeight:1.4}}>
-              Variation ID<br/>
-              <span style={{color:"#F0EDFF", fontFamily:"'Courier New', monospace"}}>
-                {variationId || "created on start"}
-              </span>
-            </div>
-          </div>
-          <div style={{
-            minWidth: 260,
-            background:"rgba(255,255,255,0.04)",
-            border:"1px solid rgba(255,255,255,0.08)",
-            borderRadius:8,
-            padding:"10px 12px",
-          }}>
-            <div style={{fontSize:10, color:"#F5C842", fontWeight:700, letterSpacing:1.5, marginBottom:8}}>
-              Tweak Notes
-            </div>
-            <textarea
-              value={tweakNotes}
-              disabled={phase === "running"}
-              onChange={e => setTweakNotes(e.target.value)}
-              placeholder={`Make traps closer to real meanings.\nAvoid weird phrases nobody says.\nUse SPRING = opposite of Autumn style.`}
-              style={{
-                width:"100%",
-                minHeight:82,
-                boxSizing:"border-box",
-                resize:"vertical",
-                background:"rgba(15,13,42,0.82)",
-                border:"1px solid rgba(245,200,66,0.25)",
-                borderRadius:6,
-                color:"#F0EDFF",
-                padding:"8px",
-                fontFamily:"inherit",
-                fontSize:12,
-                lineHeight:1.35,
-                marginBottom:7,
-              }}
-            />
-            <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", lineHeight:1.4, marginBottom:8}}>
-              These notes apply only to the next generation run.
-            </div>
-            <button
-              type="button"
-              disabled={phase === "running" || !tweakNotes}
-              onClick={() => setTweakNotes("")}
-              style={{
-                ...btnStyle("rgba(255,255,255,0.08)", "#F0EDFF", true),
-                padding:"6px 10px",
-                fontSize:10,
-                opacity: phase === "running" || !tweakNotes ? 0.45 : 1,
-                cursor: phase === "running" || !tweakNotes ? "not-allowed" : "pointer",
-              }}
-            >
-              CLEAR TWEAK NOTES
-            </button>
-          </div>
-          <div style={{display:"flex", gap:10}}>
-          {phase === "idle" && (
-            <button
-              onClick={handleStart}
-              disabled={startBlocked}
-              style={{
-                ...btnStyle("#F5C842","#1E1A3A"),
-                opacity: startBlocked ? 0.45 : 1,
-                cursor: startBlocked ? "not-allowed" : "pointer",
-              }}
-            >
-              {runButtonLabel}
-            </button>
-          )}
-          {phase === "running" && (
-            <button onClick={handlePause} style={btnStyle("#7B2D8B","#fff")}>⏸ PAUSE</button>
-          )}
-          {phase === "paused" && (
-            <button onClick={handleResume} style={btnStyle("#4CAF50","#fff")}>▶ RESUME</button>
-          )}
-          {(phase === "paused" || phase === "done" || phase === "running") && (
-            <button onClick={downloadCSV} style={btnStyle("#0F0D2A","#F5C842",true)}>
-              ⬇ DOWNLOAD CSV ({results.length} tiles)
-            </button>
-          )}
-          {phase !== "idle" && (
-            <button onClick={handleReset} style={btnStyle("rgba(255,255,255,0.08)","#aaa")}>✕ RESET</button>
-          )}
-          </div>
-        </div>
-      </div>
-
-      <div style={{padding:"16px 28px 0"}}>
-        <div style={{
-          ...cardStyle,
-          display:"grid",
-          gridTemplateColumns:"repeat(5, minmax(150px, 1fr))",
-          gap:12,
-          borderColor: mockMode ? "rgba(76,175,80,0.32)" : "rgba(245,200,66,0.28)",
-          background:"rgba(15,13,42,0.34)",
-        }}>
-          {[
-            ["WORD SOURCE", sourceLabel],
-            ["LOADED WORDS", activeWords.length],
-            ["API MODE", apiModeLabel],
-            ["RUN MODE", runModeLabel],
-            ["CREATIVITY", creativity],
-            ["FRESH RERUN", freshRerun ? "On" : "Off"],
-          ].map(([label, value]) => (
-            <div key={label} style={{
-              background:"rgba(255,255,255,0.035)",
-              border:"1px solid rgba(255,255,255,0.07)",
-              borderRadius:8,
-              padding:"10px 12px",
-              minHeight:48,
-            }}>
-              <div style={{fontSize:10, color:"rgba(240,237,255,0.48)", fontWeight:700, letterSpacing:1.4, marginBottom:5}}>
-                {label}
-              </div>
-              <div style={{
-                fontSize:13,
-                color: label === "API MODE" && mockMode ? "#4CAF50" : "#F0EDFF",
-                fontWeight:700,
-                lineHeight:1.35,
-                overflowWrap:"anywhere",
-                textTransform: label === "CREATIVITY" ? "capitalize" : "none",
-              }}>
-                {value}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {paidWarning && (
-          <div style={{
-            marginTop:12,
-            background: runMode === "full" ? "rgba(204,34,0,0.12)" : "rgba(245,200,66,0.08)",
-            border: runMode === "full" ? "1px solid rgba(204,34,0,0.38)" : "1px solid rgba(245,200,66,0.28)",
-            borderRadius:8,
-            padding:"11px 14px",
-            color: runMode === "full" ? "#FFB4A8" : "#F5C842",
-            fontSize:12,
-            fontWeight:700,
-            letterSpacing:0.4,
-          }}>
-            {paidWarning}
-          </div>
-        )}
-
-        {latestError && (
-          <div style={{
-            marginTop:12,
-            background:"rgba(204,34,0,0.12)",
-            border:"1px solid rgba(204,34,0,0.42)",
-            borderRadius:8,
-            padding:"14px 16px",
-            display:"flex",
-            gap:14,
-            alignItems:"flex-start",
-          }}>
-            <div style={{flex:1}}>
-              <div style={{fontSize:12, color:"#FFB4A8", fontWeight:800, letterSpacing:1.4, marginBottom:7}}>
-                {latestError.title} {latestError.batch ? `(batch ${latestError.batch})` : ""}
-              </div>
-              <div style={{fontSize:13, color:"#F0EDFF", fontWeight:700, marginBottom:5}}>
-                {latestError.likelyCause}
-              </div>
-              <div style={{fontSize:11, color:"rgba(240,237,255,0.66)", lineHeight:1.45, overflowWrap:"anywhere"}}>
-                Raw message summary: {latestError.rawSummary}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setLatestError(null)}
-              style={{
-                ...btnStyle("rgba(255,255,255,0.08)", "#F0EDFF", true),
-                padding:"7px 10px",
-                fontSize:10,
-                whiteSpace:"nowrap",
-              }}
-            >
-              CLEAR ERROR
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div style={{padding:"20px 28px", display:"grid", gridTemplateColumns:"1fr 380px", gap:20}}>
-        {/* Left column */}
-        <div style={{display:"flex", flexDirection:"column", gap:16}}>
-          {/* Progress bar */}
-          <div style={cardStyle}>
-            <div style={{display:"flex", justifyContent:"space-between", marginBottom:10}}>
-              <span style={{fontWeight:600, fontSize:13, color:"#F5C842"}}>PROGRESS</span>
-              <span style={{fontSize:13, color:"rgba(240,237,255,0.6)"}}>
-                {batchIdx}/{totalBatchesForProgress} batches · {totalWords}/{wordsForProgress.length} words
-              </span>
-            </div>
-            <div style={{background:"rgba(255,255,255,0.06)", borderRadius:6, height:12, overflow:"hidden"}}>
-              <div style={{
-                background: phase === "done" ? "#4CAF50" : "#F5C842",
-                height:"100%", width:`${pct}%`,
-                transition:"width 0.5s ease",
-                borderRadius:6,
-                boxShadow: phase !== "done" ? "0 0 12px rgba(245,200,66,0.5)" : "none"
-              }}/>
-            </div>
-            <div style={{marginTop:8, fontSize:13, color:"rgba(240,237,255,0.5)"}}>
-              {phase === "idle"    && (runMode === "test" ? "TEST_MODE is on — first batch only" : "Ready to run selected words")}
-              {phase === "running" && `Processing batch ${batchIdx + 1}... (~${Math.ceil((totalBatchesForProgress - batchIdx) * 1.2)} seconds remaining)`}
-              {phase === "paused"  && `Paused at batch ${batchIdx} — press Resume to continue`}
-              {phase === "done"    && `✓ Complete — ${totalTiles} tiles written across ${totalWords} words`}
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div style={{display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12}}>
-            {[
-              {label:"REAL TILES", val:realCount, color:"#F5C842"},
-              {label:"HIDDEN TILES", val:hiddenCount, color:"#7B2D8B"},
-              {label:"TRAP TILES", val:trapCount, color:"#CC2200"},
-              {label:"ERRORS", val:errors.length, color: errors.length > 0 ? "#CC2200":"#4CAF50"},
-            ].map(s => (
-              <div key={s.label} style={{...cardStyle, textAlign:"center", padding:"14px 10px"}}>
-                <div style={{fontSize:26, fontWeight:700, color:s.color}}>{s.val}</div>
-                <div style={{fontSize:10, color:"rgba(240,237,255,0.4)", marginTop:4, letterSpacing:1.5}}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Live preview */}
-          {recentSample.length > 0 && (
-            <div style={cardStyle}>
-              <div style={{fontWeight:600, fontSize:12, color:"#F5C842", letterSpacing:2, marginBottom:14}}>
-                LIVE PREVIEW — LAST {recentSample.length} WORDS
-              </div>
-              {recentSample.map(({word, tiles}) => (
-                <div key={word} style={{marginBottom:16}}>
-                  <div style={{fontSize:14, fontWeight:700, color:"#F5C842", marginBottom:6, letterSpacing:2}}>
-                    {word}
-                  </div>
-                  <div style={{display:"flex", flexWrap:"wrap", gap:6}}>
-                    {tiles.map((t, i) => {
-                      const tt = t["TILE TYPE"];
-                      const bg = tt === "✓ REAL" ? "rgba(245,200,66,0.08)"
-                               : tt === "✦ HIDDEN" ? "rgba(123,45,139,0.15)"
-                               : "rgba(204,34,0,0.08)";
-                      const border = tt === "✓ REAL" ? "rgba(245,200,66,0.25)"
-                                   : tt === "✦ HIDDEN" ? "rgba(123,45,139,0.4)"
-                                   : "rgba(204,34,0,0.25)";
-                      const label = tt === "✓ REAL" ? "R" : tt === "✦ HIDDEN" ? "H" : "T";
-                      const lc = tt === "✓ REAL" ? "#F5C842" : tt === "✦ HIDDEN" ? "#9B5BCC" : "#CC2200";
-                      return (
-                        <div key={i} style={{
-                          background: bg, border:`1px solid ${border}`,
-                          borderRadius:6, padding:"5px 10px",
-                          display:"flex", alignItems:"center", gap:6
-                        }}>
-                          <span style={{fontSize:9, fontWeight:700, color:lc, letterSpacing:1}}>{label}</span>
-                          <span style={{fontSize:12, color:"#F0EDFF"}}>{t["MASK (player reads)"]}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Errors */}
-          {errors.length > 0 && (
-            <div style={{...cardStyle, borderColor:"rgba(204,34,0,0.3)"}}>
-              <div style={{fontWeight:600, fontSize:12, color:"#CC2200", marginBottom:10}}>FAILED BATCHES</div>
-              {errors.map((e, i) => (
-                <div key={i} style={{fontSize:11, color:"rgba(240,237,255,0.5)", marginBottom:4}}>
-                  Batch {e.batch}: {e.error}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Right column — log */}
-        <div style={cardStyle}>
-          <div style={{fontWeight:600, fontSize:12, color:"#F5C842", letterSpacing:2, marginBottom:12}}>
-            RUN LOG
-          </div>
-          <div style={{
-            height:480, overflowY:"auto", display:"flex", flexDirection:"column", gap:4
-          }}>
-            {log.length === 0 && (
-              <div style={{fontSize:12, color:"rgba(240,237,255,0.25)", textAlign:"center", marginTop:40}}>
-                Waiting to start...
-              </div>
-            )}
-            {log.map((l, i) => (
-              <div key={i} style={{
-                fontSize:11, color: l.includes("✓") ? "#4CAF50"
-                  : l.includes("✗") ? "#CC2200" : "rgba(240,237,255,0.5)",
-                fontFamily:"'Courier New', monospace",
-                lineHeight:1.4
-              }}>{l}</div>
-            ))}
-          </div>
-
-          {phase === "idle" && (
-            <div style={{
-              marginTop:16, background:"rgba(245,200,66,0.06)",
-              border:"1px solid rgba(245,200,66,0.2)",
-              borderRadius:8, padding:"14px"
-            }}>
-              <div style={{fontSize:11, color:"rgba(240,237,255,0.6)", lineHeight:1.8}}>
-                <strong style={{color:"#F5C842"}}>LANGUAGE STANDARD</strong><br/>
-                "Wait... what?" then "Oh. Right."<br/>
-                Masks evoke — never describe.<br/>
-                Traps sit one step from a real meaning.<br/><br/>
-                <strong style={{color:"#F5C842"}}>KEY EXAMPLES</strong><br/>
-                SPRING (season):<br/>
-                ✗ One of four seasons<br/>
-                ✓ Opposite of Autumn<br/><br/>
-                SPRING (coil):<br/>
-                ✗ Metal coil<br/>
-                ✓ Used in cheap mattresses<br/><br/>
-                <strong style={{color:"#F5C842"}}>EST. TIME</strong><br/>
-                Default mode runs the first safe test batch<br/>
-                Specific/full modes use the Run Mode controls above<br/><br/>
-                <strong style={{color:"#F5C842"}}>SAFE TO PAUSE</strong><br/>
-                Download partial results anytime.
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+const palette = {
+  bg: '#1A1830',
+  panel: '#0F0D2A',
+  panel2: '#211A43',
+  gold: '#F5C842',
+  purple: '#7B2D8B',
+  rose: '#9B2D6B',
+  white: '#FFFFFF',
+  muted: '#B7B0CC',
+  danger: '#CC2200',
+};
+
+function initialDrafts() {
+  return Object.fromEntries(
+    PILOT_WORDS.map(({ word, phase }) => [word, createEmptyWord(word, phase)]),
   );
 }
 
-const cardStyle = {
-  background:"rgba(255,255,255,0.03)",
-  border:"1px solid rgba(255,255,255,0.08)",
-  borderRadius:10, padding:"16px 18px"
-};
+function safeParseStoredDrafts() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    return stored && typeof stored === 'object' ? stored : initialDrafts();
+  } catch {
+    return initialDrafts();
+  }
+}
 
-const btnStyle = (bg, color, hasBorder) => ({
-  background: bg, color,
-  border: hasBorder ? `1px solid ${color}` : "none",
-  borderRadius:6, padding:"8px 16px",
-  fontWeight:700, fontSize:12, letterSpacing:1.5,
-  cursor:"pointer", fontFamily:"inherit"
-});
+function makeMeaning(word, index) {
+  const suffix = `meaning-${index + 1}`;
+  return {
+    id: `${word.id}.${suffix}`,
+    label: '',
+    definition: '',
+    source: { name: '', url: '' },
+    familiarity: 3,
+    snapStrength: 3,
+    visibility: word.profile.recommendedPhase === 'boss' && index === 4 ? 'boss-hidden' : 'ordinary',
+    approved: false,
+    realMasks: [],
+    traps: [],
+  };
+}
+
+function downloadJson(filename, value) {
+  const blob = new Blob([`${JSON.stringify(value, null, 2)}\n`], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = Object.assign(document.createElement('a'), { href: url, download: filename });
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Provider request timed out after 90 seconds. Check the terminal for provider errors.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function mergeGeneratedWord(current, generated, rerunIds) {
+  const rerun = new Set(rerunIds);
+  const generatedByMeaning = new Map((generated.meanings || []).map(meaning => [meaning.id, meaning]));
+  return synchronizeDerivedFields({
+    ...current,
+    editorialStatus: 'draft',
+    meanings: current.meanings.map(meaning => {
+      const incoming = generatedByMeaning.get(meaning.id);
+      if (!incoming) return meaning;
+      if (!rerun.size) {
+        return {
+          ...meaning,
+          realMasks: incoming.realMasks || [],
+          traps: incoming.traps || [],
+        };
+      }
+      const mergeTiles = (existing, replacements) => {
+        const replacementMap = new Map((replacements || []).map(tile => [tile.id, tile]));
+        return existing.map(tile => rerun.has(tile.id) ? (replacementMap.get(tile.id) || tile) : tile);
+      };
+      return {
+        ...meaning,
+        realMasks: mergeTiles(meaning.realMasks || [], incoming.realMasks),
+        traps: mergeTiles(meaning.traps || [], incoming.traps),
+      };
+    }),
+  });
+}
+
+function Field({ label, value, onChange, type = 'text', min, max, disabled = false }) {
+  return (
+    <label style={styles.field}>
+      <span style={styles.fieldLabel}>{label}</span>
+      <input
+        value={value}
+        type={type}
+        min={min}
+        max={max}
+        disabled={disabled}
+        onChange={event => onChange(type === 'number' ? Number(event.target.value) : event.target.value)}
+        style={styles.input}
+      />
+    </label>
+  );
+}
+
+function Rating({ label, value, onChange }) {
+  return <Field label={label} value={value} onChange={onChange} type="number" min={1} max={5} />;
+}
+
+function TileEditor({ tile, kind, onChange, onReview }) {
+  const border = tile.reviewStatus === 'accepted'
+    ? palette.gold
+    : tile.reviewStatus === 'rejected'
+      ? palette.danger
+      : palette.purple;
+  return (
+    <article style={{ ...styles.tile, borderColor: border }}>
+      <div style={styles.rowBetween}>
+        <span style={styles.badge}>{kind === 'real' ? 'REAL VARIANT' : 'TRAP'}</span>
+        <code style={styles.code}>{tile.id}</code>
+      </div>
+      <Field label="PLAYER TEXT" value={tile.text || ''} onChange={text => onChange({ ...tile, text: text.toUpperCase() })} />
+      {kind === 'trap' && (
+        <>
+          <label style={styles.field}>
+            <span style={styles.fieldLabel}>TRAP STYLE</span>
+            <select
+              value={tile.trapStyle || ''}
+              onChange={event => onChange({ ...tile, trapStyle: event.target.value })}
+              style={styles.input}
+            >
+              <option value="">Choose style</option>
+              {TRAP_STYLES.map(style => <option key={style}>{style}</option>)}
+            </select>
+          </label>
+          <Field
+            label="WHY TEMPTING"
+            value={tile.whyTempting || ''}
+            onChange={whyTempting => onChange({ ...tile, whyTempting })}
+          />
+        </>
+      )}
+      <div style={styles.ratingGrid}>
+        {['difficulty', 'snapStrength', 'trapSharpness', 'familiarity', 'hiddenFairness'].map(field => (
+          <Rating
+            key={field}
+            label={field}
+            value={tile[field] ?? 3}
+            onChange={value => onChange({ ...tile, [field]: value })}
+          />
+        ))}
+      </div>
+      <div style={styles.reviewButtons}>
+        <button style={styles.acceptButton} onClick={() => onReview('accepted')}>ACCEPT</button>
+        <button style={styles.rejectButton} onClick={() => onReview('rejected')}>REJECT</button>
+        <span style={styles.muted}>Status: {tile.reviewStatus || 'pending'}</span>
+      </div>
+    </article>
+  );
+}
+
+export default function MaskRewriter() {
+  const [drafts, setDrafts] = useState(safeParseStoredDrafts);
+  const [selectedWord, setSelectedWord] = useState(PILOT_WORDS[0].word);
+  const [sourceWords, setSourceWords] = useState([]);
+  const [provider, setProvider] = useState('anthropic');
+  const [mockMode, setMockMode] = useState(false);
+  const [creativity, setCreativity] = useState('balanced');
+  const [tweakNotes, setTweakNotes] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const [blindTiles, setBlindTiles] = useState([]);
+  const importRef = useRef(null);
+
+  const current = synchronizeDerivedFields(drafts[selectedWord] || createEmptyWord(selectedWord, 'flow'));
+  const validation = useMemo(() => validateWord(current), [current]);
+  const approval = useMemo(() => canApproveWord(current), [current]);
+  const rejectedIds = current.meanings.flatMap(meaning =>
+    [...(meaning.realMasks || []), ...(meaning.traps || [])]
+      .filter(tile => tile.reviewStatus === 'rejected')
+      .map(tile => tile.id),
+  );
+  const allTiles = current.meanings.flatMap(meaning => [
+    ...(meaning.realMasks || []),
+    ...(meaning.traps || []),
+  ]);
+  const inventoryReady = current.meanings.length > 0 && current.meanings.every(meaning =>
+    meaning.approved &&
+    meaning.id &&
+    meaning.label &&
+    meaning.definition &&
+    meaning.source?.name &&
+    /^https?:\/\//i.test(meaning.source?.url || ''),
+  );
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(drafts));
+  }, [drafts]);
+
+  useEffect(() => {
+    fetch(`${API}/source-words`)
+      .then(response => response.ok ? response.json() : Promise.reject(new Error('Source load failed')))
+      .then(data => setSourceWords(data.words || []))
+      .catch(error => setMessage(error.message));
+  }, []);
+
+  const saveCurrent = next => {
+    const synchronized = synchronizeDerivedFields(typeof next === 'function' ? next(current) : next);
+    setDrafts(previous => ({ ...previous, [selectedWord]: synchronized }));
+  };
+
+  const updateProfile = (field, value) => saveCurrent({
+    ...current,
+    editorialStatus: 'draft',
+    profile: { ...current.profile, [field]: value },
+  });
+
+  const updateMeaning = (index, nextMeaning) => saveCurrent({
+    ...current,
+    editorialStatus: 'draft',
+    meanings: current.meanings.map((meaning, meaningIndex) =>
+      meaningIndex === index ? nextMeaning : meaning),
+  });
+
+  const addMeaning = () => saveCurrent({
+    ...current,
+    meanings: [...current.meanings, makeMeaning(current, current.meanings.length)],
+  });
+
+  const removeMeaning = index => saveCurrent({
+    ...current,
+    meanings: current.meanings.filter((_, meaningIndex) => meaningIndex !== index),
+  });
+
+  const researchMeanings = async () => {
+    if (current.meanings.some(meaning => meaning.realMasks?.length || meaning.traps?.length)) {
+      const confirmed = window.confirm('Generating a new inventory will remove the current generated tiles for this word. Continue?');
+      if (!confirmed) return;
+    }
+    setBusy(true);
+    setMessage(`Contacting ${mockMode ? 'local mock mode' : provider} for ${current.word} meaning research...`);
+    try {
+      const response = await fetchWithTimeout(`${API}/research-meanings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: current.word,
+          phase: current.profile.recommendedPhase,
+          provider,
+          mockMode,
+          creativity,
+          temperature: creativity === 'conservative' ? 0.35 : creativity === 'wild' ? 0.65 : 0.45,
+          tweakNotes,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || data.error || `API ${response.status}`);
+      const meanings = Array.isArray(data.inventory?.meanings) ? data.inventory.meanings : [];
+      if (!meanings.length) throw new Error('The generator returned no meaning candidates.');
+      saveCurrent({
+        ...current,
+        editorialStatus: 'draft',
+        meanings: meanings.map(meaning => ({
+          ...meaning,
+          approved: false,
+          realMasks: [],
+          traps: [],
+        })),
+        reviewChecklist: Object.fromEntries(REVIEW_CHECKS.map(key => [key, false])),
+      });
+      setMessage(data.warning || `Generated ${meanings.length} meaning candidates for review.`);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runGeneration = async rerunOnly => {
+    if (!inventoryReady) {
+      setMessage('Approve every sourced meaning before generation.');
+      return;
+    }
+    const targets = rerunOnly ? rejectedIds : [];
+    if (rerunOnly && !targets.length) {
+      setMessage('No rejected tiles are waiting for a surgical rerun.');
+      return;
+    }
+    setBusy(true);
+    setMessage(`Contacting ${mockMode ? 'local mock mode' : provider} for ${current.word} tile writing...`);
+    try {
+      const response = await fetchWithTimeout(`${API}/rewrite-word`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: current,
+          provider,
+          mockMode,
+          creativity,
+          temperature: creativity === 'conservative' ? 0.45 : creativity === 'wild' ? 1 : 0.75,
+          tweakNotes,
+          rerunTileIds: targets,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || data.error || `API ${response.status}`);
+      saveCurrent(mergeGeneratedWord(current, data.word, targets));
+      setMessage(data.warning || (rerunOnly ? 'Rejected tiles rerun.' : 'Word draft generated.'));
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const updateTile = (meaningIndex, kind, tileIndex, nextTile) => {
+    const meaning = current.meanings[meaningIndex];
+    const key = kind === 'real' ? 'realMasks' : 'traps';
+    updateMeaning(meaningIndex, {
+      ...meaning,
+      [key]: meaning[key].map((tile, index) => index === tileIndex ? nextTile : tile),
+    });
+  };
+
+  const createBlindPreview = () => {
+    const shuffled = [...allTiles];
+    for (let index = shuffled.length - 1; index > 0; index--) {
+      const swap = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[swap]] = [shuffled[swap], shuffled[index]];
+    }
+    setBlindTiles(shuffled);
+  };
+
+  const approveWord = () => {
+    if (!approval.canApprove) {
+      setMessage('Resolve blockers, accept every tile, and complete the checklist first.');
+      return;
+    }
+    saveCurrent({ ...current, editorialStatus: 'approved' });
+    setMessage(`${current.word} approved for V2 export.`);
+  };
+
+  const exportApproved = () => {
+    const words = {};
+    Object.values(drafts)
+      .map(synchronizeDerivedFields)
+      .filter(word => word.editorialStatus === 'approved')
+      .forEach(word => { words[word.id] = word; });
+    downloadJson('POLYWORDS_APPROVED_V2.json', { schemaVersion: 2, words });
+  };
+
+  const exportDrafts = () => downloadJson('POLYWORDS_CONTENT_DRAFTS.json', drafts);
+
+  const importDrafts = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Draft file must be an object.');
+      setDrafts(parsed);
+      const first = Object.keys(parsed)[0];
+      if (first) setSelectedWord(first);
+      setMessage(`Loaded ${Object.keys(parsed).length} word drafts.`);
+    } catch (error) {
+      setMessage(`Draft import failed: ${error.message}`);
+    }
+    event.target.value = '';
+  };
+
+  const source = sourceWords.find(item => item.word === selectedWord);
+  const approvedCount = Object.values(drafts).filter(word => word.editorialStatus === 'approved').length;
+
+  return (
+    <main style={styles.page}>
+      <header style={styles.header}>
+        <div>
+          <div style={styles.eyebrow}>LOCAL EDITORIAL TOOL · V2 PILOT</div>
+          <h1 style={styles.title}>POLYWORDS CONTENT WORKFLOW</h1>
+          <p style={styles.subtitle}>Meaning research → approval → generation → blind review → V2 export</p>
+        </div>
+        <div style={styles.headerActions}>
+          <button style={styles.secondaryButton} onClick={exportDrafts}>EXPORT DRAFTS</button>
+          <button style={styles.secondaryButton} onClick={() => importRef.current?.click()}>IMPORT DRAFTS</button>
+          <input ref={importRef} type="file" accept=".json" hidden onChange={importDrafts} />
+          <button style={styles.primaryButton} onClick={exportApproved}>EXPORT APPROVED ({approvedCount})</button>
+        </div>
+      </header>
+
+      {message && <div style={styles.message}>{message}</div>}
+
+      <div style={styles.layout}>
+        <aside style={styles.sidebar}>
+          <h2 style={styles.sectionTitle}>20-WORD PILOT</h2>
+          {ARC_PHASES.map(phase => (
+            <section key={phase}>
+              <div style={styles.phaseLabel}>{phase}</div>
+              {PILOT_WORDS.filter(item => item.phase === phase).map(item => {
+                const draft = drafts[item.word];
+                return (
+                  <button
+                    key={item.word}
+                    onClick={() => { setSelectedWord(item.word); setBlindTiles([]); }}
+                    style={{
+                      ...styles.wordButton,
+                      borderColor: item.word === selectedWord ? palette.gold : 'transparent',
+                    }}
+                  >
+                    <span>{item.word}</span>
+                    <span>{draft?.editorialStatus === 'approved' ? '✓' : '○'}</span>
+                  </button>
+                );
+              })}
+            </section>
+          ))}
+        </aside>
+
+        <div style={styles.content}>
+          <section style={styles.panel}>
+            <div style={styles.rowBetween}>
+              <div>
+                <div style={styles.eyebrow}>{current.profile.recommendedPhase} · {current.wordType}</div>
+                <h2 style={styles.wordTitle}>{current.word}</h2>
+              </div>
+              <div style={styles.sourceNote}>
+                Legacy source: {source ? `${source.legacyRealCount} REAL / ${source.legacyTrapCount} traps` : 'loading'}
+              </div>
+            </div>
+            <div style={styles.profileGrid}>
+              <label style={styles.field}>
+                <span style={styles.fieldLabel}>RECOMMENDED PHASE</span>
+                <select
+                  value={current.profile.recommendedPhase}
+                  onChange={event => updateProfile('recommendedPhase', event.target.value)}
+                  style={styles.input}
+                >
+                  {ARC_PHASES.map(phase => <option key={phase}>{phase}</option>)}
+                </select>
+              </label>
+              {['snapStrength', 'trapSharpness', 'hiddenFairness', 'familiarity', 'wordComplexity', 'pollyTauntPotential']
+                .map(field => (
+                  <Rating
+                    key={field}
+                    label={field}
+                    value={current.profile[field]}
+                    onChange={value => updateProfile(field, value)}
+                  />
+                ))}
+              <label style={styles.checkLine}>
+                <input
+                  type="checkbox"
+                  checked={current.profile.bossEligible}
+                  onChange={event => updateProfile('bossEligible', event.target.checked)}
+                />
+                Boss eligible
+              </label>
+              <label style={styles.checkLine}>
+                <input
+                  type="checkbox"
+                  checked={current.profile.tutorialEligible}
+                  onChange={event => updateProfile('tutorialEligible', event.target.checked)}
+                />
+                Tutorial eligible
+              </label>
+            </div>
+          </section>
+
+          <section style={styles.panel}>
+            <div style={styles.rowBetween}>
+              <div>
+                <h2 style={styles.sectionTitle}>1. APPROVE MEANING INVENTORY</h2>
+                <p style={styles.muted}>Generate candidates first. Your job is to verify, correct, and approve them.</p>
+              </div>
+              <div style={styles.controls}>
+                <button
+                  disabled={busy}
+                  style={!busy ? styles.primaryButton : styles.disabledButton}
+                  onClick={researchMeanings}
+                >
+                  {busy ? 'RESEARCHING...' : 'GENERATE MEANING INVENTORY'}
+                </button>
+                <button style={styles.secondaryButton} onClick={addMeaning}>+ ADD MANUALLY</button>
+              </div>
+            </div>
+            {message && <div style={styles.requestStatus}>{message}</div>}
+
+            {current.meanings.length === 0 && (
+              <div style={styles.empty}>
+                Click GENERATE MEANING INVENTORY. The generator proposes meanings and source links;
+                you verify them before tile writing unlocks.
+              </div>
+            )}
+
+            {current.meanings.map((meaning, meaningIndex) => (
+              <article key={meaning.id} style={styles.meaning}>
+                <div style={styles.rowBetween}>
+                  <h3 style={styles.meaningTitle}>MEANING {meaningIndex + 1}</h3>
+                  <button style={styles.dangerTextButton} onClick={() => removeMeaning(meaningIndex)}>REMOVE</button>
+                </div>
+                <div style={styles.profileGrid}>
+                  <Field
+                    label="STABLE MEANING ID"
+                    value={meaning.id}
+                    onChange={id => updateMeaning(meaningIndex, { ...meaning, id: slugify(id).replace(/-/g, '.') })}
+                  />
+                  <Field
+                    label="EDITORIAL LABEL"
+                    value={meaning.label}
+                    onChange={label => updateMeaning(meaningIndex, { ...meaning, label })}
+                  />
+                  <Field
+                    label="SHORT DEFINITION"
+                    value={meaning.definition}
+                    onChange={definition => updateMeaning(meaningIndex, { ...meaning, definition })}
+                  />
+                  <Field
+                    label="SOURCE NAME"
+                    value={meaning.source.name}
+                    onChange={name => updateMeaning(meaningIndex, { ...meaning, source: { ...meaning.source, name } })}
+                  />
+                  <Field
+                    label="SOURCE URL"
+                    value={meaning.source.url}
+                    onChange={url => updateMeaning(meaningIndex, { ...meaning, source: { ...meaning.source, url } })}
+                  />
+                  <Rating
+                    label="FAMILIARITY"
+                    value={meaning.familiarity}
+                    onChange={familiarity => updateMeaning(meaningIndex, { ...meaning, familiarity })}
+                  />
+                  <Rating
+                    label="SNAP STRENGTH"
+                    value={meaning.snapStrength}
+                    onChange={snapStrength => updateMeaning(meaningIndex, { ...meaning, snapStrength })}
+                  />
+                  <label style={styles.field}>
+                    <span style={styles.fieldLabel}>VISIBILITY</span>
+                    <select
+                      value={meaning.visibility}
+                      onChange={event => updateMeaning(meaningIndex, { ...meaning, visibility: event.target.value })}
+                      style={styles.input}
+                    >
+                      <option value="ordinary">ordinary</option>
+                      <option value="boss-hidden">boss-hidden</option>
+                    </select>
+                  </label>
+                </div>
+                <label style={styles.approveMeaning}>
+                  <input
+                    type="checkbox"
+                    checked={meaning.approved}
+                    onChange={event => updateMeaning(meaningIndex, { ...meaning, approved: event.target.checked })}
+                  />
+                  I verified that this is a distinct, playable, source-supported meaning.
+                </label>
+
+                {(meaning.realMasks.length > 0 || meaning.traps.length > 0) && (
+                  <div style={styles.tileGrid}>
+                    {meaning.realMasks.map((tile, tileIndex) => (
+                      <TileEditor
+                        key={tile.id}
+                        tile={tile}
+                        kind="real"
+                        onChange={next => updateTile(meaningIndex, 'real', tileIndex, next)}
+                        onReview={reviewStatus => updateTile(meaningIndex, 'real', tileIndex, { ...tile, reviewStatus })}
+                      />
+                    ))}
+                    {meaning.traps.map((tile, tileIndex) => (
+                      <TileEditor
+                        key={tile.id}
+                        tile={tile}
+                        kind="trap"
+                        onChange={next => updateTile(meaningIndex, 'trap', tileIndex, next)}
+                        onReview={reviewStatus => updateTile(meaningIndex, 'trap', tileIndex, { ...tile, reviewStatus })}
+                      />
+                    ))}
+                  </div>
+                )}
+              </article>
+            ))}
+          </section>
+
+          <section style={styles.panel}>
+            <h2 style={styles.sectionTitle}>2. GENERATE ONE COMPLETE WORD</h2>
+            {!inventoryReady && (
+              <div style={styles.lockNotice}>
+                LOCKED: Generate the meaning inventory, verify every definition/source, and check
+                each meaning's approval box.
+              </div>
+            )}
+            {message && <div style={styles.requestStatus}>{message}</div>}
+            <div style={styles.controls}>
+              <select value={provider} onChange={event => setProvider(event.target.value)} style={styles.input}>
+                <option value="anthropic">Anthropic</option>
+                <option value="openai">OpenAI</option>
+              </select>
+              <select value={creativity} onChange={event => setCreativity(event.target.value)} style={styles.input}>
+                <option value="conservative">Conservative</option>
+                <option value="balanced">Balanced</option>
+                <option value="wild">Wild</option>
+              </select>
+              <label style={styles.checkLine}>
+                <input type="checkbox" checked={mockMode} onChange={event => setMockMode(event.target.checked)} />
+                Local mock mode
+              </label>
+            </div>
+            <label style={styles.field}>
+              <span style={styles.fieldLabel}>TWEAK NOTES</span>
+              <textarea value={tweakNotes} onChange={event => setTweakNotes(event.target.value)} style={styles.textarea} />
+            </label>
+            <div style={styles.controls}>
+              <button
+                disabled={!inventoryReady || busy}
+                style={inventoryReady && !busy ? styles.primaryButton : styles.disabledButton}
+                onClick={() => runGeneration(false)}
+              >
+                {busy ? 'WRITING...' : 'GENERATE WORD BANK'}
+              </button>
+              <button
+                disabled={!rejectedIds.length || busy}
+                style={rejectedIds.length && !busy ? styles.secondaryButton : styles.disabledButton}
+                onClick={() => runGeneration(true)}
+              >
+                RERUN REJECTED ONLY ({rejectedIds.length})
+              </button>
+            </div>
+          </section>
+
+          <section style={styles.panel}>
+            <div style={styles.rowBetween}>
+              <div>
+                <h2 style={styles.sectionTitle}>3. BLIND HIDDEN-TRUTH REVIEW</h2>
+                <p style={styles.muted}>Role labels are concealed. Look for tone, length, or comedy tells.</p>
+              </div>
+              <button disabled={!allTiles.length} style={allTiles.length ? styles.secondaryButton : styles.disabledButton} onClick={createBlindPreview}>
+                SHUFFLE BLIND PREVIEW
+              </button>
+            </div>
+            <div style={styles.blindGrid}>
+              {blindTiles.map(tile => <div key={tile.id} style={styles.blindTile}>{tile.text}</div>)}
+            </div>
+          </section>
+
+          <section style={styles.panel}>
+            <h2 style={styles.sectionTitle}>4. VALIDATE AND APPROVE WORD</h2>
+            <div style={styles.auditGrid}>
+              <div>
+                <h3 style={styles.blockerTitle}>BLOCKERS ({validation.blockers.length})</h3>
+                {validation.blockers.length
+                  ? <ul>{validation.blockers.map(issue => <li key={issue}>{issue}</li>)}</ul>
+                  : <p style={styles.pass}>No automated blockers.</p>}
+              </div>
+              <div>
+                <h3 style={styles.warningTitle}>WARNINGS ({validation.warnings.length})</h3>
+                {validation.warnings.length
+                  ? <ul>{validation.warnings.map(issue => <li key={issue}>{issue}</li>)}</ul>
+                  : <p style={styles.pass}>No automated warnings.</p>}
+              </div>
+            </div>
+
+            <div style={styles.checklist}>
+              {REVIEW_CHECKS.map(key => (
+                <label key={key} style={styles.checkLine}>
+                  <input
+                    type="checkbox"
+                    checked={current.reviewChecklist[key]}
+                    onChange={event => saveCurrent({
+                      ...current,
+                      editorialStatus: 'draft',
+                      reviewChecklist: { ...current.reviewChecklist, [key]: event.target.checked },
+                    })}
+                  />
+                  {REVIEW_LABELS[key]}
+                </label>
+              ))}
+            </div>
+            <button
+              disabled={!approval.canApprove}
+              style={approval.canApprove ? styles.primaryButton : styles.disabledButton}
+              onClick={approveWord}
+            >
+              APPROVE {current.word} FOR V2 EXPORT
+            </button>
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: palette.bg,
+    color: palette.white,
+    fontFamily: '"Arial Narrow", "Roboto Condensed", Arial, sans-serif',
+    padding: 24,
+    boxSizing: 'border-box',
+  },
+  header: { display: 'flex', justifyContent: 'space-between', gap: 24, alignItems: 'flex-end', marginBottom: 18 },
+  headerActions: { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' },
+  eyebrow: { color: palette.gold, fontSize: 12, letterSpacing: 2, textTransform: 'uppercase' },
+  title: { fontSize: 34, margin: '6px 0', letterSpacing: 1 },
+  subtitle: { margin: 0, color: palette.muted },
+  message: { background: palette.panel2, borderLeft: `4px solid ${palette.gold}`, padding: 12, marginBottom: 16 },
+  lockNotice: { background: palette.panel2, borderLeft: `4px solid ${palette.rose}`, padding: 12, margin: '10px 0', color: palette.white },
+  requestStatus: { background: palette.panel2, border: `1px solid ${palette.gold}`, borderRadius: 8, padding: 10, margin: '10px 0', color: palette.gold },
+  layout: { display: 'grid', gridTemplateColumns: '220px minmax(0, 1fr)', gap: 18, alignItems: 'start' },
+  sidebar: { background: palette.panel, borderRadius: 14, padding: 14, position: 'sticky', top: 14 },
+  content: { display: 'grid', gap: 18 },
+  panel: { background: palette.panel, border: '1px solid rgba(245,200,66,0.16)', borderRadius: 14, padding: 18 },
+  sectionTitle: { fontSize: 16, letterSpacing: 1.5, margin: '0 0 10px' },
+  phaseLabel: { color: palette.rose, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', margin: '14px 6px 5px' },
+  wordButton: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'space-between',
+    background: palette.panel2,
+    color: palette.white,
+    border: '1px solid transparent',
+    borderRadius: 8,
+    padding: '8px 10px',
+    marginBottom: 5,
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  wordTitle: { fontSize: 40, margin: '4px 0 0', color: palette.gold },
+  sourceNote: { color: palette.muted, fontSize: 13 },
+  rowBetween: { display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' },
+  profileGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10, marginTop: 14 },
+  field: { display: 'grid', gap: 5 },
+  fieldLabel: { color: palette.muted, fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase' },
+  input: {
+    background: palette.panel2,
+    color: palette.white,
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 7,
+    padding: '9px 10px',
+    boxSizing: 'border-box',
+    width: '100%',
+  },
+  textarea: {
+    minHeight: 80,
+    resize: 'vertical',
+    background: palette.panel2,
+    color: palette.white,
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 7,
+    padding: 10,
+  },
+  controls: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', margin: '12px 0' },
+  primaryButton: {
+    background: palette.gold,
+    color: palette.panel,
+    border: 0,
+    borderRadius: 8,
+    padding: '10px 14px',
+    fontWeight: 900,
+    cursor: 'pointer',
+  },
+  secondaryButton: {
+    background: 'transparent',
+    color: palette.gold,
+    border: `1px solid ${palette.gold}`,
+    borderRadius: 8,
+    padding: '9px 13px',
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
+  disabledButton: {
+    background: '#39334A',
+    color: '#8F899C',
+    border: 0,
+    borderRadius: 8,
+    padding: '10px 14px',
+    fontWeight: 800,
+    cursor: 'not-allowed',
+  },
+  dangerTextButton: { background: 'none', border: 0, color: '#FF806F', cursor: 'pointer', fontWeight: 800 },
+  empty: { color: palette.muted, border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 8, padding: 20, textAlign: 'center' },
+  meaning: { background: palette.panel2, borderRadius: 10, padding: 14, marginTop: 12 },
+  meaningTitle: { margin: 0, color: palette.gold, fontSize: 14, letterSpacing: 1.2 },
+  approveMeaning: { display: 'flex', gap: 8, alignItems: 'center', color: palette.white, marginTop: 12 },
+  tileGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12, marginTop: 16 },
+  tile: { background: palette.panel, border: '1px solid', borderRadius: 10, padding: 12 },
+  badge: { color: palette.gold, fontSize: 10, letterSpacing: 1.2 },
+  code: { color: palette.muted, fontSize: 10 },
+  ratingGrid: { display: 'grid', gridTemplateColumns: 'repeat(5, minmax(58px, 1fr))', gap: 6, marginTop: 10 },
+  reviewButtons: { display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 },
+  acceptButton: { background: palette.gold, color: palette.panel, border: 0, borderRadius: 6, padding: '7px 10px', fontWeight: 800 },
+  rejectButton: { background: palette.danger, color: palette.white, border: 0, borderRadius: 6, padding: '7px 10px', fontWeight: 800 },
+  muted: { color: palette.muted, fontSize: 13 },
+  checkLine: { display: 'flex', gap: 8, alignItems: 'center', color: palette.white },
+  blindGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10, marginTop: 14 },
+  blindTile: {
+    background: palette.panel2,
+    border: `1px solid ${palette.purple}`,
+    borderRadius: 10,
+    padding: 18,
+    textAlign: 'center',
+    fontWeight: 800,
+    letterSpacing: 0.5,
+  },
+  auditGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, color: palette.muted },
+  blockerTitle: { color: '#FF806F', fontSize: 13 },
+  warningTitle: { color: palette.gold, fontSize: 13 },
+  pass: { color: '#BCE6B7' },
+  checklist: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: 9, margin: '18px 0' },
+};

@@ -32,6 +32,9 @@ yarn-error.*
 
 # local env files
 .env*.local
+/tools/content/mask-rewriter/.env
+/tools/content/mask-rewriter/workspace/
+/tools/content/mask-rewriter/*.csv
 
 # typescript
 *.tsbuildinfo

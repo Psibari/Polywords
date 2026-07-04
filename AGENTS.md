@@ -12,6 +12,8 @@ Before planning or changing files:
 4. Read the focused source document for the area being changed, such as:
    - `docs/GAME_REFERENCE.md` for Hunt, scoring, Vault, SFX, and gameplay systems.
    - `docs/GOLDEN_PACING_SYSTEM.md` for Hunt pacing and content selection.
+   - `docs/CONTENT_WRITING_STANDARD.md` for meaning research, REAL masks, traps, and
+     editorial approval.
    - `docs/DAILY_CHALLENGE_SPEC.md` for Daily Challenge.
    - `docs/POLLY_DIALOGUE_BANK.md` for Polly dialogue.
    - `docs/WORKFLOW.md` for patch and verification workflow.
@@ -119,7 +121,7 @@ Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible ou
 - Meaning hidden, not meaning lost.
 - Real Meaning Masks describe actual meanings of the boss word.
 - They should be masked, creative, human-readable, and clear after reveal.
-- Target 5-6 words per mask; 8 words is the hard maximum.
+- Prefer 2-6 words per mask; 7-8 words require review; 8 words is the hard maximum.
 - Avoid flat dictionary labels.
 - Avoid weird poetic phrases nobody would say.
 - Avoid predictable direct extensions.
@@ -141,20 +143,23 @@ Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible ou
   tools/content/mask-rewriter/
   ```
 - It is not player-facing gameplay code.
-- It supports:
-  - Test Batch
-  - Specific Words
-  - Full Loaded Database with confirmation
-  - Creativity controls
-  - Fresh rerun
-  - Tweak Notes
-  - CSV word source import
-  - Mock / Anthropic / OpenAI providers
-  - Audit columns: `AUDIT STATUS` and `AUDIT ISSUES`
+- It supports the controlled V2 workflow:
+  - source-backed meaning inventory;
+  - human meaning approval before generation;
+  - one complete word per generation;
+  - inline tile editing and surgical rejected-tile reruns;
+  - blind Hidden Truth review;
+  - automated blockers and warnings;
+  - human word approval;
+  - resumable draft import/export;
+  - approved-only V2 export and deterministic merge;
+  - Mock / Anthropic / OpenAI providers.
 - It uses `.env` for API keys.
 - Never commit `.env`.
 - Never commit generated CSVs or `dist` output.
 - Generated output is draft-only and requires human audit before game import.
+- `assets/data/huntData.v2.json` is dormant editorial data. Do not wire it into gameplay until
+  the pilot and curated Hunt are approved.
 - Start tool with:
   ```bash
   cd tools/content/mask-rewriter

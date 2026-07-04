@@ -12,6 +12,7 @@ Semantic Snap — *"Wait… what? … Oh. Right."*
 | --- | --- |
 | Hunt / boss / scoring / feathers / content / vault / SFX / Polly-Hunt / MaskBoard learnings | `docs/GAME_REFERENCE.md` |
 | GPS pacing | `docs/GOLDEN_PACING_SYSTEM.md` |
+| Meaning / REAL mask / trap writing and approval | `docs/CONTENT_WRITING_STANDARD.md` |
 | Daily Challenge | `docs/DAILY_CHALLENGE_SPEC.md` |
 | Polly dialogue | `docs/POLLY_DIALOGUE_BANK.md` |
 | Patch workflow | `docs/WORKFLOW.md` |
@@ -170,6 +171,7 @@ assets/data/huntData.json              403-word tile database
 assets/images/polly/poses/*.png        Daily Polly poses (transparent)  ·  polly/*.webp legacy
 assets/sfx/                            Game SFX
 tools/content/mask-rewriter            Local-only content tool
+assets/data/huntData.v2.json           Dormant approved V2 meaning bank (not gameplay-wired)
 ```
 
 ---

@@ -90,6 +90,10 @@ Play screen design overhaul complete for this sprint.
 - Wrong swipes fire the error haptic through the trinity path.
 - Chain increases pulse the multiplier display.
 - Correct REAL/TRAP score floats use compact readable badge stamps; wrong swipes show none.
+- The local Mask Rewriter now uses a controlled V2 editorial workflow: sourced meaning
+  inventory, human approval, one-word generation, automated audit, blind Hidden Truth review,
+  approved-only export, and safe deterministic merge. `assets/data/huntData.v2.json` remains
+  dormant and is not imported by gameplay.
 
 ---
 
