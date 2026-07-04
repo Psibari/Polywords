@@ -7,11 +7,28 @@ import {
   Text,
   View,
 } from 'react-native';
-import { FONTS, FONT_SIZES } from '../constants/fonts';
+import { LinearGradient } from 'expo-linear-gradient';
+import { FONTS } from '../constants/fonts';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
 import { Mask, SessionStep } from '../game/types';
 import { playSfx } from '../audio/sfx';
+import { FoilWord } from '../components/ui/FoilWord';
+import PollyResultsPerch from '../components/PollyResultsPerch';
+import { PW } from '../ui/pwTheme';
+import { homeDare, homeType } from '../ui/pwHomeMaterials';
+import {
+  RESULTS_SUB_BEAT,
+  RESULTS_SUB_LOSS,
+  RESULTS_VERDICT_BEAT,
+  RESULTS_VERDICT_COMPLETE,
+  RESULTS_VERDICT_LOSS,
+  deriveResultsPollyLine,
+  resultsCard,
+  resultsLedger,
+  resultsType,
+  resultsVerdictColor,
+} from '../ui/pwResultsMaterials';
 
 // ─── HELPERS ─────────────────────────────────────────────────
 
@@ -32,87 +49,55 @@ function findWordForMaskId(maskId: string, session: SessionStep[]): string {
   return '';
 }
 
-// ─── GRADE COMPUTATION ───────────────────────────────────────
+// ─── GRADE / RANK (thresholds and text unchanged; colors tokenized) ──
 
 function computeGrade(
   lives: number,
   wordResults: WordResult[],
 ): { text: string; color: string } {
-  if (lives === 0) return { text: 'RATTLED.', color: '#FFFFFF' };
-  const wordRounds = wordResults.filter(r => r.roundKind === 'word');
+  if (lives === 0) return { text: 'RATTLED.', color: resultsVerdictColor.gradeRattled };
   const ghostCount = wordResults.filter(r => r.missedMaskIds.length > 0).length;
-  if (ghostCount === 0) return { text: 'CLEAN RUN', color: '#4CAF50' };
-  if (ghostCount <= 2) return { text: 'CLOSE.', color: '#FFFFFF' };
-  return { text: 'MEANINGS MISSED.', color: '#7B2FBE' };
+  if (ghostCount === 0) return { text: 'CLEAN RUN', color: resultsVerdictColor.gradeClean };
+  if (ghostCount <= 2) return { text: 'CLOSE.', color: resultsVerdictColor.gradeClose };
+  return { text: 'MEANINGS MISSED.', color: resultsVerdictColor.gradeMissed };
 }
-
-// ─── RANK COMPUTATION ────────────────────────────────────────
 
 function computeRank(score: number): { letter: string; color: string } {
-  if (score >= 22000) return { letter: 'MASTER', color: '#F5C842' };
-  if (score >= 18000) return { letter: 'S',      color: '#F5C842' };
-  if (score >= 14000) return { letter: 'A',      color: '#FFFFFF' };
-  if (score >= 11000) return { letter: 'B',      color: '#FFFFFF' };
-  if (score >= 8000)  return { letter: 'C',      color: '#FFFFFF' };
-  return               { letter: 'D',            color: 'rgba(255,255,255,0.5)' };
+  if (score >= 22000) return { letter: 'MASTER', color: resultsVerdictColor.rankTop };
+  if (score >= 18000) return { letter: 'S', color: resultsVerdictColor.rankTop };
+  if (score >= 14000) return { letter: 'A', color: resultsVerdictColor.rankMid };
+  if (score >= 11000) return { letter: 'B', color: resultsVerdictColor.rankMid };
+  if (score >= 8000) return { letter: 'C', color: resultsVerdictColor.rankMid };
+  return { letter: 'D', color: resultsVerdictColor.rankLow };
 }
 
-// ─── POLLY LINE ───────────────────────────────────────────────
+// ─── LEDGER ROW ──────────────────────────────────────────────
 
-function derivePollyLine(
-  wordResults: WordResult[],
-  isComplete: boolean,
-): string | null {
-  const allPerfect =
-    isComplete && wordResults.every(r => r.wrongSwipes === 0);
-  if (allPerfect) return 'You emptied my little vault.';
-
-  const bossCleared = wordResults.some(r => r.isBossWord && r.wrongSwipes === 0);
-  if (bossCleared) return 'Fine. Keep the word.';
-
-  const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
-  if (hasMissed) return 'Some meanings got past you.';
-
-  return null;
-}
-
-// ─── WORD RESULT ROW ─────────────────────────────────────────
-
-function WordResultRow({ result }: { result: WordResult }) {
+function LedgerRow({ result }: { result: WordResult }) {
   const allFound = result.correctUp === result.totalRealMasks && result.wrongSwipes === 0;
-  const isWordRound = result.roundKind === 'word';
-  const ghostCreated = result.missedMaskIds.length > 0;
 
   let resultText: string;
   let resultColor: string;
-
   if (result.isBossWord && allFound) {
     resultText = 'Boss ✓';
-    resultColor = '#FFD700';
+    resultColor = resultsLedger.mark;
   } else if (allFound) {
     resultText = 'Perfect ✓';
-    resultColor = '#4CAF50';
+    resultColor = resultsLedger.mark;
   } else {
     resultText = `${result.correctUp}/${result.totalRealMasks}`;
-    resultColor = '#FFFFFF';
+    resultColor = resultsLedger.ink;
   }
 
   return (
-    <View style={wr.row}>
-      <View style={wr.left}>
-        <Text style={wr.word}>{result.word}</Text>
-      </View>
-      <View style={wr.right}>
-        {isWordRound && (
-          <Text style={wr.hidden}>{'🔒'}</Text>
-        )}
-        <Text style={[wr.result, { color: resultColor }]}>{resultText}</Text>
-      </View>
+    <View style={lr.row}>
+      <Text style={lr.word}>{result.word.toUpperCase()}</Text>
+      <Text style={[lr.result, { color: resultColor }]}>{resultText}</Text>
     </View>
   );
 }
 
-const wr = StyleSheet.create({
+const lr = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -120,16 +105,21 @@ const wr = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
+    borderBottomColor: resultsLedger.rule,
   },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  word: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', fontFamily: FONTS.hud },
-  right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  hidden: { fontSize: 14 },
-  result: { fontSize: 13 },
+  word: {
+    color: resultsLedger.ink,
+    fontSize: resultsType.ledgerWord,
+    fontFamily: FONTS.wordDisplay,
+    letterSpacing: 1,
+  },
+  result: {
+    fontSize: resultsType.ledgerResult,
+    fontFamily: FONTS.hud,
+  },
 });
 
-// ─── GHOST SET CARD ──────────────────────────────────────────
+// ─── CALLOUT CARDS ───────────────────────────────────────────
 
 function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
   const session = useGameStore(s => s.game.session);
@@ -137,109 +127,13 @@ function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
   if (!word) return null;
 
   return (
-    <View style={gs.card}>
-      <Text style={gs.header}>Meaning missed</Text>
-      <Text style={gs.word}>{word.toUpperCase()}</Text>
-      <Text style={gs.body}>You left this one behind.</Text>
+    <View style={[cc.card, cc.ghost]}>
+      <Text style={[cc.header, { color: resultsCard.ghostTitle }]}>Meaning missed</Text>
+      <Text style={[cc.word, { color: resultsCard.ghostTitle }]}>{word.toUpperCase()}</Text>
+      <Text style={cc.copy}>You left this one behind.</Text>
     </View>
   );
 }
-
-const gs = StyleSheet.create({
-  card: {
-    backgroundColor: 'rgba(255,215,0,0.08)',
-    borderLeftWidth: 3,
-    borderLeftColor: '#FFD700',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,215,0,0.25)',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,215,0,0.25)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,215,0,0.25)',
-    borderRadius: 14,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    marginBottom: 24,
-  },
-  header: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontFamily: FONTS.hud,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  word: {
-    color: '#FFD700',
-    fontSize: 22,
-    fontFamily: FONTS.wordDisplay,
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  body: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-  },
-});
-
-// ─── GHOST REVENGE CARD ──────────────────────────────────────
-
-const gr = StyleSheet.create({
-  cardCleared: {
-    backgroundColor: 'rgba(255,215,0,0.08)',
-    borderLeftWidth: 3,
-    borderLeftColor: '#FFD700',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,215,0,0.25)',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,215,0,0.25)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,215,0,0.25)',
-    borderRadius: 14,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    marginBottom: 16,
-  },
-  cardHaunting: {
-    backgroundColor: 'rgba(123,47,190,0.12)',
-    borderLeftWidth: 3,
-    borderLeftColor: '#7B2FBE',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(123,47,190,0.35)',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(123,47,190,0.35)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(123,47,190,0.35)',
-    borderRadius: 14,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    marginBottom: 16,
-  },
-  header: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  word: {
-    color: '#FFD700',
-    fontSize: 22,
-    fontFamily: FONTS.wordDisplay,
-    letterSpacing: 2,
-    marginBottom: 4,
-  },
-  meaning: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 13,
-    fontStyle: 'italic',
-    marginBottom: 4,
-  },
-  sub: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-  },
-});
-
-// ─── TRAP CARD ───────────────────────────────────────────────
 
 function TrapCard({ maskId }: { maskId: string }) {
   const session = useGameStore(s => s.game.session);
@@ -248,96 +142,130 @@ function TrapCard({ maskId }: { maskId: string }) {
   if (!mask) return null;
 
   return (
-    <View style={tc.section}>
-      <Text style={tc.header}>The trap that got you</Text>
-      <View style={tc.card}>
-        <Text style={tc.phrase}>{mask.phrase}</Text>
-        <Text style={tc.reveal}>
-          Not a meaning of {word.toUpperCase()}. Just nearby.
-        </Text>
-      </View>
+    <View style={[cc.card, cc.trap]}>
+      <Text style={[cc.header, { color: PW.color.lavender }]}>The trap that got you</Text>
+      <Text style={cc.phrase}>{mask.phrase}</Text>
+      <Text style={cc.copy}>Not a meaning of {word.toUpperCase()}. Just nearby.</Text>
     </View>
   );
 }
 
-const tc = StyleSheet.create({
-  section: { marginBottom: 24 },
-  header: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontFamily: FONTS.hud,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
+const cc = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(139,92,246,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.3)',
-    borderRadius: 14,
-    padding: 14,
+    backgroundColor: PW.color.cardFace,
+    borderWidth: 1.5,
+    borderRadius: PW.radius.lg,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    marginBottom: 14,
   },
-  phrase: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
+  ghost: {
+    backgroundColor: resultsCard.ghostFace,
+    borderColor: resultsCard.ghostRim,
+  },
+  trap: {
+    borderColor: resultsCard.rimTrap,
+  },
+  cleared: {
+    borderColor: resultsCard.rimGold,
+  },
+  header: {
+    fontSize: resultsType.cardHeader,
+    fontFamily: FONTS.hud,
+    letterSpacing: 1,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  word: {
+    fontSize: resultsType.cardWord,
+    fontFamily: FONTS.wordDisplay,
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
-  reveal: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 12,
-    fontStyle: 'italic',
+  phrase: {
+    color: PW.color.softWhite,
+    fontSize: resultsType.cardCopy + 1,
+    fontFamily: FONTS.tileCopy,
+    marginBottom: 4,
+  },
+  copy: {
+    color: PW.color.mutedWhite,
+    fontSize: resultsType.cardCopy,
+    fontFamily: FONTS.tileCopy,
+    lineHeight: resultsType.cardCopy + 5,
   },
 });
 
-// ─── PULSING BUTTON ──────────────────────────────────────────
+// ─── RUN IT BACK (Home dare treatment, native scale pulse) ──
 
 function RunItBackButton({ onPress }: { onPress: () => void }) {
-  const glow = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(glow, { toValue: 1, duration: 1000, useNativeDriver: false }),
-        Animated.timing(glow, { toValue: 0, duration: 1000, useNativeDriver: false }),
+        Animated.timing(pulse, { toValue: 1, duration: 950, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 950, useNativeDriver: true }),
       ]),
     ).start();
-  }, [glow]);
+  }, [pulse]);
 
-  const shadowOpacity = glow.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.9] });
-  const shadowRadius = glow.interpolate({ inputRange: [0, 1], outputRange: [8, 24] });
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
 
   return (
-    <Animated.View style={[btn.shadow, { shadowOpacity, shadowRadius }]}>
-      <Pressable onPress={onPress} style={btn.btn}>
-        <Text style={btn.label}>RUN IT BACK</Text>
+    <Animated.View style={[btn.wrap, { transform: [{ scale }] }]}>
+      <Pressable onPress={onPress} style={({ pressed }) => [btn.shell, pressed && btn.pressed]}>
+        <LinearGradient
+          colors={[...homeDare.faceGradient]}
+          locations={[...homeDare.faceLocations]}
+          style={btn.face}
+        >
+          <View style={btn.bottomEdge} />
+          <Text style={btn.label}>RUN IT BACK</Text>
+        </LinearGradient>
       </Pressable>
     </Animated.View>
   );
 }
 
 const btn = StyleSheet.create({
-  shadow: {
-    width: '100%',
-    borderRadius: 18,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 12,
+  wrap: {
+    ...PW.shadow.glowGold,
   },
-  btn: {
-    backgroundColor: '#FFD700',
-    borderRadius: 18,
-    paddingVertical: 18,
+  shell: {
+    borderRadius: PW.radius.card,
+    borderWidth: 2,
+    borderColor: homeDare.rim,
+    overflow: 'hidden',
+  },
+  face: {
+    minHeight: homeDare.minHeight,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomEdge: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 6,
+    backgroundColor: homeDare.bottomEdge,
   },
   label: {
-    color: '#1A1040',
-    fontSize: FONT_SIZES.hudScore,
+    color: homeDare.label,
     fontFamily: FONTS.hud,
-    letterSpacing: 2,
+    fontSize: homeType.dareLabel - 2,
+    letterSpacing: 3,
+    textShadowColor: homeDare.labelHighlight,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  pressed: {
+    opacity: 0.84,
   },
 });
 
-// ─── RESULTS SCREEN ──────────────────────────────────────────
+// ─── RESULTS SCREEN — THE HUNT LEDGER ────────────────────────
 
 type Props = {
   onRestart: () => void;
@@ -345,17 +273,20 @@ type Props = {
 };
 
 export default function ResultsScreen({ onRestart, onHome }: Props) {
-  const game              = useGameStore(s => s.game);
-  const ghostRevenge      = useGameStore(s => s.ghostRevenge);
+  const game = useGameStore(s => s.game);
+  const ghostRevenge = useGameStore(s => s.ghostRevenge);
   const recordRunComplete = useGameStore(s => s.recordRunComplete);
-  const progress          = useGameStore(s => s.progress);
+  const progress = useGameStore(s => s.progress);
   const { wordResults, score, bestCombo, status, lives } = game;
   const isComplete = status === 'complete';
 
   const [prevBest] = useState(() => progress.personalBest);
   const isNewBest = score > prevBest && score > 0;
-  const beatPolly = score >= 15000;
+  const beatPolly = isComplete && score >= 15000;
+  const outcome: 'loss' | 'beat' | 'complete' =
+    !isComplete ? 'loss' : beatPolly ? 'beat' : 'complete';
   const rank = computeRank(score);
+  const grade = computeGrade(lives, wordResults);
 
   const recordedRef = useRef(false);
   useEffect(() => {
@@ -370,111 +301,78 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     if (status === 'gameOver') playSfx('pollySqwawkLaugh');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Post-session ceremony hold
-  const HOLD_DURATION = isComplete ? 1800 : 1400;
-  const [showResults, setShowResults] = useState(false);
+  // Ceremony: verdict stamps in immediately; details reveal ~700ms later.
+  const verdictScale = useRef(new Animated.Value(0.8)).current;
+  const verdictY = useRef(new Animated.Value(20)).current;
+  const detailOpacity = useRef(new Animated.Value(0)).current;
+  const detailY = useRef(new Animated.Value(24)).current;
+
   useEffect(() => {
-    const t = setTimeout(() => setShowResults(true), HOLD_DURATION);
+    Animated.parallel([
+      Animated.spring(verdictScale, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }),
+      Animated.spring(verdictY, { toValue: 0, tension: 120, friction: 8, useNativeDriver: true }),
+    ]).start();
+    const t = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(detailOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.timing(detailY, { toValue: 0, duration: 400, useNativeDriver: true }),
+      ]).start();
+    }, 700);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // entrance animation
-  const enterY = useRef(new Animated.Value(40)).current;
-  const enterOpacity = useRef(new Animated.Value(0)).current;
-
-  // grade spring animation
-  const gradeScale = useRef(new Animated.Value(0.8)).current;
-  const gradeY = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    if (!showResults) return;
-    Animated.parallel([
-      Animated.timing(enterY, { toValue: 0, duration: 400, useNativeDriver: true }),
-      Animated.timing(enterOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-    ]).start();
-    setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(gradeScale, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }),
-        Animated.spring(gradeY, { toValue: 0, tension: 120, friction: 8, useNativeDriver: true }),
-      ]).start();
-    }, 150);
-  }, [showResults]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Ceremony hold screen — shown before results
-  if (!showResults) {
-    const holdHeadline = !isComplete
-      ? 'POLLY CLIPPED YOUR RUN.'
-      : score >= 15000
-      ? 'YOU BEAT POLLY'
-      : 'POLLY HUNT COMPLETE';
-    const holdSub = !isComplete
-      ? 'Out of feathers.'
-      : score >= 15000
-      ? 'Thought so.'
-      : null;
-    return (
-      <View style={ph.container}>
-        <Text style={ph.line}>{holdHeadline}</Text>
-        {holdSub && <Text style={ph.sub}>{holdSub}</Text>}
-      </View>
-    );
-  }
-
-  // derived data
+  // derived data — the missed/trap callouts are haunt territory, so they only
+  // read boss-word results (ghosts are boss-only; non-boss misses are not haunts)
   const wordOnlyResults = wordResults.filter(r => r.roundKind === 'word');
-  const allMissedMaskIds = wordResults.flatMap(r => r.missedMaskIds);
-  const allWrongMaskIds = wordResults.flatMap(r => r.wrongMaskIds);
-  const hasMissed = allMissedMaskIds.length > 0;
-  const firstWrongMaskId = allWrongMaskIds[0] ?? null;
-  const pollyLine = derivePollyLine(wordResults, isComplete);
-  const grade = computeGrade(lives, wordResults);
+  const bossResults = wordResults.filter(r => r.isBossWord);
+  const hauntMissedMaskIds = bossResults.flatMap(r => r.missedMaskIds);
+  const hauntWrongMaskIds = bossResults.flatMap(r => r.wrongMaskIds);
+  const firstWrongMaskId = hauntWrongMaskIds[0] ?? null;
+  const pollyLine = deriveResultsPollyLine(wordResults, isComplete);
 
-  const formattedScore = score.toLocaleString();
+  const verdictText = !isComplete
+    ? RESULTS_VERDICT_LOSS
+    : beatPolly
+    ? RESULTS_VERDICT_BEAT
+    : RESULTS_VERDICT_COMPLETE;
+  const verdictSub = !isComplete ? RESULTS_SUB_LOSS : beatPolly ? RESULTS_SUB_BEAT : null;
+
+  const perfectCount = wordOnlyResults.filter(
+    r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0,
+  ).length;
 
   return (
-    <Animated.View
-      style={[rs.container, { transform: [{ translateY: enterY }], opacity: enterOpacity }]}
-    >
+    <View style={rs.container}>
       <ScrollView
         style={rs.scroll}
         contentContainerStyle={rs.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── POLLY LINE ── */}
-        {pollyLine && (
-          <Text style={rs.pollyLine}>{pollyLine}</Text>
-        )}
-
-        {/* ── GRADE VERDICT ── */}
+        {/* ── VERDICT — the ceremony, appears exactly once ── */}
         <Animated.View
-          style={[rs.header, { transform: [{ scale: gradeScale }, { translateY: gradeY }] }]}
+          style={[rs.verdictBlock, { transform: [{ scale: verdictScale }, { translateY: verdictY }] }]}
         >
-
-          {/* Grade */}
-          <Text style={[rs.grade, { color: beatPolly ? '#F5C842' : grade.color }]}>
-            {!isComplete ? 'POLLY CLIPPED YOUR RUN.' : beatPolly ? 'YOU BEAT POLLY' : 'POLLY HUNT COMPLETE'}
-          </Text>
+          <View style={rs.verdictBox}>
+            <FoilWord
+              word={verdictText}
+              fontSize={resultsType.verdict}
+              baseStyle={rs.verdict}
+            />
+          </View>
+          {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
           <Text style={[rs.gradeSub, { color: grade.color }]}>{grade.text}</Text>
 
-          {/* Rank */}
           <View style={rs.rankRow}>
             <Text style={rs.rankLabel}>RANK</Text>
             <Text style={[rs.rankLetter, { color: rank.color }]}>{rank.letter}</Text>
           </View>
 
-          {/* Score line */}
           <Text style={rs.scoreLine}>
-            {formattedScore} pts  ·  ×{bestCombo} best combo
+            {score.toLocaleString()} pts  ·  ×{bestCombo} best combo
           </Text>
-
-          {/* Perfect line */}
           <Text style={rs.perfectLine}>
-            {wordOnlyResults.filter(r =>
-              r.correctUp === r.totalRealMasks && r.wrongSwipes === 0
-            ).length}/{wordOnlyResults.length} perfect
+            {perfectCount}/{wordOnlyResults.length} perfect
           </Text>
-
-          {/* Personal best */}
           {isNewBest ? (
             <Text style={rs.newBest}>NEW BEST</Text>
           ) : (
@@ -482,207 +380,190 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
               Best: {prevBest > 0 ? prevBest.toLocaleString() : '—'}
             </Text>
           )}
-
         </Animated.View>
 
-        {/* YOU BEAT POLLY banner */}
-        {beatPolly && (
-          <View style={rs.beatPollyBanner}>
-            <Text style={rs.beatPollyText}>YOU BEAT POLLY</Text>
-          </View>
-        )}
+        {/* ── DETAILS — reveal beneath the verdict ── */}
+        <Animated.View style={{ opacity: detailOpacity, transform: [{ translateY: detailY }] }}>
+          {/* Ledger */}
+          {wordOnlyResults.length > 0 && (
+            <View style={rs.ledgerPanel}>
+              <LinearGradient
+                colors={[resultsLedger.parchmentTop, resultsLedger.parchment]}
+                style={rs.parchment}
+              >
+                {wordOnlyResults.map((r, i) => (
+                  <LedgerRow key={`${r.wordId ?? r.word}-${i}`} result={r} />
+                ))}
+              </LinearGradient>
+            </View>
+          )}
 
-        {/* ── WORD RESULTS ── */}
-        {wordOnlyResults.length > 0 && (
-          <View style={rs.section}>
-            {wordOnlyResults.map((r, i) => (
-              <WordResultRow key={`${r.wordId ?? r.word}-${i}`} result={r} />
-            ))}
-          </View>
-        )}
+          {/* Ghost revenge */}
+          {ghostRevenge?.result === 'correct' && (
+            <View style={[cc.card, cc.cleared]}>
+              <Text style={[cc.header, { color: PW.color.goldSoft }]}>Haunt broken</Text>
+              <View style={rs.foilWordBox}>
+                <FoilWord
+                  word={ghostRevenge.word.toUpperCase()}
+                  fontSize={resultsType.cardWord}
+                  baseStyle={rs.foilCardWord}
+                />
+              </View>
+              <Text style={cc.copy}>Rematch won.</Text>
+            </View>
+          )}
+          {ghostRevenge?.result === 'wrong' && (
+            <View style={[cc.card, cc.ghost]}>
+              <Text style={[cc.header, { color: resultsCard.ghostTitle }]}>Still haunting you</Text>
+              <Text style={[cc.word, { color: resultsCard.ghostTitle }]}>
+                {ghostRevenge.word.toUpperCase()}
+              </Text>
+              <Text style={cc.copy}>Missed me?</Text>
+            </View>
+          )}
 
-        {/* ── GHOST REVENGE RESULT ── */}
-        {ghostRevenge?.result === 'correct' && (
-          <View style={gr.cardCleared}>
-            <Text style={gr.header}>Haunt broken 🔥</Text>
-            <Text style={gr.word}>{ghostRevenge.word}</Text>
-            <Text style={gr.sub}>Rematch won.</Text>
-          </View>
-        )}
-        {ghostRevenge?.result === 'wrong' && (
-          <View style={gr.cardHaunting}>
-            <Text style={gr.header}>Still haunting you 👻</Text>
-            <Text style={gr.word}>{ghostRevenge.word}</Text>
-            <Text style={gr.sub}>Missed me?</Text>
-          </View>
-        )}
+          {/* Meaning missed — haunts only */}
+          {hauntMissedMaskIds.length > 0 && (
+            <GhostSetCard firstMissedMaskId={hauntMissedMaskIds[0]} />
+          )}
 
-        {/* ── GHOST SET — separate from missed section ── */}
-        {hasMissed && (
-          <GhostSetCard firstMissedMaskId={allMissedMaskIds[0]} />
-        )}
+          {/* Trap that got you */}
+          {firstWrongMaskId && <TrapCard maskId={firstWrongMaskId} />}
 
-        {/* ── TRAP THAT GOT YOU ── */}
-        {firstWrongMaskId && (
-          <TrapCard maskId={firstWrongMaskId} />
-        )}
-
-        {/* ── RUN IT BACK ── */}
-        <RunItBackButton onPress={onRestart} />
-
-        {/* ── HOME ── */}
-        <Pressable onPress={onHome} style={rs.homeLink}>
-          <Text style={rs.homeLinkText}>HOME</Text>
-        </Pressable>
+          {/* Buttons */}
+          <RunItBackButton onPress={onRestart} />
+          <Pressable onPress={onHome} style={rs.homeLink}>
+            <Text style={rs.homeLinkText}>HOME</Text>
+          </Pressable>
+        </Animated.View>
       </ScrollView>
-    </Animated.View>
+
+      <PollyResultsPerch outcome={outcome} line={pollyLine} />
+    </View>
   );
 }
 
-const ph = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A1040',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  line: {
-    color: '#4CAF50',
-    fontSize: FONT_SIZES.pollyLine,
-    fontFamily: FONTS.polly,
-    textAlign: 'center',
-  },
-  sub: {
-    color: 'rgba(255,255,255,0.45)',
-    fontSize: 15,
-    fontFamily: FONTS.label,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    marginTop: 12,
-    textAlign: 'center',
-  },
-});
-
 const rs = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#1A1040',
+    flex: 1, // transparent — GameScreen's stage shows through
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingTop: 28,
+    paddingBottom: 200, // clears Polly at full scroll
   },
-  pollyLine: {
-    color: '#FFD700',
-    fontSize: FONT_SIZES.pollyLine,
-    fontFamily: FONTS.polly,
-    textAlign: 'center',
-    marginBottom: 16,
-    letterSpacing: 0.5,
-  },
-  header: {
+  verdictBlock: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 24,
   },
-  grade: {
-    fontSize: FONT_SIZES.brandTitle,
+  verdictBox: {
+    width: '100%',
+    height: resultsType.verdict + 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verdict: {
     fontFamily: FONTS.wordDisplay,
+    fontSize: resultsType.verdict,
+    letterSpacing: 2,
     textAlign: 'center',
-    marginBottom: 10,
+    width: '100%',
+  },
+  verdictSub: {
+    color: PW.color.softWhite,
+    fontSize: resultsType.verdictSub,
+    fontFamily: FONTS.label,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    marginTop: 8,
   },
   gradeSub: {
     fontFamily: FONTS.label,
-    fontSize: 13,
+    fontSize: resultsType.gradeSub,
     letterSpacing: 3,
     textTransform: 'uppercase',
     marginTop: 6,
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  scoreLine: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: FONTS.hud,
-    fontWeight: '600',
-    textAlign: 'center',
-    opacity: 0.7,
-  },
-  perfectLine: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontFamily: FONTS.hud,
-    fontWeight: '600',
-    textAlign: 'center',
-    opacity: 0.75,
-    marginTop: 4,
+    opacity: 0.8,
   },
   rankRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginTop: 6,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 8,
   },
   rankLabel: {
-    color: 'rgba(255,255,255,0.45)',
-    fontSize: 12,
+    color: PW.color.mutedWhite,
+    fontSize: resultsType.rankLabel,
     fontFamily: FONTS.hud,
-    fontWeight: '700',
     letterSpacing: 2,
   },
   rankLetter: {
-    fontSize: 28,
+    fontSize: resultsType.rankLetter,
     fontFamily: FONTS.wordDisplay,
     letterSpacing: 1,
   },
-  newBest: {
-    color: '#F5C842',
-    fontSize: 13,
+  scoreLine: {
+    color: PW.color.softWhite,
+    fontSize: resultsType.scoreLine,
     fontFamily: FONTS.hud,
-    fontWeight: '700',
+  },
+  perfectLine: {
+    color: PW.color.foilLight,
+    fontSize: resultsType.perfectLine,
+    fontFamily: FONTS.hud,
+    marginTop: 4,
+    opacity: 0.85,
+  },
+  newBest: {
+    color: resultsVerdictColor.newBest,
+    fontSize: resultsType.bestLine,
+    fontFamily: FONTS.hud,
     letterSpacing: 2,
     marginTop: 6,
   },
   prevBest: {
-    color: 'rgba(255,255,255,0.35)',
-    fontSize: 12,
+    color: resultsVerdictColor.prevBest,
+    fontSize: resultsType.bestLine,
     fontFamily: FONTS.hud,
-    fontWeight: '600',
     marginTop: 4,
   },
-  beatPollyBanner: {
-    backgroundColor: 'rgba(245,200,66,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.45)',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  beatPollyText: {
-    color: '#F5C842',
-    fontSize: 16,
-    fontFamily: FONTS.wordDisplay,
-    letterSpacing: 2,
-  },
-  section: {
+  ledgerPanel: {
+    backgroundColor: resultsLedger.panelFace,
+    borderWidth: 1.5,
+    borderColor: resultsLedger.panelRim,
+    borderRadius: PW.radius.lg,
+    padding: 6,
     marginBottom: 16,
+  },
+  parchment: {
+    borderRadius: PW.radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  foilWordBox: {
+    height: resultsType.cardWord + 10,
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  foilCardWord: {
+    fontFamily: FONTS.wordDisplay,
+    fontSize: resultsType.cardWord,
+    letterSpacing: 1.5,
+    textAlign: 'left',
   },
   homeLink: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 18,
+    paddingVertical: 8,
   },
   homeLinkText: {
-    color: 'rgba(255,255,255,0.35)',
-    fontSize: 14,
+    color: PW.color.mutedWhite,
+    fontSize: resultsType.homeLink,
     fontFamily: FONTS.hud,
-    fontWeight: '700',
     letterSpacing: 2,
   },
 });
