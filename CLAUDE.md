@@ -1,6 +1,6 @@
 # POLYWORDS — CLAUDE.md
 
-### Ground truth for Claude Code · Lean guardrails · Updated 2026-07-02
+### Ground truth for Claude Code · Lean guardrails · Updated 2026-07-04
 
 POLYWORDS: a mobile word-puzzle game about polysemous words. Polly (antagonist, Master of
 Words) sets every trap; the player challenges her one word at a time. North star: the
@@ -63,13 +63,15 @@ Dev Windows, VS Code, forward-slash paths, Expo Go via QR
 | Gold | `#F5C842` | Score, boss word, reward, mastery, trims |
 | Purple | `#7B2D8B` | Trap shards, ghost border, Polly accent |
 | Rose | `#9B2D6B` | Crystal shard gradient partner |
-| Polly Green | `#4CAF50` | Polly mascot only |
+| Polly Green | `#4CAF50` | Polly, and brand/UI where she's clearly present |
 | Deep Dark | `#0F0D2A` | Hero surfaces, tiles, Vault surfaces |
 | Wrong Flash | `#CC2200` | Wrong-swipe flash only |
 | White | `#FFFFFF` | UI text |
 
-- Max 2 gold focus elements on screen. Polly Green is Polly only, never UI chrome. Wrong Flash
-  red is never decoration and never text.
+- Max 2 gold focus elements on screen. Wrong Flash red is never decoration and never text.
+- (2026-07-04) "Polly Green is Polly only, never UI chrome" is repealed — it was an early-day
+  callout, not a real constraint. She keeps her natural green everywhere, including brand marks
+  (icon-mark) and in-game UI where it fits.
 
 ---
 
@@ -108,7 +110,7 @@ perch/heckle zone; direction cues are help only, never correctness feedback.
 
 left swipe · tap interactions · snap-back wrong swipes · two-tile hidden gate split · Master
 Gate · ghost/mastery for non-boss words · Reanimated outside SwipeMask · rectangle/square
-particles · red text/decor · Polly Green UI chrome · >2 gold focus elements · hiddenEmoji /
+particles · red text/decor · >2 gold focus elements · hiddenEmoji /
 hiddenTrapEmoji · `revealHidden()` · `hiddenFound` in WordResult · `pollyTrigger hiddenReveal`
 · HIDDEN tile type · sprite-sheet Polly · visual tells before swipe · dashed borders ·
 pink/magenta.
@@ -176,4 +178,4 @@ assets/data/huntData.v2.json           Dormant approved V2 meaning bank (not gam
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · 2026-07-02 · detail in docs/GAME_REFERENCE.md*
+*POLYWORDS CLAUDE.md · Pete DiBari · 2026-07-04 · detail in docs/GAME_REFERENCE.md*

@@ -39,6 +39,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# brainstorming visual companion
+.superpowers/
+
 # generated native folders
 /ios
 /android
