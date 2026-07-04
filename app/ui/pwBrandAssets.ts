@@ -17,8 +17,8 @@ export const brandColors = {
   radialBgCenter: '#9B5FC9',
   radialBgMid: '#5B2470',
   radialBgEdge: '#241338',
-  featherFill: '#F5F0E6',
-  featherOutline: '#1A1830',
+  wordmarkShadow: '#6B3E88',
+  wordmarkOutline: '#2A1245',
 } as const;
 
 const c = brandColors;
@@ -79,26 +79,20 @@ export const APP_ICON_MONOGRAM_ADAPTIVE_SVG = `
   </g>
 </svg>`;
 
+// Simplified single-word treatment (approved 2026-07-04): one word, one
+// gold fill, one purple shadow duplicate, one dark outline. No per-word
+// two-tone split, no badge background, no feather — those drove both the
+// SvgXml rendering issues and a look that didn't match the approved
+// reference. Background is deliberately left untransparent (no <rect>) so
+// this sits directly on top of whatever the consumer renders behind it
+// (Home screen art, or the splash screen's own backgroundColor).
 export const WORDMARK_LOCKUP_SVG = `
-<svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 460 170" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    ${radialBgDefs('wordmarkBg', '50%', '35%', '70%')}
-    <path id="wordmarkArc" d="M 10,192 Q 230,105 450,192" fill="none"/>
+    <path id="wordmarkArc" d="M 20,110 Q 230,60 440,110" fill="none"/>
   </defs>
-  <circle cx="230" cy="170" r="140" fill="url(#wordmarkBg)"/>
 
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}" stroke="${c.goldFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
-
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}" stroke="${c.purpleFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
-
-  <g transform="translate(195,150) rotate(10)">
-    <path d="M0,-38 Q-7,-8 0,40 Q7,-8 0,-38 Z" fill="${c.featherFill}" stroke="${c.featherOutline}" stroke-width="2.5"/>
-    <path d="M0,-32 L0,36" stroke="${c.featherOutline}" stroke-width="1.5"/>
-  </g>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="52" fill="${c.wordmarkShadow}" transform="translate(6,8)"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="52" fill="${c.wordmarkOutline}" stroke="${c.wordmarkOutline}" stroke-width="6"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="52" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
 </svg>`;

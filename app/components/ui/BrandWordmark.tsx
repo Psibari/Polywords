@@ -2,7 +2,7 @@ import React from 'react';
 import { SvgXml } from 'react-native-svg';
 import { WORDMARK_LOCKUP_SVG } from '../../ui/pwBrandAssets';
 
-const WORDMARK_ASPECT_RATIO = 300 / 460;
+const WORDMARK_ASPECT_RATIO = 170 / 460;
 
 type Props = {
   width: number;

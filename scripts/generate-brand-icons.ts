@@ -40,7 +40,7 @@ type Target = { svg: string; file: string; width: number; height: number };
 const TARGETS: Target[] = [
   { svg: APP_ICON_MONOGRAM_SVG, file: path.join(OUT_DIR, 'icon.png'), width: 1024, height: 1024 },
   { svg: APP_ICON_MONOGRAM_ADAPTIVE_SVG, file: path.join(OUT_DIR, 'adaptive-icon.png'), width: 1024, height: 1024 },
-  { svg: WORDMARK_LOCKUP_SVG, file: path.join(OUT_DIR, 'splash-icon.png'), width: 1200, height: 783 },
+  { svg: WORDMARK_LOCKUP_SVG, file: path.join(OUT_DIR, 'splash-icon.png'), width: 1200, height: 444 },
 ];
 
 async function main(): Promise<void> {
