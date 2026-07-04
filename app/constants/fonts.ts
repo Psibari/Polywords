@@ -15,6 +15,9 @@ export const FONTS = {
   // Polly speech only — mixed case, never uppercase
   polly: 'LilitaOne-Regular',
 
+  // Brand logotype only — wordmark lockup + app icon. Never general UI.
+  logotype: 'RammettoOne-Regular',
+
   // Legacy aliases — keep to avoid breaking existing imports
   poppinsBold:     'BarlowCondensed-Bold',
   poppinsSemiBold: 'BarlowCondensed-Bold',
