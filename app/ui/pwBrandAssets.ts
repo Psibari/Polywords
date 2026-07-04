@@ -46,7 +46,7 @@ function letterLayers(
     <text x="0" y="0" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="${fontSize}" fill="${shadow}" transform="translate(5,6)">${glyph}</text>
     <text x="0" y="0" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="${fontSize}" fill="${c.white}" stroke="${c.white}" stroke-width="9">${glyph}</text>
     <text x="0" y="0" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="${fontSize}" fill="${accentRing}" stroke="${accentRing}" stroke-width="4">${glyph}</text>
-    <text x="0" y="0" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="${fontSize}" fill="${fill}">${glyph}</text>`;
+    <text x="0" y="0" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="${fontSize}" fill="${fill}" stroke="none" stroke-width="0">${glyph}</text>`;
 }
 
 function monogramLetters(): string {
@@ -90,12 +90,12 @@ export const WORDMARK_LOCKUP_SVG = `
   <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
   <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
   <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}" stroke="${c.goldFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
 
   <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
   <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
   <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}" stroke="${c.purpleFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
 
   <g transform="translate(195,150) rotate(10)">
     <path d="M0,-38 Q-7,-8 0,40 Q7,-8 0,-38 Z" fill="${c.featherFill}" stroke="${c.featherOutline}" stroke-width="2.5"/>
