@@ -16,8 +16,6 @@ export const HOME_GREETING_LINES = [
 
 // ── Type scale (legibility clause: floor 14, tune on device) ──
 export const homeType = {
-  wordmark: 68, // width-driven via adjustsFontSizeToFit
-  wordmarkTracking: 3,
   tagline: 18,
   dareLabel: 32,
   doorEyebrow: 14,

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
+  Dimensions,
   ImageBackground,
   Pressable,
   SafeAreaView,
@@ -10,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import PollyHomePerch from '../components/PollyHomePerch';
-import { FoilWord } from '../components/ui/FoilWord';
+import { BrandWordmark } from '../components/ui/BrandWordmark';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 import { cardMaterial, stageMaterial } from '../ui/pwMaterials';
@@ -30,6 +31,7 @@ type Props = {
 export default function HomeScreen({ navigation }: Props) {
   const startGame = useGameStore(s => s.startGame);
   const darePulse = useRef(new Animated.Value(0)).current;
+  const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 380);
 
   useEffect(() => {
     Animated.loop(
@@ -63,14 +65,10 @@ export default function HomeScreen({ navigation }: Props) {
 
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.content}>
-            {/* Title block — baseline foil wordmark (bespoke logotype: own session) */}
+            {/* Title block — bespoke POLYWORDS brand lockup */}
             <View style={styles.titleBlock}>
               <View style={styles.wordmarkBox}>
-                <FoilWord
-                  word="POLYWORDS"
-                  fontSize={homeType.wordmark}
-                  baseStyle={styles.wordmark}
-                />
+                <BrandWordmark width={wordmarkWidth} />
               </View>
               <Text style={styles.tagline}>{HOME_TAGLINE}</Text>
             </View>
@@ -164,16 +162,8 @@ const styles = StyleSheet.create({
   },
   wordmarkBox: {
     width: '100%',
-    height: homeType.wordmark + 16,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  wordmark: {
-    fontFamily: FONTS.wordDisplay,
-    fontSize: homeType.wordmark,
-    letterSpacing: homeType.wordmarkTracking,
-    textAlign: 'center',
-    width: '100%',
   },
   tagline: {
     marginTop: 6,
