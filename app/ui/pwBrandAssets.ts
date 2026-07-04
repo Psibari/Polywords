@@ -83,21 +83,21 @@ export const WORDMARK_LOCKUP_SVG = `
 <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg">
   <defs>
     ${radialBgDefs('wordmarkBg', '50%', '35%', '70%')}
-    <path id="wordmarkArc" d="M 60,190 Q 230,110 400,190" fill="none"/>
+    <path id="wordmarkArc" d="M 10,192 Q 230,105 450,192" fill="none"/>
   </defs>
   <circle cx="230" cy="170" r="140" fill="url(#wordmarkBg)"/>
 
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="6%">POLY</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="6%">POLY</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}" stroke="${c.goldFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="6%">POLY</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}"><textPath href="#wordmarkArc" startOffset="6%">POLY</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}" stroke="${c.goldFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}"><textPath href="#wordmarkArc" startOffset="15">POLY</textPath></text>
 
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="56%">WORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="56%">WORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}" stroke="${c.purpleFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="56%">WORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}"><textPath href="#wordmarkArc" startOffset="56%">WORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleShadow}" transform="translate(5,6)"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.white}" stroke="${c.white}" stroke-width="9"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.purpleFill}" stroke="${c.purpleFill}" stroke-width="4"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="46" fill="${c.goldFill}"><textPath href="#wordmarkArc" startOffset="215">WORDS</textPath></text>
 
-  <g transform="translate(228,128) rotate(10)">
+  <g transform="translate(195,150) rotate(10)">
     <path d="M0,-38 Q-7,-8 0,40 Q7,-8 0,-38 Z" fill="${c.featherFill}" stroke="${c.featherOutline}" stroke-width="2.5"/>
     <path d="M0,-32 L0,36" stroke="${c.featherOutline}" stroke-width="1.5"/>
   </g>

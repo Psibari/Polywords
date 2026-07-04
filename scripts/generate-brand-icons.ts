@@ -56,7 +56,7 @@ async function main(): Promise<void> {
       waitUntil: 'networkidle',
     });
     await page.evaluate(() => document.fonts.ready);
-    await page.screenshot({ path: target.file });
+    await page.screenshot({ path: target.file, omitBackground: true });
     await page.close();
     console.log(`Wrote ${target.file} (${target.width}x${target.height})`);
   }
