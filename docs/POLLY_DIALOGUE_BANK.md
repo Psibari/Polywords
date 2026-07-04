@@ -139,6 +139,9 @@ Notes:
 - Some meanings still haunt you.
 - My traps remember you.
 
+Notes:
+Live on the Hunt Ledger (ResultsScreen bubble): lost run → "My traps remember you." · perfect run → "You emptied my little vault." · boss cleared → "Fine. Keep the word." · meanings missed → "Some meanings got past you." Ordinary clean-ish completes get no line (she watches, silent).
+
 ## Home Greeting Lines (threshold, one per app open)
 
 Rotating; delivered once per app session after Polly's fly-in; silent after.
