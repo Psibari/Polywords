@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import HomeEmbers from '../components/HomeEmbers';
 import PollyHomePerch from '../components/PollyHomePerch';
 import { BrandWordmark } from '../components/ui/BrandWordmark';
 import { FONTS } from '../constants/fonts';
@@ -134,6 +135,7 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         </SafeAreaView>
 
+        <HomeEmbers />
         <PollyHomePerch />
       </ImageBackground>
     </View>
