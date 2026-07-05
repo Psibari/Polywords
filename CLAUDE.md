@@ -1,6 +1,6 @@
 # POLYWORDS — CLAUDE.md
 
-### Ground truth for Claude Code · Lean guardrails · Updated 2026-07-04
+### Ground truth for Claude Code · Lean guardrails · Updated 2026-07-05
 
 POLYWORDS: a mobile word-puzzle game about polysemous words. Polly (antagonist, Master of
 Words) sets every trap; the player challenges her one word at a time. North star: the
@@ -39,10 +39,16 @@ entrance, perched continuously, reaction pose-swaps + whole-image punch + laugh 
 ```text
 Runtime Expo SDK managed · TS strict · React Native · Zustand+immer
 Animation React Native Animated API · SVG react-native-svg 15.12.1
-Haptics Expo Haptics · Audio expo-audio · Nav Expo Router
+Haptics Expo Haptics · Audio expo-audio (sfx.ts player pools · MusicEngine.ts file stems) · Nav Expo Router
 Fonts Bungee Shade, BebasNeue-Regular, Barlow Condensed Bold, Lilita One
 Dev Windows, VS Code, forward-slash paths, Expo Go via QR
 ```
+
+### Music
+
+- `MusicEngine.ts` plays five stem files (`assets/audio/music/stem-*.wav`), 5-state machine + crossfades. Runtime WAV synthesis is deleted — never reintroduce.
+- Stem contract LOCKED: 104 BPM · A minor · 8 bars · 18.4615 s (814,154 samples) · 44.1 kHz mono 16-bit · sample-accurate loops. Replacements must match exactly (drop-in, zero code change).
+- Audio triggers key off step `eventType` (boss = `eventType === 'bossWord'`), never magic `stepIndex` numbers. `preview-*.wav` = audition-only, never committed.
 
 ### Animation rules (load-bearing)
 
@@ -113,7 +119,8 @@ Gate · ghost/mastery for non-boss words · Reanimated outside SwipeMask · rect
 particles · red text/decor · >2 gold focus elements · hiddenEmoji /
 hiddenTrapEmoji · `revealHidden()` · `hiddenFound` in WordResult · `pollyTrigger hiddenReveal`
 · HIDDEN tile type · sprite-sheet Polly · visual tells before swipe · dashed borders ·
-pink/magenta.
+pink/magenta · runtime-synthesized music stems · `app/audio/music.ts` + jungle/cinematic music files · magic
+`stepIndex` audio triggers.
 
 ---
 
@@ -149,6 +156,7 @@ Full: `docs/WORKFLOW.md`. Hard rules:
 - After every patch: `npx.cmd tsc --noEmit` · `git diff --check` · `git status --short`.
 - Device screenshot required before visual commits. Tag known-good after device confirmation:
   `git tag v0.working-YYYYMMDD`.
+- DEV ONLY: GameScreen boss-jump buttons (`4ae4dc6`, commit also contains boss music trigger fix) — remove before release.
 
 ---
 
@@ -169,6 +177,7 @@ app/game/polyRunEngine.ts · types.ts · app/store/useGameStore.ts   Engine / ty
 app/screens/GameScreen.tsx             Play HUD + background
 app/screens/HomeScreen.tsx · VaultScreen.tsx · ResultsScreen.tsx · DailyChallengeScreen.tsx
 app/game/dailyChallengeEngine.ts · dailyPool.ts   Daily builder / pool
+app/audio/MusicEngine.ts + sfx.ts                 Music stems / file SFX
 assets/data/huntData.json              403-word tile database
 assets/images/polly/poses/*.png        Daily Polly poses (transparent)  ·  polly/*.webp legacy
 assets/sfx/                            Game SFX
@@ -178,4 +187,4 @@ assets/data/huntData.v2.json           Dormant approved V2 meaning bank (not gam
 
 ---
 
-*POLYWORDS CLAUDE.md · Pete DiBari · 2026-07-04 · detail in docs/GAME_REFERENCE.md*
+*POLYWORDS CLAUDE.md · Pete DiBari · 2026-07-05 · detail in docs/GAME_REFERENCE.md*
