@@ -7,7 +7,7 @@
 // embedded custom web fonts and can silently substitute a fallback font,
 // which would ship a broken-looking icon.
 import { chromium } from 'playwright';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   WORDMARK_LOCKUP_SVG,
@@ -17,6 +17,7 @@ import {
 
 const FONT_PATH = path.resolve(import.meta.dirname, '../assets/fonts/RammettoOne-Regular.ttf');
 const OUT_DIR = path.resolve(import.meta.dirname, '../assets');
+const BRAND_IMAGES_DIR = path.join(OUT_DIR, 'images/brand');
 
 function pageHtml(svg: string, width: number, height: number, fontBase64: string): string {
   return `<!doctype html>
@@ -41,9 +42,16 @@ const TARGETS: Target[] = [
   { svg: APP_ICON_MONOGRAM_SVG, file: path.join(OUT_DIR, 'icon.png'), width: 1024, height: 1024 },
   { svg: APP_ICON_MONOGRAM_ADAPTIVE_SVG, file: path.join(OUT_DIR, 'adaptive-icon.png'), width: 1024, height: 1024 },
   { svg: WORDMARK_LOCKUP_SVG, file: path.join(OUT_DIR, 'splash-icon.png'), width: 1200, height: 444 },
+  // Static asset for the Home screen — rendered as a plain image (expo-image),
+  // not a live SvgXml component, after react-native-svg's SvgXml proved
+  // unreliable on-device (clipped to raw viewBox pixel size). 920x340 is 2x
+  // the SVG's 460x170 viewBox, sharp enough for retina phone screens at the
+  // ~380pt max width BrandWordmark renders at.
+  { svg: WORDMARK_LOCKUP_SVG, file: path.join(BRAND_IMAGES_DIR, 'wordmark.png'), width: 920, height: 340 },
 ];
 
 async function main(): Promise<void> {
+  mkdirSync(BRAND_IMAGES_DIR, { recursive: true });
   const fontBase64 = readFileSync(FONT_PATH).toString('base64');
   const browser = await chromium.launch();
 

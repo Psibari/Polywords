@@ -1,6 +1,5 @@
 import React from 'react';
-import { SvgXml } from 'react-native-svg';
-import { WORDMARK_LOCKUP_SVG } from '../../ui/pwBrandAssets';
+import { Image } from 'expo-image';
 
 const WORDMARK_ASPECT_RATIO = 170 / 460;
 
@@ -8,12 +7,17 @@ type Props = {
   width: number;
 };
 
+// Static image, not a live SvgXml render — react-native-svg's SvgXml proved
+// unreliable on-device (clipped to raw viewBox pixel size regardless of the
+// width/height props). The source SVG (app/ui/pwBrandAssets.ts) is still the
+// single source of truth; this PNG is generated from it by
+// scripts/generate-brand-icons.ts.
 export function BrandWordmark({ width }: Props) {
   return (
-    <SvgXml
-      xml={WORDMARK_LOCKUP_SVG}
-      width={width}
-      height={width * WORDMARK_ASPECT_RATIO}
+    <Image
+      source={require('../../../assets/images/brand/wordmark.png')}
+      style={{ width, height: width * WORDMARK_ASPECT_RATIO }}
+      contentFit="contain"
     />
   );
 }
