@@ -27,7 +27,6 @@ import { PollyHuntVisit } from '../components/PollyHuntVisit';
 const MAX_FEATHERS = 5;
 const SHOW_POLLY_DEVICE_TEST = false;
 const SHOW_POLLY_RIG_TEST = false;
-const SHOW_DEV_BOSS_BUTTON = false;
 
 function PollyDeviceTestOverlay() {
   const [state, setState] = useState<PollyAnimationState>('flyIn');
@@ -505,8 +504,11 @@ function GameDirector({ navigation }: { navigation: any }) {
       stopMusic();
       return;
     }
+    const activeStep = currentStep(game);
+    const isBossStep = activeStep.kind === 'word' && activeStep.eventType === 'bossWord';
+
     let state: MusicState;
-    if (game.stepIndex === 11) {
+    if (isBossStep) {
       state = 'boss';
     } else if (game.lives <= 2) {
       state = 'crisis';
@@ -544,23 +546,20 @@ function GameDirector({ navigation }: { navigation: any }) {
     navigation.navigate('Home');
   }
 
-  function handleDevJumpToBoss() {
+  function handleDevJumpToBoss(livesOverride?: number) {
     if (!__DEV__) return;
 
     const currentGame = useGameStore.getState().game;
-    const bossStep = currentGame.session[9];
-    if (
-      !bossStep ||
-      bossStep.kind !== 'word' ||
-      bossStep.eventType !== 'bossWord'
-    ) {
-      return;
-    }
+    const bossIndex = currentGame.session.findIndex(
+      step => step.kind === 'word' && step.eventType === 'bossWord'
+    );
+    if (bossIndex === -1) return;
 
     useGameStore.setState({
       game: {
         ...currentGame,
-        stepIndex: 9,
+        stepIndex: bossIndex,
+        lives: livesOverride ?? currentGame.lives,
         swipedUpIds: [],
         swipedDownIds: [],
         revealedHiddenMasks: {},
@@ -652,15 +651,25 @@ function GameDirector({ navigation }: { navigation: any }) {
           onWrongSwipe={handleWrongSwipe}
         />
       )}
-      {SHOW_DEV_BOSS_BUTTON && __DEV__ && !isDone && game.stepIndex !== 9 && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Jump to boss round"
-          onPress={handleDevJumpToBoss}
-          style={styles.devBossButton}
-        >
-          <Text style={styles.devBossButtonText}>BOSS</Text>
-        </Pressable>
+      {__DEV__ && !isDone && !isBossRound && (
+        <View pointerEvents="box-none" style={styles.devBossOverlay}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Jump to boss round"
+            onPress={() => handleDevJumpToBoss()}
+            style={styles.devBossButton}
+          >
+            <Text style={styles.devBossButtonText}>BOSS</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Jump to boss round with two lives remaining"
+            onPress={() => handleDevJumpToBoss(2)}
+            style={[styles.devBossButton, styles.devBossButtonCrisis]}
+          >
+            <Text style={styles.devBossButtonText}>BOSS{'\n'}(CRISIS)</Text>
+          </Pressable>
+        </View>
       )}
 
       {/* ── Flash overlays — zIndex 50, above game content ── */}
@@ -767,11 +776,15 @@ const styles = StyleSheet.create({
     borderRadius: 90,
     backgroundColor: 'rgba(245,200,66,0.04)',
   },
-  devBossButton: {
+  devBossOverlay: {
     position: 'absolute',
     right: 10,
     bottom: 10,
     zIndex: 200,
+    gap: 6,
+    alignItems: 'flex-end',
+  },
+  devBossButton: {
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 6,
@@ -780,11 +793,15 @@ const styles = StyleSheet.create({
     backgroundColor: PW.color.surfaceDeep,
     opacity: 0.72,
   },
+  devBossButtonCrisis: {
+    borderColor: '#CC2200',
+  },
   devBossButtonText: {
     color: PW.color.gold,
     fontFamily: FONTS.label,
     fontSize: 9,
     letterSpacing: 1.2,
+    textAlign: 'center',
   },
   effectsOverlay: {
     position: 'absolute',
