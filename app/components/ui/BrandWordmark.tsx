@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image } from 'expo-image';
 
-const WORDMARK_ASPECT_RATIO = 170 / 460;
+const WORDMARK_ASPECT_RATIO = 165 / 700;
 
 type Props = {
   width: number;

@@ -86,13 +86,17 @@ export const APP_ICON_MONOGRAM_ADAPTIVE_SVG = `
 // reference. Background is deliberately left untransparent (no <rect>) so
 // this sits directly on top of whatever the consumer renders behind it
 // (Home screen art, or the splash screen's own backgroundColor).
+// Canvas is tightly cropped around the measured text bounding box (not
+// guessed) so the glyphs fill nearly the whole frame — a loose canvas with
+// padding was making the title read smaller than it should for THE title,
+// even though the image's own bounding box was nearly full screen width.
 export const WORDMARK_LOCKUP_SVG = `
-<svg width="460" height="170" viewBox="0 0 460 170" xmlns="http://www.w3.org/2000/svg">
+<svg width="700" height="165" viewBox="0 0 700 165" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <path id="wordmarkArc" d="M 20,110 Q 230,60 440,110" fill="none"/>
+    <path id="wordmarkArc" d="M 20,138 Q 350,38 680,138" fill="none"/>
   </defs>
 
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="52" fill="${c.wordmarkShadow}" transform="translate(6,8)"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="52" fill="${c.wordmarkOutline}" stroke="${c.wordmarkOutline}" stroke-width="6"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="52" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="65" fill="${c.wordmarkShadow}" transform="translate(6,8)"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="65" fill="${c.wordmarkOutline}" stroke="${c.wordmarkOutline}" stroke-width="6"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="65" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
 </svg>`;
