@@ -87,16 +87,20 @@ export const APP_ICON_MONOGRAM_ADAPTIVE_SVG = `
 // this sits directly on top of whatever the consumer renders behind it
 // (Home screen art, or the splash screen's own backgroundColor).
 // Canvas is tightly cropped around the measured text bounding box (not
-// guessed) so the glyphs fill nearly the whole frame — a loose canvas with
-// padding was making the title read smaller than it should for THE title,
-// even though the image's own bounding box was nearly full screen width.
+// guessed) so the glyphs fill nearly the whole frame. First cut used a
+// viewBox much wider than the actual on-screen display width, so it got
+// scaled DOWN to fit the Home screen — the title still read smaller than
+// the "ENTER THE HUNT" button (32px) despite looking fine in isolation.
+// Re-measured font-size/arc against a viewBox close to real display width
+// (~420-460pt) so what's authored here is close to 1:1 with what renders,
+// not shrunk by a wide canvas.
 export const WORDMARK_LOCKUP_SVG = `
-<svg width="700" height="165" viewBox="0 0 700 165" xmlns="http://www.w3.org/2000/svg">
+<svg width="900" height="230" viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <path id="wordmarkArc" d="M 20,138 Q 350,38 680,138" fill="none"/>
+    <path id="wordmarkArc" d="M 20,180 Q 450,80 880,180" fill="none"/>
   </defs>
 
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="65" fill="${c.wordmarkShadow}" transform="translate(6,8)"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="65" fill="${c.wordmarkOutline}" stroke="${c.wordmarkOutline}" stroke-width="6"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
-  <text font-family="${BRAND_FONT_FAMILY}" font-size="65" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="90" fill="${c.wordmarkShadow}" transform="translate(8,10)"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="90" fill="${c.wordmarkOutline}" stroke="${c.wordmarkOutline}" stroke-width="8"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
+  <text font-family="${BRAND_FONT_FAMILY}" font-size="90" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
 </svg>`;

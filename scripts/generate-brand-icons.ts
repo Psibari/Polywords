@@ -41,13 +41,13 @@ type Target = { svg: string; file: string; width: number; height: number };
 const TARGETS: Target[] = [
   { svg: APP_ICON_MONOGRAM_SVG, file: path.join(OUT_DIR, 'icon.png'), width: 1024, height: 1024 },
   { svg: APP_ICON_MONOGRAM_ADAPTIVE_SVG, file: path.join(OUT_DIR, 'adaptive-icon.png'), width: 1024, height: 1024 },
-  { svg: WORDMARK_LOCKUP_SVG, file: path.join(OUT_DIR, 'splash-icon.png'), width: 1200, height: 283 },
+  { svg: WORDMARK_LOCKUP_SVG, file: path.join(OUT_DIR, 'splash-icon.png'), width: 1200, height: 307 },
   // Static asset for the Home screen — rendered as a plain image (expo-image),
   // not a live SvgXml component, after react-native-svg's SvgXml proved
-  // unreliable on-device (clipped to raw viewBox pixel size). 1400x330 is 2x
-  // the SVG's 700x165 viewBox, sharp enough for retina phone screens at the
+  // unreliable on-device (clipped to raw viewBox pixel size). 1800x460 is 2x
+  // the SVG's 900x230 viewBox, sharp enough for retina phone screens at the
   // ~460pt max width BrandWordmark renders at.
-  { svg: WORDMARK_LOCKUP_SVG, file: path.join(BRAND_IMAGES_DIR, 'wordmark.png'), width: 1400, height: 330 },
+  { svg: WORDMARK_LOCKUP_SVG, file: path.join(BRAND_IMAGES_DIR, 'wordmark.png'), width: 1800, height: 460 },
 ];
 
 async function main(): Promise<void> {
