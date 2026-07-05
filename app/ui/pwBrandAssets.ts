@@ -60,7 +60,7 @@ function monogramLetters(): string {
 }
 
 export const APP_ICON_MONOGRAM_SVG = `
-<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
   <defs>${radialBgDefs('iconBg', '35%', '30%', '75%')}</defs>
   <rect x="0" y="0" width="200" height="200" fill="url(#iconBg)"/>
   ${monogramLetters()}
@@ -87,7 +87,7 @@ export const APP_ICON_MONOGRAM_ADAPTIVE_SVG = `
 // this sits directly on top of whatever the consumer renders behind it
 // (Home screen art, or the splash screen's own backgroundColor).
 export const WORDMARK_LOCKUP_SVG = `
-<svg viewBox="0 0 460 170" xmlns="http://www.w3.org/2000/svg">
+<svg width="460" height="170" viewBox="0 0 460 170" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <path id="wordmarkArc" d="M 20,110 Q 230,60 440,110" fill="none"/>
   </defs>
