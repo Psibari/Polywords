@@ -31,7 +31,7 @@ type Props = {
 export default function HomeScreen({ navigation }: Props) {
   const startGame = useGameStore(s => s.startGame);
   const darePulse = useRef(new Animated.Value(0)).current;
-  const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 380);
+  const wordmarkWidth = Math.min(Dimensions.get('window').width - 16, 460);
 
   useEffect(() => {
     Animated.loop(
