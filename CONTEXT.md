@@ -1,5 +1,5 @@
 # POLYWORDS — CONTEXT.md
-### Session briefing · June 30, 2026
+### Session briefing · July 5, 2026
 
 Read this at the start of any session. Full canonical detail lives in `CLAUDE.md`.
 
@@ -16,9 +16,9 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 ## Current Build State
 
 **Active branch:** `play-screen-overhaul` (never merge to main).
-**Latest clean commit:** `c4a6c31`
-**Known-good tag:** `v0.working-20260630b`
-**Checkpoint feel:** Ghost Haunt Return Loop V1 with Results copy cleanup.
+**Session baseline commit:** `069f3bb` (music guardrail docs; produced-stem implementation remains uncommitted).
+**Latest existing working tag:** `v0.working-20260704-brand-logotype`.
+**Checkpoint feel:** Produced-stem music pass pending commit, device sweep, and July 5 working tag.
 **Ghost loop checkpoint:** `badc9f0` / `v0.working-20260630a`.
 **Copy cleanup checkpoint:** `c4a6c31` / `v0.working-20260630b`.
 **tsc:** exits 0.
@@ -94,6 +94,35 @@ Play screen design overhaul complete for this sprint.
   inventory, human approval, one-word generation, automated audit, blind Hidden Truth review,
   approved-only export, and safe deterministic merge. `assets/data/huntData.v2.json` remains
   dormant and is not imported by gameplay.
+
+---
+
+## Music
+
+- **July 5, 2026:** `MusicEngine.ts` upgraded from runtime synth to five produced stem files:
+  `stem-base.wav`, `stem-beat.wav`, `stem-melody.wav`, `stem-tension.wav`, and `stem-boss.wav`
+  in `assets/audio/music/`. State machine, fades, and `triggerChainBreak` are unchanged.
+  `VOLUME_TARGETS`: beat 0.65 rhythm / 0.75 onARun; tension 0.50 crisis.
+- Stems are scratch-track quality, generated through physical-modeling synthesis:
+  Karplus-Strong bass, modal marimba, shaped-noise percussion, and loop-rendered reverb.
+  Shipping stems are a future file swap to the locked contract with zero code change.
+- `stem-base.wav` was re-rendered in the same session with octave doubling. The original
+  A1–C2-only voicing was inaudible on phone speakers, making neutral seem silent until rhythm
+  entered at ×1.5.
+- Boss music now keys from `activeStep.eventType === 'bossWord'`, independent of index:
+  standard Hunt index 9 or Returning Haunt index 7. Priority is boss > crisis > onARun >
+  rhythm > neutral. This landed in `4ae4dc6` (`dev boss-jump test buttons`), which contains
+  both the dev buttons and trigger fix. The stepIndex-11 boss bug is dead.
+- Old experimental music is retired but not yet deleted: `app/audio/music.ts` and the five
+  tracked files `danger-heartbeat.wav`, `flow-tribe-drums.mp3`, `gameplay-bed-cinematic.wav`,
+  `jungle-accent.mp3`, and `panic-atmospheric-drums.mp3` still exist. Dead concept — never
+  revive.
+- Deferred audio queue: replace the `SoundEngine.playRoundComplete` synth one-shot in the next
+  SFX pass · final on-device `VOLUME_TARGETS` ear-tuning · verify expo-audio phase-lock spread
+  below 20 ms across all five stems at `startMusic` · produced shipping stems.
+- **Git state:** `MusicEngine.ts` is modified and the five stem files are present but untracked;
+  the music commit is pending. No July 5 working tag exists; device sweep and tag are pending.
+  Latest existing working tag: `v0.working-20260704-brand-logotype`.
 
 ---
 
