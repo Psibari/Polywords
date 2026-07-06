@@ -105,12 +105,10 @@ Dead/removed: `revealHidden()`, `hiddenFound` in WordResult, `pollyTrigger 'hidd
 
 Standard: *"meaning hidden, not meaning lost."* Tile goal: *Wait… what? → Oh. Right.*
 
-- Scene-language, never dictionary voice. Register parity across real/trap tiles. Target 5–6
-  words; 8 words is the hard maximum.
+- Mask, trap, REAL, tile length, tone, and giveaway-root rules are governed by
+  `docs/CONTENT_WRITING_STANDARD.md`. Do not duplicate or override those rules here.
 - Hidden tiles cut from the ordinary visible pipeline. An active round normally selects 1 real
-  mask variant per chosen meaning and no more than 8 traps for the word. No headword or derived
-  forms in any tile. No trap-to-trap duplicate words. Trap sharing vocabulary with real is
-  allowed. No selected trap may share a meaning direction with another selected trap.
+  mask variant per chosen meaning and no more than 8 traps for the word.
 - Future Arc Generator banks may hold 2+ alternate real masks and an expanded trap pool per
   meaning. The generator selects a fair phase-appropriate subset and prefers unseen or
   least-seen tiles only after correctness, phase fit, and fairness. Full rules:

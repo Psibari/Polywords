@@ -118,23 +118,10 @@ Bottom nav tabs are Home / Play / Vault / Settings. The bottom nav is visible ou
 
 ## Content / Mask Writing Rules
 
-- Meaning hidden, not meaning lost.
-- Real Meaning Masks describe actual meanings of the boss word.
-- They should be masked, creative, human-readable, and clear after reveal.
-- Prefer 2-6 words per mask; 7-8 words require review; 8 words is the hard maximum.
-- Avoid flat dictionary labels.
-- Avoid weird poetic phrases nobody would say.
-- Avoid predictable direct extensions.
-- Traps are almost-meanings close to a real meaning.
-- Traps should live in the same scene, object family, action chain, common confusion, tool, container, result, neighbor, or almost-synonym.
-- Good examples:
-  - SPRING = opposite of Autumn
-  - SPRING = used in cheap mattresses
-  - SPRING trap near water-source = creek stream
-- Bad examples:
-  - SPRING = one of the four seasons
-  - SPRING = metal coil
-  - SPRING trap = water flow
+- Read and follow `docs/CONTENT_WRITING_STANDARD.md` before researching meanings or writing,
+  reviewing, or editing content.
+- Mask, trap, REAL, tile length, tone, and giveaway-root rules are governed by
+  `docs/CONTENT_WRITING_STANDARD.md`. Do not duplicate or override those rules here.
 
 ## Mask Rewriter Tool
 
