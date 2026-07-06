@@ -37,6 +37,10 @@ const fadeRafIds: Record<StemKey, number | null> = {
 let currentState: MusicState = 'off';
 let engineReady = false;
 
+const LOOP_SECONDS = 814154 / 44100; // 18.4615...
+
+let driftWatchId: ReturnType<typeof setInterval> | null = null;
+
 // ── Volume fading ─────────────────────────────────────────────
 
 function fadeVolumeTo(key: StemKey, targetVolume: number, durationMs: number): void {
@@ -96,8 +100,38 @@ export async function initMusicEngine(): Promise<void> {
 
 export function startMusic(): void {
   if (!engineReady) return;
-  for (const key of STEM_KEYS) {
-    try { players[key]?.play(); } catch {}
+  const keys = STEM_KEYS;
+  const ps = keys.map(k => players[k]);
+  for (let i = 0; i < ps.length; i++) {
+    if (ps[i]) ps[i]!.play();
+  }
+  if (__DEV__) {
+    startDriftWatch();
+  }
+}
+
+// DEV-ONLY drift diagnostic — safe to delete once phase-lock is confirmed stable on device.
+function startDriftWatch(): void {
+  if (driftWatchId !== null) return;
+  driftWatchId = setInterval(() => {
+    const times: Partial<Record<StemKey, number>> = {};
+    for (const key of STEM_KEYS) {
+      const p = players[key];
+      if (p) times[key] = p.currentTime % LOOP_SECONDS;
+    }
+    const vals = Object.values(times).filter((v): v is number => v != null);
+    if (vals.length < 2) return;
+    const spread = Math.max(...vals) - Math.min(...vals);
+    if (spread > 0.02) {
+      console.log('[MusicEngine] stem drift (s):', times, 'spread:', spread.toFixed(4));
+    }
+  }, 5000);
+}
+
+function stopDriftWatch(): void {
+  if (driftWatchId !== null) {
+    clearInterval(driftWatchId);
+    driftWatchId = null;
   }
 }
 
@@ -142,6 +176,9 @@ export function triggerChainBreak(): void {
 }
 
 export function disposeMusicEngine(): void {
+  if (__DEV__) {
+    stopDriftWatch();
+  }
   for (const key of STEM_KEYS) {
     if (fadeRafIds[key] !== null) {
       cancelAnimationFrame(fadeRafIds[key]!);
