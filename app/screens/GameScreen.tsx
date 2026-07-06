@@ -537,6 +537,15 @@ function GameDirector({ navigation }: { navigation: any }) {
     }
   }, [game.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Resume music whenever a new run begins after being paused
+  const prevStatusRef = useRef(game.status);
+  useEffect(() => {
+    if (prevStatusRef.current !== 'playing' && game.status === 'playing') {
+      startMusic();
+    }
+    prevStatusRef.current = game.status;
+  }, [game.status]);
+
   function handleRestart() {
     startGame();
     setMissedCount(0);
