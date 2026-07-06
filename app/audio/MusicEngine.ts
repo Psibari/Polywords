@@ -103,7 +103,10 @@ export function startMusic(): void {
   const keys = STEM_KEYS;
   const ps = keys.map(k => players[k]);
   for (let i = 0; i < ps.length; i++) {
-    if (ps[i]) ps[i]!.play();
+    if (ps[i]) {
+      ps[i]!.seekTo(0);
+      ps[i]!.play();
+    }
   }
   if (__DEV__) {
     startDriftWatch();
