@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:content": "node tests/contentWorkflow.test.mjs",
-    "merge:v2": "node scripts/merge-v2.mjs"
+    "merge:v2": "node scripts/merge-v2.mjs",
+    "audit:legacy": "node ../audit-hunt-data.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

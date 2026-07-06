@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "english-humanizer": {
+      "source": "kambleakash0/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/english-humanizer/SKILL.md",
+      "computedHash": "26321d8cf5a142513e604ecda24f22bbe161365f0e8e20685e0b1da4e47d002a"
+    },
     "svg-precision-skill": {
       "source": "dkyazzentwatwa/chatgpt-skills",
       "sourceType": "github",

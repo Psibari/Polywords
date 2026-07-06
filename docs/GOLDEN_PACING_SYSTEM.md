@@ -10,6 +10,25 @@ Recognition -> Doubt -> Discovery -> Confidence -> Tension -> Mastery
 
 This is source-of-truth documentation for Hunt pacing, content selection, and future Hunt generation. It is not wired into the app yet.
 
+## Content and Placement Boundary
+
+Golden Pacing consumes approved content. It does not write the masks.
+
+The order is locked:
+
+1. research and approve the word's distinct meanings;
+2. write and approve its REAL masks and traps under `docs/CONTENT_WRITING_STANDARD.md`;
+3. judge the finished word bank for familiarity, complexity, Snap strength, trap sharpness,
+   hidden fairness, and boss eligibility;
+4. let the Arc Generator place approved words and select an approved tile subset.
+
+Never shorten, lengthen, simplify, obscure, or rewrite a mask to make it fit Confidence, Flow,
+Tension, Panic, or Boss. `gpsTag`, `recommendedPhase`, `phaseFit`, round number, and tile budget
+are placement data, not writing prompts.
+
+Phase ratings describe finished content. They must never become a back door for weakening
+truth, masking, trap fairness, or human voice.
+
 ## Core Principle
 
 POLYWORDS is not a vocabulary quiz.
@@ -251,6 +270,9 @@ type WordArcProfile = {
 fields are human-authored editorial judgments. The generator must not guess these ratings from
 phrase length, mask IDs, or other superficial properties.
 
+Assign these ratings only after the word bank passes the full editorial checklist. Do not write
+or rewrite tile copy to hit a numeric range.
+
 ## Practical Phase Eligibility
 
 ### Confidence
@@ -328,6 +350,8 @@ Use the following values when building the first manually tagged test set and cu
 These counts apply per selected word and round, not per meaning. Each visible real mask must
 represent one distinct selected meaning. Alternate real masks for those meanings remain in the
 content bank for future replays; they do not increase the visible real count for the round.
+
+These are selection budgets, not writing quotas. Build the approved content bank first.
 
 For the initial curated test, a returning haunt in Round 8 uses the Panic budget. The boss
 mystery tile sits outside the Boss visible total, so a boss round presents 10 ordinary visible

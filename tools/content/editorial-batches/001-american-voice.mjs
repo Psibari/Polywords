@@ -1,0 +1,313 @@
+import fs from 'node:fs';
+
+const dataPath = 'assets/data/huntData.json';
+const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+const rewrites = {
+  BEAM: {
+    reals: [
+      'DARKNESS GETS CUT INTO A CONE',
+      'THE FLOOR ABOVE TRUSTS THIS',
+      'THE CAMERA GETS THE BIGGEST SMILE',
+      'FOUR INCHES WIDE, NO ROOM FOR WOBBLES',
+      'DATA HITCHES A RIDE ON LIGHT',
+    ],
+    traps: [
+      'SCAFFOLD COMES DOWN AFTER THE ROOF',
+      'TWO WALLS MEET AT THE CORNER',
+      'PLANK COVERS THE MUDDY GAP',
+      'FLASHLIGHT BATTERIES DIE MIDSEARCH',
+    ],
+  },
+  BEAR: {
+    reals: [
+      "WINNIE'S MUCH WILDER COUSIN",
+      'TEETH CLENCHED, COMPLAINT SWALLOWED',
+      'THE ROOF GETS CARRIED WITHOUT COMPLAINT',
+      'THIS DOCUMENT COMES WITH YOUR NAME',
+      'WALL STREET ANIMAL ROOTING FOR RED',
+    ],
+    traps: [
+      'WOLF STEALS DINNER FROM THE CAMPSITE',
+      'COMPLAINT ESCAPES THROUGH CLENCHED TEETH',
+      'BUILDING INSPECTOR CHECKS EVERY COLUMN',
+      'SIGNATURE WAITS BESIDE THE DOTTED LINE',
+    ],
+  },
+  BED: {
+    reals: [
+      'AFTER-WORK CRASH SITE',
+      'TULIPS STAND IN FORMATION',
+      "RIVER'S ROCKY FLOOR",
+      'SOFA RIDES BEHIND THE CAB',
+    ],
+    traps: [
+      'FITTED SHEET POPS ONE CORNER',
+      'TULIPS NEED ANOTHER DRINK',
+      'HEADBOARD MEETS THE WALL',
+    ],
+  },
+  BLADE: {
+    reals: [
+      "KNIFE'S BUSINESS END",
+      'ONE GREEN STRAND UNDER DEW',
+      'OAR DIPS WIDE END FIRST',
+      'WING BONE WITHOUT THE FEATHERS',
+    ],
+    traps: [
+      "RAZOR'S PLASTIC FRAME",
+      'FRESH-CUT GRASS SMELLS LIKE SUMMER',
+      'CURRENT PULLS THE ROWBOAT',
+      'KNIFE HANDLE KEEPS FINGERS CLEAR',
+    ],
+  },
+  BOLT: {
+    reals: [
+      "THE NUT'S OTHER HALF",
+      'THUNDER ARRIVES ONE FLASH LATE',
+      'EXIT MADE BEFORE ANYONE BLINKS',
+      'ONE SLIDE KEEPS THE DOOR SHUT',
+      'ENOUGH FABRIC FOR THE WHOLE WEDDING',
+      "THE CROSSBOW'S SHORT ANGRY ANSWER",
+    ],
+    traps: [
+      'PAIRED WITH A SCREWDRIVER',
+      'CHAIN CATCHES BEFORE THE DOOR OPENS',
+      "THUNDER'S DRAMATIC ENTRANCE",
+      'RATCHET WAITS IN THE TOOLBOX',
+    ],
+  },
+  BOOT: {
+    reals: [
+      'MUDDY FOOT ARMOR',
+      'OPERATING SYSTEM LOADS FIRST',
+      "BOUNCER'S FINAL DECISION",
+      'THREE POINTS OFF ONE FOOT',
+    ],
+    traps: [
+      'SHOELACES PULL THE ANKLE TIGHT',
+      'PASSWORD FAILS BEFORE LOGIN',
+      'GUEST LIST ENDS AT THE ROPE',
+      'SOCCER BALL HITS THE CROSSBAR',
+      'HEEL CLICKS AGAINST THE FLOOR',
+    ],
+  },
+  BOTTOM: {
+    reals: [
+      'THE ELEVATOR REFUSES TO GO LOWER',
+      'JEANS TAKE THEIR SHAPE FROM THIS',
+      'THE ONLY DIRECTION LEFT IS UP',
+      'HOME TEAM GETS THE LAST THREE OUTS',
+    ],
+    traps: [
+      'DRAIN CATCHES WHAT DINNER LEFT BEHIND',
+      'ANCHOR DISAPPEARS BELOW THE LAST WAVE',
+      'TIE GAME ENTERS THE NINTH',
+    ],
+  },
+  BOWL: {
+    reals: [
+      'SPOON DIVES WHERE SOUP WAITS',
+      'TEN PINS HEAR TROUBLE ROLLING',
+      'A TOWN SITS INSIDE THE HILLS',
+      'COLLEGE FOOTBALL SAVES ONE FOR JANUARY',
+      'ONE HIT LEFT EVERYONE FLAT',
+    ],
+    traps: [
+      'CEREAL GOES SOGGY BEFORE BREAKFAST ENDS',
+      'GUTTER BALL MISSES ALL TEN',
+      'MOUNTAIN PASS ESCAPES BETWEEN TWO PEAKS',
+      'HALFTIME SHOW STEALS THE WHOLE NIGHT',
+    ],
+  },
+  BRIDGE: {
+    reals: [
+      'THE RIVER LOSES ITS LAST WORD',
+      'FOUR PLAYERS, THIRTEEN TRICKS, NO JOKERS',
+      'GLASSES PINCH RIGHT ABOUT HERE',
+      'ONE FALSE TOOTH NEEDS GOOD NEIGHBORS',
+      'THE SONG DETOURS BEFORE THE CHORUS',
+    ],
+    traps: [
+      'CASH DISAPPEARS AT THE TOLLBOOTH',
+      'POKER CHIPS WAIT FOR THE FLOP',
+      'CONES STEAL HALF THE HIGHWAY',
+      'CEMENT SETS WHILE YOUR MOUTH STAYS OPEN',
+    ],
+  },
+  CAN: {
+    reals: [
+      'DINNER NEEDS A PULL TAB',
+      'NO TRAINING WHEELS NEEDED NOW',
+      'MOM SAYS YES, THE RULES AGREE',
+      'HR MAKES FRIDAY YOUR LAST DAY',
+      'AUGUST TOMATOES SURVIVE UNTIL FEBRUARY',
+    ],
+    traps: [
+      'GLASS JAR HOLDS THE PEACHES',
+      'WANTED IT BADLY ENOUGH',
+      'HANDBOOK OFFERS A POLITE SUGGESTION',
+      'FINAL WARNING ARRIVES FROM HR',
+      'PLASTIC BOTTLE OF SODA',
+    ],
+  },
+  CAPE: {
+    reals: [
+      "SUPERHERO'S DRAMA FLAPS BEHIND HIM",
+      'THE COAST STICKS ITS CHIN OUT',
+    ],
+    traps: [
+      "MASK HIDES THE HERO'S DAY JOB",
+      'WAVES KEEP LOSING TO THE CLIFF',
+      'AN ISLAND BREAKS CONTACT WITH SHORE',
+      'HOOD COMES UP BEFORE THE DOWNPOUR',
+    ],
+  },
+  CHARACTER: {
+    reals: [
+      'THE AUTHOR GIVES THEM A SECRET',
+      "PRESSURE SHOWS WHAT THEY'RE MADE OF",
+      'ONE KEYSTROKE JOINS THE PASSWORD',
+      'OLD BRICK GIVES THE ROOM SOME SOUL',
+      'EVERY SMALL TOWN SWEARS IT HAS ONE',
+    ],
+    traps: [
+      'ACTOR WAITS JUST OFFSTAGE',
+      'TYPEFACE GETS PICKED FOR THE MENU',
+      'DAMAGE LOWERS THE RESALE VALUE',
+      'RESUME LISTS EVERY OLD JOB',
+      'PLOT TWIST ARRIVES WITHOUT WARNING',
+      'BAD SLEEP RUINS THE MOOD',
+    ],
+  },
+  CHARGE: {
+    reals: [
+      'ONE PERCENT LEFT, OUTLET NOW',
+      'MYSTERY LINE ITEM ON THE RECEIPT',
+      'THE BULL PICKS A VERY STRAIGHT ARGUMENT',
+      'THE KIDS WERE LEFT IN HER CARE',
+      'ONE COUNT COULD MEAN TEN YEARS',
+      'FAMILY SHIELD ADOPTS A LION',
+    ],
+    traps: [
+      'POWER STRIP RUNS OUT OF ROOM',
+      'CASHIER PRINTS A SECOND RECEIPT',
+      'DINNER ENDS WITH AN UNPAID TABLE',
+      'CAVALRY WAITS FOR THE BUGLE',
+      'THE HERD TURNS BEFORE THE FENCE',
+      'EVIDENCE BOX FILLS THE COURTROOM',
+    ],
+  },
+  CHEST: {
+    reals: [
+      'STETHOSCOPE GOES HERE FIRST',
+      'BLANKETS SLEEP UNDER A HEAVY LID',
+      'NO HANDS NEEDED FOR THIS PASS',
+    ],
+    traps: [
+      "DRUMMER'S BIG FINISH",
+      'HEART BEATS HARD AFTER THE SPRINT',
+      'X MARKS THE BURIED SPOT',
+      'ATTIC LABELS FADE ON CARDBOARD BOXES',
+      'PADLOCK HAS NOWHERE TO TURN',
+      'MOVING VAN SWALLOWS THE LAST BOX',
+    ],
+  },
+  CHIP: {
+    reals: [
+      "SALSA'S FIRST CHOICE FOR A SCOOP",
+      'BILLIONS OF SWITCHES, SMALLER THAN A THUMBNAIL',
+      'THE GREEN GETS A SHORT LITTLE HOP',
+      'THE MUG LOSES ONE TINY PIECE',
+    ],
+    traps: [
+      'KETCHUP WAITS BESIDE THE FRIES',
+      'GREASE STAINS THE PAPER BASKET',
+      'LAPTOP FAN BEGS FOR A BREAK',
+      'WIFI DROPS DURING THE DOWNLOAD',
+    ],
+  },
+  CLOSE: {
+    reals: [
+      'THE STORE TURNS ITS SIGN AROUND',
+      "ONE MORE STEP AND YOU'RE THERE",
+      'THE SECRET SURVIVES BETWEEN TWO FRIENDS',
+      'ONE POINT SEPARATES THE FINAL BUZZER',
+      'HANDSHAKES MAKE THE DEAL OFFICIAL',
+    ],
+    traps: [
+      'DEADBOLT TURNS AFTER MIDNIGHT',
+      'WIND RATTLES THE OPEN DOOR',
+      'NEIGHBORS ARGUE OVER THE FENCE',
+      'DEADLINE GETS MOVED TO FRIDAY',
+    ],
+  },
+  CLUB: {
+    reals: [
+      'DUES BUY A PLACE ON THE ROSTER',
+      'VELVET ROPE GUARDS THE BASS LINE',
+      'THE BAG HOLDS FOURTEEN OF THESE',
+      'THE BLACK CLOVER TAKES A TRICK',
+      "CAVEMAN'S ANSWER TO EVERYTHING",
+    ],
+    traps: [
+      "SECRET HANDSHAKE DOESN'T COVER THE DUES",
+      'DJ TESTS THE BASS BEFORE MIDNIGHT',
+      'CADDIE COUNTS EVERY IRON TWICE',
+      'HEARTS WIN THE NEXT TRICK',
+      'STONE AXE NEEDS A NEW HANDLE',
+      'SECURITY TAKES AWAY THE BASEBALL BAT',
+    ],
+  },
+  COMPOUND: {
+    reals: [
+      'ELEMENTS LOSE THEIR OLD NAMES TOGETHER',
+      'THE WHOLE FAMILY LIVES BEHIND ONE GATE',
+      "YESTERDAY'S INTEREST EARNS MORE TODAY",
+      'TWO WORDS SHARE ONE NAME TAG',
+    ],
+    traps: [
+      'BEAKER HOLDS A MIXTURE THAT STILL SEPARATES',
+      'SECURITY BOOTH CHECKS EVERY VISITOR',
+      "PREFIX CHANGES THE WORD'S DIRECTION",
+    ],
+  },
+  CONTENT: {
+    reals: [
+      'OPEN THE BOX TO FIND THIS',
+      'NOTHING ELSE NEEDS TO CHANGE',
+      'THE ALGORITHM ALWAYS WANTS MORE OF IT',
+    ],
+    traps: [
+      'INDEX SENDS READERS TO THE RIGHT PAGE',
+      'CAMERA ROLLS BEFORE THE ALGORITHM NOTICES',
+      'SMILE STAYS UNTIL THE DENTIST TURNS AWAY',
+      'QUIET ROOM MISTAKES SILENCE FOR HAPPINESS',
+    ],
+  },
+};
+
+for (const [word, rewrite] of Object.entries(rewrites)) {
+  const entry = data[word];
+  if (!entry) throw new Error(`Missing word: ${word}`);
+
+  const reals = entry.masks.filter((mask) => mask.isReal);
+  const traps = entry.masks.filter((mask) => !mask.isReal);
+
+  if (reals.length !== rewrite.reals.length) {
+    throw new Error(`${word}: expected ${reals.length} REAL rewrites, received ${rewrite.reals.length}`);
+  }
+  if (traps.length !== rewrite.traps.length) {
+    throw new Error(`${word}: expected ${traps.length} trap rewrites, received ${rewrite.traps.length}`);
+  }
+
+  reals.forEach((mask, index) => {
+    mask.phrase = rewrite.reals[index];
+  });
+  traps.forEach((mask, index) => {
+    mask.phrase = rewrite.traps[index];
+  });
+}
+
+fs.writeFileSync(dataPath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+console.log(`Applied editorial batch 001 to ${Object.keys(rewrites).length} words.`);
