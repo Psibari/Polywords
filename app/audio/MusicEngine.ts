@@ -41,6 +41,7 @@ const fadeRafIds: Record<TrackKey, number | null> = {
 let currentState: MusicState = 'off';
 let engineReady = false;
 let musicStarted = false;
+let activeTrackKey: TrackKey | null = null;
 let stopTimerId: ReturnType<typeof setTimeout> | null = null;
 
 function warnDev(message: string, error?: unknown): void {
@@ -142,10 +143,29 @@ function startTrack(key: TrackKey, volume: number): void {
   }
 }
 
-function applyCurrentState(): void {
-  clearStopTimer();
+function playTrackWithoutRestart(key: TrackKey): void {
+  const player = players[key];
+  if (!player) {
+    warnDev(`cannot resume missing ${key} track`);
+    return;
+  }
 
+  try {
+    player.loop = true;
+    if (!player.playing) {
+      player.play();
+    }
+    fadeVolumeTo(key, TRACK_VOLUMES[key], 200);
+    activeTrackKey = key;
+  } catch (error) {
+    warnDev(`failed to resume ${key} track`, error);
+  }
+}
+
+function applyCurrentState(): void {
   if (!engineReady || !musicStarted) return;
+
+  clearStopTimer();
 
   if (currentState === 'off') {
     stopMusic();
@@ -153,6 +173,11 @@ function applyCurrentState(): void {
   }
 
   const activeTrack = STATE_TO_TRACK[currentState];
+
+  if (activeTrack === activeTrackKey) {
+    playTrackWithoutRestart(activeTrack);
+    return;
+  }
 
   for (const key of TRACK_KEYS) {
     if (key !== activeTrack) {
@@ -166,11 +191,8 @@ function applyCurrentState(): void {
     return;
   }
 
-  if (activePlayer.playing) {
-    fadeVolumeTo(activeTrack, TRACK_VOLUMES[activeTrack], 200);
-  } else {
-    startTrack(activeTrack, TRACK_VOLUMES[activeTrack]);
-  }
+  startTrack(activeTrack, TRACK_VOLUMES[activeTrack]);
+  activeTrackKey = activeTrack;
 }
 
 export async function initMusicEngine(): Promise<void> {
@@ -225,14 +247,28 @@ export function stopMusic(): void {
     for (const key of TRACK_KEYS) {
       stopTrackNow(key, false);
     }
+    activeTrackKey = null;
   }, 500);
 }
 
 export function setMusicState(newState: MusicState): void {
+  if (newState === currentState) return;
+
+  const previousState = currentState;
+  const previousTrack = previousState === 'off' ? null : STATE_TO_TRACK[previousState];
+  const newTrack = newState === 'off' ? null : STATE_TO_TRACK[newState];
+
   currentState = newState;
 
   if (newState === 'off') {
     stopMusic();
+    return;
+  }
+
+  if (previousTrack !== null && previousTrack === newTrack) {
+    if (musicStarted) {
+      playTrackWithoutRestart(previousTrack);
+    }
     return;
   }
 
@@ -259,4 +295,5 @@ export function disposeMusicEngine(): void {
   currentState = 'off';
   engineReady = false;
   musicStarted = false;
+  activeTrackKey = null;
 }
