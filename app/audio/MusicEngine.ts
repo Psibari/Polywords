@@ -1,156 +1,234 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
-// ── Types & constants ─────────────────────────────────────────
-
 export type MusicState = 'off' | 'neutral' | 'rhythm' | 'onARun' | 'crisis' | 'boss';
 
-type StemKey = 'base' | 'beat' | 'melody' | 'tension' | 'boss';
+type TrackKey = 'hunt' | 'tension' | 'boss';
 
-const STEM_KEYS: StemKey[] = ['base', 'beat', 'melody', 'tension', 'boss'];
+const TRACK_KEYS: TrackKey[] = ['hunt', 'tension', 'boss'];
 
-const STEM_SOURCES: Record<StemKey, ReturnType<typeof require>> = {
-  base:    require('../../assets/audio/music/stem-base.wav'),
-  beat:    require('../../assets/audio/music/stem-beat.wav'),
-  melody:  require('../../assets/audio/music/stem-melody.wav'),
-  tension: require('../../assets/audio/music/stem-tension.wav'),
-  boss:    require('../../assets/audio/music/stem-boss.wav'),
+const TRACK_SOURCES: Record<TrackKey, ReturnType<typeof require>> = {
+  hunt: require('../../assets/audio/bgm/hunt_suspense_loop.mp3'),
+  tension: require('../../assets/audio/bgm/tension_running_out.mp3'),
+  boss: require('../../assets/audio/bgm/boss_too_hot_to_sleep.mp3'),
 };
 
-const VOLUME_TARGETS: Record<Exclude<MusicState, 'off'>, Record<StemKey, number>> = {
-  neutral: { base: 0.40, beat: 0.00, melody: 0.00, tension: 0.00, boss: 0.00 },
-  rhythm:  { base: 0.40, beat: 0.65, melody: 0.00, tension: 0.00, boss: 0.00 },
-  onARun:  { base: 0.40, beat: 0.75, melody: 0.50, tension: 0.00, boss: 0.00 },
-  crisis:  { base: 0.30, beat: 0.20, melody: 0.00, tension: 0.50, boss: 0.00 },
-  boss:    { base: 0.00, beat: 0.00, melody: 0.00, tension: 0.00, boss: 0.70 },
+const TRACK_VOLUMES: Record<TrackKey, number> = {
+  hunt: 0.22,
+  tension: 0.20,
+  boss: 0.14,
 };
 
-// ── Engine state ──────────────────────────────────────────────
-
-const players: Record<StemKey, AudioPlayer | null> = {
-  base: null, beat: null, melody: null, tension: null, boss: null,
+const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
+  neutral: 'hunt',
+  rhythm: 'hunt',
+  onARun: 'hunt',
+  crisis: 'tension',
+  boss: 'boss',
 };
 
-const fadeRafIds: Record<StemKey, number | null> = {
-  base: null, beat: null, melody: null, tension: null, boss: null,
+const players: Record<TrackKey, AudioPlayer | null> = {
+  hunt: null,
+  tension: null,
+  boss: null,
+};
+
+const fadeRafIds: Record<TrackKey, number | null> = {
+  hunt: null,
+  tension: null,
+  boss: null,
 };
 
 let currentState: MusicState = 'off';
 let engineReady = false;
+let musicStarted = false;
+let stopTimerId: ReturnType<typeof setTimeout> | null = null;
 
-const LOOP_SECONDS = 814154 / 44100; // 18.4615...
+function warnDev(message: string, error?: unknown): void {
+  if (!__DEV__) return;
+  if (error) {
+    console.warn(`[MusicEngine] ${message}`, error);
+  } else {
+    console.warn(`[MusicEngine] ${message}`);
+  }
+}
 
-let driftWatchId: ReturnType<typeof setInterval> | null = null;
+function clearStopTimer(): void {
+  if (stopTimerId === null) return;
+  clearTimeout(stopTimerId);
+  stopTimerId = null;
+}
 
-// ── Volume fading ─────────────────────────────────────────────
+function cancelFade(key: TrackKey): void {
+  if (fadeRafIds[key] === null) return;
+  cancelAnimationFrame(fadeRafIds[key]!);
+  fadeRafIds[key] = null;
+}
 
-function fadeVolumeTo(key: StemKey, targetVolume: number, durationMs: number): void {
+function stopTrackNow(key: TrackKey, resetToStart = false): void {
+  const player = players[key];
+  cancelFade(key);
+  if (!player) return;
+
+  try {
+    player.volume = 0;
+    player.pause();
+    if (resetToStart) {
+      void player.seekTo(0, 0, 0).catch(error => {
+        warnDev(`failed to reset ${key} track`, error);
+      });
+    }
+  } catch (error) {
+    warnDev(`failed to stop ${key} track`, error);
+  }
+}
+
+function fadeVolumeTo(key: TrackKey, targetVolume: number, durationMs: number): void {
   const player = players[key];
   if (!player) return;
 
-  if (fadeRafIds[key] !== null) {
-    cancelAnimationFrame(fadeRafIds[key]!);
+  cancelFade(key);
+
+  try {
+    const startVolume = player.volume;
+    const startTime = performance.now();
+
+    function tick(): void {
+      try {
+        const livePlayer = players[key];
+        if (!livePlayer) {
+          fadeRafIds[key] = null;
+          return;
+        }
+
+        const elapsed = performance.now() - startTime;
+        const t = durationMs <= 0 ? 1 : Math.min(elapsed / durationMs, 1);
+        livePlayer.volume = startVolume + (targetVolume - startVolume) * t;
+
+        if (t < 1) {
+          fadeRafIds[key] = requestAnimationFrame(tick);
+        } else {
+          fadeRafIds[key] = null;
+        }
+      } catch (error) {
+        fadeRafIds[key] = null;
+        warnDev(`failed while fading ${key} track`, error);
+      }
+    }
+
+    fadeRafIds[key] = requestAnimationFrame(tick);
+  } catch (error) {
     fadeRafIds[key] = null;
+    warnDev(`failed to start ${key} fade`, error);
+  }
+}
+
+function startTrack(key: TrackKey, volume: number): void {
+  const player = players[key];
+  if (!player) {
+    warnDev(`cannot start missing ${key} track`);
+    return;
   }
 
-  const startVolume = player.volume;
-  const startTime   = performance.now();
+  try {
+    player.loop = true;
+    player.volume = 0;
+    void player.seekTo(0, 0, 0).catch(error => {
+      warnDev(`failed to reset ${key} track before play`, error);
+    });
+    player.play();
+    fadeVolumeTo(key, volume, 300);
+  } catch (error) {
+    warnDev(`failed to start ${key} track`, error);
+  }
+}
 
-  function tick(): void {
-    if (!player) { fadeRafIds[key] = null; return; }
-    try {
-      const elapsed = performance.now() - startTime;
-      const t       = Math.min(elapsed / durationMs, 1);
-      player.volume = startVolume + (targetVolume - startVolume) * t;
-      if (t < 1) {
-        fadeRafIds[key] = requestAnimationFrame(tick);
-      } else {
-        fadeRafIds[key] = null;
-      }
-    } catch {
-      fadeRafIds[key] = null;
+function applyCurrentState(): void {
+  clearStopTimer();
+
+  if (!engineReady || !musicStarted) return;
+
+  if (currentState === 'off') {
+    stopMusic();
+    return;
+  }
+
+  const activeTrack = STATE_TO_TRACK[currentState];
+
+  for (const key of TRACK_KEYS) {
+    if (key !== activeTrack) {
+      stopTrackNow(key, true);
     }
   }
 
-  fadeRafIds[key] = requestAnimationFrame(tick);
-}
+  const activePlayer = players[activeTrack];
+  if (!activePlayer) {
+    warnDev(`requested ${activeTrack} track is unavailable`);
+    return;
+  }
 
-// ── Public API ────────────────────────────────────────────────
+  if (activePlayer.playing) {
+    fadeVolumeTo(activeTrack, TRACK_VOLUMES[activeTrack], 200);
+  } else {
+    startTrack(activeTrack, TRACK_VOLUMES[activeTrack]);
+  }
+}
 
 export async function initMusicEngine(): Promise<void> {
   if (engineReady) return;
+
   try {
     await setAudioModeAsync({
-      playsInSilentMode:      true,
+      playsInSilentMode: true,
       shouldPlayInBackground: false,
-      interruptionMode:       'duckOthers',
+      interruptionMode: 'duckOthers',
     });
+  } catch (error) {
+    warnDev('failed to configure audio mode', error);
+  }
 
-    for (const key of STEM_KEYS) {
-      try {
-        const player  = createAudioPlayer(STEM_SOURCES[key]);
-        player.volume = 0;
-        player.loop   = true;
-        players[key]  = player;
-      } catch {}
+  for (const key of TRACK_KEYS) {
+    if (players[key]) continue;
+
+    try {
+      const player = createAudioPlayer(TRACK_SOURCES[key], {
+        downloadFirst: true,
+        keepAudioSessionActive: true,
+      });
+      player.volume = 0;
+      player.loop = true;
+      players[key] = player;
+    } catch (error) {
+      players[key] = null;
+      warnDev(`failed to load ${key} track`, error);
     }
+  }
 
-    engineReady = true;
-  } catch {}
+  engineReady = true;
+  applyCurrentState();
 }
 
 export function startMusic(): void {
-  if (!engineReady) return;
-  const keys = STEM_KEYS;
-  const ps = keys.map(k => players[k]);
-  for (let i = 0; i < ps.length; i++) {
-    if (ps[i]) {
-      ps[i]!.seekTo(0);
-      ps[i]!.play();
-    }
-  }
-  if (__DEV__) {
-    startDriftWatch();
-  }
-}
-
-// DEV-ONLY drift diagnostic — safe to delete once phase-lock is confirmed stable on device.
-function startDriftWatch(): void {
-  if (driftWatchId !== null) return;
-  driftWatchId = setInterval(() => {
-    const times: Partial<Record<StemKey, number>> = {};
-    for (const key of STEM_KEYS) {
-      const p = players[key];
-      if (p) times[key] = p.currentTime % LOOP_SECONDS;
-    }
-    const vals = Object.values(times).filter((v): v is number => v != null);
-    if (vals.length < 2) return;
-    const spread = Math.max(...vals) - Math.min(...vals);
-    if (spread > 0.02) {
-      console.log('[MusicEngine] stem drift (s):', times, 'spread:', spread.toFixed(4));
-    }
-  }, 5000);
-}
-
-function stopDriftWatch(): void {
-  if (driftWatchId !== null) {
-    clearInterval(driftWatchId);
-    driftWatchId = null;
-  }
+  musicStarted = true;
+  applyCurrentState();
 }
 
 export function stopMusic(): void {
-  for (const key of STEM_KEYS) {
-    fadeVolumeTo(key, 0, 1200);
+  musicStarted = false;
+  clearStopTimer();
+
+  for (const key of TRACK_KEYS) {
+    fadeVolumeTo(key, 0, 450);
   }
-  setTimeout(() => {
-    for (const key of STEM_KEYS) {
-      try { players[key]?.pause(); } catch {}
+
+  stopTimerId = setTimeout(() => {
+    stopTimerId = null;
+    for (const key of TRACK_KEYS) {
+      stopTrackNow(key, false);
     }
-  }, 1200);
+  }, 500);
 }
 
 export function setMusicState(newState: MusicState): void {
-  if (newState === currentState) return;
   currentState = newState;
 
   if (newState === 'off') {
@@ -158,38 +236,27 @@ export function setMusicState(newState: MusicState): void {
     return;
   }
 
-  if (newState === 'boss') {
-    const nonBoss: StemKey[] = ['base', 'beat', 'melody', 'tension'];
-    for (const key of nonBoss) fadeVolumeTo(key, 0, 400);
-    setTimeout(() => fadeVolumeTo('boss', 0.70, 600), 600);
-    return;
-  }
-
-  const targets = VOLUME_TARGETS[newState];
-  for (const key of STEM_KEYS) fadeVolumeTo(key, targets[key], 800);
+  applyCurrentState();
 }
 
 export function triggerChainBreak(): void {
-  if (currentState !== 'onARun') return;
-  try {
-    const player = players.beat;
-    if (player) player.volume = 0;
-  } catch {}
-  setTimeout(() => fadeVolumeTo('beat', VOLUME_TARGETS.onARun.beat, 600), 80);
+  // The track-based engine has no beat stem to duck.
 }
 
 export function disposeMusicEngine(): void {
-  if (__DEV__) {
-    stopDriftWatch();
-  }
-  for (const key of STEM_KEYS) {
-    if (fadeRafIds[key] !== null) {
-      cancelAnimationFrame(fadeRafIds[key]!);
-      fadeRafIds[key] = null;
+  clearStopTimer();
+
+  for (const key of TRACK_KEYS) {
+    stopTrackNow(key, true);
+    try {
+      players[key]?.remove();
+    } catch (error) {
+      warnDev(`failed to remove ${key} track`, error);
     }
-    try { players[key]?.remove(); } catch {}
     players[key] = null;
   }
+
   currentState = 'off';
-  engineReady  = false;
+  engineReady = false;
+  musicStarted = false;
 }
