@@ -74,6 +74,46 @@ A tile should feel inevitable after reveal, not obvious before it.
 - REAL masks and traps should have similar length, tone, and specificity so wording does not
   reveal the answer.
 
+## Mandatory Tile Audit Gate
+
+Before any REAL/MASK/TRAP batch is delivered, patched, or approved, the writer must self-audit
+every tile against the full POLYWORDS standard.
+
+The audit must check all rules together. Do not improve one rule while forgetting another.
+
+A tile fails if any required answer is "no":
+
+1. Is it 8 words or fewer?
+2. Does it avoid the headword, inflections, and giveaway roots?
+3. Does it sound like natural human language?
+4. Does it mask the meaning instead of defining it?
+5. Does it create hesitation, not confusion?
+6. Is it creative without becoming abstract, poetic, cute, or weird?
+7. Does it avoid fake object-acting?
+8. Is every REAL tied to a real meaning of the word?
+9. Is every TRAP guilty-close but legally wrong?
+10. For every TRAP, is the answer "no" to this challenge: Could a player fairly argue that the
+    TRAP is actually a real meaning?
+11. Do REALS and TRAPS have similar tone, length, and specificity?
+12. Are key nouns, roots, settings, or semantic scenery repeated too much?
+
+If any tile fails the audit, rewrite it before presenting or patching it.
+
+For writing passes, prefer small controlled batches of 5 words until quality is stable. Do not
+perform large data rewrites without sample approval.
+
+Unacceptable tiles that should have failed this audit:
+
+- `PAPER FOLDED OVER AT THE CREASE`
+- `LOSING HAND, BIGGER BET`
+- `PHONE BEGS FOR OUTLET`
+- `TOTAL JUMPS AT THE BOTTOM`
+- `CHARGER LOST BEHIND THE COUCH`
+
+The first two are too flat or mechanical and do not create enough game hesitation. `PHONE BEGS
+FOR OUTLET` and `TOTAL JUMPS AT THE BOTTOM` use fake object-acting and unnatural human phrasing.
+`CHARGER LOST BEHIND THE COUCH` leaks the hero word's root.
+
 ## Meaning Inventory Gate
 
 Writing begins only after the meaning inventory is approved.
