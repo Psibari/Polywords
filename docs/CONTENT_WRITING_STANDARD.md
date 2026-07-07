@@ -11,6 +11,40 @@ It consolidates the approved guidance from:
 2. `GOLDEN RULE.docx` as the legality and fairness checklist;
 3. `maskewriterGPT.docx` only where it does not conflict with the first two.
 
+## CONTENT V2 RESET: HUNT DATA IS PLACEHOLDER ONLY
+
+Existing hunt data JSON is placeholder/test content only. It exists to keep the app running
+while the POLYWORDS database is rebuilt cleanly from scratch.
+
+Future content work must not polish, preserve, or patch the current data as source of truth.
+Old masks, traps, hidden meanings, `wordType` values, and meaning counts are not trusted.
+No patching garbage on top of garbage.
+
+Every word must start with a dictionary-first meaning audit. For each word, record all real
+American English meanings first, then sort each meaning as:
+
+- `core_real`
+- `cultural_handle`
+- `boss_bonus`
+- `reject_hold`
+
+Do not use every dictionary meaning automatically. Reject dusty, obscure, British-only,
+technical-only, duplicate, weak, or unfair meanings.
+
+After the meaning ledger is clean, create human handles for playable meanings. Final REALS are
+written from human handles, not dictionary definitions. Traps are written only after the
+meaning ledger and REALS are established. A trap that is actually a real meaning must be
+promoted, held for boss/bonus, or removed.
+
+Locked workflow:
+
+> Dictionary lookup → full meaning ledger → playable meaning decisions → human handles → final REALS → legally wrong traps → audit.
+
+Definitions keep the game legal. Human handles make the game playable.
+
+All final tiles must follow the existing POLYWORDS writing law: tile max is 8 words; American
+English only; no fake-clever object acting; no dictionary-label tile wording.
+
 ## The Game Test
 
 The player must feel:
