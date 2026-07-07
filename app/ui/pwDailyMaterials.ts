@@ -11,6 +11,10 @@ export const DAILY_WIN_REWARD = 'GOLD FEATHER EARNED';
 export const DAILY_WIN_LINE = 'WON’T HAPPEN TOMORROW.';
 export const DAILY_NO_FEATHER = 'NO FEATHER TODAY';
 
+export function getStreakMilestoneRewardLabel(days: number): string {
+  return `${days}-DAY STREAK · GOLD FEATHER EARNED`;
+}
+
 export const dailyBackdrop = {
   base: '#1A1830',
   centerGlow: '#590D93',

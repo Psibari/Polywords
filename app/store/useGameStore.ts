@@ -32,7 +32,7 @@ import {
   getTodayDateString,
   revealDailyCluesByElapsed,
 } from '../game/dailyChallengeEngine';
-import { applyDailyStreak } from '../game/dailyStreak';
+import { applyDailyStreak, getStreakMilestone } from '../game/dailyStreak';
 
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
@@ -125,11 +125,13 @@ type GameStore = {
   dailyResult: DailyResult | null;
   dailyAttemptDate: string | null;
   dailyLastClaimResult: DailyClaimResult | null;
+  streakMilestoneReward: number | null;
   loadDailyResult: (date?: string) => Promise<void>;
   startDailyChallenge: (date?: string) => Promise<boolean>;
   claimDailyAnswer: (answer: string) => void;
   revealDailyClues: (elapsedMs: number) => void;
   clearDailyReaction: () => void;
+  clearStreakMilestoneReward: () => void;
   resetDailyForDev: () => Promise<void>;
   goldFeatherAvailable: boolean;
   goldFeatherExpiresAt: number | null;
@@ -154,6 +156,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   dailyResult: null,
   dailyAttemptDate: null,
   dailyLastClaimResult: null,
+  streakMilestoneReward: null,
   goldFeatherAvailable: false,
   goldFeatherExpiresAt: null,
 
@@ -363,6 +366,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         dailyResult: null,
         dailyAttemptDate: date,
         dailyLastClaimResult: null,
+        streakMilestoneReward: null,
       });
       return true;
     } catch {
@@ -382,6 +386,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const progress = dailyResult
       ? applyDailyStreak(get().progress, dailyResult.date)
       : get().progress;
+    const streakMilestone = dailyResult ? getStreakMilestone(progress.currentStreak) : null;
 
     set({
       dailySession: claim.session,
@@ -389,6 +394,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dailyLastClaimResult: claim.result,
       ...(dailyResult ? { dailyResult } : {}),
       progress,
+      streakMilestoneReward: streakMilestone,
     });
 
     if (dailyResult) {
@@ -397,7 +403,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)).catch(() => {});
     }
 
-    if (dailyResult?.goldFeatherEarned) {
+    if (dailyResult?.goldFeatherEarned || streakMilestone) {
       get().grantGoldFeather();
     }
   },
@@ -419,6 +425,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ dailyLastClaimResult: null });
   },
 
+  clearStreakMilestoneReward: () => {
+    set({ streakMilestoneReward: null });
+  },
+
   resetDailyForDev: async () => {
     const date = getTodayDateString();
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
@@ -435,6 +445,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dailyResult:           null,
       dailyAttemptDate:      null,
       dailyLastClaimResult:  null,
+      streakMilestoneReward: null,
     });
   },
 

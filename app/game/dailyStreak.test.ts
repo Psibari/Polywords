@@ -1,7 +1,12 @@
 // Run with: npx.cmd -y tsx app/game/dailyStreak.test.ts
 // Plain assert script (repo has no jest; no node:assert — repo lacks @types/node).
 // Throws on first failure; prints OK on success.
-import { applyDailyStreak, getDisplayStreak, getPreviousDateString } from './dailyStreak';
+import {
+  applyDailyStreak,
+  getDisplayStreak,
+  getPreviousDateString,
+  getStreakMilestone,
+} from './dailyStreak';
 import { PlayerProgress } from './types';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -86,5 +91,16 @@ eq(
 
 // Never played
 eq(getDisplayStreak(progress(), '2026-07-07'), 0, 'display.never');
+
+// ── getStreakMilestone ──────────────────────────────────────────────
+
+eq(getStreakMilestone(7), 7, 'milestone.seven');
+eq(getStreakMilestone(14), 14, 'milestone.fourteen');
+eq(getStreakMilestone(1), null, 'milestone.notReached');
+eq(getStreakMilestone(6), null, 'milestone.justBelowSeven');
+eq(getStreakMilestone(8), null, 'milestone.justAboveSeven');
+eq(getStreakMilestone(15), null, 'milestone.justAboveFourteen');
+eq(getStreakMilestone(21), null, 'milestone.onlySevenAndFourteenAreMilestones');
+eq(getStreakMilestone(0), null, 'milestone.zero');
 
 console.log('OK');

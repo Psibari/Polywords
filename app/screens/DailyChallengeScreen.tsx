@@ -33,6 +33,7 @@ import {
   dailyBackdrop,
   dailyClueVaultMaterial,
   DailyPollyReaction as PerchReaction,
+  getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
 import DailyAnswerCard, {
   DailyAnswerCardState,
@@ -185,6 +186,7 @@ function ResultsOverlay({
   const FEATHER_IMG = require('../../assets/ui/feather-gold-reward.png');
 
   const dailyResult = useGameStore((s) => s.dailyResult);
+  const streakMilestoneReward = useGameStore((s) => s.streakMilestoneReward);
   const fadeIn = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -222,14 +224,18 @@ function ResultsOverlay({
           {isWin ? DAILY_WIN_TITLE : DAILY_LOSS_TITLE}
         </Text>
 
-        {isWin && (
+        {(isWin || streakMilestoneReward) && (
           <View style={styles.featherWrap}>
             <Image
               source={FEATHER_IMG}
               style={styles.featherImage}
               resizeMode="contain"
             />
-            <Text style={styles.featherLabel}>{DAILY_WIN_REWARD}</Text>
+            <Text style={styles.featherLabel}>
+              {streakMilestoneReward
+                ? getStreakMilestoneRewardLabel(streakMilestoneReward)
+                : DAILY_WIN_REWARD}
+            </Text>
           </View>
         )}
 

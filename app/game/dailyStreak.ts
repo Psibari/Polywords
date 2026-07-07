@@ -26,3 +26,12 @@ export function getDisplayStreak(progress: PlayerProgress, today: string): numbe
   if (progress.lastStreakDate === getPreviousDateString(today)) return progress.currentStreak;
   return 0;
 }
+
+const STREAK_MILESTONES = [7, 14] as const;
+export type StreakMilestone = typeof STREAK_MILESTONES[number];
+
+export function getStreakMilestone(streak: number): StreakMilestone | null {
+  return (STREAK_MILESTONES as readonly number[]).includes(streak)
+    ? (streak as StreakMilestone)
+    : null;
+}

@@ -109,14 +109,12 @@ export default function HomeScreen({ navigation }: Props) {
                   pressed && styles.pressed,
                 ]}
               >
-                {streak > 0 && (
-                  <View style={styles.streakBadge}>
-                    <Text style={styles.streakBadgeText}>{`\u{1F525} ${streak}`}</Text>
-                  </View>
-                )}
                 <Text style={styles.doorEyebrow}>DAILY CHALLENGE</Text>
                 <Text style={styles.doorTitle}>{DAILY_TITLE}</Text>
                 <Text style={styles.doorCopy}>{DAILY_PROMISE}</Text>
+                {streak > 0 && (
+                  <Text style={styles.streakLabel}>{`${streak}-DAY STREAK`}</Text>
+                )}
               </Pressable>
 
               <Pressable
@@ -259,16 +257,13 @@ const styles = StyleSheet.create({
     lineHeight: homeType.doorCopy + 5,
     marginTop: 8,
   },
-  streakBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-  },
-  streakBadgeText: {
+  streakLabel: {
     color: PW.color.gold,
-    fontFamily: FONTS.hud,
+    fontFamily: FONTS.label,
     fontSize: homeType.streakBadge,
-    letterSpacing: 0.5,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 8,
   },
   settingsLinkWrap: {
     alignSelf: 'flex-end',
