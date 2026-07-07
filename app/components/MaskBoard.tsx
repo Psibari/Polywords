@@ -566,6 +566,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
   const hauntBrokenScale     = useRef(new Animated.Value(0.7)).current;
   const stillHauntedOpacity  = useRef(new Animated.Value(0)).current;
   const stillHauntedScale    = useRef(new Animated.Value(0.7)).current;
+  const hauntEntranceStingKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (visibleGridMasks.length > 0) {
@@ -897,6 +898,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
     wordLockPulse.setValue(1);
 
     if (isHaunt) {
+      const hauntEntranceKey = `${store.game.stepIndex}:${step.word}`;
+      if (hauntEntranceStingKeyRef.current !== hauntEntranceKey) {
+        hauntEntranceStingKeyRef.current = hauntEntranceKey;
+        playSfx('detectiveSting');
+      }
+
       // Haunt entrance: double haptic + purple word tint + banner
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 180);
