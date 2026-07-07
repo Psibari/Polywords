@@ -2,8 +2,9 @@
 
 ## Authority
 
-This document is the source of truth for meaning inventories, REAL masks, traps, hidden
-meanings, and editorial approval.
+For the *why* behind these rules — the feeling REALS and traps should create — see
+`docs/CONTENT_PHILOSOPHY.md`. This document is the source of truth for meaning inventories,
+REAL masks, traps, hidden meanings, and editorial approval.
 
 It consolidates the approved guidance from:
 

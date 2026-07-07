@@ -12,6 +12,7 @@ Semantic Snap — *"Wait… what? … Oh. Right."*
 | --- | --- |
 | Hunt / boss / scoring / feathers / content / vault / SFX / Polly-Hunt / MaskBoard learnings | `docs/GAME_REFERENCE.md` |
 | GPS pacing | `docs/GOLDEN_PACING_SYSTEM.md` |
+| Content philosophy (why REALS/traps feel the way they do) | `docs/CONTENT_PHILOSOPHY.md` |
 | Meaning / REAL mask / trap writing and approval | `docs/CONTENT_WRITING_STANDARD.md` |
 | Daily Challenge | `docs/DAILY_CHALLENGE_SPEC.md` |
 | Polly dialogue | `docs/POLLY_DIALOGUE_BANK.md` |
