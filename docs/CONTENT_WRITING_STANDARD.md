@@ -45,6 +45,60 @@ Definitions keep the game legal. Human handles make the game playable.
 All final tiles must follow the existing POLYWORDS writing law: tile max is 8 words; American
 English only; no fake-clever object acting; no dictionary-label tile wording.
 
+### V2 ENTRY TEMPLATE
+
+Use this as a rebuild/audit format for one word. It is not final production JSON yet.
+
+```text
+word: ROOT
+recommendedWordType: 3
+
+dictionaryMeanings:
+  - internalDefinition: The underground plant part that anchors the plant and takes in water.
+    decision: core_real
+    reason: Ordinary American English meaning; concrete, fair, and highly playable.
+  - internalDefinition: The origin, source, or basic cause of something.
+    decision: core_real
+    reason: Common figurative meaning with strong everyday use.
+  - internalDefinition: Root beer, especially as a familiar American ice-cream-float handle.
+    decision: cultural_handle
+    reason: Recognizable American cultural phrase; playable through a human handle.
+  - internalDefinition: A number that produces another number when multiplied by itself.
+    decision: reject_hold
+    reason: School/math sense may be playable later, but needs separate fairness review.
+
+humanHandles:
+  - meaning: Underground plant part.
+    handle: Plant part that drinks water.
+  - meaning: Origin or cause.
+    handle: Place where the problem started.
+  - meaning: Root beer.
+    handle: Beer used in an ice cream float.
+
+finalReals:
+  - tile: THE PART THAT DRINKS WATER
+    meaning: Underground plant part.
+    sourceDecision: core_real
+  - tile: WHERE THE PROBLEM STARTED
+    meaning: Origin or cause.
+    sourceDecision: core_real
+  - tile: ONLY BEER YOU PUT IN ICE CREAM
+    meaning: Root beer.
+    sourceDecision: cultural_handle
+
+trapPool:
+  - tile: TREE'S THIRSTY BRANCH
+    trapType: neighbor
+    whyLegallyWrong: A branch is not the root.
+  - tile: FINAL ANSWER ON THE TEST
+    trapType: result
+    whyLegallyWrong: An answer may be found, but it is not a meaning of ROOT.
+
+rejectedMeanings:
+  - meaning: Mathematical root.
+    reason: Held for later review; may be too technical or classroom-label-like for this pass.
+```
+
 ## The Game Test
 
 The player must feel:
