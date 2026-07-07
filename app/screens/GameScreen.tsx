@@ -582,6 +582,8 @@ function GameDirector({ navigation }: { navigation: any }) {
     });
     setMissedCount(0);
     setShowFeatherFloat(false);
+    startMusic();
+    setMusicState('boss');
   }
 
   const isDone = game.status === 'complete' || game.status === 'gameOver';
