@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,6 +30,8 @@ import {
   resultsType,
   resultsVerdictColor,
 } from '../ui/pwResultsMaterials';
+
+const GOLD_FEATHER_IMG = require('../../assets/ui/feather-gold-reward.png');
 
 // ─── HELPERS ─────────────────────────────────────────────────
 
@@ -265,6 +268,77 @@ const btn = StyleSheet.create({
   },
 });
 
+function GoldFeatherButton({
+  onPress,
+  disabled,
+}: {
+  onPress: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Use Gold Feather free life"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        gf.shell,
+        pressed && !disabled && gf.pressed,
+        disabled && gf.disabled,
+      ]}
+    >
+      <Image source={GOLD_FEATHER_IMG} style={gf.feather} resizeMode="contain" />
+      <View style={gf.copyBlock}>
+        <Text style={gf.title}>USE GOLD FEATHER</Text>
+        <Text style={gf.copy}>Free life. Run the Hunt back now.</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+const gf = StyleSheet.create({
+  shell: {
+    minHeight: 74,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: PW.radius.card,
+    borderWidth: 1.5,
+    borderColor: PW.color.gold,
+    backgroundColor: 'rgba(15,13,42,0.92)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    ...PW.shadow.glowGold,
+  },
+  feather: {
+    width: 28,
+    height: 46,
+  },
+  copyBlock: {
+    flex: 1,
+  },
+  title: {
+    color: PW.color.gold,
+    fontFamily: FONTS.hud,
+    fontSize: 16,
+    letterSpacing: 2,
+  },
+  copy: {
+    color: PW.color.softWhite,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 3,
+  },
+  pressed: {
+    opacity: 0.84,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+});
+
 // ─── RESULTS SCREEN — THE HUNT LEDGER ────────────────────────
 
 type Props = {
@@ -277,10 +351,20 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const ghostRevenge = useGameStore(s => s.ghostRevenge);
   const recordRunComplete = useGameStore(s => s.recordRunComplete);
   const progress = useGameStore(s => s.progress);
+  const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
+  const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
+  const spendGoldFeather = useGameStore(s => s.spendGoldFeather);
+  const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const { wordResults, score, bestCombo, status, lives } = game;
   const isComplete = status === 'complete';
+  const hasGoldFeather =
+    status === 'gameOver' &&
+    goldFeatherAvailable &&
+    goldFeatherExpiresAt !== null &&
+    Date.now() < goldFeatherExpiresAt;
 
   const [prevBest] = useState(() => progress.personalBest);
+  const [usingGoldFeather, setUsingGoldFeather] = useState(false);
   const isNewBest = score > prevBest && score > 0;
   const beatPolly = isComplete && score >= 15000;
   const outcome: 'loss' | 'beat' | 'complete' =
@@ -300,6 +384,17 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   useEffect(() => {
     if (status === 'gameOver') playSfx('pollySqwawkLaugh');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    checkGoldFeatherExpiry();
+  }, [checkGoldFeatherExpiry]);
+
+  async function handleUseGoldFeather() {
+    if (!hasGoldFeather || usingGoldFeather) return;
+    setUsingGoldFeather(true);
+    await spendGoldFeather();
+    onRestart();
+  }
 
   // Ceremony: verdict stamps in immediately; details reveal ~700ms later.
   const verdictScale = useRef(new Animated.Value(0.8)).current;
@@ -431,6 +526,12 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           {firstWrongMaskId && <TrapCard maskId={firstWrongMaskId} />}
 
           {/* Buttons */}
+          {hasGoldFeather && (
+            <GoldFeatherButton
+              onPress={handleUseGoldFeather}
+              disabled={usingGoldFeather}
+            />
+          )}
           <RunItBackButton onPress={onRestart} />
           <Pressable onPress={onHome} style={rs.homeLink}>
             <Text style={rs.homeLinkText}>HOME</Text>

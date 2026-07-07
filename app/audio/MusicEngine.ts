@@ -38,6 +38,12 @@ const fadeRafIds: Record<TrackKey, number | null> = {
   boss: null,
 };
 
+const startTokens: Record<TrackKey, number> = {
+  hunt: 0,
+  tension: 0,
+  boss: 0,
+};
+
 let currentState: MusicState = 'off';
 let engineReady = false;
 let musicStarted = false;
@@ -67,6 +73,7 @@ function cancelFade(key: TrackKey): void {
 
 function stopTrackNow(key: TrackKey, resetToStart = false): void {
   const player = players[key];
+  startTokens[key] += 1;
   cancelFade(key);
   if (!player) return;
 
@@ -130,35 +137,52 @@ function startTrack(key: TrackKey, volume: number): void {
     return;
   }
 
+  const startToken = startTokens[key] + 1;
+  startTokens[key] = startToken;
+
   try {
     player.loop = true;
     player.volume = 0;
-    void player.seekTo(0, 0, 0).catch(error => {
-      warnDev(`failed to reset ${key} track before play`, error);
-    });
-    player.play();
-    fadeVolumeTo(key, volume, 300);
+    void player.seekTo(0, 0, 0)
+      .catch(error => {
+        warnDev(`failed to reset ${key} track before play`, error);
+      })
+      .finally(() => {
+        const livePlayer = players[key];
+        if (
+          !livePlayer ||
+          startTokens[key] !== startToken ||
+          activeTrackKey !== key ||
+          !musicStarted
+        ) {
+          return;
+        }
+
+        try {
+          livePlayer.loop = true;
+          livePlayer.play();
+          fadeVolumeTo(key, volume, 300);
+        } catch (error) {
+          warnDev(`failed to play ${key} track`, error);
+        }
+      });
   } catch (error) {
     warnDev(`failed to start ${key} track`, error);
   }
 }
 
-function playTrackWithoutRestart(key: TrackKey): void {
+function ensureTrackVolume(key: TrackKey): void {
   const player = players[key];
   if (!player) {
-    warnDev(`cannot resume missing ${key} track`);
+    warnDev(`cannot adjust missing ${key} track`);
     return;
   }
 
   try {
     player.loop = true;
-    if (!player.playing) {
-      player.play();
-    }
     fadeVolumeTo(key, TRACK_VOLUMES[key], 200);
-    activeTrackKey = key;
   } catch (error) {
-    warnDev(`failed to resume ${key} track`, error);
+    warnDev(`failed to adjust ${key} track volume`, error);
   }
 }
 
@@ -175,7 +199,7 @@ function applyCurrentState(): void {
   const activeTrack = STATE_TO_TRACK[currentState];
 
   if (activeTrack === activeTrackKey) {
-    playTrackWithoutRestart(activeTrack);
+    ensureTrackVolume(activeTrack);
     return;
   }
 
@@ -239,6 +263,7 @@ export function stopMusic(): void {
   clearStopTimer();
 
   for (const key of TRACK_KEYS) {
+    startTokens[key] += 1;
     fadeVolumeTo(key, 0, 450);
   }
 
@@ -266,8 +291,8 @@ export function setMusicState(newState: MusicState): void {
   }
 
   if (previousTrack !== null && previousTrack === newTrack) {
-    if (musicStarted) {
-      playTrackWithoutRestart(previousTrack);
+    if (musicStarted && activeTrackKey === newTrack) {
+      ensureTrackVolume(newTrack);
     }
     return;
   }

@@ -84,8 +84,14 @@ function RedFlash({ flashKey }: { flashKey: number }) {
 
 function TopBar() {
   const game  = useGameStore(s => s.game);
+  const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
+  const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
   const filledFeathers = Math.max(0, Math.min(MAX_FEATHERS, game.lives));
   const hasReserve     = game.lives > MAX_FEATHERS;
+  const hasGoldFeather =
+    goldFeatherAvailable &&
+    goldFeatherExpiresAt !== null &&
+    Date.now() < goldFeatherExpiresAt;
   const total   = game.session.length;
   const current = game.stepIndex;
 
@@ -139,6 +145,19 @@ function TopBar() {
               </View>
               <View style={[tb.featherShaft, tb.featherShaftFilled, tb.reserveShaft]} />
               <Text style={tb.reservePlus}>+</Text>
+            </View>
+          )}
+          {hasGoldFeather && (
+            <View
+              style={tb.goldFeatherWrap}
+              accessible
+              accessibilityLabel="Gold Feather free life available"
+            >
+              <Image
+                source={require('../../assets/ui/feather-gold-reward.png')}
+                style={tb.goldFeatherImg}
+                resizeMode="contain"
+              />
             </View>
           )}
         </View>
@@ -396,6 +415,17 @@ const tb = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 8,
   },
+  goldFeatherWrap: {
+    width: 20,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  goldFeatherImg: {
+    width: 20,
+    height: 34,
+  },
 });
 
 // ─── INNER DIRECTOR ───────────────────────────────────────────
@@ -404,6 +434,8 @@ function GameDirector({ navigation }: { navigation: any }) {
   const game       = useGameStore(s => s.game);
   const startGame  = useGameStore(s => s.startGame);
   const consumeFeatherMilestone = useGameStore(s => s.consumeFeatherMilestone);
+  const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
+  const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
 
@@ -441,6 +473,12 @@ function GameDirector({ navigation }: { navigation: any }) {
       unloadSfx();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    loadGoldFeather().then(() => {
+      checkGoldFeatherExpiry();
+    });
+  }, [loadGoldFeather, checkGoldFeatherExpiry]);
 
   useEffect(() => {
     if (game.status === 'complete' || game.status === 'gameOver') {
