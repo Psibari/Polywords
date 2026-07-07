@@ -23,6 +23,7 @@ export const homeType = {
   doorCopy: 15,
   greeting: 16,
   settingsLink: 14,
+  streakBadge: 14,
 } as const;
 
 // ── ENTER THE HUNT — gold dare in BOOK vocabulary ──

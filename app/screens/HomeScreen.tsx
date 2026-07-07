@@ -15,6 +15,8 @@ import PollyHomePerch from '../components/PollyHomePerch';
 import { BrandWordmark } from '../components/ui/BrandWordmark';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
+import { getTodayDateString } from '../game/dailyChallengeEngine';
+import { getDisplayStreak } from '../game/dailyStreak';
 import { cardMaterial, stageMaterial } from '../ui/pwMaterials';
 import { DAILY_PROMISE, DAILY_TITLE } from '../ui/pwDailyMaterials';
 import {
@@ -31,6 +33,8 @@ type Props = {
 
 export default function HomeScreen({ navigation }: Props) {
   const startGame = useGameStore(s => s.startGame);
+  const progress = useGameStore(s => s.progress);
+  const streak = getDisplayStreak(progress, getTodayDateString());
   const darePulse = useRef(new Animated.Value(0)).current;
   const wordmarkWidth = Math.min(Dimensions.get('window').width - 16, 460);
 
@@ -105,6 +109,11 @@ export default function HomeScreen({ navigation }: Props) {
                   pressed && styles.pressed,
                 ]}
               >
+                {streak > 0 && (
+                  <View style={styles.streakBadge}>
+                    <Text style={styles.streakBadgeText}>{`\u{1F525} ${streak}`}</Text>
+                  </View>
+                )}
                 <Text style={styles.doorEyebrow}>DAILY CHALLENGE</Text>
                 <Text style={styles.doorTitle}>{DAILY_TITLE}</Text>
                 <Text style={styles.doorCopy}>{DAILY_PROMISE}</Text>
@@ -249,6 +258,17 @@ const styles = StyleSheet.create({
     fontSize: homeType.doorCopy,
     lineHeight: homeType.doorCopy + 5,
     marginTop: 8,
+  },
+  streakBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  streakBadgeText: {
+    color: PW.color.gold,
+    fontFamily: FONTS.hud,
+    fontSize: homeType.streakBadge,
+    letterSpacing: 0.5,
   },
   settingsLinkWrap: {
     alignSelf: 'flex-end',
