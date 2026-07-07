@@ -161,6 +161,9 @@ export type PlayerProgress = {
   masteredWords: MasteredWordRecord[];
   personalBest: number;
   runsCompleted: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastStreakDate: string | null;
 };
 
 export type DailyTier = 1 | 2 | 3;
