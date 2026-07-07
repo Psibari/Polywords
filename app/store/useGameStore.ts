@@ -32,6 +32,7 @@ import {
   getTodayDateString,
   revealDailyCluesByElapsed,
 } from '../game/dailyChallengeEngine';
+import { applyDailyStreak } from '../game/dailyStreak';
 
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
@@ -65,6 +66,9 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   masteredWords: [],
   personalBest: 0,
   runsCompleted: 0,
+  currentStreak: 0,
+  longestStreak: 0,
+  lastStreakDate: null,
 };
 
 function toQuarantinedDailyState(session: DailySession): DailyChallengeState {
@@ -375,16 +379,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ? null
       : createDailyResult(claim.session);
 
+    const progress = dailyResult
+      ? applyDailyStreak(get().progress, dailyResult.date)
+      : get().progress;
+
     set({
       dailySession: claim.session,
       daily: toQuarantinedDailyState(claim.session),
       dailyLastClaimResult: claim.result,
       ...(dailyResult ? { dailyResult } : {}),
+      progress,
     });
 
     if (dailyResult) {
       const resultKey = DAILY_RESULT_KEY_PREFIX + dailyResult.date;
       AsyncStorage.setItem(resultKey, JSON.stringify(dailyResult)).catch(() => {});
+      AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)).catch(() => {});
     }
 
     if (dailyResult?.goldFeatherEarned) {
