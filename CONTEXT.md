@@ -99,6 +99,14 @@ Play screen design overhaul complete for this sprint.
 
 ## Music
 
+**Current audio status:** Track-based BGM is stable on `play-screen-overhaul`.
+`MusicEngine.ts` uses `hunt_suspense_loop.mp3` for neutral/rhythm/onARun,
+`tension_running_out.mp3` for crisis, and `boss_too_hot_to_sleep.mp3` for boss/POLLY'S WORD.
+Same-track BGM restarts after swipes are fixed. The dev BOSS jump starts boss music. Returning
+Haunt entrance plays `detectiveSting` once from `assets/audio/sfx/detective_clue_sting.mp3`.
+Device pass confirmed for Hunt, crisis, boss, dev jump, swipe continuity, and Returning Haunt
+sting. Latest confirmed head: `6ad5876` Add returning haunt detective sting.
+
 - **July 5, 2026:** `MusicEngine.ts` upgraded from runtime synth to five produced stem files:
   `stem-base.wav`, `stem-beat.wav`, `stem-melody.wav`, `stem-tension.wav`, and `stem-boss.wav`
   in `assets/audio/music/`. State machine, fades, and `triggerChainBreak` are unchanged.

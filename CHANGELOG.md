@@ -1,5 +1,9 @@
 # POLYWORDS Changelog
 
+## Unreleased
+
+- Audio: replaced stem BGM with stable track-based Hunt/Tension/Boss music, fixed swipe restarts, added boss dev-jump music and Returning Haunt detective sting.
+
 ## 2026-06-27 - Hunt wrong-swipe result tracking
 
 - Routed visible and final hidden wrong swipes through mask-aware UP/RIGHT engine submissions.
