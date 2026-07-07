@@ -2,8 +2,6 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
-import { BagelFatOne_400Regular } from '@expo-google-fonts/bagel-fat-one';
-import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans';
 import HomeScreen from './app/screens/HomeScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
@@ -15,15 +13,6 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    BagelFatOne_400Regular,
-    PlusJakartaSans_800ExtraBold,
-    'SuperCartoon-6R791':    require('./assets/fonts/SuperCartoon-6R791.ttf'),
-    'SuperCarnival-j9Wq0':  require('./assets/fonts/SuperCarnival-j9Wq0.ttf'),
-    'SuperFrosting-R9z4o':  require('./assets/fonts/SuperFrosting-R9z4o.ttf'),
-    'gomarice_okuba_cloud': require('./assets/fonts/gomarice_okuba_cloud.ttf'),
-    'InterVariable':        require('./assets/fonts/InterVariable.ttf'),
-    'Poppins-Bold':         require('./assets/fonts/Poppins-Bold.ttf'),
-    'Poppins-SemiBold':     require('./assets/fonts/Poppins-SemiBold.ttf'),
     'BungeeShade-Regular':  require('./assets/fonts/BungeeShade-Regular.ttf'),
     'BebasNeue-Regular':    require('./assets/fonts/BebasNeue-Regular.ttf'),
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
