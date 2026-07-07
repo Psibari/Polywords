@@ -13,7 +13,8 @@ export type SfxName =
   | 'gateOpen'
   | 'pressHoldStart'
   | 'pollySqwawkShort'
-  | 'pollySqwawkLaugh';
+  | 'pollySqwawkLaugh'
+  | 'bookClose';
 
 type SfxConfig = {
   source: Parameters<typeof createAudioPlayer>[0];
@@ -40,6 +41,7 @@ const SFX: Record<SfxName, SfxConfig> = {
   pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300  },
   pollySqwawkShort: { source: require('../../assets/audio/sfx/pollySqwawkShort.wav'), volume: 0.42, cooldownMs: 120  },
   pollySqwawkLaugh: { source: require('../../assets/audio/sfx/pollySqwawkLaugh.wav'), volume: 0.42, cooldownMs: 600  },
+  bookClose:      { source: require('../../assets/sfx/book_close_v2.mp3'),   volume: 0.60, cooldownMs: 300  },
 };
 
 const PLAYER_POOL_SIZE = 2;

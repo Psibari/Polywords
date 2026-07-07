@@ -1303,6 +1303,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
     }
 
     // Book slides left off screen — ease-out weight
+    playSfx('bookClose');
     Animated.timing(bookSlideX, {
       toValue: -SCREEN_WIDTH,
       duration: isBoss ? 380 : 280,
