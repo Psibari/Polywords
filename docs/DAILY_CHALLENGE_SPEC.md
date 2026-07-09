@@ -113,6 +113,11 @@ Daily answer tiles use the same press-and-hold feel and swipe confidence as regu
 - Releasing without enough movement returns the tile home.
 - An intentional UP swipe claims the word.
 - Use the same general control feel and confidence threshold as regular gameplay where practical.
+- A correct claim completes its physical journey into the three-clue vault: the chosen tile
+  accelerates upward, shrinks into the clue panel, resolves as a brief gold answer stamp, and
+  triggers one contained vault-impact pulse before the next round enters.
+- A wrong claim recoils and drops out of the candidate board. It does not snap home or remain
+  as a disabled gray card.
 - Daily remains UP-only even when borrowing the regular gameplay feel.
 - Do not change `SwipeMask.tsx` as part of the Daily docs lock.
 
@@ -171,12 +176,13 @@ Polly is perched on screen for the entire Daily Challenge.
 
 Between rounds after a correct claim:
 
-1. Correct card holds its gold confirmation border — 800ms.
-2. Meanings zone wipes up and fades out.
-3. `ROUND X OF 5` stamp appears center screen — 600ms.
-4. New meanings fade in.
+1. The claimed tile follows the UP gesture into the clue vault and collapses into it.
+2. The answer appears briefly as a gold stamp while the clue vault gives one impact pulse.
+3. The current vault exits left.
+4. The next vault and candidate board enter.
 
-Total target: approximately 1.8 seconds.
+The intake is the signature beat. Do not replace it with a stationary gold glow or immediate
+round swap.
 
 ---
 

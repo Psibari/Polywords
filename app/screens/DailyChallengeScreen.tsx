@@ -292,6 +292,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [pollyPose, setPollyPose] = useState<PerchReaction>('perched');
   const [inputLocked, setInputLocked] = useState(false);
   const inputLockedRef = useRef(false);
+  const clueVaultRef = useRef<View>(null);
+  const [claimTarget, setClaimTarget] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const completingCandidateRef = useRef<string | null>(null);
+  const intakeScale = useRef(new Animated.Value(1)).current;
+  const intakeGlow = useRef(new Animated.Value(0)).current;
+  const intakeWordOpacity = useRef(new Animated.Value(0)).current;
+  const [intakeWord, setIntakeWord] = useState('');
 
   function setLocked(val: boolean) {
     inputLockedRef.current = val;
@@ -303,6 +312,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   const completedRef = useRef(false);
   const roundStartRef = useRef<number>(Date.now());
+
+  function measureClueTarget() {
+    requestAnimationFrame(() => {
+      clueVaultRef.current?.measureInWindow((x, y, width, height) => {
+        setClaimTarget({
+          x: x + width / 2,
+          y: y + height * 0.56,
+        });
+      });
+    });
+  }
 
   // INIT
   useEffect(() => {
@@ -318,8 +338,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   useEffect(() => {
     if (!dailySession || dailySession.status !== 'active') return;
     completedRef.current = false;
+    completingCandidateRef.current = null;
     setLocked(false);
     roundStartRef.current = Date.now();
+    setIntakeWord('');
+    intakeScale.setValue(1);
+    intakeGlow.setValue(0);
+    intakeWordOpacity.setValue(0);
 
     const round = dailySession.rounds[dailySession.currentRoundIndex];
     if (!round) return;
@@ -336,6 +361,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       tension: 80,
       useNativeDriver: true,
     }).start();
+    const measureTimer = setTimeout(measureClueTarget, 420);
+    return () => clearTimeout(measureTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.currentRoundIndex]);
 
@@ -376,10 +403,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
     if (isCorrect) {
       completedRef.current = true;
+      completingCandidateRef.current = candidate;
       setLocked(true);
       setCardStates(prev => new Map(prev).set(candidate, 'correct'));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      playSfx('uiClick');
+      measureClueTarget();
 
       // Remaining cards fade out
       setTimeout(() => {
@@ -392,20 +419,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         });
       }, 100);
 
-      // Board slides left; Polly stays perched (no per-round pop-in).
-      setTimeout(() => {
-        Animated.timing(vaultX, {
-          toValue: -SCREEN_WIDTH,
-          duration: 260,
-          useNativeDriver: true,
-        }).start();
-      }, 240);
-
-      // Advance round, snap vault to right, slide vault in
-      setTimeout(() => {
-        claimDailyAnswer(candidate);
-      }, 480);
-
       return;
     }
 
@@ -415,10 +428,73 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     playSfx('trapWrong');
     setTimeout(() => {
-      setCardStates((prev) => new Map(prev).set(candidate, 'disabled'));
       claimDailyAnswer(candidate);
       setLocked(false);
-    }, 380);
+    }, 620);
+  }
+
+  function handleCorrectExitComplete(candidate: string) {
+    if (completingCandidateRef.current !== candidate) return;
+    completingCandidateRef.current = null;
+    setIntakeWord(candidate.toUpperCase());
+    intakeScale.setValue(1);
+    intakeGlow.setValue(0);
+    intakeWordOpacity.setValue(0);
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    playSfx('correctClaim');
+
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(intakeScale, {
+          toValue: 1.035,
+          duration: 110,
+          useNativeDriver: true,
+        }),
+        Animated.timing(intakeScale, {
+          toValue: 1,
+          duration: 240,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(intakeGlow, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(intakeGlow, {
+          toValue: 0,
+          duration: 320,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(intakeWordOpacity, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.delay(230),
+        Animated.timing(intakeWordOpacity, {
+          toValue: 0,
+          duration: 170,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    setTimeout(() => {
+      Animated.timing(vaultX, {
+        toValue: -SCREEN_WIDTH,
+        duration: 260,
+        useNativeDriver: true,
+      }).start();
+    }, 430);
+
+    setTimeout(() => {
+      claimDailyAnswer(candidate);
+    }, 720);
   }
 
   async function handleShare() {
@@ -470,12 +546,32 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           />
 
           <Animated.View style={{ transform: [{ translateX: vaultX }] }}>
-            {currentRound && (
-              <ClueVault
-                clues={currentRound.word.clues}
-                revealedCount={revealedCount}
+            <Animated.View
+              ref={clueVaultRef}
+              collapsable={false}
+              onLayout={measureClueTarget}
+              style={{ transform: [{ scale: intakeScale }] }}
+            >
+              {currentRound && (
+                <ClueVault
+                  clues={currentRound.word.clues}
+                  revealedCount={revealedCount}
+                />
+              )}
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.intakeGlow, { opacity: intakeGlow }]}
               />
-            )}
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.intakeWord,
+                  { opacity: intakeWordOpacity },
+                ]}
+              >
+                {intakeWord}
+              </Animated.Text>
+            </Animated.View>
             <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
           </Animated.View>
 
@@ -495,6 +591,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                       state={cardStates.get(candidate) ?? 'idle'}
                       disabled={inputLocked}
                       onClaim={handleClaim}
+                      claimTarget={claimTarget}
+                      onCorrectExitComplete={handleCorrectExitComplete}
                       testID={`daily-answer-${index}`}
                       enterFromLeft={index % 2 === 0}
                       enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
@@ -565,6 +663,35 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 9,
     justifyContent: 'center',
+  },
+  intakeGlow: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    top: 10,
+    bottom: 0,
+    borderRadius: dailyClueVaultMaterial.radius,
+    borderWidth: 2,
+    borderColor: '#F5C842',
+    backgroundColor: 'rgba(245,200,66,0.12)',
+    shadowColor: '#F5C842',
+    shadowOpacity: 0.75,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  intakeWord: {
+    position: 'absolute',
+    left: 30,
+    right: 30,
+    top: '42%',
+    color: '#F5C842',
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 34,
+    letterSpacing: 2,
+    textAlign: 'center',
+    textShadowColor: 'rgba(245,200,66,0.55)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   resultPollyImage: {
     width: 140,

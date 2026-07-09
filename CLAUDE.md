@@ -32,6 +32,14 @@ Challenge overhaul into Polly's chamber, and Daily Polly on clean transparent po
 (`assets/images/polly/poses/*.png`; bottom-left, faces right, branch rooted off-screen, fly-in
 entrance, perched continuously, reaction pose-swaps + whole-image punch + laugh SFX). The
 13-part `PollyRig` is shelved for future layered art. See `docs/GAME_REFERENCE.md` + memory.
+Hunt visits use the transparent pose set with whole-image flight attitude, landing settle,
+and distinct smug, point, laugh, shocked, and sulk choreography in `PollyHuntVisit.tsx`.
+Generated cutout rig experiments are not allowed in the live renderer until assembled and
+visually approved in isolation.
+
+Daily correct-UP claims travel into the three-clue vault, collapse into a gold answer stamp,
+and trigger one vault pulse before round advance. Wrong Daily claims recoil and fall out of
+the candidate board. Daily remains UP-only; `SwipeMask.tsx` remains untouched.
 
 ---
 

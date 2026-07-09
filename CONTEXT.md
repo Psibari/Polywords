@@ -50,6 +50,12 @@ Play screen design overhaul complete for this sprint.
 - Boss word intro is clean and stable; duplicate text, shake, sweep, underline, and shockwave/ring clutter are removed.
 - The long-word fit experiment was reverted and is not active.
 - Polly Rig v1 idle uses a quiet 3.2s breath, lagged crown, quick 5.475s blink cycle, restrained glance, and occasional tail/wing accents. Device sizing remains one shared 210px outer canvas with a 1.45 inner scale at left 4px / bottom 16px. Both test flags are false, so Polly remains hidden on GameScreen; legacy MaskBoard Polly visuals remain disabled.
+- Hunt Polly visits use clean transparent pose art with whole-image flight, landing, bubble,
+  and reaction motion. The failed generated cutout-rig candidate was removed from the live
+  renderer; future articulated rigs must pass isolated assembly review before gameplay wiring.
+- Daily answer cards now use a full physical claim language: correct UP claims are absorbed
+  into the clue vault as a gold answer stamp before round advance; wrong claims recoil and
+  drop out. Daily remains UP-only and Hunt `SwipeMask` is unchanged.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`

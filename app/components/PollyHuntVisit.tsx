@@ -28,14 +28,18 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
   // Arc position (fly-in/out) — native driver, transforms only.
   const arcX = useRef(new Animated.Value(OFF_X)).current;
   const arcY = useRef(new Animated.Value(OFF_Y)).current;
+  const flightTilt = useRef(new Animated.Value(-1)).current;
+  const flightScale = useRef(new Animated.Value(0.84)).current;
   // Continuous life on the perch (offset periods = organic).
   const breatheY = useRef(new Animated.Value(0)).current;
   const breatheX = useRef(new Animated.Value(0)).current;
   // Per-reaction whole-image punch.
   const reactX = useRef(new Animated.Value(0)).current;
   const reactY = useRef(new Animated.Value(0)).current;
+  const reactTilt = useRef(new Animated.Value(0)).current;
   const reactScale = useRef(new Animated.Value(1)).current;
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
+  const bubbleScale = useRef(new Animated.Value(0.92)).current;
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const visitIdRef = useRef<number | null>(null);
@@ -80,11 +84,16 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     if (exitingRef.current) return;
     exitingRef.current = true;
     clearTimers();
-    Animated.timing(bubbleOpacity, { toValue: 0, duration: BUBBLE_OUT_MS, useNativeDriver: true }).start();
+    Animated.parallel([
+      Animated.timing(bubbleOpacity, { toValue: 0, duration: BUBBLE_OUT_MS, useNativeDriver: true }),
+      Animated.timing(bubbleScale, { toValue: 0.96, duration: BUBBLE_OUT_MS, useNativeDriver: true }),
+    ]).start();
     setPose('fly');
     Animated.parallel([
       Animated.timing(arcX, { toValue: OFF_X, duration: ms, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
       Animated.timing(arcY, { toValue: OFF_Y, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.timing(flightTilt, { toValue: -1, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.timing(flightScale, { toValue: 0.86, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
     ]).start();
     later(() => {
       const id = visitIdRef.current;
@@ -96,12 +105,17 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
   function runPunch(perchPose: PollyPoseName) {
     reactX.setValue(0);
     reactY.setValue(0);
+    reactTilt.setValue(0);
     reactScale.setValue(1);
     if (perchPose === 'laugh') {
       // Sharp bark: quick pop + hard shake.
       Animated.sequence([
         Animated.timing(reactScale, { toValue: 1.08, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         Animated.timing(reactScale, { toValue: 1, duration: 220, useNativeDriver: true }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(reactTilt, { toValue: -1, duration: 85, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(reactTilt, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
       Animated.sequence([
         Animated.timing(reactX, { toValue: 9, duration: 55, useNativeDriver: true }),
@@ -119,15 +133,34 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
         Animated.timing(reactY, { toValue: -10, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         Animated.timing(reactY, { toValue: 0, duration: 400, delay: 80, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
+      Animated.sequence([
+        Animated.timing(reactTilt, { toValue: 1, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactTilt, { toValue: 0, duration: 360, delay: 80, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
     } else if (perchPose === 'sulk') {
       // Slow deflating droop.
       Animated.timing(reactY, { toValue: 6, duration: 500, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
       Animated.timing(reactScale, { toValue: 0.95, duration: 500, useNativeDriver: true }).start();
+      Animated.timing(reactTilt, { toValue: 0.45, duration: 500, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+    } else if (perchPose === 'point') {
+      Animated.sequence([
+        Animated.timing(reactX, { toValue: 18, duration: 130, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: 10, duration: 130, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: 0, duration: 420, delay: 760, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(reactTilt, { toValue: -0.55, duration: 130, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(reactTilt, { toValue: 0, duration: 500, delay: 880, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
     } else {
-      // smug / point: cold lean toward the puzzle (she's on the left → lean right).
+      // Smug: cold lean toward the puzzle (she is on the left, leaning right).
       Animated.sequence([
         Animated.timing(reactX, { toValue: 12, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         Animated.timing(reactX, { toValue: 0, duration: 540, delay: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(reactTilt, { toValue: 0.35, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactTilt, { toValue: 0, duration: 540, delay: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
     }
   }
@@ -147,16 +180,28 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     clearTimers();
     reactX.setValue(0);
     reactY.setValue(0);
+    reactTilt.setValue(0);
     reactScale.setValue(1);
     bubbleOpacity.setValue(0);
+    bubbleScale.setValue(0.92);
     arcX.setValue(OFF_X);
     arcY.setValue(OFF_Y);
+    flightTilt.setValue(-1);
+    flightScale.setValue(0.84);
     setLine(visit.spec.line);
     setPose(visit.spec.flyPose);
 
     Animated.parallel([
       Animated.timing(arcX, { toValue: 0, duration: FLY_IN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       Animated.timing(arcY, { toValue: 0, duration: FLY_IN_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.sequence([
+        Animated.timing(flightTilt, { toValue: 0.18, duration: 430, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(flightTilt, { toValue: 0, duration: 170, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
+      Animated.sequence([
+        Animated.timing(flightScale, { toValue: 1.03, duration: 470, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(flightScale, { toValue: 1, duration: 130, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
     ]).start();
 
     later(() => {
@@ -165,7 +210,15 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
       if (visit.spec.sfx) playSfx(visit.spec.sfx);
       runPunch(visit.spec.perchPose);
       if (visit.spec.line) {
-        Animated.timing(bubbleOpacity, { toValue: 1, duration: BUBBLE_IN_MS, useNativeDriver: true }).start();
+        Animated.parallel([
+          Animated.timing(bubbleOpacity, { toValue: 1, duration: BUBBLE_IN_MS, useNativeDriver: true }),
+          Animated.spring(bubbleScale, {
+            toValue: 1,
+            speed: 24,
+            bounciness: 4,
+            useNativeDriver: true,
+          }),
+        ]).start();
       }
       if (!visit.spec.holdPerch) {
         later(() => runExit(FLY_OUT_MS), visit.spec.perchMs);
@@ -177,10 +230,24 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
 
   if (!visit) return null;
 
+  const flightRotate = flightTilt.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ['-12deg', '12deg'],
+  });
+  const reactionRotate = reactTilt.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ['-8deg', '8deg'],
+  });
+
   return (
     <View style={styles.root} pointerEvents="none">
       {/* Speech bubble — to Polly's right, tail points left at her */}
-      <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
+      <Animated.View
+        style={[
+          styles.bubbleWrap,
+          { opacity: bubbleOpacity, transform: [{ scale: bubbleScale }] },
+        ]}
+      >
         <View style={styles.bubble}>
           <Text style={styles.bubbleText}>{line ?? ''}</Text>
         </View>
@@ -200,6 +267,9 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
               { translateY: breatheY },
               { translateX: reactX },
               { translateY: reactY },
+              { rotate: flightRotate },
+              { rotate: reactionRotate },
+              { scale: flightScale },
               { scale: reactScale },
             ],
           },
