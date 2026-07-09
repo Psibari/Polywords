@@ -133,8 +133,11 @@ Three clues are available per round and reveal one at a time.
 | Clue 2 | After 4 seconds OR first wrong UP claim — whichever comes first |
 | Clue 3 | After 8 seconds OR next wrong UP claim — whichever comes first |
 
-- Locked clues show placeholder bar rows and a timing tag: `AFTER 4s` or `AFTER 8s`.
-- The player can see that more clues are coming.
+- Each newly revealed clue appears alone as the centered emphasis inside the vault,
+  holds long enough to read, then fades back into the shared clue group.
+- Revealed clues never leave the vault: clue 1 remains when clue 2 arrives, and clues 1+2
+  remain when clue 3 arrives.
+- The clue/vault typography should be large enough to read at a glance on device.
 - Timed unlocks do not cost Chances.
 - A wrong UP claim unlocks the next clue and costs 1 Chance.
 - Losing both Chances reveals the loss result and ends the session immediately.

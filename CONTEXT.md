@@ -53,6 +53,8 @@ Play screen design overhaul complete for this sprint.
 - Hunt Polly visits use clean transparent pose art with whole-image flight, landing, bubble,
   and reaction motion. The failed generated cutout-rig candidate was removed from the live
   renderer; future articulated rigs must pass isolated assembly review before gameplay wiring.
+- Daily clue reveals now use a one-two-three vault rhythm: each new meaning appears centered,
+  then fades back into the shared group while all revealed meanings remain visible.
 - Daily answer cards now use a full physical claim language: correct UP claims are absorbed
   into the clue vault as a gold answer stamp before round advance; wrong claims recoil and
   drop out. Daily remains UP-only and Hunt `SwipeMask` is unchanged.

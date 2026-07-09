@@ -37,9 +37,11 @@ and distinct smug, point, laugh, shocked, and sulk choreography in `PollyHuntVis
 Generated cutout rig experiments are not allowed in the live renderer until assembled and
 visually approved in isolation.
 
-Daily correct-UP claims travel into the three-clue vault, collapse into a gold answer stamp,
-and trigger one vault pulse before round advance. Wrong Daily claims recoil and fall out of
-the candidate board. Daily remains UP-only; `SwipeMask.tsx` remains untouched.
+Daily clue reveals now use a one-two-three vault rhythm: the newest meaning appears centered
+large in the panel, holds, then fades back into the shared clue group while remaining visible.
+Revealed meanings never disappear. Correct-UP claims travel into the vault card, collapse into
+a gold answer stamp, and trigger one vault pulse before round advance. Wrong Daily claims recoil
+and fall out of the candidate board. Daily remains UP-only; `SwipeMask.tsx` remains untouched.
 
 ---
 

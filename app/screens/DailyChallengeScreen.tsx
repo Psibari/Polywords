@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import {
   Animated,
   Dimensions,
+  Easing,
   Image,
   ImageBackground,
   Pressable,
@@ -124,48 +125,87 @@ function ClueVault({
   clues: [string, string, string];
   revealedCount: 1 | 2 | 3;
 }) {
-  const fade2 = useRef(new Animated.Value(0)).current;
-  const fade3 = useRef(new Animated.Value(0)).current;
+  const clue1Progress = useRef(new Animated.Value(0)).current;
+  const clue2Progress = useRef(new Animated.Value(0)).current;
+  const clue3Progress = useRef(new Animated.Value(0)).current;
+  const clueProgresses = [clue1Progress, clue2Progress, clue3Progress];
+  const activeIndex = revealedCount - 1;
+  const clueKey = clues.join('|');
 
   useEffect(() => {
-    if (revealedCount >= 2) {
-      Animated.timing(fade2, {
-        toValue: 1,
-        duration: 280,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      fade2.setValue(0);
-    }
-    if (revealedCount >= 3) {
-      Animated.timing(fade3, {
-        toValue: 1,
-        duration: 280,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      fade3.setValue(0);
-    }
-  }, [revealedCount, fade2, fade3]);
+    clueProgresses.forEach((progress, index) => {
+      progress.stopAnimation();
+
+      if (index < activeIndex) {
+        progress.setValue(2);
+        return;
+      }
+
+      if (index > activeIndex) {
+        progress.setValue(0);
+        return;
+      }
+
+      progress.setValue(0);
+      Animated.sequence([
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: 360,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.delay(2500),
+        Animated.timing(progress, {
+          toValue: 2,
+          duration: 420,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealedCount, clueKey]);
 
   return (
     <View style={cv.cvRoot}>
       <Text style={cv.cvLabel}>{DAILY_CLUE_TITLE}</Text>
 
-      <View style={cv.cvRow}>
-        <View style={cv.cvBullet} />
-        <Text style={cv.cvText}>{clues[0].toUpperCase()}</Text>
+      <View style={cv.cvClueStage}>
+        {clues.map((clue, index) => {
+          if (index > activeIndex) return null;
+          const progress = clueProgresses[index];
+          const opacity = progress.interpolate({
+            inputRange: [0, 0.22, 1.55, 2],
+            outputRange: [0, 1, 1, 0.84],
+          });
+          const scale = progress.interpolate({
+            inputRange: [0, 0.22, 1.55, 2],
+            outputRange: [0.92, 1.08, 1.08, 1],
+          });
+          const translateY = progress.interpolate({
+            inputRange: [0, 0.22, 2],
+            outputRange: [10, 0, 0],
+          });
+
+          return (
+            <Animated.Text
+              key={`${clue}-${index}`}
+              style={[
+                cv.cvText,
+                {
+                  opacity,
+                  transform: [{ translateY }, { scale }],
+                },
+              ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.62}
+            >
+              {clue.toUpperCase()}
+            </Animated.Text>
+          );
+        })}
       </View>
-
-      <Animated.View style={[cv.cvRow, { opacity: fade2 }]}>
-        <View style={cv.cvBullet} />
-        <Text style={cv.cvText}>{clues[1].toUpperCase()}</Text>
-      </Animated.View>
-
-      <Animated.View style={[cv.cvRow, { opacity: fade3 }]}>
-        <View style={cv.cvBullet} />
-        <Text style={cv.cvText}>{clues[2].toUpperCase()}</Text>
-      </Animated.View>
     </View>
   );
 }
@@ -318,7 +358,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       clueVaultRef.current?.measureInWindow((x, y, width, height) => {
         setClaimTarget({
           x: x + width / 2,
-          y: y + height * 0.56,
+          y: y + height * 0.5,
         });
       });
     });
@@ -638,16 +678,16 @@ const styles = StyleSheet.create({
   actionLabel: {
     color: 'rgba(255,255,255,0.45)',
     fontFamily: FONTS.label,
-    fontSize: 10,
+    fontSize: 12,
     letterSpacing: 3,
     textAlign: 'center',
     textTransform: 'uppercase',
-    marginTop: 16,
-    marginBottom: 10,
+    marginTop: 10,
+    marginBottom: 8,
   },
   cardArea: {
     marginHorizontal: 20,
-    marginTop: 6,
+    marginTop: 2,
     paddingBottom: 210,
   },
   cardBoard: {
@@ -800,41 +840,40 @@ const cv = StyleSheet.create({
   cvRoot: {
     marginHorizontal: 20,
     marginTop: 10,
-    padding: 16,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 18,
     borderRadius: dailyClueVaultMaterial.radius,
     backgroundColor: dailyClueVaultMaterial.panelBackground,
     borderWidth: dailyClueVaultMaterial.borderWidth,
     borderColor: dailyClueVaultMaterial.borderColor,
   },
   cvLabel: {
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,247,214,0.66)',
     fontFamily: FONTS.label,
-    fontSize: 10,
+    fontSize: 12,
     letterSpacing: 3,
     textTransform: 'uppercase',
-    marginBottom: 12,
+    marginBottom: 10,
+    textAlign: 'center',
   },
-  cvRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginBottom: 8,
-  },
-  cvBullet: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#7B2D8B',
-    marginTop: 8,
-    flexShrink: 0,
+  cvClueStage: {
+    minHeight: 178,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
   },
   cvText: {
-    color: dailyClueVaultMaterial.clueTextColor,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 23,
-    lineHeight: 30,
-    fontWeight: '700',
-    flex: 1,
+    color: '#FFF3B8',
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 31,
+    lineHeight: 37,
+    letterSpacing: 1,
+    textAlign: 'center',
+    textShadowColor: 'rgba(245,200,66,0.48)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+    width: '100%',
   },
 });
 
