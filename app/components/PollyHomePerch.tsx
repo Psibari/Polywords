@@ -105,13 +105,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     bottom: homePerch.bottomOffset,
-    width: 300,
+    width: 260,
     height: homePerch.pollySize,
     pointerEvents: 'none',
+    zIndex: 4,
   },
   pollyWrap: {
     position: 'absolute',
-    left: -56,
+    left: -66,
     bottom: 0,
     width: homePerch.pollySize,
     height: homePerch.pollySize,
@@ -122,8 +123,8 @@ const styles = StyleSheet.create({
   },
   bubbleWrap: {
     position: 'absolute',
-    left: 172,
-    bottom: 150,
+    left: 150,
+    bottom: 128,
   },
   bubble: {
     backgroundColor: homePerch.bubbleFace,
