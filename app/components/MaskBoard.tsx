@@ -422,7 +422,18 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
   const bookOpenAnim          = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const bookIntakeGlowAnim    = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const bookSlideX            = useRef(new Animated.Value(SCREEN_WIDTH)).current; // book entrance/exit slide, native driver
+  const boardShakeX           = useRef(new Animated.Value(0)).current; // boss entrance / haunted micro-shake, native driver
   const wordEntranceHapticRef = useRef<string | null>(null);
+
+  function triggerBoardShake() {
+    boardShakeX.setValue(0);
+    Animated.sequence([
+      Animated.timing(boardShakeX, { toValue: -4, duration: 35, useNativeDriver: true }),
+      Animated.timing(boardShakeX, { toValue: 4,  duration: 35, useNativeDriver: true }),
+      Animated.timing(boardShakeX, { toValue: -2, duration: 35, useNativeDriver: true }),
+      Animated.timing(boardShakeX, { toValue: 0,  duration: 35, useNativeDriver: true }),
+    ]).start();
+  }
   const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const goldTextOpacity       = useRef(new Animated.Value(0)).current;
@@ -981,6 +992,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
 
     const impactTimer = setTimeout(() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      triggerBoardShake();
       setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 120);
       setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 260);
     }, 400);
@@ -1049,6 +1061,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
     if (outcomeActiveRef.current) return;
     outcomeActiveRef.current = true;
     playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
+    if (outcome === 'haunted') triggerBoardShake();
     setOutcomeDetail(options.detail);
     setOutcomeBonusLabel(options.bonusLabel);
     setWordOutcome(outcome);
@@ -1587,7 +1600,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
             absoluteFill keeps the absolutely-positioned book children aligned to the word zone. */}
         <Animated.View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { transform: [{ translateX: bookSlideX }] }]}
+          style={[StyleSheet.absoluteFill, { transform: [{ translateX: Animated.add(bookSlideX, boardShakeX) }] }]}
         >
         {/* SVG Hero Book V5; MaskBoard retains the animated hero-word content. */}
         <HeroBook
