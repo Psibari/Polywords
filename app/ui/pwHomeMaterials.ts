@@ -49,8 +49,8 @@ export const homeDoor = {
 
 // ── Polly perch geometry (the branch is part of the pose art) ──
 export const homePerch = {
-  bottomOffset: 390, // clears dare + doors + settings stack (doors render ~175pt); nudged up from 366 to tighten the gap to the tagline
-  pollySize: 280, // sized up (was 240) to reduce the empty gap beside her
+  bottomOffset: 404, // high enough to loom from the left, but layered behind the Home book so she never covers controls
+  pollySize: 246, // antagonist-sized presence without swallowing the Hunt action
   bubbleFace: '#1A1055', // matches Daily bubble material
   bubbleRim: 'rgba(245,200,66,0.55)',
   bubbleText: PW.color.foilLight,

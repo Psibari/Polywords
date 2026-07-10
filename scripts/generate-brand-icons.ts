@@ -10,6 +10,7 @@ import { chromium } from 'playwright';
 import { mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
+  HOME_MASTHEAD_WORDMARK_SVG,
   WORDMARK_LOCKUP_SVG,
   APP_ICON_MONOGRAM_SVG,
   APP_ICON_MONOGRAM_ADAPTIVE_SVG,
@@ -48,6 +49,10 @@ const TARGETS: Target[] = [
   // the SVG's 900x230 viewBox, sharp enough for retina phone screens at the
   // ~460pt max width BrandWordmark renders at.
   { svg: WORDMARK_LOCKUP_SVG, file: path.join(BRAND_IMAGES_DIR, 'wordmark.png'), width: 1800, height: 460 },
+  // Home-only masthead: large, tight, straight, readable. Kept separate from
+  // wordmark.png so app icon/splash/legacy brand assets do not move while the
+  // Home composition is being tuned.
+  { svg: HOME_MASTHEAD_WORDMARK_SVG, file: path.join(BRAND_IMAGES_DIR, 'home-wordmark.png'), width: 1800, height: 440 },
 ];
 
 async function main(): Promise<void> {

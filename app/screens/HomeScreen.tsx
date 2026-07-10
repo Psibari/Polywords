@@ -12,16 +12,15 @@ import {
 } from 'react-native';
 import HomeEmbers from '../components/HomeEmbers';
 import PollyHomePerch from '../components/PollyHomePerch';
-import { BrandWordmark } from '../components/ui/BrandWordmark';
+import { HomeWordmark } from '../components/ui/HomeWordmark';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { getDisplayStreak } from '../game/dailyStreak';
-import { cardMaterial, stageMaterial } from '../ui/pwMaterials';
+import { heroBookMaterial, stageMaterial } from '../ui/pwMaterials';
 import { DAILY_PROMISE, DAILY_TITLE } from '../ui/pwDailyMaterials';
 import {
   HOME_TAGLINE,
-  homeDare,
   homeDoor,
   homeType,
 } from '../ui/pwHomeMaterials';
@@ -36,7 +35,7 @@ export default function HomeScreen({ navigation }: Props) {
   const progress = useGameStore(s => s.progress);
   const streak = getDisplayStreak(progress, getTodayDateString());
   const darePulse = useRef(new Animated.Value(0)).current;
-  const wordmarkWidth = Math.min(Dimensions.get('window').width - 16, 460);
+  const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 520);
 
   useEffect(() => {
     Animated.loop(
@@ -73,7 +72,7 @@ export default function HomeScreen({ navigation }: Props) {
             {/* Title block — bespoke POLYWORDS brand lockup */}
             <View style={styles.titleBlock}>
               <View style={styles.wordmarkBox}>
-                <BrandWordmark width={wordmarkWidth} />
+                <HomeWordmark width={wordmarkWidth} />
               </View>
               <Text style={styles.tagline}>{HOME_TAGLINE}</Text>
             </View>
@@ -81,56 +80,87 @@ export default function HomeScreen({ navigation }: Props) {
             {/* Open plaza — Polly's room to breathe */}
             <View style={styles.plaza} />
 
-            {/* The dare */}
-            <Animated.View style={[styles.dareWrap, { transform: [{ scale: dareScale }] }]}>
-              <Pressable
-                onPress={handleHunt}
-                style={({ pressed }) => [styles.dareShell, pressed && styles.pressed]}
+            {/* The Home book â€” all primary routes are plates on the cover */}
+            <Animated.View style={[styles.homeBookWrap, { transform: [{ scale: dareScale }] }]}>
+              <View pointerEvents="none" style={styles.bookDepthShadow} />
+              <LinearGradient
+                pointerEvents="none"
+                colors={[
+                  heroBookMaterial.pagesCreamTop,
+                  heroBookMaterial.pagesCream,
+                  heroBookMaterial.pagesCreamBot,
+                ]}
+                style={styles.bookPageBlock}
               >
-                <LinearGradient
-                  colors={[...homeDare.faceGradient]}
-                  locations={[...homeDare.faceLocations]}
-                  style={styles.dareFace}
+                <View style={styles.bookPageLineTop} />
+                <View style={styles.bookPageLineMid} />
+                <View style={styles.bookPageLineLow} />
+              </LinearGradient>
+              <LinearGradient
+                colors={[
+                  heroBookMaterial.coverPurpleTop,
+                  heroBookMaterial.coverPurple,
+                  heroBookMaterial.coverPurpleBot,
+                ]}
+                locations={[0, 0.46, 1]}
+                style={styles.homeBookCover}
+              >
+                <View pointerEvents="none" style={styles.bookSpine}>
+                  <View style={styles.bookSpineBandTop} />
+                  <Text style={styles.bookSpineText}>PW</Text>
+                  <View style={styles.bookSpineBandBottom} />
+                </View>
+                <View pointerEvents="none" style={styles.huntBookOuterTooling} />
+                <View pointerEvents="none" style={styles.huntBookInnerTooling} />
+                <View pointerEvents="none" style={styles.huntBookPinLeft} />
+                <View pointerEvents="none" style={styles.huntBookPinRight} />
+                <Text style={styles.huntBookHingeText}>POLLY'S VAULT</Text>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Enter the Hunt"
+                  onPress={handleHunt}
+                  style={({ pressed }) => [styles.huntPlate, pressed && styles.pressed]}
                 >
-                  <View style={styles.dareBottomEdge} />
                   <Text style={styles.dareLabel}>ENTER THE HUNT</Text>
-                </LinearGradient>
-              </Pressable>
+                </Pressable>
+
+                <View style={styles.coverPlateRow}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Open Polly's Daily Challenge"
+                    onPress={() => navigation.navigate('Daily')}
+                    style={({ pressed }) => [
+                      styles.coverPlate,
+                      styles.dailyPlate,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={styles.doorEyebrow}>DAILY CHALLENGE</Text>
+                    <Text numberOfLines={2} style={styles.doorTitle}>{DAILY_TITLE}</Text>
+                    <Text numberOfLines={2} style={styles.doorCopy}>{DAILY_PROMISE}</Text>
+                    {streak > 0 && (
+                      <Text style={styles.streakLabel}>{`${streak}-DAY STREAK`}</Text>
+                    )}
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Open the Word Vault"
+                    onPress={() => navigation.navigate('Vault')}
+                    style={({ pressed }) => [
+                      styles.coverPlate,
+                      styles.vaultPlate,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={styles.doorEyebrow}>PLAYER ARCHIVE</Text>
+                    <Text style={styles.doorTitle}>WORD VAULT</Text>
+                    <Text numberOfLines={2} style={styles.doorCopy}>Reclaimed meanings.</Text>
+                  </Pressable>
+                </View>
+              </LinearGradient>
             </Animated.View>
-
-            {/* The doors */}
-            <View style={styles.doorRow}>
-              <Pressable
-                onPress={() => navigation.navigate('Daily')}
-                style={({ pressed }) => [
-                  cardMaterial.base,
-                  styles.door,
-                  styles.dailyDoor,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.doorEyebrow}>DAILY CHALLENGE</Text>
-                <Text style={styles.doorTitle}>{DAILY_TITLE}</Text>
-                <Text style={styles.doorCopy}>{DAILY_PROMISE}</Text>
-                {streak > 0 && (
-                  <Text style={styles.streakLabel}>{`${streak}-DAY STREAK`}</Text>
-                )}
-              </Pressable>
-
-              <Pressable
-                onPress={() => navigation.navigate('Vault')}
-                style={({ pressed }) => [
-                  cardMaterial.base,
-                  styles.door,
-                  styles.vaultDoor,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.doorEyebrow}>PLAYER ARCHIVE</Text>
-                <Text style={styles.doorTitle}>WORD VAULT</Text>
-                <Text style={styles.doorCopy}>Reclaimed meanings.</Text>
-              </Pressable>
-            </View>
 
             {/* Quiet settings — low opacity, never tiny */}
             <Pressable
@@ -159,12 +189,14 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    zIndex: 3,
   },
   content: {
     flex: 1,
     paddingHorizontal: 18,
     paddingTop: 18,
     paddingBottom: 20,
+    zIndex: 3,
   },
   titleBlock: {
     alignItems: 'center',
@@ -173,9 +205,10 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 96,
   },
   tagline: {
-    marginTop: 6,
+    marginTop: 2,
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
     fontSize: homeType.tagline,
@@ -188,52 +221,216 @@ const styles = StyleSheet.create({
   plaza: {
     flex: 1,
   },
-  dareWrap: {
-    marginHorizontal: 8,
-    ...PW.shadow.glowGold,
+  homeBookWrap: {
+    marginHorizontal: 10,
+    minHeight: 314,
+    paddingRight: 12,
+    paddingBottom: 14,
+    position: 'relative',
+    ...PW.shadow.cardLifted,
   },
-  dareShell: {
-    borderRadius: PW.radius.card,
-    borderWidth: 2,
-    borderColor: homeDare.rim,
+  bookDepthShadow: {
+    position: 'absolute',
+    left: 14,
+    right: 1,
+    top: 22,
+    bottom: 1,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.36)',
+  },
+  bookPageBlock: {
+    position: 'absolute',
+    left: 24,
+    right: 0,
+    top: 20,
+    bottom: 0,
+    borderTopRightRadius: 28,
+    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,247,214,0.20)',
     overflow: 'hidden',
   },
-  dareFace: {
-    minHeight: homeDare.minHeight,
-    alignItems: 'center',
-    justifyContent: 'center',
+  bookPageLineTop: {
+    position: 'absolute',
+    left: 24,
+    right: 14,
+    bottom: 22,
+    height: 1,
+    backgroundColor: heroBookMaterial.pagesLine,
   },
-  dareBottomEdge: {
+  bookPageLineMid: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 15,
+    height: 1,
+    backgroundColor: heroBookMaterial.pagesLine,
+    opacity: 0.72,
+  },
+  bookPageLineLow: {
+    position: 'absolute',
+    left: 26,
+    right: 22,
+    bottom: 8,
+    height: 1,
+    backgroundColor: heroBookMaterial.pagesLine,
+    opacity: 0.52,
+  },
+  homeBookCover: {
+    minHeight: 300,
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 14,
+    borderTopRightRadius: 28,
+    borderBottomRightRadius: 24,
+    borderWidth: 2,
+    borderColor: heroBookMaterial.goldHairline,
+    paddingLeft: 54,
+    paddingRight: 14,
+    paddingTop: 34,
+    paddingBottom: 18,
+    overflow: 'hidden',
+  },
+  bookSpine: {
     position: 'absolute',
     left: 0,
-    right: 0,
+    top: 0,
     bottom: 0,
-    height: 6,
-    backgroundColor: homeDare.bottomEdge,
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: heroBookMaterial.hingeDark,
+    borderRightWidth: 1,
+    borderRightColor: heroBookMaterial.goldHairline,
   },
-  dareLabel: {
-    color: homeDare.label,
+  bookSpineBandTop: {
+    position: 'absolute',
+    left: 6,
+    right: 6,
+    top: 30,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: heroBookMaterial.goldHairline,
+  },
+  bookSpineBandBottom: {
+    position: 'absolute',
+    left: 6,
+    right: 6,
+    bottom: 30,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: heroBookMaterial.goldHairline,
+  },
+  bookSpineText: {
+    color: PW.color.gold,
     fontFamily: FONTS.hud,
-    fontSize: homeType.dareLabel,
-    letterSpacing: 3,
-    textShadowColor: homeDare.labelHighlight,
+    fontSize: 15,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.62)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  doorRow: {
+  huntBookHingeText: {
+    color: 'rgba(255,247,214,0.62)',
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 2,
+    marginBottom: 12,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  huntBookOuterTooling: {
+    position: 'absolute',
+    left: 48,
+    right: 10,
+    top: 18,
+    bottom: 14,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+    borderTopRightRadius: 22,
+    borderBottomRightRadius: 20,
+    borderWidth: 1.5,
+    borderColor: heroBookMaterial.goldHairline,
+  },
+  huntBookInnerTooling: {
+    position: 'absolute',
+    left: 60,
+    right: 22,
+    top: 50,
+    bottom: 28,
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+    borderTopRightRadius: 18,
+    borderBottomRightRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.18)',
+  },
+  huntBookPinLeft: {
+    position: 'absolute',
+    left: 54,
+    top: 36,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: heroBookMaterial.goldPin,
+    borderWidth: 1,
+    borderColor: heroBookMaterial.goldPinInner,
+  },
+  huntBookPinRight: {
+    position: 'absolute',
+    right: 25,
+    top: 36,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: heroBookMaterial.goldPin,
+    borderWidth: 1,
+    borderColor: heroBookMaterial.goldPinInner,
+  },
+  huntPlate: {
+    width: '100%',
+    minHeight: 78,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: heroBookMaterial.goldHairline,
+    backgroundColor: 'rgba(15,13,42,0.30)',
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+  },
+  dareLabel: {
+    color: PW.color.gold,
+    fontFamily: FONTS.hud,
+    fontSize: homeType.dareLabel,
+    letterSpacing: 3,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.74)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  coverPlateRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 14,
+    gap: 10,
+    marginTop: 10,
+    width: '100%',
   },
-  door: {
+  coverPlate: {
     flex: 1,
-    minHeight: homeDoor.minHeight,
+    minHeight: 112,
     justifyContent: 'space-between',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 11,
+    backgroundColor: 'rgba(15,13,42,0.36)',
   },
-  dailyDoor: {
+  dailyPlate: {
     borderColor: homeDoor.dailyTrim,
   },
-  vaultDoor: {
+  vaultPlate: {
     borderColor: homeDoor.vaultTrim,
   },
   doorEyebrow: {
@@ -246,16 +443,16 @@ const styles = StyleSheet.create({
   doorTitle: {
     color: homeDoor.title,
     fontFamily: FONTS.hud,
-    fontSize: homeType.doorTitle,
+    fontSize: 19,
     letterSpacing: 1,
-    marginTop: 12,
+    marginTop: 9,
   },
   doorCopy: {
     color: homeDoor.copy,
     fontFamily: FONTS.tileCopy,
-    fontSize: homeType.doorCopy,
-    lineHeight: homeType.doorCopy + 5,
-    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 18,
+    marginTop: 6,
   },
   streakLabel: {
     color: PW.color.gold,
@@ -278,6 +475,6 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.84,
-    transform: [{ scale: 0.99 }],
+    transform: [{ scale: 0.96 }],
   },
 });

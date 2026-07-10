@@ -104,3 +104,24 @@ export const WORDMARK_LOCKUP_SVG = `
   <text font-family="${BRAND_FONT_FAMILY}" font-size="90" fill="${c.wordmarkOutline}" stroke="${c.wordmarkOutline}" stroke-width="8"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
   <text font-family="${BRAND_FONT_FAMILY}" font-size="90" fill="${c.goldFill}" stroke="none" stroke-width="0"><textPath href="#wordmarkArc" startOffset="50%" text-anchor="middle">POLYWORDS</textPath></text>
 </svg>`;
+
+// Home masthead: a production-readable title asset, separate from the app
+// icon/splash lockup. The previous curved lockup stayed technically correct
+// but read too small on Home because the glyphs sat inside a wide frame. This
+// version is straight, tightly cropped, and intentionally huge: the title must
+// read before Polly, the torch art, or the Hunt call-to-action.
+export const HOME_MASTHEAD_WORDMARK_SVG = `
+<svg width="900" height="220" viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="homeMastheadFill" x1="0" y1="20" x2="0" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="${c.white}"/>
+      <stop offset="22%" stop-color="#FFF7D6"/>
+      <stop offset="56%" stop-color="${c.goldFill}"/>
+      <stop offset="100%" stop-color="${c.goldShadow}"/>
+    </linearGradient>
+  </defs>
+
+  <text x="450" y="154" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="118" textLength="830" lengthAdjust="spacingAndGlyphs" fill="${c.wordmarkOutline}" stroke="${c.wordmarkOutline}" stroke-width="18" paint-order="stroke fill" transform="translate(8,11)">POLYWORDS</text>
+  <text x="450" y="154" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="118" textLength="830" lengthAdjust="spacingAndGlyphs" fill="${c.wordmarkShadow}" stroke="${c.wordmarkOutline}" stroke-width="20" paint-order="stroke fill">POLYWORDS</text>
+  <text x="450" y="154" text-anchor="middle" font-family="${BRAND_FONT_FAMILY}" font-size="118" textLength="830" lengthAdjust="spacingAndGlyphs" fill="url(#homeMastheadFill)" stroke="#FFF7D6" stroke-width="5" paint-order="stroke fill">POLYWORDS</text>
+</svg>`;
