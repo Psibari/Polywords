@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
+import { getRankTier } from '../game/ranks';
+import { useGameStore } from '../store/useGameStore';
+import { stageMaterial } from '../ui/pwMaterials';
+import { PW } from '../ui/pwTheme';
 
 type ToggleRowProps = {
   label: string;
@@ -53,11 +58,30 @@ function PlaceholderRow({ label, note = 'Coming soon', accent = 'purple' }: Plac
 }
 
 export default function SettingsScreen({ navigation }: Props) {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const progress = useGameStore(s => s.progress);
+  const ghosts = useGameStore(s => s.ghosts);
+  const soundEnabled = useGameStore(s => s.soundEnabled);
+  const hapticsEnabled = useGameStore(s => s.hapticsEnabled);
+  const setSoundEnabled = useGameStore(s => s.setSoundEnabled);
+  const setHapticsEnabled = useGameStore(s => s.setHapticsEnabled);
+
+  const rank = getRankTier(progress.personalBest);
+  const ghostsToShow = ghosts.filter(
+    g => !progress.masteredWords.some(m => m.word === g.word),
+  );
 
   return (
     <SafeAreaView style={styles.screen}>
+      <View pointerEvents="none" style={styles.ambientWash} />
+      <LinearGradient
+        colors={[...stageMaterial.vignette]}
+        locations={[...stageMaterial.vignetteLocations]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        pointerEvents="none"
+        style={StyleSheet.absoluteFillObject}
+      />
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.headerGlow} />
@@ -69,16 +93,18 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.profileCard}>
           <View style={styles.profileTop}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>W</Text>
+              <Text style={[styles.avatarText, { color: rank.color }]}>{rank.letter}</Text>
             </View>
             <View style={styles.profileTextWrap}>
               <Text style={styles.profileEyebrow}>PROFILE</Text>
               <Text style={styles.playerName}>Word Hunter</Text>
-              <Text style={styles.profileLevel}>Level 1</Text>
+              <Text style={styles.profileLevel}>{rank.description}</Text>
             </View>
           </View>
           <View style={styles.profileStats}>
-            <Text style={styles.profileStatText}>0 Mastered · 0 Ghosts</Text>
+            <Text style={styles.profileStatText}>
+              {progress.masteredWords.length} Mastered · {ghostsToShow.length} Ghosts
+            </Text>
           </View>
           <View style={styles.disabledButton}>
             <Text style={styles.disabledButtonText}>Edit Profile</Text>
@@ -92,12 +118,12 @@ export default function SettingsScreen({ navigation }: Props) {
             <ToggleRow
               label="Sound"
               enabled={soundEnabled}
-              onPress={() => setSoundEnabled(value => !value)}
+              onPress={() => setSoundEnabled(!soundEnabled)}
             />
             <ToggleRow
               label="Haptics"
               enabled={hapticsEnabled}
-              onPress={() => setHapticsEnabled(value => !value)}
+              onPress={() => setHapticsEnabled(!hapticsEnabled)}
             />
             <PlaceholderRow label="Tutorial Replay" />
             <PlaceholderRow label="Accessibility" />
@@ -137,7 +163,11 @@ export default function SettingsScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#1A1830',
+    backgroundColor: PW.color.bg,
+  },
+  ambientWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: stageMaterial.purpleAmbient,
   },
   content: {
     paddingHorizontal: 20,
@@ -147,9 +177,9 @@ const styles = StyleSheet.create({
   header: {
     minHeight: 150,
     borderRadius: 24,
-    backgroundColor: '#0F0D2A',
+    backgroundColor: PW.color.surfaceDeep,
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.50)',
+    borderColor: PW.color.purpleSoft,
     padding: 22,
     justifyContent: 'center',
     overflow: 'hidden',
@@ -162,23 +192,23 @@ const styles = StyleSheet.create({
     height: 152,
     borderRadius: 76,
     borderWidth: 16,
-    borderColor: 'rgba(245,200,66,0.07)',
+    borderColor: PW.color.goldGlow,
   },
   kicker: {
-    color: 'rgba(255,255,255,0.56)',
+    color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
-    fontSize: 11,
+    fontSize: 14,
     letterSpacing: 2,
     marginBottom: 8,
   },
   title: {
-    color: '#F5C842',
+    color: PW.color.gold,
     fontFamily: FONTS.wordDisplay,
     fontSize: 42,
     letterSpacing: 2,
   },
   subtitle: {
-    color: '#FFFFFF',
+    color: PW.color.white,
     fontFamily: FONTS.tileCopy,
     fontSize: 16,
     marginTop: 6,
@@ -186,9 +216,9 @@ const styles = StyleSheet.create({
   profileCard: {
     marginTop: 16,
     borderRadius: 20,
-    backgroundColor: '#0F0D2A',
+    backgroundColor: PW.color.surfaceDeep,
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.24)',
+    borderColor: PW.color.cardRim,
     padding: 18,
   },
   profileTop: {
@@ -200,14 +230,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 18,
-    backgroundColor: 'rgba(123,45,139,0.28)',
+    backgroundColor: PW.color.purpleSoft,
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.34)',
+    borderColor: PW.color.cardRim,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#F5C842',
     fontFamily: FONTS.hud,
     fontSize: 28,
     letterSpacing: 1,
@@ -216,22 +245,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileEyebrow: {
-    color: 'rgba(245,200,66,0.78)',
+    color: PW.color.goldSoft,
     fontFamily: FONTS.tileCopy,
-    fontSize: 10,
+    fontSize: 14,
     letterSpacing: 1.5,
     marginBottom: 4,
   },
   playerName: {
-    color: '#FFFFFF',
+    color: PW.color.white,
     fontFamily: FONTS.hud,
     fontSize: 20,
     letterSpacing: 1,
   },
   profileLevel: {
-    color: 'rgba(255,255,255,0.62)',
+    color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
-    fontSize: 13,
+    fontSize: 14,
     marginTop: 4,
   },
   profileStats: {
@@ -239,20 +268,20 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: 'rgba(26,24,48,0.80)',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.34)',
+    borderColor: PW.color.purpleSoft,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   profileStatText: {
-    color: '#FFFFFF',
+    color: PW.color.white,
     fontFamily: FONTS.tileCopy,
-    fontSize: 13,
+    fontSize: 14,
   },
   disabledButton: {
     marginTop: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.40)',
+    borderColor: PW.color.purpleSoft,
     paddingHorizontal: 14,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -261,21 +290,21 @@ const styles = StyleSheet.create({
     opacity: 0.78,
   },
   disabledButtonText: {
-    color: '#FFFFFF',
+    color: PW.color.white,
     fontFamily: FONTS.hud,
     fontSize: 14,
     letterSpacing: 1,
   },
   disabledButtonNote: {
-    color: 'rgba(255,255,255,0.46)',
+    color: PW.color.faintWhite,
     fontFamily: FONTS.tileCopy,
-    fontSize: 12,
+    fontSize: 14,
   },
   section: {
     marginTop: 18,
   },
   sectionTitle: {
-    color: '#FFFFFF',
+    color: PW.color.white,
     fontFamily: FONTS.hud,
     fontSize: 16,
     letterSpacing: 1,
@@ -283,9 +312,9 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 18,
-    backgroundColor: '#0F0D2A',
+    backgroundColor: PW.color.surfaceDeep,
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.34)',
+    borderColor: PW.color.purpleSoft,
     overflow: 'hidden',
   },
   warningCard: {
@@ -313,14 +342,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rowLabel: {
-    color: '#FFFFFF',
+    color: PW.color.white,
     fontFamily: FONTS.tileCopy,
-    fontSize: 15,
+    fontSize: 16,
   },
   rowNote: {
-    color: 'rgba(255,255,255,0.46)',
+    color: PW.color.faintWhite,
     fontFamily: FONTS.tileCopy,
-    fontSize: 11,
+    fontSize: 14,
     marginTop: 3,
   },
   rowAccent: {
@@ -329,16 +358,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   rowAccentPurple: {
-    backgroundColor: '#7B2D8B',
+    backgroundColor: PW.color.purple,
   },
   rowAccentRose: {
     backgroundColor: '#9B2D6B',
   },
   rowAccentGold: {
-    backgroundColor: '#F5C842',
+    backgroundColor: PW.color.gold,
   },
   chevron: {
-    color: 'rgba(255,255,255,0.30)',
+    color: PW.color.faintWhite,
     fontFamily: FONTS.tileCopy,
     fontSize: 24,
     lineHeight: 24,
@@ -347,14 +376,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(123,45,139,0.24)',
+    backgroundColor: PW.color.purpleSoft,
     borderWidth: 1,
     borderColor: 'rgba(123,45,139,0.42)',
     padding: 3,
     justifyContent: 'center',
   },
   toggleTrackOn: {
-    backgroundColor: 'rgba(245,200,66,0.18)',
+    backgroundColor: PW.color.goldGlow,
     borderColor: 'rgba(245,200,66,0.42)',
   },
   toggleKnob: {
@@ -365,6 +394,6 @@ const styles = StyleSheet.create({
   },
   toggleKnobOn: {
     alignSelf: 'flex-end',
-    backgroundColor: '#F5C842',
+    backgroundColor: PW.color.gold,
   },
 });

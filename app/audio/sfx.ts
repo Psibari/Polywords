@@ -1,4 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { useGameStore } from '../store/useGameStore';
 
 export type SfxName =
   | 'uiClick'
@@ -186,6 +187,7 @@ export function preloadSfx(): void {
 }
 
 export function playSfx(name: SfxName, options?: { rate?: number }): void {
+  if (!useGameStore.getState().soundEnabled) return;
   const config = SFX[name];
   const now = Date.now();
   const antiDoubleFireMs = Math.min(config.cooldownMs, MAX_ANTI_DOUBLE_FIRE_MS);

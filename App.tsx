@@ -21,10 +21,11 @@ export default function App() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
-    const { loadGhosts, loadProgress } = useGameStore.getState();
+    const { loadGhosts, loadProgress, loadSettings } = useGameStore.getState();
 
     loadGhosts();
     loadProgress();
+    loadSettings();
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;

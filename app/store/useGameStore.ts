@@ -39,6 +39,17 @@ const PROGRESS_KEY = 'polywords_progress';
 const DAILY_ATTEMPT_KEY_PREFIX = 'polywords_daily_attempt_';
 const DAILY_RESULT_KEY_PREFIX = 'polywords_daily_result_';
 const GOLD_FEATHER_KEY = 'polywords_gold_feather';
+const SETTINGS_KEY = 'polywords_settings';
+
+type PlayerSettings = {
+  soundEnabled: boolean;
+  hapticsEnabled: boolean;
+};
+
+const DEFAULT_SETTINGS: PlayerSettings = {
+  soundEnabled: true,
+  hapticsEnabled: true,
+};
 
 type GoldFeatherRecord = {
   available: boolean;
@@ -143,6 +154,11 @@ type GameStore = {
   daily: DailyChallengeState | null;
   submitDailyWrongSwipe: (candidate: string) => void;
   submitDailyCorrectSwipe: () => void;
+  soundEnabled: boolean;
+  hapticsEnabled: boolean;
+  setSoundEnabled: (value: boolean) => void;
+  setHapticsEnabled: (value: boolean) => void;
+  loadSettings: () => Promise<void>;
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -159,6 +175,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   streakMilestoneReward: null,
   goldFeatherAvailable: false,
   goldFeatherExpiresAt: null,
+  soundEnabled: DEFAULT_SETTINGS.soundEnabled,
+  hapticsEnabled: DEFAULT_SETTINGS.hapticsEnabled,
 
   startGame: () => {
     resetPollyBudget();
@@ -301,6 +319,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const parsed = JSON.parse(raw);
         const merged: PlayerProgress = { ...DEFAULT_PROGRESS, ...parsed };
         set({ progress: merged });
+      }
+    } catch {}
+  },
+
+  setSoundEnabled: (value: boolean) => {
+    set({ soundEnabled: value });
+    const next: PlayerSettings = { soundEnabled: value, hapticsEnabled: get().hapticsEnabled };
+    AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  setHapticsEnabled: (value: boolean) => {
+    set({ hapticsEnabled: value });
+    const next: PlayerSettings = { soundEnabled: get().soundEnabled, hapticsEnabled: value };
+    AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  loadSettings: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(SETTINGS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const merged: PlayerSettings = { ...DEFAULT_SETTINGS, ...parsed };
+        set(merged);
       }
     } catch {}
   },
