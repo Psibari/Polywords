@@ -49,6 +49,11 @@ let engineReady = false;
 let musicStarted = false;
 let activeTrackKey: TrackKey | null = null;
 let stopTimerId: ReturnType<typeof setTimeout> | null = null;
+let userMuted = false;
+
+function effectiveVolume(key: TrackKey): number {
+  return userMuted ? 0 : TRACK_VOLUMES[key];
+}
 
 function warnDev(message: string, error?: unknown): void {
   if (!__DEV__) return;
@@ -180,7 +185,7 @@ function ensureTrackVolume(key: TrackKey): void {
 
   try {
     player.loop = true;
-    fadeVolumeTo(key, TRACK_VOLUMES[key], 200);
+    fadeVolumeTo(key, effectiveVolume(key), 200);
   } catch (error) {
     warnDev(`failed to adjust ${key} track volume`, error);
   }
@@ -215,7 +220,7 @@ function applyCurrentState(): void {
     return;
   }
 
-  startTrack(activeTrack, TRACK_VOLUMES[activeTrack]);
+  startTrack(activeTrack, effectiveVolume(activeTrack));
   activeTrackKey = activeTrack;
 }
 
@@ -298,6 +303,13 @@ export function setMusicState(newState: MusicState): void {
   }
 
   applyCurrentState();
+}
+
+export function setMusicEnabled(enabled: boolean): void {
+  if (userMuted === !enabled) return;
+  userMuted = !enabled;
+  if (!musicStarted || !activeTrackKey) return;
+  fadeVolumeTo(activeTrackKey, effectiveVolume(activeTrackKey), 300);
 }
 
 export function triggerChainBreak(): void {

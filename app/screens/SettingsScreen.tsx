@@ -1,6 +1,6 @@
 import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS } from '../constants/fonts';
 import { getRankTier } from '../game/ranks';
@@ -46,14 +46,17 @@ function PlaceholderRow({ label, note = 'Coming soon', accent = 'purple' }: Plac
       : styles.rowAccentPurple;
 
   return (
-    <View style={[styles.row, styles.placeholderRow]}>
+    <Pressable
+      onPress={() => Alert.alert(label, 'Not built yet — coming in a future update.')}
+      style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
+    >
       <View style={[styles.rowAccent, accentStyle]} />
       <View style={styles.rowTextWrap}>
         <Text style={styles.rowLabel}>{label}</Text>
         <Text style={styles.rowNote}>{note}</Text>
       </View>
       <Text style={styles.chevron}>›</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -106,10 +109,13 @@ export default function SettingsScreen({ navigation }: Props) {
               {progress.masteredWords.length} Mastered · {ghostsToShow.length} Ghosts
             </Text>
           </View>
-          <View style={styles.disabledButton}>
+          <Pressable
+            onPress={() => Alert.alert('Edit Profile', 'Not built yet — coming in a future update.')}
+            style={({ pressed }) => [styles.disabledButton, pressed && styles.pressed]}
+          >
             <Text style={styles.disabledButtonText}>Edit Profile</Text>
             <Text style={styles.disabledButtonNote}>Coming soon</Text>
-          </View>
+          </Pressable>
         </View>
 
         <View style={styles.section}>
@@ -177,7 +183,7 @@ const styles = StyleSheet.create({
   header: {
     minHeight: 150,
     borderRadius: 24,
-    backgroundColor: PW.color.surfaceDeep,
+    backgroundColor: 'rgba(15,13,42,0.88)',
     borderWidth: 1,
     borderColor: PW.color.purpleSoft,
     padding: 22,
@@ -216,7 +222,7 @@ const styles = StyleSheet.create({
   profileCard: {
     marginTop: 16,
     borderRadius: 20,
-    backgroundColor: PW.color.surfaceDeep,
+    backgroundColor: 'rgba(15,13,42,0.88)',
     borderWidth: 1,
     borderColor: PW.color.cardRim,
     padding: 18,
@@ -312,7 +318,7 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 18,
-    backgroundColor: PW.color.surfaceDeep,
+    backgroundColor: 'rgba(15,13,42,0.88)',
     borderWidth: 1,
     borderColor: PW.color.purpleSoft,
     overflow: 'hidden',

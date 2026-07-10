@@ -33,6 +33,7 @@ import {
   revealDailyCluesByElapsed,
 } from '../game/dailyChallengeEngine';
 import { applyDailyStreak, getStreakMilestone } from '../game/dailyStreak';
+import { setMusicEnabled } from '../audio/MusicEngine';
 
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
@@ -325,6 +326,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setSoundEnabled: (value: boolean) => {
     set({ soundEnabled: value });
+    setMusicEnabled(value);
     const next: PlayerSettings = { soundEnabled: value, hapticsEnabled: get().hapticsEnabled };
     AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
   },
@@ -342,6 +344,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const parsed = JSON.parse(raw);
         const merged: PlayerSettings = { ...DEFAULT_SETTINGS, ...parsed };
         set(merged);
+        setMusicEnabled(merged.soundEnabled);
       }
     } catch {}
   },
