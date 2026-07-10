@@ -228,6 +228,7 @@ function ResultsOverlay({
   const dailyResult = useGameStore((s) => s.dailyResult);
   const streakMilestoneReward = useGameStore((s) => s.streakMilestoneReward);
   const fadeIn = useRef(new Animated.Value(0)).current;
+  const featherScale = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
     Animated.timing(fadeIn, {
@@ -236,6 +237,18 @@ function ResultsOverlay({
       useNativeDriver: true,
     }).start();
   }, [fadeIn]);
+
+  const isWinForFeedback = dailyResult?.status === 'won';
+  useEffect(() => {
+    if (!(isWinForFeedback || streakMilestoneReward)) return;
+    playSfx('mastered');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    featherScale.setValue(0.6);
+    Animated.sequence([
+      Animated.spring(featherScale, { toValue: 1.15, friction: 3, useNativeDriver: true }),
+      Animated.spring(featherScale, { toValue: 1.0,  friction: 6, useNativeDriver: true }),
+    ]).start();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!dailyResult) return null;
 
@@ -266,9 +279,9 @@ function ResultsOverlay({
 
         {(isWin || streakMilestoneReward) && (
           <View style={styles.featherWrap}>
-            <Image
+            <Animated.Image
               source={FEATHER_IMG}
-              style={styles.featherImage}
+              style={[styles.featherImage, { transform: [{ scale: featherScale }] }]}
               resizeMode="contain"
             />
             <Text style={styles.featherLabel}>
