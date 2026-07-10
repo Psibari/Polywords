@@ -75,6 +75,7 @@ export default function VaultScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.screen}>
       {/* STAGE — night air, candle on the bookcase */}
+      <View pointerEvents="none" style={styles.ambientWash} />
       <LinearGradient
         colors={[...stageMaterial.vignette]}
         locations={[...stageMaterial.vignetteLocations]}
@@ -84,6 +85,7 @@ export default function VaultScreen({ navigation }: Props) {
         style={StyleSheet.absoluteFillObject}
       />
       <View pointerEvents="none" style={styles.candlePool} />
+      <View pointerEvents="none" style={styles.candleCore} />
 
       <ScrollView
         style={styles.scroll}
@@ -193,6 +195,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: PW.space.screenX,
   },
+  ambientWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: stageMaterial.purpleAmbient,
+  },
   candlePool: {
     position: 'absolute',
     alignSelf: 'center',
@@ -201,6 +207,16 @@ const styles = StyleSheet.create({
     height: 420,
     borderRadius: 210,
     backgroundColor: stageMaterial.candleGlow,
+  },
+  candleCore: {
+    position: 'absolute',
+    alignSelf: 'center',
+    top: '30%',
+    marginTop: 90,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(245,200,66,0.16)',
   },
   title: {
     fontFamily: FONTS.label,
