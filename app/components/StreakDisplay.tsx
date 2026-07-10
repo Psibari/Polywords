@@ -5,16 +5,30 @@ import { FONTS, FONT_SIZES } from '../constants/fonts'
 
 export function StreakDisplay() {
   const chainMultiplier = useGameStore(s => s.game?.chainMultiplier ?? 1.0)
-  const scale   = useRef(new Animated.Value(1)).current
-  const opacity = useRef(new Animated.Value(0)).current
+  const scale     = useRef(new Animated.Value(1)).current
+  const opacity   = useRef(new Animated.Value(0)).current
+  const dropY     = useRef(new Animated.Value(0)).current
   const previousMultiplier = useRef(chainMultiplier)
   const displayedMultiplier = useRef(chainMultiplier)
   if (chainMultiplier > 1.0) displayedMultiplier.current = chainMultiplier
 
   useEffect(() => {
-    const isActive = chainMultiplier > 1.0
+    const isActive   = chainMultiplier > 1.0
     const didIncrease = chainMultiplier > previousMultiplier.current
+    const brokeRealChain = chainMultiplier === 1.0 && previousMultiplier.current >= 1.5
     previousMultiplier.current = chainMultiplier
+
+    if (brokeRealChain) {
+      dropY.setValue(0)
+      const dropAnimation = Animated.parallel([
+        Animated.timing(dropY,   { toValue: 8, duration: 150, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0, duration: 150, useNativeDriver: true }),
+      ])
+      dropAnimation.start(() => dropY.setValue(0))
+      scale.stopAnimation()
+      scale.setValue(1)
+      return () => dropAnimation.stop()
+    }
 
     const opacityAnimation = Animated.timing(opacity, {
       toValue:  isActive ? 1.0 : 0,
@@ -26,9 +40,10 @@ export function StreakDisplay() {
     if (isActive && didIncrease) {
       scale.stopAnimation()
       scale.setValue(1)
+      const peak = chainMultiplier >= 2.5 ? 1.45 : 1.3
       const pulseAnimation = Animated.sequence([
-        Animated.spring(scale, { toValue: 1.3, friction: 3, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: 1.0, friction: 6, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: peak, friction: 3, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1.0,  friction: 6, useNativeDriver: true }),
       ])
       pulseAnimation.start()
       return () => {
@@ -43,7 +58,7 @@ export function StreakDisplay() {
   }, [chainMultiplier]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Animated.View style={[styles.wrapper, { transform: [{ scale }], opacity }]}>
+    <Animated.View style={[styles.wrapper, { transform: [{ scale }, { translateY: dropY }], opacity }]}>
       <Text style={styles.counter}>×{displayedMultiplier.current.toFixed(1)}</Text>
     </Animated.View>
   )

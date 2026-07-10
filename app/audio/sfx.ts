@@ -113,10 +113,11 @@ function takePlayer(pool: SfxPlayerPool): AudioPlayer | null {
   return null;
 }
 
-async function restartPlayer(name: SfxName, player: AudioPlayer): Promise<void> {
+async function restartPlayer(name: SfxName, player: AudioPlayer, rate: number): Promise<void> {
   try {
     player.pause();
     await player.seekTo(0, 0, 0);
+    try { player.setPlaybackRate(rate); } catch {}
     player.play();
   } catch (error) {
     warnDev(`Failed to play "${name}" from the beginning.`, error);
@@ -125,11 +126,11 @@ async function restartPlayer(name: SfxName, player: AudioPlayer): Promise<void> 
   }
 }
 
-function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void {
+function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAttempt = 0): void {
   const player = takePlayer(pool);
   if (player) {
     poolRebuilds[name] = 0;
-    void restartPlayer(name, player);
+    void restartPlayer(name, player, rate);
     return;
   }
 
@@ -146,7 +147,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void
       const fresh = createPlayerPool(name, SFX[name]);
       if (fresh) {
         playerPools[name] = fresh;
-        playFromPool(name, fresh);
+        playFromPool(name, fresh, rate);
       }
       return;
     }
@@ -157,7 +158,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void
   const timer = setTimeout(() => {
     pendingLoadRetryTimers.delete(timer);
     if (playerPools[name] === pool) {
-      playFromPool(name, pool, loadAttempt + 1);
+      playFromPool(name, pool, rate, loadAttempt + 1);
     }
   }, LOAD_RETRY_DELAY_MS);
   pendingLoadRetryTimers.add(timer);
@@ -184,7 +185,7 @@ export function preloadSfx(): void {
   });
 }
 
-export function playSfx(name: SfxName): void {
+export function playSfx(name: SfxName, options?: { rate?: number }): void {
   const config = SFX[name];
   const now = Date.now();
   const antiDoubleFireMs = Math.min(config.cooldownMs, MAX_ANTI_DOUBLE_FIRE_MS);
@@ -199,7 +200,7 @@ export function playSfx(name: SfxName): void {
   }
 
   lastPlayedAt[name] = now;
-  playFromPool(name, pool);
+  playFromPool(name, pool, options?.rate ?? 1.0);
 }
 
 export function unloadSfx(): void {

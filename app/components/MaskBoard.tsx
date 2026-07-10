@@ -48,6 +48,7 @@ const DECK_BACKING_BORDER_COLORS = [
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 type FloatKind = 'real' | 'trap' | 'mastery';
+type ChainTier = 1 | 2 | 3;
 type FloatEntry = {
   id: number;
   value: number;
@@ -55,12 +56,24 @@ type FloatEntry = {
   y: number;
   color: string;
   kind: FloatKind;
+  tier?: ChainTier;
 };
+
+function chainTierFromMultiplier(mult: number): ChainTier {
+  if (mult >= 2.5) return 3;
+  if (mult >= 1.5) return 2;
+  return 1;
+}
+
+const CHAIN_TIER_SFX_RATE: Record<ChainTier, number> = { 1: 1.0, 2: 1.08, 3: 1.16 };
+const CHAIN_TIER_FONT_SIZE: Record<ChainTier, number> = { 1: 26, 2: 28, 3: 31 };
+const CHAIN_TIER_GLOW_RADIUS: Record<ChainTier, number> = { 1: 2, 2: 5, 3: 9 };
 
 type SwipeScoreFloatProps = {
   value: number;
   color: string;
   kind: Exclude<FloatKind, 'mastery'>;
+  tier: ChainTier;
   onComplete: () => void;
 };
 
@@ -68,6 +81,7 @@ function SwipeScoreFloat({
   value,
   color,
   kind,
+  tier,
   onComplete,
 }: SwipeScoreFloatProps) {
   const progress = useRef(new Animated.Value(0)).current;
@@ -128,11 +142,11 @@ function SwipeScoreFloat({
         style={{
           color,
           fontFamily: FONTS.hud,
-          fontSize: 26,
-          lineHeight: 29,
-          textShadowColor: PW.color.shadow,
-          textShadowOffset: { width: 0, height: 1 },
-          textShadowRadius: 2,
+          fontSize: CHAIN_TIER_FONT_SIZE[tier],
+          lineHeight: CHAIN_TIER_FONT_SIZE[tier] + 3,
+          textShadowColor: tier > 1 ? color : PW.color.shadow,
+          textShadowOffset: { width: 0, height: tier > 1 ? 0 : 1 },
+          textShadowRadius: CHAIN_TIER_GLOW_RADIUS[tier],
         }}
       >
         +{value}
@@ -478,8 +492,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
   }
 
   function triggerWrongSwipeFeedback() {
+    const brokeRealChain = store.game.chainMultiplier >= 1.5;
     playSfx('wrongLame');
     playSfx('pollySqwawkShort');
+    if (brokeRealChain) {
+      playSfx('correctClaim', { rate: 0.55 });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     firePollyEvent('wrong');
     triggerWrongWordRecoil();
@@ -591,10 +610,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
   const [floats, setFloats] = useState<FloatEntry[]>([]);
   const floatIdRef          = useRef(0);
 
-  function spawnFloat(value: number, kind: Exclude<FloatKind, 'mastery'>) {
+  function spawnFloat(value: number, kind: Exclude<FloatKind, 'mastery'>, tier: ChainTier = 1) {
     const color = kind === 'real' ? PW.color.gold : '#9B2D6B';
     const id = ++floatIdRef.current;
-    setFloats(prev => [...prev, { id, value, color, kind, x: 0, y: 0 }]);
+    setFloats(prev => [...prev, { id, value, color, kind, tier, x: 0, y: 0 }]);
   }
 
   function spawnFloatAtSplit(value: number, color = '#F5C842') {
@@ -1427,12 +1446,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
-      playSfx('correctClaim');
-      const baseUp = mask.isRare ? 300 : 100;
       const chainMult = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
+      const tier = chainTierFromMultiplier(chainMult);
+      playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (tier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const baseUp = mask.isRare ? 300 : 100;
       const upPoints = Math.round(baseUp * chainMult * (isBoss ? 2 : 1));
       store.submitSwipeUp(maskId);
-      spawnFloat(upPoints, 'real');
+      spawnFloat(upPoints, 'real', tier);
       triggerAbsorption(mask.phrase);
 
       const nextFound = realMasks.filter(m =>
@@ -1470,11 +1492,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
-      playSfx('trapShatter');
       const chainMultTrap = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
+      const trapTier = chainTierFromMultiplier(chainMultTrap);
+      playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[trapTier] });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (trapTier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       const trapPoints = Math.round((isBoss ? 100 : 50) * chainMultTrap);
       store.submitSwipeDown(maskId);
-      spawnFloat(trapPoints, 'trap');
+      spawnFloat(trapPoints, 'trap', trapTier);
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       onTrapCaught?.();
       const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current);
@@ -1850,6 +1875,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
                 value={f.value}
                 color={f.color}
                 kind={f.kind as Exclude<FloatKind, 'mastery'>}
+                tier={f.tier ?? 1}
                 onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
               />
             ))}
