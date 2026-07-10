@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { FONTS } from '../constants/fonts';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
@@ -370,7 +371,29 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const outcome: 'loss' | 'beat' | 'complete' =
     !isComplete ? 'loss' : beatPolly ? 'beat' : 'complete';
   const rank = computeRank(score);
+  const prevRank = computeRank(prevBest);
+  const didRankUp = isNewBest && rank.letter !== prevRank.letter;
   const grade = computeGrade(lives, wordResults);
+
+  const rankPulseScale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!didRankUp) return;
+    playSfx('mastered');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const heavyTimer = setTimeout(
+      () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
+      180,
+    );
+    const pulse = Animated.sequence([
+      Animated.spring(rankPulseScale, { toValue: 1.35, friction: 3, useNativeDriver: true }),
+      Animated.spring(rankPulseScale, { toValue: 1.0, friction: 6, useNativeDriver: true }),
+    ]);
+    pulse.start();
+    return () => {
+      clearTimeout(heavyTimer);
+      pulse.stop();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const recordedRef = useRef(false);
   useEffect(() => {
@@ -459,7 +482,11 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
           <View style={rs.rankRow}>
             <Text style={rs.rankLabel}>RANK</Text>
-            <Text style={[rs.rankLetter, { color: rank.color }]}>{rank.letter}</Text>
+            <Animated.Text
+              style={[rs.rankLetter, { color: rank.color, transform: [{ scale: rankPulseScale }] }]}
+            >
+              {rank.letter}
+            </Animated.Text>
           </View>
 
           <Text style={rs.scoreLine}>
