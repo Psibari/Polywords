@@ -1,21 +1,37 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
-export type MusicState = 'off' | 'neutral' | 'rhythm' | 'onARun' | 'crisis' | 'boss';
+export type MusicState = 'off' | 'neutral' | 'rhythm' | 'onARun' | 'crisis' | 'boss' | 'daily';
 
-type TrackKey = 'hunt' | 'tension' | 'boss';
+type TrackKey = 'hunt' | 'tension' | 'boss' | 'daily';
 
-const TRACK_KEYS: TrackKey[] = ['hunt', 'tension', 'boss'];
+const TRACK_KEYS: TrackKey[] = ['hunt', 'tension', 'boss', 'daily'];
 
 const TRACK_SOURCES: Record<TrackKey, ReturnType<typeof require>> = {
   hunt: require('../../assets/audio/bgm/hunt_suspense_loop.mp3'),
   tension: require('../../assets/audio/bgm/tension_running_out.mp3'),
   boss: require('../../assets/audio/bgm/boss_too_hot_to_sleep.mp3'),
+  daily: require('../../assets/audio/bgm/daily_detective_clue_patrol.mp3'),
 };
 
 const TRACK_VOLUMES: Record<TrackKey, number> = {
   hunt: 0.22,
   tension: 0.20,
   boss: 0.14,
+  daily: 0.16,
+};
+
+const TRACK_START_POSITIONS_SECONDS: Record<TrackKey, number> = {
+  hunt: 0,
+  tension: 0,
+  boss: 0,
+  daily: 0.85,
+};
+
+const TRACK_FADE_IN_MS: Record<TrackKey, number> = {
+  hunt: 300,
+  tension: 300,
+  boss: 300,
+  daily: 90,
 };
 
 const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
@@ -24,24 +40,28 @@ const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
   onARun: 'hunt',
   crisis: 'tension',
   boss: 'boss',
+  daily: 'daily',
 };
 
 const players: Record<TrackKey, AudioPlayer | null> = {
   hunt: null,
   tension: null,
   boss: null,
+  daily: null,
 };
 
 const fadeRafIds: Record<TrackKey, number | null> = {
   hunt: null,
   tension: null,
   boss: null,
+  daily: null,
 };
 
 const startTokens: Record<TrackKey, number> = {
   hunt: 0,
   tension: 0,
   boss: 0,
+  daily: 0,
 };
 
 let currentState: MusicState = 'off';
@@ -49,11 +69,6 @@ let engineReady = false;
 let musicStarted = false;
 let activeTrackKey: TrackKey | null = null;
 let stopTimerId: ReturnType<typeof setTimeout> | null = null;
-let userMuted = false;
-
-function effectiveVolume(key: TrackKey): number {
-  return userMuted ? 0 : TRACK_VOLUMES[key];
-}
 
 function warnDev(message: string, error?: unknown): void {
   if (!__DEV__) return;
@@ -142,13 +157,19 @@ function startTrack(key: TrackKey, volume: number): void {
     return;
   }
 
+  if (activeTrackKey === key) {
+    player.loop = true;
+    ensureTrackVolume(key);
+    return;
+  }
+
   const startToken = startTokens[key] + 1;
   startTokens[key] = startToken;
 
   try {
     player.loop = true;
     player.volume = 0;
-    void player.seekTo(0, 0, 0)
+    void player.seekTo(TRACK_START_POSITIONS_SECONDS[key], 0, 0)
       .catch(error => {
         warnDev(`failed to reset ${key} track before play`, error);
       })
@@ -166,7 +187,7 @@ function startTrack(key: TrackKey, volume: number): void {
         try {
           livePlayer.loop = true;
           livePlayer.play();
-          fadeVolumeTo(key, volume, 300);
+          fadeVolumeTo(key, volume, TRACK_FADE_IN_MS[key]);
         } catch (error) {
           warnDev(`failed to play ${key} track`, error);
         }
@@ -185,7 +206,7 @@ function ensureTrackVolume(key: TrackKey): void {
 
   try {
     player.loop = true;
-    fadeVolumeTo(key, effectiveVolume(key), 200);
+    fadeVolumeTo(key, TRACK_VOLUMES[key], 200);
   } catch (error) {
     warnDev(`failed to adjust ${key} track volume`, error);
   }
@@ -220,7 +241,7 @@ function applyCurrentState(): void {
     return;
   }
 
-  startTrack(activeTrack, effectiveVolume(activeTrack));
+  startTrack(activeTrack, TRACK_VOLUMES[activeTrack]);
   activeTrackKey = activeTrack;
 }
 
@@ -231,7 +252,7 @@ export async function initMusicEngine(): Promise<void> {
     await setAudioModeAsync({
       playsInSilentMode: true,
       shouldPlayInBackground: false,
-      interruptionMode: 'duckOthers',
+      interruptionMode: 'mixWithOthers',
     });
   } catch (error) {
     warnDev('failed to configure audio mode', error);
@@ -303,13 +324,6 @@ export function setMusicState(newState: MusicState): void {
   }
 
   applyCurrentState();
-}
-
-export function setMusicEnabled(enabled: boolean): void {
-  if (userMuted === !enabled) return;
-  userMuted = !enabled;
-  if (!musicStarted || !activeTrackKey) return;
-  fadeVolumeTo(activeTrackKey, effectiveVolume(activeTrackKey), 300);
 }
 
 export function triggerChainBreak(): void {

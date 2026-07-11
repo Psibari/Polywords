@@ -1,5 +1,4 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
-import { useGameStore } from '../store/useGameStore';
 
 export type SfxName =
   | 'uiClick'
@@ -114,11 +113,10 @@ function takePlayer(pool: SfxPlayerPool): AudioPlayer | null {
   return null;
 }
 
-async function restartPlayer(name: SfxName, player: AudioPlayer, rate: number): Promise<void> {
+async function restartPlayer(name: SfxName, player: AudioPlayer): Promise<void> {
   try {
     player.pause();
     await player.seekTo(0, 0, 0);
-    try { player.setPlaybackRate(rate); } catch {}
     player.play();
   } catch (error) {
     warnDev(`Failed to play "${name}" from the beginning.`, error);
@@ -127,11 +125,11 @@ async function restartPlayer(name: SfxName, player: AudioPlayer, rate: number): 
   }
 }
 
-function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAttempt = 0): void {
+function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void {
   const player = takePlayer(pool);
   if (player) {
     poolRebuilds[name] = 0;
-    void restartPlayer(name, player, rate);
+    void restartPlayer(name, player);
     return;
   }
 
@@ -148,7 +146,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
       const fresh = createPlayerPool(name, SFX[name]);
       if (fresh) {
         playerPools[name] = fresh;
-        playFromPool(name, fresh, rate);
+        playFromPool(name, fresh);
       }
       return;
     }
@@ -159,7 +157,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
   const timer = setTimeout(() => {
     pendingLoadRetryTimers.delete(timer);
     if (playerPools[name] === pool) {
-      playFromPool(name, pool, rate, loadAttempt + 1);
+      playFromPool(name, pool, loadAttempt + 1);
     }
   }, LOAD_RETRY_DELAY_MS);
   pendingLoadRetryTimers.add(timer);
@@ -171,7 +169,7 @@ export function preloadSfx(): void {
     setAudioModeAsync({
       playsInSilentMode:    true,
       shouldPlayInBackground: false,
-      interruptionMode:     'duckOthers',
+      interruptionMode:     'mixWithOthers',
     }).catch(error => warnDev('Failed to configure audio mode.', error));
   }
 
@@ -186,8 +184,7 @@ export function preloadSfx(): void {
   });
 }
 
-export function playSfx(name: SfxName, options?: { rate?: number }): void {
-  if (!useGameStore.getState().soundEnabled) return;
+export function playSfx(name: SfxName): void {
   const config = SFX[name];
   const now = Date.now();
   const antiDoubleFireMs = Math.min(config.cooldownMs, MAX_ANTI_DOUBLE_FIRE_MS);
@@ -202,7 +199,7 @@ export function playSfx(name: SfxName, options?: { rate?: number }): void {
   }
 
   lastPlayedAt[name] = now;
-  playFromPool(name, pool, options?.rate ?? 1.0);
+  playFromPool(name, pool);
 }
 
 export function unloadSfx(): void {

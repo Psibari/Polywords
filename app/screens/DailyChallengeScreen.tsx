@@ -24,7 +24,14 @@ import {
 } from '../game/dailyChallengeEngine';
 import { DailyClaimResult } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
-import { playSfx } from '../audio/sfx';
+import { playSfx, preloadSfx } from '../audio/sfx';
+import {
+  disposeMusicEngine,
+  initMusicEngine,
+  setMusicState,
+  startMusic,
+  stopMusic,
+} from '../audio/MusicEngine';
 import {
   DAILY_WIN_TITLE,
   DAILY_WIN_REWARD,
@@ -380,6 +387,30 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // DAILY MUSIC
+  useEffect(() => {
+    let cancelled = false;
+
+    preloadSfx();
+    setMusicState('daily');
+    startMusic();
+    initMusicEngine().then(() => {
+      if (cancelled) {
+        stopMusic();
+        disposeMusicEngine();
+        return;
+      }
+      setMusicState('daily');
+      startMusic();
+    });
+
+    return () => {
+      cancelled = true;
+      stopMusic();
+      disposeMusicEngine();
+    };
+  }, []);
+
   // ROUND CHANGE
   useEffect(() => {
     if (!dailySession || dailySession.status !== 'active') return;
@@ -695,6 +726,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 2,
     paddingBottom: 210,
+    position: 'relative',
+    zIndex: 4,
+    elevation: 4,
   },
   cardBoard: {
     backgroundColor: 'rgba(10,7,26,0.45)',
