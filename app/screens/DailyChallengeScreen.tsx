@@ -30,6 +30,7 @@ import {
   DAILY_WIN_REWARD,
   DAILY_LOSS_TITLE,
   DAILY_CLUE_TITLE,
+  DAILY_CLUE_RULE,
   DAILY_ACTION_RULE,
   dailyBackdrop,
   dailyClueVaultMaterial,
@@ -45,7 +46,7 @@ import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
-// Maps store claim result reaction → PollyDailyPerch prop
+// Maps store claim result reaction -> PollyDailyPerch prop
 function toPerchReaction(
   r: DailyClaimResult['pollyReaction'] | undefined,
 ): PerchReaction {
@@ -55,9 +56,9 @@ function toPerchReaction(
   return 'perched';
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // FeatherIcon
-// ─────────────────────────────────────────
+// -----------------------------------------
 function FeatherIcon({ filled }: { filled: boolean }) {
   return (
     <Image
@@ -72,9 +73,9 @@ function FeatherIcon({ filled }: { filled: boolean }) {
   );
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // DailyHUD
-// ─────────────────────────────────────────
+// -----------------------------------------
 function DailyHUD({
   challengeNumber,
   currentRound,
@@ -115,9 +116,9 @@ function DailyHUD({
   );
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // ClueVault
-// ─────────────────────────────────────────
+// -----------------------------------------
 function ClueVault({
   clues,
   revealedCount,
@@ -147,44 +148,48 @@ function ClueVault({
       }
 
       progress.setValue(0);
-      Animated.sequence([
-        Animated.timing(progress, {
-          toValue: 1,
-          duration: 360,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.delay(2500),
-        Animated.timing(progress, {
-          toValue: 2,
-          duration: 420,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 360,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealedCount, clueKey]);
 
   return (
     <View style={cv.cvRoot}>
-      <Text style={cv.cvLabel}>{DAILY_CLUE_TITLE}</Text>
+      <View style={cv.cvHeader}>
+        <View style={cv.cvTitleBlock}>
+          <Text style={cv.cvLabel}>{DAILY_CLUE_TITLE}</Text>
+          <Text style={cv.cvRule}>{DAILY_CLUE_RULE}</Text>
+        </View>
+        <View style={cv.cvPrizeSeal}>
+          <Image
+            source={require('../../assets/ui/feather-life-filled.png')}
+            style={cv.cvPrizeFeather}
+            resizeMode="contain"
+          />
+          <Text style={cv.cvPrizeText}>GOLD FEATHER</Text>
+        </View>
+      </View>
 
       <View style={cv.cvClueStage}>
         {clues.map((clue, index) => {
           if (index > activeIndex) return null;
           const progress = clueProgresses[index];
           const opacity = progress.interpolate({
-            inputRange: [0, 0.22, 1.55, 2],
-            outputRange: [0, 1, 1, 0.84],
+            inputRange: [0, 0.22, 1, 2],
+            outputRange: [0, 1, 1, 0.9],
           });
           const scale = progress.interpolate({
-            inputRange: [0, 0.22, 1.55, 2],
-            outputRange: [0.92, 1.08, 1.08, 1],
+            inputRange: [0, 0.22, 1, 2],
+            outputRange: [0.98, 1.025, 1, 0.98],
           });
           const translateY = progress.interpolate({
             inputRange: [0, 0.22, 2],
-            outputRange: [10, 0, 0],
+            outputRange: [8, 0, 0],
           });
 
           return (
@@ -192,6 +197,7 @@ function ClueVault({
               key={`${clue}-${index}`}
               style={[
                 cv.cvText,
+                index < activeIndex && cv.cvTextMemory,
                 {
                   opacity,
                   transform: [{ translateY }, { scale }],
@@ -199,7 +205,7 @@ function ClueVault({
               ]}
               numberOfLines={1}
               adjustsFontSizeToFit
-              minimumFontScale={0.62}
+              minimumFontScale={0.58}
             >
               {clue.toUpperCase()}
             </Animated.Text>
@@ -210,12 +216,12 @@ function ClueVault({
   );
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // Daily answer-card control lives in components/DailyAnswerCard.
-// ─────────────────────────────────────────
-// ─────────────────────────────────────────
+// -----------------------------------------
+// -----------------------------------------
 // ResultsOverlay
-// ─────────────────────────────────────────
+// -----------------------------------------
 function ResultsOverlay({
   onHome,
   onShare,
@@ -228,7 +234,6 @@ function ResultsOverlay({
   const dailyResult = useGameStore((s) => s.dailyResult);
   const streakMilestoneReward = useGameStore((s) => s.streakMilestoneReward);
   const fadeIn = useRef(new Animated.Value(0)).current;
-  const featherScale = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
     Animated.timing(fadeIn, {
@@ -237,18 +242,6 @@ function ResultsOverlay({
       useNativeDriver: true,
     }).start();
   }, [fadeIn]);
-
-  const isWinForFeedback = dailyResult?.status === 'won';
-  useEffect(() => {
-    if (!(isWinForFeedback || streakMilestoneReward)) return;
-    playSfx('mastered');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    featherScale.setValue(0.6);
-    Animated.sequence([
-      Animated.spring(featherScale, { toValue: 1.15, friction: 3, useNativeDriver: true }),
-      Animated.spring(featherScale, { toValue: 1.0,  friction: 6, useNativeDriver: true }),
-    ]).start();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!dailyResult) return null;
 
@@ -279,9 +272,9 @@ function ResultsOverlay({
 
         {(isWin || streakMilestoneReward) && (
           <View style={styles.featherWrap}>
-            <Animated.Image
+            <Image
               source={FEATHER_IMG}
-              style={[styles.featherImage, { transform: [{ scale: featherScale }] }]}
+              style={styles.featherImage}
               resizeMode="contain"
             />
             <Text style={styles.featherLabel}>
@@ -293,7 +286,7 @@ function ResultsOverlay({
         )}
 
         <Text style={res.stat}>
-          {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words · ${dailyResult.chancesRemaining} chances left`.toUpperCase()}
+          {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words - ${dailyResult.chancesRemaining} chances left`.toUpperCase()}
         </Text>
 
         <View style={res.pills}>
@@ -323,9 +316,9 @@ function ResultsOverlay({
   );
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // MAIN SCREEN
-// ─────────────────────────────────────────
+// -----------------------------------------
 type Props = { navigation: any };
 
 export default function DailyChallengeScreen({ navigation }: Props) {
@@ -429,7 +422,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.currentRoundIndex]);
 
-  // CLAIM RESULT → Polly reaction
+  // CLAIM RESULT -> Polly reaction
   useEffect(() => {
     if (!dailyLastClaimResult) return;
     const pose = toPerchReaction(dailyLastClaimResult.pollyReaction);
@@ -500,25 +493,25 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     Animated.parallel([
       Animated.sequence([
         Animated.timing(intakeScale, {
-          toValue: 1.035,
-          duration: 110,
+          toValue: 1.045,
+          duration: 120,
           useNativeDriver: true,
         }),
         Animated.timing(intakeScale, {
           toValue: 1,
-          duration: 240,
+          duration: 260,
           useNativeDriver: true,
         }),
       ]),
       Animated.sequence([
         Animated.timing(intakeGlow, {
           toValue: 1,
-          duration: 100,
+          duration: 120,
           useNativeDriver: true,
         }),
         Animated.timing(intakeGlow, {
           toValue: 0,
-          duration: 320,
+          duration: 360,
           useNativeDriver: true,
         }),
       ]),
@@ -571,7 +564,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      {/* Polly's turf — her boss chamber, tamed so clues + cards stay readable */}
+      {/* Polly's turf -- her boss chamber, tamed so clues + cards stay readable */}
       <ImageBackground
         source={require('../../assets/backgrounds/boss-round-bg.png')}
         resizeMode="cover"
@@ -629,7 +622,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           </Animated.View>
 
           <View style={styles.cardArea}>
-            {/* Candidate board — the surface the six cards rest on, so they
+            {/* Candidate board -- the surface the six cards rest on, so they
                 read as laid out on Polly's board instead of floating. */}
             <View style={styles.cardBoard}>
               <View
@@ -674,15 +667,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         }}
         style={styles.devResetBtn}
       >
-        <Text style={styles.devResetText}>DEV · RESET DAILY</Text>
+        <Text style={styles.devResetText}>DEV - RESET DAILY</Text>
       </Pressable>
     </SafeAreaView>
   );
 }
 
-// ─────────────────────────────────────────
+// -----------------------------------------
 // STYLES
-// ─────────────────────────────────────────
+// -----------------------------------------
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -719,15 +712,15 @@ const styles = StyleSheet.create({
   },
   intakeGlow: {
     position: 'absolute',
-    left: 20,
-    right: 20,
-    top: 10,
-    bottom: 0,
-    borderRadius: dailyClueVaultMaterial.radius,
+    left: 64,
+    right: 24,
+    top: 42,
+    bottom: 18,
+    borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#F5C842',
-    backgroundColor: 'rgba(245,200,66,0.12)',
-    shadowColor: '#F5C842',
+    borderColor: dailyClueVaultMaterial.goldTrimColor,
+    backgroundColor: 'rgba(245,200,66,0.16)',
+    shadowColor: dailyClueVaultMaterial.goldTrimColor,
     shadowOpacity: 0.75,
     shadowRadius: 18,
     elevation: 8,
@@ -736,13 +729,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 30,
     right: 30,
-    top: '42%',
-    color: '#F5C842',
+    top: '46%',
+    color: dailyClueVaultMaterial.goldTrimColor,
     fontFamily: FONTS.wordDisplay,
-    fontSize: 34,
+    fontSize: 26,
     letterSpacing: 2,
     textAlign: 'center',
-    textShadowColor: 'rgba(245,200,66,0.55)',
+    textShadowColor: 'rgba(245,200,66,0.58)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
@@ -815,7 +808,7 @@ const hud = StyleSheet.create({
   dots: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   dot: {
     width: 12,
@@ -852,41 +845,103 @@ const feather = StyleSheet.create({
 const cv = StyleSheet.create({
   cvRoot: {
     marginHorizontal: 20,
-    marginTop: 10,
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 18,
+    marginTop: 8,
+    padding: 10,
     borderRadius: dailyClueVaultMaterial.radius,
     backgroundColor: dailyClueVaultMaterial.panelBackground,
     borderWidth: dailyClueVaultMaterial.borderWidth,
     borderColor: dailyClueVaultMaterial.borderColor,
+    borderBottomColor: dailyClueVaultMaterial.goldHairlineColor,
+    shadowColor: '#000000',
+    shadowOpacity: 0.34,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 10,
+  },
+  cvHeader: {
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingHorizontal: 6,
+    marginBottom: 8,
+  },
+  cvTitleBlock: {
+    flex: 1,
+    minWidth: 0,
   },
   cvLabel: {
-    color: 'rgba(255,247,214,0.66)',
+    color: dailyClueVaultMaterial.goldTrimColor,
     fontFamily: FONTS.label,
-    fontSize: 12,
+    fontSize: 13,
     letterSpacing: 3,
     textTransform: 'uppercase',
-    marginBottom: 10,
-    textAlign: 'center',
+    textShadowColor: 'rgba(245,200,66,0.32)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  cvRule: {
+    color: 'rgba(255,247,214,0.58)',
+    fontFamily: FONTS.label,
+    fontSize: 9,
+    letterSpacing: 2.2,
+    marginTop: 4,
+    textTransform: 'uppercase',
+  },
+  cvPrizeSeal: {
+    minWidth: 154,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: dailyClueVaultMaterial.sealBackground,
+    borderWidth: 1,
+    borderColor: dailyClueVaultMaterial.sealBorder,
+  },
+  cvPrizeFeather: {
+    width: 24,
+    height: 40,
+  },
+  cvPrizeText: {
+    color: dailyClueVaultMaterial.goldTrimColor,
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
   },
   cvClueStage: {
-    minHeight: 178,
+    minHeight: 174,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    borderRadius: dailyClueVaultMaterial.insetRadius,
+    backgroundColor: dailyClueVaultMaterial.parchmentInset,
+    borderWidth: 1,
+    borderColor: dailyClueVaultMaterial.goldHairlineColor,
+    borderBottomColor: dailyClueVaultMaterial.parchmentInsetDark,
   },
   cvText: {
-    color: '#FFF3B8',
+    color: dailyClueVaultMaterial.clueInk,
     fontFamily: FONTS.wordDisplay,
-    fontSize: 31,
-    lineHeight: 37,
-    letterSpacing: 1,
+    fontSize: 29,
+    lineHeight: 35,
+    letterSpacing: 0.8,
     textAlign: 'center',
-    textShadowColor: 'rgba(245,200,66,0.48)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowColor: 'rgba(245,200,66,0.34)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
     width: '100%',
+  },
+  cvTextMemory: {
+    color: dailyClueVaultMaterial.clueMemoryColor,
+    fontSize: 25,
+    lineHeight: 30,
   },
 });
 
@@ -932,7 +987,7 @@ const res = StyleSheet.create({
   rewardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     marginTop: 4,
   },
   rewardText: {
@@ -951,7 +1006,7 @@ const res = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     marginTop: 14,
     marginBottom: 6,
   },
