@@ -16,7 +16,7 @@ import { useGameStore } from '../store/useGameStore';
 import { Mask, SessionStep } from '../game/types';
 import { playSfx } from '../audio/sfx';
 import { FoilWord } from '../components/ui/FoilWord';
-import PollyResultsPerch from '../components/PollyResultsPerch';
+import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/PollyResultsPerch';
 import { PW } from '../ui/pwTheme';
 import { homeDare, homeType } from '../ui/pwHomeMaterials';
 import {
@@ -581,7 +581,7 @@ const rs = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 28,
-    paddingBottom: 200, // clears Polly at full scroll
+    paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE + 24, // full sprite height + breathing room
   },
   verdictBlock: {
     alignItems: 'center',

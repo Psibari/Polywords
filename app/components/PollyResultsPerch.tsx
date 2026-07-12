@@ -14,6 +14,8 @@ import { homePerch, homeType } from '../ui/pwHomeMaterials';
 
 type Outcome = 'loss' | 'beat' | 'complete';
 
+export const POLLY_RESULTS_PERCH_CLEARANCE = 300; // matches pollyImage height — screen must reserve this much bottom padding
+
 type Props = {
   outcome: Outcome;
   line: string | null;

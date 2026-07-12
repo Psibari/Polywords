@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: homePerch.pollySize,
     pointerEvents: 'none',
-    zIndex: 4,
+    zIndex: 2,
   },
   pollyWrap: {
     position: 'absolute',

@@ -55,7 +55,6 @@ function PlaceholderRow({ label, note = 'Coming soon', accent = 'purple' }: Plac
         <Text style={styles.rowLabel}>{label}</Text>
         <Text style={styles.rowNote}>{note}</Text>
       </View>
-      <Text style={styles.chevron}>›</Text>
     </Pressable>
   );
 }

@@ -599,8 +599,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         style={StyleSheet.absoluteFill}
       >
         <LinearGradient
-          colors={['rgba(12,9,32,0.80)', 'rgba(13,10,34,0.42)', 'rgba(11,8,28,0.66)']}
-          locations={[0, 0.55, 1]}
+          colors={['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           pointerEvents="none"
@@ -692,15 +691,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         <ResultsOverlay onHome={handleHome} onShare={handleShare} />
       )}
 
-      <Pressable
-        onPress={async () => {
-          await resetDailyForDev();
-          await startDailyChallenge();
-        }}
-        style={styles.devResetBtn}
-      >
-        <Text style={styles.devResetText}>DEV - RESET DAILY</Text>
-      </Pressable>
+      {__DEV__ && (
+        <Pressable
+          onPress={async () => {
+            await resetDailyForDev();
+            await startDailyChallenge();
+          }}
+          style={styles.devResetBtn}
+        >
+          <Text style={styles.devResetText}>DEV - RESET DAILY</Text>
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }
@@ -914,7 +915,7 @@ const feather = StyleSheet.create({
 const res = StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(26,24,48,0.98)',
+    backgroundColor: 'rgba(13,10,34,0.55)',
     zIndex: 20,
   },
   scroll: {
