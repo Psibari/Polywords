@@ -13,12 +13,13 @@ import {
 import HomeEmbers from '../components/HomeEmbers';
 import PollyHomePerch from '../components/PollyHomePerch';
 import { HomeWordmark } from '../components/ui/HomeWordmark';
+import { DailyQuillGlyph, VaultSpinesGlyph } from '../components/ui/HomeDoorGlyphs';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { getDisplayStreak } from '../game/dailyStreak';
 import { heroBookMaterial, stageMaterial } from '../ui/pwMaterials';
-import { DAILY_PROMISE, DAILY_TITLE } from '../ui/pwDailyMaterials';
+import { DAILY_CLUE_TITLE } from '../ui/pwDailyMaterials';
 import {
   HOME_TAGLINE,
   homeDoor,
@@ -136,12 +137,13 @@ export default function HomeScreen({ navigation }: Props) {
                       pressed && styles.pressed,
                     ]}
                   >
-                    <Text style={styles.doorEyebrow}>DAILY CHALLENGE</Text>
-                    <Text numberOfLines={2} style={styles.doorTitle}>{DAILY_TITLE}</Text>
-                    <Text numberOfLines={2} style={styles.doorCopy}>{DAILY_PROMISE}</Text>
                     {streak > 0 && (
-                      <Text style={styles.streakLabel}>{`${streak}-DAY STREAK`}</Text>
+                      <View style={styles.streakBadge}>
+                        <Text style={styles.streakBadgeText}>{streak}</Text>
+                      </View>
                     )}
+                    <DailyQuillGlyph size={24} />
+                    <Text style={styles.doorTitle}>{DAILY_CLUE_TITLE}</Text>
                   </Pressable>
 
                   <Pressable
@@ -154,9 +156,8 @@ export default function HomeScreen({ navigation }: Props) {
                       pressed && styles.pressed,
                     ]}
                   >
-                    <Text style={styles.doorEyebrow}>PLAYER ARCHIVE</Text>
+                    <VaultSpinesGlyph size={24} />
                     <Text style={styles.doorTitle}>WORD VAULT</Text>
-                    <Text numberOfLines={2} style={styles.doorCopy}>Reclaimed meanings.</Text>
                   </Pressable>
                 </View>
               </LinearGradient>
@@ -419,12 +420,13 @@ const styles = StyleSheet.create({
   },
   coverPlate: {
     flex: 1,
-    minHeight: 112,
-    justifyContent: 'space-between',
+    minHeight: 92,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 10,
-    paddingVertical: 11,
+    paddingVertical: 14,
     backgroundColor: 'rgba(15,13,42,0.36)',
   },
   dailyPlate: {
@@ -433,34 +435,31 @@ const styles = StyleSheet.create({
   vaultPlate: {
     borderColor: homeDoor.vaultTrim,
   },
-  doorEyebrow: {
-    color: homeDoor.eyebrow,
-    fontFamily: FONTS.label,
-    fontSize: homeType.doorEyebrow,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-  },
   doorTitle: {
     color: homeDoor.title,
     fontFamily: FONTS.hud,
-    fontSize: 19,
+    fontSize: homeType.doorTitle,
     letterSpacing: 1,
     marginTop: 9,
+    textAlign: 'center',
   },
-  doorCopy: {
-    color: homeDoor.copy,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 14,
-    lineHeight: 18,
-    marginTop: 6,
+  streakBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    borderRadius: 10,
+    backgroundColor: PW.color.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  streakLabel: {
-    color: PW.color.gold,
+  streakBadgeText: {
+    color: PW.color.surfaceDeep,
     fontFamily: FONTS.label,
-    fontSize: homeType.streakBadge,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginTop: 8,
+    fontSize: 12,
+    letterSpacing: 0.3,
   },
   settingsLinkWrap: {
     alignSelf: 'flex-end',

@@ -18,12 +18,9 @@ export const HOME_GREETING_LINES = [
 export const homeType = {
   tagline: 18,
   dareLabel: 32,
-  doorEyebrow: 14,
-  doorTitle: 21,
-  doorCopy: 15,
+  doorTitle: 16,
   greeting: 16,
   settingsLink: 14,
-  streakBadge: 14,
 } as const;
 
 // ── ENTER THE HUNT — gold dare in BOOK vocabulary ──
@@ -42,8 +39,6 @@ export const homeDoor = {
   dailyTrim: PW.color.cardRim, // gold at hairline strength only
   vaultTrim: heroBookMaterial.coverPurpleTop, // purple leather
   title: PW.color.white,
-  copy: PW.color.softWhite,
-  eyebrow: PW.color.mutedWhite,
   minHeight: 150,
 } as const;
 
