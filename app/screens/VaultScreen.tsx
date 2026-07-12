@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
+import { MasteredWordBook } from '../components/MasteredWordBook';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 import { MasteredWordRecord } from '../game/types';
@@ -85,6 +86,7 @@ type Props = {
 
 export default function VaultScreen({ navigation }: Props) {
   const [activeSection, setActiveSection] = useState<VaultSectionKey>('mastered');
+  const [selectedMastered, setSelectedMastered] = useState<MasteredWordRecord | null>(null);
   const currentSection = sections.find(s => s.key === activeSection) ?? sections[0];
 
   const progress = useGameStore(s => s.progress);
@@ -111,9 +113,14 @@ export default function VaultScreen({ navigation }: Props) {
       return (
         <View style={styles.plaqueShelf}>
           {masteredNewestFirst.map((record: MasteredWordRecord) => (
-            <View
+            <Pressable
               key={record.word}
-              style={[styles.wordPlaque, record.isBoss && styles.wordPlaqueBoss]}
+              onPress={() => setSelectedMastered(record)}
+              style={({ pressed }) => [
+                styles.wordPlaque,
+                record.isBoss && styles.wordPlaqueBoss,
+                pressed && styles.wordPlaquePressed,
+              ]}
             >
               {record.isBoss && <View style={styles.wordPlaqueBossAccent} />}
               <View style={styles.wordPlaqueRow}>
@@ -125,7 +132,7 @@ export default function VaultScreen({ navigation }: Props) {
               ) : (
                 <Text style={styles.wordPlaqueSub}>Core vaulted</Text>
               )}
-            </View>
+            </Pressable>
           ))}
         </View>
       );
@@ -319,6 +326,7 @@ export default function VaultScreen({ navigation }: Props) {
         </View>
       </ScrollView>
       <BottomNav active="Vault" navigation={navigation} />
+      <MasteredWordBook record={selectedMastered} onClose={() => setSelectedMastered(null)} />
     </SafeAreaView>
   );
 }
@@ -487,6 +495,10 @@ const styles = StyleSheet.create({
   },
   wordPlaqueBoss: {
     borderColor: 'rgba(245,200,66,0.55)',
+  },
+  wordPlaquePressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.98 }],
   },
   wordPlaqueBossAccent: {
     position: 'absolute',
