@@ -1,5 +1,7 @@
 import { heroBookMaterial, libraryMaterial } from './pwMaterials';
 
+export const DAILY_TITLE = "POLLY'S DAILY CHALLENGE";
+export const DAILY_PROMISE = 'ONE word · FIVE rounds · TWO chances · ONE gold feather';
 export const DAILY_CLUE_TITLE = 'DAILY CHALLENGE';
 export const DAILY_CLUE_RULE = 'ONE REPRESENTS ALL';
 export const DAILY_ACTION_RULE = 'SWIPE UP TO CLAIM';
