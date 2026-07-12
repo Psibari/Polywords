@@ -214,8 +214,11 @@ export default function DailyAnswerCard({
               useNativeDriver: true,
             }),
           ]),
+          // Dissolves away right as the curtain finishes closing (curtain
+          // starts at the same instant this flight does, 600ms drop) — no
+          // z-order trick needed, the tile is just gone by the time it matters.
           Animated.sequence([
-            Animated.delay(390),
+            Animated.delay(370),
             Animated.timing(opacity, {
               toValue: 0,
               duration: 230,

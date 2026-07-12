@@ -333,8 +333,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   );
   const completingCandidateRef = useRef<string | null>(null);
   const intakeScale = useRef(new Animated.Value(1)).current;
-  const intakeGlow = useRef(new Animated.Value(0)).current;
-  const intakeWordOpacity = useRef(new Animated.Value(0)).current;
   const [intakeWord, setIntakeWord] = useState('');
 
   function setLocked(val: boolean) {
@@ -343,7 +341,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   const rollProgress   = useRef(new Animated.Value(0)).current;
-  const payoffProgress = useRef(new Animated.Value(0)).current;
+  const revealProgress = useRef(new Animated.Value(0)).current;
   const [pollyVisible, setPollyVisible] = useState(true);
 
   const completedRef = useRef(false);
@@ -403,9 +401,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     roundStartRef.current = Date.now();
     setIntakeWord('');
     intakeScale.setValue(1);
-    intakeGlow.setValue(0);
-    intakeWordOpacity.setValue(0);
-    payoffProgress.setValue(0);
+    revealProgress.setValue(0);
 
     const round = dailySession.rounds[dailySession.currentRoundIndex];
     if (!round) return;
@@ -469,6 +465,28 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setCardStates(prev => new Map(prev).set(candidate, 'correct'));
       measureClueTarget();
 
+      // Curtain starts dropping the same instant the tile starts flying, so
+      // the two finish together instead of the curtain lagging behind a tile
+      // that already landed and sat there waiting to be covered.
+      setIntakeWord(candidate.toUpperCase());
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      playSfx('correctClaim');
+      Animated.sequence([
+        Animated.timing(revealProgress, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.bezier(0.23, 1, 0.32, 1),
+          useNativeDriver: true,
+        }),
+        Animated.delay(500), // hold the reveal so it's readable before the next round rolls in
+        Animated.timing(revealProgress, {
+          toValue: 0,
+          duration: 400,
+          easing: Easing.bezier(0.23, 1, 0.32, 1),
+          useNativeDriver: true,
+        }),
+      ]).start();
+
       // Remaining cards fade out
       setTimeout(() => {
         setCardStates(prev => {
@@ -497,65 +515,25 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function handleCorrectExitComplete(candidate: string) {
     if (completingCandidateRef.current !== candidate) return;
     completingCandidateRef.current = null;
-    setIntakeWord(candidate.toUpperCase());
     intakeScale.setValue(1);
-    intakeGlow.setValue(0);
-    intakeWordOpacity.setValue(0);
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    playSfx('correctClaim');
-
-    Animated.parallel([
-      Animated.sequence([
-        Animated.timing(intakeScale, {
-          toValue: 1.045,
-          duration: 120,
-          useNativeDriver: true,
-        }),
-        Animated.timing(intakeScale, {
-          toValue: 1,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.sequence([
-        Animated.timing(intakeGlow, {
-          toValue: 1,
-          duration: 120,
-          useNativeDriver: true,
-        }),
-        Animated.timing(intakeGlow, {
-          toValue: 0,
-          duration: 360,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.sequence([
-        Animated.timing(intakeWordOpacity, {
-          toValue: 1,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.delay(230),
-        Animated.timing(intakeWordOpacity, {
-          toValue: 0,
-          duration: 170,
-          useNativeDriver: true,
-        }),
-      ]),
+    Animated.sequence([
+      Animated.timing(intakeScale, {
+        toValue: 1.045,
+        duration: 120,
+        useNativeDriver: true,
+      }),
+      Animated.timing(intakeScale, {
+        toValue: 1,
+        duration: 260,
+        useNativeDriver: true,
+      }),
     ]).start();
 
     const isFinalRound =
       dailySession?.currentRoundIndex === DAILY_ROUND_COUNT - 1;
 
-    if (isFinalRound) {
-      Animated.timing(payoffProgress, {
-        toValue: 1,
-        duration: 520,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    } else {
+    if (!isFinalRound) {
       setTimeout(() => {
         Animated.timing(rollProgress, {
           toValue: 0,
@@ -625,12 +603,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
           <Animated.View
             onLayout={measureClueTarget}
-            style={{ transform: [{ scale: intakeScale }] }}
+            style={[
+              styles.clueVaultWrap,
+              { transform: [{ scale: intakeScale }] },
+            ]}
           >
             <QuillScrollPanel
               ref={clueVaultRef}
               rollProgress={rollProgress}
-              payoffProgress={payoffProgress}
+              revealProgress={revealProgress}
+              revealHeading={intakeWord}
+              revealBody="RECLAIMED"
             >
               {currentRound && (
                 <ClueStage
@@ -639,16 +622,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 />
               )}
             </QuillScrollPanel>
-            <Animated.View
-              pointerEvents="none"
-              style={[styles.intakeGlow, { opacity: intakeGlow }]}
-            />
-            <Animated.Text
-              pointerEvents="none"
-              style={[styles.intakeWord, { opacity: intakeWordOpacity }]}
-            >
-              {intakeWord}
-            </Animated.Text>
           </Animated.View>
           <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
 
@@ -714,6 +687,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: dailyBackdrop.base,
   },
+  clueVaultWrap: {
+    // Above cardArea's zIndex: 4 so the correct tile visually ducks into the
+    // panel as it flies up, instead of hovering in front of it the whole way.
+    zIndex: 40,
+    elevation: 40,
+  },
   actionLabel: {
     color: 'rgba(255,255,255,0.45)',
     fontFamily: FONTS.label,
@@ -745,35 +724,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 9,
     justifyContent: 'center',
-  },
-  intakeGlow: {
-    position: 'absolute',
-    left: 64,
-    right: 24,
-    top: 42,
-    bottom: 18,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: dailyScrollMaterial.goldTrim,
-    backgroundColor: 'rgba(245,200,66,0.16)',
-    shadowColor: dailyScrollMaterial.goldTrim,
-    shadowOpacity: 0.75,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  intakeWord: {
-    position: 'absolute',
-    left: 30,
-    right: 30,
-    top: '46%',
-    color: dailyScrollMaterial.goldTrim,
-    fontFamily: FONTS.wordDisplay,
-    fontSize: 26,
-    letterSpacing: 2,
-    textAlign: 'center',
-    textShadowColor: 'rgba(245,200,66,0.58)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   resultPollyImage: {
     width: 140,

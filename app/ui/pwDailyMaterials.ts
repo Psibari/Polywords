@@ -1,4 +1,4 @@
-import { heroBookMaterial, libraryMaterial } from './pwMaterials';
+import { heroBookMaterial } from './pwMaterials';
 
 export const DAILY_TITLE = "POLLY'S DAILY CHALLENGE";
 export const DAILY_PROMISE = 'ONE word · FIVE rounds · TWO chances · ONE gold feather';
@@ -57,18 +57,14 @@ export const dailyCardMaterial = {
   },
 } as const;
 
-// Quill & scroll clue panel (spec: 2026-07-11-daily-challenge-quill-scroll-design).
-// Every color traces to an existing pwMaterials token — no new hexes invented.
+// Flat clue panel — dark card matching the app shell, no parchment/quill art.
 export const dailyScrollMaterial = {
-  parchmentTop: libraryMaterial.parchment,      // #9A8E7A
-  parchmentBot: libraryMaterial.parchmentDeep,  // #887868
   goldTrim: heroBookMaterial.goldTrim,          // #F5C842
-  goldDeep: heroBookMaterial.goldPinInner,      // #C8920E
-  inkwellFill: heroBookMaterial.hingeRail,      // #0F0D2A
-  clueInk: libraryMaterial.woodShadow,          // #332A20
-  clueInkMemory: '#6B5D4A',                     // solid faded-ink brown (woodShadow blended toward parchment) — a translucent ink over light parchment washes gray instead of fading, so this stays opaque
+  panelBg: 'rgba(11,9,32,0.88)',
+  panelBorder: 'rgba(245,200,66,0.30)',
+  clueInk: '#FFF7D6',
+  clueInkMemory: 'rgba(255,247,214,0.55)',
   radius: 18,
-  rollCapWidth: 24,
 } as const;
 
 // Polly stays perched throughout Daily and is mostly silent. She reacts only
