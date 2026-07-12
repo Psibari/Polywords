@@ -64,7 +64,7 @@ export const dailyScrollMaterial = {
   goldDeep: heroBookMaterial.goldPinInner,      // #C8920E
   inkwellFill: heroBookMaterial.hingeRail,      // #0F0D2A
   clueInk: libraryMaterial.woodShadow,          // #332A20
-  clueInkMemory: 'rgba(51,42,32,0.62)',         // woodShadow, de-emphasized for already-revealed clues
+  clueInkMemory: '#6B5D4A',                     // solid faded-ink brown (woodShadow blended toward parchment) — a translucent ink over light parchment washes gray instead of fading, so this stays opaque
   radius: 18,
   rollCapWidth: 24,
 } as const;
