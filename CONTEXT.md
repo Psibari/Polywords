@@ -53,6 +53,9 @@ Play screen design overhaul complete for this sprint.
 - Hunt Polly visits use clean transparent pose art with whole-image flight, landing, bubble,
   and reaction motion. The failed generated cutout-rig candidate was removed from the live
   renderer; future articulated rigs must pass isolated assembly review before gameplay wiring.
+- Word Vault uses `assets/images/vault/bookcase-dark-mobile.png` as a fixed-aspect
+  reclaimed-archive cabinet; `Bookcase.tsx` maps trophy and haunted spines into measured
+  shelf slots and adds another cabinet frame when rows overflow.
 - Daily clue reveals now use a one-two-three vault rhythm: each new meaning appears centered,
   then fades back into the shared group while all revealed meanings remain visible.
 - Daily answer cards now use a full physical claim language: correct UP claims are absorbed

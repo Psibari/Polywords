@@ -42,6 +42,9 @@ large in the panel, holds, then fades back into the shared clue group while rema
 Revealed meanings never disappear. Correct-UP claims travel into the vault card, collapse into
 a gold answer stamp, and trigger one vault pulse before round advance. Wrong Daily claims recoil
 and fall out of the candidate board. Daily remains UP-only; `SwipeMask.tsx` remains untouched.
+Word Vault now uses the dark uploaded bookcase asset (`assets/images/vault/bookcase-dark-mobile.png`)
+as a fixed-aspect reclaimed-archive cabinet. `Bookcase.tsx` maps mastered and haunted spines into
+measured shelf slots from the artwork and adds another cabinet frame when rows overflow.
 
 ---
 
@@ -190,6 +193,7 @@ app/screens/HomeScreen.tsx · VaultScreen.tsx · ResultsScreen.tsx · DailyChall
 app/game/dailyChallengeEngine.ts · dailyPool.ts   Daily builder / pool
 app/audio/MusicEngine.ts + sfx.ts                 Music stems / file SFX
 assets/data/huntData.json              403-word tile database
+assets/images/vault/bookcase-dark-mobile.png   Word Vault bookcase shell
 assets/images/polly/poses/*.png        Daily Polly poses (transparent)  ·  polly/*.webp legacy
 assets/sfx/                            Game SFX
 tools/content/mask-rewriter            Local-only content tool
