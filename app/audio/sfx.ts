@@ -1,4 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { useGameStore } from '../store/useGameStore';
 
 export type SfxName =
   | 'uiClick'
@@ -9,8 +10,6 @@ export type SfxName =
   | 'trapShatter'
   | 'mastered'
   | 'haunted'
-  | 'pollyCall'
-  | 'gateOpen'
   | 'pressHoldStart'
   | 'pollySqwawkShort'
   | 'pollySqwawkLaugh'
@@ -37,8 +36,6 @@ const SFX: Record<SfxName, SfxConfig> = {
   trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140  },
   mastered:       { source: require('../../assets/sfx/mastered_chime.mp3'),   volume: 0.45, cooldownMs: 2200 },
   haunted:        { source: require('../../assets/sfx/haunted_moan.mp3'),     volume: 0.30, cooldownMs: 2600 },
-  pollyCall:      { source: require('../../assets/sfx/polly_call.mp3'),       volume: 0.25, cooldownMs: 1500 },
-  gateOpen:       { source: require('../../assets/sfx/gate_open.mp3'),        volume: 0.35, cooldownMs: 700  },
   pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300  },
   pollySqwawkShort: { source: require('../../assets/audio/sfx/pollySqwawkShort.wav'), volume: 0.42, cooldownMs: 120  },
   pollySqwawkLaugh: { source: require('../../assets/audio/sfx/pollySqwawkLaugh.wav'), volume: 0.42, cooldownMs: 600  },
@@ -113,10 +110,11 @@ function takePlayer(pool: SfxPlayerPool): AudioPlayer | null {
   return null;
 }
 
-async function restartPlayer(name: SfxName, player: AudioPlayer): Promise<void> {
+async function restartPlayer(name: SfxName, player: AudioPlayer, rate: number): Promise<void> {
   try {
     player.pause();
     await player.seekTo(0, 0, 0);
+    try { player.setPlaybackRate(rate); } catch {}
     player.play();
   } catch (error) {
     warnDev(`Failed to play "${name}" from the beginning.`, error);
@@ -125,11 +123,11 @@ async function restartPlayer(name: SfxName, player: AudioPlayer): Promise<void> 
   }
 }
 
-function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void {
+function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAttempt = 0): void {
   const player = takePlayer(pool);
   if (player) {
     poolRebuilds[name] = 0;
-    void restartPlayer(name, player);
+    void restartPlayer(name, player, rate);
     return;
   }
 
@@ -146,7 +144,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void
       const fresh = createPlayerPool(name, SFX[name]);
       if (fresh) {
         playerPools[name] = fresh;
-        playFromPool(name, fresh);
+        playFromPool(name, fresh, rate);
       }
       return;
     }
@@ -157,7 +155,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, loadAttempt = 0): void
   const timer = setTimeout(() => {
     pendingLoadRetryTimers.delete(timer);
     if (playerPools[name] === pool) {
-      playFromPool(name, pool, loadAttempt + 1);
+      playFromPool(name, pool, rate, loadAttempt + 1);
     }
   }, LOAD_RETRY_DELAY_MS);
   pendingLoadRetryTimers.add(timer);
@@ -184,7 +182,8 @@ export function preloadSfx(): void {
   });
 }
 
-export function playSfx(name: SfxName): void {
+export function playSfx(name: SfxName, options?: { rate?: number }): void {
+  if (!useGameStore.getState().soundEnabled) return;
   const config = SFX[name];
   const now = Date.now();
   const antiDoubleFireMs = Math.min(config.cooldownMs, MAX_ANTI_DOUBLE_FIRE_MS);
@@ -199,7 +198,7 @@ export function playSfx(name: SfxName): void {
   }
 
   lastPlayedAt[name] = now;
-  playFromPool(name, pool);
+  playFromPool(name, pool, options?.rate ?? 1.0);
 }
 
 export function unloadSfx(): void {
