@@ -1,3 +1,5 @@
+import { heroBookMaterial, libraryMaterial } from './pwMaterials';
+
 export const DAILY_TITLE = "POLLY'S DAILY CHALLENGE";
 export const DAILY_PROMISE = 'ONE word · FIVE rounds · TWO chances · ONE gold feather';
 export const DAILY_CLUE_TITLE = 'DAILY CHALLENGE';
@@ -74,6 +76,20 @@ export const dailyClueVaultMaterial = {
   radius: 22,
   insetRadius: 15,
   borderWidth: 1.5,
+} as const;
+
+// Quill & scroll clue panel (spec: 2026-07-11-daily-challenge-quill-scroll-design).
+// Every color traces to an existing pwMaterials token — no new hexes invented.
+export const dailyScrollMaterial = {
+  parchmentTop: libraryMaterial.parchment,      // #9A8E7A
+  parchmentBot: libraryMaterial.parchmentDeep,  // #887868
+  goldTrim: heroBookMaterial.goldTrim,          // #F5C842
+  goldDeep: heroBookMaterial.goldPinInner,      // #C8920E
+  inkwellFill: heroBookMaterial.hingeRail,      // #0F0D2A
+  clueInk: libraryMaterial.woodShadow,          // #332A20
+  clueInkMemory: 'rgba(51,42,32,0.62)',         // woodShadow, de-emphasized for already-revealed clues
+  radius: 18,
+  rollCapWidth: 24,
 } as const;
 
 // Polly stays perched throughout Daily and is mostly silent. She reacts only
