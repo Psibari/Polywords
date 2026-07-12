@@ -5,6 +5,7 @@ import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { cardMaterial, libraryMaterial, stageMaterial } from '../ui/pwMaterials';
+import { vaultMaterial, vaultType } from '../ui/pwVaultMaterials';
 import { Bookcase } from '../components/ui/Bookcase';
 import { FoilWord } from '../components/ui/FoilWord';
 import { useGameStore } from '../store/useGameStore';
@@ -20,11 +21,11 @@ type RankTier = {
 
 const RANK_TIERS: RankTier[] = [
   { letter: 'D',      label: 'D',      threshold: 0,     nextAt: 8000,  color: 'rgba(255,255,255,0.45)', description: 'Just getting started.'   },
-  { letter: 'C',      label: 'C',      threshold: 8000,  nextAt: 11000, color: '#FFFFFF',                description: 'Warming up.'             },
-  { letter: 'B',      label: 'B',      threshold: 11000, nextAt: 14000, color: '#FFFFFF',                description: 'Getting sharper.'        },
-  { letter: 'A',      label: 'A',      threshold: 14000, nextAt: 18000, color: '#FFFFFF',                description: 'Polly noticed.'          },
-  { letter: 'S',      label: 'S',      threshold: 18000, nextAt: 22000, color: '#F5C842',                description: 'Better than Polly.'      },
-  { letter: 'MASTER', label: 'MASTER', threshold: 22000, nextAt: null,  color: '#F5C842',                description: 'The title is yours.'     },
+  { letter: 'C',      label: 'C',      threshold: 8000,  nextAt: 11000, color: PW.color.white,                description: 'Warming up.'             },
+  { letter: 'B',      label: 'B',      threshold: 11000, nextAt: 14000, color: PW.color.white,                description: 'Getting sharper.'        },
+  { letter: 'A',      label: 'A',      threshold: 14000, nextAt: 18000, color: PW.color.white,                description: 'Polly noticed.'          },
+  { letter: 'S',      label: 'S',      threshold: 18000, nextAt: 22000, color: PW.color.gold,                description: 'Better than Polly.'      },
+  { letter: 'MASTER', label: 'MASTER', threshold: 22000, nextAt: null,  color: PW.color.gold,                description: 'The title is yours.'     },
 ];
 
 function getRankTier(score: number): RankTier {
@@ -248,14 +249,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     borderWidth: 1,
-    borderColor: PW.color.amber,
+    borderColor: vaultMaterial.bookplateBorder,
     borderRadius: PW.radius.sm,
     paddingHorizontal: 14,
     paddingVertical: 10,
+    backgroundColor: vaultMaterial.bookplateFace,
   },
   bookplateSeal: {
     fontFamily: FONTS.wordDisplay,
-    fontSize: 34,
+    fontSize: vaultType.seal,
+    color: vaultMaterial.bookplateSeal,
   },
   bookplateMeta: {
     flex: 1,
@@ -263,29 +266,29 @@ const styles = StyleSheet.create({
   },
   bookplateDesc: {
     fontFamily: FONTS.brand,
-    fontSize: 13,
-    color: 'rgba(15,13,42,0.85)', // ink on parchment
+    fontSize: vaultType.sealLabel,
+    color: vaultMaterial.bookplateSealText,
   },
   bookplateTrack: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(15,13,42,0.30)', // surfaceDeep family — track on parchment
+    backgroundColor: vaultMaterial.bookplateTrack,
     overflow: 'hidden',
   },
   bookplateFill: {
     height: 4,
-    backgroundColor: PW.color.amber,
+    backgroundColor: vaultMaterial.bookplateProgress,
   },
   emptyLine: {
     fontFamily: FONTS.brand,
-    fontSize: 15,
-    color: PW.color.mutedWhite,
+    fontSize: vaultType.empty,
+    color: vaultMaterial.emptyText,
     textAlign: 'center',
     marginTop: 18,
   },
   panelScrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(6,4,22,0.72)',
+    backgroundColor: vaultMaterial.panelScrim,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 22,
@@ -299,31 +302,31 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   detailWord: {
-    fontSize: 40,
+    fontSize: vaultType.detailWord,
     fontFamily: FONTS.wordDisplay,
     letterSpacing: 2,
     textAlign: 'center',
     maxWidth: '100%',
   },
   detailWordGhost: {
-    color: PW.color.lavender,
+    color: vaultMaterial.detailGhostText,
   },
   detailLine: {
     fontFamily: FONTS.brand,
-    fontSize: 15,
+    fontSize: vaultType.detailCopy,
     lineHeight: 21,
-    color: PW.color.softWhite,
+    color: vaultMaterial.detailText,
     textAlign: 'center',
   },
   detailBoss: {
-    color: PW.color.gold,
+    color: vaultMaterial.detailBoss,
     letterSpacing: 1.5,
   },
   ranksTitle: {
     fontFamily: FONTS.label,
-    fontSize: 16,
+    fontSize: vaultType.rankTitle,
     letterSpacing: 4,
-    color: PW.color.gold,
+    color: vaultMaterial.bookplateSeal,
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -332,21 +335,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: vaultMaterial.rankSeparator,
   },
   rankLetter: {
     fontFamily: FONTS.wordDisplay,
-    fontSize: 22,
+    fontSize: vaultType.rankLetter,
     width: 78,
+    color: vaultMaterial.rankText,
   },
   rankDesc: {
     flex: 1,
     fontFamily: FONTS.brand,
-    fontSize: 13,
-    color: PW.color.mutedWhite,
+    fontSize: vaultType.rankRow,
+    color: vaultMaterial.rankText,
   },
   rankThreshold: {
     fontFamily: FONTS.label,
-    fontSize: 12,
-    color: PW.color.faintWhite,
+    fontSize: vaultType.rankRow,
+    color: vaultMaterial.rankText,
   },
 });

@@ -2,6 +2,7 @@ import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FONTS } from '../constants/fonts';
+import { PW } from '../ui/pwTheme';
 import { useGameStore } from '../store/useGameStore';
 
 export type BottomNavRoute = 'Home' | 'Vault' | 'Settings';
@@ -40,7 +41,7 @@ export default function BottomNav({ active, navigation }: BottomNavProps) {
       <View style={styles.dock}>
         <LinearGradient
           pointerEvents="none"
-          colors={['rgba(255,255,255,0.10)', 'rgba(123,45,139,0.16)', 'rgba(5,4,18,0.98)']}
+          colors={['rgba(255,255,255,0.10)', 'rgba(123,45,139,0.16)', 'rgba(15,13,42,0.98)']}
           locations={[0, 0.38, 1]}
           style={styles.dockSheen}
         />
@@ -73,7 +74,7 @@ export default function BottomNav({ active, navigation }: BottomNavProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: '#09071E',
+    backgroundColor: PW.color.bgDeep,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
@@ -81,16 +82,16 @@ const styles = StyleSheet.create({
   dock: {
     minHeight: 66,
     borderRadius: 24,
-    backgroundColor: 'rgba(15,13,42,0.98)',
+    backgroundColor: PW.color.surfaceDeep,
     borderWidth: 1,
-    borderColor: 'rgba(193,136,255,0.20)',
+    borderColor: PW.color.purpleSoft,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
     paddingVertical: 8,
     overflow: 'hidden',
-    shadowColor: '#7B2D8B',
+    shadowColor: PW.color.purple,
     shadowOpacity: 0.36,
     shadowRadius: 22,
     shadowOffset: { width: 0, height: -6 },
@@ -137,28 +138,28 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: 'rgba(169,154,196,0.44)',
+    backgroundColor: 'rgba(185,138,222,0.44)',
   },
   activeMark: {
-    backgroundColor: '#F5C842',
-    shadowColor: '#F5C842',
+    backgroundColor: PW.color.gold,
+    shadowColor: PW.color.gold,
     shadowOpacity: 0.90,
     shadowRadius: 7,
     shadowOffset: { width: 0, height: 0 },
   },
   playMark: {
-    backgroundColor: 'rgba(245,200,66,0.62)',
+    backgroundColor: PW.color.goldSoft,
   },
   tabLabel: {
-    color: 'rgba(196,185,218,0.60)',
+    color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     fontSize: 11,
   },
   activeLabel: {
-    color: '#F5C842',
+    color: PW.color.gold,
   },
   playLabel: {
-    color: 'rgba(255,255,255,0.88)',
+    color: PW.color.white,
     fontFamily: FONTS.hud,
     fontSize: 12,
     letterSpacing: 1,

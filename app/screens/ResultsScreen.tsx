@@ -306,7 +306,7 @@ const gf = StyleSheet.create({
     borderRadius: PW.radius.card,
     borderWidth: 1.5,
     borderColor: PW.color.gold,
-    backgroundColor: 'rgba(15,13,42,0.92)',
+    backgroundColor: PW.color.overlayHeavy,
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginBottom: 12,

@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   header: {
     minHeight: 150,
     borderRadius: 24,
-    backgroundColor: 'rgba(15,13,42,0.88)',
+    backgroundColor: PW.color.overlayHeavy,
     borderWidth: 1,
     borderColor: PW.color.purpleSoft,
     padding: 22,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   profileCard: {
     marginTop: 16,
     borderRadius: 20,
-    backgroundColor: 'rgba(15,13,42,0.88)',
+    backgroundColor: PW.color.overlayHeavy,
     borderWidth: 1,
     borderColor: PW.color.cardRim,
     padding: 18,
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   profileStats: {
     marginTop: 16,
     borderRadius: 14,
-    backgroundColor: 'rgba(26,24,48,0.80)',
+    backgroundColor: PW.color.overlayMedium,
     borderWidth: 1,
     borderColor: PW.color.purpleSoft,
     paddingHorizontal: 14,
@@ -318,20 +318,20 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 18,
-    backgroundColor: 'rgba(15,13,42,0.88)',
+    backgroundColor: PW.color.overlayHeavy,
     borderWidth: 1,
     borderColor: PW.color.purpleSoft,
     overflow: 'hidden',
   },
   warningCard: {
-    borderColor: 'rgba(155,45,107,0.44)',
+    borderColor: PW.color.rose,
   },
   row: {
     minHeight: 58,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: PW.color.borderMuted,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     backgroundColor: PW.color.purple,
   },
   rowAccentRose: {
-    backgroundColor: '#9B2D6B',
+    backgroundColor: PW.color.rose,
   },
   rowAccentGold: {
     backgroundColor: PW.color.gold,
@@ -384,19 +384,19 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: PW.color.purpleSoft,
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.42)',
+    borderColor: PW.color.purpleSoft,
     padding: 3,
     justifyContent: 'center',
   },
   toggleTrackOn: {
     backgroundColor: PW.color.goldGlow,
-    borderColor: 'rgba(245,200,66,0.42)',
+    borderColor: PW.color.goldSoft,
   },
   toggleKnob: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.62)',
+    backgroundColor: PW.color.transparentWhite,
   },
   toggleKnobOn: {
     alignSelf: 'flex-end',
