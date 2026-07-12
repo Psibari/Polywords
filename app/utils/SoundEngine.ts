@@ -100,47 +100,6 @@ function toWAV(segments: Float32Array[]): string {
 
 // ── Sound builders ────────────────────────────────────────────
 
-function buildCorrectSwipe(): string {
-  return toWAV([
-    makeSegment({ waveType: 'sine', startFreq: 880, endFreq: 1100, durationMs: 120, attackMs: 5, decayMs: 115, volume: 0.7 }),
-  ]);
-}
-
-function buildWrongBuzz(): string {
-  return toWAV([
-    makeSegment({ waveType: 'square', startFreq: 120, durationMs: 180, attackMs: 0, decayMs: 180, volume: 0.6 }),
-  ]);
-}
-
-function buildShatter(): string {
-  const numSamples = Math.ceil(SAMPLE_RATE * 250 / 1000);
-  const samples = new Float32Array(numSamples);
-  let phase = 0;
-  for (let i = 0; i < numSamples; i++) {
-    const progress = i / numSamples;
-    const freq = 800 - 600 * progress;          // 800→200Hz pitch drop
-    phase += (2 * Math.PI * freq) / SAMPLE_RATE;
-    const noise = Math.random() * 2 - 1;
-    const env   = Math.exp(-progress * 5) * 0.5; // exponential decay
-    samples[i]  = (noise * 0.6 + Math.sin(phase) * 0.4) * env;
-  }
-  return toWAV([samples]);
-}
-
-function buildSplitReveal(): string {
-  return toWAV([
-    makeSegment({ waveType: 'sine', startFreq: 440, endFreq: 880,  durationMs: 200, attackMs: 10, volume: 0.65 }),
-    makeSegment({ waveType: 'sine', startFreq: 880, endFreq: 1320, durationMs: 150, attackMs: 5, decayMs: 145, volume: 0.65 }),
-  ]);
-}
-
-function buildScratch(): string {
-  return toWAV([
-    makeSegment({ waveType: 'noise', startFreq: 0, durationMs: 80,  attackMs: 2,  decayMs: 78,  volume: 0.55 }),
-    makeSegment({ waveType: 'sine', startFreq: 400, endFreq: 100,  durationMs: 200, attackMs: 5, decayMs: 195, volume: 0.5 }),
-  ]);
-}
-
 function buildRoundComplete(): string {
   const note = (freq: number, ms: number) =>
     makeSegment({ waveType: 'sine', startFreq: freq, durationMs: ms, attackMs: 5, decayMs: ms - 5, volume: 0.7 });
@@ -153,15 +112,10 @@ function buildRoundComplete(): string {
 
 // ── Engine state ──────────────────────────────────────────────
 
-type SoundKey = 'correctSwipe' | 'wrongBuzz' | 'shatter' | 'splitReveal' | 'roundComplete' | 'scratch';
+type SoundKey = 'roundComplete';
 
 const sounds: Record<SoundKey, AudioPlayer | null> = {
-  correctSwipe:  null,
-  wrongBuzz:     null,
-  shatter:       null,
-  splitReveal:   null,
   roundComplete: null,
-  scratch:       null,
 };
 
 let ready = false;
@@ -178,12 +132,7 @@ export async function initSounds(): Promise<void> {
   });
 
   const builders: [SoundKey, () => string][] = [
-    ['correctSwipe',  buildCorrectSwipe],
-    ['wrongBuzz',     buildWrongBuzz],
-    ['shatter',       buildShatter],
-    ['splitReveal',   buildSplitReveal],
     ['roundComplete', buildRoundComplete],
-    ['scratch',       buildScratch],
   ];
 
   builders.forEach(([key, build]) => {
@@ -204,9 +153,4 @@ function play(player: AudioPlayer | null): void {
   } catch {}
 }
 
-export function playCorrectSwipe():  void { play(sounds.correctSwipe); }
-export function playWrongBuzz():     void { play(sounds.wrongBuzz); }
-export function playShatter():       void { play(sounds.shatter); }
-export function playSplitReveal():   void { play(sounds.splitReveal); }
 export function playRoundComplete(): void { play(sounds.roundComplete); }
-export function playScratch():       void { play(sounds.scratch); }
