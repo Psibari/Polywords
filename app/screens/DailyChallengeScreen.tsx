@@ -39,7 +39,6 @@ import {
   DAILY_CLUE_RULE,
   DAILY_ACTION_RULE,
   dailyBackdrop,
-  dailyClueVaultMaterial,
   dailyScrollMaterial,
   DailyPollyReaction as PerchReaction,
   getStreakMilestoneRewardLabel,

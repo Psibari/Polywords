@@ -1,7 +1,5 @@
 import { heroBookMaterial, libraryMaterial } from './pwMaterials';
 
-export const DAILY_TITLE = "POLLY'S DAILY CHALLENGE";
-export const DAILY_PROMISE = 'ONE word · FIVE rounds · TWO chances · ONE gold feather';
 export const DAILY_CLUE_TITLE = 'DAILY CHALLENGE';
 export const DAILY_CLUE_RULE = 'ONE REPRESENTS ALL';
 export const DAILY_ACTION_RULE = 'SWIPE UP TO CLAIM';
@@ -55,27 +53,6 @@ export const dailyCardMaterial = {
     releaseMs: 180,
     releaseSpring: 'confident',
   },
-} as const;
-
-export const dailyClueVaultMaterial = {
-  panelBackground: 'rgba(15, 13, 42, 0.92)',
-  panelHighlight: 'rgba(255, 247, 214, 0.08)',
-  borderColor: 'rgba(123, 45, 139, 0.72)',
-  goldTrimColor: '#F5C842',
-  goldHairlineColor: 'rgba(245, 200, 66, 0.34)',
-  parchmentInset: 'rgba(13, 10, 38, 0.86)',
-  parchmentInsetDark: 'rgba(245, 200, 66, 0.22)',
-  parchmentLine: 'rgba(255, 247, 214, 0.10)',
-  clueInk: '#FFF7D6',
-  clueTextColor: '#FFF7D6',
-  clueMemoryColor: 'rgba(255, 247, 214, 0.84)',
-  sealBackground: 'rgba(245, 200, 66, 0.24)',
-  sealBorder: 'rgba(245, 200, 66, 0.68)',
-  timerTagColor: '#B98ADE',
-  titleColor: '#FFFFFF',
-  radius: 22,
-  insetRadius: 15,
-  borderWidth: 1.5,
 } as const;
 
 // Quill & scroll clue panel (spec: 2026-07-11-daily-challenge-quill-scroll-design).
