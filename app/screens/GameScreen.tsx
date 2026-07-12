@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -528,13 +529,24 @@ function GameDirector({ navigation }: { navigation: any }) {
   }, [game.featherMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Music Engine lifecycle ────────────────────────────────────
-  useEffect(() => {
-    initMusicEngine().then(() => startMusic());
-    return () => {
-      stopMusic();
-      disposeMusicEngine();
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Tied to navigation focus, not mount/unmount: native-stack keeps the
+  // outgoing and incoming screens both mounted during the transition
+  // animation, so a mount/unmount effect here would overlap with whatever
+  // screen is fading out, bleeding both tracks together.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      initMusicEngine().then(() => {
+        if (cancelled) return;
+        startMusic();
+      });
+      return () => {
+        cancelled = true;
+        stopMusic();
+        disposeMusicEngine();
+      };
+    }, []),
+  );
 
   // ── Music state machine ───────────────────────────────────────
   useEffect(() => {

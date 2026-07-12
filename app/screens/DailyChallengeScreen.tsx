@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as Haptics from 'expo-haptics';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Animated,
   Easing,
@@ -368,29 +369,35 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // DAILY MUSIC
+  // DAILY SFX PRELOAD
   useEffect(() => {
-    let cancelled = false;
-
     preloadSfx();
-    setMusicState('daily');
-    startMusic();
-    initMusicEngine().then(() => {
-      if (cancelled) {
-        stopMusic();
-        disposeMusicEngine();
-        return;
-      }
+  }, []);
+
+  // DAILY MUSIC
+  // Tied to navigation focus, not mount/unmount: native-stack keeps the
+  // outgoing and incoming screens both mounted during the transition
+  // animation, so a mount/unmount effect here would overlap with whatever
+  // screen is fading out, bleeding both tracks together.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+
       setMusicState('daily');
       startMusic();
-    });
+      initMusicEngine().then(() => {
+        if (cancelled) return;
+        setMusicState('daily');
+        startMusic();
+      });
 
-    return () => {
-      cancelled = true;
-      stopMusic();
-      disposeMusicEngine();
-    };
-  }, []);
+      return () => {
+        cancelled = true;
+        stopMusic();
+        disposeMusicEngine();
+      };
+    }, []),
+  );
 
   // ROUND CHANGE
   useEffect(() => {
