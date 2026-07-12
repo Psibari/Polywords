@@ -546,18 +546,30 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       ]),
     ]).start();
 
-    setTimeout(() => {
-      Animated.timing(rollProgress, {
-        toValue: 0,
-        duration: 180,
-        easing: Easing.in(Easing.cubic),
+    const isFinalRound =
+      dailySession?.currentRoundIndex === DAILY_ROUND_COUNT - 1;
+
+    if (isFinalRound) {
+      Animated.timing(payoffProgress, {
+        toValue: 1,
+        duration: 520,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start();
-    }, 430);
+    } else {
+      setTimeout(() => {
+        Animated.timing(rollProgress, {
+          toValue: 0,
+          duration: 180,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      }, 430);
+    }
 
     setTimeout(() => {
       claimDailyAnswer(candidate);
-    }, 720);
+    }, isFinalRound ? 1100 : 720);
   }
 
   async function handleShare() {
