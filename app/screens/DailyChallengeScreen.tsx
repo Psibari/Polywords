@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as Haptics from 'expo-haptics';
 import {
   Animated,
-  Dimensions,
   Easing,
   Image,
   ImageBackground,
@@ -41,16 +40,17 @@ import {
   DAILY_ACTION_RULE,
   dailyBackdrop,
   dailyClueVaultMaterial,
+  dailyScrollMaterial,
   DailyPollyReaction as PerchReaction,
   getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
 import DailyAnswerCard, {
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
+import QuillScrollPanel from '../components/ui/QuillScrollPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
 // Maps store claim result reaction -> PollyDailyPerch prop
@@ -124,9 +124,9 @@ function DailyHUD({
 }
 
 // -----------------------------------------
-// ClueVault
+// ClueStage — sequential clue-reveal text, rendered onto QuillScrollPanel
 // -----------------------------------------
-function ClueVault({
+function ClueStage({
   clues,
   revealedCount,
 }: {
@@ -166,60 +166,43 @@ function ClueVault({
   }, [revealedCount, clueKey]);
 
   return (
-    <View style={cv.cvRoot}>
-      <View style={cv.cvHeader}>
-        <View style={cv.cvTitleBlock}>
-          <Text style={cv.cvLabel}>{DAILY_CLUE_TITLE}</Text>
-          <Text style={cv.cvRule}>{DAILY_CLUE_RULE}</Text>
-        </View>
-        <View style={cv.cvPrizeSeal}>
-          <Image
-            source={require('../../assets/ui/feather-life-filled.png')}
-            style={cv.cvPrizeFeather}
-            resizeMode="contain"
-          />
-          <Text style={cv.cvPrizeText}>GOLD FEATHER</Text>
-        </View>
-      </View>
+    <>
+      {clues.map((clue, index) => {
+        if (index > activeIndex) return null;
+        const progress = clueProgresses[index];
+        const opacity = progress.interpolate({
+          inputRange: [0, 0.22, 1, 2],
+          outputRange: [0, 1, 1, 0.9],
+        });
+        const scale = progress.interpolate({
+          inputRange: [0, 0.22, 1, 2],
+          outputRange: [0.98, 1.025, 1, 0.98],
+        });
+        const translateY = progress.interpolate({
+          inputRange: [0, 0.22, 2],
+          outputRange: [8, 0, 0],
+        });
 
-      <View style={cv.cvClueStage}>
-        {clues.map((clue, index) => {
-          if (index > activeIndex) return null;
-          const progress = clueProgresses[index];
-          const opacity = progress.interpolate({
-            inputRange: [0, 0.22, 1, 2],
-            outputRange: [0, 1, 1, 0.9],
-          });
-          const scale = progress.interpolate({
-            inputRange: [0, 0.22, 1, 2],
-            outputRange: [0.98, 1.025, 1, 0.98],
-          });
-          const translateY = progress.interpolate({
-            inputRange: [0, 0.22, 2],
-            outputRange: [8, 0, 0],
-          });
-
-          return (
-            <Animated.Text
-              key={`${clue}-${index}`}
-              style={[
-                cv.cvText,
-                index < activeIndex && cv.cvTextMemory,
-                {
-                  opacity,
-                  transform: [{ translateY }, { scale }],
-                },
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.58}
-            >
-              {clue.toUpperCase()}
-            </Animated.Text>
-          );
-        })}
-      </View>
-    </View>
+        return (
+          <Animated.Text
+            key={`${clue}-${index}`}
+            style={[
+              styles.clueText,
+              index < activeIndex && styles.clueTextMemory,
+              {
+                opacity,
+                transform: [{ translateY }, { scale }],
+              },
+            ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.58}
+          >
+            {clue.toUpperCase()}
+          </Animated.Text>
+        );
+      })}
+    </>
   );
 }
 
@@ -360,7 +343,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setInputLocked(val);
   }
 
-  const vaultX        = useRef(new Animated.Value(0)).current;
+  const rollProgress   = useRef(new Animated.Value(0)).current;
+  const payoffProgress = useRef(new Animated.Value(0)).current;
   const [pollyVisible, setPollyVisible] = useState(true);
 
   const completedRef = useRef(false);
@@ -422,6 +406,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     intakeScale.setValue(1);
     intakeGlow.setValue(0);
     intakeWordOpacity.setValue(0);
+    payoffProgress.setValue(0);
 
     const round = dailySession.rounds[dailySession.currentRoundIndex];
     if (!round) return;
@@ -430,12 +415,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     candidates.forEach((c) => map.set(c, 'idle'));
     setCardStates(map);
 
-    vaultX.stopAnimation();
-    vaultX.setValue(SCREEN_WIDTH);
-    Animated.spring(vaultX, {
-      toValue: 0,
-      friction: 7,
-      tension: 80,
+    rollProgress.stopAnimation();
+    rollProgress.setValue(0);
+    Animated.timing(rollProgress, {
+      toValue: 1,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
     const measureTimer = setTimeout(measureClueTarget, 420);
@@ -562,9 +547,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     ]).start();
 
     setTimeout(() => {
-      Animated.timing(vaultX, {
-        toValue: -SCREEN_WIDTH,
-        duration: 260,
+      Animated.timing(rollProgress, {
+        toValue: 0,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }).start();
     }, 430);
@@ -622,35 +608,39 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             chances={dailySession.chancesRemaining}
           />
 
-          <Animated.View style={{ transform: [{ translateX: vaultX }] }}>
-            <Animated.View
+          <View style={styles.clueHeaderRow}>
+            <Text style={styles.clueHeaderLabel}>{DAILY_CLUE_TITLE}</Text>
+            <Text style={styles.clueHeaderRule}>{DAILY_CLUE_RULE}</Text>
+          </View>
+
+          <Animated.View
+            onLayout={measureClueTarget}
+            style={{ transform: [{ scale: intakeScale }] }}
+          >
+            <QuillScrollPanel
               ref={clueVaultRef}
-              collapsable={false}
-              onLayout={measureClueTarget}
-              style={{ transform: [{ scale: intakeScale }] }}
+              rollProgress={rollProgress}
+              payoffProgress={payoffProgress}
             >
               {currentRound && (
-                <ClueVault
+                <ClueStage
                   clues={currentRound.word.clues}
                   revealedCount={revealedCount}
                 />
               )}
-              <Animated.View
-                pointerEvents="none"
-                style={[styles.intakeGlow, { opacity: intakeGlow }]}
-              />
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.intakeWord,
-                  { opacity: intakeWordOpacity },
-                ]}
-              >
-                {intakeWord}
-              </Animated.Text>
-            </Animated.View>
-            <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
+            </QuillScrollPanel>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.intakeGlow, { opacity: intakeGlow }]}
+            />
+            <Animated.Text
+              pointerEvents="none"
+              style={[styles.intakeWord, { opacity: intakeWordOpacity }]}
+            >
+              {intakeWord}
+            </Animated.Text>
           </Animated.View>
+          <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
 
           <View style={styles.cardArea}>
             {/* Candidate board -- the surface the six cards rest on, so they
@@ -752,9 +742,9 @@ const styles = StyleSheet.create({
     bottom: 18,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: dailyClueVaultMaterial.goldTrimColor,
+    borderColor: dailyScrollMaterial.goldTrim,
     backgroundColor: 'rgba(245,200,66,0.16)',
-    shadowColor: dailyClueVaultMaterial.goldTrimColor,
+    shadowColor: dailyScrollMaterial.goldTrim,
     shadowOpacity: 0.75,
     shadowRadius: 18,
     elevation: 8,
@@ -764,7 +754,7 @@ const styles = StyleSheet.create({
     left: 30,
     right: 30,
     top: '46%',
-    color: dailyClueVaultMaterial.goldTrimColor,
+    color: dailyScrollMaterial.goldTrim,
     fontFamily: FONTS.wordDisplay,
     fontSize: 26,
     letterSpacing: 2,
@@ -811,6 +801,40 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.label,
     fontSize: 9,
     letterSpacing: 1.5,
+  },
+  clueHeaderRow: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    paddingHorizontal: 6,
+  },
+  clueHeaderLabel: {
+    color: dailyScrollMaterial.goldTrim,
+    fontFamily: FONTS.label,
+    fontSize: 13,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+  },
+  clueHeaderRule: {
+    color: 'rgba(255,247,214,0.55)',
+    fontFamily: FONTS.label,
+    fontSize: 9,
+    letterSpacing: 2.2,
+    marginTop: 4,
+    textTransform: 'uppercase',
+  },
+  clueText: {
+    color: dailyScrollMaterial.clueInk,
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 27,
+    lineHeight: 33,
+    letterSpacing: 0.6,
+    textAlign: 'center',
+    width: '100%',
+  },
+  clueTextMemory: {
+    color: dailyScrollMaterial.clueInkMemory,
+    fontSize: 23,
+    lineHeight: 28,
   },
 });
 
@@ -873,109 +897,6 @@ const feather = StyleSheet.create({
   img: {
     width: 20,
     height: 36,
-  },
-});
-
-const cv = StyleSheet.create({
-  cvRoot: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    padding: 10,
-    borderRadius: dailyClueVaultMaterial.radius,
-    backgroundColor: dailyClueVaultMaterial.panelBackground,
-    borderWidth: dailyClueVaultMaterial.borderWidth,
-    borderColor: dailyClueVaultMaterial.borderColor,
-    borderBottomColor: dailyClueVaultMaterial.goldHairlineColor,
-    shadowColor: '#000000',
-    shadowOpacity: 0.34,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 10,
-  },
-  cvHeader: {
-    minHeight: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingHorizontal: 6,
-    marginBottom: 8,
-  },
-  cvTitleBlock: {
-    flex: 1,
-    minWidth: 0,
-  },
-  cvLabel: {
-    color: dailyClueVaultMaterial.goldTrimColor,
-    fontFamily: FONTS.label,
-    fontSize: 13,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    textShadowColor: 'rgba(245,200,66,0.32)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
-  },
-  cvRule: {
-    color: 'rgba(255,247,214,0.58)',
-    fontFamily: FONTS.label,
-    fontSize: 9,
-    letterSpacing: 2.2,
-    marginTop: 4,
-    textTransform: 'uppercase',
-  },
-  cvPrizeSeal: {
-    minWidth: 154,
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: dailyClueVaultMaterial.sealBackground,
-    borderWidth: 1,
-    borderColor: dailyClueVaultMaterial.sealBorder,
-  },
-  cvPrizeFeather: {
-    width: 24,
-    height: 40,
-  },
-  cvPrizeText: {
-    color: dailyClueVaultMaterial.goldTrimColor,
-    fontFamily: FONTS.label,
-    fontSize: 10,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-  },
-  cvClueStage: {
-    minHeight: 174,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderRadius: dailyClueVaultMaterial.insetRadius,
-    backgroundColor: dailyClueVaultMaterial.parchmentInset,
-    borderWidth: 1,
-    borderColor: dailyClueVaultMaterial.goldHairlineColor,
-    borderBottomColor: dailyClueVaultMaterial.parchmentInsetDark,
-  },
-  cvText: {
-    color: dailyClueVaultMaterial.clueInk,
-    fontFamily: FONTS.wordDisplay,
-    fontSize: 29,
-    lineHeight: 35,
-    letterSpacing: 0.8,
-    textAlign: 'center',
-    textShadowColor: 'rgba(245,200,66,0.34)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    width: '100%',
-  },
-  cvTextMemory: {
-    color: dailyClueVaultMaterial.clueMemoryColor,
-    fontSize: 25,
-    lineHeight: 30,
   },
 });
 
