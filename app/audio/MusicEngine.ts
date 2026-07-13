@@ -1,16 +1,17 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
-export type MusicState = 'off' | 'neutral' | 'rhythm' | 'onARun' | 'crisis' | 'boss' | 'daily';
+export type MusicState = 'off' | 'neutral' | 'rhythm' | 'onARun' | 'crisis' | 'boss' | 'daily' | 'static';
 
-type TrackKey = 'hunt' | 'tension' | 'boss' | 'daily';
+type TrackKey = 'hunt' | 'tension' | 'boss' | 'daily' | 'static';
 
-const TRACK_KEYS: TrackKey[] = ['hunt', 'tension', 'boss', 'daily'];
+const TRACK_KEYS: TrackKey[] = ['hunt', 'tension', 'boss', 'daily', 'static'];
 
 const TRACK_SOURCES: Record<TrackKey, ReturnType<typeof require>> = {
   hunt: require('../../assets/audio/bgm/hunt_suspense_loop.mp3'),
   tension: require('../../assets/audio/bgm/tension_running_out.mp3'),
   boss: require('../../assets/audio/bgm/boss_too_hot_to_sleep.mp3'),
   daily: require('../../assets/audio/bgm/daily_detective_clue_patrol.mp3'),
+  static: require('../../assets/audio/bgm/static_idle_loop.mp3'),
 };
 
 const TRACK_VOLUMES: Record<TrackKey, number> = {
@@ -18,20 +19,23 @@ const TRACK_VOLUMES: Record<TrackKey, number> = {
   tension: 0.20,
   boss: 0.14,
   daily: 0.16,
+  static: 0.18,
 };
 
 const TRACK_START_POSITIONS_SECONDS: Record<TrackKey, number> = {
   hunt: 0,
   tension: 0,
   boss: 0,
-  daily: 0.85,
+  daily: 0,
+  static: 0,
 };
 
 const TRACK_FADE_IN_MS: Record<TrackKey, number> = {
   hunt: 300,
   tension: 300,
   boss: 300,
-  daily: 90,
+  daily: 2500,
+  static: 300,
 };
 
 const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
@@ -41,6 +45,7 @@ const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
   crisis: 'tension',
   boss: 'boss',
   daily: 'daily',
+  static: 'static',
 };
 
 const players: Record<TrackKey, AudioPlayer | null> = {
@@ -48,6 +53,7 @@ const players: Record<TrackKey, AudioPlayer | null> = {
   tension: null,
   boss: null,
   daily: null,
+  static: null,
 };
 
 const fadeRafIds: Record<TrackKey, number | null> = {
@@ -55,6 +61,7 @@ const fadeRafIds: Record<TrackKey, number | null> = {
   tension: null,
   boss: null,
   daily: null,
+  static: null,
 };
 
 const startTokens: Record<TrackKey, number> = {
@@ -62,6 +69,7 @@ const startTokens: Record<TrackKey, number> = {
   tension: 0,
   boss: 0,
   daily: 0,
+  static: 0,
 };
 
 let currentState: MusicState = 'off';
@@ -330,10 +338,6 @@ export function setMusicEnabled(enabled: boolean): void {
   userMuted = !enabled;
   if (!musicStarted || !activeTrackKey) return;
   fadeVolumeTo(activeTrackKey, effectiveVolume(activeTrackKey), 300);
-}
-
-export function triggerChainBreak(): void {
-  // The track-based engine has no beat stem to duck.
 }
 
 export function disposeMusicEngine(): void {
