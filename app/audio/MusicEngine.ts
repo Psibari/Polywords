@@ -340,21 +340,14 @@ export function setMusicEnabled(enabled: boolean): void {
   fadeVolumeTo(activeTrackKey, effectiveVolume(activeTrackKey), 300);
 }
 
-export function disposeMusicEngine(): void {
+export function haltMusicEngine(): void {
   clearStopTimer();
 
   for (const key of TRACK_KEYS) {
     stopTrackNow(key, true);
-    try {
-      players[key]?.remove();
-    } catch (error) {
-      warnDev(`failed to remove ${key} track`, error);
-    }
-    players[key] = null;
   }
 
   currentState = 'off';
-  engineReady = false;
   musicStarted = false;
   activeTrackKey = null;
 }

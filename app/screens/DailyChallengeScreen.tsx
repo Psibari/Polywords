@@ -26,7 +26,7 @@ import { DailyClaimResult } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { playSfx, preloadSfx } from '../audio/sfx';
 import {
-  disposeMusicEngine,
+  haltMusicEngine,
   initMusicEngine,
   setMusicState,
   startMusic,
@@ -394,7 +394,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       return () => {
         cancelled = true;
         stopMusic();
-        disposeMusicEngine();
+        haltMusicEngine();
       };
     }, []),
   );

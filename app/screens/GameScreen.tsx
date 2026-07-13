@@ -13,7 +13,7 @@ import { PW } from '../ui/pwTheme';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { playSfx, preloadSfx, unloadSfx } from '../audio/sfx';
-import { initMusicEngine, startMusic, stopMusic, setMusicState, disposeMusicEngine, MusicState } from '../audio/MusicEngine';
+import { initMusicEngine, startMusic, stopMusic, setMusicState, haltMusicEngine, MusicState } from '../audio/MusicEngine';
 import * as Haptics from 'expo-haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
@@ -576,7 +576,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       return () => {
         cancelled = true;
         stopMusic();
-        disposeMusicEngine();
+        haltMusicEngine();
       };
     }, []),
   );
