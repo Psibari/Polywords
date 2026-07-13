@@ -29,18 +29,18 @@ type SfxPlayerPool = {
 };
 
 const SFX: Record<SfxName, SfxConfig> = {
-  uiClick:        { source: require('../../assets/sfx/ui_click.mp3'),         volume: 0.25, cooldownMs: 80   },
-  tileSwipe:      { source: require('../../assets/sfx/tile_swipe.mp3'),       volume: 0.25, cooldownMs: 80   },
-  correctClaim:   { source: require('../../assets/sfx/correct_claim.mp3'),    volume: 0.35, cooldownMs: 120  },
-  trapWrong:      { source: require('../../assets/sfx/trap_wrong.mp3'),       volume: 0.35, cooldownMs: 120  },
-  wrongLame:      { source: require('../../assets/sfx/wrong_lame_whistle.mp3'), volume: 0.42, cooldownMs: 120 },
-  trapShatter:    { source: require('../../assets/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140  },
-  mastered:       { source: require('../../assets/sfx/mastered_chime.mp3'),   volume: 0.45, cooldownMs: 2200 },
-  haunted:        { source: require('../../assets/sfx/haunted_moan.mp3'),     volume: 0.30, cooldownMs: 2600 },
-  pressHoldStart: { source: require('../../assets/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300  },
+  uiClick:        { source: require('../../assets/audio/sfx/ui_click.mp3'),         volume: 0.25, cooldownMs: 80   },
+  tileSwipe:      { source: require('../../assets/audio/sfx/tile_swipe.mp3'),       volume: 0.25, cooldownMs: 80   },
+  correctClaim:   { source: require('../../assets/audio/sfx/correct_claim.mp3'),    volume: 0.35, cooldownMs: 120  },
+  trapWrong:      { source: require('../../assets/audio/sfx/trap_wrong.mp3'),       volume: 0.35, cooldownMs: 120  },
+  wrongLame:      { source: require('../../assets/audio/sfx/wrong_lame_whistle.mp3'), volume: 0.42, cooldownMs: 120 },
+  trapShatter:    { source: require('../../assets/audio/sfx/trap_shatter.mp3'),     volume: 0.40, cooldownMs: 140  },
+  mastered:       { source: require('../../assets/audio/sfx/mastered_chime.mp3'),   volume: 0.45, cooldownMs: 2200 },
+  haunted:        { source: require('../../assets/audio/sfx/haunted_moan.mp3'),     volume: 0.30, cooldownMs: 2600 },
+  pressHoldStart: { source: require('../../assets/audio/sfx/press_hold_start.mp3'), volume: 0.40, cooldownMs: 300  },
   pollySqwawkShort: { source: require('../../assets/audio/sfx/pollySqwawkShort.wav'), volume: 0.42, cooldownMs: 120  },
   pollySqwawkLaugh: { source: require('../../assets/audio/sfx/pollySqwawkLaugh.wav'), volume: 0.42, cooldownMs: 600  },
-  bookClose:      { source: require('../../assets/sfx/book_close_v2.mp3'),   volume: 0.60, cooldownMs: 300  },
+  bookClose:      { source: require('../../assets/audio/sfx/book_close_v2.mp3'),   volume: 0.60, cooldownMs: 300  },
   detectiveSting: { source: require('../../assets/audio/sfx/detective_clue_sting.mp3'), volume: 0.30, cooldownMs: 1200 },
   chainBreak:     { source: require('../../assets/audio/sfx/chain_break_stinger.mp3'), volume: 0.40, cooldownMs: 1800 },
 };
