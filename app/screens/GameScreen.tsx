@@ -17,11 +17,6 @@ import { initMusicEngine, startMusic, stopMusic, setMusicState, haltMusicEngine,
 import * as Haptics from 'expo-haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
-import { PollyActor } from '../components/PollyActor';
-import {
-  POLLY_ANIMATION_DURATIONS_MS,
-  PollyAnimationState,
-} from '../animations/pollyAnimations';
 import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
 import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
@@ -29,23 +24,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MAX_FEATHERS = 5;
 const INTRO_SEEN_KEY = 'polywords_intro_seen';
-const SHOW_POLLY_DEVICE_TEST = false;
-const SHOW_POLLY_RIG_TEST = false;
-
-function PollyDeviceTestOverlay() {
-  const [state, setState] = useState<PollyAnimationState>('flyIn');
-
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => setState('idle'),
-      POLLY_ANIMATION_DURATIONS_MS.flyIn
-    );
-    return () => clearTimeout(timeout);
-  }, []);
-
-  return <PollyActor performance="idle" renderer="flipbook" flipbookState={state} />;
-}
-
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -781,12 +759,6 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
-      {SHOW_POLLY_RIG_TEST && !isDone && (
-        <PollyActor performance="idle" renderer="rig" />
-      )}
-      {SHOW_POLLY_DEVICE_TEST && !SHOW_POLLY_RIG_TEST && !isDone && (
-        <PollyDeviceTestOverlay />
-      )}
       {!isDone && <TopBar />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
@@ -876,12 +848,17 @@ function GameContent({
   onSwipeAttempt: () => void;
 }) {
   const game = useGameStore(s => s.game);
+  const ghosts = useGameStore(s => s.ghosts);
   const step = currentStep(game);
+  const ghostRunsMissed = step.kind === 'word' && step.isHauntReturn
+    ? ghosts.find(ghost => ghost.wordId === step.word.trim().toUpperCase())?.runsMissed ?? 0
+    : 0;
 
   // Visit layer lives HERE, above MaskBoard's per-word remount boundary
   // (key={stepIndex}) — word-completion beats must outlive the board.
   const { visit, onVisitDone, firePollyEvent } = usePollyVisits(
     step.kind === 'word' && step.eventType === 'speedRound',
+    ghostRunsMissed,
   );
 
   if (step.kind === 'word') {

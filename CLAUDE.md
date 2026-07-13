@@ -47,6 +47,13 @@ systems from it without explicit approval.
 - Daily remains UP-only. Hunt `SwipeMask.tsx` remains untouched by Daily work.
 - The 13-part Polly rig is shelved. Live Polly uses transparent pose images unless a future
   rig is assembled and approved in isolation.
+- Polly's live character path is the transparent pose set plus `pollyCharacter.ts`, the
+  versioned local `pollyMemory.ts`, `usePollyVisits`, and the shared ambient-motion/bubble
+  components. Memory is bounded, deterministic, and source-authored; it never generates copy.
+- Home and Results acknowledge prior Hunt outcomes, repeated Haunts sharpen Polly's pose,
+  and Daily/Hunt/Results lines share one typed catalog. Reduced-motion disables ambient and
+  spatial entrance motion. The old rig, flipbook, sprite, animator, and global time-budget
+  files remain shelved/disconnected and must not be re-wired casually.
 
 ## Tech
 

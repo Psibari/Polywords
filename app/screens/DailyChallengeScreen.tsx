@@ -35,7 +35,9 @@ import {
 import {
   DAILY_WIN_TITLE,
   DAILY_WIN_REWARD,
+  DAILY_WIN_LINE,
   DAILY_LOSS_TITLE,
+  DAILY_LOSS_LINE,
   DAILY_CLUE_TITLE,
   DAILY_CLUE_RULE,
   DAILY_ACTION_RULE,
@@ -49,7 +51,9 @@ import DailyAnswerCard, {
 } from '../components/DailyAnswerCard';
 import QuillScrollPanel from '../components/ui/QuillScrollPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
-import { POLLY_ANIMATIONS } from '../animations/pollyAnimations';
+import { POLLY_POSES } from '../ui/pollyPoses';
+import { PollySpeechBubble } from '../components/PollySpeechBubble';
+import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
@@ -223,7 +227,11 @@ function ResultsOverlay({
 
   const dailyResult = useGameStore((s) => s.dailyResult);
   const streakMilestoneReward = useGameStore((s) => s.streakMilestoneReward);
+  const rememberPollyLine = useGameStore((s) => s.rememberPollyLine);
   const fadeIn = useRef(new Animated.Value(0)).current;
+  const lineRememberedRef = useRef(false);
+  const { translateX: pollyX, translateY: pollyY } =
+    usePollyAmbientMotion('results', dailyResult !== null);
 
   useEffect(() => {
     Animated.timing(fadeIn, {
@@ -233,9 +241,19 @@ function ResultsOverlay({
     }).start();
   }, [fadeIn]);
 
+  useEffect(() => {
+    if (!dailyResult || lineRememberedRef.current) return;
+    lineRememberedRef.current = true;
+    rememberPollyLine(
+      dailyResult.status === 'won' ? 'dailyWinTomorrow' : 'dailyLossBat',
+      'daily',
+    );
+  }, [dailyResult, rememberPollyLine]);
+
   if (!dailyResult) return null;
 
   const isWin = dailyResult.status === 'won';
+  const resultLine = isWin ? DAILY_WIN_LINE : DAILY_LOSS_LINE;
 
   return (
     <Animated.View style={[res.fill, { opacity: fadeIn }]}>
@@ -245,15 +263,18 @@ function ResultsOverlay({
         showsVerticalScrollIndicator={false}
       >
         <View style={res.card}>
-        <Image
-          source={
-            isWin
-              ? POLLY_ANIMATIONS.bossWarning
-              : POLLY_ANIMATIONS.laugh
-          }
-          style={styles.resultPollyImage}
-          resizeMode="contain"
-        />
+        <View style={styles.resultPollyStage}>
+          <Animated.View style={{ transform: [{ translateX: pollyX }, { translateY: pollyY }] }}>
+            <Image
+              source={isWin ? POLLY_POSES.shocked : POLLY_POSES.laugh}
+              style={styles.resultPollyImage}
+              resizeMode="contain"
+            />
+          </Animated.View>
+          <View style={styles.resultPollyBubble}>
+            <PollySpeechBubble line={resultLine} maxWidth={154} fontSize={15} lineHeight={20} />
+          </View>
+        </View>
         <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
 
         <Text style={[res.title, { color: isWin ? '#F5C842' : '#FFFFFF' }]}>
@@ -343,7 +364,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   const rollProgress   = useRef(new Animated.Value(0)).current;
   const revealProgress = useRef(new Animated.Value(0)).current;
-  const [pollyVisible, setPollyVisible] = useState(true);
 
   const completedRef = useRef(false);
   const roundStartRef = useRef<number>(Date.now());
@@ -664,7 +684,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       <PollyDailyPerch
         reaction={pollyPose}
-        show={pollyVisible}
+        show={!isComplete}
       />
 
       {isComplete && (
@@ -735,8 +755,17 @@ const styles = StyleSheet.create({
   resultPollyImage: {
     width: 140,
     height: 140,
-    alignSelf: 'center',
-    marginBottom: 0,
+  },
+  resultPollyStage: {
+    width: '100%',
+    minHeight: 150,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  resultPollyBubble: {
+    maxWidth: 154,
   },
   featherWrap: {
     alignItems: 'center',

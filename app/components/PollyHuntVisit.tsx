@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
-import { FONTS } from '../constants/fonts';
+import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 import { playSfx } from '../audio/sfx';
 import { POLLY_POSES, PollyPoseName } from '../ui/pollyPoses';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
+import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
+import { PollySpeechBubble } from './PollySpeechBubble';
 
 const FLY_IN_MS = 600;
 const FLY_OUT_MS = 500;
@@ -31,8 +32,8 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
   const flightTilt = useRef(new Animated.Value(-1)).current;
   const flightScale = useRef(new Animated.Value(0.84)).current;
   // Continuous life on the perch (offset periods = organic).
-  const breatheY = useRef(new Animated.Value(0)).current;
-  const breatheX = useRef(new Animated.Value(0)).current;
+  const { translateX: breatheX, translateY: breatheY, reduceMotion } =
+    usePollyAmbientMotion('hunt', visit !== null);
   // Per-reaction whole-image punch.
   const reactX = useRef(new Animated.Value(0)).current;
   const reactY = useRef(new Animated.Value(0)).current;
@@ -57,33 +58,20 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
 
   useEffect(() => clearTimers, []);
 
-  // Breath + sway loops run for the component's lifetime; invisible while
-  // she is off-screen, alive the moment she lands.
-  useEffect(() => {
-    const bob = Animated.loop(
-      Animated.sequence([
-        Animated.timing(breatheY, { toValue: -6, duration: 1900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(breatheY, { toValue: 0, duration: 1900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]),
-    );
-    const sway = Animated.loop(
-      Animated.sequence([
-        Animated.timing(breatheX, { toValue: 3, duration: 2600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(breatheX, { toValue: -3, duration: 2600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]),
-    );
-    bob.start();
-    sway.start();
-    return () => {
-      bob.stop();
-      sway.stop();
-    };
-  }, [breatheY, breatheX]);
-
   function runExit(ms: number) {
     if (exitingRef.current) return;
     exitingRef.current = true;
     clearTimers();
+    if (reduceMotion) {
+      bubbleOpacity.setValue(0);
+      setPose('fly');
+      arcX.setValue(OFF_X);
+      arcY.setValue(OFF_Y);
+      const id = visitIdRef.current;
+      visitIdRef.current = null;
+      if (id !== null) onDoneRef.current(id);
+      return;
+    }
     Animated.parallel([
       Animated.timing(bubbleOpacity, { toValue: 0, duration: BUBBLE_OUT_MS, useNativeDriver: true }),
       Animated.timing(bubbleScale, { toValue: 0.96, duration: BUBBLE_OUT_MS, useNativeDriver: true }),
@@ -107,6 +95,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     reactY.setValue(0);
     reactTilt.setValue(0);
     reactScale.setValue(1);
+    if (reduceMotion) return;
     if (perchPose === 'laugh') {
       // Sharp bark: quick pop + hard shake.
       Animated.sequence([
@@ -166,7 +155,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
   }
 
   useEffect(() => {
-    if (!visit) return;
+    if (!visit || reduceMotion === null) return;
 
     // Same visit object flipping fastExit → cut to a fast fly-out.
     if (visit.id === visitIdRef.current) {
@@ -191,18 +180,25 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     setLine(visit.spec.line);
     setPose(visit.spec.flyPose);
 
-    Animated.parallel([
-      Animated.timing(arcX, { toValue: 0, duration: FLY_IN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(arcY, { toValue: 0, duration: FLY_IN_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.sequence([
-        Animated.timing(flightTilt, { toValue: 0.18, duration: 430, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(flightTilt, { toValue: 0, duration: 170, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]),
-      Animated.sequence([
-        Animated.timing(flightScale, { toValue: 1.03, duration: 470, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(flightScale, { toValue: 1, duration: 130, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]),
-    ]).start();
+    if (reduceMotion) {
+      arcX.setValue(0);
+      arcY.setValue(0);
+      flightTilt.setValue(0);
+      flightScale.setValue(1);
+    } else {
+      Animated.parallel([
+        Animated.timing(arcX, { toValue: 0, duration: FLY_IN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(arcY, { toValue: 0, duration: FLY_IN_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(flightTilt, { toValue: 0.18, duration: 430, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(flightTilt, { toValue: 0, duration: 170, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(flightScale, { toValue: 1.03, duration: 470, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(flightScale, { toValue: 1, duration: 130, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]),
+      ]).start();
+    }
 
     later(() => {
       // Landed: reaction pose + punch + bubble + squawk.
@@ -224,9 +220,9 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
         later(() => runExit(FLY_OUT_MS), visit.spec.perchMs);
       }
       // holdPerch: stay until fastExit or unmount (terminal beats).
-    }, FLY_IN_MS);
+    }, reduceMotion ? 0 : FLY_IN_MS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visit]);
+  }, [visit, reduceMotion]);
 
   if (!visit) return null;
 
@@ -248,11 +244,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
           { opacity: bubbleOpacity, transform: [{ scale: bubbleScale }] },
         ]}
       >
-        <View style={styles.bubble}>
-          <Text style={styles.bubbleText}>{line ?? ''}</Text>
-        </View>
-        <View style={styles.tailBorder} />
-        <View style={styles.tailFill} />
+        <PollySpeechBubble line={line ?? ''} maxWidth={185} fontSize={15} lineHeight={21} />
       </Animated.View>
 
       {/* Polly — whole-image motion only, bottom-left, faces right */}
@@ -305,47 +297,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 148,
     bottom: 140,
-  },
-  bubble: {
-    backgroundColor: '#1A1055',
-    borderWidth: 1.5,
-    borderColor: 'rgba(245,200,66,0.55)',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    maxWidth: 185,
-  },
-  bubbleText: {
-    fontFamily: FONTS.brand,
-    fontSize: 15,
-    lineHeight: 21,
-    color: '#FFF7D6',
-    flexWrap: 'wrap',
-  },
-  tailBorder: {
-    position: 'absolute',
-    left: -9,
-    bottom: 10,
-    width: 0,
-    height: 0,
-    borderTopWidth: 8,
-    borderTopColor: 'transparent',
-    borderBottomWidth: 8,
-    borderBottomColor: 'transparent',
-    borderRightWidth: 9,
-    borderRightColor: 'rgba(245,200,66,0.55)',
-  },
-  tailFill: {
-    position: 'absolute',
-    left: -7,
-    bottom: 10,
-    width: 0,
-    height: 0,
-    borderTopWidth: 8,
-    borderTopColor: 'transparent',
-    borderBottomWidth: 8,
-    borderBottomColor: 'transparent',
-    borderRightWidth: 9,
-    borderRightColor: '#1A1055',
   },
 });

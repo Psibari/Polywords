@@ -1,5 +1,5 @@
 # POLYWORDS — CONTEXT.md
-### Session briefing · July 5, 2026
+### Session briefing · July 13, 2026
 
 Read this at the start of any session. Full canonical detail lives in `CLAUDE.md`.
 
@@ -16,7 +16,7 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 ## Current Build State
 
 **Active branch:** `play-screen-overhaul` (never merge to main).
-**Session baseline commit:** `069f3bb` (music guardrail docs; produced-stem implementation remains uncommitted).
+**Session baseline commit:** `dd782b9` (current branch head before the Polly living-rival pass).
 **Latest existing working tag:** `v0.working-20260704-brand-logotype`.
 **Checkpoint feel:** Produced-stem music pass pending commit, device sweep, and July 5 working tag.
 **Ghost loop checkpoint:** `badc9f0` / `v0.working-20260630a`.
@@ -53,6 +53,12 @@ Play screen design overhaul complete for this sprint.
 - Hunt Polly visits use clean transparent pose art with whole-image flight, landing, bubble,
   and reaction motion. The failed generated cutout-rig candidate was removed from the live
   renderer; future articulated rigs must pass isolated assembly review before gameplay wiring.
+- Polly living-rival pass is implemented locally and pending device review: a versioned bounded
+  memory records Hunt/Daily outcomes and recent authored lines; Home carries the prior rivalry
+  into greeting and settled pose; repeated Haunts escalate body language; Hunt/Daily/Results
+  share one line catalog and speech bubble; Daily's duplicate result presence is removed; each
+  surface has a distinct quiet ambient profile; off-screen loops stop; reduced-motion is honored.
+  No generated dialogue or articulated rig was introduced.
 - Word Vault uses `assets/images/vault/bookcase-dark-mobile.png` as a fixed-aspect
   reclaimed-archive cabinet; `Bookcase.tsx` maps trophy and haunted spines into measured
   shelf slots and adds another cabinet frame when rows overflow.
@@ -148,7 +154,8 @@ sting. Latest confirmed head: `6ad5876` Add returning haunt detective sting.
 ## On the horizon (priority order)
 
 1. Swipe cues: RIGHT cue fine-tune if needed
-2. Polly persistent anchor audit (pollyVisible stays true between events — investigate usePollyAnimator)
+2. Polly living-rival device pass: Home return pose/line, repeated Haunt pose, Daily result
+   handoff, Results continuity, reduced-motion, and small-screen bubble clearance
 3. HeroBook proportions review on device after full session
 4. Mastery shards → FXLayer
 5. Onboarding / first-run experience

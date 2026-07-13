@@ -1,4 +1,5 @@
 import { heroBookMaterial } from './pwMaterials';
+import { POLLY_LINES } from '../game/pollyCharacter';
 
 export const DAILY_TITLE = "POLLY'S DAILY CHALLENGE";
 export const DAILY_PROMISE = 'ONE word · FIVE rounds · TWO chances · ONE gold feather';
@@ -6,12 +7,12 @@ export const DAILY_CLUE_TITLE = 'DAILY CHALLENGE';
 export const DAILY_CLUE_RULE = 'ONE REPRESENTS ALL';
 export const DAILY_ACTION_RULE = 'SWIPE UP TO CLAIM';
 
-export const DAILY_FIRST_MISS_LINE = 'Sharp as a butter knife.';
+export const DAILY_FIRST_MISS_LINE = POLLY_LINES.dailyButterKnife;
 export const DAILY_LOSS_TITLE = 'YOU LOSE';
-export const DAILY_LOSS_LINE = 'CAN’T BEAT THAT WITH A BAT.';
+export const DAILY_LOSS_LINE = POLLY_LINES.dailyLossBat;
 export const DAILY_WIN_TITLE = 'YOU BEAT POLLY’S CHALLENGE';
 export const DAILY_WIN_REWARD = 'GOLD FEATHER EARNED';
-export const DAILY_WIN_LINE = 'WON’T HAPPEN TOMORROW.';
+export const DAILY_WIN_LINE = POLLY_LINES.dailyWinTomorrow;
 export const DAILY_NO_FEATHER = 'NO FEATHER TODAY';
 
 export function getStreakMilestoneRewardLabel(days: number): string {

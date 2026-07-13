@@ -160,7 +160,7 @@ mastered word leaves her vault. Runtime webp assets: `assets/images/polly/*.webp
 Daily Polly is SHIPPED on pose images — see CLAUDE.md "Daily Polly" note. The 13-part
 `PollyRig` is shelved for future layered art. Spec/plan: `docs/superpowers/{specs,plans}/2026-07-02-polly-*`.
 
-Hunt behavior (not yet wired to the new poses): fly-up entrances not pop-ins; mid-round fly in
+Hunt behavior (live on transparent poses): fly-up entrances not pop-ins; mid-round fly in
 from bottom-left, perch left, speak, exit left; one mid-round pop-in budget per word; end-of-
 round always fires; right side reserved for the reject lane.
 
@@ -171,6 +171,13 @@ so."); haunt/run clipped → `perchLaughing`; masters word → `perchSulking`; b
 Legacy compat pose map (old webps): fly→`polly_fly_in`, neutral/smug→`polly_idle`,
 dismissive/sulk→`polly_sulk`, laugh→`polly_laugh`, point→`polly_taunt_point`,
 shocked/boss→`polly_boss_warning`.
+
+Living-rival layer: `app/game/pollyCharacter.ts` is the typed authored-line catalog;
+`app/game/pollyMemory.ts` stores a small versioned local rivalry memory; `usePollyVisits`
+remains the Hunt visit director. Home and Results can acknowledge the previous outcome, and a
+Haunt missed repeatedly changes Polly from a smug perch to a pointing challenge without adding
+another line. Shared ambient motion is surface-specific, stops while inactive, and respects the
+system reduced-motion preference. The shelved rig/flipbook/legacy animator are disconnected.
 
 ---
 

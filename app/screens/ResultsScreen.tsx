@@ -27,7 +27,7 @@ import {
   RESULTS_VERDICT_BEAT,
   RESULTS_VERDICT_COMPLETE,
   RESULTS_VERDICT_LOSS,
-  deriveResultsPollyLine,
+  deriveResultsPollyMoment,
   resultsCard,
   resultsLedger,
   resultsType,
@@ -423,6 +423,8 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
   const spendGoldFeather = useGameStore(s => s.spendGoldFeather);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
+  const currentPollyMemory = useGameStore(s => s.pollyMemory);
+  const rememberPollyLine = useGameStore(s => s.rememberPollyLine);
   const { wordResults, score, bestCombo, status, lives } = game;
   const isComplete = status === 'complete';
   const hasGoldFeather =
@@ -432,6 +434,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     Date.now() < goldFeatherExpiresAt;
 
   const [prevBest] = useState(() => progress.personalBest);
+  const [pollyMemoryBeforeRunRecorded] = useState(() => currentPollyMemory);
   const [usingGoldFeather, setUsingGoldFeather] = useState(false);
   const isNewBest = score > prevBest && score > 0;
   const beatPolly = isComplete && score >= 15000;
@@ -535,7 +538,17 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const hauntMissedMaskIds = bossResults.flatMap(r => r.missedMaskIds);
   const hauntWrongMaskIds = bossResults.flatMap(r => r.wrongMaskIds);
   const firstWrongMaskId = hauntWrongMaskIds[0] ?? null;
-  const pollyLine = deriveResultsPollyLine(wordResults, isComplete);
+  const pollyMoment = deriveResultsPollyMoment(
+    wordResults,
+    isComplete,
+    pollyMemoryBeforeRunRecorded,
+  );
+  const pollyLineRememberedRef = useRef(false);
+  useEffect(() => {
+    if (!pollyMoment || pollyLineRememberedRef.current) return;
+    pollyLineRememberedRef.current = true;
+    rememberPollyLine(pollyMoment.lineId, 'results');
+  }, [pollyMoment, rememberPollyLine]);
 
   const verdictText = !isComplete
     ? RESULTS_VERDICT_LOSS
@@ -656,7 +669,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         </Animated.View>
       </ScrollView>
 
-      <PollyResultsPerch outcome={outcome} line={pollyLine} />
+      <PollyResultsPerch outcome={outcome} line={pollyMoment?.line ?? null} />
     </View>
   );
 }

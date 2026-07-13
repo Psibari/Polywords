@@ -1,6 +1,8 @@
 import { PW } from './pwTheme';
 import { heroBookMaterial, libraryMaterial } from './pwMaterials';
 import { WordResult } from '../game/polyRunEngine';
+import { PollyMoment } from '../game/pollyCharacter';
+import { PollyMemory, resolveResultsPollyMoment } from '../game/pollyMemory';
 
 // ── Verdict copy (verdict appears exactly once, top of the ledger) ──
 export const RESULTS_VERDICT_BEAT = 'YOU BEAT POLLY';
@@ -11,19 +13,21 @@ export const RESULTS_SUB_LOSS = 'Out of feathers.';
 
 // Polly's one bubble line on the ledger. All lines are bank-sourced
 // (docs/POLLY_DIALOGUE_BANK.md, Result Screen Polly Seeds).
-export function deriveResultsPollyLine(
+export function deriveResultsPollyMoment(
   wordResults: WordResult[],
   isComplete: boolean,
-): string | null {
-  if (!isComplete) return 'My traps remember you.';
+  memory: PollyMemory,
+): PollyMoment | null {
   const allPerfect =
     wordResults.length > 0 && wordResults.every(r => r.wrongSwipes === 0);
-  if (allPerfect) return 'You emptied my little vault.';
   const bossCleared = wordResults.some(r => r.isBossWord && r.wrongSwipes === 0);
-  if (bossCleared) return 'Fine. Keep the word.';
   const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
-  if (hasMissed) return 'Some meanings got past you.';
-  return null;
+  return resolveResultsPollyMoment(memory, {
+    isComplete,
+    allPerfect,
+    bossCleared,
+    hasMissed,
+  });
 }
 
 // ── Type scale (legibility clause: floor 14, tune on device) ──

@@ -5,7 +5,8 @@ Full implementation source of truth for the Daily Challenge mode.
 Do not implement anything not described here.
 Standard Hunt rules are unchanged — see `CLAUDE.md`.
 
-Daily is currently documentation-only. Existing coded Daily files are stale, unapproved scaffold and must remain quarantined until an approved implementation patch.
+Daily is implemented on `play-screen-overhaul`. This document remains the behavior source of
+truth; live implementation changes must preserve the UP-only control and approved result flow.
 
 ---
 
@@ -286,7 +287,7 @@ The Gold Feather is awarded when the player wins the Daily by completing all 5 r
 
 ## Key Files
 
-These are future implementation targets only. Their current coded versions are stale, unapproved scaffold.
+These are the live implementation files on `play-screen-overhaul`.
 
 | File | Intended role |
 |---|---|

@@ -1,17 +1,18 @@
 import { PW } from './pwTheme';
 import { heroBookMaterial } from './pwMaterials';
+import { POLLY_LINES } from '../game/pollyCharacter';
 
 // ── Copy ──
 export const HOME_TAGLINE = 'Polly stole the meanings. Take them back.';
 
 // Polly speech: mixed case, never uppercase. One line per app open, rotating.
 export const HOME_GREETING_LINES = [
-  'Back again?',
-  'Miss me?',
-  'Still missing a few meanings, aren’t you.',
-  'Come to lose some feathers?',
-  'The words asked about you. I lied.',
-  'Take your time. They’re mine either way.',
+  POLLY_LINES.homeBackAgain,
+  POLLY_LINES.homeMissMe,
+  POLLY_LINES.homeMissingMeanings,
+  POLLY_LINES.homeLoseFeathers,
+  POLLY_LINES.homeWordsAsked,
+  POLLY_LINES.homeTakeTime,
 ] as const;
 
 // ── Type scale (legibility clause: floor 14, tune on device) ──

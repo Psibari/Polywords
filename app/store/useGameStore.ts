@@ -13,7 +13,6 @@ import {
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
   consumeMercy as consumeMercyFn,
 } from '../game/polyRunEngine';
-import { resetPollyBudget } from '../logic/pollyBudget';
 import {
   DailyChallengeState,
   DailyClaimResult,
@@ -35,6 +34,15 @@ import {
 } from '../game/dailyChallengeEngine';
 import { applyDailyStreak, getStreakMilestone } from '../game/dailyStreak';
 import { setMusicEnabled } from '../audio/MusicEngine';
+import { PollyLineId } from '../game/pollyCharacter';
+import {
+  DEFAULT_POLLY_MEMORY,
+  PollyMemory,
+  hydratePollyMemory,
+  rememberDaily,
+  rememberHunt,
+  rememberPollyLine,
+} from '../game/pollyMemory';
 
 const FLEDGLING_RUNS = 3;
 
@@ -44,6 +52,7 @@ const DAILY_ATTEMPT_KEY_PREFIX = 'polywords_daily_attempt_';
 const DAILY_RESULT_KEY_PREFIX = 'polywords_daily_result_';
 const GOLD_FEATHER_KEY = 'polywords_gold_feather';
 const SETTINGS_KEY = 'polywords_settings';
+const POLLY_MEMORY_KEY = 'polywords_polly_memory_v1';
 
 type PlayerSettings = {
   soundEnabled: boolean;
@@ -138,6 +147,13 @@ type GameStore = {
   recordMastery: (word: string, isBoss: boolean, hiddenMeaningFound: string) => void;
   recordRunComplete: (finalScore: number) => void;
   loadProgress: () => Promise<void>;
+  pollyMemory: PollyMemory;
+  pollyMemoryLoaded: boolean;
+  loadPollyMemory: () => Promise<void>;
+  rememberPollyLine: (
+    lineId: PollyLineId,
+    surface: 'home' | 'hunt' | 'daily' | 'results',
+  ) => void;
   dailySession: DailySession | null;
   dailyResult: DailyResult | null;
   dailyAttemptDate: string | null;
@@ -173,6 +189,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   ghostRevenge: null,
   runStartGhostWordIds: [],
   progress:    { ...DEFAULT_PROGRESS },
+  pollyMemory: { ...DEFAULT_POLLY_MEMORY },
+  pollyMemoryLoaded: false,
   dailySession: null,
   daily:       null,
   dailyResult: null,
@@ -185,7 +203,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hapticsEnabled: DEFAULT_SETTINGS.hapticsEnabled,
 
   startGame: () => {
-    resetPollyBudget();
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
     // Fledgling Hunts: a player's first runs use the shorter 8-round arc with
     // an easy-biased draw, so the game teaches before it punishes.
@@ -320,13 +337,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   recordRunComplete: (finalScore) => {
     const current = get().progress;
+    const game = get().game;
+    const bossStep = game.session.find(
+      step => step.kind === 'word' && step.eventType === 'bossWord',
+    );
+    const hauntStep = game.session.find(
+      step => step.kind === 'word' && step.isHauntReturn === true,
+    );
+    const outcome = game.status === 'gameOver'
+      ? 'pollyWon' as const
+      : finalScore >= 15000
+      ? 'playerBeatPolly' as const
+      : 'playerCompleted' as const;
+    const pollyMemory = rememberHunt(get().pollyMemory, {
+      outcome,
+      score: finalScore,
+      bossWord: bossStep?.kind === 'word' ? bossStep.word : null,
+      hauntWord: hauntStep?.kind === 'word' ? hauntStep.word : null,
+    });
     const next: PlayerProgress = {
       ...current,
       runsCompleted: current.runsCompleted + 1,
       personalBest: finalScore > current.personalBest ? finalScore : current.personalBest,
     };
-    set({ progress: next });
+    set({ progress: next, pollyMemory });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
+    AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
   },
 
   loadProgress: async () => {
@@ -338,6 +374,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({ progress: merged });
       }
     } catch {}
+  },
+
+  loadPollyMemory: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(POLLY_MEMORY_KEY);
+      const pollyMemory = raw
+        ? hydratePollyMemory(JSON.parse(raw))
+        : { ...DEFAULT_POLLY_MEMORY };
+      set({ pollyMemory, pollyMemoryLoaded: true });
+    } catch {
+      set({ pollyMemory: { ...DEFAULT_POLLY_MEMORY }, pollyMemoryLoaded: true });
+    }
+  },
+
+  rememberPollyLine: (lineId, surface) => {
+    const pollyMemory = rememberPollyLine(get().pollyMemory, lineId, surface);
+    set({ pollyMemory });
+    AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
   },
 
   setSoundEnabled: (value: boolean) => {
@@ -446,6 +500,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const progress = dailyResult
       ? applyDailyStreak(get().progress, dailyResult.date)
       : get().progress;
+    const pollyMemory = dailyResult
+      ? rememberDaily(get().pollyMemory, dailyResult.status, dailyResult.date)
+      : get().pollyMemory;
     const streakMilestone = dailyResult ? getStreakMilestone(progress.currentStreak) : null;
 
     set({
@@ -454,6 +511,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dailyLastClaimResult: claim.result,
       ...(dailyResult ? { dailyResult } : {}),
       progress,
+      pollyMemory,
       streakMilestoneReward: streakMilestone,
     });
 
@@ -461,6 +519,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const resultKey = DAILY_RESULT_KEY_PREFIX + dailyResult.date;
       AsyncStorage.setItem(resultKey, JSON.stringify(dailyResult)).catch(() => {});
       AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)).catch(() => {});
+      AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
     }
 
     if (dailyResult?.goldFeatherEarned || streakMilestone) {

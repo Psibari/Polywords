@@ -15,6 +15,7 @@ const idle: PollyBudgetState = {
   wrongSeenThisWord: false,
   cleanSweepSeenThisRun: false,
   isSpeedRound: false,
+  ghostRunsMissed: 0,
 };
 
 function visitSpec(d: VisitDecision, label: string): VisitSpec {
@@ -69,6 +70,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   const jammed: PollyBudgetState = {
     busy: true, heckleUsedThisWord: true, wrongSeenThisWord: true,
     cleanSweepSeenThisRun: true, isSpeedRound: true,
+    ghostRunsMissed: 0,
   };
   eq(resolveVisit('bossEntry', jammed).action, 'visit', 'bossEntry while jammed');
   eq(resolveVisit('gameOver', jammed).action, 'visit', 'gameOver while jammed');
@@ -134,6 +136,16 @@ eq(resolveVisit('hesitation9s', idle).action, 'none', 'hesitation9s ignored');
   const s = visitSpec(resolveVisit('ghostEntry', idle), 'ghostEntry');
   eq(s.perchPose, 'smug', 'ghostEntry.perchPose');
   eq(s.line, 'Remember me.', 'ghostEntry.line');
+}
+
+// A repeatedly missed haunt keeps the same scarce line but points instead of
+// replaying the same smug pose: memory is visible without adding chatter.
+{
+  const s = visitSpec(
+    resolveVisit('ghostEntry', { ...idle, ghostRunsMissed: 2 }),
+    'ghostEntry repeated',
+  );
+  eq(s.perchPose, 'point', 'ghostEntry repeated.perchPose');
 }
 
 // Heckles drop when busy, when budget spent, and in speed rounds

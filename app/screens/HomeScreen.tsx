@@ -34,6 +34,7 @@ type Props = {
 export default function HomeScreen({ navigation }: Props) {
   const startGame = useGameStore(s => s.startGame);
   const progress = useGameStore(s => s.progress);
+  const pollyMemoryLoaded = useGameStore(s => s.pollyMemoryLoaded);
   const streak = getDisplayStreak(progress, getTodayDateString());
   const darePulse = useRef(new Animated.Value(0)).current;
   const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 520);
@@ -174,7 +175,7 @@ export default function HomeScreen({ navigation }: Props) {
         </SafeAreaView>
 
         <HomeEmbers />
-        <PollyHomePerch />
+        {pollyMemoryLoaded && <PollyHomePerch />}
       </ImageBackground>
     </View>
   );

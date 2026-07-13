@@ -5,6 +5,7 @@ import {
   VisitSpec,
   resolveVisit,
 } from '../game/pollyVisitPolicy';
+import { useGameStore } from '../store/useGameStore';
 
 export type ActiveVisit = {
   id: number;
@@ -16,7 +17,8 @@ export type ActiveVisit = {
 // queue; the pure policy decides, PollyHuntVisit animates. Exposes the same
 // firePollyEvent(event) signature as the quarantined usePollyAnimator so
 // MaskBoard's call sites stay untouched.
-export function usePollyVisits(isSpeedRound: boolean) {
+export function usePollyVisits(isSpeedRound: boolean, ghostRunsMissed = 0) {
+  const rememberLine = useGameStore(s => s.rememberPollyLine);
   const [visit, setVisit] = useState<ActiveVisit | null>(null);
   const visitRef = useRef<ActiveVisit | null>(null);
   const pendingRef = useRef<VisitSpec | null>(null);
@@ -28,6 +30,8 @@ export function usePollyVisits(isSpeedRound: boolean) {
   });
   const isSpeedRoundRef = useRef(isSpeedRound);
   isSpeedRoundRef.current = isSpeedRound;
+  const ghostRunsMissedRef = useRef(ghostRunsMissed);
+  ghostRunsMissedRef.current = ghostRunsMissed;
 
   const setVisitBoth = (v: ActiveVisit | null) => {
     visitRef.current = v;
@@ -37,6 +41,7 @@ export function usePollyVisits(isSpeedRound: boolean) {
   const startVisit = (spec: VisitSpec) => {
     idRef.current += 1;
     if (spec.kind === 'heckle') flagsRef.current.heckleUsedThisWord = true;
+    if (spec.lineId) rememberLine(spec.lineId, 'hunt');
     setVisitBoth({ id: idRef.current, spec, fastExit: false });
   };
 
@@ -47,7 +52,7 @@ export function usePollyVisits(isSpeedRound: boolean) {
     const pending = pendingRef.current;
     pendingRef.current = null;
     if (pending) startVisit(pending);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rememberLine]);
 
   const firePollyEvent = useCallback((event: PollyEvent) => {
     const flags = flagsRef.current;
@@ -57,6 +62,7 @@ export function usePollyVisits(isSpeedRound: boolean) {
       wrongSeenThisWord: flags.wrongSeenThisWord,
       cleanSweepSeenThisRun: flags.cleanSweepSeenThisRun,
       isSpeedRound: isSpeedRoundRef.current,
+      ghostRunsMissed: ghostRunsMissedRef.current,
     };
     const decision = resolveVisit(event, state);
 

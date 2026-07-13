@@ -7,6 +7,8 @@
 
 // Same event vocabulary as usePollyAnimator — MaskBoard call sites pass
 // these literals and must not change.
+import { POLLY_LINES, PollyLineId } from './pollyCharacter';
+
 export type PollyEvent =
   | 'wordEntry'
   | 'correct'
@@ -37,6 +39,7 @@ export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
   flyPose: 'fly' | 'flyAngry';
   perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk';
+  lineId: PollyLineId | null;
   line: string | null;
   sfx: PollyVisitSfx | null;
   holdPerch: boolean; // terminal beats stay perched until the board unmounts
@@ -49,6 +52,7 @@ export type PollyBudgetState = {
   wrongSeenThisWord: boolean;    // only the FIRST wrong swipe of a word heckles
   cleanSweepSeenThisRun: boolean;// first cleanSweep of the run is guaranteed
   isSpeedRound: boolean;         // speed rounds suppress heckles entirely
+  ghostRunsMissed: number;       // repeated haunt history sharpens body language
 };
 
 export type VisitDecision =
@@ -60,19 +64,19 @@ const NONE: VisitDecision = { action: 'none' };
 
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
-  line: 'This word stays mine.', sfx: 'pollySqwawkShort',
+  lineId: 'huntBossMine', line: POLLY_LINES.huntBossMine, sfx: 'pollySqwawkShort',
   holdPerch: false, perchMs: 2500,
 };
 
 const BOSS_MASTERED_SULK: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'sulk',
-  line: null, sfx: null, // silent — defeat needs no line
+  lineId: null, line: null, sfx: null, // silent — defeat needs no line
   holdPerch: true, perchMs: 2500,
 };
 
 const GAME_OVER_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
-  line: 'BBBLAAAAHHAHAHA!', sfx: 'pollySqwawkLaugh',
+  lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: 'pollySqwawkLaugh',
   holdPerch: true, perchMs: 2500,
 };
 
@@ -80,15 +84,14 @@ const GAME_OVER_LAUGH: VisitSpec = {
 // gameOver which holds the perch (terminal beat).
 const HAUNT_FAILED_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
-  line: 'BBBLAAAAHHAHAHA!', sfx: 'pollySqwawkLaugh',
+  lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: 'pollySqwawkLaugh',
   holdPerch: false, perchMs: 2200,
 };
 
-const CLEAN_SWEEP_LINE = "Bet you can't do that again.";
-
 const CLEAN_SWEEP_FIRST: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'shocked',
-  line: CLEAN_SWEEP_LINE, sfx: null, // silent recoil — the squawk was overused
+  lineId: 'huntCleanSweep', line: POLLY_LINES.huntCleanSweep,
+  sfx: null, // silent recoil — the squawk was overused
   holdPerch: false, perchMs: 2000,
 };
 
@@ -98,19 +101,20 @@ const CLEAN_SWEEP_REPEAT: VisitSpec = {
 
 const WRONG_SMUG: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'smug',
-  line: 'Thought so.', sfx: null, // the wrong swipe itself already squawks in MaskBoard
+  lineId: 'huntThoughtSo', line: POLLY_LINES.huntThoughtSo,
+  sfx: null, // the wrong swipe itself already squawks in MaskBoard
   holdPerch: false, perchMs: 1800,
 };
 
 const HESITATION_POINT: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'point',
-  line: 'YES... NO... MAYBE SO...', sfx: null,
+  lineId: 'huntHesitation', line: POLLY_LINES.huntHesitation, sfx: null,
   holdPerch: false, perchMs: 2000,
 };
 
 const GHOST_SMUG: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'smug',
-  line: 'Remember me.', sfx: null,
+  lineId: 'huntRemember', line: POLLY_LINES.huntRemember, sfx: null,
   holdPerch: false, perchMs: 1800,
 };
 
@@ -132,7 +136,14 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
 
   if (event === 'wrong' && !state.wrongSeenThisWord) return { action: 'visit', spec: WRONG_SMUG };
   if (event === 'hesitation6s') return { action: 'visit', spec: HESITATION_POINT };
-  if (event === 'ghostEntry') return { action: 'visit', spec: GHOST_SMUG };
+  if (event === 'ghostEntry') {
+    return {
+      action: 'visit',
+      spec: state.ghostRunsMissed >= 2
+        ? { ...GHOST_SMUG, perchPose: 'point' }
+        : GHOST_SMUG,
+    };
+  }
   if (event === 'cleanSweep') return { action: 'visit', spec: CLEAN_SWEEP_REPEAT };
 
   return NONE; // everything else: silence is menace
