@@ -304,8 +304,8 @@
   },
   "BANK": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Backboard first, then the net",
+    "hiddenTrap": "BUZZER BEATER FROM HALF COURT",
     "masks": [
       {
         "id": "bank_r0",
@@ -363,7 +363,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Sextuple"
   },
   "BARK": {
@@ -1172,8 +1172,8 @@
   },
   "BOUND": {
     "difficulty": "hard",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Sure to happen sooner or later",
+    "hiddenTrap": "LAYOVER ADDED IN DENVER",
     "masks": [
       {
         "id": "bound_r0",
@@ -1226,7 +1226,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quadruple"
   },
   "BOW": {
@@ -1829,8 +1829,8 @@
   },
   "CAST": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Faint green in old photos",
+    "hiddenTrap": "FILTER SLAPPED ON EVERY SELFIE",
     "masks": [
       {
         "id": "cast_r0",
@@ -1888,7 +1888,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Sextuple"
   },
   "CHAMBER": {
@@ -3163,8 +3163,8 @@
   },
   "COURT": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Flirting with disaster on purpose",
+    "hiddenTrap": "MOTORCYCLE JUMP OVER THE CANYON",
     "masks": [
       {
         "id": "court_r0",
@@ -3189,7 +3189,8 @@
       {
         "id": "court_r4",
         "phrase": "APARTMENTS FACE ONE SHARED PATCH OF SKY",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "court_t0",
@@ -3207,7 +3208,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quintuple"
   },
   "CRANE": {
@@ -4799,8 +4800,8 @@
   },
   "FILE": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "The rook's open highway",
+    "hiddenTrap": "KNIGHT HOPS THE LONG DIAGONAL",
     "masks": [
       {
         "id": "file_r0",
@@ -4863,7 +4864,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quintuple"
   },
   "FINE": {
@@ -6191,8 +6192,8 @@
   },
   "HORN": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Grandpa's name for the phone",
+    "hiddenTrap": "ROTARY DIAL SPINS BACK SLOW",
     "masks": [
       {
         "id": "horn_r0",
@@ -6212,7 +6213,8 @@
       {
         "id": "horn_r3",
         "phrase": "OLD COMB MATERIAL",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "horn_t0",
@@ -6245,7 +6247,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quadruple"
   },
   "INDEX": {
@@ -6348,8 +6350,8 @@
   },
   "IRON": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "What bodybuilders pump",
+    "hiddenTrap": "PROTEIN SHAKE AFTER THE SET",
     "masks": [
       {
         "id": "iron_r0",
@@ -6369,7 +6371,8 @@
       {
         "id": "iron_r3",
         "phrase": "PRISONER’S OLD CHAINS",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "iron_t0",
@@ -6402,7 +6405,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quadruple"
   },
   "ISSUE": {
@@ -6608,8 +6611,8 @@
   },
   "KEY": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Spiteful scratch down the paint",
+    "hiddenTrap": "SHOPPING CART ROLLS INTO THE BUMPER",
     "masks": [
       {
         "id": "key_r0",
@@ -6634,7 +6637,8 @@
       {
         "id": "key_r4",
         "phrase": "FLORIDA ISLAND",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "key_t0",
@@ -6672,7 +6676,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quintuple"
   },
   "KICK": {
@@ -9216,7 +9220,8 @@
       {
         "id": "pen_r4",
         "phrase": "FEMALE SWAN",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "pen_t0",
@@ -9332,8 +9337,8 @@
   },
   "PITCH": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Tent goes up before dark",
+    "hiddenTrap": "SLEEPING BAGS UNROLLED INSIDE",
     "masks": [
       {
         "id": "pitch_r0",
@@ -9368,7 +9373,8 @@
       {
         "id": "pitch_r6",
         "phrase": "SHIP’S BOW DIPS INTO EACH WAVE",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "pitch_t0",
@@ -9391,7 +9397,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Septuple"
   },
   "PITCHER": {
@@ -10182,7 +10188,8 @@
       {
         "id": "quarry_r2",
         "phrase": "RED TILE FLOOR",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "quarry_t0",
@@ -12442,8 +12449,8 @@
   },
   "SPRING": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Busting a buddy out of jail",
+    "hiddenTrap": "TUNNEL DUG BEHIND THE POSTER",
     "masks": [
       {
         "id": "spring_r0",
@@ -12501,7 +12508,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quadruple"
   },
   "STABLE": {
@@ -12943,8 +12950,8 @@
   },
   "STOCK": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Comes from tough farming blood",
+    "hiddenTrap": "HEIRLOOM QUILT PASSED DOWN",
     "masks": [
       {
         "id": "stock_r0",
@@ -12969,7 +12976,8 @@
       {
         "id": "stock_r4",
         "phrase": "NECK LOCKED IN WOODEN FRAME",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "stock_t0",
@@ -12992,7 +13000,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quintuple"
   },
   "STORY": {
@@ -13056,8 +13064,8 @@
   },
   "STRIKE": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Oil found where nobody was looking",
+    "hiddenTrap": "PICKAXE SPARKS ON BARE GRANITE",
     "masks": [
       {
         "id": "strike_r0",
@@ -13115,7 +13123,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Sextuple"
   },
   "SUIT": {
@@ -14169,8 +14177,8 @@
   },
   "WAKE": {
     "difficulty": "hard",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Everything the scandal leaves behind",
+    "hiddenTrap": "CASSEROLES CROWD THE WIDOW'S FRIDGE",
     "masks": [
       {
         "id": "wake_r0",
@@ -14218,7 +14226,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Triple"
   },
   "WARRANT": {
@@ -16158,7 +16166,8 @@
       {
         "id": "die_r2",
         "phrase": "STAMP CUTS METAL SHAPE",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "die_r3",
@@ -16934,8 +16943,8 @@
   },
   "TANK": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Where drunks sleep it off",
+    "hiddenTrap": "BAIL POSTED BEFORE SUNRISE",
     "masks": [
       {
         "id": "tank_r0",
@@ -16993,7 +17002,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quadruple"
   },
   "TEMPLE": {
@@ -17052,8 +17061,8 @@
   },
   "CHECK": {
     "difficulty": "medium",
-    "hiddenMeaning": null,
-    "hiddenTrap": null,
+    "hiddenMeaning": "Slamming someone into the boards",
+    "hiddenTrap": "GLOVES DROP AT CENTER ICE",
     "masks": [
       {
         "id": "check_r0",
@@ -17068,7 +17077,8 @@
       {
         "id": "check_r2",
         "phrase": "HOLD IT BACK",
-        "isReal": true
+        "isReal": true,
+        "isRare": true
       },
       {
         "id": "check_r3",
@@ -17111,7 +17121,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "boss",
     "wordType": "Quintuple"
   },
   "CABINET": {
