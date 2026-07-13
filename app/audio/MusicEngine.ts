@@ -34,7 +34,7 @@ const TRACK_FADE_IN_MS: Record<TrackKey, number> = {
   hunt: 300,
   tension: 300,
   boss: 300,
-  daily: 2500,
+  daily: 300,
   static: 300,
 };
 
