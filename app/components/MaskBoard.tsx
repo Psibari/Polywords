@@ -160,6 +160,7 @@ type Props = {
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: string) => void;
   onTrapCaught?: () => void;
   onWrongSwipe?: () => void;
+  onSwipeAttempt?: () => void;
   // Owned by GameContent — the visit layer must outlive this board's
   // per-word remount (key={stepIndex}), or word-completion beats die mid-arc.
   firePollyEvent: (event: PollyEvent) => void;
@@ -309,7 +310,7 @@ function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
   return states;
 }
 
-export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, firePollyEvent }: Props) {
+export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent }: Props) {
   const store   = useGameStore();
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
@@ -1817,7 +1818,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
                     entryDelay={0}
                     hapticCorrect={step.hapticTier === 'light' ? () => Haptics.selectionAsync() : undefined}
                     onEffect={handleEffect}
-                    onSwipeStart={() => playSfx('tileSwipe')}
+                    onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
                     onExitComplete={() => {
                       setRemainingMaskIds(prev => prev.filter(id => id !== topMask.id));
@@ -1863,7 +1864,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, fireP
                         tileHeight={FINAL_TILE_H}
                         entryDelay={0}
                         onEffect={handleEffect}
-                        onSwipeStart={() => playSfx('tileSwipe')}
+                        onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                         onPressHoldStart={() => playSfx('pressHoldStart')}
                         onNearTarget={handleNearTarget}
                         wordY={wordScreenY}
