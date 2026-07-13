@@ -12,8 +12,8 @@ import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import { PW } from '../ui/pwTheme';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
-import { preloadSfx, unloadSfx } from '../audio/sfx';
-import { initMusicEngine, startMusic, stopMusic, setMusicState, triggerChainBreak, disposeMusicEngine, MusicState } from '../audio/MusicEngine';
+import { playSfx, preloadSfx, unloadSfx } from '../audio/sfx';
+import { initMusicEngine, startMusic, stopMusic, setMusicState, disposeMusicEngine, MusicState } from '../audio/MusicEngine';
 import * as Haptics from 'expo-haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
@@ -467,6 +467,39 @@ function GameDirector({ navigation }: { navigation: any }) {
   const handleTrapCaught = useCallback(() => setPurpleFlashKey(k => k + 1), []);
   const handleWrongSwipe = useCallback(() => setRedFlashKey(k => k + 1),    []);
 
+  // ── Idle/stuck-static timer ──────────────────────────────────
+  const STATIC_IDLE_TIMEOUT_MS = 15000;
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isIdleStatic, setIsIdleStatic] = useState(false);
+
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current !== null) {
+      clearTimeout(idleTimerRef.current);
+    }
+    setIsIdleStatic(false);
+    idleTimerRef.current = setTimeout(() => {
+      setIsIdleStatic(true);
+    }, STATIC_IDLE_TIMEOUT_MS);
+  }, []);
+
+  useEffect(() => {
+    if (game.status !== 'playing') {
+      if (idleTimerRef.current !== null) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+      setIsIdleStatic(false);
+      return;
+    }
+    resetIdleTimer();
+    return () => {
+      if (idleTimerRef.current !== null) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+    };
+  }, [game.stepIndex, game.status, resetIdleTimer]);
+
   useEffect(() => {
     initSounds();
     preloadSfx();
@@ -562,6 +595,8 @@ function GameDirector({ navigation }: { navigation: any }) {
       state = 'boss';
     } else if (game.lives <= 2) {
       state = 'crisis';
+    } else if (isIdleStatic) {
+      state = 'static';
     } else if (game.chainMultiplier >= 2.5) {
       state = 'onARun';
     } else if (game.chainMultiplier >= 1.5) {
@@ -570,12 +605,12 @@ function GameDirector({ navigation }: { navigation: any }) {
       state = 'neutral';
     }
     setMusicState(state);
-  }, [game.chainMultiplier, game.lives, game.stepIndex, game.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [game.chainMultiplier, game.lives, game.stepIndex, game.status, isIdleStatic]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Chain break detection ─────────────────────────────────────
   useEffect(() => {
     if (prevChainRef.current >= 2.5 && game.chainMultiplier === 1.0) {
-      triggerChainBreak();
+      playSfx('chainBreak');
     }
     prevChainRef.current = game.chainMultiplier;
   }, [game.chainMultiplier]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -710,6 +745,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           spawnEffect={spawnEffect}
           onTrapCaught={handleTrapCaught}
           onWrongSwipe={handleWrongSwipe}
+          onSwipeAttempt={resetIdleTimer}
         />
       )}
       {__DEV__ && !isDone && !isBossRound && (
@@ -765,10 +801,12 @@ function GameContent({
   spawnEffect,
   onTrapCaught,
   onWrongSwipe,
+  onSwipeAttempt,
 }: {
   spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
   onTrapCaught: () => void;
   onWrongSwipe: () => void;
+  onSwipeAttempt: () => void;
 }) {
   const game = useGameStore(s => s.game);
   const step = currentStep(game);
@@ -788,6 +826,7 @@ function GameContent({
           spawnEffect={spawnEffect}
           onTrapCaught={onTrapCaught}
           onWrongSwipe={onWrongSwipe}
+          onSwipeAttempt={onSwipeAttempt}
           firePollyEvent={firePollyEvent}
         />
         <PollyHuntVisit visit={visit} onDone={onVisitDone} />
