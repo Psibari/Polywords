@@ -11,6 +11,7 @@ import {
   addBonusScore,
   consumeMilestone as consumeMilestoneFn,
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
+  consumeMercy as consumeMercyFn,
 } from '../game/polyRunEngine';
 import { resetPollyBudget } from '../logic/pollyBudget';
 import {
@@ -34,6 +35,8 @@ import {
 } from '../game/dailyChallengeEngine';
 import { applyDailyStreak, getStreakMilestone } from '../game/dailyStreak';
 import { setMusicEnabled } from '../audio/MusicEngine';
+
+const FLEDGLING_RUNS = 3;
 
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
@@ -124,6 +127,7 @@ type GameStore = {
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
   consumeFeatherMilestone: () => void;
+  consumeMercy: () => void;
   queueFailedBoss: (step: FailedBossStep) => void;
   banishHaunt: (step: HauntReturnStep) => void;
   retainFailedHaunt: (step: HauntReturnStep) => void;
@@ -182,11 +186,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startGame: () => {
     resetPollyBudget();
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
+    // Fledgling Hunts: a player's first runs use the shorter 8-round arc with
+    // an easy-biased draw, so the game teaches before it punishes.
+    const isFledgling = get().progress.runsCompleted < FLEDGLING_RUNS;
     const steps = generateHunt({
       masteredWords: get().progress.masteredWords.map(m => m.word),
       ghostWordIds: runStartGhostWordIds,
+      ...(isFledgling ? { length: 8, gentle: true } : {}),
     });
-    set({ game: createGame(runStartGhostWordIds, steps), ghostRevenge: null, runStartGhostWordIds });
+    set({
+      game: createGame(runStartGhostWordIds, steps, isFledgling),
+      ghostRevenge: null,
+      runStartGhostWordIds,
+    });
   },
 
   submitSwipeUp: (maskId) =>
@@ -218,6 +230,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   consumeFeatherMilestone: () =>
     set((s) => ({ game: consumeFeatherMilestoneFn(s.game) })),
+
+  consumeMercy: () =>
+    set((s) => ({ game: consumeMercyFn(s.game) })),
 
   queueFailedBoss: (step) => {
     if (step.eventType !== 'bossWord' || step.isHauntReturn === true) return;

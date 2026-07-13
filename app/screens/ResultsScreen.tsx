@@ -4,6 +4,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -14,6 +15,7 @@ import { FONTS } from '../constants/fonts';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
 import { Mask, SessionStep } from '../game/types';
+import { getRankTier } from '../game/ranks';
 import { playSfx } from '../audio/sfx';
 import { FoilWord } from '../components/ui/FoilWord';
 import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/PollyResultsPerch';
@@ -53,6 +55,34 @@ function findWordForMaskId(maskId: string, session: SessionStep[]): string {
   return '';
 }
 
+// Spoiler-free run summary: one square per round, no words revealed.
+function buildShareMessage(
+  session: SessionStep[],
+  wordResults: WordResult[],
+  score: number,
+  rankLetter: string,
+  isComplete: boolean,
+  bossReclaimed: boolean,
+): string {
+  const resultByStep = new Map(wordResults.map(r => [r.wordId, r]));
+  const grid = session
+    .map((step, i) => {
+      if (step.kind !== 'word') return '';
+      const r = resultByStep.get(String(i));
+      if (!r) return '⬛';
+      const perfect = r.correctUp === r.totalRealMasks && r.wrongSwipes === 0;
+      if (r.isBossWord) return perfect && bossReclaimed ? '👑' : '🟪';
+      return perfect ? '🟨' : '🟪';
+    })
+    .join('');
+  const verdict = !isComplete
+    ? `Polly got me on word ${wordResults.length}/${session.length}.`
+    : bossReclaimed
+    ? "POLLY'S WORD: RECLAIMED"
+    : 'Polly kept her word.';
+  return `POLYWORDS · RANK ${rankLetter}\n${score.toLocaleString()} pts\n${grid}\n${verdict}`;
+}
+
 // ─── GRADE / RANK (thresholds and text unchanged; colors tokenized) ──
 
 function computeGrade(
@@ -67,12 +97,14 @@ function computeGrade(
 }
 
 function computeRank(score: number): { letter: string; color: string } {
-  if (score >= 22000) return { letter: 'MASTER', color: resultsVerdictColor.rankTop };
-  if (score >= 18000) return { letter: 'S', color: resultsVerdictColor.rankTop };
-  if (score >= 14000) return { letter: 'A', color: resultsVerdictColor.rankMid };
-  if (score >= 11000) return { letter: 'B', color: resultsVerdictColor.rankMid };
-  if (score >= 8000) return { letter: 'C', color: resultsVerdictColor.rankMid };
-  return { letter: 'D', color: resultsVerdictColor.rankLow };
+  const tier = getRankTier(score);
+  const color =
+    tier.threshold >= 15000
+      ? resultsVerdictColor.rankTop
+      : tier.threshold >= 3000
+      ? resultsVerdictColor.rankMid
+      : resultsVerdictColor.rankLow;
+  return { letter: tier.letter, color };
 }
 
 // ─── LEDGER ROW ──────────────────────────────────────────────
@@ -269,6 +301,41 @@ const btn = StyleSheet.create({
   },
 });
 
+function ShareRunButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Share this run"
+      onPress={onPress}
+      style={({ pressed }) => [sb.shell, pressed && sb.pressed]}
+    >
+      <Text style={sb.label}>SHARE RESULT</Text>
+    </Pressable>
+  );
+}
+
+const sb = StyleSheet.create({
+  shell: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: PW.radius.card,
+    borderWidth: 1.5,
+    borderColor: PW.color.purpleSoft,
+    backgroundColor: PW.color.overlayHeavy,
+    marginTop: 12,
+  },
+  pressed: {
+    opacity: 0.84,
+  },
+  label: {
+    color: PW.color.softWhite,
+    fontFamily: FONTS.hud,
+    fontSize: 15,
+    letterSpacing: 2,
+  },
+});
+
 function GoldFeatherButton({
   onPress,
   disabled,
@@ -419,6 +486,28 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     onRestart();
   }
 
+  const bossStep = game.session.find(
+    s => s.kind === 'word' && s.eventType === 'bossWord',
+  );
+  const bossReclaimed =
+    bossStep?.kind === 'word' &&
+    progress.masteredWords.some(m => m.word === bossStep.word);
+
+  async function handleShare() {
+    try {
+      await Share.share({
+        message: buildShareMessage(
+          game.session,
+          wordResults,
+          score,
+          rank.letter,
+          isComplete,
+          bossReclaimed,
+        ),
+      });
+    } catch {}
+  }
+
   // Ceremony: verdict stamps in immediately; details reveal ~700ms later.
   const verdictScale = useRef(new Animated.Value(0.8)).current;
   const verdictY = useRef(new Animated.Value(20)).current;
@@ -560,6 +649,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             />
           )}
           <RunItBackButton onPress={onRestart} />
+          <ShareRunButton onPress={handleShare} />
           <Pressable onPress={onHome} style={rs.homeLink}>
             <Text style={rs.homeLinkText}>HOME</Text>
           </Pressable>

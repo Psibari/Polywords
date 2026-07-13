@@ -24,8 +24,11 @@ import {
 } from '../animations/pollyAnimations';
 import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
+import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MAX_FEATHERS = 5;
+const INTRO_SEEN_KEY = 'polywords_intro_seen';
 const SHOW_POLLY_DEVICE_TEST = false;
 const SHOW_POLLY_RIG_TEST = false;
 
@@ -435,6 +438,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   const game       = useGameStore(s => s.game);
   const startGame  = useGameStore(s => s.startGame);
   const consumeFeatherMilestone = useGameStore(s => s.consumeFeatherMilestone);
+  const consumeMercy = useGameStore(s => s.consumeMercy);
   const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const { setTension } = useHeartbeat();
@@ -514,6 +518,19 @@ function GameDirector({ navigation }: { navigation: any }) {
     });
   }, [loadGoldFeather, checkGoldFeatherExpiry]);
 
+  // ── First-hunt intro overlay ──────────────────────────────────
+  // null = still loading the flag; fail open so gameplay is never blocked.
+  const [introSeen, setIntroSeen] = useState<boolean | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem(INTRO_SEEN_KEY)
+      .then(v => setIntroSeen(v === 'true'))
+      .catch(() => setIntroSeen(true));
+  }, []);
+  const handleIntroDismiss = useCallback(() => {
+    setIntroSeen(true);
+    AsyncStorage.setItem(INTRO_SEEN_KEY, 'true').catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (game.status === 'complete' || game.status === 'gameOver') {
       playRoundComplete();
@@ -560,6 +577,40 @@ function GameDirector({ navigation }: { navigation: any }) {
       ]),
     ]).start(() => setShowFeatherFloat(false));
   }, [game.featherMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Fledgling Mercy — Polly revives her prey once ─────────────
+  const mercyFloatY       = useRef(new Animated.Value(0)).current;
+  const mercyFloatOpacity = useRef(new Animated.Value(0)).current;
+  const [showMercyFloat, setShowMercyFloat] = useState(false);
+
+  useEffect(() => {
+    if (!game.mercyTriggered) return;
+    consumeMercy();
+    playSfx('pollySqwawkLaugh');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    mercyFloatY.setValue(0);
+    mercyFloatOpacity.setValue(0);
+    setShowMercyFloat(true);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(mercyFloatOpacity, {
+          toValue: 1, duration: 220, useNativeDriver: true,
+        }),
+        Animated.timing(mercyFloatY, {
+          toValue: -10, duration: 220, useNativeDriver: true,
+        }),
+      ]),
+      Animated.delay(1400),
+      Animated.parallel([
+        Animated.timing(mercyFloatOpacity, {
+          toValue: 0, duration: 320, useNativeDriver: true,
+        }),
+        Animated.timing(mercyFloatY, {
+          toValue: -36, duration: 320, useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => setShowMercyFloat(false));
+  }, [game.mercyTriggered]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Music Engine lifecycle ────────────────────────────────────
   // Tied to navigation focus, not mount/unmount: native-stack keeps the
@@ -675,7 +726,6 @@ function GameDirector({ navigation }: { navigation: any }) {
   const activeStep = currentStep(game);
   const isBossRound =
     !isDone &&
-    game.stepIndex === 9 &&
     activeStep.kind === 'word' &&
     activeStep.eventType === 'bossWord';
 
@@ -788,9 +838,26 @@ function GameDirector({ navigation }: { navigation: any }) {
             +1 FEATHER
           </Animated.Text>
         )}
+        {showMercyFloat && (
+          <Animated.Text
+            style={[
+              gs.mercyFloat,
+              {
+                opacity:   mercyFloatOpacity,
+                transform: [{ translateY: mercyFloatY }],
+              },
+            ]}
+          >
+            POLLY ISN'T DONE WITH YOU
+          </Animated.Text>
+        )}
       </View>
 
       <FXLayer ref={fxLayerRef} />
+
+      {introSeen === false && !isDone && (
+        <HuntIntroOverlay onDismiss={handleIntroDismiss} />
+      )}
     </SafeAreaView>
   );
 }
@@ -914,6 +981,20 @@ const styles = StyleSheet.create({
 });
 
 const gs = StyleSheet.create({
+  mercyFloat: {
+    position:   'absolute',
+    top:        128,
+    left:       0,
+    right:      0,
+    textAlign:  'center',
+    color:      PW.color.lavender,
+    fontSize:   16,
+    fontFamily: FONTS.hud,
+    letterSpacing: 2,
+    textShadowColor:  'rgba(123,45,139,0.65)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
   featherFloat: {
     position:   'absolute',
     top:        72,

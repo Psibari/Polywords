@@ -6,7 +6,15 @@
 import { buildRunSession } from './session';
 import { Mask, SessionStep } from './types';
 
-const FEATHER_MILESTONES = [8000, 16000] as const;
+// Retuned 2026-07-13: bonus feathers now land where struggling and mid-tier
+// players actually are (avg-run p50 ≈ 3200), instead of expert-only territory.
+const FEATHER_MILESTONES = [3000, 10000] as const;
+
+export type FeatherMilestone = (typeof FEATHER_MILESTONES)[number];
+
+// Fledgling Mercy: during a player's first hunts the run refuses to die once —
+// Polly revives her prey with this many feathers instead of ending the game.
+const MERCY_REVIVE_LIVES = 3;
 
 export type GameStatus = 'playing' | 'gameOver' | 'complete';
 
@@ -43,8 +51,10 @@ export type GameState = {
   pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'bossMastery' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss' | 'switchback' | 'switchbackFirst' | 'switchbackSecond' | 'switchbackFail' | 'ghostIntro' | 'ghostCorrect' | 'ghostWrong';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
-  featherMilestone:     8000 | 16000 | null;
+  featherMilestone:     FeatherMilestone | null;
   featherMilestonesHit: number[];
+  fledglingMercyAvailable: boolean;
+  mercyTriggered: boolean;
 };
 
 function shuffleMasks(masks: Mask[]): Mask[] {
@@ -56,7 +66,11 @@ function shuffleMasks(masks: Mask[]): Mask[] {
   return arr;
 }
 
-export function createGame(ghostWordIds: string[] = [], session?: SessionStep[]): GameState {
+export function createGame(
+  ghostWordIds: string[] = [],
+  session?: SessionStep[],
+  fledgling = false,
+): GameState {
   const steps = session ?? buildRunSession(ghostWordIds);
   const shuffledMasks: Record<number, Mask[]> = {};
   steps.forEach((step, i) => {
@@ -87,6 +101,34 @@ export function createGame(ghostWordIds: string[] = [], session?: SessionStep[])
     shuffledMasks,
     featherMilestone:     null,
     featherMilestonesHit: [],
+    fledglingMercyAvailable: fledgling,
+    mercyTriggered: false,
+  };
+}
+
+// ─── LIFE LOSS — shared resolution incl. Fledgling Mercy ─────
+
+type LifeLossResult = Pick<
+  GameState,
+  'lives' | 'fledglingMercyAvailable' | 'mercyTriggered' | 'status'
+>;
+
+function resolveLifeLoss(state: GameState): LifeLossResult {
+  const rawLives = state.lives - 1;
+  if (rawLives <= 0 && state.fledglingMercyAvailable) {
+    return {
+      lives: MERCY_REVIVE_LIVES,
+      fledglingMercyAvailable: false,
+      mercyTriggered: true,
+      status: 'playing',
+    };
+  }
+  const lives = Math.max(rawLives, 0);
+  return {
+    lives,
+    fledglingMercyAvailable: state.fledglingMercyAvailable,
+    mercyTriggered: state.mercyTriggered,
+    status: lives <= 0 ? 'gameOver' : 'playing',
   };
 }
 
@@ -187,7 +229,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
       streak: su.streak,
       chainMultiplier: su.chainMultiplier,
       streakMilestone: su.streakMilestone,
-      featherMilestone:     hitMilestone as 8000 | 16000 | null,
+      featherMilestone:     hitMilestone as FeatherMilestone | null,
       featherMilestonesHit: newMilestonesHit,
       feedback: `+${points}`,
       lastActionAt: now,
@@ -196,22 +238,21 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
   }
 
   // wrong: claimed a trap as real
-  const lives = Math.max(state.lives - 1, 0);
+  const loss = resolveLifeLoss(state);
   const nextState: GameState = {
     ...state,
+    ...loss,
     swipedUpIds,
-    lives,
     combo: 0,
     streak: 0,
     streakMilestone: null,
     chainMultiplier: 1,
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Not a meaning',
-    status: lives <= 0 ? 'gameOver' : 'playing',
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
-  return lives <= 0 ? finalizeCurrentWordResult(nextState) : nextState;
+  return loss.status === 'gameOver' ? finalizeCurrentWordResult(nextState) : nextState;
 }
 
 // ─── SWIPE DOWN — player rejects mask as a trap ───────────────
@@ -251,7 +292,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
       streak: su.streak,
       chainMultiplier: su.chainMultiplier,
       streakMilestone: su.streakMilestone,
-      featherMilestone:     hitMilestone as 8000 | 16000 | null,
+      featherMilestone:     hitMilestone as FeatherMilestone | null,
       featherMilestonesHit: newMilestonesHit,
       feedback: `Trap spotted +${points}`,
       lastActionAt: now,
@@ -260,22 +301,21 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
   }
 
   // wrong: rejected a real meaning
-  const lives = Math.max(state.lives - 1, 0);
+  const loss = resolveLifeLoss(state);
   const nextState: GameState = {
     ...state,
+    ...loss,
     swipedDownIds,
-    lives,
     combo: 0,
     streak: 0,
     streakMilestone: null,
     chainMultiplier: 1,
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Actually a meaning',
-    status: lives <= 0 ? 'gameOver' : 'playing',
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
-  return lives <= 0 ? finalizeCurrentWordResult(nextState) : nextState;
+  return loss.status === 'gameOver' ? finalizeCurrentWordResult(nextState) : nextState;
 }
 
 // ─── BOSS MASTERY — scoring for the boss mystery tile judged correctly ─
@@ -297,7 +337,7 @@ export function submitBossMastery(state: GameState): GameState {
     streak: state.streak + 1,
     chainMultiplier: Math.min(1 + Math.floor((state.streak + 1) / 3) * 0.5, 3.0),
     streakMilestone: null,
-    featherMilestone: hitMilestone as 8000 | 16000 | null,
+    featherMilestone: hitMilestone as FeatherMilestone | null,
     featherMilestonesHit: hitMilestone
       ? [...state.featherMilestonesHit, hitMilestone]
       : state.featherMilestonesHit,
@@ -310,19 +350,25 @@ export function submitBossMastery(state: GameState): GameState {
 // ─── WRONG SWIPE — penalise without recording a specific mask ─
 
 export function submitWrongSwipe(state: GameState): GameState {
-  const lives = Math.max(state.lives - 1, 0);
-  return {
+  const loss = resolveLifeLoss(state);
+  const nextState: GameState = {
     ...state,
-    lives,
+    ...loss,
     combo: 0,
     streak: 0,
     streakMilestone: null,
     chainMultiplier: 1,
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Wrong call.',
-    status: lives <= 0 ? 'gameOver' : 'playing',
     lastActionAt: Date.now(),
   };
+  return loss.status === 'gameOver' ? finalizeCurrentWordResult(nextState) : nextState;
+}
+
+// ─── CONSUME MERCY — clear the revive flag after UI has handled it ─
+
+export function consumeMercy(state: GameState): GameState {
+  return { ...state, mercyTriggered: false };
 }
 
 // ─── CONSUME MILESTONE — clear milestone after UI has handled it ─

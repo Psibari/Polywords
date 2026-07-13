@@ -94,6 +94,18 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
   return out;
 }
 
+const DIFFICULTY_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+
+// Fledgling draw: keep the shuffle for variety, but float easier words to the
+// front of each pool so a player's first hunts draw gentler decks.
+function easyFirst(pool: string[]): string[] {
+  return [...pool].sort(
+    (a, b) =>
+      (DIFFICULTY_ORDER[db[a].difficulty] ?? 1) -
+      (DIFFICULTY_ORDER[db[b].difficulty] ?? 1),
+  );
+}
+
 function buildWordStep(
   word: string,
   emotionalRole: EmotionalRole,
@@ -124,8 +136,9 @@ export function generateHunt(opts: {
   masteredWords?: string[];
   ghostWordIds?: string[];
   length?: number;
+  gentle?: boolean;
 }): SessionStep[] {
-  const { masteredWords = [], ghostWordIds = [], length = SESSION_LENGTH } = opts;
+  const { masteredWords = [], ghostWordIds = [], length = SESSION_LENGTH, gentle = false } = opts;
   const mastered = new Set(masteredWords.map(w => w.toUpperCase()));
   const selected = new Set<string>();
   const rng = seededRng(Date.now());
@@ -134,12 +147,15 @@ export function generateHunt(opts: {
   const roles = rolesFromPlan(plan);
   const haptics = hapticsFromPlan(plan);
 
+  const prep = (pool: string[]) =>
+    gentle ? easyFirst(shuffle(pool, rng)) : shuffle(pool, rng);
+
   const available = Object.keys(db).filter(w => !mastered.has(w));
-  const confidencePool = shuffle(available.filter(w => db[w].gpsTag === 'confidence'), rng);
-  const flowPool       = shuffle(available.filter(w => db[w].gpsTag === 'flow'),       rng);
-  const tensionPool    = shuffle(available.filter(w => db[w].gpsTag === 'tension'),    rng);
-  const panicPool      = shuffle(available.filter(w => db[w].gpsTag === 'panic'),      rng);
-  const bossPool       = shuffle(available.filter(w => db[w].gpsTag === 'boss'),       rng);
+  const confidencePool = prep(available.filter(w => db[w].gpsTag === 'confidence'));
+  const flowPool       = prep(available.filter(w => db[w].gpsTag === 'flow'));
+  const tensionPool    = prep(available.filter(w => db[w].gpsTag === 'tension'));
+  const panicPool      = prep(available.filter(w => db[w].gpsTag === 'panic'));
+  const bossPool       = prep(available.filter(w => db[w].gpsTag === 'boss'));
 
   // Pick next available word from ordered fallback pools
   function next(pools: string[][]): string {
