@@ -228,6 +228,7 @@ export type DailyRoundResult = {
   tier: DailyTier;
   status: 'solved' | 'missed';
   wrongClaims: number;
+  cluesUsed: DailyRevealedClueCount;
 };
 
 export type DailyResult = {

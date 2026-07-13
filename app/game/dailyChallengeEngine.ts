@@ -78,18 +78,35 @@ function assertDailyWord(word: DailyWord): DailyWord {
   return word;
 }
 
+// Stable scrambled rotation order per tier (seed is constant, not the date):
+// rotating through this list gives every word an even cadence with a
+// guaranteed minimum gap between repeats, unlike a per-day hash pick which
+// can surface the same word on back-to-back days.
+function rotationPool(tier: DailyTier): DailyWord[] {
+  const sorted = DAILY_POOL
+    .filter(word => word.tier === tier)
+    .sort((a, b) => (a.id < b.id ? -1 : 1));
+  return seededShuffle(sorted, getDailySeed(`polywords-tier-${tier}-rotation`));
+}
+
 function pickDailyWord(
   tier: DailyTier,
+  tierSlot: number,
+  challengeNumber: number,
   selectedIds: Set<string>,
-  seed: number,
 ): DailyWord {
-  const available = DAILY_POOL.filter(
-    word => word.tier === tier && !selectedIds.has(word.id),
-  );
-  if (available.length === 0) {
-    throw new Error(`Daily Challenge needs more unused tier ${tier} words.`);
+  const pool = rotationPool(tier);
+  const count = pool.length;
+  if (count === 0) {
+    throw new Error(`Daily Challenge needs tier ${tier} words.`);
   }
-  return assertDailyWord(seededShuffle(available, seed)[0]!);
+  // Slots of the same tier start half the rotation apart, so a word's
+  // appearances are spaced ~count/2 days apart at worst.
+  let index = (challengeNumber + tierSlot * Math.floor(count / 2)) % count;
+  while (selectedIds.has(pool[index]!.id)) {
+    index = (index + 1) % count;
+  }
+  return assertDailyWord(pool[index]!);
 }
 
 function shuffleCandidates(word: DailyWord, seed: number): DailyCandidates {
@@ -98,10 +115,13 @@ function shuffleCandidates(word: DailyWord, seed: number): DailyCandidates {
 
 export function buildDailySession(dateString = getTodayDateString()): DailySession {
   const seed = getDailySeed(dateString);
+  const challengeNumber = getChallengeNumber(dateString);
   const selectedIds = new Set<string>();
+  const tierSlots: Record<DailyTier, number> = { 1: 0, 2: 0, 3: 0 };
 
   const rounds: DailyRound[] = DAILY_TIER_CURVE.map((tier, roundIndex) => {
-    const word = pickDailyWord(tier, selectedIds, seed + roundIndex * 101);
+    const word = pickDailyWord(tier, tierSlots[tier], challengeNumber, selectedIds);
+    tierSlots[tier] += 1;
     selectedIds.add(word.id);
 
     return {
@@ -120,7 +140,7 @@ export function buildDailySession(dateString = getTodayDateString()): DailySessi
 
   return {
     date: dateString,
-    challengeNumber: getChallengeNumber(dateString),
+    challengeNumber,
     rounds,
     currentRoundIndex: 0,
     chancesRemaining: DAILY_CHANCES,
@@ -255,7 +275,20 @@ export function createDailyResult(session: DailySession): DailyResult {
     tier: round.word.tier,
     status: round.solved ? 'solved' : 'missed',
     wrongClaims: round.wrongClaims.length,
+    // revealedClueCount freezes at solve time, so it doubles as clue speed.
+    cluesUsed: round.solved ? round.revealedClueCount : 3,
   }));
+
+  // Spoiler-free speed grid: gold = solved on clue 1, purple = clue 2,
+  // white = needed all three, black = never solved.
+  const grid = session.rounds
+    .map(round => {
+      if (!round.solved) return '⬛';
+      if (round.revealedClueCount === 1) return '🟨';
+      if (round.revealedClueCount === 2) return '🟪';
+      return '⬜';
+    })
+    .join('');
 
   return {
     date: session.date,
@@ -277,6 +310,7 @@ export function createDailyResult(session: DailySession): DailyResult {
         return [
           tag,
           score,
+          grid,
           `"CAN'T BEAT THAT WITH A BAT." — Polly`,
           link,
         ].join('\n');
@@ -294,6 +328,7 @@ export function createDailyResult(session: DailySession): DailyResult {
       return [
         tag,
         story,
+        grid,
         `"WON'T HAPPEN TOMORROW." — Polly`,
         link,
       ].join('\n');
@@ -321,6 +356,7 @@ function toLegacyState(session: DailySession): DailyChallengeState {
         tier: round.word.tier,
         status: 'solved' as const,
         wrongClaims: round.wrongClaims.length,
+        cluesUsed: round.revealedClueCount,
       })),
     status: session.status === 'active' ? 'playing' : 'complete',
   };

@@ -96,11 +96,14 @@ eq(getDisplayStreak(progress(), '2026-07-07'), 0, 'display.never');
 
 eq(getStreakMilestone(7), 7, 'milestone.seven');
 eq(getStreakMilestone(14), 14, 'milestone.fourteen');
+eq(getStreakMilestone(30), 30, 'milestone.thirty');
+eq(getStreakMilestone(50), 50, 'milestone.fifty');
+eq(getStreakMilestone(100), 100, 'milestone.hundred');
 eq(getStreakMilestone(1), null, 'milestone.notReached');
 eq(getStreakMilestone(6), null, 'milestone.justBelowSeven');
 eq(getStreakMilestone(8), null, 'milestone.justAboveSeven');
 eq(getStreakMilestone(15), null, 'milestone.justAboveFourteen');
-eq(getStreakMilestone(21), null, 'milestone.onlySevenAndFourteenAreMilestones');
+eq(getStreakMilestone(21), null, 'milestone.betweenMilestones');
 eq(getStreakMilestone(0), null, 'milestone.zero');
 
 console.log('OK');

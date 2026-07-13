@@ -4,7 +4,7 @@
   "main": "index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "npx -y tsx app/game/polyRunEngine.test.ts && npx -y tsx app/game/dailyStreak.test.ts && npx -y tsx app/game/pollyVisitPolicy.test.ts",
+    "test": "npx -y tsx app/game/polyRunEngine.test.ts && npx -y tsx app/game/dailyChallengeEngine.test.ts && npx -y tsx app/game/dailyStreak.test.ts && npx -y tsx app/game/pollyVisitPolicy.test.ts",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",

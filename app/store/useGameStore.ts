@@ -106,6 +106,7 @@ function toQuarantinedDailyState(session: DailySession): DailyChallengeState {
         tier: round.word.tier,
         status: 'solved' as const,
         wrongClaims: round.wrongClaims.length,
+        cluesUsed: round.revealedClueCount,
       })),
     status: session.status === 'active' ? 'playing' : 'complete',
   };
