@@ -67,7 +67,9 @@ Fonts: Bungee Shade, BebasNeue-Regular, Barlow Condensed Bold, Lilita One.
 Music: `MusicEngine.ts` plays committed audio files. Runtime music synthesis is deleted and
 must not return. Boss music keys off `eventType === 'bossWord'`, not step numbers. Expo Audio
 mode is configured once through `audioSession.ts`; the round-complete player keeps that
-session active, and Hunt music resumes its position across idle-static transitions.
+session active. One owner-scoped persistent player prevents screen cleanup and swipe updates
+from restarting or stacking BGM. Hunt uses an authored 2.5-second cut at 0.85x with pitch
+correction; crisis and boss use authored fade-free loops. Daily music is the next audio pass.
 
 Animation locks:
 

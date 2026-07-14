@@ -13,7 +13,7 @@ import { PW } from '../ui/pwTheme';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { playSfx, preloadSfx, unloadSfx } from '../audio/sfx';
-import { initMusicEngine, startMusic, stopMusic, setMusicState, haltMusicEngine, MusicState } from '../audio/MusicEngine';
+import { startMusic, stopMusic, setMusicState, MusicState } from '../audio/MusicEngine';
 import * as Haptics from 'expo-haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
@@ -597,15 +597,9 @@ function GameDirector({ navigation }: { navigation: any }) {
   // screen is fading out, bleeding both tracks together.
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-      initMusicEngine().then(() => {
-        if (cancelled) return;
-        startMusic();
-      });
+      startMusic('hunt');
       return () => {
-        cancelled = true;
-        stopMusic();
-        haltMusicEngine();
+        stopMusic('hunt');
       };
     }, []),
   );
@@ -613,7 +607,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   // ── Music state machine ───────────────────────────────────────
   useEffect(() => {
     if (game.status !== 'playing') {
-      stopMusic();
+      stopMusic('hunt');
       return;
     }
     const activeStep = currentStep(game);
@@ -633,7 +627,7 @@ function GameDirector({ navigation }: { navigation: any }) {
     } else {
       state = 'neutral';
     }
-    setMusicState(state);
+    setMusicState('hunt', state);
   }, [game.chainMultiplier, game.lives, game.stepIndex, game.status, isIdleStatic]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Chain break detection ─────────────────────────────────────
@@ -647,7 +641,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   // ── Stop music on run end ─────────────────────────────────────
   useEffect(() => {
     if (game.status === 'gameOver' || game.status === 'complete') {
-      stopMusic();
+      stopMusic('hunt');
     }
   }, [game.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -655,7 +649,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   const prevStatusRef = useRef(game.status);
   useEffect(() => {
     if (prevStatusRef.current !== 'playing' && game.status === 'playing') {
-      startMusic();
+      startMusic('hunt');
     }
     prevStatusRef.current = game.status;
   }, [game.status]);
@@ -696,8 +690,8 @@ function GameDirector({ navigation }: { navigation: any }) {
     });
     setMissedCount(0);
     setShowFeatherFloat(false);
-    startMusic();
-    setMusicState('boss');
+    startMusic('hunt');
+    setMusicState('hunt', 'boss');
   }
 
   const isDone = game.status === 'complete' || game.status === 'gameOver';

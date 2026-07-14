@@ -26,8 +26,6 @@ import { DailyClaimResult } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { playSfx, preloadSfx } from '../audio/sfx';
 import {
-  haltMusicEngine,
-  initMusicEngine,
   setMusicState,
   startMusic,
   stopMusic,
@@ -401,20 +399,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // screen is fading out, bleeding both tracks together.
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-
-      setMusicState('daily');
-      startMusic();
-      initMusicEngine().then(() => {
-        if (cancelled) return;
-        setMusicState('daily');
-        startMusic();
-      });
+      setMusicState('daily', 'daily');
+      startMusic('daily');
 
       return () => {
-        cancelled = true;
-        stopMusic();
-        haltMusicEngine();
+        stopMusic('daily');
       };
     }, []),
   );

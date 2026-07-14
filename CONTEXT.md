@@ -117,16 +117,17 @@ Play screen design overhaul complete for this sprint.
 
 ## Music
 
-**Current audio status:** Track-based BGM repair is implemented and pending device recheck on
-`play-screen-overhaul`.
-`MusicEngine.ts` uses `hunt_suspense_loop.mp3` for neutral/rhythm/onARun,
-`tension_running_out.mp3` for crisis, and `boss_too_hot_to_sleep.mp3` for boss/POLLY'S WORD.
-Expo Audio mode now has one shared configuration owner; the legacy round-complete sound keeps
-the session active so RUN IT BACK can reuse music/SFX players; Hunt music preserves position
-across idle-static transitions instead of seeking to the beginning on the next swipe. The dev
-BOSS jump starts boss music. Returning Haunt entrance plays `detectiveSting` once from
-`assets/audio/sfx/detective_clue_sting.mp3`. TypeScript and existing game suites pass; device
-recheck is required for first Hunt -> RUN IT BACK and slow-swipe continuity.
+**Current audio status:** The Hunt soundtrack rebuild is implemented and pending device recheck
+on `play-screen-overhaul`. `MusicEngine.ts` uses one persistent owner-scoped player so screen
+cleanup and same-track swipe updates cannot restart or stack BGM. Neutral/rhythm/onARun use the
+authored `hunt_suspense_loop.mp3` cut (source 2.500s-115.750s) at 0.85x with pitch correction;
+crisis uses `tension_quirky_background.mp3` (source 48.000s-124.750s); boss/POLLY'S WORD uses
+`boss_of_the_rats.mp3` (source 0.000s-55.500s). Source fades were removed before native looping.
+Daily music is unchanged and is the next audio pass. Expo Audio mode still has one shared
+configuration owner; RUN IT BACK reuses the music/SFX session; the dev BOSS jump starts boss
+music. TypeScript and all four existing game suites pass. Device recheck is required for first
+Hunt entry, slow-swipe continuity, crisis/boss transitions, loop returns, RUN IT BACK, mute,
+background/foreground, and Hunt-to-Daily ownership.
 
 - **July 5, 2026:** `MusicEngine.ts` upgraded from runtime synth to five produced stem files:
   `stem-base.wav`, `stem-beat.wav`, `stem-melody.wav`, `stem-tension.wav`, and `stem-boss.wav`
@@ -146,12 +147,11 @@ recheck is required for first Hunt -> RUN IT BACK and slow-swipe continuity.
   tracked files `danger-heartbeat.wav`, `flow-tribe-drums.mp3`, `gameplay-bed-cinematic.wav`,
   `jungle-accent.mp3`, and `panic-atmospheric-drums.mp3` still exist. Dead concept — never
   revive.
-- Deferred audio queue: replace the `SoundEngine.playRoundComplete` synth one-shot in the next
-  SFX pass · final on-device `VOLUME_TARGETS` ear-tuning · verify expo-audio phase-lock spread
-  below 20 ms across all five stems at `startMusic` · produced shipping stems.
-- **Git state:** `MusicEngine.ts` is modified and the five stem files are present but untracked;
-  the music commit is pending. No July 5 working tag exists; device sweep and tag are pending.
-  Latest existing working tag: `v0.working-20260704-brand-logotype`.
+- Deferred audio queue: evaluate and author the Daily loop; replace the
+  `SoundEngine.playRoundComplete` synth one-shot in a later SFX pass; final on-device volume
+  tuning after the new Hunt/Tension/Boss device sweep.
+- **Git state:** The soundtrack asset/transport patch is uncommitted and pending device sweep.
+  The separate Daily clue-speed and content-audit changes remain outside this audio patch.
 
 ---
 

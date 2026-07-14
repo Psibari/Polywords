@@ -2,6 +2,48 @@
 
 ---
 
+## bgm/hunt_suspense_loop.mp3
+
+- **Edited from:** ikoliks_aj-funny-comedy-cartoon-background-music-562774.mp3
+- **Track title:** Funny Comedy Cartoon Background Music
+- **Creator:** ikoliks_aj (Mykola Odnoroh)
+- **Source URL:** https://pixabay.com/music/cartoons-funny-comedy-cartoon-background-music-562774/
+- **License:** Pixabay Content License
+- **Commercial use allowed:** Yes
+- **Attribution required:** No
+- **POLYWORDS edit:** 2.500s-115.750s; Hunt playback rate is 0.85x with pitch correction
+- **Intended POLYWORDS use:** Neutral, rhythm, and on-a-run Hunt music
+
+---
+
+## bgm/tension_quirky_background.mp3
+
+- **Edited from:** magiksolo-quirky-tension-background-530939.mp3
+- **Track title:** Quirky Tension Background
+- **Creator:** Magiksolo (Artem Hramushkin)
+- **Source URL:** https://pixabay.com/music/modern-classical-quirky-tension-background-530939/
+- **License:** Pixabay Content License
+- **Commercial use allowed:** Yes
+- **Attribution required:** No
+- **POLYWORDS edit:** 48.000s-124.750s; outro fade removed
+- **Intended POLYWORDS use:** Hunt crisis / low-feather tension music
+
+---
+
+## bgm/boss_of_the_rats.mp3
+
+- **Edited from:** emmraan-boss-of-the-rats-248495.mp3
+- **Track title:** Boss Of The Rats
+- **Creator:** Emmraan
+- **Source URL:** https://pixabay.com/music/sneaky-boss-of-the-rats-248495/
+- **License:** Pixabay Content License
+- **Commercial use allowed:** Yes
+- **Attribution required:** No
+- **POLYWORDS edit:** 0.000s-55.500s; outro fade removed
+- **Intended POLYWORDS use:** Polly's Word / boss-round music
+
+---
+
 ## danger-heartbeat.wav
 
 - **Original filename:** Heartbeat Loop 73/146 BPM.wav

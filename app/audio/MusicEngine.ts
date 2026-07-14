@@ -1,42 +1,37 @@
-import { createAudioPlayer, AudioPlayer } from 'expo-audio';
+import { AudioPlayer, createAudioPlayer } from 'expo-audio';
 import { ensureAudioSessionConfigured } from './audioSession';
 
-export type MusicState = 'off' | 'neutral' | 'rhythm' | 'onARun' | 'crisis' | 'boss' | 'daily' | 'static';
+export type MusicState =
+  | 'off'
+  | 'neutral'
+  | 'rhythm'
+  | 'onARun'
+  | 'crisis'
+  | 'boss'
+  | 'daily'
+  | 'static';
+
+export type MusicOwner = 'hunt' | 'daily';
 
 type TrackKey = 'hunt' | 'tension' | 'boss' | 'daily' | 'static';
+type TrackSource = Parameters<AudioPlayer['replace']>[0];
 
-const TRACK_KEYS: TrackKey[] = ['hunt', 'tension', 'boss', 'daily', 'static'];
-
-const TRACK_SOURCES: Record<TrackKey, ReturnType<typeof require>> = {
+// One source slot per authored loop. Replacing these files does not require
+// another transport rewrite.
+const TRACK_SOURCES: Record<TrackKey, TrackSource> = {
   hunt: require('../../assets/audio/bgm/hunt_suspense_loop.mp3'),
-  tension: require('../../assets/audio/bgm/tension_running_out.mp3'),
-  boss: require('../../assets/audio/bgm/boss_too_hot_to_sleep.mp3'),
+  tension: require('../../assets/audio/bgm/tension_quirky_background.mp3'),
+  boss: require('../../assets/audio/bgm/boss_of_the_rats.mp3'),
   daily: require('../../assets/audio/bgm/daily_detective_clue_patrol.mp3'),
   static: require('../../assets/audio/bgm/static_idle_loop.mp3'),
 };
 
-const TRACK_VOLUMES: Record<TrackKey, number> = {
-  hunt: 0.22,
-  tension: 0.20,
-  boss: 0.14,
-  daily: 0.16,
-  static: 0.18,
-};
-
-const TRACK_START_POSITIONS_SECONDS: Record<TrackKey, number> = {
-  hunt: 0,
-  tension: 0,
-  boss: 0,
-  daily: 0,
-  static: 0,
-};
-
-const TRACK_FADE_IN_MS: Record<TrackKey, number> = {
-  hunt: 300,
-  tension: 300,
-  boss: 300,
-  daily: 300,
-  static: 300,
+const TRACK_PLAYBACK_RATES: Record<TrackKey, number> = {
+  hunt: 0.85,
+  tension: 1,
+  boss: 1,
+  daily: 1,
+  static: 1,
 };
 
 const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
@@ -49,312 +44,274 @@ const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
   static: 'static',
 };
 
-const players: Record<TrackKey, AudioPlayer | null> = {
-  hunt: null,
-  tension: null,
-  boss: null,
-  daily: null,
-  static: null,
+const STATE_VOLUMES: Record<Exclude<MusicState, 'off'>, number> = {
+  neutral: 0.18,
+  rhythm: 0.20,
+  onARun: 0.22,
+  crisis: 0.20,
+  boss: 0.14,
+  daily: 0.16,
+  static: 0.18,
 };
 
-const fadeRafIds: Record<TrackKey, number | null> = {
-  hunt: null,
-  tension: null,
-  boss: null,
-  daily: null,
-  static: null,
-};
+const FADE_IN_MS = 300;
+const FADE_OUT_MS = 240;
 
-const startTokens: Record<TrackKey, number> = {
-  hunt: 0,
-  tension: 0,
-  boss: 0,
-  daily: 0,
-  static: 0,
+let player: AudioPlayer | null = null;
+let playerSubscription: { remove(): void } | null = null;
+let initPromise: Promise<void> | null = null;
+const desiredStates: Record<MusicOwner, Exclude<MusicState, 'off'>> = {
+  hunt: 'neutral',
+  daily: 'daily',
 };
-
-let currentState: MusicState = 'off';
-let engineReady = false;
-let musicStarted = false;
+let activeOwner: MusicOwner | null = null;
 let activeTrackKey: TrackKey | null = null;
-let stopTimerId: ReturnType<typeof setTimeout> | null = null;
 let userMuted = false;
-
-function effectiveVolume(key: TrackKey): number {
-  return userMuted ? 0 : TRACK_VOLUMES[key];
-}
+let transitionToken = 0;
+let configuredTrackToken = -1;
+let pendingSeek: { key: TrackKey; seconds: number; token: number } | null = null;
+let fadeRafId: number | null = null;
+let pauseTimerId: ReturnType<typeof setTimeout> | null = null;
+const savedPositions: Partial<Record<TrackKey, number>> = {};
 
 function warnDev(message: string, error?: unknown): void {
   if (!__DEV__) return;
-  if (error) {
-    console.warn(`[MusicEngine] ${message}`, error);
-  } else {
-    console.warn(`[MusicEngine] ${message}`);
-  }
+  if (error === undefined) console.warn(`[MusicEngine] ${message}`);
+  else console.warn(`[MusicEngine] ${message}`, error);
 }
 
-function clearStopTimer(): void {
-  if (stopTimerId === null) return;
-  clearTimeout(stopTimerId);
-  stopTimerId = null;
+function clearPauseTimer(): void {
+  if (pauseTimerId === null) return;
+  clearTimeout(pauseTimerId);
+  pauseTimerId = null;
 }
 
-function cancelFade(key: TrackKey): void {
-  if (fadeRafIds[key] === null) return;
-  cancelAnimationFrame(fadeRafIds[key]!);
-  fadeRafIds[key] = null;
+function cancelFade(): void {
+  if (fadeRafId === null) return;
+  cancelAnimationFrame(fadeRafId);
+  fadeRafId = null;
 }
 
-function stopTrackNow(key: TrackKey, resetToStart = false): void {
-  const player = players[key];
-  startTokens[key] += 1;
-  cancelFade(key);
+function targetVolume(): number {
+  if (userMuted || !activeOwner) return 0;
+  return STATE_VOLUMES[desiredStates[activeOwner]];
+}
+
+function fadeVolumeTo(volume: number, durationMs: number): void {
   if (!player) return;
+  cancelFade();
 
-  try {
-    player.volume = 0;
-    player.pause();
-    if (resetToStart) {
-      void player.seekTo(0, 0, 0).catch(error => {
-        warnDev(`failed to reset ${key} track`, error);
-      });
-    }
-  } catch (error) {
-    warnDev(`failed to stop ${key} track`, error);
-  }
-}
+  const livePlayer = player;
+  const startVolume = livePlayer.volume;
+  const startTime = performance.now();
 
-function fadeVolumeTo(key: TrackKey, targetVolume: number, durationMs: number): void {
-  const player = players[key];
-  if (!player) return;
-
-  cancelFade(key);
-
-  try {
-    const startVolume = player.volume;
-    const startTime = performance.now();
-
-    function tick(): void {
-      try {
-        const livePlayer = players[key];
-        if (!livePlayer) {
-          fadeRafIds[key] = null;
-          return;
-        }
-
-        const elapsed = performance.now() - startTime;
-        const t = durationMs <= 0 ? 1 : Math.min(elapsed / durationMs, 1);
-        livePlayer.volume = startVolume + (targetVolume - startVolume) * t;
-
-        if (t < 1) {
-          fadeRafIds[key] = requestAnimationFrame(tick);
-        } else {
-          fadeRafIds[key] = null;
-        }
-      } catch (error) {
-        fadeRafIds[key] = null;
-        warnDev(`failed while fading ${key} track`, error);
-      }
-    }
-
-    fadeRafIds[key] = requestAnimationFrame(tick);
-  } catch (error) {
-    fadeRafIds[key] = null;
-    warnDev(`failed to start ${key} fade`, error);
-  }
-}
-
-function startTrack(key: TrackKey, volume: number, restartFromBeginning = true): void {
-  const player = players[key];
-  if (!player) {
-    warnDev(`cannot start missing ${key} track`);
-    return;
-  }
-
-  const startToken = startTokens[key] + 1;
-  startTokens[key] = startToken;
-
-  const playWhenReady = () => {
-    const livePlayer = players[key];
-    if (
-      !livePlayer ||
-      startTokens[key] !== startToken ||
-      activeTrackKey !== key ||
-      !musicStarted
-    ) {
+  function tick(): void {
+    if (player !== livePlayer) {
+      fadeRafId = null;
       return;
     }
 
+    const elapsed = performance.now() - startTime;
+    const progress = durationMs <= 0 ? 1 : Math.min(elapsed / durationMs, 1);
+    livePlayer.volume = startVolume + (volume - startVolume) * progress;
+
+    if (progress < 1) fadeRafId = requestAnimationFrame(tick);
+    else fadeRafId = null;
+  }
+
+  fadeRafId = requestAnimationFrame(tick);
+}
+
+function playLoadedTrack(token: number): void {
+  const livePlayer = player;
+  if (
+    !livePlayer ||
+    !livePlayer.isLoaded ||
+    !activeOwner ||
+    token !== transitionToken
+  ) {
+    return;
+  }
+
+  const desiredTrack = STATE_TO_TRACK[desiredStates[activeOwner]];
+  if (activeTrackKey !== desiredTrack) return;
+
+  if (configuredTrackToken !== token) {
     try {
-      livePlayer.loop = true;
+      livePlayer.setPlaybackRate(TRACK_PLAYBACK_RATES[desiredTrack], 'high');
+    } catch (error) {
+      warnDev(`failed to set ${desiredTrack} playback rate`, error);
+    } finally {
+      configuredTrackToken = token;
+    }
+  }
+
+  const seek = pendingSeek;
+  if (seek && seek.key === desiredTrack && seek.token === token) {
+    pendingSeek = null;
+    if (seek.seconds > 0.05) {
+      void livePlayer.seekTo(seek.seconds, 0, 0)
+        .catch(error => warnDev(`failed to resume ${desiredTrack} track`, error))
+        .finally(() => playLoadedTrack(token));
+      return;
+    }
+  }
+
+  try {
+    livePlayer.loop = true;
+    if (!livePlayer.playing) {
       livePlayer.play();
-      fadeVolumeTo(key, volume, TRACK_FADE_IN_MS[key]);
-    } catch (error) {
-      warnDev(`failed to play ${key} track`, error);
+      fadeVolumeTo(targetVolume(), FADE_IN_MS);
+    } else if (
+      fadeRafId === null &&
+      Math.abs(livePlayer.volume - targetVolume()) > 0.005
+    ) {
+      fadeVolumeTo(targetVolume(), 200);
     }
-  };
-
-  try {
-    player.loop = true;
-    player.volume = 0;
-    if (!restartFromBeginning) {
-      playWhenReady();
-      return;
-    }
-    void player.seekTo(TRACK_START_POSITIONS_SECONDS[key], 0, 0)
-      .catch(error => {
-        warnDev(`failed to reset ${key} track before play`, error);
-      })
-      .finally(playWhenReady);
   } catch (error) {
-    warnDev(`failed to start ${key} track`, error);
+    warnDev(`failed to play ${desiredTrack} track`, error);
   }
 }
 
-function ensureTrackVolume(key: TrackKey): void {
-  const player = players[key];
-  if (!player) {
-    warnDev(`cannot adjust missing ${key} track`);
-    return;
+function switchTrack(nextTrack: TrackKey): void {
+  const livePlayer = player;
+  if (!livePlayer) return;
+
+  if (activeTrackKey) {
+    savedPositions[activeTrackKey] = Math.max(0, livePlayer.currentTime || 0);
   }
 
+  transitionToken += 1;
+  const token = transitionToken;
+  configuredTrackToken = -1;
+  cancelFade();
+  clearPauseTimer();
+
   try {
-    player.loop = true;
-    fadeVolumeTo(key, effectiveVolume(key), 200);
+    livePlayer.volume = 0;
+    livePlayer.pause();
+    livePlayer.replace(TRACK_SOURCES[nextTrack]);
+    livePlayer.loop = true;
+    activeTrackKey = nextTrack;
+    pendingSeek = {
+      key: nextTrack,
+      seconds: savedPositions[nextTrack] ?? 0,
+      token,
+    };
+    playLoadedTrack(token);
   } catch (error) {
-    warnDev(`failed to adjust ${key} track volume`, error);
+    warnDev(`failed to switch to ${nextTrack} track`, error);
   }
 }
 
-function applyCurrentState(): void {
-  if (!engineReady || !musicStarted) return;
+function applyDesiredState(): void {
+  if (!player || !activeOwner) return;
 
-  clearStopTimer();
-
-  if (currentState === 'off') {
-    stopMusic();
+  clearPauseTimer();
+  const desiredTrack = STATE_TO_TRACK[desiredStates[activeOwner]];
+  if (activeTrackKey !== desiredTrack) {
+    switchTrack(desiredTrack);
     return;
   }
 
-  const activeTrack = STATE_TO_TRACK[currentState];
-
-  if (activeTrack === activeTrackKey) {
-    ensureTrackVolume(activeTrack);
-    return;
-  }
-
-  const previousActiveTrack = activeTrackKey;
-  const preserveIdleContinuity =
-    previousActiveTrack === 'static' || activeTrack === 'static';
-
-  for (const key of TRACK_KEYS) {
-    if (key !== activeTrack) {
-      stopTrackNow(key, !preserveIdleContinuity);
-    }
-  }
-
-  const activePlayer = players[activeTrack];
-  if (!activePlayer) {
-    warnDev(`requested ${activeTrack} track is unavailable`);
-    return;
-  }
-
-  activeTrackKey = activeTrack;
-  startTrack(activeTrack, effectiveVolume(activeTrack), !preserveIdleContinuity);
+  playLoadedTrack(transitionToken);
 }
 
-export async function initMusicEngine(): Promise<void> {
-  if (engineReady) return;
+export function initMusicEngine(): Promise<void> {
+  if (initPromise) return initPromise;
 
-  try {
-    await ensureAudioSessionConfigured();
-  } catch (error) {
-    warnDev('failed to configure audio mode', error);
-  }
+  initPromise = ensureAudioSessionConfigured()
+    .catch(error => warnDev('failed to configure audio mode', error))
+    .then(() => {
+      if (player) return;
 
-  for (const key of TRACK_KEYS) {
-    if (players[key]) continue;
-
-    try {
-      const player = createAudioPlayer(TRACK_SOURCES[key], {
-        downloadFirst: true,
+      const nextPlayer = createAudioPlayer(null, {
         keepAudioSessionActive: true,
+        updateInterval: 250,
       });
-      player.volume = 0;
-      player.loop = true;
-      players[key] = player;
+      nextPlayer.volume = 0;
+      nextPlayer.loop = true;
+      player = nextPlayer;
+      playerSubscription = nextPlayer.addListener('playbackStatusUpdate', status => {
+        if (status.isLoaded) playLoadedTrack(transitionToken);
+      });
+      applyDesiredState();
+    })
+    .catch(error => {
+      initPromise = null;
+      warnDev('failed to initialize music player', error);
+    });
+
+  return initPromise;
+}
+
+export function startMusic(owner: MusicOwner): void {
+  activeOwner = owner;
+  clearPauseTimer();
+  cancelFade();
+  void initMusicEngine().then(applyDesiredState);
+}
+
+export function stopMusic(owner: MusicOwner): void {
+  // Native-stack focus transitions may mount the incoming screen before the
+  // outgoing cleanup fires. Only the current owner may stop the singleton.
+  if (activeOwner !== owner) return;
+  activeOwner = null;
+  transitionToken += 1;
+  pendingSeek = null;
+  clearPauseTimer();
+  fadeVolumeTo(0, FADE_OUT_MS);
+
+  const livePlayer = player;
+  pauseTimerId = setTimeout(() => {
+    pauseTimerId = null;
+    if (activeOwner || player !== livePlayer) return;
+    try {
+      livePlayer?.pause();
     } catch (error) {
-      players[key] = null;
-      warnDev(`failed to load ${key} track`, error);
+      warnDev('failed to pause music', error);
     }
-  }
-
-  engineReady = true;
-  applyCurrentState();
+  }, FADE_OUT_MS + 30);
 }
 
-export function startMusic(): void {
-  musicStarted = true;
-  applyCurrentState();
-}
-
-export function stopMusic(): void {
-  musicStarted = false;
-  clearStopTimer();
-
-  for (const key of TRACK_KEYS) {
-    startTokens[key] += 1;
-    fadeVolumeTo(key, 0, 450);
-  }
-
-  stopTimerId = setTimeout(() => {
-    stopTimerId = null;
-    for (const key of TRACK_KEYS) {
-      stopTrackNow(key, false);
-    }
-    activeTrackKey = null;
-  }, 500);
-}
-
-export function setMusicState(newState: MusicState): void {
-  if (newState === currentState) return;
-
-  const previousState = currentState;
-  const previousTrack = previousState === 'off' ? null : STATE_TO_TRACK[previousState];
-  const newTrack = newState === 'off' ? null : STATE_TO_TRACK[newState];
-
-  currentState = newState;
-
+export function setMusicState(owner: MusicOwner, newState: MusicState): void {
   if (newState === 'off') {
-    stopMusic();
+    stopMusic(owner);
     return;
   }
 
-  if (previousTrack !== null && previousTrack === newTrack) {
-    if (musicStarted && activeTrackKey === newTrack) {
-      ensureTrackVolume(newTrack);
-    }
-    return;
-  }
-
-  applyCurrentState();
+  desiredStates[owner] = newState;
+  if (activeOwner === owner) applyDesiredState();
 }
 
 export function setMusicEnabled(enabled: boolean): void {
-  if (userMuted === !enabled) return;
   userMuted = !enabled;
-  if (!musicStarted || !activeTrackKey) return;
-  fadeVolumeTo(activeTrackKey, effectiveVolume(activeTrackKey), 300);
+  if (!player || !activeOwner) return;
+  fadeVolumeTo(targetVolume(), 220);
 }
 
+// App-teardown escape hatch only. Screen blur should call stopMusic(), which
+// keeps the singleton and desired state available for a clean focus return.
 export function haltMusicEngine(): void {
-  clearStopTimer();
+  activeOwner = null;
+  activeTrackKey = null;
+  configuredTrackToken = -1;
+  pendingSeek = null;
+  transitionToken += 1;
+  clearPauseTimer();
+  cancelFade();
+  playerSubscription?.remove();
+  playerSubscription = null;
 
-  for (const key of TRACK_KEYS) {
-    stopTrackNow(key, true);
+  try {
+    player?.remove();
+  } catch (error) {
+    warnDev('failed to release music player', error);
   }
 
-  currentState = 'off';
-  musicStarted = false;
-  activeTrackKey = null;
+  player = null;
+  initPromise = null;
+  for (const key of Object.keys(savedPositions) as TrackKey[]) {
+    delete savedPositions[key];
+  }
 }
