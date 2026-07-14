@@ -1,4 +1,5 @@
-import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, AudioPlayer } from 'expo-audio';
+import { ensureAudioSessionConfigured } from '../audio/audioSession';
 
 const SAMPLE_RATE = 44100;
 
@@ -125,11 +126,9 @@ let ready = false;
 export async function initSounds(): Promise<void> {
   if (ready) return;
 
-  await setAudioModeAsync({
-    playsInSilentMode:      true,
-    shouldPlayInBackground: false,
-    interruptionMode:       'duckOthers',
-  });
+  try {
+    await ensureAudioSessionConfigured();
+  } catch {}
 
   const builders: [SoundKey, () => string][] = [
     ['roundComplete', buildRoundComplete],
@@ -137,7 +136,10 @@ export async function initSounds(): Promise<void> {
 
   builders.forEach(([key, build]) => {
     try {
-      const player = createAudioPlayer({ uri: build() });
+      const player = createAudioPlayer(
+        { uri: build() },
+        { keepAudioSessionActive: true },
+      );
       sounds[key] = player;
     } catch {}
   });

@@ -5,7 +5,7 @@ import { ImageSourcePropType } from 'react-native';
 // life comes from whole-image motion.
 export const POLLY_POSES = {
   idle: require('../../assets/images/polly/poses/sprite4.png'),     // smug perched, watchful
-  smug: require('../../assets/images/polly/poses/sprite6.png'),     // half-lidded smug perch
+  smug: require('../../assets/images/polly/poses/sprite4.png'),     // right-facing smug perch
   laugh: require('../../assets/images/polly/poses/sprite5.png'),    // laughing wide
   point: require('../../assets/images/polly/poses/sprite7.png'),    // pointing taunt
   shocked: require('../../assets/images/polly/poses/sprite8.png'),  // shocked recoil

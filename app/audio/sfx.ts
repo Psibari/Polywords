@@ -1,5 +1,6 @@
-import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, AudioPlayer } from 'expo-audio';
 import { useGameStore } from '../store/useGameStore';
+import { ensureAudioSessionConfigured } from './audioSession';
 
 export type SfxName =
   | 'uiClick'
@@ -58,8 +59,6 @@ const poolRebuilds: Partial<Record<SfxName, number>> = {};
 const MAX_POOL_REBUILDS = 2;
 const reservedPlayers = new Set<AudioPlayer>();
 const pendingLoadRetryTimers = new Set<ReturnType<typeof setTimeout>>();
-
-let audioModeSet = false;
 
 function warnDev(message: string, error?: unknown): void {
   if (!__DEV__) return;
@@ -164,14 +163,8 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
 }
 
 export function preloadSfx(): void {
-  if (!audioModeSet) {
-    audioModeSet = true;
-    setAudioModeAsync({
-      playsInSilentMode:    true,
-      shouldPlayInBackground: false,
-      interruptionMode:     'mixWithOthers',
-    }).catch(error => warnDev('Failed to configure audio mode.', error));
-  }
+  void ensureAudioSessionConfigured()
+    .catch(error => warnDev('Failed to configure audio mode.', error));
 
   (Object.entries(SFX) as [SfxName, SfxConfig][]).forEach(([name, config]) => {
     if (playerPools[name]) return;
@@ -215,5 +208,4 @@ export function unloadSfx(): void {
     delete lastPlayedAt[name];
     delete poolRebuilds[name];
   });
-  audioModeSet = false;
 }

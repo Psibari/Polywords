@@ -16,7 +16,7 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 ## Current Build State
 
 **Active branch:** `play-screen-overhaul` (never merge to main).
-**Session baseline commit:** `dd782b9` (current branch head before the Polly living-rival pass).
+**Session baseline commit:** `f69bab7` (Polly living-rival pass).
 **Latest existing working tag:** `v0.working-20260704-brand-logotype`.
 **Checkpoint feel:** Produced-stem music pass pending commit, device sweep, and July 5 working tag.
 **Ghost loop checkpoint:** `badc9f0` / `v0.working-20260630a`.
@@ -53,12 +53,13 @@ Play screen design overhaul complete for this sprint.
 - Hunt Polly visits use clean transparent pose art with whole-image flight, landing, bubble,
   and reaction motion. The failed generated cutout-rig candidate was removed from the live
   renderer; future articulated rigs must pass isolated assembly review before gameplay wiring.
-- Polly living-rival pass is implemented locally and pending device review: a versioned bounded
+- Polly living-rival pass is implemented and pending repair recheck on device: a versioned bounded
   memory records Hunt/Daily outcomes and recent authored lines; Home carries the prior rivalry
   into greeting and settled pose; repeated Haunts escalate body language; Hunt/Daily/Results
   share one line catalog and speech bubble; Daily's duplicate result presence is removed; each
   surface has a distinct quiet ambient profile; off-screen loops stop; reduced-motion is honored.
-  No generated dialogue or articulated rig was introduced.
+  The left-anchored Home/Hunt smug reaction now uses the authored right-facing pose. No generated
+  dialogue, mirrored artwork, or articulated rig was introduced.
 - Word Vault uses `assets/images/vault/bookcase-dark-mobile.png` as a fixed-aspect
   reclaimed-archive cabinet; `Bookcase.tsx` maps trophy and haunted spines into measured
   shelf slots and adds another cabinet frame when rows overflow.
@@ -116,13 +117,16 @@ Play screen design overhaul complete for this sprint.
 
 ## Music
 
-**Current audio status:** Track-based BGM is stable on `play-screen-overhaul`.
+**Current audio status:** Track-based BGM repair is implemented and pending device recheck on
+`play-screen-overhaul`.
 `MusicEngine.ts` uses `hunt_suspense_loop.mp3` for neutral/rhythm/onARun,
 `tension_running_out.mp3` for crisis, and `boss_too_hot_to_sleep.mp3` for boss/POLLY'S WORD.
-Same-track BGM restarts after swipes are fixed. The dev BOSS jump starts boss music. Returning
-Haunt entrance plays `detectiveSting` once from `assets/audio/sfx/detective_clue_sting.mp3`.
-Device pass confirmed for Hunt, crisis, boss, dev jump, swipe continuity, and Returning Haunt
-sting. Latest confirmed head: `6ad5876` Add returning haunt detective sting.
+Expo Audio mode now has one shared configuration owner; the legacy round-complete sound keeps
+the session active so RUN IT BACK can reuse music/SFX players; Hunt music preserves position
+across idle-static transitions instead of seeking to the beginning on the next swipe. The dev
+BOSS jump starts boss music. Returning Haunt entrance plays `detectiveSting` once from
+`assets/audio/sfx/detective_clue_sting.mp3`. TypeScript and existing game suites pass; device
+recheck is required for first Hunt -> RUN IT BACK and slow-swipe continuity.
 
 - **July 5, 2026:** `MusicEngine.ts` upgraded from runtime synth to five produced stem files:
   `stem-base.wav`, `stem-beat.wav`, `stem-melody.wav`, `stem-tension.wav`, and `stem-boss.wav`

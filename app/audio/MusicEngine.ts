@@ -1,4 +1,5 @@
-import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, AudioPlayer } from 'expo-audio';
+import { ensureAudioSessionConfigured } from './audioSession';
 
 export type MusicState = 'off' | 'neutral' | 'rhythm' | 'onARun' | 'crisis' | 'boss' | 'daily' | 'static';
 
@@ -163,7 +164,7 @@ function fadeVolumeTo(key: TrackKey, targetVolume: number, durationMs: number): 
   }
 }
 
-function startTrack(key: TrackKey, volume: number): void {
+function startTrack(key: TrackKey, volume: number, restartFromBeginning = true): void {
   const player = players[key];
   if (!player) {
     warnDev(`cannot start missing ${key} track`);
@@ -173,32 +174,38 @@ function startTrack(key: TrackKey, volume: number): void {
   const startToken = startTokens[key] + 1;
   startTokens[key] = startToken;
 
+  const playWhenReady = () => {
+    const livePlayer = players[key];
+    if (
+      !livePlayer ||
+      startTokens[key] !== startToken ||
+      activeTrackKey !== key ||
+      !musicStarted
+    ) {
+      return;
+    }
+
+    try {
+      livePlayer.loop = true;
+      livePlayer.play();
+      fadeVolumeTo(key, volume, TRACK_FADE_IN_MS[key]);
+    } catch (error) {
+      warnDev(`failed to play ${key} track`, error);
+    }
+  };
+
   try {
     player.loop = true;
     player.volume = 0;
+    if (!restartFromBeginning) {
+      playWhenReady();
+      return;
+    }
     void player.seekTo(TRACK_START_POSITIONS_SECONDS[key], 0, 0)
       .catch(error => {
         warnDev(`failed to reset ${key} track before play`, error);
       })
-      .finally(() => {
-        const livePlayer = players[key];
-        if (
-          !livePlayer ||
-          startTokens[key] !== startToken ||
-          activeTrackKey !== key ||
-          !musicStarted
-        ) {
-          return;
-        }
-
-        try {
-          livePlayer.loop = true;
-          livePlayer.play();
-          fadeVolumeTo(key, volume, TRACK_FADE_IN_MS[key]);
-        } catch (error) {
-          warnDev(`failed to play ${key} track`, error);
-        }
-      });
+      .finally(playWhenReady);
   } catch (error) {
     warnDev(`failed to start ${key} track`, error);
   }
@@ -236,9 +243,13 @@ function applyCurrentState(): void {
     return;
   }
 
+  const previousActiveTrack = activeTrackKey;
+  const preserveIdleContinuity =
+    previousActiveTrack === 'static' || activeTrack === 'static';
+
   for (const key of TRACK_KEYS) {
     if (key !== activeTrack) {
-      stopTrackNow(key, true);
+      stopTrackNow(key, !preserveIdleContinuity);
     }
   }
 
@@ -248,19 +259,15 @@ function applyCurrentState(): void {
     return;
   }
 
-  startTrack(activeTrack, effectiveVolume(activeTrack));
   activeTrackKey = activeTrack;
+  startTrack(activeTrack, effectiveVolume(activeTrack), !preserveIdleContinuity);
 }
 
 export async function initMusicEngine(): Promise<void> {
   if (engineReady) return;
 
   try {
-    await setAudioModeAsync({
-      playsInSilentMode: true,
-      shouldPlayInBackground: false,
-      interruptionMode: 'mixWithOthers',
-    });
+    await ensureAudioSessionConfigured();
   } catch (error) {
     warnDev('failed to configure audio mode', error);
   }

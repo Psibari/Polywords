@@ -54,6 +54,8 @@ systems from it without explicit approval.
   and Daily/Hunt/Results lines share one typed catalog. Reduced-motion disables ambient and
   spatial entrance motion. The old rig, flipbook, sprite, animator, and global time-budget
   files remain shelved/disconnected and must not be re-wired casually.
+- Left-anchored Home/Hunt reactions use the authored right-facing smug pose; do not restore
+  the left-facing `sprite6.png` on those surfaces.
 
 ## Tech
 
@@ -63,7 +65,9 @@ Expo SDK managed, TypeScript strict, React Native, Zustand + immer, Expo Router,
 Fonts: Bungee Shade, BebasNeue-Regular, Barlow Condensed Bold, Lilita One.
 
 Music: `MusicEngine.ts` plays committed audio files. Runtime music synthesis is deleted and
-must not return. Boss music keys off `eventType === 'bossWord'`, not step numbers.
+must not return. Boss music keys off `eventType === 'bossWord'`, not step numbers. Expo Audio
+mode is configured once through `audioSession.ts`; the round-complete player keeps that
+session active, and Hunt music resumes its position across idle-static transitions.
 
 Animation locks:
 
