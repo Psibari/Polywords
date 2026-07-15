@@ -304,67 +304,52 @@
   },
   "BANK": {
     "difficulty": "medium",
-    "hiddenMeaning": "Backboard first, then the net",
-    "hiddenTrap": "BUZZER BEATER FROM HALF COURT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "bank_r0",
-        "phrase": "DIRECT DEPOSIT ARRIVES BEFORE RENT",
+        "phrase": "WHERE THE THIEF STEALS THE LOOT",
         "isReal": true
       },
       {
         "id": "bank_r1",
-        "phrase": "WATER ENDS, MUD BEGINS HERE",
+        "phrase": "RIVER'S MUDDY SHOULDER",
         "isReal": true
       },
       {
         "id": "bank_r2",
-        "phrase": "ONE WING DIPS INTO THE TURN",
+        "phrase": "HOW A JET TILTS INTO A TURN",
         "isReal": true
       },
       {
         "id": "bank_r3",
-        "phrase": "YOUR WHOLE PLAN DEPENDS ON THIS",
+        "phrase": "WHERE THE FOOD DRIVE STORES DONATIONS",
         "isReal": true
       },
       {
-        "id": "bank_r4",
-        "phrase": "TYPE O WAITS FOR AN EMERGENCY",
-        "isReal": true
-      },
-      {
-        "id": "bank_r5",
-        "phrase": "THE HOUSE KEEPS THIS PILE",
-        "isReal": true
-      },
-      {
-        "id": "bank_t5",
-        "phrase": "FISHERMAN WAITS KNEE-DEEP IN WATER",
+        "id": "bank_t0",
+        "phrase": "WHO COUNTS YOUR CASH BEHIND GLASS",
         "isReal": false
       },
       {
-        "id": "bank_t6",
-        "phrase": "ALTIMETER DROPS DURING THE TURN",
+        "id": "bank_t1",
+        "phrase": "HEAVY DOOR SEALING THE GOLD INSIDE",
         "isReal": false
       },
       {
-        "id": "bank_t7",
-        "phrase": "RUDDER STARTS THE TURN INSTEAD",
+        "id": "bank_t2",
+        "phrase": "THIRTY YEARS TO PAY OFF THE HOUSE",
         "isReal": false
       },
       {
-        "id": "bank_t8",
-        "phrase": "LOAN OUTLIVES THE THING IT BOUGHT",
-        "isReal": false
-      },
-      {
-        "id": "bank_t9",
-        "phrase": "INTEREST GROWS WHILE YOU SLEEP",
+        "id": "bank_t3",
+        "phrase": "WHAT YOU TUCK AWAY FOR EMERGENCIES",
         "isReal": false
       }
     ],
-    "gpsTag": "boss",
-    "wordType": "Sextuple"
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "BARK": {
     "difficulty": "easy",
@@ -4800,71 +4785,51 @@
   },
   "FILE": {
     "difficulty": "medium",
-    "hiddenMeaning": "The rook's open highway",
-    "hiddenTrap": "KNIGHT HOPS THE LONG DIAGONAL",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "file_r0",
-        "phrase": "PAPERS IN A FOLDER",
+        "phrase": "WHERE THE CASE PAPERS ARE KEPT",
         "isReal": true
       },
       {
         "id": "file_r1",
-        "phrase": "NAILS GET SMOOTHED",
+        "phrase": "ATTACHMENT IN AN EMAIL",
         "isReal": true
       },
       {
         "id": "file_r2",
-        "phrase": "SOLDIERS WALK SINGLE LINE",
+        "phrase": "USED IN THE NAIL SALON AND THE WOOD SHOP",
         "isReal": true
       },
       {
         "id": "file_r3",
-        "phrase": "TAXES GET SUBMITTED",
+        "phrase": "SINGLE LINE OUT FOR THE FIRE DRILL",
         "isReal": true
       },
       {
         "id": "file_r4",
-        "phrase": "DESKTOP DOCUMENT",
+        "phrase": "TAXES EVERY APRIL",
         "isReal": true
       },
       {
         "id": "file_t0",
-        "phrase": "LAWYER EARNS THEIR HOURLY RATE",
+        "phrase": "MANILA FOLDER STUFFED IN THE DRAWER",
         "isReal": false
       },
       {
         "id": "file_t1",
-        "phrase": "CLERK STAMPS IT THREE TIMES",
+        "phrase": "DOWNLOAD BAR CRAWLS TO 100%",
         "isReal": false
       },
       {
         "id": "file_t2",
-        "phrase": "WITNESS SWEARS ON THE BIBLE",
-        "isReal": false
-      },
-      {
-        "id": "file_t3",
-        "phrase": "DRAWER CRAMMED WITH OLD RECEIPTS",
-        "isReal": false
-      },
-      {
-        "id": "file_t4",
-        "phrase": "DEADLINE LOOMS ACCOUNTANT SWEATS",
-        "isReal": false
-      },
-      {
-        "id": "file_t5",
-        "phrase": "EMERY BOARD IN EVERY PURSE",
-        "isReal": false
-      },
-      {
-        "id": "file_t6",
-        "phrase": "SINGLE ROW INTO THE AUDITORIUM",
+        "phrase": "CONGA LINE SNAKING THROUGH THE PARTY",
         "isReal": false
       }
     ],
-    "gpsTag": "boss",
+    "gpsTag": "panic",
     "wordType": "Quintuple"
   },
   "FINE": {
@@ -9337,68 +9302,47 @@
   },
   "PITCH": {
     "difficulty": "medium",
-    "hiddenMeaning": "Tent goes up before dark",
-    "hiddenTrap": "SLEEPING BAGS UNROLLED INSIDE",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "pitch_r0",
-        "phrase": "WHERE SOCCER SPENDS SATURDAY",
+        "phrase": "HEATER BLOWN PAST THE BATTER",
         "isReal": true
       },
       {
         "id": "pitch_r1",
-        "phrase": "THE NOTE CLIMBS WITHOUT GETTING LOUDER",
+        "phrase": "HOW HIGH THE SOPRANO GOES",
         "isReal": true
       },
       {
         "id": "pitch_r2",
-        "phrase": "FIVE MINUTES BETWEEN FOUNDER AND FUNDING",
+        "phrase": "SPEECH HOPING FOR INVESTMENT",
         "isReal": true
       },
       {
         "id": "pitch_r3",
-        "phrase": "BLACK STUFF THAT NEVER LEAVES YOUR SHOE",
+        "phrase": "TAR USED TO SEAL THE ROOF",
         "isReal": true
-      },
-      {
-        "id": "pitch_r4",
-        "phrase": "NINETY MILES AN HOUR TOWARD THE MITT",
-        "isReal": true
-      },
-      {
-        "id": "pitch_r5",
-        "phrase": "STEEP ROOF SENDS RAIN TO THE GUTTER",
-        "isReal": true
-      },
-      {
-        "id": "pitch_r6",
-        "phrase": "SHIP’S BOW DIPS INTO EACH WAVE",
-        "isReal": true,
-        "isRare": true
       },
       {
         "id": "pitch_t0",
-        "phrase": "INVESTOR FLIPS THROUGH THE DECK AGAIN",
+        "phrase": "LOBS IT SOFTLY OVER THE NET",
         "isReal": false
       },
       {
         "id": "pitch_t1",
-        "phrase": "CATCHER HOLDS THE GLOVE PERFECTLY STILL",
+        "phrase": "TURNS THE VOLUME ALL THE WAY UP",
         "isReal": false
       },
       {
         "id": "pitch_t2",
-        "phrase": "CAULK FILLS THE GAP BETWEEN TILES",
-        "isReal": false
-      },
-      {
-        "id": "pitch_t3",
-        "phrase": "GUTTER CATCHES THE ROOF RUNOFF",
+        "phrase": "FLASHY AD DURING THE BIG GAME",
         "isReal": false
       }
     ],
-    "gpsTag": "boss",
-    "wordType": "Septuple"
+    "gpsTag": "panic",
+    "wordType": "Quadruple"
   },
   "PITCHER": {
     "difficulty": "medium",
@@ -10575,61 +10519,51 @@
   },
   "REVOLUTION": {
     "difficulty": "hard",
-    "hiddenMeaning": "RPM stands for this",
-    "hiddenTrap": "TURBINE BLADE SPINS",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "revolution_r0",
-        "phrase": "PEOPLE TOPPLE GOVERNMENT",
+        "phrase": "THE PUBLIC FORCED A CHANGE OF POWER",
+        "isReal": true
+      },
+      {
+        "id": "revolution_r1",
+        "phrase": "HAPPENS ONCE EVERY THREE HUNDRED SIXTY-FIVE DAYS",
         "isReal": true
       },
       {
         "id": "revolution_r2",
-        "phrase": "EARTH’S YEARLY ORBIT",
-        "isReal": true
-      },
-      {
-        "id": "revolution_r4",
         "phrase": "WHEEL MAKES FULL TURN",
         "isReal": true
       },
       {
         "id": "revolution_r3",
-        "phrase": "NEW IDEA CHANGES EVERYTHING",
+        "phrase": "THE PRINTING MACHINE CHANGED THE WHOLE INDUSTRY",
         "isReal": true
       },
       {
         "id": "revolution_t0",
-        "phrase": "A PROTEST THAT STAYED PEACEFUL",
+        "phrase": "EVERYONE SIGNED THE ONLINE PETITION",
+        "isReal": false
+      },
+      {
+        "id": "revolution_t1",
+        "phrase": "THE MOON'S GRAVITY PULLS THE TIDES",
         "isReal": false
       },
       {
         "id": "revolution_t2",
-        "phrase": "A RADICAL NEW IDEA CHANGING EVERYTHING",
+        "phrase": "TIGHTEN THE KNOT WITH A RATCHET",
         "isReal": false
       },
       {
         "id": "revolution_t3",
-        "phrase": "A SUDDEN FLASH OF GENIUS",
-        "isReal": false
-      },
-      {
-        "id": "revolution_t5",
-        "phrase": "WHAT A NEW PRODUCT PROMISES",
-        "isReal": false
-      },
-      {
-        "id": "revolution_t90",
-        "phrase": "PAMPHLET SLIPPED UNDER THE DOOR",
-        "isReal": false
-      },
-      {
-        "id": "revolution_t91",
-        "phrase": "CROWD GATHERS WITHOUT A PERMIT",
+        "phrase": "THE FLYING CAR NEVER REACHED THE FUTURE",
         "isReal": false
       }
     ],
-    "gpsTag": "boss",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "RIFLE": {
@@ -12449,67 +12383,52 @@
   },
   "SPRING": {
     "difficulty": "medium",
-    "hiddenMeaning": "Busting a buddy out of jail",
-    "hiddenTrap": "TUNNEL DUG BEHIND THE POSTER",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "spring_r0",
-        "phrase": "THE GARDEN COMES BACK AFTER WINTER",
+        "phrase": "COLLEGE STUDENTS' FAVORITE BREAK",
         "isReal": true
       },
       {
         "id": "spring_r1",
-        "phrase": "COLD WATER APPEARS WITHOUT A FAUCET",
+        "phrase": "INSIDE OLD CHEAP MATTRESSES",
         "isReal": true
       },
       {
         "id": "spring_r2",
-        "phrase": "CHEAP MATTRESS HIDES THIS UNDER YOU",
+        "phrase": "WHERE BOTTLED WATER CLAIMS IT STARTED",
         "isReal": true
       },
       {
         "id": "spring_r3",
-        "phrase": "THE CAT REACHES THE COUNTER IN ONE MOVE",
+        "phrase": "JUMPED INTO ACTION RIGHT AWAY",
+        "isReal": true
+      },
+      {
+        "id": "spring_r4",
+        "phrase": "DON'T DROP THIS ON ME NOW",
         "isReal": true
       },
       {
         "id": "spring_t0",
-        "phrase": "LEAVES COVER THE LAWN BY OCTOBER",
+        "phrase": "SEASON WHEN THE LEAVES ALL FALL",
         "isReal": false
       },
       {
         "id": "spring_t1",
-        "phrase": "SHOVEL FINDS WATER BEHIND THE HOUSE",
+        "phrase": "STREAM TRICKLING DOWN THE MOUNTAIN",
         "isReal": false
       },
       {
         "id": "spring_t2",
-        "phrase": "RUBBER BAND WAITS AT FULL STRETCH",
-        "isReal": false
-      },
-      {
-        "id": "spring_t3",
-        "phrase": "RUNNING START ENDS AT THE TAKEOFF LINE",
-        "isReal": false
-      },
-      {
-        "id": "spring_t4",
-        "phrase": "GARDENER BUYS SEEDS BEFORE THE THAW",
-        "isReal": false
-      },
-      {
-        "id": "spring_t7",
-        "phrase": "FOAM CUSHION HIDES UNDER THE FABRIC",
-        "isReal": false
-      },
-      {
-        "id": "spring_t8",
-        "phrase": "KNEES BEND AFTER THE HARD LANDING",
+        "phrase": "TRACK STAR CLEARS THE HIGH BAR",
         "isReal": false
       }
     ],
-    "gpsTag": "boss",
-    "wordType": "Quadruple"
+    "gpsTag": "panic",
+    "wordType": "Quintuple"
   },
   "STABLE": {
     "difficulty": "medium",
@@ -14594,8 +14513,8 @@
   },
   "PROJECT": {
     "difficulty": "hard",
-    "hiddenMeaning": "Blaming others for yourself",
-    "hiddenTrap": "DIAGNOSIS NOBODY ASKED FOR",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "masks": [
       {
         "id": "project_r0",
@@ -14604,67 +14523,52 @@
       },
       {
         "id": "project_r1",
-        "phrase": "MOVIE HITS THE WALL",
+        "phrase": "PUTS THE FILM ON THE SILVER SCREEN",
         "isReal": true
       },
       {
         "id": "project_r2",
-        "phrase": "SALES GUESS NEXT YEAR",
+        "phrase": "AN EDUCATED GUESS FOR THIS QUARTER'S NUMBERS",
         "isReal": true
       },
       {
         "id": "project_r3",
-        "phrase": "BALCONY JUTS OUT",
+        "phrase": "WHY THEY YODELING ON TOP OF A MOUNTAIN",
         "isReal": true
       },
       {
         "id": "project_r4",
-        "phrase": "VOICE REACHES BACK ROW",
+        "phrase": "THE ACCUSATIONS OF THE GUILTY",
         "isReal": true
       },
       {
-        "id": "project_r5",
-        "phrase": "BLAME GETS PUT ELSEWHERE",
-        "isReal": true
+        "id": "project_t0",
+        "phrase": "HOMEWORK PILED UP ALL WEEKEND",
+        "isReal": false
+      },
+      {
+        "id": "project_t1",
+        "phrase": "LIVE BROADCAST OF THE EVENING NEWS",
+        "isReal": false
       },
       {
         "id": "project_t2",
-        "phrase": "SCREEN HANGS IN FRONT",
+        "phrase": "SALES HAVE CLIMBED FOR TEN YEARS STRAIGHT",
         "isReal": false
       },
       {
         "id": "project_t3",
-        "phrase": "LAMP BRIGHTENS THE ROOM",
+        "phrase": "CANYON WALLS SEND YOUR SHOUT RIGHT BACK",
         "isReal": false
       },
       {
         "id": "project_t4",
-        "phrase": "BUDGET CUTS THIS MONTH",
-        "isReal": false
-      },
-      {
-        "id": "project_t6",
-        "phrase": "SHADOW FALLS ON SIDEWALK",
-        "isReal": false
-      },
-      {
-        "id": "project_t7",
-        "phrase": "RAILING LINES THE EDGE",
-        "isReal": false
-      },
-      {
-        "id": "project_t8",
-        "phrase": "MICROPHONE MAKES IT LOUDER",
-        "isReal": false
-      },
-      {
-        "id": "project_t9",
-        "phrase": "AUDIENCE LEANS FORWARD",
+        "phrase": "A WRITTEN CONFESSION TO THE CRIME",
         "isReal": false
       }
     ],
-    "gpsTag": "boss",
-    "wordType": "Sextuple"
+    "gpsTag": "tension",
+    "wordType": "Quintuple"
   },
   "REFRAIN": {
     "difficulty": "hard",
