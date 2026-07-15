@@ -8,10 +8,11 @@ locks still live in CLAUDE.md (Locked Decisions / Cut List / Design locks).
 
 ## The Game
 
-POLYWORDS is a mobile word puzzle game about polysemous words. Polly is the Master of
-Words. She holds every word in her vault and set every trap. The player challenges her one
-word at a time to take the title. Every run is a **HUNT**: 10 rounds, a designed difficulty
-arc, boss at Round 10. North star: *"Wait… what? … Oh. Right."* — the Semantic Snap.
+POLYWORDS is a mobile word puzzle game about polysemous words. Polly is a trickster who
+sets every trap — she never owned the words, she baits the player toward the wrong meaning
+and wins when they fall for it. The player challenges her one word at a time. Every run is
+a **HUNT**: 10 rounds, a designed difficulty arc, boss at Round 10. North star: *"Wait…
+what? … Oh. Right."* — the Semantic Snap.
 
 App shell: Home = arcade lobby, Play = arena, Word Vault = reclaimed-meaning archive,
 Settings = player/account/preferences/about (Profile lives in Settings for MVP). Bottom nav
@@ -152,8 +153,9 @@ not mix into HeroBook patches.
 
 ## Polly (Hunt behavior + legacy)
 
-Polly is the antagonist, not a mascot. Every trap is her move; the boss word is hers; a
-mastered word leaves her vault. Runtime webp assets: `assets/images/polly/*.webp`. Component
+Polly is the antagonist, not a mascot. Every trap is her move; the boss word is hers to
+defend; mastering a word means the player saw through her trap for good. Runtime webp
+assets: `assets/images/polly/*.webp`. Component
 `app/components/ui/PollySprite.tsx`; animator `app/hooks/usePollyAnimator.ts`; gameplay size
 `POLLY_GAMEPLAY_SIZE = 210`. Dialogue source of truth: `docs/POLLY_DIALOGUE_BANK.md`.
 

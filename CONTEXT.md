@@ -7,7 +7,7 @@ Read this at the start of any session. Full canonical detail lives in `CLAUDE.md
 
 ## What POLYWORDS Is
 
-Polly is the Master of Words. She holds the word vault and set every trap. The player challenges her one word at a time. Every run is a HUNT: 10 rounds, GPS difficulty arc, boss at Round 10. North star: *"Wait… what? … Oh. Right."*
+Polly is a trickster who sets every trap. She never owned the words — she baits the player toward the wrong meaning and wins when they fall for it. The player challenges her one word at a time. Every run is a HUNT: 10 rounds, GPS difficulty arc, boss at Round 10. North star: *"Wait… what? … Oh. Right."*
 
 App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. Bottom nav shows outside gameplay only.
 
