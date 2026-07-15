@@ -49,8 +49,8 @@ function session(): SessionStep[] {
   ];
 }
 
-function fresh(fledgling = false): GameState {
-  return createGame([], session(), fledgling);
+function fresh(mercyReviveLives = 0): GameState {
+  return createGame([], session(), mercyReviveLives);
 }
 
 // ── Scoring: correct swipes ──────────────────────────────────────
@@ -161,17 +161,17 @@ function fresh(fledgling = false): GameState {
   eq(s.wordResults.length, 1, 'death.wrongDirection.wordResultRecorded');
 }
 
-// ── Fledgling Mercy: one revive at 3 feathers, then real death ───
+// ── Mercy: one revive at the configured life count, then real death ─
 
 {
-  let s = fresh(true);
-  eq(s.fledglingMercyAvailable, true, 'mercy.availableAtStart');
+  let s = fresh(3); // fledgling tier
+  eq(s.mercyReviveLives, 3, 'mercy.availableAtStart');
   s = { ...s, lives: 1 };
   s = submitSwipeUp(s, 't1');
   eq(s.status, 'playing', 'mercy.runSurvives');
   eq(s.lives, 3, 'mercy.revivedAt3');
   eq(s.mercyTriggered, true, 'mercy.flagSet');
-  eq(s.fledglingMercyAvailable, false, 'mercy.spent');
+  eq(s.mercyReviveLives, 0, 'mercy.spent');
   s = consumeMercy(s);
   eq(s.mercyTriggered, false, 'mercy.consumed');
   s = { ...s, lives: 1 };
@@ -180,9 +180,21 @@ function fresh(fledgling = false): GameState {
 }
 
 {
-  // non-fledgling games never get mercy
-  let s = fresh(false);
-  eq(s.fledglingMercyAvailable, false, 'mercy.offForStandardRuns');
+  // grace tier revives to a lower life count than fledgling
+  let s = fresh(2);
+  s = { ...s, lives: 1 };
+  s = submitSwipeUp(s, 't1');
+  eq(s.status, 'playing', 'mercy.grace.runSurvives');
+  eq(s.lives, 2, 'mercy.grace.revivedAt2');
+}
+
+{
+  // full-stakes games (mercyReviveLives = 0) never get a revive
+  let s = fresh(0);
+  eq(s.mercyReviveLives, 0, 'mercy.offForStandardRuns');
+  s = { ...s, lives: 1 };
+  s = submitSwipeUp(s, 't1');
+  eq(s.status, 'gameOver', 'mercy.offForStandardRuns.diesForReal');
 }
 
 // ── completeWord: advance, then complete on last step ────────────

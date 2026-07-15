@@ -12,9 +12,11 @@ const FEATHER_MILESTONES = [3000, 10000] as const;
 
 export type FeatherMilestone = (typeof FEATHER_MILESTONES)[number];
 
-// Fledgling Mercy: during a player's first hunts the run refuses to die once —
-// Polly revives her prey with this many feathers instead of ending the game.
-const MERCY_REVIVE_LIVES = 3;
+// Mercy: during a player's early hunts the run refuses to die once — Polly
+// revives her prey instead of ending the game. How many feathers she leaves
+// behind tapers as the player racks up runs (see FLEDGLING/GRACE tiers in
+// useGameStore) — a hard full/nothing cliff felt unfair, so this now
+// accepts the revive amount per game rather than hardcoding one value.
 
 export type GameStatus = 'playing' | 'gameOver' | 'complete';
 
@@ -53,7 +55,8 @@ export type GameState = {
   shuffledMasks: Record<number, Mask[]>;
   featherMilestone:     FeatherMilestone | null;
   featherMilestonesHit: number[];
-  fledglingMercyAvailable: boolean;
+  // 0 = no mercy left/available this game; >0 = lives granted on next revive.
+  mercyReviveLives: number;
   mercyTriggered: boolean;
 };
 
@@ -69,7 +72,7 @@ function shuffleMasks(masks: Mask[]): Mask[] {
 export function createGame(
   ghostWordIds: string[] = [],
   session?: SessionStep[],
-  fledgling = false,
+  mercyReviveLives = 0,
 ): GameState {
   const steps = session ?? buildRunSession(ghostWordIds);
   const shuffledMasks: Record<number, Mask[]> = {};
@@ -101,24 +104,24 @@ export function createGame(
     shuffledMasks,
     featherMilestone:     null,
     featherMilestonesHit: [],
-    fledglingMercyAvailable: fledgling,
+    mercyReviveLives,
     mercyTriggered: false,
   };
 }
 
-// ─── LIFE LOSS — shared resolution incl. Fledgling Mercy ─────
+// ─── LIFE LOSS — shared resolution incl. Mercy revive ────────
 
 type LifeLossResult = Pick<
   GameState,
-  'lives' | 'fledglingMercyAvailable' | 'mercyTriggered' | 'status'
+  'lives' | 'mercyReviveLives' | 'mercyTriggered' | 'status'
 >;
 
 function resolveLifeLoss(state: GameState): LifeLossResult {
   const rawLives = state.lives - 1;
-  if (rawLives <= 0 && state.fledglingMercyAvailable) {
+  if (rawLives <= 0 && state.mercyReviveLives > 0) {
     return {
-      lives: MERCY_REVIVE_LIVES,
-      fledglingMercyAvailable: false,
+      lives: state.mercyReviveLives,
+      mercyReviveLives: 0,
       mercyTriggered: true,
       status: 'playing',
     };
@@ -126,7 +129,7 @@ function resolveLifeLoss(state: GameState): LifeLossResult {
   const lives = Math.max(rawLives, 0);
   return {
     lives,
-    fledglingMercyAvailable: state.fledglingMercyAvailable,
+    mercyReviveLives: state.mercyReviveLives,
     mercyTriggered: state.mercyTriggered,
     status: lives <= 0 ? 'gameOver' : 'playing',
   };

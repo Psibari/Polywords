@@ -44,7 +44,14 @@ import {
   rememberPollyLine,
 } from '../game/pollyMemory';
 
+// Onboarding taper: a hard cliff from full protection to zero protection at
+// run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
+// unchanged player). Fledgling gets the full ramp; Grace keeps a lighter
+// safety net for several more runs before the game goes full stakes.
 const FLEDGLING_RUNS = 3;
+const GRACE_RUNS = 10;
+const FLEDGLING_MERCY_LIVES = 3;
+const GRACE_MERCY_LIVES = 2;
 
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
@@ -204,16 +211,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startGame: () => {
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
-    // Fledgling Hunts: a player's first runs use the shorter 8-round arc with
-    // an easy-biased draw, so the game teaches before it punishes.
-    const isFledgling = get().progress.runsCompleted < FLEDGLING_RUNS;
+    const runsCompleted = get().progress.runsCompleted;
+    // Fledgling: first 3 runs get the shorter 8-round arc, an easy-biased
+    // draw, and a full revive-to-3 mercy. Grace: runs 4-9 return to the
+    // standard 10-round draw but keep a lighter revive-to-2 safety net, so
+    // the jump to full stakes is a taper instead of a cliff. Run 10+: no net.
+    const isFledgling = runsCompleted < FLEDGLING_RUNS;
+    const isGrace = !isFledgling && runsCompleted < GRACE_RUNS;
+    const mercyReviveLives = isFledgling
+      ? FLEDGLING_MERCY_LIVES
+      : isGrace
+      ? GRACE_MERCY_LIVES
+      : 0;
     const steps = generateHunt({
       masteredWords: get().progress.masteredWords.map(m => m.word),
       ghostWordIds: runStartGhostWordIds,
       ...(isFledgling ? { length: 8, gentle: true } : {}),
     });
     set({
-      game: createGame(runStartGhostWordIds, steps, isFledgling),
+      game: createGame(runStartGhostWordIds, steps, mercyReviveLives),
       ghostRevenge: null,
       runStartGhostWordIds,
     });
