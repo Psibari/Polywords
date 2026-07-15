@@ -45,6 +45,9 @@ systems from it without explicit approval.
   cabinet. `Bookcase.tsx` maps mastered and haunted spines into measured shelf slots and adds
   another cabinet frame when rows overflow.
 - Daily remains UP-only. Hunt `SwipeMask.tsx` remains untouched by Daily work.
+- Daily results show a device-approved clue-speed summary with five enlarged round cells,
+  a visible 1/2/3-clue/missed legend, per-cell accessibility labels, and an unknown fallback
+  for older persisted results that do not contain clue counts.
 - The 13-part Polly rig is shelved. Live Polly uses transparent pose images unless a future
   rig is assembled and approved in isolation.
 - Polly's live character path is the transparent pose set plus `pollyCharacter.ts`, the

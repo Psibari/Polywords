@@ -18,7 +18,8 @@ App shell: Home (lobby) · Play (arena) · Vault (player archive) · Settings. B
 **Active branch:** `play-screen-overhaul` (never merge to main).
 **Session baseline commit:** `f69bab7` (Polly living-rival pass).
 **Latest existing working tag:** `v0.working-20260704-brand-logotype`.
-**Checkpoint feel:** Produced-stem music pass pending commit, device sweep, and July 5 working tag.
+**Checkpoint feel:** Hunt soundtrack rebuild is device-confirmed; Daily clue-speed results are
+device-approved with a larger, readable results hierarchy.
 **Ghost loop checkpoint:** `badc9f0` / `v0.working-20260630a`.
 **Copy cleanup checkpoint:** `c4a6c31` / `v0.working-20260630b`.
 **tsc:** exits 0.
@@ -68,6 +69,8 @@ Play screen design overhaul complete for this sprint.
 - Daily answer cards now use a full physical claim language: correct UP claims are absorbed
   into the clue vault as a gold answer stamp before round advance; wrong claims recoil and
   drop out. Daily remains UP-only and Hunt `SwipeMask` is unchanged.
+- Daily results now show five enlarged clue-speed cells plus a visible 1/2/3-clue/missed
+  legend. Older persisted results without clue counts render an accessible unknown state.
 
 **Active stashes — reference by NAME only, never index, never pop/drop/clear:**
 - `wip hud material pass needs feather asset`
@@ -117,17 +120,16 @@ Play screen design overhaul complete for this sprint.
 
 ## Music
 
-**Current audio status:** The Hunt soundtrack rebuild is implemented and pending device recheck
-on `play-screen-overhaul`. `MusicEngine.ts` uses one persistent owner-scoped player so screen
+**Current audio status:** The Hunt soundtrack rebuild is implemented and device-confirmed on
+`play-screen-overhaul`. `MusicEngine.ts` uses one persistent owner-scoped player so screen
 cleanup and same-track swipe updates cannot restart or stack BGM. Neutral/rhythm/onARun use the
 authored `hunt_suspense_loop.mp3` cut (source 2.500s-115.750s) at 0.85x with pitch correction;
 crisis uses `tension_quirky_background.mp3` (source 48.000s-124.750s); boss/POLLY'S WORD uses
 `boss_of_the_rats.mp3` (source 0.000s-55.500s). Source fades were removed before native looping.
-Daily music is unchanged and is the next audio pass. Expo Audio mode still has one shared
+Daily music is unchanged by decision. Expo Audio mode still has one shared
 configuration owner; RUN IT BACK reuses the music/SFX session; the dev BOSS jump starts boss
-music. TypeScript and all four existing game suites pass. Device recheck is required for first
-Hunt entry, slow-swipe continuity, crisis/boss transitions, loop returns, RUN IT BACK, mute,
-background/foreground, and Hunt-to-Daily ownership.
+music. TypeScript and all four existing game suites pass. The device sweep confirmed first Hunt
+entry, swipe continuity, crisis/boss transitions, loop returns, and session ownership behavior.
 
 - **July 5, 2026:** `MusicEngine.ts` upgraded from runtime synth to five produced stem files:
   `stem-base.wav`, `stem-beat.wav`, `stem-melody.wav`, `stem-tension.wav`, and `stem-boss.wav`
@@ -147,11 +149,10 @@ background/foreground, and Hunt-to-Daily ownership.
   tracked files `danger-heartbeat.wav`, `flow-tribe-drums.mp3`, `gameplay-bed-cinematic.wav`,
   `jungle-accent.mp3`, and `panic-atmospheric-drums.mp3` still exist. Dead concept — never
   revive.
-- Deferred audio queue: evaluate and author the Daily loop; replace the
-  `SoundEngine.playRoundComplete` synth one-shot in a later SFX pass; final on-device volume
-  tuning after the new Hunt/Tension/Boss device sweep.
-- **Git state:** The soundtrack asset/transport patch is uncommitted and pending device sweep.
-  The separate Daily clue-speed and content-audit changes remain outside this audio patch.
+- Deferred audio queue: replace the `SoundEngine.playRoundComplete` synth one-shot in a later
+  SFX pass. Daily music remains unchanged by decision.
+- **Git state:** The soundtrack asset/transport patch is committed at `639b6d3`. The separate
+  content-audit changes remain uncommitted and outside this checkpoint.
 
 ---
 

@@ -298,6 +298,65 @@ function ResultsOverlay({
           {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words - ${dailyResult.chancesRemaining} chances left`.toUpperCase()}
         </Text>
 
+        <Text style={res.speedTitle}>CLUE SPEED</Text>
+        <View style={res.speedGrid}>
+          {dailyResult.wordResults.map((result, i) => {
+            const cluesUsed = (result as { cluesUsed?: number }).cluesUsed;
+            let cellStyle = res.speedUnknown;
+            let outcome = 'clue speed unavailable';
+            let isUnknown = true;
+
+            if (result.status !== 'solved') {
+              cellStyle = res.speedMissed;
+              outcome = 'missed';
+              isUnknown = false;
+            } else if (cluesUsed === 1) {
+              cellStyle = res.speedClue1;
+              outcome = 'solved from one clue';
+              isUnknown = false;
+            } else if (cluesUsed === 2) {
+              cellStyle = res.speedClue2;
+              outcome = 'solved from two clues';
+              isUnknown = false;
+            } else if (cluesUsed === 3) {
+              cellStyle = res.speedClue3;
+              outcome = 'solved from three clues';
+              isUnknown = false;
+            }
+
+            return (
+              <View
+                key={`speed-${i}`}
+                accessible
+                accessibilityRole="image"
+                accessibilityLabel={`Round ${i + 1}, ${outcome}`}
+                style={[res.speedCell, cellStyle]}
+              >
+                {isUnknown && <Text style={res.speedUnknownMark}>?</Text>}
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={res.speedLegend}>
+          <View style={res.speedLegendItem}>
+            <View style={[res.speedLegendSwatch, res.speedClue1]} />
+            <Text style={res.speedLegendText}>1 CLUE</Text>
+          </View>
+          <View style={res.speedLegendItem}>
+            <View style={[res.speedLegendSwatch, res.speedClue2]} />
+            <Text style={res.speedLegendText}>2 CLUES</Text>
+          </View>
+          <View style={res.speedLegendItem}>
+            <View style={[res.speedLegendSwatch, res.speedClue3]} />
+            <Text style={res.speedLegendText}>3 CLUES</Text>
+          </View>
+          <View style={res.speedLegendItem}>
+            <View style={[res.speedLegendSwatch, res.speedMissed]} />
+            <Text style={res.speedLegendText}>MISSED</Text>
+          </View>
+        </View>
+
         <View style={res.pills}>
           {dailyResult.wordResults.map((result, i) => {
             const solved = result.status === 'solved';
@@ -913,9 +972,9 @@ const res = StyleSheet.create({
     gap: 4,
   },
   challenge: {
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.55)',
     fontFamily: FONTS.tileCopy,
-    fontSize: 11,
+    fontSize: 13,
     letterSpacing: 2,
   },
   title: {
@@ -935,28 +994,103 @@ const res = StyleSheet.create({
   rewardText: {
     color: '#F5C842',
     fontFamily: FONTS.label,
-    fontSize: 11,
+    fontSize: 13,
     letterSpacing: 2.5,
   },
   stat: {
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.72)',
     fontFamily: FONTS.tileCopy,
-    fontSize: 13,
-    marginTop: 4,
+    fontSize: 16,
+    marginTop: 6,
   },
   pills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
+    gap: 12,
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  speedGrid: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  speedTitle: {
+    color: 'rgba(255,255,255,0.82)',
+    fontFamily: FONTS.label,
+    fontSize: 13,
+    letterSpacing: 2,
+    marginTop: 16,
+  },
+  speedCell: {
+    width: 26,
+    height: 26,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  speedClue1: {
+    backgroundColor: 'rgba(245,200,66,0.85)',
+    borderColor: '#F5C842',
+  },
+  speedClue2: {
+    backgroundColor: 'rgba(123,45,139,0.85)',
+    borderColor: '#7B2D8B',
+  },
+  speedClue3: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.55)',
+  },
+  speedMissed: {
+    backgroundColor: 'rgba(15,13,42,0.9)',
+    borderColor: 'rgba(155,45,107,0.55)',
+  },
+  speedUnknown: {
+    backgroundColor: 'rgba(15,13,42,0.9)',
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  speedUnknownMark: {
+    color: 'rgba(255,255,255,0.65)',
+    fontFamily: FONTS.hud,
+    fontSize: 14,
+    lineHeight: 16,
+  },
+  speedLegend: {
+    width: '100%',
+    maxWidth: 300,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 10,
-    marginTop: 14,
-    marginBottom: 6,
+    marginTop: 12,
+  },
+  speedLegendItem: {
+    width: '44%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  speedLegendSwatch: {
+    width: 14,
+    height: 14,
+    borderRadius: 3,
+    borderWidth: 1.5,
+  },
+  speedLegendText: {
+    color: 'rgba(255,255,255,0.78)',
+    fontFamily: FONTS.tileCopy,
+    fontSize: 13,
+    letterSpacing: 0.9,
   },
   pill: {
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
   },
   pillSolved: {
     borderColor: 'rgba(245,200,66,0.55)',
@@ -969,7 +1103,7 @@ const res = StyleSheet.create({
   pillText: {
     color: '#FFFFFF',
     fontFamily: FONTS.hud,
-    fontSize: 12,
+    fontSize: 15,
     letterSpacing: 1,
   },
   shareBtn: {
@@ -983,7 +1117,7 @@ const res = StyleSheet.create({
   shareText: {
     color: '#0F0D2A',
     fontFamily: FONTS.hud,
-    fontSize: 14,
+    fontSize: 17,
     letterSpacing: 2,
   },
   homeBtn: {
@@ -991,9 +1125,9 @@ const res = StyleSheet.create({
     alignItems: 'center',
   },
   homeText: {
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.58)',
     fontFamily: FONTS.hud,
-    fontSize: 13,
+    fontSize: 15,
     letterSpacing: 2,
   },
 });
