@@ -16172,7 +16172,7 @@
       {
         "id": "die_r3",
         "phrase": "FABRIC CHANGES IN VAT",
-        "isReal": true
+        "isReal": false
       },
       {
         "id": "die_t0",
@@ -16211,7 +16211,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Quadruple"
+    "wordType": "Triple"
   },
   "HIDE": {
     "difficulty": "medium",
