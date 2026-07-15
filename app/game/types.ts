@@ -226,7 +226,7 @@ export type DailyClaimResult = {
 export type DailyRoundResult = {
   word: string;
   tier: DailyTier;
-  status: 'solved' | 'missed';
+  status: 'solved' | 'missed' | 'unreached';
   wrongClaims: number;
   cluesUsed: DailyRevealedClueCount;
 };

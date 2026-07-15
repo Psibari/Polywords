@@ -270,23 +270,33 @@ export function createDailyResult(session: DailySession): DailyResult {
   const completedAt = session.completedAt ?? Date.now();
   const won = session.status === 'won';
   const title = won ? "YOU BEAT POLLY'S CHALLENGE" : 'YOU LOSE';
-  const wordResults: DailyRoundResult[] = session.rounds.map(round => ({
-    word: round.word.answer,
-    tier: round.word.tier,
-    status: round.solved ? 'solved' : 'missed',
-    wrongClaims: round.wrongClaims.length,
-    // revealedClueCount freezes at solve time, so it doubles as clue speed.
-    cluesUsed: round.solved ? round.revealedClueCount : 3,
-  }));
+  const wordResults: DailyRoundResult[] = session.rounds.map((round, i) => {
+    let status: 'solved' | 'missed' | 'unreached';
+    if (round.solved) status = 'solved';
+    else if (i === session.currentRoundIndex && session.status === 'lost') status = 'missed';
+    else status = 'unreached';
+
+    return {
+      word: round.word.answer,
+      tier: round.word.tier,
+      status,
+      wrongClaims: round.wrongClaims.length,
+      // revealedClueCount freezes at solve time, so it doubles as clue speed.
+      cluesUsed: round.solved ? round.revealedClueCount : 3,
+    };
+  });
 
   // Spoiler-free speed grid: gold = solved on clue 1, purple = clue 2,
-  // white = needed all three, black = never solved.
+  // white = needed all three, red = the round that ended the run, black = unreached.
   const grid = session.rounds
-    .map(round => {
-      if (!round.solved) return '⬛';
-      if (round.revealedClueCount === 1) return '🟨';
-      if (round.revealedClueCount === 2) return '🟪';
-      return '⬜';
+    .map((round, i) => {
+      if (round.solved) {
+        if (round.revealedClueCount === 1) return '🟨';
+        if (round.revealedClueCount === 2) return '🟪';
+        return '⬜';
+      }
+      if (i === session.currentRoundIndex && session.status === 'lost') return '🟥';
+      return '⬛';
     })
     .join('');
 
@@ -311,7 +321,7 @@ export function createDailyResult(session: DailySession): DailyResult {
           tag,
           score,
           grid,
-          `"CAN'T BEAT THAT WITH A BAT." — Polly`,
+          `"COULDN'T BEAT MY TRAP WITH THE BAT." — Polly`,
           link,
         ].join('\n');
       }

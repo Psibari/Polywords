@@ -8,6 +8,7 @@ type Props = {
   maxWidth?: number;
   fontSize?: number;
   lineHeight?: number;
+  tone?: 'default' | 'loss';
 };
 
 export function PollySpeechBubble({
@@ -15,19 +16,24 @@ export function PollySpeechBubble({
   maxWidth = 190,
   fontSize = homeType.greeting,
   lineHeight = 22,
+  tone = 'default',
 }: Props) {
   return (
     <View>
-      <View style={[styles.bubble, { maxWidth }]}>
+      <View style={[
+        styles.bubble,
+        { maxWidth },
+        tone === 'loss' && styles.bubbleLoss,
+      ]}>
         <Text
           accessibilityLiveRegion="polite"
-          style={[styles.text, { fontSize, lineHeight }]}
+          style={[styles.text, { fontSize, lineHeight }, tone === 'loss' && styles.textLoss]}
         >
           {line}
         </Text>
       </View>
-      <View style={styles.tailBorder} />
-      <View style={styles.tailFill} />
+      <View style={[styles.tailBorder, tone === 'loss' && styles.tailBorderLoss]} />
+      <View style={[styles.tailFill, tone === 'loss' && styles.tailFillLoss]} />
     </View>
   );
 }
@@ -71,5 +77,18 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
     borderRightWidth: 9,
     borderRightColor: homePerch.bubbleFace,
+  },
+  bubbleLoss: {
+    backgroundColor: 'rgba(226,75,74,0.14)',
+    borderColor: '#E24B4A',
+  },
+  textLoss: {
+    color: '#F5DCDC',
+  },
+  tailBorderLoss: {
+    borderRightColor: '#E24B4A',
+  },
+  tailFillLoss: {
+    borderRightColor: 'rgba(226,75,74,0.14)',
   },
 });

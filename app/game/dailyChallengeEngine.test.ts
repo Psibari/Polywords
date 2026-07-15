@@ -159,7 +159,8 @@ function solveAll(session: DailySession, waits: number[]): DailySession {
   eq(result.goldFeatherEarned, false, 'loss.noFeather');
   eq(result.wordResults[0].status, 'missed', 'loss.roundMissed');
   eq(result.wordResults[0].cluesUsed, 3, 'loss.cluesUsedMax');
-  ok(result.shareText.includes('⬛⬛⬛⬛⬛'), 'loss.shareGrid');
+  eq(result.wordResults[1].status, 'unreached', 'loss.roundUnreached');
+  ok(result.shareText.includes('🟥⬛⬛⬛⬛'), 'loss.shareGrid');
 
   // claims after the session ends are ignored
   const after = claimDailyWord(second.session, round.word.answer);

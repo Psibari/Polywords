@@ -260,19 +260,7 @@ function ResultsOverlay({
         contentContainerStyle={res.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={res.card}>
-        <View style={styles.resultPollyStage}>
-          <Animated.View style={{ transform: [{ translateX: pollyX }, { translateY: pollyY }] }}>
-            <Image
-              source={isWin ? POLLY_POSES.shocked : POLLY_POSES.laugh}
-              style={styles.resultPollyImage}
-              resizeMode="contain"
-            />
-          </Animated.View>
-          <View style={styles.resultPollyBubble}>
-            <PollySpeechBubble line={resultLine} maxWidth={154} fontSize={15} lineHeight={20} />
-          </View>
-        </View>
+        <View style={[res.card, isWin ? res.cardWin : res.cardLoss]}>
         <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
 
         <Text style={[res.title, { color: isWin ? '#F5C842' : '#FFFFFF' }]}>
@@ -294,9 +282,18 @@ function ResultsOverlay({
           </View>
         )}
 
-        <Text style={res.stat}>
-          {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words - ${dailyResult.chancesRemaining} chances left`.toUpperCase()}
-        </Text>
+        {(() => {
+          if (isWin) {
+            return (
+              <Text style={res.stat}>
+                {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words - ${dailyResult.chancesRemaining} chances left`.toUpperCase()}
+              </Text>
+            );
+          }
+          const missedIndex = dailyResult.wordResults.findIndex(r => r.status === 'missed');
+          const roundLabel = missedIndex >= 0 ? missedIndex + 1 : DAILY_ROUND_COUNT;
+          return <Text style={res.stat}>{`POLYTRAPS GOT YOU ON ROUND ${roundLabel}`.toUpperCase()}</Text>;
+        })()}
 
         <Text style={res.speedTitle}>CLUE SPEED</Text>
         <View style={res.speedGrid}>
@@ -306,7 +303,11 @@ function ResultsOverlay({
             let outcome = 'clue speed unavailable';
             let isUnknown = true;
 
-            if (result.status !== 'solved') {
+            if (result.status === 'unreached') {
+              cellStyle = res.speedUnreached;
+              outcome = 'not reached';
+              isUnknown = true;
+            } else if (result.status === 'missed') {
               cellStyle = res.speedMissed;
               outcome = 'missed';
               isUnknown = false;
@@ -332,7 +333,7 @@ function ResultsOverlay({
                 accessibilityLabel={`Round ${i + 1}, ${outcome}`}
                 style={[res.speedCell, cellStyle]}
               >
-                {isUnknown && <Text style={res.speedUnknownMark}>?</Text>}
+                {isUnknown && <Text style={res.speedUnknownMark}>–</Text>}
               </View>
             );
           })}
@@ -357,18 +358,17 @@ function ResultsOverlay({
           </View>
         </View>
 
-        <View style={res.pills}>
-          {dailyResult.wordResults.map((result, i) => {
-            const solved = result.status === 'solved';
-            return (
-              <View
-                key={`${result.word}-${i}`}
-                style={[res.pill, solved ? res.pillSolved : res.pillMissed]}
-              >
-                <Text style={res.pillText}>{result.word.toUpperCase()}</Text>
-              </View>
-            );
-          })}
+        <View style={styles.resultPollyStage}>
+          <Animated.View style={{ transform: [{ translateX: pollyX }, { translateY: pollyY }] }}>
+            <Image
+              source={isWin ? POLLY_POSES.shocked : POLLY_POSES.laugh}
+              style={styles.resultPollyImage}
+              resizeMode="contain"
+            />
+          </Animated.View>
+          <View style={styles.resultPollyBubble}>
+            <PollySpeechBubble line={resultLine} maxWidth={154} fontSize={15} lineHeight={20} />
+          </View>
         </View>
 
         <Pressable style={res.shareBtn} onPress={onShare}>
@@ -965,11 +965,16 @@ const res = StyleSheet.create({
     width: '100%',
     backgroundColor: '#0F0D2A',
     borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.55)',
+    borderWidth: 2,
     padding: 20,
     alignItems: 'center',
     gap: 4,
+  },
+  cardWin: {
+    borderColor: '#7B2D8B',
+  },
+  cardLoss: {
+    borderColor: '#E24B4A',
   },
   challenge: {
     color: 'rgba(255,255,255,0.55)',
@@ -1003,14 +1008,6 @@ const res = StyleSheet.create({
     fontSize: 16,
     marginTop: 6,
   },
-  pills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 12,
-    marginTop: 18,
-    marginBottom: 8,
-  },
   speedGrid: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -1042,12 +1039,17 @@ const res = StyleSheet.create({
     borderColor: '#7B2D8B',
   },
   speedClue3: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(224,134,43,0.85)',
+    borderColor: '#E0862B',
   },
   speedMissed: {
-    backgroundColor: 'rgba(15,13,42,0.9)',
-    borderColor: 'rgba(155,45,107,0.55)',
+    backgroundColor: 'rgba(226,75,74,0.85)',
+    borderColor: '#E24B4A',
+  },
+  speedUnreached: {
+    backgroundColor: 'transparent',
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderStyle: 'dashed',
   },
   speedUnknown: {
     backgroundColor: 'rgba(15,13,42,0.9)',
@@ -1085,26 +1087,6 @@ const res = StyleSheet.create({
     fontFamily: FONTS.tileCopy,
     fontSize: 13,
     letterSpacing: 0.9,
-  },
-  pill: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-  },
-  pillSolved: {
-    borderColor: 'rgba(245,200,66,0.55)',
-    backgroundColor: 'rgba(245,200,66,0.10)',
-  },
-  pillMissed: {
-    borderColor: 'rgba(155,45,107,0.55)',
-    backgroundColor: 'rgba(155,45,107,0.10)',
-  },
-  pillText: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.hud,
-    fontSize: 15,
-    letterSpacing: 1,
   },
   shareBtn: {
     backgroundColor: '#F5C842',
