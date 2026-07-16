@@ -160,6 +160,11 @@ Content tool: `tools/content/mask-rewriter/`
 - Local/editorial only, not gameplay.
 - Uses `.env`; never commit `.env`.
 - Never commit generated CSVs or `dist`.
+- `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial master workbook for
+  approved Haunt REALs, traps, word status, and review notes.
+- The workbook is not imported by gameplay. Workbook approval does not update
+  `assets/data/huntData.json`; production-data changes require a separate explicit export or
+  merge request.
 - `assets/data/huntData.v2.json` is dormant editorial data; do not wire it into gameplay
   until approved.
 
@@ -199,6 +204,7 @@ app/audio/MusicEngine.ts
 app/audio/sfx.ts
 assets/data/huntData.json
 assets/data/huntData.v2.json
+localworkbooks/POLYWORDS_HAUNT_TILES.xlsx
 assets/images/vault/bookcase-dark-mobile.png
 assets/images/polly/poses/*.png
 tools/content/mask-rewriter/

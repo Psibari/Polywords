@@ -115,6 +115,10 @@ Play screen design overhaul complete for this sprint.
   inventory, human approval, one-word generation, automated audit, blind Hidden Truth review,
   approved-only export, and safe deterministic merge. `assets/data/huntData.v2.json` remains
   dormant and is not imported by gameplay.
+- `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial master workbook for
+  approved Haunt content. It currently includes the July 15 live-writing checkpoint through
+  PLANT and PLOT. It is not imported by gameplay and does not change
+  `assets/data/huntData.json` without a separate explicit export or merge.
 
 ---
 
