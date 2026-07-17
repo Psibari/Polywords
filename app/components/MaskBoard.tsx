@@ -230,8 +230,8 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
           {word}
         </Text>
         <View style={styles.outcomeCopyBlock}>
-          <Text style={styles.outcomeCopy}>Taken from Polly's vault.</Text>
-          <Text style={styles.outcomeCopy}>Hers no longer.</Text>
+          <Text style={styles.outcomeCopy}>Not one of Polly's traps.</Text>
+          <Text style={styles.outcomeCopy}>You saw through it.</Text>
         </View>
         {bonusLabel && <Text style={styles.outcomeBonus}>{bonusLabel}</Text>}
         <Text style={styles.outcomeContinue}>CONTINUE</Text>
@@ -287,8 +287,8 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
           {word}
         </Text>
         <View style={styles.outcomeCopyBlock}>
-          <Text style={styles.outcomeCopy}>Polly stole a meaning.</Text>
-          <Text style={styles.outcomeCopy}>It'll be back.</Text>
+          <Text style={styles.outcomeCopy}>Polly's trap held.</Text>
+          <Text style={styles.outcomeCopy}>It'll be waiting.</Text>
         </View>
         {detail && <Text style={styles.hauntedDetail} numberOfLines={2}>{detail}</Text>}
         <Text style={styles.outcomeContinue}>CONTINUE</Text>
