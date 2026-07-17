@@ -504,8 +504,10 @@ function GameDirector({ navigation }: { navigation: any }) {
       .then(v => setIntroSeen(v === 'true'))
       .catch(() => setIntroSeen(true));
   }, []);
+  const [introVisitPending, setIntroVisitPending] = useState(false);
   const handleIntroDismiss = useCallback(() => {
     setIntroSeen(true);
+    setIntroVisitPending(true);
     AsyncStorage.setItem(INTRO_SEEN_KEY, 'true').catch(() => {});
   }, []);
 
@@ -762,6 +764,8 @@ function GameDirector({ navigation }: { navigation: any }) {
           onTrapCaught={handleTrapCaught}
           onWrongSwipe={handleWrongSwipe}
           onSwipeAttempt={resetIdleTimer}
+          fireIntroVisit={introVisitPending}
+          onIntroVisitFired={() => setIntroVisitPending(false)}
         />
       )}
       {__DEV__ && !isDone && !isBossRound && (
@@ -835,11 +839,15 @@ function GameContent({
   onTrapCaught,
   onWrongSwipe,
   onSwipeAttempt,
+  fireIntroVisit,
+  onIntroVisitFired,
 }: {
   spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
   onTrapCaught: () => void;
   onWrongSwipe: () => void;
   onSwipeAttempt: () => void;
+  fireIntroVisit: boolean;
+  onIntroVisitFired: () => void;
 }) {
   const game = useGameStore(s => s.game);
   const ghosts = useGameStore(s => s.ghosts);
@@ -854,6 +862,12 @@ function GameContent({
     step.kind === 'word' && step.eventType === 'speedRound',
     ghostRunsMissed,
   );
+
+  useEffect(() => {
+    if (!fireIntroVisit) return;
+    firePollyEvent('huntIntro');
+    onIntroVisitFired();
+  }, [fireIntroVisit, firePollyEvent, onIntroVisitFired]);
 
   if (step.kind === 'word') {
     return (

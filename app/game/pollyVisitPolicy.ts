@@ -31,7 +31,8 @@ export type PollyEvent =
   | 'gateMasteredBoss'
   | 'hiddenMasterFailed'
   | 'hauntFailed'
-  | 'oneWrongMove';
+  | 'oneWrongMove'
+  | 'huntIntro';
 
 export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 
@@ -61,6 +62,12 @@ export type VisitDecision =
   | { action: 'visit'; spec: VisitSpec };
 
 const NONE: VisitDecision = { action: 'none' };
+
+const HUNT_INTRO: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'point',
+  lineId: 'huntIntro', line: POLLY_LINES.huntIntro, sfx: 'pollySqwawkShort',
+  holdPerch: false, perchMs: 2500,
+};
 
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
@@ -122,6 +129,7 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   if (event === 'wordEntry') return { action: 'wordEntry' };
 
   // ── Guaranteed big beats: ignore all budgets ──────────────────
+  if (event === 'huntIntro') return { action: 'visit', spec: HUNT_INTRO };
   if (event === 'bossEntry') return { action: 'visit', spec: BOSS_ENTRY };
   if (event === 'gateMasteredBoss') return { action: 'visit', spec: BOSS_MASTERED_SULK };
   if (event === 'gameOver') return { action: 'visit', spec: GAME_OVER_LAUGH };

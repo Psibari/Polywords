@@ -5,6 +5,7 @@ export const POLLY_LINES = {
   homeLoseFeathers: 'Come to lose some feathers?',
   homeWordsAsked: 'The words asked about you. I lied.',
   homeTakeTime: 'Take your time. They’re mine either way.',
+  homeFirstMeeting: 'Who are you? What do you want?',
   huntBossMine: 'This word stays mine.',
   huntLaugh: 'BBBLAAAAHHAHAHA!',
   huntCleanSweep: "Bet you can't do that again.",
@@ -20,6 +21,7 @@ export const POLLY_LINES = {
   dailyButterKnife: 'Sharp as a butter knife.',
   dailyLossBat: 'CAN’T BEAT THAT WITH A BAT.',
   dailyWinTomorrow: 'WON’T HAPPEN TOMORROW.',
+  huntIntro: 'Enter the Hunt. We’ll see who hunts who.',
 } as const;
 
 export type PollyLineId = keyof typeof POLLY_LINES;

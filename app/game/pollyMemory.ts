@@ -152,6 +152,13 @@ function firstFresh(memory: PollyMemory, candidates: PollyLineId[]): PollyLineId
 }
 
 export function resolveHomePollyMoment(memory: PollyMemory): PollyMoment {
+  if (
+    memory.homeGreetingCursor === 0 &&
+    memory.huntsRemembered === 0 &&
+    memory.dailyChallengesRemembered === 0
+  ) {
+    return pollyMoment('homeFirstMeeting');
+  }
   if (memory.playerWinStreak > 0) {
     return pollyMoment(firstFresh(memory, ['homeWordsAsked', 'homeBackAgain']));
   }
