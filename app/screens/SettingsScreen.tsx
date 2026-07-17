@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
+import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { FONTS } from '../constants/fonts';
 import { getRankTier } from '../game/ranks';
 import { useGameStore } from '../store/useGameStore';
@@ -60,6 +61,7 @@ function PlaceholderRow({ label, note = 'Coming soon', accent = 'purple' }: Plac
 }
 
 export default function SettingsScreen({ navigation }: Props) {
+  const [showPollyAnimations, setShowPollyAnimations] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -153,6 +155,25 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
+        {__DEV__ && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Development</Text>
+            <View style={styles.card}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowPollyAnimations(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Polly Animation Viewer</Text>
+                  <Text style={styles.rowNote}>Preview five isolated motion loops</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Danger / Reset</Text>
           <View style={[styles.card, styles.warningCard]}>
@@ -160,6 +181,12 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
       </ScrollView>
+      {__DEV__ && (
+        <PollyAnimationDevViewer
+          onClose={() => setShowPollyAnimations(false)}
+          visible={showPollyAnimations}
+        />
+      )}
       <BottomNav active="Settings" navigation={navigation} />
     </SafeAreaView>
   );

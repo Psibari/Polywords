@@ -3,7 +3,7 @@ import { heroBookMaterial } from './pwMaterials';
 import { POLLY_LINES } from '../game/pollyCharacter';
 
 // ── Copy ──
-export const HOME_TAGLINE = 'Polly stole the meanings. Take them back.';
+export const HOME_TAGLINE = 'Words have meaning..SSsss';
 
 // Polly speech: mixed case, never uppercase. One line per app open, rotating.
 export const HOME_GREETING_LINES = [

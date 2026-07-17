@@ -34,11 +34,31 @@ export function HuntIntroOverlay({ onDismiss }: Props) {
   return (
     <Animated.View style={[io.root, { opacity }]}>
       <View style={io.card}>
-        <Text style={io.headline}>POLLY STOLE{'\n'}YOUR WORDS</Text>
+        <Text style={io.headline}>POLLY SET{'\n'}THE TRAPS</Text>
         <Text style={io.body}>
-          Every word hides more meanings than you think. Polly mixed the real
-          ones with her traps.
+          POLYWORDS: a game about polysemous words — ones with more than one
+          meaning you've stopped noticing. Polly's named for exactly that.
+          She's counting on you not to look — and she'll trap you in what
+          you missed.
         </Text>
+
+        <View style={io.example}>
+          <Text style={io.exampleIntro}>A piece of an actual round —</Text>
+          <Text style={io.exampleWord}>FINE</Text>
+
+          <View style={io.exampleLineRow}>
+            <Text style={io.exampleLine}>Parking ten minutes longer costs this.</Text>
+            <Text style={io.exampleTagReal}>REAL</Text>
+          </View>
+          <View style={io.exampleLineRow}>
+            <Text style={io.exampleLine}>No clouds spoil the picnic.</Text>
+            <Text style={io.exampleTagReal}>REAL</Text>
+          </View>
+          <View style={io.exampleLineRow}>
+            <Text style={io.exampleLine}>Judge dismisses the parking ticket.</Text>
+            <Text style={io.exampleTagTrap}>TRAP</Text>
+          </View>
+        </View>
 
         <View style={io.ruleRow}>
           <Text style={io.ruleArrow}>↑</Text>
@@ -57,7 +77,7 @@ export function HuntIntroOverlay({ onDismiss }: Props) {
 
         <Text style={io.stakes}>
           Wrong calls cost a feather — and they stick.{'\n'}
-          Lose every feather and Polly keeps the words.
+          Run out of feathers, and Polly wins.
         </Text>
 
         <Pressable
@@ -91,6 +111,57 @@ const io = StyleSheet.create({
     backgroundColor: 'rgba(15,13,42,0.92)',
     paddingVertical: 28,
     paddingHorizontal: 24,
+  },
+  exampleIntro: {
+    color: PW.color.mutedWhite,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 12,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  example: {
+    borderRadius: PW.radius.card,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.28)',
+    backgroundColor: 'rgba(15,13,42,0.55)',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+  },
+  exampleWord: {
+    color: PW.color.gold,
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 20,
+    letterSpacing: 1,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  exampleLineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 6,
+  },
+  exampleLine: {
+    flex: 1,
+    color: PW.color.softWhite,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  exampleTagReal: {
+    color: PW.color.gold,
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 1.5,
+  },
+  exampleTagTrap: {
+    color: 'rgba(155,45,107,0.95)',
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 1.5,
   },
   headline: {
     color: PW.color.gold,

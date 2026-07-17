@@ -50,6 +50,10 @@ systems from it without explicit approval.
   for older persisted results that do not contain clue counts.
 - The 13-part Polly rig is shelved. Live Polly uses transparent pose images unless a future
   rig is assembled and approved in isolation.
+- `PollyPoseAnimation.tsx` exposes isolated whole-image `idle`, `angry`, `point`, `surprised`,
+  and `flying` loops from the approved transparent pose set. It is reusable but not wired into
+  live surfaces; reduced motion renders the selected pose without spatial motion. Development
+  builds expose all five loops through Settings -> Polly Animation Viewer for device review.
 - Polly's live character path is the transparent pose set plus `pollyCharacter.ts`, the
   versioned local `pollyMemory.ts`, `usePollyVisits`, and the shared ambient-motion/bubble
   components. Memory is bounded, deterministic, and source-authored; it never generates copy.

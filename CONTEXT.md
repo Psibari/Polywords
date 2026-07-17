@@ -54,6 +54,10 @@ Play screen design overhaul complete for this sprint.
 - Hunt Polly visits use clean transparent pose art with whole-image flight, landing, bubble,
   and reaction motion. The failed generated cutout-rig candidate was removed from the live
   renderer; future articulated rigs must pass isolated assembly review before gameplay wiring.
+- Five reusable whole-image pose loops now live behind `PollyPoseAnimation.tsx`: idle, angry,
+  point, surprised, and flying. They reuse the approved transparent art, respect reduced motion,
+  and remain isolated from live Hunt/Daily/Home/Results behavior pending device review. A
+  development-only Settings modal previews all five loops without adding a route.
 - Polly living-rival pass is implemented and pending repair recheck on device: a versioned bounded
   memory records Hunt/Daily outcomes and recent authored lines; Home carries the prior rivalry
   into greeting and settled pose; repeated Haunts escalate body language; Hunt/Daily/Results

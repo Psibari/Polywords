@@ -124,6 +124,11 @@ export default function HomeScreen({ navigation }: Props) {
                   onPress={handleHunt}
                   style={({ pressed }) => [styles.huntPlate, pressed && styles.pressed]}
                 >
+                  {progress.runsCompleted === 0 && (
+                    <View style={styles.startHereBadge}>
+                      <Text style={styles.startHereBadgeText}>START HERE</Text>
+                    </View>
+                  )}
                   <Text style={styles.dareLabel}>ENTER THE HUNT</Text>
                 </Pressable>
 
@@ -402,6 +407,22 @@ const styles = StyleSheet.create({
     backgroundColor: PW.color.overlayLight,
     paddingHorizontal: 12,
     paddingVertical: 14,
+  },
+  startHereBadge: {
+    position: 'absolute',
+    top: -10,
+    right: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: PW.color.gold,
+    zIndex: 5,
+  },
+  startHereBadgeText: {
+    color: PW.color.surfaceDeep,
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 1.2,
   },
   dareLabel: {
     color: PW.color.gold,
