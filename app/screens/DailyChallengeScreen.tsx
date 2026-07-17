@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   resultPollyBubble: {
-    maxWidth: 154,
+    maxWidth: 170,
   },
   featherWrap: {
     alignItems: 'center',
