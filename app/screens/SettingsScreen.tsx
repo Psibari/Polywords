@@ -68,6 +68,18 @@ export default function SettingsScreen({ navigation }: Props) {
   const hapticsEnabled = useGameStore(s => s.hapticsEnabled);
   const setSoundEnabled = useGameStore(s => s.setSoundEnabled);
   const setHapticsEnabled = useGameStore(s => s.setHapticsEnabled);
+  const resetProgressForDev = useGameStore(s => s.resetProgressForDev);
+
+  const handleResetProgress = () => {
+    Alert.alert(
+      'Reset Progress',
+      "This clears mastered words, Hunt stats, Daily results, and Polly's memory of you. This can't be undone.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Reset', style: 'destructive', onPress: () => { resetProgressForDev(); } },
+      ],
+    );
+  };
 
   const rank = getRankTier(progress.personalBest);
   const ghostsToShow = ghosts.filter(
@@ -177,7 +189,16 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Danger / Reset</Text>
           <View style={[styles.card, styles.warningCard]}>
-            <PlaceholderRow label="Reset Progress" note="Disabled placeholder" accent="rose" />
+            <Pressable
+              onPress={handleResetProgress}
+              style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
+            >
+              <View style={[styles.rowAccent, styles.rowAccentRose]} />
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Reset Progress</Text>
+                <Text style={styles.rowNote}>Clears Hunt, Daily, and Polly memory — can't be undone</Text>
+              </View>
+            </Pressable>
           </View>
         </View>
       </ScrollView>

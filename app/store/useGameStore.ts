@@ -173,6 +173,7 @@ type GameStore = {
   clearDailyReaction: () => void;
   clearStreakMilestoneReward: () => void;
   resetDailyForDev: () => Promise<void>;
+  resetProgressForDev: () => Promise<void>;
   goldFeatherAvailable: boolean;
   goldFeatherExpiresAt: number | null;
   grantGoldFeather: () => Promise<void>;
@@ -581,6 +582,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dailyAttemptDate:      null,
       dailyLastClaimResult:  null,
       streakMilestoneReward: null,
+    });
+  },
+
+  resetProgressForDev: async () => {
+    // Mirrors GameScreen.tsx's INTRO_SEEN_KEY — kept as a literal here to
+    // avoid a cross-file export just for a dev tool.
+    const INTRO_SEEN_KEY = 'polywords_intro_seen';
+    const date = getTodayDateString();
+    const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
+    const resultKey  = DAILY_RESULT_KEY_PREFIX  + date;
+    try {
+      await Promise.all([
+        AsyncStorage.removeItem(GHOSTS_KEY),
+        AsyncStorage.removeItem(PROGRESS_KEY),
+        AsyncStorage.removeItem(POLLY_MEMORY_KEY),
+        AsyncStorage.removeItem(GOLD_FEATHER_KEY),
+        AsyncStorage.removeItem(INTRO_SEEN_KEY),
+        AsyncStorage.removeItem(attemptKey),
+        AsyncStorage.removeItem(resultKey),
+      ]);
+    } catch {}
+    set({
+      ghosts: [],
+      runStartGhostWordIds: [],
+      progress: { ...DEFAULT_PROGRESS },
+      pollyMemory: { ...DEFAULT_POLLY_MEMORY },
+      dailySession: null,
+      daily: null,
+      dailyResult: null,
+      dailyAttemptDate: null,
+      dailyLastClaimResult: null,
+      streakMilestoneReward: null,
+      goldFeatherAvailable: false,
+      goldFeatherExpiresAt: null,
     });
   },
 
