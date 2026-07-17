@@ -33,19 +33,19 @@ export function deriveResultsPollyMoment(
 // ── Type scale (legibility clause: floor 14, tune on device) ──
 export const resultsType = {
   verdict: 46,
-  verdictSub: 16,
-  gradeSub: 15,
-  rankLabel: 14,
+  verdictSub: 17,
+  gradeSub: 16,
+  rankLabel: 16,
   rankLetter: 30,
   scoreLine: 17,
-  perfectLine: 15,
-  bestLine: 15,
+  perfectLine: 16,
+  bestLine: 16,
   ledgerWord: 18,
-  ledgerResult: 15,
-  cardHeader: 15,
+  ledgerResult: 16,
+  cardHeader: 16,
   cardWord: 24,
-  cardCopy: 15,
-  homeLink: 14,
+  cardCopy: 16,
+  homeLink: 15,
 } as const;
 
 // ── Ledger panel: BOOK leather frame around dark parchment ──

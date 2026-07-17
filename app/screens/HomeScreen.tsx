@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   huntBookHingeText: {
     color: 'rgba(255,247,214,0.62)',
     fontFamily: FONTS.label,
-    fontSize: 10,
+    fontSize: 13,
     letterSpacing: 2,
     marginBottom: 12,
     textAlign: 'center',
@@ -410,10 +410,10 @@ const styles = StyleSheet.create({
   },
   startHereBadge: {
     position: 'absolute',
-    top: -10,
+    top: -12,
     right: 14,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 10,
     backgroundColor: PW.color.gold,
     zIndex: 5,
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   startHereBadgeText: {
     color: PW.color.surfaceDeep,
     fontFamily: FONTS.label,
-    fontSize: 10,
+    fontSize: 12,
     letterSpacing: 1.2,
   },
   dareLabel: {

@@ -20,8 +20,8 @@ export const homeType = {
   tagline: 18,
   dareLabel: 32,
   doorTitle: 16,
-  greeting: 16,
-  settingsLink: 14,
+  greeting: 18,
+  settingsLink: 15,
 } as const;
 
 // ── ENTER THE HUNT — gold dare in BOOK vocabulary ──

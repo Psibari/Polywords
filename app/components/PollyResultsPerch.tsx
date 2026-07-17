@@ -12,7 +12,7 @@ import { PollySpeechBubble } from './PollySpeechBubble';
 
 type Outcome = 'loss' | 'beat' | 'complete';
 
-export const POLLY_RESULTS_PERCH_CLEARANCE = 300; // matches pollyImage height — screen must reserve this much bottom padding
+export const POLLY_RESULTS_PERCH_CLEARANCE = 380; // pollyImage height + extra clearance for the speech bubble, which sits above the buttons, not beside them
 
 type Props = {
   outcome: Outcome;
@@ -101,6 +101,6 @@ const styles = StyleSheet.create({
   bubbleWrap: {
     position: 'absolute',
     left: 162,
-    bottom: 158,
+    bottom: 190,
   },
 });

@@ -367,7 +367,7 @@ function ResultsOverlay({
             />
           </Animated.View>
           <View style={styles.resultPollyBubble}>
-            <PollySpeechBubble line={resultLine} maxWidth={154} fontSize={15} lineHeight={20} />
+            <PollySpeechBubble line={resultLine} maxWidth={170} fontSize={17} lineHeight={22} />
           </View>
         </View>
 
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   actionLabel: {
     color: 'rgba(255,255,255,0.45)',
     fontFamily: FONTS.label,
-    fontSize: 12,
+    fontSize: 16,
     letterSpacing: 3,
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -827,7 +827,7 @@ const styles = StyleSheet.create({
   featherLabel: {
     color: '#F5C842',
     fontFamily: FONTS.label,
-    fontSize: 11,
+    fontSize: 14,
     letterSpacing: 2.5,
     marginTop: 4,
     textAlign: 'center',
@@ -856,14 +856,14 @@ const styles = StyleSheet.create({
   clueHeaderLabel: {
     color: dailyScrollMaterial.goldTrim,
     fontFamily: FONTS.label,
-    fontSize: 13,
+    fontSize: 15,
     letterSpacing: 3,
     textTransform: 'uppercase',
   },
   clueHeaderRule: {
     color: 'rgba(255,247,214,0.55)',
     fontFamily: FONTS.label,
-    fontSize: 9,
+    fontSize: 14,
     letterSpacing: 2.2,
     marginTop: 4,
     textTransform: 'uppercase',
@@ -979,7 +979,7 @@ const res = StyleSheet.create({
   challenge: {
     color: 'rgba(255,255,255,0.55)',
     fontFamily: FONTS.tileCopy,
-    fontSize: 13,
+    fontSize: 15,
     letterSpacing: 2,
   },
   title: {
@@ -1018,7 +1018,7 @@ const res = StyleSheet.create({
   speedTitle: {
     color: 'rgba(255,255,255,0.82)',
     fontFamily: FONTS.label,
-    fontSize: 13,
+    fontSize: 15,
     letterSpacing: 2,
     marginTop: 16,
   },
@@ -1085,7 +1085,7 @@ const res = StyleSheet.create({
   speedLegendText: {
     color: 'rgba(255,255,255,0.78)',
     fontFamily: FONTS.tileCopy,
-    fontSize: 13,
+    fontSize: 15,
     letterSpacing: 0.9,
   },
   shareBtn: {

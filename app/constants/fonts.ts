@@ -33,7 +33,7 @@ export const FONT_SIZES = {
   hudScore:                   26,
   hudMultiplier:              32,
   hudLabel:                   11,
-  progressLabel:              12,
+  progressLabel:              15,
   pollyLine:                  17,
   ghostSubLabel:              10,
 } as const;
