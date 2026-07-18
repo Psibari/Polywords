@@ -23,6 +23,7 @@ import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
 import { deckBackMaterial } from '../ui/pwMaterials';
 import { useHeartbeat } from '../hooks/useHeartbeat';
+import MasterySeal from './MasterySeal';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -450,30 +451,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const cueOpacityAnim = useRef(new Animated.Value(1)).current;
   const recoilRafRef    = useRef<number | null>(null);
 
-  // ── mastery shards ────────────────────────────────────────────
-  type MasteryShard = {
-    angle: number; speed: number;
-    w: number; h: number;
-    rot: number; rotSpeed: number;
-    color: string;
-  };
-
-  const masteryShards = useRef<MasteryShard[]>(
-    Array.from({ length: 16 }, (_, i) => ({
-      angle:    ((360 / 16) * i + (Math.random() - 0.5) * 20) * Math.PI / 180,
-      speed:    200 + Math.random() * 180,
-      w:        6   + Math.random() * 8,
-      h:        20  + Math.random() * 16,
-      rot:      Math.random() * 360,
-      rotSpeed: (Math.random() - 0.5) * 8,
-      color:    Math.random() > 0.5 ? '#7B2D8B' : '#9B2D6B',
-    }))
-  ).current;
-
-  const masteryRafRef      = useRef<number | null>(null);
-  const masteryStartRef    = useRef<number | null>(null);
-  const [masteryProgress, setMasteryProgress] = useState(-1);
-
   function triggerWrongWordRecoil() {
     if (recoilRafRef.current !== null) {
       cancelAnimationFrame(recoilRafRef.current);
@@ -592,12 +569,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   // ── haunt entrance ────────────────────────────────────────────
   const [hauntReady, setHauntReady]           = useState(!isHaunt);
   const [hauntBannerVisible, setHauntBannerVisible] = useState(false);
-  const [hauntBrokenVisible, setHauntBrokenVisible] = useState(false);
   const [stillHauntedVisible, setStillHauntedVisible] = useState(false);
   const wordHauntTintOpacity = useRef(new Animated.Value(0)).current;
   const hauntBannerOpacity   = useRef(new Animated.Value(0)).current;
-  const hauntBrokenOpacity   = useRef(new Animated.Value(0)).current;
-  const hauntBrokenScale     = useRef(new Animated.Value(0.7)).current;
   const stillHauntedOpacity  = useRef(new Animated.Value(0)).current;
   const stillHauntedScale    = useRef(new Animated.Value(0.7)).current;
   const hauntEntranceStingKeyRef = useRef<string | null>(null);
@@ -684,7 +658,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const masterHeroTransY     = useRef(new Animated.Value(0)).current;
   const masterAllFadeAnim    = useRef(new Animated.Value(1)).current;
   // Phase-based mastery sequence
-  const masteredLabelOpacity = useRef(new Animated.Value(0)).current;
   const goldSeedScale        = useRef(new Animated.Value(0)).current;
   const goldSeedTransY       = useRef(new Animated.Value(0)).current;
   const goldSeedTransX       = useRef(new Animated.Value(0)).current;
@@ -693,12 +666,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const goldBloomScale       = useRef(new Animated.Value(1)).current;
   const goldBloomOpacity     = useRef(new Animated.Value(0)).current;
   const masterCrackOpacity   = useRef(new Animated.Value(0)).current;
-  const masterStampScale     = useRef(new Animated.Value(0.6)).current;
   const masterCoreOpacity    = useRef(new Animated.Value(0)).current;
   const systemStingerOpacity = useRef(new Animated.Value(0)).current;
   const systemStingerScale   = useRef(new Animated.Value(0.75)).current;
   const [masterStampVisible, setMasterStampVisible]   = useState(false);
-  const [masteredLabelVisible, setMasteredLabelVisible] = useState(false);
+  const [sealReady, setSealReady]                       = useState(false);
   const [goldSeedVisible, setGoldSeedVisible]           = useState(false);
   const [goldBloomVisible, setGoldBloomVisible]         = useState(false);
   const [masterCracksVisible, setMasterCracksVisible]   = useState(false);
@@ -885,12 +857,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     setLandedHiddenTileCount(0);
     setFailedHiddenTileId(null);
     setMasterStampVisible(false);
+    setSealReady(false);
     splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
     finalBorder1Anim.setValue(0);
     masterHeroScale.setValue(1);
     masterHeroTransY.setValue(0);
     masterAllFadeAnim.setValue(1);
-    masteredLabelOpacity.setValue(0);
     goldSeedScale.setValue(0);
     goldSeedTransY.setValue(0);
     goldSeedTransX.setValue(0);
@@ -899,11 +871,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     goldBloomScale.setValue(1);
     goldBloomOpacity.setValue(0);
     masterCrackOpacity.setValue(0);
-    masterStampScale.setValue(0.6);
     masterCoreOpacity.setValue(0);
     systemStingerOpacity.setValue(0);
     systemStingerScale.setValue(0.75);
-    setMasteredLabelVisible(false);
     setGoldSeedVisible(false);
     setGoldBloomVisible(false);
     setMasterCracksVisible(false);
@@ -917,12 +887,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     // Haunt resets
     setHauntReady(!isHaunt);
     setHauntBannerVisible(false);
-    setHauntBrokenVisible(false);
     setStillHauntedVisible(false);
     wordHauntTintOpacity.setValue(0);
     hauntBannerOpacity.setValue(0);
-    hauntBrokenOpacity.setValue(0);
-    hauntBrokenScale.setValue(0.7);
     stillHauntedOpacity.setValue(0);
     stillHauntedScale.setValue(0.7);
     return () => clearTimeout(slamTimer);
@@ -1160,7 +1127,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       spawnFloatAtSplit(masteryPoints, '#F5C842');
     }
     setMasterStampVisible(true);
-    setMasteredLabelVisible(false);
     setMasterCracksVisible(false);
     setGoldSeedVisible(false);
     setGoldBloomVisible(false);
@@ -1185,41 +1151,13 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     // Phase 2 — T+500ms: Word pulse
-    setTimeout(() => {
-      setMasteredLabelVisible(true);
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(masteredLabelOpacity, { toValue: 1, duration: 110, useNativeDriver: true }),
-          Animated.spring(masterStampScale, { toValue: 1.18, damping: 6, stiffness: 260, useNativeDriver: true }),
-        ]),
-        Animated.spring(masterStampScale, { toValue: 1.0, damping: 8, stiffness: 220, useNativeDriver: true }),
-      ]).start();
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }, 360);
-
-    // Haunt broken stinger — T+460ms (after stamp slam at T+360ms)
-    if (isHaunt) {
-      setTimeout(() => {
-        setHauntBrokenVisible(true);
-        hauntBrokenOpacity.setValue(0);
-        hauntBrokenScale.setValue(0.7);
-        Animated.parallel([
-          Animated.timing(hauntBrokenOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-          Animated.spring(hauntBrokenScale, { toValue: 1.0, damping: 6, stiffness: 300, useNativeDriver: true }),
-        ]).start();
-        setTimeout(() => {
-          Animated.timing(hauntBrokenOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
-          setTimeout(() => setHauntBrokenVisible(false), 220);
-        }, 560);
-      }, 460);
-    }
+    setTimeout(() => setSealReady(true), 360);
 
     // Phase 3 — T+800ms: MASTERED label appears below word
     setTimeout(() => {
       setMasterCracksVisible(true);
       masterCrackOpacity.setValue(0);
       Animated.timing(masterCrackOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
-      spawnEffect?.('shard', containerWidthRef.current / 2, wordScreenY + crashDistance);
     }, 800);
 
     // Fade label before word swells — NEVER simultaneous
@@ -1236,23 +1174,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
         toValue: 1.0, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true,
       }).start();
     }, 1050);
-
-    // Phase 5 — T+1300ms: Crystal shard burst + Polly + haptic
-    setTimeout(() => {
-      spawnEffect?.('shard', containerWidthRef.current / 2, 40);
-      masteryStartRef.current = null;
-      setMasteryProgress(0);
-      function masteryTick(now: number) {
-        if (masteryStartRef.current === null) masteryStartRef.current = now;
-        const mp = Math.min((now - masteryStartRef.current) / 900, 1);
-        setMasteryProgress(mp);
-        if (mp < 1) masteryRafRef.current = requestAnimationFrame(masteryTick);
-        else { masteryRafRef.current = null; setMasteryProgress(-1); }
-      }
-      masteryRafRef.current = requestAnimationFrame(masteryTick);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      playRoundComplete();
-    }, 1300);
 
     // Phase 6 — T+1900ms: Gold seed appears at word center
     setTimeout(() => {
@@ -1316,7 +1237,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
 
     // Restore dim before transition
     setTimeout(() => {
-      Animated.timing(masteredLabelOpacity, { toValue: 0, duration: 180, useNativeDriver: true }).start();
       Animated.timing(masterCrackOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
       Animated.timing(masterAllFadeAnim, { toValue: 1, duration: 200, useNativeDriver: false }).start();
     }, isBoss ? 4050 : 3200);
@@ -1325,7 +1245,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
 
     // Phase 10 — T+3000ms: Transition
     setTimeout(() => {
-      setMasteredLabelVisible(false);
       setMasterCracksVisible(false);
       setSystemStingerWord(null);
       showWordOutcome(
@@ -1953,59 +1872,17 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       {/* Mastery celebration — phase-based elements */}
       {masterStampVisible && (
         <>
-          {/* Mastery shards — rAF driven */}
-          {masteryProgress >= 0 && masteryShards.map((s, i) => {
-            const originX  = containerWidthRef.current / 2;
-            const originY  = 40;
-            const px       = originX + Math.cos(s.angle) * s.speed * masteryProgress;
-            const py       = originY + Math.sin(s.angle) * s.speed * masteryProgress
-                             + 160 * masteryProgress * masteryProgress;
-            const opacity  = masteryProgress < 0.3 ? 1 : 1 - (masteryProgress - 0.3) / 0.7;
-            const rotation = s.rot + s.rotSpeed * masteryProgress * 60;
-            return (
-              <View
-                key={i}
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  left: px - s.w / 2,
-                  top:  py - s.h / 2,
-                  width: s.w, height: s.h,
-                  borderRadius: 2,
-                  backgroundColor: s.color,
-                  opacity,
-                  transform: [{ rotate: `${rotation}deg` }],
-                }}
-              />
-            );
-          })}
-
-          {/* Diagonal MASTER stamp over the crashed word */}
-          {masteredLabelVisible && (
-            <Animated.Text
-              pointerEvents="none"
-              style={{
-                position: 'absolute',
-                top: masteryWordCenterY - 54,
-                left: 0, right: 0,
-                textAlign: 'center',
-                fontFamily: FONTS.label,
-                fontWeight: '900',
-                fontSize: 44,
-                color: '#F5C842',
-                letterSpacing: 0,
-                opacity: masteredLabelOpacity,
-                textShadowColor: 'rgba(245,200,66,0.55)',
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 12,
-                transform: [
-                  { rotate: '-14deg' },
-                  { scale: masterStampScale },
-                ],
+          {sealReady && (
+            <MasterySeal
+              x={containerWidth / 2}
+              y={masteryWordCenterY}
+              variant={isHaunt ? 'banished' : 'master'}
+              label={isHaunt ? 'BANISHED' : 'MASTER'}
+              onReveal={() => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                playRoundComplete();
               }}
-            >
-              {isHaunt ? 'BANISHED' : 'MASTER'}
-            </Animated.Text>
+            />
           )}
 
           {/* Cracked word energy */}
@@ -2163,20 +2040,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
         >
           <Text style={styles.hauntEntranceBannerText}>Guess who's back.</Text>
         </Animated.View>
-      )}
-
-      {/* ── HAUNT BROKEN stamp ────────────────────────────────── */}
-      {hauntBrokenVisible && (
-        <Animated.Text
-          pointerEvents="none"
-          style={[styles.hauntBrokenText, {
-            top: masteryWordCenterY + 38,
-            opacity: hauntBrokenOpacity,
-            transform: [{ scale: hauntBrokenScale }],
-          }]}
-        >
-          HAUNT BROKEN
-        </Animated.Text>
       )}
 
       {/* ── STILL HAUNTED stamp ───────────────────────────────── */}
@@ -2592,20 +2455,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     letterSpacing: 0.5,
     textAlign: 'center',
-  },
-  hauntBrokenText: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontFamily: FONTS.label,
-    fontWeight: '900',
-    fontSize: 26,
-    color: '#FFFFFF',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(123,45,139,0.8)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   stillHauntedText: {
     position: 'absolute',
