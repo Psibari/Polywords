@@ -167,8 +167,11 @@ export const libraryMaterial = {
   ghostTitle: 'rgba(185,138,222,0.75)',   // PW.color.lavender, faded
   ghostFeatherEdge: 'rgba(185,138,222,0.5)',
   hauntedLabel: 'rgba(185,138,222,0.6)',
-  parchment: heroBookMaterial.pagesCreamTop,
-  parchmentDeep: heroBookMaterial.pagesCream,
+  // Dark card faces for stat/progress panels (Vault bookplate, Results
+  // ledger) — was the Home book's cream page color, which read as a stray
+  // gray-tan box against this app's dark palette outside the book itself.
+  parchment: PW.color.overlayLight,
+  parchmentDeep: PW.color.cardFace,
 } as const;
 
 // STAGE — the room the drama happens in. Backgrounds only, never panels.

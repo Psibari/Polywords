@@ -13,6 +13,7 @@ import {
 import HomeEmbers from '../components/HomeEmbers';
 import PollyHomePerch from '../components/PollyHomePerch';
 import { HomeWordmark } from '../components/ui/HomeWordmark';
+import { HomeTagline } from '../components/ui/HomeTagline';
 import { DailyQuillGlyph, VaultSpinesGlyph } from '../components/ui/HomeDoorGlyphs';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
@@ -20,11 +21,7 @@ import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { getDisplayStreak } from '../game/dailyStreak';
 import { heroBookMaterial, stageMaterial } from '../ui/pwMaterials';
 import { DAILY_CLUE_TITLE } from '../ui/pwDailyMaterials';
-import {
-  HOME_TAGLINE,
-  homeDoor,
-  homeType,
-} from '../ui/pwHomeMaterials';
+import { homeDoor, homeType } from '../ui/pwHomeMaterials';
 import { PW } from '../ui/pwTheme';
 
 type Props = {
@@ -76,7 +73,7 @@ export default function HomeScreen({ navigation }: Props) {
               <View style={styles.wordmarkBox}>
                 <HomeWordmark width={wordmarkWidth} />
               </View>
-              <Text style={styles.tagline}>{HOME_TAGLINE}</Text>
+              <HomeTagline maxWidth={wordmarkWidth} />
             </View>
 
             {/* Open plaza — Polly's room to breathe */}
@@ -213,17 +210,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 96,
-  },
-  tagline: {
-    marginTop: 2,
-    color: PW.color.softWhite,
-    fontFamily: FONTS.tileCopy,
-    fontSize: homeType.tagline,
-    lineHeight: homeType.tagline + 6,
-    textAlign: 'center',
-    textShadowColor: PW.color.textShadowStrong,
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
   },
   plaza: {
     flex: 1,

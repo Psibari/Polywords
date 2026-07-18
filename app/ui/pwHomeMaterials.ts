@@ -3,7 +3,7 @@ import { heroBookMaterial } from './pwMaterials';
 import { POLLY_LINES } from '../game/pollyCharacter';
 
 // ── Copy ──
-export const HOME_TAGLINE = 'Words have meaning..SSsss';
+export const HOME_TAGLINE = 'WORDS HAVE MEANING..SSsss';
 
 // Polly speech: mixed case, never uppercase. One line per app open, rotating.
 export const HOME_GREETING_LINES = [
@@ -17,7 +17,7 @@ export const HOME_GREETING_LINES = [
 
 // ── Type scale (legibility clause: floor 14, tune on device) ──
 export const homeType = {
-  tagline: 18,
+  tagline: 32,
   dareLabel: 32,
   doorTitle: 16,
   greeting: 18,
@@ -45,7 +45,7 @@ export const homeDoor = {
 
 // ── Polly perch geometry (the branch is part of the pose art) ──
 export const homePerch = {
-  bottomOffset: 404, // high enough to loom from the left, but layered behind the Home book so she never covers controls
+  bottomOffset: 364, // high enough to loom from the left, but layered behind the Home book so she never covers controls; lowered to clear the bigger tagline above her
   pollySize: 246, // antagonist-sized presence without swallowing the Hunt action
   bubbleFace: '#1A1055', // matches Daily bubble material
   bubbleRim: 'rgba(245,200,66,0.55)',

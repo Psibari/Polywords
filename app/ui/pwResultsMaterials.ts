@@ -48,16 +48,16 @@ export const resultsType = {
   homeLink: 15,
 } as const;
 
-// ── Ledger panel: BOOK leather frame around dark parchment ──
+// ── Ledger panel: BOOK leather frame around a dark card face ──
 export const resultsLedger = {
   panelFace: heroBookMaterial.coverPurple,
   panelRim: heroBookMaterial.goldHairline,
-  parchmentTop: heroBookMaterial.pagesCreamTop,
-  parchment: heroBookMaterial.pagesCream,
-  rule: heroBookMaterial.pagesLine,
-  ink: '#33291A', // ledger ink on parchment
-  inkSoft: 'rgba(51,41,26,0.72)',
-  mark: PW.color.amber, // Boss ✓ / Perfect ✓ — ink-gold on parchment
+  parchmentTop: PW.color.overlayLight,
+  parchment: PW.color.cardFace,
+  rule: 'rgba(245,200,66,0.22)',
+  ink: PW.color.softWhite, // ledger text on the dark card face
+  inkSoft: PW.color.mutedWhite,
+  mark: PW.color.amber, // Boss ✓ / Perfect ✓
 } as const;
 
 // ── Callout cards (CARD material trims) ──

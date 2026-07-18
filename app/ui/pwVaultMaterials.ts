@@ -21,7 +21,7 @@ export const vaultMaterial = {
   bookplateBorder: PW.color.goldSoft,
   bookplateSeal: PW.color.gold,
   bookplateSealText: '#33291A',
-  bookplateTrack: 'rgba(51,41,26,0.28)',
+  bookplateTrack: 'rgba(255,255,255,0.14)',
   bookplateProgress: PW.color.amber,
   bookplateText: PW.color.softWhite,
   bookplateCopy: PW.color.white,

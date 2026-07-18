@@ -1,14 +1,21 @@
 import React, { forwardRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, Image, StyleSheet, View } from 'react-native';
 import { dailyScrollMaterial as M } from '../../ui/pwDailyMaterials';
+
+const FEATHER_WHITE = require('../../../assets/ui/feather-life-filled.png');
+const FEATHER_GOLD = require('../../../assets/ui/feather-gold-reward.png');
+const GOLD = '#F5C842';
 
 export type QuillScrollPanelProps = {
   // 0 = rolled closed, 1 = fully open. Native driver: transform + opacity only.
   rollProgress: Animated.Value;
   // 0 = clue showing, 1 = purple reveal panel fully covers the card. Native driver: transform + opacity only.
   revealProgress?: Animated.Value;
-  revealHeading?: string;
-  revealBody?: string;
+  // Daily's day-progress feathers: 1-4 correct claims today shows that many
+  // white feathers; the 5th (revealPerfect) shows a single gold feather and
+  // gilds the card border for the rest of that reveal.
+  revealFeatherCount?: number;
+  revealPerfect?: boolean;
   children: React.ReactNode;
 };
 
@@ -16,7 +23,7 @@ const VIEW_H = 190;
 
 const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
   function QuillScrollPanel(
-    { rollProgress, revealProgress, revealHeading, revealBody, children },
+    { rollProgress, revealProgress, revealFeatherCount, revealPerfect, children },
     ref,
   ) {
     const rollScaleX = rollProgress.interpolate({
@@ -41,12 +48,20 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       ? revealProgress.interpolate({ inputRange: [0, 1], outputRange: [-VIEW_H * 0.96, 0] })
       : -VIEW_H * 0.96;
 
+    const isRevealing = Boolean(revealFeatherCount) || revealPerfect;
+    const borderColor = revealPerfect ? GOLD : isRevealing ? '#FFFFFF' : M.panelBorder;
+
     return (
       <View ref={ref} style={styles.root} collapsable={false}>
         <Animated.View
           style={[
             styles.scrollBody,
-            { opacity: rollOpacity, transform: [{ scaleX: rollScaleX }] },
+            {
+              borderColor,
+              borderWidth: isRevealing ? 3 : 1.5,
+              opacity: rollOpacity,
+              transform: [{ scaleX: rollScaleX }],
+            },
           ]}
         >
           {/* front-content — the live clue text, fades + sinks on reveal */}
@@ -69,11 +84,14 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
                 { transform: [{ translateY: revealTranslateY }] },
               ]}
             >
-              {revealHeading ? (
-                <Animated.Text style={styles.revealHeading}>{revealHeading}</Animated.Text>
-              ) : null}
-              {revealBody ? (
-                <Animated.Text style={styles.revealBody}>{revealBody}</Animated.Text>
+              {revealPerfect ? (
+                <Image source={FEATHER_GOLD} style={styles.revealFeatherGold} resizeMode="contain" />
+              ) : revealFeatherCount ? (
+                <View style={styles.revealFeatherRow}>
+                  {Array.from({ length: revealFeatherCount }).map((_, i) => (
+                    <Image key={i} source={FEATHER_WHITE} style={styles.revealFeatherSmall} resizeMode="contain" />
+                  ))}
+                </View>
               ) : null}
             </Animated.View>
           )}
@@ -96,8 +114,6 @@ const styles = StyleSheet.create({
     borderRadius: M.radius,
     overflow: 'hidden',
     backgroundColor: M.panelBg,
-    borderWidth: 1.5,
-    borderColor: M.panelBorder,
     shadowColor: '#000000',
     shadowOpacity: 0.34,
     shadowRadius: 18,
@@ -121,19 +137,17 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 20,
   },
-  revealHeading: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textAlign: 'center',
+  revealFeatherRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  revealBody: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '500',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    lineHeight: 20,
+  revealFeatherSmall: {
+    width: 44,
+    height: 70,
+  },
+  revealFeatherGold: {
+    width: 100,
+    height: 150,
   },
 });

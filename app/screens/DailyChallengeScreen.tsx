@@ -412,7 +412,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   );
   const completingCandidateRef = useRef<string | null>(null);
   const intakeScale = useRef(new Animated.Value(1)).current;
-  const [intakeWord, setIntakeWord] = useState('');
+  // How many of today's 5 rounds are solved as of this claim, for the
+  // reveal curtain's feather tally. Computed synchronously in handleClaim
+  // (not read from the store) so it can't race the session update.
+  const [revealSolvedCount, setRevealSolvedCount] = useState(0);
 
   function setLocked(val: boolean) {
     inputLockedRef.current = val;
@@ -474,9 +477,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     completingCandidateRef.current = null;
     setLocked(false);
     roundStartRef.current = Date.now();
-    setIntakeWord('');
     intakeScale.setValue(1);
     revealProgress.setValue(0);
+    setRevealSolvedCount(0);
 
     const round = dailySession.rounds[dailySession.currentRoundIndex];
     if (!round) return;
@@ -538,12 +541,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       completingCandidateRef.current = candidate;
       setLocked(true);
       setCardStates(prev => new Map(prev).set(candidate, 'correct'));
+      setRevealSolvedCount(dailySession.currentRoundIndex + 1);
       measureClueTarget();
 
       // Curtain starts dropping the same instant the tile starts flying, so
       // the two finish together instead of the curtain lagging behind a tile
       // that already landed and sat there waiting to be covered.
-      setIntakeWord(candidate.toUpperCase());
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       playSfx('correctClaim');
       Animated.sequence([
@@ -687,8 +690,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               ref={clueVaultRef}
               rollProgress={rollProgress}
               revealProgress={revealProgress}
-              revealHeading={intakeWord}
-              revealBody="RECLAIMED"
+              revealPerfect={revealSolvedCount === DAILY_ROUND_COUNT}
+              revealFeatherCount={
+                revealSolvedCount > 0 && revealSolvedCount < DAILY_ROUND_COUNT
+                  ? revealSolvedCount
+                  : undefined
+              }
             >
               {currentRound && (
                 <ClueStage

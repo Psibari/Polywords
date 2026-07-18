@@ -683,7 +683,7 @@ const rs = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 44,
     paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE + 24, // full sprite height + breathing room
   },
   verdictBlock: {
@@ -692,13 +692,14 @@ const rs = StyleSheet.create({
   },
   verdictBox: {
     width: '100%',
-    height: resultsType.verdict + 14,
+    height: resultsType.verdict * 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   verdict: {
     fontFamily: FONTS.wordDisplay,
     fontSize: resultsType.verdict,
+    lineHeight: resultsType.verdict * 1.3,
     letterSpacing: 2,
     textAlign: 'center',
     width: '100%',
