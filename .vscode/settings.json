@@ -1,0 +1,24 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.wordWrap": "on",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.renderWhitespace": "selection",
+  "workbench.colorTheme": "Default Dark Modern",
+  "editor.fontLigatures": true,
+  "editor.fontFamily": "Cascadia Code, Consolas, monospace",
+  "editor.fontSize": 14,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "files.associations": {
+    "*.tsx": "typescriptreact"
+  }
+}
