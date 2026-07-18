@@ -1,5 +1,5 @@
 # POLYWORDS — CONTEXT.md
-### Session briefing · July 13, 2026
+### Session briefing · July 18, 2026
 
 Read this at the start of any session. Full canonical detail lives in `CLAUDE.md`.
 
@@ -123,6 +123,8 @@ Play screen design overhaul complete for this sprint.
   approved Haunt content. It currently includes the July 15 live-writing checkpoint through
   PLANT and PLOT. It is not imported by gameplay and does not change
   `assets/data/huntData.json` without a separate explicit export or merge.
+- Heartbeat feel system: tension-scaled edge vignette + GPS-phase-aware tile pacing, both
+  device-confirmed across a restart chain.
 
 ---
 

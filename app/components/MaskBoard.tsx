@@ -22,6 +22,7 @@ import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
 import { deckBackMaterial } from '../ui/pwMaterials';
+import { useHeartbeat } from '../hooks/useHeartbeat';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -312,6 +313,8 @@ function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
 
 export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent }: Props) {
   const store   = useGameStore();
+  const { pulseAnim, tension } = useHeartbeat();
+  const tileBreatheAmount = useRef(new Animated.Value(0)).current;
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
   const isFinalGateStep = isBoss || isHaunt;
@@ -747,6 +750,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       }).start();
     }
   }, [store.game.stepIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    Animated.timing(tileBreatheAmount, {
+      toValue: tension === 3 ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [tension]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Polly reactive triggers ───────────────────────────────────
   useEffect(() => {
@@ -1437,6 +1448,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     resolution: 'up' | 'right' | 'wrong',
     bossWord: boolean,
     tileIndex: number,
+    phaseRole: WordStep['emotionalRole'],
   ): number {
     let gap = 350;
     // Combo modifier
@@ -1447,6 +1459,21 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     // Resolution type
     if      (resolution === 'right') gap -= 50;
     else if (resolution === 'wrong') gap += 150;
+    // GPS phase modifier — confidence/flow stay generous, panic tightens,
+    // independent of streak so early rounds never feel rushed and late
+    // rounds never feel slack even after a chain break.
+    switch (phaseRole) {
+      case 'confidence':
+      case 'flow':
+        gap += 60;
+        break;
+      case 'panic':
+      case 'adrenaline':
+        gap -= 40;
+        break;
+      default:
+        break;
+    }
     // Boss modifier
     if (bossWord) gap -= 100;
     // Per-tile escalation: each tile within a word tightens the gap
@@ -1482,7 +1509,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
 
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
       firePollyEvent('correct');
-      const gapUp = computeGapMs(store.game.combo, 'up', isBoss, tileIndexInWordRef.current);
+      const gapUp = computeGapMs(store.game.combo, 'up', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapUp);
@@ -1493,7 +1520,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       store.submitSwipeUp(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrong = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);
+      const gapWrong = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapWrong);
@@ -1516,7 +1543,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       spawnFloat(trapPoints, 'trap', trapTier);
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
       onTrapCaught?.();
-      const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current);
+      const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapRight);
@@ -1527,7 +1554,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       store.submitSwipeDown(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrongR = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current);
+      const gapWrongR = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapWrongR);
@@ -1796,7 +1823,20 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
                 <Animated.View style={[
                   styles.deckActiveCardLayer,
                   {
-                    transform: [{ translateY: deckActiveY }, { translateY: cardPopY }, { rotate: deckActiveRotDeg }],
+                    transform: [
+                      { translateY: deckActiveY },
+                      { translateY: cardPopY },
+                      { rotate: deckActiveRotDeg },
+                      {
+                        scale: Animated.add(
+                          1,
+                          Animated.multiply(
+                            pulseAnim,
+                            tileBreatheAmount.interpolate({ inputRange: [0, 1], outputRange: [0, 0.008] }),
+                          ),
+                        ),
+                      },
+                    ],
                     opacity: deckActiveOp,
                   },
                 ]}>

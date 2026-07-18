@@ -21,6 +21,7 @@ import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
 import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import HeartbeatVignette from '../components/HeartbeatVignette';
 
 const MAX_FEATHERS = 5;
 const INTRO_SEEN_KEY = 'polywords_intro_seen';
@@ -517,14 +518,39 @@ function GameDirector({ navigation }: { navigation: any }) {
     }
   }, [game.status]);
 
+  const prevTensionRef = useRef(0);
+
   useEffect(() => {
     const step = currentStep(game);
     if (step.kind !== 'word') return;
 
-    let t = 0;
+    const phaseFloor = (role: typeof step.emotionalRole): number => {
+      switch (role) {
+        case 'confidence':
+        case 'flow':
+          return 0;
+        case 'firstTension':
+        case 'tension':
+          return 1;
+        case 'panic':
+        case 'adrenaline':
+          return 2;
+        case 'finalBoss':
+          return 3;
+        default:
+          return 0;
+      }
+    };
+
+    let t = phaseFloor(step.emotionalRole);
     if (step.eventType === 'bossWord') t = 3;
     if (game.lives === 1) t = Math.min(t + 1, 3);
     if (missedCount >= 2) t = Math.min(t + 1, 3);
+
+    if (t > prevTensionRef.current) {
+      Haptics.selectionAsync();
+    }
+    prevTensionRef.current = t;
     setTension(t);
   }, [game.stepIndex, game.lives, missedCount, setTension]);
 
@@ -755,6 +781,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
+      {!isDone && <HeartbeatVignette />}
       {!isDone && <TopBar />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />

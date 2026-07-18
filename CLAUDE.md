@@ -63,6 +63,8 @@ systems from it without explicit approval.
   files remain shelved/disconnected and must not be re-wired casually.
 - Left-anchored Home/Hunt reactions use the authored right-facing smug pose; do not restore
   the left-facing `sprite6.png` on those surfaces.
+- Heartbeat feel system live: tension-scaled edge vignette (`HeartbeatVignette.tsx`) +
+  GPS-phase-aware pacing in `MaskBoard.tsx`. Device-confirmed.
 
 ## Tech
 
@@ -149,9 +151,10 @@ Vault:
 ## Polly
 
 - Polly is an opponent, not a friendly mascot.
-- She is a polysemous word thief: mimic, hoarder, taunting language burglar.
+- She is a trickster and trap-setter: she never owned the words, she baits players toward the
+  wrong meaning. Never call her a word-thief, mimic, hoarder, or language burglar.
 - She should not sound warmly supportive.
-- Keep dialogue in the smug word-thief voice and check `docs/POLLY_DIALOGUE_BANK.md`.
+- Keep dialogue in the smug trickster voice and check `docs/POLLY_DIALOGUE_BANK.md`.
 - `BINGO BANGO ZZZZINGO!` is system text, never Polly dialogue.
 
 ## Content
@@ -214,4 +217,4 @@ assets/images/polly/poses/*.png
 tools/content/mask-rewriter/
 ```
 
-Last trimmed: 2026-07-12.
+Last trimmed: 2026-07-18.
