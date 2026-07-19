@@ -14,6 +14,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { dailyRevealMaterial as M } from '../../ui/pwDailyMaterials';
+import { PW } from '../../ui/pwTheme';
 
 const FEATHER_WHITE = require('../../../assets/ui/feather-life-filled.png');
 const FEATHER_GOLD = require('../../../assets/ui/feather-gold-reward.png');
@@ -63,9 +64,9 @@ export default function DailyRevealCurtain({ revealFeatherCount, revealPerfect }
       <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
         <Defs>
           <RadialGradient id="curtainGlow" cx="50%" cy="50%" rx="60%" ry="60%">
-            <Stop offset="0" stopColor={M.glow} />
-            <Stop offset="0.6" stopColor={M.glowFade} />
-            <Stop offset="1" stopColor={M.glowFade} stopOpacity={0} />
+            <Stop offset="0" stopColor={PW.color.gold} stopOpacity={0.20} />
+            <Stop offset="0.6" stopColor={PW.color.gold} stopOpacity={0.06} />
+            <Stop offset="1" stopColor={PW.color.gold} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Rect x={0} y={0} width="100%" height="100%" fill="url(#curtainGlow)" />
@@ -133,18 +134,18 @@ export default function DailyRevealCurtain({ revealFeatherCount, revealPerfect }
             <Stop offset="1" stopColor={M.rollBottom} />
           </SvgGrad>
           <SvgGrad id="rollHighlight" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={M.rollSpecular} />
-            <Stop offset="1" stopColor={M.rollSpecular} stopOpacity={0} />
+            <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.7} />
+            <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
           </SvgGrad>
           <RadialGradient id="rollEndCap" cx="50%" cy="50%" r="50%">
             <Stop offset="0" stopColor={M.rollEndCapNear} />
             <Stop offset="1" stopColor={M.rollEndCapFar} />
           </RadialGradient>
         </Defs>
-        <Rect x={0} y={4} width={360} height={14} rx={7} fill="url(#rollBody)" />
-        <Rect x={0} y={4} width={360} height={5} rx={2.5} fill="url(#rollHighlight)" />
-        <Ellipse cx={6} cy={11} rx={6} ry={7} fill="url(#rollEndCap)" />
-        <Ellipse cx={354} cy={11} rx={6} ry={7} fill="url(#rollEndCap)" />
+        <Rect x={0} y={8} width={360} height={14} rx={7} fill="url(#rollBody)" />
+        <Rect x={0} y={8} width={360} height={5} rx={2.5} fill="url(#rollHighlight)" />
+        <Ellipse cx={6} cy={15} rx={6} ry={7} fill="url(#rollEndCap)" />
+        <Ellipse cx={354} cy={15} rx={6} ry={7} fill="url(#rollEndCap)" />
       </Svg>
     </View>
   );
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '15%',
     right: '15%',
-    bottom: -6,
+    bottom: 2,
     height: 10,
     borderRadius: 999,
     backgroundColor: M.rollShadow,
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: -10,
+    bottom: 0,
     height: 22,
   },
 });

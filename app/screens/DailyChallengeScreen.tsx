@@ -496,7 +496,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     rollProgress.setValue(0);
     Animated.timing(rollProgress, {
       toValue: 1,
-      duration: 220,
+      duration: 320,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
@@ -619,7 +619,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setTimeout(() => {
         Animated.timing(rollProgress, {
           toValue: 0,
-          duration: 180,
+          duration: 260,
           easing: Easing.in(Easing.cubic),
           useNativeDriver: true,
         }).start();

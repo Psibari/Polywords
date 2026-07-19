@@ -18,19 +18,18 @@ export type QuillScrollPanelProps = {
 };
 
 const VIEW_H = 190;
+// Tuned for this panel's own size (~190px tall) — HERO_BOOK_PERSPECTIVE (2000)
+// is scaled for HeroBook's much larger cover and would read nearly flat here.
+const PANEL_PERSPECTIVE = 900;
 
 const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
   function QuillScrollPanel(
     { rollProgress, revealProgress, revealFeatherCount, revealPerfect, children },
     ref,
   ) {
-    const rollScaleX = rollProgress.interpolate({
+    const rollRotateY = rollProgress.interpolate({
       inputRange: [0, 1],
-      outputRange: [0.08, 1],
-    });
-    const rollOpacity = rollProgress.interpolate({
-      inputRange: [0, 0.35, 1],
-      outputRange: [0, 0, 1],
+      outputRange: ['-90deg', '0deg'],
     });
 
     // front-content: fades + sinks as the curtain drops (CSS: opacity 0, translateY(30%))
@@ -54,8 +53,10 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
           style={[
             styles.scrollBody,
             {
-              opacity: rollOpacity,
-              transform: [{ scaleX: rollScaleX }],
+              transform: [
+                { perspective: PANEL_PERSPECTIVE },
+                { rotateY: rollRotateY },
+              ],
             },
           ]}
         >

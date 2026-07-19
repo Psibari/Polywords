@@ -22,8 +22,6 @@ export default function DailyCardFace({ label }: Props) {
         end={{ x: 0, y: 1 }}
         style={styles.sheen}
       />
-      <View style={[styles.pin, styles.pinTL]} />
-      <View style={[styles.pin, styles.pinBR]} />
       <Text
         style={styles.label}
         numberOfLines={1}
@@ -63,15 +61,6 @@ const styles = StyleSheet.create({
     right: 0,
     height: '40%',
   },
-  pin: {
-    position: 'absolute',
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: dailyCardFaceMaterial.pin,
-  },
-  pinTL: { top: 6, left: 6 },
-  pinBR: { bottom: 6, right: 6 },
   label: {
     color: dailyCardMaterial.text,
     fontFamily: FONTS.tileCopy,
