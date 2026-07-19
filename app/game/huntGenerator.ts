@@ -96,6 +96,10 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 
 const DIFFICULTY_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
 
+function hasBossContent(word: string): boolean {
+  return db[word].hiddenMeaning != null || db[word].hiddenTrap != null;
+}
+
 // Fledgling draw: keep the shuffle for variety, but float easier words to the
 // front of each pool so a player's first hunts draw gentler decks.
 function easyFirst(pool: string[]): string[] {
@@ -174,7 +178,10 @@ export function generateHunt(opts: {
       case 'flow':       return next([flowPool, confidencePool, tensionPool]);
       case 'tension':    return next([tensionPool, flowPool, panicPool]);
       case 'panic':      return next([panicPool, tensionPool]);
-      case 'boss':       return next([bossPool, panicPool, tensionPool]);
+      case 'boss': {
+        const eligible = (pool: string[]) => pool.filter(hasBossContent);
+        return next([eligible(bossPool), eligible(panicPool), eligible(tensionPool)]);
+      }
     }
   }
 
@@ -182,7 +189,7 @@ export function generateHunt(opts: {
   let ghostWord: string | null = null;
   for (const gid of ghostWordIds) {
     const w = gid.toUpperCase();
-    if (db[w] && (db[w].gpsTag === 'panic' || db[w].gpsTag === 'boss') && !selected.has(w) && !mastered.has(w)) {
+    if (db[w] && db[w].gpsTag === 'boss' && !selected.has(w) && !mastered.has(w)) {
       ghostWord = w;
       selected.add(w);
       break;
