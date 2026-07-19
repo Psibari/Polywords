@@ -1,10 +1,8 @@
 import React, { forwardRef } from 'react';
-import { Animated, Image, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import { dailyScrollMaterial as M } from '../../ui/pwDailyMaterials';
-
-const FEATHER_WHITE = require('../../../assets/ui/feather-life-filled.png');
-const FEATHER_GOLD = require('../../../assets/ui/feather-gold-reward.png');
-const GOLD = '#F5C842';
+import DailyPanelFrame from './DailyPanelFrame';
+import DailyRevealCurtain from './DailyRevealCurtain';
 
 export type QuillScrollPanelProps = {
   // 0 = rolled closed, 1 = fully open. Native driver: transform + opacity only.
@@ -49,7 +47,6 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       : -VIEW_H * 0.96;
 
     const isRevealing = Boolean(revealFeatherCount) || revealPerfect;
-    const borderColor = revealPerfect ? GOLD : isRevealing ? '#FFFFFF' : M.panelBorder;
 
     return (
       <View ref={ref} style={styles.root} collapsable={false}>
@@ -57,25 +54,25 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
           style={[
             styles.scrollBody,
             {
-              borderColor,
-              borderWidth: isRevealing ? 3 : 1.5,
               opacity: rollOpacity,
               transform: [{ scaleX: rollScaleX }],
             },
           ]}
         >
-          {/* front-content — the live clue text, fades + sinks on reveal */}
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.content,
-              { opacity: frontOpacity, transform: [{ translateY: frontTranslateY }] },
-            ]}
-          >
-            {children}
-          </Animated.View>
+          <DailyPanelFrame state={revealPerfect ? 'perfect' : isRevealing ? 'revealing' : 'idle'}>
+            {/* front-content — the live clue text, fades + sinks on reveal */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.content,
+                { opacity: frontOpacity, transform: [{ translateY: frontTranslateY }] },
+              ]}
+            >
+              {children}
+            </Animated.View>
+          </DailyPanelFrame>
 
-          {/* .content — purple curtain, slides down from above to cover the card */}
+          {/* purple curtain, slides down from above to cover the card */}
           {revealProgress && (
             <Animated.View
               pointerEvents="none"
@@ -84,15 +81,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
                 { transform: [{ translateY: revealTranslateY }] },
               ]}
             >
-              {revealPerfect ? (
-                <Image source={FEATHER_GOLD} style={styles.revealFeatherGold} resizeMode="contain" />
-              ) : revealFeatherCount ? (
-                <View style={styles.revealFeatherRow}>
-                  {Array.from({ length: revealFeatherCount }).map((_, i) => (
-                    <Image key={i} source={FEATHER_WHITE} style={styles.revealFeatherSmall} resizeMode="contain" />
-                  ))}
-                </View>
-              ) : null}
+              <DailyRevealCurtain revealFeatherCount={revealFeatherCount} revealPerfect={revealPerfect} />
             </Animated.View>
           )}
         </Animated.View>
@@ -131,23 +120,5 @@ const styles = StyleSheet.create({
   },
   revealPanel: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#7B2D8B',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 20,
-  },
-  revealFeatherRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  revealFeatherSmall: {
-    width: 44,
-    height: 70,
-  },
-  revealFeatherGold: {
-    width: 100,
-    height: 150,
   },
 });

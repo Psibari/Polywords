@@ -5,14 +5,13 @@ import {
   Easing,
   PanResponder,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { FONTS } from '../constants/fonts';
 import { playSfx } from '../audio/sfx';
-import { dailyCardMaterial } from '../ui/pwDailyMaterials';
+import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
+import DailyCardFace from './ui/DailyCardFace';
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -35,9 +34,9 @@ const MOVE_THRESHOLD = 4;
 function rimColors(
   state: DailyAnswerCardState,
 ): readonly [string, string] {
-  if (state === 'correct') return ['#F5C842', '#F5C842'];
-  if (state === 'wrong') return ['#CC2200', '#CC2200'];
-  if (state === 'disabled') return ['#3C315E', '#7B2D8B'];
+  if (state === 'correct') return [dailyCardFaceMaterial.rimCorrect, dailyCardFaceMaterial.rimCorrect];
+  if (state === 'wrong') return [dailyCardFaceMaterial.rimWrong, dailyCardFaceMaterial.rimWrong];
+  if (state === 'disabled') return [dailyCardFaceMaterial.rimDisabledStart, dailyCardFaceMaterial.rimDisabledEnd];
   return [dailyCardMaterial.outerGradient[0], dailyCardMaterial.outerGradient[1]];
 }
 
@@ -489,6 +488,7 @@ export default function DailyAnswerCard({
           style={styles.rim}
         >
           <View style={styles.face}>
+            <DailyCardFace label={label} state={state} />
             <Animated.View
               pointerEvents="none"
               style={[styles.gripGlow, { opacity: gripGlow }]}
@@ -502,14 +502,6 @@ export default function DailyAnswerCard({
             {state === 'disabled' && (
               <View pointerEvents="none" style={styles.disabledOverlay} />
             )}
-            <Text
-              style={styles.label}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-            >
-              {label.toUpperCase()}
-            </Text>
           </View>
         </LinearGradient>
       </Animated.View>
@@ -582,13 +574,5 @@ const styles = StyleSheet.create({
   disabledOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: dailyCardMaterial.disabledOverlay,
-  },
-  label: {
-    color: dailyCardMaterial.text,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textAlign: 'center',
   },
 });
