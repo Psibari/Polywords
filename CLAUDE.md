@@ -71,7 +71,15 @@ systems from it without explicit approval.
 Expo SDK managed, TypeScript strict, React Native, Zustand + immer, Expo Router, Animated API,
 `react-native-svg`, Expo Haptics, `expo-audio`.
 
-Fonts: Bungee Shade, BebasNeue-Regular, Barlow Condensed Bold, Lilita One.
+Fonts (actually referenced in `app/constants/fonts.ts` and applied to components):
+BebasNeue-Regular (hero word), Barlow Condensed Bold (all UI), Lilita One (Polly dialogue
+only), Rammetto One (brand logotype/wordmark only). `BungeeShade-Regular.ttf` is still loaded
+by `App.tsx`'s `useFonts()` and linked via `app.json`'s `expo-font` plugin, but zero components
+reference it — dead weight, not an active font. `app.json` also links seven more legacy font
+files with zero references anywhere in `app/`: `SuperCartoon-6R791`, `SuperCarnival-j9Wq0`,
+`SuperFrosting-R9z4o`, `gomarice_okuba_cloud`, `InterVariable`, `Poppins-Bold`,
+`Poppins-SemiBold`. Verified 2026-07-19; do not treat this list as permanent — re-check
+`app/constants/fonts.ts` + `App.tsx` + `app.json` against actual usage before trusting it.
 
 Music: `MusicEngine.ts` plays committed audio files. Runtime music synthesis is deleted and
 must not return. Boss music keys off `eventType === 'bossWord'`, not step numbers. Expo Audio

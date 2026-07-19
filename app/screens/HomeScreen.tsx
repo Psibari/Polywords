@@ -13,7 +13,6 @@ import {
 import HomeEmbers from '../components/HomeEmbers';
 import PollyHomePerch from '../components/PollyHomePerch';
 import { HomeWordmark } from '../components/ui/HomeWordmark';
-import { HomeTagline } from '../components/ui/HomeTagline';
 import { DailyQuillGlyph, VaultSpinesGlyph } from '../components/ui/HomeDoorGlyphs';
 import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
@@ -73,7 +72,6 @@ export default function HomeScreen({ navigation }: Props) {
               <View style={styles.wordmarkBox}>
                 <HomeWordmark width={wordmarkWidth} />
               </View>
-              <HomeTagline maxWidth={wordmarkWidth} />
             </View>
 
             {/* Open plaza — Polly's room to breathe */}

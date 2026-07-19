@@ -1,96 +1,97 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Image, StyleSheet } from 'react-native';
 import { useReducedMotionPreference } from '../../hooks/usePollyAmbientMotion';
+import { HOME_TAGLINE } from '../../ui/pwHomeMaterials';
 
-// Source crop geometry (px) from the approved title-reveal render. WORDS_X is
-// POLY's and WORDS's relative offset in that source frame; both pieces scale
-// together from `width` so the lockup stays correctly spaced at any size.
-const POLY_W = 566;
-const POLY_H = 204;
-const WORDS_W = 870;
-const WORDS_H = 210;
-const WORDS_X = 604;
-const LOCKUP_W = WORDS_X + WORDS_W;
-const LOCKUP_H = WORDS_H;
-const HOME_WORDMARK_ASPECT_RATIO = LOCKUP_H / LOCKUP_W;
+// Source crop geometry (px) from the approved title-reveal render. Lockup and
+// tagline are two separate pieces cropped from the same frame; GAP is the
+// vertical space between them, all scaled together from `width` so the whole
+// unit stays correctly proportioned at any size.
+const LOCKUP_W = 1558;
+const LOCKUP_H = 251;
+const TAGLINE_W = 1462;
+const TAGLINE_H = 208;
+const GAP = 51;
 
 type Props = {
   width: number;
 };
 
-// Home masthead: POLY (purple) drops in, WORDS (gold) slides in from the
-// lower right, settling into the lockup once on mount. Reduced motion skips
-// straight to the settled position. Separate from BrandWordmark: the Home
-// screen needs a large readable title; icon/splash assets keep their own lockup.
+// Home masthead: the POLYWORDS lockup fades in, and the "WORDS HAVE MEANING"
+// tagline types itself on via a left-to-right wipe, revealing its own curl
+// flourish as it goes. Both pieces are baked-in pixels from the approved
+// title-reveal render (not live text) since the tagline's hand-drawn font
+// isn't one bundled with the app. Reduced motion skips straight to settled.
 export function HomeWordmark({ width }: Props) {
   const reduceMotion = useReducedMotionPreference();
-  const t = useRef(new Animated.Value(0)).current;
+  const lockupOpacity = useRef(new Animated.Value(0)).current;
+  const tagWipe = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (reduceMotion !== false) return;
-    t.setValue(0);
-    const anim = Animated.timing(t, {
-      toValue: 1,
-      duration: 700,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    });
+    if (reduceMotion !== false) {
+      lockupOpacity.setValue(1);
+      tagWipe.setValue(1);
+      return;
+    }
+    lockupOpacity.setValue(0);
+    tagWipe.setValue(0);
+    const anim = Animated.parallel([
+      Animated.timing(lockupOpacity, {
+        toValue: 1,
+        duration: 450,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(tagWipe, {
+        toValue: 1,
+        duration: 950,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: false,
+      }),
+    ]);
     anim.start();
     return () => anim.stop();
-  }, [reduceMotion, t]);
+  }, [reduceMotion, lockupOpacity, tagWipe]);
 
   const scale = width / LOCKUP_W;
-  const height = width * HOME_WORDMARK_ASPECT_RATIO;
+  const lockupHeight = LOCKUP_H * scale;
+  const tagWidth = TAGLINE_W * scale;
+  const tagHeight = TAGLINE_H * scale;
+  const gap = GAP * scale;
+  const height = lockupHeight + gap + tagHeight;
 
-  const polyTranslateY = t.interpolate({ inputRange: [0, 0.6, 1], outputRange: [-46, 0, 0] });
-  const polyOpacity = t.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 1] });
-  const wordsTranslateX = t.interpolate({
-    inputRange: [0, 0.22, 0.75, 1],
-    outputRange: [54, 54, 0, 0],
+  const tagRevealWidth = tagWipe.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, tagWidth],
   });
-  const wordsTranslateY = t.interpolate({
-    inputRange: [0, 0.22, 0.75, 1],
-    outputRange: [34, 34, 0, 0],
-  });
-  const wordsOpacity = t.interpolate({ inputRange: [0, 0.22, 0.6, 1], outputRange: [0, 0, 1, 1] });
 
   return (
-    <Animated.View style={{ width, height }}>
+    <Animated.View
+      accessible
+      accessibilityLabel={`POLYWORDS. ${HOME_TAGLINE}`}
+      style={{ width, height }}
+    >
       <Animated.View
-        style={[
-          styles.piece,
-          {
-            width: POLY_W * scale,
-            height: POLY_H * scale,
-            opacity: polyOpacity,
-            transform: [{ translateY: polyTranslateY }],
-          },
-        ]}
+        style={[styles.lockup, { width, height: lockupHeight, opacity: lockupOpacity }]}
       >
         <Image
           accessible={false}
-          source={require('../../../assets/images/brand/home-title-poly.png')}
+          source={require('../../../assets/images/brand/home-title-lockup.png')}
           resizeMode="contain"
           style={styles.fill}
         />
       </Animated.View>
       <Animated.View
         style={[
-          styles.piece,
-          {
-            left: WORDS_X * scale,
-            width: WORDS_W * scale,
-            height: WORDS_H * scale,
-            opacity: wordsOpacity,
-            transform: [{ translateX: wordsTranslateX }, { translateY: wordsTranslateY }],
-          },
+          styles.tagWrap,
+          { top: lockupHeight + gap, width: tagRevealWidth, height: tagHeight },
         ]}
       >
         <Image
           accessible={false}
-          source={require('../../../assets/images/brand/home-title-words.png')}
+          source={require('../../../assets/images/brand/home-title-tagline.png')}
           resizeMode="contain"
-          style={styles.fill}
+          style={[styles.fill, { width: tagWidth }]}
         />
       </Animated.View>
     </Animated.View>
@@ -98,10 +99,15 @@ export function HomeWordmark({ width }: Props) {
 }
 
 const styles = StyleSheet.create({
-  piece: {
+  lockup: {
     position: 'absolute',
     top: 0,
     left: 0,
+  },
+  tagWrap: {
+    position: 'absolute',
+    left: 0,
+    overflow: 'hidden',
   },
   fill: {
     width: '100%',
