@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS } from '../constants/fonts';
@@ -41,6 +42,9 @@ import {
   DAILY_ACTION_RULE,
   dailyBackdrop,
   dailyScrollMaterial,
+  dailyResultsMaterial,
+  dailyHudMaterial,
+  dailyChromeMaterial,
   DailyPollyReaction as PerchReaction,
   getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
@@ -263,7 +267,7 @@ function ResultsOverlay({
         <View style={[res.card, isWin ? res.cardWin : res.cardLoss]}>
         <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
 
-        <Text style={[res.title, { color: isWin ? '#F5C842' : '#FFFFFF' }]}>
+        <Text style={[res.title, { color: isWin ? dailyResultsMaterial.titleWin : dailyResultsMaterial.titleLoss }]}>
           {isWin ? DAILY_WIN_TITLE : DAILY_LOSS_TITLE}
         </Text>
 
@@ -299,7 +303,7 @@ function ResultsOverlay({
         <View style={res.speedGrid}>
           {dailyResult.wordResults.map((result, i) => {
             const cluesUsed = (result as { cluesUsed?: number }).cluesUsed;
-            let cellStyle = res.speedUnknown;
+            let cellStyle: ViewStyle = res.speedUnknown;
             let outcome = 'clue speed unavailable';
             let isUnknown = true;
 
@@ -776,7 +780,7 @@ const styles = StyleSheet.create({
     elevation: 40,
   },
   actionLabel: {
-    color: 'rgba(255,255,255,0.45)',
+    color: dailyChromeMaterial.actionLabel,
     fontFamily: FONTS.label,
     fontSize: 16,
     letterSpacing: 3,
@@ -794,10 +798,10 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardBoard: {
-    backgroundColor: 'rgba(10,7,26,0.45)',
+    backgroundColor: dailyChromeMaterial.cardBoardBg,
     borderRadius: 26,
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.14)',
+    borderColor: dailyChromeMaterial.cardBoardBorder,
     padding: 10,
     overflow: 'visible',
   },
@@ -832,7 +836,7 @@ const styles = StyleSheet.create({
     height: 72,
   },
   featherLabel: {
-    color: '#F5C842',
+    color: dailyChromeMaterial.featherLabel,
     fontFamily: FONTS.label,
     fontSize: 14,
     letterSpacing: 2.5,
@@ -850,7 +854,7 @@ const styles = StyleSheet.create({
     zIndex: 99,
   },
   devResetText: {
-    color: 'rgba(255,255,255,0.35)',
+    color: dailyChromeMaterial.devResetText,
     fontFamily: FONTS.label,
     fontSize: 9,
     letterSpacing: 1.5,
@@ -868,7 +872,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   clueHeaderRule: {
-    color: 'rgba(255,247,214,0.55)',
+    color: dailyChromeMaterial.clueHeaderRule,
     fontFamily: FONTS.label,
     fontSize: 14,
     letterSpacing: 2.2,
@@ -901,18 +905,18 @@ const hud = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 11,
     borderRadius: 8,
-    backgroundColor: 'rgba(11,9,32,0.80)',
+    backgroundColor: dailyHudMaterial.rowBg,
     borderWidth: 0.5,
-    borderColor: 'rgba(123,45,139,0.28)',
-    borderBottomColor: 'rgba(245,200,66,0.22)',
+    borderColor: dailyHudMaterial.rowBorder,
+    borderBottomColor: dailyHudMaterial.rowBorderBottom,
     borderBottomWidth: 0.5,
   },
   label: {
-    color: '#F5C842',
+    color: dailyHudMaterial.label,
     fontFamily: FONTS.hud,
     fontSize: 24,
     letterSpacing: 2,
-    textShadowColor: 'rgba(245,200,66,0.5)',
+    textShadowColor: dailyHudMaterial.labelGlow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
   },
@@ -927,17 +931,17 @@ const hud = StyleSheet.create({
     borderRadius: 6,
   },
   dotDone: {
-    backgroundColor: '#F5C842',
+    backgroundColor: dailyHudMaterial.dotDone,
   },
   dotCurrent: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#FFFFFF',
+    backgroundColor: dailyHudMaterial.dotCurrent,
+    shadowColor: dailyHudMaterial.dotCurrent,
     shadowOpacity: 0.9,
     shadowRadius: 5,
     elevation: 4,
   },
   dotPending: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: dailyHudMaterial.dotPending,
   },
   feathers: {
     flexDirection: 'row',
@@ -956,7 +960,7 @@ const feather = StyleSheet.create({
 const res = StyleSheet.create({
   fill: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(13,10,34,0.55)',
+    backgroundColor: dailyResultsMaterial.overlayScrim,
     zIndex: 20,
   },
   scroll: {
@@ -970,7 +974,7 @@ const res = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: '#0F0D2A',
+    backgroundColor: dailyResultsMaterial.cardBg,
     borderRadius: 24,
     borderWidth: 2,
     padding: 20,
@@ -978,13 +982,13 @@ const res = StyleSheet.create({
     gap: 4,
   },
   cardWin: {
-    borderColor: '#7B2D8B',
+    borderColor: dailyResultsMaterial.cardBorderWin,
   },
   cardLoss: {
-    borderColor: '#E24B4A',
+    borderColor: dailyResultsMaterial.cardBorderLoss,
   },
   challenge: {
-    color: 'rgba(255,255,255,0.55)',
+    color: dailyResultsMaterial.challengeLabel,
     fontFamily: FONTS.tileCopy,
     fontSize: 15,
     letterSpacing: 2,
@@ -1004,13 +1008,13 @@ const res = StyleSheet.create({
     marginTop: 4,
   },
   rewardText: {
-    color: '#F5C842',
+    color: dailyResultsMaterial.rewardText,
     fontFamily: FONTS.label,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   stat: {
-    color: 'rgba(255,255,255,0.72)',
+    color: dailyResultsMaterial.statText,
     fontFamily: FONTS.tileCopy,
     fontSize: 16,
     marginTop: 6,
@@ -1023,7 +1027,7 @@ const res = StyleSheet.create({
     marginBottom: 2,
   },
   speedTitle: {
-    color: 'rgba(255,255,255,0.82)',
+    color: dailyResultsMaterial.speedTitle,
     fontFamily: FONTS.label,
     fontSize: 15,
     letterSpacing: 2,
@@ -1038,32 +1042,32 @@ const res = StyleSheet.create({
     justifyContent: 'center',
   },
   speedClue1: {
-    backgroundColor: 'rgba(245,200,66,0.85)',
-    borderColor: '#F5C842',
+    backgroundColor: dailyResultsMaterial.speedClue1Bg,
+    borderColor: dailyResultsMaterial.speedClue1Border,
   },
   speedClue2: {
-    backgroundColor: 'rgba(123,45,139,0.85)',
-    borderColor: '#7B2D8B',
+    backgroundColor: dailyResultsMaterial.speedClue2Bg,
+    borderColor: dailyResultsMaterial.speedClue2Border,
   },
   speedClue3: {
-    backgroundColor: 'rgba(224,134,43,0.85)',
-    borderColor: '#E0862B',
+    backgroundColor: dailyResultsMaterial.speedClue3Bg,
+    borderColor: dailyResultsMaterial.speedClue3Border,
   },
   speedMissed: {
-    backgroundColor: 'rgba(226,75,74,0.85)',
-    borderColor: '#E24B4A',
+    backgroundColor: dailyResultsMaterial.speedMissedBg,
+    borderColor: dailyResultsMaterial.speedMissedBorder,
   },
   speedUnreached: {
     backgroundColor: 'transparent',
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: dailyResultsMaterial.speedUnreachedBorder,
     borderStyle: 'dashed',
   },
   speedUnknown: {
-    backgroundColor: 'rgba(15,13,42,0.9)',
-    borderColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: dailyResultsMaterial.speedUnknownBg,
+    borderColor: dailyResultsMaterial.speedUnknownBorder,
   },
   speedUnknownMark: {
-    color: 'rgba(255,255,255,0.65)',
+    color: dailyResultsMaterial.speedUnknownMark,
     fontFamily: FONTS.hud,
     fontSize: 14,
     lineHeight: 16,
@@ -1090,13 +1094,13 @@ const res = StyleSheet.create({
     borderWidth: 1.5,
   },
   speedLegendText: {
-    color: 'rgba(255,255,255,0.78)',
+    color: dailyResultsMaterial.speedLegendText,
     fontFamily: FONTS.tileCopy,
     fontSize: 15,
     letterSpacing: 0.9,
   },
   shareBtn: {
-    backgroundColor: '#F5C842',
+    backgroundColor: dailyResultsMaterial.shareBtnBg,
     borderRadius: 14,
     paddingVertical: 14,
     width: '100%',
@@ -1104,7 +1108,7 @@ const res = StyleSheet.create({
     marginTop: 12,
   },
   shareText: {
-    color: '#0F0D2A',
+    color: dailyResultsMaterial.shareBtnText,
     fontFamily: FONTS.hud,
     fontSize: 17,
     letterSpacing: 2,
@@ -1114,7 +1118,7 @@ const res = StyleSheet.create({
     alignItems: 'center',
   },
   homeText: {
-    color: 'rgba(255,255,255,0.58)',
+    color: dailyResultsMaterial.homeText,
     fontFamily: FONTS.hud,
     fontSize: 15,
     letterSpacing: 2,
