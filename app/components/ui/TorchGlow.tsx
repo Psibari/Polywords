@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { Animated, Easing, StyleSheet } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { useReducedMotionPreference } from '../../hooks/usePollyAmbientMotion';
@@ -17,6 +17,8 @@ const FLICKER_MS = 1400;
 // only draws the glow itself. Flicker is opacity-only (native driver) and freezes
 // to a static mid glow under reduced motion, same pattern as usePollyAmbientMotion.
 export function TorchGlow({ size = 64 }: Props) {
+  const id = useId();
+  const gradientId = `torchGlow-${id}`;
   const reduceMotion = useReducedMotionPreference();
   const opacity = useRef(new Animated.Value(FLICKER_MAX)).current;
 
@@ -56,12 +58,12 @@ export function TorchGlow({ size = 64 }: Props) {
     >
       <Svg width={size} height={size} viewBox="0 0 100 100">
         <Defs>
-          <RadialGradient id="torchGlow" cx="50%" cy="50%" r="50%">
+          <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
             <Stop offset="0" stopColor={chamberMaterial.torchGlow} stopOpacity={0.34} />
             <Stop offset="1" stopColor={chamberMaterial.torchGlow} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Circle cx="50" cy="50" r="50" fill="url(#torchGlow)" />
+        <Circle cx="50" cy="50" r="50" fill={`url(#${gradientId})`} />
       </Svg>
     </Animated.View>
   );

@@ -131,7 +131,7 @@ export default function SettingsScreen({ navigation }: Props) {
             </View>
           ))}
           <LinearGradient
-            colors={['transparent', PW.color.bgDeep]}
+            colors={['transparent', PW.color.bg]}
             pointerEvents="none"
             style={styles.chamberFade}
           />
