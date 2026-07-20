@@ -49,12 +49,12 @@ future answers.
 ## Gold Feather
 
 A win awards one dated Gold Feather. It cannot stack and expires when its stored date no
-longer matches today. Award/storage is live. Hunt spending is quarantined until a safe
-resume-state design is approved; do not expose or rebuild spending incidentally.
+longer matches today. Hunt can consume it once from game-over Results to revive the same
+run in place with one feather.
 
 ## Owners
 
-- UI: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyAnswerCard.tsx`
+- UI: `app/screens/DailyChallengeScreen.tsx`, `app/components/ui/QuillScrollPanel.tsx`
 - Rules: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`
 - State: `app/store/useGameStore.ts`
 - Materials/copy: `app/ui/pwDailyMaterials.ts`, `app/game/pollyCharacter.ts`

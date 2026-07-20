@@ -52,8 +52,9 @@ B at 11k, A at 14k, S at 18k, and MASTER at 22k.
 ## Feathers and Results
 
 - Hunt starts with 5 feathers; a wrong swipe removes 1; zero ends the run.
-- Score milestones at 8,000 and 16,000 restore one feather, subject to engine limits.
-- Daily can award one dated Gold Feather. Hunt spending is currently quarantined.
+- Score milestones at 3,000 and 10,000 restore one feather, subject to engine limits.
+- Daily can award one dated Gold Feather. In Hunt, it revives a failed run in place
+  with one feather, preserves committed swipes, and consumes the dated reward once.
 - Results must preserve mask ID and UP/RIGHT direction for wrong swipes.
 - Fatal wrong swipes finalize the current word result before game-over.
 

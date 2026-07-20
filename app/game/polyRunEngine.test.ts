@@ -3,6 +3,7 @@
 // Throws on first failure; prints OK on success.
 import {
   createGame,
+  applyGoldFeather,
   consumeMercy,
   completeWord,
   submitBossMastery,
@@ -159,6 +160,29 @@ function fresh(mercyReviveLives = 0): GameState {
   s = submitWrongSwipe(s);
   eq(s.status, 'gameOver', 'death.wrongDirection.status');
   eq(s.wordResults.length, 1, 'death.wrongDirection.wordResultRecorded');
+}
+
+{
+  let s = fresh();
+  s = { ...s, lives: 1 };
+  s = submitSwipeUp(s, 't1');
+  eq(s.status, 'gameOver', 'goldFeather.before.status');
+  eq(s.wordResults.length, 1, 'goldFeather.before.fatalResultRecorded');
+  s = applyGoldFeather(s);
+  eq(s.status, 'playing', 'goldFeather.revived.status');
+  eq(s.lives, 1, 'goldFeather.revived.oneLife');
+  eq(s.stepIndex, 0, 'goldFeather.revived.sameWord');
+  eq(s.swipedUpIds.includes('t1'), true, 'goldFeather.revived.keepsFatalSwipe');
+  eq(s.wordResults.length, 0, 'goldFeather.revived.removesFatalResult');
+  s = submitSwipeUp(s, 'r1');
+  s = completeWord(s);
+  eq(s.wordResults.length, 1, 'goldFeather.after.finalizesWordOnce');
+  eq(s.wordResults[0].wrongSwipes, 1, 'goldFeather.after.preservesMistake');
+}
+
+{
+  const s = fresh();
+  eq(applyGoldFeather(s), s, 'goldFeather.noopWhilePlaying');
 }
 
 // ── Mercy: one revive at the configured life count, then real death ─

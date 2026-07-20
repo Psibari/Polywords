@@ -421,7 +421,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const progress = useGameStore(s => s.progress);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
-  const spendGoldFeather = useGameStore(s => s.spendGoldFeather);
+  const useGoldFeatherInHunt = useGameStore(s => s.useGoldFeatherInHunt);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const currentPollyMemory = useGameStore(s => s.pollyMemory);
   const rememberPollyLine = useGameStore(s => s.rememberPollyLine);
@@ -466,11 +466,16 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const recordedRef = useRef(false);
-  useEffect(() => {
+  function recordFinalRunIfNeeded() {
     if (recordedRef.current) return;
     recordedRef.current = true;
     recordRunComplete(score);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }
+
+  useEffect(() => {
+    if (hasGoldFeather && status === 'gameOver') return;
+    recordFinalRunIfNeeded();
+  }, [hasGoldFeather, status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Polly gloats over a lost run — the on-board laugh can't render because
   // the board unmounts to Results the instant the run ends.
@@ -485,8 +490,20 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   async function handleUseGoldFeather() {
     if (!hasGoldFeather || usingGoldFeather) return;
     setUsingGoldFeather(true);
-    await spendGoldFeather();
+    const revived = await useGoldFeatherInHunt();
+    if (!revived) {
+      setUsingGoldFeather(false);
+    }
+  }
+
+  function handleRestart() {
+    recordFinalRunIfNeeded();
     onRestart();
+  }
+
+  function handleHome() {
+    recordFinalRunIfNeeded();
+    onHome();
   }
 
   const bossStep = game.session.find(
@@ -497,6 +514,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     progress.masteredWords.some(m => m.word === bossStep.word);
 
   async function handleShare() {
+    recordFinalRunIfNeeded();
     try {
       await Share.share({
         message: buildShareMessage(
@@ -666,9 +684,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             disabled={usingGoldFeather}
           />
         )}
-        <RunItBackButton onPress={onRestart} />
+        <RunItBackButton onPress={handleRestart} />
         <ShareRunButton onPress={handleShare} />
-        <Pressable onPress={onHome} style={rs.homeLink}>
+        <Pressable onPress={handleHome} style={rs.homeLink}>
           <Text style={rs.homeLinkText}>HOME</Text>
         </Pressable>
       </Animated.View>

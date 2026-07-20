@@ -10,8 +10,8 @@ Updated July 20, 2026. Active branch: `play-screen-overhaul`.
 - Vault uses the fixed-aspect bookcase archive and measured shelf slots.
 - Daily is live for device testing: five rounds, six UP-only answer cards, sequential
   clues, two Chances, result flow, and Gold Feather award/storage.
-- Hunt Gold Feather spending remains quarantined until safe resume-state behavior is
-  designed.
+- Hunt Gold Feather spending now revives a failed run in place with one feather, then
+  consumes the dated reward.
 - Hunt BGM is device-confirmed with persistent owner-scoped playback; Daily music is a
   separate future polish lane.
 - Daily clue-speed results are device-approved.

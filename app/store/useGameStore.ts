@@ -9,6 +9,7 @@ import {
   submitBossMastery,
   completeWord,
   addBonusScore,
+  applyGoldFeather,
   consumeMilestone as consumeMilestoneFn,
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
   consumeMercy as consumeMercyFn,
@@ -177,7 +178,7 @@ type GameStore = {
   goldFeatherAvailable: boolean;
   goldFeatherExpiresAt: number | null;
   grantGoldFeather: () => Promise<void>;
-  spendGoldFeather: () => Promise<void>;
+  useGoldFeatherInHunt: () => Promise<boolean>;
   checkGoldFeatherExpiry: () => Promise<void>;
   loadGoldFeather: () => Promise<void>;
   // Quarantined stale screen adapters. Do not use for new Daily work.
@@ -628,11 +629,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {}
   },
 
-  spendGoldFeather: async () => {
-    set({ goldFeatherAvailable: false, goldFeatherExpiresAt: null });
+  useGoldFeatherInHunt: async () => {
+    const { game, goldFeatherAvailable, goldFeatherExpiresAt } = get();
+    if (
+      game.status !== 'gameOver' ||
+      game.lives > 0 ||
+      !goldFeatherAvailable ||
+      goldFeatherExpiresAt === null ||
+      Date.now() >= goldFeatherExpiresAt
+    ) {
+      await get().checkGoldFeatherExpiry();
+      return false;
+    }
+
+    const revivedGame = applyGoldFeather(game);
+    if (revivedGame === game || revivedGame.status !== 'playing') return false;
+
+    set({
+      game: revivedGame,
+      goldFeatherAvailable: false,
+      goldFeatherExpiresAt: null,
+    });
     try {
       await AsyncStorage.removeItem(GOLD_FEATHER_KEY);
     } catch {}
+    return true;
   },
 
   checkGoldFeatherExpiry: async () => {

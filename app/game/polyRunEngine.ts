@@ -384,6 +384,24 @@ export function consumeFeatherMilestone(state: GameState): GameState {
   return { ...state, featherMilestone: null };
 }
 
+// Revive a failed Hunt in place. The fatal word result is removed because the
+// same word is still active and must be finalized again after the player
+// continues.
+export function applyGoldFeather(state: GameState): GameState {
+  if (state.status !== 'gameOver' || state.lives > 0) return state;
+
+  const currentWordId = String(state.stepIndex);
+  return {
+    ...state,
+    lives: 1,
+    status: 'playing',
+    feedback: 'Gold Feather',
+    lastActionAt: Date.now(),
+    pollyTrigger: null,
+    wordResults: state.wordResults.filter(result => result.wordId !== currentWordId),
+  };
+}
+
 // ─── ADD BONUS SCORE — for split tile results ─────────────────
 
 export function addBonusScore(state: GameState, points: number): GameState {
