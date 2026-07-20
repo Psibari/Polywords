@@ -140,7 +140,12 @@ export default function SettingsScreen({ navigation }: Props) {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View style={styles.headerGlow} />
+          <View pointerEvents="none" style={styles.headerGlowLeft}>
+            <TorchGlow size={72} />
+          </View>
+          <View pointerEvents="none" style={styles.headerGlowRight}>
+            <TorchGlow size={72} />
+          </View>
           <Text style={styles.kicker}>UTILITY</Text>
           <Text style={styles.title}>SETTINGS</Text>
           <Text style={styles.subtitle}>Tune the hunt.</Text>
@@ -295,15 +300,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  headerGlow: {
+  headerGlowLeft: {
     position: 'absolute',
-    right: -44,
-    top: -58,
-    width: 152,
-    height: 152,
-    borderRadius: 76,
-    borderWidth: 16,
-    borderColor: PW.color.goldGlow,
+    left: -20,
+    top: 18,
+    width: 72,
+    height: 72,
+  },
+  headerGlowRight: {
+    position: 'absolute',
+    right: -20,
+    top: 18,
+    width: 72,
+    height: 72,
   },
   kicker: {
     color: PW.color.mutedWhite,
