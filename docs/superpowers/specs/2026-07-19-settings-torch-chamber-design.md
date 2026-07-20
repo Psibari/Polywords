@@ -37,15 +37,16 @@ export const chamberMaterial = {
   plaqueFace: PW.color.cardFace,         // reuse existing card face, not a new color
   plaqueRim: PW.color.cardRim,
   plaqueRimStrong: PW.color.cardRimStrong,
-  torchGlowCore: 'rgba(185,138,222,0.34)', // PW.color.lavender at new alpha — matches the art's purple flame
-  torchGlowEdge: 'rgba(185,138,222,0.0)',  // same hue, fades to transparent
-  emberAccent: PW.color.rose,              // danger/warning plaques read as ember-lit
+  torchGlow: PW.color.lavender,          // matches the art's purple flame; used as SVG
+                                          // stopColor with per-stop stopOpacity, same
+                                          // convention as DailyRevealCurtain's curtainGlow
+  emberAccent: PW.color.rose,            // danger/warning plaques read as ember-lit
 } as const;
 ```
 
-No hex literals outside the two rgba derivations above (both are `PW.color.lavender`
-at new alpha values, same convention `libraryMaterial.ghostTint` already uses for
-`purpleSoft`-family derivations). Gold is deliberately *not* used for the torch
+No hex literals — every value is an existing `PW.color.*` reference or an rgba
+derivation of one, same convention `libraryMaterial.ghostTint` already uses for
+`purpleSoft`-family derivations. Gold is deliberately *not* used for the torch
 glow — it stays reserved for the title text and toggle "on" state so it keeps
 reading as a focus accent rather than becoming the ambient light source.
 
@@ -61,9 +62,13 @@ reading as a focus accent rather than becoming the ambient light source.
   underneath — the image supplies the depth instead).
 - `chamberMaterial.stoneShade` sits in a single `View` overlay atop the image for
   text-contrast, replacing today's `ambientWash` style.
-- A `torchGlow` layer (small radial-gradient `View`s via `expo-linear-gradient`,
-  colored `chamberMaterial.torchGlowCore` → `torchGlowEdge`) sits above the shade,
-  positioned at the wall-mounted torches in the art. Positions were **measured**
+- A `TorchGlow` component (new, `app/components/ui/TorchGlow.tsx`) renders each
+  accent as an `react-native-svg` `RadialGradient` — same technique already used for
+  `HeroBook`'s cover glow and `DailyRevealCurtain`'s `curtainGlow`, not
+  `expo-linear-gradient` (which is linear-only and can't produce a true radial
+  falloff). Each glow is `chamberMaterial.torchGlow` at `stopOpacity` fading center
+  to edge. Instances sit above the shade, positioned at the wall-mounted torches in
+  the art. Positions were **measured**
   against the actual pixels (brightness-cluster scan of the real PNG, not eyeballed)
   — 7 anchor points as percentages of image width/height, top-left origin:
 
