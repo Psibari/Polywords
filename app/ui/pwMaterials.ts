@@ -182,3 +182,15 @@ export const stageMaterial = {
   purpleAmbient: 'rgba(123,45,139,0.14)',
   candleGlow: 'rgba(245,200,66,0.09)', // every room gets a candle
 } as const;
+
+// CHAMBER — Settings' torch-lit stone-corridor world (spec: 2026-07-19
+// settings-torch-chamber). Purple flame, not orange — keeps gold reserved as the
+// sparse focus-accent color (title text, toggle "on" state) instead of doubling as
+// the ambient light source.
+export const chamberMaterial = {
+  stoneShade: 'rgba(6,4,22,0.55)',
+  plaqueFace: PW.color.cardFace,
+  plaqueRim: PW.color.cardRim,
+  torchGlow: PW.color.lavender,
+  emberAccent: PW.color.rose,
+} as const;
