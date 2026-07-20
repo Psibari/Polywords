@@ -8,7 +8,7 @@
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
   "editor.renderWhitespace": "selection",
-  "workbench.colorTheme": "Dark Modern",
+  "workbench.colorTheme": "Dark 2026",
   "editor.fontLigatures": true,
   "editor.fontFamily": "Cascadia Code, Consolas, monospace",
   "editor.fontSize": 14,
@@ -20,5 +20,7 @@
   ],
   "files.associations": {
     "*.tsx": "typescriptreact"
-  }
+  },
+  "workbench.activityBar.autoHide": true,
+  "workbench.colorCustomizations": {}
 }
