@@ -152,6 +152,7 @@ export default function SettingsScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.profileCard}>
+          <View pointerEvents="none" style={styles.plaqueHighlight} />
           <View style={styles.profileTop}>
             <View style={styles.avatar}>
               <Text style={[styles.avatarText, { color: rank.color }]}>{rank.letter}</Text>
@@ -179,6 +180,7 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Game</Text>
           <View style={styles.card}>
+            <View pointerEvents="none" style={styles.plaqueHighlight} />
             <ToggleRow
               label="Sound"
               enabled={soundEnabled}
@@ -197,6 +199,7 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
+            <View pointerEvents="none" style={styles.plaqueHighlight} />
             <PlaceholderRow label="Profile" note="Lives in Settings for MVP" accent="gold" />
             <PlaceholderRow label="Cloud Save" />
             <PlaceholderRow label="Sign In / Account Sync" />
@@ -206,6 +209,7 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <View style={styles.card}>
+            <View pointerEvents="none" style={styles.plaqueHighlight} />
             <PlaceholderRow label="Credits" />
             <PlaceholderRow label="Privacy" />
             <PlaceholderRow label="Version" note="App shell preview" />
@@ -216,6 +220,7 @@ export default function SettingsScreen({ navigation }: Props) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Development</Text>
             <View style={styles.card}>
+              <View pointerEvents="none" style={styles.plaqueHighlight} />
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowPollyAnimations(true)}
@@ -234,6 +239,7 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Danger / Reset</Text>
           <View style={[styles.card, styles.warningCard]}>
+            <View pointerEvents="none" style={styles.plaqueHighlight} />
             <Pressable
               onPress={handleResetProgress}
               style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
@@ -281,6 +287,15 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 140,
+  },
+  plaqueHighlight: {
+    position: 'absolute',
+    top: 6,
+    left: 14,
+    right: 14,
+    height: 1,
+    backgroundColor: PW.color.cardInner,
+    opacity: 0.5,
   },
   torchAnchor: {
     position: 'absolute',
@@ -336,10 +351,12 @@ const styles = StyleSheet.create({
   profileCard: {
     marginTop: 16,
     borderRadius: 20,
-    backgroundColor: PW.color.overlayHeavy,
-    borderWidth: 1,
-    borderColor: PW.color.cardRim,
+    backgroundColor: chamberMaterial.plaqueFace,
+    borderWidth: 1.5,
+    borderColor: chamberMaterial.plaqueRim,
     padding: 18,
+    overflow: 'hidden',
+    ...PW.shadow.panel,
   },
   profileTop: {
     flexDirection: 'row',
@@ -432,13 +449,14 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 18,
-    backgroundColor: PW.color.overlayHeavy,
-    borderWidth: 1,
-    borderColor: PW.color.purpleSoft,
+    backgroundColor: chamberMaterial.plaqueFace,
+    borderWidth: 1.5,
+    borderColor: chamberMaterial.plaqueRim,
     overflow: 'hidden',
+    ...PW.shadow.panel,
   },
   warningCard: {
-    borderColor: PW.color.rose,
+    borderColor: chamberMaterial.emberAccent,
   },
   row: {
     minHeight: 58,
