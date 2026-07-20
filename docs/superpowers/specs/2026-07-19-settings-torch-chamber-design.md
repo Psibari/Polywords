@@ -17,10 +17,14 @@ the Reset Progress confirmation flow.
 
 Jungle was the starting idea but is dropped as literal content — `CLAUDE.md`'s
 visual locks forbid green UI outside Polly's character art and forbid orange UI.
-What survives is the *torch-lit ruins* mood: warm gold flame-light against cold dark
-stone. This reads as "adventurer's basecamp before a Hunt," which fits the game's
-expedition framing without touching either locked rule. Everything below stays
-inside the existing 8-color locked palette (`PW.color.*`) — no new hues.
+What survives is the *torch-lit ruins* mood, delivered via the commissioned
+background art (`assets/images/settings/chamber-dark-mobile.png`): a vaulted stone
+corridor lit by **purple flame**, not orange fire, with a crowned-parrot crest
+banner hanging at the far end — this is Polly's hall, not a generic dungeon. Purple
+flame reads as more distinctive than literal fire anyway, and keeps gold free to
+stay the sparse focus-accent color (title text, toggle "on" state) rather than
+doubling as ambient light. Everything below stays inside the existing 8-color
+locked palette (`PW.color.*`) — no new hues.
 
 ## New material module: `chamberMaterial`
 
@@ -33,35 +37,49 @@ export const chamberMaterial = {
   plaqueFace: PW.color.cardFace,         // reuse existing card face, not a new color
   plaqueRim: PW.color.cardRim,
   plaqueRimStrong: PW.color.cardRimStrong,
-  torchGlowCore: PW.color.goldGlow,
-  torchGlowEdge: 'rgba(245,200,66,0.0)', // fades to transparent, not a new color
-  emberAccent: PW.color.rose,            // danger/warning plaques read as ember-lit
+  torchGlowCore: 'rgba(185,138,222,0.34)', // PW.color.lavender at new alpha — matches the art's purple flame
+  torchGlowEdge: 'rgba(185,138,222,0.0)',  // same hue, fades to transparent
+  emberAccent: PW.color.rose,              // danger/warning plaques read as ember-lit
 } as const;
 ```
 
-No hex literals outside the two rgba derivations above (both are existing colors at
-new alpha values, same convention `libraryMaterial.ghostTint` already uses for
-`purpleSoft`-family derivations).
+No hex literals outside the two rgba derivations above (both are `PW.color.lavender`
+at new alpha values, same convention `libraryMaterial.ghostTint` already uses for
+`purpleSoft`-family derivations). Gold is deliberately *not* used for the torch
+glow — it stays reserved for the title text and toggle "on" state so it keeps
+reading as a focus accent rather than becoming the ambient light source.
 
 ## Background asset & atmosphere layer
 
-- New image asset: `assets/images/settings/chamber-dark-mobile.png` — a stone
-  corridor/chamber interior with torches mounted on the walls, fixed aspect ratio,
-  same delivery pattern as `assets/images/vault/bookcase-dark-mobile.png` (user
-  supplies/generates the art; Claude integrates it).
+- Image asset delivered and in place: `assets/images/settings/chamber-dark-mobile.png`
+  — 941×1672px (aspect ratio 0.5628, i.e. `941/1672`), a stone corridor with
+  purple-lit wall torches and a crowned-parrot crest banner at the far end. Same
+  delivery pattern as `assets/images/vault/bookcase-dark-mobile.png`.
 - Rendered via `ImageBackground` full-bleed behind the `ScrollView`, replacing the
   current flat `stageMaterial.vignette` + `stageMaterial.purpleAmbient` wash (those
   two `LinearGradient`/`View` layers are removed from `SettingsScreen.tsx`, not kept
   underneath — the image supplies the depth instead).
 - `chamberMaterial.stoneShade` sits in a single `View` overlay atop the image for
   text-contrast, replacing today's `ambientWash` style.
-- A `torchGlow` layer (one or more small radial-gradient `View`s via
-  `expo-linear-gradient`, colored `chamberMaterial.torchGlowCore` →
-  `torchGlowEdge`) sits above the shade, positioned at the wall-mounted torches in
-  the art. **Positions are measured against the actual delivered image once
-  supplied — not guessed** — same lesson as
-  `feedback_measure_dont_guess_visual_sizing` (Playwright/on-device check of the
-  real image, not eyeballed coordinates).
+- A `torchGlow` layer (small radial-gradient `View`s via `expo-linear-gradient`,
+  colored `chamberMaterial.torchGlowCore` → `torchGlowEdge`) sits above the shade,
+  positioned at the wall-mounted torches in the art. Positions were **measured**
+  against the actual pixels (brightness-cluster scan of the real PNG, not eyeballed)
+  — 7 anchor points as percentages of image width/height, top-left origin:
+
+  | Torch | left | top |
+  |---|---|---|
+  | Foreground L | 11.0% | 31.0% |
+  | Foreground R | 89.7% | 31.0% |
+  | Mid L | 29.3% | 42.2% |
+  | Mid R | 70.0% | 42.2% |
+  | Far L | 36.5% | 48.0% |
+  | Far R | 61.5% | 48.0% |
+  | Altar candle | 44.7% | 53.5% |
+
+  Each anchor gets a small radial glow (~40-60px diameter at 1x, scaled with image
+  width) centered on that point, absolutely positioned inside the same container the
+  `ImageBackground` renders in so percentages stay correct at any screen width.
 
 ## Header
 
@@ -102,10 +120,8 @@ treatment, built from `chamberMaterial` + existing `PW.shadow.panel`:
   alert/confirmation flow.
 - No changes to `VaultScreen.tsx`, `HomeScreen.tsx`, `DailyChallengeScreen.tsx`,
   `BottomNav.tsx`, `MaskBoard.tsx`, or `SwipeMask.tsx`.
-- New: `assets/images/settings/chamber-dark-mobile.png` (asset, supplied
-  separately), `chamberMaterial` export in `pwMaterials.ts`.
+- New: `assets/images/settings/chamber-dark-mobile.png` (delivered), `chamberMaterial`
+  export in `pwMaterials.ts`, `TorchGlow` component.
 - Modified: `SettingsScreen.tsx` only.
-- Blocked on: the chamber background image itself. Torch-glow overlay positions
-  cannot be finalized until that asset exists — implementation can build the plaque/
-  header/card restyle against a placeholder fill first, then wire the real image and
-  measure torch positions once it's supplied.
+- No remaining external blockers — asset is in place and measured; ready for a full
+  implementation plan.
