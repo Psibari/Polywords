@@ -653,21 +653,25 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
           {/* Trap that got you */}
           {firstWrongMaskId && <TrapCard maskId={firstWrongMaskId} />}
-
-          {/* Buttons */}
-          {hasGoldFeather && (
-            <GoldFeatherButton
-              onPress={handleUseGoldFeather}
-              disabled={usingGoldFeather}
-            />
-          )}
-          <RunItBackButton onPress={onRestart} />
-          <ShareRunButton onPress={handleShare} />
-          <Pressable onPress={onHome} style={rs.homeLink}>
-            <Text style={rs.homeLinkText}>HOME</Text>
-          </Pressable>
         </Animated.View>
       </ScrollView>
+
+      {/* ── FOOTER — always above Polly's reach, outside the scroll ── */}
+      <Animated.View
+        style={[rs.footer, { opacity: detailOpacity, transform: [{ translateY: detailY }] }]}
+      >
+        {hasGoldFeather && (
+          <GoldFeatherButton
+            onPress={handleUseGoldFeather}
+            disabled={usingGoldFeather}
+          />
+        )}
+        <RunItBackButton onPress={onRestart} />
+        <ShareRunButton onPress={handleShare} />
+        <Pressable onPress={onHome} style={rs.homeLink}>
+          <Text style={rs.homeLinkText}>HOME</Text>
+        </Pressable>
+      </Animated.View>
 
       <PollyResultsPerch outcome={outcome} line={pollyMoment?.line ?? null} />
     </View>
@@ -684,7 +688,12 @@ const rs = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 44,
-    paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE + 24, // full sprite height + breathing room
+    paddingBottom: 16,
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE, // clears Polly's reach regardless of scroll position
   },
   verdictBlock: {
     alignItems: 'center',
