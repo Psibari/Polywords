@@ -99,8 +99,10 @@ card) restyles from the current flat rounded rectangle to a carved-stone-plaque
 treatment, built from `chamberMaterial` + existing `PW.shadow.panel`:
 
 - `plaqueFace` background (unchanged color, already dark enough to read as stone).
-- `plaqueRim` border, `plaqueRimStrong` on the pressed state (same rim-brightens-
-  on-press pattern `cardMaterial.pressed` already uses elsewhere).
+- `plaqueRim` border (the existing faint gold hairline every card in the app
+  already uses — not a new gold usage). No pressed-state rim variant: the cards
+  themselves are plain `View`s, not `Pressable`s; only their inner rows are
+  interactive, and those already have their own `styles.pressed` treatment.
 - A thin top-edge highlight (reuse `cardMaterial.topHighlight`'s technique — a 1px
   `PW.color.cardInner` line near the top) to read as a beveled carved edge.
 - Rows, toggles, and placeholder rows inside keep their exact current structure and
