@@ -41,6 +41,16 @@ yarn-error.*
 
 # brainstorming visual companion
 .superpowers/
+docs/superpowers/
+
+# locally installed agent skills
+.agents/skills/
+.claude/skills/
+skills-lock.json
+
+# generated editorial reports
+docs/HUNT_DATA_400_WORD_QUALITY_CHECK.md
+docs/HUNT_DATA_REWRITE_REVIEW.md
 
 # generated native folders
 /ios

@@ -36,18 +36,8 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/SuperCartoon-6R791.ttf",
-            "./assets/fonts/SuperCarnival-j9Wq0.ttf",
-            "./assets/fonts/SuperFrosting-R9z4o.ttf",
-            "./assets/fonts/gomarice_okuba_cloud.ttf",
-            "./assets/fonts/InterVariable.ttf",
-            "./assets/fonts/Poppins-Bold.ttf",
-            "./assets/fonts/Poppins-SemiBold.ttf",
-            "assets/fonts/BungeeShade-Regular.ttf",
             "assets/fonts/BebasNeue-Regular.ttf",
-            "assets/fonts/BarlowCondensed-Bold.ttf",
-            "assets/fonts/LilitaOne-Regular.ttf",
-            "assets/fonts/RammettoOne-Regular.ttf"
+            "assets/fonts/BarlowCondensed-Bold.ttf"
           ]
         }
       ],

@@ -14,7 +14,6 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    'BungeeShade-Regular':  require('./assets/fonts/BungeeShade-Regular.ttf'),
     'BebasNeue-Regular':    require('./assets/fonts/BebasNeue-Regular.ttf'),
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
   });

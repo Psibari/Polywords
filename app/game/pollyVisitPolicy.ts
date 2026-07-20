@@ -1,12 +1,11 @@
 // Pure visit policy for Hunt Polly. RN-free on purpose so it runs under
 // plain Node (npx tsx) — do not import react-native or app/hooks here.
 //
-// Spec: docs/superpowers/specs/2026-07-02-polly-hunt-visits-design.md
+// Visit behavior is documented in docs/GAME_REFERENCE.md.
 // Scarcity is the menace: guaranteed big beats always fire; heckles are
 // capped at one visit per word and dropped (never queued) when blocked.
 
-// Same event vocabulary as usePollyAnimator — MaskBoard call sites pass
-// these literals and must not change.
+// Same event vocabulary used by MaskBoard call sites; these literals must not change.
 import { POLLY_LINES, PollyLineId } from './pollyCharacter';
 
 export type PollyEvent =
