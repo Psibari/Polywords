@@ -38,7 +38,6 @@ migration is explicitly approved.
 | Action | Points |
 | --- | ---: |
 | REAL UP | 100 × chain |
-| Rare REAL UP | 300 × chain |
 | Trap RIGHT | 50 × chain |
 | Boss REAL | 200 × chain |
 | Boss trap | 100 × chain |
@@ -46,8 +45,8 @@ migration is explicitly approved.
 | Wrong swipe | 0 |
 
 The chain starts at 1.0, increases by 0.5 every three correct swipes, caps at 3.0,
-and resets on error. Polly’s score target is 15,000. Ranks are D under 8k, C at 8k,
-B at 11k, A at 14k, S at 18k, and MASTER at 22k.
+and resets on error. Polly’s score target is 15,000. Ranks are D below 3,000, C at
+3,000, B at 6,000, A at 10,000, S at 15,000, and MASTER at 19,500.
 
 ## Feathers and Results
 

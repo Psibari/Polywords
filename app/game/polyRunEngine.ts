@@ -11,6 +11,27 @@ const FEATHER_MILESTONES = [3000, 10000] as const;
 
 export type FeatherMilestone = (typeof FEATHER_MILESTONES)[number];
 
+// ─── SCORING — single source of truth for chain multiplier + point math ─
+
+export const BOSS_MYSTERY_BASE = 600;
+
+export function chainMultiplierForStreak(streak: number): number {
+  return Math.min(1 + Math.floor(streak / 3) * 0.5, 3.0);
+}
+
+export function realMaskPoints(opts: { isRare?: boolean; isBoss: boolean; chainMultiplier: number }): number {
+  const base = opts.isRare ? 300 : 100;
+  return Math.round(base * opts.chainMultiplier * (opts.isBoss ? 2 : 1));
+}
+
+export function trapMaskPoints(opts: { isBoss: boolean; chainMultiplier: number }): number {
+  return Math.round((opts.isBoss ? 100 : 50) * opts.chainMultiplier);
+}
+
+export function mysteryMasteryPoints(chainMultiplier: number): number {
+  return Math.round(BOSS_MYSTERY_BASE * chainMultiplier);
+}
+
 // Mercy: during a player's early hunts the run refuses to die once — Polly
 // revives her prey instead of ending the game. How many feathers she leaves
 // behind tapers as the player racks up runs (see FLEDGLING/GRACE tiers in
@@ -71,7 +92,6 @@ function shuffleMasks(masks: Mask[]): Mask[] {
 }
 
 export function createGame(
-  ghostWordIds: string[] = [],
   steps: SessionStep[],
   mercyReviveLives = 0,
 ): GameState {
@@ -190,7 +210,7 @@ function computeStreakUpdate(currentStreak: number): {
   streakMilestone: 3 | 5 | 7 | null;
 } {
   const streak = currentStreak + 1;
-  const chainMultiplier = Math.min(1 + Math.floor(streak / 3) * 0.5, 3.0);
+  const chainMultiplier = chainMultiplierForStreak(streak);
   let streakMilestone: 3 | 5 | 7 | null = null;
   if (streak === 3 || streak === 5 || streak === 7) streakMilestone = streak as 3 | 5 | 7;
   return { streak, chainMultiplier, streakMilestone };
@@ -211,8 +231,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
 
   if (mask.isReal) {
     const su = computeStreakUpdate(state.streak);
-    let points = Math.round((mask.isRare ? 300 : 100) * su.chainMultiplier);
-    if (step.eventType === 'bossWord') points *= 2;
+    const points = realMaskPoints({ isRare: mask.isRare, isBoss: step.eventType === 'bossWord', chainMultiplier: su.chainMultiplier });
     const newCombo = state.combo + 1;
     const newScore = state.score + points;
     const hitMilestone = FEATHER_MILESTONES.find(
@@ -280,7 +299,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
 
   if (!mask.isReal) {
     const su = computeStreakUpdate(state.streak);
-    const points = Math.round((step.eventType === 'bossWord' ? 100 : 50) * su.chainMultiplier);
+    const points = trapMaskPoints({ isBoss: step.eventType === 'bossWord', chainMultiplier: su.chainMultiplier });
     const newCombo = state.combo + 1;
     const newScore = state.score + points;
     const hitMilestone = FEATHER_MILESTONES.find(
@@ -336,7 +355,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
 // ─── BOSS MASTERY — scoring for the boss mystery tile judged correctly ─
 
 export function submitBossMastery(state: GameState): GameState {
-  const points = Math.round(600 * state.chainMultiplier);
+  const points = mysteryMasteryPoints(state.chainMultiplier);
   const newCombo = state.combo + 1;
   const newScore = state.score + points;
   const hitMilestone = FEATHER_MILESTONES.find(
@@ -350,7 +369,7 @@ export function submitBossMastery(state: GameState): GameState {
     combo: newCombo,
     bestCombo: Math.max(state.bestCombo, newCombo),
     streak: state.streak + 1,
-    chainMultiplier: Math.min(1 + Math.floor((state.streak + 1) / 3) * 0.5, 3.0),
+    chainMultiplier: chainMultiplierForStreak(state.streak + 1),
     streakMilestone: null,
     featherMilestone: hitMilestone as FeatherMilestone | null,
     featherMilestonesHit: hitMilestone

@@ -195,7 +195,7 @@ type GameStore = {
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: createGame([], generateHunt({})),
+  game: createGame(generateHunt({})),
   ghosts: [],
   ghostRevenge: null,
   runStartGhostWordIds: [],
@@ -233,7 +233,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ...(isFledgling ? { length: 8, gentle: true } : {}),
     });
     set({
-      game: createGame(runStartGhostWordIds, steps, mercyReviveLives),
+      game: createGame(steps, mercyReviveLives),
       ghostRevenge: null,
       runStartGhostWordIds,
     });

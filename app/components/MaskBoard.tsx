@@ -13,6 +13,7 @@ import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
 import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
+import { chainMultiplierForStreak, realMaskPoints, trapMaskPoints, mysteryMasteryPoints } from '../game/polyRunEngine';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
@@ -1115,7 +1116,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   function triggerMastered() {
     setGatePhase('mastered');
     completedRef.current = true;
-    const masteryPoints = isHaunt ? 0 : Math.round(600 * preMysteryChainMultiplierRef.current);
+    const masteryPoints = isHaunt ? 0 : mysteryMasteryPoints(preMysteryChainMultiplierRef.current);
     if (!isHaunt) {
       spawnFloatAtSplit(masteryPoints, '#F5C842');
     }
@@ -1405,13 +1406,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
-      const chainMult = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
+      const chainMult = chainMultiplierForStreak(store.game.streak + 1);
       const tier = chainTierFromMultiplier(chainMult);
       playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (tier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const baseUp = mask.isRare ? 300 : 100;
-      const upPoints = Math.round(baseUp * chainMult * (isBoss ? 2 : 1));
+      const upPoints = realMaskPoints({ isRare: mask.isRare, isBoss, chainMultiplier: chainMult });
       store.submitSwipeUp(maskId);
       spawnFloat(upPoints, 'real', tier);
       triggerAbsorption(mask.phrase);
@@ -1451,12 +1451,12 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
-      const chainMultTrap = Math.min(1 + Math.floor((store.game.streak + 1) / 3) * 0.5, 3.0);
+      const chainMultTrap = chainMultiplierForStreak(store.game.streak + 1);
       const trapTier = chainTierFromMultiplier(chainMultTrap);
       playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[trapTier] });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (trapTier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const trapPoints = Math.round((isBoss ? 100 : 50) * chainMultTrap);
+      const trapPoints = trapMaskPoints({ isBoss, chainMultiplier: chainMultTrap });
       store.submitSwipeDown(maskId);
       spawnFloat(trapPoints, 'trap', trapTier);
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));

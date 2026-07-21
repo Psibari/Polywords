@@ -51,7 +51,7 @@ function session(): SessionStep[] {
 }
 
 function fresh(mercyReviveLives = 0): GameState {
-  return createGame([], session(), mercyReviveLives);
+  return createGame(session(), mercyReviveLives);
 }
 
 // ── Scoring: correct swipes ──────────────────────────────────────
