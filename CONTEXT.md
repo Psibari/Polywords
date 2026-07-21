@@ -9,6 +9,7 @@ Shipped + tagged today, all tsc-clean + device-confirmed:
 - Phase 1 (tag v0.working-20260721-phase1): engine owns per-run bossOutcome ('pending'|'mastered'|'haunted') + bossFlawless. Rule: survive boss tiles → mystery unlocks → correct = MASTERED regardless of visible mistakes; wrong mystery or boss death = HAUNTED. Persistence reconciled off the outcome in useGameStore; MaskBoard is presenter-only. Loss-laugh echo/replay-lag fixed (GAME_OVER_LAUGH.sfx=null; ResultsScreen owns the loss laugh).
 - Phase 2 (tag v0.working-20260721-phase2): Results/rank/Polly-memory read bossOutcome, not score. FLAWLESS badge on clean master. Rank is score-only.
 - Phase 3 (tag v0.working-20260721-phase3): deleted dead session.ts (12-round SESSION contradicting canon). generateHunt is the only arc source (10 rounds, boss idx 9, haunt idx 7). createGame requires steps. hasBossContent requires hiddenMeaning && hiddenTrap.
+- Phase 4 (tag v0.working-20260721-phase4): scoring single-sourced in polyRunEngine (chainMultiplierForStreak + point helpers), MaskBoard reads them; dropped dead createGame ghostWordIds param; GAME_REFERENCE ranks reconciled to ranks.ts + dead rare-300 claim removed. No behavior change.
 
 Locked run-end verdicts (from bossOutcome): mastered → "SLIPPED PAST POLLY'S TRAP"; survived-not-mastered → "ALMOST, BUT ALMOST DOESN'T COUNT."; died → "GOT SNAPPED BY POLLY'S TRAP".
 
@@ -22,10 +23,9 @@ Locked run-end verdicts (from bossOutcome): mastered → "SLIPPED PAST POLLY'S T
 
 ## Next Product Work
 
-1. Phase 4 — scoring cleanup: dead rare-300 tier, reconcile GAME_REFERENCE rank numbers to ranks.ts, de-dupe chain multiplier, drop dead createGame ghostWordIds param.
-2. Phase 5 verify; Phase 6 feel pass (wrong-swipe-as-snare).
-3. Standalone: H1 HUD round counter; H2 book open/close timing (warroom-gated).
-4. Joint writing still owed: haunt re-theme, run-language, wrong-swipe copy.
+1. Phase 5 verify; Phase 6 feel pass (wrong-swipe-as-snare).
+2. Standalone: H1 HUD round counter; H2 book open/close timing (warroom-gated).
+3. Joint writing still owed: haunt re-theme, run-language, wrong-swipe copy.
 
 ## Protected Stashes
 
