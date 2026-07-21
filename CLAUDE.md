@@ -31,13 +31,21 @@ drivers on one `Animated.Value`.
 
 ## Hunt
 
-- 10 rounds; Round 10/index 9 is Polly’s Word (`eventType: 'bossWord'`).
+- 10 rounds; Round 10/index 9 is Polly’s Word (`eventType: 'bossWord'`). `generateHunt`
+  (`huntGenerator.ts`) is the sole arc source; `createGame` requires a `steps` arg.
 - Round 8/index 7 is the Returning Haunt slot and remains a standard event.
+- Mastery/haunt is decided by the engine's per-run `bossOutcome`
+  (`'pending'|'mastered'|'haunted'`), never by score. Results, rank, and Polly-memory all
+  derive from it. Surviving the visible boss tiles unlocks the mystery tile regardless of
+  visible mistakes; a perfect visible round is not required to master — it only sets
+  `bossFlawless`. Wrong mystery or death on the boss = HAUNTED.
+- Boss words require BOTH `hiddenMeaning` and `hiddenTrap` (`hasBossContent` enforces it).
 - Only failed boss words become HAUNTED. Mastered words graduate permanently.
 - RUN IT BACK draws a fresh Hunt with ghost priority.
-- Boss mastery uses `submitBossMastery()`.
 - Never-change text: `Thought so.` and `BINGO BANGO ZZZZINGO!`.
 - Master Gate is gone.
+- `MaskBoard.tsx` and `SwipeMask.tsx` are warroom-gated — a warroom pass is required
+  before either is edited.
 
 The visual hierarchy is hero word, active mask tile, HeroBook/Vault target, HUD, then
 Polly visit. Ordinary tiles share one neutral treatment until commitment.

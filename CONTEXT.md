@@ -1,21 +1,16 @@
 # POLYWORDS Current Context
 
-Updated July 20, 2026. Active branch: `play-screen-overhaul`.
+Updated July 21, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-- Play-screen overhaul is implemented: Hunt arena, HeroBook intake, flat HUD, boss
-  chamber, Returning Haunts, score feedback, and heartbeat pacing.
-- Home, Results, Daily, and Hunt share the authored Polly pose/voice/memory system.
-- Vault uses the fixed-aspect bookcase archive and measured shelf slots.
-- Daily is live for device testing: five rounds, six UP-only answer cards, sequential
-  clues, two Chances, result flow, and Gold Feather award/storage.
-- Hunt Gold Feather spending now revives a failed run in place with one feather, then
-  consumes the dated reward.
-- Hunt BGM is device-confirmed with persistent owner-scoped playback; Daily music is a
-  separate future polish lane.
-- Daily clue-speed results are device-approved.
-- TypeScript passed at the previous checkpoint; rerun it after code changes.
+Hunt/Polly rebuild in progress — plan: docs/HUNT_POLLY_REBUILD_PLAN.md (read first).
+Shipped + tagged today, all tsc-clean + device-confirmed:
+- Phase 1 (tag v0.working-20260721-phase1): engine owns per-run bossOutcome ('pending'|'mastered'|'haunted') + bossFlawless. Rule: survive boss tiles → mystery unlocks → correct = MASTERED regardless of visible mistakes; wrong mystery or boss death = HAUNTED. Persistence reconciled off the outcome in useGameStore; MaskBoard is presenter-only. Loss-laugh echo/replay-lag fixed (GAME_OVER_LAUGH.sfx=null; ResultsScreen owns the loss laugh).
+- Phase 2 (tag v0.working-20260721-phase2): Results/rank/Polly-memory read bossOutcome, not score. FLAWLESS badge on clean master. Rank is score-only.
+- Phase 3 (tag v0.working-20260721-phase3): deleted dead session.ts (12-round SESSION contradicting canon). generateHunt is the only arc source (10 rounds, boss idx 9, haunt idx 7). createGame requires steps. hasBossContent requires hiddenMeaning && hiddenTrap.
+
+Locked run-end verdicts (from bossOutcome): mastered → "SLIPPED PAST POLLY'S TRAP"; survived-not-mastered → "ALMOST, BUT ALMOST DOESN'T COUNT."; died → "GOT SNAPPED BY POLLY'S TRAP".
 
 ## Active Runtime Boundaries
 
@@ -27,10 +22,10 @@ Updated July 20, 2026. Active branch: `play-screen-overhaul`.
 
 ## Next Product Work
 
-1. Device recheck of the living-rival pass and small-screen bubble clearance.
-2. Right swipe-cue fine-tune if device testing still calls for it.
-3. HeroBook proportion review after a full Hunt.
-4. Mastery-shard integration and first-run onboarding.
+1. Phase 4 — scoring cleanup: dead rare-300 tier, reconcile GAME_REFERENCE rank numbers to ranks.ts, de-dupe chain multiplier, drop dead createGame ghostWordIds param.
+2. Phase 5 verify; Phase 6 feel pass (wrong-swipe-as-snare).
+3. Standalone: H1 HUD round counter; H2 book open/close timing (warroom-gated).
+4. Joint writing still owed: haunt re-theme, run-language, wrong-swipe copy.
 
 ## Protected Stashes
 
@@ -39,5 +34,6 @@ Reference by name only; never pop, drop, or clear without instruction:
 - `wip hud material pass needs feather asset`
 - `wip haunt loop type scaffolding`
 - `wip intake sliver not approved - needs SwipeMask handoff`
+- `wip failed View-based Hunt hero book V5`
 
 Durable rules live in `CLAUDE.md`; gameplay specifics live in focused docs.
