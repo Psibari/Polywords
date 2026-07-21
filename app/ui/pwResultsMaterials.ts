@@ -5,9 +5,9 @@ import { PollyMoment } from '../game/pollyCharacter';
 import { PollyMemory, resolveResultsPollyMoment } from '../game/pollyMemory';
 
 // ── Verdict copy (verdict appears exactly once, top of the ledger) ──
-export const RESULTS_VERDICT_BEAT = 'YOU BEAT POLLY';
-export const RESULTS_VERDICT_COMPLETE = 'POLLY HUNT COMPLETE';
-export const RESULTS_VERDICT_LOSS = 'POLLY CLIPPED YOUR RUN.';
+export const RESULTS_VERDICT_BEAT = "SLIPPED PAST POLLY'S TRAP";
+export const RESULTS_VERDICT_COMPLETE = "ALMOST, BUT ALMOST DOESN'T COUNT.";
+export const RESULTS_VERDICT_LOSS = "GOT SNAPPED BY POLLY'S TRAP";
 export const RESULTS_SUB_BEAT = 'Thought so.'; // never-change line, system text
 export const RESULTS_SUB_LOSS = 'Out of feathers.';
 

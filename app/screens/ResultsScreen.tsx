@@ -22,7 +22,6 @@ import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/
 import { PW } from '../ui/pwTheme';
 import { homeDare, homeType } from '../ui/pwHomeMaterials';
 import {
-  RESULTS_SUB_BEAT,
   RESULTS_SUB_LOSS,
   RESULTS_VERDICT_BEAT,
   RESULTS_VERDICT_COMPLETE,
@@ -62,7 +61,7 @@ function buildShareMessage(
   score: number,
   rankLetter: string,
   isComplete: boolean,
-  bossReclaimed: boolean,
+  bossMastered: boolean,
 ): string {
   const resultByStep = new Map(wordResults.map(r => [r.wordId, r]));
   const grid = session
@@ -71,15 +70,13 @@ function buildShareMessage(
       const r = resultByStep.get(String(i));
       if (!r) return '⬛';
       const perfect = r.correctUp === r.totalRealMasks && r.wrongSwipes === 0;
-      if (r.isBossWord) return perfect && bossReclaimed ? '👑' : '🟪';
+      if (r.isBossWord) return bossMastered ? '👑' : '🟪';
       return perfect ? '🟨' : '🟪';
     })
     .join('');
   const verdict = !isComplete
-    ? `Polly got me on word ${wordResults.length}/${session.length}.`
-    : bossReclaimed
-    ? "POLLY'S WORD: RECLAIMED"
-    : 'Polly kept her word.';
+    ? RESULTS_VERDICT_LOSS
+    : bossMastered ? RESULTS_VERDICT_BEAT : RESULTS_VERDICT_COMPLETE;
   return `POLYWORDS · RANK ${rankLetter}\n${score.toLocaleString()} pts\n${grid}\n${verdict}`;
 }
 
@@ -437,9 +434,11 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const [pollyMemoryBeforeRunRecorded] = useState(() => currentPollyMemory);
   const [usingGoldFeather, setUsingGoldFeather] = useState(false);
   const isNewBest = score > prevBest && score > 0;
-  const beatPolly = isComplete && score >= 15000;
+  const died = status === 'gameOver';
+  const bossMastered = game.bossOutcome === 'mastered';
+  const flawlessWin = bossMastered && game.bossFlawless;
   const outcome: 'loss' | 'beat' | 'complete' =
-    !isComplete ? 'loss' : beatPolly ? 'beat' : 'complete';
+    died ? 'loss' : bossMastered ? 'beat' : 'complete';
   const rank = computeRank(score);
   const prevRank = computeRank(prevBest);
   const didRankUp = isNewBest && rank.letter !== prevRank.letter;
@@ -506,13 +505,6 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     onHome();
   }
 
-  const bossStep = game.session.find(
-    s => s.kind === 'word' && s.eventType === 'bossWord',
-  );
-  const bossReclaimed =
-    bossStep?.kind === 'word' &&
-    progress.masteredWords.some(m => m.word === bossStep.word);
-
   async function handleShare() {
     recordFinalRunIfNeeded();
     try {
@@ -523,7 +515,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           score,
           rank.letter,
           isComplete,
-          bossReclaimed,
+          bossMastered,
         ),
       });
     } catch {}
@@ -568,12 +560,11 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     rememberPollyLine(pollyMoment.lineId, 'results');
   }, [pollyMoment, rememberPollyLine]);
 
-  const verdictText = !isComplete
-    ? RESULTS_VERDICT_LOSS
-    : beatPolly
-    ? RESULTS_VERDICT_BEAT
+  const verdictText =
+    outcome === 'loss' ? RESULTS_VERDICT_LOSS
+    : outcome === 'beat' ? RESULTS_VERDICT_BEAT
     : RESULTS_VERDICT_COMPLETE;
-  const verdictSub = !isComplete ? RESULTS_SUB_LOSS : beatPolly ? RESULTS_SUB_BEAT : null;
+  const verdictSub = outcome === 'loss' ? RESULTS_SUB_LOSS : null;
 
   const perfectCount = wordOnlyResults.filter(
     r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0,
@@ -594,11 +585,13 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             <FoilWord
               word={verdictText}
               fontSize={resultsType.verdict}
+              numberOfLines={0}
               baseStyle={rs.verdict}
             />
           </View>
           {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
           <Text style={[rs.gradeSub, { color: grade.color }]}>{grade.text}</Text>
+          {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
 
           <View style={rs.rankRow}>
             <Text style={rs.rankLabel}>RANK</Text>
@@ -719,7 +712,7 @@ const rs = StyleSheet.create({
   },
   verdictBox: {
     width: '100%',
-    height: resultsType.verdict * 1.5,
+    minHeight: resultsType.verdict * 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -746,6 +739,14 @@ const rs = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 6,
     opacity: 0.8,
+  },
+  flawlessTag: {
+    fontFamily: FONTS.hud,
+    fontSize: resultsType.verdictSub,
+    color: PW.color.amber,
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+    marginTop: 4,
   },
   rankRow: {
     flexDirection: 'row',

@@ -415,7 +415,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     );
     const outcome = game.status === 'gameOver'
       ? 'pollyWon' as const
-      : finalScore >= 15000
+      : game.bossOutcome === 'mastered'
       ? 'playerBeatPolly' as const
       : 'playerCompleted' as const;
     const pollyMemory = rememberHunt(get().pollyMemory, {
