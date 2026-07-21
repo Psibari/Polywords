@@ -97,7 +97,7 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 const DIFFICULTY_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
 
 function hasBossContent(word: string): boolean {
-  return db[word].hiddenMeaning != null || db[word].hiddenTrap != null;
+  return db[word].hiddenMeaning != null && db[word].hiddenTrap != null;
 }
 
 // Fledgling draw: keep the shuffle for variety, but float easier words to the

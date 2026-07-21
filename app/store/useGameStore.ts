@@ -195,7 +195,7 @@ type GameStore = {
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: createGame(),
+  game: createGame([], generateHunt({})),
   ghosts: [],
   ghostRevenge: null,
   runStartGhostWordIds: [],

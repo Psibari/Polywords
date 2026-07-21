@@ -3,7 +3,6 @@
 // Pure function state machine. No side effects.
 // ============================================================
 
-import { buildRunSession } from './session';
 import { Mask, SessionStep } from './types';
 
 // Retuned 2026-07-13: bonus feathers now land where struggling and mid-tier
@@ -73,10 +72,9 @@ function shuffleMasks(masks: Mask[]): Mask[] {
 
 export function createGame(
   ghostWordIds: string[] = [],
-  session?: SessionStep[],
+  steps: SessionStep[],
   mercyReviveLives = 0,
 ): GameState {
-  const steps = session ?? buildRunSession(ghostWordIds);
   const shuffledMasks: Record<number, Mask[]> = {};
   steps.forEach((step, i) => {
     if (step.kind === 'word') {
