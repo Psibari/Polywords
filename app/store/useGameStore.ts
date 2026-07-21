@@ -7,6 +7,7 @@ import {
   submitSwipeDown,
   submitWrongSwipe,
   submitBossMastery,
+  resolveMysteryTile,
   completeWord,
   addBonusScore,
   applyGoldFeather,
@@ -139,6 +140,7 @@ type GameStore = {
   submitSwipeDown: (maskId: string) => void;
   submitWrongSwipe: () => void;
   submitBossMastery: () => void;
+  resolveMystery: (correct: boolean, visiblePerfect: boolean) => void;
   completeWord: () => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
@@ -152,7 +154,7 @@ type GameStore = {
   setGhostRevenge: (data: GhostRevenge) => void;
   loadGhosts: () => Promise<void>;
   progress: PlayerProgress;
-  recordMastery: (word: string, isBoss: boolean, hiddenMeaningFound: string) => void;
+  recordMastery: (word: string, isBoss: boolean, hiddenMeaningFound: string, flawless: boolean) => void;
   recordRunComplete: (finalScore: number) => void;
   loadProgress: () => Promise<void>;
   pollyMemory: PollyMemory;
@@ -237,17 +239,65 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
-  submitSwipeUp: (maskId) =>
-    set((s) => ({ game: submitSwipeUp(s.game, maskId) })),
+  submitSwipeUp: (maskId) => {
+    const prev = get().game;
+    const next = submitSwipeUp(prev, maskId);
+    set({ game: next });
+    if (next.bossOutcome === 'haunted' && prev.bossOutcome !== 'haunted') {
+      const bossStep = next.session.find(s => s.kind === 'word' && s.eventType === 'bossWord');
+      if (bossStep && bossStep.kind === 'word') get().queueFailedBoss(bossStep);
+    }
+  },
 
-  submitSwipeDown: (maskId) =>
-    set((s) => ({ game: submitSwipeDown(s.game, maskId) })),
+  submitSwipeDown: (maskId) => {
+    const prev = get().game;
+    const next = submitSwipeDown(prev, maskId);
+    set({ game: next });
+    if (next.bossOutcome === 'haunted' && prev.bossOutcome !== 'haunted') {
+      const bossStep = next.session.find(s => s.kind === 'word' && s.eventType === 'bossWord');
+      if (bossStep && bossStep.kind === 'word') get().queueFailedBoss(bossStep);
+    }
+  },
 
-  submitWrongSwipe: () =>
-    set((s) => ({ game: submitWrongSwipe(s.game) })),
+  submitWrongSwipe: () => {
+    const prev = get().game;
+    const next = submitWrongSwipe(prev);
+    set({ game: next });
+    if (next.bossOutcome === 'haunted' && prev.bossOutcome !== 'haunted') {
+      const bossStep = next.session.find(s => s.kind === 'word' && s.eventType === 'bossWord');
+      if (bossStep && bossStep.kind === 'word') get().queueFailedBoss(bossStep);
+    }
+  },
 
   submitBossMastery: () =>
     set((s) => ({ game: submitBossMastery(s.game) })),
+
+  resolveMystery: (correct, visiblePerfect) => {
+    const prev = get().game;
+    const step = prev.session[prev.stepIndex];
+    const next = resolveMysteryTile(prev, { correct, visiblePerfect });
+    set({ game: next });
+    if (step.kind !== 'word') return;
+    const isBoss = step.eventType === 'bossWord';
+    const isHaunt = step.isHauntReturn === true;
+    if (isBoss) {
+      if (correct) {
+        get().recordMastery(step.word, true, step.hiddenMeaning ?? '', visiblePerfect);
+        // invariant: a mastered word is never also a pending ghost (covers die→revive→master)
+        const wordId = step.word.trim().toUpperCase();
+        const pruned = get().ghosts.filter(g => g.wordId !== wordId);
+        if (pruned.length !== get().ghosts.length) {
+          set({ ghosts: pruned });
+          AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(pruned)).catch(() => {});
+        }
+      } else {
+        get().queueFailedBoss(step);
+      }
+    } else if (isHaunt) {
+      if (correct) get().banishHaunt(step);
+      else get().retainFailedHaunt(step);
+    }
+  },
 
   completeWord: () =>
     set((s) => ({ game: completeWord(s.game) })),
@@ -330,14 +380,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setGhostRevenge: (data) => set({ ghostRevenge: data }),
 
-  recordMastery: (word, isBoss, hiddenMeaningFound) => {
+  recordMastery: (word, isBoss, hiddenMeaningFound, flawless) => {
     const current = get().progress;
     const existing = current.masteredWords.find(m => m.word === word);
     let masteredWords: MasteredWordRecord[];
     if (existing) {
       masteredWords = current.masteredWords.map(m =>
         m.word === word
-          ? { ...m, dateMastered: new Date().toISOString(), hiddenMeaningFound }
+          ? { ...m, dateMastered: new Date().toISOString(), hiddenMeaningFound, flawless }
           : m
       );
     } else {
@@ -346,6 +396,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         isBoss,
         hiddenMeaningFound,
         dateMastered: new Date().toISOString(),
+        flawless,
       }];
     }
     const next = { ...current, masteredWords };

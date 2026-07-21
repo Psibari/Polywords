@@ -58,6 +58,8 @@ export type GameState = {
   // 0 = no mercy left/available this game; >0 = lives granted on next revive.
   mercyReviveLives: number;
   mercyTriggered: boolean;
+  bossOutcome: 'pending' | 'mastered' | 'haunted';
+  bossFlawless: boolean;
 };
 
 function shuffleMasks(masks: Mask[]): Mask[] {
@@ -106,6 +108,8 @@ export function createGame(
     featherMilestonesHit: [],
     mercyReviveLives,
     mercyTriggered: false,
+    bossOutcome: 'pending',
+    bossFlawless: false,
   };
 }
 
@@ -255,7 +259,12 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
-  return loss.status === 'gameOver' ? finalizeCurrentWordResult(nextState) : nextState;
+  if (loss.status === 'gameOver') {
+    const finalized = finalizeCurrentWordResult(nextState);
+    const bossDied = step.kind === 'word' && step.eventType === 'bossWord';
+    return bossDied ? { ...finalized, bossOutcome: 'haunted' as const } : finalized;
+  }
+  return nextState;
 }
 
 // ─── SWIPE DOWN — player rejects mask as a trap ───────────────
@@ -318,7 +327,12 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
-  return loss.status === 'gameOver' ? finalizeCurrentWordResult(nextState) : nextState;
+  if (loss.status === 'gameOver') {
+    const finalized = finalizeCurrentWordResult(nextState);
+    const bossDied = step.kind === 'word' && step.eventType === 'bossWord';
+    return bossDied ? { ...finalized, bossOutcome: 'haunted' as const } : finalized;
+  }
+  return nextState;
 }
 
 // ─── BOSS MASTERY — scoring for the boss mystery tile judged correctly ─
@@ -350,9 +364,26 @@ export function submitBossMastery(state: GameState): GameState {
   };
 }
 
+// ─── MYSTERY TILE RESOLUTION — single source of truth for boss/haunt outcome ─
+
+export function resolveMysteryTile(
+  state: GameState,
+  opts: { correct: boolean; visiblePerfect: boolean },
+): GameState {
+  const step = currentStep(state);
+  const isBoss = step.kind === 'word' && step.eventType === 'bossWord';
+  if (!isBoss) return state; // Returning Haunt: no score/outcome change here
+  if (opts.correct) {
+    const scored = submitBossMastery(state);
+    return { ...scored, bossOutcome: 'mastered', bossFlawless: opts.visiblePerfect };
+  }
+  return { ...state, bossOutcome: 'haunted' };
+}
+
 // ─── WRONG SWIPE — penalise without recording a specific mask ─
 
 export function submitWrongSwipe(state: GameState): GameState {
+  const step = currentStep(state);
   const loss = resolveLifeLoss(state);
   const nextState: GameState = {
     ...state,
@@ -365,7 +396,12 @@ export function submitWrongSwipe(state: GameState): GameState {
     feedback: 'Wrong call.',
     lastActionAt: Date.now(),
   };
-  return loss.status === 'gameOver' ? finalizeCurrentWordResult(nextState) : nextState;
+  if (loss.status === 'gameOver') {
+    const finalized = finalizeCurrentWordResult(nextState);
+    const bossDied = step.kind === 'word' && step.eventType === 'bossWord';
+    return bossDied ? { ...finalized, bossOutcome: 'haunted' as const } : finalized;
+  }
+  return nextState;
 }
 
 // ─── CONSUME MERCY — clear the revive flag after UI has handled it ─
@@ -399,6 +435,8 @@ export function applyGoldFeather(state: GameState): GameState {
     lastActionAt: Date.now(),
     pollyTrigger: null,
     wordResults: state.wordResults.filter(result => result.wordId !== currentWordId),
+    bossOutcome: 'pending',
+    bossFlawless: false,
   };
 }
 

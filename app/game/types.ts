@@ -155,6 +155,7 @@ export type MasteredWordRecord = {
   isBoss: boolean;
   hiddenMeaningFound: string;
   dateMastered: string;
+  flawless?: boolean;
 };
 
 export type PlayerProgress = {

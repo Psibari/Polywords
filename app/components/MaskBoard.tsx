@@ -336,6 +336,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const completedRef          = useRef(false);
   const gateTriggeredRef      = useRef(false);
   const wrongSwipeOccurred    = useRef(false);
+  const visiblePerfectRef     = useRef(true);
+  const preMysteryChainMultiplierRef = useRef(1);
   const mysteryIsRealRef      = useRef(true);
   const gapLockedRef          = useRef(false);
   const tileIndexInWordRef    = useRef(0);
@@ -1069,7 +1071,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     spawnEffect?.('shard', containerWidthRef.current / 2, wordScreenY + 110);
 
     if (isHaunt) {
-      store.retainFailedHaunt(step);
       setTimeout(() => {
         setStillHauntedVisible(true);
         stillHauntedOpacity.setValue(0);
@@ -1084,8 +1085,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
           setTimeout(() => setStillHauntedVisible(false), 240);
         }, 1400);
       }, 400);
-    } else {
-      store.queueFailedBoss(step);
     }
 
     setTimeout(() => {
@@ -1114,16 +1113,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   }
 
   function triggerMastered() {
-    if (isHaunt) {
-      store.banishHaunt(step);
-    } else {
-      store.recordMastery(step.word, isBoss, step.hiddenMeaning ?? '');
-    }
     setGatePhase('mastered');
     completedRef.current = true;
-    const masteryPoints = isHaunt ? 0 : Math.round(600 * store.game.chainMultiplier);
+    const masteryPoints = isHaunt ? 0 : Math.round(600 * preMysteryChainMultiplierRef.current);
     if (!isHaunt) {
-      store.submitBossMastery();
       spawnFloatAtSplit(masteryPoints, '#F5C842');
     }
     setMasterStampVisible(true);
@@ -1292,6 +1285,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     if (wordOutcome !== 'none') return;
     resetHesitation();
     const isReal = mysteryIsRealRef.current;
+    preMysteryChainMultiplierRef.current = store.game.chainMultiplier;
+    store.resolveMystery(isReal, visiblePerfectRef.current);
     if (isReal) {
       playSfx('correctClaim');
       splitCompletedRef.current = true;
@@ -1302,7 +1297,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     } else {
       wrongSwipeOccurred.current = true;
       triggerWrongSwipeFeedback();
-      store.submitSwipeUp(maskId);
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       triggerWrongFail(maskId);
     }
@@ -1312,7 +1306,10 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     if (wordOutcome !== 'none') return;
     resetHesitation();
     const isReal = mysteryIsRealRef.current;
-    if (!isReal) {
+    const correct = !isReal;
+    preMysteryChainMultiplierRef.current = store.game.chainMultiplier;
+    store.resolveMystery(correct, visiblePerfectRef.current);
+    if (correct) {
       splitCompletedRef.current = true;
       playSfx('trapShatter');
       setFinalTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
@@ -1321,7 +1318,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     } else {
       wrongSwipeOccurred.current = true;
       triggerWrongSwipeFeedback();
-      store.submitSwipeDown(maskId);
       setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
       triggerWrongFail(maskId);
     }
@@ -1336,7 +1332,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     const perfect = !wrongSwipeOccurred.current;
 
     if (isFinalGateStep) {
-      if (perfect && hasHidden) {
+      if (hasHidden) {
+        // Survival unlocks the mystery — a visible mistake no longer bars it.
+        visiblePerfectRef.current = perfect;
         gateTriggeredRef.current = true;
         firePollyEvent('allMasksFound');
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -1344,8 +1342,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
           triggerFinalTilesDrop();
         }, 600);
       } else {
-        // A failed boss enters the queue; a failed return stays haunted.
+        // No hidden content on this final-gate word — falls through as a normal fail.
         gateTriggeredRef.current = true;
+        store.resolveMystery(false, perfect);
         const failedMaskId = visibleGridMasks.find(
           mask => tileStates.get(mask.id) === 'wrong',
         )?.id ?? `${step.word}_gate_fail`;

@@ -45,12 +45,15 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.holdPerch, true, 'gateMasteredBoss.holdPerch');
 }
 
-// gameOver: laugh, never-change line, laugh squawk, holds perch (terminal beat)
+// gameOver: laugh, never-change line, holds perch (terminal beat). Silent by
+// design — ResultsScreen owns the one reliable pollySqwawkLaugh play; this
+// visit used to carry its own copy, which raced ResultsScreen's and could
+// double-fire the laugh across replays.
 {
   const s = visitSpec(resolveVisit('gameOver', idle), 'gameOver');
   eq(s.perchPose, 'laugh', 'gameOver.perchPose');
   eq(s.line, 'BBBLAAAAHHAHAHA!', 'gameOver.line');
-  eq(s.sfx, 'pollySqwawkLaugh', 'gameOver.sfx');
+  eq(s.sfx, null, 'gameOver.sfx');
   eq(s.holdPerch, true, 'gameOver.holdPerch');
 }
 

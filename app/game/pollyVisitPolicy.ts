@@ -80,9 +80,13 @@ const BOSS_MASTERED_SULK: VisitSpec = {
   holdPerch: true, perchMs: 2500,
 };
 
+// Sound-free by design: ResultsScreen reliably plays pollySqwawkLaugh once on
+// mount, before this visit's board can ever unmount. Giving this spec its own
+// sfx raced that reliable copy — MaskBoard sometimes stays mounted long enough
+// for the visit's own delayed playSfx to also fire, doubling the laugh.
 const GAME_OVER_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
-  lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: 'pollySqwawkLaugh',
+  lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: null,
   holdPerch: true, perchMs: 2500,
 };
 
