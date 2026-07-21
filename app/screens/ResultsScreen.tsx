@@ -708,18 +708,18 @@ const rs = StyleSheet.create({
   },
   verdictBlock: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 40,
   },
   verdictBox: {
     width: '100%',
-    minHeight: resultsType.verdict * 1.5,
+    minHeight: resultsType.verdict * 2.6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   verdict: {
     fontFamily: FONTS.wordDisplay,
     fontSize: resultsType.verdict,
-    lineHeight: resultsType.verdict * 1.3,
+    lineHeight: resultsType.verdict * 1.15,
     letterSpacing: 2,
     textAlign: 'center',
     width: '100%',

@@ -32,7 +32,7 @@ export function deriveResultsPollyMoment(
 
 // ── Type scale (legibility clause: floor 14, tune on device) ──
 export const resultsType = {
-  verdict: 46,
+  verdict: 40,
   verdictSub: 17,
   gradeSub: 16,
   rankLabel: 16,
