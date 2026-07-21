@@ -177,7 +177,7 @@ export function resolveResultsPollyMoment(
   input: {
     isComplete: boolean;
     allPerfect: boolean;
-    bossCleared: boolean;
+    bossMastered: boolean;
     hasMissed: boolean;
   },
 ): PollyMoment | null {
@@ -188,7 +188,7 @@ export function resolveResultsPollyMoment(
   }
   if (input.allPerfect) return pollyMoment('resultsEmptyVault');
   if (memory.playerWinStreak > 0) return pollyMoment('resultsWantBack');
-  if (input.bossCleared) return pollyMoment('resultsKeepWord');
+  if (input.bossMastered) return pollyMoment('resultsKeepWord');
   if (input.hasMissed) return pollyMoment('resultsMeaningsPast');
   return null;
 }

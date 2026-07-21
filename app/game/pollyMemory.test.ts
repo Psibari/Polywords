@@ -48,7 +48,7 @@ function eq<T>(actual: T, expected: T, label: string): void {
   const repeatLoss = { ...DEFAULT_POLLY_MEMORY, pollyWinStreak: 1 };
   eq(
     resolveResultsPollyMoment(repeatLoss, {
-      isComplete: false, allPerfect: false, bossCleared: false, hasMissed: true,
+      isComplete: false, allPerfect: false, bossMastered: false, hasMissed: true,
     })?.lineId,
     'resultsTrapsRemember',
     'results.repeatLoss',

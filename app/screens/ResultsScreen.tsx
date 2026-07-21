@@ -106,14 +106,14 @@ function computeRank(score: number): { letter: string; color: string } {
 
 // ─── LEDGER ROW ──────────────────────────────────────────────
 
-function LedgerRow({ result }: { result: WordResult }) {
+function LedgerRow({ result, bossMastered }: { result: WordResult; bossMastered: boolean }) {
   const allFound = result.correctUp === result.totalRealMasks && result.wrongSwipes === 0;
 
   let resultText: string;
   let resultColor: string;
-  if (result.isBossWord && allFound) {
-    resultText = 'Boss ✓';
-    resultColor = resultsLedger.mark;
+  if (result.isBossWord) {
+    resultText = bossMastered ? 'Boss ✓' : `${result.correctUp}/${result.totalRealMasks}`;
+    resultColor = bossMastered ? resultsLedger.mark : resultsLedger.ink;
   } else if (allFound) {
     resultText = 'Perfect ✓';
     resultColor = resultsLedger.mark;
@@ -551,6 +551,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const pollyMoment = deriveResultsPollyMoment(
     wordResults,
     isComplete,
+    bossMastered,
     pollyMemoryBeforeRunRecorded,
   );
   const pollyLineRememberedRef = useRef(false);
@@ -627,7 +628,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
                 style={rs.parchment}
               >
                 {wordOnlyResults.map((r, i) => (
-                  <LedgerRow key={`${r.wordId ?? r.word}-${i}`} result={r} />
+                  <LedgerRow key={`${r.wordId ?? r.word}-${i}`} result={r} bossMastered={bossMastered} />
                 ))}
               </LinearGradient>
             </View>

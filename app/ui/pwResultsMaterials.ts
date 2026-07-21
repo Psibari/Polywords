@@ -16,16 +16,16 @@ export const RESULTS_SUB_LOSS = 'Out of feathers.';
 export function deriveResultsPollyMoment(
   wordResults: WordResult[],
   isComplete: boolean,
+  bossMastered: boolean,
   memory: PollyMemory,
 ): PollyMoment | null {
   const allPerfect =
     wordResults.length > 0 && wordResults.every(r => r.wrongSwipes === 0);
-  const bossCleared = wordResults.some(r => r.isBossWord && r.wrongSwipes === 0);
   const hasMissed = wordResults.some(r => r.missedMaskIds.length > 0);
   return resolveResultsPollyMoment(memory, {
     isComplete,
     allPerfect,
-    bossCleared,
+    bossMastered,
     hasMissed,
   });
 }

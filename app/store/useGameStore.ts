@@ -6,7 +6,6 @@ import {
   submitSwipeUp,
   submitSwipeDown,
   submitWrongSwipe,
-  submitBossMastery,
   resolveMysteryTile,
   completeWord,
   addBonusScore,
@@ -139,7 +138,6 @@ type GameStore = {
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
   submitWrongSwipe: () => void;
-  submitBossMastery: () => void;
   resolveMystery: (correct: boolean, visiblePerfect: boolean) => void;
   completeWord: () => void;
   clearPollyTrigger: () => void;
@@ -268,9 +266,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (bossStep && bossStep.kind === 'word') get().queueFailedBoss(bossStep);
     }
   },
-
-  submitBossMastery: () =>
-    set((s) => ({ game: submitBossMastery(s.game) })),
 
   resolveMystery: (correct, visiblePerfect) => {
     const prev = get().game;
