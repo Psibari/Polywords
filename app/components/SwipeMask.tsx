@@ -48,7 +48,7 @@ type Props = {
   onSwipeStart?: () => void;
   onPressHoldStart?: () => void;
   onExitComplete?: () => void;
-  onNearTarget?: () => void;
+  onCardTouch?: () => void;
   disabled?: boolean;
   nearMastery?: boolean;
   wordY?: number;
@@ -85,7 +85,7 @@ export function SwipeMask({
   onSwipeStart,
   onPressHoldStart,
   onExitComplete,
-  onNearTarget,
+  onCardTouch,
   disabled = false,
   nearMastery = false,
   wordY = 180,
@@ -147,8 +147,8 @@ export function SwipeMask({
   useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
   useEffect(() => { onExitCompleteRef.current = onExitComplete; }, [onExitComplete]);
-  const onNearTargetRef = useRef(onNearTarget);
-  useEffect(() => { onNearTargetRef.current = onNearTarget; }, [onNearTarget]);
+  const onCardTouchRef = useRef(onCardTouch);
+  useEffect(() => { onCardTouchRef.current = onCardTouch; }, [onCardTouch]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
 
   function fireExitCompleteOnce() {
@@ -250,12 +250,12 @@ export function SwipeMask({
           if (!bumped && closed > 0.45) {
             bumped = true;
             onEffectRef.current?.('trail', px, py);
-            onNearTargetRef.current?.();
           }
 
           if (dist < 12 || elapsed > 1.15) {
             absorbRafRef.current = null;
             tileOpacity.value = 0;
+            onCardTouchRef.current?.();
             RNAnimated.parallel([
               RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
               RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
