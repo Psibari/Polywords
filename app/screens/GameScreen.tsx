@@ -81,19 +81,6 @@ function TopBar() {
   const animScore = useRef(new Animated.Value(game.score)).current;
   const [displayScore, setDisplayScore] = useState(game.score);
 
-  const progressAnim = useRef(new Animated.Value(
-    total > 0 ? current / total : 0
-  )).current;
-
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue:  total > 0 ? current / total : 0,
-      duration: 380,
-      easing:   Easing.out(Easing.quad),
-      useNativeDriver: false,
-    }).start();
-  }, [current, total]); // eslint-disable-line react-hooks/exhaustive-deps
-
   useEffect(() => {
     const id = animScore.addListener(({ value }) => setDisplayScore(Math.round(value)));
     return () => animScore.removeListener(id);
@@ -145,16 +132,97 @@ function TopBar() {
           )}
         </View>
       </View>
-      <View style={tb.progressTrack}>
-        <Animated.View
-          style={[tb.progressFill, {
-            width: progressAnim.interpolate({
-              inputRange:  [0, 1],
-              outputRange: ['0%', '100%'],
-            }),
-          }]}
-        />
-      </View>
+      <RoundChips current={current} total={total} />
+    </View>
+  );
+}
+
+// ─── ROUND CHIPS ─────────────────────────────────────────────
+
+function RoundChips({ current, total }: { current: number; total: number }) {
+  const chipAnims = useRef(
+    Array.from({ length: total }, (_, i) => ({
+      scale: new Animated.Value(i === current ? 1.25 : i < current ? 0.92 : 1),
+      translateY: new Animated.Value(i === current ? -3 : 0),
+      opacity: new Animated.Value(i < current ? 0.45 : 1),
+    }))
+  ).current;
+
+  useEffect(() => {
+    chipAnims.forEach((anim, i) => {
+      const isDone = i < current;
+      const isCurrent = i === current;
+      const toScale = isCurrent ? 1.25 : isDone ? 0.92 : 1;
+      const toY = isCurrent ? -3 : 0;
+      const toOpacity = isDone ? 0.45 : 1;
+
+      Animated.spring(anim.scale, {
+        toValue: toScale,
+        damping: 12,
+        stiffness: 180,
+        useNativeDriver: true,
+      }).start();
+      Animated.spring(anim.translateY, {
+        toValue: toY,
+        damping: 12,
+        stiffness: 180,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(anim.opacity, {
+        toValue: toOpacity,
+        duration: 180,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <View style={tb.chipsRow}>
+      {chipAnims.map((anim, i) => {
+        const isBoss = i === total - 1;
+        const isCurrent = i === current;
+        const isPurpleFramed = isCurrent || isBoss;
+        return (
+          <Animated.View
+            key={i}
+            style={[
+              tb.chip,
+              {
+                borderColor: isPurpleFramed
+                  ? PW.color.purple
+                  : 'rgba(255,255,255,0.55)',
+                borderWidth: isPurpleFramed ? 1.5 : 1,
+                opacity: anim.opacity,
+                transform: [
+                  { scale: anim.scale },
+                  { translateY: anim.translateY },
+                ],
+              },
+              isCurrent && {
+                shadowColor: PW.color.purple,
+                shadowOpacity: 0.5,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 0 },
+                elevation: 4,
+              },
+            ]}
+          >
+            {isBoss ? (
+              // PLACEHOLDER — swap for a real crown icon asset when available
+              <View style={{ width: 12, height: 10 }}>
+                <View style={tb.crownBase} />
+                <View style={[tb.crownPoint, { left: 0, bottom: 2 }]} />
+                <View style={[tb.crownPoint, { left: 4, bottom: 4 }]} />
+                <View style={[tb.crownPoint, { left: 8, bottom: 2 }]} />
+              </View>
+            ) : (
+              <Text style={[tb.chipLabel, isCurrent && tb.chipLabelCurrent]}>
+                {i + 1}
+              </Text>
+            )}
+          </Animated.View>
+        );
+      })}
     </View>
   );
 }
@@ -276,9 +344,9 @@ const tb = StyleSheet.create({
     paddingBottom: 9,
     borderRadius: 6,
     backgroundColor: 'rgba(11,9,32,0.86)',
-    borderWidth: 0.5,
-    borderColor: 'rgba(123,45,139,0.22)',
-    borderBottomColor: 'rgba(245,200,66,0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,45,139,0.38)',
+    borderBottomColor: 'rgba(245,200,66,0.42)',
     borderBottomWidth: 0.5,
   },
   statsRow: {
@@ -360,17 +428,45 @@ const tb = StyleSheet.create({
   featherShaftFilled: {
     backgroundColor: 'rgba(123,45,139,0.70)',
   },
-  progressTrack: {
-    height: 4,
+  chipsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 5,
     marginTop: 8,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    overflow: 'hidden',
   },
-  progressFill: {
+  chip: {
+    width: 22,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    backgroundColor: PW.color.surfaceDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chipLabel: {
+    fontSize: 10,
+    fontFamily: FONTS.hud,
+    color: PW.color.softWhite,
+  },
+  chipLabelCurrent: {
+    color: PW.color.lavender,
+  },
+  crownBase: {
+    position: 'absolute',
+    bottom: 0,
+    width: 12,
     height: 4,
-    borderRadius: 2,
+    borderRadius: 1,
     backgroundColor: PW.color.gold,
+  },
+  crownPoint: {
+    position: 'absolute',
+    bottom: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 1,
+    backgroundColor: PW.color.gold,
+    transform: [{ rotate: '45deg' }],
   },
   reserveFeatherWrap: {
     width:          8,
