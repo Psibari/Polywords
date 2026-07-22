@@ -514,7 +514,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.delay(420),
+        Animated.delay(200),
         Animated.timing(bookOpenAnim, {
           toValue: 0,
           duration: 120,
@@ -529,7 +529,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-        Animated.delay(300),
+        Animated.delay(200),
         Animated.timing(bookIntakeGlowAnim, {
           toValue: 0,
           duration: 180,
@@ -562,7 +562,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     ]).start(() => setAbsorbedPhrase(null));
   }
 
-  function handleNearTarget() {
+  function handleCardTouch() {
     triggerBookOpen();
   }
 
@@ -1781,7 +1781,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
                     onExitComplete={() => {
                       setRemainingMaskIds(prev => prev.filter(id => id !== topMask.id));
                     }}
-                    onNearTarget={handleNearTarget}
+                    onCardTouch={handleCardTouch}
                     wordY={wordScreenY}
                     intakeY={wordScreenY + 73}
                   />
@@ -1824,7 +1824,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
                         onEffect={handleEffect}
                         onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                         onPressHoldStart={() => playSfx('pressHoldStart')}
-                        onNearTarget={handleNearTarget}
+                        onCardTouch={handleCardTouch}
                         wordY={wordScreenY}
                         intakeY={wordScreenY + 73}
                         splitBorderColor="rgba(245,200,66,1.0)"
