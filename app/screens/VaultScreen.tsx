@@ -67,7 +67,7 @@ export default function VaultScreen({ navigation }: Props) {
         {/* Header — archive language */}
         <Text style={styles.title}>WORD VAULT</Text>
         <Text style={styles.counts}>
-          {progress.masteredWords.length} RECLAIMED · {ghostsToShow.length} HAUNTED
+          {progress.masteredWords.length} MASTERED · {ghostsToShow.length} HAUNTED
         </Text>
 
         {/* Bookplate — parchment inset, tier seal; tap → rank ladder (Task 7) */}
@@ -92,7 +92,7 @@ export default function VaultScreen({ navigation }: Props) {
         />
 
         {progress.masteredWords.length === 0 && (
-          <Text style={styles.emptyLine}>Your first reclaimed word will stand here.</Text>
+          <Text style={styles.emptyLine}>Your first mastered word will stand here.</Text>
         )}
       </ScrollView>
 
@@ -115,10 +115,10 @@ export default function VaultScreen({ navigation }: Props) {
             {selectedMastered && (
               <>
                 <Text style={styles.detailLine}>
-                  Reclaimed {formatDate(selectedMastered.dateMastered)}
+                  Mastered {formatDate(selectedMastered.dateMastered)}
                 </Text>
                 {selectedMastered.isBoss && (
-                  <Text style={[styles.detailLine, styles.detailBoss]}>POLLY'S WORD — TAKEN</Text>
+                  <Text style={[styles.detailLine, styles.detailBoss]}>POLLY'S WORD — MASTERED</Text>
                 )}
                 {selectedMastered.hiddenMeaningFound.length > 0 && (
                   <Text style={styles.detailLine}>
@@ -132,7 +132,7 @@ export default function VaultScreen({ navigation }: Props) {
                 <Text style={styles.detailLine}>
                   Still haunted — missed {selectedGhost.runsMissed} {selectedGhost.runsMissed === 1 ? 'run' : 'runs'}.
                 </Text>
-                <Text style={styles.detailLine}>Win it back in the next Hunt.</Text>
+                <Text style={styles.detailLine}>Run it back next Hunt.</Text>
               </>
             )}
           </Pressable>
