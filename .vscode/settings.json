@@ -8,7 +8,7 @@
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
   "editor.renderWhitespace": "selection",
-  "workbench.colorTheme": "Dark 2026",
+  "workbench.colorTheme": "Red",
   "editor.fontLigatures": true,
   "editor.fontFamily": "Cascadia Code, Consolas, monospace",
   "editor.fontSize": 14,
