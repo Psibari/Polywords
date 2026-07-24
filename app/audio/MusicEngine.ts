@@ -74,6 +74,17 @@ let fadeRafId: number | null = null;
 let pauseTimerId: ReturnType<typeof setTimeout> | null = null;
 const savedPositions: Partial<Record<TrackKey, number>> = {};
 
+const LOAD_RETRY_MS = [60, 150, 300, 600, 1200];
+let transportPaused = false;
+let loadRetryId: ReturnType<typeof setTimeout> | null = null;
+let loadRetryAttempt = 0;
+
+function clearLoadRetry(): void {
+  if (loadRetryId !== null) clearTimeout(loadRetryId);
+  loadRetryId = null;
+  loadRetryAttempt = 0;
+}
+
 function warnDev(message: string, error?: unknown): void {
   if (!__DEV__) return;
   if (error === undefined) console.warn(`[MusicEngine] ${message}`);
@@ -93,7 +104,7 @@ function cancelFade(): void {
 }
 
 function targetVolume(): number {
-  if (userMuted || !activeOwner) return 0;
+  if (userMuted || !activeOwner || transportPaused) return 0;
   return STATE_VOLUMES[desiredStates[activeOwner]];
 }
 
@@ -124,17 +135,34 @@ function fadeVolumeTo(volume: number, durationMs: number): void {
 
 function playLoadedTrack(token: number): void {
   const livePlayer = player;
-  if (
-    !livePlayer ||
-    !livePlayer.isLoaded ||
-    !activeOwner ||
-    token !== transitionToken
-  ) {
+  if (!livePlayer || !activeOwner || token !== transitionToken) {
+    clearLoadRetry();
     return;
   }
 
   const desiredTrack = STATE_TO_TRACK[desiredStates[activeOwner]];
   if (activeTrackKey !== desiredTrack) return;
+
+  if (!livePlayer.isLoaded) {
+    // playbackStatusUpdate is not a guaranteed wake-up for a paused player
+    // whose source was just replaced. Bounded ladder so the engine can never
+    // wedge in loaded-but-never-played.
+    const delay = LOAD_RETRY_MS[loadRetryAttempt];
+    if (delay === undefined) {
+      warnDev(`gave up waiting for ${desiredTrack} to load`);
+      return;
+    }
+    loadRetryAttempt += 1;
+    if (loadRetryId !== null) clearTimeout(loadRetryId);
+    loadRetryId = setTimeout(() => {
+      loadRetryId = null;
+      playLoadedTrack(token);
+    }, delay);
+    return;
+  }
+
+  clearLoadRetry();
+  if (transportPaused) return;
 
   if (configuredTrackToken !== token) {
     try {
@@ -186,6 +214,7 @@ function switchTrack(nextTrack: TrackKey): void {
   configuredTrackToken = -1;
   cancelFade();
   clearPauseTimer();
+  clearLoadRetry();
 
   try {
     livePlayer.volume = 0;
@@ -204,9 +233,28 @@ function switchTrack(nextTrack: TrackKey): void {
   }
 }
 
+function pauseTransport(): void {
+  transportPaused = true;
+  clearPauseTimer();
+  clearLoadRetry();
+  fadeVolumeTo(0, FADE_OUT_MS);
+
+  const livePlayer = player;
+  pauseTimerId = setTimeout(() => {
+    pauseTimerId = null;
+    if (!transportPaused || player !== livePlayer) return;
+    try {
+      livePlayer?.pause();
+    } catch (error) {
+      warnDev('failed to pause music', error);
+    }
+  }, FADE_OUT_MS + 30);
+}
+
 function applyDesiredState(): void {
   if (!player || !activeOwner) return;
 
+  transportPaused = false;
   clearPauseTimer();
   const desiredTrack = STATE_TO_TRACK[desiredStates[activeOwner]];
   if (activeTrackKey !== desiredTrack) {
@@ -247,6 +295,7 @@ export function initMusicEngine(): Promise<void> {
 
 export function startMusic(owner: MusicOwner): void {
   activeOwner = owner;
+  transportPaused = false;
   clearPauseTimer();
   cancelFade();
   void initMusicEngine().then(applyDesiredState);
@@ -276,7 +325,13 @@ export function stopMusic(owner: MusicOwner): void {
 
 export function setMusicState(owner: MusicOwner, newState: MusicState): void {
   if (newState === 'off') {
-    stopMusic(owner);
+    if (activeOwner !== owner || transportPaused) return;
+    // A new run must start its loop from the top, not resume mid-loop from
+    // wherever the previous run's last track switch left it.
+    for (const key of Object.keys(savedPositions) as TrackKey[]) {
+      delete savedPositions[key];
+    }
+    pauseTransport();
     return;
   }
 
@@ -290,15 +345,19 @@ export function setMusicEnabled(enabled: boolean): void {
   fadeVolumeTo(targetVolume(), 220);
 }
 
-// App-teardown escape hatch only. Screen blur should call stopMusic(), which
+// App-teardown escape hatch only. stopMusic() is for screen blur only, which
 // keeps the singleton and desired state available for a clean focus return.
+// setMusicState(owner, 'off') pauses the transport in place without
+// releasing ownership, for a run ending while its screen stays focused.
 export function haltMusicEngine(): void {
   activeOwner = null;
   activeTrackKey = null;
   configuredTrackToken = -1;
   pendingSeek = null;
   transitionToken += 1;
+  transportPaused = false;
   clearPauseTimer();
+  clearLoadRetry();
   cancelFade();
   playerSubscription?.remove();
   playerSubscription = null;
