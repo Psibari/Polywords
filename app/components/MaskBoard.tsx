@@ -178,6 +178,12 @@ function eventKicker(step: WordStep): string | null {
 type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
 type WordOutcomeState = 'none' | 'mastered' | 'haunted';
 
+type GauntletTile = {
+  pairIndex: number;
+  mask: Mask;
+  isReal: boolean;
+};
+
 type OutcomeOverlayProps = {
   word: string;
   headline?: string;
@@ -339,7 +345,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const wrongSwipeOccurred    = useRef(false);
   const visiblePerfectRef     = useRef(true);
   const preMysteryChainMultiplierRef = useRef(1);
-  const mysteryIsRealRef      = useRef(true);
   const gapLockedRef          = useRef(false);
   const tileIndexInWordRef    = useRef(0);
 
@@ -629,14 +634,24 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   }
 
   // ── master gate ───────────────────────────────────────────────
-  const hasHidden = !!step.hiddenMeaning;
+  // Returning Haunt re-tests the exact pair that beat you last run, stored on
+  // the ghost. Boss draws up to 3 distinct pairs, one tile each.
+  const hauntPair = ghost && ghost.hiddenMeaningReal && ghost.hiddenMeaningTrap
+    ? { real: ghost.hiddenMeaningReal, trap: ghost.hiddenMeaningTrap }
+    : null;
 
-  const hiddenRealMask: Mask | null = step.hiddenMeaning
-    ? { id: `${step.word}_hidden_real`, phrase: step.hiddenMeaning, isReal: true }
-    : null;
-  const hiddenTrapMask: Mask | null = step.hiddenMeaning
-    ? { id: `${step.word}_hidden_trap`, phrase: step.hiddenTrap ?? 'Not this one', isReal: false }
-    : null;
+  const stepPairs: { real: string; trap: string }[] =
+    step.hiddenPairs && step.hiddenPairs.length > 0
+      ? step.hiddenPairs
+      : step.hiddenMeaning != null && step.hiddenTrap != null
+        ? [{ real: step.hiddenMeaning, trap: step.hiddenTrap }]
+        : [];
+
+  const gauntletPairs = isHaunt
+    ? (hauntPair ? [hauntPair] : stepPairs.slice(0, 1))
+    : stepPairs;
+
+  const hasHidden = gauntletPairs.length > 0;
 
   // Gate phase
   const [gatePhase, setGatePhase] = useState<
@@ -645,8 +660,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
 
   // Final tile states (replaces splitStates)
   const [finalTileStates, setFinalTileStates] = useState<Map<string, SwipeMaskState>>(new Map());
-  const [releasedHiddenTileCount, setReleasedHiddenTileCount] = useState(0);
-  const [landedHiddenTileCount, setLandedHiddenTileCount] = useState(0);
+  const [gauntletTiles, setGauntletTiles] = useState<GauntletTile[]>([]);
+  const [gauntletIndex, setGauntletIndex] = useState(0);
+  const [tileLanded, setTileLanded] = useState(false);
   const [failedHiddenTileId, setFailedHiddenTileId] = useState<string | null>(null);
 
   // Final tile drop (native: transform only)
@@ -765,7 +781,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     completedRef.current          = false;
     gateTriggeredRef.current      = false;
     splitCompletedRef.current     = false;
-    mysteryIsRealRef.current      = true;
     setTileStates(buildInitialTileStates(step));
     // Deck reset
     const freshIds = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
@@ -856,8 +871,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     // Gate reset
     setGatePhase('locked');
     setFinalTileStates(new Map());
-    setReleasedHiddenTileCount(0);
-    setLandedHiddenTileCount(0);
+    setGauntletTiles([]);
+    setGauntletIndex(0);
+    setTileLanded(false);
     setFailedHiddenTileId(null);
     setMasterStampVisible(false);
     setSealReady(false);
@@ -992,16 +1008,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
 
   // ── Gate sequence ─────────────────────────────────────────────
 
-  function triggerFinalTilesDrop() {
-    if (!hiddenRealMask || !hiddenTrapMask) return;
-    const useReal = Math.random() < 0.5;
-    mysteryIsRealRef.current = useReal;
-    const mysteryMask = useReal ? hiddenRealMask : hiddenTrapMask;
-
-    setGatePhase('tiles');
-    setFinalTileStates(new Map([[mysteryMask.id, 'idle']]));
-    setReleasedHiddenTileCount(1);
-    setLandedHiddenTileCount(0);
+  function dropGauntletTile(index: number) {
+    setGauntletIndex(index);
+    setTileLanded(false);
     splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
     finalBorder1Anim.setValue(0);
 
@@ -1009,7 +1018,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
     }).start(({ finished }) => {
       if (!finished) return;
-      setLandedHiddenTileCount(1);
+      setTileLanded(true);
       Animated.sequence([
         Animated.timing(finalBorder1Anim, { toValue: 0.55, duration: 120, useNativeDriver: false }),
         Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
@@ -1017,12 +1026,41 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     });
   }
 
+  function triggerFinalTilesDrop() {
+    if (gauntletPairs.length === 0) return;
+
+    // One tile per pair, max 3. Which face shows is an independent coin flip
+    // per tile, so three tiles is 12.5% guess-through, not 50%.
+    const chosen = gauntletPairs.slice(0, 3);
+    const tiles: GauntletTile[] = chosen.map((pair, i) => {
+      const useReal = Math.random() < 0.5;
+      return {
+        pairIndex: i,
+        isReal: useReal,
+        mask: {
+          id: `${step.word}_hidden_${i}_${useReal ? 'real' : 'trap'}`,
+          phrase: useReal ? pair.real : pair.trap,
+          isReal: useReal,
+        },
+      };
+    });
+
+    // Chain multiplier does not move across the gauntlet, so capture once.
+    preMysteryChainMultiplierRef.current = store.game.chainMultiplier;
+    store.beginMysteryGauntlet(tiles.length);
+
+    setGatePhase('tiles');
+    setGauntletTiles(tiles);
+    setFinalTileStates(new Map(tiles.map(t => [t.mask.id, 'idle' as SwipeMaskState])));
+    dropGauntletTile(0);
+  }
+
   function buildHauntedDetail(failedMaskId?: string): string | undefined {
-    if (failedMaskId === hiddenRealMask?.id && hiddenRealMask) {
-      return `Missed: ${hiddenRealMask.phrase}`;
-    }
-    if (failedMaskId === hiddenTrapMask?.id && hiddenTrapMask) {
-      return `Trap claimed: ${hiddenTrapMask.phrase}`;
+    const failedTile = gauntletTiles.find(t => t.mask.id === failedMaskId);
+    if (failedTile) {
+      return failedTile.isReal
+        ? `Missed: ${failedTile.mask.phrase}`
+        : `Trap claimed: ${failedTile.mask.phrase}`;
     }
 
     const missedReal = visibleGridMasks.find(m => m.isReal && tileStates.get(m.id) === 'wrong');
@@ -1281,46 +1319,51 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     }, 290);
   }
 
-  function handleFinalTileSwipeUp(maskId: string) {
+  function resolveGauntletTile(correct: boolean, swipedUp: boolean) {
     if (wordOutcome !== 'none') return;
+    const tile = gauntletTiles[gauntletIndex];
+    if (!tile) return;
     resetHesitation();
-    const isReal = mysteryIsRealRef.current;
-    preMysteryChainMultiplierRef.current = store.game.chainMultiplier;
-    store.resolveMystery(isReal, visiblePerfectRef.current);
-    if (isReal) {
-      playSfx('correctClaim');
-      splitCompletedRef.current = true;
-      setFinalTileStates(prev => new Map(prev).set(maskId, 'correct'));
-      if (hiddenRealMask) triggerAbsorption(hiddenRealMask.phrase);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => triggerMastered(), 200);
-    } else {
+
+    const failedPair = correct
+      ? undefined
+      : { real: gauntletPairs[tile.pairIndex].real, trap: gauntletPairs[tile.pairIndex].trap };
+    store.resolveMystery(correct, visiblePerfectRef.current, failedPair);
+
+    if (!correct) {
       wrongSwipeOccurred.current = true;
       triggerWrongSwipeFeedback();
-      setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      triggerWrongFail(maskId);
+      setFinalTileStates(prev => new Map(prev).set(tile.mask.id, 'wrong'));
+      triggerWrongFail(tile.mask.id);
+      return;
+    }
+
+    playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setFinalTileStates(prev =>
+      new Map(prev).set(tile.mask.id, swipedUp ? 'correct' : 'trap-caught'));
+    if (swipedUp) triggerAbsorption(tile.mask.phrase);
+
+    const isLast = gauntletIndex + 1 >= gauntletTiles.length;
+    if (isLast) {
+      splitCompletedRef.current = true;
+      setTimeout(() => triggerMastered(), 200);
+    } else {
+      setTileLanded(false);
+      setTimeout(() => dropGauntletTile(gauntletIndex + 1), 320);
     }
   }
 
-  function handleFinalTileSwipeRight(maskId: string) {
-    if (wordOutcome !== 'none') return;
-    resetHesitation();
-    const isReal = mysteryIsRealRef.current;
-    const correct = !isReal;
-    preMysteryChainMultiplierRef.current = store.game.chainMultiplier;
-    store.resolveMystery(correct, visiblePerfectRef.current);
-    if (correct) {
-      splitCompletedRef.current = true;
-      playSfx('trapShatter');
-      setFinalTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => triggerMastered(), 200);
-    } else {
-      wrongSwipeOccurred.current = true;
-      triggerWrongSwipeFeedback();
-      setFinalTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      triggerWrongFail(maskId);
-    }
+  function handleFinalTileSwipeUp() {
+    const tile = gauntletTiles[gauntletIndex];
+    if (!tile) return;
+    resolveGauntletTile(tile.isReal, true);
+  }
+
+  function handleFinalTileSwipeRight() {
+    const tile = gauntletTiles[gauntletIndex];
+    if (!tile) return;
+    resolveGauntletTile(!tile.isReal, false);
   }
 
   // ── completion check ─────────────────────────────────────────
@@ -1485,7 +1528,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   });
   const masteryWordCenterY = Math.max(170, Dimensions.get('window').height * 0.48);
   const vaultBloomX = Math.max(28, containerWidth - 86);
-  const mysteryMask = mysteryIsRealRef.current ? hiddenRealMask : hiddenTrapMask;
+  const activeGauntletTile = gauntletTiles[gauntletIndex] ?? null;
   const inputLocked = wordOutcome !== 'none';
 
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
@@ -1789,50 +1832,61 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
               </View>
             )}
 
-            {(gatePhase === 'tiles' || gatePhase === 'wrongFail') && mysteryMask && (
+            {(gatePhase === 'tiles' || gatePhase === 'wrongFail') && activeGauntletTile && (
               <View style={styles.finalHiddenTileStack}>
-                {releasedHiddenTileCount >= 1 && (
-                  <Animated.View
-                    pointerEvents={gatePhase === 'wrongFail' ? 'none' : landedHiddenTileCount >= 1 ? 'auto' : 'none'}
-                    style={{ transform: [{ translateY: splitTile1TransY }] }}
-                  >
-                    <Animated.View style={[
-                      styles.finalHiddenTileFrame,
-                      {
-                        borderColor: finalBorder1Anim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['rgba(245,200,66,0.35)', 'rgba(245,200,66,1.0)'],
-                        }),
-                        shadowOpacity: finalBorder1Anim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.08, 0.26],
-                        }),
-                      },
-                    ]}>
-                      <SwipeMask
-                        mask={mysteryMask}
-                        state={finalTileStates.get(mysteryMask.id) ?? 'idle'}
-                        onSwipeUp={() => handleFinalTileSwipeUp(mysteryMask.id)}
-                        onSwipeDown={() => handleFinalTileSwipeRight(mysteryMask.id)}
-                        onSwipeReveal={() => {}}
-                        revealable={false}
-                        disabled={inputLocked}
-                        isSpecialSplit={true}
-                        tileHeight={FINAL_TILE_H}
-                        entryDelay={0}
-                        onEffect={handleEffect}
-                        onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
-                        onPressHoldStart={() => playSfx('pressHoldStart')}
-                        onCardTouch={handleCardTouch}
-                        wordY={wordScreenY}
-                        intakeY={wordScreenY + 73}
-                        splitBorderColor="rgba(245,200,66,1.0)"
-                        splitTextColor="rgba(255,248,230,1)"
-                        splitBackgroundColor="#0F0D2A"
-                      />
-                    </Animated.View>
-                  </Animated.View>
+                {gauntletTiles.length > 1 && (
+                  <Text style={{
+                    color: 'rgba(245,200,66,0.72)',
+                    fontFamily: FONTS.label,
+                    fontSize: 15,
+                    letterSpacing: 3,
+                    textAlign: 'center',
+                    marginBottom: 8,
+                  }}>
+                    {`${gauntletIndex + 1} OF ${gauntletTiles.length}`}
+                  </Text>
                 )}
+                <Animated.View
+                  pointerEvents={gatePhase === 'wrongFail' ? 'none' : tileLanded ? 'auto' : 'none'}
+                  style={{ transform: [{ translateY: splitTile1TransY }] }}
+                >
+                  <Animated.View style={[
+                    styles.finalHiddenTileFrame,
+                    {
+                      borderColor: finalBorder1Anim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['rgba(245,200,66,0.35)', 'rgba(245,200,66,1.0)'],
+                      }),
+                      shadowOpacity: finalBorder1Anim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.08, 0.26],
+                      }),
+                    },
+                  ]}>
+                    <SwipeMask
+                      key={activeGauntletTile.mask.id}
+                      mask={activeGauntletTile.mask}
+                      state={finalTileStates.get(activeGauntletTile.mask.id) ?? 'idle'}
+                      onSwipeUp={handleFinalTileSwipeUp}
+                      onSwipeDown={handleFinalTileSwipeRight}
+                      onSwipeReveal={() => {}}
+                      revealable={false}
+                      disabled={inputLocked}
+                      isSpecialSplit={true}
+                      tileHeight={FINAL_TILE_H}
+                      entryDelay={0}
+                      onEffect={handleEffect}
+                      onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
+                      onPressHoldStart={() => playSfx('pressHoldStart')}
+                      onCardTouch={handleCardTouch}
+                      wordY={wordScreenY}
+                      intakeY={wordScreenY + 73}
+                      splitBorderColor="rgba(245,200,66,1.0)"
+                      splitTextColor="rgba(255,248,230,1)"
+                      splitBackgroundColor="#0F0D2A"
+                    />
+                  </Animated.View>
+                </Animated.View>
               </View>
             )}
             </Animated.View>

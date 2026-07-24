@@ -140,7 +140,11 @@ type GameStore = {
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
   submitWrongSwipe: () => void;
-  resolveMystery: (correct: boolean, visiblePerfect: boolean) => void;
+  resolveMystery: (
+    correct: boolean,
+    visiblePerfect: boolean,
+    failedPair?: { real: string; trap: string },
+  ) => void;
   beginMysteryGauntlet: (total: number) => void;
   completeWord: () => void;
   clearPollyTrigger: () => void;
@@ -273,7 +277,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   beginMysteryGauntlet: (total) =>
     set((s) => ({ game: beginMysteryGauntletFn(s.game, total) })),
 
-  resolveMystery: (correct, visiblePerfect) => {
+  resolveMystery: (correct, visiblePerfect, failedPair) => {
     const prev = get().game;
     const step = prev.session[prev.stepIndex];
     const terminal = isMysteryTerminal(prev, correct);
@@ -294,7 +298,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(pruned)).catch(() => {});
         }
       } else {
-        get().queueFailedBoss(step);
+        get().queueFailedBoss(
+          failedPair
+            ? { ...step, hiddenMeaning: failedPair.real, hiddenTrap: failedPair.trap }
+            : step,
+        );
       }
     } else if (isHaunt) {
       if (correct) get().banishHaunt(step);
