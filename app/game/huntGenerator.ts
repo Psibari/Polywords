@@ -1,10 +1,11 @@
-import { EmotionalRole, SessionStep, WordStep } from './types';
+import { EmotionalRole, HiddenPair, SessionStep, WordStep } from './types';
 import rawHuntData from '../../assets/data/huntData.json';
 
 type HuntWordData = {
   difficulty: string;
   hiddenMeaning: string | null;
   hiddenTrap: string | null;
+  hiddenPairs?: { real: string; trap: string }[] | null;
   gpsTag: 'confidence' | 'flow' | 'tension' | 'panic' | 'boss';
   wordType?: string;
   masks: { id: string; phrase: string; isReal: boolean }[];
@@ -96,8 +97,23 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 
 const DIFFICULTY_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
 
+// Compatibility bridge — words with the old singular fields yield exactly one
+// pair, so nothing in huntData.json changes.
+function hiddenPairsFor(word: string): HiddenPair[] {
+  const data = db[word];
+  if (data.hiddenPairs && data.hiddenPairs.length > 0) {
+    return data.hiddenPairs
+      .filter(p => p.real != null && p.trap != null)
+      .map(p => ({ real: p.real, trap: p.trap }));
+  }
+  if (data.hiddenMeaning != null && data.hiddenTrap != null) {
+    return [{ real: data.hiddenMeaning, trap: data.hiddenTrap }];
+  }
+  return [];
+}
+
 function hasBossContent(word: string): boolean {
-  return db[word].hiddenMeaning != null && db[word].hiddenTrap != null;
+  return hiddenPairsFor(word).length > 0;
 }
 
 // Fledgling draw: keep the shuffle for variety, but float easier words to the
@@ -161,6 +177,8 @@ function buildWordStep(
   if (isHauntReturn) step.isHauntReturn = true;
   if (data.hiddenMeaning != null) step.hiddenMeaning = data.hiddenMeaning;
   if (data.hiddenTrap != null) step.hiddenTrap = data.hiddenTrap;
+  const pairs = hiddenPairsFor(word);
+  if (pairs.length > 0) step.hiddenPairs = pairs;
   return step;
 }
 
@@ -217,7 +235,7 @@ export function generateHunt(opts: {
   let ghostWord: string | null = null;
   for (const gid of ghostWordIds) {
     const w = gid.toUpperCase();
-    if (db[w] && db[w].gpsTag === 'boss' && !selected.has(w) && !mastered.has(w)) {
+    if (db[w] && db[w].gpsTag === 'boss' && hasBossContent(w) && !selected.has(w) && !mastered.has(w)) {
       ghostWord = w;
       selected.add(w);
       break;

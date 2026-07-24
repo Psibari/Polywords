@@ -7,6 +7,8 @@ import {
   submitSwipeDown,
   submitWrongSwipe,
   resolveMysteryTile,
+  beginMysteryGauntlet as beginMysteryGauntletFn,
+  isMysteryTerminal,
   completeWord,
   addBonusScore,
   applyGoldFeather,
@@ -139,6 +141,7 @@ type GameStore = {
   submitSwipeDown: (maskId: string) => void;
   submitWrongSwipe: () => void;
   resolveMystery: (correct: boolean, visiblePerfect: boolean) => void;
+  beginMysteryGauntlet: (total: number) => void;
   completeWord: () => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
@@ -267,17 +270,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  beginMysteryGauntlet: (total) =>
+    set((s) => ({ game: beginMysteryGauntletFn(s.game, total) })),
+
   resolveMystery: (correct, visiblePerfect) => {
     const prev = get().game;
     const step = prev.session[prev.stepIndex];
+    const terminal = isMysteryTerminal(prev, correct);
     const next = resolveMysteryTile(prev, { correct, visiblePerfect });
     set({ game: next });
+    if (!terminal) return;
     if (step.kind !== 'word') return;
     const isBoss = step.eventType === 'bossWord';
     const isHaunt = step.isHauntReturn === true;
     if (isBoss) {
       if (correct) {
-        get().recordMastery(step.word, true, step.hiddenMeaning ?? '', visiblePerfect);
+        get().recordMastery(step.word, true, step.hiddenPairs?.[0]?.real ?? step.hiddenMeaning ?? '', visiblePerfect);
         // invariant: a mastered word is never also a pending ghost (covers die→revive→master)
         const wordId = step.word.trim().toUpperCase();
         const pruned = get().ghosts.filter(g => g.wordId !== wordId);

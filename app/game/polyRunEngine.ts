@@ -80,6 +80,8 @@ export type GameState = {
   mercyTriggered: boolean;
   bossOutcome: 'pending' | 'mastered' | 'haunted';
   bossFlawless: boolean;
+  mysteryTotal: number;
+  mysteryResolved: number;
 };
 
 function shuffleMasks(masks: Mask[]): Mask[] {
@@ -128,6 +130,8 @@ export function createGame(
     mercyTriggered: false,
     bossOutcome: 'pending',
     bossFlawless: false,
+    mysteryTotal: 0,
+    mysteryResolved: 0,
   };
 }
 
@@ -386,6 +390,10 @@ export function submitBossMastery(state: GameState): GameState {
 
 // ─── MYSTERY TILE RESOLUTION — single source of truth for boss/haunt outcome ─
 
+export function beginMysteryGauntlet(state: GameState, total: number): GameState {
+  return { ...state, mysteryTotal: total, mysteryResolved: 0 };
+}
+
 export function resolveMysteryTile(
   state: GameState,
   opts: { correct: boolean; visiblePerfect: boolean },
@@ -393,11 +401,32 @@ export function resolveMysteryTile(
   const step = currentStep(state);
   const isBoss = step.kind === 'word' && step.eventType === 'bossWord';
   if (!isBoss) return state; // Returning Haunt: no score/outcome change here
-  if (opts.correct) {
-    const scored = submitBossMastery(state);
-    return { ...scored, bossOutcome: 'mastered', bossFlawless: opts.visiblePerfect };
+
+  const resolved = state.mysteryResolved + 1;
+  const total = Math.max(1, state.mysteryTotal);
+
+  if (!opts.correct) {
+    // Abort on first wrong — the gauntlet ends here.
+    return { ...state, mysteryResolved: resolved, bossOutcome: 'haunted' };
   }
-  return { ...state, bossOutcome: 'haunted' };
+
+  if (resolved < total) {
+    // Survived this tile, gauntlet continues. No outcome, no mastery score.
+    return { ...state, mysteryResolved: resolved };
+  }
+
+  const scored = submitBossMastery(state);
+  return {
+    ...scored,
+    mysteryResolved: resolved,
+    bossOutcome: 'mastered',
+    bossFlawless: opts.visiblePerfect,
+  };
+}
+
+export function isMysteryTerminal(state: GameState, correct: boolean): boolean {
+  if (!correct) return true;
+  return state.mysteryResolved + 1 >= Math.max(1, state.mysteryTotal);
 }
 
 // ─── WRONG SWIPE — penalise without recording a specific mask ─
@@ -457,6 +486,8 @@ export function applyGoldFeather(state: GameState): GameState {
     wordResults: state.wordResults.filter(result => result.wordId !== currentWordId),
     bossOutcome: 'pending',
     bossFlawless: false,
+    mysteryTotal: 0,
+    mysteryResolved: 0,
   };
 }
 

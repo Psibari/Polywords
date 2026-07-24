@@ -10,6 +10,10 @@ import {
   submitSwipeDown,
   submitSwipeUp,
   submitWrongSwipe,
+  beginMysteryGauntlet,
+  resolveMysteryTile,
+  isMysteryTerminal,
+  mysteryMasteryPoints,
   GameState,
 } from './polyRunEngine';
 import { Mask, SessionStep, WordStep } from './types';
@@ -234,6 +238,110 @@ function fresh(mercyReviveLives = 0): GameState {
   s = completeWord(s);
   eq(s.status, 'complete', 'complete.status');
   eq(s.wordResults.length, 2, 'complete.allResultsRecorded');
+}
+
+// ── Route C mystery gauntlet: multi-tile boss resolution ─────────
+
+{
+  // beginMysteryGauntlet sets total, resets resolved
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, 3);
+  eq(s.mysteryTotal, 3, 'gauntlet.beginSetsTotal');
+  eq(s.mysteryResolved, 0, 'gauntlet.beginResetsResolved');
+}
+
+{
+  // 3-tile clear: pending through tiles 1-2, mastered only on tile 3;
+  // mastery score awarded exactly once (not per tile)
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, 3);
+  const scoreBefore = s.score;
+  const chainAtStart = s.chainMultiplier;
+
+  s = resolveMysteryTile(s, { correct: true, visiblePerfect: true });
+  eq(s.mysteryResolved, 1, 'gauntlet.clear.tile1Resolved');
+  eq(s.bossOutcome, 'pending', 'gauntlet.clear.tile1StillPending');
+  eq(s.score, scoreBefore, 'gauntlet.clear.tile1NoScore');
+
+  s = resolveMysteryTile(s, { correct: true, visiblePerfect: true });
+  eq(s.mysteryResolved, 2, 'gauntlet.clear.tile2Resolved');
+  eq(s.bossOutcome, 'pending', 'gauntlet.clear.tile2StillPending');
+  eq(s.score, scoreBefore, 'gauntlet.clear.tile2NoScore');
+
+  s = resolveMysteryTile(s, { correct: true, visiblePerfect: true });
+  eq(s.mysteryResolved, 3, 'gauntlet.clear.tile3Resolved');
+  eq(s.bossOutcome, 'mastered', 'gauntlet.clear.tile3Mastered');
+  eq(s.score, scoreBefore + mysteryMasteryPoints(chainAtStart), 'gauntlet.clear.scoredExactlyOnce');
+}
+
+{
+  // wrong on tile 2 of 3 ends the gauntlet immediately
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, 3);
+  s = resolveMysteryTile(s, { correct: true, visiblePerfect: true });
+  s = resolveMysteryTile(s, { correct: false, visiblePerfect: false });
+  eq(s.bossOutcome, 'haunted', 'gauntlet.wrongTile2.hauntedImmediately');
+  eq(s.mysteryResolved, 2, 'gauntlet.wrongTile2.resolvedCount');
+}
+
+{
+  // 1-tile gauntlet behaves exactly as the old single-mystery-tile rule
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, 1);
+  const scoreBefore = s.score;
+  const chainAtStart = s.chainMultiplier;
+  s = resolveMysteryTile(s, { correct: true, visiblePerfect: true });
+  eq(s.mysteryResolved, 1, 'gauntlet.single.resolved');
+  eq(s.bossOutcome, 'mastered', 'gauntlet.single.mastered');
+  eq(s.score, scoreBefore + mysteryMasteryPoints(chainAtStart), 'gauntlet.single.scoredOnce');
+}
+
+{
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, 1);
+  s = resolveMysteryTile(s, { correct: false, visiblePerfect: false });
+  eq(s.bossOutcome, 'haunted', 'gauntlet.single.wrongHaunted');
+}
+
+{
+  // mysteryTotal 0 (e.g. never begun) is treated as 1, not a divide-by-zero/hang
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  eq(s.mysteryTotal, 0, 'gauntlet.zeroTotal.defaultsToZero');
+  const scoreBefore = s.score;
+  const chainAtStart = s.chainMultiplier;
+  s = resolveMysteryTile(s, { correct: true, visiblePerfect: true });
+  eq(s.bossOutcome, 'mastered', 'gauntlet.zeroTotal.treatedAsOne');
+  eq(s.score, scoreBefore + mysteryMasteryPoints(chainAtStart), 'gauntlet.zeroTotal.scoredOnce');
+}
+
+{
+  // isMysteryTerminal: any wrong is terminal; only the LAST correct is terminal
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, 3);
+  eq(isMysteryTerminal(s, false), true, 'terminal.anyWrongIsTerminal');
+  eq(isMysteryTerminal(s, true), false, 'terminal.firstCorrectNotTerminal');
+  s = { ...s, mysteryResolved: 2 };
+  eq(isMysteryTerminal(s, true), true, 'terminal.lastCorrectIsTerminal');
+}
+
+{
+  // applyGoldFeather resets the gauntlet alongside bossOutcome
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, 3);
+  s = resolveMysteryTile(s, { correct: true, visiblePerfect: true });
+  eq(s.mysteryResolved, 1, 'goldFeather.gauntlet.preResolvedOne');
+  s = { ...s, status: 'gameOver', lives: 0 };
+  s = applyGoldFeather(s);
+  eq(s.mysteryTotal, 0, 'goldFeather.gauntlet.resetsTotal');
+  eq(s.mysteryResolved, 0, 'goldFeather.gauntlet.resetsResolved');
 }
 
 console.log('OK');

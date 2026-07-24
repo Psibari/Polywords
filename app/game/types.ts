@@ -90,6 +90,11 @@ export type Mask = {
   borderline?: boolean;  // trap that edges close to a real meaning
 };
 
+export type HiddenPair = {
+  real: string;
+  trap: string;
+};
+
 export type WordStep = {
   kind: 'word';
   word: string;
@@ -104,6 +109,7 @@ export type WordStep = {
   };
   hiddenMeaning?:    string;
   hiddenTrap?:       string;
+  hiddenPairs?:       HiddenPair[];
   slangEra?:         SlangEra;
   slangMaskId?:      string;
   difficulty?:               'easy' | 'medium' | 'hard';
