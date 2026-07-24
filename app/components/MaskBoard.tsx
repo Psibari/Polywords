@@ -1069,7 +1069,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     setGatePhase('wrongFail');
     setFailedHiddenTileId(failedMaskId);
     firePollyEvent('hiddenMasterFailed');
-    spawnEffect?.('shard', containerWidthRef.current / 2, wordScreenY + 110);
 
     if (isHaunt) {
       setTimeout(() => {
