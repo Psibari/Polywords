@@ -34,6 +34,8 @@ drivers on one `Animated.Value`.
 
 - 10 rounds; Round 10/index 9 is Polly’s Word (`eventType: 'bossWord'`). `generateHunt`
   (`huntGenerator.ts`) is the sole arc source; `createGame` requires a `steps` arg.
+  Fledgling runs (first 3, `runsCompleted < 3`) use an 8-round arc instead, with the boss at
+  index 7 — nothing may hardcode index 9 as "the boss."
 - Round 8/index 7 is the Returning Haunt slot and remains a standard event.
 - Mastery/haunt is decided by the engine's per-run `bossOutcome`
   (`'pending'|'mastered'|'haunted'`), never by score. Results, rank, and Polly-memory all
@@ -56,7 +58,11 @@ drivers on one `Animated.Value`.
 - Gold Feather: earned only by winning the Daily; one use, expires. Revives at 1 life on the
   same word and resets `bossOutcome` to 'pending' — a second shot at the boss is
   intentional, not a bug to fix.
-- Never-change text: `Thought so.` and `BINGO BANGO ZZZZINGO!`.
+- Never-change text: `Thought so.` (`BINGO BANGO ZZZZINGO!` was unassigned from the mastery
+  sequence by Pete on 2026-07-23 — may be placed elsewhere later; do not reintroduce it into
+  mastery without a new decision).
+- Boss round presentation is specced in `docs/BOSS_ROUND_SPEC.md` (design locked 2026-07-23,
+  implementation not started).
 - Master Gate is gone.
 - `MaskBoard.tsx` and `SwipeMask.tsx` are warroom-gated — a warroom pass is required
   before either is edited.
