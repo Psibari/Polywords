@@ -14,6 +14,7 @@ architecture; current progress belongs in `CONTEXT.md`.
 | Daily Challenge | `docs/DAILY_CHALLENGE_SPEC.md` |
 | Polly voice | `docs/POLLY_DIALOGUE_BANK.md` |
 | Patch workflow | `docs/WORKFLOW.md` |
+| Hunt economy pacing | `docs/POLYWORDS_ECONOMY_LOCK.md` |
 
 ## App
 
@@ -39,9 +40,22 @@ drivers on one `Animated.Value`.
   derive from it. Surviving the visible boss tiles unlocks the mystery tile regardless of
   visible mistakes; a perfect visible round is not required to master — it only sets
   `bossFlawless`. Wrong mystery or death on the boss = HAUNTED.
+- Boss round redesign decided 2026-07-22, not yet built: ROUTE C — survive visible tiles,
+  then a 3-tile hidden gauntlet, each judged UP/RIGHT; all correct = MASTERED, one wrong =
+  HAUNTED. Chosen over 1-tile and 2-card, both of which were coin flips. Supersedes the
+  one-mystery-tile rule above once built; GAME_REFERENCE and HUNT_POLLY_REBUILD_PLAN still
+  describe the old rule.
 - Boss words require BOTH `hiddenMeaning` and `hiddenTrap` (`hasBossContent` enforces it).
+- Boss content spec: target ~3 hidden meaning/trap pairs per boss word, written hard enough
+  that a good player misses ~1 in 4. Schema is still singular hiddenMeaning/hiddenTrap —
+  migrate to arrays when Route C ships.
 - Only failed boss words become HAUNTED. Mastered words graduate permanently.
 - RUN IT BACK draws a fresh Hunt with ghost priority.
+- Hunt economy is locked (`docs/POLYWORDS_ECONOMY_LOCK.md`): target ~54% survive, ~25%
+  master, deaths land late. Difficulty ramps via trap sharpness per phase, not tile count.
+- Gold Feather: earned only by winning the Daily; one use, expires. Revives at 1 life on the
+  same word and resets `bossOutcome` to 'pending' — a second shot at the boss is
+  intentional, not a bug to fix.
 - Never-change text: `Thought so.` and `BINGO BANGO ZZZZINGO!`.
 - Master Gate is gone.
 - `MaskBoard.tsx` and `SwipeMask.tsx` are warroom-gated — a warroom pass is required
@@ -82,6 +96,10 @@ not old design plans.
 editorial master, while `huntData.v2.json` and mask-rewriter output stay dormant until an
 explicit production merge. Workbook approval never changes live JSON automatically.
 
+Live huntData.json's ~400 words are the old broken set, kept deliberately as a test
+corpus — do not strip it. Real content is ~110 words (100 standard + ~10-11 boss) in the
+workbook.
+
 ## Key Files
 
 ```text
@@ -105,3 +123,5 @@ tools/content/mask-rewriter/
 - Preserve the named stashes listed in `CONTEXT.md`.
 - Verify code with `npx.cmd tsc --noEmit`; use `npm.cmd test` for game logic changes.
 - Do not commit generated editorial output, local credentials, or dependency caches.
+- Never guess or assume app state — verify against repo/workbook/live code before stating
+  anything about it. Ask Pete on canon/design intent.
