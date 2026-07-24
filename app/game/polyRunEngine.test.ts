@@ -62,7 +62,7 @@ function fresh(mercyReviveLives = 0): GameState {
   eq(s.score, 100, 'up.real.score');
   eq(s.combo, 1, 'up.real.combo');
   eq(s.streak, 1, 'up.real.streak');
-  eq(s.lives, 5, 'up.real.livesUntouched');
+  eq(s.lives, 6, 'up.real.livesUntouched');
 }
 
 {
@@ -114,31 +114,28 @@ function fresh(mercyReviveLives = 0): GameState {
   let s = fresh();
   s = submitSwipeUp(s, 'r1');
   s = submitSwipeUp(s, 't1');
-  eq(s.lives, 4, 'wrong.upTrap.lifeLost');
+  eq(s.lives, 5, 'wrong.upTrap.lifeLost');
   eq(s.streak, 0, 'wrong.upTrap.streakReset');
   eq(s.chainMultiplier, 1, 'wrong.upTrap.chainReset');
   eq(s.feedback, 'Not a meaning', 'wrong.upTrap.feedback');
   s = submitSwipeDown(s, 'r2');
-  eq(s.lives, 3, 'wrong.downReal.lifeLost');
+  eq(s.lives, 4, 'wrong.downReal.lifeLost');
   eq(s.feedback, 'Actually a meaning', 'wrong.downReal.feedback');
   s = submitWrongSwipe(s);
-  eq(s.lives, 2, 'wrong.direction.lifeLost');
+  eq(s.lives, 3, 'wrong.direction.lifeLost');
 }
 
-// ── Feather milestone: crossing 3000 grants a life, capped at 6 ──
+// ── Feather milestone: fires for FX, no longer grants a life ─────
+// Economy lock: the score->life net was regressive and was removed.
 
 {
   let s = fresh();
   s = { ...s, score: 2950 };
   s = submitSwipeUp(s, 'r1');
   eq(s.score, 3050, 'milestone.scoreCrossed');
-  eq(s.lives, 6, 'milestone.lifeGranted');
+  eq(s.lives, 6, 'milestone.noLifeGranted');
   eq(s.featherMilestone, 3000 as const, 'milestone.flagSet');
   eq(s.featherMilestonesHit.includes(3000), true, 'milestone.recorded');
-  // crossing again must not re-grant
-  s = { ...s, score: 2950, featherMilestone: null };
-  s = submitSwipeUp(s, 'r2');
-  eq(s.lives, 6, 'milestone.noDoubleGrant');
 }
 
 // ── Game over: non-fledgling dies at 0, word result recorded ─────

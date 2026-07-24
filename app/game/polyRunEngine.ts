@@ -109,7 +109,7 @@ export function createGame(
     swipedDownIds: [],
     revealedHiddenMasks: {},
     score: 0,
-    lives: 5,
+    lives: 6,
     combo: 0,
     bestCombo: 0,
     streak: 0,
@@ -237,9 +237,10 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     const hitMilestone = FEATHER_MILESTONES.find(
       m => newScore >= m && !state.featherMilestonesHit.includes(m)
     ) ?? null;
-    const newLives = hitMilestone
-      ? Math.min(state.lives + 1, 6)
-      : state.lives;
+    // Economy lock: milestones no longer grant lives. The old score->life net was
+    // regressive (only reached players already winning). Milestone still fires
+    // for FX/celebration; lives are now flat.
+    const newLives = state.lives;
     const newMilestonesHit = hitMilestone
       ? [...state.featherMilestonesHit, hitMilestone]
       : state.featherMilestonesHit;
@@ -305,9 +306,10 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     const hitMilestone = FEATHER_MILESTONES.find(
       m => newScore >= m && !state.featherMilestonesHit.includes(m)
     ) ?? null;
-    const newLives = hitMilestone
-      ? Math.min(state.lives + 1, 6)
-      : state.lives;
+    // Economy lock: milestones no longer grant lives. The old score->life net was
+    // regressive (only reached players already winning). Milestone still fires
+    // for FX/celebration; lives are now flat.
+    const newLives = state.lives;
     const newMilestonesHit = hitMilestone
       ? [...state.featherMilestonesHit, hitMilestone]
       : state.featherMilestonesHit;
@@ -361,7 +363,8 @@ export function submitBossMastery(state: GameState): GameState {
   const hitMilestone = FEATHER_MILESTONES.find(
     m => newScore >= m && !state.featherMilestonesHit.includes(m)
   ) ?? null;
-  const newLives = hitMilestone ? Math.min(state.lives + 1, 6) : state.lives;
+  // Economy lock: milestones no longer grant lives (see the two sites above).
+  const newLives = state.lives;
   return {
     ...state,
     score: newScore,

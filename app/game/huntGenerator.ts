@@ -110,12 +110,40 @@ function easyFirst(pool: string[]): string[] {
   );
 }
 
+// Hunt economy lock (docs/POLYWORDS_ECONOMY_LOCK.md): every word shows a flat
+// 5 visible tiles. The difficulty ramp comes from trap sharpness per phase, not
+// from tile count. Boss mystery tiles are built from hiddenMeaning/hiddenTrap
+// (separate fields) and are NOT affected by this cap.
+const VISIBLE_MASK_CAP = 5;
+
+function selectVisibleMasks(
+  masks: HuntWordData['masks'],
+  rng: () => number,
+): HuntWordData['masks'] {
+  if (masks.length <= VISIBLE_MASK_CAP) return masks;
+
+  const reals = shuffle(masks.filter(m => m.isReal), rng);
+  const traps = shuffle(masks.filter(m => !m.isReal), rng);
+
+  // Guarantee both swipe directions stay live on every word.
+  const picked: HuntWordData['masks'] = [];
+  if (reals.length) picked.push(reals[0]);
+  if (traps.length) picked.push(traps[0]);
+
+  const rest = shuffle([...reals.slice(1), ...traps.slice(1)], rng);
+  while (picked.length < VISIBLE_MASK_CAP && rest.length) {
+    picked.push(rest.shift()!);
+  }
+  return picked;
+}
+
 function buildWordStep(
   word: string,
   emotionalRole: EmotionalRole,
   hapticTier: 'light' | 'medium' | 'heavy',
   isHauntReturn: boolean,
   isBoss: boolean,
+  rng: () => number,
 ): WordStep {
   const data = db[word];
   const step: WordStep = {
@@ -127,7 +155,7 @@ function buildWordStep(
     hapticTier,
     tileStagger: isBoss ? 120 : 80,
     meanings: [],
-    masks: data.masks,
+    masks: selectVisibleMasks(data.masks, rng),
   };
   if (isBoss) step.bossModifier = true;
   if (isHauntReturn) step.isHauntReturn = true;
@@ -213,6 +241,6 @@ export function generateHunt(opts: {
   }
 
   return slots.map(({ word, isHauntReturn }, idx) =>
-    buildWordStep(word, roles[idx], haptics[idx], !!isHauntReturn, idx === bossIdx),
+    buildWordStep(word, roles[idx], haptics[idx], !!isHauntReturn, idx === bossIdx, rng),
   );
 }

@@ -23,7 +23,7 @@ import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import HeartbeatVignette from '../components/HeartbeatVignette';
 
-const MAX_FEATHERS = 5;
+const MAX_FEATHERS = 6;
 const INTRO_SEEN_KEY = 'polywords_intro_seen';
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
