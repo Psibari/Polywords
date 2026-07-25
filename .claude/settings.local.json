@@ -32,7 +32,8 @@
       "Bash(cat babel.config.ts)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.babel || p['babel-preset-expo'] || 'no babel key', null, 2\\)\\)\")",
       "Bash(xargs grep -l \"useNativeDriver\")",
-      "Bash(grep -v \"//\")"
+      "Bash(grep -v \"//\")",
+      "mcp__bf7c680d-5fdc-5ef4-b4a0-abadb619bf0a__send_later"
     ],
     "additionalDirectories": [
       "c:\\Users\\pdiba\\poly-words"
