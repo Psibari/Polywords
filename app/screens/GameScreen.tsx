@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
 import { MaskBoard } from '../components/MaskBoard';
+import { BossBoard } from '../components/BossBoard';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import { PW } from '../ui/pwTheme';
@@ -975,9 +976,13 @@ function GameContent({
   }, [fireIntroVisit, firePollyEvent, onIntroVisitFired]);
 
   if (step.kind === 'word') {
+    // Same predicate GameDirector uses for isBossRound, so routing here and
+    // the boss background/scrim there stay in lockstep.
+    const isBossStep = step.eventType === 'bossWord';
+    const Board = isBossStep ? BossBoard : MaskBoard;
     return (
       <View style={{ flex: 1 }}>
-        <MaskBoard
+        <Board
           key={`board-${game.stepIndex}`}
           step={step}
           spawnEffect={spawnEffect}

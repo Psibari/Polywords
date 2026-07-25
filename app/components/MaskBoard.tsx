@@ -152,7 +152,7 @@ function SwipeScoreFloat({
   );
 }
 
-type Props = {
+export type Props = {
   step: WordStep;
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: string) => void;
   onTrapCaught?: () => void;
@@ -161,6 +161,12 @@ type Props = {
   // Owned by GameContent — the visit layer must outlive this board's
   // per-word remount (key={stepIndex}), or word-completion beats die mid-arc.
   firePollyEvent: (event: PollyEvent) => void;
+};
+
+type BoardPresenterProps = Props & {
+  // Inert for now — drives nothing. Reserved for the boss theater work that
+  // follows this step; BossBoard passes true, MaskBoard passes false.
+  isBossStage: boolean;
 };
 
 type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
@@ -294,7 +300,8 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
   return null;
 }
 
-export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent }: Props) {
+function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
+  void isBossStage; // inert this step — no visual or timing effect yet
   const store   = useGameStore();
   const { pulseAnim, tension } = useHeartbeat();
   const tileBreatheAmount = useRef(new Animated.Value(0)).current;
@@ -1678,6 +1685,15 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     </Animated.View>
   );
 }
+
+// Thin presenter — MaskBoard is BoardPresenter with isBossStage locked off.
+// BossBoard (app/components/BossBoard.tsx) is the boss-stage counterpart;
+// both render through this exact same face code, never a copy.
+export function MaskBoard(props: Props) {
+  return <BoardPresenter {...props} isBossStage={false} />;
+}
+
+export { BoardPresenter };
 
 const styles = StyleSheet.create({
   container: {
