@@ -11,9 +11,8 @@ import {
 
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
-import { GhostMeaning, Mask, WordStep } from '../game/types';
+import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
-import { chainMultiplierForStreak, realMaskPoints, trapMaskPoints, mysteryMasteryPoints } from '../game/polyRunEngine';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
@@ -25,6 +24,8 @@ import { PW } from '../ui/pwTheme';
 import { deckBackMaterial } from '../ui/pwMaterials';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
+import { useBoardMechanics } from '../hooks/useBoardMechanics';
+import type { ChainTier } from '../hooks/useBoardMechanics';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -51,7 +52,6 @@ const DECK_BACKING_BORDER_COLORS = [
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 type FloatKind = 'real' | 'trap' | 'mastery';
-type ChainTier = 1 | 2 | 3;
 type FloatEntry = {
   id: number;
   value: number;
@@ -61,12 +61,6 @@ type FloatEntry = {
   kind: FloatKind;
   tier?: ChainTier;
 };
-
-function chainTierFromMultiplier(mult: number): ChainTier {
-  if (mult >= 2.5) return 3;
-  if (mult >= 1.5) return 2;
-  return 1;
-}
 
 const CHAIN_TIER_SFX_RATE: Record<ChainTier, number> = { 1: 1.0, 2: 1.08, 3: 1.16 };
 const CHAIN_TIER_FONT_SIZE: Record<ChainTier, number> = { 1: 26, 2: 28, 3: 31 };
@@ -169,20 +163,7 @@ type Props = {
   firePollyEvent: (event: PollyEvent) => void;
 };
 
-function eventKicker(step: WordStep): string | null {
-  if (step.eventType === 'bossWord')  return "POLLY'S WORD · 2× SCORE";
-  if (step.eventType === 'slangDrop') return 'SLANG DROP';
-  return null;
-}
-
 type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
-type WordOutcomeState = 'none' | 'mastered' | 'haunted';
-
-type GauntletTile = {
-  pairIndex: number;
-  mask: Mask;
-  isReal: boolean;
-};
 
 type OutcomeOverlayProps = {
   word: string;
@@ -313,44 +294,12 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
   return null;
 }
 
-function buildInitialTileStates(step: WordStep): Map<string, SwipeMaskState> {
-  const states = new Map<string, SwipeMaskState>();
-  step.masks.forEach(mask => states.set(mask.id, 'idle'));
-  return states;
-}
-
 export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent }: Props) {
   const store   = useGameStore();
   const { pulseAnim, tension } = useHeartbeat();
   const tileBreatheAmount = useRef(new Animated.Value(0)).current;
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
-  const isFinalGateStep = isBoss || isHaunt;
-  const kicker    = eventKicker(step);
-
-  // Stale-closure-safe refs
-  const streakRef = useRef(store.game.streak);
-  streakRef.current = store.game.streak;
-  const livesRef = useRef(store.game.lives);
-  livesRef.current = store.game.lives;
-
-
-  // ── tile state map ───────────────────────────────────────────
-  const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() => buildInitialTileStates(step));
-
-  // ── 14-shard burst system ────────────────────────────────────
-
-  const completedRef          = useRef(false);
-  const gateTriggeredRef      = useRef(false);
-  const wrongSwipeOccurred    = useRef(false);
-  const visiblePerfectRef     = useRef(true);
-  const preMysteryChainMultiplierRef = useRef(1);
-  const gapLockedRef          = useRef(false);
-  const tileIndexInWordRef    = useRef(0);
-
-  const ghost = store.runStartGhostWordIds.includes(step.word)
-    ? store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
-    : null;
 
   // ── layout ───────────────────────────────────────────────────
   const [containerWidth, setContainerWidth] = useState(350);
@@ -359,46 +308,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const wordZoneRef   = useRef<View>(null);
   const [wordScreenY, setWordScreenY] = useState(180);
 
-  const visibleGridMasks = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
-    .filter(m => !m.isHidden);
-
-  // ── Deck state ────────────────────────────────────────────────
-  const [remainingMaskIds, setRemainingMaskIds] = useState<string[]>(() =>
-    visibleGridMasks.map(m => m.id)
-  );
   const prevTopIdRef = useRef<string | null>(null);
   const cardPopCountRef = useRef(0);
-
-  useEffect(() => {
-    const newTopId = remainingMaskIds[0] ?? null;
-    if (newTopId && newTopId !== prevTopIdRef.current) {
-      prevTopIdRef.current = newTopId;
-      cardPopCountRef.current += 1;
-      if (cardPopCountRef.current > 1) {
-        cardPopY.setValue(18);
-        Animated.spring(cardPopY, {
-          toValue: 0,
-          damping: 14,
-          stiffness: 220,
-          useNativeDriver: true,
-        }).start(() => {
-          Haptics.selectionAsync();
-        });
-      }
-    }
-  }, [remainingMaskIds]);
-
-  const topMaskId    = remainingMaskIds[0] ?? null;
-  const topMask      = topMaskId
-    ? visibleGridMasks.find(m => m.id === topMaskId) ?? null
-    : null;
-  const deckSize     = remainingMaskIds.length;
-  const nearMastery  = !isBoss && deckSize <= 2 && deckSize > 0;
-  const topMaskState = topMask ? tileStates.get(topMask.id) ?? 'idle' : 'idle';
-  const backingCardCount = topMask
-    ? Math.min(MAX_DECK_BACKING_CARDS, Math.max(0, deckSize - 1))
-    : 0;
-  const backingCardWidth = Math.min(Math.max(containerWidth - 80, 0), 290);
 
   // Deck entrance animation (native: translateY / transform only)
   const deckSlamY    = useRef(new Animated.Value(-52)).current;
@@ -418,10 +329,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const deckMidOp    = useRef(new Animated.Value(0)).current;
   const deckActiveOp = useRef(new Animated.Value(0)).current;
   const cardPopY     = useRef(new Animated.Value(0)).current;
-
-  // ── find counts ──────────────────────────────────────────────
-  const realMasks  = visibleGridMasks.filter(m => m.isReal);
-  const foundCount = realMasks.filter(m => tileStates.get(m.id) === 'correct').length;
 
   // ── word absorption ──────────────────────────────────────────
   const absorptionScale       = useRef(new Animated.Value(1)).current;
@@ -491,8 +398,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     recoilRafRef.current = requestAnimationFrame(tick);
   }
 
-  function triggerWrongSwipeFeedback() {
-    const brokeRealChain = store.game.chainMultiplier >= 1.5;
+  // Face half of the old triggerWrongSwipeFeedback — shared by normal-tile
+  // and gauntlet-tile wrong swipes, same as the original single function was.
+  function performWrongSwipeFeedback(brokeRealChain: boolean) {
     playSfx('wrongLame');
     playSfx('pollySqwawkShort');
     if (brokeRealChain) {
@@ -500,7 +408,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    firePollyEvent('wrong');
     triggerWrongWordRecoil();
     onWrongSwipe?.();
   }
@@ -584,13 +491,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const stillHauntedScale    = useRef(new Animated.Value(0.7)).current;
   const hauntEntranceStingKeyRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (visibleGridMasks.length > 0) {
-      const id = setTimeout(() => setTilesReady(true), 50);
-      return () => clearTimeout(id);
-    }
-  }, [visibleGridMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
   function getTileRef(maskId: string): React.Ref<View> {
@@ -633,41 +533,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     }
   }
 
-  // ── master gate ───────────────────────────────────────────────
-  // Returning Haunt re-tests the exact pair that beat you last run, stored on
-  // the ghost. Boss draws up to 3 distinct pairs, one tile each.
-  const hauntPair = ghost && ghost.hiddenMeaningReal && ghost.hiddenMeaningTrap
-    ? { real: ghost.hiddenMeaningReal, trap: ghost.hiddenMeaningTrap }
-    : null;
-
-  const stepPairs: { real: string; trap: string }[] =
-    step.hiddenPairs && step.hiddenPairs.length > 0
-      ? step.hiddenPairs
-      : step.hiddenMeaning != null && step.hiddenTrap != null
-        ? [{ real: step.hiddenMeaning, trap: step.hiddenTrap }]
-        : [];
-
-  const gauntletPairs = isHaunt
-    ? (hauntPair ? [hauntPair] : stepPairs.slice(0, 1))
-    : stepPairs;
-
-  const hasHidden = gauntletPairs.length > 0;
-
-  // Gate phase
-  const [gatePhase, setGatePhase] = useState<
-    'locked' | 'tiles' | 'wrongFail' | 'mastered'
-  >('locked');
-
-  // Final tile states (replaces splitStates)
-  const [finalTileStates, setFinalTileStates] = useState<Map<string, SwipeMaskState>>(new Map());
-  const [gauntletTiles, setGauntletTiles] = useState<GauntletTile[]>([]);
-  const [gauntletIndex, setGauntletIndex] = useState(0);
-  const [tileLanded, setTileLanded] = useState(false);
-  const [failedHiddenTileId, setFailedHiddenTileId] = useState<string | null>(null);
-
+  // ── master gate (face-only) ─────────────────────────────────────
   // Final tile drop (native: transform only)
   const splitTile1TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
-  const splitCompletedRef = useRef(false);
 
   // Final tile border pulse (non-native)
   const finalBorder1Anim = useRef(new Animated.Value(0)).current;
@@ -694,42 +562,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   const [goldBloomVisible, setGoldBloomVisible]         = useState(false);
   const [masterCracksVisible, setMasterCracksVisible]   = useState(false);
   const [systemStingerWord, setSystemStingerWord]       = useState<string | null>(null);
-  const [wordOutcome, setWordOutcome] = useState<WordOutcomeState>('none');
-  const [outcomeDetail, setOutcomeDetail] = useState<string | undefined>(undefined);
-  const [outcomeBonusLabel, setOutcomeBonusLabel] = useState<string | undefined>(undefined);
-  const outcomeContinueRef = useRef<(() => void) | null>(null);
-  const outcomeActiveRef = useRef(false);
-
-  // ── hesitation timers ─────────────────────────────────────────
-  const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hes2Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hes3Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function startHesitationTimers() {
-    if (hes1Ref.current !== null) { clearTimeout(hes1Ref.current); hes1Ref.current = null; }
-    if (hes2Ref.current !== null) { clearTimeout(hes2Ref.current); hes2Ref.current = null; }
-    if (hes3Ref.current !== null) { clearTimeout(hes3Ref.current); hes3Ref.current = null; }
-    hes1Ref.current = setTimeout(() => firePollyEvent('hesitation3s'), 3000);
-    hes2Ref.current = setTimeout(() => firePollyEvent('hesitation6s'), 6000);
-    hes3Ref.current = setTimeout(() => firePollyEvent('hesitation9s'), 9000);
-  }
-
-  function resetHesitation() {
-    firePollyEvent('hesitationCleared');
-    startHesitationTimers();
-  }
 
   const showBoardContent = (!isBoss || bossReady) && tilesReady && (!isHaunt || hauntReady);
-
-  useEffect(() => {
-    if (!showBoardContent) return;
-    startHesitationTimers();
-    return () => {
-      if (hes1Ref.current !== null) clearTimeout(hes1Ref.current);
-      if (hes2Ref.current !== null) clearTimeout(hes2Ref.current);
-      if (hes3Ref.current !== null) clearTimeout(hes3Ref.current);
-    };
-  }, [showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Swipe cues fade permanently after round 3
   useEffect(() => {
@@ -750,43 +584,289 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     }).start();
   }, [tension]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Polly reactive triggers ───────────────────────────────────
-  useEffect(() => {
-    if (store.game.lives === 1) firePollyEvent('oneHeartLeft');
-  }, [store.game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+  function playSystemStingerWord(word: string, peakScale: number) {
+    setSystemStingerWord(word);
+    systemStingerOpacity.setValue(0);
+    systemStingerScale.setValue(0.75);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(systemStingerOpacity, { toValue: 1, duration: 70, useNativeDriver: true }),
+        Animated.spring(systemStingerScale, { toValue: peakScale, damping: 5, stiffness: 320, useNativeDriver: true }),
+      ]),
+      Animated.timing(systemStingerOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+    ]).start();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  }
 
-  // Zero-feather red tint on deck depth cards
+  // ── mechanics (brain) ───────────────────────────────────────────
+  // Every perform.* callback below is the FACE half of a function that used
+  // to live directly in this component — see useBoardMechanics.ts for the
+  // BRAIN half and how the two are stitched back together.
+  const mechanics = useBoardMechanics({
+    step,
+    firePollyEvent,
+    perform: {
+      onRealClaimed({ mask, tier, points, nextFound }) {
+        playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (tier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        spawnFloat(points, 'real', tier);
+        triggerAbsorption(mask.phrase);
+        Animated.timing(goldTextOpacity, {
+          toValue: GOLD_STEPS_LOCAL[Math.min(nextFound, GOLD_STEPS_LOCAL.length - 1)],
+          duration: 400,
+          useNativeDriver: true,
+        }).start();
+      },
+      onTrapRejected({ tier, points }) {
+        playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (tier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        spawnFloat(points, 'trap', tier);
+        onTrapCaught?.();
+      },
+      onWrongSwipe({ brokeRealChain }) {
+        performWrongSwipeFeedback(brokeRealChain);
+      },
+      onGauntletCorrect({ swipedUp, phrase }) {
+        playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (swipedUp) triggerAbsorption(phrase);
+      },
+      onGauntletTileDrop() {
+        splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
+        finalBorder1Anim.setValue(0);
+        Animated.spring(splitTile1TransY, {
+          toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
+        }).start(({ finished }) => {
+          if (!finished) return;
+          mechanics.onGauntletTileLanded();
+          Animated.sequence([
+            Animated.timing(finalBorder1Anim, { toValue: 0.55, duration: 120, useNativeDriver: false }),
+            Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
+          ]).start();
+        });
+      },
+      onGauntletBegin() {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      },
+      onWordExit(perfect) {
+        if (perfect) {
+          setTransitionLabel('CLEAR');
+          transitionLabelOpacity.setValue(0);
+          Animated.timing(transitionLabelOpacity, {
+            toValue: 1, duration: 80, useNativeDriver: true,
+          }).start();
+        }
+        playSfx('bookClose');
+        Animated.timing(bookSlideX, {
+          toValue: -SCREEN_WIDTH,
+          duration: isBoss ? 380 : 280,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }).start();
+        setTimeout(() => {
+          setTransitionLabel(null);
+          transitionLabelOpacity.setValue(0);
+        }, 290);
+      },
+      onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
+        if (!hauntOutcome) {
+          spawnFloatAtSplit(masteryPoints, '#F5C842');
+        }
+        setMasterStampVisible(true);
+        setMasterCracksVisible(false);
+        setGoldSeedVisible(false);
+        setGoldBloomVisible(false);
+        setSystemStingerWord(null);
+
+        const screenH = Dimensions.get('window').height;
+        const crashDistance = Math.max(150, screenH * 0.48 - wordScreenY);
+        const vaultTargetX = Math.max(120, containerWidthRef.current / 2 - 34);
+        const vaultTargetY = Math.max(250, screenH * 0.42);
+
+        // Phase 1 — T+0ms: Screen dims — tiles to 15% opacity
+        Animated.timing(masterAllFadeAnim, {
+          toValue: 0.15, duration: 300, useNativeDriver: false,
+        }).start();
+        Animated.spring(masterHeroTransY, {
+          toValue: crashDistance, damping: 8, stiffness: 170, mass: 0.8, useNativeDriver: true,
+        }).start();
+        Animated.sequence([
+          Animated.timing(masterHeroScale, { toValue: 1.22, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.spring(masterHeroScale, { toValue: 1.0, damping: 8, stiffness: 190, useNativeDriver: true }),
+        ]).start();
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+        // Phase 2 — T+500ms: Word pulse
+        setTimeout(() => setSealReady(true), 360);
+
+        // Phase 3 — T+800ms: MASTERED label appears below word
+        setTimeout(() => {
+          setMasterCracksVisible(true);
+          masterCrackOpacity.setValue(0);
+          Animated.timing(masterCrackOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+        }, 800);
+
+        // Fade label before word swells — NEVER simultaneous
+        setTimeout(() => {
+          Animated.sequence([
+            Animated.timing(masterHeroScale, { toValue: 1.08, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(masterHeroScale, { toValue: 0.96, duration: 160, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          ]).start();
+        }, 1000);
+
+        // Phase 4 — T+1050ms: Word swells 1.0→1.6
+        setTimeout(() => {
+          Animated.timing(masterHeroScale, {
+            toValue: 1.0, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true,
+          }).start();
+        }, 1050);
+
+        // Phase 6 — T+1900ms: Gold seed appears at word center
+        setTimeout(() => {
+          setGoldSeedVisible(true);
+          masterCoreOpacity.setValue(1);
+          goldSeedScale.setValue(0.15);
+          goldSeedTransX.setValue(0);
+          goldSeedTransY.setValue(0);
+          goldSeedRotate.setValue(0);
+          goldSeedTrailOpacity.setValue(0);
+          Animated.parallel([
+            Animated.spring(goldSeedScale, { toValue: 2.6, damping: 7, stiffness: 150, useNativeDriver: true }),
+            Animated.timing(goldSeedRotate, { toValue: 1, duration: 820, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(goldSeedTrailOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+          ]).start();
+        }, 1900);
+
+        // Seed settles
+        setTimeout(() => {
+          Animated.spring(goldSeedScale, { toValue: 2.15, damping: 8, stiffness: 220, useNativeDriver: true }).start();
+        }, 2000);
+
+        // Phase 7 — T+2100ms: Seed drops to screen bottom
+        setTimeout(() => {
+          Animated.parallel([
+            Animated.timing(goldSeedTransX, {
+              toValue: vaultTargetX, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
+            }),
+            Animated.timing(goldSeedTransY, {
+              toValue: vaultTargetY, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
+            }),
+            Animated.timing(goldSeedScale, {
+              toValue: 0.62, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
+            }),
+            Animated.timing(masterCoreOpacity, { toValue: 0.95, duration: 620, useNativeDriver: true }),
+          ]).start();
+        }, 2100);
+
+        // Phase 8 — T+2400ms: Seed landing bloom
+        setTimeout(() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          setGoldSeedVisible(false);
+          setGoldBloomVisible(true);
+          goldBloomScale.setValue(1);
+          goldBloomOpacity.setValue(1);
+          Animated.parallel([
+            Animated.timing(goldBloomScale, { toValue: 3.5, duration: 300, useNativeDriver: true }),
+            Animated.timing(goldBloomOpacity, { toValue: 0,   duration: 300, useNativeDriver: true }),
+          ]).start();
+          setTimeout(() => setGoldBloomVisible(false), 350);
+        }, 2400);
+
+        setTimeout(() => {
+          if (bossOutcome) {
+            playSystemStingerWord('BINGO', 1.0);
+            setTimeout(() => playSystemStingerWord('BANGO', 1.08), 430);
+            setTimeout(() => playSystemStingerWord('ZZZZINGO!', 1.28), 900);
+          }
+        }, 2600);
+
+        // Restore dim before transition
+        setTimeout(() => {
+          Animated.timing(masterCrackOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+          Animated.timing(masterAllFadeAnim, { toValue: 1, duration: 200, useNativeDriver: false }).start();
+        }, bossOutcome ? 4050 : 3200);
+
+        // Phase 10 — T+3000ms: presentation cleanup (the outcome reveal
+        // itself fires from useBoardMechanics on a matching timer)
+        setTimeout(() => {
+          setMasterCracksVisible(false);
+          setSystemStingerWord(null);
+        }, bossOutcome ? 4300 : 3450);
+      },
+      onHauntedSequence({ isHaunt: hauntFail, failedMaskId }) {
+        if (!hauntFail) return;
+        void failedMaskId;
+        setTimeout(() => {
+          setStillHauntedVisible(true);
+          stillHauntedOpacity.setValue(0);
+          stillHauntedScale.setValue(0.7);
+          Animated.parallel([
+            Animated.timing(stillHauntedOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
+            Animated.spring(stillHauntedScale, { toValue: 1.0, damping: 7, stiffness: 280, useNativeDriver: true }),
+          ]).start();
+          setTimeout(() => {
+            Animated.timing(stillHauntedOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start();
+            setTimeout(() => setStillHauntedVisible(false), 240);
+          }, 1400);
+        }, 400);
+      },
+      onOutcomeReveal(outcome) {
+        playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
+        if (outcome === 'haunted') triggerBoardShake();
+      },
+      onLivesDepleted() {
+        Animated.timing(deckRedTint, {
+          toValue: 1, duration: 300, useNativeDriver: false,
+        }).start();
+      },
+    },
+  });
+  const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
+
   useEffect(() => {
-    if (store.game.lives === 0 && !completedRef.current) {
-      Animated.timing(deckRedTint, {
-        toValue: 1, duration: 300, useNativeDriver: false,
-      }).start();
-      firePollyEvent('oneWrongMove');
+    if (mechanics.visibleGridMasks.length > 0) {
+      const id = setTimeout(() => setTilesReady(true), 50);
+      return () => clearTimeout(id);
     }
-  }, [store.game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mechanics.visibleGridMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (store.game.status === 'gameOver') firePollyEvent('gameOver');
-  }, [store.game.status]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (store.game.streak > 0 && store.game.streak % 10 === 0) {
-      firePollyEvent('streakX10');
+    const newTopId = mechanics.remainingMaskIds[0] ?? null;
+    if (newTopId && newTopId !== prevTopIdRef.current) {
+      prevTopIdRef.current = newTopId;
+      cardPopCountRef.current += 1;
+      if (cardPopCountRef.current > 1) {
+        cardPopY.setValue(18);
+        Animated.spring(cardPopY, {
+          toValue: 0,
+          damping: 14,
+          stiffness: 220,
+          useNativeDriver: true,
+        }).start(() => {
+          Haptics.selectionAsync();
+        });
+      }
     }
-  }, [store.game.streak]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mechanics.remainingMaskIds]);
+
+  const backingCardCount = mechanics.topMask
+    ? Math.min(MAX_DECK_BACKING_CARDS, Math.max(0, mechanics.deckSize - 1))
+    : 0;
+  const backingCardWidth = Math.min(Math.max(containerWidth - 80, 0), 290);
+
+  useEffect(() => {
+    if (showBoardContent) mechanics.onBoardContentReady();
+  }, [showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Polly reactive triggers not tied to a presentation animation move to
+  // useBoardMechanics; oneWrongMove stays wired here only through
+  // perform.onLivesDepleted above, so the deck's red-tint reaction and its
+  // Polly event share one trigger condition.
 
   // Reset guards and animated values on new word
   useEffect(() => {
-    wrongSwipeOccurred.current    = false;
-    completedRef.current          = false;
-    gateTriggeredRef.current      = false;
-    splitCompletedRef.current     = false;
-    setTileStates(buildInitialTileStates(step));
-    // Deck reset
-    const freshIds = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
-      .filter((m: Mask) => !m.isHidden)
-      .map((m: Mask) => m.id);
-    setRemainingMaskIds(freshIds);
     cardPopY.setValue(0);
     prevTopIdRef.current = null;
     cardPopCountRef.current = 0;
@@ -868,13 +948,8 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     wordRecoilScale.setValue(1);
     wordRedOpacity.setValue(0);
 
-    // Gate reset
-    setGatePhase('locked');
-    setFinalTileStates(new Map());
-    setGauntletTiles([]);
-    setGauntletIndex(0);
-    setTileLanded(false);
-    setFailedHiddenTileId(null);
+    // Gate reset (face-only — brain state is fresh via the hook's own
+    // per-mount initializers, since MaskBoard remounts per word)
     setMasterStampVisible(false);
     setSealReady(false);
     splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
@@ -897,11 +972,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     setGoldBloomVisible(false);
     setMasterCracksVisible(false);
     setSystemStingerWord(null);
-    setWordOutcome('none');
-    setOutcomeDetail(undefined);
-    setOutcomeBonusLabel(undefined);
-    outcomeContinueRef.current = null;
-    outcomeActiveRef.current = false;
 
     // Haunt resets
     setHauntReady(!isHaunt);
@@ -916,8 +986,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
 
   // Word title fade + scale in (non-boss)
   useEffect(() => {
-    tileIndexInWordRef.current = 0;
-    gapLockedRef.current = false;
     if (isBoss) return;
     wordEntryOpacity.setValue(0);
     wordEntryScale.setValue(0.85);
@@ -981,7 +1049,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
 
   // Ghost Polly trigger
   useEffect(() => {
-    if (ghost) firePollyEvent('ghostEntry');
+    if (mechanics.ghost) firePollyEvent('ghostEntry');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Boss V1 entrance: stable hero word, then reveal the real tile stack.
@@ -1006,520 +1074,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Gate sequence ─────────────────────────────────────────────
-
-  function dropGauntletTile(index: number) {
-    setGauntletIndex(index);
-    setTileLanded(false);
-    splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
-    finalBorder1Anim.setValue(0);
-
-    Animated.spring(splitTile1TransY, {
-      toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (!finished) return;
-      setTileLanded(true);
-      Animated.sequence([
-        Animated.timing(finalBorder1Anim, { toValue: 0.55, duration: 120, useNativeDriver: false }),
-        Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
-      ]).start();
-    });
-  }
-
-  function triggerFinalTilesDrop() {
-    if (gauntletPairs.length === 0) return;
-
-    // One tile per pair, max 3. Which face shows is an independent coin flip
-    // per tile, so three tiles is 12.5% guess-through, not 50%.
-    const chosen = gauntletPairs.slice(0, 3);
-    const tiles: GauntletTile[] = chosen.map((pair, i) => {
-      const useReal = Math.random() < 0.5;
-      return {
-        pairIndex: i,
-        isReal: useReal,
-        mask: {
-          id: `${step.word}_hidden_${i}_${useReal ? 'real' : 'trap'}`,
-          phrase: useReal ? pair.real : pair.trap,
-          isReal: useReal,
-        },
-      };
-    });
-
-    // Chain multiplier does not move across the gauntlet, so capture once.
-    preMysteryChainMultiplierRef.current = store.game.chainMultiplier;
-    store.beginMysteryGauntlet(tiles.length);
-
-    setGatePhase('tiles');
-    setGauntletTiles(tiles);
-    setFinalTileStates(new Map(tiles.map(t => [t.mask.id, 'idle' as SwipeMaskState])));
-    dropGauntletTile(0);
-  }
-
-  function buildHauntedDetail(failedMaskId?: string): string | undefined {
-    const failedTile = gauntletTiles.find(t => t.mask.id === failedMaskId);
-    if (failedTile) {
-      return failedTile.isReal
-        ? `Missed: ${failedTile.mask.phrase}`
-        : `Trap claimed: ${failedTile.mask.phrase}`;
-    }
-
-    const missedReal = visibleGridMasks.find(m => m.isReal && tileStates.get(m.id) === 'wrong');
-    if (missedReal) return `Missed: ${missedReal.phrase}`;
-
-    const acceptedTrap = visibleGridMasks.find(m => !m.isReal && tileStates.get(m.id) === 'wrong');
-    if (acceptedTrap) return `Trap claimed: ${acceptedTrap.phrase}`;
-
-    if (ghost?.isGhostedMaster) return 'Still haunted.';
-    return undefined;
-  }
-
-  function showWordOutcome(
-    outcome: Exclude<WordOutcomeState, 'none'>,
-    options: { detail?: string; bonusLabel?: string },
-    onContinue: () => void
-  ) {
-    if (outcomeActiveRef.current) return;
-    outcomeActiveRef.current = true;
-    playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
-    if (outcome === 'haunted') triggerBoardShake();
-    setOutcomeDetail(options.detail);
-    setOutcomeBonusLabel(options.bonusLabel);
-    setWordOutcome(outcome);
-    outcomeContinueRef.current = () => {
-      outcomeContinueRef.current = null;
-      outcomeActiveRef.current = false;
-      setWordOutcome('none');
-      setOutcomeDetail(undefined);
-      setOutcomeBonusLabel(undefined);
-      onContinue();
-    };
-  }
-
-  function continueOutcome() {
-    outcomeContinueRef.current?.();
-  }
-
-  function triggerWrongFail(failedMaskId: string) {
-    if (splitCompletedRef.current) return;
-    splitCompletedRef.current = true;
-    completedRef.current = true;
-    wrongSwipeOccurred.current = true;
-    setGatePhase('wrongFail');
-    setFailedHiddenTileId(failedMaskId);
-    firePollyEvent('hiddenMasterFailed');
-
-    if (isHaunt) {
-      setTimeout(() => {
-        setStillHauntedVisible(true);
-        stillHauntedOpacity.setValue(0);
-        stillHauntedScale.setValue(0.7);
-        Animated.parallel([
-          Animated.timing(stillHauntedOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
-          Animated.spring(stillHauntedScale, { toValue: 1.0, damping: 7, stiffness: 280, useNativeDriver: true }),
-        ]).start();
-        firePollyEvent('hauntFailed');
-        setTimeout(() => {
-          Animated.timing(stillHauntedOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start();
-          setTimeout(() => setStillHauntedVisible(false), 240);
-        }, 1400);
-      }, 400);
-    }
-
-    setTimeout(() => {
-      showWordOutcome(
-        'haunted',
-        { detail: buildHauntedDetail(failedMaskId) },
-        () => {
-          store.completeWord();
-        }
-      );
-    }, 800);
-  }
-
-  function playSystemStingerWord(word: string, peakScale: number) {
-    setSystemStingerWord(word);
-    systemStingerOpacity.setValue(0);
-    systemStingerScale.setValue(0.75);
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(systemStingerOpacity, { toValue: 1, duration: 70, useNativeDriver: true }),
-        Animated.spring(systemStingerScale, { toValue: peakScale, damping: 5, stiffness: 320, useNativeDriver: true }),
-      ]),
-      Animated.timing(systemStingerOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
-    ]).start();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-  }
-
-  function triggerMastered() {
-    setGatePhase('mastered');
-    completedRef.current = true;
-    const masteryPoints = isHaunt ? 0 : mysteryMasteryPoints(preMysteryChainMultiplierRef.current);
-    if (!isHaunt) {
-      spawnFloatAtSplit(masteryPoints, '#F5C842');
-    }
-    setMasterStampVisible(true);
-    setMasterCracksVisible(false);
-    setGoldSeedVisible(false);
-    setGoldBloomVisible(false);
-    setSystemStingerWord(null);
-
-    const screenH = Dimensions.get('window').height;
-    const crashDistance = Math.max(150, screenH * 0.48 - wordScreenY);
-    const vaultTargetX = Math.max(120, containerWidthRef.current / 2 - 34);
-    const vaultTargetY = Math.max(250, screenH * 0.42);
-
-    // Phase 1 — T+0ms: Screen dims — tiles to 15% opacity
-    Animated.timing(masterAllFadeAnim, {
-      toValue: 0.15, duration: 300, useNativeDriver: false,
-    }).start();
-    Animated.spring(masterHeroTransY, {
-      toValue: crashDistance, damping: 8, stiffness: 170, mass: 0.8, useNativeDriver: true,
-    }).start();
-    Animated.sequence([
-      Animated.timing(masterHeroScale, { toValue: 1.22, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      Animated.spring(masterHeroScale, { toValue: 1.0, damping: 8, stiffness: 190, useNativeDriver: true }),
-    ]).start();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-    // Phase 2 — T+500ms: Word pulse
-    setTimeout(() => setSealReady(true), 360);
-
-    // Phase 3 — T+800ms: MASTERED label appears below word
-    setTimeout(() => {
-      setMasterCracksVisible(true);
-      masterCrackOpacity.setValue(0);
-      Animated.timing(masterCrackOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
-    }, 800);
-
-    // Fade label before word swells — NEVER simultaneous
-    setTimeout(() => {
-      Animated.sequence([
-        Animated.timing(masterHeroScale, { toValue: 1.08, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.timing(masterHeroScale, { toValue: 0.96, duration: 160, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]).start();
-    }, 1000);
-
-    // Phase 4 — T+1050ms: Word swells 1.0→1.6
-    setTimeout(() => {
-      Animated.timing(masterHeroScale, {
-        toValue: 1.0, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true,
-      }).start();
-    }, 1050);
-
-    // Phase 6 — T+1900ms: Gold seed appears at word center
-    setTimeout(() => {
-      setGoldSeedVisible(true);
-      masterCoreOpacity.setValue(1);
-      goldSeedScale.setValue(0.15);
-      goldSeedTransX.setValue(0);
-      goldSeedTransY.setValue(0);
-      goldSeedRotate.setValue(0);
-      goldSeedTrailOpacity.setValue(0);
-      Animated.parallel([
-        Animated.spring(goldSeedScale, { toValue: 2.6, damping: 7, stiffness: 150, useNativeDriver: true }),
-        Animated.timing(goldSeedRotate, { toValue: 1, duration: 820, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.timing(goldSeedTrailOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
-      ]).start();
-    }, 1900);
-
-    // Seed settles
-    setTimeout(() => {
-      Animated.spring(goldSeedScale, { toValue: 2.15, damping: 8, stiffness: 220, useNativeDriver: true }).start();
-    }, 2000);
-
-    // Phase 7 — T+2100ms: Seed drops to screen bottom
-    setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(goldSeedTransX, {
-          toValue: vaultTargetX, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(goldSeedTransY, {
-          toValue: vaultTargetY, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(goldSeedScale, {
-          toValue: 0.62, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
-        }),
-        Animated.timing(masterCoreOpacity, { toValue: 0.95, duration: 620, useNativeDriver: true }),
-      ]).start();
-    }, 2100);
-
-    // Phase 8 — T+2400ms: Seed landing bloom
-    setTimeout(() => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      setGoldSeedVisible(false);
-      setGoldBloomVisible(true);
-      goldBloomScale.setValue(1);
-      goldBloomOpacity.setValue(1);
-      Animated.parallel([
-        Animated.timing(goldBloomScale, { toValue: 3.5, duration: 300, useNativeDriver: true }),
-        Animated.timing(goldBloomOpacity, { toValue: 0,   duration: 300, useNativeDriver: true }),
-      ]).start();
-      setTimeout(() => setGoldBloomVisible(false), 350);
-    }, 2400);
-
-    setTimeout(() => {
-      firePollyEvent(isBoss ? 'gateMasteredBoss' : 'gateMastered');
-      if (isBoss) {
-        playSystemStingerWord('BINGO', 1.0);
-        setTimeout(() => playSystemStingerWord('BANGO', 1.08), 430);
-        setTimeout(() => playSystemStingerWord('ZZZZINGO!', 1.28), 900);
-      }
-    }, 2600);
-
-    // Restore dim before transition
-    setTimeout(() => {
-      Animated.timing(masterCrackOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
-      Animated.timing(masterAllFadeAnim, { toValue: 1, duration: 200, useNativeDriver: false }).start();
-    }, isBoss ? 4050 : 3200);
-
-    // Phase 9 — T+2700ms: Hold (silence)
-
-    // Phase 10 — T+3000ms: Transition
-    setTimeout(() => {
-      setMasterCracksVisible(false);
-      setSystemStingerWord(null);
-      showWordOutcome(
-        'mastered',
-        {
-          bonusLabel: isHaunt
-            ? 'HAUNT BROKEN'
-            : isBoss
-              ? `BOSS MASTERY +${masteryPoints}`
-              : undefined,
-        },
-        () => {
-          store.completeWord();
-        }
-      );
-    }, isBoss ? 4300 : 3450);
-  }
-
-  function triggerWordExit(onComplete: () => void, perfect?: boolean) {
-    if (perfect) {
-      setTransitionLabel('CLEAR');
-      transitionLabelOpacity.setValue(0);
-      Animated.timing(transitionLabelOpacity, {
-        toValue: 1, duration: 80, useNativeDriver: true,
-      }).start();
-    }
-
-    // Book slides left off screen — ease-out weight
-    playSfx('bookClose');
-    Animated.timing(bookSlideX, {
-      toValue: -SCREEN_WIDTH,
-      duration: isBoss ? 380 : 280,
-      easing: Easing.in(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-
-    setTimeout(() => {
-      setTransitionLabel(null);
-      transitionLabelOpacity.setValue(0);
-      onComplete();
-    }, 290);
-  }
-
-  function resolveGauntletTile(correct: boolean, swipedUp: boolean) {
-    if (wordOutcome !== 'none') return;
-    const tile = gauntletTiles[gauntletIndex];
-    if (!tile) return;
-    resetHesitation();
-
-    const failedPair = correct
-      ? undefined
-      : { real: gauntletPairs[tile.pairIndex].real, trap: gauntletPairs[tile.pairIndex].trap };
-    store.resolveMystery(correct, visiblePerfectRef.current, failedPair);
-
-    if (!correct) {
-      wrongSwipeOccurred.current = true;
-      triggerWrongSwipeFeedback();
-      setFinalTileStates(prev => new Map(prev).set(tile.mask.id, 'wrong'));
-      triggerWrongFail(tile.mask.id);
-      return;
-    }
-
-    playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setFinalTileStates(prev =>
-      new Map(prev).set(tile.mask.id, swipedUp ? 'correct' : 'trap-caught'));
-    if (swipedUp) triggerAbsorption(tile.mask.phrase);
-
-    const isLast = gauntletIndex + 1 >= gauntletTiles.length;
-    if (isLast) {
-      splitCompletedRef.current = true;
-      setTimeout(() => triggerMastered(), 200);
-    } else {
-      setTileLanded(false);
-      setTimeout(() => dropGauntletTile(gauntletIndex + 1), 320);
-    }
-  }
-
-  function handleFinalTileSwipeUp() {
-    const tile = gauntletTiles[gauntletIndex];
-    if (!tile) return;
-    resolveGauntletTile(tile.isReal, true);
-  }
-
-  function handleFinalTileSwipeRight() {
-    const tile = gauntletTiles[gauntletIndex];
-    if (!tile) return;
-    resolveGauntletTile(!tile.isReal, false);
-  }
-
-  // ── completion check ─────────────────────────────────────────
-  useEffect(() => {
-    if (completedRef.current || gateTriggeredRef.current) return;
-    if (remainingMaskIds.length > 0) return;
-
-    // Deck empty — all tiles judged (correct, trap-caught, or wrong)
-    const perfect = !wrongSwipeOccurred.current;
-
-    if (isFinalGateStep) {
-      if (hasHidden) {
-        // Survival unlocks the mystery — a visible mistake no longer bars it.
-        visiblePerfectRef.current = perfect;
-        gateTriggeredRef.current = true;
-        firePollyEvent('allMasksFound');
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        setTimeout(() => {
-          triggerFinalTilesDrop();
-        }, 600);
-      } else {
-        // No hidden content on this final-gate word — falls through as a normal fail.
-        gateTriggeredRef.current = true;
-        store.resolveMystery(false, perfect);
-        const failedMaskId = visibleGridMasks.find(
-          mask => tileStates.get(mask.id) === 'wrong',
-        )?.id ?? `${step.word}_gate_fail`;
-        triggerWrongFail(failedMaskId);
-      }
-    } else {
-      // Ordinary words always complete without touching the ghost queue.
-      gateTriggeredRef.current = true;
-      if (perfect) firePollyEvent('cleanSweep');
-      triggerWordExit(() => store.completeWord(), perfect);
-    }
-  }, [remainingMaskIds]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── swipe handlers ────────────────────────────────────────────
-  const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
-
-  function computeGapMs(
-    combo: number,
-    resolution: 'up' | 'right' | 'wrong',
-    bossWord: boolean,
-    tileIndex: number,
-    phaseRole: WordStep['emotionalRole'],
-  ): number {
-    let gap = 350;
-    // Combo modifier
-    if      (combo <= 3)  gap += 100;
-    else if (combo <= 6)  gap += 0;
-    else if (combo <= 9)  gap -= 80;
-    else                  gap -= 150;
-    // Resolution type
-    if      (resolution === 'right') gap -= 50;
-    else if (resolution === 'wrong') gap += 150;
-    // GPS phase modifier — confidence/flow stay generous, panic tightens,
-    // independent of streak so early rounds never feel rushed and late
-    // rounds never feel slack even after a chain break.
-    switch (phaseRole) {
-      case 'confidence':
-      case 'flow':
-        gap += 60;
-        break;
-      case 'panic':
-      case 'adrenaline':
-        gap -= 40;
-        break;
-      default:
-        break;
-    }
-    // Boss modifier
-    if (bossWord) gap -= 100;
-    // Per-tile escalation: each tile within a word tightens the gap
-    gap -= Math.min(tileIndex * 18, 90);
-    return Math.min(Math.max(gap, 150), 500);
-  }
-
-  function handleSwipeUp(maskId: string) {
-    if (wordOutcome !== 'none') return;
-    if (gapLockedRef.current) return;
-    resetHesitation();
-    const mask = step.masks.find(m => m.id === maskId)!;
-    if (mask.isReal) {
-      const chainMult = chainMultiplierForStreak(store.game.streak + 1);
-      const tier = chainTierFromMultiplier(chainMult);
-      playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (tier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const upPoints = realMaskPoints({ isRare: mask.isRare, isBoss, chainMultiplier: chainMult });
-      store.submitSwipeUp(maskId);
-      spawnFloat(upPoints, 'real', tier);
-      triggerAbsorption(mask.phrase);
-
-      const nextFound = realMasks.filter(m =>
-        tileStates.get(m.id) === 'correct' || m.id === maskId
-      ).length;
-      Animated.timing(goldTextOpacity, {
-        toValue: GOLD_STEPS_LOCAL[Math.min(nextFound, GOLD_STEPS_LOCAL.length - 1)],
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-
-      setTileStates(prev => new Map(prev).set(maskId, 'correct'));
-      firePollyEvent('correct');
-      const gapUp = computeGapMs(store.game.combo, 'up', isBoss, tileIndexInWordRef.current, step.emotionalRole);
-      tileIndexInWordRef.current += 1;
-      gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapUp);
-    } else {
-      // Wrong swipe — UP on trap
-      wrongSwipeOccurred.current = true;
-      triggerWrongSwipeFeedback();
-      store.submitSwipeUp(maskId);
-      // Tile exits permanently — no retry
-      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrong = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
-      tileIndexInWordRef.current += 1;
-      gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapWrong);
-    }
-  }
-
-  function handleSwipeRight(maskId: string) {
-    if (wordOutcome !== 'none') return;
-    if (gapLockedRef.current) return;
-    resetHesitation();
-    const mask = step.masks.find(m => m.id === maskId)!;
-    if (!mask.isReal) {
-      const chainMultTrap = chainMultiplierForStreak(store.game.streak + 1);
-      const trapTier = chainTierFromMultiplier(chainMultTrap);
-      playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[trapTier] });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (trapTier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const trapPoints = trapMaskPoints({ isBoss, chainMultiplier: chainMultTrap });
-      store.submitSwipeDown(maskId);
-      spawnFloat(trapPoints, 'trap', trapTier);
-      setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
-      onTrapCaught?.();
-      const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current, step.emotionalRole);
-      tileIndexInWordRef.current += 1;
-      gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapRight);
-    } else {
-      // Wrong swipe — RIGHT on real meaning
-      wrongSwipeOccurred.current = true;
-      triggerWrongSwipeFeedback();
-      store.submitSwipeDown(maskId);
-      // Tile exits permanently — no retry
-      setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrongR = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
-      tileIndexInWordRef.current += 1;
-      gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapWrongR);
-    }
-  }
 
   // ── render ────────────────────────────────────────────────────
   const wordCoreRotate = goldSeedRotate.interpolate({
@@ -1528,8 +1082,6 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
   });
   const masteryWordCenterY = Math.max(170, Dimensions.get('window').height * 0.48);
   const vaultBloomX = Math.max(28, containerWidth - 86);
-  const activeGauntletTile = gauntletTiles[gauntletIndex] ?? null;
-  const inputLocked = wordOutcome !== 'none';
 
   const deckActiveRotDeg = deckActiveRot.interpolate({ inputRange: [-4, 0, 4], outputRange: ['-4deg', '0deg', '4deg'] });
   const wordEntryTiltDeg = wordEntryTilt.interpolate({ inputRange: [-1, 0, 1], outputRange: ['-5deg', '0deg', '5deg'] });
@@ -1567,11 +1119,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
         }}
       >
         {/* Kicker — floats above word zone */}
-        {kicker && (
+        {mechanics.kicker && (
           isBoss ? (
-            <Text style={styles.kickerBoss}>{kicker}</Text>
+            <Text style={styles.kickerBoss}>{mechanics.kicker}</Text>
           ) : (
-            <Text style={styles.kicker}>{kicker}</Text>
+            <Text style={styles.kicker}>{mechanics.kicker}</Text>
           )
         )}
 
@@ -1609,7 +1161,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
           {/* Hero word transforms */}
           <Animated.View
             style={{
-              opacity: wordOutcome === 'none' ? wordEntryOpacity : 0,
+              opacity: mechanics.wordOutcome === 'none' ? wordEntryOpacity : 0,
               transform: [
                 { scale: absorptionScale },
                 { scale: wordEntryScale },
@@ -1733,7 +1285,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
       {/* ── TILE ZONE ───────────────────────────────────────── */}
       <View style={styles.gridWrap}>
         <View style={styles.tileStackArea}>
-          {showBoardContent && gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
+          {showBoardContent && mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
             <Animated.View
               pointerEvents="none"
               style={[styles.swipeCueOverlay, { opacity: cueOpacityAnim }]}
@@ -1749,7 +1301,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
           {showBoardContent && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
-            {gatePhase !== 'tiles' && gatePhase !== 'wrongFail' && topMask && (
+            {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
               <View style={styles.deckWrap}>
                 {Array.from({ length: backingCardCount }, (_, index) => {
                   const depth = backingCardCount - index;
@@ -1801,19 +1353,19 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
                   },
                 ]}>
                 <View
-                  ref={getTileRef(topMask.id)}
+                  ref={getTileRef(mechanics.topMask.id)}
                   style={styles.deckTopCardSlot}
                 >
                   <SwipeMask
-                    key={topMask.id}
-                    mask={topMask}
-                    state={tileStates.get(topMask.id) ?? 'idle'}
-                    onSwipeUp={() => handleSwipeUp(topMask.id)}
-                    onSwipeDown={() => handleSwipeRight(topMask.id)}
+                    key={mechanics.topMask.id}
+                    mask={mechanics.topMask}
+                    state={mechanics.tileStates.get(mechanics.topMask.id) ?? 'idle'}
+                    onSwipeUp={() => mechanics.onSwipeUp(mechanics.topMask!.id)}
+                    onSwipeDown={() => mechanics.onSwipeRight(mechanics.topMask!.id)}
                     onSwipeReveal={() => {}}
                     revealable={false}
-                    disabled={inputLocked}
-                    nearMastery={nearMastery}
+                    disabled={mechanics.inputLocked}
+                    nearMastery={mechanics.nearMastery}
                     tileHeight={TILE_H}
                     entryDelay={0}
                     hapticCorrect={step.hapticTier === 'light' ? () => Haptics.selectionAsync() : undefined}
@@ -1821,7 +1373,7 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
                     onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
                     onExitComplete={() => {
-                      setRemainingMaskIds(prev => prev.filter(id => id !== topMask.id));
+                      mechanics.onTileExitComplete(mechanics.topMask!.id);
                     }}
                     onCardTouch={handleCardTouch}
                     wordY={wordScreenY}
@@ -1832,9 +1384,9 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
               </View>
             )}
 
-            {(gatePhase === 'tiles' || gatePhase === 'wrongFail') && activeGauntletTile && (
+            {(mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') && mechanics.activeGauntletTile && (
               <View style={styles.finalHiddenTileStack}>
-                {gauntletTiles.length > 1 && (
+                {mechanics.gauntletTiles.length > 1 && (
                   <Text style={{
                     color: 'rgba(245,200,66,0.72)',
                     fontFamily: FONTS.label,
@@ -1843,11 +1395,11 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
                     textAlign: 'center',
                     marginBottom: 8,
                   }}>
-                    {`${gauntletIndex + 1} OF ${gauntletTiles.length}`}
+                    {`${mechanics.gauntletIndex + 1} OF ${mechanics.gauntletTiles.length}`}
                   </Text>
                 )}
                 <Animated.View
-                  pointerEvents={gatePhase === 'wrongFail' ? 'none' : tileLanded ? 'auto' : 'none'}
+                  pointerEvents={mechanics.gatePhase === 'wrongFail' ? 'none' : mechanics.tileLanded ? 'auto' : 'none'}
                   style={{ transform: [{ translateY: splitTile1TransY }] }}
                 >
                   <Animated.View style={[
@@ -1864,14 +1416,14 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
                     },
                   ]}>
                     <SwipeMask
-                      key={activeGauntletTile.mask.id}
-                      mask={activeGauntletTile.mask}
-                      state={finalTileStates.get(activeGauntletTile.mask.id) ?? 'idle'}
-                      onSwipeUp={handleFinalTileSwipeUp}
-                      onSwipeDown={handleFinalTileSwipeRight}
+                      key={mechanics.activeGauntletTile.mask.id}
+                      mask={mechanics.activeGauntletTile.mask}
+                      state={mechanics.finalTileStates.get(mechanics.activeGauntletTile.mask.id) ?? 'idle'}
+                      onSwipeUp={mechanics.onGauntletSwipeUp}
+                      onSwipeDown={mechanics.onGauntletSwipeRight}
                       onSwipeReveal={() => {}}
                       revealable={false}
-                      disabled={inputLocked}
+                      disabled={mechanics.inputLocked}
                       isSpecialSplit={true}
                       tileHeight={FINAL_TILE_H}
                       entryDelay={0}
@@ -2107,20 +1659,20 @@ export function MaskBoard({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwi
         </Animated.Text>
       )}
 
-      {wordOutcome === 'mastered' && (
+      {mechanics.wordOutcome === 'mastered' && (
         <MasteredOutcomeOverlay
           word={step.word}
           headline={isHaunt ? 'BANISHED' : 'MASTERED'}
-          bonusLabel={outcomeBonusLabel}
-          onContinue={continueOutcome}
+          bonusLabel={mechanics.outcomeBonusLabel}
+          onContinue={mechanics.continueOutcome}
         />
       )}
 
-      {wordOutcome === 'haunted' && (
+      {mechanics.wordOutcome === 'haunted' && (
         <HauntedOutcomeOverlay
           word={step.word}
-          detail={outcomeDetail}
-          onContinue={continueOutcome}
+          detail={mechanics.outcomeDetail}
+          onContinue={mechanics.continueOutcome}
         />
       )}
     </Animated.View>
