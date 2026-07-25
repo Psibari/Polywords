@@ -792,7 +792,6 @@ function GameDirector({ navigation }: { navigation: any }) {
         mistakesOnWord: 0,
         feedback: null,
         lastActionAt: Date.now(),
-        pollyTrigger: null,
         streakMilestone: null,
         featherMilestone: null,
       },

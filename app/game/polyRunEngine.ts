@@ -70,7 +70,6 @@ export type GameState = {
   feedback: string | null;
   status: GameStatus;
   lastActionAt: number;
-  pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'bossMastery' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss' | 'switchback' | 'switchbackFirst' | 'switchbackSecond' | 'switchbackFail' | 'ghostIntro' | 'ghostCorrect' | 'ghostWrong';
   wordResults: WordResult[];
   shuffledMasks: Record<number, Mask[]>;
   featherMilestone:     FeatherMilestone | null;
@@ -121,7 +120,6 @@ export function createGame(
     feedback: null,
     status: 'playing',
     lastActionAt: Date.now(),
-    pollyTrigger: null,
     wordResults: [],
     shuffledMasks,
     featherMilestone:     null,
@@ -262,7 +260,6 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
       featherMilestonesHit: newMilestonesHit,
       feedback: `+${points}`,
       lastActionAt: now,
-      pollyTrigger: null,
     };
   }
 
@@ -279,7 +276,6 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Not a meaning',
     lastActionAt: now,
-    pollyTrigger: 'nearMiss',
   };
   if (loss.status === 'gameOver') {
     const finalized = finalizeCurrentWordResult(nextState);
@@ -331,7 +327,6 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
       featherMilestonesHit: newMilestonesHit,
       feedback: `Trap spotted +${points}`,
       lastActionAt: now,
-      pollyTrigger: null,
     };
   }
 
@@ -348,7 +343,6 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Actually a meaning',
     lastActionAt: now,
-    pollyTrigger: 'nearMiss',
   };
   if (loss.status === 'gameOver') {
     const finalized = finalizeCurrentWordResult(nextState);
@@ -384,7 +378,6 @@ export function submitBossMastery(state: GameState): GameState {
       : state.featherMilestonesHit,
     feedback: `+${points}`,
     lastActionAt: Date.now(),
-    pollyTrigger: 'bossMastery',
   };
 }
 
@@ -482,7 +475,6 @@ export function applyGoldFeather(state: GameState): GameState {
     status: 'playing',
     feedback: 'Gold Feather',
     lastActionAt: Date.now(),
-    pollyTrigger: null,
     wordResults: state.wordResults.filter(result => result.wordId !== currentWordId),
     bossOutcome: 'pending',
     bossFlawless: false,
@@ -518,7 +510,6 @@ export function completeWord(state: GameState): GameState {
     combo: perfect ? state.combo : 0,
     feedback: state.feedback,
     lastActionAt: Date.now(),
-    pollyTrigger: null,
     wordResults: finalizedState.wordResults,
   });
 }
@@ -531,7 +522,6 @@ type StepUpdate = {
   combo: number;
   feedback: string | null;
   lastActionAt: number;
-  pollyTrigger: GameState['pollyTrigger'];
   wordResults: WordResult[];
 };
 

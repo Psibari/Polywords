@@ -435,13 +435,23 @@ export function SwipeMask({
       onPanResponderRelease: (_, g) => {
         if (disabledRef.current || judgedRef.current) return;
 
-        if (g.dy < -SWIPE_THRESHOLD) {
+        // Dominant-axis classification — mirrors onPanResponderMove's domUp/
+        // domRight tilt logic below. A release that clears both thresholds
+        // (diagonal swipe) must resolve to whichever axis moved further, or a
+        // rightward reject can get misread as an upward claim (and vice
+        // versa) just because it also happened to clear the up threshold.
+        const passedUp    = g.dy < -SWIPE_THRESHOLD;
+        const passedRight = g.dx > SWIPE_THRESHOLD;
+        const isUp        = passedUp && (!passedRight || Math.abs(g.dy) >= Math.abs(g.dx));
+        const isRight     = passedRight && !isUp;
+
+        if (isUp) {
           judgedRef.current   = true;
           swipeDirRef.current = 'up';
           grabLift.value      = withTiming(0, { duration: 80 });
           onSwipeUpRef.current();
 
-        } else if (g.dx > SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
+        } else if (isRight) {
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
           grabLift.value      = withTiming(0, { duration: 80 });

@@ -147,8 +147,6 @@ type GameStore = {
   ) => void;
   beginMysteryGauntlet: (total: number) => void;
   completeWord: () => void;
-  clearPollyTrigger: () => void;
-  setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
   consumeFeatherMilestone: () => void;
@@ -312,12 +310,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   completeWord: () =>
     set((s) => ({ game: completeWord(s.game) })),
-
-  clearPollyTrigger: () =>
-    set((s) => ({ game: { ...s.game, pollyTrigger: null } })),
-
-  setPollyTrigger: (trigger) =>
-    set((s) => ({ game: { ...s.game, pollyTrigger: trigger } })),
 
   addBonusScore: (pts) =>
     set((s) => ({ game: addBonusScore(s.game, pts) })),

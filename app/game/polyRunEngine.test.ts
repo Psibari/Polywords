@@ -107,9 +107,10 @@ function fresh(mercyReviveLives = 0): GameState {
   s = submitSwipeDown(s, 't1');
   eq(s.score, 300, 'boss.trapCatch100');
   const before = s.score;
+  const comboBefore = s.combo;
   s = submitBossMastery(s);
   eq(s.score, before + 600, 'boss.mastery600AtChain1');
-  eq(s.pollyTrigger, 'bossMastery', 'boss.masteryTrigger');
+  eq(s.combo, comboBefore + 1, 'boss.masteryCombo');
 }
 
 // ── Wrong swipes: life loss, streak reset ────────────────────────
