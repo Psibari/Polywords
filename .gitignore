@@ -55,3 +55,4 @@ docs/HUNT_DATA_REWRITE_REVIEW.md
 # generated native folders
 /ios
 /android
+.worktrees/
