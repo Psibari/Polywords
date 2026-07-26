@@ -880,9 +880,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const backingCardWidth = Math.min(Math.max(containerWidth - 80, 0), 290);
 
   useEffect(() => {
-    const backingIds = mechanics.remainingMaskIds.slice(1, 1 + backingCardCount);
+    const backingIds = mechanics.remainingMaskIds.slice(1, 1 + backingCardCount).reverse();
     backingIds.forEach((maskId, index) => {
-      const depth = index + 1;
+      const depth = backingCardCount - index;
       const anim = getBackingCardAnim(maskId, depth);
       Animated.timing(anim.depthY, { toValue: depth * DECK_BACKING_OFFSET, duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
       Animated.timing(anim.scale,  { toValue: 1 - depth * 0.01,            duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
@@ -1341,8 +1341,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
               <View style={styles.deckWrap}>
-                {mechanics.remainingMaskIds.slice(1, 1 + backingCardCount).map((maskId, index) => {
-                  const depth = index + 1;
+                {mechanics.remainingMaskIds.slice(1, 1 + backingCardCount).reverse().map((maskId, index) => {
+                  const depth = backingCardCount - index;
                   const anim = getBackingCardAnim(maskId, depth);
                   const rotateDeg = anim.rotate.interpolate({ inputRange: [-6, 0], outputRange: ['-6deg', '0deg'] });
                   const mask = mechanics.visibleGridMasks.find(m => m.id === maskId);
@@ -1379,7 +1379,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                       {mask && (
                         <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
                           <Text
-                            style={styles.deckBackingPhrase}
+                            style={[
+                              styles.deckBackingPhrase,
+                              {
+                                fontSize: 27 - (depth - 1) * 3,
+                                color: depth === 1 ? PW.color.softWhite : PW.color.mutedWhite,
+                              },
+                            ]}
                             numberOfLines={2}
                             adjustsFontSizeToFit={true}
                             minimumFontScale={0.8}
