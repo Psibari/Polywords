@@ -24,7 +24,7 @@ import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
-import { cardMaterial } from '../ui/pwMaterials';
+import { cardMaterial, heroBookMaterial } from '../ui/pwMaterials';
 import { ShardVariant } from '../ui/pwEffects';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
@@ -41,6 +41,9 @@ type Props = {
   revealable?: boolean;
   tileHeight?: number;
   isSpecialSplit?: boolean;
+  // Gauntlet card material — a page pulled from the book itself, not the
+  // deck's plain gold→magenta bezel.
+  bookMaterial?: boolean;
   entryDelay?: number;
   eraBadge?: string;
   hapticCorrect?: () => void;
@@ -62,10 +65,12 @@ type Props = {
 export const GOLD_STEPS = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
 function tileGradient(
-  state: SwipeMaskState
+  state: SwipeMaskState,
+  bookMaterial: boolean
 ): readonly [string, string] {
   if (state === 'correct')  return ['#F5C842', '#F5C842'] as const;
   if (state === 'wrong')    return ['#CC2200', '#CC2200'] as const;
+  if (bookMaterial) return [heroBookMaterial.goldTrim, heroBookMaterial.coverPurpleTop] as const;
   return ['#F5C842', '#9B2D6B'] as const;
 }
 
@@ -78,6 +83,7 @@ export function SwipeMask({
   revealable = false,
   tileHeight = 58,
   isSpecialSplit = false,
+  bookMaterial = false,
   entryDelay = 0,
   eraBadge,
   hapticCorrect,
@@ -96,7 +102,7 @@ export function SwipeMask({
 }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = Math.min(screenWidth - 80, 290);
-  const cardHeight = Math.min(Math.max(tileHeight, 96), 124);
+  const cardHeight = Math.min(Math.max(tileHeight, 96), bookMaterial ? 220 : 124);
 
   // ── UI state ──────────────────────────────────────────────────
   const [flashRed, setFlashRed] = useState(false);
@@ -524,6 +530,7 @@ export function SwipeMask({
           style={[
             isSpecialSplit ? styles.splitTile : styles.tile,
             !isSpecialSplit && { width: cardWidth, height: cardHeight },
+            bookMaterial && styles.tileBookMaterial,
             tileAnimStyle,
           ]}
           onLayout={(e: LayoutChangeEvent) => {
@@ -542,7 +549,7 @@ export function SwipeMask({
           {/* Outer gradient bezel — double bezel construction */}
           {!isSpecialSplit && (
             <LinearGradient
-              colors={tileGradient(s)}
+              colors={tileGradient(s, bookMaterial)}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -571,7 +578,10 @@ export function SwipeMask({
           )}
           {/* Phrase text */}
           <View
-            style={isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel}
+            style={[
+              isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel,
+              bookMaterial && styles.phrasePanelBook,
+            ]}
             pointerEvents="none"
           >
             <Text
@@ -633,6 +643,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1548',
     overflow: 'hidden',
     zIndex: 2,
+  },
+  tileBookMaterial: {
+    shadowColor: heroBookMaterial.goldTrim,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 22,
+    elevation: 16,
+  },
+  phrasePanelBook: {
+    backgroundColor: heroBookMaterial.coverPurpleBot,
   },
   checkmark: {
     position: 'absolute',

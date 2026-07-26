@@ -502,7 +502,36 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   }
 
   function handleCardTouch() {
+    if (mechanics.gatePhase !== 'locked') return;
     triggerBookOpen();
+  }
+
+  // ── gauntlet pulse ────────────────────────────────────────────
+  // A stronger, distinct pulse fired for each correctly-judged mystery
+  // tile — the book stays at rest between tiles (same as normal) but
+  // gets a bigger glow + heavier haptic on each correct judgment, rather
+  // than holding open statically for the whole gauntlet. Reuses the same
+  // bookOpenAnimationRef safety pattern as triggerBookOpen: reset both
+  // bookOpenAnim and bookIntakeGlowAnim unconditionally before starting.
+  function triggerGauntletPulse() {
+    bookOpenAnimationRef.current?.stop();
+    bookOpenAnim.stopAnimation();
+    bookOpenAnim.setValue(0);
+    bookIntakeGlowAnim.stopAnimation();
+    bookIntakeGlowAnim.setValue(0);
+    bookOpenAnimationRef.current = Animated.parallel([
+      Animated.sequence([
+        Animated.timing(bookOpenAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.delay(220),
+        Animated.timing(bookOpenAnim, { toValue: 0, duration: 160, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      ]),
+      Animated.sequence([
+        Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.delay(220),
+        Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]),
+    ]);
+    bookOpenAnimationRef.current.start();
   }
 
   const [bossReady, setBossReady]             = useState(!isBoss);
@@ -655,6 +684,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       onGauntletCorrect({ swipedUp, phrase }) {
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        triggerGauntletPulse();
         if (swipedUp) triggerAbsorption(phrase);
       },
       onGauntletTileDrop() {
@@ -1531,8 +1562,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                       onSwipeReveal={() => {}}
                       revealable={false}
                       disabled={mechanics.inputLocked}
-                      isSpecialSplit={true}
-                      tileHeight={FINAL_TILE_H}
+                      bookMaterial
+                      tileHeight={220}
                       entryDelay={0}
                       onEffect={handleEffect}
                       onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
@@ -1540,9 +1571,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                       onCardTouch={handleCardTouch}
                       wordY={wordScreenY}
                       intakeY={wordScreenY + 73}
-                      splitBorderColor="rgba(245,200,66,1.0)"
-                      splitTextColor="rgba(255,248,230,1)"
-                      splitBackgroundColor="#0F0D2A"
                     />
                   </Animated.View>
                 </Animated.View>
