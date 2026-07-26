@@ -872,13 +872,14 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         bookOpenAnimationRef.current?.stop();
         bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
-        Animated.parallel([
+        bookOpenAnimationRef.current = Animated.parallel([
           Animated.timing(bookOpenAnim, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
           Animated.sequence([
             Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
             Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 360, easing: Easing.in(Easing.quad), useNativeDriver: true }),
           ]),
-        ]).start();
+        ]);
+        bookOpenAnimationRef.current.start();
       },
       onHauntedSequence({ isHaunt: hauntFail, failedMaskId }) {
         if (hauntFail) {
@@ -909,13 +910,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         // its Animated.delay) before driving these shared values directly —
         // otherwise its queued final leg fires later and fights this beat.
         bookOpenAnimationRef.current?.stop();
+        bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
         bookGhostDrainOpacity.setValue(0);
-        Animated.parallel([
+        bookOpenAnimationRef.current = Animated.parallel([
           Animated.timing(bookOpenAnim, { toValue: 0, duration: 300, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
           Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 260, useNativeDriver: true }),
           Animated.timing(bookGhostDrainOpacity, { toValue: 0.55, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        ]).start();
+        ]);
+        bookOpenAnimationRef.current.start();
       },
       onOutcomeReveal(outcome) {
         playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');

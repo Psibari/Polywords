@@ -22,7 +22,6 @@ import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
 import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import HeartbeatVignette from '../components/HeartbeatVignette';
 
 const MAX_FEATHERS = 6;
 const INTRO_SEEN_KEY = 'polywords_intro_seen';
@@ -875,7 +874,6 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
-      {!isDone && <HeartbeatVignette />}
       {!isDone && <TopBar />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
