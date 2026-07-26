@@ -21,7 +21,7 @@ import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
-import { deckBackMaterial } from '../ui/pwMaterials';
+import { deckBackMaterial, cardMaterial } from '../ui/pwMaterials';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
@@ -872,11 +872,11 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       prevTopIdRef.current = newTopId;
       cardPopCountRef.current += 1;
       if (cardPopCountRef.current > 1) {
-        cardPopY.setValue(18);
-        Animated.spring(cardPopY, {
+        cardPopY.setValue(DECK_BACKING_OFFSET);
+        Animated.timing(cardPopY, {
           toValue: 0,
-          damping: 14,
-          stiffness: 220,
+          duration: 180,
+          easing: CARD_SNAP,
           useNativeDriver: true,
         }).start(() => {
           Haptics.selectionAsync();
@@ -1377,6 +1377,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                         },
                       ]}
                     >
+                      <View style={cardMaterial.topHighlight} pointerEvents="none" />
                       <View style={styles.deckBackingLowerEdge} />
                     </Animated.View>
                   );
