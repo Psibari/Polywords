@@ -377,7 +377,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       Animated.timing(boardShakeX, { toValue: 0,  duration: 35, useNativeDriver: true }),
     ]).start();
   }
-  const transitionLabelOpacity = useRef(new Animated.Value(0)).current;
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
   const goldTextOpacity       = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
@@ -522,9 +521,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     }
     return tileRefs.current.get(maskId) as React.Ref<View>;
   }
-
-  // ── word transition label ────────────────────────────────────
-  const [transitionLabel, setTransitionLabel] = useState<string | null>(null);
 
   // ── score floats ─────────────────────────────────────────────
   const [floats, setFloats] = useState<FloatEntry[]>([]);
@@ -675,11 +671,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
       onWordExit(perfect) {
         if (perfect) {
-          setTransitionLabel('CLEAR');
-          transitionLabelOpacity.setValue(0);
-          Animated.timing(transitionLabelOpacity, {
-            toValue: 1, duration: 80, useNativeDriver: true,
-          }).start();
+          // Round clear pulses the book's own glow harder and longer than
+          // the 120ms per-tile flick (triggerBookOpen) — a full round
+          // reads as more than one tile landing, using the same prop.
+          bookIntakeGlowAnim.stopAnimation();
+          bookIntakeGlowAnim.setValue(0);
+          Animated.sequence([
+            Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 250, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          ]).start();
         }
         playSfx('bookClose');
         Animated.timing(bookSlideX, {
@@ -688,10 +688,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           easing: Easing.in(Easing.quad),
           useNativeDriver: true,
         }).start();
-        setTimeout(() => {
-          setTransitionLabel(null);
-          transitionLabelOpacity.setValue(0);
-        }, 290);
       },
       onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
         if (!hauntOutcome) {
@@ -1163,15 +1159,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           ) : (
             <Text style={styles.kicker}>{mechanics.kicker}</Text>
           )
-        )}
-
-        {transitionLabel && (
-          <Animated.Text
-            pointerEvents="none"
-            style={[styles.kicker, { opacity: transitionLabelOpacity, color: '#F5C842', letterSpacing: 5 }]}
-          >
-            {transitionLabel}
-          </Animated.Text>
         )}
 
         {/* Book slide wrapper — entire book (shadow, pages, intake, cover) slides in/out as one unit.

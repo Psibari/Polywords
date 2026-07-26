@@ -149,7 +149,12 @@ function RoundChips({ current, total }: { current: number; total: number }) {
     }))
   ).current;
 
+  const prevCurrentRef = useRef(current);
+
   useEffect(() => {
+    const justCompletedIndex = current > prevCurrentRef.current ? current - 1 : null;
+    prevCurrentRef.current = current;
+
     chipAnims.forEach((anim, i) => {
       const isDone = i < current;
       const isCurrent = i === current;
@@ -157,12 +162,22 @@ function RoundChips({ current, total }: { current: number; total: number }) {
       const toY = isCurrent ? -3 : 0;
       const toOpacity = isDone ? 0.45 : 1;
 
-      Animated.spring(anim.scale, {
-        toValue: toScale,
-        damping: 12,
-        stiffness: 180,
-        useNativeDriver: true,
-      }).start();
+      if (i === justCompletedIndex) {
+        // The chip that just finished gets one deliberate pop before
+        // settling to its resting "done" scale — this is the round's
+        // actual completion signal now that the floating text is gone.
+        Animated.sequence([
+          Animated.spring(anim.scale, { toValue: 1.4, damping: 9, stiffness: 260, useNativeDriver: true }),
+          Animated.spring(anim.scale, { toValue: toScale, damping: 12, stiffness: 180, useNativeDriver: true }),
+        ]).start();
+      } else {
+        Animated.spring(anim.scale, {
+          toValue: toScale,
+          damping: 12,
+          stiffness: 180,
+          useNativeDriver: true,
+        }).start();
+      }
       Animated.spring(anim.translateY, {
         toValue: toY,
         damping: 12,
