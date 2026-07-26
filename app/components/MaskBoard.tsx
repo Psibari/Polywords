@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import * as Haptics from 'expo-haptics';
@@ -36,18 +37,6 @@ const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
-const DECK_BACKING_COLORS = [
-  '#2A2352',
-  '#231D48',
-  '#1C173E',
-  '#161234',
-] as const;
-const DECK_BACKING_BORDER_COLORS = [
-  'rgba(245,200,66,0.45)',
-  'rgba(198,130,95,0.34)',
-  'rgba(158,62,104,0.26)',
-  'rgba(124,52,96,0.18)',
-] as const;
 
 // Deck timing curves — shared by the round's opening deal-in and the
 // per-tile shuffle-forward animation (Task 1), so the deck reads as one
@@ -893,7 +882,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   useEffect(() => {
     const backingIds = mechanics.remainingMaskIds.slice(1, 1 + backingCardCount);
     backingIds.forEach((maskId, index) => {
-      const depth = backingCardCount - index;
+      const depth = index + 1;
       const anim = getBackingCardAnim(maskId, depth);
       Animated.timing(anim.depthY, { toValue: depth * DECK_BACKING_OFFSET, duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
       Animated.timing(anim.scale,  { toValue: 1 - depth * 0.01,            duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
@@ -1353,7 +1342,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
               <View style={styles.deckWrap}>
                 {mechanics.remainingMaskIds.slice(1, 1 + backingCardCount).map((maskId, index) => {
-                  const depth = backingCardCount - index;
+                  const depth = index + 1;
                   const anim = getBackingCardAnim(maskId, depth);
                   const rotateDeg = anim.rotate.interpolate({ inputRange: [-6, 0], outputRange: ['-6deg', '0deg'] });
                   const mask = mechanics.visibleGridMasks.find(m => m.id === maskId);
@@ -1367,8 +1356,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                         styles.deckBackingCard,
                         {
                           width: backingCardWidth,
-                          backgroundColor: DECK_BACKING_COLORS[depth - 1],
-                          borderColor: DECK_BACKING_BORDER_COLORS[depth - 1],
                           opacity: deckBackingOp,
                           transform: [
                             { translateY: Animated.add(deckBackingY, anim.depthY) },
@@ -1378,6 +1365,16 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                         },
                       ]}
                     >
+                      <LinearGradient
+                        colors={[PW.color.gold, PW.color.rose]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={[
+                          StyleSheet.absoluteFill,
+                          { opacity: 1 - (depth - 1) * 0.15 },
+                        ]}
+                        pointerEvents="none"
+                      />
                       <View style={cardMaterial.topHighlight} pointerEvents="none" />
                       {mask && (
                         <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
