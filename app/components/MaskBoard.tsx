@@ -866,6 +866,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
         playSfx('bookClose');
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
+        // its Animated.delay) before driving these shared values directly —
+        // otherwise its queued final leg fires later and fights this beat.
+        bookOpenAnimationRef.current?.stop();
         bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
         Animated.parallel([
@@ -901,6 +905,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         playSfx('bookClose');
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         triggerBoardShake();
+        // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
+        // its Animated.delay) before driving these shared values directly —
+        // otherwise its queued final leg fires later and fights this beat.
+        bookOpenAnimationRef.current?.stop();
         bookIntakeGlowAnim.stopAnimation();
         bookGhostDrainOpacity.setValue(0);
         Animated.parallel([
