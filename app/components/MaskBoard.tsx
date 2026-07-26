@@ -673,20 +673,21 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       },
       onWordExit(perfect) {
-        // Stop any prior per-tile flick animation and reset the book cover
-        // to its closed state, unconditionally — triggerBookOpen may have
-        // fired on any tile in this round, and the book needs to be closed
-        // before exiting regardless of clear status.
+        // Stop any prior per-tile flick animation and reset both values it
+        // drives to their rest state, unconditionally — triggerBookOpen may
+        // have fired on any tile in this round on either the perfect or
+        // imperfect path, and both bookOpenAnim and bookIntakeGlowAnim need
+        // to return to 0 before anything else touches them.
         bookOpenAnimationRef.current?.stop();
         bookOpenAnim.stopAnimation();
         bookOpenAnim.setValue(0);
+        bookIntakeGlowAnim.stopAnimation();
+        bookIntakeGlowAnim.setValue(0);
 
         if (perfect) {
           // Round clear pulses the book's own glow harder and longer than
           // the 120ms per-tile flick (triggerBookOpen) — a full round
           // reads as more than one tile landing, using the same prop.
-          bookIntakeGlowAnim.stopAnimation();
-          bookIntakeGlowAnim.setValue(0);
           Animated.sequence([
             Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
             Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 250, easing: Easing.in(Easing.quad), useNativeDriver: true }),
