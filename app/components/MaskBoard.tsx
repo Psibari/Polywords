@@ -49,6 +49,12 @@ const DECK_BACKING_BORDER_COLORS = [
   'rgba(124,52,96,0.18)',
 ] as const;
 
+// Deck timing curves — shared by the round's opening deal-in and the
+// per-tile shuffle-forward animation (Task 1), so the deck reads as one
+// consistent object rather than two different systems.
+const CARD_DEAL = Easing.bezier(0.18, 1.04, 0.26, 1.00);
+const CARD_SNAP = Easing.bezier(0.16, 0.95, 0.22, 1.00);
+
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 type FloatKind = 'real' | 'trap' | 'mastery';
@@ -328,6 +334,27 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const deckActiveY  = useRef(new Animated.Value(400)).current;
   const deckBackingY = useRef(new Animated.Value(28)).current;
   const deckBackingOp = useRef(new Animated.Value(0)).current;
+
+  // Per-backing-card animated depth state, keyed by mask id so a card's
+  // identity survives the deck shrinking. This is what makes the stack
+  // advance smoothly instead of snapping — see getBackingCardAnim below.
+  const backingCardAnimsRef = useRef(
+    new Map<string, { depthY: Animated.Value; scale: Animated.Value; rotate: Animated.Value }>()
+  ).current;
+
+  function getBackingCardAnim(maskId: string, depth: number) {
+    let anim = backingCardAnimsRef.get(maskId);
+    if (!anim) {
+      anim = {
+        depthY: new Animated.Value(depth * DECK_BACKING_OFFSET),
+        scale: new Animated.Value(1 - depth * 0.01),
+        rotate: new Animated.Value(depth * -1.3),
+      };
+      backingCardAnimsRef.set(maskId, anim);
+    }
+    return anim;
+  }
+
   const deckEntranceHapticRef = useRef<string | null>(null);
   const deckDeepRot  = useRef(new Animated.Value(-4)).current;
   const deckMidRot   = useRef(new Animated.Value(3)).current;
@@ -864,6 +891,23 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const backingCardWidth = Math.min(Math.max(containerWidth - 80, 0), 290);
 
   useEffect(() => {
+    const backingIds = mechanics.remainingMaskIds.slice(1, 1 + backingCardCount);
+    backingIds.forEach((maskId, index) => {
+      const depth = backingCardCount - index;
+      const anim = getBackingCardAnim(maskId, depth);
+      Animated.timing(anim.depthY, { toValue: depth * DECK_BACKING_OFFSET, duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+      Animated.timing(anim.scale,  { toValue: 1 - depth * 0.01,            duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+      Animated.timing(anim.rotate, { toValue: depth * -1.3,                duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+    });
+    // Garbage-collect cards that have left the deck entirely (claimed,
+    // rejected, or judged wrong) so the map doesn't grow across a round.
+    const liveIds = new Set(mechanics.remainingMaskIds);
+    backingCardAnimsRef.forEach((_, maskId) => {
+      if (!liveIds.has(maskId)) backingCardAnimsRef.delete(maskId);
+    });
+  }, [mechanics.remainingMaskIds, backingCardCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (showBoardContent) mechanics.onBoardContentReady();
   }, [showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -879,8 +923,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     cardPopCountRef.current = 0;
     deckRedTint.setValue(0);
     deckSlamY.setValue(0);  // outer wrapper stays static
-    const CARD_DEAL = Easing.bezier(0.18, 1.04, 0.26, 1.00);
-    const CARD_SNAP = Easing.bezier(0.16, 0.95, 0.22, 1.00);
     const cardDelay = isBoss ? 1200 : 520;
 
     // Reset all card values
@@ -1310,26 +1352,27 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
               <View style={styles.deckWrap}>
-                {Array.from({ length: backingCardCount }, (_, index) => {
+                {mechanics.remainingMaskIds.slice(1, 1 + backingCardCount).map((maskId, index) => {
                   const depth = backingCardCount - index;
+                  const anim = getBackingCardAnim(maskId, depth);
+                  const rotateDeg = anim.rotate.interpolate({ inputRange: [-6, 0], outputRange: ['-6deg', '0deg'] });
                   return (
                     <Animated.View
-                      key={`deck-backing-${depth}`}
+                      key={maskId}
                       pointerEvents="none"
                       style={[
                         deckBackMaterial.base,
                         deckBackMaterial.rim,
                         styles.deckBackingCard,
                         {
-                          top: depth * DECK_BACKING_OFFSET,
                           width: backingCardWidth,
                           backgroundColor: DECK_BACKING_COLORS[depth - 1],
                           borderColor: DECK_BACKING_BORDER_COLORS[depth - 1],
                           opacity: deckBackingOp,
                           transform: [
-                            { translateY: deckBackingY },
-                            { scale: 1 - depth * 0.01 },
-                            { rotate: `${depth * -1.3}deg` },
+                            { translateY: Animated.add(deckBackingY, anim.depthY) },
+                            { scale: anim.scale },
+                            { rotate: rotateDeg },
                           ],
                         },
                       ]}
