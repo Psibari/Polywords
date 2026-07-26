@@ -18,6 +18,7 @@ import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
 import HeroBook from './ui/HeroBook';
 import { FoilWord } from './ui/FoilWord';
+import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
@@ -1150,6 +1151,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         containerWidthRef.current = w;
       }}
     >
+      <BookLight tension={tension} isBoss={isBoss} />
+
       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
       <View
         style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
