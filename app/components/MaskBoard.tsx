@@ -367,6 +367,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const bookSlideX            = useRef(new Animated.Value(SCREEN_WIDTH)).current; // book entrance/exit slide, native driver
   const boardShakeX           = useRef(new Animated.Value(0)).current; // boss entrance / haunted micro-shake, native driver
   const wordEntranceHapticRef = useRef<string | null>(null);
+  const bookOpenAnimationRef   = useRef<Animated.CompositeAnimation | null>(null);
 
   function triggerBoardShake() {
     boardShakeX.setValue(0);
@@ -438,9 +439,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   function triggerBookOpen() {
     bookOpenAnim.stopAnimation();
     bookIntakeGlowAnim.stopAnimation();
+    bookOpenAnimationRef.current?.stop();
     bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.setValue(0);
-    Animated.parallel([
+    bookOpenAnimationRef.current = Animated.parallel([
       Animated.sequence([
         Animated.timing(bookOpenAnim, {
           toValue: 1,
@@ -471,7 +473,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
+    ]);
+    bookOpenAnimationRef.current.start();
   }
 
   function triggerAbsorption(phrase: string) {
@@ -674,6 +677,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           // Round clear pulses the book's own glow harder and longer than
           // the 120ms per-tile flick (triggerBookOpen) — a full round
           // reads as more than one tile landing, using the same prop.
+          bookOpenAnimationRef.current?.stop();
           bookIntakeGlowAnim.stopAnimation();
           bookIntakeGlowAnim.setValue(0);
           Animated.sequence([
