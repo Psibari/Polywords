@@ -320,7 +320,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
           store.completeWord();
         }
       );
-    }, 800);
+    }, isBoss ? 600 : 800);
   }
 
   function triggerMasteredBrain() {
@@ -335,7 +335,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // outcome reveal land at the same moments they did before the split.
     setTimeout(() => {
       firePollyEvent(isBoss ? 'gateMasteredBoss' : 'gateMastered');
-    }, 2600);
+    }, isBoss ? 400 : 2600);
 
     setTimeout(() => {
       showWordOutcome(
@@ -351,7 +351,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
           store.completeWord();
         }
       );
-    }, isBoss ? 4300 : 3450);
+    }, isBoss ? 700 : 3450);
   }
 
   // ── swipe resolution ─────────────────────────────────────────────────

@@ -23,7 +23,7 @@ import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
-import { deckBackMaterial, cardMaterial } from '../ui/pwMaterials';
+import { deckBackMaterial, cardMaterial, libraryMaterial } from '../ui/pwMaterials';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
@@ -365,6 +365,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const wordLockPulse         = useRef(new Animated.Value(1)).current;
   const bookOpenAnim          = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
   const bookIntakeGlowAnim    = useRef(new Animated.Value(0)).current;  // useNativeDriver: true
+  const bookGhostDrainOpacity = useRef(new Animated.Value(0)).current; // Task 4 — boss haunt only
   const bookSlideX            = useRef(new Animated.Value(SCREEN_WIDTH)).current; // book entrance/exit slide, native driver
   const boardShakeX           = useRef(new Animated.Value(0)).current; // boss entrance / haunted micro-shake, native driver
   const wordEntranceHapticRef = useRef<string | null>(null);
@@ -703,6 +704,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         }).start();
       },
       onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
+        if (!isBoss) {
+        // ── Returning Haunt path — existing 12-phase sequence, unchanged ──
         if (!hauntOutcome) {
           spawnFloatAtSplit(masteryPoints, '#F5C842');
         }
@@ -826,9 +829,25 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           setMasterCracksVisible(false);
           setSystemStingerWord(null);
         }, bossOutcome ? 4300 : 3450);
+        return;
+        }
+        // ── Boss path — one decisive beat instead of the 12-phase sequence.
+        if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
+        playSfx('bookClose');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        bookOpenAnim.stopAnimation();
+        bookIntakeGlowAnim.stopAnimation();
+        Animated.parallel([
+          Animated.timing(bookOpenAnim, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+          Animated.sequence([
+            Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+            Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 360, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+          ]),
+        ]).start();
       },
       onHauntedSequence({ isHaunt: hauntFail, failedMaskId }) {
-        if (!hauntFail) return;
+        if (hauntFail) {
+        // ── Returning Haunt path — existing STILL HAUNTED sequence, unchanged ──
         void failedMaskId;
         setTimeout(() => {
           setStillHauntedVisible(true);
@@ -843,6 +862,21 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             setTimeout(() => setStillHauntedVisible(false), 240);
           }, 1400);
         }, 400);
+        return;
+        }
+        if (!isBoss) return;
+        // ── Boss path — mirror of the master beat: same duration, opposite
+        // signal. No flash, no stamp: colour drains, it does not travel.
+        playSfx('bookClose');
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        triggerBoardShake();
+        bookIntakeGlowAnim.stopAnimation();
+        bookGhostDrainOpacity.setValue(0);
+        Animated.parallel([
+          Animated.timing(bookOpenAnim, { toValue: 0, duration: 300, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 260, useNativeDriver: true }),
+          Animated.timing(bookGhostDrainOpacity, { toValue: 0.55, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]).start();
       },
       onOutcomeReveal(outcome) {
         playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
@@ -971,6 +1005,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     wordEntryTilt.setValue(0);
     bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.setValue(0);
+    bookGhostDrainOpacity.setValue(0);
     bookSlideX.setValue(SCREEN_WIDTH);
 
     if (isBoss) {
@@ -1312,6 +1347,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         >
           POLLY'S VAULT
         </Text>
+
+        {/* Boss haunt only — colour drains from the book, it does not travel */}
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: libraryMaterial.ghostTint, opacity: bookGhostDrainOpacity }]} />
         </Animated.View>
 
         {/* Absorbed phrase flash */}
