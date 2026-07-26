@@ -1356,6 +1356,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                   const depth = backingCardCount - index;
                   const anim = getBackingCardAnim(maskId, depth);
                   const rotateDeg = anim.rotate.interpolate({ inputRange: [-6, 0], outputRange: ['-6deg', '0deg'] });
+                  const mask = mechanics.visibleGridMasks.find(m => m.id === maskId);
                   return (
                     <Animated.View
                       key={maskId}
@@ -1378,6 +1379,18 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                       ]}
                     >
                       <View style={cardMaterial.topHighlight} pointerEvents="none" />
+                      {mask && (
+                        <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
+                          <Text
+                            style={styles.deckBackingPhrase}
+                            numberOfLines={2}
+                            adjustsFontSizeToFit={true}
+                            minimumFontScale={0.8}
+                          >
+                            {mask.phrase}
+                          </Text>
+                        </View>
+                      )}
                       <View style={styles.deckBackingLowerEdge} />
                     </Animated.View>
                   );
@@ -1934,6 +1947,23 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: 'rgba(245,200,66,0.5)',
     opacity: 0.85,
+  },
+  deckBackingPhrasePanel: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  deckBackingPhrase: {
+    fontSize: 18,
+    fontFamily: FONTS.tileCopy,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0,
+    color: PW.color.mutedWhite,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   deckActiveCardLayer: {
     position: 'relative',
