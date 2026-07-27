@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import {
   Modal,
   Pressable,
@@ -8,133 +8,28 @@ import {
   Text,
   View,
 } from 'react-native';
+import type { PollyPoseAnimationName } from '../animations/pollyPoseAnimations';
 import { FONTS } from '../constants/fonts';
-import {
-  DEFAULT_POLLY_MEMORY,
-  PollyMemory,
-  resolveHomePollyMoment,
-} from '../game/pollyMemory';
 import { PW } from '../ui/pwTheme';
-import {
-  PollyLabAction,
-  PollyLabCommand,
-  PollyLabPose,
-  PollyMotionStage,
-} from './PollyMotionStage';
+import { PollyPoseAnimation } from './PollyPoseAnimation';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
 };
 
-type MemoryPreset = {
-  id: 'first' | 'normal' | 'pollyWon' | 'playerMastered' | 'streak' | 'haunt';
+const PREVIEWS: Array<{
+  animation: PollyPoseAnimationName;
   label: string;
-  note: string;
-  memory: PollyMemory;
-};
-
-const MEMORY_PRESETS: MemoryPreset[] = [
-  {
-    id: 'first',
-    label: 'FIRST VISIT',
-    note: 'No Hunt or Daily history',
-    memory: { ...DEFAULT_POLLY_MEMORY },
-  },
-  {
-    id: 'normal',
-    label: 'NORMAL RETURN',
-    note: 'A familiar player, no active streak',
-    memory: {
-      ...DEFAULT_POLLY_MEMORY,
-      huntsRemembered: 3,
-      homeGreetingCursor: 2,
-      lastHuntOutcome: 'playerCompleted',
-      lastHuntScore: 6100,
-    },
-  },
-  {
-    id: 'pollyWon',
-    label: 'POLLY WON',
-    note: 'She remembers taking the last Hunt',
-    memory: {
-      ...DEFAULT_POLLY_MEMORY,
-      huntsRemembered: 4,
-      lastHuntOutcome: 'pollyWon',
-      pollyWinStreak: 2,
-      lastHuntScore: 2300,
-    },
-  },
-  {
-    id: 'playerMastered',
-    label: 'PLAYER MASTERED',
-    note: 'One boss word entered the Vault',
-    memory: {
-      ...DEFAULT_POLLY_MEMORY,
-      huntsRemembered: 4,
-      lastHuntOutcome: 'playerBeatPolly',
-      playerWinStreak: 1,
-      lastHuntScore: 14500,
-      lastBossWord: 'KERNEL',
-    },
-  },
-  {
-    id: 'streak',
-    label: 'PLAYER STREAK',
-    note: 'Polly has lost three Hunts in a row',
-    memory: {
-      ...DEFAULT_POLLY_MEMORY,
-      huntsRemembered: 8,
-      lastHuntOutcome: 'playerBeatPolly',
-      playerWinStreak: 3,
-      lastHuntScore: 18100,
-      lastBossWord: 'EXTRACT',
-    },
-  },
-  {
-    id: 'haunt',
-    label: 'ACTIVE HAUNT',
-    note: 'A failed boss is waiting to return',
-    memory: {
-      ...DEFAULT_POLLY_MEMORY,
-      huntsRemembered: 5,
-      homeGreetingCursor: 4,
-      lastHuntOutcome: 'playerCompleted',
-      lastHuntScore: 7600,
-      lastBossWord: 'WAKE',
-      lastHauntWord: 'WAKE',
-    },
-  },
+}> = [
+  { animation: 'idle', label: 'Idle' },
+  { animation: 'angry', label: 'Angry' },
+  { animation: 'point', label: 'Point' },
+  { animation: 'surprised', label: 'Surprised' },
+  { animation: 'flying', label: 'Flying' },
 ];
-
-const ACTIONS: Array<{ action: PollyLabAction; label: string; note: string }> = [
-  { action: 'flyIn', label: 'FLY IN', note: 'Enter and land once' },
-  { action: 'idle', label: 'IDLE', note: 'Living settled state' },
-  { action: 'pollyWins', label: 'POLLY WINS', note: 'Hop and laugh' },
-  { action: 'playerWins', label: 'PLAYER WINS', note: 'Shock, then sulk' },
-];
-
-function settledPoseForMemory(memory: PollyMemory): Extract<PollyLabPose, 'idle' | 'smug' | 'sulk'> {
-  if (memory.playerWinStreak > 0) return 'sulk';
-  if (memory.pollyWinStreak > 0) return 'smug';
-  return 'idle';
-}
 
 export function PollyAnimationDevViewer({ visible, onClose }: Props) {
-  const [activeMemoryId, setActiveMemoryId] = useState<MemoryPreset['id']>('first');
-  const [command, setCommand] = useState<PollyLabCommand>({ action: 'idle', nonce: 0 });
-
-  const activePreset = useMemo(
-    () => MEMORY_PRESETS.find(preset => preset.id === activeMemoryId) ?? MEMORY_PRESETS[0],
-    [activeMemoryId],
-  );
-  const moment = resolveHomePollyMoment(activePreset.memory);
-  const settledPose = settledPoseForMemory(activePreset.memory);
-
-  function trigger(action: PollyLabAction) {
-    setCommand(previous => ({ action, nonce: previous.nonce + 1 }));
-  }
-
   return (
     <Modal
       animationType="fade"
@@ -160,82 +55,26 @@ export function PollyAnimationDevViewer({ visible, onClose }: Props) {
         </View>
 
         <Text style={styles.note}>
-          One canonical branch stage. Raw pose dimensions are normalized, memory chooses
-          Polly&apos;s settled mood, and each performance can be replayed independently.
+          Five isolated whole-image loops. Motion follows the device Reduce Motion setting.
         </Text>
 
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.grid}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.sectionHeading}>
-            <Text style={styles.sectionTitle}>MEMORY STATE</Text>
-            <Text style={styles.sectionNote}>Preview the mood Polly carries back Home.</Text>
-          </View>
-          <ScrollView
-            contentContainerStyle={styles.presetRow}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {MEMORY_PRESETS.map(preset => {
-              const active = preset.id === activeMemoryId;
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  key={preset.id}
-                  onPress={() => {
-                    setActiveMemoryId(preset.id);
-                    trigger('idle');
-                  }}
-                  style={({ pressed }) => [
-                    styles.preset,
-                    active && styles.presetActive,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={[styles.presetLabel, active && styles.presetLabelActive]}>
-                    {preset.label}
-                  </Text>
-                  <Text style={styles.presetNote}>{preset.note}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          <PollyMotionStage
-            command={command}
-            moodLabel={activePreset.label}
-            settledPose={settledPose}
-            speech={moment.line}
-          />
-
-          <View style={styles.sectionHeading}>
-            <Text style={styles.sectionTitle}>PERFORMANCE</Text>
-            <Text style={styles.sectionNote}>
-              These controls do not alter saved progress or production gameplay.
-            </Text>
-          </View>
-          <View style={styles.actionGrid}>
-            {ACTIONS.map(item => (
-              <Pressable
-                accessibilityRole="button"
-                key={item.action}
-                onPress={() => trigger(item.action)}
-                style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
-              >
-                <Text style={styles.actionLabel}>{item.label}</Text>
-                <Text style={styles.actionNote}>{item.note}</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <View style={styles.scopeCard}>
-            <Text style={styles.scopeTitle}>FIRST PROOF SCOPE</Text>
-            <Text style={styles.scopeCopy}>
-              Hunt and Daily use the long branch. Home remains a separate composition.
-              Normal play stays restrained; terminal outcomes carry the large reactions.
-            </Text>
-          </View>
+          {PREVIEWS.map(({ animation, label }) => (
+            <View key={animation} style={styles.preview}>
+              <View style={styles.stage}>
+                <PollyPoseAnimation
+                  active={visible}
+                  accessibilityLabel={`Polly ${label.toLowerCase()} animation`}
+                  animation={animation}
+                  size={142}
+                />
+              </View>
+              <Text style={styles.previewLabel}>{label}</Text>
+            </View>
+          ))}
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -300,115 +139,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: PW.space.lg,
     paddingTop: PW.space.lg,
   },
-  content: {
+  grid: {
     padding: PW.space.lg,
     paddingBottom: PW.space.xxl,
-  },
-  sectionHeading: {
-    marginTop: PW.space.xl,
-    marginBottom: PW.space.md,
-  },
-  sectionTitle: {
-    color: PW.color.gold,
-    fontFamily: FONTS.hud,
-    fontSize: 16,
-    letterSpacing: 1.5,
-  },
-  sectionNote: {
-    color: PW.color.mutedWhite,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 14,
-    lineHeight: 19,
-    marginTop: 4,
-  },
-  presetRow: {
-    gap: PW.space.sm,
-    paddingBottom: PW.space.lg,
-  },
-  preset: {
-    width: 168,
-    minHeight: 86,
-    borderRadius: PW.radius.lg,
-    borderWidth: 1,
-    borderColor: PW.color.purpleSoft,
-    backgroundColor: PW.color.overlayHeavy,
-    padding: PW.space.md,
-  },
-  presetActive: {
-    borderColor: PW.color.cardRimStrong,
-    backgroundColor: PW.color.surfaceRaised,
-  },
-  presetLabel: {
-    color: PW.color.mutedWhite,
-    fontFamily: FONTS.hud,
-    fontSize: 14,
-    letterSpacing: 0.8,
-  },
-  presetLabelActive: {
-    color: PW.color.gold,
-  },
-  presetNote: {
-    color: PW.color.mutedWhite,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 12,
-    lineHeight: 16,
-    marginTop: 7,
-  },
-  actionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: PW.space.md,
   },
-  action: {
+  preview: {
     width: '47.5%',
-    minHeight: 82,
-    borderRadius: PW.radius.lg,
-    borderWidth: 1.5,
-    borderColor: PW.color.cardRim,
-    backgroundColor: PW.color.surfaceRaised,
-    paddingHorizontal: PW.space.md,
-    paddingVertical: PW.space.md,
-    justifyContent: 'center',
-  },
-  actionPressed: {
-    borderColor: PW.color.gold,
-    backgroundColor: PW.color.overlayMedium,
-    transform: [{ scale: 0.98 }],
-  },
-  actionLabel: {
-    color: PW.color.gold,
-    fontFamily: FONTS.hud,
-    fontSize: 15,
-    letterSpacing: 0.8,
-  },
-  actionNote: {
-    color: PW.color.softWhite,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 12,
-    lineHeight: 16,
-    marginTop: 5,
-  },
-  scopeCard: {
-    marginTop: PW.space.xl,
-    borderRadius: PW.radius.lg,
+    minHeight: 190,
+    borderRadius: PW.radius.xl,
     borderWidth: 1,
     borderColor: PW.color.purpleSoft,
     backgroundColor: PW.color.overlayHeavy,
-    padding: PW.space.lg,
+    overflow: 'hidden',
   },
-  scopeTitle: {
-    color: PW.color.lavender,
+  stage: {
+    minHeight: 150,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewLabel: {
+    color: PW.color.white,
     fontFamily: FONTS.hud,
-    fontSize: 14,
-    letterSpacing: 1,
-  },
-  scopeCopy: {
-    color: PW.color.mutedWhite,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 7,
+    fontSize: 15,
+    letterSpacing: 0.8,
+    textAlign: 'center',
+    paddingHorizontal: PW.space.sm,
+    paddingBottom: PW.space.md,
   },
   pressed: {
     opacity: 0.8,

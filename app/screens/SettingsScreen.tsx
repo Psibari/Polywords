@@ -228,7 +228,7 @@ export default function SettingsScreen({ navigation }: Props) {
               >
                 <View style={styles.rowTextWrap}>
                   <Text style={styles.rowLabel}>Polly Animation Viewer</Text>
-                  <Text style={styles.rowNote}>Interactive branch, performance, and memory proof</Text>
+                  <Text style={styles.rowNote}>Preview five isolated motion loops</Text>
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
