@@ -139,6 +139,7 @@ type GameStore = {
   runStartGhostWordIds: string[];
   startGame: () => void;
   loadGame: () => Promise<boolean>;
+  forfeitGame: () => Promise<void>;
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
   submitWrongSwipe: () => void;
@@ -265,6 +266,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {
       return false;
     }
+  },
+
+  // Deliberately leaving via PollyExitConfirm doesn't change game.status —
+  // the in-memory run just stops being navigated to. Without this, force-
+  // quitting before starting a fresh run would resume the very run the
+  // player just chose to forfeit, contradicting the whole point of asking.
+  forfeitGame: async () => {
+    try {
+      await AsyncStorage.removeItem(GAME_KEY);
+    } catch {}
   },
 
   submitSwipeUp: (maskId) => {
@@ -672,9 +683,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   resetProgressForDev: async () => {
-    // Mirrors GameScreen.tsx's INTRO_SEEN_KEY — kept as a literal here to
-    // avoid a cross-file export just for a dev tool.
+    // Mirrors GameScreen.tsx's INTRO_SEEN_KEY/BOSS_INTRO_SEEN_KEY — kept as
+    // literals here to avoid a cross-file export just for a dev tool.
     const INTRO_SEEN_KEY = 'polywords_intro_seen';
+    const BOSS_INTRO_SEEN_KEY = 'polywords_boss_intro_seen';
     const date = getTodayDateString();
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
     const resultKey  = DAILY_RESULT_KEY_PREFIX  + date;
@@ -685,6 +697,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         AsyncStorage.removeItem(POLLY_MEMORY_KEY),
         AsyncStorage.removeItem(GOLD_FEATHER_KEY),
         AsyncStorage.removeItem(INTRO_SEEN_KEY),
+        AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
+        AsyncStorage.removeItem(GAME_KEY),
         AsyncStorage.removeItem(attemptKey),
         AsyncStorage.removeItem(resultKey),
       ]);

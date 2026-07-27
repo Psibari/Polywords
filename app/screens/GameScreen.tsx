@@ -21,11 +21,13 @@ import { ShardVariant } from '../ui/pwEffects';
 import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
 import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
+import { BossIntroOverlay } from '../components/BossIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MAX_FEATHERS = 6;
 const INTRO_SEEN_KEY = 'polywords_intro_seen';
+const BOSS_INTRO_SEEN_KEY = 'polywords_boss_intro_seen';
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -66,7 +68,7 @@ function RedFlash({ flashKey }: { flashKey: number }) {
 
 // ─── TOP BAR ─────────────────────────────────────────────────
 
-function TopBar() {
+function TopBar({ navigation }: { navigation: any }) {
   const game  = useGameStore(s => s.game);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
@@ -99,7 +101,24 @@ function TopBar() {
   return (
     <View style={tb.root}>
       <View style={tb.statsRow}>
-        <Text style={tb.scoreVal}>{displayScore}</Text>
+        <View style={tb.leftGroup}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Pause the Hunt"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.goBack();
+            }}
+            style={({ pressed }) => [tb.pauseBtn, pressed && tb.pausePressed]}
+            hitSlop={8}
+          >
+            <View style={tb.pauseBars}>
+              <View style={tb.pauseBar} />
+              <View style={tb.pauseBar} />
+            </View>
+          </Pressable>
+          <Text style={tb.scoreVal}>{displayScore}</Text>
+        </View>
         <StreakDisplay />
         <View
           style={tb.featherRow}
@@ -370,6 +389,34 @@ const tb = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  leftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  pauseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  pausePressed: {
+    opacity: 0.7,
+  },
+  pauseBars: {
+    flexDirection: 'row',
+    gap: 3.5,
+  },
+  pauseBar: {
+    width: 3.5,
+    height: 13,
+    borderRadius: 1.5,
+    backgroundColor: PW.color.softWhite,
+  },
   scoreVal: {
     color: PW.color.gold,
     fontSize: 42,
@@ -528,6 +575,7 @@ const tb = StyleSheet.create({
 function GameDirector({ navigation }: { navigation: any }) {
   const game       = useGameStore(s => s.game);
   const startGame  = useGameStore(s => s.startGame);
+  const forfeitGame = useGameStore(s => s.forfeitGame);
   const consumeFeatherMilestone = useGameStore(s => s.consumeFeatherMilestone);
   const consumeMercy = useGameStore(s => s.consumeMercy);
   const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
@@ -560,8 +608,9 @@ function GameDirector({ navigation }: { navigation: any }) {
     setExitConfirmVisible(false);
     const action = pendingExitActionRef.current;
     pendingExitActionRef.current = null;
+    forfeitGame();
     if (action) navigation.dispatch(action);
-  }, [navigation]);
+  }, [navigation, forfeitGame]);
 
   // ── Feather float animation ────────────────────────────────
   const featherFloatY       = useRef(new Animated.Value(0)).current;
@@ -650,6 +699,21 @@ function GameDirector({ navigation }: { navigation: any }) {
     setIntroSeen(true);
     setIntroVisitPending(true);
     AsyncStorage.setItem(INTRO_SEEN_KEY, 'true').catch(() => {});
+  }, []);
+
+  // ── First-boss-only warning overlay ─────────────────────────────
+  // Plays over the existing boss entrance rather than gating it — the
+  // entrance's haptics/shake/Polly visit fire on their own timers below,
+  // unaffected by whether this has been seen before.
+  const [bossIntroSeen, setBossIntroSeen] = useState<boolean | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem(BOSS_INTRO_SEEN_KEY)
+      .then(v => setBossIntroSeen(v === 'true'))
+      .catch(() => setBossIntroSeen(true));
+  }, []);
+  const handleBossIntroDismiss = useCallback(() => {
+    setBossIntroSeen(true);
+    AsyncStorage.setItem(BOSS_INTRO_SEEN_KEY, 'true').catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -903,7 +967,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
-      {!isDone && <TopBar />}
+      {!isDone && <TopBar navigation={navigation} />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : (
@@ -975,6 +1039,10 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       {introSeen === false && !isDone && (
         <HuntIntroOverlay onDismiss={handleIntroDismiss} />
+      )}
+
+      {introSeen === true && bossIntroSeen === false && isBossRound && (
+        <BossIntroOverlay onDismiss={handleBossIntroDismiss} />
       )}
 
       {exitConfirmVisible && (

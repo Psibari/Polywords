@@ -37,18 +37,34 @@ export default function App() {
 
   if (!fontsLoaded || resumedGame === null) return null;
 
+  // Resuming lands on Game, but it must never be the stack's root screen —
+  // a root screen has nowhere to go "back" to, so the edge-swipe-back
+  // gesture simply doesn't exist there (and Android hardware back at the
+  // root exits the app outright, bypassing the exit-confirm entirely).
+  // Seeding Home underneath keeps a real previous screen in the stack so
+  // the gesture — and PollyExitConfirm intercepting it — both still work.
+  const initialState = resumedGame
+    ? { index: 1, routes: [{ name: 'Home' }, { name: 'Game' }] }
+    : undefined;
+
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <NavigationContainer initialState={initialState}>
         <Stack.Navigator
-          initialRouteName={resumedGame ? 'Game' : 'Home'}
           screenOptions={{
             headerShown: false,
             animation: 'fade',
           }}
         >
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Game" component={GameScreen} />
+          {/* Interactive swipe-back disabled: it's a native-driven gesture that
+              can complete before the beforeRemove exit-guard in GameScreen gets
+              a chance to intervene, desyncing JS from the native screen stack
+              (react-native-screens' "removed natively but didn't get removed
+              from JS side" error). Leaving now only happens through the pause
+              button (a JS-dispatched navigation.goBack()), which the guard
+              catches reliably every time. */}
+          <Stack.Screen name="Game" component={GameScreen} options={{ gestureEnabled: false }} />
           <Stack.Screen name="Vault" component={VaultScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Daily" component={DailyChallengeScreen} />

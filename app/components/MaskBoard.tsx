@@ -618,11 +618,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
 
   const showBoardContent = (!isBoss || bossReady) && tilesReady && (!isHaunt || hauntReady);
 
-  // Swipe cues fade permanently after round 3
+  // Swipe cues quiet down after round 3, but never disappear for good — a
+  // full fade-to-zero re-imposed the grammar-recall tax on every session
+  // after the first few rounds, every run.
   useEffect(() => {
     if (store.game.stepIndex >= 3) {
       Animated.timing(cueOpacityAnim, {
-        toValue: 0,
+        toValue: 0.38,
         duration: 400,
         useNativeDriver: true,
       }).start();
@@ -1969,27 +1971,27 @@ const styles = StyleSheet.create({
   swipeCueText: {
     position: 'absolute',
     fontFamily: FONTS.label,
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: '800',
-    letterSpacing: 0.9,
+    letterSpacing: 1,
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.42)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
+    textShadowColor: 'rgba(0,0,0,0.72)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   swipeUpCue: {
-    top: -32,
+    top: -34,
     left: 0,
     right: 0,
     color: '#F5C842',
-    opacity: 0.72,
+    opacity: 0.92,
   },
   swipeRightCue: {
     top: TILE_H + 16,
     right: 8,
-    width: 190,
-    color: 'rgba(155,45,107,0.88)',
-    opacity: 0.74,
+    width: 210,
+    color: 'rgba(185,138,222,0.96)',
+    opacity: 0.92,
     textAlign: 'right',
   },
   tileStack: {

@@ -27,7 +27,10 @@ function chainTierFromMultiplier(mult: number): ChainTier {
 }
 
 function eventKicker(step: WordStep): string | null {
-  if (step.eventType === 'bossWord')  return "POLLY'S WORD · 2× SCORE";
+  // Reward-only framing let the boss round's stakes go unsignaled on every
+  // repeat visit, not just a player's first — this always-visible badge is
+  // the persistent half of that fix; BossIntroOverlay is the one-time half.
+  if (step.eventType === 'bossWord')  return "POLLY'S WORD · 2× OR HAUNTED";
   if (step.eventType === 'slangDrop') return 'SLANG DROP';
   return null;
 }
