@@ -25,10 +25,9 @@ import { BossIntroOverlay } from '../components/BossIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
 
 const MAX_FEATHERS = 6;
-const INTRO_SEEN_KEY = 'polywords_intro_seen';
-const BOSS_INTRO_SEEN_KEY = 'polywords_boss_intro_seen';
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;

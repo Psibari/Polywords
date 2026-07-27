@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
+import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
+import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { getRankTier } from '../game/ranks';
 import { useGameStore } from '../store/useGameStore';
 import { chamberMaterial } from '../ui/pwMaterials';
 import { PW } from '../ui/pwTheme';
+import appConfig from '../../app.json';
+
+const APP_VERSION = appConfig.expo.version;
+
+const PRIVACY_TEXT =
+  "POLYWORDS stores your game progress locally on this device only — " +
+  "mastered words, Hunt stats, Daily Challenge history, and Polly's memory " +
+  "of your runs. None of it leaves your device, is sent to a server, or is " +
+  "shared or sold to anyone.\n\n" +
+  "There are no accounts and no sign-in. If you delete the app, or use " +
+  "Reset Progress, this information is gone for good.\n\n" +
+  "We haven't added any analytics or tracking to this app.";
+
+const CREDITS_TEXT =
+  "The credits list is still being put together — check back in a future update.";
 
 const CHAMBER_ASPECT_RATIO = 941 / 1672;
 const chamberImage = require('../../assets/images/settings/chamber-dark-mobile.png');
@@ -85,9 +103,18 @@ export default function SettingsScreen({ navigation }: Props) {
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
   const hapticsEnabled = useGameStore(s => s.hapticsEnabled);
+  const reduceMotionOverride = useGameStore(s => s.reduceMotionOverride);
+  const playerName = useGameStore(s => s.playerName);
   const setSoundEnabled = useGameStore(s => s.setSoundEnabled);
   const setHapticsEnabled = useGameStore(s => s.setHapticsEnabled);
+  const setReduceMotionOverride = useGameStore(s => s.setReduceMotionOverride);
+  const setPlayerName = useGameStore(s => s.setPlayerName);
   const resetProgressForDev = useGameStore(s => s.resetProgressForDev);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(playerName);
+  const [showCredits, setShowCredits] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   const handleResetProgress = () => {
     Alert.alert(
@@ -98,6 +125,24 @@ export default function SettingsScreen({ navigation }: Props) {
         { text: 'Reset', style: 'destructive', onPress: () => { resetProgressForDev(); } },
       ],
     );
+  };
+
+  const handleEditName = () => {
+    if (isEditingName) {
+      setPlayerName(nameDraft);
+      setIsEditingName(false);
+    } else {
+      setNameDraft(playerName);
+      setIsEditingName(true);
+    }
+  };
+
+  const handleTutorialReplay = () => {
+    Promise.all([
+      AsyncStorage.removeItem(INTRO_SEEN_KEY),
+      AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
+    ]).catch(() => {});
+    Alert.alert('Tutorial Replay', "You'll see it again next time you start a Hunt.");
   };
 
   const rank = getRankTier(progress.personalBest);
@@ -159,7 +204,21 @@ export default function SettingsScreen({ navigation }: Props) {
             </View>
             <View style={styles.profileTextWrap}>
               <Text style={styles.profileEyebrow}>PROFILE</Text>
-              <Text style={styles.playerName}>Word Hunter</Text>
+              {isEditingName ? (
+                <TextInput
+                  value={nameDraft}
+                  onChangeText={setNameDraft}
+                  style={styles.nameInput}
+                  autoFocus
+                  maxLength={20}
+                  placeholder="Word Hunter"
+                  placeholderTextColor={PW.color.faintWhite}
+                  returnKeyType="done"
+                  onSubmitEditing={handleEditName}
+                />
+              ) : (
+                <Text style={styles.playerName}>{playerName}</Text>
+              )}
               <Text style={styles.profileLevel}>{rank.description}</Text>
             </View>
           </View>
@@ -169,11 +228,12 @@ export default function SettingsScreen({ navigation }: Props) {
             </Text>
           </View>
           <Pressable
-            onPress={() => Alert.alert('Edit Profile', 'Not built yet — coming in a future update.')}
+            onPress={handleEditName}
             style={({ pressed }) => [styles.disabledButton, pressed && styles.pressed]}
           >
-            <Text style={styles.disabledButtonText}>Edit Profile</Text>
-            <Text style={styles.disabledButtonNote}>Coming soon</Text>
+            <Text style={styles.disabledButtonText}>
+              {isEditingName ? 'Save Name' : 'Edit Name'}
+            </Text>
           </Pressable>
         </View>
 
@@ -191,8 +251,18 @@ export default function SettingsScreen({ navigation }: Props) {
               enabled={hapticsEnabled}
               onPress={() => setHapticsEnabled(!hapticsEnabled)}
             />
-            <PlaceholderRow label="Tutorial Replay" />
-            <PlaceholderRow label="Accessibility" />
+            <Pressable onPress={handleTutorialReplay} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Tutorial Replay</Text>
+                <Text style={styles.rowNote}>See the swipe-grammar intro again</Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Pressable>
+            <ToggleRow
+              label="Reduce Motion"
+              enabled={reduceMotionOverride}
+              onPress={() => setReduceMotionOverride(!reduceMotionOverride)}
+            />
           </View>
         </View>
 
@@ -200,7 +270,6 @@ export default function SettingsScreen({ navigation }: Props) {
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
             <View pointerEvents="none" style={styles.plaqueHighlight} />
-            <PlaceholderRow label="Profile" note="Lives in Settings for MVP" accent="gold" />
             <PlaceholderRow label="Cloud Save" />
             <PlaceholderRow label="Sign In / Account Sync" />
           </View>
@@ -210,9 +279,24 @@ export default function SettingsScreen({ navigation }: Props) {
           <Text style={styles.sectionTitle}>About</Text>
           <View style={styles.card}>
             <View pointerEvents="none" style={styles.plaqueHighlight} />
-            <PlaceholderRow label="Credits" />
-            <PlaceholderRow label="Privacy" />
-            <PlaceholderRow label="Version" note="App shell preview" />
+            <Pressable onPress={() => setShowCredits(true)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Credits</Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Pressable>
+            <Pressable onPress={() => setShowPrivacy(true)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Privacy</Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Pressable>
+            <View style={[styles.row, styles.placeholderRow]}>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Version</Text>
+                <Text style={styles.rowNote}>{APP_VERSION}</Text>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -236,22 +320,24 @@ export default function SettingsScreen({ navigation }: Props) {
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Danger / Reset</Text>
-          <View style={[styles.card, styles.warningCard]}>
-            <View pointerEvents="none" style={styles.plaqueHighlight} />
-            <Pressable
-              onPress={handleResetProgress}
-              style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
-            >
-              <View style={[styles.rowAccent, styles.rowAccentRose]} />
-              <View style={styles.rowTextWrap}>
-                <Text style={styles.rowLabel}>Reset Progress</Text>
-                <Text style={styles.rowNote}>Clears Hunt, Daily, and Polly memory — can't be undone</Text>
-              </View>
-            </Pressable>
+        {__DEV__ && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Danger / Reset</Text>
+            <View style={[styles.card, styles.warningCard]}>
+              <View pointerEvents="none" style={styles.plaqueHighlight} />
+              <Pressable
+                onPress={handleResetProgress}
+                style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
+              >
+                <View style={[styles.rowAccent, styles.rowAccentRose]} />
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Reset Progress</Text>
+                  <Text style={styles.rowNote}>Clears Hunt, Daily, and Polly memory — can't be undone</Text>
+                </View>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
       {__DEV__ && (
         <PollyAnimationDevViewer
@@ -259,6 +345,18 @@ export default function SettingsScreen({ navigation }: Props) {
           visible={showPollyAnimations}
         />
       )}
+      <InfoModal
+        visible={showCredits}
+        title="CREDITS"
+        body={CREDITS_TEXT}
+        onClose={() => setShowCredits(false)}
+      />
+      <InfoModal
+        visible={showPrivacy}
+        title="PRIVACY"
+        body={PRIVACY_TEXT}
+        onClose={() => setShowPrivacy(false)}
+      />
       <BottomNav active="Settings" navigation={navigation} />
     </SafeAreaView>
   );
@@ -393,6 +491,15 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.hud,
     fontSize: 20,
     letterSpacing: 1,
+  },
+  nameInput: {
+    color: PW.color.white,
+    fontFamily: FONTS.hud,
+    fontSize: 20,
+    letterSpacing: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: PW.color.gold,
+    paddingVertical: 2,
   },
   profileLevel: {
     color: PW.color.mutedWhite,

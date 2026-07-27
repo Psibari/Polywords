@@ -46,6 +46,7 @@ import {
   rememberHunt,
   rememberPollyLine,
 } from '../game/pollyMemory';
+import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
 
 // Onboarding taper: a hard cliff from full protection to zero protection at
 // run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
@@ -68,12 +69,32 @@ const POLLY_MEMORY_KEY = 'polywords_polly_memory_v1';
 type PlayerSettings = {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
+  // Adds to (never removes) the system Reduce Motion setting — see
+  // useReducedMotionPreference. A player can ask the app for less motion
+  // than their phone does; the app should never force more.
+  reduceMotionOverride: boolean;
+  playerName: string;
 };
 
 const DEFAULT_SETTINGS: PlayerSettings = {
   soundEnabled: true,
   hapticsEnabled: true,
+  reduceMotionOverride: false,
+  playerName: 'Word Hunter',
 };
+
+// Single write path for the settings blob — every setter below reads
+// current state and writes all four fields together, so no setter can
+// accidentally clobber a sibling field it doesn't know about.
+function persistSettings(state: PlayerSettings): void {
+  const next: PlayerSettings = {
+    soundEnabled: state.soundEnabled,
+    hapticsEnabled: state.hapticsEnabled,
+    reduceMotionOverride: state.reduceMotionOverride,
+    playerName: state.playerName,
+  };
+  AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
+}
 
 type GoldFeatherRecord = {
   available: boolean;
@@ -203,8 +224,12 @@ type GameStore = {
   submitDailyCorrectSwipe: () => void;
   soundEnabled: boolean;
   hapticsEnabled: boolean;
+  reduceMotionOverride: boolean;
+  playerName: string;
   setSoundEnabled: (value: boolean) => void;
   setHapticsEnabled: (value: boolean) => void;
+  setReduceMotionOverride: (value: boolean) => void;
+  setPlayerName: (name: string) => void;
   loadSettings: () => Promise<void>;
 };
 
@@ -227,6 +252,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   goldFeatherExpiresAt: null,
   soundEnabled: DEFAULT_SETTINGS.soundEnabled,
   hapticsEnabled: DEFAULT_SETTINGS.hapticsEnabled,
+  reduceMotionOverride: DEFAULT_SETTINGS.reduceMotionOverride,
+  playerName: DEFAULT_SETTINGS.playerName,
 
   startGame: () => {
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
@@ -520,14 +547,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSoundEnabled: (value: boolean) => {
     set({ soundEnabled: value });
     setMusicEnabled(value);
-    const next: PlayerSettings = { soundEnabled: value, hapticsEnabled: get().hapticsEnabled };
-    AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
+    persistSettings(get());
   },
 
   setHapticsEnabled: (value: boolean) => {
     set({ hapticsEnabled: value });
-    const next: PlayerSettings = { soundEnabled: get().soundEnabled, hapticsEnabled: value };
-    AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
+    persistSettings(get());
+  },
+
+  setReduceMotionOverride: (value: boolean) => {
+    set({ reduceMotionOverride: value });
+    persistSettings(get());
+  },
+
+  setPlayerName: (name: string) => {
+    const trimmed = name.trim();
+    set({ playerName: trimmed.length > 0 ? trimmed : DEFAULT_SETTINGS.playerName });
+    persistSettings(get());
   },
 
   loadSettings: async () => {
@@ -692,10 +728,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   resetProgressForDev: async () => {
-    // Mirrors GameScreen.tsx's INTRO_SEEN_KEY/BOSS_INTRO_SEEN_KEY — kept as
-    // literals here to avoid a cross-file export just for a dev tool.
-    const INTRO_SEEN_KEY = 'polywords_intro_seen';
-    const BOSS_INTRO_SEEN_KEY = 'polywords_boss_intro_seen';
     const date = getTodayDateString();
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
     const resultKey  = DAILY_RESULT_KEY_PREFIX  + date;

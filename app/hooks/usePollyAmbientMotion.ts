@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing } from 'react-native';
+import { useGameStore } from '../store/useGameStore';
 
 export type PollyAmbientProfile = 'home' | 'daily' | 'hunt' | 'results';
 
@@ -10,17 +11,22 @@ const PROFILE = {
   results: { rise: -2, drift: 1, riseMs: 2800, settleMs: 3300, driftMs: 4200 },
 } as const;
 
+// System Reduce Motion OR'd with the in-app override (Settings ▸
+// Accessibility) — a player can ask the app for less motion than their
+// phone's system setting does, but the app must never force more than the
+// system already asked for. null while the system read is still pending.
 export function useReducedMotionPreference(): boolean | null {
-  const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
+  const [systemReduceMotion, setSystemReduceMotion] = useState<boolean | null>(null);
+  const appOverride = useGameStore(s => s.reduceMotionOverride);
 
   useEffect(() => {
     let mounted = true;
     AccessibilityInfo.isReduceMotionEnabled().then(value => {
-      if (mounted) setReduceMotion(value);
+      if (mounted) setSystemReduceMotion(value);
     });
     const subscription = AccessibilityInfo.addEventListener(
       'reduceMotionChanged',
-      setReduceMotion,
+      setSystemReduceMotion,
     );
     return () => {
       mounted = false;
@@ -28,7 +34,8 @@ export function useReducedMotionPreference(): boolean | null {
     };
   }, []);
 
-  return reduceMotion;
+  if (systemReduceMotion === null) return null;
+  return systemReduceMotion || appOverride;
 }
 
 export function usePollyAmbientMotion(
