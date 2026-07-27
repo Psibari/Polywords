@@ -134,6 +134,12 @@ function toQuarantinedDailyState(session: DailySession): DailyChallengeState {
 
 type GameStore = {
   game: ReturnType<typeof createGame>;
+  // True only when `game` was hydrated from a real saved run via loadGame()
+  // — the store's placeholder default game (set at module load, before
+  // anyone has ever played) also has status 'playing', so that field alone
+  // can't tell "never played" apart from "genuinely mid-run." Home reads
+  // this to decide between RESUME HUNT and ENTER THE HUNT.
+  hasResumableGame: boolean;
   ghosts: GhostMeaning[];
   ghostRevenge: GhostRevenge;
   runStartGhostWordIds: string[];
@@ -204,6 +210,7 @@ type GameStore = {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createGame(generateHunt({})),
+  hasResumableGame: false,
   ghosts: [],
   ghostRevenge: null,
   runStartGhostWordIds: [],
@@ -247,10 +254,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
-  // Resumes an in-progress Hunt after the app was backgrounded/killed
-  // mid-run (see the debounced save subscription below). Returns whether a
-  // playing run was actually resumed, so App.tsx knows which screen to land
-  // on. A saved snapshot that isn't 'playing' is stale (the run finished
+  // Hydrates a saved run after the app was backgrounded/killed mid-Hunt
+  // (see the debounced save subscription below), but never navigates on
+  // its own — Home always shows first; it just switches its button to
+  // RESUME HUNT via hasResumableGame when this finds something real.
+  // A saved snapshot that isn't 'playing' is stale (the run finished
   // normally last time) and gets discarded rather than resumed.
   loadGame: async () => {
     try {
@@ -261,7 +269,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         await AsyncStorage.removeItem(GAME_KEY);
         return false;
       }
-      set({ game: saved });
+      set({ game: saved, hasResumableGame: true });
       return true;
     } catch {
       return false;
@@ -273,6 +281,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // quitting before starting a fresh run would resume the very run the
   // player just chose to forfeit, contradicting the whole point of asking.
   forfeitGame: async () => {
+    set({ hasResumableGame: false });
     try {
       await AsyncStorage.removeItem(GAME_KEY);
     } catch {}
@@ -716,6 +725,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       streakMilestoneReward: null,
       goldFeatherAvailable: false,
       goldFeatherExpiresAt: null,
+      hasResumableGame: false,
     });
   },
 
@@ -809,6 +819,7 @@ useGameStore.subscribe((state, prevState) => {
 
   if (state.game.status !== 'playing') {
     AsyncStorage.removeItem(GAME_KEY).catch(() => {});
+    if (state.hasResumableGame) useGameStore.setState({ hasResumableGame: false });
     return;
   }
   saveGameTimer = setTimeout(() => {

@@ -23,10 +23,12 @@ const tabs: Array<{ key: BottomNavRoute | 'Play'; label: string }> = [
 
 export default function BottomNav({ active, navigation }: BottomNavProps) {
   const startGame = useGameStore(s => s.startGame);
+  const hasResumableGame = useGameStore(s => s.hasResumableGame);
 
   function handlePress(route: BottomNavRoute | 'Play') {
     if (route === 'Play') {
-      startGame();
+      // Same rule as Home's hunt button: never overwrite a resumable run.
+      if (!hasResumableGame) startGame();
       navigation.navigate('Game');
       return;
     }

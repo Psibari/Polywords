@@ -298,7 +298,11 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 
 function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
   void isBossStage; // inert this step — no visual or timing effect yet
-  const store   = useGameStore();
+  // Only stepIndex is read here, so select it directly rather than the
+  // whole store — this is the per-word presenter, remounted on every swipe
+  // resolution, so a whole-store subscription re-rendered it on completely
+  // unrelated state (daily session, settings, pollyMemory...).
+  const gameStepIndex = useGameStore(s => s.game.stepIndex);
   const { pulseAnim, tension } = useHeartbeat();
   const tileBreatheAmount = useRef(new Animated.Value(0)).current;
   const isBoss  = step.eventType === 'bossWord';
@@ -622,14 +626,14 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   // full fade-to-zero re-imposed the grammar-recall tax on every session
   // after the first few rounds, every run.
   useEffect(() => {
-    if (store.game.stepIndex >= 3) {
+    if (gameStepIndex >= 3) {
       Animated.timing(cueOpacityAnim, {
         toValue: 0.38,
         duration: 400,
         useNativeDriver: true,
       }).start();
     }
-  }, [store.game.stepIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [gameStepIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     Animated.timing(tileBreatheAmount, {
@@ -1037,7 +1041,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           Animated.timing(deckActiveRot,{ toValue: 0, duration: 160, useNativeDriver: true }),
           Animated.timing(deckActiveOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
         ]).start(() => {
-          const deckEntranceKey = `${store.game.stepIndex}:${step.word}`;
+          const deckEntranceKey = `${gameStepIndex}:${step.word}`;
           if (deckEntranceHapticRef.current !== deckEntranceKey) {
             deckEntranceHapticRef.current = deckEntranceKey;
             Haptics.selectionAsync();
@@ -1120,7 +1124,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     wordLockPulse.setValue(1);
 
     if (isHaunt) {
-      const hauntEntranceKey = `${store.game.stepIndex}:${step.word}`;
+      const hauntEntranceKey = `${gameStepIndex}:${step.word}`;
       if (hauntEntranceStingKeyRef.current !== hauntEntranceKey) {
         hauntEntranceStingKeyRef.current = hauntEntranceKey;
         playSfx('detectiveSting');

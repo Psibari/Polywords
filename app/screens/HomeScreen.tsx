@@ -29,6 +29,7 @@ type Props = {
 
 export default function HomeScreen({ navigation }: Props) {
   const startGame = useGameStore(s => s.startGame);
+  const hasResumableGame = useGameStore(s => s.hasResumableGame);
   const progress = useGameStore(s => s.progress);
   const pollyMemoryLoaded = useGameStore(s => s.pollyMemoryLoaded);
   const streak = getDisplayStreak(progress, getTodayDateString());
@@ -47,7 +48,10 @@ export default function HomeScreen({ navigation }: Props) {
   const dareScale = darePulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
 
   function handleHunt() {
-    startGame();
+    // A resumable run is already hydrated into the store by App.tsx's boot
+    // check — starting fresh here would overwrite the very run this button
+    // is offering to resume.
+    if (!hasResumableGame) startGame();
     navigation.navigate('Game');
   }
 
@@ -115,7 +119,7 @@ export default function HomeScreen({ navigation }: Props) {
 
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Enter the Hunt"
+                  accessibilityLabel={hasResumableGame ? 'Resume Hunt' : 'Enter the Hunt'}
                   onPress={handleHunt}
                   style={({ pressed }) => [styles.huntPlate, pressed && styles.pressed]}
                 >
@@ -124,7 +128,9 @@ export default function HomeScreen({ navigation }: Props) {
                       <Text style={styles.startHereBadgeText}>START HERE</Text>
                     </View>
                   )}
-                  <Text style={styles.dareLabel}>ENTER THE HUNT</Text>
+                  <Text style={styles.dareLabel}>
+                    {hasResumableGame ? 'RESUME HUNT' : 'ENTER THE HUNT'}
+                  </Text>
                 </Pressable>
 
                 <View style={styles.coverPlateRow}>

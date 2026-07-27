@@ -76,17 +76,30 @@ export type UseBoardMechanicsParams = {
 // all state below is fresh on every word via plain useState/useRef
 // initializers — there is no reset() to call.
 export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMechanicsParams) {
-  const store = useGameStore();
+  // Scoped selectors, not a bare useGameStore() — this hook drives the
+  // hottest render path in the app (every swipe), so a whole-store
+  // subscription here re-rendered on completely unrelated state (daily
+  // session, settings, pollyMemory...). Action functions are stable
+  // references from the store, so selecting them individually never
+  // triggers a re-render on their own account.
+  const game = useGameStore(s => s.game);
+  const ghosts = useGameStore(s => s.ghosts);
+  const runStartGhostWordIds = useGameStore(s => s.runStartGhostWordIds);
+  const beginMysteryGauntlet = useGameStore(s => s.beginMysteryGauntlet);
+  const completeWord = useGameStore(s => s.completeWord);
+  const submitSwipeUp = useGameStore(s => s.submitSwipeUp);
+  const submitSwipeDown = useGameStore(s => s.submitSwipeDown);
+  const resolveMystery = useGameStore(s => s.resolveMystery);
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
   const isFinalGateStep = isBoss || isHaunt;
   const kicker = eventKicker(step);
 
   // Stale-closure-safe refs
-  const streakRef = useRef(store.game.streak);
-  streakRef.current = store.game.streak;
-  const livesRef = useRef(store.game.lives);
-  livesRef.current = store.game.lives;
+  const streakRef = useRef(game.streak);
+  streakRef.current = game.streak;
+  const livesRef = useRef(game.lives);
+  livesRef.current = game.lives;
 
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() =>
     buildInitialTileStates(step.masks));
@@ -99,11 +112,11 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const gapLockedRef                 = useRef(false);
   const tileIndexInWordRef           = useRef(0);
 
-  const ghost = store.runStartGhostWordIds.includes(step.word)
-    ? store.ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
+  const ghost = runStartGhostWordIds.includes(step.word)
+    ? ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
     : null;
 
-  const visibleGridMasks = (store.game.shuffledMasks[store.game.stepIndex] ?? step.masks)
+  const visibleGridMasks = (game.shuffledMasks[game.stepIndex] ?? step.masks)
     .filter(m => !m.isHidden);
 
   const [remainingMaskIds, setRemainingMaskIds] = useState<string[]>(() =>
@@ -195,25 +208,25 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
   // ── Polly reactive triggers (pure brain — no Animated involved) ────────
   useEffect(() => {
-    if (store.game.lives === 1) firePollyEvent('oneHeartLeft');
-  }, [store.game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (game.lives === 1) firePollyEvent('oneHeartLeft');
+  }, [game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (store.game.lives === 0 && !completedRef.current) {
+    if (game.lives === 0 && !completedRef.current) {
       firePollyEvent('oneWrongMove');
       perform.onLivesDepleted();
     }
-  }, [store.game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (store.game.status === 'gameOver') firePollyEvent('gameOver');
-  }, [store.game.status]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (game.status === 'gameOver') firePollyEvent('gameOver');
+  }, [game.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (store.game.streak > 0 && store.game.streak % 10 === 0) {
+    if (game.streak > 0 && game.streak % 10 === 0) {
       firePollyEvent('streakX10');
     }
-  }, [store.game.streak]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [game.streak]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── gate sequence ────────────────────────────────────────────────────
 
@@ -243,8 +256,8 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     });
 
     // Chain multiplier does not move across the gauntlet, so capture once.
-    preMysteryChainMultiplierRef.current = store.game.chainMultiplier;
-    store.beginMysteryGauntlet(tiles.length);
+    preMysteryChainMultiplierRef.current = game.chainMultiplier;
+    beginMysteryGauntlet(tiles.length);
 
     setGatePhase('tiles');
     setGauntletTiles(tiles);
@@ -320,7 +333,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
         'haunted',
         { detail: buildHauntedDetail(failedMaskId) },
         () => {
-          store.completeWord();
+          completeWord();
         }
       );
     }, isBoss ? 600 : 800);
@@ -351,7 +364,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
               : undefined,
         },
         () => {
-          store.completeWord();
+          completeWord();
         }
       );
     }, isBoss ? 700 : 3450);
@@ -403,10 +416,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
-      const chainMult = chainMultiplierForStreak(store.game.streak + 1);
+      const chainMult = chainMultiplierForStreak(game.streak + 1);
       const tier = chainTierFromMultiplier(chainMult);
       const upPoints = realMaskPoints({ isRare: mask.isRare, isBoss, chainMultiplier: chainMult });
-      store.submitSwipeUp(maskId);
+      submitSwipeUp(maskId);
 
       const nextFound = realMasks.filter(m =>
         tileStates.get(m.id) === 'correct' || m.id === maskId
@@ -416,20 +429,20 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
       firePollyEvent('correct');
-      const gapUp = computeGapMs(store.game.combo, 'up', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const gapUp = computeGapMs(game.combo, 'up', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapUp);
     } else {
       // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
-      const brokeRealChain = store.game.chainMultiplier >= 1.5;
+      const brokeRealChain = game.chainMultiplier >= 1.5;
       firePollyEvent('wrong');
       perform.onWrongSwipe({ mask, brokeRealChain });
-      store.submitSwipeUp(maskId);
+      submitSwipeUp(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrong = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const gapWrong = computeGapMs(game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapWrong);
@@ -442,26 +455,26 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     resetHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
-      const chainMultTrap = chainMultiplierForStreak(store.game.streak + 1);
+      const chainMultTrap = chainMultiplierForStreak(game.streak + 1);
       const trapTier = chainTierFromMultiplier(chainMultTrap);
       const trapPoints = trapMaskPoints({ isBoss, chainMultiplier: chainMultTrap });
-      store.submitSwipeDown(maskId);
+      submitSwipeDown(maskId);
       perform.onTrapRejected({ mask, tier: trapTier, points: trapPoints });
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
-      const gapRight = computeGapMs(store.game.combo, 'right', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const gapRight = computeGapMs(game.combo, 'right', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapRight);
     } else {
       // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
-      const brokeRealChain = store.game.chainMultiplier >= 1.5;
+      const brokeRealChain = game.chainMultiplier >= 1.5;
       firePollyEvent('wrong');
       perform.onWrongSwipe({ mask, brokeRealChain });
-      store.submitSwipeDown(maskId);
+      submitSwipeDown(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrongR = computeGapMs(store.game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const gapWrongR = computeGapMs(game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
       setTimeout(() => { gapLockedRef.current = false; }, gapWrongR);
@@ -481,7 +494,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     const failedPair = correct
       ? undefined
       : { real: gauntletPairs[tile.pairIndex].real, trap: gauntletPairs[tile.pairIndex].trap };
-    store.resolveMystery(correct, visiblePerfectRef.current, failedPair);
+    resolveMystery(correct, visiblePerfectRef.current, failedPair);
 
     if (!correct) {
       wrongSwipeOccurred.current = true;
@@ -489,7 +502,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       // shared function for both) — routed through onWrongSwipe rather than
       // a separate gauntlet-only callback so the "broke real chain" bonus
       // sfx/haptic isn't silently dropped for gauntlet misses.
-      const brokeRealChain = store.game.chainMultiplier >= 1.5;
+      const brokeRealChain = game.chainMultiplier >= 1.5;
       firePollyEvent('wrong');
       perform.onWrongSwipe({ mask: tile.mask, brokeRealChain });
       setFinalTileStates(prev => new Map(prev).set(tile.mask.id, 'wrong'));
@@ -544,7 +557,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       } else {
         // No hidden content on this final-gate word — falls through as a normal fail.
         gateTriggeredRef.current = true;
-        store.resolveMystery(false, perfect);
+        resolveMystery(false, perfect);
         const failedMaskId = visibleGridMasks.find(
           mask => tileStates.get(mask.id) === 'wrong',
         )?.id ?? `${step.word}_gate_fail`;
@@ -557,7 +570,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       perform.onWordExit(perfect);
       // Matches triggerWordExit's original 290ms book-slide-out timing.
       setTimeout(() => {
-        store.completeWord();
+        completeWord();
       }, 290);
     }
   }, [remainingMaskIds]); // eslint-disable-line react-hooks/exhaustive-deps

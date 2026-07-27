@@ -24,6 +24,7 @@ import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
 import { BossIntroOverlay } from '../components/BossIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
 const MAX_FEATHERS = 6;
 const INTRO_SEEN_KEY = 'polywords_intro_seen';
@@ -31,8 +32,9 @@ const BOSS_INTRO_SEEN_KEY = 'polywords_boss_intro_seen';
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useReducedMotionPreference();
   useEffect(() => {
-    if (flashKey === 0) return;
+    if (flashKey === 0 || reduceMotion) return;
     opacity.setValue(0);
     Animated.sequence([
       Animated.timing(opacity, { toValue: 0.50, duration: 69,  useNativeDriver: true }),
@@ -50,8 +52,9 @@ function PurpleFlash({ flashKey }: { flashKey: number }) {
 // ─── RED FLASH — wrong-swipe danger signal ─────────────────────
 function RedFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useReducedMotionPreference();
   useEffect(() => {
-    if (flashKey === 0) return;
+    if (flashKey === 0 || reduceMotion) return;
     opacity.setValue(0);
     Animated.sequence([
       Animated.timing(opacity, { toValue: 0.32, duration: 55,  useNativeDriver: true }),

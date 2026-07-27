@@ -27,6 +27,7 @@ import { PW } from '../ui/pwTheme';
 import { cardMaterial, heroBookMaterial } from '../ui/pwMaterials';
 import { ShardVariant } from '../ui/pwEffects';
 import { CLAIM_REJECT_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -104,6 +105,7 @@ export function SwipeMask({
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = Math.min(screenWidth - 80, 290);
   const cardHeight = Math.min(Math.max(tileHeight, 96), bookMaterial ? 220 : 124);
+  const reduceMotion = useReducedMotionPreference();
 
   // ── UI state ──────────────────────────────────────────────────
   const [flashRed, setFlashRed] = useState(false);
@@ -287,47 +289,64 @@ export function SwipeMask({
       setFlashRed(true);
       timers.push(setTimeout(() => setFlashRed(false), 145));
 
-      const fallDistance = Dimensions.get('window').height + 180;
+      if (reduceMotion) {
+        // Reduce Motion: no fling/rotate/fall — hold still so the caption
+        // (rendered below) actually gets read, then a plain crossfade out.
+        timers.push(setTimeout(() => {
+          tileOpacity.value = withTiming(0, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) });
+        }, 900));
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 180, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 180, useNativeDriver: false }),
+          ]).start(({ finished }) => {
+            if (finished) fireExitCompleteOnce();
+          });
+        }, 1120));
+        timers.push(setTimeout(fireExitCompleteOnce, 1340));
+      } else {
+        const fallDistance = Dimensions.get('window').height + 180;
 
-      // Both wrong directions fail the same way: false reject, buzz, then a shameful drop.
-      translateX.value = withSequence(
-        withTiming(56, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-        withTiming(26, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
-        withTiming(40, { duration: 420, easing: ReaEasing.in(ReaEasing.quad) })
-      );
-      translateY.value = withSequence(
-        withTiming(4, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-        withTiming(10, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
-        withTiming(fallDistance, { duration: 420, easing: ReaEasing.in(ReaEasing.quad) })
-      );
-      rotation.value = withSequence(
-        withTiming(5, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-        withTiming(-4, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
-        withTiming(18, { duration: 420, easing: ReaEasing.in(ReaEasing.ease) })
-      );
-      scale.value = withSequence(
-        withTiming(0.99, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
-        withTiming(0.96, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
-        withTiming(0.88, { duration: 420, easing: ReaEasing.in(ReaEasing.ease) })
-      );
+        // Both wrong directions fail the same way: false reject, buzz, then a shameful drop.
+        translateX.value = withSequence(
+          withTiming(56, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(26, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+          withTiming(40, { duration: 420, easing: ReaEasing.in(ReaEasing.quad) })
+        );
+        translateY.value = withSequence(
+          withTiming(4, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(10, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+          withTiming(fallDistance, { duration: 420, easing: ReaEasing.in(ReaEasing.quad) })
+        );
+        rotation.value = withSequence(
+          withTiming(5, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(-4, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+          withTiming(18, { duration: 420, easing: ReaEasing.in(ReaEasing.ease) })
+        );
+        scale.value = withSequence(
+          withTiming(0.99, { duration: 70, easing: ReaEasing.out(ReaEasing.ease) }),
+          withTiming(0.96, { duration: 55, easing: ReaEasing.inOut(ReaEasing.ease) }),
+          withTiming(0.88, { duration: 420, easing: ReaEasing.in(ReaEasing.ease) })
+        );
 
-      timers.push(setTimeout(() => {
-        tileOpacity.value = withTiming(0, {
-          duration: 260,
-          easing: ReaEasing.in(ReaEasing.ease),
-        });
-      }, 280));
+        timers.push(setTimeout(() => {
+          tileOpacity.value = withTiming(0, {
+            duration: 260,
+            easing: ReaEasing.in(ReaEasing.ease),
+          });
+        }, 280));
 
-      timers.push(setTimeout(() => {
-        RNAnimated.parallel([
-          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
-          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
-        ]).start(({ finished }) => {
-          if (finished) fireExitCompleteOnce();
-        });
-      }, 560));
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 170, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 170, useNativeDriver: false }),
+          ]).start(({ finished }) => {
+            if (finished) fireExitCompleteOnce();
+          });
+        }, 560));
 
-      timers.push(setTimeout(fireExitCompleteOnce, 780));
+        timers.push(setTimeout(fireExitCompleteOnce, 780));
+      }
     }
 
     // ── TRAP-CAUGHT — hard right toss + shards ───────────────
@@ -336,30 +355,55 @@ export function SwipeMask({
       grabLift.value = withTiming(0, { duration: 120 });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-      outerRef.current?.measure((_x: number, _y: number, _w: number, h: number, _pageX: number, pageY: number) => {
-        onEffectRef.current?.(
-          'shard',
-          Dimensions.get('window').width - 20,
-          pageY + h / 2,
-          'trap'
-        );
-      });
-
-      const shatterLaneX = Dimensions.get('window').width + 180;
-      translateX.value  = withTiming(shatterLaneX, { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
-      translateY.value  = withTiming(-10,          { duration: 160, easing: ReaEasing.out(ReaEasing.ease) });
-      rotation.value    = withTiming(18,           { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
-      scale.value       = withTiming(0.9,          { duration: 160, easing: ReaEasing.in(ReaEasing.ease) });
-      tileOpacity.value = withTiming(0,            { duration: 170, easing: ReaEasing.in(ReaEasing.ease) });
-
-      timers.push(setTimeout(() => {
-        RNAnimated.parallel([
-          RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 160, useNativeDriver: false }),
-          RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 160, useNativeDriver: false }),
-        ]).start(({ finished }) => {
-          if (finished) fireExitCompleteOnce();
+      if (reduceMotion) {
+        // Reduce Motion: keep the shard burst (a fixed-position particle
+        // effect elsewhere on screen, not this tile flinging/rotating) as
+        // the outcome signal, but drop the tile's own toss physics for a
+        // plain crossfade.
+        outerRef.current?.measure((_x: number, _y: number, _w: number, h: number, _pageX: number, pageY: number) => {
+          onEffectRef.current?.(
+            'shard',
+            Dimensions.get('window').width - 20,
+            pageY + h / 2,
+            'trap'
+          );
         });
-      }, 200));
+        tileOpacity.value = withTiming(0, { duration: 200, easing: ReaEasing.in(ReaEasing.ease) });
+
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 180, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 180, useNativeDriver: false }),
+          ]).start(({ finished }) => {
+            if (finished) fireExitCompleteOnce();
+          });
+        }, 220));
+      } else {
+        outerRef.current?.measure((_x: number, _y: number, _w: number, h: number, _pageX: number, pageY: number) => {
+          onEffectRef.current?.(
+            'shard',
+            Dimensions.get('window').width - 20,
+            pageY + h / 2,
+            'trap'
+          );
+        });
+
+        const shatterLaneX = Dimensions.get('window').width + 180;
+        translateX.value  = withTiming(shatterLaneX, { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
+        translateY.value  = withTiming(-10,          { duration: 160, easing: ReaEasing.out(ReaEasing.ease) });
+        rotation.value    = withTiming(18,           { duration: 180, easing: ReaEasing.in(ReaEasing.ease) });
+        scale.value       = withTiming(0.9,          { duration: 160, easing: ReaEasing.in(ReaEasing.ease) });
+        tileOpacity.value = withTiming(0,            { duration: 170, easing: ReaEasing.in(ReaEasing.ease) });
+
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 160, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 160, useNativeDriver: false }),
+          ]).start(({ finished }) => {
+            if (finished) fireExitCompleteOnce();
+          });
+        }, 200));
+      }
     }
 
     // ── REVEALED — full reset ────────────────────────────────
@@ -533,6 +577,19 @@ export function SwipeMask({
     );
   }
 
+  // Wrong-swipe caption — the "why," derived from data already on this
+  // tile (which way it was swiped + whether it was real), not new
+  // per-word content. Both wrong directions funnel into the same 'wrong'
+  // state, so this is what tells them apart in the moment instead of only
+  // at Results, rounds later.
+  const wrongCaption = s === 'wrong'
+    ? swipeDirRef.current === 'up' && !mask.isReal
+      ? 'THAT WAS A TRAP'
+      : swipeDirRef.current === 'right' && mask.isReal
+        ? 'THAT WAS REAL'
+        : null
+    : null;
+
   // ── Main tile ─────────────────────────────────────────────────
   return (
     <RNAnimated.View
@@ -610,6 +667,10 @@ export function SwipeMask({
             <Text style={isSpecialSplit ? styles.splitCheckmark : styles.checkmark}>
               ✓
             </Text>
+          )}
+          {/* Wrong-swipe caption — why, not just that */}
+          {wrongCaption && (
+            <Text style={styles.wrongCaption}>{wrongCaption}</Text>
           )}
           {/* Phrase text */}
           <View
@@ -697,6 +758,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '800',
     zIndex: 3,
+  },
+  wrongCaption: {
+    position: 'absolute',
+    top: 10,
+    left: 16,
+    right: 16,
+    textAlign: 'center',
+    fontFamily: FONTS.label,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.72)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+    zIndex: 4,
   },
   phrase: {
     fontSize: 27,

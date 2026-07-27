@@ -18,10 +18,10 @@ export default function App() {
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
   });
 
-  // null = still checking for a run interrupted by backgrounding/a kill;
-  // resolves to whether one was actually resumed, which decides the
-  // Navigator's initial route below.
-  const [resumedGame, setResumedGame] = useState<boolean | null>(null);
+  // Home is always the landing screen — this only gates the first paint so
+  // hasResumableGame is known before Home renders its button (otherwise
+  // it'd flash ENTER THE HUNT then flip to RESUME HUNT a beat later).
+  const [bootChecksDone, setBootChecksDone] = useState(false);
 
   useEffect(() => {
     if (!fontsLoaded) return;
@@ -32,24 +32,14 @@ export default function App() {
     loadProgress();
     loadSettings();
     loadPollyMemory();
-    loadGame().then(setResumedGame);
+    loadGame().finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || resumedGame === null) return null;
-
-  // Resuming lands on Game, but it must never be the stack's root screen —
-  // a root screen has nowhere to go "back" to, so the edge-swipe-back
-  // gesture simply doesn't exist there (and Android hardware back at the
-  // root exits the app outright, bypassing the exit-confirm entirely).
-  // Seeding Home underneath keeps a real previous screen in the stack so
-  // the gesture — and PollyExitConfirm intercepting it — both still work.
-  const initialState = resumedGame
-    ? { index: 1, routes: [{ name: 'Home' }, { name: 'Game' }] }
-    : undefined;
+  if (!fontsLoaded || !bootChecksDone) return null;
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer initialState={initialState}>
+      <NavigationContainer>
         <Stack.Navigator
           screenOptions={{
             headerShown: false,
