@@ -56,6 +56,7 @@ const GRACE_RUNS = 10;
 const FLEDGLING_MERCY_LIVES = 3;
 const GRACE_MERCY_LIVES = 2;
 
+const GAME_KEY = 'polywords_active_game';
 const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
 const DAILY_ATTEMPT_KEY_PREFIX = 'polywords_daily_attempt_';
@@ -137,6 +138,7 @@ type GameStore = {
   ghostRevenge: GhostRevenge;
   runStartGhostWordIds: string[];
   startGame: () => void;
+  loadGame: () => Promise<boolean>;
   submitSwipeUp: (maskId: string) => void;
   submitSwipeDown: (maskId: string) => void;
   submitWrongSwipe: () => void;
@@ -242,6 +244,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ghostRevenge: null,
       runStartGhostWordIds,
     });
+  },
+
+  // Resumes an in-progress Hunt after the app was backgrounded/killed
+  // mid-run (see the debounced save subscription below). Returns whether a
+  // playing run was actually resumed, so App.tsx knows which screen to land
+  // on. A saved snapshot that isn't 'playing' is stale (the run finished
+  // normally last time) and gets discarded rather than resumed.
+  loadGame: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(GAME_KEY);
+      if (!raw) return false;
+      const saved = JSON.parse(raw) as GameState;
+      if (saved.status !== 'playing') {
+        await AsyncStorage.removeItem(GAME_KEY);
+        return false;
+      }
+      set({ game: saved });
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   submitSwipeUp: (maskId) => {
@@ -757,3 +780,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get().claimDailyAnswer(round.word.answer);
   },
 }));
+
+// ── Active-run persistence ──────────────────────────────────────
+// Backgrounding, an OS kill, or a crash mid-Hunt shouldn't erase the run —
+// only the exit-confirm dialog (PollyExitConfirm) should be able to end it
+// early. Debounced so a burst of swipes doesn't hit AsyncStorage on every
+// single state change; reads fresh state at fire time to avoid a stale
+// closure. Cleared as soon as the run leaves 'playing' (finished normally
+// or a fresh run started), so a stale snapshot never resumes twice.
+let saveGameTimer: ReturnType<typeof setTimeout> | null = null;
+useGameStore.subscribe((state, prevState) => {
+  if (state.game === prevState.game) return;
+  if (saveGameTimer) clearTimeout(saveGameTimer);
+
+  if (state.game.status !== 'playing') {
+    AsyncStorage.removeItem(GAME_KEY).catch(() => {});
+    return;
+  }
+  saveGameTimer = setTimeout(() => {
+    AsyncStorage.setItem(GAME_KEY, JSON.stringify(useGameStore.getState().game)).catch(() => {});
+  }, 400);
+});

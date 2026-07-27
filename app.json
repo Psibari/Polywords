@@ -25,7 +25,7 @@
         "backgroundColor": "#241338"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
+      "predictiveBackGestureEnabled": true,
       "package": "com.pdb8080.polywords"
     },
     "web": {

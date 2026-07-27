@@ -12,6 +12,7 @@ import * as Haptics from 'expo-haptics';
 import { playSfx } from '../audio/sfx';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
 import DailyCardFace from './ui/DailyCardFace';
+import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -448,6 +449,23 @@ export default function DailyAnswerCard({
       },
     }),
   ).current;
+
+  // ── Screen-reader alternate path ──────────────────────────────
+  // Daily has one gesture (swipe up to claim this candidate) and no reject,
+  // so this only ever resolves 'claim' — same outcome as onPanResponderRelease.
+  function handleAccessibilityAction(actionName: string) {
+    if (interactionDisabledRef.current || claimedRef.current) return;
+    if (resolveTileAccessibilityAction(actionName) !== 'claim') return;
+
+    claimedRef.current = true;
+    Animated.timing(gripGlow, {
+      toValue: 0,
+      duration: dailyCardMaterial.motion.pressOutMs,
+      useNativeDriver: true,
+    }).start();
+    onClaimRef.current(labelRef.current);
+  }
+
   const rotate = rotation.interpolate({
     inputRange: [-20, 20],
     outputRange: ['-20deg', '20deg'],
@@ -469,7 +487,12 @@ export default function DailyAnswerCard({
     >
       <Animated.View
         testID={testID}
+        accessible
+        accessibilityRole="button"
         accessibilityLabel={label}
+        accessibilityState={{ disabled: disabled || state !== 'idle' }}
+        accessibilityActions={CLAIM_ONLY_ACTIONS}
+        onAccessibilityAction={(event) => handleAccessibilityAction(event.nativeEvent.actionName)}
         {...panResponder.panHandlers}
         style={[
           styles.shell,

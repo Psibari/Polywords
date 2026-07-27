@@ -22,6 +22,7 @@ export const POLLY_LINES = {
   dailyLossBat: 'CAN’T BEAT THAT WITH A BAT.',
   dailyWinTomorrow: 'WON’T HAPPEN TOMORROW.',
   huntIntro: 'Enter the Hunt. We’ll see who hunts who.',
+  huntAbandonTaunt: 'See you later, loser.',
 } as const;
 
 export type PollyLineId = keyof typeof POLLY_LINES;

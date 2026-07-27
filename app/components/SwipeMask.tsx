@@ -26,6 +26,7 @@ import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { cardMaterial, heroBookMaterial } from '../ui/pwMaterials';
 import { ShardVariant } from '../ui/pwEffects';
+import { CLAIM_REJECT_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -479,6 +480,30 @@ export function SwipeMask({
     })
   ).current;
 
+  // ── Screen-reader alternate path ────────────────────────────────
+  // VoiceOver/TalkBack users have no way to perform the drag gesture above,
+  // so accessibility actions drive the exact same judged/swipeDir outcome
+  // the gesture does. Tiles must stay anonymous until commit either way —
+  // the label only repeats the phrase already on screen, never real/trap.
+  function handleAccessibilityAction(actionName: string) {
+    if (disabledRef.current || judgedRef.current) return;
+    const action = resolveTileAccessibilityAction(actionName);
+    if (action === 'claim') {
+      judgedRef.current   = true;
+      swipeDirRef.current = 'up';
+      onSwipeUpRef.current();
+    } else if (action === 'reject') {
+      judgedRef.current   = true;
+      swipeDirRef.current = 'right';
+      Haptics.impactAsync(
+        nearMastery
+          ? Haptics.ImpactFeedbackStyle.Medium
+          : Haptics.ImpactFeedbackStyle.Light
+      );
+      onSwipeDownRef.current();
+    }
+  }
+
   // ── Hidden state ──────────────────────────────────────────────
   if (s === 'hidden') {
     return (
@@ -493,6 +518,10 @@ export function SwipeMask({
           <Pressable
             onPress={revealable ? onSwipeReveal : undefined}
             style={styles.hiddenTile}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Hidden meaning tile"
+            accessibilityState={{ disabled: !revealable }}
           >
             <FluentEmoji emoji="❓" size={32} />
             <Text style={styles.hiddenPhrase} numberOfLines={2}>
@@ -540,6 +569,12 @@ export function SwipeMask({
             };
           }}
           {...panResponder.panHandlers}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={mask.phrase}
+          accessibilityHint="Choose an action to claim as real or reject as a trap."
+          accessibilityActions={CLAIM_REJECT_ACTIONS}
+          onAccessibilityAction={(event) => handleAccessibilityAction(event.nativeEvent.actionName)}
         >
           {/* Top edge shine */}
           <View style={styles.tileTopShine} />

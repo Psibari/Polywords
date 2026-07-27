@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
@@ -18,23 +18,30 @@ export default function App() {
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
   });
 
+  // null = still checking for a run interrupted by backgrounding/a kill;
+  // resolves to whether one was actually resumed, which decides the
+  // Navigator's initial route below.
+  const [resumedGame, setResumedGame] = useState<boolean | null>(null);
+
   useEffect(() => {
     if (!fontsLoaded) return;
 
-    const { loadGhosts, loadProgress, loadSettings, loadPollyMemory } = useGameStore.getState();
+    const { loadGame, loadGhosts, loadProgress, loadSettings, loadPollyMemory } = useGameStore.getState();
 
     loadGhosts();
     loadProgress();
     loadSettings();
     loadPollyMemory();
+    loadGame().then(setResumedGame);
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || resumedGame === null) return null;
 
   return (
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
+          initialRouteName={resumedGame ? 'Game' : 'Home'}
           screenOptions={{
             headerShown: false,
             animation: 'fade',

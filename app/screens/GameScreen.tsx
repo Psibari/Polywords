@@ -21,6 +21,7 @@ import { ShardVariant } from '../ui/pwEffects';
 import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
 import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
+import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MAX_FEATHERS = 6;
@@ -534,6 +535,34 @@ function GameDirector({ navigation }: { navigation: any }) {
   const { setTension } = useHeartbeat();
   const [missedCount, setMissedCount] = useState(0);
 
+  // ── Exit guard — leaving mid-Hunt takes a real choice, never silence ────
+  // beforeRemove fires for edge-swipe-back, Android back, and any
+  // navigation away, so this is the one place that covers all three.
+  const [exitConfirmVisible, setExitConfirmVisible] = useState(false);
+  const pendingExitActionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+      if (game.status !== 'playing') return;
+      e.preventDefault();
+      pendingExitActionRef.current = e.data.action;
+      setExitConfirmVisible(true);
+    });
+    return unsubscribe;
+  }, [navigation, game.status]);
+
+  const handleStayHunting = useCallback(() => {
+    pendingExitActionRef.current = null;
+    setExitConfirmVisible(false);
+  }, []);
+
+  const handleConfirmLeave = useCallback(() => {
+    setExitConfirmVisible(false);
+    const action = pendingExitActionRef.current;
+    pendingExitActionRef.current = null;
+    if (action) navigation.dispatch(action);
+  }, [navigation]);
+
   // ── Feather float animation ────────────────────────────────
   const featherFloatY       = useRef(new Animated.Value(0)).current;
   const featherFloatOpacity = useRef(new Animated.Value(0)).current;
@@ -946,6 +975,10 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       {introSeen === false && !isDone && (
         <HuntIntroOverlay onDismiss={handleIntroDismiss} />
+      )}
+
+      {exitConfirmVisible && (
+        <PollyExitConfirm onStay={handleStayHunting} onLeave={handleConfirmLeave} />
       )}
     </SafeAreaView>
   );
