@@ -16,7 +16,10 @@ export type SfxName =
   | 'pollySqwawkLaugh'
   | 'bookClose'
   | 'detectiveSting'
-  | 'chainBreak';
+  | 'chainBreak'
+  | 'lockSpin1'
+  | 'lockSpin2'
+  | 'lockSpin3';
 
 type SfxConfig = {
   source: Parameters<typeof createAudioPlayer>[0];
@@ -44,6 +47,9 @@ const SFX: Record<SfxName, SfxConfig> = {
   bookClose:      { source: require('../../assets/audio/sfx/book_close_v2.mp3'),   volume: 0.60, cooldownMs: 300  },
   detectiveSting: { source: require('../../assets/audio/sfx/detective_clue_sting.mp3'), volume: 0.30, cooldownMs: 1200 },
   chainBreak:     { source: require('../../assets/audio/sfx/chain_break_stinger.mp3'), volume: 0.40, cooldownMs: 1800 },
+  lockSpin1:      { source: require('../../assets/audio/sfx/lock_spin_1.mp3'),        volume: 0.40, cooldownMs: 150  },
+  lockSpin2:      { source: require('../../assets/audio/sfx/lock_spin_2.mp3'),        volume: 0.40, cooldownMs: 150  },
+  lockSpin3:      { source: require('../../assets/audio/sfx/lock_spin_3.mp3'),        volume: 0.40, cooldownMs: 150  },
 };
 
 const PLAYER_POOL_SIZE = 2;

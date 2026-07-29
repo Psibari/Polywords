@@ -26,6 +26,7 @@ import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import ChestTest from '../components/dev/ChestTest'; // TEMP dev-only chest asset test — trivially removable
 
 const MAX_FEATHERS = 6;
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
@@ -619,6 +620,9 @@ function GameDirector({ navigation }: { navigation: any }) {
   const featherFloatOpacity = useRef(new Animated.Value(0)).current;
   const [showFeatherFloat, setShowFeatherFloat] = useState(false);
 
+  // ── TEMP dev-only chest asset test — trivially removable ──────
+  const [showChestTest, setShowChestTest] = useState(false);
+
   // ── Effects overlay ────────────────────────────────────────
   const fxLayerRef    = useRef<FXLayerHandle>(null);
   const prevChainRef  = useRef<number>(1);
@@ -1000,8 +1004,20 @@ function GameDirector({ navigation }: { navigation: any }) {
           >
             <Text style={styles.devBossButtonText}>BOSS{'\n'}(CRISIS)</Text>
           </Pressable>
+          {/* TEMP dev-only chest asset test — trivially removable */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open chest test"
+            onPress={() => setShowChestTest(true)}
+            style={styles.devBossButton}
+          >
+            <Text style={styles.devBossButtonText}>CHEST{'\n'}TEST</Text>
+          </Pressable>
         </View>
       )}
+
+      {/* TEMP dev-only chest asset test overlay — trivially removable */}
+      {showChestTest && <ChestTest onClose={() => setShowChestTest(false)} />}
 
       {/* ── Flash overlays — zIndex 50, above game content ── */}
       <PurpleFlash flashKey={purpleFlashKey} />

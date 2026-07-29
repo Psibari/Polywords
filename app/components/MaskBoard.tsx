@@ -28,6 +28,7 @@ import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
 import type { ChainTier } from '../hooks/useBoardMechanics';
+import { HuntChest } from './HuntChest';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -160,8 +161,8 @@ export type Props = {
 };
 
 type BoardPresenterProps = Props & {
-  // Inert for now — drives nothing. Reserved for the boss theater work that
-  // follows this step; BossBoard passes true, MaskBoard passes false.
+  // Drives the boss-only chest theater below; BossBoard passes true,
+  // MaskBoard passes false, so the normal-round face is unaffected.
   isBossStage: boolean;
 };
 
@@ -296,8 +297,74 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
   return null;
 }
 
+// ── Boss chest — Arc entrance (values match the tuned "Arc" variant in
+// app/components/dev/ChestTest.tsx; keep the two in sync by hand). Wraps
+// HuntChest in an Animated.View only — HuntChest itself is untouched.
+const CHEST_START_TRANSLATE_Y = -160;
+const CHEST_START_TRANSLATE_X = 90;
+const CHEST_START_SCALE = 0.15;
+const CHEST_FLIGHT_MS = 520;
+const CHEST_FLIGHT_EASING = Easing.bezier(0.2, 0.9, 0.1, 1);
+// X settles well before Y finishes falling — matching timing on both axes
+// is mathematically a straight line, so decoupling them is what curves it.
+const CHEST_ARC_X_MS = 300;
+const CHEST_ARC_X_EASING = Easing.out(Easing.cubic);
+const CHEST_SQUASH_IMPACT_MS = 70;
+const CHEST_SQUASH_SETTLE_MS = 140;
+const CHEST_OVERSHOOT_LEG_MS = 70;
+const CHEST_SCALE_OVERSHOOT = 1.09;
+const CHEST_Y_OVERSHOOT = 22;
+
+function BossChestGauntlet({ locksOpen }: { locksOpen: 0 | 1 | 2 | 3 }) {
+  const translateY = useRef(new Animated.Value(CHEST_START_TRANSLATE_Y)).current;
+  const translateX = useRef(new Animated.Value(CHEST_START_TRANSLATE_X)).current;
+  const scale       = useRef(new Animated.Value(CHEST_START_SCALE)).current;
+  const scaleX      = useRef(new Animated.Value(1)).current;
+  const scaleY      = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Mounted only while the gauntlet is active, so this fires exactly once
+    // per gauntlet — i.e. when it begins.
+    Animated.parallel([
+      Animated.timing(translateY, { toValue: 0, duration: CHEST_FLIGHT_MS, easing: CHEST_FLIGHT_EASING, useNativeDriver: true }),
+      Animated.timing(scale,      { toValue: 1, duration: CHEST_FLIGHT_MS, easing: CHEST_FLIGHT_EASING, useNativeDriver: true }),
+      Animated.timing(translateX, { toValue: 0, duration: CHEST_ARC_X_MS,  easing: CHEST_ARC_X_EASING,  useNativeDriver: true }),
+    ]).start(() => {
+      const squash = Animated.sequence([
+        Animated.parallel([
+          Animated.timing(scaleX, { toValue: 1.08, duration: CHEST_SQUASH_IMPACT_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scaleY, { toValue: 0.92, duration: CHEST_SQUASH_IMPACT_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scaleX, { toValue: 1, duration: CHEST_SQUASH_SETTLE_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(scaleY, { toValue: 1, duration: CHEST_SQUASH_SETTLE_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]),
+      ]);
+      const scaleOvershoot = Animated.sequence([
+        Animated.timing(scale, { toValue: CHEST_SCALE_OVERSHOOT, duration: CHEST_OVERSHOOT_LEG_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: CHEST_OVERSHOOT_LEG_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]);
+      const yOvershoot = Animated.sequence([
+        Animated.timing(translateY, { toValue: CHEST_Y_OVERSHOOT, duration: CHEST_OVERSHOOT_LEG_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration: CHEST_OVERSHOOT_LEG_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]);
+      Animated.parallel([squash, scaleOvershoot, yOvershoot]).start();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <View style={styles.bossChestSlot} pointerEvents="none">
+      <Animated.View
+        style={{ transform: [{ translateX }, { translateY }, { scale }, { scaleX }, { scaleY }] }}
+      >
+        <HuntChest open={false} locksOpen={locksOpen} />
+      </Animated.View>
+    </View>
+  );
+}
+
 function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
-  void isBossStage; // inert this step — no visual or timing effect yet
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
   // resolution, so a whole-store subscription re-rendered it on completely
@@ -657,6 +724,12 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }
 
+  // ── boss chest (face-only; no brain state) ─────────────────────
+  // Locks cracked = gauntlet tiles cleared correctly so far. Derived purely
+  // from the existing onGauntletCorrect/onGauntletBegin callbacks below —
+  // useBoardMechanics itself is untouched.
+  const [gauntletLocksOpen, setGauntletLocksOpen] = useState<0 | 1 | 2 | 3>(0);
+
   // ── mechanics (brain) ───────────────────────────────────────────
   // Every perform.* callback below is the FACE half of a function that used
   // to live directly in this component — see useBoardMechanics.ts for the
@@ -693,6 +766,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         triggerGauntletPulse();
         if (swipedUp) triggerAbsorption(phrase);
+        setGauntletLocksOpen(prev => (Math.min(3, prev + 1) as 0 | 1 | 2 | 3));
       },
       onGauntletTileDrop() {
         splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
@@ -710,6 +784,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
       onGauntletBegin() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        setGauntletLocksOpen(0);
       },
       onWordExit(perfect) {
         // Stop any prior per-tile flick animation and reset both values it
@@ -1541,7 +1616,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
 
             {(mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') && mechanics.activeGauntletTile && (
               <View style={styles.finalHiddenTileStack}>
-                {mechanics.gauntletTiles.length > 1 && (
+                {!isBossStage && mechanics.gauntletTiles.length > 1 && (
                   <Text style={{
                     color: 'rgba(245,200,66,0.72)',
                     fontFamily: FONTS.label,
@@ -1613,6 +1688,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         </View>
       </View>
 
+      {isBossStage && (mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') && (
+        <BossChestGauntlet locksOpen={gauntletLocksOpen} />
+      )}
 
       {/* Mastery score float */}
       {floats.filter(f => f.kind === 'mastery').map(f => (
@@ -2084,6 +2162,13 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     position: 'relative',
+  },
+  bossChestSlot: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 24,
+    alignItems: 'center',
   },
   finalHiddenTileFrame: {
     borderWidth: 1.5,
