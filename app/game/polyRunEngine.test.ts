@@ -13,6 +13,8 @@ import {
   beginMysteryGauntlet,
   resolveMysteryTile,
   isMysteryTerminal,
+  isMaskResolved,
+  getUnresolvedMaskIds,
   mysteryMasteryPoints,
   GameState,
 } from './polyRunEngine';
@@ -80,6 +82,54 @@ function fresh(mercyReviveLives = 0): GameState {
   s = submitSwipeDown(s, 't1');
   eq(s.score, 50, 'down.trap.score');
   eq(s.streak, 1, 'down.trap.streak');
+}
+
+// Resolved cards are committed once. This protects scoring, lives, and
+// resumed/revived boards even if a presenter submits the same ID again.
+{
+  let s = fresh();
+  s = submitSwipeUp(s, 'r1');
+  const afterFirstResolution = s;
+
+  s = submitSwipeUp(s, 'r1');
+  eq(s, afterFirstResolution, 'resolved.sameDirection.noop');
+
+  s = submitSwipeDown(s, 'r1');
+  eq(s, afterFirstResolution, 'resolved.oppositeDirection.noop');
+  eq(s.score, 100, 'resolved.noDuplicateScore');
+  eq(s.streak, 1, 'resolved.noDuplicateStreak');
+  eq(s.swipedUpIds.length, 1, 'resolved.noDuplicateHistory');
+}
+
+{
+  let s = fresh();
+  s = { ...s, lives: 3 };
+  s = submitSwipeUp(s, 't1');
+  const afterWrongResolution = s;
+
+  s = submitSwipeUp(s, 't1');
+  eq(s, afterWrongResolution, 'resolved.wrongSameDirection.noop');
+
+  s = submitSwipeDown(s, 't1');
+  eq(s, afterWrongResolution, 'resolved.wrongOppositeDirection.noop');
+  eq(s.lives, 2, 'resolved.noDuplicateLifeLoss');
+  eq(s.mistakesOnWord, 1, 'resolved.noDuplicateMistake');
+}
+
+{
+  let s = fresh();
+  s = submitSwipeUp(s, 'r1');
+  s = submitSwipeDown(s, 't1');
+
+  const resumed = JSON.parse(JSON.stringify(s)) as GameState;
+  const visibleMasks = resumed.shuffledMasks[resumed.stepIndex];
+  const remaining = getUnresolvedMaskIds(resumed, visibleMasks);
+
+  eq(isMaskResolved(resumed, 'r1'), true, 'resume.realIsResolved');
+  eq(isMaskResolved(resumed, 't1'), true, 'resume.trapIsResolved');
+  eq(remaining.includes('r1'), false, 'resume.realRemovedFromDeck');
+  eq(remaining.includes('t1'), false, 'resume.trapRemovedFromDeck');
+  eq(remaining.length, visibleMasks.length - 2, 'resume.onlyUnresolvedRemain');
 }
 
 // ── Chain multiplier: 1.5x at streak 3 ──────────────────────────
@@ -175,6 +225,14 @@ function fresh(mercyReviveLives = 0): GameState {
   eq(s.stepIndex, 0, 'goldFeather.revived.sameWord');
   eq(s.swipedUpIds.includes('t1'), true, 'goldFeather.revived.keepsFatalSwipe');
   eq(s.wordResults.length, 0, 'goldFeather.revived.removesFatalResult');
+  const revivedRemaining = getUnresolvedMaskIds(
+    s,
+    s.shuffledMasks[s.stepIndex],
+  );
+  eq(revivedRemaining.includes('t1'), false, 'goldFeather.revived.removesCommittedCardFromDeck');
+  const beforeDuplicateFatalSwipe = s;
+  s = submitSwipeDown(s, 't1');
+  eq(s, beforeDuplicateFatalSwipe, 'goldFeather.revived.committedCardCannotReplay');
   s = submitSwipeUp(s, 'r1');
   s = completeWord(s);
   eq(s.wordResults.length, 1, 'goldFeather.after.finalizesWordOnce');

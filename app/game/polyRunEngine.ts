@@ -84,6 +84,21 @@ export type GameState = {
   mysteryResolved: number;
 };
 
+type SwipeHistory = Pick<GameState, 'swipedUpIds' | 'swipedDownIds'>;
+
+export function isMaskResolved(state: SwipeHistory, maskId: string): boolean {
+  return state.swipedUpIds.includes(maskId) || state.swipedDownIds.includes(maskId);
+}
+
+export function getUnresolvedMaskIds(
+  state: SwipeHistory,
+  masks: readonly Mask[],
+): string[] {
+  return masks
+    .filter(mask => !isMaskResolved(state, mask.id))
+    .map(mask => mask.id);
+}
+
 function shuffleMasks(masks: Mask[]): Mask[] {
   const arr = [...masks];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -229,6 +244,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
 
   const mask = step.masks.find(m => m.id === maskId);
   if (!mask) return state;
+  if (isMaskResolved(state, maskId)) return state;
 
   const now = Date.now();
   const swipedUpIds = [...state.swipedUpIds, maskId];
@@ -298,6 +314,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
 
   const mask = step.masks.find(m => m.id === maskId);
   if (!mask) return state;
+  if (isMaskResolved(state, maskId)) return state;
 
   const now = Date.now();
   const swipedDownIds = [...state.swipedDownIds, maskId];

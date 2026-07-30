@@ -4,6 +4,7 @@ import { GhostMeaning, Mask, WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import {
   chainMultiplierForStreak,
+  getUnresolvedMaskIds,
   realMaskPoints,
   trapMaskPoints,
   mysteryMasteryPoints,
@@ -35,9 +36,25 @@ function eventKicker(step: WordStep): string | null {
   return null;
 }
 
-function buildInitialTileStates(masks: Mask[]): Map<string, SwipeMaskState> {
+function buildInitialTileStates(
+  masks: Mask[],
+  swipedUpIds: readonly string[],
+  swipedDownIds: readonly string[],
+): Map<string, SwipeMaskState> {
+  const swipedUp = new Set(swipedUpIds);
+  const swipedDown = new Set(swipedDownIds);
   const states = new Map<string, SwipeMaskState>();
-  masks.forEach(mask => states.set(mask.id, 'idle'));
+  masks.forEach(mask => {
+    if (swipedUp.has(mask.id)) {
+      states.set(mask.id, mask.isReal ? 'correct' : 'wrong');
+      return;
+    }
+    if (swipedDown.has(mask.id)) {
+      states.set(mask.id, mask.isReal ? 'wrong' : 'trap-caught');
+      return;
+    }
+    states.set(mask.id, 'idle');
+  });
   return states;
 }
 
@@ -95,6 +112,12 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const isFinalGateStep = isBoss || isHaunt;
   const kicker = eventKicker(step);
 
+  const visibleGridMasks = (game.shuffledMasks[game.stepIndex] ?? step.masks)
+    .filter(m => !m.isHidden);
+  const initialRemainingMaskIds = getUnresolvedMaskIds(game, visibleGridMasks);
+  const initialResolvedMaskCount =
+    visibleGridMasks.length - initialRemainingMaskIds.length;
+
   // Stale-closure-safe refs
   const streakRef = useRef(game.streak);
   streakRef.current = game.streak;
@@ -102,25 +125,22 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   livesRef.current = game.lives;
 
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() =>
-    buildInitialTileStates(step.masks));
+    buildInitialTileStates(step.masks, game.swipedUpIds, game.swipedDownIds));
 
   const completedRef                 = useRef(false);
   const gateTriggeredRef             = useRef(false);
-  const wrongSwipeOccurred           = useRef(false);
-  const visiblePerfectRef            = useRef(true);
+  const wrongSwipeOccurred           = useRef(game.mistakesOnWord > 0);
+  const visiblePerfectRef            = useRef(game.mistakesOnWord === 0);
   const preMysteryChainMultiplierRef = useRef(1);
   const gapLockedRef                 = useRef(false);
-  const tileIndexInWordRef           = useRef(0);
+  const tileIndexInWordRef           = useRef(initialResolvedMaskCount);
 
   const ghost = runStartGhostWordIds.includes(step.word)
     ? ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
     : null;
 
-  const visibleGridMasks = (game.shuffledMasks[game.stepIndex] ?? step.masks)
-    .filter(m => !m.isHidden);
-
   const [remainingMaskIds, setRemainingMaskIds] = useState<string[]>(() =>
-    visibleGridMasks.map(m => m.id)
+    initialRemainingMaskIds
   );
 
   const topMaskId    = remainingMaskIds[0] ?? null;
