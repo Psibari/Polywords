@@ -23,12 +23,13 @@ import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
-import { deckBackMaterial, cardMaterial, libraryMaterial } from '../ui/pwMaterials';
+import { libraryMaterial } from '../ui/pwMaterials';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
 import type { ChainTier } from '../hooks/useBoardMechanics';
 import { HuntChest } from './HuntChest';
+import MaskCardArtwork from './ui/MaskCardArtwork';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -1514,8 +1515,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                       key={maskId}
                       pointerEvents="none"
                       style={[
-                        deckBackMaterial.base,
-                        deckBackMaterial.rim,
                         styles.deckBackingCard,
                         {
                           width: backingCardWidth,
@@ -1528,17 +1527,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                         },
                       ]}
                     >
-                      <LinearGradient
-                        colors={[PW.color.gold, PW.color.rose]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
+                      <Animated.View
+                        pointerEvents="none"
                         style={[
                           StyleSheet.absoluteFill,
-                          { opacity: 1 - (depth - 1) * 0.15 },
+                          { opacity: 1 - (depth - 1) * 0.12 },
                         ]}
-                        pointerEvents="none"
-                      />
-                      <View style={cardMaterial.topHighlight} pointerEvents="none" />
+                      >
+                        <MaskCardArtwork />
+                      </Animated.View>
                       {mask && (
                         <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
                           <Text
@@ -1557,7 +1554,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                           </Text>
                         </View>
                       )}
-                      <View style={styles.deckBackingLowerEdge} />
                     </Animated.View>
                   );
                 })}
@@ -2095,7 +2091,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: TILE_H,
     borderRadius: PW.radius.card,
-    borderWidth: 1,
+    backgroundColor: 'transparent',
     shadowColor: PW.color.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.16,
@@ -2104,29 +2100,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 1,
   },
-  deckBackingLowerEdge: {
-    position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 5,
-    height: 2.5,
-    borderRadius: 2,
-    backgroundColor: 'rgba(245,200,66,0.5)',
-    opacity: 0.85,
-  },
   deckBackingPhrasePanel: {
     position: 'absolute',
-    top: 3,
-    left: 3,
-    right: 3,
-    bottom: 3,
-    borderRadius: PW.radius.card - 4,
-    backgroundColor: '#1C1548',
+    top: 0,
+    left: '9%',
+    right: '9%',
+    bottom: 0,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    overflow: 'hidden',
   },
   deckBackingPhrase: {
     fontSize: 18,

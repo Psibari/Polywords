@@ -24,10 +24,11 @@ import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
-import { cardMaterial, heroBookMaterial } from '../ui/pwMaterials';
+import { heroBookMaterial } from '../ui/pwMaterials';
 import { ShardVariant } from '../ui/pwEffects';
 import { CLAIM_REJECT_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import MaskCardArtwork from './ui/MaskCardArtwork';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -70,10 +71,11 @@ function tileGradient(
   state: SwipeMaskState,
   bookMaterial: boolean
 ): readonly [string, string] {
-  if (state === 'correct')  return ['#F5C842', '#F5C842'] as const;
-  if (state === 'wrong')    return ['#CC2200', '#CC2200'] as const;
+  if (state === 'correct')     return [PW.color.gold, PW.color.goldDark] as const;
+  if (state === 'wrong')       return [PW.color.wrong, PW.color.bgDeep] as const;
+  if (state === 'trap-caught') return [PW.color.rose, PW.color.purple] as const;
   if (bookMaterial) return [heroBookMaterial.goldTrim, heroBookMaterial.coverPurpleTop] as const;
-  return ['#F5C842', '#9B2D6B'] as const;
+  return [PW.color.surfaceRaised, PW.color.surfaceBase] as const;
 }
 
 export function SwipeMask({
@@ -431,15 +433,25 @@ export function SwipeMask({
     };
   }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const tileAnimStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value + grabLift.value },
-      { scale:      scale.value      },
-      { rotate:     `${rotation.value}deg` },
-    ],
-    opacity:     tileOpacity.value,
-  }));
+  const tileAnimStyle = useAnimatedStyle(() => {
+    const liftAmount = Math.max(0, Math.min(1, -grabLift.value / 10));
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value + grabLift.value },
+        { scale:      scale.value      },
+        { rotate:     `${rotation.value}deg` },
+      ],
+      opacity: tileOpacity.value,
+      ...(!isSpecialSplit && !bookMaterial
+        ? {
+            shadowOpacity: 0.36 + (liftAmount * 0.10),
+            shadowRadius: 18 + (liftAmount * 6),
+            elevation: 10 + (liftAmount * 6),
+          }
+        : {}),
+    };
+  });
 
   // ── PanResponder ──────────────────────────────────────────────
   const panResponder = useRef(
@@ -614,7 +626,11 @@ export function SwipeMask({
         {/* Main animated tile — Reanimated for transforms/opacity (native) */}
         <Animated.View
           style={[
-            isSpecialSplit ? styles.splitTile : styles.tile,
+            isSpecialSplit
+              ? styles.splitTile
+              : bookMaterial
+                ? styles.bookTile
+                : styles.tile,
             !isSpecialSplit && { width: cardWidth, height: cardHeight },
             bookMaterial && styles.tileBookMaterial,
             tileAnimStyle,
@@ -633,15 +649,13 @@ export function SwipeMask({
           accessibilityActions={CLAIM_REJECT_ACTIONS}
           onAccessibilityAction={(event) => handleAccessibilityAction(event.nativeEvent.actionName)}
         >
-          {/* Top edge shine */}
-          <View style={styles.tileTopShine} />
-          {!isSpecialSplit && (
-            <View pointerEvents="none" style={styles.tileBottomEdge} />
+          {/* Approved neutral card art. Outcome feedback appears only after commitment. */}
+          {!isSpecialSplit && !bookMaterial && (
+            <MaskCardArtwork />
           )}
-          {/* Outer gradient bezel — double bezel construction */}
-          {!isSpecialSplit && (
+          {!isSpecialSplit && bookMaterial && (
             <LinearGradient
-              colors={tileGradient(s, bookMaterial)}
+              colors={tileGradient(s, true)}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -653,11 +667,6 @@ export function SwipeMask({
               style={[StyleSheet.absoluteFill, { backgroundColor: splitBackgroundColor }]}
             />
           )}
-          {/* Corner pips — decorative */}
-          <View style={styles.tilePipTL} pointerEvents="none" />
-          <View style={styles.tilePipTR} pointerEvents="none" />
-          <View style={styles.tilePipBL} pointerEvents="none" />
-          <View style={styles.tilePipBR} pointerEvents="none" />
           {/* Wrong flash */}
           {flashRed && (
             <View style={[StyleSheet.absoluteFill, styles.flashOverlay]} />
@@ -720,6 +729,23 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 0,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    shadowColor: PW.color.shadow,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.36,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  bookTile: {
+    borderRadius: 20,
+    minHeight: 148,
+    alignSelf: 'center',
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 2,
     overflow: 'hidden',
     shadowColor: '#9B2D6B',
@@ -729,15 +755,13 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   phrasePanel: {
-    width: '100%',
+    width: '82%',
     flex: 1,
-    borderRadius: 18,
     alignItems: 'stretch',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: '#1C1548',
-    overflow: 'hidden',
+    paddingHorizontal: 8,
+    paddingVertical: 18,
+    backgroundColor: 'transparent',
     zIndex: 2,
   },
   tileBookMaterial: {
@@ -748,7 +772,12 @@ const styles = StyleSheet.create({
     elevation: 16,
   },
   phrasePanelBook: {
+    width: '100%',
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     backgroundColor: heroBookMaterial.coverPurpleBot,
+    overflow: 'hidden',
   },
   checkmark: {
     position: 'absolute',
@@ -828,7 +857,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   flashOverlay: {
-    borderRadius: PW.radius.card,
+    borderRadius: 20,
     zIndex: 10,
     borderWidth: 1,
     borderColor: PW.color.wrong,
@@ -867,24 +896,4 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
   },
-  tileTopShine: {
-    position: 'absolute',
-    top: 1,
-    left: 22,
-    right: 22,
-    height: 3,
-    backgroundColor: PW.color.cardInner,
-    borderRadius: 3,
-    zIndex: 2,
-  },
-  tileBottomEdge: {
-    ...cardMaterial.bottomEdge,
-    left: 22,
-    right: 22,
-    zIndex: 1,
-  },
-  tilePipTL: { position: 'absolute', top: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
-  tilePipTR: { position: 'absolute', top: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
-  tilePipBL: { position: 'absolute', bottom: 10, left: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
-  tilePipBR: { position: 'absolute', bottom: 10, right: 10, width: 4, height: 4, borderRadius: 2, backgroundColor: PW.color.cardRim },
 });
