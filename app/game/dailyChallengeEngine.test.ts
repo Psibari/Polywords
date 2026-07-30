@@ -9,8 +9,14 @@ import {
   claimDailyWord,
   createDailyResult,
   getChallengeNumber,
+  pauseDailyRound,
   revealDailyCluesByElapsed,
 } from './dailyChallengeEngine';
+import {
+  decodeDailySessionSnapshot,
+  encodeDailySessionSnapshot,
+  recoverDailySession,
+} from './dailySessionPersistence';
 import { DAILY_POOL } from './dailyPool';
 import { DailySession } from './types';
 
@@ -78,6 +84,7 @@ function ok(condition: boolean, label: string): void {
     eq(a.rounds[i].word.tier, DAILY_TIER_CURVE[i], `session.tierCurve.${i}`);
   }
   eq(a.challengeNumber, getChallengeNumber('2026-07-13'), 'session.challengeNumber');
+  eq(a.roundElapsedMs, 0, 'session.roundElapsedStartsAtZero');
 }
 
 // ── Rotation spacing: no word repeats within 4 consecutive days ──
@@ -140,7 +147,9 @@ function solveAll(session: DailySession, waits: number[]): DailySession {
 {
   let s = buildDailySession('2026-07-13');
   const round = s.rounds[0];
-  const wrong = round.candidates.find(c => c !== round.word.answer)!;
+  const wrongCandidates = round.candidates.filter(c => c !== round.word.answer);
+  const wrong = wrongCandidates[0]!;
+  const secondWrong = wrongCandidates[1]!;
 
   const first = claimDailyWord(s, wrong);
   eq(first.result.isCorrect, false, 'miss.first.incorrect');
@@ -149,7 +158,11 @@ function solveAll(session: DailySession, waits: number[]): DailySession {
   eq(first.session.rounds[0].revealedClueCount, 2, 'miss.first.clueBump');
   eq(first.session.status, 'active', 'miss.first.stillActive');
 
-  const second = claimDailyWord(first.session, wrong);
+  const duplicate = claimDailyWord(first.session, wrong);
+  eq(duplicate.session, first.session, 'miss.duplicate.sessionUnchanged');
+  eq(duplicate.result.chancesRemaining, 1, 'miss.duplicate.noSecondChanceLost');
+
+  const second = claimDailyWord(first.session, secondWrong);
   eq(second.result.chancesRemaining, 0, 'miss.second.chances');
   eq(second.session.status, 'lost', 'miss.second.lost');
   eq(second.result.pollyReaction, 'loss', 'miss.second.reaction');
@@ -181,6 +194,101 @@ function solveAll(session: DailySession, waits: number[]): DailySession {
   // never goes backwards
   s = revealDailyCluesByElapsed(s, 0);
   eq(s.rounds[0].revealedClueCount, 3, 'reveal.neverRegresses');
+}
+
+// ── Interruption recovery and paused clue timing ─────────────────
+
+{
+  let s = buildDailySession('2026-07-13');
+  s = pauseDailyRound(s, 3500);
+  eq(s.roundElapsedMs, 3500, 'pause.recordsActiveRoundTime');
+
+  s = revealDailyCluesByElapsed(s, s.roundElapsedMs + 499);
+  eq(s.rounds[0].revealedClueCount, 1, 'pause.resumeBeforeRemainingDelay');
+  s = revealDailyCluesByElapsed(s, s.roundElapsedMs + 500);
+  eq(s.rounds[0].revealedClueCount, 2, 'pause.resumeAtRemainingDelay');
+
+  const currentRound = s.rounds[s.currentRoundIndex];
+  s = claimDailyWord(s, currentRound.word.answer).session;
+  eq(s.currentRoundIndex, 1, 'pause.correctAdvancesRound');
+  eq(s.roundElapsedMs, 0, 'pause.nextRoundResetsElapsed');
+}
+
+{
+  const original = pauseDailyRound(
+    buildDailySession('2026-07-13'),
+    2750,
+  );
+  const encoded = encodeDailySessionSnapshot(original);
+  const restored = decodeDailySessionSnapshot(encoded, '2026-07-13');
+
+  ok(restored !== null, 'snapshot.sameDayRestores');
+  eq(restored!.date, original.date, 'snapshot.datePreserved');
+  eq(restored!.roundElapsedMs, 2750, 'snapshot.elapsedPreserved');
+  eq(
+    restored!.rounds[0].word.id,
+    original.rounds[0].word.id,
+    'snapshot.puzzlePreserved',
+  );
+
+  eq(
+    decodeDailySessionSnapshot(encoded, '2026-07-14'),
+    null,
+    'snapshot.staleDateRejected',
+  );
+  eq(
+    decodeDailySessionSnapshot('{not-json', '2026-07-13'),
+    null,
+    'snapshot.corruptRejected',
+  );
+}
+
+{
+  const missingWithAttempt = recoverDailySession(
+    null,
+    '2026-07-13',
+    true,
+  );
+  ok(missingWithAttempt.session !== null, 'recovery.legacyAttemptRebuilt');
+  eq(missingWithAttempt.repaired, true, 'recovery.legacyAttemptMarkedRepaired');
+  eq(
+    missingWithAttempt.session!.rounds[0].word.id,
+    buildDailySession('2026-07-13').rounds[0].word.id,
+    'recovery.legacyAttemptUsesDeterministicPuzzle',
+  );
+
+  const corruptWithAttempt = recoverDailySession(
+    '{broken',
+    '2026-07-13',
+    true,
+  );
+  ok(corruptWithAttempt.session !== null, 'recovery.corruptAttemptRebuilt');
+  eq(corruptWithAttempt.repaired, true, 'recovery.corruptMarkedRepaired');
+
+  const staleWithoutAttempt = recoverDailySession(
+    encodeDailySessionSnapshot(buildDailySession('2026-07-12')),
+    '2026-07-13',
+    false,
+  );
+  eq(staleWithoutAttempt.session, null, 'recovery.staleSessionDiscarded');
+  eq(staleWithoutAttempt.repaired, true, 'recovery.staleSessionRequestsCleanup');
+}
+
+{
+  const won = solveAll(
+    buildDailySession('2026-07-13'),
+    [0, 0, 0, 0, 0],
+  );
+  const restoredWon = decodeDailySessionSnapshot(
+    encodeDailySessionSnapshot(won),
+    won.date,
+  );
+  ok(restoredWon !== null, 'snapshot.terminalSessionRestores');
+  eq(
+    createDailyResult(restoredWon!).status,
+    'won',
+    'snapshot.terminalSessionRebuildsResult',
+  );
 }
 
 console.log('OK');

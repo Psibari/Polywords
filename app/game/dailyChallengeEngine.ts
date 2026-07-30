@@ -147,6 +147,7 @@ export function buildDailySession(dateString = getTodayDateString()): DailySessi
     status: 'active',
     solvedCount: 0,
     startedAt: Date.now(),
+    roundElapsedMs: 0,
   };
 }
 
@@ -172,6 +173,19 @@ export function claimDailyWord(
 
   const normalizedClaim = claimedWord.trim().toUpperCase();
   const isCorrect = normalizedClaim === currentRound.word.answer.toUpperCase();
+  if (!isCorrect && currentRound.wrongClaims.includes(normalizedClaim)) {
+    return {
+      session,
+      result: {
+        isCorrect: false,
+        status: session.status,
+        chancesRemaining: session.chancesRemaining,
+        revealedClueCount: currentRound.revealedClueCount,
+        solvedCount: session.solvedCount,
+        roundAdvanced: false,
+      },
+    };
+  }
   const rounds = [...session.rounds];
 
   if (isCorrect) {
@@ -186,6 +200,7 @@ export function claimDailyWord(
         : session.currentRoundIndex + 1,
       solvedCount,
       status: won ? 'won' : 'active',
+      roundElapsedMs: won ? session.roundElapsedMs : 0,
       ...(won ? { completedAt: now } : {}),
     };
 
@@ -246,9 +261,13 @@ export function revealDailyCluesByElapsed(
   const currentRound = session.rounds[session.currentRoundIndex];
   if (!currentRound) return session;
 
-  const timedClueCount = elapsedMs >= DAILY_CLUE_3_DELAY_MS
+  const boundedElapsedMs = Math.min(
+    Math.max(0, elapsedMs),
+    DAILY_CLUE_3_DELAY_MS,
+  );
+  const timedClueCount = boundedElapsedMs >= DAILY_CLUE_3_DELAY_MS
     ? 3
-    : elapsedMs >= DAILY_CLUE_2_DELAY_MS
+    : boundedElapsedMs >= DAILY_CLUE_2_DELAY_MS
       ? 2
       : 1;
 
@@ -259,7 +278,20 @@ export function revealDailyCluesByElapsed(
     ...currentRound,
     revealedClueCount: timedClueCount,
   };
-  return { ...session, rounds };
+  return { ...session, rounds, roundElapsedMs: boundedElapsedMs };
+}
+
+export function pauseDailyRound(
+  session: DailySession,
+  elapsedMs: number,
+): DailySession {
+  if (session.status !== 'active') return session;
+  const roundElapsedMs = Math.min(
+    Math.max(session.roundElapsedMs, elapsedMs, 0),
+    DAILY_CLUE_3_DELAY_MS,
+  );
+  if (roundElapsedMs === session.roundElapsedMs) return session;
+  return { ...session, roundElapsedMs };
 }
 
 export function createDailyResult(session: DailySession): DailyResult {

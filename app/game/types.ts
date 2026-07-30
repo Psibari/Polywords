@@ -217,6 +217,9 @@ export type DailySession = {
   status: DailySessionStatus;
   solvedCount: number;
   startedAt: number;
+  // Active time spent on the current round. Wall-clock time while the app is
+  // backgrounded or Daily is out of focus must not reveal extra clues.
+  roundElapsedMs: number;
   completedAt?: number;
 };
 

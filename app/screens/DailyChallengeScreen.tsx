@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   Animated,
+  AppState,
   Easing,
   Image,
   ImageBackground,
@@ -400,6 +401,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const startDailyChallenge = useGameStore((s) => s.startDailyChallenge);
   const claimDailyAnswer = useGameStore((s) => s.claimDailyAnswer);
   const revealDailyClues = useGameStore((s) => s.revealDailyClues);
+  const pauseDailyChallenge = useGameStore((s) => s.pauseDailyChallenge);
   const clearDailyReaction = useGameStore((s) => s.clearDailyReaction);
   const loadDailyResult = useGameStore((s) => s.loadDailyResult);
   const resetDailyForDev = useGameStore((s) => s.resetDailyForDev);
@@ -409,6 +411,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   );
   const [pollyPose, setPollyPose] = useState<PerchReaction>('perched');
   const [inputLocked, setInputLocked] = useState(false);
+  const [dailyInitialized, setDailyInitialized] = useState(false);
   const inputLockedRef = useRef(false);
   const clueVaultRef = useRef<View>(null);
   const [claimTarget, setClaimTarget] = useState<{ x: number; y: number } | null>(
@@ -431,6 +434,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   const completedRef = useRef(false);
   const roundStartRef = useRef<number>(Date.now());
+  const dailyFocusedRef = useRef(false);
+  const dailySessionRef = useRef(dailySession);
+  dailySessionRef.current = dailySession;
 
   function measureClueTarget() {
     requestAnimationFrame(() => {
@@ -446,8 +452,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // INIT
   useEffect(() => {
     async function init() {
-      await loadDailyResult();
-      await startDailyChallenge();
+      try {
+        await loadDailyResult();
+        await startDailyChallenge();
+      } finally {
+        setDailyInitialized(true);
+      }
     }
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -480,7 +490,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     completedRef.current = false;
     completingCandidateRef.current = null;
     setLocked(false);
-    roundStartRef.current = Date.now();
+    roundStartRef.current = Date.now() - dailySession.roundElapsedMs;
     intakeScale.setValue(1);
     revealProgress.setValue(0);
     setRevealSolvedCount(0);
@@ -489,7 +499,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     if (!round) return;
     const candidates = [...round.candidates];
     const map = new Map<string, DailyAnswerCardState>();
-    candidates.forEach((c) => map.set(c, 'idle'));
+    const committedWrongClaims = new Set(round.wrongClaims);
+    candidates.forEach((c) =>
+      map.set(c, committedWrongClaims.has(c) ? 'disabled' : 'idle'),
+    );
     setCardStates(map);
 
     rollProgress.stopAnimation();
@@ -505,15 +518,49 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.currentRoundIndex]);
 
-  // CLUE TIMER
+  // CLUE TIMER — active play time only. Leaving Daily or backgrounding the
+  // app saves elapsed time and stops the clock; returning resumes from there.
+  useFocusEffect(
+    useCallback(() => {
+      dailyFocusedRef.current = true;
+      const focusedSession = dailySessionRef.current;
+      if (focusedSession?.status === 'active') {
+        roundStartRef.current =
+          Date.now() - focusedSession.roundElapsedMs;
+      }
+
+      const id = setInterval(() => {
+        const current = dailySessionRef.current;
+        if (!current || current.status !== 'active') return;
+        revealDailyClues(Date.now() - roundStartRef.current);
+      }, 500);
+
+      return () => {
+        clearInterval(id);
+        const current = dailySessionRef.current;
+        if (current?.status === 'active') {
+          pauseDailyChallenge(Date.now() - roundStartRef.current);
+        }
+        dailyFocusedRef.current = false;
+      };
+    }, [pauseDailyChallenge, revealDailyClues]),
+  );
+
   useEffect(() => {
-    if (!dailySession) return;
-    const id = setInterval(() => {
-      revealDailyClues(Date.now() - roundStartRef.current);
-    }, 500);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailySession?.currentRoundIndex]);
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (!dailyFocusedRef.current) return;
+      const current = dailySessionRef.current;
+      if (!current || current.status !== 'active') return;
+
+      if (nextState === 'active') {
+        roundStartRef.current = Date.now() - current.roundElapsedMs;
+        return;
+      }
+
+      pauseDailyChallenge(Date.now() - roundStartRef.current);
+    });
+    return () => subscription.remove();
+  }, [pauseDailyChallenge]);
 
   // CLAIM RESULT -> Polly reaction
   useEffect(() => {
@@ -642,7 +689,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     navigation.navigate('Home');
   }
 
-  const isComplete = !!dailyResult || dailySession?.status !== 'active';
+  const isComplete =
+    dailyInitialized &&
+    (!!dailyResult || dailySession?.status !== 'active');
   const challengeNumber = dailySession
     ? dailySession.challengeNumber
     : getChallengeNumber(getTodayDateString());

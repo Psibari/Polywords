@@ -33,8 +33,13 @@ import {
   claimDailyWord,
   createDailyResult,
   getTodayDateString,
+  pauseDailyRound,
   revealDailyCluesByElapsed,
 } from '../game/dailyChallengeEngine';
+import {
+  encodeDailySessionSnapshot,
+  recoverDailySession,
+} from '../game/dailySessionPersistence';
 import { applyDailyStreak, getStreakMilestone } from '../game/dailyStreak';
 import { setMusicEnabled } from '../audio/MusicEngine';
 import { PollyLineId } from '../game/pollyCharacter';
@@ -62,9 +67,51 @@ const GHOSTS_KEY = 'polywords_ghosts';
 const PROGRESS_KEY = 'polywords_progress';
 const DAILY_ATTEMPT_KEY_PREFIX = 'polywords_daily_attempt_';
 const DAILY_RESULT_KEY_PREFIX = 'polywords_daily_result_';
+const DAILY_ACTIVE_SESSION_KEY = 'polywords_daily_active_session_v1';
 const GOLD_FEATHER_KEY = 'polywords_gold_feather';
 const SETTINGS_KEY = 'polywords_settings';
 const POLLY_MEMORY_KEY = 'polywords_polly_memory_v1';
+
+let dailyPersistenceQueue: Promise<void> = Promise.resolve();
+
+function enqueueDailyPersistence(operation: () => Promise<void>): Promise<void> {
+  dailyPersistenceQueue = dailyPersistenceQueue
+    .catch(() => {})
+    .then(operation);
+  return dailyPersistenceQueue;
+}
+
+function persistActiveDailySession(session: DailySession): Promise<void> {
+  return enqueueDailyPersistence(() =>
+    AsyncStorage.setItem(
+      DAILY_ACTIVE_SESSION_KEY,
+      encodeDailySessionSnapshot(session),
+    ),
+  );
+}
+
+function parseDailyResult(raw: string | null, date: string): DailyResult | null {
+  if (!raw) return null;
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (typeof value !== 'object' || value === null) return null;
+    const candidate = value as Partial<DailyResult>;
+    if (candidate.date !== date) return null;
+    if (candidate.status !== 'won' && candidate.status !== 'lost') return null;
+    if (typeof candidate.challengeNumber !== 'number') return null;
+    if (typeof candidate.solvedCount !== 'number') return null;
+    if (![0, 1, 2].includes(candidate.chancesRemaining as number)) return null;
+    if (typeof candidate.goldFeatherEarned !== 'boolean') return null;
+    if (typeof candidate.completedAt !== 'number') return null;
+    if (typeof candidate.title !== 'string') return null;
+    if (![0, 1, 2].includes(candidate.livesLeft as number)) return null;
+    if (typeof candidate.shareText !== 'string') return null;
+    if (!Array.isArray(candidate.wordResults)) return null;
+    return candidate as DailyResult;
+  } catch {
+    return null;
+  }
+}
 
 type PlayerSettings = {
   soundEnabled: boolean;
@@ -208,6 +255,7 @@ type GameStore = {
   startDailyChallenge: (date?: string) => Promise<boolean>;
   claimDailyAnswer: (answer: string) => void;
   revealDailyClues: (elapsedMs: number) => void;
+  pauseDailyChallenge: (elapsedMs: number) => void;
   clearDailyReaction: () => void;
   clearStreakMilestoneReward: () => void;
   resetDailyForDev: () => Promise<void>;
@@ -598,24 +646,113 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const resultKey = DAILY_RESULT_KEY_PREFIX + date;
 
     try {
-      const [attempt, rawResult] = await Promise.all([
+      await dailyPersistenceQueue.catch(() => {});
+      const [attempt, rawResult, rawSession] = await Promise.all([
         AsyncStorage.getItem(attemptKey),
         AsyncStorage.getItem(resultKey),
+        AsyncStorage.getItem(DAILY_ACTIVE_SESSION_KEY),
       ]);
-      const dailyResult = rawResult
-        ? JSON.parse(rawResult) as DailyResult
-        : null;
+      const attemptRecorded = attempt === date;
+      const dailyResult = parseDailyResult(rawResult, date);
+
+      if (dailyResult) {
+        set({
+          dailySession: null,
+          daily: null,
+          dailyAttemptDate: date,
+          dailyResult,
+          dailyLastClaimResult: null,
+        });
+        await enqueueDailyPersistence(async () => {
+          await AsyncStorage.multiSet([[attemptKey, date]]);
+          await AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY);
+        });
+        await get().loadGoldFeather();
+        return;
+      }
+
+      const recovery = recoverDailySession(rawSession, date, attemptRecorded);
+      const recoveredSession = recovery.session;
+
+      if (!recoveredSession) {
+        set({
+          dailySession: null,
+          daily: null,
+          dailyAttemptDate: null,
+          dailyResult: null,
+          dailyLastClaimResult: null,
+        });
+        if (recovery.repaired) {
+          await enqueueDailyPersistence(() =>
+            AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY),
+          );
+        }
+        await get().loadGoldFeather();
+        return;
+      }
+
+      if (recoveredSession.status === 'active') {
+        set({
+          dailySession: recoveredSession,
+          daily: toQuarantinedDailyState(recoveredSession),
+          dailyAttemptDate: date,
+          dailyResult: null,
+          dailyLastClaimResult: null,
+        });
+        await enqueueDailyPersistence(() =>
+          AsyncStorage.multiSet([
+            [attemptKey, date],
+            [
+              DAILY_ACTIVE_SESSION_KEY,
+              encodeDailySessionSnapshot(recoveredSession),
+            ],
+          ]),
+        );
+        await get().loadGoldFeather();
+        return;
+      }
+
+      const recoveredResult = createDailyResult(recoveredSession);
+      const progress = applyDailyStreak(get().progress, recoveredResult.date);
+      const pollyMemory = rememberDaily(
+        get().pollyMemory,
+        recoveredResult.status,
+        recoveredResult.date,
+      );
+      const streakMilestone = getStreakMilestone(progress.currentStreak);
 
       set({
-        dailyAttemptDate: attempt === date ? date : null,
-        dailyResult,
+        dailySession: recoveredSession,
+        daily: toQuarantinedDailyState(recoveredSession),
+        dailyAttemptDate: date,
+        dailyResult: recoveredResult,
+        dailyLastClaimResult: null,
+        progress,
+        pollyMemory,
+        streakMilestoneReward: streakMilestone,
       });
 
-      get().loadGoldFeather();
+      await enqueueDailyPersistence(async () => {
+        await AsyncStorage.multiSet([
+          [attemptKey, date],
+          [resultKey, JSON.stringify(recoveredResult)],
+          [PROGRESS_KEY, JSON.stringify(progress)],
+          [POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)],
+        ]);
+        await AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY);
+      });
+      if (recoveredResult.goldFeatherEarned || streakMilestone) {
+        await get().grantGoldFeather();
+      } else {
+        await get().loadGoldFeather();
+      }
     } catch {
       set({
+        dailySession: null,
+        daily: null,
         dailyAttemptDate: null,
         dailyResult: null,
+        dailyLastClaimResult: null,
       });
     }
   },
@@ -627,12 +764,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       const existingAttempt = await AsyncStorage.getItem(attemptKey);
       if (existingAttempt === date) {
-        set({ dailyAttemptDate: date });
+        await get().loadDailyResult(date);
         return false;
       }
 
-      await AsyncStorage.setItem(attemptKey, date);
       const dailySession = buildDailySession(date);
+      await enqueueDailyPersistence(() =>
+        AsyncStorage.multiSet([
+          [attemptKey, date],
+          [
+            DAILY_ACTIVE_SESSION_KEY,
+            encodeDailySessionSnapshot(dailySession),
+          ],
+        ]),
+      );
       set({
         dailySession,
         daily: toQuarantinedDailyState(dailySession),
@@ -674,11 +819,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
       streakMilestoneReward: streakMilestone,
     });
 
-    if (dailyResult) {
+    if (!dailyResult) {
+      void persistActiveDailySession(claim.session);
+    } else {
       const resultKey = DAILY_RESULT_KEY_PREFIX + dailyResult.date;
-      AsyncStorage.setItem(resultKey, JSON.stringify(dailyResult)).catch(() => {});
-      AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)).catch(() => {});
-      AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
+      const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + dailyResult.date;
+      void enqueueDailyPersistence(async () => {
+        await AsyncStorage.setItem(
+          DAILY_ACTIVE_SESSION_KEY,
+          encodeDailySessionSnapshot(claim.session),
+        );
+        await AsyncStorage.multiSet([
+          [attemptKey, dailyResult.date],
+          [resultKey, JSON.stringify(dailyResult)],
+          [PROGRESS_KEY, JSON.stringify(progress)],
+          [POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)],
+        ]);
+        await AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY);
+      });
     }
 
     if (dailyResult?.goldFeatherEarned || streakMilestone) {
@@ -697,6 +855,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dailySession: nextSession,
       daily: toQuarantinedDailyState(nextSession),
     });
+    void persistActiveDailySession(nextSession);
+  },
+
+  pauseDailyChallenge: (elapsedMs: number) => {
+    const dailySession = get().dailySession;
+    if (!dailySession || dailySession.status !== 'active') return;
+    const pausedSession = pauseDailyRound(dailySession, elapsedMs);
+    if (pausedSession === dailySession) return;
+    set({
+      dailySession: pausedSession,
+      daily: toQuarantinedDailyState(pausedSession),
+    });
+    void persistActiveDailySession(pausedSession);
   },
 
   clearDailyReaction: () => {
@@ -712,9 +883,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
     const resultKey  = DAILY_RESULT_KEY_PREFIX  + date;
     try {
+      await dailyPersistenceQueue.catch(() => {});
       await Promise.all([
         AsyncStorage.removeItem(attemptKey),
         AsyncStorage.removeItem(resultKey),
+        AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY),
       ]);
     } catch {}
     set({
@@ -732,6 +905,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
     const resultKey  = DAILY_RESULT_KEY_PREFIX  + date;
     try {
+      await dailyPersistenceQueue.catch(() => {});
       await Promise.all([
         AsyncStorage.removeItem(GHOSTS_KEY),
         AsyncStorage.removeItem(PROGRESS_KEY),
@@ -742,6 +916,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         AsyncStorage.removeItem(GAME_KEY),
         AsyncStorage.removeItem(attemptKey),
         AsyncStorage.removeItem(resultKey),
+        AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY),
       ]);
     } catch {}
     set({
