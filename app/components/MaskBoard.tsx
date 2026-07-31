@@ -544,6 +544,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
 
   const [bossReady, setBossReady]             = useState(!isBoss);
   const [tilesReady, setTilesReady]           = useState(false);
+  // Held beat between the close-beat finishing and the outcome card
+  // appearing — mirrors ResultsScreen's verdict-then-detail stagger.
+  const [showOutcomeCard, setShowOutcomeCard] = useState(false);
 
   // ── haunt entrance ────────────────────────────────────────────
   const [hauntReady, setHauntReady]           = useState(!isHaunt);
@@ -883,15 +886,29 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
         bookOpenAnimationRef.current = Animated.parallel([
-          // Firm, confident snap with a small bounce-settle — reads as solid,
-          // distinct from an ordinary per-tile flick.
-          Animated.spring(bookOpenAnim, {
-            toValue: 0,
-            damping: 9,
-            stiffness: 220,
-            mass: 1,
-            useNativeDriver: true,
-          }),
+          // Explicit chained legs, not a spring — a spring here read as an
+          // under-damped blink/pulse on device instead of a single clean
+          // snap. Overshoot past shut, a tiny recoil settle, then rest.
+          Animated.sequence([
+            Animated.timing(bookOpenAnim, {
+              toValue: -0.04, // small overshoot past fully-shut, proportional to heroBook's overshootAngle/openAngle ratio
+              duration: PW.motion.heroBook.overshootMs,
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.timing(bookOpenAnim, {
+              toValue: 0.02, // tiny recoil settle, proportional to heroBook's settleAngle/openAngle ratio
+              duration: PW.motion.heroBook.settleMs,
+              easing: Easing.inOut(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.timing(bookOpenAnim, {
+              toValue: 0,
+              duration: PW.motion.heroBook.settleMs,
+              easing: Easing.inOut(Easing.quad),
+              useNativeDriver: true,
+            }),
+          ]),
           Animated.sequence([
             Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
             Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 360, easing: Easing.in(Easing.quad), useNativeDriver: true }),
@@ -946,6 +963,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       onOutcomeReveal(outcome) {
         playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
         if (outcome === 'haunted') triggerBoardShake();
+        setShowOutcomeCard(false);
+        setTimeout(() => setShowOutcomeCard(true), 350);
       },
       onLivesDepleted() {
         Animated.timing(deckRedTint, {
@@ -1234,10 +1253,12 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const bookIntakeRotateX = bookOpenAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '65deg'],
+    extrapolateLeft: 'extend', // small negative overshoot is intentional (mastered close beat) — do not clamp this one
   });
   const bookIntakeGlowScale = bookOpenAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.86, 1],
+    extrapolateLeft: 'clamp', // this one must not go below 0.86 on overshoot
   });
 
   const showGauntletCard =
@@ -1831,7 +1852,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         </Animated.Text>
       )}
 
-      {mechanics.wordOutcome === 'mastered' && (
+      {mechanics.wordOutcome === 'mastered' && showOutcomeCard && (
         <MasteredOutcomeOverlay
           word={step.word}
           headline={isHaunt ? 'BANISHED' : 'MASTERED'}
@@ -1840,7 +1861,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         />
       )}
 
-      {mechanics.wordOutcome === 'haunted' && (
+      {mechanics.wordOutcome === 'haunted' && showOutcomeCard && (
         <HauntedOutcomeOverlay
           word={step.word}
           detail={mechanics.outcomeDetail}
