@@ -28,7 +28,6 @@ import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
 import type { ChainTier } from '../hooks/useBoardMechanics';
-import { HuntChest } from './HuntChest';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 
 // ── Layout constants ──────────────────────────────────────────
@@ -659,13 +658,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }
 
-  // ── boss chest (face-only; no brain state) ─────────────────────
-  // Locks cracked = gauntlet tiles cleared correctly so far. Derived purely
-  // from the existing onGauntletCorrect/onGauntletBegin callbacks below —
-  // useBoardMechanics itself is untouched.
-  const [gauntletLocksOpen, setGauntletLocksOpen] = useState<0 | 1 | 2 | 3>(0);
-
-
   // ── mechanics (brain) ───────────────────────────────────────────
   // Every perform.* callback below is the FACE half of a function that used
   // to live directly in this component — see useBoardMechanics.ts for the
@@ -702,7 +694,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         triggerGauntletPulse();
         if (swipedUp) triggerAbsorption(phrase);
-        setGauntletLocksOpen(prev => (Math.min(3, prev + 1) as 0 | 1 | 2 | 3));
       },
       onGauntletTileDrop() {
         splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
@@ -723,7 +714,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
       onGauntletBegin() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        setGauntletLocksOpen(0);
       },
       onWordExit(perfect) {
         // Stop any prior per-tile flick animation and reset both values it
