@@ -31,6 +31,7 @@ import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
 import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
+import { BossGauntletStack } from './BossGauntletStack';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -597,9 +598,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   // Final tile drop (native: transform only)
   const splitTile1TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
 
-  // Final tile border pulse (non-native)
-  const finalBorder1Anim = useRef(new Animated.Value(0)).current;
-
   // Mastered celebration
   const masterHeroScale      = useRef(new Animated.Value(1)).current;
   const masterHeroTransY     = useRef(new Animated.Value(0)).current;
@@ -699,7 +697,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
       onGauntletTileDrop() {
         splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
-        finalBorder1Anim.setValue(0);
         const drops = [
           Animated.spring(splitTile1TransY, {
             toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
@@ -708,10 +705,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         Animated.parallel(drops).start(({ finished }) => {
           if (!finished) return;
           mechanics.onGauntletTileLanded();
-          Animated.sequence([
-            Animated.timing(finalBorder1Anim, { toValue: 0.55, duration: 120, useNativeDriver: false }),
-            Animated.timing(finalBorder1Anim, { toValue: 1.0, duration: 220, useNativeDriver: false }),
-          ]).start();
         });
       },
       onGauntletBegin() {
@@ -1102,7 +1095,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     setMasterStampVisible(false);
     setSealReady(false);
     splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
-    finalBorder1Anim.setValue(0);
     masterHeroScale.setValue(1);
     masterHeroTransY.setValue(0);
     masterAllFadeAnim.setValue(1);
@@ -1243,50 +1235,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     outputRange: [0.86, 1],
   });
 
-  const gauntletBorderColor = finalBorder1Anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['rgba(245,200,66,0.35)', 'rgba(245,200,66,1.0)'],
-  });
-
-  // Shared by both boss and non-boss paths below, unchanged from before this
-  // pass — only whether it gets an extra positioning wrapper differs.
-  const gauntletCard = (mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') && mechanics.activeGauntletTile ? (
-    <Animated.View
-      pointerEvents={mechanics.gatePhase === 'wrongFail' ? 'none' : mechanics.tileLanded ? 'auto' : 'none'}
-      style={{ transform: [{ translateY: splitTile1TransY }] }}
-    >
-      <Animated.View style={[
-        styles.finalHiddenTileFrame,
-        {
-          borderColor: gauntletBorderColor,
-          shadowOpacity: finalBorder1Anim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.08, 0.26],
-          }),
-        },
-      ]}>
-        <SwipeMask
-          key={mechanics.activeGauntletTile.mask.id}
-          mask={mechanics.activeGauntletTile.mask}
-          state={mechanics.finalTileStates.get(mechanics.activeGauntletTile.mask.id) ?? 'idle'}
-          onSwipeUp={mechanics.onGauntletSwipeUp}
-          onSwipeDown={mechanics.onGauntletSwipeRight}
-          onSwipeReveal={() => {}}
-          revealable={false}
-          disabled={mechanics.inputLocked}
-          bookMaterial
-          tileHeight={220}
-          entryDelay={0}
-          onEffect={handleEffect}
-          onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
-          onPressHoldStart={() => playSfx('pressHoldStart')}
-          onCardTouch={handleCardTouch}
-          wordY={wordScreenY}
-          intakeY={wordScreenY + 73}
-        />
-      </Animated.View>
-    </Animated.View>
-  ) : null;
+  const showGauntletCard =
+    (mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') &&
+    !!mechanics.activeGauntletTile;
 
   return (
     <Animated.View
@@ -1623,7 +1574,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
               </View>
             )}
 
-            {gauntletCard && (
+            {showGauntletCard && (
               <View style={styles.finalHiddenTileStack}>
                 {!isBossStage && mechanics.gauntletTiles.length > 1 && (
                   <Text style={{
@@ -1637,7 +1588,22 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                     {`${mechanics.gauntletIndex + 1} OF ${mechanics.gauntletTiles.length}`}
                   </Text>
                 )}
-                {gauntletCard}
+                <BossGauntletStack
+                  gatePhase={mechanics.gatePhase}
+                  activeGauntletTile={mechanics.activeGauntletTile}
+                  gauntletTiles={mechanics.gauntletTiles}
+                  gauntletIndex={mechanics.gauntletIndex}
+                  tileState={mechanics.finalTileStates.get(mechanics.activeGauntletTile?.mask.id ?? '') ?? 'idle'}
+                  tileLanded={mechanics.tileLanded}
+                  inputLocked={mechanics.inputLocked}
+                  onSwipeUp={mechanics.onGauntletSwipeUp}
+                  onSwipeRight={mechanics.onGauntletSwipeRight}
+                  onEffect={handleEffect}
+                  onSwipeAttempt={onSwipeAttempt}
+                  onCardTouch={handleCardTouch}
+                  wordY={wordScreenY}
+                  intakeY={wordScreenY + 73}
+                />
               </View>
             )}
             </Animated.View>
@@ -2115,15 +2081,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     position: 'relative',
-  },
-  finalHiddenTileFrame: {
-    borderWidth: 1.5,
-    borderRadius: 14,
-    backgroundColor: '#0F0D2A',
-    shadowColor: '#F5C842',
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 10,
-    elevation: 7,
   },
   outcomeOverlay: {
     ...StyleSheet.absoluteFillObject,
