@@ -260,6 +260,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
   function triggerFinalTilesDrop() {
     if (gauntletPairs.length === 0) return;
+    // After the guard, not before: a final-gate word with zero gauntlet
+    // pairs never reaches triggerWrongFail/triggerMasteredBrain (the only
+    // places that clear this flag), so setting it earlier would leave
+    // gauntletActive stuck true for the rest of the run.
     setGauntletActive(true);
 
     // One tile per pair, max 3. Which face shows is an independent coin flip

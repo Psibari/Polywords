@@ -885,6 +885,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
         bookOpenAnimationRef.current = Animated.parallel([
+          // Firm, confident snap with a small bounce-settle — reads as solid,
+          // distinct from an ordinary per-tile flick.
           Animated.spring(bookOpenAnim, {
             toValue: 0,
             damping: 9,
@@ -919,8 +921,11 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         return;
         }
         if (!isBoss) return;
-        // ── Boss path — mirror of the master beat: same duration, opposite
-        // signal. No flash, no stamp: colour drains, it does not travel.
+        // ── Boss path — same shape of beat as the master close (one decisive
+        // motion, not the 12-phase sequence) but a different physical quality:
+        // the mastered close is a spring with bounce-settle, this is a slower
+        // 420ms ease with no overshoot. No flash, no stamp: colour drains, it
+        // does not travel.
         playSfx('bookClose');
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         triggerBoardShake();
@@ -932,6 +937,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         bookIntakeGlowAnim.stopAnimation();
         bookGhostDrainOpacity.setValue(0);
         bookOpenAnimationRef.current = Animated.parallel([
+          // Heavier and slower than the mastered spring, no overshoot — reads
+          // as losing structure, not snapping shut.
           Animated.timing(bookOpenAnim, { toValue: 0, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
           Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 260, useNativeDriver: true }),
           Animated.timing(bookGhostDrainOpacity, { toValue: 0.55, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -1450,6 +1457,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             />
           </Animated.View>
         </Animated.View>
+        {/* CAUTION: this gate (wordOutcome === 'mastered') is also what mounts
+            MasteredOutcomeOverlay elsewhere in this file — a full-screen scrim
+            (zIndex 300, rgba(15,13,42,0.78)) that renders after the book in tree
+            order. Once real art replaces bossOutcomeAssets.masterSeal, it will be
+            covered by that scrim unless the gate changes to something that fires
+            before the overlay mounts (e.g. mechanics.gatePhase === 'mastered',
+            which flips earlier) or the render order changes. Untested today
+            because masterSeal is null — do not assume this renders correctly
+            once art lands without checking. */}
         {isBossStage && mechanics.wordOutcome === 'mastered' && bossOutcomeAssets.masterSeal && (
           <View pointerEvents="none" style={styles.bossMasterSeal}>
             <Image

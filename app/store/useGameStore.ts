@@ -346,7 +346,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         await AsyncStorage.removeItem(GAME_KEY);
         return false;
       }
-      set({ game: saved, hasResumableGame: true });
+      // gauntletActive/gauntletCorrectCount are transient UI-session state
+      // (the actual gauntlet phase lives in useBoardMechanics component
+      // state, not here) — force them back to their idle values on resume
+      // so a snapshot saved mid-gauntlet can't leave the feather-row HUD
+      // stuck dimmed after the app is backgrounded/killed and reopened.
+      set({
+        game: { ...saved, gauntletActive: false, gauntletCorrectCount: 0 },
+        hasResumableGame: true,
+      });
       return true;
     } catch {
       return false;

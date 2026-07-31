@@ -86,6 +86,10 @@ export type GameState = {
   // (future) count-up indicator — not engine logic, so no pure functions
   // here beyond this type/initial value.
   gauntletActive: boolean;
+  // Tracks correct-only gauntlet tiles for the future HUD count-up indicator;
+  // deliberately distinct from mysteryResolved (which also counts the
+  // terminal failure — see resolveMysteryTile) so a future "N correct"
+  // display never briefly shows a wrong number on loss.
   gauntletCorrectCount: number;
 };
 
