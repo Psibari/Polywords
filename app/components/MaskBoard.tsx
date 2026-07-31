@@ -883,7 +883,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
         bookOpenAnimationRef.current = Animated.parallel([
-          Animated.timing(bookOpenAnim, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+          Animated.spring(bookOpenAnim, {
+            toValue: 0,
+            damping: 9,
+            stiffness: 220,
+            mass: 1,
+            useNativeDriver: true,
+          }),
           Animated.sequence([
             Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
             Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 360, easing: Easing.in(Easing.quad), useNativeDriver: true }),
