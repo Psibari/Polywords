@@ -45,7 +45,12 @@ export function BookSpine({ word, kind, isBoss, raised, onPress, height = SPINE_
   const titleTrack = height - Math.round(34 * scale);
 
   return (
-    <Pressable onPress={onPress} disabled={!onPress}>
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? `${word}, ${isGhost ? 'haunted' : 'mastered'}${isBoss ? ", Polly's Word" : ''}` : undefined}
+    >
       <Animated.View
         style={[
           styles.root,

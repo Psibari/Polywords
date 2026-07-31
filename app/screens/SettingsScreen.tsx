@@ -62,7 +62,13 @@ type Props = {
 
 function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="switch"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: enabled }}
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+    >
       <View>
         <Text style={styles.rowLabel}>{label}</Text>
         <Text style={styles.rowNote}>{enabled ? 'On' : 'Off'}</Text>

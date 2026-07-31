@@ -376,11 +376,21 @@ function ResultsOverlay({
           </View>
         </View>
 
-        <Pressable style={res.shareBtn} onPress={onShare}>
+        <Pressable
+          style={res.shareBtn}
+          onPress={onShare}
+          accessibilityRole="button"
+          accessibilityLabel="Share result"
+        >
           <Text style={res.shareText}>SHARE RESULT</Text>
         </Pressable>
 
-          <Pressable style={res.homeBtn} onPress={onHome}>
+          <Pressable
+            style={res.homeBtn}
+            onPress={onHome}
+            accessibilityRole="button"
+            accessibilityLabel="Go home"
+          >
             <Text style={res.homeText}>HOME</Text>
           </Pressable>
         </View>

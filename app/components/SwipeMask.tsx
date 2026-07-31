@@ -211,6 +211,36 @@ export function SwipeMask({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
 
+      if (reduceMotion) {
+        // Reduce Motion: skip the magnetic-flight physics (a screen-spanning
+        // per-frame travel toward the book) for a simple in-place fade.
+        // onCardTouch still fires at a sensible "arrival" moment so the
+        // book-open timing sync it drives isn't affected by skipping the
+        // physics that normally cue it.
+        timers.push(setTimeout(() => {
+          onCardTouchRef.current?.();
+          tileOpacity.value = withTiming(0, { duration: 200, easing: ReaEasing.out(ReaEasing.ease) });
+        }, 120));
+
+        timers.push(setTimeout(() => {
+          RNAnimated.parallel([
+            RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 200, useNativeDriver: false }),
+            RNAnimated.timing(outerMarginTopAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+          ]).start(({ finished }) => {
+            if (finished) fireExitCompleteOnce();
+          });
+        }, 340));
+
+        timers.push(setTimeout(fireExitCompleteOnce, 560));
+        return () => {
+          timers.forEach(clearTimeout);
+          if (absorbRafRef.current !== null) {
+            cancelAnimationFrame(absorbRafRef.current);
+            absorbRafRef.current = null;
+          }
+        };
+      }
+
       const currentOffsetX = translateX.value;
       const currentOffsetY = translateY.value;
 

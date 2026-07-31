@@ -21,6 +21,7 @@ import { FoilWord } from '../components/ui/FoilWord';
 import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/PollyResultsPerch';
 import { PW } from '../ui/pwTheme';
 import { homeDare, homeType } from '../ui/pwHomeMaterials';
+import { usePulseScale } from '../hooks/usePulseScale';
 import {
   RESULTS_SUB_LOSS,
   RESULTS_VERDICT_BEAT,
@@ -232,22 +233,16 @@ const cc = StyleSheet.create({
 // ─── RUN IT BACK (Home dare treatment, native scale pulse) ──
 
 function RunItBackButton({ onPress }: { onPress: () => void }) {
-  const pulse = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 950, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 950, useNativeDriver: true }),
-      ]),
-    ).start();
-  }, [pulse]);
-
-  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
+  const scale = usePulseScale();
 
   return (
     <Animated.View style={[btn.wrap, { transform: [{ scale }] }]}>
-      <Pressable onPress={onPress} style={({ pressed }) => [btn.shell, pressed && btn.pressed]}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel="Run it back"
+        style={({ pressed }) => [btn.shell, pressed && btn.pressed]}
+      >
         <LinearGradient
           colors={[...homeDare.faceGradient]}
           locations={[...homeDare.faceLocations]}
@@ -680,7 +675,12 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         )}
         <RunItBackButton onPress={handleRestart} />
         <ShareRunButton onPress={handleShare} />
-        <Pressable onPress={handleHome} style={rs.homeLink}>
+        <Pressable
+          onPress={handleHome}
+          accessibilityRole="button"
+          accessibilityLabel="Go home"
+          style={rs.homeLink}
+        >
           <Text style={rs.homeLinkText}>HOME</Text>
         </Pressable>
       </Animated.View>

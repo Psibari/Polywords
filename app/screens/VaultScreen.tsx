@@ -97,8 +97,17 @@ export default function VaultScreen({ navigation }: Props) {
       </ScrollView>
 
       {(selectedMastered || selectedGhost) && (
-        <Pressable style={styles.panelScrim} onPress={() => setSelectedWord(null)}>
-          <Pressable style={[cardMaterial.base, styles.detailPanel]} onPress={() => {}}>
+        <Pressable
+          style={styles.panelScrim}
+          onPress={() => setSelectedWord(null)}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+        >
+          <Pressable
+            style={[cardMaterial.base, styles.detailPanel]}
+            onPress={() => {}}
+            accessibilityViewIsModal
+          >
             <View style={styles.detailTitleRow}>
               {selectedMastered ? (
                 <FoilWord
@@ -140,8 +149,17 @@ export default function VaultScreen({ navigation }: Props) {
       )}
 
       {showRanks && (
-        <Pressable style={styles.panelScrim} onPress={() => setShowRanks(false)}>
-          <Pressable style={[cardMaterial.base, styles.detailPanel]} onPress={() => {}}>
+        <Pressable
+          style={styles.panelScrim}
+          onPress={() => setShowRanks(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+        >
+          <Pressable
+            style={[cardMaterial.base, styles.detailPanel]}
+            onPress={() => {}}
+            accessibilityViewIsModal
+          >
             <Text style={styles.ranksTitle}>RANKS</Text>
             {RANK_TIERS.map(t => (
               <View key={t.letter} style={styles.rankRow}>

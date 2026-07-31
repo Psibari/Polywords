@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
@@ -22,6 +22,7 @@ import { heroBookMaterial, stageMaterial } from '../ui/pwMaterials';
 import { DAILY_CLUE_TITLE } from '../ui/pwDailyMaterials';
 import { homeDoor, homeType } from '../ui/pwHomeMaterials';
 import { PW } from '../ui/pwTheme';
+import { usePulseScale } from '../hooks/usePulseScale';
 
 type Props = {
   navigation: any;
@@ -33,19 +34,8 @@ export default function HomeScreen({ navigation }: Props) {
   const progress = useGameStore(s => s.progress);
   const pollyMemoryLoaded = useGameStore(s => s.pollyMemoryLoaded);
   const streak = getDisplayStreak(progress, getTodayDateString());
-  const darePulse = useRef(new Animated.Value(0)).current;
   const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 520);
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(darePulse, { toValue: 1, duration: 950, useNativeDriver: true }),
-        Animated.timing(darePulse, { toValue: 0, duration: 950, useNativeDriver: true }),
-      ]),
-    ).start();
-  }, [darePulse]);
-
-  const dareScale = darePulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.018] });
+  const dareScale = usePulseScale();
 
   function handleHunt() {
     // A resumable run is already hydrated into the store by App.tsx's boot
