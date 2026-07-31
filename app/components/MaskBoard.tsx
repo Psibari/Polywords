@@ -620,6 +620,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const [goldBloomVisible, setGoldBloomVisible]         = useState(false);
   const [masterCracksVisible, setMasterCracksVisible]   = useState(false);
   const [systemStingerWord, setSystemStingerWord]       = useState<string | null>(null);
+  // Bumped each time the boss gauntlet begins so BossGauntletStack remounts
+  // and replays its throw-in (relevant for Returning Haunt retries within
+  // the same session).
+  const [gauntletThrowKey, setGauntletThrowKey]         = useState(0);
 
   const showBoardContent = (!isBoss || bossReady) && tilesReady && (!isHaunt || hauntReady);
 
@@ -708,6 +712,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         });
       },
       onGauntletBegin() {
+        setGauntletThrowKey(k => k + 1);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       },
       onWordExit(perfect) {
@@ -1589,6 +1594,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                   </Text>
                 )}
                 <BossGauntletStack
+                  key={gauntletThrowKey}
+                  playThrowIn
                   gatePhase={mechanics.gatePhase}
                   activeGauntletTile={mechanics.activeGauntletTile}
                   gauntletTiles={mechanics.gauntletTiles}
