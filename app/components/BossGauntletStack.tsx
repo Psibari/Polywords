@@ -3,6 +3,7 @@ import { Animated, StyleSheet, View } from 'react-native';
 import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ShardVariant } from '../ui/pwEffects';
+import { playSfx } from '../audio/sfx';
 
 type GauntletTile = { pairIndex: number; mask: Mask; isReal: boolean };
 
@@ -64,7 +65,8 @@ export function BossGauntletStack({
           tileHeight={200}
           entryDelay={0}
           onEffect={onEffect}
-          onSwipeStart={() => onSwipeAttempt?.()}
+          onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
+          onPressHoldStart={() => playSfx('pressHoldStart')}
           onCardTouch={onCardTouch}
           wordY={wordY}
           intakeY={intakeY}
