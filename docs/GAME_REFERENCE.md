@@ -8,7 +8,11 @@ player archive, and Settings the utility/profile surface.
 
 ## Hunt
 
-- 10 rounds and 5 starting feathers.
+- 10 rounds and 6 starting feathers (economy lock, 2026-07-22).
+- Fledgling runs (first 3, `runsCompleted < 3`) use an 8-round arc with the boss at
+  index 7 instead of 9.
+- Up to 5 masks are shown per word (`VISIBLE_MASK_CAP`); unshown masks resurface in
+  other runs rather than being wasted.
 - Round 10/index 9 is Polly’s Word (`eventType: 'bossWord'`).
 - Round 8/index 7 may host a Returning Haunt as a standard event with
   `isHauntReturn: true`; it never receives boss presentation.
@@ -20,14 +24,23 @@ player archive, and Settings the utility/profile surface.
 `app/game/huntGenerator.ts` builds the arc from `assets/data/huntData.json`. Daily is a
 separate mode.
 
+Design targets (60k-run simulation, locked 2026-07-22): ~54% of runs survive, ~25% master
+Polly's Word (a trophy, not an expectation), and deaths cluster late — 0% in
+Confidence/Flow, rising through Tension/Panic, over half in the boss phase. Never a
+round-3 rug-pull. Holds only if boss hidden content is genuinely hard (~1-in-4 miss rate
+for a decent player) — an easy boss cheapens the mastery trophy by inflating the rate.
+
 ## Boss and Haunts
 
 The player-facing name is Polly’s Word; keep internal `bossWord` identifiers unless a
 migration is explicitly approved.
 
-- Boss visible tiles lead to one mystery tile.
-- Correct mystery resolution masters the word.
-- Boss failure or wrong mystery resolution haunts the word once.
+- Surviving the visible boss tiles unlocks a 3-tile hidden gauntlet (Route C): one
+  tile per hidden meaning/trap pair, each judged UP/RIGHT independently. A visible
+  mistake does not block the gauntlet from unlocking.
+- All three gauntlet tiles correct masters the word, regardless of visible mistakes.
+- One wrong gauntlet tile ends the boss attempt immediately and haunts the word once.
+- Returning Haunt re-tests the exact pair that beat the player last run.
 - Returning Haunt clear: BANISHED / HAUNT BROKEN and remove it from the queue.
 - Returning Haunt failure: STILL HAUNTED and retain/rotate it.
 - Ordinary missed meanings are not called Haunts.
@@ -46,12 +59,15 @@ migration is explicitly approved.
 
 The chain starts at 1.0, increases by 0.5 every three correct swipes, caps at 3.0,
 and resets on error. Polly’s score target is 15,000. Ranks are D below 3,000, C at
-3,000, B at 6,000, A at 10,000, S at 15,000, and MASTER at 19,500.
+3,000, B at 6,000, A at 10,000, S at 15,000, and MASTER at 19,500. Boss mystery is
+awarded once, on clearing the full 3-tile hidden gauntlet — not per tile.
 
 ## Feathers and Results
 
-- Hunt starts with 5 feathers; a wrong swipe removes 1; zero ends the run.
-- Score milestones at 3,000 and 10,000 restore one feather, subject to engine limits.
+- Hunt starts with 6 feathers; a wrong swipe removes 1; zero ends the run.
+- Score milestones at 3,000 and 10,000 trigger a celebration beat only — they no
+  longer grant a feather (economy lock, 2026-07-22; the old score→life net was
+  regressive, reaching only players who were already winning).
 - Daily can award one dated Gold Feather. In Hunt, it revives a failed run in place
   with one feather, preserves committed swipes, and consumes the dated reward once.
 - Results must preserve mask ID and UP/RIGHT direction for wrong swipes.

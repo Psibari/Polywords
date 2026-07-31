@@ -14,7 +14,6 @@ architecture; current progress belongs in `CONTEXT.md`.
 | Daily Challenge | `docs/DAILY_CHALLENGE_SPEC.md` |
 | Polly voice | `docs/POLLY_DIALOGUE_BANK.md` |
 | Patch workflow | `docs/WORKFLOW.md` |
-| Hunt economy pacing | `docs/POLYWORDS_ECONOMY_LOCK.md` |
 
 ## App
 
@@ -39,21 +38,32 @@ drivers on one `Animated.Value`.
 - Round 8/index 7 is the Returning Haunt slot and remains a standard event.
 - Mastery/haunt is decided by the engine's per-run `bossOutcome`
   (`'pending'|'mastered'|'haunted'`), never by score. Results, rank, and Polly-memory all
-  derive from it. Surviving the visible boss tiles unlocks the mystery tile regardless of
-  visible mistakes; a perfect visible round is not required to master — it only sets
-  `bossFlawless`. Wrong mystery or death on the boss = HAUNTED.
-- Boss round redesign decided 2026-07-22, not yet built: ROUTE C — survive visible tiles,
-  then a 3-tile hidden gauntlet, each judged UP/RIGHT; all correct = MASTERED, one wrong =
-  HAUNTED. Chosen over 1-tile and 2-card, both of which were coin flips. Supersedes the
-  one-mystery-tile rule above once built; GAME_REFERENCE and HUNT_POLLY_REBUILD_PLAN still
-  describe the old rule.
+  derive from it. Surviving the visible boss tiles unlocks the hidden gauntlet regardless
+  of visible mistakes; a perfect visible round is not required to master — it only sets
+  `bossFlawless`. A wrong gauntlet tile or death on the boss = HAUNTED.
+- Boss round mechanic: ROUTE C, shipped 2026-07-23 (not "decided, not yet built" — that
+  was stale as of this pass) — survive visible tiles, then a 3-tile hidden gauntlet, each
+  tile judged UP/RIGHT independently; all three correct = MASTERED, one wrong = HAUNTED
+  immediately. Chosen over 1-tile and 2-card, both of which were coin flips.
+  `docs/GAME_REFERENCE.md` was corrected to describe this 2026-07-30; `HUNT_POLLY_REBUILD_PLAN.md`
+  described the old one-mystery-tile rule and has been retired (its build plan was
+  finished; nothing in it was still live).
+- Boss round *presentation* — what the player sees during the gauntlet and on win/loss —
+  is a separate, unresolved redesign as of 2026-07-30. `docs/BOSS_ROUND_SPEC.md`'s
+  direction (sealed-then-lit word, ember room, book-material cards) was fully built once
+  and reverted for looking "layered/blurry on device"; a since-abandoned chest object and
+  an earlier locks-on-the-book attempt both also failed. Current direction living in
+  `docs/superpowers/specs/2026-07-30-boss-round-presentation-design.md` (git-ignored,
+  local only — re-derive from conversation history if that file is missing).
 - Boss words require BOTH `hiddenMeaning` and `hiddenTrap` (`hasBossContent` enforces it).
 - Boss content spec: target ~3 hidden meaning/trap pairs per boss word, written hard enough
-  that a good player misses ~1 in 4. Schema is still singular hiddenMeaning/hiddenTrap —
-  migrate to arrays when Route C ships.
+  that a good player misses ~1 in 4. `WordStep.hiddenPairs` (array schema) shipped with
+  Route C 2026-07-23 — schema is no longer singular-only. Most live boss words still have
+  only one real pair populated; the other two slots are `PLACEHOLDER TEST` content pending
+  real editorial writing.
 - Only failed boss words become HAUNTED. Mastered words graduate permanently.
 - RUN IT BACK draws a fresh Hunt with ghost priority.
-- Hunt economy is locked (`docs/POLYWORDS_ECONOMY_LOCK.md`): target ~54% survive, ~25%
+- Hunt economy is locked (`docs/GAME_REFERENCE.md`): target ~54% survive, ~25%
   master, deaths land late. Difficulty ramps via trap sharpness per phase, not tile count.
 - Gold Feather: earned only by winning the Daily; one use, expires. Revives at 1 life on the
   same word and resets `bossOutcome` to 'pending' — a second shot at the boss is
