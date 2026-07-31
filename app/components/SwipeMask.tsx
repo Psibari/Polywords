@@ -47,6 +47,7 @@ type Props = {
   // Gauntlet card material — a page pulled from the book itself, not the
   // deck's plain gold→magenta bezel.
   bookMaterial?: boolean;
+  gauntletCard?: boolean;
   entryDelay?: number;
   eraBadge?: string;
   hapticCorrect?: () => void;
@@ -88,6 +89,7 @@ export function SwipeMask({
   tileHeight = 58,
   isSpecialSplit = false,
   bookMaterial = false,
+  gauntletCard = false,
   entryDelay = 0,
   eraBadge,
   hapticCorrect,
@@ -105,8 +107,13 @@ export function SwipeMask({
   splitBackgroundColor,
 }: Props) {
   const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = Math.min(screenWidth - 80, 290);
-  const cardHeight = Math.min(Math.max(tileHeight, 96), bookMaterial ? 220 : 124);
+  const cardWidth = gauntletCard
+    ? Math.min(screenWidth - 40, 300)
+    : Math.min(screenWidth - 80, 290);
+  const cardHeight = Math.min(
+    Math.max(tileHeight, 96),
+    gauntletCard ? 200 : bookMaterial ? 220 : 124,
+  );
   const reduceMotion = useReducedMotionPreference();
 
   // ── UI state ──────────────────────────────────────────────────
@@ -473,7 +480,14 @@ export function SwipeMask({
         { rotate:     `${rotation.value}deg` },
       ],
       opacity: tileOpacity.value,
-      ...(!isSpecialSplit && !bookMaterial
+      ...(gauntletCard
+        ? {
+            shadowColor: '#FF3FA0',
+            shadowOpacity: 0.25 + (liftAmount * 0.55),
+            shadowRadius: 10 + (liftAmount * 26),
+            elevation: 10 + (liftAmount * 14),
+          }
+        : !isSpecialSplit && !bookMaterial
         ? {
             shadowOpacity: 0.36 + (liftAmount * 0.10),
             shadowRadius: 18 + (liftAmount * 6),
@@ -691,6 +705,18 @@ export function SwipeMask({
               style={StyleSheet.absoluteFill}
             />
           )}
+          {!isSpecialSplit && gauntletCard && (
+            <>
+              <LinearGradient
+                colors={['#C23E88', '#6B2D9B', '#2A1C5C']}
+                locations={[0, 0.55, 1]}
+                start={{ x: 0.1, y: 0 }}
+                end={{ x: 0.9, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.gauntletInset} pointerEvents="none" />
+            </>
+          )}
           {/* Split tile background */}
           {isSpecialSplit && splitBackgroundColor && (
             <View
@@ -808,6 +834,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: heroBookMaterial.coverPurpleBot,
     overflow: 'hidden',
+  },
+  gauntletInset: {
+    position: 'absolute',
+    top: 5, left: 5, right: 5, bottom: 5,
+    borderRadius: 16,
+    backgroundColor: '#0F0D2A',
   },
   checkmark: {
     position: 'absolute',
