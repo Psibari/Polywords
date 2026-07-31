@@ -1300,6 +1300,14 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     >
       <BookLight tension={tension} isBoss={isBoss} />
 
+      {mechanics.kicker && (
+        isBoss ? (
+          <Text style={styles.kickerBossFixed}>{mechanics.kicker}</Text>
+        ) : (
+          <Text style={styles.kickerFixed}>{mechanics.kicker}</Text>
+        )
+      )}
+
       {/* ── WORD ZONE — dominant upper arena ────────────────── */}
       <View
         style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
@@ -1314,14 +1322,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           );
         }}
       >
-        {/* Kicker — floats above word zone */}
-        {mechanics.kicker && (
-          isBoss ? (
-            <Text style={styles.kickerBoss}>{mechanics.kicker}</Text>
-          ) : (
-            <Text style={styles.kicker}>{mechanics.kicker}</Text>
-          )
-        )}
 
         {/* Book slide wrapper — entire book (shadow, pages, intake, cover) slides in/out as one unit.
             absoluteFill keeps the absolutely-positioned book children aligned to the word zone. */}
@@ -1909,33 +1909,29 @@ const styles = StyleSheet.create({
   wordZoneBoss: {
     height: 186,
   },
-  kicker: {
+  kickerFixed: {
     color: '#F5C842',
     fontSize: FONT_SIZES.hudLabel,
     fontFamily: FONTS.label,
     letterSpacing: 2,
     textAlign: 'center',
     position: 'absolute',
-    top: -18,
+    top: 0,
     left: 0,
     right: 0,
+    zIndex: 5,
   },
-  kickerBoss: {
+  kickerBossFixed: {
     color: '#F5C842',
     fontSize: FONT_SIZES.hudLabel,
     fontFamily: FONTS.label,
     letterSpacing: 2,
     textAlign: 'center',
     position: 'absolute',
-    top: -24,
+    top: 0,
     left: 20,
     right: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.55)',
-    backgroundColor: 'rgba(15,13,42,0.88)',
+    zIndex: 5,
   },
   word: {
     fontSize: 96,
