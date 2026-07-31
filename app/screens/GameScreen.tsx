@@ -73,6 +73,7 @@ function RedFlash({ flashKey }: { flashKey: number }) {
 
 function TopBar({ navigation }: { navigation: any }) {
   const game  = useGameStore(s => s.game);
+  const gauntletActive = useGameStore(s => s.game.gauntletActive);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
   const filledFeathers = Math.max(0, Math.min(MAX_FEATHERS, game.lives));
@@ -129,7 +130,7 @@ function TopBar({ navigation }: { navigation: any }) {
           accessibilityLabel={`${filledFeathers} feathers remaining`}
         >
           {Array.from({ length: MAX_FEATHERS }, (_, i) => (
-            <FeatherIcon key={i} filled={i < filledFeathers} />
+            <FeatherIcon key={i} filled={i < filledFeathers} inert={gauntletActive} />
           ))}
           {hasReserve && (
             <View style={tb.reserveFeatherWrap}>
@@ -306,7 +307,7 @@ function FeatherDustParticle({
   );
 }
 
-function FeatherIcon({ filled }: { filled: boolean }) {
+function FeatherIcon({ filled, inert }: { filled: boolean; inert?: boolean }) {
   const prevFilled    = useRef(filled);
   const shakeRotate   = useRef(new Animated.Value(0)).current;
   const launchY       = useRef(new Animated.Value(0)).current;
@@ -348,7 +349,7 @@ function FeatherIcon({ filled }: { filled: boolean }) {
   });
 
   return (
-    <View style={[tb.featherBox, { overflow: 'visible' }]}>
+    <View style={[tb.featherBox, { overflow: 'visible' }, inert && tb.featherBoxInert]}>
       <Animated.View
         style={{
           transform: [{ rotate }, { translateY: launchY }],
@@ -445,6 +446,9 @@ const tb = StyleSheet.create({
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  featherBoxInert: {
+    opacity: 0.35,
   },
   featherImg: {
     width: 18,

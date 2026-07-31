@@ -82,6 +82,11 @@ export type GameState = {
   bossFlawless: boolean;
   mysteryTotal: number;
   mysteryResolved: number;
+  // UI-session state for the boss gauntlet's feather-row inert visual and
+  // (future) count-up indicator — not engine logic, so no pure functions
+  // here beyond this type/initial value.
+  gauntletActive: boolean;
+  gauntletCorrectCount: number;
 };
 
 type SwipeHistory = Pick<GameState, 'swipedUpIds' | 'swipedDownIds'>;
@@ -147,6 +152,8 @@ export function createGame(
     bossFlawless: false,
     mysteryTotal: 0,
     mysteryResolved: 0,
+    gauntletActive: false,
+    gauntletCorrectCount: 0,
   };
 }
 

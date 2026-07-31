@@ -103,6 +103,8 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const ghosts = useGameStore(s => s.ghosts);
   const runStartGhostWordIds = useGameStore(s => s.runStartGhostWordIds);
   const beginMysteryGauntlet = useGameStore(s => s.beginMysteryGauntlet);
+  const setGauntletActive = useGameStore(s => s.setGauntletActive);
+  const incrementGauntletCorrectCount = useGameStore(s => s.incrementGauntletCorrectCount);
   const completeWord = useGameStore(s => s.completeWord);
   const submitSwipeUp = useGameStore(s => s.submitSwipeUp);
   const submitSwipeDown = useGameStore(s => s.submitSwipeDown);
@@ -258,6 +260,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
   function triggerFinalTilesDrop() {
     if (gauntletPairs.length === 0) return;
+    setGauntletActive(true);
 
     // One tile per pair, max 3. Which face shows is an independent coin flip
     // per tile, so three tiles is 12.5% guess-through, not 50%.
@@ -333,6 +336,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     splitCompletedRef.current = true;
     completedRef.current = true;
     wrongSwipeOccurred.current = true;
+    setGauntletActive(false);
     setGatePhase('wrongFail');
     setFailedHiddenTileId(failedMaskId);
     firePollyEvent('hiddenMasterFailed');
@@ -360,6 +364,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   }
 
   function triggerMasteredBrain() {
+    setGauntletActive(false);
     setGatePhase('mastered');
     completedRef.current = true;
     const masteryPoints = isHaunt ? 0 : mysteryMasteryPoints(preMysteryChainMultiplierRef.current);
@@ -531,6 +536,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     }
 
     perform.onGauntletCorrect({ swipedUp, phrase: tile.mask.phrase });
+    incrementGauntletCorrectCount();
     setFinalTileStates(prev =>
       new Map(prev).set(tile.mask.id, swipedUp ? 'correct' : 'trap-caught'));
 

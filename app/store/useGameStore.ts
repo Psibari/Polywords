@@ -226,6 +226,8 @@ type GameStore = {
   completeWord: () => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
+  setGauntletActive: (active: boolean) => void;
+  incrementGauntletCorrectCount: () => void;
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
   consumeFeatherMilestone: () => void;
@@ -436,6 +438,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setPollyTrigger: (trigger) =>
     set((s) => ({ game: { ...s.game, pollyTrigger: trigger } })),
+
+  setGauntletActive: (active) =>
+    set((s) => ({
+      game: {
+        ...s.game,
+        gauntletActive: active,
+        gauntletCorrectCount: active ? 0 : s.game.gauntletCorrectCount,
+      },
+    })),
+
+  incrementGauntletCorrectCount: () =>
+    set((s) => ({
+      game: { ...s.game, gauntletCorrectCount: Math.min(3, s.game.gauntletCorrectCount + 1) },
+    })),
 
   addBonusScore: (pts) =>
     set((s) => ({ game: addBonusScore(s.game, pts) })),
