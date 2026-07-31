@@ -25,6 +25,7 @@ type Props = {
 export function PollyHuntVisit({ visit, onDone }: Props) {
   const [pose, setPose] = useState<PollyPoseName>('fly');
   const [line, setLine] = useState<string | null>(null);
+  const [perchScale, setPerchScale] = useState(1);
 
   // Arc position (fly-in/out) — native driver, transforms only.
   const arcX = useRef(new Animated.Value(OFF_X)).current;
@@ -179,6 +180,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     flightScale.setValue(0.84);
     setLine(visit.spec.line);
     setPose(visit.spec.flyPose);
+    setPerchScale(visit.spec.perchScale ?? 1);
 
     if (reduceMotion) {
       arcX.setValue(0);
@@ -263,6 +265,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
               { rotate: reactionRotate },
               { scale: flightScale },
               { scale: reactScale },
+              { scale: perchScale },
             ],
           },
         ]}

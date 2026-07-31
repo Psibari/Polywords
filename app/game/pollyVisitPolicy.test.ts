@@ -25,7 +25,8 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 
 // ── Guaranteed beats ────────────────────────────────────────────
 
-// bossEntry: flyAngry → point, line + short squawk, flies out
+// bossEntry: flyAngry → point, line + short squawk, bigger + holds perch
+// (boss entrance is deliberately bigger/longer than an ordinary visit)
 {
   const s = visitSpec(resolveVisit('bossEntry', idle), 'bossEntry');
   eq(s.kind, 'guaranteed', 'bossEntry.kind');
@@ -33,7 +34,9 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.perchPose, 'point', 'bossEntry.perchPose');
   eq(s.line, 'This word stays mine.', 'bossEntry.line');
   eq(s.sfx, 'pollySqwawkShort', 'bossEntry.sfx');
-  eq(s.holdPerch, false, 'bossEntry.holdPerch');
+  eq(s.holdPerch, true, 'bossEntry.holdPerch');
+  eq(s.perchMs, 3400, 'bossEntry.perchMs');
+  eq(s.perchScale, 1.3, 'bossEntry.perchScale');
 }
 
 // gateMasteredBoss: flyAngry → sulk, silent, holds perch

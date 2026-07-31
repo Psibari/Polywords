@@ -44,6 +44,7 @@ export type VisitSpec = {
   sfx: PollyVisitSfx | null;
   holdPerch: boolean; // terminal beats stay perched until the board unmounts
   perchMs: number;
+  perchScale?: number; // multiplies her rendered scale on the perch; defaults to 1 if absent
 };
 
 export type PollyBudgetState = {
@@ -71,7 +72,7 @@ const HUNT_INTRO: VisitSpec = {
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
   lineId: 'huntBossMine', line: POLLY_LINES.huntBossMine, sfx: 'pollySqwawkShort',
-  holdPerch: false, perchMs: 2500,
+  holdPerch: true, perchMs: 3400, perchScale: 1.3,
 };
 
 const BOSS_MASTERED_SULK: VisitSpec = {
