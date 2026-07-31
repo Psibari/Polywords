@@ -315,13 +315,81 @@ const CHEST_SQUASH_SETTLE_MS = 140;
 const CHEST_OVERSHOOT_LEG_MS = 70;
 const CHEST_SCALE_OVERSHOOT = 1.09;
 const CHEST_Y_OVERSHOOT = 22;
+// After landing, the chest recedes — smaller and pushed further back —
+// so it reads as a quiet status object during the gauntlet instead of
+// competing with the card for the same space. It was too big for the
+// room it had (device-checked against a screenshot 2026-07-29).
+const CHEST_REST_SCALE = 0.58;
+const CHEST_REST_TRANSLATE_Y = 30;
+const CHEST_RECEDE_MS = 650;
+// Win beat — explicit chained phases, not parallel-and-hope-it-lines-up
+// (a spring for the return read as an instant pop between two frames on
+// device, and the token was sized so small after two rounds of shrinking
+// that it was never actually visible — both confirmed against a screen
+// recording 2026-07-29):
+//   1. Chest grows back to full prominence (CHEST_WIN_RETURN_MS, explicit
+//      timing so the growth itself is guaranteed visible, not spring physics).
+//   2. Once grown, the lid opens.
+//   3. After CHEST_TOKEN_DELAY_MS (timed to the real book's fade-out —
+//      BOOK_TRAVEL_MS below), a token big enough to actually read as
+//      something falls the last stretch inside the chest via travelingSlot.
+//   4. Lid closes.
+const CHEST_WIN_RETURN_MS = 700;
+const CHEST_TOKEN_DELAY_MS = 300; // after the lid finishes opening
+// Round 5 fix (device-confirmed via frame-by-frame video 2026-07-30): the
+// token was invisible not because it was too subtle, but because the math
+// placed it ~140px ABOVE the entire chest artwork at its starting position
+// — outside the visible opening entirely, not just hard to see. Anchored
+// to the mouth/interior region now (not the box's dead-center) and the
+// whole fall stays within the chest's own visible bounds throughout.
+const CHEST_TOKEN_ANCHOR_Y = 130;
+const CHEST_TOKEN_START_Y = -40;
+const CHEST_TOKEN_END_Y = 90;
+// Much bigger — over half the chest's own width — and barely shrinks, so
+// it cannot be missed even in a compressed recording. Being unmissable
+// matters more here than subtlety.
+const CHEST_TOKEN_W = 190;
+const CHEST_TOKEN_H = 130;
+const CHEST_TOKEN_START_SCALE = 1.0;
+const CHEST_TOKEN_END_SCALE = 0.6;
+const CHEST_TOKEN_FALL_MS = 500;
+const CHEST_TOKEN_HOLD_MS = 300;
+const CHEST_TOKEN_FADE_MS = 250;
+const CHEST_CLOSE_DELAY_MS = 200;
+// The real book's own local reaction (used by triggerBookTravelIntoChest,
+// defined further down in BoardPresenter — kept here so all win-sequence
+// timing tunes in one place). Short and fixed, deliberately — see the
+// comment on triggerBookTravelIntoChest for why it must NOT travel far
+// enough to reach the chest's screen space.
+const BOOK_TRAVEL_DISTANCE = 200;
+const BOOK_TRAVEL_MS = 700;
+const BOOK_FADE_MS = 220;
+// Total win-beat runtime — used to hold the MASTERED card back until the
+// chest is actually done (return + lid-open crossfade + token delay/fall/
+// hold/fade + close delay + its own crossfade, plus a buffer).
+const CHEST_WIN_SEQUENCE_MS =
+  CHEST_WIN_RETURN_MS + 200 + CHEST_TOKEN_DELAY_MS + CHEST_TOKEN_FALL_MS + CHEST_TOKEN_HOLD_MS + CHEST_TOKEN_FADE_MS + CHEST_CLOSE_DELAY_MS + 300;
+// Must match HuntChest's own internal container (330x300) — not exported,
+// so mirrored here for the token's position within travelingSlot.
+const CHEST_LOCAL_CENTER_X = 165;
 
-function BossChestGauntlet({ locksOpen }: { locksOpen: 0 | 1 | 2 | 3 }) {
+function BossChestGauntlet({ locksOpen, won, word }: { locksOpen: 0 | 1 | 2 | 3; won: boolean; word: string }) {
   const translateY = useRef(new Animated.Value(CHEST_START_TRANSLATE_Y)).current;
   const translateX = useRef(new Animated.Value(CHEST_START_TRANSLATE_X)).current;
   const scale       = useRef(new Animated.Value(CHEST_START_SCALE)).current;
   const scaleX      = useRef(new Animated.Value(1)).current;
   const scaleY      = useRef(new Animated.Value(1)).current;
+
+  const [chestLidOpen, setChestLidOpen] = useState(false);
+  const [showToken, setShowToken] = useState(false);
+  const tokenY       = useRef(new Animated.Value(CHEST_TOKEN_START_Y)).current;
+  const tokenScale   = useRef(new Animated.Value(CHEST_TOKEN_START_SCALE)).current;
+  const tokenOpacity = useRef(new Animated.Value(1)).current;
+  // TEMP diagnostic — five rounds of tuning off screen recordings hasn't
+  // converged, so this answers directly whether the JS/animation sequence
+  // is actually firing (vs a rendering/positioning problem in what it
+  // produces). Trivially removable once we know which it is.
+  const [debugPhase, setDebugPhase] = useState('mounted');
 
   useEffect(() => {
     // Mounted only while the gauntlet is active, so this fires exactly once
@@ -349,17 +417,92 @@ function BossChestGauntlet({ locksOpen }: { locksOpen: 0 | 1 | 2 | 3 }) {
         Animated.timing(translateY, { toValue: CHEST_Y_OVERSHOOT, duration: CHEST_OVERSHOOT_LEG_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         Animated.timing(translateY, { toValue: 0, duration: CHEST_OVERSHOOT_LEG_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]);
-      Animated.parallel([squash, scaleOvershoot, yOvershoot]).start();
+      Animated.parallel([squash, scaleOvershoot, yOvershoot]).start(() => {
+        Animated.parallel([
+          Animated.timing(scale, { toValue: CHEST_REST_SCALE, duration: CHEST_RECEDE_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(translateY, { toValue: CHEST_REST_TRANSLATE_Y, duration: CHEST_RECEDE_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]).start();
+      });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!won) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    setDebugPhase('won:growing');
+
+    // Phase 1: grow back to full prominence — explicit timing, not a spring,
+    // so the growth itself takes a guaranteed, visible amount of time
+    // instead of however long spring physics happens to settle in (that
+    // read as an instant pop on device).
+    Animated.parallel([
+      // inOut, not out — an out-curve front-loads motion so most of the
+      // growth happens in the first third and reads as a pop; inOut spreads
+      // it evenly across the full duration (device-confirmed 2026-07-30).
+      Animated.timing(scale, { toValue: 1, duration: CHEST_WIN_RETURN_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: CHEST_WIN_RETURN_MS, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+    ]).start(() => {
+      // Phase 2: lid opens only once the chest has actually finished growing.
+      setChestLidOpen(true);
+      setDebugPhase('lid:opening');
+
+      timers.push(setTimeout(() => {
+        // Phase 3: token falls the last stretch inside the chest.
+        setShowToken(true);
+        setDebugPhase('token:falling');
+        tokenY.setValue(CHEST_TOKEN_START_Y);
+        tokenScale.setValue(CHEST_TOKEN_START_SCALE);
+        tokenOpacity.setValue(1);
+        Animated.parallel([
+          Animated.timing(tokenY, { toValue: CHEST_TOKEN_END_Y, duration: CHEST_TOKEN_FALL_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(tokenScale, { toValue: CHEST_TOKEN_END_SCALE, duration: CHEST_TOKEN_FALL_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+          Animated.sequence([
+            Animated.delay(CHEST_TOKEN_HOLD_MS),
+            Animated.timing(tokenOpacity, { toValue: 0, duration: CHEST_TOKEN_FADE_MS, useNativeDriver: true }),
+          ]),
+        ]).start(() => {
+          setShowToken(false);
+          setDebugPhase('lid:closing');
+          // Phase 4: lid closes.
+          timers.push(setTimeout(() => {
+            setChestLidOpen(false);
+            setDebugPhase('done');
+          }, CHEST_CLOSE_DELAY_MS));
+        });
+      }, CHEST_TOKEN_DELAY_MS));
+    });
+
+    return () => timers.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [won]);
 
   return (
     <View style={styles.bossChestSlot} pointerEvents="none">
       <Animated.View
         style={{ transform: [{ translateX }, { translateY }, { scale }, { scaleX }, { scaleY }] }}
       >
-        <HuntChest open={false} locksOpen={locksOpen} />
+        <HuntChest
+          open={chestLidOpen}
+          locksOpen={locksOpen}
+          travelingSlot={showToken && (
+            <Animated.View
+              style={{
+                position: 'absolute',
+                left: CHEST_LOCAL_CENTER_X - CHEST_TOKEN_W / 2,
+                top: CHEST_TOKEN_ANCHOR_Y - CHEST_TOKEN_H / 2,
+                width: CHEST_TOKEN_W,
+                height: CHEST_TOKEN_H,
+                opacity: tokenOpacity,
+                transform: [{ translateY: tokenY }, { scale: tokenScale }],
+              }}
+            >
+              <View style={styles.bossBookToken}>
+                <Text style={styles.bossBookTokenText} numberOfLines={1}>{word}</Text>
+              </View>
+            </Animated.View>
+          )}
+        />
       </Animated.View>
     </View>
   );
@@ -440,6 +583,12 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const bookGhostDrainOpacity = useRef(new Animated.Value(0)).current; // Task 4 — boss haunt only
   const bookSlideX            = useRef(new Animated.Value(SCREEN_WIDTH)).current; // book entrance/exit slide, native driver
   const boardShakeX           = useRef(new Animated.Value(0)).current; // boss entrance / haunted micro-shake, native driver
+  // Boss-only win beat: the book drops toward the chest instead of sliding
+  // off-frame. Rest values (0/1/1) are a no-op, so this never affects the
+  // ordinary close for non-boss or non-mastered outcomes.
+  const bookTravelY       = useRef(new Animated.Value(0)).current;
+  const bookTravelScale   = useRef(new Animated.Value(1)).current;
+  const bookTravelOpacity = useRef(new Animated.Value(1)).current;
   const wordEntranceHapticRef = useRef<string | null>(null);
   const bookOpenAnimationRef   = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -665,6 +814,11 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   // Final tile border pulse (non-native)
   const finalBorder1Anim = useRef(new Animated.Value(0)).current;
 
+  // Boss-only: Polly's thrown-card tilt (native: transform only). Rests at
+  // 0deg for the ordinary (non-boss) hidden-gate path — only isBossStage
+  // ever moves it off center.
+  const gauntletCardTilt = useRef(new Animated.Value(0)).current;
+
   // Mastered celebration
   const masterHeroScale      = useRef(new Animated.Value(1)).current;
   const masterHeroTransY     = useRef(new Animated.Value(0)).current;
@@ -730,6 +884,53 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   // from the existing onGauntletCorrect/onGauntletBegin callbacks below —
   // useBoardMechanics itself is untouched.
   const [gauntletLocksOpen, setGauntletLocksOpen] = useState<0 | 1 | 2 | 3>(0);
+  const [bossChestWon, setBossChestWon] = useState(false);
+  // Boss-only: hold the MASTERED card back until the chest's own ceremony
+  // (return, open, book drops in, close) has actually finished — otherwise
+  // the card pops up instantly and covers the chest for the whole thing.
+  // Non-boss mastery is unaffected — it never sets this, so it stays true.
+  const [showMasteredOverlay, setShowMasteredOverlay] = useState(true);
+
+  function triggerBookTravelIntoChest() {
+    // Deliberately NOT travelling anywhere near the chest — the book lives
+    // earlier in the layer order than the chest, so once its falling
+    // position overlaps the chest's on-screen box it paints behind the
+    // WHOLE chest object (not tucked behind just the front wall the way
+    // the token is, via HuntChest's travelingSlot). Device-confirmed
+    // 2026-07-30: it visibly dropped behind the chest instead of into it.
+    // So the book's job is just to sink/shrink/fade in place near the word
+    // — a short, fixed hop that never reaches the chest's screen space —
+    // and the correctly-layered token (BossChestGauntlet) carries the
+    // entire "arrives and goes inside" illusion by itself, later, once the
+    // chest has actually opened.
+    bookTravelY.setValue(0);
+    bookTravelScale.setValue(1);
+    bookTravelOpacity.setValue(1);
+    Animated.parallel([
+      Animated.timing(bookTravelY, { toValue: BOOK_TRAVEL_DISTANCE, duration: BOOK_TRAVEL_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(bookTravelScale, { toValue: 0.3, duration: BOOK_TRAVEL_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(BOOK_TRAVEL_MS - BOOK_FADE_MS),
+        Animated.timing(bookTravelOpacity, { toValue: 0, duration: BOOK_FADE_MS, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }
+
+  // ── boss gauntlet card — dev size/position tuner (face-only) ──────
+  // Wrapper-only transform; SwipeMask's own layout/style is never touched.
+  // Seeded to clear the chest lid with real breathing room, and scaled down
+  // enough to read as subordinate to the hero word above it rather than a
+  // second, competing card (device-checked against a screenshot 2026-07-29).
+  const [gauntletCardTune, setGauntletCardTune] = useState({ scale: 0.70, x: -4, y: -252 });
+
+  function dumpGauntletCardTune() {
+    const { scale, x, y } = gauntletCardTune;
+    // eslint-disable-next-line no-console
+    console.log(
+      '// ── Boss gauntlet card DUMP — paste back in as the new seed ──\n' +
+      `const GAUNTLET_CARD_TUNE = { scale: ${scale}, x: ${x}, y: ${y} };`
+    );
+  }
 
   // ── mechanics (brain) ───────────────────────────────────────────
   // Every perform.* callback below is the FACE half of a function that used
@@ -772,9 +973,22 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       onGauntletTileDrop() {
         splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
         finalBorder1Anim.setValue(0);
-        Animated.spring(splitTile1TransY, {
-          toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
-        }).start(({ finished }) => {
+        const drops = [
+          Animated.spring(splitTile1TransY, {
+            toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
+          }),
+        ];
+        if (isBossStage) {
+          // Polly flings it in — starts crooked, settles level. Alternates
+          // side so three in a row don't all lean the same way.
+          gauntletCardTilt.setValue(Math.random() < 0.5 ? -9 : 9);
+          drops.push(
+            Animated.spring(gauntletCardTilt, {
+              toValue: 0, damping: 10, stiffness: 120, useNativeDriver: true,
+            }),
+          );
+        }
+        Animated.parallel(drops).start(({ finished }) => {
           if (!finished) return;
           mechanics.onGauntletTileLanded();
           Animated.sequence([
@@ -1005,6 +1219,12 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       onOutcomeReveal(outcome) {
         playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
         if (outcome === 'haunted') triggerBoardShake();
+        if (outcome === 'mastered' && isBossStage) {
+          setShowMasteredOverlay(false);
+          setBossChestWon(true);
+          triggerBookTravelIntoChest();
+          setTimeout(() => setShowMasteredOverlay(true), CHEST_WIN_SEQUENCE_MS);
+        }
       },
       onLivesDepleted() {
         Animated.timing(deckRedTint, {
@@ -1300,6 +1520,64 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     outputRange: [0.86, 1],
   });
 
+  // Boss-only: it's Polly's card, not the book's — gold is already claimed by
+  // STRIKE and the chest, so hers wears her own lavender/purple instead.
+  // Non-boss keeps the original gold treatment untouched.
+  const gauntletRotateDeg = gauntletCardTilt.interpolate({
+    inputRange: [-9, 0, 9],
+    outputRange: ['-9deg', '0deg', '9deg'],
+  });
+  const gauntletBorderColor = isBossStage
+    ? finalBorder1Anim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['rgba(185,138,222,0.4)', 'rgba(185,138,222,1.0)'],
+      })
+    : finalBorder1Anim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['rgba(245,200,66,0.35)', 'rgba(245,200,66,1.0)'],
+      });
+
+  // Shared by both boss and non-boss paths below, unchanged from before this
+  // pass — only whether it gets an extra positioning wrapper differs.
+  const gauntletCard = (mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') && mechanics.activeGauntletTile ? (
+    <Animated.View
+      pointerEvents={mechanics.gatePhase === 'wrongFail' ? 'none' : mechanics.tileLanded ? 'auto' : 'none'}
+      style={{ transform: [{ translateY: splitTile1TransY }, { rotate: gauntletRotateDeg }] }}
+    >
+      <Animated.View style={[
+        styles.finalHiddenTileFrame,
+        isBossStage && styles.finalHiddenTileFramePolly,
+        {
+          borderColor: gauntletBorderColor,
+          shadowOpacity: finalBorder1Anim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.08, 0.26],
+          }),
+        },
+      ]}>
+        <SwipeMask
+          key={mechanics.activeGauntletTile.mask.id}
+          mask={mechanics.activeGauntletTile.mask}
+          state={mechanics.finalTileStates.get(mechanics.activeGauntletTile.mask.id) ?? 'idle'}
+          onSwipeUp={mechanics.onGauntletSwipeUp}
+          onSwipeDown={mechanics.onGauntletSwipeRight}
+          onSwipeReveal={() => {}}
+          revealable={false}
+          disabled={mechanics.inputLocked}
+          bookMaterial
+          tileHeight={220}
+          entryDelay={0}
+          onEffect={handleEffect}
+          onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
+          onPressHoldStart={() => playSfx('pressHoldStart')}
+          onCardTouch={handleCardTouch}
+          wordY={wordScreenY}
+          intakeY={wordScreenY + 73}
+        />
+      </Animated.View>
+    </Animated.View>
+  ) : null;
+
   return (
     <Animated.View
       style={styles.container}
@@ -1339,7 +1617,17 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             absoluteFill keeps the absolutely-positioned book children aligned to the word zone. */}
         <Animated.View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { transform: [{ translateX: Animated.add(bookSlideX, boardShakeX) }] }]}
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              opacity: bookTravelOpacity,
+              transform: [
+                { translateX: Animated.add(bookSlideX, boardShakeX) },
+                { translateY: bookTravelY },
+                { scale: bookTravelScale },
+              ],
+            },
+          ]}
         >
         {/* SVG Hero Book V5; MaskBoard retains the animated hero-word content. */}
         <HeroBook
@@ -1610,7 +1898,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
               </View>
             )}
 
-            {(mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') && mechanics.activeGauntletTile && (
+            {gauntletCard && (
               <View style={styles.finalHiddenTileStack}>
                 {!isBossStage && mechanics.gauntletTiles.length > 1 && (
                   <Text style={{
@@ -1624,44 +1912,44 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                     {`${mechanics.gauntletIndex + 1} OF ${mechanics.gauntletTiles.length}`}
                   </Text>
                 )}
-                <Animated.View
-                  pointerEvents={mechanics.gatePhase === 'wrongFail' ? 'none' : mechanics.tileLanded ? 'auto' : 'none'}
-                  style={{ transform: [{ translateY: splitTile1TransY }] }}
-                >
-                  <Animated.View style={[
-                    styles.finalHiddenTileFrame,
-                    {
-                      borderColor: finalBorder1Anim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['rgba(245,200,66,0.35)', 'rgba(245,200,66,1.0)'],
-                      }),
-                      shadowOpacity: finalBorder1Anim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.08, 0.26],
-                      }),
-                    },
-                  ]}>
-                    <SwipeMask
-                      key={mechanics.activeGauntletTile.mask.id}
-                      mask={mechanics.activeGauntletTile.mask}
-                      state={mechanics.finalTileStates.get(mechanics.activeGauntletTile.mask.id) ?? 'idle'}
-                      onSwipeUp={mechanics.onGauntletSwipeUp}
-                      onSwipeDown={mechanics.onGauntletSwipeRight}
-                      onSwipeReveal={() => {}}
-                      revealable={false}
-                      disabled={mechanics.inputLocked}
-                      bookMaterial
-                      tileHeight={220}
-                      entryDelay={0}
-                      onEffect={handleEffect}
-                      onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
-                      onPressHoldStart={() => playSfx('pressHoldStart')}
-                      onCardTouch={handleCardTouch}
-                      wordY={wordScreenY}
-                      intakeY={wordScreenY + 73}
-                    />
-                  </Animated.View>
-                </Animated.View>
+                {isBossStage ? (
+                  <View
+                    style={{
+                      transform: [
+                        { translateX: gauntletCardTune.x },
+                        { translateY: gauntletCardTune.y },
+                        { scale: gauntletCardTune.scale },
+                      ],
+                    }}
+                  >
+                    <View style={{ position: 'relative' }}>
+                      {/* Stack depth = cards still to come — Polly threw all
+                          three at once, and the pile visibly thins as each
+                          one resolves. Doubles as the N-OF-M readout. */}
+                      {mechanics.gauntletTiles.length - mechanics.gauntletIndex - 1 >= 2 && (
+                        <View
+                          pointerEvents="none"
+                          style={[
+                            styles.gauntletPeekCard,
+                            { transform: [{ translateY: -12 }, { translateX: 12 }, { rotate: '-5deg' }, { scale: 0.96 }] },
+                          ]}
+                        />
+                      )}
+                      {mechanics.gauntletTiles.length - mechanics.gauntletIndex - 1 >= 1 && (
+                        <View
+                          pointerEvents="none"
+                          style={[
+                            styles.gauntletPeekCard,
+                            { transform: [{ translateY: -6 }, { translateX: 6 }, { rotate: '3deg' }, { scale: 0.98 }] },
+                          ]}
+                        />
+                      )}
+                      {gauntletCard}
+                    </View>
+                  </View>
+                ) : (
+                  gauntletCard
+                )}
               </View>
             )}
             </Animated.View>
@@ -1684,8 +1972,74 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         </View>
       </View>
 
-      {isBossStage && (mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') && (
-        <BossChestGauntlet locksOpen={gauntletLocksOpen} />
+      {/* gatePhase flips to 'mastered' immediately, but the win signal
+          (bossChestWon, set from onOutcomeReveal) doesn't fire until
+          showWordOutcome runs — 700ms later on the boss path. Gating the
+          mount on gatePhase alone (not bossChestWon) covers that whole gap,
+          so the chest doesn't unmount/remount mid-celebration and lose its
+          settled state right as the win sequence needs it. */}
+      {isBossStage && (mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail' || mechanics.gatePhase === 'mastered') && (
+        <BossChestGauntlet locksOpen={gauntletLocksOpen} won={bossChestWon} word={step.word} />
+      )}
+
+      {/* TEMP dev-only gauntlet card tuner — trivially removable */}
+      {__DEV__ && isBossStage && (
+        <View pointerEvents="box-none" style={styles.devCardTunerOverlay}>
+          <Text style={styles.devCardTunerReadout}>
+            {`x:${gauntletCardTune.x} y:${gauntletCardTune.y} s:${gauntletCardTune.scale.toFixed(2)}`}
+          </Text>
+          <View style={styles.devCardTunerRow}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setGauntletCardTune(p => ({ ...p, x: p.x - 4 }))}
+              style={styles.devCardTunerButton}
+            >
+              <Text style={styles.devCardTunerButtonText}>←</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setGauntletCardTune(p => ({ ...p, y: p.y - 4 }))}
+              style={styles.devCardTunerButton}
+            >
+              <Text style={styles.devCardTunerButtonText}>↑</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setGauntletCardTune(p => ({ ...p, y: p.y + 4 }))}
+              style={styles.devCardTunerButton}
+            >
+              <Text style={styles.devCardTunerButtonText}>↓</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setGauntletCardTune(p => ({ ...p, x: p.x + 4 }))}
+              style={styles.devCardTunerButton}
+            >
+              <Text style={styles.devCardTunerButtonText}>→</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setGauntletCardTune(p => ({ ...p, scale: Math.round((p.scale - 0.02) * 100) / 100 }))}
+              style={styles.devCardTunerButton}
+            >
+              <Text style={styles.devCardTunerButtonText}>S −</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setGauntletCardTune(p => ({ ...p, scale: Math.round((p.scale + 0.02) * 100) / 100 }))}
+              style={styles.devCardTunerButton}
+            >
+              <Text style={styles.devCardTunerButtonText}>S +</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={dumpGauntletCardTune}
+              style={styles.devCardTunerDump}
+            >
+              <Text style={styles.devCardTunerButtonText}>DUMP CARD</Text>
+            </Pressable>
+          </View>
+        </View>
       )}
 
       {/* Mastery score float */}
@@ -1885,7 +2239,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         </Animated.Text>
       )}
 
-      {mechanics.wordOutcome === 'mastered' && (
+      {mechanics.wordOutcome === 'mastered' && showMasteredOverlay && (
         <MasteredOutcomeOverlay
           word={step.word}
           headline={isHaunt ? 'BANISHED' : 'MASTERED'}
@@ -2154,6 +2508,81 @@ const styles = StyleSheet.create({
     bottom: 24,
     alignItems: 'center',
   },
+  // Small stand-in for the real book during the last leg of its drop into
+  // the chest — same gold-plaque material as STRIKE, at token scale.
+  bossBookToken: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderRadius: 10,
+    borderColor: '#F5C842',
+    backgroundColor: '#0F0D2A',
+  },
+  bossBookTokenText: {
+    color: '#F5C842',
+    fontFamily: FONTS.hud,
+    fontSize: 18,
+    letterSpacing: 0.5,
+    paddingHorizontal: 6,
+  },
+  chestDebugPhase: {
+    position: 'absolute',
+    top: -260,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: '#FFFFFF',
+    backgroundColor: '#FF00CC',
+    fontFamily: FONTS.hud,
+    fontSize: 22,
+    fontWeight: '700',
+    paddingVertical: 6,
+    zIndex: 999,
+  },
+  devCardTunerOverlay: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    zIndex: 400,
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  devCardTunerReadout: {
+    color: '#F5C842',
+    fontSize: 10,
+    letterSpacing: 0.5,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  devCardTunerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 4,
+    maxWidth: 320,
+  },
+  devCardTunerButton: {
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  devCardTunerDump: {
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 5,
+    backgroundColor: '#9B2D6B',
+  },
+  devCardTunerButtonText: {
+    color: '#F5C842',
+    fontSize: 10,
+    letterSpacing: 0.5,
+  },
   finalHiddenTileFrame: {
     borderWidth: 1.5,
     borderRadius: 14,
@@ -2162,6 +2591,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 10,
     elevation: 7,
+  },
+  // Boss-only override — Polly's card, not the book's. Purple-tinted fill
+  // (heroBookMaterial.coverPurple) + her lavender glow instead of gold.
+  finalHiddenTileFramePolly: {
+    backgroundColor: '#191541',
+    shadowColor: '#B98ADE',
+  },
+  // Static cards peeking out behind the active gauntlet card — the rest of
+  // Polly's thrown stack, not yet turned over.
+  gauntletPeekCard: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    borderColor: 'rgba(185,138,222,0.4)',
+    backgroundColor: '#191541',
   },
   outcomeOverlay: {
     ...StyleSheet.absoluteFillObject,

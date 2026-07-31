@@ -1159,6 +1159,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "Sure to happen sooner or later",
     "hiddenTrap": "LAYOVER ADDED IN DENVER",
+    "hiddenPairs": [
+      { "real": "Sure to happen sooner or later", "trap": "LAYOVER ADDED IN DENVER" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "bound_r0",
@@ -1816,6 +1821,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Faint green in old photos",
     "hiddenTrap": "FILTER SLAPPED ON EVERY SELFIE",
+    "hiddenPairs": [
+      { "real": "Faint green in old photos", "trap": "FILTER SLAPPED ON EVERY SELFIE" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "cast_r0",
@@ -3150,6 +3160,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Flirting with disaster on purpose",
     "hiddenTrap": "MOTORCYCLE JUMP OVER THE CANYON",
+    "hiddenPairs": [
+      { "real": "Flirting with disaster on purpose", "trap": "MOTORCYCLE JUMP OVER THE CANYON" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "court_r0",
@@ -4473,6 +4488,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "OLD MATH BOOKS PULL ROOTS THIS WAY",
     "hiddenTrap": "FORMULA SOLVES FOR X",
+    "hiddenPairs": [
+      { "real": "OLD MATH BOOKS PULL ROOTS THIS WAY", "trap": "FORMULA SOLVES FOR X" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "extract_r0",
@@ -6159,6 +6179,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Grandpa's name for the phone",
     "hiddenTrap": "ROTARY DIAL SPINS BACK SLOW",
+    "hiddenPairs": [
+      { "real": "Grandpa's name for the phone", "trap": "ROTARY DIAL SPINS BACK SLOW" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "horn_r0",
@@ -6317,6 +6342,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "What bodybuilders pump",
     "hiddenTrap": "PROTEIN SHAKE AFTER THE SET",
+    "hiddenPairs": [
+      { "real": "What bodybuilders pump", "trap": "PROTEIN SHAKE AFTER THE SET" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "iron_r0",
@@ -6534,6 +6564,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "One soldier on the cob",
     "hiddenTrap": "HUSK PULLED BACK",
+    "hiddenPairs": [
+      { "real": "One soldier on the cob", "trap": "HUSK PULLED BACK" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "kernel_r0",
@@ -6578,6 +6613,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Spiteful scratch down the paint",
     "hiddenTrap": "SHOPPING CART ROLLS INTO THE BUMPER",
+    "hiddenPairs": [
+      { "real": "Spiteful scratch down the paint", "trap": "SHOPPING CART ROLLS INTO THE BUMPER" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "key_r0",
@@ -12871,6 +12911,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Comes from tough farming blood",
     "hiddenTrap": "HEIRLOOM QUILT PASSED DOWN",
+    "hiddenPairs": [
+      { "real": "Comes from tough farming blood", "trap": "HEIRLOOM QUILT PASSED DOWN" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "stock_r0",
@@ -12985,6 +13030,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Oil found where nobody was looking",
     "hiddenTrap": "PICKAXE SPARKS ON BARE GRANITE",
+    "hiddenPairs": [
+      { "real": "Oil found where nobody was looking", "trap": "PICKAXE SPARKS ON BARE GRANITE" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "strike_r0",
@@ -14098,6 +14148,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "Everything the scandal leaves behind",
     "hiddenTrap": "CASSEROLES CROWD THE WIDOW'S FRIDGE",
+    "hiddenPairs": [
+      { "real": "Everything the scandal leaves behind", "trap": "CASSEROLES CROWD THE WIDOW'S FRIDGE" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "wake_r0",
@@ -14618,6 +14673,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "Every drum and mallet",
     "hiddenTrap": "SNARE ROLL BUILDS TENSION",
+    "hiddenPairs": [
+      { "real": "Every drum and mallet", "trap": "SNARE ROLL BUILDS TENSION" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "battery_r0",
@@ -14687,6 +14747,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "Designer's marching orders",
     "hiddenTrap": "UNSIGNED SCOPE OF WORK",
+    "hiddenPairs": [
+      { "real": "Designer's marching orders", "trap": "UNSIGNED SCOPE OF WORK" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "brief_r0",
@@ -14761,6 +14826,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "Thickened before the carton",
     "hiddenTrap": "VITAMIN C ADDED BACK",
+    "hiddenPairs": [
+      { "real": "Thickened before the carton", "trap": "VITAMIN C ADDED BACK" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "concentration_r0",
@@ -14830,6 +14900,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "What covens call their practice",
     "hiddenTrap": "POTION BREWED AT MIDNIGHT",
+    "hiddenPairs": [
+      { "real": "What covens call their practice", "trap": "POTION BREWED AT MIDNIGHT" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "craft_r0",
@@ -14904,6 +14979,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "Hired to perform the role",
     "hiddenTrap": "AUDITION CALLBACK TOMORROW",
+    "hiddenPairs": [
+      { "real": "Hired to perform the role", "trap": "AUDITION CALLBACK TOMORROW" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "engaged_r0",
@@ -14978,6 +15058,11 @@
     "difficulty": "hard",
     "hiddenMeaning": "Spy returned at dawn",
     "hiddenTrap": "DEFECTOR ASKS ASYLUM",
+    "hiddenPairs": [
+      { "real": "Spy returned at dawn", "trap": "DEFECTOR ASKS ASYLUM" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "exchange_r0",
@@ -16849,6 +16934,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Where drunks sleep it off",
     "hiddenTrap": "BAIL POSTED BEFORE SUNRISE",
+    "hiddenPairs": [
+      { "real": "Where drunks sleep it off", "trap": "BAIL POSTED BEFORE SUNRISE" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "tank_r0",
@@ -16967,6 +17057,11 @@
     "difficulty": "medium",
     "hiddenMeaning": "Slamming someone into the boards",
     "hiddenTrap": "GLOVES DROP AT CENTER ICE",
+    "hiddenPairs": [
+      { "real": "Slamming someone into the boards", "trap": "GLOVES DROP AT CENTER ICE" },
+      { "real": "PLACEHOLDER TEST — meaning two", "trap": "PLACEHOLDER TEST — TRAP TWO" },
+      { "real": "PLACEHOLDER TEST — meaning three", "trap": "PLACEHOLDER TEST — TRAP THREE" }
+    ],
     "masks": [
       {
         "id": "check_r0",

@@ -147,9 +147,17 @@ export type HuntChestProps = {
   open: boolean;
   locksOpen: 0 | 1 | 2 | 3;
   style?: StyleProp<ViewStyle>;
+  // Rendered above the base/locks, below the lid. chest_base.png's own
+  // "opening" is fully opaque painted art, not a real transparent cutout
+  // (verified against the source PNG's alpha channel 2026-07-30) — there is
+  // no way for anything behind it to ever show through, at any position.
+  // So content here sits ON TOP of the painted cavity instead; "going
+  // inside" is sold by shrinking + fading out, not by physical occlusion.
+  // Optional; omitting it changes nothing.
+  travelingSlot?: React.ReactNode;
 };
 
-export function HuntChest({ open, locksOpen, style }: HuntChestProps) {
+export function HuntChest({ open, locksOpen, style, travelingSlot }: HuntChestProps) {
   const openAnim = useRef(new Animated.Value(open ? 1 : 0)).current;
   const didMount = useRef(false);
 
@@ -178,6 +186,8 @@ export function HuntChest({ open, locksOpen, style }: HuntChestProps) {
       {LOCKS.map((lock, i) => (
         <ChestLock key={i} isOpen={locksOpen > i} {...lock} />
       ))}
+
+      {travelingSlot}
 
       <Animated.View style={[lidWrapperStyle, { transform: [{ translateY: lidTranslateY }] }]}>
         <Animated.View style={[StyleSheet.absoluteFill, { opacity: lidClosedOpacity }]}>
