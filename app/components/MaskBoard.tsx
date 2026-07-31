@@ -3,6 +3,7 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -24,6 +25,7 @@ import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
 import { libraryMaterial } from '../ui/pwMaterials';
+import { bossOutcomeAssets } from '../ui/bossOutcomeAssets';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
@@ -1448,6 +1450,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             />
           </Animated.View>
         </Animated.View>
+        {isBossStage && mechanics.wordOutcome === 'mastered' && bossOutcomeAssets.masterSeal && (
+          <View pointerEvents="none" style={styles.bossMasterSeal}>
+            <Image
+              source={bossOutcomeAssets.masterSeal}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="contain"
+            />
+          </View>
+        )}
         </HeroBook>
 
         {/* Vault brand on spine — slides in with the book every round */}
@@ -2267,5 +2278,12 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(123,45,139,0.6)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
+  },
+  bossMasterSeal: {
+    position: 'absolute',
+    alignSelf: 'center',
+    top: '38%',
+    width: 96,
+    height: 96,
   },
 });
