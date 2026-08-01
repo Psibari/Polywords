@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
@@ -11,6 +11,8 @@ import { BossBoard } from '../components/BossBoard';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import { PW } from '../ui/pwTheme';
+import AmbientSkyBackground from '../components/AmbientSkyBackground';
+import { BOSS_SKY_TUNING, HUNT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { playSfx, preloadSfx, unloadSfx } from '../audio/sfx';
@@ -927,26 +929,17 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ImageBackground
-        source={
-          isBossRound
-            ? require('../../assets/backgrounds/boss-round-bg.png')
-            : require('../../assets/home/home-hero-bg.png')
-        }
-        resizeMode="cover"
-        style={styles.backgroundImage}
-      >
-        <LinearGradient
-          colors={isBossRound
-            ? ['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']
-            : ['rgba(6,4,22,0.93)', 'rgba(9,6,26,0.55)', 'rgba(7,5,23,0.82)']}
-          locations={isBossRound ? undefined : [0, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          pointerEvents="none"
-          style={StyleSheet.absoluteFillObject}
-        />
-      </ImageBackground>
+      <AmbientSkyBackground {...(isBossRound ? BOSS_SKY_TUNING : HUNT_SKY_TUNING)} />
+      <LinearGradient
+        colors={isBossRound
+          ? ['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']
+          : ['rgba(6,4,22,0.93)', 'rgba(9,6,26,0.55)', 'rgba(7,5,23,0.82)']}
+        locations={isBossRound ? undefined : [0, 0.5, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        pointerEvents="none"
+        style={StyleSheet.absoluteFillObject}
+      />
       {isBossRound && (
         <View pointerEvents="none" style={styles.bossBackground}>
           <View style={styles.bossBookGlow}>

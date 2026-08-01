@@ -6,7 +6,6 @@ import {
   AppState,
   Easing,
   Image,
-  ImageBackground,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -17,6 +16,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AmbientSkyBackground from '../components/AmbientSkyBackground';
+import { DAILY_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { FONTS } from '../constants/fonts';
 import {
   DAILY_ROUND_COUNT,
@@ -711,20 +712,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      {/* Polly's turf -- her boss chamber, tamed so clues + cards stay readable */}
-      <ImageBackground
-        source={require('../../assets/backgrounds/boss-round-bg.png')}
-        resizeMode="cover"
-        style={StyleSheet.absoluteFill}
-      >
-        <LinearGradient
-          colors={['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          pointerEvents="none"
-          style={StyleSheet.absoluteFillObject}
-        />
-      </ImageBackground>
+      {/* Daily's own sky, distinct from Boss's now that they no longer share art or tint. */}
+      <AmbientSkyBackground {...DAILY_SKY_TUNING} />
+      <LinearGradient
+        colors={['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        pointerEvents="none"
+        style={StyleSheet.absoluteFillObject}
+      />
 
       {!isComplete && dailySession && (
         <>

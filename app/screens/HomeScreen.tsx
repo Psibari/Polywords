@@ -3,13 +3,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
   Dimensions,
-  ImageBackground,
   Pressable,
   SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import AmbientSkyBackground from '../components/AmbientSkyBackground';
+import { HOME_SKY_TUNING } from '../ui/ambientSkyTuning';
 import HomeEmbers from '../components/HomeEmbers';
 import PollyHomePerch from '../components/PollyHomePerch';
 import { HomeWordmark } from '../components/ui/HomeWordmark';
@@ -47,19 +48,15 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <View style={styles.screen}>
-      <ImageBackground
-        source={require('../../assets/home/home-hero-bg.png')}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          pointerEvents="none"
-          colors={[...stageMaterial.vignette]}
-          locations={[...stageMaterial.vignetteLocations]}
-          style={StyleSheet.absoluteFillObject}
-        />
+      <AmbientSkyBackground {...HOME_SKY_TUNING} />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[...stageMaterial.vignette]}
+        locations={[...stageMaterial.vignetteLocations]}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-        <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea}>
           <View style={styles.content}>
             {/* Title block — bespoke POLYWORDS brand lockup */}
             <View style={styles.titleBlock}>
@@ -170,9 +167,8 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         </SafeAreaView>
 
-        <HomeEmbers />
-        {pollyMemoryLoaded && <PollyHomePerch />}
-      </ImageBackground>
+      <HomeEmbers />
+      {pollyMemoryLoaded && <PollyHomePerch />}
     </View>
   );
 }
