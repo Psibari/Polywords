@@ -8,6 +8,8 @@ import {
   realMaskPoints,
   trapMaskPoints,
   mysteryMasteryPoints,
+  isGauntletTilePickable,
+  isLastRemainingGauntletTile,
 } from '../game/polyRunEngine';
 import type { SwipeMaskState } from '../components/SwipeMask';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
@@ -180,7 +182,9 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   >('locked');
   const [finalTileStates, setFinalTileStates] = useState<Map<string, SwipeMaskState>>(new Map());
   const [gauntletTiles, setGauntletTiles] = useState<GauntletTile[]>([]);
-  const [gauntletIndex, setGauntletIndex] = useState(0);
+  // -1 = no tile currently active; the player must pick one. Never defaults
+  // to 0 — even the first tile of a gauntlet is a player choice now.
+  const [gauntletIndex, setGauntletIndex] = useState(-1);
   const [tileLanded, setTileLanded] = useState(false);
   const [failedHiddenTileId, setFailedHiddenTileId] = useState<string | null>(null);
   const activeGauntletTile = gauntletTiles[gauntletIndex] ?? null;
@@ -258,6 +262,16 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     perform.onGauntletTileDrop(index);
   }
 
+  // Player-driven pick — the only way a tile becomes active now. Guards
+  // against picking mid-judgment (one already active) or picking a tile
+  // that's already resolved.
+  function pickGauntletTile(index: number) {
+    if (activeGauntletTile !== null) return;
+    const tileIds = gauntletTiles.map(t => t.mask.id);
+    if (!isGauntletTilePickable(tileIds, finalTileStates, index)) return;
+    dropGauntletTile(index);
+  }
+
   function triggerFinalTilesDrop() {
     if (gauntletPairs.length === 0) return;
     // After the guard, not before: a final-gate word with zero gauntlet
@@ -289,7 +303,6 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     setGatePhase('tiles');
     setGauntletTiles(tiles);
     setFinalTileStates(new Map(tiles.map(t => [t.mask.id, 'idle' as SwipeMaskState])));
-    dropGauntletTile(0);
   }
 
   function buildHauntedDetail(failedMaskId?: string): string | undefined {
@@ -544,13 +557,19 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     setFinalTileStates(prev =>
       new Map(prev).set(tile.mask.id, swipedUp ? 'correct' : 'trap-caught'));
 
-    const isLast = gauntletIndex + 1 >= gauntletTiles.length;
+    const isLast = isLastRemainingGauntletTile(
+      gauntletTiles.map(t => t.mask.id),
+      finalTileStates,
+      tile.mask.id,
+    );
     if (isLast) {
       splitCompletedRef.current = true;
       setTimeout(() => triggerMasteredBrain(), 200);
     } else {
       setTileLanded(false);
-      setTimeout(() => dropGauntletTile(gauntletIndex + 1), 320);
+      // Return to "no active tile" — the remaining spine(s) wait for the
+      // player's next pick instead of auto-advancing in sequence.
+      setTimeout(() => setGauntletIndex(-1), 320);
     }
   }
 
@@ -638,6 +657,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     onTileExitComplete,
     onGauntletSwipeUp,
     onGauntletSwipeRight,
+    pickGauntletTile,
     continueOutcome,
     // Not in the original spec list — the two small entry points the
     // presenter needs to report animation-driven timing back into brain
