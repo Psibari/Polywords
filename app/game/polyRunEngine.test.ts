@@ -13,6 +13,8 @@ import {
   beginMysteryGauntlet,
   resolveMysteryTile,
   isMysteryTerminal,
+  isGauntletTilePickable,
+  isLastRemainingGauntletTile,
   isMaskResolved,
   getUnresolvedMaskIds,
   mysteryMasteryPoints,
@@ -400,6 +402,42 @@ function fresh(mercyReviveLives = 0): GameState {
   s = applyGoldFeather(s);
   eq(s.mysteryTotal, 0, 'goldFeather.gauntlet.resetsTotal');
   eq(s.mysteryResolved, 0, 'goldFeather.gauntlet.resetsResolved');
+}
+
+// ── gauntlet order-tracking (Pick Your Trap) ────────────────────────────
+{
+  const ids = ['a', 'b', 'c'];
+  const allIdle = new Map<string, string>([['a', 'idle'], ['b', 'idle'], ['c', 'idle']]);
+
+  eq(isGauntletTilePickable(ids, allIdle, 0), true, 'idle tile is pickable');
+  eq(isGauntletTilePickable(ids, allIdle, 3), false, 'out-of-range index is not pickable');
+
+  const oneResolved = new Map<string, string>([['a', 'correct'], ['b', 'idle'], ['c', 'idle']]);
+  eq(isGauntletTilePickable(ids, oneResolved, 0), false, 'resolved (correct) tile is not pickable');
+  eq(isGauntletTilePickable(ids, oneResolved, 1), true, 'still-idle tile remains pickable');
+
+  // Missing map entry defaults to idle (a freshly-dealt tile with no state yet).
+  const empty = new Map<string, string>();
+  eq(isGauntletTilePickable(ids, empty, 0), true, 'tile with no recorded state defaults to pickable');
+}
+
+{
+  const ids = ['a', 'b', 'c'];
+
+  // Resolving 'a' when 'b' and 'c' are both still idle: not the last one.
+  const twoLeft = new Map<string, string>([['a', 'idle'], ['b', 'idle'], ['c', 'idle']]);
+  eq(isLastRemainingGauntletTile(ids, twoLeft, 'a'), false, 'two other tiles still idle: not last');
+
+  // 'b' already correct, 'c' still idle, resolving 'a' now: not last (c remains).
+  const oneLeft = new Map<string, string>([['a', 'idle'], ['b', 'correct'], ['c', 'idle']]);
+  eq(isLastRemainingGauntletTile(ids, oneLeft, 'a'), false, 'one other tile still idle: not last');
+
+  // 'b' and 'c' both already resolved, resolving 'a' now: this is the last one.
+  const noneLeft = new Map<string, string>([['a', 'idle'], ['b', 'correct'], ['c', 'trap-caught']]);
+  eq(isLastRemainingGauntletTile(ids, noneLeft, 'a'), true, 'both others resolved: this is last');
+
+  // Single-tile gauntlet (Returning Haunt): resolving the only tile is always last.
+  eq(isLastRemainingGauntletTile(['a'], new Map(), 'a'), true, 'single-tile gauntlet: always last');
 }
 
 console.log('OK');

@@ -457,6 +457,32 @@ export function isMysteryTerminal(state: GameState, correct: boolean): boolean {
   return state.mysteryResolved + 1 >= Math.max(1, state.mysteryTotal);
 }
 
+// ─── GAUNTLET ORDER TRACKING — "Pick Your Trap" ─
+// Order-independent: which of the 3 gauntlet tiles remain pickable, and
+// whether a just-resolved tile was the last one left. Does not touch the
+// mastery/haunt math above (resolveMysteryTile) — order never affects the
+// per-tile odds, only which one the player faces when.
+
+export function isGauntletTilePickable(
+  tileIds: readonly string[],
+  states: ReadonlyMap<string, string>,
+  index: number,
+): boolean {
+  const id = tileIds[index];
+  if (id === undefined) return false;
+  return (states.get(id) ?? 'idle') === 'idle';
+}
+
+export function isLastRemainingGauntletTile(
+  tileIds: readonly string[],
+  states: ReadonlyMap<string, string>,
+  resolvedId: string,
+): boolean {
+  return tileIds
+    .filter(id => id !== resolvedId)
+    .every(id => (states.get(id) ?? 'idle') !== 'idle');
+}
+
 // ─── WRONG SWIPE — penalise without recording a specific mask ─
 
 export function submitWrongSwipe(state: GameState): GameState {
