@@ -31,7 +31,7 @@ import MasterySeal from './MasterySeal';
 import { useBoardMechanics } from '../hooks/useBoardMechanics';
 import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
-import { BossGauntletStack } from './BossGauntletStack';
+import { BossGauntletSpines } from './BossGauntletSpines';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -1615,16 +1615,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
 
             {showGauntletCard && (
               <View style={styles.finalHiddenTileStack}>
-                <BossGauntletStack
+                <BossGauntletSpines
                   key={gauntletThrowKey}
-                  playThrowIn
                   gatePhase={mechanics.gatePhase}
-                  activeGauntletTile={mechanics.activeGauntletTile}
                   gauntletTiles={mechanics.gauntletTiles}
-                  gauntletIndex={mechanics.gauntletIndex}
-                  tileState={mechanics.finalTileStates.get(mechanics.activeGauntletTile?.mask.id ?? '') ?? 'idle'}
+                  finalTileStates={mechanics.finalTileStates}
+                  activeGauntletTile={mechanics.activeGauntletTile}
                   tileLanded={mechanics.tileLanded}
                   inputLocked={mechanics.inputLocked}
+                  onPick={mechanics.pickGauntletTile}
                   onSwipeUp={mechanics.onGauntletSwipeUp}
                   onSwipeRight={mechanics.onGauntletSwipeRight}
                   onEffect={handleEffect}
