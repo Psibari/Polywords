@@ -72,11 +72,26 @@ const HUNT_INTRO: VisitSpec = {
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
   lineId: 'huntBossMine', line: POLLY_LINES.huntBossMine, sfx: 'pollySqwawkShort',
-  // perchMs is currently inert: holdPerch: true means the consuming
-  // component never runs the timed auto-exit that would read it. Kept in
-  // case holdPerch is ever flipped back to false for this spec — do not
-  // spend time tuning this value until then.
-  holdPerch: true, perchMs: 3400, perchScale: 1.3,
+  // Pops in for the entrance line, then flies back out — she does not stay
+  // perched through the visible tiles or the hidden gauntlet. Her enlarged
+  // (perchScale 1.3) bottom-left perch overlapped and hid gauntlet card
+  // text when this held indefinitely (device test 2026-07-31); she instead
+  // returns for a separate BOSS_GAUNTLET_THROW beat when the gauntlet
+  // actually begins.
+  holdPerch: false, perchMs: 3400, perchScale: 1.3,
+};
+
+// Fires when the visible boss tiles are cleared and the hidden gauntlet is
+// about to begin (see 'allMasksFound' handling below) — she flies back in
+// to throw the gauntlet cards, then flies back out so the board is clear
+// for the player to read them. No line: this is a physical beat, not a
+// dialogue beat. perchMs is a device-unverified starting point sized to
+// roughly cover BossGauntletStack's own throw-in animation (~900ms after
+// her landing) plus a short beat — re-tune once seen live.
+const BOSS_GAUNTLET_THROW: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
+  lineId: null, line: null, sfx: 'pollySqwawkShort',
+  holdPerch: false, perchMs: 1400, perchScale: 1.3,
 };
 
 const BOSS_MASTERED_SULK: VisitSpec = {
@@ -139,6 +154,10 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   // ── Guaranteed big beats: ignore all budgets ──────────────────
   if (event === 'huntIntro') return { action: 'visit', spec: HUNT_INTRO };
   if (event === 'bossEntry') return { action: 'visit', spec: BOSS_ENTRY };
+  // Only fired by useBoardMechanics on the final-gate step with hidden
+  // content — i.e. exclusively the boss-gauntlet-begin beat, never an
+  // ordinary word's completion (those fire 'cleanSweep' instead).
+  if (event === 'allMasksFound') return { action: 'visit', spec: BOSS_GAUNTLET_THROW };
   if (event === 'gateMasteredBoss') return { action: 'visit', spec: BOSS_MASTERED_SULK };
   if (event === 'gameOver') return { action: 'visit', spec: GAME_OVER_LAUGH };
   if (event === 'hauntFailed') return { action: 'visit', spec: HAUNT_FAILED_LAUGH };

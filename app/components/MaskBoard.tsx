@@ -876,16 +876,32 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
         // its Animated.delay) before driving these shared values directly —
         // otherwise its queued final leg fires later and fights this beat.
+        // Reset to a known 0 rather than leaving stopAnimation()'s frozen
+        // mid-flight value as the start point — triggerGauntletPulse from the
+        // just-resolved 3rd gauntlet tile can still be mid-cycle here, and
+        // starting this sequence from an arbitrary in-between value made its
+        // timing unpredictable.
         bookOpenAnimationRef.current?.stop();
         bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
+        bookOpenAnim.setValue(0);
+        bookIntakeGlowAnim.setValue(0);
         bookOpenAnimationRef.current = Animated.parallel([
           // Explicit chained legs, not a spring — a spring here read as an
           // under-damped blink/pulse on device instead of a single clean
-          // snap. Overshoot past shut, a tiny recoil settle, then rest.
+          // snap. Snap-to-shut, a tiny recoil settle, then rest.
+          //
+          // The first leg used to target -0.04 (a small overshoot PAST fully
+          // shut) rather than 0. bookOpenAnim never goes negative anywhere
+          // else in the app; that negative value was the only thing that
+          // ever drove HeroBook's coverRotateX below 0deg, and its two cover
+          // faces (coverOuter/coverInner) both use backfaceVisibility:
+          // 'hidden' — a combination that's flaky on RN once rotateX crosses
+          // zero, which read on device as the cover flickering out and back.
+          // Targeting 0 keeps the decisive snap without ever crossing zero.
           Animated.sequence([
             Animated.timing(bookOpenAnim, {
-              toValue: -0.04, // small overshoot past fully-shut, proportional to heroBook's overshootAngle/openAngle ratio
+              toValue: 0,
               duration: PW.motion.heroBook.overshootMs,
               easing: Easing.out(Easing.quad),
               useNativeDriver: true,
@@ -1246,7 +1262,11 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   const bookIntakeRotateX = bookOpenAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '65deg'],
-    extrapolateLeft: 'extend', // small negative overshoot is intentional (mastered close beat) — do not clamp this one
+    // Clamped: bookOpenAnim should never go negative (nothing animates it
+    // below 0 anymore), but HeroBook's cover faces use backfaceVisibility:
+    // 'hidden', which flickers on RN once rotateX crosses zero — clamp is a
+    // defensive floor against ever rendering a negative angle here again.
+    extrapolateLeft: 'clamp',
   });
   const bookIntakeGlowScale = bookOpenAnim.interpolate({
     inputRange: [0, 1],

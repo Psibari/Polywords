@@ -25,8 +25,10 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 
 // ── Guaranteed beats ────────────────────────────────────────────
 
-// bossEntry: flyAngry → point, line + short squawk, bigger + holds perch
-// (boss entrance is deliberately bigger/longer than an ordinary visit)
+// bossEntry: flyAngry → point, line + short squawk, bigger — pops in for the
+// line then flies back out (does NOT hold perch; holding through the visible
+// tiles + gauntlet caused her to overlap/hide gauntlet card text — device
+// test 2026-07-31). She returns separately for the gauntlet throw below.
 {
   const s = visitSpec(resolveVisit('bossEntry', idle), 'bossEntry');
   eq(s.kind, 'guaranteed', 'bossEntry.kind');
@@ -34,9 +36,23 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.perchPose, 'point', 'bossEntry.perchPose');
   eq(s.line, 'This word stays mine.', 'bossEntry.line');
   eq(s.sfx, 'pollySqwawkShort', 'bossEntry.sfx');
-  eq(s.holdPerch, true, 'bossEntry.holdPerch');
+  eq(s.holdPerch, false, 'bossEntry.holdPerch');
   eq(s.perchMs, 3400, 'bossEntry.perchMs');
   eq(s.perchScale, 1.3, 'bossEntry.perchScale');
+}
+
+// allMasksFound: only ever fired on the boss final-gate step, once the
+// visible tiles clear and the hidden gauntlet is about to begin — she flies
+// back in to throw the cards, then flies back out (no line: a physical beat).
+{
+  const s = visitSpec(resolveVisit('allMasksFound', idle), 'allMasksFound');
+  eq(s.kind, 'guaranteed', 'allMasksFound.kind');
+  eq(s.flyPose, 'flyAngry', 'allMasksFound.flyPose');
+  eq(s.perchPose, 'point', 'allMasksFound.perchPose');
+  eq(s.line, null, 'allMasksFound.line');
+  eq(s.sfx, 'pollySqwawkShort', 'allMasksFound.sfx');
+  eq(s.holdPerch, false, 'allMasksFound.holdPerch');
+  eq(s.perchScale, 1.3, 'allMasksFound.perchScale');
 }
 
 // gateMasteredBoss: flyAngry → sulk, silent, holds perch
@@ -79,6 +95,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
     ghostRunsMissed: 0,
   };
   eq(resolveVisit('bossEntry', jammed).action, 'visit', 'bossEntry while jammed');
+  eq(resolveVisit('allMasksFound', jammed).action, 'visit', 'allMasksFound while jammed');
   eq(resolveVisit('gameOver', jammed).action, 'visit', 'gameOver while jammed');
   eq(resolveVisit('gateMasteredBoss', jammed).action, 'visit', 'gateMasteredBoss while jammed');
 }
@@ -170,7 +187,7 @@ for (const [i, block] of [
 eq(resolveVisit('wordEntry', idle).action, 'wordEntry', 'wordEntry resets budget');
 
 for (const ev of [
-  'correct', 'streakX10', 'oneHeartLeft', 'oneWrongMove', 'allMasksFound',
+  'correct', 'streakX10', 'oneHeartLeft', 'oneWrongMove',
   'hiddenFound', 'hesitationCleared', 'ghostFoundLate', 'ghostDissolved',
   'gateMastered', 'hiddenMasterFailed',
 ] as const) {
