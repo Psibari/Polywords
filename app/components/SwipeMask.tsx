@@ -483,6 +483,7 @@ export function SwipeMask({
       ...(gauntletCard
         ? {
             shadowColor: '#FF3FA0',
+            shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.25 + (liftAmount * 0.55),
             shadowRadius: 10 + (liftAmount * 26),
             elevation: 10 + (liftAmount * 14),

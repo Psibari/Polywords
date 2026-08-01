@@ -39,13 +39,25 @@ export function BossGauntletStack({
   // Back card (2) launches first so it isn't visually covering cards that
   // land after it; active card (0) launches last. Values/timings are
   // starting points from the approved mockup — tune on device.
-  const throw0 = useRef(new Animated.ValueXY(playThrowIn ? { x: -230, y: 260 } : { x: 0, y: 0 })).current;
+  //
+  // NOTE (final review pass): the stack renders inside MaskBoard's outer
+  // container, which has overflow: 'hidden'. The original offsets here
+  // (~-210 to -230 x, ~240 to 260 y) were large enough that the throw could
+  // start outside that clipped area, meaning on-device the cards would pop
+  // in at the clip edge instead of visibly flying in. These halved values
+  // are a device-unverified starting point chosen only to keep the whole
+  // arc within a plausible on-screen distance of the resting stack — not a
+  // claim of pixel alignment with Polly's actual sprite position. Re-tune
+  // once Pete can see it on a real screen, ideally by measuring where the
+  // board's visible bottom-left actually is relative to this stack's rest
+  // position.
+  const throw0 = useRef(new Animated.ValueXY(playThrowIn ? { x: -115, y: 130 } : { x: 0, y: 0 })).current;
   const throw0Rotate = useRef(new Animated.Value(playThrowIn ? -200 : 0)).current;
   const throw0Scale = useRef(new Animated.Value(playThrowIn ? 0.3 : 1)).current;
-  const throw1 = useRef(new Animated.ValueXY(playThrowIn ? { x: -220, y: 250 } : { x: 0, y: 6 })).current;
+  const throw1 = useRef(new Animated.ValueXY(playThrowIn ? { x: -110, y: 125 } : { x: 0, y: 6 })).current;
   const throw1Rotate = useRef(new Animated.Value(playThrowIn ? -230 : 7)).current;
   const throw1Scale = useRef(new Animated.Value(playThrowIn ? 0.28 : 1)).current;
-  const throw2 = useRef(new Animated.ValueXY(playThrowIn ? { x: -210, y: 240 } : { x: 0, y: 10 })).current;
+  const throw2 = useRef(new Animated.ValueXY(playThrowIn ? { x: -105, y: 120 } : { x: 0, y: 10 })).current;
   const throw2Rotate = useRef(new Animated.Value(playThrowIn ? 200 : -6)).current;
   const throw2Scale = useRef(new Animated.Value(playThrowIn ? 0.26 : 1)).current;
 
@@ -157,6 +169,12 @@ const styles = StyleSheet.create({
   stage: {
     alignItems: 'center',
     justifyContent: 'flex-end',
+    // Fixed height matching the active SwipeMask's tileHeight (200) plus a
+    // small margin. Without this, the stage's height derives entirely from
+    // the active card's own wrapper, which animates to 0 between tiles
+    // (judgement) and back — the two absolutely-positioned back cards would
+    // otherwise visibly slide down and back up on every tile transition.
+    height: 206,
   },
   activeCardSlot: {
     zIndex: 3,

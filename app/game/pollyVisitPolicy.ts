@@ -72,6 +72,10 @@ const HUNT_INTRO: VisitSpec = {
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
   lineId: 'huntBossMine', line: POLLY_LINES.huntBossMine, sfx: 'pollySqwawkShort',
+  // perchMs is currently inert: holdPerch: true means the consuming
+  // component never runs the timed auto-exit that would read it. Kept in
+  // case holdPerch is ever flipped back to false for this spec — do not
+  // spend time tuning this value until then.
   holdPerch: true, perchMs: 3400, perchScale: 1.3,
 };
 

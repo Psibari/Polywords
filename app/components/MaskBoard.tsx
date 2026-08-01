@@ -38,7 +38,6 @@ const TILE_GAP   = 6;
 const TILE_H     = 152;
 const FINAL_TILE_H = 72;
 const FINAL_TILE_GAP = 10;
-const FINAL_TILE_RELEASE_OFFSET_Y = 190;
 const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
@@ -598,8 +597,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   }
 
   // ── master gate (face-only) ─────────────────────────────────────
-  // Final tile drop (native: transform only)
-  const splitTile1TransY  = useRef(new Animated.Value(FINAL_TILE_RELEASE_OFFSET_Y)).current;
 
   // Mastered celebration
   const masterHeroScale      = useRef(new Animated.Value(1)).current;
@@ -703,16 +700,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         if (swipedUp) triggerAbsorption(phrase);
       },
       onGauntletTileDrop() {
-        splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
-        const drops = [
-          Animated.spring(splitTile1TransY, {
-            toValue: 0, damping: 13, stiffness: 150, useNativeDriver: true,
-          }),
-        ];
-        Animated.parallel(drops).start(({ finished }) => {
-          if (!finished) return;
+        // No longer drives any visible animation — BossGauntletStack owns
+        // the card's own motion now. This timer only stands in for the old
+        // spring's settle time (damping: 13, stiffness: 150) so
+        // onGauntletTileLanded still fires on roughly the same beat.
+        setTimeout(() => {
           mechanics.onGauntletTileLanded();
-        });
+        }, 280);
       },
       onGauntletBegin() {
         setGauntletThrowKey(k => k + 1);
@@ -1118,7 +1112,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     // per-mount initializers, since MaskBoard remounts per word)
     setMasterStampVisible(false);
     setSealReady(false);
-    splitTile1TransY.setValue(FINAL_TILE_RELEASE_OFFSET_Y);
     masterHeroScale.setValue(1);
     masterHeroTransY.setValue(0);
     masterAllFadeAnim.setValue(1);
@@ -1602,18 +1595,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
 
             {showGauntletCard && (
               <View style={styles.finalHiddenTileStack}>
-                {!isBossStage && mechanics.gauntletTiles.length > 1 && (
-                  <Text style={{
-                    color: 'rgba(245,200,66,0.72)',
-                    fontFamily: FONTS.label,
-                    fontSize: 15,
-                    letterSpacing: 3,
-                    textAlign: 'center',
-                    marginBottom: 8,
-                  }}>
-                    {`${mechanics.gauntletIndex + 1} OF ${mechanics.gauntletTiles.length}`}
-                  </Text>
-                )}
                 <BossGauntletStack
                   key={gauntletThrowKey}
                   playThrowIn
@@ -1902,6 +1883,16 @@ const styles = StyleSheet.create({
   },
   wordZoneBoss: {
     height: 186,
+    // Extra headroom so the chromed kickerBossFixed badge (restored padding
+    // + border, see below) has clearance above the book instead of
+    // overlapping its top edge. Kept on wordZone rather than lifting the
+    // badge itself with a negative top: kickerBossFixed is a direct child
+    // of this component's root container, which has overflow: 'hidden' and
+    // no paddingTop — a negative top would be clipped by that boundary,
+    // reintroducing the exact invisible-kicker bug fixed previously (see
+    // "Fix boss-entrance kicker" commit). Pushing the zone down instead
+    // keeps the whole badge inside the visible, unclipped area.
+    marginTop: 26,
   },
   kickerFixed: {
     color: '#F5C842',
@@ -1922,10 +1913,21 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textAlign: 'center',
     position: 'absolute',
+    // top intentionally stays 0, not negative: this Text is a direct child
+    // of the root container, which has overflow: 'hidden' and no
+    // paddingTop, so anything above top: 0 here would be clipped off —
+    // that was the original "kicker never visible" bug. Clearance from the
+    // book comes from wordZoneBoss's marginTop instead (see above).
     top: 0,
     left: 20,
     right: 20,
     zIndex: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(245,200,66,0.55)',
+    backgroundColor: 'rgba(15,13,42,0.88)',
   },
   word: {
     fontSize: 96,
