@@ -1275,8 +1275,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   });
 
   const showGauntletCard =
-    (mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail') &&
-    !!mechanics.activeGauntletTile;
+    mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail';
 
   return (
     <Animated.View

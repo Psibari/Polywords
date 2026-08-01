@@ -33,13 +33,14 @@ const SPINE_OPEN_MS = 280;
 const SPINE_CLOSED_SCALE_X = 0.14;
 
 function SpineSlot({
-  tile, index, status, isOpen, tileLanded, inputLocked,
+  tile, index, status, isOpen, anyOpen, tileLanded, inputLocked,
   onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY,
 }: {
   tile: GauntletTile;
   index: number;
   status: SwipeMaskState;
   isOpen: boolean;
+  anyOpen: boolean;
   tileLanded: boolean;
   inputLocked: boolean;
   onPick: (index: number) => void;
@@ -53,6 +54,11 @@ function SpineSlot({
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
   const resolved = status !== 'idle';
+  // Open (or resolved) cards render wider than their 90px slot (see
+  // SwipeMask's gauntletCard width), so they must paint above sibling
+  // slots — otherwise a neighbor's opaque sealed panel occludes the
+  // overflow and its full-slot Pressable steals touches meant for it.
+  const elevated = isOpen || resolved;
 
   useEffect(() => {
     Animated.timing(openAnim, {
@@ -68,8 +74,15 @@ function SpineSlot({
   const labelOpacity = openAnim.interpolate({ inputRange: [0, 0.35, 1], outputRange: [1, 0, 0] });
   const contentOpacity = openAnim.interpolate({ inputRange: [0, 0.55, 1], outputRange: [0, 0, 1] });
 
+  // A closed, unopened, unresolved slot's hit target should never capture
+  // touches meant for whichever OTHER slot is currently open — its own
+  // card can be picked only while nothing else is active anyway
+  // (useBoardMechanics.pickGauntletTile no-ops once a tile is active), so
+  // there's no functional loss in going fully inert here.
+  const closedHitInert = resolved || anyOpen;
+
   return (
-    <View style={styles.slot}>
+    <View style={[styles.slot, elevated && styles.slotElevated]}>
       <Animated.View pointerEvents="none" style={[styles.spine, { transform: [{ scaleX }] }]}>
         <Animated.Text
           style={[styles.spineLabel, { opacity: labelOpacity, transform: [{ rotate: labelRotate }] }]}
@@ -79,16 +92,24 @@ function SpineSlot({
       </Animated.View>
 
       {/* Closed hit target — sits on top while sealed, stops intercepting
-          touches once open so it never fights SwipeMask's own gesture. */}
+          touches once open (or once ANY sibling is open) so it never fights
+          SwipeMask's own gesture or steals touches from an overflowing
+          neighbor's open card. */}
       <Pressable
-        pointerEvents={isOpen || resolved ? 'none' : 'auto'}
-        disabled={resolved || inputLocked}
+        pointerEvents={closedHitInert ? 'none' : 'auto'}
+        disabled={closedHitInert || inputLocked}
         onPressIn={() => { if (!resolved) onPick(index); }}
         style={StyleSheet.absoluteFill}
       />
 
+      {/* Closed/unopened/unresolved slots must be fully invisible to
+          assistive tech — SwipeMask always sets accessibilityLabel to the
+          real tile phrase regardless of opacity/pointerEvents, and exposing
+          that before the player commits would leak Hidden Truth content. */}
       <Animated.View
         pointerEvents={isOpen || resolved ? 'box-none' : 'none'}
+        accessibilityElementsHidden={!(isOpen || resolved)}
+        importantForAccessibility={isOpen || resolved ? 'auto' : 'no-hide-descendants'}
         style={[styles.openContent, { opacity: contentOpacity }]}
       >
         <SwipeMask
@@ -99,7 +120,7 @@ function SpineSlot({
           onSwipeDown={onSwipeRight}
           onSwipeReveal={() => {}}
           revealable={false}
-          disabled={inputLocked || (!resolved && !tileLanded)}
+          disabled={inputLocked || (!resolved && !(isOpen && tileLanded))}
           gauntletCard
           tileHeight={200}
           entryDelay={0}
@@ -122,6 +143,8 @@ export function BossGauntletSpines({
 }: BossGauntletSpinesProps) {
   if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
+  const anyOpen = activeGauntletTile !== null;
+
   return (
     <View style={styles.row} pointerEvents="box-none">
       {gauntletTiles.map((tile, index) => (
@@ -131,6 +154,7 @@ export function BossGauntletSpines({
           index={index}
           status={finalTileStates.get(tile.mask.id) ?? 'idle'}
           isOpen={activeGauntletTile?.mask.id === tile.mask.id}
+          anyOpen={anyOpen}
           tileLanded={tileLanded}
           inputLocked={inputLocked}
           onPick={onPick}
@@ -158,6 +182,13 @@ const styles = StyleSheet.create({
   slot: {
     width: 90,
     height: 200,
+  },
+  // Applied to whichever slot is currently open (or already resolved) so
+  // its overflowing gauntletCard-width SwipeMask paints above sibling
+  // sealed spines instead of being occluded by them (finding 2).
+  slotElevated: {
+    zIndex: PW.z.activeCard,
+    elevation: PW.z.activeCard,
   },
   spine: {
     ...StyleSheet.absoluteFillObject,
