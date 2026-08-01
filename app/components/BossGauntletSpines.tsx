@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ShardVariant } from '../ui/pwEffects';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
+import { libraryMaterial } from '../ui/pwMaterials';
 
 type GauntletTile = { pairIndex: number; mask: Mask; isReal: boolean };
 
@@ -30,14 +32,43 @@ export type BossGauntletSpinesProps = {
 // (MaskBoard.tsx) — the spine's own open animation should finish at
 // roughly the same beat the tile becomes swipeable (tileLanded).
 const SPINE_OPEN_MS = 280;
-const SPINE_CLOSED_SCALE_X = 0.14;
+// A real book spine (BookSpine.tsx, the Vault shelf) runs 30-44px wide at
+// 128px tall — roughly a 1:3 to 1:4 width:height ratio, not the 1:13 sliver
+// a 0.14 scale produced here (110 * 0.14 ≈ 15px against a 200px height).
+// 0.55 puts the closed rest width at ~60px against this spine's 200px
+// height (~1:3.3), landing inside BookSpine's own established range instead
+// of guessing a new one.
+const SPINE_CLOSED_SCALE_X = 0.55;
+// Sized against MaskBoard's own container padding (14px each side) so 3
+// slots + 2 gaps fit on the narrowest realistic target width (375pt)
+// without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
+const SPINE_WIDTH = 110;
+const SPINE_HEIGHT = 200;
+const ROW_GAP = 8; // must match styles.row.gap below — read by the centering math too
+
+// The expanded SwipeMask (gauntletCard width, up to 300px) is centered
+// within its OWN 110px-wide slot by default. For the outer slots that means
+// it's centered on a point far from the row's actual midpoint — on a 3-tile
+// row the left slot's card ends up centered ~118px left of screen-center,
+// wide enough to clip off the left edge entirely (confirmed on device).
+// This computes the horizontal correction so an opened/resolved card at any
+// slot index re-centers on the ROW's own midpoint instead of its slot's,
+// generalized over tile count (N) rather than hardcoded to 3, so it's also
+// a no-op (0 offset) for the 1-tile Returning Haunt case, where a single
+// slot is already centered on the full row width and needs no correction.
+function centerOffsetX(index: number, tileCount: number): number {
+  const contentWidth = tileCount * SPINE_WIDTH + (tileCount - 1) * ROW_GAP;
+  const slotCenter = index * (SPINE_WIDTH + ROW_GAP) + SPINE_WIDTH / 2;
+  return contentWidth / 2 - slotCenter;
+}
 
 function SpineSlot({
-  tile, index, status, isOpen, anyOpen, tileLanded, inputLocked,
+  tile, index, offsetX, status, isOpen, anyOpen, tileLanded, inputLocked,
   onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY,
 }: {
   tile: GauntletTile;
   index: number;
+  offsetX: number;
   status: SwipeMaskState;
   isOpen: boolean;
   anyOpen: boolean;
@@ -90,6 +121,38 @@ function SpineSlot({
   return (
     <View style={[styles.slot, isOpen ? styles.slotOpen : elevated && styles.slotElevated]}>
       <Animated.View pointerEvents="none" style={[styles.spine, { transform: [{ scaleX }] }]}>
+        {/* Same leather-and-tooling material as BookSpine.tsx (Vault shelf)
+            and HeroBook's own cover — every purple/gold token here traces
+            back to heroBookMaterial, so this reads as the same object, not
+            a new material invented for this one component. */}
+        <Svg width={SPINE_WIDTH} height={SPINE_HEIGHT} style={StyleSheet.absoluteFillObject}>
+          <Defs>
+            {/* Id must be unique per instance — 3 slots render simultaneously,
+                each with its own Svg, same reason BookSpine.tsx keys its
+                gradient id off the word instead of a shared literal. */}
+            <LinearGradient id={`gauntletSpineLeather-${tile.mask.id}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={libraryMaterial.spineLeatherTop} />
+              <Stop offset="0.5" stopColor={libraryMaterial.spineLeather} />
+              <Stop offset="1" stopColor={libraryMaterial.spineLeatherBot} />
+            </LinearGradient>
+          </Defs>
+          <Rect
+            x={0.5} y={0.5}
+            width={SPINE_WIDTH - 1} height={SPINE_HEIGHT - 1}
+            rx={16}
+            fill={`url(#gauntletSpineLeather-${tile.mask.id})`}
+            stroke={libraryMaterial.spineToolingHairline}
+            strokeWidth={1}
+          />
+          {/* Gold tooling bands, head and tail */}
+          <Rect x={8} y={18} width={SPINE_WIDTH - 16} height={2.5} fill={libraryMaterial.spineTooling} />
+          <Rect x={8} y={SPINE_HEIGHT - 24} width={SPINE_WIDTH - 16} height={2.5} fill={libraryMaterial.spineTooling} />
+          {/* Boss-only second amber band, same treatment BookSpine reserves
+              for isBoss — this spine is always Polly's Word, so it's always
+              on. */}
+          <Rect x={8} y={26} width={SPINE_WIDTH - 16} height={1.5} fill={libraryMaterial.spineAmber} />
+          <Rect x={8} y={SPINE_HEIGHT - 32} width={SPINE_WIDTH - 16} height={1.5} fill={libraryMaterial.spineAmber} />
+        </Svg>
         <Animated.Text
           style={[styles.spineLabel, { opacity: labelOpacity, transform: [{ rotate: labelRotate }] }]}
         >
@@ -122,7 +185,7 @@ function SpineSlot({
         pointerEvents={isOpen ? 'box-none' : 'none'}
         accessibilityElementsHidden={!(isOpen || resolved)}
         importantForAccessibility={isOpen || resolved ? 'auto' : 'no-hide-descendants'}
-        style={[styles.openContent, { opacity: contentOpacity }]}
+        style={[styles.openContent, { opacity: contentOpacity, transform: [{ translateX: offsetX }] }]}
       >
         <SwipeMask
           key={tile.mask.id}
@@ -164,6 +227,7 @@ export function BossGauntletSpines({
           key={tile.mask.id}
           tile={tile}
           index={index}
+          offsetX={centerOffsetX(index, gauntletTiles.length)}
           status={finalTileStates.get(tile.mask.id) ?? 'idle'}
           isOpen={activeGauntletTile?.mask.id === tile.mask.id}
           anyOpen={anyOpen}
@@ -188,12 +252,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-end',
-    gap: 8,
+    gap: ROW_GAP,
     height: 206,
   },
   slot: {
-    width: 90,
-    height: 200,
+    width: SPINE_WIDTH,
+    height: SPINE_HEIGHT,
   },
   // Applied to a resolved-but-not-open slot so its overflowing
   // gauntletCard-width SwipeMask paints above sibling sealed spines
@@ -215,12 +279,26 @@ const styles = StyleSheet.create({
   spine: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 16,
-    backgroundColor: '#1C1548',
-    borderWidth: 1,
-    borderColor: PW.color.gold,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    // Static warm-toned drop shadow, not an ambient glow (this codebase
+    // has burned three times on animated/ongoing glow effects — see
+    // MaskBoard's boss-round governing rules) — a one-time, non-animated
+    // shadow satisfies pwMaterials.ts's own "spines stand against warm
+    // wood, never purple-on-purple" rule without adding an effect system.
+    // The boss room's ambient is purple/indigo, unlike the Vault's warm
+    // wood backing, so the purple leather needs this to read as an object
+    // sitting in front of the scene rather than blending into it.
+    // iOS-only shadow props deliberately — Android's `elevation` establishes
+    // its own stacking context and this component already has a carefully
+    // tuned zIndex/elevation scheme on the parent `slot` (see slotOpen/
+    // slotElevated above, fixing a real touch-stealing bug); adding a
+    // second elevation value on a nested child risks reopening that.
+    shadowColor: PW.color.amber,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
   },
   spineLabel: {
     position: 'absolute',
