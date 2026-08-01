@@ -58,6 +58,12 @@ function SpineSlot({
   // SwipeMask's gauntletCard width), so they must paint above sibling
   // slots — otherwise a neighbor's opaque sealed panel occludes the
   // overflow and its full-slot Pressable steals touches meant for it.
+  // isOpen and "merely resolved" get DIFFERENT elevation levels (not a
+  // shared one) — picking is player-driven, so a resolved-but-inactive
+  // slot and a newly-opened slot routinely coexist (e.g. resolve tile 2,
+  // then pick tile 0), and a zIndex tie between them resolves by render
+  // order, not by which one is actually interactive. isOpen must always
+  // win that tie regardless of array index.
   const elevated = isOpen || resolved;
 
   useEffect(() => {
@@ -82,7 +88,7 @@ function SpineSlot({
   const closedHitInert = resolved || anyOpen;
 
   return (
-    <View style={[styles.slot, elevated && styles.slotElevated]}>
+    <View style={[styles.slot, isOpen ? styles.slotOpen : elevated && styles.slotElevated]}>
       <Animated.View pointerEvents="none" style={[styles.spine, { transform: [{ scaleX }] }]}>
         <Animated.Text
           style={[styles.spineLabel, { opacity: labelOpacity, transform: [{ rotate: labelRotate }] }]}
@@ -107,7 +113,13 @@ function SpineSlot({
           real tile phrase regardless of opacity/pointerEvents, and exposing
           that before the player commits would leak Hidden Truth content. */}
       <Animated.View
-        pointerEvents={isOpen || resolved ? 'box-none' : 'none'}
+        // Only the currently-open slot needs to stay hit-testable — once a
+        // slot is resolved and no longer open, its judgment is locked in,
+        // so it has nothing left to receive touches for. Leaving it
+        // 'box-none' let a resolved (inert) card sitting on top of the
+        // open one (see slotOpen/slotElevated above) steal the open
+        // card's touches even after this component's zIndex split.
+        pointerEvents={isOpen ? 'box-none' : 'none'}
         accessibilityElementsHidden={!(isOpen || resolved)}
         importantForAccessibility={isOpen || resolved ? 'auto' : 'no-hide-descendants'}
         style={[styles.openContent, { opacity: contentOpacity }]}
@@ -183,10 +195,20 @@ const styles = StyleSheet.create({
     width: 90,
     height: 200,
   },
-  // Applied to whichever slot is currently open (or already resolved) so
-  // its overflowing gauntletCard-width SwipeMask paints above sibling
-  // sealed spines instead of being occluded by them (finding 2).
+  // Applied to a resolved-but-not-open slot so its overflowing
+  // gauntletCard-width SwipeMask paints above sibling sealed spines
+  // instead of being occluded by them (finding 2). Deliberately ONE
+  // level below slotOpen — a resolved slot must never win a stacking
+  // tie against whichever slot the player currently has open (finding 3).
   slotElevated: {
+    zIndex: PW.z.activeCard - 1,
+    elevation: PW.z.activeCard - 1,
+  },
+  // Applied to whichever slot is currently open. Strictly higher than
+  // slotElevated so the open card always paints/hit-tests above a
+  // resolved sibling in their overlap region, regardless of which one
+  // has the higher array index (finding 3).
+  slotOpen: {
     zIndex: PW.z.activeCard,
     elevation: PW.z.activeCard,
   },
