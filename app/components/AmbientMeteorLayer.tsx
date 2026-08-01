@@ -6,13 +6,13 @@ type MeteorDef = { startXFrac: number; startYFrac: number; delayMs: number; dura
 // Hand-placed, staggered so meteors don't all fire together.
 const METEORS: MeteorDef[] = [
   { startXFrac: 0.85, startYFrac: 0.05, delayMs: 0, durationMs: 1400 },
-  { startXFrac: 0.65, startYFrac: 0.15, delayMs: 6000, durationMs: 1200 },
-  { startXFrac: 0.95, startYFrac: 0.25, delayMs: 11000, durationMs: 1600 },
+  { startXFrac: 0.65, startYFrac: 0.15, delayMs: 9000, durationMs: 1200 },
+  { startXFrac: 0.95, startYFrac: 0.25, delayMs: 17000, durationMs: 1600 },
 ];
 
 const METEOR_TRAVEL_X = -220;
 const METEOR_TRAVEL_Y = 160;
-const METEOR_REST_MS = 9000;
+const METEOR_REST_MS = 24000;
 
 function Meteor({
   meteor,
