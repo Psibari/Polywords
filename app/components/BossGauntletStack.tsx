@@ -100,7 +100,7 @@ export function BossGauntletStack({
       {remainingAfterActive >= 2 && (
         <Animated.View
           style={{
-            transformOrigin: ['50%', '100%'],
+            transformOrigin: ['50%', '100%', 0],
             transform: [
               { translateX: throw2.x }, { translateY: throw2.y },
               { rotate: throw2Rotate.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }) },
@@ -115,7 +115,7 @@ export function BossGauntletStack({
       {remainingAfterActive >= 1 && (
         <Animated.View
           style={{
-            transformOrigin: ['50%', '100%'],
+            transformOrigin: ['50%', '100%', 0],
             transform: [
               { translateX: throw1.x }, { translateY: throw1.y },
               { rotate: throw1Rotate.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }) },
@@ -132,7 +132,7 @@ export function BossGauntletStack({
         style={[
           styles.activeCardSlot,
           {
-            transformOrigin: ['50%', '100%'],
+            transformOrigin: ['50%', '100%', 0],
             transform: [
               { translateX: throw0.x }, { translateY: throw0.y },
               { rotate: throw0Rotate.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }) },
