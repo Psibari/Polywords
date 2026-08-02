@@ -1,7 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { View, Image, StyleSheet, LayoutChangeEvent } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { computeGroundLayout, StarDensity } from './ambientSkyLayout';
+import { StarDensity, MoonPhase } from './ambientSkyLayout';
+import GraphicGround from './GraphicGround';
+import Moon from './Moon';
 import AmbientDriftLayer from './AmbientDriftLayer';
 import AmbientTwinkleLayer from './AmbientTwinkleLayer';
 import AmbientMeteorLayer from './AmbientMeteorLayer';
@@ -14,21 +16,18 @@ export type AmbientSkyBackgroundProps = {
   starDensity?: StarDensity;
   driftSpeedMs?: number;
   meteorsEnabled?: boolean;
+  moonPhase: MoonPhase;
+  starTint?: string;
 };
-
-const groundSource = require('../../assets/backgrounds/bgbottom.png');
 
 export default function AmbientSkyBackground({
   tint,
   starDensity = 'medium',
   driftSpeedMs = 26000,
   meteorsEnabled = false,
+  moonPhase,
+  starTint,
 }: AmbientSkyBackgroundProps) {
-  const [width, setWidth] = useState(0);
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    setWidth(e.nativeEvent.layout.width);
-  }, []);
-  const layout = width > 0 ? computeGroundLayout(width) : null;
   // Treat the pending (null) read as "reduce" — matches usePollyAmbientMotion's
   // `reduceMotion !== false` convention. Coercing null to false would start every
   // loop for a frame or two before the async accessibility read lands, and would
@@ -36,24 +35,15 @@ export default function AmbientSkyBackground({
   const reducedMotion = useReducedMotionPreference() !== false;
 
   return (
-    <View style={[StyleSheet.absoluteFill, styles.root]} onLayout={onLayout} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, styles.root]} pointerEvents="none">
       <LinearGradient colors={tint} style={StyleSheet.absoluteFill} />
-      <AmbientDriftLayer durationMs={driftSpeedMs} frozen={reducedMotion} />
-      <AmbientTwinkleLayer density={starDensity} frozen={reducedMotion} />
+      <AmbientDriftLayer durationMs={driftSpeedMs} frozen={reducedMotion} tint={starTint} />
+      <AmbientTwinkleLayer density={starDensity} frozen={reducedMotion} tint={starTint} />
       {meteorsEnabled && <AmbientMeteorLayer frozen={reducedMotion} />}
-      {layout && (
-        <View style={[styles.groundBand, { height: layout.bandHeight }]}>
-          <Image
-            source={groundSource}
-            resizeMode="stretch"
-            style={{
-              width: layout.imageWidth,
-              height: layout.imageHeight,
-              top: layout.imageOffsetY,
-            }}
-          />
-        </View>
-      )}
+      <View style={styles.moonWrap}>
+        <Moon phase={moonPhase} skyTint={tint[0]} tint={starTint} />
+      </View>
+      <GraphicGround skyTint={tint[0]} />
     </View>
   );
 }
@@ -62,11 +52,9 @@ const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
   },
-  groundBand: {
+  moonWrap: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: 'hidden',
+    top: '8%',
+    right: '10%',
   },
 });

@@ -5,10 +5,12 @@ import { PW } from './pwTheme';
 // pwMaterials.ts without touching any component logic.
 
 export const HOME_SKY_TUNING: AmbientSkyBackgroundProps = {
-  tint: ['#5C4423', PW.color.bg],
+  tint: ['#351845', PW.color.bg],
   starDensity: 'low',
   driftSpeedMs: 32000,
   meteorsEnabled: false,
+  moonPhase: 'full',
+  starTint: PW.color.goldSoft,
 };
 
 export const HUNT_SKY_TUNING: AmbientSkyBackgroundProps = {
@@ -16,6 +18,8 @@ export const HUNT_SKY_TUNING: AmbientSkyBackgroundProps = {
   starDensity: 'medium',
   driftSpeedMs: 26000,
   meteorsEnabled: false,
+  moonPhase: 'gibbous',
+  starTint: PW.color.white,
 };
 
 export const BOSS_SKY_TUNING: AmbientSkyBackgroundProps = {
@@ -23,11 +27,15 @@ export const BOSS_SKY_TUNING: AmbientSkyBackgroundProps = {
   starDensity: 'high',
   driftSpeedMs: 18000,
   meteorsEnabled: true,
+  moonPhase: 'crescent',
+  starTint: PW.color.goldSoft,
 };
 
 export const DAILY_SKY_TUNING: AmbientSkyBackgroundProps = {
-  tint: ['#2D5F8B', PW.color.bg],
+  tint: ['#8B2D7B', PW.color.bg],
   starDensity: 'medium',
   driftSpeedMs: 28000,
   meteorsEnabled: false,
+  moonPhase: 'half',
+  starTint: PW.color.white,
 };
