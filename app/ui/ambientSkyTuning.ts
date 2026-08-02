@@ -5,7 +5,7 @@ import { PW } from './pwTheme';
 // pwMaterials.ts without touching any component logic.
 
 export const HOME_SKY_TUNING: AmbientSkyBackgroundProps = {
-  tint: ['#6B2A5A', PW.color.bg],
+  tint: ['#5C4423', PW.color.bg],
   starDensity: 'low',
   driftSpeedMs: 32000,
   meteorsEnabled: false,

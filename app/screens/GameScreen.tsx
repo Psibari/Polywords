@@ -928,18 +928,19 @@ function GameDirector({ navigation }: { navigation: any }) {
     activeStep.eventType === 'bossWord';
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       <AmbientSkyBackground {...(isBossRound ? BOSS_SKY_TUNING : HUNT_SKY_TUNING)} />
       <LinearGradient
         colors={isBossRound
           ? ['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']
-          : ['rgba(6,4,22,0.93)', 'rgba(9,6,26,0.55)', 'rgba(7,5,23,0.82)']}
+          : ['rgba(6,4,22,0.45)', 'rgba(9,6,26,0.22)', 'rgba(7,5,23,0.38)']}
         locations={isBossRound ? undefined : [0, 0.5, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         pointerEvents="none"
         style={StyleSheet.absoluteFillObject}
       />
+      <SafeAreaView style={styles.content}>
       {isBossRound && (
         <View pointerEvents="none" style={styles.bossBackground}>
           <View style={styles.bossBookGlow}>
@@ -1063,7 +1064,8 @@ function GameDirector({ navigation }: { navigation: any }) {
       {exitConfirmVisible && (
         <PollyExitConfirm onStay={handleStayHunting} onLeave={handleConfirmLeave} />
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -1142,6 +1144,11 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#1A1830',
+  },
+  // The background layers sit on the outer View so they reach the true screen
+  // edges; this holds everything that should respect the safe-area insets.
+  content: {
+    flex: 1,
   },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,

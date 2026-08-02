@@ -57,6 +57,12 @@ export default function AmbientDriftLayer({ durationMs, frozen }: AmbientDriftLa
 
   useEffect(() => {
     if (frozen || size.height === 0) return;
+    // Restart from the top whenever the duration changes (e.g. entering or
+    // leaving the Boss round). Animated.timing does not scale its duration to
+    // the remaining distance, so resuming mid-flight from a high progress value
+    // would stretch the last sliver of the loop across the full new duration and
+    // read as the starfield grinding to a halt.
+    progress.setValue(0);
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(progress, {

@@ -29,7 +29,11 @@ export default function AmbientSkyBackground({
     setWidth(e.nativeEvent.layout.width);
   }, []);
   const layout = width > 0 ? computeGroundLayout(width) : null;
-  const reducedMotion = !!useReducedMotionPreference();
+  // Treat the pending (null) read as "reduce" — matches usePollyAmbientMotion's
+  // `reduceMotion !== false` convention. Coercing null to false would start every
+  // loop for a frame or two before the async accessibility read lands, and would
+  // make AmbientTwinkleLayer's static-frame initial value unreachable.
+  const reducedMotion = useReducedMotionPreference() !== false;
 
   return (
     <View style={[StyleSheet.absoluteFill, styles.root]} onLayout={onLayout} pointerEvents="none">

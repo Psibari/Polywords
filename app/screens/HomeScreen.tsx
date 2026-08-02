@@ -19,7 +19,7 @@ import { FONTS } from '../constants/fonts';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { getDisplayStreak } from '../game/dailyStreak';
-import { heroBookMaterial, stageMaterial } from '../ui/pwMaterials';
+import { heroBookMaterial } from '../ui/pwMaterials';
 import { DAILY_CLUE_TITLE } from '../ui/pwDailyMaterials';
 import { homeDoor, homeType } from '../ui/pwHomeMaterials';
 import { PW } from '../ui/pwTheme';
@@ -51,8 +51,8 @@ export default function HomeScreen({ navigation }: Props) {
       <AmbientSkyBackground {...HOME_SKY_TUNING} />
       <LinearGradient
         pointerEvents="none"
-        colors={[...stageMaterial.vignette]}
-        locations={[...stageMaterial.vignetteLocations]}
+        colors={['rgba(6,4,22,0.45)', 'rgba(9,6,26,0.22)', 'rgba(7,5,23,0.38)']}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFillObject}
       />
 

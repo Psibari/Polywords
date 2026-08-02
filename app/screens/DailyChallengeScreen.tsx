@@ -711,7 +711,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const revealedCount = currentRound?.revealedClueCount ?? 1;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       {/* Daily's own sky, distinct from Boss's now that they no longer share art or tint. */}
       <AmbientSkyBackground {...DAILY_SKY_TUNING} />
       <LinearGradient
@@ -722,6 +722,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         style={StyleSheet.absoluteFillObject}
       />
 
+      <SafeAreaView style={styles.content}>
       {!isComplete && dailySession && (
         <>
           <DailyHUD
@@ -816,7 +817,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           <Text style={styles.devResetText}>DEV - RESET DAILY</Text>
         </Pressable>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -827,6 +829,11 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: dailyBackdrop.base,
+  },
+  // The background layers sit on the outer View so they reach the true screen
+  // edges; this holds everything that should respect the safe-area insets.
+  content: {
+    flex: 1,
   },
   clueVaultWrap: {
     // Above cardArea's zIndex: 4 so the correct tile visually ducks into the
