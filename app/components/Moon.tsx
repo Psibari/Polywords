@@ -14,9 +14,9 @@ const MOON_RADIUS = 22;
 // Offset (as a fraction of MOON_RADIUS) of the shadow circle's center from
 // the moon's center, per phase. 'full' renders no shadow circle at all.
 const PHASE_OFFSET: Record<Exclude<MoonPhase, 'full'>, number> = {
-  gibbous: 0.5,
+  gibbous: 1.5,
   half: 1.0,
-  crescent: 1.5,
+  crescent: 0.5,
 };
 
 export default function Moon({ phase, skyTint, tint = PW.color.white }: Props) {
