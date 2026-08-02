@@ -8,6 +8,7 @@ export type HapticCue =
   | 'wrong'
   | 'bossEntry'
   | 'bossCorrect'
+  | 'bossHaunted'
   | 'mastery';
 
 function hapticsEnabled(): boolean {
@@ -54,6 +55,7 @@ export const Haptics = {
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
       case 'bossEntry':
       case 'bossCorrect':
+      case 'bossHaunted':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
       case 'mastery':
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success);

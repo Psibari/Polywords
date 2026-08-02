@@ -160,7 +160,6 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     ? visibleGridMasks.find(m => m.id === topMaskId) ?? null
     : null;
   const deckSize     = remainingMaskIds.length;
-  const nearMastery  = !isBoss && deckSize <= 2 && deckSize > 0;
   const topMaskState = topMask ? tileStates.get(topMask.id) ?? 'idle' : 'idle';
 
   const realMasks  = visibleGridMasks.filter(m => m.isReal);
@@ -241,16 +240,35 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   }
 
   function onDecisionReady() {
+    // Resuming directly into an already-decided boss outcome (app was
+    // killed/backgrounded between the live gauntlet judgment and the
+    // outcome card showing) — replay the same presentation callbacks a live
+    // win/loss uses instead of jumping straight to the overlay, so the
+    // player still gets the boss-specific theater (gold seed/bloom, book
+    // snap) rather than a bare card. gatePhase is set directly to the
+    // terminal phase with no gauntlet tiles built, since there's nothing
+    // left to judge — showGauntletCard's gauntletTiles.length guard keeps
+    // that from flashing an empty "0/0" gauntlet in the meantime.
     if (resumedBossOutcome && !outcomeActiveRef.current) {
       setGauntletActive(false);
-      setGatePhase(resumedBossOutcome === 'mastered' ? 'mastered' : 'wrongFail');
-      showWordOutcome(
-        resumedBossOutcome,
-        {
-          bonusLabel: resumedBossOutcome === 'mastered' ? 'BOSS MASTERY' : undefined,
-        },
-        () => completeWord(),
-      );
+      if (resumedBossOutcome === 'mastered') {
+        setGatePhase('mastered');
+        const masteryPoints = mysteryMasteryPoints(preMysteryChainMultiplierRef.current);
+        perform.onMasteredSequence({ isBoss: true, isHaunt: false, masteryPoints });
+        setTimeout(() => {
+          showWordOutcome(
+            'mastered',
+            { bonusLabel: `BOSS MASTERY +${masteryPoints}` },
+            () => completeWord(),
+          );
+        }, 700);
+      } else {
+        setGatePhase('wrongFail');
+        perform.onHauntedSequence({ isHaunt: false, failedMaskId: '' });
+        setTimeout(() => {
+          showWordOutcome('haunted', {}, () => completeWord());
+        }, 600);
+      }
       return;
     }
     if (completedRef.current || outcomeActiveRef.current) return;
@@ -443,8 +461,13 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // outcome reveal land at the same moments they did before the split.
     setTimeout(() => {
       firePollyEvent(isBoss ? 'gateMasteredBoss' : 'gateMastered');
-    }, isBoss ? 400 : isHaunt ? 420 : 2600);
+    }, isBoss ? 400 : isHaunt ? 180 : 2600);
 
+    // Haunt's reveal must land sooner than Boss's — it's the smaller,
+    // quicker beat ("one decisive banishment beat... before it can
+    // overshadow Polly's Word", per the commit that introduced the short
+    // sequence). 950ms here previously made it resolve slower than Boss's
+    // 700ms, backwards from that intent.
     setTimeout(() => {
       showWordOutcome(
         'mastered',
@@ -459,7 +482,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
           completeWord();
         }
       );
-    }, isBoss ? 700 : isHaunt ? 950 : 3450);
+    }, isBoss ? 700 : isHaunt ? 550 : 3450);
   }
 
   // ── swipe resolution ─────────────────────────────────────────────────
@@ -692,7 +715,6 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     topMask,
     topMaskState,
     deckSize,
-    nearMastery,
     realMasks,
     foundCount,
     gatePhase,

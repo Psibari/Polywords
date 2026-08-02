@@ -166,7 +166,7 @@ type GoldFeatherRecord = {
 
 type FailedBossStep = Pick<
   WordStep,
-  'word' | 'eventType' | 'isHauntReturn' | 'hiddenMeaning' | 'hiddenTrap'
+  'word' | 'eventType' | 'isHauntReturn' | 'hiddenMeaning' | 'hiddenTrap' | 'isMasteryRematch'
 >;
 
 type HauntReturnStep = Pick<WordStep, 'word' | 'isHauntReturn'>;
@@ -554,6 +554,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   queueFailedBoss: (step) => {
     if (step.eventType !== 'bossWord' || step.isHauntReturn === true) return;
+    // A mastery rematch replays a word that already graduated permanently
+    // (CLAUDE.md: "mastered words graduate permanently"). Losing the replay
+    // must not haunt it — that word is still in masteredWords and would
+    // become a ghost the Haunt slot can never place, since Haunt placement
+    // excludes already-mastered words. It just stays mastered.
+    if (step.isMasteryRematch === true) return;
 
     const wordId = step.word.trim().toUpperCase();
     const existing = get().ghosts.find(g => g.wordId === wordId);

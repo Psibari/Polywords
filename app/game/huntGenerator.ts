@@ -261,6 +261,21 @@ export function generateHunt(opts: {
     isMasteryRematch = bossWord !== null;
   }
   if (!bossWord) {
+    // Last resort: content is exhausted or authored without enough
+    // boss-capable words for this player's mastered/selected state. Reuse
+    // any boss-capable word in the whole db rather than throwing and taking
+    // down the run — a repeated/rematch boss beats an app crash. Only a
+    // genuinely empty boss pool (no boss-capable word exists at all) falls
+    // through to the throw below, which is a content-authoring failure, not
+    // a runtime one.
+    const anyBossCapable = Object.keys(db).filter(hasBossContent);
+    bossWord = anyBossCapable.find(word => !selected.has(word)) ?? anyBossCapable[0] ?? null;
+    if (bossWord) {
+      isMasteryRematch = true;
+      console.warn(`[huntGenerator] Boss pool exhausted — reusing "${bossWord}" as a fallback boss word.`);
+    }
+  }
+  if (!bossWord) {
     throw new Error('[huntGenerator] No boss-capable word is available');
   }
   selected.add(bossWord);

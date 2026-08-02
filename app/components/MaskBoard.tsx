@@ -790,142 +790,26 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             ]),
           ]).start();
           setTimeout(() => setSealReady(true), 180);
+          // Fade back to normal well before the outcome reveal below (see
+          // useBoardMechanics.ts's showWordOutcome timer for this sequence,
+          // currently 550ms) — this must finish before that fires, or the
+          // fade-back animation is still running on masterAllFadeAnim when
+          // the next word's presentation reuses the same shared value.
           setTimeout(() => {
             Animated.timing(masterAllFadeAnim, {
               toValue: 1,
-              duration: 180,
+              duration: 160,
               useNativeDriver: false,
             }).start();
-          }, 680);
+          }, 320);
           return;
         }
-        if (!isBoss) {
-        // ── Returning Haunt path — existing 12-phase sequence, unchanged ──
-        if (!hauntOutcome) {
-          spawnFloatAtSplit(masteryPoints, '#F5C842');
-        }
-        setMasterStampVisible(true);
-        setMasterCracksVisible(false);
-        setGoldSeedVisible(false);
-        setGoldBloomVisible(false);
-        setSystemStingerWord(null);
-
-        const screenH = Dimensions.get('window').height;
-        const crashDistance = Math.max(150, screenH * 0.48 - wordScreenY);
-        const vaultTargetX = Math.max(120, containerWidthRef.current / 2 - 34);
-        const vaultTargetY = Math.max(250, screenH * 0.42);
-
-        // Phase 1 — T+0ms: Screen dims — tiles to 15% opacity
-        Animated.timing(masterAllFadeAnim, {
-          toValue: 0.15, duration: 300, useNativeDriver: false,
-        }).start();
-        Animated.spring(masterHeroTransY, {
-          toValue: crashDistance, damping: 8, stiffness: 170, mass: 0.8, useNativeDriver: true,
-        }).start();
-        Animated.sequence([
-          Animated.timing(masterHeroScale, { toValue: 1.22, duration: 90, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.spring(masterHeroScale, { toValue: 1.0, damping: 8, stiffness: 190, useNativeDriver: true }),
-        ]).start();
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-        // Phase 2 — T+500ms: Word pulse
-        setTimeout(() => setSealReady(true), 360);
-
-        // Phase 3 — T+800ms: MASTERED label appears below word
-        setTimeout(() => {
-          setMasterCracksVisible(true);
-          masterCrackOpacity.setValue(0);
-          Animated.timing(masterCrackOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
-        }, 800);
-
-        // Fade label before word swells — NEVER simultaneous
-        setTimeout(() => {
-          Animated.sequence([
-            Animated.timing(masterHeroScale, { toValue: 1.08, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-            Animated.timing(masterHeroScale, { toValue: 0.96, duration: 160, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-          ]).start();
-        }, 1000);
-
-        // Phase 4 — T+1050ms: Word swells 1.0→1.6
-        setTimeout(() => {
-          Animated.timing(masterHeroScale, {
-            toValue: 1.0, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true,
-          }).start();
-        }, 1050);
-
-        // Phase 6 — T+1900ms: Gold seed appears at word center
-        setTimeout(() => {
-          setGoldSeedVisible(true);
-          masterCoreOpacity.setValue(1);
-          goldSeedScale.setValue(0.15);
-          goldSeedTransX.setValue(0);
-          goldSeedTransY.setValue(0);
-          goldSeedRotate.setValue(0);
-          goldSeedTrailOpacity.setValue(0);
-          Animated.parallel([
-            Animated.spring(goldSeedScale, { toValue: 2.6, damping: 7, stiffness: 150, useNativeDriver: true }),
-            Animated.timing(goldSeedRotate, { toValue: 1, duration: 820, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-            Animated.timing(goldSeedTrailOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
-          ]).start();
-        }, 1900);
-
-        // Seed settles
-        setTimeout(() => {
-          Animated.spring(goldSeedScale, { toValue: 2.15, damping: 8, stiffness: 220, useNativeDriver: true }).start();
-        }, 2000);
-
-        // Phase 7 — T+2100ms: Seed drops to screen bottom
-        setTimeout(() => {
-          Animated.parallel([
-            Animated.timing(goldSeedTransX, {
-              toValue: vaultTargetX, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
-            }),
-            Animated.timing(goldSeedTransY, {
-              toValue: vaultTargetY, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
-            }),
-            Animated.timing(goldSeedScale, {
-              toValue: 0.62, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true,
-            }),
-            Animated.timing(masterCoreOpacity, { toValue: 0.95, duration: 620, useNativeDriver: true }),
-          ]).start();
-        }, 2100);
-
-        // Phase 8 — T+2400ms: Seed landing bloom
-        setTimeout(() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          setGoldSeedVisible(false);
-          setGoldBloomVisible(true);
-          goldBloomScale.setValue(1);
-          goldBloomOpacity.setValue(1);
-          Animated.parallel([
-            Animated.timing(goldBloomScale, { toValue: 3.5, duration: 300, useNativeDriver: true }),
-            Animated.timing(goldBloomOpacity, { toValue: 0,   duration: 300, useNativeDriver: true }),
-          ]).start();
-          setTimeout(() => setGoldBloomVisible(false), 350);
-        }, 2400);
-
-        setTimeout(() => {
-          if (bossOutcome) {
-            playSystemStingerWord('BINGO', 1.0);
-            setTimeout(() => playSystemStingerWord('BANGO', 1.08), 430);
-            setTimeout(() => playSystemStingerWord('ZZZZINGO!', 1.28), 900);
-          }
-        }, 2600);
-
-        // Restore dim before transition
-        setTimeout(() => {
-          Animated.timing(masterCrackOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
-          Animated.timing(masterAllFadeAnim, { toValue: 1, duration: 200, useNativeDriver: false }).start();
-        }, bossOutcome ? 4050 : 3200);
-
-        // Phase 10 — T+3000ms: presentation cleanup (the outcome reveal
-        // itself fires from useBoardMechanics on a matching timer)
-        setTimeout(() => {
-          setMasterCracksVisible(false);
-          setSystemStingerWord(null);
-        }, bossOutcome ? 4300 : 3450);
-        return;
-        }
+        // `!isBoss` here can only mean isHaunt (onMasteredSequence is only
+        // ever invoked when isFinalGateStep — isBoss || isHaunt — is true,
+        // see the completion-check effect above), and the isHaunt case
+        // already returned above. The old 12-phase Haunt-mastery sequence
+        // that used to live here is unreachable; removed rather than left
+        // as dead code a future edit could waste time modifying.
         // ── Boss path — one decisive beat instead of the 12-phase sequence.
         if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
         playSfx('bookClose');
@@ -1009,7 +893,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         // 420ms ease with no overshoot. No flash, no stamp: colour drains, it
         // does not travel.
         playSfx('bookClose');
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        Haptics.cueAsync('bossHaunted');
         triggerBoardShake();
         // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
         // its Animated.delay) before driving these shared values directly —
@@ -1334,8 +1218,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     extrapolateLeft: 'clamp', // this one must not go below 0.86 on overshoot
   });
 
+  // Resuming directly into an already-haunted boss word sets gatePhase to
+  // 'wrongFail' with no gauntlet tiles ever built (there's nothing left to
+  // judge) — without the length guard this briefly mounts an empty
+  // "0/0" gauntlet before the outcome overlay covers it.
   const showGauntletCard =
-    mechanics.gatePhase === 'tiles' || mechanics.gatePhase === 'wrongFail';
+    mechanics.gatePhase === 'tiles' ||
+    (mechanics.gatePhase === 'wrongFail' && mechanics.gauntletTiles.length > 0);
 
   return (
     <Animated.View

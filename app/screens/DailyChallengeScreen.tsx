@@ -643,6 +643,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       const curtainCloseMs = reduceMotion !== false ? 120 : 600;
       const curtainHoldMs = reduceMotion !== false ? 180 : 500;
       const curtainOpenMs = reduceMotion !== false ? 120 : 400;
+      const commitClaimOnce = () => {
+        if (completingCandidateRef.current !== candidate) return;
+        completingCandidateRef.current = null;
+        claimDailyAnswer(candidate);
+      };
       Animated.sequence([
         Animated.timing(revealProgress, {
           toValue: 1,
@@ -658,10 +663,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           useNativeDriver: true,
         }),
       ]).start(({ finished }) => {
-        if (!finished || completingCandidateRef.current !== candidate) return;
-        completingCandidateRef.current = null;
-        claimDailyAnswer(candidate);
+        if (finished) commitClaimOnce();
       });
+      // Fallback: if the native animation never reports finished (OS-level
+      // preemption/interruption), commit anyway once the curtain's own
+      // duration has had time to play out, rather than stranding the round
+      // with no way to advance. commitClaimOnce's ref guard makes this safe
+      // to fire alongside a normal finished:true callback — whichever runs
+      // first wins, the other is a no-op.
+      setTimeout(commitClaimOnce, curtainCloseMs + curtainHoldMs + curtainOpenMs + 300);
 
       // Remaining cards fade out
       setTimeout(() => {
