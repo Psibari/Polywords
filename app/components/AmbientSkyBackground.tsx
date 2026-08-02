@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, DimensionValue } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StarDensity, MoonPhase } from './ambientSkyLayout';
 import GraphicGround from './GraphicGround';
@@ -18,6 +18,11 @@ export type AmbientSkyBackgroundProps = {
   meteorsEnabled?: boolean;
   moonPhase: MoonPhase;
   starTint?: string;
+  // Hunt/Boss's TopBar is wide and opaque enough to sit directly over the
+  // default position, hiding the moon entirely — screens with tall top
+  // chrome should override these rather than share the default.
+  moonTop?: DimensionValue;
+  moonRight?: DimensionValue;
 };
 
 export default function AmbientSkyBackground({
@@ -27,6 +32,8 @@ export default function AmbientSkyBackground({
   meteorsEnabled = false,
   moonPhase,
   starTint,
+  moonTop = '8%',
+  moonRight = '10%',
 }: AmbientSkyBackgroundProps) {
   // Treat the pending (null) read as "reduce" — matches usePollyAmbientMotion's
   // `reduceMotion !== false` convention. Coercing null to false would start every
@@ -40,8 +47,8 @@ export default function AmbientSkyBackground({
       <AmbientDriftLayer durationMs={driftSpeedMs} frozen={reducedMotion} tint={starTint} />
       <AmbientTwinkleLayer density={starDensity} frozen={reducedMotion} tint={starTint} />
       {meteorsEnabled && <AmbientMeteorLayer frozen={reducedMotion} />}
-      <View style={styles.moonWrap}>
-        <Moon phase={moonPhase} tint={starTint} />
+      <View style={[styles.moonWrap, { top: moonTop, right: moonRight }]}>
+        <Moon phase={moonPhase} />
       </View>
       <View style={styles.groundBand}>
         <GraphicGround />
@@ -56,8 +63,6 @@ const styles = StyleSheet.create({
   },
   moonWrap: {
     position: 'absolute',
-    top: '8%',
-    right: '10%',
   },
   groundBand: {
     position: 'absolute',

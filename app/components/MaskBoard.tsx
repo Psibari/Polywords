@@ -1931,7 +1931,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 180,
+    // Was 180 — left the deck sitting low enough to collide with the ground
+    // torches (GraphicGround) and crowd Polly's speech bubble, both pinned
+    // near the bottom of the screen. Pulled up to give both room.
+    paddingTop: 110,
     paddingBottom: 48,
     minHeight: 0,
   },

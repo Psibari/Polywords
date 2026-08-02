@@ -1,49 +1,42 @@
-import React, { useId } from 'react';
-import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
+import React from 'react';
+import { Image } from 'react-native';
 import { MoonPhase } from './ambientSkyLayout';
-import { PW } from '../ui/pwTheme';
 
 type Props = {
   phase: MoonPhase;
-  tint?: string;
 };
 
-const MOON_RADIUS = 22;
+const MOON_HEIGHT = 64;
 
-// Offset (as a fraction of MOON_RADIUS) of the mask-cutout circle's center
-// from the moon's center, per phase. 'full' renders no cutout at all. Note:
-// this technique always produces a lune (crescent-like curve), including for
-// 'half' — a true straight-edge terminator isn't achievable this way. That's
-// an accepted limitation, not a bug.
-const PHASE_OFFSET: Record<Exclude<MoonPhase, 'full'>, number> = {
-  gibbous: 1.5,
-  half: 1.0,
-  crescent: 0.5,
+// Cropped from Pete's 9-phase sprite sheet (assets/images/moons/moons.png).
+// Real shaded art replaces the old SVG mask+flat-tint circle — these render
+// as-is, no recoloring, so the shading stays intact.
+const MOON_SOURCES: Record<MoonPhase, number> = {
+  crescent: require('../../assets/images/moons/moon-r0-c0.png'),
+  half: require('../../assets/images/moons/moon-r1-c0.png'),
+  gibbous: require('../../assets/images/moons/moon-r1-c1.png'),
+  full: require('../../assets/images/moons/moon-r2-c2.png'),
 };
 
-export default function Moon({ phase, tint = PW.color.white }: Props) {
-  const id = useId();
-  const maskId = `moonMask-${id}`;
-  const size = MOON_RADIUS * 2 + 8;
-  const cx = size / 2;
-  const cy = size / 2;
+// Native crop dimensions, used to hold a consistent apparent diameter
+// (MOON_HEIGHT) across phases despite crescent crops being much narrower
+// than full-moon crops.
+const MOON_NATIVE_SIZE: Record<MoonPhase, { width: number; height: number }> = {
+  crescent: { width: 107, height: 244 },
+  half: { width: 159, height: 245 },
+  gibbous: { width: 197, height: 245 },
+  full: { width: 244, height: 244 },
+};
+
+export default function Moon({ phase }: Props) {
+  const native = MOON_NATIVE_SIZE[phase];
+  const width = MOON_HEIGHT * (native.width / native.height);
 
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Defs>
-        <Mask id={maskId}>
-          <Rect x={0} y={0} width={size} height={size} fill="white" />
-          {phase !== 'full' && (
-            <Circle
-              cx={cx + MOON_RADIUS * PHASE_OFFSET[phase]}
-              cy={cy}
-              r={MOON_RADIUS}
-              fill="black"
-            />
-          )}
-        </Mask>
-      </Defs>
-      <Circle cx={cx} cy={cy} r={MOON_RADIUS} fill={tint} mask={`url(#${maskId})`} />
-    </Svg>
+    <Image
+      source={MOON_SOURCES[phase]}
+      style={{ width, height: MOON_HEIGHT }}
+      resizeMode="contain"
+    />
   );
 }
