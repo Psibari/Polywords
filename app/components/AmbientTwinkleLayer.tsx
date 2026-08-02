@@ -30,11 +30,13 @@ function TwinkleDot({
   left,
   top,
   frozen,
+  tint,
 }: {
   star: TwinkleStar;
   left: number;
   top: number;
   frozen: boolean;
+  tint: string;
 }) {
   const progress = useRef(new Animated.Value(frozen ? 0.85 : 0)).current;
 
@@ -72,7 +74,7 @@ function TwinkleDot({
         width: star.size,
         height: star.size,
         borderRadius: star.size / 2,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: tint,
         opacity,
       }}
     />
@@ -82,9 +84,10 @@ function TwinkleDot({
 export type AmbientTwinkleLayerProps = {
   density: StarDensity;
   frozen: boolean;
+  tint?: string;
 };
 
-export default function AmbientTwinkleLayer({ density, frozen }: AmbientTwinkleLayerProps) {
+export default function AmbientTwinkleLayer({ density, frozen, tint = '#FFFFFF' }: AmbientTwinkleLayerProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     setSize(e.nativeEvent.layout);
@@ -101,6 +104,7 @@ export default function AmbientTwinkleLayer({ density, frozen }: AmbientTwinkleL
             left={star.x * size.width}
             top={star.y * size.height}
             frozen={frozen}
+            tint={tint}
           />
         ))}
     </View>

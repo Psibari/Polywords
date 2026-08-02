@@ -20,7 +20,7 @@ const DRIFT_STARS: DriftStar[] = [
   { x: 0.60, y: 0.55, size: 2, opacity: 0.65 },
 ];
 
-function Tile({ width, height }: { width: number; height: number }) {
+function Tile({ width, height, tint }: { width: number; height: number; tint: string }) {
   return (
     <View style={[styles.tile, { width, height }]} pointerEvents="none">
       {DRIFT_STARS.map((star, i) => (
@@ -33,7 +33,7 @@ function Tile({ width, height }: { width: number; height: number }) {
             width: star.size,
             height: star.size,
             borderRadius: star.size / 2,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: tint,
             opacity: star.opacity,
           }}
         />
@@ -45,9 +45,10 @@ function Tile({ width, height }: { width: number; height: number }) {
 export type AmbientDriftLayerProps = {
   durationMs: number;
   frozen: boolean;
+  tint?: string;
 };
 
-export default function AmbientDriftLayer({ durationMs, frozen }: AmbientDriftLayerProps) {
+export default function AmbientDriftLayer({ durationMs, frozen, tint = '#FFFFFF' }: AmbientDriftLayerProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -88,7 +89,7 @@ export default function AmbientDriftLayer({ durationMs, frozen }: AmbientDriftLa
       {size.height > 0 && (
         <>
           <Animated.View style={[styles.tileWrap, { transform: [{ translateY }] }]}>
-            <Tile width={size.width} height={size.height} />
+            <Tile width={size.width} height={size.height} tint={tint} />
           </Animated.View>
           <Animated.View
             style={[
@@ -96,7 +97,7 @@ export default function AmbientDriftLayer({ durationMs, frozen }: AmbientDriftLa
               { transform: [{ translateY: Animated.subtract(translateY, size.height) }] },
             ]}
           >
-            <Tile width={size.width} height={size.height} />
+            <Tile width={size.width} height={size.height} tint={tint} />
           </Animated.View>
         </>
       )}
