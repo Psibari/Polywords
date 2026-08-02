@@ -15,6 +15,9 @@ const TILE_MID = '#241a3e';
 const PILLAR = '#2f2050';
 const PILLAR_MID = '#281c46';
 const VINE = '#20183c';
+const TILE_ALT = '#2a1e46';
+const GROUND_DEEPEST = '#120f2c';
+const BEVEL_HIGHLIGHT = 'rgba(185,138,222,0.28)';
 
 // Flat, bold-graphic ground: a continuous gradient (starts at the sky's own
 // tint so there's no seam), chunky flagstone tiles, two low pillar/rubble
@@ -29,7 +32,7 @@ export default function GraphicGround({ skyTint }: Props) {
           <LinearGradient id="groundBase" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0%" stopColor={skyTint} />
             <Stop offset="18%" stopColor={PW.color.bg} />
-            <Stop offset="55%" stopColor="#120f2c" />
+            <Stop offset="55%" stopColor={GROUND_DEEPEST} />
             <Stop offset="100%" stopColor={PW.color.bgDeep} />
           </LinearGradient>
         </Defs>
@@ -39,13 +42,13 @@ export default function GraphicGround({ skyTint }: Props) {
         {/* chunky flagstone floor */}
         <G stroke={OUTLINE} strokeWidth={4} strokeLinejoin="round">
           <Rect x="-10" y="300" width="130" height="70" rx="14" fill={TILE_MID} />
-          <Rect x="112" y="290" width="150" height="80" rx="14" fill="#2a1e46" />
+          <Rect x="112" y="290" width="150" height="80" rx="14" fill={TILE_ALT} />
           <Rect x="254" y="300" width="150" height="70" rx="14" fill={TILE_MID} />
           <Rect x="-10" y="360" width="150" height="80" rx="14" fill={TILE_DARK} />
-          <Rect x="132" y="355" width="130" height="85" rx="14" fill="#20183c" />
+          <Rect x="132" y="355" width="130" height="85" rx="14" fill={VINE} />
           <Rect x="254" y="358" width="150" height="82" rx="14" fill={TILE_DARK} />
         </G>
-        <G stroke="rgba(180,140,220,0.28)" strokeWidth={3} strokeLinecap="round" fill="none">
+        <G stroke={BEVEL_HIGHLIGHT} strokeWidth={3} strokeLinecap="round" fill="none">
           <Path d="M -6 302 H 116" />
           <Path d="M 116 292 H 258" />
           <Path d="M 258 302 H 400" />
