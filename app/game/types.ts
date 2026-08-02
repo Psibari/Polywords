@@ -118,6 +118,7 @@ export type WordStep = {
   bossModifier?:             boolean;
   postSessionPollyDuration?: number;
   isHauntReturn?:            boolean;
+  isMasteryRematch?:         boolean;
 };
 
 export type PhraseBreakStep = {
@@ -160,6 +161,8 @@ export type MasteredWordRecord = {
   word: string;
   isBoss: boolean;
   hiddenMeaningFound: string;
+  hiddenMeaningsFound?: string[];
+  priorHauntAttempts?: number;
   dateMastered: string;
   flawless?: boolean;
 };

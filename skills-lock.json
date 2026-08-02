@@ -31,11 +31,23 @@
       "skillPath": "skills/game-engines/SKILL.md",
       "computedHash": "4d82c1d26fc2a0e22e4e5cb7dd430365cb4a2be9c7c4ce58eef7fa76ccebafa8"
     },
+    "game-feel": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/game-feel/SKILL.md",
+      "computedHash": "85fbc6ee90b5ea10e6f085fa09027c140788c75789f943f33bdab3579e09f002"
+    },
     "gameplay-mechanics": {
       "source": "pluginagentmarketplace/custom-plugin-game-developer",
       "sourceType": "github",
       "skillPath": "skills/gameplay-mechanics/SKILL.md",
       "computedHash": "c51cc56bb5c673d557c6da48bc7709ac2229706844036277970cc52c621233ae"
+    },
+    "level-design": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/level-design/SKILL.md",
+      "computedHash": "1e4025f059ba7f368d16736c48906bbd111c5f1ed6263223742914f0f55af794"
     },
     "mediabunny": {
       "source": "remotion-dev/skills",
@@ -48,6 +60,12 @@
       "sourceType": "github",
       "skillPath": "skills/mobile-game-dev/SKILL.md",
       "computedHash": "0d6692e93b62406b5a91fad10512451bfdd4677314fb085fcab3ac6528e57882"
+    },
+    "puzzle": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/genres/puzzle/SKILL.md",
+      "computedHash": "72954442f78e320b58145feabdd97d7405c6c9c6c29d0b7bfaf0466498b8014c"
     },
     "remotion-best-practices": {
       "source": "remotion-dev/skills",

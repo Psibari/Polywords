@@ -433,6 +433,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const isNewBest = score > prevBest && score > 0;
   const died = status === 'gameOver';
   const bossMastered = game.bossOutcome === 'mastered';
+  const isMasteryRematch = game.session.some(
+    step => step.kind === 'word' && step.eventType === 'bossWord' && step.isMasteryRematch,
+  );
   const flawlessWin = bossMastered && game.bossFlawless;
   const outcome: 'loss' | 'beat' | 'complete' =
     died ? 'loss' : bossMastered ? 'beat' : 'complete';
@@ -577,6 +580,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
   const verdictText =
     outcome === 'loss' ? RESULTS_VERDICT_LOSS
+    : outcome === 'beat' && isMasteryRematch ? 'REMATCH CLEARED'
     : outcome === 'beat' ? RESULTS_VERDICT_BEAT
     : RESULTS_VERDICT_COMPLETE;
   const verdictSub = outcome === 'loss' ? RESULTS_SUB_LOSS : null;

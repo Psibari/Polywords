@@ -1,6 +1,15 @@
 import * as ExpoHaptics from 'expo-haptics';
 import { useGameStore } from '../store/useGameStore';
 
+export type HapticCue =
+  | 'gestureThreshold'
+  | 'standardCorrect'
+  | 'heightenedCorrect'
+  | 'wrong'
+  | 'bossEntry'
+  | 'bossCorrect'
+  | 'mastery';
+
 function hapticsEnabled(): boolean {
   return useGameStore.getState().hapticsEnabled;
 }
@@ -30,5 +39,24 @@ export const Haptics = {
   selectionAsync(): Promise<void> {
     if (!hapticsEnabled()) return Promise.resolve();
     return ExpoHaptics.selectionAsync();
+  },
+
+  cueAsync(cue: HapticCue): Promise<void> {
+    if (!hapticsEnabled()) return Promise.resolve();
+    switch (cue) {
+      case 'gestureThreshold':
+        return ExpoHaptics.selectionAsync();
+      case 'standardCorrect':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light);
+      case 'heightenedCorrect':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      case 'wrong':
+        return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
+      case 'bossEntry':
+      case 'bossCorrect':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
+      case 'mastery':
+        return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success);
+    }
   },
 } as const;

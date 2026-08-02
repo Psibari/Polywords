@@ -24,7 +24,7 @@ const PRIVACY_TEXT =
   "shared or sold to anyone.\n\n" +
   "There are no accounts and no sign-in. If you delete the app, or use " +
   "Reset Progress, this information is gone for good.\n\n" +
-  "We haven't added any analytics or tracking to this app.";
+  "Production builds do not collect analytics or tracking.";
 
 const CREDITS_TEXT =
   "POLYWORDS\n\n" +
@@ -87,10 +87,12 @@ export default function SettingsScreen({ navigation }: Props) {
   const soundEnabled = useGameStore(s => s.soundEnabled);
   const hapticsEnabled = useGameStore(s => s.hapticsEnabled);
   const reduceMotionOverride = useGameStore(s => s.reduceMotionOverride);
+  const reduceFlashesOverride = useGameStore(s => s.reduceFlashesOverride);
   const playerName = useGameStore(s => s.playerName);
   const setSoundEnabled = useGameStore(s => s.setSoundEnabled);
   const setHapticsEnabled = useGameStore(s => s.setHapticsEnabled);
   const setReduceMotionOverride = useGameStore(s => s.setReduceMotionOverride);
+  const setReduceFlashesOverride = useGameStore(s => s.setReduceFlashesOverride);
   const setPlayerName = useGameStore(s => s.setPlayerName);
   const resetProgressForDev = useGameStore(s => s.resetProgressForDev);
 
@@ -252,6 +254,11 @@ export default function SettingsScreen({ navigation }: Props) {
               label="Reduce Motion"
               enabled={reduceMotionOverride}
               onPress={() => setReduceMotionOverride(!reduceMotionOverride)}
+            />
+            <ToggleRow
+              label="Reduce Flashes"
+              enabled={reduceFlashesOverride}
+              onPress={() => setReduceFlashesOverride(!reduceFlashesOverride)}
             />
           </View>
         </View>

@@ -13,6 +13,8 @@ import {
 } from '../game/polyRunEngine';
 import type { SwipeMaskState } from '../components/SwipeMask';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
+import { createSeededTruthPlan } from '../game/seededRandom';
+import { recordPlaytestEvent } from '../game/playtestTelemetry';
 
 export type ChainTier = 1 | 2 | 3;
 type WordOutcomeState = 'none' | 'mastered' | 'haunted';
@@ -33,6 +35,7 @@ function eventKicker(step: WordStep): string | null {
   // Reward-only framing let the boss round's stakes go unsignaled on every
   // repeat visit, not just a player's first — this always-visible badge is
   // the persistent half of that fix; BossIntroOverlay is the one-time half.
+  if (step.eventType === 'bossWord' && step.isMasteryRematch) return "MASTER'S REMATCH · 2×";
   if (step.eventType === 'bossWord')  return "POLLY'S WORD · 2× OR HAUNTED";
   if (step.eventType === 'slangDrop') return 'SLANG DROP';
   return null;
@@ -218,9 +221,18 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   function startHesitationTimers() {
     clearHesitationTimers();
     if (completedRef.current || outcomeActiveRef.current) return;
-    hes1Ref.current = setTimeout(() => firePollyEvent('hesitation3s'), 3000);
-    hes2Ref.current = setTimeout(() => firePollyEvent('hesitation6s'), 6000);
-    hes3Ref.current = setTimeout(() => firePollyEvent('hesitation9s'), 9000);
+    hes1Ref.current = setTimeout(() => {
+      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, seconds: 3, boss: isBoss, haunt: isHaunt });
+      firePollyEvent('hesitation3s');
+    }, 3000);
+    hes2Ref.current = setTimeout(() => {
+      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, seconds: 6, boss: isBoss, haunt: isHaunt });
+      firePollyEvent('hesitation6s');
+    }, 6000);
+    hes3Ref.current = setTimeout(() => {
+      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, seconds: 9, boss: isBoss, haunt: isHaunt });
+      firePollyEvent('hesitation9s');
+    }, 9000);
   }
 
   function pauseHesitation() {
@@ -306,7 +318,11 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     const chosen = gauntletPairs.slice(0, 3);
     const truths = game.mysteryTileTruths?.length === chosen.length
       ? game.mysteryTileTruths
-      : chosen.map(() => Math.random() < 0.5);
+      : createSeededTruthPlan(
+          game.runSeed,
+          `gauntlet:${game.stepIndex}:${step.word}`,
+          chosen.length,
+        );
     const tiles: GauntletTile[] = chosen.map((pair, i) => {
       const useReal = truths[i];
       return {

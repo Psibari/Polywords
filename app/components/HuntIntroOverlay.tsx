@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
+import { resolveHuntSwipeDirection } from './huntSwipeDirection';
 
 // First-hunt-only instruction card. Purely instructional — explains the swipe
 // grammar and stakes, never correctness. Shown once, before the first word.
@@ -12,9 +13,104 @@ type Props = {
   onDismiss: () => void;
 };
 
+type PracticeDirection = 'up' | 'right';
+
+function PracticeCard({
+  phrase,
+  truthLabel,
+  direction,
+  reduceMotion,
+  onComplete,
+}: {
+  phrase: string;
+  truthLabel: 'REAL' | 'TRAP';
+  direction: PracticeDirection;
+  reduceMotion: boolean;
+  onComplete: () => void;
+}) {
+  const position = useRef(new Animated.ValueXY()).current;
+  const completedRef = useRef(false);
+  const thresholdFiredRef = useRef(false);
+
+  function reset() {
+    Animated.spring(position, {
+      toValue: { x: 0, y: 0 },
+      damping: 14,
+      stiffness: 260,
+      useNativeDriver: true,
+    }).start();
+  }
+
+  function resolve(dx: number, dy: number) {
+    if (completedRef.current) return;
+    const resolved = resolveHuntSwipeDirection(dx, dy);
+    if (resolved !== direction) {
+      reset();
+      return;
+    }
+    completedRef.current = true;
+    Haptics.cueAsync('standardCorrect');
+    if (reduceMotion) {
+      onComplete();
+      return;
+    }
+    Animated.timing(position, {
+      toValue: direction === 'up' ? { x: 0, y: -120 } : { x: 180, y: 0 },
+      duration: 180,
+      useNativeDriver: true,
+    }).start(onComplete);
+  }
+
+  const panResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 4 || Math.abs(gesture.dy) > 4,
+    onPanResponderGrant: () => {
+      thresholdFiredRef.current = false;
+    },
+    onPanResponderMove: (_, gesture) => {
+      position.setValue({ x: gesture.dx, y: gesture.dy });
+      if (
+        !thresholdFiredRef.current &&
+        resolveHuntSwipeDirection(gesture.dx, gesture.dy, 24)
+      ) {
+        thresholdFiredRef.current = true;
+        Haptics.cueAsync('gestureThreshold');
+      }
+    },
+    onPanResponderRelease: (_, gesture) => resolve(gesture.dx, gesture.dy),
+    onPanResponderTerminate: reset,
+  })).current;
+
+  const actionName = direction === 'up' ? 'practiceClaim' : 'practiceReject';
+  const actionLabel = direction === 'up' ? 'Swipe up' : 'Swipe right';
+
+  return (
+    <Animated.View
+      {...panResponder.panHandlers}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={`${truthLabel}. ${phrase}. ${actionLabel} to practice.`}
+      accessibilityActions={[{ name: actionName, label: actionLabel }]}
+      onAccessibilityAction={event => {
+        if (event.nativeEvent.actionName === actionName) {
+          resolve(direction === 'right' ? 80 : 0, direction === 'up' ? -80 : 0);
+        }
+      }}
+      style={[io.practiceCard, { transform: position.getTranslateTransform() }]}
+    >
+      <Text style={io.practicePhrase}>{phrase}</Text>
+      <View style={io.practiceFooter}>
+        <Text style={truthLabel === 'REAL' ? io.exampleTagReal : io.exampleTagTrap}>{truthLabel}</Text>
+        <Text style={io.practiceDirection}>{direction === 'up' ? 'SWIPE UP  ↑' : 'SWIPE RIGHT  →'}</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
 export function HuntIntroOverlay({ onDismiss }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
   const reduceMotion = useReducedMotionPreference();
+  const [practiceStep, setPracticeStep] = useState(0);
 
   useEffect(() => {
     if (reduceMotion !== false) {
@@ -29,6 +125,7 @@ export function HuntIntroOverlay({ onDismiss }: Props) {
   }, [opacity, reduceMotion]);
 
   function handleBegin() {
+    if (practiceStep < 2) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (reduceMotion !== false) {
       onDismiss();
@@ -51,21 +148,29 @@ export function HuntIntroOverlay({ onDismiss }: Props) {
         </Text>
 
         <View style={io.example}>
-          <Text style={io.exampleIntro}>LOOK AT ONE WORD — TRUST WHAT YOU RECOGNIZE</Text>
+          <Text style={io.exampleIntro}>PRACTICE WITH ONE WORD · {Math.min(practiceStep + 1, 2)} OF 2</Text>
           <Text style={io.exampleWord}>FINE</Text>
-
-          <View style={io.exampleLineRow}>
-            <Text style={io.exampleLine}>Parking ten minutes longer costs this.</Text>
-            <Text style={io.exampleTagReal}>REAL</Text>
-          </View>
-          <View style={io.exampleLineRow}>
-            <Text style={io.exampleLine}>No clouds spoil the picnic.</Text>
-            <Text style={io.exampleTagReal}>REAL</Text>
-          </View>
-          <View style={io.exampleLineRow}>
-            <Text style={io.exampleLine}>Judge dismisses the parking ticket.</Text>
-            <Text style={io.exampleTagTrap}>TRAP</Text>
-          </View>
+          {practiceStep === 0 && (
+            <PracticeCard
+              key="practice-real"
+              phrase="Parking ten minutes longer costs this."
+              truthLabel="REAL"
+              direction="up"
+              reduceMotion={reduceMotion !== false}
+              onComplete={() => setPracticeStep(1)}
+            />
+          )}
+          {practiceStep === 1 && (
+            <PracticeCard
+              key="practice-trap"
+              phrase="Judge dismisses the parking ticket."
+              truthLabel="TRAP"
+              direction="right"
+              reduceMotion={reduceMotion !== false}
+              onComplete={() => setPracticeStep(2)}
+            />
+          )}
+          {practiceStep === 2 && <Text style={io.practiceComplete}>GRAMMAR LOCKED IN</Text>}
         </View>
 
         <View style={io.ruleRow}>
@@ -91,10 +196,12 @@ export function HuntIntroOverlay({ onDismiss }: Props) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Begin the hunt"
+          accessibilityState={{ disabled: practiceStep < 2 }}
+          disabled={practiceStep < 2}
           onPress={handleBegin}
-          style={({ pressed }) => [io.beginBtn, pressed && io.beginPressed]}
+          style={({ pressed }) => [io.beginBtn, practiceStep < 2 && io.beginDisabled, pressed && io.beginPressed]}
         >
-          <Text style={io.beginLabel}>BEGIN THE HUNT</Text>
+          <Text style={io.beginLabel}>{practiceStep < 2 ? 'PRACTICE BOTH SWIPES' : 'BEGIN THE HUNT'}</Text>
         </Pressable>
       </View>
     </Animated.View>
@@ -144,6 +251,45 @@ const io = StyleSheet.create({
     letterSpacing: 1,
     textAlign: 'center',
     marginBottom: 10,
+  },
+  practiceCard: {
+    minHeight: 86,
+    borderRadius: PW.radius.card,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.20)',
+    backgroundColor: PW.color.surfaceRaised,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    justifyContent: 'space-between',
+  },
+  practicePhrase: {
+    color: PW.color.softWhite,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 15,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  practiceFooter: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  practiceDirection: {
+    color: PW.color.lavender,
+    fontFamily: FONTS.hud,
+    fontSize: 12,
+    letterSpacing: 1.5,
+  },
+  practiceComplete: {
+    minHeight: 86,
+    color: PW.color.gold,
+    fontFamily: FONTS.hud,
+    fontSize: 16,
+    letterSpacing: 2,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    paddingTop: 30,
   },
   exampleLineRow: {
     flexDirection: 'row',
@@ -237,6 +383,9 @@ const io = StyleSheet.create({
   },
   beginPressed: {
     opacity: 0.84,
+  },
+  beginDisabled: {
+    opacity: 0.45,
   },
   beginLabel: {
     color: PW.color.gold,

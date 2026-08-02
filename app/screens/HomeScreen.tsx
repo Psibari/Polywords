@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
@@ -33,10 +33,21 @@ export default function HomeScreen({ navigation }: Props) {
   const startGame = useGameStore(s => s.startGame);
   const hasResumableGame = useGameStore(s => s.hasResumableGame);
   const progress = useGameStore(s => s.progress);
+  const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
+  const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
+  const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
+  const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const pollyMemoryLoaded = useGameStore(s => s.pollyMemoryLoaded);
   const streak = getDisplayStreak(progress, getTodayDateString());
   const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 520);
   const dareScale = usePulseScale();
+  const goldFeatherReady = goldFeatherAvailable &&
+    goldFeatherExpiresAt !== null &&
+    Date.now() < goldFeatherExpiresAt;
+
+  useEffect(() => {
+    loadGoldFeather().then(checkGoldFeatherExpiry).catch(() => {});
+  }, [loadGoldFeather, checkGoldFeatherExpiry]);
 
   function handleHunt() {
     // A resumable run is already hydrated into the store by App.tsx's boot
@@ -69,7 +80,7 @@ export default function HomeScreen({ navigation }: Props) {
             <View style={styles.plaza} />
 
             {/* The Home book â€” all primary routes are plates on the cover */}
-            <Animated.View style={[styles.homeBookWrap, { transform: [{ scale: dareScale }] }]}>
+            <View style={styles.homeBookWrap}>
               <View pointerEvents="none" style={styles.bookDepthShadow} />
               <LinearGradient
                 pointerEvents="none"
@@ -102,11 +113,12 @@ export default function HomeScreen({ navigation }: Props) {
                 <View pointerEvents="none" style={styles.huntBookInnerTooling} />
                 <View pointerEvents="none" style={styles.huntBookPinLeft} />
                 <View pointerEvents="none" style={styles.huntBookPinRight} />
-                <Text style={styles.huntBookHingeText}>POLLY'S VAULT</Text>
+                <Text style={styles.huntBookHingeText}>WORD VAULT</Text>
 
+                <Animated.View style={[styles.huntPulseWrap, { transform: [{ scale: dareScale }] }]}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={hasResumableGame ? 'Resume Hunt' : 'Enter the Hunt'}
+                  accessibilityLabel={`${hasResumableGame ? 'Resume Hunt' : 'Enter the Hunt'}${goldFeatherReady ? '. Gold Feather ready.' : ''}`}
                   onPress={handleHunt}
                   style={({ pressed }) => [styles.huntPlate, pressed && styles.pressed]}
                 >
@@ -118,7 +130,11 @@ export default function HomeScreen({ navigation }: Props) {
                   <Text style={styles.dareLabel}>
                     {hasResumableGame ? 'RESUME HUNT' : 'ENTER THE HUNT'}
                   </Text>
+                  {goldFeatherReady && (
+                    <Text style={styles.goldFeatherReady}>GOLD FEATHER READY</Text>
+                  )}
                 </Pressable>
+                </Animated.View>
 
                 <View style={styles.coverPlateRow}>
                   <Pressable
@@ -155,7 +171,7 @@ export default function HomeScreen({ navigation }: Props) {
                   </Pressable>
                 </View>
               </LinearGradient>
-            </Animated.View>
+            </View>
 
             {/* Quiet settings — low opacity, never tiny */}
             <Pressable
@@ -385,6 +401,16 @@ const styles = StyleSheet.create({
     backgroundColor: PW.color.overlayLight,
     paddingHorizontal: 12,
     paddingVertical: 14,
+  },
+  huntPulseWrap: {
+    width: '100%',
+  },
+  goldFeatherReady: {
+    marginTop: 5,
+    color: PW.color.softWhite,
+    fontFamily: FONTS.label,
+    fontSize: 10,
+    letterSpacing: 1.8,
   },
   startHereBadge: {
     position: 'absolute',

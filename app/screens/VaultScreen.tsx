@@ -45,6 +45,10 @@ export default function VaultScreen({ navigation }: Props) {
   const selectedGhost = selectedWord && !selectedMastered
     ? ghostsToShow.find(g => g.word === selectedWord) ?? null
     : null;
+  const selectedHiddenMeanings = selectedMastered
+    ? selectedMastered.hiddenMeaningsFound?.filter(Boolean)
+      ?? (selectedMastered.hiddenMeaningFound ? [selectedMastered.hiddenMeaningFound] : [])
+    : [];
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -135,9 +139,17 @@ export default function VaultScreen({ navigation }: Props) {
                 {selectedMastered.isBoss && (
                   <Text style={[styles.detailLine, styles.detailBoss]}>POLLY'S WORD — MASTERED</Text>
                 )}
-                {selectedMastered.hiddenMeaningFound.length > 0 && (
+                <Text style={styles.detailLine}>
+                  {selectedMastered.flawless ? 'Flawless mastery' : 'Mastered with visible mistakes'}
+                </Text>
+                {selectedHiddenMeanings.map((meaning, index) => (
+                  <Text key={`${meaning}-${index}`} style={styles.detailLine}>
+                    Hidden {index + 1}: {meaning}
+                  </Text>
+                ))}
+                {(selectedMastered.priorHauntAttempts ?? 0) > 0 && (
                   <Text style={styles.detailLine}>
-                    Hidden meaning: {selectedMastered.hiddenMeaningFound}
+                    Mastered after {selectedMastered.priorHauntAttempts} prior {selectedMastered.priorHauntAttempts === 1 ? 'Haunt' : 'Haunts'}
                   </Text>
                 )}
               </>

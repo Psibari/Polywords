@@ -449,7 +449,6 @@ export default function DailyAnswerCard({
             useNativeDriver: true,
           }),
         ]).start();
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         playSfx('pressHoldStart');
       },
 
@@ -466,7 +465,7 @@ export default function DailyAnswerCard({
 
         if (crossedUpThreshold && !thresholdCrossedRef.current) {
           thresholdCrossedRef.current = true;
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          Haptics.cueAsync('gestureThreshold');
           playSfx('tileSwipe');
         } else if (!crossedUpThreshold) {
           thresholdCrossedRef.current = false;

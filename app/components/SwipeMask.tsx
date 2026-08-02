@@ -27,12 +27,16 @@ import { PW } from '../ui/pwTheme';
 import { heroBookMaterial } from '../ui/pwMaterials';
 import { ShardVariant } from '../ui/pwEffects';
 import { CLAIM_REJECT_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
-import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import MaskCardArtwork from './ui/MaskCardArtwork';
+import {
+  HUNT_SWIPE_THRESHOLD,
+  resolveHuntSwipeDirection,
+} from './huntSwipeDirection';
+import { recordPlaytestEvent } from '../game/playtestTelemetry';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
-const SWIPE_THRESHOLD = 40;
 const TILE_GAP        = 6;
 
 type Props = {
@@ -50,14 +54,12 @@ type Props = {
   gauntletCard?: boolean;
   entryDelay?: number;
   eraBadge?: string;
-  hapticCorrect?: () => void;
   onEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: ShardVariant) => void;
   onSwipeStart?: () => void;
   onPressHoldStart?: () => void;
   onExitComplete?: () => void;
   onCardTouch?: () => void;
   disabled?: boolean;
-  nearMastery?: boolean;
   wordY?: number;
   intakeY?: number;
   splitBorderColor?: string;
@@ -92,14 +94,12 @@ export function SwipeMask({
   gauntletCard = false,
   entryDelay = 0,
   eraBadge,
-  hapticCorrect,
   onEffect,
   onSwipeStart,
   onPressHoldStart,
   onExitComplete,
   onCardTouch,
   disabled = false,
-  nearMastery = false,
   wordY = 180,
   intakeY,
   splitBorderColor = '#FFD700',
@@ -115,6 +115,7 @@ export function SwipeMask({
     gauntletCard ? 200 : bookMaterial ? 220 : 124,
   );
   const reduceMotion = useReducedMotionPreference();
+  const reduceFlashes = useReducedFlashesPreference();
 
   // ── UI state ──────────────────────────────────────────────────
   const [flashRed, setFlashRed] = useState(false);
@@ -147,7 +148,6 @@ export function SwipeMask({
   const tileLayoutRef            = useRef({ width: 300, height: tileHeight });
   const onSwipeUpRef             = useRef(onSwipeUp);
   const onSwipeDownRef           = useRef(onSwipeDown);
-  const hapticCorrectRef         = useRef(hapticCorrect);
   const onEffectRef              = useRef(onEffect);
   const onSwipeStartRef          = useRef(onSwipeStart);
   const onPressHoldStartRef      = useRef(onPressHoldStart);
@@ -160,7 +160,6 @@ export function SwipeMask({
 
   useEffect(() => { onSwipeUpRef.current    = onSwipeUp;    }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
-  useEffect(() => { hapticCorrectRef.current = hapticCorrect; }, [hapticCorrect]);
   useEffect(() => { onEffectRef.current      = onEffect;      }, [onEffect]);
   useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
@@ -212,12 +211,6 @@ export function SwipeMask({
     if (s === 'correct') {
       exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
-      if (hapticCorrectRef.current) {
-        hapticCorrectRef.current();
-      } else {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-
       if (reduceMotion !== false) {
         // Reduce Motion: skip the magnetic-flight physics (a screen-spanning
         // per-frame travel toward the book) for a simple in-place fade.
@@ -325,8 +318,10 @@ export function SwipeMask({
     if (s === 'wrong') {
       exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
-      setFlashRed(true);
-      timers.push(setTimeout(() => setFlashRed(false), 145));
+      if (!reduceFlashes) {
+        setFlashRed(true);
+        timers.push(setTimeout(() => setFlashRed(false), 145));
+      }
 
       if (reduceMotion !== false) {
         // Reduce Motion: no fling/rotate/fall. Keep the acknowledgement beat,
@@ -392,8 +387,6 @@ export function SwipeMask({
     if (s === 'trap-caught') {
       exitCompleteFiredRef.current = false;
       grabLift.value = withTiming(0, { duration: 120 });
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
       if (reduceMotion !== false) {
         // Reduce Motion: keep the shard burst (a fixed-position particle
         // effect elsewhere on screen, not this tile flinging/rotating) as
@@ -468,7 +461,7 @@ export function SwipeMask({
         absorbRafRef.current = null;
       }
     };
-  }, [s]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s, reduceFlashes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tileAnimStyle = useAnimatedStyle(() => {
     const liftAmount = Math.max(0, Math.min(1, -grabLift.value / 10));
@@ -515,7 +508,6 @@ export function SwipeMask({
         grabLift.value         = withSpring(-10, { damping: 16, stiffness: 420 });
         scale.value            = withSpring(1.04, { damping: 16, stiffness: 420 });
         onPressHoldStartRef.current?.();
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       },
 
       onPanResponderMove: (_, g) => {
@@ -524,43 +516,48 @@ export function SwipeMask({
         translateX.value = g.dx;
         translateY.value = g.dy;
 
-        const domRight  = Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 0;
-        const domUp     = g.dy < 0 && Math.abs(g.dy) >= Math.abs(g.dx);
-        const targetRot = domRight ? 3 : domUp ? -1.5 : 0;
+        const previewDirection = resolveHuntSwipeDirection(g.dx, g.dy, 0);
+        const targetRot = previewDirection === 'right' ? 3 : previewDirection === 'up' ? -1.5 : 0;
         rotation.value  = withSpring(targetRot, { damping: 20, stiffness: 300 });
 
         const speed = Math.sqrt(g.vx * g.vx + g.vy * g.vy) * 1000;
         scale.value = withSpring(speed > 300 ? 1.038 : 1.026, { damping: 18, stiffness: 340 });
 
-        const mainAxis = Math.max(g.dx > 0 ? g.dx : 0, -g.dy > 0 ? -g.dy : 0);
-        if (mainAxis > SWIPE_THRESHOLD * 0.6 && !hasThresholdFiredRef.current) {
+        const thresholdDirection = resolveHuntSwipeDirection(
+          g.dx,
+          g.dy,
+          HUNT_SWIPE_THRESHOLD * 0.6,
+        );
+        if (thresholdDirection && !hasThresholdFiredRef.current) {
           hasThresholdFiredRef.current = true;
           onSwipeStartRef.current?.();
-          Haptics.selectionAsync();
+          Haptics.cueAsync('gestureThreshold');
         }
       },
 
       onPanResponderRelease: (_, g) => {
         if (disabledRef.current || judgedRef.current) return;
 
-        if (g.dy < -SWIPE_THRESHOLD) {
+        const direction = resolveHuntSwipeDirection(g.dx, g.dy);
+        if (direction === 'up') {
           judgedRef.current   = true;
           swipeDirRef.current = 'up';
           grabLift.value      = withTiming(0, { duration: 80 });
           onSwipeUpRef.current();
 
-        } else if (g.dx > SWIPE_THRESHOLD && Math.abs(g.dy) < SWIPE_THRESHOLD) {
+        } else if (direction === 'right') {
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
           grabLift.value      = withTiming(0, { duration: 80 });
-          Haptics.impactAsync(
-            nearMastery
-              ? Haptics.ImpactFeedbackStyle.Medium
-              : Haptics.ImpactFeedbackStyle.Light
-          );
           onSwipeDownRef.current();
 
         } else {
+          if (g.dy < -HUNT_SWIPE_THRESHOLD || g.dx > HUNT_SWIPE_THRESHOLD) {
+            recordPlaytestEvent('hunt_ambiguous_swipe', {
+              dx: Math.round(g.dx),
+              dy: Math.round(g.dy),
+            });
+          }
           translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });
           translateY.value       = withSpring(0, { damping: 14, stiffness: 300 });
           grabLift.value         = withSpring(0, { damping: 14, stiffness: 300 });
@@ -596,11 +593,6 @@ export function SwipeMask({
     } else if (action === 'reject') {
       judgedRef.current   = true;
       swipeDirRef.current = 'right';
-      Haptics.impactAsync(
-        nearMastery
-          ? Haptics.ImpactFeedbackStyle.Medium
-          : Haptics.ImpactFeedbackStyle.Light
-      );
       onSwipeDownRef.current();
     }
   }

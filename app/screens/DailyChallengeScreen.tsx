@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { DAILY_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { FONTS } from '../constants/fonts';
+import { PW } from '../ui/pwTheme';
 import {
   DAILY_ROUND_COUNT,
   DAILY_CHANCES,
@@ -26,6 +27,7 @@ import {
   getTodayDateString,
 } from '../game/dailyChallengeEngine';
 import { DailyClaimResult } from '../game/types';
+import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
 import { playSfx, preloadSfx } from '../audio/sfx';
 import {
@@ -568,6 +570,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         clearInterval(id);
         const current = dailySessionRef.current;
         if (current?.status === 'active') {
+          recordPlaytestEvent('daily_abandon_candidate', {
+            round: current.currentRoundIndex + 1,
+            chances: current.chancesRemaining,
+            clues: current.rounds[current.currentRoundIndex]?.revealedClueCount ?? 1,
+          });
           pauseDailyChallenge(Date.now() - roundStartRef.current);
         }
         dailyFocusedRef.current = false;
@@ -627,7 +634,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // Curtain starts dropping the same instant the tile starts flying, so
       // the two finish together instead of the curtain lagging behind a tile
       // that already landed and sat there waiting to be covered.
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.cueAsync(
+        dailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1
+          ? 'mastery'
+          : 'standardCorrect',
+      );
       playSfx('correctClaim');
       const curtainCloseMs = reduceMotion !== false ? 120 : 600;
       const curtainHoldMs = reduceMotion !== false ? 180 : 500;
@@ -669,7 +680,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // Wrong
     setLocked(true);
     setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    Haptics.cueAsync('wrong');
     playSfx('trapWrong');
     const wrongExitMs = reduceMotion !== false
       ? DAILY_CARD_TIMING.reducedWrongExitMs
@@ -684,11 +695,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     if (completingCandidateRef.current !== candidate) return;
     intakeScale.setValue(1);
 
+    const isFinalRound =
+      dailySession?.currentRoundIndex === DAILY_ROUND_COUNT - 1;
+
     if (reduceMotion === false) {
       Animated.sequence([
         Animated.timing(intakeScale, {
-          toValue: 1.045,
-          duration: 120,
+          toValue: isFinalRound ? 1.085 : 1.045,
+          duration: isFinalRound ? 170 : 120,
           useNativeDriver: true,
         }),
         Animated.timing(intakeScale, {
@@ -698,9 +712,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         }),
       ]).start();
     }
-
-    const isFinalRound =
-      dailySession?.currentRoundIndex === DAILY_ROUND_COUNT - 1;
 
     if (!isFinalRound) {
       if (reduceMotion !== false) {
@@ -749,6 +760,18 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const currentRound =
     dailySession?.rounds[dailySession.currentRoundIndex] ?? null;
   const revealedCount = currentRound?.revealedClueCount ?? 1;
+  const dailyPressure = dailySession
+    ? Math.min(
+        0.18,
+        dailySession.currentRoundIndex * 0.025 +
+          (2 - dailySession.chancesRemaining) * 0.045,
+      )
+    : 0;
+  const clueSpeedPrompt = revealedCount === 1
+    ? 'FIRST-CLUE MARK'
+    : revealedCount === 2
+      ? 'SECOND-CLUE MARK'
+      : 'FINAL CLUE';
 
   return (
     <View style={styles.screen}>
@@ -760,6 +783,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         end={{ x: 0, y: 1 }}
         pointerEvents="none"
         style={StyleSheet.absoluteFillObject}
+      />
+      <View
+        pointerEvents="none"
+        style={[styles.dailyPressureVeil, { opacity: dailyPressure }]}
       />
 
       <SafeAreaView style={styles.content}>
@@ -842,7 +869,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               )}
             </QuillScrollPanel>
           </Animated.View>
-          <Text style={styles.actionLabel}>{DAILY_ACTION_RULE}</Text>
+          <Text style={styles.speedPrompt}>{clueSpeedPrompt}</Text>
+          <Text style={styles.actionLabel}>
+            {dailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
+            {DAILY_ACTION_RULE}
+          </Text>
 
           <View style={styles.cardArea}>
             {/* Candidate board -- the surface the six cards rest on, so they
@@ -906,6 +937,10 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: dailyBackdrop.base,
+  },
+  dailyPressureVeil: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: PW.color.purple,
   },
   // The background layers sit on the outer View so they reach the true screen
   // edges; this holds everything that should respect the safe-area insets.
@@ -1006,8 +1041,16 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     textAlign: 'center',
     textTransform: 'uppercase',
-    marginTop: 10,
+    marginTop: 2,
     marginBottom: 8,
+  },
+  speedPrompt: {
+    color: PW.color.gold,
+    fontFamily: FONTS.hud,
+    fontSize: 12,
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginTop: 8,
   },
   cardArea: {
     marginHorizontal: 20,

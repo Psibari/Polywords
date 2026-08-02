@@ -10,7 +10,10 @@ export function usePulseScale(maxScale = 1.018, periodMs = 950) {
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (reduceMotion) return;
+    if (reduceMotion !== false) {
+      pulse.setValue(0);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: periodMs, useNativeDriver: true }),

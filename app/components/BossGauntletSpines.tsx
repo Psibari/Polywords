@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
@@ -26,6 +26,7 @@ export type BossGauntletSpinesProps = {
   onCardTouch: () => void;
   wordY: number;
   intakeY: number;
+  correctCount: number;
 };
 
 // Matches perform.onGauntletTileDrop's existing ~280ms landing timer
@@ -64,7 +65,7 @@ function centerOffsetX(index: number, tileCount: number): number {
 
 function SpineSlot({
   tile, index, offsetX, status, isOpen, anyOpen, tileLanded, inputLocked,
-  onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY,
+  onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY, totalTiles,
 }: {
   tile: GauntletTile;
   index: number;
@@ -82,6 +83,7 @@ function SpineSlot({
   onCardTouch: () => void;
   wordY: number;
   intakeY?: number;
+  totalTiles: number;
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
   const resolved = status !== 'idle';
@@ -168,6 +170,11 @@ function SpineSlot({
         pointerEvents={closedHitInert ? 'none' : 'auto'}
         disabled={closedHitInert || inputLocked}
         onPressIn={() => { if (!resolved) onPick(index); }}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={`Sealed tile ${index + 1} of ${totalTiles}`}
+        accessibilityHint="Activate to open this tile"
+        accessibilityState={{ disabled: closedHitInert || inputLocked }}
         style={StyleSheet.absoluteFill}
       />
 
@@ -214,15 +221,24 @@ function SpineSlot({
 export function BossGauntletSpines({
   gatePhase, gauntletTiles, finalTileStates, activeGauntletTile,
   tileLanded, inputLocked, onPick, onSwipeUp, onSwipeRight,
-  onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY,
+  onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY, correctCount,
 }: BossGauntletSpinesProps) {
   if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
   const anyOpen = activeGauntletTile !== null;
 
   return (
-    <View style={styles.row} pointerEvents="box-none">
-      {gauntletTiles.map((tile, index) => (
+    <View style={styles.wrap} pointerEvents="box-none">
+      <View
+        style={styles.header}
+        accessible
+        accessibilityLabel={`Choose a seal. ${correctCount} of ${gauntletTiles.length} correct.`}
+      >
+        <Text style={styles.instruction}>CHOOSE A SEAL</Text>
+        <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
+      </View>
+      <View style={styles.row} pointerEvents="box-none">
+        {gauntletTiles.map((tile, index) => (
         <SpineSlot
           key={tile.mask.id}
           tile={tile}
@@ -241,13 +257,38 @@ export function BossGauntletSpines({
           onCardTouch={onCardTouch}
           wordY={wordY}
           intakeY={intakeY}
+          totalTiles={gauntletTiles.length}
         />
-      ))}
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    alignItems: 'center',
+  },
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  instruction: {
+    color: PW.color.softWhite,
+    fontFamily: FONTS.label,
+    fontSize: 13,
+    letterSpacing: 2,
+  },
+  progress: {
+    color: PW.color.gold,
+    fontFamily: FONTS.hud,
+    fontSize: 16,
+    letterSpacing: 1,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'center',

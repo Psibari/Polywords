@@ -4,6 +4,7 @@ import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { POLLY_LINES } from '../game/pollyCharacter';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
 // Guards a mid-Hunt exit (back gesture, hardware back, or nav away) behind
 // a real choice — never a system "are you sure?" dialog. Losing the run is
@@ -17,14 +18,20 @@ type Props = {
 export function PollyExitConfirm({ onStay, onLeave }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.94)).current;
+  const reduceMotion = useReducedMotionPreference();
 
   useEffect(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (reduceMotion !== false) {
+      opacity.setValue(1);
+      scale.setValue(1);
+      return;
+    }
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, damping: 14, stiffness: 260, useNativeDriver: true }),
     ]).start();
-  }, [opacity, scale]);
+  }, [opacity, scale, reduceMotion]);
 
   function handleStay() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

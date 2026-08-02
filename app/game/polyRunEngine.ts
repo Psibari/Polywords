@@ -4,6 +4,7 @@
 // ============================================================
 
 import { Mask, SessionStep } from './types';
+import { deriveSeed, shuffleSeeded } from './seededRandom';
 
 // Retuned 2026-07-13: bonus feathers now land where struggling and mid-tier
 // players actually are (avg-run p50 ≈ 3200), instead of expert-only territory.
@@ -95,6 +96,7 @@ export type GameState = {
   // terminal failure — see resolveMysteryTile) so a future "N correct"
   // display never briefly shows a wrong number on loss.
   gauntletCorrectCount: number;
+  runSeed: number;
 };
 
 type SwipeHistory = Pick<GameState, 'swipedUpIds' | 'swipedDownIds'>;
@@ -112,23 +114,18 @@ export function getUnresolvedMaskIds(
     .map(mask => mask.id);
 }
 
-function shuffleMasks(masks: Mask[]): Mask[] {
-  const arr = [...masks];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
 export function createGame(
   steps: SessionStep[],
   mercyReviveLives = 0,
+  runSeed = Date.now(),
 ): GameState {
   const shuffledMasks: Record<number, Mask[]> = {};
   steps.forEach((step, i) => {
     if (step.kind === 'word') {
-      shuffledMasks[i] = shuffleMasks(step.masks.filter(m => !m.isHidden));
+      shuffledMasks[i] = shuffleSeeded(
+        step.masks.filter(m => !m.isHidden),
+        deriveSeed(runSeed, `masks:${i}:${step.word}`),
+      );
     }
   });
 
@@ -164,6 +161,7 @@ export function createGame(
     mysteryResolvedPairIndices: [],
     gauntletActive: false,
     gauntletCorrectCount: 0,
+    runSeed,
   };
 }
 

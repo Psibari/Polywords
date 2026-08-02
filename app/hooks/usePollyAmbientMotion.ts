@@ -38,6 +38,12 @@ export function useReducedMotionPreference(): boolean | null {
   return systemReduceMotion || appOverride;
 }
 
+export function useReducedFlashesPreference(): boolean {
+  const reduceMotion = useReducedMotionPreference();
+  const appOverride = useGameStore(s => s.reduceFlashesOverride);
+  return reduceMotion !== false || appOverride;
+}
+
 export function usePollyAmbientMotion(
   profile: PollyAmbientProfile,
   active = true,

@@ -32,6 +32,7 @@ import { useBoardMechanics } from '../hooks/useBoardMechanics';
 import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -183,6 +184,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
   const scale = useRef(new Animated.Value(0.88)).current;
   const pulse = useRef(new Animated.Value(0)).current;
   const resolvedRef = useRef(false);
+  const reduceMotion = useReducedMotionPreference();
 
   function resolve() {
     if (resolvedRef.current) return;
@@ -196,19 +198,27 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
   }
 
   useEffect(() => {
+    if (reduceMotion !== false) {
+      opacity.setValue(1);
+      scale.setValue(1);
+      pulse.setValue(0);
+      const auto = setTimeout(resolve, 2800);
+      return () => clearTimeout(auto);
+    }
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, damping: 8, stiffness: 160, useNativeDriver: true }),
     ]).start();
-    Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         Animated.timing(pulse, { toValue: 0, duration: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ])
-    ).start();
+    );
+    loop.start();
     const auto = setTimeout(resolve, 2800);
-    return () => clearTimeout(auto);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { clearTimeout(auto); loop.stop(); };
+  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
   const pulseOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.62] });
@@ -240,6 +250,7 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
   const scale = useRef(new Animated.Value(0.94)).current;
   const drift = useRef(new Animated.Value(0)).current;
   const resolvedRef = useRef(false);
+  const reduceMotion = useReducedMotionPreference();
 
   function resolve() {
     if (resolvedRef.current) return;
@@ -253,19 +264,27 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
   }
 
   useEffect(() => {
+    if (reduceMotion !== false) {
+      opacity.setValue(1);
+      scale.setValue(1);
+      drift.setValue(0);
+      const auto = setTimeout(resolve, 3200);
+      return () => clearTimeout(auto);
+    }
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, damping: 9, stiffness: 120, useNativeDriver: true }),
     ]).start();
-    Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(drift, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         Animated.timing(drift, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ])
-    ).start();
+    );
+    loop.start();
     const auto = setTimeout(resolve, 3200);
-    return () => clearTimeout(auto);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { clearTimeout(auto); loop.stop(); };
+  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hazeY = drift.interpolate({ inputRange: [0, 1], outputRange: [0, -10] });
   const hazeOpacity = drift.interpolate({ inputRange: [0, 1], outputRange: [0.24, 0.48] });
@@ -306,6 +325,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   // resolution, so a whole-store subscription re-rendered it on completely
   // unrelated state (daily session, settings, pollyMemory...).
   const gameStepIndex = useGameStore(s => s.game.stepIndex);
+  const gauntletCorrectCount = useGameStore(s => s.game.gauntletCorrectCount);
   const { pulseAnim, tension } = useHeartbeat();
   const tileBreatheAmount = useRef(new Animated.Value(0)).current;
   const isBoss  = step.eventType === 'bossWord';
@@ -437,9 +457,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     playSfx('pollySqwawkShort');
     if (brokeRealChain) {
       playSfx('correctClaim', { rate: 0.55 });
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    Haptics.cueAsync('wrong');
     triggerWrongWordRecoil();
     onWrongSwipe?.();
   }
@@ -672,8 +691,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     perform: {
       onRealClaimed({ mask, tier, points, nextFound }) {
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        if (tier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
         spawnFloat(points, 'real', tier);
         triggerAbsorption(mask.phrase);
         Animated.timing(goldTextOpacity, {
@@ -684,8 +702,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
       onTrapRejected({ tier, points }) {
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        if (tier === 3) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
         spawnFloat(points, 'trap', tier);
         onTrapCaught?.();
       },
@@ -694,8 +711,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
       onGauntletCorrect({ swipedUp, phrase }) {
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        Haptics.cueAsync('bossCorrect');
         triggerGauntletPulse();
         if (swipedUp) triggerAbsorption(phrase);
       },
@@ -710,7 +726,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
       onGauntletBegin() {
         setGauntletThrowKey(k => k + 1);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        Haptics.cueAsync('bossEntry');
       },
       onWordExit(perfect) {
         // Stop any prior per-tile flick animation and reset both values it
@@ -913,7 +929,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         // ── Boss path — one decisive beat instead of the 12-phase sequence.
         if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
         playSfx('bookClose');
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.cueAsync('mastery');
         // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
         // its Animated.delay) before driving these shared values directly —
         // otherwise its queued final leg fires later and fights this beat.
@@ -1515,7 +1531,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           pointerEvents="none"
           style={styles.vaultLabel}
         >
-          POLLY'S VAULT
+          WORD VAULT
         </Text>
 
         {/* Boss haunt only — colour drains from the book, it does not travel */}
@@ -1555,7 +1571,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                   const depth = backingCardCount - index;
                   const anim = getBackingCardAnim(maskId, depth);
                   const rotateDeg = anim.rotate.interpolate({ inputRange: [-6, 0], outputRange: ['-6deg', '0deg'] });
-                  const mask = mechanics.visibleGridMasks.find(m => m.id === maskId);
                   return (
                     <Animated.View
                       key={maskId}
@@ -1582,24 +1597,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                       >
                         <MaskCardArtwork />
                       </Animated.View>
-                      {mask && (
-                        <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
-                          <Text
-                            style={[
-                              styles.deckBackingPhrase,
-                              {
-                                fontSize: 27 - (depth - 1) * 3,
-                                color: depth === 1 ? PW.color.softWhite : PW.color.mutedWhite,
-                              },
-                            ]}
-                            numberOfLines={2}
-                            adjustsFontSizeToFit={true}
-                            minimumFontScale={0.8}
-                          >
-                            {mask.phrase}
-                          </Text>
-                        </View>
-                      )}
                     </Animated.View>
                   );
                 })}
@@ -1637,10 +1634,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                     onSwipeReveal={() => {}}
                     revealable={false}
                     disabled={mechanics.inputLocked}
-                    nearMastery={mechanics.nearMastery}
                     tileHeight={TILE_H}
                     entryDelay={0}
-                    hapticCorrect={step.hapticTier === 'light' ? () => Haptics.selectionAsync() : undefined}
                     onEffect={handleEffect}
                     onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
@@ -1674,6 +1669,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                   onCardTouch={handleCardTouch}
                   wordY={wordScreenY}
                   intakeY={wordScreenY + 73}
+                  correctCount={gauntletCorrectCount}
                 />
               </View>
             )}

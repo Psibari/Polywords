@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
@@ -26,23 +27,40 @@ import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
 import { BossIntroOverlay } from '../components/BossIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
-import ChestTest from '../components/dev/ChestTest'; // TEMP dev-only chest asset test — trivially removable
 
 const MAX_FEATHERS = 6;
+
+function BossCrownIcon() {
+  return (
+    <Svg width={15} height={12} viewBox="0 0 30 24" accessibilityElementsHidden>
+      <Path
+        d="M3 6.5L9.2 13 15 3l5.8 10L27 6.5 24.7 20H5.3L3 6.5Z"
+        fill={PW.color.gold}
+        stroke={PW.color.foilLight}
+        strokeWidth={1.4}
+        strokeLinejoin="round"
+      />
+      <Path d="M6 17.2h18" stroke={PW.color.bgDeep} strokeWidth={1.5} opacity={0.55} />
+    </Svg>
+  );
+}
 // ─── PURPLE FLASH — trap-caught confirmation ───────────────────
 function PurpleFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const reduceMotion = useReducedMotionPreference();
+  const reduceFlashes = useReducedFlashesPreference();
   useEffect(() => {
-    if (flashKey === 0 || reduceMotion) return;
+    if (flashKey === 0 || reduceFlashes) {
+      opacity.setValue(0);
+      return;
+    }
     opacity.setValue(0);
     Animated.sequence([
       Animated.timing(opacity, { toValue: 0.50, duration: 69,  useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 0,    duration: 391, useNativeDriver: true }),
     ]).start();
-  }, [flashKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flashKey, reduceFlashes]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Animated.View
       pointerEvents="none"
@@ -54,15 +72,18 @@ function PurpleFlash({ flashKey }: { flashKey: number }) {
 // ─── RED FLASH — wrong-swipe danger signal ─────────────────────
 function RedFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const reduceMotion = useReducedMotionPreference();
+  const reduceFlashes = useReducedFlashesPreference();
   useEffect(() => {
-    if (flashKey === 0 || reduceMotion) return;
+    if (flashKey === 0 || reduceFlashes) {
+      opacity.setValue(0);
+      return;
+    }
     opacity.setValue(0);
     Animated.sequence([
       Animated.timing(opacity, { toValue: 0.32, duration: 55,  useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 0,    duration: 180, useNativeDriver: true }),
     ]).start();
-  }, [flashKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flashKey, reduceFlashes]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Animated.View
       pointerEvents="none"
@@ -86,6 +107,7 @@ function TopBar({ navigation }: { navigation: any }) {
     Date.now() < goldFeatherExpiresAt;
   const total   = game.session.length;
   const current = game.stepIndex;
+  const reduceMotion = useReducedMotionPreference();
 
   const animScore = useRef(new Animated.Value(game.score)).current;
   const [displayScore, setDisplayScore] = useState(game.score);
@@ -96,13 +118,17 @@ function TopBar({ navigation }: { navigation: any }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (reduceMotion !== false) {
+      animScore.setValue(game.score);
+      return;
+    }
     Animated.timing(animScore, {
       toValue: game.score,
       duration: 400,
       easing: Easing.out(Easing.quad),
       useNativeDriver: false,
     }).start();
-  }, [game.score]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [game.score, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <View style={tb.root}>
@@ -166,6 +192,7 @@ function TopBar({ navigation }: { navigation: any }) {
 // ─── ROUND CHIPS ─────────────────────────────────────────────
 
 function RoundChips({ current, total }: { current: number; total: number }) {
+  const reduceMotion = useReducedMotionPreference();
   const chipAnims = useRef(
     Array.from({ length: total }, (_, i) => ({
       scale: new Animated.Value(i === current ? 1.25 : i < current ? 0.92 : 1),
@@ -186,6 +213,13 @@ function RoundChips({ current, total }: { current: number; total: number }) {
       const toScale = isCurrent ? 1.25 : isDone ? 0.92 : 1;
       const toY = isCurrent ? -3 : 0;
       const toOpacity = isDone ? 0.45 : 1;
+
+      if (reduceMotion !== false) {
+        anim.scale.setValue(toScale);
+        anim.translateY.setValue(toY);
+        anim.opacity.setValue(toOpacity);
+        return;
+      }
 
       if (i === justCompletedIndex) {
         // The chip that just finished gets one deliberate pop before
@@ -215,7 +249,7 @@ function RoundChips({ current, total }: { current: number; total: number }) {
         useNativeDriver: true,
       }).start();
     });
-  }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [current, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <View style={tb.chipsRow}>
@@ -249,13 +283,7 @@ function RoundChips({ current, total }: { current: number; total: number }) {
             ]}
           >
             {isBoss ? (
-              // PLACEHOLDER — swap for a real crown icon asset when available
-              <View style={{ width: 12, height: 10 }}>
-                <View style={tb.crownBase} />
-                <View style={[tb.crownPoint, { left: 0, bottom: 2 }]} />
-                <View style={[tb.crownPoint, { left: 4, bottom: 4 }]} />
-                <View style={[tb.crownPoint, { left: 8, bottom: 2 }]} />
-              </View>
+              <BossCrownIcon />
             ) : (
               <Text style={[tb.chipLabel, isCurrent && tb.chipLabelCurrent]}>
                 {i + 1}
@@ -310,6 +338,7 @@ function FeatherDustParticle({
 }
 
 function FeatherIcon({ filled, inert }: { filled: boolean; inert?: boolean }) {
+  const reduceMotion = useReducedMotionPreference();
   const prevFilled    = useRef(filled);
   const shakeRotate   = useRef(new Animated.Value(0)).current;
   const launchY       = useRef(new Animated.Value(0)).current;
@@ -319,6 +348,13 @@ function FeatherIcon({ filled, inert }: { filled: boolean; inert?: boolean }) {
 
   useEffect(() => {
     if (prevFilled.current === true && filled === false) {
+      if (reduceMotion !== false) {
+        launchY.setValue(0);
+        launchOpacity.setValue(1);
+        setDustVisible(false);
+        prevFilled.current = filled;
+        return;
+      }
       // Phase 1 — Shake (80ms)
       Animated.sequence([
         Animated.timing(shakeRotate, { toValue:  8, duration: 22, useNativeDriver: true }),
@@ -343,7 +379,7 @@ function FeatherIcon({ filled, inert }: { filled: boolean; inert?: boolean }) {
       });
     }
     prevFilled.current = filled;
-  }, [filled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filled, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rotate = shakeRotate.interpolate({
     inputRange:  [-8, 8],
@@ -626,9 +662,6 @@ function GameDirector({ navigation }: { navigation: any }) {
   const featherFloatOpacity = useRef(new Animated.Value(0)).current;
   const [showFeatherFloat, setShowFeatherFloat] = useState(false);
 
-  // ── TEMP dev-only chest asset test — trivially removable ──────
-  const [showChestTest, setShowChestTest] = useState(false);
-
   // ── Effects overlay ────────────────────────────────────────
   const fxLayerRef    = useRef<FXLayerHandle>(null);
   const prevChainRef  = useRef<number>(1);
@@ -717,15 +750,18 @@ function GameDirector({ navigation }: { navigation: any }) {
   // The first encounter gates the board mount so its entrance, haptics, and
   // decision clock all begin after the player dismisses this explanation.
   const [bossIntroSeen, setBossIntroSeen] = useState<boolean | null>(null);
+  const [bossTransitionActive, setBossTransitionActive] = useState(false);
+  const skipBossTransitionStepRef = useRef<number | null>(null);
   useEffect(() => {
     AsyncStorage.getItem(BOSS_INTRO_SEEN_KEY)
       .then(v => setBossIntroSeen(v === 'true'))
       .catch(() => setBossIntroSeen(true));
   }, []);
   const handleBossIntroDismiss = useCallback(() => {
+    skipBossTransitionStepRef.current = game.stepIndex;
     setBossIntroSeen(true);
     AsyncStorage.setItem(BOSS_INTRO_SEEN_KEY, 'true').catch(() => {});
-  }, []);
+  }, [game.stepIndex]);
 
   useEffect(() => {
     if (game.status === 'complete' || game.status === 'gameOver') {
@@ -925,9 +961,26 @@ function GameDirector({ navigation }: { navigation: any }) {
     !isDone &&
     activeStep.kind === 'word' &&
     activeStep.eventType === 'bossWord';
+
+  useEffect(() => {
+    if (!isBossRound || bossIntroSeen !== true) {
+      setBossTransitionActive(false);
+      return;
+    }
+    if (skipBossTransitionStepRef.current === game.stepIndex) {
+      skipBossTransitionStepRef.current = null;
+      setBossTransitionActive(false);
+      return;
+    }
+    setBossTransitionActive(true);
+    const timer = setTimeout(() => setBossTransitionActive(false), 760);
+    return () => clearTimeout(timer);
+  }, [game.stepIndex, bossIntroSeen, isBossRound]);
+
   const gameplayGateActive =
     introSeen !== true ||
-    (isBossRound && bossIntroSeen !== true);
+    (isBossRound && bossIntroSeen !== true) ||
+    bossTransitionActive;
 
   useEffect(() => {
     if (!gameplayGateActive || game.status !== 'playing') return;
@@ -1013,20 +1066,8 @@ function GameDirector({ navigation }: { navigation: any }) {
           >
             <Text style={styles.devBossButtonText}>BOSS{'\n'}(CRISIS)</Text>
           </Pressable>
-          {/* TEMP dev-only chest asset test — trivially removable */}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open chest test"
-            onPress={() => setShowChestTest(true)}
-            style={styles.devBossButton}
-          >
-            <Text style={styles.devBossButtonText}>CHEST{'\n'}TEST</Text>
-          </Pressable>
         </View>
       )}
-
-      {/* TEMP dev-only chest asset test overlay — trivially removable */}
-      {showChestTest && <ChestTest onClose={() => setShowChestTest(false)} />}
 
       {/* ── Flash overlays — zIndex 50, above game content ── */}
       <PurpleFlash flashKey={purpleFlashKey} />
@@ -1070,6 +1111,15 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       {introSeen === true && bossIntroSeen === false && isBossRound && (
         <BossIntroOverlay onDismiss={handleBossIntroDismiss} />
+      )}
+
+      {bossTransitionActive && isBossRound && (
+        <View style={styles.bossTransition} pointerEvents="none" accessible accessibilityLabel="Polly's Word. One last breath.">
+          <Text style={styles.bossTransitionKicker}>
+            {activeStep.kind === 'word' && activeStep.isMasteryRematch ? "MASTER'S REMATCH" : "POLLY'S WORD"}
+          </Text>
+          <Text style={styles.bossTransitionCopy}>ONE LAST BREATH</Text>
+        </View>
       )}
 
       {exitConfirmVisible && (
@@ -1184,6 +1234,27 @@ const styles = StyleSheet.create({
     right: '16%',
     borderRadius: 90,
     backgroundColor: 'rgba(245,200,66,0.04)',
+  },
+  bossTransition: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 290,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15,13,42,0.94)',
+  },
+  bossTransitionKicker: {
+    color: PW.color.gold,
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 34,
+    letterSpacing: 2.5,
+    textAlign: 'center',
+  },
+  bossTransitionCopy: {
+    marginTop: 8,
+    color: PW.color.softWhite,
+    fontFamily: FONTS.hud,
+    fontSize: 14,
+    letterSpacing: 3,
   },
   devBossOverlay: {
     position: 'absolute',

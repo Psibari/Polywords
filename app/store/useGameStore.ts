@@ -52,6 +52,11 @@ import {
   rememberPollyLine,
 } from '../game/pollyMemory';
 import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { deriveSeed } from '../game/seededRandom';
+import {
+  flushPlaytestSummary,
+  recordPlaytestEvent,
+} from '../game/playtestTelemetry';
 
 // Onboarding taper: a hard cliff from full protection to zero protection at
 // run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
@@ -73,6 +78,14 @@ const SETTINGS_KEY = 'polywords_settings';
 const POLLY_MEMORY_KEY = 'polywords_polly_memory_v1';
 
 let dailyPersistenceQueue: Promise<void> = Promise.resolve();
+let runSeedCounter = 0;
+
+function createRunSeed(): number {
+  runSeedCounter = (runSeedCounter + 1) >>> 0;
+  return deriveSeed(Date.now(), `run:${runSeedCounter}`);
+}
+
+const initialRunSeed = createRunSeed();
 
 function enqueueDailyPersistence(operation: () => Promise<void>): Promise<void> {
   dailyPersistenceQueue = dailyPersistenceQueue
@@ -120,6 +133,7 @@ type PlayerSettings = {
   // useReducedMotionPreference. A player can ask the app for less motion
   // than their phone does; the app should never force more.
   reduceMotionOverride: boolean;
+  reduceFlashesOverride: boolean;
   playerName: string;
 };
 
@@ -127,6 +141,7 @@ const DEFAULT_SETTINGS: PlayerSettings = {
   soundEnabled: true,
   hapticsEnabled: true,
   reduceMotionOverride: false,
+  reduceFlashesOverride: false,
   playerName: 'Word Hunter',
 };
 
@@ -138,6 +153,7 @@ function persistSettings(state: PlayerSettings): void {
     soundEnabled: state.soundEnabled,
     hapticsEnabled: state.hapticsEnabled,
     reduceMotionOverride: state.reduceMotionOverride,
+    reduceFlashesOverride: state.reduceFlashesOverride,
     playerName: state.playerName,
   };
   AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
@@ -239,7 +255,13 @@ type GameStore = {
   setGhostRevenge: (data: GhostRevenge) => void;
   loadGhosts: () => Promise<void>;
   progress: PlayerProgress;
-  recordMastery: (word: string, isBoss: boolean, hiddenMeaningFound: string, flawless: boolean) => void;
+  recordMastery: (
+    word: string,
+    isBoss: boolean,
+    hiddenMeaningsFound: string[],
+    flawless: boolean,
+    priorHauntAttempts: number,
+  ) => void;
   recordRunComplete: (finalScore: number) => void;
   loadProgress: () => Promise<void>;
   pollyMemory: PollyMemory;
@@ -276,16 +298,18 @@ type GameStore = {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
   reduceMotionOverride: boolean;
+  reduceFlashesOverride: boolean;
   playerName: string;
   setSoundEnabled: (value: boolean) => void;
   setHapticsEnabled: (value: boolean) => void;
   setReduceMotionOverride: (value: boolean) => void;
+  setReduceFlashesOverride: (value: boolean) => void;
   setPlayerName: (name: string) => void;
   loadSettings: () => Promise<void>;
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: createGame(generateHunt({})),
+  game: createGame(generateHunt({ seed: initialRunSeed }), 0, initialRunSeed),
   hasResumableGame: false,
   ghosts: [],
   ghostRevenge: null,
@@ -304,9 +328,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   soundEnabled: DEFAULT_SETTINGS.soundEnabled,
   hapticsEnabled: DEFAULT_SETTINGS.hapticsEnabled,
   reduceMotionOverride: DEFAULT_SETTINGS.reduceMotionOverride,
+  reduceFlashesOverride: DEFAULT_SETTINGS.reduceFlashesOverride,
   playerName: DEFAULT_SETTINGS.playerName,
 
   startGame: () => {
+    const runSeed = createRunSeed();
     const runStartGhostWordIds = get().ghosts.map(g => g.wordId);
     const runsCompleted = get().progress.runsCompleted;
     // Fledgling: first 3 runs get the shorter 8-round arc, an easy-biased
@@ -324,9 +350,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       masteredWords: get().progress.masteredWords.map(m => m.word),
       ghostWordIds: runStartGhostWordIds,
       ...(isFledgling ? { length: 8, gentle: true } : {}),
+      seed: runSeed,
     });
     set({
-      game: createGame(steps, mercyReviveLives),
+      game: createGame(steps, mercyReviveLives, runSeed),
       ghostRevenge: null,
       runStartGhostWordIds,
     });
@@ -369,6 +396,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({
         game: {
           ...saved,
+          runSeed: Number.isFinite(saved.runSeed)
+            ? saved.runSeed >>> 0
+            : deriveSeed(saved.lastActionAt || Date.now(), 'migrated-run'),
           mysteryTotal,
           mysteryResolved,
           mysteryTileTruths,
@@ -436,13 +466,35 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const terminal = !pairAlreadyResolved && isMysteryTerminal(prev, correct);
     const next = resolveMysteryTile(prev, { correct, visiblePerfect, pairIndex });
     set({ game: next });
+    if (step.kind === 'word' && (step.eventType === 'bossWord' || step.isHauntReturn)) {
+      recordPlaytestEvent('boss_hidden_choice', {
+        round: prev.stepIndex + 1,
+        correct,
+        pair: pairIndex ?? prev.mysteryResolved,
+        total: next.mysteryTotal,
+        haunt: step.isHauntReturn === true,
+      });
+    }
     if (!terminal) return;
     if (step.kind !== 'word') return;
     const isBoss = step.eventType === 'bossWord';
     const isHaunt = step.isHauntReturn === true;
     if (isBoss) {
       if (correct) {
-        get().recordMastery(step.word, true, step.hiddenPairs?.[0]?.real ?? step.hiddenMeaning ?? '', visiblePerfect);
+        if (!step.isMasteryRematch) {
+          const hiddenMeaningsFound = step.hiddenPairs?.map(pair => pair.real)
+            ?? (step.hiddenMeaning ? [step.hiddenMeaning] : []);
+          const priorHauntAttempts = get().ghosts.find(
+            ghost => ghost.wordId === step.word.trim().toUpperCase(),
+          )?.runsMissed ?? 0;
+          get().recordMastery(
+            step.word,
+            true,
+            hiddenMeaningsFound,
+            visiblePerfect,
+            priorHauntAttempts,
+          );
+        }
         // invariant: a mastered word is never also a pending ghost (covers die→revive→master)
         const wordId = step.word.trim().toUpperCase();
         const pruned = get().ghosts.filter(g => g.wordId !== wordId);
@@ -536,9 +588,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (step.isHauntReturn !== true) return;
 
     const wordId = step.word.trim().toUpperCase();
+    const priorMisses = get().ghosts.find(g => g.wordId === wordId)?.runsMissed ?? 0;
     const next = get().ghosts.filter(g => g.wordId !== wordId);
     if (next.length === get().ghosts.length) return;
     set({ ghosts: next });
+    recordPlaytestEvent('haunt_cleared', { word: wordId, priorMisses });
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
   },
 
@@ -560,14 +614,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setGhostRevenge: (data) => set({ ghostRevenge: data }),
 
-  recordMastery: (word, isBoss, hiddenMeaningFound, flawless) => {
+  recordMastery: (word, isBoss, hiddenMeaningsFound, flawless, priorHauntAttempts) => {
     const current = get().progress;
     const existing = current.masteredWords.find(m => m.word === word);
+    const hiddenMeaningFound = hiddenMeaningsFound[0] ?? '';
     let masteredWords: MasteredWordRecord[];
     if (existing) {
       masteredWords = current.masteredWords.map(m =>
         m.word === word
-          ? { ...m, dateMastered: new Date().toISOString(), hiddenMeaningFound, flawless }
+          ? {
+              ...m,
+              dateMastered: new Date().toISOString(),
+              hiddenMeaningFound,
+              hiddenMeaningsFound,
+              priorHauntAttempts,
+              flawless,
+            }
           : m
       );
     } else {
@@ -575,6 +637,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         word,
         isBoss,
         hiddenMeaningFound,
+        hiddenMeaningsFound,
+        priorHauntAttempts,
         dateMastered: new Date().toISOString(),
         flawless,
       }];
@@ -598,6 +662,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       : game.bossOutcome === 'mastered'
       ? 'playerBeatPolly' as const
       : 'playerCompleted' as const;
+    recordPlaytestEvent('hunt_complete', {
+      score: finalScore,
+      roundsReached: game.stepIndex + 1,
+      outcome,
+    });
+    if (game.status === 'gameOver') {
+      recordPlaytestEvent('hunt_death', { round: game.stepIndex + 1, lives: game.lives });
+    }
     const pollyMemory = rememberHunt(get().pollyMemory, {
       outcome,
       score: finalScore,
@@ -612,6 +684,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ progress: next, pollyMemory });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
     AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
+    flushPlaytestSummary('hunt');
   },
 
   loadProgress: async () => {
@@ -656,6 +729,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setReduceMotionOverride: (value: boolean) => {
     set({ reduceMotionOverride: value });
+    persistSettings(get());
+  },
+
+  setReduceFlashesOverride: (value: boolean) => {
+    set({ reduceFlashesOverride: value });
     persistSettings(get());
   },
 
@@ -854,6 +932,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const dailyResult = claim.session.status === 'active'
       ? null
       : createDailyResult(claim.session);
+    if (dailyResult) {
+      recordPlaytestEvent('daily_complete', {
+        status: dailyResult.status,
+        solved: dailyResult.solvedCount,
+      });
+      if (dailyResult.status === 'lost') {
+        recordPlaytestEvent('daily_loss', {
+          round: dailySession.currentRoundIndex + 1,
+          solved: dailyResult.solvedCount,
+        });
+      }
+    }
 
     const progress = dailyResult
       ? applyDailyStreak(get().progress, dailyResult.date)
@@ -901,6 +991,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (dailyResult?.goldFeatherEarned) {
       get().grantGoldFeather();
     }
+    if (dailyResult) flushPlaytestSummary('daily');
   },
 
   revealDailyClues: (elapsedMs: number) => {

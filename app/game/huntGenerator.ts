@@ -1,5 +1,6 @@
 import { EmotionalRole, HiddenPair, SessionStep, WordStep } from './types';
 import rawHuntData from '../../assets/data/huntData.json';
+import { createSeededRng } from './seededRandom';
 
 type HuntWordData = {
   difficulty: string;
@@ -78,17 +79,6 @@ function hapticsFromPlan(plan: Phase[]): ('light' | 'medium' | 'heavy')[] {
 }
 
 // Mulberry32 seeded PRNG — deterministic shuffle per seed
-function seededRng(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s += 0x6d2b79f5;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
-  };
-}
-
 function shuffle<T>(arr: T[], rng: () => number): T[] {
   const out = [...arr];
   for (let i = out.length - 1; i > 0; i--) {
@@ -162,6 +152,7 @@ function buildWordStep(
   hapticTier: 'light' | 'medium' | 'heavy',
   isHauntReturn: boolean,
   isBoss: boolean,
+  isMasteryRematch: boolean,
   rng: () => number,
 ): WordStep {
   const data = db[word];
@@ -177,6 +168,7 @@ function buildWordStep(
     masks: selectVisibleMasks(data.masks, rng),
   };
   if (isBoss) step.bossModifier = true;
+  if (isMasteryRematch) step.isMasteryRematch = true;
   if (isHauntReturn) step.isHauntReturn = true;
   if (data.hiddenMeaning != null) step.hiddenMeaning = data.hiddenMeaning;
   if (data.hiddenTrap != null) step.hiddenTrap = data.hiddenTrap;
@@ -190,16 +182,20 @@ export function generateHunt(opts: {
   ghostWordIds?: string[];
   length?: number;
   gentle?: boolean;
+  seed?: number;
 }): SessionStep[] {
-  const { masteredWords = [], ghostWordIds = [], length = SESSION_LENGTH, gentle = false } = opts;
+  const {
+    masteredWords = [],
+    ghostWordIds = [],
+    length = SESSION_LENGTH,
+    gentle = false,
+    seed = Date.now(),
+  } = opts;
   const mastered = new Set(masteredWords.map(w => w.toUpperCase()));
   const selected = new Set<string>();
-  const rng = seededRng(Date.now());
+  const rng = createSeededRng(seed);
 
   const plan = buildPhasePlan(length);
-  const roles = rolesFromPlan(plan);
-  const haptics = hapticsFromPlan(plan);
-
   const prep = (pool: string[]) =>
     gentle ? easyFirst(shuffle(pool, rng)) : shuffle(pool, rng);
 
@@ -245,23 +241,51 @@ export function generateHunt(opts: {
     }
   }
 
-  const bossWord = pickForPhase('boss');
-
   const hauntIdx = length - 3; // ghost slot, then one panic word, then boss last
   const bossIdx = length - 1;
 
-  const slots: { word: string; isHauntReturn?: true }[] = [];
+  const eligibleBossPools = [bossPool, panicPool, tensionPool]
+    .map(pool => pool.filter(hasBossContent));
+  let bossWord: string | null = null;
+  for (const pool of eligibleBossPools) {
+    bossWord = pool.find(word => !selected.has(word)) ?? null;
+    if (bossWord) break;
+  }
+
+  let isMasteryRematch = false;
+  if (!bossWord) {
+    const masteredBossPool = prep(
+      Object.keys(db).filter(word => mastered.has(word) && hasBossContent(word)),
+    );
+    bossWord = masteredBossPool.find(word => !selected.has(word)) ?? null;
+    isMasteryRematch = bossWord !== null;
+  }
+  if (!bossWord) {
+    throw new Error('[huntGenerator] No boss-capable word is available');
+  }
+  selected.add(bossWord);
+
+  const slotPlan = [...plan];
+  if (ghostWord && hauntIdx + 1 < bossIdx) {
+    // A returning Haunt is already a peak. Follow it with a recognition-first
+    // Flow beat before Polly's Word instead of stacking three peaks in a row.
+    slotPlan[hauntIdx + 1] = 'flow';
+  }
+  const roles = rolesFromPlan(slotPlan);
+  const haptics = hapticsFromPlan(slotPlan);
+
+  const slots: { word: string; isHauntReturn?: true; isMasteryRematch?: true }[] = [];
   for (let i = 0; i < length; i++) {
     if (i === bossIdx) {
-      slots.push({ word: bossWord });
+      slots.push({ word: bossWord, ...(isMasteryRematch ? { isMasteryRematch: true as const } : {}) });
     } else if (i === hauntIdx && ghostWord) {
       slots.push({ word: ghostWord, isHauntReturn: true });
     } else {
-      slots.push({ word: pickForPhase(plan[i]) });
+      slots.push({ word: pickForPhase(slotPlan[i]) });
     }
   }
 
-  return slots.map(({ word, isHauntReturn }, idx) =>
-    buildWordStep(word, roles[idx], haptics[idx], !!isHauntReturn, idx === bossIdx, rng),
+  return slots.map(({ word, isHauntReturn, isMasteryRematch: rematch }, idx) =>
+    buildWordStep(word, roles[idx], haptics[idx], !!isHauntReturn, idx === bossIdx, !!rematch, rng),
   );
 }
