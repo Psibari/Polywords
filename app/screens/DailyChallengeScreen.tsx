@@ -51,13 +51,17 @@ import {
   getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
 import DailyAnswerCard, {
+  DAILY_CARD_TIMING,
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
 import QuillScrollPanel from '../components/ui/QuillScrollPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
-import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
+import {
+  usePollyAmbientMotion,
+  useReducedMotionPreference,
+} from '../hooks/usePollyAmbientMotion';
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
@@ -141,6 +145,7 @@ function ClueStage({
   clues: [string, string, string];
   revealedCount: 1 | 2 | 3;
 }) {
+  const reduceMotion = useReducedMotionPreference();
   const clue1Progress = useRef(new Animated.Value(0)).current;
   const clue2Progress = useRef(new Animated.Value(0)).current;
   const clue3Progress = useRef(new Animated.Value(0)).current;
@@ -162,6 +167,11 @@ function ClueStage({
         return;
       }
 
+      if (reduceMotion !== false) {
+        progress.setValue(1);
+        return;
+      }
+
       progress.setValue(0);
       Animated.timing(progress, {
         toValue: 1,
@@ -171,7 +181,7 @@ function ClueStage({
       }).start();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealedCount, clueKey]);
+  }, [revealedCount, clueKey, reduceMotion]);
 
   return (
     <>
@@ -406,6 +416,7 @@ function ResultsOverlay({
 type Props = { navigation: any };
 
 export default function DailyChallengeScreen({ navigation }: Props) {
+  const reduceMotion = useReducedMotionPreference();
   const dailySession = useGameStore((s) => s.dailySession);
   const dailyResult = useGameStore((s) => s.dailyResult);
   const dailyLastClaimResult = useGameStore((s) => s.dailyLastClaimResult);
@@ -517,14 +528,21 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setCardStates(map);
 
     rollProgress.stopAnimation();
-    rollProgress.setValue(0);
-    Animated.timing(rollProgress, {
-      toValue: 1,
-      duration: 320,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-    const measureTimer = setTimeout(measureClueTarget, 420);
+    if (reduceMotion !== false) {
+      rollProgress.setValue(1);
+    } else {
+      rollProgress.setValue(0);
+      Animated.timing(rollProgress, {
+        toValue: 1,
+        duration: 320,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    }
+    const measureTimer = setTimeout(
+      measureClueTarget,
+      reduceMotion !== false ? 0 : 420,
+    );
     return () => clearTimeout(measureTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.currentRoundIndex]);
@@ -544,7 +562,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         const current = dailySessionRef.current;
         if (!current || current.status !== 'active') return;
         revealDailyClues(Date.now() - roundStartRef.current);
-      }, 500);
+      }, 250);
 
       return () => {
         clearInterval(id);
@@ -611,21 +629,28 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // that already landed and sat there waiting to be covered.
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       playSfx('correctClaim');
+      const curtainCloseMs = reduceMotion !== false ? 120 : 600;
+      const curtainHoldMs = reduceMotion !== false ? 180 : 500;
+      const curtainOpenMs = reduceMotion !== false ? 120 : 400;
       Animated.sequence([
         Animated.timing(revealProgress, {
           toValue: 1,
-          duration: 600,
+          duration: curtainCloseMs,
           easing: Easing.bezier(0.23, 1, 0.32, 1),
           useNativeDriver: true,
         }),
-        Animated.delay(500), // hold the reveal so it's readable before the next round rolls in
+        Animated.delay(curtainHoldMs),
         Animated.timing(revealProgress, {
           toValue: 0,
-          duration: 400,
+          duration: curtainOpenMs,
           easing: Easing.bezier(0.23, 1, 0.32, 1),
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(({ finished }) => {
+        if (!finished || completingCandidateRef.current !== candidate) return;
+        completingCandidateRef.current = null;
+        claimDailyAnswer(candidate);
+      });
 
       // Remaining cards fade out
       setTimeout(() => {
@@ -646,47 +671,51 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     playSfx('trapWrong');
+    const wrongExitMs = reduceMotion !== false
+      ? DAILY_CARD_TIMING.reducedWrongExitMs
+      : DAILY_CARD_TIMING.wrongExitMs;
     setTimeout(() => {
       claimDailyAnswer(candidate);
       setLocked(false);
-    }, 620);
+    }, wrongExitMs);
   }
 
   function handleCorrectExitComplete(candidate: string) {
     if (completingCandidateRef.current !== candidate) return;
-    completingCandidateRef.current = null;
     intakeScale.setValue(1);
 
-    Animated.sequence([
-      Animated.timing(intakeScale, {
-        toValue: 1.045,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-      Animated.timing(intakeScale, {
-        toValue: 1,
-        duration: 260,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    if (reduceMotion === false) {
+      Animated.sequence([
+        Animated.timing(intakeScale, {
+          toValue: 1.045,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(intakeScale, {
+          toValue: 1,
+          duration: 260,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
 
     const isFinalRound =
       dailySession?.currentRoundIndex === DAILY_ROUND_COUNT - 1;
 
     if (!isFinalRound) {
-      setTimeout(() => {
-        Animated.timing(rollProgress, {
-          toValue: 0,
-          duration: 260,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
-      }, 430);
+      if (reduceMotion !== false) {
+        rollProgress.setValue(0);
+      } else {
+        setTimeout(() => {
+          Animated.timing(rollProgress, {
+            toValue: 0,
+            duration: 260,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+          }).start();
+        }, 430);
+      }
     }
-
-    setTimeout(() => {
-      claimDailyAnswer(candidate);
-    }, isFinalRound ? 1100 : 720);
   }
 
   async function handleShare() {

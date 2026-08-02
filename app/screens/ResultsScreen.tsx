@@ -527,6 +527,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const detailOpacity = useRef(new Animated.Value(0)).current;
   const detailY = useRef(new Animated.Value(24)).current;
   const ceremonyStartedRef = useRef(false);
+  const [detailsInteractive, setDetailsInteractive] = useState(false);
 
   useEffect(() => {
     if (reduceMotion === null || ceremonyStartedRef.current) return;
@@ -536,6 +537,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
       verdictY.setValue(0);
       detailOpacity.setValue(1);
       detailY.setValue(0);
+      setDetailsInteractive(true);
       return;
     }
     Animated.parallel([
@@ -546,7 +548,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
       Animated.parallel([
         Animated.timing(detailOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
         Animated.timing(detailY, { toValue: 0, duration: 400, useNativeDriver: true }),
-      ]).start();
+      ]).start(({ finished }) => {
+        if (finished) setDetailsInteractive(true);
+      });
     }, 700);
     return () => clearTimeout(t);
   }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -680,6 +684,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
       {/* ── FOOTER — always above Polly's reach, outside the scroll ── */}
       <Animated.View
+        pointerEvents={detailsInteractive ? 'auto' : 'none'}
+        accessibilityElementsHidden={!detailsInteractive}
+        importantForAccessibility={detailsInteractive ? 'auto' : 'no-hide-descendants'}
         style={[rs.footer, { opacity: detailOpacity, transform: [{ translateY: detailY }] }]}
       >
         {hasGoldFeather && (

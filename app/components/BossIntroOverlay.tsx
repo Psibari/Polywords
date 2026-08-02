@@ -5,10 +5,8 @@ import { FONTS } from '../constants/fonts';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 
-// First-boss-only warning. Plays over the existing boss entrance (haptics,
-// board shake, Polly's "This word stays mine." visit) rather than replacing
-// it — this only supplies the explanation that entrance never carried.
-// Shown once, ever, gated by BOSS_INTRO_SEEN_KEY in GameScreen.
+// First-boss-only warning. GameScreen holds the board unmounted until this is
+// dismissed, so the entrance and decision clock begin together afterward.
 
 type Props = {
   onDismiss: () => void;

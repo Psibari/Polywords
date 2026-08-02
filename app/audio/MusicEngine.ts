@@ -78,6 +78,8 @@ const LOAD_RETRY_MS = [60, 150, 300, 600, 1200];
 let transportPaused = false;
 let loadRetryId: ReturnType<typeof setTimeout> | null = null;
 let loadRetryAttempt = 0;
+let transitionRequestedAt = 0;
+let tracedTransitionToken = -1;
 
 function clearLoadRetry(): void {
   if (loadRetryId !== null) clearTimeout(loadRetryId);
@@ -89,6 +91,10 @@ function warnDev(message: string, error?: unknown): void {
   if (!__DEV__) return;
   if (error === undefined) console.warn(`[MusicEngine] ${message}`);
   else console.warn(`[MusicEngine] ${message}`, error);
+}
+
+function traceDev(message: string): void {
+  if (__DEV__) console.info(`[MusicEngine timing] ${message}`);
 }
 
 function clearPauseTimer(): void {
@@ -188,6 +194,12 @@ function playLoadedTrack(token: number): void {
   try {
     livePlayer.loop = true;
     if (!livePlayer.playing) {
+      if (transitionRequestedAt > 0 && tracedTransitionToken !== token) {
+        tracedTransitionToken = token;
+        traceDev(
+          `${desiredTrack} play requested ${Math.round(performance.now() - transitionRequestedAt)}ms after switch`,
+        );
+      }
       livePlayer.play();
       fadeVolumeTo(targetVolume(), FADE_IN_MS);
     } else if (
@@ -211,6 +223,7 @@ function switchTrack(nextTrack: TrackKey): void {
 
   transitionToken += 1;
   const token = transitionToken;
+  transitionRequestedAt = performance.now();
   configuredTrackToken = -1;
   cancelFade();
   clearPauseTimer();

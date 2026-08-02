@@ -21,6 +21,7 @@ import {
   GameState,
 } from './polyRunEngine';
 import { Mask, SessionStep, WordStep } from './types';
+import { generateHunt } from './huntGenerator';
 
 function eq<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
@@ -345,6 +346,67 @@ function fresh(mercyReviveLives = 0): GameState {
   s = resolveMysteryTile(s, { correct: false, visiblePerfect: false });
   eq(s.bossOutcome, 'haunted', 'gauntlet.wrongTile2.hauntedImmediately');
   eq(s.mysteryResolved, 2, 'gauntlet.wrongTile2.resolvedCount');
+}
+
+{
+  const fledgling = generateHunt({ length: 8, gentle: true });
+  const roles = fledgling
+    .filter((step): step is WordStep => step.kind === 'word')
+    .map(step => step.emotionalRole);
+  eq(roles.filter(role => role === 'confidence').length, 2, 'fledgling.twoConfidenceRounds');
+  eq(roles.filter(role => role === 'panic' || role === 'adrenaline').length, 1, 'fledgling.onePanicRound');
+  eq(roles[roles.length - 1], 'finalBoss', 'fledgling.bossStillLast');
+}
+
+{
+  // A persisted plan survives a presenter remount and already-resolved pair
+  // indexes cannot score or advance twice.
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, [true, false, true]);
+  eq(s.mysteryTileTruths.length, 3, 'gauntlet.resume.planStored');
+  eq(s.mysteryTileTruths[1], false, 'gauntlet.resume.planTruthStored');
+
+  s = resolveMysteryTile(s, {
+    correct: true,
+    visiblePerfect: true,
+    pairIndex: 1,
+  });
+  const afterFirst = s;
+  s = beginMysteryGauntlet(s, [false, false, false]);
+  eq(s.mysteryResolved, 1, 'gauntlet.resume.beginDoesNotResetProgress');
+  eq(s.mysteryTileTruths[0], true, 'gauntlet.resume.beginKeepsOriginalPlan');
+
+  s = resolveMysteryTile(s, {
+    correct: true,
+    visiblePerfect: true,
+    pairIndex: 1,
+  });
+  eq(s.mysteryResolved, afterFirst.mysteryResolved, 'gauntlet.resume.duplicatePairIgnored');
+  eq(s.score, afterFirst.score, 'gauntlet.resume.duplicatePairNoScore');
+}
+
+{
+  // A terminal outcome is immutable even if a stale presenter submits again.
+  let s = fresh();
+  s = { ...s, stepIndex: 1 };
+  s = beginMysteryGauntlet(s, [true]);
+  s = resolveMysteryTile(s, {
+    correct: true,
+    visiblePerfect: true,
+    pairIndex: 0,
+  });
+  const terminalScore = s.score;
+  const terminalResolved = s.mysteryResolved;
+  s = resolveMysteryTile(s, {
+    correct: false,
+    visiblePerfect: false,
+    pairIndex: 0,
+  });
+  eq(s.bossOutcome, 'mastered', 'gauntlet.terminal.outcomeImmutable');
+  eq(s.score, terminalScore, 'gauntlet.terminal.scoreImmutable');
+  eq(s.mysteryResolved, terminalResolved, 'gauntlet.terminal.countImmutable');
+  eq(isMysteryTerminal(s, false), false, 'gauntlet.terminal.noSecondTerminalEvent');
 }
 
 {

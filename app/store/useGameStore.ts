@@ -221,8 +221,9 @@ type GameStore = {
     correct: boolean,
     visiblePerfect: boolean,
     failedPair?: { real: string; trap: string },
+    pairIndex?: number,
   ) => void;
-  beginMysteryGauntlet: (total: number) => void;
+  beginMysteryGauntlet: (plan: number | readonly boolean[]) => void;
   completeWord: () => void;
   clearPollyTrigger: () => void;
   setPollyTrigger: (trigger: GameState['pollyTrigger']) => void;
@@ -346,13 +347,35 @@ export const useGameStore = create<GameStore>((set, get) => ({
         await AsyncStorage.removeItem(GAME_KEY);
         return false;
       }
-      // gauntletActive/gauntletCorrectCount are transient UI-session state
-      // (the actual gauntlet phase lives in useBoardMechanics component
-      // state, not here) — force them back to their idle values on resume
-      // so a snapshot saved mid-gauntlet can't leave the feather-row HUD
-      // stuck dimmed after the app is backgrounded/killed and reopened.
+      const mysteryTotal = Math.max(0, saved.mysteryTotal ?? 0);
+      const mysteryResolved = Math.min(
+        mysteryTotal,
+        Math.max(0, saved.mysteryResolved ?? 0),
+      );
+      const savedResolvedPairIndices = Array.isArray(saved.mysteryResolvedPairIndices)
+        ? saved.mysteryResolvedPairIndices
+        : Array.from({ length: mysteryResolved }, (_, index) => index);
+      const mysteryResolvedPairIndices = savedResolvedPairIndices
+        .filter(index => Number.isInteger(index) && index >= 0 && index < mysteryTotal)
+        .slice(0, mysteryResolved);
+      const mysteryTileTruths = Array.isArray(saved.mysteryTileTruths)
+        ? saved.mysteryTileTruths.slice(0, mysteryTotal).map(Boolean)
+        : [];
+      const gauntletInProgress =
+        saved.bossOutcome === 'pending' &&
+        mysteryTotal > 0 &&
+        mysteryResolved < mysteryTotal;
+
       set({
-        game: { ...saved, gauntletActive: false, gauntletCorrectCount: 0 },
+        game: {
+          ...saved,
+          mysteryTotal,
+          mysteryResolved,
+          mysteryTileTruths,
+          mysteryResolvedPairIndices,
+          gauntletActive: gauntletInProgress,
+          gauntletCorrectCount: gauntletInProgress ? mysteryResolved : 0,
+        },
         hasResumableGame: true,
       });
       return true;
@@ -402,14 +425,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  beginMysteryGauntlet: (total) =>
-    set((s) => ({ game: beginMysteryGauntletFn(s.game, total) })),
+  beginMysteryGauntlet: (plan) =>
+    set((s) => ({ game: beginMysteryGauntletFn(s.game, plan) })),
 
-  resolveMystery: (correct, visiblePerfect, failedPair) => {
+  resolveMystery: (correct, visiblePerfect, failedPair, pairIndex) => {
     const prev = get().game;
     const step = prev.session[prev.stepIndex];
-    const terminal = isMysteryTerminal(prev, correct);
-    const next = resolveMysteryTile(prev, { correct, visiblePerfect });
+    const pairAlreadyResolved = pairIndex !== undefined &&
+      (prev.mysteryResolvedPairIndices ?? []).includes(pairIndex);
+    const terminal = !pairAlreadyResolved && isMysteryTerminal(prev, correct);
+    const next = resolveMysteryTile(prev, { correct, visiblePerfect, pairIndex });
     set({ game: next });
     if (!terminal) return;
     if (step.kind !== 'word') return;
@@ -452,7 +477,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       game: {
         ...s.game,
         gauntletActive: active,
-        gauntletCorrectCount: active ? 0 : s.game.gauntletCorrectCount,
+        gauntletCorrectCount: active
+          ? s.game.mysteryResolved
+          : s.game.gauntletCorrectCount,
       },
     })),
 

@@ -218,7 +218,7 @@ export function SwipeMask({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
 
-      if (reduceMotion) {
+      if (reduceMotion !== false) {
         // Reduce Motion: skip the magnetic-flight physics (a screen-spanning
         // per-frame travel toward the book) for a simple in-place fade.
         // onCardTouch still fires at a sensible "arrival" moment so the
@@ -328,12 +328,12 @@ export function SwipeMask({
       setFlashRed(true);
       timers.push(setTimeout(() => setFlashRed(false), 145));
 
-      if (reduceMotion) {
-        // Reduce Motion: no fling/rotate/fall — hold still so the caption
-        // (rendered below) actually gets read, then a plain crossfade out.
+      if (reduceMotion !== false) {
+        // Reduce Motion: no fling/rotate/fall. Keep the acknowledgement beat,
+        // then crossfade on the same overall cadence as the standard path.
         timers.push(setTimeout(() => {
           tileOpacity.value = withTiming(0, { duration: 220, easing: ReaEasing.in(ReaEasing.ease) });
-        }, 900));
+        }, 360));
         timers.push(setTimeout(() => {
           RNAnimated.parallel([
             RNAnimated.timing(outerHeightAnim,    { toValue: 0, duration: 180, useNativeDriver: false }),
@@ -341,8 +341,8 @@ export function SwipeMask({
           ]).start(({ finished }) => {
             if (finished) fireExitCompleteOnce();
           });
-        }, 1120));
-        timers.push(setTimeout(fireExitCompleteOnce, 1340));
+        }, 560));
+        timers.push(setTimeout(fireExitCompleteOnce, 760));
       } else {
         const fallDistance = Dimensions.get('window').height + 180;
 
@@ -394,7 +394,7 @@ export function SwipeMask({
       grabLift.value = withTiming(0, { duration: 120 });
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-      if (reduceMotion) {
+      if (reduceMotion !== false) {
         // Reduce Motion: keep the shard burst (a fixed-position particle
         // effect elsewhere on screen, not this tile flinging/rotating) as
         // the outcome signal, but drop the tile's own toss physics for a

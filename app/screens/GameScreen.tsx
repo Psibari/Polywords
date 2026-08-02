@@ -714,9 +714,8 @@ function GameDirector({ navigation }: { navigation: any }) {
   }, []);
 
   // ── First-boss-only warning overlay ─────────────────────────────
-  // Plays over the existing boss entrance rather than gating it — the
-  // entrance's haptics/shake/Polly visit fire on their own timers below,
-  // unaffected by whether this has been seen before.
+  // The first encounter gates the board mount so its entrance, haptics, and
+  // decision clock all begin after the player dismisses this explanation.
   const [bossIntroSeen, setBossIntroSeen] = useState<boolean | null>(null);
   useEffect(() => {
     AsyncStorage.getItem(BOSS_INTRO_SEEN_KEY)
@@ -926,6 +925,18 @@ function GameDirector({ navigation }: { navigation: any }) {
     !isDone &&
     activeStep.kind === 'word' &&
     activeStep.eventType === 'bossWord';
+  const gameplayGateActive =
+    introSeen !== true ||
+    (isBossRound && bossIntroSeen !== true);
+
+  useEffect(() => {
+    if (!gameplayGateActive || game.status !== 'playing') return;
+    if (idleTimerRef.current !== null) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+    setIsIdleStatic(false);
+  }, [gameplayGateActive, game.status]);
 
   return (
     <View style={styles.screen}>
@@ -974,7 +985,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       {!isDone && <TopBar navigation={navigation} />}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
-      ) : (
+      ) : !gameplayGateActive ? (
         <GameContent
           spawnEffect={spawnEffect}
           onTrapCaught={handleTrapCaught}
@@ -983,7 +994,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           fireIntroVisit={introVisitPending}
           onIntroVisitFired={() => setIntroVisitPending(false)}
         />
-      )}
+      ) : null}
       {__DEV__ && !isDone && !isBossRound && (
         <View pointerEvents="box-none" style={styles.devBossOverlay}>
           <Pressable

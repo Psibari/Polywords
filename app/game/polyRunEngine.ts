@@ -82,6 +82,10 @@ export type GameState = {
   bossFlawless: boolean;
   mysteryTotal: number;
   mysteryResolved: number;
+  // Persisted face plan and resolved pair indexes make a partially completed
+  // boss gauntlet resumable without rerolling or replaying judged tiles.
+  mysteryTileTruths: boolean[];
+  mysteryResolvedPairIndices: number[];
   // UI-session state for the boss gauntlet's feather-row inert visual and
   // (future) count-up indicator — not engine logic, so no pure functions
   // here beyond this type/initial value.
@@ -156,6 +160,8 @@ export function createGame(
     bossFlawless: false,
     mysteryTotal: 0,
     mysteryResolved: 0,
+    mysteryTileTruths: [],
+    mysteryResolvedPairIndices: [],
     gauntletActive: false,
     gauntletCorrectCount: 0,
   };
@@ -418,41 +424,89 @@ export function submitBossMastery(state: GameState): GameState {
 
 // ─── MYSTERY TILE RESOLUTION — single source of truth for boss/haunt outcome ─
 
-export function beginMysteryGauntlet(state: GameState, total: number): GameState {
-  return { ...state, mysteryTotal: total, mysteryResolved: 0 };
+export function beginMysteryGauntlet(
+  state: GameState,
+  plan: number | readonly boolean[],
+): GameState {
+  if (state.bossOutcome !== 'pending') return state;
+
+  const total = typeof plan === 'number' ? plan : plan.length;
+  const truths = typeof plan === 'number' ? [] : [...plan];
+
+  // Mounting a resumed board must not erase progress that was already saved.
+  if (state.mysteryTotal === total && state.mysteryResolved > 0) {
+    return {
+      ...state,
+      mysteryTileTruths:
+        state.mysteryTileTruths?.length === total
+          ? state.mysteryTileTruths
+          : truths,
+    };
+  }
+
+  return {
+    ...state,
+    mysteryTotal: total,
+    mysteryResolved: 0,
+    mysteryTileTruths: truths,
+    mysteryResolvedPairIndices: [],
+  };
 }
 
 export function resolveMysteryTile(
   state: GameState,
-  opts: { correct: boolean; visiblePerfect: boolean },
+  opts: { correct: boolean; visiblePerfect: boolean; pairIndex?: number },
 ): GameState {
   const step = currentStep(state);
   const isBoss = step.kind === 'word' && step.eventType === 'bossWord';
   if (!isBoss) return state; // Returning Haunt: no score/outcome change here
 
-  const resolved = state.mysteryResolved + 1;
+  // Terminal outcomes and already-judged pair indexes are idempotent. This
+  // prevents a remounted presenter from awarding mastery twice or reversing
+  // a saved outcome after an app background/resume.
+  if (state.bossOutcome !== 'pending') return state;
   const total = Math.max(1, state.mysteryTotal);
+  if (state.mysteryResolved >= total) return state;
+
+  const resolvedPairIndices = state.mysteryResolvedPairIndices ?? [];
+  const pairIndex = opts.pairIndex ?? state.mysteryResolved;
+  if (resolvedPairIndices.includes(pairIndex)) return state;
+
+  const resolved = state.mysteryResolved + 1;
+  const nextResolvedPairIndices = [...resolvedPairIndices, pairIndex];
 
   if (!opts.correct) {
     // Abort on first wrong — the gauntlet ends here.
-    return { ...state, mysteryResolved: resolved, bossOutcome: 'haunted' };
+    return {
+      ...state,
+      mysteryResolved: resolved,
+      mysteryResolvedPairIndices: nextResolvedPairIndices,
+      bossOutcome: 'haunted',
+    };
   }
 
   if (resolved < total) {
     // Survived this tile, gauntlet continues. No outcome, no mastery score.
-    return { ...state, mysteryResolved: resolved };
+    return {
+      ...state,
+      mysteryResolved: resolved,
+      mysteryResolvedPairIndices: nextResolvedPairIndices,
+    };
   }
 
   const scored = submitBossMastery(state);
   return {
     ...scored,
     mysteryResolved: resolved,
+    mysteryResolvedPairIndices: nextResolvedPairIndices,
     bossOutcome: 'mastered',
     bossFlawless: opts.visiblePerfect,
   };
 }
 
 export function isMysteryTerminal(state: GameState, correct: boolean): boolean {
+  if (state.bossOutcome !== 'pending') return false;
+  if (state.mysteryResolved >= Math.max(1, state.mysteryTotal)) return false;
   if (!correct) return true;
   return state.mysteryResolved + 1 >= Math.max(1, state.mysteryTotal);
 }
@@ -542,6 +596,10 @@ export function applyGoldFeather(state: GameState): GameState {
     bossFlawless: false,
     mysteryTotal: 0,
     mysteryResolved: 0,
+    mysteryTileTruths: [],
+    mysteryResolvedPairIndices: [],
+    gauntletActive: false,
+    gauntletCorrectCount: 0,
   };
 }
 

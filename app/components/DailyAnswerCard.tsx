@@ -13,8 +13,16 @@ import { playSfx } from '../audio/sfx';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
 import DailyCardFace from './ui/DailyCardFace';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
+
+export const DAILY_CARD_TIMING = {
+  correctExitMs: 650,
+  wrongExitMs: 620,
+  reducedCorrectExitMs: 220,
+  reducedWrongExitMs: 240,
+} as const;
 
 type Props = {
   label: string;
@@ -53,6 +61,7 @@ export default function DailyAnswerCard({
   claimTarget = null,
   onCorrectExitComplete,
 }: Props) {
+  const reduceMotion = useReducedMotionPreference();
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new Animated.Value(0)).current;
   const entryOpacity = useRef(new Animated.Value(0)).current;
@@ -118,6 +127,11 @@ export default function DailyAnswerCard({
     const entryDistance = Dimensions.get('window').width * 0.7;
     entryTranslateX.stopAnimation();
     entryOpacity.stopAnimation();
+    if (reduceMotion !== false) {
+      entryTranslateX.setValue(0);
+      entryOpacity.setValue(1);
+      return;
+    }
     entryTranslateX.setValue(enterFromLeft ? -entryDistance : entryDistance);
     entryOpacity.setValue(0);
 
@@ -143,6 +157,7 @@ export default function DailyAnswerCard({
     enterFromLeft,
     entryOpacity,
     entryTranslateX,
+    reduceMotion,
     roundKey,
   ]);
 
@@ -182,6 +197,27 @@ export default function DailyAnswerCard({
         useNativeDriver: true,
       }).start();
       rotation.setValue(0);
+
+      if (reduceMotion !== false) {
+        Animated.parallel([
+          Animated.timing(opacity, {
+            toValue: 0,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 0.96,
+            duration: 180,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        completionTimer = setTimeout(() => {
+          onCorrectExitCompleteRef.current?.(labelRef.current);
+        }, DAILY_CARD_TIMING.reducedCorrectExitMs);
+        return () => {
+          if (completionTimer) clearTimeout(completionTimer);
+        };
+      }
 
       shellRef.current?.measureInWindow((pageX, pageY, width, height) => {
         const targetTranslateX = target.x - (pageX + width / 2);
@@ -231,7 +267,7 @@ export default function DailyAnswerCard({
 
       completionTimer = setTimeout(() => {
         onCorrectExitCompleteRef.current?.(labelRef.current);
-      }, 650);
+      }, DAILY_CARD_TIMING.correctExitMs);
 
       return () => {
         if (completionTimer) clearTimeout(completionTimer);
@@ -239,6 +275,23 @@ export default function DailyAnswerCard({
     }
 
     if (state === 'wrong') {
+      if (reduceMotion !== false) {
+        scale.setValue(1);
+        gripGlow.setValue(0);
+        Animated.parallel([
+          Animated.timing(opacity, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scale, {
+            toValue: 0.97,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        return;
+      }
       const fallDistance = Dimensions.get('window').height * 0.72;
       scale.setValue(1);
       gripGlow.setValue(0);
@@ -367,7 +420,7 @@ export default function DailyAnswerCard({
         useNativeDriver: true,
       }),
     ]).start();
-  }, [gripGlow, opacity, rotation, scale, state, translateX, translateY]);
+  }, [gripGlow, opacity, reduceMotion, rotation, scale, state, translateX, translateY]);
 
   const panResponder = useRef(
     PanResponder.create({

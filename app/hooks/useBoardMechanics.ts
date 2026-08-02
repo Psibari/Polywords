@@ -114,6 +114,9 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
   const isFinalGateStep = isBoss || isHaunt;
+  const resumedBossOutcome = isBoss && game.bossOutcome !== 'pending'
+    ? game.bossOutcome
+    : null;
   const kicker = eventKicker(step);
 
   const visibleGridMasks = (game.shuffledMasks[game.stepIndex] ?? step.masks)
@@ -131,13 +134,15 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() =>
     buildInitialTileStates(step.masks, game.swipedUpIds, game.swipedDownIds));
 
-  const completedRef                 = useRef(false);
-  const gateTriggeredRef             = useRef(false);
+  const completedRef                 = useRef(resumedBossOutcome !== null);
+  const gateTriggeredRef             = useRef(resumedBossOutcome !== null);
   const wrongSwipeOccurred           = useRef(game.mistakesOnWord > 0);
   const visiblePerfectRef            = useRef(game.mistakesOnWord === 0);
   const preMysteryChainMultiplierRef = useRef(1);
   const gapLockedRef                 = useRef(false);
   const tileIndexInWordRef           = useRef(initialResolvedMaskCount);
+  const resolutionClockRef           = useRef<{ startedAt: number; targetMs: number } | null>(null);
+  const readyTimerRef                = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const ghost = runStartGhostWordIds.includes(step.word)
     ? ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
@@ -196,41 +201,58 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const [outcomeBonusLabel, setOutcomeBonusLabel] = useState<string | undefined>(undefined);
   const outcomeContinueRef = useRef<(() => void) | null>(null);
   const outcomeActiveRef   = useRef(false);
+  const [decisionLocked, setDecisionLocked] = useState(true);
 
-  const inputLocked = wordOutcome !== 'none';
+  const inputLocked = wordOutcome !== 'none' || decisionLocked;
 
   // ── hesitation timers ─────────────────────────────────────────
   const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hes2Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hes3Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Presenter-driven: flips true once entrance animations finish showing the
-  // board, mirroring the old `showBoardContent` gate (that flag is built from
-  // presentation-only readiness state, so it stays owned by the presenter).
-  const [boardContentReady, setBoardContentReady] = useState(false);
-
-  function startHesitationTimers() {
+  function clearHesitationTimers() {
     if (hes1Ref.current !== null) { clearTimeout(hes1Ref.current); hes1Ref.current = null; }
     if (hes2Ref.current !== null) { clearTimeout(hes2Ref.current); hes2Ref.current = null; }
     if (hes3Ref.current !== null) { clearTimeout(hes3Ref.current); hes3Ref.current = null; }
+  }
+
+  function startHesitationTimers() {
+    clearHesitationTimers();
+    if (completedRef.current || outcomeActiveRef.current) return;
     hes1Ref.current = setTimeout(() => firePollyEvent('hesitation3s'), 3000);
     hes2Ref.current = setTimeout(() => firePollyEvent('hesitation6s'), 6000);
     hes3Ref.current = setTimeout(() => firePollyEvent('hesitation9s'), 9000);
   }
 
-  function resetHesitation() {
+  function pauseHesitation() {
     firePollyEvent('hesitationCleared');
+    clearHesitationTimers();
+  }
+
+  function onDecisionReady() {
+    if (resumedBossOutcome && !outcomeActiveRef.current) {
+      setGauntletActive(false);
+      setGatePhase(resumedBossOutcome === 'mastered' ? 'mastered' : 'wrongFail');
+      showWordOutcome(
+        resumedBossOutcome,
+        {
+          bonusLabel: resumedBossOutcome === 'mastered' ? 'BOSS MASTERY' : undefined,
+        },
+        () => completeWord(),
+      );
+      return;
+    }
+    if (completedRef.current || outcomeActiveRef.current) return;
+    gapLockedRef.current = false;
+    setDecisionLocked(false);
     startHesitationTimers();
   }
 
   useEffect(() => {
-    if (!boardContentReady) return;
-    startHesitationTimers();
     return () => {
-      if (hes1Ref.current !== null) clearTimeout(hes1Ref.current);
-      if (hes2Ref.current !== null) clearTimeout(hes2Ref.current);
-      if (hes3Ref.current !== null) clearTimeout(hes3Ref.current);
+      clearHesitationTimers();
+      if (readyTimerRef.current !== null) clearTimeout(readyTimerRef.current);
     };
-  }, [boardContentReady]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Polly reactive triggers (pure brain — no Animated involved) ────────
   useEffect(() => {
@@ -266,9 +288,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   // against picking mid-judgment (one already active) or picking a tile
   // that's already resolved.
   function pickGauntletTile(index: number) {
-    if (activeGauntletTile !== null) return;
+    if (decisionLocked || activeGauntletTile !== null) return;
     const tileIds = gauntletTiles.map(t => t.mask.id);
     if (!isGauntletTilePickable(tileIds, finalTileStates, index)) return;
+    setDecisionLocked(true);
     dropGauntletTile(index);
   }
 
@@ -278,13 +301,14 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // pairs never reaches triggerWrongFail/triggerMasteredBrain (the only
     // places that clear this flag), so setting it earlier would leave
     // gauntletActive stuck true for the rest of the run.
-    setGauntletActive(true);
-
     // One tile per pair, max 3. Which face shows is an independent coin flip
     // per tile, so three tiles is 12.5% guess-through, not 50%.
     const chosen = gauntletPairs.slice(0, 3);
+    const truths = game.mysteryTileTruths?.length === chosen.length
+      ? game.mysteryTileTruths
+      : chosen.map(() => Math.random() < 0.5);
     const tiles: GauntletTile[] = chosen.map((pair, i) => {
-      const useReal = Math.random() < 0.5;
+      const useReal = truths[i];
       return {
         pairIndex: i,
         isReal: useReal,
@@ -298,11 +322,19 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
     // Chain multiplier does not move across the gauntlet, so capture once.
     preMysteryChainMultiplierRef.current = game.chainMultiplier;
-    beginMysteryGauntlet(tiles.length);
+    beginMysteryGauntlet(truths);
+    setGauntletActive(true);
 
     setGatePhase('tiles');
     setGauntletTiles(tiles);
-    setFinalTileStates(new Map(tiles.map(t => [t.mask.id, 'idle' as SwipeMaskState])));
+    const resolvedPairIndices = new Set(game.mysteryResolvedPairIndices ?? []);
+    setFinalTileStates(new Map(tiles.map(t => [
+      t.mask.id,
+      resolvedPairIndices.has(t.pairIndex)
+        ? (t.isReal ? 'correct' : 'trap-caught')
+        : 'idle',
+    ])));
+    onDecisionReady();
   }
 
   function buildHauntedDetail(failedMaskId?: string): string | undefined {
@@ -353,6 +385,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     splitCompletedRef.current = true;
     completedRef.current = true;
     wrongSwipeOccurred.current = true;
+    clearHesitationTimers();
     setGauntletActive(false);
     setGatePhase('wrongFail');
     setFailedHiddenTileId(failedMaskId);
@@ -381,6 +414,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   }
 
   function triggerMasteredBrain() {
+    clearHesitationTimers();
     setGauntletActive(false);
     setGatePhase('mastered');
     completedRef.current = true;
@@ -393,7 +427,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // outcome reveal land at the same moments they did before the split.
     setTimeout(() => {
       firePollyEvent(isBoss ? 'gateMasteredBoss' : 'gateMastered');
-    }, isBoss ? 400 : 2600);
+    }, isBoss ? 400 : isHaunt ? 420 : 2600);
 
     setTimeout(() => {
       showWordOutcome(
@@ -409,53 +443,46 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
           completeWord();
         }
       );
-    }, isBoss ? 700 : 3450);
+    }, isBoss ? 700 : isHaunt ? 950 : 3450);
   }
 
   // ── swipe resolution ─────────────────────────────────────────────────
 
-  function computeGapMs(
+  function computeCadenceMs(
     combo: number,
     resolution: 'up' | 'right' | 'wrong',
     bossWord: boolean,
     tileIndex: number,
     phaseRole: WordStep['emotionalRole'],
   ): number {
-    let gap = 350;
-    // Combo modifier
-    if      (combo <= 3)  gap += 100;
-    else if (combo <= 6)  gap += 0;
-    else if (combo <= 9)  gap -= 80;
-    else                  gap -= 150;
-    // Resolution type
-    if      (resolution === 'right') gap -= 50;
-    else if (resolution === 'wrong') gap += 150;
-    // GPS phase modifier — confidence/flow stay generous, panic tightens,
-    // independent of streak so early rounds never feel rushed and late
-    // rounds never feel slack even after a chain break.
+    // Minimum commitment-to-next-card cadence. SwipeMask may take longer for
+    // a particular result; in that case its real exit duration wins and no
+    // artificial delay is added after it.
+    let cadence = resolution === 'up' ? 650 : resolution === 'right' ? 420 : 760;
+    if (combo >= 7) cadence -= 30;
+    if (combo >= 10) cadence -= 30;
     switch (phaseRole) {
       case 'confidence':
       case 'flow':
-        gap += 60;
+        cadence += 60;
         break;
       case 'panic':
       case 'adrenaline':
-        gap -= 40;
+        cadence -= 40;
         break;
       default:
         break;
     }
-    // Boss modifier
-    if (bossWord) gap -= 100;
-    // Per-tile escalation: each tile within a word tightens the gap
-    gap -= Math.min(tileIndex * 18, 90);
-    return Math.min(Math.max(gap, 150), 500);
+    if (bossWord) cadence -= 40;
+    cadence -= Math.min(tileIndex * 8, 40);
+    return Math.min(Math.max(cadence, 350), 850);
   }
 
   function onSwipeUp(maskId: string) {
     if (wordOutcome !== 'none') return;
     if (gapLockedRef.current) return;
-    resetHesitation();
+    setDecisionLocked(true);
+    pauseHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
       const chainMult = chainMultiplierForStreak(game.streak + 1);
@@ -471,10 +498,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
       setTileStates(prev => new Map(prev).set(maskId, 'correct'));
       firePollyEvent('correct');
-      const gapUp = computeGapMs(game.combo, 'up', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const cadenceUp = computeCadenceMs(game.combo, 'up', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapUp);
+      resolutionClockRef.current = { startedAt: Date.now(), targetMs: cadenceUp };
     } else {
       // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
@@ -484,17 +511,18 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       submitSwipeUp(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrong = computeGapMs(game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const cadenceWrong = computeCadenceMs(game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapWrong);
+      resolutionClockRef.current = { startedAt: Date.now(), targetMs: cadenceWrong };
     }
   }
 
   function onSwipeRight(maskId: string) {
     if (wordOutcome !== 'none') return;
     if (gapLockedRef.current) return;
-    resetHesitation();
+    setDecisionLocked(true);
+    pauseHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
       const chainMultTrap = chainMultiplierForStreak(game.streak + 1);
@@ -503,10 +531,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       submitSwipeDown(maskId);
       perform.onTrapRejected({ mask, tier: trapTier, points: trapPoints });
       setTileStates(prev => new Map(prev).set(maskId, 'trap-caught'));
-      const gapRight = computeGapMs(game.combo, 'right', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const cadenceRight = computeCadenceMs(game.combo, 'right', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapRight);
+      resolutionClockRef.current = { startedAt: Date.now(), targetMs: cadenceRight };
     } else {
       // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
@@ -516,27 +544,41 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       submitSwipeDown(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
-      const gapWrongR = computeGapMs(game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
+      const cadenceWrongR = computeCadenceMs(game.combo, 'wrong', isBoss, tileIndexInWordRef.current, step.emotionalRole);
       tileIndexInWordRef.current += 1;
       gapLockedRef.current = true;
-      setTimeout(() => { gapLockedRef.current = false; }, gapWrongR);
+      resolutionClockRef.current = { startedAt: Date.now(), targetMs: cadenceWrongR };
     }
   }
 
   function onTileExitComplete(maskId: string) {
-    setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
+    const clock = resolutionClockRef.current;
+    const remainingMs = clock
+      ? Math.max(0, clock.targetMs - (Date.now() - clock.startedAt))
+      : 0;
+    const revealNext = () => {
+      readyTimerRef.current = null;
+      resolutionClockRef.current = null;
+      setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
+    };
+    if (remainingMs === 0) {
+      revealNext();
+    } else {
+      readyTimerRef.current = setTimeout(revealNext, remainingMs);
+    }
   }
 
   function resolveGauntletTile(correct: boolean, swipedUp: boolean) {
     if (wordOutcome !== 'none') return;
     const tile = gauntletTiles[gauntletIndex];
     if (!tile) return;
-    resetHesitation();
+    setDecisionLocked(true);
+    pauseHesitation();
 
     const failedPair = correct
       ? undefined
       : { real: gauntletPairs[tile.pairIndex].real, trap: gauntletPairs[tile.pairIndex].trap };
-    resolveMystery(correct, visiblePerfectRef.current, failedPair);
+    resolveMystery(correct, visiblePerfectRef.current, failedPair, tile.pairIndex);
 
     if (!correct) {
       wrongSwipeOccurred.current = true;
@@ -569,7 +611,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       setTileLanded(false);
       // Return to "no active tile" — the remaining spine(s) wait for the
       // player's next pick instead of auto-advancing in sequence.
-      setTimeout(() => setGauntletIndex(-1), 320);
+      setTimeout(() => {
+        setGauntletIndex(-1);
+        setDecisionLocked(false);
+      }, 320);
     }
   }
 
@@ -662,7 +707,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // Not in the original spec list — the two small entry points the
     // presenter needs to report animation-driven timing back into brain
     // state without the hook touching Animated itself.
-    onGauntletTileLanded: () => setTileLanded(true),
-    onBoardContentReady: () => setBoardContentReady(true),
+    onGauntletTileLanded: () => {
+      setTileLanded(true);
+      onDecisionReady();
+    },
+    onDecisionReady,
   };
 }

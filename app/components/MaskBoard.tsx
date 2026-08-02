@@ -742,6 +742,47 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         }).start();
       },
       onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
+        if (!isBoss && hauntOutcome) {
+          // Returning Haunt is a recurring Round-8 payoff, not the final
+          // climax. Give it one decisive banishment beat and return control
+          // before it can overshadow Polly's Word.
+          setMasterStampVisible(true);
+          setMasterCracksVisible(false);
+          setGoldSeedVisible(false);
+          setGoldBloomVisible(false);
+          setSystemStingerWord(null);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Animated.parallel([
+            Animated.timing(masterAllFadeAnim, {
+              toValue: 0.32,
+              duration: 160,
+              useNativeDriver: false,
+            }),
+            Animated.sequence([
+              Animated.timing(masterHeroScale, {
+                toValue: 1.12,
+                duration: 140,
+                easing: Easing.out(Easing.quad),
+                useNativeDriver: true,
+              }),
+              Animated.spring(masterHeroScale, {
+                toValue: 1,
+                damping: 9,
+                stiffness: 210,
+                useNativeDriver: true,
+              }),
+            ]),
+          ]).start();
+          setTimeout(() => setSealReady(true), 180);
+          setTimeout(() => {
+            Animated.timing(masterAllFadeAnim, {
+              toValue: 1,
+              duration: 180,
+              useNativeDriver: false,
+            }).start();
+          }, 680);
+          return;
+        }
         if (!isBoss) {
         // ── Returning Haunt path — existing 12-phase sequence, unchanged ──
         if (!hauntOutcome) {
@@ -1006,6 +1047,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
           useNativeDriver: true,
         }).start(() => {
           Haptics.selectionAsync();
+          mechanics.onDecisionReady();
         });
       }
     }
@@ -1032,10 +1074,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       if (!liveIds.has(maskId)) backingCardAnimsRef.delete(maskId);
     });
   }, [mechanics.remainingMaskIds, backingCardCount]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (showBoardContent) mechanics.onBoardContentReady();
-  }, [showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Polly reactive triggers not tied to a presentation animation move to
   // useBoardMechanics; oneWrongMove stays wired here only through
@@ -1092,6 +1130,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             deckEntranceHapticRef.current = deckEntranceKey;
             Haptics.selectionAsync();
           }
+          mechanics.onDecisionReady();
         });
       }, 120);
     }, cardDelay);
