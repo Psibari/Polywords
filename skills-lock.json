@@ -115,6 +115,12 @@
       "skillPath": "svg-precision-skill/SKILL.md",
       "computedHash": "d3da5e4d782223dabaf78347f43a9983dda9250b1b452857d7380019f60e35ee"
     },
+    "ui-ux-pro-max": {
+      "source": "julianromli/ai-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "6337038fe1fe6bbe1b9f252ab678ee575859190bab6f0f246f4061824eb40875"
+    },
     "vocabulary": {
       "source": "index-how/vocabulary",
       "sourceType": "github",
