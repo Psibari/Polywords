@@ -1083,8 +1083,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
   // Reset guards and animated values on new word
   useEffect(() => {
     cardPopY.setValue(0);
-    prevTopIdRef.current = null;
-    cardPopCountRef.current = 0;
+    // The remaining-mask effect above has already observed the opening card
+    // by the time this reset runs on mount. Preserve that identity explicitly
+    // so card 2 is treated as a real deck advance and fires onDecisionReady;
+    // resetting to null/0 left every card after the opener input-locked.
+    const openingMaskId = mechanics.remainingMaskIds[0] ?? null;
+    prevTopIdRef.current = openingMaskId;
+    cardPopCountRef.current = openingMaskId ? 1 : 0;
     deckRedTint.setValue(0);
     deckSlamY.setValue(0);  // outer wrapper stays static
     const cardDelay = isBoss ? 1200 : 520;
