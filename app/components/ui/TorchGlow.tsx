@@ -6,6 +6,7 @@ import { chamberMaterial } from '../../ui/pwMaterials';
 
 type Props = {
   size?: number;
+  color?: string;
 };
 
 const FLICKER_MIN = 0.55;
@@ -16,7 +17,7 @@ const FLICKER_MS = 1400;
 // wrapping in an absolutely-positioned View of the same `size` — this component
 // only draws the glow itself. Flicker is opacity-only (native driver) and freezes
 // to a static mid glow under reduced motion, same pattern as usePollyAmbientMotion.
-export function TorchGlow({ size = 64 }: Props) {
+export function TorchGlow({ size = 64, color = chamberMaterial.torchGlow }: Props) {
   const id = useId();
   const gradientId = `torchGlow-${id}`;
   const reduceMotion = useReducedMotionPreference();
@@ -59,8 +60,8 @@ export function TorchGlow({ size = 64 }: Props) {
       <Svg width={size} height={size} viewBox="0 0 100 100">
         <Defs>
           <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={chamberMaterial.torchGlow} stopOpacity={0.34} />
-            <Stop offset="1" stopColor={chamberMaterial.torchGlow} stopOpacity={0} />
+            <Stop offset="0" stopColor={color} stopOpacity={0.34} />
+            <Stop offset="1" stopColor={color} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Circle cx="50" cy="50" r="50" fill={`url(#${gradientId})`} />
