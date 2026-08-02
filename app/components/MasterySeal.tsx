@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import Svg, { Path, Ellipse, Circle } from 'react-native-svg';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
 export type MasterySealVariant = 'master' | 'banished';
 
@@ -17,7 +18,7 @@ const PALETTE: Record<MasterySealVariant, {
   blob: string; blobDeep: string; rim: string; text: string;
   stampFill: string; stampRim: string;
 }> = {
-  master:   { blob: '#EF9F27', blobDeep: '#854F0B', rim: '#F5C842', text: '#4A1B0C', stampFill: '#26215C', stampRim: '#F5C842' },
+  master:   { blob: '#F5C842', blobDeep: '#7B2D8B', rim: '#FFFFFF', text: '#0F0D2A', stampFill: '#26215C', stampRim: '#F5C842' },
   banished: { blob: '#9B2D6B', blobDeep: '#5A1A3E', rim: '#F5C842', text: '#F5E8F0', stampFill: '#26215C', stampRim: '#9B2D6B' },
 };
 
@@ -27,6 +28,8 @@ const STAMP_SIZE = 108;
 
 export default function MasterySeal({ x, y, variant, label, onReveal }: Props) {
   const pal = PALETTE[variant];
+  const reduceMotion = useReducedMotionPreference();
+  const sequenceStartedRef = useRef(false);
 
   const blobOpacity = useRef(new Animated.Value(0)).current;
   const blobScale   = useRef(new Animated.Value(0)).current;
@@ -41,6 +44,16 @@ export default function MasterySeal({ x, y, variant, label, onReveal }: Props) {
   const sweepOpacity  = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (reduceMotion === null || sequenceStartedRef.current) return;
+    sequenceStartedRef.current = true;
+    if (reduceMotion) {
+      blobOpacity.setValue(1);
+      blobScale.setValue(1);
+      stampOpacity.setValue(0);
+      labelOpacity.setValue(1);
+      onReveal?.();
+      return;
+    }
     Animated.parallel([
       Animated.timing(blobOpacity, { toValue: 1, duration: 160, useNativeDriver: true }),
       Animated.spring(blobScale,   { toValue: 1, damping: 7, stiffness: 180, useNativeDriver: true }),
@@ -79,7 +92,7 @@ export default function MasterySeal({ x, y, variant, label, onReveal }: Props) {
       clearTimeout(revealTimer);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reduceMotion]);
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>

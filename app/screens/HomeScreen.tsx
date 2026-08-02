@@ -4,11 +4,11 @@ import {
   Animated,
   Dimensions,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { HOME_SKY_TUNING } from '../ui/ambientSkyTuning';
 import HomeEmbers from '../components/HomeEmbers';
@@ -159,6 +159,8 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* Quiet settings — low opacity, never tiny */}
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open Settings"
               onPress={() => navigation.navigate('Settings')}
               style={({ pressed }) => [styles.settingsLinkWrap, pressed && styles.pressed]}
             >

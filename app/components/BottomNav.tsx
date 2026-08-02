@@ -54,6 +54,9 @@ export default function BottomNav({ active, navigation }: BottomNavProps) {
           return (
             <Pressable
               key={tab.key}
+              accessibilityRole="tab"
+              accessibilityLabel={tab.label}
+              accessibilityState={{ selected: isActive }}
               onPress={() => handlePress(tab.key)}
               style={({ pressed }) => [
                 styles.tab,

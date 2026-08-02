@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { playSfx } from '../audio/sfx';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
 import DailyCardFace from './ui/DailyCardFace';

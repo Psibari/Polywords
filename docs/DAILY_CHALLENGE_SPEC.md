@@ -2,6 +2,9 @@
 
 Daily is a deterministic, one-attempt-per-day mode separate from Hunt.
 
+Opening the Daily screen does not spend the attempt. The attempt is recorded only after
+the player confirms `BEGIN DAILY`, after seeing the five-word, two-Chance stakes.
+
 ## Session
 
 - Five rounds with tier curve `[1, 1, 2, 2, 3]`.

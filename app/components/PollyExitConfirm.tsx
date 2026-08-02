@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { POLLY_LINES } from '../game/pollyCharacter';

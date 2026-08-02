@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
@@ -71,7 +72,12 @@ export default function VaultScreen({ navigation }: Props) {
         </Text>
 
         {/* Bookplate — parchment inset, tier seal; tap → rank ladder (Task 7) */}
-        <Pressable style={styles.bookplate} onPress={() => setShowRanks(true)}>
+        <Pressable
+          style={styles.bookplate}
+          onPress={() => setShowRanks(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Open rank ladder. Current rank ${tier.letter}, ${tier.description}`}
+        >
           <View style={styles.bookplateInner}>
             <Text style={[styles.bookplateSeal, { color: tier.color }]}>{tier.letter}</Text>
             <View style={styles.bookplateMeta}>

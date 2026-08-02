@@ -40,7 +40,7 @@ import {
   encodeDailySessionSnapshot,
   recoverDailySession,
 } from '../game/dailySessionPersistence';
-import { applyDailyStreak, getStreakMilestone } from '../game/dailyStreak';
+import { applyDailyStreak, getRewardedStreakMilestone } from '../game/dailyStreak';
 import { setMusicEnabled } from '../audio/MusicEngine';
 import { PollyLineId } from '../game/pollyCharacter';
 import {
@@ -743,7 +743,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         recoveredResult.status,
         recoveredResult.date,
       );
-      const streakMilestone = getStreakMilestone(progress.currentStreak);
+      const streakMilestone = getRewardedStreakMilestone(
+        progress.currentStreak,
+        recoveredResult.goldFeatherEarned,
+      );
 
       set({
         dailySession: recoveredSession,
@@ -765,7 +768,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ]);
         await AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY);
       });
-      if (recoveredResult.goldFeatherEarned || streakMilestone) {
+      if (recoveredResult.goldFeatherEarned) {
         await get().grantGoldFeather();
       } else {
         await get().loadGoldFeather();
@@ -831,7 +834,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const pollyMemory = dailyResult
       ? rememberDaily(get().pollyMemory, dailyResult.status, dailyResult.date)
       : get().pollyMemory;
-    const streakMilestone = dailyResult ? getStreakMilestone(progress.currentStreak) : null;
+    const streakMilestone = dailyResult
+      ? getRewardedStreakMilestone(
+          progress.currentStreak,
+          dailyResult.goldFeatherEarned,
+        )
+      : null;
 
     set({
       dailySession: claim.session,
@@ -863,7 +871,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
     }
 
-    if (dailyResult?.goldFeatherEarned || streakMilestone) {
+    if (dailyResult?.goldFeatherEarned) {
       get().grantGoldFeather();
     }
   },
@@ -1044,9 +1052,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
 // closure. Cleared as soon as the run leaves 'playing' (finished normally
 // or a fresh run started), so a stale snapshot never resumes twice.
 let saveGameTimer: ReturnType<typeof setTimeout> | null = null;
+
+export async function flushActiveGamePersistence(): Promise<void> {
+  if (saveGameTimer) {
+    clearTimeout(saveGameTimer);
+    saveGameTimer = null;
+  }
+
+  const { game } = useGameStore.getState();
+  if (game.status !== 'playing') return;
+  await AsyncStorage.setItem(GAME_KEY, JSON.stringify(game));
+}
+
 useGameStore.subscribe((state, prevState) => {
   if (state.game === prevState.game) return;
-  if (saveGameTimer) clearTimeout(saveGameTimer);
+  if (saveGameTimer) {
+    clearTimeout(saveGameTimer);
+    saveGameTimer = null;
+  }
 
   if (state.game.status !== 'playing') {
     AsyncStorage.removeItem(GAME_KEY).catch(() => {});
@@ -1054,6 +1077,7 @@ useGameStore.subscribe((state, prevState) => {
     return;
   }
   saveGameTimer = setTimeout(() => {
+    saveGameTimer = null;
     AsyncStorage.setItem(GAME_KEY, JSON.stringify(useGameStore.getState().game)).catch(() => {});
   }, 400);
 });

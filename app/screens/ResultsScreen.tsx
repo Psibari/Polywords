@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
@@ -22,6 +22,7 @@ import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/
 import { PW } from '../ui/pwTheme';
 import { homeDare, homeType } from '../ui/pwHomeMaterials';
 import { usePulseScale } from '../hooks/usePulseScale';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import {
   RESULTS_SUB_LOSS,
   RESULTS_VERDICT_BEAT,
@@ -407,6 +408,7 @@ type Props = {
 };
 
 export default function ResultsScreen({ onRestart, onHome }: Props) {
+  const reduceMotion = useReducedMotionPreference();
   const game = useGameStore(s => s.game);
   const ghostRevenge = useGameStore(s => s.ghostRevenge);
   const recordRunComplete = useGameStore(s => s.recordRunComplete);
@@ -440,10 +442,13 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const grade = computeGrade(lives, wordResults);
 
   const rankPulseScale = useRef(new Animated.Value(1)).current;
+  const rankEffectStartedRef = useRef(false);
   useEffect(() => {
-    if (!didRankUp) return;
+    if (!didRankUp || reduceMotion === null || rankEffectStartedRef.current) return;
+    rankEffectStartedRef.current = true;
     playSfx('mastered');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (reduceMotion) return;
     const heavyTimer = setTimeout(
       () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
       180,
@@ -457,7 +462,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
       clearTimeout(heavyTimer);
       pulse.stop();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const recordedRef = useRef(false);
   function recordFinalRunIfNeeded() {
@@ -521,8 +526,18 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const verdictY = useRef(new Animated.Value(20)).current;
   const detailOpacity = useRef(new Animated.Value(0)).current;
   const detailY = useRef(new Animated.Value(24)).current;
+  const ceremonyStartedRef = useRef(false);
 
   useEffect(() => {
+    if (reduceMotion === null || ceremonyStartedRef.current) return;
+    ceremonyStartedRef.current = true;
+    if (reduceMotion) {
+      verdictScale.setValue(1);
+      verdictY.setValue(0);
+      detailOpacity.setValue(1);
+      detailY.setValue(0);
+      return;
+    }
     Animated.parallel([
       Animated.spring(verdictScale, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }),
       Animated.spring(verdictY, { toValue: 0, tension: 120, friction: 8, useNativeDriver: true }),
@@ -534,7 +549,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
       ]).start();
     }, 700);
     return () => clearTimeout(t);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // derived data — the missed/trap callouts are haunt territory, so they only
   // read boss-word results (ghosts are boss-only; non-boss misses are not haunts)

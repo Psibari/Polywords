@@ -19,7 +19,7 @@ import Animated, {
   Easing as ReaEasing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
@@ -482,7 +482,7 @@ export function SwipeMask({
       opacity: tileOpacity.value,
       ...(gauntletCard
         ? {
-            shadowColor: '#FF3FA0',
+            shadowColor: '#9B2D6B',
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.25 + (liftAmount * 0.55),
             shadowRadius: 10 + (liftAmount * 26),
@@ -709,7 +709,7 @@ export function SwipeMask({
           {!isSpecialSplit && gauntletCard && (
             <>
               <LinearGradient
-                colors={['#C23E88', '#6B2D9B', '#2A1C5C']}
+                colors={['#9B2D6B', '#7B2D8B', '#2A1C5C']}
                 locations={[0, 0.55, 1]}
                 start={{ x: 0.1, y: 0 }}
                 end={{ x: 0.9, y: 1 }}

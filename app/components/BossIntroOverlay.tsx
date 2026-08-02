@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 
 // First-boss-only warning. Plays over the existing boss entrance (haptics,
@@ -15,17 +16,26 @@ type Props = {
 
 export function BossIntroOverlay({ onDismiss }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useReducedMotionPreference();
 
   useEffect(() => {
+    if (reduceMotion !== false) {
+      opacity.setValue(1);
+      return;
+    }
     Animated.timing(opacity, {
       toValue: 1,
       duration: 280,
       useNativeDriver: true,
     }).start();
-  }, [opacity]);
+  }, [opacity, reduceMotion]);
 
   function handleBegin() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (reduceMotion !== false) {
+      onDismiss();
+      return;
+    }
     Animated.timing(opacity, {
       toValue: 0,
       duration: 200,
@@ -39,12 +49,11 @@ export function BossIntroOverlay({ onDismiss }: Props) {
         <Text style={bo.kicker}>BOSS ROUND</Text>
         <Text style={bo.headline}>POLLY'S WORD</Text>
         <Text style={bo.body}>
-          This is it — the last word of the Hunt. Clear what's on the board,
-          and Polly reveals what she's kept hidden.
+          Clear the board and Polly reveals three sealed tiles. Judge each
+          one with the same UP or RIGHT rule.
         </Text>
         <Text style={bo.stakes}>
-          Get it right, and the word goes in your vault. Get it wrong, and
-          it comes back to haunt you.
+          All three correct: MASTERED. One wrong: HAUNTED.
         </Text>
 
         <Pressable

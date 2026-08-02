@@ -1,4 +1,4 @@
-// Run with: npx.cmd -y tsx app/game/dailyChallengeEngine.test.ts
+// Run with: npm.cmd test
 // Plain assert script (repo has no jest; no node:assert — repo lacks @types/node).
 // Throws on first failure; prints OK on success.
 import {

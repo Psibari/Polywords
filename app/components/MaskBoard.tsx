@@ -12,7 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { FONTS, FONT_SIZES } from '../constants/fonts';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';

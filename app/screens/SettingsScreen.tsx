@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
@@ -26,7 +27,10 @@ const PRIVACY_TEXT =
   "We haven't added any analytics or tracking to this app.";
 
 const CREDITS_TEXT =
-  "The credits list is still being put together — check back in a future update.";
+  "POLYWORDS\n\n" +
+  "A recognition game about familiar words with more than one meaning.\n\n" +
+  "Built with React Native and Expo.\n\n" +
+  "Typography: Bebas Neue and Barlow Condensed.";
 
 const CHAMBER_ASPECT_RATIO = 941 / 1672;
 const chamberImage = require('../../assets/images/settings/chamber-dark-mobile.png');
@@ -50,12 +54,6 @@ type ToggleRowProps = {
   onPress: () => void;
 };
 
-type PlaceholderRowProps = {
-  label: string;
-  note?: string;
-  accent?: 'purple' | 'rose' | 'gold';
-};
-
 type Props = {
   navigation: any;
 };
@@ -75,27 +73,6 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
       </View>
       <View style={[styles.toggleTrack, enabled && styles.toggleTrackOn]}>
         <View style={[styles.toggleKnob, enabled && styles.toggleKnobOn]} />
-      </View>
-    </Pressable>
-  );
-}
-
-function PlaceholderRow({ label, note = 'Coming soon', accent = 'purple' }: PlaceholderRowProps) {
-  const accentStyle = accent === 'rose'
-    ? styles.rowAccentRose
-    : accent === 'gold'
-      ? styles.rowAccentGold
-      : styles.rowAccentPurple;
-
-  return (
-    <Pressable
-      onPress={() => Alert.alert(label, 'Not built yet — coming in a future update.')}
-      style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
-    >
-      <View style={[styles.rowAccent, accentStyle]} />
-      <View style={styles.rowTextWrap}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.rowNote}>{note}</Text>
       </View>
     </Pressable>
   );
@@ -234,6 +211,8 @@ export default function SettingsScreen({ navigation }: Props) {
             </Text>
           </View>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isEditingName ? 'Save Name' : 'Edit Name'}
             onPress={handleEditName}
             style={({ pressed }) => [styles.disabledButton, pressed && styles.pressed]}
           >
@@ -257,7 +236,12 @@ export default function SettingsScreen({ navigation }: Props) {
               enabled={hapticsEnabled}
               onPress={() => setHapticsEnabled(!hapticsEnabled)}
             />
-            <Pressable onPress={handleTutorialReplay} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Replay Hunt tutorial"
+              onPress={handleTutorialReplay}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+            >
               <View style={styles.rowTextWrap}>
                 <Text style={styles.rowLabel}>Tutorial Replay</Text>
                 <Text style={styles.rowNote}>See the swipe-grammar intro again</Text>
@@ -273,25 +257,26 @@ export default function SettingsScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.card}>
-            <View pointerEvents="none" style={styles.plaqueHighlight} />
-            <PlaceholderRow label="Cloud Save" />
-            <PlaceholderRow label="Sign In / Account Sync" />
-          </View>
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <View style={styles.card}>
             <View pointerEvents="none" style={styles.plaqueHighlight} />
-            <Pressable onPress={() => setShowCredits(true)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open Credits"
+              onPress={() => setShowCredits(true)}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+            >
               <View style={styles.rowTextWrap}>
                 <Text style={styles.rowLabel}>Credits</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
             </Pressable>
-            <Pressable onPress={() => setShowPrivacy(true)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open Privacy information"
+              onPress={() => setShowPrivacy(true)}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+            >
               <View style={styles.rowTextWrap}>
                 <Text style={styles.rowLabel}>Privacy</Text>
               </View>
@@ -332,6 +317,8 @@ export default function SettingsScreen({ navigation }: Props) {
             <View style={[styles.card, styles.warningCard]}>
               <View pointerEvents="none" style={styles.plaqueHighlight} />
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reset all progress"
                 onPress={handleResetProgress}
                 style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
               >
@@ -608,14 +595,8 @@ const styles = StyleSheet.create({
     height: 9,
     borderRadius: 5,
   },
-  rowAccentPurple: {
-    backgroundColor: PW.color.purple,
-  },
   rowAccentRose: {
     backgroundColor: PW.color.rose,
-  },
-  rowAccentGold: {
-    backgroundColor: PW.color.gold,
   },
   chevron: {
     color: PW.color.faintWhite,

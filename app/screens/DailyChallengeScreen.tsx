@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   Animated,
@@ -7,7 +7,6 @@ import {
   Easing,
   Image,
   Pressable,
-  SafeAreaView,
   ScrollView,
   Share,
   StyleSheet,
@@ -15,6 +14,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { DAILY_SKY_TUNING } from '../ui/ambientSkyTuning';
@@ -423,6 +423,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [pollyPose, setPollyPose] = useState<PerchReaction>('perched');
   const [inputLocked, setInputLocked] = useState(false);
   const [dailyInitialized, setDailyInitialized] = useState(false);
+  const [dailyStarting, setDailyStarting] = useState(false);
   const inputLockedRef = useRef(false);
   const clueVaultRef = useRef<View>(null);
   const [claimTarget, setClaimTarget] = useState<{ x: number; y: number } | null>(
@@ -465,7 +466,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     async function init() {
       try {
         await loadDailyResult();
-        await startDailyChallenge();
       } finally {
         setDailyInitialized(true);
       }
@@ -700,9 +700,20 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     navigation.navigate('Home');
   }
 
+  async function handleStartDaily() {
+    if (dailyStarting) return;
+    setDailyStarting(true);
+    try {
+      await startDailyChallenge();
+    } finally {
+      setDailyStarting(false);
+    }
+  }
+
+  const isReadyToStart = dailyInitialized && !dailyResult && !dailySession;
   const isComplete =
     dailyInitialized &&
-    (!!dailyResult || dailySession?.status !== 'active');
+    (!!dailyResult || (dailySession !== null && dailySession.status !== 'active'));
   const challengeNumber = dailySession
     ? dailySession.challengeNumber
     : getChallengeNumber(getTodayDateString());
@@ -723,6 +734,43 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       />
 
       <SafeAreaView style={styles.content}>
+      {isReadyToStart && (
+        <View style={styles.startGate}>
+          <View style={styles.startCard}>
+            <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
+            <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
+            <Text style={styles.startRule}>FIVE WORDS · TWO CHANCES</Text>
+            <Text style={styles.startBody}>
+              One word connects the clues. Swipe UP to claim it. This is your
+              one attempt for today, and it begins when you enter.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Begin today's Daily Challenge"
+              accessibilityState={{ disabled: dailyStarting }}
+              disabled={dailyStarting}
+              onPress={() => void handleStartDaily()}
+              style={({ pressed }) => [
+                styles.startButton,
+                pressed && styles.startButtonPressed,
+                dailyStarting && styles.startButtonDisabled,
+              ]}
+            >
+              <Text style={styles.startButtonText}>
+                {dailyStarting ? 'OPENING…' : 'BEGIN DAILY'}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Return Home"
+              onPress={handleHome}
+              style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
+            >
+              <Text style={styles.startHomeText}>NOT NOW</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
       {!isComplete && dailySession && (
         <>
           <DailyHUD
@@ -799,7 +847,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       <PollyDailyPerch
         reaction={pollyPose}
-        show={!isComplete}
+        show={!isComplete && !isReadyToStart}
       />
 
       {isComplete && (
@@ -834,6 +882,87 @@ const styles = StyleSheet.create({
   // edges; this holds everything that should respect the safe-area insets.
   content: {
     flex: 1,
+  },
+  startGate: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  startCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: dailyScrollMaterial.goldTrim,
+    backgroundColor: dailyResultsMaterial.cardBg,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
+    alignItems: 'center',
+  },
+  startKicker: {
+    color: dailyResultsMaterial.challengeLabel,
+    fontFamily: FONTS.label,
+    fontSize: 13,
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  startTitle: {
+    color: dailyResultsMaterial.titleWin,
+    fontFamily: FONTS.wordDisplay,
+    fontSize: 34,
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
+  startRule: {
+    color: dailyResultsMaterial.speedTitle,
+    fontFamily: FONTS.hud,
+    fontSize: 16,
+    letterSpacing: 2,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  startBody: {
+    color: dailyResultsMaterial.statText,
+    fontFamily: FONTS.tileCopy,
+    fontSize: 17,
+    lineHeight: 24,
+    marginTop: 18,
+    textAlign: 'center',
+  },
+  startButton: {
+    width: '100%',
+    minHeight: 54,
+    borderRadius: 16,
+    backgroundColor: dailyResultsMaterial.shareBtnBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  startButtonPressed: {
+    opacity: 0.82,
+  },
+  startButtonDisabled: {
+    opacity: 0.55,
+  },
+  startButtonText: {
+    color: dailyResultsMaterial.shareBtnText,
+    fontFamily: FONTS.hud,
+    fontSize: 17,
+    letterSpacing: 2.5,
+  },
+  startHomeButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    marginTop: 8,
+  },
+  startHomeText: {
+    color: dailyResultsMaterial.homeText,
+    fontFamily: FONTS.label,
+    fontSize: 13,
+    letterSpacing: 2,
   },
   clueVaultWrap: {
     // Above cardArea's zIndex: 4 so the correct tile visually ducks into the

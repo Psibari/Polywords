@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 
 // First-hunt-only instruction card. Purely instructional — explains the swipe
@@ -13,17 +14,26 @@ type Props = {
 
 export function HuntIntroOverlay({ onDismiss }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useReducedMotionPreference();
 
   useEffect(() => {
+    if (reduceMotion !== false) {
+      opacity.setValue(1);
+      return;
+    }
     Animated.timing(opacity, {
       toValue: 1,
       duration: 280,
       useNativeDriver: true,
     }).start();
-  }, [opacity]);
+  }, [opacity, reduceMotion]);
 
   function handleBegin() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (reduceMotion !== false) {
+      onDismiss();
+      return;
+    }
     Animated.timing(opacity, {
       toValue: 0,
       duration: 200,
@@ -36,14 +46,12 @@ export function HuntIntroOverlay({ onDismiss }: Props) {
       <View style={io.card}>
         <Text style={io.headline}>POLLY SET{'\n'}THE TRAPS</Text>
         <Text style={io.body}>
-          POLYWORDS: a game about polysemous words — ones with more than one
-          meaning you've stopped noticing. Polly's named for exactly that.
-          She's counting on you not to look — and she'll trap you in what
-          you missed.
+          One familiar word can hold several meanings. Polly mixes those
+          meanings with convincing lines that belong somewhere else.
         </Text>
 
         <View style={io.example}>
-          <Text style={io.exampleIntro}>A piece of an actual round —</Text>
+          <Text style={io.exampleIntro}>LOOK AT ONE WORD — TRUST WHAT YOU RECOGNIZE</Text>
           <Text style={io.exampleWord}>FINE</Text>
 
           <View style={io.exampleLineRow}>

@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
+import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeScreen from './app/screens/HomeScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
-import { useGameStore } from './app/store/useGameStore';
+import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,7 +36,18 @@ export default function App() {
     loadGame().finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || !bootChecksDone) return null;
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState !== 'active') {
+        void flushActiveGamePersistence().catch(() => {});
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  if (!fontsLoaded || !bootChecksDone) {
+    return <View style={{ flex: 1, backgroundColor: '#1A1830' }} />;
+  }
 
   return (
     <SafeAreaProvider>

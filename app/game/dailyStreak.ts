@@ -35,3 +35,11 @@ export function getStreakMilestone(streak: number): StreakMilestone | null {
     ? (streak as StreakMilestone)
     : null;
 }
+
+/** A streak milestone is celebratory, but it never turns a Daily loss into a reward. */
+export function getRewardedStreakMilestone(
+  streak: number,
+  goldFeatherEarned: boolean,
+): StreakMilestone | null {
+  return goldFeatherEarned ? getStreakMilestone(streak) : null;
+}

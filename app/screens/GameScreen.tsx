@@ -17,7 +17,7 @@ import ResultsScreen from './ResultsScreen';
 import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { playSfx, preloadSfx, unloadSfx } from '../audio/sfx';
 import { startMusic, stopMusic, setMusicState, MusicState } from '../audio/MusicEngine';
-import * as Haptics from 'expo-haptics';
+import { Haptics } from '../utils/haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
 import { usePollyVisits } from '../hooks/usePollyVisits';
@@ -1033,7 +1033,7 @@ function GameDirector({ navigation }: { navigation: any }) {
               },
             ]}
           >
-            +1 FEATHER
+            SCORE MILESTONE
           </Animated.Text>
         )}
         {showMercyFloat && (

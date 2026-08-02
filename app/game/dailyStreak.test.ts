@@ -1,10 +1,11 @@
-// Run with: npx.cmd -y tsx app/game/dailyStreak.test.ts
+// Run with: npm.cmd test
 // Plain assert script (repo has no jest; no node:assert — repo lacks @types/node).
 // Throws on first failure; prints OK on success.
 import {
   applyDailyStreak,
   getDisplayStreak,
   getPreviousDateString,
+  getRewardedStreakMilestone,
   getStreakMilestone,
 } from './dailyStreak';
 import { PlayerProgress } from './types';
@@ -105,5 +106,11 @@ eq(getStreakMilestone(8), null, 'milestone.justAboveSeven');
 eq(getStreakMilestone(15), null, 'milestone.justAboveFourteen');
 eq(getStreakMilestone(21), null, 'milestone.betweenMilestones');
 eq(getStreakMilestone(0), null, 'milestone.zero');
+
+// A completion streak can continue after a loss, but Gold Feather messaging
+// and granting remain win-only.
+eq(getRewardedStreakMilestone(7, true), 7, 'rewardedMilestone.win');
+eq(getRewardedStreakMilestone(7, false), null, 'rewardedMilestone.loss');
+eq(getRewardedStreakMilestone(8, true), null, 'rewardedMilestone.nonMilestone');
 
 console.log('OK');
