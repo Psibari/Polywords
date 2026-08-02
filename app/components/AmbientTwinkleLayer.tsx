@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { Animated, Easing, StyleSheet, View, LayoutChangeEvent } from 'react-native';
 import { StarDensity } from './ambientSkyLayout';
+import { PW } from '../ui/pwTheme';
 
 type TwinkleStar = { x: number; y: number; size: number; durationMs: number; delayMs: number };
 
@@ -87,7 +88,7 @@ export type AmbientTwinkleLayerProps = {
   tint?: string;
 };
 
-export default function AmbientTwinkleLayer({ density, frozen, tint = '#FFFFFF' }: AmbientTwinkleLayerProps) {
+export default function AmbientTwinkleLayer({ density, frozen, tint = PW.color.white }: AmbientTwinkleLayerProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     setSize(e.nativeEvent.layout);

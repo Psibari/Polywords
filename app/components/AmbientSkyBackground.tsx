@@ -41,9 +41,11 @@ export default function AmbientSkyBackground({
       <AmbientTwinkleLayer density={starDensity} frozen={reducedMotion} tint={starTint} />
       {meteorsEnabled && <AmbientMeteorLayer frozen={reducedMotion} />}
       <View style={styles.moonWrap}>
-        <Moon phase={moonPhase} skyTint={tint[0]} tint={starTint} />
+        <Moon phase={moonPhase} tint={starTint} />
       </View>
-      <GraphicGround skyTint={tint[0]} />
+      <View style={styles.groundBand}>
+        <GraphicGround />
+      </View>
     </View>
   );
 }
@@ -56,5 +58,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '8%',
     right: '10%',
+  },
+  groundBand: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    aspectRatio: 390 / 420,
   },
 });

@@ -1,13 +1,9 @@
 // app/components/GraphicGround.tsx
-import React from 'react';
+import React, { useId } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Defs, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import GroundTorch from './GroundTorch';
 import { PW } from '../ui/pwTheme';
-
-type Props = {
-  skyTint: string;
-};
 
 const OUTLINE = '#050410';
 const TILE_DARK = '#1c1436';
@@ -24,20 +20,22 @@ const BEVEL_HIGHLIGHT = 'rgba(185,138,222,0.28)';
 // stacks, vine silhouettes at the top corners only, and two torches. The
 // space between the torches is deliberately left empty — Polly's spot, not
 // a decorated focal point (an earlier gold-seal design was rejected).
-export default function GraphicGround({ skyTint }: Props) {
+export default function GraphicGround() {
+  const id = useId();
+  const gradientId = `groundBase-${id}`;
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Svg width="100%" height="100%" viewBox="0 0 390 420" preserveAspectRatio="none">
+    <View style={styles.root} pointerEvents="none">
+      <Svg width="100%" height="100%" viewBox="0 0 390 420">
         <Defs>
-          <LinearGradient id="groundBase" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor={skyTint} />
-            <Stop offset="18%" stopColor={PW.color.bg} />
-            <Stop offset="55%" stopColor={GROUND_DEEPEST} />
-            <Stop offset="100%" stopColor={PW.color.bgDeep} />
+          <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor={PW.color.bg} stopOpacity={0} />
+            <Stop offset="18%" stopColor={PW.color.bg} stopOpacity={1} />
+            <Stop offset="55%" stopColor={GROUND_DEEPEST} stopOpacity={1} />
+            <Stop offset="100%" stopColor={PW.color.bgDeep} stopOpacity={1} />
           </LinearGradient>
         </Defs>
 
-        <Rect x="0" y="0" width="390" height="420" fill="url(#groundBase)" />
+        <Rect x="0" y="0" width="390" height="420" fill={`url(#${gradientId})`} />
 
         {/* chunky flagstone floor */}
         <G stroke={OUTLINE} strokeWidth={4} strokeLinejoin="round">
@@ -85,3 +83,10 @@ export default function GraphicGround({ skyTint }: Props) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    width: '100%',
+    height: '100%',
+  },
+});

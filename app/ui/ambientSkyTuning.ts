@@ -10,7 +10,7 @@ export const HOME_SKY_TUNING: AmbientSkyBackgroundProps = {
   driftSpeedMs: 32000,
   meteorsEnabled: false,
   moonPhase: 'full',
-  starTint: PW.color.goldSoft,
+  starTint: PW.color.gold,
 };
 
 export const HUNT_SKY_TUNING: AmbientSkyBackgroundProps = {
@@ -28,7 +28,7 @@ export const BOSS_SKY_TUNING: AmbientSkyBackgroundProps = {
   driftSpeedMs: 18000,
   meteorsEnabled: true,
   moonPhase: 'crescent',
-  starTint: PW.color.goldSoft,
+  starTint: PW.color.gold,
 };
 
 export const DAILY_SKY_TUNING: AmbientSkyBackgroundProps = {

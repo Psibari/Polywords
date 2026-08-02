@@ -7,6 +7,12 @@ import { PW } from '../ui/pwTheme';
 
 type Props = {
   size?: number;
+  // Offsets when this torch's flicker sequence starts. Because it's inside
+  // the looped Animated.sequence below, this delay re-applies at the top of
+  // every loop iteration (not just once at mount) — the two torches never
+  // lock into a fixed phase offset and instead keep drifting relative to
+  // each other over time. That's the intended visual (torches never
+  // perfectly sync), not a bug.
   delayMs?: number;
 };
 

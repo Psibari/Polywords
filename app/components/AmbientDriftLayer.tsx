@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Animated, Easing, StyleSheet, View, LayoutChangeEvent } from 'react-native';
+import { PW } from '../ui/pwTheme';
 
 type DriftStar = { x: number; y: number; size: number; opacity: number };
 
@@ -48,7 +49,7 @@ export type AmbientDriftLayerProps = {
   tint?: string;
 };
 
-export default function AmbientDriftLayer({ durationMs, frozen, tint = '#FFFFFF' }: AmbientDriftLayerProps) {
+export default function AmbientDriftLayer({ durationMs, frozen, tint = PW.color.white }: AmbientDriftLayerProps) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const progress = useRef(new Animated.Value(0)).current;
 
