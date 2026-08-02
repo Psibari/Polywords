@@ -10,6 +10,8 @@ export const GROUND_CROP_FRACTION = 0.5;
 
 export type StarDensity = 'low' | 'medium' | 'high';
 
+export type MoonPhase = 'full' | 'gibbous' | 'half' | 'crescent';
+
 export type GroundLayout = {
   imageWidth: number;
   imageHeight: number;
