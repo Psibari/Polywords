@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
@@ -618,6 +618,7 @@ const tb = StyleSheet.create({
 // ─── INNER DIRECTOR ───────────────────────────────────────────
 
 function GameDirector({ navigation }: { navigation: any }) {
+  const vignetteId = useId();
   const game       = useGameStore(s => s.game);
   const startGame  = useGameStore(s => s.startGame);
   const forfeitGame = useGameStore(s => s.forfeitGame);
@@ -994,16 +995,24 @@ function GameDirector({ navigation }: { navigation: any }) {
   return (
     <View style={styles.screen}>
       <AmbientSkyBackground {...(isBossRound ? BOSS_SKY_TUNING : HUNT_SKY_TUNING)} />
-      <LinearGradient
-        colors={isBossRound
-          ? ['rgba(15,13,42,0.46)', 'rgba(15,13,42,0.18)']
-          : ['rgba(6,4,22,0.45)', 'rgba(9,6,26,0.22)', 'rgba(7,5,23,0.38)']}
-        locations={isBossRound ? undefined : [0, 0.5, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        pointerEvents="none"
-        style={StyleSheet.absoluteFillObject}
-      />
+      {/* Radial vignette, not a flat top-to-bottom scrim: keeps the hero word
+          card's stage clear (so the starfield behind it actually reads) while
+          still darkening the edges for focus. Replaces a prior flat gradient
+          that smothered the ambient sky layers in the middle of the screen. */}
+      <Svg style={StyleSheet.absoluteFillObject} pointerEvents="none">
+        <Defs>
+          <RadialGradient id={`gameVignette-${vignetteId}`} cx="50%" cy="30%" r="72%">
+            <Stop offset="0%" stopColor={PW.color.bgDeep} stopOpacity={0.24} />
+            <Stop offset="45%" stopColor={PW.color.bgDeep} stopOpacity={0.20} />
+            <Stop
+              offset="100%"
+              stopColor={isBossRound ? PW.color.rose : PW.color.bgDeep}
+              stopOpacity={isBossRound ? 0.5 : 0.56}
+            />
+          </RadialGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill={`url(#gameVignette-${vignetteId})`} />
+      </Svg>
       <SafeAreaView style={styles.content}>
       {isBossRound && (
         <View pointerEvents="none" style={styles.bossBackground}>
