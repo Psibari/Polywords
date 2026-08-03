@@ -1543,6 +1543,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                     disabled={mechanics.inputLocked}
                     tileHeight={TILE_H}
                     entryDelay={0}
+                    skipEntryAnimation={
+                      prevTopIdRef.current !== null && prevTopIdRef.current !== mechanics.topMask.id
+                    }
                     onEffect={handleEffect}
                     onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
@@ -2042,18 +2045,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 18,
   },
   deckBackingPhrase: {
-    fontSize: 18,
+    fontSize: 27,
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0,
-    color: PW.color.mutedWhite,
+    color: '#FFFFFF',
     textAlign: 'center',
     flexShrink: 1,
+    lineHeight: 31,
+    width: '100%',
+    textShadowColor: 'rgba(0,0,0,0.76)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   deckActiveCardLayer: {
     position: 'relative',

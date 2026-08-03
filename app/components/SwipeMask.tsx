@@ -53,6 +53,13 @@ type Props = {
   bookMaterial?: boolean;
   gauntletCard?: boolean;
   entryDelay?: number;
+  // True when this tile is being promoted from the backing stack to the
+  // top slot within an already-visible deck (not the word's opening
+  // card). MaskBoard's own cardPopY already animates that promotion —
+  // without this, the tile's own fade/scale-from-nothing entry ran on
+  // top of it, blipping the tile briefly transparent and letting the
+  // backing card underneath show through.
+  skipEntryAnimation?: boolean;
   eraBadge?: string;
   onEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: ShardVariant) => void;
   onSwipeStart?: () => void;
@@ -93,6 +100,7 @@ export function SwipeMask({
   bookMaterial = false,
   gauntletCard = false,
   entryDelay = 0,
+  skipEntryAnimation = false,
   eraBadge,
   onEffect,
   onSwipeStart,
@@ -133,9 +141,11 @@ export function SwipeMask({
   const outerMarginTopAnim = useRef(new RNAnimated.Value(TILE_GAP)).current;
 
   // ── RN Animated: entry (native driver) ────────────────────────
-  const entryOpacity = useRef(new RNAnimated.Value(0)).current;
-  const entryTransY  = useRef(new RNAnimated.Value(10)).current;
-  const entryScale   = useRef(new RNAnimated.Value(0.95)).current;
+  // Seeded already-settled when skipEntryAnimation is set, so a promoted
+  // tile never renders its first frame invisible/shrunk.
+  const entryOpacity = useRef(new RNAnimated.Value(skipEntryAnimation ? 1 : 0)).current;
+  const entryTransY  = useRef(new RNAnimated.Value(skipEntryAnimation ? 0 : 10)).current;
+  const entryScale   = useRef(new RNAnimated.Value(skipEntryAnimation ? 1 : 0.95)).current;
 
   // ── RN Animated: era badge (native driver) ────────────────────
   const eraBadgeTransY  = useRef(new RNAnimated.Value(20)).current;
@@ -186,6 +196,7 @@ export function SwipeMask({
 
   // ── Entry animation ───────────────────────────────────────────
   useEffect(() => {
+    if (skipEntryAnimation) return;
     const id = setTimeout(() => {
       RNAnimated.parallel([
         RNAnimated.spring(entryTransY,  { toValue: 0, tension: 230, friction: 15, useNativeDriver: true }),
