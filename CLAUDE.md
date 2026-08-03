@@ -41,20 +41,39 @@ drivers on one `Animated.Value`.
   derive from it. Surviving the visible boss tiles unlocks the hidden gauntlet regardless
   of visible mistakes; a perfect visible round is not required to master — it only sets
   `bossFlawless`. A wrong gauntlet tile or death on the boss = HAUNTED.
-- Boss round mechanic: ROUTE C, shipped 2026-07-23 (not "decided, not yet built" — that
-  was stale as of this pass) — survive visible tiles, then a 3-tile hidden gauntlet, each
-  tile judged UP/RIGHT independently; all three correct = MASTERED, one wrong = HAUNTED
-  immediately. Chosen over 1-tile and 2-card, both of which were coin flips.
-  `docs/GAME_REFERENCE.md` was corrected to describe this 2026-07-30; `HUNT_POLLY_REBUILD_PLAN.md`
-  described the old one-mystery-tile rule and has been retired (its build plan was
-  finished; nothing in it was still live).
-- Boss round *presentation* — what the player sees during the gauntlet and on win/loss —
-  is a separate, unresolved redesign as of 2026-07-30. `docs/BOSS_ROUND_SPEC.md`'s
-  direction (sealed-then-lit word, ember room, book-material cards) was fully built once
-  and reverted for looking "layered/blurry on device"; a since-abandoned chest object and
-  an earlier locks-on-the-book attempt both also failed. Current direction living in
-  `docs/superpowers/specs/2026-07-30-boss-round-presentation-design.md` (git-ignored,
-  local only — re-derive from conversation history if that file is missing).
+- Boss round judgment math: ROUTE C, shipped 2026-07-23 — survive visible tiles, then a
+  3-tile hidden gauntlet, each tile judged UP/RIGHT independently; all three correct =
+  MASTERED, one wrong = HAUNTED immediately. Chosen over 1-tile and 2-card, both of which
+  were coin flips. `HUNT_POLLY_REBUILD_PLAN.md` described the old one-mystery-tile rule
+  and has been retired.
+- Boss gauntlet *interaction and presentation* — "Pick Your Trap", designed 2026-07-31,
+  shipped 2026-08-01 — superseded Route C's fixed-sequence tile order and the
+  `BossGauntletStack.tsx` throw-in cards it shipped with. All three gauntlet tiles now
+  arrive together as closed spines (`BossGauntletSpines.tsx`, `useBoardMechanics.ts`
+  `pickGauntletTile`/`gauntletIndex`) and the player picks which one to face and in what
+  order — a real choice, made three times per boss round. The judgment math itself is
+  unchanged (still per-tile UP/RIGHT, still economy-neutral, no re-simulation needed).
+  Picking a spine opens it (reveal); judging it is a separate, later swipe — irrevocable
+  once a spine is opened. This is the direction that replaced every earlier
+  presentation-only attempt at "looking like a boss round" (the original
+  `BOSS_ROUND_SPEC.md` build reverted for looking "layered/blurry on device", an
+  abandoned chest object, an abandoned locks-on-the-book branch) — those attempts changed
+  Aesthetics without changing Mechanics/Dynamics, which is why none of them landed
+  regardless of polish. Full design:
+  `docs/superpowers/specs/2026-07-31-boss-gauntlet-pick-your-trap-design.md`
+  (git-ignored, local only). Still open/deferred, not decided by this design: exact spine
+  layout/dimensions, closed-state icon/texture, and the book-material skin in pixel
+  detail (leather/gold-trim direction carried over from `BOSS_ROUND_SPEC.md` Part C5).
+  Separately, the boss *word* itself (not the gauntlet) stays plain `Text` — a
+  2026-08-02 attempt to switch it to the same `FoilWord` treatment every other word uses
+  was reverted the same day after device testing showed the bevel layers don't register
+  cleanly at the boss word's larger size/heavier `FONTS.bossWord` face; they read as
+  visibly doubled letters instead of a subtle foil effect. Don't retry this without a
+  device-verified fix to `FoilWord` itself (or a boss-specific variant), not just
+  re-plugging it in. The gold-absorption/wrong-swipe overlay FX that were previously
+  hard-disabled for boss specifically ARE re-enabled and sized off `styles.wordBoss` —
+  that part is unaffected, since it's a single flat text layer (the same technique the
+  existing Haunt tint already uses successfully), not FoilWord's multi-layer stack.
 - Boss words require BOTH `hiddenMeaning` and `hiddenTrap` (`hasBossContent` enforces it).
 - Boss content spec: target ~3 hidden meaning/trap pairs per boss word, written hard enough
   that a good player misses ~1 in 4. `WordStep.hiddenPairs` (array schema) shipped with
@@ -71,8 +90,6 @@ drivers on one `Animated.Value`.
 - Never-change text: `Thought so.` (`BINGO BANGO ZZZZINGO!` was unassigned from the mastery
   sequence by Pete on 2026-07-23 — may be placed elsewhere later; do not reintroduce it into
   mastery without a new decision).
-- Boss round presentation is specced in `docs/BOSS_ROUND_SPEC.md` (design locked 2026-07-23,
-  implementation not started).
 - Master Gate is gone.
 - `MaskBoard.tsx` and `SwipeMask.tsx` are warroom-gated — a warroom pass is required
   before either is edited.
@@ -104,7 +121,10 @@ and stops off-screen.
 - Daily is a separate UP-only five-round mode.
 
 Theme and material sources live under `app/ui/`; behavior should be read from live code,
-not old design plans.
+not old design plans. `app/ui/ambientSkyTuning.ts` gives all four screens' backgrounds one
+shared deep tone — the earlier plan to give Boss its own rose/ember tint as a deliberate
+escalation was tried and then killed by Pete (2026-08-02) as still off-palette; there is
+no per-screen background exception anymore.
 
 ## Content Boundary
 

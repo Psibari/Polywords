@@ -55,9 +55,19 @@ A win awards one dated Gold Feather. It cannot stack and expires when its stored
 longer matches today. Hunt can consume it once from game-over Results to revive the same
 run in place with one feather.
 
+## Streak
+
+Completing a Daily attempt — win or lose — advances a day-based streak
+(`app/game/dailyStreak.ts`). It is deliberately a *play* streak, not a *win* streak: a
+loss still counts as playing that day and keeps the streak alive, it just doesn't earn a
+Gold Feather. Missing a calendar day resets the streak to 1 on the next play. Streak
+milestones (7/14/30/50/100) are celebratory, but a milestone only pays out a reward on a
+day that also won its Gold Feather — a milestone never turns a loss into a reward.
+Displayed on Home via `getDisplayStreak`.
+
 ## Owners
 
 - UI: `app/screens/DailyChallengeScreen.tsx`, `app/components/ui/QuillScrollPanel.tsx`
-- Rules: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`
+- Rules: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`, `app/game/dailyStreak.ts`
 - State: `app/store/useGameStore.ts`
 - Materials/copy: `app/ui/pwDailyMaterials.ts`, `app/game/pollyCharacter.ts`

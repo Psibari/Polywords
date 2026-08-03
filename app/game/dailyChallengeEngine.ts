@@ -1,7 +1,6 @@
 import { DAILY_POOL } from './dailyPool';
 import {
   DailyCandidates,
-  DailyChallengeState,
   DailyClaimResult,
   DailyResult,
   DailyRound,
@@ -376,57 +375,4 @@ export function createDailyResult(session: DailySession): DailyResult {
       ].join('\n');
     })(),
   };
-}
-
-function toLegacyState(session: DailySession): DailyChallengeState {
-  return {
-    session,
-    date: session.date,
-    rounds: session.rounds.map(round => ({
-      ...round.word,
-      word: round.word.answer,
-      meanings: round.word.clues,
-      candidates: round.candidates,
-    })),
-    currentRound: session.currentRoundIndex,
-    lives: session.chancesRemaining,
-    remainingCandidates: session.rounds.map(round => [...round.candidates]),
-    results: session.rounds
-      .filter(round => round.solved)
-      .map(round => ({
-        word: round.word.answer,
-        tier: round.word.tier,
-        status: 'solved' as const,
-        wrongClaims: round.wrongClaims.length,
-        cluesUsed: round.revealedClueCount,
-      })),
-    status: session.status === 'active' ? 'playing' : 'complete',
-  };
-}
-
-/** @deprecated Quarantined store adapter. Use buildDailySession. */
-export function createDailyState(dateString: string): DailyChallengeState {
-  return toLegacyState(buildDailySession(dateString));
-}
-
-/** @deprecated Quarantined store adapter. Claims are UP-only. */
-export function submitDailyWrongSwipe(
-  state: DailyChallengeState,
-  candidate: string,
-): DailyChallengeState {
-  return toLegacyState(claimDailyWord(state.session, candidate).session);
-}
-
-/** @deprecated Quarantined store adapter. Claims are UP-only. */
-export function submitDailyCorrectSwipe(
-  state: DailyChallengeState,
-): DailyChallengeState {
-  const round = state.session.rounds[state.session.currentRoundIndex];
-  if (!round) return state;
-  return toLegacyState(claimDailyWord(state.session, round.word.answer).session);
-}
-
-/** @deprecated Quarantined store adapter. Use createDailyResult. */
-export function buildDailyResult(state: DailyChallengeState): DailyResult {
-  return createDailyResult(state.session);
 }

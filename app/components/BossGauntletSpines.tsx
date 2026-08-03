@@ -5,6 +5,7 @@ import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ShardVariant } from '../ui/pwEffects';
 import { playSfx } from '../audio/sfx';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
 import { libraryMaterial } from '../ui/pwMaterials';
@@ -86,6 +87,7 @@ function SpineSlot({
   totalTiles: number;
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
+  const reduceMotion = useReducedMotionPreference();
   const resolved = status !== 'idle';
   // Open (or resolved) cards render wider than their 90px slot (see
   // SwipeMask's gauntletCard width), so they must paint above sibling
@@ -100,13 +102,18 @@ function SpineSlot({
   const elevated = isOpen || resolved;
 
   useEffect(() => {
+    const target = isOpen || resolved ? 1 : 0;
+    if (reduceMotion !== false) {
+      openAnim.setValue(target);
+      return;
+    }
     Animated.timing(openAnim, {
-      toValue: isOpen || resolved ? 1 : 0,
+      toValue: target,
       duration: SPINE_OPEN_MS,
       useNativeDriver: true,
     }).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, resolved]);
+  }, [isOpen, resolved, reduceMotion]);
 
   const scaleX = openAnim.interpolate({ inputRange: [0, 1], outputRange: [SPINE_CLOSED_SCALE_X, 1] });
   const labelRotate = openAnim.interpolate({ inputRange: [0, 1], outputRange: ['-90deg', '0deg'] });
@@ -275,7 +282,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    marginBottom: 10,
+    marginBottom: PW.space.md,
   },
   instruction: {
     color: PW.color.softWhite,

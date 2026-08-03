@@ -2,6 +2,7 @@ import React from 'react';
 import { Animated, Image, StyleSheet, View } from 'react-native';
 import { HERO_BOOK_PERSPECTIVE } from '../../ui/heroBookMotion';
 import { heroBookMaterial as M } from '../../ui/pwMaterials';
+import { PW } from '../../ui/pwTheme';
 
 export type HeroBookProps = {
   coverRotateX: Animated.AnimatedInterpolation<string>;
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     top: 0,
     height: M.bookHeight,
     overflow: 'visible',
-    shadowColor: '#000',
+    shadowColor: PW.color.shadow,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.60,
     shadowRadius: 16,
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   },
   coverPlane: {
     backfaceVisibility: 'visible',
-    shadowColor: '#000',
+    shadowColor: PW.color.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.44,
     shadowRadius: 12,

@@ -1,6 +1,7 @@
 import { createAudioPlayer, AudioPlayer } from 'expo-audio';
 import { useGameStore } from '../store/useGameStore';
 import { ensureAudioSessionConfigured } from './audioSession';
+import { ROUND_COMPLETE_URI } from '../utils/soundSynthesis';
 
 export type SfxName =
   | 'uiClick'
@@ -19,7 +20,8 @@ export type SfxName =
   | 'chainBreak'
   | 'lockSpin1'
   | 'lockSpin2'
-  | 'lockSpin3';
+  | 'lockSpin3'
+  | 'roundComplete';
 
 type SfxConfig = {
   source: Parameters<typeof createAudioPlayer>[0];
@@ -50,6 +52,7 @@ const SFX: Record<SfxName, SfxConfig> = {
   lockSpin1:      { source: require('../../assets/audio/sfx/lock_spin_1.mp3'),        volume: 0.40, cooldownMs: 150  },
   lockSpin2:      { source: require('../../assets/audio/sfx/lock_spin_2.mp3'),        volume: 0.40, cooldownMs: 150  },
   lockSpin3:      { source: require('../../assets/audio/sfx/lock_spin_3.mp3'),        volume: 0.40, cooldownMs: 150  },
+  roundComplete:  { source: { uri: ROUND_COMPLETE_URI },                              volume: 0.50, cooldownMs: 400  },
 };
 
 const PLAYER_POOL_SIZE = 2;

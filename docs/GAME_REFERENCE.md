@@ -38,6 +38,11 @@ migration is explicitly approved.
 - Surviving the visible boss tiles unlocks a 3-tile hidden gauntlet (Route C): one
   tile per hidden meaning/trap pair, each judged UP/RIGHT independently. A visible
   mistake does not block the gauntlet from unlocking.
+- **Pick Your Trap** (shipped 2026-08-01): all three gauntlet tiles arrive together as
+  closed spines and the player picks which one to face and in what order — tapping a
+  spine opens it (reveal), then a separate later swipe judges it; once a spine is
+  opened it cannot be closed back up unpicked. Order is purely a player choice and does
+  not change the per-tile odds — the judgment math below is unaffected.
 - All three gauntlet tiles correct masters the word, regardless of visible mistakes.
 - One wrong gauntlet tile ends the boss attempt immediately and haunts the word once.
 - Returning Haunt re-tests the exact pair that beat the player last run.

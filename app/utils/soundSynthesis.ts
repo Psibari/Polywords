@@ -1,15 +1,10 @@
-import { createAudioPlayer, AudioPlayer } from 'expo-audio';
-import { ensureAudioSessionConfigured } from '../audio/audioSession';
-
+// Pure waveform synthesis — no player, no engine state. Produces a data-URI
+// WAV that sfx.ts's pool loads like any other bundled sound source.
 const SAMPLE_RATE = 44100;
-
-// ── WAV encoding helpers ───────────────────────────────────────
 
 function writeStr(view: DataView, offset: number, s: string): void {
   for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
 }
-
-// ── PCM segment generation ────────────────────────────────────
 
 interface SegmentOpts {
   waveType: 'sine' | 'square' | 'noise';
@@ -62,8 +57,6 @@ function silence(ms: number): Float32Array {
   return new Float32Array(Math.ceil(SAMPLE_RATE * ms / 1000));
 }
 
-// ── WAV container ─────────────────────────────────────────────
-
 function toWAV(segments: Float32Array[]): string {
   const total     = segments.reduce((n, s) => n + s.length, 0);
   const dataBytes = total * 2;
@@ -99,8 +92,6 @@ function toWAV(segments: Float32Array[]): string {
   return `data:audio/wav;base64,${btoa(binary)}`;
 }
 
-// ── Sound builders ────────────────────────────────────────────
-
 function buildRoundComplete(): string {
   const note = (freq: number, ms: number) =>
     makeSegment({ waveType: 'sine', startFreq: freq, durationMs: ms, attackMs: 5, decayMs: ms - 5, volume: 0.7 });
@@ -111,48 +102,5 @@ function buildRoundComplete(): string {
   ]);
 }
 
-// ── Engine state ──────────────────────────────────────────────
-
-type SoundKey = 'roundComplete';
-
-const sounds: Record<SoundKey, AudioPlayer | null> = {
-  roundComplete: null,
-};
-
-let ready = false;
-
-// ── Public API ────────────────────────────────────────────────
-
-export async function initSounds(): Promise<void> {
-  if (ready) return;
-
-  try {
-    await ensureAudioSessionConfigured();
-  } catch {}
-
-  const builders: [SoundKey, () => string][] = [
-    ['roundComplete', buildRoundComplete],
-  ];
-
-  builders.forEach(([key, build]) => {
-    try {
-      const player = createAudioPlayer(
-        { uri: build() },
-        { keepAudioSessionActive: true },
-      );
-      sounds[key] = player;
-    } catch {}
-  });
-
-  ready = true;
-}
-
-function play(player: AudioPlayer | null): void {
-  if (!player) return;
-  try {
-    player.seekTo(0).catch(() => {});
-    player.play();
-  } catch {}
-}
-
-export function playRoundComplete(): void { play(sounds.roundComplete); }
+// Computed once at import time — pure/deterministic, cheap.
+export const ROUND_COMPLETE_URI = buildRoundComplete();

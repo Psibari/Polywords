@@ -60,9 +60,12 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <View style={styles.screen}>
       <AmbientSkyBackground {...HOME_SKY_TUNING} />
+      {/* Same dark (PW.color.surfaceDeep / cardFace, rgb 15,13,42) GameScreen
+          and DailyChallengeScreen already use for this same scrim — this was
+          three different one-off near-blacks that didn't match either. */}
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(6,4,22,0.45)', 'rgba(9,6,26,0.22)', 'rgba(7,5,23,0.38)']}
+        colors={['rgba(15,13,42,0.45)', 'rgba(15,13,42,0.22)', 'rgba(15,13,42,0.38)']}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -79,7 +82,7 @@ export default function HomeScreen({ navigation }: Props) {
             {/* Open plaza — Polly's room to breathe */}
             <View style={styles.plaza} />
 
-            {/* The Home book â€” all primary routes are plates on the cover */}
+            {/* The Home book — all primary routes are plates on the cover */}
             <View style={styles.homeBookWrap}>
               <View pointerEvents="none" style={styles.bookDepthShadow} />
               <LinearGradient
@@ -409,7 +412,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: PW.color.softWhite,
     fontFamily: FONTS.label,
-    fontSize: 10,
+    fontSize: homeType.goldFeatherReady,
     letterSpacing: 1.8,
   },
   startHereBadge: {

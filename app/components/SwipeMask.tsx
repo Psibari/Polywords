@@ -475,7 +475,10 @@ export function SwipeMask({
       opacity: tileOpacity.value,
       ...(gauntletCard
         ? {
-            shadowColor: '#9B2D6B',
+            // Amber, matching the sealed spine's own shadow (BossGauntletSpines)
+            // — the glow stays the same hue whether the card is closed or open,
+            // so it reads as one object unsealing rather than swapping identity.
+            shadowColor: PW.color.amber,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.25 + (liftAmount * 0.55),
             shadowRadius: 10 + (liftAmount * 26),
@@ -707,6 +710,10 @@ export function SwipeMask({
                 end={{ x: 0.9, y: 1 }}
                 style={StyleSheet.absoluteFill}
               />
+              {/* Translucent scrim, not a solid block — the rose/purple/violet
+                  gradient above is this card's material (the same leather-and-
+                  tooling family the sealed spine used); it must still read
+                  through, not be reduced to a picture-frame edge. */}
               <View style={styles.gauntletInset} pointerEvents="none" />
             </>
           )}
@@ -832,7 +839,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 5, left: 5, right: 5, bottom: 5,
     borderRadius: 16,
-    backgroundColor: '#0F0D2A',
+    // Was a fully opaque PW.color.cardFace/surfaceDeep hex, which hid the
+    // gradient behind everything but a 5px picture-frame edge. Translucent
+    // instead, so the gradient stays the card's visible material while
+    // still darkening enough for phrase-text contrast.
+    backgroundColor: PW.color.overlayLight,
   },
   checkmark: {
     position: 'absolute',

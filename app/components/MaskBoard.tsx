@@ -21,7 +21,6 @@ import HeroBook from './ui/HeroBook';
 import { FoilWord } from './ui/FoilWord';
 import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
-import { playRoundComplete } from '../utils/SoundEngine';
 import { playSfx } from '../audio/sfx';
 import { PW } from '../ui/pwTheme';
 import { libraryMaterial } from '../ui/pwMaterials';
@@ -772,7 +771,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             Animated.timing(masterAllFadeAnim, {
               toValue: 0.32,
               duration: 160,
-              useNativeDriver: false,
+              useNativeDriver: true,
             }),
             Animated.sequence([
               Animated.timing(masterHeroScale, {
@@ -799,7 +798,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
             Animated.timing(masterAllFadeAnim, {
               toValue: 1,
               duration: 160,
-              useNativeDriver: false,
+              useNativeDriver: true,
             }).start();
           }, 320);
           return;
@@ -1313,6 +1312,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                 minimumFontScale={0.72}
               />
             ) : (
+              // FoilWord's 3-layer bevel recipe was tuned against the default
+              // word size/font; at the boss word's larger size and heavier
+              // `FONTS.bossWord` face, the deboss/catch-light layers stopped
+              // registering as a subtle bevel and read as visibly doubled
+              // letters instead (confirmed on device 2026-08-02). Reverted to
+              // plain text rather than ship that; the gold-absorb/wrong-flash
+              // overlays below don't have this problem since they're a single
+              // flat layer, same technique the existing Haunt tint already
+              // uses successfully over this same plain text.
               <Text
                 style={[styles.word, styles.wordBoss]}
                 numberOfLines={1}
@@ -1323,47 +1331,45 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
               </Text>
             )}
             {/* Gold overlay for absorption fill */}
-            {!isBoss && (
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.word,
-                  {
-                    color: '#F5C842',
-                    opacity: goldTextOpacity,
-                    position: 'absolute',
-                    left: 0, right: 0,
-                    textAlign: 'center',
-                  },
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >
-                {step.word}
-              </Animated.Text>
-            )}
+            <Animated.Text
+              pointerEvents="none"
+              style={[
+                styles.word,
+                isBoss && styles.wordBoss,
+                {
+                  color: '#F5C842',
+                  opacity: goldTextOpacity,
+                  position: 'absolute',
+                  left: 0, right: 0,
+                  textAlign: 'center',
+                },
+              ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+            >
+              {step.word}
+            </Animated.Text>
             {/* Red flash overlay — wrong swipe danger signal */}
-            {!isBoss && (
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.word,
-                  {
-                    color: '#CC2200',
-                    opacity: wordRedOpacity,
-                    position: 'absolute',
-                    left: 0, right: 0,
-                    textAlign: 'center',
-                  },
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >
-                {step.word}
-              </Animated.Text>
-            )}
+            <Animated.Text
+              pointerEvents="none"
+              style={[
+                styles.word,
+                isBoss && styles.wordBoss,
+                {
+                  color: '#CC2200',
+                  opacity: wordRedOpacity,
+                  position: 'absolute',
+                  left: 0, right: 0,
+                  textAlign: 'center',
+                },
+              ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+            >
+              {step.word}
+            </Animated.Text>
 
             {/* Haunt entrance purple tint — fades out as tiles appear */}
             {isHaunt && (
@@ -1605,7 +1611,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
               label={isHaunt ? 'BANISHED' : 'MASTER'}
               onReveal={() => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                playRoundComplete();
+                playSfx('roundComplete');
               }}
             />
           )}

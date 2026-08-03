@@ -22,6 +22,7 @@ export const homeType = {
   doorTitle: 16,
   greeting: 18,
   settingsLink: 15,
+  goldFeatherReady: 14,
 } as const;
 
 // ── ENTER THE HUNT — gold dare in BOOK vocabulary ──

@@ -17,7 +17,6 @@ import {
   consumeMercy as consumeMercyFn,
 } from '../game/polyRunEngine';
 import {
-  DailyChallengeState,
   DailyClaimResult,
   DailyResult,
   DailySession,
@@ -190,32 +189,6 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   lastStreakDate: null,
 };
 
-function toQuarantinedDailyState(session: DailySession): DailyChallengeState {
-  return {
-    session,
-    date: session.date,
-    rounds: session.rounds.map(round => ({
-      ...round.word,
-      word: round.word.answer,
-      meanings: round.word.clues,
-      candidates: round.candidates,
-    })),
-    currentRound: session.currentRoundIndex,
-    lives: session.chancesRemaining,
-    remainingCandidates: session.rounds.map(round => [...round.candidates]),
-    results: session.rounds
-      .filter(round => round.solved)
-      .map(round => ({
-        word: round.word.answer,
-        tier: round.word.tier,
-        status: 'solved' as const,
-        wrongClaims: round.wrongClaims.length,
-        cluesUsed: round.revealedClueCount,
-      })),
-    status: session.status === 'active' ? 'playing' : 'complete',
-  };
-}
-
 type GameStore = {
   game: ReturnType<typeof createGame>;
   // True only when `game` was hydrated from a real saved run via loadGame()
@@ -291,10 +264,6 @@ type GameStore = {
   useGoldFeatherInHunt: () => Promise<boolean>;
   checkGoldFeatherExpiry: () => Promise<void>;
   loadGoldFeather: () => Promise<void>;
-  // Quarantined stale screen adapters. Do not use for new Daily work.
-  daily: DailyChallengeState | null;
-  submitDailyWrongSwipe: (candidate: string) => void;
-  submitDailyCorrectSwipe: () => void;
   soundEnabled: boolean;
   hapticsEnabled: boolean;
   reduceMotionOverride: boolean;
@@ -318,7 +287,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   pollyMemory: { ...DEFAULT_POLLY_MEMORY },
   pollyMemoryLoaded: false,
   dailySession: null,
-  daily:       null,
   dailyResult: null,
   dailyAttemptDate: null,
   dailyLastClaimResult: null,
@@ -793,7 +761,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (dailyResult) {
         set({
           dailySession: null,
-          daily: null,
           dailyAttemptDate: date,
           dailyResult,
           dailyLastClaimResult: null,
@@ -812,7 +779,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (!recoveredSession) {
         set({
           dailySession: null,
-          daily: null,
           dailyAttemptDate: null,
           dailyResult: null,
           dailyLastClaimResult: null,
@@ -829,7 +795,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (recoveredSession.status === 'active') {
         set({
           dailySession: recoveredSession,
-          daily: toQuarantinedDailyState(recoveredSession),
           dailyAttemptDate: date,
           dailyResult: null,
           dailyLastClaimResult: null,
@@ -861,7 +826,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({
         dailySession: recoveredSession,
-        daily: toQuarantinedDailyState(recoveredSession),
         dailyAttemptDate: date,
         dailyResult: recoveredResult,
         dailyLastClaimResult: null,
@@ -887,7 +851,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {
       set({
         dailySession: null,
-        daily: null,
         dailyAttemptDate: null,
         dailyResult: null,
         dailyLastClaimResult: null,
@@ -918,7 +881,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       );
       set({
         dailySession,
-        daily: toQuarantinedDailyState(dailySession),
         dailyResult: null,
         dailyAttemptDate: date,
         dailyLastClaimResult: null,
@@ -966,7 +928,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       dailySession: claim.session,
-      daily: toQuarantinedDailyState(claim.session),
       dailyLastClaimResult: claim.result,
       ...(dailyResult ? { dailyResult } : {}),
       progress,
@@ -1009,7 +970,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     set({
       dailySession: nextSession,
-      daily: toQuarantinedDailyState(nextSession),
     });
     void persistActiveDailySession(nextSession);
   },
@@ -1021,7 +981,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (pausedSession === dailySession) return;
     set({
       dailySession: pausedSession,
-      daily: toQuarantinedDailyState(pausedSession),
     });
     void persistActiveDailySession(pausedSession);
   },
@@ -1048,7 +1007,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {}
     set({
       dailySession:          null,
-      daily:                 null,
       dailyResult:           null,
       dailyAttemptDate:      null,
       dailyLastClaimResult:  null,
@@ -1081,7 +1039,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       progress: { ...DEFAULT_PROGRESS },
       pollyMemory: { ...DEFAULT_POLLY_MEMORY },
       dailySession: null,
-      daily: null,
       dailyResult: null,
       dailyAttemptDate: null,
       dailyLastClaimResult: null,
@@ -1154,17 +1111,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         goldFeatherExpiresAt: record.expiresAt,
       });
     } catch {}
-  },
-
-  submitDailyWrongSwipe: (candidate: string) => {
-    get().claimDailyAnswer(candidate);
-  },
-
-  submitDailyCorrectSwipe: () => {
-    const dailySession = get().dailySession;
-    const round = dailySession?.rounds[dailySession.currentRoundIndex];
-    if (!round) return;
-    get().claimDailyAnswer(round.word.answer);
   },
 }));
 

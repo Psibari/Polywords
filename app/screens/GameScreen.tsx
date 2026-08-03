@@ -12,10 +12,10 @@ import { BossBoard } from '../components/BossBoard';
 import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import { PW } from '../ui/pwTheme';
+import { heroBookMaterial } from '../ui/pwMaterials';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { BOSS_SKY_TUNING, HUNT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import ResultsScreen from './ResultsScreen';
-import { initSounds, playRoundComplete } from '../utils/SoundEngine';
 import { playSfx, preloadSfx, unloadSfx } from '../audio/sfx';
 import { startMusic, stopMusic, setMusicState, MusicState } from '../audio/MusicEngine';
 import { Haptics } from '../utils/haptics';
@@ -131,60 +131,45 @@ function TopBar({ navigation }: { navigation: any }) {
   }, [game.score, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <View style={tb.root}>
-      <View style={tb.statsRow}>
-        <View style={tb.leftGroup}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Pause the Hunt"
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              navigation.goBack();
-            }}
-            style={({ pressed }) => [tb.pauseBtn, pressed && tb.pausePressed]}
-            hitSlop={8}
-          >
-            <View style={tb.pauseBars}>
-              <View style={tb.pauseBar} />
-              <View style={tb.pauseBar} />
-            </View>
-          </Pressable>
+    <View style={tb.outerRow}>
+      <View style={tb.root}>
+        <View style={tb.statsRow}>
           <Text style={tb.scoreVal}>{displayScore}</Text>
-        </View>
-        <StreakDisplay />
-        <View
-          style={tb.featherRow}
-          accessible
-          accessibilityLabel={`${filledFeathers} feathers remaining`}
-        >
-          {Array.from({ length: MAX_FEATHERS }, (_, i) => (
-            <FeatherIcon key={i} filled={i < filledFeathers} inert={gauntletActive} />
-          ))}
-          {hasReserve && (
-            <View style={tb.reserveFeatherWrap}>
-              <View style={[tb.featherBlade, tb.featherBladeFilled, tb.reserveBlade]}>
-                <View style={[tb.featherHighlight, tb.featherHighlightFilled]} />
+          <StreakDisplay />
+          <View
+            style={tb.featherRow}
+            accessible
+            accessibilityLabel={`${filledFeathers} feathers remaining`}
+          >
+            {Array.from({ length: MAX_FEATHERS }, (_, i) => (
+              <FeatherIcon key={i} filled={i < filledFeathers} inert={gauntletActive} />
+            ))}
+            {hasReserve && (
+              <View style={tb.reserveFeatherWrap}>
+                <View style={[tb.featherBlade, tb.featherBladeFilled, tb.reserveBlade]}>
+                  <View style={[tb.featherHighlight, tb.featherHighlightFilled]} />
+                </View>
+                <View style={[tb.featherShaft, tb.featherShaftFilled, tb.reserveShaft]} />
+                <Text style={tb.reservePlus}>+</Text>
               </View>
-              <View style={[tb.featherShaft, tb.featherShaftFilled, tb.reserveShaft]} />
-              <Text style={tb.reservePlus}>+</Text>
-            </View>
-          )}
-          {hasGoldFeather && (
-            <View
-              style={tb.goldFeatherWrap}
-              accessible
-              accessibilityLabel="Gold Feather free life available"
-            >
-              <Image
-                source={require('../../assets/ui/feather-gold-reward.png')}
-                style={tb.goldFeatherImg}
-                resizeMode="contain"
-              />
-            </View>
-          )}
+            )}
+            {hasGoldFeather && (
+              <View
+                style={tb.goldFeatherWrap}
+                accessible
+                accessibilityLabel="Gold Feather free life available"
+              >
+                <Image
+                  source={require('../../assets/ui/feather-gold-reward.png')}
+                  style={tb.goldFeatherImg}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+          </View>
         </View>
+        <RoundChips current={current} total={total} />
       </View>
-      <RoundChips current={current} total={total} />
     </View>
   );
 }
@@ -412,31 +397,48 @@ function FeatherIcon({ filled, inert }: { filled: boolean; inert?: boolean }) {
 }
 
 const tb = StyleSheet.create({
-  root: {
+  // Pause used to live inside this row, eating ~42px (button + gap) from the
+  // same row the feathers/gold-feather have to share. Moved to a floating
+  // bottom-right button (see pauseBtn below) so the bar keeps that width —
+  // this wrapper now holds only `root`, but stays a row so `root`'s `flex: 1`
+  // still means "fill available width" instead of "fill available height."
+  outerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginHorizontal: PW.space.screenX,
     marginTop: 4,
     marginBottom: 0,
+  },
+  root: {
+    flex: 1,
     paddingHorizontal: PW.space.md,
-    paddingTop: 8,
-    paddingBottom: 9,
-    borderRadius: 6,
-    backgroundColor: 'rgba(11,9,32,0.86)',
+    paddingTop: 14,
+    paddingBottom: 15,
+    borderRadius: 8,
+    // Was 0.86 — see-through enough that the old, much darker sky behind it
+    // never showed. Now that Hunt shares the lighter unified sky tint, that
+    // same translucency lets it bleed through unevenly (solid over the score
+    // row, patchy over the round chips below), making one continuous bar
+    // read as two different ones. More opaque so it looks the same regardless
+    // of what's behind it.
+    backgroundColor: 'rgba(11,9,32,0.95)',
     borderWidth: 1,
-    borderColor: 'rgba(123,45,139,0.38)',
-    borderBottomColor: 'rgba(245,200,66,0.42)',
-    borderBottomWidth: 0.5,
+    borderColor: heroBookMaterial.goldHairline,
+    overflow: 'hidden',
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  leftGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
+  // Floating, bottom-right — stacked above the __DEV__-only boss-jump
+  // buttons (styles.devBossOverlay, right: 10, bottom: 10) rather than
+  // overlapping them. This is meant to be the pause button's permanent home
+  // once those dev buttons are removed, not a temporary parking spot.
   pauseBtn: {
+    position: 'absolute',
+    right: 10,
+    bottom: 74,
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -445,6 +447,7 @@ const tb = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
+    zIndex: 200,
   },
   pausePressed: {
     opacity: 0.7,
@@ -461,27 +464,26 @@ const tb = StyleSheet.create({
   },
   scoreVal: {
     color: PW.color.gold,
-    fontSize: 42,
+    fontSize: 50,
     fontFamily: FONTS.hud,
-    lineHeight: 44,
+    lineHeight: 52,
     letterSpacing: 2,
     textTransform: 'uppercase',
     textShadowColor: PW.color.goldGlow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
-    minWidth: 96,
+    minWidth: 110,
   },
   featherRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 5,
-    minWidth: 108,
-    overflow: 'visible',
+    gap: 6,
+    minWidth: 130,
   },
   featherBox: {
-    width: 18,
-    height: 34,
+    width: 24,
+    height: 43,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -489,8 +491,8 @@ const tb = StyleSheet.create({
     opacity: 0.35,
   },
   featherImg: {
-    width: 18,
-    height: 34,
+    width: 24,
+    height: 43,
   },
   featherBlade: {
     position: 'absolute',
@@ -539,20 +541,20 @@ const tb = StyleSheet.create({
   chipsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 5,
-    marginTop: 8,
+    gap: 7,
+    marginTop: 10,
   },
   chip: {
-    width: 22,
-    height: 20,
-    borderRadius: 5,
+    width: 28,
+    height: 26,
+    borderRadius: 6,
     borderWidth: 1,
     backgroundColor: PW.color.surfaceDeep,
     alignItems: 'center',
     justifyContent: 'center',
   },
   chipLabel: {
-    fontSize: 10,
+    fontSize: 13,
     fontFamily: FONTS.hud,
     color: PW.color.softWhite,
   },
@@ -577,41 +579,41 @@ const tb = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
   },
   reserveFeatherWrap: {
-    width:          8,
-    height:         14,
+    width:          12,
+    height:         21,
     alignItems:     'center',
     justifyContent: 'center',
     marginLeft:     2,
   },
   reserveBlade: {
-    width:  6,
-    height: 13,
+    width:  9,
+    height: 19,
     borderColor: PW.color.goldSoft,
     backgroundColor: PW.color.goldGlow,
   },
   reserveShaft: {
     backgroundColor: PW.color.goldSoft,
-    height: 12,
+    height: 18,
   },
   reservePlus: {
     position:   'absolute',
-    top:        -5,
-    right:      -3,
+    top:        -7,
+    right:      -4,
     color:      PW.color.gold,
-    fontSize:   7,
+    fontSize:   10,
     fontWeight: '700',
-    lineHeight: 8,
+    lineHeight: 11,
   },
   goldFeatherWrap: {
-    width: 20,
-    height: 34,
+    width: 28,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 4,
+    marginLeft: 5,
   },
   goldFeatherImg: {
-    width: 20,
-    height: 34,
+    width: 28,
+    height: 50,
   },
 });
 
@@ -719,7 +721,6 @@ function GameDirector({ navigation }: { navigation: any }) {
   }, [game.stepIndex, game.status, resetIdleTimer]);
 
   useEffect(() => {
-    initSounds();
     preloadSfx();
     return () => {
       unloadSfx();
@@ -766,7 +767,7 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   useEffect(() => {
     if (game.status === 'complete' || game.status === 'gameOver') {
-      playRoundComplete();
+      playSfx('roundComplete');
     }
   }, [game.status]);
 
@@ -1045,6 +1046,23 @@ function GameDirector({ navigation }: { navigation: any }) {
         </View>
       )}
       {!isDone && <TopBar navigation={navigation} />}
+      {!isDone && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Pause the Hunt"
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            navigation.goBack();
+          }}
+          style={({ pressed }) => [tb.pauseBtn, pressed && tb.pausePressed]}
+          hitSlop={8}
+        >
+          <View style={tb.pauseBars}>
+            <View style={tb.pauseBar} />
+            <View style={tb.pauseBar} />
+          </View>
+        </Pressable>
+      )}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />
       ) : !gameplayGateActive ? (
