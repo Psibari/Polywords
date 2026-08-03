@@ -927,8 +927,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
 
   useEffect(() => {
     if (mechanics.visibleGridMasks.length > 0) {
-      const id = setTimeout(() => setTilesReady(true), 50);
-      return () => clearTimeout(id);
+      setTilesReady(true);
     }
   }, [mechanics.visibleGridMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -991,7 +990,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     cardPopCountRef.current = openingMaskId ? 1 : 0;
     deckRedTint.setValue(0);
     deckSlamY.setValue(0);  // outer wrapper stays static
-    const cardDelay = isBoss ? 1200 : 520;
+    const cardDelay = isBoss ? 1200 : 80;
 
     // Reset all card values
     [deckDeepY, deckMidY, deckActiveY].forEach(v => v.setValue(400));
@@ -1466,6 +1465,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                   const depth = backingCardCount - index;
                   const anim = getBackingCardAnim(maskId, depth);
                   const rotateDeg = anim.rotate.interpolate({ inputRange: [-6, 0], outputRange: ['-6deg', '0deg'] });
+                  const backingMask = mechanics.visibleGridMasks.find(m => m.id === maskId);
                   return (
                     <Animated.View
                       key={maskId}
@@ -1492,6 +1492,18 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                       >
                         <MaskCardArtwork />
                       </Animated.View>
+                      {backingMask && (
+                        <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
+                          <Text
+                            style={styles.deckBackingPhrase}
+                            numberOfLines={2}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.8}
+                          >
+                            {backingMask.phrase}
+                          </Text>
+                        </View>
+                      )}
                     </Animated.View>
                   );
                 })}

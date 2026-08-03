@@ -1,5 +1,6 @@
 import React from 'react';
-import { Animated, Image, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Animated, StyleSheet, View } from 'react-native';
 import { HERO_BOOK_PERSPECTIVE } from '../../ui/heroBookMotion';
 import { heroBookMaterial as M } from '../../ui/pwMaterials';
 import { PW } from '../../ui/pwTheme';
@@ -28,7 +29,7 @@ export default function HeroBook({
   return (
     <View style={styles.book}>
       <Image
-        resizeMode="stretch"
+        contentFit="fill"
         source={bookBase}
         style={styles.rigImage}
       />
@@ -49,7 +50,7 @@ export default function HeroBook({
       >
         <View style={[StyleSheet.absoluteFill, styles.outerSurface]}>
           <Image
-            resizeMode="stretch"
+            contentFit="fill"
             source={coverOuter}
             style={styles.rigImage}
           />
@@ -72,7 +73,7 @@ export default function HeroBook({
 
         <View style={[StyleSheet.absoluteFill, styles.innerSurface]}>
           <Image
-            resizeMode="stretch"
+            contentFit="fill"
             source={coverInner}
             style={styles.rigImage}
           />

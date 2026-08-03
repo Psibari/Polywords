@@ -43,6 +43,12 @@
       "skillPath": "skills/gameplay-mechanics/SKILL.md",
       "computedHash": "c51cc56bb5c673d557c6da48bc7709ac2229706844036277970cc52c621233ae"
     },
+    "godot-genre-rhythm": {
+      "source": "thedivergentai/gd-agentic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot-genre-rhythm/SKILL.md",
+      "computedHash": "acf37be237e04aadc9e0b37ad050e8e455c44971fba71db11102cc34d1147345"
+    },
     "level-design": {
       "source": "gamedev-skills/awesome-gamedev-agent-skills",
       "sourceType": "github",
