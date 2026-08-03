@@ -704,16 +704,24 @@ export function SwipeMask({
           {!isSpecialSplit && gauntletCard && (
             <>
               <LinearGradient
-                colors={['#9B2D6B', '#7B2D8B', '#2A1C5C']}
+                colors={[
+                  heroBookMaterial.coverPurpleTop,
+                  heroBookMaterial.coverPurple,
+                  heroBookMaterial.coverPurpleBot,
+                ]}
                 locations={[0, 0.55, 1]}
                 start={{ x: 0.1, y: 0 }}
                 end={{ x: 0.9, y: 1 }}
                 style={StyleSheet.absoluteFill}
               />
-              {/* Translucent scrim, not a solid block — the rose/purple/violet
-                  gradient above is this card's material (the same leather-and-
-                  tooling family the sealed spine used); it must still read
-                  through, not be reduced to a picture-frame edge. */}
+              {/* Translucent scrim, not a solid block — the gradient above is
+                  this card's material, the exact same purple leather the
+                  sealed spine (BossGauntletSpines) uses, not a separate rose
+                  tint (that rose accent read as "too pink" on device
+                  2026-08-02 and was dropped — this project's rule as of the
+                  same day is one background/material family, no per-screen
+                  exceptions); it must still read through, not be reduced to
+                  a picture-frame edge. */}
               <View style={styles.gauntletInset} pointerEvents="none" />
             </>
           )}

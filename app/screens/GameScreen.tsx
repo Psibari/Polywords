@@ -1005,11 +1005,10 @@ function GameDirector({ navigation }: { navigation: any }) {
           <RadialGradient id={`gameVignette-${vignetteId}`} cx="50%" cy="30%" r="72%">
             <Stop offset="0%" stopColor={PW.color.bgDeep} stopOpacity={0.24} />
             <Stop offset="45%" stopColor={PW.color.bgDeep} stopOpacity={0.20} />
-            <Stop
-              offset="100%"
-              stopColor={isBossRound ? PW.color.rose : PW.color.bgDeep}
-              stopOpacity={isBossRound ? 0.5 : 0.56}
-            />
+            {/* Was rose-tinted for boss specifically — dropped 2026-08-02,
+                same rule as ambientSkyTuning.ts: one background family,
+                no per-screen exceptions. */}
+            <Stop offset="100%" stopColor={PW.color.bgDeep} stopOpacity={0.56} />
           </RadialGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill={`url(#gameVignette-${vignetteId})`} />
@@ -1251,7 +1250,10 @@ const styles = StyleSheet.create({
     right: '6%',
     height: 230,
     borderRadius: 150,
-    backgroundColor: 'rgba(155,45,107,0.08)',
+    // Was PW.color.rose at low opacity — dropped 2026-08-02 along with the
+    // other boss-specific rose accents; PW.color.purple instead, same family
+    // as everything else now.
+    backgroundColor: 'rgba(123,45,139,0.08)',
   },
   bossBookGlowCore: {
     position: 'absolute',
