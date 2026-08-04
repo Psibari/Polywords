@@ -65,24 +65,32 @@ export function StreakDisplay() {
 }
 
 const styles = StyleSheet.create({
-  // Was a permanently-laid-out `width: 64` flex slot — occupied that width
-  // even while invisible (opacity 0) between chains, competing with the
-  // feather row for space. Now an absolutely-positioned badge that only
-  // takes up room when a parent renders it inside a `position: relative`
-  // wrapper around the score (see TopBar) — starting offsets below, tune
-  // on-device in the HUD redesign's verification pass, not final values.
+  // Anchored via `left: '100%'` + marginLeft so it always grows AWAY from
+  // the score (rightward) regardless of its own text width — anchoring via
+  // `right` (as before) made it grow leftward, into the score, as the font
+  // got bigger. Background pill in rose (PW.color.rose, matching the
+  // existing trap/chain accent used elsewhere for tier>1 feedback) instead
+  // of gold text-on-transparent, so it can't blend into the gold score
+  // number next to it.
   wrapper: {
     position: 'absolute',
-    top: -14,
-    right: -34,
+    top: 2,
+    left: '100%',
+    marginLeft: 8,
+    backgroundColor: 'rgba(155,45,107,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     alignItems: 'center',
   },
   counter: {
     fontFamily: FONTS.hud,
     fontSize:   FONT_SIZES.hudMultiplier,
-    color:      '#F5C842',
-    textShadowColor:  'rgba(245,200,66,0.45)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    color:      '#FFFFFF',
+    textShadowColor:  'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 })
