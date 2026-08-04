@@ -1,11 +1,25 @@
 # POLYWORDS Current Context
 
-Updated July 23, 2026. Active branch: `play-screen-overhaul`.
+Updated August 4, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
 HEAD: 9e8b7dc. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
+
+## Session — 2026-08-04
+
+Feel pass, tsc-clean, device-confirmed, commit eea4e6c:
+
+- Boss entrance (pollyVisitPolicy.ts): perchMs 3400->4200, perchScale 1.3->1.45.
+- Gauntlet 3rd-tile: MaskBoard.tsx onGauntletCorrect adds a second Heavy
+  haptic ~120ms after the first, only on the gauntlet-ending tile.
+- Haptics: bossEntry is now a double-pulse, distinct from bossCorrect's single.
+
+Recurring issue, not new: music intermittently drops and later self-recovers.
+Pete investigating. Known contributing gap: MusicEngine's load retry ladder
+(60/150/300/600/1200ms) gives up permanently on a slow load and only gets a
+fresh shot on the next real track switch — not fixed this session.
 
 Hunt/Polly rebuild in progress — plan: docs/HUNT_POLLY_REBUILD_PLAN.md (read first).
 Shipped + tagged today, all tsc-clean + device-confirmed:

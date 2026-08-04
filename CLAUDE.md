@@ -93,6 +93,8 @@ drivers on one `Animated.Value`.
 - Master Gate is gone.
 - `MaskBoard.tsx` and `SwipeMask.tsx` are warroom-gated — a warroom pass is required
   before either is edited.
+- Gauntlet's 3rd (final) tile gets a distinct double-pulse haptic on correct
+  judgment; tiles 1-2 unchanged.
 
 The visual hierarchy is hero word, active mask tile, HeroBook/Vault target, HUD, then
 Polly visit. Ordinary tiles share one neutral treatment until commitment.
@@ -108,6 +110,8 @@ generates dialogue. The live system is:
 - `app/game/pollyMemory.ts`
 - `app/hooks/usePollyVisits.ts`
 - shared perch/visit/bubble components
+- Boss entrance (BOSS_ENTRY) holds 4200ms at 1.45x scale. bossEntry/bossCorrect
+  haptics are now distinct (double-pulse vs single).
 
 Memory is bounded, deterministic, versioned, and local. Motion respects reduced-motion
 and stops off-screen.
