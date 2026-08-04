@@ -134,8 +134,10 @@ function TopBar({ navigation }: { navigation: any }) {
     <View style={tb.outerRow}>
       <View style={tb.root}>
         <View style={tb.statsRow}>
-          <Text style={tb.scoreVal}>{displayScore}</Text>
-          <StreakDisplay />
+          <View style={tb.scoreWrap}>
+            <Text style={tb.scoreVal}>{displayScore}</Text>
+            <StreakDisplay />
+          </View>
           <View
             style={tb.featherRow}
             accessible
@@ -462,17 +464,24 @@ const tb = StyleSheet.create({
     borderRadius: 1.5,
     backgroundColor: PW.color.softWhite,
   },
+  // Wraps the score + StreakDisplay so the badge (now position: 'absolute')
+  // has a positioned parent to anchor against.
+  scoreWrap: {
+    position: 'relative',
+  },
   scoreVal: {
     color: PW.color.gold,
-    fontSize: 50,
+    // Was 50/52 — shrunk to share statsRow width with a bigger feather row
+    // (see featherBox/featherImg below). Starting point, not final — see
+    // Task 2.
+    fontSize: 36,
     fontFamily: FONTS.hud,
-    lineHeight: 52,
+    lineHeight: 38,
     letterSpacing: 2,
     textTransform: 'uppercase',
     textShadowColor: PW.color.goldGlow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
-    minWidth: 110,
   },
   featherRow: {
     flexDirection: 'row',
@@ -482,8 +491,11 @@ const tb = StyleSheet.create({
     minWidth: 130,
   },
   featherBox: {
-    width: 24,
-    height: 43,
+    // Was 24×43 — shrunk just enough to fit 8 elements (6 lives + reserve
+    // "+" + Gold Feather) on one line with the score. Starting point, not
+    // final — see Task 2.
+    width: 18,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -491,8 +503,8 @@ const tb = StyleSheet.create({
     opacity: 0.35,
   },
   featherImg: {
-    width: 24,
-    height: 43,
+    width: 18,
+    height: 32,
   },
   featherBlade: {
     position: 'absolute',
@@ -579,41 +591,41 @@ const tb = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
   },
   reserveFeatherWrap: {
-    width:          12,
-    height:         21,
+    width:          9,
+    height:         16,
     alignItems:     'center',
     justifyContent: 'center',
     marginLeft:     2,
   },
   reserveBlade: {
-    width:  9,
-    height: 19,
+    width:  7,
+    height: 14,
     borderColor: PW.color.goldSoft,
     backgroundColor: PW.color.goldGlow,
   },
   reserveShaft: {
     backgroundColor: PW.color.goldSoft,
-    height: 18,
+    height: 13,
   },
   reservePlus: {
     position:   'absolute',
-    top:        -7,
-    right:      -4,
+    top:        -6,
+    right:      -3,
     color:      PW.color.gold,
-    fontSize:   10,
+    fontSize:   9,
     fontWeight: '700',
-    lineHeight: 11,
+    lineHeight: 10,
   },
   goldFeatherWrap: {
-    width: 28,
-    height: 50,
+    width: 21,
+    height: 37,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 5,
   },
   goldFeatherImg: {
-    width: 28,
-    height: 50,
+    width: 21,
+    height: 37,
   },
 });
 

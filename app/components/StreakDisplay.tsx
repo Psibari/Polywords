@@ -65,7 +65,18 @@ export function StreakDisplay() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { width: 64, alignItems: 'center' },
+  // Was a permanently-laid-out `width: 64` flex slot — occupied that width
+  // even while invisible (opacity 0) between chains, competing with the
+  // feather row for space. Now an absolutely-positioned badge that only
+  // takes up room when a parent renders it inside a `position: relative`
+  // wrapper around the score (see TopBar) — starting offsets below, tune
+  // on-device in the HUD redesign's verification pass, not final values.
+  wrapper: {
+    position: 'absolute',
+    top: -10,
+    right: -26,
+    alignItems: 'center',
+  },
   counter: {
     fontFamily: FONTS.hud,
     fontSize:   FONT_SIZES.hudMultiplier,
