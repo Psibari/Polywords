@@ -464,8 +464,8 @@ const tb = StyleSheet.create({
     borderRadius: 1.5,
     backgroundColor: PW.color.softWhite,
   },
-  // Wraps the score + StreakDisplay so the badge (now position: 'absolute')
-  // has a positioned parent to anchor against.
+  // Score + StreakDisplay share this row; StreakDisplay renders nothing at
+  // all when there's no active chain, so no space is reserved for it.
   scoreWrap: {
     flexDirection: 'row',
     alignItems: 'baseline',

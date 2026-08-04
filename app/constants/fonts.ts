@@ -21,7 +21,7 @@ export const FONT_SIZES = {
   tileCopy: 28,
   brandTitle: 48,
   hudScore: 26,
-  hudMultiplier: 24,
+  hudMultiplier: 34,
   hudLabel: 11,
   progressLabel: 15,
   pollyLine: 17,

@@ -21,9 +21,12 @@ export function StreakDisplay() {
     if (!isActive) return
     scale.setValue(0.7)
     opacity.setValue(0)
-    Animated.parallel([
+    Animated.sequence([
+      Animated.parallel([
+        Animated.spring(scale, { toValue: 1.25, friction: 4, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
+      ]),
       Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
     ]).start()
   }, [isActive, chainMultiplier]) // eslint-disable-line react-hooks/exhaustive-deps
 
