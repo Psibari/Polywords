@@ -467,7 +467,8 @@ const tb = StyleSheet.create({
   // Wraps the score + StreakDisplay so the badge (now position: 'absolute')
   // has a positioned parent to anchor against.
   scoreWrap: {
-    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   scoreVal: {
     color: PW.color.gold,
