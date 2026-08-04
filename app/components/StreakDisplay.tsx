@@ -73,8 +73,8 @@ const styles = StyleSheet.create({
   // on-device in the HUD redesign's verification pass, not final values.
   wrapper: {
     position: 'absolute',
-    top: -10,
-    right: -26,
+    top: -14,
+    right: -34,
     alignItems: 'center',
   },
   counter: {

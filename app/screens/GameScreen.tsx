@@ -491,11 +491,9 @@ const tb = StyleSheet.create({
     minWidth: 130,
   },
   featherBox: {
-    // Was 24×43 — shrunk just enough to fit 8 elements (6 lives + reserve
-    // "+" + Gold Feather) on one line with the score. Starting point, not
-    // final — see Task 2.
-    width: 18,
-    height: 32,
+    // On-device check confirmed room to spare at 18×32 — sized back up.
+    width: 21,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -503,8 +501,8 @@ const tb = StyleSheet.create({
     opacity: 0.35,
   },
   featherImg: {
-    width: 18,
-    height: 32,
+    width: 21,
+    height: 38,
   },
   featherBlade: {
     position: 'absolute',
@@ -591,41 +589,41 @@ const tb = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
   },
   reserveFeatherWrap: {
-    width:          9,
-    height:         16,
+    width:          11,
+    height:         19,
     alignItems:     'center',
     justifyContent: 'center',
     marginLeft:     2,
   },
   reserveBlade: {
-    width:  7,
-    height: 14,
+    width:  8,
+    height: 16,
     borderColor: PW.color.goldSoft,
     backgroundColor: PW.color.goldGlow,
   },
   reserveShaft: {
     backgroundColor: PW.color.goldSoft,
-    height: 13,
+    height: 15,
   },
   reservePlus: {
     position:   'absolute',
-    top:        -6,
-    right:      -3,
+    top:        -7,
+    right:      -4,
     color:      PW.color.gold,
-    fontSize:   9,
+    fontSize:   10,
     fontWeight: '700',
-    lineHeight: 10,
+    lineHeight: 11,
   },
   goldFeatherWrap: {
-    width: 21,
-    height: 37,
+    width: 25,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 5,
   },
   goldFeatherImg: {
-    width: 21,
-    height: 37,
+    width: 25,
+    height: 44,
   },
 });
 
