@@ -53,7 +53,11 @@ export const Haptics = {
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
       case 'wrong':
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
-      case 'bossEntry':
+      case 'bossEntry': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 100);
+        return first;
+      }
       case 'bossCorrect':
       case 'bossHaunted':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);

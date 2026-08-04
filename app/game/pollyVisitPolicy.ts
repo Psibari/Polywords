@@ -78,7 +78,7 @@ const BOSS_ENTRY: VisitSpec = {
   // text when this held indefinitely (device test 2026-07-31); she instead
   // returns for a separate BOSS_GAUNTLET_THROW beat when the gauntlet
   // actually begins.
-  holdPerch: false, perchMs: 3400, perchScale: 1.3,
+  holdPerch: false, perchMs: 4200, perchScale: 1.45,
 };
 
 // Fires when the visible boss tiles are cleared and the hidden gauntlet is

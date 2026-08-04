@@ -712,6 +712,19 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
         Haptics.cueAsync('bossCorrect');
         triggerGauntletPulse();
+        // gauntletCorrectCount in the store hasn't incremented for this
+        // tile yet (resolveGauntletTile calls this callback before it calls
+        // incrementGauntletCorrectCount) — same for mechanics.finalTileStates,
+        // so counting its prior entries and adding this tile gives the
+        // correct ordinal without an off-by-one. The gauntlet-ending tile
+        // (the one immediately before mastery) gets a heavier double-pulse;
+        // reuses the same stacked Heavy-impact shape as the boss entrance.
+        const priorCorrect = Array.from(mechanics.finalTileStates.values())
+          .filter(s => s === 'correct' || s === 'trap-caught').length;
+        const isFinalGauntletTile = priorCorrect + 1 >= mechanics.gauntletTiles.length;
+        if (isFinalGauntletTile) {
+          setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 120);
+        }
         if (swipedUp) triggerAbsorption(phrase);
       },
       onGauntletTileDrop() {
