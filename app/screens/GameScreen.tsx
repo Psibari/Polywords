@@ -135,7 +135,7 @@ function TopBar({ navigation }: { navigation: any }) {
       <View style={tb.root}>
         <View style={tb.statsRow}>
           <View style={tb.scoreWrap}>
-            <Text style={tb.scoreVal}>{displayScore}</Text>
+            <Text style={tb.scoreVal} numberOfLines={1} adjustsFontSizeToFit>{displayScore}</Text>
             <StreakDisplay />
           </View>
           <View
@@ -467,14 +467,23 @@ const tb = StyleSheet.create({
   // Score + StreakDisplay share this row; StreakDisplay renders nothing at
   // all when there's no active chain, so no space is reserved for it.
   scoreWrap: {
+    // Allowed to compress under width pressure — see scoreVal's
+    // adjustsFontSizeToFit below. The feather row must never shrink (a life
+    // indicator that visually shrinks when it's fuller would read backwards),
+    // so the score is what gives when a 5-digit score + an active streak +
+    // all 8 feather elements (6 lives + reserve "+" + Gold Feather) would
+    // otherwise overflow the row and get silently clipped by tb.root's
+    // overflow: 'hidden' (the original bug this HUD redesign was for).
     flexDirection: 'row',
     alignItems: 'baseline',
+    flexShrink: 1,
+    minWidth: 0,
   },
   scoreVal: {
     color: PW.color.gold,
-    // Was 50/52 — shrunk to share statsRow width with a bigger feather row
-    // (see featherBox/featherImg below). Starting point, not final — see
-    // Task 2.
+    // Was 50/52 — shrunk so the score fits alongside the feather row.
+    // adjustsFontSizeToFit (see the Text usage above) lets it compress
+    // further under pressure; this is its normal-case starting size.
     fontSize: 36,
     fontFamily: FONTS.hud,
     lineHeight: 38,
@@ -489,7 +498,7 @@ const tb = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     gap: 6,
-    minWidth: 130,
+    flexShrink: 0,
   },
   featherBox: {
     // On-device check confirmed room to spare at 18×32 — sized back up.

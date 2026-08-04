@@ -44,6 +44,7 @@ export function StreakDisplay() {
 const styles = StyleSheet.create({
   counter: {
     marginLeft: 6,
+    lineHeight: 38,
     fontFamily: FONTS.hud,
     fontSize:   FONT_SIZES.hudMultiplier,
     color:      PW.color.rose,
