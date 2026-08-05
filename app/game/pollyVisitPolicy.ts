@@ -37,8 +37,8 @@ export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 
 export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
-  flyPose: 'fly' | 'flyAngry';
-  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk';
+  flyPose: 'fly' | 'flyAngry' | 'masterShock' | 'hauntTaunt';
+  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'masterAngry' | 'hauntTaunt';
   lineId: PollyLineId | null;
   line: string | null;
   sfx: PollyVisitSfx | null;
@@ -94,9 +94,15 @@ const BOSS_GAUNTLET_THROW: VisitSpec = {
   holdPerch: false, perchMs: 1400, perchScale: 1.3,
 };
 
-const BOSS_MASTERED_SULK: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'sulk',
-  lineId: null, line: null, sfx: null, // silent — defeat needs no line
+const MASTERED_REACTION: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'masterShock', perchPose: 'masterAngry',
+  lineId: null, line: null, sfx: null, // silent, defeat needs no line — same precedent as the old BOSS_MASTERED_SULK
+  holdPerch: true, perchMs: 2500,
+};
+
+const HAUNTED_GLOAT: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'hauntTaunt', perchPose: 'hauntTaunt',
+  lineId: null, line: null, sfx: 'pollySqwawkLaugh',
   holdPerch: true, perchMs: 2500,
 };
 
@@ -108,14 +114,6 @@ const GAME_OVER_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
   lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: null,
   holdPerch: true, perchMs: 2500,
-};
-
-// A failed haunt does NOT end the run — she laughs and flies out, unlike
-// gameOver which holds the perch (terminal beat).
-const HAUNT_FAILED_LAUGH: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
-  lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: 'pollySqwawkLaugh',
-  holdPerch: false, perchMs: 2200,
 };
 
 const CLEAN_SWEEP_FIRST: VisitSpec = {
@@ -158,9 +156,10 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   // content — i.e. exclusively the boss-gauntlet-begin beat, never an
   // ordinary word's completion (those fire 'cleanSweep' instead).
   if (event === 'allMasksFound') return { action: 'visit', spec: BOSS_GAUNTLET_THROW };
-  if (event === 'gateMasteredBoss') return { action: 'visit', spec: BOSS_MASTERED_SULK };
+  if (event === 'gateMasteredBoss') return { action: 'visit', spec: MASTERED_REACTION };
+  if (event === 'gateMastered') return { action: 'visit', spec: MASTERED_REACTION };
+  if (event === 'hiddenMasterFailed') return { action: 'visit', spec: HAUNTED_GLOAT };
   if (event === 'gameOver') return { action: 'visit', spec: GAME_OVER_LAUGH };
-  if (event === 'hauntFailed') return { action: 'visit', spec: HAUNT_FAILED_LAUGH };
   if (event === 'cleanSweep' && !state.cleanSweepSeenThisRun) {
     return { action: 'visit', spec: CLEAN_SWEEP_FIRST };
   }

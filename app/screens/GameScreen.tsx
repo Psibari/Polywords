@@ -92,6 +92,29 @@ function RedFlash({ flashKey }: { flashKey: number }) {
   );
 }
 
+// ─── GOLD FLASH — real-claim / gauntlet-correct / mastery confirmation ──
+function GoldFlash({ flashKey }: { flashKey: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const reduceFlashes = useReducedFlashesPreference();
+  useEffect(() => {
+    if (flashKey === 0 || reduceFlashes) {
+      opacity.setValue(0);
+      return;
+    }
+    opacity.setValue(0);
+    Animated.sequence([
+      Animated.timing(opacity, { toValue: 0.38, duration: 65,  useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0,    duration: 260, useNativeDriver: true }),
+    ]).start();
+  }, [flashKey, reduceFlashes]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: '#F5C842', opacity }}
+    />
+  );
+}
+
 // ─── TOP BAR ─────────────────────────────────────────────────
 
 function TopBar({ navigation }: { navigation: any }) {
@@ -703,9 +726,11 @@ function GameDirector({ navigation }: { navigation: any }) {
   // ── Flash overlay state ────────────────────────────────────
   const [purpleFlashKey, setPurpleFlashKey] = useState(0);
   const [redFlashKey,    setRedFlashKey]    = useState(0);
+  const [goldFlashKey,   setGoldFlashKey]   = useState(0);
 
   const handleTrapCaught = useCallback(() => setPurpleFlashKey(k => k + 1), []);
   const handleWrongSwipe = useCallback(() => setRedFlashKey(k => k + 1),    []);
+  const handleGoldFlash  = useCallback(() => setGoldFlashKey(k => k + 1),   []);
 
   // ── Idle/stuck-static timer ──────────────────────────────────
   const STATIC_IDLE_TIMEOUT_MS = 15000;
@@ -1089,6 +1114,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           spawnEffect={spawnEffect}
           onTrapCaught={handleTrapCaught}
           onWrongSwipe={handleWrongSwipe}
+          onGoldFlash={handleGoldFlash}
           onSwipeAttempt={resetIdleTimer}
           fireIntroVisit={introVisitPending}
           onIntroVisitFired={() => setIntroVisitPending(false)}
@@ -1118,6 +1144,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       {/* ── Flash overlays — zIndex 50, above game content ── */}
       <PurpleFlash flashKey={purpleFlashKey} />
       <RedFlash    flashKey={redFlashKey} />
+      <GoldFlash   flashKey={goldFlashKey} />
 
       {/* ── Effects overlay — pointerEvents none, zIndex 100 ── */}
       <View style={styles.effectsOverlay} pointerEvents="none">
@@ -1182,6 +1209,7 @@ function GameContent({
   spawnEffect,
   onTrapCaught,
   onWrongSwipe,
+  onGoldFlash,
   onSwipeAttempt,
   fireIntroVisit,
   onIntroVisitFired,
@@ -1189,6 +1217,7 @@ function GameContent({
   spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
   onTrapCaught: () => void;
   onWrongSwipe: () => void;
+  onGoldFlash: () => void;
   onSwipeAttempt: () => void;
   fireIntroVisit: boolean;
   onIntroVisitFired: () => void;
@@ -1226,6 +1255,7 @@ function GameContent({
           spawnEffect={spawnEffect}
           onTrapCaught={onTrapCaught}
           onWrongSwipe={onWrongSwipe}
+          onGoldFlash={onGoldFlash}
           onSwipeAttempt={onSwipeAttempt}
           firePollyEvent={firePollyEvent}
         />

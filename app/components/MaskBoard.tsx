@@ -156,6 +156,7 @@ export type Props = {
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: string) => void;
   onTrapCaught?: () => void;
   onWrongSwipe?: () => void;
+  onGoldFlash?: () => void;
   onSwipeAttempt?: () => void;
   // Owned by GameContent — the visit layer must outlive this board's
   // per-word remount (key={stepIndex}), or word-completion beats die mid-arc.
@@ -184,6 +185,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
   const pulse = useRef(new Animated.Value(0)).current;
   const resolvedRef = useRef(false);
   const reduceMotion = useReducedMotionPreference();
+  const [canDismiss, setCanDismiss] = useState(false);
 
   function resolve() {
     if (resolvedRef.current) return;
@@ -192,6 +194,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
   }
 
   function handlePress() {
+    if (!canDismiss) return;
     playSfx('uiClick');
     resolve();
   }
@@ -202,7 +205,8 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
       scale.setValue(1);
       pulse.setValue(0);
       const auto = setTimeout(resolve, 2800);
-      return () => clearTimeout(auto);
+      const dismissTimer = setTimeout(() => setCanDismiss(true), 1200);
+      return () => { clearTimeout(auto); clearTimeout(dismissTimer); };
     }
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
@@ -216,7 +220,8 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
     );
     loop.start();
     const auto = setTimeout(resolve, 2800);
-    return () => { clearTimeout(auto); loop.stop(); };
+    const dismissTimer = setTimeout(() => setCanDismiss(true), 1200);
+    return () => { clearTimeout(auto); clearTimeout(dismissTimer); loop.stop(); };
   }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
@@ -250,6 +255,7 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
   const drift = useRef(new Animated.Value(0)).current;
   const resolvedRef = useRef(false);
   const reduceMotion = useReducedMotionPreference();
+  const [canDismiss, setCanDismiss] = useState(false);
 
   function resolve() {
     if (resolvedRef.current) return;
@@ -258,6 +264,7 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
   }
 
   function handlePress() {
+    if (!canDismiss) return;
     playSfx('uiClick');
     resolve();
   }
@@ -268,7 +275,8 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
       scale.setValue(1);
       drift.setValue(0);
       const auto = setTimeout(resolve, 3200);
-      return () => clearTimeout(auto);
+      const dismissTimer = setTimeout(() => setCanDismiss(true), 1200);
+      return () => { clearTimeout(auto); clearTimeout(dismissTimer); };
     }
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
@@ -282,7 +290,8 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
     );
     loop.start();
     const auto = setTimeout(resolve, 3200);
-    return () => { clearTimeout(auto); loop.stop(); };
+    const dismissTimer = setTimeout(() => setCanDismiss(true), 1200);
+    return () => { clearTimeout(auto); clearTimeout(dismissTimer); loop.stop(); };
   }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hazeY = drift.interpolate({ inputRange: [0, 1], outputRange: [0, -10] });
@@ -318,7 +327,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 }
 
 
-function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
+function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldFlash, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
   // resolution, so a whole-store subscription re-rendered it on completely
@@ -407,7 +416,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     ]).start();
   }
   const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
-  const goldTextOpacity       = useRef(new Animated.Value(0)).current;
   const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
 
   // ── wrong-swipe word recoil ───────────────────────────────────
@@ -688,16 +696,12 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
     step,
     firePollyEvent,
     perform: {
-      onRealClaimed({ mask, tier, points, nextFound }) {
+      onRealClaimed({ mask, tier, points }) {
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
         Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
         spawnFloat(points, 'real', tier);
         triggerAbsorption(mask.phrase);
-        Animated.timing(goldTextOpacity, {
-          toValue: GOLD_STEPS_LOCAL[Math.min(nextFound, GOLD_STEPS_LOCAL.length - 1)],
-          duration: 400,
-          useNativeDriver: true,
-        }).start();
+        onGoldFlash?.();
       },
       onTrapRejected({ tier, points }) {
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
@@ -712,6 +716,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
         Haptics.cueAsync('bossCorrect');
         triggerGauntletPulse();
+        onGoldFlash?.();
         // gauntletCorrectCount in the store hasn't incremented for this
         // tile yet (resolveGauntletTile calls this callback before it calls
         // incrementGauntletCorrectCount) — same for mechanics.finalTileStates,
@@ -770,59 +775,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         }).start();
       },
       onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
-        if (!isBoss && hauntOutcome) {
-          // Returning Haunt is a recurring Round-8 payoff, not the final
-          // climax. Give it one decisive banishment beat and return control
-          // before it can overshadow Polly's Word.
-          setMasterStampVisible(true);
-          setMasterCracksVisible(false);
-          setGoldSeedVisible(false);
-          setGoldBloomVisible(false);
-          setSystemStingerWord(null);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Animated.parallel([
-            Animated.timing(masterAllFadeAnim, {
-              toValue: 0.32,
-              duration: 160,
-              useNativeDriver: true,
-            }),
-            Animated.sequence([
-              Animated.timing(masterHeroScale, {
-                toValue: 1.12,
-                duration: 140,
-                easing: Easing.out(Easing.quad),
-                useNativeDriver: true,
-              }),
-              Animated.spring(masterHeroScale, {
-                toValue: 1,
-                damping: 9,
-                stiffness: 210,
-                useNativeDriver: true,
-              }),
-            ]),
-          ]).start();
-          setTimeout(() => setSealReady(true), 180);
-          // Fade back to normal well before the outcome reveal below (see
-          // useBoardMechanics.ts's showWordOutcome timer for this sequence,
-          // currently 550ms) — this must finish before that fires, or the
-          // fade-back animation is still running on masterAllFadeAnim when
-          // the next word's presentation reuses the same shared value.
-          setTimeout(() => {
-            Animated.timing(masterAllFadeAnim, {
-              toValue: 1,
-              duration: 160,
-              useNativeDriver: true,
-            }).start();
-          }, 320);
-          return;
-        }
         // `!isBoss` here can only mean isHaunt (onMasteredSequence is only
         // ever invoked when isFinalGateStep — isBoss || isHaunt — is true,
-        // see the completion-check effect above), and the isHaunt case
-        // already returned above. The old 12-phase Haunt-mastery sequence
-        // that used to live here is unreachable; removed rather than left
+        // see the completion-check effect above). The old 12-phase Haunt-mastery
+        // sequence that used to live here is unreachable; removed rather than left
         // as dead code a future edit could waste time modifying.
-        // ── Boss path — one decisive beat instead of the 12-phase sequence.
+        // ── One decisive beat, boss or Haunt rematch alike.
+        onGoldFlash?.();
         if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
         playSfx('bookClose');
         Haptics.cueAsync('mastery');
@@ -936,7 +895,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
       },
     },
   });
-  const GOLD_STEPS_LOCAL = [0, 0.25, 0.55, 0.80, 1.0] as const;
 
   useEffect(() => {
     if (mechanics.visibleGridMasks.length > 0) {
@@ -1050,7 +1008,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
         });
       }, 120);
     }, cardDelay);
-    goldTextOpacity.setValue(0);
     wordEntryTilt.setValue(0);
     bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.setValue(0);
@@ -1342,26 +1299,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onSwipe
                 {step.word}
               </Text>
             )}
-            {/* Gold overlay for absorption fill */}
-            <Animated.Text
-              pointerEvents="none"
-              style={[
-                styles.word,
-                isBoss && styles.wordBoss,
-                {
-                  color: '#F5C842',
-                  opacity: goldTextOpacity,
-                  position: 'absolute',
-                  left: 0, right: 0,
-                  textAlign: 'center',
-                },
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {step.word}
-            </Animated.Text>
             {/* Red flash overlay — wrong swipe danger signal */}
             <Animated.Text
               pointerEvents="none"

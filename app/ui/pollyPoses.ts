@@ -13,6 +13,9 @@ export const POLLY_POSES = {
   fly: require('../../assets/images/polly/poses/sprite2.png'),      // neutral fly
   flyAngry: require('../../assets/images/polly/poses/sprite10.png'),// angry open-beak fly
   flyGrin: require('../../assets/images/polly/poses/sprite1.png'),  // confident grinning fly (reserve)
+  masterShock: require('../../assets/images/polly/polly_shocked.png'),  // flying, wide-eyed shock
+  masterAngry: require('../../assets/images/polly/polly_angry.png'),    // perched, angry glare
+  hauntTaunt: require('../../assets/images/polly/polly_pointing.png'),  // flying, pointing/laughing
 } as const;
 
 export type PollyPoseName = keyof typeof POLLY_POSES;
