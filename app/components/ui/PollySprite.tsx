@@ -12,7 +12,10 @@ export type PollyPose =
   | 'perchSmug'        // polly_smug         — wrong x1
   | 'perchPointing'    // polly_pointing     — hesitation taunts
   | 'perchShocked'     // polly_shocked      — perfect clear
-  | 'perchSulking';    // polly_sulking      — player masters word
+  | 'perchSulking'     // polly_sulking      — player masters word
+  | 'flyMasterShock'   // polly_shocked — mastery celebration, beat 1
+  | 'perchMasterAngry' // polly_angry — mastery celebration, beat 2
+  | 'flyHauntTaunt';   // polly_pointing — haunted celebration
 
 // Canvas: 460w × 500h. Branch top sits at 73% down the canvas.
 const W_RATIO = 460 / 500;
@@ -21,6 +24,7 @@ export const POLLY_BRANCH_BOTTOM_FRACTION = 0.73;
 // Flying poses — used to conditionally hide the fixed branch in MaskBoard
 export const FLYING_POSES = new Set<PollyPose>([
   'flyExcited', 'flyRelaxed', 'flyAngry',
+  'flyMasterShock', 'flyHauntTaunt',
 ]);
 
 const POSE_IMAGES: Record<PollyPose, ReturnType<typeof require>> = {
@@ -34,6 +38,9 @@ const POSE_IMAGES: Record<PollyPose, ReturnType<typeof require>> = {
   perchPointing: POLLY_ANIMATIONS.tauntPoint,
   perchShocked: POLLY_ANIMATIONS.bossWarning,
   perchSulking: POLLY_ANIMATIONS.sulk,
+  flyMasterShock: POLLY_ANIMATIONS.masterShock,
+  perchMasterAngry: POLLY_ANIMATIONS.masterAngry,
+  flyHauntTaunt: POLLY_ANIMATIONS.hauntTaunt,
 };
 
 interface PollySpriteProps {
