@@ -63,3 +63,30 @@ Authority is: current user request, this file, focused source, `CLAUDE.md`, then
 - Docs-only work requires at least the two git checks.
 - Commit or push only when explicitly asked.
 - Never pop, drop, or clear stashes unless instructed by name.
+
+## Build and Verification
+
+- Use `npm.cmd install` once to restore dependencies.
+- Use `npm.cmd run typecheck` or `npx.cmd tsc --noEmit` for TypeScript validation.
+- Use `npm.cmd test` for gameplay and logic changes.
+- Use `git diff --check` and `git status --short` before claiming completion.
+
+## Key Files and Boundaries
+
+- App entry: `App.tsx`
+- Game screens: `app/screens/{Game,Home,Vault,Settings,DailyChallenge,Results}Screen.tsx`
+- Hunt gameplay core: `app/game/{huntGenerator,polyRunEngine,dailyChallengeEngine}.ts`
+- Persisted state: `app/store/useGameStore.ts`
+- Live content: `assets/data/huntData.json`
+- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`
+- Polly assets: `assets/images/polly/poses/*.png`
+- UI layout/animation key surfaces: `app/components/MaskBoard.tsx`, `app/components/SwipeMask.tsx`
+
+## Project Notes
+
+- Active branch: `play-screen-overhaul`; do not merge to `main` without approval.
+- Navigation is Home / Play / Vault / Settings, plus Daily; active gameplay is nav-free.
+- Hunt uses UP to claim a REAL and RIGHT to reject a trap; Daily is UP-only.
+- Do not change swipe grammar, scoring, boss rules, or persistence without explicit request.
+- Do not wire `assets/data/huntData.v2.json` into gameplay without approval.
+- Preserve the live app palette and Polly treatment rules from `CLAUDE.md` and `AGENTS.md`.
