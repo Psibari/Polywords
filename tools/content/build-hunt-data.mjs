@@ -100,6 +100,21 @@ for (const row of sheetRows('Rewrite Queue').slice(1)) {
 const WORD_TYPE_NAMES = { 1: 'Single', 2: 'Double', 3: 'Triple', 4: 'Quadruple', 5: 'Quintuple', 6: 'Sextuple', 7: 'Septuple' };
 const PACING_ROTATION = ['confidence', 'flow', 'tension', 'panic'];
 
+// A pure function of the word itself, not a shared running counter — so one
+// word's placeholder never shifts just because some other word gained or
+// lost an override. A shared cursor looked fine until pacing-overrides.json
+// started pulling words out of the rotation: every remaining placeholder
+// word's phase silently reshuffled because its position in the now-shorter
+// rotation sequence changed, even though nothing about that word was
+// reviewed. Confirmed via a before/after diff (2026-08-08): 35 unreviewed
+// words got a different (still equally meaningless) gpsTag placeholder
+// purely from 91 other words being added to pacing-overrides.json.
+function stableRotationIndex(word) {
+  let hash = 0;
+  for (let i = 0; i < word.length; i++) hash = (hash * 31 + word.charCodeAt(i)) >>> 0;
+  return hash % PACING_ROTATION.length;
+}
+
 const allWords = new Set([...tilesByWord.keys(), ...bossByWord.keys()]);
 const finalData = {};
 const report = {
@@ -107,7 +122,6 @@ const report = {
   noMasks: [], difficultyDefaulted: [], gpsTagPlaceholder: [],
 };
 
-let pacingCursor = 0;
 for (const word of [...allWords].sort()) {
   const bossEntry = bossByWord.get(word);
   const tileEntry = tilesByWord.get(word);
@@ -163,8 +177,7 @@ for (const word of [...allWords].sort()) {
     if (override?.gpsTag) {
       gpsTag = override.gpsTag;
     } else {
-      gpsTag = PACING_ROTATION[pacingCursor % PACING_ROTATION.length];
-      pacingCursor += 1;
+      gpsTag = PACING_ROTATION[stableRotationIndex(word)];
       report.gpsTagPlaceholder.push({ word, gpsTag });
     }
   }
