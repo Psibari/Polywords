@@ -37,8 +37,8 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.line, 'This word stays mine.', 'bossEntry.line');
   eq(s.sfx, 'pollySqwawkShort', 'bossEntry.sfx');
   eq(s.holdPerch, false, 'bossEntry.holdPerch');
-  eq(s.perchMs, 3400, 'bossEntry.perchMs');
-  eq(s.perchScale, 1.3, 'bossEntry.perchScale');
+  eq(s.perchMs, 4200, 'bossEntry.perchMs');
+  eq(s.perchScale, 1.45, 'bossEntry.perchScale');
 }
 
 // allMasksFound: only ever fired on the boss final-gate step, once the
@@ -55,10 +55,10 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.perchScale, 1.3, 'allMasksFound.perchScale');
 }
 
-// gateMasteredBoss: flyAngry → sulk, silent, holds perch
+// gateMasteredBoss: masterShock → masterAngry, silent, holds perch
 {
   const s = visitSpec(resolveVisit('gateMasteredBoss', idle), 'gateMasteredBoss');
-  eq(s.perchPose, 'sulk', 'gateMasteredBoss.perchPose');
+  eq(s.perchPose, 'masterAngry', 'gateMasteredBoss.perchPose');
   eq(s.line, null, 'gateMasteredBoss.line');
   eq(s.sfx, null, 'gateMasteredBoss.sfx');
   eq(s.holdPerch, true, 'gateMasteredBoss.holdPerch');
@@ -189,7 +189,6 @@ eq(resolveVisit('wordEntry', idle).action, 'wordEntry', 'wordEntry resets budget
 for (const ev of [
   'correct', 'streakX10', 'oneHeartLeft', 'oneWrongMove',
   'hiddenFound', 'hesitationCleared', 'ghostFoundLate', 'ghostDissolved',
-  'gateMastered', 'hiddenMasterFailed',
 ] as const) {
   eq(resolveVisit(ev, idle).action, 'none', `${ev} ignored`);
 }

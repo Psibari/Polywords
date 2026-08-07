@@ -116,6 +116,14 @@ const GAME_OVER_LAUGH: VisitSpec = {
   holdPerch: true, perchMs: 2500,
 };
 
+// A failed haunt does NOT end the run — she laughs and flies out, unlike
+// gameOver which holds the perch (terminal beat).
+const HAUNT_FAILED_LAUGH: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
+  lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: 'pollySqwawkLaugh',
+  holdPerch: false, perchMs: 2200,
+};
+
 const CLEAN_SWEEP_FIRST: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'shocked',
   lineId: 'huntCleanSweep', line: POLLY_LINES.huntCleanSweep,
@@ -160,6 +168,7 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   if (event === 'gateMastered') return { action: 'visit', spec: MASTERED_REACTION };
   if (event === 'hiddenMasterFailed') return { action: 'visit', spec: HAUNTED_GLOAT };
   if (event === 'gameOver') return { action: 'visit', spec: GAME_OVER_LAUGH };
+  if (event === 'hauntFailed') return { action: 'visit', spec: HAUNT_FAILED_LAUGH };
   if (event === 'cleanSweep' && !state.cleanSweepSeenThisRun) {
     return { action: 'visit', spec: CLEAN_SWEEP_FIRST };
   }
