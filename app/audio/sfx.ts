@@ -120,24 +120,51 @@ function takePlayer(pool: SfxPlayerPool): AudioPlayer | null {
   return null;
 }
 
-async function restartPlayer(name: SfxName, player: AudioPlayer, rate: number): Promise<void> {
+async function restartPlayer(name: SfxName, player: AudioPlayer, rate: number): Promise<boolean> {
   try {
     player.pause();
     await player.seekTo(0, 0, 0);
     try { player.setPlaybackRate(rate); } catch {}
     player.play();
+    return true;
   } catch (error) {
     warnDev(`Failed to play "${name}" from the beginning.`, error);
+    return false;
   } finally {
     reservedPlayers.delete(player);
   }
+}
+
+// Shared by both failure modes: a pool whose players never reach isLoaded,
+// and a pool whose players loaded but a native error on play() proves they're
+// actually broken (e.g. iOS "Session lookup failed" after an audio-server
+// hiccup). Bounded per sound so a persistently dead audio server can't spin.
+function rebuildPoolIfNeeded(name: SfxName, pool: SfxPlayerPool, rate: number, reason: string): void {
+  const rebuilds = poolRebuilds[name] ?? 0;
+  if (rebuilds < MAX_POOL_REBUILDS) {
+    poolRebuilds[name] = rebuilds + 1;
+    warnDev(`"${name}" ${reason}; rebuilding pool (attempt ${rebuilds + 1}).`);
+    pool.players.forEach(p => { try { p.remove(); } catch {} });
+    delete playerPools[name];
+    const fresh = createPlayerPool(name, SFX[name]);
+    if (fresh) {
+      playerPools[name] = fresh;
+      playFromPool(name, fresh, rate);
+    }
+    return;
+  }
+  warnDev(`"${name}" could not play because its pooled players are broken.`);
 }
 
 function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAttempt = 0): void {
   const player = takePlayer(pool);
   if (player) {
     poolRebuilds[name] = 0;
-    void restartPlayer(name, player, rate);
+    void restartPlayer(name, player, rate).then(ok => {
+      if (!ok && playerPools[name] === pool) {
+        rebuildPoolIfNeeded(name, pool, rate, 'player errored on play()');
+      }
+    });
     return;
   }
 
@@ -145,20 +172,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
     warnDev(`"${name}" was requested before any pooled player finished loading; retrying.`);
   }
   if (loadAttempt >= LOAD_RETRY_ATTEMPTS) {
-    const rebuilds = poolRebuilds[name] ?? 0;
-    if (rebuilds < MAX_POOL_REBUILDS) {
-      poolRebuilds[name] = rebuilds + 1;
-      warnDev(`"${name}" players never loaded; rebuilding pool (attempt ${rebuilds + 1}).`);
-      pool.players.forEach(p => { try { p.remove(); } catch {} });
-      delete playerPools[name];
-      const fresh = createPlayerPool(name, SFX[name]);
-      if (fresh) {
-        playerPools[name] = fresh;
-        playFromPool(name, fresh, rate);
-      }
-      return;
-    }
-    warnDev(`"${name}" could not play because its pooled players did not load.`);
+    rebuildPoolIfNeeded(name, pool, rate, 'players never loaded');
     return;
   }
 

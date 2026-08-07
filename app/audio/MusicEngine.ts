@@ -81,6 +81,13 @@ let loadRetryAttempt = 0;
 let transitionRequestedAt = 0;
 let tracedTransitionToken = -1;
 
+// A native play() failure (e.g. iOS "Server was dead when activation request
+// was made") means the underlying player object itself is broken, not just
+// slow to load — the load-retry ladder above can never recover from this.
+// Bounded rebuild mirrors sfx.ts's pool-rebuild self-heal.
+const MAX_PLAYER_REBUILDS = 2;
+let playerRebuildAttempts = 0;
+
 function clearLoadRetry(): void {
   if (loadRetryId !== null) clearTimeout(loadRetryId);
   loadRetryId = null;
@@ -156,6 +163,7 @@ function playLoadedTrack(token: number): void {
     const delay = LOAD_RETRY_MS[loadRetryAttempt];
     if (delay === undefined) {
       warnDev(`gave up waiting for ${desiredTrack} to load`);
+      if (livePlayer === player) rebuildPlayerAndRetry();
       return;
     }
     loadRetryAttempt += 1;
@@ -201,6 +209,7 @@ function playLoadedTrack(token: number): void {
         );
       }
       livePlayer.play();
+      playerRebuildAttempts = 0;
       fadeVolumeTo(targetVolume(), FADE_IN_MS);
     } else if (
       fadeRafId === null &&
@@ -210,7 +219,46 @@ function playLoadedTrack(token: number): void {
     }
   } catch (error) {
     warnDev(`failed to play ${desiredTrack} track`, error);
+    if (livePlayer === player) rebuildPlayerAndRetry();
   }
+}
+
+function createPlayer(): AudioPlayer {
+  const nextPlayer = createAudioPlayer(null, {
+    keepAudioSessionActive: true,
+    updateInterval: 250,
+  });
+  nextPlayer.volume = 0;
+  nextPlayer.loop = true;
+  playerSubscription?.remove();
+  playerSubscription = nextPlayer.addListener('playbackStatusUpdate', status => {
+    if (status.isLoaded) playLoadedTrack(transitionToken);
+  });
+  return nextPlayer;
+}
+
+// Recreates the underlying native player after a hard play() failure (the
+// broken instance can never load again) and re-applies whatever track/state
+// is currently desired. Bounded so a persistently dead audio server can't
+// spin this forever.
+function rebuildPlayerAndRetry(): void {
+  if (playerRebuildAttempts >= MAX_PLAYER_REBUILDS) {
+    warnDev(`music player failed to recover after ${MAX_PLAYER_REBUILDS} rebuilds`);
+    return;
+  }
+  playerRebuildAttempts += 1;
+  warnDev(`rebuilding music player (attempt ${playerRebuildAttempts})`);
+
+  try {
+    player?.remove();
+  } catch (error) {
+    warnDev('failed to release broken music player', error);
+  }
+
+  player = createPlayer();
+  activeTrackKey = null;
+  configuredTrackToken = -1;
+  applyDesiredState();
 }
 
 function switchTrack(nextTrack: TrackKey): void {
@@ -285,17 +333,7 @@ export function initMusicEngine(): Promise<void> {
     .catch(error => warnDev('failed to configure audio mode', error))
     .then(() => {
       if (player) return;
-
-      const nextPlayer = createAudioPlayer(null, {
-        keepAudioSessionActive: true,
-        updateInterval: 250,
-      });
-      nextPlayer.volume = 0;
-      nextPlayer.loop = true;
-      player = nextPlayer;
-      playerSubscription = nextPlayer.addListener('playbackStatusUpdate', status => {
-        if (status.isLoaded) playLoadedTrack(transitionToken);
-      });
+      player = createPlayer();
       applyDesiredState();
     })
     .catch(error => {
@@ -369,6 +407,7 @@ export function haltMusicEngine(): void {
   pendingSeek = null;
   transitionToken += 1;
   transportPaused = false;
+  playerRebuildAttempts = 0;
   clearPauseTimer();
   clearLoadRetry();
   cancelFade();
