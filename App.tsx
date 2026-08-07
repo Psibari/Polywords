@@ -11,6 +11,7 @@ import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
 import { preloadHuntTrack } from './app/audio/MusicEngine';
+import { preloadSfx } from './app/audio/sfx';
 
 const Stack = createNativeStackNavigator();
 
@@ -43,11 +44,17 @@ export default function App() {
     ]).finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
-  // Warms the hunt music track in the background as soon as Home is about to
-  // render, so the first real Hunt entry doesn't pay the full load cost that
-  // GameScreen's own startMusic('hunt') call would otherwise hit cold.
+  // Warms the hunt music track and every SFX pool in the background as soon
+  // as Home is about to render, so the first real Hunt/Daily entry doesn't
+  // pay the full load cost that startMusic('hunt')/preloadSfx() would
+  // otherwise hit cold — same fix as the music preload, same root cause.
+  // preloadSfx() is idempotent per sound, so GameScreen/DailyChallengeScreen
+  // calling it again on mount is a harmless no-op once this has already run.
   useEffect(() => {
-    if (bootChecksDone) preloadHuntTrack();
+    if (bootChecksDone) {
+      preloadHuntTrack();
+      preloadSfx();
+    }
   }, [bootChecksDone]);
 
   useEffect(() => {
