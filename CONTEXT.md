@@ -4,7 +4,7 @@ Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 8c2f4b4. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 4e86b0c. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
 
 ## Session — 2026-08-07
@@ -31,6 +31,31 @@ Full audit pass, then a full content replace at Pete's explicit direction:
   `POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx` as the tracked
   editorial master — verified byte-identical `huntData.json`/`build-report.json`
   regeneration before the swap. Committed as `936c50c` and pushed.
+- Device test (`npx expo start -c`) requested specifically to verify the SFX
+  play()-error self-heal path from `9ff2242` on a real failure. Found two things,
+  both fixed and device-confirmed, commit `4e86b0c`:
+  - Music self-heal confirmed working as designed: a real `Session activation failed`
+    error hit the hunt track mid-session and recovered by rebuild attempt 2 — closes the
+    "not yet seen self-healing on-device" gap `9ff2242` left open, and answers the
+    "Unchased" boss-track warning below (same error class, same recovery path).
+  - SFX self-heal had a real gap, not just an unconfirmed one: `pressHoldStart` and
+    `tileSwipe` exhausted both rebuild attempts and went permanently silent for the rest
+    of the session, because `sfx.ts`'s retry budget (50ms x 4 = 200ms total) was never
+    revisited when `9ff2242` added the bounded rebuild for exactly this "slow cold
+    launch" failure mode — it was still sized for the ordinary already-preloaded case.
+    Fixed by giving `sfx.ts` the same ascending backoff ladder (`[60, 150, 300, 600,
+    1200]`, ~4.6s across 2 rebuilds) `MusicEngine.ts` already proved works.
+  - Separately, Pete noticed a consistent 1-3s delay before hunt music starts on first
+    Hunt entry after a reload. Confirmed via `ffmpeg` that `hunt_suspense_loop.mp3` has
+    no leading silence — the delay was architectural: nothing preloads any track before
+    `GameScreen`'s own `startMusic('hunt')` call, which only fires the instant Hunt is
+    entered. Added `preloadHuntTrack()` (`MusicEngine.ts`), called from `App.tsx` right
+    after boot checks finish, so the track warms silently in the background during Home
+    idle time instead of loading cold at the door of Hunt.
+  - Note: SFX preloading (`preloadSfx()`) has this same lazy-first-entry pattern —
+    GameScreen/DailyChallengeScreen only call it on their own mount, nothing warms it
+    earlier. Not fixed this session (Pete didn't report an SFX-equivalent delay), but
+    worth doing for consistency if it ever comes up.
 
 ## Session — 2026-08-04
 
@@ -74,9 +99,10 @@ Corrects stale stem info — stems are GONE.
 ## Open Bugs
 
 - Music intermittent (fresh reload plays, run-back silent): FIXED (tag v0.working-20260723-music). Ownership consolidated to navigation focus; 'off' pauses in place instead of releasing the owner.
-- Music/SFX going permanently silent after a native audio-server hiccup ("Server was dead"/"Session lookup failed"/"Session activation failed"): FIXED 2026-08-06, commit `9ff2242`. MusicEngine.ts and sfx.ts now rebuild the broken player/pool (bounded to 2 attempts) on a play()-error, not just on load-timeout. Confirmed recovering from real device failures for music; the SFX play()-error path is implemented and typechecked but not yet seen self-healing from an actual on-device failure — worth a device pass with `npx expo start -c` next time you're on-device anyway.
+- Music/SFX going permanently silent after a native audio-server hiccup ("Server was dead"/"Session lookup failed"/"Session activation failed"): FIXED 2026-08-06, commit `9ff2242`, self-heal mechanism fully device-confirmed 2026-08-07 for both engines (see Session log above). SFX's retry budget was too short to actually benefit from the mechanism on a genuinely slow load — fixed same session, commit `4e86b0c`.
 - Glitchy staggered startup: FIXED 2026-08-06, commit `39b202c` — subsystems now coordinate readiness instead of racing.
-- Unchased: `[MusicEngine] failed to play boss track — Session activation failed` warning, seen once on a boss-track switch. Not reproduced since; no fix attempted.
+- Cold-start hunt music delay (1-3s before music starts on first Hunt entry after reload): FIXED 2026-08-07, commit `4e86b0c` — hunt track now preloads in the background from `App.tsx` instead of loading cold at Hunt entry.
+- Resolved: `[MusicEngine] failed to play ... track — Session activation failed` warning (previously "Unchased", seen once on a boss-track switch) — reproduced on hunt track 2026-08-07, confirmed the existing self-heal recovers it within 2 rebuild attempts.
 
 ## Active Runtime Boundaries
 
