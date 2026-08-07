@@ -179,4 +179,9 @@ tools/content/mask-rewriter/
 - Verify code with `npx.cmd tsc --noEmit`; use `npm.cmd test` for game logic changes.
 - Do not commit generated editorial output, local credentials, or dependency caches.
 - Never guess or assume app state — verify against repo/workbook/live code before stating
-  anything about it. Ask Pete on canon/design intent.
+  anything about it, including anything recalled from memory of a prior session. Ask Pete
+  on canon/design intent.
+- Explain findings and fixes in the simplest plain-language terms first; save file/line
+  and mechanism detail as supporting reference, not the headline.
+- Never take the easy shortcut to fix something. Find and name the actual root cause, and
+  say plainly whether a proposed fix addresses it or is a patch — even unprompted.
