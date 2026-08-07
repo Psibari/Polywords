@@ -4,7 +4,7 @@ Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 4e86b0c. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 086c300. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
 
 ## Session — 2026-08-07
@@ -52,10 +52,11 @@ Full audit pass, then a full content replace at Pete's explicit direction:
     entered. Added `preloadHuntTrack()` (`MusicEngine.ts`), called from `App.tsx` right
     after boot checks finish, so the track warms silently in the background during Home
     idle time instead of loading cold at the door of Hunt.
-  - Note: SFX preloading (`preloadSfx()`) has this same lazy-first-entry pattern —
-    GameScreen/DailyChallengeScreen only call it on their own mount, nothing warms it
-    earlier. Not fixed this session (Pete didn't report an SFX-equivalent delay), but
-    worth doing for consistency if it ever comes up.
+  - SFX preloading (`preloadSfx()`) had this same lazy-first-entry pattern —
+    GameScreen/DailyChallengeScreen only called it on their own mount. Fixed same
+    session, commit `086c300`: called from `App.tsx` alongside `preloadHuntTrack()`.
+    `preloadSfx()` is idempotent per sound, so the existing mount-time calls stay as
+    harmless no-ops.
 
 ## Session — 2026-08-04
 
