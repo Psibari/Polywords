@@ -1,4 +1,4 @@
-name: Typecheck
+name: Quality Checks
 
 on:
   pull_request:
@@ -26,3 +26,6 @@ jobs:
 
       - name: Run TypeScript check
         run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
