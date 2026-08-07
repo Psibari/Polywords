@@ -4,7 +4,7 @@ Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: a2ce6b7. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 0a0099e. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
 
 ## Session — 2026-08-07
@@ -83,6 +83,14 @@ Full audit pass, then a full content replace at Pete's explicit direction:
   override, rebuilt, confirmed zero drift elsewhere) and re-confirmed the REAL/TRAP mask
   data itself was untouched throughout, byte-identical across all 150 words both before
   this fix and before the original 91-word pass.
+- `0a0099e` — the 37 words held back as "low confidence" turned out not to be a real
+  concern on review: each one's trap is a correctly-labeled, genuinely sharp near-miss of
+  its REAL, exactly what a harder word is supposed to look like, not a fairness problem.
+  Folded in with their original analysis. 128 of 136 non-boss words now have real
+  gpsTag/difficulty. Only 8 remain genuinely open: **TRAIN, TRIP, RING, PLUG, TIRE** (most
+  or all traps closely restate their REAL 1:1 rather than contrasting it) and **BULB,
+  DATE, POUND** (possible factual mismatches in the trap wording) — see
+  `tools/content/import-staging/build-report.json` for the current placeholder list.
 
 ## Session — 2026-08-04
 
