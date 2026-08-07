@@ -148,20 +148,22 @@ mask-rewriter output remain a separate, still-dormant pilot track.
 `gpsTag` and `difficulty` are not in the workbook at all — `build-hunt-data.mjs`
 placeholder-assigns them so the game can run (`gpsTag` is load-bearing — `huntGenerator.ts`
 pools words by it and throws on an empty pool) before a real editorial pass exists, per
-`docs/GOLDEN_PACING_SYSTEM.md`. That pass started 2026-08-07: 128 of the 136 non-boss
-words now have a real hand-reviewed `gpsTag`/`difficulty`, grounded in each word's actual
-REAL/trap content against the phase table, tracked in
+`docs/GOLDEN_PACING_SYSTEM.md`. That pass ran 2026-08-07 and is now complete: all 136
+non-boss words have a real hand-reviewed `gpsTag`/`difficulty`, grounded in each word's
+actual REAL/trap content against the phase table, tracked in
 `tools/content/pacing-overrides.json` (git-tracked, merged in by `build-hunt-data.mjs`
-before falling back to placeholder, so it survives a workbook rebuild). Only 8 remain
-genuinely open — TRAIN, TRIP, RING, PLUG, TIRE (most or all traps closely restate their
-REAL 1:1 rather than contrasting it — a possible fairness question, not just pacing) and
-BULB, DATE, POUND (possible factual mismatches in the trap wording) — pending Pete's own
-read. Applying the pass also exposed a real crash risk in `huntGenerator.ts`'s phase
-fallback chains (some phases couldn't reach the confidence pool as a last resort), and a
-placeholder-stability bug (the round-robin placeholder shifted for unreviewed words every
-time another word gained an override) — both fixed the same session, see `CONTEXT.md` for
-the history. See `tools/content/import-staging/build-report.json` for exactly which words
-are still placeholder.
+before falling back to placeholder, so it survives a workbook rebuild — only the 14 boss
+words still fall back to a placeholder `difficulty`, not covered by this pass). A batch of
+37 words were briefly held back mid-pass as "traps restate their REAL" before Pete
+clarified that's not a defect — `docs/CONTENT_WRITING_STANDARD.md` defines a trap as
+"guilty-close, legally wrong," not required to oppose the REAL — so they were folded back
+in. Two words' traps were genuinely fixed: BULB's onion trap was cut (onions are literal
+bulbs, not a fair trap) and DATE's "wrinkled purple fruit" trap (actually a fig near-miss,
+not a color error) was rewritten to "a one-night stand." Applying the pass also exposed and
+fixed a real crash risk in `huntGenerator.ts`'s phase fallback chains (some phases couldn't
+reach the confidence pool as a last resort) and a placeholder-stability bug (the
+round-robin placeholder shifted for unreviewed words every time another word gained an
+override) — see `CONTEXT.md` for the full history.
 
 ## Key Files
 

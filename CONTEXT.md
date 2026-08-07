@@ -4,7 +4,7 @@ Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 0a0099e. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 8e0b1a5. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
 
 ## Session — 2026-08-07
@@ -87,10 +87,22 @@ Full audit pass, then a full content replace at Pete's explicit direction:
   concern on review: each one's trap is a correctly-labeled, genuinely sharp near-miss of
   its REAL, exactly what a harder word is supposed to look like, not a fairness problem.
   Folded in with their original analysis. 128 of 136 non-boss words now have real
-  gpsTag/difficulty. Only 8 remain genuinely open: **TRAIN, TRIP, RING, PLUG, TIRE** (most
-  or all traps closely restate their REAL 1:1 rather than contrasting it) and **BULB,
-  DATE, POUND** (possible factual mismatches in the trap wording) — see
-  `tools/content/import-staging/build-report.json` for the current placeholder list.
+  gpsTag/difficulty.
+- `bfbd2f2` — went through the last 8 flagged words with Pete directly. TRAIN, TRIP, RING,
+  PLUG, TIRE resolved the same way as the 37 above (Pete: traps don't need to oppose the
+  REAL, they just need to trap the word — matches `CONTENT_WRITING_STANDARD.md`'s
+  "guilty-close, legally wrong" definition exactly). POUND reviewed and left as-is. BULB
+  and DATE had genuine content issues, fixed directly in the workbook (not just
+  `huntData.json`, so it survives a rebuild): BULB's "the vegetable that makes you cry"
+  trap cut (onions are literal bulbs, not a fair trap); DATE's "wrinkled purple fruit from
+  the tree" trap (a fig near-miss, not a color mistake — the workbook's hidden "target
+  word"/"trap family" columns, which don't make it into `huntData.json`, confirmed both
+  were written on purpose) rewritten to "a one-night stand."
+- `8e0b1a5` — gpsTag/difficulty applied for the final 8 words. **The pacing pass is
+  complete: all 136 non-boss words have real, hand-reviewed `gpsTag`/`difficulty`, zero
+  left on the round-robin/medium placeholder.** Only the 14 boss words' `difficulty` still
+  falls back to placeholder where the workbook has no signal — that was never in scope for
+  this pass.
 
 ## Session — 2026-08-04
 
