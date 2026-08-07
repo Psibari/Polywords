@@ -75,6 +75,10 @@
     "gpsTag": "panic",
     "difficulty": "hard"
   },
+  "BENCH": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
   "BERRY": {
     "gpsTag": "confidence",
     "difficulty": "easy"
@@ -123,9 +127,17 @@
     "gpsTag": "flow",
     "difficulty": "medium"
   },
+  "BOTTOM": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
   "BOUND": {
     "gpsTag": "panic",
     "difficulty": "hard"
+  },
+  "BOW": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
   },
   "BOWL": {
     "gpsTag": "panic",
@@ -141,6 +153,10 @@
   },
   "BRIGHT": {
     "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "BUCKLE": {
+    "gpsTag": "tension",
     "difficulty": "medium"
   },
   "BUTT": {
@@ -163,6 +179,14 @@
     "gpsTag": "flow",
     "difficulty": "medium"
   },
+  "CAPE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CAPITAL": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
   "CARPET": {
     "gpsTag": "flow",
     "difficulty": "medium"
@@ -179,12 +203,36 @@
     "gpsTag": "tension",
     "difficulty": "hard"
   },
+  "CHANNEL": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CHARACTER": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CHARGE": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "CHEST": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
   "CHILL": {
     "gpsTag": "flow",
     "difficulty": "medium"
   },
   "CHIP": {
     "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CIRCUIT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CLAP": {
+    "gpsTag": "tension",
     "difficulty": "medium"
   },
   "CLAW": {
@@ -203,6 +251,14 @@
     "gpsTag": "flow",
     "difficulty": "medium"
   },
+  "CLICK": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "CLIP": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
   "CLOSE": {
     "gpsTag": "panic",
     "difficulty": "hard"
@@ -219,6 +275,26 @@
     "gpsTag": "flow",
     "difficulty": "medium"
   },
+  "COMB": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "COMMISSION": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "COMPANY": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "COMPOUND": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "CONCENTRATION": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
   "CONDUCT": {
     "gpsTag": "tension",
     "difficulty": "hard"
@@ -226,6 +302,22 @@
   "CORK": {
     "gpsTag": "flow",
     "difficulty": "easy"
+  },
+  "CORNER": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "COURSE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CRANE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CURRENT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
   },
   "DRAW": {
     "gpsTag": "tension",
@@ -235,11 +327,19 @@
     "gpsTag": "tension",
     "difficulty": "medium"
   },
+  "DUCK": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
   "FILE": {
     "gpsTag": "tension",
     "difficulty": "medium"
   },
   "FLY": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "GRACE": {
     "gpsTag": "panic",
     "difficulty": "hard"
   },
@@ -255,8 +355,32 @@
     "gpsTag": "flow",
     "difficulty": "medium"
   },
+  "LOG": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
   "LONG": {
     "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "MATCH": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "MINE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "MISS": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "MOLD": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "MOUSE": {
+    "gpsTag": "tension",
     "difficulty": "easy"
   },
   "NAIL": {
@@ -267,9 +391,17 @@
     "gpsTag": "tension",
     "difficulty": "medium"
   },
+  "PARK": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
   "PEN": {
     "gpsTag": "tension",
     "difficulty": "hard"
+  },
+  "PITCH": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
   },
   "PLANE": {
     "gpsTag": "flow",
@@ -289,6 +421,10 @@
   },
   "POINT": {
     "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "POOL": {
+    "gpsTag": "panic",
     "difficulty": "medium"
   },
   "POT": {
@@ -323,6 +459,10 @@
     "gpsTag": "tension",
     "difficulty": "medium"
   },
+  "RULER": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
   "SCALE": {
     "gpsTag": "tension",
     "difficulty": "medium"
@@ -334,6 +474,10 @@
   "SENTENCE": {
     "gpsTag": "confidence",
     "difficulty": "easy"
+  },
+  "SINK": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
   },
   "SOUND": {
     "gpsTag": "flow",
@@ -358,6 +502,10 @@
   "WATCH": {
     "gpsTag": "flow",
     "difficulty": "medium"
+  },
+  "WAVE": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
   },
   "WELL": {
     "gpsTag": "tension",

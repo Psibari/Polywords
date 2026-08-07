@@ -989,7 +989,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Quintuple"
   },
   "BERRY": {
@@ -1611,7 +1611,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "flow",
     "wordType": "Quadruple"
   },
   "BOUND": {
@@ -1719,7 +1719,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "tension",
+    "gpsTag": "panic",
     "wordType": "Quintuple"
   },
   "BOWL": {
@@ -2062,7 +2062,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "BULB": {
@@ -2390,7 +2390,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "tension",
     "wordType": "Double"
   },
   "CAPITAL": {
@@ -2434,7 +2434,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "CARPET": {
@@ -2742,7 +2742,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "CHARACTER": {
@@ -2786,7 +2786,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "CHARGE": {
@@ -2860,7 +2860,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Sextuple"
   },
   "CHECK": {
@@ -2982,7 +2982,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "CHILL": {
@@ -3129,7 +3129,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "CLAP": {
@@ -3183,7 +3183,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "tension",
     "wordType": "Quintuple"
   },
   "CLAW": {
@@ -3508,7 +3508,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Sextuple"
   },
   "CLIP": {
@@ -3567,7 +3567,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Quintuple"
   },
   "CLOSE": {
@@ -3862,7 +3862,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "COMMISSION": {
@@ -3965,7 +3965,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "COMPOUND": {
@@ -4195,7 +4195,7 @@
     "wordType": "Double"
   },
   "CORNER": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -4260,7 +4260,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "panic",
     "wordType": "Sextuple"
   },
   "COURSE": {
@@ -4309,7 +4309,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "COURT": {
@@ -4464,7 +4464,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "CURRENT": {
@@ -4503,7 +4503,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "DATE": {
@@ -4679,7 +4679,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "panic",
     "wordType": "Triple"
   },
   "ENGAGED": {
@@ -5075,7 +5075,7 @@
     "wordType": "8-MEANING"
   },
   "GRACE": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -5165,7 +5165,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Septuple"
   },
   "HORN": {
@@ -5530,7 +5530,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Triple"
   },
   "LONG": {
@@ -5613,7 +5613,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "MINE": {
@@ -5652,7 +5652,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "panic",
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "MISS": {
@@ -5691,7 +5691,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "MOLD": {
@@ -5739,7 +5739,7 @@
     "wordType": "Quadruple"
   },
   "MOUSE": {
-    "difficulty": "medium",
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -5769,7 +5769,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "tension",
     "wordType": "Double"
   },
   "NAIL": {
@@ -5916,7 +5916,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "tension",
+    "gpsTag": "panic",
     "wordType": "Triple"
   },
   "PEN": {
@@ -6029,7 +6029,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Quadruple"
   },
   "PLANE": {
@@ -6407,7 +6407,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Quintuple"
   },
   "POT": {
@@ -7062,7 +7062,7 @@
     "wordType": "Double"
   },
   "SINK": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7728,7 +7728,7 @@
     "wordType": "Quadruple"
   },
   "WAVE": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7803,7 +7803,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "panic",
     "wordType": "Septuple"
   },
   "WELL": {
