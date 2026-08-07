@@ -216,13 +216,20 @@ export function generateHunt(opts: {
     throw new Error('[huntGenerator] Word pool exhausted — add more words to huntData.json');
   }
 
-  // Fallback chain per phase — own pool first, then adjacent tiers
+  // Fallback chain per phase — own pool first, then adjacent tiers, then
+  // every remaining pool as a last resort. Every phase must eventually be
+  // able to reach every pool: the four pools are not evenly sized (by
+  // editorial design, confidence and panic are the smallest — few words are
+  // genuinely quick/fair recognition, or hard-but-defensible), so a
+  // heavily-mastered late-game player can exhaust two adjacent pools at once
+  // while a third pool sits unreachable and full. A phase degrading into a
+  // less-fitting pool beats the run crashing outright.
   function pickForPhase(phase: Phase): string {
     switch (phase) {
-      case 'confidence': return next([confidencePool, flowPool]);
-      case 'flow':       return next([flowPool, confidencePool, tensionPool]);
-      case 'tension':    return next([tensionPool, flowPool, panicPool]);
-      case 'panic':      return next([panicPool, tensionPool]);
+      case 'confidence': return next([confidencePool, flowPool, tensionPool, panicPool]);
+      case 'flow':       return next([flowPool, confidencePool, tensionPool, panicPool]);
+      case 'tension':    return next([tensionPool, flowPool, panicPool, confidencePool]);
+      case 'panic':      return next([panicPool, tensionPool, flowPool, confidencePool]);
       case 'boss': {
         const eligible = (pool: string[]) => pool.filter(hasBossContent);
         return next([eligible(bossPool), eligible(panicPool), eligible(tensionPool)]);

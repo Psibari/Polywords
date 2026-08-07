@@ -6,8 +6,12 @@
 // huntGenerator.ts pools words by it and throws if a pool is empty — so this assigns a
 // round-robin placeholder split across confidence/flow/tension/panic rather than leaving it
 // null. difficulty is seeded from the workbook's Rewrite Queue "Diff" column where present,
-// defaulting to 'medium' elsewhere. BOTH are flagged in the report as needing a real
-// editorial pacing pass — this unblocks the game running today, it does not finish pacing.
+// defaulting to 'medium' elsewhere. Both fall back to tools/content/pacing-overrides.json —
+// a git-tracked, hand-reviewed editorial pass (word -> {gpsTag, difficulty}) that is NOT in
+// the workbook — before falling back further to the round-robin/medium placeholder. This is
+// what keeps that editorial work from being silently wiped out the next time this script
+// runs against an updated workbook. Words absent from the overrides file are still flagged
+// in the report as needing the real pass.
 //
 // Usage: node tools/content/build-hunt-data.mjs <path-to-xlsx>
 import fs from 'node:fs';
@@ -22,6 +26,10 @@ if (!workbookPath) {
 }
 const livePath = path.join(repoRoot, 'assets/data/huntData.json');
 const reportDir = path.join(repoRoot, 'tools/content/import-staging');
+const overridesPath = path.join(repoRoot, 'tools/content/pacing-overrides.json');
+const pacingOverrides = fs.existsSync(overridesPath)
+  ? JSON.parse(fs.readFileSync(overridesPath, 'utf8'))
+  : {};
 
 const wb = XLSX.readFile(workbookPath, { cellStyles: true });
 function sheetRows(name) {
@@ -149,13 +157,19 @@ for (const word of [...allWords].sort()) {
     report.bossIncomplete.push(word);
   }
 
+  const override = pacingOverrides[word];
+
   if (!isBoss) {
-    gpsTag = PACING_ROTATION[pacingCursor % PACING_ROTATION.length];
-    pacingCursor += 1;
-    report.gpsTagPlaceholder.push({ word, gpsTag });
+    if (override?.gpsTag) {
+      gpsTag = override.gpsTag;
+    } else {
+      gpsTag = PACING_ROTATION[pacingCursor % PACING_ROTATION.length];
+      pacingCursor += 1;
+      report.gpsTagPlaceholder.push({ word, gpsTag });
+    }
   }
 
-  let difficulty = difficultyHints.get(word);
+  let difficulty = difficultyHints.get(word) || override?.difficulty;
   if (!difficulty) {
     difficulty = 'medium';
     report.difficultyDefaulted.push(word);
@@ -186,6 +200,7 @@ console.log('=== REPLACED assets/data/huntData.json ===');
 console.log('Total words now live:', Object.keys(finalData).length);
 console.log('Boss words:', report.readyBoss.length, report.readyBoss.join(', '));
 console.log('Skipped (no usable masks):', report.noMasks.length, report.noMasks.join(', '));
-console.log('Difficulty defaulted to medium (no workbook signal):', report.difficultyDefaulted.length);
+console.log('Difficulty defaulted to medium (no workbook or override signal):', report.difficultyDefaulted.length);
 console.log('gpsTag is a PLACEHOLDER round-robin split, not real pacing:', report.gpsTagPlaceholder.length, 'words');
+console.log('Pacing overrides applied from tools/content/pacing-overrides.json:', Object.keys(pacingOverrides).length, 'words');
 console.log('Report written to:', path.join(reportDir, 'build-report.json'));

@@ -1,0 +1,366 @@
+{
+  "ABSTRACT": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "ADDRESS": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "ANCHOR": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "ARMS": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "ARROW": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "ARTICULATE": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "BACK": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BALANCE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "BALL": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "BAND": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "BANK": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BARK": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "BASS": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "BAT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "BATTER": {
+    "gpsTag": "flow",
+    "difficulty": "easy"
+  },
+  "BEAM": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BEAR": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "BED": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "BELT": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BERRY": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "BILL": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BITTER": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "BLADE": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BLANK": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BLOCK": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BLOOM": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "BLOW": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "BLUFF": {
+    "gpsTag": "confidence",
+    "difficulty": "medium"
+  },
+  "BOLT": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BOOK": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "BOOT": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "BOUND": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BOWL": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BRANCH": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "BRIDGE": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "BRIGHT": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "BUTT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CABIN": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CABINET": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CAMPAIGN": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CAN": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CARPET": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CEILING": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CELL": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CHAMBER": {
+    "gpsTag": "tension",
+    "difficulty": "hard"
+  },
+  "CHILL": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CHIP": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CLAW": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "CLEAN": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "CLEAR": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "CLEAVE": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CLOSE": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "CLUB": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "COACH": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "COAST": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CONDUCT": {
+    "gpsTag": "tension",
+    "difficulty": "hard"
+  },
+  "CORK": {
+    "gpsTag": "flow",
+    "difficulty": "easy"
+  },
+  "DRAW": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "DROP": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FILE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FLY": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "JAM": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "KEY": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "LIGHT": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "LONG": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "NAIL": {
+    "gpsTag": "flow",
+    "difficulty": "easy"
+  },
+  "PALM": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "PEN": {
+    "gpsTag": "tension",
+    "difficulty": "hard"
+  },
+  "PLANE": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "PLANT": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "PLAY": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "PLOT": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "POINT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "POT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "POWDER": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "PROJECT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "PUPIL": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "RANK": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "REVOLUTION": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "ROCK": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "ROW": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "SCALE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "SEAL": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "SENTENCE": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "SOUND": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "SPRING": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "STICK": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "TABLE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "WAKE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "WATCH": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "WELL": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  }
+}
