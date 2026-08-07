@@ -159,6 +159,10 @@
     "gpsTag": "tension",
     "difficulty": "medium"
   },
+  "BULB": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
   "BUTT": {
     "gpsTag": "tension",
     "difficulty": "medium"
@@ -319,6 +323,10 @@
     "gpsTag": "tension",
     "difficulty": "medium"
   },
+  "DATE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
   "DRAW": {
     "gpsTag": "tension",
     "difficulty": "medium"
@@ -419,6 +427,10 @@
     "gpsTag": "panic",
     "difficulty": "medium"
   },
+  "PLUG": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
   "POINT": {
     "gpsTag": "tension",
     "difficulty": "medium"
@@ -430,6 +442,10 @@
   "POT": {
     "gpsTag": "tension",
     "difficulty": "medium"
+  },
+  "POUND": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
   },
   "POWDER": {
     "gpsTag": "flow",
@@ -450,6 +466,10 @@
   "REVOLUTION": {
     "gpsTag": "tension",
     "difficulty": "medium"
+  },
+  "RING": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
   },
   "ROCK": {
     "gpsTag": "tension",
@@ -494,6 +514,18 @@
   "TABLE": {
     "gpsTag": "tension",
     "difficulty": "medium"
+  },
+  "TIRE": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "TRAIN": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "TRIP": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
   },
   "WAKE": {
     "gpsTag": "tension",

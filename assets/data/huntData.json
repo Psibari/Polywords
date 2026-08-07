@@ -2121,7 +2121,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "panic",
     "wordType": "Quadruple"
   },
   "BUTT": {
@@ -6254,7 +6254,7 @@
     "wordType": "Quadruple"
   },
   "PLUG": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -6304,7 +6304,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "tension",
+    "gpsTag": "panic",
     "wordType": "Triple"
   },
   "POINT": {
@@ -6450,7 +6450,7 @@
     "wordType": "Quadruple"
   },
   "POUND": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -6510,7 +6510,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Quintuple"
   },
   "POWDER": {
@@ -6769,7 +6769,7 @@
     "wordType": "Quadruple"
   },
   "RING": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -6814,7 +6814,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Quadruple"
   },
   "ROCK": {
@@ -7493,7 +7493,7 @@
     "wordType": "Triple"
   },
   "TIRE": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7543,11 +7543,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Triple"
   },
   "TRAIN": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7587,11 +7587,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": "confidence",
+    "gpsTag": "panic",
     "wordType": "Quadruple"
   },
   "TRIP": {
-    "difficulty": "medium",
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -7631,7 +7631,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": "flow",
+    "gpsTag": "panic",
     "wordType": "Quadruple"
   },
   "WAKE": {
