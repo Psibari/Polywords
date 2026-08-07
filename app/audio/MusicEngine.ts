@@ -368,6 +368,33 @@ export function musicReady(): Promise<void> {
   });
 }
 
+// Warms the hunt track in the background (silent, not playing) so the first
+// real startMusic('hunt') call — which fires the moment GameScreen mounts —
+// finds an already-loaded track instead of paying the full asset-load cost
+// at the door of Hunt. No-ops if the engine is already active (startMusic()
+// got there first) so this can never fight the real transport for ownership.
+let huntPreloadStarted = false;
+
+export function preloadHuntTrack(): void {
+  if (huntPreloadStarted || player) return;
+  huntPreloadStarted = true;
+
+  void ensureAudioSessionConfigured()
+    .catch(error => warnDev('failed to configure audio mode for preload', error))
+    .then(() => {
+      if (player) return;
+      const preloadPlayer = createPlayer();
+      player = preloadPlayer;
+      try {
+        preloadPlayer.replace(TRACK_SOURCES.hunt);
+        preloadPlayer.loop = true;
+        activeTrackKey = 'hunt';
+      } catch (error) {
+        warnDev('failed to preload hunt track', error);
+      }
+    });
+}
+
 export function startMusic(owner: MusicOwner): void {
   activeOwner = owner;
   transportPaused = false;

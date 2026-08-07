@@ -10,6 +10,7 @@ import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
+import { preloadHuntTrack } from './app/audio/MusicEngine';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,13 @@ export default function App() {
       loadGame(),
     ]).finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
+
+  // Warms the hunt music track in the background as soon as Home is about to
+  // render, so the first real Hunt entry doesn't pay the full load cost that
+  // GameScreen's own startMusic('hunt') call would otherwise hit cold.
+  useEffect(() => {
+    if (bootChecksDone) preloadHuntTrack();
+  }, [bootChecksDone]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {

@@ -57,8 +57,17 @@ const SFX: Record<SfxName, SfxConfig> = {
 
 const PLAYER_POOL_SIZE = 2;
 const MAX_ANTI_DOUBLE_FIRE_MS = 35;
-const LOAD_RETRY_DELAY_MS = 50;
-const LOAD_RETRY_ATTEMPTS = 4;
+// Same ladder as MusicEngine.ts's LOAD_RETRY_MS. The two engines share the
+// same self-heal mechanism (bounded pool/player rebuild after a load never
+// completes), so they need the same per-attempt patience — a sound that
+// still hasn't loaded after the same slow-cold-launch conditions that
+// justified this ladder for music is equally not "just a hair slow," it's
+// the same failure. The previous 50ms x 4 (200ms) budget was sized only for
+// the ordinary case (pool already preloaded), never revisited when the
+// bounded rebuild was added for real load failures — so on a genuinely slow
+// load it exhausted both rebuild attempts and went permanently silent for
+// the rest of the session (reproduced on-device 2026-08-07).
+const LOAD_RETRY_MS = [60, 150, 300, 600, 1200];
 
 const playerPools: Partial<Record<SfxName, SfxPlayerPool>> = {};
 const lastPlayedAt: Partial<Record<SfxName, number>> = {};
@@ -171,7 +180,8 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
   if (loadAttempt === 0) {
     warnDev(`"${name}" was requested before any pooled player finished loading; retrying.`);
   }
-  if (loadAttempt >= LOAD_RETRY_ATTEMPTS) {
+  const delay = LOAD_RETRY_MS[loadAttempt];
+  if (delay === undefined) {
     rebuildPoolIfNeeded(name, pool, rate, 'players never loaded');
     return;
   }
@@ -181,7 +191,7 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
     if (playerPools[name] === pool) {
       playFromPool(name, pool, rate, loadAttempt + 1);
     }
-  }, LOAD_RETRY_DELAY_MS);
+  }, delay);
   pendingLoadRetryTimers.add(timer);
 }
 
