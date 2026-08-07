@@ -135,10 +135,11 @@ no per-screen background exception anymore.
 `assets/data/huntData.json` is now the real working content, not a test corpus. On
 2026-08-07 Pete had it fully replaced — the old ~400-word broken test set was wiped
 entirely (not merged, not kept alongside) — with the ~150-word set built from his new
-editorial workbook (`tools/content/build-hunt-data.mjs`, run against a workbook currently
-named `POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`; it has not yet
-replaced the tracked `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`, which is a pending
-follow-up, not done). 14 words shipped as full boss cards (hidden pair populated, 2 of the
+editorial workbook (`tools/content/build-hunt-data.mjs`, run against
+`POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`, which on 2026-08-07
+also replaced the tracked `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` as the master —
+verified byte-identical `huntData.json`/`build-report.json` regeneration before the swap).
+14 words shipped as full boss cards (hidden pair populated, 2 of the
 3 `hiddenPairs` slots still `PLACEHOLDER TEST` per the standing 3-pair target); 2 words
 (REVOLUTION, PROJECT) were explicitly demoted from boss by Pete and ship as regular words
 only, per his own documented reasoning in the workbook. `huntData.v2.json` and
