@@ -2112,16 +2112,11 @@
       },
       {
         "id": "bulb_t4",
-        "phrase": "THE VEGETABLE THAT MAKES YOU CRY WHEN YOU CUT IT",
-        "isReal": false
-      },
-      {
-        "id": "bulb_t5",
         "phrase": "THE SWITCH YOU FLIP WHEN A ROOM IS DARK",
         "isReal": false
       },
       {
-        "id": "bulb_t6",
+        "id": "bulb_t5",
         "phrase": "THE FUEL AN OLD CAMPING LANTERN BURNS",
         "isReal": false
       }
@@ -4533,7 +4528,7 @@
       },
       {
         "id": "date_t1",
-        "phrase": "WRINKLED PURPLE FRUIT FROM THE TREE",
+        "phrase": "A ONE-NIGHT STAND",
         "isReal": false
       },
       {
