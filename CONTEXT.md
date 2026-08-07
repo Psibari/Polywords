@@ -4,7 +4,7 @@ Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 7290f90. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: a2ce6b7. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
 
 ## Session — 2026-08-07
@@ -73,6 +73,16 @@ Full audit pass, then a full content replace at Pete's explicit direction:
   preserved first). Verified with a before/after stress test: the same scenario crashed on
   the prior fallback chain, passes now. tsc clean, full test suite green, `generateHunt`
   smoke-tested across all 4 session lengths plus the exhaustion stress case.
+- Placeholder-stability fix, commit `a2ce6b7`: Pete caught that the 45 held-back words
+  weren't actually untouched — the round-robin placeholder walked a shared cursor down the
+  sorted word list, skipping override words, so pulling 91 words out of that rotation
+  shifted which arbitrary phase the *remaining* placeholder words landed on (confirmed:
+  35 of 45 got a different, equally meaningless gpsTag). Fixed by hashing each word's own
+  spelling into its placeholder instead of using shared position — a word's placeholder can
+  no longer move just because some other word gets reviewed. Verified live (added a test
+  override, rebuilt, confirmed zero drift elsewhere) and re-confirmed the REAL/TRAP mask
+  data itself was untouched throughout, byte-identical across all 150 words both before
+  this fix and before the original 91-word pass.
 
 ## Session — 2026-08-04
 
