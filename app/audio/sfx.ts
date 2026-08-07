@@ -200,6 +200,36 @@ export function preloadSfx(): void {
   });
 }
 
+const READY_POLL_MS = 40;
+const READY_TIMEOUT_MS = 1200;
+
+// Condition-based, not a fixed delay: resolves as soon as every pool
+// preloadSfx() created has at least one loaded player, or after
+// READY_TIMEOUT_MS — callers that gate on this must never be blocked
+// indefinitely by a slow or broken audio server (the self-heal in
+// playFromPool/rebuildPoolIfNeeded keeps working in the background either
+// way, this just tells a caller when the *typical* case is already ready).
+export function sfxReady(): Promise<void> {
+  const pools = Object.values(playerPools) as SfxPlayerPool[];
+  if (pools.length === 0 || pools.every(pool => pool.players.some(p => p.isLoaded))) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    const startedAt = Date.now();
+    const poll = () => {
+      const current = Object.values(playerPools) as SfxPlayerPool[];
+      const allLoaded = current.every(pool => pool.players.some(p => p.isLoaded));
+      if (allLoaded || Date.now() - startedAt >= READY_TIMEOUT_MS) {
+        resolve();
+        return;
+      }
+      setTimeout(poll, READY_POLL_MS);
+    };
+    poll();
+  });
+}
+
 export function playSfx(name: SfxName, options?: { rate?: number }): void {
   if (!useGameStore.getState().soundEnabled) return;
   const config = SFX[name];

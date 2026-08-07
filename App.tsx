@@ -29,11 +29,17 @@ export default function App() {
 
     const { loadGame, loadGhosts, loadProgress, loadSettings, loadPollyMemory } = useGameStore.getState();
 
-    loadGhosts();
-    loadProgress();
-    loadSettings();
-    loadPollyMemory();
-    loadGame().finally(() => setBootChecksDone(true));
+    // All five must finish before anything renders — a screen that mounts
+    // against partially-loaded state (e.g. a Hunt generated before ghosts or
+    // progress load) is the same class of bug as the audio engines racing
+    // their own readiness independently.
+    Promise.all([
+      loadGhosts(),
+      loadProgress(),
+      loadSettings(),
+      loadPollyMemory(),
+      loadGame(),
+    ]).finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
   useEffect(() => {

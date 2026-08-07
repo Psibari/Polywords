@@ -344,6 +344,30 @@ export function initMusicEngine(): Promise<void> {
   return initPromise;
 }
 
+const READY_POLL_MS = 40;
+const READY_TIMEOUT_MS = 1200;
+
+// Condition-based, not a fixed delay: resolves once the active player has
+// actually loaded its track, or after READY_TIMEOUT_MS — a caller gating on
+// this must never be blocked indefinitely by a slow or dead audio server
+// (the rebuild self-heal above keeps working in the background regardless;
+// this just tells a caller when the *typical* case is already ready).
+export function musicReady(): Promise<void> {
+  if (player?.isLoaded) return Promise.resolve();
+
+  return new Promise(resolve => {
+    const startedAt = Date.now();
+    const poll = () => {
+      if (player?.isLoaded || Date.now() - startedAt >= READY_TIMEOUT_MS) {
+        resolve();
+        return;
+      }
+      setTimeout(poll, READY_POLL_MS);
+    };
+    poll();
+  });
+}
+
 export function startMusic(owner: MusicOwner): void {
   activeOwner = owner;
   transportPaused = false;
