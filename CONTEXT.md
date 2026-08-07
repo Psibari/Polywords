@@ -4,7 +4,7 @@ Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 086c300. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 7290f90. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
 
 ## Session — 2026-08-07
@@ -57,6 +57,22 @@ Full audit pass, then a full content replace at Pete's explicit direction:
     session, commit `086c300`: called from `App.tsx` alongside `preloadHuntTrack()`.
     `preloadSfx()` is idempotent per sound, so the existing mount-time calls stay as
     harmless no-ops.
+- First gpsTag/difficulty editorial pacing pass, commit `7290f90`: 91 of the 136 non-boss
+  words moved off the round-robin/medium placeholder, each read against its actual
+  REAL/trap content per the phase table in `docs/GOLDEN_PACING_SYSTEM.md`. Landed in
+  `tools/content/pacing-overrides.json` (new, git-tracked) and merged in by
+  `build-hunt-data.mjs` ahead of the placeholder fallback, so a future workbook rebuild
+  won't silently wipe it. 45 words held back as genuinely uncertain — several because a
+  trap reads as restating its REAL rather than contrasting it (a fairness question, not
+  just pacing), see the CSV sent to Pete for the full list with per-word reasoning and a
+  confidence flag. Applying the pass exposed a real crash risk: `huntGenerator.ts`'s
+  `tension`/`panic` phase fallback chains couldn't reach the `confidence` pool as a last
+  resort, so a heavily-mastered late-game player could exhaust two adjacent phase pools at
+  once and crash instead of degrading gracefully. Fixed in the same commit — every phase's
+  fallback chain now reaches every pool as an absolute last resort (own-pool preference
+  preserved first). Verified with a before/after stress test: the same scenario crashed on
+  the prior fallback chain, passes now. tsc clean, full test suite green, `generateHunt`
+  smoke-tested across all 4 session lengths plus the exhaustion stress case.
 
 ## Session — 2026-08-04
 
