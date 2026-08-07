@@ -4,7 +4,7 @@ Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 39b202c. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 8c2f4b4. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
 
 ## Session — 2026-08-07
@@ -25,9 +25,12 @@ Full audit pass, then a full content replace at Pete's explicit direction:
   `difficulty` placeholder-assigned since the workbook has neither).
   tsc clean, full test suite green, `generateHunt` smoke-tested across all 4 session
   lengths (8/10/12/15) plus mastered-word and ghost-word scenarios — confirmed playable,
-  not just schema-valid. **Not committed** — sitting in the working tree pending Pete's
-  review.
+  not just schema-valid. Committed as `f593a24` and pushed.
 - Added `xlsx` as a devDependency for the two new tools.
+- `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` swapped for
+  `POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx` as the tracked
+  editorial master — verified byte-identical `huntData.json`/`build-report.json`
+  regeneration before the swap. Committed as `936c50c` and pushed.
 
 ## Session — 2026-08-04
 
@@ -78,7 +81,9 @@ Corrects stale stem info — stems are GONE.
 ## Active Runtime Boundaries
 
 - Live content: `assets/data/huntData.json` — real 150-word working list as of 2026-08-07 (see Session log above), not the old test corpus.
-- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` — STALE (last touched Jul 16); Pete's 2026-08-06 workbook (`POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`, currently in Downloads) is the one actually live in the game now and should replace this tracked file — not yet done.
+- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` — now Pete's 2026-08-06
+  workbook (`POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`), swapped in
+  2026-08-07 (`936c50c`).
 - Dormant V2 export: `assets/data/huntData.v2.json`.
 - Live Polly art: `assets/images/polly/poses/*.png`.
 - Live music: `assets/audio/bgm/*.mp3` through `app/audio/MusicEngine.ts`.
