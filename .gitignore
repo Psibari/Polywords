@@ -35,6 +35,7 @@ yarn-error.*
 /tools/content/mask-rewriter/.env
 /tools/content/mask-rewriter/workspace/
 /tools/content/mask-rewriter/*.csv
+/tools/content/import-staging/
 
 # typescript
 *.tsbuildinfo

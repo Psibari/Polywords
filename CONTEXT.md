@@ -1,11 +1,33 @@
 # POLYWORDS Current Context
 
-Updated August 4, 2026. Active branch: `play-screen-overhaul`.
+Updated August 7, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 9e8b7dc. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 39b202c. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
+
+## Session — 2026-08-07
+
+Full audit pass, then a full content replace at Pete's explicit direction:
+
+- Audit found `9ff2242` (music/SFX self-heal on native audio failures) and `39b202c`
+  (startup readiness coordination) had already fixed the two bugs this file's "Open Bugs"
+  section still listed as open — see corrected section below.
+- Pete supplied a new editorial workbook (150 words: 142 regular + 18 boss candidates,
+  including a recovery/consolidation audit trail). Built `tools/content/import-workbook.mjs`
+  (staging/diff tool) and `tools/content/build-hunt-data.mjs` (the real replace) to parse
+  it — two sheets (`Tiles`, `Boss Words (Production)`) with non-contiguous duplicate row
+  blocks per word, requiring last-write-wins dedup by phrase text.
+- Pete's call: gut `assets/data/huntData.json` completely and replace it with only this
+  150-word set — see `CLAUDE.md` Content Boundary for the full breakdown (14 boss-ready,
+  2 demoted-from-boss-by-Pete words correctly shipped as regular-only, `gpsTag`/
+  `difficulty` placeholder-assigned since the workbook has neither).
+  tsc clean, full test suite green, `generateHunt` smoke-tested across all 4 session
+  lengths (8/10/12/15) plus mastered-word and ghost-word scenarios — confirmed playable,
+  not just schema-valid. **Not committed** — sitting in the working tree pending Pete's
+  review.
+- Added `xlsx` as a devDependency for the two new tools.
 
 ## Session — 2026-08-04
 
@@ -49,13 +71,14 @@ Corrects stale stem info — stems are GONE.
 ## Open Bugs
 
 - Music intermittent (fresh reload plays, run-back silent): FIXED (tag v0.working-20260723-music). Ownership consolidated to navigation focus; 'off' pauses in place instead of releasing the owner.
-- SFX cold-start (pools failed to load entirely on one slow bundle): STILL OPEN. The earlier diagnosis — unloadSfx() wedging the iOS audio session — was WRONG; audio session config was a red herring, and that fix was written then reverted. Real suspect: playFromPool's rebuild ladder calls remove() on players that are still mid-decode, twice, then gives up permanently since poolRebuilds only resets on a successful play. Repro lever: `npx expo start -c` forces a slow bundle; audio failure tracked bundle time (1481ms clean, 15281ms broken, 60s broken).
+- Music/SFX going permanently silent after a native audio-server hiccup ("Server was dead"/"Session lookup failed"/"Session activation failed"): FIXED 2026-08-06, commit `9ff2242`. MusicEngine.ts and sfx.ts now rebuild the broken player/pool (bounded to 2 attempts) on a play()-error, not just on load-timeout. Confirmed recovering from real device failures for music; the SFX play()-error path is implemented and typechecked but not yet seen self-healing from an actual on-device failure — worth a device pass with `npx expo start -c` next time you're on-device anyway.
+- Glitchy staggered startup: FIXED 2026-08-06, commit `39b202c` — subsystems now coordinate readiness instead of racing.
 - Unchased: `[MusicEngine] failed to play boss track — Session activation failed` warning, seen once on a boss-track switch. Not reproduced since; no fix attempted.
 
 ## Active Runtime Boundaries
 
-- Live content: `assets/data/huntData.json`.
-- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`.
+- Live content: `assets/data/huntData.json` — real 150-word working list as of 2026-08-07 (see Session log above), not the old test corpus.
+- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` — STALE (last touched Jul 16); Pete's 2026-08-06 workbook (`POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`, currently in Downloads) is the one actually live in the game now and should replace this tracked file — not yet done.
 - Dormant V2 export: `assets/data/huntData.v2.json`.
 - Live Polly art: `assets/images/polly/poses/*.png`.
 - Live music: `assets/audio/bgm/*.mp3` through `app/audio/MusicEngine.ts`.

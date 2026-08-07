@@ -132,13 +132,27 @@ no per-screen background exception anymore.
 
 ## Content Boundary
 
-`assets/data/huntData.json` is live test content. The tracked Haunt workbook is the
-editorial master, while `huntData.v2.json` and mask-rewriter output stay dormant until an
-explicit production merge. Workbook approval never changes live JSON automatically.
+`assets/data/huntData.json` is now the real working content, not a test corpus. On
+2026-08-07 Pete had it fully replaced — the old ~400-word broken test set was wiped
+entirely (not merged, not kept alongside) — with the ~150-word set built from his new
+editorial workbook (`tools/content/build-hunt-data.mjs`, run against a workbook currently
+named `POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`; it has not yet
+replaced the tracked `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`, which is a pending
+follow-up, not done). 14 words shipped as full boss cards (hidden pair populated, 2 of the
+3 `hiddenPairs` slots still `PLACEHOLDER TEST` per the standing 3-pair target); 2 words
+(REVOLUTION, PROJECT) were explicitly demoted from boss by Pete and ship as regular words
+only, per his own documented reasoning in the workbook. `huntData.v2.json` and
+mask-rewriter output remain a separate, still-dormant pilot track.
 
-Live huntData.json's ~400 words are the old broken set, kept deliberately as a test
-corpus — do not strip it. Real content is ~110 words (100 standard + ~10-11 boss) in the
-workbook.
+Known incomplete on this content: **`gpsTag` and `difficulty` are not in the workbook at
+all.** `build-hunt-data.mjs` placeholder-assigned them so the game can actually run
+(`gpsTag` is load-bearing — `huntGenerator.ts` pools words by it and throws on an empty
+pool) — `gpsTag` via round-robin confidence/flow/tension/panic rotation, `difficulty`
+seeded from the workbook's Rewrite Queue "Diff" column where present (55/150 words) and
+defaulted to `medium` elsewhere (95/150 words). Neither reflects real pacing/difficulty
+judgment yet — see `tools/content/import-staging/build-report.json` for exactly which
+words got which placeholder. This is the next real editorial pass, per
+`docs/GOLDEN_PACING_SYSTEM.md`.
 
 ## Key Files
 
