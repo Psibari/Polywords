@@ -1087,7 +1087,7 @@
     "masks": [
       {
         "id": "bitter_r0",
-        "phrase": "WHAT YOU GET WHEN YOU BRUSH YOUR TEETH BEFORE ORANGE JUICE",
+        "phrase": "ORANGE JUICE RIGHT AFTER BRUSHING",
         "isReal": true
       },
       {
@@ -1097,7 +1097,7 @@
       },
       {
         "id": "bitter_r2",
-        "phrase": "WHAT IT IS OUTSIDE WHEN THE THERMOMETER HAS A MINUS SIGN",
+        "phrase": "THE KIND OF COLD THAT HURTS YOUR FACE",
         "isReal": true
       },
       {
@@ -1107,17 +1107,12 @@
       },
       {
         "id": "bitter_t1",
-        "phrase": "WHAT YOU PUT ON TOAST WHEN YOU’RE OUT OF JAM",
+        "phrase": "THE FLAVOR OF THE POPULAR DIPPING SAUCE",
         "isReal": false
       },
       {
         "id": "bitter_t2",
-        "phrase": "WHAT THINGS ARE SUPPOSED TO GET WITH AGE",
-        "isReal": false
-      },
-      {
-        "id": "bitter_t3",
-        "phrase": "WHAT YOU HOPE MEDICINE MAKES YOU FEEL",
+        "phrase": "THE REASON YOU NEED A CHASER",
         "isReal": false
       }
     ],
@@ -2229,37 +2224,42 @@
     "masks": [
       {
         "id": "cabinet_r0",
-        "phrase": "WHERE THE FAMILY KEEPS THE FINE CHINA",
+        "phrase": "THE BATHROOM MIRROR THAT SWINGS OPEN",
         "isReal": true
       },
       {
         "id": "cabinet_r1",
-        "phrase": "THE PRESIDENT’S DECISION-MAKING TEAM",
+        "phrase": "WHERE YOU PUT THE QUARTER, I GOT NEXT",
         "isReal": true
       },
       {
         "id": "cabinet_r2",
-        "phrase": "WHAT A CLASSIC 25-CENT ARCADE GAME CAME IN",
+        "phrase": "THE PEOPLE WHO SIT BEHIND THE PRESIDENT ON TV",
         "isReal": true
       },
       {
         "id": "cabinet_t0",
-        "phrase": "WHERE DEMOCRATS AND REPUBLICANS FIGHT",
+        "phrase": "WHERE THE WINTER COATS GO IN JULY",
         "isReal": false
       },
       {
         "id": "cabinet_t1",
-        "phrase": "WHERE A CHILD PUTS ALL THEIR TOYS",
+        "phrase": "WHERE A BILL GETS MARKED UP FIRST",
         "isReal": false
       },
       {
         "id": "cabinet_t2",
-        "phrase": "WHERE YOU HEAT UP LEFTOVERS",
+        "phrase": "WHERE THE CANNED GOODS OUTLIVE EVERYONE",
         "isReal": false
       },
       {
         "id": "cabinet_t3",
-        "phrase": "WHERE A MUSEUM DISPLAYS ITS VALUABLE ART",
+        "phrase": "WHERE NOTHING BELONGS BUT EVERYTHING ENDS UP",
+        "isReal": false
+      },
+      {
+        "id": "cabinet_t4",
+        "phrase": "WHERE THE BOOKS YOU NEVER READ ARE KEPT",
         "isReal": false
       }
     ],
@@ -2439,12 +2439,12 @@
     "masks": [
       {
         "id": "carpet_r0",
-        "phrase": "YOUR BEDROOM HAS IT, BUT YOUR BATHROOM DOESN’T",
+        "phrase": "WHERE THE VACUUM LEAVES ITS STRIPES",
         "isReal": true
       },
       {
         "id": "carpet_r1",
-        "phrase": "WHERE CELEBRITIES ANSWER QUESTIONS BETWEEN CAMERA FLASHES",
+        "phrase": "WHERE THEY ASK WHO YOU’RE WEARING",
         "isReal": true
       },
       {
@@ -2454,22 +2454,27 @@
       },
       {
         "id": "carpet_t0",
-        "phrase": "WHAT YOU SHAKE OUT OVER THE BACK PORCH",
+        "phrase": "WHAT THE COFFEE SPILL BECOMES BY MORNING",
         "isReal": false
       },
       {
         "id": "carpet_t1",
-        "phrase": "WHAT GETS PULLED OUT FROM UNDER YOU",
+        "phrase": "WHY YOUR SOCKS SHOCK THE DOORKNOB",
         "isReal": false
       },
       {
         "id": "carpet_t2",
-        "phrase": "THE WELCOME SIGN AT YOUR FRONT DOOR",
+        "phrase": "WHAT THE BRIDE WALKS DOWN",
         "isReal": false
       },
       {
         "id": "carpet_t3",
-        "phrase": "WHAT GYMNASTS LAND ON WHILE LEARNING FLIPS",
+        "phrase": "WHAT THEY TELL YOU TO TAKE OFF AT THE DOOR",
+        "isReal": false
+      },
+      {
+        "id": "carpet_t4",
+        "phrase": "WHY THE MOVIE THEATER FLOOR IS STICKY",
         "isReal": false
       }
     ],
@@ -2938,7 +2943,7 @@
     "masks": [
       {
         "id": "chest_r0",
-        "phrase": "KING KONG BEATS IT TO SHOW DOMINANCE",
+        "phrase": "WHAT KING KONG BEAT TO SHOW DOMINANCE",
         "isReal": true
       },
       {
@@ -2952,28 +2957,43 @@
         "isReal": true
       },
       {
+        "id": "chest_r3",
+        "phrase": "WHAT PUSH-UPS BURN AFTER TWENTY",
+        "isReal": true
+      },
+      {
+        "id": "chest_r4",
+        "phrase": "WHERE THE DOCTOR PUTS THE COLD DISC",
+        "isReal": true
+      },
+      {
+        "id": "chest_r5",
+        "phrase": "THE DRAWERS YOU KEEP SOCKS AND UNDERWEAR IN",
+        "isReal": true
+      },
+      {
         "id": "chest_t0",
         "phrase": "WHERE YOU KEEP CLOTHES HANGING ON HANGERS",
         "isReal": false
       },
       {
         "id": "chest_t1",
-        "phrase": "WHAT YOU LOCK MONEY AND JEWELRY INSIDE",
-        "isReal": false
-      },
-      {
-        "id": "chest_t2",
         "phrase": "WHAT PULL-UPS LEAVE SORE THE NEXT DAY",
         "isReal": false
       },
       {
+        "id": "chest_t2",
+        "phrase": "WHAT GETS WEIGHED AT AIRPORT CHECK-IN",
+        "isReal": false
+      },
+      {
         "id": "chest_t3",
-        "phrase": "THE DIRECTION OPPOSITE EAST",
+        "phrase": "WHAT THE BABY GETS BURPED AGAINST",
         "isReal": false
       },
       {
         "id": "chest_t4",
-        "phrase": "WHAT GETS WEIGHED AT AIRPORT CHECK-IN",
+        "phrase": "WHAT THE SEATBELT DIGS INTO",
         "isReal": false
       }
     ],
@@ -3193,42 +3213,37 @@
       },
       {
         "id": "claw_r1",
-        "phrase": "THE SCRATCH MARKS YOUR CAT LEFT ON YOU",
-        "isReal": true
-      },
-      {
-        "id": "claw_r2",
-        "phrase": "THE ARCADE GRABBER THAT ALWAYS DROPS YOUR PRIZE",
-        "isReal": true
-      },
-      {
-        "id": "claw_r3",
         "phrase": "THE UNDO END OF A HAMMER",
         "isReal": true
       },
       {
+        "id": "claw_r2",
+        "phrase": "WHAT ALWAYS DROPS THE PRIZE AT THE ARCADE",
+        "isReal": true
+      },
+      {
+        "id": "claw_r3",
+        "phrase": "WEAPON OF CHOICE IN A CAT FIGHT",
+        "isReal": true
+      },
+      {
         "id": "claw_t0",
-        "phrase": "WHAT YOU USE TO SCRATCH AN ITCH",
+        "phrase": "THE TOOL THEY BRING WITH THE BIB",
         "isReal": false
       },
       {
         "id": "claw_t1",
-        "phrase": "WHAT GRABS METAL AT A JUNKYARD",
+        "phrase": "WHAT T. REX HAD TINY VERSIONS OF",
         "isReal": false
       },
       {
         "id": "claw_t2",
-        "phrase": "A PIRATE’S METAL HAND",
+        "phrase": "WHAT SCISSORHANDS HAD INSTEAD OF FINGERS",
         "isReal": false
       },
       {
         "id": "claw_t3",
-        "phrase": "USED TO PRY OPEN A SAFE",
-        "isReal": false
-      },
-      {
-        "id": "claw_t4",
-        "phrase": "WHAT BEAVERS USE TO CUT DOWN TREES",
+        "phrase": "WHAT THE CRAB WALKS SIDEWAYS ON",
         "isReal": false
       }
     ],
@@ -3666,42 +3681,32 @@
       },
       {
         "id": "club_r5",
-        "phrase": "STAYING AFTER SCHOOL FOR CHESS, NOT DETENTION",
+        "phrase": "THE REASON YOU STAY AFTER SCHOOL, NOT DETENTION",
         "isReal": true
       },
       {
         "id": "club_t0",
-        "phrase": "WHERE YOU GO TO LIFT WEIGHTS",
+        "phrase": "WHO DECIDES YOU’RE NOT GETTING IN TONIGHT",
         "isReal": false
       },
       {
         "id": "club_t1",
-        "phrase": "WHAT YOU JOIN TO GET ROADSIDE ASSISTANCE",
+        "phrase": "THE CARD YOU SHOW TO BUY IN BULK",
         "isReal": false
       },
       {
         "id": "club_t2",
-        "phrase": "WHAT A BASEBALL PLAYER SWINGS AT THE PLATE",
+        "phrase": "WHAT NOBODY ACTUALLY READ BEFORE THE MEETING",
         "isReal": false
       },
       {
         "id": "club_t3",
-        "phrase": "THE GROUP OF LIONS LIVING TOGETHER",
+        "phrase": "THE ONE IN THE DECK THAT’S ALWAYS WILD",
         "isReal": false
       },
       {
         "id": "club_t4",
-        "phrase": "WHAT A SEAL BALANCES ON ITS NOSE",
-        "isReal": false
-      },
-      {
-        "id": "club_t5",
-        "phrase": "THE PLACE WHERE STUDENTS EAT LUNCH",
-        "isReal": false
-      },
-      {
-        "id": "club_t6",
-        "phrase": "THE SUIT WITH THE RED DIAMOND SYMBOL",
+        "phrase": "A GROUP OF JUVENILE DELINQUENTS",
         "isReal": false
       }
     ],
@@ -4401,7 +4406,7 @@
       },
       {
         "id": "craft_r2",
-        "phrase": "AN ALIEN'S UFO â€” A SPACESHIP FROM ANOTHER WORLD",
+        "phrase": "AN ALIEN'S UFO — A SPACESHIP FROM ANOTHER WORLD",
         "isReal": true
       },
       {
@@ -4962,7 +4967,7 @@
       },
       {
         "id": "fly_r3",
-        "phrase": "TOP GUNâ€™S BASIC JOB REQUIREMENT",
+        "phrase": "TOP GUN'S BASIC JOB REQUIREMENT",
         "isReal": true
       },
       {
@@ -4972,17 +4977,17 @@
       },
       {
         "id": "fly_r5",
-        "phrase": "WHAT HAPPENS TO TIME WHEN YOUâ€™RE HAVING FUN?",
+        "phrase": "WHAT HAPPENS TO TIME WHEN YOU'RE HAVING FUN?",
         "isReal": true
       },
       {
         "id": "fly_r6",
-        "phrase": "AN UNACCEPTABLE EXCUSE WONâ€™T DO HERE",
+        "phrase": "AN UNACCEPTABLE EXCUSE WON'T DO HERE",
         "isReal": true
       },
       {
         "id": "fly_r7",
-        "phrase": "ITâ€™S OPENâ€”MADE YOU LOOK",
+        "phrase": "IT'S OPEN—MADE YOU LOOK",
         "isReal": true
       },
       {
@@ -5095,68 +5100,18 @@
         "isReal": true
       },
       {
-        "id": "grace_r4",
-        "phrase": "OFFICER WAS IN A GOOD MOOD, SO I GOT A WARNING",
-        "isReal": true
-      },
-      {
-        "id": "grace_r5",
-        "phrase": "THREE DAYS AFTER IT'S DUE BEFORE IT'S LATE",
-        "isReal": true
-      },
-      {
-        "id": "grace_r6",
-        "phrase": "WHAT FIGURE SKATERS HAVE THAT HOCKEY PLAYERS DON'T",
-        "isReal": true
-      },
-      {
         "id": "grace_t0",
-        "phrase": "HE LIGHTS UP EVERY ROOM HE ENTERS",
+        "phrase": "WHAT SHE STICKS AT THE END OF THE ROUTINE",
         "isReal": false
       },
       {
         "id": "grace_t1",
-        "phrase": "NEVER RATTLED, EVEN UNDER PRESSURE",
+        "phrase": "WHAT THE DANCER POINTS BEFORE SHE LEAPS",
         "isReal": false
       },
       {
         "id": "grace_t2",
-        "phrase": "JUDGE SPARED HIM THE MAXIMUM SENTENCE",
-        "isReal": false
-      },
-      {
-        "id": "grace_t3",
-        "phrase": "HIS SMILE WON OVER THE WHOLE ROOM",
-        "isReal": false
-      },
-      {
-        "id": "grace_t4",
-        "phrase": "KEPT PERFECT POSTURE THROUGH THE INTERVIEW",
-        "isReal": false
-      },
-      {
-        "id": "grace_t5",
-        "phrase": "SHE ALWAYS KNOWS THE RIGHT THING TO SAY",
-        "isReal": false
-      },
-      {
-        "id": "grace_t6",
-        "phrase": "NEVER LOST HER COOL ON LIVE TELEVISION",
-        "isReal": false
-      },
-      {
-        "id": "grace_t7",
-        "phrase": "KNOWS WHICH FORK TO USE AT DINNER",
-        "isReal": false
-      },
-      {
-        "id": "grace_t8",
-        "phrase": "EVERYONE NOTICES WHEN SHE WALKS IN",
-        "isReal": false
-      },
-      {
-        "id": "grace_t9",
-        "phrase": "MADE THE WHOLE TABLE LAUGH INSTANTLY",
+        "phrase": "WHAT EVERYONE DOES AT THE BARRE FIRST",
         "isReal": false
       }
     ],
