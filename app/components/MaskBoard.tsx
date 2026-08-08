@@ -471,7 +471,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   // and gauntlet-tile wrong swipes, same as the original single function was.
   function performWrongSwipeFeedback(brokeRealChain: boolean) {
     playSfx('wrongLame');
-    playSfx('pollySqwawkShort');
+    // Staggered slightly behind wrongLame — fired together, the sharper
+    // squawk was burying the softer wrong-swipe whistle entirely.
+    setTimeout(() => playSfx('pollySqwawkShort'), 70);
     if (brokeRealChain) {
       playSfx('correctClaim', { rate: 0.55 });
     }
@@ -544,9 +546,20 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     ]).start(() => setAbsorbedPhrase(null));
   }
 
+  // Set by onRealClaimed the instant a swipe is judged correct — consumed
+  // here at the card's actual visual arrival (onCardTouch fires from
+  // SwipeMask's magnetic-flight physics reaching the book, up to ~1.15s
+  // later) so the absorption pulse and the book's own open flick land on
+  // the same beat instead of the pulse firing up to a second early.
+  const pendingAbsorbPhraseRef = useRef<string | null>(null);
+
   function handleCardTouch() {
     if (mechanics.gatePhase !== 'locked') return;
     triggerBookOpen();
+    if (pendingAbsorbPhraseRef.current !== null) {
+      triggerAbsorption(pendingAbsorbPhraseRef.current);
+      pendingAbsorbPhraseRef.current = null;
+    }
   }
 
   // ── gauntlet pulse ────────────────────────────────────────────
@@ -710,7 +723,9 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
         Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
         spawnFloat(points, 'real', tier);
-        triggerAbsorption(mask.phrase);
+        // Not fired directly — handleCardTouch fires it at actual arrival,
+        // synced with triggerBookOpen (see pendingAbsorbPhraseRef).
+        pendingAbsorbPhraseRef.current = mask.phrase;
         onGoldFlash?.();
       },
       onTrapRejected({ tier, points }) {
