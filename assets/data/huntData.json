@@ -694,12 +694,12 @@
         "trap": "THE DRUM MAJOR LEADING OUT FRONT"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "NO PITCH GETS THROWN UNTIL BOTH AGREE",
+        "trap": "THE TEAM’S STARTING NINE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "THE NEIGHBORHOOD WHERE THE CHARGING BULL LIVES",
+        "trap": "THE FREE RIDE FOR A VIEW OF THE STATUE OF LIBERTY"
       }
     ],
     "masks": [
@@ -1894,12 +1894,12 @@
         "trap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "A CLIENT’S BLUEPRINT FOR THE DESIGN TEAM TO FOLLOW",
+        "trap": "THE FINAL APPROVAL ON A PRODUCT PROTOTYPE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "CUT TO THE CHASE VERSION",
+        "trap": "THE MORAL STORIES OF AESOP"
       }
     ],
     "masks": [
@@ -2491,12 +2491,12 @@
         "trap": "FILTER SLAPPED ON EVERY SELFIE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "WHAT HAPPENS WHEN THE MAGIC WORDS ARE SAID",
+        "trap": "WHAT YOU’RE UNDER WHEN I COUNT BACKWARDS FROM THREE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "WHAT A RULER DOES WHEN THEY SEND SOMEONE INTO EXILE",
+        "trap": "THE CEREMONY WHERE A NEW MONARCH TAKES POWER"
       }
     ],
     "masks": [
@@ -2873,12 +2873,12 @@
         "trap": "BOARD WARPS IN THE SUMMER HEAT"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "SEEN ON GYM SHORTS BUT NOT ON A SUIT JACKET",
+        "trap": "THE SOUND A CLOCK’S LONG HAND MAKES"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "WHAT YOU GET WHEN THE GAME IS RAINED OUT",
+        "trap": "WHAT THE TEAM GETS FOR BECOMING CHAMPIONS"
       }
     ],
     "masks": [
@@ -4322,8 +4322,8 @@
         "trap": "THE CROWD'S THUMBS DECIDE IF HE LIVES"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "THE MALL’S HOME OF “AUTHENTIC” CUISINE",
+        "trap": "WHERE YOU EAT LUNCH IN FIFTH PERIOD"
       },
       {
         "real": "PLACEHOLDER TEST — meaning three",
@@ -4385,12 +4385,12 @@
         "trap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "THE DRINK YOU PRETEND TASTES LIKE CITRUS, PINE, AND WHATEVER ELSE THEY SAID",
+        "trap": "WHAT YOU BUILT FOR THE SCIENCE FAIR"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "HOW THE MASTERMIND PUTS THE PERFECT PLAN TOGETHER",
+        "trap": "WHEN YOU’RE NOT PREPARED AND HAVE TO WING IT"
       }
     ],
     "masks": [
@@ -4692,12 +4692,12 @@
         "trap": "COMMANDER ORDERS THE TROOPS TO RETREAT"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "WHEN IT’S TIME TO BRING IN A SPECIALIST",
+        "trap": "WHAT YOU FEEL WHEN YOU COULDN’T CARE LESS ABOUT IT"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "THE COLUMN THAT LOOKS LIKE THE WALL SWALLOWED HALF OF IT",
+        "trap": "WHEN YOU RAISE YOUR HAND BECAUSE YOU KNOW THE ANSWER"
       }
     ],
     "masks": [
@@ -4752,20 +4752,20 @@
   },
   "EXCHANGE": {
     "difficulty": "medium",
-    "hiddenMeaning": "OPPOSING ARMIES ENGAGE IN A BACK-AND-FORTH GUNFIGHT",
+    "hiddenMeaning": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
     "hiddenTrap": "THE DEBATE WAS OVER, NO REBUTTAL LEFT",
     "hiddenPairs": [
       {
-        "real": "OPPOSING ARMIES ENGAGE IN A BACK-AND-FORTH GUNFIGHT",
+        "real": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
         "trap": "THE DEBATE WAS OVER, NO REBUTTAL LEFT"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "A VERBAL ARGUMENT WITH BACK-AND-FORTH INSULTS",
+        "trap": "WHERE TWO SEPARATE HIGHWAYS MERGE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "WHEN YOU TURN YOUR DOLLARS INTO EUROS",
+        "trap": "WHEN YOU ASK THE CASHIER TO BREAK A HUNDRED"
       }
     ],
     "masks": [
@@ -4843,12 +4843,12 @@
         "trap": "USE A AND B TO FIND SIDE C"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "HOW SCIENTISTS PULL DNA FROM A FOSSIL",
+        "trap": "WHAT A NEWSPAPER DOES WHEN IT HAS TO TAKE BACK THE STORY"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "THE CERTIFIED COPY PULLED FROM THE PUBLIC RECORD",
+        "trap": "WHEN SECRET GOVERNMENT RECORDS BECOME PUBLIC"
       }
     ],
     "masks": [
@@ -5128,12 +5128,12 @@
         "trap": "HOLD IT TO YOUR EAR AND HEAR THE OCEAN"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "WHAT YOUR THANKSGIVING CORNUCOPIA IS ALSO CALLED",
+        "trap": "WHAT WAS USED TO WARN A MEDIEVAL TOWN OF DANGER"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "THE SHARP TIPPY-TOP OF A MOUNTAIN",
+        "trap": "WHAT GIVES THE FINAL SOUND TO END THE GAME"
       }
     ],
     "masks": [
