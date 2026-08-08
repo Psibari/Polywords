@@ -25,8 +25,11 @@ export type BossGauntletSpinesProps = {
   onEffect: (type: 'shard' | 'trail', x: number, y: number, variant?: ShardVariant) => void;
   onSwipeAttempt?: () => void;
   onCardTouch: () => void;
-  wordY: number;
-  intakeY: number;
+  // Optional to match SwipeMask's own wordY/intakeY (these are forwarded
+  // straight through to it below) — undefined until MaskBoard's word zone
+  // has actually been measured, rather than forwarding a guessed default.
+  wordY?: number;
+  intakeY?: number;
   correctCount: number;
 };
 
@@ -82,7 +85,7 @@ function SpineSlot({
   onEffect: BossGauntletSpinesProps['onEffect'];
   onSwipeAttempt?: () => void;
   onCardTouch: () => void;
-  wordY: number;
+  wordY?: number;
   intakeY?: number;
   totalTiles: number;
 }) {

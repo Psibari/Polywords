@@ -196,22 +196,31 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
 }
 
 export function preloadSfx(): void {
-  void ensureAudioSessionConfigured()
+  // Pool creation must not fire until the native session is actually
+  // configured — creating 38 AudioPlayer instances against an
+  // unconfigured session was the asymmetry that made SFX loading lag
+  // behind MusicEngine's preloadHuntTrack, which already waits correctly.
+  ensureAudioSessionConfigured()
+    .then(() => {
+      (Object.entries(SFX) as [SfxName, SfxConfig][]).forEach(([name, config]) => {
+        if (playerPools[name]) return;
+        const pool = createPlayerPool(name, config);
+        if (pool) {
+          playerPools[name] = pool;
+        } else {
+          warnDev(`No players loaded for "${name}".`);
+        }
+      });
+    })
     .catch(error => warnDev('Failed to configure audio mode.', error));
-
-  (Object.entries(SFX) as [SfxName, SfxConfig][]).forEach(([name, config]) => {
-    if (playerPools[name]) return;
-    const pool = createPlayerPool(name, config);
-    if (pool) {
-      playerPools[name] = pool;
-    } else {
-      warnDev(`No players loaded for "${name}".`);
-    }
-  });
 }
 
 const READY_POLL_MS = 40;
-const READY_TIMEOUT_MS = 1200;
+// Real device loads were measured at 1-3s (CONTEXT.md); 1200ms meant
+// "start anyway" was the typical outcome, not the rare edge case it was
+// designed for. 2000ms still bounds worst-case wait, just closer to
+// covering an ordinary load instead of losing the race by default.
+const READY_TIMEOUT_MS = 2000;
 
 // Condition-based, not a fixed delay: resolves as soon as every pool
 // preloadSfx() created has at least one loaded player, or after

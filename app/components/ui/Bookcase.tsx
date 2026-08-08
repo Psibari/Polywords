@@ -73,6 +73,12 @@ function chunkShelves(entries: ShelfEntry[]): ShelfEntry[][] {
 // bookcase art defines shelf positions; rows never stretch the image.
 export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
   const [frameWidth, setFrameWidth] = useState(0);
+  // 0 is an honest "not measured yet" sentinel, but shelfWidth's own floor
+  // (below) still produces a real, too-narrow packing width from it — so
+  // gate the actual render on a real measurement having landed, same
+  // pattern as SettingsScreen's chamberWidth, instead of ever painting
+  // shelves packed against the floor value.
+  const hasMeasuredFrame = frameWidth > 0;
   const shelfWidth = Math.max(
     frameWidth * (1 - SHELF_SIDE_INSET * 2),
     spineWidthFor('POLYWORDS') + SPINE_GAP,
@@ -106,7 +112,7 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
 
   return (
     <View style={styles.caseStack} onLayout={e => setFrameWidth(e.nativeEvent.layout.width)}>
-      {frames.map((frame, frameIndex) => (
+      {hasMeasuredFrame && frames.map((frame, frameIndex) => (
         <ImageBackground
           key={`case-${frameIndex}`}
           source={bookcaseImage}

@@ -340,11 +340,21 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const isHaunt = step.isHauntReturn === true;
 
   // ── layout ───────────────────────────────────────────────────
-  const [containerWidth, setContainerWidth] = useState(350);
-  const containerWidthRef                   = useRef(350);
+  // Seeded from the real device width (available synchronously before
+  // first paint) instead of a guessed literal — onLayout below still
+  // corrects it for edge cases (split-view resize, rotation), but the
+  // first render is no longer drawn against a made-up number.
+  const initialWindowWidth = Dimensions.get('window').width;
+  const [containerWidth, setContainerWidth] = useState(initialWindowWidth);
+  const containerWidthRef                   = useRef(initialWindowWidth);
   const containerRef  = useRef<View>(null);
   const wordZoneRef   = useRef<View>(null);
+  // wordScreenY has no synchronous real-value equivalent (it's a page
+  // position, not a device dimension) — wordZoneMeasured gates its only
+  // consumers (SwipeMask's wordY/intakeY props) so nothing reads the
+  // still-default value before the real onLayout+measure() lands.
   const [wordScreenY, setWordScreenY] = useState(180);
+  const [wordZoneMeasured, setWordZoneMeasured] = useState(false);
 
   const prevTopIdRef = useRef<string | null>(null);
   const cardPopCountRef = useRef(0);
@@ -1224,6 +1234,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           (wordZoneRef.current as any)?.measure(
             (_x: number, _y: number, _w: number, _h: number, _px: number, pageY: number) => {
               setWordScreenY(pageY + zoneHeight / 2);
+              setWordZoneMeasured(true);
             }
           );
         }}
@@ -1503,8 +1514,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                       mechanics.onTileExitComplete(mechanics.topMask!.id);
                     }}
                     onCardTouch={handleCardTouch}
-                    wordY={wordScreenY}
-                    intakeY={wordScreenY + 73}
+                    wordY={wordZoneMeasured ? wordScreenY : undefined}
+                    intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
                   />
                 </View>
                 </Animated.View>
@@ -1527,8 +1538,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                   onEffect={handleEffect}
                   onSwipeAttempt={onSwipeAttempt}
                   onCardTouch={handleCardTouch}
-                  wordY={wordScreenY}
-                  intakeY={wordScreenY + 73}
+                  wordY={wordZoneMeasured ? wordScreenY : undefined}
+                  intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
                   correctCount={gauntletCorrectCount}
                 />
               </View>

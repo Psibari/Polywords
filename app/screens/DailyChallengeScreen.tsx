@@ -29,11 +29,12 @@ import {
 import { DailyClaimResult } from '../game/types';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
-import { playSfx, preloadSfx } from '../audio/sfx';
+import { playSfx, preloadSfx, sfxReady } from '../audio/sfx';
 import {
   setMusicState,
   startMusic,
   stopMusic,
+  musicReady,
 } from '../audio/MusicEngine';
 import {
   DAILY_WIN_TITLE,
@@ -434,10 +435,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     new Map(),
   );
   const [pollyPose, setPollyPose] = useState<PerchReaction>('perched');
-  const [inputLocked, setInputLocked] = useState(false);
+  // Starts locked (unlike the old default of unlocked) — GameScreen never
+  // renders its interactive content until audioReady is true; Daily had no
+  // equivalent gate at all, so a fast tap could request a sound before
+  // preloadSfx() had a chance to finish. See the audioReady effect below.
+  const [inputLocked, setInputLocked] = useState(true);
   const [dailyInitialized, setDailyInitialized] = useState(false);
   const [dailyStarting, setDailyStarting] = useState(false);
-  const inputLockedRef = useRef(false);
+  const inputLockedRef = useRef(true);
   const clueVaultRef = useRef<View>(null);
   const [claimTarget, setClaimTarget] = useState<{ x: number; y: number } | null>(
     null,
@@ -492,6 +497,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     preloadSfx();
   }, []);
 
+  // AUDIO READY GATE — same pattern GameScreen already uses (audioReady /
+  // gameplayGateActive). Daily previously had no equivalent, so cards were
+  // tappable immediately, racing preloadSfx() every session rather than
+  // only on a slow load.
+  const [audioReady, setAudioReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([sfxReady(), musicReady()]).then(() => {
+      if (!cancelled) setAudioReady(true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   // DAILY MUSIC
   // Tied to navigation focus, not mount/unmount: native-stack keeps the
   // outgoing and incoming screens both mounted during the transition
@@ -513,7 +531,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     if (!dailySession || dailySession.status !== 'active') return;
     completedRef.current = false;
     completingCandidateRef.current = null;
-    setLocked(false);
+    // Unlocking itself is handled by the audioReady-gated effect below —
+    // it re-checks audioReady on every round change too, so this doesn't
+    // need to unlock unconditionally here.
     roundStartRef.current = Date.now() - dailySession.roundElapsedMs;
     intakeScale.setValue(1);
     revealProgress.setValue(0);
@@ -548,6 +568,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     return () => clearTimeout(measureTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.currentRoundIndex]);
+
+  // UNLOCK GATE — fires on round change (paired with the effect above,
+  // which always runs first in the same commit and resets completedRef)
+  // and whenever audioReady flips true, so a round that starts before
+  // audio finishes preloading unlocks retroactively instead of never.
+  useEffect(() => {
+    if (!audioReady) return;
+    if (!dailySession || dailySession.status !== 'active') return;
+    if (completedRef.current) return;
+    setLocked(false);
+  }, [audioReady, dailySession?.currentRoundIndex, dailySession?.status]);
 
   // CLUE TIMER — active play time only. Leaving Daily or backgrounding the
   // app saves elapsed time and stops the clock; returning resumes from there.

@@ -345,7 +345,10 @@ export function initMusicEngine(): Promise<void> {
 }
 
 const READY_POLL_MS = 40;
-const READY_TIMEOUT_MS = 1200;
+// Matches sfx.ts's READY_TIMEOUT_MS — see that file for why 1200ms was
+// raised: real device loads measured at 1-3s made "start anyway" the
+// typical outcome rather than a rare edge case.
+const READY_TIMEOUT_MS = 2000;
 
 // Condition-based, not a fixed delay: resolves once the active player has
 // actually loaded its track, or after READY_TIMEOUT_MS — a caller gating on
