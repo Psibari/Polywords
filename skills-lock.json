@@ -73,6 +73,12 @@
       "skillPath": "skills/genres/puzzle/SKILL.md",
       "computedHash": "72954442f78e320b58145feabdd97d7405c6c9c6c29d0b7bfaf0466498b8014c"
     },
+    "react-native-best-practices": {
+      "source": "software-mansion-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-best-practices/SKILL.md",
+      "computedHash": "e935597d2def83a84aae3f8621f645dc84023c91335b1c201f9a0122b55326bc"
+    },
     "remotion-best-practices": {
       "source": "remotion-dev/skills",
       "sourceType": "github",
