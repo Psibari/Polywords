@@ -151,6 +151,32 @@ Corrects stale stem info — stems are GONE.
 - Cold-start hunt music delay (1-3s before music starts on first Hunt entry after reload): FIXED 2026-08-07, commit `4e86b0c` — hunt track now preloads in the background from `App.tsx` instead of loading cold at Hunt entry.
 - Resolved: `[MusicEngine] failed to play ... track — Session activation failed` warning (previously "Unchased", seen once on a boss-track switch) — reproduced on hunt track 2026-08-07, confirmed the existing self-heal recovers it within 2 rebuild attempts.
 
+## Deferred — Pre-Launch Accessibility/Polish Pass (found 2026-08-09)
+
+Not urgent, explicitly deferred by Pete (not near launch) — batch these together for one
+pass later rather than fixing piecemeal. Found via a ui-ux-pro-max checklist audit of the
+Hunt session + boss round.
+
+1. Reduce Motion is inconsistently honored in `MaskBoard.tsx` — most animations there
+   correctly check it, but three don't: `triggerBoardShake` (~419-427, fires unconditionally
+   on boss entrance and boss-haunted), the per-word deck-entrance cascade (~989-1052,
+   including `bookSlideX`), and the non-boss word "lock pulse" (~1142-1156). Needs a
+   warroom pass (MaskBoard.tsx is gated).
+2. MASTERED/HAUNTED outcome overlay's dismiss tap (`MasteredOutcomeOverlay` ~190-200,
+   `HauntedOutcomeOverlay` ~252-270) ignores taps for up to 1200ms after mount with zero
+   visual/accessibility indication it's not yet interactive. Same file, same gate.
+3. Several real (non-decorative) text elements are under this project's own documented
+   14px legibility floor: `vaultLabel` 9px (MaskBoard.tsx ~1919-1929), boss stakes kicker
+   11px (`FONT_SIZES.hudLabel`, MaskBoard.tsx ~1845-1879), outcome "CONTINUE" label 11px
+   (MaskBoard.tsx ~2187-2194), card era badge 10px (`FONT_SIZES.ghostSubLabel`,
+   SwipeMask.tsx ~960-964).
+4. Boss gauntlet swipe threshold (`HUNT_SWIPE_THRESHOLD = 40`, huntSwipeDirection.ts:3)
+   is thin for what CLAUDE.md calls an irrevocable action. Lower-confidence finding, worth
+   a second look rather than an automatic fix.
+5. Boss stakes badge text has no `numberOfLines`/`adjustsFontSizeToFit` safeguard
+   (MaskBoard.tsx ~1857-1879) — could wrap at large system text sizes and overlap the book
+   below it. Low urgency.
+
 ## Active Runtime Boundaries
 
 - Live content: `assets/data/huntData.json` — real 150-word working list as of 2026-08-07 (see Session log above), not the old test corpus.
