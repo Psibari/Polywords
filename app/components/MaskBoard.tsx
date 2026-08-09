@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -32,6 +32,7 @@ import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { resolveActiveTileHeight } from './tileTextLayout';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -347,6 +348,20 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const initialWindowWidth = Dimensions.get('window').width;
   const [containerWidth, setContainerWidth] = useState(initialWindowWidth);
   const containerWidthRef                   = useRef(initialWindowWidth);
+  const [activeTileLayout, setActiveTileLayout] = useState({
+    maskId: null as string | null,
+    height: TILE_H,
+  });
+  const activeTopMaskIdRef = useRef<string | null>(null);
+  const handleActiveTileHeightChange = useCallback((maskId: string, measuredHeight: number) => {
+    if (activeTopMaskIdRef.current !== maskId) return;
+    const height = resolveActiveTileHeight(measuredHeight);
+    setActiveTileLayout(previous => (
+      previous.maskId === maskId && previous.height === height
+        ? previous
+        : { maskId, height }
+    ));
+  }, []);
   const containerRef  = useRef<View>(null);
   const wordZoneRef   = useRef<View>(null);
   // wordScreenY has no synchronous real-value equivalent (it's a page
@@ -921,6 +936,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     },
   });
 
+  const activeTopMaskId = mechanics.topMask?.id ?? null;
+  activeTopMaskIdRef.current = activeTopMaskId;
+  // The keyed measurement belongs only to the current top mask. An identity
+  // mismatch synchronously renders the 152px minimum, so a long prior card
+  // can never flash its stale height while the next card is being measured.
+  const activeTileHeight = activeTileLayout.maskId === activeTopMaskId
+    ? activeTileLayout.height
+    : TILE_H;
+
   useEffect(() => {
     if (mechanics.visibleGridMasks.length > 0) {
       setTilesReady(true);
@@ -1418,16 +1442,25 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
       <View style={styles.gridWrap}>
-        <View style={styles.tileStackArea}>
+        <View style={[styles.tileStackArea, { minHeight: activeTileHeight + 16 }]}>
           {showBoardContent && mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
             <Animated.View
               pointerEvents="none"
-              style={[styles.swipeCueOverlay, { opacity: cueOpacityAnim }]}
+              style={[
+                styles.swipeCueOverlay,
+                { minHeight: activeTileHeight + 96, opacity: cueOpacityAnim },
+              ]}
             >
               <Text style={[styles.swipeCueText, styles.swipeUpCue]}>
                 SWIPE UP TO CLAIM
               </Text>
-              <Text style={[styles.swipeCueText, styles.swipeRightCue]}>
+              <Text
+                style={[
+                  styles.swipeCueText,
+                  styles.swipeRightCue,
+                  { top: activeTileHeight + 16 },
+                ]}
+              >
                 SWIPE RIGHT TO REJECT
               </Text>
             </Animated.View>
@@ -1436,7 +1469,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
-              <View style={styles.deckWrap}>
+              <View style={[styles.deckWrap, { minHeight: activeTileHeight + 18 }]}>
                 {mechanics.remainingMaskIds.slice(1, 1 + backingCardCount).reverse().map((maskId, index) => {
                   const depth = backingCardCount - index;
                   const anim = getBackingCardAnim(maskId, depth);
@@ -1506,7 +1539,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                 ]}>
                 <View
                   ref={getTileRef(mechanics.topMask.id)}
-                  style={styles.deckTopCardSlot}
+                  style={[styles.deckTopCardSlot, { minHeight: activeTileHeight }]}
                 >
                   <SwipeMask
                     key={mechanics.topMask.id}
@@ -1529,6 +1562,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                       mechanics.onTileExitComplete(mechanics.topMask!.id);
                     }}
                     onCardTouch={handleCardTouch}
+                    onMeasuredHeightChange={handleActiveTileHeightChange}
                     wordY={wordZoneMeasured ? wordScreenY : undefined}
                     intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
                   />

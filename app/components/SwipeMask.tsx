@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
   Dimensions,
@@ -34,6 +34,11 @@ import {
   resolveHuntSwipeDirection,
 } from './huntSwipeDirection';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import {
+  ACTIVE_TILE_BASE_FONT_SIZE,
+  ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
+  resolveActiveTileHeight,
+} from './tileTextLayout';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -66,6 +71,7 @@ type Props = {
   onPressHoldStart?: () => void;
   onExitComplete?: () => void;
   onCardTouch?: () => void;
+  onMeasuredHeightChange?: (maskId: string, height: number) => void;
   disabled?: boolean;
   wordY?: number;
   intakeY?: number;
@@ -107,6 +113,7 @@ export function SwipeMask({
   onPressHoldStart,
   onExitComplete,
   onCardTouch,
+  onMeasuredHeightChange,
   disabled = false,
   wordY = 180,
   intakeY,
@@ -122,6 +129,8 @@ export function SwipeMask({
     Math.max(tileHeight, 96),
     gauntletCard ? 200 : bookMaterial ? 220 : 124,
   );
+  const usesMeasuredActiveLayout =
+    s !== 'hidden' && s !== 'revealed' && !isSpecialSplit && !bookMaterial && !gauntletCard;
   const reduceMotion = useReducedMotionPreference();
   const reduceFlashes = useReducedFlashesPreference();
 
@@ -162,6 +171,7 @@ export function SwipeMask({
   const onSwipeStartRef          = useRef(onSwipeStart);
   const onPressHoldStartRef      = useRef(onPressHoldStart);
   const onExitCompleteRef        = useRef(onExitComplete);
+  const onMeasuredHeightChangeRef = useRef(onMeasuredHeightChange);
   const disabledRef              = useRef(disabled);
   const outerRef                 = useRef<any>(null);
   const absorbRafRef             = useRef<number | null>(null);
@@ -174,9 +184,21 @@ export function SwipeMask({
   useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
   useEffect(() => { onExitCompleteRef.current = onExitComplete; }, [onExitComplete]);
+  useEffect(() => { onMeasuredHeightChangeRef.current = onMeasuredHeightChange; }, [onMeasuredHeightChange]);
   const onCardTouchRef = useRef(onCardTouch);
   useEffect(() => { onCardTouchRef.current = onCardTouch; }, [onCardTouch]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
+
+  // A SwipeMask is keyed by mask id in every live owner. Keep an explicit
+  // identity reset as well so a future unkeyed owner cannot carry a long
+  // phrase's measured height into the next tile before its first onLayout.
+  useLayoutEffect(() => {
+    if (!usesMeasuredActiveLayout) return;
+    const resetHeight = resolveActiveTileHeight(tileHeight);
+    tileLayoutRef.current = { width: cardWidth, height: resetHeight };
+    outerHeightAnim.setValue(resetHeight);
+    onMeasuredHeightChangeRef.current?.(mask.id, resetHeight);
+  }, [mask.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function fireExitCompleteOnce() {
     if (exitCompleteFiredRef.current) return;
@@ -210,7 +232,11 @@ export function SwipeMask({
   // ── Outer height sync on tileHeight prop change ───────────────
   useEffect(() => {
     if (!judgedRef.current) {
-      outerHeightAnim.setValue(Math.max(tileHeight, 58));
+      outerHeightAnim.setValue(
+        usesMeasuredActiveLayout
+          ? resolveActiveTileHeight(tileLayoutRef.current.height)
+          : Math.max(tileHeight, 58),
+      );
     }
   }, [tileHeight]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -682,15 +708,27 @@ export function SwipeMask({
               : bookMaterial
                 ? styles.bookTile
                 : styles.tile,
-            !isSpecialSplit && { width: cardWidth, height: cardHeight },
+            !isSpecialSplit && {
+              width: cardWidth,
+              ...(usesMeasuredActiveLayout
+                ? { minHeight: resolveActiveTileHeight(tileHeight) }
+                : { height: cardHeight }),
+            },
             bookMaterial && styles.tileBookMaterial,
             tileAnimStyle,
           ]}
           onLayout={(e: LayoutChangeEvent) => {
+            const measuredHeight = usesMeasuredActiveLayout
+              ? resolveActiveTileHeight(e.nativeEvent.layout.height)
+              : e.nativeEvent.layout.height;
             tileLayoutRef.current = {
               width:  e.nativeEvent.layout.width,
-              height: e.nativeEvent.layout.height,
+              height: measuredHeight,
             };
+            if (usesMeasuredActiveLayout && !judgedRef.current) {
+              outerHeightAnim.setValue(measuredHeight);
+              onMeasuredHeightChangeRef.current?.(mask.id, measuredHeight);
+            }
           }}
           {...panResponder.panHandlers}
           accessible
@@ -760,6 +798,7 @@ export function SwipeMask({
           <View
             style={[
               isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel,
+              usesMeasuredActiveLayout && styles.measuredPhrasePanel,
               bookMaterial && styles.phrasePanelBook,
             ]}
             pointerEvents="none"
@@ -769,9 +808,13 @@ export function SwipeMask({
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
               ]}
-              numberOfLines={2}
-              adjustsFontSizeToFit={true}
-              minimumFontScale={isSpecialSplit ? 0.65 : 0.8}
+              {...(usesMeasuredActiveLayout
+                ? ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS
+                : {
+                    numberOfLines: 2,
+                    adjustsFontSizeToFit: true,
+                    minimumFontScale: isSpecialSplit ? 0.65 : 0.8,
+                  })}
             >
               {mask.phrase}
             </Text>
@@ -839,6 +882,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     zIndex: 2,
   },
+  measuredPhrasePanel: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+  },
   tileBookMaterial: {
     shadowColor: heroBookMaterial.goldTrim,
     shadowOffset: { width: 0, height: 0 },
@@ -890,7 +938,7 @@ const styles = StyleSheet.create({
     zIndex: 4,
   },
   phrase: {
-    fontSize: 27,
+    fontSize: ACTIVE_TILE_BASE_FONT_SIZE,
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',
