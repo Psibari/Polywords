@@ -36,8 +36,8 @@ import {
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import {
   ACTIVE_TILE_BASE_FONT_SIZE,
-  ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
   resolveActiveTileHeight,
+  resolveActiveTileLayoutPolicy,
 } from './tileTextLayout';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
@@ -129,8 +129,13 @@ export function SwipeMask({
     Math.max(tileHeight, 96),
     gauntletCard ? 200 : bookMaterial ? 220 : 124,
   );
-  const usesMeasuredActiveLayout =
-    s !== 'hidden' && s !== 'revealed' && !isSpecialSplit && !bookMaterial && !gauntletCard;
+  const activeTileLayoutPolicy = resolveActiveTileLayoutPolicy({
+    state: s,
+    isSpecialSplit,
+    bookMaterial,
+    gauntletCard,
+    tileHeight,
+  });
   const reduceMotion = useReducedMotionPreference();
   const reduceFlashes = useReducedFlashesPreference();
 
@@ -193,8 +198,8 @@ export function SwipeMask({
   // identity reset as well so a future unkeyed owner cannot carry a long
   // phrase's measured height into the next tile before its first onLayout.
   useLayoutEffect(() => {
-    if (!usesMeasuredActiveLayout) return;
-    const resetHeight = resolveActiveTileHeight(tileHeight);
+    if (!activeTileLayoutPolicy.usesMeasuredLayout) return;
+    const resetHeight = activeTileLayoutPolicy.minimumHeight;
     tileLayoutRef.current = { width: cardWidth, height: resetHeight };
     outerHeightAnim.setValue(resetHeight);
     onMeasuredHeightChangeRef.current?.(mask.id, resetHeight);
@@ -233,8 +238,11 @@ export function SwipeMask({
   useEffect(() => {
     if (!judgedRef.current) {
       outerHeightAnim.setValue(
-        usesMeasuredActiveLayout
-          ? resolveActiveTileHeight(tileLayoutRef.current.height)
+        activeTileLayoutPolicy.usesMeasuredLayout
+          ? resolveActiveTileHeight(
+              tileLayoutRef.current.height,
+              activeTileLayoutPolicy.minimumHeight,
+            )
           : Math.max(tileHeight, 58),
       );
     }
@@ -710,22 +718,25 @@ export function SwipeMask({
                 : styles.tile,
             !isSpecialSplit && {
               width: cardWidth,
-              ...(usesMeasuredActiveLayout
-                ? { minHeight: resolveActiveTileHeight(tileHeight) }
+              ...(activeTileLayoutPolicy.usesMeasuredLayout
+                ? { minHeight: activeTileLayoutPolicy.minimumHeight }
                 : { height: cardHeight }),
             },
             bookMaterial && styles.tileBookMaterial,
             tileAnimStyle,
           ]}
           onLayout={(e: LayoutChangeEvent) => {
-            const measuredHeight = usesMeasuredActiveLayout
-              ? resolveActiveTileHeight(e.nativeEvent.layout.height)
+            const measuredHeight = activeTileLayoutPolicy.usesMeasuredLayout
+              ? resolveActiveTileHeight(
+                  e.nativeEvent.layout.height,
+                  activeTileLayoutPolicy.minimumHeight,
+                )
               : e.nativeEvent.layout.height;
             tileLayoutRef.current = {
               width:  e.nativeEvent.layout.width,
               height: measuredHeight,
             };
-            if (usesMeasuredActiveLayout && !judgedRef.current) {
+            if (activeTileLayoutPolicy.usesMeasuredLayout && !judgedRef.current) {
               outerHeightAnim.setValue(measuredHeight);
               onMeasuredHeightChangeRef.current?.(mask.id, measuredHeight);
             }
@@ -798,7 +809,7 @@ export function SwipeMask({
           <View
             style={[
               isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel,
-              usesMeasuredActiveLayout && styles.measuredPhrasePanel,
+              activeTileLayoutPolicy.usesMeasuredLayout && styles.measuredPhrasePanel,
               bookMaterial && styles.phrasePanelBook,
             ]}
             pointerEvents="none"
@@ -808,13 +819,7 @@ export function SwipeMask({
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
               ]}
-              {...(usesMeasuredActiveLayout
-                ? ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS
-                : {
-                    numberOfLines: 2,
-                    adjustsFontSizeToFit: true,
-                    minimumFontScale: isSpecialSplit ? 0.65 : 0.8,
-                  })}
+              {...activeTileLayoutPolicy.textProps}
             >
               {mask.phrase}
             </Text>

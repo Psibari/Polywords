@@ -5,6 +5,7 @@ import {
   Easing,
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -32,7 +33,11 @@ import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
-import { resolveActiveTileHeight } from './tileTextLayout';
+import {
+  hasBoardVerticalOverflow,
+  resolveActiveTileHeight,
+  resolveBoardVerticalSpacing,
+} from './tileTextLayout';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -42,6 +47,9 @@ const FINAL_TILE_GAP = 10;
 const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
+const GAUNTLET_TILE_H = 200;
+const ACTIVE_CUE_REGION_EXTRA = 48;
+const GAUNTLET_HEADER_REGION_EXTRA = 44;
 
 // Deck timing curves — shared by the round's opening deal-in and the
 // per-tile shuffle-forward animation (Task 1), so the deck reads as one
@@ -353,6 +361,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     height: TILE_H,
   });
   const activeTopMaskIdRef = useRef<string | null>(null);
+  const [activeGauntletTileHeight, setActiveGauntletTileHeight] = useState(GAUNTLET_TILE_H);
+  const activeGauntletMaskIdRef = useRef<string | null>(null);
+  const [gridViewportHeight, setGridViewportHeight] = useState(0);
+  const [gridContentHeight, setGridContentHeight] = useState(0);
   const handleActiveTileHeightChange = useCallback((maskId: string, measuredHeight: number) => {
     if (activeTopMaskIdRef.current !== maskId) return;
     const height = resolveActiveTileHeight(measuredHeight);
@@ -361,6 +373,11 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         ? previous
         : { maskId, height }
     ));
+  }, []);
+  const handleGauntletTileHeightChange = useCallback((maskId: string, measuredHeight: number) => {
+    if (activeGauntletMaskIdRef.current !== maskId) return;
+    const height = resolveActiveTileHeight(measuredHeight, GAUNTLET_TILE_H);
+    setActiveGauntletTileHeight(previous => Math.max(previous, height));
   }, []);
   const containerRef  = useRef<View>(null);
   const wordZoneRef   = useRef<View>(null);
@@ -938,6 +955,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
   const activeTopMaskId = mechanics.topMask?.id ?? null;
   activeTopMaskIdRef.current = activeTopMaskId;
+  const activeGauntletMaskId = mechanics.activeGauntletTile?.mask.id ?? null;
+  activeGauntletMaskIdRef.current = activeGauntletMaskId;
   // The keyed measurement belongs only to the current top mask. An identity
   // mismatch synchronously renders the 152px minimum, so a long prior card
   // can never flash its stale height while the next card is being measured.
@@ -1242,6 +1261,18 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const showGauntletCard =
     mechanics.gatePhase === 'tiles' ||
     (mechanics.gatePhase === 'wrongFail' && mechanics.gauntletTiles.length > 0);
+  const ownedGridRegionHeight = showGauntletCard
+    ? activeGauntletTileHeight + GAUNTLET_HEADER_REGION_EXTRA
+    : activeTileHeight + ACTIVE_CUE_REGION_EXTRA;
+  const boardSpacing = resolveBoardVerticalSpacing(
+    gridViewportHeight,
+    ownedGridRegionHeight,
+    0,
+  );
+  const gridHasVerticalOverflow = hasBoardVerticalOverflow(
+    gridViewportHeight,
+    gridContentHeight,
+  );
 
   return (
     <Animated.View
@@ -1441,7 +1472,26 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
       </View>
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
-      <View style={styles.gridWrap}>
+      <ScrollView
+        style={styles.gridViewport}
+        contentContainerStyle={[
+          styles.gridWrap,
+          {
+            minHeight: ownedGridRegionHeight +
+              boardSpacing.gridPaddingTop + boardSpacing.gridPaddingBottom,
+            paddingTop: boardSpacing.gridPaddingTop,
+            paddingBottom: boardSpacing.gridPaddingBottom,
+          },
+        ]}
+        scrollEnabled={gridHasVerticalOverflow}
+        showsVerticalScrollIndicator={gridHasVerticalOverflow}
+        directionalLockEnabled
+        removeClippedSubviews={false}
+        overScrollMode="never"
+        scrollEventThrottle={16}
+        onLayout={event => setGridViewportHeight(Math.ceil(event.nativeEvent.layout.height))}
+        onContentSizeChange={(_width, height) => setGridContentHeight(Math.ceil(height))}
+      >
         <View style={[styles.tileStackArea, { minHeight: activeTileHeight + 16 }]}>
           {showBoardContent && mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
             <Animated.View
@@ -1591,6 +1641,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                   onEffect={handleEffect}
                   onSwipeAttempt={onSwipeAttempt}
                   onCardTouch={handleCardTouch}
+                  onActiveCardHeightChange={handleGauntletTileHeightChange}
                   wordY={wordZoneMeasured ? wordScreenY : undefined}
                   intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
                   correctCount={gauntletCorrectCount}
@@ -1615,7 +1666,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           </View>
 
         </View>
-      </View>
+      </ScrollView>
 
 
       {/* Mastery score float */}
@@ -1849,7 +1900,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 14,
     backgroundColor: 'transparent',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
@@ -1869,10 +1920,8 @@ const styles = StyleSheet.create({
     // + border, see below) has clearance above the book instead of
     // overlapping its top edge. Kept on wordZone rather than lifting the
     // badge itself with a negative top: kickerBossFixed is a direct child
-    // of this component's root container, which has overflow: 'hidden' and
-    // no paddingTop — a negative top would be clipped by that boundary,
-    // reintroducing the exact invisible-kicker bug fixed previously (see
-    // "Fix boss-entrance kicker" commit). Pushing the zone down instead
+    // of this component's root container and must remain inside its
+    // no-padding top edge. Pushing the zone down instead
     // keeps the whole badge inside the visible, unclipped area.
     marginTop: 26,
   },
@@ -1896,9 +1945,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     position: 'absolute',
     // top intentionally stays 0, not negative: this Text is a direct child
-    // of the root container, which has overflow: 'hidden' and no
-    // paddingTop, so anything above top: 0 here would be clipped off —
-    // that was the original "kicker never visible" bug. Clearance from the
+    // of the root container with no paddingTop, and the original negative
+    // offset caused the "kicker never visible" bug. Clearance from the
     // book comes from wordZoneBoss's marginTop instead (see above).
     top: 0,
     left: 20,
@@ -1962,8 +2010,14 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
   },
   // ── Tile zone ─────────────────────────────────────────────────
-  gridWrap: {
+  gridViewport: {
     flex: 1,
+    width: '100%',
+    overflow: 'visible',
+  },
+  gridWrap: {
+    flexGrow: 1,
+    flexShrink: 0,
     justifyContent: 'flex-start',
     alignItems: 'center',
     // Was 180 — left the deck sitting low enough to collide with the ground
