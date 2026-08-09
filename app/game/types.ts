@@ -79,7 +79,7 @@ export type TrapType =
 export type Mask = {
   id: string;
   emoji?: string;
-  phrase: string;          // 2-4 words max, feeling not definition
+  phrase: string;          // recognition-first feeling, not a definition
   isReal: boolean;         // true = correct meaning, false = trap
   isRare?: boolean;        // real meaning most players miss, +300
   isHidden?: boolean;      // shows as ❓ until swiped correctly

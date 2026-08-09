@@ -30,10 +30,6 @@ const britishOnlyWarnings = [
   /\bLUGGAGE\b.*\bBACK\b/,
 ];
 
-function wordCount(value) {
-  return String(value || '').trim().split(/\s+/).filter(Boolean).length;
-}
-
 function normalize(value) {
   return String(value || '')
     .toUpperCase()
@@ -57,17 +53,12 @@ for (const [word, entry] of Object.entries(data)) {
     const prefix = `${word}/${mask.id || 'missing-id'}`;
     const phrase = String(mask.phrase || '').trim();
     const normalized = normalize(phrase);
-    const count = wordCount(phrase);
-
     if (!mask.id) blockers.push(`${word}: mask ID is missing`);
     else if (ids.has(mask.id)) blockers.push(`${prefix}: duplicate ID also used by ${ids.get(mask.id)}`);
     else ids.set(mask.id, word);
 
     if (!phrase) blockers.push(`${prefix}: phrase is empty`);
     if (phrase !== phrase.toUpperCase()) blockers.push(`${prefix}: phrase must be uppercase`);
-    if (count > 8) blockers.push(`${prefix}: ${count} words exceeds the hard maximum`);
-    if (count < 2) warnings.push(`${prefix}: one-word tile needs editorial review`);
-
     if (phrases.has(normalized)) {
       blockers.push(`${prefix}: duplicate phrase also used by ${phrases.get(normalized)}`);
     } else {

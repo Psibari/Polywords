@@ -2,7 +2,7 @@
 // Run with: npm run audit:content   (or: npx -y tsx scripts/auditContent.ts)
 //
 // Mechanically checks huntData.json and the Daily pool against the locked
-// Content Writing Standard: tile length, trap/real counts, headword leaks,
+// Content Writing Standard: trap/real counts, headword leaks,
 // zero content-word repeats across a word's tiles, duplicate phrases, and
 // boss hidden-pair presence. It does NOT judge fairness or human voice —
 // that stays editorial. Exit code 1 if anything fails, so it can gate CI.
@@ -111,9 +111,6 @@ for (const [word, entry] of Object.entries(db)) {
   const tokenOwners = new Map<string, string>();
 
   for (const tile of tiles) {
-    const wordCount = tile.phrase.trim().split(/\s+/).length;
-    if (wordCount > 8) flag('length', `${word}: ${tile.label} "${tile.phrase}" is ${wordCount} words (max 8)`);
-
     for (const token of tokens(tile.phrase)) {
       if (forms.has(token)) {
         flag('headword-leak', `${word}: ${tile.label} "${tile.phrase}" contains "${token}"`);
@@ -160,8 +157,6 @@ for (const entry of DAILY_POOL) {
 
   const answer = entry.answer.toUpperCase();
   for (const clue of entry.clues) {
-    const wordCount = clue.trim().split(/\s+/).length;
-    if (wordCount > 8) flag('length', `${tag}: clue "${clue}" is ${wordCount} words (max 8)`);
     if (clue.toUpperCase().includes(answer)) {
       flag('headword-leak', `${tag}: clue "${clue}" contains the answer`);
     }

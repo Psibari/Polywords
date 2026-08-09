@@ -79,6 +79,22 @@ function hasMessage(messages, fragment) {
 
 {
   const bank = makeValidBank();
+  bank.WORD0.masks[0].phrase =
+    'WHAT YOUR BRAIN DOES WHEN YOU KNOW THE SONG BUT NOT THE NAME';
+  const report = validateRuntimeHuntData(bank);
+  assert.equal(hasMessage(report.blockers, 'word maximum'), false);
+  assert.equal(hasMessage(report.warnings, 'word maximum'), false);
+}
+
+{
+  const bank = makeValidBank();
+  bank.WORD0.masks[0].phrase = 'REMINDER';
+  const report = validateRuntimeHuntData(bank);
+  assert.equal(hasMessage(report.warnings, 'one-word phrase'), false);
+}
+
+{
+  const bank = makeValidBank();
   bank.WORD0.masks.pop();
   const report = validateRuntimeHuntData(bank);
   assert.ok(hasMessage(report.blockers, 'at least 5 masks'));
