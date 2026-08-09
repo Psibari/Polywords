@@ -9,7 +9,8 @@ export type HapticCue =
   | 'bossEntry'
   | 'bossCorrect'
   | 'bossHaunted'
-  | 'mastery';
+  | 'mastery'
+  | 'gauntletPick';
 
 function hapticsEnabled(): boolean {
   return useGameStore.getState().hapticsEnabled;
@@ -63,6 +64,8 @@ export const Haptics = {
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
       case 'mastery':
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success);
+      case 'gauntletPick':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
     }
   },
 } as const;

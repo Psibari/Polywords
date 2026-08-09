@@ -1547,7 +1547,11 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                   activeGauntletTile={mechanics.activeGauntletTile}
                   tileLanded={mechanics.tileLanded}
                   inputLocked={mechanics.inputLocked}
-                  onPick={mechanics.pickGauntletTile}
+                  onPick={(index) => {
+                    playSfx('gauntletPick');
+                    Haptics.cueAsync('gauntletPick');
+                    mechanics.pickGauntletTile(index);
+                  }}
                   onSwipeUp={mechanics.onGauntletSwipeUp}
                   onSwipeRight={mechanics.onGauntletSwipeRight}
                   onEffect={handleEffect}
