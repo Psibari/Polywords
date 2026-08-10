@@ -2131,7 +2131,7 @@
       },
       {
         "id": "butt_r1",
-        "phrase": "WHAT A RIFLE HAS THAT A HANDGUN DOESN’T",
+        "phrase": "THE SHOULDER CUT THAT SMOKES FOR TWELVE HOURS",
         "isReal": true
       },
       {
@@ -7278,16 +7278,16 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
-        "real": "SOMETHING PUT AWAY, READY FOR EMERGENCIES",
-        "trap": "WHAT YOU KEEP AN EXTRA OF FOR AN EMERGENCY"
+        "real": "A BILLBOARD DOING TWO HUNDRED, TURNING LEFT ALL AFTERNOON",
+        "trap": "WHERE GOLD, COFFEE, AND OIL GET THEIR PRICE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "WHAT NOBODY PUTS IN A PSYCHIC HOTLINE",
+        "trap": "GRANDMA'S BIRTHDAY GIFT THAT TOOK A DECADE TO DOUBLE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "WHAT HELD THE THIEF WHILE THE VILLAGE THREW ROTTEN TOMATOES",
+        "trap": "WHAT THE CHAIN GANG WORE BREAKING ROCKS ALL DAY"
       }
     ],
     "masks": [
@@ -7318,17 +7318,17 @@
       },
       {
         "id": "stock_r5",
-        "phrase": "THE FAMILY PHOTO THAT CAME WITH THE WALLET",
+        "phrase": "THE SMILING STRANGERS INSIDE A BRAND-NEW WALLET",
         "isReal": true
       },
       {
         "id": "stock_t0",
-        "phrase": "ONE OF YOUR MOST PRIZED POSSESSIONS",
+        "phrase": "THE PAPER TRAIL PROVING THE PUPPY'S BLOODLINE",
         "isReal": false
       },
       {
         "id": "stock_t1",
-        "phrase": "WHAT YOUR BOSS LET YOU TAKE HOME",
+        "phrase": "HUNG BY THE CHIMNEY, STUFFED WITH COAL",
         "isReal": false
       },
       {
