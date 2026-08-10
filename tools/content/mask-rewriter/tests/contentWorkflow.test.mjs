@@ -70,9 +70,17 @@ const missingSource = structuredClone(good);
 missingSource.meanings[0].source.url = '';
 assert.match(validateWord(missingSource).blockers.join('\n'), /source URL/);
 
-const tooLong = structuredClone(good);
-tooLong.meanings[0].realMasks[0].text = 'ONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE';
-assert.match(validateWord(tooLong).blockers.join('\n'), /8-word hard maximum/);
+const longTile = structuredClone(good);
+longTile.meanings[0].realMasks[0].text =
+  'WHAT YOUR BRAIN DOES WHEN A FAMILIAR SONG PLAYS IN A CROWDED ROOM AND YOU REMEMBER EVERY NOTE BEFORE YOU CAN NAME THE ARTIST';
+const longTileResult = validateWord(longTile);
+assert.doesNotMatch(longTileResult.blockers.join('\n'), /maximum/i);
+assert.doesNotMatch(longTileResult.warnings.join('\n'), /requires review/i);
+
+const oneWordTile = structuredClone(good);
+oneWordTile.meanings[0].realMasks[0].text = 'REMINDER';
+const oneWordTileResult = validateWord(oneWordTile);
+assert.doesNotMatch(oneWordTileResult.warnings.join('\n'), /one-word tile/i);
 
 const headwordLeak = structuredClone(good);
 headwordLeak.meanings[0].realMasks[0].text = 'SAMPLE APPEARS IN THIS TILE';

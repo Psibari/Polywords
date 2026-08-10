@@ -57,7 +57,7 @@ function obviousWordForms(word) {
   return forms;
 }
 
-function validatePhrase(value, context, wordForms, phraseOwners, blockers, warnings) {
+function validatePhrase(value, context, wordForms, phraseOwners, blockers) {
   const phrase = typeof value === 'string' ? value.trim() : '';
   if (!phrase) {
     blockers.push(`${context}: phrase is required`);
@@ -65,9 +65,6 @@ function validatePhrase(value, context, wordForms, phraseOwners, blockers, warni
   }
   if (phrase !== phrase.toUpperCase()) {
     blockers.push(`${context}: phrase must be uppercase`);
-  }
-  if (countWords(phrase) > 8) {
-    blockers.push(`${context}: phrase exceeds the 8-word maximum`);
   }
   if (PLACEHOLDER_PATTERN.test(phrase)) {
     blockers.push(`${context}: placeholder text is not shippable`);
@@ -84,10 +81,6 @@ function validatePhrase(value, context, wordForms, phraseOwners, blockers, warni
     blockers.push(`${context}: duplicate phrase also used by ${previousOwner}`);
   } else {
     phraseOwners.set(normalized, context);
-  }
-
-  if (countWords(phrase) === 1) {
-    warnings.push(`${context}: one-word phrase needs editorial review`);
   }
 }
 
@@ -179,7 +172,7 @@ export function validateRuntimeHuntData(data) {
         } else {
           trapCount += 1;
         }
-        validatePhrase(mask.phrase, maskContext, wordForms, phraseOwners, blockers, warnings);
+        validatePhrase(mask.phrase, maskContext, wordForms, phraseOwners, blockers);
       }
 
       summary.realMasks += realCount;
@@ -214,8 +207,8 @@ export function validateRuntimeHuntData(data) {
           blockers.push(`${pairContext}: hidden pair must be an object`);
           continue;
         }
-        validatePhrase(pair.real, `${pairContext}/real`, wordForms, phraseOwners, blockers, warnings);
-        validatePhrase(pair.trap, `${pairContext}/trap`, wordForms, phraseOwners, blockers, warnings);
+        validatePhrase(pair.real, `${pairContext}/real`, wordForms, phraseOwners, blockers);
+        validatePhrase(pair.trap, `${pairContext}/trap`, wordForms, phraseOwners, blockers);
         if (normalizePhrase(pair.real) && normalizePhrase(pair.real) === normalizePhrase(pair.trap)) {
           blockers.push(`${pairContext}: hidden REAL and trap cannot be identical`);
         }

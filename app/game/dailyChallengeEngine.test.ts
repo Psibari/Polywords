@@ -47,7 +47,6 @@ function ok(condition: boolean, label: string): void {
     );
     ok([1, 2, 3].includes(word.tier), `pool.validTier.${word.id}`);
     for (const clue of word.clues) {
-      ok(clue.split(/\s+/).length <= 8, `pool.clueLength.${word.id}: "${clue}"`);
       ok(
         !clue.toUpperCase().includes(word.answer.toUpperCase()),
         `pool.clueLeaksAnswer.${word.id}: "${clue}"`,

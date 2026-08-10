@@ -1,12 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
   Easing,
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,6 +34,12 @@ import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import {
+  hasBoardVerticalOverflow,
+  resolveActiveCueLayout,
+  resolveActiveTileHeight,
+  resolveBoardVerticalSpacing,
+} from './tileTextLayout';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -41,6 +49,8 @@ const FINAL_TILE_GAP = 10;
 const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
+const GAUNTLET_TILE_H = 200;
+const GAUNTLET_HEADER_REGION_EXTRA = 44;
 
 // Deck timing curves — shared by the round's opening deal-in and the
 // per-tile shuffle-forward animation (Task 1), so the deck reads as one
@@ -328,6 +338,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 
 
 function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldFlash, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
+  const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
   // resolution, so a whole-store subscription re-rendered it on completely
@@ -347,6 +358,48 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const initialWindowWidth = Dimensions.get('window').width;
   const [containerWidth, setContainerWidth] = useState(initialWindowWidth);
   const containerWidthRef                   = useRef(initialWindowWidth);
+  const [activeTileLayout, setActiveTileLayout] = useState({
+    maskId: null as string | null,
+    height: TILE_H,
+  });
+  const activeTopMaskIdRef = useRef<string | null>(null);
+  const [activeGauntletTileHeight, setActiveGauntletTileHeight] = useState(GAUNTLET_TILE_H);
+  const [gridViewportWidth, setGridViewportWidth] = useState(0);
+  const [gridViewportHeight, setGridViewportHeight] = useState(0);
+  const [gridContentHeight, setGridContentHeight] = useState(0);
+  const cueLayoutIdentityRef = useRef('');
+  const [cueTextMeasurements, setCueTextMeasurements] = useState({
+    identity: '',
+    upHeight: 0,
+    rightHeight: 0,
+  });
+  const handleActiveTileHeightChange = useCallback((maskId: string, measuredHeight: number) => {
+    if (activeTopMaskIdRef.current !== maskId) return;
+    const height = resolveActiveTileHeight(measuredHeight);
+    setActiveTileLayout(previous => (
+      previous.maskId === maskId && previous.height === height
+        ? previous
+        : { maskId, height }
+    ));
+  }, []);
+  const handleGauntletTileHeightChange = useCallback((measuredHeight: number) => {
+    const height = resolveActiveTileHeight(measuredHeight, GAUNTLET_TILE_H);
+    setActiveGauntletTileHeight(height);
+  }, []);
+  const handleCueTextLayout = useCallback((cue: 'up' | 'right', measuredHeight: number) => {
+    const identity = cueLayoutIdentityRef.current;
+    if (!identity) return;
+    const height = Number.isFinite(measuredHeight) && measuredHeight > 0
+      ? Math.ceil(measuredHeight)
+      : 0;
+    setCueTextMeasurements(previous => {
+      const current = previous.identity === identity
+        ? previous
+        : { identity, upHeight: 0, rightHeight: 0 };
+      const key = cue === 'up' ? 'upHeight' : 'rightHeight';
+      return current[key] === height ? current : { ...current, [key]: height };
+    });
+  }, []);
   const containerRef  = useRef<View>(null);
   const wordZoneRef   = useRef<View>(null);
   // wordScreenY has no synchronous real-value equivalent (it's a page
@@ -921,6 +974,20 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     },
   });
 
+  const activeTopMaskId = mechanics.topMask?.id ?? null;
+  activeTopMaskIdRef.current = activeTopMaskId;
+  // The keyed measurement belongs only to the current top mask. An identity
+  // mismatch synchronously renders the 152px minimum, so a long prior card
+  // can never flash its stale height while the next card is being measured.
+  const activeTileHeight = activeTileLayout.maskId === activeTopMaskId
+    ? activeTileLayout.height
+    : TILE_H;
+  const cueLayoutIdentity = `${activeTopMaskId ?? 'none'}:${gridViewportWidth}:${fontScale}`;
+  cueLayoutIdentityRef.current = cueLayoutIdentity;
+  const activeCueMeasurements = cueTextMeasurements.identity === cueLayoutIdentity
+    ? cueTextMeasurements
+    : { upHeight: 0, rightHeight: 0 };
+
   useEffect(() => {
     if (mechanics.visibleGridMasks.length > 0) {
       setTilesReady(true);
@@ -1218,6 +1285,34 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const showGauntletCard =
     mechanics.gatePhase === 'tiles' ||
     (mechanics.gatePhase === 'wrongFail' && mechanics.gauntletTiles.length > 0);
+  const showSwipeCues =
+    showBoardContent &&
+    mechanics.gatePhase !== 'tiles' &&
+    mechanics.gatePhase !== 'wrongFail' &&
+    mechanics.topMask !== null;
+  const activeCueLayout = resolveActiveCueLayout(
+    activeTileHeight,
+    activeCueMeasurements.upHeight,
+    activeCueMeasurements.rightHeight,
+  );
+  const ownedGridRegionHeight = showGauntletCard
+    ? activeGauntletTileHeight + GAUNTLET_HEADER_REGION_EXTRA
+    : showSwipeCues
+      ? activeCueLayout.ownedRegionHeight
+      : activeTileHeight + 48;
+  const boardSpacing = resolveBoardVerticalSpacing(
+    gridViewportHeight,
+    ownedGridRegionHeight,
+    0,
+  );
+  const gridHasVerticalOverflow = hasBoardVerticalOverflow(
+    gridViewportHeight,
+    gridContentHeight,
+  );
+  const gridPaddingTop = Math.max(
+    0,
+    boardSpacing.gridPaddingTop - (showSwipeCues ? activeCueLayout.leadingCueRegionHeight : 0),
+  );
 
   return (
     <Animated.View
@@ -1417,18 +1512,41 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
       </View>
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
-      <View style={styles.gridWrap}>
-        <View style={styles.tileStackArea}>
-          {showBoardContent && mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
+      <ScrollView
+        style={styles.gridViewport}
+        contentContainerStyle={[
+          styles.gridWrap,
+          {
+            minHeight: ownedGridRegionHeight +
+              gridPaddingTop + boardSpacing.gridPaddingBottom,
+            paddingTop: gridPaddingTop,
+            paddingBottom: boardSpacing.gridPaddingBottom,
+          },
+        ]}
+        scrollEnabled={gridHasVerticalOverflow}
+        showsVerticalScrollIndicator={gridHasVerticalOverflow}
+        directionalLockEnabled
+        removeClippedSubviews={false}
+        overScrollMode="never"
+        scrollEventThrottle={16}
+        onLayout={event => {
+          setGridViewportWidth(Math.ceil(event.nativeEvent.layout.width));
+          setGridViewportHeight(Math.ceil(event.nativeEvent.layout.height));
+        }}
+        onContentSizeChange={(_width, height) => setGridContentHeight(Math.ceil(height))}
+      >
+        <View style={[styles.tileStackArea, { minHeight: ownedGridRegionHeight }]}>
+          {showSwipeCues && (
             <Animated.View
               pointerEvents="none"
-              style={[styles.swipeCueOverlay, { opacity: cueOpacityAnim }]}
+              style={[styles.swipeUpCueRegion, { opacity: cueOpacityAnim }]}
             >
-              <Text style={[styles.swipeCueText, styles.swipeUpCue]}>
+              <Text
+                key={`up-${cueLayoutIdentity}`}
+                style={[styles.swipeCueText, styles.swipeUpCue]}
+                onLayout={event => handleCueTextLayout('up', event.nativeEvent.layout.height)}
+              >
                 SWIPE UP TO CLAIM
-              </Text>
-              <Text style={[styles.swipeCueText, styles.swipeRightCue]}>
-                SWIPE RIGHT TO REJECT
               </Text>
             </Animated.View>
           )}
@@ -1436,7 +1554,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
-              <View style={styles.deckWrap}>
+              <View style={[styles.deckWrap, { minHeight: activeTileHeight + 18 }]}>
                 {mechanics.remainingMaskIds.slice(1, 1 + backingCardCount).reverse().map((maskId, index) => {
                   const depth = backingCardCount - index;
                   const anim = getBackingCardAnim(maskId, depth);
@@ -1506,7 +1624,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                 ]}>
                 <View
                   ref={getTileRef(mechanics.topMask.id)}
-                  style={styles.deckTopCardSlot}
+                  style={[styles.deckTopCardSlot, { minHeight: activeTileHeight }]}
                 >
                   <SwipeMask
                     key={mechanics.topMask.id}
@@ -1529,6 +1647,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                       mechanics.onTileExitComplete(mechanics.topMask!.id);
                     }}
                     onCardTouch={handleCardTouch}
+                    onMeasuredHeightChange={handleActiveTileHeightChange}
                     wordY={wordZoneMeasured ? wordScreenY : undefined}
                     intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
                   />
@@ -1557,6 +1676,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
                   onEffect={handleEffect}
                   onSwipeAttempt={onSwipeAttempt}
                   onCardTouch={handleCardTouch}
+                  onActiveCardHeightChange={handleGauntletTileHeightChange}
                   wordY={wordZoneMeasured ? wordScreenY : undefined}
                   intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
                   correctCount={gauntletCorrectCount}
@@ -1565,6 +1685,21 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
             )}
             </Animated.View>
           </Animated.View>
+          )}
+
+          {showSwipeCues && (
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.swipeRightCueRegion, { opacity: cueOpacityAnim }]}
+            >
+              <Text
+                key={`right-${cueLayoutIdentity}`}
+                style={[styles.swipeCueText, styles.swipeRightCue]}
+                onLayout={event => handleCueTextLayout('right', event.nativeEvent.layout.height)}
+              >
+                SWIPE RIGHT TO REJECT
+              </Text>
+            </Animated.View>
           )}
 
           <View pointerEvents="none" style={styles.scoreFloatOverlay}>
@@ -1581,7 +1716,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           </View>
 
         </View>
-      </View>
+      </ScrollView>
 
 
       {/* Mastery score float */}
@@ -1815,7 +1950,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 14,
     backgroundColor: 'transparent',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   // ── Word zone ─────────────────────────────────────────────────
   wordZone: {
@@ -1835,10 +1970,8 @@ const styles = StyleSheet.create({
     // + border, see below) has clearance above the book instead of
     // overlapping its top edge. Kept on wordZone rather than lifting the
     // badge itself with a negative top: kickerBossFixed is a direct child
-    // of this component's root container, which has overflow: 'hidden' and
-    // no paddingTop — a negative top would be clipped by that boundary,
-    // reintroducing the exact invisible-kicker bug fixed previously (see
-    // "Fix boss-entrance kicker" commit). Pushing the zone down instead
+    // of this component's root container and must remain inside its
+    // no-padding top edge. Pushing the zone down instead
     // keeps the whole badge inside the visible, unclipped area.
     marginTop: 26,
   },
@@ -1862,9 +1995,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     position: 'absolute',
     // top intentionally stays 0, not negative: this Text is a direct child
-    // of the root container, which has overflow: 'hidden' and no
-    // paddingTop, so anything above top: 0 here would be clipped off —
-    // that was the original "kicker never visible" bug. Clearance from the
+    // of the root container with no paddingTop, and the original negative
+    // offset caused the "kicker never visible" bug. Clearance from the
     // book comes from wordZoneBoss's marginTop instead (see above).
     top: 0,
     left: 20,
@@ -1928,8 +2060,14 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
   },
   // ── Tile zone ─────────────────────────────────────────────────
-  gridWrap: {
+  gridViewport: {
     flex: 1,
+    width: '100%',
+    overflow: 'visible',
+  },
+  gridWrap: {
+    flexGrow: 1,
+    flexShrink: 0,
     justifyContent: 'flex-start',
     alignItems: 'center',
     // Was 180 — left the deck sitting low enough to collide with the ground
@@ -1953,17 +2091,22 @@ const styles = StyleSheet.create({
     zIndex: PW.z.overlay,
     elevation: PW.z.overlay,
   },
-  swipeCueOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    minHeight: TILE_H + 96,
+  swipeUpCueRegion: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 14,
+    zIndex: 3,
+    elevation: 3,
+  },
+  swipeRightCueRegion: {
+    width: '94%',
+    alignItems: 'flex-end',
+    marginTop: 0,
+    paddingRight: 8,
     zIndex: 3,
     elevation: 3,
   },
   swipeCueText: {
-    position: 'absolute',
     fontFamily: FONTS.label,
     fontSize: 17,
     fontWeight: '800',
@@ -1974,15 +2117,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   swipeUpCue: {
-    top: -34,
-    left: 0,
-    right: 0,
     color: '#F5C842',
     opacity: 0.92,
   },
   swipeRightCue: {
-    top: TILE_H + 16,
-    right: 8,
     width: 210,
     color: 'rgba(185,138,222,0.96)',
     opacity: 0.92,

@@ -32,8 +32,8 @@ five-word review batches until quality is stable.
 ## Tile Law
 
 - Contemporary American English only.
-- Uppercase player-facing text; eight words maximum.
-- No preferred short length. Use the space needed for a natural, masked line.
+- Uppercase player-facing text; there is no numeric word maximum.
+- Use the space needed for a natural, masked line. Brevity is an editorial judgment, never a mechanical rejection rule.
 - Never include the headword, an inflection, or an obvious giveaway root.
 - Create productive hesitation, not confusion.
 - Sound like a person, memory, phrase, or recognizable moment—not a dictionary label.
@@ -85,7 +85,7 @@ it.
 
 A tile fails if any answer below is no:
 
-1. Eight words or fewer, uppercase, and stable ID?
+1. Uppercase with a stable ID?
 2. No headword, inflection, or giveaway root?
 3. Natural contemporary American English?
 4. Masks rather than defines?

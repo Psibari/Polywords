@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
   Dimensions,
@@ -34,6 +34,11 @@ import {
   resolveHuntSwipeDirection,
 } from './huntSwipeDirection';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import {
+  ACTIVE_TILE_BASE_FONT_SIZE,
+  resolveActiveTileHeight,
+  resolveActiveTileLayoutPolicy,
+} from './tileTextLayout';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
 
@@ -66,6 +71,7 @@ type Props = {
   onPressHoldStart?: () => void;
   onExitComplete?: () => void;
   onCardTouch?: () => void;
+  onMeasuredHeightChange?: (maskId: string, height: number) => void;
   disabled?: boolean;
   wordY?: number;
   intakeY?: number;
@@ -107,6 +113,7 @@ export function SwipeMask({
   onPressHoldStart,
   onExitComplete,
   onCardTouch,
+  onMeasuredHeightChange,
   disabled = false,
   wordY = 180,
   intakeY,
@@ -122,6 +129,13 @@ export function SwipeMask({
     Math.max(tileHeight, 96),
     gauntletCard ? 200 : bookMaterial ? 220 : 124,
   );
+  const activeTileLayoutPolicy = resolveActiveTileLayoutPolicy({
+    state: s,
+    isSpecialSplit,
+    bookMaterial,
+    gauntletCard,
+    tileHeight,
+  });
   const reduceMotion = useReducedMotionPreference();
   const reduceFlashes = useReducedFlashesPreference();
 
@@ -162,6 +176,7 @@ export function SwipeMask({
   const onSwipeStartRef          = useRef(onSwipeStart);
   const onPressHoldStartRef      = useRef(onPressHoldStart);
   const onExitCompleteRef        = useRef(onExitComplete);
+  const onMeasuredHeightChangeRef = useRef(onMeasuredHeightChange);
   const disabledRef              = useRef(disabled);
   const outerRef                 = useRef<any>(null);
   const absorbRafRef             = useRef<number | null>(null);
@@ -174,9 +189,21 @@ export function SwipeMask({
   useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
   useEffect(() => { onExitCompleteRef.current = onExitComplete; }, [onExitComplete]);
+  useEffect(() => { onMeasuredHeightChangeRef.current = onMeasuredHeightChange; }, [onMeasuredHeightChange]);
   const onCardTouchRef = useRef(onCardTouch);
   useEffect(() => { onCardTouchRef.current = onCardTouch; }, [onCardTouch]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
+
+  // A SwipeMask is keyed by mask id in every live owner. Keep an explicit
+  // identity reset as well so a future unkeyed owner cannot carry a long
+  // phrase's measured height into the next tile before its first onLayout.
+  useLayoutEffect(() => {
+    if (!activeTileLayoutPolicy.usesMeasuredLayout) return;
+    const resetHeight = activeTileLayoutPolicy.minimumHeight;
+    tileLayoutRef.current = { width: cardWidth, height: resetHeight };
+    outerHeightAnim.setValue(resetHeight);
+    onMeasuredHeightChangeRef.current?.(mask.id, resetHeight);
+  }, [mask.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function fireExitCompleteOnce() {
     if (exitCompleteFiredRef.current) return;
@@ -195,22 +222,43 @@ export function SwipeMask({
   }, []);
 
   // ── Entry animation ───────────────────────────────────────────
+  // Every live caller passes entryDelay=0. A setTimeout(fn, 0) still queues
+  // behind whatever else is already pending on the JS thread at that instant
+  // (word-transition state cascades, audio-engine callbacks) — on a busy
+  // frame that queuing was measured adding 100-300ms before this native-
+  // driver animation's start() call even fired, during which the card sat
+  // at its seeded opacity (0) with nothing visibly happening: the "blank
+  // flash" on a fresh word's first card. Starting synchronously in the
+  // effect body removes that extra queue hop for the delay=0 case; a real
+  // positive delay (no current caller uses one) still defers properly.
   useEffect(() => {
     if (skipEntryAnimation) return;
-    const id = setTimeout(() => {
+    const start = () => {
       RNAnimated.parallel([
         RNAnimated.spring(entryTransY,  { toValue: 0, tension: 230, friction: 15, useNativeDriver: true }),
         RNAnimated.spring(entryScale,   { toValue: 1, tension: 260, friction: 14, useNativeDriver: true }),
         RNAnimated.timing(entryOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
       ]).start();
-    }, entryDelay);
+    };
+    if (entryDelay <= 0) {
+      start();
+      return;
+    }
+    const id = setTimeout(start, entryDelay);
     return () => clearTimeout(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Outer height sync on tileHeight prop change ───────────────
   useEffect(() => {
     if (!judgedRef.current) {
-      outerHeightAnim.setValue(Math.max(tileHeight, 58));
+      outerHeightAnim.setValue(
+        activeTileLayoutPolicy.usesMeasuredLayout
+          ? resolveActiveTileHeight(
+              tileLayoutRef.current.height,
+              activeTileLayoutPolicy.minimumHeight,
+            )
+          : Math.max(tileHeight, 58),
+      );
     }
   }, [tileHeight]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -682,15 +730,30 @@ export function SwipeMask({
               : bookMaterial
                 ? styles.bookTile
                 : styles.tile,
-            !isSpecialSplit && { width: cardWidth, height: cardHeight },
+            !isSpecialSplit && {
+              width: cardWidth,
+              ...(activeTileLayoutPolicy.usesMeasuredLayout
+                ? { minHeight: activeTileLayoutPolicy.minimumHeight }
+                : { height: cardHeight }),
+            },
             bookMaterial && styles.tileBookMaterial,
             tileAnimStyle,
           ]}
           onLayout={(e: LayoutChangeEvent) => {
+            const measuredHeight = activeTileLayoutPolicy.usesMeasuredLayout
+              ? resolveActiveTileHeight(
+                  e.nativeEvent.layout.height,
+                  activeTileLayoutPolicy.minimumHeight,
+                )
+              : e.nativeEvent.layout.height;
             tileLayoutRef.current = {
               width:  e.nativeEvent.layout.width,
-              height: e.nativeEvent.layout.height,
+              height: measuredHeight,
             };
+            if (activeTileLayoutPolicy.usesMeasuredLayout && !judgedRef.current) {
+              outerHeightAnim.setValue(measuredHeight);
+              onMeasuredHeightChangeRef.current?.(mask.id, measuredHeight);
+            }
           }}
           {...panResponder.panHandlers}
           accessible
@@ -760,6 +823,11 @@ export function SwipeMask({
           <View
             style={[
               isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel,
+              !isSpecialSplit && (
+                activeTileLayoutPolicy.usesMeasuredLayout
+                  ? styles.measuredPhrasePanel
+                  : styles.stretchPhrasePanel
+              ),
               bookMaterial && styles.phrasePanelBook,
             ]}
             pointerEvents="none"
@@ -769,9 +837,7 @@ export function SwipeMask({
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
               ]}
-              numberOfLines={2}
-              adjustsFontSizeToFit={true}
-              minimumFontScale={isSpecialSplit ? 0.65 : 0.8}
+              {...activeTileLayoutPolicy.textProps}
             >
               {mask.phrase}
             </Text>
@@ -831,13 +897,27 @@ const styles = StyleSheet.create({
   },
   phrasePanel: {
     width: '82%',
-    flex: 1,
     alignItems: 'stretch',
     justifyContent: 'center',
     paddingHorizontal: 8,
     paddingVertical: 18,
     backgroundColor: 'transparent',
     zIndex: 2,
+  },
+  // Old fixed-height tiles (hidden/revealed states) need the panel to
+  // stretch and fill the card's fixed height. Split out from phrasePanel
+  // itself — it must never combine with measuredPhrasePanel below, since
+  // mixing RN's `flex` shorthand with explicit flexGrow/flexShrink/flexBasis
+  // on the same node left Yoga's resolved size ambiguous and was collapsing
+  // the panel (and the phrase text inside it) to zero height on the active
+  // tile — the root cause of the "blank top card" bug.
+  stretchPhrasePanel: {
+    flex: 1,
+  },
+  measuredPhrasePanel: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
   },
   tileBookMaterial: {
     shadowColor: heroBookMaterial.goldTrim,
@@ -890,7 +970,7 @@ const styles = StyleSheet.create({
     zIndex: 4,
   },
   phrase: {
-    fontSize: 27,
+    fontSize: ACTIVE_TILE_BASE_FONT_SIZE,
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',

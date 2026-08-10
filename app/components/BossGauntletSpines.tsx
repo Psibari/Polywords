@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Mask } from '../game/types';
@@ -8,6 +8,11 @@ import { playSfx } from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
+import {
+  releaseGauntletMeasuredHeight,
+  resolveActiveTileHeight,
+  resolveGauntletRowHeight,
+} from './tileTextLayout';
 
 // Straight-on, no baked-in angle or per-instance detail (page bulge, gem
 // marks) — a single symmetrical asset so it packs edge-to-edge with its
@@ -36,6 +41,7 @@ export type BossGauntletSpinesProps = {
   wordY?: number;
   intakeY?: number;
   correctCount: number;
+  onActiveCardHeightChange?: (height: number) => void;
 };
 
 // Matches perform.onGauntletTileDrop's existing ~280ms landing timer
@@ -54,6 +60,7 @@ const SPINE_CLOSED_SCALE_X = 0.55;
 // without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
 const SPINE_WIDTH = 110;
 const SPINE_HEIGHT = 200;
+const ROW_VERTICAL_INSET = 6;
 const ROW_GAP = 8; // must match styles.row.gap below — read by the centering math too
 
 // The expanded SwipeMask (gauntletCard width, up to 300px) is centered
@@ -74,7 +81,8 @@ function centerOffsetX(index: number, tileCount: number): number {
 
 function SpineSlot({
   tile, index, offsetX, status, isOpen, anyOpen, tileLanded, inputLocked,
-  onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY, totalTiles,
+  onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch,
+  onMeasuredHeightChange, onLayoutExitComplete, wordY, intakeY, totalTiles, slotHeight,
 }: {
   tile: GauntletTile;
   index: number;
@@ -90,12 +98,16 @@ function SpineSlot({
   onEffect: BossGauntletSpinesProps['onEffect'];
   onSwipeAttempt?: () => void;
   onCardTouch: () => void;
+  onMeasuredHeightChange: (maskId: string, height: number) => void;
+  onLayoutExitComplete: (maskId: string) => void;
   wordY?: number;
   intakeY?: number;
   totalTiles: number;
+  slotHeight: number;
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
   const reduceMotion = useReducedMotionPreference();
+  const measuredHeightRef = useRef(SPINE_HEIGHT);
   const resolved = status !== 'idle';
   // Open (or resolved) cards render wider than their 90px slot (see
   // SwipeMask's gauntletCard width), so they must paint above sibling
@@ -108,6 +120,21 @@ function SpineSlot({
   // order, not by which one is actually interactive. isOpen must always
   // win that tie regardless of array index.
   const elevated = isOpen || resolved;
+
+  const handleMeasuredHeightChange = useCallback((maskId: string, measuredHeight: number) => {
+    const height = resolveActiveTileHeight(measuredHeight, SPINE_HEIGHT);
+    measuredHeightRef.current = height;
+    if (isOpen) onMeasuredHeightChange(maskId, height);
+  }, [isOpen, onMeasuredHeightChange]);
+
+  // All gauntlet SwipeMasks stay mounted behind their sealed spines. A long
+  // phrase may therefore finish layout before its slot becomes active and
+  // never emit another onLayout solely because the seal opens. Relay that
+  // exact keyed measurement at activation so the row grows before paint.
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    onMeasuredHeightChange(tile.mask.id, measuredHeightRef.current);
+  }, [isOpen, onMeasuredHeightChange, tile.mask.id]);
 
   useEffect(() => {
     const target = isOpen || resolved ? 1 : 0;
@@ -136,7 +163,11 @@ function SpineSlot({
   const closedHitInert = resolved || anyOpen;
 
   return (
-    <View style={[styles.slot, isOpen ? styles.slotOpen : elevated && styles.slotElevated]}>
+    <View style={[
+      styles.slot,
+      { height: slotHeight },
+      isOpen ? styles.slotOpen : elevated && styles.slotElevated,
+    ]}>
       <Animated.View pointerEvents="none" style={[styles.spine, { transform: [{ scaleX }] }]}>
         {/* "contain" not "cover" — this asset has a real transparent alpha
             channel (verified: corner pixels are alpha=0, not baked-black),
@@ -202,7 +233,9 @@ function SpineSlot({
           onEffect={onEffect}
           onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
           onPressHoldStart={() => playSfx('pressHoldStart')}
+          onExitComplete={() => onLayoutExitComplete(tile.mask.id)}
           onCardTouch={onCardTouch}
+          onMeasuredHeightChange={handleMeasuredHeightChange}
           wordY={wordY}
           intakeY={intakeY}
         />
@@ -215,10 +248,38 @@ export function BossGauntletSpines({
   gatePhase, gauntletTiles, finalTileStates, activeGauntletTile,
   tileLanded, inputLocked, onPick, onSwipeUp, onSwipeRight,
   onEffect, onSwipeAttempt, onCardTouch, wordY, intakeY, correctCount,
+  onActiveCardHeightChange,
 }: BossGauntletSpinesProps) {
-  if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
+  const activeMaskId = activeGauntletTile?.mask.id ?? null;
+  const activeMaskIdRef = useRef<string | null>(activeMaskId);
+  const [measuredCardHeights, setMeasuredCardHeights] = useState(
+    () => new Map<string, number>(),
+  );
+  activeMaskIdRef.current = activeMaskId;
+
+  const handleActiveCardHeightChange = useCallback((maskId: string, measuredHeight: number) => {
+    if (activeMaskIdRef.current !== maskId) return;
+    const height = resolveActiveTileHeight(measuredHeight, SPINE_HEIGHT);
+    setMeasuredCardHeights(previous => {
+      if (previous.get(maskId) === height) return previous;
+      const next = new Map(previous);
+      next.set(maskId, height);
+      return next;
+    });
+  }, []);
+
+  const handleLayoutExitComplete = useCallback((maskId: string) => {
+    setMeasuredCardHeights(previous => releaseGauntletMeasuredHeight(previous, maskId));
+  }, []);
 
   const anyOpen = activeGauntletTile !== null;
+  const activeCardHeight = resolveGauntletRowHeight(measuredCardHeights);
+
+  useEffect(() => {
+    onActiveCardHeightChange?.(activeCardHeight);
+  }, [activeCardHeight, onActiveCardHeightChange]);
+
+  if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
   return (
     <View style={styles.wrap} pointerEvents="box-none">
@@ -230,7 +291,10 @@ export function BossGauntletSpines({
         <Text style={styles.instruction}>CHOOSE A SEAL</Text>
         <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
       </View>
-      <View style={styles.row} pointerEvents="box-none">
+      <View
+        style={[styles.row, { height: activeCardHeight + ROW_VERTICAL_INSET }]}
+        pointerEvents="box-none"
+      >
         {gauntletTiles.map((tile, index) => (
         <SpineSlot
           key={tile.mask.id}
@@ -248,9 +312,12 @@ export function BossGauntletSpines({
           onEffect={onEffect}
           onSwipeAttempt={onSwipeAttempt}
           onCardTouch={onCardTouch}
+          onMeasuredHeightChange={handleActiveCardHeightChange}
+          onLayoutExitComplete={handleLayoutExitComplete}
           wordY={wordY}
           intakeY={intakeY}
           totalTiles={gauntletTiles.length}
+          slotHeight={measuredCardHeights.get(tile.mask.id) ?? SPINE_HEIGHT}
         />
         ))}
       </View>
@@ -285,13 +352,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     gap: ROW_GAP,
-    height: 206,
+    paddingTop: ROW_VERTICAL_INSET,
   },
   slot: {
     width: SPINE_WIDTH,
-    height: SPINE_HEIGHT,
   },
   // Applied to a resolved-but-not-open slot so its overflowing
   // gauntletCard-width SwipeMask paints above sibling sealed spines
@@ -311,7 +377,11 @@ const styles = StyleSheet.create({
     elevation: PW.z.activeCard,
   },
   spine: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SPINE_WIDTH,
+    height: SPINE_HEIGHT,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',

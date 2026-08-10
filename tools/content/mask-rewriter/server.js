@@ -94,7 +94,7 @@ NON-NEGOTIABLE CONTRACT
 - Return exactly 2 REAL masks and 3 traps for each supplied meaning.
 - Preserve every supplied meaning ID.
 - Store tile text in uppercase.
-- Prefer 2-6 words; never exceed 8.
+- Use only as many words as recognition needs; avoid padding/repetition.
 - Every trap must include trapStyle, whyTempting, and the supplied baitMeaningId.
 - Use only these trapStyle values: neighbor, scene, tool, result, phrase, sound-confusion,
   almost-synonym, sequence, category, family.
