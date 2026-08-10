@@ -222,15 +222,29 @@ export function SwipeMask({
   }, []);
 
   // ── Entry animation ───────────────────────────────────────────
+  // Every live caller passes entryDelay=0. A setTimeout(fn, 0) still queues
+  // behind whatever else is already pending on the JS thread at that instant
+  // (word-transition state cascades, audio-engine callbacks) — on a busy
+  // frame that queuing was measured adding 100-300ms before this native-
+  // driver animation's start() call even fired, during which the card sat
+  // at its seeded opacity (0) with nothing visibly happening: the "blank
+  // flash" on a fresh word's first card. Starting synchronously in the
+  // effect body removes that extra queue hop for the delay=0 case; a real
+  // positive delay (no current caller uses one) still defers properly.
   useEffect(() => {
     if (skipEntryAnimation) return;
-    const id = setTimeout(() => {
+    const start = () => {
       RNAnimated.parallel([
         RNAnimated.spring(entryTransY,  { toValue: 0, tension: 230, friction: 15, useNativeDriver: true }),
         RNAnimated.spring(entryScale,   { toValue: 1, tension: 260, friction: 14, useNativeDriver: true }),
         RNAnimated.timing(entryOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
       ]).start();
-    }, entryDelay);
+    };
+    if (entryDelay <= 0) {
+      start();
+      return;
+    }
+    const id = setTimeout(start, entryDelay);
     return () => clearTimeout(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -809,7 +823,11 @@ export function SwipeMask({
           <View
             style={[
               isSpecialSplit ? styles.splitPhrasePanel : styles.phrasePanel,
-              activeTileLayoutPolicy.usesMeasuredLayout && styles.measuredPhrasePanel,
+              !isSpecialSplit && (
+                activeTileLayoutPolicy.usesMeasuredLayout
+                  ? styles.measuredPhrasePanel
+                  : styles.stretchPhrasePanel
+              ),
               bookMaterial && styles.phrasePanelBook,
             ]}
             pointerEvents="none"
@@ -879,13 +897,22 @@ const styles = StyleSheet.create({
   },
   phrasePanel: {
     width: '82%',
-    flex: 1,
     alignItems: 'stretch',
     justifyContent: 'center',
     paddingHorizontal: 8,
     paddingVertical: 18,
     backgroundColor: 'transparent',
     zIndex: 2,
+  },
+  // Old fixed-height tiles (hidden/revealed states) need the panel to
+  // stretch and fill the card's fixed height. Split out from phrasePanel
+  // itself — it must never combine with measuredPhrasePanel below, since
+  // mixing RN's `flex` shorthand with explicit flexGrow/flexShrink/flexBasis
+  // on the same node left Yoga's resolved size ambiguous and was collapsing
+  // the panel (and the phrase text inside it) to zero height on the active
+  // tile — the root cause of the "blank top card" bug.
+  stretchPhrasePanel: {
+    flex: 1,
   },
   measuredPhrasePanel: {
     flexGrow: 0,
