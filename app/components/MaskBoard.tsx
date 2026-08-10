@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -35,6 +36,7 @@ import { BossGauntletSpines } from './BossGauntletSpines';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import {
   hasBoardVerticalOverflow,
+  resolveActiveCueLayout,
   resolveActiveTileHeight,
   resolveBoardVerticalSpacing,
 } from './tileTextLayout';
@@ -48,7 +50,6 @@ const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
 const GAUNTLET_TILE_H = 200;
-const ACTIVE_CUE_REGION_EXTRA = 48;
 const GAUNTLET_HEADER_REGION_EXTRA = 44;
 
 // Deck timing curves — shared by the round's opening deal-in and the
@@ -337,6 +338,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 
 
 function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldFlash, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
+  const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
   // resolution, so a whole-store subscription re-rendered it on completely
@@ -362,9 +364,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   });
   const activeTopMaskIdRef = useRef<string | null>(null);
   const [activeGauntletTileHeight, setActiveGauntletTileHeight] = useState(GAUNTLET_TILE_H);
-  const activeGauntletMaskIdRef = useRef<string | null>(null);
+  const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const [gridViewportHeight, setGridViewportHeight] = useState(0);
   const [gridContentHeight, setGridContentHeight] = useState(0);
+  const cueLayoutIdentityRef = useRef('');
+  const [cueTextMeasurements, setCueTextMeasurements] = useState({
+    identity: '',
+    upHeight: 0,
+    rightHeight: 0,
+  });
   const handleActiveTileHeightChange = useCallback((maskId: string, measuredHeight: number) => {
     if (activeTopMaskIdRef.current !== maskId) return;
     const height = resolveActiveTileHeight(measuredHeight);
@@ -374,10 +382,23 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         : { maskId, height }
     ));
   }, []);
-  const handleGauntletTileHeightChange = useCallback((maskId: string, measuredHeight: number) => {
-    if (activeGauntletMaskIdRef.current !== maskId) return;
+  const handleGauntletTileHeightChange = useCallback((measuredHeight: number) => {
     const height = resolveActiveTileHeight(measuredHeight, GAUNTLET_TILE_H);
-    setActiveGauntletTileHeight(previous => Math.max(previous, height));
+    setActiveGauntletTileHeight(height);
+  }, []);
+  const handleCueTextLayout = useCallback((cue: 'up' | 'right', measuredHeight: number) => {
+    const identity = cueLayoutIdentityRef.current;
+    if (!identity) return;
+    const height = Number.isFinite(measuredHeight) && measuredHeight > 0
+      ? Math.ceil(measuredHeight)
+      : 0;
+    setCueTextMeasurements(previous => {
+      const current = previous.identity === identity
+        ? previous
+        : { identity, upHeight: 0, rightHeight: 0 };
+      const key = cue === 'up' ? 'upHeight' : 'rightHeight';
+      return current[key] === height ? current : { ...current, [key]: height };
+    });
   }, []);
   const containerRef  = useRef<View>(null);
   const wordZoneRef   = useRef<View>(null);
@@ -955,14 +976,17 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
   const activeTopMaskId = mechanics.topMask?.id ?? null;
   activeTopMaskIdRef.current = activeTopMaskId;
-  const activeGauntletMaskId = mechanics.activeGauntletTile?.mask.id ?? null;
-  activeGauntletMaskIdRef.current = activeGauntletMaskId;
   // The keyed measurement belongs only to the current top mask. An identity
   // mismatch synchronously renders the 152px minimum, so a long prior card
   // can never flash its stale height while the next card is being measured.
   const activeTileHeight = activeTileLayout.maskId === activeTopMaskId
     ? activeTileLayout.height
     : TILE_H;
+  const cueLayoutIdentity = `${activeTopMaskId ?? 'none'}:${gridViewportWidth}:${fontScale}`;
+  cueLayoutIdentityRef.current = cueLayoutIdentity;
+  const activeCueMeasurements = cueTextMeasurements.identity === cueLayoutIdentity
+    ? cueTextMeasurements
+    : { upHeight: 0, rightHeight: 0 };
 
   useEffect(() => {
     if (mechanics.visibleGridMasks.length > 0) {
@@ -1261,9 +1285,21 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const showGauntletCard =
     mechanics.gatePhase === 'tiles' ||
     (mechanics.gatePhase === 'wrongFail' && mechanics.gauntletTiles.length > 0);
+  const showSwipeCues =
+    showBoardContent &&
+    mechanics.gatePhase !== 'tiles' &&
+    mechanics.gatePhase !== 'wrongFail' &&
+    mechanics.topMask !== null;
+  const activeCueLayout = resolveActiveCueLayout(
+    activeTileHeight,
+    activeCueMeasurements.upHeight,
+    activeCueMeasurements.rightHeight,
+  );
   const ownedGridRegionHeight = showGauntletCard
     ? activeGauntletTileHeight + GAUNTLET_HEADER_REGION_EXTRA
-    : activeTileHeight + ACTIVE_CUE_REGION_EXTRA;
+    : showSwipeCues
+      ? activeCueLayout.ownedRegionHeight
+      : activeTileHeight + 48;
   const boardSpacing = resolveBoardVerticalSpacing(
     gridViewportHeight,
     ownedGridRegionHeight,
@@ -1272,6 +1308,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const gridHasVerticalOverflow = hasBoardVerticalOverflow(
     gridViewportHeight,
     gridContentHeight,
+  );
+  const gridPaddingTop = Math.max(
+    0,
+    boardSpacing.gridPaddingTop - (showSwipeCues ? activeCueLayout.leadingCueRegionHeight : 0),
   );
 
   return (
@@ -1478,8 +1518,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           styles.gridWrap,
           {
             minHeight: ownedGridRegionHeight +
-              boardSpacing.gridPaddingTop + boardSpacing.gridPaddingBottom,
-            paddingTop: boardSpacing.gridPaddingTop,
+              gridPaddingTop + boardSpacing.gridPaddingBottom,
+            paddingTop: gridPaddingTop,
             paddingBottom: boardSpacing.gridPaddingBottom,
           },
         ]}
@@ -1489,29 +1529,24 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         removeClippedSubviews={false}
         overScrollMode="never"
         scrollEventThrottle={16}
-        onLayout={event => setGridViewportHeight(Math.ceil(event.nativeEvent.layout.height))}
+        onLayout={event => {
+          setGridViewportWidth(Math.ceil(event.nativeEvent.layout.width));
+          setGridViewportHeight(Math.ceil(event.nativeEvent.layout.height));
+        }}
         onContentSizeChange={(_width, height) => setGridContentHeight(Math.ceil(height))}
       >
-        <View style={[styles.tileStackArea, { minHeight: activeTileHeight + 16 }]}>
-          {showBoardContent && mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
+        <View style={[styles.tileStackArea, { minHeight: ownedGridRegionHeight }]}>
+          {showSwipeCues && (
             <Animated.View
               pointerEvents="none"
-              style={[
-                styles.swipeCueOverlay,
-                { minHeight: activeTileHeight + 96, opacity: cueOpacityAnim },
-              ]}
+              style={[styles.swipeUpCueRegion, { opacity: cueOpacityAnim }]}
             >
-              <Text style={[styles.swipeCueText, styles.swipeUpCue]}>
-                SWIPE UP TO CLAIM
-              </Text>
               <Text
-                style={[
-                  styles.swipeCueText,
-                  styles.swipeRightCue,
-                  { top: activeTileHeight + 16 },
-                ]}
+                key={`up-${cueLayoutIdentity}`}
+                style={[styles.swipeCueText, styles.swipeUpCue]}
+                onLayout={event => handleCueTextLayout('up', event.nativeEvent.layout.height)}
               >
-                SWIPE RIGHT TO REJECT
+                SWIPE UP TO CLAIM
               </Text>
             </Animated.View>
           )}
@@ -1650,6 +1685,21 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
             )}
             </Animated.View>
           </Animated.View>
+          )}
+
+          {showSwipeCues && (
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.swipeRightCueRegion, { opacity: cueOpacityAnim }]}
+            >
+              <Text
+                key={`right-${cueLayoutIdentity}`}
+                style={[styles.swipeCueText, styles.swipeRightCue]}
+                onLayout={event => handleCueTextLayout('right', event.nativeEvent.layout.height)}
+              >
+                SWIPE RIGHT TO REJECT
+              </Text>
+            </Animated.View>
           )}
 
           <View pointerEvents="none" style={styles.scoreFloatOverlay}>
@@ -2041,17 +2091,22 @@ const styles = StyleSheet.create({
     zIndex: PW.z.overlay,
     elevation: PW.z.overlay,
   },
-  swipeCueOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    minHeight: TILE_H + 96,
+  swipeUpCueRegion: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 14,
+    zIndex: 3,
+    elevation: 3,
+  },
+  swipeRightCueRegion: {
+    width: '94%',
+    alignItems: 'flex-end',
+    marginTop: 0,
+    paddingRight: 8,
     zIndex: 3,
     elevation: 3,
   },
   swipeCueText: {
-    position: 'absolute',
     fontFamily: FONTS.label,
     fontSize: 17,
     fontWeight: '800',
@@ -2062,15 +2117,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   swipeUpCue: {
-    top: -34,
-    left: 0,
-    right: 0,
     color: '#F5C842',
     opacity: 0.92,
   },
   swipeRightCue: {
-    top: TILE_H + 16,
-    right: 8,
     width: 210,
     color: 'rgba(185,138,222,0.96)',
     opacity: 0.92,

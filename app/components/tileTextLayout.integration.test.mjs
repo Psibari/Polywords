@@ -37,23 +37,53 @@ assert.match(
 );
 assert.match(
   gauntletSpines,
-  /const \[measuredCardHeights, setMeasuredCardHeights\]/,
-  'BossGauntletSpines must retain each keyed measurement through judged-state collapse',
+  /onExitComplete=\{\(\) => onLayoutExitComplete\(tile\.mask\.id\)\}/,
+  'Gauntlet SwipeMask collapse completion must report through a layout-only callback',
+);
+assert.match(
+  gauntletSpines,
+  /releaseGauntletMeasuredHeight\(previous, maskId\)/,
+  'BossGauntletSpines must remove only the collapsed mask measurement',
+);
+assert.match(
+  gauntletSpines,
+  /resolveGauntletRowHeight\(measuredCardHeights\)/,
+  'BossGauntletSpines must derive its row from active and in-flight measurements only',
+);
+assert.ok(
+  gauntletSpines.indexOf('onActiveCardHeightChange?.(activeCardHeight)') <
+    gauntletSpines.indexOf("if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null"),
+  'Gauntlet height publication must not introduce a hook after the conditional return',
 );
 assert.match(
   maskBoard,
-  /onActiveCardHeightChange=\{handleGauntletTileHeightChange\}/,
-  'MaskBoard must receive gauntlet height for board-owned overflow geometry',
-);
-assert.match(
-  maskBoard,
-  /setActiveGauntletTileHeight\(previous => Math\.max\(previous, height\)\)/,
-  'MaskBoard must retain the largest judged gauntlet geometry until the board unmounts',
+  /setActiveGauntletTileHeight\(height\)/,
+  'MaskBoard must allow gauntlet overflow geometry to shrink after collapse',
 );
 assert.match(
   maskBoard,
   /scrollEnabled=\{gridHasVerticalOverflow\}/,
   'MaskBoard must activate its board-owned scroll fallback only after measured overflow',
+);
+assert.match(
+  maskBoard,
+  /resolveActiveCueLayout\([\s\S]*?activeTileHeight,[\s\S]*?activeCueMeasurements\.upHeight,[\s\S]*?activeCueMeasurements\.rightHeight/,
+  'MaskBoard must derive owned cue geometry from both native text measurements',
+);
+assert.match(
+  maskBoard,
+  /key=\{`up-\$\{cueLayoutIdentity\}`\}[\s\S]*?onLayout=\{event => handleCueTextLayout\('up',[\s\S]*?key=\{`right-\$\{cueLayoutIdentity\}`\}[\s\S]*?onLayout=\{event => handleCueTextLayout\('right'/,
+  'Both cue texts must remount and remeasure for the active layout identity',
+);
+assert.match(
+  maskBoard,
+  /pointerEvents="none"[\s\S]*?styles\.swipeUpCueRegion[\s\S]*?pointerEvents="none"[\s\S]*?styles\.swipeRightCueRegion/,
+  'Both measured cue regions must remain pointerless flow siblings around the card stack',
+);
+assert.doesNotMatch(
+  maskBoard,
+  /swipeCueOverlay:\s*\{[\s\S]*?position:\s*'absolute'/,
+  'Cue text must stay in flow so its native height contributes to ScrollView content size',
 );
 assert.match(
   swipeMask,

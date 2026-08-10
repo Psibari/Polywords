@@ -3,9 +3,12 @@ import {
   ACTIVE_TILE_MIN_FONT_SIZE,
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
   hasBoardVerticalOverflow,
+  releaseGauntletMeasuredHeight,
   resolveActiveTileHeight,
   resolveActiveTileLayoutPolicy,
+  resolveActiveCueLayout,
   resolveBoardVerticalSpacing,
+  resolveGauntletRowHeight,
 } from './tileTextLayout';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -45,6 +48,54 @@ eq(resolveActiveTileHeight(Number.POSITIVE_INFINITY), 152, 'infinite measurement
 eq(resolveActiveTileHeight(180, 200), 200, 'gauntlet measurement keeps its 200px minimum');
 eq(resolveActiveTileHeight(200.2, 200), 201, 'gauntlet measurement rounds up');
 eq(resolveActiveTileHeight(240, Number.NaN), 240, 'invalid custom minimum falls back to 152px');
+
+const standardCueLayout = resolveActiveCueLayout(152, 20, 20);
+eq(standardCueLayout.upCueHeight, 20, 'cue layout uses measured UP text height');
+eq(standardCueLayout.rightCueHeight, 20, 'cue layout uses measured RIGHT text height');
+eq(standardCueLayout.leadingCueRegionHeight, 34, 'UP cue placement includes its measured height');
+eq(standardCueLayout.ownedRegionHeight, 238, 'owned cue region includes both measured cue texts');
+
+const wrappedCueLayout = resolveActiveCueLayout(152, 64.2, 88.1);
+eq(wrappedCueLayout.upCueHeight, 65, 'wrapped UP cue measurement rounds up');
+eq(wrappedCueLayout.rightCueHeight, 89, 'wrapped RIGHT cue measurement rounds up');
+eq(
+  wrappedCueLayout.ownedRegionHeight,
+  352,
+  'large accessibility-wrapped cues expand the owned region',
+);
+
+const invalidCueLayout = resolveActiveCueLayout(Number.NaN, -4, Number.POSITIVE_INFINITY);
+eq(invalidCueLayout.activeCardHeight, 152, 'invalid active height uses the Hunt minimum');
+eq(invalidCueLayout.upCueHeight, 21, 'invalid UP cue measurement uses the text fallback');
+eq(invalidCueLayout.rightCueHeight, 21, 'invalid RIGHT cue measurement uses the text fallback');
+eq(invalidCueLayout.ownedRegionHeight, 240, 'invalid cue inputs produce bounded fallback geometry');
+
+const longGauntletHeights = new Map([['long-card', 348]]);
+eq(
+  resolveGauntletRowHeight(longGauntletHeights),
+  348,
+  'gauntlet row retains a long card through its in-flight geometry',
+);
+const collapsedGauntletHeights = releaseGauntletMeasuredHeight(
+  longGauntletHeights,
+  'long-card',
+);
+eq(
+  resolveGauntletRowHeight(collapsedGauntletHeights),
+  200,
+  'gauntlet row releases a long card after layout collapse completes',
+);
+const shortGauntletHeights = new Map(collapsedGauntletHeights).set('short-card', 224);
+eq(
+  resolveGauntletRowHeight(shortGauntletHeights),
+  224,
+  'a short next card is not held open by a collapsed long card',
+);
+eq(
+  releaseGauntletMeasuredHeight(shortGauntletHeights, 'missing-card'),
+  shortGauntletHeights,
+  'releasing an unknown gauntlet card preserves map identity',
+);
 
 const normalPolicy = resolveActiveTileLayoutPolicy({
   state: 'idle',

@@ -72,7 +72,7 @@ assert.match(validateWord(missingSource).blockers.join('\n'), /source URL/);
 
 const longTile = structuredClone(good);
 longTile.meanings[0].realMasks[0].text =
-  'WHAT YOUR BRAIN DOES WHEN YOU KNOW THE SONG BUT NOT THE NAME';
+  'WHAT YOUR BRAIN DOES WHEN A FAMILIAR SONG PLAYS IN A CROWDED ROOM AND YOU REMEMBER EVERY NOTE BEFORE YOU CAN NAME THE ARTIST';
 const longTileResult = validateWord(longTile);
 assert.doesNotMatch(longTileResult.blockers.join('\n'), /maximum/i);
 assert.doesNotMatch(longTileResult.warnings.join('\n'), /requires review/i);

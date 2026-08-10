@@ -80,7 +80,7 @@ function hasMessage(messages, fragment) {
 {
   const bank = makeValidBank();
   bank.WORD0.masks[0].phrase =
-    'WHAT YOUR BRAIN DOES WHEN YOU KNOW THE SONG BUT NOT THE NAME';
+    'WHAT YOUR BRAIN DOES WHEN A FAMILIAR SONG PLAYS IN A CROWDED ROOM AND YOU REMEMBER EVERY NOTE BEFORE YOU CAN NAME THE ARTIST';
   const report = validateRuntimeHuntData(bank);
   assert.equal(hasMessage(report.blockers, 'word maximum'), false);
   assert.equal(hasMessage(report.warnings, 'word maximum'), false);

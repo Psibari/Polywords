@@ -8,6 +8,9 @@ const DEFAULT_GRID_PADDING_TOP = 110;
 const MIN_GRID_PADDING_TOP = 48;
 const DEFAULT_GRID_PADDING_BOTTOM = 48;
 const MIN_GRID_PADDING_BOTTOM = 12;
+const DEFAULT_CUE_TEXT_HEIGHT = 21;
+const UP_CUE_TO_CARD_GAP = 14;
+const ACTIVE_DECK_REGION_EXTRA = 32;
 
 export const ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS = {
   android_hyphenationFrequency: 'none',
@@ -31,6 +34,62 @@ export function resolveActiveTileHeight(
   }
 
   return Math.max(safeMinimumHeight, Math.ceil(measuredHeight));
+}
+
+export function resolveGauntletRowHeight(
+  measuredHeights: ReadonlyMap<string, number>,
+  minimumHeight = 200,
+): number {
+  const safeMinimumHeight = resolveActiveTileHeight(0, minimumHeight);
+  let rowHeight = safeMinimumHeight;
+  for (const height of measuredHeights.values()) {
+    rowHeight = Math.max(
+      rowHeight,
+      resolveActiveTileHeight(height, safeMinimumHeight),
+    );
+  }
+  return rowHeight;
+}
+
+export function releaseGauntletMeasuredHeight(
+  measuredHeights: Map<string, number>,
+  maskId: string,
+): Map<string, number> {
+  if (!measuredHeights.has(maskId)) return measuredHeights;
+  const next = new Map(measuredHeights);
+  next.delete(maskId);
+  return next;
+}
+
+export function resolveActiveCueLayout(
+  activeCardHeight: number,
+  measuredUpCueHeight: number,
+  measuredRightCueHeight: number,
+): {
+  activeCardHeight: number;
+  upCueHeight: number;
+  rightCueHeight: number;
+  leadingCueRegionHeight: number;
+  ownedRegionHeight: number;
+} {
+  const safeCardHeight = resolveActiveTileHeight(activeCardHeight);
+  const safeCueHeight = (height: number) => (
+    Number.isFinite(height) && height > 0
+      ? Math.ceil(height)
+      : DEFAULT_CUE_TEXT_HEIGHT
+  );
+  const upCueHeight = safeCueHeight(measuredUpCueHeight);
+  const rightCueHeight = safeCueHeight(measuredRightCueHeight);
+  const leadingCueRegionHeight = upCueHeight + UP_CUE_TO_CARD_GAP;
+
+  return {
+    activeCardHeight: safeCardHeight,
+    upCueHeight,
+    rightCueHeight,
+    leadingCueRegionHeight,
+    ownedRegionHeight:
+      leadingCueRegionHeight + safeCardHeight + ACTIVE_DECK_REGION_EXTRA + rightCueHeight,
+  };
 }
 
 type ActiveTileLayoutOptions = {

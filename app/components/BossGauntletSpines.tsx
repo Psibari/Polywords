@@ -9,7 +9,11 @@ import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
 import { libraryMaterial } from '../ui/pwMaterials';
-import { resolveActiveTileHeight } from './tileTextLayout';
+import {
+  releaseGauntletMeasuredHeight,
+  resolveActiveTileHeight,
+  resolveGauntletRowHeight,
+} from './tileTextLayout';
 
 type GauntletTile = { pairIndex: number; mask: Mask; isReal: boolean };
 
@@ -32,7 +36,7 @@ export type BossGauntletSpinesProps = {
   wordY?: number;
   intakeY?: number;
   correctCount: number;
-  onActiveCardHeightChange?: (maskId: string, height: number) => void;
+  onActiveCardHeightChange?: (height: number) => void;
 };
 
 // Matches perform.onGauntletTileDrop's existing ~280ms landing timer
@@ -73,7 +77,7 @@ function centerOffsetX(index: number, tileCount: number): number {
 function SpineSlot({
   tile, index, offsetX, status, isOpen, anyOpen, tileLanded, inputLocked,
   onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch,
-  onMeasuredHeightChange, wordY, intakeY, totalTiles, slotHeight,
+  onMeasuredHeightChange, onLayoutExitComplete, wordY, intakeY, totalTiles, slotHeight,
 }: {
   tile: GauntletTile;
   index: number;
@@ -90,6 +94,7 @@ function SpineSlot({
   onSwipeAttempt?: () => void;
   onCardTouch: () => void;
   onMeasuredHeightChange: (maskId: string, height: number) => void;
+  onLayoutExitComplete: (maskId: string) => void;
   wordY?: number;
   intakeY?: number;
   totalTiles: number;
@@ -245,6 +250,7 @@ function SpineSlot({
           onEffect={onEffect}
           onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
           onPressHoldStart={() => playSfx('pressHoldStart')}
+          onExitComplete={() => onLayoutExitComplete(tile.mask.id)}
           onCardTouch={onCardTouch}
           onMeasuredHeightChange={handleMeasuredHeightChange}
           wordY={wordY}
@@ -277,16 +283,20 @@ export function BossGauntletSpines({
       next.set(maskId, height);
       return next;
     });
-    onActiveCardHeightChange?.(maskId, height);
-  }, [onActiveCardHeightChange]);
+  }, []);
 
-  if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
+  const handleLayoutExitComplete = useCallback((maskId: string) => {
+    setMeasuredCardHeights(previous => releaseGauntletMeasuredHeight(previous, maskId));
+  }, []);
 
   const anyOpen = activeGauntletTile !== null;
-  const activeCardHeight = Math.max(
-    SPINE_HEIGHT,
-    ...gauntletTiles.map(tile => measuredCardHeights.get(tile.mask.id) ?? SPINE_HEIGHT),
-  );
+  const activeCardHeight = resolveGauntletRowHeight(measuredCardHeights);
+
+  useEffect(() => {
+    onActiveCardHeightChange?.(activeCardHeight);
+  }, [activeCardHeight, onActiveCardHeightChange]);
+
+  if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
   return (
     <View style={styles.wrap} pointerEvents="box-none">
@@ -320,6 +330,7 @@ export function BossGauntletSpines({
           onSwipeAttempt={onSwipeAttempt}
           onCardTouch={onCardTouch}
           onMeasuredHeightChange={handleActiveCardHeightChange}
+          onLayoutExitComplete={handleLayoutExitComplete}
           wordY={wordY}
           intakeY={intakeY}
           totalTiles={gauntletTiles.length}
