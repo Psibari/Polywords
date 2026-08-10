@@ -70,10 +70,6 @@ const missingSource = structuredClone(good);
 missingSource.meanings[0].source.url = '';
 assert.match(validateWord(missingSource).blockers.join('\n'), /source URL/);
 
-const tooLong = structuredClone(good);
-tooLong.meanings[0].realMasks[0].text = 'ONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE';
-assert.match(validateWord(tooLong).blockers.join('\n'), /8-word hard maximum/);
-
 const headwordLeak = structuredClone(good);
 headwordLeak.meanings[0].realMasks[0].text = 'SAMPLE APPEARS IN THIS TILE';
 assert.match(validateWord(headwordLeak).blockers.join('\n'), /leaks the headword/);

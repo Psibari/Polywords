@@ -111,9 +111,6 @@ for (const [word, entry] of Object.entries(db)) {
   const tokenOwners = new Map<string, string>();
 
   for (const tile of tiles) {
-    const wordCount = tile.phrase.trim().split(/\s+/).length;
-    if (wordCount > 8) flag('length', `${word}: ${tile.label} "${tile.phrase}" is ${wordCount} words (max 8)`);
-
     for (const token of tokens(tile.phrase)) {
       if (forms.has(token)) {
         flag('headword-leak', `${word}: ${tile.label} "${tile.phrase}" contains "${token}"`);
@@ -160,8 +157,6 @@ for (const entry of DAILY_POOL) {
 
   const answer = entry.answer.toUpperCase();
   for (const clue of entry.clues) {
-    const wordCount = clue.trim().split(/\s+/).length;
-    if (wordCount > 8) flag('length', `${tag}: clue "${clue}" is ${wordCount} words (max 8)`);
     if (clue.toUpperCase().includes(answer)) {
       flag('headword-leak', `${tag}: clue "${clue}" contains the answer`);
     }

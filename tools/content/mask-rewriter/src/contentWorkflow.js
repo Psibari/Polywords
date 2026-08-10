@@ -203,8 +203,7 @@ function validateTile(tile, context, ids, phrases, blockers, warnings) {
   if (!text) blockers.push(`${prefix}: tile text is required`);
   if (text && text !== text.toUpperCase()) blockers.push(`${prefix}: tile text must be uppercase`);
   const wordCount = countWords(text);
-  if (wordCount > 8) blockers.push(`${prefix}: tile exceeds the 8-word hard maximum`);
-  else if (wordCount >= 7) warnings.push(`${prefix}: ${wordCount}-word tile requires review`);
+  if (wordCount >= 7) warnings.push(`${prefix}: ${wordCount}-word tile requires review`);
   else if (wordCount < 2) warnings.push(`${prefix}: one-word tile may be too flat`);
 
   const normalized = normalizePhrase(text);

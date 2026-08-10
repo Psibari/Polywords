@@ -686,8 +686,8 @@
   },
   "BATTERY": {
     "difficulty": "medium",
-    "hiddenMeaning": "THE BEAT THE BAND MARCHES TO",
-    "hiddenTrap": "THE DRUM MAJOR LEADING OUT FRONT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "THE BEAT THE BAND MARCHES TO",
@@ -1886,8 +1886,8 @@
   },
   "BRIEF": {
     "difficulty": "medium",
-    "hiddenMeaning": "ANCHOR TEASES TONIGHT'S TOP STORY AT TEN",
-    "hiddenTrap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "ANCHOR TEASES TONIGHT'S TOP STORY AT TEN",
@@ -2483,8 +2483,8 @@
   },
   "CAST": {
     "difficulty": "medium",
-    "hiddenMeaning": "FAINT GREEN IN OLD PHOTOS",
-    "hiddenTrap": "FILTER SLAPPED ON EVERY SELFIE",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "FAINT GREEN IN OLD PHOTOS",
@@ -2865,8 +2865,8 @@
   },
   "CHECK": {
     "difficulty": "medium",
-    "hiddenMeaning": "A CRACK THAT RUNS WITH THE GRAIN",
-    "hiddenTrap": "BOARD WARPS IN THE SUMMER HEAT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "A CRACK THAT RUNS WITH THE GRAIN",
@@ -2998,7 +2998,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Sextuple"
   },
   "CHILL": {
     "difficulty": "easy",
@@ -4314,8 +4314,8 @@
   },
   "COURT": {
     "difficulty": "medium",
-    "hiddenMeaning": "THE REAL VERDICT SEEN THROUGH THE PEOPLE'S EYES",
-    "hiddenTrap": "THE CROWD'S THUMBS DECIDE IF HE LIVES",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "THE REAL VERDICT SEEN THROUGH THE PEOPLE'S EYES",
@@ -4377,8 +4377,8 @@
   },
   "CRAFT": {
     "difficulty": "medium",
-    "hiddenMeaning": "WHERE THE FOOD'S FREE ON A MOVIE SET",
-    "hiddenTrap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "WHERE THE FOOD'S FREE ON A MOVIE SET",
@@ -4684,8 +4684,8 @@
   },
   "ENGAGED": {
     "difficulty": "medium",
-    "hiddenMeaning": "PICARD ORDERS THE SHIP TO WARP SPEED",
-    "hiddenTrap": "COMMANDER ORDERS THE TROOPS TO RETREAT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "PICARD ORDERS THE SHIP TO WARP SPEED",
@@ -4752,8 +4752,8 @@
   },
   "EXCHANGE": {
     "difficulty": "medium",
-    "hiddenMeaning": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
-    "hiddenTrap": "THE DEBATE WAS OVER, NO REBUTTAL LEFT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
@@ -4835,8 +4835,8 @@
   },
   "EXTRACT": {
     "difficulty": "medium",
-    "hiddenMeaning": "ALGEBRA CLASS: ISOLATE X SQUARED, THEN SQUARE ROOT",
-    "hiddenTrap": "USE A AND B TO FIND SIDE C",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "ALGEBRA CLASS: ISOLATE X SQUARED, THEN SQUARE ROOT",
@@ -5120,8 +5120,8 @@
   },
   "HORN": {
     "difficulty": "medium",
-    "hiddenMeaning": "A PHRASE FOR STROKING YOUR OWN EGO",
-    "hiddenTrap": "HOLD IT TO YOUR EAR AND HEAR THE OCEAN",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "A PHRASE FOR STROKING YOUR OWN EGO",
@@ -5178,8 +5178,8 @@
   },
   "IRON": {
     "difficulty": "medium",
-    "hiddenMeaning": "THE AGE WHEN SILVER DIDN’T FOLLOW BRONZE",
-    "hiddenTrap": "THE MEDAL THAT COMES AFTER SILVER",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "THE AGE WHEN SILVER DIDN’T FOLLOW BRONZE",
@@ -5280,8 +5280,8 @@
   },
   "KERNEL": {
     "difficulty": "medium",
-    "hiddenMeaning": "INSIDE THE PIT, INSIDE THE PEACH",
-    "hiddenTrap": "SHAVING THE ORANGE PEEL FOR A LITTLE ZEST",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "INSIDE THE PIT, INSIDE THE PEACH",
@@ -7274,8 +7274,8 @@
   },
   "STOCK": {
     "difficulty": "medium",
-    "hiddenMeaning": "SOMETHING PUT AWAY, READY FOR EMERGENCIES",
-    "hiddenTrap": "WHAT YOU KEEP AN EXTRA OF FOR AN EMERGENCY",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "SOMETHING PUT AWAY, READY FOR EMERGENCIES",
@@ -7342,8 +7342,8 @@
   },
   "STRIKE": {
     "difficulty": "medium",
-    "hiddenMeaning": "OIL FOUND WHERE NOBODY WAS LOOKING",
-    "hiddenTrap": "PICKAXE SPARKS ON BARE GRANITE",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "OIL FOUND WHERE NOBODY WAS LOOKING",

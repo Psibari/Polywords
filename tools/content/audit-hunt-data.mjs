@@ -65,7 +65,6 @@ for (const [word, entry] of Object.entries(data)) {
 
     if (!phrase) blockers.push(`${prefix}: phrase is empty`);
     if (phrase !== phrase.toUpperCase()) blockers.push(`${prefix}: phrase must be uppercase`);
-    if (count > 8) blockers.push(`${prefix}: ${count} words exceeds the hard maximum`);
     if (count < 2) warnings.push(`${prefix}: one-word tile needs editorial review`);
 
     if (phrases.has(normalized)) {

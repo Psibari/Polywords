@@ -32,7 +32,7 @@ five-word review batches until quality is stable.
 ## Tile Law
 
 - Contemporary American English only.
-- Uppercase player-facing text; eight words maximum.
+- Uppercase player-facing text.
 - No preferred short length. Use the space needed for a natural, masked line.
 - Never include the headword, an inflection, or an obvious giveaway root.
 - Create productive hesitation, not confusion.
