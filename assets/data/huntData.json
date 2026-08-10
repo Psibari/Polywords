@@ -686,8 +686,8 @@
   },
   "BATTERY": {
     "difficulty": "medium",
-    "hiddenMeaning": "THE BEAT THE BAND MARCHES TO",
-    "hiddenTrap": "THE DRUM MAJOR LEADING OUT FRONT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "THE BEAT THE BAND MARCHES TO",
@@ -1886,8 +1886,8 @@
   },
   "BRIEF": {
     "difficulty": "medium",
-    "hiddenMeaning": "ANCHOR TEASES TONIGHT'S TOP STORY AT TEN",
-    "hiddenTrap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "ANCHOR TEASES TONIGHT'S TOP STORY AT TEN",
@@ -2131,7 +2131,7 @@
       },
       {
         "id": "butt_r1",
-        "phrase": "WHAT A RIFLE HAS THAT A HANDGUN DOESN’T",
+        "phrase": "THE SHOULDER CUT THAT SMOKES FOR TWELVE HOURS",
         "isReal": true
       },
       {
@@ -2483,8 +2483,8 @@
   },
   "CAST": {
     "difficulty": "medium",
-    "hiddenMeaning": "FAINT GREEN IN OLD PHOTOS",
-    "hiddenTrap": "FILTER SLAPPED ON EVERY SELFIE",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "FAINT GREEN IN OLD PHOTOS",
@@ -2865,8 +2865,8 @@
   },
   "CHECK": {
     "difficulty": "medium",
-    "hiddenMeaning": "A CRACK THAT RUNS WITH THE GRAIN",
-    "hiddenTrap": "BOARD WARPS IN THE SUMMER HEAT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "A CRACK THAT RUNS WITH THE GRAIN",
@@ -2998,7 +2998,7 @@
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Sextuple"
   },
   "CHILL": {
     "difficulty": "easy",
@@ -4314,8 +4314,8 @@
   },
   "COURT": {
     "difficulty": "medium",
-    "hiddenMeaning": "THE REAL VERDICT SEEN THROUGH THE PEOPLE'S EYES",
-    "hiddenTrap": "THE CROWD'S THUMBS DECIDE IF HE LIVES",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "THE REAL VERDICT SEEN THROUGH THE PEOPLE'S EYES",
@@ -4377,8 +4377,8 @@
   },
   "CRAFT": {
     "difficulty": "medium",
-    "hiddenMeaning": "WHERE THE FOOD'S FREE ON A MOVIE SET",
-    "hiddenTrap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "WHERE THE FOOD'S FREE ON A MOVIE SET",
@@ -4684,8 +4684,8 @@
   },
   "ENGAGED": {
     "difficulty": "medium",
-    "hiddenMeaning": "PICARD ORDERS THE SHIP TO WARP SPEED",
-    "hiddenTrap": "COMMANDER ORDERS THE TROOPS TO RETREAT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "PICARD ORDERS THE SHIP TO WARP SPEED",
@@ -4752,8 +4752,8 @@
   },
   "EXCHANGE": {
     "difficulty": "medium",
-    "hiddenMeaning": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
-    "hiddenTrap": "THE DEBATE WAS OVER, NO REBUTTAL LEFT",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
@@ -4835,8 +4835,8 @@
   },
   "EXTRACT": {
     "difficulty": "medium",
-    "hiddenMeaning": "ALGEBRA CLASS: ISOLATE X SQUARED, THEN SQUARE ROOT",
-    "hiddenTrap": "USE A AND B TO FIND SIDE C",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "ALGEBRA CLASS: ISOLATE X SQUARED, THEN SQUARE ROOT",
@@ -5120,8 +5120,8 @@
   },
   "HORN": {
     "difficulty": "medium",
-    "hiddenMeaning": "A PHRASE FOR STROKING YOUR OWN EGO",
-    "hiddenTrap": "HOLD IT TO YOUR EAR AND HEAR THE OCEAN",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "A PHRASE FOR STROKING YOUR OWN EGO",
@@ -5178,8 +5178,8 @@
   },
   "IRON": {
     "difficulty": "medium",
-    "hiddenMeaning": "THE AGE WHEN SILVER DIDN’T FOLLOW BRONZE",
-    "hiddenTrap": "THE MEDAL THAT COMES AFTER SILVER",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "THE AGE WHEN SILVER DIDN’T FOLLOW BRONZE",
@@ -5280,8 +5280,8 @@
   },
   "KERNEL": {
     "difficulty": "medium",
-    "hiddenMeaning": "INSIDE THE PIT, INSIDE THE PEACH",
-    "hiddenTrap": "SHAVING THE ORANGE PEEL FOR A LITTLE ZEST",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "INSIDE THE PIT, INSIDE THE PEACH",
@@ -7274,20 +7274,20 @@
   },
   "STOCK": {
     "difficulty": "medium",
-    "hiddenMeaning": "SOMETHING PUT AWAY, READY FOR EMERGENCIES",
-    "hiddenTrap": "WHAT YOU KEEP AN EXTRA OF FOR AN EMERGENCY",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
-        "real": "SOMETHING PUT AWAY, READY FOR EMERGENCIES",
-        "trap": "WHAT YOU KEEP AN EXTRA OF FOR AN EMERGENCY"
+        "real": "A BILLBOARD DOING TWO HUNDRED, TURNING LEFT ALL AFTERNOON",
+        "trap": "WHERE GOLD, COFFEE, AND OIL GET THEIR PRICE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "WHAT NOBODY PUTS IN A PSYCHIC HOTLINE",
+        "trap": "GRANDMA'S BIRTHDAY GIFT THAT TOOK A DECADE TO DOUBLE"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "WHAT HELD THE THIEF WHILE THE VILLAGE THREW ROTTEN TOMATOES",
+        "trap": "WHAT THE CHAIN GANG WORE BREAKING ROCKS ALL DAY"
       }
     ],
     "masks": [
@@ -7318,17 +7318,17 @@
       },
       {
         "id": "stock_r5",
-        "phrase": "THE FAMILY PHOTO THAT CAME WITH THE WALLET",
+        "phrase": "THE SMILING STRANGERS INSIDE A BRAND-NEW WALLET",
         "isReal": true
       },
       {
         "id": "stock_t0",
-        "phrase": "ONE OF YOUR MOST PRIZED POSSESSIONS",
+        "phrase": "THE PAPER TRAIL PROVING THE PUPPY'S BLOODLINE",
         "isReal": false
       },
       {
         "id": "stock_t1",
-        "phrase": "WHAT YOUR BOSS LET YOU TAKE HOME",
+        "phrase": "HUNG BY THE CHIMNEY, STUFFED WITH COAL",
         "isReal": false
       },
       {
@@ -7342,8 +7342,8 @@
   },
   "STRIKE": {
     "difficulty": "medium",
-    "hiddenMeaning": "OIL FOUND WHERE NOBODY WAS LOOKING",
-    "hiddenTrap": "PICKAXE SPARKS ON BARE GRANITE",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
     "hiddenPairs": [
       {
         "real": "OIL FOUND WHERE NOBODY WAS LOOKING",

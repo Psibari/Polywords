@@ -14,6 +14,7 @@ const WORD_TYPE_BY_REAL_COUNT = {
   4: 'Quadruple',
   5: 'Quintuple',
   6: 'Sextuple',
+  7: 'Septuple',
 };
 const PLACEHOLDER_PATTERN = /\b(?:PLACEHOLDER|TODO|TBD|FIXME|TEST CONTENT)\b/i;
 
