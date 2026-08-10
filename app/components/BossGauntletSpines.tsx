@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { Image } from 'expo-image';
 import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ShardVariant } from '../ui/pwEffects';
@@ -8,7 +8,12 @@ import { playSfx } from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
-import { libraryMaterial } from '../ui/pwMaterials';
+
+// Straight-on, no baked-in angle or per-instance detail (page bulge, gem
+// marks) — a single symmetrical asset so it packs edge-to-edge with its
+// siblings in the row's tight 8px gap regardless of slot index. See
+// docs/superpowers/specs/2026-08-08-gauntlet-spine-artwork-design.md.
+const gauntletSpineArt = require('../../assets/images/gauntlet/spine.png');
 
 type GauntletTile = { pairIndex: number; mask: Mask; isReal: boolean };
 
@@ -133,38 +138,16 @@ function SpineSlot({
   return (
     <View style={[styles.slot, isOpen ? styles.slotOpen : elevated && styles.slotElevated]}>
       <Animated.View pointerEvents="none" style={[styles.spine, { transform: [{ scaleX }] }]}>
-        {/* Same leather-and-tooling material as BookSpine.tsx (Vault shelf)
-            and HeroBook's own cover — every purple/gold token here traces
-            back to heroBookMaterial, so this reads as the same object, not
-            a new material invented for this one component. */}
-        <Svg width={SPINE_WIDTH} height={SPINE_HEIGHT} style={StyleSheet.absoluteFillObject}>
-          <Defs>
-            {/* Id must be unique per instance — 3 slots render simultaneously,
-                each with its own Svg, same reason BookSpine.tsx keys its
-                gradient id off the word instead of a shared literal. */}
-            <LinearGradient id={`gauntletSpineLeather-${tile.mask.id}`} x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={libraryMaterial.spineLeatherTop} />
-              <Stop offset="0.5" stopColor={libraryMaterial.spineLeather} />
-              <Stop offset="1" stopColor={libraryMaterial.spineLeatherBot} />
-            </LinearGradient>
-          </Defs>
-          <Rect
-            x={0.5} y={0.5}
-            width={SPINE_WIDTH - 1} height={SPINE_HEIGHT - 1}
-            rx={16}
-            fill={`url(#gauntletSpineLeather-${tile.mask.id})`}
-            stroke={libraryMaterial.spineToolingHairline}
-            strokeWidth={1}
-          />
-          {/* Gold tooling bands, head and tail */}
-          <Rect x={8} y={18} width={SPINE_WIDTH - 16} height={2.5} fill={libraryMaterial.spineTooling} />
-          <Rect x={8} y={SPINE_HEIGHT - 24} width={SPINE_WIDTH - 16} height={2.5} fill={libraryMaterial.spineTooling} />
-          {/* Boss-only second amber band, same treatment BookSpine reserves
-              for isBoss — this spine is always Polly's Word, so it's always
-              on. */}
-          <Rect x={8} y={26} width={SPINE_WIDTH - 16} height={1.5} fill={libraryMaterial.spineAmber} />
-          <Rect x={8} y={SPINE_HEIGHT - 32} width={SPINE_WIDTH - 16} height={1.5} fill={libraryMaterial.spineAmber} />
-        </Svg>
+        {/* "contain" not "cover" — this asset has a real transparent alpha
+            channel (verified: corner pixels are alpha=0, not baked-black),
+            so any empty space around the art is genuinely see-through, not
+            a visible gap. Safe to show the whole spine at its natural
+            proportions rather than cropping into it to fill the slot. */}
+        <Image
+          source={gauntletSpineArt}
+          contentFit="contain"
+          style={StyleSheet.absoluteFillObject}
+        />
         <Animated.Text
           style={[styles.spineLabel, { opacity: labelOpacity, transform: [{ rotate: labelRotate }] }]}
         >

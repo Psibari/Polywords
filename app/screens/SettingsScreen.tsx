@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
+import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
@@ -80,6 +81,7 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
 
 export default function SettingsScreen({ navigation }: Props) {
   const [showPollyAnimations, setShowPollyAnimations] = useState(false);
+  const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
   const [chamberWidth, setChamberWidth] = useState(0);
   const chamberHeight = chamberWidth / CHAMBER_ASPECT_RATIO;
   const progress = useGameStore(s => s.progress);
@@ -314,6 +316,17 @@ export default function SettingsScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowGauntletSpineSizer(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Gauntlet Spine Sizer</Text>
+                  <Text style={styles.rowNote}>Tune the boss spine art's scale/position live</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
             </View>
           </View>
         )}
@@ -340,10 +353,16 @@ export default function SettingsScreen({ navigation }: Props) {
         )}
       </ScrollView>
       {__DEV__ && (
-        <PollyAnimationDevViewer
-          onClose={() => setShowPollyAnimations(false)}
-          visible={showPollyAnimations}
-        />
+        <>
+          <PollyAnimationDevViewer
+            onClose={() => setShowPollyAnimations(false)}
+            visible={showPollyAnimations}
+          />
+          <GauntletSpineDevViewer
+            onClose={() => setShowGauntletSpineSizer(false)}
+            visible={showGauntletSpineSizer}
+          />
+        </>
       )}
       <InfoModal
         visible={showCredits}
