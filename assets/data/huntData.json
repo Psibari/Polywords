@@ -677,7 +677,7 @@
       },
       {
         "id": "batter_t2",
-        "phrase": "REMOTE CONTROL NEEDS THREE AAs TO WORK",
+        "phrase": "PLENTY OF AA, AND OF COURSE IT TAKES AAA",
         "isReal": false
       }
     ],
@@ -3509,7 +3509,7 @@
       },
       {
         "id": "click_t4",
-        "phrase": "WHAT HOLDS PAPERS TOGETHER WITHOUT A STAPLE",
+        "phrase": "WHAT CLAMPS A THICK STACK THE STAPLER CAN'T HANDLE",
         "isReal": false
       },
       {
@@ -4319,15 +4319,15 @@
     "hiddenPairs": [
       {
         "real": "THE REAL VERDICT SEEN THROUGH THE PEOPLE'S EYES",
-        "trap": "THE CROWD'S THUMBS DECIDE IF HE LIVES"
+        "trap": "THE EMPEROR'S THUMB DECIDES IF HE LIVES"
       },
       {
         "real": "THE MALL’S HOME OF “AUTHENTIC” CUISINE",
         "trap": "WHERE YOU EAT LUNCH IN FIFTH PERIOD"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "WHERE STUDENTS SPRAWL ON THE GRASS BETWEEN CLASSES",
+        "trap": "WHAT YOU SWEAR ON TO TELL THE TRUTH AND NOTHING BUT THE TRUTH"
       }
     ],
     "masks": [
@@ -5116,7 +5116,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "Septuple"
+    "wordType": "Quadruple"
   },
   "HORN": {
     "difficulty": "medium",
@@ -5218,6 +5218,11 @@
       {
         "id": "iron_t1",
         "phrase": "WHAT ATE THROUGH THE OLD METAL FENCE",
+        "isReal": false
+      },
+      {
+        "id": "iron_t2",
+        "phrase": "THE MAN WITH THE S ON HIS CHEST IS MADE OF IT",
         "isReal": false
       }
     ],
@@ -7005,6 +7010,11 @@
       {
         "id": "sentence_t1",
         "phrase": "JUDGE LETS YOU OFF WITH JUST A WARNING",
+        "isReal": false
+      },
+      {
+        "id": "sentence_t2",
+        "phrase": "CROSS YOUR T'S AND DOT YOUR I'S",
         "isReal": false
       }
     ],
