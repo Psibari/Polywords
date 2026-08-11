@@ -40,6 +40,7 @@ import {
   resolveActiveTileHeight,
   resolveBoardVerticalSpacing,
 } from './tileTextLayout';
+import { shouldReleaseOpeningDecision } from './boardDecisionReadiness';
 
 // ── Layout constants ──────────────────────────────────────────
 const TILE_GAP   = 6;
@@ -645,6 +646,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
   const [bossReady, setBossReady]             = useState(!isBoss);
   const [tilesReady, setTilesReady]           = useState(false);
+  const [openingCardLanded, setOpeningCardLanded] = useState(false);
+  const openingDecisionReleasedRef = useRef(false);
   // Held beat between the close-beat finishing and the outcome card
   // appearing — mirrors ResultsScreen's verdict-then-detail stagger.
   const [showOutcomeCard, setShowOutcomeCard] = useState(false);
@@ -976,6 +979,18 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
   const activeTopMaskId = mechanics.topMask?.id ?? null;
   activeTopMaskIdRef.current = activeTopMaskId;
+
+  useEffect(() => {
+    if (!shouldReleaseOpeningDecision({
+      cardLanded: openingCardLanded,
+      boardVisible: showBoardContent,
+      alreadyReleased: openingDecisionReleasedRef.current,
+    })) return;
+
+    openingDecisionReleasedRef.current = true;
+    mechanics.onDecisionReady();
+  }, [openingCardLanded, showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // The keyed measurement belongs only to the current top mask. An identity
   // mismatch synchronously renders the 152px minimum, so a long prior card
   // can never flash its stale height while the next card is being measured.
@@ -1044,6 +1059,8 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   // Reset guards and animated values on new word
   useEffect(() => {
     cardPopY.setValue(0);
+    openingDecisionReleasedRef.current = false;
+    setOpeningCardLanded(false);
     // The remaining-mask effect above has already observed the opening card
     // by the time this reset runs on mount. Preserve that identity explicitly
     // so card 2 is treated as a real deck advance and fires onDecisionReady;
@@ -1096,7 +1113,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
             deckEntranceHapticRef.current = deckEntranceKey;
             Haptics.selectionAsync();
           }
-          mechanics.onDecisionReady();
+          setOpeningCardLanded(true);
         });
       }, 120);
     }, cardDelay);

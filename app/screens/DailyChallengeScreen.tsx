@@ -26,7 +26,14 @@ import {
   getChallengeNumber,
   getTodayDateString,
 } from '../game/dailyChallengeEngine';
-import { DailyClaimResult } from '../game/types';
+import { DailyClaimResult, DailySession } from '../game/types';
+import {
+  beginDailyCommittedPresentation,
+  DailyClaimPresentation,
+  resolveDailyActiveElapsedMs,
+  selectDailyDisplaySession,
+  shouldShowDailyResult,
+} from '../game/dailyClaimPresentation';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
 import { playSfx, preloadSfx, sfxReady } from '../audio/sfx';
@@ -448,6 +455,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     null,
   );
   const completingCandidateRef = useRef<string | null>(null);
+  const [claimPresentation, setClaimPresentation] = useState<
+    DailyClaimPresentation<DailySession> | null
+  >(null);
+  const claimPresentationRef = useRef<
+    DailyClaimPresentation<DailySession> | null
+  >(null);
   const intakeScale = useRef(new Animated.Value(1)).current;
   // How many of today's 5 rounds are solved as of this claim, for the
   // reveal curtain's feather tally. Computed synchronously in handleClaim
@@ -467,6 +480,71 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const dailyFocusedRef = useRef(false);
   const dailySessionRef = useRef(dailySession);
   dailySessionRef.current = dailySession;
+  const displayedDailySession = selectDailyDisplaySession(
+    dailySession,
+    claimPresentationRef.current ?? claimPresentation,
+  );
+
+  function beginClaimPresentation(
+    session: DailySession,
+    candidate: string,
+    outcome: 'correct' | 'wrong',
+  ) {
+    const roundElapsedMsAtClaim = activeDailyElapsedMs(session);
+    beginDailyCommittedPresentation(
+      session,
+      candidate,
+      outcome,
+      roundElapsedMsAtClaim,
+      presentation => {
+        // The ref becomes authoritative before the store commit. If the
+        // external store publishes synchronously, that render still sees the
+        // outgoing round instead of flashing the next round or Results.
+        claimPresentationRef.current = presentation;
+        setClaimPresentation(presentation);
+      },
+      claimDailyAnswer,
+    );
+  }
+
+  function finishClaimPresentation(candidate: string): boolean {
+    if (claimPresentationRef.current?.candidate !== candidate) return false;
+
+    const presentation = claimPresentationRef.current;
+    const committedSession = dailySessionRef.current;
+    if (committedSession?.status === 'active') {
+      const sameRound =
+        presentation.session.currentRoundIndex ===
+        committedSession.currentRoundIndex;
+      const resumeElapsedMs = sameRound
+        ? Math.max(
+            committedSession.roundElapsedMs,
+            presentation.roundElapsedMsAtClaim,
+          )
+        : committedSession.roundElapsedMs;
+      // The committed round was intentionally paused while its predecessor's
+      // claim animation remained on screen. Start its active clock now.
+      roundStartRef.current = Date.now() - resumeElapsedMs;
+    }
+    claimPresentationRef.current = null;
+    setClaimPresentation(null);
+    return true;
+  }
+
+  function activeDailyElapsedMs(session: DailySession): number {
+    const presentation = claimPresentationRef.current;
+    const presentationRoundElapsedMs =
+      presentation?.session.currentRoundIndex === session.currentRoundIndex
+        ? presentation.roundElapsedMsAtClaim
+        : session.roundElapsedMs;
+    return resolveDailyActiveElapsedMs({
+      presentationActive: presentation !== null,
+      committedRoundElapsedMs: session.roundElapsedMs,
+      presentationRoundElapsedMs,
+      roundStartedAtMs: roundStartRef.current,
+      nowMs: Date.now(),
+    });
+  }
 
   function measureClueTarget() {
     requestAnimationFrame(() => {
@@ -528,18 +606,18 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   // ROUND CHANGE
   useEffect(() => {
-    if (!dailySession || dailySession.status !== 'active') return;
+    if (!displayedDailySession || displayedDailySession.status !== 'active') return;
     completedRef.current = false;
     completingCandidateRef.current = null;
     // Unlocking itself is handled by the audioReady-gated effect below —
     // it re-checks audioReady on every round change too, so this doesn't
     // need to unlock unconditionally here.
-    roundStartRef.current = Date.now() - dailySession.roundElapsedMs;
+    roundStartRef.current = Date.now() - displayedDailySession.roundElapsedMs;
     intakeScale.setValue(1);
     revealProgress.setValue(0);
     setRevealSolvedCount(0);
 
-    const round = dailySession.rounds[dailySession.currentRoundIndex];
+    const round = displayedDailySession.rounds[displayedDailySession.currentRoundIndex];
     if (!round) return;
     const candidates = [...round.candidates];
     const map = new Map<string, DailyAnswerCardState>();
@@ -567,7 +645,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     );
     return () => clearTimeout(measureTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailySession?.currentRoundIndex]);
+  }, [displayedDailySession?.currentRoundIndex]);
 
   // UNLOCK GATE — fires on round change (paired with the effect above,
   // which always runs first in the same commit and resets completedRef)
@@ -575,10 +653,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // audio finishes preloading unlocks retroactively instead of never.
   useEffect(() => {
     if (!audioReady) return;
-    if (!dailySession || dailySession.status !== 'active') return;
+    if (!displayedDailySession || displayedDailySession.status !== 'active') return;
     if (completedRef.current) return;
     setLocked(false);
-  }, [audioReady, dailySession?.currentRoundIndex, dailySession?.status]);
+  }, [audioReady, displayedDailySession?.currentRoundIndex, displayedDailySession?.status]);
 
   // CLUE TIMER — active play time only. Leaving Daily or backgrounding the
   // app saves elapsed time and stops the clock; returning resumes from there.
@@ -594,6 +672,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       const id = setInterval(() => {
         const current = dailySessionRef.current;
         if (!current || current.status !== 'active') return;
+        if (claimPresentationRef.current !== null) return;
         revealDailyClues(Date.now() - roundStartRef.current);
       }, 250);
 
@@ -606,7 +685,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             chances: current.chancesRemaining,
             clues: current.rounds[current.currentRoundIndex]?.revealedClueCount ?? 1,
           });
-          pauseDailyChallenge(Date.now() - roundStartRef.current);
+          pauseDailyChallenge(activeDailyElapsedMs(current));
         }
         dailyFocusedRef.current = false;
       };
@@ -624,7 +703,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         return;
       }
 
-      pauseDailyChallenge(Date.now() - roundStartRef.current);
+      pauseDailyChallenge(activeDailyElapsedMs(current));
     });
     return () => subscription.remove();
   }, [pauseDailyChallenge]);
@@ -661,6 +740,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setCardStates(prev => new Map(prev).set(candidate, 'correct'));
       setRevealSolvedCount(dailySession.currentRoundIndex + 1);
       measureClueTarget();
+      beginClaimPresentation(dailySession, candidate, 'correct');
 
       // Curtain starts dropping the same instant the tile starts flying, so
       // the two finish together instead of the curtain lagging behind a tile
@@ -674,10 +754,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       const curtainCloseMs = reduceMotion !== false ? 120 : 600;
       const curtainHoldMs = reduceMotion !== false ? 180 : 500;
       const curtainOpenMs = reduceMotion !== false ? 120 : 400;
-      const commitClaimOnce = () => {
-        if (completingCandidateRef.current !== candidate) return;
+      const finishClaimOnce = () => {
+        if (!finishClaimPresentation(candidate)) return;
         completingCandidateRef.current = null;
-        claimDailyAnswer(candidate);
       };
       Animated.sequence([
         Animated.timing(revealProgress, {
@@ -694,15 +773,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           useNativeDriver: true,
         }),
       ]).start(({ finished }) => {
-        if (finished) commitClaimOnce();
+        if (finished) finishClaimOnce();
       });
-      // Fallback: if the native animation never reports finished (OS-level
-      // preemption/interruption), commit anyway once the curtain's own
-      // duration has had time to play out, rather than stranding the round
-      // with no way to advance. commitClaimOnce's ref guard makes this safe
-      // to fire alongside a normal finished:true callback — whichever runs
-      // first wins, the other is a no-op.
-      setTimeout(commitClaimOnce, curtainCloseMs + curtainHoldMs + curtainOpenMs + 300);
+      // The claim is already committed. If the native animation callback is
+      // interrupted, release only the outgoing presentation hold here.
+      setTimeout(finishClaimOnce, curtainCloseMs + curtainHoldMs + curtainOpenMs + 300);
 
       // Remaining cards fade out
       setTimeout(() => {
@@ -723,11 +798,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
     Haptics.cueAsync('wrong');
     playSfx('trapWrong');
+    beginClaimPresentation(dailySession, candidate, 'wrong');
     const wrongExitMs = reduceMotion !== false
       ? DAILY_CARD_TIMING.reducedWrongExitMs
       : DAILY_CARD_TIMING.wrongExitMs;
     setTimeout(() => {
-      claimDailyAnswer(candidate);
+      if (!finishClaimPresentation(candidate)) return;
+      setCardStates((prev) => new Map(prev).set(candidate, 'disabled'));
       setLocked(false);
     }, wrongExitMs);
   }
@@ -737,7 +814,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     intakeScale.setValue(1);
 
     const isFinalRound =
-      dailySession?.currentRoundIndex === DAILY_ROUND_COUNT - 1;
+      claimPresentationRef.current?.session.currentRoundIndex ===
+      DAILY_ROUND_COUNT - 1;
 
     if (reduceMotion === false) {
       Animated.sequence([
@@ -792,20 +870,25 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   const isReadyToStart = dailyInitialized && !dailyResult && !dailySession;
-  const isComplete =
+  const committedComplete =
     dailyInitialized &&
     (!!dailyResult || (dailySession !== null && dailySession.status !== 'active'));
-  const challengeNumber = dailySession
-    ? dailySession.challengeNumber
+  const activeClaimPresentation = claimPresentationRef.current ?? claimPresentation;
+  const isComplete = shouldShowDailyResult(
+    committedComplete,
+    activeClaimPresentation,
+  );
+  const challengeNumber = displayedDailySession
+    ? displayedDailySession.challengeNumber
     : getChallengeNumber(getTodayDateString());
   const currentRound =
-    dailySession?.rounds[dailySession.currentRoundIndex] ?? null;
+    displayedDailySession?.rounds[displayedDailySession.currentRoundIndex] ?? null;
   const revealedCount = currentRound?.revealedClueCount ?? 1;
-  const dailyPressure = dailySession
+  const dailyPressure = displayedDailySession
     ? Math.min(
         0.18,
-        dailySession.currentRoundIndex * 0.025 +
-          (2 - dailySession.chancesRemaining) * 0.045,
+        displayedDailySession.currentRoundIndex * 0.025 +
+          (2 - displayedDailySession.chancesRemaining) * 0.045,
       )
     : 0;
   const clueSpeedPrompt = revealedCount === 1
@@ -868,15 +951,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           </View>
         </View>
       )}
-      {!isComplete && dailySession && (
+      {!isComplete && displayedDailySession && (
         <>
           <DailyHUD
             challengeNumber={challengeNumber}
             currentRound={Math.min(
-              dailySession.currentRoundIndex,
+              displayedDailySession.currentRoundIndex,
               DAILY_ROUND_COUNT - 1,
             )}
-            chances={dailySession.chancesRemaining}
+            chances={displayedDailySession.chancesRemaining}
           />
 
           <View style={styles.clueHeaderRow}>
@@ -912,7 +995,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           </Animated.View>
           <Text style={styles.speedPrompt}>{clueSpeedPrompt}</Text>
           <Text style={styles.actionLabel}>
-            {dailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
+            {displayedDailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
             {DAILY_ACTION_RULE}
           </Text>
 
@@ -921,7 +1004,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 read as laid out on Polly's board instead of floating. */}
             <View style={styles.cardBoard}>
               <View
-                key={`grid-${dailySession.currentRoundIndex}`}
+                key={`grid-${displayedDailySession.currentRoundIndex}`}
                 style={styles.cardGrid}
               >
                 {currentRound &&
@@ -937,7 +1020,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                       testID={`daily-answer-${index}`}
                       enterFromLeft={index % 2 === 0}
                       enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
-                      roundKey={dailySession.currentRoundIndex}
+                      roundKey={displayedDailySession.currentRoundIndex}
                     />
                   ))}
               </View>

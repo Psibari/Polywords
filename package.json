@@ -7,7 +7,7 @@
     "audit:content": "npx -y tsx scripts/auditContent.ts",
     "content:preflight": "node tools/content/validate-runtime-hunt.mjs",
     "test:content-runtime": "node tools/content/runtimeHuntValidation.test.mjs",
-    "test": "tsx app/game/seededRandom.test.ts && tsx app/game/huntDeterminism.test.ts && tsx app/game/playtestTelemetry.test.ts && tsx app/components/huntSwipeDirection.test.ts && tsx app/components/tileTextLayout.test.ts && node app/components/tileTextLayout.integration.test.mjs && tsx app/game/polyRunEngine.test.ts && tsx app/game/dailyChallengeEngine.test.ts && tsx app/game/dailyStreak.test.ts && tsx app/game/pollyVisitPolicy.test.ts && tsx app/components/tileAccessibility.test.ts && node tools/content/runtimeHuntValidation.test.mjs && node tools/content/wordCapPolicy.test.mjs",
+    "test": "tsx app/game/seededRandom.test.ts && tsx app/game/huntDeterminism.test.ts && tsx app/game/playtestTelemetry.test.ts && tsx app/components/huntSwipeDirection.test.ts && tsx app/components/boardDecisionReadiness.test.ts && tsx app/components/tileTextLayout.test.ts && node app/components/tileTextLayout.integration.test.mjs && tsx app/game/polyRunEngine.test.ts && tsx app/game/dailyChallengeEngine.test.ts && tsx app/game/dailyClaimPresentation.test.ts && tsx app/game/dailyStreak.test.ts && tsx app/game/pollyVisitPolicy.test.ts && tsx app/components/tileAccessibility.test.ts && node tools/content/runtimeHuntValidation.test.mjs && node tools/content/wordCapPolicy.test.mjs",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
