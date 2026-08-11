@@ -114,12 +114,17 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const submitSwipeUp = useGameStore(s => s.submitSwipeUp);
   const submitSwipeDown = useGameStore(s => s.submitSwipeDown);
   const resolveMystery = useGameStore(s => s.resolveMystery);
+  const reconcileHauntOutcome = useGameStore(s => s.reconcileHauntOutcome);
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
   const isFinalGateStep = isBoss || isHaunt;
   const resumedBossOutcome = isBoss && game.bossOutcome !== 'pending'
     ? game.bossOutcome
     : null;
+  const resumedHauntOutcome = isHaunt && game.hauntOutcome !== 'pending'
+    ? game.hauntOutcome
+    : null;
+  const hasResumedGateOutcome = resumedBossOutcome !== null || resumedHauntOutcome !== null;
   const kicker = eventKicker(step);
 
   const visibleGridMasks = (game.shuffledMasks[game.stepIndex] ?? step.masks)
@@ -137,8 +142,8 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const [tileStates, setTileStates] = useState<Map<string, SwipeMaskState>>(() =>
     buildInitialTileStates(step.masks, game.swipedUpIds, game.swipedDownIds));
 
-  const completedRef                 = useRef(resumedBossOutcome !== null);
-  const gateTriggeredRef             = useRef(resumedBossOutcome !== null);
+  const completedRef                 = useRef(hasResumedGateOutcome);
+  const gateTriggeredRef             = useRef(hasResumedGateOutcome);
   const wrongSwipeOccurred           = useRef(game.mistakesOnWord > 0);
   const visiblePerfectRef            = useRef(game.mistakesOnWord === 0);
   const preMysteryChainMultiplierRef = useRef(1);
@@ -268,6 +273,36 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
         setTimeout(() => {
           showWordOutcome('haunted', {}, () => completeWord());
         }, 600);
+      }
+      return;
+    }
+    if (resumedHauntOutcome && !outcomeActiveRef.current) {
+      setGauntletActive(false);
+      const resolutionId = `${game.runSeed}:${game.stepIndex}:${step.word.trim().toUpperCase()}`;
+      reconcileHauntOutcome(step, resumedHauntOutcome, resolutionId);
+      if (resumedHauntOutcome === 'banished') {
+        setGatePhase('mastered');
+        perform.onMasteredSequence({ isBoss: false, isHaunt: true, masteryPoints: 0 });
+        setTimeout(() => firePollyEvent('gateMastered'), 180);
+        setTimeout(() => {
+          showWordOutcome(
+            'mastered',
+            { bonusLabel: 'HAUNT BROKEN' },
+            () => completeWord(),
+          );
+        }, 550);
+      } else {
+        setGatePhase('wrongFail');
+        firePollyEvent('hiddenMasterFailed');
+        perform.onHauntedSequence({ isHaunt: true, failedMaskId: '' });
+        setTimeout(() => firePollyEvent('hauntFailed'), 400);
+        setTimeout(() => {
+          showWordOutcome(
+            'haunted',
+            { detail: 'Still haunted.' },
+            () => completeWord(),
+          );
+        }, 800);
       }
       return;
     }

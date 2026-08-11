@@ -12,10 +12,13 @@ import {
   completeWord,
   addBonusScore,
   applyGoldFeather,
+  type HauntOutcome,
   consumeMilestone as consumeMilestoneFn,
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
   consumeMercy as consumeMercyFn,
 } from '../game/polyRunEngine';
+import { createActiveGamePersistenceCoordinator } from '../game/activeGamePersistence';
+import { applyReturningHauntResolution } from '../game/returningHauntResolution';
 import {
   DailyClaimResult,
   DailyResult,
@@ -223,8 +226,11 @@ type GameStore = {
   consumeFeatherMilestone: () => void;
   consumeMercy: () => void;
   queueFailedBoss: (step: FailedBossStep) => void;
-  banishHaunt: (step: HauntReturnStep) => void;
-  retainFailedHaunt: (step: HauntReturnStep) => void;
+  reconcileHauntOutcome: (
+    step: HauntReturnStep,
+    outcome: Exclude<HauntOutcome, 'pending'>,
+    resolutionId: string,
+  ) => void;
   setGhostRevenge: (data: GhostRevenge) => void;
   loadGhosts: () => Promise<void>;
   progress: PlayerProgress;
@@ -277,6 +283,14 @@ type GameStore = {
   loadSettings: () => Promise<void>;
 };
 
+let activeGamePersistence: {
+  arm(): void;
+  schedule(): void;
+  flush(): Promise<void>;
+  discard(): Promise<void>;
+  whenIdle(): Promise<void>;
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   game: createGame(generateHunt({ seed: initialRunSeed }), 0, initialRunSeed),
   hasResumableGame: false,
@@ -320,6 +334,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ...(isFledgling ? { length: 8, gentle: true } : {}),
       seed: runSeed,
     });
+    activeGamePersistence.arm();
     set({
       game: createGame(steps, mercyReviveLives, runSeed),
       ghostRevenge: null,
@@ -339,7 +354,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (!raw) return false;
       const saved = JSON.parse(raw) as GameState;
       if (saved.status !== 'playing') {
-        await AsyncStorage.removeItem(GAME_KEY);
+        await activeGamePersistence.discard();
         return false;
       }
       const mysteryTotal = Math.max(0, saved.mysteryTotal ?? 0);
@@ -356,11 +371,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const mysteryTileTruths = Array.isArray(saved.mysteryTileTruths)
         ? saved.mysteryTileTruths.slice(0, mysteryTotal).map(Boolean)
         : [];
+      const savedStep = saved.session[saved.stepIndex];
+      const isSavedHaunt = savedStep?.kind === 'word' && savedStep.isHauntReturn === true;
+      const hauntOutcome: HauntOutcome = isSavedHaunt &&
+        (saved.hauntOutcome === 'banished' || saved.hauntOutcome === 'haunted')
+          ? saved.hauntOutcome
+          : 'pending';
+      const gateOutcomePending = isSavedHaunt
+        ? hauntOutcome === 'pending'
+        : saved.bossOutcome === 'pending';
       const gauntletInProgress =
-        saved.bossOutcome === 'pending' &&
+        gateOutcomePending &&
         mysteryTotal > 0 &&
         mysteryResolved < mysteryTotal;
 
+      activeGamePersistence.arm();
       set({
         game: {
           ...saved,
@@ -371,6 +396,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           mysteryResolved,
           mysteryTileTruths,
           mysteryResolvedPairIndices,
+          hauntOutcome,
           gauntletActive: gauntletInProgress,
           gauntletCorrectCount: gauntletInProgress ? mysteryResolved : 0,
         },
@@ -389,7 +415,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   forfeitGame: async () => {
     set({ hasResumableGame: false });
     try {
-      await AsyncStorage.removeItem(GAME_KEY);
+      await activeGamePersistence.discard();
     } catch {}
   },
 
@@ -477,9 +503,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
             : step,
         );
       }
-    } else if (isHaunt) {
-      if (correct) get().banishHaunt(step);
-      else get().retainFailedHaunt(step);
+    } else if (isHaunt && next.hauntOutcome !== 'pending') {
+      // Persist the terminal verdict before mutating the ghost queue. If the
+      // process dies between the two writes, resume reconciliation finishes
+      // the idempotent ghost update instead of replaying the decision.
+      const resolutionId = `${prev.runSeed}:${prev.stepIndex}:${step.word.trim().toUpperCase()}`;
+      void flushActiveGamePersistence()
+        .catch(() => {})
+        .then(() => get().reconcileHauntOutcome(
+          step,
+          next.hauntOutcome as Exclude<HauntOutcome, 'pending'>,
+          resolutionId,
+        ));
     }
   },
 
@@ -558,32 +593,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
   },
 
-  banishHaunt: (step) => {
+  reconcileHauntOutcome: (step, outcome, resolutionId) => {
     if (step.isHauntReturn !== true) return;
-
     const wordId = step.word.trim().toUpperCase();
-    const priorMisses = get().ghosts.find(g => g.wordId === wordId)?.runsMissed ?? 0;
-    const next = get().ghosts.filter(g => g.wordId !== wordId);
-    if (next.length === get().ghosts.length) return;
-    set({ ghosts: next });
-    recordPlaytestEvent('haunt_cleared', { word: wordId, priorMisses });
-    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
-  },
-
-  retainFailedHaunt: (step) => {
-    if (step.isHauntReturn !== true) return;
-
-    const wordId = step.word.trim().toUpperCase();
-    const current = get().ghosts;
-    const existing = current.find(g => g.wordId === wordId);
-    if (!existing) return;
-
-    const next = [
-      ...current.filter(g => g.wordId !== wordId),
-      { ...existing, runsMissed: existing.runsMissed + 1 },
-    ];
-    set({ ghosts: next });
-    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
+    const result = applyReturningHauntResolution(
+      get().ghosts,
+      wordId,
+      outcome,
+      resolutionId,
+    );
+    if (!result.changed) return;
+    set({ ghosts: result.ghosts });
+    if (outcome === 'banished') {
+      recordPlaytestEvent('haunt_cleared', { word: wordId, priorMisses: result.priorMisses });
+    }
+    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(result.ghosts)).catch(() => {});
   },
 
   setGhostRevenge: (data) => set({ ghostRevenge: data }),
@@ -1019,6 +1043,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
     const resultKey  = DAILY_RESULT_KEY_PREFIX  + date;
     try {
+      await activeGamePersistence.discard();
       await dailyPersistenceQueue.catch(() => {});
       await Promise.all([
         AsyncStorage.removeItem(GHOSTS_KEY),
@@ -1027,7 +1052,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         AsyncStorage.removeItem(GOLD_FEATHER_KEY),
         AsyncStorage.removeItem(INTRO_SEEN_KEY),
         AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
-        AsyncStorage.removeItem(GAME_KEY),
         AsyncStorage.removeItem(attemptKey),
         AsyncStorage.removeItem(resultKey),
         AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY),
@@ -1074,6 +1098,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const revivedGame = applyGoldFeather(game);
     if (revivedGame === game || revivedGame.status !== 'playing') return false;
 
+    activeGamePersistence.arm();
     set({
       game: revivedGame,
       goldFeatherAvailable: false,
@@ -1121,33 +1146,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
 // single state change; reads fresh state at fire time to avoid a stale
 // closure. Cleared as soon as the run leaves 'playing' (finished normally
 // or a fresh run started), so a stale snapshot never resumes twice.
-let saveGameTimer: ReturnType<typeof setTimeout> | null = null;
+activeGamePersistence = createActiveGamePersistenceCoordinator({
+  key: GAME_KEY,
+  storage: AsyncStorage,
+  getSnapshot: () => useGameStore.getState().game,
+  shouldPersist: game => game.status === 'playing',
+});
 
 export async function flushActiveGamePersistence(): Promise<void> {
-  if (saveGameTimer) {
-    clearTimeout(saveGameTimer);
-    saveGameTimer = null;
-  }
-
-  const { game } = useGameStore.getState();
-  if (game.status !== 'playing') return;
-  await AsyncStorage.setItem(GAME_KEY, JSON.stringify(game));
+  await activeGamePersistence.flush();
 }
 
 useGameStore.subscribe((state, prevState) => {
   if (state.game === prevState.game) return;
-  if (saveGameTimer) {
-    clearTimeout(saveGameTimer);
-    saveGameTimer = null;
-  }
 
   if (state.game.status !== 'playing') {
-    AsyncStorage.removeItem(GAME_KEY).catch(() => {});
+    void activeGamePersistence.discard().catch(() => {});
     if (state.hasResumableGame) useGameStore.setState({ hasResumableGame: false });
     return;
   }
-  saveGameTimer = setTimeout(() => {
-    saveGameTimer = null;
-    AsyncStorage.setItem(GAME_KEY, JSON.stringify(useGameStore.getState().game)).catch(() => {});
-  }, 400);
+  activeGamePersistence.schedule();
 });

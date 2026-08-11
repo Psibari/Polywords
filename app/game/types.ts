@@ -7,6 +7,8 @@ export interface GhostMeaning {
   hiddenMeaningTrap: string;
   runsMissed: number;
   isGhostedMaster?: boolean;
+  // Run-scoped idempotency marker for Returning Haunt failure reconciliation.
+  lastHauntResolutionId?: string;
 }
 
 export type GhostRevenge = {

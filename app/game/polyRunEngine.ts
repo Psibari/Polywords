@@ -40,6 +40,7 @@ export function mysteryMasteryPoints(chainMultiplier: number): number {
 // accepts the revive amount per game rather than hardcoding one value.
 
 export type GameStatus = 'playing' | 'gameOver' | 'complete';
+export type HauntOutcome = 'pending' | 'banished' | 'haunted';
 
 export type WordResult = {
   wordId: string;
@@ -80,6 +81,9 @@ export type GameState = {
   mercyReviveLives: number;
   mercyTriggered: boolean;
   bossOutcome: 'pending' | 'mastered' | 'haunted';
+  // Returning Haunt truth is deliberately separate from bossOutcome because
+  // Results, rank, and Polly memory consume only Polly's final-boss verdict.
+  hauntOutcome: HauntOutcome;
   bossFlawless: boolean;
   mysteryTotal: number;
   mysteryResolved: number;
@@ -154,6 +158,7 @@ export function createGame(
     mercyReviveLives,
     mercyTriggered: false,
     bossOutcome: 'pending',
+    hauntOutcome: 'pending',
     bossFlawless: false,
     mysteryTotal: 0,
     mysteryResolved: 0,
@@ -426,7 +431,11 @@ export function beginMysteryGauntlet(
   state: GameState,
   plan: number | readonly boolean[],
 ): GameState {
-  if (state.bossOutcome !== 'pending') return state;
+  const step = currentStep(state);
+  const isHaunt = step.kind === 'word' && step.isHauntReturn === true;
+  if (isHaunt ? state.hauntOutcome !== 'pending' : state.bossOutcome !== 'pending') {
+    return state;
+  }
 
   const total = typeof plan === 'number' ? plan : plan.length;
   const truths = typeof plan === 'number' ? [] : [...plan];
@@ -457,12 +466,15 @@ export function resolveMysteryTile(
 ): GameState {
   const step = currentStep(state);
   const isBoss = step.kind === 'word' && step.eventType === 'bossWord';
-  if (!isBoss) return state; // Returning Haunt: no score/outcome change here
+  const isHaunt = step.kind === 'word' && step.isHauntReturn === true;
+  if (!isBoss && !isHaunt) return state;
 
   // Terminal outcomes and already-judged pair indexes are idempotent. This
   // prevents a remounted presenter from awarding mastery twice or reversing
   // a saved outcome after an app background/resume.
-  if (state.bossOutcome !== 'pending') return state;
+  if (isHaunt ? state.hauntOutcome !== 'pending' : state.bossOutcome !== 'pending') {
+    return state;
+  }
   const total = Math.max(1, state.mysteryTotal);
   if (state.mysteryResolved >= total) return state;
 
@@ -472,6 +484,30 @@ export function resolveMysteryTile(
 
   const resolved = state.mysteryResolved + 1;
   const nextResolvedPairIndices = [...resolvedPairIndices, pairIndex];
+
+  if (isHaunt) {
+    if (!opts.correct) {
+      return {
+        ...state,
+        mysteryResolved: resolved,
+        mysteryResolvedPairIndices: nextResolvedPairIndices,
+        hauntOutcome: 'haunted',
+      };
+    }
+    if (resolved < total) {
+      return {
+        ...state,
+        mysteryResolved: resolved,
+        mysteryResolvedPairIndices: nextResolvedPairIndices,
+      };
+    }
+    return {
+      ...state,
+      mysteryResolved: resolved,
+      mysteryResolvedPairIndices: nextResolvedPairIndices,
+      hauntOutcome: 'banished',
+    };
+  }
 
   if (!opts.correct) {
     // Abort on first wrong — the gauntlet ends here.
@@ -503,7 +539,11 @@ export function resolveMysteryTile(
 }
 
 export function isMysteryTerminal(state: GameState, correct: boolean): boolean {
-  if (state.bossOutcome !== 'pending') return false;
+  const step = currentStep(state);
+  const isHaunt = step.kind === 'word' && step.isHauntReturn === true;
+  if (isHaunt ? state.hauntOutcome !== 'pending' : state.bossOutcome !== 'pending') {
+    return false;
+  }
   if (state.mysteryResolved >= Math.max(1, state.mysteryTotal)) return false;
   if (!correct) return true;
   return state.mysteryResolved + 1 >= Math.max(1, state.mysteryTotal);
@@ -591,6 +631,7 @@ export function applyGoldFeather(state: GameState): GameState {
     pollyTrigger: null,
     wordResults: state.wordResults.filter(result => result.wordId !== currentWordId),
     bossOutcome: 'pending',
+    hauntOutcome: 'pending',
     bossFlawless: false,
     mysteryTotal: 0,
     mysteryResolved: 0,
@@ -621,15 +662,27 @@ export function completeWord(state: GameState): GameState {
 
   const finalizedState = finalizeCurrentWordResult(state);
   const perfect = state.mistakesOnWord === 0;
+  const advancingState = step.isHauntReturn === true
+    ? {
+        ...finalizedState,
+        hauntOutcome: 'pending' as const,
+        mysteryTotal: 0,
+        mysteryResolved: 0,
+        mysteryTileTruths: [],
+        mysteryResolvedPairIndices: [],
+        gauntletActive: false,
+        gauntletCorrectCount: 0,
+      }
+    : finalizedState;
 
-  return advanceStep(finalizedState, {
+  return advanceStep(advancingState, {
     score: state.score,
     lives: state.lives,
     combo: perfect ? state.combo : 0,
     feedback: state.feedback,
     lastActionAt: Date.now(),
     pollyTrigger: null,
-    wordResults: finalizedState.wordResults,
+    wordResults: advancingState.wordResults,
   });
 }
 

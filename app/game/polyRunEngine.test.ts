@@ -63,6 +63,16 @@ function fresh(mercyReviveLives = 0): GameState {
   return createGame(session(), mercyReviveLives);
 }
 
+function freshHaunt(): GameState {
+  const haunt = {
+    ...mkWord('BANK', STANDARD_MASKS),
+    isHauntReturn: true,
+    hiddenMeaning: 'THE SIDE OF A RIVER',
+    hiddenTrap: 'A STACK OF CASH',
+  } satisfies WordStep;
+  return createGame([haunt, mkWord('OMEGA', STANDARD_MASKS, true)]);
+}
+
 // ── Scoring: correct swipes ──────────────────────────────────────
 
 {
@@ -410,6 +420,59 @@ function fresh(mercyReviveLives = 0): GameState {
 }
 
 {
+  // Returning Haunt terminal truth is persisted separately from Polly's boss
+  // verdict and never awards boss mastery score.
+  let s = freshHaunt();
+  s = beginMysteryGauntlet(s, [true]);
+  const scoreBefore = s.score;
+  s = resolveMysteryTile(s, {
+    correct: true,
+    visiblePerfect: true,
+    pairIndex: 0,
+  });
+  eq(s.hauntOutcome, 'banished', 'haunt.correct.outcomePersisted');
+  eq(s.bossOutcome, 'pending', 'haunt.correct.bossOutcomeUntouched');
+  eq(s.score, scoreBefore, 'haunt.correct.noBossMasteryScore');
+  eq(s.mysteryResolved, 1, 'haunt.correct.resolutionPersisted');
+  eq(isMysteryTerminal(s, true), false, 'haunt.correct.noSecondTerminalEvent');
+
+  const terminal = s;
+  s = resolveMysteryTile(s, {
+    correct: false,
+    visiblePerfect: false,
+    pairIndex: 0,
+  });
+  eq(s, terminal, 'haunt.correct.duplicateSubmissionIgnored');
+
+  s = completeWord(s);
+  eq(s.stepIndex, 1, 'haunt.correct.continueAdvances');
+  eq(s.hauntOutcome, 'pending', 'haunt.correct.outcomeClearsAfterAdvance');
+  eq(s.mysteryResolved, 0, 'haunt.correct.gauntletProgressClearsAfterAdvance');
+}
+
+{
+  let s = freshHaunt();
+  s = beginMysteryGauntlet(s, [false]);
+  const scoreBefore = s.score;
+  s = resolveMysteryTile(s, {
+    correct: false,
+    visiblePerfect: false,
+    pairIndex: 0,
+  });
+  eq(s.hauntOutcome, 'haunted', 'haunt.wrong.outcomePersisted');
+  eq(s.bossOutcome, 'pending', 'haunt.wrong.bossOutcomeUntouched');
+  eq(s.score, scoreBefore, 'haunt.wrong.noScoreChange');
+
+  const terminal = s;
+  s = resolveMysteryTile(s, {
+    correct: false,
+    visiblePerfect: false,
+    pairIndex: 0,
+  });
+  eq(s, terminal, 'haunt.wrong.duplicateSubmissionIgnored');
+}
+
+{
   // 1-tile gauntlet behaves exactly as the old single-mystery-tile rule
   let s = fresh();
   s = { ...s, stepIndex: 1 };
@@ -464,6 +527,7 @@ function fresh(mercyReviveLives = 0): GameState {
   s = applyGoldFeather(s);
   eq(s.mysteryTotal, 0, 'goldFeather.gauntlet.resetsTotal');
   eq(s.mysteryResolved, 0, 'goldFeather.gauntlet.resetsResolved');
+  eq(s.hauntOutcome, 'pending', 'goldFeather.gauntlet.resetsHauntOutcome');
 }
 
 // ── gauntlet order-tracking (Pick Your Trap) ────────────────────────────
