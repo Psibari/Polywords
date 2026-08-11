@@ -5183,15 +5183,15 @@
     "hiddenPairs": [
       {
         "real": "THE AGE WHEN SILVER DIDN’T FOLLOW BRONZE",
-        "trap": "THE MEDAL THAT COMES AFTER SILVER"
+        "trap": "WHAT THE X-RAY VEST AT THE DENTIST IS MADE OF"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
+        "real": "PICKED IT UP AND PUT IT DOWN ALL WINTER, JUST FOR THE SUMMER",
+        "trap": "WHAT'S INSIDE EVERY TELEPHONE LINE ON THE BLOCK"
       },
       {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
+        "real": "THE BALL AND CHAIN BACK WHEN IT WASN'T A WIFE JOKE",
+        "trap": "WHAT SEPARATES AN INMATE FROM HIS VISITOR"
       }
     ],
     "masks": [
@@ -5287,20 +5287,6 @@
     "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
-    "hiddenPairs": [
-      {
-        "real": "INSIDE THE PIT, INSIDE THE PEACH",
-        "trap": "SHAVING THE ORANGE PEEL FOR A LITTLE ZEST"
-      },
-      {
-        "real": "PLACEHOLDER TEST — meaning two",
-        "trap": "PLACEHOLDER TEST — TRAP TWO"
-      },
-      {
-        "real": "PLACEHOLDER TEST — meaning three",
-        "trap": "PLACEHOLDER TEST — TRAP THREE"
-      }
-    ],
     "masks": [
       {
         "id": "kernel_r0",
@@ -5331,10 +5317,20 @@
         "id": "kernel_t2",
         "phrase": "THERE'S TWO SIDES TO EVERY STORY",
         "isReal": false
+      },
+      {
+        "id": "kernel_r3",
+        "phrase": "INSIDE THE PIT THAT'S INSIDE THE PEACH",
+        "isReal": true
+      },
+      {
+        "id": "kernel_t3",
+        "phrase": "SHAVING THE ORANGE PEEL FOR THE ZEST",
+        "isReal": false
       }
     ],
-    "gpsTag": "boss",
-    "wordType": "Triple"
+    "gpsTag": "flow",
+    "wordType": "Quadruple"
   },
   "KEY": {
     "difficulty": "medium",
