@@ -449,6 +449,7 @@ const styles = StyleSheet.create({
   kicker: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 2,
     marginBottom: 8,
@@ -456,12 +457,14 @@ const styles = StyleSheet.create({
   title: {
     color: PW.color.gold,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 42,
     letterSpacing: 2,
   },
   subtitle: {
     color: PW.color.white,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 16,
     marginTop: 6,
   },
@@ -492,6 +495,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 28,
     letterSpacing: 1,
   },
@@ -501,6 +505,7 @@ const styles = StyleSheet.create({
   profileEyebrow: {
     color: PW.color.goldSoft,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 1.5,
     marginBottom: 4,
@@ -508,12 +513,14 @@ const styles = StyleSheet.create({
   playerName: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 20,
     letterSpacing: 1,
   },
   nameInput: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 20,
     letterSpacing: 1,
     borderBottomWidth: 1,
@@ -523,6 +530,7 @@ const styles = StyleSheet.create({
   profileLevel: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     marginTop: 4,
   },
@@ -538,6 +546,7 @@ const styles = StyleSheet.create({
   profileStatText: {
     color: PW.color.white,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
   },
   disabledButton: {
@@ -555,12 +564,14 @@ const styles = StyleSheet.create({
   disabledButtonText: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 1,
   },
   disabledButtonNote: {
     color: PW.color.faintWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
   },
   section: {
@@ -569,6 +580,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 16,
     letterSpacing: 1,
     marginBottom: 8,
@@ -608,11 +620,13 @@ const styles = StyleSheet.create({
   rowLabel: {
     color: PW.color.white,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 16,
   },
   rowNote: {
     color: PW.color.faintWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     marginTop: 3,
   },
@@ -627,6 +641,7 @@ const styles = StyleSheet.create({
   chevron: {
     color: PW.color.faintWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 24,
     lineHeight: 24,
   },

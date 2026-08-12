@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: FONTS.brand,
+    includeFontPadding: false,
     color: homePerch.bubbleText,
     flexWrap: 'wrap',
   },

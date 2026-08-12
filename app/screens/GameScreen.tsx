@@ -509,6 +509,7 @@ const tb = StyleSheet.create({
     // further under pressure; this is its normal-case starting size.
     fontSize: 36,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     lineHeight: 38,
     letterSpacing: 2,
     textTransform: 'uppercase',
@@ -599,6 +600,7 @@ const tb = StyleSheet.create({
   chipLabel: {
     fontSize: 13,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     color: PW.color.softWhite,
   },
   chipLabelCurrent: {
@@ -1341,6 +1343,7 @@ const styles = StyleSheet.create({
   bossTransitionKicker: {
     color: PW.color.gold,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 34,
     letterSpacing: 2.5,
     textAlign: 'center',
@@ -1349,6 +1352,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: PW.color.softWhite,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 3,
   },
@@ -1375,6 +1379,7 @@ const styles = StyleSheet.create({
   devBossButtonText: {
     color: PW.color.gold,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 9,
     letterSpacing: 1.2,
     textAlign: 'center',
@@ -1399,6 +1404,7 @@ const gs = StyleSheet.create({
     color:      PW.color.lavender,
     fontSize:   16,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     letterSpacing: 2,
     textShadowColor:  'rgba(123,45,139,0.65)',
     textShadowOffset: { width: 0, height: 0 },
@@ -1411,6 +1417,7 @@ const gs = StyleSheet.create({
     color:      '#F5C842',
     fontSize:   13,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontWeight: '700',
     letterSpacing: 1.5,
     textShadowColor:  'rgba(245,200,66,0.55)',

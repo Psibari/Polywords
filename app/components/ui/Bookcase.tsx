@@ -219,6 +219,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: FONT_SIZES.progressLabel,
     letterSpacing: 3,
     color: libraryMaterial.hauntedLabel,

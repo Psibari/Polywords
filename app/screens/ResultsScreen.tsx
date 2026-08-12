@@ -146,11 +146,13 @@ const lr = StyleSheet.create({
     color: resultsLedger.ink,
     fontSize: resultsType.ledgerWord,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     letterSpacing: 1,
   },
   result: {
     fontSize: resultsType.ledgerResult,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
   },
 });
 
@@ -207,6 +209,7 @@ const cc = StyleSheet.create({
   header: {
     fontSize: resultsType.cardHeader,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     letterSpacing: 1,
     marginBottom: 6,
     textTransform: 'uppercase',
@@ -214,6 +217,7 @@ const cc = StyleSheet.create({
   word: {
     fontSize: resultsType.cardWord,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     letterSpacing: 1.5,
     marginBottom: 4,
   },
@@ -221,12 +225,14 @@ const cc = StyleSheet.create({
     color: PW.color.softWhite,
     fontSize: resultsType.cardCopy + 1,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     marginBottom: 4,
   },
   copy: {
     color: PW.color.mutedWhite,
     fontSize: resultsType.cardCopy,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     lineHeight: resultsType.cardCopy + 5,
   },
 });
@@ -283,6 +289,7 @@ const btn = StyleSheet.create({
   label: {
     color: homeDare.label,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: homeType.dareLabel - 2,
     letterSpacing: 3,
     textShadowColor: homeDare.labelHighlight,
@@ -324,6 +331,7 @@ const sb = StyleSheet.create({
   label: {
     color: PW.color.softWhite,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
   },
@@ -382,12 +390,14 @@ const gf = StyleSheet.create({
   title: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 16,
     letterSpacing: 2,
   },
   copy: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 13,
     lineHeight: 18,
     marginTop: 3,
@@ -745,6 +755,7 @@ const rs = StyleSheet.create({
   },
   verdict: {
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: resultsType.verdict,
     lineHeight: resultsType.verdict * 1.15,
     letterSpacing: 2,
@@ -755,12 +766,14 @@ const rs = StyleSheet.create({
     color: PW.color.softWhite,
     fontSize: resultsType.verdictSub,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     letterSpacing: 3,
     textTransform: 'uppercase',
     marginTop: 8,
   },
   gradeSub: {
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: resultsType.gradeSub,
     letterSpacing: 3,
     textTransform: 'uppercase',
@@ -769,6 +782,7 @@ const rs = StyleSheet.create({
   },
   flawlessTag: {
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: resultsType.verdictSub,
     color: PW.color.amber,
     letterSpacing: 4,
@@ -786,22 +800,26 @@ const rs = StyleSheet.create({
     color: PW.color.mutedWhite,
     fontSize: resultsType.rankLabel,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     letterSpacing: 2,
   },
   rankLetter: {
     fontSize: resultsType.rankLetter,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     letterSpacing: 1,
   },
   scoreLine: {
     color: PW.color.softWhite,
     fontSize: resultsType.scoreLine,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
   },
   perfectLine: {
     color: PW.color.foilLight,
     fontSize: resultsType.perfectLine,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     marginTop: 4,
     opacity: 0.85,
   },
@@ -809,6 +827,7 @@ const rs = StyleSheet.create({
     color: resultsVerdictColor.newBest,
     fontSize: resultsType.bestLine,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     letterSpacing: 2,
     marginTop: 6,
   },
@@ -816,6 +835,7 @@ const rs = StyleSheet.create({
     color: resultsVerdictColor.prevBest,
     fontSize: resultsType.bestLine,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     marginTop: 4,
   },
   ledgerPanel: {
@@ -838,6 +858,7 @@ const rs = StyleSheet.create({
   },
   foilCardWord: {
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: resultsType.cardWord,
     letterSpacing: 1.5,
     textAlign: 'left',
@@ -851,6 +872,7 @@ const rs = StyleSheet.create({
     color: PW.color.mutedWhite,
     fontSize: resultsType.homeLink,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     letterSpacing: 2,
   },
 });

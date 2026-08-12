@@ -51,8 +51,10 @@ Authority is: current user request, this file, focused source, `CLAUDE.md`, then
   not imported by gameplay.
 - `assets/data/huntData.v2.json` is dormant editorial data. Never wire it into the app
   without approval.
-- `tools/content/mask-rewriter/` is local editorial tooling. Keep `.env`, generated
-  CSVs, workspace data, and `dist` untracked. Never expose API keys.
+- `tools/content/_deprecated/mask-rewriter/` is retired editorial tooling (moved here
+  2026-08-11 at Pete's direction — never produced a usable line across many attempts).
+  Keep `.env`, generated CSVs, workspace data, and `dist` untracked. Never expose API
+  keys. Do not revive or build on it without Pete's explicit approval.
 
 ## Workflow
 

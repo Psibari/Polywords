@@ -71,6 +71,7 @@ const im = StyleSheet.create({
   title: {
     color: PW.color.gold,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 26,
     letterSpacing: 1.5,
     textAlign: 'center',
@@ -82,6 +83,7 @@ const im = StyleSheet.create({
   body: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -100,6 +102,7 @@ const im = StyleSheet.create({
   closeLabel: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 3,
   },

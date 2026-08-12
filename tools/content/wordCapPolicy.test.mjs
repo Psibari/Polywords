@@ -13,8 +13,8 @@ for (const expected of [
   'app/components/SwipeMask.tsx',
   'scripts/auditContent.ts',
   'tools/content/import-workbook.mjs',
-  'tools/content/mask-rewriter/server.js',
-  'tools/content/mask-rewriter/src/MaskRewriter.jsx',
+  'tools/content/_deprecated/mask-rewriter/server.js',
+  'tools/content/_deprecated/mask-rewriter/src/MaskRewriter.jsx',
 ]) {
   assert.ok(governedFiles.includes(expected), `discovery must govern new production file ${expected}`);
 }
@@ -22,7 +22,7 @@ for (const expected of [
 for (const excluded of [
   'app/components/tileTextLayout.test.ts',
   'tools/content/runtimeHuntValidation.test.mjs',
-  'tools/content/mask-rewriter/tests/contentWorkflow.test.mjs',
+  'tools/content/_deprecated/mask-rewriter/tests/contentWorkflow.test.mjs',
   'tools/content/pacing-overrides.json',
   'tools/content/RUNTIME_CONTENT_PREFLIGHT.md',
 ]) {

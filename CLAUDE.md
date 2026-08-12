@@ -139,11 +139,16 @@ editorial workbook (`tools/content/build-hunt-data.mjs`, run against
 `POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`, which on 2026-08-07
 also replaced the tracked `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` as the master —
 verified byte-identical `huntData.json`/`build-report.json` regeneration before the swap).
-14 words shipped as full boss cards (hidden pair populated, 2 of the
-3 `hiddenPairs` slots still `PLACEHOLDER TEST` per the standing 3-pair target); 2 words
-(REVOLUTION, PROJECT) were explicitly demoted from boss by Pete and ship as regular words
-only, per his own documented reasoning in the workbook. `huntData.v2.json` and
-mask-rewriter output remain a separate, still-dormant pilot track.
+13 words currently ship as full boss cards (KERNEL was demoted from boss by Pete
+2026-08-11, replaced by a promoted fruit-stone REAL). As of 2026-08-11 all 13 have their
+full 3-pair `hiddenPairs` set hand-written — the COURT/IRON/STRIKE gauntlet-review commits
+that day closed out the standing 3-pair target; no `PLACEHOLDER TEST` slots remain on any
+boss word. 2 words (REVOLUTION, PROJECT) were separately, explicitly demoted from boss by
+Pete earlier and ship as regular words only, per his own documented reasoning in the
+workbook. `huntData.v2.json` (0 words) and the mask-rewriter AI-assisted content-generation
+pilot were both retired 2026-08-11 — Pete: mask-rewriter never produced one usable line
+across many attempts — and moved to `tools/content/_deprecated/`; no longer an active
+track.
 
 `gpsTag` and `difficulty` are not in the workbook at all — `build-hunt-data.mjs`
 placeholder-assigns them so the game can run (`gpsTag` is load-bearing — `huntGenerator.ts`
@@ -152,7 +157,7 @@ pools words by it and throws on an empty pool) before a real editorial pass exis
 non-boss words have a real hand-reviewed `gpsTag`/`difficulty`, grounded in each word's
 actual REAL/trap content against the phase table, tracked in
 `tools/content/pacing-overrides.json` (git-tracked, merged in by `build-hunt-data.mjs`
-before falling back to placeholder, so it survives a workbook rebuild — only the 14 boss
+before falling back to placeholder, so it survives a workbook rebuild — only the 13 boss
 words still fall back to a placeholder `difficulty`, not covered by this pass). A batch of
 37 words were briefly held back mid-pass as "traps restate their REAL" before Pete
 clarified that's not a defect — `docs/CONTENT_WRITING_STANDARD.md` defines a trap as
@@ -179,7 +184,6 @@ app/audio/{MusicEngine,sfx,audioSession}.ts
 app/ui/pwTheme.ts
 assets/data/huntData.json
 localworkbooks/POLYWORDS_HAUNT_TILES.xlsx
-tools/content/mask-rewriter/
 ```
 
 ## Repository Rules

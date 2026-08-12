@@ -230,6 +230,7 @@ const io = StyleSheet.create({
   exampleIntro: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -247,6 +248,7 @@ const io = StyleSheet.create({
   exampleWord: {
     color: PW.color.gold,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 20,
     letterSpacing: 1,
     textAlign: 'center',
@@ -265,6 +267,7 @@ const io = StyleSheet.create({
   practicePhrase: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 15,
     lineHeight: 20,
     textAlign: 'center',
@@ -278,6 +281,7 @@ const io = StyleSheet.create({
   practiceDirection: {
     color: PW.color.lavender,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 1.5,
   },
@@ -285,6 +289,7 @@ const io = StyleSheet.create({
     minHeight: 86,
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 16,
     letterSpacing: 2,
     textAlign: 'center',
@@ -302,24 +307,28 @@ const io = StyleSheet.create({
     flex: 1,
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 13,
     lineHeight: 18,
   },
   exampleTagReal: {
     color: PW.color.gold,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 10,
     letterSpacing: 1.5,
   },
   exampleTagTrap: {
     color: 'rgba(155,45,107,0.95)',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 10,
     letterSpacing: 1.5,
   },
   headline: {
     color: PW.color.gold,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 30,
     lineHeight: 36,
     letterSpacing: 1.5,
@@ -329,6 +338,7 @@ const io = StyleSheet.create({
   body: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
@@ -353,12 +363,14 @@ const io = StyleSheet.create({
   ruleTitle: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 16,
     letterSpacing: 2,
   },
   ruleCopy: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     lineHeight: 19,
     marginTop: 2,
@@ -366,6 +378,7 @@ const io = StyleSheet.create({
   stakes: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -390,6 +403,7 @@ const io = StyleSheet.create({
   beginLabel: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 3,
   },

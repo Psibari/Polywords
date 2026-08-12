@@ -98,6 +98,7 @@ const ec = StyleSheet.create({
   kicker: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 1.5,
     textAlign: 'center',
@@ -106,6 +107,7 @@ const ec = StyleSheet.create({
   pollyLine: {
     color: PW.color.lavender,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 22,
     lineHeight: 27,
     textAlign: 'center',
@@ -114,6 +116,7 @@ const ec = StyleSheet.create({
   body: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -136,6 +139,7 @@ const ec = StyleSheet.create({
   stayLabel: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 3,
   },
@@ -154,6 +158,7 @@ const ec = StyleSheet.create({
   leaveLabel: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 2,
   },

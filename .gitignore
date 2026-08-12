@@ -32,9 +32,9 @@ yarn-error.*
 
 # local env files
 .env*.local
-/tools/content/mask-rewriter/.env
-/tools/content/mask-rewriter/workspace/
-/tools/content/mask-rewriter/*.csv
+/tools/content/_deprecated/mask-rewriter/.env
+/tools/content/_deprecated/mask-rewriter/workspace/
+/tools/content/_deprecated/mask-rewriter/*.csv
 /tools/content/import-staging/
 
 # typescript
@@ -47,6 +47,7 @@ docs/superpowers/
 # locally installed agent skills
 .agents/skills/
 .claude/skills/
+.codex/
 skills-lock.json
 
 # impeccable design-skill local cache/config

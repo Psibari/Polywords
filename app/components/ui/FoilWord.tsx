@@ -21,7 +21,14 @@ export function FoilWord({
   word,
   baseStyle,
   fontSize,
-  numberOfLines = 1,
+  // Android's adjustsFontSizeToFit is known-unreliable at shrinking custom-font
+  // text far enough to fit a single line (RN/Android platform limitation, not
+  // something this app controls) — when it under-shrinks, numberOfLines={1}
+  // was silently clipping whole trailing letters ("CRAFT" rendering as "CRA")
+  // instead of the word actually shrinking. Allowing a 2nd line as a fallback
+  // means a failed shrink wraps instead of losing letters; it never forces a
+  // 2nd line for words that already fit on one.
+  numberOfLines = 2,
   adjustsFontSizeToFit = true,
   minimumFontScale,
 }: Props) {

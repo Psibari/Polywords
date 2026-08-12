@@ -148,6 +148,7 @@ const styles = StyleSheet.create({
   titleBase: {
     fontSize: 15,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     letterSpacing: 1,
     textAlign: 'center',
     maxWidth: '100%',
@@ -155,6 +156,7 @@ const styles = StyleSheet.create({
   ghostTitle: {
     fontSize: 15,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     letterSpacing: 1,
     textAlign: 'center',
     maxWidth: '100%',

@@ -1091,6 +1091,7 @@ const styles = StyleSheet.create({
   startKicker: {
     color: dailyResultsMaterial.challengeLabel,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 13,
     letterSpacing: 2,
     marginBottom: 8,
@@ -1098,6 +1099,7 @@ const styles = StyleSheet.create({
   startTitle: {
     color: dailyResultsMaterial.titleWin,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 34,
     letterSpacing: 2,
     textAlign: 'center',
@@ -1105,6 +1107,7 @@ const styles = StyleSheet.create({
   startRule: {
     color: dailyResultsMaterial.speedTitle,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 16,
     letterSpacing: 2,
     marginTop: 12,
@@ -1113,6 +1116,7 @@ const styles = StyleSheet.create({
   startBody: {
     color: dailyResultsMaterial.statText,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 17,
     lineHeight: 24,
     marginTop: 18,
@@ -1136,6 +1140,7 @@ const styles = StyleSheet.create({
   startButtonText: {
     color: dailyResultsMaterial.shareBtnText,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 2.5,
   },
@@ -1149,6 +1154,7 @@ const styles = StyleSheet.create({
   startHomeText: {
     color: dailyResultsMaterial.homeText,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 13,
     letterSpacing: 2,
   },
@@ -1161,6 +1167,7 @@ const styles = StyleSheet.create({
   actionLabel: {
     color: dailyChromeMaterial.actionLabel,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 16,
     letterSpacing: 3,
     textAlign: 'center',
@@ -1171,6 +1178,7 @@ const styles = StyleSheet.create({
   speedPrompt: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 2,
     textAlign: 'center',
@@ -1225,6 +1233,7 @@ const styles = StyleSheet.create({
   featherLabel: {
     color: dailyChromeMaterial.featherLabel,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 2.5,
     marginTop: 4,
@@ -1243,6 +1252,7 @@ const styles = StyleSheet.create({
   devResetText: {
     color: dailyChromeMaterial.devResetText,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 9,
     letterSpacing: 1.5,
   },
@@ -1254,6 +1264,7 @@ const styles = StyleSheet.create({
   clueHeaderLabel: {
     color: dailyScrollMaterial.goldTrim,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 3,
     textTransform: 'uppercase',
@@ -1261,6 +1272,7 @@ const styles = StyleSheet.create({
   clueHeaderRule: {
     color: dailyChromeMaterial.clueHeaderRule,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 2.2,
     marginTop: 4,
@@ -1269,6 +1281,7 @@ const styles = StyleSheet.create({
   clueText: {
     color: dailyScrollMaterial.clueInk,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 27,
     lineHeight: 33,
     letterSpacing: 0.6,
@@ -1301,6 +1314,7 @@ const hud = StyleSheet.create({
   label: {
     color: dailyHudMaterial.label,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 24,
     letterSpacing: 2,
     textShadowColor: dailyHudMaterial.labelGlow,
@@ -1377,11 +1391,13 @@ const res = StyleSheet.create({
   challenge: {
     color: dailyResultsMaterial.challengeLabel,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
   },
   title: {
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 36,
     lineHeight: 40,
     letterSpacing: 1,
@@ -1397,12 +1413,14 @@ const res = StyleSheet.create({
   rewardText: {
     color: dailyResultsMaterial.rewardText,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 13,
     letterSpacing: 2.5,
   },
   stat: {
     color: dailyResultsMaterial.statText,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 16,
     marginTop: 6,
   },
@@ -1416,6 +1434,7 @@ const res = StyleSheet.create({
   speedTitle: {
     color: dailyResultsMaterial.speedTitle,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
     marginTop: 16,
@@ -1456,6 +1475,7 @@ const res = StyleSheet.create({
   speedUnknownMark: {
     color: dailyResultsMaterial.speedUnknownMark,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 14,
     lineHeight: 16,
   },
@@ -1483,6 +1503,7 @@ const res = StyleSheet.create({
   speedLegendText: {
     color: dailyResultsMaterial.speedLegendText,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 0.9,
   },
@@ -1497,6 +1518,7 @@ const res = StyleSheet.create({
   shareText: {
     color: dailyResultsMaterial.shareBtnText,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 2,
   },
@@ -1507,6 +1529,7 @@ const res = StyleSheet.create({
   homeText: {
     color: dailyResultsMaterial.homeText,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
   },

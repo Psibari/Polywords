@@ -330,6 +330,7 @@ const styles = StyleSheet.create({
   bookSpineText: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 1,
     textShadowColor: PW.color.textShadowMedium,
@@ -339,6 +340,7 @@ const styles = StyleSheet.create({
   huntBookHingeText: {
     color: 'rgba(255,247,214,0.62)',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 13,
     letterSpacing: 2,
     marginBottom: 12,
@@ -412,6 +414,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: PW.color.softWhite,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: homeType.goldFeatherReady,
     letterSpacing: 1.8,
   },
@@ -428,12 +431,14 @@ const styles = StyleSheet.create({
   startHereBadgeText: {
     color: PW.color.surfaceDeep,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 1.2,
   },
   dareLabel: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: homeType.dareLabel,
     letterSpacing: 3,
     textAlign: 'center',
@@ -467,6 +472,7 @@ const styles = StyleSheet.create({
   doorTitle: {
     color: homeDoor.title,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: homeType.doorTitle,
     letterSpacing: 1,
     marginTop: 9,
@@ -487,6 +493,7 @@ const styles = StyleSheet.create({
   streakBadgeText: {
     color: PW.color.surfaceDeep,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 0.3,
   },
@@ -498,6 +505,7 @@ const styles = StyleSheet.create({
   settingsLink: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: homeType.settingsLink,
     letterSpacing: 1.6,
   },

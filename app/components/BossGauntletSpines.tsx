@@ -340,12 +340,14 @@ const styles = StyleSheet.create({
   instruction: {
     color: PW.color.softWhite,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 13,
     letterSpacing: 2,
   },
   progress: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 16,
     letterSpacing: 1,
   },
@@ -408,6 +410,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     color: PW.color.gold,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 2,
   },

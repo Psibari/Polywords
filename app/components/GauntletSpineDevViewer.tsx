@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
   kicker: {
     color: PW.color.goldSoft,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     letterSpacing: 1.5,
     marginBottom: PW.space.xs,
@@ -177,6 +178,7 @@ const styles = StyleSheet.create({
   title: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 24,
     letterSpacing: 1,
   },
@@ -193,12 +195,14 @@ const styles = StyleSheet.create({
   closeText: {
     color: PW.color.white,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 30,
     lineHeight: 32,
   },
   note: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 14,
     lineHeight: 20,
     paddingHorizontal: PW.space.lg,
@@ -235,6 +239,7 @@ const styles = StyleSheet.create({
   controlLabel: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 0.6,
   },
@@ -255,6 +260,7 @@ const styles = StyleSheet.create({
   stepperText: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 22,
     lineHeight: 24,
   },
@@ -269,6 +275,7 @@ const styles = StyleSheet.create({
   resetText: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 13,
     letterSpacing: 1,
   },

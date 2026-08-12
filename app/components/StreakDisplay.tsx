@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     lineHeight: 38,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize:   FONT_SIZES.hudMultiplier,
     color:      PW.color.rose,
     textShadowColor:  'rgba(0,0,0,0.4)',

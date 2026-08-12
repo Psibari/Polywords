@@ -116,6 +116,15 @@ const styles = StyleSheet.create({
     backfaceVisibility: 'hidden',
   },
   innerSurface: {
+    // backfaceVisibility: 'hidden' alone is not reliable on Android (long-
+    // standing RN/Android platform gap — MaskBoard's own comments on
+    // bookOpenAnim document this exact pane flickering visible on device).
+    // At the live coverRotateX range this app currently drives (0deg-65deg,
+    // clamped non-negative in MaskBoard), this pane's effective angle
+    // (rotateX + 180deg) is always back-facing, i.e. it is never meant to
+    // be seen right now — opacity: 0 hides it through a property Android
+    // does honor, instead of trusting backface culling to do it.
+    opacity: 0,
     backfaceVisibility: 'hidden',
     transform: [{ rotateX: '180deg' }],
   },

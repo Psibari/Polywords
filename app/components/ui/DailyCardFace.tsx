@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
   label: {
     color: dailyCardMaterial.text,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 26,
     fontWeight: '800',
     letterSpacing: 0.5,

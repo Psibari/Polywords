@@ -229,6 +229,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 24,
     letterSpacing: 6,
     color: PW.color.softWhite,
@@ -237,6 +238,7 @@ const styles = StyleSheet.create({
   },
   counts: {
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: FONT_SIZES.progressLabel,
     letterSpacing: 2.5,
     color: PW.color.mutedWhite,
@@ -265,6 +267,7 @@ const styles = StyleSheet.create({
   },
   bookplateSeal: {
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: vaultType.seal,
     color: vaultMaterial.bookplateSeal,
   },
@@ -274,6 +277,7 @@ const styles = StyleSheet.create({
   },
   bookplateDesc: {
     fontFamily: FONTS.brand,
+    includeFontPadding: false,
     fontSize: vaultType.sealLabel,
     color: vaultMaterial.bookplateSealText,
   },
@@ -289,6 +293,7 @@ const styles = StyleSheet.create({
   },
   emptyLine: {
     fontFamily: FONTS.brand,
+    includeFontPadding: false,
     fontSize: vaultType.empty,
     color: vaultMaterial.emptyText,
     textAlign: 'center',
@@ -312,6 +317,7 @@ const styles = StyleSheet.create({
   detailWord: {
     fontSize: vaultType.detailWord,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     letterSpacing: 2,
     textAlign: 'center',
     maxWidth: '100%',
@@ -321,6 +327,7 @@ const styles = StyleSheet.create({
   },
   detailLine: {
     fontFamily: FONTS.brand,
+    includeFontPadding: false,
     fontSize: vaultType.detailCopy,
     lineHeight: 21,
     color: vaultMaterial.detailText,
@@ -332,6 +339,7 @@ const styles = StyleSheet.create({
   },
   ranksTitle: {
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: vaultType.rankTitle,
     letterSpacing: 4,
     color: vaultMaterial.bookplateSeal,
@@ -348,6 +356,7 @@ const styles = StyleSheet.create({
   },
   rankLetter: {
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: vaultType.rankLetter,
     width: 78,
     color: vaultMaterial.rankText,
@@ -355,11 +364,13 @@ const styles = StyleSheet.create({
   rankDesc: {
     flex: 1,
     fontFamily: FONTS.brand,
+    includeFontPadding: false,
     fontSize: vaultType.rankRow,
     color: vaultMaterial.rankText,
   },
   rankThreshold: {
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: vaultType.rankRow,
     color: vaultMaterial.rankText,
   },

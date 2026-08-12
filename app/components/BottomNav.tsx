@@ -158,6 +158,7 @@ const styles = StyleSheet.create({
   tabLabel: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 11,
   },
   activeLabel: {
@@ -166,6 +167,7 @@ const styles = StyleSheet.create({
   playLabel: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 1,
   },

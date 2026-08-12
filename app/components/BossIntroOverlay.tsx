@@ -89,6 +89,7 @@ const bo = StyleSheet.create({
   kicker: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 13,
     letterSpacing: 2,
     textAlign: 'center',
@@ -97,6 +98,7 @@ const bo = StyleSheet.create({
   headline: {
     color: PW.color.gold,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 34,
     lineHeight: 38,
     letterSpacing: 1.5,
@@ -106,6 +108,7 @@ const bo = StyleSheet.create({
   body: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 17,
     lineHeight: 24,
     textAlign: 'center',
@@ -114,6 +117,7 @@ const bo = StyleSheet.create({
   stakes: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontSize: 17,
     lineHeight: 24,
     textAlign: 'center',
@@ -135,6 +139,7 @@ const bo = StyleSheet.create({
   beginLabel: {
     color: PW.color.foilLight,
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 3,
   },
