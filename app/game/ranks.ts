@@ -32,3 +32,25 @@ export function getRankProgress(score: number, tier: RankTier): number {
   if (range <= 0) return 1;
   return Math.min((score - tier.threshold) / range, 1);
 }
+
+// Pure so it's testable without the store: given a run's final score and the
+// tiers already recorded, returns an updated record with `achievedAt` filled
+// in for every newly-reached tier, or null if nothing new was reached this
+// run. Checks every tier against the score directly (not against the prior
+// personalBest) so it's correct even if called out of order or after a
+// missed update — a tier's date is set the first time it's ever true.
+export function computeRankHistoryUpdates(
+  finalScore: number,
+  existing: Partial<Record<string, string>>,
+  achievedAt: string,
+): Partial<Record<string, string>> | null {
+  let changed = false;
+  const next = { ...existing };
+  for (const tier of RANK_TIERS) {
+    if (finalScore >= tier.threshold && !next[tier.letter]) {
+      next[tier.letter] = achievedAt;
+      changed = true;
+    }
+  }
+  return changed ? next : null;
+}

@@ -176,6 +176,10 @@ export type PlayerProgress = {
   currentStreak: number;
   longestStreak: number;
   lastStreakDate: string | null;
+  // First-reached date (ISO) per rank tier letter (D/C/B/A/S/MASTER) — see
+  // app/game/ranks.ts computeRankHistoryUpdates(). Absent tiers haven't been
+  // reached yet; personalBest alone has no record of when a tier was first hit.
+  rankHistory?: Partial<Record<string, string>>;
 };
 
 export type DailyTier = 1 | 2 | 3;

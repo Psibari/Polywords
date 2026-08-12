@@ -3,15 +3,30 @@ import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
-import { FONTS, FONT_SIZES } from '../constants/fonts';
+import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { cardMaterial, libraryMaterial, stageMaterial } from '../ui/pwMaterials';
 import { vaultMaterial, vaultType } from '../ui/pwVaultMaterials';
 import { Bookcase } from '../components/ui/Bookcase';
 import { FoilWord } from '../components/ui/FoilWord';
 import { useGameStore } from '../store/useGameStore';
+import { getTodayDateString } from '../game/dailyChallengeEngine';
+import { getDisplayStreak } from '../game/dailyStreak';
+import rawHuntData from '../../assets/data/huntData.json';
 
 import { RANK_TIERS, getRankProgress, getRankTier } from '../game/ranks';
+
+const TOTAL_WORD_COUNT = Object.keys(rawHuntData).length;
+
+type HuntDataMask = { phrase: string; isReal: boolean };
+type HuntDataEntry = { masks?: HuntDataMask[] };
+const HUNT_DATA = rawHuntData as unknown as Record<string, HuntDataEntry>;
+
+function realMeaningsFor(word: string): string[] {
+  return (HUNT_DATA[word]?.masks ?? [])
+    .filter(mask => mask.isReal)
+    .map(mask => mask.phrase);
+}
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -38,6 +53,7 @@ export default function VaultScreen({ navigation }: Props) {
   const masteredNewestLast = progress.masteredWords; // shelf grows left→right, newest last
   const tier = getRankTier(progress.personalBest);
   const rankProgress = getRankProgress(progress.personalBest, tier);
+  const streak = getDisplayStreak(progress, getTodayDateString());
 
   const selectedMastered = selectedWord
     ? progress.masteredWords.find(m => m.word === selectedWord) ?? null
@@ -49,6 +65,7 @@ export default function VaultScreen({ navigation }: Props) {
     ? selectedMastered.hiddenMeaningsFound?.filter(Boolean)
       ?? (selectedMastered.hiddenMeaningFound ? [selectedMastered.hiddenMeaningFound] : [])
     : [];
+  const selectedRealMeanings = selectedMastered ? realMeaningsFor(selectedMastered.word) : [];
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -71,9 +88,20 @@ export default function VaultScreen({ navigation }: Props) {
       >
         {/* Header — archive language */}
         <Text style={styles.title}>WORD VAULT</Text>
-        <Text style={styles.counts}>
-          {progress.masteredWords.length} MASTERED · {ghostsToShow.length} HAUNTED
-        </Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statChip}>
+            <Text style={styles.statValue}>{progress.masteredWords.length}<Text style={styles.statValueMuted}>/{TOTAL_WORD_COUNT}</Text></Text>
+            <Text style={styles.statLabel}>MASTERED</Text>
+          </View>
+          <View style={styles.statChip}>
+            <Text style={styles.statValue}>{ghostsToShow.length}</Text>
+            <Text style={styles.statLabel}>HAUNTED</Text>
+          </View>
+          <View style={styles.statChip}>
+            <Text style={styles.statValue}>{streak}</Text>
+            <Text style={styles.statLabel}>DAY STREAK</Text>
+          </View>
+        </View>
 
         {/* Bookplate — parchment inset, tier seal; tap → rank ladder (Task 7) */}
         <Pressable
@@ -152,6 +180,14 @@ export default function VaultScreen({ navigation }: Props) {
                     Mastered after {selectedMastered.priorHauntAttempts} prior {selectedMastered.priorHauntAttempts === 1 ? 'Haunt' : 'Haunts'}
                   </Text>
                 )}
+                {selectedRealMeanings.length > 0 && (
+                  <View style={styles.detailMeaningsBlock}>
+                    <Text style={styles.detailMeaningsTitle}>MEANINGS</Text>
+                    {selectedRealMeanings.map((meaning, index) => (
+                      <Text key={`${meaning}-${index}`} style={styles.detailLine}>{meaning}</Text>
+                    ))}
+                  </View>
+                )}
               </>
             )}
             {selectedGhost && (
@@ -159,6 +195,14 @@ export default function VaultScreen({ navigation }: Props) {
                 <Text style={styles.detailLine}>
                   Still haunted — missed {selectedGhost.runsMissed} {selectedGhost.runsMissed === 1 ? 'run' : 'runs'}.
                 </Text>
+                {selectedGhost.hiddenMeaningReal && (
+                  <Text style={styles.detailLine}>Hidden meaning: {selectedGhost.hiddenMeaningReal}</Text>
+                )}
+                {selectedGhost.hiddenMeaningTrap && (
+                  <Text style={[styles.detailLine, styles.detailTrap]}>
+                    Watch for: {selectedGhost.hiddenMeaningTrap}
+                  </Text>
+                )}
                 <Text style={styles.detailLine}>Run it back next Hunt.</Text>
               </>
             )}
@@ -179,13 +223,21 @@ export default function VaultScreen({ navigation }: Props) {
             accessibilityViewIsModal
           >
             <Text style={styles.ranksTitle}>RANKS</Text>
-            {RANK_TIERS.map(t => (
-              <View key={t.letter} style={styles.rankRow}>
-                <Text style={[styles.rankLetter, { color: t.color }]}>{t.letter}</Text>
-                <Text style={styles.rankDesc}>{t.description}</Text>
-                <Text style={styles.rankThreshold}>{t.threshold.toLocaleString()}</Text>
-              </View>
-            ))}
+            {RANK_TIERS.map(t => {
+              const reachedAt = progress.rankHistory?.[t.letter];
+              return (
+                <View key={t.letter} style={styles.rankRow}>
+                  <Text style={[styles.rankLetter, { color: t.color }]}>{t.letter}</Text>
+                  <View style={styles.rankDescWrap}>
+                    <Text style={styles.rankDesc}>{t.description}</Text>
+                    {reachedAt && (
+                      <Text style={styles.rankReached}>Reached {formatDate(reachedAt)}</Text>
+                    )}
+                  </View>
+                  <Text style={styles.rankThreshold}>{t.threshold.toLocaleString()}</Text>
+                </View>
+              );
+            })}
           </Pressable>
         </Pressable>
       )}
@@ -236,15 +288,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 18,
   },
-  counts: {
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  statChip: {
+    flex: 1,
+    maxWidth: 120,
+    alignItems: 'center',
+    backgroundColor: vaultMaterial.detailFace,
+    borderWidth: 1,
+    borderColor: vaultMaterial.detailRim,
+    borderRadius: PW.radius.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+  },
+  statValue: {
+    fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
+    fontSize: 22,
+    color: PW.color.gold,
+  },
+  statValueMuted: {
+    fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
+    fontSize: 14,
+    color: PW.color.mutedWhite,
+  },
+  statLabel: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: FONT_SIZES.progressLabel,
-    letterSpacing: 2.5,
+    fontSize: 10,
+    letterSpacing: 1.5,
     color: PW.color.mutedWhite,
-    textAlign: 'center',
-    marginTop: 6,
-    marginBottom: 16,
+    marginTop: 2,
   },
   bookplate: {
     backgroundColor: libraryMaterial.parchmentDeep,
@@ -337,6 +417,22 @@ const styles = StyleSheet.create({
     color: vaultMaterial.detailBoss,
     letterSpacing: 1.5,
   },
+  detailTrap: {
+    color: vaultMaterial.detailGhostText,
+  },
+  detailMeaningsBlock: {
+    marginTop: 4,
+    gap: 4,
+  },
+  detailMeaningsTitle: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 11,
+    letterSpacing: 2,
+    color: vaultMaterial.bookplateSeal,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
   ranksTitle: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
@@ -361,12 +457,21 @@ const styles = StyleSheet.create({
     width: 78,
     color: vaultMaterial.rankText,
   },
-  rankDesc: {
+  rankDescWrap: {
     flex: 1,
+    gap: 2,
+  },
+  rankDesc: {
     fontFamily: FONTS.brand,
     includeFontPadding: false,
     fontSize: vaultType.rankRow,
     color: vaultMaterial.rankText,
+  },
+  rankReached: {
+    fontFamily: FONTS.brand,
+    includeFontPadding: false,
+    fontSize: 12,
+    color: PW.color.mutedWhite,
   },
   rankThreshold: {
     fontFamily: FONTS.label,

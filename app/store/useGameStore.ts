@@ -64,6 +64,7 @@ import {
   requestAndScheduleDailyReminder,
   rescheduleDailyReminderAfterCompletion,
 } from '../notifications/dailyReminder';
+import { computeRankHistoryUpdates } from '../game/ranks';
 
 // Onboarding taper: a hard cliff from full protection to zero protection at
 // run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
@@ -200,6 +201,7 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   currentStreak: 0,
   longestStreak: 0,
   lastStreakDate: null,
+  rankHistory: {},
 };
 
 type GameStore = {
@@ -690,10 +692,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       bossWord: bossStep?.kind === 'word' ? bossStep.word : null,
       hauntWord: hauntStep?.kind === 'word' ? hauntStep.word : null,
     });
+    const rankHistoryUpdate = computeRankHistoryUpdates(
+      finalScore,
+      current.rankHistory ?? {},
+      new Date().toISOString(),
+    );
     const next: PlayerProgress = {
       ...current,
       runsCompleted: current.runsCompleted + 1,
       personalBest: finalScore > current.personalBest ? finalScore : current.personalBest,
+      ...(rankHistoryUpdate ? { rankHistory: rankHistoryUpdate } : {}),
     };
     set({ progress: next, pollyMemory });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
