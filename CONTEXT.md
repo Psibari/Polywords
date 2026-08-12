@@ -1,11 +1,57 @@
 # POLYWORDS Current Context
 
-Updated August 7, 2026. Active branch: `play-screen-overhaul`.
+Updated August 12, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 8e0b1a5. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: f853812. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2.
+
+## Session — 2026-08-11/12
+
+- Boss content pass complete: COURT/IRON/STRIKE gauntlets finished (`cd16cbd`, `a143933`,
+  `63f7c85`), alongside BATTER/CLICK/SENTENCE/IRON/GRACE content fixes. KERNEL was demoted
+  from boss by Pete (replaced by a promoted fruit-stone REAL). All 13 current boss words now
+  have their full 3-pair `hiddenPairs` hand-written — zero `PLACEHOLDER TEST` slots remain
+  anywhere. `CLAUDE.md`'s Content Boundary section corrected to match (it still said 14 boss
+  words, mostly incomplete).
+- Technical hardening, same window: "Fix Daily and Haunt readiness timing" (`a09eb2d`) and
+  "Harden Hunt interruption persistence" (`44e92e5`) — new `activeGamePersistence.ts`,
+  `returningHauntResolution.ts`, `boardDecisionReadiness.ts`, `dailyClaimPresentation.ts`,
+  all with test coverage.
+- First-ever Android real-device test (custom EAS dev-client build) surfaced real RN/Android
+  platform gaps — not code that regressed, code that had simply never been tested on that
+  platform. Root-caused and fixed: `HeroBook.tsx`'s `backfaceVisibility:'hidden'` (unreliable
+  on Android; added an `opacity: 0` backstop), `FoilWord.tsx`'s per-layer
+  `adjustsFontSizeToFit` truncating text instead of shrinking (numberOfLines now allows a
+  2nd-line fallback), and app-wide missing `includeFontPadding: false` clipping text (added
+  across 137 style spots in 20 files — `MaskBoard.tsx`/`SwipeMask.tsx` still need the same
+  fix once a warroom pass unlocks them). Also surfaced: every prior test session has been
+  Expo-Go-only on iPhone (Pete has no Apple Developer account yet), so even "working" iOS
+  behavior has never been checked against a real compiled build either. Pete's explicit call:
+  park all further device-hardening work until content/feel/pacing is further along. Full
+  detail in memory (`project_android_device_pass_deferred`).
+- Retired two content-generation tools at Pete's direction — `tools/content/mask-rewriter/`
+  (never produced one usable line despite being fully wired to real API keys) and
+  `generate-rewrite-review.mjs` — moved to `tools/content/_deprecated/`. `CLAUDE.md`,
+  `AGENTS.md`, `.gitignore`, and `wordCapPolicy.test.mjs` updated to the new paths.
+- Full-game retention/engagement audit (level-design + game-feel + gameplay-mechanics lenses
+  via `polywords-warroom`) found: zero production telemetry (`playtestTelemetry.ts` was
+  `__DEV__`-only, so the 54%/25% economy targets this doc's Hunt section cites were
+  unverifiable against real play), no re-engagement mechanism for Daily's streak, and a
+  browse-only Vault with no stats or history. Shipped: `playtestTelemetry.ts` now persists
+  locally in every build (Settings > Playtest Data can share/clear a summary — local only,
+  never networked); an opt-in local Daily-streak reminder via `expo-notifications` (off by
+  default, no push server, no account); a Vault stats header (mastered/total, haunted,
+  streak), rank-up history (`ranks.ts` `computeRankHistoryUpdates`), and ghost detail cards
+  now surface their already-stored `hiddenMeaningReal`/`hiddenMeaningTrap` (data that existed
+  but was never shown). The deeper Vault interaction redesign (book pulls off the shelf,
+  turns to face the player, opens) is mid-brainstorm with mockups via the visual-companion
+  tool — paused, not dropped, not yet an approved design.
+- Confirmed working as designed, not a bug: the true first-ever "Who are you? What do you
+  want?" Polly line (`pollyMemory.ts` `homeFirstMeeting`) fires once per install, before any
+  Hunt or Daily is ever played. Pete's own dev device passed that state long ago, which is
+  why he stopped seeing it. Reproducible via Settings > Reset Progress.
 
 ## Session — 2026-08-07
 
