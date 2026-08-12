@@ -59,6 +59,11 @@ import {
   flushPlaytestSummary,
   recordPlaytestEvent,
 } from '../game/playtestTelemetry';
+import {
+  cancelDailyReminder,
+  requestAndScheduleDailyReminder,
+  rescheduleDailyReminderAfterCompletion,
+} from '../notifications/dailyReminder';
 
 // Onboarding taper: a hard cliff from full protection to zero protection at
 // run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
@@ -137,6 +142,9 @@ type PlayerSettings = {
   reduceMotionOverride: boolean;
   reduceFlashesOverride: boolean;
   playerName: string;
+  // Opt-in only — never enabled by default, never silently requests OS
+  // notification permission. See app/notifications/dailyReminder.ts.
+  dailyReminderEnabled: boolean;
 };
 
 const DEFAULT_SETTINGS: PlayerSettings = {
@@ -145,10 +153,11 @@ const DEFAULT_SETTINGS: PlayerSettings = {
   reduceMotionOverride: false,
   reduceFlashesOverride: false,
   playerName: 'Word Hunter',
+  dailyReminderEnabled: false,
 };
 
 // Single write path for the settings blob — every setter below reads
-// current state and writes all four fields together, so no setter can
+// current state and writes all fields together, so no setter can
 // accidentally clobber a sibling field it doesn't know about.
 function persistSettings(state: PlayerSettings): void {
   const next: PlayerSettings = {
@@ -157,6 +166,7 @@ function persistSettings(state: PlayerSettings): void {
     reduceMotionOverride: state.reduceMotionOverride,
     reduceFlashesOverride: state.reduceFlashesOverride,
     playerName: state.playerName,
+    dailyReminderEnabled: state.dailyReminderEnabled,
   };
   AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
 }
@@ -275,11 +285,16 @@ type GameStore = {
   reduceMotionOverride: boolean;
   reduceFlashesOverride: boolean;
   playerName: string;
+  dailyReminderEnabled: boolean;
   setSoundEnabled: (value: boolean) => void;
   setHapticsEnabled: (value: boolean) => void;
   setReduceMotionOverride: (value: boolean) => void;
   setReduceFlashesOverride: (value: boolean) => void;
   setPlayerName: (name: string) => void;
+  // Returns whether the reminder actually ended up enabled — false means OS
+  // notification permission was declined; callers must not assume the toggle
+  // took effect just because this was invoked.
+  setDailyReminderEnabled: (value: boolean) => Promise<boolean>;
   loadSettings: () => Promise<void>;
 };
 
@@ -312,6 +327,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   reduceMotionOverride: DEFAULT_SETTINGS.reduceMotionOverride,
   reduceFlashesOverride: DEFAULT_SETTINGS.reduceFlashesOverride,
   playerName: DEFAULT_SETTINGS.playerName,
+  dailyReminderEnabled: DEFAULT_SETTINGS.dailyReminderEnabled,
 
   startGame: () => {
     const runSeed = createRunSeed();
@@ -741,6 +757,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     persistSettings(get());
   },
 
+  setDailyReminderEnabled: async (value: boolean) => {
+    if (!value) {
+      set({ dailyReminderEnabled: false });
+      persistSettings(get());
+      await cancelDailyReminder();
+      return false;
+    }
+    const granted = await requestAndScheduleDailyReminder();
+    set({ dailyReminderEnabled: granted });
+    persistSettings(get());
+    return granted;
+  },
+
   loadSettings: async () => {
     try {
       const raw = await AsyncStorage.getItem(SETTINGS_KEY);
@@ -934,6 +963,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
           round: dailySession.currentRoundIndex + 1,
           solved: dailyResult.solvedCount,
         });
+      }
+      // Win or lose, completing today's attempt keeps the streak alive
+      // (docs/DAILY_CHALLENGE_SPEC.md) — reschedule the reminder for
+      // tomorrow either way. No-ops if the setting is off or permission was
+      // never granted.
+      if (get().dailyReminderEnabled) {
+        void rescheduleDailyReminderAfterCompletion();
       }
     }
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ImageBackground, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
@@ -11,6 +11,11 @@ import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
 import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { getRankTier } from '../game/ranks';
+import {
+  clearPlaytestHistory,
+  formatPlaytestSummaryText,
+  getPlaytestEventCount,
+} from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
 import { chamberMaterial } from '../ui/pwMaterials';
 import { PW } from '../ui/pwTheme';
@@ -25,7 +30,15 @@ const PRIVACY_TEXT =
   "shared or sold to anyone.\n\n" +
   "There are no accounts and no sign-in. If you delete the app, or use " +
   "Reset Progress, this information is gone for good.\n\n" +
-  "Production builds do not collect analytics or tracking.";
+  "During this playtest period, POLYWORDS also keeps a local tally of run " +
+  "outcomes (survived/mastered/lost, and at what round) under Playtest Data " +
+  "below. It stays on this device and is never sent anywhere automatically " +
+  "— it only leaves the device if you tap Share Debug Stats yourself, and " +
+  "you can clear it at any time.\n\n" +
+  "Daily Reminder (off by default) asks your phone's permission to show a " +
+  "single local notification if you haven't played Daily in a while. " +
+  "Nothing is scheduled unless you turn it on, and it uses no server — the " +
+  "reminder is set entirely on your device.";
 
 const CREDITS_TEXT =
   "POLYWORDS\n\n" +
@@ -91,17 +104,20 @@ export default function SettingsScreen({ navigation }: Props) {
   const reduceMotionOverride = useGameStore(s => s.reduceMotionOverride);
   const reduceFlashesOverride = useGameStore(s => s.reduceFlashesOverride);
   const playerName = useGameStore(s => s.playerName);
+  const dailyReminderEnabled = useGameStore(s => s.dailyReminderEnabled);
   const setSoundEnabled = useGameStore(s => s.setSoundEnabled);
   const setHapticsEnabled = useGameStore(s => s.setHapticsEnabled);
   const setReduceMotionOverride = useGameStore(s => s.setReduceMotionOverride);
   const setReduceFlashesOverride = useGameStore(s => s.setReduceFlashesOverride);
   const setPlayerName = useGameStore(s => s.setPlayerName);
+  const setDailyReminderEnabled = useGameStore(s => s.setDailyReminderEnabled);
   const resetProgressForDev = useGameStore(s => s.resetProgressForDev);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(playerName);
   const [showCredits, setShowCredits] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [playtestEventCount, setPlaytestEventCount] = useState(getPlaytestEventCount());
 
   const handleResetProgress = () => {
     Alert.alert(
@@ -122,6 +138,43 @@ export default function SettingsScreen({ navigation }: Props) {
       setNameDraft(playerName);
       setIsEditingName(true);
     }
+  };
+
+  const handleSharePlaytestStats = () => {
+    Share.share({ message: formatPlaytestSummaryText() }).catch(() => {});
+  };
+
+  const handleClearPlaytestStats = () => {
+    Alert.alert(
+      'Clear Playtest Data',
+      'This clears the local run-outcome tally described in Privacy. This can\'t be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => {
+            clearPlaytestHistory();
+            setPlaytestEventCount(getPlaytestEventCount());
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDailyReminderToggle = () => {
+    if (dailyReminderEnabled) {
+      void setDailyReminderEnabled(false);
+      return;
+    }
+    setDailyReminderEnabled(true).then(granted => {
+      if (!granted) {
+        Alert.alert(
+          "Can't Enable Reminder",
+          'Notifications are turned off for POLYWORDS. Enable them for this app in your phone\'s system settings, then try again.',
+        );
+      }
+    });
   };
 
   const handleTutorialReplay = () => {
@@ -240,6 +293,11 @@ export default function SettingsScreen({ navigation }: Props) {
               enabled={hapticsEnabled}
               onPress={() => setHapticsEnabled(!hapticsEnabled)}
             />
+            <ToggleRow
+              label="Daily Reminder"
+              enabled={dailyReminderEnabled}
+              onPress={handleDailyReminderToggle}
+            />
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Replay Hunt tutorial"
@@ -297,6 +355,39 @@ export default function SettingsScreen({ navigation }: Props) {
                 <Text style={styles.rowNote}>{APP_VERSION}</Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Playtest Data</Text>
+          <View style={styles.card}>
+            <View pointerEvents="none" style={styles.plaqueHighlight} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share debug stats"
+              onPress={handleSharePlaytestStats}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+            >
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Share Debug Stats</Text>
+                <Text style={styles.rowNote}>
+                  {playtestEventCount > 0
+                    ? `${playtestEventCount} events tracked on this device`
+                    : 'No events tracked yet — play a Hunt or Daily run first'}
+                </Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear playtest data"
+              onPress={handleClearPlaytestStats}
+              style={({ pressed }) => [styles.row, styles.placeholderRow, pressed && styles.pressed]}
+            >
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Clear Playtest Data</Text>
+              </View>
+            </Pressable>
           </View>
         </View>
 

@@ -12,6 +12,7 @@ import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
 import { preloadHuntTrack } from './app/audio/MusicEngine';
 import { preloadSfx } from './app/audio/sfx';
+import { loadPlaytestEvents } from './app/game/playtestTelemetry';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,7 @@ export default function App() {
       loadSettings(),
       loadPollyMemory(),
       loadGame(),
+      loadPlaytestEvents(),
     ]).finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
