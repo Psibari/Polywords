@@ -16,8 +16,6 @@ import rawHuntData from '../../assets/data/huntData.json';
 
 import { RANK_TIERS, getRankProgress, getRankTier } from '../game/ranks';
 
-const TOTAL_WORD_COUNT = Object.keys(rawHuntData).length;
-
 type HuntDataMask = { phrase: string; isReal: boolean };
 type HuntDataEntry = { masks?: HuntDataMask[] };
 const HUNT_DATA = rawHuntData as unknown as Record<string, HuntDataEntry>;
@@ -90,7 +88,7 @@ export default function VaultScreen({ navigation }: Props) {
         <Text style={styles.title}>WORD VAULT</Text>
         <View style={styles.statsRow}>
           <View style={styles.statChip}>
-            <Text style={styles.statValue}>{progress.masteredWords.length}<Text style={styles.statValueMuted}>/{TOTAL_WORD_COUNT}</Text></Text>
+            <Text style={styles.statValue}>{progress.masteredWords.length}</Text>
             <Text style={styles.statLabel}>MASTERED</Text>
           </View>
           <View style={styles.statChip}>
@@ -311,12 +309,6 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     fontSize: 22,
     color: PW.color.gold,
-  },
-  statValueMuted: {
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    fontSize: 14,
-    color: PW.color.mutedWhite,
   },
   statLabel: {
     fontFamily: FONTS.label,
