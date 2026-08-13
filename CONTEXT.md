@@ -60,8 +60,9 @@ Full audit pass, then a full content replace at Pete's explicit direction:
 - Audit found `9ff2242` (music/SFX self-heal on native audio failures) and `39b202c`
   (startup readiness coordination) had already fixed the two bugs this file's "Open Bugs"
   section still listed as open — see corrected section below.
-- Pete supplied a new editorial workbook (150 words: 142 regular + 18 boss candidates,
-  including a recovery/consolidation audit trail). Built `tools/content/import-workbook.mjs`
+- Pete supplied a new editorial workbook (150 unique words — 142 on the `Tiles` sheet and
+  18 boss candidates on the `Boss Words (Production)` sheet, 10 appearing on both, with a
+  recovery/consolidation audit trail). Built `tools/content/import-workbook.mjs`
   (staging/diff tool) and `tools/content/build-hunt-data.mjs` (the real replace) to parse
   it — two sheets (`Tiles`, `Boss Words (Production)`) with non-contiguous duplicate row
   blocks per word, requiring last-write-wins dedup by phrase text.

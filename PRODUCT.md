@@ -72,10 +72,11 @@ RUN IT BACK draws a fresh Hunt with ghost priority from prior haunted words.
 
 ## Evidence on Hand
 
-- Live test content: `assets/data/huntData.json` (~400 words, deliberately kept as
-  a broken/legacy test corpus — do not treat as production copy).
-- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` (~110 real words:
-  100 standard + ~10-11 boss). Workbook approval never auto-promotes to live JSON.
+- Live content: `assets/data/huntData.json` (150 words: 13 boss, each carrying a full
+  hand-written 3-pair hidden gauntlet, plus 137 regular words with hand-reviewed
+  `gpsTag`/`difficulty`).
+- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` (the tracked 150-word
+  editorial workbook). Workbook approval never auto-promotes to live JSON.
 - No app store listing, marketing site, testimonials, or press exist yet — do not
   fabricate any of these for future design work.
 

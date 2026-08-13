@@ -49,6 +49,8 @@ Authority is: current user request, this file, focused source, `CLAUDE.md`, then
   editorial approval. Do not duplicate its rules elsewhere.
 - `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial master; it is
   not imported by gameplay.
+- Boss words follow the live JSON, not the workbook: `assets/data/huntData.json` is the
+  source of truth for which words are bosses and their `hiddenPairs`.
 - `assets/data/huntData.v2.json` is dormant editorial data. Never wire it into the app
   without approval.
 - `tools/content/_deprecated/mask-rewriter/` is retired editorial tooling (moved here

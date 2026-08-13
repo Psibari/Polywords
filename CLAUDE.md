@@ -77,9 +77,9 @@ drivers on one `Animated.Value`.
 - Boss words require BOTH `hiddenMeaning` and `hiddenTrap` (`hasBossContent` enforces it).
 - Boss content spec: target ~3 hidden meaning/trap pairs per boss word, written hard enough
   that a good player misses ~1 in 4. `WordStep.hiddenPairs` (array schema) shipped with
-  Route C 2026-07-23 — schema is no longer singular-only. Most live boss words still have
-  only one real pair populated; the other two slots are `PLACEHOLDER TEST` content pending
-  real editorial writing.
+  Route C 2026-07-23 — schema is no longer singular-only. As of 2026-08-11 all 13 live
+  boss words ship with a full hand-written 3-pair `hiddenPairs` set; zero `PLACEHOLDER TEST`
+  slots remain.
 - Only failed boss words become HAUNTED. Mastered words graduate permanently.
 - RUN IT BACK draws a fresh Hunt with ghost priority.
 - Hunt economy is locked (`docs/GAME_REFERENCE.md`): target ~54% survive, ~25%
@@ -143,7 +143,14 @@ verified byte-identical `huntData.json`/`build-report.json` regeneration before 
 2026-08-11, replaced by a promoted fruit-stone REAL). As of 2026-08-11 all 13 have their
 full 3-pair `hiddenPairs` set hand-written — the COURT/IRON/STRIKE gauntlet-review commits
 that day closed out the standing 3-pair target; no `PLACEHOLDER TEST` slots remain on any
-boss word. 2 words (REVOLUTION, PROJECT) were separately, explicitly demoted from boss by
+boss word. Boss words are governed by the live JSON: `assets/data/huntData.json` is
+the source of truth for which words ship as bosses and their hand-written
+`hiddenPairs`, superseding the workbook and `build-hunt-data.mjs` wherever they
+differ. (They currently do: the workbook stores one hidden pair per boss word and
+still marks KERNEL and WAKE boss-ready, and `build-hunt-data.mjs` emits 1-real +
+2-`PLACEHOLDER TEST` pairs — so a rebuild is not authoritative until the pipeline
+reproduces the live 13 × 3-pair set.) 2 words (REVOLUTION, PROJECT) were
+separately, explicitly demoted from boss by
 Pete earlier and ship as regular words only, per his own documented reasoning in the
 workbook. `huntData.v2.json` (0 words) and the mask-rewriter AI-assisted content-generation
 pilot were both retired 2026-08-11 — Pete: mask-rewriter never produced one usable line
@@ -153,7 +160,7 @@ track.
 `gpsTag` and `difficulty` are not in the workbook at all — `build-hunt-data.mjs`
 placeholder-assigns them so the game can run (`gpsTag` is load-bearing — `huntGenerator.ts`
 pools words by it and throws on an empty pool) before a real editorial pass exists, per
-`docs/GOLDEN_PACING_SYSTEM.md`. That pass ran 2026-08-07 and is now complete: all 136
+`docs/GOLDEN_PACING_SYSTEM.md`. That pass ran 2026-08-07 and is now complete: all 137
 non-boss words have a real hand-reviewed `gpsTag`/`difficulty`, grounded in each word's
 actual REAL/trap content against the phase table, tracked in
 `tools/content/pacing-overrides.json` (git-tracked, merged in by `build-hunt-data.mjs`
