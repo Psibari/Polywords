@@ -27,11 +27,30 @@ function makeEntry(word, phase, index) {
   };
   if (phase === 'boss') {
     entry.hiddenPairs = [0, 1, 2].map(pair => ({
+      id: `${slug}_h0${pair}`,
       real: `SECRET HANDLE ${index} ${pair} ALPHA`,
       trap: `SECRET DECOY ${index} ${pair} BRAVO`,
     }));
   }
   return entry;
+}
+
+{
+  const bank = makeValidBank();
+  delete bank.WORD96.hiddenPairs[0].id;
+  assert.ok(hasMessage(validateRuntimeHuntData(bank).blockers, 'missing hidden pair ID'));
+}
+
+{
+  const bank = makeValidBank();
+  bank.WORD96.hiddenPairs[1].id = bank.WORD96.hiddenPairs[0].id;
+  assert.ok(hasMessage(validateRuntimeHuntData(bank).blockers, 'duplicate content ID'));
+}
+
+{
+  const bank = makeValidBank();
+  bank.WORD96.hiddenPairs[0].id = 'other_h01';
+  assert.ok(hasMessage(validateRuntimeHuntData(bank).blockers, 'word prefix'));
 }
 
 function makeValidBank() {

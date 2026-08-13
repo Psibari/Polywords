@@ -5,6 +5,7 @@ export interface GhostMeaning {
   word: string;
   hiddenMeaningReal: string;
   hiddenMeaningTrap: string;
+  hiddenPairId?: string;
   runsMissed: number;
   isGhostedMaster?: boolean;
   // Run-scoped idempotency marker for Returning Haunt failure reconciliation.
@@ -93,6 +94,7 @@ export type Mask = {
 };
 
 export type HiddenPair = {
+  id: string;
   real: string;
   trap: string;
 };
@@ -164,6 +166,7 @@ export type MasteredWordRecord = {
   isBoss: boolean;
   hiddenMeaningFound: string;
   hiddenMeaningsFound?: string[];
+  hiddenPairIds?: string[];
   priorHauntAttempts?: number;
   dateMastered: string;
   flawless?: boolean;

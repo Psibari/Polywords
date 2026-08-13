@@ -208,6 +208,19 @@ export function validateRuntimeHuntData(data) {
           blockers.push(`${pairContext}: hidden pair must be an object`);
           continue;
         }
+        const pairId = typeof pair.id === 'string' ? pair.id.trim() : '';
+        const wordPrefix = word.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        if (!pairId) {
+          blockers.push(`${pairContext}: missing hidden pair ID`);
+        } else if (!/^[a-z0-9-]+_h\d+$/.test(pairId)) {
+          blockers.push(`${pairContext}: malformed hidden pair ID`);
+        } else if (!pairId.startsWith(`${wordPrefix}_h`)) {
+          blockers.push(`${pairContext}: hidden pair ID has the wrong word prefix`);
+        } else if (ids.has(pairId)) {
+          blockers.push(`${pairContext}: duplicate content ID also used by ${ids.get(pairId)}`);
+        } else {
+          ids.set(pairId, pairContext);
+        }
         validatePhrase(pair.real, `${pairContext}/real`, wordForms, phraseOwners, blockers);
         validatePhrase(pair.trap, `${pairContext}/trap`, wordForms, phraseOwners, blockers);
         if (normalizePhrase(pair.real) && normalizePhrase(pair.real) === normalizePhrase(pair.trap)) {

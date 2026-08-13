@@ -25,10 +25,11 @@ import {
   DailySession,
   GhostMeaning,
   GhostRevenge,
-  MasteredWordRecord,
+  HiddenPair,
   PlayerProgress,
   WordStep,
 } from '../game/types';
+import { upsertGhostRecord, upsertMasteredRecord } from '../game/hiddenProgressPersistence';
 import { generateHunt } from '../game/huntGenerator';
 import {
   buildDailySession,
@@ -224,7 +225,7 @@ type GameStore = {
   resolveMystery: (
     correct: boolean,
     visiblePerfect: boolean,
-    failedPair?: { real: string; trap: string },
+    failedPair?: HiddenPair,
     pairIndex?: number,
   ) => void;
   beginMysteryGauntlet: (plan: number | readonly boolean[]) => void;
@@ -237,7 +238,7 @@ type GameStore = {
   consumeMilestone: () => void;
   consumeFeatherMilestone: () => void;
   consumeMercy: () => void;
-  queueFailedBoss: (step: FailedBossStep) => void;
+  queueFailedBoss: (step: FailedBossStep, failedPair?: HiddenPair) => void;
   reconcileHauntOutcome: (
     step: HauntReturnStep,
     outcome: Exclude<HauntOutcome, 'pending'>,
@@ -249,7 +250,7 @@ type GameStore = {
   recordMastery: (
     word: string,
     isBoss: boolean,
-    hiddenMeaningsFound: string[],
+    hiddenPairsFound: HiddenPair[],
     flawless: boolean,
     priorHauntAttempts: number,
   ) => void;
@@ -494,15 +495,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (isBoss) {
       if (correct) {
         if (!step.isMasteryRematch) {
-          const hiddenMeaningsFound = step.hiddenPairs?.map(pair => pair.real)
-            ?? (step.hiddenMeaning ? [step.hiddenMeaning] : []);
+          const hiddenPairsFound = step.hiddenPairs
+            ?? (step.hiddenMeaning && step.hiddenTrap ? [{
+              id: `${step.word.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}_h00`,
+              real: step.hiddenMeaning,
+              trap: step.hiddenTrap,
+            }] : []);
           const priorHauntAttempts = get().ghosts.find(
             ghost => ghost.wordId === step.word.trim().toUpperCase(),
           )?.runsMissed ?? 0;
           get().recordMastery(
             step.word,
             true,
-            hiddenMeaningsFound,
+            hiddenPairsFound,
             visiblePerfect,
             priorHauntAttempts,
           );
@@ -515,11 +520,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(pruned)).catch(() => {});
         }
       } else {
-        get().queueFailedBoss(
-          failedPair
-            ? { ...step, hiddenMeaning: failedPair.real, hiddenTrap: failedPair.trap }
-            : step,
-        );
+        get().queueFailedBoss(step, failedPair);
       }
     } else if (isHaunt && next.hauntOutcome !== 'pending') {
       // Persist the terminal verdict before mutating the ghost queue. If the
@@ -573,7 +574,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   consumeMercy: () =>
     set((s) => ({ game: consumeMercyFn(s.game) })),
 
-  queueFailedBoss: (step) => {
+  queueFailedBoss: (step, failedPair) => {
     if (step.eventType !== 'bossWord' || step.isHauntReturn === true) return;
     // A mastery rematch replays a word that already graduated permanently
     // (CLAUDE.md: "mastered words graduate permanently"). Losing the replay
@@ -582,31 +583,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // excludes already-mastered words. It just stays mastered.
     if (step.isMasteryRematch === true) return;
 
-    const wordId = step.word.trim().toUpperCase();
-    const existing = get().ghosts.find(g => g.wordId === wordId);
-    let next: GhostMeaning[];
-    if (existing) {
-      next = get().ghosts.map(g =>
-        g.wordId === wordId
-          ? {
-              ...g,
-              word: wordId,
-              hiddenMeaningReal: step.hiddenMeaning ?? g.hiddenMeaningReal,
-              hiddenMeaningTrap: step.hiddenTrap ?? g.hiddenMeaningTrap,
-              runsMissed: g.runsMissed + 1,
-            }
-          : g
-      );
-    } else {
-      next = [...get().ghosts, {
-        wordId,
-        word: wordId,
-        hiddenMeaningReal: step.hiddenMeaning ?? '',
-        hiddenMeaningTrap: step.hiddenTrap ?? '',
-        isGhostedMaster: true,
-        runsMissed: 1,
-      }];
-    }
+    const next = upsertGhostRecord(get().ghosts, step, failedPair);
     set({ ghosts: next });
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
   },
@@ -630,36 +607,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setGhostRevenge: (data) => set({ ghostRevenge: data }),
 
-  recordMastery: (word, isBoss, hiddenMeaningsFound, flawless, priorHauntAttempts) => {
+  recordMastery: (word, isBoss, hiddenPairsFound, flawless, priorHauntAttempts) => {
     const current = get().progress;
-    const existing = current.masteredWords.find(m => m.word === word);
-    const hiddenMeaningFound = hiddenMeaningsFound[0] ?? '';
-    let masteredWords: MasteredWordRecord[];
-    if (existing) {
-      masteredWords = current.masteredWords.map(m =>
-        m.word === word
-          ? {
-              ...m,
-              dateMastered: new Date().toISOString(),
-              hiddenMeaningFound,
-              hiddenMeaningsFound,
-              priorHauntAttempts,
-              flawless,
-            }
-          : m
-      );
-    } else {
-      masteredWords = [...current.masteredWords, {
-        word,
-        isBoss,
-        hiddenMeaningFound,
-        hiddenMeaningsFound,
-        priorHauntAttempts,
-        dateMastered: new Date().toISOString(),
-        flawless,
-      }];
-    }
-    const next = { ...current, masteredWords };
+    const next = upsertMasteredRecord(
+      current, word, isBoss, hiddenPairsFound, flawless, priorHauntAttempts,
+    );
     set({ progress: next });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
   },

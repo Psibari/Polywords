@@ -691,15 +691,18 @@
     "hiddenPairs": [
       {
         "real": "THE BEAT THE BAND MARCHES TO",
-        "trap": "THE DRUM MAJOR LEADING OUT FRONT"
+        "trap": "THE DRUM MAJOR LEADING OUT FRONT",
+        "id": "battery_h00"
       },
       {
         "real": "NO PITCH GETS THROWN UNTIL BOTH AGREE",
-        "trap": "THE TEAM’S STARTING NINE"
+        "trap": "THE TEAM’S STARTING NINE",
+        "id": "battery_h01"
       },
       {
         "real": "THE NEIGHBORHOOD WHERE THE CHARGING BULL LIVES",
-        "trap": "THE FREE RIDE FOR A VIEW OF THE STATUE OF LIBERTY"
+        "trap": "THE FREE RIDE FOR A VIEW OF THE STATUE OF LIBERTY",
+        "id": "battery_h02"
       }
     ],
     "masks": [
@@ -1891,15 +1894,18 @@
     "hiddenPairs": [
       {
         "real": "ANCHOR TEASES TONIGHT'S TOP STORY AT TEN",
-        "trap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK"
+        "trap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK",
+        "id": "brief_h00"
       },
       {
         "real": "A CLIENT’S BLUEPRINT FOR THE DESIGN TEAM TO FOLLOW",
-        "trap": "THE FINAL APPROVAL ON A PRODUCT PROTOTYPE"
+        "trap": "THE FINAL APPROVAL ON A PRODUCT PROTOTYPE",
+        "id": "brief_h01"
       },
       {
         "real": "CUT TO THE CHASE VERSION",
-        "trap": "THE MORAL STORIES OF AESOP"
+        "trap": "THE MORAL STORIES OF AESOP",
+        "id": "brief_h02"
       }
     ],
     "masks": [
@@ -2488,15 +2494,18 @@
     "hiddenPairs": [
       {
         "real": "FAINT GREEN IN OLD PHOTOS",
-        "trap": "FILTER SLAPPED ON EVERY SELFIE"
+        "trap": "FILTER SLAPPED ON EVERY SELFIE",
+        "id": "cast_h00"
       },
       {
         "real": "WHAT HAPPENS WHEN THE MAGIC WORDS ARE SAID",
-        "trap": "WHAT YOU’RE UNDER WHEN I COUNT BACKWARDS FROM THREE"
+        "trap": "WHAT YOU’RE UNDER WHEN I COUNT BACKWARDS FROM THREE",
+        "id": "cast_h01"
       },
       {
         "real": "WHAT A RULER DOES WHEN THEY SEND SOMEONE INTO EXILE",
-        "trap": "THE CEREMONY WHERE A NEW MONARCH TAKES POWER"
+        "trap": "THE CEREMONY WHERE A NEW MONARCH TAKES POWER",
+        "id": "cast_h02"
       }
     ],
     "masks": [
@@ -2870,15 +2879,18 @@
     "hiddenPairs": [
       {
         "real": "A CRACK THAT RUNS WITH THE GRAIN",
-        "trap": "BOARD WARPS IN THE SUMMER HEAT"
+        "trap": "BOARD WARPS IN THE SUMMER HEAT",
+        "id": "check_h00"
       },
       {
         "real": "SEEN ON GYM SHORTS BUT NOT ON A SUIT JACKET",
-        "trap": "THE SOUND A CLOCK’S LONG HAND MAKES"
+        "trap": "THE SOUND A CLOCK’S LONG HAND MAKES",
+        "id": "check_h01"
       },
       {
         "real": "WHAT YOU GET WHEN THE GAME IS RAINED OUT",
-        "trap": "WHAT THE TEAM GETS FOR BECOMING CHAMPIONS"
+        "trap": "WHAT THE TEAM GETS FOR BECOMING CHAMPIONS",
+        "id": "check_h02"
       }
     ],
     "masks": [
@@ -4319,15 +4331,18 @@
     "hiddenPairs": [
       {
         "real": "THE REAL VERDICT SEEN THROUGH THE PEOPLE'S EYES",
-        "trap": "THE EMPEROR'S THUMB DECIDES IF HE LIVES"
+        "trap": "THE EMPEROR'S THUMB DECIDES IF HE LIVES",
+        "id": "court_h01"
       },
       {
         "real": "THE MALL’S HOME OF “AUTHENTIC” CUISINE",
-        "trap": "WHERE YOU EAT LUNCH IN FIFTH PERIOD"
+        "trap": "WHERE YOU EAT LUNCH IN FIFTH PERIOD",
+        "id": "court_h02"
       },
       {
         "real": "WHERE STUDENTS SPRAWL ON THE GRASS BETWEEN CLASSES",
-        "trap": "WHAT YOU SWEAR ON TO TELL THE TRUTH AND NOTHING BUT THE TRUTH"
+        "trap": "WHAT YOU SWEAR ON TO TELL THE TRUTH AND NOTHING BUT THE TRUTH",
+        "id": "court_h03"
       }
     ],
     "masks": [
@@ -4382,15 +4397,18 @@
     "hiddenPairs": [
       {
         "real": "WHERE THE FOOD'S FREE ON A MOVIE SET",
-        "trap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS"
+        "trap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS",
+        "id": "craft_h00"
       },
       {
         "real": "THE DRINK YOU PRETEND TASTES LIKE CITRUS, PINE, AND WHATEVER ELSE THEY SAID",
-        "trap": "WHAT YOU BUILT FOR THE SCIENCE FAIR"
+        "trap": "WHAT YOU BUILT FOR THE SCIENCE FAIR",
+        "id": "craft_h01"
       },
       {
         "real": "HOW THE MASTERMIND PUTS THE PERFECT PLAN TOGETHER",
-        "trap": "WHEN YOU’RE NOT PREPARED AND HAVE TO WING IT"
+        "trap": "WHEN YOU’RE NOT PREPARED AND HAVE TO WING IT",
+        "id": "craft_h02"
       }
     ],
     "masks": [
@@ -4689,15 +4707,18 @@
     "hiddenPairs": [
       {
         "real": "PICARD ORDERS THE SHIP TO WARP SPEED",
-        "trap": "COMMANDER ORDERS THE TROOPS TO RETREAT"
+        "trap": "COMMANDER ORDERS THE TROOPS TO RETREAT",
+        "id": "engaged_h00"
       },
       {
         "real": "WHEN IT’S TIME TO BRING IN A SPECIALIST",
-        "trap": "WHAT YOU FEEL WHEN YOU COULDN’T CARE LESS ABOUT IT"
+        "trap": "WHAT YOU FEEL WHEN YOU COULDN’T CARE LESS ABOUT IT",
+        "id": "engaged_h01"
       },
       {
         "real": "THE COLUMN THAT LOOKS LIKE THE WALL SWALLOWED HALF OF IT",
-        "trap": "WHEN YOU RAISE YOUR HAND BECAUSE YOU KNOW THE ANSWER"
+        "trap": "WHEN YOU RAISE YOUR HAND BECAUSE YOU KNOW THE ANSWER",
+        "id": "engaged_h02"
       }
     ],
     "masks": [
@@ -4757,15 +4778,18 @@
     "hiddenPairs": [
       {
         "real": "BOTH SIDES OPENED FIRE ACROSS THE RIDGE",
-        "trap": "THE DEBATE WAS OVER, NO REBUTTAL LEFT"
+        "trap": "THE DEBATE WAS OVER, NO REBUTTAL LEFT",
+        "id": "exchange_h02"
       },
       {
         "real": "A VERBAL ARGUMENT WITH BACK-AND-FORTH INSULTS",
-        "trap": "WHERE TWO SEPARATE HIGHWAYS MERGE"
+        "trap": "WHERE TWO SEPARATE HIGHWAYS MERGE",
+        "id": "exchange_h03"
       },
       {
         "real": "WHEN YOU TURN YOUR DOLLARS INTO EUROS",
-        "trap": "WHEN YOU ASK THE CASHIER TO BREAK A HUNDRED"
+        "trap": "WHEN YOU ASK THE CASHIER TO BREAK A HUNDRED",
+        "id": "exchange_h04"
       }
     ],
     "masks": [
@@ -4840,15 +4864,18 @@
     "hiddenPairs": [
       {
         "real": "ALGEBRA CLASS: ISOLATE X SQUARED, THEN SQUARE ROOT",
-        "trap": "USE A AND B TO FIND SIDE C"
+        "trap": "USE A AND B TO FIND SIDE C",
+        "id": "extract_h00"
       },
       {
         "real": "HOW SCIENTISTS PULL DNA FROM A FOSSIL",
-        "trap": "WHAT A NEWSPAPER DOES WHEN IT HAS TO TAKE BACK THE STORY"
+        "trap": "WHAT A NEWSPAPER DOES WHEN IT HAS TO TAKE BACK THE STORY",
+        "id": "extract_h01"
       },
       {
         "real": "THE CERTIFIED COPY PULLED FROM THE PUBLIC RECORD",
-        "trap": "WHEN SECRET GOVERNMENT RECORDS BECOME PUBLIC"
+        "trap": "WHEN SECRET GOVERNMENT RECORDS BECOME PUBLIC",
+        "id": "extract_h02"
       }
     ],
     "masks": [
@@ -5125,15 +5152,18 @@
     "hiddenPairs": [
       {
         "real": "A PHRASE FOR STROKING YOUR OWN EGO",
-        "trap": "HOLD IT TO YOUR EAR AND HEAR THE OCEAN"
+        "trap": "HOLD IT TO YOUR EAR AND HEAR THE OCEAN",
+        "id": "horn_h00"
       },
       {
         "real": "WHAT YOUR THANKSGIVING CORNUCOPIA IS ALSO CALLED",
-        "trap": "WHAT WAS USED TO WARN A MEDIEVAL TOWN OF DANGER"
+        "trap": "WHAT WAS USED TO WARN A MEDIEVAL TOWN OF DANGER",
+        "id": "horn_h01"
       },
       {
         "real": "THE SHARP TIPPY-TOP OF A MOUNTAIN",
-        "trap": "WHAT GIVES THE FINAL SOUND TO END THE GAME"
+        "trap": "WHAT GIVES THE FINAL SOUND TO END THE GAME",
+        "id": "horn_h02"
       }
     ],
     "masks": [
@@ -5183,15 +5213,18 @@
     "hiddenPairs": [
       {
         "real": "THE AGE WHEN SILVER DIDN’T FOLLOW BRONZE",
-        "trap": "WHAT THE X-RAY VEST AT THE DENTIST IS MADE OF"
+        "trap": "WHAT THE X-RAY VEST AT THE DENTIST IS MADE OF",
+        "id": "iron_h00"
       },
       {
         "real": "PICKED IT UP AND PUT IT DOWN ALL WINTER, JUST FOR THE SUMMER",
-        "trap": "WHAT'S INSIDE EVERY TELEPHONE LINE ON THE BLOCK"
+        "trap": "WHAT'S INSIDE EVERY TELEPHONE LINE ON THE BLOCK",
+        "id": "iron_h01"
       },
       {
         "real": "THE BALL AND CHAIN BACK WHEN IT WASN'T A WIFE JOKE",
-        "trap": "WHAT SEPARATES AN INMATE FROM HIS VISITOR"
+        "trap": "WHAT SEPARATES AN INMATE FROM HIS VISITOR",
+        "id": "iron_h02"
       }
     ],
     "masks": [
@@ -7285,15 +7318,18 @@
     "hiddenPairs": [
       {
         "real": "A BILLBOARD DOING TWO HUNDRED, TURNING LEFT ALL AFTERNOON",
-        "trap": "WHERE GOLD, COFFEE, AND OIL GET THEIR PRICE"
+        "trap": "WHERE GOLD, COFFEE, AND OIL GET THEIR PRICE",
+        "id": "stock_h01"
       },
       {
         "real": "WHAT NOBODY PUTS IN A PSYCHIC HOTLINE",
-        "trap": "GRANDMA'S BIRTHDAY GIFT THAT TOOK A DECADE TO DOUBLE"
+        "trap": "GRANDMA'S BIRTHDAY GIFT THAT TOOK A DECADE TO DOUBLE",
+        "id": "stock_h02"
       },
       {
         "real": "WHAT HELD THE THIEF WHILE THE VILLAGE THREW ROTTEN TOMATOES",
-        "trap": "WHAT THE CHAIN GANG WORE BREAKING ROCKS ALL DAY"
+        "trap": "WHAT THE CHAIN GANG WORE BREAKING ROCKS ALL DAY",
+        "id": "stock_h03"
       }
     ],
     "masks": [
@@ -7353,15 +7389,18 @@
     "hiddenPairs": [
       {
         "real": "OIL FOUND WHERE NOBODY WAS LOOKING",
-        "trap": "PICKAXE SPARKS ON BARE GRANITE"
+        "trap": "PICKAXE SPARKS ON BARE GRANITE",
+        "id": "strike_h00"
       },
       {
         "real": "THREE IN A ROW AND THEY CALL IT A TURKEY",
-        "trap": "THE POWER SHOT IN VOLLEYBALL"
+        "trap": "THE POWER SHOT IN VOLLEYBALL",
+        "id": "strike_h01"
       },
       {
         "real": "WHAT THE GRANDFATHER CLOCK DID WHEN IT REACHED TWELVE",
-        "trap": "HOW YOU LIGHT A LIGHTER"
+        "trap": "HOW YOU LIGHT A LIGHTER",
+        "id": "strike_h02"
       }
     ],
     "masks": [

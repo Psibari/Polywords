@@ -12,6 +12,7 @@ import { FoilWord } from '../components/ui/FoilWord';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { getDisplayStreak } from '../game/dailyStreak';
+import { resolveGhostPair, resolveMasteredPairs } from '../game/hiddenPairIdentity';
 import rawHuntData from '../../assets/data/huntData.json';
 
 import { RANK_TIERS, getRankProgress, getRankTier } from '../game/ranks';
@@ -60,9 +61,9 @@ export default function VaultScreen({ navigation }: Props) {
     ? ghostsToShow.find(g => g.word === selectedWord) ?? null
     : null;
   const selectedHiddenMeanings = selectedMastered
-    ? selectedMastered.hiddenMeaningsFound?.filter(Boolean)
-      ?? (selectedMastered.hiddenMeaningFound ? [selectedMastered.hiddenMeaningFound] : [])
+    ? resolveMasteredPairs(selectedMastered).map(pair => pair.real)
     : [];
+  const selectedGhostPair = selectedGhost ? resolveGhostPair(selectedGhost) : null;
   const selectedRealMeanings = selectedMastered ? realMeaningsFor(selectedMastered.word) : [];
 
   return (
@@ -193,12 +194,12 @@ export default function VaultScreen({ navigation }: Props) {
                 <Text style={styles.detailLine}>
                   Still haunted — missed {selectedGhost.runsMissed} {selectedGhost.runsMissed === 1 ? 'run' : 'runs'}.
                 </Text>
-                {selectedGhost.hiddenMeaningReal && (
-                  <Text style={styles.detailLine}>Hidden meaning: {selectedGhost.hiddenMeaningReal}</Text>
+                {selectedGhostPair?.real && (
+                  <Text style={styles.detailLine}>Hidden meaning: {selectedGhostPair.real}</Text>
                 )}
-                {selectedGhost.hiddenMeaningTrap && (
+                {selectedGhostPair?.trap && (
                   <Text style={[styles.detailLine, styles.detailTrap]}>
-                    Watch for: {selectedGhost.hiddenMeaningTrap}
+                    Watch for: {selectedGhostPair.trap}
                   </Text>
                 )}
                 <Text style={styles.detailLine}>Run it back next Hunt.</Text>

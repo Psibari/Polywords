@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { GhostMeaning, Mask, WordStep } from '../game/types';
+import { GhostMeaning, HiddenPair, Mask, WordStep } from '../game/types';
+import { resolveGhostPair } from '../game/hiddenPairIdentity';
 import { useGameStore } from '../store/useGameStore';
 import {
   chainMultiplierForStreak,
@@ -172,15 +173,24 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
   // Returning Haunt re-tests the exact pair that beat you last run, stored on
   // the ghost. Boss draws up to 3 distinct pairs, one tile each.
-  const hauntPair = ghost && ghost.hiddenMeaningReal && ghost.hiddenMeaningTrap
-    ? { real: ghost.hiddenMeaningReal, trap: ghost.hiddenMeaningTrap }
+  const resolvedHauntPair = ghost ? resolveGhostPair(ghost) : null;
+  const hauntPair: HiddenPair | null = resolvedHauntPair?.real && resolvedHauntPair.trap
+    ? resolvedHauntPair.pair ?? {
+      id: `${ghost!.wordId.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}_h00`,
+      real: resolvedHauntPair.real,
+      trap: resolvedHauntPair.trap,
+    }
     : null;
 
-  const stepPairs: { real: string; trap: string }[] =
+  const stepPairs: HiddenPair[] =
     step.hiddenPairs && step.hiddenPairs.length > 0
       ? step.hiddenPairs
       : step.hiddenMeaning != null && step.hiddenTrap != null
-        ? [{ real: step.hiddenMeaning, trap: step.hiddenTrap }]
+        ? [{
+          id: `${step.word.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}_h00`,
+          real: step.hiddenMeaning,
+          trap: step.hiddenTrap,
+        }]
         : [];
 
   const gauntletPairs = isHaunt
@@ -649,9 +659,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     setDecisionLocked(true);
     pauseHesitation();
 
-    const failedPair = correct
-      ? undefined
-      : { real: gauntletPairs[tile.pairIndex].real, trap: gauntletPairs[tile.pairIndex].trap };
+    const failedPair = correct ? undefined : gauntletPairs[tile.pairIndex];
     resolveMystery(correct, visiblePerfectRef.current, failedPair, tile.pairIndex);
 
     if (!correct) {

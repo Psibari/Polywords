@@ -27,8 +27,13 @@ console.log('huntDeterminism tests passed');
 const data = rawHuntData as Record<string, {
   hiddenMeaning: string | null;
   hiddenTrap: string | null;
-  hiddenPairs?: { real: string; trap: string }[] | null;
+  hiddenPairs?: { id?: string; real: string; trap: string }[] | null;
 }>;
+for (const [word, entry] of Object.entries(data)) {
+  for (const sourcePair of entry.hiddenPairs ?? []) {
+    ok(typeof sourcePair.id === 'string' && sourcePair.id.length > 0, `${word} source hidden pair has a stable ID`);
+  }
+}
 const bossCapable = Object.keys(data).filter(word =>
   (data[word].hiddenPairs?.length ?? 0) > 0 ||
   (data[word].hiddenMeaning != null && data[word].hiddenTrap != null),
@@ -39,6 +44,13 @@ ok(
   rematchBoss?.kind === 'word' && rematchBoss.isMasteryRematch === true,
   'mastered boss pool becomes an explicit rematch instead of exhausting',
 );
+if (rematchBoss?.kind === 'word') {
+  const sourcePairs = data[rematchBoss.word].hiddenPairs ?? [];
+  ok(
+    rematchBoss.hiddenPairs?.every((pair, index) => pair.id === sourcePairs[index]?.id) === true,
+    'generated boss pairs retain source stable IDs',
+  );
+}
 
 const hauntHunt = generateHunt({ ghostWordIds: [bossCapable[0]], seed: 8181 });
 const hauntIndex = hauntHunt.findIndex(step => step.kind === 'word' && step.isHauntReturn);

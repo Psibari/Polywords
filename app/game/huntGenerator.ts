@@ -6,7 +6,7 @@ type HuntWordData = {
   difficulty: string;
   hiddenMeaning: string | null;
   hiddenTrap: string | null;
-  hiddenPairs?: { real: string; trap: string }[] | null;
+  hiddenPairs?: HiddenPair[] | null;
   gpsTag: 'confidence' | 'flow' | 'tension' | 'panic' | 'boss';
   wordType?: string;
   masks: { id: string; phrase: string; isReal: boolean }[];
@@ -97,10 +97,10 @@ function hiddenPairsFor(word: string): HiddenPair[] {
   if (data.hiddenPairs && data.hiddenPairs.length > 0) {
     return data.hiddenPairs
       .filter(p => p.real != null && p.trap != null)
-      .map(p => ({ real: p.real, trap: p.trap }));
+      .map(p => ({ id: p.id, real: p.real, trap: p.trap }));
   }
   if (data.hiddenMeaning != null && data.hiddenTrap != null) {
-    return [{ real: data.hiddenMeaning, trap: data.hiddenTrap }];
+    return [{ id: `${word.toLowerCase().replace(/[^a-z0-9]+/g, '-')}_h00`, real: data.hiddenMeaning, trap: data.hiddenTrap }];
   }
   return [];
 }
