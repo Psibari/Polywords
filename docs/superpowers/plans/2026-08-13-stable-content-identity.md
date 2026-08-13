@@ -452,7 +452,7 @@ Run `git status --short` and `git diff --stat`. Confirm no unrelated files, asse
 - [ ] **Step 5: Final commit if required and push directly**
 
 ```bash
-git add <only verified in-scope files>
+git add package.json assets/data/huntData.json app/game/types.ts app/game/huntGenerator.ts app/game/huntDeterminism.test.ts app/game/hiddenPairIdentity.ts app/game/hiddenPairIdentity.test.ts app/game/hiddenProgressPersistence.test.ts app/game/vaultHiddenContent.test.ts app/store/useGameStore.ts app/screens/VaultScreen.tsx tools/content/build-content-identity-map.mjs tools/content/contentIdentityMap.test.mjs tools/content/runtimeHuntValidation.mjs tools/content/runtimeHuntValidation.test.mjs artifacts/content-identity-map.json
 git commit -m "test: verify stable content identity migration"
 git push origin play-screen-overhaul
 ```
