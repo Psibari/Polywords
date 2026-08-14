@@ -14,9 +14,6 @@ export type HeroBookProps = {
 
 const SOURCE_HEIGHT = 830;
 const SOURCE_HINGE_Y = 88;
-const BASE_RENDER_HEIGHT = 210;
-const VERTICAL_SCALE = M.bookHeight / BASE_RENDER_HEIGHT;
-const scaleY = (value: number) => value * VERTICAL_SCALE;
 const HINGE_Y = (SOURCE_HINGE_Y / SOURCE_HEIGHT) * M.bookHeight;
 
 const bookBase = require('../../../assets/images/hero-book-rig-v1/book-base.png');
@@ -89,8 +86,6 @@ export default function HeroBook({
 const styles = StyleSheet.create({
   book: {
     position: 'absolute',
-    // Width remains owned by the existing parent. Phase 1 changes only the
-    // vertical silhouette so the book cannot creep wider on small phones.
     left: 0,
     right: 0,
     top: 0,
@@ -137,8 +132,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '13%',
     right: '12%',
-    top: scaleY(161),
-    height: scaleY(7),
+    top: 161,
+    height: 7,
     borderRadius: 4,
     backgroundColor: M.intakeGlow,
     shadowColor: M.goldTrim,
@@ -151,8 +146,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '19%',
     right: '18%',
-    top: scaleY(48),
-    bottom: scaleY(48),
+    top: 48,
+    bottom: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
