@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
+import { HuntBookV2PrototypeDevViewer } from '../components/HuntBookV2PrototypeDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
@@ -95,6 +96,7 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
 export default function SettingsScreen({ navigation }: Props) {
   const [showPollyAnimations, setShowPollyAnimations] = useState(false);
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
+  const [showHuntBookV2Prototype, setShowHuntBookV2Prototype] = useState(false);
   const [chamberWidth, setChamberWidth] = useState(0);
   const chamberHeight = chamberWidth / CHAMBER_ASPECT_RATIO;
   const progress = useGameStore(s => s.progress);
@@ -398,6 +400,18 @@ export default function SettingsScreen({ navigation }: Props) {
               <View pointerEvents="none" style={styles.plaqueHighlight} />
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel="Open Hunt Book V2 prototype"
+                onPress={() => setShowHuntBookV2Prototype(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Hunt Book V2 Prototype</Text>
+                  <Text style={styles.rowNote}>Preview the isolated vertical SVG book</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
                 onPress={() => setShowPollyAnimations(true)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               >
@@ -445,6 +459,10 @@ export default function SettingsScreen({ navigation }: Props) {
       </ScrollView>
       {__DEV__ && (
         <>
+          <HuntBookV2PrototypeDevViewer
+            onClose={() => setShowHuntBookV2Prototype(false)}
+            visible={showHuntBookV2Prototype}
+          />
           <PollyAnimationDevViewer
             onClose={() => setShowPollyAnimations(false)}
             visible={showPollyAnimations}
