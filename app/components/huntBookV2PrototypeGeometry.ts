@@ -1,22 +1,18 @@
 export const HUNT_BOOK_V2_GEOMETRY = {
-  // Preserve the historical SVG book's horizontal geometry exactly. The V2
-  // experiment grows only top-to-bottom.
+  // Exact historical SVG HeroBook baseline. No V2 stretching, ribbon, or
+  // altered page anatomy. This viewer exists only so the original object can
+  // be judged on-device before any new treatment is added.
   viewBoxWidth: 360,
-  viewBoxHeight: 286,
+  viewBoxHeight: 210,
   coverLeft: 10,
   coverRight: 350,
   coverTop: 14,
-  coverBottom: 214,
-  coverHeight: 224,
-  lowerCoverTop: 204,
-  lowerCoverBottom: 282,
-  pageBlockTop: 214,
-  pageBlockBottom: 272,
-  ribbonTop: 28,
-  ribbonLeft: 168,
-  ribbonRight: 192,
-  ribbonTailY: 282,
-  ribbonNotchY: 268,
+  coverBottom: 158,
+  coverHeight: 162,
+  lowerCoverTop: 150,
+  lowerCoverBottom: 204,
+  pageBlockTop: 158,
+  pageBlockBottom: 196,
 } as const;
 
 export const HUNT_BOOK_V2_WORDS = [
