@@ -130,9 +130,7 @@ export const heroBookMaterial = {
   goldPin:        '#F5C842',
   goldPinInner:   '#C8920E',
   intakeGlow:     '#7B2D8B',
-  // Phase 1 Hunt presentation prototype: increase only the vertical
-  // silhouette. HeroBook's parent still owns the existing width.
-  bookHeight:     228,
+  bookHeight:     210,
   hingeHeight:    18,
   coverHeight:    162,
   pageHeight:     52,
