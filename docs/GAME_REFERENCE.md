@@ -79,7 +79,10 @@ awarded once, on clearing the full 3-tile hidden gauntlet — not per tile.
 - Fatal wrong swipes finalize the current word result before game-over.
 
 Locked text includes `YOU BEAT POLLY`, `POLLY HUNT COMPLETE`,
-`POLLY CLIPPED YOUR RUN.`, `Thought so.`, and `BINGO BANGO ZZZZINGO!`.
+`POLLY CLIPPED YOUR RUN.`, and `Thought so.`. `BINGO BANGO ZZZZINGO!` was unassigned from
+the mastery sequence by Pete on 2026-07-23 (see `CLAUDE.md`) — the line itself is still
+locked text, but it is not currently placed anywhere; do not reintroduce it into mastery
+without a new decision.
 
 ## Presentation
 

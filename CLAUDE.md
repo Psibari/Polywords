@@ -49,21 +49,33 @@ drivers on one `Animated.Value`.
 - Boss gauntlet *interaction and presentation* — "Pick Your Trap", designed 2026-07-31,
   shipped 2026-08-01 — superseded Route C's fixed-sequence tile order and the
   `BossGauntletStack.tsx` throw-in cards it shipped with. All three gauntlet tiles now
-  arrive together as closed spines (`BossGauntletSpines.tsx`, `useBoardMechanics.ts`
+  arrive together as closed cards (`BossGauntletSpines.tsx` — file name predates the
+  2026-08-15 card rework below, still the live component; `useBoardMechanics.ts`
   `pickGauntletTile`/`gauntletIndex`) and the player picks which one to face and in what
   order — a real choice, made three times per boss round. The judgment math itself is
   unchanged (still per-tile UP/RIGHT, still economy-neutral, no re-simulation needed).
-  Picking a spine opens it (reveal); judging it is a separate, later swipe — irrevocable
-  once a spine is opened. This is the direction that replaced every earlier
+  Picking a card opens it (reveal); judging it is a separate, later swipe — irrevocable
+  once a card is opened. This is the direction that replaced every earlier
   presentation-only attempt at "looking like a boss round" (the original
   `BOSS_ROUND_SPEC.md` build reverted for looking "layered/blurry on device", an
   abandoned chest object, an abandoned locks-on-the-book branch) — those attempts changed
   Aesthetics without changing Mechanics/Dynamics, which is why none of them landed
   regardless of polish. Full design:
   `docs/superpowers/specs/2026-07-31-boss-gauntlet-pick-your-trap-design.md`
-  (git-ignored, local only). Still open/deferred, not decided by this design: exact spine
-  layout/dimensions, closed-state icon/texture, and the book-material skin in pixel
-  detail (leather/gold-trim direction carried over from `BOSS_ROUND_SPEC.md` Part C5).
+  (git-ignored, local only). Presentation moved on 2026-08-15 (`aa08db6`): Pete called the
+  standing-spine shape "sticks standing up" on device, so the closed state is now three
+  small face-down cards that flip open on pick (a `rotateY` roll, not a literal two-sided
+  flip, so it never depends on the Android `backfaceVisibility` bug already hit once in
+  `HeroBook.tsx`) — pick-order mechanic and judgment math untouched, this replaced only
+  the closed-state shape and material. Opened-card material now reuses the same painted
+  texture every regular tile uses (`MaskCardArtwork`) plus a gold rim accent, closing the
+  book-material-skin open item below; the closed-state marker is Pete's crown artwork
+  (`assets/images/gauntlet/crown-marker.png`), tinted gold/rose/lavender per tile. Full
+  presentation detail: `docs/superpowers/specs/2026-08-15-gauntlet-card-flip-design.md`.
+  Still open/deferred, not decided by either design: exact card layout/dimensions/aspect
+  ratio (device-tuning starting values, not locked) and a gauntlet-open music stinger —
+  none exists yet, the boss track just continues unchanged when the gauntlet opens,
+  pending Pete's call on whether to commission one.
   Separately, the boss *word* itself (not the gauntlet) stays plain `Text` — a
   2026-08-02 attempt to switch it to the same `FoilWord` treatment every other word uses
   was reverted the same day after device testing showed the bevel layers don't register
