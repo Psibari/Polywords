@@ -3,6 +3,8 @@ import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
+import AmbientSkyBackground from '../components/AmbientSkyBackground';
+import { VAULT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { cardMaterial, libraryMaterial, stageMaterial } from '../ui/pwMaterials';
@@ -68,7 +70,9 @@ export default function VaultScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      {/* STAGE — night air, candle on the bookcase */}
+      {/* STAGE — the shared night sky every other screen lives under, with
+          the candle-lit vignette on top so the bookcase stays readable. */}
+      <AmbientSkyBackground {...VAULT_SKY_TUNING} />
       <View pointerEvents="none" style={styles.ambientWash} />
       <LinearGradient
         colors={[...stageMaterial.vignette]}

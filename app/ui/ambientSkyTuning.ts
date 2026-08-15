@@ -55,3 +55,29 @@ export const DAILY_SKY_TUNING: AmbientSkyBackgroundProps = {
   moonPhase: 'half',
   starTint: PW.color.white,
 };
+
+// Vault sits behind its own bookcase art and candle-glow vignette, but
+// previously had no sky at all above it — the only screen with zero
+// connection to the shared night world. Same tint family as every other
+// screen; the vignette (see VaultScreen's stageMaterial layer) is what keeps
+// it readable behind the bookcase, same pattern as GameScreen's TopBar.
+export const VAULT_SKY_TUNING: AmbientSkyBackgroundProps = {
+  tint: [HOME_TINT_TOP, PW.color.bg],
+  starDensity: 'low',
+  driftSpeedMs: 34000,
+  meteorsEnabled: false,
+  moonPhase: 'gibbous',
+  starTint: PW.color.white,
+};
+
+// Settings previously used its own painted stone-corridor room (chamber),
+// the only screen built as a fully enclosed 3D space rather than the shared
+// flat stage. This brings it onto the same stage everyone else uses.
+export const SETTINGS_SKY_TUNING: AmbientSkyBackgroundProps = {
+  tint: [HOME_TINT_TOP, PW.color.bg],
+  starDensity: 'low',
+  driftSpeedMs: 30000,
+  meteorsEnabled: false,
+  moonPhase: 'half',
+  starTint: PW.color.gold,
+};

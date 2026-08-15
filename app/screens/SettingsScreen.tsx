@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, ImageBackground, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
+import AmbientSkyBackground from '../components/AmbientSkyBackground';
+import { SETTINGS_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
@@ -46,22 +48,6 @@ const CREDITS_TEXT =
   "Built with React Native and Expo.\n\n" +
   "Typography: Bebas Neue and Barlow Condensed.";
 
-const CHAMBER_ASPECT_RATIO = 941 / 1672;
-const chamberImage = require('../../assets/images/settings/chamber-dark-mobile.png');
-
-// Anchor points measured from the source art's actual pixels (brightness-cluster
-// scan of the PNG), not eyeballed. Percentages of the chamber image's own
-// width/height, top-left origin.
-const TORCH_POSITIONS = [
-  { leftPct: 0.110, topPct: 0.310, sizePct: 0.16 }, // foreground L
-  { leftPct: 0.897, topPct: 0.309, sizePct: 0.16 }, // foreground R
-  { leftPct: 0.293, topPct: 0.422, sizePct: 0.11 }, // mid L
-  { leftPct: 0.700, topPct: 0.422, sizePct: 0.11 }, // mid R
-  { leftPct: 0.365, topPct: 0.480, sizePct: 0.08 }, // far L
-  { leftPct: 0.615, topPct: 0.479, sizePct: 0.08 }, // far R
-  { leftPct: 0.447, topPct: 0.535, sizePct: 0.07 }, // altar candle
-] as const;
-
 type ToggleRowProps = {
   label: string;
   enabled: boolean;
@@ -95,8 +81,6 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
 export default function SettingsScreen({ navigation }: Props) {
   const [showPollyAnimations, setShowPollyAnimations] = useState(false);
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
-  const [chamberWidth, setChamberWidth] = useState(0);
-  const chamberHeight = chamberWidth / CHAMBER_ASPECT_RATIO;
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -192,36 +176,15 @@ export default function SettingsScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View
-        style={styles.chamberFrame}
-        onLayout={e => setChamberWidth(e.nativeEvent.layout.width)}
-      >
-        <ImageBackground source={chamberImage} resizeMode="cover" style={StyleSheet.absoluteFillObject}>
-          <View pointerEvents="none" style={styles.stoneShade} />
-          {chamberWidth > 0 && TORCH_POSITIONS.map((t, i) => (
-            <View
-              key={i}
-              pointerEvents="none"
-              style={[
-                styles.torchAnchor,
-                {
-                  left: t.leftPct * chamberWidth - (t.sizePct * chamberWidth) / 2,
-                  top: t.topPct * chamberHeight - (t.sizePct * chamberWidth) / 2,
-                  width: t.sizePct * chamberWidth,
-                  height: t.sizePct * chamberWidth,
-                },
-              ]}
-            >
-              <TorchGlow size={t.sizePct * chamberWidth} />
-            </View>
-          ))}
-          <LinearGradient
-            colors={['transparent', PW.color.bg]}
-            pointerEvents="none"
-            style={styles.chamberFade}
-          />
-        </ImageBackground>
-      </View>
+      {/* Same shared stage — night sky over flagstone ground — every other
+          screen lives on, replacing Settings' old one-off stone chamber. */}
+      <AmbientSkyBackground {...SETTINGS_SKY_TUNING} />
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(15,13,42,0.45)', 'rgba(15,13,42,0.22)', 'rgba(15,13,42,0.5)']}
+        locations={[0, 0.5, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -477,25 +440,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PW.color.bg,
   },
-  chamberFrame: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    aspectRatio: CHAMBER_ASPECT_RATIO,
-    overflow: 'hidden',
-  },
-  stoneShade: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: chamberMaterial.stoneShade,
-  },
-  chamberFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 140,
-  },
   plaqueHighlight: {
     position: 'absolute',
     top: 6,
@@ -504,9 +448,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: PW.color.cardInner,
     opacity: 0.5,
-  },
-  torchAnchor: {
-    position: 'absolute',
   },
   content: {
     paddingHorizontal: 20,

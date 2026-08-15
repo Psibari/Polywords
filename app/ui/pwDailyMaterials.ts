@@ -30,8 +30,13 @@ export const dailyBackdrop = {
 } as const;
 
 export const dailyCardMaterial = {
-  outerGradient: ['#F5C842', '#9B2D6B'] as const,
-  innerFace: '#1A1830',
+  // Gold-to-amber rim + purple-leather face — the same material identity as
+  // the painted Hunt tile (mask-card-v1/card-face.png) and the hero book's
+  // cover, instead of the gold-to-rose gradient this card used to have on
+  // its own (rose belongs to Polly's ghost/haunt accent elsewhere, not to
+  // an idle card face).
+  outerGradient: [PW.color.gold, PW.color.amber] as const,
+  innerFace: heroBookMaterial.coverPurple,
   text: '#FFF7D6',
   textSoft: '#E9FFF5',
   shadowColor: '#000000',
