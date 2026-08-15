@@ -40,6 +40,26 @@ export function FoilWord({
 
   return (
     <>
+      {/* Invisible sizer, normal flow — reserves the box the three foil
+          layers below share. Previously "fill" was the only layer in normal
+          flow (deboss/catchLight were position:absolute with no left/right,
+          sized from their own intrinsic content instead of that box). RN's
+          per-Text adjustsFontSizeToFit/numberOfLines fit algorithm runs
+          independently per instance, so once numberOfLines allowed a 2nd
+          line (Android clipping fix, 2026-08-11), that width mismatch let
+          one layer wrap while the others stayed single-line — the word
+          visibly split into three different, misaligned renderings instead
+          of one blended bevel. Pinning all three foil layers to this sizer's
+          exact box (left:0, right:0) makes their fit decisions identical by
+          construction, independent of numberOfLines. */}
+      <Text
+        {...textProps}
+        pointerEvents="none"
+        importantForAccessibility="no-hide-descendants"
+        style={[baseStyle, styles.sizer]}
+      >
+        {word}
+      </Text>
       <Text
         {...textProps}
         style={[baseStyle, styles.deboss, { transform: [{ translateY: debossY }] }]}
@@ -63,19 +83,29 @@ export function FoilWord({
 }
 
 const styles = StyleSheet.create({
+  sizer: {
+    opacity: 0,
+  },
   deboss: {
     position: 'absolute',
+    left: 0,
+    right: 0,
     color: foilMaterial.deboss,
     textShadowColor: 'transparent',
     textShadowRadius: 0,
   },
   catchLight: {
     position: 'absolute',
+    left: 0,
+    right: 0,
     color: foilMaterial.catchLight,
     textShadowColor: 'transparent',
     textShadowRadius: 0,
   },
   fill: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     color: foilMaterial.fill,
     textShadowColor: foilMaterial.edge,
     textShadowOffset: { width: 0, height: 1 },

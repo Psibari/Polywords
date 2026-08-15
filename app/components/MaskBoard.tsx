@@ -1412,11 +1412,19 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
             }}
           >
             {!isBoss ? (
+              // numberOfLines explicitly 1: FoilWord's shared default (2)
+              // exists as an Android undershoot fallback for other call
+              // sites, but this banner has no room for a 2nd line — a long
+              // word (e.g. SENTENCE) wrapping here spills its second line
+              // out below the book entirely (confirmed on device
+              // 2026-08-14). This restores the single-line config this
+              // exact 96px recipe was originally device-confirmed against.
               <FoilWord
                 word={step.word}
                 baseStyle={styles.word}
                 fontSize={96}
                 minimumFontScale={0.72}
+                numberOfLines={1}
               />
             ) : (
               // FoilWord's 3-layer bevel recipe was tuned against the default
