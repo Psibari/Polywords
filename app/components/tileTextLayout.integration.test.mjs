@@ -47,8 +47,9 @@ assert.match(
 );
 assert.match(
   gauntletSpines,
-  /resolveGauntletRowHeight\(measuredCardHeights\)/,
-  'BossGauntletSpines must derive its row from active and in-flight measurements only',
+  /resolveGauntletRowHeight\(measuredCardHeights, CARD_CLOSED_HEIGHT\)/,
+  'BossGauntletSpines must derive its row from active/in-flight measurements, floored to the ' +
+    "closed card's own (short) resting height rather than the helper's taller opened-card default",
 );
 assert.ok(
   gauntletSpines.indexOf('onActiveCardHeightChange?.(activeCardHeight)') <

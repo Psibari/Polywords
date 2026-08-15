@@ -10,7 +10,8 @@ export type HapticCue =
   | 'bossCorrect'
   | 'bossHaunted'
   | 'mastery'
-  | 'gauntletPick';
+  | 'gauntletPick'
+  | 'gauntletBegin';
 
 function hapticsEnabled(): boolean {
   return useGameStore.getState().hapticsEnabled;
@@ -66,6 +67,18 @@ export const Haptics = {
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success);
       case 'gauntletPick':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      // Deliberately NOT bossEntry's double-heavy-pulse — reusing that cue
+      // for a second, different moment made the gauntlet's own arrival feel
+      // like more of the same instead of a distinct beat (Pete, 2026-08-15).
+      // Three quick Medium pulses instead of two slow Heavy ones: faster,
+      // lighter rhythm reads as "here we go" rather than repeating the
+      // entrance's own weight, and echoes the 3-tile gauntlet itself.
+      case 'gauntletBegin': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 90);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 180);
+        return first;
+      }
     }
   },
 } as const;

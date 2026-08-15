@@ -824,7 +824,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
       },
       onGauntletBegin() {
         setGauntletThrowKey(k => k + 1);
-        Haptics.cueAsync('bossEntry');
+        Haptics.cueAsync('gauntletBegin');
       },
       onWordExit(perfect) {
         // Stop any prior per-tile flick animation and reset both values it

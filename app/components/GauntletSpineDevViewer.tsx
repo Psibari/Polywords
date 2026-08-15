@@ -8,38 +8,42 @@ import {
   View,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
+import { heroBookMaterial } from '../ui/pwMaterials';
+import { CARD_WIDTH, CARD_CLOSED_HEIGHT, CARD_MARKER_COLORS } from './BossGauntletSpines';
+
+const crownMarkerArt = require('../../assets/images/gauntlet/crown-marker.png');
 
 type Props = {
   visible: boolean;
   onClose: () => void;
 };
 
-const gauntletSpineArt = require('../../assets/images/gauntlet/spine.png');
-
-// Matches BossGauntletSpines.tsx's real slot dimensions exactly — the
-// point of this viewer is to preview the actual art at the actual size
-// it renders in-game, not a stand-in.
-const SPINE_WIDTH = 110;
-const SPINE_HEIGHT = 200;
-
+// This used to tune a stretched spine PNG's scale/position — that job no
+// longer exists (BossGauntletSpines.tsx, 2026-08-15: cut the standing spine
+// for a card-shaped, code-drawn closed face, no image asset at all). What's
+// genuinely still un-sized is the crown identity marker (real artwork
+// landed 2026-08-15) — so this viewer now previews the real card recipe
+// live (same gradient/border tokens as the live component, imported, not
+// duplicated) with the scale/position controls sizing the actual crown art.
 const SCALE_STEP = 0.05;
 const SCALE_MIN = 0.5;
 const SCALE_MAX = 2;
 const OFFSET_STEP = 4;
 
 export function GauntletSpineDevViewer({ visible, onClose }: Props) {
-  const [scale, setScale] = useState(1);
-  const [offsetY, setOffsetY] = useState(0);
+  const [markerScale, setMarkerScale] = useState(1);
+  const [markerOffsetY, setMarkerOffsetY] = useState(0);
 
   function nudgeScale(delta: number) {
-    setScale(prev => Math.min(SCALE_MAX, Math.max(SCALE_MIN, +(prev + delta).toFixed(2))));
+    setMarkerScale(prev => Math.min(SCALE_MAX, Math.max(SCALE_MIN, +(prev + delta).toFixed(2))));
   }
 
   function reset() {
-    setScale(1);
-    setOffsetY(0);
+    setMarkerScale(1);
+    setMarkerOffsetY(0);
   }
 
   return (
@@ -53,10 +57,10 @@ export function GauntletSpineDevViewer({ visible, onClose }: Props) {
         <View style={styles.header}>
           <View style={styles.headerCopy}>
             <Text style={styles.kicker}>DEVELOPMENT ONLY</Text>
-            <Text style={styles.title}>GAUNTLET SPINE SIZER</Text>
+            <Text style={styles.title}>GAUNTLET CARD MARKER SIZER</Text>
           </View>
           <Pressable
-            accessibilityLabel="Close gauntlet spine sizer"
+            accessibilityLabel="Close gauntlet card marker sizer"
             accessibilityRole="button"
             hitSlop={8}
             onPress={onClose}
@@ -67,33 +71,46 @@ export function GauntletSpineDevViewer({ visible, onClose }: Props) {
         </View>
 
         <Text style={styles.note}>
-          Same slot size (110×200) the real gauntlet row uses. Tune scale/position here,
-          then report the numbers back — this viewer doesn't write to the live component itself.
+          Live preview of the real closed-card recipe (same gradient/border tokens the actual
+          gauntlet row uses, {CARD_WIDTH}×{CARD_CLOSED_HEIGHT}). Controls below size/position the
+          identity marker only — swap the colored dot for real crown artwork once it lands, then
+          tune it here and report the numbers back.
         </Text>
 
         <View style={styles.row}>
-          {[0, 1, 2].map(i => (
+          {CARD_MARKER_COLORS.map((color, i) => (
             <View key={i} style={styles.slot}>
-              <Image
-                source={gauntletSpineArt}
-                contentFit="contain"
-                style={{
-                  width: SPINE_WIDTH,
-                  height: SPINE_HEIGHT,
-                  transform: [{ scale }, { translateY: offsetY }],
-                }}
-              />
+              <LinearGradient
+                colors={[
+                  heroBookMaterial.coverPurpleTop,
+                  heroBookMaterial.coverPurple,
+                  heroBookMaterial.coverPurpleBot,
+                ]}
+                style={styles.card}
+              >
+                <Image
+                  source={crownMarkerArt}
+                  contentFit="contain"
+                  tintColor={color}
+                  style={[
+                    styles.marker,
+                    {
+                      transform: [{ scale: markerScale }, { translateY: markerOffsetY }],
+                    },
+                  ]}
+                />
+              </LinearGradient>
             </View>
           ))}
         </View>
 
         <View style={styles.controls}>
           <View style={styles.controlGroup}>
-            <Text style={styles.controlLabel}>SCALE — {scale.toFixed(2)}x</Text>
+            <Text style={styles.controlLabel}>MARKER SCALE — {markerScale.toFixed(2)}x</Text>
             <View style={styles.stepperRow}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Decrease scale"
+                accessibilityLabel="Decrease marker scale"
                 onPress={() => nudgeScale(-SCALE_STEP)}
                 style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
               >
@@ -101,7 +118,7 @@ export function GauntletSpineDevViewer({ visible, onClose }: Props) {
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Increase scale"
+                accessibilityLabel="Increase marker scale"
                 onPress={() => nudgeScale(SCALE_STEP)}
                 style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
               >
@@ -111,20 +128,20 @@ export function GauntletSpineDevViewer({ visible, onClose }: Props) {
           </View>
 
           <View style={styles.controlGroup}>
-            <Text style={styles.controlLabel}>VERTICAL — {offsetY}px</Text>
+            <Text style={styles.controlLabel}>MARKER VERTICAL — {markerOffsetY}px</Text>
             <View style={styles.stepperRow}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Nudge up"
-                onPress={() => setOffsetY(prev => prev - OFFSET_STEP)}
+                accessibilityLabel="Nudge marker up"
+                onPress={() => setMarkerOffsetY(prev => prev - OFFSET_STEP)}
                 style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
               >
                 <Text style={styles.stepperText}>↑</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Nudge down"
-                onPress={() => setOffsetY(prev => prev + OFFSET_STEP)}
+                accessibilityLabel="Nudge marker down"
+                onPress={() => setMarkerOffsetY(prev => prev + OFFSET_STEP)}
                 style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
               >
                 <Text style={styles.stepperText}>↓</Text>
@@ -134,7 +151,7 @@ export function GauntletSpineDevViewer({ visible, onClose }: Props) {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Reset scale and position"
+            accessibilityLabel="Reset marker scale and position"
             onPress={reset}
             style={({ pressed }) => [styles.resetButton, pressed && styles.pressed]}
           >
@@ -216,14 +233,28 @@ const styles = StyleSheet.create({
     gap: PW.space.md,
   },
   slot: {
-    width: SPINE_WIDTH,
-    height: SPINE_HEIGHT,
+    width: CARD_WIDTH,
+    height: CARD_CLOSED_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
     borderWidth: 1,
     borderColor: PW.color.purpleSoft,
     borderStyle: 'dashed',
+  },
+  card: {
+    width: CARD_WIDTH,
+    height: CARD_CLOSED_HEIGHT,
+    borderRadius: PW.radius.card,
+    borderWidth: 1.5,
+    borderColor: heroBookMaterial.goldHairline,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marker: {
+    width: 84,
+    height: 54,
   },
   controls: {
     paddingHorizontal: PW.space.lg,

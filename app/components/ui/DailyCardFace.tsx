@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONTS } from '../../constants/fonts';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../../ui/pwDailyMaterials';
+import { heroBookMaterial } from '../../ui/pwMaterials';
 
 export type DailyCardFaceState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -14,7 +15,18 @@ type Props = {
 export default function DailyCardFace({ label }: Props) {
   return (
     <View style={styles.root}>
-      <View style={styles.background} />
+      {/* Same purple-leather family as the Hero Book cover, the Vault
+          spines, and the boss gauntlet's closed card (heroBookMaterial) —
+          but only the two DARKER stops, not the full 3-stop recipe those
+          larger surfaces use. This card already has its own separate top
+          "sheen" highlight below; stacking that with the gradient's own
+          lightest (coverPurpleTop) stop doubled up the top-highlighting and
+          created a visible bright box with an edge instead of one smooth
+          surface (Pete, on-device, 2026-08-15). One light source, not two. */}
+      <LinearGradient
+        colors={[heroBookMaterial.coverPurple, heroBookMaterial.coverPurpleBot]}
+        style={styles.background}
+      />
       <View style={styles.insetTrim} />
       <LinearGradient
         colors={[dailyCardFaceMaterial.sheenTop, 'transparent']}
@@ -42,7 +54,6 @@ const styles = StyleSheet.create({
   },
   background: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: dailyCardMaterial.innerFace,
   },
   insetTrim: {
     position: 'absolute',

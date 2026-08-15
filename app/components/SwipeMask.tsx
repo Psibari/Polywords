@@ -534,10 +534,13 @@ export function SwipeMask({
       opacity: tileOpacity.value,
       ...(gauntletCard
         ? {
-            // Amber, matching the sealed spine's own shadow (BossGauntletSpines)
-            // — the glow stays the same hue whether the card is closed or open,
-            // so it reads as one object unsealing rather than swapping identity.
-            shadowColor: PW.color.amber,
+            // Gold glow, same family as tileBookMaterial's shadow below and
+            // the closed card's gold rim (BossGauntletSpines.tsx) — was
+            // amber, matching the old standing spine's own shadow, but that
+            // spine is retired (2026-08-15) and amber no longer connects to
+            // anything else on screen once the card itself uses the shared
+            // MaskCardArtwork texture instead of its own purple material.
+            shadowColor: heroBookMaterial.goldTrim,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.25 + (liftAmount * 0.55),
             shadowRadius: 10 + (liftAmount * 26),
@@ -777,26 +780,19 @@ export function SwipeMask({
           )}
           {!isSpecialSplit && gauntletCard && (
             <>
-              <LinearGradient
-                colors={[
-                  heroBookMaterial.coverPurpleTop,
-                  heroBookMaterial.coverPurple,
-                  heroBookMaterial.coverPurpleBot,
-                ]}
-                locations={[0, 0.55, 1]}
-                start={{ x: 0.1, y: 0 }}
-                end={{ x: 0.9, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              {/* Translucent scrim, not a solid block — the gradient above is
-                  this card's material, the exact same purple leather the
-                  sealed spine (BossGauntletSpines) uses, not a separate rose
-                  tint (that rose accent read as "too pink" on device
-                  2026-08-02 and was dropped — this project's rule as of the
-                  same day is one background/material family, no per-screen
-                  exceptions); it must still read through, not be reduced to
-                  a picture-frame edge. */}
-              <View style={styles.gauntletInset} pointerEvents="none" />
+              {/* Same painted texture every regular tile uses (MaskCardArtwork),
+                  not a separate purple-leather gradient — the earlier version
+                  of this card was its own material family (matching the old
+                  standing spine, since retired for a flat card presentation —
+                  see BossGauntletSpines.tsx, 2026-08-15) and read as visibly
+                  different from the rest of the game's cards, which is
+                  exactly the "doesn't look like it belongs" complaint the
+                  2026-08-08 design doc already called out and approved fixing
+                  (never actually implemented until now, confirmed on device
+                  2026-08-15). Boss identity now comes from the gold rim
+                  accent below, not a whole separate texture. */}
+              <MaskCardArtwork />
+              <View style={styles.gauntletAccentRim} pointerEvents="none" />
             </>
           )}
           {/* Split tile background */}
@@ -934,15 +930,17 @@ const styles = StyleSheet.create({
     backgroundColor: heroBookMaterial.coverPurpleBot,
     overflow: 'hidden',
   },
-  gauntletInset: {
+  // The "little accent" that marks this as a boss card without giving it a
+  // whole separate texture (Pete, 2026-08-15) — a gold rim on top of the
+  // same MaskCardArtwork every regular tile already has, echoing the
+  // gauntlet card's own gold-trim identity (crown marker, closed-card
+  // border) instead of introducing a new visual language.
+  gauntletAccentRim: {
     position: 'absolute',
-    top: 5, left: 5, right: 5, bottom: 5,
-    borderRadius: 16,
-    // Was a fully opaque PW.color.cardFace/surfaceDeep hex, which hid the
-    // gradient behind everything but a 5px picture-frame edge. Translucent
-    // instead, so the gradient stays the card's visible material while
-    // still darkening enough for phrase-text contrast.
-    backgroundColor: PW.color.overlayLight,
+    top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: PW.color.goldSoft,
   },
   checkmark: {
     position: 'absolute',
