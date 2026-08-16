@@ -115,6 +115,10 @@
     "gpsTag": "confidence",
     "difficulty": "medium"
   },
+  "BOIL": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
   "BOLT": {
     "gpsTag": "panic",
     "difficulty": "hard"
@@ -303,11 +307,39 @@
     "gpsTag": "tension",
     "difficulty": "hard"
   },
+  "CONTENT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CONTEST": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CONVICTION": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "COPY": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CORD": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
   "CORK": {
     "gpsTag": "flow",
     "difficulty": "easy"
   },
   "CORNER": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "COUNT": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "COUNTER": {
     "gpsTag": "panic",
     "difficulty": "hard"
   },
@@ -319,6 +351,30 @@
     "gpsTag": "tension",
     "difficulty": "medium"
   },
+  "CRICKET": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "CROSS": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CROWN": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "CRUST": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "CUE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "CURE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
   "CURRENT": {
     "gpsTag": "tension",
     "difficulty": "medium"
@@ -326,6 +382,42 @@
   "DATE": {
     "gpsTag": "tension",
     "difficulty": "medium"
+  },
+  "DEAL": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "DECK": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "DEEP": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "DEGREE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "DESERT": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "DIE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "DIGEST": {
+    "gpsTag": "panic",
+    "difficulty": "medium"
+  },
+  "DIRECT": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "DISCHARGE": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
   },
   "DRAW": {
     "gpsTag": "tension",

@@ -1,3 +1,17 @@
+// ⚠️ RETIRED as the normal content-update path (2026-08-15). This script predates stable
+// content identities (the 2026-08-13 mask/hiddenPairs id migration) and is destructive
+// against current live data: it regenerates every boss word's hiddenPairs as
+// [realPair, 'PLACEHOLDER TEST — meaning two', 'PLACEHOLDER TEST — meaning three'] (destroying
+// hand-written pairs), writes hiddenPairs with no `id` field at all (breaking
+// app/game/hiddenPairIdentity.ts), and regenerates every mask id positionally as
+// `${slug}_r${i}`/`${slug}_t${i}` instead of reading the workbook's own `Content ID` column —
+// re-pointing every saved player record out from under them. For adding new words to an
+// already-live corpus, use tools/content/merge-workbook-additions.mjs instead, which is
+// purely additive and never touches an existing word's masks or hiddenPairs.
+//
+// Kept in the repo only as a record of how the 150-word corpus was originally built, and
+// guarded below so it can't run by accident.
+//
 // Full replacement build: wipes assets/data/huntData.json and rebuilds it from ONLY the
 // new editorial workbook (Pete's 2026-08-06 call — the old 400-word test corpus is gone,
 // this 150-word workbook is the new working list).
@@ -17,6 +31,23 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import XLSX from 'xlsx';
+
+if (process.env.POLYWORDS_ALLOW_DESTRUCTIVE_REBUILD !== '1') {
+  console.error(
+    '\nbuild-hunt-data.mjs is disarmed.\n\n' +
+    'This script predates stable content identities and is destructive against current\n' +
+    'live data: it regenerates every boss word\'s hiddenPairs as PLACEHOLDER TEST content\n' +
+    '(destroying hand-written pairs), writes hiddenPairs with no `id` field (breaking\n' +
+    'app/game/hiddenPairIdentity.ts), and regenerates every mask id positionally instead\n' +
+    'of using the workbook\'s own `Content ID` column — re-pointing every saved player\n' +
+    'record out from under them.\n\n' +
+    'To add new words to the live corpus, use tools/content/merge-workbook-additions.mjs\n' +
+    'instead — it is purely additive and never touches an existing word.\n\n' +
+    'If you truly intend a full destructive rebuild, re-run with\n' +
+    'POLYWORDS_ALLOW_DESTRUCTIVE_REBUILD=1 set in the environment.\n'
+  );
+  process.exit(1);
+}
 
 const repoRoot = path.resolve(import.meta.dirname, '../..');
 const workbookPath = process.argv[2];
