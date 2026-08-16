@@ -128,6 +128,15 @@ function pct(count: number, total: number): string {
   return total > 0 ? `${Math.round((count / total) * 100)}%` : '—';
 }
 
+// Design targets from a 60k-run simulation, locked 2026-07-22
+// (docs/GAME_REFERENCE.md) — never measured against real play until this
+// summary started printing the comparison directly. Survive = reached
+// results without running out of feathers, whether or not the boss was
+// mastered (playerBeatPolly + playerCompleted); master = playerBeatPolly
+// specifically.
+const SURVIVE_TARGET_PCT = 54;
+const MASTER_TARGET_PCT = 25;
+
 // Human-readable text for the Settings "Share Debug Stats" button — this is
 // the whole point of the stopgap: turning the docs/GAME_REFERENCE.md
 // survive/master targets (54%/25%, asserted from an unreproducible
@@ -138,6 +147,9 @@ export function formatPlaytestSummaryText(): string {
 
   const huntTotal = Object.values(s.huntOutcomes).reduce((a, b) => a + b, 0);
   const dailyTotal = Object.values(s.dailyOutcomes).reduce((a, b) => a + b, 0);
+  const mastered = s.huntOutcomes.playerBeatPolly ?? 0;
+  const completed = s.huntOutcomes.playerCompleted ?? 0;
+  const surviveCount = mastered + completed;
   const deathRounds = Object.entries(s.deathsByRound)
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([round, count]) => `    round ${round}: ${count}`)
@@ -148,8 +160,14 @@ export function formatPlaytestSummaryText(): string {
     `Events tracked: ${s.eventCount}`,
     '',
     `Hunt runs completed: ${huntTotal}`,
-    `  mastered (playerBeatPolly): ${s.huntOutcomes.playerBeatPolly ?? 0} (${pct(s.huntOutcomes.playerBeatPolly ?? 0, huntTotal)})`,
-    `  survived, not mastered (playerCompleted): ${s.huntOutcomes.playerCompleted ?? 0} (${pct(s.huntOutcomes.playerCompleted ?? 0, huntTotal)})`,
+    `  survive rate: ${pct(surviveCount, huntTotal)} (target ~${SURVIVE_TARGET_PCT}%)`,
+    `  master rate: ${pct(mastered, huntTotal)} (target ~${MASTER_TARGET_PCT}%)`,
+    ...(huntTotal > 0 && huntTotal < 30
+      ? [`  (only ${huntTotal} run${huntTotal === 1 ? '' : 's'} logged — too few to compare against a target meaningfully; keep playing)`]
+      : []),
+    '',
+    `  mastered (playerBeatPolly): ${mastered} (${pct(mastered, huntTotal)})`,
+    `  survived, not mastered (playerCompleted): ${completed} (${pct(completed, huntTotal)})`,
     `  died (pollyWon): ${s.huntOutcomes.pollyWon ?? 0} (${pct(s.huntOutcomes.pollyWon ?? 0, huntTotal)})`,
     '',
     'Deaths by round:',
