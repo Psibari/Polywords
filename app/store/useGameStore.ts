@@ -63,6 +63,7 @@ import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { deriveSeed } from '../game/seededRandom';
 import {
   flushPlaytestSummary,
+  flushPlaytestEvents,
   recordPlaytestEvent,
 } from '../game/playtestTelemetry';
 import {
@@ -597,8 +598,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // excludes already-mastered words. It just stays mastered.
     if (step.isMasteryRematch === true) return;
 
+    const priorMisses = get().ghosts.find(
+      ghost => ghost.wordId === step.word.trim().toUpperCase(),
+    )?.runsMissed ?? 0;
     const next = upsertGhostRecord(get().ghosts, step, failedPair);
     set({ ghosts: next });
+    recordPlaytestEvent('ghost_created', { word: step.word, priorMisses, queueDepthAfter: next.length });
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
   },
 
@@ -615,6 +620,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ ghosts: result.ghosts });
     if (outcome === 'banished') {
       recordPlaytestEvent('haunt_cleared', { word: wordId, priorMisses: result.priorMisses });
+    } else if (outcome === 'haunted') {
+      recordPlaytestEvent('haunt_failed', { word: wordId, priorMisses: result.priorMisses });
     }
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(result.ghosts)).catch(() => {});
   },
@@ -660,6 +667,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (game.status === 'gameOver') {
       recordPlaytestEvent('hunt_death', { round: game.stepIndex + 1, lives: game.lives });
     }
+    flushPlaytestEvents();
     const pollyMemory = rememberHunt(get().pollyMemory, {
       outcome,
       score: finalScore,
@@ -947,6 +955,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           solved: dailyResult.solvedCount,
         });
       }
+      flushPlaytestEvents();
       // Win or lose, completing today's attempt keeps the streak alive
       // (docs/DAILY_CHALLENGE_SPEC.md) — reschedule the reminder for
       // tomorrow either way. No-ops if the setting is off or permission was

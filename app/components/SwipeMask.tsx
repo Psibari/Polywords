@@ -34,6 +34,7 @@ import {
   resolveHuntSwipeDirection,
 } from './huntSwipeDirection';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import { useGameStore } from '../store/useGameStore';
 import {
   ACTIVE_TILE_BASE_FONT_SIZE,
   resolveActiveTileHeight,
@@ -182,6 +183,13 @@ export function SwipeMask({
   const absorbRafRef             = useRef<number | null>(null);
   const lastGestureVelocityRef   = useRef({ vx: 0, vy: 0 });
   const exitCompleteFiredRef     = useRef(false);
+  // Telemetry-only timing/state — see recordHuntDecision below. visibleAtRef
+  // is a mount-time fallback; MaskBoard doesn't pass a promotion/landing
+  // timestamp prop today, so this is the only "became interactive" moment
+  // available per card.
+  const visibleAtRef              = useRef(Date.now());
+  const grantAtRef                = useRef<number | null>(null);
+  const ambiguousFiredRef         = useRef(false);
 
   useEffect(() => { onSwipeUpRef.current    = onSwipeUp;    }, [onSwipeUp]);
   useEffect(() => { onSwipeDownRef.current  = onSwipeDown;  }, [onSwipeDown]);
@@ -209,6 +217,32 @@ export function SwipeMask({
     if (exitCompleteFiredRef.current) return;
     exitCompleteFiredRef.current = true;
     onExitCompleteRef.current?.();
+  }
+
+  // Fires at the same swipe-commit point the existing correct/wrong
+  // resolution already happens at (onPanResponderRelease below) — not a
+  // second resolution path. correct is derived the same way wrongCaption
+  // already derives it below: direction + mask.isReal, no new state.
+  // Called after the onSwipeUp/onSwipeDown callback so chainAfter/livesAfter
+  // reflect the store's post-commit state, not the pre-swipe snapshot.
+  function recordHuntDecision(direction: 'up' | 'right') {
+    const game = useGameStore.getState().game;
+    const activeStep = game.session[game.stepIndex] as
+      (typeof game.session[number]) & { gpsTag?: string };
+    const correct = (direction === 'up' && mask.isReal) || (direction === 'right' && !mask.isReal);
+    const touchToCommitMs = grantAtRef.current !== null ? Date.now() - grantAtRef.current : undefined;
+    recordPlaytestEvent('hunt_decision', {
+      round: game.stepIndex + 1,
+      ...(activeStep.gpsTag ? { phase: activeStep.gpsTag } : {}),
+      truth: mask.isReal ? 'real' : 'trap',
+      chosenDirection: direction,
+      correct,
+      ...(touchToCommitMs !== undefined ? { touchToCommitMs } : {}),
+      visibleToTouchMs: Date.now() - visibleAtRef.current,
+      chainAfter: game.chainMultiplier,
+      livesAfter: game.lives,
+      precededByAmbiguous: ambiguousFiredRef.current,
+    });
   }
 
   // ── Cleanup rAF on unmount ────────────────────────────────────
@@ -570,6 +604,7 @@ export function SwipeMask({
       onPanResponderGrant: () => {
         if (disabledRef.current || judgedRef.current) return;
         hasThresholdFiredRef.current = false;
+        grantAtRef.current     = Date.now();
         grabLift.value         = withSpring(-10, { damping: 16, stiffness: 420 });
         scale.value            = withSpring(1.04, { damping: 16, stiffness: 420 });
         onPressHoldStartRef.current?.();
@@ -609,15 +644,18 @@ export function SwipeMask({
           swipeDirRef.current = 'up';
           grabLift.value      = withTiming(0, { duration: 80 });
           onSwipeUpRef.current();
+          recordHuntDecision('up');
 
         } else if (direction === 'right') {
           judgedRef.current   = true;
           swipeDirRef.current = 'right';
           grabLift.value      = withTiming(0, { duration: 80 });
           onSwipeDownRef.current();
+          recordHuntDecision('right');
 
         } else {
           if (g.dy < -HUNT_SWIPE_THRESHOLD || g.dx > HUNT_SWIPE_THRESHOLD) {
+            ambiguousFiredRef.current = true;
             recordPlaytestEvent('hunt_ambiguous_swipe', {
               dx: Math.round(g.dx),
               dy: Math.round(g.dy),
@@ -655,10 +693,12 @@ export function SwipeMask({
       judgedRef.current   = true;
       swipeDirRef.current = 'up';
       onSwipeUpRef.current();
+      recordHuntDecision('up');
     } else if (action === 'reject') {
       judgedRef.current   = true;
       swipeDirRef.current = 'right';
       onSwipeDownRef.current();
+      recordHuntDecision('right');
     }
   }
 

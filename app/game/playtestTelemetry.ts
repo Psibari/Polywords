@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createActiveGamePersistenceCoordinator } from './activeGamePersistence';
 
 export type PlaytestEventName =
   | 'hunt_ambiguous_swipe'
@@ -9,7 +10,13 @@ export type PlaytestEventName =
   | 'boss_hidden_choice'
   | 'daily_abandon_candidate'
   | 'daily_complete'
-  | 'daily_loss';
+  | 'daily_loss'
+  | 'hunt_decision'
+  | 'ghost_created'
+  | 'haunt_reached'
+  | 'haunt_failed'
+  | 'boss_entered'
+  | 'boss_playable';
 
 export type PlaytestEvent = {
   name: PlaytestEventName;
@@ -45,6 +52,20 @@ export function loadPlaytestEvents(): Promise<void> {
   return loadPromise;
 }
 
+// A run-ending moment (hunt_complete/hunt_death/daily_complete/daily_loss)
+// can background or kill the app before a debounced write below ever fires
+// — flushPlaytestEvents() lets those specific call sites (see
+// useGameStore.ts) write immediately instead of losing the tail of the run.
+const PLAYTEST_DEBOUNCE_MS = 800;
+const persistence = createActiveGamePersistenceCoordinator<PlaytestEvent[]>({
+  key: STORAGE_KEY,
+  storage: AsyncStorage,
+  getSnapshot: () => events,
+  shouldPersist: () => true,
+  debounceMs: PLAYTEST_DEBOUNCE_MS,
+});
+persistence.arm();
+
 // Records in every build, not just __DEV__ — this is the whole point of the
 // local-only playtest stopgap: without it there is no way to check the
 // design's survive/master targets (docs/GAME_REFERENCE.md) against real play
@@ -52,13 +73,24 @@ export function loadPlaytestEvents(): Promise<void> {
 // getPlaytestSummary()/clearPlaytestHistory() and SettingsScreen's "Playtest
 // Data" section, which is the only way this data is ever surfaced (a manual
 // on-device Share, never automatic, never networked).
+//
+// The AsyncStorage write is debounced (trailing ~800ms, see `persistence`
+// above) rather than fired on every call — this is called on every swipe
+// commit now (hunt_decision), and a synchronous write per swipe was the kind
+// of main-thread hitch a card-commit animation can't afford.
 export function recordPlaytestEvent(
   name: PlaytestEventName,
   data: PlaytestEvent['data'] = {},
 ): void {
   events.push({ name, at: Date.now(), data });
   if (events.length > MAX_EVENTS) events = events.slice(-MAX_EVENTS);
-  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(events)).catch(() => {});
+  persistence.schedule();
+}
+
+// Bypasses the debounce above for the run-ending moments that can't afford
+// to lose the tail of the event log to a backgrounded/killed app.
+export function flushPlaytestEvents(): Promise<void> {
+  return persistence.flush().catch(() => {});
 }
 
 export function summarizePlaytestEvents(source: readonly PlaytestEvent[]) {

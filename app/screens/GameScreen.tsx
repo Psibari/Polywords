@@ -29,6 +29,7 @@ import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { recordPlaytestEvent } from '../game/playtestTelemetry';
 
 const MAX_FEATHERS = 6;
 
@@ -667,6 +668,7 @@ const tb = StyleSheet.create({
 function GameDirector({ navigation }: { navigation: any }) {
   const vignetteId = useId();
   const game       = useGameStore(s => s.game);
+  const ghosts     = useGameStore(s => s.ghosts);
   const startGame  = useGameStore(s => s.startGame);
   const forfeitGame = useGameStore(s => s.forfeitGame);
   const consumeFeatherMilestone = useGameStore(s => s.consumeFeatherMilestone);
@@ -1026,6 +1028,10 @@ function GameDirector({ navigation }: { navigation: any }) {
     !isDone &&
     activeStep.kind === 'word' &&
     activeStep.eventType === 'bossWord';
+  const isHauntRound =
+    !isDone &&
+    activeStep.kind === 'word' &&
+    activeStep.isHauntReturn === true;
 
   useEffect(() => {
     if (!isBossRound || bossIntroSeen !== true) {
@@ -1035,12 +1041,26 @@ function GameDirector({ navigation }: { navigation: any }) {
     if (skipBossTransitionStepRef.current === game.stepIndex) {
       skipBossTransitionStepRef.current = null;
       setBossTransitionActive(false);
+      recordPlaytestEvent('boss_playable', { round: game.stepIndex + 1, transitionMs: 0 });
       return;
     }
     setBossTransitionActive(true);
-    const timer = setTimeout(() => setBossTransitionActive(false), 760);
+    recordPlaytestEvent('boss_entered', { round: game.stepIndex + 1 });
+    const timer = setTimeout(() => {
+      setBossTransitionActive(false);
+      recordPlaytestEvent('boss_playable', { round: game.stepIndex + 1, transitionMs: 760 });
+    }, 760);
     return () => clearTimeout(timer);
   }, [game.stepIndex, bossIntroSeen, isBossRound]);
+
+  useEffect(() => {
+    if (!isHauntRound || activeStep.kind !== 'word') return;
+    const word = activeStep.word;
+    const runsWaited = ghosts.find(
+      ghost => ghost.wordId === word.trim().toUpperCase(),
+    )?.runsMissed ?? 0;
+    recordPlaytestEvent('haunt_reached', { word, runsWaited });
+  }, [game.stepIndex, isHauntRound]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const gameplayGateActive =
     introSeen !== true ||
