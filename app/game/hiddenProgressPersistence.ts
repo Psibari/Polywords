@@ -60,3 +60,23 @@ export function upsertMasteredRecord(
       : [...progress.masteredWords, record],
   };
 }
+
+export function addHiddenPairIdFound(progress: PlayerProgress, pairId: string): PlayerProgress {
+  if ((progress.hiddenPairIdsFound ?? []).includes(pairId)) return progress;
+  return {
+    ...progress,
+    hiddenPairIdsFound: [...(progress.hiddenPairIdsFound ?? []), pairId].sort(),
+  };
+}
+
+// Recovers ids for words mastered before hiddenPairIdsFound existed on
+// PlayerProgress. Only hiddenPairIds is a source of real stable ids —
+// MasteredWordRecord.hiddenMeaningsFound holds display REAL text, not ids,
+// so it is not folded in here. Idempotent: safe to run on every load.
+export function backfillHiddenPairIdsFound(progress: PlayerProgress): PlayerProgress {
+  const ids = new Set(progress.hiddenPairIdsFound ?? []);
+  for (const record of progress.masteredWords) {
+    for (const id of record.hiddenPairIds ?? []) ids.add(id);
+  }
+  return { ...progress, hiddenPairIdsFound: Array.from(ids).sort() };
+}

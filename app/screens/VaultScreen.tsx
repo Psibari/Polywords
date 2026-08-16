@@ -14,7 +14,7 @@ import { FoilWord } from '../components/ui/FoilWord';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { getDisplayStreak } from '../game/dailyStreak';
-import { resolveGhostPair, resolveMasteredPairs } from '../game/hiddenPairIdentity';
+import { resolveGhostPair, resolveMasteredPairs, pairsForWord } from '../game/hiddenPairIdentity';
 import rawHuntData from '../../assets/data/huntData.json';
 
 import { RANK_TIERS, getRankProgress, getRankTier } from '../game/ranks';
@@ -67,6 +67,10 @@ export default function VaultScreen({ navigation }: Props) {
     : [];
   const selectedGhostPair = selectedGhost ? resolveGhostPair(selectedGhost) : null;
   const selectedRealMeanings = selectedMastered ? realMeaningsFor(selectedMastered.word) : [];
+  const selectedGhostTotalPairs = selectedGhost ? pairsForWord(selectedGhost.word) : [];
+  const selectedGhostCrackedCount = selectedGhost
+    ? selectedGhostTotalPairs.filter(pair => (progress.hiddenPairIdsFound ?? []).includes(pair.id)).length
+    : 0;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -204,6 +208,11 @@ export default function VaultScreen({ navigation }: Props) {
                 {selectedGhostPair?.trap && (
                   <Text style={[styles.detailLine, styles.detailTrap]}>
                     Watch for: {selectedGhostPair.trap}
+                  </Text>
+                )}
+                {selectedGhostCrackedCount > 0 && (
+                  <Text style={styles.detailLine}>
+                    Cracked {selectedGhostCrackedCount} of {selectedGhostTotalPairs.length} hidden meanings.
                   </Text>
                 )}
                 <Text style={styles.detailLine}>Run it back next Hunt.</Text>

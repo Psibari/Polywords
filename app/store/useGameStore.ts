@@ -29,7 +29,12 @@ import {
   PlayerProgress,
   WordStep,
 } from '../game/types';
-import { upsertGhostRecord, upsertMasteredRecord } from '../game/hiddenProgressPersistence';
+import {
+  upsertGhostRecord,
+  upsertMasteredRecord,
+  addHiddenPairIdFound,
+  backfillHiddenPairIdsFound,
+} from '../game/hiddenProgressPersistence';
 import { generateHunt } from '../game/huntGenerator';
 import {
   buildDailySession,
@@ -254,6 +259,7 @@ type GameStore = {
     flawless: boolean,
     priorHauntAttempts: number,
   ) => void;
+  recordHiddenPairIdFound: (pairId: string) => void;
   recordRunComplete: (finalScore: number) => void;
   loadProgress: () => Promise<void>;
   pollyMemory: PollyMemory;
@@ -488,6 +494,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         haunt: step.isHauntReturn === true,
       });
     }
+    if (correct && step.kind === 'word') {
+      const resolvedPairIndex = pairIndex ?? prev.mysteryResolved;
+      const hiddenPairId = step.hiddenPairs?.[resolvedPairIndex]?.id
+        ?? (step.hiddenMeaning && step.hiddenTrap
+          ? `${step.word.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}_h00`
+          : undefined);
+      if (hiddenPairId) get().recordHiddenPairIdFound(hiddenPairId);
+    }
     if (!terminal) return;
     if (step.kind !== 'word') return;
     const isBoss = step.eventType === 'bossWord';
@@ -616,6 +630,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
   },
 
+  recordHiddenPairIdFound: (pairId) => {
+    const current = get().progress;
+    const next = addHiddenPairIdFound(current, pairId);
+    if (next === current) return;
+    set({ progress: next });
+    AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
   recordRunComplete: (finalScore) => {
     const current = get().progress;
     const game = get().game;
@@ -667,7 +689,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (raw) {
         const parsed = JSON.parse(raw);
         const merged: PlayerProgress = { ...DEFAULT_PROGRESS, ...parsed };
-        set({ progress: merged });
+        const backfilled = backfillHiddenPairIdsFound(merged);
+        set({ progress: backfilled });
       }
     } catch {}
   },

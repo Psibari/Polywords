@@ -183,6 +183,12 @@ export type PlayerProgress = {
   // app/game/ranks.ts computeRankHistoryUpdates(). Absent tiers haven't been
   // reached yet; personalBest alone has no record of when a tier was first hit.
   rankHistory?: Partial<Record<string, string>>;
+  /** Stable hidden-pair ids (e.g. 'battery_h00') the player has answered correctly,
+   *  whether or not the word was ultimately mastered. Set semantics — each id
+   *  appears at most once. There is no denominator and no ceiling by design.
+   *  Not to be confused with MasteredWordRecord.hiddenMeaningsFound, which
+   *  holds REAL-text strings, not ids. */
+  hiddenPairIdsFound?: string[];
 };
 
 export type DailyTier = 1 | 2 | 3;

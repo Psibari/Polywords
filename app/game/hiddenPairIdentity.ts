@@ -36,10 +36,11 @@ export function createHiddenPairResolver(source: HiddenPairData) {
     }).filter(item => item.real);
   }
 
-  return { findHiddenPairById, matchLegacyHiddenPair, resolveGhostPair, resolveMasteredPairs };
+  return { pairsFor, findHiddenPairById, matchLegacyHiddenPair, resolveGhostPair, resolveMasteredPairs };
 }
 
 const runtimeResolver = createHiddenPairResolver(rawHuntData as unknown as HiddenPairData);
+export const pairsForWord = runtimeResolver.pairsFor;
 export const findHiddenPairById = runtimeResolver.findHiddenPairById;
 export const matchLegacyHiddenPair = runtimeResolver.matchLegacyHiddenPair;
 export const resolveGhostPair = runtimeResolver.resolveGhostPair;
