@@ -26,14 +26,14 @@ type GpsDistribution = {
   boss: number;
 };
 
+// Only 8 (fledgling) and 10 (standard) are ever actually requested by
+// generateHunt's callers — no live call site passes any other length.
 const GPS_ARCS: Record<number, GpsDistribution> = {
   // Fledgling runs need two safe repetitions of the swipe/recognition loop
   // before tension rises. The shorter arc removes one Panic word rather than
   // compressing onboarding into a single Confidence round.
   8:  { confidence: 2, flow: 2, tension: 2, panic: 1, boss: 1 },
   10: { confidence: 2, flow: 2, tension: 3, panic: 2, boss: 1 },
-  12: { confidence: 2, flow: 3, tension: 3, panic: 3, boss: 1 },
-  15: { confidence: 2, flow: 4, tension: 4, panic: 4, boss: 1 },
 };
 
 type Phase = 'confidence' | 'flow' | 'tension' | 'panic' | 'boss';
