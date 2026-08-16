@@ -197,22 +197,49 @@ function playFromPool(name: SfxName, pool: SfxPlayerPool, rate: number, loadAtte
   pendingLoadRetryTimers.add(timer);
 }
 
+// Creating all 19 pools (38 AudioPlayer instances) in one synchronous pass
+// was a startup stampede: every pool fired its native create/decode call in
+// the same JS tick as MusicEngine's own preload player, all landing on the
+// native audio thread at once. That's a plausible root cause for "loads
+// late/inconsistently, some sounds never play" independent of (and prior
+// to) the load-retry/rebuild self-heal above — this spreads pool creation
+// across several ticks instead of one burst, so the native side is never
+// asked to start 38+ things simultaneously.
+const PRELOAD_BATCH_SIZE = 3;
+const PRELOAD_BATCH_DELAY_MS = 32;
+let pendingPreloadBatchTimer: ReturnType<typeof setTimeout> | null = null;
+
 export function preloadSfx(): void {
   // Pool creation must not fire until the native session is actually
-  // configured — creating 38 AudioPlayer instances against an
-  // unconfigured session was the asymmetry that made SFX loading lag
-  // behind MusicEngine's preloadHuntTrack, which already waits correctly.
+  // configured — creating AudioPlayer instances against an unconfigured
+  // session was the asymmetry that made SFX loading lag behind
+  // MusicEngine's preloadHuntTrack, which already waits correctly.
   ensureAudioSessionConfigured()
     .then(() => {
-      (Object.entries(SFX) as [SfxName, SfxConfig][]).forEach(([name, config]) => {
-        if (playerPools[name]) return;
-        const pool = createPlayerPool(name, config);
-        if (pool) {
-          playerPools[name] = pool;
-        } else {
-          warnDev(`No players loaded for "${name}".`);
+      const names = (Object.keys(SFX) as SfxName[]).filter(name => !playerPools[name]);
+      let index = 0;
+
+      function loadNextBatch(): void {
+        pendingPreloadBatchTimer = null;
+        const batch = names.slice(index, index + PRELOAD_BATCH_SIZE);
+        index += PRELOAD_BATCH_SIZE;
+
+        batch.forEach(name => {
+          if (playerPools[name]) return; // a targeted playSfx() retry may have already created it
+          const pool = createPlayerPool(name, SFX[name]);
+          if (pool) {
+            playerPools[name] = pool;
+          } else {
+            warnDev(`No players loaded for "${name}".`);
+          }
+        });
+
+        if (index < names.length) {
+          pendingPreloadBatchTimer = setTimeout(loadNextBatch, PRELOAD_BATCH_DELAY_MS);
         }
-      });
+      }
+
+      if (names.length > 0) loadNextBatch();
     })
     .catch(error => warnDev('Failed to configure audio mode.', error));
 }
@@ -224,24 +251,29 @@ const READY_POLL_MS = 40;
 // covering an ordinary load instead of losing the race by default.
 const READY_TIMEOUT_MS = 2000;
 
-// Condition-based, not a fixed delay: resolves as soon as every pool
-// preloadSfx() created has at least one loaded player, or after
-// READY_TIMEOUT_MS — callers that gate on this must never be blocked
-// indefinitely by a slow or broken audio server (the self-heal in
-// playFromPool/rebuildPoolIfNeeded keeps working in the background either
-// way, this just tells a caller when the *typical* case is already ready).
+function allSfxLoaded(): boolean {
+  return (Object.keys(SFX) as SfxName[]).every(name => {
+    const pool = playerPools[name];
+    return pool !== undefined && pool.players.some(p => p.isLoaded);
+  });
+}
+
+// Condition-based, not a fixed delay: resolves as soon as every sound has a
+// pool with at least one loaded player, or after READY_TIMEOUT_MS — callers
+// that gate on this must never be blocked indefinitely by a slow or broken
+// audio server (the self-heal in playFromPool/rebuildPoolIfNeeded keeps
+// working in the background either way, this just tells a caller when the
+// *typical* case is already ready). Checks every SFX name explicitly rather
+// than "whatever pools happen to exist right now" — preloadSfx() now creates
+// pools in staggered batches, so early on most pools genuinely don't exist
+// yet, and that must read as "not ready," not "nothing to wait for."
 export function sfxReady(): Promise<void> {
-  const pools = Object.values(playerPools) as SfxPlayerPool[];
-  if (pools.length === 0 || pools.every(pool => pool.players.some(p => p.isLoaded))) {
-    return Promise.resolve();
-  }
+  if (allSfxLoaded()) return Promise.resolve();
 
   return new Promise(resolve => {
     const startedAt = Date.now();
     const poll = () => {
-      const current = Object.values(playerPools) as SfxPlayerPool[];
-      const allLoaded = current.every(pool => pool.players.some(p => p.isLoaded));
-      if (allLoaded || Date.now() - startedAt >= READY_TIMEOUT_MS) {
+      if (allSfxLoaded() || Date.now() - startedAt >= READY_TIMEOUT_MS) {
         resolve();
         return;
       }
@@ -258,19 +290,39 @@ export function playSfx(name: SfxName, options?: { rate?: number }): void {
   const antiDoubleFireMs = Math.min(config.cooldownMs, MAX_ANTI_DOUBLE_FIRE_MS);
   if ((now - (lastPlayedAt[name] ?? 0)) < antiDoubleFireMs) return;
 
-  if (!playerPools[name]) preloadSfx();
+  lastPlayedAt[name] = now;
+  playWhenPoolReady(name, options?.rate ?? 1.0);
+}
 
+// A sound requested before its pool exists yet (e.g. the very first tap,
+// landing while preloadSfx()'s staggered batches or the audio-session
+// configure call are still in flight) used to be dropped outright — the old
+// code called preloadSfx() and then immediately checked playerPools[name]
+// in the same synchronous tick, before that async work could ever finish,
+// so the request just silently vanished with a dev warning. That's a second,
+// independent contributor to "some sounds don't play": not a load failure,
+// just asking before the pool was born. Same bounded ladder as the rest of
+// this file so it can never wait forever.
+function playWhenPoolReady(name: SfxName, rate: number, attempt = 0): void {
   const pool = playerPools[name];
-  if (!pool) {
-    warnDev(`"${name}" was requested but its player pool is unavailable.`);
+  if (pool) {
+    playFromPool(name, pool, rate);
     return;
   }
 
-  lastPlayedAt[name] = now;
-  playFromPool(name, pool, options?.rate ?? 1.0);
+  if (attempt === 0) preloadSfx();
+
+  const delay = LOAD_RETRY_MS[attempt];
+  if (delay === undefined) {
+    warnDev(`"${name}" was requested but its player pool never became available.`);
+    return;
+  }
+  setTimeout(() => playWhenPoolReady(name, rate, attempt + 1), delay);
 }
 
 export function unloadSfx(): void {
+  if (pendingPreloadBatchTimer !== null) clearTimeout(pendingPreloadBatchTimer);
+  pendingPreloadBatchTimer = null;
   pendingLoadRetryTimers.forEach(timer => clearTimeout(timer));
   pendingLoadRetryTimers.clear();
   reservedPlayers.clear();
