@@ -194,6 +194,10 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
   const pulse = useRef(new Animated.Value(0)).current;
+  // Starts dim, brightens the instant the tap actually starts working — the
+  // 1200ms non-interactive window otherwise had zero visual signal, so an
+  // early tap looked like a dropped touch rather than "not yet."
+  const continueOpacity = useRef(new Animated.Value(0.35)).current;
   const resolvedRef = useRef(false);
   const reduceMotion = useReducedMotionPreference();
   const [canDismiss, setCanDismiss] = useState(false);
@@ -209,6 +213,15 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
     playSfx('uiClick');
     resolve();
   }
+
+  useEffect(() => {
+    if (!canDismiss) return;
+    if (reduceMotion !== false) {
+      continueOpacity.setValue(1);
+      return;
+    }
+    Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  }, [canDismiss, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (reduceMotion !== false) {
@@ -254,7 +267,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
           <Text style={styles.outcomeCopy}>You saw through it.</Text>
         </View>
         {bonusLabel && <Text style={styles.outcomeBonus}>{bonusLabel}</Text>}
-        <Text style={styles.outcomeContinue}>CONTINUE</Text>
+        <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -264,6 +277,8 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.94)).current;
   const drift = useRef(new Animated.Value(0)).current;
+  // Same dim-until-ready treatment as MasteredOutcomeOverlay — see its comment.
+  const continueOpacity = useRef(new Animated.Value(0.35)).current;
   const resolvedRef = useRef(false);
   const reduceMotion = useReducedMotionPreference();
   const [canDismiss, setCanDismiss] = useState(false);
@@ -279,6 +294,15 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
     playSfx('uiClick');
     resolve();
   }
+
+  useEffect(() => {
+    if (!canDismiss) return;
+    if (reduceMotion !== false) {
+      continueOpacity.setValue(1);
+      return;
+    }
+    Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  }, [canDismiss, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (reduceMotion !== false) {
@@ -324,7 +348,7 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
           <Text style={styles.outcomeCopy}>It'll be waiting.</Text>
         </View>
         {detail && <Text style={styles.hauntedDetail} numberOfLines={2}>{detail}</Text>}
-        <Text style={styles.outcomeContinue}>CONTINUE</Text>
+        <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -350,6 +374,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   const tileBreatheAmount = useRef(new Animated.Value(0)).current;
   const isBoss  = step.eventType === 'bossWord';
   const isHaunt = step.isHauntReturn === true;
+  // Same convention as MasteredOutcomeOverlay/HauntedOutcomeOverlay below:
+  // treat the pending (null) read as "reduce" so there's no frame where an
+  // animation starts before the async accessibility read lands.
+  const reduceMotion = useReducedMotionPreference() !== false;
 
   // ── layout ───────────────────────────────────────────────────
   // Seeded from the real device width (available synchronously before
@@ -472,6 +500,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
   function triggerBoardShake() {
     boardShakeX.setValue(0);
+    if (reduceMotion) return;
     Animated.sequence([
       Animated.timing(boardShakeX, { toValue: -4, duration: 35, useNativeDriver: true }),
       Animated.timing(boardShakeX, { toValue: 4,  duration: 35, useNativeDriver: true }),
@@ -1079,42 +1108,67 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     deckDeepRot.setValue(-4); deckMidRot.setValue(3); deckActiveRot.setValue(-2);
     [deckDeepOp, deckMidOp, deckActiveOp].forEach(v => v.setValue(0));
 
-    // Deep card (back) — arrives first
+    // Deep card (back) — arrives first. Timing/haptic sequencing is kept
+    // even under Reduce Motion (it's pacing, not visual movement); only the
+    // Animated.timing tweens are swapped for an instant snap to end value.
     const slamTimer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(deckBackingY, { toValue: 0, duration: 220, easing: CARD_DEAL, useNativeDriver: true }),
-        Animated.timing(deckBackingOp, { toValue: 1, duration: 120, useNativeDriver: true }),
-        Animated.timing(deckDeepY,  { toValue: 0, duration: 210, easing: CARD_DEAL, useNativeDriver: true }),
-        Animated.timing(deckDeepRot,{ toValue: 0, duration: 180, useNativeDriver: true }),
-        Animated.timing(deckDeepOp, { toValue: 1, duration: 100,  useNativeDriver: true }),
-      ]).start();
+      if (reduceMotion) {
+        deckBackingY.setValue(0);
+        deckBackingOp.setValue(1);
+        deckDeepY.setValue(0);
+        deckDeepRot.setValue(0);
+        deckDeepOp.setValue(1);
+      } else {
+        Animated.parallel([
+          Animated.timing(deckBackingY, { toValue: 0, duration: 220, easing: CARD_DEAL, useNativeDriver: true }),
+          Animated.timing(deckBackingOp, { toValue: 1, duration: 120, useNativeDriver: true }),
+          Animated.timing(deckDeepY,  { toValue: 0, duration: 210, easing: CARD_DEAL, useNativeDriver: true }),
+          Animated.timing(deckDeepRot,{ toValue: 0, duration: 180, useNativeDriver: true }),
+          Animated.timing(deckDeepOp, { toValue: 1, duration: 100,  useNativeDriver: true }),
+        ]).start();
+      }
 
       // Mid card — 90ms after deep
       setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(deckMidY,  { toValue: 0, duration: 190, easing: CARD_DEAL, useNativeDriver: true }),
-          Animated.timing(deckMidRot,{ toValue: 0, duration: 190, useNativeDriver: true }),
-          Animated.timing(deckMidOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
-        ]).start();
+        if (reduceMotion) {
+          deckMidY.setValue(0);
+          deckMidRot.setValue(0);
+          deckMidOp.setValue(1);
+        } else {
+          Animated.parallel([
+            Animated.timing(deckMidY,  { toValue: 0, duration: 190, easing: CARD_DEAL, useNativeDriver: true }),
+            Animated.timing(deckMidRot,{ toValue: 0, duration: 190, useNativeDriver: true }),
+            Animated.timing(deckMidOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
+          ]).start();
+        }
       }, 70);
 
       // Active card — 180ms after deep, heaviest haptic on land
       setTimeout(() => {
-        Animated.parallel([
-          Animated.sequence([
-            Animated.timing(deckActiveY, { toValue: -6, duration: 130, easing: CARD_SNAP, useNativeDriver: true }),
-            Animated.timing(deckActiveY, { toValue: 0, duration: 90, useNativeDriver: true }),
-          ]),
-          Animated.timing(deckActiveRot,{ toValue: 0, duration: 160, useNativeDriver: true }),
-          Animated.timing(deckActiveOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
-        ]).start(() => {
+        function onActiveCardLanded() {
           const deckEntranceKey = `${gameStepIndex}:${step.word}`;
           if (deckEntranceHapticRef.current !== deckEntranceKey) {
             deckEntranceHapticRef.current = deckEntranceKey;
             Haptics.selectionAsync();
           }
           setOpeningCardLanded(true);
-        });
+        }
+
+        if (reduceMotion) {
+          deckActiveY.setValue(0);
+          deckActiveRot.setValue(0);
+          deckActiveOp.setValue(1);
+          onActiveCardLanded();
+        } else {
+          Animated.parallel([
+            Animated.sequence([
+              Animated.timing(deckActiveY, { toValue: -6, duration: 130, easing: CARD_SNAP, useNativeDriver: true }),
+              Animated.timing(deckActiveY, { toValue: 0, duration: 90, useNativeDriver: true }),
+            ]),
+            Animated.timing(deckActiveRot,{ toValue: 0, duration: 160, useNativeDriver: true }),
+            Animated.timing(deckActiveOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
+          ]).start(onActiveCardLanded);
+        }
       }, 120);
     }, cardDelay);
     wordEntryTilt.setValue(0);
@@ -1123,7 +1177,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     bookGhostDrainOpacity.setValue(0);
     bookSlideX.setValue(SCREEN_WIDTH);
 
-    if (isBoss) {
+    if (isBoss || reduceMotion) {
       bookSlideX.setValue(0);
     } else {
       // Normal words keep the existing book entrance.
@@ -1228,6 +1282,10 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         if (wordEntranceHapticRef.current !== step.word) {
           wordEntranceHapticRef.current = step.word;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+        if (reduceMotion) {
+          wordLockPulse.setValue(1.00);
+          return;
         }
         Animated.sequence([
           Animated.timing(wordLockPulse, {
@@ -1345,7 +1403,17 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
       {mechanics.kicker && (
         isBoss ? (
-          <Text style={styles.kickerBossFixed}>{mechanics.kicker}</Text>
+          // No wrap guard previously — at large system text sizes this
+          // could wrap to a 2nd line and overlap the book below it (flagged
+          // 2026-08-09, never fixed). Shrinks instead of wrapping.
+          <Text
+            style={styles.kickerBossFixed}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            {mechanics.kicker}
+          </Text>
         ) : (
           <Text style={styles.kickerFixed}>{mechanics.kicker}</Text>
         )
@@ -2051,6 +2119,20 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bossWord,
     letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#F5C842',
+    // The base boss word (plain Text, no explicit width — just maxWidth via
+    // styles.word) hugs its own natural text width. The red wrong-swipe
+    // overlay and the haunt tint stacked on top of it are both
+    // position:'absolute' with left:0/right:0, which stretches THEM to the
+    // full word zone instead — a different box feeding adjustsFontSizeToFit
+    // than the base text gets, so the two layers can land at different
+    // scaled sizes on a long boss word and read as a misaligned "double
+    // word" (reported 2026-08-15, only on some boss words — exactly what a
+    // width-dependent shrink mismatch would produce). Forcing this layer to
+    // stretch the same way removes the mismatch at the source instead of
+    // patching each overlay separately. Scoped to wordBoss (not styles.word)
+    // so the regular FoilWord word — already fixed once for its own
+    // layering bug — is untouched.
+    width: '100%',
   },
   goldRing: {
     position: 'absolute',
@@ -2081,8 +2163,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'rgba(245,200,66,0.72)',
     fontFamily: FONTS.label,
-    fontSize: 9,
-    letterSpacing: 4,
+    // Was 9px, below this project's 14px non-gameplay floor. Trimmed
+    // letterSpacing from 4 to 3 to partly offset the width increase — this
+    // sits on the book's fixed spine art, so it's worth a look on-device to
+    // confirm "WORD VAULT" still fits the spine cleanly at the new size.
+    fontSize: 14,
+    letterSpacing: 3,
   },
   // ── Tile zone ─────────────────────────────────────────────────
   gridViewport: {

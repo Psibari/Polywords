@@ -22,8 +22,13 @@ export const FONT_SIZES = {
   brandTitle: 48,
   hudScore: 26,
   hudMultiplier: 34,
-  hudLabel: 11,
+  // Both floored at 14px (this project's non-gameplay legibility minimum) —
+  // previously 11/10, below the floor. Each is used only by its own labeled
+  // spot (hudLabel: boss stakes kicker + outcome CONTINUE label;
+  // ghostSubLabel: card era badge), so raising them here can't inflate any
+  // other UI.
+  hudLabel: 14,
   progressLabel: 15,
   pollyLine: 17,
-  ghostSubLabel: 10,
+  ghostSubLabel: 14,
 } as const;
