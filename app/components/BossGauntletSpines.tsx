@@ -175,7 +175,19 @@ function SpineSlot({
   // flip is built to never depend on it at all. See the design doc's "Flip
   // mechanism" section.
   const closedRotateY = openAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '90deg'] });
-  const closedOpacity = openAnim.interpolate({ inputRange: [0, 0.35, 1], outputRange: [1, 0, 0] });
+  // A still-closed sibling (never picked, while a DIFFERENT tile is active)
+  // was relying on the open card's zIndex to visually cover it — but the
+  // open card doesn't cover every pixel of it (it's centered on the row,
+  // not stretched over the whole thing), so a sliver of the closed sibling's
+  // own gold border/fill kept showing past the open card's edge (confirmed
+  // via screenshot, 2026-08-15 — Pete: "an outline... outside of the
+  // card," visible even after the shadow-only fix above). Forcing this
+  // card fully invisible the instant ANY sibling opens — not just when it
+  // opens itself — removes the leftover pixels directly instead of hoping
+  // stacking order hides them.
+  const closedOpacity = (anyOpen && !isOpen)
+    ? 0
+    : openAnim.interpolate({ inputRange: [0, 0.35, 1], outputRange: [1, 0, 0] });
   const contentOpacity = openAnim.interpolate({ inputRange: [0, 0.55, 1], outputRange: [0, 0, 1] });
 
   // A closed, unopened, unresolved slot's hit target should never capture
@@ -202,10 +214,16 @@ function SpineSlot({
           // "ghost" outline behind the opened card even once this view had
           // faded to opacity 0 and turned edge-on (confirmed on device,
           // 2026-08-15 — Pete: "there's a trace... on kind of an angle").
-          // Conditioning it on `elevated` (already computed above for the
-          // z-index split) removes it the instant this card starts
-          // opening, same beat as everything else on this view fading out.
-          !elevated && styles.cardShadow,
+          // `!elevated` alone only covers THIS card's own shadow once IT
+          // opens — it missed the same bleed from its still-closed
+          // siblings: the open card grows well past its own 110px slot and
+          // visually overlaps the other two, which are still closed and
+          // still casting their own shadow underneath it (confirmed via
+          // screenshot, 2026-08-15 — Pete: "a different outline... outside
+          // of the card"). Once any card is active, the other two are
+          // background and have no reason to keep casting depth, so
+          // `anyOpen` cuts their shadow the same instant the sibling opens.
+          !elevated && !anyOpen && styles.cardShadow,
           {
             opacity: closedOpacity,
             transform: [{ perspective: CARD_PERSPECTIVE }, { rotateY: closedRotateY }],
