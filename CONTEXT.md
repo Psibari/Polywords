@@ -1,11 +1,65 @@
 # POLYWORDS Current Context
 
-Updated August 12, 2026. Active branch: `play-screen-overhaul`.
+Updated August 16, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: f853812. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
-v0.working-20260723-music, -lossfx, -routec1, -routec2.
+HEAD: f179dc0. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+v0.working-20260723-music, -lossfx, -routec1, -routec2, v0.working-20260725-hook, -fork,
+v0.working-20260729-chest, v0.working-20260815-workbook-merge, v0.working-20260816-option-c,
+-telemetry-v2, -death-sequence-fix.
+
+## Session — 2026-08-16
+
+- **Telemetry V2 shipped** (`4fe13b9`, landed just before this session's bug-fix work):
+  `playtestTelemetry.ts` now tracks 6 new event types beyond the original 9 —
+  `hunt_decision` (fires on every resolved swipe, not just ambiguous ones),
+  `ghost_created`, `haunt_reached`, `haunt_failed`, `boss_entered`, `boss_playable`.
+  Persistence moved from write-on-every-event to a debounced write (trailing 800ms) via
+  the reused `activeGamePersistence` coordinator, with an explicit `flushPlaytestEvents()`
+  forced-write at `hunt_complete`, `hunt_death`, `daily_complete`, and `daily_loss` so a
+  run-ending moment can't lose its tail to the debounce window if the app backgrounds or
+  dies. Verified on device: data survives a full app force-quit/reopen. Status:
+  instrumented and actively collecting on Pete's device — under 30 logged Hunt runs, the
+  app's own summary already flags itself as "too few to compare meaningfully"; treat
+  nothing pulled before that volume as reliable.
+- **Three bugs found and fixed**, all confirmed on device, commit `617417b`:
+  1. Fatal-swipe render race (`GameScreen.tsx`) — `isDone` swapped the board for
+     `ResultsScreen` the instant `game.status` became `'gameOver'`, with no gate, so the
+     wrong-swipe death animation (780ms/760ms reduce-motion, `SwipeMask.tsx`) never got to
+     play — a device recording showed the board vanish in ~33ms with no animation at all.
+     Fixed with a `deathHoldActive` gate (same pattern as the existing
+     `bossTransitionActive` effect), held 780ms on a FRESH `playing`→`gameOver` transition
+     only, never on a resumed already-dead session. First implementation set the gate from
+     a `useEffect` and still produced a visible blink (hearts UI flashing back before
+     Results reappeared) — effects run after React commits/paints, so one stale frame
+     always painted first. The real fix sets the gate synchronously during render instead
+     (React's documented "adjust state while rendering" pattern), which lets React redo
+     the render before anything is ever painted.
+  2. Card-promotion-during-death-hold (`useBoardMechanics.ts`) — surfaced BY fix #1:
+     `onTileExitComplete`'s `revealNext()` had no `game.status` check, so once the board was
+     correctly held open for 780ms, this old, previously-never-exercised code path used
+     that window to promote a new card right before Results appeared. Fixed by skipping
+     just the mask-list mutation (not the ref cleanup) when `game.status !== 'playing'`.
+  3. Wrong-swipe deflate-cue mispitch (`sfx.ts`) — the "you broke a 1.5x+ chain" wrong-swipe
+     sound layer (`correctClaim` reused at rate 0.55) has sounded like a normal, unpitched
+     correct chime since the feature shipped 2026-07-09 — not a regression, a day-one bug
+     only caught now via focused testing. Root cause: `expo-audio`'s
+     `AudioPlayer.shouldCorrectPitch` defaults to `true` (built for slow-motion video), and
+     the deflate code never set it `false`. Fixed: `shouldCorrectPitch = (rate !== 1.0)`
+     before every `setPlaybackRate` call; `setPlaybackRate` failures are now logged
+     (previously silently swallowed) and skip playback rather than falling through to the
+     default pitch.
+- **Gameplay-mechanics audit status**, from the war-room-style audit that opened this
+  session: P0 Telemetry V2 — done. P0 fatal-swipe → Results continuity — done. P0
+  REAL-absorption P50/P90, P1 repeat-boss entrance compression, P1 Haunted reach-rate +
+  runs-waited, P1 Round 5/6 vs Round 8 Haunt-return test — all instrumented, all blocked on
+  real play volume (30+ Hunt runs minimum, per the app's own built-in threshold). P1
+  selectable next-card deck prototype (Tension/Panic) — correctly not started, explicitly
+  sequenced behind the volume-gated items above. P2 items (boss gauntlet strategic
+  consequence, prestige/history tracking, RUN IT BACK signal) — not started.
+- `.freebuff/` added to `.gitignore` — a local duplicate git worktree + SQLite db from
+  tooling/session scratch state, never project content.
 
 ## Session — 2026-08-11/12
 

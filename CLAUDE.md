@@ -23,6 +23,17 @@ architecture; current progress belongs in `CONTEXT.md`.
 - Motion: React Native Animated for most surfaces; Reanimated remains isolated to
   `SwipeMask.tsx`.
 - Audio: `expo-audio`; `MusicEngine.ts` owns one persistent, owner-scoped player.
+- Non-default `playSfx` rate: `expo-audio`'s `AudioPlayer.shouldCorrectPitch` defaults to
+  `true` (built for slow-motion video — a rate change alters duration only, not pitch,
+  unless disabled). `sfx.ts`'s `restartPlayer` must set `shouldCorrectPitch = (rate !== 1.0)`
+  before every `setPlaybackRate` call, or a pitched cue (e.g. the wrong-swipe deflate layer
+  at 0.55x) plays at its normal bright pitch instead — present unnoticed since the deflate
+  cue shipped 2026-07-09, fixed 2026-08-16. `setPlaybackRate` failures are now logged and
+  skip playback rather than silently falling through to the default pitch.
+- Telemetry: `playtestTelemetry.ts` persists locally in every build, not dev-only —
+  hesitation, ambiguous-swipe, decision-timeline, ghost/Haunt-lifecycle, and boss-entrance
+  events. Never networked; surfaced only via Settings > Playtest Data (manual on-device
+  Share). See `CONTEXT.md` for the live event-type list and collection status.
 - Runtime fonts: Bebas Neue (hero) and Barlow Condensed (UI, tiles, Polly bubbles).
   Rammetto One is retained only for offline brand icon generation.
 
@@ -107,6 +118,17 @@ drivers on one `Animated.Value`.
   before either is edited.
 - Gauntlet's 3rd (final) tile gets a distinct double-pulse haptic on correct
   judgment; tiles 1-2 unchanged.
+- Fatal wrong-swipe → Results transition is held open, not instant: `GameScreen.tsx`'s
+  `deathHoldActive` gate (same pattern as `bossTransitionActive`) keeps `isDone` false for
+  780ms (`SwipeMask.tsx`'s wrong-swipe exit duration) on a FRESH `playing`→`gameOver`
+  transition only — a resumed already-gameOver session skips the hold. Shipped 2026-08-16
+  (`617417b`) after a device recording showed the board disappearing in ~33ms with no death
+  animation. The gate must be set synchronously during render, not in a `useEffect` — an
+  effect-based flip still paints one stale frame first (a visible blink to Results and
+  back), since effects run after commit. `useBoardMechanics.ts`'s `onTileExitComplete` must
+  likewise check `game.status !== 'playing'` before its `revealNext()` mask-list mutation
+  promotes the next card — that check didn't exist before the hold gave the old,
+  previously-never-exercised code path a window to run in.
 
 The visual hierarchy is hero word, active mask tile, HeroBook/Vault target, HUD, then
 Polly visit. Ordinary tiles share one neutral treatment until commitment.
@@ -197,7 +219,7 @@ app/screens/{Game,Home,Vault,Settings,DailyChallenge,Results}Screen.tsx
 app/components/MaskBoard.tsx
 app/components/SwipeMask.tsx
 app/components/ui/{HeroBook,Bookcase,BookSpine}.tsx
-app/game/{huntGenerator,polyRunEngine,dailyChallengeEngine}.ts
+app/game/{huntGenerator,polyRunEngine,dailyChallengeEngine,playtestTelemetry}.ts
 app/store/useGameStore.ts
 app/audio/{MusicEngine,sfx,audioSession}.ts
 app/ui/pwTheme.ts
