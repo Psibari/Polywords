@@ -53,7 +53,9 @@
       "Bash(node tools/content/build-hunt-data.mjs \"C:/Users/pdiba/Downloads/POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx\")",
       "Bash(npx.cmd tsx *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(npx.cmd tsc *)",
+      "PowerShell(npm.cmd test *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\pdiba\\poly-words"
