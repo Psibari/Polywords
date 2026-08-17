@@ -819,6 +819,33 @@ function GameDirector({ navigation }: { navigation: any }) {
   const [bossIntroSeen, setBossIntroSeen] = useState<boolean | null>(null);
   const [bossTransitionActive, setBossTransitionActive] = useState(false);
   const skipBossTransitionStepRef = useRef<number | null>(null);
+
+  // ── Fatal-swipe death hold ───────────────────────────────────
+  // Holds the board on-screen for the wrong-swipe death animation's full
+  // 780ms (760ms under Reduce Motion — see SwipeMask.tsx) before letting
+  // isDone swap to ResultsScreen. Only fires on a fresh transition into
+  // gameOver; a session that resumes already-gameOver has no animation to
+  // protect and must go straight to Results.
+  const [deathHoldActive, setDeathHoldActive] = useState(false);
+  const [deathHoldStatusSeen, setDeathHoldStatusSeen] = useState(game.status);
+  // Entering the hold must happen synchronously during render, not in a
+  // useEffect: an effect runs after React commits and paints, so a
+  // fresh gameOver render would still paint with the stale (false)
+  // deathHoldActive first — a visible flash to Results and back to the
+  // board before the effect could catch up. Adjusting state during
+  // render (React's documented pattern for this) makes React redo the
+  // render with the new value before anything is ever painted.
+  if (game.status !== deathHoldStatusSeen) {
+    if (game.status === 'gameOver' && deathHoldStatusSeen === 'playing') {
+      setDeathHoldActive(true);
+    }
+    setDeathHoldStatusSeen(game.status);
+  }
+  useEffect(() => {
+    if (!deathHoldActive) return;
+    const timer = setTimeout(() => setDeathHoldActive(false), 780);
+    return () => clearTimeout(timer);
+  }, [deathHoldActive]);
   useEffect(() => {
     AsyncStorage.getItem(BOSS_INTRO_SEEN_KEY)
       .then(v => setBossIntroSeen(v === 'true'))
@@ -1022,7 +1049,8 @@ function GameDirector({ navigation }: { navigation: any }) {
     setShowFeatherFloat(false);
   }
 
-  const isDone = game.status === 'complete' || game.status === 'gameOver';
+  const isDone =
+    (game.status === 'complete' || game.status === 'gameOver') && !deathHoldActive;
   const activeStep = currentStep(game);
   const isBossRound =
     !isDone &&

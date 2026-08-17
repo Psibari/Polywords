@@ -643,6 +643,12 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     const revealNext = () => {
       readyTimerRef.current = null;
       resolutionClockRef.current = null;
+      // A fatal wrong swipe can still be mid-exit-animation (held on-screen
+      // by GameScreen.tsx's death hold) once game.status has already left
+      // 'playing' — promoting the next card here would flash a new tile up
+      // right before Results appears. Skip only the mask-list mutation;
+      // the ref cleanup above must still always run.
+      if (game.status !== 'playing') return;
       setRemainingMaskIds(prev => prev.filter(id => id !== maskId));
     };
     if (remainingMs === 0) {

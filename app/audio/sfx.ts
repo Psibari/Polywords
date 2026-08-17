@@ -135,7 +135,27 @@ async function restartPlayer(name: SfxName, player: AudioPlayer, rate: number): 
   try {
     player.pause();
     await player.seekTo(0, 0, 0);
-    try { player.setPlaybackRate(rate); } catch {}
+    let rateApplied = true;
+    try {
+      // expo-audio defaults shouldCorrectPitch to true (built for slow-motion
+      // video, where pitch should stay constant) — left alone, a non-default
+      // rate changes duration but not pitch at all, so the 0.55 deflate cue
+      // played back slower but at the same bright pitch, never actually
+      // "deflated." Must be set before setPlaybackRate for it to take effect.
+      player.shouldCorrectPitch = rate === 1.0;
+      player.setPlaybackRate(rate);
+    } catch (error) {
+      rateApplied = false;
+      warnDev(`Failed to set playback rate ${rate} for "${name}".`, error);
+    }
+    // A failed non-default rate means the sample would play at its bright,
+    // unpitched default instead — e.g. the wrong-swipe deflate cue reusing
+    // correctClaim at rate 0.55 would sound exactly like a correct-swipe
+    // chime. Skip playing rather than let that happen silently. A failed
+    // default-rate request has nothing to protect against, so it still plays.
+    if (!rateApplied && rate !== 1.0) {
+      return true;
+    }
     player.play();
     return true;
   } catch (error) {
