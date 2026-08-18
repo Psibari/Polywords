@@ -189,6 +189,11 @@ export type PlayerProgress = {
    *  Not to be confused with MasteredWordRecord.hiddenMeaningsFound, which
    *  holds REAL-text strings, not ids. */
   hiddenPairIdsFound?: string[];
+  /** Words actually shown to the player across their most recent runs,
+   *  most-recent-first, capped. Biases word selection away from immediate
+   *  repeats — never a hard exclusion, never surfaced to the player, not a
+   *  permanent record like masteredWords. */
+  recentWordIds?: string[];
 };
 
 export type DailyTier = 1 | 2 | 3;

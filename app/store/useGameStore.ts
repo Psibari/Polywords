@@ -209,6 +209,7 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   longestStreak: 0,
   lastStreakDate: null,
   rankHistory: {},
+  recentWordIds: [],
 };
 
 type GameStore = {
@@ -357,6 +358,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const steps = generateHunt({
       masteredWords: get().progress.masteredWords.map(m => m.word),
       ghostWordIds: runStartGhostWordIds,
+      recentWordIds: get().progress.recentWordIds ?? [],
       ...(isFledgling ? { length: 8, gentle: true } : {}),
       seed: runSeed,
     });
@@ -679,11 +681,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
       current.rankHistory ?? {},
       new Date().toISOString(),
     );
+    const RECENT_WORDS_CAP = 30; // ~3 runs of history — tunable constant, not locked
+    const reachedWords = game.session
+      .slice(0, game.stepIndex + 1)
+      .filter((s): s is WordStep => s.kind === 'word')
+      .map(s => s.word)
+      .reverse(); // most-recent-first within this run
+    const recentSeen = new Set<string>();
+    const recentWordIds: string[] = [];
+    for (const w of [...reachedWords, ...(current.recentWordIds ?? [])]) {
+      if (recentSeen.has(w)) continue;
+      recentSeen.add(w);
+      recentWordIds.push(w);
+      if (recentWordIds.length >= RECENT_WORDS_CAP) break;
+    }
     const next: PlayerProgress = {
       ...current,
       runsCompleted: current.runsCompleted + 1,
       personalBest: finalScore > current.personalBest ? finalScore : current.personalBest,
       ...(rankHistoryUpdate ? { rankHistory: rankHistoryUpdate } : {}),
+      recentWordIds,
     };
     set({ progress: next, pollyMemory });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});

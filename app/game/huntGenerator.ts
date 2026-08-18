@@ -90,6 +90,16 @@ function shuffle<T>(arr: T[], rng: () => number): T[] {
 
 const DIFFICULTY_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
 
+// Reorder only — never removes a word from the pool. Words shown recently
+// sink to the back so a fresher word is picked first when one is available,
+// but the existing cross-pool fallback chain must still see every word.
+function recencyPartition(pool: string[], recentSet: Set<string>): string[] {
+  const fresh: string[] = [];
+  const recent: string[] = [];
+  for (const w of pool) (recentSet.has(w) ? recent : fresh).push(w);
+  return [...fresh, ...recent];
+}
+
 // Compatibility bridge — words with the old singular fields yield exactly one
 // pair, so nothing in huntData.json changes.
 function hiddenPairsFor(word: string): HiddenPair[] {
@@ -180,6 +190,7 @@ function buildWordStep(
 export function generateHunt(opts: {
   masteredWords?: string[];
   ghostWordIds?: string[];
+  recentWordIds?: string[];
   length?: number;
   gentle?: boolean;
   seed?: number;
@@ -187,17 +198,21 @@ export function generateHunt(opts: {
   const {
     masteredWords = [],
     ghostWordIds = [],
+    recentWordIds = [],
     length = SESSION_LENGTH,
     gentle = false,
     seed = Date.now(),
   } = opts;
   const mastered = new Set(masteredWords.map(w => w.toUpperCase()));
+  const recentSet = new Set(recentWordIds.map(w => w.toUpperCase()));
   const selected = new Set<string>();
   const rng = createSeededRng(seed);
 
   const plan = buildPhasePlan(length);
-  const prep = (pool: string[]) =>
-    gentle ? easyFirst(shuffle(pool, rng)) : shuffle(pool, rng);
+  const prep = (pool: string[]) => {
+    const ordered = gentle ? easyFirst(shuffle(pool, rng)) : shuffle(pool, rng);
+    return recencyPartition(ordered, recentSet);
+  };
 
   const available = Object.keys(db).filter(w => !mastered.has(w));
   const confidencePool = prep(available.filter(w => db[w].gpsTag === 'confidence'));

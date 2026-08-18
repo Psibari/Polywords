@@ -60,3 +60,25 @@ ok(
     hauntHunt[hauntIndex + 1].emotionalRole === 'flow',
   'returning Haunt is followed by a decompression beat',
 );
+
+// Recency: a word in recentWordIds should never be picked while a
+// non-recent alternative exists in the same pool.
+const confidenceWords = Object.keys(data).filter(
+  w => (data[w] as any).gpsTag === 'confidence',
+);
+const recentHunt = generateHunt({ recentWordIds: confidenceWords.slice(0, 10), seed: 4242 });
+const pickedConfidenceWords = recentHunt
+  .filter(s => s.kind === 'word')
+  .map(s => (s as any).word)
+  .filter(w => confidenceWords.includes(w));
+ok(
+  pickedConfidenceWords.every(w => !confidenceWords.slice(0, 10).includes(w)),
+  'recent confidence words are deprioritized when fresher ones exist',
+);
+
+// Never crashes when the entire pool is "recent" — degrades gracefully.
+const allWordsRecent = Object.keys(data);
+ok(
+  (() => { generateHunt({ recentWordIds: allWordsRecent, seed: 1357 }); return true; })(),
+  'generateHunt does not throw when every word is marked recent',
+);
