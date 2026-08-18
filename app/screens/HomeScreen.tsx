@@ -1,10 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
   Dimensions,
   Image,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -29,9 +28,8 @@ import { Haptics } from '../utils/haptics';
 
 const HOME_BOOK_IMAGE = require('../../assets/images/homebook/homebook1.png');
 // Book geometry is locked (tuned on device). The three route plates are
-// positioned absolutely inside the cover, each driven by its own X/Y/H/W
-// state so they can be fitted inside the painted gold frame from the
-// dev-only tweak panel (bottom-left).
+// positioned absolutely inside the cover, fitted inside the painted gold
+// frame.
 const HOME_BOOK_HEIGHT = 440;
 const HOME_BOOK_MAX_WIDTH = 350;
 const HOME_BOOK_OFFSET_X = -5;
@@ -43,18 +41,10 @@ const HUNT_X = 68, HUNT_Y = 75, HUNT_W = 235, HUNT_H = 75;
 const DAILY_X = 67, DAILY_Y = 160, DAILY_W = 115, DAILY_H = 104;
 const VAULT_X = 190, VAULT_Y = 160, VAULT_W = 115, VAULT_H = 104;
 
-// Route-plate faces — purple ink plaques in the book's family
-const DAILY_PLATE_FACE = ['#211B4A', '#0F0D2A'] as const;
-const VAULT_PLATE_FACE = ['#17143A', '#0F0D2A'] as const;
-
-// Dev-only treatment previews for the plate redesign discussion.
-//   current — gold-foil HUNT + dark tiles with gold medallions (as shipped)
-//   deboss  — all three carved into the cover: flat dark faces, no glow,
-//             faint gold hairline, gold text (reads engraved, not stuck on)
-//   foil    — HUNT keeps the gold dare; tiles go quiet (no medallions, flat)
+// Route-plate faces — the shipped deboss look: flat dark faces carved into
+// the cover's purple family, faint gold hairlines, gold text.
 const HUNT_FACE_DEBOSS = ['#251F4E', '#161233'] as const;
 const TILE_FACE_QUIET = ['#1D1840', '#130F2C'] as const;
-type PlateTreatment = 'current' | 'deboss' | 'foil';
 
 type Props = {
   navigation: any;
@@ -72,23 +62,6 @@ export default function HomeScreen({ navigation }: Props) {
   const streak = getDisplayStreak(progress, getTodayDateString());
   const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 520);
   const dareScale = usePulseScale();
-  const [huntX, setHuntX] = useState(HUNT_X);
-  const [huntY, setHuntY] = useState(HUNT_Y);
-  const [huntW, setHuntW] = useState(HUNT_W);
-  const [huntH, setHuntH] = useState(HUNT_H);
-  const [dailyX, setDailyX] = useState(DAILY_X);
-  const [dailyY, setDailyY] = useState(DAILY_Y);
-  const [dailyW, setDailyW] = useState(DAILY_W);
-  const [dailyH, setDailyH] = useState(DAILY_H);
-  const [vaultX, setVaultX] = useState(VAULT_X);
-  const [vaultY, setVaultY] = useState(VAULT_Y);
-  const [vaultW, setVaultW] = useState(VAULT_W);
-  const [vaultH, setVaultH] = useState(VAULT_H);
-  // DEBOSS is the chosen plate design (carved into the cover); the switcher
-  // stays live in dev so we can still compare against current/foil.
-  const [treatment, setTreatment] = useState<PlateTreatment>('deboss');
-  const huntQuiet = treatment === 'deboss';
-  const tilesQuiet = treatment === 'deboss' || treatment === 'foil';
   // Press-time gold bloom on all three plates (feedback only — the resting
   // deboss state stays flat). Fades in on press, out on release.
   const huntGlow = useRef(new Animated.Value(0)).current;
@@ -163,10 +136,10 @@ export default function HomeScreen({ navigation }: Props) {
                   <Text style={styles.bookSpineText}>PW</Text>
                   <Text style={styles.huntBookHingeText}>WORD VAULT</Text>
 
-                  {/* Hunt plate — absolute placement, tweaked per-button */}
+                  {/* Hunt plate — absolute placement on the cover */}
                   <View
                     pointerEvents="box-none"
-                    style={[styles.platePos, { left: huntX, top: huntY, width: huntW, height: huntH }]}
+                    style={[styles.platePos, { left: HUNT_X, top: HUNT_Y, width: HUNT_W, height: HUNT_H }]}
                   >
                     <Animated.View
                       pointerEvents="none"
@@ -181,16 +154,14 @@ export default function HomeScreen({ navigation }: Props) {
                         onPressOut={() => glowOff(huntGlow)}
                         style={({ pressed }) => [
                           styles.huntShell,
-                          huntQuiet && styles.huntShellDeboss,
+                          styles.huntShellDeboss,
                           pressed && styles.pressed,
                         ]}
                       >
                         <LinearGradient
-                          colors={huntQuiet ? HUNT_FACE_DEBOSS : [...homeDare.faceGradient]}
-                          locations={huntQuiet ? undefined : [...homeDare.faceLocations]}
+                          colors={HUNT_FACE_DEBOSS}
                           style={styles.huntFace}
                         >
-                          {!huntQuiet && <View style={styles.huntFaceEdge} />}
                           {progress.runsCompleted === 0 && (
                             <View style={styles.startHereBadge}>
                               <Text style={styles.startHereBadgeText}>START HERE</Text>
@@ -200,12 +171,12 @@ export default function HomeScreen({ navigation }: Props) {
                             numberOfLines={1}
                             adjustsFontSizeToFit
                             minimumFontScale={0.55}
-                            style={[styles.dareLabel, huntQuiet && styles.dareLabelDeboss]}
+                            style={[styles.dareLabel, styles.dareLabelDeboss]}
                           >
                             {hasResumableGame ? 'RESUME HUNT' : 'ENTER THE HUNT'}
                           </Text>
                           {goldFeatherReady && (
-                            <Text style={[styles.goldFeatherReady, huntQuiet && styles.goldFeatherReadyDeboss]}>
+                            <Text style={[styles.goldFeatherReady, styles.goldFeatherReadyDeboss]}>
                               GOLD FEATHER READY
                             </Text>
                           )}
@@ -217,7 +188,7 @@ export default function HomeScreen({ navigation }: Props) {
                   {/* Daily plate */}
                   <View
                     pointerEvents="box-none"
-                    style={[styles.platePos, { left: dailyX, top: dailyY, width: dailyW, height: dailyH }]}
+                    style={[styles.platePos, { left: DAILY_X, top: DAILY_Y, width: DAILY_W, height: DAILY_H }]}
                   >
                     <Animated.View
                       pointerEvents="none"
@@ -232,7 +203,7 @@ export default function HomeScreen({ navigation }: Props) {
                       style={({ pressed }) => [
                         styles.coverPlate,
                         styles.dailyPlate,
-                        tilesQuiet && styles.coverPlateQuiet,
+                        styles.coverPlateQuiet,
                         pressed && styles.pressed,
                       ]}
                     >
@@ -242,10 +213,10 @@ export default function HomeScreen({ navigation }: Props) {
                         </View>
                       )}
                       <LinearGradient
-                        colors={tilesQuiet ? TILE_FACE_QUIET : [...DAILY_PLATE_FACE]}
+                        colors={TILE_FACE_QUIET}
                         style={styles.coverPlateFace}
                       >
-                        <View style={[styles.glyphMedallion, tilesQuiet && styles.glyphMedallionQuiet]}>
+                        <View style={[styles.glyphMedallion, styles.glyphMedallionQuiet]}>
                           <DailyQuillGlyph size={22} />
                         </View>
                         <Text style={styles.doorTitle}>{DAILY_CLUE_TITLE}</Text>
@@ -256,7 +227,7 @@ export default function HomeScreen({ navigation }: Props) {
                   {/* Vault plate */}
                   <View
                     pointerEvents="box-none"
-                    style={[styles.platePos, { left: vaultX, top: vaultY, width: vaultW, height: vaultH }]}
+                    style={[styles.platePos, { left: VAULT_X, top: VAULT_Y, width: VAULT_W, height: VAULT_H }]}
                   >
                     <Animated.View
                       pointerEvents="none"
@@ -271,15 +242,15 @@ export default function HomeScreen({ navigation }: Props) {
                       style={({ pressed }) => [
                         styles.coverPlate,
                         styles.vaultPlate,
-                        tilesQuiet && styles.coverPlateQuiet,
+                        styles.coverPlateQuiet,
                         pressed && styles.pressed,
                       ]}
                     >
                       <LinearGradient
-                        colors={tilesQuiet ? TILE_FACE_QUIET : [...VAULT_PLATE_FACE]}
+                        colors={TILE_FACE_QUIET}
                         style={styles.coverPlateFace}
                       >
-                        <View style={[styles.glyphMedallion, tilesQuiet && styles.glyphMedallionQuiet]}>
+                        <View style={[styles.glyphMedallion, styles.glyphMedallionQuiet]}>
                           <VaultSpinesGlyph size={22} />
                         </View>
                         <Text style={styles.doorTitle}>WORD VAULT</Text>
@@ -301,275 +272,6 @@ export default function HomeScreen({ navigation }: Props) {
             </Pressable>
           </View>
         </SafeAreaView>
-
-      {/* Dev-only tuning stays on web (preview) so it never covers the book
-          on a real device — all values are locked defaults on phone. */}
-      {__DEV__ && Platform.OS === 'web' && (
-        <View pointerEvents="box-none" style={styles.bookTweakPanel}>
-          <View style={styles.tweakTreatmentRow}>
-            {(['current', 'deboss', 'foil'] as PlateTreatment[]).map(t => (
-              <Pressable
-                key={t}
-                accessibilityRole="button"
-                accessibilityLabel={`Treatment ${t}`}
-                onPress={() => setTreatment(t)}
-                style={[styles.treatmentBtn, treatment === t && styles.treatmentBtnActive]}
-              >
-                <Text style={styles.treatmentBtnText}>{t.toUpperCase()}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.tweakPlateRow}>
-            <Text style={styles.tweakPlateName}>HUNT</Text>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>X</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate left"
-                onPress={() => setHuntX(x => Math.max(-200, x - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{huntX}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate right"
-                onPress={() => setHuntX(x => Math.min(300, x + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>Y</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate up"
-                onPress={() => setHuntY(y => Math.max(-100, y - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{huntY}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate down"
-                onPress={() => setHuntY(y => Math.min(400, y + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>H</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate shorter"
-                onPress={() => setHuntH(h => Math.max(40, h - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{huntH}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate taller"
-                onPress={() => setHuntH(h => Math.min(300, h + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>W</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate narrower"
-                onPress={() => setHuntW(w => Math.max(60, w - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{huntW}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Hunt plate wider"
-                onPress={() => setHuntW(w => Math.min(350, w + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-          </View>
-          <View style={styles.tweakPlateRow}>
-            <Text style={styles.tweakPlateName}>DAILY</Text>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>X</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate left"
-                onPress={() => setDailyX(x => Math.max(-200, x - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{dailyX}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate right"
-                onPress={() => setDailyX(x => Math.min(300, x + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>Y</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate up"
-                onPress={() => setDailyY(y => Math.max(-100, y - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{dailyY}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate down"
-                onPress={() => setDailyY(y => Math.min(400, y + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>H</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate shorter"
-                onPress={() => setDailyH(h => Math.max(40, h - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{dailyH}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate taller"
-                onPress={() => setDailyH(h => Math.min(300, h + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>W</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate narrower"
-                onPress={() => setDailyW(w => Math.max(60, w - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{dailyW}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Daily plate wider"
-                onPress={() => setDailyW(w => Math.min(350, w + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-          </View>
-          <View style={styles.tweakPlateRow}>
-            <Text style={styles.tweakPlateName}>VAULT</Text>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>X</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate left"
-                onPress={() => setVaultX(x => Math.max(-200, x - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{vaultX}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate right"
-                onPress={() => setVaultX(x => Math.min(300, x + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>Y</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate up"
-                onPress={() => setVaultY(y => Math.max(-100, y - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{vaultY}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate down"
-                onPress={() => setVaultY(y => Math.min(400, y + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>H</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate shorter"
-                onPress={() => setVaultH(h => Math.max(40, h - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{vaultH}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate taller"
-                onPress={() => setVaultH(h => Math.min(300, h + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-            <View style={styles.tweakGroup}>
-              <Text style={styles.tweakLabel}>W</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate narrower"
-                onPress={() => setVaultW(w => Math.max(60, w - 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>−</Text>
-              </Pressable>
-              <Text style={styles.bookTweakValue}>{vaultW}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Vault plate wider"
-                onPress={() => setVaultW(w => Math.min(350, w + 2))}
-                style={({ pressed }) => [styles.bookTweakBtn, pressed && styles.pressed]}
-              >
-                <Text style={styles.bookTweakText}>＋</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      )}
 
       <HomeEmbers />
       {pollyMemoryLoaded && <PollyHomePerch />}
@@ -696,14 +398,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 14,
   },
-  huntFaceEdge: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 6,
-    backgroundColor: homeDare.bottomEdge,
-  },
   huntPulseWrap: {
     width: '100%',
     height: '100%',
@@ -760,45 +454,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 8,
     width: '100%',
-  },
-  tweakTreatmentRow: {
-    flexDirection: 'row',
-    gap: 4,
-    marginBottom: 4,
-  },
-  treatmentBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.35)',
-    backgroundColor: 'rgba(15,13,42,0.9)',
-  },
-  treatmentBtnActive: {
-    backgroundColor: 'rgba(245,200,66,0.28)',
-    borderColor: PW.color.gold,
-  },
-  treatmentBtnText: {
-    color: PW.color.gold,
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    fontSize: 10,
-    letterSpacing: 1,
-  },
-  tweakPlateRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-  },
-  tweakPlateName: {
-    color: 'rgba(245,200,66,0.95)',
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    fontSize: 10,
-    letterSpacing: 1,
-    width: 44,
-    textAlign: 'left',
-    marginTop: 16,
   },
   coverPlate: {
     flex: 1,
@@ -871,56 +526,6 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 0.3,
-  },
-  bookTweakPanel: {
-    position: 'absolute',
-    left: 8,
-    bottom: 8,
-    flexDirection: 'column',
-    gap: 4,
-    zIndex: 20,
-    backgroundColor: 'rgba(15,13,42,0.85)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.35)',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-  },
-  tweakGroup: {
-    alignItems: 'center',
-    gap: 2,
-    width: 40,
-  },
-  tweakLabel: {
-    color: 'rgba(245,200,66,0.9)',
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    fontSize: 9,
-    letterSpacing: 1,
-  },
-  bookTweakBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(15,13,42,0.9)',
-    borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bookTweakText: {
-    color: PW.color.gold,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    fontSize: 14,
-    lineHeight: 16,
-  },
-  bookTweakValue: {
-    color: 'rgba(255,255,255,0.85)',
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    fontSize: 10,
-    letterSpacing: 0.5,
   },
   settingsLinkWrap: {
     // Floats above the book (which is taller + offset now) so SETTINGS is
