@@ -263,7 +263,12 @@ export function generateHunt(opts: {
     }
   }
 
-  const hauntIdx = length - 3; // ghost slot, then one panic word, then boss last
+  // Ghost slot moved earlier 2026-08-18 (was length-3: round 8/10 standard,
+  // round 6/8 fledgling) — too deep for players who don't reliably reach
+  // that far to ever see their revenge match. Only two lengths are ever
+  // requested (see GPS_ARCS above), so this is explicit per-length rather
+  // than a formula. Round 5 of 10 standard / round 4 of 8 fledgling.
+  const hauntIdx = length === 8 ? 3 : 4;
   const bossIdx = length - 1;
 
   const eligibleBossPools = [bossPool, panicPool, tensionPool]
@@ -310,6 +315,18 @@ export function generateHunt(opts: {
   }
   const roles = rolesFromPlan(slotPlan);
   const haptics = hapticsFromPlan(slotPlan);
+
+  // The ghost's weight must not depend on which phase slot it happens to
+  // land on — previously it inherited whatever role/haptic the original
+  // phase label at hauntIdx carried, an accident of array position, not a
+  // decision (proof: fledgling runs got a weaker 'tension' treatment than
+  // standard runs' 'adrenaline' purely because hauntIdx landed on a
+  // different phase in each arc length). Always heavy/adrenaline: this is
+  // Polly's exact rematch for the word that already beat the player once.
+  if (ghostWord) {
+    roles[hauntIdx] = 'adrenaline';
+    haptics[hauntIdx] = 'heavy';
+  }
 
   const slots: { word: string; isHauntReturn?: true; isMasteryRematch?: true }[] = [];
   for (let i = 0; i < length; i++) {

@@ -61,6 +61,35 @@ ok(
   'returning Haunt is followed by a decompression beat',
 );
 
+// The ghost round's weight must not depend on where it lands — regression
+// guard for the position-inherited-role bug fixed 2026-08-18. At the new
+// hauntIdx, both arc lengths inherit a weaker role without the fix:
+// standard lands 'firstTension'/medium (hauntIdx coincides with
+// firstTensionIdx), fledgling lands 'tension'/medium. Both assertions
+// below are real regression guards, not redundant ones.
+ok(
+  hauntHunt[hauntIndex]?.kind === 'word' &&
+    hauntHunt[hauntIndex].emotionalRole === 'adrenaline' &&
+    hauntHunt[hauntIndex].hapticTier === 'heavy',
+  'returning Haunt always gets adrenaline/heavy weight (standard arc)',
+);
+const fledglingHauntHunt = generateHunt({
+  ghostWordIds: [bossCapable[0]],
+  length: 8,
+  gentle: true,
+  seed: 8181,
+});
+const fledglingHauntIndex = fledglingHauntHunt.findIndex(
+  step => step.kind === 'word' && step.isHauntReturn,
+);
+ok(fledglingHauntIndex >= 0, 'eligible returning Haunt is placed in fledgling arc');
+ok(
+  fledglingHauntHunt[fledglingHauntIndex]?.kind === 'word' &&
+    fledglingHauntHunt[fledglingHauntIndex].emotionalRole === 'adrenaline' &&
+    fledglingHauntHunt[fledglingHauntIndex].hapticTier === 'heavy',
+  'returning Haunt always gets adrenaline/heavy weight (fledgling arc, the case that actually proves the fix)',
+);
+
 // Recency: a word in recentWordIds should never be picked while a
 // non-recent alternative exists in the same pool.
 const confidenceWords = Object.keys(data).filter(
