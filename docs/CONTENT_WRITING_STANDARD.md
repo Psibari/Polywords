@@ -5,12 +5,19 @@ editorial approval. `docs/CONTENT_PHILOSOPHY.md` explains the intended feeling.
 
 ## Data Boundary
 
-- `assets/data/huntData.json` is live placeholder/test content, not editorial truth.
-- `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial master.
-- `assets/data/huntData.v2.json` is dormant approved-only export data.
-- Workbook approval never changes live JSON automatically; production merge is a separate
-  explicit task.
-- Use live JSON for queue order only. Verify workbook status before selecting the next word.
+- `assets/data/huntData.json` is the real shipped content and the source of truth for
+  what's live — not a placeholder/test corpus (superseded that status 2026-08-07). It is
+  authoritative over the workbook and any build script wherever they differ.
+- `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial staging ground —
+  where new words get drafted and approved before they exist in the live game.
+- `assets/data/huntData.v2.json` is retired (schema shell only, 0 words) — not an active
+  export target.
+- Workbook approval never changes live JSON automatically; bringing approved words into
+  `huntData.json` is a separate, explicit, purely-additive merge task
+  (`tools/content/merge-workbook-additions.mjs`) that never touches an existing word's
+  masks or hidden pairs.
+- Verify workbook status before selecting the next word to draft; verify live JSON before
+  stating anything about what's currently shipped.
 
 Never polish legacy masks as canon. Rebuild each word from a fresh American-English meaning
 audit.

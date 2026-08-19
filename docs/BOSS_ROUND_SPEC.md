@@ -1,5 +1,11 @@
 # POLYWORDS — Boss Round Spec
 
+> **Flagged 2026-08-19 (doc reconciliation pass):** this spec's Part C presentation
+> (ceremony/room treatment/gauntlet-card material) is NOT what got built — "Pick Your
+> Trap" (see `CLAUDE.md` Hunt section) shipped instead. Status here needs Pete's explicit
+> call: keep this as a record of an abandoned direction, or retire it. Left otherwise
+> untouched by this pass.
+
 **Owner:** Pete (sole authority) · **Lead:** Claude
 **Branch:** `play-screen-overhaul` · **Written:** July 23 2026 · **Revised:** July 25 2026
 **Status:** DESIGN LOCKED (rev. 2) — implementation not started

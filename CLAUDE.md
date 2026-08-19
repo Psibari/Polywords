@@ -46,7 +46,17 @@ drivers on one `Animated.Value`.
   (`huntGenerator.ts`) is the sole arc source; `createGame` requires a `steps` arg.
   Fledgling runs (first 3, `runsCompleted < 3`) use an 8-round arc instead, with the boss at
   index 7 — nothing may hardcode index 9 as "the boss."
-- Round 8/index 7 is the Returning Haunt slot and remains a standard event.
+- The Returning Haunt slot moved earlier 2026-08-18 (`279ccf5`): round 5/index 4 in the
+  standard 10-round arc, round 4/index 3 in the 8-round fledgling arc (was round 8/6 —
+  too deep for players who don't reliably reach that far to see their revenge match).
+  `huntGenerator.ts`'s `hauntIdx` is now an explicit per-length value, not a `length - 3`
+  formula. It remains a standard event — never boss presentation. Its emotional weight
+  (role/haptic) no longer inherits whatever phase happened to sit at that array index; it
+  is explicitly forced to `adrenaline`/heavy regardless of arc length or position.
+- Cross-run repeat suppression shipped 2026-08-18 (`82430d1`): `generateHunt` takes a
+  `recentWordIds` param (the last ~30 words actually shown, persisted on
+  `PlayerProgress`); each `gpsTag` pool is reordered so recently-shown words sink to the
+  back, never excluded — the existing cross-pool fallback chain sees an unchanged pool.
 - Mastery/haunt is decided by the engine's per-run `bossOutcome`
   (`'pending'|'mastered'|'haunted'`), never by score. Results, rank, and Polly-memory all
   derive from it. Surviving the visible boss tiles unlocks the hidden gauntlet regardless
@@ -166,50 +176,52 @@ no per-screen background exception anymore.
 
 ## Content Boundary
 
-`assets/data/huntData.json` is now the real working content, not a test corpus. On
-2026-08-07 Pete had it fully replaced — the old ~400-word broken test set was wiped
-entirely (not merged, not kept alongside) — with the ~150-word set built from his new
-editorial workbook (`tools/content/build-hunt-data.mjs`, run against
-`POLYWORDS_content_data_2026-08-06_ARMS_NAIL_COMPLETE_LOCKED.xlsx`, which on 2026-08-07
-also replaced the tracked `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` as the master —
-verified byte-identical `huntData.json`/`build-report.json` regeneration before the swap).
-13 words currently ship as full boss cards (KERNEL was demoted from boss by Pete
-2026-08-11, replaced by a promoted fruit-stone REAL). As of 2026-08-11 all 13 have their
-full 3-pair `hiddenPairs` set hand-written — the COURT/IRON/STRIKE gauntlet-review commits
-that day closed out the standing 3-pair target; no `PLACEHOLDER TEST` slots remain on any
-boss word. Boss words are governed by the live JSON: `assets/data/huntData.json` is
-the source of truth for which words ship as bosses and their hand-written
-`hiddenPairs`, superseding the workbook and `build-hunt-data.mjs` wherever they
-differ. (They currently do: the workbook stores one hidden pair per boss word and
-still marks KERNEL and WAKE boss-ready, and `build-hunt-data.mjs` emits 1-real +
-2-`PLACEHOLDER TEST` pairs — so a rebuild is not authoritative until the pipeline
-reproduces the live 13 × 3-pair set.) 2 words (REVOLUTION, PROJECT) were
-separately, explicitly demoted from boss by
-Pete earlier and ship as regular words only, per his own documented reasoning in the
-workbook. `huntData.v2.json` (0 words) and the mask-rewriter AI-assisted content-generation
-pilot were both retired 2026-08-11 — Pete: mask-rewriter never produced one usable line
-across many attempts — and moved to `tools/content/_deprecated/`; no longer an active
-track.
+`assets/data/huntData.json` is the real working content and the source of truth for what
+ships — not a test corpus, and not subordinate to the workbook. Current corpus (verified
+directly against the live file, 2026-08-19): **173 words**, gpsTag pools confidence 12 /
+flow 33 / tension 62 / panic 53 / boss 13, 39 hand-written hidden meaning/trap pairs
+across the 13 boss words, zero `PLACEHOLDER TEST` slots. History: Pete fully replaced the
+old ~400-word broken test set 2026-08-07 with a 150-word set built from his editorial
+workbook; a purely-additive merge 2026-08-16 (`f2f6def8`) brought in 23 more words
+(150→173) via the new `tools/content/merge-workbook-additions.mjs`, which reads mask ids
+verbatim from the workbook's Content ID column and never touches an existing word's masks
+or `hiddenPairs`.
 
-`gpsTag` and `difficulty` are not in the workbook at all — `build-hunt-data.mjs`
+`tools/content/build-hunt-data.mjs` — the original full-rebuild tool — is retired as the
+normal update path and now refuses to run without
+`POLYWORDS_ALLOW_DESTRUCTIVE_REBUILD=1`: it predates stable content identities and would
+regenerate most hand-written `hiddenPairs` as placeholder content, drop their ids, and
+break every saved player record against the current corpus. Kept only as a record of how
+the original 150-word corpus was built. `merge-workbook-additions.mjs` is the live,
+additive path for bringing new workbook words in.
+
+13 words ship as full boss cards, each with a full hand-written 3-pair `hiddenPairs` set
+(KERNEL was demoted from boss by Pete 2026-08-11, replaced by a promoted fruit-stone REAL;
+REVOLUTION and PROJECT were separately demoted earlier and ship as regular words only).
+`assets/data/huntData.json` is authoritative over the workbook and both build scripts
+wherever they differ.
+
+`localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial-master pointer;
+its current backing file is `POLYWORDS_content_data_2026-08-15_DIRECT_DISCHARGE_LOCKED.xlsx`
+(166 words, refreshed from Pete's 2026-08-15 working copy). `huntData.v2.json` (schema
+shell, `words: {}`, 0 entries) and the mask-rewriter AI-assisted content-generation pilot
+were both retired 2026-08-11 — Pete: mask-rewriter never produced one usable line across
+many attempts — and moved to `tools/content/_deprecated/`; no longer an active track.
+
+`gpsTag` and `difficulty` are not in the workbook at all — the build tooling
 placeholder-assigns them so the game can run (`gpsTag` is load-bearing — `huntGenerator.ts`
 pools words by it and throws on an empty pool) before a real editorial pass exists, per
-`docs/GOLDEN_PACING_SYSTEM.md`. That pass ran 2026-08-07 and is now complete: all 137
-non-boss words have a real hand-reviewed `gpsTag`/`difficulty`, grounded in each word's
-actual REAL/trap content against the phase table, tracked in
-`tools/content/pacing-overrides.json` (git-tracked, merged in by `build-hunt-data.mjs`
-before falling back to placeholder, so it survives a workbook rebuild — only the 13 boss
-words still fall back to a placeholder `difficulty`, not covered by this pass). A batch of
-37 words were briefly held back mid-pass as "traps restate their REAL" before Pete
-clarified that's not a defect — `docs/CONTENT_WRITING_STANDARD.md` defines a trap as
-"guilty-close, legally wrong," not required to oppose the REAL — so they were folded back
-in. Two words' traps were genuinely fixed: BULB's onion trap was cut (onions are literal
-bulbs, not a fair trap) and DATE's "wrinkled purple fruit" trap (actually a fig near-miss,
-not a color error) was rewritten to "a one-night stand." Applying the pass also exposed and
-fixed a real crash risk in `huntGenerator.ts`'s phase fallback chains (some phases couldn't
-reach the confidence pool as a last resort) and a placeholder-stability bug (the
-round-robin placeholder shifted for unreviewed words every time another word gained an
-override) — see `CONTEXT.md` for the full history.
+`docs/GOLDEN_PACING_SYSTEM.md`. The first pass (2026-08-07) hand-reviewed all 136 non-boss
+words that existed at the time; the 2026-08-16 merge added real, cross-checked
+`gpsTag`/`difficulty` for the 23 new words alongside it, tracked in
+`tools/content/pacing-overrides.json` (git-tracked, merged in ahead of the placeholder
+fallback so it survives a workbook rebuild). **One gap found this pass:** KERNEL — demoted
+from boss 2026-08-11, after the pacing pass closed — has no entry in
+`pacing-overrides.json` and is still on the placeholder assignment; every other one of the
+160 non-boss words has a real hand-reviewed tag. Boss words' `difficulty` still falls back
+to placeholder throughout — never in scope for this pass. Full session-by-session history
+(BULB/DATE trap fixes, the fallback-chain crash fix, the placeholder-stability fix) is in
+`CONTEXT.md`.
 
 ## Key Files
 

@@ -14,8 +14,9 @@ player archive, and Settings the utility/profile surface.
 - Up to 5 masks are shown per word (`VISIBLE_MASK_CAP`); unshown masks resurface in
   other runs rather than being wasted.
 - Round 10/index 9 is Polly’s Word (`eventType: 'bossWord'`).
-- Round 8/index 7 may host a Returning Haunt as a standard event with
-  `isHauntReturn: true`; it never receives boss presentation.
+- Round 5/index 4 (round 4/index 3 in the fledgling arc) may host a Returning Haunt as a
+  standard event with `isHauntReturn: true`; it never receives boss presentation. Moved
+  earlier 2026-08-18 (was round 8/6) — see `CLAUDE.md` Hunt section.
 - Only boss words can become HAUNTED. Mastered words leave the standard pool.
 - RUN IT BACK builds a fresh Hunt with ghost priority.
 - UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit.
@@ -39,10 +40,12 @@ migration is explicitly approved.
   tile per hidden meaning/trap pair, each judged UP/RIGHT independently. A visible
   mistake does not block the gauntlet from unlocking.
 - **Pick Your Trap** (shipped 2026-08-01): all three gauntlet tiles arrive together as
-  closed spines and the player picks which one to face and in what order — tapping a
-  spine opens it (reveal), then a separate later swipe judges it; once a spine is
+  closed cards and the player picks which one to face and in what order — tapping a
+  card flips it open (reveal), then a separate later swipe judges it; once a card is
   opened it cannot be closed back up unpicked. Order is purely a player choice and does
-  not change the per-tile odds — the judgment math below is unaffected.
+  not change the per-tile odds — the judgment math below is unaffected. Presentation
+  moved 2026-08-15 from standing spines to face-down flip cards (`aa08db6`); the
+  mechanic is unchanged.
 - All three gauntlet tiles correct masters the word, regardless of visible mistakes.
 - One wrong gauntlet tile ends the boss attempt immediately and haunts the word once.
 - Returning Haunt re-tests the exact pair that beat the player last run.

@@ -24,16 +24,21 @@ that belongs exclusively to `docs/CONTENT_WRITING_STANDARD.md`.
 | 10 | Boss | maximum authored confrontation |
 
 The implementation profile is `2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss`.
-Round 8 may become a Returning Haunt without receiving boss presentation. Round 10 always
+Round 5 (round 4 in the 8-round fledgling arc) may become a Returning Haunt without
+receiving boss presentation — moved earlier 2026-08-18, was round 8/6. Round 10 always
 remains Polly’s Word.
 
-Two placement details live only in `huntGenerator.ts`, not this table: the round
-immediately after a Returning Haunt is force-set to Flow regardless of what the phase
-plan would otherwise put there (`hauntIdx + 1`) — a Haunt is already a peak, so it's
-followed by a recognition-first beat instead of stacking two peaks back to back. And in
-the 8-round fledgling arc, the Returning Haunt slot sits at index 5, not 7 — the formula
-is always `length - 3`, which resolves to 7 in the standard 10-round arc and 5 in the
-8-round one.
+Three placement details live only in `huntGenerator.ts`, not this table:
+
+- The round immediately after a Returning Haunt is force-set to Flow regardless of what
+  the phase plan would otherwise put there (`hauntIdx + 1`) — a Haunt is already a peak,
+  so it's followed by a recognition-first beat instead of stacking two peaks back to back.
+- `hauntIdx` is an explicit per-length value (4 standard, 3 fledgling), not a formula —
+  only two arc lengths are ever requested, so there's nothing for a formula to generalize.
+- The Returning Haunt's emotional weight (role/haptic) is explicitly forced to
+  `adrenaline`/heavy rather than inherited from whatever phase happens to sit at
+  `hauntIdx` — at either arc length, the inherited role would otherwise be weaker
+  (`firstTension`/medium standard, `tension`/medium fledgling).
 
 ## Placement Metadata
 
