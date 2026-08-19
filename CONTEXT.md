@@ -234,6 +234,17 @@ Corrects stale stem info — stems are GONE.
 - Glitchy staggered startup: FIXED 2026-08-06, commit `39b202c` — subsystems now coordinate readiness instead of racing.
 - Cold-start hunt music delay (1-3s before music starts on first Hunt entry after reload): FIXED 2026-08-07, commit `4e86b0c` — hunt track now preloads in the background from `App.tsx` instead of loading cold at Hunt entry.
 - Resolved: `[MusicEngine] failed to play ... track — Session activation failed` warning (previously "Unchased", seen once on a boss-track switch) — reproduced on hunt track 2026-08-07, confirmed the existing self-heal recovers it within 2 rebuild attempts.
+- Total audio silence, music AND SFX, every play attempt: FIXED 2026-08-19. Root cause was
+  `audioSession.ts` requesting `interruptionMode: 'mixWithOthers'` — on iOS this made every
+  `player.play()` throw expo-audio's native `Session activation failed`, which is why the
+  self-heal from the bug above (and every other audio commit before it) could never
+  actually clear it: rebuilding the JS player object re-invokes the same broken native call
+  every time. Switched to `interruptionMode: 'doNotMix'`, device-confirmed fixed (heard
+  music + SFX again on iOS Expo Go). `setAudioModeAsync did not settle within 2500ms` still
+  logs every launch — harmless now that activation itself no longer fails, not investigated
+  further this session. Separately caught mid-investigation: a "totally silent, zero errors"
+  report was the in-app Settings > Sound toggle switched off, unrelated to this bug — rule
+  that out first before chasing a native/session cause.
 
 ## Deferred — Pre-Launch Accessibility/Polish Pass (found 2026-08-09)
 

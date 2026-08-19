@@ -30,6 +30,17 @@ architecture; current progress belongs in `CONTEXT.md`.
   at 0.55x) plays at its normal bright pitch instead — present unnoticed since the deflate
   cue shipped 2026-07-09, fixed 2026-08-16. `setPlaybackRate` failures are now logged and
   skip playback rather than silently falling through to the default pitch.
+- Total audio silence (music AND SFX, zero errors from the mute case but real native errors
+  otherwise) root-caused 2026-08-19: `audioSession.ts`'s `setAudioModeAsync` was requesting
+  `interruptionMode: 'mixWithOthers'`, which on iOS made every subsequent
+  `AudioPlayer.play()` throw expo-audio's native `Session activation failed`
+  (`AVAudioSession.setActive`). `MusicEngine.ts`/`sfx.ts`'s bounded rebuild self-heal (added
+  across 7+ prior commits chasing this same symptom) could never fix it, since rebuilding a
+  JS-side player just re-invokes the same broken native call. Switched to
+  `interruptionMode: 'doNotMix'`, which does not add the failing category option — device-
+  confirmed fixed on iOS Expo Go. Separately: a "totally silent, zero errors" report during
+  this investigation turned out to be the in-app Settings > Sound toggle switched off, not a
+  code bug — check that first before assuming a native/session issue.
 - Telemetry: `playtestTelemetry.ts` persists locally in every build, not dev-only —
   hesitation, ambiguous-swipe, decision-timeline, ghost/Haunt-lifecycle, and boss-entrance
   events. Never networked; surfaced only via Settings > Playtest Data (manual on-device

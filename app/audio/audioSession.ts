@@ -27,7 +27,13 @@ export function ensureAudioSessionConfigured(): Promise<void> {
     const configure = setAudioModeAsync({
       playsInSilentMode: true,
       shouldPlayInBackground: false,
-      interruptionMode: 'mixWithOthers',
+      // 'mixWithOthers' caused every player.play() call to throw expo-audio's
+      // native "Session activation failed" (AVAudioSession.setActive) on iOS,
+      // permanently silencing music and SFX once the bounded rebuild
+      // self-heal in MusicEngine.ts/sfx.ts exhausted its attempts. 'doNotMix'
+      // does not add this failing category option and is device-confirmed
+      // fixed (2026-08-19). See CONTEXT.md for the investigation.
+      interruptionMode: 'doNotMix',
     });
 
     configure.catch(error => {
