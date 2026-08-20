@@ -15,11 +15,15 @@ export default function GraphicGround() {
     <View style={styles.root} pointerEvents="none">
       <Image source={stoneWallImage} style={styles.wall} resizeMode="cover" />
 
-      {/* torches sit above the wall art, positioned to match the old pillar stacks */}
-      <View style={{ position: 'absolute', left: '4%', top: '30%' }}>
+      {/* torches sit above the wall art, positioned to match the old pillar
+          stacks. Fixed points from the bottom (reverse-derived from the old
+          top: 30%/28% at the old, much shorter band height) instead of a
+          percentage, so they stay put regardless of the band's rendered
+          height on any screen or device. */}
+      <View style={{ position: 'absolute', left: '4%', bottom: 300 }}>
         <GroundTorch size={56} delayMs={0} />
       </View>
-      <View style={{ position: 'absolute', right: '4%', top: '28%' }}>
+      <View style={{ position: 'absolute', right: '4%', bottom: 300 }}>
         <GroundTorch size={56} delayMs={400} />
       </View>
     </View>
