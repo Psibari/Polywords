@@ -23,6 +23,11 @@ export type AmbientSkyBackgroundProps = {
   // chrome should override these rather than share the default.
   moonTop?: DimensionValue;
   moonRight?: DimensionValue;
+  showGround?: boolean;
+  // When provided, the ground band fills from this many points below the
+  // screen top down to the bottom (cropped via GraphicGround's own
+  // resizeMode="cover") instead of the default aspectRatio-based sizing.
+  groundTopInset?: number;
 };
 
 export default function AmbientSkyBackground({
@@ -34,6 +39,8 @@ export default function AmbientSkyBackground({
   starTint,
   moonTop = '8%',
   moonRight = '10%',
+  showGround = true,
+  groundTopInset,
 }: AmbientSkyBackgroundProps) {
   // Treat the pending (null) read as "reduce" — matches usePollyAmbientMotion's
   // `reduceMotion !== false` convention. Coercing null to false would start every
@@ -50,9 +57,18 @@ export default function AmbientSkyBackground({
       <View style={[styles.moonWrap, { top: moonTop, right: moonRight }]}>
         <Moon phase={moonPhase} />
       </View>
-      <View style={styles.groundBand}>
-        <GraphicGround />
-      </View>
+      {showGround && (
+        <View
+          style={[
+            styles.groundBand,
+            groundTopInset === undefined
+              ? styles.groundBandAspect
+              : { top: groundTopInset },
+          ]}
+        >
+          <GraphicGround />
+        </View>
+      )}
     </View>
   );
 }
@@ -69,6 +85,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    aspectRatio: 390 / 420,
+  },
+  groundBandAspect: {
+    aspectRatio: 853 / 1844,
   },
 });

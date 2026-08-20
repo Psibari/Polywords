@@ -1,79 +1,21 @@
 // app/components/GraphicGround.tsx
-import React, { useId } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Svg, { Defs, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import React from 'react';
+import { Image, StyleSheet, View } from 'react-native';
 import GroundTorch from './GroundTorch';
-import { PW } from '../ui/pwTheme';
 
-const OUTLINE = '#050410';
-const TILE_DARK = '#1c1436';
-const TILE_MID = '#241a3e';
-const PILLAR = '#2f2050';
-const PILLAR_MID = '#281c46';
-const VINE = '#20183c';
-const TILE_ALT = '#2a1e46';
-const GROUND_DEEPEST = '#120f2c';
-const BEVEL_HIGHLIGHT = 'rgba(185,138,222,0.28)';
+const stoneWallImage = require('../../assets/images/background/StoneWall.png');
 
-// Flat, bold-graphic ground: a continuous gradient (starts at the sky's own
-// tint so there's no seam), chunky flagstone tiles, two low pillar/rubble
-// stacks, vine silhouettes at the top corners only, and two torches. The
-// space between the torches is deliberately left empty — Polly's spot, not
-// a decorated focal point (an earlier gold-seal design was rejected).
+// Ground art: a photoreal stone wall texture filling the same box the old
+// flat-graphic SVG (gradient + flagstone tiles + pillar stacks + corner
+// vines) used to occupy, plus two torches. The space between the torches is
+// deliberately left empty — Polly's spot, not a decorated focal point (an
+// earlier gold-seal design was rejected).
 export default function GraphicGround() {
-  const id = useId();
-  const gradientId = `groundBase-${id}`;
   return (
     <View style={styles.root} pointerEvents="none">
-      <Svg width="100%" height="100%" viewBox="0 0 390 420">
-        <Defs>
-          <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor={PW.color.bg} stopOpacity={0} />
-            <Stop offset="18%" stopColor={PW.color.bg} stopOpacity={1} />
-            <Stop offset="55%" stopColor={GROUND_DEEPEST} stopOpacity={1} />
-            <Stop offset="100%" stopColor={PW.color.bgDeep} stopOpacity={1} />
-          </LinearGradient>
-        </Defs>
+      <Image source={stoneWallImage} style={styles.wall} resizeMode="cover" />
 
-        <Rect x="0" y="0" width="390" height="420" fill={`url(#${gradientId})`} />
-
-        {/* chunky flagstone floor */}
-        <G stroke={OUTLINE} strokeWidth={4} strokeLinejoin="round">
-          <Rect x="-10" y="300" width="130" height="70" rx="14" fill={TILE_MID} />
-          <Rect x="112" y="290" width="150" height="80" rx="14" fill={TILE_ALT} />
-          <Rect x="254" y="300" width="150" height="70" rx="14" fill={TILE_MID} />
-          <Rect x="-10" y="360" width="150" height="80" rx="14" fill={TILE_DARK} />
-          <Rect x="132" y="355" width="130" height="85" rx="14" fill={VINE} />
-          <Rect x="254" y="358" width="150" height="82" rx="14" fill={TILE_DARK} />
-        </G>
-        <G stroke={BEVEL_HIGHLIGHT} strokeWidth={3} strokeLinecap="round" fill="none">
-          <Path d="M -6 302 H 116" />
-          <Path d="M 116 292 H 258" />
-          <Path d="M 258 302 H 400" />
-        </G>
-
-        {/* left pillar stack */}
-        <G stroke={OUTLINE} strokeWidth={4} strokeLinejoin="round">
-          <Rect x="10" y="150" width="52" height="60" rx="10" fill={PILLAR} />
-          <Rect x="2" y="200" width="70" height="55" rx="12" fill={PILLAR_MID} />
-          <Rect x="14" y="248" width="58" height="60" rx="10" fill={TILE_MID} />
-        </G>
-
-        {/* right pillar stack */}
-        <G stroke={OUTLINE} strokeWidth={4} strokeLinejoin="round">
-          <Rect x="322" y="140" width="54" height="62" rx="10" fill={PILLAR} />
-          <Rect x="316" y="192" width="70" height="56" rx="12" fill={PILLAR_MID} />
-          <Rect x="320" y="242" width="58" height="60" rx="10" fill={TILE_MID} />
-        </G>
-
-        {/* vine clusters, top corners only */}
-        <G fill={VINE} stroke={OUTLINE} strokeWidth={3} strokeLinejoin="round">
-          <Path d="M 0 130 C 20 145 26 165 14 185 C 30 178 40 190 34 208 L 0 208 Z" />
-          <Path d="M 390 120 C 368 138 364 158 378 176 C 360 172 350 186 358 204 L 390 204 Z" />
-        </G>
-      </Svg>
-
-      {/* torches sit above the SVG, positioned to match the pillar stacks */}
+      {/* torches sit above the wall art, positioned to match the old pillar stacks */}
       <View style={{ position: 'absolute', left: '4%', top: '30%' }}>
         <GroundTorch size={56} delayMs={0} />
       </View>
@@ -86,6 +28,10 @@ export default function GraphicGround() {
 
 const styles = StyleSheet.create({
   root: {
+    width: '100%',
+    height: '100%',
+  },
+  wall: {
     width: '100%',
     height: '100%',
   },

@@ -22,6 +22,7 @@ export const HOME_SKY_TUNING: AmbientSkyBackgroundProps = {
   // read too low. Splitting the difference between those two known points.
   moonTop: '21%',
   moonRight: '12%',
+  showGround: false,
 };
 
 export const HUNT_SKY_TUNING: AmbientSkyBackgroundProps = {
