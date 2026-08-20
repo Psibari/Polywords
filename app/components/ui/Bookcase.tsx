@@ -12,13 +12,12 @@ const FRAME_ASPECT_RATIO = 900 / 1346;
 const SHELF_SIDE_INSET = 0.074;
 const VAULT_SPINE_HEIGHT = 84;
 
-const bookcaseImage = require('../../../assets/images/vault/bookcase-dark-mobile.png');
+const bookcaseImage = require('../../../assets/images/vault/shelves.png');
 
 const SHELF_SLOTS = [
-  { top: '10.8%', height: '19.3%' },
-  { top: '33.4%', height: '17.7%' },
-  { top: '52.7%', height: '18.8%' },
-  { top: '73.8%', height: '16.9%' },
+  { top: '30.5%', height: '13.6%' },
+  { top: '46.1%', height: '13.7%' },
+  { top: '61.8%', height: '15.9%' },
 ] as const;
 
 type Props = {
