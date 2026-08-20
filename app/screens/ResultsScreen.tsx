@@ -740,7 +740,7 @@ const rs = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 28,
     paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE, // clears Polly's reach regardless of scroll position
   },
   verdictBlock: {
