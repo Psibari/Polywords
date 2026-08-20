@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: 220,
     pointerEvents: 'none',
-    zIndex: 1,
-    elevation: 1,
+    zIndex: 45,
+    elevation: 45,
   },
   pollyWrap: {
     position: 'absolute',
