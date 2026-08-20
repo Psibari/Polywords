@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
@@ -24,6 +34,8 @@ import { PW } from '../ui/pwTheme';
 import appConfig from '../../app.json';
 
 const APP_VERSION = appConfig.expo.version;
+
+const stoneTileTexture = require('../../assets/images/textures/stoneTile.png');
 
 const PRIVACY_TEXT =
   "POLYWORDS stores your game progress locally on this device only — " +
@@ -199,7 +211,12 @@ export default function SettingsScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>Tune the hunt.</Text>
         </View>
 
-        <View style={styles.profileCard}>
+        <ImageBackground
+          source={stoneTileTexture}
+          resizeMode="repeat"
+          style={styles.profileCard}
+          imageStyle={styles.profileCardTexture}
+        >
           <View pointerEvents="none" style={styles.plaqueHighlight} />
           <View style={styles.profileTop}>
             <View style={styles.avatar}>
@@ -240,11 +257,16 @@ export default function SettingsScreen({ navigation }: Props) {
               {isEditingName ? 'Save Name' : 'Edit Name'}
             </Text>
           </Pressable>
-        </View>
+        </ImageBackground>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Game</Text>
-          <View style={styles.card}>
+          <ImageBackground
+            source={stoneTileTexture}
+            resizeMode="repeat"
+            style={styles.card}
+            imageStyle={styles.cardTexture}
+          >
             <View pointerEvents="none" style={styles.plaqueHighlight} />
             <ToggleRow
               label="Sound"
@@ -283,12 +305,17 @@ export default function SettingsScreen({ navigation }: Props) {
               enabled={reduceFlashesOverride}
               onPress={() => setReduceFlashesOverride(!reduceFlashesOverride)}
             />
-          </View>
+          </ImageBackground>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
-          <View style={styles.card}>
+          <ImageBackground
+            source={stoneTileTexture}
+            resizeMode="repeat"
+            style={styles.card}
+            imageStyle={styles.cardTexture}
+          >
             <View pointerEvents="none" style={styles.plaqueHighlight} />
             <Pressable
               accessibilityRole="button"
@@ -318,12 +345,17 @@ export default function SettingsScreen({ navigation }: Props) {
                 <Text style={styles.rowNote}>{APP_VERSION}</Text>
               </View>
             </View>
-          </View>
+          </ImageBackground>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Playtest Data</Text>
-          <View style={styles.card}>
+          <ImageBackground
+            source={stoneTileTexture}
+            resizeMode="repeat"
+            style={styles.card}
+            imageStyle={styles.cardTexture}
+          >
             <View pointerEvents="none" style={styles.plaqueHighlight} />
             <Pressable
               accessibilityRole="button"
@@ -351,13 +383,18 @@ export default function SettingsScreen({ navigation }: Props) {
                 <Text style={styles.rowLabel}>Clear Playtest Data</Text>
               </View>
             </Pressable>
-          </View>
+          </ImageBackground>
         </View>
 
         {__DEV__ && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Development</Text>
-            <View style={styles.card}>
+            <ImageBackground
+              source={stoneTileTexture}
+              resizeMode="repeat"
+              style={styles.card}
+              imageStyle={styles.cardTexture}
+            >
               <View pointerEvents="none" style={styles.plaqueHighlight} />
               <Pressable
                 accessibilityRole="button"
@@ -381,14 +418,19 @@ export default function SettingsScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
-            </View>
+            </ImageBackground>
           </View>
         )}
 
         {__DEV__ && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Danger / Reset</Text>
-            <View style={[styles.card, styles.warningCard]}>
+            <ImageBackground
+              source={stoneTileTexture}
+              resizeMode="repeat"
+              style={[styles.card, styles.warningCard]}
+              imageStyle={styles.cardTexture}
+            >
               <View pointerEvents="none" style={styles.plaqueHighlight} />
               <Pressable
                 accessibilityRole="button"
@@ -402,7 +444,7 @@ export default function SettingsScreen({ navigation }: Props) {
                   <Text style={styles.rowNote}>Clears Hunt, Daily, and Polly memory — can't be undone</Text>
                 </View>
               </Pressable>
-            </View>
+            </ImageBackground>
           </View>
         )}
       </ScrollView>
@@ -503,12 +545,14 @@ const styles = StyleSheet.create({
   profileCard: {
     marginTop: 16,
     borderRadius: 20,
-    backgroundColor: chamberMaterial.plaqueFace,
     borderWidth: 1.5,
     borderColor: chamberMaterial.plaqueRim,
     padding: 18,
     overflow: 'hidden',
     ...PW.shadow.panel,
+  },
+  profileCardTexture: {
+    borderRadius: 20,
   },
   profileTop: {
     flexDirection: 'row',
@@ -619,11 +663,13 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 18,
-    backgroundColor: chamberMaterial.plaqueFace,
     borderWidth: 1.5,
     borderColor: chamberMaterial.plaqueRim,
     overflow: 'hidden',
     ...PW.shadow.panel,
+  },
+  cardTexture: {
+    borderRadius: 18,
   },
   warningCard: {
     borderColor: chamberMaterial.emberAccent,

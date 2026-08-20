@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ImageBackground, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { dailyScrollMaterial as M, dailyPanelFrameMaterial as F } from '../../ui/pwDailyMaterials';
 
@@ -13,6 +13,8 @@ type Props = {
 const PIN_SIZE = 6;
 const INSET = 8;
 
+const stoneTileTexture = require('../../../assets/images/textures/stoneTile.png');
+
 export default function DailyPanelFrame({ state, children }: Props) {
   const borderColor =
     state === 'perfect' ? F.borderPerfect : state === 'revealing' ? F.borderRevealing : F.border;
@@ -20,7 +22,12 @@ export default function DailyPanelFrame({ state, children }: Props) {
 
   return (
     <View style={styles.outer}>
-      <View style={[styles.inner, { borderColor, borderWidth }]}>
+      <ImageBackground
+        source={stoneTileTexture}
+        resizeMode="repeat"
+        style={[styles.inner, { borderColor, borderWidth }]}
+        imageStyle={styles.innerTexture}
+      >
         <View style={styles.insetTrim} />
         <LinearGradient
           colors={[F.sheenTop, 'transparent']}
@@ -29,7 +36,7 @@ export default function DailyPanelFrame({ state, children }: Props) {
           style={styles.sheen}
         />
         {children}
-      </View>
+      </ImageBackground>
       <View style={[styles.pin, styles.pinTL]} />
       <View style={[styles.pin, styles.pinTR]} />
       <View style={[styles.pin, styles.pinBL]} />
@@ -47,7 +54,9 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: M.radius,
     overflow: 'hidden',
-    backgroundColor: M.panelBg,
+  },
+  innerTexture: {
+    borderRadius: M.radius,
   },
   insetTrim: {
     position: 'absolute',

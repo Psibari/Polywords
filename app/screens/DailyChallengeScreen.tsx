@@ -6,6 +6,7 @@ import {
   AppState,
   Easing,
   Image,
+  ImageBackground,
   Pressable,
   ScrollView,
   Share,
@@ -74,6 +75,8 @@ import {
 } from '../hooks/usePollyAmbientMotion';
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
+
+const stoneTileTexture = require('../../assets/images/textures/stoneTile.png');
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 function toPerchReaction(
@@ -1002,7 +1005,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           <View style={styles.cardArea}>
             {/* Candidate board -- the surface the six cards rest on, so they
                 read as laid out on Polly's board instead of floating. */}
-            <View style={styles.cardBoard}>
+            <ImageBackground
+              source={stoneTileTexture}
+              resizeMode="repeat"
+              style={styles.cardBoard}
+              imageStyle={styles.cardBoardTexture}
+            >
               <View
                 key={`grid-${displayedDailySession.currentRoundIndex}`}
                 style={styles.cardGrid}
@@ -1024,7 +1032,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                     />
                   ))}
               </View>
-            </View>
+            </ImageBackground>
           </View>
         </>
       )}
@@ -1193,12 +1201,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardBoard: {
-    backgroundColor: dailyChromeMaterial.cardBoardBg,
     borderRadius: 26,
     borderWidth: 1,
     borderColor: dailyChromeMaterial.cardBoardBorder,
     padding: 10,
     overflow: 'visible',
+  },
+  cardBoardTexture: {
+    borderRadius: 26,
   },
   cardGrid: {
     flexDirection: 'row',
