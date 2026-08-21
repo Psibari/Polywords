@@ -1,13 +1,116 @@
 # POLYWORDS Current Context
 
-Updated August 18, 2026. Active branch: `play-screen-overhaul`.
+Updated August 21, 2026. Active branch: `play-screen-overhaul`.
 
 ## Current Build
 
-HEAD: 279ccf5. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
+HEAD: 5254f2d. Tags: v0.working-20260722-hudchips, -vaultcopy, -economy1,
 v0.working-20260723-music, -lossfx, -routec1, -routec2, v0.working-20260725-hook, -fork,
 v0.working-20260729-chest, v0.working-20260815-workbook-merge, v0.working-20260816-option-c,
 -telemetry-v2, -death-sequence-fix.
+
+## Session — 2026-08-21
+
+- **Haunt Intro Overlay shipped** (`783d439`, `80967ab`): first-Haunt-only
+  explainer overlay, same one-time AsyncStorage-gate pattern as
+  `HuntIntroOverlay`/`BossIntroOverlay` (`HAUNT_INTRO_SEEN_KEY`, blocks
+  board mount via `gameplayGateActive` until dismissed). Fires a new
+  guaranteed Polly visit (`hauntIntro` event, `HAUNT_INTRO` spec in
+  `pollyVisitPolicy.ts`) on dismiss. Card copy corrected mid-session
+  against `docs/GAME_REFERENCE.md`: a Haunt is specifically a
+  boss-gauntlet-pair loss re-tested later, not any missed meaning
+  ("ordinary missed meanings are not called Haunts") — first-draft copy
+  ("words you miss don't vanish") was wrong on canon and rewritten before
+  shipping. Settings' Tutorial Replay extended to clear the new key; its
+  subtitle broadened from "swipe-grammar intro" to "Hunt, Boss, and Haunt
+  intros."
+- **Vault Intro Overlay shipped** (`ac253e7`): first-visit-only Vault
+  explainer, gold-accented, deliberately different from the three
+  Hunt-round overlays in two ways — non-gating (Vault's content renders
+  underneath it immediately, nothing blocks) and fires no Polly visit at
+  all, per `docs/GAME_REFERENCE.md`'s "Vault is a Polly-free reclaimed
+  archive." New `VAULT_INTRO_SEEN_KEY`; deliberately NOT added to Tutorial
+  Replay — no gameplay-blocking precedent exists for a replay button on a
+  non-gating overlay yet, open question if Pete wants one later.
+- **Polybook naming pass** (`ac253e7`): the in-round book's spine label
+  (`MaskBoard.tsx`, shown every round) and the Home screen's own
+  book-cover title (`HomeScreen.tsx`'s `huntBookHingeText`, sits above all
+  three route plates) both renamed "WORD VAULT" → "POLYBOOK." Establishes
+  Polybook as the name of the object players swipe cards into during a
+  Hunt, distinct from the Vault archive screen. The Vault screen's own
+  page title and its Home nav button both deliberately kept "WORD VAULT"
+  — they name the archive, not the book. Text-only change; neither
+  style's sizing was touched — "POLYBOOK" is one word where "WORD VAULT"
+  was two, needs on-device confirmation before any spacing tuning.
+- **Tile phrase letter-spacing loosened** (`5254f2d`): `SwipeMask.tsx`'s
+  active-tile `phrase` style and `MaskBoard.tsx`'s `deckBackingPhrase`
+  style (both 27px uppercase Barlow Condensed Bold) moved from
+  `letterSpacing: 0` to `0.6` — zero tracking on all-caps condensed bold
+  was reading crowded/stiff. Starting value only, not yet confirmed
+  on-device.
+- **SE-class ground-art cropping — closed, won't-fix.** Root cause traced
+  precisely: `AmbientSkyBackground.tsx`'s ground band sizes itself by
+  `aspectRatio: 853/1844` (matching `StoneWall.png`'s native ratio) at
+  full screen width, bottom-anchored, clipped by the root view's
+  `overflow: hidden`. At SE-class dimensions (375×667), the band's
+  computed height (~811pt) exceeds the actual screen height (667pt) by
+  ~144pt — about 18% of the image cropped from the top. Pulled and
+  inspected the actual asset: the cropped region is two rows of plain
+  brick and a handful of small vine sprigs; the wall's ledge (the
+  compositional/functional anchor) sits well below the crop line and is
+  never touched. Both real fixes — retrying `groundTopInset` (already
+  tried once this window, reverted after misaligning the ledge with
+  gameplay cards, see the 2026-08-20 entry below) or a dedicated
+  SE-scaled art variant — cost more than the problem is worth. Decision:
+  leave as-is. Do not resurface without new evidence (e.g. a real device
+  complaint from a tester, not a screenshot review).
+
+## Session — 2026-08-20
+
+Background art pass — replaces the flat procedural SVG ground (gradient +
+flagstone tiles + pillar stacks + corner vines) shared across Hunt/Boss/
+Daily/Vault/Settings with painted art, closing the style clash flagged
+2026-08-19 between the newly-painted Home book and the flat vector ground
+everywhere else.
+
+- **Ground art swap** (`1710567`): `GraphicGround.tsx`'s flat SVG replaced
+  with `StoneWall.png` (853×1844, painted stone wall texture, two torches
+  positioned over it). `AmbientSkyBackground.tsx` gained `showGround`
+  (default `true`) so Home can opt out and stay sky-only — stars, moon,
+  gradient, no wall, since the book art already covers most of Home's
+  ground anyway. `groundBand`'s sizing changed to `aspectRatio: 853/1844`
+  (the art's real proportions) instead of the old vector-shaped box. Also
+  added a dormant `groundTopInset` prop — an alternate top-inset sizing
+  mode built to experiment with capping the band's height on shorter
+  devices — tried on Hunt/Boss/Daily and reverted same session (confirmed
+  on-device that the cutoff misaligned the wall's ledge with the gameplay
+  cards); left in place as unused, working capability rather than ripped
+  out. Relevant to the SE-class crop decision above — this is the
+  mechanism that was tried and rejected before that won't-fix call.
+- **Vault shelving swap** (`812134b`): the previous wooden bookcase art
+  (`bookcase-dark-mobile.png` — off-palette brown, externally sourced)
+  replaced with `shelves.png`, matching painted stone. Shelf slot count
+  retuned from 4 to 3 (`SHELF_SLOTS`), positioned at the new art's actual
+  measured shelf-board trim lines: 30.5% / 46.1% / 61.8%.
+- **Daily/Settings panel texture** (`1f37737`): `stoneTile.png` (tileable,
+  `resizeMode="repeat"`) applied behind Daily's card board and clue-scroll
+  panel, and Settings' profile card and toggle-row section panels — the
+  shared plaque chrome. Border colors/widths/corner radii on every panel
+  left unchanged; only the flat fill underneath was replaced.
+- **Torch position fix** (`b8da6d3`): torches were positioned via
+  `top: '30%'/'28%'`, a percentage of the ground band's height — broke
+  once the band grew to the wall art's full native aspect ratio, drifting
+  the torches away from their old position. Changed to a fixed
+  `bottom: 300` (points, both torches), stable regardless of band height
+  on any screen or device going forward.
+- **Results screen Gold Feather glow clearance** (`358d0df`): footer
+  `paddingTop` 16 → 28, giving `PW.shadow.glowGold`'s 14px shadow radius
+  real headroom above the button.
+- **Daily Polly z-index fix** (`3310a59`): `PollyDailyPerch`'s root
+  `zIndex`/`elevation` was 1 — below `DailyChallengeScreen`'s `cardArea`
+  (4) and clue-panel wrapper (40) — so Polly and her speech bubble were
+  rendering underneath the answer cards. Raised to 45. Pre-existing
+  stacking bug, not introduced by this session's texture/wall work.
 
 ## Session — 2026-08-17/18
 
@@ -280,6 +383,11 @@ drift — MaskBoard.tsx is warroom-gated and none of this needed that pass):
   workbook (`POLYWORDS_content_data_2026-08-15_DIRECT_DISCHARGE_LOCKED.xlsx`).
 - Retired V2 export: `assets/data/huntData.v2.json` (schema shell, 0 words).
 - Live Polly art: `assets/images/polly/poses/*.png`.
+- Live ground/background art: `assets/images/background/StoneWall.png`
+  (Hunt/Boss/Daily/Vault/Settings ground band), `assets/images/vault/
+  shelves.png` (Vault bookcase), `assets/images/textures/stoneTile.png`
+  (Daily/Settings panel chrome, tiled). Home stays sky-only
+  (`showGround: false`), no wall.
 - Live music: `assets/audio/bgm/*.mp3` through `app/audio/MusicEngine.ts`.
 
 ## Next Product Work

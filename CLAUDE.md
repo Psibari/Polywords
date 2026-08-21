@@ -171,6 +171,31 @@ generates dialogue. The live system is:
 Memory is bounded, deterministic, versioned, and local. Motion respects reduced-motion
 and stops off-screen.
 
+## Onboarding
+
+Four one-time explainer overlays, each gated by its own AsyncStorage key
+(`app/constants/storageKeys.ts`) and never shown twice to the same player:
+
+| Overlay | Fires | Gates gameplay? | Polly visit after dismiss? |
+| --- | --- | --- | --- |
+| `HuntIntroOverlay` | First Hunt round ever | Yes — blocks board mount | `huntIntro` |
+| `BossIntroOverlay` | First boss round ever | Yes — blocks board mount | `bossEntry` (separate trigger, not chained to this overlay) |
+| `HauntIntroOverlay` | First Returning Haunt round ever | Yes — blocks board mount | `hauntIntro` |
+| `VaultIntroOverlay` | First Vault visit ever | No — Vault renders underneath it immediately | None — Vault is Polly-free (see Screens and Materials) |
+
+The three gating overlays are wired through `GameScreen.tsx`'s
+`gameplayGateActive` — fail-open, same as every other flag in that gate: a
+failed AsyncStorage read is treated as "already seen," never blocks play
+forever. Settings > Tutorial Replay clears the three gating keys only;
+Vault's key is deliberately not included — no gameplay-blocking precedent
+exists for replaying a non-gating overlay yet.
+
+The book players swipe cards into during a Hunt round is named
+**Polybook** (in-round spine text, `MaskBoard.tsx`; Home cover book title,
+`HomeScreen.tsx`) — distinct from the **Vault**, the archive screen where
+finds get recorded (`VaultScreen.tsx`'s own title and its Home nav button
+both correctly still say "WORD VAULT"). Naming locked 2026-08-21.
+
 ## Screens and Materials
 
 - Home is the lobby/launchpad.
@@ -182,8 +207,20 @@ and stops off-screen.
 Theme and material sources live under `app/ui/`; behavior should be read from live code,
 not old design plans. `app/ui/ambientSkyTuning.ts` gives all four screens' backgrounds one
 shared deep tone — the earlier plan to give Boss its own rose/ember tint as a deliberate
-escalation was tried and then killed by Pete (2026-08-02) as still off-palette; there is
-no per-screen background exception anymore.
+escalation was tried and then killed by Pete (2026-08-02) as still off-palette. One
+deliberate per-screen exception does exist: Home renders `showGround: false` and stays
+sky-only (stars, moon, gradient) with no ground band at all, since the painted Home book
+already covers most of its ground. Every other screen (Hunt, Boss, Daily, Vault,
+Settings) shares one painted stone-wall ground art (`assets/images/background/
+StoneWall.png`, added 2026-08-20) at its native aspect ratio, bottom-anchored, with two
+torches (`GroundTorch`) pinned at a fixed `bottom: 300` offset. Vault additionally
+layers painted stone shelving (`assets/images/vault/shelves.png`, 3 slots) over the
+shared wall; Daily and Settings layer a tiled stone texture
+(`assets/images/textures/stoneTile.png`) behind their panel chrome specifically. An
+SE-class phone (375×667) crops roughly the top 18% of the wall art due to aspect-ratio
+math — confirmed cosmetic only (two brick rows + a few vine sprigs, never the
+compositional ledge) and closed won't-fix 2026-08-21; do not resurface without new
+on-device evidence.
 
 ## Content Boundary
 
