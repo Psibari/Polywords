@@ -31,7 +31,8 @@ export type PollyEvent =
   | 'hiddenMasterFailed'
   | 'hauntFailed'
   | 'oneWrongMove'
-  | 'huntIntro';
+  | 'huntIntro'
+  | 'hauntIntro';
 
 export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 
@@ -66,6 +67,12 @@ const NONE: VisitDecision = { action: 'none' };
 const HUNT_INTRO: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'point',
   lineId: 'huntIntro', line: POLLY_LINES.huntIntro, sfx: 'pollySqwawkShort',
+  holdPerch: false, perchMs: 2500,
+};
+
+const HAUNT_INTRO: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'point',
+  lineId: 'huntHauntIntro', line: POLLY_LINES.huntHauntIntro, sfx: 'pollySqwawkShort',
   holdPerch: false, perchMs: 2500,
 };
 
@@ -159,6 +166,7 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
 
   // ── Guaranteed big beats: ignore all budgets ──────────────────
   if (event === 'huntIntro') return { action: 'visit', spec: HUNT_INTRO };
+  if (event === 'hauntIntro') return { action: 'visit', spec: HAUNT_INTRO };
   if (event === 'bossEntry') return { action: 'visit', spec: BOSS_ENTRY };
   // Only fired by useBoardMechanics on the final-gate step with hidden
   // content — i.e. exclusively the boss-gauntlet-begin beat, never an

@@ -21,7 +21,7 @@ import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { getRankTier } from '../game/ranks';
 import {
   clearPlaytestHistory,
@@ -177,6 +177,7 @@ export default function SettingsScreen({ navigation }: Props) {
     Promise.all([
       AsyncStorage.removeItem(INTRO_SEEN_KEY),
       AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
+      AsyncStorage.removeItem(HAUNT_INTRO_SEEN_KEY),
     ]).catch(() => {});
     Alert.alert('Tutorial Replay', "You'll see it again next time you start a Hunt.");
   };
@@ -291,7 +292,7 @@ export default function SettingsScreen({ navigation }: Props) {
             >
               <View style={styles.rowTextWrap}>
                 <Text style={styles.rowLabel}>Tutorial Replay</Text>
-                <Text style={styles.rowNote}>See the swipe-grammar intro again</Text>
+                <Text style={styles.rowNote}>See the Hunt, Boss, and Haunt intros again</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
             </Pressable>

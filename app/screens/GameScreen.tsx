@@ -25,10 +25,11 @@ import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
 import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
 import { BossIntroOverlay } from '../components/BossIntroOverlay';
+import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 
 const MAX_FEATHERS = 6;
@@ -857,6 +858,20 @@ function GameDirector({ navigation }: { navigation: any }) {
     AsyncStorage.setItem(BOSS_INTRO_SEEN_KEY, 'true').catch(() => {});
   }, [game.stepIndex]);
 
+  // ── First-haunt-only explainer overlay ──────────────────────────
+  const [hauntIntroSeen, setHauntIntroSeen] = useState<boolean | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem(HAUNT_INTRO_SEEN_KEY)
+      .then(v => setHauntIntroSeen(v === 'true'))
+      .catch(() => setHauntIntroSeen(true));
+  }, []);
+  const [hauntIntroVisitPending, setHauntIntroVisitPending] = useState(false);
+  const handleHauntIntroDismiss = useCallback(() => {
+    setHauntIntroSeen(true);
+    setHauntIntroVisitPending(true);
+    AsyncStorage.setItem(HAUNT_INTRO_SEEN_KEY, 'true').catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (game.status === 'complete' || game.status === 'gameOver') {
       playSfx('roundComplete');
@@ -1093,6 +1108,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   const gameplayGateActive =
     introSeen !== true ||
     (isBossRound && bossIntroSeen !== true) ||
+    (isHauntRound && hauntIntroSeen !== true) ||
     bossTransitionActive ||
     !audioReady;
 
@@ -1185,6 +1201,8 @@ function GameDirector({ navigation }: { navigation: any }) {
           onSwipeAttempt={resetIdleTimer}
           fireIntroVisit={introVisitPending}
           onIntroVisitFired={() => setIntroVisitPending(false)}
+          fireHauntIntroVisit={hauntIntroVisitPending}
+          onHauntIntroVisitFired={() => setHauntIntroVisitPending(false)}
         />
       ) : null}
       {__DEV__ && !isDone && !isBossRound && (
@@ -1253,6 +1271,10 @@ function GameDirector({ navigation }: { navigation: any }) {
         <BossIntroOverlay onDismiss={handleBossIntroDismiss} />
       )}
 
+      {introSeen === true && hauntIntroSeen === false && isHauntRound && (
+        <HauntIntroOverlay onDismiss={handleHauntIntroDismiss} />
+      )}
+
       {bossTransitionActive && isBossRound && (
         <View style={styles.bossTransition} pointerEvents="none" accessible accessibilityLabel="Polly's Word. One last breath.">
           <Text style={styles.bossTransitionKicker}>
@@ -1280,6 +1302,8 @@ function GameContent({
   onSwipeAttempt,
   fireIntroVisit,
   onIntroVisitFired,
+  fireHauntIntroVisit,
+  onHauntIntroVisitFired,
 }: {
   spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
   onTrapCaught: () => void;
@@ -1288,6 +1312,8 @@ function GameContent({
   onSwipeAttempt: () => void;
   fireIntroVisit: boolean;
   onIntroVisitFired: () => void;
+  fireHauntIntroVisit: boolean;
+  onHauntIntroVisitFired: () => void;
 }) {
   const game = useGameStore(s => s.game);
   const ghosts = useGameStore(s => s.ghosts);
@@ -1308,6 +1334,12 @@ function GameContent({
     firePollyEvent('huntIntro');
     onIntroVisitFired();
   }, [fireIntroVisit, firePollyEvent, onIntroVisitFired]);
+
+  useEffect(() => {
+    if (!fireHauntIntroVisit) return;
+    firePollyEvent('hauntIntro');
+    onHauntIntroVisitFired();
+  }, [fireHauntIntroVisit, firePollyEvent, onHauntIntroVisitFired]);
 
   if (step.kind === 'word') {
     // Same predicate GameDirector uses for isBossRound, so routing here and
