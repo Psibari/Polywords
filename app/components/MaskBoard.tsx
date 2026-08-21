@@ -152,6 +152,7 @@ function SwipeScoreFloat({
         style={{
           color,
           fontFamily: FONTS.hud,
+          includeFontPadding: false,
           fontSize: CHAIN_TIER_FONT_SIZE[tier],
           lineHeight: CHAIN_TIER_FONT_SIZE[tier] + 3,
           textShadowColor: tier > 1 ? color : PW.color.shadow,
@@ -2034,6 +2035,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 right: 0,
                 textAlign: 'center',
                 fontFamily: FONTS.label,
+                includeFontPadding: false,
                 fontWeight: '900',
                 fontSize: systemStingerWord === 'ZZZZINGO!' ? 42 : 50,
                 color: '#FFFFFF',
@@ -2137,6 +2139,7 @@ const styles = StyleSheet.create({
     color: '#F5C842',
     fontSize: FONT_SIZES.hudLabel,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     letterSpacing: 2,
     textAlign: 'center',
     position: 'absolute',
@@ -2149,6 +2152,7 @@ const styles = StyleSheet.create({
     color: '#F5C842',
     fontSize: FONT_SIZES.hudLabel,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     letterSpacing: 2,
     textAlign: 'center',
     position: 'absolute',
@@ -2170,6 +2174,7 @@ const styles = StyleSheet.create({
   word: {
     fontSize: 96,
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     letterSpacing: FONT_SIZES.wordDisplayLetterSpacing,
     color: '#F5C842',
     // Tight warm edge only — a wide zero-offset glow (radius 8) hazed the glyphs
@@ -2182,6 +2187,7 @@ const styles = StyleSheet.create({
   wordBoss: {
     fontSize: 112,
     fontFamily: FONTS.bossWord,
+    includeFontPadding: false,
     letterSpacing: FONT_SIZES.bossWordLetterSpacing,
     color: '#F5C842',
     // The base boss word (plain Text, no explicit width — just maxWidth via
@@ -2212,6 +2218,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: FONT_SIZES.progressLabel,
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     letterSpacing: 0.5,
     marginTop: 2,
     textAlign: 'center',
@@ -2228,6 +2235,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'rgba(245,200,66,0.72)',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     // Was 9px, below this project's 14px non-gameplay floor. Trimmed
     // letterSpacing from 4 to 3 to partly offset the width increase — this
     // sits on the book's fixed spine art, so it's worth a look on-device to
@@ -2284,6 +2292,7 @@ const styles = StyleSheet.create({
   },
   swipeCueText: {
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 17,
     fontWeight: '800',
     letterSpacing: 1,
@@ -2345,6 +2354,7 @@ const styles = StyleSheet.create({
   deckBackingPhrase: {
     fontSize: 27,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -2439,6 +2449,7 @@ const styles = StyleSheet.create({
   },
   outcomeHeadline: {
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontWeight: '900',
     fontSize: 38,
     letterSpacing: 0,
@@ -2460,6 +2471,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#F5C842',
     fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
     fontSize: 54,
     letterSpacing: 0,
     textAlign: 'center',
@@ -2472,6 +2484,7 @@ const styles = StyleSheet.create({
   outcomeCopy: {
     color: '#FFFFFF',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: FONT_SIZES.progressLabel,
     letterSpacing: 0,
     textAlign: 'center',
@@ -2480,6 +2493,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#F5C842',
     fontFamily: FONTS.hud,
+    includeFontPadding: false,
     fontSize: FONT_SIZES.hudScore,
     letterSpacing: 0,
     textAlign: 'center',
@@ -2494,6 +2508,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(123,45,139,0.20)',
     color: '#FFFFFF',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: FONT_SIZES.progressLabel,
     letterSpacing: 0,
     textAlign: 'center',
@@ -2502,6 +2517,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: 'rgba(255,255,255,0.72)',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: FONT_SIZES.hudLabel,
     letterSpacing: 1,
     textAlign: 'center',
@@ -2528,6 +2544,7 @@ const styles = StyleSheet.create({
   hauntEntranceBannerText: {
     color: '#FFFFFF',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontWeight: '900',
     fontSize: 20,
     letterSpacing: 0.5,
@@ -2540,6 +2557,7 @@ const styles = StyleSheet.create({
     right: 0,
     textAlign: 'center',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontWeight: '900',
     fontSize: 30,
     color: '#7B2D8B',

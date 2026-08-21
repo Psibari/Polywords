@@ -1004,6 +1004,7 @@ const styles = StyleSheet.create({
     right: 16,
     textAlign: 'center',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 1,
@@ -1016,6 +1017,7 @@ const styles = StyleSheet.create({
   phrase: {
     fontSize: ACTIVE_TILE_BASE_FONT_SIZE,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -1053,6 +1055,7 @@ const styles = StyleSheet.create({
   splitPhrase: {
     fontSize: 16,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontWeight: '800',
     color: '#FFFFFF',
     flex: 1,
@@ -1085,6 +1088,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.ghostSubLabel,
     color: 'rgba(255,255,255,0.82)',
     fontFamily: FONTS.label,
+    includeFontPadding: false,
   },
   hiddenTile: {
     backgroundColor: '#2A2060',
@@ -1100,6 +1104,7 @@ const styles = StyleSheet.create({
   hiddenPhrase: {
     fontSize: 16,
     fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
     fontWeight: '800',
     color: '#FFD700',
     marginLeft: 12,
