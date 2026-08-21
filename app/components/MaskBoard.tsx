@@ -34,6 +34,8 @@ import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { resolveOutcomeRevealSfx } from '../game/huntOutcomeFeedback';
+import type { ScreenFlashEvent } from '../game/huntFeedbackPolicy';
 import {
   hasBoardVerticalOverflow,
   resolveActiveCueLayout,
@@ -92,11 +94,12 @@ function SwipeScoreFloat({
   onComplete,
 }: SwipeScoreFloatProps) {
   const progress = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useReducedMotionPreference() !== false;
 
   useEffect(() => {
     const animation = Animated.timing(progress, {
       toValue: 1,
-      duration: 940,
+      duration: reduceMotion ? 220 : 940,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     });
@@ -104,21 +107,21 @@ function SwipeScoreFloat({
       if (finished) onComplete();
     });
     return () => animation.stop();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const opacity = progress.interpolate({
     inputRange: [0, 0.62, 0.82, 1],
     outputRange: [1, 1, 0.92, 0],
   });
-  const scale = progress.interpolate({
+  const scale = reduceMotion ? 1 : progress.interpolate({
     inputRange: [0, 0.18, 0.42, 1],
     outputRange: [1.2, 1.08, 1, 1],
   });
-  const translateX = progress.interpolate({
+  const translateX = reduceMotion ? 0 : progress.interpolate({
     inputRange: [0, 1],
     outputRange: [0, kind === 'trap' ? 8 : 0],
   });
-  const translateY = progress.interpolate({
+  const translateY = reduceMotion ? 0 : progress.interpolate({
     inputRange: [0, 1],
     outputRange: [0, kind === 'trap' ? -44 : -48],
   });
@@ -165,9 +168,9 @@ function SwipeScoreFloat({
 export type Props = {
   step: WordStep;
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: string) => void;
-  onTrapCaught?: () => void;
   onWrongSwipe?: () => void;
-  onGoldFlash?: () => void;
+  onGoldFlash?: (event: ScreenFlashEvent) => void;
+  onBossDecisionReady?: () => void;
   onSwipeAttempt?: () => void;
   // Owned by GameContent — the visit layer must outlive this board's
   // per-word remount (key={stepIndex}), or word-completion beats die mid-arc.
@@ -362,7 +365,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 }
 
 
-function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldFlash, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
+function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
   const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
@@ -521,6 +524,13 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   function triggerWrongWordRecoil() {
     if (recoilRafRef.current !== null) {
       cancelAnimationFrame(recoilRafRef.current);
+      recoilRafRef.current = null;
+    }
+    if (reduceMotion) {
+      wordRecoilY.setValue(0);
+      wordRecoilScale.setValue(1);
+      wordRedOpacity.setValue(0);
+      return;
     }
     let t0: number | null = null;
 
@@ -572,6 +582,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     bookOpenAnimationRef.current?.stop();
     bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.setValue(0);
+    if (reduceMotion) return;
     bookOpenAnimationRef.current = Animated.parallel([
       Animated.sequence([
         Animated.timing(bookOpenAnim, {
@@ -609,6 +620,17 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
   function triggerAbsorption(phrase: string) {
     absorptionScale.setValue(1);
+    ringScale.setValue(1);
+    ringOpacity.setValue(0);
+    setAbsorbedPhrase(phrase);
+    absorbedPhraseOpacity.setValue(1);
+    if (reduceMotion) {
+      Animated.sequence([
+        Animated.delay(300),
+        Animated.timing(absorbedPhraseOpacity, { toValue: 0, duration: 160, useNativeDriver: true }),
+      ]).start(() => setAbsorbedPhrase(null));
+      return;
+    }
     Animated.sequence([
       Animated.timing(absorptionScale, { toValue: 1.12, duration: 120, useNativeDriver: true }),
       Animated.timing(absorptionScale, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
@@ -621,8 +643,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
       Animated.timing(ringOpacity, { toValue: 0,   duration: 380, useNativeDriver: true }),
     ]).start();
 
-    setAbsorbedPhrase(phrase);
-    absorbedPhraseOpacity.setValue(1);
     Animated.sequence([
       Animated.delay(600),
       Animated.timing(absorbedPhraseOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
@@ -658,6 +678,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.stopAnimation();
     bookIntakeGlowAnim.setValue(0);
+    if (reduceMotion) return;
     bookOpenAnimationRef.current = Animated.parallel([
       Animated.sequence([
         Animated.timing(bookOpenAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
@@ -775,17 +796,31 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
   }, [gameStepIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    tileBreatheAmount.stopAnimation();
+    if (reduceMotion) {
+      tileBreatheAmount.setValue(0);
+      return;
+    }
     Animated.timing(tileBreatheAmount, {
       toValue: tension === 3 ? 1 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [tension]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tension, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function playSystemStingerWord(word: string, peakScale: number) {
     setSystemStingerWord(word);
     systemStingerOpacity.setValue(0);
-    systemStingerScale.setValue(0.75);
+    systemStingerScale.setValue(reduceMotion ? 1 : 0.75);
+    if (reduceMotion) {
+      Animated.sequence([
+        Animated.timing(systemStingerOpacity, { toValue: 1, duration: 60, useNativeDriver: true }),
+        Animated.delay(120),
+        Animated.timing(systemStingerOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+      ]).start();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      return;
+    }
     Animated.sequence([
       Animated.parallel([
         Animated.timing(systemStingerOpacity, { toValue: 1, duration: 70, useNativeDriver: true }),
@@ -811,13 +846,11 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         // Not fired directly — handleCardTouch fires it at actual arrival,
         // synced with triggerBookOpen (see pendingAbsorbPhraseRef).
         pendingAbsorbPhraseRef.current = mask.phrase;
-        onGoldFlash?.();
       },
       onTrapRejected({ tier, points }) {
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
         Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
         spawnFloat(points, 'trap', tier);
-        onTrapCaught?.();
       },
       onWrongSwipe({ brokeRealChain }) {
         performWrongSwipeFeedback(brokeRealChain);
@@ -826,7 +859,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
         Haptics.cueAsync('bossCorrect');
         triggerGauntletPulse();
-        onGoldFlash?.();
+        onGoldFlash?.('gauntletCorrect');
         // gauntletCorrectCount in the store hasn't incremented for this
         // tile yet (resolveGauntletTile calls this callback before it calls
         // incrementGauntletCorrectCount) — same for mechanics.finalTileStates,
@@ -877,12 +910,16 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           ]).start();
         }
         playSfx('bookClose');
-        Animated.timing(bookSlideX, {
-          toValue: -SCREEN_WIDTH,
-          duration: isBoss ? 380 : 280,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }).start();
+        if (reduceMotion) {
+          bookSlideX.setValue(-SCREEN_WIDTH);
+        } else {
+          Animated.timing(bookSlideX, {
+            toValue: -SCREEN_WIDTH,
+            duration: isBoss ? 380 : 280,
+            easing: Easing.in(Easing.quad),
+            useNativeDriver: true,
+          }).start();
+        }
       },
       onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
         // `!isBoss` here can only mean isHaunt (onMasteredSequence is only
@@ -891,7 +928,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         // sequence that used to live here is unreachable; removed rather than left
         // as dead code a future edit could waste time modifying.
         // ── One decisive beat, boss or Haunt rematch alike.
-        onGoldFlash?.();
+        onGoldFlash?.('mastery');
         if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
         playSfx('bookClose');
         Haptics.cueAsync('mastery');
@@ -908,6 +945,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         bookIntakeGlowAnim.stopAnimation();
         bookOpenAnim.setValue(0);
         bookIntakeGlowAnim.setValue(0);
+        if (reduceMotion) return;
         bookOpenAnimationRef.current = Animated.parallel([
           // Explicit chained legs, not a spring — a spring here read as an
           // under-damped blink/pulse on device instead of a single clean
@@ -955,11 +993,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         setTimeout(() => {
           setStillHauntedVisible(true);
           stillHauntedOpacity.setValue(0);
-          stillHauntedScale.setValue(0.7);
-          Animated.parallel([
-            Animated.timing(stillHauntedOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
-            Animated.spring(stillHauntedScale, { toValue: 1.0, damping: 7, stiffness: 280, useNativeDriver: true }),
-          ]).start();
+          stillHauntedScale.setValue(reduceMotion ? 1 : 0.7);
+          if (reduceMotion) {
+            Animated.timing(stillHauntedOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+          } else {
+            Animated.parallel([
+              Animated.timing(stillHauntedOpacity, { toValue: 1, duration: 120, useNativeDriver: true }),
+              Animated.spring(stillHauntedScale, { toValue: 1.0, damping: 7, stiffness: 280, useNativeDriver: true }),
+            ]).start();
+          }
           setTimeout(() => {
             Animated.timing(stillHauntedOpacity, { toValue: 0, duration: 220, useNativeDriver: true }).start();
             setTimeout(() => setStillHauntedVisible(false), 240);
@@ -983,6 +1025,17 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         bookOpenAnim.stopAnimation();
         bookIntakeGlowAnim.stopAnimation();
         bookGhostDrainOpacity.setValue(0);
+        if (reduceMotion) {
+          bookOpenAnim.setValue(0);
+          bookIntakeGlowAnim.setValue(0);
+          Animated.timing(bookGhostDrainOpacity, {
+            toValue: 0.55,
+            duration: 420,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }).start();
+          return;
+        }
         bookOpenAnimationRef.current = Animated.parallel([
           // Heavier and slower than the mastered spring, no overshoot — reads
           // as losing structure, not snapping shut.
@@ -993,7 +1046,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         bookOpenAnimationRef.current.start();
       },
       onOutcomeReveal(outcome) {
-        playSfx(outcome === 'mastered' ? 'mastered' : 'haunted');
+        playSfx(resolveOutcomeRevealSfx(outcome));
         if (outcome === 'haunted') triggerBoardShake();
         setShowOutcomeCard(false);
         setTimeout(() => setShowOutcomeCard(true), 350);
@@ -1018,6 +1071,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
 
     openingDecisionReleasedRef.current = true;
     mechanics.onDecisionReady();
+    if (isBoss) onBossDecisionReady?.();
   }, [openingCardLanded, showBoardContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The keyed measurement belongs only to the current top mask. An identity
@@ -1044,6 +1098,12 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
       prevTopIdRef.current = newTopId;
       cardPopCountRef.current += 1;
       if (cardPopCountRef.current > 1) {
+        if (reduceMotion) {
+          cardPopY.setValue(0);
+          Haptics.selectionAsync();
+          mechanics.onDecisionReady();
+          return;
+        }
         cardPopY.setValue(DECK_BACKING_OFFSET);
         Animated.timing(cardPopY, {
           toValue: 0,
@@ -1056,7 +1116,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
         });
       }
     }
-  }, [mechanics.remainingMaskIds]);
+  }, [mechanics.remainingMaskIds, reduceMotion]);
 
   const backingCardCount = mechanics.topMask
     ? Math.min(MAX_DECK_BACKING_CARDS, Math.max(0, mechanics.deckSize - 1))
@@ -1068,9 +1128,15 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     backingIds.forEach((maskId, index) => {
       const depth = backingCardCount - index;
       const anim = getBackingCardAnim(maskId, depth);
-      Animated.timing(anim.depthY, { toValue: depth * DECK_BACKING_OFFSET, duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
-      Animated.timing(anim.scale,  { toValue: 1 - depth * 0.01,            duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
-      Animated.timing(anim.rotate, { toValue: depth * -1.3,                duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+      if (reduceMotion) {
+        anim.depthY.setValue(depth * DECK_BACKING_OFFSET);
+        anim.scale.setValue(1 - depth * 0.01);
+        anim.rotate.setValue(depth * -1.3);
+      } else {
+        Animated.timing(anim.depthY, { toValue: depth * DECK_BACKING_OFFSET, duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+        Animated.timing(anim.scale,  { toValue: 1 - depth * 0.01,            duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+        Animated.timing(anim.rotate, { toValue: depth * -1.3,                duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+      }
     });
     // Garbage-collect cards that have left the deck entirely (claimed,
     // rejected, or judged wrong) so the map doesn't grow across a round.
@@ -1078,7 +1144,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
     backingCardAnimsRef.forEach((_, maskId) => {
       if (!liveIds.has(maskId)) backingCardAnimsRef.delete(maskId);
     });
-  }, [mechanics.remainingMaskIds, backingCardCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mechanics.remainingMaskIds, backingCardCount, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Polly reactive triggers not tied to a presentation animation move to
   // useBoardMechanics; oneWrongMove stays wired here only through
@@ -1834,7 +1900,6 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
               label={isHaunt ? 'BANISHED' : 'MASTER'}
               onReveal={() => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                playSfx('roundComplete');
               }}
             />
           )}

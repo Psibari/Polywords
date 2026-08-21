@@ -1,7 +1,6 @@
 import { createAudioPlayer, AudioPlayer } from 'expo-audio';
 import { useGameStore } from '../store/useGameStore';
 import { ensureAudioSessionConfigured } from './audioSession';
-import { ROUND_COMPLETE_URI } from '../utils/soundSynthesis';
 
 export type SfxName =
   | 'uiClick'
@@ -21,7 +20,6 @@ export type SfxName =
   | 'lockSpin1'
   | 'lockSpin2'
   | 'lockSpin3'
-  | 'roundComplete'
   | 'gauntletPick';
 
 type SfxConfig = {
@@ -53,7 +51,6 @@ const SFX: Record<SfxName, SfxConfig> = {
   lockSpin1:      { source: require('../../assets/audio/sfx/lock_spin_1.mp3'),        volume: 0.40, cooldownMs: 150  },
   lockSpin2:      { source: require('../../assets/audio/sfx/lock_spin_2.mp3'),        volume: 0.40, cooldownMs: 150  },
   lockSpin3:      { source: require('../../assets/audio/sfx/lock_spin_3.mp3'),        volume: 0.40, cooldownMs: 150  },
-  roundComplete:  { source: { uri: ROUND_COMPLETE_URI },                              volume: 0.50, cooldownMs: 400  },
   gauntletPick:   { source: require('../../assets/audio/sfx/gauntlet_pick_swoosh.mp3'), volume: 0.45, cooldownMs: 200  },
 };
 

@@ -15,7 +15,7 @@ import {
 import type { SwipeMaskState } from '../components/SwipeMask';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { createSeededTruthPlan } from '../game/seededRandom';
-import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import { recordPlaytestEvent, resolveHuntTelemetryPhase } from '../game/playtestTelemetry';
 
 export type ChainTier = 1 | 2 | 3;
 type WordOutcomeState = 'none' | 'mastered' | 'haunted';
@@ -236,15 +236,15 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     clearHesitationTimers();
     if (completedRef.current || outcomeActiveRef.current) return;
     hes1Ref.current = setTimeout(() => {
-      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, seconds: 3, boss: isBoss, haunt: isHaunt });
+      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, phase: resolveHuntTelemetryPhase(step), seconds: 3, boss: isBoss, haunt: isHaunt });
       firePollyEvent('hesitation3s');
     }, 3000);
     hes2Ref.current = setTimeout(() => {
-      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, seconds: 6, boss: isBoss, haunt: isHaunt });
+      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, phase: resolveHuntTelemetryPhase(step), seconds: 6, boss: isBoss, haunt: isHaunt });
       firePollyEvent('hesitation6s');
     }, 6000);
     hes3Ref.current = setTimeout(() => {
-      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, seconds: 9, boss: isBoss, haunt: isHaunt });
+      recordPlaytestEvent('hunt_hesitation', { round: game.stepIndex + 1, phase: resolveHuntTelemetryPhase(step), seconds: 9, boss: isBoss, haunt: isHaunt });
       firePollyEvent('hesitation9s');
     }, 9000);
   }

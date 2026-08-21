@@ -23,6 +23,7 @@ import { PW } from '../ui/pwTheme';
 import { homeDare, homeType } from '../ui/pwHomeMaterials';
 import { usePulseScale } from '../hooks/usePulseScale';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { resolveRankUpFeedback } from '../game/huntOutcomeFeedback';
 import {
   RESULTS_SUB_LOSS,
   RESULTS_VERDICT_BEAT,
@@ -459,9 +460,12 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   useEffect(() => {
     if (!didRankUp || reduceMotion === null || rankEffectStartedRef.current) return;
     rankEffectStartedRef.current = true;
-    playSfx('mastered');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    if (reduceMotion) return;
+    const feedback = resolveRankUpFeedback(died);
+    if (feedback.sfx) playSfx(feedback.sfx);
+    if (feedback.successHaptic) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    if (reduceMotion || !feedback.heavyPulse) return;
     const heavyTimer = setTimeout(
       () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
       180,

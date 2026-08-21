@@ -7,6 +7,11 @@ import React, {
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
 import { FX, FXEvent, ShardVariant } from '../ui/pwEffects';
+import {
+  useReducedFlashesPreference,
+  useReducedMotionPreference,
+} from '../hooks/usePollyAmbientMotion';
+import { resolveFXAccessibility } from '../game/huntFeedbackPolicy';
 
 export interface FXLayerHandle {
   spawn: (event: FXEvent) => void;
@@ -17,10 +22,12 @@ type FXEntry = FXEvent & { id: number };
 function TrapShatter({
   x,
   y,
+  showImpactGlow,
   onDone,
 }: {
   x: number;
   y: number;
+  showImpactGlow: boolean;
   onDone: () => void;
 }) {
   const cfg = FX.shard.trap;
@@ -141,24 +148,26 @@ function TrapShatter({
   return (
     <>
       {/* Layer 1 — Impact glow at right wall */}
-      <Animated.View
-        pointerEvents="none"
-        style={{
-          position: 'absolute',
-          left: x - 30,
-          top: y - 30,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: cfg.glowColor,
-          opacity: glowOpacity,
-          transform: [{ scale: glowScale }],
-          shadowColor: cfg.glowColor,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.9,
-          shadowRadius: 20,
-        }}
-      />
+      {showImpactGlow && (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: x - 30,
+            top: y - 30,
+            width: 60,
+            height: 60,
+            borderRadius: 30,
+            backgroundColor: cfg.glowColor,
+            opacity: glowOpacity,
+            transform: [{ scale: glowScale }],
+            shadowColor: cfg.glowColor,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.9,
+            shadowRadius: 20,
+          }}
+        />
+      )}
 
       {/* Layer 2 — Tile chunks */}
       {chunks.map((c, i) => {
@@ -192,7 +201,7 @@ function TrapShatter({
               transform: [{ translateX: tx }, { translateY: ty }, { rotate }],
               shadowColor: cfg.chunkEdgeColor,
               shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.6,
+              shadowOpacity: showImpactGlow ? 0.6 : 0,
               shadowRadius: 6,
             }}
           >
@@ -245,7 +254,7 @@ function TrapShatter({
               ],
               shadowColor: g.color,
               shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.8,
+              shadowOpacity: showImpactGlow ? 0.8 : 0,
               shadowRadius: 4,
             }}
           >
@@ -483,11 +492,51 @@ function TrailBurst({
   );
 }
 
+function StaticImpact({ event, onDone }: { event: FXEvent; onDone: () => void }) {
+  const opacity = useRef(new Animated.Value(0.72)).current;
+  const color = event.type === 'shard' && event.variant === 'trap'
+    ? '#9B2D6B'
+    : '#F5C842';
+
+  React.useEffect(() => {
+    const animation = Animated.timing(opacity, {
+      toValue: 0,
+      duration: 180,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    });
+    animation.start(({ finished }) => {
+      if (finished) onDone();
+    });
+    return () => animation.stop();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: event.x - 10,
+        top: event.y - 10,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        borderWidth: 3,
+        borderColor: color,
+        opacity,
+      }}
+    />
+  );
+}
+
 // ── FXLayer ──────────────────────────────────────────────────
 const FXLayer = forwardRef<FXLayerHandle>(
   (_, ref) => {
     const [entries, setEntries] = useState<FXEntry[]>([]);
     const idRef = useRef(0);
+    const reduceMotion = useReducedMotionPreference();
+    const reduceFlashes = useReducedFlashesPreference();
+    const accessibility = resolveFXAccessibility(reduceMotion, reduceFlashes);
 
     useImperativeHandle(ref, () => ({
       spawn: (event: FXEvent) => {
@@ -503,6 +552,15 @@ const FXLayer = forwardRef<FXLayerHandle>(
     return (
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {entries.map(e => {
+          if (accessibility.mode === 'static') {
+            return (
+              <StaticImpact
+                key={e.id}
+                event={e}
+                onDone={() => remove(e.id)}
+              />
+            );
+          }
           if (e.type === 'shard') {
             if (e.variant === 'trap') {
               return (
@@ -510,6 +568,7 @@ const FXLayer = forwardRef<FXLayerHandle>(
                   key={e.id}
                   x={e.x}
                   y={e.y}
+                  showImpactGlow={accessibility.showImpactGlow}
                   onDone={() => remove(e.id)}
                 />
               );

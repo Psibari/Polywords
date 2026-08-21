@@ -31,6 +31,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import {
+  resolveScreenFlash,
+  type ScreenFlashEvent,
+} from '../game/huntFeedbackPolicy';
+import {
+  createBossReadinessState,
+  markBossEntered,
+  markBossPlayable,
+} from '../game/bossReadinessTelemetry';
 
 const MAX_FEATHERS = 6;
 
@@ -48,29 +57,6 @@ function BossCrownIcon() {
     </Svg>
   );
 }
-// ─── PURPLE FLASH — trap-caught confirmation ───────────────────
-function PurpleFlash({ flashKey }: { flashKey: number }) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const reduceFlashes = useReducedFlashesPreference();
-  useEffect(() => {
-    if (flashKey === 0 || reduceFlashes) {
-      opacity.setValue(0);
-      return;
-    }
-    opacity.setValue(0);
-    Animated.sequence([
-      Animated.timing(opacity, { toValue: 0.50, duration: 69,  useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0,    duration: 391, useNativeDriver: true }),
-    ]).start();
-  }, [flashKey, reduceFlashes]); // eslint-disable-line react-hooks/exhaustive-deps
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: '#7B2D8B', opacity }}
-    />
-  );
-}
-
 // ─── RED FLASH — wrong-swipe danger signal ─────────────────────
 function RedFlash({ flashKey }: { flashKey: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -95,24 +81,25 @@ function RedFlash({ flashKey }: { flashKey: number }) {
 }
 
 // ─── GOLD FLASH — real-claim / gauntlet-correct / mastery confirmation ──
-function GoldFlash({ flashKey }: { flashKey: number }) {
+function GoldFlash({ flashKey, event }: { flashKey: number; event: ScreenFlashEvent }) {
   const opacity = useRef(new Animated.Value(0)).current;
   const reduceFlashes = useReducedFlashesPreference();
+  const recipe = resolveScreenFlash(event);
   useEffect(() => {
-    if (flashKey === 0 || reduceFlashes) {
+    if (flashKey === 0 || reduceFlashes || recipe === null) {
       opacity.setValue(0);
       return;
     }
     opacity.setValue(0);
     Animated.sequence([
-      Animated.timing(opacity, { toValue: 0.38, duration: 65,  useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0,    duration: 260, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: recipe.peakOpacity, duration: recipe.attackMs, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0, duration: recipe.decayMs, useNativeDriver: true }),
     ]).start();
-  }, [flashKey, reduceFlashes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flashKey, reduceFlashes, recipe]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Animated.View
       pointerEvents="none"
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: '#F5C842', opacity }}
+      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: recipe?.color ?? '#F5C842', opacity }}
     />
   );
 }
@@ -729,13 +716,16 @@ function GameDirector({ navigation }: { navigation: any }) {
   );
 
   // ── Flash overlay state ────────────────────────────────────
-  const [purpleFlashKey, setPurpleFlashKey] = useState(0);
   const [redFlashKey,    setRedFlashKey]    = useState(0);
-  const [goldFlashKey,   setGoldFlashKey]   = useState(0);
+  const [goldFlash, setGoldFlash] = useState<{ key: number; event: ScreenFlashEvent }>({
+    key: 0,
+    event: 'gauntletCorrect',
+  });
 
-  const handleTrapCaught = useCallback(() => setPurpleFlashKey(k => k + 1), []);
   const handleWrongSwipe = useCallback(() => setRedFlashKey(k => k + 1),    []);
-  const handleGoldFlash  = useCallback(() => setGoldFlashKey(k => k + 1),   []);
+  const handleGoldFlash = useCallback((event: ScreenFlashEvent) => {
+    setGoldFlash(previous => ({ key: previous.key + 1, event }));
+  }, []);
 
   // ── Idle/stuck-static timer ──────────────────────────────────
   const STATIC_IDLE_TIMEOUT_MS = 15000;
@@ -820,6 +810,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   const [bossIntroSeen, setBossIntroSeen] = useState<boolean | null>(null);
   const [bossTransitionActive, setBossTransitionActive] = useState(false);
   const skipBossTransitionStepRef = useRef<number | null>(null);
+  const bossReadinessRef = useRef(createBossReadinessState());
 
   // ── Fatal-swipe death hold ───────────────────────────────────
   // Holds the board on-screen for the wrong-swipe death animation's full
@@ -871,12 +862,6 @@ function GameDirector({ navigation }: { navigation: any }) {
     setHauntIntroVisitPending(true);
     AsyncStorage.setItem(HAUNT_INTRO_SEEN_KEY, 'true').catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (game.status === 'complete' || game.status === 'gameOver') {
-      playSfx('roundComplete');
-    }
-  }, [game.status]);
 
   const prevTensionRef = useRef(0);
 
@@ -1077,6 +1062,38 @@ function GameDirector({ navigation }: { navigation: any }) {
     activeStep.isHauntReturn === true;
 
   useEffect(() => {
+    if (!isBossRound) {
+      bossReadinessRef.current = createBossReadinessState();
+      return;
+    }
+    const entered = markBossEntered(
+      bossReadinessRef.current,
+      game.stepIndex,
+      Date.now(),
+    );
+    bossReadinessRef.current = entered.state;
+    if (entered.shouldRecord) {
+      recordPlaytestEvent('boss_entered', { round: game.stepIndex + 1 });
+    }
+  }, [game.stepIndex, isBossRound]);
+
+  const handleBossDecisionReady = useCallback(() => {
+    const stepIndex = useGameStore.getState().game.stepIndex;
+    const playable = markBossPlayable(
+      bossReadinessRef.current,
+      stepIndex,
+      Date.now(),
+    );
+    bossReadinessRef.current = playable.state;
+    if (playable.transitionMs !== null) {
+      recordPlaytestEvent('boss_playable', {
+        round: stepIndex + 1,
+        transitionMs: playable.transitionMs,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     if (!isBossRound || bossIntroSeen !== true) {
       setBossTransitionActive(false);
       return;
@@ -1084,14 +1101,11 @@ function GameDirector({ navigation }: { navigation: any }) {
     if (skipBossTransitionStepRef.current === game.stepIndex) {
       skipBossTransitionStepRef.current = null;
       setBossTransitionActive(false);
-      recordPlaytestEvent('boss_playable', { round: game.stepIndex + 1, transitionMs: 0 });
       return;
     }
     setBossTransitionActive(true);
-    recordPlaytestEvent('boss_entered', { round: game.stepIndex + 1 });
     const timer = setTimeout(() => {
       setBossTransitionActive(false);
-      recordPlaytestEvent('boss_playable', { round: game.stepIndex + 1, transitionMs: 760 });
     }, 760);
     return () => clearTimeout(timer);
   }, [game.stepIndex, bossIntroSeen, isBossRound]);
@@ -1195,9 +1209,9 @@ function GameDirector({ navigation }: { navigation: any }) {
       ) : !gameplayGateActive ? (
         <GameContent
           spawnEffect={spawnEffect}
-          onTrapCaught={handleTrapCaught}
           onWrongSwipe={handleWrongSwipe}
           onGoldFlash={handleGoldFlash}
+          onBossDecisionReady={handleBossDecisionReady}
           onSwipeAttempt={resetIdleTimer}
           fireIntroVisit={introVisitPending}
           onIntroVisitFired={() => setIntroVisitPending(false)}
@@ -1227,9 +1241,8 @@ function GameDirector({ navigation }: { navigation: any }) {
       )}
 
       {/* ── Flash overlays — zIndex 50, above game content ── */}
-      <PurpleFlash flashKey={purpleFlashKey} />
       <RedFlash    flashKey={redFlashKey} />
-      <GoldFlash   flashKey={goldFlashKey} />
+      <GoldFlash   flashKey={goldFlash.key} event={goldFlash.event} />
 
       {/* ── Effects overlay — pointerEvents none, zIndex 100 ── */}
       <View style={styles.effectsOverlay} pointerEvents="none">
@@ -1296,9 +1309,9 @@ function GameDirector({ navigation }: { navigation: any }) {
 
 function GameContent({
   spawnEffect,
-  onTrapCaught,
   onWrongSwipe,
   onGoldFlash,
+  onBossDecisionReady,
   onSwipeAttempt,
   fireIntroVisit,
   onIntroVisitFired,
@@ -1306,9 +1319,9 @@ function GameContent({
   onHauntIntroVisitFired,
 }: {
   spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
-  onTrapCaught: () => void;
   onWrongSwipe: () => void;
-  onGoldFlash: () => void;
+  onGoldFlash: (event: ScreenFlashEvent) => void;
+  onBossDecisionReady: () => void;
   onSwipeAttempt: () => void;
   fireIntroVisit: boolean;
   onIntroVisitFired: () => void;
@@ -1352,9 +1365,9 @@ function GameContent({
           key={`board-${game.stepIndex}`}
           step={step}
           spawnEffect={spawnEffect}
-          onTrapCaught={onTrapCaught}
           onWrongSwipe={onWrongSwipe}
           onGoldFlash={onGoldFlash}
+          onBossDecisionReady={onBossDecisionReady}
           onSwipeAttempt={onSwipeAttempt}
           firePollyEvent={firePollyEvent}
         />

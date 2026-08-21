@@ -33,7 +33,7 @@ import {
   HUNT_SWIPE_THRESHOLD,
   resolveHuntSwipeDirection,
 } from './huntSwipeDirection';
-import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import { recordPlaytestEvent, resolveHuntTelemetryPhase } from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
 import {
   ACTIVE_TILE_BASE_FONT_SIZE,
@@ -227,13 +227,14 @@ export function SwipeMask({
   // reflect the store's post-commit state, not the pre-swipe snapshot.
   function recordHuntDecision(direction: 'up' | 'right') {
     const game = useGameStore.getState().game;
-    const activeStep = game.session[game.stepIndex] as
-      (typeof game.session[number]) & { gpsTag?: string };
+    const activeStep = game.session[game.stepIndex];
     const correct = (direction === 'up' && mask.isReal) || (direction === 'right' && !mask.isReal);
     const touchToCommitMs = grantAtRef.current !== null ? Date.now() - grantAtRef.current : undefined;
     recordPlaytestEvent('hunt_decision', {
       round: game.stepIndex + 1,
-      ...(activeStep.gpsTag ? { phase: activeStep.gpsTag } : {}),
+      ...(activeStep?.kind === 'word'
+        ? { phase: resolveHuntTelemetryPhase(activeStep) }
+        : {}),
       truth: mask.isReal ? 'real' : 'trap',
       chosenDirection: direction,
       correct,
@@ -656,9 +657,14 @@ export function SwipeMask({
         } else {
           if (g.dy < -HUNT_SWIPE_THRESHOLD || g.dx > HUNT_SWIPE_THRESHOLD) {
             ambiguousFiredRef.current = true;
+            const game = useGameStore.getState().game;
+            const activeStep = game.session[game.stepIndex];
             recordPlaytestEvent('hunt_ambiguous_swipe', {
               dx: Math.round(g.dx),
               dy: Math.round(g.dy),
+              ...(activeStep?.kind === 'word'
+                ? { phase: resolveHuntTelemetryPhase(activeStep) }
+                : {}),
             });
           }
           translateX.value       = withSpring(0, { damping: 14, stiffness: 300 });

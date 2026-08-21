@@ -15,6 +15,7 @@ import {
   resolveActiveTileHeight,
   resolveGauntletRowHeight,
 } from './tileTextLayout';
+import { createBossGauntletPressProps } from './bossGauntletPress';
 
 // Per-spine identity marker (2026-08-08 doc) — a single flat-silhouette
 // crown asset (verified transparent, not a baked-in white background: all
@@ -196,6 +197,11 @@ function SpineSlot({
   // (useBoardMechanics.pickGauntletTile no-ops once a tile is active), so
   // there's no functional loss in going fully inert here.
   const closedHitInert = resolved || anyOpen;
+  const pressProps = createBossGauntletPressProps(
+    index,
+    closedHitInert || inputLocked,
+    onPick,
+  );
 
   return (
     <View style={[
@@ -262,8 +268,7 @@ function SpineSlot({
           neighbor's open card. */}
       <Pressable
         pointerEvents={closedHitInert ? 'none' : 'auto'}
-        disabled={closedHitInert || inputLocked}
-        onPressIn={() => { if (!resolved) onPick(index); }}
+        {...pressProps}
         accessible
         accessibilityRole="button"
         accessibilityLabel={`Sealed tile ${index + 1} of ${totalTiles}`}

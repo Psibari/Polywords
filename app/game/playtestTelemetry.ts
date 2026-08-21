@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createActiveGamePersistenceCoordinator } from './activeGamePersistence';
+import type { EmotionalRole, EventType } from './types';
 
 export type PlaytestEventName =
   | 'hunt_ambiguous_swipe'
@@ -23,6 +24,38 @@ export type PlaytestEvent = {
   at: number;
   data: Record<string, string | number | boolean>;
 };
+
+export type HuntTelemetryPhase =
+  | 'confidence'
+  | 'flow'
+  | 'tension'
+  | 'panic'
+  | 'boss'
+  | 'haunt'
+  | 'other';
+
+export function resolveHuntTelemetryPhase(step: {
+  emotionalRole: EmotionalRole;
+  eventType: EventType | null;
+  isHauntReturn?: boolean;
+}): HuntTelemetryPhase {
+  if (step.isHauntReturn === true) return 'haunt';
+  if (step.eventType === 'bossWord') return 'boss';
+  switch (step.emotionalRole) {
+    case 'confidence':
+      return 'confidence';
+    case 'flow':
+      return 'flow';
+    case 'firstTension':
+    case 'tension':
+      return 'tension';
+    case 'panic':
+    case 'adrenaline':
+      return 'panic';
+    default:
+      return 'other';
+  }
+}
 
 const MAX_EVENTS = 500;
 const STORAGE_KEY = 'polywords_playtest_events';
@@ -98,8 +131,48 @@ export function summarizePlaytestEvents(source: readonly PlaytestEvent[]) {
   const deathsByRound: Record<string, number> = {};
   const huntOutcomes: Record<string, number> = {};
   const dailyOutcomes: Record<string, number> = {};
+  const visibleToTouchSamples: number[] = [];
+  const touchToCommitSamples: number[] = [];
+  const bossReadySamples: number[] = [];
+  const phaseFeel: Record<string, {
+    decisions: number;
+    ambiguousReleases: number;
+    decisionsAfterAmbiguity: number;
+    hesitation3s: number;
+    hesitation6s: number;
+    hesitation9s: number;
+  }> = {};
+  const hauntLifecycle = { created: 0, reached: 0, cleared: 0, failed: 0 };
   let bossChoices = 0;
   let bossCorrect = 0;
+
+  function phaseFor(event: PlaytestEvent): string {
+    if (typeof event.data.phase === 'string' && event.data.phase.length > 0) {
+      return event.data.phase;
+    }
+    if (event.data.boss === true) return 'boss';
+    if (event.data.haunt === true) return 'haunt';
+    return 'unknown';
+  }
+
+  function phaseBucket(event: PlaytestEvent) {
+    const phase = phaseFor(event);
+    phaseFeel[phase] ??= {
+      decisions: 0,
+      ambiguousReleases: 0,
+      decisionsAfterAmbiguity: 0,
+      hesitation3s: 0,
+      hesitation6s: 0,
+      hesitation9s: 0,
+    };
+    return phaseFeel[phase];
+  }
+
+  function collectNumber(target: number[], value: unknown): void {
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+      target.push(value);
+    }
+  }
 
   source.forEach(event => {
     counts[event.name] = (counts[event.name] ?? 0) + 1;
@@ -119,7 +192,49 @@ export function summarizePlaytestEvents(source: readonly PlaytestEvent[]) {
       bossChoices += 1;
       if (event.data.correct === true) bossCorrect += 1;
     }
+    if (event.name === 'hunt_decision') {
+      const phase = phaseBucket(event);
+      phase.decisions += 1;
+      if (event.data.precededByAmbiguous === true) phase.decisionsAfterAmbiguity += 1;
+      collectNumber(visibleToTouchSamples, event.data.visibleToTouchMs);
+      collectNumber(touchToCommitSamples, event.data.touchToCommitMs);
+    }
+    if (event.name === 'hunt_ambiguous_swipe') {
+      phaseBucket(event).ambiguousReleases += 1;
+    }
+    if (event.name === 'hunt_hesitation') {
+      const phase = phaseBucket(event);
+      if (event.data.seconds === 3) phase.hesitation3s += 1;
+      if (event.data.seconds === 6) phase.hesitation6s += 1;
+      if (event.data.seconds === 9) phase.hesitation9s += 1;
+    }
+    if (event.name === 'boss_playable') {
+      collectNumber(bossReadySamples, event.data.transitionMs);
+    }
+    if (event.name === 'ghost_created') hauntLifecycle.created += 1;
+    if (event.name === 'haunt_reached') hauntLifecycle.reached += 1;
+    if (event.name === 'haunt_cleared') hauntLifecycle.cleared += 1;
+    if (event.name === 'haunt_failed') hauntLifecycle.failed += 1;
   });
+
+  function percentile(values: readonly number[], quantile: number): number | null {
+    if (values.length === 0) return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    const position = (sorted.length - 1) * quantile;
+    const lower = Math.floor(position);
+    const upper = Math.ceil(position);
+    if (lower === upper) return Math.round(sorted[lower]);
+    const weight = position - lower;
+    return Math.round(sorted[lower] + (sorted[upper] - sorted[lower]) * weight);
+  }
+
+  function timingSummary(values: readonly number[]) {
+    return {
+      samples: values.length,
+      medianMs: percentile(values, 0.5),
+      p90Ms: percentile(values, 0.9),
+    };
+  }
 
   return {
     eventCount: source.length,
@@ -128,6 +243,24 @@ export function summarizePlaytestEvents(source: readonly PlaytestEvent[]) {
     huntOutcomes,
     dailyOutcomes,
     bossHiddenAccuracy: bossChoices > 0 ? bossCorrect / bossChoices : null,
+    decisionTiming: {
+      visibleToTouch: timingSummary(visibleToTouchSamples),
+      touchToCommit: timingSummary(touchToCommitSamples),
+    },
+    phaseFeel,
+    bossReadyTiming: timingSummary(bossReadySamples),
+    hauntLifecycle: {
+      ...hauntLifecycle,
+      reachRate: hauntLifecycle.created > 0
+        ? hauntLifecycle.reached / hauntLifecycle.created
+        : null,
+      clearRate: hauntLifecycle.reached > 0
+        ? hauntLifecycle.cleared / hauntLifecycle.reached
+        : null,
+      failRate: hauntLifecycle.reached > 0
+        ? hauntLifecycle.failed / hauntLifecycle.reached
+        : null,
+    },
   };
 }
 
@@ -173,8 +306,10 @@ const MASTER_TARGET_PCT = 25;
 // the whole point of the stopgap: turning the docs/GAME_REFERENCE.md
 // survive/master targets (54%/25%, asserted from an unreproducible
 // simulation, not measured code) into numbers actually pulled off a device.
-export function formatPlaytestSummaryText(): string {
-  const s = getPlaytestSummary();
+export function formatPlaytestSummaryText(
+  source: readonly PlaytestEvent[] = events,
+): string {
+  const s = summarizePlaytestEvents(source);
   if (s.eventCount === 0) return 'POLYWORDS Playtest Stats\n\nNo events recorded yet — play a Hunt or Daily run first.';
 
   const huntTotal = Object.values(s.huntOutcomes).reduce((a, b) => a + b, 0);
@@ -186,6 +321,25 @@ export function formatPlaytestSummaryText(): string {
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([round, count]) => `    round ${round}: ${count}`)
     .join('\n');
+  const phaseOrder = ['confidence', 'flow', 'tension', 'panic', 'boss', 'haunt', 'unknown'];
+  const phaseLines = Object.entries(s.phaseFeel)
+    .sort(([a], [b]) => {
+      const aIndex = phaseOrder.indexOf(a);
+      const bIndex = phaseOrder.indexOf(b);
+      return (aIndex === -1 ? phaseOrder.length : aIndex) -
+        (bIndex === -1 ? phaseOrder.length : bIndex) || a.localeCompare(b);
+    })
+    .map(([phase, feel]) =>
+      `  ${phase}: ${feel.decisions} decisions, ${feel.ambiguousReleases} ambiguous releases, ` +
+      `decisions after ambiguity ${feel.decisionsAfterAmbiguity}, ` +
+      `hesitation 3s/6s/9s ${feel.hesitation3s}/${feel.hesitation6s}/${feel.hesitation9s}`,
+    );
+  const timingLine = (
+    label: string,
+    timing: { samples: number; medianMs: number | null; p90Ms: number | null },
+  ) => timing.samples > 0
+    ? `${label}: median ${timing.medianMs}ms, P90 ${timing.p90Ms}ms (${timing.samples})`
+    : `${label}: no samples`;
 
   const lines = [
     'POLYWORDS Playtest Stats',
@@ -206,6 +360,16 @@ export function formatPlaytestSummaryText(): string {
     deathRounds || '    (none)',
     '',
     `Boss hidden-tile accuracy: ${s.bossHiddenAccuracy === null ? '—' : `${Math.round(s.bossHiddenAccuracy * 100)}%`}`,
+    timingLine('Boss input ready', s.bossReadyTiming),
+    '',
+    'Decision feel:',
+    timingLine('Visible-to-touch', s.decisionTiming.visibleToTouch),
+    timingLine('Touch-to-commit', s.decisionTiming.touchToCommit),
+    ...phaseLines,
+    '',
+    `Haunts: ${s.hauntLifecycle.created} created, ${s.hauntLifecycle.reached} reached (${pct(s.hauntLifecycle.reached, s.hauntLifecycle.created)}), ` +
+      `${s.hauntLifecycle.cleared} cleared (${pct(s.hauntLifecycle.cleared, s.hauntLifecycle.reached)} of reached), ` +
+      `${s.hauntLifecycle.failed} failed (${pct(s.hauntLifecycle.failed, s.hauntLifecycle.reached)} of reached)`,
     '',
     `Daily attempts: ${dailyTotal}`,
     `  won: ${s.dailyOutcomes.won ?? 0} (${pct(s.dailyOutcomes.won ?? 0, dailyTotal)})`,

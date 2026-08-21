@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { Animated } from 'react-native';
+import { useReducedMotionPreference } from './usePollyAmbientMotion';
 
 // ms per full beat cycle at each tension level (0–3)
 const CYCLE_MS = [1100, 900, 700, 550] as const;
@@ -26,9 +27,16 @@ export function HeartbeatProvider({
   const [tension, setTension] = useState(0);
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const loopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const reduceMotion = useReducedMotionPreference();
 
   useEffect(() => {
     loopRef.current?.stop();
+    pulseAnim.stopAnimation();
+    if (reduceMotion !== false) {
+      loopRef.current = null;
+      pulseAnim.setValue(0);
+      return;
+    }
     const cycle = CYCLE_MS[Math.min(tension, 3) as 0 | 1 | 2 | 3];
     const beatIn = Math.round(cycle * 0.2);
     const beatOut = cycle - beatIn;
@@ -50,7 +58,7 @@ export function HeartbeatProvider({
     loopRef.current = loop;
     loop.start();
     return () => loop.stop();
-  }, [tension, pulseAnim]);
+  }, [tension, pulseAnim, reduceMotion]);
 
   return React.createElement(
     HeartbeatCtx.Provider,
