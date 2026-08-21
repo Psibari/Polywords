@@ -1,12 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
+  Animated as RNAnimated,
   Dimensions,
-  Easing,
   PanResponder,
   StyleSheet,
   View,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  withSpring,
+  withTiming,
+  withSequence,
+  withDelay,
+  useAnimatedStyle,
+  Easing as ReaEasing,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Haptics } from '../utils/haptics';
 import { playSfx } from '../audio/sfx';
@@ -63,14 +71,14 @@ export default function DailyAnswerCard({
 }: Props) {
   const reduceMotion = useReducedMotionPreference();
   const shellRef = useRef<View>(null);
-  const entryTranslateX = useRef(new Animated.Value(0)).current;
-  const entryOpacity = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.96)).current;
-  const rotation = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
-  const gripGlow = useRef(new Animated.Value(0)).current;
+  const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
+  const entryOpacity = useRef(new RNAnimated.Value(0)).current;
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const scale = useSharedValue(0.96);
+  const rotation = useSharedValue(0);
+  const opacity = useSharedValue(1);
+  const gripGlow = useSharedValue(0);
 
   const labelRef = useRef(label);
   const onClaimRef = useRef(onClaim);
@@ -81,6 +89,14 @@ export default function DailyAnswerCard({
   const claimTargetRef = useRef(claimTarget);
   const onCorrectExitCompleteRef = useRef(onCorrectExitComplete);
 
+  // Elevation while a card is under the finger — before onPanResponderGrant,
+  // there was no zIndex boost until `state` flipped to 'correct'/'wrong',
+  // so a mid-drag card in the 2-column grid could render underneath a
+  // sibling it visually overlapped. Cleared once `state` actually leaves
+  // 'idle' so entryShellClaiming/Failing's own elevation takes over with no
+  // gap; left true across the claim-to-outcome handoff for the same reason.
+  const [activelyHeld, setActivelyHeld] = useState(false);
+
   labelRef.current = label;
   onClaimRef.current = onClaim;
   interactionDisabledRef.current = disabled || state !== 'idle';
@@ -90,37 +106,11 @@ export default function DailyAnswerCard({
   function springBack() {
     thresholdCrossedRef.current = false;
     gestureOffsetRef.current = { x: 0, y: 0 };
-    Animated.parallel([
-      Animated.spring(translateX, {
-        toValue: 0,
-        friction: 7,
-        tension: 110,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateY, {
-        toValue: 0,
-        friction: 7,
-        tension: 110,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 7,
-        tension: 110,
-        useNativeDriver: true,
-      }),
-      Animated.spring(rotation, {
-        toValue: 0,
-        friction: 7,
-        tension: 110,
-        useNativeDriver: true,
-      }),
-      Animated.timing(gripGlow, {
-        toValue: 0,
-        duration: dailyCardMaterial.motion.pressOutMs,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    translateX.value = withSpring(0, { damping: 7, stiffness: 110 });
+    translateY.value = withSpring(0, { damping: 7, stiffness: 110 });
+    scale.value = withSpring(1, { damping: 7, stiffness: 110 });
+    rotation.value = withSpring(0, { damping: 7, stiffness: 110 });
+    gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
   }
 
   useEffect(() => {
@@ -136,14 +126,14 @@ export default function DailyAnswerCard({
     entryOpacity.setValue(0);
 
     const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.spring(entryTranslateX, {
+      RNAnimated.parallel([
+        RNAnimated.spring(entryTranslateX, {
           toValue: 0,
           friction: 8,
           tension: 100,
           useNativeDriver: true,
         }),
-        Animated.timing(entryOpacity, {
+        RNAnimated.timing(entryOpacity, {
           toValue: 1,
           duration: 160,
           useNativeDriver: true,
@@ -162,25 +152,26 @@ export default function DailyAnswerCard({
   ]);
 
   useEffect(() => {
-    translateX.setValue(0);
-    translateY.setValue(0);
-    scale.setValue(0.96);
-    rotation.setValue(0);
-    opacity.setValue(1);
-    gripGlow.setValue(0);
+    translateX.value = 0;
+    translateY.value = 0;
+    scale.value = 0.96;
+    rotation.value = 0;
+    opacity.value = 1;
+    gripGlow.value = 0;
     claimedRef.current = false;
     thresholdCrossedRef.current = false;
     gestureOffsetRef.current = { x: 0, y: 0 };
+    setActivelyHeld(false);
 
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 8,
-        tension: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    scale.value = withSpring(1, { damping: 8, stiffness: 100 });
   }, [label, gripGlow, opacity, rotation, scale, translateX, translateY]);
+
+  // Held elevation only ever needs to survive up to the moment `state`
+  // itself starts driving entryShellClaiming/Failing — once it's no longer
+  // 'idle', clear it (harmless no-op if already false).
+  useEffect(() => {
+    if (state !== 'idle') setActivelyHeld(false);
+  }, [state]);
 
   useEffect(() => {
     if (state === 'correct') {
@@ -191,26 +182,12 @@ export default function DailyAnswerCard({
       const target = claimTargetRef.current ?? fallbackTarget;
       let completionTimer: ReturnType<typeof setTimeout> | null = null;
 
-      Animated.timing(gripGlow, {
-        toValue: 0,
-        duration: dailyCardMaterial.motion.pressOutMs,
-        useNativeDriver: true,
-      }).start();
-      rotation.setValue(0);
+      gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
+      rotation.value = 0;
 
       if (reduceMotion !== false) {
-        Animated.parallel([
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scale, {
-            toValue: 0.96,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-        ]).start();
+        opacity.value = withTiming(0, { duration: 180 });
+        scale.value = withTiming(0.96, { duration: 180 });
         completionTimer = setTimeout(() => {
           onCorrectExitCompleteRef.current?.(labelRef.current);
         }, DAILY_CARD_TIMING.reducedCorrectExitMs);
@@ -223,46 +200,22 @@ export default function DailyAnswerCard({
         const targetTranslateX = target.x - (pageX + width / 2);
         const targetTranslateY = target.y - (pageY + height / 2);
 
-        Animated.parallel([
-          Animated.timing(translateX, {
-            toValue: targetTranslateX,
-            duration: 620,
-            easing: Easing.in(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateY, {
-            toValue: targetTranslateY,
-            duration: 620,
-            easing: Easing.in(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.sequence([
-            Animated.timing(scale, {
-              toValue: 1.06,
-              duration: 100,
-              easing: Easing.out(Easing.quad),
-              useNativeDriver: true,
-            }),
-            Animated.timing(scale, {
-              toValue: 0.24,
-              duration: 520,
-              easing: Easing.in(Easing.cubic),
-              useNativeDriver: true,
-            }),
-          ]),
-          // Dissolves away right as the curtain finishes closing (curtain
-          // starts at the same instant this flight does, 600ms drop) — no
-          // z-order trick needed, the tile is just gone by the time it matters.
-          Animated.sequence([
-            Animated.delay(370),
-            Animated.timing(opacity, {
-              toValue: 0,
-              duration: 230,
-              easing: Easing.in(Easing.quad),
-              useNativeDriver: true,
-            }),
-          ]),
-        ]).start();
+        translateX.value = withTiming(targetTranslateX, {
+          duration: 620,
+          easing: ReaEasing.in(ReaEasing.cubic),
+        });
+        translateY.value = withTiming(targetTranslateY, {
+          duration: 620,
+          easing: ReaEasing.in(ReaEasing.cubic),
+        });
+        scale.value = withSequence(
+          withTiming(1.06, { duration: 100, easing: ReaEasing.out(ReaEasing.quad) }),
+          withTiming(0.24, { duration: 520, easing: ReaEasing.in(ReaEasing.cubic) }),
+        );
+        // Dissolves away right as the curtain finishes closing (curtain
+        // starts at the same instant this flight does, 600ms drop) — no
+        // z-order trick needed, the tile is just gone by the time it matters.
+        opacity.value = withDelay(370, withTiming(0, { duration: 230, easing: ReaEasing.in(ReaEasing.quad) }));
       });
 
       completionTimer = setTimeout(() => {
@@ -276,150 +229,50 @@ export default function DailyAnswerCard({
 
     if (state === 'wrong') {
       if (reduceMotion !== false) {
-        scale.setValue(1);
-        gripGlow.setValue(0);
-        Animated.parallel([
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scale, {
-            toValue: 0.97,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-        ]).start();
+        scale.value = 1;
+        gripGlow.value = 0;
+        opacity.value = withTiming(0, { duration: 200 });
+        scale.value = withTiming(0.97, { duration: 200 });
         return;
       }
       const fallDistance = Dimensions.get('window').height * 0.72;
-      scale.setValue(1);
-      gripGlow.setValue(0);
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(translateX, {
-            toValue: 34,
-            duration: 75,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: 18,
-            duration: 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateX, {
-            toValue: 46,
-            duration: 430,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(translateY, {
-            toValue: 7,
-            duration: 75,
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateY, {
-            toValue: 13,
-            duration: 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateY, {
-            toValue: fallDistance,
-            duration: 430,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(rotation, {
-            toValue: 5,
-            duration: 75,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotation, {
-            toValue: -4,
-            duration: 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rotation, {
-            toValue: 18,
-            duration: 430,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.delay(275),
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 290,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
+      scale.value = 1;
+      gripGlow.value = 0;
+      translateX.value = withSequence(
+        withTiming(34, { duration: 75, easing: ReaEasing.out(ReaEasing.quad) }),
+        withTiming(18, { duration: 60 }),
+        withTiming(46, { duration: 430, easing: ReaEasing.in(ReaEasing.quad) }),
+      );
+      translateY.value = withSequence(
+        withTiming(7, { duration: 75 }),
+        withTiming(13, { duration: 60 }),
+        withTiming(fallDistance, { duration: 430, easing: ReaEasing.in(ReaEasing.quad) }),
+      );
+      rotation.value = withSequence(
+        withTiming(5, { duration: 75 }),
+        withTiming(-4, { duration: 60 }),
+        withTiming(18, { duration: 430, easing: ReaEasing.in(ReaEasing.quad) }),
+      );
+      opacity.value = withDelay(275, withTiming(0, { duration: 290, easing: ReaEasing.in(ReaEasing.quad) }));
       return;
     }
 
     if (state === 'disabled') {
-      Animated.parallel([
-        Animated.spring(translateX, {
-          toValue: 0,
-          useNativeDriver: true,
-        }),
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scale, {
-          toValue: 0.96,
-          useNativeDriver: true,
-        }),
-        Animated.spring(rotation, {
-          toValue: 0,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: dailyCardMaterial.disabledOpacity,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.timing(gripGlow, {
-          toValue: 0,
-          duration: dailyCardMaterial.motion.pressOutMs,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      translateX.value = withSpring(0);
+      translateY.value = withSpring(0);
+      scale.value = withSpring(0.96);
+      rotation.value = withSpring(0);
+      opacity.value = withTiming(dailyCardMaterial.disabledOpacity, { duration: 180 });
+      gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
       return;
     }
 
     claimedRef.current = false;
-    Animated.parallel([
-      Animated.spring(translateX, {
-        toValue: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(translateY, {
-        toValue: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-      Animated.spring(rotation, {
-        toValue: 0,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    translateX.value = withSpring(0);
+    translateY.value = withSpring(0);
+    scale.value = withSpring(1);
+    rotation.value = withSpring(0);
+    opacity.value = withTiming(1, { duration: 120 });
   }, [gripGlow, opacity, reduceMotion, rotation, scale, state, translateX, translateY]);
 
   const panResponder = useRef(
@@ -436,27 +289,17 @@ export default function DailyAnswerCard({
       onPanResponderGrant: () => {
         if (interactionDisabledRef.current || claimedRef.current) return;
         thresholdCrossedRef.current = false;
-        Animated.parallel([
-          Animated.spring(scale, {
-            toValue: dailyCardMaterial.liftScale,
-            friction: 7,
-            tension: 140,
-            useNativeDriver: true,
-          }),
-          Animated.timing(gripGlow, {
-            toValue: 1,
-            duration: dailyCardMaterial.motion.pressInMs,
-            useNativeDriver: true,
-          }),
-        ]).start();
+        setActivelyHeld(true);
+        scale.value = withSpring(dailyCardMaterial.liftScale, { damping: 7, stiffness: 140 });
+        gripGlow.value = withTiming(1, { duration: dailyCardMaterial.motion.pressInMs });
         playSfx('pressHoldStart');
       },
 
       onPanResponderMove: (_, gesture) => {
         if (interactionDisabledRef.current || claimedRef.current) return;
 
-        translateX.setValue(gesture.dx);
-        translateY.setValue(gesture.dy);
+        translateX.value = gesture.dx;
+        translateY.value = gesture.dy;
         gestureOffsetRef.current = { x: gesture.dx, y: gesture.dy };
 
         const crossedUpThreshold =
@@ -474,6 +317,7 @@ export default function DailyAnswerCard({
 
       onPanResponderRelease: (_, gesture) => {
         if (interactionDisabledRef.current || claimedRef.current) {
+          setActivelyHeld(false);
           springBack();
           return;
         }
@@ -483,21 +327,25 @@ export default function DailyAnswerCard({
           Math.abs(gesture.dy) > Math.abs(gesture.dx) * 0.85;
 
         if (!isUpClaim) {
+          setActivelyHeld(false);
           springBack();
           return;
         }
 
         claimedRef.current = true;
-        Animated.timing(gripGlow, {
-          toValue: 0,
-          duration: dailyCardMaterial.motion.pressOutMs,
-          useNativeDriver: true,
-        }).start();
+        // activelyHeld intentionally stays true here — cleared by the
+        // state-effect above once `state` actually flips to 'correct'/
+        // 'wrong' and its own elevation style takes over, so there's no
+        // frame where the card drops back to baseline zIndex in between.
+        gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
         onClaimRef.current(labelRef.current);
       },
 
       onPanResponderTerminate: () => {
-        if (!claimedRef.current) springBack();
+        if (!claimedRef.current) {
+          setActivelyHeld(false);
+          springBack();
+        }
       },
     }),
   ).current;
@@ -510,27 +358,32 @@ export default function DailyAnswerCard({
     if (resolveTileAccessibilityAction(actionName) !== 'claim') return;
 
     claimedRef.current = true;
-    Animated.timing(gripGlow, {
-      toValue: 0,
-      duration: dailyCardMaterial.motion.pressOutMs,
-      useNativeDriver: true,
-    }).start();
+    gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
     onClaimRef.current(labelRef.current);
   }
 
-  const rotate = rotation.interpolate({
-    inputRange: [-20, 20],
-    outputRange: ['-20deg', '20deg'],
-  });
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { rotate: `${rotation.value}deg` },
+      { scale: scale.value },
+    ],
+  }));
+
+  const gripGlowStyle = useAnimatedStyle(() => ({
+    opacity: gripGlow.value,
+  }));
 
   return (
-    <Animated.View
+    <RNAnimated.View
       ref={shellRef}
       collapsable={false}
       style={[
         styles.entryShell,
-        state === 'correct' && styles.entryShellClaiming,
-        state === 'wrong' && styles.entryShellFailing,
+        (activelyHeld || state === 'correct') && styles.entryShellClaiming,
+        (!activelyHeld && state === 'wrong') && styles.entryShellFailing,
         {
           opacity: entryOpacity,
           transform: [{ translateX: entryTranslateX }],
@@ -550,10 +403,7 @@ export default function DailyAnswerCard({
           styles.shell,
           state === 'correct' && styles.shellCorrect,
           state === 'wrong' && styles.shellWrong,
-          {
-            opacity,
-            transform: [{ translateX }, { translateY }, { rotate }, { scale }],
-          },
+          cardAnimatedStyle,
         ]}
       >
         <LinearGradient
@@ -566,7 +416,7 @@ export default function DailyAnswerCard({
             <DailyCardFace label={label} state={state} />
             <Animated.View
               pointerEvents="none"
-              style={[styles.gripGlow, { opacity: gripGlow }]}
+              style={[styles.gripGlow, gripGlowStyle]}
             />
             {state === 'correct' && (
               <View pointerEvents="none" style={styles.correctOverlay} />
@@ -580,7 +430,7 @@ export default function DailyAnswerCard({
           </View>
         </LinearGradient>
       </Animated.View>
-    </Animated.View>
+    </RNAnimated.View>
   );
 }
 

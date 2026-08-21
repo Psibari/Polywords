@@ -21,7 +21,10 @@ architecture; current progress belongs in `CONTEXT.md`.
 - Navigation: Home / Play / Vault / Settings, plus Daily. GameScreen is nav-free.
 - State: Zustand + immer; persistence uses AsyncStorage.
 - Motion: React Native Animated for most surfaces; Reanimated remains isolated to
-  `SwipeMask.tsx`.
+  `SwipeMask.tsx` and `DailyAnswerCard.tsx` (added 2026-08-21 — same live-drag
+  transform pattern, ported for the same JSI-direct responsiveness under
+  finger; both files' non-touch-critical entry/layout values still stay on
+  plain RN `Animated`).
 - Audio: `expo-audio`; `MusicEngine.ts` owns one persistent, owner-scoped player.
 - Non-default `playSfx` rate: `expo-audio`'s `AudioPlayer.shouldCorrectPitch` defaults to
   `true` (built for slow-motion video — a rate change alters duration only, not pitch,
