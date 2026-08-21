@@ -2282,7 +2282,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.tileCopy,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0,
+    letterSpacing: 0.6,
     color: '#FFFFFF',
     textAlign: 'center',
     flexShrink: 1,
