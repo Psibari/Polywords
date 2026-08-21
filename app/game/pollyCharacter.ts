@@ -22,7 +22,7 @@ export const POLLY_LINES = {
   dailyLossBat: 'CAN’T BEAT THAT WITH A BAT.',
   dailyWinTomorrow: 'WON’T HAPPEN TOMORROW.',
   huntIntro: 'Enter the Hunt. We’ll see who hunts who.',
-  huntHauntIntro: 'PLACEHOLDER — PETE TO WRITE',
+  huntHauntIntro: 'I hunt you. I haunt you.',
   huntAbandonTaunt: 'See you later, loser.',
 } as const;
 
