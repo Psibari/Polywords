@@ -1589,7 +1589,7 @@ function BoardPresenter({ step, spawnEffect, onTrapCaught, onWrongSwipe, onGoldF
           pointerEvents="none"
           style={styles.vaultLabel}
         >
-          WORD VAULT
+          POLYBOOK
         </Text>
 
         {/* Boss haunt only — colour drains from the book, it does not travel */}

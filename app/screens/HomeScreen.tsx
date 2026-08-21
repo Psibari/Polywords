@@ -134,7 +134,7 @@ export default function HomeScreen({ navigation }: Props) {
               />
                 <View pointerEvents="box-none" style={styles.homeBookCover}>
                   <Text style={styles.bookSpineText}>PW</Text>
-                  <Text style={styles.huntBookHingeText}>WORD VAULT</Text>
+                  <Text style={styles.huntBookHingeText}>POLYBOOK</Text>
 
                   {/* Hunt plate — absolute placement on the cover */}
                   <View
