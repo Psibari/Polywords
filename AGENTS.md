@@ -46,7 +46,10 @@ Authority is: current user request, this file, focused source, `CLAUDE.md`, then
 ## Content and Tools
 
 - `docs/CONTENT_WRITING_STANDARD.md` exclusively governs REALS, traps, masks, and
-  editorial approval. Do not duplicate its rules elsewhere.
+  editorial approval inside the repository.
+- `.agents/skills/polywords-master-director/` is the version-controlled master skill.
+  Its bundled content doctrine is the synchronized standalone fallback for use outside
+  the repository. Do not create any additional content-rule copies.
 - `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial master; it is
   not imported by gameplay.
 - Boss words follow the live JSON, not the workbook: `assets/data/huntData.json` is the
