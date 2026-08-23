@@ -1,12 +1,11 @@
-import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, {
   Circle,
   Defs,
   Ellipse,
   Line,
-  LinearGradient as SvgGrad,
   Path,
   Pattern,
   RadialGradient,
@@ -15,9 +14,11 @@ import Svg, {
 } from 'react-native-svg';
 import { dailyRevealMaterial as M } from '../../ui/pwDailyMaterials';
 import { PW } from '../../ui/pwTheme';
+import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
 
 const FEATHER_WHITE = require('../../../assets/ui/feather-life-filled.png');
 const FEATHER_GOLD = require('../../../assets/ui/feather-gold-reward.png');
+const SCROLL_PAPER = require('../../../assets/images/textures/scroll_paper.png');
 
 // revealFeatherCount (1-4) -> [left group count, right group count]
 const FEATHER_SPLITS: Record<number, readonly [number, number]> = {
@@ -28,20 +29,49 @@ const FEATHER_SPLITS: Record<number, readonly [number, number]> = {
 };
 
 type Props = {
+  // The space this layer grows into — QuillScrollPanel's VIEW_H minus the
+  // shared rod's own height, since the rod now lives once, fixed, one level
+  // up (see QuillScrollPanel.tsx), not duplicated here. This component no
+  // longer owns any rod at all — Pete: "you need one piece, not two rods
+  // that might not line up" (2026-08-23). Growing from directly under that
+  // one rod, instead of sliding in from off-screen, is what makes this read
+  // as the same scroll continuing to unroll rather than a second object.
+  height: number;
   revealFeatherCount?: number;
   revealPerfect?: boolean;
 };
 
-export default function DailyRevealCurtain({ revealFeatherCount, revealPerfect }: Props) {
+export default function DailyRevealCurtain({ height, revealFeatherCount, revealPerfect }: Props) {
   const [leftCount, rightCount] = FEATHER_SPLITS[revealFeatherCount ?? 0] ?? [0, 0];
 
+  const [curtainWidth, setCurtainWidth] = useState(0);
+  const handleLayout = (e: LayoutChangeEvent) => setCurtainWidth(e.nativeEvent.layout.width);
+  const paper = useDailyScrollTuning((s) => s.paper);
+
+  // Unlike DailyPanelFrame's paper, this one does NOT apply paper.offsetY
+  // to its own top position — DailyPanelFrame's offsetY exists to leave
+  // room for a rod sitting inside its own space, but the shared rod now
+  // lives entirely outside this component (see QuillScrollPanel.tsx), so
+  // this region has nothing to leave room for. Applying the same offset
+  // here would leave a permanent empty gap between the rod and where this
+  // paper starts (device-confirmed 2026-08-23). `paper`'s X/width/height
+  // tuning is still shared and applies normally.
+  const paperWidth = curtainWidth > 0 ? curtainWidth * paper.scaleX : undefined;
+  const paperHeight = curtainWidth > 0 ? height * paper.scaleY : undefined;
+  const paperLeft =
+    paperWidth !== undefined ? (curtainWidth - paperWidth) / 2 + paper.offsetX : undefined;
+  const paperTop = 0;
+
   return (
-    <View style={styles.root}>
-      <LinearGradient
-        colors={[M.fillTop, M.fillMid, M.fillBot]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
+    <View style={[styles.root, { height }]} onLayout={handleLayout}>
+      <Image
+        source={SCROLL_PAPER}
+        style={
+          paperWidth !== undefined
+            ? { position: 'absolute', width: paperWidth, height: paperHeight, left: paperLeft, top: paperTop }
+            : StyleSheet.absoluteFill
+        }
+        resizeMode="stretch"
       />
 
       <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
@@ -124,29 +154,6 @@ export default function DailyRevealCurtain({ revealFeatherCount, revealPerfect }
         </>
       )}
 
-      <View style={styles.rollShadow} pointerEvents="none" />
-      <Svg viewBox="0 0 360 22" preserveAspectRatio="none" style={styles.rollSvg}>
-        <Defs>
-          <SvgGrad id="rollBody" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={M.rollTop} />
-            <Stop offset="0.35" stopColor={M.rollMid} />
-            <Stop offset="0.7" stopColor={M.rollLowerMid} />
-            <Stop offset="1" stopColor={M.rollBottom} />
-          </SvgGrad>
-          <SvgGrad id="rollHighlight" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.7} />
-            <Stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
-          </SvgGrad>
-          <RadialGradient id="rollEndCap" cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={M.rollEndCapNear} />
-            <Stop offset="1" stopColor={M.rollEndCapFar} />
-          </RadialGradient>
-        </Defs>
-        <Rect x={0} y={8} width={360} height={14} rx={7} fill="url(#rollBody)" />
-        <Rect x={0} y={8} width={360} height={5} rx={2.5} fill="url(#rollHighlight)" />
-        <Ellipse cx={6} cy={15} rx={6} ry={7} fill="url(#rollEndCap)" />
-        <Ellipse cx={354} cy={15} rx={6} ry={7} fill="url(#rollEndCap)" />
-      </Svg>
     </View>
   );
 }
@@ -154,13 +161,10 @@ export default function DailyRevealCurtain({ revealFeatherCount, revealPerfect }
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    borderTopWidth: 0,
-    borderLeftWidth: 1.5,
-    borderRightWidth: 1.5,
-    borderBottomWidth: 1.5,
-    borderLeftColor: M.border,
-    borderRightColor: M.border,
-    borderBottomColor: M.border,
+    // Removed the flat colored border 2026-08-23 — same "box" issue as
+    // QuillScrollPanel's dropped background/shadow: it was tuned for the old
+    // solid-color curtain and reads as a rectangular frame around the
+    // parchment art now that the curtain has its own painted, torn edge.
   },
   centerFold: {
     position: 'absolute',
@@ -205,21 +209,5 @@ const styles = StyleSheet.create({
     height: 150,
     marginLeft: -50,
     marginTop: -75,
-  },
-  rollShadow: {
-    position: 'absolute',
-    left: '15%',
-    right: '15%',
-    bottom: 2,
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: M.rollShadow,
-  },
-  rollSvg: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 22,
   },
 });

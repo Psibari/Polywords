@@ -66,6 +66,7 @@ import DailyAnswerCard, {
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
 import QuillScrollPanel from '../components/ui/QuillScrollPanel';
+import DailyScrollTuningPanel from '../dev/DailyScrollTuningPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
@@ -639,7 +640,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         toValue: 1,
         duration: 320,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
+        // QuillScrollPanel now animates this into a `height` (layout, not
+        // transform/opacity) for the roll-open-downward effect — native
+        // driver only supports transform/opacity and throws "Style property
+        // 'height' is not supported" if forced, causing the animation to
+        // jump/snap instead of animate (device-confirmed 2026-08-23).
+        useNativeDriver: false,
       }).start();
     }
     const measureTimer = setTimeout(
@@ -766,14 +772,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           toValue: 1,
           duration: curtainCloseMs,
           easing: Easing.bezier(0.23, 1, 0.32, 1),
-          useNativeDriver: true,
+          // QuillScrollPanel now animates a `height` (the reveal growing
+          // under the shared rod) from this same value alongside its
+          // opacity/transform uses — native driver can't do height, and one
+          // Animated.Value can't mix drivers, so this must be false too
+          // (same fix as rollProgress, 2026-08-23).
+          useNativeDriver: false,
         }),
         Animated.delay(curtainHoldMs),
         Animated.timing(revealProgress, {
           toValue: 0,
           duration: curtainOpenMs,
           easing: Easing.bezier(0.23, 1, 0.32, 1),
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]).start(({ finished }) => {
         if (finished) finishClaimOnce();
@@ -844,7 +855,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             toValue: 0,
             duration: 260,
             easing: Easing.in(Easing.cubic),
-            useNativeDriver: true,
+            // See matching note above — this drives a `height` layout value now.
+            useNativeDriver: false,
           }).start();
         }, 430);
       }
@@ -1045,6 +1057,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       {isComplete && (
         <ResultsOverlay onHome={handleHome} onShare={handleShare} />
       )}
+
+      {__DEV__ && !isComplete && displayedDailySession && <DailyScrollTuningPanel />}
 
       {__DEV__ && (
         <Pressable
