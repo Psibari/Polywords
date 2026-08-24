@@ -1,6 +1,10 @@
 import React, { forwardRef, useState } from 'react';
 import { Animated, Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
-import { dailyScrollMaterial as M } from '../../ui/pwDailyMaterials';
+import {
+  dailyCardMaterial,
+  dailyScrollMaterial as M,
+} from '../../ui/pwDailyMaterials';
+import { DailySubmittedAnswerCard } from '../DailyAnswerCard';
 import DailyPanelFrame from './DailyPanelFrame';
 import DailyRevealCurtain from './DailyRevealCurtain';
 import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
@@ -10,15 +14,23 @@ const SCROLL_ROD = require('../../../assets/images/textures/scroll_rod.png');
 const ROD_ASPECT_RATIO = 1659 / 165;
 
 export type QuillScrollPanelProps = {
-  // 0 = rolled closed, 1 = fully open. Native driver: transform + opacity only.
+  // 0 = rolled closed, 1 = fully open. Drives clipped layout height.
   rollProgress: Animated.Value;
-  // 0 = clue showing, 1 = purple reveal panel fully covers the card. Native driver: transform + opacity only.
+  // 0 = clue showing, 1 = reward paper fully covers clue + submitted card.
   revealProgress?: Animated.Value;
   // Daily's day-progress feathers: 1-4 correct claims today shows that many
   // white feathers; the 5th (revealPerfect) shows a single gold feather and
   // gilds the card border for the rest of that reveal.
   revealFeatherCount?: number;
   revealPerfect?: boolean;
+  submittedAnswer?: {
+    label: string;
+    startX: number;
+    startY: number;
+    width: number;
+    height: number;
+  } | null;
+  submittedProgress?: Animated.Value;
   children: React.ReactNode;
 };
 
@@ -26,7 +38,15 @@ const VIEW_H = 190;
 
 const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
   function QuillScrollPanel(
-    { rollProgress, revealProgress, revealFeatherCount, revealPerfect, children },
+    {
+      rollProgress,
+      revealProgress,
+      revealFeatherCount,
+      revealPerfect,
+      submittedAnswer,
+      submittedProgress,
+      children,
+    },
     ref,
   ) {
     const contentTopPad = useDailyScrollTuning((s) => s.contentTopPad);
@@ -49,7 +69,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // and looked like two different rods (Pete, 2026-08-23). Measured here
     // once and handed down as sizes, not duplicated.
     const [scrollBodyWidth, setScrollBodyWidth] = useState(0);
-    const handleScrollBodyLayout = (e: LayoutChangeEvent) =>
+    const handleRootLayout = (e: LayoutChangeEvent) =>
       setScrollBodyWidth(e.nativeEvent.layout.width);
     const rodBaseHeight = scrollBodyWidth > 0 ? scrollBodyWidth / ROD_ASPECT_RATIO : undefined;
     const rodHeight = rodBaseHeight !== undefined ? rodBaseHeight * rod.scaleY : undefined;
@@ -57,14 +77,6 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const rodLeft =
       rodWidth !== undefined ? (scrollBodyWidth - rodWidth) / 2 + rod.offsetX : undefined;
     const rodTop = rod.offsetY;
-
-    // front-content: fades + sinks as the reveal grows over it (CSS: opacity 0, translateY(30%))
-    const frontOpacity = revealProgress
-      ? revealProgress.interpolate({ inputRange: [0, 1], outputRange: [1, 0] })
-      : 1;
-    const frontTranslateY = revealProgress
-      ? revealProgress.interpolate({ inputRange: [0, 1], outputRange: [0, VIEW_H * 0.3] })
-      : 0;
 
     // Reveal: grows straight down from directly under the ONE shared rod
     // above, instead of a separate curtain sliding in from off-screen — so
@@ -75,25 +87,56 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const revealGrowHeight = revealProgress
       ? revealProgress.interpolate({ inputRange: [0, 1], outputRange: [0, revealAreaHeight] })
       : 0;
+    // The descending paper edge uses the exact same authored rod as the
+    // fixed fixture. At progress 0 the two rods coincide; as the reward paper
+    // grows, this copy stays attached to its lower edge.
+    const movingRodTop = revealProgress
+      ? Animated.add(revealGrowHeight, rodTop)
+      : rodTop;
+    const movingRodOpacity = revealProgress
+      ? revealProgress.interpolate({
+          inputRange: [0, 0.02, 1],
+          outputRange: [0, 1, 1],
+        })
+      : 0;
+
+    const submittedTargetX = submittedAnswer
+      ? (scrollBodyWidth - submittedAnswer.width) / 2
+      : 0;
+    const submittedTargetY = submittedAnswer
+      ? Math.max(rodTop + (rodHeight ?? 0) + 12, VIEW_H - submittedAnswer.height - 16)
+      : 0;
+    const submittedTranslateX = submittedAnswer && submittedProgress
+      ? submittedProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [submittedAnswer.startX, submittedTargetX],
+        })
+      : 0;
+    const submittedTranslateY = submittedAnswer && submittedProgress
+      ? submittedProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [submittedAnswer.startY, submittedTargetY],
+        })
+      : 0;
+    const submittedScale = submittedProgress
+      ? submittedProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [dailyCardMaterial.liftScale, 1],
+        })
+      : 1;
 
     const isRevealing = Boolean(revealFeatherCount) || revealPerfect;
 
     return (
-      <View ref={ref} style={styles.root} collapsable={false}>
-        <Animated.View
-          style={[styles.scrollBody, { height: rollHeight }]}
-          onLayout={handleScrollBodyLayout}
-        >
-          {/* front-content — the idle paper + live clue text, fades away as
-              the reveal grows over it. */}
-          <Animated.View
-            pointerEvents="none"
-            style={{
-              flex: 1,
-              opacity: frontOpacity,
-              transform: [{ translateY: frontTranslateY }],
-            }}
-          >
+      <View
+        ref={ref}
+        style={styles.root}
+        collapsable={false}
+        onLayout={handleRootLayout}
+      >
+        <Animated.View style={[styles.scrollBody, { height: rollHeight }]}>
+          {/* The clue stays intact; the reward paper physically covers it. */}
+          <Animated.View pointerEvents="none" style={styles.frontContent}>
             <DailyPanelFrame
               height={VIEW_H}
               state={revealPerfect ? 'perfect' : isRevealing ? 'revealing' : 'idle'}
@@ -101,46 +144,78 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
               <View style={[styles.content, { top: contentTopPad }]}>{children}</View>
             </DailyPanelFrame>
           </Animated.View>
+        </Animated.View>
 
-          {/* reveal — grows down from directly under the shared rod below,
-              covering the clue and showing the feather/seal celebration
-              content, instead of a separate curtain sliding in. */}
-          {revealProgress && rodHeight !== undefined && rodTop !== undefined && (
-            <Animated.View
-              pointerEvents="none"
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: rodTop + rodHeight,
-                height: revealGrowHeight,
-                overflow: 'hidden',
-              }}
-            >
-              <DailyRevealCurtain
-                height={revealAreaHeight}
-                revealFeatherCount={revealFeatherCount}
-                revealPerfect={revealPerfect}
-              />
-            </Animated.View>
-          )}
+        {submittedAnswer && submittedProgress && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.submittedAnswer,
+              {
+                width: submittedAnswer.width,
+                height: submittedAnswer.height,
+                transform: [
+                  { translateX: submittedTranslateX },
+                  { translateY: submittedTranslateY },
+                  { scale: submittedScale },
+                ],
+              },
+            ]}
+          >
+            <DailySubmittedAnswerCard label={submittedAnswer.label} />
+          </Animated.View>
+        )}
 
-          {/* the one shared rod — fixed in place, always visible, on top of
-              both the idle content and the reveal growing beneath it. */}
-          {rodHeight !== undefined && (
-            <Image
-              source={SCROLL_ROD}
-              style={{
-                position: 'absolute',
+        {/* Reward paper grows from the shared rod above both clue and card. */}
+        {revealProgress && rodHeight !== undefined && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.revealClip,
+              { top: rodTop + rodHeight, height: revealGrowHeight },
+            ]}
+          >
+            <DailyRevealCurtain
+              height={revealAreaHeight}
+              revealFeatherCount={revealFeatherCount}
+              revealPerfect={revealPerfect}
+            />
+          </Animated.View>
+        )}
+
+        {revealProgress && rodHeight !== undefined && (
+          <Animated.Image
+            source={SCROLL_ROD}
+            style={[
+              styles.movingRod,
+              {
                 width: rodWidth,
                 height: rodHeight,
                 left: rodLeft,
-                top: rodTop,
-              }}
+                top: movingRodTop,
+                opacity: movingRodOpacity,
+              },
+            ]}
+            resizeMode="stretch"
+          />
+        )}
+
+        {/* One shared rod stays fixed above every moving layer. */}
+        {rodHeight !== undefined && (
+            <Image
+              source={SCROLL_ROD}
+              style={[
+                styles.fixedRod,
+                {
+                  width: rodWidth,
+                  height: rodHeight,
+                  left: rodLeft,
+                  top: rodTop,
+                },
+              ]}
               resizeMode="stretch"
             />
-          )}
-        </Animated.View>
+        )}
       </View>
     );
   },
@@ -153,6 +228,10 @@ const styles = StyleSheet.create({
     height: VIEW_H,
     marginHorizontal: 20,
     marginTop: 8,
+    overflow: 'visible',
+  },
+  frontContent: {
+    flex: 1,
   },
   scrollBody: {
     // height comes from the animated rollHeight (see render) — the
@@ -179,5 +258,30 @@ const styles = StyleSheet.create({
     bottom: 14,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  submittedAnswer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    zIndex: 20,
+    elevation: 20,
+  },
+  revealClip: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    overflow: 'hidden',
+    zIndex: 30,
+    elevation: 30,
+  },
+  movingRod: {
+    position: 'absolute',
+    zIndex: 31,
+    elevation: 31,
+  },
+  fixedRod: {
+    position: 'absolute',
+    zIndex: 40,
+    elevation: 40,
   },
 });

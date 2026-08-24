@@ -30,9 +30,13 @@ import {
 import { DailyClaimResult, DailySession } from '../game/types';
 import {
   beginDailyCommittedPresentation,
+  canBeginDailyClaim,
   DailyClaimPresentation,
+  DailyClaimPresentationPhase,
+  isDailyClaimInputLocked,
   resolveDailyActiveElapsedMs,
   selectDailyDisplaySession,
+  shouldHideCompletedDailyClue,
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
@@ -62,9 +66,11 @@ import {
   getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
 import DailyAnswerCard, {
+  DailyAnswerCardClaimOrigin,
   DAILY_CARD_TIMING,
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
+import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
 import QuillScrollPanel from '../components/ui/QuillScrollPanel';
 import DailyScrollTuningPanel from '../dev/DailyScrollTuningPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
@@ -76,6 +82,34 @@ import {
 } from '../hooks/usePollyAmbientMotion';
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
+
+const DAILY_SCROLL_TRANSITION = {
+  settleMs: 520,
+  landedHoldMs: 240,
+  coverDownMs: 560,
+  rewardHoldMs: 500,
+  revealMs: 420,
+  reducedSettleMs: 180,
+  reducedLandedHoldMs: 120,
+  reducedCoverDownMs: 140,
+  reducedRewardHoldMs: 180,
+  reducedRevealMs: 140,
+} as const;
+
+type DailyClueFrame = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type SubmittedDailyAnswer = {
+  label: string;
+  startX: number;
+  startY: number;
+  width: number;
+  height: number;
+};
 
 const stoneTileTexture = require('../../assets/images/textures/stoneTile.png');
 
@@ -455,10 +489,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [dailyStarting, setDailyStarting] = useState(false);
   const inputLockedRef = useRef(true);
   const clueVaultRef = useRef<View>(null);
-  const [claimTarget, setClaimTarget] = useState<{ x: number; y: number } | null>(
-    null,
-  );
+  const clueFrameRef = useRef<DailyClueFrame | null>(null);
   const completingCandidateRef = useRef<string | null>(null);
+  const pendingClaimCandidateRef = useRef<string | null>(null);
   const [claimPresentation, setClaimPresentation] = useState<
     DailyClaimPresentation<DailySession> | null
   >(null);
@@ -466,6 +499,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     DailyClaimPresentation<DailySession> | null
   >(null);
   const intakeScale = useRef(new Animated.Value(1)).current;
+  const submittedProgress = useRef(new Animated.Value(0)).current;
+  const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedDailyAnswer | null>(null);
+  const [claimPhase, setClaimPhase] = useState<DailyClaimPresentationPhase>('idle');
+  const claimPhaseRef = useRef<DailyClaimPresentationPhase>('idle');
+  const correctTransitionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   // How many of today's 5 rounds are solved as of this claim, for the
   // reveal curtain's feather tally. Computed synchronously in handleClaim
   // (not read from the store) so it can't race the session update.
@@ -476,6 +514,23 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setInputLocked(val);
   }
 
+  function setPhysicalClaimPhase(phase: DailyClaimPresentationPhase) {
+    claimPhaseRef.current = phase;
+    setClaimPhase(phase);
+  }
+
+  function clearCorrectTransitionTimers() {
+    correctTransitionTimersRef.current.forEach(clearTimeout);
+    correctTransitionTimersRef.current = [];
+  }
+
+  function scheduleCorrectTransition(callback: () => void, delayMs: number) {
+    const timer = setTimeout(callback, delayMs);
+    correctTransitionTimersRef.current.push(timer);
+  }
+
+  useEffect(() => clearCorrectTransitionTimers, []);
+
   const rollProgress   = useRef(new Animated.Value(0)).current;
   const revealProgress = useRef(new Animated.Value(0)).current;
 
@@ -484,9 +539,16 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const dailyFocusedRef = useRef(false);
   const dailySessionRef = useRef(dailySession);
   dailySessionRef.current = dailySession;
+  const currentClaimPresentation = claimPresentationRef.current ?? claimPresentation;
+  const displayPhase: DailyClaimPresentationPhase = currentClaimPresentation
+    ? currentClaimPresentation.outcome === 'correct'
+      ? claimPhase
+      : 'settling'
+    : claimPhase;
   const displayedDailySession = selectDailyDisplaySession(
     dailySession,
-    claimPresentationRef.current ?? claimPresentation,
+    currentClaimPresentation,
+    displayPhase,
   );
 
   function beginClaimPresentation(
@@ -542,7 +604,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         ? presentation.roundElapsedMsAtClaim
         : session.roundElapsedMs;
     return resolveDailyActiveElapsedMs({
-      presentationActive: presentation !== null,
+      presentationActive:
+        presentation !== null || isDailyClaimInputLocked(claimPhaseRef.current),
       committedRoundElapsedMs: session.roundElapsedMs,
       presentationRoundElapsedMs,
       roundStartedAtMs: roundStartRef.current,
@@ -553,10 +616,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function measureClueTarget() {
     requestAnimationFrame(() => {
       clueVaultRef.current?.measureInWindow((x, y, width, height) => {
-        setClaimTarget({
-          x: x + width / 2,
-          y: y + height * 0.5,
-        });
+        clueFrameRef.current = { x, y, width, height };
       });
     });
   }
@@ -611,15 +671,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // ROUND CHANGE
   useEffect(() => {
     if (!displayedDailySession || displayedDailySession.status !== 'active') return;
-    completedRef.current = false;
-    completingCandidateRef.current = null;
+    const physicalTransitionActive = isDailyClaimInputLocked(claimPhaseRef.current);
+    if (!physicalTransitionActive) {
+      completedRef.current = false;
+      completingCandidateRef.current = null;
+      pendingClaimCandidateRef.current = null;
+      revealProgress.setValue(0);
+      setRevealSolvedCount(0);
+    }
     // Unlocking itself is handled by the audioReady-gated effect below —
     // it re-checks audioReady on every round change too, so this doesn't
     // need to unlock unconditionally here.
     roundStartRef.current = Date.now() - displayedDailySession.roundElapsedMs;
     intakeScale.setValue(1);
-    revealProgress.setValue(0);
-    setRevealSolvedCount(0);
 
     const round = displayedDailySession.rounds[displayedDailySession.currentRoundIndex];
     if (!round) return;
@@ -631,22 +695,20 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     );
     setCardStates(map);
 
-    rollProgress.stopAnimation();
-    if (reduceMotion !== false) {
-      rollProgress.setValue(1);
-    } else {
-      rollProgress.setValue(0);
-      Animated.timing(rollProgress, {
-        toValue: 1,
-        duration: 320,
-        easing: Easing.out(Easing.cubic),
-        // QuillScrollPanel now animates this into a `height` (layout, not
-        // transform/opacity) for the roll-open-downward effect — native
-        // driver only supports transform/opacity and throws "Style property
-        // 'height' is not supported" if forced, causing the animation to
-        // jump/snap instead of animate (device-confirmed 2026-08-23).
-        useNativeDriver: false,
-      }).start();
+    if (!physicalTransitionActive) {
+      rollProgress.stopAnimation();
+      if (reduceMotion !== false) {
+        rollProgress.setValue(1);
+      } else {
+        rollProgress.setValue(0);
+        Animated.timing(rollProgress, {
+          toValue: 1,
+          duration: 320,
+          easing: Easing.out(Easing.cubic),
+          // This value drives layout height, so it cannot use native driver.
+          useNativeDriver: false,
+        }).start();
+      }
     }
     const measureTimer = setTimeout(
       measureClueTarget,
@@ -682,6 +744,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         const current = dailySessionRef.current;
         if (!current || current.status !== 'active') return;
         if (claimPresentationRef.current !== null) return;
+        if (isDailyClaimInputLocked(claimPhaseRef.current)) return;
         revealDailyClues(Date.now() - roundStartRef.current);
       }, 250);
 
@@ -733,8 +796,148 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailyLastClaimResult]);
 
-  function handleClaim(candidate: string) {
-    if (completedRef.current || inputLockedRef.current) return;
+  function finishPhysicalCorrectTransition(candidate: string) {
+    if (completingCandidateRef.current !== candidate) return;
+    clearCorrectTransitionTimers();
+    if (claimPresentationRef.current?.candidate === candidate) {
+      finishClaimPresentation(candidate);
+    }
+
+    revealProgress.stopAnimation();
+    revealProgress.setValue(0);
+    submittedProgress.stopAnimation();
+    submittedProgress.setValue(0);
+    setSubmittedAnswer(null);
+    setRevealSolvedCount(0);
+    completingCandidateRef.current = null;
+    setPhysicalClaimPhase('idle');
+
+    const committedSession = dailySessionRef.current;
+    if (committedSession?.status === 'active') {
+      completedRef.current = false;
+      roundStartRef.current = Date.now() - committedSession.roundElapsedMs;
+      setLocked(!audioReady);
+    } else {
+      setLocked(true);
+    }
+  }
+
+  function runPhysicalCorrectTransition(
+    candidate: string,
+    origin: DailyAnswerCardClaimOrigin | null,
+  ) {
+    const { startX, startY, width, height } =
+      createDailySubmittedAnswerLayout(origin, clueFrameRef.current);
+
+    clearCorrectTransitionTimers();
+    submittedProgress.stopAnimation();
+    submittedProgress.setValue(0);
+    revealProgress.stopAnimation();
+    revealProgress.setValue(0);
+    setSubmittedAnswer({ label: candidate, startX, startY, width, height });
+    setPhysicalClaimPhase('settling');
+
+    const settleMs = reduceMotion !== false
+      ? DAILY_SCROLL_TRANSITION.reducedSettleMs
+      : DAILY_SCROLL_TRANSITION.settleMs;
+    const landedHoldMs = reduceMotion !== false
+      ? DAILY_SCROLL_TRANSITION.reducedLandedHoldMs
+      : DAILY_SCROLL_TRANSITION.landedHoldMs;
+    const coverDownMs = reduceMotion !== false
+      ? DAILY_SCROLL_TRANSITION.reducedCoverDownMs
+      : DAILY_SCROLL_TRANSITION.coverDownMs;
+    const rewardHoldMs = reduceMotion !== false
+      ? DAILY_SCROLL_TRANSITION.reducedRewardHoldMs
+      : DAILY_SCROLL_TRANSITION.rewardHoldMs;
+    const revealMs = reduceMotion !== false
+      ? DAILY_SCROLL_TRANSITION.reducedRevealMs
+      : DAILY_SCROLL_TRANSITION.revealMs;
+
+    const revealNextClue = () => {
+      if (completingCandidateRef.current !== candidate) return;
+      setPhysicalClaimPhase('revealing');
+      Animated.timing(revealProgress, {
+        toValue: 0,
+        duration: revealMs,
+        easing: Easing.bezier(0.23, 1, 0.32, 1),
+        useNativeDriver: false,
+      }).start(({ finished }) => {
+        if (finished) finishPhysicalCorrectTransition(candidate);
+      });
+    };
+
+    const showReward = () => {
+      if (completingCandidateRef.current !== candidate) return;
+      setPhysicalClaimPhase('reward');
+      finishClaimPresentation(candidate);
+      setSubmittedAnswer(null);
+      scheduleCorrectTransition(revealNextClue, rewardHoldMs);
+    };
+
+    const coverSubmittedAnswer = () => {
+      if (completingCandidateRef.current !== candidate) return;
+      setPhysicalClaimPhase('covering');
+      Animated.timing(revealProgress, {
+        toValue: 1,
+        duration: coverDownMs,
+        easing: Easing.bezier(0.23, 1, 0.32, 1),
+        useNativeDriver: false,
+      }).start(({ finished }) => {
+        if (finished) showReward();
+      });
+    };
+
+    requestAnimationFrame(() => {
+      Animated.timing(submittedProgress, {
+        toValue: 1,
+        duration: settleMs,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished || completingCandidateRef.current !== candidate) return;
+        setPhysicalClaimPhase('landed');
+        if (reduceMotion === false) {
+          intakeScale.setValue(1);
+          Animated.sequence([
+            Animated.timing(intakeScale, {
+              toValue: 1.045,
+              duration: 120,
+              useNativeDriver: true,
+            }),
+            Animated.timing(intakeScale, {
+              toValue: 1,
+              duration: 180,
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+        scheduleCorrectTransition(coverSubmittedAnswer, landedHoldMs);
+      });
+    });
+
+    const totalMs = settleMs + landedHoldMs + coverDownMs + rewardHoldMs + revealMs;
+    scheduleCorrectTransition(
+      () => finishPhysicalCorrectTransition(candidate),
+      totalMs + 600,
+    );
+  }
+
+  function handleClaimStart(candidate: string): boolean {
+    if (!canBeginDailyClaim(completedRef.current, inputLockedRef.current)) {
+      return false;
+    }
+    pendingClaimCandidateRef.current = candidate;
+    setLocked(true);
+    return true;
+  }
+
+  function handleClaim(
+    candidate: string,
+    origin: DailyAnswerCardClaimOrigin | null,
+  ) {
+    const ownsPendingLock = pendingClaimCandidateRef.current === candidate;
+    if (completedRef.current || (inputLockedRef.current && !ownsPendingLock)) return;
+    pendingClaimCandidateRef.current = null;
     if (!dailySession) return;
     const round = dailySession.rounds[dailySession.currentRoundIndex];
     if (!round) return;
@@ -748,53 +951,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setLocked(true);
       setCardStates(prev => new Map(prev).set(candidate, 'correct'));
       setRevealSolvedCount(dailySession.currentRoundIndex + 1);
-      measureClueTarget();
       beginClaimPresentation(dailySession, candidate, 'correct');
+      runPhysicalCorrectTransition(candidate, origin);
 
-      // Curtain starts dropping the same instant the tile starts flying, so
-      // the two finish together instead of the curtain lagging behind a tile
-      // that already landed and sat there waiting to be covered.
+      // Game result commits immediately; the physical presentation now owns
+      // the readable settle, cover, reward, and next-clue reveal sequence.
       Haptics.cueAsync(
         dailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1
           ? 'mastery'
           : 'standardCorrect',
       );
       playSfx('correctClaim');
-      const curtainCloseMs = reduceMotion !== false ? 120 : 600;
-      const curtainHoldMs = reduceMotion !== false ? 180 : 500;
-      const curtainOpenMs = reduceMotion !== false ? 120 : 400;
-      const finishClaimOnce = () => {
-        if (!finishClaimPresentation(candidate)) return;
-        completingCandidateRef.current = null;
-      };
-      Animated.sequence([
-        Animated.timing(revealProgress, {
-          toValue: 1,
-          duration: curtainCloseMs,
-          easing: Easing.bezier(0.23, 1, 0.32, 1),
-          // QuillScrollPanel now animates a `height` (the reveal growing
-          // under the shared rod) from this same value alongside its
-          // opacity/transform uses — native driver can't do height, and one
-          // Animated.Value can't mix drivers, so this must be false too
-          // (same fix as rollProgress, 2026-08-23).
-          useNativeDriver: false,
-        }),
-        Animated.delay(curtainHoldMs),
-        Animated.timing(revealProgress, {
-          toValue: 0,
-          duration: curtainOpenMs,
-          easing: Easing.bezier(0.23, 1, 0.32, 1),
-          useNativeDriver: false,
-        }),
-      ]).start(({ finished }) => {
-        if (finished) finishClaimOnce();
-      });
-      // The claim is already committed. If the native animation callback is
-      // interrupted, release only the outgoing presentation hold here.
-      setTimeout(finishClaimOnce, curtainCloseMs + curtainHoldMs + curtainOpenMs + 300);
-
       // Remaining cards fade out
-      setTimeout(() => {
+      scheduleCorrectTransition(() => {
         setCardStates(prev => {
           const next = new Map(prev);
           next.forEach((v, k) => {
@@ -821,46 +990,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setCardStates((prev) => new Map(prev).set(candidate, 'disabled'));
       setLocked(false);
     }, wrongExitMs);
-  }
-
-  function handleCorrectExitComplete(candidate: string) {
-    if (completingCandidateRef.current !== candidate) return;
-    intakeScale.setValue(1);
-
-    const isFinalRound =
-      claimPresentationRef.current?.session.currentRoundIndex ===
-      DAILY_ROUND_COUNT - 1;
-
-    if (reduceMotion === false) {
-      Animated.sequence([
-        Animated.timing(intakeScale, {
-          toValue: isFinalRound ? 1.085 : 1.045,
-          duration: isFinalRound ? 170 : 120,
-          useNativeDriver: true,
-        }),
-        Animated.timing(intakeScale, {
-          toValue: 1,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-
-    if (!isFinalRound) {
-      if (reduceMotion !== false) {
-        rollProgress.setValue(0);
-      } else {
-        setTimeout(() => {
-          Animated.timing(rollProgress, {
-            toValue: 0,
-            duration: 260,
-            easing: Easing.in(Easing.cubic),
-            // See matching note above — this drives a `height` layout value now.
-            useNativeDriver: false,
-          }).start();
-        }, 430);
-      }
-    }
   }
 
   async function handleShare() {
@@ -892,6 +1021,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const isComplete = shouldShowDailyResult(
     committedComplete,
     activeClaimPresentation,
+    claimPhase,
   );
   const challengeNumber = displayedDailySession
     ? displayedDailySession.challengeNumber
@@ -899,6 +1029,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const currentRound =
     displayedDailySession?.rounds[displayedDailySession.currentRoundIndex] ?? null;
   const revealedCount = currentRound?.revealedClueCount ?? 1;
+  const hideCompletedClueUnderlay = shouldHideCompletedDailyClue(
+    committedComplete,
+    claimPhase,
+  );
   const dailyPressure = displayedDailySession
     ? Math.min(
         0.18,
@@ -999,8 +1133,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                   ? revealSolvedCount
                   : undefined
               }
+              submittedAnswer={submittedAnswer}
+              submittedProgress={submittedProgress}
             >
-              {currentRound && (
+              {currentRound && !hideCompletedClueUnderlay && (
                 <ClueStage
                   clues={currentRound.word.clues}
                   revealedCount={revealedCount}
@@ -1034,9 +1170,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                       label={candidate}
                       state={cardStates.get(candidate) ?? 'idle'}
                       disabled={inputLocked}
+                      onClaimStart={handleClaimStart}
                       onClaim={handleClaim}
-                      claimTarget={claimTarget}
-                      onCorrectExitComplete={handleCorrectExitComplete}
                       testID={`daily-answer-${index}`}
                       enterFromLeft={index % 2 === 0}
                       enterDelay={CARD_ENTER_DELAYS[index] ?? 200}

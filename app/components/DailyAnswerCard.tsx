@@ -26,23 +26,27 @@ import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
 export const DAILY_CARD_TIMING = {
-  correctExitMs: 650,
   wrongExitMs: 620,
-  reducedCorrectExitMs: 220,
   reducedWrongExitMs: 240,
 } as const;
+
+export type DailyAnswerCardClaimOrigin = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 type Props = {
   label: string;
   disabled?: boolean;
   state?: DailyAnswerCardState;
-  onClaim: (label: string) => void;
+  onClaimStart: (label: string) => boolean;
+  onClaim: (label: string, origin: DailyAnswerCardClaimOrigin | null) => void;
   testID?: string;
   enterFromLeft?: boolean;
   enterDelay?: number;
   roundKey?: string | number;
-  claimTarget?: { x: number; y: number } | null;
-  onCorrectExitComplete?: (label: string) => void;
 };
 
 const CLAIM_THRESHOLD = -80;
@@ -61,13 +65,12 @@ export default function DailyAnswerCard({
   label,
   disabled = false,
   state = 'idle',
+  onClaimStart,
   onClaim,
   testID,
   enterFromLeft = false,
   enterDelay = 0,
   roundKey = 0,
-  claimTarget = null,
-  onCorrectExitComplete,
 }: Props) {
   const reduceMotion = useReducedMotionPreference();
   const shellRef = useRef<View>(null);
@@ -81,13 +84,12 @@ export default function DailyAnswerCard({
   const gripGlow = useSharedValue(0);
 
   const labelRef = useRef(label);
+  const onClaimStartRef = useRef(onClaimStart);
   const onClaimRef = useRef(onClaim);
   const interactionDisabledRef = useRef(disabled || state !== 'idle');
   const claimedRef = useRef(false);
   const thresholdCrossedRef = useRef(false);
   const gestureOffsetRef = useRef({ x: 0, y: 0 });
-  const claimTargetRef = useRef(claimTarget);
-  const onCorrectExitCompleteRef = useRef(onCorrectExitComplete);
 
   // Elevation while a card is under the finger — before onPanResponderGrant,
   // there was no zIndex boost until `state` flipped to 'correct'/'wrong',
@@ -98,10 +100,38 @@ export default function DailyAnswerCard({
   const [activelyHeld, setActivelyHeld] = useState(false);
 
   labelRef.current = label;
+  onClaimStartRef.current = onClaimStart;
   onClaimRef.current = onClaim;
   interactionDisabledRef.current = disabled || state !== 'idle';
-  claimTargetRef.current = claimTarget;
-  onCorrectExitCompleteRef.current = onCorrectExitComplete;
+
+  function publishClaim() {
+    const currentLabel = labelRef.current;
+    const offset = gestureOffsetRef.current;
+    const node = shellRef.current;
+    if (!node) {
+      onClaimRef.current(currentLabel, null);
+      return;
+    }
+
+    let published = false;
+    const fallbackTimer = setTimeout(() => {
+      if (published) return;
+      published = true;
+      onClaimRef.current(currentLabel, null);
+    }, 100);
+
+    node.measureInWindow((x, y, width, height) => {
+      if (published) return;
+      published = true;
+      clearTimeout(fallbackTimer);
+      onClaimRef.current(currentLabel, {
+        x: x + offset.x,
+        y: y + offset.y,
+        width,
+        height,
+      });
+    });
+  }
 
   function springBack() {
     thresholdCrossedRef.current = false;
@@ -175,56 +205,13 @@ export default function DailyAnswerCard({
 
   useEffect(() => {
     if (state === 'correct') {
-      const fallbackTarget = {
-        x: Dimensions.get('window').width / 2,
-        y: 180,
-      };
-      const target = claimTargetRef.current ?? fallbackTarget;
-      let completionTimer: ReturnType<typeof setTimeout> | null = null;
-
       gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
       rotation.value = 0;
 
-      if (reduceMotion !== false) {
-        opacity.value = withTiming(0, { duration: 180 });
-        scale.value = withTiming(0.96, { duration: 180 });
-        completionTimer = setTimeout(() => {
-          onCorrectExitCompleteRef.current?.(labelRef.current);
-        }, DAILY_CARD_TIMING.reducedCorrectExitMs);
-        return () => {
-          if (completionTimer) clearTimeout(completionTimer);
-        };
-      }
-
-      shellRef.current?.measureInWindow((pageX, pageY, width, height) => {
-        const targetTranslateX = target.x - (pageX + width / 2);
-        const targetTranslateY = target.y - (pageY + height / 2);
-
-        translateX.value = withTiming(targetTranslateX, {
-          duration: 620,
-          easing: ReaEasing.in(ReaEasing.cubic),
-        });
-        translateY.value = withTiming(targetTranslateY, {
-          duration: 620,
-          easing: ReaEasing.in(ReaEasing.cubic),
-        });
-        scale.value = withSequence(
-          withTiming(1.06, { duration: 100, easing: ReaEasing.out(ReaEasing.quad) }),
-          withTiming(0.24, { duration: 520, easing: ReaEasing.in(ReaEasing.cubic) }),
-        );
-        // Dissolves away right as the curtain finishes closing (curtain
-        // starts at the same instant this flight does, 600ms drop) — no
-        // z-order trick needed, the tile is just gone by the time it matters.
-        opacity.value = withDelay(370, withTiming(0, { duration: 230, easing: ReaEasing.in(ReaEasing.quad) }));
-      });
-
-      completionTimer = setTimeout(() => {
-        onCorrectExitCompleteRef.current?.(labelRef.current);
-      }, DAILY_CARD_TIMING.correctExitMs);
-
-      return () => {
-        if (completionTimer) clearTimeout(completionTimer);
-      };
+      opacity.value = 0;
+      // The scroll-owned transient copy is already mounted at this exact
+      // release position, so hiding the grid source does not create a gap.
+      return;
     }
 
     if (state === 'wrong') {
@@ -332,13 +319,18 @@ export default function DailyAnswerCard({
           return;
         }
 
+        if (!onClaimStartRef.current(labelRef.current)) {
+          setActivelyHeld(false);
+          springBack();
+          return;
+        }
         claimedRef.current = true;
         // activelyHeld intentionally stays true here — cleared by the
         // state-effect above once `state` actually flips to 'correct'/
         // 'wrong' and its own elevation style takes over, so there's no
         // frame where the card drops back to baseline zIndex in between.
         gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
-        onClaimRef.current(labelRef.current);
+        publishClaim();
       },
 
       onPanResponderTerminate: () => {
@@ -357,9 +349,11 @@ export default function DailyAnswerCard({
     if (interactionDisabledRef.current || claimedRef.current) return;
     if (resolveTileAccessibilityAction(actionName) !== 'claim') return;
 
+    if (!onClaimStartRef.current(labelRef.current)) return;
     claimedRef.current = true;
     gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
-    onClaimRef.current(labelRef.current);
+    gestureOffsetRef.current = { x: 0, y: 0 };
+    publishClaim();
   }
 
   const cardAnimatedStyle = useAnimatedStyle(() => ({
@@ -431,6 +425,24 @@ export default function DailyAnswerCard({
         </LinearGradient>
       </Animated.View>
     </RNAnimated.View>
+  );
+}
+
+export function DailySubmittedAnswerCard({ label }: { label: string }) {
+  return (
+    <View style={[styles.shell, styles.shellCorrect]} pointerEvents="none">
+      <LinearGradient
+        colors={rimColors('correct')}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.rim}
+      >
+        <View style={styles.face}>
+          <DailyCardFace label={label} state="correct" />
+          <View style={styles.correctOverlay} />
+        </View>
+      </LinearGradient>
+    </View>
   );
 }
 
