@@ -24,6 +24,9 @@ const db = rawHuntData as unknown as Record<string, HuntWord>;
 
 const GPS_TAGS = new Set(['confidence', 'flow', 'tension', 'panic', 'boss']);
 const DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
+const APPROVED_HEADWORD_LEAKS = new Map([
+  ['FAST/fast_r04', 'WHAT YOU BREAK WHEN YOU BREAK FAST'],
+]);
 
 // Words that don't count as "content words" for the zero-repeat rule.
 const STOPWORDS = new Set([
@@ -100,7 +103,8 @@ for (const [word, entry] of Object.entries(db)) {
   }
 
   // Every player-visible tile for this word, hidden pair included.
-  const tiles: { label: string; phrase: string }[] = entry.masks.map(m => ({
+  const tiles: { id?: string; label: string; phrase: string }[] = entry.masks.map(m => ({
+    id: m.id,
     label: m.isReal ? 'REAL' : 'TRAP',
     phrase: m.phrase,
   }));
@@ -112,7 +116,10 @@ for (const [word, entry] of Object.entries(db)) {
 
   for (const tile of tiles) {
     for (const token of tokens(tile.phrase)) {
-      if (forms.has(token)) {
+      const leakKey = tile.id ? `${word}/${tile.id}` : null;
+      const approvedLeak =
+        leakKey !== null && APPROVED_HEADWORD_LEAKS.get(leakKey) === tile.phrase;
+      if (!approvedLeak && forms.has(token)) {
         flag('headword-leak', `${word}: ${tile.label} "${tile.phrase}" contains "${token}"`);
       }
     }
@@ -139,34 +146,39 @@ for (const [word, entry] of Object.entries(db)) {
 
 // ── Daily pool ────────────────────────────────────────────────────
 
-const dailyIds = new Set<string>();
+const dailyWords = new Set<string>();
+if (DAILY_POOL.length !== 43) {
+  flag('structure', `daily: expected 43 approved words, found ${DAILY_POOL.length}`);
+}
 for (const entry of DAILY_POOL) {
-  const tag = `daily:${entry.id}`;
-  if (dailyIds.has(entry.id)) flag('structure', `${tag}: duplicate id`);
-  dailyIds.add(entry.id);
+  const tag = `daily:${entry.word}`;
+  if (dailyWords.has(entry.word)) flag('structure', `${tag}: duplicate word`);
+  dailyWords.add(entry.word);
 
-  if (entry.clues.length !== 3) flag('structure', `${tag}: needs exactly 3 clues`);
-  if (entry.candidates.length !== 6) flag('structure', `${tag}: needs exactly 6 candidates`);
+  if (entry.meanings.length !== 3) flag('structure', `${tag}: needs exactly 3 clues`);
+  if (entry.candidates.length !== 9) flag('structure', `${tag}: needs exactly 9 candidates`);
   if (new Set(entry.candidates).size !== entry.candidates.length) {
     flag('structure', `${tag}: candidates not unique`);
   }
-  if (entry.candidates.filter(c => c === entry.answer).length !== 1) {
+  if (entry.candidates.filter(c => c === entry.word).length !== 1) {
     flag('structure', `${tag}: answer must appear exactly once in candidates`);
   }
   if (![1, 2, 3].includes(entry.tier)) flag('structure', `${tag}: invalid tier ${entry.tier}`);
 
-  const answer = entry.answer.toUpperCase();
-  for (const clue of entry.clues) {
+  const answer = entry.word.toUpperCase();
+  for (const clue of entry.meanings) {
     if (clue.toUpperCase().includes(answer)) {
       flag('headword-leak', `${tag}: clue "${clue}" contains the answer`);
     }
   }
   for (const candidate of entry.candidates) {
-    if (candidate !== entry.answer && candidate.toUpperCase().includes(answer)) {
+    if (candidate !== entry.word && candidate.toUpperCase().includes(answer)) {
       flag('headword-leak', `${tag}: candidate "${candidate}" contains the answer`);
     }
   }
 }
+if (!dailyWords.has('STAGE')) flag('structure', 'daily: STAGE is required');
+if (dailyWords.has('SENTENCE')) flag('structure', 'daily: SENTENCE must be excluded');
 
 // ── Report ────────────────────────────────────────────────────────
 

@@ -419,8 +419,48 @@
     "gpsTag": "panic",
     "difficulty": "hard"
   },
+  "DISPATCH": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "DOCK": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "DOUBLE": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "DOVE": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "DOWN": {
+    "gpsTag": "flow",
+    "difficulty": "easy"
+  },
+  "DRAFT": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "DRAIN": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
   "DRAW": {
     "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "DRIFT": {
+    "gpsTag": "flow",
+    "difficulty": "easy"
+  },
+  "DRILL": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "DRUM": {
+    "gpsTag": "flow",
     "difficulty": "medium"
   },
   "DROP": {
@@ -431,7 +471,63 @@
     "gpsTag": "panic",
     "difficulty": "medium"
   },
+  "DULL": {
+    "gpsTag": "flow",
+    "difficulty": "medium"
+  },
+  "DUMP": {
+    "gpsTag": "confidence",
+    "difficulty": "easy"
+  },
+  "DUST": {
+    "gpsTag": "flow",
+    "difficulty": "easy"
+  },
+  "EXHAUST": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "EXPLOIT": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "EXPRESS": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FACE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FAIR": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FAN": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FAST": {
+    "gpsTag": "flow",
+    "difficulty": "easy"
+  },
+  "FIELD": {
+    "gpsTag": "panic",
+    "difficulty": "hard"
+  },
+  "FIGURE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
   "FILE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FINE": {
+    "gpsTag": "tension",
+    "difficulty": "medium"
+  },
+  "FLAG": {
     "gpsTag": "tension",
     "difficulty": "medium"
   },

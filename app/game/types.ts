@@ -207,9 +207,28 @@ export type DailyCandidates = [
   string,
 ];
 
+export type DailyCandidatePool = [
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+];
+
 export type DailyClues = [string, string, string];
 
 export type DailyWord = {
+  word: string;
+  meanings: DailyClues;
+  candidates: DailyCandidatePool;
+  tier: DailyTier;
+};
+
+export type DailyRoundWord = {
   id: string;
   answer: string;
   tier: DailyTier;
@@ -224,7 +243,7 @@ export type DailyPollyReaction = 'firstMiss' | 'loss' | 'win';
 
 export type DailyRound = {
   roundIndex: number;
-  word: DailyWord;
+  word: DailyRoundWord;
   candidates: DailyCandidates;
   revealedClueCount: DailyRevealedClueCount;
   solved: boolean;
@@ -283,7 +302,7 @@ export type DailyResult = {
 export type DailyChallengeState = {
   session: DailySession;
   date: string;
-  rounds: Array<DailyWord & {
+  rounds: Array<DailyRoundWord & {
     word: string;
     meanings: DailyClues;
   }>;

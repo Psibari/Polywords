@@ -85,6 +85,20 @@ function hasMessage(messages, fragment) {
 }
 
 {
+  const fast = makeEntry('FAST', 'confidence', 999);
+  fast.masks[0].id = 'fast_r04';
+  fast.masks[0].phrase = 'WHAT YOU BREAK WHEN YOU BREAK FAST';
+  assert.equal(hasMessage(validateRuntimeHuntData({ FAST: fast }).blockers, 'leaks the headword'), false);
+
+  fast.masks[0].id = 'fast_r99';
+  assert.ok(hasMessage(validateRuntimeHuntData({ FAST: fast }).blockers, 'leaks the headword'));
+
+  fast.masks[0].id = 'fast_r04';
+  fast.masks[0].phrase = 'WHAT YOU BREAK WHEN YOU BREAK FAST AGAIN';
+  assert.ok(hasMessage(validateRuntimeHuntData({ FAST: fast }).blockers, 'leaks the headword'));
+}
+
+{
   const bank = makeValidBank();
   bank.WORD0.masks[0].phrase = 'Mixed Case Memory';
   assert.ok(hasMessage(validateRuntimeHuntData(bank).blockers, 'must be uppercase'));

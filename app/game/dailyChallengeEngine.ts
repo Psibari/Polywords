@@ -5,6 +5,7 @@ import {
   DailyResult,
   DailyRound,
   DailyRoundResult,
+  DailyRoundWord,
   DailySession,
   DailyTier,
   DailyWord,
@@ -62,17 +63,17 @@ function seededShuffle<T>(values: readonly T[], initialSeed: number): T[] {
 }
 
 function assertDailyWord(word: DailyWord): DailyWord {
-  if (word.clues.length !== 3) {
-    throw new Error(`Daily word ${word.id} must have exactly 3 clues.`);
+  if (word.meanings.length !== 3) {
+    throw new Error(`Daily word ${word.word} must have exactly 3 clues.`);
   }
-  if (word.candidates.length !== DAILY_CANDIDATE_COUNT) {
-    throw new Error(`Daily word ${word.id} must have exactly 6 candidates.`);
+  if (word.candidates.length !== 9) {
+    throw new Error(`Daily word ${word.word} must have exactly 9 candidates.`);
   }
-  if (new Set(word.candidates).size !== DAILY_CANDIDATE_COUNT) {
-    throw new Error(`Daily word ${word.id} candidates must be unique.`);
+  if (new Set(word.candidates).size !== 9) {
+    throw new Error(`Daily word ${word.word} candidates must be unique.`);
   }
-  if (word.candidates.filter(candidate => candidate === word.answer).length !== 1) {
-    throw new Error(`Daily word ${word.id} must include its answer exactly once.`);
+  if (word.candidates.filter(candidate => candidate === word.word).length !== 1) {
+    throw new Error(`Daily word ${word.word} must include its answer exactly once.`);
   }
   return word;
 }
@@ -84,7 +85,7 @@ function assertDailyWord(word: DailyWord): DailyWord {
 function rotationPool(tier: DailyTier): DailyWord[] {
   const sorted = DAILY_POOL
     .filter(word => word.tier === tier)
-    .sort((a, b) => (a.id < b.id ? -1 : 1));
+    .sort((a, b) => (a.word < b.word ? -1 : 1));
   return seededShuffle(sorted, getDailySeed(`polywords-tier-${tier}-rotation`));
 }
 
@@ -102,14 +103,29 @@ function pickDailyWord(
   // Slots of the same tier start half the rotation apart, so a word's
   // appearances are spaced ~count/2 days apart at worst.
   let index = (challengeNumber + tierSlot * Math.floor(count / 2)) % count;
-  while (selectedIds.has(pool[index]!.id)) {
+  while (selectedIds.has(pool[index]!.word)) {
     index = (index + 1) % count;
   }
   return assertDailyWord(pool[index]!);
 }
 
-function shuffleCandidates(word: DailyWord, seed: number): DailyCandidates {
-  return seededShuffle(word.candidates, seed) as DailyCandidates;
+function buildRoundWord(word: DailyWord, seed: number): DailyRoundWord {
+  const distractors = seededShuffle(
+    word.candidates.filter(candidate => candidate !== word.word),
+    seed,
+  ).slice(0, DAILY_CANDIDATE_COUNT - 1);
+  const candidates = seededShuffle(
+    [word.word, ...distractors],
+    seed + 1,
+  ) as DailyCandidates;
+
+  return {
+    id: `${word.word.toLowerCase()}-${word.tier}`,
+    answer: word.word,
+    tier: word.tier,
+    clues: word.meanings,
+    candidates,
+  };
 }
 
 export function buildDailySession(dateString = getTodayDateString()): DailySession {
@@ -119,14 +135,20 @@ export function buildDailySession(dateString = getTodayDateString()): DailySessi
   const tierSlots: Record<DailyTier, number> = { 1: 0, 2: 0, 3: 0 };
 
   const rounds: DailyRound[] = DAILY_TIER_CURVE.map((tier, roundIndex) => {
-    const word = pickDailyWord(tier, tierSlots[tier], challengeNumber, selectedIds);
+    const sourceWord = pickDailyWord(
+      tier,
+      tierSlots[tier],
+      challengeNumber,
+      selectedIds,
+    );
     tierSlots[tier] += 1;
-    selectedIds.add(word.id);
+    selectedIds.add(sourceWord.word);
+    const word = buildRoundWord(sourceWord, seed + roundIndex * 313);
 
     return {
       roundIndex,
       word,
-      candidates: shuffleCandidates(word, seed + roundIndex * 313),
+      candidates: word.candidates,
       revealedClueCount: 1,
       solved: false,
       wrongClaims: [],

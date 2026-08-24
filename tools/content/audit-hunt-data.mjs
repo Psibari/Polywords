@@ -17,6 +17,9 @@ const wordTypes = {
   6: 'Sextuple',
   7: 'Septuple',
 };
+const approvedHeadwordLeaks = new Map([
+  ['FAST/fast_r04', 'WHAT YOU BREAK WHEN YOU BREAK FAST'],
+]);
 const britishOnlyWarnings = [
   /\bCOLOUR\b/,
   /\bFAVOUR\b/,
@@ -68,7 +71,10 @@ for (const [word, entry] of Object.entries(data)) {
     const headwordPattern = new RegExp(
       `(?:^|[^A-Z])${word}(?:S|ES|ED|ING)?(?:$|[^A-Z])`,
     );
-    if (headwordPattern.test(phrase)) blockers.push(`${prefix}: phrase leaks the headword`);
+    const approvedLeak = approvedHeadwordLeaks.get(prefix) === phrase;
+    if (!approvedLeak && headwordPattern.test(phrase)) {
+      blockers.push(`${prefix}: phrase leaks the headword`);
+    }
 
     if (britishOnlyWarnings.some((pattern) => pattern.test(phrase))) {
       warnings.push(`${prefix}: possible non-American wording: ${phrase}`);

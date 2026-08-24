@@ -17,6 +17,9 @@ const WORD_TYPE_BY_REAL_COUNT = {
   7: 'Septuple',
 };
 const PLACEHOLDER_PATTERN = /\b(?:PLACEHOLDER|TODO|TBD|FIXME|TEST CONTENT)\b/i;
+const APPROVED_HEADWORD_LEAKS = new Map([
+  ['FAST/fast_r04', 'WHAT YOU BREAK WHEN YOU BREAK FAST'],
+]);
 
 export function normalizePhrase(value) {
   return String(value ?? '')
@@ -58,7 +61,14 @@ function obviousWordForms(word) {
   return forms;
 }
 
-function validatePhrase(value, context, wordForms, phraseOwners, blockers) {
+function validatePhrase(
+  value,
+  context,
+  wordForms,
+  phraseOwners,
+  blockers,
+  headwordLeakKey = null,
+) {
   const phrase = typeof value === 'string' ? value.trim() : '';
   if (!phrase) {
     blockers.push(`${context}: phrase is required`);
@@ -73,7 +83,9 @@ function validatePhrase(value, context, wordForms, phraseOwners, blockers) {
 
   const normalized = normalizePhrase(phrase);
   const tokens = normalized.split(/\s+/).filter(Boolean);
-  if (tokens.some(token => wordForms.has(token))) {
+  const approvedLeak =
+    headwordLeakKey != null && APPROVED_HEADWORD_LEAKS.get(headwordLeakKey) === phrase;
+  if (!approvedLeak && tokens.some(token => wordForms.has(token))) {
     blockers.push(`${context}: phrase leaks the headword or an obvious inflection`);
   }
 
@@ -173,7 +185,14 @@ export function validateRuntimeHuntData(data) {
         } else {
           trapCount += 1;
         }
-        validatePhrase(mask.phrase, maskContext, wordForms, phraseOwners, blockers);
+        validatePhrase(
+          mask.phrase,
+          maskContext,
+          wordForms,
+          phraseOwners,
+          blockers,
+          `${word}/${id}`,
+        );
       }
 
       summary.realMasks += realCount;

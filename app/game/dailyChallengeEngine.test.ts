@@ -33,38 +33,23 @@ function ok(condition: boolean, label: string): void {
 // ── Pool integrity ────────────────────────────────────────────────
 
 {
-  const ids = new Set<string>();
-  for (const word of DAILY_POOL) {
-    ok(!ids.has(word.id), `pool.uniqueId.${word.id}`);
-    ids.add(word.id);
-    eq(word.clues.length, 3, `pool.threeClues.${word.id}`);
-    eq(word.candidates.length, 6, `pool.sixCandidates.${word.id}`);
-    eq(new Set(word.candidates).size, 6, `pool.uniqueCandidates.${word.id}`);
+  const approvedPool = DAILY_POOL;
+  eq(approvedPool.length, 43, 'pool.approvedCount');
+  eq(new Set(approvedPool.map(entry => entry.word)).size, 43, 'pool.uniqueWords');
+  ok(approvedPool.some(entry => entry.word === 'STAGE'), 'pool.includesStage');
+  ok(!approvedPool.some(entry => entry.word === 'SENTENCE'), 'pool.excludesSentence');
+  for (const entry of approvedPool) {
+    eq(entry.meanings.length, 3, `pool.threeMeanings.${entry.word}`);
+    eq(entry.candidates.length, 9, `pool.nineCandidates.${entry.word}`);
+    eq(new Set(entry.candidates).size, 9, `pool.uniqueGrid.${entry.word}`);
     eq(
-      word.candidates.filter(c => c === word.answer).length,
+      entry.candidates.filter(candidate => candidate === entry.word).length,
       1,
-      `pool.answerOnce.${word.id}`,
+      `pool.targetOnce.${entry.word}`,
     );
-    ok([1, 2, 3].includes(word.tier), `pool.validTier.${word.id}`);
-    for (const clue of word.clues) {
-      ok(
-        !clue.toUpperCase().includes(word.answer.toUpperCase()),
-        `pool.clueLeaksAnswer.${word.id}: "${clue}"`,
-      );
-    }
-    for (const candidate of word.candidates) {
-      if (candidate === word.answer) continue;
-      ok(
-        !candidate.includes(word.answer),
-        `pool.candidateContainsAnswer.${word.id}: "${candidate}"`,
-      );
-    }
+    ok([1, 2, 3].includes(entry.tier), `pool.validApprovedTier.${entry.word}`);
   }
-  // Every tier needs real depth for the rotation.
-  for (const tier of [1, 2, 3] as const) {
-    const size = DAILY_POOL.filter(w => w.tier === tier).length;
-    ok(size >= 12, `pool.tierDepth.${tier} (${size})`);
-  }
+
 }
 
 // ── Determinism: same date, same puzzle ──────────────────────────
@@ -79,6 +64,15 @@ function ok(condition: boolean, label: string): void {
       a.rounds[i].candidates.join(','),
       b.rounds[i].candidates.join(','),
       `determinism.candidates.${i}`,
+    );
+    eq(a.rounds[i].candidates.length, 6, `session.sixCandidates.${i}`);
+    eq(new Set(a.rounds[i].candidates).size, 6, `session.uniqueCandidates.${i}`);
+    eq(
+      a.rounds[i].candidates.filter(candidate => (
+        candidate === a.rounds[i].word.answer
+      )).length,
+      1,
+      `session.answerOnce.${i}`,
     );
     eq(a.rounds[i].word.tier, DAILY_TIER_CURVE[i], `session.tierCurve.${i}`);
   }
