@@ -58,14 +58,8 @@ const SPINE_OPEN_MS = 280;
 // slots + 2 gaps fit on the narrowest realistic target width (375pt)
 // without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
 export const CARD_WIDTH = 110;
-// Card-shaped, not spine-shaped: the old standing spine ran 110x200 (a
-// 1:1.8 width:height ratio) and read as "a stick" on device (Pete,
-// 2026-08-15) — the fix isn't new art, it's a shorter box. This lands much
-// closer to a real card proportion, and closer to the *opened* gauntletCard
-// shape (300x200, wider than tall — see SwipeMask.tsx), so picking a card
-// grows one shape into a same-family bigger shape instead of a tall sliver
-// morphing into a squat one. See
-// docs/superpowers/specs/2026-08-15-gauntlet-card-flip-design.md.
+// Closed state stays card-shaped so opening grows within one visual family;
+// the retired 110x200 standing spine read as a stick on device.
 export const CARD_CLOSED_HEIGHT = 144;
 // Floor for the *opened* gauntletCard's measured height — matches the fixed
 // tileHeight={200} SwipeMask is given below for gauntletCard mode. Kept

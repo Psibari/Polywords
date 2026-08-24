@@ -1,9 +1,5 @@
-# Polly Rig v0
+# Dormant Polly Rig
 
-Rough layered puppet cut from the flattened `sprite4.png` reference.
-
-Use for POLYWORDS Phase 2 rig scaffolding and motion proof only.
-
-Important: this was cut from a single flattened raster, so hidden pixels behind the beak, bandana, body, branch, and wings cannot be reconstructed perfectly. A final production rig should be exported from a layered master drawing or PSD/vector source.
-
-All layer PNGs are 512x512 transparent canvas and align when stacked at top-left.
+Legacy layered proof cut from a flattened raster. It is not the live Polly path and has
+irrecoverable hidden-pixel gaps. Live UI uses `assets/images/polly/poses/*.png`; do not revive
+this rig without approval.

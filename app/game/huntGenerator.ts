@@ -129,10 +129,9 @@ function easyFirst(pool: string[]): string[] {
   );
 }
 
-// Hunt economy lock (docs/POLYWORDS_ECONOMY_LOCK.md): every word shows a flat
-// 5 visible tiles. The difficulty ramp comes from trap sharpness per phase, not
-// from tile count. Boss mystery tiles are built from hiddenMeaning/hiddenTrap
-// (separate fields) and are NOT affected by this cap.
+// Hunt economy lock (docs/GAME_REFERENCE.md): every word shows up to five
+// visible tiles. Difficulty ramps through content, not tile count; hidden
+// gauntlet tiles are separate and unaffected by this cap.
 const VISIBLE_MASK_CAP = 5;
 
 function selectVisibleMasks(

@@ -16,8 +16,7 @@ export const POLLY_ANIMATIONS: Record<PollyAnimationState, number> = {
   bossWarning: require('../../assets/images/polly/polly_boss_warning.webp'),
   sulk: require('../../assets/images/polly/polly_sulk.webp'),
   flyIn: require('../../assets/images/polly/polly_fly_in.webp'),
-  // Mastery celebration set (2026-08-04) — see memory/CLAUDE.md for the
-  // locked sequence: word gilds -> Polly reacts -> book closes in background.
+  // Mastery celebration: word gilds -> Polly reacts -> book closes behind it.
   masterShock: require('../../assets/images/polly/polly_shocked.png'),
   masterAngry: require('../../assets/images/polly/polly_angry.png'),
   hauntTaunt: require('../../assets/images/polly/polly_pointing.png'),

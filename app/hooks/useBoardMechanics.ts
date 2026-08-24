@@ -90,10 +90,8 @@ export type UseBoardMechanicsParams = {
   perform: BoardMechanicsPerform;
 };
 
-// Headless brain for MaskBoard/BossBoard: owns tile/deck/gauntlet/outcome
-// state, store calls, and Polly judging events. Renders nothing, touches no
-// Animated value, sound, or haptic — see docs/BOSS_ROUND_SPEC.md context in
-// CLAUDE.md for why this exists (BossBoard reuses this same brain).
+// Shared headless brain for MaskBoard/BossBoard: owns tile/deck/gauntlet/outcome
+// state, store calls, and Polly judging events; presentation remains outside.
 //
 // MaskBoard remounts per word (keyed board-${stepIndex} by GameContent), so
 // all state below is fresh on every word via plain useState/useRef

@@ -2,37 +2,26 @@
 
 ## Before Editing
 
-1. Read `AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, and the focused source doc.
-2. Name the task lane: visual, gameplay, content, bugfix, or docs/tooling.
-3. Define the smallest file scope and protect unrelated working-tree changes.
+1. Read `AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, and the focused source.
+2. Verify the branch, worktree, live owner, and any code/doc conflict.
+3. Define one coherent goal and the smallest safe file scope.
 
-Visual layout changes need an approved direction before implementation. Gameplay and
-content changes must not be smuggled into visual polish.
-
-## Patch Rules
-
-- One coherent goal per patch.
-- Prefer the existing owner/choke point over new parallel abstractions.
-- Do not change scoring, navigation, swipe grammar, or live content unless requested.
-- If required work exceeds the agreed scope, stop and report why.
-- Never expose credentials or commit `.env`, generated CSVs, workspaces, or `dist`.
+Do not smuggle gameplay/content changes into visual work. Preserve unrelated changes, stashes,
+credentials, and generated/local files.
 
 ## Verification
 
-Code/tooling:
-
 ```powershell
 npx.cmd tsc --noEmit
-npm.cmd test                 # when game logic changes
+npm.cmd test                 # game logic or broad regression
 git diff --check
 git status --short
 ```
 
-Docs-only work requires the two git checks. Report commands honestly; device-only
-behavior is not verified until it is tested on device.
+Docs-only work requires both Git checks and a broken-reference scan. Static checks do not prove
+native animation, audio, gestures, or layout; report device coverage separately.
 
 ## Completion
 
-- Confirm changed files match the requested scope.
-- Summarize behavior, verification, and anything intentionally deferred.
-- Commit or push only after explicit approval.
+Report changed files, checks, deferred risk, and any incomplete native validation. Commit, push,
+merge, or touch stashes only after explicit approval.

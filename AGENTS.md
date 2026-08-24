@@ -1,99 +1,78 @@
 # POLYWORDS Agent Instructions
 
-## Read Order
+## Authority and Read Order
 
-Before changing the repository, read:
+For repository changes, read `AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, then the focused
+source below. Runtime code and data outrank documentation when describing current behavior.
 
-1. `AGENTS.md`
-2. `CLAUDE.md`
-3. `CONTEXT.md`
-4. The focused source for the task:
-   - Hunt/gameplay: `docs/GAME_REFERENCE.md`
-   - pacing: `docs/GOLDEN_PACING_SYSTEM.md`
-   - content: `docs/CONTENT_WRITING_STANDARD.md`
-   - Daily: `docs/DAILY_CHALLENGE_SPEC.md`
-   - Polly copy: `docs/POLLY_DIALOGUE_BANK.md`
-   - workflow: `docs/WORKFLOW.md`
+| Task | Focused source |
+| --- | --- |
+| Hunt/gameplay | `docs/GAME_REFERENCE.md` |
+| pacing | `docs/GOLDEN_PACING_SYSTEM.md` |
+| Hunt content | `docs/CONTENT_WRITING_STANDARD.md` |
+| Daily | `docs/DAILY_CHALLENGE_SPEC.md` |
+| Polly copy | `docs/POLLY_DIALOGUE_BANK.md` |
+| workflow | `docs/WORKFLOW.md` |
 
-Authority is: current user request, this file, focused source, `CLAUDE.md`, then
-`CONTEXT.md`. Report conflicts instead of blending them.
+Authority: current user request > this file > focused source > `CLAUDE.md` > `CONTEXT.md`.
+Report conflicts; never blend them silently.
 
 ## Product Locks
 
-- POLYWORDS is a recognition game: the desired reaction is “Wait… Oh. Right.”
-- Home / Play / Vault / Settings are the main tabs. Active gameplay is nav-free.
+- POLYWORDS creates recognition: “Wait… Oh. Right.”, not vocabulary instruction.
+- Home / Play / Vault / Settings are the main surfaces; active gameplay is nav-free.
 - Hunt: UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit.
-- Daily is UP-only. Do not apply Hunt’s RIGHT gesture to Daily.
-- Ordinary tiles must not reveal truth, rarity, or importance before commitment.
-- Do not change scoring, swipe grammar, `SwipeMask`, boss rules, or persistence
-  without an explicit request.
-- Hunt has 10 rounds. Round 10 is Polly’s Word; a Returning Haunt uses Round 8.
-- The Master Gate is removed. Do not restore its UI or logic.
-- Vault is the player’s archive. Never present it as Polly’s cage or lair.
+- Daily is UP-only. Never apply Hunt's RIGHT gesture to Daily.
+- Ordinary choices never reveal truth, rarity, or value before commitment.
+- Standard Hunts have 10 rounds; the first three fledgling runs have 8. Polly's Word is
+  always the final round. A Returning Haunt occupies round 5 standard / round 4 fledgling.
+- Boss outcome comes from the hidden gauntlet, not score. The Master Gate is removed.
+- Do not change scoring, swipe grammar, boss rules, persistence, or `SwipeMask` without an
+  explicit request. `MaskBoard.tsx` and `SwipeMask.tsx` require a focused war-room pass.
+- The in-round book is the **Polybook**. The **Vault** is the player's archive and never
+  Polly's cage, lair, or property.
 
 ## Polly and Visual Locks
 
 - Polly is a smug opponent and trap-setter, not a friendly mascot or word owner.
-- Live Polly uses transparent pose images and whole-image motion. Do not revive the
-  deleted rig, flipbook, or legacy animator.
-- `BINGO BANGO ZZZZINGO!` is system text, never Polly dialogue.
-- Palette: background `#1A1830`, deep dark `#0F0D2A`, gold `#F5C842`, purple
-  `#7B2D8B`, rose `#9B2D6B`, Polly green `#4CAF50`, wrong flash `#CC2200`, white
-  `#FFFFFF`.
-- No orange UI, pink/magenta, green UI outside Polly, or red outside wrong feedback.
-- Gold should remain a scarce focus color.
+- Live Polly uses transparent pose images with whole-image motion. The dormant layered rig
+  must not be revived without approval.
+- `BINGO BANGO ZZZZINGO!` is unassigned system text, never Polly dialogue.
+- Locked palette: `#1A1830`, `#0F0D2A`, `#F5C842`, `#7B2D8B`, `#9B2D6B`, Polly green
+  `#4CAF50`, wrong red `#CC2200`, and white. No orange UI, pink/magenta, green outside
+  Polly, or red outside wrong feedback. Gold remains scarce.
 
-## Content and Tools
+## Content Boundaries
 
-- `docs/CONTENT_WRITING_STANDARD.md` exclusively governs REALS, traps, masks, and
-  editorial approval inside the repository.
-- `.agents/skills/polywords-master-director/` is the version-controlled master skill.
-  Its bundled content doctrine is the synchronized standalone fallback for use outside
-  the repository. Do not create any additional content-rule copies.
-- `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is the tracked editorial master; it is
-  not imported by gameplay.
-- Boss words follow the live JSON, not the workbook: `assets/data/huntData.json` is the
-  source of truth for which words are bosses and their `hiddenPairs`.
-- `assets/data/huntData.v2.json` is dormant editorial data. Never wire it into the app
-  without approval.
-- `tools/content/_deprecated/mask-rewriter/` is retired editorial tooling (moved here
-  2026-08-11 at Pete's direction — never produced a usable line across many attempts).
-  Keep `.env`, generated CSVs, workspace data, and `dist` untracked. Never expose API
-  keys. Do not revive or build on it without Pete's explicit approval.
+- `docs/CONTENT_WRITING_STANDARD.md` exclusively governs Hunt REALS, traps, hidden content,
+  and editorial approval.
+- Live Hunt content is `assets/data/huntData.json`; the tracked editorial workbook is
+  `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` and never updates runtime automatically.
+- `app/game/dailyPool.ts` is a **development placeholder only**. Its 54 entries are not
+  approved content and must be replaced or Daily disabled before release. Do not promote,
+  polish, or reuse them as canon without Pete's explicit approval.
+- `assets/data/huntData.v2.json` is dormant. Do not wire it into gameplay.
+- `tools/content/_deprecated/mask-rewriter/` is retired and must not be revived.
+- `.agents/skills/polywords-master-director/` is the version-controlled product skill.
+  Do not create another copy of the content doctrine.
 
 ## Workflow
 
-- Keep patches scoped and preserve unrelated user changes.
-- Do not run full content generation or `npm audit fix` unless asked.
-- After code/tooling changes run `npx.cmd tsc --noEmit`, relevant tests,
-  `git diff --check`, and `git status --short`.
-- Docs-only work requires at least the two git checks.
-- Commit or push only when explicitly asked.
-- Never pop, drop, or clear stashes unless instructed by name.
+- Keep patches scoped; preserve unrelated changes and every stash.
+- Do not run full content generation, destructive rebuilds, or `npm audit fix` unless asked.
+- Use `apply_patch` for manual file edits. Never expose credentials or commit `.env`, caches,
+  generated CSVs, workspaces, or `dist`.
+- After code/tooling changes: `npx.cmd tsc --noEmit`, relevant tests, `git diff --check`,
+  and `git status --short`. Docs-only changes require the two Git checks plus a reference scan.
+- Report device/native validation separately from static checks.
+- Commit, push, merge, or alter stashes only with explicit approval.
 
-## Build and Verification
+## Key Owners
 
-- Use `npm.cmd install` once to restore dependencies.
-- Use `npm.cmd run typecheck` or `npx.cmd tsc --noEmit` for TypeScript validation.
-- Use `npm.cmd test` for gameplay and logic changes.
-- Use `git diff --check` and `git status --short` before claiming completion.
-
-## Key Files and Boundaries
-
-- App entry: `App.tsx`
-- Game screens: `app/screens/{Game,Home,Vault,Settings,DailyChallenge,Results}Screen.tsx`
-- Hunt gameplay core: `app/game/{huntGenerator,polyRunEngine,dailyChallengeEngine}.ts`
-- Persisted state: `app/store/useGameStore.ts`
-- Live content: `assets/data/huntData.json`
-- Editorial master: `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`
-- Polly assets: `assets/images/polly/poses/*.png`
-- UI layout/animation key surfaces: `app/components/MaskBoard.tsx`, `app/components/SwipeMask.tsx`
-
-## Project Notes
-
-- Active branch: `play-screen-overhaul`; do not merge to `main` without approval.
-- Navigation is Home / Play / Vault / Settings, plus Daily; active gameplay is nav-free.
-- Hunt uses UP to claim a REAL and RIGHT to reject a trap; Daily is UP-only.
-- Do not change swipe grammar, scoring, boss rules, or persistence without explicit request.
-- Do not wire `assets/data/huntData.v2.json` into gameplay without approval.
-- Preserve the live app palette and Polly treatment rules from `CLAUDE.md` and `AGENTS.md`.
+- Entry/navigation: `App.tsx`
+- Screens: `app/screens/`
+- Hunt: `app/game/huntGenerator.ts`, `app/game/polyRunEngine.ts`
+- Daily: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`
+- State: `app/store/useGameStore.ts`
+- Gestures/presentation: `app/components/MaskBoard.tsx`, `app/components/SwipeMask.tsx`
+- Theme/materials: `app/ui/`

@@ -1,73 +1,53 @@
 # POLYWORDS Daily Challenge
 
-Daily is a deterministic, one-attempt-per-day mode separate from Hunt.
+Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hunt.
 
-Opening the Daily screen does not spend the attempt. The attempt is recorded only after
-the player confirms `BEGIN DAILY`, after seeing the five-word, two-Chance stakes.
+> **Content status:** `app/game/dailyPool.ts` is a 54-entry development placeholder. It is
+> not approved or release-ready. Leave it unchanged until a new Daily pool is written; before
+> release, replace it or disable Daily. Hunt content is not an automatic substitute.
 
 ## Session
 
-- Five rounds with tier curve `[1, 1, 2, 2, 3]`.
-- Same date-seeded puzzle for every player.
-- Two Chances for the full challenge.
-- Six curated near-miss candidate words per round.
-- One candidate connects all three clues.
-- Win by solving all five rounds before the second lost Chance.
+- Opening Daily does not spend the attempt; `BEGIN DAILY` does.
+- Five rounds use tiers `[1, 1, 2, 2, 3]` with two Chances for the whole challenge.
+- Each round shows six candidates; one word connects all three clues.
+- The same date produces the same session. Solve all five before losing both Chances to win.
 
-## Control
+## Input and Clues
 
-Daily is UP-only. Press and hold wakes a card; a deliberate UP swipe claims it. Releasing
-below threshold returns it home. There is no RIGHT action, left swipe, or tap-submit.
+- Daily is UP-only. Press/hold lifts a card; a deliberate UP swipe commits it. Releasing below
+  threshold returns it. There is no RIGHT, left, or tap-submit path.
+- All candidate cards remain neutral before commitment.
+- Clue 1 is immediate; clues 2 and 3 appear at 4s and 8s or after wrong claims. Timed reveals
+  do not cost Chances.
+- Wrong claim: costs one Chance, disables that candidate, reveals the next clue, and returns
+  input after the wrong-card exit.
 
-- Correct claim: card travels into the clue vault, resolves as a gold answer stamp, then
-  advances the round.
-- Wrong claim: costs one Chance, reveals the next clue, recoils, and drops away.
-- All cards use one neutral treatment before commitment.
-- Daily must never change Hunt’s `SwipeMask.tsx` gesture behavior.
+## Correct-Claim Scroll Sequence
 
-Labels: `ONE REPRESENTS ALL` and `SWIPE UP TO CLAIM`.
+1. Keep the submitted card continuous from the swipe and settle it on the clue parchment.
+2. Hold briefly with clue and card readable.
+3. Roll reward paper down from the fixed ornate rod; a matching moving rod stays attached to
+   its lower edge and physically covers clue and card.
+4. Show the existing feather/crown reward on that paper.
+5. While fully covered, render the next clue underneath.
+6. Roll the reward paper and moving rod upward to reveal only the next clue.
+7. Re-enable input after stable reveal. Lock input and reject stale/double claims throughout.
 
-## Clues
+The final round must complete the same reward/reveal sequence without flashing the old clue
+before Results.
 
-- Clue 1 is immediate.
-- Clue 2 appears after 4 seconds or the first wrong claim.
-- Clue 3 appears after 8 seconds or the next wrong claim.
-- Timed reveals do not cost Chances.
-- Each new clue receives centered emphasis, then joins the persistent revealed group.
+## Reward, Results, and Streak
 
-## Polly and Results
-
-Polly stays perched without obstructing clues, cards, or the UP lane. She reacts only to a
-lost Chance or the final result.
-
-- First lost Chance: `Sharp as a butter knife.`
-- Win: `YOU BEAT POLLY'S CHALLENGE`, `GOLD FEATHER EARNED`,
-  `WON'T HAPPEN TOMORROW.`
-- Loss: `YOU LOSE`, `NO FEATHER TODAY`, `CAN'T BEAT THAT WITH A BAT.`
-
-Results show each round’s clue speed (1/2/3 clues or missed), with an accessible unknown
-fallback for older persisted results. Share copy tells the short play story without exposing
-future answers.
-
-## Gold Feather
-
-A win awards one dated Gold Feather. It cannot stack and expires when its stored date no
-longer matches today. Hunt can consume it once from game-over Results to revive the same
-run in place with one feather.
-
-## Streak
-
-Completing a Daily attempt — win or lose — advances a day-based streak
-(`app/game/dailyStreak.ts`). It is deliberately a *play* streak, not a *win* streak: a
-loss still counts as playing that day and keeps the streak alive, it just doesn't earn a
-Gold Feather. Missing a calendar day resets the streak to 1 on the next play. Streak
-milestones (7/14/30/50/100) are celebratory, but a milestone only pays out a reward on a
-day that also won its Gold Feather — a milestone never turns a loss into a reward.
-Displayed on Home via `getDisplayStreak`.
+- A win awards one dated Gold Feather; it cannot stack and expires when its date is no longer
+  today. Hunt game-over Results can consume it once for an in-place one-feather revive.
+- Results report clue speed without exposing future answers.
+- Completing Daily—win or lose—advances the play streak. Missing a calendar day resets it.
+- Polly may react to a lost Chance or final result but must not obstruct clue, cards, or UP lane.
 
 ## Owners
 
-- UI: `app/screens/DailyChallengeScreen.tsx`, `app/components/ui/QuillScrollPanel.tsx`
-- Rules: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`, `app/game/dailyStreak.ts`
-- State: `app/store/useGameStore.ts`
-- Materials/copy: `app/ui/pwDailyMaterials.ts`, `app/game/pollyCharacter.ts`
+- UI/motion: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyAnswerCard.tsx`,
+  `app/components/ui/QuillScrollPanel.tsx`
+- Rules/content: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`
+- State/streak: `app/store/useGameStore.ts`, `app/game/dailyStreak.ts`

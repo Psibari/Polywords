@@ -1,116 +1,70 @@
 # POLYWORDS Game Reference
 
-## App Model
-
-POLYWORDS is a recognition game about familiar words with multiple meanings. Polly sets
-the traps; the player reclaims meanings. Home is the lobby, Play the arena, Vault the
-player archive, and Settings the utility/profile surface.
+This file owns durable Hunt rules. Live code remains authoritative for implementation detail.
 
 ## Hunt
 
-- 10 rounds and 6 starting feathers (economy lock, 2026-07-22).
-- Fledgling runs (first 3, `runsCompleted < 3`) use an 8-round arc with the boss at
-  index 7 instead of 9.
-- Up to 5 masks are shown per word (`VISIBLE_MASK_CAP`); unshown masks resurface in
-  other runs rather than being wasted.
-- Round 10/index 9 is Polly’s Word (`eventType: 'bossWord'`).
-- Round 5/index 4 (round 4/index 3 in the fledgling arc) may host a Returning Haunt as a
-  standard event with `isHauntReturn: true`; it never receives boss presentation. Moved
-  earlier 2026-08-18 (was round 8/6) — see `CLAUDE.md` Hunt section.
-- Only boss words can become HAUNTED. Mastered words leave the standard pool.
-- RUN IT BACK builds a fresh Hunt with ghost priority.
-- UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit.
-- Wrong swipes are permanent, cost a feather, and reset the chain.
+- Standard arc: 10 rounds. First three fledgling runs: 8 rounds.
+- Polly's Word is always final. A Returning Haunt may occupy round 5 standard / round 4
+  fledgling and remains a normal round presentation.
+- Six starting feathers; zero ends the run. Up to five visible masks appear per word.
+- UP claims a REAL; RIGHT rejects a trap. Wrong choices cost one feather, reset the chain,
+  and preserve the chosen mask ID/direction in results.
+- Mastered words leave the standard pool. RUN IT BACK creates a fresh arc with ghost priority.
+- `huntGenerator.ts` builds the arc from `assets/data/huntData.json`.
 
-`app/game/huntGenerator.ts` builds the arc from `assets/data/huntData.json`. Daily is a
-separate mode.
+Economy target: roughly 54% survive and 25% master, with deaths concentrated late. This
+depends on genuinely difficult but fair boss-hidden content; it is a simulation target, not
+measured player data.
 
-Design targets (60k-run simulation, locked 2026-07-22): ~54% of runs survive, ~25% master
-Polly's Word (a trophy, not an expectation), and deaths cluster late — 0% in
-Confidence/Flow, rising through Tension/Panic, over half in the boss phase. Never a
-round-3 rug-pull. Holds only if boss hidden content is genuinely hard (~1-in-4 miss rate
-for a decent player) — an easy boss cheapens the mastery trophy by inflating the rate.
+## Polly's Word and Haunts
 
-## Boss and Haunts
+- Surviving visible boss tiles opens three face-down hidden-gauntlet cards.
+- The player chooses a card, opens it, then judges it with UP/RIGHT. Opened cards cannot be
+  put back.
+- All three hidden tiles correct = MASTERED. One hidden mistake or boss death = HAUNTED.
+- Visible mistakes do not block the gauntlet; they only affect `bossFlawless`.
+- A Returning Haunt re-tests the exact hidden pair that previously won.
+- Success banishes it; failure keeps it queued. Ordinary missed meanings are not Haunts.
+- `bossOutcome` is the authority for mastery/haunt. The Master Gate must not return.
 
-The player-facing name is Polly’s Word; keep internal `bossWord` identifiers unless a
-migration is explicitly approved.
+## Scoring and Rank
 
-- Surviving the visible boss tiles unlocks a 3-tile hidden gauntlet (Route C): one
-  tile per hidden meaning/trap pair, each judged UP/RIGHT independently. A visible
-  mistake does not block the gauntlet from unlocking.
-- **Pick Your Trap** (shipped 2026-08-01): all three gauntlet tiles arrive together as
-  closed cards and the player picks which one to face and in what order — tapping a
-  card flips it open (reveal), then a separate later swipe judges it; once a card is
-  opened it cannot be closed back up unpicked. Order is purely a player choice and does
-  not change the per-tile odds — the judgment math below is unaffected. Presentation
-  moved 2026-08-15 from standing spines to face-down flip cards (`aa08db6`); the
-  mechanic is unchanged.
-- All three gauntlet tiles correct masters the word, regardless of visible mistakes.
-- One wrong gauntlet tile ends the boss attempt immediately and haunts the word once.
-- Returning Haunt re-tests the exact pair that beat the player last run.
-- Returning Haunt clear: BANISHED / HAUNT BROKEN and remove it from the queue.
-- Returning Haunt failure: STILL HAUNTED and retain/rotate it.
-- Ordinary missed meanings are not called Haunts.
-- The Master Gate is removed; do not restore its UI or logic.
-
-## Scoring
-
-| Action | Points |
+| Action | Base points |
 | --- | ---: |
-| REAL UP | 100 × chain |
-| Trap RIGHT | 50 × chain |
-| Boss REAL | 200 × chain |
-| Boss trap | 100 × chain |
-| Boss mystery | 600 × chain |
-| Wrong swipe | 0 |
+| REAL | 100 (rare REAL: 300) |
+| Trap rejected | 50 |
+| Boss REAL / trap | 2× normal / 100 |
+| Full hidden gauntlet clear | 600 once |
+| Wrong choice | 0 |
 
-The chain starts at 1.0, increases by 0.5 every three correct swipes, caps at 3.0,
-and resets on error. Polly’s score target is 15,000. Ranks are D below 3,000, C at
-3,000, B at 6,000, A at 10,000, S at 15,000, and MASTER at 19,500. Boss mystery is
-awarded once, on clearing the full 3-tile hidden gauntlet — not per tile.
+The chain starts at 1×, rises by 0.5× every three consecutive correct choices, caps at 3×,
+and resets on error. Ranks: D 0, C 3,000, B 6,000, A 10,000, S 15,000, MASTER 19,500.
 
-## Feathers and Results
+Score milestones at 3,000 and 10,000 celebrate but do not award feathers.
 
-- Hunt starts with 6 feathers; a wrong swipe removes 1; zero ends the run.
-- Score milestones at 3,000 and 10,000 trigger a celebration beat only — they no
-  longer grant a feather (economy lock, 2026-07-22; the old score→life net was
-  regressive, reaching only players who were already winning).
-- Daily can award one dated Gold Feather. In Hunt, it revives a failed run in place
-  with one feather, preserves committed swipes, and consumes the dated reward once.
-- Results must preserve mask ID and UP/RIGHT direction for wrong swipes.
-- Fatal wrong swipes finalize the current word result before game-over.
+## Gold Feather and Results
 
-Locked text includes `YOU BEAT POLLY`, `POLLY HUNT COMPLETE`,
-`POLLY CLIPPED YOUR RUN.`, and `Thought so.`. `BINGO BANGO ZZZZINGO!` was unassigned from
-the mastery sequence by Pete on 2026-07-23 (see `CLAUDE.md`) — the line itself is still
-locked text, but it is not currently placed anywhere; do not reintroduce it into mastery
-without a new decision.
+- Winning Daily awards one dated Gold Feather. It expires by date and cannot stack.
+- From Hunt game-over Results, it revives the same run with one feather, preserves committed
+  choices, resets `bossOutcome` to pending, and is consumed once.
+- Fatal wrong choices finalize the current word result before game-over.
+
+Locked system text includes `YOU BEAT POLLY`, `POLLY HUNT COMPLETE`,
+`POLLY CLIPPED YOUR RUN.`, and `Thought so.`. `BINGO BANGO ZZZZINGO!` is unassigned and
+must not be reintroduced into mastery without approval.
 
 ## Presentation
 
-- Hierarchy: hero word, active tile, HeroBook target, HUD, Polly visit.
-- Ordinary tiles use one neutral treatment before commitment.
-- HeroBook is a bound book with a top hinge and label `POLLY'S VAULT`.
-- Correct REAL UP uses a compact gold score badge; correct trap RIGHT uses rose;
-  wrong swipes show no score badge.
-- Vault is a Polly-free reclaimed archive. Use archive/collection language.
+- Hierarchy: hero word, active mask, Polybook, HUD, Polly visit.
+- Ordinary masks stay neutral before commitment.
+- The in-round book is **POLYBOOK**; the separate archive is **WORD VAULT**.
+- Vault is player-owned and Polly-free.
 
-Polly visits are owned by GameScreen so MaskBoard remounts cannot kill them. Live Polly
-uses `assets/images/polly/poses/*.png`, `usePollyVisits`, authored character copy, and
-bounded local memory. Dialogue rules live in `docs/POLLY_DIALOGUE_BANK.md`.
+## Owners
 
-## Content and Pacing
-
-`docs/CONTENT_WRITING_STANDARD.md` exclusively governs tiles. The live Hunt arc is
-2 Confidence + 2 Flow + 3 Tension + 2 Panic + 1 Boss; placement rules live in
-`docs/GOLDEN_PACING_SYSTEM.md`.
-
-## Key Owners
-
-- Arena: `app/screens/GameScreen.tsx`, `app/components/MaskBoard.tsx`
+- Screen/presentation: `app/screens/GameScreen.tsx`, `app/components/MaskBoard.tsx`
 - Gestures: `app/components/SwipeMask.tsx`
-- Rules: `app/game/polyRunEngine.ts`, `app/game/huntGenerator.ts`
+- Rules/arc: `app/game/polyRunEngine.ts`, `app/game/huntGenerator.ts`
 - State: `app/store/useGameStore.ts`
-- Vault: `app/screens/VaultScreen.tsx`, `app/components/ui/Bookcase.tsx`
-- Feedback/audio: `app/components/FXLayer.tsx`, `app/audio/sfx.ts`
+- Results/Vault: `app/screens/ResultsScreen.tsx`, `app/screens/VaultScreen.tsx`
