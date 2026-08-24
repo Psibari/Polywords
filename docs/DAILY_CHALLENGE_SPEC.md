@@ -2,9 +2,11 @@
 
 Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hunt.
 
-> **Content status:** `app/game/dailyPool.ts` is a 54-entry development placeholder. It is
-> not approved or release-ready. Leave it unchanged until a new Daily pool is written; before
-> release, replace it or disable Daily. Hunt content is not an automatic substitute.
+> **Content status:** The canonical source is the 43-word locked workbook at
+> `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx`; `STAGE` is included and
+> `SENTENCE` is excluded. `app/game/dailyPool.ts` is the approved runtime representation.
+> Each source row has three clues, nine unique approved candidates, and tier 1–3. A round
+> deterministically presents the target plus five of those distractors: six candidates total.
 
 ## Session
 
@@ -47,7 +49,10 @@ before Results.
 
 ## Owners
 
+- Editorial standard: `docs/DAILY_CONTENT_WRITING_STANDARD.md`
+- Authoring source: `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx`
 - UI/motion: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyAnswerCard.tsx`,
   `app/components/ui/QuillScrollPanel.tsx`
-- Rules/content: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`
+- Gameplay rules: `app/game/dailyChallengeEngine.ts`
+- Runtime content: `app/game/dailyPool.ts`
 - State/streak: `app/store/useGameStore.ts`, `app/game/dailyStreak.ts`

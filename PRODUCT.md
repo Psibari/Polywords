@@ -15,7 +15,7 @@ reduced motion, performance, and gesture behavior.
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. A run escalates toward Polly's Word and
   its hidden gauntlet. Failed boss words can return as Haunts.
 - **Daily:** five UP-only connection puzzles, one attempt per date, with a Gold Feather for
-  a win. The current content pool is a development placeholder and is not release-ready.
+  a win. Its 43-word locked source pool is approved.
 - **Vault:** the player's reclaimed-word archive.
 - **Home / Settings:** launch, identity, preferences, local reminders, and playtest tools.
 
@@ -41,7 +41,6 @@ generator, or owner of the words.
 
 ## Release Gates
 
-- Replace or disable the placeholder Daily pool.
 - Complete representative iOS and Android device journeys.
 - Validate accessibility, interruption/resume, persistence, and lower-end performance.
 - Do not claim store presence, testimonials, market results, or compliance evidence that does

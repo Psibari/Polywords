@@ -10,7 +10,8 @@ current state and blockers live in `CONTEXT.md`. Verify runtime claims against c
 | Hunt rules, scoring, results | `docs/GAME_REFERENCE.md` |
 | Hunt pacing | `docs/GOLDEN_PACING_SYSTEM.md` |
 | Hunt editorial law | `docs/CONTENT_WRITING_STANDARD.md` |
-| Daily | `docs/DAILY_CHALLENGE_SPEC.md` |
+| Daily gameplay/rules | `docs/DAILY_CHALLENGE_SPEC.md` |
+| Daily content/editorial writing | `docs/DAILY_CONTENT_WRITING_STANDARD.md` |
 | Polly voice | `docs/POLLY_DIALOGUE_BANK.md` |
 | Visual system | `DESIGN.md`, `app/ui/` |
 | Patch workflow | `docs/WORKFLOW.md` |
@@ -53,7 +54,8 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Correct-answer presentation is physical: the submitted card lands on the clue parchment,
   the matching rod/reward paper covers it, reward appears, then the paper rolls up over the
   already-rendered next clue. Input stays locked until the reveal finishes.
-- `app/game/dailyPool.ts` is temporary development content, not approved or release-ready.
+- `app/game/dailyPool.ts` contains the approved 43-word Daily runtime pool. Each source word
+  has three clues and nine approved candidates; a round deterministically presents six.
 
 ## Content and Data
 
@@ -63,8 +65,8 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Stable word/mask IDs are persistence contracts. Never rebuild or renumber existing content
   casually.
 - `assets/data/huntData.v2.json` and `tools/content/_deprecated/mask-rewriter/` are retired.
-- Daily needs a new approved, separately governed pool before release; Hunt JSON is not an
-  automatic substitute.
+- `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx` is the canonical Daily
+  authoring source; `app/game/dailyPool.ts` is the runtime representation.
 
 ## Presentation and Character
 

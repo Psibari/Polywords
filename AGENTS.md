@@ -10,7 +10,8 @@ source below. Runtime code and data outrank documentation when describing curren
 | Hunt/gameplay | `docs/GAME_REFERENCE.md` |
 | pacing | `docs/GOLDEN_PACING_SYSTEM.md` |
 | Hunt content | `docs/CONTENT_WRITING_STANDARD.md` |
-| Daily | `docs/DAILY_CHALLENGE_SPEC.md` |
+| Daily gameplay/rules | `docs/DAILY_CHALLENGE_SPEC.md` |
+| Daily content/editorial writing | `docs/DAILY_CONTENT_WRITING_STANDARD.md` |
 | Polly copy | `docs/POLLY_DIALOGUE_BANK.md` |
 | workflow | `docs/WORKFLOW.md` |
 
@@ -46,11 +47,13 @@ Report conflicts; never blend them silently.
 
 - `docs/CONTENT_WRITING_STANDARD.md` exclusively governs Hunt REALS, traps, hidden content,
   and editorial approval.
+- `docs/DAILY_CONTENT_WRITING_STANDARD.md` exclusively governs writing and auditing Daily
+  Challenge content. Do not apply Hunt-only editorial doctrine to Daily.
 - Live Hunt content is `assets/data/huntData.json`; the tracked editorial workbook is
   `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` and never updates runtime automatically.
-- `app/game/dailyPool.ts` is a **development placeholder only**. Its 54 entries are not
-  approved content and must be replaced or Daily disabled before release. Do not promote,
-  polish, or reuse them as canon without Pete's explicit approval.
+- Canonical Daily authoring content is the 43-word locked workbook at
+  `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx`; `STAGE` is included and
+  `SENTENCE` is excluded. `app/game/dailyPool.ts` is its approved runtime representation.
 - `assets/data/huntData.v2.json` is dormant. Do not wire it into gameplay.
 - `tools/content/_deprecated/mask-rewriter/` is retired and must not be revived.
 - `.agents/skills/polywords-master-director/` is the version-controlled product skill.

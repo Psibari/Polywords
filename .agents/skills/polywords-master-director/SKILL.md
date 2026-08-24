@@ -1,6 +1,6 @@
 ---
 name: polywords-master-director
-description: Use when reviewing, planning, auditing, designing, prioritizing, or implementing work anywhere in the POLYWORDS product.
+description: Use when reviewing, planning, auditing, designing, writing, importing, selecting, prioritizing, or implementing work anywhere in the POLYWORDS product.
 ---
 
 # POLYWORDS Master Product Director
@@ -242,9 +242,23 @@ During audits, identify which failure reaction each issue risks producing.
 
 ## Content Constitution
 
-Read `references/content-doctrine.md` before any content writing or content audit.
+Read `references/content-doctrine.md` before writing, reviewing, auditing, importing, or
+selecting any content.
 
-When working inside the POLYWORDS repository, also read `docs/CONTENT_WRITING_STANDARD.md`. That repository document is the sole in-repo editorial authority; this bundled doctrine is the standalone fallback for ChatGPT use. They must express the same locked rules. If they conflict, stop, report the conflict, and synchronize them before writing or approving content.
+When working inside the POLYWORDS repository, route editorial work by mode:
+
+- Hunt content: read `docs/CONTENT_WRITING_STANDARD.md`, the sole in-repo Hunt editorial
+  authority.
+- Daily gameplay/rules: read `docs/DAILY_CHALLENGE_SPEC.md`.
+- Daily content/editorial writing: read `docs/DAILY_CONTENT_WRITING_STANDARD.md`, the sole
+  in-repo Daily editorial authority.
+
+The corresponding repository standard outranks the bundled doctrine, which is the standalone
+fallback for ChatGPT use. They must express the same locked rules. If they conflict, stop, report
+the conflict, and synchronize them before writing or approving content. Never apply Hunt-only
+editorial rules to Daily or Daily-only editorial rules to Hunt.
+
+### Hunt Content Standard
 
 Core rules:
 - Start with a dictionary meaning audit.
@@ -268,6 +282,50 @@ Core rules:
 - There are exceptions to writing rules, but an exception must be special enough to improve fairness, recognition, specificity, and memory and must be explicitly approved by Pete.
 
 Never reduce content review to a lint check.
+
+### Daily Challenge Content Standard
+
+For Daily writing, reviewing, auditing, importing, or selection, enforce the controlling Daily
+standard in full:
+
+- Start with an American-English dictionary audit. Merge duplicate or overlapping senses and
+  separate meanings from phrases, collocations, examples, associations, and grammatical
+  restatements.
+- Require exactly three genuinely distinct, broadly recognizable meanings. Reject a target with
+  only two strong meanings rather than inventing or stretching a third. `SENTENCE` is the
+  controlling precedent.
+- Work in this order: definitions/meaning audit -> select three meanings -> identify human
+  handles/recognition surfaces -> draft three clues -> preserve Pete's locks interactively ->
+  order hardest to easiest -> build the nine-word grid after clues stabilize -> audit the whole
+  set -> lock only after approval -> update the canonical workbook only from approved wording.
+- Make Daily clues more direct than Hunt REALs while still using familiar recognition memory,
+  not dictionary prose. Give each clue a different recognition surface and order them hardest,
+  middle, easiest. Use no hard word cap; shorten only when equally natural, fair, and precise.
+  Never add artificial obscurity to imitate Hunt disguise.
+- Keep the target and revealing inflections, derivatives, compounds, and morphological variants
+  out of clues. Any deliberate exception requires Pete's explicit approval and a narrow record;
+  never weaken the general rule.
+- Build exactly nine unique source candidates: the target once and eight distractors. Runtime may
+  present the target plus five distractors, but editorial approval covers all nine.
+- Build distractors for the whole puzzle, not one per clue. Spread temptation across the three
+  clue domains. Each distractor must be recognizable American English, plausible from at least
+  one clue or semantic neighborhood, fail the full three-clue convergence, and leave no second
+  defensible answer. Distractors need not be polysemous or master-database headwords and must not
+  rely on cheap morphology or spelling.
+- Audit the full three-clue/nine-word set for distinctive wording, phrase, subject, scene, object,
+  and memory-snap reuse. Do not reuse another clue's recognition surface or make the answer or a
+  distractor mechanically obvious. Same-neighborhood temptation may use different language;
+  ordinary connective/common language is not contamination.
+- Cross-reference distinctive material against the canonical Daily workbook and wider locked
+  POLYWORDS corpus when available. Avoid recognizable recycling when a natural alternative
+  exists without mechanically banning ordinary semantic overlap.
+- Run the complete 14-point fairness audit in the controlling Daily standard before lock.
+- Only explicit Pete approval locks content. Preserve approved wording exactly; never silently
+  rewrite locked clues or grid words. Deliberate easier clues or gimmes may support pacing and
+  confidence.
+- Treat `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx` as authoring truth and
+  `app/game/dailyPool.ts` as its exported runtime representation. If memory, chat, runtime, and
+  workbook disagree, inspect the workbook rather than guessing.
 
 ## Polly Constitution
 

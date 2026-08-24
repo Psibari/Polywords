@@ -11,7 +11,7 @@ and editorial approval. `docs/CONTENT_PHILOSOPHY.md` states the intended feeling
 - Runtime promotion is an explicit, verified, additive merge. Stable word/mask IDs are
   persistence contracts; never rewrite existing entries during an addition.
 - `assets/data/huntData.v2.json` and `_deprecated/mask-rewriter` are retired.
-- Daily's placeholder pool is separate and is not approved by this Hunt standard.
+- Daily's approved pool is separately governed; this Hunt standard does not govern it.
 
 Never polish legacy wording into canon. Rebuild a word from a fresh American-English meaning
 audit.
