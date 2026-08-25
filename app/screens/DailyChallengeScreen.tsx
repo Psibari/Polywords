@@ -72,7 +72,6 @@ import DailyAnswerCard, {
 } from '../components/DailyAnswerCard';
 import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
 import QuillScrollPanel from '../components/ui/QuillScrollPanel';
-import DailyScrollTuningPanel from '../dev/DailyScrollTuningPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
@@ -1192,8 +1191,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       {isComplete && (
         <ResultsOverlay onHome={handleHome} onShare={handleShare} />
       )}
-
-      {__DEV__ && !isComplete && displayedDailySession && <DailyScrollTuningPanel />}
 
       {__DEV__ && (
         <Pressable
