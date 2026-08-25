@@ -7,17 +7,25 @@ import { spineVariantFor } from '../../ui/spineVariants';
 import { BookSpine, SPINE_HEIGHT, SPINE_WIDTHS } from './BookSpine';
 
 const SPINE_GAP = 4;
+const RAISE_RATIO = 14 / 128; // must match BookSpine RAISE_Y / SPINE_HEIGHT
+const SHELF_BASE_GAP = 2;
+const SPINE_TOP_MARGIN = 3;
+const SPINE_MIN_HEIGHT = 48;
 const MIN_MASTERED_SHELVES = 3; // honest empty space early on
-const FRAME_ASPECT_RATIO = 900 / 1346;
-const SHELF_SIDE_INSET = 0.074;
-const VAULT_SPINE_HEIGHT = 84;
+// assets/images/vault/shelves.png is 1026 x 1533px.
+const FRAME_ASPECT_RATIO = 1026 / 1533;
+const SHELF_LEFT_INSET = 0.1774; // measured: plank rim left edge
+const SHELF_RIGHT_INSET = 0.1832; // measured: plank rim right edge
 
 const bookcaseImage = require('../../../assets/images/vault/shelves.png');
 
+// Each slot's BOTTOM is a painted surface; books stand on it.
+// Measured from shelves.png (1026 x 1533).
 const SHELF_SLOTS = [
-  { top: '30.5%', height: '13.6%' },
-  { top: '46.1%', height: '13.7%' },
-  { top: '61.8%', height: '15.9%' },
+  { top: 0.1300, height: 0.1746 }, // alcove ceiling -> plank 1 (30.46%)
+  { top: 0.3046, height: 0.1566 }, // plank 1 -> plank 2 (46.12%)
+  { top: 0.4612, height: 0.1565 }, // plank 2 -> plank 3 (61.77%)
+  { top: 0.6177, height: 0.2075 }, // plank 3 -> base ledge (82.52%)
 ] as const;
 
 type Props = {
@@ -34,8 +42,8 @@ type ShelfEntry =
   | { key: string; kind: 'ghost'; row: ShelfRow<GhostMeaning>; label?: string }
   | { key: string; kind: 'empty'; row: [] };
 
-function spineWidthFor(word: string): number {
-  const scale = VAULT_SPINE_HEIGHT / SPINE_HEIGHT;
+function spineWidthFor(word: string, height: number): number {
+  const scale = height / SPINE_HEIGHT;
   return Math.round(SPINE_WIDTHS[spineVariantFor(word).widthTier] * scale);
 }
 
@@ -78,18 +86,31 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
   // pattern as SettingsScreen's chamberWidth, instead of ever painting
   // shelves packed against the floor value.
   const hasMeasuredFrame = frameWidth > 0;
+
+  // VAULT_SPINE_HEIGHT used to be a fixed pt value inside a slot whose real
+  // pixel height depends on device width. Derive it from the shortest slot
+  // instead, leaving room for BookSpine's own raise-on-select lift so a
+  // raised spine never drives through the plank above it.
+  const frameHeight = frameWidth / FRAME_ASPECT_RATIO;
+  const shortestSlot = Math.min(...SHELF_SLOTS.map(s => s.height));
+  const spineHeight = Math.max(
+    SPINE_MIN_HEIGHT,
+    Math.floor((frameHeight * shortestSlot - SHELF_BASE_GAP - SPINE_TOP_MARGIN)
+               / (1 + RAISE_RATIO)),
+  );
+
   const shelfWidth = Math.max(
-    frameWidth * (1 - SHELF_SIDE_INSET * 2),
-    spineWidthFor('POLYWORDS') + SPINE_GAP,
+    frameWidth * (1 - SHELF_LEFT_INSET - SHELF_RIGHT_INSET),
+    spineWidthFor('POLYWORDS', spineHeight) + SPINE_GAP,
   );
 
   const frames = useMemo(() => {
-    const masteredRows = packShelves(mastered, r => spineWidthFor(r.word), shelfWidth);
+    const masteredRows = packShelves(mastered, r => spineWidthFor(r.word, spineHeight), shelfWidth);
     while (masteredRows.length < MIN_MASTERED_SHELVES) masteredRows.push([]);
 
     const ghostRows = ghosts.length === 0
       ? []
-      : packShelves(ghosts, g => spineWidthFor(g.word), shelfWidth);
+      : packShelves(ghosts, g => spineWidthFor(g.word, spineHeight), shelfWidth);
 
     const entries: ShelfEntry[] = masteredRows.map((row, i) => (
       row.length > 0
@@ -107,7 +128,7 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
     });
 
     return chunkShelves(entries);
-  }, [ghosts, mastered, shelfWidth]);
+  }, [ghosts, mastered, shelfWidth, spineHeight]);
 
   return (
     <View style={styles.caseStack} onLayout={e => setFrameWidth(e.nativeEvent.layout.width)}>
@@ -129,7 +150,7 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
                 key={entry.key}
                 style={[
                   styles.shelfSlot,
-                  { top: slot.top, height: slot.height },
+                  { top: `${slot.top * 100}%`, height: `${slot.height * 100}%` },
                 ]}
               >
                 {entry.kind === 'ghost' && entry.label && (
@@ -144,7 +165,7 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
                         kind="mastered"
                         isBoss={record.isBoss}
                         raised={selectedWord === record.word}
-                        height={VAULT_SPINE_HEIGHT}
+                        height={spineHeight}
                         onPress={() =>
                           onSelect(selectedWord === record.word ? null : record.word)
                         }
@@ -158,7 +179,7 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
                         word={ghost.word}
                         kind="ghost"
                         raised={selectedWord === ghost.word}
-                        height={VAULT_SPINE_HEIGHT}
+                        height={spineHeight}
                         onPress={() =>
                           onSelect(selectedWord === ghost.word ? null : ghost.word)
                         }
@@ -198,14 +219,14 @@ const styles = StyleSheet.create({
   },
   shelfSlot: {
     position: 'absolute',
-    left: `${SHELF_SIDE_INSET * 100}%`,
-    right: `${SHELF_SIDE_INSET * 100}%`,
+    left: `${SHELF_LEFT_INSET * 100}%`,
+    right: `${SHELF_RIGHT_INSET * 100}%`,
   },
   shelfBooks: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 2,
+    bottom: SHELF_BASE_GAP,
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
