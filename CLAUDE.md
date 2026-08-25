@@ -45,6 +45,34 @@ navigation shell; active Hunt and Daily play are nav-free.
 - A Returning Haunt re-tests the exact hidden pair that previously won. Success banishes it;
   failure keeps it queued. Ordinary missed meanings are not Haunts.
 - `bossOutcome` is authoritative. Score/rank never decides mastery.
+- Mastery currently removes a word from EVERY pool (`huntGenerator.ts:216`). Because boss
+  words are gpsTag 'boss' and no ordinary phase's fallback chain reaches bossPool, a mastered
+  word leaves the game entirely, taking its visible REALs with it (55 across the 13 boss words).
+  Past the boss-word count every boss is isMasteryRematch and `recordMastery` is skipped
+  (`useGameStore.ts:531`), so the round records nothing either way. Both are known and
+  scheduled for change, not intended behaviour.
+
+#### Scoring
+
+- Score sources are `realMaskPoints`, `trapMaskPoints` and `mysteryMasteryPoints` in
+  `polyRunEngine.ts`. `addBonusScore()` is exported and wired into the store but has no caller
+  anywhere in `app/` — treat as dead.
+- `realMaskPoints`' isRare 300-point tier has no data behind it: zero of the 908 visible REAL
+  masks carry isRare.
+- `FEATHER_MILESTONES` fires for FX only. The old score-to-extra-life conversion was
+  deliberately removed as regressive and stays removed.
+- `ranks.ts` thresholds are absolute values anchored to a 2026-07-13 simulation. Against
+  current content a flawless 10-round run scores 15,425-18,050 and a flawless 8-round
+  fledgling run maxes at 15,600, so MASTER (19,500) is unreachable. The ladder is UNDER
+  REVIEW.
+
+### Vault
+
+- The reward economy pass is COMPLETE. The Vault's headline becomes a count of visible REAL
+  meanings claimed (`realMaskIdsFound`, a count with no denominator); `personalBest` and the
+  rank letter come off the bookplate; books represent words, plain once any of that word's
+  visible REALs are found and finished once all are. Perfect-run clears are a Results event,
+  not a Vault record.
 
 ### Daily
 
