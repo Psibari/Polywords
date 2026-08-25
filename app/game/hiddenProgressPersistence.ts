@@ -69,6 +69,14 @@ export function addHiddenPairIdFound(progress: PlayerProgress, pairId: string): 
   };
 }
 
+export function addRealMaskIdFound(progress: PlayerProgress, maskId: string): PlayerProgress {
+  if ((progress.realMaskIdsFound ?? []).includes(maskId)) return progress;
+  return {
+    ...progress,
+    realMaskIdsFound: [...(progress.realMaskIdsFound ?? []), maskId].sort(),
+  };
+}
+
 // Recovers ids for words mastered before hiddenPairIdsFound existed on
 // PlayerProgress. Only hiddenPairIds is a source of real stable ids —
 // MasteredWordRecord.hiddenMeaningsFound holds display REAL text, not ids,

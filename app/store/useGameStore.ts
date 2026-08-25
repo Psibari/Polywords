@@ -33,6 +33,7 @@ import {
   upsertGhostRecord,
   upsertMasteredRecord,
   addHiddenPairIdFound,
+  addRealMaskIdFound,
   backfillHiddenPairIdsFound,
 } from '../game/hiddenProgressPersistence';
 import { generateHunt } from '../game/huntGenerator';
@@ -262,6 +263,7 @@ type GameStore = {
     priorHauntAttempts: number,
   ) => void;
   recordHiddenPairIdFound: (pairId: string) => void;
+  recordRealMaskIdFound: (maskId: string) => void;
   recordRunComplete: (finalScore: number) => void;
   loadProgress: () => Promise<void>;
   pollyMemory: PollyMemory;
@@ -451,6 +453,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const prev = get().game;
     const next = submitSwipeUp(prev, maskId);
     set({ game: next });
+
+    // Record the claim only when the engine actually accepted the swipe.
+    // The engine no-ops (returns prev) when the run isn't playing, the mask
+    // isn't on the current step, or the mask is already resolved — so an
+    // identity check is the correct guard against double-recording.
+    if (next !== prev) {
+      const step = prev.session[prev.stepIndex];
+      if (step && step.kind === 'word') {
+        const mask = step.masks.find(m => m.id === maskId);
+        if (mask && mask.isReal && !mask.isHidden) {
+          get().recordRealMaskIdFound(maskId);
+        }
+      }
+    }
+
     if (next.bossOutcome === 'haunted' && prev.bossOutcome !== 'haunted') {
       const bossStep = next.session.find(s => s.kind === 'word' && s.eventType === 'bossWord');
       if (bossStep && bossStep.kind === 'word') get().queueFailedBoss(bossStep);
@@ -642,6 +659,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   recordHiddenPairIdFound: (pairId) => {
     const current = get().progress;
     const next = addHiddenPairIdFound(current, pairId);
+    if (next === current) return;
+    set({ progress: next });
+    AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});
+  },
+
+  recordRealMaskIdFound: (maskId) => {
+    const current = get().progress;
+    const next = addRealMaskIdFound(current, maskId);
     if (next === current) return;
     set({ progress: next });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});

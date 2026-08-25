@@ -189,6 +189,16 @@ export type PlayerProgress = {
    *  Not to be confused with MasteredWordRecord.hiddenMeaningsFound, which
    *  holds REAL-text strings, not ids. */
   hiddenPairIdsFound?: string[];
+  /** Stable mask ids (e.g. 'abstract_r0') for VISIBLE REAL masks the player
+   *  has correctly claimed with a swipe up. Set semantics — each id appears
+   *  at most once. No denominator and no ceiling by design.
+   *
+   *  Hunt only. Daily has no mask ids. Excludes isHidden masks; boss gauntlet
+   *  content is recorded separately via hiddenPairIdsFound and the two sets
+   *  are disjoint.
+   *
+   *  NOT BACKFILLABLE — no prior record of claimed REALs exists anywhere. */
+  realMaskIdsFound?: string[];
   /** Words actually shown to the player across their most recent runs,
    *  most-recent-first, capped. Biases word selection away from immediate
    *  repeats — never a hard exclusion, never surfaced to the player, not a

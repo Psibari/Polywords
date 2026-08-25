@@ -2,6 +2,7 @@ import {
   upsertGhostRecord,
   upsertMasteredRecord,
   addHiddenPairIdFound,
+  addRealMaskIdFound,
   backfillHiddenPairIdsFound,
 } from './hiddenProgressPersistence';
 import { createGame, beginMysteryGauntlet, resolveMysteryTile, mysteryMasteryPoints } from './polyRunEngine';
@@ -164,6 +165,50 @@ function resolveTile(
 
 function eqNum(actual: number, expected: number, label: string): void {
   if (actual !== expected) throw new Error(`${label}: expected ${expected}, got ${actual}`);
+}
+
+// ── addRealMaskIdFound ───────────────────────────────────────────────────
+
+{
+  // Adds a new id to an absent field.
+  const progress = emptyProgress();
+  const next = addRealMaskIdFound(progress, 'abstract_r0');
+  equal(next.realMaskIdsFound, ['abstract_r0'], 'adds a new id to an absent field');
+}
+
+{
+  // Appends a second id and keeps the array sorted.
+  let progress = emptyProgress();
+  progress = addRealMaskIdFound(progress, 'zebra_r0');
+  progress = addRealMaskIdFound(progress, 'abstract_r0');
+  equal(progress.realMaskIdsFound, ['abstract_r0', 'zebra_r0'], 'appends a second id and keeps the array sorted');
+}
+
+{
+  // Recording the same id twice returns the same object, not a new one.
+  let progress = emptyProgress();
+  progress = addRealMaskIdFound(progress, 'abstract_r0');
+  const again = addRealMaskIdFound(progress, 'abstract_r0');
+  if (again !== progress) throw new Error('recording the same id twice must return the same object');
+}
+
+{
+  // Leaves masteredWords, hiddenPairIdsFound, and every other progress field untouched.
+  const progress: PlayerProgress = {
+    ...emptyProgress(),
+    masteredWords: [{
+      word: 'HORN', isBoss: true, hiddenPairIds: ['horn_h00'], hiddenMeaningFound: 'REAL', dateMastered: '2026-08-01',
+    }],
+    hiddenPairIdsFound: ['horn_h00'],
+    personalBest: 42,
+    runsCompleted: 3,
+  };
+  const next = addRealMaskIdFound(progress, 'abstract_r0');
+  equal(next.masteredWords, progress.masteredWords, 'leaves masteredWords untouched');
+  equal(next.hiddenPairIdsFound, progress.hiddenPairIdsFound, 'leaves hiddenPairIdsFound untouched');
+  eqNum(next.personalBest, progress.personalBest, 'leaves personalBest untouched');
+  eqNum(next.runsCompleted, progress.runsCompleted, 'leaves runsCompleted untouched');
+  equal(next.realMaskIdsFound, ['abstract_r0'], 'sets realMaskIdsFound to the new id');
 }
 
 console.log('hiddenProgressPersistence tests passed');
