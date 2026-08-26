@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
-Updated August 25, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `eee5112`.
+Updated August 26, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current code baseline: `5ebab24`.
 
 ## Verified Current State
 
@@ -23,6 +23,11 @@ Updated August 25, 2026. Branch: `play-screen-overhaul`, tracking
 - The Vault now derives books from claimed visible REAL mask IDs: a word appears after its first
   claim and is finished when all of its visible REALs are claimed. Banishing a Haunt removes it
   from the active ghost queue; permanent Haunt-clear history in the Vault is not implemented yet.
+- Audio was repaired at the transport boundary. SFX now load on demand from real sources and
+  wait for native load-status events; the old eager 36-player startup burst and polling retry
+  path are retired. Music uses the same real-source construction, has app foreground recovery,
+  and restarts a new Hunt from the start. The protected Hunt-loss Results chuckle remains
+  distinct from ordinary, boss, and Returning Haunt laughs and was verified on device.
 
 ## REWARD ECONOMY
 
@@ -50,7 +55,8 @@ five distractors.
 
 ## Next Work
 
-1. Continue real-device iOS/Android journey checks before release.
+1. Continue real-device iOS/Android journey checks before release, including cold-start audio,
+  rapid navigation, app background/foreground recovery, and every distinct Polly laugh beat.
 2. Author and editorially approve more Boss-capable Hunt words, targeting roughly one in five
   new words with three fair, stable-ID `hiddenPairs`. Do not generate placeholder hidden truth.
 3. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should

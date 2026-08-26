@@ -23,7 +23,9 @@ current state and blockers live in `CONTEXT.md`. Verify runtime claims against c
 - React Native Animated handles most motion. Reanimated owns finger-tracked cards in
   `SwipeMask.tsx` and `DailyAnswerCard.tsx`.
 - `expo-audio` supplies music/SFX. `MusicEngine.ts` owns the persistent music player;
-  `audioSession.ts` owns session configuration.
+  `audioSession.ts` owns the single app-wide session configuration; `sfx.ts` owns on-demand
+  SFX players and their bounded overlap queue. SFX and music construct players with real
+  sources and use native load-status events rather than screen-local preload races.
 - Bebas Neue is the hero face; Barlow Condensed is the UI/tile/dialogue face.
 - Transform/opacity animations may use the native driver; layout/color animations may not.
 
@@ -71,6 +73,22 @@ navigation shell; active Hunt and Daily play are nav-free.
 ### Daily
 
 - Daily is a deterministic, one-attempt-per-date, five-round UP-only mode with two Chances.
+
+### Audio
+
+- Audio lifetime is app-owned. `App.tsx` warms the shared audio session and forwards app
+  foreground/background changes to `MusicEngine`; Hunt and Daily only claim music ownership
+  while focused and do not create or destroy shared SFX during navigation transitions.
+- `sfx.ts` loads effects on demand from their real source files. Each effect has at most two
+  players for legitimate overlap, a small pending queue, native `playbackStatusUpdate`
+  readiness, and teardown-safe ownership. It does not eagerly create every SFX player at boot.
+- `MusicEngine.ts` owns one persistent looping player, switches tracks by focused owner,
+  resumes after app backgrounding, and restarts a new Hunt from the beginning. Track loading
+  has a bounded fallback, but normal playback is released by native status events.
+- Polly's ordinary laughs, boss hidden-failure laugh, Returning Haunt final laugh, and the
+  Hunt-loss Results chuckle are separate event beats. The Hunt-loss chuckle is requested by
+  `ResultsScreen` with cooldown bypass so an earlier Polly laugh cannot suppress it; do not
+  remove or merge that sound without an explicit product decision.
 - `useGameStore.ts` creates sessions through `dailyChallengeEngine.ts` and persists active
   sessions/results separately from Hunt.
 - Correct-answer presentation is physical: the submitted card lands on the clue parchment,
