@@ -12,7 +12,7 @@ import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { cardMaterial, libraryMaterial, stageMaterial } from '../ui/pwMaterials';
 import { vaultMaterial, vaultType } from '../ui/pwVaultMaterials';
-import { Bookcase } from '../components/ui/Bookcase';
+import { Bookcase, VaultWordRecord } from '../components/ui/Bookcase';
 import { FoilWord } from '../components/ui/FoilWord';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
@@ -22,19 +22,35 @@ import rawHuntData from '../../assets/data/huntData.json';
 
 import { RANK_TIERS, getRankProgress, getRankTier } from '../game/ranks';
 
-type HuntDataMask = { phrase: string; isReal: boolean };
+type HuntDataMask = { id: string; phrase: string; isReal: boolean };
 type HuntDataEntry = { masks?: HuntDataMask[] };
 const HUNT_DATA = rawHuntData as unknown as Record<string, HuntDataEntry>;
 
-function realMeaningsFor(word: string): string[] {
-  return (HUNT_DATA[word]?.masks ?? [])
-    .filter(mask => mask.isReal)
-    .map(mask => mask.phrase);
+function realMasksFor(word: string): HuntDataMask[] {
+  return (HUNT_DATA[word]?.masks ?? []).filter(mask => mask.isReal);
 }
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function vaultBookFor(
+  word: string,
+  claimedIds: Set<string>,
+  masteredByWord: Map<string, { isBoss: boolean }>,
+): VaultWordRecord | null {
+  const realMasks = realMasksFor(word);
+  const claimedCount = realMasks.filter(mask => claimedIds.has(mask.id)).length;
+  const mastered = masteredByWord.get(word);
+  if (claimedCount === 0 && !mastered) return null;
+  return {
+    word,
+    ...(mastered?.isBoss ? { isBoss: true } : {}),
+    isFinished: realMasks.length > 0 && claimedCount === realMasks.length,
+    claimedCount,
+    totalCount: realMasks.length,
+  };
 }
 
 type Props = {
@@ -65,11 +81,19 @@ export default function VaultScreen({ navigation }: Props) {
     AsyncStorage.setItem(VAULT_INTRO_SEEN_KEY, 'true').catch(() => {});
   }, []);
 
-  const masteredNewestLast = progress.masteredWords; // shelf grows left→right, newest last
+  const claimedIds = new Set(progress.realMaskIdsFound ?? []);
+  const masteredByWord = new Map(progress.masteredWords.map(record => [record.word, record]));
+  const books = Object.keys(HUNT_DATA)
+    .map(word => vaultBookFor(word, claimedIds, masteredByWord))
+    .filter((book): book is VaultWordRecord => book !== null);
+  const finishedBooks = books.filter(book => book.isFinished).length;
   const tier = getRankTier(progress.personalBest);
   const rankProgress = getRankProgress(progress.personalBest, tier);
   const streak = getDisplayStreak(progress, getTodayDateString());
 
+  const selectedBook = selectedWord
+    ? books.find(book => book.word === selectedWord) ?? null
+    : null;
   const selectedMastered = selectedWord
     ? progress.masteredWords.find(m => m.word === selectedWord) ?? null
     : null;
@@ -80,7 +104,11 @@ export default function VaultScreen({ navigation }: Props) {
     ? resolveMasteredPairs(selectedMastered).map(pair => pair.real)
     : [];
   const selectedGhostPair = selectedGhost ? resolveGhostPair(selectedGhost) : null;
-  const selectedRealMeanings = selectedMastered ? realMeaningsFor(selectedMastered.word) : [];
+  const selectedRealMeanings = selectedBook
+    ? realMasksFor(selectedBook.word)
+        .filter(mask => claimedIds.has(mask.id))
+        .map(mask => mask.phrase)
+    : [];
   const selectedGhostTotalPairs = selectedGhost ? pairsForWord(selectedGhost.word) : [];
   const selectedGhostCrackedCount = selectedGhost
     ? selectedGhostTotalPairs.filter(pair => (progress.hiddenPairIdsFound ?? []).includes(pair.id)).length
@@ -111,51 +139,53 @@ export default function VaultScreen({ navigation }: Props) {
         <Text style={styles.title}>WORD VAULT</Text>
         <View style={styles.statsRow}>
           <View style={styles.statChip}>
-            <Text style={styles.statValue}>{progress.masteredWords.length}</Text>
-            <Text style={styles.statLabel}>MASTERED</Text>
+            <Text style={styles.statValue}>{(progress.realMaskIdsFound ?? []).length}</Text>
+            <Text style={styles.statLabel}>MEANINGS TAKEN</Text>
           </View>
           <View style={styles.statChip}>
-            <Text style={styles.statValue}>{ghostsToShow.length}</Text>
-            <Text style={styles.statLabel}>HAUNTED</Text>
+            <Text style={styles.statValue}>{books.length}</Text>
+            <Text style={styles.statLabel}>BOOKS</Text>
           </View>
           <View style={styles.statChip}>
-            <Text style={styles.statValue}>{streak}</Text>
-            <Text style={styles.statLabel}>DAY STREAK</Text>
+            <Text style={styles.statValue}>{finishedBooks}</Text>
+            <Text style={styles.statLabel}>FINISHED</Text>
           </View>
         </View>
 
-        {/* Bookplate — parchment inset, tier seal; tap → rank ladder (Task 7) */}
+        <View style={styles.secondaryStatsRow}>
+          <Text style={styles.secondaryStat}>MASTERED {progress.masteredWords.length}</Text>
+          <Text style={styles.secondaryDot}>•</Text>
+          <Text style={styles.secondaryStat}>HAUNTED {ghostsToShow.length}</Text>
+          <Text style={styles.secondaryDot}>•</Text>
+          <Text style={styles.secondaryStat}>STREAK {streak}</Text>
+        </View>
+
         <Pressable
-          style={styles.bookplate}
+          style={styles.rankLink}
           onPress={() => setShowRanks(true)}
           accessibilityRole="button"
-          accessibilityLabel={`Open rank ladder. Current rank ${tier.letter}, ${tier.description}`}
+          accessibilityLabel={`Open run ranks. Current rank ${tier.letter}, ${tier.description}`}
         >
-          <View style={styles.bookplateInner}>
-            <Text style={[styles.bookplateSeal, { color: tier.color }]}>{tier.letter}</Text>
-            <View style={styles.bookplateMeta}>
-              <Text style={styles.bookplateDesc}>{tier.description}</Text>
-              <View style={styles.bookplateTrack}>
-                <View style={[styles.bookplateFill, { width: `${Math.round(rankProgress * 100)}%` }]} />
-              </View>
-            </View>
+          <Text style={styles.rankLinkText}>RUN RANK {tier.letter}</Text>
+          <View style={styles.rankLinkTrack}>
+            <View style={[styles.rankLinkFill, { width: `${Math.round(rankProgress * 100)}%` }]} />
           </View>
         </Pressable>
 
         {/* The library */}
         <Bookcase
-          mastered={masteredNewestLast}
+          books={books}
           ghosts={ghostsToShow}
           selectedWord={selectedWord}
           onSelect={setSelectedWord}
         />
 
-        {progress.masteredWords.length === 0 && (
-          <Text style={styles.emptyLine}>Your first mastered word will stand here.</Text>
+        {books.length === 0 && (
+          <Text style={styles.emptyLine}>Your first claimed meaning will open a book.</Text>
         )}
       </ScrollView>
 
-      {(selectedMastered || selectedGhost) && (
+      {(selectedBook || selectedGhost) && (
         <Pressable
           style={styles.panelScrim}
           onPress={() => setSelectedWord(null)}
@@ -168,9 +198,9 @@ export default function VaultScreen({ navigation }: Props) {
             accessibilityViewIsModal
           >
             <View style={styles.detailTitleRow}>
-              {selectedMastered ? (
+              {selectedBook ? (
                 <FoilWord
-                  word={selectedMastered.word}
+                  word={selectedBook!.word}
                   baseStyle={styles.detailWord}
                   fontSize={40}
                 />
@@ -180,30 +210,39 @@ export default function VaultScreen({ navigation }: Props) {
                 </Text>
               )}
             </View>
-            {selectedMastered && (
+            {selectedBook && (
               <>
                 <Text style={styles.detailLine}>
-                  Mastered {formatDate(selectedMastered.dateMastered)}
+                  {selectedBook.isFinished
+                    ? 'Every visible meaning claimed.'
+                    : `${selectedBook.claimedCount} of ${selectedBook.totalCount} visible meanings claimed.`}
                 </Text>
-                {selectedMastered.isBoss && (
+                {selectedMastered && (
+                  <Text style={styles.detailLine}>
+                    Mastered {formatDate(selectedMastered.dateMastered)}
+                  </Text>
+                )}
+                {selectedMastered?.isBoss && (
                   <Text style={[styles.detailLine, styles.detailBoss]}>POLLY'S WORD — MASTERED</Text>
                 )}
-                <Text style={styles.detailLine}>
-                  {selectedMastered.flawless ? 'Flawless mastery' : 'Mastered with visible mistakes'}
-                </Text>
-                {selectedHiddenMeanings.map((meaning, index) => (
+                {selectedMastered && (
+                  <Text style={styles.detailLine}>
+                    {selectedMastered.flawless ? 'Flawless mastery' : 'Mastered with visible mistakes'}
+                  </Text>
+                )}
+                {selectedMastered && selectedHiddenMeanings.map((meaning, index) => (
                   <Text key={`${meaning}-${index}`} style={styles.detailLine}>
                     Hidden {index + 1}: {meaning}
                   </Text>
                 ))}
-                {(selectedMastered.priorHauntAttempts ?? 0) > 0 && (
+                {selectedMastered && (selectedMastered.priorHauntAttempts ?? 0) > 0 && (
                   <Text style={styles.detailLine}>
                     Mastered after {selectedMastered.priorHauntAttempts} prior {selectedMastered.priorHauntAttempts === 1 ? 'Haunt' : 'Haunts'}
                   </Text>
                 )}
                 {selectedRealMeanings.length > 0 && (
                   <View style={styles.detailMeaningsBlock}>
-                    <Text style={styles.detailMeaningsTitle}>MEANINGS</Text>
+                    <Text style={styles.detailMeaningsTitle}>CLAIMED MEANINGS</Text>
                     {selectedRealMeanings.map((meaning, index) => (
                       <Text key={`${meaning}-${index}`} style={styles.detailLine}>{meaning}</Text>
                     ))}
@@ -349,6 +388,50 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     color: PW.color.mutedWhite,
     marginTop: 2,
+  },
+  secondaryStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: -6,
+    marginBottom: 14,
+  },
+  secondaryStat: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    color: PW.color.mutedWhite,
+  },
+  secondaryDot: {
+    color: vaultMaterial.bookplateSeal,
+    fontSize: 12,
+  },
+  rankLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  rankLinkText: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    color: vaultMaterial.bookplateSeal,
+  },
+  rankLinkTrack: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: vaultMaterial.bookplateTrack,
+    overflow: 'hidden',
+  },
+  rankLinkFill: {
+    height: 3,
+    backgroundColor: vaultMaterial.bookplateProgress,
   },
   bookplate: {
     backgroundColor: libraryMaterial.parchmentDeep,

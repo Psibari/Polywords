@@ -7,20 +7,19 @@ export type RankTier = {
   description: string;
 };
 
-// Thresholds anchored to the 2026-07-13 playthrough simulation:
-// C is reachable by an average run, and MASTER sits just under the 5th
-// percentile of perfect play (19700) so a flawless hunt reliably earns the
-// title. Rank is a pure score/skill axis — it does not reflect the boss
-// outcome (mastered/haunted/died), which is its own independent verdict.
+// Retuned 2026-08-25 against the live 197-word corpus and current five-mask
+// cap. A flawless run currently ranges from 12,100 to 14,400 points, so the
+// old S/MASTER thresholds (15,000/19,500) were impossible to reach. Rank is a
+// per-run skill axis — it does not reflect the Boss outcome or long-term Vault
+// progress, which are separate systems.
 export const RANK_TIERS: RankTier[] = [
   { letter: 'D',      label: 'D',      threshold: 0,     nextAt: 3000,  color: 'rgba(255,255,255,0.45)', description: 'Just getting started.'   },
   { letter: 'C',      label: 'C',      threshold: 3000,  nextAt: 6000,  color: '#FFFFFF',                description: 'Warming up.'             },
-  { letter: 'B',      label: 'B',      threshold: 6000,  nextAt: 10000, color: '#FFFFFF',                description: 'Getting sharper.'        },
-  { letter: 'A',      label: 'A',      threshold: 10000, nextAt: 15000, color: '#FFFFFF',                description: 'Polly noticed.'          },
-  { letter: 'S',      label: 'S',      threshold: 15000, nextAt: 19500, color: '#F5C842',                description: 'Razor sharp.'             },
-  { letter: 'MASTER', label: 'MASTER', threshold: 19500, nextAt: null,  color: '#F5C842',                description: 'The title is yours.'     },
+  { letter: 'B',      label: 'B',      threshold: 6000,  nextAt: 9000,  color: '#FFFFFF',                description: 'Getting sharper.'        },
+  { letter: 'A',      label: 'A',      threshold: 9000,  nextAt: 11500, color: '#FFFFFF',                description: 'Polly noticed.'          },
+  { letter: 'S',      label: 'S',      threshold: 11500, nextAt: 14000, color: '#F5C842',                description: 'Razor sharp.'             },
+  { letter: 'MASTER', label: 'MASTER', threshold: 14000, nextAt: null,  color: '#F5C842',                description: 'The title is yours.'     },
 ];
-
 export function getRankTier(score: number): RankTier {
   const reversed = [...RANK_TIERS].reverse();
   return reversed.find(t => score >= t.threshold) ?? RANK_TIERS[0];

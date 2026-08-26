@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { FONTS, FONT_SIZES } from '../../constants/fonts';
-import { GhostMeaning, MasteredWordRecord } from '../../game/types';
+import { GhostMeaning } from '../../game/types';
 import { libraryMaterial } from '../../ui/pwMaterials';
 import { spineVariantFor } from '../../ui/spineVariants';
 import { BookSpine, SPINE_HEIGHT, SPINE_WIDTHS } from './BookSpine';
@@ -28,8 +28,16 @@ const SHELF_SLOTS = [
   { top: 0.6177, height: 0.2075 }, // plank 3 -> base ledge (82.52%)
 ] as const;
 
+export type VaultWordRecord = {
+  word: string;
+  isBoss?: boolean;
+  isFinished: boolean;
+  claimedCount: number;
+  totalCount: number;
+};
+
 type Props = {
-  mastered: MasteredWordRecord[];
+  books: VaultWordRecord[];
   ghosts: GhostMeaning[];
   selectedWord: string | null;
   onSelect: (word: string | null) => void;
@@ -38,7 +46,7 @@ type Props = {
 type ShelfRow<T> = T[];
 
 type ShelfEntry =
-  | { key: string; kind: 'mastered'; row: ShelfRow<MasteredWordRecord> }
+  | { key: string; kind: 'book'; row: ShelfRow<VaultWordRecord> }
   | { key: string; kind: 'ghost'; row: ShelfRow<GhostMeaning>; label?: string }
   | { key: string; kind: 'empty'; row: [] };
 
@@ -78,7 +86,7 @@ function chunkShelves(entries: ShelfEntry[]): ShelfEntry[][] {
 
 // The player's archive is made of physical cabinet frames. The uploaded
 // bookcase art defines shelf positions; rows never stretch the image.
-export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
+export function Bookcase({ books, ghosts, selectedWord, onSelect }: Props) {
   const [frameWidth, setFrameWidth] = useState(0);
   // 0 is an honest "not measured yet" sentinel, but shelfWidth's own floor
   // (below) still produces a real, too-narrow packing width from it — so
@@ -105,16 +113,16 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
   );
 
   const frames = useMemo(() => {
-    const masteredRows = packShelves(mastered, r => spineWidthFor(r.word, spineHeight), shelfWidth);
-    while (masteredRows.length < MIN_MASTERED_SHELVES) masteredRows.push([]);
+    const bookRows = packShelves(books, r => spineWidthFor(r.word, spineHeight), shelfWidth);
+    while (bookRows.length < MIN_MASTERED_SHELVES) bookRows.push([]);
 
     const ghostRows = ghosts.length === 0
       ? []
       : packShelves(ghosts, g => spineWidthFor(g.word, spineHeight), shelfWidth);
 
-    const entries: ShelfEntry[] = masteredRows.map((row, i) => (
+    const entries: ShelfEntry[] = bookRows.map((row, i) => (
       row.length > 0
-        ? { key: `mastered-${i}`, kind: 'mastered', row }
+        ? { key: `book-${i}`, kind: 'book', row }
         : { key: `empty-${i}`, kind: 'empty', row: [] }
     ));
 
@@ -128,7 +136,7 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
     });
 
     return chunkShelves(entries);
-  }, [ghosts, mastered, shelfWidth, spineHeight]);
+  }, [books, ghosts, shelfWidth, spineHeight]);
 
   return (
     <View style={styles.caseStack} onLayout={e => setFrameWidth(e.nativeEvent.layout.width)}>
@@ -158,12 +166,13 @@ export function Bookcase({ mastered, ghosts, selectedWord, onSelect }: Props) {
                 )}
 
                 <View style={styles.shelfBooks}>
-                  {entry.kind === 'mastered' && entry.row.map(record => (
+                  {entry.kind === 'book' && entry.row.map(record => (
                     <View key={record.word} style={styles.spineWrap}>
                       <BookSpine
                         word={record.word}
                         kind="mastered"
                         isBoss={record.isBoss}
+                        isFinished={record.isFinished}
                         raised={selectedWord === record.word}
                         height={spineHeight}
                         onPress={() =>

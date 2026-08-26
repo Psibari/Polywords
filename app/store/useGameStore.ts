@@ -26,6 +26,7 @@ import {
   GhostMeaning,
   GhostRevenge,
   HiddenPair,
+  HuntPerformance,
   PlayerProgress,
   WordStep,
 } from '../game/types';
@@ -210,6 +211,7 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   longestStreak: 0,
   lastStreakDate: null,
   rankHistory: {},
+  recentHuntPerformance: [],
   recentWordIds: [],
 };
 
@@ -361,6 +363,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       masteredWords: get().progress.masteredWords.map(m => m.word),
       ghostWordIds: runStartGhostWordIds,
       recentWordIds: get().progress.recentWordIds ?? [],
+      recentHuntPerformance: get().progress.recentHuntPerformance ?? [],
       ...(isFledgling ? { length: 8, gentle: true } : {}),
       seed: runSeed,
     });
@@ -720,11 +723,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
       recentWordIds.push(w);
       if (recentWordIds.length >= RECENT_WORDS_CAP) break;
     }
+    const RECENT_PERFORMANCE_CAP = 5;
+    const roundsReached = game.session.filter((_, index) => index <= game.stepIndex).length;
+    const performance: HuntPerformance =
+      game.status === 'gameOver' && roundsReached <= Math.ceil(game.session.length / 2)
+        ? 'struggle'
+        : game.status === 'complete' &&
+          game.bossOutcome === 'mastered' &&
+          game.bossFlawless
+        ? 'clean'
+        : 'steady';
+    const recentHuntPerformance = [
+      performance,
+      ...(current.recentHuntPerformance ?? []),
+    ].slice(0, RECENT_PERFORMANCE_CAP);
     const next: PlayerProgress = {
       ...current,
       runsCompleted: current.runsCompleted + 1,
       personalBest: finalScore > current.personalBest ? finalScore : current.personalBest,
       ...(rankHistoryUpdate ? { rankHistory: rankHistoryUpdate } : {}),
+      recentHuntPerformance,
       recentWordIds,
     };
     set({ progress: next, pollyMemory });

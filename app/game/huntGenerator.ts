@@ -1,4 +1,4 @@
-import { EmotionalRole, HiddenPair, SessionStep, WordStep } from './types';
+import { EmotionalRole, HiddenPair, HuntPerformance, SessionStep, WordStep } from './types';
 import rawHuntData from '../../assets/data/huntData.json';
 import { createSeededRng } from './seededRandom';
 
@@ -129,6 +129,14 @@ function easyFirst(pool: string[]): string[] {
   );
 }
 
+function hardFirst(pool: string[]): string[] {
+  return [...pool].sort(
+    (a, b) =>
+      (DIFFICULTY_ORDER[db[b].difficulty] ?? 1) -
+      (DIFFICULTY_ORDER[db[a].difficulty] ?? 1),
+  );
+}
+
 // Hunt economy lock (docs/GAME_REFERENCE.md): every word shows up to five
 // visible tiles. Difficulty ramps through content, not tile count; hidden
 // gauntlet tiles are separate and unaffected by this cap.
@@ -162,6 +170,7 @@ function buildWordStep(
   isHauntReturn: boolean,
   isBoss: boolean,
   isMasteryRematch: boolean,
+  isMasteredReturn: boolean,
   rng: () => number,
 ): WordStep {
   const data = db[word];
@@ -178,6 +187,7 @@ function buildWordStep(
   };
   if (isBoss) step.bossModifier = true;
   if (isMasteryRematch) step.isMasteryRematch = true;
+  if (isMasteredReturn) step.isMasteredReturn = true;
   if (isHauntReturn) step.isHauntReturn = true;
   if (data.hiddenMeaning != null) step.hiddenMeaning = data.hiddenMeaning;
   if (data.hiddenTrap != null) step.hiddenTrap = data.hiddenTrap;
@@ -192,6 +202,7 @@ export function generateHunt(opts: {
   recentWordIds?: string[];
   length?: number;
   gentle?: boolean;
+  recentHuntPerformance?: HuntPerformance[];
   seed?: number;
 }): SessionStep[] {
   const {
@@ -200,6 +211,7 @@ export function generateHunt(opts: {
     recentWordIds = [],
     length = SESSION_LENGTH,
     gentle = false,
+    recentHuntPerformance = [],
     seed = Date.now(),
   } = opts;
   const mastered = new Set(masteredWords.map(w => w.toUpperCase()));
@@ -208,17 +220,43 @@ export function generateHunt(opts: {
   const rng = createSeededRng(seed);
 
   const plan = buildPhasePlan(length);
-  const prep = (pool: string[]) => {
-    const ordered = gentle ? easyFirst(shuffle(pool, rng)) : shuffle(pool, rng);
+  const hasRepeatedStruggle = recentHuntPerformance.slice(0, 2).length === 2 &&
+    recentHuntPerformance.slice(0, 2).every(result => result === 'struggle');
+  const hasCleanStreak = recentHuntPerformance.slice(0, 3).length === 3 &&
+    recentHuntPerformance.slice(0, 3).every(result => result === 'clean');
+  const prep = (pool: string[], adaptive = true) => {
+    const shuffled = shuffle(pool, rng);
+    const useEase = gentle || (adaptive && hasRepeatedStruggle);
+    const useSharp = adaptive && !useEase && hasCleanStreak;
+    const ordered = useSharp
+      ? hardFirst(shuffled)
+      : useEase
+      ? easyFirst(shuffled)
+      : shuffled;
     return recencyPartition(ordered, recentSet);
   };
 
-  const available = Object.keys(db).filter(w => !mastered.has(w));
+  const allWords = Object.keys(db);
+  const available = allWords.filter(w => !mastered.has(w));
+  // Mastered words remain in ordinary play as marked revisits. They are kept
+  // out of confidence/flow so the opening stays fresh, and mixed into the
+  // later tension/panic pools where a reclaimed word can add recognition
+  // confidence without becoming a Boss or Haunt candidate.
+  const masteredReturns = allWords.filter(w => mastered.has(w));
   const confidencePool = prep(available.filter(w => db[w].gpsTag === 'confidence'));
   const flowPool       = prep(available.filter(w => db[w].gpsTag === 'flow'));
-  const tensionPool    = prep(available.filter(w => db[w].gpsTag === 'tension'));
-  const panicPool      = prep(available.filter(w => db[w].gpsTag === 'panic'));
-  const bossPool       = prep(available.filter(w => db[w].gpsTag === 'boss'));
+  const tensionPool    = prep([
+    ...available.filter(w => db[w].gpsTag === 'tension'),
+    ...masteredReturns,
+  ]);
+  const panicPool      = prep([
+    ...available.filter(w => db[w].gpsTag === 'panic'),
+    ...masteredReturns,
+  ]);
+  // Bosses and Returning Haunts must always be unmastered. A mastered word's
+  // hidden content is for ordinary revisits only; it is no longer an active
+  // Boss gate and cannot be re-queued as a new Haunt.
+  const bossPool       = prep(available.filter(w => db[w].gpsTag === 'boss'), false);
 
   // Pick next available word from ordered fallback pools
   function next(pools: string[][]): string {
@@ -270,39 +308,21 @@ export function generateHunt(opts: {
   const hauntIdx = length === 8 ? 3 : 4;
   const bossIdx = length - 1;
 
-  const eligibleBossPools = [bossPool, panicPool, tensionPool]
-    .map(pool => pool.filter(hasBossContent));
+  const bossSelectionPanicPool = prep(available.filter(w => db[w].gpsTag === 'panic'), false);
+  const bossSelectionTensionPool = prep(available.filter(w => db[w].gpsTag === 'tension'), false);
+  const eligibleBossPools = [bossPool, bossSelectionPanicPool, bossSelectionTensionPool]
+    .map(pool => pool.filter(word => !mastered.has(word) && hasBossContent(word)));
   let bossWord: string | null = null;
   for (const pool of eligibleBossPools) {
     bossWord = pool.find(word => !selected.has(word)) ?? null;
     if (bossWord) break;
   }
 
-  let isMasteryRematch = false;
   if (!bossWord) {
-    const masteredBossPool = prep(
-      Object.keys(db).filter(word => mastered.has(word) && hasBossContent(word)),
-    );
-    bossWord = masteredBossPool.find(word => !selected.has(word)) ?? null;
-    isMasteryRematch = bossWord !== null;
-  }
-  if (!bossWord) {
-    // Last resort: content is exhausted or authored without enough
-    // boss-capable words for this player's mastered/selected state. Reuse
-    // any boss-capable word in the whole db rather than throwing and taking
-    // down the run — a repeated/rematch boss beats an app crash. Only a
-    // genuinely empty boss pool (no boss-capable word exists at all) falls
-    // through to the throw below, which is a content-authoring failure, not
-    // a runtime one.
-    const anyBossCapable = Object.keys(db).filter(hasBossContent);
-    bossWord = anyBossCapable.find(word => !selected.has(word)) ?? anyBossCapable[0] ?? null;
-    if (bossWord) {
-      isMasteryRematch = true;
-      console.warn(`[huntGenerator] Boss pool exhausted — reusing "${bossWord}" as a fallback boss word.`);
-    }
-  }
-  if (!bossWord) {
-    throw new Error('[huntGenerator] No boss-capable word is available');
+    // Mastered Boss words remain ordinary revisits, never Boss fallbacks.
+    // Once the unmastered Boss-capable content is exhausted, authoring needs
+    // to add more hidden-pair words rather than silently undoing mastery.
+    throw new Error('[huntGenerator] No unmastered boss-capable word is available');
   }
   selected.add(bossWord);
 
@@ -327,18 +347,35 @@ export function generateHunt(opts: {
     haptics[hauntIdx] = 'heavy';
   }
 
-  const slots: { word: string; isHauntReturn?: true; isMasteryRematch?: true }[] = [];
+  const slots: {
+    word: string;
+    isHauntReturn?: true;
+    isMasteredReturn?: true;
+  }[] = [];
   for (let i = 0; i < length; i++) {
     if (i === bossIdx) {
-      slots.push({ word: bossWord, ...(isMasteryRematch ? { isMasteryRematch: true as const } : {}) });
+      slots.push({ word: bossWord });
     } else if (i === hauntIdx && ghostWord) {
       slots.push({ word: ghostWord, isHauntReturn: true });
     } else {
-      slots.push({ word: pickForPhase(slotPlan[i]) });
+      const word = pickForPhase(slotPlan[i]);
+      slots.push({
+        word,
+        ...(mastered.has(word) ? { isMasteredReturn: true as const } : {}),
+      });
     }
   }
 
-  return slots.map(({ word, isHauntReturn, isMasteryRematch: rematch }, idx) =>
-    buildWordStep(word, roles[idx], haptics[idx], !!isHauntReturn, idx === bossIdx, !!rematch, rng),
+  return slots.map(({ word, isHauntReturn, isMasteredReturn }, idx) =>
+    buildWordStep(
+      word,
+      roles[idx],
+      haptics[idx],
+      !!isHauntReturn,
+      idx === bossIdx,
+      false,
+      !!isMasteredReturn,
+      rng,
+    ),
   );
 }

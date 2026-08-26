@@ -123,6 +123,9 @@ export type WordStep = {
   postSessionPollyDuration?: number;
   isHauntReturn?:            boolean;
   isMasteryRematch?:         boolean;
+  // Ordinary revisit of a word already mastered at the Boss. It stays out of
+  // Boss/Haunt selection but remains part of the player's living word pool.
+  isMasteredReturn?:         boolean;
 };
 
 export type PhraseBreakStep = {
@@ -172,6 +175,8 @@ export type MasteredWordRecord = {
   flawless?: boolean;
 };
 
+export type HuntPerformance = 'struggle' | 'steady' | 'clean';
+
 export type PlayerProgress = {
   masteredWords: MasteredWordRecord[];
   personalBest: number;
@@ -199,8 +204,11 @@ export type PlayerProgress = {
    *
    *  NOT BACKFILLABLE — no prior record of claimed REALs exists anywhere. */
   realMaskIdsFound?: string[];
+  /** Recent Hunt outcomes, most-recent-first. Used only to make the next draw
+   *  slightly kinder after repeated struggles or slightly sharper after repeated
+   *  clean clears; it never changes lives, scoring, or the Boss gate. */
+  recentHuntPerformance?: HuntPerformance[];
   /** Words actually shown to the player across their most recent runs,
-   *  most-recent-first, capped. Biases word selection away from immediate
    *  repeats — never a hard exclusion, never surfaced to the player, not a
    *  permanent record like masteredWords. */
   recentWordIds?: string[];

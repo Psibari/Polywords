@@ -22,6 +22,46 @@ ok(
 );
 ok(firstGame.runSeed === seed && secondGame.runSeed === seed, 'run seed is persisted in game state');
 
+// Adaptive pacing is deliberately deterministic and never changes the Boss/Haunt grammar.
+const defaultAdaptiveHunt = generateHunt({ seed: 2468 });
+const struggleAdaptiveHunt = generateHunt({
+  recentHuntPerformance: ['struggle', 'struggle'],
+  seed: 2468,
+});
+const cleanAdaptiveHunt = generateHunt({
+  recentHuntPerformance: ['clean', 'clean', 'clean'],
+  seed: 2468,
+});
+const adaptiveBoss = (steps: typeof defaultAdaptiveHunt) =>
+  steps[steps.length - 1];
+ok(
+  JSON.stringify(struggleAdaptiveHunt) === JSON.stringify(generateHunt({
+    recentHuntPerformance: ['struggle', 'struggle'],
+    seed: 2468,
+  })),
+  'struggle adaptive draws remain deterministic',
+);
+ok(
+  JSON.stringify(cleanAdaptiveHunt) === JSON.stringify(generateHunt({
+    recentHuntPerformance: ['clean', 'clean', 'clean'],
+    seed: 2468,
+  })),
+  'clean adaptive draws remain deterministic',
+);
+const struggleBoss = struggleAdaptiveHunt[struggleAdaptiveHunt.length - 1];
+ok(
+  struggleBoss.kind === 'word' &&
+    struggleBoss.eventType === 'bossWord' &&
+    struggleBoss.isMasteredReturn !== true,
+  'struggle adaptation keeps the final Boss slot intact',
+);
+ok(
+  struggleAdaptiveHunt.some(
+    (step) => step.kind === 'word' && step.isMasteredReturn === true,
+  ) === false,
+  'adaptive draw does not invent mastered returns',
+);
+
 console.log('huntDeterminism tests passed');
 
 const data = rawHuntData as Record<string, {
@@ -38,17 +78,38 @@ const bossCapable = Object.keys(data).filter(word =>
   (data[word].hiddenPairs?.length ?? 0) > 0 ||
   (data[word].hiddenMeaning != null && data[word].hiddenTrap != null),
 );
-const rematchHunt = generateHunt({ masteredWords: bossCapable, seed: 90210 });
-const rematchBoss = rematchHunt.find(step => step.kind === 'word' && step.eventType === 'bossWord');
+// Mastered words return to ordinary play, but never back into the Boss slot.
+// Leave one Boss-capable word unmastered so the run still has a valid Boss.
+const unmasteredBoss = bossCapable[0];
+const masteredExceptBoss = Object.keys(data).filter(word => word !== unmasteredBoss);
+const masteredReturnHunt = generateHunt({ masteredWords: masteredExceptBoss, seed: 90210 });
+const masteredReturnSteps = masteredReturnHunt.filter(step => step.kind === 'word');
+const masteredReturnBoss = masteredReturnSteps[masteredReturnSteps.length - 1];
 ok(
-  rematchBoss?.kind === 'word' && rematchBoss.isMasteryRematch === true,
-  'mastered boss pool becomes an explicit rematch instead of exhausting',
+  masteredReturnBoss?.kind === 'word' &&
+    masteredReturnBoss.eventType === 'bossWord' &&
+    masteredReturnBoss.word === unmasteredBoss &&
+    masteredReturnBoss.isMasteredReturn !== true,
+  'an unmastered Boss-capable word remains the Boss',
 );
-if (rematchBoss?.kind === 'word') {
-  const sourcePairs = data[rematchBoss.word].hiddenPairs ?? [];
+const masteredReturns = masteredReturnSteps.filter(
+  step => step.kind === 'word' && step.isMasteredReturn === true,
+);
+ok(masteredReturns.length > 0, 'mastered words remain reachable as ordinary returns');
+ok(
+  masteredReturns.every(step => step.kind === 'word' && step.eventType !== 'bossWord' && !step.isHauntReturn),
+  'mastered returns are never Bosses or Returning Haunts',
+);
+const repeatedMasteredReturnHunt = generateHunt({ masteredWords: masteredExceptBoss, seed: 90210 });
+ok(
+  JSON.stringify(masteredReturnHunt) === JSON.stringify(repeatedMasteredReturnHunt),
+  'mastered-return draws remain deterministic for the same seed',
+);
+if (masteredReturnBoss?.kind === 'word') {
+  const sourcePairs = data[masteredReturnBoss.word].hiddenPairs ?? [];
   ok(
-    rematchBoss.hiddenPairs?.every((pair, index) => pair.id === sourcePairs[index]?.id) === true,
-    'generated boss pairs retain source stable IDs',
+    masteredReturnBoss.hiddenPairs?.every((pair, index) => pair.id === sourcePairs[index]?.id) === true,
+    'generated Boss pairs retain source stable IDs',
   );
 }
 
