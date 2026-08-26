@@ -10,7 +10,7 @@ import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
-import { preloadHuntTrack } from './app/audio/MusicEngine';
+import { preloadHuntTrack, setMusicAppActive } from './app/audio/MusicEngine';
 import { preloadSfx } from './app/audio/sfx';
 import { loadPlaytestEvents } from './app/game/playtestTelemetry';
 
@@ -50,8 +50,8 @@ export default function App() {
   // as Home is about to render, so the first real Hunt/Daily entry doesn't
   // pay the full load cost that startMusic('hunt')/preloadSfx() would
   // otherwise hit cold — same fix as the music preload, same root cause.
-  // preloadSfx() is idempotent per sound, so GameScreen/DailyChallengeScreen
-  // calling it again on mount is a harmless no-op once this has already run.
+  // Audio is app-owned: screens request readiness and music ownership but do
+  // not preload or destroy the shared SFX pools while navigation transitions.
   useEffect(() => {
     if (bootChecksDone) {
       preloadHuntTrack();
@@ -61,6 +61,7 @@ export default function App() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
+      setMusicAppActive(nextState === 'active');
       if (nextState !== 'active') {
         void flushActiveGamePersistence().catch(() => {});
       }

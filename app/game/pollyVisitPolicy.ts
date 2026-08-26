@@ -29,6 +29,7 @@ export type PollyEvent =
   | 'gateMastered'
   | 'gateMasteredBoss'
   | 'hiddenMasterFailed'
+  | 'hauntMasterFailed'
   | 'hauntFailed'
   | 'oneWrongMove'
   | 'huntIntro'
@@ -113,10 +114,14 @@ const HAUNTED_GLOAT: VisitSpec = {
   holdPerch: true, perchMs: 2500,
 };
 
-// Sound-free by design: ResultsScreen reliably plays pollySqwawkLaugh once on
-// mount, before this visit's board can ever unmount. Giving this spec its own
-// sfx raced that reliable copy — MaskBoard sometimes stays mounted long enough
-// for the visit's own delayed playSfx to also fire, doubling the laugh.
+const RETURNING_HAUNT_GLOAT: VisitSpec = {
+  ...HAUNTED_GLOAT,
+  sfx: null,
+};
+
+// ResultsScreen owns the one terminal Hunt-loss chuckle. Keeping the board
+// visit silent prevents the death hold and Results transition from requesting
+// the same favorite sound twice.
 const GAME_OVER_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
   lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: null,
@@ -175,6 +180,7 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   if (event === 'gateMasteredBoss') return { action: 'visit', spec: MASTERED_REACTION };
   if (event === 'gateMastered') return { action: 'visit', spec: MASTERED_REACTION };
   if (event === 'hiddenMasterFailed') return { action: 'visit', spec: HAUNTED_GLOAT };
+  if (event === 'hauntMasterFailed') return { action: 'visit', spec: RETURNING_HAUNT_GLOAT };
   if (event === 'gameOver') return { action: 'visit', spec: GAME_OVER_LAUGH };
   if (event === 'hauntFailed') return { action: 'visit', spec: HAUNT_FAILED_LAUGH };
   if (event === 'cleanSweep' && !state.cleanSweepSeenThisRun) {

@@ -496,7 +496,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   // Polly gloats over a lost run — the on-board laugh can't render because
   // the board unmounts to Results the instant the run ends.
   useEffect(() => {
-    if (status === 'gameOver') playSfx('pollySqwawkLaugh');
+    if (status === 'gameOver') playSfx('pollySqwawkLaugh', { bypassCooldown: true });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

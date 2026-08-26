@@ -41,12 +41,11 @@ import {
 } from '../game/dailyClaimPresentation';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
-import { playSfx, preloadSfx, sfxReady } from '../audio/sfx';
+import { playSfx, sfxReady } from '../audio/sfx';
 import {
   setMusicState,
   startMusic,
   stopMusic,
-  musicReady,
 } from '../audio/MusicEngine';
 import {
   DAILY_WIN_TITLE,
@@ -633,19 +632,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // DAILY SFX PRELOAD
-  useEffect(() => {
-    preloadSfx();
-  }, []);
-
-  // AUDIO READY GATE — same pattern GameScreen already uses (audioReady /
-  // gameplayGateActive). Daily previously had no equivalent, so cards were
-  // tappable immediately, racing preloadSfx() every session rather than
-  // only on a slow load.
+  // AUDIO READY GATE — SFX is app-owned and shared across screens. Daily
+  // waits for that shared pool instead of starting its own preload race.
   const [audioReady, setAudioReady] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    Promise.all([sfxReady(), musicReady()]).then(() => {
+    sfxReady().then(() => {
       if (!cancelled) setAudioReady(true);
     });
     return () => { cancelled = true; };

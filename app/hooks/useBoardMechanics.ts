@@ -301,7 +301,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
         }, 550);
       } else {
         setGatePhase('wrongFail');
-        firePollyEvent('hiddenMasterFailed');
+        firePollyEvent('hauntMasterFailed');
         perform.onHauntedSequence({ isHaunt: true, failedMaskId: '' });
         setTimeout(() => firePollyEvent('hauntFailed'), 400);
         setTimeout(() => {
@@ -466,9 +466,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     setGauntletActive(false);
     setGatePhase('wrongFail');
     setFailedHiddenTileId(failedMaskId);
-    firePollyEvent('hiddenMasterFailed');
+    firePollyEvent(isHaunt ? 'hauntMasterFailed' : 'hiddenMasterFailed');
 
     perform.onHauntedSequence({ isHaunt, failedMaskId });
+
 
     // Runs on its own timer (rather than nested inside the presenter's
     // STILL HAUNTED visual sequence) so this file never has to reach back

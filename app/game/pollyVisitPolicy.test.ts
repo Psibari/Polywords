@@ -76,6 +76,19 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.holdPerch, true, 'gameOver.holdPerch');
 }
 
+// hiddenMasterFailed keeps the boss hidden-failure gloat sound.
+{
+  const s = visitSpec(resolveVisit('hiddenMasterFailed', idle), 'hiddenMasterFailed');
+  eq(s.sfx, 'pollySqwawkLaugh', 'hiddenMasterFailed.sfx');
+}
+
+// Returning Haunt's first failure beat is silent; the final hauntFailed beat
+// owns the one favorite chuckle, and the run continues afterward.
+{
+  const s = visitSpec(resolveVisit('hauntMasterFailed', idle), 'hauntMasterFailed');
+  eq(s.sfx, null, 'hauntMasterFailed.sfx');
+}
+
 // hauntFailed: same laugh beat, but the run continues — does NOT hold the
 // perch. Regression guard for the fix that split this off from gameOver.
 {

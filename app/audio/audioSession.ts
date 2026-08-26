@@ -36,21 +36,36 @@ export function ensureAudioSessionConfigured(): Promise<void> {
       interruptionMode: 'doNotMix',
     });
 
-    configure.catch(error => {
-      // Reset so a later caller gets a fresh attempt instead of being
-      // stuck sharing this rejected promise for the rest of the session.
-      audioSessionPromise = null;
-      warnDev('setAudioModeAsync rejected.', error);
-    });
-
-    const timeout = new Promise<void>(resolve => {
-      setTimeout(() => {
-        warnDev(`setAudioModeAsync did not settle within ${CONFIGURE_TIMEOUT_MS}ms — continuing without confirmation.`);
+    audioSessionPromise = new Promise<void>(resolve => {
+      let settled = false;
+      let timedOut = false;
+      const finish = (message?: string, error?: unknown) => {
+        if (settled) return;
+        settled = true;
+        if (message) warnDev(message, error);
         resolve();
+      };
+      const timeoutId = setTimeout(() => {
+        timedOut = true;
+        finish(`setAudioModeAsync did not settle within ${CONFIGURE_TIMEOUT_MS}ms — continuing without confirmation.`);
       }, CONFIGURE_TIMEOUT_MS);
-    });
 
-    audioSessionPromise = Promise.race([configure, timeout]).then(() => undefined, () => undefined);
+      configure.then(
+        () => {
+          clearTimeout(timeoutId);
+          finish();
+        },
+        error => {
+          clearTimeout(timeoutId);
+          // A late rejection means the timed-out attempt really failed.
+          // Clear the shared promise now so a later audio request can make
+          // one fresh attempt, without overlapping the native call that just
+          // settled.
+          audioSessionPromise = null;
+          finish('setAudioModeAsync rejected.', error);
+        },
+      );
+    });
   }
 
   return audioSessionPromise;

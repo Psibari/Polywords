@@ -16,8 +16,8 @@ import { heroBookMaterial } from '../ui/pwMaterials';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { BOSS_SKY_TUNING, HUNT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import ResultsScreen from './ResultsScreen';
-import { playSfx, preloadSfx, unloadSfx, sfxReady } from '../audio/sfx';
-import { startMusic, stopMusic, setMusicState, MusicState, musicReady } from '../audio/MusicEngine';
+import { playSfx, sfxReady } from '../audio/sfx';
+import { startMusic, stopMusic, setMusicState, MusicState } from '../audio/MusicEngine';
 import { Haptics } from '../utils/haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
@@ -760,22 +760,13 @@ function GameDirector({ navigation }: { navigation: any }) {
     };
   }, [game.stepIndex, game.status, resetIdleTimer]);
 
-  useEffect(() => {
-    preloadSfx();
-    return () => {
-      unloadSfx();
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Audio and the board used to render independently and just show up
-  // whenever each one's own async work finished — the visible "things
-  // arrive at different times" glitch. This holds the initial reveal
-  // (via gameplayGateActive below) until both engines report ready, same
-  // fail-open philosophy as introSeen/bossIntroSeen: never blocks forever.
+  // SFX session setup is app-owned and warmed from App.tsx. This holds the
+  // initial reveal until the audio session is available; individual effects
+  // load on demand, while music starts through the focused screen owner.
   const [audioReady, setAudioReady] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    Promise.all([sfxReady(), musicReady()]).then(() => {
+    sfxReady().then(() => {
       if (!cancelled) setAudioReady(true);
     });
     return () => {

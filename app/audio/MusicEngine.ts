@@ -74,12 +74,18 @@ let fadeRafId: number | null = null;
 let pauseTimerId: ReturnType<typeof setTimeout> | null = null;
 const savedPositions: Partial<Record<TrackKey, number>> = {};
 
-const LOAD_RETRY_MS = [60, 150, 300, 600, 1200];
+// Native asset preparation can take several seconds on a cold device. The
+// status listener normally wakes playback as soon as loading completes; this
+// ladder is only a bounded fallback for platforms that miss that event.
+const LOAD_RETRY_MS = [100, 250, 500, 1000, 2000, 4000];
 let transportPaused = false;
 let loadRetryId: ReturnType<typeof setTimeout> | null = null;
 let loadRetryAttempt = 0;
 let transitionRequestedAt = 0;
 let tracedTransitionToken = -1;
+let appIsActive = true;
+let restartCurrentTrackAtZero = false;
+let pausedForApp = false;
 
 // A native play() failure (e.g. iOS "Server was dead when activation request
 // was made") means the underlying player object itself is broken, not just
@@ -176,7 +182,7 @@ function playLoadedTrack(token: number): void {
   }
 
   clearLoadRetry();
-  if (transportPaused) return;
+  if (transportPaused || !appIsActive) return;
 
   if (configuredTrackToken !== token) {
     try {
@@ -186,6 +192,14 @@ function playLoadedTrack(token: number): void {
     } finally {
       configuredTrackToken = token;
     }
+  }
+
+  if (restartCurrentTrackAtZero) {
+    restartCurrentTrackAtZero = false;
+    void livePlayer.seekTo(0, 0, 0)
+      .catch(error => warnDev(`failed to restart ${desiredTrack} track`, error))
+      .finally(() => playLoadedTrack(token));
+    return;
   }
 
   const seek = pendingSeek;
@@ -224,7 +238,10 @@ function playLoadedTrack(token: number): void {
 }
 
 function createPlayer(): AudioPlayer {
-  const nextPlayer = createAudioPlayer(null, {
+  // Start with a real source. Constructing a null-source player and attaching
+  // the first track later can leave the native player permanently unloaded on
+  // device, which makes the retry ladder spin without ever starting music.
+  const nextPlayer = createAudioPlayer(TRACK_SOURCES.hunt, {
     keepAudioSessionActive: true,
     updateInterval: 250,
   });
@@ -344,33 +361,6 @@ export function initMusicEngine(): Promise<void> {
   return initPromise;
 }
 
-const READY_POLL_MS = 40;
-// Matches sfx.ts's READY_TIMEOUT_MS — see that file for why 1200ms was
-// raised: real device loads measured at 1-3s made "start anyway" the
-// typical outcome rather than a rare edge case.
-const READY_TIMEOUT_MS = 2000;
-
-// Condition-based, not a fixed delay: resolves once the active player has
-// actually loaded its track, or after READY_TIMEOUT_MS — a caller gating on
-// this must never be blocked indefinitely by a slow or dead audio server
-// (the rebuild self-heal above keeps working in the background regardless;
-// this just tells a caller when the *typical* case is already ready).
-export function musicReady(): Promise<void> {
-  if (player?.isLoaded) return Promise.resolve();
-
-  return new Promise(resolve => {
-    const startedAt = Date.now();
-    const poll = () => {
-      if (player?.isLoaded || Date.now() - startedAt >= READY_TIMEOUT_MS) {
-        resolve();
-        return;
-      }
-      setTimeout(poll, READY_POLL_MS);
-    };
-    poll();
-  });
-}
-
 // Warms the hunt track in the background (silent, not playing) so the first
 // real startMusic('hunt') call — which fires the moment GameScreen mounts —
 // finds an already-loaded track instead of paying the full asset-load cost
@@ -389,7 +379,6 @@ export function preloadHuntTrack(): void {
       const preloadPlayer = createPlayer();
       player = preloadPlayer;
       try {
-        preloadPlayer.replace(TRACK_SOURCES.hunt);
         preloadPlayer.loop = true;
         activeTrackKey = 'hunt';
       } catch (error) {
@@ -401,6 +390,7 @@ export function preloadHuntTrack(): void {
 export function startMusic(owner: MusicOwner): void {
   activeOwner = owner;
   transportPaused = false;
+  pausedForApp = false;
   clearPauseTimer();
   cancelFade();
   void initMusicEngine().then(applyDesiredState);
@@ -430,12 +420,14 @@ export function stopMusic(owner: MusicOwner): void {
 
 export function setMusicState(owner: MusicOwner, newState: MusicState): void {
   if (newState === 'off') {
-    if (activeOwner !== owner || transportPaused) return;
+    if (activeOwner !== owner) return;
     // A new run must start its loop from the top, not resume mid-loop from
     // wherever the previous run's last track switch left it.
     for (const key of Object.keys(savedPositions) as TrackKey[]) {
       delete savedPositions[key];
     }
+    restartCurrentTrackAtZero = true;
+    pausedForApp = false;
     pauseTransport();
     return;
   }
@@ -454,9 +446,29 @@ export function setMusicEnabled(enabled: boolean): void {
 // keeps the singleton and desired state available for a clean focus return.
 // setMusicState(owner, 'off') pauses the transport in place without
 // releasing ownership, for a run ending while its screen stays focused.
+export function setMusicAppActive(active: boolean): void {
+  appIsActive = active;
+  if (!active) {
+    if (activeOwner && !transportPaused) {
+      pausedForApp = true;
+      pauseTransport();
+    }
+    return;
+  }
+  if (activeOwner && pausedForApp) {
+    pausedForApp = false;
+    transportPaused = false;
+    clearPauseTimer();
+    applyDesiredState();
+  }
+}
+
 export function haltMusicEngine(): void {
   activeOwner = null;
   activeTrackKey = null;
+  appIsActive = true;
+  restartCurrentTrackAtZero = false;
+  pausedForApp = false;
   configuredTrackToken = -1;
   pendingSeek = null;
   transitionToken += 1;
