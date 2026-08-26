@@ -32,7 +32,7 @@ assert.match(
 );
 assert.match(
   gauntletSpines,
-  /style=\{\[styles\.row, \{ height: activeCardHeight \+ ROW_VERTICAL_INSET \}\]\}/,
+  /style=\{\[styles\.row, \{ height: activeCardHeight \+ ROW_VERTICAL_INSET/,
   'BossGauntletSpines row must grow with the active card measurement',
 );
 assert.match(

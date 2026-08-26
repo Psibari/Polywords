@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mask } from '../game/types';
@@ -55,6 +55,8 @@ export type BossGauntletSpinesProps = {
 // (MaskBoard.tsx) — the flip should finish at roughly the same beat the
 // tile becomes swipeable (tileLanded).
 const SPINE_OPEN_MS = 280;
+const STONE_PUSH_MS = 320;
+const STONE_PUSH_TRANSLATE_Y = 18;
 // Sized against MaskBoard's own container padding (14px each side) so 3
 // slots + 2 gaps fit on the narrowest realistic target width (375pt)
 // without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
@@ -224,7 +226,6 @@ function SpineSlot({
           // of the card"). Once any card is active, the other two are
           // background and have no reason to keep casting depth, so
           // `anyOpen` cuts their shadow the same instant the sibling opens.
-          !elevated && !anyOpen && styles.cardShadow,
           {
             opacity: closedOpacity,
             transform: [{ perspective: CARD_PERSPECTIVE }, { rotateY: closedRotateY }],
@@ -343,12 +344,27 @@ export function BossGauntletSpines({
   // handleActiveCardHeightChange above, so this never undersizes an
   // actually-open card.
   const activeCardHeight = resolveGauntletRowHeight(measuredCardHeights, CARD_CLOSED_HEIGHT);
+  const reduceMotion = useReducedMotionPreference();
 
   useEffect(() => {
     onActiveCardHeightChange?.(activeCardHeight);
   }, [activeCardHeight, onActiveCardHeightChange]);
 
   if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
+
+  const entranceTransY = useMemo(() => new Animated.Value(STONE_PUSH_TRANSLATE_Y), []);
+  useEffect(() => {
+    if (reduceMotion !== false) {
+      entranceTransY.setValue(0);
+      return;
+    }
+    Animated.timing(entranceTransY, {
+      toValue: 0,
+      duration: STONE_PUSH_MS,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [entranceTransY, reduceMotion]);
 
   return (
     <View style={styles.wrap} pointerEvents="box-none">
@@ -360,8 +376,8 @@ export function BossGauntletSpines({
         <Text style={styles.instruction}>CHOOSE A SEAL</Text>
         <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
       </View>
-      <View
-        style={[styles.row, { height: activeCardHeight + ROW_VERTICAL_INSET }]}
+      <Animated.View
+        style={[styles.row, { height: activeCardHeight + ROW_VERTICAL_INSET, transform: [{ translateY: entranceTransY }] }]}
         pointerEvents="box-none"
       >
         {gauntletTiles.map((tile, index) => (
@@ -389,7 +405,7 @@ export function BossGauntletSpines({
           slotHeight={measuredCardHeights.get(tile.mask.id) ?? CARD_CLOSED_HEIGHT}
         />
         ))}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -453,9 +469,6 @@ const styles = StyleSheet.create({
     left: 0,
     width: CARD_WIDTH,
     height: CARD_CLOSED_HEIGHT,
-    borderRadius: PW.radius.card,
-    borderWidth: 1.5,
-    borderColor: heroBookMaterial.goldHairline,
     overflow: 'hidden',
   },
   // Split out from `card` — see the "shadow ghost" comment where this is
@@ -491,6 +504,9 @@ const styles = StyleSheet.create({
   // take up most of the card instead of sharing space with text (Pete,
   // 2026-08-15: "just the crowns as big as they go").
   cardMarker: {
+    position: 'absolute',
+    left: (CARD_WIDTH - 84) / 2,
+    top: (CARD_CLOSED_HEIGHT - 54) / 2,
     width: 84,
     height: 54,
   },
