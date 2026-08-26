@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
 Updated August 25, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `4e6294d`.
+`origin/play-screen-overhaul`. Current code baseline: `eee5112`.
 
 ## Verified Current State
 
@@ -17,7 +17,12 @@ Updated August 25, 2026. Branch: `play-screen-overhaul`, tracking
 - The tracked Hunt workbook is `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`; live JSON remains
   authoritative.
 - Live Polly uses pose images. The layered rig remains dormant.
-- Local playtest telemetry is available through Settings and is never networked.
+- The current Hunt generator keeps mastered words in ordinary tension/panic play as marked
+  revisits. Mastered words cannot be Bosses or Returning Haunts, and deterministic regression
+  coverage protects those rules. The old mastered-word deletion/rematch behavior is retired.
+- The Vault now derives books from claimed visible REAL mask IDs: a word appears after its first
+  claim and is finished when all of its visible REALs are claimed. Banishing a Haunt removes it
+  from the active ghost queue; permanent Haunt-clear history in the Vault is not implemented yet.
 
 ## REWARD ECONOMY
 
@@ -27,9 +32,13 @@ Updated August 25, 2026. Branch: `play-screen-overhaul`, tracking
   clear certifies the tiles dealt, not the word.
 - Roughly every fifth new word should carry `hiddenPairs`. APPROVED. This is the only fix for
   the mastery ceiling.
-- Rank thresholds UNRULED: go relative (grade each run against the maximum that run could have
-  produced), retune the absolute numbers, or cut the ladder. Relative is recommended because
-  absolute thresholds drift on every content ship.
+- Rank thresholds are now retuned and live: D 0, C 3,000, B 6,000, A 9,000, S 11,500,
+  MASTER 14,000. This is an absolute ladder and should be revisited if future content changes
+  materially alter the perfect-play ceiling.
+- Roughly every fifth new word should carry `hiddenPairs`. APPROVED as the content remedy for
+  the finite Boss pool; the current runtime still has 13 Boss words / 39 hidden pairs.
+- Banished Haunts are removed from the active queue but are not yet recorded as a permanent Vault
+  collection item. This is a future reward/UX decision, not a reason to remove Haunts from Hunt.
 
 ## Approved Daily Content
 
@@ -42,17 +51,15 @@ five distractors.
 ## Next Work
 
 1. Continue real-device iOS/Android journey checks before release.
-2. Implement the mastered-word return in `huntGenerator.ts`. Mastered words stay out of
-  `bossPool` and out of the Returning Haunt reservation, are mixed INTO the tension and panic
-  pools (not appended as a fallback tier — `next()` walks pools in order and tension never
-  exhausts against a three-word draw), are excluded from the boss slot's `hasBossContent`
-  fallback chain, and carry a flag on the step marking the round as a return. Guard it in
-  `huntDeterminism.test.ts`: a mastered word must never be the boss, never be the haunt, and
-  must be reachable as an ordinary round. Card treatment and Polly's reaction lines are a
-  separate later task.
-3. The three sealed boss-gauntlet cards in `BossGauntletSpines.tsx` are placeholder art by
-  their own comment. Pete's direction is stone blocks pushing out of the wall with a crown,
-  replacing the `rotateY` flip with a push-forward motion. Not yet specified.
+2. Author and editorially approve more Boss-capable Hunt words, targeting roughly one in five
+  new words with three fair, stable-ID `hiddenPairs`. Do not generate placeholder hidden truth.
+3. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should
+  remember that victory. Keep the hidden pair ledger on Polly's side; do not turn it into a
+  player shelf collection.
+4. Replace the placeholder Boss-gauntlet card art when the stone-block/crown direction is
+  specified. The desired motion is push-forward, not `rotateY`.
+5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
+  persistence, gestures, animation, and performance.
 
 ## Protection
 

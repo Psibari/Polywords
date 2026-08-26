@@ -45,12 +45,7 @@ navigation shell; active Hunt and Daily play are nav-free.
 - A Returning Haunt re-tests the exact hidden pair that previously won. Success banishes it;
   failure keeps it queued. Ordinary missed meanings are not Haunts.
 - `bossOutcome` is authoritative. Score/rank never decides mastery.
-- Mastery currently removes a word from EVERY pool (`huntGenerator.ts:216`). Because boss
-  words are gpsTag 'boss' and no ordinary phase's fallback chain reaches bossPool, a mastered
-  word leaves the game entirely, taking its visible REALs with it (55 across the 13 boss words).
-  Past the boss-word count every boss is isMasteryRematch and `recordMastery` is skipped
-  (`useGameStore.ts:531`), so the round records nothing either way. Both are known and
-  scheduled for change, not intended behaviour.
+- Mastered words return to ordinary Hunt play as marked revisits. They stay out of the Boss slot and Returning Haunt reservation, but are mixed into the tension and panic pools so mastery changes a word's status without deleting its visible REALs. `isMasteredReturn` marks these ordinary returns; `isMasteryRematch` is legacy compatibility only and is no longer generated.
 
 #### Scoring
 
@@ -61,18 +56,17 @@ navigation shell; active Hunt and Daily play are nav-free.
   masks carry isRare.
 - `FEATHER_MILESTONES` fires for FX only. The old score-to-extra-life conversion was
   deliberately removed as regressive and stays removed.
-- `ranks.ts` thresholds are absolute values anchored to a 2026-07-13 simulation. Against
-  current content a flawless 10-round run scores 15,425-18,050 and a flawless 8-round
-  fledgling run maxes at 15,600, so MASTER (19,500) is unreachable. The ladder is UNDER
-  REVIEW.
+- `ranks.ts` uses the current absolute ladder: D 0, C 3,000, B 6,000, A 9,000, S 11,500,
+  MASTER 14,000. The ladder was retuned against the current 197-word corpus and observed
+  flawless-run ceiling; rank remains a per-run skill verdict, not long-term Vault progress.
 
 ### Vault
 
-- The reward economy pass is COMPLETE. The Vault's headline becomes a count of visible REAL
-  meanings claimed (`realMaskIdsFound`, a count with no denominator); `personalBest` and the
-  rank letter come off the bookplate; books represent words, plain once any of that word's
-  visible REALs are found and finished once all are. Perfect-run clears are a Results event,
-  not a Vault record.
+- The Vault's headline is visible REAL meanings claimed (`realMaskIdsFound`, a count with no
+  denominator); personalBest and the rank letter are secondary, accessible through the run-rank
+  link rather than the bookplate identity. Books represent words, plain once any visible REAL is
+  found and finished once all visible REALs are claimed. A banished Haunt leaves the active ghost
+  queue, but a permanent Haunt-clear history entry is not yet part of the Vault.
 
 ### Daily
 

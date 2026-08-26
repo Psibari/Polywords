@@ -10,8 +10,11 @@ This file owns durable Hunt rules. Live code remains authoritative for implement
 - Six starting feathers; zero ends the run. Up to five visible masks appear per word.
 - UP claims a REAL; RIGHT rejects a trap. Wrong choices cost one feather, reset the chain,
   and preserve the chosen mask ID/direction in results.
-- Mastered words leave the standard pool. RUN IT BACK creates a fresh arc with ghost priority.
-- `huntGenerator.ts` builds the arc from `assets/data/huntData.json`.
+- Mastered words return to ordinary tension/panic play as marked revisits. They are excluded from
+  the Boss slot and Returning Haunt reservation, so mastery changes their status without deleting
+  their visible REAL meanings. `RUN IT BACK` creates a fresh arc with ghost priority.
+- `huntGenerator.ts` builds the arc from `assets/data/huntData.json` and marks ordinary mastered
+  revisits with `isMasteredReturn`.
 
 Economy target: roughly 54% survive and 25% master, with deaths concentrated late. This
 depends on genuinely difficult but fair boss-hidden content; it is a simulation target, not
@@ -24,8 +27,9 @@ measured player data.
   put back.
 - All three hidden tiles correct = MASTERED. One hidden mistake or boss death = HAUNTED.
 - Visible mistakes do not block the gauntlet; they only affect `bossFlawless`.
-- A Returning Haunt re-tests the exact hidden pair that previously won.
-- Success banishes it; failure keeps it queued. Ordinary missed meanings are not Haunts.
+- A Returning Haunt re-tests the exact hidden pair that previously won. Success banishes it from
+  the active ghost queue; failure keeps it queued. Banished Haunts are currently not persisted as
+  a separate Vault collection item. Ordinary missed meanings are not Haunts.
 - `bossOutcome` is the authority for mastery/haunt. The Master Gate must not return.
 
 ## Scoring and Rank
@@ -39,7 +43,8 @@ measured player data.
 | Wrong choice | 0 |
 
 The chain starts at 1×, rises by 0.5× every three consecutive correct choices, caps at 3×,
-and resets on error. Ranks: D 0, C 3,000, B 6,000, A 10,000, S 15,000, MASTER 19,500.
+and resets on error. Current ranks: D 0, C 3,000, B 6,000, A 9,000, S 11,500, MASTER 14,000.
+The ladder is an absolute per-run skill axis; it does not represent long-term Vault progress.
 
 Score milestones at 3,000 and 10,000 celebrate but do not award feathers.
 

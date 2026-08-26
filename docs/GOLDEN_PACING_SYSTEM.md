@@ -30,7 +30,9 @@ stack. It never receives boss presentation.
 5. unseen or least-recently-seen material.
 
 Boss-hidden content must be rare-but-fair and sourced. Returning Haunts take their reserved
-slot; mastered words remain out of the standard pool.
+slot; mastered words remain eligible only for ordinary tension/panic revisits, never Boss or
+Returning Haunt placement. The generator marks those revisits so presentation can acknowledge
+them without leaking their status before commitment.
 
 `app/game/huntGenerator.ts` owns the executable phase plan and fallbacks. Do not add pacing
 schema or automated content rewriting without an approved task.
