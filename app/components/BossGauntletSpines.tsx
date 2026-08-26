@@ -127,7 +127,6 @@ function SpineSlot({
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
   const entranceTransY = useRef(new Animated.Value(STONE_RECESS_TRANSLATE_Y)).current;
   const entranceScale = useRef(new Animated.Value(STONE_RECESS_SCALE)).current;
-  const entranceOpacity = useRef(new Animated.Value(0)).current;
   const measuredHeightRef = useRef(GAUNTLET_CARD_OPEN_MIN_HEIGHT);
   const resolved = status !== 'idle';
   // Open (or resolved) cards render wider than their 90px slot (see
@@ -161,13 +160,8 @@ function SpineSlot({
     if (reduceMotion !== false) {
       entranceTransY.setValue(0);
       entranceScale.setValue(1);
-      entranceOpacity.setValue(1);
       return;
     }
-    entranceOpacity.setValue(0);
-    entranceTransY.setValue(STONE_RECESS_TRANSLATE_Y);
-    entranceScale.setValue(STONE_RECESS_SCALE);
-
     const timer = setTimeout(() => {
       Animated.parallel([
         Animated.timing(entranceTransY, {
@@ -182,15 +176,10 @@ function SpineSlot({
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-        Animated.timing(entranceOpacity, {
-          toValue: 1,
-          duration: Math.min(140, STONE_ENTRANCE_MS),
-          useNativeDriver: true,
-        }),
       ]).start();
     }, entranceDelay);
     return () => clearTimeout(timer);
-  }, [entranceDelay, reduceMotion, entranceTransY, entranceScale, entranceOpacity]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [entranceDelay, reduceMotion, entranceTransY, entranceScale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const target = isOpen || resolved ? 1 : 0;
@@ -270,7 +259,12 @@ function SpineSlot({
           // `anyOpen` cuts their shadow the same instant the sibling opens.
           {
             opacity: closedOpacity,
-            transform: [{ perspective: CARD_PERSPECTIVE }, { rotateY: closedRotateY }],
+            transform: [
+              { translateY: entranceTransY },
+              { scale: entranceScale },
+              { perspective: CARD_PERSPECTIVE },
+              { rotateY: closedRotateY },
+            ],
           },
         ]}
       >
