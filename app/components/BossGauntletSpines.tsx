@@ -55,10 +55,10 @@ export type BossGauntletSpinesProps = {
 // (MaskBoard.tsx) — the flip should finish at roughly the same beat the
 // tile becomes swipeable (tileLanded).
 const SPINE_OPEN_MS = 280;
-const STONE_ENTRANCE_MS = 420;
-const STONE_ENTRANCE_STAGGER_MS = 80;
-const STONE_RECESS_TRANSLATE_Y = 24;
-const STONE_RECESS_SCALE = 0.92;
+const STONE_ENTRANCE_MS = 500;
+const STONE_ENTRANCE_STAGGER_MS = 100;
+const STONE_RECESS_TRANSLATE_Y = 50;
+const STONE_RECESS_SCALE = 0.85;
 // Sized against MaskBoard's own container padding (14px each side) so 3
 // slots + 2 gaps fit on the narrowest realistic target width (375pt)
 // without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
@@ -157,11 +157,19 @@ function SpineSlot({
   }, [isOpen, onMeasuredHeightChange, tile.mask.id]);
 
   useEffect(() => {
+    // null = preference not yet resolved; hold at starting position
+    // so the later false→true transition has something to animate.
+    if (reduceMotion === null) return;
     if (reduceMotion !== false) {
       entranceTransY.setValue(0);
       entranceScale.setValue(1);
       return;
     }
+    // Reset to recessed position so the animation is always visible
+    // (the previous render may have snapped values to their targets
+    // while reduceMotion was still null).
+    entranceTransY.setValue(STONE_RECESS_TRANSLATE_Y);
+    entranceScale.setValue(STONE_RECESS_SCALE);
     const timer = setTimeout(() => {
       Animated.parallel([
         Animated.timing(entranceTransY, {
