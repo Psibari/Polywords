@@ -55,8 +55,10 @@ export type BossGauntletSpinesProps = {
 // (MaskBoard.tsx) — the flip should finish at roughly the same beat the
 // tile becomes swipeable (tileLanded).
 const SPINE_OPEN_MS = 280;
-const STONE_PUSH_MS = 320;
-const STONE_PUSH_TRANSLATE_Y = 18;
+const STONE_ENTRANCE_MS = 420;
+const STONE_ENTRANCE_STAGGER_MS = 80;
+const STONE_RECESS_TRANSLATE_Y = 24;
+const STONE_RECESS_SCALE = 0.92;
 // Sized against MaskBoard's own container padding (14px each side) so 3
 // slots + 2 gaps fit on the narrowest realistic target width (375pt)
 // without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
@@ -95,8 +97,9 @@ function centerOffsetX(index: number, tileCount: number): number {
 
 function SpineSlot({
   tile, index, offsetX, status, isOpen, anyOpen, tileLanded, inputLocked,
-  onPick, onSwipeUp, onSwipeRight, onEffect, onSwipeAttempt, onCardTouch,
-  onMeasuredHeightChange, onLayoutExitComplete, wordY, intakeY, totalTiles, slotHeight,
+  entranceDelay, reduceMotion, onPick, onSwipeUp, onSwipeRight, onEffect,
+  onSwipeAttempt, onCardTouch, onMeasuredHeightChange, onLayoutExitComplete,
+  wordY, intakeY, totalTiles, slotHeight,
 }: {
   tile: GauntletTile;
   index: number;
@@ -106,6 +109,8 @@ function SpineSlot({
   anyOpen: boolean;
   tileLanded: boolean;
   inputLocked: boolean;
+  entranceDelay: number;
+  reduceMotion: boolean;
   onPick: (index: number) => void;
   onSwipeUp: () => void;
   onSwipeRight: () => void;
@@ -120,7 +125,9 @@ function SpineSlot({
   slotHeight: number;
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
-  const reduceMotion = useReducedMotionPreference();
+  const entranceTransY = useRef(new Animated.Value(STONE_RECESS_TRANSLATE_Y)).current;
+  const entranceScale = useRef(new Animated.Value(STONE_RECESS_SCALE)).current;
+  const entranceOpacity = useRef(new Animated.Value(0)).current;
   const measuredHeightRef = useRef(GAUNTLET_CARD_OPEN_MIN_HEIGHT);
   const resolved = status !== 'idle';
   // Open (or resolved) cards render wider than their 90px slot (see
@@ -149,6 +156,41 @@ function SpineSlot({
     if (!isOpen) return;
     onMeasuredHeightChange(tile.mask.id, measuredHeightRef.current);
   }, [isOpen, onMeasuredHeightChange, tile.mask.id]);
+
+  useEffect(() => {
+    if (reduceMotion !== false) {
+      entranceTransY.setValue(0);
+      entranceScale.setValue(1);
+      entranceOpacity.setValue(1);
+      return;
+    }
+    entranceOpacity.setValue(0);
+    entranceTransY.setValue(STONE_RECESS_TRANSLATE_Y);
+    entranceScale.setValue(STONE_RECESS_SCALE);
+
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(entranceTransY, {
+          toValue: 0,
+          duration: STONE_ENTRANCE_MS,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(entranceScale, {
+          toValue: 1,
+          duration: STONE_ENTRANCE_MS,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(entranceOpacity, {
+          toValue: 1,
+          duration: Math.min(140, STONE_ENTRANCE_MS),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, entranceDelay);
+    return () => clearTimeout(timer);
+  }, [entranceDelay, reduceMotion, entranceTransY, entranceScale, entranceOpacity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const target = isOpen || resolved ? 1 : 0;
@@ -352,20 +394,6 @@ export function BossGauntletSpines({
 
   if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
-  const entranceTransY = useMemo(() => new Animated.Value(STONE_PUSH_TRANSLATE_Y), []);
-  useEffect(() => {
-    if (reduceMotion !== false) {
-      entranceTransY.setValue(0);
-      return;
-    }
-    Animated.timing(entranceTransY, {
-      toValue: 0,
-      duration: STONE_PUSH_MS,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [entranceTransY, reduceMotion]);
-
   return (
     <View style={styles.wrap} pointerEvents="box-none">
       <View
@@ -376,8 +404,8 @@ export function BossGauntletSpines({
         <Text style={styles.instruction}>CHOOSE A SEAL</Text>
         <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
       </View>
-      <Animated.View
-        style={[styles.row, { height: activeCardHeight + ROW_VERTICAL_INSET, transform: [{ translateY: entranceTransY }] }]}
+      <View
+        style={[styles.row, { height: activeCardHeight + ROW_VERTICAL_INSET }]}
         pointerEvents="box-none"
       >
         {gauntletTiles.map((tile, index) => (
@@ -391,6 +419,8 @@ export function BossGauntletSpines({
           anyOpen={anyOpen}
           tileLanded={tileLanded}
           inputLocked={inputLocked}
+          entranceDelay={index * STONE_ENTRANCE_STAGGER_MS}
+          reduceMotion={reduceMotion !== false}
           onPick={onPick}
           onSwipeUp={onSwipeUp}
           onSwipeRight={onSwipeRight}
@@ -405,7 +435,7 @@ export function BossGauntletSpines({
           slotHeight={measuredCardHeights.get(tile.mask.id) ?? CARD_CLOSED_HEIGHT}
         />
         ))}
-      </Animated.View>
+      </View>
     </View>
   );
 }
