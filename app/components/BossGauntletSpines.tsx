@@ -22,6 +22,7 @@ import { createBossGauntletPressProps } from './bossGauntletPress';
 // four corners decode to alpha 0, the crown shape itself to alpha 255),
 // recolored per card via tintColor rather than three separate art files.
 const crownMarkerArt = require('../../assets/images/gauntlet/crown-marker.png');
+const stoneMarkerArt = require('../../assets/ui/boss-gauntlet-stone-purple.png');
 // Three genuinely distinct hues, not three golds, so "which one is which"
 // actually reads. Pulled from the app's own locked palette, not new colors.
 export const CARD_MARKER_COLORS = [PW.color.gold, PW.color.rose, PW.color.lavender] as const;
@@ -230,30 +231,22 @@ function SpineSlot({
           },
         ]}
       >
-        {/* Same purple-leather gradient recipe as the Hero Book cover and
-            the Vault spines (heroBookMaterial), not a flat fill — this is
-            what actually reads as "book material" rather than "a plain
-            dark card," and reads as distinct from the flat cardMaterial
-            regular tiles use. Real closed-card texture/illustration is
-            still an open item (2026-08-15 doc); this is the material
-            recipe, not the final art. */}
-        <LinearGradient
-          colors={[
-            heroBookMaterial.coverPurpleTop,
-            heroBookMaterial.coverPurple,
-            heroBookMaterial.coverPurpleBot,
-          ]}
-          style={styles.cardFace}
-        >
-          {/* No "SEALED" label — Pete wants the crown to be the only
-              content, as large as the card can hold (2026-08-15). */}
-          <Image
-            source={crownMarkerArt}
-            contentFit="contain"
-            tintColor={CARD_MARKER_COLORS[index % CARD_MARKER_COLORS.length]}
-            style={styles.cardMarker}
-          />
-        </LinearGradient>
+        {/* Reusable prepared stone artwork; the crown remains the existing
+            repo marker and is still recolored per card. Both are separate
+            layers so the stone can be reused for all three choices and the
+            crown identity stays under app control. */}
+        <Image
+          source={stoneMarkerArt}
+          contentFit="cover"
+          style={styles.stoneFace}
+        />
+        <View style={styles.stoneTint} pointerEvents="none" />
+        <Image
+          source={crownMarkerArt}
+          contentFit="contain"
+          tintColor={CARD_MARKER_COLORS[index % CARD_MARKER_COLORS.length]}
+          style={styles.cardMarker}
+        />
       </Animated.View>
 
       {/* Closed hit target — sits on top while sealed, stops intercepting
@@ -484,6 +477,15 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  stoneFace: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  stoneTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15,13,42,0.10)',
   },
   // No "SEALED" label anymore — the crown is the only content, so it can
   // take up most of the card instead of sharing space with text (Pete,
