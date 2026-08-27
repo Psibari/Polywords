@@ -56,10 +56,25 @@ export type BossGauntletSpinesProps = {
 // (MaskBoard.tsx) — the flip should finish at roughly the same beat the
 // tile becomes swipeable (tileLanded).
 const SPINE_OPEN_MS = 280;
-const STONE_ENTRANCE_MS = 500;
+const STONE_ENTRANCE_MS = 520;
 const STONE_ENTRANCE_STAGGER_MS = 100;
-const STONE_RECESS_TRANSLATE_Y = 50;
-const STONE_RECESS_SCALE = 0.85;
+// Starting state: small, dim, offset up into the wall — "further from the
+// viewer, still in shadow" — rather than the old below-and-slightly-shrunk
+// recess. Re-tune against an on-device look, not a lock.
+const STONE_EMBED_TRANSLATE_Y = -34;
+const STONE_EMBED_SCALE = 0.35;
+const STONE_EMBED_OPACITY = 0.55;
+// Easing.back() overshoot amount for the landing settle — the stone drops
+// slightly past its resting spot on the ledge, then eases back to it, so it
+// reads as a physical thump rather than a drift into place.
+const STONE_LANDING_OVERSHOOT = 1.6;
+
+const DUST_PARTICLE_COUNT = 5;
+const DUST_DURATION_MS = 420;
+// Dusty tan-gray, deliberately distinct from pwEffects.ts's FX.shard palette
+// (magic gem/crystal colors) — this is ambient stone debris, not the
+// trap-shatter/gold-trail gameplay-feedback system, so it does not reuse it.
+const DUST_COLOR = '#B8A98F';
 // Sized against MaskBoard's own container padding (14px each side) so 3
 // slots + 2 gaps fit on the narrowest realistic target width (375pt)
 // without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
@@ -96,6 +111,47 @@ function centerOffsetX(index: number, tileCount: number): number {
   return contentWidth / 2 - slotCenter;
 }
 
+function StoneDustBurst({ onDone }: { onDone: () => void }) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: DUST_DURATION_MS,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) onDone();
+    });
+  }, [progress, onDone]);
+
+  return (
+    <View pointerEvents="none" style={styles.dustWrap}>
+      {Array.from({ length: DUST_PARTICLE_COUNT }).map((_, i) => {
+        // Fan the particles out in a shallow upward arc from the landing point.
+        const angle = -70 + i * (140 / (DUST_PARTICLE_COUNT - 1));
+        const rad = (angle * Math.PI) / 180;
+        const distance = 18 + (i % 2) * 6;
+        const dx = Math.cos(rad) * distance;
+        const dy = -Math.abs(Math.sin(rad) * distance) - 6;
+        const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, dx] });
+        const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, dy] });
+        const opacity = progress.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.85, 0] });
+        const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1.15] });
+        return (
+          <Animated.View
+            key={i}
+            style={[
+              styles.dustParticle,
+              { opacity, transform: [{ translateX }, { translateY }, { scale }] },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+}
+
 function SpineSlot({
   tile, index, offsetX, status, isOpen, anyOpen, tileLanded, inputLocked,
   entranceDelay, reduceMotion, onPick, onSwipeUp, onSwipeRight, onEffect,
@@ -126,8 +182,11 @@ function SpineSlot({
   slotHeight: number;
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
-  const entranceTransY = useRef(new Animated.Value(STONE_RECESS_TRANSLATE_Y)).current;
-  const entranceScale = useRef(new Animated.Value(STONE_RECESS_SCALE)).current;
+  const entranceTransY = useRef(new Animated.Value(STONE_EMBED_TRANSLATE_Y)).current;
+  const entranceScale = useRef(new Animated.Value(STONE_EMBED_SCALE)).current;
+  const entranceOpacity = useRef(new Animated.Value(STONE_EMBED_OPACITY)).current;
+  const [showLandingDust, setShowLandingDust] = useState(false);
+  const onEntranceSettled = useCallback(() => setShowLandingDust(true), []);
   const measuredHeightRef = useRef(GAUNTLET_CARD_OPEN_MIN_HEIGHT);
   const resolved = status !== 'idle';
   // Open (or resolved) cards render wider than their 90px slot (see
@@ -164,19 +223,21 @@ function SpineSlot({
     if (reduceMotion !== false) {
       entranceTransY.setValue(0);
       entranceScale.setValue(1);
+      entranceOpacity.setValue(1);
       return;
     }
-    // Reset to recessed position so the animation is always visible
-    // (the previous render may have snapped values to their targets
-    // while reduceMotion was still null).
-    entranceTransY.setValue(STONE_RECESS_TRANSLATE_Y);
-    entranceScale.setValue(STONE_RECESS_SCALE);
+    // Reset to embedded starting position so the animation is always visible
+    // (the previous render may have snapped values to their targets while
+    // reduceMotion was still null).
+    entranceTransY.setValue(STONE_EMBED_TRANSLATE_Y);
+    entranceScale.setValue(STONE_EMBED_SCALE);
+    entranceOpacity.setValue(STONE_EMBED_OPACITY);
     const timer = setTimeout(() => {
       Animated.parallel([
         Animated.timing(entranceTransY, {
           toValue: 0,
           duration: STONE_ENTRANCE_MS,
-          easing: Easing.out(Easing.cubic),
+          easing: Easing.out(Easing.back(STONE_LANDING_OVERSHOOT)),
           useNativeDriver: true,
         }),
         Animated.timing(entranceScale, {
@@ -185,10 +246,19 @@ function SpineSlot({
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-      ]).start();
+        Animated.timing(entranceOpacity, {
+          toValue: 1,
+          duration: STONE_ENTRANCE_MS,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) onEntranceSettled();
+      });
     }, entranceDelay);
     return () => clearTimeout(timer);
-  }, [entranceDelay, reduceMotion, entranceTransY, entranceScale]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entranceDelay, reduceMotion, entranceTransY, entranceScale, entranceOpacity]);
 
   useEffect(() => {
     const target = isOpen || resolved ? 1 : 0;
@@ -267,7 +337,7 @@ function SpineSlot({
           // background and have no reason to keep casting depth, so
           // `anyOpen` cuts their shadow the same instant the sibling opens.
           {
-            opacity: closedOpacity,
+            opacity: Animated.multiply(closedOpacity, entranceOpacity),
             transform: [
               { translateY: entranceTransY },
               { scale: entranceScale },
@@ -294,6 +364,10 @@ function SpineSlot({
           style={styles.cardMarker}
         />
       </Animated.View>
+
+      {showLandingDust && (
+        <StoneDustBurst onDone={() => setShowLandingDust(false)} />
+      )}
 
       {/* Closed hit target — sits on top while sealed, stops intercepting
           touches once open (or once ANY sibling is open) so it never fights
@@ -547,6 +621,22 @@ const styles = StyleSheet.create({
     top: (CARD_CLOSED_HEIGHT - 54) / 2,
     width: 84,
     height: 54,
+  },
+  dustWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: CARD_CLOSED_HEIGHT - 12,
+    height: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dustParticle: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: DUST_COLOR,
   },
   openContent: {
     ...StyleSheet.absoluteFillObject,
