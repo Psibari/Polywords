@@ -1816,33 +1816,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               </View>
             )}
 
-            {showGauntletCard && (
-              <View style={styles.finalHiddenTileStack}>
-                <BossGauntletSpines
-                  key={gauntletThrowKey}
-                  gatePhase={mechanics.gatePhase}
-                  gauntletTiles={mechanics.gauntletTiles}
-                  finalTileStates={mechanics.finalTileStates}
-                  activeGauntletTile={mechanics.activeGauntletTile}
-                  tileLanded={mechanics.tileLanded}
-                  inputLocked={mechanics.inputLocked}
-                  onPick={(index) => {
-                    playSfx('gauntletPick');
-                    Haptics.cueAsync('gauntletPick');
-                    mechanics.pickGauntletTile(index);
-                  }}
-                  onSwipeUp={mechanics.onGauntletSwipeUp}
-                  onSwipeRight={mechanics.onGauntletSwipeRight}
-                  onEffect={handleEffect}
-                  onSwipeAttempt={onSwipeAttempt}
-                  onCardTouch={handleCardTouch}
-                  onActiveCardHeightChange={handleGauntletTileHeightChange}
-                  wordY={wordZoneMeasured ? wordScreenY : undefined}
-                  intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
-                  correctCount={gauntletCorrectCount}
-                />
-              </View>
-            )}
             </Animated.View>
           </Animated.View>
           )}
@@ -1878,6 +1851,31 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         </View>
       </ScrollView>
 
+      {showGauntletCard && (
+        <BossGauntletSpines
+          key={gauntletThrowKey}
+          gatePhase={mechanics.gatePhase}
+          gauntletTiles={mechanics.gauntletTiles}
+          finalTileStates={mechanics.finalTileStates}
+          activeGauntletTile={mechanics.activeGauntletTile}
+          tileLanded={mechanics.tileLanded}
+          inputLocked={mechanics.inputLocked}
+          onPick={(index) => {
+            playSfx('gauntletPick');
+            Haptics.cueAsync('gauntletPick');
+            mechanics.pickGauntletTile(index);
+          }}
+          onSwipeUp={mechanics.onGauntletSwipeUp}
+          onSwipeRight={mechanics.onGauntletSwipeRight}
+          onEffect={handleEffect}
+          onSwipeAttempt={onSwipeAttempt}
+          onCardTouch={handleCardTouch}
+          onActiveCardHeightChange={handleGauntletTileHeightChange}
+          wordY={wordZoneMeasured ? wordScreenY : undefined}
+          intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
+          correctCount={gauntletCorrectCount}
+        />
+      )}
 
       {/* Mastery score float */}
       {floats.filter(f => f.kind === 'mastery').map(f => (
@@ -2386,11 +2384,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.24,
     shadowRadius: 22,
     elevation: 12,
-  },
-  finalHiddenTileStack: {
-    width: '100%',
-    alignSelf: 'center',
-    position: 'relative',
   },
   outcomeOverlay: {
     ...StyleSheet.absoluteFillObject,
