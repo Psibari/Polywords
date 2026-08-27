@@ -18,6 +18,7 @@ import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { SETTINGS_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
+import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
@@ -93,6 +94,7 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
 export default function SettingsScreen({ navigation }: Props) {
   const [showPollyAnimations, setShowPollyAnimations] = useState(false);
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
+  const [showPollyCrown, setShowPollyCrown] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -419,6 +421,17 @@ export default function SettingsScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowPollyCrown(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Polly Crown Layer Test</Text>
+                  <Text style={styles.rowNote}>Tilt the crown as its own layer</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
             </ImageBackground>
           </View>
         )}
@@ -458,6 +471,10 @@ export default function SettingsScreen({ navigation }: Props) {
           <GauntletSpineDevViewer
             onClose={() => setShowGauntletSpineSizer(false)}
             visible={showGauntletSpineSizer}
+          />
+          <PollyCrownDevViewer
+            onClose={() => setShowPollyCrown(false)}
+            visible={showPollyCrown}
           />
         </>
       )}
