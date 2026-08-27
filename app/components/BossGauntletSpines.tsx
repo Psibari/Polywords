@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mask } from '../game/types';
@@ -16,6 +16,7 @@ import {
   resolveGauntletRowHeight,
 } from './tileTextLayout';
 import { createBossGauntletPressProps } from './bossGauntletPress';
+import { resolveLedgeOffset } from './bossGauntletLedge';
 
 // Per-spine identity marker (2026-08-08 doc) — a single flat-silhouette
 // crown asset (verified transparent, not a baked-in white background: all
@@ -389,6 +390,8 @@ export function BossGauntletSpines({
   // actually-open card.
   const activeCardHeight = resolveGauntletRowHeight(measuredCardHeights, CARD_CLOSED_HEIGHT);
   const reduceMotion = useReducedMotionPreference();
+  const { width: windowWidth } = useWindowDimensions();
+  const ledgeOffset = resolveLedgeOffset(windowWidth);
 
   useEffect(() => {
     onActiveCardHeightChange?.(activeCardHeight);
@@ -397,7 +400,7 @@ export function BossGauntletSpines({
   if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
   return (
-    <View style={styles.wrap} pointerEvents="box-none">
+    <View style={[styles.wrap, { bottom: ledgeOffset }]} pointerEvents="box-none">
       <View
         style={styles.header}
         accessible
@@ -444,6 +447,9 @@ export function BossGauntletSpines({
 
 const styles = StyleSheet.create({
   wrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     alignItems: 'center',
   },
   header: {
