@@ -52,8 +52,6 @@ const FINAL_TILE_GAP = 10;
 const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
-const GAUNTLET_TILE_H = 200;
-const GAUNTLET_HEADER_REGION_EXTRA = 44;
 
 // Deck timing curves — shared by the round's opening deal-in and the
 // per-tile shuffle-forward animation (Task 1), so the deck reads as one
@@ -396,7 +394,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     height: TILE_H,
   });
   const activeTopMaskIdRef = useRef<string | null>(null);
-  const [activeGauntletTileHeight, setActiveGauntletTileHeight] = useState(GAUNTLET_TILE_H);
   const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const [gridViewportHeight, setGridViewportHeight] = useState(0);
   const [gridContentHeight, setGridContentHeight] = useState(0);
@@ -414,10 +411,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         ? previous
         : { maskId, height }
     ));
-  }, []);
-  const handleGauntletTileHeightChange = useCallback((measuredHeight: number) => {
-    const height = resolveActiveTileHeight(measuredHeight, GAUNTLET_TILE_H);
-    setActiveGauntletTileHeight(height);
   }, []);
   const handleCueTextLayout = useCallback((cue: 'up' | 'right', measuredHeight: number) => {
     const identity = cueLayoutIdentityRef.current;
@@ -1437,11 +1430,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     activeCueMeasurements.upHeight,
     activeCueMeasurements.rightHeight,
   );
-  const ownedGridRegionHeight = showGauntletCard
-    ? activeGauntletTileHeight + GAUNTLET_HEADER_REGION_EXTRA
-    : showSwipeCues
-      ? activeCueLayout.ownedRegionHeight
-      : activeTileHeight + 48;
+  // No showGauntletCard branch here: BossGauntletSpines now renders as an
+  // absolutely-positioned overlay OUTSIDE this ScrollView's content (see
+  // below), so during the gauntlet phase this scrolling region has no
+  // deck/topMask content and no swipe cues either — reserving gauntlet-sized
+  // space for it here was vestigial and could make an otherwise-empty
+  // scroll region behave as if it had overflow.
+  const ownedGridRegionHeight = showSwipeCues
+    ? activeCueLayout.ownedRegionHeight
+    : activeTileHeight + 48;
   const boardSpacing = resolveBoardVerticalSpacing(
     gridViewportHeight,
     ownedGridRegionHeight,
@@ -1870,7 +1867,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           onEffect={handleEffect}
           onSwipeAttempt={onSwipeAttempt}
           onCardTouch={handleCardTouch}
-          onActiveCardHeightChange={handleGauntletTileHeightChange}
           wordY={wordZoneMeasured ? wordScreenY : undefined}
           intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}
           correctCount={gauntletCorrectCount}

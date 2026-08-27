@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ShardVariant } from '../ui/pwEffects';
@@ -69,6 +70,7 @@ const STONE_EMBED_OPACITY = 0.55;
 // reads as a physical thump rather than a drift into place.
 const STONE_LANDING_OVERSHOOT = 1.6;
 
+// Must stay > 1 — the angle spread below divides by (DUST_PARTICLE_COUNT - 1).
 const DUST_PARTICLE_COUNT = 5;
 const DUST_DURATION_MS = 420;
 // Dusty tan-gray, deliberately distinct from pwEffects.ts's FX.shard palette
@@ -471,7 +473,16 @@ export function BossGauntletSpines({
   const activeCardHeight = resolveGauntletRowHeight(measuredCardHeights, CARD_CLOSED_HEIGHT);
   const reduceMotion = useReducedMotionPreference();
   const { width: windowWidth } = useWindowDimensions();
-  const ledgeOffset = resolveLedgeOffset(windowWidth);
+  const insets = useSafeAreaInsets();
+  // GameScreen.tsx renders the wall art (AmbientSkyBackground, with the
+  // carved ledge this offset targets) as a direct child of the screen,
+  // reaching its true bottom edge — but this component now renders inside
+  // GameScreen's <SafeAreaView> (no `edges` override), which insets its own
+  // frame's bottom by the device's home-indicator/gesture-nav inset. The two
+  // views' `bottom` therefore mean different things; subtract the inset here,
+  // where the two coordinate frames actually meet, so the stones still land
+  // on the ledge as painted rather than floating above it by that amount.
+  const ledgeOffset = resolveLedgeOffset(windowWidth) - insets.bottom;
 
   useEffect(() => {
     onActiveCardHeightChange?.(activeCardHeight);
@@ -483,6 +494,7 @@ export function BossGauntletSpines({
     <View style={[styles.wrap, { bottom: ledgeOffset }]} pointerEvents="box-none">
       <View
         style={styles.header}
+        pointerEvents="none"
         accessible
         accessibilityLabel={`Choose a seal. ${correctCount} of ${gauntletTiles.length} correct.`}
       >
@@ -490,7 +502,15 @@ export function BossGauntletSpines({
         <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
       </View>
       <View
-        style={[styles.row, { height: activeCardHeight + ROW_VERTICAL_INSET }]}
+        // Fixed, not activeCardHeight-driven: this whole wrap is
+        // bottom-anchored (see styles.wrap above), so a height that grows
+        // when a card opens pushes everything ABOVE it (the header)
+        // upward instead of extending downward — a visible jump every time
+        // a tile is picked. The opened card already paints through
+        // SpineSlot's absolutely-positioned openContent layer, which
+        // overflows this box's bounds on its own, so the row itself only
+        // ever needs to reserve the closed-card footprint.
+        style={[styles.row, { height: CARD_CLOSED_HEIGHT + ROW_VERTICAL_INSET }]}
         pointerEvents="box-none"
       >
         {gauntletTiles.map((tile, index) => (
