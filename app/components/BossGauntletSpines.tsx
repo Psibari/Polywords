@@ -187,6 +187,12 @@ function SpineSlot({
   const entranceOpacity = useRef(new Animated.Value(STONE_EMBED_OPACITY)).current;
   const [showLandingDust, setShowLandingDust] = useState(false);
   const onEntranceSettled = useCallback(() => setShowLandingDust(true), []);
+  // Stable identity across re-renders — StoneDustBurst's effect depends on
+  // this callback, and an inline arrow at the JSX call site would give it a
+  // fresh identity on every SpineSlot re-render (e.g. from
+  // onMeasuredHeightChange/tileLanded/inputLocked prop churn), restarting
+  // the ~420ms dust animation mid-flight instead of letting it finish once.
+  const onDustBurstDone = useCallback(() => setShowLandingDust(false), []);
   const measuredHeightRef = useRef(GAUNTLET_CARD_OPEN_MIN_HEIGHT);
   const resolved = status !== 'idle';
   // Open (or resolved) cards render wider than their 90px slot (see
@@ -366,7 +372,7 @@ function SpineSlot({
       </Animated.View>
 
       {showLandingDust && (
-        <StoneDustBurst onDone={() => setShowLandingDust(false)} />
+        <StoneDustBurst onDone={onDustBurstDone} />
       )}
 
       {/* Closed hit target — sits on top while sealed, stops intercepting
