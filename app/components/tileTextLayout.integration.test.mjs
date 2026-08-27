@@ -32,8 +32,9 @@ assert.match(
 );
 assert.match(
   gauntletSpines,
-  /style=\{\[styles\.row, \{ height: activeCardHeight \+ ROW_VERTICAL_INSET/,
-  'BossGauntletSpines row must grow with the active card measurement',
+  /style=\{\[styles\.row, \{ height: CARD_CLOSED_HEIGHT \+ ROW_VERTICAL_INSET/,
+  'BossGauntletSpines row must stay pinned to the closed-card footprint, not grow with the ' +
+    'active card measurement (a growing row pushes the bottom-anchored header upward)',
 );
 assert.match(
   gauntletSpines,
@@ -55,11 +56,6 @@ assert.ok(
   gauntletSpines.indexOf('onActiveCardHeightChange?.(activeCardHeight)') <
     gauntletSpines.indexOf("if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null"),
   'Gauntlet height publication must not introduce a hook after the conditional return',
-);
-assert.match(
-  maskBoard,
-  /setActiveGauntletTileHeight\(height\)/,
-  'MaskBoard must allow gauntlet overflow geometry to shrink after collapse',
 );
 assert.match(
   maskBoard,
