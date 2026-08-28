@@ -33,8 +33,8 @@ type Props = {
 // facial landmark rather than the canvas centre.
 const STAGE_SIZE = 340;
 
-// Estimate of the eye artwork's own vertical centre line, above the canvas
-// centre — tune by eye against the live render and port the number once set.
+// Measured against the eye artwork's lower edge, which is the correct blink
+// pivot — the eye squashes shut from its bottom, not its centre.
 const EYE_PIVOT_Y_FRAC = 0.12;
 const EYE_CLOSED_SCALE = 0.05;
 const BLINK_DOWN_MS = 90;
@@ -47,6 +47,9 @@ const BROW_MAX = 6;
 const BROW_ROTATE_DEG = -7;
 const BROW_TRANSITION_MS = 220;
 const BROW_NUDGE_STEP = 1;
+const BROW_TO_EYE_PIVOT_FRAC = 0.085;
+const BROW_FOLLOW_DEFAULT = 0.33;
+const BROW_FOLLOW_NUDGE_STEP = 0.05;
 
 const CROWN_PIVOT_X_FRAC = 0.04;
 const CROWN_PIVOT_Y_FRAC = 0.236;
@@ -77,6 +80,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const [brow, setBrow] = useState(0);
   const [crownAngle, setCrownAngle] = useState(0);
   const [breathe, setBreathe] = useState(0);
+  const [browFollow, setBrowFollow] = useState(BROW_FOLLOW_DEFAULT);
 
   const [blinkOn, setBlinkOn] = useState(false);
   const [browOn, setBrowOn] = useState(false);
@@ -205,6 +209,10 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
     browValue.setValue(clamp(brow + delta, 0, BROW_MAX));
   }
 
+  function nudgeBrowFollow(delta: number) {
+    setBrowFollow(prev => clamp(prev + delta, 0, 1));
+  }
+
   function nudgeCrown(delta: number) {
     if (crownTiltOn) return;
     crownValue.setValue(clamp(crownAngle + delta, CROWN_ANGLE_MIN, CROWN_ANGLE_MAX));
@@ -221,6 +229,13 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
       browOffsetPx: +brow.toFixed(1),
       crownAngleDeg: +crownAngle.toFixed(1),
       breatheYPx: +breathe.toFixed(2),
+      browFollowFrac: +browFollow.toFixed(2),
+      browFollowPx: +(
+        BROW_TO_EYE_PIVOT_FRAC *
+        STAGE_SIZE *
+        browFollow *
+        ((1 - blink) / (1 - EYE_CLOSED_SCALE))
+      ).toFixed(1),
     }, 'pivots:', {
       stage: STAGE_SIZE,
       eyePivotYFrac: EYE_PIVOT_Y_FRAC,
@@ -232,6 +247,10 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const browRotateDeg = browValue.interpolate({
     inputRange: [0, BROW_MAX],
     outputRange: ['0deg', `${BROW_ROTATE_DEG}deg`],
+  });
+  const browFollowY = blinkValue.interpolate({
+    inputRange: [EYE_CLOSED_SCALE, 1],
+    outputRange: [BROW_TO_EYE_PIVOT_FRAC * STAGE_SIZE * browFollow, 0],
   });
   const crownSpinDeg = crownValue.interpolate({
     inputRange: [CROWN_ANGLE_MIN, CROWN_ANGLE_MAX],
@@ -292,7 +311,13 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
                 resizeMode="contain"
                 style={[
                   styles.layer,
-                  { transform: [{ translateY: browValue }, { rotate: browRotateDeg }] },
+                  {
+                    transform: [
+                      { translateY: browFollowY },
+                      { translateY: browValue },
+                      { rotate: browRotateDeg },
+                    ],
+                  },
                 ]}
               />
               <Animated.Image
@@ -393,6 +418,27 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
                     accessibilityRole="button"
                     accessibilityLabel="Nudge brow toward angry"
                     onPress={() => nudgeBrow(BROW_NUDGE_STEP)}
+                    style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
+                  >
+                    <Text style={styles.stepperText}>+</Text>
+                  </Pressable>
+                </View>
+              </View>
+              <View style={styles.groupRow}>
+                <Text style={styles.controlLabel}>BROW FOLLOW — {browFollow.toFixed(2)}</Text>
+                <View style={styles.stepperRow}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Nudge brow follow lower"
+                    onPress={() => nudgeBrowFollow(-BROW_FOLLOW_NUDGE_STEP)}
+                    style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
+                  >
+                    <Text style={styles.stepperText}>−</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Nudge brow follow higher"
+                    onPress={() => nudgeBrowFollow(BROW_FOLLOW_NUDGE_STEP)}
                     style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
                   >
                     <Text style={styles.stepperText}>+</Text>
