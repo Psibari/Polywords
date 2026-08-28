@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
 Updated August 26, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `5ebab24`.
+`origin/play-screen-overhaul`. Current code baseline: `2bc4aa2`.
 
 ## Verified Current State
 
@@ -16,7 +16,20 @@ Updated August 26, 2026. Branch: `play-screen-overhaul`, tracking
   confidence retag has happened; any earlier figure of 6 or 12 is stale.
 - The tracked Hunt workbook is `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`; live JSON remains
   authoritative.
-- Live Polly uses pose images. The layered rig remains dormant.
+- Live Polly uses pose images on all four perches. A layered face rig runs behind a
+  `__DEV__` gate in Settings (`PollyFaceRigDevViewer`, assets in
+  `assets/images/polly/rig2/`), device-confirmed 2026-08-28 for blink, brow, crown tilt and
+  breathe. Nothing live consumes it yet.
+- Layered parts so far: crown, beak, eye, brow, bandana, near wing, talons, plus a
+  hand-painted head and body that fill the chest and blank face. Still unpainted: her feet
+  behind the branch, and the far wing, which was never drawn in any pose. Her tail stays
+  inside the body layer until the feet are painted.
+- Two known rig defects, both parked: the brow animates on its own driver and reads as
+  detached from the eye, and `EYE_PIVOT_Y_FRAC` is a guessed value, never measured.
+- The beak is a swap, not a hinge — open and closed mouths as matched states. Chosen because
+  a hinge needs a mouth interior no pose contains.
+- `POLLY_ART_SPEC_2026-08-13.md` sets a beak-aspect test of 0.78 ±0.05. That figure was
+  measured on an open mouth. Her closed beak is ~1.01. Do not judge a closed beak against it.
 - The current Hunt generator keeps mastered words in ordinary tension/panic play as marked
   revisits. Mastered words cannot be Bosses or Returning Haunts, and deterministic regression
   coverage protects those rules. The old mastered-word deletion/rematch behavior is retired.
