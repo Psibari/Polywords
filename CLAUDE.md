@@ -114,7 +114,22 @@ navigation shell; active Hunt and Daily play are nav-free.
   Settings owns preferences/development utilities; Daily is separate.
 - The in-round intake object is the **Polybook**. Vault remains **WORD VAULT**.
 - Live Polly uses `assets/images/polly/poses/*.png`, authored copy, deterministic local
-  memory, and whole-image motion. Dormant rig code/assets are not the live path.
+  memory, and whole-image motion. All four live perches (Home, Hunt, Daily, Results) render
+  a single flat pose.
+- A layered face rig exists behind a `__DEV__` gate only: `PollyFaceRigDevViewer` in Settings,
+  driving `assets/images/polly/rig2/*.png` (base, crown, beak, eye, brow). Device-confirmed
+  for blink, brow, crown tilt and breathe. It is not wired to any live screen. Pete approved
+  reviving the layered approach on 2026-08-27, overriding the "do not revive" note in
+  `assets/images/polly/rig/README.md`.
+- `assets/images/polly/rig/` (the old rig), `PollyRig.tsx`, `pollyPerformances.ts`,
+  `pollyRigParts.ts`, `PollyActor.tsx`, `PollySprite.tsx`, `usePollyAnimator.ts`,
+  `pollyAnimations.ts` and the six `polly_*.webp` files are dead — nothing imports them.
+  `PollyActor.tsx` still defaults to `renderer: 'rig'`, which contradicts that README.
+  Do not delete `polly_shocked.png`, `polly_angry.png` or `polly_pointing.png`: they are
+  also referenced by live `pollyPoses.ts`.
+- `sprite4.png` is the master pose for layered work. Other poses map onto it by beak width:
+  sprite2 ×1.000, sprite5 ×0.883, sprite7 ×0.883. Use sprite7, not sprite5, as the
+  open-mouth donor — same three-quarter head angle as sprite4.
 - One-time Hunt, Boss, Haunt, and Vault explainers use separate AsyncStorage gates. Hunt,
   Boss, and Haunt block play; Vault does not.
 - Theme/material tokens live under `app/ui/`; current render code outranks abandoned plans.
