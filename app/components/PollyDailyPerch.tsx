@@ -18,6 +18,7 @@ import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollyLineId } from '../game/pollyCharacter';
 import { useGameStore } from '../store/useGameStore';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
+import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 
 type Props = {
@@ -214,7 +215,13 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
           },
         ]}
       >
-        <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+        {POLLY_PERCH_RIG_ENABLED && pose === POSE.idle ? (
+          // 288 must track styles.pollyImage — StyleSheet.create() returns
+          // opaque style IDs, not readable objects, so it can't be sourced live.
+          <PollyPerchRig size={288} reduceMotion={reduceMotion} />
+        ) : (
+          <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+        )}
       </Animated.View>
     </Animated.View>
   );
