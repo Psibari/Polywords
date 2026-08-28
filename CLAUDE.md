@@ -117,9 +117,11 @@ navigation shell; active Hunt and Daily play are nav-free.
   memory, and whole-image motion. All four live perches (Home, Hunt, Daily, Results) render
   a single flat pose.
 - A layered face rig exists behind a `__DEV__` gate only: `PollyFaceRigDevViewer` in Settings,
-  driving `assets/images/polly/rig2/*.png` (base, crown, beak, eye, brow). Device-confirmed
-  for blink, brow, crown tilt and breathe. It is not wired to any live screen. Pete approved
-  reviving the layered approach on 2026-08-27, overriding the "do not revive" note in
+  driving `assets/images/polly/rig2/*.png` (base, crown, beak, eye, brow, feet, far wing,
+  tail). Device-confirmed for blink, brow, crown tilt and breathe. The brow rides the blink
+  at BROW_FOLLOW 0.33, device-confirmed; that value must travel with the rig when it is wired
+  live — it currently exists only in the dev viewer. It is not wired to any live screen. Pete
+  approved reviving the layered approach on 2026-08-27, overriding the "do not revive" note in
   `assets/images/polly/rig/README.md`.
 - `assets/images/polly/rig/` (the old rig), `PollyRig.tsx`, `pollyPerformances.ts`,
   `pollyRigParts.ts`, `PollyActor.tsx`, `PollySprite.tsx`, `usePollyAnimator.ts`,
@@ -130,6 +132,8 @@ navigation shell; active Hunt and Daily play are nav-free.
 - `sprite4.png` is the master pose for layered work. Other poses map onto it by beak width:
   sprite2 ×1.000, sprite5 ×0.883, sprite7 ×0.883. Use sprite7, not sprite5, as the
   open-mouth donor — same three-quarter head angle as sprite4.
+- Perched, both of Polly's wings fold back toward the tail and point the same direction —
+  never mirror the far wing.
 - One-time Hunt, Boss, Haunt, and Vault explainers use separate AsyncStorage gates. Hunt,
   Boss, and Haunt block play; Vault does not.
 - Theme/material tokens live under `app/ui/`; current render code outranks abandoned plans.

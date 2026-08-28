@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
-Updated August 26, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `2bc4aa2`.
+Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current code baseline: `2a24a4e`.
 
 ## Verified Current State
 
@@ -20,12 +20,14 @@ Updated August 26, 2026. Branch: `play-screen-overhaul`, tracking
   `__DEV__` gate in Settings (`PollyFaceRigDevViewer`, assets in
   `assets/images/polly/rig2/`), device-confirmed 2026-08-28 for blink, brow, crown tilt and
   breathe. Nothing live consumes it yet.
-- Layered parts so far: crown, beak, eye, brow, bandana, near wing, talons, plus a
-  hand-painted head and body that fill the chest and blank face. Still unpainted: her feet
-  behind the branch, and the far wing, which was never drawn in any pose. Her tail stays
-  inside the body layer until the feet are painted.
-- Two known rig defects, both parked: the brow animates on its own driver and reads as
-  detached from the eye, and `EYE_PIVOT_Y_FRAC` is a guessed value, never measured.
+- Nothing is left unpainted for the perch. `rig2` holds base, crown, beak, eye, brow, feet,
+  far wing and tail, all registered on the 283x413 sprite4 canvas (commit 981af56). Feet, far
+  wing and tail are banked and nothing imports them yet: the far wing is hidden behind the
+  body, the tail is hidden because it is still baked into `polly_base`, and the feet only
+  matter once the branch becomes its own layer. The tail's placement is provisional.
+- Both known rig defects are closed by `2a24a4e`. `EYE_PIVOT_Y_FRAC` 0.12 was verified to sit
+  on the eye artwork's lower edge, the correct blink pivot — the value was always right, only
+  its comment was wrong. The brow now follows the blink, locked at 0.33.
 - The beak is a swap, not a hinge — open and closed mouths as matched states. Chosen because
   a hinge needs a mouth interior no pose contains.
 - `POLLY_ART_SPEC_2026-08-13.md` sets a beak-aspect test of 0.78 ±0.05. That figure was
@@ -79,6 +81,10 @@ five distractors.
   specified. The desired motion is push-forward, not `rotateY`.
 5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
   persistence, gestures, animation, and performance.
+6. Wire the face rig into live Polly. Every player-facing perch still renders a flat pose;
+  `PollyHuntVisit` is the only place the game renders her. Route it through a `PollyFigure`
+  wrapper that renders the flat pose or the rig behind a flag so the flat path stays
+  shippable.
 
 ## Protection
 
