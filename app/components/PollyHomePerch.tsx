@@ -11,6 +11,7 @@ import { resolveHomePollyMoment } from '../game/pollyMemory';
 import { useGameStore } from '../store/useGameStore';
 import { useIsFocused } from '@react-navigation/native';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
+import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 
 // Once per app session: fly-in + one greeting. Navigating away re-mounts
@@ -79,7 +80,11 @@ export default function PollyHomePerch() {
           { transform: [{ translateX: breatheX }, { translateY: breatheY }] },
         ]}
       >
-        <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+        {POLLY_PERCH_RIG_ENABLED && (pose === POLLY_POSES.idle || pose === POLLY_POSES.smug) ? (
+          <PollyPerchRig size={homePerch.pollySize} reduceMotion={reduceMotion} />
+        ) : (
+          <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+        )}
       </Animated.View>
 
       {/* Greeting bubble — to her right, tail points left at her */}
