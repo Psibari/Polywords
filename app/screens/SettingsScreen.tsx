@@ -19,6 +19,7 @@ import { SETTINGS_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
+import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
@@ -95,6 +96,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const [showPollyAnimations, setShowPollyAnimations] = useState(false);
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
   const [showPollyCrown, setShowPollyCrown] = useState(false);
+  const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -432,6 +434,17 @@ export default function SettingsScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowPollyFaceRig(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Polly Face Rig</Text>
+                  <Text style={styles.rowNote}>Blink, brow, crown, breathe</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
             </ImageBackground>
           </View>
         )}
@@ -475,6 +488,10 @@ export default function SettingsScreen({ navigation }: Props) {
           <PollyCrownDevViewer
             onClose={() => setShowPollyCrown(false)}
             visible={showPollyCrown}
+          />
+          <PollyFaceRigDevViewer
+            onClose={() => setShowPollyFaceRig(false)}
+            visible={showPollyFaceRig}
           />
         </>
       )}
