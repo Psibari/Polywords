@@ -8,9 +8,12 @@ import {
 } from 'react-native';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
+import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 
 type Outcome = 'loss' | 'beat' | 'complete';
+
+const POLLY_SIZE = 300;
 
 export const POLLY_RESULTS_PERCH_CLEARANCE = 380; // pollyImage height + extra clearance for the speech bubble, which sits above the buttons, not beside them
 
@@ -67,7 +70,11 @@ export default function PollyResultsPerch({ outcome, line }: Props) {
           { transform: [{ translateX: breatheX }, { translateY: breatheY }] },
         ]}
       >
-        <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+        {POLLY_PERCH_RIG_ENABLED && pose === POLLY_POSES.idle ? (
+          <PollyPerchRig size={POLLY_SIZE} reduceMotion={reduceMotion} />
+        ) : (
+          <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+        )}
       </Animated.View>
 
       {/* Bubble — to her right, tail points left at her */}
@@ -91,12 +98,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: -74,
     bottom: -26,
-    width: 300,
-    height: 300,
+    width: POLLY_SIZE,
+    height: POLLY_SIZE,
   },
   pollyImage: {
-    width: 300,
-    height: 300,
+    width: POLLY_SIZE,
+    height: POLLY_SIZE,
   },
   bubbleWrap: {
     position: 'absolute',
