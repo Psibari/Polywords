@@ -13,6 +13,7 @@ import { flushActiveGamePersistence, useGameStore } from './app/store/useGameSto
 import { preloadHuntTrack, setMusicAppActive } from './app/audio/MusicEngine';
 import { preloadSfx } from './app/audio/sfx';
 import { loadPlaytestEvents } from './app/game/playtestTelemetry';
+import ErrorBoundary from './app/components/ErrorBoundary';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +27,7 @@ export default function App() {
   // hasResumableGame is known before Home renders its button (otherwise
   // it'd flash ENTER THE HUNT then flip to RESUME HUNT a beat later).
   const [bootChecksDone, setBootChecksDone] = useState(false);
+  const [navKey, setNavKey] = useState(0);
 
   useEffect(() => {
     if (!fontsLoaded) return;
@@ -75,27 +77,29 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            animation: 'fade',
-          }}
-        >
-          <Stack.Screen name="Home" component={HomeScreen} />
-          {/* Interactive swipe-back disabled: it's a native-driven gesture that
-              can complete before the beforeRemove exit-guard in GameScreen gets
-              a chance to intervene, desyncing JS from the native screen stack
-              (react-native-screens' "removed natively but didn't get removed
-              from JS side" error). Leaving now only happens through the pause
-              button (a JS-dispatched navigation.goBack()), which the guard
-              catches reliably every time. */}
-          <Stack.Screen name="Game" component={GameScreen} options={{ gestureEnabled: false }} />
-          <Stack.Screen name="Vault" component={VaultScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen name="Daily" component={DailyChallengeScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <ErrorBoundary onReset={() => setNavKey(k => k + 1)}>
+        <NavigationContainer key={navKey}>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              animation: 'fade',
+            }}
+          >
+            <Stack.Screen name="Home" component={HomeScreen} />
+            {/* Interactive swipe-back disabled: it's a native-driven gesture that
+                can complete before the beforeRemove exit-guard in GameScreen gets
+                a chance to intervene, desyncing JS from the native screen stack
+                (react-native-screens' "removed natively but didn't get removed
+                from JS side" error). Leaving now only happens through the pause
+                button (a JS-dispatched navigation.goBack()), which the guard
+                catches reliably every time. */}
+            <Stack.Screen name="Game" component={GameScreen} options={{ gestureEnabled: false }} />
+            <Stack.Screen name="Vault" component={VaultScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Daily" component={DailyChallengeScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }
