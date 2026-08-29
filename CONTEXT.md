@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
 Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `d39ca2e`.
+`origin/play-screen-overhaul`. Current code baseline: `ae2257c`.
 
 ## Verified Current State
 
@@ -40,10 +40,15 @@ Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
   a hinge needs a mouth interior no pose contains.
 - `POLLY_ART_SPEC_2026-08-13.md` sets a beak-aspect test of 0.78 ±0.05. That figure was
   measured on an open mouth. Her closed beak is ~1.01. Do not judge a closed beak against it.
-- An open mouth cannot be harvested from an existing pose; it must be drawn on the perched
-  head. Tested 2026-08-28 against sprite7 and sprite5 at multiple scales and alignments —
-  sprite7's mouth opens across her own cheek and eye on the sprite4 head, and sprite5's head
-  is tipped back. See CLAUDE.md for the full finding.
+- Polly's face rig has three faces. `rig2` now holds `polly_beak_open.png`,
+  `polly_eye_wide.png` and `polly_brow_shock.png` alongside the originals, all cut
+  in place on the sprite4 canvas. Smug, laughing and shocked all read correctly on
+  device. An open mouth could not be harvested from any existing pose — Pete drew
+  the parts. See CLAUDE.md for the finding and the drawing workflow.
+- The open beak is a talking mouth, not a gasp. Shocked = wide eye + shocked brow +
+  closed beak until a proper gape is drawn.
+- An app-wide error boundary is live (`fb72f65`), device-confirmed catching and
+  recovering.
 - The current Hunt generator keeps mastered words in ordinary tension/panic play as marked
   revisits. Mastered words cannot be Bosses or Returning Haunts, and deterministic regression
   coverage protects those rules. The old mastered-word deletion/rematch behavior is retired.

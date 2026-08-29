@@ -152,7 +152,26 @@ navigation shell; active Hunt and Daily play are nav-free.
   poses; the mouth does not, because her head is turned further in the perch. sprite7 also has
   her pointing wing crossing the mouth, so part of the lower beak was never drawn. sprite5's
   open mouth is unobstructed but her head is tipped back, which is further off, not closer.
-  An open mouth has to be drawn on the perched head as a new part.
+  Pete drew it instead, painting directly onto sprite4 and changing only the mouth.
+  That workflow is the one to repeat: paint on sprite4, change only the target
+  feature, export transparent. Three parts now exist — `polly_beak_open.png`
+  (e46281c), `polly_eye_wide.png` and `polly_brow_shock.png` (ae2257c). Watch for
+  the recurring defect in first passes: moving a cut jaw leaves the back of the
+  mouth see-through, because nothing was drawn behind it. Always check for
+  transparent gaps inside a part before accepting it.
+- `beak_open` reads as a talking or shouting mouth, not a gasp. Her shocked face is
+  wide eye plus shocked brow with the beak CLOSED. A rounder, more vertical gape is
+  a future fourth part.
+- `PollyPerchRig` takes `openMouth`, `eye` ('default' | 'wide') and
+  `brow` ('default' | 'shocked'). Art variants are named strings rather than
+  booleans because a third brow exists. `angryBrow` remains a boolean and drives
+  motion only — the downward offset and rotation. All swaps are hard cuts, no
+  cross-fade. No live screen passes any of them yet; the three faces exist only in
+  the dev viewer, which now has MOUTH, EYE and BROW toggles.
+- There is an app-wide error boundary (`fb72f65`). `app/components/ErrorBoundary.tsx`
+  wraps the navigator inside `SafeAreaProvider`; its reset bumps a `navKey` so the
+  navigator remounts to a clean Home. The fallback uses system fonts only, so it
+  still renders if a font failure is what broke the app. Device-confirmed both ways.
 - Perched, both of Polly's wings fold back toward the tail and point the same direction —
   never mirror the far wing.
 - One-time Hunt, Boss, Haunt, and Vault explainers use separate AsyncStorage gates. Hunt,
