@@ -18,6 +18,7 @@ import { PW } from '../ui/pwTheme';
 const baseArt = require('../../assets/images/polly/rig2/polly_base.png');
 const beakArt = require('../../assets/images/polly/rig2/polly_beak.png');
 const beakOpenArt = require('../../assets/images/polly/rig2/polly_beak_open.png');
+const beakGapeArt = require('../../assets/images/polly/rig2/polly_beak_gape.png');
 const eyeArt = require('../../assets/images/polly/rig2/polly_eye.png');
 const eyeWideArt = require('../../assets/images/polly/rig2/polly_eye_wide.png');
 const browArt = require('../../assets/images/polly/rig2/polly_brow.png');
@@ -66,6 +67,13 @@ const BREATHE_RANGE = -3;
 const BREATHE_DURATION_MS = 1800;
 const BREATHE_NUDGE_STEP = 0.5;
 
+type MouthState = 'closed' | 'open' | 'gape';
+const MOUTH_OPTIONS: { value: MouthState; label: string }[] = [
+  { value: 'closed', label: 'CLOSED' },
+  { value: 'open', label: 'OPEN' },
+  { value: 'gape', label: 'GAPE' },
+];
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -89,7 +97,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const [browOn, setBrowOn] = useState(false);
   const [crownTiltOn, setCrownTiltOn] = useState(false);
   const [breatheOn, setBreatheOn] = useState(false);
-  const [mouthOpen, setMouthOpen] = useState(false);
+  const [mouth, setMouth] = useState<MouthState>('closed');
   const [eyeWide, setEyeWide] = useState(false);
   const [browShocked, setBrowShocked] = useState(false);
 
@@ -298,7 +306,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
             <Animated.View style={[styles.stage, { transform: [{ translateY: breatheValue }] }]}>
               <Image source={baseArt} resizeMode="contain" style={styles.layer} />
               <Animated.Image
-                source={mouthOpen ? beakOpenArt : beakArt}
+                source={mouth === 'gape' ? beakGapeArt : mouth === 'open' ? beakOpenArt : beakArt}
                 resizeMode="contain"
                 style={styles.layer}
               />
@@ -403,18 +411,31 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
             <View style={styles.groupCard}>
               <View style={styles.groupRow}>
                 <Text style={styles.groupTitle}>MOUTH</Text>
-                <Pressable
-                  accessibilityRole="switch"
-                  accessibilityLabel="Toggle mouth between closed and open"
-                  accessibilityState={{ checked: mouthOpen }}
-                  onPress={() => setMouthOpen(prev => !prev)}
-                  style={[styles.toggleTrack, mouthOpen && styles.toggleTrackOn]}
-                >
-                  <View style={[styles.toggleKnob, mouthOpen && styles.toggleKnobOn]} />
-                </Pressable>
               </View>
-              <View style={styles.groupRow}>
-                <Text style={styles.controlLabel}>{mouthOpen ? 'OPEN' : 'CLOSED'}</Text>
+              <View style={styles.segmentRow}>
+                {MOUTH_OPTIONS.map(option => (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Set mouth to ${option.label.toLowerCase()}`}
+                    accessibilityState={{ selected: mouth === option.value }}
+                    onPress={() => setMouth(option.value)}
+                    style={({ pressed }) => [
+                      styles.segmentButton,
+                      mouth === option.value && styles.segmentButtonActive,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        mouth === option.value && styles.segmentTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
             </View>
 
@@ -805,6 +826,34 @@ const styles = StyleSheet.create({
   toggleKnobOn: {
     alignSelf: 'flex-end',
     backgroundColor: PW.color.gold,
+  },
+  segmentRow: {
+    flexDirection: 'row',
+    gap: PW.space.sm,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: PW.space.sm,
+    borderRadius: PW.radius.md,
+    borderWidth: 1,
+    borderColor: PW.color.cardRim,
+    backgroundColor: PW.color.overlayMedium,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentButtonActive: {
+    backgroundColor: PW.color.goldGlow,
+    borderColor: PW.color.goldSoft,
+  },
+  segmentText: {
+    color: PW.color.mutedWhite,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 13,
+    letterSpacing: 0.6,
+  },
+  segmentTextActive: {
+    color: PW.color.gold,
   },
   pressed: {
     opacity: 0.8,

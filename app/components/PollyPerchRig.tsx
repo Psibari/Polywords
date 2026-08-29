@@ -4,6 +4,7 @@ import { Animated, Easing, Image, StyleSheet } from 'react-native';
 const baseArt = require('../../assets/images/polly/rig2/polly_base.png');
 const beakArt = require('../../assets/images/polly/rig2/polly_beak.png');
 const beakOpenArt = require('../../assets/images/polly/rig2/polly_beak_open.png');
+const beakGapeArt = require('../../assets/images/polly/rig2/polly_beak_gape.png');
 const eyeArt = require('../../assets/images/polly/rig2/polly_eye.png');
 const eyeWideArt = require('../../assets/images/polly/rig2/polly_eye_wide.png');
 const browArt = require('../../assets/images/polly/rig2/polly_brow.png');
@@ -36,7 +37,7 @@ type Props = {
   size: number;
   crownTilt?: boolean;
   angryBrow?: boolean;
-  openMouth?: boolean;
+  mouth?: 'closed' | 'open' | 'gape';
   eye?: 'default' | 'wide';
   brow?: 'default' | 'shocked';
   reduceMotion: boolean | null;
@@ -46,7 +47,7 @@ export function PollyPerchRig({
   size,
   crownTilt = false,
   angryBrow = false,
-  openMouth = false,
+  mouth = 'closed',
   eye = 'default',
   brow = 'default',
   reduceMotion,
@@ -161,7 +162,7 @@ export function PollyPerchRig({
     <Animated.View style={[styles.stage, layerSize]}>
       <Image source={baseArt} resizeMode="contain" style={[styles.layer, layerSize]} />
       <Image
-        source={openMouth ? beakOpenArt : beakArt}
+        source={mouth === 'gape' ? beakGapeArt : mouth === 'open' ? beakOpenArt : beakArt}
         resizeMode="contain"
         style={[styles.layer, layerSize]}
       />
