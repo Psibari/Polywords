@@ -3,6 +3,7 @@ import { Animated, Easing, Image, StyleSheet } from 'react-native';
 
 const baseArt = require('../../assets/images/polly/rig2/polly_base.png');
 const beakArt = require('../../assets/images/polly/rig2/polly_beak.png');
+const beakOpenArt = require('../../assets/images/polly/rig2/polly_beak_open.png');
 const eyeArt = require('../../assets/images/polly/rig2/polly_eye.png');
 const browArt = require('../../assets/images/polly/rig2/polly_brow.png');
 const crownArt = require('../../assets/images/polly/rig2/polly_crown.png');
@@ -33,10 +34,17 @@ type Props = {
   size: number;
   crownTilt?: boolean;
   angryBrow?: boolean;
+  openMouth?: boolean;
   reduceMotion: boolean | null;
 };
 
-export function PollyPerchRig({ size, crownTilt = false, angryBrow = false, reduceMotion }: Props) {
+export function PollyPerchRig({
+  size,
+  crownTilt = false,
+  angryBrow = false,
+  openMouth = false,
+  reduceMotion,
+}: Props) {
   const motionAllowed = reduceMotion === false;
 
   const blinkValue = useRef(new Animated.Value(1)).current;
@@ -146,7 +154,11 @@ export function PollyPerchRig({ size, crownTilt = false, angryBrow = false, redu
   return (
     <Animated.View style={[styles.stage, layerSize]}>
       <Image source={baseArt} resizeMode="contain" style={[styles.layer, layerSize]} />
-      <Image source={beakArt} resizeMode="contain" style={[styles.layer, layerSize]} />
+      <Image
+        source={openMouth ? beakOpenArt : beakArt}
+        resizeMode="contain"
+        style={[styles.layer, layerSize]}
+      />
       <Animated.Image
         source={eyeArt}
         resizeMode="contain"

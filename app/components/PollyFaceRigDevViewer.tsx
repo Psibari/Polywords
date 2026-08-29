@@ -17,6 +17,7 @@ import { PW } from '../ui/pwTheme';
 
 const baseArt = require('../../assets/images/polly/rig2/polly_base.png');
 const beakArt = require('../../assets/images/polly/rig2/polly_beak.png');
+const beakOpenArt = require('../../assets/images/polly/rig2/polly_beak_open.png');
 const eyeArt = require('../../assets/images/polly/rig2/polly_eye.png');
 const browArt = require('../../assets/images/polly/rig2/polly_brow.png');
 const crownArt = require('../../assets/images/polly/rig2/polly_crown.png');
@@ -86,6 +87,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const [browOn, setBrowOn] = useState(false);
   const [crownTiltOn, setCrownTiltOn] = useState(false);
   const [breatheOn, setBreatheOn] = useState(false);
+  const [mouthOpen, setMouthOpen] = useState(false);
 
   useEffect(() => {
     const id = blinkValue.addListener(({ value }) => setBlink(value));
@@ -291,7 +293,11 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
           <View style={styles.stageWrap}>
             <Animated.View style={[styles.stage, { transform: [{ translateY: breatheValue }] }]}>
               <Image source={baseArt} resizeMode="contain" style={styles.layer} />
-              <Animated.Image source={beakArt} resizeMode="contain" style={styles.layer} />
+              <Animated.Image
+                source={mouthOpen ? beakOpenArt : beakArt}
+                resizeMode="contain"
+                style={styles.layer}
+              />
               <Animated.Image
                 source={eyeArt}
                 resizeMode="contain"
@@ -387,6 +393,24 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
                     <Text style={styles.stepperText}>+</Text>
                   </Pressable>
                 </View>
+              </View>
+            </View>
+
+            <View style={styles.groupCard}>
+              <View style={styles.groupRow}>
+                <Text style={styles.groupTitle}>MOUTH</Text>
+                <Pressable
+                  accessibilityRole="switch"
+                  accessibilityLabel="Toggle mouth between closed and open"
+                  accessibilityState={{ checked: mouthOpen }}
+                  onPress={() => setMouthOpen(prev => !prev)}
+                  style={[styles.toggleTrack, mouthOpen && styles.toggleTrackOn]}
+                >
+                  <View style={[styles.toggleKnob, mouthOpen && styles.toggleKnobOn]} />
+                </Pressable>
+              </View>
+              <View style={styles.groupRow}>
+                <Text style={styles.controlLabel}>{mouthOpen ? 'OPEN' : 'CLOSED'}</Text>
               </View>
             </View>
 
