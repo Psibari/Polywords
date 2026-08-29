@@ -114,13 +114,26 @@ navigation shell; active Hunt and Daily play are nav-free.
   Settings owns preferences/development utilities; Daily is separate.
 - The in-round intake object is the **Polybook**. Vault remains **WORD VAULT**.
 - Live Polly uses `assets/images/polly/poses/*.png`, authored copy, deterministic local
-  memory, and whole-image motion. All four live perches (Home, Hunt, Daily, Results) render
-  a single flat pose.
-- A layered face rig exists behind a `__DEV__` gate only: `PollyFaceRigDevViewer` in Settings,
-  driving `assets/images/polly/rig2/*.png` (base, crown, beak, eye, brow, feet, far wing,
-  tail). Device-confirmed for blink, brow, crown tilt and breathe. The brow rides the blink
-  at BROW_FOLLOW 0.33, device-confirmed; that value must travel with the rig when it is wired
-  live — it currently exists only in the dev viewer. It is not wired to any live screen. Pete
+  memory, and whole-image motion. Home, Daily and Results now render the layered face rig
+  while she is settled in her idle/smug pose; the Hunt perch and every non-idle pose on all
+  four perches still render a single flat pose.
+- The layered face rig is live. `app/components/PollyPerchRig.tsx` stacks five `rig2` layers
+  (base, beak, eye, brow, crown) as contain-fitted images inside a square box and runs the
+  idle blink with the brow riding it at BROW_FOLLOW 0.33. Every tuning value is a fraction of
+  the `size` prop, so the rig scales to any perch. `crownTilt` and `angryBrow` are props that
+  default to false and are currently unused. `reduceMotion` true or null renders the neutral
+  static stack and schedules no timers. The component adds no breathe or bob —
+  `usePollyAmbientMotion` already moves the whole figure at each call site.
+- Rollback is one line: `POLLY_PERCH_RIG_ENABLED`, exported from `PollyPerchRig.tsx`.
+- The swap rule: the rig renders only when the settled pose is the sprite4 drawing — Home
+  idle/smug, Daily `POSE.idle`, Results `complete`. Fly-ins and every other pose stay flat art.
+  Shipped in `5c6f92a` (Home), `44b4114` (Daily), `d39ca2e` (Results), each device-confirmed
+  before commit.
+- The Hunt perch is not wired, and the blocker is content, not code. Only `WRONG_SMUG` and
+  `GHOST_SMUG` perch as `smug`, both for about 1800ms, while the blink is scheduled 2000–6000ms
+  after mount — the rig would show no blink at all there. Her other Hunt faces (laugh, point,
+  shocked, sulk) are expressions the rig cannot currently make.
+- `PollyFaceRigDevViewer` remains in Settings behind `__DEV__` as the tuning harness. Pete
   approved reviving the layered approach on 2026-08-27, overriding the "do not revive" note in
   `assets/images/polly/rig/README.md`.
 - `assets/images/polly/rig/` (the old rig), `PollyRig.tsx`, `pollyPerformances.ts`,
@@ -130,8 +143,16 @@ navigation shell; active Hunt and Daily play are nav-free.
   Do not delete `polly_shocked.png`, `polly_angry.png` or `polly_pointing.png`: they are
   also referenced by live `pollyPoses.ts`.
 - `sprite4.png` is the master pose for layered work. Other poses map onto it by beak width:
-  sprite2 ×1.000, sprite5 ×0.883, sprite7 ×0.883. Use sprite7, not sprite5, as the
-  open-mouth donor — same three-quarter head angle as sprite4.
+  sprite2 ×1.000, sprite5 ×0.883, sprite7 ×0.883.
+- An open mouth cannot be harvested from any existing pose. This supersedes the earlier
+  "use sprite7 as the open-mouth donor" note. Tested 2026-08-28: sprite7's open beak was cut
+  cleanly, including the mouth cavity and tongue, and placed on the perched head at several
+  scales and alignments. All of them fail the same way — sprite7's mouth opens down and to the
+  left, across what is her cheek and eye on sprite4. Crown and skull register between those
+  poses; the mouth does not, because her head is turned further in the perch. sprite7 also has
+  her pointing wing crossing the mouth, so part of the lower beak was never drawn. sprite5's
+  open mouth is unobstructed but her head is tipped back, which is further off, not closer.
+  An open mouth has to be drawn on the perched head as a new part.
 - Perched, both of Polly's wings fold back toward the tail and point the same direction —
   never mirror the far wing.
 - One-time Hunt, Boss, Haunt, and Vault explainers use separate AsyncStorage gates. Hunt,

@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
 Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `2a24a4e`.
+`origin/play-screen-overhaul`. Current code baseline: `d39ca2e`.
 
 ## Verified Current State
 
@@ -16,10 +16,18 @@ Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
   confidence retag has happened; any earlier figure of 6 or 12 is stale.
 - The tracked Hunt workbook is `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`; live JSON remains
   authoritative.
-- Live Polly uses pose images on all four perches. A layered face rig runs behind a
-  `__DEV__` gate in Settings (`PollyFaceRigDevViewer`, assets in
-  `assets/images/polly/rig2/`), device-confirmed 2026-08-28 for blink, brow, crown tilt and
-  breathe. Nothing live consumes it yet.
+- The layered face rig is live on three screens: Home (`5c6f92a`), Daily (`44b4114`) and
+  Results (`d39ca2e`), each device-confirmed before commit. `PollyPerchRig.tsx` renders the
+  five `rig2` face layers and the idle blink, with the brow riding it at 0.33. It renders only
+  when she is settled in the sprite4 idle/smug pose; fly-ins and all other poses stay flat art.
+  `POLLY_PERCH_RIG_ENABLED` turns it off in one line. The rig composite was verified against
+  `sprite4.png` pixel by pixel — nothing is displaced, the only difference is a hairline on her
+  black outlines, so the flat-to-rig swap is not visible in play.
+- Crown tilt exists as a prop and is deliberately off. A crown that rocks continuously while
+  she sits reads as a broken prop; it belongs to a one-shot reaction, which only the Hunt has.
+- The Hunt perch is unwired and blocked on content, not code. Only two visit specs perch as
+  `smug`, both about 1800ms, against a blink scheduled 2000–6000ms after mount.
+- `PollyFaceRigDevViewer` stays in Settings behind `__DEV__` as the tuning harness.
 - Nothing is left unpainted for the perch. `rig2` holds base, crown, beak, eye, brow, feet,
   far wing and tail, all registered on the 283x413 sprite4 canvas (commit 981af56). Feet, far
   wing and tail are banked and nothing imports them yet: the far wing is hidden behind the
@@ -32,6 +40,10 @@ Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
   a hinge needs a mouth interior no pose contains.
 - `POLLY_ART_SPEC_2026-08-13.md` sets a beak-aspect test of 0.78 ±0.05. That figure was
   measured on an open mouth. Her closed beak is ~1.01. Do not judge a closed beak against it.
+- An open mouth cannot be harvested from an existing pose; it must be drawn on the perched
+  head. Tested 2026-08-28 against sprite7 and sprite5 at multiple scales and alignments —
+  sprite7's mouth opens across her own cheek and eye on the sprite4 head, and sprite5's head
+  is tipped back. See CLAUDE.md for the full finding.
 - The current Hunt generator keeps mastered words in ordinary tension/panic play as marked
   revisits. Mastered words cannot be Bosses or Returning Haunts, and deterministic regression
   coverage protects those rules. The old mastered-word deletion/rematch behavior is retired.
