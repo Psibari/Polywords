@@ -55,13 +55,17 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.perchScale, 1.3, 'allMasksFound.perchScale');
 }
 
-// gateMasteredBoss: masterShock → masterAngry, silent, holds perch
+// gateMasteredBoss: bravado then collapse — angry fly-in, hunched sulk
+// landing, one line, exits still hunched (does not hold perch).
 {
   const s = visitSpec(resolveVisit('gateMasteredBoss', idle), 'gateMasteredBoss');
-  eq(s.perchPose, 'masterAngry', 'gateMasteredBoss.perchPose');
-  eq(s.line, null, 'gateMasteredBoss.line');
+  eq(s.flyPose, 'flyAngry', 'gateMasteredBoss.flyPose');
+  eq(s.perchPose, 'sulk', 'gateMasteredBoss.perchPose');
+  eq(s.exitPose, 'sulk', 'gateMasteredBoss.exitPose');
+  eq(s.line, 'Next time, the traps will be different.', 'gateMasteredBoss.line');
   eq(s.sfx, null, 'gateMasteredBoss.sfx');
-  eq(s.holdPerch, true, 'gateMasteredBoss.holdPerch');
+  eq(s.holdPerch, false, 'gateMasteredBoss.holdPerch');
+  eq(s.perchMs, 1600, 'gateMasteredBoss.perchMs');
 }
 
 // gameOver: laugh, never-change line, holds perch (terminal beat). Silent by

@@ -24,6 +24,7 @@ export const POLLY_LINES = {
   huntIntro: 'Enter the Hunt. We’ll see who hunts who.',
   huntHauntIntro: 'I hunt you. I haunt you.',
   huntAbandonTaunt: 'See you later, loser.',
+  huntMasteredTrapsDiffer: 'Next time, the traps will be different.',
 } as const;
 
 export type PollyLineId = keyof typeof POLLY_LINES;

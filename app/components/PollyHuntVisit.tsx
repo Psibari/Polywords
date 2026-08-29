@@ -45,6 +45,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const visitIdRef = useRef<number | null>(null);
+  const exitPoseRef = useRef<PollyPoseName>('fly');
   const exitingRef = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -65,7 +66,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     clearTimers();
     if (reduceMotion) {
       bubbleOpacity.setValue(0);
-      setPose('fly');
+      setPose(exitPoseRef.current);
       arcX.setValue(OFF_X);
       arcY.setValue(OFF_Y);
       const id = visitIdRef.current;
@@ -77,7 +78,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
       Animated.timing(bubbleOpacity, { toValue: 0, duration: BUBBLE_OUT_MS, useNativeDriver: true }),
       Animated.timing(bubbleScale, { toValue: 0.96, duration: BUBBLE_OUT_MS, useNativeDriver: true }),
     ]).start();
-    setPose('fly');
+    setPose(exitPoseRef.current);
     Animated.parallel([
       Animated.timing(arcX, { toValue: OFF_X, duration: ms, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
       Animated.timing(arcY, { toValue: OFF_Y, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
@@ -181,6 +182,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     setLine(visit.spec.line);
     setPose(visit.spec.flyPose);
     setPerchScale(visit.spec.perchScale ?? 1);
+    exitPoseRef.current = visit.spec.exitPose ?? 'fly';
 
     if (reduceMotion) {
       arcX.setValue(0);

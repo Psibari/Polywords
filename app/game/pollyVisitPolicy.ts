@@ -41,6 +41,7 @@ export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
   flyPose: 'fly' | 'flyAngry' | 'masterShock' | 'hauntTaunt';
   perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'masterAngry' | 'hauntTaunt';
+  exitPose?: 'fly' | 'sulk'; // pose held while flying out; defaults to 'fly'
   lineId: PollyLineId | null;
   line: string | null;
   sfx: PollyVisitSfx | null;
@@ -102,10 +103,23 @@ const BOSS_GAUNTLET_THROW: VisitSpec = {
   holdPerch: false, perchMs: 1400, perchScale: 1.3,
 };
 
+// She arrives still swinging and collapses in front of the player:
+// angry fly-in, hunched landing (runPunch's 'sulk' deflating droop),
+// one line, then she sinks off still hunched. Silent on purpose —
+// perform.onMasteredSequence already owns this moment's audio and a
+// squawk would fight the deflation. perchMs 1600 puts her off screen
+// ~400ms before the MASTERED card auto-resolves at 2800ms, on all
+// three mastery paths (boss 400/700, haunt 180/550, plain 2600/3450),
+// so the card is alone on screen when the run resolves. This
+// supersedes the previous silent-defeat treatment, per Pete
+// 2026-08-29.
 const MASTERED_REACTION: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'masterShock', perchPose: 'masterAngry',
-  lineId: null, line: null, sfx: null, // silent, defeat needs no line — same precedent as the old BOSS_MASTERED_SULK
-  holdPerch: true, perchMs: 2500,
+  kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'sulk',
+  exitPose: 'sulk',
+  lineId: 'huntMasteredTrapsDiffer',
+  line: POLLY_LINES.huntMasteredTrapsDiffer,
+  sfx: null,
+  holdPerch: false, perchMs: 1600,
 };
 
 const HAUNTED_GLOAT: VisitSpec = {
