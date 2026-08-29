@@ -5,7 +5,9 @@ const baseArt = require('../../assets/images/polly/rig2/polly_base.png');
 const beakArt = require('../../assets/images/polly/rig2/polly_beak.png');
 const beakOpenArt = require('../../assets/images/polly/rig2/polly_beak_open.png');
 const eyeArt = require('../../assets/images/polly/rig2/polly_eye.png');
+const eyeWideArt = require('../../assets/images/polly/rig2/polly_eye_wide.png');
 const browArt = require('../../assets/images/polly/rig2/polly_brow.png');
+const browShockArt = require('../../assets/images/polly/rig2/polly_brow_shock.png');
 const crownArt = require('../../assets/images/polly/rig2/polly_crown.png');
 
 // Flip off to fall back to the flat pose image everywhere this rig is wired.
@@ -35,6 +37,8 @@ type Props = {
   crownTilt?: boolean;
   angryBrow?: boolean;
   openMouth?: boolean;
+  eye?: 'default' | 'wide';
+  brow?: 'default' | 'shocked';
   reduceMotion: boolean | null;
 };
 
@@ -43,6 +47,8 @@ export function PollyPerchRig({
   crownTilt = false,
   angryBrow = false,
   openMouth = false,
+  eye = 'default',
+  brow = 'default',
   reduceMotion,
 }: Props) {
   const motionAllowed = reduceMotion === false;
@@ -160,7 +166,7 @@ export function PollyPerchRig({
         style={[styles.layer, layerSize]}
       />
       <Animated.Image
-        source={eyeArt}
+        source={eye === 'wide' ? eyeWideArt : eyeArt}
         resizeMode="contain"
         style={[
           styles.layer,
@@ -175,7 +181,7 @@ export function PollyPerchRig({
         ]}
       />
       <Animated.Image
-        source={browArt}
+        source={brow === 'shocked' ? browShockArt : browArt}
         resizeMode="contain"
         style={[
           styles.layer,

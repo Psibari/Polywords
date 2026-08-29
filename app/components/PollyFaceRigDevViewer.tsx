@@ -19,7 +19,9 @@ const baseArt = require('../../assets/images/polly/rig2/polly_base.png');
 const beakArt = require('../../assets/images/polly/rig2/polly_beak.png');
 const beakOpenArt = require('../../assets/images/polly/rig2/polly_beak_open.png');
 const eyeArt = require('../../assets/images/polly/rig2/polly_eye.png');
+const eyeWideArt = require('../../assets/images/polly/rig2/polly_eye_wide.png');
 const browArt = require('../../assets/images/polly/rig2/polly_brow.png');
+const browShockArt = require('../../assets/images/polly/rig2/polly_brow_shock.png');
 const crownArt = require('../../assets/images/polly/rig2/polly_crown.png');
 
 type Props = {
@@ -88,6 +90,8 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const [crownTiltOn, setCrownTiltOn] = useState(false);
   const [breatheOn, setBreatheOn] = useState(false);
   const [mouthOpen, setMouthOpen] = useState(false);
+  const [eyeWide, setEyeWide] = useState(false);
+  const [browShocked, setBrowShocked] = useState(false);
 
   useEffect(() => {
     const id = blinkValue.addListener(({ value }) => setBlink(value));
@@ -299,7 +303,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
                 style={styles.layer}
               />
               <Animated.Image
-                source={eyeArt}
+                source={eyeWide ? eyeWideArt : eyeArt}
                 resizeMode="contain"
                 style={[
                   styles.layer,
@@ -313,7 +317,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
                 ]}
               />
               <Animated.Image
-                source={browArt}
+                source={browShocked ? browShockArt : browArt}
                 resizeMode="contain"
                 style={[
                   styles.layer,
@@ -411,6 +415,42 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
               </View>
               <View style={styles.groupRow}>
                 <Text style={styles.controlLabel}>{mouthOpen ? 'OPEN' : 'CLOSED'}</Text>
+              </View>
+            </View>
+
+            <View style={styles.groupCard}>
+              <View style={styles.groupRow}>
+                <Text style={styles.groupTitle}>EYE</Text>
+                <Pressable
+                  accessibilityRole="switch"
+                  accessibilityLabel="Toggle eye between normal and wide"
+                  accessibilityState={{ checked: eyeWide }}
+                  onPress={() => setEyeWide(prev => !prev)}
+                  style={[styles.toggleTrack, eyeWide && styles.toggleTrackOn]}
+                >
+                  <View style={[styles.toggleKnob, eyeWide && styles.toggleKnobOn]} />
+                </Pressable>
+              </View>
+              <View style={styles.groupRow}>
+                <Text style={styles.controlLabel}>{eyeWide ? 'WIDE' : 'NORMAL'}</Text>
+              </View>
+            </View>
+
+            <View style={styles.groupCard}>
+              <View style={styles.groupRow}>
+                <Text style={styles.groupTitle}>BROW</Text>
+                <Pressable
+                  accessibilityRole="switch"
+                  accessibilityLabel="Toggle brow between normal and shocked"
+                  accessibilityState={{ checked: browShocked }}
+                  onPress={() => setBrowShocked(prev => !prev)}
+                  style={[styles.toggleTrack, browShocked && styles.toggleTrackOn]}
+                >
+                  <View style={[styles.toggleKnob, browShocked && styles.toggleKnobOn]} />
+                </Pressable>
+              </View>
+              <View style={styles.groupRow}>
+                <Text style={styles.controlLabel}>{browShocked ? 'SHOCKED' : 'NORMAL'}</Text>
               </View>
             </View>
 
