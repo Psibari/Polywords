@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
-Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `ae2257c`.
+Updated August 30, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current code baseline: `fde5902`.
 
 ## Verified Current State
 
@@ -25,8 +25,9 @@ Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
   black outlines, so the flat-to-rig swap is not visible in play.
 - Crown tilt exists as a prop and is deliberately off. A crown that rocks continuously while
   she sits reads as a broken prop; it belongs to a one-shot reaction, which only the Hunt has.
-- The Hunt perch is unwired and blocked on content, not code. Only two visit specs perch as
-  `smug`, both about 1800ms, against a blink scheduled 2000–6000ms after mount.
+- The Hunt perch is unwired. The 1800ms perches block the BLINK only; a face swap is a hard
+  cut and would land fine. The actual blocker is that VisitSpec cannot express a face
+  separately from `perchPose`, so the rig reaches 2 of 13 specs.
 - `PollyFaceRigDevViewer` stays in Settings behind `__DEV__` as the tuning harness.
 - Nothing is left unpainted for the perch. `rig2` holds base, crown, beak, eye, brow, feet,
   far wing and tail, all registered on the 283x413 sprite4 canvas (commit 981af56). Feet, far
@@ -46,7 +47,7 @@ Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
   device. An open mouth could not be harvested from any existing pose — Pete drew
   the parts. See CLAUDE.md for the finding and the drawing workflow.
 - The open beak is a talking mouth, not a gasp. Shocked = wide eye + shocked brow +
-  closed beak until a proper gape is drawn.
+  closed beak.
 - An app-wide error boundary is live (`fb72f65`), device-confirmed catching and
   recovering.
 - The current Hunt generator keeps mastered words in ordinary tension/panic play as marked
@@ -60,6 +61,42 @@ Updated August 28, 2026. Branch: `play-screen-overhaul`, tracking
   path are retired. Music uses the same real-source construction, has app foreground recovery,
   and restarts a new Hunt from the start. The protected Hunt-loss Results chuckle remains
   distinct from ordinary, boss, and Returning Haunt laughs and was verified on device.
+- Polly's mastery beat changed (`e23979d`, device-confirmed). She used to fly in wide-eyed
+  shocked, land in an angry glare, stay silent, and hold the perch until the board unmounted.
+  She now flies in angry, lands in `sulk` and runs runPunch's previously-unused deflating
+  droop, says "Next time, the traps will be different." (`huntMasteredTrapsDiffer`), and sinks
+  off still hunched at perchMs 1600 — clearing the screen ~400ms before the MASTERED card
+  auto-resolves, on all three mastery paths. Silent by design. `sulk` and its droop branch had
+  existed and never fired.
+- Pose size is normalized (`f6394e1`, device-confirmed). See CLAUDE.md. Everything except
+  idle/smug renders smaller than before; sulk is 31% smaller. Boss entry and gauntlet throw use
+  `point` with perchScale 1.45 and 1.3 on top and are now ~9% smaller than originally tuned.
+- Two Polly animations were cleaned and committed (`fde5902`): polly_sulk and polly_idle. Four
+  others are unusable and need re-rendering at 724x724. See CLAUDE.md.
+- Audit of `pollyVisitPolicy.ts`, 2026-08-29, verified against live source:
+  - `oneHeartLeft` (`useBoardMechanics:332`) and `streakX10` (`:348`) are FIRED on every run and
+    discarded — `resolveVisit` has no branch for either. Adding reactions is a policy-file
+    change only, no MaskBoard edit.
+  - `hiddenFound`, `ghostFoundLate` and `ghostDissolved` are declared in `PollyEvent` but fired
+    by nothing anywhere.
+  - WRONG_SMUG is the only spec for `wrong`, and "Thought so." is therefore the only
+    wrong-answer line in the game. Capped one per word, so it can fire up to ~7 times in a run
+    reaching round 7.
+  - VisitSpec holds one fixed `lineId`; there is no variant mechanism. `resolveHomePollyMoment`
+    and `resolveResultsPollyMoment` both pick from candidate arrays via `firstFresh()` against
+    `recentLineIds`. The Hunt has no equivalent.
+  - `resolveVisit` receives no pollyMemory data. `PollyBudgetState`'s only history field is
+    `ghostRunsMissed`, which does one thing: swaps GHOST_SMUG's `perchPose` to `'point'` at
+    >=2. Home and Results both branch on `playerWinStreak`/`pollyWinStreak`; the Hunt does not.
+    `usePollyVisits` already imports `useGameStore`, so passing the streaks through is a
+    hook-level change with no MaskBoard involvement.
+  - Of 25 reachable Hunt lines, she has no losing register at all.
+  - `POLLY_LINES` holds 25 lines, not 24.
+- `isMasteredReturn` is set on returning mastered-word steps in `huntGenerator` and is read by
+  NOTHING — not the board, store, Results or Polly. A mastered word returns silently and
+  unmarked.
+- MASTERED overlay timings, for anyone coordinating against them: tap is dead for 1200ms,
+  auto-resolves at 2800ms. The HAUNTED overlay is 1200ms and 3200ms.
 
 ## REWARD ECONOMY
 
@@ -98,10 +135,18 @@ five distractors.
   specified. The desired motion is push-forward, not `rotateY`.
 5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
   persistence, gestures, animation, and performance.
-6. Wire the face rig into live Polly. Every player-facing perch still renders a flat pose;
-  `PollyHuntVisit` is the only place the game renders her. Route it through a `PollyFigure`
-  wrapper that renders the flat pose or the rig behind a flag so the flat path stays
-  shippable.
+6. Give Polly a reaction to `streakX10` in her rattled register. The event already fires and
+  is already discarded, it is the register the Hunt does not have, and it costs one branch in
+  a pure file plus authored lines. It needs the lineId-to-candidate-array change first so
+  variants can rotate, which also fixes the "Thought so." repetition.
+7. Rewrite the five theft-voice lines listed in CLAUDE.md.
+8. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
+  placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
+  and the mastery beat.
+9. Re-render the four clipped animations at 724x724.
+10. Polly has no pose for "rattled but pretending she is fine" — smug is winning, sulk is
+  fully beaten, and shocked was ruled to have no feeling in it. That is the register the
+  streak reaction needs.
 
 ## Protection
 
