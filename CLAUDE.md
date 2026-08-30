@@ -110,6 +110,12 @@ navigation shell; active Hunt and Daily play are nav-free.
 
 ## Presentation and Character
 
+- Polly is NOT a word thief and does not own or steal meanings. She is the antagonist who
+  authored the traps — the designer of the deception, not a burglar. Pete ruled this
+  2026-08-29. Five shipped lines still contradict it and are pending rewrite: `huntBossMine`,
+  `homeTakeTime`, `resultsWantBack`, `resultsEmptyVault`, `resultsKeepWord`. "My traps
+  remember you" is the model for the correct voice. Note that the polywords-feel-engine
+  skill still describes her as a "smug theatrical word-burglar" and is stale.
 - Home is the lobby; Play is the semantic arena; Vault is the player's reclaimed archive;
   Settings owns preferences/development utilities; Daily is separate.
 - The in-round intake object is the **Polybook**. Vault remains **WORD VAULT**.
@@ -129,10 +135,13 @@ navigation shell; active Hunt and Daily play are nav-free.
   idle/smug, Daily `POSE.idle`, Results `complete`. Fly-ins and every other pose stay flat art.
   Shipped in `5c6f92a` (Home), `44b4114` (Daily), `d39ca2e` (Results), each device-confirmed
   before commit.
-- The Hunt perch is not wired, and the blocker is content, not code. Only `WRONG_SMUG` and
-  `GHOST_SMUG` perch as `smug`, both for about 1800ms, while the blink is scheduled 2000–6000ms
-  after mount — the rig would show no blink at all there. Her other Hunt faces (laugh, point,
-  shocked, sulk) are expressions the rig cannot currently make.
+- The Hunt perch is not wired, and the blocker is code, not content. The 1800ms perch on
+  `WRONG_SMUG`/`GHOST_SMUG` only prevents the idle BLINK, which is scheduled 2000–6000ms after
+  mount — it does not prevent a FACE: mouth, eye and brow swaps are hard cuts that land the
+  instant she arrives. The real blocker is that `VisitSpec` has no field for a face — `perchPose`
+  is a single enum conflating body pose and expression across seven values, and the rig draws
+  only sprite4. So the rig can reach 2 of 13 visit specs (`WRONG_SMUG`, `GHOST_SMUG`) until
+  `VisitSpec` carries a face separately.
 - `PollyFaceRigDevViewer` remains in Settings behind `__DEV__` as the tuning harness. Pete
   approved reviving the layered approach on 2026-08-27, overriding the "do not revive" note in
   `assets/images/polly/rig/README.md`.
@@ -142,6 +151,16 @@ navigation shell; active Hunt and Daily play are nav-free.
   `PollyActor.tsx` still defaults to `renderer: 'rig'`, which contradicts that README.
   Do not delete `polly_shocked.png`, `polly_angry.png` or `polly_pointing.png`: they are
   also referenced by live `pollyPoses.ts`.
+- The six dead `polly_*.webp` files are all 362x724, six frames, ~0.6–0.8s loops. All had a
+  light-grey halo along the alpha edge, left over from being cut off a white background, plus
+  1-bit alpha with no anti-aliasing; on a dark background that reads as static. `polly_sulk`
+  and `polly_idle` were de-fringed and re-feathered and committed clean in `fde5902` (edge
+  colour ~(146,146,146) to ~(21,20,18), near-white edge pixels ~18% to ~0%). The other four —
+  fly_in, laugh, boss_warning, taunt_point — are unusable and cannot be repaired: the canvas is
+  too narrow for spread-wing and pointing poses, so wingtips, tail and hand are clipped flat at
+  the margins. Those pixels were never drawn and cannot be recovered. They need re-rendering at
+  724x724 square, which also matches the square perch boxes. Nothing in the app plays animated
+  webp today; React Native `<Image>` will not animate one on Android without additional work.
 - `sprite4.png` is the master pose for layered work. Other poses map onto it by beak width:
   sprite2 ×1.000, sprite5 ×0.883, sprite7 ×0.883.
 - An open mouth cannot be harvested from any existing pose. This supersedes the earlier
@@ -160,14 +179,32 @@ navigation shell; active Hunt and Daily play are nav-free.
   mouth see-through, because nothing was drawn behind it. Always check for
   transparent gaps inside a part before accepting it.
 - `beak_open` reads as a talking or shouting mouth, not a gasp. Her shocked face is
-  wide eye plus shocked brow with the beak CLOSED. A rounder, more vertical gape is
-  a future fourth part.
-- `PollyPerchRig` takes `openMouth`, `eye` ('default' | 'wide') and
+  wide eye plus shocked brow with the beak CLOSED. A rounder, more vertical gape shipped in
+  `54c85bb` as `polly_beak_gape.png`. `rig2` now holds base, crown, beak, beak_open, beak_gape,
+  eye, eye_wide, brow, brow_shock, plus banked feet, far wing and tail.
+- `PollyPerchRig` takes `mouth` ('closed' | 'open' | 'gape'), `eye` ('default' | 'wide') and
   `brow` ('default' | 'shocked'). Art variants are named strings rather than
-  booleans because a third brow exists. `angryBrow` remains a boolean and drives
-  motion only — the downward offset and rotation. All swaps are hard cuts, no
+  booleans because a third brow and a third mouth exist. `angryBrow` remains a boolean and
+  drives motion only — the downward offset and rotation. All swaps are hard cuts, no
   cross-fade. No live screen passes any of them yet; the three faces exist only in
   the dev viewer, which now has MOUTH, EYE and BROW toggles.
+- Poses are contain-fitted into square boxes, but the drawings have very different canvas
+  aspect ratios, so they rendered at very different sizes. sprite4 is portrait 283x413;
+  sprite9 is landscape 238x178 and rendered ~1.45x larger in the same box. `POLLY_POSE_SCALE`
+  in `app/ui/pollyPoses.ts` normalizes this, anchored on sprite4 because it is the most-seen
+  pose and the drawing rig2 is cut from. Values derive from crown width, which is
+  near-constant across poses. The perch components hold an image source rather than a pose
+  name, so they use `pollyPoseScale(source)`; `PollyHuntVisit` uses `POLLY_POSE_SCALE[name]`.
+  Applied on the Image, never on the parent Animated.View — those transform stacks are
+  native-driven. Rig branches are unaffected. (`f6394e1`)
+- `VisitSpec.exitPose` ('fly' | 'sulk', default 'fly') controls the pose held during the
+  fly-out. Before it, `runExit` hardcoded 'fly', so she always left neutral regardless of
+  what had just happened. Use an inline union, never an import from `pollyPoses.ts` —
+  `pollyVisitPolicy.ts` is RN-free so it runs under plain node. (`e23979d`)
+- `masterShock` and `masterAngry` are no longer selected by any visit spec after `e23979d`.
+  They remain in `POLLY_POSES` and in the type unions. Do NOT delete `polly_angry.png` or
+  `polly_shocked.png` regardless: they are the reference art the rig was measured from and
+  the reference for the gape mouth.
 - There is an app-wide error boundary (`fb72f65`). `app/components/ErrorBoundary.tsx`
   wraps the navigator inside `SafeAreaProvider`; its reset bumps a `navKey` so the
   navigator remounts to a clean Home. The fallback uses system fonts only, so it
