@@ -6,7 +6,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { POLLY_POSES } from '../ui/pollyPoses';
+import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
@@ -73,7 +73,11 @@ export default function PollyResultsPerch({ outcome, line }: Props) {
         {POLLY_PERCH_RIG_ENABLED && pose === POLLY_POSES.idle ? (
           <PollyPerchRig size={POLLY_SIZE} reduceMotion={reduceMotion} />
         ) : (
-          <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+          <Image
+            source={pose}
+            style={[styles.pollyImage, { transform: [{ scale: pollyPoseScale(pose) }] }]}
+            resizeMode="contain"
+          />
         )}
       </Animated.View>
 

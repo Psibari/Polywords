@@ -5,7 +5,7 @@ import {
   ImageSourcePropType,
   StyleSheet,
 } from 'react-native';
-import { POLLY_POSES } from '../ui/pollyPoses';
+import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
 import { homePerch } from '../ui/pwHomeMaterials';
 import { resolveHomePollyMoment } from '../game/pollyMemory';
 import { useGameStore } from '../store/useGameStore';
@@ -83,7 +83,11 @@ export default function PollyHomePerch() {
         {POLLY_PERCH_RIG_ENABLED && (pose === POLLY_POSES.idle || pose === POLLY_POSES.smug) ? (
           <PollyPerchRig size={homePerch.pollySize} reduceMotion={reduceMotion} />
         ) : (
-          <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+          <Image
+            source={pose}
+            style={[styles.pollyImage, { transform: [{ scale: pollyPoseScale(pose) }] }]}
+            resizeMode="contain"
+          />
         )}
       </Animated.View>
 

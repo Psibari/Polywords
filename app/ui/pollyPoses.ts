@@ -23,3 +23,36 @@ export type PollyPoseName = keyof typeof POLLY_POSES;
 // Type-check the values without widening the const map.
 const _check: Record<PollyPoseName, ImageSourcePropType> = POLLY_POSES;
 void _check;
+
+// Each drawing has a different canvas aspect ratio, so contain-fitting
+// them into one square box renders her at wildly different sizes.
+// These multipliers normalize her apparent size, anchored on sprite4
+// (idle/smug) because it is the most-seen pose and the drawing the
+// perch rig is cut from. Derived from crown width, which is close to
+// constant across poses; tune on device, this is one table.
+export const POLLY_POSE_SCALE: Record<PollyPoseName, number> = {
+  idle: 1,
+  smug: 1,
+  laugh: 0.82,
+  point: 0.91,
+  shocked: 0.84,
+  sulk: 0.69,
+  fly: 0.8,
+  flyAngry: 0.78,
+  flyGrin: 0.81,
+  masterShock: 1,
+  masterAngry: 0.91,
+  hauntTaunt: 0.75,
+};
+
+// The perch components hold an image source in state rather than a pose
+// name, so they look the scale up by source. idle and smug are the same
+// require() and therefore the same key — harmless, both are 1.
+const SCALE_BY_SOURCE = new Map<ImageSourcePropType, number>(
+  (Object.keys(POLLY_POSES) as PollyPoseName[])
+    .map(name => [POLLY_POSES[name], POLLY_POSE_SCALE[name]] as const)
+);
+
+export function pollyPoseScale(source: ImageSourcePropType): number {
+  return SCALE_BY_SOURCE.get(source) ?? 1;
+}

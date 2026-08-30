@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 import { playSfx } from '../audio/sfx';
-import { POLLY_POSES, PollyPoseName } from '../ui/pollyPoses';
+import { POLLY_POSES, POLLY_POSE_SCALE, PollyPoseName } from '../ui/pollyPoses';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollySpeechBubble } from './PollySpeechBubble';
@@ -272,7 +272,11 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
           },
         ]}
       >
-        <Image source={POLLY_POSES[pose]} style={styles.pollyImage} resizeMode="contain" />
+        <Image
+          source={POLLY_POSES[pose]}
+          style={[styles.pollyImage, { transform: [{ scale: POLLY_POSE_SCALE[pose] }] }]}
+          resizeMode="contain"
+        />
       </Animated.View>
     </View>
   );

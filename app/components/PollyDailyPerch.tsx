@@ -14,7 +14,7 @@ import {
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
-import { POLLY_POSES } from '../ui/pollyPoses';
+import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
 import { PollyLineId } from '../game/pollyCharacter';
 import { useGameStore } from '../store/useGameStore';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
@@ -220,7 +220,11 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
           // opaque style IDs, not readable objects, so it can't be sourced live.
           <PollyPerchRig size={288} reduceMotion={reduceMotion} />
         ) : (
-          <Image source={pose} style={styles.pollyImage} resizeMode="contain" />
+          <Image
+            source={pose}
+            style={[styles.pollyImage, { transform: [{ scale: pollyPoseScale(pose) }] }]}
+            resizeMode="contain"
+          />
         )}
       </Animated.View>
     </Animated.View>
