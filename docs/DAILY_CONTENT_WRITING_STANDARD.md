@@ -12,7 +12,7 @@ importing, and selecting Daily Challenge content.
 ## Source Discipline
 
 - Canonical authoring workbook:
-  `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx`
+  `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`
 - Runtime representation: `app/game/dailyPool.ts`
 - The workbook is the authoring truth. Runtime is an exported representation.
 - When memory, chat history, runtime, and the current locked workbook disagree about approved
