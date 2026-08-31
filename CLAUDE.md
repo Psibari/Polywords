@@ -105,8 +105,10 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Stable word/mask IDs are persistence contracts. Never rebuild or renumber existing content
   casually.
 - `assets/data/huntData.v2.json` and `tools/content/_deprecated/mask-rewriter/` are retired.
-- `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx` is the canonical Daily
-  authoring source; `app/game/dailyPool.ts` is the runtime representation.
+- `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx` is the canonical Daily
+  authoring source; `app/game/dailyPool.ts` is the runtime representation. Supersedes
+  `POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx` (retired, kept for history), which is a
+  strict subset — all 43 of its entries carried over unchanged, plus 17 new entries.
 
 ## Presentation and Character
 

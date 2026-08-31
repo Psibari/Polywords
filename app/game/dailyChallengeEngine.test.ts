@@ -34,8 +34,8 @@ function ok(condition: boolean, label: string): void {
 
 {
   const approvedPool = DAILY_POOL;
-  eq(approvedPool.length, 43, 'pool.approvedCount');
-  eq(new Set(approvedPool.map(entry => entry.word)).size, 43, 'pool.uniqueWords');
+  eq(approvedPool.length, 60, 'pool.approvedCount');
+  eq(new Set(approvedPool.map(entry => entry.word)).size, 60, 'pool.uniqueWords');
   ok(approvedPool.some(entry => entry.word === 'STAGE'), 'pool.includesStage');
   ok(!approvedPool.some(entry => entry.word === 'SENTENCE'), 'pool.excludesSentence');
   for (const entry of approvedPool) {

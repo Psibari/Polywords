@@ -123,11 +123,15 @@ Updated August 31, 2026. Branch: `play-screen-overhaul`, tracking
 
 ## Approved Daily Content
 
-`workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx` is the canonical source for
-43 approved locked words; `STAGE` is included and `SENTENCE` is excluded.
-`app/game/dailyPool.ts` is the runtime representation. Each source word has three clues, nine
-unique approved candidates, and tier 1–3; each round deterministically presents the target plus
-five distractors.
+`workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx` is the canonical source for
+60 approved locked words; `STAGE` is included and `SENTENCE` is excluded. It supersedes
+`POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx` (retired, kept for history) — the prior
+43 entries carried over unchanged, plus 17 new entries added 2026-08-28 (JAM, HIGHLIGHT, HIKE,
+HIP, HIT, HOLLOW, HOOD, INDEX, INTEREST, ISSUE, JACK, KICK, KIND, LAP, LAST, LATCH, LAUNCH).
+`app/game/dailyPool.ts` is the runtime representation and was merged additively to match
+(`tsc`/full suite green; `dailyChallengeEngine.test.ts`'s hardcoded pool-size assertion updated
+from 43 to 60). Each source word has three clues, nine unique approved candidates, and tier
+1–3; each round deterministically presents the target plus five distractors.
 
 ## Next Work
 
