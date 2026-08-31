@@ -11,6 +11,7 @@ export const POLLY_POSES = {
   shocked: require('../../assets/images/polly/poses/sprite8.png'),  // shocked recoil
   sulk: require('../../assets/images/polly/poses/sprite9.png'),     // hunched angry glare
   rattled: require('../../assets/images/polly/poses/rattled.png'), // perched, sweating, forced grin — losing and covering
+  asleep: require('../../assets/images/polly/poses/zzz.png'),      // perched, eyes closed, "Zzz" marks — dozing
   fly: require('../../assets/images/polly/poses/sprite2.png'),      // neutral fly
   flyAngry: require('../../assets/images/polly/poses/sprite10.png'),// angry open-beak fly
   flyGrin: require('../../assets/images/polly/poses/sprite1.png'),  // confident grinning fly (reserve)
@@ -39,6 +40,7 @@ export const POLLY_POSE_SCALE: Record<PollyPoseName, number> = {
   shocked: 0.84,
   sulk: 0.69,
   rattled: 1,
+  asleep: 1.3,
   fly: 0.8,
   flyAngry: 0.78,
   flyGrin: 0.81,

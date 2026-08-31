@@ -225,6 +225,19 @@ navigation shell; active Hunt and Daily play are nav-free.
   It is a whole-pose drawing, NOT rig-compatible — the body is a fresh
   drawing rather than a repaint of sprite4, so no part cut from it will
   register on the rig.
+- `asleep` is a new flat pose (`assets/images/polly/poses/zzz.png`, banked 2026-08-31):
+  perched, eyes closed, "Zzz" marks beside her head — dozing. Its `POLLY_POSE_SCALE` is
+  1.3, not 1 — unlike `rattled` it was NOT exported crown-matched to sprite4, so the value
+  was measured: crop it tight (bird + Zzz marks together, 183x271 canvas), contain-fit both
+  it and sprite4 into matching boxes, and compare. Three
+  independent measurements (bird height, bird width, crown width, all excluding the Zzz
+  marks via connected-component isolation) converged on 1.24–1.39; 1.3 was the rendered
+  comparison that visually matched sprite4 best. Not device-confirmed — spot-check on
+  screen before trusting it further. Whole-pose drawing, not rig-compatible, same as
+  `rattled`. The original raw upload (a 1656x950 canvas with the art occupying a small
+  region in the middle) no longer exists: Windows treats `zzz.png`/`ZZZ.png` as the same
+  file, so cropping-and-saving as `zzz.png` silently overwrote the original in place before
+  it was ever committed. Only the cropped, banked version survives.
 - `PollyPerchRig` takes `mouth` ('closed' | 'open' | 'gape'), `eye` ('default' | 'wide') and
   `brow` ('default' | 'shocked'). Art variants are named strings rather than
   booleans because a third brow and a third mouth exist. `angryBrow` remains a boolean and
