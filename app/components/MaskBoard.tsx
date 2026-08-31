@@ -766,6 +766,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       if (outcome === 'mastered') {
         bookOpenAnim.setValue(0);
         masteredHeadwordOpacity.setValue(1);
+      } else {
+        hauntedHeadwordOpacity.setValue(1);
       }
       setBookVariant(outcome);
       return;
@@ -792,7 +794,14 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         ]),
       ]);
     } else {
-      setTimeout(() => setBookVariant('haunted'), HAUNTED_SWAP_AT_MS);
+      setTimeout(() => {
+        setBookVariant('haunted');
+        // Lands with the gray rig, not the slam's end — same beat the rig
+        // itself becomes visible, mirroring the mastered headword tint.
+        Animated.timing(hauntedHeadwordOpacity, {
+          toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true,
+        }).start();
+      }, HAUNTED_SWAP_AT_MS);
       bookOpenAnimationRef.current = Animated.parallel([
         Animated.sequence([
           Animated.timing(bookOpenAnim, { toValue: 1, duration: HAUNTED_DRAG_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -829,6 +838,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // 'mastered', so the color change lands with the gold rig rather than
   // waiting for the slam to finish.
   const masteredHeadwordOpacity = useRef(new Animated.Value(0)).current;
+  // ── boss haunted headword tint ──────────────────────────────────
+  // Same mechanism as masteredHeadwordOpacity directly above — a dark
+  // overlay of the same word, faded in as the gray rig becomes active
+  // (fired from triggerBossOutcomeSlam's haunted branch), fixing washed-out
+  // light/gold text over the pale Haunted center panel. Distinct from
+  // wordHauntTintOpacity above: that one is the Haunt-REMATCH entrance tint
+  // (isHaunt, fades OUT as tiles appear) — an unrelated beat that never
+  // touches bookVariant.
+  const hauntedHeadwordOpacity = useRef(new Animated.Value(0)).current;
 
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
@@ -1745,6 +1763,31 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                   {
                     color: PW.color.purple,
                     opacity: masteredHeadwordOpacity,
+                    position: 'absolute',
+                    left: 0, right: 0,
+                    textAlign: 'center',
+                  },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {step.word}
+              </Animated.Text>
+            )}
+
+            {/* Haunted gray-book headword tint — fades in over the gold/
+                light base word once bookVariant flips to 'haunted', so it
+                stays readable against the pale Haunted center panel. */}
+            {bookVariant === 'haunted' && (
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.word,
+                  isBoss && styles.wordBoss,
+                  {
+                    color: PW.color.bg,
+                    opacity: hauntedHeadwordOpacity,
                     position: 'absolute',
                     left: 0, right: 0,
                     textAlign: 'center',
