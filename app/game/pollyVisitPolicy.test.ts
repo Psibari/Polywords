@@ -163,6 +163,10 @@ eq(
 // wrong: second wrong of the same word is ignored
 eq(resolveVisit('wrong', { ...idle, wrongSeenThisWord: true }).action, 'none', 'second wrong');
 
+const streak = visitSpec(resolveVisit('streakX10', idle), 'streakX10');
+eq(streak.perchPose, 'rattled', 'streakX10 perches rattled');
+eq(streak.kind, 'heckle', 'streakX10 is a heckle');
+
 // hesitation6s → point taunt; 3s and 9s are ignored
 {
   const s = visitSpec(resolveVisit('hesitation6s', idle), 'hesitation6s');
@@ -206,7 +210,7 @@ for (const [i, block] of [
 eq(resolveVisit('wordEntry', idle).action, 'wordEntry', 'wordEntry resets budget');
 
 for (const ev of [
-  'correct', 'streakX10', 'oneHeartLeft', 'oneWrongMove',
+  'correct', 'oneHeartLeft', 'oneWrongMove',
   'hiddenFound', 'hesitationCleared', 'ghostFoundLate', 'ghostDissolved',
 ] as const) {
   eq(resolveVisit(ev, idle).action, 'none', `${ev} ignored`);

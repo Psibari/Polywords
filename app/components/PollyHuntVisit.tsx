@@ -143,6 +143,21 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
         Animated.timing(reactTilt, { toValue: -0.55, duration: 130, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
         Animated.timing(reactTilt, { toValue: 0, duration: 500, delay: 880, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
+    } else if (perchPose === 'rattled') {
+      // Flinch back, then straighten up too fast — she over-corrects into fine.
+      Animated.sequence([
+        Animated.timing(reactX, { toValue: -7, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactX, { toValue: 0, duration: 520, delay: 260, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(reactTilt, { toValue: 0.35, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactTilt, { toValue: -0.18, duration: 300, delay: 200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(reactTilt, { toValue: 0, duration: 420, useNativeDriver: true }),
+      ]).start();
+      Animated.sequence([
+        Animated.timing(reactScale, { toValue: 0.97, duration: 140, useNativeDriver: true }),
+        Animated.timing(reactScale, { toValue: 1, duration: 440, delay: 240, useNativeDriver: true }),
+      ]).start();
     } else {
       // Smug: cold lean toward the puzzle (she is on the left, leaning right).
       Animated.sequence([

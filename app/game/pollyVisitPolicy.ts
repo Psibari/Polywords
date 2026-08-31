@@ -40,7 +40,7 @@ export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
   flyPose: 'fly' | 'flyAngry' | 'masterShock' | 'hauntTaunt';
-  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'masterAngry' | 'hauntTaunt';
+  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'masterAngry' | 'hauntTaunt';
   exitPose?: 'fly' | 'sulk'; // pose held while flying out; defaults to 'fly'
   lineId: PollyLineId | null;
   line: string | null;
@@ -199,6 +199,25 @@ const WRONG_HECKLE_LINES: PollyLineId[] = [
   'huntGotMeCrowned',
 ];
 
+// Ten correct in a row. She is losing and covering — the pose is a flinch
+// with a forced grin, and every line is her explaining why it doesn't count.
+// Heckle, not guaranteed: it is a flourish, and it fires again at twenty.
+const STREAK_RATTLED: VisitSpec = {
+  kind: 'heckle', flyPose: 'fly', perchPose: 'rattled',
+  lineId: 'huntStreakSoWhat', line: POLLY_LINES.huntStreakSoWhat,
+  sfx: null,
+  holdPerch: false, perchMs: 1800,
+};
+
+const STREAK_LINES: PollyLineId[] = [
+  'huntStreakSoWhat',
+  'huntStreakEasy',
+  'huntStreakWhosCounting',
+  'huntStreakLetYouHave',
+  'huntStreakWarmUp',
+  'huntStreakPacing',
+];
+
 const HESITATION_POINT: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'point',
   lineId: 'huntHesitation', line: POLLY_LINES.huntHesitation, sfx: null,
@@ -239,6 +258,10 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   if (event === 'wrong' && !state.wrongSeenThisWord) {
     const lineId = pickFreshLine(WRONG_HECKLE_LINES, state.recentLineIds, state.lineRoll);
     return { action: 'visit', spec: { ...WRONG_SMUG, lineId, line: POLLY_LINES[lineId] } };
+  }
+  if (event === 'streakX10') {
+    const lineId = pickFreshLine(STREAK_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...STREAK_RATTLED, lineId, line: POLLY_LINES[lineId] } };
   }
   if (event === 'hesitation6s') return { action: 'visit', spec: HESITATION_POINT };
   if (event === 'ghostEntry') {
