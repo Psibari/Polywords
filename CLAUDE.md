@@ -116,6 +116,27 @@ navigation shell; active Hunt and Daily play are nav-free.
   `homeTakeTime`, `resultsWantBack`, `resultsEmptyVault`, `resultsKeepWord`. "My traps
   remember you" is the model for the correct voice. Note that the polywords-feel-engine
   skill still describes her as a "smug theatrical word-burglar" and is stale.
+- Hunt lines now rotate. `VisitSpec` still carries one resolved `lineId` and
+  `line`, but `resolveVisit` picks them at fire time from a candidate pool
+  via the exported pure helper `pickFreshLine(candidates, recent, roll)` in
+  `pollyVisitPolicy.ts`. It filters out anything in `pollyMemory.recentLineIds`
+  (last five, any surface) and indexes the survivors with a caller-supplied
+  0–1 roll. `PollyBudgetState` gained `recentLineIds` and `lineRoll` for this;
+  `usePollyVisits` fills them from `useGameStore.getState()` (never a
+  selector — a subscription would re-render mid-visit) and `Math.random()`.
+  Randomness is an input so the policy file stays pure and still runs under
+  plain node. Two pools exist: `WRONG_HECKLE_LINES` (12) and `STREAK_LINES`
+  (6). Every other moment still holds a single fixed line. (d623087)
+- Polly now has a losing register in the Hunt. `streakX10` fires from
+  `useBoardMechanics` on every multiple of ten and used to be discarded;
+  it now resolves to `STREAK_RATTLED` — flyPose `fly`, perchPose `rattled`,
+  heckle, 1800ms, no sfx — with its own line pool of her explaining why the
+  streak does not count. Heckle rather than guaranteed on purpose: it is a
+  flourish, it must not hard-cut a bigger beat, and it fires again at twenty.
+  `runPunch` in `PollyHuntVisit.tsx` gained a `rattled` branch: flinch back,
+  then over-correct upright. Without it a new pose falls through to the smug
+  branch, which leans her toward the puzzle — confident, and wrong here.
+  (2e82c32)
 - Home is the lobby; Play is the semantic arena; Vault is the player's reclaimed archive;
   Settings owns preferences/development utilities; Daily is separate.
 - The in-round intake object is the **Polybook**. Vault remains **WORD VAULT**.
@@ -182,6 +203,15 @@ navigation shell; active Hunt and Daily play are nav-free.
   wide eye plus shocked brow with the beak CLOSED. A rounder, more vertical gape shipped in
   `54c85bb` as `polly_beak_gape.png`. `rig2` now holds base, crown, beak, beak_open, beak_gape,
   eye, eye_wide, brow, brow_shock, plus banked feet, far wing and tail.
+- `rattled` is a new flat pose (`assets/images/polly/poses/rattled.png`,
+  ff3e68d): perched, sweating, blushing, forced closed grin — losing and
+  covering for it. It was exported crown-matched to sprite4 on the same
+  283x413 canvas, so its `POLLY_POSE_SCALE` entry is 1 by construction, not
+  by tuning. She reads slightly smaller in the body than sprite4 because the
+  drawing gives her a larger head; that is the art, not a scale error.
+  It is a whole-pose drawing, NOT rig-compatible — the body is a fresh
+  drawing rather than a repaint of sprite4, so no part cut from it will
+  register on the rig.
 - `PollyPerchRig` takes `mouth` ('closed' | 'open' | 'gape'), `eye` ('default' | 'wide') and
   `brow` ('default' | 'shocked'). Art variants are named strings rather than
   booleans because a third brow and a third mouth exist. `angryBrow` remains a boolean and
