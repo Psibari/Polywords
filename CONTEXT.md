@@ -18,9 +18,15 @@ Updated August 31, 2026. Branch: `play-screen-overhaul`, tracking
   added as brand-new boss words (full REAL/TRAP sets plus 3 locked hidden pairs each, all dated
   complete 2026-08-26 through 2026-08-29 in the workbook); WAKE promoted from a regular
   `tension` word to `boss` (gained a 5th REAL — "WHAT YOU DON'T DO TO A SLEEPING GIANT" — and 3
-  hidden pairs); BULB gained one additive trap (onion, "THE VEGETABLE THAT MAKES YOU CRY WHEN
-  YOU CUT IT"); DATE's `date_t1` trap text was replaced (a mild "ONE-NIGHT STAND" trap swapped
-  for a fruit-pun one), same mask ID. The workbook's own `import-workbook.mjs`-staged output
+  hidden pairs). BULB and DATE were initially "merged" with edits from this workbook — an onion
+  trap re-added to BULB, DATE's `date_t1` swapped to a fig-pun — but both were reverted within
+  the same session: the 2026-08-07 gpsTag/difficulty pacing pass (`bfbd2f2`/`8e0b1a5`) had
+  already deliberately fixed both (cut BULB's onion trap as an unfair non-contrasting trap —
+  onions genuinely are bulbs; rewrote DATE's fig trap to "A ONE-NIGHT STAND" for the same
+  reason), and this workbook still carries the pre-fix text for those two tiles specifically.
+  Confirmed via git history, not assumption. No other word in this merge had a pre-existing
+  live entry with conflicting history — this was checked for all 197 pre-merge overlap words.
+  The workbook's own `import-workbook.mjs`-staged output
   was NOT used as-is: that tool only captures one hidden pair per boss word (a stale schema)
   where the live game requires exactly 3 per boss word for the Route C gauntlet
   (`runtimeHuntValidation.mjs` enforces this and passed clean on the merge). 13 other words the
