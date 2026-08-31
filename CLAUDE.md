@@ -54,13 +54,16 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Score sources are `realMaskPoints`, `trapMaskPoints` and `mysteryMasteryPoints` in
   `polyRunEngine.ts`. `addBonusScore()` is exported and wired into the store but has no caller
   anywhere in `app/` — treat as dead.
-- `realMaskPoints`' isRare 300-point tier has no data behind it: zero of the 908 visible REAL
+- `realMaskPoints`' isRare 300-point tier has no data behind it: zero of the 1,007 visible REAL
   masks carry isRare.
 - `FEATHER_MILESTONES` fires for FX only. The old score-to-extra-life conversion was
   deliberately removed as regressive and stays removed.
 - `ranks.ts` uses the current absolute ladder: D 0, C 3,000, B 6,000, A 9,000, S 11,500,
-  MASTER 14,000. The ladder was retuned against the current 197-word corpus and observed
-  flawless-run ceiling; rank remains a per-run skill verdict, not long-term Vault progress.
+  MASTER 14,000. The ladder was retuned against the 197-word corpus and observed flawless-run
+  ceiling as of 2026-08-24; the corpus has since grown to 209 words / 18 boss words (2026-08-31),
+  which the ladder has not been re-verified against — a run only ever draws one boss word, so
+  the ceiling is unlikely to have moved, but this is unverified, not confirmed unaffected.
+  Rank remains a per-run skill verdict, not long-term Vault progress.
 
 ### Vault
 
@@ -94,14 +97,22 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Correct-answer presentation is physical: the submitted card lands on the clue parchment,
   the matching rod/reward paper covers it, reward appears, then the paper rolls up over the
   already-rendered next clue. Input stays locked until the reveal finishes.
-- `app/game/dailyPool.ts` contains the approved 43-word Daily runtime pool. Each source word
+- `app/game/dailyPool.ts` contains the approved 60-word Daily runtime pool. Each source word
   has three clues and nine approved candidates; a round deterministically presents six.
 
 ## Content and Data
 
-- `assets/data/huntData.json` is the live Hunt bank and outranks workbook/tool output.
+- `assets/data/huntData.json` is the live Hunt bank and outranks workbook/tool output: 209
+  words, 18 boss words, 54 hidden pairs as of 2026-08-31.
 - `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is editorial staging. Runtime changes require
-  an explicit additive merge and verification.
+  an explicit additive merge and verification. Dated per-batch workbooks
+  (`POLYWORDS_content_data_<date>_<WORDRANGE>_LOCKED.xlsx`) also live in `localworkbooks/` as
+  each batch is merged and archived — e.g. `..._2026-08-15_DIRECT_DISCHARGE_LOCKED.xlsx` and
+  `..._2026-08-30_FOSTER_FOUL_LOCKED.xlsx`. `tools/content/import-workbook.mjs` reads the
+  standard `Tiles` / `Boss Words (Production)` sheet layout but is stale against the current
+  boss schema — it captures only one hidden pair per boss word where the live game requires
+  exactly 3 (`runtimeHuntValidation.mjs` enforces this). Do not trust its staged boss output
+  without cross-checking the raw sheet rows.
 - Stable word/mask IDs are persistence contracts. Never rebuild or renumber existing content
   casually.
 - `assets/data/huntData.v2.json` and `tools/content/_deprecated/mask-rewriter/` are retired.
