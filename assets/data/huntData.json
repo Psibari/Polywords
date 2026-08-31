@@ -2164,6 +2164,11 @@
         "id": "bulb_t5",
         "phrase": "THE FUEL AN OLD CAMPING LANTERN BURNS",
         "isReal": false
+      },
+      {
+        "id": "bulb_t6",
+        "phrase": "THE VEGETABLE THAT MAKES YOU CRY WHEN YOU CUT IT",
+        "isReal": false
       }
     ],
     "gpsTag": "panic",
@@ -5402,7 +5407,7 @@
       },
       {
         "id": "date_t1",
-        "phrase": "A ONE-NIGHT STAND",
+        "phrase": "WRINKLED PURPLE FRUIT FROM THE TREE",
         "isReal": false
       },
       {
@@ -7860,6 +7865,154 @@
     "gpsTag": "tension",
     "wordType": "8-MEANING"
   },
+  "FLAT": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "flat_r0",
+        "phrase": "HOW THE EARTH LOOKS TO PEOPLE WHO DON’T BELIEVE NASA",
+        "isReal": true
+      },
+      {
+        "id": "flat_r1",
+        "phrase": "WHAT A NAIL IN THE ROAD CAN GIVE YOU",
+        "isReal": true
+      },
+      {
+        "id": "flat_r2",
+        "phrase": "WHAT YESTERDAY’S OPEN SODA HAS GONE",
+        "isReal": true
+      },
+      {
+        "id": "flat_r3",
+        "phrase": "THE WAY A SURPRISE PARTY LANDS WHEN NOBODY’S SURPRISED",
+        "isReal": true
+      },
+      {
+        "id": "flat_r4",
+        "phrase": "THE ONE RATE YOU PAY FOR AN ALL-INCLUSIVE VACATION",
+        "isReal": true
+      },
+      {
+        "id": "flat_r5",
+        "phrase": "ZERO GROWTH, ZERO DECLINE, SAME OLD NUMBERS",
+        "isReal": true
+      },
+      {
+        "id": "flat_r6",
+        "phrase": "THE WORST WAY TO FALL: RIGHT ON YOUR FACE",
+        "isReal": true
+      },
+      {
+        "id": "flat_r7",
+        "phrase": "THE FEET THAT USED TO GET RECRUITS REJECTED FROM THE MILITARY",
+        "isReal": true
+      },
+      {
+        "id": "flat_r8",
+        "phrase": "THE LOWEST LEVEL OF BEING BROKE",
+        "isReal": true
+      },
+      {
+        "id": "flat_r9",
+        "phrase": "A PLACE WHERE YOU CAN WATCH SOMEONE DRIVE AWAY FOR MILES",
+        "isReal": true
+      },
+      {
+        "id": "flat_r10",
+        "phrase": "WHEN FIVE MINUTES MEANS EXACTLY FIVE MINUTES",
+        "isReal": true
+      },
+      {
+        "id": "flat_t0",
+        "phrase": "THE DRY-CLEANER SERVICE THAT TAKES THE WRINKLES OUT",
+        "isReal": false
+      },
+      {
+        "id": "flat_t1",
+        "phrase": "A STACK OF CAKES WITH BUTTER AND SYRUP",
+        "isReal": false
+      },
+      {
+        "id": "flat_t2",
+        "phrase": "THE SCALES WHEN BOTH SIDES WEIGH THE SAME",
+        "isReal": false
+      },
+      {
+        "id": "flat_t3",
+        "phrase": "THE ROOF ON A ONE-STORY HOUSE",
+        "isReal": false
+      },
+      {
+        "id": "flat_t4",
+        "phrase": "A HEART MONITOR WHEN THE BEATS COME TOO FAR APART",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "panic",
+    "wordType": "11-MEANING"
+  },
+  "FLUSH": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "flush_r0",
+        "phrase": "THE UNWRITTEN RULE OF BATHROOM COURTESY",
+        "isReal": true
+      },
+      {
+        "id": "flush_r1",
+        "phrase": "YOUR FACE WHEN THE EMBARRASSMENT HITS",
+        "isReal": true
+      },
+      {
+        "id": "flush_r2",
+        "phrase": "STRONGER THAN A STRAIGHT, WEAKER THAN A FULL HOUSE",
+        "isReal": true
+      },
+      {
+        "id": "flush_r3",
+        "phrase": "TWO PIECES OF WOOD SANDED UNTIL THEY MEET SEAMLESSLY",
+        "isReal": true
+      },
+      {
+        "id": "flush_r4",
+        "phrase": "YOUR WALLET ON THE FIRST NIGHT IN VEGAS, NOT THE LAST",
+        "isReal": true
+      },
+      {
+        "id": "flush_r5",
+        "phrase": "THE JOB YOU SENT THE HUNTING DOG OUT TO DO",
+        "isReal": true
+      },
+      {
+        "id": "flush_t0",
+        "phrase": "HOW YOU UNCLOG A CLOGGED TOILET",
+        "isReal": false
+      },
+      {
+        "id": "flush_t1",
+        "phrase": "HOW YOU GET TRAPPED AIR OUT OF A HOME RADIATOR",
+        "isReal": false
+      },
+      {
+        "id": "flush_t2",
+        "phrase": "HOW YOU GET THE BATHWATER OUT OF THE TUB",
+        "isReal": false
+      },
+      {
+        "id": "flush_t3",
+        "phrase": "WHAT YOU NEED IN RUMMY TO CALL GIN",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "tension",
+    "wordType": "Sextuple"
+  },
   "FLY": {
     "difficulty": "hard",
     "hiddenMeaning": null,
@@ -7988,6 +8141,668 @@
     ],
     "gpsTag": "panic",
     "wordType": "8-MEANING"
+  },
+  "FOAM": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "real": "SMOTHERS A GASOLINE FIRE WHEN WATER ISN’T THE ANSWER",
+        "trap": "FILLING INSIDE A TRAVEL PILLOW THAT SHIFTS WHEN YOU SQUEEZE IT",
+        "id": "foam_h00"
+      },
+      {
+        "real": "GREEN BLOCK FRESH FLOWER STEMS GET STUCK INTO",
+        "trap": "LAYER STITCHED INSIDE A QUILT TO GIVE IT THICKNESS",
+        "id": "foam_h01"
+      },
+      {
+        "real": "A CERTAIN HUE OR SHADE OF GREEN",
+        "trap": "CLEANS YOUR HAIR IN THE SHOWER",
+        "id": "foam_h02"
+      }
+    ],
+    "masks": [
+      {
+        "id": "foam_r0",
+        "phrase": "WHAT CAN RUIN A BEER WHEN IT'S POURED WRONG",
+        "isReal": true
+      },
+      {
+        "id": "foam_r1",
+        "phrase": "WHAT BUILDS UP FROM AN OUT-OF-CONTROL BUBBLE BATH",
+        "isReal": true
+      },
+      {
+        "id": "foam_r2",
+        "phrase": "WHAT YOU SEE INSIDE WHEN A COUCH CUSHION RIPS OPEN",
+        "isReal": true
+      },
+      {
+        "id": "foam_r3",
+        "phrase": "SOFT MATERIAL THAT PROTECTS AN ITEM INSIDE A BOX MARKED FRAGILE",
+        "isReal": true
+      },
+      {
+        "id": "foam_r4",
+        "phrase": "WHAT STARTS FORMING AROUND A RABID ANIMAL'S MOUTH",
+        "isReal": true
+      },
+      {
+        "id": "foam_r5",
+        "phrase": "INSULATES YOUR HOUSE WITHOUT USING FIBERGLASS",
+        "isReal": true
+      },
+      {
+        "id": "foam_r6",
+        "phrase": "THE MATTRESS THAT REMEMBERS YOUR SHAPE",
+        "isReal": true
+      },
+      {
+        "id": "foam_r7",
+        "phrase": "RUBBED TOGETHER, MAKES A SOUND THAT ACTUALLY HURTS TO HEAR",
+        "isReal": true
+      },
+      {
+        "id": "foam_r8",
+        "phrase": "TOPPING FOR PEOPLE WHO TAKE COFFEE WITH THEIR SUGAR",
+        "isReal": true
+      },
+      {
+        "id": "foam_r9",
+        "phrase": "HAIR PRODUCT THAT SOUNDS LIKE IT'S NAMED AFTER A MOOSE",
+        "isReal": true
+      },
+      {
+        "id": "foam_t0",
+        "phrase": "USED TO DRY THE DISHES AFTER DINNER",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "10-MEANING"
+  },
+  "FOCUS": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "focus_r0",
+        "phrase": "WHEN YOU DROP EVERY OTHER INTEREST TO MASTER ONE",
+        "isReal": true
+      },
+      {
+        "id": "focus_r1",
+        "phrase": "WHAT THE AUDIENCE PUTS ON WHOEVER’S IN THE SPOTLIGHT",
+        "isReal": true
+      },
+      {
+        "id": "focus_r2",
+        "phrase": "WHAT YOU DO TO THE CAMERA LENS BEFORE THE SHOT",
+        "isReal": true
+      },
+      {
+        "id": "focus_r3",
+        "phrase": "HOW A MAGNIFYING GLASS USES THE SUN’S POWER TO START A FIRE",
+        "isReal": true
+      },
+      {
+        "id": "focus_r4",
+        "phrase": "THE POINT BELOW GROUND WHERE THE QUAKE STARTS",
+        "isReal": true
+      },
+      {
+        "id": "focus_r5",
+        "phrase": "WHERE A SATELLITE DISH DIRECTS THE SIGNAL IT CATCHES",
+        "isReal": true
+      },
+      {
+        "id": "focus_r6",
+        "phrase": "WHAT PATIENT ZERO CAN BECOME IN A GLOBAL PANDEMIC",
+        "isReal": true
+      },
+      {
+        "id": "focus_t0",
+        "phrase": "THE FIRST THING DONE ON A TO-DO LIST",
+        "isReal": false
+      },
+      {
+        "id": "focus_t1",
+        "phrase": "WHAT YOU READY BEFORE TAKING THE SHOT",
+        "isReal": false
+      },
+      {
+        "id": "focus_t2",
+        "phrase": "THE LITTLE PIECES YOU SPEND THE MOST TIME ON",
+        "isReal": false
+      },
+      {
+        "id": "focus_t3",
+        "phrase": "WHAT YOU’VE BEEN WORKING TOWARD FOR MONTHS",
+        "isReal": false
+      },
+      {
+        "id": "focus_t4",
+        "phrase": "WHAT A TEACHER KEEPS ASKING THE CLASS TO PAY",
+        "isReal": false
+      },
+      {
+        "id": "focus_t5",
+        "phrase": "WHAT THE KIDS GATHER AROUND AT STORY TIME",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "panic",
+    "wordType": "Septuple"
+  },
+  "FOIL": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "foil_r0",
+        "phrase": "WHAT THE DETECTIVE DID TO THE PLOT",
+        "isReal": true
+      },
+      {
+        "id": "foil_r1",
+        "phrase": "WHAT YOU WRAP A POTATO IN BEFORE BAKING IT",
+        "isReal": true
+      },
+      {
+        "id": "foil_r2",
+        "phrase": "HOW YOUR UGLY FRIEND MAKES YOU LOOK BETTER",
+        "isReal": true
+      },
+      {
+        "id": "foil_r3",
+        "phrase": "WHAT YOU HIT YOUR OPPONENT WITH TO EARN A “TOUCHÉ”",
+        "isReal": true
+      },
+      {
+        "id": "foil_r4",
+        "phrase": "WHAT LETS A BOARD GLIDE ABOVE THE WAVES",
+        "isReal": true
+      },
+      {
+        "id": "foil_r5",
+        "phrase": "HOW A FOX USES ITS SMARTS TO MAKE A GETAWAY",
+        "isReal": true
+      },
+      {
+        "id": "foil_t0",
+        "phrase": "WHAT A PHOTOGRAPHER USES TO DIRECT LIGHT ON THE SUBJECT",
+        "isReal": false
+      },
+      {
+        "id": "foil_t1",
+        "phrase": "WHAT BOUNCES OFF A SHINY CAR HOOD INTO YOUR EYES",
+        "isReal": false
+      },
+      {
+        "id": "foil_t2",
+        "phrase": "THE SHINY STRIPS ON A ROAD WORKER’S SAFETY VEST",
+        "isReal": false
+      },
+      {
+        "id": "foil_t3",
+        "phrase": "WHAT YOU LINE A BAKING PAN WITH SO NOTHING STICKS",
+        "isReal": false
+      },
+      {
+        "id": "foil_t4",
+        "phrase": "WHAT THEY STRETCH ACROSS A CRIME SCENE TO KEEP PEOPLE OUT",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "tension",
+    "wordType": "Sextuple"
+  },
+  "FOLD": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "real": "THE SHAPE A PROTEIN HAS TO GET RIGHT TO DO ITS JOB",
+        "trap": "HOW YOU GET A GARDEN HOSE READY TO HANG ON THE WALL",
+        "id": "fold_h00"
+      },
+      {
+        "real": "A CURVE IN ROCK LAYERS FORMED DEEP UNDERGROUND",
+        "trap": "HOW YOU OPEN A PACKAGE ALONG THE DOTTED LINE",
+        "id": "fold_h01"
+      },
+      {
+        "real": "BACK IN THE GROUP AFTER A LEAVE OF ABSENCE",
+        "trap": "THE JOB WAITING IN YOUR SUITCASE AFTER A VACATION",
+        "id": "fold_h02"
+      }
+    ],
+    "masks": [
+      {
+        "id": "fold_r0",
+        "phrase": "THE STEP AFTER THE DRYER, BEFORE THE CLOTHES WRINKLE",
+        "isReal": true
+      },
+      {
+        "id": "fold_r1",
+        "phrase": "THE EXTRA CHAIR BROUGHT OUT WHEN COMPANY'S OVER FOR DINNER",
+        "isReal": true
+      },
+      {
+        "id": "fold_r2",
+        "phrase": "POSITION FOR YOUR ARMS WHEN YOU DON'T KNOW WHAT ELSE TO DO WITH THEM",
+        "isReal": true
+      },
+      {
+        "id": "fold_r3",
+        "phrase": "KEEPS EGG WHITES FLUFFY WHILE MIXING THEM IN",
+        "isReal": true
+      },
+      {
+        "id": "fold_r4",
+        "phrase": "TURNS A LOOSE-LEAF SHEET INTO A FLYING AIRPLANE",
+        "isReal": true
+      },
+      {
+        "id": "fold_r5",
+        "phrase": "THE CORRECT WAY TO EAT A SLICE OF NEW YORK PIZZA",
+        "isReal": true
+      },
+      {
+        "id": "fold_r6",
+        "phrase": "THE MOVE IN TEXAS WHEN YOU SHOULDN'T HOLD 'EM",
+        "isReal": true
+      },
+      {
+        "id": "fold_r7",
+        "phrase": "THE FINAL STAGE FOR A BUSINESS THAT CAN'T STAY OPEN",
+        "isReal": true
+      },
+      {
+        "id": "fold_r8",
+        "phrase": "THE ENCLOSURE A SHEEPDOG HERDS THE FLOCK INTO WHEN THEY'RE CALLED IN",
+        "isReal": true
+      },
+      {
+        "id": "fold_r9",
+        "phrase": "A BAD ONE TURNS A BURRITO INTO A MESS",
+        "isReal": true
+      },
+      {
+        "id": "fold_r10",
+        "phrase": "THE JOB THAT NEVER ENDS IN THE SHIRT DEPARTMENT",
+        "isReal": true
+      },
+      {
+        "id": "fold_r11",
+        "phrase": "THE WAY THE MORNING PAPER LANDS ON YOUR PORCH",
+        "isReal": true
+      },
+      {
+        "id": "fold_t0",
+        "phrase": "HOW YOU SHARE ONE SANDWICH BETWEEN TWO PEOPLE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "12-MEANING"
+  },
+  "FOOT": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "foot_r0",
+        "phrase": "A SNAIL ONLY NEEDS ONE TO GET AROUND",
+        "isReal": true
+      },
+      {
+        "id": "foot_r1",
+        "phrase": "WHAT YOU GRAB IN PAIN AFTER DROPPING SOMETHING HEAVY ON IT",
+        "isReal": true
+      },
+      {
+        "id": "foot_r2",
+        "phrase": "YOU NEED THREE OF THEM TO MAKE A YARD",
+        "isReal": true
+      },
+      {
+        "id": "foot_r3",
+        "phrase": "THE END OF THE BED WHERE YOU SWEAR YOU SAW A GHOST STANDING",
+        "isReal": true
+      },
+      {
+        "id": "foot_r4",
+        "phrase": "THE PART OF A SEWING MACHINE THAT GUIDES THE CLOTH UNDER THE NEEDLE",
+        "isReal": true
+      },
+      {
+        "id": "foot_r5",
+        "phrase": "THE SOLDIERS WITH ACTUAL BOOTS ON THE GROUND",
+        "isReal": true
+      },
+      {
+        "id": "foot_r6",
+        "phrase": "THE RHYTHM PATTERN HIDING INSIDE A VERSE",
+        "isReal": true
+      },
+      {
+        "id": "foot_r7",
+        "phrase": "WHAT YOU TAKE THE REST OF THE WAY WHEN THE ROAD ENDS",
+        "isReal": true
+      },
+      {
+        "id": "foot_r8",
+        "phrase": "WHAT YOU’RE STUCK DOING WHEN EVERYONE ELSE “FORGOT” THEIR WALLET",
+        "isReal": true
+      },
+      {
+        "id": "foot_r9",
+        "phrase": "WHAT THE BOOKKEEPER DOES TO THE COLUMN BEFORE CLOSING THE LEDGER",
+        "isReal": true
+      },
+      {
+        "id": "foot_r10",
+        "phrase": "WHAT YOU STICK OUT FROM UNDER THE BLANKET WHEN YOU GET TOO HOT",
+        "isReal": true
+      },
+      {
+        "id": "foot_r11",
+        "phrase": "WHAT THE GAME IS ONCE THE ACTION HAS STARTED",
+        "isReal": true
+      },
+      {
+        "id": "foot_t0",
+        "phrase": "WHAT YOU PUT TO THE METAL WHEN YOU WANT TO GO FAST",
+        "isReal": false
+      },
+      {
+        "id": "foot_t1",
+        "phrase": "WHAT MUDDY SHOES LEAVE ACROSS A CLEAN FLOOR",
+        "isReal": false
+      },
+      {
+        "id": "foot_t2",
+        "phrase": "WHAT GOES ON BEFORE THE SHOE AND SOMEHOW VANISHES IN THE WASH",
+        "isReal": false
+      },
+      {
+        "id": "foot_t3",
+        "phrase": "WHAT YOU TAKE EACH TIME YOU CLIMB A STAIR",
+        "isReal": false
+      },
+      {
+        "id": "foot_t4",
+        "phrase": "ONE BIG PIGGY AND FOUR LITTLE PIGGIES",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "panic",
+    "wordType": "12-MEANING"
+  },
+  "FORGE": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "forge_r0",
+        "phrase": "WHAT FIRE AND AN ANVIL DO TO METAL",
+        "isReal": true
+      },
+      {
+        "id": "forge_r1",
+        "phrase": "WHEN YOU PUT A NAME THAT ISN’T YOURS ON THE SIGNATURE LINE",
+        "isReal": true
+      },
+      {
+        "id": "forge_r2",
+        "phrase": "HOW YOU MAKE AN ALLIANCE WITH THE ENEMY OF YOUR ENEMY",
+        "isReal": true
+      },
+      {
+        "id": "forge_r3",
+        "phrase": "WHAT A RESCUE TEAM DOES THROUGH A BLIZZARD",
+        "isReal": true
+      },
+      {
+        "id": "forge_t0",
+        "phrase": "WHAT A COPYCAT DOES TO SOMEONE ELSE’S WORK",
+        "isReal": false
+      },
+      {
+        "id": "forge_t1",
+        "phrase": "WHAT A LIAR DOES TO AN ALIBI THAT NEVER HAPPENED",
+        "isReal": false
+      },
+      {
+        "id": "forge_t2",
+        "phrase": "WHAT A FAKE HUNDRED-DOLLAR BILL REALLY IS",
+        "isReal": false
+      },
+      {
+        "id": "forge_t3",
+        "phrase": "HOW YOU TURN A LUMP OF CLAY INTO POTTERY",
+        "isReal": false
+      },
+      {
+        "id": "forge_t4",
+        "phrase": "WHAT SUPER GLUE DOES TO YOUR FINGERS",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "flow",
+    "wordType": "Quadruple"
+  },
+  "FORK": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "real": "WHERE THE DNA HELIX SPLITS TO MAKE A COPY",
+        "trap": "HOW ONE SINGLE-CELLED ORGANISM BECOMES TWO OF ITSELF",
+        "id": "fork_h00"
+      },
+      {
+        "real": "A CHESS PIECE POSITIONED TO MAKE A DOUBLE THREAT",
+        "trap": "WHAT HOLDS THE RUBBER BAND YOU PULL BACK ON A SLINGSHOT",
+        "id": "fork_h01"
+      },
+      {
+        "real": "WHERE THE HIP BONE CONNECTS TO THE TWO THIGH BONES",
+        "trap": "THE CONNECTOR THAT TURNS ONE CABLE LINE INTO TWO",
+        "id": "fork_h02"
+      }
+    ],
+    "masks": [
+      {
+        "id": "fork_r0",
+        "phrase": "THE OTHER UTENSIL YOU USE WHEN CUTTING A STEAK",
+        "isReal": true
+      },
+      {
+        "id": "fork_r1",
+        "phrase": "THE PART OF THE ROAD THAT FORCES A DECISION",
+        "isReal": true
+      },
+      {
+        "id": "fork_r2",
+        "phrase": "WHERE A SMALLER STREAM SPLITS OFF FROM A BIG RIVER",
+        "isReal": true
+      },
+      {
+        "id": "fork_r3",
+        "phrase": "THE PART OF THE BIKE THAT HOLDS THE FRONT WHEEL WHILE IT SPINS",
+        "isReal": true
+      },
+      {
+        "id": "fork_r4",
+        "phrase": "THE TOOL YOU TAP TO TUNE TO A FREQUENCY",
+        "isReal": true
+      },
+      {
+        "id": "fork_r5",
+        "phrase": "THE CLICHÉ THING STICKING OUT OF HAY IN A BARN",
+        "isReal": true
+      },
+      {
+        "id": "fork_r6",
+        "phrase": "WHAT YOU MUST DO WHEN IT'S TIME TO PAY UP",
+        "isReal": true
+      },
+      {
+        "id": "fork_r7",
+        "phrase": "WHAT YOUR FINGERS DO FOR THE VULCAN SALUTE",
+        "isReal": true
+      },
+      {
+        "id": "fork_r8",
+        "phrase": "DIFFERENT VERSIONS WRITTEN FROM THE SAME PIECE OF CODE",
+        "isReal": true
+      },
+      {
+        "id": "fork_t0",
+        "phrase": "THE PLASTIC UTENSIL YOU GET WITH SCHOOL CAFETERIA LUNCH",
+        "isReal": false
+      },
+      {
+        "id": "fork_t1",
+        "phrase": "THE TWO METAL PIECES YOU PLUG INTO THE WALL",
+        "isReal": false
+      },
+      {
+        "id": "fork_t2",
+        "phrase": "WHAT YOU SCRAPE THE BOTTOM OF AN ITALIAN ICE CUP WITH",
+        "isReal": false
+      },
+      {
+        "id": "fork_t3",
+        "phrase": "WHAT YOU TAKE TO GET OFF THE HIGHWAY",
+        "isReal": false
+      },
+      {
+        "id": "fork_t4",
+        "phrase": "WHAT CONNECTS A TREE'S TRUNK TO ITS LEAVES",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "9-MEANING"
+  },
+  "FOSTER": {
+    "difficulty": "easy",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "foster_r0",
+        "phrase": "A KID LIVING IN BETWEEN HOMES",
+        "isReal": true
+      },
+      {
+        "id": "foster_r1",
+        "phrase": "THE PET THAT STAYS WITH YOU UNTIL ADOPTION DAY",
+        "isReal": true
+      },
+      {
+        "id": "foster_r2",
+        "phrase": "GIVE THE CONDITIONS FOR SOMETHING TO THRIVE",
+        "isReal": true
+      },
+      {
+        "id": "foster_t0",
+        "phrase": "THE PERSON WHO LOOKS AFTER A CHILD FOR THE EVENING",
+        "isReal": false
+      },
+      {
+        "id": "foster_t1",
+        "phrase": "A HOME THAT TAKES IN STRAY ANIMALS",
+        "isReal": false
+      },
+      {
+        "id": "foster_t2",
+        "phrase": "THE THING THAT HELPS A PLANT GROW STRONG",
+        "isReal": false
+      },
+      {
+        "id": "foster_t3",
+        "phrase": "THE SUPPORT THAT HELPS YOU GET BETTER",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Triple"
+  },
+  "FOUL": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "foul_r0",
+        "phrase": "THE KIND OF SMELL THAT MAKES YOU CHECK YOUR SHOE",
+        "isReal": true
+      },
+      {
+        "id": "foul_r1",
+        "phrase": "THE CALL THAT CAN SEND A PLAYER TO THE FREE-THROW LINE",
+        "isReal": true
+      },
+      {
+        "id": "foul_r2",
+        "phrase": "SOME FANS BRING THEIR GLOVE, HOPING TO CATCH ONE",
+        "isReal": true
+      },
+      {
+        "id": "foul_r3",
+        "phrase": "THE LANGUAGE THAT GETS A MOVIE AN R RATING",
+        "isReal": true
+      },
+      {
+        "id": "foul_r4",
+        "phrase": "WHAT YOU CALL IT WHEN SOMEBODY DOES YOU DIRTY",
+        "isReal": true
+      },
+      {
+        "id": "foul_r5",
+        "phrase": "HOW YOU AND THE LEASH GET WHEN YOUR DOG RUNS IN CIRCLES",
+        "isReal": true
+      },
+      {
+        "id": "foul_t0",
+        "phrase": "A WORD YOU WISH YOU COULD TAKE BACK",
+        "isReal": false
+      },
+      {
+        "id": "foul_t1",
+        "phrase": "WHAT WAKING UP ON THE WRONG SIDE OF THE BED DOES",
+        "isReal": false
+      },
+      {
+        "id": "foul_t2",
+        "phrase": "THE TASTE THAT MAKES MILK GO STRAIGHT DOWN THE DRAIN",
+        "isReal": false
+      },
+      {
+        "id": "foul_t3",
+        "phrase": "KNOWING THE RULES AND BREAKING THEM ANYWAY",
+        "isReal": false
+      },
+      {
+        "id": "foul_t4",
+        "phrase": "THE SOUND OF BOOS FROM THE STANDS",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "tension",
+    "wordType": "Sextuple"
   },
   "GRACE": {
     "difficulty": "hard",
@@ -10380,6 +11195,122 @@
     "gpsTag": "tension",
     "wordType": "Triple"
   },
+  "TANK": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "real": "ROOM FOR BRAINSTORMING OLD IDEAS TO PASS OFF AS NEW ONES",
+        "trap": "WHAT HOLDS THE MEDICINE THAT DRIPS INTO YOUR IV",
+        "id": "tank_h00"
+      },
+      {
+        "real": "WHEN A TEAM PLAYS TO LOSE FOR NEXT YEAR’S DRAFT PICK",
+        "trap": "WHAT YOU WEAR TO KEEP FROM BREATHING IN TOXIC FUMES",
+        "id": "tank_h01"
+      },
+      {
+        "real": "WHERE THE COPS PUT YOU TO SLEEP OFF THAT LIQUID COURAGE",
+        "trap": "WHAT THE FIRE TRUCK HOOKS ITS HOSE TO AT THE CURB",
+        "id": "tank_h02"
+      }
+    ],
+    "masks": [
+      {
+        "id": "tank_r0",
+        "phrase": "WHAT'S EMPTY WHEN THE NEEDLE IS PAST E IN YOUR CAR?",
+        "isReal": true
+      },
+      {
+        "id": "tank_r1",
+        "phrase": "A CANNON-FIRING FORTRESS THAT MOVES WITHOUT WHEELS",
+        "isReal": true
+      },
+      {
+        "id": "tank_r2",
+        "phrase": "WHAT A BRO WEARS WHEN IT'S SUN'S OUT, GUNS OUT",
+        "isReal": true
+      },
+      {
+        "id": "tank_r3",
+        "phrase": "WHAT RATINGS DO WHEN THE SHOW JUMPS THE SHARK",
+        "isReal": true
+      },
+      {
+        "id": "tank_r4",
+        "phrase": "TAPPING ON IT SCARES THE FISH",
+        "isReal": true
+      },
+      {
+        "id": "tank_r5",
+        "phrase": "WHAT THREE TRIES FOR A SMALL PRICE CAN KNOCK THE CLOWN INTO",
+        "isReal": true
+      },
+      {
+        "id": "tank_r6",
+        "phrase": "THE WATER SUPPLY WITH THE TOWN'S NAME PAINTED ACROSS IT",
+        "isReal": true
+      },
+      {
+        "id": "tank_r7",
+        "phrase": "THE METAL APPARATUS STRAPPED TO YOUR BACK TO KEEP YOU ALIVE UNDERWATER",
+        "isReal": true
+      },
+      {
+        "id": "tank_r8",
+        "phrase": "WHERE EVERYTHING YOU FLUSH ENDS UP WHEN THERE'S NO CITY SEWER",
+        "isReal": true
+      },
+      {
+        "id": "tank_r9",
+        "phrase": "WHAT ALWAYS RUNS OUT HALFWAY THROUGH THE BURGERS",
+        "isReal": true
+      },
+      {
+        "id": "tank_r10",
+        "phrase": "WHAT NEEDS TO BE FIXED WHEN THERE'S NEVER ANY HOT WATER IN THE HOUSE",
+        "isReal": true
+      },
+      {
+        "id": "tank_r11",
+        "phrase": "WHAT HOLDS THE GAS THE DENTIST GIVES YOU THAT MAKES YOU LAUGH",
+        "isReal": true
+      },
+      {
+        "id": "tank_t0",
+        "phrase": "WHAT HOLDS THE ICE AND SODA AT A BACKYARD PARTY",
+        "isReal": false
+      },
+      {
+        "id": "tank_t1",
+        "phrase": "WHAT COVERS THE TOILET BOWL WHEN IT'S CLOSED",
+        "isReal": false
+      },
+      {
+        "id": "tank_t2",
+        "phrase": "WHAT YOU TURN TO SHUT OFF THE WATER UNDER THE SINK",
+        "isReal": false
+      },
+      {
+        "id": "tank_t3",
+        "phrase": "WHERE THE PILOT FLIES THE GOODYEAR BLIMP FROM",
+        "isReal": false
+      },
+      {
+        "id": "tank_t4",
+        "phrase": "WHAT YOU BUILD IN THE BACKYARD FOR KOI TO SWIM IN",
+        "isReal": false
+      },
+      {
+        "id": "tank_t5",
+        "phrase": "WHAT YOU FILL WITH WATER TO WATER THE GARDEN",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "12-MEANING"
+  },
   "TIRE": {
     "difficulty": "hard",
     "hiddenMeaning": null,
@@ -10523,7 +11454,7 @@
     "wordType": "Quadruple"
   },
   "WAKE": {
-    "difficulty": "hard",
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -10561,10 +11492,32 @@
         "id": "wake_t2",
         "phrase": "WHAT THE SNOOZE BUTTON IS FOR",
         "isReal": false
+      },
+      {
+        "id": "wake_r4",
+        "phrase": "WHAT YOU DON'T DO TO A SLEEPING GIANT",
+        "isReal": true
       }
     ],
-    "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "gpsTag": "boss",
+    "wordType": "Quintuple",
+    "hiddenPairs": [
+      {
+        "real": "WHAT THE THIRD RED FLAG FINALLY MAKES YOU DO",
+        "trap": "THE LABEL FOR SOMEONE ALERT TO SOCIAL INJUSTICE",
+        "id": "wake_h00"
+      },
+      {
+        "real": "WHAT REMINISCING CAN DO TO OLD FEELINGS",
+        "trap": "WHEN SEEING IT FROM A DIFFERENT ANGLE CHANGED YOUR OUTLOOK",
+        "id": "wake_h01"
+      },
+      {
+        "real": "WHAT THE MEDIC TRIES TO DO ONCE THE VICTIM LOSES CONSCIOUSNESS",
+        "trap": "WHAT CPR IS MEANT TO DO WHEN YOU STOP BREATHING",
+        "id": "wake_h02"
+      }
+    ]
   },
   "WATCH": {
     "difficulty": "medium",

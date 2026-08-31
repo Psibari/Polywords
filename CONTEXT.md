@@ -9,10 +9,44 @@ Updated August 31, 2026. Branch: `play-screen-overhaul`, tracking
   parchment, a matching ornate rod rolls reward paper over it, the reward holds, and the
   paper rolls up to reveal the next clue. Repeated-round state/input tests, TypeScript, the
   full test suite, and an iPhone check passed.
-- Hunt runtime content is `assets/data/huntData.json`: 197 words and 1,748 tiles, including
-  13 boss words and 39 hidden pairs. The 24-word DISPATCH-through-FLAG import preserved all
+- Hunt runtime content is `assets/data/huntData.json`: 209 words and 1,900 tiles, including
+  18 boss words and 54 hidden pairs. The 24-word DISPATCH-through-FLAG import preserved all
   173 prior entries; DISCHARGE remained unchanged. Boss/hidden-pair structure did not change.
-- Current gpsTag pool counts are confidence 16, flow 41, tension 70, panic 57, boss 13. The
+- Merged from `localworkbooks/POLYWORDS_content_data_2026-08-30_FOSTER_FOUL_LOCKED.xlsx`
+  (copied into the repo 2026-08-31, same convention as the existing
+  `POLYWORDS_content_data_2026-08-15_DIRECT_DISCHARGE_LOCKED.xlsx`): TANK, FOAM, FOLD and FORK
+  added as brand-new boss words (full REAL/TRAP sets plus 3 locked hidden pairs each, all dated
+  complete 2026-08-26 through 2026-08-29 in the workbook); WAKE promoted from a regular
+  `tension` word to `boss` (gained a 5th REAL — "WHAT YOU DON'T DO TO A SLEEPING GIANT" — and 3
+  hidden pairs); BULB gained one additive trap (onion, "THE VEGETABLE THAT MAKES YOU CRY WHEN
+  YOU CUT IT"); DATE's `date_t1` trap text was replaced (a mild "ONE-NIGHT STAND" trap swapped
+  for a fruit-pun one), same mask ID. The workbook's own `import-workbook.mjs`-staged output
+  was NOT used as-is: that tool only captures one hidden pair per boss word (a stale schema)
+  where the live game requires exactly 3 per boss word for the Route C gauntlet
+  (`runtimeHuntValidation.mjs` enforces this and passed clean on the merge). 13 other words the
+  tool flagged as "boss-ready" (BATTERY, BRIEF, CAST, CHECK, COURT, CRAFT, ENGAGED, EXCHANGE,
+  EXTRACT, HORN, IRON, STOCK, STRIKE) were left untouched — they are already complete live boss
+  words with all 3 hidden pairs; the workbook only has 1-2 of them and is stale for these (per
+  the workbook's own "Repo Sync Audit" sheet, the rest were finished through a separate
+  boss/gauntlet sync process not in this file). KERNEL was intentionally demoted from boss back
+  to a regular word on 2026-08-11 per the workbook's own Word Tracker; its leftover single
+  hidden-pair draft is historical cruft and was ignored. BOIL, flagged in the workbook's own
+  recovery audit (dated 2026-08-12) as a completed word missing from live data, is already
+  present and matches the recovered text — already resolved, no action taken. HAUNT and CRAZY
+  remain intentionally absent per the workbook's own instruction not to reconstruct lost text
+  for either.
+- 8 new non-boss headwords, fully written and LOCKED in the workbook's Tiles sheet, were merged
+  with hand-assigned difficulty/gpsTag (no precedent exists in the runtime for a word without
+  both, and gpsTag is a deliberately tuned pacing distribution — Pete asked for a judgment call
+  rather than leaving them out, so difficulty/gpsTag were assigned per
+  `docs/GOLDEN_PACING_SYSTEM.md`'s rule — semantic distance and trap sharpness — calibrated
+  against existing words of similar size): FLAT (11R/5T, hard/panic — wide domain spread, sharp
+  traps), FLUSH (6R/4T, medium/tension), FOCUS (7R/6T, hard/panic — includes obscure senses:
+  seismology, satellite, epidemiology), FOIL (6R/5T, medium/tension), FOOT (12R/5T, hard/panic —
+  widest spread in the batch), FORGE (4R/5T, medium/flow), FOSTER (3R/4T, easy/confidence —
+  smallest/gentlest, matches the confidence-bucket profile), FOUL (6R/5T, medium/tension — every
+  trap sharply baits one specific REAL). These are Pete's calls to revise, not settled fact.
+- Current gpsTag pool counts are confidence 17, flow 42, tension 72, panic 60, boss 18. The
   confidence retag has happened; any earlier figure of 6 or 12 is stale.
 - The tracked Hunt workbook is `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`; live JSON remains
   authoritative.
@@ -117,7 +151,8 @@ Updated August 31, 2026. Branch: `play-screen-overhaul`, tracking
   MASTER 14,000. This is an absolute ladder and should be revisited if future content changes
   materially alter the perfect-play ceiling.
 - Roughly every fifth new word should carry `hiddenPairs`. APPROVED as the content remedy for
-  the finite Boss pool; the current runtime still has 13 Boss words / 39 hidden pairs.
+  the finite Boss pool; the current runtime now has 18 Boss words / 54 hidden pairs (up from
+  13/39 — TANK, FOAM, FOLD, FORK added and WAKE promoted, 2026-08-31).
 - Banished Haunts are removed from the active queue but are not yet recorded as a permanent Vault
   collection item. This is a future reward/UX decision, not a reason to remove Haunts from Hunt.
 
