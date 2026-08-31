@@ -681,55 +681,105 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // than holding open statically for the whole gauntlet. Reuses the same
   // bookOpenAnimationRef safety pattern as triggerBookOpen: reset both
   // bookOpenAnim and bookIntakeGlowAnim unconditionally before starting.
-  function triggerGauntletPulse() {
+  // holdOpen: true for the final winning tile of a boss gauntlet — opens
+  // and stays open instead of closing again, so the Mastered slam
+  // (triggerBossOutcomeSlam, fired ~200ms later once useBoardMechanics
+  // resolves mastery) continues the cover from where this pulse left it
+  // instead of closing here and reopening there — the double-close/reopen
+  // bug this parameter exists to fix. The glow still fades on its own
+  // timing either way; only the cover's own close leg is skipped.
+  function triggerGauntletPulse(holdOpen = false) {
     bookOpenAnimationRef.current?.stop();
     bookOpenAnim.stopAnimation();
     bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.stopAnimation();
     bookIntakeGlowAnim.setValue(0);
-    if (reduceMotion) return;
-    bookOpenAnimationRef.current = Animated.parallel([
-      Animated.sequence([
-        Animated.timing(bookOpenAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.delay(220),
-        Animated.timing(bookOpenAnim, { toValue: 0, duration: 160, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-      ]),
-      Animated.sequence([
-        Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.delay(220),
-        Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-      ]),
+    if (reduceMotion) {
+      if (holdOpen) bookOpenAnim.setValue(1);
+      return;
+    }
+    const glow = Animated.sequence([
+      Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.delay(220),
+      Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: true }),
     ]);
+    bookOpenAnimationRef.current = holdOpen
+      ? Animated.parallel([
+          Animated.timing(bookOpenAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          glow,
+        ])
+      : Animated.parallel([
+          Animated.sequence([
+            Animated.timing(bookOpenAnim, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            Animated.delay(220),
+            Animated.timing(bookOpenAnim, { toValue: 0, duration: 160, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+          ]),
+          glow,
+        ]);
     bookOpenAnimationRef.current.start();
   }
 
   // ── boss outcome slam ────────────────────────────────────────
-  // Boss-only. Swings the SAME coverRotateX channel the per-tile intake
-  // pulse already uses, but through the full 0→1 range (front-facing →
-  // ~65deg edge-on, HeroBook's own tested ceiling — never past it, see
-  // hero-book-rig-v1/README.md) instead of the tiny ~0.02 recoil the old
-  // shared close used. The rig swap (bookVariant) fires mid-swing, timed to
-  // land under cover of whichever flash/haze this outcome already drives
-  // (GoldFlash's 65ms attack for mastered; the book-local drain haze for
-  // haunted) plus the cover being near edge-on at that moment — the same
-  // "concealed swap during the impact/cover transition" the spec calls for,
-  // not a bare cut. Not device-confirmed; spot-check the conceal timing
-  // before trusting it further.
+  // Boss-only. Drives the SAME coverRotateX channel the per-tile intake
+  // pulse already uses, through the full 0↔1 range (front-facing → ~65deg
+  // edge-on, HeroBook's own tested ceiling — never past it, see
+  // hero-book-rig-v1/README.md).
+  //
+  // Mastered: the cover is normally ALREADY at 1 by the time this fires —
+  // triggerGauntletPulse(true) opened it and held, for the final winning
+  // gauntlet tile — so the first leg below is a hold, not a fresh open, and
+  // the whole thing reads as one continuous "open → transform → close",
+  // never a second close/reopen. (The one exception, resuming straight
+  // into an already-decided boss mastery with no live gauntlet played,
+  // starts that same leg from bookOpenAnim's untouched 0 and it genuinely
+  // opens — still exactly one motion.) Haunted has no such pulse and
+  // always starts from closed.
+  //
+  // The rig swap (bookVariant) fires mid-sequence, timed to land under
+  // cover of whichever flash/haze this outcome already drives (GoldFlash's
+  // 65ms attack for mastered; the book-local drain haze for haunted) —
+  // "concealed swap during the impact/cover transition" per spec, not a
+  // bare cut. Not device-confirmed; spot-check the conceal timing and the
+  // hold-then-close read before trusting either further.
   function triggerBossOutcomeSlam(outcome: 'mastered' | 'haunted') {
     bookOpenAnimationRef.current?.stop();
     bookOpenAnim.stopAnimation();
-    bookOpenAnim.setValue(0);
     bookIntakeGlowAnim.stopAnimation();
     bookIntakeGlowAnim.setValue(0);
-    if (outcome === 'haunted') bookGhostDrainOpacity.setValue(0);
+    if (outcome === 'haunted') {
+      // Haunted never has an open-hold pulse before it (a wrong swipe never
+      // calls triggerGauntletPulse) — it always starts from closed, exactly
+      // as before this patch.
+      bookOpenAnim.setValue(0);
+      bookGhostDrainOpacity.setValue(0);
+    }
+    // Mastered deliberately does NOT reset bookOpenAnim here. The final
+    // winning gauntlet tile's pulse (triggerGauntletPulse(true), called
+    // from onGauntletCorrect) already opened the cover and held it at 1 —
+    // resetting to 0 and re-animating open here was exactly the
+    // close→reopen→close bug this patch fixes. The one other caller
+    // (resuming directly into an already-decided boss mastery, no live
+    // gauntlet ever played) leaves bookOpenAnim at its untouched initial
+    // 0, so the same toValue:1 leg below still reads as a genuine open.
 
     if (reduceMotion) {
+      if (outcome === 'mastered') {
+        bookOpenAnim.setValue(0);
+        masteredHeadwordOpacity.setValue(1);
+      }
       setBookVariant(outcome);
       return;
     }
 
     if (outcome === 'mastered') {
-      setTimeout(() => setBookVariant('mastered'), MASTERED_SWAP_AT_MS);
+      setTimeout(() => {
+        setBookVariant('mastered');
+        // Lands with the gold rig, not the slam's end — same beat the rig
+        // itself becomes visible, per spec.
+        Animated.timing(masteredHeadwordOpacity, {
+          toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true,
+        }).start();
+      }, MASTERED_SWAP_AT_MS);
       bookOpenAnimationRef.current = Animated.parallel([
         Animated.sequence([
           Animated.timing(bookOpenAnim, { toValue: 1, duration: MASTERED_IMPACT_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -771,6 +821,14 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const stillHauntedOpacity  = useRef(new Animated.Value(0)).current;
   const stillHauntedScale    = useRef(new Animated.Value(0.7)).current;
   const hauntEntranceStingKeyRef = useRef<string | null>(null);
+
+  // ── boss mastered headword tint ─────────────────────────────────
+  // Same technique as wordHauntTintOpacity above — an absolutely-positioned
+  // purple overlay of the same word, faded in over the gold/light base text
+  // — fired from triggerBossOutcomeSlam the instant bookVariant flips to
+  // 'mastered', so the color change lands with the gold rig rather than
+  // waiting for the slam to finish.
+  const masteredHeadwordOpacity = useRef(new Animated.Value(0)).current;
 
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
@@ -918,8 +976,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       onGauntletCorrect({ swipedUp, phrase }) {
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
         Haptics.cueAsync('bossCorrect');
-        triggerGauntletPulse();
-        onGoldFlash?.('gauntletCorrect');
         // gauntletCorrectCount in the store hasn't incremented for this
         // tile yet (resolveGauntletTile calls this callback before it calls
         // incrementGauntletCorrectCount) — same for mechanics.finalTileStates,
@@ -930,6 +986,13 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         const priorCorrect = Array.from(mechanics.finalTileStates.values())
           .filter(s => s === 'correct' || s === 'trap-caught').length;
         const isFinalGauntletTile = priorCorrect + 1 >= mechanics.gauntletTiles.length;
+        // Boss's final winning tile (accepted REAL or correctly-rejected
+        // trap alike) hands straight into the Mastered slam — hold the
+        // cover open instead of letting this pulse close it first. Every
+        // other tile (non-final, or the single-tile non-boss Haunt-rematch
+        // gauntlet) keeps the original open-then-close pulse.
+        triggerGauntletPulse(isBoss && isFinalGauntletTile);
+        onGoldFlash?.('gauntletCorrect');
         if (isFinalGauntletTile) {
           setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 120);
         }
@@ -1657,6 +1720,31 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                   {
                     color: '#7B2D8B',
                     opacity: wordHauntTintOpacity,
+                    position: 'absolute',
+                    left: 0, right: 0,
+                    textAlign: 'center',
+                  },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {step.word}
+              </Animated.Text>
+            )}
+
+            {/* Mastered gold-book headword tint — fades in over the gold/
+                light base word once bookVariant flips to 'mastered', so it
+                stays readable against the gold cover panel. */}
+            {bookVariant === 'mastered' && (
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.word,
+                  isBoss && styles.wordBoss,
+                  {
+                    color: PW.color.purple,
+                    opacity: masteredHeadwordOpacity,
                     position: 'absolute',
                     left: 0, right: 0,
                     textAlign: 'center',
