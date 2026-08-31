@@ -57,12 +57,25 @@ export type PollyBudgetState = {
   cleanSweepSeenThisRun: boolean;// first cleanSweep of the run is guaranteed
   isSpeedRound: boolean;         // speed rounds suppress heckles entirely
   ghostRunsMissed: number;       // repeated haunt history sharpens body language
+  recentLineIds: PollyLineId[];  // last few lines she used, any surface
+  lineRoll: number;              // 0–1, supplied by the caller; keeps this file pure
 };
 
 export type VisitDecision =
   | { action: 'none' }
   | { action: 'wordEntry' } // caller resets per-word budget flags
   | { action: 'visit'; spec: VisitSpec };
+
+export function pickFreshLine(
+  candidates: PollyLineId[],
+  recent: PollyLineId[],
+  roll: number,
+): PollyLineId {
+  const fresh = candidates.filter(id => !recent.includes(id));
+  const pool = fresh.length > 0 ? fresh : candidates;
+  const i = Math.min(pool.length - 1, Math.max(0, Math.floor(roll * pool.length)));
+  return pool[i];
+}
 
 const NONE: VisitDecision = { action: 'none' };
 
@@ -168,6 +181,24 @@ const WRONG_SMUG: VisitSpec = {
   holdPerch: false, perchMs: 1800,
 };
 
+// Fires on the first wrong swipe of a word — up to ~7 times in a full run,
+// which makes it the most-repeated line in the game. Weighted toward quiet
+// lines on purpose; the loud ones wear out fastest.
+const WRONG_HECKLE_LINES: PollyLineId[] = [
+  'huntThoughtSo',
+  'huntGotcha',
+  'huntThereItIs',
+  'huntEveryTime',
+  'huntStillWorks',
+  'huntPointToMe',
+  'huntAllMe',
+  'huntGoodIsntIt',
+  'huntLoveThisGame',
+  'huntMyHouse',
+  'huntWalkedRightIn',
+  'huntGotMeCrowned',
+];
+
 const HESITATION_POINT: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'point',
   lineId: 'huntHesitation', line: POLLY_LINES.huntHesitation, sfx: null,
@@ -205,7 +236,10 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   const heckleBlocked = state.busy || state.heckleUsedThisWord || state.isSpeedRound;
   if (heckleBlocked) return NONE;
 
-  if (event === 'wrong' && !state.wrongSeenThisWord) return { action: 'visit', spec: WRONG_SMUG };
+  if (event === 'wrong' && !state.wrongSeenThisWord) {
+    const lineId = pickFreshLine(WRONG_HECKLE_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...WRONG_SMUG, lineId, line: POLLY_LINES[lineId] } };
+  }
   if (event === 'hesitation6s') return { action: 'visit', spec: HESITATION_POINT };
   if (event === 'ghostEntry') {
     return {

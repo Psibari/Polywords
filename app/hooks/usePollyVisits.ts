@@ -63,6 +63,8 @@ export function usePollyVisits(isSpeedRound: boolean, ghostRunsMissed = 0) {
       cleanSweepSeenThisRun: flags.cleanSweepSeenThisRun,
       isSpeedRound: isSpeedRoundRef.current,
       ghostRunsMissed: ghostRunsMissedRef.current,
+      recentLineIds: useGameStore.getState().pollyMemory.recentLineIds,
+      lineRoll: Math.random(),
     };
     const decision = resolveVisit(event, state);
 

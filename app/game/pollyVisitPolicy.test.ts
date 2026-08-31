@@ -16,6 +16,8 @@ const idle: PollyBudgetState = {
   cleanSweepSeenThisRun: false,
   isSpeedRound: false,
   ghostRunsMissed: 0,
+  recentLineIds: [],
+  lineRoll: 0,
 };
 
 function visitSpec(d: VisitDecision, label: string): VisitSpec {
@@ -109,7 +111,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   const jammed: PollyBudgetState = {
     busy: true, heckleUsedThisWord: true, wrongSeenThisWord: true,
     cleanSweepSeenThisRun: true, isSpeedRound: true,
-    ghostRunsMissed: 0,
+    ghostRunsMissed: 0, recentLineIds: [], lineRoll: 0,
   };
   eq(resolveVisit('bossEntry', jammed).action, 'visit', 'bossEntry while jammed');
   eq(resolveVisit('allMasksFound', jammed).action, 'visit', 'allMasksFound while jammed');
