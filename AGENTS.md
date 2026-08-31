@@ -36,8 +36,12 @@ Report conflicts; never blend them silently.
 ## Polly and Visual Locks
 
 - Polly is a smug opponent and trap-setter, not a friendly mascot or word owner.
-- Live Polly uses transparent pose images with whole-image motion. The dormant layered rig
-  must not be revived without approval.
+- Live Polly uses transparent pose images with whole-image motion for most poses. Pete
+  approved reviving the layered face rig on 2026-08-27; it is now live on Home, Daily, and
+  Results while she's settled in her idle/smug pose (a fresh implementation cut from
+  `sprite4.png`, not a reactivation of the old dead assets under `assets/images/polly/rig/`,
+  which remain dormant and unapproved). The Hunt perch and every non-idle pose still render
+  flat art. See CLAUDE.md's Presentation and Character section for the current detail.
 - `BINGO BANGO ZZZZINGO!` is unassigned system text, never Polly dialogue.
 - Locked palette: `#1A1830`, `#0F0D2A`, `#F5C842`, `#7B2D8B`, `#9B2D6B`, Polly green
   `#4CAF50`, wrong red `#CC2200`, and white. No orange UI, pink/magenta, green outside
@@ -51,8 +55,8 @@ Report conflicts; never blend them silently.
   Challenge content. Do not apply Hunt-only editorial doctrine to Daily.
 - Live Hunt content is `assets/data/huntData.json`; the tracked editorial workbook is
   `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` and never updates runtime automatically.
-- Canonical Daily authoring content is the 43-word locked workbook at
-  `workbooks/POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx`; `STAGE` is included and
+- Canonical Daily authoring content is the 60-word locked workbook at
+  `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`; `STAGE` is included and
   `SENTENCE` is excluded. `app/game/dailyPool.ts` is its approved runtime representation.
 - `assets/data/huntData.v2.json` is dormant. Do not wire it into gameplay.
 - `tools/content/_deprecated/mask-rewriter/` is retired and must not be revived.
