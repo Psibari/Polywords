@@ -5,32 +5,54 @@ import { HERO_BOOK_PERSPECTIVE } from '../../ui/heroBookMotion';
 import { heroBookMaterial as M } from '../../ui/pwMaterials';
 import { PW } from '../../ui/pwTheme';
 
+export type HeroBookVariant = 'neutral' | 'mastered' | 'haunted';
+
 export type HeroBookProps = {
   coverRotateX: Animated.AnimatedInterpolation<string>;
   intakeOpacity: Animated.Value;
   intakeScaleY: Animated.AnimatedInterpolation<number>;
   children: React.ReactNode;
+  // Which 3-piece rig to render. All three variants share the exact same
+  // 1154x830 canvas and hinge (device-verified via PNG header read,
+  // 2026-08-31) — swapping this never touches HINGE_Y/geometry below.
+  variant?: HeroBookVariant;
 };
 
 const SOURCE_HEIGHT = 830;
 const SOURCE_HINGE_Y = 88;
 const HINGE_Y = (SOURCE_HINGE_Y / SOURCE_HEIGHT) * M.bookHeight;
 
-const bookBase = require('../../../assets/images/hero-book-rig-v1/book-base.png');
-const coverOuter = require('../../../assets/images/hero-book-rig-v1/cover-outer.png');
-const coverInner = require('../../../assets/images/hero-book-rig-v1/cover-inner.png');
+const RIG_SOURCES: Record<HeroBookVariant, { base: number; outer: number; inner: number }> = {
+  neutral: {
+    base: require('../../../assets/images/hero-book-rig-v1/book-base.png'),
+    outer: require('../../../assets/images/hero-book-rig-v1/cover-outer.png'),
+    inner: require('../../../assets/images/hero-book-rig-v1/cover-inner.png'),
+  },
+  mastered: {
+    base: require('../../../assets/images/hero-book-rig-v1/mastered-gold-book-base.png'),
+    outer: require('../../../assets/images/hero-book-rig-v1/mastered-gold-cover-outer.png'),
+    inner: require('../../../assets/images/hero-book-rig-v1/mastered-gold-cover-inner.png'),
+  },
+  haunted: {
+    base: require('../../../assets/images/hero-book-rig-v1/haunted-book-base.png'),
+    outer: require('../../../assets/images/hero-book-rig-v1/haunted-cover-outer.png'),
+    inner: require('../../../assets/images/hero-book-rig-v1/haunted-cover-inner.png'),
+  },
+};
 
 export default function HeroBook({
   coverRotateX,
   intakeOpacity,
   intakeScaleY,
   children,
+  variant = 'neutral',
 }: HeroBookProps) {
+  const rig = RIG_SOURCES[variant];
   return (
     <View style={styles.book}>
       <Image
         contentFit="fill"
-        source={bookBase}
+        source={rig.base}
         style={styles.rigImage}
       />
 
@@ -51,7 +73,7 @@ export default function HeroBook({
         <View style={[StyleSheet.absoluteFill, styles.outerSurface]}>
           <Image
             contentFit="fill"
-            source={coverOuter}
+            source={rig.outer}
             style={styles.rigImage}
           />
 
@@ -74,7 +96,7 @@ export default function HeroBook({
         <View style={[StyleSheet.absoluteFill, styles.innerSurface]}>
           <Image
             contentFit="fill"
-            source={coverInner}
+            source={rig.inner}
             style={styles.rigImage}
           />
         </View>

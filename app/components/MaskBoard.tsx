@@ -19,7 +19,7 @@ import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ScoreFloat } from './ScoreFloat';
-import HeroBook from './ui/HeroBook';
+import HeroBook, { type HeroBookVariant } from './ui/HeroBook';
 import { FoilWord } from './ui/FoilWord';
 import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
@@ -52,6 +52,16 @@ const FINAL_TILE_GAP = 10;
 const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
+
+// ── Boss outcome slam timing ────────────────────────────────────
+// See triggerBossOutcomeSlam's comment for the concealed-swap rationale.
+const MASTERED_IMPACT_MS = 150; // front-facing → edge-on, punchy
+const MASTERED_SWAP_AT_MS = 70; // ~GoldFlash's 65ms attack peak
+const MASTERED_RECOIL_MS = 90;  // edge-on → slight overshoot bounce
+const MASTERED_SETTLE_MS = 110; // bounce → rest, reveals the gold rig
+const HAUNTED_DRAG_MS = 260;    // front-facing → edge-on, heavy, no punch
+const HAUNTED_SWAP_AT_MS = 140; // under the rising drain haze + board shake
+const HAUNTED_SETTLE_MS = 260;  // edge-on → rest, no bounce — sinks shut
 
 // Deck timing curves — shared by the round's opening deal-in and the
 // per-tile shuffle-forward animation (Task 1), so the deck reads as one
@@ -494,6 +504,11 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const boardShakeX           = useRef(new Animated.Value(0)).current; // boss entrance / haunted micro-shake, native driver
   const wordEntranceHapticRef = useRef<string | null>(null);
   const bookOpenAnimationRef   = useRef<Animated.CompositeAnimation | null>(null);
+  // Which HeroBook rig is showing. Local state, not a ref: swapping it must
+  // re-render. Board remounts per word (key={`board-${stepIndex}`} in
+  // GameScreen), so a fresh 'neutral' initializer is the only reset this
+  // ever needs — no cleanup effect required.
+  const [bookVariant, setBookVariant] = useState<HeroBookVariant>('neutral');
 
   function triggerBoardShake() {
     boardShakeX.setValue(0);
@@ -685,6 +700,57 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: true }),
       ]),
     ]);
+    bookOpenAnimationRef.current.start();
+  }
+
+  // ── boss outcome slam ────────────────────────────────────────
+  // Boss-only. Swings the SAME coverRotateX channel the per-tile intake
+  // pulse already uses, but through the full 0→1 range (front-facing →
+  // ~65deg edge-on, HeroBook's own tested ceiling — never past it, see
+  // hero-book-rig-v1/README.md) instead of the tiny ~0.02 recoil the old
+  // shared close used. The rig swap (bookVariant) fires mid-swing, timed to
+  // land under cover of whichever flash/haze this outcome already drives
+  // (GoldFlash's 65ms attack for mastered; the book-local drain haze for
+  // haunted) plus the cover being near edge-on at that moment — the same
+  // "concealed swap during the impact/cover transition" the spec calls for,
+  // not a bare cut. Not device-confirmed; spot-check the conceal timing
+  // before trusting it further.
+  function triggerBossOutcomeSlam(outcome: 'mastered' | 'haunted') {
+    bookOpenAnimationRef.current?.stop();
+    bookOpenAnim.stopAnimation();
+    bookOpenAnim.setValue(0);
+    bookIntakeGlowAnim.stopAnimation();
+    bookIntakeGlowAnim.setValue(0);
+    if (outcome === 'haunted') bookGhostDrainOpacity.setValue(0);
+
+    if (reduceMotion) {
+      setBookVariant(outcome);
+      return;
+    }
+
+    if (outcome === 'mastered') {
+      setTimeout(() => setBookVariant('mastered'), MASTERED_SWAP_AT_MS);
+      bookOpenAnimationRef.current = Animated.parallel([
+        Animated.sequence([
+          Animated.timing(bookOpenAnim, { toValue: 1, duration: MASTERED_IMPACT_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(bookOpenAnim, { toValue: 0.06, duration: MASTERED_RECOIL_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(bookOpenAnim, { toValue: 0, duration: MASTERED_SETTLE_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(bookIntakeGlowAnim, { toValue: 1, duration: 130, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 250, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+        ]),
+      ]);
+    } else {
+      setTimeout(() => setBookVariant('haunted'), HAUNTED_SWAP_AT_MS);
+      bookOpenAnimationRef.current = Animated.parallel([
+        Animated.sequence([
+          Animated.timing(bookOpenAnim, { toValue: 1, duration: HAUNTED_DRAG_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(bookOpenAnim, { toValue: 0, duration: HAUNTED_SETTLE_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.timing(bookGhostDrainOpacity, { toValue: 0.55, duration: HAUNTED_DRAG_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      ]);
+    }
     bookOpenAnimationRef.current.start();
   }
 
@@ -926,6 +992,13 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
         playSfx('bookClose');
         Haptics.cueAsync('mastery');
+        // Boss only, from here — the gold rig slam. The Haunt-rematch banish
+        // beat below (isBoss false) is untouched: it keeps the neutral rig
+        // and the original tiny-recoil close.
+        if (bossOutcome) {
+          triggerBossOutcomeSlam('mastered');
+          return;
+        }
         // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
         // its Animated.delay) before driving these shared values directly —
         // otherwise its queued final leg fires later and fights this beat.
@@ -1004,40 +1077,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         return;
         }
         if (!isBoss) return;
-        // ── Boss path — same shape of beat as the master close (one decisive
-        // motion, not the 12-phase sequence) but a different physical quality:
-        // the mastered close is a spring with bounce-settle, this is a slower
-        // 420ms ease with no overshoot. No flash, no stamp: colour drains, it
-        // does not travel.
+        // ── Boss path — the gray rig slam. Same shape of beat as the master
+        // close (one decisive motion) but a different physical quality: the
+        // mastered close is a punchy impact with bounce-settle, this is a
+        // slower drag with no overshoot. No flash, no stamp: colour drains,
+        // it does not travel.
         playSfx('bookClose');
         Haptics.cueAsync('bossHaunted');
         triggerBoardShake();
-        // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
-        // its Animated.delay) before driving these shared values directly —
-        // otherwise its queued final leg fires later and fights this beat.
-        bookOpenAnimationRef.current?.stop();
-        bookOpenAnim.stopAnimation();
-        bookIntakeGlowAnim.stopAnimation();
-        bookGhostDrainOpacity.setValue(0);
-        if (reduceMotion) {
-          bookOpenAnim.setValue(0);
-          bookIntakeGlowAnim.setValue(0);
-          Animated.timing(bookGhostDrainOpacity, {
-            toValue: 0.55,
-            duration: 420,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }).start();
-          return;
-        }
-        bookOpenAnimationRef.current = Animated.parallel([
-          // Heavier and slower than the mastered spring, no overshoot — reads
-          // as losing structure, not snapping shut.
-          Animated.timing(bookOpenAnim, { toValue: 0, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(bookIntakeGlowAnim, { toValue: 0, duration: 260, useNativeDriver: true }),
-          Animated.timing(bookGhostDrainOpacity, { toValue: 0.55, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        ]);
-        bookOpenAnimationRef.current.start();
+        triggerBossOutcomeSlam('haunted');
       },
       onOutcomeReveal(outcome) {
         playSfx(resolveOutcomeRevealSfx(outcome));
@@ -1517,6 +1565,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           coverRotateX={bookIntakeRotateX}
           intakeOpacity={bookIntakeGlowAnim}
           intakeScaleY={bookIntakeGlowScale}
+          variant={bookVariant}
         >
 
         {/* Outer wrapper: non-native recoil transforms (RAF-driven setValue) */}
