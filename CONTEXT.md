@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
-Updated August 30, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `fde5902`.
+Updated August 31, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current code baseline: `2e82c32`.
 
 ## Verified Current State
 
@@ -74,29 +74,36 @@ Updated August 30, 2026. Branch: `play-screen-overhaul`, tracking
 - Two Polly animations were cleaned and committed (`fde5902`): polly_sulk and polly_idle. Four
   others are unusable and need re-rendering at 724x724. See CLAUDE.md.
 - Audit of `pollyVisitPolicy.ts`, 2026-08-29, verified against live source:
-  - `oneHeartLeft` (`useBoardMechanics:332`) and `streakX10` (`:348`) are FIRED on every run and
-    discarded — `resolveVisit` has no branch for either. Adding reactions is a policy-file
-    change only, no MaskBoard edit.
+  - `oneHeartLeft` (`useBoardMechanics:332`) is still FIRED on every run and discarded —
+    `resolveVisit` has no branch for it. `streakX10` (`:348`) was the same until 2e82c32 and
+    now resolves to a rattled heckle.
   - `hiddenFound`, `ghostFoundLate` and `ghostDissolved` are declared in `PollyEvent` but fired
     by nothing anywhere.
-  - WRONG_SMUG is the only spec for `wrong`, and "Thought so." is therefore the only
-    wrong-answer line in the game. Capped one per word, so it can fire up to ~7 times in a run
-    reaching round 7.
-  - VisitSpec holds one fixed `lineId`; there is no variant mechanism. `resolveHomePollyMoment`
-    and `resolveResultsPollyMoment` both pick from candidate arrays via `firstFresh()` against
-    `recentLineIds`. The Hunt has no equivalent.
+  - WRONG_SMUG is still the only spec for `wrong`, but it no longer carries a fixed line:
+    `resolveVisit` picks from a 12-line pool at fire time (d623087).
+  - The Hunt now has a variant mechanism of its own: `pickFreshLine()` in `pollyVisitPolicy.ts`,
+    fed `recentLineIds` and a random roll through `PollyBudgetState`. It reads the same
+    `recentLineIds` that `resolveHomePollyMoment` and `resolveResultsPollyMoment` use via
+    `firstFresh()`. Only `wrong` and `streakX10` have pools; every other moment still holds one
+    fixed line.
   - `resolveVisit` receives no pollyMemory data. `PollyBudgetState`'s only history field is
     `ghostRunsMissed`, which does one thing: swaps GHOST_SMUG's `perchPose` to `'point'` at
     >=2. Home and Results both branch on `playerWinStreak`/`pollyWinStreak`; the Hunt does not.
     `usePollyVisits` already imports `useGameStore`, so passing the streaks through is a
     hook-level change with no MaskBoard involvement.
-  - Of 25 reachable Hunt lines, she has no losing register at all.
-  - `POLLY_LINES` holds 25 lines, not 24.
+  - She has a losing register in the Hunt as of 2e82c32 — the ten-streak reaction. Everything
+    else she says in the Hunt is still her winning or threatening.
+  - `POLLY_LINES` holds 43 lines, 27 of them Hunt lines.
 - `isMasteredReturn` is set on returning mastered-word steps in `huntGenerator` and is read by
   NOTHING — not the board, store, Results or Polly. A mastered word returns silently and
   unmarked.
 - MASTERED overlay timings, for anyone coordinating against them: tap is dead for 1200ms,
   auto-resolves at 2800ms. The HAUNTED overlay is 1200ms and 3200ms.
+- Polly's `rattled` pose is banked and live (ff3e68d, 2e82c32). Whole-pose flat art, not
+  rig-compatible. See CLAUDE.md.
+- Hunt line rotation shipped (d623087, device-confirmed). The most-repeated line in the game
+  was "Thought so.", capable of firing ~7 times in a run; it is now one of twelve.
+- The ten-streak reaction shipped (2e82c32, device-confirmed). See CLAUDE.md.
 
 ## REWARD ECONOMY
 
@@ -135,18 +142,16 @@ five distractors.
   specified. The desired motion is push-forward, not `rotateY`.
 5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
   persistence, gestures, animation, and performance.
-6. Give Polly a reaction to `streakX10` in her rattled register. The event already fires and
-  is already discarded, it is the register the Hunt does not have, and it costs one branch in
-  a pure file plus authored lines. It needs the lineId-to-candidate-array change first so
-  variants can rotate, which also fixes the "Thought so." repetition.
-7. Rewrite the five theft-voice lines listed in CLAUDE.md.
-8. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
+6. Rewrite the five theft-voice lines listed in CLAUDE.md.
+7. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
   placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
   and the mastery beat.
-9. Re-render the four clipped animations at 724x724.
-10. Polly has no pose for "rattled but pretending she is fine" — smug is winning, sulk is
-  fully beaten, and shocked was ruled to have no feeling in it. That is the register the
-  streak reaction needs.
+8. Re-render the four clipped animations at 724x724.
+9. The streak pool holds six lines against a five-deep line memory, so at a ten-streak there is
+  often only one fresh line left and a repeat inside one run is possible. More lines would give
+  it room. The wrong-answer pool of twelve does not have this problem.
+10. `oneHeartLeft` still fires every run and is discarded. It is the same shape of change as the
+  streak reaction: one branch in a pure file plus authored lines, no MaskBoard involvement.
 
 ## Protection
 
