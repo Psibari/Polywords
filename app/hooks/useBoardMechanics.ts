@@ -37,14 +37,16 @@ export type GauntletTile = {
 // register, then the book takes over" shape mastery already had — boss
 // only; the Haunt-rematch STILL HAUNTED beat is untouched below.
 const BOSS_HAUNTED_RECOGNITION_MS = 220; // let the red flash read before the book reacts
-const BOSS_HAUNTED_POLLY_MS = 800;       // lands near the (now-later) slam settle, mirroring gateMasteredBoss's own post-settle landing
-// 800ms settle + 650ms hold, then onOutcomeReveal's own 350ms scrim-mount
-// delay (MaskBoard.tsx, shared/untouched) on top — ~1000ms of dwell on the
-// closed gray book with Polly's line before the results scrim covers it.
-// Was 980 (only ~180ms of hold — read as the results snapping in before
-// the slam had even been felt). Mirrors triggerMasteredBrain's own
-// isBoss reveal delay below, tuned the same way for the same reason.
-const BOSS_HAUNTED_OUTCOME_REVEAL_MS = 1450;
+// The gray book settles at BOSS_HAUNTED_RECOGNITION_MS + HAUNTED_DRAG_MS +
+// HAUNTED_SETTLE_MS (MaskBoard.tsx) = 220+280+300 = 800ms. Device-observed
+// 2026-08-31: Polly was landing ~0ms after that settle (read as starting
+// on the same frame the book stopped moving) and the result card ~1000ms
+// after settle (raced in behind Polly instead of after her). Both values
+// below are that 800ms settle plus a deliberate post-slam hold — the
+// transformed book gets to be the only thing on screen for a beat before
+// anything else claims attention.
+const BOSS_HAUNTED_POLLY_MS = 1270;         // 800ms settle + 470ms clean hold (target: 450-500ms)
+const BOSS_HAUNTED_OUTCOME_REVEAL_MS = 1850; // 800ms settle + 1050ms hold; + onOutcomeReveal's own untouched 350ms scrim-mount = 1400ms settle-to-card-visible (target: 1.3-1.5s)
 
 function chainTierFromMultiplier(mult: number): ChainTier {
   if (mult >= 2.5) return 3;
@@ -536,9 +538,17 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // These two fire on their own timers, matched to the presentation phase
     // timings perform.onMasteredSequence uses, so the judging events and the
     // outcome reveal land at the same moments they did before the split.
+    //
+    // The gold book settles at MASTERED_IMPACT_MS + MASTERED_RECOIL_MS +
+    // MASTERED_SETTLE_MS (MaskBoard.tsx) = 170+100+130 = 400ms. Device-
+    // observed 2026-08-31: Polly was landing right on that settle frame
+    // (0ms hold) and the result card ~650ms after it — both too tight for
+    // the transformed book to register before something else claims the
+    // screen. isBoss below is 400ms settle + a deliberate post-slam hold;
+    // isHaunt/plain are untouched.
     setTimeout(() => {
       firePollyEvent(isBoss ? 'gateMasteredBoss' : 'gateMastered');
-    }, isBoss ? 400 : isHaunt ? 180 : 2600);
+    }, isBoss ? 870 : isHaunt ? 180 : 2600); // Boss: 400ms settle + 470ms clean hold (target: 450-500ms)
 
     // Haunt's reveal must land sooner than Boss's — it's the smaller,
     // quicker beat ("one decisive banishment beat... before it can
@@ -547,11 +557,11 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // 700ms, backwards from that intent. Raising Boss's own value only
     // widens that gap, never risks it — still true after this change.
     //
-    // Boss: 400ms settle + 650ms hold — was 700 (300ms hold), which read
-    // as the results snapping in right behind the slam instead of a felt
-    // beat with it. Mirrors BOSS_HAUNTED_OUTCOME_REVEAL_MS in this same
-    // file, tuned together for the same reason: give the closed book (and
-    // Polly's line, already landing at 400ms) real room before the scrim.
+    // Boss: 400ms settle + 1050ms hold; + onOutcomeReveal's own untouched
+    // 350ms scrim-mount delay = 1400ms settle-to-card-visible (target:
+    // 1.3-1.5s), landing well after gateMasteredBoss above so the card
+    // never races Polly. Mirrors BOSS_HAUNTED_OUTCOME_REVEAL_MS in this
+    // same file, tuned together for the same reason.
     setTimeout(() => {
       showWordOutcome(
         'mastered',
@@ -566,7 +576,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
           completeWord();
         }
       );
-    }, isBoss ? 1050 : isHaunt ? 550 : 3450);
+    }, isBoss ? 1450 : isHaunt ? 550 : 3450);
   }
 
   // ── swipe resolution ─────────────────────────────────────────────────
