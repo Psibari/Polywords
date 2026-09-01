@@ -85,9 +85,20 @@ navigation shell; active Hunt and Daily play are nav-free.
 - `sfx.ts` loads effects on demand from their real source files. Each effect has at most two
   players for legitimate overlap, a small pending queue, native `playbackStatusUpdate`
   readiness, and teardown-safe ownership. It does not eagerly create every SFX player at boot.
+  The boss-only `masteredTransform`, `masteredBookSlam`, `masteredResult`, and
+  `hauntedTransformSlam` cues map to `assets/audio/sfx/mastered_transform_v1.wav`,
+  `assets/audio/sfx/mastered_book_slam_v1.wav`, `assets/audio/sfx/mastered_result_sting_v1.wav`,
+  and `assets/audio/sfx/haunted_transform_slam_v1.wav`; `warmBossOutcomeSfx()` prepares only
+  these four when the boss gauntlet begins.
 - `MusicEngine.ts` owns one persistent looping player, switches tracks by focused owner,
   resumes after app backgrounding, and restarts a new Hunt from the beginning. Track loading
-  has a bounded fallback, but normal playback is released by native status events.
+  has a bounded fallback, but normal playback is released by native status events. Its
+  `setBossOutcomeMusicDucked()` overlay owns the boss MASTERED/HAUNTED duck (0.14 → 0.07,
+  100ms attack, 220ms release) and composes with mute, pause, foreground recovery, and later
+  state/track transitions; `MaskBoard` never manipulates player volume directly and ducking
+  neither pauses nor restarts the track.
+- `app/utils/haptics.ts` is the only haptic gateway and remains preference-gated. Its semantic
+  `masteredBookImpact` and `hauntedBookImpact` cues are both Heavy physical-impact haptics.
 - Polly's ordinary laughs, boss hidden-failure laugh, Returning Haunt final laugh, and the
   Hunt-loss Results chuckle are separate event beats. The Hunt-loss chuckle is requested by
   `ResultsScreen` with cooldown bypass so an earlier Polly laugh cannot suppress it; do not
@@ -312,8 +323,18 @@ navigation shell; active Hunt and Daily play are nav-free.
   `PW.color.purple`/`PW.color.bg` on the gold field (no gold text on gold). Haunted text is a
   single ink, `PW.color.bg`, for the headline/headword/copy/failed-trap-phrase — `PW.color.rose`
   is reserved for exactly one element, the `TRAP CLAIMED` label. Device-confirmed 2026-09-01.
-  SFX/haptic impact synchronization for the whole outcome sequence is the only piece of this
-  system still open — see CONTEXT.md's Next Work.
+  The full boss outcome audiovisual package is **LOCKED** (Pete, device-approved 2026-09-01).
+  MASTERED starts its transformation SFX at `onMasteredSequence`, lands `masteredBookSlam` plus
+  `masteredBookImpact` Heavy haptic at +270ms from sequence start, and plays `masteredResult`
+  plus Success haptic only when the plaque mounts after the existing 350ms delay. HAUNTED starts
+  its combined cue at
+  `onHauntedSequence`, then lands its Heavy haptic and one board shake at the +580ms physical
+  close from sequence start; its plaque adds neither a second shake nor a result SFX. The
+  immediate wrong/Error feedback and Polly's Haunted laugh remain separate. Both final boss wins
+  converge cleanly:
+  accepting the final REAL and correctly rejecting the final TRAP, which remains rejected.
+  Returning Haunts do not use this boss transformation package. Do not retime visual choreography
+  to solve a future audio issue; reopen this lock only with new regression/device evidence.
 - One-time Hunt, Boss, Haunt, and Vault explainers use separate AsyncStorage gates. Hunt,
   Boss, and Haunt block play; Vault does not.
 - Theme/material tokens live under `app/ui/`; current render code outranks abandoned plans.

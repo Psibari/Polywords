@@ -9,6 +9,8 @@ export type HapticCue =
   | 'bossEntry'
   | 'bossCorrect'
   | 'bossHaunted'
+  | 'masteredBookImpact'
+  | 'hauntedBookImpact'
   | 'mastery'
   | 'gauntletPick'
   | 'gauntletBegin';
@@ -62,6 +64,8 @@ export const Haptics = {
       }
       case 'bossCorrect':
       case 'bossHaunted':
+      case 'masteredBookImpact':
+      case 'hauntedBookImpact':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
       case 'mastery':
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success);

@@ -11,6 +11,10 @@ export type SfxName =
   | 'trapShatter'
   | 'mastered'
   | 'haunted'
+  | 'masteredTransform'
+  | 'masteredBookSlam'
+  | 'masteredResult'
+  | 'hauntedTransformSlam'
   | 'pressHoldStart'
   | 'pollySqwawkShort'
   | 'pollySqwawkLaugh'
@@ -57,6 +61,10 @@ const SFX: Record<SfxName, SfxConfig> = {
   trapShatter:    { source: require('../../assets/audio/sfx/trap_shatter.mp3'),      volume: 0.40, cooldownMs: 140 },
   mastered:       { source: require('../../assets/audio/sfx/mastered_chime.mp3'),    volume: 0.45, cooldownMs: 2200 },
   haunted:        { source: require('../../assets/audio/sfx/haunted_moan.mp3'),      volume: 0.30, cooldownMs: 2600 },
+  masteredTransform: { source: require('../../assets/audio/sfx/mastered_transform_v1.wav'), volume: 0.45, cooldownMs: 2200 },
+  masteredBookSlam: { source: require('../../assets/audio/sfx/mastered_book_slam_v1.wav'), volume: 0.60, cooldownMs: 300 },
+  masteredResult: { source: require('../../assets/audio/sfx/mastered_result_sting_v1.wav'), volume: 0.45, cooldownMs: 2200 },
+  hauntedTransformSlam: { source: require('../../assets/audio/sfx/haunted_transform_slam_v1.wav'), volume: 0.60, cooldownMs: 2600 },
   pressHoldStart: { source: require('../../assets/audio/sfx/press_hold_start.mp3'),  volume: 0.40, cooldownMs: 300 },
   pollySqwawkShort: { source: require('../../assets/audio/sfx/pollySqwawkShort.wav'), volume: 0.42, cooldownMs: 120 },
   pollySqwawkLaugh: { source: require('../../assets/audio/sfx/pollySqwawkLaugh.wav'), volume: 0.42, cooldownMs: 600 },
@@ -73,6 +81,12 @@ const MAX_PLAYERS_PER_SOUND = 2;
 const MAX_PENDING_PLAYS = 2;
 const LOAD_TIMEOUT_MS = 5000;
 const PLAY_RELEASE_FALLBACK_MS = 5000;
+const BOSS_OUTCOME_SFX: readonly SfxName[] = [
+  'masteredTransform',
+  'masteredBookSlam',
+  'masteredResult',
+  'hauntedTransformSlam',
+];
 
 const slots: Partial<Record<SfxName, SfxSlot>> = {};
 const lastPlayedAt: Partial<Record<SfxName, number>> = {};
@@ -256,6 +270,17 @@ export function preloadSfx(): void {
       warnDev('Failed to warm audio session.', error);
     });
   }
+}
+
+export function warmBossOutcomeSfx(): void {
+  if (!useGameStore.getState().soundEnabled) return;
+  const generation = lifecycleGeneration;
+  BOSS_OUTCOME_SFX.forEach(name => {
+    const slot = getOrCreateSlot(name);
+    if (slot.players.length === 0 && !slot.creating && slot.loadAttempts < 2) {
+      createPlayer(name, generation);
+    }
+  });
 }
 
 export function sfxReady(): Promise<void> {

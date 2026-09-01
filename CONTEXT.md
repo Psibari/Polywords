@@ -5,18 +5,27 @@ Updated September 1, 2026. Branch: `play-screen-overhaul`, tracking
 
 ## Verified Current State
 
-- The boss MASTERED/HAUNTED outcome sequence — book rig, choreography, pacing, single-node
-  headword, and now the result plaques — is done and **locked** (Pete, 2026-08-31 for the
-  mechanics/timing, 2026-09-01 for the plaques), all device-confirmed. Gold/gray 3-piece rigs
-  wired into `HeroBook`'s `variant` prop; one continuous open → transform → close slam (no more
-  close→reopen→close, converged from both the accepted-REAL and rejected-trap win routes);
-  the boss headword is a single color-driven text node; the old generic result-card panel is
-  replaced by illustrated plaques (`assets/images/results/mastered-result-plaque.png` /
-  `haunted-result-plaque.png`) for `isBoss` only. See CLAUDE.md's Presentation and Character
-  section for exact timing values, colors, and file/function references. Shipped across
-  `d943c1a`, `062d930`, `8cb5655`, `39f3477`, `b3e494a`, `ceb7708`, `9582f40`, `b9d9009`,
-  `b376f73`, `b8ce6cb`, `7aa8d58`. Still open, not part of this lock: SFX/haptic impact
-  synchronization for the sequence — see Next Work.
+- The boss MASTERED/HAUNTED outcome package is fully complete and **LOCKED** (Pete,
+  device-approved 2026-09-01). All of it is device-confirmed: the 3-piece Mastered/Haunted
+  `HeroBook` rigs; the one continuous locked open → transform → close choreography; the single
+  color-driven boss headword; and the illustrated `isBoss` result plaques. Both winning routes
+  remain intact: accepting the final REAL and correctly rejecting the final TRAP, which stays
+  rejected. The non-boss Returning Haunt path remains a separate, unchanged presentation.
+  - MASTERED starts `assets/audio/sfx/mastered_transform_v1.wav` at `onMasteredSequence`; its
+    physical book slam uses `assets/audio/sfx/mastered_book_slam_v1.wav` plus one Heavy haptic
+    at +270ms from sequence start. Its result uses `assets/audio/sfx/mastered_result_sting_v1.wav`
+    plus Success haptic at actual plaque visibility, after the existing 350ms mount delay.
+  - HAUNTED starts the combined `assets/audio/sfx/haunted_transform_slam_v1.wav` at
+    `onHauntedSequence`; one Heavy haptic and the board shake land together at the +580ms
+    physical close from sequence start. The failed decision's immediate Error feedback and Polly
+    laugh remain; the plaque adds neither a second shake nor a result SFX.
+  - `sfx.ts` warms only these four boss assets when the boss gauntlet begins; it does not restore
+    global eager SFX preload. `app/utils/haptics.ts` remains the preference-gated haptic gateway.
+  - `MusicEngine` owns boss-only outcome ducking, never `MaskBoard` player-volume manipulation:
+    boss music smoothly ducks 0.14 → 0.07 in 100ms, remains ducked through the plaque audio, and
+    releases over 220ms without pausing or restarting the track. Mute, background recovery, state
+    changes, and track ownership remain authoritative. This balance is locked unless new
+    regression/device evidence warrants revisiting it.
 
 - Daily's correct-answer transition now reads as one physical mechanism: card lands on the
   parchment, a matching ornate rod rolls reward paper over it, the reward holds, and the
@@ -189,36 +198,26 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
 
 ## Next Work
 
-1. MASTERED/HAUNTED sound + haptic impact synchronization — the focused next task. Book rig,
-  choreography, timing, headword, and result plaques are locked (see Verified Current State);
-  do not redesign the visual motion while doing this. Inspect: current `bookClose` SFX timing;
-  Mastered's decisive haptic timing; Haunted's decisive haptic timing; board-shake timing; the
-  final-gauntlet Heavy haptic's interaction with the Mastered slam; whether any tactile/audio
-  event currently fires before the physical cover impact. Goal: land sound/haptic impact on the
-  perceived physical book-impact frame, not merely at outcome-sequence start. Existing call
-  sites (`playSfx('bookClose')`, `Haptics.cueAsync('mastery'/'bossHaunted')`,
-  `resolveOutcomeRevealSfx`) are placeholders carried over from before the plaque work, not a
-  final pick.
-2. Continue real-device iOS/Android journey checks before release, including cold-start audio,
+1. Continue real-device iOS/Android journey checks before release, including cold-start audio,
   rapid navigation, app background/foreground recovery, and every distinct Polly laugh beat.
-3. Author and editorially approve more Boss-capable Hunt words, targeting roughly one in five
+2. Author and editorially approve more Boss-capable Hunt words, targeting roughly one in five
   new words with three fair, stable-ID `hiddenPairs`. Do not generate placeholder hidden truth.
-4. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should
+3. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should
   remember that victory. Keep the hidden pair ledger on Polly's side; do not turn it into a
   player shelf collection.
-5. Replace the placeholder Boss-gauntlet card art when the stone-block/crown direction is
+4. Replace the placeholder Boss-gauntlet card art when the stone-block/crown direction is
   specified. The desired motion is push-forward, not `rotateY`.
-6. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
+5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
   persistence, gestures, animation, and performance.
-7. Rewrite the five theft-voice lines listed in CLAUDE.md.
-8. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
+6. Rewrite the five theft-voice lines listed in CLAUDE.md.
+7. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
   placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
   and the mastery beat.
-9. Re-render the four clipped animations at 724x724.
-10. The streak pool holds six lines against a five-deep line memory, so at a ten-streak there is
+8. Re-render the four clipped animations at 724x724.
+9. The streak pool holds six lines against a five-deep line memory, so at a ten-streak there is
   often only one fresh line left and a repeat inside one run is possible. More lines would give
   it room. The wrong-answer pool of twelve does not have this problem.
-11. `oneHeartLeft` still fires every run and is discarded. It is the same shape of change as the
+10. `oneHeartLeft` still fires every run and is discarded. It is the same shape of change as the
   streak reaction: one branch in a pure file plus authored lines, no MaskBoard involvement.
 
 ## Protection

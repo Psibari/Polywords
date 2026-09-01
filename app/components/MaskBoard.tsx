@@ -23,7 +23,8 @@ import HeroBook, { type HeroBookVariant } from './ui/HeroBook';
 import { FoilWord } from './ui/FoilWord';
 import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
-import { playSfx } from '../audio/sfx';
+import { playSfx, warmBossOutcomeSfx } from '../audio/sfx';
+import { setBossOutcomeMusicDucked } from '../audio/MusicEngine';
 import { PW } from '../ui/pwTheme';
 import { libraryMaterial } from '../ui/pwMaterials';
 import { bossOutcomeAssets } from '../ui/bossOutcomeAssets';
@@ -34,7 +35,11 @@ import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
-import { resolveOutcomeRevealSfx } from '../game/huntOutcomeFeedback';
+import {
+  resolveBossOutcomePlaqueFeedback,
+  resolveBossOutcomeSequenceFeedback,
+  resolveOutcomeRevealSfx,
+} from '../game/huntOutcomeFeedback';
 import type { ScreenFlashEvent } from '../game/huntFeedbackPolicy';
 import {
   hasBoardVerticalOverflow,
@@ -1088,9 +1093,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         // tile yet (resolveGauntletTile calls this callback before it calls
         // incrementGauntletCorrectCount) — same for mechanics.finalTileStates,
         // so counting its prior entries and adding this tile gives the
-        // correct ordinal without an off-by-one. The gauntlet-ending tile
-        // (the one immediately before mastery) gets a heavier double-pulse;
-        // reuses the same stacked Heavy-impact shape as the boss entrance.
+        // correct ordinal without an off-by-one. A gauntlet-ending tile on
+        // a non-boss Haunt rematch keeps its original second pulse. Boss
+        // final tiles keep only their immediate decision Heavy here; the
+        // next physical Heavy belongs to the book slam.
         const priorCorrect = Array.from(mechanics.finalTileStates.values())
           .filter(s => s === 'correct' || s === 'trap-caught').length;
         const isFinalGauntletTile = priorCorrect + 1 >= mechanics.gauntletTiles.length;
@@ -1101,7 +1107,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         // gauntlet) keeps the original open-then-close pulse.
         triggerGauntletPulse(isBoss && isFinalGauntletTile);
         onGoldFlash?.('gauntletCorrect');
-        if (isFinalGauntletTile) {
+        if (isFinalGauntletTile && !isBoss) {
           setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 120);
         }
         if (swipedUp) triggerAbsorption(phrase);
@@ -1116,6 +1122,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         }, 280);
       },
       onGauntletBegin() {
+        if (isBoss) warmBossOutcomeSfx();
         setGauntletThrowKey(k => k + 1);
         Haptics.cueAsync('gauntletBegin');
       },
@@ -1153,6 +1160,13 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         }
       },
       onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
+        const bossFeedback = bossOutcome
+          ? resolveBossOutcomeSequenceFeedback('mastered')
+          : null;
+        if (bossFeedback) {
+          setBossOutcomeMusicDucked(true);
+          playSfx(bossFeedback.startSfx);
+        }
         // `!isBoss` here can only mean isHaunt (onMasteredSequence is only
         // ever invoked when isFinalGateStep — isBoss || isHaunt — is true,
         // see the completion-check effect above). The old 12-phase Haunt-mastery
@@ -1161,15 +1175,19 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         // ── One decisive beat, boss or Haunt rematch alike.
         onGoldFlash?.('mastery');
         if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
-        playSfx('bookClose');
-        Haptics.cueAsync('mastery');
         // Boss only, from here — the gold rig slam. The Haunt-rematch banish
         // beat below (isBoss false) is untouched: it keeps the neutral rig
         // and the original tiny-recoil close.
-        if (bossOutcome) {
+        if (bossFeedback) {
+          setTimeout(() => {
+            if (bossFeedback.impact.sfx) playSfx(bossFeedback.impact.sfx);
+            Haptics.cueAsync(bossFeedback.impact.hapticCue);
+          }, bossFeedback.impact.delayMs);
           triggerBossOutcomeSlam('mastered');
           return;
         }
+        playSfx('bookClose');
+        Haptics.cueAsync('mastery');
         // Cancel any in-flight composite (e.g. a gauntlet pulse parked in
         // its Animated.delay) before driving these shared values directly —
         // otherwise its queued final leg fires later and fights this beat.
@@ -1253,14 +1271,18 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         // mastered close is a punchy impact with bounce-settle, this is a
         // slower drag with no overshoot. No flash, no stamp: colour drains,
         // it does not travel.
-        playSfx('bookClose');
-        Haptics.cueAsync('bossHaunted');
-        triggerBoardShake();
+        const bossFeedback = resolveBossOutcomeSequenceFeedback('haunted');
+        setBossOutcomeMusicDucked(true);
+        playSfx(bossFeedback.startSfx);
+        setTimeout(() => {
+          if (bossFeedback.impact.sfx) playSfx(bossFeedback.impact.sfx);
+          Haptics.cueAsync(bossFeedback.impact.hapticCue);
+          if (bossFeedback.impact.boardShake) triggerBoardShake();
+        }, bossFeedback.impact.delayMs);
         triggerBossOutcomeSlam('haunted');
       },
       onOutcomeReveal(outcome) {
-        playSfx(resolveOutcomeRevealSfx(outcome));
-        if (outcome === 'haunted') triggerBoardShake();
+        if (!isBoss) playSfx(resolveOutcomeRevealSfx(outcome));
         setShowOutcomeCard(false);
         setTimeout(() => setShowOutcomeCard(true), 350);
       },
@@ -1271,6 +1293,24 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       },
     },
   });
+
+  useEffect(() => {
+    const outcome = mechanics.wordOutcome;
+    if (!isBoss || !showOutcomeCard || outcome === 'none') return;
+    const feedback = resolveBossOutcomePlaqueFeedback(outcome);
+    if (feedback.sfx) playSfx(feedback.sfx);
+    if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
+  }, [isBoss, mechanics.wordOutcome, showOutcomeCard]);
+
+  useEffect(() => {
+    if (!isBoss) return;
+    return () => setBossOutcomeMusicDucked(false);
+  }, [isBoss]);
+
+  function continueOutcome() {
+    if (isBoss) setBossOutcomeMusicDucked(false);
+    mechanics.continueOutcome();
+  }
 
   const activeTopMaskId = mechanics.topMask?.id ?? null;
   activeTopMaskIdRef.current = activeTopMaskId;
@@ -2326,7 +2366,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           word={step.word}
           headline={isHaunt ? 'BANISHED' : 'MASTERED'}
           bonusLabel={mechanics.outcomeBonusLabel}
-          onContinue={mechanics.continueOutcome}
+          onContinue={continueOutcome}
           isBoss={isBoss}
         />
       )}
@@ -2335,7 +2375,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         <HauntedOutcomeOverlay
           word={step.word}
           detail={mechanics.outcomeDetail}
-          onContinue={mechanics.continueOutcome}
+          onContinue={continueOutcome}
           isBoss={isBoss}
         />
       )}

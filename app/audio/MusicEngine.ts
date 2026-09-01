@@ -1,17 +1,13 @@
 import { AudioPlayer, createAudioPlayer } from 'expo-audio';
 import { ensureAudioSessionConfigured } from './audioSession';
+import {
+  BOSS_OUTCOME_DUCK_ATTACK_MS,
+  BOSS_OUTCOME_DUCK_RELEASE_MS,
+  resolveMusicTargetVolume,
+} from './musicVolumePolicy';
+import type { MusicOwner, MusicState } from './musicVolumePolicy';
 
-export type MusicState =
-  | 'off'
-  | 'neutral'
-  | 'rhythm'
-  | 'onARun'
-  | 'crisis'
-  | 'boss'
-  | 'daily'
-  | 'static';
-
-export type MusicOwner = 'hunt' | 'daily';
+export type { MusicOwner, MusicState } from './musicVolumePolicy';
 
 type TrackKey = 'hunt' | 'tension' | 'boss' | 'daily' | 'static';
 type TrackSource = Parameters<AudioPlayer['replace']>[0];
@@ -44,16 +40,6 @@ const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
   static: 'static',
 };
 
-const STATE_VOLUMES: Record<Exclude<MusicState, 'off'>, number> = {
-  neutral: 0.18,
-  rhythm: 0.20,
-  onARun: 0.22,
-  crisis: 0.20,
-  boss: 0.14,
-  daily: 0.16,
-  static: 0.18,
-};
-
 const FADE_IN_MS = 300;
 const FADE_OUT_MS = 240;
 
@@ -67,6 +53,7 @@ const desiredStates: Record<MusicOwner, Exclude<MusicState, 'off'>> = {
 let activeOwner: MusicOwner | null = null;
 let activeTrackKey: TrackKey | null = null;
 let userMuted = false;
+let bossOutcomeDucked = false;
 let transitionToken = 0;
 let configuredTrackToken = -1;
 let pendingSeek: { key: TrackKey; seconds: number; token: number } | null = null;
@@ -123,8 +110,17 @@ function cancelFade(): void {
 }
 
 function targetVolume(): number {
-  if (userMuted || !activeOwner || transportPaused) return 0;
-  return STATE_VOLUMES[desiredStates[activeOwner]];
+  return resolveMusicTargetVolume({
+    activeOwner,
+    state: activeOwner ? desiredStates[activeOwner] : null,
+    muted: userMuted,
+    transportPaused,
+    bossOutcomeDucked,
+  });
+}
+
+function isBossMusicActive(): boolean {
+  return activeOwner === 'hunt' && desiredStates.hunt === 'boss';
 }
 
 function fadeVolumeTo(volume: number, durationMs: number): void {
@@ -388,6 +384,7 @@ export function preloadHuntTrack(): void {
 }
 
 export function startMusic(owner: MusicOwner): void {
+  if (activeOwner !== owner) bossOutcomeDucked = false;
   activeOwner = owner;
   transportPaused = false;
   pausedForApp = false;
@@ -400,6 +397,7 @@ export function stopMusic(owner: MusicOwner): void {
   // Native-stack focus transitions may mount the incoming screen before the
   // outgoing cleanup fires. Only the current owner may stop the singleton.
   if (activeOwner !== owner) return;
+  if (owner === 'hunt') bossOutcomeDucked = false;
   activeOwner = null;
   transitionToken += 1;
   pendingSeek = null;
@@ -419,6 +417,7 @@ export function stopMusic(owner: MusicOwner): void {
 }
 
 export function setMusicState(owner: MusicOwner, newState: MusicState): void {
+  if (owner === 'hunt' && newState !== 'boss') bossOutcomeDucked = false;
   if (newState === 'off') {
     if (activeOwner !== owner) return;
     // A new run must start its loop from the top, not resume mid-loop from
@@ -440,6 +439,22 @@ export function setMusicEnabled(enabled: boolean): void {
   userMuted = !enabled;
   if (!player || !activeOwner) return;
   fadeVolumeTo(targetVolume(), 220);
+}
+
+/**
+ * Boss-only overlay over the normal MusicEngine state target. It never owns
+ * the player directly, so mute, pause, foreground recovery, and a later
+ * track/state transition continue to resolve volume through targetVolume().
+ */
+export function setBossOutcomeMusicDucked(ducked: boolean): void {
+  if (ducked && !isBossMusicActive()) return;
+  if (bossOutcomeDucked === ducked) return;
+  bossOutcomeDucked = ducked;
+  if (!player || !isBossMusicActive()) return;
+  fadeVolumeTo(
+    targetVolume(),
+    ducked ? BOSS_OUTCOME_DUCK_ATTACK_MS : BOSS_OUTCOME_DUCK_RELEASE_MS,
+  );
 }
 
 // App-teardown escape hatch only. stopMusic() is for screen blur only, which
@@ -471,6 +486,7 @@ export function haltMusicEngine(): void {
   pausedForApp = false;
   configuredTrackToken = -1;
   pendingSeek = null;
+  bossOutcomeDucked = false;
   transitionToken += 1;
   transportPaused = false;
   playerRebuildAttempts = 0;
