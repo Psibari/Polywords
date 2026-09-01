@@ -763,25 +763,18 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     // 0, so the same toValue:1 leg below still reads as a genuine open.
 
     if (reduceMotion) {
-      if (outcome === 'mastered') {
-        bookOpenAnim.setValue(0);
-        masteredHeadwordOpacity.setValue(1);
-      } else {
-        hauntedHeadwordOpacity.setValue(1);
-      }
+      if (outcome === 'mastered') bookOpenAnim.setValue(0);
+      // bossHeadwordColor (the render's precomputed interpolation) tracks
+      // bookVariant directly — no separate opacity/timing to drive here.
       setBookVariant(outcome);
       return;
     }
 
     if (outcome === 'mastered') {
-      setTimeout(() => {
-        setBookVariant('mastered');
-        // Lands with the gold rig, not the slam's end — same beat the rig
-        // itself becomes visible, per spec.
-        Animated.timing(masteredHeadwordOpacity, {
-          toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true,
-        }).start();
-      }, MASTERED_SWAP_AT_MS);
+      // Lands with the gold rig, not the slam's end — same beat the rig
+      // itself becomes visible, per spec. bossHeadwordColor picks up the
+      // new bookVariant on the very next render; no separate fade to drive.
+      setTimeout(() => setBookVariant('mastered'), MASTERED_SWAP_AT_MS);
       bookOpenAnimationRef.current = Animated.parallel([
         Animated.sequence([
           Animated.timing(bookOpenAnim, { toValue: 1, duration: MASTERED_IMPACT_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -794,14 +787,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         ]),
       ]);
     } else {
-      setTimeout(() => {
-        setBookVariant('haunted');
-        // Lands with the gray rig, not the slam's end — same beat the rig
-        // itself becomes visible, mirroring the mastered headword tint.
-        Animated.timing(hauntedHeadwordOpacity, {
-          toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true,
-        }).start();
-      }, HAUNTED_SWAP_AT_MS);
+      // Lands with the gray rig, not the slam's end — same beat the rig
+      // itself becomes visible, mirroring the mastered path above.
+      setTimeout(() => setBookVariant('haunted'), HAUNTED_SWAP_AT_MS);
       bookOpenAnimationRef.current = Animated.parallel([
         Animated.sequence([
           Animated.timing(bookOpenAnim, { toValue: 1, duration: HAUNTED_DRAG_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -830,23 +818,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const stillHauntedOpacity  = useRef(new Animated.Value(0)).current;
   const stillHauntedScale    = useRef(new Animated.Value(0.7)).current;
   const hauntEntranceStingKeyRef = useRef<string | null>(null);
-
-  // ── boss mastered headword tint ─────────────────────────────────
-  // Same technique as wordHauntTintOpacity above — an absolutely-positioned
-  // purple overlay of the same word, faded in over the gold/light base text
-  // — fired from triggerBossOutcomeSlam the instant bookVariant flips to
-  // 'mastered', so the color change lands with the gold rig rather than
-  // waiting for the slam to finish.
-  const masteredHeadwordOpacity = useRef(new Animated.Value(0)).current;
-  // ── boss haunted headword tint ──────────────────────────────────
-  // Same mechanism as masteredHeadwordOpacity directly above — a dark
-  // overlay of the same word, faded in as the gray rig becomes active
-  // (fired from triggerBossOutcomeSlam's haunted branch), fixing washed-out
-  // light/gold text over the pale Haunted center panel. Distinct from
-  // wordHauntTintOpacity above: that one is the Haunt-REMATCH entrance tint
-  // (isHaunt, fades OUT as tiles appear) — an unrelated beat that never
-  // touches bookVariant.
-  const hauntedHeadwordOpacity = useRef(new Animated.Value(0)).current;
 
   const tileRefs = useRef(new Map<string, React.RefObject<View | null>>());
 
@@ -1542,6 +1513,26 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     extrapolateLeft: 'clamp', // this one must not go below 0.86 on overshoot
   });
 
+  // Boss's single headword text node's color. Persistent base tracks
+  // bookVariant (matches styles.wordBoss's own '#F5C842' for neutral, so
+  // switching a word from static color to this interpolation is a no-op
+  // until bookVariant actually changes); wordRedOpacity — already driven
+  // 0→0.4→0 by triggerWrongWordRecoil's RAF loop, unchanged — mixes toward
+  // wrong-red on top of whichever base is current. inputRange [0,1] (not
+  // [0,0.4]) is deliberate: wordRedOpacity's real runtime ceiling is 0.4,
+  // so at that peak this reads as a 40% mix toward red, matching the old
+  // overlay's 0.4 peak opacity instead of flashing full solid red.
+  const bossHeadwordBaseColor = bookVariant === 'mastered'
+    ? PW.color.purple
+    : bookVariant === 'haunted'
+      ? PW.color.bg
+      : PW.color.gold;
+  const bossHeadwordColor = wordRedOpacity.interpolate({
+    inputRange: [0, 1],
+    outputRange: [bossHeadwordBaseColor, PW.color.wrong],
+    extrapolate: 'clamp',
+  });
+
   // Resuming directly into an already-haunted boss word sets gatePhase to
   // 'wrongFail' with no gauntlet tiles ever built (there's nothing left to
   // judge) — without the length guard this briefly mounts an empty
@@ -1689,105 +1680,66 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 numberOfLines={1}
               />
             ) : (
-              // FoilWord's 3-layer bevel recipe was tuned against the default
-              // word size/font; at the boss word's larger size and heavier
-              // `FONTS.bossWord` face, the deboss/catch-light layers stopped
-              // registering as a subtle bevel and read as visibly doubled
-              // letters instead (confirmed on device 2026-08-02). Reverted to
-              // plain text rather than ship that; the gold-absorb/wrong-flash
-              // overlays below don't have this problem since they're a single
-              // flat layer, same technique the existing Haunt tint already
-              // uses successfully over this same plain text.
-              <Text
-                style={[styles.word, styles.wordBoss]}
+              // Exactly one text node for the boss headword — previously a
+              // static Text plus up to 4 stacked Animated.Text overlays
+              // (red/haunt-tint/mastered/haunted), each position:'absolute'
+              // with left:0/right:0 (full word zone), a different box than
+              // this node's own natural/100%-width fit feeds
+              // adjustsFontSizeToFit than the base layer got — on a long
+              // boss word that could shrink each layer a different amount
+              // and read as misaligned doubled glyphs (reported 2026-08-15,
+              // wordBoss's width:'100%' below narrowed but didn't remove
+              // it). A single node removes the mismatch at the source:
+              // bossHeadwordColor (computed above) carries the wrong-swipe
+              // flash AND the mastered/haunted outcome color, so there is
+              // nothing left to stack on top of it.
+              <Animated.Text
+                style={[styles.word, styles.wordBoss, { color: bossHeadwordColor }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.72}
               >
                 {step.word}
-              </Text>
+              </Animated.Text>
             )}
-            {/* Red flash overlay — wrong swipe danger signal */}
-            <Animated.Text
-              pointerEvents="none"
-              style={[
-                styles.word,
-                isBoss && styles.wordBoss,
-                {
-                  color: '#CC2200',
-                  opacity: wordRedOpacity,
-                  position: 'absolute',
-                  left: 0, right: 0,
-                  textAlign: 'center',
-                },
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {step.word}
-            </Animated.Text>
-
-            {/* Haunt entrance purple tint — fades out as tiles appear */}
-            {isHaunt && (
+            {/* Red flash overlay — wrong swipe danger signal. Non-boss only:
+                boss folds this into bossHeadwordColor above instead of a
+                second layer. */}
+            {!isBoss && (
               <Animated.Text
                 pointerEvents="none"
                 style={[
                   styles.word,
-                  isBoss && styles.wordBoss,
+                  {
+                    color: PW.color.wrong,
+                    opacity: wordRedOpacity,
+                    position: 'absolute',
+                    left: 0, right: 0,
+                    textAlign: 'center',
+                  },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {step.word}
+              </Animated.Text>
+            )}
+
+            {/* Haunt entrance purple tint — fades out as tiles appear.
+                Non-boss only by construction: Returning Haunt and Polly's
+                Word are different round slots (CLAUDE.md — a word is never
+                both), but the isBoss guard here is a defensive belt so a
+                boss word can never gain a second text node through this
+                path even if that ever changed. */}
+            {isHaunt && !isBoss && (
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.word,
                   {
                     color: '#7B2D8B',
                     opacity: wordHauntTintOpacity,
-                    position: 'absolute',
-                    left: 0, right: 0,
-                    textAlign: 'center',
-                  },
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >
-                {step.word}
-              </Animated.Text>
-            )}
-
-            {/* Mastered gold-book headword tint — fades in over the gold/
-                light base word once bookVariant flips to 'mastered', so it
-                stays readable against the gold cover panel. */}
-            {bookVariant === 'mastered' && (
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.word,
-                  isBoss && styles.wordBoss,
-                  {
-                    color: PW.color.purple,
-                    opacity: masteredHeadwordOpacity,
-                    position: 'absolute',
-                    left: 0, right: 0,
-                    textAlign: 'center',
-                  },
-                ]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >
-                {step.word}
-              </Animated.Text>
-            )}
-
-            {/* Haunted gray-book headword tint — fades in over the gold/
-                light base word once bookVariant flips to 'haunted', so it
-                stays readable against the pale Haunted center panel. */}
-            {bookVariant === 'haunted' && (
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.word,
-                  isBoss && styles.wordBoss,
-                  {
-                    color: PW.color.bg,
-                    opacity: hauntedHeadwordOpacity,
                     position: 'absolute',
                     left: 0, right: 0,
                     textAlign: 'center',
