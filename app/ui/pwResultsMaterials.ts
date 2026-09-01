@@ -18,6 +18,7 @@ export function deriveResultsPollyMoment(
   isComplete: boolean,
   bossMastered: boolean,
   memory: PollyMemory,
+  roll: number,
 ): PollyMoment | null {
   const allPerfect =
     wordResults.length > 0 && wordResults.every(r => r.wrongSwipes === 0);
@@ -27,7 +28,7 @@ export function deriveResultsPollyMoment(
     allPerfect,
     bossMastered,
     hasMissed,
-  });
+  }, roll);
 }
 
 // ── Type scale (legibility clause: floor 14, tune on device) ──

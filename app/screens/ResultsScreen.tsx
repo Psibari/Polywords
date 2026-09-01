@@ -579,11 +579,16 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const hauntMissedMaskIds = bossResults.flatMap(r => r.missedMaskIds);
   const hauntWrongMaskIds = bossResults.flatMap(r => r.wrongMaskIds);
   const firstWrongMaskId = hauntWrongMaskIds[0] ?? null;
+  // Held stable for the life of the screen — resolveResultsPollyMoment/
+  // pickFreshLine must stay pure (no Math.random inside them), so the roll
+  // is drawn once here, in a useState initialiser, never during render.
+  const [pollyRoll] = useState(() => Math.random());
   const pollyMoment = deriveResultsPollyMoment(
     wordResults,
     isComplete,
     bossMastered,
     pollyMemoryBeforeRunRecorded,
+    pollyRoll,
   );
   const pollyLineRememberedRef = useRef(false);
   useEffect(() => {

@@ -52,7 +52,7 @@ import {
   DAILY_WIN_REWARD,
   DAILY_WIN_LINE,
   DAILY_LOSS_TITLE,
-  DAILY_LOSS_LINE,
+  DAILY_LOSS_LINE_IDS,
   DAILY_CLUE_TITLE,
   DAILY_CLUE_RULE,
   DAILY_ACTION_RULE,
@@ -64,6 +64,8 @@ import {
   DailyPollyReaction as PerchReaction,
   getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
+import { POLLY_LINES } from '../game/pollyCharacter';
+import { pickFreshLine } from '../game/pollyVisitPolicy';
 import DailyAnswerCard, {
   DailyAnswerCardClaimOrigin,
   DAILY_CARD_TIMING,
@@ -292,6 +294,15 @@ function ResultsOverlay({
   const lineRememberedRef = useRef(false);
   const { translateX: pollyX, translateY: pollyY } =
     usePollyAmbientMotion('results', dailyResult !== null);
+  // Both held stable for the life of the overlay, snapshotted the same way
+  // ResultsScreen.tsx's pollyMemoryBeforeRunRecorded is: a live pollyMemory
+  // selector here would re-derive recentLineIds (and this pick) right after
+  // the effect below calls rememberPollyLine, flipping the displayed line
+  // away from the one actually remembered. useGameStore.getState() (not a
+  // selector — matches usePollyVisits' own reasoning) reads once at mount.
+  const [pollyMemoryBeforeRecorded] = useState(() => useGameStore.getState().pollyMemory);
+  const [dailyRoll] = useState(() => Math.random());
+  const dailyLossLineId = pickFreshLine(DAILY_LOSS_LINE_IDS, pollyMemoryBeforeRecorded.recentLineIds, dailyRoll);
 
   useEffect(() => {
     Animated.timing(fadeIn, {
@@ -305,15 +316,15 @@ function ResultsOverlay({
     if (!dailyResult || lineRememberedRef.current) return;
     lineRememberedRef.current = true;
     rememberPollyLine(
-      dailyResult.status === 'won' ? 'dailyWinTomorrow' : 'dailyLossBat',
+      dailyResult.status === 'won' ? 'dailyWinTomorrow' : dailyLossLineId,
       'daily',
     );
-  }, [dailyResult, rememberPollyLine]);
+  }, [dailyResult, rememberPollyLine, dailyLossLineId]);
 
   if (!dailyResult) return null;
 
   const isWin = dailyResult.status === 'won';
-  const resultLine = isWin ? DAILY_WIN_LINE : DAILY_LOSS_LINE;
+  const resultLine = isWin ? DAILY_WIN_LINE : POLLY_LINES[dailyLossLineId];
 
   return (
     <Animated.View style={[res.fill, { opacity: fadeIn }]}>

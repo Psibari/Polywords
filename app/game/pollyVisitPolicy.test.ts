@@ -31,16 +31,29 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 // line then flies back out (does NOT hold perch; holding through the visible
 // tiles + gauntlet caused her to overlap/hide gauntlet card text — device
 // test 2026-07-31). She returns separately for the gauntlet throw below.
+// Line now draws from a 6-line pool (pickFreshLine) same as WRONG_SMUG;
+// lineRoll 0 with no recent history picks the pool's first entry.
 {
   const s = visitSpec(resolveVisit('bossEntry', idle), 'bossEntry');
   eq(s.kind, 'guaranteed', 'bossEntry.kind');
   eq(s.flyPose, 'flyAngry', 'bossEntry.flyPose');
   eq(s.perchPose, 'point', 'bossEntry.perchPose');
-  eq(s.line, 'This word stays mine.', 'bossEntry.line');
+  eq(s.lineId, 'bossCage', 'bossEntry.lineId');
+  eq(s.line, 'I was still in the cage when I learned that one.', 'bossEntry.line');
   eq(s.sfx, 'pollySqwawkShort', 'bossEntry.sfx');
   eq(s.holdPerch, false, 'bossEntry.holdPerch');
   eq(s.perchMs, 4200, 'bossEntry.perchMs');
   eq(s.perchScale, 1.45, 'bossEntry.perchScale');
+}
+
+// bossEntry avoids a recently-used line from the pool, same mechanism as
+// wrong/streakX10 below — proves the pool is live, not a single fixed line.
+{
+  const s = visitSpec(
+    resolveVisit('bossEntry', { ...idle, recentLineIds: ['bossCage'] }),
+    'bossEntry avoids recent',
+  );
+  if (s.lineId === 'bossCage') throw new Error('bossEntry avoids recent: repeated a recent line');
 }
 
 // allMasksFound: only ever fired on the boss final-gate step, once the
@@ -167,12 +180,21 @@ const streak = visitSpec(resolveVisit('streakX10', idle), 'streakX10');
 eq(streak.perchPose, 'rattled', 'streakX10 perches rattled');
 eq(streak.kind, 'heckle', 'streakX10 is a heckle');
 
-// hesitation6s → point taunt; 3s and 9s are ignored
+// hesitation6s → point taunt; 3s and 9s are ignored. Line draws from a
+// 2-line pool (pickFreshLine) same as bossEntry/WRONG_SMUG.
 {
   const s = visitSpec(resolveVisit('hesitation6s', idle), 'hesitation6s');
   eq(s.perchPose, 'point', 'hesitation6s.perchPose');
+  eq(s.lineId, 'huntHesitation', 'hesitation6s.lineId');
   eq(s.line, 'YES... NO... MAYBE SO...', 'hesitation6s.line');
   eq(s.sfx, null, 'hesitation6s.sfx');
+}
+{
+  const s = visitSpec(
+    resolveVisit('hesitation6s', { ...idle, recentLineIds: ['huntHesitation'] }),
+    'hesitation6s avoids recent',
+  );
+  eq(s.lineId, 'huntAreYouSure', 'hesitation6s avoids recent.lineId');
 }
 eq(resolveVisit('hesitation3s', idle).action, 'none', 'hesitation3s ignored');
 eq(resolveVisit('hesitation9s', idle).action, 'none', 'hesitation9s ignored');

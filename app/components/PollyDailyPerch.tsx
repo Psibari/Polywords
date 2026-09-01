@@ -9,13 +9,14 @@ import {
 } from 'react-native';
 import {
   DAILY_FIRST_MISS_LINE,
-  DAILY_LOSS_LINE,
+  DAILY_LOSS_LINE_IDS,
   DAILY_WIN_LINE,
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
 import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
-import { PollyLineId } from '../game/pollyCharacter';
+import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
+import { pickFreshLine } from '../game/pollyVisitPolicy';
 import { useGameStore } from '../store/useGameStore';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
@@ -36,22 +37,31 @@ const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropTyp
 };
 const POSE_FLY = POLLY_POSES.fly; // fly-in entrance
 
-function getLine(reaction: DailyPollyReaction | null): string {
+function getLine(reaction: DailyPollyReaction | null, lossLineId: PollyLineId): string {
   if (reaction === 'happy') return DAILY_FIRST_MISS_LINE;
-  if (reaction === 'laughing') return DAILY_LOSS_LINE;
+  if (reaction === 'laughing') return POLLY_LINES[lossLineId];
   if (reaction === 'shocked') return DAILY_WIN_LINE;
   return '';
 }
 
-function getLineId(reaction: DailyPollyReaction | null): PollyLineId | null {
+function getLineId(reaction: DailyPollyReaction | null, lossLineId: PollyLineId): PollyLineId | null {
   if (reaction === 'happy') return 'dailyButterKnife';
-  if (reaction === 'laughing') return 'dailyLossBat';
+  if (reaction === 'laughing') return lossLineId;
   if (reaction === 'shocked') return 'dailyWinTomorrow';
   return null;
 }
 
 export default function PollyDailyPerch({ reaction, show = true }: Props) {
   const rememberLine = useGameStore(s => s.rememberPollyLine);
+  // Both held stable for the life of this perch, same pattern as
+  // ResultsScreen.tsx's pollyMemoryBeforeRunRecorded: a live pollyMemory
+  // selector would re-derive recentLineIds (and this pick) right after
+  // rememberLine fires below, flipping the bubble away from the line
+  // actually remembered. useGameStore.getState() (not a selector — matches
+  // usePollyVisits' own reasoning) reads once at mount.
+  const [pollyMemoryBeforeRecorded] = useState(() => useGameStore.getState().pollyMemory);
+  const [dailyLossRoll] = useState(() => Math.random());
+  const dailyLossLineId = pickFreshLine(DAILY_LOSS_LINE_IDS, pollyMemoryBeforeRecorded.recentLineIds, dailyLossRoll);
   const [pose, setPose] = useState<ImageSourcePropType>(POSE_FLY);
   const enteredRef = useRef(false);
 
@@ -126,7 +136,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
     }
 
     setPose(POSE[reaction]);
-    const lineId = getLineId(reaction);
+    const lineId = getLineId(reaction, dailyLossLineId);
     if (lineId && show) rememberLine(lineId, 'daily');
     if (reaction === 'laughing') playSfx('pollySqwawkLaugh');
     else playSfx('pollySqwawkShort');
@@ -193,7 +203,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       {/* Speech bubble — to Polly's right, tail points left at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
         <PollySpeechBubble
-          line={getLine(reaction)}
+          line={getLine(reaction, dailyLossLineId)}
           maxWidth={185}
           fontSize={15}
           lineHeight={21}

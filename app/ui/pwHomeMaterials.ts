@@ -12,7 +12,7 @@ export const HOME_GREETING_LINES = [
   POLLY_LINES.homeMissingMeanings,
   POLLY_LINES.homeLoseFeathers,
   POLLY_LINES.homeWordsAsked,
-  POLLY_LINES.homeTakeTime,
+  POLLY_LINES.homeCracker,
 ] as const;
 
 // ── Type scale (legibility clause: floor 14, tune on device) ──

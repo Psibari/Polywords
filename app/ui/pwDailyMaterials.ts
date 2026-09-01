@@ -1,5 +1,5 @@
 import { heroBookMaterial } from './pwMaterials';
-import { POLLY_LINES } from '../game/pollyCharacter';
+import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
 import { PW } from './pwTheme';
 
 export const DAILY_TITLE = "POLLY'S DAILY CHALLENGE";
@@ -10,7 +10,7 @@ export const DAILY_ACTION_RULE = 'SWIPE UP TO CLAIM';
 
 export const DAILY_FIRST_MISS_LINE = POLLY_LINES.dailyButterKnife;
 export const DAILY_LOSS_TITLE = 'YOU LOSE';
-export const DAILY_LOSS_LINE = POLLY_LINES.dailyLossBat;
+export const DAILY_LOSS_LINE_IDS: PollyLineId[] = ['dailyLossBat', 'dailyNotToday'];
 export const DAILY_WIN_TITLE = 'YOU BEAT POLLY’S CHALLENGE';
 export const DAILY_WIN_REWARD = 'GOLD FEATHER EARNED';
 export const DAILY_WIN_LINE = POLLY_LINES.dailyWinTomorrow;

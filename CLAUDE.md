@@ -125,10 +125,11 @@ navigation shell; active Hunt and Daily play are nav-free.
 
 - Polly is NOT a word thief and does not own or steal meanings. She is the antagonist who
   authored the traps — the designer of the deception, not a burglar. Pete ruled this
-  2026-08-29. Five shipped lines still contradict it and are pending rewrite: `huntBossMine`,
-  `homeTakeTime`, `resultsWantBack`, `resultsEmptyVault`, `resultsKeepWord`. "My traps
-  remember you" is the model for the correct voice. Note that the polywords-feel-engine
-  skill still describes her as a "smug theatrical word-burglar" and is stale.
+  2026-08-29. The five lines that contradicted it were retired 2026-09-01 (boss-entry,
+  home, and Results line-pool expansion pass), replaced by pool-based lines that don't carry
+  possession language. "My traps remember you" is the model for the correct voice. Note that
+  the polywords-feel-engine skill still describes her as a "smug theatrical word-burglar" and
+  is stale.
 - Hunt lines now rotate. `VisitSpec` still carries one resolved `lineId` and
   `line`, but `resolveVisit` picks them at fire time from a candidate pool
   via the exported pure helper `pickFreshLine(candidates, recent, roll)` in

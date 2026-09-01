@@ -1,4 +1,6 @@
 import { POLLY_LINES, PollyLineId, PollyMoment, pollyMoment } from './pollyCharacter';
+// No cycle: pollyVisitPolicy imports only from pollyCharacter.
+import { pickFreshLine } from './pollyVisitPolicy';
 
 export const POLLY_MEMORY_VERSION = 1 as const;
 const RECENT_LINE_LIMIT = 5;
@@ -44,7 +46,8 @@ const HOME_ROTATION: PollyLineId[] = [
   'homeMissingMeanings',
   'homeLoseFeathers',
   'homeWordsAsked',
-  'homeTakeTime',
+  'homeYourHighness',
+  'homeCrown',
 ];
 
 function isPollyLineId(value: unknown): value is PollyLineId {
@@ -160,17 +163,34 @@ export function resolveHomePollyMoment(memory: PollyMemory): PollyMoment {
     return pollyMoment('homeFirstMeeting');
   }
   if (memory.playerWinStreak > 0) {
-    return pollyMoment(firstFresh(memory, ['homeWordsAsked', 'homeBackAgain']));
+    return pollyMoment(firstFresh(memory, [
+      'homeWordsAsked', 'homeBackAgain', 'homeCracker',
+      'homeGoAgain', 'homeReady', 'homeDoubleOrNothing',
+    ]));
   }
   if (memory.pollyWinStreak >= 2) {
-    return pollyMoment(firstFresh(memory, ['homeLoseFeathers', 'homeMissMe']));
+    return pollyMoment(firstFresh(memory, ['homeLoseFeathers', 'homeMissMe', 'homeChamp']));
   }
   if (memory.lastHauntWord) {
-    return pollyMoment(firstFresh(memory, ['homeMissingMeanings', 'homeTakeTime']));
+    return pollyMoment(firstFresh(memory, ['homeMissingMeanings']));
   }
   const rotated = HOME_ROTATION[memory.homeGreetingCursor % HOME_ROTATION.length];
   return pollyMoment(firstFresh(memory, [rotated, ...HOME_ROTATION]));
 }
+
+const RESULTS_FLAWLESS_LINES: PollyLineId[] = [
+  'resultsNobodySaw', 'resultsNeverHappened', 'resultsAMoment', 'resultsRude',
+  'resultsDareYou', 'resultsThatWasGood', 'resultsReadEveryOne',
+  'resultsNothingToSay', 'resultsIWroteThose', 'resultsTakingNotes',
+];
+const RESULTS_PLAYER_STREAK_LINES: PollyLineId[] = [
+  'resultsGettingOld', 'resultsEnjoyIt', 'resultsAdjustments',
+  'resultsDontGetComfortable', 'resultsNewOnesTonight',
+  'resultsLuckyLately', 'resultsIveNoticed',
+];
+const RESULTS_MASTERED_LINES: PollyLineId[] = [
+  'resultsManyMore', 'resultsSecondBest', 'resultsGotOne',
+];
 
 export function resolveResultsPollyMoment(
   memory: PollyMemory,
@@ -180,15 +200,22 @@ export function resolveResultsPollyMoment(
     bossMastered: boolean;
     hasMissed: boolean;
   },
+  roll: number,
 ): PollyMoment | null {
   if (!input.isComplete) {
     return memory.pollyWinStreak > 0
       ? pollyMoment('resultsTrapsRemember')
       : pollyMoment('resultsMeaningsHaunt');
   }
-  if (input.allPerfect) return pollyMoment('resultsEmptyVault');
-  if (memory.playerWinStreak > 0) return pollyMoment('resultsWantBack');
-  if (input.bossMastered) return pollyMoment('resultsKeepWord');
+  if (input.allPerfect) {
+    return pollyMoment(pickFreshLine(RESULTS_FLAWLESS_LINES, memory.recentLineIds, roll));
+  }
+  if (memory.playerWinStreak > 0) {
+    return pollyMoment(pickFreshLine(RESULTS_PLAYER_STREAK_LINES, memory.recentLineIds, roll));
+  }
+  if (input.bossMastered) {
+    return pollyMoment(pickFreshLine(RESULTS_MASTERED_LINES, memory.recentLineIds, roll));
+  }
   if (input.hasMissed) return pollyMoment('resultsMeaningsPast');
   return null;
 }

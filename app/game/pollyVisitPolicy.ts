@@ -91,9 +91,16 @@ const HAUNT_INTRO: VisitSpec = {
   holdPerch: false, perchMs: 2500,
 };
 
+const BOSS_ENTRY_LINES: PollyLineId[] = [
+  'bossCage', 'bossForYou', 'bossWroteMyself',
+  'bossWaiting', 'bossFavorite', 'bossPutWork',
+];
+
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
-  lineId: 'huntBossMine', line: POLLY_LINES.huntBossMine, sfx: 'pollySqwawkShort',
+  // Placeholder — overwritten at the call site with a pickFreshLine draw
+  // over BOSS_ENTRY_LINES, same pattern as WRONG_SMUG.
+  lineId: 'bossCage', line: POLLY_LINES.bossCage, sfx: 'pollySqwawkShort',
   // Pops in for the entrance line, then flies back out — she does not stay
   // perched through the visible tiles or the hidden gauntlet. Her enlarged
   // (perchScale 1.3) bottom-left perch overlapped and hid gauntlet card
@@ -197,6 +204,7 @@ const WRONG_HECKLE_LINES: PollyLineId[] = [
   'huntMyHouse',
   'huntWalkedRightIn',
   'huntGotMeCrowned',
+  'huntZing',
 ];
 
 // Ten correct in a row. She is losing and covering — the pose is a flinch
@@ -216,10 +224,19 @@ const STREAK_LINES: PollyLineId[] = [
   'huntStreakLetYouHave',
   'huntStreakWarmUp',
   'huntStreakPacing',
+  'streakLucky',
+  'streakYikes',
+  'streakNotOver',
+  'streakStillGetYa',
+  'streakBirdBrain',
+  'streakRuffling',
 ];
+
+const HESITATION_LINES: PollyLineId[] = ['huntHesitation', 'huntAreYouSure'];
 
 const HESITATION_POINT: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'point',
+  // Placeholder — overwritten at the call site, same pattern as WRONG_SMUG.
   lineId: 'huntHesitation', line: POLLY_LINES.huntHesitation, sfx: null,
   holdPerch: false, perchMs: 2000,
 };
@@ -236,7 +253,10 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   // ── Guaranteed big beats: ignore all budgets ──────────────────
   if (event === 'huntIntro') return { action: 'visit', spec: HUNT_INTRO };
   if (event === 'hauntIntro') return { action: 'visit', spec: HAUNT_INTRO };
-  if (event === 'bossEntry') return { action: 'visit', spec: BOSS_ENTRY };
+  if (event === 'bossEntry') {
+    const lineId = pickFreshLine(BOSS_ENTRY_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...BOSS_ENTRY, lineId, line: POLLY_LINES[lineId] } };
+  }
   // Only fired by useBoardMechanics on the final-gate step with hidden
   // content — i.e. exclusively the boss-gauntlet-begin beat, never an
   // ordinary word's completion (those fire 'cleanSweep' instead).
@@ -263,7 +283,10 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
     const lineId = pickFreshLine(STREAK_LINES, state.recentLineIds, state.lineRoll);
     return { action: 'visit', spec: { ...STREAK_RATTLED, lineId, line: POLLY_LINES[lineId] } };
   }
-  if (event === 'hesitation6s') return { action: 'visit', spec: HESITATION_POINT };
+  if (event === 'hesitation6s') {
+    const lineId = pickFreshLine(HESITATION_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...HESITATION_POINT, lineId, line: POLLY_LINES[lineId] } };
+  }
   if (event === 'ghostEntry') {
     return {
       action: 'visit',
