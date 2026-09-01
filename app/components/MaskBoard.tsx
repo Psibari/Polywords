@@ -304,7 +304,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
     return (
       <Pressable style={styles.plaqueOverlay} onPress={handlePress}>
         <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
-          <View style={styles.plaqueFrame}>
+          <View style={[styles.plaqueFrame, styles.masteredPlaqueFrame]}>
             <Image source={masteredPlaqueArt} style={[styles.plaqueImage, { aspectRatio: MASTERED_PLAQUE_ASPECT }]} resizeMode="contain" />
             <View pointerEvents="none" style={[styles.plaqueContent, styles.masteredPlaqueContent]}>
               <Text style={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}>{headline}</Text>
@@ -426,7 +426,7 @@ function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOver
     return (
       <Pressable style={styles.plaqueOverlay} onPress={handlePress}>
         <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
-          <View style={styles.plaqueFrame}>
+          <View style={[styles.plaqueFrame, styles.hauntedPlaqueFrame]}>
             <Image source={hauntedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: HAUNTED_PLAQUE_ASPECT }]} resizeMode="contain" />
             <View pointerEvents="none" style={[styles.plaqueContent, styles.hauntedPlaqueContent]}>
               <Text style={[styles.plaqueHeadline, styles.hauntedPlaqueHeadline]}>HAUNTED</Text>
@@ -2779,13 +2779,20 @@ const styles = StyleSheet.create({
   plaqueColumn: {
     alignItems: 'center',
   },
-  // MASTERED is the size reference; HAUNTED shares this same width and
-  // gets its own (flatter) height purely from its own aspectRatio below —
-  // never stretched, never cropped independently of the two supplied
-  // plaque images.
+  // MASTERED is the size reference; HAUNTED shares the same sizing logic
+  // (own width, own aspectRatio-driven height) so neither is ever
+  // stretched or cropped independently of the two supplied plaque images.
+  // Both widths trimmed ~9-10% from the original shared 360 (device
+  // feedback: plaque was reading larger than the transformed book behind
+  // it warranted).
   plaqueFrame: {
     width: '100%',
-    maxWidth: 360,
+  },
+  masteredPlaqueFrame: {
+    maxWidth: 324, // -10% from 360
+  },
+  hauntedPlaqueFrame: {
+    maxWidth: 328, // -9% from 360
   },
   plaqueImage: {
     width: '100%',
@@ -2795,22 +2802,28 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
+    // Backstop only: normal content fits the insets below (checked against
+    // each plaque's own measured field), this just guarantees a rare
+    // long-phrase/long-headword edge case clips rather than bleeding onto
+    // the illustrated border.
+    overflow: 'hidden',
   },
   // Insets measured against each plaque's own illustrated inner field
-  // (color-sampled against the source art, not eyeballed) plus a further
-  // safety margin so text never nears the border — generous breathing
-  // room over maximum field usage.
+  // (color-sampled against the source art, not eyeballed), tightened from
+  // the original pass to use substantially more of the field per device
+  // feedback — a small safety margin remains so text still never nears
+  // the border.
   masteredPlaqueContent: {
-    left: '18%', right: '18%', top: '19%', bottom: '28%',
+    left: '14%', right: '14%', top: '13%', bottom: '25%',
   },
   hauntedPlaqueContent: {
-    left: '17%', right: '17%', top: '19%', bottom: '17%',
+    left: '13%', right: '13%', top: '13%', bottom: '15%',
   },
   plaqueHeadline: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
     fontWeight: '900',
-    fontSize: 24,
+    fontSize: 33, // was 24 (+37%)
     letterSpacing: 0,
     textAlign: 'center',
   },
@@ -2818,13 +2831,18 @@ const styles = StyleSheet.create({
     color: PW.color.purple, // deep POLYWORDS purple, per spec
   },
   hauntedPlaqueHeadline: {
-    color: PW.color.softWhite, // cold off-white/pale silver, per spec
+    // Unified to the same single dark ink as the rest of Haunted's text
+    // (was PW.color.softWhite) — device feedback: the prior white
+    // headline + dark headword + rose label + dark copy mix read as
+    // disconnected from the Haunted book's own gray-stone/dark-indigo
+    // palette. One ink color ties the whole plaque to the book.
+    color: PW.color.bg,
   },
   plaqueWord: {
-    marginTop: 4,
+    marginTop: 3,
     fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
-    fontSize: 28,
+    fontSize: 41, // was 28 (+46%) — the strongest element on either plaque, per spec's priority hierarchy
     letterSpacing: 0,
     textAlign: 'center',
     maxWidth: '100%',
@@ -2836,13 +2854,13 @@ const styles = StyleSheet.create({
     color: PW.color.bg, // dark headword, per spec, kept off gold entirely
   },
   plaqueCopyBlock: {
-    marginTop: 6,
+    marginTop: 4,
     gap: 2,
   },
   plaqueCopy: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 11,
+    fontSize: 14, // was 11 (+27%)
     letterSpacing: 0,
     textAlign: 'center',
   },
@@ -2850,20 +2868,14 @@ const styles = StyleSheet.create({
     color: PW.color.bg, // dark purple/very-dark readable tone over the gold field
   },
   hauntedPlaqueCopy: {
-    // DESIGN.md's palette has no true neutral gray — every dark value in
-    // it is purple-tinted (background/background-deep/surface). Reusing
-    // surfaceDeep here instead of a literal charcoal keeps the "restrained
-    // neutral over the stone field" spec'd for this text without breaking
-    // that pattern; it reads distinct from the navy headword (PW.color.bg)
-    // by being a shade deeper/richer, not by leaving the palette.
-    color: PW.color.surfaceDeep,
+    color: PW.color.bg, // same single Haunted ink as headline/headword — see hauntedPlaqueHeadline
   },
   plaqueBonus: {
-    marginTop: 8,
+    marginTop: 6,
     fontWeight: '800',
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 15,
+    fontSize: 20, // was 15 (+33%)
     letterSpacing: 0.5,
     textAlign: 'center',
   },
@@ -2871,25 +2883,25 @@ const styles = StyleSheet.create({
     color: PW.color.bg, // same dark-on-gold family as the copy above, bold/sized for reward emphasis (gold-on-gold would vanish)
   },
   plaqueDangerBlock: {
-    marginTop: 8,
+    marginTop: 5,
     alignItems: 'center',
   },
   plaqueDangerLabel: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
     fontWeight: '800',
-    fontSize: 11,
+    fontSize: 15, // was 11 (+36%) — sits between plaqueCopy (14, priority 4) and plaqueDangerPhrase (17, priority 2), so TRAP CLAIMED reads as priority 3 as spec'd
     letterSpacing: 1,
-    color: PW.color.rose, // restrained danger accent, label only per spec
+    color: PW.color.rose, // restrained danger accent — the ONE place rose appears; everything else on the Haunted plaque is the single dark ink
     textAlign: 'center',
   },
   plaqueDangerPhrase: {
     marginTop: 2,
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 12,
+    fontSize: 17, // was 12 (+42%) — recognition content, not footer copy, per spec
     letterSpacing: 0,
-    color: PW.color.surfaceDeep, // same as hauntedPlaqueCopy — the phrase itself isn't the danger accent, the label is
+    color: PW.color.bg, // same single Haunted ink as the rest of the plaque
     textAlign: 'center',
   },
   plaqueContinue: {
