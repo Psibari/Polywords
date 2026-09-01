@@ -204,9 +204,40 @@ type OutcomeOverlayProps = {
   bonusLabel?: string;
   detail?: string;
   onContinue: () => void;
+  // Boss only: swaps the generic rounded panel for the illustrated result
+  // plaque that continues the just-completed book transformation. The
+  // non-boss Haunt-rematch overlay (banish/still-haunted) keeps the
+  // original panel — its book never actually transforms, so the plaque
+  // art would be visually false there.
+  isBoss: boolean;
 };
 
-function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onContinue }: OutcomeOverlayProps) {
+// Result plaques (boss only) — approved production art, used as supplied.
+// Both are pre-cropped to their own visible-alpha bounds (source PSDs carry
+// very different amounts of transparent padding — sizing off raw canvas
+// dimensions instead of visible content made Mastered read far smaller
+// than Haunted at the same declared width). Aspect ratios below are each
+// crop's own measured width/height; contain-fit at a shared frame width
+// preserves them exactly, never stretching either plaque.
+const masteredPlaqueArt = require('../../assets/images/results/mastered-result-plaque.png');
+const hauntedPlaqueArt = require('../../assets/images/results/haunted-result-plaque.png');
+const MASTERED_PLAQUE_ASPECT = 681 / 567;
+const HAUNTED_PLAQUE_ASPECT = 1263 / 954;
+
+// buildHauntedDetail (useBoardMechanics.ts) formats one combined string —
+// "Trap claimed: X" or "Missed: X" for a boss failure, "Still haunted."
+// for a Haunt-rematch fail (never reaches this boss-only split). Pure
+// presentation-layer parse of that existing string; no brain-layer change.
+function splitHauntedDetail(detail?: string): { label: string; phrase: string } | null {
+  if (!detail) return null;
+  const trapMatch = detail.match(/^Trap claimed: (.+)$/);
+  if (trapMatch) return { label: 'TRAP CLAIMED', phrase: trapMatch[1] };
+  const missedMatch = detail.match(/^Missed: (.+)$/);
+  if (missedMatch) return { label: 'MISSED', phrase: missedMatch[1] };
+  return { label: 'TRAP CLAIMED', phrase: detail };
+}
+
+function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onContinue, isBoss }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
   const pulse = useRef(new Animated.Value(0)).current;
@@ -267,6 +298,46 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
   const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
   const pulseOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.62] });
 
+  if (isBoss) {
+    // Plaque presentation. pulse keeps running (untouched, above) but has
+    // no ring to drive here — the illustrated frame carries that job now.
+    return (
+      <Pressable style={styles.plaqueOverlay} onPress={handlePress}>
+        <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
+          <View style={styles.plaqueFrame}>
+            <Image source={masteredPlaqueArt} style={[styles.plaqueImage, { aspectRatio: MASTERED_PLAQUE_ASPECT }]} resizeMode="contain" />
+            <View pointerEvents="none" style={[styles.plaqueContent, styles.masteredPlaqueContent]}>
+              <Text style={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}>{headline}</Text>
+              <Text
+                style={[styles.plaqueWord, styles.masteredPlaqueWord]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
+                {word}
+              </Text>
+              <View style={styles.plaqueCopyBlock}>
+                <Text style={[styles.plaqueCopy, styles.masteredPlaqueCopy]}>Not one of Polly's traps.</Text>
+                <Text style={[styles.plaqueCopy, styles.masteredPlaqueCopy]}>You saw through it.</Text>
+              </View>
+              {bonusLabel && (
+                <Text
+                  style={[styles.plaqueBonus, styles.masteredPlaqueBonus]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                >
+                  {bonusLabel}
+                </Text>
+              )}
+            </View>
+          </View>
+          <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        </Animated.View>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable style={styles.outcomeOverlay} onPress={handlePress}>
       <Animated.View style={[styles.outcomePanel, styles.masteredOutcomePanel, { opacity, transform: [{ scale }] }]}>
@@ -289,7 +360,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
   );
 }
 
-function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps) {
+function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.94)).current;
   const drift = useRef(new Animated.Value(0)).current;
@@ -347,6 +418,50 @@ function HauntedOutcomeOverlay({ word, detail, onContinue }: OutcomeOverlayProps
 
   const hazeY = drift.interpolate({ inputRange: [0, 1], outputRange: [0, -10] });
   const hazeOpacity = drift.interpolate({ inputRange: [0, 1], outputRange: [0.24, 0.48] });
+
+  if (isBoss) {
+    // Plaque presentation. drift keeps running (untouched, above) but has
+    // no haze to drive here — the illustrated frame carries that job now.
+    const parts = splitHauntedDetail(detail);
+    return (
+      <Pressable style={styles.plaqueOverlay} onPress={handlePress}>
+        <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
+          <View style={styles.plaqueFrame}>
+            <Image source={hauntedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: HAUNTED_PLAQUE_ASPECT }]} resizeMode="contain" />
+            <View pointerEvents="none" style={[styles.plaqueContent, styles.hauntedPlaqueContent]}>
+              <Text style={[styles.plaqueHeadline, styles.hauntedPlaqueHeadline]}>HAUNTED</Text>
+              <Text
+                style={[styles.plaqueWord, styles.hauntedPlaqueWord]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
+                {word}
+              </Text>
+              <View style={styles.plaqueCopyBlock}>
+                <Text style={[styles.plaqueCopy, styles.hauntedPlaqueCopy]}>Polly's trap held.</Text>
+                <Text style={[styles.plaqueCopy, styles.hauntedPlaqueCopy]}>It'll be waiting.</Text>
+              </View>
+              {parts && (
+                <View style={styles.plaqueDangerBlock}>
+                  <Text style={styles.plaqueDangerLabel}>{parts.label}</Text>
+                  <Text
+                    style={styles.plaqueDangerPhrase}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                  >
+                    {parts.phrase}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+          <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        </Animated.View>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable style={styles.outcomeOverlay} onPress={handlePress}>
@@ -2212,6 +2327,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           headline={isHaunt ? 'BANISHED' : 'MASTERED'}
           bonusLabel={mechanics.outcomeBonusLabel}
           onContinue={mechanics.continueOutcome}
+          isBoss={isBoss}
         />
       )}
 
@@ -2220,6 +2336,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           word={step.word}
           detail={mechanics.outcomeDetail}
           onContinue={mechanics.continueOutcome}
+          isBoss={isBoss}
         />
       )}
     </Animated.View>
@@ -2641,6 +2758,137 @@ const styles = StyleSheet.create({
   outcomeContinue: {
     marginTop: 20,
     color: 'rgba(255,255,255,0.72)',
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: FONT_SIZES.hudLabel,
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  // ── Boss outcome plaques (isBoss only — see OutcomeOverlayProps) ──────
+  // Lighter than outcomeOverlay's 0.78: the whole point is the just-
+  // transformed book stays recognizable behind the plaque, not fully
+  // curtained off.
+  plaqueOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 300,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(15,13,42,0.42)',
+  },
+  plaqueColumn: {
+    alignItems: 'center',
+  },
+  // MASTERED is the size reference; HAUNTED shares this same width and
+  // gets its own (flatter) height purely from its own aspectRatio below —
+  // never stretched, never cropped independently of the two supplied
+  // plaque images.
+  plaqueFrame: {
+    width: '100%',
+    maxWidth: 360,
+  },
+  plaqueImage: {
+    width: '100%',
+    height: undefined,
+  },
+  plaqueContent: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Insets measured against each plaque's own illustrated inner field
+  // (color-sampled against the source art, not eyeballed) plus a further
+  // safety margin so text never nears the border — generous breathing
+  // room over maximum field usage.
+  masteredPlaqueContent: {
+    left: '18%', right: '18%', top: '19%', bottom: '28%',
+  },
+  hauntedPlaqueContent: {
+    left: '17%', right: '17%', top: '19%', bottom: '17%',
+  },
+  plaqueHeadline: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontWeight: '900',
+    fontSize: 24,
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  masteredPlaqueHeadline: {
+    color: PW.color.purple, // deep POLYWORDS purple, per spec
+  },
+  hauntedPlaqueHeadline: {
+    color: PW.color.softWhite, // cold off-white/pale silver, per spec
+  },
+  plaqueWord: {
+    marginTop: 4,
+    fontFamily: FONTS.wordDisplay,
+    includeFontPadding: false,
+    fontSize: 28,
+    letterSpacing: 0,
+    textAlign: 'center',
+    maxWidth: '100%',
+  },
+  masteredPlaqueWord: {
+    color: PW.color.purple,
+  },
+  hauntedPlaqueWord: {
+    color: PW.color.bg, // dark headword, per spec, kept off gold entirely
+  },
+  plaqueCopyBlock: {
+    marginTop: 6,
+    gap: 2,
+  },
+  plaqueCopy: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 11,
+    letterSpacing: 0,
+    textAlign: 'center',
+  },
+  masteredPlaqueCopy: {
+    color: PW.color.bg, // dark purple/very-dark readable tone over the gold field
+  },
+  hauntedPlaqueCopy: {
+    color: '#2E2E2B', // dark charcoal — restrained neutral over the stone field, no existing token fits this exactly
+  },
+  plaqueBonus: {
+    marginTop: 8,
+    fontWeight: '800',
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 15,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  masteredPlaqueBonus: {
+    color: PW.color.bg, // same dark-on-gold family as the copy above, bold/sized for reward emphasis (gold-on-gold would vanish)
+  },
+  plaqueDangerBlock: {
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  plaqueDangerLabel: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontWeight: '800',
+    fontSize: 11,
+    letterSpacing: 1,
+    color: PW.color.rose, // restrained danger accent, label only per spec
+    textAlign: 'center',
+  },
+  plaqueDangerPhrase: {
+    marginTop: 2,
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 12,
+    letterSpacing: 0,
+    color: '#2E2E2B', // same charcoal as hauntedPlaqueCopy — the phrase itself isn't the danger accent, the label is
+    textAlign: 'center',
+  },
+  plaqueContinue: {
+    marginTop: 16,
+    color: 'rgba(255,255,255,0.85)',
     fontFamily: FONTS.label,
     includeFontPadding: false,
     fontSize: FONT_SIZES.hudLabel,
