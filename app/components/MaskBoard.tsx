@@ -2850,7 +2850,13 @@ const styles = StyleSheet.create({
     color: PW.color.bg, // dark purple/very-dark readable tone over the gold field
   },
   hauntedPlaqueCopy: {
-    color: '#2E2E2B', // dark charcoal — restrained neutral over the stone field, no existing token fits this exactly
+    // DESIGN.md's palette has no true neutral gray — every dark value in
+    // it is purple-tinted (background/background-deep/surface). Reusing
+    // surfaceDeep here instead of a literal charcoal keeps the "restrained
+    // neutral over the stone field" spec'd for this text without breaking
+    // that pattern; it reads distinct from the navy headword (PW.color.bg)
+    // by being a shade deeper/richer, not by leaving the palette.
+    color: PW.color.surfaceDeep,
   },
   plaqueBonus: {
     marginTop: 8,
@@ -2883,7 +2889,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     fontSize: 12,
     letterSpacing: 0,
-    color: '#2E2E2B', // same charcoal as hauntedPlaqueCopy — the phrase itself isn't the danger accent, the label is
+    color: PW.color.surfaceDeep, // same as hauntedPlaqueCopy — the phrase itself isn't the danger accent, the label is
     textAlign: 'center',
   },
   plaqueContinue: {
