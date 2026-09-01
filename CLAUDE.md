@@ -267,6 +267,38 @@ navigation shell; active Hunt and Daily play are nav-free.
   still renders if a font failure is what broke the app. Device-confirmed both ways.
 - Perched, both of Polly's wings fold back toward the tail and point the same direction —
   never mirror the far wing.
+- The boss MASTERED/HAUNTED outcome book rig is live and **locked** (Pete, 2026-08-31):
+  `HeroBook.tsx` takes a `variant` prop (`'neutral' | 'mastered' | 'haunted'`) selecting which
+  3-piece rig (book-base/cover-outer/cover-inner) it renders from
+  `assets/images/hero-book-rig-v1/` — all nine images share the same 1154x830 canvas and hinge
+  (PNG-header-verified), so the swap touches no geometry; HeroBook's registration/hinge lock is
+  otherwise unchanged. `MaskBoard.tsx`'s `triggerBossOutcomeSlam` drives the transform: the
+  final winning gauntlet tile's own pulse (`triggerGauntletPulse(holdOpen=true)`, gated
+  `isBoss && isFinalGauntletTile`) opens the cover and holds it rather than closing, so the
+  Mastered slam's own first leg is a hold (cover already open), not a second open — one
+  continuous open → transform → close, never the close-reopen-close sequence this replaced.
+  Haunted always starts from closed (no holding pulse exists for a wrong swipe — it never
+  reaches `triggerGauntletPulse`). The boss headword renders as exactly one `Animated.Text`
+  node (`bossHeadwordColor` in `MaskBoard.tsx`, derived each render from `bookVariant`: neutral
+  `PW.color.gold`, mastered `PW.color.purple`, haunted `PW.color.bg`) — the wrong-swipe red
+  flash mixes into that same node's color via the existing `wordRedOpacity` (0→0.4→0, RAF-driven,
+  untouched) rather than a second stacked layer, which was the source of a doubled/misaligned-
+  glyph bug on some boss words. `masteredHeadwordOpacity`/`hauntedHeadwordOpacity` and the four
+  separate overlay `Animated.Text` layers they drove are retired.
+- Boss outcome pacing is locked with the rig above (Pete, 2026-08-31). Both final-tile paths
+  share the same shape: a recognition beat (correct: `resolveGauntletTile`'s existing 200ms
+  before `triggerMasteredBrain`; wrong: `BOSS_HAUNTED_RECOGNITION_MS` 220ms in
+  `useBoardMechanics.ts`, boss-only — the non-boss Haunt-rematch STILL HAUNTED beat is
+  untouched) lets the card's own result read before the book moves. The slam itself: Mastered
+  impact/recoil/settle 170/100/130ms (400ms total, punchy, 0.08 recoil overshoot); Haunted
+  drag/settle 280/300ms (580ms total, heavier, no bounce) — both in `MaskBoard.tsx`. After the
+  book settles there is a deliberate ~470ms clean hold before Polly's line fires
+  (`gateMasteredBoss` at 870ms / `BOSS_HAUNTED_POLLY_MS` 1270ms, each measured from the top of
+  its own trigger function) and ~1400ms settle-to-card-visible before the result scrim covers
+  it (`showWordOutcome` at 1450ms / `BOSS_HAUNTED_OUTCOME_REVEAL_MS` 1850ms, plus the existing,
+  untouched 350ms `onOutcomeReveal` scrim-mount delay). Device-confirmed 2026-08-31.
+  NOT locked: the outcome card's own visual design and the SFX/haptic pass for this
+  sequence — both still open, next up.
 - One-time Hunt, Boss, Haunt, and Vault explainers use separate AsyncStorage gates. Hunt,
   Boss, and Haunt block play; Vault does not.
 - Theme/material tokens live under `app/ui/`; current render code outranks abandoned plans.

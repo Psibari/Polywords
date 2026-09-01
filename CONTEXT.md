@@ -1,9 +1,20 @@
 # POLYWORDS Current Context
 
 Updated August 31, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `2e82c32`.
+`origin/play-screen-overhaul`. Current code baseline: `9582f40`.
 
 ## Verified Current State
+
+- The boss MASTERED/HAUNTED outcome book sequence is done and **locked** (Pete, 2026-08-31):
+  the gold/gray 3-piece rigs are wired into `HeroBook`'s new `variant` prop, the old
+  close→reopen→close bug is fixed (one continuous open → transform → close slam, converged
+  from both the accepted-REAL and rejected-trap win routes), the boss headword is a single
+  color-driven text node (no more stacked overlays / doubled-glyph bug), and the full pacing —
+  recognition beat, slam weight, post-settle hold, Polly landing, result-card reveal — is
+  device-confirmed and tuned. See CLAUDE.md's Presentation and Character section for the exact
+  timing values and file/function references. Shipped across `d943c1a`, `062d930`, `8cb5655`,
+  `39f3477`, `b3e494a`, `ceb7708`, `9582f40`. Still open, not part of this lock: the outcome
+  card's own visual redesign, and the SFX/haptic pass for this sequence — see Next Work.
 
 - Daily's correct-answer transition now reads as one physical mechanism: card lands on the
   parchment, a matching ornate rod rolls reward paper over it, the reward holds, and the
@@ -176,26 +187,33 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
 
 ## Next Work
 
-1. Continue real-device iOS/Android journey checks before release, including cold-start audio,
+1. Redesign the MASTERED/HAUNTED outcome card's own visual style. The mechanics/rig/timing
+  underneath are locked (see Verified Current State) — this is presentation-only, scoped to
+  `MasteredOutcomeOverlay`/`HauntedOutcomeOverlay` in `MaskBoard.tsx`.
+2. Design and wire final SFX + haptics for the boss MASTERED/HAUNTED outcome sequence
+  (recognition beat, slam impact, Polly landing, result reveal). Existing SFX/haptic call sites
+  (`playSfx('bookClose')`, `Haptics.cueAsync('mastery'/'bossHaunted')`,
+  `resolveOutcomeRevealSfx`) are placeholders reused from before this pass, not a final pick.
+3. Continue real-device iOS/Android journey checks before release, including cold-start audio,
   rapid navigation, app background/foreground recovery, and every distinct Polly laugh beat.
-2. Author and editorially approve more Boss-capable Hunt words, targeting roughly one in five
+4. Author and editorially approve more Boss-capable Hunt words, targeting roughly one in five
   new words with three fair, stable-ID `hiddenPairs`. Do not generate placeholder hidden truth.
-3. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should
+5. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should
   remember that victory. Keep the hidden pair ledger on Polly's side; do not turn it into a
   player shelf collection.
-4. Replace the placeholder Boss-gauntlet card art when the stone-block/crown direction is
+6. Replace the placeholder Boss-gauntlet card art when the stone-block/crown direction is
   specified. The desired motion is push-forward, not `rotateY`.
-5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
+7. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
   persistence, gestures, animation, and performance.
-6. Rewrite the five theft-voice lines listed in CLAUDE.md.
-7. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
+8. Rewrite the five theft-voice lines listed in CLAUDE.md.
+9. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
   placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
   and the mastery beat.
-8. Re-render the four clipped animations at 724x724.
-9. The streak pool holds six lines against a five-deep line memory, so at a ten-streak there is
+10. Re-render the four clipped animations at 724x724.
+11. The streak pool holds six lines against a five-deep line memory, so at a ten-streak there is
   often only one fresh line left and a repeat inside one run is possible. More lines would give
   it room. The wrong-answer pool of twelve does not have this problem.
-10. `oneHeartLeft` still fires every run and is discarded. It is the same shape of change as the
+12. `oneHeartLeft` still fires every run and is discarded. It is the same shape of change as the
   streak reaction: one branch in a pure file plus authored lines, no MaskBoard involvement.
 
 ## Protection
