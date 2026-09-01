@@ -38,7 +38,13 @@ export type GauntletTile = {
 // only; the Haunt-rematch STILL HAUNTED beat is untouched below.
 const BOSS_HAUNTED_RECOGNITION_MS = 220; // let the red flash read before the book reacts
 const BOSS_HAUNTED_POLLY_MS = 800;       // lands near the (now-later) slam settle, mirroring gateMasteredBoss's own post-settle landing
-const BOSS_HAUNTED_OUTCOME_REVEAL_MS = 980; // showWordOutcome; overlay itself follows 350ms later (onOutcomeReveal)
+// 800ms settle + 650ms hold, then onOutcomeReveal's own 350ms scrim-mount
+// delay (MaskBoard.tsx, shared/untouched) on top — ~1000ms of dwell on the
+// closed gray book with Polly's line before the results scrim covers it.
+// Was 980 (only ~180ms of hold — read as the results snapping in before
+// the slam had even been felt). Mirrors triggerMasteredBrain's own
+// isBoss reveal delay below, tuned the same way for the same reason.
+const BOSS_HAUNTED_OUTCOME_REVEAL_MS = 1450;
 
 function chainTierFromMultiplier(mult: number): ChainTier {
   if (mult >= 2.5) return 3;
@@ -538,7 +544,14 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     // quicker beat ("one decisive banishment beat... before it can
     // overshadow Polly's Word", per the commit that introduced the short
     // sequence). 950ms here previously made it resolve slower than Boss's
-    // 700ms, backwards from that intent.
+    // 700ms, backwards from that intent. Raising Boss's own value only
+    // widens that gap, never risks it — still true after this change.
+    //
+    // Boss: 400ms settle + 650ms hold — was 700 (300ms hold), which read
+    // as the results snapping in right behind the slam instead of a felt
+    // beat with it. Mirrors BOSS_HAUNTED_OUTCOME_REVEAL_MS in this same
+    // file, tuned together for the same reason: give the closed book (and
+    // Polly's line, already landing at 400ms) real room before the scrim.
     setTimeout(() => {
       showWordOutcome(
         'mastered',
@@ -553,7 +566,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
           completeWord();
         }
       );
-    }, isBoss ? 700 : isHaunt ? 550 : 3450);
+    }, isBoss ? 1050 : isHaunt ? 550 : 3450);
   }
 
   // ── swipe resolution ─────────────────────────────────────────────────
