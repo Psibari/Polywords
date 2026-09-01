@@ -297,8 +297,22 @@ navigation shell; active Hunt and Daily play are nav-free.
   its own trigger function) and ~1400ms settle-to-card-visible before the result scrim covers
   it (`showWordOutcome` at 1450ms / `BOSS_HAUNTED_OUTCOME_REVEAL_MS` 1850ms, plus the existing,
   untouched 350ms `onOutcomeReveal` scrim-mount delay). Device-confirmed 2026-08-31.
-  NOT locked: the outcome card's own visual design and the SFX/haptic pass for this
-  sequence — both still open, next up.
+- Boss result plaques are live and locked too (Pete, 2026-09-01), replacing the old generic rounded
+  panel for `isBoss` only — the non-boss Haunt-rematch overlay (BANISHED/still-haunted) keeps
+  that original panel unchanged, since its book never actually transforms. Wired assets are
+  `assets/images/results/mastered-result-plaque.png` (681x567) and `haunted-result-plaque.png`
+  (1263x954) — both mechanically cropped from the supplied `masterresult.png`/`hauntedresult.png`
+  to their own visible-alpha bounds (raw canvas padding differed wildly between the two; sizing
+  off canvas dimensions made them read as very different sizes at the same width). See
+  `assets/images/results/README.md`. `MasteredOutcomeOverlay`/`HauntedOutcomeOverlay` gained an
+  `isBoss` prop; all existing timing/animation hooks are untouched, only the isBoss render
+  branch differs. Frame widths: Mastered 324, Haunted 328 (both trimmed from an original shared
+  360 after device feedback the plaque read larger than the book behind it). Mastered text is
+  `PW.color.purple`/`PW.color.bg` on the gold field (no gold text on gold). Haunted text is a
+  single ink, `PW.color.bg`, for the headline/headword/copy/failed-trap-phrase — `PW.color.rose`
+  is reserved for exactly one element, the `TRAP CLAIMED` label. Device-confirmed 2026-09-01.
+  SFX/haptic impact synchronization for the whole outcome sequence is the only piece of this
+  system still open — see CONTEXT.md's Next Work.
 - One-time Hunt, Boss, Haunt, and Vault explainers use separate AsyncStorage gates. Hunt,
   Boss, and Haunt block play; Vault does not.
 - Theme/material tokens live under `app/ui/`; current render code outranks abandoned plans.
