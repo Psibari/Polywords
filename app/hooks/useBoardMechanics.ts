@@ -26,6 +26,20 @@ export type GauntletTile = {
   isReal: boolean;
 };
 
+// ── Boss-only outcome pacing ────────────────────────────────────────────
+// Mastered's success path already gets a recognition beat for free (see
+// resolveGauntletTile's own 200ms delay before calling triggerMasteredBrain
+// — untouched, and shared with the non-boss Haunt-rematch banish beat, so
+// it stays there rather than duplicated here). Failure had none: the book
+// used to react on the exact same frame as the wrong swipe, racing the
+// card's own 380ms red-flash/recoil envelope (triggerWrongWordRecoil).
+// These three exist to give boss failure the same "let the last decision
+// register, then the book takes over" shape mastery already had — boss
+// only; the Haunt-rematch STILL HAUNTED beat is untouched below.
+const BOSS_HAUNTED_RECOGNITION_MS = 220; // let the red flash read before the book reacts
+const BOSS_HAUNTED_POLLY_MS = 800;       // lands near the (now-later) slam settle, mirroring gateMasteredBoss's own post-settle landing
+const BOSS_HAUNTED_OUTCOME_REVEAL_MS = 980; // showWordOutcome; overlay itself follows 350ms later (onOutcomeReveal)
+
 function chainTierFromMultiplier(mult: number): ChainTier {
   if (mult >= 2.5) return 3;
   if (mult >= 1.5) return 2;
@@ -466,10 +480,23 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     setGauntletActive(false);
     setGatePhase('wrongFail');
     setFailedHiddenTileId(failedMaskId);
-    firePollyEvent(isHaunt ? 'hauntMasterFailed' : 'hiddenMasterFailed');
 
-    perform.onHauntedSequence({ isHaunt, failedMaskId });
-
+    if (isBoss) {
+      // Gate the sensory reaction and the judging event behind the
+      // recognition beat — the state above (gatePhase, failedHiddenTileId)
+      // stays synchronous so the failed gauntlet card's own visual is
+      // already correct the instant the presenter's red-flash/recoil
+      // starts on it.
+      setTimeout(() => {
+        perform.onHauntedSequence({ isHaunt: false, failedMaskId });
+      }, BOSS_HAUNTED_RECOGNITION_MS);
+      setTimeout(() => {
+        firePollyEvent('hiddenMasterFailed');
+      }, BOSS_HAUNTED_POLLY_MS);
+    } else {
+      firePollyEvent(isHaunt ? 'hauntMasterFailed' : 'hiddenMasterFailed');
+      perform.onHauntedSequence({ isHaunt, failedMaskId });
+    }
 
     // Runs on its own timer (rather than nested inside the presenter's
     // STILL HAUNTED visual sequence) so this file never has to reach back
@@ -488,7 +515,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
           completeWord();
         }
       );
-    }, isBoss ? 600 : 800);
+    }, isBoss ? BOSS_HAUNTED_OUTCOME_REVEAL_MS : 800);
   }
 
   function triggerMasteredBrain() {

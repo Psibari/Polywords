@@ -55,13 +55,17 @@ const DECK_BACKING_OFFSET = 9;
 
 // ── Boss outcome slam timing ────────────────────────────────────
 // See triggerBossOutcomeSlam's comment for the concealed-swap rationale.
-const MASTERED_IMPACT_MS = 150; // front-facing → edge-on, punchy
-const MASTERED_SWAP_AT_MS = 70; // ~GoldFlash's 65ms attack peak
-const MASTERED_RECOIL_MS = 90;  // edge-on → slight overshoot bounce
-const MASTERED_SETTLE_MS = 110; // bounce → rest, reveals the gold rig
-const HAUNTED_DRAG_MS = 260;    // front-facing → edge-on, heavy, no punch
-const HAUNTED_SWAP_AT_MS = 140; // under the rising drain haze + board shake
-const HAUNTED_SETTLE_MS = 260;  // edge-on → rest, no bounce — sinks shut
+// Mastered total 400ms / Haunted total 580ms — the ~1.45x ratio between
+// them (Haunted heavier/slower) is deliberate and preserved from the
+// original pass; both were nudged up together for more weight, not just
+// Haunted in isolation. First-pass feel numbers, not device-confirmed.
+const MASTERED_IMPACT_MS = 170; // front-facing → edge-on, punchy (was 150)
+const MASTERED_SWAP_AT_MS = 70; // ~GoldFlash's 65ms attack peak — unchanged, tied to the flash, not the swing
+const MASTERED_RECOIL_MS = 100; // edge-on → slight overshoot bounce (was 90)
+const MASTERED_SETTLE_MS = 130; // bounce → rest, reveals the gold rig (was 110)
+const HAUNTED_DRAG_MS = 280;    // front-facing → edge-on, heavy, no punch (was 260)
+const HAUNTED_SWAP_AT_MS = 150; // under the rising drain haze + board shake — scaled with HAUNTED_DRAG_MS to hold the same ~54% mid-swing concealment point (was 140)
+const HAUNTED_SETTLE_MS = 300;  // edge-on → rest, no bounce — sinks shut (was 260)
 
 // Deck timing curves — shared by the round's opening deal-in and the
 // per-tile shuffle-forward animation (Task 1), so the deck reads as one
@@ -778,7 +782,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       bookOpenAnimationRef.current = Animated.parallel([
         Animated.sequence([
           Animated.timing(bookOpenAnim, { toValue: 1, duration: MASTERED_IMPACT_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          Animated.timing(bookOpenAnim, { toValue: 0.06, duration: MASTERED_RECOIL_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(bookOpenAnim, { toValue: 0.08, duration: MASTERED_RECOIL_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }), // was 0.06 — a touch more visible bounce for "weight"
           Animated.timing(bookOpenAnim, { toValue: 0, duration: MASTERED_SETTLE_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ]),
         Animated.sequence([
