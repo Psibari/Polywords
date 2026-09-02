@@ -351,10 +351,6 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
 
   // ── Polly reactive triggers (pure brain — no Animated involved) ────────
   useEffect(() => {
-    if (game.lives === 1) firePollyEvent('oneHeartLeft');
-  }, [game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
     if (game.lives === 0 && !completedRef.current) {
       firePollyEvent('oneWrongMove');
       perform.onLivesDepleted();
@@ -639,7 +635,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
       const brokeRealChain = game.chainMultiplier >= 1.5;
-      firePollyEvent('wrong');
+      firePollyEvent(game.lives === 2 ? 'oneHeartLeft' : 'wrong');
       perform.onWrongSwipe({ mask, brokeRealChain });
       submitSwipeUp(maskId);
       // Tile exits permanently — no retry
@@ -672,7 +668,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
       const brokeRealChain = game.chainMultiplier >= 1.5;
-      firePollyEvent('wrong');
+      firePollyEvent(game.lives === 2 ? 'oneHeartLeft' : 'wrong');
       perform.onWrongSwipe({ mask, brokeRealChain });
       submitSwipeDown(maskId);
       // Tile exits permanently — no retry
@@ -724,7 +720,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       // a separate gauntlet-only callback so the "broke real chain" bonus
       // sfx/haptic isn't silently dropped for gauntlet misses.
       const brokeRealChain = game.chainMultiplier >= 1.5;
-      firePollyEvent('wrong');
+      firePollyEvent(game.lives === 2 ? 'oneHeartLeft' : 'wrong');
       perform.onWrongSwipe({ mask: tile.mask, brokeRealChain });
       setFinalTileStates(prev => new Map(prev).set(tile.mask.id, 'wrong'));
       triggerWrongFail(tile.mask.id);

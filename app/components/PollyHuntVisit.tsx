@@ -158,6 +158,10 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
         Animated.timing(reactScale, { toValue: 0.97, duration: 140, useNativeDriver: true }),
         Animated.timing(reactScale, { toValue: 1, duration: 440, delay: 240, useNativeDriver: true }),
       ]).start();
+    } else if (perchPose === 'asleep') {
+      // Slow settle only — no lean, no tilt. A sleeping bird does not lean
+      // at the board.
+      Animated.timing(reactY, { toValue: 4, duration: 600, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
     } else {
       // Smug: cold lean toward the puzzle (she is on the left, leaning right).
       Animated.sequence([

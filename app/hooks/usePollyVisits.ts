@@ -70,7 +70,7 @@ export function usePollyVisits(isSpeedRound: boolean, ghostRunsMissed = 0) {
 
     // Flag bookkeeping happens on the EVENT, not only on shown visits:
     // the first wrong of a word consumes eligibility even if dropped.
-    if (event === 'wrong') flags.wrongSeenThisWord = true;
+    if (event === 'wrong' || event === 'oneHeartLeft') flags.wrongSeenThisWord = true;
     if (event === 'cleanSweep' && decision.action === 'visit' && decision.spec.kind === 'guaranteed') {
       flags.cleanSweepSeenThisRun = true;
     }

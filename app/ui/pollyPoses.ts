@@ -40,7 +40,7 @@ export const POLLY_POSE_SCALE: Record<PollyPoseName, number> = {
   shocked: 0.84,
   sulk: 0.69,
   rattled: 1,
-  asleep: 1.3,
+  asleep: 1.3, // not device-confirmed; the oneHeartLeft beat is its first live use
   fly: 0.8,
   flyAngry: 0.78,
   flyGrin: 0.81,

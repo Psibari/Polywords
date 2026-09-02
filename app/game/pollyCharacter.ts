@@ -79,6 +79,11 @@ export const POLLY_LINES = {
   huntHauntIntro: 'I hunt you. I haunt you.',
   huntAbandonTaunt: 'See you later, loser.',
   huntMasteredTrapsDiffer: 'Next time, the traps will be different.',
+  featherOneLookAtMine: 'Look at all my feathers. You got one left.',
+  featherOnePlucked: 'You plucked yourself. I don’t even need to be here.',
+  featherOneAroundHere: 'One left. Around here, you get plucked.',
+  featherOneWait: 'That’s your last feather. I’ll wait.',
+  featherOneCheck: 'That’s check.',
 } as const;
 
 export type PollyLineId = keyof typeof POLLY_LINES;

@@ -40,7 +40,7 @@ export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
   flyPose: 'fly' | 'flyAngry' | 'masterShock' | 'hauntTaunt';
-  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'masterAngry' | 'hauntTaunt';
+  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'masterAngry' | 'hauntTaunt' | 'asleep';
   exitPose?: 'fly' | 'sulk'; // pose held while flying out; defaults to 'fly'
   lineId: PollyLineId | null;
   line: string | null;
@@ -247,6 +247,38 @@ const GHOST_SMUG: VisitSpec = {
   holdPerch: false, perchMs: 1800,
 };
 
+const ONE_FEATHER_LINES: PollyLineId[] = [
+  'featherOneLookAtMine',
+  'featherOnePlucked',
+  'featherOneAroundHere',
+  'featherOneWait',
+  'featherOneCheck',
+];
+
+// Two lines only work with her eyes shut, so the pose travels with the line
+// rather than being fixed on the spec.
+const ONE_FEATHER_POSE: Record<string, 'smug' | 'asleep'> = {
+  featherOneLookAtMine: 'smug',
+  featherOnePlucked: 'asleep',
+  featherOneAroundHere: 'smug',
+  featherOneWait: 'asleep',
+  featherOneCheck: 'smug',
+};
+
+// Guaranteed, not heckle: lives reach 1 exactly once per run (unless a Gold
+// Feather revive), and if an earlier heckle on the same word had already
+// been spent, a heckle here would be silently dropped — leaving the
+// last-feather moment with no reaction at all. sfx is null because this
+// fires on a wrong swipe and MaskBoard already squawks there, same reason
+// WRONG_SMUG is silent.
+const ONE_FEATHER: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'smug',
+  lineId: 'featherOneLookAtMine',
+  line: POLLY_LINES.featherOneLookAtMine,
+  sfx: null,
+  holdPerch: false, perchMs: 2000,
+};
+
 export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitDecision {
   if (event === 'wordEntry') return { action: 'wordEntry' };
 
@@ -267,6 +299,13 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
   if (event === 'hauntMasterFailed') return { action: 'visit', spec: RETURNING_HAUNT_GLOAT };
   if (event === 'gameOver') return { action: 'visit', spec: GAME_OVER_LAUGH };
   if (event === 'hauntFailed') return { action: 'visit', spec: HAUNT_FAILED_LAUGH };
+  if (event === 'oneHeartLeft') {
+    const lineId = pickFreshLine(ONE_FEATHER_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: {
+      ...ONE_FEATHER, lineId, line: POLLY_LINES[lineId],
+      perchPose: ONE_FEATHER_POSE[lineId],
+    }};
+  }
   if (event === 'cleanSweep' && !state.cleanSweepSeenThisRun) {
     return { action: 'visit', spec: CLEAN_SWEEP_FIRST };
   }

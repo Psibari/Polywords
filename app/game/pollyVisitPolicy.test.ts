@@ -2,6 +2,7 @@
 // Plain assert script (repo has no jest; no node:assert — repo lacks @types/node).
 // Throws on first failure; prints OK on success.
 import { resolveVisit, PollyBudgetState, VisitDecision, VisitSpec } from './pollyVisitPolicy';
+import { PollyLineId } from './pollyCharacter';
 
 function eq<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
@@ -232,10 +233,56 @@ for (const [i, block] of [
 eq(resolveVisit('wordEntry', idle).action, 'wordEntry', 'wordEntry resets budget');
 
 for (const ev of [
-  'correct', 'oneHeartLeft', 'oneWrongMove',
+  'correct', 'oneWrongMove',
   'hiddenFound', 'hesitationCleared', 'ghostFoundLate', 'ghostDissolved',
 ] as const) {
   eq(resolveVisit(ev, idle).action, 'none', `${ev} ignored`);
+}
+
+// ── oneHeartLeft ─────────────────────────────────────────────────
+// Substitutes for 'wrong' on the swipe that drops the player to their last
+// feather — guaranteed, so it must fire even when every heckle budget is
+// jammed and there is no time for a squawk (MaskBoard already squawks on
+// the wrong swipe itself).
+{
+  const jammed: PollyBudgetState = {
+    busy: true, heckleUsedThisWord: true, wrongSeenThisWord: true,
+    cleanSweepSeenThisRun: true, isSpeedRound: true,
+    ghostRunsMissed: 0, recentLineIds: [], lineRoll: 0,
+  };
+  const s = visitSpec(resolveVisit('oneHeartLeft', jammed), 'oneHeartLeft while jammed');
+  eq(s.kind, 'guaranteed', 'oneHeartLeft.kind');
+  eq(s.sfx, null, 'oneHeartLeft.sfx');
+}
+
+// perchPose travels with the drawn line: two of the five only work with her
+// eyes shut. Roll values are chosen well inside each of the pool's five
+// buckets (pool order: LookAtMine, Plucked, AroundHere, Wait, Check).
+{
+  const rolls: [number, PollyLineId, 'smug' | 'asleep'][] = [
+    [0.05, 'featherOneLookAtMine', 'smug'],
+    [0.25, 'featherOnePlucked', 'asleep'],
+    [0.45, 'featherOneAroundHere', 'smug'],
+    [0.65, 'featherOneWait', 'asleep'],
+    [0.85, 'featherOneCheck', 'smug'],
+  ];
+  for (const [roll, expectedLineId, expectedPose] of rolls) {
+    const s = visitSpec(
+      resolveVisit('oneHeartLeft', { ...idle, lineRoll: roll }),
+      `oneHeartLeft roll ${roll}`,
+    );
+    eq(s.lineId, expectedLineId, `oneHeartLeft roll ${roll}.lineId`);
+    eq(s.perchPose, expectedPose, `oneHeartLeft roll ${roll}.perchPose`);
+  }
+}
+
+// pickFreshLine still avoids recentLineIds for this pool.
+{
+  const s = visitSpec(
+    resolveVisit('oneHeartLeft', { ...idle, lineRoll: 0, recentLineIds: ['featherOneLookAtMine'] }),
+    'oneHeartLeft avoids recent',
+  );
+  if (s.lineId === 'featherOneLookAtMine') throw new Error('oneHeartLeft avoids recent: repeated a recent line');
 }
 
 console.log('OK — pollyVisitPolicy: all assertions passed');
