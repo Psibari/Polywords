@@ -48,7 +48,14 @@ export const homeDoor = {
 export const homePerch = {
   bottomOffset: 364, // high enough to loom from the left, but layered behind the Home book so she never covers controls; lowered to clear the bigger tagline above her
   pollySize: 246, // antagonist-sized presence without swallowing the Hunt action
-  bubbleFace: '#1A1055', // matches Daily bubble material
-  bubbleRim: 'rgba(245,200,66,0.55)',
-  bubbleText: PW.color.foilLight,
+  // Dark indigo on dark screens barely separated the bubble from the
+  // board — inverted so the bubble reads against the background instead
+  // of blending into it. Straight token swap: face and text trade places,
+  // and the rim goes solid because a half-opacity gold line disappears
+  // against a cream face. (The old '#1A1055' was a raw literal outside
+  // DESIGN.md's palette; its "matches Daily bubble material" comment was
+  // stale — that colour appears nowhere else in the materials layer.)
+  bubbleFace: PW.color.foilLight,
+  bubbleRim: PW.color.goldDark,
+  bubbleText: PW.color.bg,
 } as const;
