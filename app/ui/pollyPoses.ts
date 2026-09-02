@@ -40,7 +40,11 @@ export const POLLY_POSE_SCALE: Record<PollyPoseName, number> = {
   shocked: 0.84,
   sulk: 0.69,
   rattled: 1,
-  asleep: 1.3, // not device-confirmed; the oneHeartLeft beat is its first live use
+  // Crown-matched to sprite4 (the anchor). sprite4's 164px crown renders
+  // 103.2pt contain-fit into the 260pt pose box; this pose's 128px crown
+  // renders 83.2pt, so 1.24 brings them level. Her widest point lands at
+  // 252 of the 260pt box — it fits, with little margin.
+  asleep: 1.24,
   fly: 0.8,
   flyAngry: 0.78,
   flyGrin: 0.81,
