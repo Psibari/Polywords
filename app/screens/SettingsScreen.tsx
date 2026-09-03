@@ -23,7 +23,7 @@ import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY, VAULT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { getRankTier } from '../game/ranks';
 import {
   clearPlaytestHistory,
@@ -182,6 +182,7 @@ export default function SettingsScreen({ navigation }: Props) {
       AsyncStorage.removeItem(INTRO_SEEN_KEY),
       AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
       AsyncStorage.removeItem(HAUNT_INTRO_SEEN_KEY),
+      AsyncStorage.removeItem(VAULT_INTRO_SEEN_KEY),
     ]).catch(() => {});
     Alert.alert('Tutorial Replay', "You'll see it again next time you start a Hunt.");
   };
