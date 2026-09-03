@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 14,
+    fontSize: 15,
     letterSpacing: 2,
     marginBottom: 8,
   },
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     color: PW.color.goldSoft,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 14,
+    fontSize: 15,
     letterSpacing: 1.5,
     marginBottom: 4,
   },
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 14,
+    fontSize: 15,
     marginTop: 4,
   },
   profileStats: {
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     color: PW.color.white,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 14,
+    fontSize: 15,
   },
   disabledButton: {
     marginTop: 12,
@@ -676,14 +676,14 @@ const styles = StyleSheet.create({
     color: PW.color.white,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 14,
+    fontSize: 16,
     letterSpacing: 1,
   },
   disabledButtonNote: {
-    color: PW.color.faintWhite,
+    color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 14,
+    fontSize: 15,
   },
   section: {
     marginTop: 18,
@@ -736,11 +736,13 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     fontSize: 16,
   },
+  // Stays one point under rowLabel (16) on purpose — the setting's name
+  // should still lead its current state. Not an inconsistency to tidy away.
   rowNote: {
-    color: PW.color.faintWhite,
+    color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 14,
+    fontSize: 15,
     marginTop: 3,
   },
   rowAccent: {
@@ -752,7 +754,7 @@ const styles = StyleSheet.create({
     backgroundColor: PW.color.rose,
   },
   chevron: {
-    color: PW.color.faintWhite,
+    color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
     fontSize: 24,
