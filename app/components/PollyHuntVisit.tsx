@@ -267,7 +267,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
           { opacity: bubbleOpacity, transform: [{ scale: bubbleScale }] },
         ]}
       >
-        <PollySpeechBubble line={line ?? ''} maxWidth={185} fontSize={15} lineHeight={21} />
+        <PollySpeechBubble line={line ?? ''} maxWidth={185} />
       </Animated.View>
 
       {/* Polly — whole-image motion only, bottom-left, faces right */}

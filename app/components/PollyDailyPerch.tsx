@@ -205,8 +205,6 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
         <PollySpeechBubble
           line={getLine(reaction, dailyLossLineId)}
           maxWidth={185}
-          fontSize={15}
-          lineHeight={21}
         />
       </Animated.View>
 

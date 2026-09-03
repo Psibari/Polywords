@@ -11,11 +11,14 @@ type Props = {
   tone?: 'default' | 'loss';
 };
 
+// All four surfaces (Home, Results, Hunt, Daily) are expected to inherit these
+// defaults. A per-surface fontSize/lineHeight override is a layout escape
+// hatch, not a style choice — reach for maxWidth first.
 export function PollySpeechBubble({
   line,
   maxWidth = 190,
   fontSize = homeType.greeting,
-  lineHeight = 22,
+  lineHeight = 24,
   tone = 'default',
 }: Props) {
   return (
