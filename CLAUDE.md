@@ -150,8 +150,8 @@ navigation shell; active Hunt and Daily play are nav-free.
   `usePollyVisits` fills them from `useGameStore.getState()` (never a
   selector — a subscription would re-render mid-visit) and `Math.random()`.
   Randomness is an input so the policy file stays pure and still runs under
-  plain node. Two pools exist: `WRONG_HECKLE_LINES` (12) and `STREAK_LINES`
-  (6). Every other moment still holds a single fixed line. (d623087)
+  plain node. Two pools exist: `WRONG_HECKLE_LINES` (13) and `STREAK_LINES`
+  (12). Every other moment still holds a single fixed line. (d623087)
 - Polly now has a losing register in the Hunt. `streakX10` fires from
   `useBoardMechanics` on every multiple of ten and used to be discarded;
   it now resolves to `STREAK_RATTLED` — flyPose `fly`, perchPose `rattled`,
@@ -237,19 +237,16 @@ navigation shell; active Hunt and Daily play are nav-free.
   It is a whole-pose drawing, NOT rig-compatible — the body is a fresh
   drawing rather than a repaint of sprite4, so no part cut from it will
   register on the rig.
-- `asleep` is a new flat pose (`assets/images/polly/poses/zzz.png`, banked 2026-08-31):
-  perched, eyes closed, "Zzz" marks beside her head — dozing. Its `POLLY_POSE_SCALE` is
-  1.3, not 1 — unlike `rattled` it was NOT exported crown-matched to sprite4, so the value
-  was measured: crop it tight (bird + Zzz marks together, 183x271 canvas), contain-fit both
-  it and sprite4 into matching boxes, and compare. Three
-  independent measurements (bird height, bird width, crown width, all excluding the Zzz
-  marks via connected-component isolation) converged on 1.24–1.39; 1.3 was the rendered
-  comparison that visually matched sprite4 best. Not device-confirmed — spot-check on
-  screen before trusting it further. Whole-pose drawing, not rig-compatible, same as
-  `rattled`. The original raw upload (a 1656x950 canvas with the art occupying a small
-  region in the middle) no longer exists: Windows treats `zzz.png`/`ZZZ.png` as the same
-  file, so cropping-and-saving as `zzz.png` silently overwrote the original in place before
-  it was ever committed. Only the cropped, banked version survives.
+- `asleep` is a live flat pose (`assets/images/polly/poses/zzz.png`, perched, eyes closed,
+  "Zzz" marks beside her head) driving Polly's Home doze — see CONTEXT.md. Unlike `rattled` it
+  was NOT exported crown-matched to sprite4, so `POLLY_POSE_SCALE.asleep` needed measuring, and
+  the first attempt got it wrong: crown width is not a valid scale anchor for a pose where the
+  head droops and the crown tilts with it — that measurement produced 1.24, rendering roughly a
+  third too large. Figure height, which doesn't tilt, gave the correct value: 0.96,
+  device-confirmed. Whole-pose drawing, not rig-compatible, same as `rattled`. Watch asset
+  naming on Windows: an earlier raw upload for this pose was silently destroyed when
+  cropping-and-saving as `zzz.png` collided case-insensitively with an in-progress `ZZZ.png` of
+  the same file — only the cropped version survives.
 - `PollyPerchRig` takes `mouth` ('closed' | 'open' | 'gape'), `eye` ('default' | 'wide') and
   `brow` ('default' | 'shocked'). Art variants are named strings rather than
   booleans because a third brow and a third mouth exist. `angryBrow` remains a boolean and

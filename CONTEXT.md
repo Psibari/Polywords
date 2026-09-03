@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
-Updated September 1, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `7aa8d58`.
+Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current code baseline: `199dd1a`.
 
 ## Verified Current State
 
@@ -136,9 +136,10 @@ Updated September 1, 2026. Branch: `play-screen-overhaul`, tracking
 - Two Polly animations were cleaned and committed (`fde5902`): polly_sulk and polly_idle. Four
   others are unusable and need re-rendering at 724x724. See CLAUDE.md.
 - Audit of `pollyVisitPolicy.ts`, 2026-08-29, verified against live source:
-  - `oneHeartLeft` (`useBoardMechanics:332`) is still FIRED on every run and discarded —
-    `resolveVisit` has no branch for it. `streakX10` (`:348`) was the same until 2e82c32 and
-    now resolves to a rattled heckle.
+  - `oneHeartLeft` no longer fires on every run and gets discarded. It now substitutes for
+    `wrong` at the three wrong-swipe call sites in `useBoardMechanics.ts` when pre-swipe
+    `game.lives` is 2, and resolves to a guaranteed five-line pool (`af1a250`). `streakX10`
+    (`:348`) was the same until 2e82c32 and now resolves to a rattled heckle.
   - `hiddenFound`, `ghostFoundLate` and `ghostDissolved` are declared in `PollyEvent` but fired
     by nothing anywhere.
   - WRONG_SMUG is still the only spec for `wrong`, but it no longer carries a fixed line:
@@ -155,7 +156,10 @@ Updated September 1, 2026. Branch: `play-screen-overhaul`, tracking
     hook-level change with no MaskBoard involvement.
   - She has a losing register in the Hunt as of 2e82c32 — the ten-streak reaction. Everything
     else she says in the Hunt is still her winning or threatening.
-  - `POLLY_LINES` holds 43 lines, 27 of them Hunt lines.
+  - `POLLY_LINES` holds 85 lines; 28 of them have a `hunt`-prefixed id. That undercounts lines
+    that actually fire in the Hunt — `streakLucky`/etc. (6) and `featherOne*` (5) also fire
+    only there but don't carry the prefix — so "Hunt lines" is not one number without saying
+    which count it means.
 - `isMasteredReturn` is set on returning mastered-word steps in `huntGenerator` and is read by
   NOTHING — not the board, store, Results or Polly. A mastered word returns silently and
   unmarked.
@@ -166,6 +170,56 @@ Updated September 1, 2026. Branch: `play-screen-overhaul`, tracking
 - Hunt line rotation shipped (d623087, device-confirmed). The most-repeated line in the game
   was "Thought so.", capable of firing ~7 times in a run; it is now one of twelve.
 - The ten-streak reaction shipped (2e82c32, device-confirmed). See CLAUDE.md.
+- The one-feather beat shipped (`af1a250`, device-confirmed). The non-obvious part: every
+  life-loss path is already a wrong swipe that claims the word's single heckle via
+  `firePollyEvent('wrong')`, so a plain `oneHeartLeft` heckle branch would never have fired —
+  it had to substitute for `wrong` at the three wrong-swipe call sites in
+  `useBoardMechanics.ts` when pre-swipe `game.lives` is 2, not add alongside it. Guaranteed,
+  not heckle; `sfx: null` because MaskBoard already squawks on the swipe. Five lines; two pair
+  with the `asleep` perch pose, and `perchPose` travels with whichever line is drawn rather
+  than being fixed on the spec. This is also why the old Next Work item calling it "the same
+  shape of change as the streak reaction" was itself the wrong diagnosis: `streakX10` already
+  fired at the right moment and only needed a `resolveVisit` branch, but `oneHeartLeft` fired
+  one render late from a since-deleted `useEffect`, always after an earlier `wrong` heckle had
+  already spent the word's single-heckle budget — a `resolveVisit` branch alone could never
+  have surfaced it. That wrong diagnosis is what left the item open.
+- The Polly speech bubble inverted to light on dark screens (`a0b585f`) across all four
+  `PollySpeechBubble` surfaces — Home, Hunt, Daily, Results. The three colour tokens live in
+  `homePerch` (`pwHomeMaterials.ts`) and are read by `PollySpeechBubble` alone. Separately,
+  Hunt and Daily had each overridden the component's own 18/22 default down to 15/21; both
+  overrides were removed and the default `lineHeight` raised to 24 (`dff9b73`), so all four
+  surfaces now inherit the same type.
+- The asleep pose is live. Pete redrew the art with white Zzz beside her head instead of above
+  it (`594be2d`), `POLLY_POSE_SCALE.asleep` was corrected from 1.24 to 0.96 (`9ea32e3`; crown
+  width was the wrong scale anchor — see CLAUDE.md), and it now drives Polly's Home doze
+  (`e38e814`). The doze delay is honestly two different numbers: ~8s after the screen goes
+  still, which is ~13s from a fresh arrival because the greeting's 5.16s fade runs first, and a
+  flat ~8s on a return visit where there is no entrance or bubble at all.
+- A type and contrast pass ran across four surfaces: Vault (`3e03daa`), Hunt intro (`cbcf6de`),
+  Settings (`b38cfc6`), and the three sibling intro overlays — Boss, Haunt, Vault (`199dd1a`).
+  The rule that came out of it: 15pt is the floor for anything a player reads as prose or as a
+  label, and small text was usually also faint (`mutedWhite` or `faintWhite`), so contrast was
+  raised alongside size wherever that applied. HomeScreen was reviewed and deliberately
+  skipped — it already runs through the `homeType` token block, and its remaining small values
+  are decorative set dressing.
+- Tutorial Replay now clears all four intro seen-keys (`7c7f01e`). It had only ever cleared
+  three — `VAULT_INTRO_SEEN_KEY` was defined and consumed by `VaultIntroOverlay` but never
+  removed, so the Vault intro could never be replayed once seen.
+- A JSX branch that changes shape between renders causes React to tear down and remount the
+  node, and any animation already attached to it silently does nothing — the animation still
+  ticks, but there is no continuously-mounted layer left to see it move. This cost four passes
+  on the Home doze transition; three of them were spent diagnosing a fade that was never
+  actually running. General trap, not specific to Polly.
+- Crown width is not a valid scale anchor for any pose where the head is tilted or drooped — it
+  produced the 29% oversize on the asleep pose (1.24 vs the corrected 0.96). Use figure height
+  instead; it does not tilt.
+- Crossfading two layers (outgoing opacity 1→0, incoming 0→1 in parallel) dips to roughly 0.75
+  combined alpha at the midpoint and shows the background through the subject. Hold the
+  incoming layer opaque underneath from the start and fade only the outgoing one on top.
+- Pose art must be cropped to its true visible-alpha bounds, not eyeballed. The old `zzz.png`
+  had a handful of near-invisible stray alpha pixels in one corner, isolated roughly 65px below
+  the real artwork, that held its 271px canvas open by about a quarter of its height —
+  contain-fit sizes against the full canvas, so that invisible margin shrank the whole pose.
 
 ## REWARD ECONOMY
 
@@ -209,16 +263,27 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
   specified. The desired motion is push-forward, not `rotateY`.
 5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
   persistence, gestures, animation, and performance.
-6. Rewrite the five theft-voice lines listed in CLAUDE.md.
-7. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
+6. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
   placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
   and the mastery beat.
-8. Re-render the four clipped animations at 724x724.
-9. The streak pool holds six lines against a five-deep line memory, so at a ten-streak there is
-  often only one fresh line left and a repeat inside one run is possible. More lines would give
-  it room. The wrong-answer pool of twelve does not have this problem.
-10. `oneHeartLeft` still fires every run and is discarded. It is the same shape of change as the
-  streak reaction: one branch in a pure file plus authored lines, no MaskBoard involvement.
+7. Re-render the four clipped animations at 724x724.
+8. The Vault needs a redesign, not a fix. Shelves grow without bound, there is no ordering
+  beyond alphabetical, spines are already unreadable at 42 books, long spines clip mid-word
+  (ABSTRAC/T, EXCHANG/E), and MEANINGS TAKEN now wraps in its chip after the type pass. Pete
+  has also questioned whether "Vault" is the right name. Largest open design item.
+9. Navigation gap: BottomNav renders on Vault and Settings only, but has four tabs — there is
+  no way to reach the Vault from Home. Solve before its 11/12pt labels are worth changing.
+10. The `tone='loss'` `PollySpeechBubble` variant is still dead — none of the four call sites
+  (Home, Hunt, Daily, Results) pass a `tone`. Wire it or delete it.
+11. Three poses remain unused: `flyGrin`, `masterShock`, `masterAngry` — none appear as a value
+  in any `pollyVisitPolicy.ts` VisitSpec.
+12. `ONE_FEATHER_POSE` is typed `Record<string, ...>`; a typo'd key would compile and yield an
+  undefined `perchPose`. Hardening, not urgent.
+13. Daily is the last unaddressed screen in the type pass, and the messiest file — 12 distinct
+  font sizes from 9pt to 36pt.
+14. Tutorial Replay's alert still says "You'll see it again next time you start a Hunt." It now
+  clears four overlays across three screens (Settings, GameScreen, VaultScreen); the copy
+  undersells it.
 
 ## Protection
 
