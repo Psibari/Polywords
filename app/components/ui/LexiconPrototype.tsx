@@ -1,13 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { FONTS } from '../../constants/fonts';
-import { PW } from '../../ui/pwTheme';
+import React, { useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FONTS } from "../../constants/fonts";
+import { PW } from "../../ui/pwTheme";
 
-export type LexiconStatus =
-  | 'mastered'
-  | 'haunted'
-  | 'finished'
-  | 'progress';
+export type LexiconStatus = "mastered" | "haunted" | "finished" | "progress";
 
 export type LexiconEntry = {
   word: string;
@@ -18,7 +14,7 @@ export type LexiconEntry = {
 export type LexiconMeaningLine = {
   key: string;
   text: string;
-  tone?: 'normal' | 'hidden' | 'trap' | 'locked';
+  tone?: "normal" | "hidden" | "trap" | "locked";
 };
 
 export type LexiconDetail = {
@@ -29,6 +25,11 @@ export type LexiconDetail = {
   meanings: LexiconMeaningLine[];
 };
 
+type StatCellProps = {
+  value: number;
+  label: string;
+};
+
 type LexiconSummary = {
   meanings: number;
   words: number;
@@ -36,7 +37,7 @@ type LexiconSummary = {
   haunted: number;
 };
 
-type Filter = 'all' | 'mastered' | 'haunted' | 'progress';
+type Filter = "all" | "mastered" | "haunted" | "progress";
 
 type Props = {
   entries: LexiconEntry[];
@@ -46,29 +47,38 @@ type Props = {
   detail: LexiconDetail | null;
 };
 
-const PAGE = '#D8CAA5';
-const PAGE_EDGE = '#A78957';
-const INK = '#33291F';
-const INK_MUTED = 'rgba(51,41,31,0.62)';
-const COVER = '#4A315B';
-const COVER_DARK = '#26182F';
-const HAUNTED = '#775183';
+const PAGE = "#D8CAA5";
+const PAGE_EDGE = "#A78957";
+const INK = "#33291F";
+const INK_MUTED = "rgba(51,41,31,0.62)";
+const COVER = "#4A315B";
+const COVER_DARK = "#26182F";
+const HAUNTED = "#775183";
 
 function filterMatches(entry: LexiconEntry, filter: Filter): boolean {
-  if (filter === 'all') return true;
-  if (filter === 'mastered') return entry.status === 'mastered';
-  if (filter === 'haunted') return entry.status === 'haunted';
+  if (filter === "all") return true;
+  if (filter === "mastered") return entry.status === "mastered";
+  if (filter === "haunted") return entry.status === "haunted";
 
   // "In progress" includes words whose visible meanings are finished
   // but which have not reached permanent Mastery.
-  return entry.status === 'progress' || entry.status === 'finished';
+  return entry.status === "progress" || entry.status === "finished";
 }
 
 function statusStyle(status: LexiconStatus) {
-  if (status === 'mastered') return styles.statusMastered;
-  if (status === 'haunted') return styles.statusHaunted;
-  if (status === 'finished') return styles.statusFinished;
+  if (status === "mastered") return styles.statusMastered;
+  if (status === "haunted") return styles.statusHaunted;
+  if (status === "finished") return styles.statusFinished;
   return styles.statusProgress;
+}
+
+function StatCell({ value, label }: StatCellProps) {
+  return (
+    <View style={styles.statCell}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
 }
 
 export function LexiconPrototype({
@@ -78,10 +88,10 @@ export function LexiconPrototype({
   summary,
   detail,
 }: Props) {
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>("all");
 
   const filteredEntries = useMemo(
-    () => entries.filter(entry => filterMatches(entry, filter)),
+    () => entries.filter((entry) => filterMatches(entry, filter)),
     [entries, filter],
   );
 
@@ -112,19 +122,17 @@ export function LexiconPrototype({
                   {detail.word}
                 </Text>
 
-                <Text style={styles.progressCopy}>
-                  {detail.progressLabel}
-                </Text>
+                <Text style={styles.progressCopy}>{detail.progressLabel}</Text>
 
                 <View style={[styles.detailStatus, statusStyle(detail.status)]}>
                   <Text style={styles.detailStatusText}>
-                    {detail.status === 'mastered'
-                      ? 'MASTERED'
-                      : detail.status === 'haunted'
-                        ? 'HAUNTED'
-                        : detail.status === 'finished'
-                          ? 'VISIBLE MEANINGS CLEARED'
-                          : 'IN PROGRESS'}
+                    {detail.status === "mastered"
+                      ? "MASTERED"
+                      : detail.status === "haunted"
+                        ? "HAUNTED"
+                        : detail.status === "finished"
+                          ? "VISIBLE MEANINGS CLEARED"
+                          : "IN PROGRESS"}
                   </Text>
                 </View>
 
@@ -154,7 +162,9 @@ export function LexiconPrototype({
 
               {entries.length === 0 ? (
                 <View style={styles.emptyWrap}>
-                  <Text style={styles.emptyTitle}>THE FIRST PAGE IS BLANK.</Text>
+                  <Text style={styles.emptyTitle}>
+                    THE FIRST PAGE IS BLANK.
+                  </Text>
                   <Text style={styles.emptyCopy}>
                     Claim a real meaning in the Hunt and its word will be
                     recorded here.
@@ -171,7 +181,7 @@ export function LexiconPrototype({
                       No words in this section yet.
                     </Text>
                   ) : (
-                    filteredEntries.map(entry => (
+                    filteredEntries.map((entry) => (
                       <Pressable
                         key={entry.word}
                         accessibilityRole="button"
@@ -194,9 +204,9 @@ export function LexiconPrototype({
                         <Text
                           style={[
                             styles.wordStatus,
-                            entry.status === 'mastered' &&
+                            entry.status === "mastered" &&
                               styles.wordStatusMastered,
-                            entry.status === 'haunted' &&
+                            entry.status === "haunted" &&
                               styles.wordStatusHaunted,
                           ]}
                         >
@@ -231,14 +241,14 @@ export function LexiconPrototype({
                     No recorded meanings yet.
                   </Text>
                 ) : (
-                  detail.meanings.map(line => (
+                  detail.meanings.map((line) => (
                     <View key={line.key} style={styles.meaningRow}>
                       <Text
                         style={[
                           styles.meaningText,
-                          line.tone === 'hidden' && styles.meaningHidden,
-                          line.tone === 'trap' && styles.meaningTrap,
-                          line.tone === 'locked' && styles.meaningLocked,
+                          line.tone === "hidden" && styles.meaningHidden,
+                          line.tone === "trap" && styles.meaningTrap,
+                          line.tone === "locked" && styles.meaningLocked,
                         ]}
                       >
                         {line.text}
@@ -254,24 +264,14 @@ export function LexiconPrototype({
               <View style={styles.pageRule} />
 
               <View style={styles.statsGrid}>
-                <View style={styles.statCell}>
-                  <Text style={styles.statValue}>{summary.meanings}</Text>
-                  <Text style={styles.statLabel}>MEANINGS</Text>
+                <View style={styles.statRow}>
+                  <StatCell value={summary.meanings} label="MEANINGS" />
+                  <StatCell value={summary.words} label="WORDS" />
                 </View>
 
-                <View style={styles.statCell}>
-                  <Text style={styles.statValue}>{summary.words}</Text>
-                  <Text style={styles.statLabel}>WORDS</Text>
-                </View>
-
-                <View style={styles.statCell}>
-                  <Text style={styles.statValue}>{summary.mastered}</Text>
-                  <Text style={styles.statLabel}>MASTERED</Text>
-                </View>
-
-                <View style={styles.statCell}>
-                  <Text style={styles.statValue}>{summary.haunted}</Text>
-                  <Text style={styles.statLabel}>HAUNTED</Text>
+                <View style={styles.statRow}>
+                  <StatCell value={summary.mastered} label="MASTERED" />
+                  <StatCell value={summary.haunted} label="HAUNTED" />
                 </View>
               </View>
 
@@ -280,10 +280,10 @@ export function LexiconPrototype({
               <View style={styles.filterGrid}>
                 {(
                   [
-                    ['all', 'ALL'],
-                    ['mastered', 'MASTERED'],
-                    ['haunted', 'HAUNTED'],
-                    ['progress', 'IN PROGRESS'],
+                    ["all", "ALL"],
+                    ["mastered", "MASTERED"],
+                    ["haunted", "HAUNTED"],
+                    ["progress", "IN PROGRESS"],
                   ] as const
                 ).map(([key, label]) => {
                   const selected = filter === key;
@@ -331,20 +331,23 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     minHeight: 0,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
 
   bookCover: {
-    flex: 1,
-    minHeight: 420,
-    flexDirection: 'row',
+    width: "100%",
+    aspectRatio: 0.88,
+    flexDirection: "row",
     backgroundColor: COVER,
     borderRadius: 22,
     borderWidth: 2,
     borderColor: PW.color.goldSoft,
     paddingHorizontal: 7,
     paddingVertical: 8,
-    overflow: 'hidden',
-    shadowColor: '#000000',
+    overflow: "hidden",
+    shadowColor: "#000000",
     shadowOpacity: 0.42,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 12 },
@@ -356,7 +359,7 @@ const styles = StyleSheet.create({
     margin: 4,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(245,200,66,0.26)',
+    borderColor: "rgba(245,200,66,0.26)",
   },
 
   page: {
@@ -388,14 +391,14 @@ const styles = StyleSheet.create({
     width: 12,
     marginVertical: 1,
     backgroundColor: COVER_DARK,
-    alignItems: 'center',
-    overflow: 'hidden',
+    alignItems: "center",
+    overflow: "hidden",
   },
 
   gutterHighlight: {
     width: 3,
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
 
   pageHeading: {
@@ -404,12 +407,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 1.8,
     color: INK,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   pageRule: {
     height: 1,
-    backgroundColor: 'rgba(51,41,31,0.22)',
+    backgroundColor: "rgba(51,41,31,0.22)",
     marginTop: 7,
     marginBottom: 6,
   },
@@ -425,14 +428,14 @@ const styles = StyleSheet.create({
 
   wordRow: {
     minHeight: 46,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51,41,31,0.16)',
+    borderBottomColor: "rgba(51,41,31,0.16)",
     paddingVertical: 5,
   },
 
   wordRowPressed: {
-    backgroundColor: 'rgba(123,45,139,0.08)',
+    backgroundColor: "rgba(123,45,139,0.08)",
   },
 
   wordName: {
@@ -453,7 +456,7 @@ const styles = StyleSheet.create({
   },
 
   wordStatusMastered: {
-    color: '#806314',
+    color: "#806314",
   },
 
   wordStatusHaunted: {
@@ -461,20 +464,22 @@ const styles = StyleSheet.create({
   },
 
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     gap: 6,
     marginTop: 4,
   },
 
+  statRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+
   statCell: {
-    width: '48%',
-    minHeight: 70,
-    alignItems: 'center',
-    justifyContent: 'center',
+    flex: 1,
+    minHeight: 62,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: 'rgba(51,41,31,0.18)',
+    borderColor: "rgba(51,41,31,0.18)",
     borderRadius: 7,
     paddingHorizontal: 3,
   },
@@ -492,7 +497,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.8,
     color: INK_MUTED,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   filterHeading: {
@@ -506,19 +511,19 @@ const styles = StyleSheet.create({
   },
 
   filterGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: 5,
   },
 
   filterButton: {
-    width: '48%',
+    width: "48%",
     minHeight: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'rgba(51,41,31,0.22)',
+    borderColor: "rgba(51,41,31,0.22)",
     borderRadius: 7,
     paddingHorizontal: 4,
   },
@@ -534,15 +539,15 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.5,
     color: INK,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   filterTextSelected: {
-    color: '#FFF3D4',
+    color: "#FFF3D4",
   },
 
   indexNote: {
-    marginTop: 'auto',
+    marginTop: "auto",
     paddingTop: 14,
   },
 
@@ -552,7 +557,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     color: INK_MUTED,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   detailScrollContent: {
@@ -566,7 +571,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
     letterSpacing: 1.5,
     color: INK,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   progressCopy: {
@@ -577,7 +582,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     color: INK_MUTED,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   detailStatus: {
@@ -589,23 +594,23 @@ const styles = StyleSheet.create({
   },
 
   statusMastered: {
-    backgroundColor: 'rgba(184,145,39,0.18)',
-    borderColor: 'rgba(128,99,20,0.40)',
+    backgroundColor: "rgba(184,145,39,0.18)",
+    borderColor: "rgba(128,99,20,0.40)",
   },
 
   statusHaunted: {
-    backgroundColor: 'rgba(119,81,131,0.15)',
-    borderColor: 'rgba(119,81,131,0.45)',
+    backgroundColor: "rgba(119,81,131,0.15)",
+    borderColor: "rgba(119,81,131,0.45)",
   },
 
   statusFinished: {
-    backgroundColor: 'rgba(128,99,20,0.08)',
-    borderColor: 'rgba(128,99,20,0.25)',
+    backgroundColor: "rgba(128,99,20,0.08)",
+    borderColor: "rgba(128,99,20,0.25)",
   },
 
   statusProgress: {
-    backgroundColor: 'rgba(51,41,31,0.04)',
-    borderColor: 'rgba(51,41,31,0.18)',
+    backgroundColor: "rgba(51,41,31,0.04)",
+    borderColor: "rgba(51,41,31,0.18)",
   },
 
   detailStatusText: {
@@ -614,7 +619,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.8,
     color: INK,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   metaLine: {
@@ -624,15 +629,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     color: INK_MUTED,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   indexButton: {
     minHeight: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: 'rgba(51,41,31,0.24)',
+    borderColor: "rgba(51,41,31,0.24)",
     borderRadius: 7,
     marginTop: 7,
   },
@@ -652,7 +657,7 @@ const styles = StyleSheet.create({
   meaningRow: {
     paddingVertical: 9,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51,41,31,0.14)',
+    borderBottomColor: "rgba(51,41,31,0.14)",
   },
 
   meaningText: {
@@ -664,22 +669,22 @@ const styles = StyleSheet.create({
   },
 
   meaningHidden: {
-    color: '#5B3C68',
+    color: "#5B3C68",
   },
 
   meaningTrap: {
-    color: '#78364E',
+    color: "#78364E",
   },
 
   meaningLocked: {
     color: INK_MUTED,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 
   emptyWrap: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 4,
   },
 
@@ -689,7 +694,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 1,
     color: INK,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 8,
   },
 
@@ -699,7 +704,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     color: INK_MUTED,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   emptyFilter: {
@@ -709,7 +714,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     color: INK_MUTED,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   pressed: {

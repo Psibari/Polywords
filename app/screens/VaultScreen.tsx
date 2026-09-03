@@ -424,8 +424,8 @@ const styles = StyleSheet.create({
   kicker: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 11,
-    letterSpacing: 2,
+    fontSize: 10,
+    letterSpacing: 1.6,
     color: PW.color.mutedWhite,
     textAlign: "center",
     marginTop: 2,
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     letterSpacing: 5,
     color: PW.color.softWhite,
     textAlign: "center",
-    marginTop: 2,
+    marginTop: 1,
   },
 
   subtitle: {
@@ -449,12 +449,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     color: PW.color.mutedWhite,
     textAlign: "center",
-    marginTop: 2,
-    marginBottom: 8,
+    marginTop: 1,
+    marginBottom: 6,
   },
 
   lexiconWrap: {
     flex: 1,
     minHeight: 0,
+    justifyContent: "flex-start",
   },
 });
