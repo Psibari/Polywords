@@ -14,6 +14,12 @@ export const vaultType = {
   rankTitle: 20,
   rankLetter: 22,
   rankRow: 15,
+  statLabel: 15,
+  secondaryStat: 15,
+  secondaryDot: 15,
+  rankLinkText: 15,
+  detailMeaningsTitle: 15,
+  rankReached: 15,
 } as const;
 
 export const vaultMaterial = {

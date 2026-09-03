@@ -384,9 +384,9 @@ const styles = StyleSheet.create({
   statLabel: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    color: PW.color.mutedWhite,
+    fontSize: vaultType.statLabel,
+    letterSpacing: 1,
+    color: PW.color.softWhite,
     marginTop: 2,
   },
   secondaryStatsRow: {
@@ -400,13 +400,13 @@ const styles = StyleSheet.create({
   secondaryStat: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 10,
-    letterSpacing: 1.2,
-    color: PW.color.mutedWhite,
+    fontSize: vaultType.secondaryStat,
+    letterSpacing: 0.8,
+    color: PW.color.softWhite,
   },
   secondaryDot: {
     color: vaultMaterial.bookplateSeal,
-    fontSize: 12,
+    fontSize: vaultType.secondaryDot,
   },
   rankLink: {
     flexDirection: 'row',
@@ -418,8 +418,8 @@ const styles = StyleSheet.create({
   rankLinkText: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 11,
-    letterSpacing: 1.5,
+    fontSize: vaultType.rankLinkText,
+    letterSpacing: 1,
     color: vaultMaterial.bookplateSeal,
   },
   rankLinkTrack: {
@@ -534,8 +534,8 @@ const styles = StyleSheet.create({
   detailMeaningsTitle: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 11,
-    letterSpacing: 2,
+    fontSize: vaultType.detailMeaningsTitle,
+    letterSpacing: 1.5,
     color: vaultMaterial.bookplateSeal,
     textAlign: 'center',
     marginBottom: 2,
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
   rankReached: {
     fontFamily: FONTS.brand,
     includeFontPadding: false,
-    fontSize: 12,
+    fontSize: vaultType.rankReached,
     color: PW.color.mutedWhite,
   },
   rankThreshold: {
