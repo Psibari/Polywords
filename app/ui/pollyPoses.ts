@@ -40,11 +40,14 @@ export const POLLY_POSE_SCALE: Record<PollyPoseName, number> = {
   shocked: 0.84,
   sulk: 0.69,
   rattled: 1,
-  // Crown-matched to sprite4 (the anchor). sprite4's 164px crown renders
-  // 103.2pt contain-fit into the 260pt pose box; this pose's 128px crown
-  // renders 83.2pt, so 1.24 brings them level. Her widest point lands at
-  // 252 of the 260pt box — it fits, with little margin.
-  asleep: 1.24,
+  // Derived from figure height, not crown width — her head droops and
+  // tilts in this pose, so the crown's horizontal span under-reads and a
+  // width match overshoots. Crown width is not a valid scale anchor for
+  // any pose where the head is tilted or drooped.
+  // sprite4 figure 396px on a 283x413 canvas -> renders 249.3pt contain-fit
+  // asleep  figure 398px on a 313x400 canvas -> renders 258.7pt
+  // 249.3 / 258.7 = 0.96
+  asleep: 0.96,
   fly: 0.8,
   flyAngry: 0.78,
   flyGrin: 0.81,
