@@ -2,7 +2,8 @@
 
 ## Before Editing
 
-1. Read `AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, and the focused source.
+1. Read `AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, and the focused source. Run `npm run state`
+   for live content counts and the content pickup marker; docs never carry those numbers.
 2. Verify the branch, worktree, live owner, and any code/doc conflict.
 3. Define one coherent goal and the smallest safe file scope.
 

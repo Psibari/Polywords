@@ -31,9 +31,9 @@ Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
   parchment, a matching ornate rod rolls reward paper over it, the reward holds, and the
   paper rolls up to reveal the next clue. Repeated-round state/input tests, TypeScript, the
   full test suite, and an iPhone check passed.
-- Hunt runtime content is `assets/data/huntData.json`: 209 words and 1,900 tiles, including
-  18 boss words and 54 hidden pairs. The 24-word DISPATCH-through-FLAG import preserved all
-  173 prior entries; DISCHARGE remained unchanged. Boss/hidden-pair structure did not change.
+- Hunt runtime content is `assets/data/huntData.json`; `npm run state` prints its live counts.
+  The 24-word DISPATCH-through-FLAG import preserved all prior entries; DISCHARGE remained
+  unchanged. Boss/hidden-pair structure did not change.
 - Merged from `localworkbooks/POLYWORDS_content_data_2026-08-30_FOSTER_FOUL_LOCKED.xlsx`
   (copied into the repo 2026-08-31, same convention as the existing
   `POLYWORDS_content_data_2026-08-15_DIRECT_DISCHARGE_LOCKED.xlsx`): TANK, FOAM, FOLD and FORK
@@ -74,7 +74,7 @@ Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
   widest spread in the batch), FORGE (4R/5T, medium/flow), FOSTER (3R/4T, easy/confidence —
   smallest/gentlest, matches the confidence-bucket profile), FOUL (6R/5T, medium/tension — every
   trap sharply baits one specific REAL). These are Pete's calls to revise, not settled fact.
-- Current gpsTag pool counts are confidence 17, flow 42, tension 72, panic 60, boss 18. The
+- Current gpsTag pool counts come from `npm run state`. The
   confidence retag has happened; any earlier figure of 6 or 12 is stale.
 - The tracked Hunt workbook is `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`; live JSON remains
   authoritative.
@@ -143,7 +143,7 @@ Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
   - `hiddenFound`, `ghostFoundLate` and `ghostDissolved` are declared in `PollyEvent` but fired
     by nothing anywhere.
   - WRONG_SMUG is still the only spec for `wrong`, but it no longer carries a fixed line:
-    `resolveVisit` picks from a 12-line pool at fire time (d623087).
+    `resolveVisit` picks from `WRONG_HECKLE_LINES` at fire time (d623087).
   - The Hunt now has a variant mechanism of its own: `pickFreshLine()` in `pollyVisitPolicy.ts`,
     fed `recentLineIds` and a random roll through `PollyBudgetState`. It reads the same
     `recentLineIds` that `resolveHomePollyMoment` and `resolveResultsPollyMoment` use via
@@ -156,10 +156,10 @@ Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
     hook-level change with no MaskBoard involvement.
   - She has a losing register in the Hunt as of 2e82c32 — the ten-streak reaction. Everything
     else she says in the Hunt is still her winning or threatening.
-  - `POLLY_LINES` holds 85 lines; 28 of them have a `hunt`-prefixed id. That undercounts lines
-    that actually fire in the Hunt — `streakLucky`/etc. (6) and `featherOne*` (5) also fire
-    only there but don't carry the prefix — so "Hunt lines" is not one number without saying
-    which count it means.
+  - `POLLY_LINES` holds the line total `npm run state` prints; only some of them have a
+    `hunt`-prefixed id. That prefix undercounts lines that actually fire in the Hunt —
+    `streakLucky`/etc. and `featherOne*` also fire only there but don't carry the prefix — so
+    "Hunt lines" is not one number without saying which count it means.
 - `isMasteredReturn` is set on returning mastered-word steps in `huntGenerator` and is read by
   NOTHING — not the board, store, Results or Polly. A mastered word returns silently and
   unmarked.
@@ -233,8 +233,8 @@ Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
   MASTER 14,000. This is an absolute ladder and should be revisited if future content changes
   materially alter the perfect-play ceiling.
 - Roughly every fifth new word should carry `hiddenPairs`. APPROVED as the content remedy for
-  the finite Boss pool; the current runtime now has 18 Boss words / 54 hidden pairs (up from
-  13/39 — TANK, FOAM, FOLD, FORK added and WAKE promoted, 2026-08-31).
+  the finite Boss pool; `npm run state` prints the current Boss word and hidden-pair counts
+  (TANK, FOAM, FOLD and FORK added and WAKE promoted, 2026-08-31).
 - Banished Haunts are removed from the active queue but are not yet recorded as a permanent Vault
   collection item. This is a future reward/UX decision, not a reason to remove Haunts from Hunt.
 

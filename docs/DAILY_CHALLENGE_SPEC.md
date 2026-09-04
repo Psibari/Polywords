@@ -2,11 +2,12 @@
 
 Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hunt.
 
-> **Content status:** The canonical source is the 60-word locked workbook at
+> **Content status:** The canonical source is the locked workbook at
 > `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`; `STAGE` is included and
 > `SENTENCE` is excluded. `app/game/dailyPool.ts` is the approved runtime representation.
 > Each source row has three clues, nine unique approved candidates, and tier 1–3. A round
 > deterministically presents the target plus five of those distractors: six candidates total.
+> `npm run state` prints the live pool size.
 
 ## Session
 

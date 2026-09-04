@@ -21,19 +21,20 @@ do not treat them as models even though they're live.
 ## Line pools
 
 Most moments still hold one fixed line, but two Hunt moments pick from a pool instead:
-`wrong` (12 lines, `WRONG_HECKLE_LINES`) and `streakX10` (6 lines, `STREAK_LINES`), both in
-`pollyVisitPolicy.ts`. `pickFreshLine()` avoids whatever's in `pollyMemory.recentLineIds`
-(the last 5 lines used, any surface) before picking, so pooled moments need real variety, not
-one line and four throwaway rewordings — a line that only makes sense once in a row will
-resurface. When asked to add lines to a pooled moment, write to the same standard as the
-existing pool entries, not a lesser one.
+`wrong` (`WRONG_HECKLE_LINES`) and `streakX10` (`STREAK_LINES`), both in
+`pollyVisitPolicy.ts` and both sized by `npm run state`. `pickFreshLine()` avoids whatever's
+in `pollyMemory.recentLineIds` (the last 5 lines used, any surface) before picking, so pooled
+moments need real variety, not one line and four throwaway rewordings — a line that only
+makes sense once in a row will resurface. When asked to add lines to a pooled moment, write
+to the same standard as the existing pool entries, not a lesser one.
 
 ## Losing register
 
 Polly isn't only smug. At a ten-in-a-row streak she goes `rattled` — sweating, forced grin,
-explaining why the streak doesn't count (`STREAK_RATTLED` in `pollyVisitPolicy.ts`, its own
-6-line pool). This is a distinct defensive tone, not a smaller version of her usual smugness —
-she's covering, not winning. Any future writing for this moment should stay in that register.
+explaining why the streak doesn't count (`STREAK_RATTLED` in `pollyVisitPolicy.ts`, drawing
+from `STREAK_LINES`). This is a distinct defensive tone, not a smaller version of her usual
+smugness — she's covering, not winning. Any future writing for this moment should stay in
+that register.
 
 ## Surfaces
 

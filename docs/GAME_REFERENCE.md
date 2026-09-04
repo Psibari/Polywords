@@ -45,8 +45,8 @@ measured player data.
 The chain starts at 1×, rises by 0.5× every three consecutive correct choices, caps at 3×,
 and resets on error. Current ranks: D 0, C 3,000, B 6,000, A 9,000, S 11,500, MASTER 14,000.
 The ladder is an absolute per-run skill axis; it does not represent long-term Vault progress.
-It was retuned against the 197-word corpus as of 2026-08-24; the corpus has since grown to
-209 words / 18 boss words (2026-08-31) and the ladder has not been re-verified against that —
+It was retuned against the corpus as of 2026-08-24; the corpus has grown since then
+(`npm run state`) and the ladder has not been re-verified against that —
 a run only ever draws one boss word, so the ceiling is unlikely to have moved, but this is
 unverified, not confirmed unaffected.
 
@@ -62,7 +62,7 @@ Score milestones at 3,000 and 10,000 celebrate but do not award feathers.
 Locked system text includes `YOU BEAT POLLY`, `POLLY HUNT COMPLETE`, and
 `POLLY CLIPPED YOUR RUN.`. `BINGO BANGO ZZZZINGO!` is unassigned and must not be reintroduced
 into mastery without approval. `Thought so.` is not locked system text — it is one example
-from `WRONG_HECKLE_LINES`, a 12-line pool `resolveVisit` now picks from on each wrong swipe
+from `WRONG_HECKLE_LINES`, a pool `resolveVisit` now picks from on each wrong swipe
 (see `docs/POLLY_DIALOGUE_BANK.md`).
 
 ## Presentation

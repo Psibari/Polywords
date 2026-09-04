@@ -3,6 +3,10 @@
 `AGENTS.md` owns authority and workflow. This file records durable architecture only;
 current state and blockers live in `CONTEXT.md`. Verify runtime claims against code/data.
 
+> No number in this file may be one that `npm run state` can print. Run it for live counts —
+> words, boss words, hidden pairs, visible REAL masks, traps, gpsTag pools, Daily pool entries,
+> authored Polly lines and the Hunt line pools — and for the content pickup marker.
+
 ## Source Map
 
 | Area | Owner |
@@ -54,13 +58,13 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Score sources are `realMaskPoints`, `trapMaskPoints` and `mysteryMasteryPoints` in
   `polyRunEngine.ts`. `addBonusScore()` is exported and wired into the store but has no caller
   anywhere in `app/` — treat as dead.
-- `realMaskPoints`' isRare 300-point tier has no data behind it: zero of the 1,007 visible REAL
-  masks carry isRare.
+- `realMaskPoints`' isRare 300-point tier has no data behind it: zero of the visible REAL
+  masks carry isRare (`npm run state`).
 - `FEATHER_MILESTONES` fires for FX only. The old score-to-extra-life conversion was
   deliberately removed as regressive and stays removed.
 - `ranks.ts` uses the current absolute ladder: D 0, C 3,000, B 6,000, A 9,000, S 11,500,
-  MASTER 14,000. The ladder was retuned against the 197-word corpus and observed flawless-run
-  ceiling as of 2026-08-24; the corpus has since grown to 209 words / 18 boss words (2026-08-31),
+  MASTER 14,000. The ladder was retuned against the corpus and observed flawless-run
+  ceiling as of 2026-08-24; the corpus has grown since then (`npm run state`),
   which the ladder has not been re-verified against — a run only ever draws one boss word, so
   the ceiling is unlikely to have moved, but this is unverified, not confirmed unaffected.
   Rank remains a per-run skill verdict, not long-term Vault progress.
@@ -72,6 +76,10 @@ navigation shell; active Hunt and Daily play are nav-free.
   link rather than the bookplate identity. Books represent words, plain once any visible REAL is
   found and finished once all visible REALs are claimed. A banished Haunt leaves the active ghost
   queue, but a permanent Haunt-clear history entry is not yet part of the Vault.
+- Ruling: the Vault and the Polybook may never display a meaning, a trap or a hidden pair.
+  Words recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
+  flagged `isMasteredReturn` — so any such display is an answer key for a game still in
+  progress. Counts, status and titles only.
 
 ### Daily
 
@@ -108,13 +116,14 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Correct-answer presentation is physical: the submitted card lands on the clue parchment,
   the matching rod/reward paper covers it, reward appears, then the paper rolls up over the
   already-rendered next clue. Input stays locked until the reveal finishes.
-- `app/game/dailyPool.ts` contains the approved 60-word Daily runtime pool. Each source word
-  has three clues and nine approved candidates; a round deterministically presents six.
+- `app/game/dailyPool.ts` contains the approved Daily runtime pool (`npm run state`). Each
+  source word has three clues and nine approved candidates; a round deterministically
+  presents six.
 
 ## Content and Data
 
-- `assets/data/huntData.json` is the live Hunt bank and outranks workbook/tool output: 209
-  words, 18 boss words, 54 hidden pairs as of 2026-08-31.
+- `assets/data/huntData.json` is the live Hunt bank and outranks workbook/tool output.
+  `npm run state` prints its live counts and the last commit that touched it.
 - `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` is editorial staging. Runtime changes require
   an explicit additive merge and verification. Dated per-batch workbooks
   (`POLYWORDS_content_data_<date>_<WORDRANGE>_LOCKED.xlsx`) also live in `localworkbooks/` as
@@ -134,6 +143,10 @@ navigation shell; active Hunt and Daily play are nav-free.
 
 ## Presentation and Character
 
+- "Locked" in this file means device-approved and not to be reopened without new regression or
+  device evidence. It does not mean permanent. Only two things are permanently locked — see
+  AGENTS.md's Product Locks.
+
 - Polly is NOT a word thief and does not own or steal meanings. She is the antagonist who
   authored the traps — the designer of the deception, not a burglar. Pete ruled this
   2026-08-29. The five lines that contradicted it were retired 2026-09-01 (boss-entry,
@@ -150,8 +163,8 @@ navigation shell; active Hunt and Daily play are nav-free.
   `usePollyVisits` fills them from `useGameStore.getState()` (never a
   selector — a subscription would re-render mid-visit) and `Math.random()`.
   Randomness is an input so the policy file stays pure and still runs under
-  plain node. Two pools exist: `WRONG_HECKLE_LINES` (13) and `STREAK_LINES`
-  (12). Every other moment still holds a single fixed line. (d623087)
+  plain node. Two pools exist: `WRONG_HECKLE_LINES` and `STREAK_LINES`
+  (`npm run state` for their sizes). Every other moment still holds a single fixed line. (d623087)
 - Polly now has a losing register in the Hunt. `streakX10` fires from
   `useBoardMechanics` on every multiple of ten and used to be discarded;
   it now resolves to `STREAK_RATTLED` — flyPose `fly`, perchPose `rattled`,

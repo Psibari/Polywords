@@ -20,6 +20,11 @@ Report conflicts; never blend them silently.
 
 ## Product Locks
 
+Ruling: only two things are permanently locked — the swipe grammar (UP claims a real meaning,
+RIGHT rejects a trap) and the premise (one word, many real meanings, convincing traps).
+Everything else below, and everything any other doc calls "locked", is current best thinking
+and reopenable with a request. Treat those as "do not change casually", not "never change".
+
 - POLYWORDS creates recognition: “Wait… Oh. Right.”, not vocabulary instruction.
 - Home / Play / Vault / Settings are the main surfaces; active gameplay is nav-free.
 - Hunt: UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit.
@@ -32,6 +37,10 @@ Report conflicts; never blend them silently.
   explicit request. `MaskBoard.tsx` and `SwipeMask.tsx` require a focused war-room pass.
 - The in-round book is the **Polybook**. The **Vault** is the player's archive and never
   Polly's cage, lair, or property.
+- The Vault and the Polybook may never display a meaning, a trap or a hidden pair. Words
+  recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
+  flagged `isMasteredReturn` — so any such display is an answer key for a game still in
+  progress. Counts, status and titles only.
 
 ## Polly and Visual Locks
 
@@ -55,7 +64,7 @@ Report conflicts; never blend them silently.
   Challenge content. Do not apply Hunt-only editorial doctrine to Daily.
 - Live Hunt content is `assets/data/huntData.json`; the tracked editorial workbook is
   `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx` and never updates runtime automatically.
-- Canonical Daily authoring content is the 60-word locked workbook at
+- Canonical Daily authoring content is the locked workbook at
   `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`; `STAGE` is included and
   `SENTENCE` is excluded. `app/game/dailyPool.ts` is its approved runtime representation.
 - `assets/data/huntData.v2.json` is dormant. Do not wire it into gameplay.
@@ -69,6 +78,8 @@ Report conflicts; never blend them silently.
 - Do not run full content generation, destructive rebuilds, or `npm audit fix` unless asked.
 - Use `apply_patch` for manual file edits. Never expose credentials or commit `.env`, caches,
   generated CSVs, workspaces, or `dist`.
+- Never write a content count into a doc. `npm run state` prints them live; a written count
+  rots the day content ships.
 - After code/tooling changes: `npx.cmd tsc --noEmit`, relevant tests, `git diff --check`,
   and `git status --short`. Docs-only changes require the two Git checks plus a reference scan.
 - Report device/native validation separately from static checks.
