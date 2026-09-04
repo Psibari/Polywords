@@ -348,16 +348,19 @@ export default function VaultScreen({ navigation }: Props) {
       <View pointerEvents="none" style={styles.candleCore} />
 
       <View style={styles.content}>
-        <Text style={styles.kicker}>YOUR PERMANENT RECORD</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>POLYBOOK</Text>
 
-        <Text style={styles.title}>THE LEXICON</Text>
+          <Text style={styles.subtitle}>YOUR HAUNTS. YOUR MASTERY.</Text>
+        </View>
 
-        <Text style={styles.subtitle}>
-          EVERY MEANING YOU SURVIVE LEAVES ITS MARK.
-        </Text>
-
-        <View style={styles.lexiconWrap}>
+        <View style={styles.polybookArea}>
           <LexiconPrototype
+            hauntedWords={ghostsToShow.map((ghost) => ghost.word)}
+            masteredWords={progress.masteredWords.map((record) => ({
+              word: record.word,
+              dateMastered: record.dateMastered,
+            }))}
             entries={lexiconEntries}
             selectedWord={selectedWord}
             onSelectWord={setSelectedWord}
@@ -390,9 +393,18 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     minHeight: 0,
-    paddingHorizontal: PW.space.screenX,
     paddingTop: 8,
     paddingBottom: 8,
+  },
+
+  headerContainer: {
+    paddingHorizontal: PW.space.screenX,
+  },
+
+  polybookArea: {
+    flex: 1,
+    minHeight: 0,
+    width: "100%",
   },
 
   ambientWash: {
@@ -456,6 +468,8 @@ const styles = StyleSheet.create({
   lexiconWrap: {
     flex: 1,
     minHeight: 0,
+    paddingTop: 6,
+    paddingBottom: 12,
     justifyContent: "flex-start",
   },
 });

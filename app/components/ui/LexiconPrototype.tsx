@@ -1,7 +1,14 @@
 import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { FONTS } from "../../constants/fonts";
-import { PW } from "../../ui/pwTheme";
 
 export type LexiconStatus = "mastered" | "haunted" | "finished" | "progress";
 
@@ -25,304 +32,486 @@ export type LexiconDetail = {
   meanings: LexiconMeaningLine[];
 };
 
-type StatCellProps = {
-  value: number;
-  label: string;
+type MasteredWord = {
+  word: string;
+  dateMastered?: string;
 };
-
-type LexiconSummary = {
-  meanings: number;
-  words: number;
-  mastered: number;
-  haunted: number;
-};
-
-type Filter = "all" | "mastered" | "haunted" | "progress";
 
 type Props = {
-  entries: LexiconEntry[];
-  selectedWord: string | null;
-  onSelectWord: (word: string | null) => void;
-  summary: LexiconSummary;
-  detail: LexiconDetail | null;
+  entries?: LexiconEntry[];
+  selectedWord?: string | null;
+  onSelectWord?: (word: string | null) => void;
+  summary?: {
+    meanings: number;
+    words: number;
+    mastered: number;
+    haunted: number;
+  };
+  detail?: LexiconDetail | null;
+  hauntedWords: string[];
+  masteredWords: MasteredWord[];
 };
 
-const PAGE = "#D8CAA5";
-const PAGE_EDGE = "#A78957";
+type PolybookLayoutConfig = {
+  bookWidthPct: number;
+  bookHeightScale: number;
+  bookTopOffset: number;
+  pageTopPct: number;
+  pageHeightPct: number;
+  pageWidthPct: number;
+  leftPageLeftPct: number;
+  rightPageLeftPct: number;
+  contentScale: number;
+  sealSize: number;
+  wordSize: number;
+};
+
 const INK = "#33291F";
 const INK_MUTED = "rgba(51,41,31,0.62)";
-const COVER = "#4A315B";
-const COVER_DARK = "#26182F";
-const HAUNTED = "#775183";
+const POLYBOOK_ART = require("../../../assets/images/vault/polybook_open.png");
+const HAUNTED_SEAL = require("../../../assets/images/vault/polybook/polybook_haunted_seal_clean.png");
+const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
+const POLYBOOK_SOURCE = Image.resolveAssetSource(POLYBOOK_ART);
+const POLYBOOK_ASPECT_RATIO = POLYBOOK_SOURCE.width / POLYBOOK_SOURCE.height;
 
-function filterMatches(entry: LexiconEntry, filter: Filter): boolean {
-  if (filter === "all") return true;
-  if (filter === "mastered") return entry.status === "mastered";
-  if (filter === "haunted") return entry.status === "haunted";
+const DEFAULT_POLYBOOK_LAYOUT: PolybookLayoutConfig = {
+  bookWidthPct: 98,
+  bookHeightScale: 1.17,
+  bookTopOffset: 60,
+  pageTopPct: 13,
+  pageHeightPct: 67,
+  pageWidthPct: 33.5,
+  leftPageLeftPct: 11.5,
+  rightPageLeftPct: 55,
+  contentScale: 1,
+  sealSize: 60,
+  wordSize: 28,
+};
 
-  // "In progress" includes words whose visible meanings are finished
-  // but which have not reached permanent Mastery.
-  return entry.status === "progress" || entry.status === "finished";
+type TunerField = {
+  key: keyof PolybookLayoutConfig;
+  label: string;
+  step: number;
+  min?: number;
+  max?: number;
+  suffix: string;
+};
+
+const TUNER_FIELDS: TunerField[] = [
+  {
+    key: "bookWidthPct",
+    label: "BOOK WIDTH",
+    step: 0.5,
+    min: 80,
+    max: 105,
+    suffix: "%",
+  },
+  {
+    key: "bookHeightScale",
+    label: "BOOK HEIGHT",
+    step: 0.025,
+    min: 0.95,
+    max: 1.35,
+    suffix: "x",
+  },
+  {
+    key: "bookTopOffset",
+    label: "BOOK Y",
+    step: 4,
+    min: -120,
+    max: 300,
+    suffix: "px",
+  },
+  {
+    key: "pageTopPct",
+    label: "PAGE TOP",
+    step: 0.5,
+    min: 0,
+    max: 40,
+    suffix: "%",
+  },
+  {
+    key: "pageHeightPct",
+    label: "PAGE HEIGHT",
+    step: 0.5,
+    min: 40,
+    max: 85,
+    suffix: "%",
+  },
+  {
+    key: "pageWidthPct",
+    label: "PAGE WIDTH",
+    step: 0.5,
+    min: 20,
+    max: 45,
+    suffix: "%",
+  },
+  {
+    key: "leftPageLeftPct",
+    label: "LEFT X",
+    step: 0.5,
+    min: 0,
+    max: 30,
+    suffix: "%",
+  },
+  {
+    key: "rightPageLeftPct",
+    label: "RIGHT X",
+    step: 0.5,
+    min: 45,
+    max: 75,
+    suffix: "%",
+  },
+  {
+    key: "contentScale",
+    label: "CONTENT SCALE",
+    step: 0.02,
+    min: 0.85,
+    max: 1.1,
+    suffix: "x",
+  },
+  {
+    key: "sealSize",
+    label: "SEAL SIZE",
+    step: 2,
+    min: 60,
+    max: 100,
+    suffix: "px",
+  },
+  {
+    key: "wordSize",
+    label: "WORD SIZE",
+    step: 1,
+    min: 26,
+    max: 30,
+    suffix: "px",
+  },
+];
+
+function formatTunerValue(
+  value: number,
+  key: keyof PolybookLayoutConfig,
+): string {
+  return key === "contentScale" ? value.toFixed(2) : value.toFixed(1);
 }
 
-function statusStyle(status: LexiconStatus) {
-  if (status === "mastered") return styles.statusMastered;
-  if (status === "haunted") return styles.statusHaunted;
-  if (status === "finished") return styles.statusFinished;
-  return styles.statusProgress;
-}
+function PolybookDevTuner({
+  layout,
+  onChange,
+  showSafeZones,
+  onToggleSafeZones,
+  showSamples,
+  onToggleSamples,
+  dimensions,
+}: {
+  layout: PolybookLayoutConfig;
+  onChange: (layout: PolybookLayoutConfig) => void;
+  showSafeZones: boolean;
+  onToggleSafeZones: () => void;
+  showSamples: boolean;
+  onToggleSamples: () => void;
+  dimensions: {
+    screenWidth: number;
+    bookWidth: number;
+    baseBookHeight: number;
+    finalBookHeight: number;
+  };
+}) {
+  const [expanded, setExpanded] = useState(false);
 
-function StatCell({ value, label }: StatCellProps) {
+  if (!__DEV__) return null;
+
+  const updateField = (field: TunerField, direction: -1 | 1) => {
+    const nextValue = layout[field.key] + field.step * direction;
+    const value = Math.min(
+      field.max ?? Number.POSITIVE_INFINITY,
+      Math.max(field.min ?? Number.NEGATIVE_INFINITY, nextValue),
+    );
+    onChange({ ...layout, [field.key]: Number(value.toFixed(2)) });
+  };
+
+  const printValues = () => {
+    console.log("POLYBOOK_LAYOUT =", JSON.stringify(layout, null, 2));
+    console.log(
+      "POLYBOOK_DIMENSIONS =",
+      JSON.stringify(
+        {
+          screenWidth: dimensions.screenWidth,
+          bookWidth: dimensions.bookWidth,
+          baseBookHeight: dimensions.baseBookHeight,
+          finalBookHeight: dimensions.finalBookHeight,
+          bookHeightScale: layout.bookHeightScale,
+        },
+        null,
+        2,
+      ),
+    );
+  };
+
   return (
-    <View style={styles.statCell}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={styles.tunerAnchor} pointerEvents="box-none">
+      <View
+        style={[styles.tunerPanel, !expanded && styles.tunerPanelCollapsed]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          accessibilityLabel={
+            expanded
+              ? "Collapse Polybook dev tuner"
+              : "Expand Polybook dev tuner"
+          }
+          onPress={() => setExpanded((value) => !value)}
+          style={styles.tunerHeader}
+        >
+          <Text style={styles.tunerTitle}>DEV SIZE</Text>
+          <Text style={styles.tunerChevron}>{expanded ? "-" : "+"}</Text>
+        </Pressable>
+
+        {expanded && (
+          <ScrollView
+            style={styles.tunerScroll}
+            contentContainerStyle={styles.tunerContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {TUNER_FIELDS.map((field) => (
+              <View key={field.key} style={styles.tunerRow}>
+                <Text style={styles.tunerLabel}>{field.label}</Text>
+                <View style={styles.tunerControls}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Decrease ${field.label.toLowerCase()}`}
+                    onPress={() => updateField(field, -1)}
+                    style={styles.tunerButton}
+                  >
+                    <Text style={styles.tunerButtonText}>-</Text>
+                  </Pressable>
+                  <Text style={styles.tunerValue}>
+                    {formatTunerValue(layout[field.key], field.key)}
+                    {field.suffix}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Increase ${field.label.toLowerCase()}`}
+                    onPress={() => updateField(field, 1)}
+                    style={styles.tunerButton}
+                  >
+                    <Text style={styles.tunerButtonText}>+</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: showSafeZones }}
+              accessibilityLabel="Show Polybook safe zones"
+              onPress={onToggleSafeZones}
+              style={styles.tunerAction}
+            >
+              <Text style={styles.tunerActionText}>
+                {showSafeZones ? "[x]" : "[ ]"} SHOW SAFE ZONES
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: showSamples }}
+              accessibilityLabel="Show sample seals"
+              onPress={onToggleSamples}
+              style={styles.tunerAction}
+            >
+              <Text style={styles.tunerActionText}>
+                {showSamples ? "[x]" : "[ ]"} SHOW SAMPLE SEALS
+              </Text>
+            </Pressable>
+
+            <View style={styles.tunerActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reset Polybook layout values"
+                onPress={() => onChange({ ...DEFAULT_POLYBOOK_LAYOUT })}
+                style={styles.tunerAction}
+              >
+                <Text style={styles.tunerActionText}>RESET</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Print Polybook layout values"
+                onPress={printValues}
+                style={styles.tunerAction}
+              >
+                <Text style={styles.tunerActionText}>PRINT VALUES</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        )}
+      </View>
     </View>
   );
 }
 
-export function LexiconPrototype({
-  entries,
-  selectedWord,
-  onSelectWord,
-  summary,
-  detail,
-}: Props) {
-  const [filter, setFilter] = useState<Filter>("all");
+function formatMasteredWords(words: MasteredWord[]): string[] {
+  return [...words]
+    .sort((first, second) => {
+      if (!first.dateMastered || !second.dateMastered) return 0;
+      return (
+        new Date(second.dateMastered).getTime() -
+        new Date(first.dateMastered).getTime()
+      );
+    })
+    .map((record) => record.word);
+}
 
-  const filteredEntries = useMemo(
-    () => entries.filter((entry) => filterMatches(entry, filter)),
-    [entries, filter],
+export function LexiconPrototype({ hauntedWords, masteredWords }: Props) {
+  const { width: screenWidth } = useWindowDimensions();
+  const [layout, setLayout] = useState<PolybookLayoutConfig>({
+    ...DEFAULT_POLYBOOK_LAYOUT,
+  });
+  const [showSafeZones, setShowSafeZones] = useState(false);
+  const [showSamples, setShowSamples] = useState(false);
+
+  const bookWidth = screenWidth * (layout.bookWidthPct / 100);
+  const baseBookHeight = bookWidth / POLYBOOK_ASPECT_RATIO;
+  const bookHeight = baseBookHeight * layout.bookHeightScale;
+  const displayedHaunts = showSamples
+    ? ["FOLD", "BATTERY", "FORK"]
+    : hauntedWords.slice(0, 3);
+  const masteredNames = useMemo(
+    () => formatMasteredWords(masteredWords),
+    [masteredWords],
   );
-
-  const showingDetail = selectedWord !== null && detail !== null;
+  const displayedMastered = showSamples
+    ? ["STOCK", "CAST", "COURT"]
+    : masteredNames.slice(0, 3);
+  const displayedSealSize = layout.sealSize;
 
   return (
     <View style={styles.root}>
-      <View style={styles.bookCover}>
-        <View pointerEvents="none" style={styles.coverInnerRim} />
+      <View
+        style={[
+          styles.bookStage,
+          {
+            width: bookWidth,
+            height: bookHeight,
+            marginTop: layout.bookTopOffset,
+          },
+        ]}
+      >
+        <View pointerEvents="none" style={styles.bookArt}>
+          <Image
+            source={POLYBOOK_ART}
+            resizeMode="stretch"
+            style={styles.bookArtImage}
+          />
+        </View>
 
-        <View style={[styles.page, styles.leftPage]}>
-          {showingDetail ? (
-            <>
-              <Text style={styles.pageHeading}>WORD RECORD</Text>
-              <View style={styles.pageRule} />
-
-              <ScrollView
-                style={styles.pageScroll}
-                contentContainerStyle={styles.detailScrollContent}
-                showsVerticalScrollIndicator={false}
-              >
+        <View
+          style={[
+            styles.pageContent,
+            {
+              left: `${layout.leftPageLeftPct}%`,
+              top: `${layout.pageTopPct}%`,
+              width: `${layout.pageWidthPct}%`,
+              height: `${layout.pageHeightPct}%`,
+              transform: [{ scale: layout.contentScale }],
+            },
+            __DEV__ && showSafeZones && styles.leftSafeZoneDebug,
+          ]}
+        >
+          <Text style={styles.pageHeading}>HAUNTED</Text>
+          <Image
+            source={HAUNTED_SEAL}
+            resizeMode="contain"
+            style={[
+              styles.pageSeal,
+              { width: displayedSealSize, height: displayedSealSize },
+            ]}
+          />
+          <Text style={styles.pageCount}>
+            {showSamples
+              ? `${displayedHaunts.length} ACTIVE`
+              : `${hauntedWords.length} ACTIVE`}
+          </Text>
+          <View style={styles.wordStack}>
+            {displayedHaunts.length > 0 ? (
+              displayedHaunts.map((word, index) => (
                 <Text
-                  style={styles.detailWord}
+                  key={`${word}-${index}`}
+                  style={[styles.pageWord, { fontSize: layout.wordSize }]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  minimumFontScale={0.58}
                 >
-                  {detail.word}
+                  {word}
                 </Text>
-
-                <Text style={styles.progressCopy}>{detail.progressLabel}</Text>
-
-                <View style={[styles.detailStatus, statusStyle(detail.status)]}>
-                  <Text style={styles.detailStatusText}>
-                    {detail.status === "mastered"
-                      ? "MASTERED"
-                      : detail.status === "haunted"
-                        ? "HAUNTED"
-                        : detail.status === "finished"
-                          ? "VISIBLE MEANINGS CLEARED"
-                          : "IN PROGRESS"}
-                  </Text>
-                </View>
-
-                {detail.metaLines.map((line, index) => (
-                  <Text key={`${line}-${index}`} style={styles.metaLine}>
-                    {line}
-                  </Text>
-                ))}
-              </ScrollView>
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Return to Lexicon index"
-                onPress={() => onSelectWord(null)}
-                style={({ pressed }) => [
-                  styles.indexButton,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.indexButtonText}>← INDEX</Text>
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <Text style={styles.pageHeading}>YOUR WORDS</Text>
-              <View style={styles.pageRule} />
-
-              {entries.length === 0 ? (
-                <View style={styles.emptyWrap}>
-                  <Text style={styles.emptyTitle}>
-                    THE FIRST PAGE IS BLANK.
-                  </Text>
-                  <Text style={styles.emptyCopy}>
-                    Claim a real meaning in the Hunt and its word will be
-                    recorded here.
-                  </Text>
-                </View>
-              ) : (
-                <ScrollView
-                  style={styles.pageScroll}
-                  contentContainerStyle={styles.wordList}
-                  showsVerticalScrollIndicator={false}
-                >
-                  {filteredEntries.length === 0 ? (
-                    <Text style={styles.emptyFilter}>
-                      No words in this section yet.
-                    </Text>
-                  ) : (
-                    filteredEntries.map((entry) => (
-                      <Pressable
-                        key={entry.word}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${entry.word}. ${entry.statusLabel}`}
-                        onPress={() => onSelectWord(entry.word)}
-                        style={({ pressed }) => [
-                          styles.wordRow,
-                          pressed && styles.wordRowPressed,
-                        ]}
-                      >
-                        <Text
-                          style={styles.wordName}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.7}
-                        >
-                          {entry.word}
-                        </Text>
-
-                        <Text
-                          style={[
-                            styles.wordStatus,
-                            entry.status === "mastered" &&
-                              styles.wordStatusMastered,
-                            entry.status === "haunted" &&
-                              styles.wordStatusHaunted,
-                          ]}
-                        >
-                          {entry.statusLabel}
-                        </Text>
-                      </Pressable>
-                    ))
-                  )}
-                </ScrollView>
-              )}
-            </>
-          )}
+              ))
+            ) : (
+              <Text style={styles.emptyState}>NO ACTIVE HAUNTS</Text>
+            )}
+          </View>
         </View>
 
-        <View pointerEvents="none" style={styles.gutter}>
-          <View style={styles.gutterHighlight} />
-        </View>
-
-        <View style={[styles.page, styles.rightPage]}>
-          {showingDetail ? (
-            <>
-              <Text style={styles.pageHeading}>MEANINGS</Text>
-              <View style={styles.pageRule} />
-
-              <ScrollView
-                style={styles.pageScroll}
-                contentContainerStyle={styles.meaningList}
-                showsVerticalScrollIndicator={false}
-              >
-                {detail.meanings.length === 0 ? (
-                  <Text style={styles.emptyFilter}>
-                    No recorded meanings yet.
-                  </Text>
-                ) : (
-                  detail.meanings.map((line) => (
-                    <View key={line.key} style={styles.meaningRow}>
-                      <Text
-                        style={[
-                          styles.meaningText,
-                          line.tone === "hidden" && styles.meaningHidden,
-                          line.tone === "trap" && styles.meaningTrap,
-                          line.tone === "locked" && styles.meaningLocked,
-                        ]}
-                      >
-                        {line.text}
-                      </Text>
-                    </View>
-                  ))
-                )}
-              </ScrollView>
-            </>
-          ) : (
-            <>
-              <Text style={styles.pageHeading}>YOUR RECORD</Text>
-              <View style={styles.pageRule} />
-
-              <View style={styles.statsGrid}>
-                <View style={styles.statRow}>
-                  <StatCell value={summary.meanings} label="MEANINGS" />
-                  <StatCell value={summary.words} label="WORDS" />
-                </View>
-
-                <View style={styles.statRow}>
-                  <StatCell value={summary.mastered} label="MASTERED" />
-                  <StatCell value={summary.haunted} label="HAUNTED" />
-                </View>
-              </View>
-
-              <Text style={styles.filterHeading}>SHOW</Text>
-
-              <View style={styles.filterGrid}>
-                {(
-                  [
-                    ["all", "ALL"],
-                    ["mastered", "MASTERED"],
-                    ["haunted", "HAUNTED"],
-                    ["progress", "IN PROGRESS"],
-                  ] as const
-                ).map(([key, label]) => {
-                  const selected = filter === key;
-
-                  return (
-                    <Pressable
-                      key={key}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      accessibilityLabel={`Show ${label.toLowerCase()} words`}
-                      onPress={() => setFilter(key)}
-                      style={({ pressed }) => [
-                        styles.filterButton,
-                        selected && styles.filterButtonSelected,
-                        pressed && styles.pressed,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.filterText,
-                          selected && styles.filterTextSelected,
-                        ]}
-                      >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <View style={styles.indexNote}>
-                <Text style={styles.indexNoteText}>
-                  Tap a word to open its permanent record.
+        <View
+          style={[
+            styles.pageContent,
+            {
+              left: `${layout.rightPageLeftPct}%`,
+              top: `${layout.pageTopPct}%`,
+              width: `${layout.pageWidthPct}%`,
+              height: `${layout.pageHeightPct}%`,
+              transform: [{ scale: layout.contentScale }],
+            },
+            __DEV__ && showSafeZones && styles.rightSafeZoneDebug,
+          ]}
+        >
+          <Text style={styles.pageHeading}>MASTERED</Text>
+          <Image
+            source={MASTERED_SEAL}
+            resizeMode="contain"
+            style={[
+              styles.pageSeal,
+              { width: displayedSealSize, height: displayedSealSize },
+            ]}
+          />
+          <Text style={styles.pageCount}>
+            {showSamples
+              ? `${displayedMastered.length} TOTAL`
+              : `${masteredNames.length} TOTAL`}
+          </Text>
+          <View style={styles.wordStack}>
+            {displayedMastered.length > 0 ? (
+              displayedMastered.map((word, index) => (
+                <Text
+                  key={`${word}-${index}`}
+                  style={[styles.pageWord, { fontSize: layout.wordSize }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {word}
                 </Text>
-              </View>
-            </>
-          )}
+              ))
+            ) : (
+              <Text style={styles.emptyState}>NO MASTERY YET</Text>
+            )}
+          </View>
         </View>
       </View>
+
+      {__DEV__ && (
+        <PolybookDevTuner
+          layout={layout}
+          onChange={setLayout}
+          showSafeZones={showSafeZones}
+          onToggleSafeZones={() => setShowSafeZones((value) => !value)}
+          showSamples={showSamples}
+          onToggleSamples={() => setShowSamples((value) => !value)}
+          dimensions={{
+            screenWidth,
+            bookWidth,
+            baseBookHeight,
+            finalBookHeight: bookHeight,
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -334,390 +523,169 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "flex-start",
+    overflow: "visible",
   },
-
-  bookCover: {
-    width: "100%",
-    aspectRatio: 0.88,
-    flexDirection: "row",
-    backgroundColor: COVER,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: PW.color.goldSoft,
-    paddingHorizontal: 7,
-    paddingVertical: 8,
+  bookStage: { position: "relative", alignSelf: "center", overflow: "visible" },
+  bookArt: { ...StyleSheet.absoluteFillObject },
+  bookArtImage: { width: "100%", height: "100%" },
+  pageContent: {
+    position: "absolute",
     overflow: "hidden",
-    shadowColor: "#000000",
-    shadowOpacity: 0.42,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
-  },
-
-  coverInnerRim: {
-    ...StyleSheet.absoluteFillObject,
-    margin: 4,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(245,200,66,0.26)",
-  },
-
-  page: {
-    flex: 1,
-    minWidth: 0,
-    backgroundColor: PAGE,
-    borderColor: PAGE_EDGE,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-
-  leftPage: {
-    borderTopLeftRadius: 15,
-    borderBottomLeftRadius: 18,
-    borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
-  },
-
-  rightPage: {
-    borderTopRightRadius: 15,
-    borderBottomRightRadius: 18,
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
-  },
-
-  gutter: {
-    width: 12,
-    marginVertical: 1,
-    backgroundColor: COVER_DARK,
     alignItems: "center",
-    overflow: "hidden",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    paddingTop: 10,
+    paddingBottom: 8,
   },
-
-  gutterHighlight: {
-    width: 3,
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.08)",
+  leftSafeZoneDebug: { borderWidth: 1, borderColor: "rgba(255, 70, 90, 0.9)" },
+  rightSafeZoneDebug: {
+    borderWidth: 1,
+    borderColor: "rgba(40, 210, 255, 0.9)",
   },
-
   pageHeading: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 13,
-    letterSpacing: 1.8,
-    color: INK,
-    textAlign: "center",
-  },
-
-  pageRule: {
-    height: 1,
-    backgroundColor: "rgba(51,41,31,0.22)",
-    marginTop: 7,
-    marginBottom: 6,
-  },
-
-  pageScroll: {
-    flex: 1,
-    minHeight: 0,
-  },
-
-  wordList: {
-    paddingBottom: 12,
-  },
-
-  wordRow: {
-    minHeight: 46,
-    justifyContent: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(51,41,31,0.16)",
-    paddingVertical: 5,
-  },
-
-  wordRowPressed: {
-    backgroundColor: "rgba(123,45,139,0.08)",
-  },
-
-  wordName: {
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    fontSize: 22,
-    lineHeight: 25,
+    fontSize: 23,
     letterSpacing: 1.2,
     color: INK,
+    textAlign: "center",
   },
-
-  wordStatus: {
+  pageCount: {
+    marginTop: 10,
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 10,
+    fontSize: 17,
     letterSpacing: 0.6,
     color: INK_MUTED,
+    textAlign: "center",
   },
-
-  wordStatusMastered: {
-    color: "#806314",
+  pageSeal: {
+    marginTop: 12,
+    marginBottom: 10,
   },
-
-  wordStatusHaunted: {
-    color: HAUNTED,
-  },
-
-  statsGrid: {
-    gap: 6,
-    marginTop: 4,
-  },
-
-  statRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-
-  statCell: {
-    flex: 1,
-    minHeight: 62,
+  wordStack: {
+    width: "100%",
     alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(51,41,31,0.18)",
-    borderRadius: 7,
-    paddingHorizontal: 3,
+    gap: 18,
+    marginTop: 22,
   },
-
-  statValue: {
+  pageWord: {
     fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
-    fontSize: 25,
+    lineHeight: 32,
+    letterSpacing: 1,
     color: INK,
+    textAlign: "center",
   },
-
-  statLabel: {
+  emptyState: {
+    marginTop: 22,
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 9,
+    fontSize: 14,
     letterSpacing: 0.8,
     color: INK_MUTED,
     textAlign: "center",
   },
-
-  filterHeading: {
-    marginTop: 17,
-    marginBottom: 7,
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    fontSize: 10,
-    letterSpacing: 1.6,
-    color: INK_MUTED,
+  tunerAnchor: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    zIndex: 10,
+    alignItems: "flex-end",
   },
-
-  filterGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 5,
-  },
-
-  filterButton: {
-    width: "48%",
-    minHeight: 38,
-    justifyContent: "center",
-    alignItems: "center",
+  tunerPanel: {
+    width: 184,
+    maxHeight: 390,
+    backgroundColor: "rgba(15,13,42,0.94)",
     borderWidth: 1,
-    borderColor: "rgba(51,41,31,0.22)",
-    borderRadius: 7,
+    borderColor: "rgba(245,200,66,0.68)",
+    borderRadius: 8,
+    padding: 6,
+  },
+
+  tunerPanelCollapsed: {
+    width: 58,
+    padding: 2,
+  },
+  tunerHeader: {
+    minHeight: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 4,
   },
-
-  filterButtonSelected: {
-    backgroundColor: COVER,
-    borderColor: COVER_DARK,
+  tunerTitle: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    color: "#FFF7D6",
   },
-
-  filterText: {
+  tunerChevron: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 18,
+    color: "#F5C842",
+  },
+  tunerScroll: { maxHeight: 342 },
+  tunerContent: { paddingTop: 4, paddingBottom: 2 },
+  tunerRow: { marginBottom: 5 },
+  tunerLabel: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
     fontSize: 9,
-    letterSpacing: 0.5,
-    color: INK,
-    textAlign: "center",
-  },
-
-  filterTextSelected: {
-    color: "#FFF3D4",
-  },
-
-  indexNote: {
-    marginTop: "auto",
-    paddingTop: 14,
-  },
-
-  indexNoteText: {
-    fontFamily: FONTS.brand,
-    includeFontPadding: false,
-    fontSize: 12,
-    lineHeight: 16,
-    color: INK_MUTED,
-    textAlign: "center",
-  },
-
-  detailScrollContent: {
-    paddingBottom: 12,
-  },
-
-  detailWord: {
-    marginTop: 6,
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    fontSize: 36,
-    letterSpacing: 1.5,
-    color: INK,
-    textAlign: "center",
-  },
-
-  progressCopy: {
-    marginTop: 1,
-    marginBottom: 10,
-    fontFamily: FONTS.brand,
-    includeFontPadding: false,
-    fontSize: 12,
-    lineHeight: 16,
-    color: INK_MUTED,
-    textAlign: "center",
-  },
-
-  detailStatus: {
-    borderWidth: 1,
-    borderRadius: 7,
-    paddingVertical: 8,
-    paddingHorizontal: 5,
-    marginBottom: 10,
-  },
-
-  statusMastered: {
-    backgroundColor: "rgba(184,145,39,0.18)",
-    borderColor: "rgba(128,99,20,0.40)",
-  },
-
-  statusHaunted: {
-    backgroundColor: "rgba(119,81,131,0.15)",
-    borderColor: "rgba(119,81,131,0.45)",
-  },
-
-  statusFinished: {
-    backgroundColor: "rgba(128,99,20,0.08)",
-    borderColor: "rgba(128,99,20,0.25)",
-  },
-
-  statusProgress: {
-    backgroundColor: "rgba(51,41,31,0.04)",
-    borderColor: "rgba(51,41,31,0.18)",
-  },
-
-  detailStatusText: {
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    fontSize: 10,
     letterSpacing: 0.8,
-    color: INK,
-    textAlign: "center",
+    color: "rgba(255,247,214,0.72)",
   },
-
-  metaLine: {
-    marginBottom: 7,
-    fontFamily: FONTS.brand,
-    includeFontPadding: false,
-    fontSize: 12,
-    lineHeight: 17,
-    color: INK_MUTED,
-    textAlign: "center",
+  tunerControls: {
+    minHeight: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 4,
   },
-
-  indexButton: {
-    minHeight: 42,
+  tunerButton: {
+    width: 28,
+    height: 26,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(51,41,31,0.24)",
-    borderRadius: 7,
-    marginTop: 7,
+    borderColor: "rgba(245,200,66,0.42)",
+    borderRadius: 4,
+    backgroundColor: "rgba(123,45,139,0.35)",
   },
-
-  indexButtonText: {
+  tunerButtonText: {
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 16,
+    lineHeight: 18,
+    color: "#FFF7D6",
+  },
+  tunerValue: {
+    flex: 1,
     fontFamily: FONTS.label,
     includeFontPadding: false,
     fontSize: 11,
-    letterSpacing: 1,
-    color: INK,
+    color: "#FFF7D6",
+    textAlign: "center",
   },
-
-  meaningList: {
-    paddingBottom: 12,
-  },
-
-  meaningRow: {
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(51,41,31,0.14)",
-  },
-
-  meaningText: {
-    fontFamily: FONTS.brand,
-    includeFontPadding: false,
-    fontSize: 14,
-    lineHeight: 19,
-    color: INK,
-  },
-
-  meaningHidden: {
-    color: "#5B3C68",
-  },
-
-  meaningTrap: {
-    color: "#78364E",
-  },
-
-  meaningLocked: {
-    color: INK_MUTED,
-    fontStyle: "italic",
-  },
-
-  emptyWrap: {
+  tunerActions: { flexDirection: "row", gap: 5, marginTop: 3 },
+  tunerAction: {
+    minHeight: 28,
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderColor: "rgba(245,200,66,0.42)",
+    borderRadius: 4,
+    paddingHorizontal: 3,
   },
-
-  emptyTitle: {
+  tunerActionText: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 13,
-    letterSpacing: 1,
-    color: INK,
+    fontSize: 9,
+    letterSpacing: 0.4,
+    color: "#FFF7D6",
     textAlign: "center",
-    marginBottom: 8,
-  },
-
-  emptyCopy: {
-    fontFamily: FONTS.brand,
-    includeFontPadding: false,
-    fontSize: 12,
-    lineHeight: 17,
-    color: INK_MUTED,
-    textAlign: "center",
-  },
-
-  emptyFilter: {
-    marginTop: 18,
-    fontFamily: FONTS.brand,
-    includeFontPadding: false,
-    fontSize: 12,
-    lineHeight: 17,
-    color: INK_MUTED,
-    textAlign: "center",
-  },
-
-  pressed: {
-    opacity: 0.72,
   },
 });
