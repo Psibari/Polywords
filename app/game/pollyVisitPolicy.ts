@@ -66,11 +66,14 @@ export type VisitDecision =
   | { action: 'wordEntry' } // caller resets per-word budget flags
   | { action: 'visit'; spec: VisitSpec };
 
-export function pickFreshLine(
-  candidates: PollyLineId[],
-  recent: PollyLineId[],
+// Generic over the id union so the Polybook's own line ids
+// (pollyBookLines.ts) reuse this rather than growing a second picker. Callers
+// passing PollyLineId[] are unaffected — T infers to PollyLineId.
+export function pickFreshLine<T extends string>(
+  candidates: T[],
+  recent: readonly string[],
   roll: number,
-): PollyLineId {
+): T {
   const fresh = candidates.filter(id => !recent.includes(id));
   const pool = fresh.length > 0 ? fresh : candidates;
   const i = Math.min(pool.length - 1, Math.max(0, Math.floor(roll * pool.length)));
