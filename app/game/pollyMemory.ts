@@ -14,6 +14,12 @@ export type PollyMemory = {
   lastHuntOutcome: PollyHuntOutcome | null;
   playerWinStreak: number;
   pollyWinStreak: number;
+  /** Lifetime Hunt wins, never reset. Written from the same place as the
+   *  streaks above so the two can never drift apart. A streak answers "what is
+   *  happening now"; these answer "what has happened", which the Polybook's
+   *  rivalry states need and a five-entry window cannot give. */
+  playerHuntsWon: number;
+  pollyHuntsWon: number;
   lastHuntScore: number;
   lastBossWord: string | null;
   lastHauntWord: string | null;
@@ -30,6 +36,8 @@ export const DEFAULT_POLLY_MEMORY: PollyMemory = {
   lastHuntOutcome: null,
   playerWinStreak: 0,
   pollyWinStreak: 0,
+  playerHuntsWon: 0,
+  pollyHuntsWon: 0,
   lastHuntScore: 0,
   lastBossWord: null,
   lastHauntWord: null,
@@ -88,6 +96,10 @@ export function hydratePollyMemory(value: unknown): PollyMemory {
     lastHuntOutcome,
     playerWinStreak: safeCount(raw.playerWinStreak),
     pollyWinStreak: safeCount(raw.pollyWinStreak),
+    // safeCount hydrates an absent field to 0, so saves written before these
+    // existed migrate cleanly — as undercounts, not as wrong numbers.
+    playerHuntsWon: safeCount(raw.playerHuntsWon),
+    pollyHuntsWon: safeCount(raw.pollyHuntsWon),
     lastHuntScore: safeCount(raw.lastHuntScore),
     lastBossWord: safeWord(raw.lastBossWord),
     lastHauntWord: safeWord(raw.lastHauntWord),
@@ -130,6 +142,8 @@ export function rememberHunt(
     lastHuntOutcome: input.outcome,
     playerWinStreak: playerWon ? memory.playerWinStreak + 1 : 0,
     pollyWinStreak: pollyWon ? memory.pollyWinStreak + 1 : 0,
+    playerHuntsWon: memory.playerHuntsWon + (playerWon ? 1 : 0),
+    pollyHuntsWon: memory.pollyHuntsWon + (pollyWon ? 1 : 0),
     lastHuntScore: Math.max(0, Math.floor(input.score)),
     lastBossWord: safeWord(input.bossWord),
     lastHauntWord: safeWord(input.hauntWord) ?? memory.lastHauntWord,

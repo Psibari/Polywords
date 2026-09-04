@@ -74,6 +74,7 @@ import {
   rescheduleDailyReminderAfterCompletion,
 } from '../notifications/dailyReminder';
 import { computeRankHistoryUpdates } from '../game/ranks';
+import { foldRunIntoBookLog, localDateKey } from '../game/bookLog';
 
 // Onboarding taper: a hard cliff from full protection to zero protection at
 // run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
@@ -369,7 +370,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
     activeGamePersistence.arm();
     set({
-      game: createGame(steps, mercyReviveLives, runSeed),
+      // The 4th argument is the run's realMaskIdsFound baseline. Claims are
+      // written incrementally while the run is live, so the Polybook's
+      // "new REALs this run" is only recoverable by subtracting this at
+      // completion. It rides on GameState so a resumed run keeps it.
+      game: createGame(
+        steps,
+        mercyReviveLives,
+        runSeed,
+        (get().progress.realMaskIdsFound ?? []).length,
+      ),
       ghostRevenge: null,
       runStartGhostWordIds,
     });
@@ -422,6 +432,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({
         game: {
           ...saved,
+          // Absent in saves written before the Polybook log existed. 0 is the
+          // honest default: it undercounts that one in-flight run's mercy
+          // rather than inventing a number.
+          mercyUsed: Number.isFinite(saved.mercyUsed) ? Math.max(0, saved.mercyUsed) : 0,
           runSeed: Number.isFinite(saved.runSeed)
             ? saved.runSeed >>> 0
             : deriveSeed(saved.lastActionAt || Date.now(), 'migrated-run'),
@@ -737,6 +751,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
       performance,
       ...(current.recentHuntPerformance ?? []),
     ].slice(0, RECENT_PERFORMANCE_CAP);
+    // ── Polybook work log ──────────────────────────────────────
+    // Facts only: counts and word names, never a sentence and never a bucket
+    // name. Which line she writes is chosen at render time from
+    // pollyBookLines.ts, so rewriting her copy strands no records. Folded into
+    // the same `next` object and the same setItem below — there is deliberately
+    // no second persistence path.
+    const bossWordName = bossStep?.kind === 'word' ? bossStep.word : null;
+    const hauntWordName = hauntStep?.kind === 'word' ? hauntStep.word : null;
+    // Boss mastery is the only mastery mechanism (see resolveMysteryTile's
+    // recordMastery call site), so a mastered word is always the boss word.
+    const bossMastered = game.bossOutcome === 'mastered';
+    const bossHeldByPolly = game.bossOutcome === 'haunted';
+    // gotPast: NEW visible REAL mask ids added during this run. They are
+    // written incrementally while the run is live, so the lifetime total
+    // already includes them by now — subtract the baseline captured at
+    // startGame. A run that predates the baseline records 0 rather than a
+    // guess, which would otherwise be the whole lifetime total.
+    const realMaskTotalNow = (current.realMaskIdsFound ?? []).length;
+    const realMaskBaseline = Number.isFinite(game.runStartRealMaskCount)
+      ? Math.min(game.runStartRealMaskCount as number, realMaskTotalNow)
+      : realMaskTotalNow;
+    const bookLog = foldRunIntoBookLog(current.bookLog, localDateKey(new Date()), {
+      runs: 1,
+      gotPast: Math.max(0, realMaskTotalNow - realMaskBaseline),
+      bossHeld: bossHeldByPolly ? 1 : 0,
+      bossLost: bossMastered ? 1 : 0,
+      mastered: bossMastered && bossWordName ? [bossWordName] : [],
+      hauntLeft: game.hauntOutcome === 'haunted' && hauntWordName ? [hauntWordName] : [],
+      hauntBroken: game.hauntOutcome === 'banished' && hauntWordName ? [hauntWordName] : [],
+      // Mercy only. The Gold Feather revive is deliberately not logged — it is
+      // a Daily reward, and the Hunt equivalent is Mercy
+      // (docs/POLLY_POLYBOOK_LOG_LINES.md, Part 5).
+      mercy: Math.max(0, game.mercyUsed ?? 0),
+    });
     const next: PlayerProgress = {
       ...current,
       runsCompleted: current.runsCompleted + 1,
@@ -744,6 +792,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ...(rankHistoryUpdate ? { rankHistory: rankHistoryUpdate } : {}),
       recentHuntPerformance,
       recentWordIds,
+      bookLog,
     };
     set({ progress: next, pollyMemory });
     AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(next)).catch(() => {});

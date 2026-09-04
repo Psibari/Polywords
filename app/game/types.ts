@@ -212,6 +212,46 @@ export type PlayerProgress = {
    *  repeats — never a hard exclusion, never surfaced to the player, not a
    *  permanent record like masteredWords. */
   recentWordIds?: string[];
+  /** One row per DAY, most-recent-first. Facts only — the line shown is chosen
+   *  at render time from pollyBookLines.ts, so rewriting her copy strands no
+   *  records. Capped at 200 rows; lifetime totals live in their own fields so
+   *  trimming can never move a total. NOT BACKFILLABLE. */
+  bookLog?: BookDayRecord[];
+};
+
+/** A single day in Polly's Polybook work log.
+ *
+ *  Stores FACTS, never sentences and never a bucket name. "Heavy day" is a
+ *  reading of these numbers made at render time, not something recorded here —
+ *  so a bucket added later (Mercy arrived exactly this way) can be derived from
+ *  rows already collected, and rewriting her copy strands nothing.
+ *
+ *  NOT BACKFILLABLE: no run history exists anywhere else in the app.
+ *  recentHuntPerformance keeps a five-entry window and masteredWords carries
+ *  dates only for masteries. */
+export type BookDayRecord = {
+  /** Local YYYY-MM-DD, never UTC — this is a diary. A run at 8pm New York
+   *  time belongs to that day, not the next one. */
+  date: string;
+  /** Hunts finished that day, however they ended. */
+  runs: number;
+  /** NEW visible REAL masks claimed that day — ids not already in
+   *  realMaskIdsFound when the run began, not every claim made. */
+  gotPast: number;
+  /** Boss rounds Polly held (the gauntlet was failed). */
+  bossHeld: number;
+  /** Boss rounds Polly lost (the word was mastered). */
+  bossLost: number;
+  /** Word names mastered that day. */
+  mastered: string[];
+  /** Returning Haunts left standing. */
+  hauntLeft: string[];
+  /** Returning Haunts banished. */
+  hauntBroken: string[];
+  /** Times a run was revived by Mercy. The Gold Feather revive is deliberately
+   *  excluded — it is a Daily reward, and the Hunt equivalent is Mercy
+   *  (docs/POLLY_POLYBOOK_LOG_LINES.md, Part 5). */
+  mercy: number;
 };
 
 export type DailyTier = 1 | 2 | 3;

@@ -80,6 +80,12 @@ export type GameState = {
   // 0 = no mercy left/available this game; >0 = lives granted on next revive.
   mercyReviveLives: number;
   mercyTriggered: boolean;
+  // How many times Mercy actually revived THIS run. mercyTriggered is a UI
+  // flag that consumeMercy() clears once the reveal has been handled, so it is
+  // usually false by run end and cannot be counted at completion — this is the
+  // durable per-run tally the Polybook work log reads. Persisted with the rest
+  // of the run so a resumed game keeps its count.
+  mercyUsed: number;
   bossOutcome: 'pending' | 'mastered' | 'haunted';
   // Returning Haunt truth is deliberately separate from bossOutcome because
   // Results, rank, and Polly memory consume only Polly's final-boss verdict.
@@ -101,6 +107,15 @@ export type GameState = {
   // display never briefly shows a wrong number on loss.
   gauntletCorrectCount: number;
   runSeed: number;
+  // realMaskIdsFound.length at the moment this run began. The Polybook's
+  // gotPast is "NEW visible REALs claimed this run", and claims are written
+  // incrementally through hiddenProgressPersistence while the run is live, so
+  // by completion the lifetime total already includes them — the run's own
+  // contribution is only recoverable by subtracting this baseline. Lives on
+  // GameState rather than the store so a run resumed after the app was killed
+  // still knows where it started. Optional: a run already in flight when this
+  // shipped has no baseline, and gotPast is recorded as 0 rather than guessed.
+  runStartRealMaskCount?: number;
 };
 
 type SwipeHistory = Pick<GameState, 'swipedUpIds' | 'swipedDownIds'>;
@@ -122,6 +137,7 @@ export function createGame(
   steps: SessionStep[],
   mercyReviveLives = 0,
   runSeed = Date.now(),
+  runStartRealMaskCount?: number,
 ): GameState {
   const shuffledMasks: Record<number, Mask[]> = {};
   steps.forEach((step, i) => {
@@ -157,6 +173,8 @@ export function createGame(
     featherMilestonesHit: [],
     mercyReviveLives,
     mercyTriggered: false,
+    mercyUsed: 0,
+    ...(runStartRealMaskCount === undefined ? {} : { runStartRealMaskCount }),
     bossOutcome: 'pending',
     hauntOutcome: 'pending',
     bossFlawless: false,
@@ -174,16 +192,21 @@ export function createGame(
 
 type LifeLossResult = Pick<
   GameState,
-  'lives' | 'mercyReviveLives' | 'mercyTriggered' | 'status'
+  'lives' | 'mercyReviveLives' | 'mercyTriggered' | 'mercyUsed' | 'status'
 >;
 
 function resolveLifeLoss(state: GameState): LifeLossResult {
+  const mercyUsed = state.mercyUsed ?? 0;
   const rawLives = state.lives - 1;
   if (rawLives <= 0 && state.mercyReviveLives > 0) {
     return {
       lives: state.mercyReviveLives,
       mercyReviveLives: 0,
       mercyTriggered: true,
+      // Counted here, at the one place Mercy actually fires. mercyTriggered is
+      // cleared by consumeMercy() once the UI has shown it, so it cannot be
+      // read back at run completion.
+      mercyUsed: mercyUsed + 1,
       status: 'playing',
     };
   }
@@ -192,6 +215,7 @@ function resolveLifeLoss(state: GameState): LifeLossResult {
     lives,
     mercyReviveLives: state.mercyReviveLives,
     mercyTriggered: state.mercyTriggered,
+    mercyUsed,
     status: lives <= 0 ? 'gameOver' : 'playing',
   };
 }
