@@ -4,6 +4,7 @@
   "main": "index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "state": "node tools/state.mjs",
     "audit:content": "npx -y tsx scripts/auditContent.ts",
     "content:preflight": "node tools/content/validate-runtime-hunt.mjs",
     "content:identity-map": "node tools/content/build-content-identity-map.mjs",
