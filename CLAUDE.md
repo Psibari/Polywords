@@ -68,10 +68,9 @@ navigation shell; active Hunt and Daily play are nav-free.
 ### Vault
 
 - The Vault's headline is visible REAL meanings claimed (`realMaskIdsFound`, a count with no
-  denominator); personalBest and the rank letter are secondary to the bookplate identity. Books
-  represent words, plain once any visible REAL is found and finished once all visible REALs are
-  claimed. A banished Haunt leaves the active ghost queue, but a permanent Haunt-clear history
-  entry is not yet part of the Vault.
+  denominator). Books represent words, plain once any visible REAL is found and finished once
+  all visible REALs are claimed. A banished Haunt leaves the active ghost queue, but a
+  permanent Haunt-clear history entry is not yet part of the Vault.
 - Ruling: the Vault and the Polybook may never display a meaning, a trap or a hidden pair.
   Words recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
   flagged `isMasteredReturn` — so any such display is an answer key for a game still in
