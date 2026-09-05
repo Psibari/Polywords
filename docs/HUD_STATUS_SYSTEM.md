@@ -50,11 +50,21 @@ POLLY'S WORD
 GAUNTLET
 ```
 
+If the gauntlet belongs to a Returning Haunt, the context row reads `RETURNING HAUNT` instead:
+
+```
+RETURNING HAUNT
+GAUNTLET
+```
+
+(`resolveHuntHud` in `app/game/huntControl.ts` picks the context label from `isHauntReturn` even
+while `isGauntletActive` is true.)
+
 ---
 
 ## How the Streak Works
 
-The streak counts consecutive correct answers (swiping up on a real meaning or swiping down on a trap).
+The streak counts consecutive correct answers: UP claims a real meaning, RIGHT rejects a trap.
 
 The streak determines the **chain multiplier**, which is:
 

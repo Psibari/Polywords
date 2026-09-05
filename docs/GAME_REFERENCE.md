@@ -32,7 +32,7 @@ measured player data.
   a separate Vault collection item. Ordinary missed meanings are not Haunts.
 - `bossOutcome` is the authority for mastery/haunt. The Master Gate must not return.
 
-## Scoring and Rank
+## Scoring
 
 | Action | Base points |
 | --- | ---: |
@@ -43,14 +43,11 @@ measured player data.
 | Wrong choice | 0 |
 
 The chain starts at 1×, rises by 0.5× every three consecutive correct choices, caps at 3×,
-and resets on error. Current ranks: D 0, C 3,000, B 6,000, A 9,000, S 11,500, MASTER 14,000.
-The ladder is an absolute per-run skill axis; it does not represent long-term Vault progress.
-It was retuned against the corpus as of 2026-08-24; the corpus has grown since then
-(`npm run state`) and the ladder has not been re-verified against that —
-a run only ever draws one boss word, so the ceiling is unlikely to have moved, but this is
-unverified, not confirmed unaffected.
+and resets on error.
 
-Score milestones at 3,000 and 10,000 celebrate but do not award feathers.
+Score is still calculated in `polyRunEngine.ts` and persisted, but it is displayed nowhere:
+the Hunt HUD shows live status and Results shows an outcome label, not a number or rank. See
+`docs/HUD_STATUS_SYSTEM.md`.
 
 ## Gold Feather and Results
 

@@ -62,20 +62,16 @@ navigation shell; active Hunt and Daily play are nav-free.
   masks carry isRare (`npm run state`).
 - `FEATHER_MILESTONES` fires for FX only. The old score-to-extra-life conversion was
   deliberately removed as regressive and stays removed.
-- `ranks.ts` uses the current absolute ladder: D 0, C 3,000, B 6,000, A 9,000, S 11,500,
-  MASTER 14,000. The ladder was retuned against the corpus and observed flawless-run
-  ceiling as of 2026-08-24; the corpus has grown since then (`npm run state`),
-  which the ladder has not been re-verified against — a run only ever draws one boss word, so
-  the ceiling is unlikely to have moved, but this is unverified, not confirmed unaffected.
-  Rank remains a per-run skill verdict, not long-term Vault progress.
+- Rank is retired from the player-facing progression as of 2026-09-04 (`c48e3fe`).
+  `app/game/ranks.ts` still exists but is imported by nothing in `app/`.
 
 ### Vault
 
 - The Vault's headline is visible REAL meanings claimed (`realMaskIdsFound`, a count with no
-  denominator); personalBest and the rank letter are secondary, accessible through the run-rank
-  link rather than the bookplate identity. Books represent words, plain once any visible REAL is
-  found and finished once all visible REALs are claimed. A banished Haunt leaves the active ghost
-  queue, but a permanent Haunt-clear history entry is not yet part of the Vault.
+  denominator); personalBest and the rank letter are secondary to the bookplate identity. Books
+  represent words, plain once any visible REAL is found and finished once all visible REALs are
+  claimed. A banished Haunt leaves the active ghost queue, but a permanent Haunt-clear history
+  entry is not yet part of the Vault.
 - Ruling: the Vault and the Polybook may never display a meaning, a trap or a hidden pair.
   Words recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
   flagged `isMasteredReturn` — so any such display is an answer key for a game still in

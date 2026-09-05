@@ -223,15 +223,13 @@ Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
 
 ## REWARD ECONOMY
 
-- Rank comes off the Vault; meanings taken is the headline. APPROVED.
+- Rank and score were removed from every player-facing surface on 2026-09-04 (`c48e3fe`);
+  meanings taken is the headline. Score is still computed and stored but shown nowhere.
 - Books equal words, finished when all of that word's visible REALs are found. APPROVED. No
   perfect-clear tier — a round shows only about 2.54 of a word's 4.61 REALs, so a flawless
   clear certifies the tiles dealt, not the word.
 - Roughly every fifth new word should carry `hiddenPairs`. APPROVED. This is the only fix for
   the mastery ceiling.
-- Rank thresholds are now retuned and live: D 0, C 3,000, B 6,000, A 9,000, S 11,500,
-  MASTER 14,000. This is an absolute ladder and should be revisited if future content changes
-  materially alter the perfect-play ceiling.
 - Roughly every fifth new word should carry `hiddenPairs`. APPROVED as the content remedy for
   the finite Boss pool; `npm run state` prints the current Boss word and hidden-pair counts
   (TANK, FOAM, FOLD and FORK added and WAKE promoted, 2026-08-31).
