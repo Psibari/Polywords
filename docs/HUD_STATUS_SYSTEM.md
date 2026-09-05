@@ -37,9 +37,15 @@ This row tells the player how they are doing right now.
 | Label | What it means | How to trigger it |
 |-------|--------------|-------------------|
 | `STEADY` | The Hunt just started or the player is at 0-2 correct in a row | streak 0-2 |
-| `FLOW` | The player is building momentum | streak 3-5 |
-| `IN CONTROL` | The player is reading Polly's pattern | streak 6+ |
+| `READING` | The player is building momentum | streak 3-5 |
+| `GETTING PAST` | The player is reading Polly's pattern | streak 6+ |
 | `HUNTED` | The player is down to 1 feather — the run is in danger | 1 life remaining (overrides everything) |
+
+Beside the label, a rung column shows the same streak as three stacked segments at the
+left edge of the status block, lit from the bottom up: one segment lit at streak 0–2, two
+at 3–5, three at 6+. At HUNTED, the rungs keep showing the real streak level — only the
+label turns rose. The label is the danger; the rungs are the read. They are two different
+facts, and HUNTED should never make the rungs go dark or false.
 
 ### Gauntlet
 
@@ -75,8 +81,8 @@ multiplier = 1 + floor(streak / 3) * 0.5
 | Streak | Multiplier | HUD Status |
 |--------|-----------|------------|
 | 0-2 | 1.0 | STEADY |
-| 3-5 | 1.5 | FLOW |
-| 6+ | 2.0+ | IN CONTROL |
+| 3-5 | 1.5 | READING |
+| 6+ | 2.0+ | GETTING PAST |
 
 Any wrong answer (losing a feather) resets the streak to 0 and the multiplier to 1.0.
 
@@ -130,8 +136,8 @@ The HUD uses no gold. Gold is reserved for earned rewards only.
 | Element | Color |
 |---------|-------|
 | STEADY | White |
-| FLOW | Lavender |
-| IN CONTROL | Lavender (with haptic on change) |
+| READING | Lavender |
+| GETTING PAST | Lavender (with haptic on change) |
 | HUNTED | Rose |
 | Context labels | Lavender |
 | HUD border | Purple soft |
@@ -144,8 +150,8 @@ The HUD uses no gold. Gold is reserved for earned rewards only.
 When the HUD status changes:
 - A subtle glow pulses behind the text (14% opacity, not a solid block)
 - The text briefly scales up 8% then settles back
-- A haptic fires for: Returning Haunt, Mastered Return, Polly's Word, Gauntlet, and reaching IN CONTROL
-- Ordinary STEADY/FLOW changes are visual only (no haptic) so the status does not chatter
+- A haptic fires for: Returning Haunt, Mastered Return, Polly's Word, Gauntlet, and reaching GETTING PAST
+- Ordinary STEADY/READING changes are visual only (no haptic) so the status does not chatter
 
 ---
 
