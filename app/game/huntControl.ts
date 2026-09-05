@@ -1,48 +1,68 @@
 export type HuntControlTier = 'steady' | 'flow' | 'control' | 'rattled';
 
+/** The streak read alone, never overridden by lives. See resolveLiveHuntControl. */
+export type HuntReadTier = 'steady' | 'flow' | 'control';
+
 export type HuntControlState = {
   tier: HuntControlTier;
   label: string;
   description: string;
+  readTier: HuntReadTier;
 };
 
 export type HuntHudState = HuntControlState & {
   contextLabel: string | null;
 };
 
+function resolveReadTier(chainMultiplier: number): HuntReadTier {
+  if (chainMultiplier >= 2.0) return 'control';
+  if (chainMultiplier >= 1.5) return 'flow';
+  return 'steady';
+}
+
 /**
  * The player's live condition. This is system status, not Polly dialogue.
  * HUNTED means the player is down to one feather and the run is in danger.
+ *
+ * `readTier` is derived from `chainMultiplier` alone and is always populated,
+ * even at HUNTED — `tier`/`label` describe the danger, `readTier` keeps
+ * reporting the streak, so the two facts never compete for one field.
  */
 export function resolveLiveHuntControl(
   chainMultiplier: number,
   lives: number,
 ): HuntControlState {
+  const readTier = resolveReadTier(chainMultiplier);
+
   if (lives <= 1) {
     return {
       tier: 'rattled',
       label: 'HUNTED',
       description: 'The run is on the edge.',
+      readTier,
     };
   }
-  if (chainMultiplier >= 2.0) {
+  if (readTier === 'control') {
     return {
       tier: 'control',
-      label: 'IN CONTROL',
-      description: 'You are reading her pattern.',
+      label: 'GETTING PAST',
+      description: 'You are getting past her clean.',
+      readTier,
     };
   }
-  if (chainMultiplier >= 1.5) {
+  if (readTier === 'flow') {
     return {
       tier: 'flow',
-      label: 'FLOW',
-      description: 'The read is holding.',
+      label: 'READING',
+      description: 'You are reading the pattern.',
+      readTier,
     };
   }
   return {
     tier: 'steady',
     label: 'STEADY',
     description: 'One read at a time.',
+    readTier,
   };
 }
 

@@ -131,11 +131,13 @@ function TopBar({ navigation }: { navigation: any }) {
   const hudSignature = `${hud.contextLabel ?? 'NORMAL'}:${hud.label}`;
   const previousHudSignatureRef = useRef(hudSignature);
   const hudPulse = useRef(new Animated.Value(0)).current;
-  const hudAccent = hud.label === 'HUNTED'
+  const hudAccent = hud.tier === 'rattled'
     ? PW.color.rose
-    : hud.label === 'STEADY'
+    : hud.tier === 'steady'
     ? PW.color.softWhite
     : PW.color.lavender;
+  const rungLitCount = hud.readTier === 'control' ? 3 : hud.readTier === 'flow' ? 2 : 1;
+  const rungLitColor = hud.readTier === 'steady' ? PW.color.softWhite : PW.color.lavender;
   const hudPulseScale = hudPulse.interpolate({
     inputRange: [0, 0.35, 1],
     outputRange: [1, 1.08, 1],
@@ -156,13 +158,14 @@ function TopBar({ navigation }: { navigation: any }) {
       useNativeDriver: true,
     }).start();
 
-    // Context changes and reaching IN CONTROL are deliberate beats. Ordinary
-    // STEADY/FLOW changes stay visual-only so the status never chatters in the
-    // player's hand; HUNTED already arrives with the wrong-answer error cue.
-    if (hud.contextLabel !== null || hud.label === 'IN CONTROL') {
+    // Context changes and reaching the control read are deliberate beats.
+    // Ordinary STEADY/READING changes stay visual-only so the status never
+    // chatters in the player's hand; HUNTED already arrives with the
+    // wrong-answer error cue.
+    if (hud.contextLabel !== null || hud.tier === 'control') {
       Haptics.selectionAsync();
     }
-  }, [hudSignature, hud.contextLabel, hud.label, hudPulse]);
+  }, [hudSignature, hud.contextLabel, hud.tier, hudPulse]);
 
   return (
     <View style={tb.outerRow}>
@@ -171,29 +174,39 @@ function TopBar({ navigation }: { navigation: any }) {
           <Animated.View
             style={[
               tb.controlWrap,
-              {
-                borderLeftColor: hudAccent,
-                transform: [{ scale: hudPulseScale }],
-              },
+              { transform: [{ scale: hudPulseScale }] },
             ]}
             accessible
-            accessibilityLabel={`${hud.contextLabel ? `${hud.contextLabel}. ` : ''}${hud.label}`}
+            accessibilityLabel={`${hud.contextLabel ? `${hud.contextLabel}. ` : ''}${hud.label}. Level ${rungLitCount} of 3.`}
           >
             <Animated.View
               pointerEvents="none"
               style={[tb.controlPulse, { backgroundColor: hudAccent, opacity: hudPulseOpacity }]}
             />
-            <Text style={tb.controlContext} numberOfLines={1}>
-              {hud.contextLabel ?? ' '}
-            </Text>
-            <Text
-              style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
-            >
-              {hud.label}
-            </Text>
+            <View style={tb.controlRungColumn}>
+              {[0, 1, 2].map(i => (
+                <View
+                  key={i}
+                  style={[
+                    tb.controlRung,
+                    { backgroundColor: i < rungLitCount ? rungLitColor : 'rgba(185,138,222,0.16)' },
+                  ]}
+                />
+              ))}
+            </View>
+            <View style={tb.controlTextColumn}>
+              <Text style={tb.controlContext} numberOfLines={1}>
+                {hud.contextLabel ?? ' '}
+              </Text>
+              <Text
+                style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {hud.label}
+              </Text>
+            </View>
           </Animated.View>
           <View
             style={tb.featherRow}
@@ -524,15 +537,30 @@ const tb = StyleSheet.create({
   controlWrap: {
     flex: 1,
     minWidth: 0,
-    justifyContent: 'center',
-    paddingLeft: 10,
-    borderLeftWidth: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     borderRadius: 4,
     overflow: 'visible',
   },
   controlPulse: {
     ...StyleSheet.absoluteFill,
     borderRadius: 4,
+  },
+  controlRungColumn: {
+    width: 3,
+    height: 44,
+    flexDirection: 'column-reverse',
+    gap: 3,
+  },
+  controlRung: {
+    flex: 1,
+    width: 3,
+    borderRadius: 2,
+  },
+  controlTextColumn: {
+    flex: 1,
+    minWidth: 0,
   },
   controlContext: {
     color: PW.color.lavender,
