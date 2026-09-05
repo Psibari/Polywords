@@ -108,10 +108,12 @@ type OutcomeOverlayProps = {
   detail?: string;
   onContinue: () => void;
   // Boss only: swaps the generic rounded panel for the illustrated result
-  // plaque that continues the just-completed book transformation. The
-  // non-boss Haunt-rematch overlay (banish/still-haunted) keeps the
-  // original panel — its book never actually transforms, so the plaque
-  // art would be visually false there.
+  // plaque that continues the just-completed book transformation. A
+  // Returning Haunt success (headline 'BANISHED') gets its own illustrated
+  // plaque too (see isBanished in MasteredOutcomeOverlay/banishedPlaqueArt),
+  // independent of this flag — its book never transforms, so it renders
+  // through the full scrim, not the boss plaque's lighter one. Only the
+  // Haunt-rematch failure (STILL HAUNTED) keeps the original generic panel.
   isBoss: boolean;
 };
 
@@ -126,6 +128,15 @@ const masteredPlaqueArt = require('../../assets/images/results/mastered-result-p
 const hauntedPlaqueArt = require('../../assets/images/results/haunted-result-plaque.png');
 const MASTERED_PLAQUE_ASPECT = 681 / 567;
 const HAUNTED_PLAQUE_ASPECT = 1263 / 954;
+
+// The Returning Haunt banish plaque. Same alpha-crop-plus-margin treatment as
+// the two above, cropped from the supplied banished.png. Unlike those two,
+// this is not boss-gated — a Returning Haunt is never boss UI (see
+// isBoss below), so it renders through the full outcomeOverlay scrim, not
+// the lighter plaqueOverlay: there is no just-transformed book behind it to
+// keep visible.
+const banishedPlaqueArt = require('../../assets/images/results/banished-result-plaque.png');
+const BANISHED_PLAQUE_ASPECT = 705 / 553;
 
 // buildHauntedDetail (useBoardMechanics.ts) formats one combined string —
 // "Trap claimed: X" or "Missed: X" for a boss failure, "Still haunted."
@@ -200,6 +211,48 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
 
   const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
   const pulseOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.62] });
+  const isBanished = headline === 'BANISHED';
+
+  if (isBanished) {
+    // Returning Haunt success. Illustrated frame, but through the standard
+    // full scrim (outcomeOverlay), not the boss-only lighter plaqueOverlay —
+    // there is no transformed book behind this one.
+    return (
+      <Pressable style={styles.outcomeOverlay} onPress={handlePress}>
+        <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
+          <View style={[styles.plaqueFrame, styles.banishedPlaqueFrame]}>
+            <Image source={banishedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: BANISHED_PLAQUE_ASPECT }]} resizeMode="contain" />
+            <View pointerEvents="none" style={[styles.plaqueContent, styles.banishedPlaqueContent]}>
+              <Text style={[styles.plaqueHeadline, styles.banishedPlaqueHeadline]}>{headline}</Text>
+              <Text
+                style={[styles.plaqueWord, styles.banishedPlaqueWord]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
+                {word}
+              </Text>
+              <View style={styles.plaqueCopyBlock}>
+                <Text style={[styles.plaqueCopy, styles.banishedPlaqueCopy]}>Not one of Polly's traps.</Text>
+                <Text style={[styles.plaqueCopy, styles.banishedPlaqueCopy]}>You saw through it.</Text>
+              </View>
+              {bonusLabel && (
+                <Text
+                  style={[styles.plaqueBonus, styles.banishedPlaqueBonus]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                >
+                  {bonusLabel}
+                </Text>
+              )}
+            </View>
+          </View>
+          <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        </Animated.View>
+      </Pressable>
+    );
+  }
 
   if (isBoss) {
     // Plaque presentation. pulse keeps running (untouched, above) but has
@@ -2684,6 +2737,12 @@ const styles = StyleSheet.create({
   hauntedPlaqueFrame: {
     maxWidth: 328, // -9% from 360
   },
+  // Not boss-gated (see banishedPlaqueArt) — renders through the full
+  // outcomeOverlay scrim, so it can sit at outcomePanel's own width rather
+  // than trimmed down to stay behind a transformed book.
+  banishedPlaqueFrame: {
+    maxWidth: 340,
+  },
   plaqueImage: {
     width: '100%',
     height: undefined,
@@ -2709,6 +2768,12 @@ const styles = StyleSheet.create({
   hauntedPlaqueContent: {
     left: '13%', right: '13%', top: '13%', bottom: '15%',
   },
+  // Measured against banished-result-plaque.png's own grey field (color-
+  // sampled through its center cross, same convention as the two above),
+  // then padded inward for safety against the crack shards near the corners.
+  banishedPlaqueContent: {
+    left: '12%', right: '13%', top: '16%', bottom: '17%',
+  },
   plaqueHeadline: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
@@ -2728,6 +2793,9 @@ const styles = StyleSheet.create({
     // palette. One ink color ties the whole plaque to the book.
     color: PW.color.bg,
   },
+  banishedPlaqueHeadline: {
+    color: PW.color.purple, // same win-ink as Mastered — banishing a Haunt is a win, not a rescue
+  },
   plaqueWord: {
     marginTop: 3,
     fontFamily: FONTS.wordDisplay,
@@ -2742,6 +2810,9 @@ const styles = StyleSheet.create({
   },
   hauntedPlaqueWord: {
     color: PW.color.bg, // dark headword, per spec, kept off gold entirely
+  },
+  banishedPlaqueWord: {
+    color: PW.color.purple,
   },
   plaqueCopyBlock: {
     marginTop: 4,
@@ -2760,6 +2831,9 @@ const styles = StyleSheet.create({
   hauntedPlaqueCopy: {
     color: PW.color.bg, // same single Haunted ink as headline/headword — see hauntedPlaqueHeadline
   },
+  banishedPlaqueCopy: {
+    color: PW.color.bg, // dark ink for readability on the plaque's neutral grey field
+  },
   plaqueBonus: {
     marginTop: 6,
     fontWeight: '800',
@@ -2771,6 +2845,9 @@ const styles = StyleSheet.create({
   },
   masteredPlaqueBonus: {
     color: PW.color.bg, // same dark-on-gold family as the copy above, bold/sized for reward emphasis (gold-on-gold would vanish)
+  },
+  banishedPlaqueBonus: {
+    color: PW.color.bg,
   },
   plaqueDangerBlock: {
     marginTop: 5,
