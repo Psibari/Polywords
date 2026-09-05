@@ -280,10 +280,10 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   innerRig: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   partLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   partImage: {
     position: 'absolute',

@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   dockSheen: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   dockLowerShade: {
     position: "absolute",

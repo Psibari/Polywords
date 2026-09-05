@@ -210,7 +210,7 @@ export function HuntIntroOverlay({ onDismiss }: Props) {
 
 const io = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 300,
     backgroundColor: 'rgba(9,7,26,0.94)',
     alignItems: 'center',

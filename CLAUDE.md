@@ -22,7 +22,7 @@ current state and blockers live in `CONTEXT.md`. Verify runtime claims against c
 
 ## Runtime
 
-- Expo SDK 54, React Native 0.81, strict TypeScript, New Architecture.
+- Expo SDK 57, React Native 0.86, strict TypeScript, New Architecture.
 - Zustand + immer own state; AsyncStorage owns local persistence.
 - React Native Animated handles most motion. Reanimated owns finger-tracked cards in
   `SwipeMask.tsx` and `DailyAnswerCard.tsx`.

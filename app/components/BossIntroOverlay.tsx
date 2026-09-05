@@ -69,7 +69,7 @@ export function BossIntroOverlay({ onDismiss }: Props) {
 
 const bo = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 320,
     backgroundColor: 'rgba(9,7,26,0.94)',
     alignItems: 'center',

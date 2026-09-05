@@ -630,12 +630,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stoneFace: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     width: '100%',
     height: '100%',
   },
   stoneTint: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(15,13,42,0.10)',
   },
   // No "SEALED" label anymore — the crown is the only content, so it can
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
     backgroundColor: DUST_COLOR,
   },
   openContent: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

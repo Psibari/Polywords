@@ -6,13 +6,12 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
+import { resolveHuntHud } from '../game/huntControl';
 import { useGameStore } from '../store/useGameStore';
 import { MaskBoard } from '../components/MaskBoard';
 import { BossBoard } from '../components/BossBoard';
-import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
 import { PW } from '../ui/pwTheme';
-import { heroBookMaterial } from '../ui/pwMaterials';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { BOSS_SKY_TUNING, HUNT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import ResultsScreen from './ResultsScreen';
@@ -48,8 +47,8 @@ function BossCrownIcon() {
     <Svg width={15} height={12} viewBox="0 0 30 24" accessibilityElementsHidden>
       <Path
         d="M3 6.5L9.2 13 15 3l5.8 10L27 6.5 24.7 20H5.3L3 6.5Z"
-        fill={PW.color.gold}
-        stroke={PW.color.foilLight}
+        fill={PW.color.lavender}
+        stroke={PW.color.softWhite}
         strokeWidth={1.4}
         strokeLinejoin="round"
       />
@@ -119,37 +118,83 @@ function TopBar({ navigation }: { navigation: any }) {
     Date.now() < goldFeatherExpiresAt;
   const total   = game.session.length;
   const current = game.stepIndex;
-  const reduceMotion = useReducedMotionPreference();
-
-  const animScore = useRef(new Animated.Value(game.score)).current;
-  const [displayScore, setDisplayScore] = useState(game.score);
+  const step = currentStep(game);
+  const isWordStep = step.kind === 'word';
+  const hud = resolveHuntHud({
+    chainMultiplier: game.chainMultiplier,
+    lives: game.lives,
+    isHauntReturn: isWordStep && step.isHauntReturn === true,
+    isMasteredReturn: isWordStep && step.isMasteredReturn === true,
+    isBossWord: isWordStep && step.eventType === 'bossWord',
+    isGauntletActive: game.gauntletActive,
+  });
+  const hudSignature = `${hud.contextLabel ?? 'NORMAL'}:${hud.label}`;
+  const previousHudSignatureRef = useRef(hudSignature);
+  const hudPulse = useRef(new Animated.Value(0)).current;
+  const hudAccent = hud.label === 'HUNTED'
+    ? PW.color.rose
+    : hud.label === 'STEADY'
+    ? PW.color.softWhite
+    : PW.color.lavender;
+  const hudPulseScale = hudPulse.interpolate({
+    inputRange: [0, 0.35, 1],
+    outputRange: [1, 1.08, 1],
+  });
+  const hudPulseOpacity = hudPulse.interpolate({
+    inputRange: [0, 0.25, 1],
+    outputRange: [0, 0.14, 0],
+  });
 
   useEffect(() => {
-    const id = animScore.addListener(({ value }) => setDisplayScore(Math.round(value)));
-    return () => animScore.removeListener(id);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (reduceMotion !== false) {
-      animScore.setValue(game.score);
-      return;
-    }
-    Animated.timing(animScore, {
-      toValue: game.score,
-      duration: 400,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: false,
+    if (previousHudSignatureRef.current === hudSignature) return;
+    previousHudSignatureRef.current = hudSignature;
+    hudPulse.stopAnimation();
+    hudPulse.setValue(0);
+    Animated.timing(hudPulse, {
+      toValue: 1,
+      duration: 520,
+      useNativeDriver: true,
     }).start();
-  }, [game.score, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Context changes and reaching IN CONTROL are deliberate beats. Ordinary
+    // STEADY/FLOW changes stay visual-only so the status never chatters in the
+    // player's hand; HUNTED already arrives with the wrong-answer error cue.
+    if (hud.contextLabel !== null || hud.label === 'IN CONTROL') {
+      Haptics.selectionAsync();
+    }
+  }, [hudSignature, hud.contextLabel, hud.label, hudPulse]);
 
   return (
     <View style={tb.outerRow}>
       <View style={tb.root}>
         <View style={tb.statsRow}>
-          <View style={tb.scoreWrap}>
-            <Text style={tb.scoreVal} numberOfLines={1} adjustsFontSizeToFit>{displayScore}</Text>
-            <StreakDisplay />
-          </View>
+          <Animated.View
+            style={[
+              tb.controlWrap,
+              {
+                borderLeftColor: hudAccent,
+                transform: [{ scale: hudPulseScale }],
+              },
+            ]}
+            accessible
+            accessibilityLabel={`${hud.contextLabel ? `${hud.contextLabel}. ` : ''}${hud.label}`}
+          >
+            <Animated.View
+              pointerEvents="none"
+              style={[tb.controlPulse, { backgroundColor: hudAccent, opacity: hudPulseOpacity }]}
+            />
+            <Text style={tb.controlContext} numberOfLines={1}>
+              {hud.contextLabel ?? ' '}
+            </Text>
+            <Text
+              style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+            >
+              {hud.label}
+            </Text>
+          </Animated.View>
           <View
             style={tb.featherRow}
             accessible
@@ -437,7 +482,7 @@ const tb = StyleSheet.create({
     // of what's behind it.
     backgroundColor: 'rgba(11,9,32,0.95)',
     borderWidth: 1,
-    borderColor: heroBookMaterial.goldHairline,
+    borderColor: PW.color.purpleSoft,
     overflow: 'hidden',
   },
   statsRow: {
@@ -476,35 +521,43 @@ const tb = StyleSheet.create({
     borderRadius: 1.5,
     backgroundColor: PW.color.softWhite,
   },
-  // Score + StreakDisplay share this row; StreakDisplay renders nothing at
-  // all when there's no active chain, so no space is reserved for it.
-  scoreWrap: {
-    // Allowed to compress under width pressure — see scoreVal's
-    // adjustsFontSizeToFit below. The feather row must never shrink (a life
-    // indicator that visually shrinks when it's fuller would read backwards),
-    // so the score is what gives when a 5-digit score + an active streak +
-    // all 8 feather elements (6 lives + reserve "+" + Gold Feather) would
-    // otherwise overflow the row and get silently clipped by tb.root's
-    // overflow: 'hidden' (the original bug this HUD redesign was for).
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    flexShrink: 1,
+  controlWrap: {
+    flex: 1,
     minWidth: 0,
+    justifyContent: 'center',
+    paddingLeft: 10,
+    borderLeftWidth: 3,
+    borderRadius: 4,
+    overflow: 'visible',
   },
-  scoreVal: {
-    color: PW.color.gold,
-    // Was 50/52 — shrunk so the score fits alongside the feather row.
-    // adjustsFontSizeToFit (see the Text usage above) lets it compress
-    // further under pressure; this is its normal-case starting size.
-    fontSize: 36,
+  controlPulse: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 4,
+  },
+  controlContext: {
+    color: PW.color.lavender,
+    fontSize: 13,
+    lineHeight: 15,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    lineHeight: 38,
-    letterSpacing: 2,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    textShadowColor: PW.color.goldGlow,
+  },
+  controlLabel: {
+    color: PW.color.white,
+    fontSize: 25,
+    lineHeight: 27,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(185,138,222,0.30)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 6,
+  },
+  controlLabelRattled: {
+    color: PW.color.lavender,
+    textShadowColor: 'rgba(185,138,222,0.48)',
   },
   featherRow: {
     flexDirection: 'row',
@@ -659,7 +712,6 @@ function GameDirector({ navigation }: { navigation: any }) {
   const ghosts     = useGameStore(s => s.ghosts);
   const startGame  = useGameStore(s => s.startGame);
   const forfeitGame = useGameStore(s => s.forfeitGame);
-  const consumeFeatherMilestone = useGameStore(s => s.consumeFeatherMilestone);
   const consumeMercy = useGameStore(s => s.consumeMercy);
   const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
@@ -694,11 +746,6 @@ function GameDirector({ navigation }: { navigation: any }) {
     forfeitGame();
     if (action) navigation.dispatch(action);
   }, [navigation, forfeitGame]);
-
-  // ── Feather float animation ────────────────────────────────
-  const featherFloatY       = useRef(new Animated.Value(0)).current;
-  const featherFloatOpacity = useRef(new Animated.Value(0)).current;
-  const [showFeatherFloat, setShowFeatherFloat] = useState(false);
 
   // ── Effects overlay ────────────────────────────────────────
   const fxLayerRef    = useRef<FXLayerHandle>(null);
@@ -892,34 +939,6 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   useEffect(() => { setMissedCount(0); }, [game.stepIndex]);
 
-  useEffect(() => {
-    if (!game.featherMilestone) return;
-    consumeFeatherMilestone();
-    Haptics.selectionAsync();
-    featherFloatY.setValue(0);
-    featherFloatOpacity.setValue(0);
-    setShowFeatherFloat(true);
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(featherFloatOpacity, {
-          toValue: 1, duration: 200, useNativeDriver: true,
-        }),
-        Animated.timing(featherFloatY, {
-          toValue: -12, duration: 200, useNativeDriver: true,
-        }),
-      ]),
-      Animated.delay(600),
-      Animated.parallel([
-        Animated.timing(featherFloatOpacity, {
-          toValue: 0, duration: 300, useNativeDriver: true,
-        }),
-        Animated.timing(featherFloatY, {
-          toValue: -44, duration: 300, useNativeDriver: true,
-        }),
-      ]),
-    ]).start(() => setShowFeatherFloat(false));
-  }, [game.featherMilestone]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── Fledgling Mercy — Polly revives her prey once ─────────────
   const mercyFloatY       = useRef(new Animated.Value(0)).current;
   const mercyFloatOpacity = useRef(new Animated.Value(0)).current;
@@ -984,7 +1003,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       state = 'crisis';
     } else if (isIdleStatic) {
       state = 'static';
-    } else if (game.chainMultiplier >= 2.5) {
+    } else if (game.chainMultiplier >= 2.0) {
       state = 'onARun';
     } else if (game.chainMultiplier >= 1.5) {
       state = 'rhythm';
@@ -1037,7 +1056,6 @@ function GameDirector({ navigation }: { navigation: any }) {
       },
     });
     setMissedCount(0);
-    setShowFeatherFloat(false);
   }
 
   const isDone =
@@ -1133,7 +1151,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           card's stage clear (so the starfield behind it actually reads) while
           still darkening the edges for focus. Replaces a prior flat gradient
           that smothered the ambient sky layers in the middle of the screen. */}
-      <Svg style={StyleSheet.absoluteFillObject} pointerEvents="none">
+      <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
         <Defs>
           <RadialGradient id={`gameVignette-${vignetteId}`} cx="50%" cy="30%" r="72%">
             <Stop offset="0%" stopColor={PW.color.bgDeep} stopOpacity={0.24} />
@@ -1162,7 +1180,7 @@ function GameDirector({ navigation }: { navigation: any }) {
             locations={[0, 0.30, 0.70, 1]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
           <LinearGradient
             colors={[
@@ -1173,7 +1191,7 @@ function GameDirector({ navigation }: { navigation: any }) {
             locations={[0, 0.5, 1]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
         </View>
       )}
@@ -1237,19 +1255,6 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       {/* ── Effects overlay — pointerEvents none, zIndex 100 ── */}
       <View style={styles.effectsOverlay} pointerEvents="none">
-        {showFeatherFloat && (
-          <Animated.Text
-            style={[
-              gs.featherFloat,
-              {
-                opacity:   featherFloatOpacity,
-                transform: [{ translateY: featherFloatY }],
-              },
-            ]}
-          >
-            SCORE MILESTONE
-          </Animated.Text>
-        )}
         {showMercyFloat && (
           <Animated.Text
             style={[
@@ -1391,10 +1396,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   bossBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   bossBookGlow: {
     position: 'absolute',
@@ -1415,17 +1420,17 @@ const styles = StyleSheet.create({
     left: '16%',
     right: '16%',
     borderRadius: 90,
-    backgroundColor: 'rgba(245,200,66,0.04)',
+    backgroundColor: 'rgba(185,138,222,0.05)',
   },
   bossTransition: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 290,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(15,13,42,0.94)',
   },
   bossTransitionKicker: {
-    color: PW.color.gold,
+    color: PW.color.lavender,
     fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
     fontSize: 34,
@@ -1493,19 +1498,5 @@ const gs = StyleSheet.create({
     textShadowColor:  'rgba(123,45,139,0.65)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
-  },
-  featherFloat: {
-    position:   'absolute',
-    top:        72,
-    right:      20,
-    color:      '#F5C842',
-    fontSize:   13,
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    textShadowColor:  'rgba(245,200,66,0.55)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
   },
 });

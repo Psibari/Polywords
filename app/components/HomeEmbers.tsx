@@ -94,7 +94,7 @@ export default function HomeEmbers() {
 
 const styles = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   dot: {
     position: 'absolute',

@@ -497,19 +497,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   gripGlow: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: dailyCardMaterial.pressGlow,
   },
   correctOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(245,200,66,0.14)',
   },
   wrongOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(204,34,0,0.14)',
   },
   disabledOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: dailyCardMaterial.disabledOverlay,
   },
 });

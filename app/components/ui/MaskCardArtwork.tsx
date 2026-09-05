@@ -20,7 +20,7 @@ export default function MaskCardArtwork({ style }: Props) {
 
 const styles = StyleSheet.create({
   artwork: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     width: '100%',
     height: '100%',
   },

@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     overflow: "visible",
   },
   bookStage: { position: "relative", alignSelf: "center", overflow: "visible" },
-  bookArt: { ...StyleSheet.absoluteFillObject },
+  bookArt: { ...StyleSheet.absoluteFill },
   bookArtImage: { width: "100%", height: "100%" },
   pageContent: {
     position: "absolute",

@@ -71,7 +71,7 @@ export function HauntIntroOverlay({ onDismiss }: Props) {
 
 const ho = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 310,
     backgroundColor: 'rgba(9,7,26,0.94)',
     alignItems: 'center',

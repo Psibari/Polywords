@@ -15,7 +15,6 @@ import { FONTS } from '../constants/fonts';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
 import { Mask, SessionStep } from '../game/types';
-import { getRankTier } from '../game/ranks';
 import { playSfx } from '../audio/sfx';
 import { FoilWord } from '../components/ui/FoilWord';
 import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/PollyResultsPerch';
@@ -23,17 +22,13 @@ import { PW } from '../ui/pwTheme';
 import { homeDare, homeType } from '../ui/pwHomeMaterials';
 import { usePulseScale } from '../hooks/usePulseScale';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
-import { resolveRankUpFeedback } from '../game/huntOutcomeFeedback';
+import { resolveHuntResultLabel } from '../game/huntControl';
 import {
   RESULTS_SUB_LOSS,
-  RESULTS_VERDICT_BEAT,
-  RESULTS_VERDICT_COMPLETE,
-  RESULTS_VERDICT_LOSS,
   deriveResultsPollyMoment,
   resultsCard,
   resultsLedger,
   resultsType,
-  resultsVerdictColor,
 } from '../ui/pwResultsMaterials';
 
 const GOLD_FEATHER_IMG = require('../../assets/ui/feather-gold-reward.png');
@@ -61,10 +56,9 @@ function findWordForMaskId(maskId: string, session: SessionStep[]): string {
 function buildShareMessage(
   session: SessionStep[],
   wordResults: WordResult[],
-  score: number,
-  rankLetter: string,
   isComplete: boolean,
   bossMastered: boolean,
+  haunted: boolean,
 ): string {
   const resultByStep = new Map(wordResults.map(r => [r.wordId, r]));
   const grid = session
@@ -77,35 +71,15 @@ function buildShareMessage(
       return perfect ? '🟨' : '🟪';
     })
     .join('');
-  const verdict = !isComplete
-    ? RESULTS_VERDICT_LOSS
-    : bossMastered ? RESULTS_VERDICT_BEAT : RESULTS_VERDICT_COMPLETE;
-  return `POLYWORDS · RANK ${rankLetter}\n${score.toLocaleString()} pts\n${grid}\n${verdict}`;
+  const verdict = resolveHuntResultLabel({
+    status: isComplete ? 'complete' : 'gameOver',
+    bossMastered,
+    haunted,
+  });
+  return `POLYWORDS · ${verdict}\n${grid}`;
 }
 
-// ─── GRADE / RANK (thresholds and text unchanged; colors tokenized) ──
-
-function computeGrade(
-  lives: number,
-  wordResults: WordResult[],
-): { text: string; color: string } {
-  if (lives === 0) return { text: 'RATTLED.', color: resultsVerdictColor.gradeRattled };
-  const ghostCount = wordResults.filter(r => r.missedMaskIds.length > 0).length;
-  if (ghostCount === 0) return { text: 'CLEAN RUN', color: resultsVerdictColor.gradeClean };
-  if (ghostCount <= 2) return { text: 'CLOSE.', color: resultsVerdictColor.gradeClose };
-  return { text: 'MEANINGS MISSED.', color: resultsVerdictColor.gradeMissed };
-}
-
-function computeRank(score: number): { letter: string; color: string } {
-  const tier = getRankTier(score);
-  const color =
-    tier.threshold >= 15000
-      ? resultsVerdictColor.rankTop
-      : tier.threshold >= 3000
-      ? resultsVerdictColor.rankMid
-      : resultsVerdictColor.rankLow;
-  return { letter: tier.letter, color };
-}
+// ─── RUN READ ─────────────────────────────────────────────────
 
 // ─── LEDGER ROW ──────────────────────────────────────────────
 
@@ -423,63 +397,34 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const game = useGameStore(s => s.game);
   const ghostRevenge = useGameStore(s => s.ghostRevenge);
   const recordRunComplete = useGameStore(s => s.recordRunComplete);
-  const progress = useGameStore(s => s.progress);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
   const useGoldFeatherInHunt = useGameStore(s => s.useGoldFeatherInHunt);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const currentPollyMemory = useGameStore(s => s.pollyMemory);
   const rememberPollyLine = useGameStore(s => s.rememberPollyLine);
-  const { wordResults, score, bestCombo, status, lives } = game;
+  const { wordResults, score, bestCombo, status } = game;
   const isComplete = status === 'complete';
+  const haunted =
+    game.bossOutcome === 'haunted' || game.hauntOutcome === 'haunted';
   const hasGoldFeather =
     status === 'gameOver' &&
     goldFeatherAvailable &&
     goldFeatherExpiresAt !== null &&
     Date.now() < goldFeatherExpiresAt;
 
-  const [prevBest] = useState(() => progress.personalBest);
   const [pollyMemoryBeforeRunRecorded] = useState(() => currentPollyMemory);
   const [usingGoldFeather, setUsingGoldFeather] = useState(false);
-  const isNewBest = score > prevBest && score > 0;
   const died = status === 'gameOver';
   const bossMastered = game.bossOutcome === 'mastered';
-  const isMasteryRematch = game.session.some(
-    step => step.kind === 'word' && step.eventType === 'bossWord' && step.isMasteryRematch,
-  );
   const flawlessWin = bossMastered && game.bossFlawless;
   const outcome: 'loss' | 'beat' | 'complete' =
     died ? 'loss' : bossMastered ? 'beat' : 'complete';
-  const rank = computeRank(score);
-  const prevRank = computeRank(prevBest);
-  const didRankUp = isNewBest && rank.letter !== prevRank.letter;
-  const grade = computeGrade(lives, wordResults);
-
-  const rankPulseScale = useRef(new Animated.Value(1)).current;
-  const rankEffectStartedRef = useRef(false);
-  useEffect(() => {
-    if (!didRankUp || reduceMotion === null || rankEffectStartedRef.current) return;
-    rankEffectStartedRef.current = true;
-    const feedback = resolveRankUpFeedback(died);
-    if (feedback.sfx) playSfx(feedback.sfx);
-    if (feedback.successHaptic) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-    if (reduceMotion || !feedback.heavyPulse) return;
-    const heavyTimer = setTimeout(
-      () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
-      180,
-    );
-    const pulse = Animated.sequence([
-      Animated.spring(rankPulseScale, { toValue: 1.35, friction: 3, useNativeDriver: true }),
-      Animated.spring(rankPulseScale, { toValue: 1.0, friction: 6, useNativeDriver: true }),
-    ]);
-    pulse.start();
-    return () => {
-      clearTimeout(heavyTimer);
-      pulse.stop();
-    };
-  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+  const resultLabel = resolveHuntResultLabel({
+    status: died ? 'gameOver' : 'complete',
+    bossMastered,
+    haunted,
+  });
 
   const recordedRef = useRef(false);
   function recordFinalRunIfNeeded() {
@@ -529,10 +474,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         message: buildShareMessage(
           game.session,
           wordResults,
-          score,
-          rank.letter,
           isComplete,
           bossMastered,
+          haunted,
         ),
       });
     } catch {}
@@ -597,11 +541,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     rememberPollyLine(pollyMoment.lineId, 'results');
   }, [pollyMoment, rememberPollyLine]);
 
-  const verdictText =
-    outcome === 'loss' ? RESULTS_VERDICT_LOSS
-    : outcome === 'beat' && isMasteryRematch ? 'REMATCH CLEARED'
-    : outcome === 'beat' ? RESULTS_VERDICT_BEAT
-    : RESULTS_VERDICT_COMPLETE;
+  const verdictText = resultLabel;
   const verdictSub = outcome === 'loss' ? RESULTS_SUB_LOSS : null;
 
   const perfectCount = wordOnlyResults.filter(
@@ -628,31 +568,11 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             />
           </View>
           {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
-          <Text style={[rs.gradeSub, { color: grade.color }]}>{grade.text}</Text>
           {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
 
-          <View style={rs.rankRow}>
-            <Text style={rs.rankLabel}>RANK</Text>
-            <Animated.Text
-              style={[rs.rankLetter, { color: rank.color, transform: [{ scale: rankPulseScale }] }]}
-            >
-              {rank.letter}
-            </Animated.Text>
-          </View>
-
-          <Text style={rs.scoreLine}>
-            {score.toLocaleString()} pts  ·  ×{bestCombo} best combo
-          </Text>
           <Text style={rs.perfectLine}>
-            {perfectCount}/{wordOnlyResults.length} perfect
+            {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
           </Text>
-          {isNewBest ? (
-            <Text style={rs.newBest}>NEW BEST</Text>
-          ) : (
-            <Text style={rs.prevBest}>
-              Best: {prevBest > 0 ? prevBest.toLocaleString() : '—'}
-            </Text>
-          )}
         </Animated.View>
 
         {/* ── DETAILS — reveal beneath the verdict ── */}
@@ -780,15 +700,6 @@ const rs = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 8,
   },
-  gradeSub: {
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    fontSize: resultsType.gradeSub,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    marginTop: 6,
-    opacity: 0.8,
-  },
   flawlessTag: {
     fontFamily: FONTS.hud,
     includeFontPadding: false,
@@ -798,32 +709,6 @@ const rs = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 4,
   },
-  rankRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  rankLabel: {
-    color: PW.color.mutedWhite,
-    fontSize: resultsType.rankLabel,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    letterSpacing: 2,
-  },
-  rankLetter: {
-    fontSize: resultsType.rankLetter,
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    letterSpacing: 1,
-  },
-  scoreLine: {
-    color: PW.color.softWhite,
-    fontSize: resultsType.scoreLine,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-  },
   perfectLine: {
     color: PW.color.foilLight,
     fontSize: resultsType.perfectLine,
@@ -831,21 +716,6 @@ const rs = StyleSheet.create({
     includeFontPadding: false,
     marginTop: 4,
     opacity: 0.85,
-  },
-  newBest: {
-    color: resultsVerdictColor.newBest,
-    fontSize: resultsType.bestLine,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    letterSpacing: 2,
-    marginTop: 6,
-  },
-  prevBest: {
-    color: resultsVerdictColor.prevBest,
-    fontSize: resultsType.bestLine,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    marginTop: 4,
   },
   ledgerPanel: {
     backgroundColor: resultsLedger.panelFace,

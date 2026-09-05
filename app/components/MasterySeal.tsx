@@ -95,7 +95,7 @@ export default function MasterySeal({ x, y, variant, label, onReveal }: Props) {
   }, [reduceMotion]);
 
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Animated.View
         style={{
           position: 'absolute',

@@ -24,7 +24,6 @@ import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
 import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY, VAULT_INTRO_SEEN_KEY } from '../constants/storageKeys';
-import { getRankTier } from '../game/ranks';
 import {
   clearPlaytestHistory,
   formatPlaytestSummaryText,
@@ -187,7 +186,6 @@ export default function SettingsScreen({ navigation }: Props) {
     Alert.alert('Tutorial Replay', "You'll see it again next time you start a Hunt.");
   };
 
-  const rank = getRankTier(progress.personalBest);
   const ghostsToShow = ghosts.filter(
     g => !progress.masteredWords.some(m => m.word === g.word),
   );
@@ -201,7 +199,7 @@ export default function SettingsScreen({ navigation }: Props) {
         pointerEvents="none"
         colors={['rgba(15,13,42,0.45)', 'rgba(15,13,42,0.22)', 'rgba(15,13,42,0.5)']}
         locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -226,7 +224,7 @@ export default function SettingsScreen({ navigation }: Props) {
           <View pointerEvents="none" style={styles.plaqueHighlight} />
           <View style={styles.profileTop}>
             <View style={styles.avatar}>
-              <Text style={[styles.avatarText, { color: rank.color }]}>{rank.letter}</Text>
+              <Text style={styles.avatarText}>PW</Text>
             </View>
             <View style={styles.profileTextWrap}>
               <Text style={styles.profileEyebrow}>PROFILE</Text>
@@ -245,7 +243,11 @@ export default function SettingsScreen({ navigation }: Props) {
               ) : (
                 <Text style={styles.playerName}>{playerName}</Text>
               )}
-              <Text style={styles.profileLevel}>{rank.description}</Text>
+              <Text style={styles.profileLevel}>
+                {progress.masteredWords.length > 0
+                  ? 'Building your word archive.'
+                  : 'Your first word is waiting.'}
+              </Text>
             </View>
           </View>
           <View style={styles.profileStats}>

@@ -82,6 +82,6 @@ const styles = StyleSheet.create({
     height: 18,
   },
   polly: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });

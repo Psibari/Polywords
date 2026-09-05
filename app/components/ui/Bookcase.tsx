@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   caseShade: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: libraryMaterial.bookcaseShade,
   },
   shelfSlot: {

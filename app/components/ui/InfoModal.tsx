@@ -49,7 +49,7 @@ export function InfoModal({ visible, title, body, onClose }: Props) {
 
 const im = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 400,
     backgroundColor: 'rgba(9,7,26,0.92)',
     alignItems: 'center',

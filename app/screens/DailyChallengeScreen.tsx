@@ -1057,7 +1057,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         pointerEvents="none"
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
       <View
         pointerEvents="none"
@@ -1220,7 +1220,7 @@ const styles = StyleSheet.create({
     backgroundColor: dailyBackdrop.base,
   },
   dailyPressureVeil: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: PW.color.purple,
   },
   // The background layers sit on the outer View so they reach the true screen
@@ -1519,7 +1519,7 @@ const feather = StyleSheet.create({
 
 const res = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: dailyResultsMaterial.overlayScrim,
     zIndex: 20,
   },

@@ -73,7 +73,6 @@ import {
   requestAndScheduleDailyReminder,
   rescheduleDailyReminderAfterCompletion,
 } from '../notifications/dailyReminder';
-import { computeRankHistoryUpdates } from '../game/ranks';
 import { foldRunIntoBookLog, localDateKey } from '../game/bookLog';
 
 // Onboarding taper: a hard cliff from full protection to zero protection at
@@ -718,11 +717,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       bossWord: bossStep?.kind === 'word' ? bossStep.word : null,
       hauntWord: hauntStep?.kind === 'word' ? hauntStep.word : null,
     });
-    const rankHistoryUpdate = computeRankHistoryUpdates(
-      finalScore,
-      current.rankHistory ?? {},
-      new Date().toISOString(),
-    );
+    // Rank is retired from the player-facing progression. Keep legacy
+    // `personalBest`/`rankHistory` fields readable for old saves, but do not
+    // write new rank history while the control migration is in progress.
     const RECENT_WORDS_CAP = 30; // ~3 runs of history — tunable constant, not locked
     const reachedWords = game.session
       .slice(0, game.stepIndex + 1)
@@ -788,8 +785,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const next: PlayerProgress = {
       ...current,
       runsCompleted: current.runsCompleted + 1,
+      // Legacy compatibility only; no current UI reads this field.
       personalBest: finalScore > current.personalBest ? finalScore : current.personalBest,
-      ...(rankHistoryUpdate ? { rankHistory: rankHistoryUpdate } : {}),
       recentHuntPerformance,
       recentWordIds,
       bookLog,

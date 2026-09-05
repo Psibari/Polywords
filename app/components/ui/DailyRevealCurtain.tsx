@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     width: 34,
   },
   sealWrap: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

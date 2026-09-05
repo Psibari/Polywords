@@ -5,10 +5,6 @@ import { PollyMoment } from '../game/pollyCharacter';
 import { PollyMemory, resolveResultsPollyMoment } from '../game/pollyMemory';
 
 // ── Verdict copy (verdict appears exactly once, top of the ledger) ──
-export const RESULTS_VERDICT_BEAT = "SLIPPED PAST POLLY'S TRAP";
-export const RESULTS_VERDICT_COMPLETE = "ALMOST, BUT ALMOST DOESN'T COUNT.";
-export const RESULTS_VERDICT_LOSS = "GOT SNAPPED BY POLLY'S TRAP";
-export const RESULTS_SUB_BEAT = 'Thought so.'; // never-change line, system text
 export const RESULTS_SUB_LOSS = 'Out of feathers.';
 
 // Polly's one bubble line on the ledger. All lines are bank-sourced
@@ -35,12 +31,7 @@ export function deriveResultsPollyMoment(
 export const resultsType = {
   verdict: 40,
   verdictSub: 17,
-  gradeSub: 16,
-  rankLabel: 16,
-  rankLetter: 30,
-  scoreLine: 17,
   perfectLine: 16,
-  bestLine: 16,
   ledgerWord: 18,
   ledgerResult: 16,
   cardHeader: 16,
@@ -68,17 +59,4 @@ export const resultsCard = {
   ghostFace: libraryMaterial.ghostTint,
   ghostRim: libraryMaterial.ghostFeatherEdge,
   ghostTitle: libraryMaterial.ghostTitle,
-} as const;
-
-// ── Verdict-block colors (no green, no raw gold beyond the foil) ──
-export const resultsVerdictColor = {
-  gradeClean: PW.color.foilLight,
-  gradeClose: PW.color.white,
-  gradeMissed: PW.color.lavender,
-  gradeRattled: PW.color.white,
-  rankTop: PW.color.amber, // MASTER / S
-  rankMid: PW.color.white, // A / B / C
-  rankLow: PW.color.mutedWhite, // D
-  newBest: PW.color.amber,
-  prevBest: PW.color.faintWhite,
 } as const;

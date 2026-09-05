@@ -18,7 +18,6 @@ import { Haptics } from '../utils/haptics';
 import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
-import { ScoreFloat } from './ScoreFloat';
 import HeroBook, { type HeroBookVariant } from './ui/HeroBook';
 import { FoilWord } from './ui/FoilWord';
 import { BookLight } from './ui/BookLight';
@@ -80,108 +79,7 @@ const CARD_SNAP = Easing.bezier(0.16, 0.95, 0.22, 1.00);
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-type FloatKind = 'real' | 'trap' | 'mastery';
-type FloatEntry = {
-  id: number;
-  value: number;
-  x: number;
-  y: number;
-  color: string;
-  kind: FloatKind;
-  tier?: ChainTier;
-};
-
 const CHAIN_TIER_SFX_RATE: Record<ChainTier, number> = { 1: 1.0, 2: 1.08, 3: 1.16 };
-const CHAIN_TIER_FONT_SIZE: Record<ChainTier, number> = { 1: 26, 2: 28, 3: 31 };
-const CHAIN_TIER_GLOW_RADIUS: Record<ChainTier, number> = { 1: 2, 2: 5, 3: 9 };
-
-type SwipeScoreFloatProps = {
-  value: number;
-  color: string;
-  kind: Exclude<FloatKind, 'mastery'>;
-  tier: ChainTier;
-  onComplete: () => void;
-};
-
-function SwipeScoreFloat({
-  value,
-  color,
-  kind,
-  tier,
-  onComplete,
-}: SwipeScoreFloatProps) {
-  const progress = useRef(new Animated.Value(0)).current;
-  const reduceMotion = useReducedMotionPreference() !== false;
-
-  useEffect(() => {
-    const animation = Animated.timing(progress, {
-      toValue: 1,
-      duration: reduceMotion ? 220 : 940,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    });
-    animation.start(({ finished }) => {
-      if (finished) onComplete();
-    });
-    return () => animation.stop();
-  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const opacity = progress.interpolate({
-    inputRange: [0, 0.62, 0.82, 1],
-    outputRange: [1, 1, 0.92, 0],
-  });
-  const scale = reduceMotion ? 1 : progress.interpolate({
-    inputRange: [0, 0.18, 0.42, 1],
-    outputRange: [1.2, 1.08, 1, 1],
-  });
-  const translateX = reduceMotion ? 0 : progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, kind === 'trap' ? 8 : 0],
-  });
-  const translateY = reduceMotion ? 0 : progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, kind === 'trap' ? -44 : -48],
-  });
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        ...(kind === 'trap'
-          ? { right: 24, top: -18 }
-          : { alignSelf: 'center', top: -34 }),
-        minWidth: 64,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 11,
-        paddingVertical: 5,
-        borderRadius: 10,
-        backgroundColor: 'rgba(15,13,42,0.92)',
-        borderWidth: 1,
-        borderColor: color,
-        zIndex: PW.z.overlay,
-        opacity,
-        transform: [{ translateX }, { translateY }, { scale }],
-      }}
-    >
-      <Text
-        style={{
-          color,
-          fontFamily: FONTS.hud,
-          includeFontPadding: false,
-          fontSize: CHAIN_TIER_FONT_SIZE[tier],
-          lineHeight: CHAIN_TIER_FONT_SIZE[tier] + 3,
-          textShadowColor: tier > 1 ? color : PW.color.shadow,
-          textShadowOffset: { width: 0, height: tier > 1 ? 0 : 1 },
-          textShadowRadius: CHAIN_TIER_GLOW_RADIUS[tier],
-        }}
-      >
-        +{value}
-      </Text>
-    </Animated.View>
-  );
-}
 
 export type Props = {
   step: WordStep;
@@ -952,27 +850,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     return tileRefs.current.get(maskId) as React.Ref<View>;
   }
 
-  // ── score floats ─────────────────────────────────────────────
-  const [floats, setFloats] = useState<FloatEntry[]>([]);
-  const floatIdRef          = useRef(0);
-
-  function spawnFloat(value: number, kind: Exclude<FloatKind, 'mastery'>, tier: ChainTier = 1) {
-    const color = kind === 'real' ? PW.color.gold : '#9B2D6B';
-    const id = ++floatIdRef.current;
-    setFloats(prev => [...prev, { id, value, color, kind, tier, x: 0, y: 0 }]);
-  }
-
-  function spawnFloatAtSplit(value: number, color = '#F5C842') {
-    const id = ++floatIdRef.current;
-    setFloats(prev => [...prev, {
-      id,
-      value,
-      color,
-      kind: 'mastery',
-      x: containerWidth / 2,
-      y: 300,
-    }]);
-  }
 
   function handleEffect(type: 'shard' | 'trail', pageX: number, pageY: number) {
     if (type === 'shard') {
@@ -1070,18 +947,16 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     step,
     firePollyEvent,
     perform: {
-      onRealClaimed({ mask, tier, points }) {
+      onRealClaimed({ mask, tier }) {
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
         Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
-        spawnFloat(points, 'real', tier);
         // Not fired directly — handleCardTouch fires it at actual arrival,
         // synced with triggerBookOpen (see pendingAbsorbPhraseRef).
         pendingAbsorbPhraseRef.current = mask.phrase;
       },
-      onTrapRejected({ tier, points }) {
+      onTrapRejected({ tier }) {
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
         Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
-        spawnFloat(points, 'trap', tier);
       },
       onWrongSwipe({ brokeRealChain }) {
         performWrongSwipeFeedback(brokeRealChain);
@@ -1159,7 +1034,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           }).start();
         }
       },
-      onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome, masteryPoints }) {
+      onMasteredSequence({ isBoss: bossOutcome, isHaunt: hauntOutcome }) {
         const bossFeedback = bossOutcome
           ? resolveBossOutcomeSequenceFeedback('mastered')
           : null;
@@ -1174,7 +1049,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         // as dead code a future edit could waste time modifying.
         // ── One decisive beat, boss or Haunt rematch alike.
         onGoldFlash?.('mastery');
-        if (!hauntOutcome) spawnFloatAtSplit(masteryPoints, '#F5C842');
         // Boss only, from here — the gold rig slam. The Haunt-rematch banish
         // beat below (isBoss false) is untouched: it keeps the neutral rig
         // and the original tiny-recoil close.
@@ -2123,19 +1997,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             </Animated.View>
           )}
 
-          <View pointerEvents="none" style={styles.scoreFloatOverlay}>
-            {floats.filter(f => f.kind !== 'mastery').map(f => (
-              <SwipeScoreFloat
-                key={f.id}
-                value={f.value}
-                color={f.color}
-                kind={f.kind as Exclude<FloatKind, 'mastery'>}
-                tier={f.tier ?? 1}
-                onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
-              />
-            ))}
-          </View>
-
         </View>
       </ScrollView>
 
@@ -2163,17 +2024,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           correctCount={gauntletCorrectCount}
         />
       )}
-
-      {/* Mastery score float */}
-      {floats.filter(f => f.kind === 'mastery').map(f => (
-          <ScoreFloat
-            key={f.id}
-            value={f.value}
-            startPosition={{ x: f.x, y: f.y }}
-            color={f.color}
-            onComplete={() => setFloats(prev => prev.filter(e => e.id !== f.id))}
-          />
-      ))}
 
       {/* Mastery celebration — phase-based elements */}
       {masterStampVisible && (
@@ -2558,7 +2408,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   scoreFloatOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: PW.z.overlay,
     elevation: PW.z.overlay,
   },
@@ -2675,7 +2525,7 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   outcomeOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 300,
     alignItems: 'center',
     justifyContent: 'center',
@@ -2809,7 +2659,7 @@ const styles = StyleSheet.create({
   // transformed book stays recognizable behind the plaque, not fully
   // curtained off.
   plaqueOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 300,
     alignItems: 'center',
     justifyContent: 'center',

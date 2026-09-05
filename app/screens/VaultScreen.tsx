@@ -340,7 +340,7 @@ export default function VaultScreen({ navigation }: Props) {
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         pointerEvents="none"
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <View pointerEvents="none" style={styles.candlePool} />
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   },
 
   ambientWash: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: stageMaterial.purpleAmbient,
   },
 
