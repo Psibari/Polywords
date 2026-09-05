@@ -334,3 +334,7 @@ I need better work.
 - More CONCEDING. Thinnest pool and it is the payoff.
 - The line where she first writes *they* as a person rather than a dodge.
 - Haunt notes per rivalry state, if state is meant to colour them.
+- Today's entries need to reach roughly ten per rivalry state — the entry is
+  now re-picked daily, not only on a mood change.
+- The payoff entry itself: the one where she drops both the excuse and
+  "the visitor" at once.
