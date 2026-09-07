@@ -1,0 +1,175 @@
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { usePolybookTuning } from './polybookTuning';
+
+// DEV-ONLY live tuning control for the Polybook spread — lets Pete dial in
+// the page insets directly on a real device instead of a code-edit-reload
+// cycle per nudge. Remove once values are locked in and baked back into
+// PolybookSpread.tsx, same as DailyScrollTuningPanel.tsx.
+export default function PolybookTuningPanel() {
+  const pageTopPct = usePolybookTuning((s) => s.pageTopPct);
+  const pageHeightPct = usePolybookTuning((s) => s.pageHeightPct);
+  const pageWidthPct = usePolybookTuning((s) => s.pageWidthPct);
+  const leftPageLeftPct = usePolybookTuning((s) => s.leftPageLeftPct);
+  const rightPageLeftPct = usePolybookTuning((s) => s.rightPageLeftPct);
+  const contentScale = usePolybookTuning((s) => s.contentScale);
+  const sealSize = usePolybookTuning((s) => s.sealSize);
+  const setLayout = usePolybookTuning((s) => s.setLayout);
+
+  if (!__DEV__) return null;
+
+  const dump = () => {
+    console.log(
+      'POLYBOOK_LAYOUT =',
+      JSON.stringify(
+        {
+          pageTopPct,
+          pageHeightPct,
+          pageWidthPct,
+          leftPageLeftPct,
+          rightPageLeftPct,
+          contentScale,
+          sealSize,
+        },
+        null,
+        2,
+      ),
+    );
+  };
+
+  return (
+    <View style={styles.root} pointerEvents="box-none">
+      <Text style={styles.section}>PAGE</Text>
+      <Row
+        label="TOP"
+        value={`${pageTopPct.toFixed(1)}%`}
+        onDec={() => setLayout({ pageTopPct: pageTopPct - 0.5 })}
+        onInc={() => setLayout({ pageTopPct: pageTopPct + 0.5 })}
+      />
+      <Row
+        label="HEIGHT"
+        value={`${pageHeightPct.toFixed(1)}%`}
+        onDec={() => setLayout({ pageHeightPct: pageHeightPct - 0.5 })}
+        onInc={() => setLayout({ pageHeightPct: pageHeightPct + 0.5 })}
+      />
+      <Row
+        label="WIDTH"
+        value={`${pageWidthPct.toFixed(1)}%`}
+        onDec={() => setLayout({ pageWidthPct: pageWidthPct - 0.5 })}
+        onInc={() => setLayout({ pageWidthPct: pageWidthPct + 0.5 })}
+      />
+      <Row
+        label="LEFT X"
+        value={`${leftPageLeftPct.toFixed(1)}%`}
+        onDec={() => setLayout({ leftPageLeftPct: leftPageLeftPct - 0.5 })}
+        onInc={() => setLayout({ leftPageLeftPct: leftPageLeftPct + 0.5 })}
+      />
+      <Row
+        label="RIGHT X"
+        value={`${rightPageLeftPct.toFixed(1)}%`}
+        onDec={() => setLayout({ rightPageLeftPct: rightPageLeftPct - 0.5 })}
+        onInc={() => setLayout({ rightPageLeftPct: rightPageLeftPct + 0.5 })}
+      />
+      <Row
+        label="SCALE"
+        value={`${contentScale.toFixed(2)}x`}
+        onDec={() => setLayout({ contentScale: contentScale - 0.02 })}
+        onInc={() => setLayout({ contentScale: contentScale + 0.02 })}
+      />
+      <Row
+        label="SEAL"
+        value={`${Math.round(sealSize)}`}
+        onDec={() => setLayout({ sealSize: sealSize - 2 })}
+        onInc={() => setLayout({ sealSize: sealSize + 2 })}
+      />
+
+      <Pressable onPress={dump} style={styles.dumpBtn} hitSlop={8}>
+        <Text style={styles.dumpText}>DUMP</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function Row({
+  label,
+  value,
+  onDec,
+  onInc,
+}: {
+  label: string;
+  value: string;
+  onDec: () => void;
+  onInc: () => void;
+}) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.label}>{label}</Text>
+      <Pressable onPress={onDec} style={styles.btn} hitSlop={8}>
+        <Text style={styles.btnText}>-</Text>
+      </Pressable>
+      <Text style={styles.value}>{value}</Text>
+      <Pressable onPress={onInc} style={styles.btn} hitSlop={8}>
+        <Text style={styles.btnText}>+</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    position: 'absolute',
+    bottom: 70,
+    right: 14,
+    zIndex: 99,
+    backgroundColor: 'rgba(0,0,0,0.82)',
+    borderRadius: 6,
+    padding: 6,
+    gap: 2,
+  },
+  section: {
+    color: '#FFC800',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  label: {
+    color: '#00FF88',
+    fontSize: 10,
+    width: 46,
+  },
+  btn: {
+    backgroundColor: '#333',
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnText: {
+    color: '#fff',
+    fontSize: 13,
+    lineHeight: 14,
+  },
+  value: {
+    color: '#00FF88',
+    fontSize: 11,
+    width: 40,
+    textAlign: 'center',
+  },
+  dumpBtn: {
+    marginTop: 4,
+    backgroundColor: '#333',
+    borderRadius: 4,
+    paddingVertical: 5,
+    alignItems: 'center',
+  },
+  dumpText: {
+    color: '#FFC800',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+});

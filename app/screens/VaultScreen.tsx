@@ -21,6 +21,7 @@ import {
   type LexiconMeaningLine,
   type LexiconStatus,
 } from "../components/ui/LexiconPrototype";
+import { PolybookSpread } from "../components/ui/PolybookSpread";
 
 import { useGameStore } from "../store/useGameStore";
 import {
@@ -30,6 +31,11 @@ import {
 } from "../game/hiddenPairIdentity";
 
 import rawHuntData from "../../assets/data/huntData.json";
+
+// Rollback flag, same pattern as POLLY_PERCH_RIG_ENABLED. False renders the
+// existing LexiconPrototype path exactly as it did before this screen
+// existed. Flip it back the moment a regression needs the old path.
+const POLYBOOK_SPREAD_ENABLED = true;
 
 type HuntDataMask = {
   id: string;
@@ -89,6 +95,7 @@ type Props = {
 export default function VaultScreen({ navigation }: Props) {
   const progress = useGameStore((state) => state.progress);
   const ghosts = useGameStore((state) => state.ghosts);
+  const pollyMemory = useGameStore((state) => state.pollyMemory);
 
   // Mastery remains permanent. A re-ghosted master is not presented
   // as an active Haunted Lexicon entry.
@@ -355,23 +362,27 @@ export default function VaultScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.polybookArea}>
-          <LexiconPrototype
-            hauntedWords={ghostsToShow.map((ghost) => ghost.word)}
-            masteredWords={progress.masteredWords.map((record) => ({
-              word: record.word,
-              dateMastered: record.dateMastered,
-            }))}
-            entries={lexiconEntries}
-            selectedWord={selectedWord}
-            onSelectWord={setSelectedWord}
-            summary={{
-              meanings: (progress.realMaskIdsFound ?? []).length,
-              words: lexiconEntries.length,
-              mastered: progress.masteredWords.length,
-              haunted: ghostsToShow.length,
-            }}
-            detail={selectedDetail}
-          />
+          {POLYBOOK_SPREAD_ENABLED ? (
+            <PolybookSpread progress={progress} pollyMemory={pollyMemory} />
+          ) : (
+            <LexiconPrototype
+              hauntedWords={ghostsToShow.map((ghost) => ghost.word)}
+              masteredWords={progress.masteredWords.map((record) => ({
+                word: record.word,
+                dateMastered: record.dateMastered,
+              }))}
+              entries={lexiconEntries}
+              selectedWord={selectedWord}
+              onSelectWord={setSelectedWord}
+              summary={{
+                meanings: (progress.realMaskIdsFound ?? []).length,
+                words: lexiconEntries.length,
+                mastered: progress.masteredWords.length,
+                haunted: ghostsToShow.length,
+              }}
+              detail={selectedDetail}
+            />
+          )}
         </View>
       </View>
 
