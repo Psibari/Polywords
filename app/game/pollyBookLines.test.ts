@@ -11,6 +11,9 @@ import {
   BookRivalryState,
   STRUCK_PAIRS,
   pickBookLine,
+  BookLogRow,
+  PRE_INSTALL_GENERAL,
+  PRE_INSTALL_CRACKER,
 } from './pollyBookLines';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -68,6 +71,12 @@ const poolNames = Object.keys(BOOK_LINE_POOLS) as BookLinePoolName[];
   for (const name of poolNames) {
     for (const id of BOOK_LINE_POOLS[name]) pooled.add(id);
   }
+  // Pre-install rows are deliberately outside BOOK_LINE_POOLS (they aren't a
+  // day bucket, see pollyBookLines.ts), but still need to be accounted for
+  // here or every id in them would look orphaned.
+  for (const row of [...PRE_INSTALL_GENERAL, ...PRE_INSTALL_CRACKER]) {
+    for (const id of row) pooled.add(id);
+  }
   for (const id of Object.keys(POLLY_BOOK_LINES)) {
     ok(pooled.has(id), `id '${id}' is in POLLY_BOOK_LINES but in no pool`);
   }
@@ -103,6 +112,42 @@ const poolNames = Object.keys(BOOK_LINE_POOLS) as BookLinePoolName[];
     ok(pair.next.trim().length > 0, `STRUCK_PAIRS[${i}].next: empty`);
     ok(pair.old !== pair.next, `STRUCK_PAIRS[${i}]: old and next are identical`);
   });
+}
+
+// ── Pre-install rows: PRE_INSTALL_GENERAL / PRE_INSTALL_CRACKER ──
+{
+  const allRows: BookLogRow[] = [...PRE_INSTALL_GENERAL, ...PRE_INSTALL_CRACKER];
+
+  // Every row is one or two entries, never zero or three, and every id it
+  // references resolves to a non-empty string.
+  for (const row of allRows) {
+    ok(row.length === 1 || row.length === 2, `pre-install row: unexpected length ${row.length}`);
+    for (const id of row) {
+      ok(id in POLLY_BOOK_LINES, `pre-install row: id '${id}' is not in POLLY_BOOK_LINES`);
+      const line = POLLY_BOOK_LINES[id];
+      ok(typeof line === 'string' && line.length > 0, `pre-install row: id '${id}' has no text`);
+    }
+  }
+
+  // The two pools share no ids.
+  const generalIds = new Set<PollyBookLineId>();
+  for (const row of PRE_INSTALL_GENERAL) for (const id of row) generalIds.add(id);
+  for (const row of PRE_INSTALL_CRACKER) {
+    for (const id of row) {
+      ok(
+        !generalIds.has(id),
+        `pre-install row: id '${id}' appears in both PRE_INSTALL_GENERAL and PRE_INSTALL_CRACKER`,
+      );
+    }
+  }
+
+  // The cracker pool is non-empty — the guarantee later depends on it, and
+  // an empty pool would fail silently at render.
+  ok(PRE_INSTALL_CRACKER.length > 0, 'PRE_INSTALL_CRACKER: empty');
+
+  // Neither pool is wired into day-bucket selection.
+  ok(!('PRE_INSTALL_GENERAL' in BOOK_LINE_POOLS), 'PRE_INSTALL_GENERAL must not appear in BOOK_LINE_POOLS');
+  ok(!('PRE_INSTALL_CRACKER' in BOOK_LINE_POOLS), 'PRE_INSTALL_CRACKER must not appear in BOOK_LINE_POOLS');
 }
 
 // ── pickFreshLine never returns a recent id while a fresh one exists ──

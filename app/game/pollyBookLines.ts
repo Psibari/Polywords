@@ -165,6 +165,32 @@ export const POLLY_BOOK_LINES = {
   hauntBrokenTheyRemembered: 'They remembered. Hm.',
   hauntBrokenCameBack: 'Came back. Of course.',
   hauntBrokenSettled: 'That one is settled.',
+
+  // ── 1.8 Pre-install rows — dated rows that predate the player ──
+  preInstallChamp: 'I am the champ.',
+  preInstallWhatIDo: 'This is what I do.',
+  preInstallNothingToReport: 'Nothing to report.',
+  preInstallRecordsUpToDate: 'Records up to date.',
+  preInstallDustedCrown: 'Dusted the crown.',
+  preInstallInkRefilled: 'Ink refilled.',
+  preInstallTrapsCheckedFine: 'Traps checked. Fine.',
+  preInstallAllPresentAllShut: 'All present. All shut.',
+  preInstallOiledHinges: 'Oiled the hinges.',
+  preInstallStillTuesday: 'Is it still Tuesday.',
+  preInstallNewPageWhy: 'Began a new page. Why.',
+  preInstallLostCount: 'Lost count of the days.',
+  preInstallSameAsLast: 'Same as the last one.',
+  preInstallAsYesterday: 'As yesterday.',
+  preInstallDaysStopped1: 'The days have stopped',
+  preInstallDaysStopped2: 'being separate.',
+  preInstallWrittenBefore1: 'I have written this',
+  preInstallWrittenBefore2: 'before, I think.',
+  preInstallCrackerNeverHad1: 'Never had a cracker.',
+  preInstallCrackerNeverHad2: 'I bet they are good.',
+  preInstallCrackerThatIsAll1: 'A cracker. That is all.',
+  preInstallCrackerThatIsAll2: 'I do not want one.',
+  preInstallCrackerStillNo1: 'Still no cracker.',
+  preInstallCrackerStillNo2: 'Nobody has offered.',
 } as const;
 
 export type PollyBookLineId = keyof typeof POLLY_BOOK_LINES;
@@ -353,6 +379,56 @@ export const BOOK_LINE_POOLS = {
 } as const;
 
 export type BookLinePoolName = keyof typeof BOOK_LINE_POOLS;
+
+// ── Pre-install rows ──────────────────────────────────────────────
+// The three or four dated rows that already exist in the book the first
+// time a player opens it — her business before they arrived. Not §1.5
+// "First day," which is about the player's first day; these are about the
+// days before the player existed, and must never be mistaken for the
+// player's own record. See docs/POLLY_POLYBOOK_LOG_LINES.md §1.8.
+//
+// Deliberately absent from BOOK_LINE_POOLS: that map feeds day-bucket
+// selection, and these rows are not a day bucket. Folding them in would
+// make them eligible for a day the player actually played, which would put
+// pre-player history into a played day's row. There is no selector for
+// these pools yet — it lives with whatever builds the pre-install pages.
+
+/** Rows here are one or two lines — every pool above is single-line only,
+ *  so a two-line row needs its own shape. Each line still gets its own
+ *  entry in POLLY_BOOK_LINES; this only groups the ids that render as one
+ *  row. */
+export type BookLogRow = readonly [PollyBookLineId] | readonly [PollyBookLineId, PollyBookLineId];
+
+/** The fourteen one-line rows and the two general two-line rows. */
+export const PRE_INSTALL_GENERAL: readonly BookLogRow[] = [
+  ['preInstallChamp'],
+  ['preInstallWhatIDo'],
+  ['preInstallNothingToReport'],
+  ['preInstallRecordsUpToDate'],
+  ['preInstallDustedCrown'],
+  ['preInstallInkRefilled'],
+  ['preInstallTrapsCheckedFine'],
+  ['preInstallAllPresentAllShut'],
+  ['preInstallOiledHinges'],
+  ['preInstallStillTuesday'],
+  ['preInstallNewPageWhy'],
+  ['preInstallLostCount'],
+  ['preInstallSameAsLast'],
+  ['preInstallAsYesterday'],
+  ['preInstallDaysStopped1', 'preInstallDaysStopped2'],
+  ['preInstallWrittenBefore1', 'preInstallWrittenBefore2'],
+];
+
+/** The cracker rows, split out from PRE_INSTALL_GENERAL because one of them
+ *  is guaranteed a slot in every book (Pete's ruling) — separating the
+ *  group is what makes that guarantee expressible without special-casing a
+ *  single id inside a larger pool. The guarantee itself is selection logic
+ *  and is not implemented here. */
+export const PRE_INSTALL_CRACKER: readonly BookLogRow[] = [
+  ['preInstallCrackerNeverHad1', 'preInstallCrackerNeverHad2'],
+  ['preInstallCrackerThatIsAll1', 'preInstallCrackerThatIsAll2'],
+  ['preInstallCrackerStillNo1', 'preInstallCrackerStillNo2'],
+];
 
 // ── Today's entry, right page ───────────────────────────────────
 // Part 3: 15pt, exactly three short lines, roughly nineteen characters a

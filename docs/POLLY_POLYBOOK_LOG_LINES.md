@@ -143,6 +143,70 @@ Fell for it again.
 La la la la.
 ```
 
+### 1.8 Pre-install rows
+
+These are the three or four dated rows that already exist in the book the
+first time a player opens it — her business before they arrived. §1.5
+"First day" is about the player's first day. §1.8 is about the days before
+the player existed. They must never be mistaken for the player's own
+record.
+
+Rules specific to this pool: no word names, no reference to the player or
+any visitor, no "they", no numbers. The register is deliberately dull — she
+is undefeated, unchallenged, bored, and keeping meticulous records of
+nothing. The joke lands on her because she bothered to write it down.
+
+One-line rows:
+
+- I am the champ.
+- This is what I do.
+- Nothing to report.
+- Records up to date.
+- Dusted the crown.
+- Ink refilled.
+- Traps checked. Fine.
+- All present. All shut.
+- Oiled the hinges.
+- Is it still Tuesday.
+- Began a new page. Why.
+- Lost count of the days.
+- Same as the last one.
+- As yesterday.
+
+Two-line rows:
+
+```
+The days have stopped
+being separate.
+```
+
+```
+I have written this
+before, I think.
+```
+
+Cracker rows — two-line, and their own group. **One of them is guaranteed to
+appear in every book** (Pete's ruling). The guarantee is selection logic and
+is not implemented in this commit.
+
+```
+Never had a cracker.
+I bet they are good.
+```
+
+```
+A cracker. That is all.
+I do not want one.
+```
+
+```
+Still no cracker.
+Nobody has offered.
+```
+
+Every line above was measured in Buggie at 12pt against the 160pt usable
+page and fits. Do not re-measure.
+
 ---
 ## Part 2 — the rows that name a word
 
