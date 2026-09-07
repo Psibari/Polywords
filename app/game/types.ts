@@ -228,7 +228,12 @@ export type PlayerProgress = {
  *
  *  NOT BACKFILLABLE: no run history exists anywhere else in the app.
  *  recentHuntPerformance keeps a five-entry window and masteredWords carries
- *  dates only for masteries. */
+ *  dates only for masteries.
+ *
+ *  Rows written before `claims`/`offered` shipped carry neither field, so a
+ *  ratio cannot be computed for them — the render layer must treat
+ *  `offered === 0` as "unknown," not as a light day. That fallback belongs
+ *  there, not here: no screen reads this yet. */
 export type BookDayRecord = {
   /** Local YYYY-MM-DD, never UTC — this is a diary. A run at 8pm New York
    *  time belongs to that day, not the next one. */
@@ -252,6 +257,16 @@ export type BookDayRecord = {
    *  excluded — it is a Daily reward, and the Hunt equivalent is Mercy
    *  (docs/POLLY_POLYBOOK_LOG_LINES.md, Part 5). */
   mercy: number;
+  /** Visible REAL meanings claimed correctly that day — every correct claim,
+   *  not only new ones. Pairs with `offered` to give the day's ratio, which is
+   *  what the quiet/light/heavy reading is made from. Deliberately different
+   *  from gotPast, which stays new-only because it feeds the lifetime
+   *  "GOT PAST ME" total. */
+  claims: number;
+  /** Visible REAL meanings the day's rounds put in front of the player. The
+   *  denominator for `claims`. Hidden (boss gauntlet) masks are excluded, as
+   *  they are from claims. */
+  offered: number;
 };
 
 export type DailyTier = 1 | 2 | 3;

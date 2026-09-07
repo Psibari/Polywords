@@ -18,6 +18,8 @@ function ok(condition: boolean, label: string): void {
 const emptyRun: BookRunFacts = {
   runs: 1,
   gotPast: 0,
+  claims: 0,
+  offered: 0,
   bossHeld: 0,
   bossLost: 0,
   mastered: [],
@@ -31,12 +33,12 @@ const run = (over: Partial<BookRunFacts> = {}): BookRunFacts => ({ ...emptyRun, 
 // ── A second run on the same date merges rather than appending ──
 {
   const first = foldRunIntoBookLog(undefined, '2026-09-04', run({
-    gotPast: 4, bossLost: 1, mastered: ['CONCENTRATION'], mercy: 1,
+    gotPast: 4, bossLost: 1, mastered: ['CONCENTRATION'], mercy: 1, claims: 5, offered: 8,
   }));
   eq(first.length, 1, 'first run: row count');
 
   const second = foldRunIntoBookLog(first, '2026-09-04', run({
-    gotPast: 3, bossHeld: 1, hauntLeft: ['BATTERY'],
+    gotPast: 3, bossHeld: 1, hauntLeft: ['BATTERY'], claims: 4, offered: 6,
   }));
   eq(second.length, 1, 'same date: still one row');
   eq(second[0].date, '2026-09-04', 'same date: date');
@@ -45,18 +47,55 @@ const run = (over: Partial<BookRunFacts> = {}): BookRunFacts => ({ ...emptyRun, 
   eq(second[0].bossLost, 1, 'same date: bossLost carried');
   eq(second[0].bossHeld, 1, 'same date: bossHeld added');
   eq(second[0].mercy, 1, 'same date: mercy carried');
+  eq(second[0].claims, 9, 'same date: claims added');
+  eq(second[0].offered, 14, 'same date: offered added');
   eq(second[0].mastered.join(','), 'CONCENTRATION', 'same date: mastered concatenated');
   eq(second[0].hauntLeft.join(','), 'BATTERY', 'same date: hauntLeft concatenated');
 
   // A third merge keeps accumulating rather than replacing.
   const third = foldRunIntoBookLog(second, '2026-09-04', run({
-    gotPast: 1, mastered: ['STRIKE'], mercy: 1,
+    gotPast: 1, mastered: ['STRIKE'], mercy: 1, claims: 2, offered: 3,
   }));
   eq(third.length, 1, 'third run: still one row');
   eq(third[0].runs, 3, 'third run: runs');
   eq(third[0].gotPast, 8, 'third run: gotPast');
   eq(third[0].mercy, 2, 'third run: mercy');
+  eq(third[0].claims, 11, 'third run: claims');
+  eq(third[0].offered, 17, 'third run: offered');
   eq(third[0].mastered.join(','), 'CONCENTRATION,STRIKE', 'third run: mastered order');
+}
+
+// ── A new day's row carries claims and offered as given ──────────
+{
+  const day = foldRunIntoBookLog(undefined, '2026-09-04', run({ claims: 6, offered: 9 }));
+  eq(day[0].claims, 6, 'new row: claims');
+  eq(day[0].offered, 9, 'new row: offered');
+}
+
+// ── A merge onto a legacy row lacking claims/offered doesn't NaN ──
+// The type requires both fields, but a row already on disk from before this
+// shipped won't have them at runtime — cast to construct that shape, since
+// the point here is what the function does with the actual runtime value,
+// not what the compiler believes it is.
+{
+  const legacyRow = {
+    date: '2026-09-04',
+    runs: 2,
+    gotPast: 5,
+    bossHeld: 0,
+    bossLost: 0,
+    mastered: [],
+    hauntLeft: [],
+    hauntBroken: [],
+    mercy: 0,
+  } as unknown as BookDayRecord;
+
+  const merged = foldRunIntoBookLog([legacyRow], '2026-09-04', run({ claims: 3, offered: 5 }));
+  eq(merged.length, 1, 'legacy merge: still one row');
+  ok(!Number.isNaN(merged[0].claims), 'legacy merge: claims is not NaN');
+  ok(!Number.isNaN(merged[0].offered), 'legacy merge: offered is not NaN');
+  eq(merged[0].claims, 3, 'legacy merge: claims is the new run alone, missing field treated as 0');
+  eq(merged[0].offered, 5, 'legacy merge: offered is the new run alone, missing field treated as 0');
 }
 
 // ── Merging never mutates the row it was given ──────────────────
@@ -102,9 +141,13 @@ const run = (over: Partial<BookRunFacts> = {}): BookRunFacts => ({ ...emptyRun, 
     log = foldRunIntoBookLog(log, `2026-02-${String(i).padStart(3, '0')}`, run());
   }
   eq(log.length, 200, 'merge cap: pre-condition');
-  const merged = foldRunIntoBookLog(log, log[0].date, run({ gotPast: 3 }));
+  // claims/offered ride along unchanged: cap and ordering are unaffected by
+  // the new fields.
+  const merged = foldRunIntoBookLog(log, log[0].date, run({ gotPast: 3, claims: 5, offered: 10 }));
   eq(merged.length, 200, 'merge cap: still capped');
   eq(merged[0].runs, 2, 'merge cap: head merged not prepended');
+  eq(merged[0].claims, 5, 'merge cap: claims added onto the default-zero head');
+  eq(merged[0].offered, 10, 'merge cap: offered added onto the default-zero head');
 }
 
 // ── An existing save with no bookLog migrates cleanly ───────────

@@ -767,9 +767,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const realMaskBaseline = Number.isFinite(game.runStartRealMaskCount)
       ? Math.min(game.runStartRealMaskCount as number, realMaskTotalNow)
       : realMaskTotalNow;
+    // claims/offered: the day's ratio, unlike gotPast which is new-ids-only
+    // and drifts toward zero for a veteran however well they play. Both
+    // numbers already exist per word — correctUp already excludes hidden
+    // masks and counts only correct claims, and totalRealMasks is that
+    // word's visible REAL count — buildCurrentWordResult writes both, so
+    // this only sums what is already there rather than tracking anything new.
+    // buildCurrentWordResult only appends when a word is left, so a word
+    // still in progress when the run ends contributes to neither sum. Both
+    // sides are missing together, so the ratio stays honest — it is simply
+    // computed over the rounds that finished. Do not "fix" this.
+    const claims = game.wordResults.reduce((sum, result) => sum + result.correctUp, 0);
+    const offered = game.wordResults.reduce((sum, result) => sum + result.totalRealMasks, 0);
     const bookLog = foldRunIntoBookLog(current.bookLog, localDateKey(new Date()), {
       runs: 1,
       gotPast: Math.max(0, realMaskTotalNow - realMaskBaseline),
+      claims,
+      offered,
       bossHeld: bossHeldByPolly ? 1 : 0,
       bossLost: bossMastered ? 1 : 0,
       mastered: bossMastered && bossWordName ? [bossWordName] : [],

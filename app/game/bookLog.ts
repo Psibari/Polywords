@@ -56,6 +56,13 @@ export function foldRunIntoBookLog(
       date,
       runs: head.runs + facts.runs,
       gotPast: head.gotPast + facts.gotPast,
+      // A row written before claims/offered shipped has neither field at
+      // runtime, whatever the type says — head.claims + facts.claims would
+      // be NaN and silently poison the row. Same defensive posture as the
+      // Array.isArray(log) guard above, for the same reason: old data on
+      // disk doesn't match today's type.
+      claims: (head.claims ?? 0) + facts.claims,
+      offered: (head.offered ?? 0) + facts.offered,
       bossHeld: head.bossHeld + facts.bossHeld,
       bossLost: head.bossLost + facts.bossLost,
       mastered: [...head.mastered, ...facts.mastered],
