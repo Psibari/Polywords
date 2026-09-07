@@ -55,6 +55,12 @@ a win, on the Results screen or in her book.
 A `playerCompleted` run that didn't master the boss word resets both
 streaks. That is deliberate, not a bug to be found and fixed later.
 
+Until `208b2ec` the per-run stamp disagreed with this rule: a run that
+mastered the boss word but missed one visible tile was stamped `steady`,
+identical to a run that died halfway having taken nothing, because the
+stamp also required a flawless boss. It now requires only that the boss
+word was mastered — which is what this section already said counted.
+
 ## Her five states
 
 DISMISSIVE, AMUSED, WATCHFUL, RATTLED, and CONCEDING are a mood, not a score.
@@ -75,6 +81,20 @@ The window's coarseness is accepted, not a flaw to fix. A "steady" run could
 be one the player survived cleanly but late, or one that ended in a death
 after a strong start. The five-run window cannot tell those two runs apart,
 and it is not supposed to.
+
+DISMISSIVE is the one exception, and it is deliberately one-way. She
+notices a player either the moment they master a word, or once they have
+kept coming back for a full window of runs — two doors, either one opens
+it, and neither can close again because both inputs only ever grow. She
+can be rattled again; she cannot un-meet someone.
+
+There are two doors and not one because a mastery-only rule would strand
+a player who keeps playing and keeps losing in DISMISSIVE for weeks — and
+that player is precisely who the AMUSED lines were written for.
+
+The mood now has code: `resolveRivalryState` in `app/game/pollyMood.ts`.
+It is the source of truth for what each band contains; this document does
+not restate it, so a rewrite there cannot leave a stale copy here.
 
 ## The payoff
 
