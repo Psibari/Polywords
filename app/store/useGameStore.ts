@@ -214,6 +214,9 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   rankHistory: {},
   recentHuntPerformance: [],
   recentWordIds: [],
+  // Set only by loadProgress, once, on first load of a save that predates it.
+  // Kept undefined here so there is one code path that ever assigns it.
+  bookSeed: undefined,
 };
 
 type GameStore = {
@@ -816,7 +819,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const parsed = JSON.parse(raw);
         const merged: PlayerProgress = { ...DEFAULT_PROGRESS, ...parsed };
         const backfilled = backfillHiddenPairIdsFound(merged);
-        set({ progress: backfilled });
+        // Generated once, ever, right here. Date.now() is fine — it is a
+        // seed, not a secret. Never regenerate an existing one: that would
+        // rewrite what she wrote on every past day.
+        const withBookSeed = backfilled.bookSeed === undefined
+          ? { ...backfilled, bookSeed: Date.now() }
+          : backfilled;
+        set({ progress: withBookSeed });
+        if (withBookSeed !== backfilled) {
+          AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(withBookSeed)).catch(() => {});
+        }
       }
     } catch {}
   },

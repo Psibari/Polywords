@@ -217,6 +217,11 @@ export type PlayerProgress = {
    *  records. Capped at 200 rows; lifetime totals live in their own fields so
    *  trimming can never move a total. NOT BACKFILLABLE. */
   bookLog?: BookDayRecord[];
+  /** A stable per-player number, generated once and never changed. Seeds the
+   *  Polybook's line selection so a given day always shows the same line and
+   *  two players don't open an identical book. Optional only for saves that
+   *  predate it; the store fills it on load. */
+  bookSeed?: number;
 };
 
 /** A single day in Polly's Polybook work log.
