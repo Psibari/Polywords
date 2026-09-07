@@ -21,6 +21,7 @@ export default function App() {
   const [fontsLoaded] = useFonts({
     'BebasNeue-Regular':    require('./assets/fonts/BebasNeue-Regular.ttf'),
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
+    'Buggie-Regular': require('./assets/fonts/Buggie-Regular.ttf'),
   });
 
   // Home is always the landing screen — this only gates the first paint so
