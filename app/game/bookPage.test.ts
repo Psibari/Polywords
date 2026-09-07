@@ -78,25 +78,111 @@ const day = (date: string, over: Partial<Omit<BookDayRecord, 'date'>> = {}): Boo
   eq(readDayBucket(day('2026-09-01', { claims: HEAVY_DAY_CLAIMS + 1 })), 'HEAVY_DAY', 'boundary: one above is heavy');
 }
 
-// ── A three-day gap between two played days fills two quiet rows ──
+// ── A run of two or more empty days between played days collapses into
+// ONE quiet row spanning the whole run — a three-day gap now yields one
+// row, not three ───────────────────────────────────────────────────
 {
   const log = [day('2026-09-04'), day('2026-09-01')];
   const rows = buildWorkLog({ log, today: '2026-09-04', bookSeed: 42 });
-  eq(rows.length, 4, 'gap: row count');
+  eq(rows.length, 3, 'gap: row count collapses to one quiet row');
   eq(rows[0].date, '2026-09-04', 'gap: newest first');
-  eq(rows[1].date, '2026-09-03', 'gap: first quiet gap day');
-  eq(rows[2].date, '2026-09-02', 'gap: second quiet gap day');
-  eq(rows[3].date, '2026-09-01', 'gap: oldest last');
-  ok(rows[1].word === undefined, 'gap: quiet row has no word');
-  ok(rows[2].word === undefined, 'gap: quiet row has no word');
+  eq(rows[1].date, '2026-09-02', 'gap: collapsed row starts on the first empty day');
+  eq(rows[1].endDate, '2026-09-03', 'gap: collapsed row ends on the last empty day');
+  ok(rows[1].word === undefined, 'gap: collapsed row has no word');
+  eq(rows[2].date, '2026-09-01', 'gap: oldest last');
+}
+
+// ── A single empty day is still just a day, not a range ────────────
+{
+  const log = [day('2026-09-03'), day('2026-09-01')];
+  const rows = buildWorkLog({ log, today: '2026-09-03', bookSeed: 11 });
+  eq(rows.length, 3, 'single gap day: row count');
+  eq(rows[1].date, '2026-09-02', 'single gap day: the one empty day');
+  ok(rows[1].endDate === undefined, 'single gap day: no endDate on a lone quiet day');
+}
+
+// ── A collapsed range's line is exactly what a single row starting on
+// that same date would have drawn — selection keys off the start date
+// alone, never the range's length or end ────────────────────────────
+{
+  const seed = 314;
+  const rangeRows = buildWorkLog({
+    log: [day('2026-09-05'), day('2026-09-01')],
+    today: '2026-09-05',
+    bookSeed: seed,
+  });
+  const collapsed = rangeRows.find(r => r.date === '2026-09-02');
+  ok(collapsed !== undefined, 'line match: pre-condition, collapsed row exists');
+  eq(collapsed!.endDate, '2026-09-04', 'line match: pre-condition, range spans the full gap');
+
+  const singleDayRows = buildWorkLog({
+    log: [day('2026-09-03'), day('2026-09-01')],
+    today: '2026-09-03',
+    bookSeed: seed,
+  });
+  const single = singleDayRows.find(r => r.date === '2026-09-02');
+  ok(single !== undefined, 'line match: pre-condition, single quiet row exists');
+
+  eq(
+    collapsed!.lines[0],
+    single!.lines[0],
+    'line match: a collapsed range draws the same line as a single row starting on its first day',
+  );
+}
+
+// ── A collapsed range is stable: a later played day cannot change a
+// range that is already bounded by two played days, because a player
+// cannot go back and play a past day ─────────────────────────────────
+{
+  const seed = 4242;
+  const first = buildWorkLog({
+    log: [day('2026-09-01'), day('2026-08-25')],
+    today: '2026-09-01',
+    bookSeed: seed,
+  });
+  const firstRange = first.find(r => r.endDate !== undefined);
+  ok(firstRange !== undefined, 'range stability: pre-condition, a collapsed range exists');
+
+  const withNewDay = buildWorkLog({
+    log: [day('2026-09-05'), day('2026-09-01'), day('2026-08-25')],
+    today: '2026-09-05',
+    bookSeed: seed,
+  });
+  const rangeAfter = withNewDay.find(r => r.date === firstRange!.date);
+  ok(rangeAfter !== undefined, 'range stability: the old range is still present');
+  eq(
+    JSON.stringify(rangeAfter),
+    JSON.stringify(firstRange),
+    'range stability: appending a new played day leaves a bounded range byte-identical',
+  );
+}
+
+// ── A collapsed range counts as exactly one row against maxRows ──────
+{
+  const rows = buildWorkLog({
+    log: [day('2026-12-31'), day('2026-01-01')],
+    today: '2026-12-31',
+    bookSeed: 9,
+    maxRows: 3,
+  });
+  eq(rows.length, 3, 'maxRows: a huge range still leaves room for the oldest row');
+  eq(rows[0].date, '2026-12-31', 'maxRows: newest first');
+  eq(rows[1].date, '2026-01-02', 'maxRows: the collapsed range starts right after the oldest day');
+  eq(rows[1].endDate, '2026-12-30', 'maxRows: the collapsed range ends right before the newest day');
+  eq(rows[2].date, '2026-01-01', 'maxRows: the oldest stored row still fits');
 }
 
 // ── Today only appears if it was played ───────────────────────────
 {
   const unplayedToday = buildWorkLog({ log: [day('2026-09-01')], today: '2026-09-05', bookSeed: 1 });
   ok(!unplayedToday.some(r => r.date === '2026-09-05'), 'unplayed today: no row for today');
-  eq(unplayedToday[0].date, '2026-09-04', 'unplayed today: newest row is yesterday');
-  eq(unplayedToday.length, 4, 'unplayed today: row count spans oldest..yesterday');
+  eq(
+    unplayedToday[0].date,
+    '2026-09-02',
+    'unplayed today: newest row is the collapsed range starting the day after the oldest stored day',
+  );
+  eq(unplayedToday[0].endDate, '2026-09-04', 'unplayed today: collapsed range ends the day before today');
+  eq(unplayedToday.length, 2, 'unplayed today: row count collapses the gap to one range plus the oldest day');
 
   const playedToday = buildWorkLog({
     log: [day('2026-09-05'), day('2026-09-01')],

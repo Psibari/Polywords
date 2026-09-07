@@ -31,9 +31,17 @@ import { BOOK_LOG_CAP } from './bookLog';
  *  without stranding a single record. */
 export const HEAVY_DAY_CLAIMS = 20;
 
-/** One row as it renders on the page. */
+/** One row as it renders on the page.
+ *
+ *  `endDate`, when set, means this row is a COLLAPSED RUN of consecutive
+ *  quiet days — date is the first empty day, endDate the last, inclusive.
+ *  A single quiet day is still just a day: it gets a normal row with no
+ *  endDate, same as a played day. Only ever set on quiet rows; word-naming
+ *  and played rows always cover exactly one date. */
 export type WorkLogRow = {
-  date: string;              // local YYYY-MM-DD
+  date: string;              // local YYYY-MM-DD — the row's identity, and the
+                              // START of the range when endDate is set
+  endDate?: string;          // set only on a collapsed quiet range; inclusive
   word?: string;             // set only on word-naming rows; renders on its own line
   lines: string[];           // one or two lines of her handwriting
 };
@@ -136,6 +144,25 @@ function drawLine(bucket: BookLinePoolName, date: string, bookSeed: number): str
 
 /**
  * Build the work-log rows the player would see, most-recent-first.
+ *
+ * Runs of two or more consecutive unplayed days collapse into ONE quiet row
+ * spanning the whole run (Pete's ruling, knowingly overriding "one row per
+ * day" for empty days only — played days still get exactly one row each,
+ * however many runs happened that day). One quiet row per unplayed day reads
+ * fine for a daily player, but at a twice-a-week cadence five rows in six say
+ * nobody came, and at that density her quiet lines stop reading as a bird
+ * alone with her records and start reading as her nagging the player for not
+ * showing up — the joke lands on the player instead of on her, which her
+ * voice may never do. A single unplayed day is still just a day, not a gap,
+ * so it stays a normal one-day row.
+ *
+ * A collapsed range is safe against the same stability concern drawLine's
+ * comment raises for single days: once a gap is bounded by two played days,
+ * neither of those boundary dates — nor anything between them — can ever
+ * change, because a player cannot go back and play a past day. So the range
+ * a run of empty days produces is exactly as stable as any other row, and
+ * its line is rolled from the range's own start date alone (see drawLine),
+ * never the range length or its end — the same rule as every other row.
  */
 export function buildWorkLog(input: {
   log: BookDayRecord[];   // most-recent-first, as stored
@@ -168,9 +195,30 @@ export function buildWorkLog(input: {
     // oldestDate and never goes earlier, so pre-player history is never
     // invented here. That ground belongs to buildPreInstallRows.
     const stored = byDate.get(cursor) ?? null;
-    const bucket: BookLinePoolName = stored
-      ? (cursor === oldestDate && oldestIsFirstDay ? 'FIRST_DAY' : readDayBucket(stored))
-      : 'QUIET_DAY';
+
+    if (!stored) {
+      // oldestDate is always a stored row (it comes straight from `log`), so
+      // a run can never start on the very first iteration — no conflict with
+      // FIRST_DAY below.
+      const rangeStart = cursor;
+      let rangeEnd = cursor;
+      let next = addDays(cursor, 1);
+      while (next <= endDate && !byDate.has(next)) {
+        rangeEnd = next;
+        next = addDays(next, 1);
+      }
+      const line = drawLine('QUIET_DAY', rangeStart, bookSeed);
+      rows.push(
+        rangeEnd === rangeStart
+          ? { date: rangeStart, lines: [line] }
+          : { date: rangeStart, endDate: rangeEnd, lines: [line] },
+      );
+      cursor = addDays(rangeEnd, 1);
+      continue;
+    }
+
+    const bucket: BookLinePoolName =
+      cursor === oldestDate && oldestIsFirstDay ? 'FIRST_DAY' : readDayBucket(stored);
     const line = drawLine(bucket, cursor, bookSeed);
     const word = wordForBucket(bucket, stored);
     rows.push(word ? { date: cursor, word, lines: [line] } : { date: cursor, lines: [line] });

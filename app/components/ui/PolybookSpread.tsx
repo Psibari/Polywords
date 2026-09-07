@@ -52,6 +52,32 @@ function formatBookDate(date: string, showYear: boolean): string {
   return showYear ? `${label}, ${year}` : label;
 }
 
+function yearOf(date: string): string {
+  return date.slice(0, 4);
+}
+
+// The row's most recent edge — its own date for a single-day row, endDate
+// for a collapsed range. Used to find the adjacent date across a row
+// boundary, since a range's `date` is always its OLDEST (start) edge.
+function newEdgeDate(row: WorkLogRow): string {
+  return row.endDate ?? row.date;
+}
+
+// A collapsed range renders as "Aug 22 – Aug 26" in the same muted date
+// style as a single day. The base year rule (does THIS row show a year at
+// all) only ever marks the start edge, same as a single-date row — a range
+// that stays inside one calendar year has one year to show, so it shows it
+// once. A range that itself crosses a year boundary is the one exception:
+// both ends show their own year, regardless of the base rule.
+function formatRowDateLabel(row: WorkLogRow, showStartYear: boolean): string {
+  const crossesYear =
+    row.endDate !== undefined && yearOf(row.date) !== yearOf(row.endDate);
+  const startLabel = formatBookDate(row.date, showStartYear || crossesYear);
+  if (row.endDate === undefined) return startLabel;
+  const endLabel = formatBookDate(row.endDate, crossesYear);
+  return `${startLabel} – ${endLabel}`;
+}
+
 type Props = {
   progress: PlayerProgress;
   pollyMemory: PollyMemory;
@@ -84,18 +110,20 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   );
 
   // Rendered newest-first, so the row immediately AFTER a given row in this
-  // array is the older neighbor. A row shows its year only when that differs
-  // from the older neighbor's — the point where the book actually crosses
-  // into a new year, shown once, on the row where the crossing happened. The
-  // oldest row on screen has no older neighbor to compare against, so it
-  // always shows its year.
+  // array is the older neighbor. A row shows its year only when its own
+  // start date's year differs from the older neighbor's most recent edge —
+  // the point where the book actually crosses into a new year, shown once,
+  // on the row where the crossing happened. The oldest row on screen has no
+  // older neighbor to compare against, so it always shows its year. A
+  // collapsed range that itself spans a year boundary shows the year on
+  // both ends regardless (see formatRowDateLabel).
   const rowDisplays = useMemo(
     () =>
       allRows.map((row, index) => {
         const olderRow = allRows[index + 1];
         const showYear =
-          !olderRow || row.date.slice(0, 4) !== olderRow.date.slice(0, 4);
-        return { row, dateLabel: formatBookDate(row.date, showYear) };
+          !olderRow || yearOf(row.date) !== yearOf(newEdgeDate(olderRow));
+        return { row, dateLabel: formatRowDateLabel(row, showYear) };
       }),
     [allRows],
   );
