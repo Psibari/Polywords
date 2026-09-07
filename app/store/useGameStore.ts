@@ -74,6 +74,7 @@ import {
   rescheduleDailyReminderAfterCompletion,
 } from '../notifications/dailyReminder';
 import { foldRunIntoBookLog, localDateKey } from '../game/bookLog';
+import { resolveHuntPerformance } from '../game/pollyMood';
 
 // Onboarding taper: a hard cliff from full protection to zero protection at
 // run 4 felt unfair in simulation (finish rate fell from ~32% to ~6% for an
@@ -735,15 +736,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (recentWordIds.length >= RECENT_WORDS_CAP) break;
     }
     const RECENT_PERFORMANCE_CAP = 5;
-    const roundsReached = game.session.filter((_, index) => index <= game.stepIndex).length;
-    const performance: HuntPerformance =
-      game.status === 'gameOver' && roundsReached <= Math.ceil(game.session.length / 2)
-        ? 'struggle'
-        : game.status === 'complete' &&
-          game.bossOutcome === 'mastered' &&
-          game.bossFlawless
-        ? 'clean'
-        : 'steady';
+    const performance: HuntPerformance = resolveHuntPerformance({
+      status: game.status,
+      stepIndex: game.stepIndex,
+      sessionLength: game.session.length,
+      bossOutcome: game.bossOutcome,
+    });
     const recentHuntPerformance = [
       performance,
       ...(current.recentHuntPerformance ?? []),

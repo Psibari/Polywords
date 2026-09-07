@@ -90,6 +90,9 @@ export type GameState = {
   // Returning Haunt truth is deliberately separate from bossOutcome because
   // Results, rank, and Polly memory consume only Polly's final-boss verdict.
   hauntOutcome: HauntOutcome;
+  // Written every boss round but read by nothing as of pollyMood.ts's
+  // resolveHuntPerformance — `clean` no longer requires it. Left in place in
+  // case a flawless boss earns its own reaction later.
   bossFlawless: boolean;
   mysteryTotal: number;
   mysteryResolved: number;
