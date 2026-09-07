@@ -21,6 +21,14 @@ type PolybookLayout = {
   rightPageLeftPct: number;
   contentScale: number;
   sealSize: number;
+  // The quill resting on the right page — scenery behind the text, never a
+  // guessed final placement. offsetX/offsetY are px nudges from page center;
+  // angle is degrees; scale multiplies the page-width-sized base image.
+  quillOffsetX: number;
+  quillOffsetY: number;
+  quillAngle: number;
+  quillScale: number;
+  quillOpacity: number;
 };
 
 type PolybookTuningState = PolybookLayout & {
@@ -40,6 +48,11 @@ const BOUNDS: Record<keyof PolybookLayout, [number, number]> = {
   rightPageLeftPct: [45, 75],
   contentScale: [0.85, 1.1],
   sealSize: [16, 100],
+  quillOffsetX: [-300, 300],
+  quillOffsetY: [-300, 300],
+  quillAngle: [-180, 180],
+  quillScale: [0.2, 3],
+  quillOpacity: [0, 1],
 };
 
 const DEFAULT_LAYOUT: PolybookLayout = {
@@ -50,6 +63,13 @@ const DEFAULT_LAYOUT: PolybookLayout = {
   rightPageLeftPct: 55,
   contentScale: 1,
   sealSize: 60,
+  // Starting point only, not a final placement — centered on the page,
+  // nib angled toward the gutter, faint. Pete dials the rest in on-device.
+  quillOffsetX: 0,
+  quillOffsetY: 0,
+  quillAngle: -35,
+  quillScale: 1,
+  quillOpacity: 0.18,
 };
 
 export const usePolybookTuning = create<PolybookTuningState>((set) => ({

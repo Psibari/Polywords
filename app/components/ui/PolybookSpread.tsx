@@ -21,6 +21,7 @@ import { resolveRivalryState } from "../../game/pollyMood";
 import { createSeededRng, deriveSeed } from "../../game/seededRandom";
 import PolybookTuningPanel from "../../dev/PolybookTuningPanel";
 import { usePolybookTuning } from "../../dev/polybookTuning";
+import { INK, INK_MUTED } from "../../ui/polybookInk";
 
 // The Polybook spread — one open book, one page per screen. See
 // docs/POLYBOOK.md for the rulings this renders and app/game/bookPage.ts for
@@ -32,13 +33,24 @@ import { usePolybookTuning } from "../../dev/polybookTuning";
 // the old two-pages-at-once idea and already carries five dead props. See
 // VaultScreen's POLYBOOK_SPREAD_ENABLED flag for the rollback path.
 
-const INK = "#33291F";
-const INK_MUTED = "rgba(51,41,31,0.62)";
-
 const POLYBOOK_ART = require("../../../assets/images/vault/polybook_open.png");
 const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
+const QUILL_ART = require("../../../assets/images/vault/polybook/quill_clean.png");
 const POLYBOOK_SOURCE = Image.resolveAssetSource(POLYBOOK_ART);
 const POLYBOOK_ASPECT_RATIO = POLYBOOK_SOURCE.width / POLYBOOK_SOURCE.height;
+const QUILL_SOURCE = Image.resolveAssetSource(QUILL_ART);
+const QUILL_ASPECT_RATIO = QUILL_SOURCE.width / QUILL_SOURCE.height;
+
+const MONTH_ABBR = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function formatBookDate(date: string, showYear: boolean): string {
+  const [year, month, day] = date.split("-");
+  const label = `${MONTH_ABBR[Number(month) - 1]} ${day}`;
+  return showYear ? `${label}, ${year}` : label;
+}
 
 type Props = {
   progress: PlayerProgress;
@@ -69,6 +81,23 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const allRows = useMemo(
     () => [...workLogRows, ...preInstallRows],
     [workLogRows, preInstallRows],
+  );
+
+  // Rendered newest-first, so the row immediately AFTER a given row in this
+  // array is the older neighbor. A row shows its year only when that differs
+  // from the older neighbor's — the point where the book actually crosses
+  // into a new year, shown once, on the row where the crossing happened. The
+  // oldest row on screen has no older neighbor to compare against, so it
+  // always shows its year.
+  const rowDisplays = useMemo(
+    () =>
+      allRows.map((row, index) => {
+        const olderRow = allRows[index + 1];
+        const showYear =
+          !olderRow || row.date.slice(0, 4) !== olderRow.date.slice(0, 4);
+        return { row, dateLabel: formatBookDate(row.date, showYear) };
+      }),
+    [allRows],
   );
 
   // Stable forever once a player's book has a seed — rolled from bookSeed
@@ -104,6 +133,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const bookWidth = pageWidth * 2;
   const bookHeight = bookWidth / POLYBOOK_ASPECT_RATIO;
 
+  // Base size before the tuner's scale knob — a starting point sized off the
+  // page's own footprint, not a guessed final value. Centered in the page by
+  // default; offsetX/offsetY nudge it from there.
+  const quillBaseWidth = bookWidth * (layout.pageWidthPct / 100);
+  const quillBaseHeight = quillBaseWidth / QUILL_ASPECT_RATIO;
+
   const pageBoxStyle = (leftPct: number) => ({
     left: `${leftPct}%` as const,
     top: `${layout.pageTopPct}%` as const,
@@ -137,8 +172,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             >
               <Text style={styles.label}>WORK LOG</Text>
 
-              {allRows.map((row, index) => (
-                <WorkLogRowView key={`${row.date}-${index}`} row={row} />
+              {rowDisplays.map(({ row, dateLabel }, index) => (
+                <WorkLogRowView
+                  key={`${row.date}-${index}`}
+                  row={row}
+                  dateLabel={dateLabel}
+                />
               ))}
 
               <View style={styles.doubleRule}>
@@ -160,6 +199,27 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           </View>
 
           <View style={[styles.pageContent, pageBoxStyle(layout.rightPageLeftPct)]}>
+            <Image
+              source={QUILL_ART}
+              resizeMode="contain"
+              style={[
+                styles.quill,
+                {
+                  width: quillBaseWidth,
+                  height: quillBaseHeight,
+                  marginLeft: -quillBaseWidth / 2,
+                  marginTop: -quillBaseHeight / 2,
+                  opacity: layout.quillOpacity,
+                  transform: [
+                    { translateX: layout.quillOffsetX },
+                    { translateY: layout.quillOffsetY },
+                    { rotate: `${layout.quillAngle}deg` },
+                    { scale: layout.quillScale },
+                  ],
+                },
+              ]}
+            />
+
             <View style={styles.struckPairBlock}>
               <Text style={styles.struckOld}>{struckPair.old}</Text>
               <Text style={styles.struckNext}>{struckPair.next}</Text>
@@ -202,10 +262,16 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   );
 }
 
-function WorkLogRowView({ row }: { row: WorkLogRow }) {
+function WorkLogRowView({
+  row,
+  dateLabel,
+}: {
+  row: WorkLogRow;
+  dateLabel: string;
+}) {
   return (
     <View style={styles.row}>
-      <Text style={styles.rowDate}>{row.date}</Text>
+      <Text style={styles.rowDate}>{dateLabel}</Text>
       {row.word && <Text style={styles.rowWord}>{row.word}</Text>}
       {row.lines.map((line, index) => (
         <Text key={index} style={styles.rowLine}>
@@ -238,6 +304,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
+  },
+  quill: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    pointerEvents: "none",
   },
   pageContent: {
     position: "absolute",
@@ -276,7 +348,7 @@ const styles = StyleSheet.create({
   rowLine: {
     fontFamily: FONTS.hand,
     includeFontPadding: false,
-    fontSize: 15,
+    fontSize: 17,
     color: INK,
   },
   doubleRule: {
@@ -311,14 +383,14 @@ const styles = StyleSheet.create({
   struckOld: {
     fontFamily: FONTS.hand,
     includeFontPadding: false,
-    fontSize: 15,
+    fontSize: 17,
     color: INK_MUTED,
     textDecorationLine: "line-through",
   },
   struckNext: {
     fontFamily: FONTS.hand,
     includeFontPadding: false,
-    fontSize: 15,
+    fontSize: 17,
     color: INK,
   },
   todayBlock: {
@@ -327,7 +399,7 @@ const styles = StyleSheet.create({
   todayLine: {
     fontFamily: FONTS.hand,
     includeFontPadding: false,
-    fontSize: 19,
+    fontSize: 24,
     color: INK,
   },
   beatenCorner: {

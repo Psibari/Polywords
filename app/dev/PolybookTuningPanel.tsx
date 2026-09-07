@@ -14,6 +14,11 @@ export default function PolybookTuningPanel() {
   const rightPageLeftPct = usePolybookTuning((s) => s.rightPageLeftPct);
   const contentScale = usePolybookTuning((s) => s.contentScale);
   const sealSize = usePolybookTuning((s) => s.sealSize);
+  const quillOffsetX = usePolybookTuning((s) => s.quillOffsetX);
+  const quillOffsetY = usePolybookTuning((s) => s.quillOffsetY);
+  const quillAngle = usePolybookTuning((s) => s.quillAngle);
+  const quillScale = usePolybookTuning((s) => s.quillScale);
+  const quillOpacity = usePolybookTuning((s) => s.quillOpacity);
   const setLayout = usePolybookTuning((s) => s.setLayout);
 
   if (!__DEV__) return null;
@@ -30,6 +35,11 @@ export default function PolybookTuningPanel() {
           rightPageLeftPct,
           contentScale,
           sealSize,
+          quillOffsetX,
+          quillOffsetY,
+          quillAngle,
+          quillScale,
+          quillOpacity,
         },
         null,
         2,
@@ -81,6 +91,38 @@ export default function PolybookTuningPanel() {
         value={`${Math.round(sealSize)}`}
         onDec={() => setLayout({ sealSize: sealSize - 2 })}
         onInc={() => setLayout({ sealSize: sealSize + 2 })}
+      />
+
+      <Text style={styles.section}>QUILL</Text>
+      <Row
+        label="X"
+        value={`${Math.round(quillOffsetX)}`}
+        onDec={() => setLayout({ quillOffsetX: quillOffsetX - 5 })}
+        onInc={() => setLayout({ quillOffsetX: quillOffsetX + 5 })}
+      />
+      <Row
+        label="Y"
+        value={`${Math.round(quillOffsetY)}`}
+        onDec={() => setLayout({ quillOffsetY: quillOffsetY - 5 })}
+        onInc={() => setLayout({ quillOffsetY: quillOffsetY + 5 })}
+      />
+      <Row
+        label="ANGLE"
+        value={`${Math.round(quillAngle)}°`}
+        onDec={() => setLayout({ quillAngle: quillAngle - 5 })}
+        onInc={() => setLayout({ quillAngle: quillAngle + 5 })}
+      />
+      <Row
+        label="SCALE"
+        value={`${quillScale.toFixed(2)}x`}
+        onDec={() => setLayout({ quillScale: quillScale - 0.05 })}
+        onInc={() => setLayout({ quillScale: quillScale + 0.05 })}
+      />
+      <Row
+        label="OPACITY"
+        value={quillOpacity.toFixed(2)}
+        onDec={() => setLayout({ quillOpacity: quillOpacity - 0.02 })}
+        onInc={() => setLayout({ quillOpacity: quillOpacity + 0.02 })}
       />
 
       <Pressable onPress={dump} style={styles.dumpBtn} hitSlop={8}>

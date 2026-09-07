@@ -66,8 +66,8 @@ type PolybookLayoutConfig = {
   wordSize: number;
 };
 
-const INK = "#33291F";
-const INK_MUTED = "rgba(51,41,31,0.62)";
+import { INK, INK_MUTED } from "../../ui/polybookInk";
+
 const POLYBOOK_ART = require("../../../assets/images/vault/polybook_open.png");
 const HAUNTED_SEAL = require("../../../assets/images/vault/polybook/polybook_haunted_seal_clean.png");
 const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
