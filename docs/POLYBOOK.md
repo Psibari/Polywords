@@ -1,6 +1,6 @@
 # The Polybook
 
-**Date:** 5 September 2026. This file records rulings. It does not authorise code.
+**Date:** 7 September 2026. This file records rulings. It does not authorise code.
 
 ## What it is
 
@@ -120,12 +120,83 @@ The exact number is not decided.
 `TODAY_ENTRIES`. `BookDayRecord`, `foldRunIntoBookLog`, and `localDateKey`
 record one row per day, and they are already writing those rows during play.
 
-Nothing displays any of it. No component reads `bookLog`. The remaining work
-is one screen — the numbers, the pools, and the daily fold are already in
-place waiting for it.
+The screen exists now — `app/components/ui/PolybookSpread.tsx` reads all of
+it. The sections below record what got ruled or discovered while building it.
 
 For current pool sizes and line counts, see `npm run state` and the file
 itself. This document does not restate either.
+
+## Gestures
+
+Two, and no more. Sideways moves the view across the one open spread — the
+log page and today's page. Down the log goes back in time. There is no page
+turn and there is nowhere to turn to: the book has a single spread whose left
+page is simply very long, and going backwards through time is the vertical
+scroll.
+
+The earlier "scroll, no page turns" ruling is PRESERVED by this, not
+overridden. That rule was about not turning pages to travel backwards through
+the log — the log has always been, and remains, a continuous scroll with no
+page-flip control for time travel. Sliding across the two halves of one
+spread is a different motion doing a different job: it switches which static
+page is in view, log or today, and never touches how far back in time either
+page reads. Read the older rule alone and the new sideways motion looks like
+a page turn that snuck back in. It is not one, and it must not be ripped out
+on that reading.
+
+## Empty days collapse
+
+A run of two or more unplayed days renders as one row spanning the range. A
+single unplayed day stays one row, because one day is not a gap. This
+knowingly overrides "one row per day" for empty days only — played days
+still get exactly one row however many runs happened that day.
+
+At a twice-a-week cadence, one quiet row per unplayed day made five rows in
+six say nobody came, and at that density her quiet lines read as nagging the
+player rather than as a bird alone with her records. The joke inverts and
+lands on the player, which her voice may never do.
+
+## How a day is read
+
+Specific events outrank the general reading of a day: quiet, then boss lost,
+haunt broken, haunt left, boss held, mercy, then heavy or light. Heavy is
+more than 20 meanings taken in a day — volume, not accuracy.
+
+It is deliberately not a ratio, because this is the mistake most likely to be
+made again: claims-over-offered tracks how accurately the player swipes,
+sits near their accuracy whatever they do, and barely moves day to day.
+Setting a line on it would have made nearly every day read the same.
+`offered` is still recorded — it is the only thing that could later separate
+a long sloppy day from a long clean one.
+
+## The BEATEN corner
+
+Every mastered word renders, always. The corner never scrolls and never cuts
+the list; once the group would outgrow the corner, the seals shrink instead.
+The words are the content, the corner is the container. An earlier version
+derived the count from a fixed box and silently dropped words, which is the
+failure this rule exists to prevent.
+
+## Typography
+
+Her log lines 19, today's entry 21, every label, date, word name and total
+14 — the project's non-gameplay floor. Nothing on the page goes below 14.
+Every Text in her hand sets `includeFontPadding` false.
+
+The working rule that came out of the passes: a line that does not fit gets
+rewritten, not shrunk — UNLESS a large share of a pool does not fit, in which
+case the type is what is wrong. Both happened during the build and both are
+correct in their place.
+
+Log lines and today's entry are clipped rather than wrapped, so an overflow
+is visible as a fault. A wrapped line looks deliberate, which is how one
+survived several device passes.
+
+## The quill is cut
+
+Five passes. At a readable opacity it competed with her writing; at scenery
+opacity it read as a smudge on the screen. The art stays in the repo; the
+placement was the problem, not the drawing.
 
 ## What is not decided
 
@@ -134,3 +205,17 @@ itself. This document does not restate either.
   notification work does.
 - What happens to the score, which is still computed and stored, but shown
   nowhere.
+- The first-day label is derived from the log not yet being full, so on the
+  day the log reaches its cap the oldest row stops reading as the player's
+  first day and starts reading as whatever happened — and if a word was
+  mastered that day, the word appears, having been hidden until then. One
+  row, roughly two hundred days out, about to be trimmed anyway. The proper
+  fix is recording the player's first played date once; it is safe to add
+  later and backfillable from the oldest row.
+- A player who masters a word on their very first day gets the first-day
+  line and the word is never named. Accepted, not overlooked.
+- LexiconPrototype is dead, reachable only via `POLYBOOK_SPREAD_ENABLED`.
+  Deleting it is Pete's call.
+- Tabs down the page edge, jumping to a month, are the answer for when the
+  log gets long. Not needed until a book is months deep, and deliberately
+  not built against content nobody has yet.

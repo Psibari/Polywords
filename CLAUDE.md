@@ -67,14 +67,33 @@ navigation shell; active Hunt and Daily play are nav-free.
 
 ### Vault
 
-- The Vault's headline is visible REAL meanings claimed (`realMaskIdsFound`, a count with no
-  denominator). Books represent words, plain once any visible REAL is found and finished once
-  all visible REALs are claimed. A banished Haunt leaves the active ghost queue, but a
-  permanent Haunt-clear history entry is not yet part of the Vault.
-- Ruling: the Vault and the Polybook may never display a meaning, a trap or a hidden pair.
-  Words recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
-  flagged `isMasteredReturn` — so any such display is an answer key for a game still in
-  progress. Counts, status and titles only.
+- The screen is the Polybook, and it is built (`app/components/ui/PolybookSpread.tsx`, live
+  behind `VaultScreen`'s `POLYBOOK_SPREAD_ENABLED` flag, default on). Its headline is
+  deliberately not a number: GOT PAST ME, HUNTS RUN, and the two streaks sit small under a
+  double rule at the foot of the left page and do not lead, because they are now the only
+  persistent numbers left anywhere in the player-facing game. See `docs/POLYBOOK.md`.
+- Ruling, unchanged by the above: the Vault and the Polybook may never display a meaning, a
+  trap or a hidden pair. Words recur — `huntGenerator.ts` mixes mastered words back into the
+  tension and panic pools flagged `isMasteredReturn` — so any such display is an answer key for
+  a game still in progress. Counts, status and titles only.
+- `LexiconPrototype.tsx`/`Bookcase.tsx` are the pre-Polybook screen: visible REAL meanings
+  claimed (`realMaskIdsFound`, a count with no denominator) as the headline, books plain once
+  any visible REAL is found and finished once all are claimed. `VaultScreen` still computes
+  this data, but it renders only when the flag above is off. Dead weight, not dead code —
+  deleting it is Pete's call (`docs/POLYBOOK.md`, "What is not decided"). A banished Haunt
+  leaves the active ghost queue either way; a permanent Haunt-clear history entry is not yet
+  part of either screen.
+- New modules behind the Polybook: `pollyMood.ts` owns the per-run stamp
+  (`resolveHuntPerformance`) and the five-state rivalry read (`resolveRivalryState`) today's
+  entry keys on; `bookPage.ts` owns day-bucket selection, gap-filling (including the empty-day
+  collapse), and which authored line a day or a today's-entry pool draws; `bookLog.ts` owns
+  recording, one `BookDayRecord` per day folded from each finished run; `pollyBookLines.ts`
+  owns authored copy only — the line pools and `TODAY_ENTRIES` — and is never written to
+  directly, only transcribed from `docs/POLLY_POLYBOOK_LOG_LINES.md`; `PolybookSpread.tsx` owns
+  the screen itself and decides no content of its own.
+- FLAGGED, NOT FIXED: see the note on the "in-round intake object" line in Presentation and
+  Character below — the Vault's own nav tab label and its built screen are both now also
+  branded Polybook, which collides with that line's claim.
 
 ### Daily
 
@@ -172,7 +191,19 @@ navigation shell; active Hunt and Daily play are nav-free.
   (2e82c32)
 - Home is the lobby; Play is the semantic arena; Vault is the player's reclaimed archive;
   Settings owns preferences/development utilities; Daily is separate.
-- The in-round intake object is the **Polybook**. Vault remains **WORD VAULT**.
+- The in-round intake object is the **Polybook**. Vault remains **WORD VAULT** as a route name.
+  FLAGGED, NOT FIXED: this line predates the built Polybook screen (see Vault above) and is now
+  a naming collision, not a stale correction. Checked: `MaskBoard.tsx` renders a "Vault brand on
+  spine" over `<Text style={styles.vaultLabel}>` reading `POLYBOOK` on the intake book shown
+  during active Hunt play — a different object from the archive screen, per `docs/GAME_REFERENCE.md`
+  ("The in-round book is **POLYBOOK**; the separate archive is **WORD VAULT**") and `AGENTS.md`'s
+  equivalent line. But `BottomNav.tsx` labels the Vault's own nav tab `{ key: "Vault", label:
+  "Polybook" }`, and the built screen is `PolybookSpread.tsx` with its own `docs/POLYBOOK.md` —
+  so the archive is now ALSO branded Polybook, in the nav a player actually taps. Two different
+  objects, one name. Proposed disambiguation, Pete's call: rename the in-round spine's brand
+  text off "Polybook" rather than the archive — its own style is still named `vaultLabel`, a
+  leftover from before it was last relabeled, while "Polybook" now carries a dedicated screen,
+  ten-plus commits, and a doc under that name. Not renamed here.
 - Live Polly uses `assets/images/polly/poses/*.png`, authored copy, deterministic local
   memory, and whole-image motion. Home, Daily and Results now render the layered face rig
   while she is settled in her idle/smug pose; the Hunt perch and every non-idle pose on all

@@ -1,9 +1,17 @@
 # POLYWORDS Current Context
 
-Updated September 2, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `199dd1a`.
+Updated September 7, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current code baseline: `77d710d`.
 
 ## Verified Current State
+
+- The Polybook screen is built (`7435211`..`77d710d`, 2026-09-07): a two-page spread, sideways
+  paging between the work log and today's entry, vertical scroll back through the days. This
+  was the largest open design item in this file; it no longer is. The "is Vault the right name"
+  question raised alongside it is resolved the same way — it is the Polybook, in the nav tab
+  label and on the screen itself. See `docs/POLYBOOK.md` for what got ruled while building it
+  and `CLAUDE.md`'s Vault section for the module map and a naming collision it surfaced with the
+  in-round intake object, flagged there rather than fixed.
 
 - The boss MASTERED/HAUNTED outcome package is fully complete and **LOCKED** (Pete,
   device-approved 2026-09-01). All of it is device-confirmed: the 3-piece Mastered/Haunted
@@ -265,21 +273,27 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
   placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
   and the mastery beat.
 7. Re-render the four clipped animations at 724x724.
-8. The Vault needs a redesign, not a fix. Shelves grow without bound, there is no ordering
-  beyond alphabetical, spines are already unreadable at 42 books, long spines clip mid-word
-  (ABSTRAC/T, EXCHANG/E), and MEANINGS TAKEN now wraps in its chip after the type pass. Pete
-  has also questioned whether "Vault" is the right name. Largest open design item.
-9. Navigation gap: BottomNav renders on Vault and Settings only, but has four tabs — there is
+8. The remaining Polybook writing: today's entries want roughly ten per rivalry state against
+  three or four written today; CONCEDING and MERCY are the thinnest pools; the payoff entry
+  (docs/POLYBOOK.md, "The payoff") is undrafted.
+9. The three-step naming arc — "the visitor," then "the one they call [name]" using the
+  `playerName` that already exists in Settings, then "they" — is not built. The line pools have
+  no slot for a name.
+10. The first-day label rewrites itself the day the log fills (see docs/POLYBOOK.md, "What is
+  not decided") — one row, roughly two hundred days out, about to be trimmed anyway. Fix is
+  recording the player's first played date once; safe to add later, backfillable from the
+  oldest row.
+11. Navigation gap: BottomNav renders on Vault and Settings only, but has four tabs — there is
   no way to reach the Vault from Home. Solve before its 11/12pt labels are worth changing.
-10. The `tone='loss'` `PollySpeechBubble` variant is still dead — none of the four call sites
+12. The `tone='loss'` `PollySpeechBubble` variant is still dead — none of the four call sites
   (Home, Hunt, Daily, Results) pass a `tone`. Wire it or delete it.
-11. Three poses remain unused: `flyGrin`, `masterShock`, `masterAngry` — none appear as a value
+13. Three poses remain unused: `flyGrin`, `masterShock`, `masterAngry` — none appear as a value
   in any `pollyVisitPolicy.ts` VisitSpec.
-12. `ONE_FEATHER_POSE` is typed `Record<string, ...>`; a typo'd key would compile and yield an
+14. `ONE_FEATHER_POSE` is typed `Record<string, ...>`; a typo'd key would compile and yield an
   undefined `perchPose`. Hardening, not urgent.
-13. Daily is the last unaddressed screen in the type pass, and the messiest file — 12 distinct
+15. Daily is the last unaddressed screen in the type pass, and the messiest file — 12 distinct
   font sizes from 9pt to 36pt.
-14. Tutorial Replay's alert still says "You'll see it again next time you start a Hunt." It now
+16. Tutorial Replay's alert still says "You'll see it again next time you start a Hunt." It now
   clears four overlays across three screens (Settings, GameScreen, VaultScreen); the copy
   undersells it.
 
