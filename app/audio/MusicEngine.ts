@@ -9,7 +9,7 @@ import type { MusicOwner, MusicState } from './musicVolumePolicy';
 
 export type { MusicOwner, MusicState } from './musicVolumePolicy';
 
-type TrackKey = 'hunt' | 'tension' | 'boss' | 'daily' | 'static';
+type TrackKey = 'hunt' | 'tension' | 'boss' | 'daily' | 'home' | 'static';
 type TrackSource = Parameters<AudioPlayer['replace']>[0];
 
 // One source slot per authored loop. Replacing these files does not require
@@ -19,6 +19,7 @@ const TRACK_SOURCES: Record<TrackKey, TrackSource> = {
   tension: require('../../assets/audio/bgm/tension_quirky_background.mp3'),
   boss: require('../../assets/audio/bgm/boss_of_the_rats.mp3'),
   daily: require('../../assets/audio/bgm/daily_detective_clue_patrol.mp3'),
+  home: require('../../assets/audio/bgm/home_smallest_detective_full.mp3'),
   static: require('../../assets/audio/bgm/static_idle_loop.mp3'),
 };
 
@@ -27,6 +28,7 @@ const TRACK_PLAYBACK_RATES: Record<TrackKey, number> = {
   tension: 1,
   boss: 1,
   daily: 1,
+  home: 1,
   static: 1,
 };
 
@@ -37,6 +39,7 @@ const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
   crisis: 'tension',
   boss: 'boss',
   daily: 'daily',
+  home: 'home',
   static: 'static',
 };
 
@@ -49,6 +52,7 @@ let initPromise: Promise<void> | null = null;
 const desiredStates: Record<MusicOwner, Exclude<MusicState, 'off'>> = {
   hunt: 'neutral',
   daily: 'daily',
+  home: 'home',
 };
 let activeOwner: MusicOwner | null = null;
 let activeTrackKey: TrackKey | null = null;
@@ -239,7 +243,7 @@ function createPlayer(): AudioPlayer {
   // Start with a real source. Constructing a null-source player and attaching
   // the first track later can leave the native player permanently unloaded on
   // device, which makes the retry ladder spin without ever starting music.
-  const nextPlayer = createAudioPlayer(TRACK_SOURCES.hunt, {
+  const nextPlayer = createAudioPlayer(TRACK_SOURCES.home, {
     keepAudioSessionActive: true,
     updateInterval: 250,
   });
@@ -359,16 +363,15 @@ export function initMusicEngine(): Promise<void> {
   return initPromise;
 }
 
-// Warms the hunt track in the background (silent, not playing) so the first
-// real startMusic('hunt') call — which fires the moment GameScreen mounts —
-// finds an already-loaded track instead of paying the full asset-load cost
-// at the door of Hunt. No-ops if the engine is already active (startMusic()
-// got there first) so this can never fight the real transport for ownership.
-let huntPreloadStarted = false;
+// Warms the landing-screen track in the background (silent, not playing) so
+// Home can claim the shared transport without paying the full asset-load cost
+// after its first paint. No-ops if startMusic() got there first, so this never
+// fights the focused screen for ownership.
+let homePreloadStarted = false;
 
-export function preloadHuntTrack(): void {
-  if (huntPreloadStarted || player) return;
-  huntPreloadStarted = true;
+export function preloadHomeTrack(): void {
+  if (homePreloadStarted || player) return;
+  homePreloadStarted = true;
 
   void ensureAudioSessionConfigured()
     .catch(error => warnDev('failed to configure audio mode for preload', error))
@@ -378,9 +381,9 @@ export function preloadHuntTrack(): void {
       player = preloadPlayer;
       try {
         preloadPlayer.loop = true;
-        activeTrackKey = 'hunt';
+        activeTrackKey = 'home';
       } catch (error) {
-        warnDev('failed to preload hunt track', error);
+        warnDev('failed to preload home track', error);
       }
     });
 }

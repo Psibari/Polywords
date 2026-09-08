@@ -10,7 +10,7 @@ import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
-import { preloadHuntTrack, setMusicAppActive } from './app/audio/MusicEngine';
+import { preloadHomeTrack, setMusicAppActive } from './app/audio/MusicEngine';
 import { preloadSfx } from './app/audio/sfx';
 import { loadPlaytestEvents } from './app/game/playtestTelemetry';
 import ErrorBoundary from './app/components/ErrorBoundary';
@@ -49,15 +49,13 @@ export default function App() {
     ]).finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
-  // Warms the hunt music track and every SFX pool in the background as soon
-  // as Home is about to render, so the first real Hunt/Daily entry doesn't
-  // pay the full load cost that startMusic('hunt')/preloadSfx() would
-  // otherwise hit cold — same fix as the music preload, same root cause.
+  // Warms the Home music track and shared audio session as the landing screen
+  // appears, plus the on-demand SFX manager used by every screen.
   // Audio is app-owned: screens request readiness and music ownership but do
   // not preload or destroy the shared SFX pools while navigation transitions.
   useEffect(() => {
     if (bootChecksDone) {
-      preloadHuntTrack();
+      preloadHomeTrack();
       preloadSfx();
     }
   }, [bootChecksDone]);

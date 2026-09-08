@@ -4,6 +4,12 @@ export type HuntFeedbackEvent =
   | 'gauntletCorrect'
   | 'mastery';
 
+export type WrongSwipeSfx = 'wrongImpact' | 'streakBreakImpact';
+
+export function resolveWrongSwipeSfx(brokeRealChain: boolean): WrongSwipeSfx {
+  return brokeRealChain ? 'streakBreakImpact' : 'wrongImpact';
+}
+
 export type ScreenFlashEvent = Extract<HuntFeedbackEvent, 'gauntletCorrect' | 'mastery'>;
 export type ScreenFlashTier = 'gauntlet' | 'mastery';
 

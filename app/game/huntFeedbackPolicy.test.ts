@@ -3,7 +3,19 @@ import assert from 'node:assert/strict';
 import {
   resolveFXAccessibility,
   resolveScreenFlash,
+  resolveWrongSwipeSfx,
 } from './huntFeedbackPolicy';
+
+assert.equal(
+  resolveWrongSwipeSfx(false),
+  'wrongImpact',
+  'an ordinary wrong swipe adds the character impact without borrowing the streak-break punch',
+);
+assert.equal(
+  resolveWrongSwipeSfx(true),
+  'streakBreakImpact',
+  'a wrong swipe that breaks a streak upgrades to the punch impact instead of stacking both impacts',
+);
 
 assert.equal(
   resolveScreenFlash('routineReal'),

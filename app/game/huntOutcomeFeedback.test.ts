@@ -41,8 +41,8 @@ assert.deepEqual(
 );
 assert.deepEqual(
   resolveBossOutcomePlaqueFeedback('haunted'),
-  { sfx: null, hapticCue: null },
-  'the visible HAUNTED plaque adds no result sound, haptic, or physical impact',
+  { sfx: 'hauntedResult', hapticCue: null },
+  'the visible HAUNTED plaque owns the dark-magic result cue without adding another physical impact',
 );
 
 assert.equal(

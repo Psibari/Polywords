@@ -4,6 +4,30 @@ import { resolveMusicTargetVolume } from './musicVolumePolicy';
 
 assert.equal(
   resolveMusicTargetVolume({
+    activeOwner: 'home',
+    state: 'home',
+    muted: false,
+    transportPaused: false,
+    bossOutcomeDucked: false,
+  }),
+  0.14,
+  'Home music keeps a restrained lobby volume beneath navigation and Polly',
+);
+assert.equal(
+  resolveMusicTargetVolume({
+    activeOwner: 'home',
+    state: 'home',
+    muted: false,
+    transportPaused: false,
+    bossOutcomeDucked: true,
+    returningHauntCueActive: true,
+  }),
+  0.14,
+  'stale Hunt-only overlays cannot mute or duck Home music',
+);
+
+assert.equal(
+  resolveMusicTargetVolume({
     activeOwner: 'hunt',
     state: 'boss',
     muted: false,

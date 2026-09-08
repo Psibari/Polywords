@@ -777,7 +777,6 @@ function GameDirector({ navigation }: { navigation: any }) {
 
   // ── Effects overlay ────────────────────────────────────────
   const fxLayerRef    = useRef<FXLayerHandle>(null);
-  const prevChainRef  = useRef<number>(1);
 
   const spawnEffect = useCallback(
     (type: 'shard' | 'trail', x: number, y: number, variant?: ShardVariant) => {
@@ -1040,14 +1039,6 @@ function GameDirector({ navigation }: { navigation: any }) {
     }
     setMusicState('hunt', state);
   }, [game.chainMultiplier, game.lives, game.stepIndex, game.status, isIdleStatic]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Chain break detection ─────────────────────────────────────
-  useEffect(() => {
-    if (prevChainRef.current >= 2.5 && game.chainMultiplier === 1.0) {
-      playSfx('chainBreak');
-    }
-    prevChainRef.current = game.chainMultiplier;
-  }, [game.chainMultiplier]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleRestart() {
     startGame();

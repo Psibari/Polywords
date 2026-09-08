@@ -6,9 +6,10 @@ export type MusicState =
   | 'crisis'
   | 'boss'
   | 'daily'
+  | 'home'
   | 'static';
 
-export type MusicOwner = 'hunt' | 'daily';
+export type MusicOwner = 'hunt' | 'daily' | 'home';
 
 export const STATE_VOLUMES: Record<Exclude<MusicState, 'off'>, number> = {
   neutral: 0.18,
@@ -17,6 +18,7 @@ export const STATE_VOLUMES: Record<Exclude<MusicState, 'off'>, number> = {
   crisis: 0.20,
   boss: 0.14,
   daily: 0.16,
+  home: 0.14,
   static: 0.18,
 };
 

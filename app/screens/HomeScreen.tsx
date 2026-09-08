@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
@@ -25,6 +26,7 @@ import { homeDare, homeDoor, homeType } from '../ui/pwHomeMaterials';
 import { PW } from '../ui/pwTheme';
 import { usePulseScale } from '../hooks/usePulseScale';
 import { Haptics } from '../utils/haptics';
+import { setMusicState, startMusic, stopMusic } from '../audio/MusicEngine';
 
 const HOME_BOOK_IMAGE = require('../../assets/images/homebook/homebook1.png');
 // Book geometry is locked (tuned on device). The three route plates are
@@ -90,6 +92,17 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => {
     loadGoldFeather().then(checkGoldFeatherExpiry).catch(() => {});
   }, [loadGoldFeather, checkGoldFeatherExpiry]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setMusicState('home', 'home');
+      startMusic('home');
+
+      return () => {
+        stopMusic('home');
+      };
+    }, []),
+  );
 
   function handleHunt() {
     // A resumable run is already hydrated into the store by App.tsx's boot

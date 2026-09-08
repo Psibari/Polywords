@@ -42,7 +42,10 @@ import {
   resolveBossOutcomeSequenceFeedback,
   resolveOutcomeRevealSfx,
 } from '../game/huntOutcomeFeedback';
-import type { ScreenFlashEvent } from '../game/huntFeedbackPolicy';
+import {
+  resolveWrongSwipeSfx,
+  type ScreenFlashEvent,
+} from '../game/huntFeedbackPolicy';
 import {
   hasBoardVerticalOverflow,
   resolveActiveCueLayout,
@@ -650,13 +653,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // Face half of the old triggerWrongSwipeFeedback — shared by normal-tile
   // and gauntlet-tile wrong swipes, same as the original single function was.
   function performWrongSwipeFeedback(brokeRealChain: boolean) {
-    playSfx('wrongLame');
-    // Staggered slightly behind wrongLame — fired together, the sharper
-    // squawk was burying the softer wrong-swipe whistle entirely.
+    playSfx(resolveWrongSwipeSfx(brokeRealChain));
+    // Polly keeps her existing smug reaction just behind the physical hit.
     setTimeout(() => playSfx('pollySqwawkShort'), 70);
-    if (brokeRealChain) {
-      playSfx('correctClaim', { rate: 0.55 });
-    }
     Haptics.cueAsync('wrong');
     triggerWrongWordRecoil();
     onWrongSwipe?.();
