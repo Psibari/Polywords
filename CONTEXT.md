@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
-Updated September 7, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current code baseline: `77d710d`.
+Updated September 8, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current committed baseline: `688fde3`.
 
 ## Verified Current State
 
@@ -26,14 +26,15 @@ Updated September 7, 2026. Branch: `play-screen-overhaul`, tracking
   - HAUNTED starts the combined `assets/audio/sfx/haunted_transform_slam_v1.wav` at
     `onHauntedSequence`; one Heavy haptic and the board shake land together at the +580ms
     physical close from sequence start. The failed decision's immediate Error feedback and Polly
-    laugh remain; the plaque adds neither a second shake nor a result SFX.
-  - `sfx.ts` warms only these four boss assets when the boss gauntlet begins; it does not restore
+    laugh remain; the plaque adds the dark-magic result cue, but no second shake or haptic.
+  - `sfx.ts` warms only these five boss assets when the boss gauntlet begins; it does not restore
     global eager SFX preload. `app/utils/haptics.ts` remains the preference-gated haptic gateway.
-  - `MusicEngine` owns boss-only outcome ducking, never `MaskBoard` player-volume manipulation:
-    boss music smoothly ducks 0.14 → 0.07 in 100ms, remains ducked through the plaque audio, and
-    releases over 220ms without pausing or restarting the track. Mute, background recovery, state
-    changes, and track ownership remain authoritative. This balance is locked unless new
-    regression/device evidence warrants revisiting it.
+  - `MusicEngine` owns boss-only outcome silence, never `MaskBoard` player-volume manipulation:
+    boss music fades fully inaudible, 0.14 → 0 in 100ms, when either MASTERED or HAUNTED starts,
+    remains silent through the plaque audio, and releases over 220ms afterward. Its transport
+    keeps running silently so there is no pause/restart discontinuity. Mute, background recovery,
+    state changes, and track ownership remain authoritative. Pete locked this audio rule on
+    2026-09-08; do not restore audible music during either outcome without an explicit reopening.
 
 - Daily's correct-answer transition now reads as one physical mechanism: card lands on the
   parchment, a matching ornate rod rolls reward paper over it, the reward holds, and the

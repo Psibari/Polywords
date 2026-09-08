@@ -24,7 +24,7 @@ import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playSfx, warmBossOutcomeSfx } from '../audio/sfx';
 import {
-  setBossOutcomeMusicDucked,
+  setBossOutcomeMusicSilenced,
   setReturningHauntCueMusicExclusive,
 } from '../audio/MusicEngine';
 import { PW } from '../ui/pwTheme';
@@ -1094,7 +1094,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           ? resolveBossOutcomeSequenceFeedback('mastered')
           : null;
         if (bossFeedback) {
-          setBossOutcomeMusicDucked(true);
+          setBossOutcomeMusicSilenced(true);
           playSfx(bossFeedback.startSfx);
         }
         // `!isBoss` here can only mean isHaunt (onMasteredSequence is only
@@ -1201,7 +1201,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         // slower drag with no overshoot. No flash, no stamp: colour drains,
         // it does not travel.
         const bossFeedback = resolveBossOutcomeSequenceFeedback('haunted');
-        setBossOutcomeMusicDucked(true);
+        setBossOutcomeMusicSilenced(true);
         playSfx(bossFeedback.startSfx);
         setTimeout(() => {
           if (bossFeedback.impact.sfx) playSfx(bossFeedback.impact.sfx);
@@ -1233,11 +1233,11 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
   useEffect(() => {
     if (!isBoss) return;
-    return () => setBossOutcomeMusicDucked(false);
+    return () => setBossOutcomeMusicSilenced(false);
   }, [isBoss]);
 
   function continueOutcome() {
-    if (isBoss) setBossOutcomeMusicDucked(false);
+    if (isBoss) setBossOutcomeMusicSilenced(false);
     mechanics.continueOutcome();
   }
 

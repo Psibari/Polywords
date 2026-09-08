@@ -1,8 +1,8 @@
 import { AudioPlayer, createAudioPlayer } from 'expo-audio';
 import { ensureAudioSessionConfigured } from './audioSession';
 import {
-  BOSS_OUTCOME_DUCK_ATTACK_MS,
-  BOSS_OUTCOME_DUCK_RELEASE_MS,
+  BOSS_OUTCOME_SILENCE_ATTACK_MS,
+  BOSS_OUTCOME_SILENCE_RELEASE_MS,
   resolveMusicTargetVolume,
 } from './musicVolumePolicy';
 import type { MusicOwner, MusicState } from './musicVolumePolicy';
@@ -57,7 +57,7 @@ const desiredStates: Record<MusicOwner, Exclude<MusicState, 'off'>> = {
 let activeOwner: MusicOwner | null = null;
 let activeTrackKey: TrackKey | null = null;
 let userMuted = false;
-let bossOutcomeDucked = false;
+let bossOutcomeSilenced = false;
 let returningHauntCueActive = false;
 let transitionToken = 0;
 let configuredTrackToken = -1;
@@ -120,7 +120,7 @@ function targetVolume(): number {
     state: activeOwner ? desiredStates[activeOwner] : null,
     muted: userMuted,
     transportPaused,
-    bossOutcomeDucked,
+    bossOutcomeSilenced,
     returningHauntCueActive,
   });
 }
@@ -390,7 +390,7 @@ export function preloadHomeTrack(): void {
 
 export function startMusic(owner: MusicOwner): void {
   if (activeOwner !== owner) {
-    bossOutcomeDucked = false;
+    bossOutcomeSilenced = false;
     returningHauntCueActive = false;
   }
   activeOwner = owner;
@@ -406,7 +406,7 @@ export function stopMusic(owner: MusicOwner): void {
   // outgoing cleanup fires. Only the current owner may stop the singleton.
   if (activeOwner !== owner) return;
   if (owner === 'hunt') {
-    bossOutcomeDucked = false;
+    bossOutcomeSilenced = false;
     returningHauntCueActive = false;
   }
   activeOwner = null;
@@ -428,7 +428,7 @@ export function stopMusic(owner: MusicOwner): void {
 }
 
 export function setMusicState(owner: MusicOwner, newState: MusicState): void {
-  if (owner === 'hunt' && newState !== 'boss') bossOutcomeDucked = false;
+  if (owner === 'hunt' && newState !== 'boss') bossOutcomeSilenced = false;
   if (owner === 'hunt' && newState === 'off') returningHauntCueActive = false;
   if (newState === 'off') {
     if (activeOwner !== owner) return;
@@ -458,14 +458,14 @@ export function setMusicEnabled(enabled: boolean): void {
  * the player directly, so mute, pause, foreground recovery, and a later
  * track/state transition continue to resolve volume through targetVolume().
  */
-export function setBossOutcomeMusicDucked(ducked: boolean): void {
-  if (ducked && !isBossMusicActive()) return;
-  if (bossOutcomeDucked === ducked) return;
-  bossOutcomeDucked = ducked;
+export function setBossOutcomeMusicSilenced(silenced: boolean): void {
+  if (silenced && !isBossMusicActive()) return;
+  if (bossOutcomeSilenced === silenced) return;
+  bossOutcomeSilenced = silenced;
   if (!player || !isBossMusicActive()) return;
   fadeVolumeTo(
     targetVolume(),
-    ducked ? BOSS_OUTCOME_DUCK_ATTACK_MS : BOSS_OUTCOME_DUCK_RELEASE_MS,
+    silenced ? BOSS_OUTCOME_SILENCE_ATTACK_MS : BOSS_OUTCOME_SILENCE_RELEASE_MS,
   );
 }
 
@@ -512,7 +512,7 @@ export function haltMusicEngine(): void {
   pausedForApp = false;
   configuredTrackToken = -1;
   pendingSeek = null;
-  bossOutcomeDucked = false;
+  bossOutcomeSilenced = false;
   returningHauntCueActive = false;
   transitionToken += 1;
   transportPaused = false;

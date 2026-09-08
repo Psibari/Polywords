@@ -8,7 +8,7 @@ assert.equal(
     state: 'home',
     muted: false,
     transportPaused: false,
-    bossOutcomeDucked: false,
+    bossOutcomeSilenced: false,
   }),
   0.14,
   'Home music keeps a restrained lobby volume beneath navigation and Polly',
@@ -19,7 +19,7 @@ assert.equal(
     state: 'home',
     muted: false,
     transportPaused: false,
-    bossOutcomeDucked: true,
+    bossOutcomeSilenced: true,
     returningHauntCueActive: true,
   }),
   0.14,
@@ -32,7 +32,7 @@ assert.equal(
     state: 'boss',
     muted: false,
     transportPaused: false,
-    bossOutcomeDucked: false,
+    bossOutcomeSilenced: false,
   }),
   0.14,
   'normal boss music retains its authored target before an outcome begins',
@@ -44,10 +44,10 @@ assert.equal(
     state: 'boss',
     muted: false,
     transportPaused: false,
-    bossOutcomeDucked: true,
+    bossOutcomeSilenced: true,
   }),
-  0.07,
-  'a boss outcome ducks only the active boss track to leave room for outcome SFX',
+  0,
+  'a boss outcome fully silences the active boss track so outcome SFX own the moment',
 );
 
 assert.equal(
@@ -56,10 +56,10 @@ assert.equal(
     state: 'rhythm',
     muted: false,
     transportPaused: false,
-    bossOutcomeDucked: true,
+    bossOutcomeSilenced: true,
   }),
   0.20,
-  'a stale boss-outcome flag cannot duck a normal Hunt state',
+  'a stale boss-outcome flag cannot silence a normal Hunt state',
 );
 
 assert.equal(
@@ -68,10 +68,10 @@ assert.equal(
     state: 'daily',
     muted: false,
     transportPaused: false,
-    bossOutcomeDucked: true,
+    bossOutcomeSilenced: true,
   }),
   0.16,
-  'a boss-outcome flag cannot duck Daily music',
+  'a boss-outcome flag cannot silence Daily music',
 );
 
 assert.equal(
@@ -80,10 +80,10 @@ assert.equal(
     state: 'boss',
     muted: true,
     transportPaused: false,
-    bossOutcomeDucked: true,
+    bossOutcomeSilenced: true,
   }),
   0,
-  'mute remains authoritative over an active boss outcome duck',
+  'mute remains authoritative over an active boss outcome silence',
 );
 
 assert.equal(
@@ -92,10 +92,10 @@ assert.equal(
     state: 'boss',
     muted: false,
     transportPaused: true,
-    bossOutcomeDucked: true,
+    bossOutcomeSilenced: true,
   }),
   0,
-  'background transport pause remains authoritative over an active boss outcome duck',
+  'background transport pause remains authoritative over an active boss outcome silence',
 );
 
 assert.equal(
@@ -104,7 +104,7 @@ assert.equal(
     state: 'neutral',
     muted: false,
     transportPaused: false,
-    bossOutcomeDucked: false,
+    bossOutcomeSilenced: false,
     returningHauntCueActive: true,
   }),
   0,

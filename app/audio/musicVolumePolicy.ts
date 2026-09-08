@@ -22,29 +22,26 @@ export const STATE_VOLUMES: Record<Exclude<MusicState, 'off'>, number> = {
   static: 0.18,
 };
 
-export const BOSS_OUTCOME_DUCK_VOLUME = 0.07;
-export const BOSS_OUTCOME_DUCK_ATTACK_MS = 100;
-export const BOSS_OUTCOME_DUCK_RELEASE_MS = 220;
+export const BOSS_OUTCOME_SILENCE_ATTACK_MS = 100;
+export const BOSS_OUTCOME_SILENCE_RELEASE_MS = 220;
 
 export function resolveMusicTargetVolume({
   activeOwner,
   state,
   muted,
   transportPaused,
-  bossOutcomeDucked,
+  bossOutcomeSilenced,
   returningHauntCueActive,
 }: {
   activeOwner: MusicOwner | null;
   state: Exclude<MusicState, 'off'> | null;
   muted: boolean;
   transportPaused: boolean;
-  bossOutcomeDucked: boolean;
+  bossOutcomeSilenced: boolean;
   returningHauntCueActive?: boolean;
 }): number {
   if (muted || transportPaused || !activeOwner || !state) return 0;
   if (returningHauntCueActive && activeOwner === 'hunt') return 0;
-  if (bossOutcomeDucked && activeOwner === 'hunt' && state === 'boss') {
-    return BOSS_OUTCOME_DUCK_VOLUME;
-  }
+  if (bossOutcomeSilenced && activeOwner === 'hunt' && state === 'boss') return 0;
   return STATE_VOLUMES[state];
 }
