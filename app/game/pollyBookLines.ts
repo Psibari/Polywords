@@ -22,7 +22,7 @@ export const POLLY_BOOK_LINES = {
   quietScaredOff: 'Scared them off, then.',
   quietNobodyDared: 'Nobody dared. Naturally.',
   quietFrightenedAway: 'Frightened them away.',
-  quietKnowBetter: 'No one. They know better.',
+  quietKnowBetter: 'No one. They know.',
   quietWordSpread: 'Word must have spread.',
   quietAfraid: 'Afraid, I expect.',
   quietChampRests: 'The champ rests.',
@@ -490,7 +490,7 @@ export const TODAY_ENTRIES: Record<BookRivalryState, readonly BookTodayEntry[]> 
 export type BookStruckPair = { old: string; next: string };
 
 export const STRUCK_PAIRS: readonly BookStruckPair[] = [
-  { old: 'The visitor is no trouble.', next: 'Trouble, then.' },
+  { old: 'Easy work, that one.', next: 'Not easy work.' },
   { old: 'They will tire of it.', next: 'They have not tired.' },
   { old: "Beginner's luck.", next: 'Not luck. Still luck.' },
   { old: 'I am not concerned.', next: 'Still not concerned.' },

@@ -19,8 +19,6 @@ import { localDateKey } from "../../game/bookLog";
 import { STRUCK_PAIRS, TODAY_ENTRIES } from "../../game/pollyBookLines";
 import { resolveRivalryState } from "../../game/pollyMood";
 import { createSeededRng, deriveSeed } from "../../game/seededRandom";
-import PolybookTuningPanel from "../../dev/PolybookTuningPanel";
-import { usePolybookTuning } from "../../dev/polybookTuning";
 import { INK, INK_MUTED } from "../../ui/polybookInk";
 
 // The Polybook spread — one open book, one page per screen. See
@@ -86,6 +84,22 @@ function formatRowDateLabel(row: WorkLogRow, showStartYear: boolean): string {
 const PAGE_CONTENT_PADDING_H = 8;
 const PAGE_CONTENT_PADDING_TOP = 10;
 const PAGE_CONTENT_PADDING_BOTTOM = 8;
+
+// Device-confirmed 2026-09-07, across seven on-device passes. The dev tuner
+// (app/dev/polybookTuning.ts) that produced these is deleted; this is the
+// frozen result, not a starting point. sealSize is a PREFERRED MAXIMUM, not
+// a fixed size — layoutBeatenSeals still shrinks it automatically once a
+// save's mastered-word count would outgrow the BEATEN corner, since the
+// word list itself is never cut.
+const POLYBOOK_LAYOUT = {
+  pageTopPct: 13.0,
+  pageHeightPct: 67.0,
+  pageWidthPct: 33.5,
+  leftPageLeftPct: 11.5,
+  rightPageLeftPct: 55.0,
+  contentScale: 1.0,
+  sealSize: 54,
+} as const;
 
 // The BEATEN corner never drops a word — it never scrolls, but it also never
 // cuts the list. BEATEN_CORNER_MAX_WIDTH is a hard bound (the corner may not
@@ -175,7 +189,6 @@ type Props = {
 
 export function PolybookSpread({ progress, pollyMemory }: Props) {
   const { width: screenWidth } = useWindowDimensions();
-  const layout = usePolybookTuning();
 
   // WORK LOG (plus its framing rule) and the totals block are both pinned
   // outside the log ScrollView, above and below it respectively (see the
@@ -268,16 +281,16 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     [progress.masteredWords],
   );
   const beatenLayout = useMemo(
-    () => layoutBeatenSeals(beatenWords, layout.sealSize),
-    [beatenWords, layout.sealSize],
+    () => layoutBeatenSeals(beatenWords, POLYBOOK_LAYOUT.sealSize),
+    [beatenWords],
   );
 
   const pageBoxStyle = (leftPct: number) => ({
     left: `${leftPct}%` as const,
-    top: `${layout.pageTopPct}%` as const,
-    width: `${layout.pageWidthPct}%` as const,
-    height: `${layout.pageHeightPct}%` as const,
-    transform: [{ scale: layout.contentScale }],
+    top: `${POLYBOOK_LAYOUT.pageTopPct}%` as const,
+    width: `${POLYBOOK_LAYOUT.pageWidthPct}%` as const,
+    height: `${POLYBOOK_LAYOUT.pageHeightPct}%` as const,
+    transform: [{ scale: POLYBOOK_LAYOUT.contentScale }],
   });
 
   return (
@@ -298,7 +311,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             ]}
           />
 
-          <View style={[styles.pageContent, pageBoxStyle(layout.leftPageLeftPct)]}>
+          <View style={[styles.pageContent, pageBoxStyle(POLYBOOK_LAYOUT.leftPageLeftPct)]}>
             {/* Scroll region: the rows and ONLY the rows, framed top and
                 bottom by the pinned header+rule and the pinned totals block
                 below. */}
@@ -362,7 +375,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             </View>
           </View>
 
-          <View style={[styles.pageContent, pageBoxStyle(layout.rightPageLeftPct)]}>
+          <View style={[styles.pageContent, pageBoxStyle(POLYBOOK_LAYOUT.rightPageLeftPct)]}>
             <View style={styles.struckPairBlock}>
               <Text style={styles.struckOld}>{struckPair.old}</Text>
               <Text style={styles.struckNext}>{struckPair.next}</Text>
@@ -399,8 +412,6 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           </View>
         </View>
       </ScrollView>
-
-      {__DEV__ && <PolybookTuningPanel />}
     </View>
   );
 }

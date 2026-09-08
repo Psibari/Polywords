@@ -20,7 +20,7 @@ Twelve-point, her hand. One row per day.
 - Scared them off, then.
 - Nobody dared. Naturally.
 - Frightened them away.
-- No one. They know better.
+- No one. They know.
 - Word must have spread.
 - Afraid, I expect.
 - The champ rests.
@@ -371,7 +371,7 @@ I need better work.
 ---
 ## Part 4 — struck-out pairs
 
-- ~~The visitor is no trouble.~~ → Trouble, then.
+- ~~Easy work, that one.~~ → Not easy work.
 - ~~They will tire of it.~~ → They have not tired.
 - ~~Beginner's luck.~~ → Not luck. Still luck.
 - ~~I am not concerned.~~ → Still not concerned.
@@ -379,6 +379,14 @@ I need better work.
 - ~~They cannot read.~~ → They can read.
 - ~~No one lasts a month.~~ → A month, then.
 - ~~This will not continue.~~ → It continued.
+
+The first pair used to read ~~The visitor is no trouble.~~ → Trouble, then.
+The crossed-out line measured 265pt against the real 245pt page and had to
+go; no shortening of it preserved the echo "Trouble, then." depends on, so
+the whole pair was rewritten instead. This pair no longer says "the
+visitor" — accepted: the pairs above still carry it, and "that one"
+performs the same refusal by another route. She is calling a person a
+thing either way.
 
 ---
 ## Part 5 — cut, and why
