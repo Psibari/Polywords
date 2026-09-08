@@ -35,11 +35,8 @@ import { INK, INK_MUTED } from "../../ui/polybookInk";
 
 const POLYBOOK_ART = require("../../../assets/images/vault/polybook_open.png");
 const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
-const QUILL_ART = require("../../../assets/images/vault/polybook/quill_clean.png");
 const POLYBOOK_SOURCE = Image.resolveAssetSource(POLYBOOK_ART);
 const POLYBOOK_ASPECT_RATIO = POLYBOOK_SOURCE.width / POLYBOOK_SOURCE.height;
-const QUILL_SOURCE = Image.resolveAssetSource(QUILL_ART);
-const QUILL_ASPECT_RATIO = QUILL_SOURCE.width / QUILL_SOURCE.height;
 
 const MONTH_ABBR = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -89,18 +86,20 @@ const PAGE_CONTENT_PADDING_H = 8;
 const PAGE_CONTENT_PADDING_TOP = 10;
 const PAGE_CONTENT_PADDING_BOTTOM = 8;
 
-// The BEATEN corner's own footprint — a corner of a page, not a gallery, so
-// it never scrolls and never grows past this box. How many seals actually
-// fit inside it is computed from the live sealSize (see beatenSealCap in the
-// component), so shrinking or growing the tuner's SEAL knob keeps this box
-// honest instead of needing a second hand-tuned constant.
+// The BEATEN corner never drops a word — it never scrolls, but it also never
+// cuts the list. BEATEN_CORNER_MAX_WIDTH is a hard bound (the corner may not
+// run into the page's centre); BEATEN_CORNER_MAX_HEIGHT is a soft ceiling —
+// the block grows upward from the bottom as words accumulate, and only once
+// it would exceed the ceiling do the seals themselves shrink to fit (see
+// layoutBeatenSeals). The list is never sliced; the size is.
 const BEATEN_CORNER_MAX_WIDTH = 170;
 const BEATEN_CORNER_MAX_HEIGHT = 120;
 const BEATEN_SEAL_GAP = 4;
+const BEATEN_SEAL_MIN_SIZE = 10;
 
-// Most-recent-first, same rule LexiconPrototype's formatMasteredWords used —
-// so when the corner can't hold every mastered word, it's the newest ones
-// that survive the cap, not an arbitrary slice.
+// Most-recent-first — kept for stable, deterministic ordering even though
+// nothing is ever cut from it now; every mastered word renders regardless of
+// position.
 function sortMasteredMostRecentFirst<T extends { dateMastered?: string }>(
   words: T[],
 ): T[] {
@@ -109,6 +108,63 @@ function sortMasteredMostRecentFirst<T extends { dateMastered?: string }>(
     const bTime = b.dateMastered ? new Date(b.dateMastered).getTime() : 0;
     return bTime - aTime;
   });
+}
+
+type BeatenSealsLayout<T> = {
+  sealSize: number;
+  rows: T[][];
+  blockWidth: number;
+};
+
+/**
+ * Grid the BEATEN corner's seals: shrink the seal size (never the list) until
+ * every word fits under BEATEN_CORNER_MAX_HEIGHT, then group them into rows
+ * with any short row FIRST — rendered at the top of a plain top-to-bottom
+ * column, full rows of exactly `columns` packed below it. Computed explicitly
+ * rather than left to flexWrap: a wrap-reverse + justify combination was
+ * producing a genuinely broken partial row (a hole, not a taper), and this
+ * sidesteps that ambiguity entirely rather than papering over it with a
+ * spacer.
+ */
+function layoutBeatenSeals<T>(
+  words: T[],
+  preferredSealSize: number,
+): BeatenSealsLayout<T> {
+  const count = words.length;
+  const columnsAt = (size: number) =>
+    Math.max(1, Math.floor(BEATEN_CORNER_MAX_WIDTH / (size + BEATEN_SEAL_GAP)));
+  const heightForRows = (size: number, rowCount: number) =>
+    rowCount * size + Math.max(0, rowCount - 1) * BEATEN_SEAL_GAP;
+
+  let sealSize = preferredSealSize;
+  let columns = columnsAt(sealSize);
+  let rowCount = count === 0 ? 0 : Math.ceil(count / columns);
+
+  while (
+    count > 0 &&
+    heightForRows(sealSize, rowCount) > BEATEN_CORNER_MAX_HEIGHT &&
+    sealSize > BEATEN_SEAL_MIN_SIZE
+  ) {
+    sealSize -= 1;
+    columns = columnsAt(sealSize);
+    rowCount = Math.ceil(count / columns);
+  }
+
+  const rows: T[][] = [];
+  const partial = count % columns;
+  let index = 0;
+  if (partial > 0) {
+    rows.push(words.slice(0, partial));
+    index = partial;
+  }
+  while (index < count) {
+    rows.push(words.slice(index, index + columns));
+    index += columns;
+  }
+
+  const blockWidth = columns * sealSize + Math.max(0, columns - 1) * BEATEN_SEAL_GAP;
+
+  return { sealSize, rows, blockWidth };
 }
 
 type Props = {
@@ -203,33 +259,16 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const bookWidth = pageWidth * 2;
   const bookHeight = bookWidth / POLYBOOK_ASPECT_RATIO;
 
-  // Base size before the tuner's scale knob — a starting point sized off the
-  // screen, not a guessed final value. The quill is anchored to the screen
-  // now (see styles.quill), not to page coordinates, so its base size scales
-  // off pageWidth rather than the book image.
-  const quillBaseWidth = pageWidth * 0.5;
-  const quillBaseHeight = quillBaseWidth / QUILL_ASPECT_RATIO;
-
-  // How many seals the BEATEN corner can actually hold at the tuner's live
-  // sealSize — recomputed from the box's own footprint rather than a second
-  // hand-picked number, so shrinking or growing SEAL in the tuner keeps the
-  // cap honest instead of drifting out of sync with it.
-  const beatenColumns = Math.max(
-    1,
-    Math.floor(BEATEN_CORNER_MAX_WIDTH / (layout.sealSize + BEATEN_SEAL_GAP)),
-  );
-  const beatenRows = Math.max(
-    1,
-    Math.floor(BEATEN_CORNER_MAX_HEIGHT / (layout.sealSize + BEATEN_SEAL_GAP)),
-  );
-  const beatenSealCap = beatenColumns * beatenRows;
-
-  // This is a corner of a page, not a gallery: never scrolled, capped at
-  // what the corner holds, and when the count exceeds that, the most recent
-  // masteries survive the cut rather than an arbitrary slice.
+  // This is a corner of a page, not a gallery: never scrolled, but never
+  // cut either — every mastered word renders. layoutBeatenSeals shrinks the
+  // seal size instead once the group would outgrow the corner's ceiling.
   const beatenWords = useMemo(
-    () => sortMasteredMostRecentFirst(progress.masteredWords).slice(0, beatenSealCap),
-    [progress.masteredWords, beatenSealCap],
+    () => sortMasteredMostRecentFirst(progress.masteredWords),
+    [progress.masteredWords],
+  );
+  const beatenLayout = useMemo(
+    () => layoutBeatenSeals(beatenWords, layout.sealSize),
+    [beatenWords, layout.sealSize],
   );
 
   const pageBoxStyle = (leftPct: number) => ({
@@ -339,51 +378,27 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
             <View style={styles.beatenCorner}>
               <Text style={styles.label}>BEATEN</Text>
-              <View style={styles.beatenSeals}>
-                {beatenWords.map((record) => (
-                  <Image
-                    key={record.word}
-                    source={MASTERED_SEAL}
-                    resizeMode="contain"
-                    style={{
-                      width: layout.sealSize,
-                      height: layout.sealSize,
-                    }}
-                  />
+              <View style={{ width: beatenLayout.blockWidth, gap: BEATEN_SEAL_GAP }}>
+                {beatenLayout.rows.map((rowWords, rowIndex) => (
+                  <View key={rowIndex} style={styles.beatenSealsRow}>
+                    {rowWords.map((record) => (
+                      <Image
+                        key={record.word}
+                        source={MASTERED_SEAL}
+                        resizeMode="contain"
+                        style={{
+                          width: beatenLayout.sealSize,
+                          height: beatenLayout.sealSize,
+                        }}
+                      />
+                    ))}
+                  </View>
                 ))}
               </View>
             </View>
           </View>
         </View>
       </ScrollView>
-
-      {/* Anchored to the SCREEN, not the page — a separate object resting
-          beside the book rather than a mark printed on it. It sits outside
-          the paging ScrollView entirely so the pages slide underneath it
-          while it stays put (Pete's ruling). Default position targets the
-          right page's empty middle, since the screen shows exactly one page
-          at a time (pageWidth === screenWidth) — this is the last pass on
-          this element; if it still doesn't land on device it comes out. */}
-      <Image
-        source={QUILL_ART}
-        resizeMode="contain"
-        style={[
-          styles.quill,
-          {
-            width: quillBaseWidth,
-            height: quillBaseHeight,
-            marginLeft: -quillBaseWidth / 2,
-            marginTop: -quillBaseHeight / 2,
-            opacity: layout.quillOpacity,
-            transform: [
-              { translateX: layout.quillOffsetX },
-              { translateY: layout.quillOffsetY },
-              { rotate: `${layout.quillAngle}deg` },
-              { scale: layout.quillScale },
-            ],
-          },
-        ]}
-      />
 
       {__DEV__ && <PolybookTuningPanel />}
     </View>
@@ -432,20 +447,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-  },
-  quill: {
-    // Anchored near screen center — the right page's empty middle, between
-    // today's entry and the BEATEN corner, since the screen shows exactly
-    // one page at a time. Centered via top/left + the negative margins set
-    // alongside width/height at the call site; offsetX/offsetY (in the
-    // tuner) nudge from this anchor. Last pass on this element — it has had
-    // four already and has not earned its place. It must read as clearly
-    // present and clearly behind her writing, never overlapping a line of
-    // it or the BEATEN corner, or it comes out rather than getting a sixth.
-    position: "absolute",
-    top: "48%",
-    left: "42%",
-    pointerEvents: "none",
   },
   pageContent: {
     position: "absolute",
@@ -564,22 +565,21 @@ const styles = StyleSheet.create({
     color: INK,
   },
   beatenCorner: {
+    // Hard into the page's bottom-right corner — she put these somewhere
+    // she does not have to look, and laid out neatly with a cushion of
+    // space around it is the opposite of that.
     position: "absolute",
-    bottom: 4,
-    right: 4,
+    bottom: 0,
+    right: 0,
     alignItems: "flex-end",
   },
-  beatenSeals: {
-    // Grows sideways then downward, capped at what the corner holds
-    // (beatenSealCap in the component) — never scrolled. This is a corner
-    // of a page, not a gallery.
+  beatenSealsRow: {
+    // One row of the BEATEN block (see layoutBeatenSeals) — stretches to
+    // the parent's explicit blockWidth and right-aligns its own seals, so a
+    // short top row tapers flush against the same right edge as the full
+    // rows below it rather than leaving an off-center hole.
     flexDirection: "row",
-    flexWrap: "wrap-reverse",
     justifyContent: "flex-end",
-    alignContent: "flex-end",
-    overflow: "hidden",
     gap: BEATEN_SEAL_GAP,
-    maxWidth: BEATEN_CORNER_MAX_WIDTH,
-    maxHeight: BEATEN_CORNER_MAX_HEIGHT,
   },
 });
