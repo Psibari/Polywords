@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -11,6 +11,7 @@ import {
 import type { PollyPoseAnimationName } from '../animations/pollyPoseAnimations';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
+import { PollyFlightLandingAnimation } from './PollyFlightLandingAnimation';
 import { PollyPoseAnimation } from './PollyPoseAnimation';
 
 type Props = {
@@ -30,6 +31,8 @@ const PREVIEWS: Array<{
 ];
 
 export function PollyAnimationDevViewer({ visible, onClose }: Props) {
+  const [flightReplayKey, setFlightReplayKey] = useState(0);
+
   return (
     <Modal
       animationType="fade"
@@ -55,7 +58,7 @@ export function PollyAnimationDevViewer({ visible, onClose }: Props) {
         </View>
 
         <Text style={styles.note}>
-          Five isolated whole-image loops. Motion follows the device Reduce Motion setting.
+          Five isolated whole-image loops plus the new flight-rig landing sequence. Motion follows the device Reduce Motion setting.
         </Text>
 
         <ScrollView
@@ -75,6 +78,28 @@ export function PollyAnimationDevViewer({ visible, onClose }: Props) {
               <Text style={styles.previewLabel}>{label}</Text>
             </View>
           ))}
+
+          <View style={[styles.preview, styles.flightPreview]}>
+            <View style={[styles.stage, styles.flightStage]}>
+              {visible ? (
+                <PollyFlightLandingAnimation
+                  key={flightReplayKey}
+                  active
+                  accessibilityLabel="Polly flight rig landing preview"
+                  size={190}
+                />
+              ) : null}
+            </View>
+            <Text style={styles.previewLabel}>Flight → Land → Laugh</Text>
+            <Pressable
+              accessibilityLabel="Replay Polly flight landing animation"
+              accessibilityRole="button"
+              onPress={() => setFlightReplayKey(value => value + 1)}
+              style={({ pressed }) => [styles.replayButton, pressed && styles.pressed]}
+            >
+              <Text style={styles.replayText}>REPLAY</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -165,6 +190,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  flightPreview: {
+    width: '100%',
+    minHeight: 286,
+  },
+  flightStage: {
+    minHeight: 220,
+    overflow: 'hidden',
+  },
   previewLabel: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
@@ -174,6 +207,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: PW.space.sm,
     paddingBottom: PW.space.md,
+  },
+  replayButton: {
+    alignSelf: 'center',
+    minWidth: 112,
+    minHeight: 40,
+    marginBottom: PW.space.md,
+    borderRadius: PW.radius.lg,
+    borderWidth: 1,
+    borderColor: PW.color.cardRim,
+    backgroundColor: PW.color.overlayMedium,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: PW.space.md,
+  },
+  replayText: {
+    color: PW.color.gold,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 13,
+    letterSpacing: 1,
   },
   pressed: {
     opacity: 0.8,
