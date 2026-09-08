@@ -75,13 +75,14 @@ function formatRowDateLabel(row: WorkLogRow, showStartYear: boolean): string {
   return `${startLabel} – ${endLabel}`;
 }
 
-// pageContent's own padding — named so the absolutely positioned children
-// inside it (logScroll, totalsBlock) can explicitly match it. React Native
-// does NOT apply a parent's padding to absolutely positioned children (only
-// to normal-flow ones), so an absolute child using left:0/top:0 lands at the
-// padding-less border edge — a few points off from a normal-flow sibling at
-// the same nominal position. Matching these constants explicitly, rather
-// than relying on inheritance, is what keeps the two from drifting apart.
+// pageContent's own padding. In Yoga, an absolutely positioned child is
+// placed from the PARENT'S PADDING EDGE, same as a normal-flow child — so an
+// absolute child inside pageContent that also sets left/right to this value
+// is not matching the padding, it is adding a second copy of it. logScroll
+// and totalsBlock learned this the hard way (device-measured: the log column
+// came out ~16pt narrower than the page box allows, exactly 2x this value)
+// and now use left:0/right:0, same as any other absolute child that wants to
+// fill pageContent's own content box exactly.
 const PAGE_CONTENT_PADDING_H = 8;
 const PAGE_CONTENT_PADDING_TOP = 10;
 const PAGE_CONTENT_PADDING_BOTTOM = 8;
@@ -300,8 +301,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           <View style={[styles.pageContent, pageBoxStyle(layout.leftPageLeftPct)]}>
             {/* Scroll region: the rows and ONLY the rows, framed top and
                 bottom by the pinned header+rule and the pinned totals block
-                below. Explicit left/right insets (PAGE_CONTENT_PADDING_H)
-                rather than 0 — see the constant's own comment for why. */}
+                below. */}
             <ScrollView
               showsVerticalScrollIndicator={false}
               style={[
@@ -417,7 +417,7 @@ function WorkLogRowView({
       <Text style={styles.rowDate}>{dateLabel}</Text>
       {row.word && <Text style={styles.rowWord}>{row.word}</Text>}
       {row.lines.map((line, index) => (
-        <Text key={index} style={styles.rowLine}>
+        <Text key={index} style={styles.rowLine} numberOfLines={1}>
           {line}
         </Text>
       ))}
@@ -460,11 +460,14 @@ const styles = StyleSheet.create({
     // pinned totals by their own measured heights (top/bottom are set
     // per-instance — see the left-page JSX). Rows clip at these edges
     // rather than merely being padded past them, so nothing can travel
-    // underneath either pinned block. Explicit left/right insets, not 0 —
-    // see PAGE_CONTENT_PADDING_H's own comment.
+    // underneath either pinned block. left/right are 0 — Yoga positions an
+    // absolute child from the parent's PADDING edge, so 0 already lands
+    // this flush with pageContent's padded content box, same edge the
+    // pinned header (a normal-flow sibling) sits at. See
+    // PAGE_CONTENT_PADDING_H's own comment for the bug this replaced.
     position: "absolute",
-    left: PAGE_CONTENT_PADDING_H,
-    right: PAGE_CONTENT_PADDING_H,
+    left: 0,
+    right: 0,
   },
   logHeader: {
     // Normal flow, not absolute — it sits at pageContent's own top-left
@@ -478,10 +481,11 @@ const styles = StyleSheet.create({
   },
   totalsBlock: {
     // Anchored to pageContent's bottom padding edge (bottom is set
-    // per-instance). Same explicit-inset reasoning as logScroll.
+    // per-instance). left/right are 0, same reasoning as logScroll — Yoga
+    // already applies the parent's padding to an absolute child.
     position: "absolute",
-    left: PAGE_CONTENT_PADDING_H,
-    right: PAGE_CONTENT_PADDING_H,
+    left: 0,
+    right: 0,
   },
   label: {
     fontFamily: FONTS.ui,
