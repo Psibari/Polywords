@@ -85,9 +85,6 @@ function formatRowDateLabel(row: WorkLogRow, showStartYear: boolean): string {
 // honest instead of needing a second hand-tuned constant.
 const BEATEN_CORNER_MAX_WIDTH = 170;
 const BEATEN_CORNER_MAX_HEIGHT = 120;
-// Rough single-line height for the 14pt word-name label under each seal —
-// used only to estimate how many rows of seals fit, not to lay out the text.
-const BEATEN_WORD_ROW_HEIGHT = 16;
 const BEATEN_SEAL_GAP = 4;
 
 // Most-recent-first, same rule LexiconPrototype's formatMasteredWords used —
@@ -113,10 +110,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const layout = usePolybookTuning();
 
   // WORK LOG is pinned above the log ScrollView rather than living inside
-  // it (see the left-page JSX below) — the scroll content needs top padding
-  // equal to the header's real rendered height so the first row clears it
-  // instead of sliding underneath mid-scroll. 24 is just a reasonable guess
-  // for before the first layout pass fires.
+  // it (see the left-page JSX below) — the ScrollView is inset by the
+  // header's real rendered height so rows clip at its own top edge instead
+  // of scrolling underneath a header that has no background of its own.
+  // 24 is just a reasonable guess for before the first layout pass fires.
   const [logHeaderHeight, setLogHeaderHeight] = useState(24);
 
   const bookSeed = progress.bookSeed ?? 0;
@@ -210,10 +207,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   );
   const beatenRows = Math.max(
     1,
-    Math.floor(
-      BEATEN_CORNER_MAX_HEIGHT /
-        (layout.sealSize + BEATEN_WORD_ROW_HEIGHT + BEATEN_SEAL_GAP),
-    ),
+    Math.floor(BEATEN_CORNER_MAX_HEIGHT / (layout.sealSize + BEATEN_SEAL_GAP)),
   );
   const beatenSealCap = beatenColumns * beatenRows;
 
@@ -252,15 +246,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           />
 
           <View style={[styles.pageContent, pageBoxStyle(layout.leftPageLeftPct)]}>
-            {/* Absolutely positioned to fill the whole page box, BEHIND the
-                pinned header below — the header stays in normal flow (so it
-                sits at the page's own top-left padding) while this scrolls
-                underneath it. Rows never slide over it: the content's own
-                paddingTop reserves exactly the header's measured height. */}
+            {/* Inset below the pinned header rather than filling the whole
+                page box behind it — the header has no background (a flat
+                patch would read as one against the page's photographic
+                texture), so rows must clip at the ScrollView's own bounds
+                instead of merely being padded past a transparent label. */}
             <ScrollView
               showsVerticalScrollIndicator={false}
-              style={styles.logScroll}
-              contentContainerStyle={{ paddingTop: logHeaderHeight + 4 }}
+              style={[styles.logScroll, { top: logHeaderHeight + 4 }]}
             >
               {rowDisplays.map(({ row, dateLabel }, index) => (
                 <WorkLogRowView
@@ -313,22 +306,15 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
               <Text style={styles.label}>BEATEN</Text>
               <View style={styles.beatenSeals}>
                 {beatenWords.map((record) => (
-                  <View key={record.word} style={styles.beatenSeal}>
-                    <Image
-                      source={MASTERED_SEAL}
-                      resizeMode="contain"
-                      style={{
-                        width: layout.sealSize,
-                        height: layout.sealSize,
-                      }}
-                    />
-                    <Text
-                      style={[styles.beatenWord, { maxWidth: layout.sealSize + 24 }]}
-                      numberOfLines={1}
-                    >
-                      {record.word}
-                    </Text>
-                  </View>
+                  <Image
+                    key={record.word}
+                    source={MASTERED_SEAL}
+                    resizeMode="contain"
+                    style={{
+                      width: layout.sealSize,
+                      height: layout.sealSize,
+                    }}
+                  />
                 ))}
               </View>
             </View>
@@ -426,12 +412,13 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   logScroll: {
-    // Fills the whole page box. Absolute (not flex) so it sits BEHIND the
-    // WORK LOG header — rendered after it in JSX, so it draws on top, and
-    // left in normal flow so it lands at the page's own top-left padding —
-    // rather than the header claiming its own row and shrinking this one.
+    // Absolute (not flex) and inset below the WORK LOG header by its own
+    // measured height (top is set per-instance — see the left-page JSX)
+    // rather than filling the whole page box behind it. The header has no
+    // background, so rows must clip at this box's own edge; padding scrolled
+    // content past a transparent label only clears the FIRST row, not every
+    // row that follows it underneath.
     position: "absolute",
-    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
@@ -514,7 +501,7 @@ const styles = StyleSheet.create({
   todayLine: {
     fontFamily: FONTS.hand,
     includeFontPadding: false,
-    fontSize: 24,
+    fontSize: 21,
     color: INK,
   },
   beatenCorner: {
@@ -535,18 +522,5 @@ const styles = StyleSheet.create({
     gap: BEATEN_SEAL_GAP,
     maxWidth: BEATEN_CORNER_MAX_WIDTH,
     maxHeight: BEATEN_CORNER_MAX_HEIGHT,
-  },
-  beatenSeal: {
-    // Tight on purpose: a seal and its word name read as one object, not a
-    // seal with a caption floating below it.
-    alignItems: "center",
-    gap: 1,
-  },
-  beatenWord: {
-    fontFamily: FONTS.ui,
-    includeFontPadding: false,
-    fontSize: 14,
-    lineHeight: 14,
-    color: INK,
   },
 });
