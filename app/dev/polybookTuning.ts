@@ -21,9 +21,11 @@ type PolybookLayout = {
   rightPageLeftPct: number;
   contentScale: number;
   sealSize: number;
-  // The quill resting on the right page — scenery behind the text, never a
-  // guessed final placement. offsetX/offsetY are px nudges from page center;
-  // angle is degrees; scale multiplies the page-width-sized base image.
+  // The quill resting beside the book — anchored to the SCREEN (see
+  // PolybookSpread's styles.quill), not the page, so it stays put while the
+  // pages slide underneath it. offsetX/offsetY are px nudges from that
+  // screen anchor (the lower-right corner, overlapping the book's edge);
+  // angle is degrees; scale multiplies the screen-width-sized base image.
   quillOffsetX: number;
   quillOffsetY: number;
   quillAngle: number;
@@ -63,13 +65,15 @@ const DEFAULT_LAYOUT: PolybookLayout = {
   rightPageLeftPct: 55,
   contentScale: 1,
   sealSize: 60,
-  // Starting point only, not a final placement — centered on the page,
-  // nib angled toward the gutter, faint. Pete dials the rest in on-device.
+  // Starting point only, not a final placement. It arrived far too loud —
+  // near-full opacity and oversized made it the loudest thing on the page
+  // instead of scenery — so both are pulled well back here. Pete dials the
+  // rest in on-device.
   quillOffsetX: 0,
   quillOffsetY: 0,
   quillAngle: -35,
-  quillScale: 1,
-  quillOpacity: 0.18,
+  quillScale: 0.55,
+  quillOpacity: 0.1,
 };
 
 export const usePolybookTuning = create<PolybookTuningState>((set) => ({

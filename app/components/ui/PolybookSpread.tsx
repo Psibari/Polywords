@@ -162,9 +162,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const bookHeight = bookWidth / POLYBOOK_ASPECT_RATIO;
 
   // Base size before the tuner's scale knob — a starting point sized off the
-  // page's own footprint, not a guessed final value. Centered in the page by
-  // default; offsetX/offsetY nudge it from there.
-  const quillBaseWidth = bookWidth * (layout.pageWidthPct / 100);
+  // screen, not a guessed final value. The quill is anchored to the screen
+  // now (see styles.quill), not to page coordinates, so its base size scales
+  // off pageWidth rather than the book image.
+  const quillBaseWidth = pageWidth * 0.5;
   const quillBaseHeight = quillBaseWidth / QUILL_ASPECT_RATIO;
 
   const pageBoxStyle = (leftPct: number) => ({
@@ -227,27 +228,6 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           </View>
 
           <View style={[styles.pageContent, pageBoxStyle(layout.rightPageLeftPct)]}>
-            <Image
-              source={QUILL_ART}
-              resizeMode="contain"
-              style={[
-                styles.quill,
-                {
-                  width: quillBaseWidth,
-                  height: quillBaseHeight,
-                  marginLeft: -quillBaseWidth / 2,
-                  marginTop: -quillBaseHeight / 2,
-                  opacity: layout.quillOpacity,
-                  transform: [
-                    { translateX: layout.quillOffsetX },
-                    { translateY: layout.quillOffsetY },
-                    { rotate: `${layout.quillAngle}deg` },
-                    { scale: layout.quillScale },
-                  ],
-                },
-              ]}
-            />
-
             <View style={styles.struckPairBlock}>
               <Text style={styles.struckOld}>{struckPair.old}</Text>
               <Text style={styles.struckNext}>{struckPair.next}</Text>
@@ -284,6 +264,29 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           </View>
         </View>
       </ScrollView>
+
+      {/* Anchored to the SCREEN, not the page — a separate object resting
+          beside the book rather than a mark printed on it. It sits outside
+          the paging ScrollView entirely so the pages slide underneath it
+          while it stays put (Pete's ruling). */}
+      <Image
+        source={QUILL_ART}
+        resizeMode="contain"
+        style={[
+          styles.quill,
+          {
+            width: quillBaseWidth,
+            height: quillBaseHeight,
+            opacity: layout.quillOpacity,
+            transform: [
+              { translateX: layout.quillOffsetX },
+              { translateY: layout.quillOffsetY },
+              { rotate: `${layout.quillAngle}deg` },
+              { scale: layout.quillScale },
+            ],
+          },
+        ]}
+      />
 
       {__DEV__ && <PolybookTuningPanel />}
     </View>
@@ -334,9 +337,14 @@ const styles = StyleSheet.create({
     left: 0,
   },
   quill: {
+    // Anchored to the screen's lower-right, overlapping the book's lower
+    // corner rather than floating clear of it — a quill with nothing but
+    // sky behind it reads as pasted on; resting against the book's edge
+    // gives it something to sit on. offsetX/offsetY (in the tuner) nudge
+    // from this anchor.
     position: "absolute",
-    top: "50%",
-    left: "50%",
+    bottom: 24,
+    right: 4,
     pointerEvents: "none",
   },
   pageContent: {
@@ -376,7 +384,7 @@ const styles = StyleSheet.create({
   rowLine: {
     fontFamily: FONTS.hand,
     includeFontPadding: false,
-    fontSize: 17,
+    fontSize: 19,
     color: INK,
   },
   doubleRule: {

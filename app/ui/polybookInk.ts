@@ -6,5 +6,10 @@
 // stays lighter than INK on purpose: the contrast between her voice (INK) and
 // everything that isn't her voice (INK_MUTED) is what makes the split
 // typography read. Never bring them to the same value.
-export const INK = "#2E2418";
-export const INK_MUTED = "rgba(51,41,31,0.62)";
+//
+// Second device pass (2026-09): INK still read soft against the cream, so it
+// stepped darker again, toward near-black-but-brown. INK_MUTED stepped down
+// by the same delta on its base color, so the gap between the two — what
+// actually makes the split typography legible — stays exactly what it was.
+export const INK = "#1F180F";
+export const INK_MUTED = "rgba(36,29,22,0.62)";
