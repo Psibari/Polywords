@@ -41,7 +41,9 @@ const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(ma
 
 // Same bounds LexiconPrototype's TUNER_FIELDS used, except sealSize's floor
 // is lowered — these seals are cramped into a page corner rather than a
-// full section icon, so they need to go smaller than 60.
+// full section icon, so they need to go smaller than 60. Third device pass:
+// even 60 read as a trophy on a plinth, so the floor came down further to
+// let it go genuinely small.
 const BOUNDS: Record<keyof PolybookLayout, [number, number]> = {
   pageTopPct: [0, 40],
   pageHeightPct: [40, 85],
@@ -49,7 +51,7 @@ const BOUNDS: Record<keyof PolybookLayout, [number, number]> = {
   leftPageLeftPct: [0, 30],
   rightPageLeftPct: [45, 75],
   contentScale: [0.85, 1.1],
-  sealSize: [16, 100],
+  sealSize: [10, 100],
   quillOffsetX: [-300, 300],
   quillOffsetY: [-300, 300],
   quillAngle: [-180, 180],
@@ -64,7 +66,12 @@ const DEFAULT_LAYOUT: PolybookLayout = {
   leftPageLeftPct: 11.5,
   rightPageLeftPct: 55,
   contentScale: 1,
-  sealSize: 60,
+  // Third device pass: 60 filled roughly a third of the page corner — a
+  // trophy on a plinth, not the cramped, doesn't-want-to-look-at-them pile
+  // the design calls for. This is a starting point only; the corner's own
+  // capacity (BEATEN_CORNER_MAX_WIDTH/HEIGHT in PolybookSpread.tsx) is what
+  // actually decides how many seals render at whatever size this ends up.
+  sealSize: 20,
   // Starting point only, not a final placement. It arrived far too loud —
   // near-full opacity and oversized made it the loudest thing on the page
   // instead of scenery — so both are pulled well back here. Pete dials the

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -78,6 +78,31 @@ function formatRowDateLabel(row: WorkLogRow, showStartYear: boolean): string {
   return `${startLabel} – ${endLabel}`;
 }
 
+// The BEATEN corner's own footprint — a corner of a page, not a gallery, so
+// it never scrolls and never grows past this box. How many seals actually
+// fit inside it is computed from the live sealSize (see beatenSealCap in the
+// component), so shrinking or growing the tuner's SEAL knob keeps this box
+// honest instead of needing a second hand-tuned constant.
+const BEATEN_CORNER_MAX_WIDTH = 170;
+const BEATEN_CORNER_MAX_HEIGHT = 120;
+// Rough single-line height for the 14pt word-name label under each seal —
+// used only to estimate how many rows of seals fit, not to lay out the text.
+const BEATEN_WORD_ROW_HEIGHT = 16;
+const BEATEN_SEAL_GAP = 4;
+
+// Most-recent-first, same rule LexiconPrototype's formatMasteredWords used —
+// so when the corner can't hold every mastered word, it's the newest ones
+// that survive the cap, not an arbitrary slice.
+function sortMasteredMostRecentFirst<T extends { dateMastered?: string }>(
+  words: T[],
+): T[] {
+  return [...words].sort((a, b) => {
+    const aTime = a.dateMastered ? new Date(a.dateMastered).getTime() : 0;
+    const bTime = b.dateMastered ? new Date(b.dateMastered).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
 type Props = {
   progress: PlayerProgress;
   pollyMemory: PollyMemory;
@@ -86,6 +111,13 @@ type Props = {
 export function PolybookSpread({ progress, pollyMemory }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const layout = usePolybookTuning();
+
+  // WORK LOG is pinned above the log ScrollView rather than living inside
+  // it (see the left-page JSX below) — the scroll content needs top padding
+  // equal to the header's real rendered height so the first row clears it
+  // instead of sliding underneath mid-scroll. 24 is just a reasonable guess
+  // for before the first layout pass fires.
+  const [logHeaderHeight, setLogHeaderHeight] = useState(24);
 
   const bookSeed = progress.bookSeed ?? 0;
   const log = progress.bookLog ?? [];
@@ -168,6 +200,31 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const quillBaseWidth = pageWidth * 0.5;
   const quillBaseHeight = quillBaseWidth / QUILL_ASPECT_RATIO;
 
+  // How many seals the BEATEN corner can actually hold at the tuner's live
+  // sealSize — recomputed from the box's own footprint rather than a second
+  // hand-picked number, so shrinking or growing SEAL in the tuner keeps the
+  // cap honest instead of drifting out of sync with it.
+  const beatenColumns = Math.max(
+    1,
+    Math.floor(BEATEN_CORNER_MAX_WIDTH / (layout.sealSize + BEATEN_SEAL_GAP)),
+  );
+  const beatenRows = Math.max(
+    1,
+    Math.floor(
+      BEATEN_CORNER_MAX_HEIGHT /
+        (layout.sealSize + BEATEN_WORD_ROW_HEIGHT + BEATEN_SEAL_GAP),
+    ),
+  );
+  const beatenSealCap = beatenColumns * beatenRows;
+
+  // This is a corner of a page, not a gallery: never scrolled, capped at
+  // what the corner holds, and when the count exceeds that, the most recent
+  // masteries survive the cut rather than an arbitrary slice.
+  const beatenWords = useMemo(
+    () => sortMasteredMostRecentFirst(progress.masteredWords).slice(0, beatenSealCap),
+    [progress.masteredWords, beatenSealCap],
+  );
+
   const pageBoxStyle = (leftPct: number) => ({
     left: `${leftPct}%` as const,
     top: `${layout.pageTopPct}%` as const,
@@ -195,12 +252,16 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           />
 
           <View style={[styles.pageContent, pageBoxStyle(layout.leftPageLeftPct)]}>
+            {/* Absolutely positioned to fill the whole page box, BEHIND the
+                pinned header below — the header stays in normal flow (so it
+                sits at the page's own top-left padding) while this scrolls
+                underneath it. Rows never slide over it: the content's own
+                paddingTop reserves exactly the header's measured height. */}
             <ScrollView
               showsVerticalScrollIndicator={false}
               style={styles.logScroll}
+              contentContainerStyle={{ paddingTop: logHeaderHeight + 4 }}
             >
-              <Text style={styles.label}>WORK LOG</Text>
-
               {rowDisplays.map(({ row, dateLabel }, index) => (
                 <WorkLogRowView
                   key={`${row.date}-${index}`}
@@ -225,6 +286,13 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
               />
               <StatRow label="STREAK MINE" value={pollyMemory.pollyWinStreak} />
             </ScrollView>
+
+            <Text
+              style={styles.label}
+              onLayout={(e) => setLogHeaderHeight(e.nativeEvent.layout.height)}
+            >
+              WORK LOG
+            </Text>
           </View>
 
           <View style={[styles.pageContent, pageBoxStyle(layout.rightPageLeftPct)]}>
@@ -235,7 +303,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
             <View style={styles.todayBlock}>
               {todayEntry.map((line, index) => (
-                <Text key={index} style={styles.todayLine}>
+                <Text key={index} style={styles.todayLine} numberOfLines={1}>
                   {line}
                 </Text>
               ))}
@@ -244,7 +312,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             <View style={styles.beatenCorner}>
               <Text style={styles.label}>BEATEN</Text>
               <View style={styles.beatenSeals}>
-                {progress.masteredWords.map((record) => (
+                {beatenWords.map((record) => (
                   <View key={record.word} style={styles.beatenSeal}>
                     <Image
                       source={MASTERED_SEAL}
@@ -254,7 +322,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                         height: layout.sealSize,
                       }}
                     />
-                    <Text style={styles.beatenWord} numberOfLines={1}>
+                    <Text
+                      style={[styles.beatenWord, { maxWidth: layout.sealSize + 24 }]}
+                      numberOfLines={1}
+                    >
                       {record.word}
                     </Text>
                   </View>
@@ -355,7 +426,15 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   logScroll: {
-    flex: 1,
+    // Fills the whole page box. Absolute (not flex) so it sits BEHIND the
+    // WORK LOG header — rendered after it in JSX, so it draws on top, and
+    // left in normal flow so it lands at the page's own top-left padding —
+    // rather than the header claiming its own row and shrinking this one.
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   label: {
     fontFamily: FONTS.ui,
@@ -445,20 +524,29 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   beatenSeals: {
+    // Grows sideways then downward, capped at what the corner holds
+    // (beatenSealCap in the component) — never scrolled. This is a corner
+    // of a page, not a gallery.
     flexDirection: "row",
     flexWrap: "wrap-reverse",
     justifyContent: "flex-end",
-    maxWidth: 160,
+    alignContent: "flex-end",
+    overflow: "hidden",
+    gap: BEATEN_SEAL_GAP,
+    maxWidth: BEATEN_CORNER_MAX_WIDTH,
+    maxHeight: BEATEN_CORNER_MAX_HEIGHT,
   },
   beatenSeal: {
+    // Tight on purpose: a seal and its word name read as one object, not a
+    // seal with a caption floating below it.
     alignItems: "center",
-    margin: 2,
+    gap: 1,
   },
   beatenWord: {
     fontFamily: FONTS.ui,
     includeFontPadding: false,
     fontSize: 14,
+    lineHeight: 14,
     color: INK,
-    maxWidth: 60,
   },
 });
