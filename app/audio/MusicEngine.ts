@@ -54,6 +54,7 @@ let activeOwner: MusicOwner | null = null;
 let activeTrackKey: TrackKey | null = null;
 let userMuted = false;
 let bossOutcomeDucked = false;
+let returningHauntCueActive = false;
 let transitionToken = 0;
 let configuredTrackToken = -1;
 let pendingSeek: { key: TrackKey; seconds: number; token: number } | null = null;
@@ -116,6 +117,7 @@ function targetVolume(): number {
     muted: userMuted,
     transportPaused,
     bossOutcomeDucked,
+    returningHauntCueActive,
   });
 }
 
@@ -384,7 +386,10 @@ export function preloadHuntTrack(): void {
 }
 
 export function startMusic(owner: MusicOwner): void {
-  if (activeOwner !== owner) bossOutcomeDucked = false;
+  if (activeOwner !== owner) {
+    bossOutcomeDucked = false;
+    returningHauntCueActive = false;
+  }
   activeOwner = owner;
   transportPaused = false;
   pausedForApp = false;
@@ -397,7 +402,10 @@ export function stopMusic(owner: MusicOwner): void {
   // Native-stack focus transitions may mount the incoming screen before the
   // outgoing cleanup fires. Only the current owner may stop the singleton.
   if (activeOwner !== owner) return;
-  if (owner === 'hunt') bossOutcomeDucked = false;
+  if (owner === 'hunt') {
+    bossOutcomeDucked = false;
+    returningHauntCueActive = false;
+  }
   activeOwner = null;
   transitionToken += 1;
   pendingSeek = null;
@@ -418,6 +426,7 @@ export function stopMusic(owner: MusicOwner): void {
 
 export function setMusicState(owner: MusicOwner, newState: MusicState): void {
   if (owner === 'hunt' && newState !== 'boss') bossOutcomeDucked = false;
+  if (owner === 'hunt' && newState === 'off') returningHauntCueActive = false;
   if (newState === 'off') {
     if (activeOwner !== owner) return;
     // A new run must start its loop from the top, not resume mid-loop from
@@ -457,6 +466,19 @@ export function setBossOutcomeMusicDucked(ducked: boolean): void {
   );
 }
 
+/**
+ * Gives the Returning Haunt's long-form entrance cue exclusive use of the
+ * audio bed. The looping Hunt player keeps its playback position; only its
+ * volume fades to silence and returns when the cue's native completion fires.
+ */
+export function setReturningHauntCueMusicExclusive(active: boolean): void {
+  if (active && activeOwner !== 'hunt') return;
+  if (returningHauntCueActive === active) return;
+  returningHauntCueActive = active;
+  if (!player || activeOwner !== 'hunt') return;
+  fadeVolumeTo(targetVolume(), active ? FADE_OUT_MS : FADE_IN_MS);
+}
+
 // App-teardown escape hatch only. stopMusic() is for screen blur only, which
 // keeps the singleton and desired state available for a clean focus return.
 // setMusicState(owner, 'off') pauses the transport in place without
@@ -464,6 +486,7 @@ export function setBossOutcomeMusicDucked(ducked: boolean): void {
 export function setMusicAppActive(active: boolean): void {
   appIsActive = active;
   if (!active) {
+    returningHauntCueActive = false;
     if (activeOwner && !transportPaused) {
       pausedForApp = true;
       pauseTransport();
@@ -487,6 +510,7 @@ export function haltMusicEngine(): void {
   configuredTrackToken = -1;
   pendingSeek = null;
   bossOutcomeDucked = false;
+  returningHauntCueActive = false;
   transitionToken += 1;
   transportPaused = false;
   playerRebuildAttempts = 0;

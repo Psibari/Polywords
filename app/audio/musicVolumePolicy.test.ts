@@ -74,4 +74,17 @@ assert.equal(
   'background transport pause remains authoritative over an active boss outcome duck',
 );
 
+assert.equal(
+  resolveMusicTargetVolume({
+    activeOwner: 'hunt',
+    state: 'neutral',
+    muted: false,
+    transportPaused: false,
+    bossOutcomeDucked: false,
+    returningHauntCueActive: true,
+  }),
+  0,
+  'a Returning Haunt cue owns the audio bed while it is playing',
+);
+
 console.log('musicVolumePolicy tests passed');

@@ -30,10 +30,12 @@ type SfxConfig = {
   source: Parameters<typeof createAudioPlayer>[0];
   volume: number;
   cooldownMs: number;
+  fallbackReleaseMs?: number;
 };
 
 type PendingPlay = {
   rate: number;
+  onFinish?: () => void;
 };
 
 type SfxPlayer = {
@@ -41,6 +43,7 @@ type SfxPlayer = {
   ready: boolean;
   busy: boolean;
   started: boolean;
+  onFinish: (() => void) | null;
   removeStatusListener: () => void;
   releaseTimer: ReturnType<typeof setTimeout> | null;
 };
@@ -69,7 +72,7 @@ const SFX: Record<SfxName, SfxConfig> = {
   pollySqwawkShort: { source: require('../../assets/audio/sfx/pollySqwawkShort.wav'), volume: 0.42, cooldownMs: 120 },
   pollySqwawkLaugh: { source: require('../../assets/audio/sfx/pollySqwawkLaugh.wav'), volume: 0.42, cooldownMs: 600 },
   bookClose:      { source: require('../../assets/audio/sfx/book_close_v2.mp3'),      volume: 0.60, cooldownMs: 300 },
-  detectiveSting: { source: require('../../assets/audio/sfx/detective_clue_sting.mp3'), volume: 0.30, cooldownMs: 1200 },
+  detectiveSting: { source: require('../../assets/audio/sfx/detective_clue_sting.mp3'), volume: 0.30, cooldownMs: 1200, fallbackReleaseMs: 16000 },
   chainBreak:     { source: require('../../assets/audio/sfx/chain_break_stinger.mp3'), volume: 0.40, cooldownMs: 1800 },
   lockSpin1:      { source: require('../../assets/audio/sfx/lock_spin_1.mp3'),         volume: 0.40, cooldownMs: 150 },
   lockSpin2:      { source: require('../../assets/audio/sfx/lock_spin_2.mp3'),         volume: 0.40, cooldownMs: 150 },
@@ -101,10 +104,32 @@ function warnDev(message: string, error?: unknown): void {
 
 function removePlayer(item: SfxPlayer): void {
   if (item.releaseTimer !== null) clearTimeout(item.releaseTimer);
+  const onFinish = item.onFinish;
+  item.onFinish = null;
   item.removeStatusListener();
   try {
     item.player.remove();
   } catch {}
+  onFinish?.();
+}
+
+function finishPlayback(name: SfxName, item: SfxPlayer, generation: number): void {
+  if (!item.busy && !item.started && item.onFinish === null) return;
+  item.started = false;
+  item.busy = false;
+  if (item.releaseTimer !== null) {
+    clearTimeout(item.releaseTimer);
+    item.releaseTimer = null;
+  }
+  const onFinish = item.onFinish;
+  item.onFinish = null;
+  onFinish?.();
+  drainSlot(name, generation);
+}
+
+function dropPending(slot: SfxSlot): void {
+  const pending = slot.pending.splice(0);
+  pending.forEach(request => request.onFinish?.());
 }
 
 function drainSlot(name: SfxName, generation: number): void {
@@ -121,7 +146,7 @@ function drainSlot(name: SfxName, generation: number): void {
         createPlayer(name, generation);
       } else if (slot.players.length === 0 && slot.loadAttempts >= 2) {
         warnDev(`"${name}" could not be loaded after two attempts; dropping pending playback.`);
-        slot.pending.length = 0;
+        dropPending(slot);
       }
       return;
     }
@@ -130,7 +155,7 @@ function drainSlot(name: SfxName, generation: number): void {
     if (!request) return;
     item.busy = true;
     item.started = false;
-    void playOnPlayer(name, item, request.rate, generation);
+    void playOnPlayer(name, item, request.rate, generation, request.onFinish);
   }
 }
 
@@ -173,19 +198,14 @@ function createPlayer(name: SfxName, generation: number): void {
         ready: player.isLoaded,
         busy: false,
         started: false,
+        onFinish: null,
         removeStatusListener: () => {},
         releaseTimer: null,
       };
       item.removeStatusListener = player.addListener('playbackStatusUpdate', status => {
         if (status.isLoaded) settleReady();
         if (item.started && status.didJustFinish) {
-          item.started = false;
-          item.busy = false;
-          if (item.releaseTimer !== null) {
-            clearTimeout(item.releaseTimer);
-            item.releaseTimer = null;
-          }
-          drainSlot(name, generation);
+          finishPlayback(name, item, generation);
         }
       }).remove;
       slot.players.push(item);
@@ -203,7 +223,7 @@ function createPlayer(name: SfxName, generation: number): void {
           if (slot.pending.length > 0 && slot.loadAttempts < 2) {
             createPlayer(name, generation);
           } else {
-            slot.pending.length = 0;
+            dropPending(slot);
           }
         }, LOAD_TIMEOUT_MS);
       }
@@ -223,29 +243,23 @@ async function playOnPlayer(
   item: SfxPlayer,
   rate: number,
   generation: number,
+  onFinish?: () => void,
 ): Promise<void> {
+  item.onFinish = onFinish ?? null;
   try {
     item.player.pause();
     await item.player.seekTo(0, 0, 0);
     item.player.shouldCorrectPitch = rate === 1;
     item.player.setPlaybackRate(rate);
     item.started = true;
-    item.releaseTimer = setTimeout(() => {
-      item.releaseTimer = null;
-      item.started = false;
-      item.busy = false;
-      drainSlot(name, generation);
-    }, PLAY_RELEASE_FALLBACK_MS);
+    item.releaseTimer = setTimeout(
+      () => finishPlayback(name, item, generation),
+      SFX[name].fallbackReleaseMs ?? PLAY_RELEASE_FALLBACK_MS,
+    );
     item.player.play();
   } catch (error) {
-    item.started = false;
-    if (item.releaseTimer !== null) {
-      clearTimeout(item.releaseTimer);
-      item.releaseTimer = null;
-    }
-    item.busy = false;
     warnDev(`Failed to play "${name}".`, error);
-    drainSlot(name, generation);
+    finishPlayback(name, item, generation);
   }
 }
 
@@ -289,20 +303,21 @@ export function sfxReady(): Promise<void> {
 
 export function playSfx(
   name: SfxName,
-  options?: { rate?: number; bypassCooldown?: boolean },
-): void {
-  if (!useGameStore.getState().soundEnabled) return;
+  options?: { rate?: number; bypassCooldown?: boolean; onFinish?: () => void },
+): boolean {
+  if (!useGameStore.getState().soundEnabled) return false;
   const config = SFX[name];
   const now = Date.now();
-  if (!options?.bypassCooldown && now - (lastPlayedAt[name] ?? 0) < config.cooldownMs) return;
+  if (!options?.bypassCooldown && now - (lastPlayedAt[name] ?? 0) < config.cooldownMs) return false;
   lastPlayedAt[name] = now;
 
   const slot = getOrCreateSlot(name);
-  if (slot.pending.length >= MAX_PENDING_PLAYS) slot.pending.shift();
-  slot.pending.push({ rate: options?.rate ?? 1 });
+  if (slot.pending.length >= MAX_PENDING_PLAYS) slot.pending.shift()?.onFinish?.();
+  slot.pending.push({ rate: options?.rate ?? 1, onFinish: options?.onFinish });
   const generation = lifecycleGeneration;
   if (slot.players.length === 0 && !slot.creating) createPlayer(name, generation);
   drainSlot(name, generation);
+  return true;
 }
 
 export function unloadSfx(): void {

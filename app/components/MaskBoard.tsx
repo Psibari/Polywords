@@ -23,7 +23,10 @@ import { FoilWord } from './ui/FoilWord';
 import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { playSfx, warmBossOutcomeSfx } from '../audio/sfx';
-import { setBossOutcomeMusicDucked } from '../audio/MusicEngine';
+import {
+  setBossOutcomeMusicDucked,
+  setReturningHauntCueMusicExclusive,
+} from '../audio/MusicEngine';
 import { PW } from '../ui/pwTheme';
 import { libraryMaterial } from '../ui/pwMaterials';
 import { bossOutcomeAssets } from '../ui/bossOutcomeAssets';
@@ -1492,7 +1495,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       const hauntEntranceKey = `${gameStepIndex}:${step.word}`;
       if (hauntEntranceStingKeyRef.current !== hauntEntranceKey) {
         hauntEntranceStingKeyRef.current = hauntEntranceKey;
-        playSfx('detectiveSting');
+        setReturningHauntCueMusicExclusive(true);
+        if (!playSfx('detectiveSting', {
+          onFinish: () => setReturningHauntCueMusicExclusive(false),
+        })) {
+          setReturningHauntCueMusicExclusive(false);
+        }
       }
 
       // Haunt entrance: double haptic + purple word tint + banner

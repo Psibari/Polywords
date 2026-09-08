@@ -30,14 +30,17 @@ export function resolveMusicTargetVolume({
   muted,
   transportPaused,
   bossOutcomeDucked,
+  returningHauntCueActive,
 }: {
   activeOwner: MusicOwner | null;
   state: Exclude<MusicState, 'off'> | null;
   muted: boolean;
   transportPaused: boolean;
   bossOutcomeDucked: boolean;
+  returningHauntCueActive?: boolean;
 }): number {
   if (muted || transportPaused || !activeOwner || !state) return 0;
+  if (returningHauntCueActive && activeOwner === 'hunt') return 0;
   if (bossOutcomeDucked && activeOwner === 'hunt' && state === 'boss') {
     return BOSS_OUTCOME_DUCK_VOLUME;
   }
