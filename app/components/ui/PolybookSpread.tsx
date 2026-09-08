@@ -78,6 +78,17 @@ function formatRowDateLabel(row: WorkLogRow, showStartYear: boolean): string {
   return `${startLabel} – ${endLabel}`;
 }
 
+// pageContent's own padding — named so the absolutely positioned children
+// inside it (logScroll, totalsBlock) can explicitly match it. React Native
+// does NOT apply a parent's padding to absolutely positioned children (only
+// to normal-flow ones), so an absolute child using left:0/top:0 lands at the
+// padding-less border edge — a few points off from a normal-flow sibling at
+// the same nominal position. Matching these constants explicitly, rather
+// than relying on inheritance, is what keeps the two from drifting apart.
+const PAGE_CONTENT_PADDING_H = 8;
+const PAGE_CONTENT_PADDING_TOP = 10;
+const PAGE_CONTENT_PADDING_BOTTOM = 8;
+
 // The BEATEN corner's own footprint — a corner of a page, not a gallery, so
 // it never scrolls and never grows past this box. How many seals actually
 // fit inside it is computed from the live sealSize (see beatenSealCap in the
@@ -109,12 +120,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const layout = usePolybookTuning();
 
-  // WORK LOG is pinned above the log ScrollView rather than living inside
-  // it (see the left-page JSX below) — the ScrollView is inset by the
-  // header's real rendered height so rows clip at its own top edge instead
-  // of scrolling underneath a header that has no background of its own.
-  // 24 is just a reasonable guess for before the first layout pass fires.
-  const [logHeaderHeight, setLogHeaderHeight] = useState(24);
+  // WORK LOG (plus its framing rule) and the totals block are both pinned
+  // outside the log ScrollView, above and below it respectively (see the
+  // left-page JSX below) — the ScrollView is inset on both edges by their
+  // real rendered heights so rows clip at those edges instead of scrolling
+  // underneath either one. These are just reasonable guesses for before the
+  // first layout pass fires.
+  const [logHeaderHeight, setLogHeaderHeight] = useState(30);
+  const [totalsHeight, setTotalsHeight] = useState(90);
 
   const bookSeed = progress.bookSeed ?? 0;
   const log = progress.bookLog ?? [];
@@ -246,14 +259,19 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           />
 
           <View style={[styles.pageContent, pageBoxStyle(layout.leftPageLeftPct)]}>
-            {/* Inset below the pinned header rather than filling the whole
-                page box behind it — the header has no background (a flat
-                patch would read as one against the page's photographic
-                texture), so rows must clip at the ScrollView's own bounds
-                instead of merely being padded past a transparent label. */}
+            {/* Scroll region: the rows and ONLY the rows, framed top and
+                bottom by the pinned header+rule and the pinned totals block
+                below. Explicit left/right insets (PAGE_CONTENT_PADDING_H)
+                rather than 0 — see the constant's own comment for why. */}
             <ScrollView
               showsVerticalScrollIndicator={false}
-              style={[styles.logScroll, { top: logHeaderHeight + 4 }]}
+              style={[
+                styles.logScroll,
+                {
+                  top: PAGE_CONTENT_PADDING_TOP + logHeaderHeight,
+                  bottom: PAGE_CONTENT_PADDING_BOTTOM + totalsHeight,
+                },
+              ]}
             >
               {rowDisplays.map(({ row, dateLabel }, index) => (
                 <WorkLogRowView
@@ -262,7 +280,31 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                   dateLabel={dateLabel}
                 />
               ))}
+            </ScrollView>
 
+            {/* Pinned header — WORK LOG plus a single framing rule beneath
+                it. Normal flow, not absolute, so it naturally shares
+                pageContent's own padding (and thus the same left edge as
+                the rows above, via the explicit inset on logScroll). Never
+                scrolls. */}
+            <View
+              style={styles.logHeader}
+              onLayout={(e) => setLogHeaderHeight(e.nativeEvent.layout.height)}
+            >
+              <Text style={styles.label}>WORK LOG</Text>
+              <View style={styles.logHeaderRule} />
+            </View>
+
+            {/* Pinned totals — the double rule and the four numbers she
+                can't argue with. Anchored to the page's own bottom padding
+                edge, out of the scroll entirely, so all four are always
+                fully visible rather than the last items a long scroll
+                might never quite reach. The double rule stays visually
+                distinct from the single one above: two strokes, not one. */}
+            <View
+              style={[styles.totalsBlock, { bottom: PAGE_CONTENT_PADDING_BOTTOM }]}
+              onLayout={(e) => setTotalsHeight(e.nativeEvent.layout.height)}
+            >
               <View style={styles.doubleRule}>
                 <View style={styles.ruleLine} />
                 <View style={styles.ruleLine} />
@@ -278,14 +320,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                 value={pollyMemory.playerWinStreak}
               />
               <StatRow label="STREAK MINE" value={pollyMemory.pollyWinStreak} />
-            </ScrollView>
-
-            <Text
-              style={styles.label}
-              onLayout={(e) => setLogHeaderHeight(e.nativeEvent.layout.height)}
-            >
-              WORK LOG
-            </Text>
+            </View>
           </View>
 
           <View style={[styles.pageContent, pageBoxStyle(layout.rightPageLeftPct)]}>
@@ -325,7 +360,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
       {/* Anchored to the SCREEN, not the page — a separate object resting
           beside the book rather than a mark printed on it. It sits outside
           the paging ScrollView entirely so the pages slide underneath it
-          while it stays put (Pete's ruling). */}
+          while it stays put (Pete's ruling). Default position targets the
+          right page's empty middle, since the screen shows exactly one page
+          at a time (pageWidth === screenWidth) — this is the last pass on
+          this element; if it still doesn't land on device it comes out. */}
       <Image
         source={QUILL_ART}
         resizeMode="contain"
@@ -334,6 +372,8 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           {
             width: quillBaseWidth,
             height: quillBaseHeight,
+            marginLeft: -quillBaseWidth / 2,
+            marginTop: -quillBaseHeight / 2,
             opacity: layout.quillOpacity,
             transform: [
               { translateX: layout.quillOffsetX },
@@ -394,34 +434,53 @@ const styles = StyleSheet.create({
     left: 0,
   },
   quill: {
-    // Anchored to the screen's lower-right, overlapping the book's lower
-    // corner rather than floating clear of it — a quill with nothing but
-    // sky behind it reads as pasted on; resting against the book's edge
-    // gives it something to sit on. offsetX/offsetY (in the tuner) nudge
-    // from this anchor.
+    // Anchored near screen center — the right page's empty middle, between
+    // today's entry and the BEATEN corner, since the screen shows exactly
+    // one page at a time. Centered via top/left + the negative margins set
+    // alongside width/height at the call site; offsetX/offsetY (in the
+    // tuner) nudge from this anchor. Last pass on this element — it has had
+    // four already and has not earned its place. It must read as clearly
+    // present and clearly behind her writing, never overlapping a line of
+    // it or the BEATEN corner, or it comes out rather than getting a sixth.
     position: "absolute",
-    bottom: 24,
-    right: 4,
+    top: "48%",
+    left: "42%",
     pointerEvents: "none",
   },
   pageContent: {
     position: "absolute",
     overflow: "hidden",
-    paddingHorizontal: 8,
-    paddingTop: 10,
-    paddingBottom: 8,
+    paddingHorizontal: PAGE_CONTENT_PADDING_H,
+    paddingTop: PAGE_CONTENT_PADDING_TOP,
+    paddingBottom: PAGE_CONTENT_PADDING_BOTTOM,
   },
   logScroll: {
-    // Absolute (not flex) and inset below the WORK LOG header by its own
-    // measured height (top is set per-instance — see the left-page JSX)
-    // rather than filling the whole page box behind it. The header has no
-    // background, so rows must clip at this box's own edge; padding scrolled
-    // content past a transparent label only clears the FIRST row, not every
-    // row that follows it underneath.
+    // Absolute (not flex), inset below the pinned header and above the
+    // pinned totals by their own measured heights (top/bottom are set
+    // per-instance — see the left-page JSX). Rows clip at these edges
+    // rather than merely being padded past them, so nothing can travel
+    // underneath either pinned block. Explicit left/right insets, not 0 —
+    // see PAGE_CONTENT_PADDING_H's own comment.
     position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
+    left: PAGE_CONTENT_PADDING_H,
+    right: PAGE_CONTENT_PADDING_H,
+  },
+  logHeader: {
+    // Normal flow, not absolute — it sits at pageContent's own top-left
+    // padding like any other normal child, which is exactly why the rows
+    // above (inset to match, not inheriting) now share its left edge.
+  },
+  logHeaderRule: {
+    height: 1,
+    backgroundColor: INK_MUTED,
+    marginBottom: 6,
+  },
+  totalsBlock: {
+    // Anchored to pageContent's bottom padding edge (bottom is set
+    // per-instance). Same explicit-inset reasoning as logScroll.
+    position: "absolute",
+    left: PAGE_CONTENT_PADDING_H,
+    right: PAGE_CONTENT_PADDING_H,
   },
   label: {
     fontFamily: FONTS.ui,

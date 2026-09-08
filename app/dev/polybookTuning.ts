@@ -24,8 +24,9 @@ type PolybookLayout = {
   // The quill resting beside the book — anchored to the SCREEN (see
   // PolybookSpread's styles.quill), not the page, so it stays put while the
   // pages slide underneath it. offsetX/offsetY are px nudges from that
-  // screen anchor (the lower-right corner, overlapping the book's edge);
-  // angle is degrees; scale multiplies the screen-width-sized base image.
+  // screen anchor (near screen center — the right page's empty middle, since
+  // the screen shows one page at a time); angle is degrees; scale multiplies
+  // the screen-width-sized base image.
   quillOffsetX: number;
   quillOffsetY: number;
   quillAngle: number;
@@ -72,15 +73,17 @@ const DEFAULT_LAYOUT: PolybookLayout = {
   // capacity (BEATEN_CORNER_MAX_WIDTH/HEIGHT in PolybookSpread.tsx) is what
   // actually decides how many seals render at whatever size this ends up.
   sealSize: 20,
-  // Starting point only, not a final placement. It arrived far too loud —
-  // near-full opacity and oversized made it the loudest thing on the page
-  // instead of scenery — so both are pulled well back here. Pete dials the
-  // rest in on-device.
+  // Starting point only, not a final placement. Earlier passes overshot in
+  // both directions — first too loud (near-full opacity, oversized), then
+  // too faint to read as anything but a smudge over the totals. This pass
+  // moves it to the right page's empty middle at a size and opacity meant
+  // to read as an object actually resting on the page: present, but
+  // clearly behind her writing. Last attempt — see styles.quill's comment.
   quillOffsetX: 0,
   quillOffsetY: 0,
   quillAngle: -35,
-  quillScale: 0.55,
-  quillOpacity: 0.1,
+  quillScale: 0.85,
+  quillOpacity: 0.35,
 };
 
 export const usePolybookTuning = create<PolybookTuningState>((set) => ({
