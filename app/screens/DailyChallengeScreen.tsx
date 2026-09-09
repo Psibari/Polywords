@@ -960,13 +960,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const coverSubmittedAnswer = () => {
       if (completingCandidateRef.current !== candidate) return;
       setPhysicalClaimPhase('covering');
+      // BLOCKED: no paper-unroll asset yet. See sfx.ts's SFX registration note.
+      // playSfx('scrollPaperRoll');
       Animated.timing(revealProgress, {
         toValue: 1,
         duration: coverDownMs,
         easing: Easing.bezier(0.23, 1, 0.32, 1),
         useNativeDriver: false,
       }).start(({ finished }) => {
-        if (finished) showReward();
+        if (!finished) return;
+        Haptics.cueAsync('dailyRodStop');
+        // BLOCKED: no rod-knock asset yet. See sfx.ts's SFX registration note.
+        // playSfx('scrollRodKnock');
+        showReward();
       });
     };
 
@@ -978,6 +984,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // never be mixed with this value.
     const inkSubmittedAnswer = () => {
       if (completingCandidateRef.current !== candidate) return;
+      Haptics.cueAsync('dailyInkPress');
+      // BLOCKED: no ink-stamp asset yet. See sfx.ts's SFX registration note.
+      // playSfx('inkStamp');
       setPhysicalClaimPhase('inking');
       Animated.timing(inkProgress, {
         toValue: 1,

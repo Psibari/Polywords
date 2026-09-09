@@ -13,7 +13,9 @@ export type HapticCue =
   | 'hauntedBookImpact'
   | 'mastery'
   | 'gauntletPick'
-  | 'gauntletBegin';
+  | 'gauntletBegin'
+  | 'dailyInkPress'
+  | 'dailyRodStop';
 
 function hapticsEnabled(): boolean {
   return useGameStore.getState().hapticsEnabled;
@@ -83,6 +85,13 @@ export const Haptics = {
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 180);
         return first;
       }
+      // The Daily scroll's two physical contacts: the word pressing into the
+      // parchment, and the rod arriving at its stop. Light then Medium, so
+      // the rod lands heavier than the ink — the rod is the bigger object.
+      case 'dailyInkPress':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light);
+      case 'dailyRodStop':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
     }
   },
 } as const;

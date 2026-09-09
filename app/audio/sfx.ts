@@ -25,7 +25,14 @@ export type SfxName =
   | 'lockSpin1'
   | 'lockSpin2'
   | 'lockSpin3'
-  | 'gauntletPick';
+  | 'gauntletPick'
+  // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
+  // below. Uncomment together with the matching entries in SFX and the
+  // guarded call sites in DailyChallengeScreen.tsx once the files land.
+  // | 'scrollPaperRoll'
+  // | 'scrollRodKnock'
+  // | 'inkStamp'
+  ;
 
 type SfxConfig = {
   source: Parameters<typeof createAudioPlayer>[0];
@@ -80,6 +87,18 @@ const SFX: Record<SfxName, SfxConfig> = {
   lockSpin2:      { source: require('../../assets/audio/sfx/lock_spin_2.mp3'),         volume: 0.40, cooldownMs: 150 },
   lockSpin3:      { source: require('../../assets/audio/sfx/lock_spin_3.mp3'),         volume: 0.40, cooldownMs: 150 },
   gauntletPick:   { source: require('../../assets/audio/sfx/gauntlet_pick_swoosh.mp3'), volume: 0.45, cooldownMs: 200 },
+
+  // Daily scroll mechanism. The 2.24s correct-claim sequence shipped with one
+  // sound (correctClaim) and no haptic after the swipe, so a physical
+  // mechanism read as a picture sliding around.
+  //
+  // BLOCKED: these three assets do not exist yet. Nothing already on the shelf
+  // is a substitute — gauntlet_pick_swoosh in particular is not paper. Keep
+  // these commented out until Pete supplies the files; the call sites below
+  // are already wired and will start sounding the moment they are registered.
+  // scrollPaperRoll: { source: require('../../assets/audio/sfx/scroll_paper_roll_v1.wav'), volume: 0.40, cooldownMs: 120 },
+  // scrollRodKnock:  { source: require('../../assets/audio/sfx/scroll_rod_knock_v1.wav'),  volume: 0.45, cooldownMs: 120 },
+  // inkStamp:        { source: require('../../assets/audio/sfx/ink_stamp_v1.wav'),         volume: 0.42, cooldownMs: 200 },
 };
 
 const MAX_PLAYERS_PER_SOUND = 2;
