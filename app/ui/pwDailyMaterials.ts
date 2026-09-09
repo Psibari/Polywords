@@ -62,15 +62,15 @@ export const dailyCardMaterial = {
 } as const;
 
 // Parchment scroll panel — quill-and-rod clue surface drawn by
-// QuillScrollPanel/ParchmentSurface from real art, not a flat card. These
-// tokens are the remaining ink/rule colors layered over that art.
+// QuillScrollPanel/ParchmentSurface from real art, not a flat card. Only ink
+// and trim colors layered over that art live here: the old boxed-panel
+// tokens (panelBg, panelBorder, radius) went with the flat background,
+// border and rounded-rect clip they described, all of which were removed
+// because they framed the torn-edge art in a rectangle.
 export const dailyScrollMaterial = {
   goldTrim: heroBookMaterial.goldTrim,          // #F5C842
-  panelBg: 'rgba(11,9,32,0.88)',
-  panelBorder: 'rgba(245,200,66,0.30)',
   clueInk: '#FFF7D6',
   clueInkMemory: 'rgba(255,247,214,0.75)',
-  radius: 18,
 } as const;
 
 export const dailyCardFaceMaterial = {

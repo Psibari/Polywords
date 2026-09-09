@@ -76,7 +76,8 @@ function resolveFeatherFit(outerBudget: number): FeatherFit {
 }
 
 type Props = {
-  // The space this layer grows into — QuillScrollPanel's VIEW_H minus the
+  // The space this layer grows into — QuillScrollPanel's unroll target
+  // (VIEW_H, the old hardcoded 190, is gone) minus the
   // shared rod's own height, since the rod now lives once, fixed, one level
   // up (see QuillScrollPanel.tsx), not duplicated here. This component no
   // longer owns any rod at all — Pete: "you need one piece, not two rods

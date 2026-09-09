@@ -8,8 +8,10 @@ import DailyRevealCurtain from './DailyRevealCurtain';
 import {
   resolveClueStackHeight,
   resolveClueTextBoxWidth,
+  resolveReservedTextHeight,
   resolveRodMetrics,
 } from '../dailyScrollLayout';
+import type { DailyClaimPresentationPhase } from '../../game/dailyClaimPresentation';
 import { DAILY_POOL_CLUES } from '../../game/dailyPool';
 import { useReducedMotionPreference } from '../../hooks/usePollyAmbientMotion';
 import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
@@ -49,6 +51,14 @@ export type QuillScrollPanelProps = {
   // at the BOTTOM, where the card lands and inks in, rather than splitting
   // above and below the surviving active clue.
   contracted?: boolean;
+  // The claim presentation's own phase, threaded from DailyChallengeScreen
+  // rather than inferred from `submittedAnswer` here. submittedAnswer is
+  // cleared at the TOP of the 'reward' phase, so inferring the pin from it
+  // released the parchment's full height one frame into the reward beat —
+  // panel, both rods and the reveal curtain all dropped together while the
+  // reward paper was meant to be sitting still and readable. See
+  // unrollTarget below.
+  claimPhase?: DailyClaimPresentationPhase;
   children: React.ReactNode;
 };
 
@@ -71,6 +81,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       inkProgress,
       revealedClueCount,
       contracted,
+      claimPhase,
       children,
     },
     ref,
@@ -106,13 +117,36 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // rod's independent journey.
     const rodTop = 0;
 
-    // scrollHeight overrides the derived worst-case reservation for Pete's
-    // on-device pass. Still gated on rodMetrics: nothing can reserve space
-    // before the root has a measured width.
-    const reservedHeight = rodMetrics === null ? 0 : scrollHeightOverride;
+    // The honest worst case: both rods, the clearance above and below the
+    // text, and the reserved text box itself. Device-dependent, because the
+    // rod's height is a fraction of the panel's width — a hard-coded
+    // constant was several points short at 393 and 430pt. scrollHeight
+    // (DEV-ONLY) OVERRIDES this when Pete moves the knob off its "derived"
+    // sentinel; it does not replace it, so the shipped default is genuinely
+    // the derived value. Still gated on rodMetrics: nothing can reserve
+    // space before the root has a measured width.
+    const derivedReservedHeight =
+      rodMetrics === null
+        ? 0
+        : rodMetrics.height * 2 +
+          CONTENT_TOP_CLEARANCE +
+          resolveReservedTextHeight(scrollBodyWidth) +
+          CONTENT_BOTTOM_CLEARANCE;
+    const reservedHeight =
+      rodMetrics === null ? 0 : scrollHeightOverride ?? derivedReservedHeight;
 
     const contentTopPad =
       rodHeight !== undefined ? rodHeight + CONTENT_TOP_CLEARANCE : CONTENT_TOP_CLEARANCE;
+    // The permanent bottom rod sits at the paper's lower edge, so the clue
+    // stack must clear the rod's own height as well as CONTENT_BOTTOM_
+    // CLEARANCE — exactly what the reservation above budgets. styles.content
+    // used to hard-code 14 here, which predates that rod and ran the last
+    // line of a worst-case stack under it. Computed inline (like
+    // contentTopPad) because rodHeight is device-dependent.
+    const contentBottomPad =
+      rodHeight !== undefined
+        ? rodHeight + CONTENT_BOTTOM_CLEARANCE
+        : CONTENT_BOTTOM_CLEARANCE;
 
     // resolveClueStackHeight guards width but not clueCount — a NaN count
     // would propagate NaN into the unroll math. Only 1/2/3 are ever valid,
@@ -125,17 +159,25 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // is what a scroll does. rollProgress still drives the round-entrance
     // grow (0 -> full reservation); unrollHeight below scales that target.
     //
-    // While a claim is in flight (submittedAnswer non-null — set at the top
-    // of runPhysicalCorrectTransition before the card starts moving, and
-    // cleared at the start of the 'reward' phase in DailyChallengeScreen.tsx)
-    // the parchment opens to its FULL reserved height regardless of how many
-    // clues are showing. Below full height, one clue's worth of unroll
-    // (~148.6) leaves too little room for an active clue plus the inked
-    // card to land without overlapping — see the Task 6 fix-round-1 report.
-    // Thematically this reads as the document opening up to take the word.
+    // While a claim presentation is running the parchment opens to its FULL
+    // reserved height regardless of how many clues are showing. Below full
+    // height, one clue's worth of unroll leaves too little room for an
+    // active clue plus the inked card to land without overlapping — see the
+    // Task 6 fix-round-1 report. Thematically this reads as the document
+    // opening up to take the word.
+    //
+    // The pin lasts the WHOLE presentation ('settling' through 'revealing'),
+    // not just while submittedAnswer is non-null. submittedAnswer is cleared
+    // at the top of 'reward', and the same batch flips the displayed session
+    // to the next round — dropping revealedCount to 1 — so keying off it
+    // shrank the reservation mid-reward. It releases at 'idle', once the
+    // reward paper has finished rolling back up.
+    const claimPresentationActive = claimPhase !== undefined
+      ? claimPhase !== 'idle'
+      : submittedAnswer != null;
     const unrollTarget = (() => {
       if (rodMetrics === null || scrollBodyWidth <= 0) return 0;
-      if (submittedAnswer) return reservedHeight;
+      if (claimPresentationActive) return reservedHeight;
       const box = resolveClueTextBoxWidth(scrollBodyWidth);
       const stack = resolveClueStackHeight(safeRevealedClueCount, box, DAILY_POOL_CLUES);
       return Math.min(
@@ -161,10 +203,16 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // listener is the wrong tool for a one-off comparison), so this ref is
     // the source of truth for "did the target grow or shrink".
     const unrollHeightTargetRef = useRef(0);
+    // Whether the previous render's target was the claim-presentation pin,
+    // so the effect can tell "the pin was just released" from "a fresh
+    // round reset the clue count".
+    const wasPinnedRef = useRef(false);
     useEffect(() => {
       const grew = unrollTarget > unrollHeightTargetRef.current;
+      const releasingPin = wasPinnedRef.current && !claimPresentationActive;
       unrollHeightTargetRef.current = unrollTarget;
-      if (reduceMotion !== false || !grew) {
+      wasPinnedRef.current = claimPresentationActive;
+      if (reduceMotion !== false || (!grew && !releasingPin)) {
         // A round boundary resets the clue count from 3 back to 1 — a
         // shrink. Animating that down raced the entrance (rollProgress
         // 0->1 over 320ms) easing up toward the OLD, larger unrollHeight,
@@ -172,6 +220,14 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
         // visibly shrank to the new one. The entrance owns that moment, so
         // a shrink snaps instead. Reduce Motion always snaps too, same as
         // every other animation in this feature.
+        //
+        // The pin's own release is the one shrink that does NOT snap. On
+        // that path the round already changed back during 'reward', and the
+        // ROUND CHANGE effect in DailyChallengeScreen skips the entrance
+        // whenever a physical transition is active — so rollProgress is
+        // still 1 and no entrance is running to own the moment or hide a
+        // snap. The scroll rolling back up to its one-clue length is what
+        // should be seen there instead.
         unrollHeight.setValue(unrollTarget);
         return;
       }
@@ -182,7 +238,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
         // height, not transform — native driver is not available here
         useNativeDriver: false,
       }).start();
-    }, [unrollTarget, unrollHeight, reduceMotion]);
+    }, [unrollTarget, unrollHeight, reduceMotion, claimPresentationActive]);
 
     // The visible paper height composes the round-entrance grow with the
     // per-clue unroll target: 0 while rollProgress is 0, unrollHeight once
@@ -292,7 +348,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
               <View
                 style={[
                   styles.content,
-                  { top: contentTopPad },
+                  { top: contentTopPad, bottom: contentBottomPad },
                   contracted && styles.contentContracted,
                 ]}
               >
@@ -318,7 +374,14 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
               },
             ]}
           >
-            <Animated.View style={{ opacity: cardChromeOpacity }}>
+            {/* absoluteFill, not a bare wrapper: DailySubmittedAnswerCard's
+                shell is width/height '100%', which against an indefinite
+                owner height content-sized to roughly 37pt inside the 64pt
+                box. The ink below centres in the FULL box, so the two halves
+                of the crossfade sat ~13pt apart and the word stepped as the
+                chrome faded. Both layers must occupy the identical
+                rectangle. */}
+            <Animated.View style={[StyleSheet.absoluteFill, { opacity: cardChromeOpacity }]}>
               <DailySubmittedAnswerCard label={submittedAnswer.label} />
             </Animated.View>
             {inkProgress && (
@@ -448,9 +511,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 18,
     right: 18,
-    // top comes from contentTopPad (see render) — the measured rod height
-    // plus CONTENT_TOP_CLEARANCE, i.e. clearance below the top-mounted rod.
-    bottom: 14,
+    // top comes from contentTopPad and bottom from contentBottomPad (see
+    // render) — the measured rod height plus the matching clearance at each
+    // end, i.e. clearance inside both the top-mounted rod and the permanent
+    // bottom rod, and exactly what the reservation budgets.
     justifyContent: 'center',
     alignItems: 'center',
   },

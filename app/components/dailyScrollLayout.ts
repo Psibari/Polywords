@@ -3,7 +3,7 @@
 // be tested without a renderer — same pattern as tileTextLayout.ts.
 //
 // This module exists because the scroll's height used to be hardcoded
-// (QuillScrollPanel's VIEW_H = 190) while its width floated with the
+// (QuillScrollPanel's since-deleted VIEW_H = 190) while its width floated with the
 // device. That made the parchment's rendered aspect a function of screen
 // width, so the art distorted by x1.06 on a 320pt screen and x1.48 on a
 // 430pt one, and the two symptoms (stretched art, crushed text) traded
@@ -39,15 +39,28 @@ export const SCROLL_ROD_ASPECT = SCROLL_ROD_SOURCE_W / SCROLL_ROD_SOURCE_H;
 export const SCROLL_ROD_WIDTH_RATIO = 1.06;
 
 // ── Type scale ────────────────────────────────────────────────────
-// 24/18 is the largest scale whose worst-case three-clue stack is constant
-// at 160pt on every device AND where no clue in the live pool exceeds two
-// lines. At 26/19 the 51-character roof clue needs three lines on a 320pt
-// screen, and numberOfLines={2} truncates rather than wrapping it.
+// 23/17 is the largest scale where NO clue in the live pool exceeds two
+// lines at ANY supported width. Measured 2026-09-09 with the corrected
+// greedy-word-wrap estimateClueLines below, over all 180 pool clues at
+// screens 320/375/393/430 (box = screen - 76):
+//
+//   scale   clues over 2 lines   worst 3-clue stack
+//   24/18   1 (at 320pt)         188  <- truncates
+//   23/17   0                    150  <- adopted
+//   22/17   0                    148
+//
+// 24/18 was chosen under the PREVIOUS line-count model, which divided total
+// text width by box width — that models text breaking MID-WORD, which is
+// never better than real word wrapping and here was one line better. Under
+// real wrapping, HIP's "THE OUTWARD ANGLE WHERE TWO SLOPING ROOF SIDES
+// MEET" (51 chars) needs three lines at 24pt on a 320pt screen, and
+// numberOfLines={2} truncates rather than wrapping it. 22/17 buys only 2pt
+// of stack over 23/17 and gives up a point of type for it.
 export const DAILY_CLUE_TYPE = {
-  activeSize: 24,
-  activeLineHeight: 28,
-  memorySize: 18,
-  memoryLineHeight: 22,
+  activeSize: 23,
+  activeLineHeight: 27,
+  memorySize: 17,
+  memoryLineHeight: 20,
   gap: 8,
   maxLines: 2,
   textPadding: 18,
@@ -133,13 +146,39 @@ export function estimateClueWidth(text: string, fontSize: number): number {
   return text.length * (fontSize * BEBAS_ADVANCE_EM + BEBAS_TRACKING);
 }
 
+// Greedy word wrap, the way a text engine actually breaks a line: words are
+// accumulated while they fit and pushed to the next line when they do not.
+// The previous model divided total width by box width, which is the answer
+// for text allowed to break MID-WORD — never better than word wrapping and
+// often one line better, so it under-counted and let a clue that truncates
+// on device pass the guard.
+//
+// A single word wider than the box gets its own line and is not split; the
+// loop cannot spin on it because every iteration consumes one word.
 export function estimateClueLines(
   text: string,
   fontSize: number,
   boxWidth: number,
 ): number {
   if (boxWidth <= 0) return DAILY_CLUE_TYPE.maxLines;
-  return Math.max(1, Math.ceil(estimateClueWidth(text, fontSize) / boxWidth));
+  const words = text.split(/\s+/).filter((word) => word.length > 0);
+  // Starts at 1 so empty text reports one line without a separate guard.
+  let lines = 1;
+  let current = '';
+  for (const word of words) {
+    if (current === '') {
+      current = word;
+      continue;
+    }
+    const joined = `${current} ${word}`;
+    if (estimateClueWidth(joined, fontSize) <= boxWidth) {
+      current = joined;
+    } else {
+      lines += 1;
+      current = word;
+    }
+  }
+  return lines;
 }
 
 function worstBlockHeight(
@@ -182,8 +221,12 @@ export function resolveClueStackHeight(
 
 // The reserved text box. Fixed rather than per-round, so nothing below the
 // scroll ever moves; the parchment unrolls INTO this reservation (Task 5).
-// 160 is the measured worst case at 24/18 and is constant on every device.
-const RESERVED_TEXT_HEIGHT = 160;
+// 150 is the measured worst-case three-clue stack at 23/17 (see the type
+// scale note above): the tallest at 320/375/393pt, where the widest clue
+// still takes two lines in both roles. dailyScrollLayout.test.ts asserts
+// this equals the stack computed from the live pool, so the constant cannot
+// drift from the data.
+const RESERVED_TEXT_HEIGHT = 150;
 
 export function resolveReservedTextHeight(_panelWidth: number): number {
   return RESERVED_TEXT_HEIGHT;

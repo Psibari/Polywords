@@ -13,13 +13,23 @@ import ParchmentSurface from './ParchmentSurface';
 const PARCHMENT_TUCK = 10;
 
 type Props = {
-  // Threaded explicitly from QuillScrollPanel's VIEW_H, same reasoning as
-  // DailyRevealCurtain's `height` prop: this panel's real height animates
-  // (0 -> VIEW_H) during the round-open grow, so self-measuring it via
-  // onLayout made the paper/rod recompute their size on every intermediate
-  // layout tick of that animation instead of once against a stable target —
-  // a second, separate cause of visible size-jumping (device-confirmed
-  // 2026-08-23), on top of the native-driver bug fixed alongside this.
+  // Threaded explicitly from QuillScrollPanel's reservedHeight (the derived
+  // worst-case reservation; VIEW_H, the old hardcoded 190, is gone), same
+  // reasoning as DailyRevealCurtain's `height` prop: this panel's real
+  // height animates (0 -> the reservation) during the round-open grow, so
+  // self-measuring it via onLayout made the paper/rod recompute their size
+  // on every intermediate layout tick of that animation instead of once
+  // against a stable target — a second, separate cause of visible
+  // size-jumping (device-confirmed 2026-08-23), on top of the native-driver
+  // bug fixed alongside this.
+  //
+  // Note that this is the FULL reservation, not the currently-unrolled
+  // height: the parchment is always drawn at its full reserved size and
+  // clipped by the animated scrollBody above, which is what makes the torn
+  // bottom edge sit inside the bottom rod's own footprint at rest rather
+  // than floating above or below it. A negative rodOffsetY (DEV-ONLY,
+  // dailyScrollTuning.ts) lifts that rod off the clip line and will expose a
+  // straight clipped edge instead of the torn one.
   height: number;
   children: React.ReactNode;
 };

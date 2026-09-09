@@ -13,14 +13,17 @@ import { create } from 'zustand';
 // compensate for the old fixed-height scroll bug; geometry now derives from
 // the art itself (see dailyScrollLayout.ts), so those three are gone.
 type DailyScrollTuningState = {
-  // Overrides QuillScrollPanel's derived `reservedHeight`. The derived value
-  // (~252 at a 375pt screen) is a worst-case reservation sized to fit a full
-  // three-clue stack; this knob turns that into a free override, so values
-  // below roughly 250 will clip a three-clue stack against `scrollBody`'s
+  // Overrides QuillScrollPanel's derived `reservedHeight`. null means "use
+  // the derived value" — the shipped default, so nothing on device depends
+  // on this knob until Pete moves it. The derived value (~243 at a 375pt
+  // screen, and device-dependent because the rod's height scales with the
+  // panel's width) is a worst-case reservation sized to fit a full
+  // three-clue stack; a numeric override is free, so values below roughly
+  // the derived one will clip a three-clue stack against `scrollBody`'s
   // `overflow: 'hidden'` rather than reflow it. That is expected for an
   // override knob during tuning, not a bug — the derived value remains the
   // honest floor for full content.
-  scrollHeight: number;
+  scrollHeight: number | null;
   // Toggles the DAILY CHALLENGE / ONE REPRESENTS ALL header block above the
   // scroll — Pete is judging on-device whether it earns its ~45pt back.
   headerVisible: boolean;
@@ -33,7 +36,7 @@ type DailyScrollTuningState = {
   // decouples the rod art from the parchment it should sit flush against,
   // opening a gap or overlap.
   rodOffsetY: number;
-  setScrollHeight: (v: number) => void;
+  setScrollHeight: (v: number | null) => void;
   setHeaderVisible: (v: boolean) => void;
   setCardHeight: (v: number) => void;
   setRodOffsetY: (v: number) => void;
@@ -42,11 +45,11 @@ type DailyScrollTuningState = {
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 export const useDailyScrollTuning = create<DailyScrollTuningState>((set) => ({
-  scrollHeight: 252,
+  scrollHeight: null,
   headerVisible: false,
   cardHeight: 64,
   rodOffsetY: 0,
-  setScrollHeight: (v) => set({ scrollHeight: clamp(v, 160, 340) }),
+  setScrollHeight: (v) => set({ scrollHeight: v === null ? null : clamp(v, 160, 340) }),
   setHeaderVisible: (v) => set({ headerVisible: v }),
   setCardHeight: (v) => set({ cardHeight: clamp(v, 48, 96) }),
   setRodOffsetY: (v) => set({ rodOffsetY: clamp(v, -24, 24) }),

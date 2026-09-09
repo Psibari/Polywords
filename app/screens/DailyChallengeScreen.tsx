@@ -171,7 +171,16 @@ function DailyHUD({
 }) {
   return (
     <View style={hud.row}>
-      <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
+      {/* The mode's rule folds into the HUD row under the DAILY #<n> label.
+          The separate DAILY CHALLENGE header block that used to carry it is
+          behind headerVisible (default off, Pete's A/B), so without this the
+          central rule of the mode appeared nowhere on the play screen. Same
+          colour and type treatment the header block gives this exact line —
+          no new colour. */}
+      <View style={hud.labelStack}>
+        <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
+        <Text style={hud.rule}>{DAILY_CLUE_RULE}</Text>
+      </View>
 
       <View style={hud.dots}>
         {Array.from({ length: DAILY_ROUND_COUNT }).map((_, i) => {
@@ -325,6 +334,7 @@ function ClueStage({
             style={[
               styles.clueText,
               index < activeIndex && styles.clueTextMemory,
+              index === activeIndex && styles.clueTextLast,
               {
                 opacity,
                 transform: [{ translateY }, { scale }],
@@ -1011,7 +1021,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start(({ finished }) => {
-        if (finished) scheduleCorrectTransition(coverSubmittedAnswer, inkHoldMs);
+        // Same guard as its two siblings (the settle and cover completions):
+        // an abort path that reassigns completingCandidateRef without
+        // stopping this exact animation must not schedule the next leg for a
+        // claim that no longer exists.
+        if (!finished || completingCandidateRef.current !== candidate) return;
+        scheduleCorrectTransition(coverSubmittedAnswer, inkHoldMs);
       });
     };
 
@@ -1278,6 +1293,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               inkProgress={inkProgress}
               revealedClueCount={revealedCount}
               contracted={clueStackContracted}
+              claimPhase={claimPhase}
             >
               {currentRound && !hideCompletedClueUnderlay && (
                 <ClueStage
@@ -1588,7 +1604,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textAlign: 'center',
     width: '100%',
+    // The gap BETWEEN clues. The last clue in the stack drops it (see
+    // clueTextLast): the reservation budgets the stack as
+    // active + memories + (count - 1) gaps, so a trailing gap here was
+    // height the budget never counted, pushing the stack that much further
+    // toward the bottom rod.
     marginBottom: DAILY_CLUE_TYPE.gap,
+  },
+  clueTextLast: {
+    marginBottom: 0,
   },
   clueTextMemory: {
     color: dailyScrollMaterial.clueInkMemory,
@@ -1613,6 +1637,11 @@ const hud = StyleSheet.create({
     borderBottomColor: dailyHudMaterial.rowBorderBottom,
     borderBottomWidth: 0.5,
   },
+  labelStack: {
+    // Shrinkable so the dots and feathers to its right keep their space on a
+    // 320pt screen; the row itself stays a single flex row.
+    flexShrink: 1,
+  },
   label: {
     color: dailyHudMaterial.label,
     fontFamily: FONTS.hud,
@@ -1622,6 +1651,15 @@ const hud = StyleSheet.create({
     textShadowColor: dailyHudMaterial.labelGlow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
+  },
+  rule: {
+    color: dailyChromeMaterial.clueHeaderRule,
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontSize: 14,
+    letterSpacing: 2.2,
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   dots: {
     flexDirection: 'row',

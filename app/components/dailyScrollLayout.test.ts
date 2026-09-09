@@ -17,6 +17,7 @@ import {
   SCROLL_PAPER_EDGE_SPLIT_PX,
   SCROLL_ROD_ASPECT,
   estimateClueLines,
+  estimateClueWidth,
   resolveClueStackHeight,
   resolveClueTextBoxWidth,
   resolveParchmentSlices,
@@ -134,11 +135,41 @@ const panelWidthFor = (screenWidth: number) => screenWidth - 40;
   }
 }
 
-// ── The worst-case three-clue stack fits the reserved box ─────────
-// Reserved height is constant across devices by design; if a device drifts
-// out of that, the layout has started varying by phone again.
+// ── Lines break on WORD boundaries, not mid-word ──────────────────
+// The estimator used to divide total width by box width, which models
+// mid-word breaking and therefore under-counts. This guards the model
+// itself: a box wide enough for the character count but too narrow to hold
+// the second word must report two lines.
+{
+  const twoWords = 'ALPHA BRAVO';
+  const fontSize = 23;
+  const fullWidth = estimateClueWidth(twoWords, fontSize);
+  const firstWordWidth = estimateClueWidth('ALPHA', fontSize);
+  // A box between "one word" and "both words" wide: mid-word division would
+  // still say one line here, word wrapping says two.
+  const box = (fullWidth + firstWordWidth) / 2;
+  ok(fullWidth / box < 2, 'the mid-word model would report one line for this box');
+  ok(
+    estimateClueLines(twoWords, fontSize, box) === 2,
+    'word wrapping must push the overflowing word onto its own line',
+  );
+  // A single word wider than the box takes one line and does not hang.
+  ok(
+    estimateClueLines('SUPERCALIFRAGILISTIC', fontSize, 10) === 1,
+    'an unbreakable word occupies exactly one line',
+  );
+}
+
+// ── The reservation IS the live pool's worst three-clue stack ─────
+// Not a literal restated against itself: the constant is checked against
+// the height the pool actually produces, so a pool edit or a type-scale
+// change that grows the stack fails here instead of silently overflowing
+// the reservation on device. Reserved height is constant across devices by
+// design; if a device drifts out of that, the layout has started varying by
+// phone again.
 {
   const allClues = DAILY_POOL.flatMap((entry) => entry.meanings);
+  let worstAcrossDevices = 0;
   for (const screenWidth of DEVICE_WIDTHS) {
     const panelWidth = panelWidthFor(screenWidth);
     const box = resolveClueTextBoxWidth(panelWidth);
@@ -148,8 +179,20 @@ const panelWidthFor = (screenWidth: number) => screenWidth - 40;
       worst <= reserved,
       `worst 3-clue stack ${worst}pt exceeds reserved ${reserved}pt at ${screenWidth}pt`,
     );
-    near(reserved, 160, 0.01, `reserved text height should be 160pt at ${screenWidth}pt`);
+    near(
+      reserved,
+      resolveReservedTextHeight(panelWidthFor(320)),
+      0.01,
+      `reserved text height must not vary by device (${screenWidth}pt)`,
+    );
+    if (worst > worstAcrossDevices) worstAcrossDevices = worst;
   }
+  near(
+    resolveReservedTextHeight(panelWidthFor(375)),
+    Math.ceil(worstAcrossDevices),
+    0.01,
+    'RESERVED_TEXT_HEIGHT must equal the live pool worst-case 3-clue stack, rounded up',
+  );
 }
 
 // ── One and two clue stacks are strictly shorter than three ───────

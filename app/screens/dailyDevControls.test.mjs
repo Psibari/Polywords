@@ -56,25 +56,46 @@ function matchOne(source, pattern, label) {
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-// scrollHeight: default 252, clamp [160, 340]
+// scrollHeight: default null (= use QuillScrollPanel's derived reservation),
+// numeric overrides clamp [160, 340].
+//
+// The default used to be the literal 252, which REPLACED the derived
+// reservation rather than overriding it — the shipped app then reserved a
+// hard-coded, device-blind height and resolveReservedTextHeight was never
+// called in production. null is the sentinel that keeps the derived value
+// shipped and makes the knob a true override, so this asserts the sentinel
+// as well as the clamp it still applies to real numbers.
 {
-  const [, defaultValue] = matchOne(
+  matchOne(
     scrollTuningSource,
-    /scrollHeight: (\d+),/,
-    'scrollHeight default',
+    /^ {2}scrollHeight: null,$/m,
+    'scrollHeight default is null (derived reservation)',
   );
-  assert.equal(Number(defaultValue), 252, 'scrollHeight default is 252');
+  assert.equal(
+    /^ {2}scrollHeight: \d/m.test(scrollTuningSource),
+    false,
+    'scrollHeight must not default to a hard-coded number — that replaces the derived value',
+  );
 
   const [, min, max] = matchOne(
     scrollTuningSource,
-    /setScrollHeight: \(v\) => set\(\{ scrollHeight: clamp\(v, (-?\d+), (-?\d+)\) \}\),/,
-    'scrollHeight clamp bounds',
+    /setScrollHeight: \(v\) => set\(\{ scrollHeight: v === null \? null : clamp\(v, (-?\d+), (-?\d+)\) \}\),/,
+    'scrollHeight sentinel passthrough + clamp bounds',
   );
   assert.equal(Number(min), 160, 'scrollHeight clamp floor is 160');
   assert.equal(Number(max), 340, 'scrollHeight clamp ceiling is 340');
   assert.equal(clamp(0, Number(min), Number(max)), 160, 'scrollHeight clamps below floor to 160');
   assert.equal(clamp(9999, Number(min), Number(max)), 340, 'scrollHeight clamps above ceiling to 340');
 }
+
+// The panel must never be wired into the Daily screen (asserted above), so
+// it has to be reachable somewhere else or the knobs are unreachable
+// constants. Settings owns development utilities.
+assert.equal(
+  settingsScreenSource.includes('DailyScrollTuningPanel'),
+  true,
+  'Settings must host the Daily scroll tuning panel so the knobs are reachable in __DEV__',
+);
 
 // headerVisible: default false, boolean passthrough (no clamp)
 {
