@@ -939,6 +939,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const revealNextClue = () => {
       if (completingCandidateRef.current !== candidate) return;
       setPhysicalClaimPhase('revealing');
+      // BLOCKED: no paper-roll asset yet. See sfx.ts's SFX registration note.
+      // playSfx('scrollPaperRoll');
       Animated.timing(revealProgress, {
         toValue: 0,
         duration: revealMs,

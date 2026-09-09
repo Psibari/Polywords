@@ -96,6 +96,21 @@ const SFX: Record<SfxName, SfxConfig> = {
   // is a substitute — gauntlet_pick_swoosh in particular is not paper. Keep
   // these commented out until Pete supplies the files; the call sites below
   // are already wired and will start sounding the moment they are registered.
+  //
+  // scrollPaperRoll fires at BOTH ends of the mechanism: the cover-down
+  // (reward paper rolling down over the ink, 560ms) and the reveal-up
+  // (rolling back up to the next clue, 420ms). The plan called this "one
+  // asset, reversed for the up-roll" — expo-audio has no reverse playback
+  // and this player registry has no notion of it, so that is NOT
+  // implemented here. Open question for whoever authors the file (Pete's
+  // call, not decided in code):
+  //   (a) one file played forward at both ends — paper unrolling and
+  //       re-rolling sound broadly alike, so this is likely close enough
+  //       and is the cheaper option: zero extra wiring, both call sites
+  //       already point at `scrollPaperRoll`.
+  //   (b) a second file, e.g. `scroll_paper_unroll_v1.wav`, registered as
+  //       its own cue for the reveal-up call site specifically.
+  // The reveal-up call site is a one-line repoint either way.
   // scrollPaperRoll: { source: require('../../assets/audio/sfx/scroll_paper_roll_v1.wav'), volume: 0.40, cooldownMs: 120 },
   // scrollRodKnock:  { source: require('../../assets/audio/sfx/scroll_rod_knock_v1.wav'),  volume: 0.45, cooldownMs: 120 },
   // inkStamp:        { source: require('../../assets/audio/sfx/ink_stamp_v1.wav'),         volume: 0.42, cooldownMs: 200 },
