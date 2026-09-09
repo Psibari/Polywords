@@ -9,6 +9,7 @@ export type DailyClaimPresentationPhase =
   | 'idle'
   | 'settling'
   | 'landed'
+  | 'inking'
   | 'covering'
   | 'reward'
   | 'revealing';
@@ -29,7 +30,7 @@ export function canBeginDailyClaim(
 function usesOutgoingDailySnapshot(
   phase: DailyClaimPresentationPhase,
 ): boolean {
-  return phase === 'settling' || phase === 'landed' || phase === 'covering';
+  return phase === 'settling' || phase === 'landed' || phase === 'inking' || phase === 'covering';
 }
 
 export function createDailyClaimPresentation<TSession>(

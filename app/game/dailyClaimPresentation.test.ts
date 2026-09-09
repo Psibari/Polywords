@@ -214,4 +214,27 @@ const transitionPhases: DailyClaimPresentationPhase[] = [
   );
 }
 
+// ── The inking phase ──────────────────────────────────────────────
+// Inking sits between 'landed' and 'covering'. It is part of the OUTGOING
+// round: the clue and cards on screen still belong to the round just won,
+// so it must use the outgoing snapshot, and input must stay locked.
+{
+  eq(isDailyClaimInputLocked('inking'), true, 'inking keeps input locked');
+  eq(
+    selectDailyDisplaySession(nextRound, { session: outgoing, candidate: 'X', outcome: 'correct', roundElapsedMsAtClaim: 0 }, 'inking'),
+    outgoing,
+    'inking shows the outgoing round',
+  );
+  eq(
+    shouldShowDailyResult(true, { session: completed, candidate: 'X', outcome: 'correct', roundElapsedMsAtClaim: 0 }, 'inking'),
+    false,
+    'inking never shows Results early',
+  );
+  eq(
+    shouldHideCompletedDailyClue(true, 'inking'),
+    true,
+    'the final round hides its completed clue through inking',
+  );
+}
+
 console.log('dailyClaimPresentation tests passed');

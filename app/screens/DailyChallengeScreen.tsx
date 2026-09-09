@@ -85,13 +85,17 @@ import {
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
 const DAILY_SCROLL_TRANSITION = {
-  settleMs: 520,
+  settleMs: 460,
   landedHoldMs: 240,
+  inkMs: 350,
+  inkHoldMs: 400,
   coverDownMs: 560,
-  rewardHoldMs: 500,
+  rewardHoldMs: 420,
   revealMs: 420,
   reducedSettleMs: 180,
   reducedLandedHoldMs: 120,
+  reducedInkMs: 0,
+  reducedInkHoldMs: 120,
   reducedCoverDownMs: 140,
   reducedRewardHoldMs: 180,
   reducedRevealMs: 140,
@@ -190,9 +194,17 @@ function DailyHUD({
 function ClueStage({
   clues,
   revealedCount,
+  contracted,
 }: {
   clues: [string, string, string];
   revealedCount: 1 | 2 | 3;
+  // True once the answer is known (inking/covering) — memory clues have
+  // done their job and animate out of the way so the ink has room. The
+  // active clue (this round's winner) is untouched by this: only clues
+  // below activeIndex are affected, and contracted only ever coincides
+  // with a state where the active clue itself is about to be hidden by
+  // the caller anyway (hideCompletedClueUnderlay / the round unmounting).
+  contracted?: boolean;
 }) {
   const reduceMotion = useReducedMotionPreference();
   const clue1Progress = useRef(new Animated.Value(0)).current;
@@ -232,14 +244,39 @@ function ClueStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealedCount, clueKey, reduceMotion]);
 
+  // The memory clues have done their job once the answer is known — the
+  // inked word needs their room. This is a SEPARATE effect from the one
+  // above: it only ever nudges progress forward from 2 to a new stop (3)
+  // on the memory clues, and must not disturb the active clue's own
+  // reveal animation or reset anything when contracted goes false again
+  // (the round-change effect above already resets everything for the
+  // next round).
+  useEffect(() => {
+    if (!contracted) return;
+    clueProgresses.forEach((progress, index) => {
+      if (index >= activeIndex) return;
+      if (reduceMotion !== false) {
+        progress.setValue(3);
+        return;
+      }
+      Animated.timing(progress, {
+        toValue: 3,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contracted, activeIndex, reduceMotion]);
+
   return (
     <>
       {clues.map((clue, index) => {
         if (index > activeIndex) return null;
         const progress = clueProgresses[index];
         const opacity = progress.interpolate({
-          inputRange: [0, 0.22, 1, 2],
-          outputRange: [0, 1, 1, 0.9],
+          inputRange: [0, 0.22, 1, 2, 3],
+          outputRange: [0, 1, 1, 0.9, 0],
         });
         const scale = progress.interpolate({
           inputRange: [0, 0.22, 1, 2],
@@ -508,6 +545,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   >(null);
   const intakeScale = useRef(new Animated.Value(1)).current;
   const submittedProgress = useRef(new Animated.Value(0)).current;
+  // 0 = the submitted card is still a card; 1 = fully inked into the
+  // parchment. Opacity/transform only — native driver only, never mixed
+  // with revealProgress/unrollHeight's height-driven (non-native) values.
+  const inkProgress = useRef(new Animated.Value(0)).current;
   const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedDailyAnswer | null>(null);
   const [claimPhase, setClaimPhase] = useState<DailyClaimPresentationPhase>('idle');
   const claimPhaseRef = useRef<DailyClaimPresentationPhase>('idle');
@@ -808,6 +849,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     revealProgress.setValue(0);
     submittedProgress.stopAnimation();
     submittedProgress.setValue(0);
+    inkProgress.stopAnimation();
+    inkProgress.setValue(0);
     setSubmittedAnswer(null);
     setRevealSolvedCount(0);
     completingCandidateRef.current = null;
@@ -835,6 +878,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     submittedProgress.setValue(0);
     revealProgress.stopAnimation();
     revealProgress.setValue(0);
+    inkProgress.stopAnimation();
+    inkProgress.setValue(0);
     setSubmittedAnswer({ label: candidate, startX, startY, width, height });
     setPhysicalClaimPhase('settling');
 
@@ -844,6 +889,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const landedHoldMs = reduceMotion !== false
       ? DAILY_SCROLL_TRANSITION.reducedLandedHoldMs
       : DAILY_SCROLL_TRANSITION.landedHoldMs;
+    const inkMs = reduceMotion !== false
+      ? DAILY_SCROLL_TRANSITION.reducedInkMs
+      : DAILY_SCROLL_TRANSITION.inkMs;
+    const inkHoldMs = reduceMotion !== false
+      ? DAILY_SCROLL_TRANSITION.reducedInkHoldMs
+      : DAILY_SCROLL_TRANSITION.inkHoldMs;
     const coverDownMs = reduceMotion !== false
       ? DAILY_SCROLL_TRANSITION.reducedCoverDownMs
       : DAILY_SCROLL_TRANSITION.coverDownMs;
@@ -888,6 +939,25 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       });
     };
 
+    // The card stops being a card here: its leather and gold rim fade out
+    // (QuillScrollPanel's cardChromeOpacity) while the word resolves into
+    // the clues' own typeface and ink (DailyInkedWord). Opacity + transform
+    // only, so this is the one leg of the whole sequence allowed to run on
+    // the native driver — revealProgress/unrollHeight drive height and must
+    // never be mixed with this value.
+    const inkSubmittedAnswer = () => {
+      if (completingCandidateRef.current !== candidate) return;
+      setPhysicalClaimPhase('inking');
+      Animated.timing(inkProgress, {
+        toValue: 1,
+        duration: inkMs,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) scheduleCorrectTransition(coverSubmittedAnswer, inkHoldMs);
+      });
+    };
+
     requestAnimationFrame(() => {
       Animated.timing(submittedProgress, {
         toValue: 1,
@@ -912,11 +982,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             }),
           ]).start();
         }
-        scheduleCorrectTransition(coverSubmittedAnswer, landedHoldMs);
+        scheduleCorrectTransition(inkSubmittedAnswer, landedHoldMs);
       });
     });
 
-    const totalMs = settleMs + landedHoldMs + coverDownMs + rewardHoldMs + revealMs;
+    const totalMs =
+      settleMs + landedHoldMs + inkMs + inkHoldMs + coverDownMs + rewardHoldMs + revealMs;
     scheduleCorrectTransition(
       () => finishPhysicalCorrectTransition(candidate),
       totalMs + 600,
@@ -1136,12 +1207,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               }
               submittedAnswer={submittedAnswer}
               submittedProgress={submittedProgress}
+              inkProgress={inkProgress}
               revealedClueCount={revealedCount}
             >
               {currentRound && !hideCompletedClueUnderlay && (
                 <ClueStage
                   clues={currentRound.word.clues}
                   revealedCount={revealedCount}
+                  contracted={claimPhase === 'inking' || claimPhase === 'covering'}
                 />
               )}
             </QuillScrollPanel>

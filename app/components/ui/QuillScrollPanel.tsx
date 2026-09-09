@@ -2,6 +2,7 @@ import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { dailyCardMaterial } from '../../ui/pwDailyMaterials';
 import { DailySubmittedAnswerCard } from '../DailyAnswerCard';
+import DailyInkedWord from './DailyInkedWord';
 import DailyPanelFrame from './DailyPanelFrame';
 import DailyRevealCurtain from './DailyRevealCurtain';
 import {
@@ -33,6 +34,10 @@ export type QuillScrollPanelProps = {
     height: number;
   } | null;
   submittedProgress?: Animated.Value;
+  // 0 = the submitted card is still a card; 1 = fully inked into the
+  // parchment. Drives the card-chrome fade and the ink's own opacity/
+  // transform (see DailyInkedWord) — never layout or color.
+  inkProgress?: Animated.Value;
   // How many of the round's clues are currently revealed. Drives how far the
   // parchment unrolls; a fresh round with no value yet defaults to 1.
   revealedClueCount?: 1 | 2 | 3;
@@ -55,6 +60,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       revealPerfect,
       submittedAnswer,
       submittedProgress,
+      inkProgress,
       revealedClueCount,
       children,
     },
@@ -238,6 +244,13 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
         })
       : 1;
 
+    // The card's leather and gold rim fade out as the ink comes in, so the
+    // two never simply cross-dissolve on top of each other — the chrome is
+    // mostly gone (opacity 0) well before the ink is fully legible.
+    const cardChromeOpacity = inkProgress
+      ? inkProgress.interpolate({ inputRange: [0, 0.45], outputRange: [1, 0] })
+      : 1;
+
     const isRevealing = Boolean(revealFeatherCount) || revealPerfect;
 
     return (
@@ -275,7 +288,16 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
               },
             ]}
           >
-            <DailySubmittedAnswerCard label={submittedAnswer.label} />
+            <Animated.View style={{ opacity: cardChromeOpacity }}>
+              <DailySubmittedAnswerCard label={submittedAnswer.label} />
+            </Animated.View>
+            {inkProgress && (
+              <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                <View style={styles.inkCentre}>
+                  <DailyInkedWord label={submittedAnswer.label} progress={inkProgress} />
+                </View>
+              </View>
+            )}
           </Animated.View>
         )}
 
@@ -403,6 +425,11 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 20,
     elevation: 20,
+  },
+  inkCentre: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   revealClip: {
     position: 'absolute',
