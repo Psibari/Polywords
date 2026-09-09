@@ -1202,3 +1202,10 @@ export const DAILY_POOL: DailyWord[] = [
     tier: 2,
   },
 ];
+
+// Flattened once at module load for the scroll's unroll math, which needs
+// the pool's worst-case clue at each type size. Re-flattening per render
+// would run 180 strings through flatMap on every frame of the unroll.
+export const DAILY_POOL_CLUES: readonly string[] = DAILY_POOL.flatMap(
+  (word) => word.meanings,
+);

@@ -1136,6 +1136,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               }
               submittedAnswer={submittedAnswer}
               submittedProgress={submittedProgress}
+              revealedClueCount={revealedCount}
             >
               {currentRound && !hideCompletedClueUnderlay && (
                 <ClueStage

@@ -1,5 +1,5 @@
-import React, { forwardRef, useState } from 'react';
-import { Animated, Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import {
   dailyCardMaterial,
   dailyScrollMaterial as M,
@@ -7,8 +7,13 @@ import {
 import { DailySubmittedAnswerCard } from '../DailyAnswerCard';
 import DailyPanelFrame from './DailyPanelFrame';
 import DailyRevealCurtain from './DailyRevealCurtain';
-import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
-import { resolveRodMetrics } from '../dailyScrollLayout';
+import {
+  resolveClueStackHeight,
+  resolveClueTextBoxWidth,
+  resolveReservedTextHeight,
+  resolveRodMetrics,
+} from '../dailyScrollLayout';
+import { DAILY_POOL_CLUES } from '../../game/dailyPool';
 
 const SCROLL_ROD = require('../../../assets/images/textures/scroll_rod.png');
 
@@ -30,10 +35,18 @@ export type QuillScrollPanelProps = {
     height: number;
   } | null;
   submittedProgress?: Animated.Value;
+  // How many of the round's clues are currently revealed. Drives how far the
+  // parchment unrolls; a fresh round with no value yet defaults to 1.
+  revealedClueCount?: 1 | 2 | 3;
   children: React.ReactNode;
 };
 
-const VIEW_H = 190;
+// The panel reserves its WORST case and never resizes, so nothing below it
+// on screen ever moves. The parchment unrolls INTO this reservation as
+// clues arrive (see unrollTarget below), which is what turns round 1's
+// empty parchment from "dead space" into "not yet unrolled".
+const CONTENT_TOP_CLEARANCE = 12; // below the top rod
+const CONTENT_BOTTOM_CLEARANCE = 10; // above the bottom rod
 
 const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
   function QuillScrollPanel(
@@ -44,23 +57,11 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       revealPerfect,
       submittedAnswer,
       submittedProgress,
+      revealedClueCount,
       children,
     },
     ref,
   ) {
-    const contentTopPad = useDailyScrollTuning((s) => s.contentTopPad);
-
-    // Round-to-round entrance: the panel grows downward from the fixed top
-    // rod (0 -> full height, clipped by scrollBody's overflow:hidden), like
-    // paper unrolling — replaced a 3D rotateY card-flip that no longer
-    // matched the scroll art (Pete: "it has to roll", 2026-08-22). rollProgress
-    // is still named for the original flip; kept to avoid touching every
-    // caller over a rename.
-    const rollHeight = rollProgress.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, VIEW_H],
-    });
-
     // The rod is now ONE fixture, fixed in place, shared by both the idle
     // panel and the reveal — it used to be drawn separately by each of
     // DailyPanelFrame and DailyRevealCurtain, which could drift out of sync
@@ -78,12 +79,70 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const rodLeft = rodMetrics ? -rodMetrics.overhang : undefined;
     const rodTop = 0;
 
+    const reservedHeight =
+      rodMetrics === null
+        ? 0
+        : rodMetrics.height +
+          CONTENT_TOP_CLEARANCE +
+          resolveReservedTextHeight(scrollBodyWidth) +
+          CONTENT_BOTTOM_CLEARANCE +
+          rodMetrics.height;
+
+    const contentTopPad =
+      rodHeight !== undefined ? rodHeight + CONTENT_TOP_CLEARANCE : CONTENT_TOP_CLEARANCE;
+
+    // resolveClueStackHeight guards width but not clueCount — a NaN count
+    // would propagate NaN into the unroll math. Only 1/2/3 are ever valid,
+    // so anything else (including a genuinely absent prop) defaults to 1.
+    const safeRevealedClueCount: 1 | 2 | 3 =
+      revealedClueCount === 2 || revealedClueCount === 3 ? revealedClueCount : 1;
+
+    // One clue shows a short scroll; each new clue unrolls it further. The
+    // paper's own lower edge and the bottom rod travel down together, which
+    // is what a scroll does. rollProgress still drives the round-entrance
+    // grow (0 -> full reservation); unrollHeight below scales that target.
+    const unrollTarget = (() => {
+      if (rodMetrics === null || scrollBodyWidth <= 0) return 0;
+      const box = resolveClueTextBoxWidth(scrollBodyWidth);
+      const stack = resolveClueStackHeight(safeRevealedClueCount, box, DAILY_POOL_CLUES);
+      return Math.min(
+        reservedHeight,
+        rodMetrics.height +
+          CONTENT_TOP_CLEARANCE +
+          stack +
+          CONTENT_BOTTOM_CLEARANCE +
+          rodMetrics.height,
+      );
+    })();
+
+    // A separate Animated.Value from rollProgress (which stays a pure 0->1
+    // round-entrance driver, untouched here) so that changing unrollTarget
+    // animates smoothly instead of rebuilding an interpolation's captured
+    // outputRange out from under a running animation, which would jump
+    // rather than glide.
+    const unrollHeight = useRef(new Animated.Value(unrollTarget)).current;
+    useEffect(() => {
+      Animated.timing(unrollHeight, {
+        toValue: unrollTarget,
+        duration: 420,
+        easing: Easing.bezier(0.23, 1, 0.32, 1),
+        // height, not transform — native driver is not available here
+        useNativeDriver: false,
+      }).start();
+    }, [unrollTarget, unrollHeight]);
+
+    // The visible paper height composes the round-entrance grow with the
+    // per-clue unroll target: 0 while rollProgress is 0, unrollHeight once
+    // the round has entered.
+    const panelAnimatedHeight = Animated.multiply(rollProgress, unrollHeight);
+
     // Reveal: grows straight down from directly under the ONE shared rod
     // above, instead of a separate curtain sliding in from off-screen — so
     // it reads as the same scroll continuing to unroll, not a second object
     // landing on top (Pete: "it doesn't look right... looks like a separate
     // thing", 2026-08-23).
-    const revealAreaHeight = rodHeight !== undefined ? Math.max(0, VIEW_H - rodHeight) : VIEW_H;
+    const revealAreaHeight =
+      rodHeight !== undefined ? Math.max(0, unrollTarget - rodHeight) : reservedHeight;
     const revealGrowHeight = revealProgress
       ? revealProgress.interpolate({ inputRange: [0, 1], outputRange: [0, revealAreaHeight] })
       : 0;
@@ -110,7 +169,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       ? (scrollBodyWidth - submittedAnswer.width) / 2
       : 0;
     const submittedTargetY = submittedAnswer
-      ? Math.max(rodTop + (rodHeight ?? 0) + 12, VIEW_H - submittedAnswer.height - 16)
+      ? Math.max(rodTop + (rodHeight ?? 0) + 12, reservedHeight - submittedAnswer.height - 16)
       : 0;
     const submittedTranslateX = submittedAnswer && submittedProgress
       ? submittedProgress.interpolate({
@@ -136,15 +195,15 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     return (
       <View
         ref={ref}
-        style={styles.root}
+        style={[styles.root, { height: reservedHeight }]}
         collapsable={false}
         onLayout={handleRootLayout}
       >
-        <Animated.View style={[styles.scrollBody, { height: rollHeight }]}>
+        <Animated.View style={[styles.scrollBody, { height: panelAnimatedHeight }]}>
           {/* The clue stays intact; the reward paper physically covers it. */}
           <Animated.View pointerEvents="none" style={styles.frontContent}>
             <DailyPanelFrame
-              height={VIEW_H}
+              height={reservedHeight}
               state={revealPerfect ? 'perfect' : isRevealing ? 'revealing' : 'idle'}
             >
               <View style={[styles.content, { top: contentTopPad }]}>{children}</View>
@@ -197,7 +256,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
             the descending paper still visually covers it as a reveal grows,
             landing coincident with it at progress 1. */}
         {rodHeight !== undefined && (
-          <Image
+          <Animated.Image
             source={SCROLL_ROD}
             style={[
               styles.permanentBottomRod,
@@ -205,7 +264,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
                 width: rodWidth,
                 height: rodHeight,
                 left: rodLeft,
-                top: revealAreaHeight,
+                top: Animated.subtract(panelAnimatedHeight, rodHeight),
               },
             ]}
             resizeMode="stretch"
@@ -254,7 +313,8 @@ export default QuillScrollPanel;
 
 const styles = StyleSheet.create({
   root: {
-    height: VIEW_H,
+    // height comes from the derived reservedHeight (see render) — it never
+    // changes once the rod is measured, so nothing below the panel moves.
     marginHorizontal: 20,
     marginTop: 8,
     overflow: 'visible',
@@ -263,8 +323,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollBody: {
-    // height comes from the animated rollHeight (see render) — the
-    // round-entrance grow, replacing the old flex:1 + rotateY flip.
+    // height comes from panelAnimatedHeight (see render) — the
+    // round-entrance grow composed with the per-clue unroll target,
+    // replacing the old flex:1 + rotateY flip.
     borderRadius: M.radius,
     // Reverted to 'hidden' 2026-08-23 — the paper-overflow bug that made
     // 'hidden' crop the art is fixed in DailyPanelFrame.tsx/
@@ -282,8 +343,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 18,
     right: 18,
-    // top comes from useDailyScrollTuning's contentTopPad (see render) —
-    // clearance below DailyPanelFrame's top-mounted rod art, dev-tunable.
+    // top comes from contentTopPad (see render) — the measured rod height
+    // plus CONTENT_TOP_CLEARANCE, i.e. clearance below the top-mounted rod.
     bottom: 14,
     justifyContent: 'center',
     alignItems: 'center',
