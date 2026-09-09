@@ -14,11 +14,10 @@ import Svg, {
 } from 'react-native-svg';
 import { dailyRevealMaterial as M } from '../../ui/pwDailyMaterials';
 import { PW } from '../../ui/pwTheme';
-import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
+import ParchmentSurface from './ParchmentSurface';
 
 const FEATHER_WHITE = require('../../../assets/ui/feather-life-filled.png');
 const FEATHER_GOLD = require('../../../assets/ui/feather-gold-reward.png');
-const SCROLL_PAPER = require('../../../assets/images/textures/scroll_paper.png');
 
 // revealFeatherCount (1-4) -> [left group count, right group count]
 const FEATHER_SPLITS: Record<number, readonly [number, number]> = {
@@ -46,33 +45,10 @@ export default function DailyRevealCurtain({ height, revealFeatherCount, revealP
 
   const [curtainWidth, setCurtainWidth] = useState(0);
   const handleLayout = (e: LayoutChangeEvent) => setCurtainWidth(e.nativeEvent.layout.width);
-  const paper = useDailyScrollTuning((s) => s.paper);
-
-  // Unlike DailyPanelFrame's paper, this one does NOT apply paper.offsetY
-  // to its own top position — DailyPanelFrame's offsetY exists to leave
-  // room for a rod sitting inside its own space, but the shared rod now
-  // lives entirely outside this component (see QuillScrollPanel.tsx), so
-  // this region has nothing to leave room for. Applying the same offset
-  // here would leave a permanent empty gap between the rod and where this
-  // paper starts (device-confirmed 2026-08-23). `paper`'s X/width/height
-  // tuning is still shared and applies normally.
-  const paperWidth = curtainWidth > 0 ? curtainWidth * paper.scaleX : undefined;
-  const paperHeight = curtainWidth > 0 ? height * paper.scaleY : undefined;
-  const paperLeft =
-    paperWidth !== undefined ? (curtainWidth - paperWidth) / 2 + paper.offsetX : undefined;
-  const paperTop = 0;
 
   return (
     <View style={[styles.root, { height }]} onLayout={handleLayout}>
-      <Image
-        source={SCROLL_PAPER}
-        style={
-          paperWidth !== undefined
-            ? { position: 'absolute', width: paperWidth, height: paperHeight, left: paperLeft, top: paperTop }
-            : StyleSheet.absoluteFill
-        }
-        resizeMode="stretch"
-      />
+      <ParchmentSurface width={curtainWidth} height={height} />
 
       <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
         <Defs>

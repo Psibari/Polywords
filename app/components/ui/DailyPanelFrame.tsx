@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { dailyScrollMaterial as M, dailyPanelFrameMaterial as F } from '../../ui/pwDailyMaterials';
-import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
+import ParchmentSurface from './ParchmentSurface';
 
 export type DailyPanelFrameState = 'idle' | 'revealing' | 'perfect';
 
@@ -19,38 +19,14 @@ type Props = {
   children: React.ReactNode;
 };
 
-const SCROLL_PAPER = require('../../../assets/images/textures/scroll_paper.png');
-
 export default function DailyPanelFrame({ height: panelHeight, children }: Props) {
   const [panelWidth, setPanelWidth] = useState(0);
   const handleLayout = (e: LayoutChangeEvent) => setPanelWidth(e.nativeEvent.layout.width);
-  const paper = useDailyScrollTuning((s) => s.paper);
-
-  // Top-anchored, and height is measured from the offset position down to
-  // the panel's own bottom edge — NOT the full panel height. Shifting the
-  // paper down while keeping it full-height pushed its bottom edge past the
-  // panel, so overflow:hidden was cropping the torn edge off (device-
-  // confirmed 2026-08-23). Sizing it to what's actually left below the
-  // offset means it always fits by construction, at any offsetY.
-  const paperWidth = panelWidth > 0 ? panelWidth * paper.scaleX : undefined;
-  const paperHeight =
-    panelHeight > 0 ? Math.max(0, panelHeight - paper.offsetY) * paper.scaleY : undefined;
-  const paperLeft =
-    paperWidth !== undefined ? (panelWidth - paperWidth) / 2 + paper.offsetX : undefined;
-  const paperTop = paper.offsetY;
 
   return (
     <View style={styles.outer}>
       <View style={styles.inner} onLayout={handleLayout}>
-        <Image
-          source={SCROLL_PAPER}
-          style={
-            paperWidth !== undefined
-              ? { position: 'absolute', width: paperWidth, height: paperHeight, left: paperLeft, top: paperTop }
-              : StyleSheet.absoluteFill
-          }
-          resizeMode="stretch"
-        />
+        <ParchmentSurface width={panelWidth} height={panelHeight} />
         <LinearGradient
           colors={[F.sheenTop, 'transparent']}
           start={{ x: 0, y: 0 }}
