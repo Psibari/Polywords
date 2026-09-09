@@ -84,9 +84,20 @@ import {
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
+// Full corrected-claim sequence, settle through next-clue-visible:
+// settle 460 -> landed 140 -> ink 350 -> ink hold 400 -> cover 560 ->
+// reward 420 -> reveal 420 = 2750ms, up from 2240ms before this pass.
+// landedHoldMs exists so the card reads as a card — leather, gold rim,
+// sitting on the parchment — before it transforms; dropping it to 0 would
+// start the ink transform before the player's eye registers what landed,
+// which is the entire point of this task. It was cut from 240 to 140
+// because 240 landed + 350 ink + 400 ink-hold (~990ms) left the card just
+// sitting there too long; 140 keeps a recognition beat without the dead
+// air. This total is the top candidate for a trim once this is felt on
+// device.
 const DAILY_SCROLL_TRANSITION = {
   settleMs: 460,
-  landedHoldMs: 240,
+  landedHoldMs: 140,
   inkMs: 350,
   inkHoldMs: 400,
   coverDownMs: 560,
