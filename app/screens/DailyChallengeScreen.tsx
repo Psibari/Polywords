@@ -72,6 +72,7 @@ import DailyAnswerCard, {
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
 import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
+import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
 import QuillScrollPanel from '../components/ui/QuillScrollPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
@@ -260,9 +261,7 @@ function ClueStage({
                 transform: [{ translateY }, { scale }],
               },
             ]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.58}
+            numberOfLines={DAILY_CLUE_TYPE.maxLines}
           >
             {clue.toUpperCase()}
           </Animated.Text>
@@ -1441,16 +1440,17 @@ const styles = StyleSheet.create({
     color: dailyScrollMaterial.clueInk,
     fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
-    fontSize: 27,
-    lineHeight: 33,
+    fontSize: DAILY_CLUE_TYPE.activeSize,
+    lineHeight: DAILY_CLUE_TYPE.activeLineHeight,
     letterSpacing: 0.6,
     textAlign: 'center',
     width: '100%',
+    marginBottom: DAILY_CLUE_TYPE.gap,
   },
   clueTextMemory: {
     color: dailyScrollMaterial.clueInkMemory,
-    fontSize: 23,
-    lineHeight: 28,
+    fontSize: DAILY_CLUE_TYPE.memorySize,
+    lineHeight: DAILY_CLUE_TYPE.memoryLineHeight,
   },
 });
 

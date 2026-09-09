@@ -70,7 +70,7 @@ export const dailyScrollMaterial = {
   panelBg: 'rgba(11,9,32,0.88)',
   panelBorder: 'rgba(245,200,66,0.30)',
   clueInk: '#FFF7D6',
-  clueInkMemory: 'rgba(255,247,214,0.55)',
+  clueInkMemory: 'rgba(255,247,214,0.75)',
   radius: 18,
 } as const;
 
