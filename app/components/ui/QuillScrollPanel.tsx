@@ -8,10 +8,9 @@ import { DailySubmittedAnswerCard } from '../DailyAnswerCard';
 import DailyPanelFrame from './DailyPanelFrame';
 import DailyRevealCurtain from './DailyRevealCurtain';
 import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
+import { resolveRodMetrics } from '../dailyScrollLayout';
 
 const SCROLL_ROD = require('../../../assets/images/textures/scroll_rod.png');
-// Native pixel ratio (1659x165) of scroll_rod.png.
-const ROD_ASPECT_RATIO = 1659 / 165;
 
 export type QuillScrollPanelProps = {
   // 0 = rolled closed, 1 = fully open. Drives clipped layout height.
@@ -50,7 +49,6 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     ref,
   ) {
     const contentTopPad = useDailyScrollTuning((s) => s.contentTopPad);
-    const rod = useDailyScrollTuning((s) => s.rod);
 
     // Round-to-round entrance: the panel grows downward from the fixed top
     // rod (0 -> full height, clipped by scrollBody's overflow:hidden), like
@@ -71,12 +69,14 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const [scrollBodyWidth, setScrollBodyWidth] = useState(0);
     const handleRootLayout = (e: LayoutChangeEvent) =>
       setScrollBodyWidth(e.nativeEvent.layout.width);
-    const rodBaseHeight = scrollBodyWidth > 0 ? scrollBodyWidth / ROD_ASPECT_RATIO : undefined;
-    const rodHeight = rodBaseHeight !== undefined ? rodBaseHeight * rod.scaleY : undefined;
-    const rodWidth = scrollBodyWidth > 0 ? scrollBodyWidth * rod.scaleX : undefined;
-    const rodLeft =
-      rodWidth !== undefined ? (scrollBodyWidth - rodWidth) / 2 + rod.offsetX : undefined;
-    const rodTop = rod.offsetY;
+    // Rod metrics come from the drawing's own aspect (1659x165), never from
+    // scale knobs. The shipped rod.scaleX 1.1 / scaleY 0.9 rendered a 10.055
+    // drawing at 12.29 — a x1.22 stretch that smeared its cast finials.
+    const rodMetrics = scrollBodyWidth > 0 ? resolveRodMetrics(scrollBodyWidth) : null;
+    const rodWidth = rodMetrics?.width;
+    const rodHeight = rodMetrics?.height;
+    const rodLeft = rodMetrics ? -rodMetrics.overhang : undefined;
+    const rodTop = 0;
 
     // Reveal: grows straight down from directly under the ONE shared rod
     // above, instead of a separate curtain sliding in from off-screen — so
@@ -90,15 +90,14 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // The descending paper edge uses the exact same authored rod as the
     // fixed fixture. At progress 0 the two rods coincide; as the reward paper
     // grows, this copy stays attached to its lower edge.
+    // The bottom rod is a permanent fixture, not a reveal-only element. It sits
+    // at the paper's lower edge in every state and rides the reward paper down
+    // when one is growing. Previously it faded in only once revealProgress left
+    // 0, so the object changed identity between normal play and the reward.
     const movingRodTop = revealProgress
       ? Animated.add(revealGrowHeight, rodTop)
-      : rodTop;
-    const movingRodOpacity = revealProgress
-      ? revealProgress.interpolate({
-          inputRange: [0, 0.02, 1],
-          outputRange: [0, 1, 1],
-        })
-      : 0;
+      : rodTop + revealAreaHeight;
+    const movingRodOpacity = 1;
 
     const submittedTargetX = submittedAnswer
       ? (scrollBodyWidth - submittedAnswer.width) / 2
@@ -183,7 +182,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
           </Animated.View>
         )}
 
-        {revealProgress && rodHeight !== undefined && (
+        {rodHeight !== undefined && (
           <Animated.Image
             source={SCROLL_ROD}
             style={[
