@@ -5,11 +5,8 @@ import { FONTS } from '../../constants/fonts';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../../ui/pwDailyMaterials';
 import { heroBookMaterial } from '../../ui/pwMaterials';
 
-export type DailyCardFaceState = 'idle' | 'correct' | 'wrong' | 'disabled';
-
 type Props = {
   label: string;
-  state: DailyCardFaceState;
 };
 
 export default function DailyCardFace({ label }: Props) {

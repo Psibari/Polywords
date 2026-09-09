@@ -4,8 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { dailyPanelFrameMaterial as F } from '../../ui/pwDailyMaterials';
 import ParchmentSurface from './ParchmentSurface';
 
-export type DailyPanelFrameState = 'idle' | 'revealing' | 'perfect';
-
 // Hides the parchment's straight top edge behind the top rod: the paper is
 // rendered PARCHMENT_TUCK points above this panel's own top (see below), so
 // its top edge sits inside the rod's own footprint regardless of any residual
@@ -15,7 +13,6 @@ export type DailyPanelFrameState = 'idle' | 'revealing' | 'perfect';
 const PARCHMENT_TUCK = 10;
 
 type Props = {
-  state: DailyPanelFrameState;
   // Threaded explicitly from QuillScrollPanel's VIEW_H, same reasoning as
   // DailyRevealCurtain's `height` prop: this panel's real height animates
   // (0 -> VIEW_H) during the round-open grow, so self-measuring it via

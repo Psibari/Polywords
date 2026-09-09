@@ -2,36 +2,58 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useDailyScrollTuning } from './dailyScrollTuning';
 
-// DEV-ONLY live tuning control for the Daily scroll art — lets Pete dial in
-// position (X/Y) and size for both the rod and the paper background,
-// directly on-device, instead of a code-edit-reload cycle per nudge. One
-// knob set for each art piece, shared across both places it renders (the
-// idle DailyPanelFrame mount and the DailyRevealCurtain reveal). Remove once
-// values are locked in and baked back into the real constants.
+// DEV-ONLY live tuning control for the Daily scroll — lets Pete dial in
+// scroll height, the header block, card height, and a rod nudge directly
+// on-device instead of a code-edit-reload cycle per nudge. Remove once
+// values are locked in and baked back into the real constants (see the
+// contract comment atop dailyScrollTuning.ts).
 export default function DailyScrollTuningPanel() {
-  const rod = useDailyScrollTuning((s) => s.rod);
-  const paper = useDailyScrollTuning((s) => s.paper);
-  const contentTopPad = useDailyScrollTuning((s) => s.contentTopPad);
-  const setRod = useDailyScrollTuning((s) => s.setRod);
-  const setPaper = useDailyScrollTuning((s) => s.setPaper);
-  const setContentTopPad = useDailyScrollTuning((s) => s.setContentTopPad);
+  const scrollHeight = useDailyScrollTuning((s) => s.scrollHeight);
+  const headerVisible = useDailyScrollTuning((s) => s.headerVisible);
+  const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
+  const rodOffsetY = useDailyScrollTuning((s) => s.rodOffsetY);
+  const setScrollHeight = useDailyScrollTuning((s) => s.setScrollHeight);
+  const setHeaderVisible = useDailyScrollTuning((s) => s.setHeaderVisible);
+  const setCardHeight = useDailyScrollTuning((s) => s.setCardHeight);
+  const setRodOffsetY = useDailyScrollTuning((s) => s.setRodOffsetY);
 
   return (
     <View style={styles.root} pointerEvents="box-none">
+      <Text style={styles.section}>SCROLL</Text>
+      <Row
+        label="HEIGHT"
+        value={`${Math.round(scrollHeight)}`}
+        onDec={() => setScrollHeight(scrollHeight - 8)}
+        onInc={() => setScrollHeight(scrollHeight + 8)}
+      />
+
+      <Text style={styles.section}>HEADER</Text>
+      <View style={styles.row}>
+        <Text style={styles.label}>SHOW</Text>
+        <Pressable
+          onPress={() => setHeaderVisible(!headerVisible)}
+          style={styles.btn}
+          hitSlop={8}
+        >
+          <Text style={styles.btnText}>{headerVisible ? 'ON' : 'OFF'}</Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.section}>CARD</Text>
+      <Row
+        label="HEIGHT"
+        value={`${Math.round(cardHeight)}`}
+        onDec={() => setCardHeight(cardHeight - 4)}
+        onInc={() => setCardHeight(cardHeight + 4)}
+      />
+
       <Text style={styles.section}>ROD</Text>
-      <Row label="X" value={`${Math.round(rod.offsetX)}`} onDec={() => setRod({ offsetX: rod.offsetX - 15 })} onInc={() => setRod({ offsetX: rod.offsetX + 15 })} />
-      <Row label="Y" value={`${Math.round(rod.offsetY)}`} onDec={() => setRod({ offsetY: rod.offsetY - 15 })} onInc={() => setRod({ offsetY: rod.offsetY + 15 })} />
-      <Row label="LEN" value={`${rod.scaleX.toFixed(2)}x`} onDec={() => setRod({ scaleX: rod.scaleX - 0.1 })} onInc={() => setRod({ scaleX: rod.scaleX + 0.1 })} />
-      <Row label="THICK" value={`${rod.scaleY.toFixed(2)}x`} onDec={() => setRod({ scaleY: rod.scaleY - 0.1 })} onInc={() => setRod({ scaleY: rod.scaleY + 0.1 })} />
-
-      <Text style={styles.section}>PAPER</Text>
-      <Row label="X" value={`${Math.round(paper.offsetX)}`} onDec={() => setPaper({ offsetX: paper.offsetX - 15 })} onInc={() => setPaper({ offsetX: paper.offsetX + 15 })} />
-      <Row label="Y" value={`${Math.round(paper.offsetY)}`} onDec={() => setPaper({ offsetY: paper.offsetY - 15 })} onInc={() => setPaper({ offsetY: paper.offsetY + 15 })} />
-      <Row label="LEN" value={`${paper.scaleX.toFixed(2)}x`} onDec={() => setPaper({ scaleX: paper.scaleX - 0.1 })} onInc={() => setPaper({ scaleX: paper.scaleX + 0.1 })} />
-      <Row label="THICK" value={`${paper.scaleY.toFixed(2)}x`} onDec={() => setPaper({ scaleY: paper.scaleY - 0.1 })} onInc={() => setPaper({ scaleY: paper.scaleY + 0.1 })} />
-
-      <Text style={styles.section}>TEXT</Text>
-      <Row label="GAP" value={`${Math.round(contentTopPad)}`} onDec={() => setContentTopPad(contentTopPad - 2)} onInc={() => setContentTopPad(contentTopPad + 2)} />
+      <Row
+        label="Y"
+        value={`${Math.round(rodOffsetY)}`}
+        onDec={() => setRodOffsetY(rodOffsetY - 2)}
+        onInc={() => setRodOffsetY(rodOffsetY + 2)}
+      />
     </View>
   );
 }
@@ -86,19 +108,20 @@ const styles = StyleSheet.create({
   label: {
     color: '#00FF88',
     fontSize: 10,
-    width: 34,
+    width: 44,
   },
   btn: {
     backgroundColor: '#333',
-    width: 20,
+    minWidth: 20,
     height: 20,
+    paddingHorizontal: 4,
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
   btnText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 14,
   },
   value: {

@@ -47,9 +47,6 @@ export const dailyCardMaterial = {
   disabledOpacity: 0.42,
   outerRadius: 20,
   innerRadius: 12,
-  minHeight: 72,
-  maxHeight: 84,
-  pressScale: 0.98,
   liftScale: 1.02,
   frameWidth: 3,
   shadowOpacity: 0.34,
@@ -64,7 +61,9 @@ export const dailyCardMaterial = {
   },
 } as const;
 
-// Flat clue panel — dark card matching the app shell, no parchment/quill art.
+// Parchment scroll panel — quill-and-rod clue surface drawn by
+// QuillScrollPanel/ParchmentSurface from real art, not a flat card. These
+// tokens are the remaining ink/rule colors layered over that art.
 export const dailyScrollMaterial = {
   goldTrim: heroBookMaterial.goldTrim,          // #F5C842
   panelBg: 'rgba(11,9,32,0.88)',
@@ -85,11 +84,6 @@ export const dailyCardFaceMaterial = {
 } as const;
 
 export const dailyPanelFrameMaterial = {
-  border: 'rgba(245,200,66,0.30)',
-  borderRevealing: '#FFFFFF',
-  borderPerfect: PW.color.gold,
-  insetTrim: 'rgba(245,200,66,0.16)',
-  pin: PW.color.gold,
   pinInner: PW.color.amber,
   sheenTop: 'rgba(255,255,255,0.06)',
 } as const;
@@ -164,7 +158,7 @@ export const dailyHudMaterial = {
 } as const;
 
 export const dailyChromeMaterial = {
-  actionLabel: 'rgba(255,255,255,0.45)',
+  actionLabel: 'rgba(255,255,255,0.78)',
   cardBoardBg: 'rgba(10,7,26,0.45)',
   cardBoardBorder: 'rgba(245,200,66,0.14)',
   featherLabel: PW.color.gold,

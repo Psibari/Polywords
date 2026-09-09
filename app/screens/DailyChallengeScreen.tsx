@@ -73,6 +73,7 @@ import DailyAnswerCard, {
 } from '../components/DailyAnswerCard';
 import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
 import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
+import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
 import QuillScrollPanel from '../components/ui/QuillScrollPanel';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
@@ -541,6 +542,11 @@ type Props = { navigation: any };
 
 export default function DailyChallengeScreen({ navigation }: Props) {
   const reduceMotion = useReducedMotionPreference();
+  // DEV-ONLY (app/dev/dailyScrollTuning.ts) — the DAILY CHALLENGE header
+  // restates DAILY #<n> in the HUD directly above it, and cutting it returns
+  // ~45pt to the scroll. Kept behind a toggle rather than deleted so Pete can
+  // compare both on device; the loser goes when the values are hard-coded.
+  const headerVisible = useDailyScrollTuning((s) => s.headerVisible);
   const dailySession = useGameStore((s) => s.dailySession);
   const dailyResult = useGameStore((s) => s.dailyResult);
   const dailyLastClaimResult = useGameStore((s) => s.dailyLastClaimResult);
@@ -1238,10 +1244,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             chances={displayedDailySession.chancesRemaining}
           />
 
-          <View style={styles.clueHeaderRow}>
-            <Text style={styles.clueHeaderLabel}>{DAILY_CLUE_TITLE}</Text>
-            <Text style={styles.clueHeaderRule}>{DAILY_CLUE_RULE}</Text>
-          </View>
+          {headerVisible && (
+            <View style={styles.clueHeaderRow}>
+              <Text style={styles.clueHeaderLabel}>{DAILY_CLUE_TITLE}</Text>
+              <Text style={styles.clueHeaderRule}>{DAILY_CLUE_RULE}</Text>
+            </View>
+          )}
 
           <Animated.View
             onLayout={measureClueTarget}

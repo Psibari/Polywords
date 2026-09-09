@@ -8,11 +8,11 @@ import DailyRevealCurtain from './DailyRevealCurtain';
 import {
   resolveClueStackHeight,
   resolveClueTextBoxWidth,
-  resolveReservedTextHeight,
   resolveRodMetrics,
 } from '../dailyScrollLayout';
 import { DAILY_POOL_CLUES } from '../../game/dailyPool';
 import { useReducedMotionPreference } from '../../hooks/usePollyAmbientMotion';
+import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
 
 const SCROLL_ROD = require('../../../assets/images/textures/scroll_rod.png');
 
@@ -22,8 +22,8 @@ export type QuillScrollPanelProps = {
   // 0 = clue showing, 1 = reward paper fully covers clue + submitted card.
   revealProgress?: Animated.Value;
   // Daily's day-progress feathers: 1-4 correct claims today shows that many
-  // white feathers; the 5th (revealPerfect) shows a single gold feather and
-  // gilds the card border for the rest of that reveal.
+  // white feathers; the 5th (revealPerfect) shows a single gold feather
+  // instead.
   revealFeatherCount?: number;
   revealPerfect?: boolean;
   submittedAnswer?: {
@@ -77,6 +77,13 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
   ) {
     const reduceMotion = useReducedMotionPreference();
 
+    // DEV-ONLY tuning (app/dev/dailyScrollTuning.ts) — see that file's
+    // contract comment. scrollHeight overrides the derived reservedHeight
+    // below; rodOffsetY nudges the fixed top rod and the permanent bottom
+    // rod together, never the reward paper's own moving rod.
+    const scrollHeightOverride = useDailyScrollTuning((s) => s.scrollHeight);
+    const rodOffsetY = useDailyScrollTuning((s) => s.rodOffsetY);
+
     // The rod is now ONE fixture, fixed in place, shared by both the idle
     // panel and the reveal — it used to be drawn separately by each of
     // DailyPanelFrame and DailyRevealCurtain, which could drift out of sync
@@ -92,16 +99,17 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const rodWidth = rodMetrics?.width;
     const rodHeight = rodMetrics?.height;
     const rodLeft = rodMetrics ? -rodMetrics.overhang : undefined;
+    // Base position for the fixed top rod and the reveal paper's own moving
+    // rod, which starts its descent from here. rodOffsetY is applied
+    // separately, below, only to the fixed top rod and the permanent bottom
+    // rod — never to this value, so the dev nudge cannot touch the moving
+    // rod's independent journey.
     const rodTop = 0;
 
-    const reservedHeight =
-      rodMetrics === null
-        ? 0
-        : rodMetrics.height +
-          CONTENT_TOP_CLEARANCE +
-          resolveReservedTextHeight(scrollBodyWidth) +
-          CONTENT_BOTTOM_CLEARANCE +
-          rodMetrics.height;
+    // scrollHeight overrides the derived worst-case reservation for Pete's
+    // on-device pass. Still gated on rodMetrics: nothing can reserve space
+    // before the root has a measured width.
+    const reservedHeight = rodMetrics === null ? 0 : scrollHeightOverride;
 
     const contentTopPad =
       rodHeight !== undefined ? rodHeight + CONTENT_TOP_CLEARANCE : CONTENT_TOP_CLEARANCE;
@@ -270,8 +278,6 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       ? inkProgress.interpolate({ inputRange: [0, 0.45], outputRange: [1, 0] })
       : 1;
 
-    const isRevealing = Boolean(revealFeatherCount) || revealPerfect;
-
     return (
       <View
         ref={ref}
@@ -282,10 +288,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
         <Animated.View style={[styles.scrollBody, { height: panelAnimatedHeight }]}>
           {/* The clue stays intact; the reward paper physically covers it. */}
           <Animated.View pointerEvents="none" style={styles.frontContent}>
-            <DailyPanelFrame
-              height={reservedHeight}
-              state={revealPerfect ? 'perfect' : isRevealing ? 'revealing' : 'idle'}
-            >
+            <DailyPanelFrame height={reservedHeight}>
               <View
                 style={[
                   styles.content,
@@ -351,7 +354,10 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
             a scroll (rod top and bottom) rather than a torn page in normal
             play. It sits below the reward paper's revealClip (zIndex 30) so
             the descending paper still visually covers it as a reveal grows,
-            landing coincident with it at progress 1. */}
+            landing coincident with it at progress 1. rodOffsetY (DEV-ONLY,
+            dailyScrollTuning.ts) nudges this together with the fixed top
+            rod below — the pair must never drift apart — and never touches
+            the reward paper's own moving rod above. */}
         {rodHeight !== undefined && (
           <Animated.Image
             source={SCROLL_ROD}
@@ -361,7 +367,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
                 width: rodWidth,
                 height: rodHeight,
                 left: rodLeft,
-                top: Animated.subtract(panelAnimatedHeight, rodHeight),
+                top: Animated.add(Animated.subtract(panelAnimatedHeight, rodHeight), rodOffsetY),
               },
             ]}
             resizeMode="stretch"
@@ -385,7 +391,9 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
           />
         )}
 
-        {/* One shared rod stays fixed above every moving layer. */}
+        {/* One shared rod stays fixed above every moving layer. rodOffsetY
+            (DEV-ONLY, dailyScrollTuning.ts) nudges this together with the
+            permanent bottom rod above — see that comment. */}
         {rodHeight !== undefined && (
             <Image
               source={SCROLL_ROD}
@@ -395,7 +403,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
                   width: rodWidth,
                   height: rodHeight,
                   left: rodLeft,
-                  top: rodTop,
+                  top: rodTop + rodOffsetY,
                 },
               ]}
               resizeMode="stretch"

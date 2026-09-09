@@ -22,6 +22,7 @@ import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials
 import DailyCardFace from './ui/DailyCardFace';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -73,6 +74,12 @@ export default function DailyAnswerCard({
   roundKey = 0,
 }: Props) {
   const reduceMotion = useReducedMotionPreference();
+  // DEV-ONLY (app/dev/dailyScrollTuning.ts) — overrides entryShell's default
+  // 64. The flying/landing card in QuillScrollPanel is sized from this same
+  // shell's own measureInWindow() result (see publishClaim below and
+  // createDailySubmittedAnswerLayout), so it tracks this override
+  // automatically rather than needing a separate wire-up.
+  const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
   const entryOpacity = useRef(new RNAnimated.Value(0)).current;
@@ -376,6 +383,7 @@ export default function DailyAnswerCard({
       collapsable={false}
       style={[
         styles.entryShell,
+        { height: cardHeight },
         (activelyHeld || state === 'correct') && styles.entryShellClaiming,
         (!activelyHeld && state === 'wrong') && styles.entryShellFailing,
         {
@@ -407,7 +415,7 @@ export default function DailyAnswerCard({
           style={styles.rim}
         >
           <View style={styles.face}>
-            <DailyCardFace label={label} state={state} />
+            <DailyCardFace label={label} />
             <Animated.View
               pointerEvents="none"
               style={[styles.gripGlow, gripGlowStyle]}
@@ -438,7 +446,7 @@ export function DailySubmittedAnswerCard({ label }: { label: string }) {
         style={styles.rim}
       >
         <View style={styles.face}>
-          <DailyCardFace label={label} state="correct" />
+          <DailyCardFace label={label} />
           <View style={styles.correctOverlay} />
         </View>
       </LinearGradient>
@@ -448,8 +456,9 @@ export function DailySubmittedAnswerCard({ label }: { label: string }) {
 
 const styles = StyleSheet.create({
   entryShell: {
+    // height comes from cardHeight (see render) — DEV-ONLY tuning default is
+    // 64, matching this shell's old hardcoded value.
     width: '47%',
-    height: 64,
     overflow: 'visible',
   },
   entryShellClaiming: {
