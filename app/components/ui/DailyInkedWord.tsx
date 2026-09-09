@@ -20,22 +20,27 @@ type Props = {
 // Every driven property here is opacity or transform, so this runs on the
 // native driver. It must not be given anything layout- or color-animated.
 export default function DailyInkedWord({ label, progress }: Props) {
-  const opacity = progress.interpolate({
-    inputRange: [0, 0.25, 1],
-    outputRange: [0, 0, 1],
-  });
+  // Deliberately NOT animated. This is the one thing on screen that must not
+  // change: it is fully opaque from the moment the card lifts, in the
+  // document's face at the document's size, and the card's chrome simply
+  // goes away from around it. The previous build cross-faded this against
+  // the card's OWN label — a different typeface at a different size in the
+  // same place — which is what read as two pieces of text on top of each
+  // other. There is now exactly one word node for the whole beat.
+  //
+  // Only a settle remains: a 2% relax as the chrome releases, so the word
+  // reads as setting into the paper rather than being revealed on top of
+  // it. The old 1.12 scale-up and -1.5deg tilt are gone — a word that
+  // changes size or angle mid-transform breaks the continuity the whole
+  // effect depends on.
   const scale = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 1.12],
-  });
-  const rotate = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '-1.5deg'],
+    outputRange: [1.02, 1],
   });
 
   return (
     <Animated.Text
-      style={[styles.ink, { opacity, transform: [{ scale }, { rotate }] }]}
+      style={[styles.ink, { transform: [{ scale }] }]}
       numberOfLines={1}
       allowFontScaling={false}
     >

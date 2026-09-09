@@ -1,18 +1,12 @@
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import React, { forwardRef, useState } from 'react';
+import { Animated, Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { dailyCardMaterial } from '../../ui/pwDailyMaterials';
 import { DailySubmittedAnswerCard } from '../DailyAnswerCard';
 import DailyInkedWord from './DailyInkedWord';
 import DailyPanelFrame, { PARCHMENT_TUCK } from './DailyPanelFrame';
 import DailyRevealCurtain from './DailyRevealCurtain';
-import {
-  resolveClueStackHeight,
-  resolveClueTextBoxWidth,
-  resolveReservedTextHeight,
-  resolveRodMetrics,
-} from '../dailyScrollLayout';
+import { resolveReservedTextHeight, resolveRodMetrics } from '../dailyScrollLayout';
 import type { DailyClaimPresentationPhase } from '../../game/dailyClaimPresentation';
-import { DAILY_POOL_CLUES } from '../../game/dailyPool';
 import { useReducedMotionPreference } from '../../hooks/usePollyAmbientMotion';
 import { useDailyScrollTuning } from '../../dev/dailyScrollTuning';
 
@@ -164,102 +158,27 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
         ? rodHeight + CONTENT_BOTTOM_CLEARANCE
         : CONTENT_BOTTOM_CLEARANCE;
 
-    // resolveClueStackHeight guards width but not clueCount — a NaN count
-    // would propagate NaN into the unroll math. Only 1/2/3 are ever valid,
-    // so anything else (including a genuinely absent prop) defaults to 1.
-    const safeRevealedClueCount: 1 | 2 | 3 =
-      revealedClueCount === 2 || revealedClueCount === 3 ? revealedClueCount : 1;
-
-    // One clue shows a short scroll; each new clue unrolls it further. The
-    // paper's own lower edge and the bottom rod travel down together, which
-    // is what a scroll does. rollProgress still drives the round-entrance
-    // grow (0 -> full reservation); unrollHeight below scales that target.
+    // ONE HEIGHT, ALL ROUND. The scroll does not unroll per clue and does
+    // not grow on a claim.
     //
-    // While a claim presentation is running the parchment opens to its FULL
-    // reserved height regardless of how many clues are showing. Below full
-    // height, one clue's worth of unroll leaves too little room for an
-    // active clue plus the inked card to land without overlapping — see the
-    // Task 6 fix-round-1 report. Thematically this reads as the document
-    // opening up to take the word.
+    // The per-clue unroll was a flourish, and pinning it to full height on
+    // a claim was how the inked word got room to land clear of the clue.
+    // Together they meant a swipe moved THREE things at once: the card
+    // flying, the parchment growing under it, and the clue stack clearing.
+    // The card was chasing a target that was itself still moving, and the
+    // bottom rod slid past it for no reason the eye could connect to the
+    // swipe — device-reported as "the whole sequence is glitchy". Pete
+    // chose a still scroll (option B) so that when you claim, the ONLY
+    // things moving are the card pressing in and the word setting.
     //
-    // The pin lasts the WHOLE presentation ('settling' through 'revealing'),
-    // not just while submittedAnswer is non-null. submittedAnswer is cleared
-    // at the top of 'reward', and the same batch flips the displayed session
-    // to the next round — dropping revealedCount to 1 — so keying off it
-    // shrank the reservation mid-reward. It releases at 'idle', once the
-    // reward paper has finished rolling back up.
-    const claimPresentationActive = claimPhase !== undefined
-      ? claimPhase !== 'idle'
-      : submittedAnswer != null;
-    const unrollTarget = (() => {
-      if (rodMetrics === null || scrollBodyWidth <= 0) return 0;
-      if (claimPresentationActive) return reservedHeight;
-      const box = resolveClueTextBoxWidth(scrollBodyWidth);
-      const stack = resolveClueStackHeight(safeRevealedClueCount, box, DAILY_POOL_CLUES);
-      return Math.min(
-        reservedHeight,
-        rodMetrics.height +
-          CONTENT_TOP_CLEARANCE +
-          stack +
-          CONTENT_BOTTOM_CLEARANCE +
-          rodMetrics.height,
-      );
-    })();
-
-    // A separate Animated.Value from rollProgress (which stays a pure 0->1
-    // round-entrance driver, untouched here) so that changing unrollTarget
-    // animates smoothly instead of rebuilding an interpolation's captured
-    // outputRange out from under a running animation, which would jump
-    // rather than glide. Initialised to 0, not unrollTarget: the effect
-    // below drives it to the first real target once one exists, so this
-    // doesn't construct-and-discard a fresh Animated.Value on every render.
-    const unrollHeight = useRef(new Animated.Value(0)).current;
-    // Plain mirror of unrollHeight's last requested target. There is no
-    // safe synchronous read of an Animated.Value (no __getValue, and a
-    // listener is the wrong tool for a one-off comparison), so this ref is
-    // the source of truth for "did the target grow or shrink".
-    const unrollHeightTargetRef = useRef(0);
-    // Whether the previous render's target was the claim-presentation pin,
-    // so the effect can tell "the pin was just released" from "a fresh
-    // round reset the clue count".
-    const wasPinnedRef = useRef(false);
-    useEffect(() => {
-      const grew = unrollTarget > unrollHeightTargetRef.current;
-      const releasingPin = wasPinnedRef.current && !claimPresentationActive;
-      unrollHeightTargetRef.current = unrollTarget;
-      wasPinnedRef.current = claimPresentationActive;
-      if (reduceMotion !== false || (!grew && !releasingPin)) {
-        // A round boundary resets the clue count from 3 back to 1 — a
-        // shrink. Animating that down raced the entrance (rollProgress
-        // 0->1 over 320ms) easing up toward the OLD, larger unrollHeight,
-        // so the panel overshot to the previous round's height and then
-        // visibly shrank to the new one. The entrance owns that moment, so
-        // a shrink snaps instead. Reduce Motion always snaps too, same as
-        // every other animation in this feature.
-        //
-        // The pin's own release is the one shrink that does NOT snap. On
-        // that path the round already changed back during 'reward', and the
-        // ROUND CHANGE effect in DailyChallengeScreen skips the entrance
-        // whenever a physical transition is active — so rollProgress is
-        // still 1 and no entrance is running to own the moment or hide a
-        // snap. The scroll rolling back up to its one-clue length is what
-        // should be seen there instead.
-        unrollHeight.setValue(unrollTarget);
-        return;
-      }
-      Animated.timing(unrollHeight, {
-        toValue: unrollTarget,
-        duration: 420,
-        easing: Easing.bezier(0.23, 1, 0.32, 1),
-        // height, not transform — native driver is not available here
-        useNativeDriver: false,
-      }).start();
-    }, [unrollTarget, unrollHeight, reduceMotion, claimPresentationActive]);
-
-    // The visible paper height composes the round-entrance grow with the
-    // per-clue unroll target: 0 while rollProgress is 0, unrollHeight once
-    // the round has entered.
-    const panelAnimatedHeight = Animated.multiply(rollProgress, unrollHeight);
+    // With the height constant there is nothing left for a separate
+    // Animated.Value to track: the round entrance is rollProgress alone,
+    // multiplied straight into the reservation. The old unrollHeight value,
+    // its grow/shrink target ref, the pin-release ref and their effect are
+    // all gone with it — as is the whole class of bugs they carried (the
+    // round-boundary overshoot, the mid-reward snap, the rebuilt
+    // interpolation outputRange).
+    const panelAnimatedHeight = Animated.multiply(rollProgress, reservedHeight);
 
     // Reveal: grows straight down from directly under the ONE shared rod
     // above, instead of a separate curtain sliding in from off-screen — so
@@ -272,7 +191,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // derive from unrollTarget — see revealGrowHeight below, which tracks
     // the same live unrollHeight the panel itself uses instead.
     const revealAreaHeight =
-      rodHeight !== undefined ? Math.max(0, unrollTarget - rodHeight) : reservedHeight;
+      rodHeight !== undefined ? Math.max(0, reservedHeight - rodHeight) : reservedHeight;
     // Tracks the live unrollHeight (not the plain-number unrollTarget/
     // revealAreaHeight above) via Animated.multiply/subtract rather than an
     // interpolation whose outputRange would need rebuilding — and silently
@@ -281,7 +200,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // same animated value, so the two rods cannot land at different
     // heights in the same window.
     const revealGrowHeight = revealProgress
-      ? Animated.multiply(revealProgress, Animated.subtract(unrollHeight, rodHeight ?? 0))
+      ? Animated.multiply(revealProgress, Math.max(0, reservedHeight - (rodHeight ?? 0)))
       : 0;
     // This is the reward paper's OWN descending edge — a separate instance
     // from the permanent bottom rod rendered below. Do not try to merge them:
@@ -321,7 +240,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const submittedTargetY = submittedAnswer && rodMetrics
       ? Math.max(
           rodMetrics.height + CONTENT_TOP_CLEARANCE,
-          unrollTarget - rodMetrics.height - CONTENT_BOTTOM_CLEARANCE - submittedAnswer.height,
+          reservedHeight - rodMetrics.height - CONTENT_BOTTOM_CLEARANCE - submittedAnswer.height,
         )
       : 0;
     const submittedTranslateX = submittedAnswer && submittedProgress
@@ -343,11 +262,17 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
         })
       : 1;
 
-    // The card's leather and gold rim fade out as the ink comes in, so the
-    // two never simply cross-dissolve on top of each other — the chrome is
-    // mostly gone (opacity 0) well before the ink is fully legible.
-    const cardChromeOpacity = inkProgress
-      ? inkProgress.interpolate({ inputRange: [0, 0.45], outputRange: [1, 0] })
+    // The chrome releases the word from the OUTSIDE IN: the gold rim goes
+    // first and fastest, the leather face follows. The word itself never
+    // fades at all — it is one node, already in the document's hand, and
+    // the card simply stops existing around it. That ordering is what reads
+    // as the card bleeding into the parchment rather than one thing being
+    // swapped for another.
+    const cardRimOpacity = inkProgress
+      ? inkProgress.interpolate({ inputRange: [0, 0.35], outputRange: [1, 0] })
+      : 1;
+    const cardFaceOpacity = inkProgress
+      ? inkProgress.interpolate({ inputRange: [0, 0.25, 0.7], outputRange: [1, 0.9, 0] })
       : 1;
 
     return (
@@ -390,15 +315,28 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
               },
             ]}
           >
-            {/* absoluteFill, not a bare wrapper: DailySubmittedAnswerCard's
-                shell is width/height '100%', which against an indefinite
-                owner height content-sized to roughly 37pt inside the 64pt
-                box. The ink below centres in the FULL box, so the two halves
-                of the crossfade sat ~13pt apart and the word stepped as the
-                chrome faded. Both layers must occupy the identical
-                rectangle. */}
-            <Animated.View style={[StyleSheet.absoluteFill, { opacity: cardChromeOpacity }]}>
-              <DailySubmittedAnswerCard label={submittedAnswer.label} />
+            {/* Two layers, ONE word.
+                The chrome layer carries the rim and the leather face but NOT
+                the label whenever the ink layer is present (showLabel), so
+                there is never a second copy of the text. The word lives
+                only in DailyInkedWord, at full opacity for the whole beat,
+                in the clues' own face and ink — so as the chrome dissolves
+                the eye tracks a single continuous object changing state
+                rather than watching one thing swap for another.
+                Both layers are absoluteFill so they share the identical
+                rectangle: the card's shell is width/height '100%' and would
+                otherwise content-size to ~37pt inside the 64pt box while
+                the word centred in the full box. */}
+            <Animated.View
+              style={[StyleSheet.absoluteFill, { opacity: cardFaceOpacity }]}
+              pointerEvents="none"
+            >
+              <Animated.View style={[StyleSheet.absoluteFill, { opacity: cardRimOpacity }]}>
+                <DailySubmittedAnswerCard
+                  label={submittedAnswer.label}
+                  showLabel={!inkProgress}
+                />
+              </Animated.View>
             </Animated.View>
             {inkProgress && (
               <View style={StyleSheet.absoluteFill} pointerEvents="none">

@@ -436,7 +436,17 @@ export default function DailyAnswerCard({
   );
 }
 
-export function DailySubmittedAnswerCard({ label }: { label: string }) {
+// The claimed card in flight, and the chrome that dissolves off it once it
+// lands. `showLabel` is false wherever DailyInkedWord is rendering the word
+// instead: the word must exist as ONE node for the whole beat, so the card
+// contributes only its rim and face and never a second copy of the text.
+export function DailySubmittedAnswerCard({
+  label,
+  showLabel = true,
+}: {
+  label: string;
+  showLabel?: boolean;
+}) {
   return (
     <View style={[styles.shell, styles.shellCorrect]} pointerEvents="none">
       <LinearGradient
@@ -446,7 +456,7 @@ export function DailySubmittedAnswerCard({ label }: { label: string }) {
         style={styles.rim}
       >
         <View style={styles.face}>
-          <DailyCardFace label={label} />
+          {showLabel && <DailyCardFace label={label} />}
           <View style={styles.correctOverlay} />
         </View>
       </LinearGradient>
