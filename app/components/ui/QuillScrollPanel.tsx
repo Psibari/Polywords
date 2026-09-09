@@ -14,6 +14,7 @@ import {
   resolveRodMetrics,
 } from '../dailyScrollLayout';
 import { DAILY_POOL_CLUES } from '../../game/dailyPool';
+import { useReducedMotionPreference } from '../../hooks/usePollyAmbientMotion';
 
 const SCROLL_ROD = require('../../../assets/images/textures/scroll_rod.png');
 
@@ -62,6 +63,8 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     },
     ref,
   ) {
+    const reduceMotion = useReducedMotionPreference();
+
     // The rod is now ONE fixture, fixed in place, shared by both the idle
     // panel and the reveal — it used to be drawn separately by each of
     // DailyPanelFrame and DailyRevealCurtain, which could drift out of sync
@@ -119,9 +122,29 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // round-entrance driver, untouched here) so that changing unrollTarget
     // animates smoothly instead of rebuilding an interpolation's captured
     // outputRange out from under a running animation, which would jump
-    // rather than glide.
-    const unrollHeight = useRef(new Animated.Value(unrollTarget)).current;
+    // rather than glide. Initialised to 0, not unrollTarget: the effect
+    // below drives it to the first real target once one exists, so this
+    // doesn't construct-and-discard a fresh Animated.Value on every render.
+    const unrollHeight = useRef(new Animated.Value(0)).current;
+    // Plain mirror of unrollHeight's last requested target. There is no
+    // safe synchronous read of an Animated.Value (no __getValue, and a
+    // listener is the wrong tool for a one-off comparison), so this ref is
+    // the source of truth for "did the target grow or shrink".
+    const unrollHeightTargetRef = useRef(0);
     useEffect(() => {
+      const grew = unrollTarget > unrollHeightTargetRef.current;
+      unrollHeightTargetRef.current = unrollTarget;
+      if (reduceMotion !== false || !grew) {
+        // A round boundary resets the clue count from 3 back to 1 — a
+        // shrink. Animating that down raced the entrance (rollProgress
+        // 0->1 over 320ms) easing up toward the OLD, larger unrollHeight,
+        // so the panel overshot to the previous round's height and then
+        // visibly shrank to the new one. The entrance owns that moment, so
+        // a shrink snaps instead. Reduce Motion always snaps too, same as
+        // every other animation in this feature.
+        unrollHeight.setValue(unrollTarget);
+        return;
+      }
       Animated.timing(unrollHeight, {
         toValue: unrollTarget,
         duration: 420,
@@ -129,7 +152,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
         // height, not transform — native driver is not available here
         useNativeDriver: false,
       }).start();
-    }, [unrollTarget, unrollHeight]);
+    }, [unrollTarget, unrollHeight, reduceMotion]);
 
     // The visible paper height composes the round-entrance grow with the
     // per-clue unroll target: 0 while rollProgress is 0, unrollHeight once
@@ -141,10 +164,22 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // it reads as the same scroll continuing to unroll, not a second object
     // landing on top (Pete: "it doesn't look right... looks like a separate
     // thing", 2026-08-23).
+    // Plain number, used only where a plain number is genuinely required
+    // (DailyRevealCurtain's height prop draws its background art at this
+    // size). Nothing that feeds an Animated interpolation's outputRange may
+    // derive from unrollTarget — see revealGrowHeight below, which tracks
+    // the same live unrollHeight the panel itself uses instead.
     const revealAreaHeight =
       rodHeight !== undefined ? Math.max(0, unrollTarget - rodHeight) : reservedHeight;
+    // Tracks the live unrollHeight (not the plain-number unrollTarget/
+    // revealAreaHeight above) via Animated.multiply/subtract rather than an
+    // interpolation whose outputRange would need rebuilding — and silently
+    // jump — every time unrollTarget changes. This also makes the moving
+    // reward-paper edge and the permanent bottom rod below track the exact
+    // same animated value, so the two rods cannot land at different
+    // heights in the same window.
     const revealGrowHeight = revealProgress
-      ? revealProgress.interpolate({ inputRange: [0, 1], outputRange: [0, revealAreaHeight] })
+      ? Animated.multiply(revealProgress, Animated.subtract(unrollHeight, rodHeight ?? 0))
       : 0;
     // This is the reward paper's OWN descending edge — a separate instance
     // from the permanent bottom rod rendered below. Do not try to merge them:
