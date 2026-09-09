@@ -1,9 +1,6 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
-import {
-  dailyCardMaterial,
-  dailyScrollMaterial as M,
-} from '../../ui/pwDailyMaterials';
+import { dailyCardMaterial } from '../../ui/pwDailyMaterials';
 import { DailySubmittedAnswerCard } from '../DailyAnswerCard';
 import DailyPanelFrame from './DailyPanelFrame';
 import DailyRevealCurtain from './DailyRevealCurtain';
@@ -377,12 +374,12 @@ const styles = StyleSheet.create({
     // height comes from panelAnimatedHeight (see render) — the
     // round-entrance grow composed with the per-clue unroll target,
     // replacing the old flex:1 + rotateY flip.
-    borderRadius: M.radius,
-    // Reverted to 'hidden' 2026-08-23 — the paper-overflow bug that made
-    // 'hidden' crop the art is fixed in DailyPanelFrame.tsx/
-    // DailyRevealCurtain.tsx (paperHeight now fits by construction), and
-    // 'hidden' is required for the round-open grow animation to clip
-    // correctly (only the currently-grown portion should be visible).
+    // borderRadius removed 2026-09-09 — the parchment art has its own
+    // painted torn silhouette; a rounded-rect clip cut a hard geometric
+    // edge across it and was a leftover from the boxed-panel look removed
+    // below. overflow stays: it is still required for the round-open grow
+    // animation to clip correctly (only the currently-grown portion should
+    // be visible).
     overflow: 'hidden',
     // Removed the flat backgroundColor + drop shadow 2026-08-23 — both were
     // tuned for the old solid-rectangle card and read as an artificial "box"

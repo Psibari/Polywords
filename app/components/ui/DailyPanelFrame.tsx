@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { dailyScrollMaterial as M, dailyPanelFrameMaterial as F } from '../../ui/pwDailyMaterials';
+import { dailyPanelFrameMaterial as F } from '../../ui/pwDailyMaterials';
 import ParchmentSurface from './ParchmentSurface';
 
 export type DailyPanelFrameState = 'idle' | 'revealing' | 'perfect';
+
+// Hides the parchment's straight top edge behind the top rod: the paper is
+// rendered PARCHMENT_TUCK points above this panel's own top (see below), so
+// its top edge sits inside the rod's own footprint regardless of any residual
+// stacking/rounding cause. The top rod renders ~30-38pt tall across
+// supported device widths (see resolveRodMetrics in dailyScrollLayout.ts),
+// so 10pt keeps the tuck safely within it on every one of them.
+const PARCHMENT_TUCK = 10;
 
 type Props = {
   state: DailyPanelFrameState;
@@ -26,7 +34,21 @@ export default function DailyPanelFrame({ height: panelHeight, children }: Props
   return (
     <View style={styles.outer}>
       <View style={styles.inner} onLayout={handleLayout}>
-        <ParchmentSurface width={panelWidth} height={panelHeight} />
+        {/* Absolutely positioned and tucked PARCHMENT_TUCK above this
+            panel's own top so the paper's straight top edge sits behind the
+            top rod (rendered above this component) rather than exposed at
+            the panel's boundary. Its height grows by the same amount so the
+            torn BOTTOM edge — drawn from the bottom of this view — still
+            lands exactly at panelHeight, unchanged. This also makes the
+            positioning honest: ParchmentSurface was previously the only
+            in-flow child here, which only worked because every sibling
+            (the sheen gradient, and `children`) is itself absolutely
+            positioned. */}
+        <ParchmentSurface
+          width={panelWidth}
+          height={panelHeight + PARCHMENT_TUCK}
+          style={styles.parchmentTuck}
+        />
         <LinearGradient
           colors={[F.sheenTop, 'transparent']}
           start={{ x: 0, y: 0 }}
@@ -46,11 +68,12 @@ const styles = StyleSheet.create({
   },
   inner: {
     flex: 1,
-    borderRadius: M.radius,
-    // Reverted to 'hidden' 2026-08-23 — the paper-overflow bug that made
-    // 'hidden' crop the art is fixed above (paperHeight now fits by
-    // construction), so clipping is safe again and needed for rounded
-    // corners + the round-open grow animation.
+    // borderRadius removed 2026-09-09 — the parchment art has its own
+    // painted torn silhouette; a rounded-rect clip cut a hard geometric
+    // edge across it and was a leftover from the boxed-panel look removed
+    // 2026-08-23 (see sheen/scrollBody comments elsewhere: "the art sits
+    // inside a box rather than being the box"). overflow stays: it is still
+    // needed for the round-open grow animation to clip correctly.
     overflow: 'hidden',
   },
   sheen: {
@@ -59,5 +82,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '30%',
+  },
+  parchmentTuck: {
+    position: 'absolute',
+    top: -PARCHMENT_TUCK,
+    left: 0,
   },
 });
