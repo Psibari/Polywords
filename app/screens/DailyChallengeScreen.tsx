@@ -209,12 +209,18 @@ function ClueStage({
 }: {
   clues: [string, string, string];
   revealedCount: 1 | 2 | 3;
-  // True once the answer is known (inking/covering) — memory clues have
-  // done their job and animate out of the way so the ink has room. The
-  // active clue (this round's winner) is untouched by this: only clues
-  // below activeIndex are affected, and contracted only ever coincides
-  // with a state where the active clue itself is about to be hidden by
-  // the caller anyway (hideCompletedClueUnderlay / the round unmounting).
+  // True for 'settling' | 'landed' | 'inking' | 'covering' — from the
+  // moment the claim is committed, not from 'inking'. The memory clues
+  // UNMOUNT (not merely fade) the instant this flips true, which only
+  // reclaims real layout height if it happens during the 460ms card
+  // flight: that is the one moment the reflow is invisible, because the
+  // player's eye is tracking the moving card rather than the clue stack.
+  // Waiting until 'inking' would put the reflow directly against the ink
+  // transform, competing for the same attention. The active clue (this
+  // round's winner) is untouched: only clues below activeIndex unmount,
+  // and contracted only ever coincides with a state where the active clue
+  // itself is about to be hidden by the caller anyway (
+  // hideCompletedClueUnderlay / the round unmounting).
   contracted?: boolean;
 }) {
   const reduceMotion = useReducedMotionPreference();
@@ -284,18 +290,32 @@ function ClueStage({
     <>
       {clues.map((clue, index) => {
         if (index > activeIndex) return null;
+        // Unmount, not fade: an opacity-only fade animates but reclaims no
+        // layout height, which is exactly what made the stack "contract"
+        // in name only. This return is unconditional on `contracted` — it
+        // does not wait for the progress-3 animation above to finish —
+        // because the whole point is for the removal to land inside the
+        // card's flight window, not to be seen happening.
+        if (contracted && index < activeIndex) return null;
         const progress = clueProgresses[index];
         const opacity = progress.interpolate({
           inputRange: [0, 0.22, 1, 2, 3],
           outputRange: [0, 1, 1, 0.9, 0],
         });
+        // Both extended to a 3 stop so neither extrapolates past input 2
+        // now that progress can reach 3 (see the effect above). Held flat
+        // at the same value as input 2: these clues unmount immediately
+        // once contracted (see the early return above), so in practice
+        // this animation is rarely seen playing out — the stop exists so
+        // the interpolation itself has no undefined behavior past 2, not
+        // because the flat tail is expected to be visible.
         const scale = progress.interpolate({
-          inputRange: [0, 0.22, 1, 2],
-          outputRange: [0.98, 1.025, 1, 0.98],
+          inputRange: [0, 0.22, 1, 2, 3],
+          outputRange: [0.98, 1.025, 1, 0.98, 0.98],
         });
         const translateY = progress.interpolate({
-          inputRange: [0, 0.22, 2],
-          outputRange: [8, 0, 0],
+          inputRange: [0, 0.22, 2, 3],
+          outputRange: [8, 0, 0, 0],
         });
 
         return (
@@ -1116,6 +1136,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     committedComplete,
     claimPhase,
   );
+  // One phase check, threaded to both ClueStage (unmounts memory clues) and
+  // QuillScrollPanel (top-anchors the content band) rather than each
+  // re-deriving it — see the comments on both `contracted` props for why
+  // this span starts at 'settling' rather than 'inking'.
+  const clueStackContracted =
+    claimPhase === 'settling' ||
+    claimPhase === 'landed' ||
+    claimPhase === 'inking' ||
+    claimPhase === 'covering';
   const dailyPressure = displayedDailySession
     ? Math.min(
         0.18,
@@ -1220,12 +1249,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               submittedProgress={submittedProgress}
               inkProgress={inkProgress}
               revealedClueCount={revealedCount}
+              contracted={clueStackContracted}
             >
               {currentRound && !hideCompletedClueUnderlay && (
                 <ClueStage
                   clues={currentRound.word.clues}
                   revealedCount={revealedCount}
-                  contracted={claimPhase === 'inking' || claimPhase === 'covering'}
+                  contracted={clueStackContracted}
                 />
               )}
             </QuillScrollPanel>

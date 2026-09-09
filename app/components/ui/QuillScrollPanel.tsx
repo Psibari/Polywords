@@ -41,6 +41,14 @@ export type QuillScrollPanelProps = {
   // How many of the round's clues are currently revealed. Drives how far the
   // parchment unrolls; a fresh round with no value yet defaults to 1.
   revealedClueCount?: 1 | 2 | 3;
+  // True for the same phase span the caller passes to ClueStage's own
+  // `contracted` prop ('settling' | 'landed' | 'inking' | 'covering') — a
+  // single boolean threaded from one phase check in DailyChallengeScreen,
+  // not re-derived here. Top-anchors the content band instead of centering
+  // it, so the height ClueStage's unmounted memory clues free up collects
+  // at the BOTTOM, where the card lands and inks in, rather than splitting
+  // above and below the surviving active clue.
+  contracted?: boolean;
   children: React.ReactNode;
 };
 
@@ -62,6 +70,7 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
       submittedProgress,
       inkProgress,
       revealedClueCount,
+      contracted,
       children,
     },
     ref,
@@ -107,8 +116,18 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // paper's own lower edge and the bottom rod travel down together, which
     // is what a scroll does. rollProgress still drives the round-entrance
     // grow (0 -> full reservation); unrollHeight below scales that target.
+    //
+    // While a claim is in flight (submittedAnswer non-null — set at the top
+    // of runPhysicalCorrectTransition before the card starts moving, and
+    // cleared at the start of the 'reward' phase in DailyChallengeScreen.tsx)
+    // the parchment opens to its FULL reserved height regardless of how many
+    // clues are showing. Below full height, one clue's worth of unroll
+    // (~148.6) leaves too little room for an active clue plus the inked
+    // card to land without overlapping — see the Task 6 fix-round-1 report.
+    // Thematically this reads as the document opening up to take the word.
     const unrollTarget = (() => {
       if (rodMetrics === null || scrollBodyWidth <= 0) return 0;
+      if (submittedAnswer) return reservedHeight;
       const box = resolveClueTextBoxWidth(scrollBodyWidth);
       const stack = resolveClueStackHeight(safeRevealedClueCount, box, DAILY_POOL_CLUES);
       return Math.min(
@@ -267,7 +286,15 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
               height={reservedHeight}
               state={revealPerfect ? 'perfect' : isRevealing ? 'revealing' : 'idle'}
             >
-              <View style={[styles.content, { top: contentTopPad }]}>{children}</View>
+              <View
+                style={[
+                  styles.content,
+                  { top: contentTopPad },
+                  contracted && styles.contentContracted,
+                ]}
+              >
+                {children}
+              </View>
             </DailyPanelFrame>
           </Animated.View>
         </Animated.View>
@@ -418,6 +445,15 @@ const styles = StyleSheet.create({
     bottom: 14,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Active during 'settling' | 'landed' | 'inking' | 'covering' (the same
+  // span ClueStage unmounts its memory clues for). The surviving active
+  // clue rises to the top of the content band instead of staying centred,
+  // so the height the memory clues freed up collects at the BOTTOM — where
+  // the card lands and inks in — rather than splitting evenly above and
+  // below it.
+  contentContracted: {
+    justifyContent: 'flex-start',
   },
   submittedAnswer: {
     position: 'absolute',
