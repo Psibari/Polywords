@@ -68,6 +68,11 @@ export type QuillScrollPanelProps = {
 // empty parchment from "dead space" into "not yet unrolled".
 const CONTENT_TOP_CLEARANCE = 12; // below the top rod
 const CONTENT_BOTTOM_CLEARANCE = 10; // above the bottom rod
+// How far the reward paper starts ABOVE the top rod's lower edge, so its own
+// straight top edge is hidden behind the rod instead of sitting flush against
+// the rod's boundary where it reads as a seam. Same trick as the parchment's
+// PARCHMENT_TUCK in DailyPanelFrame.tsx.
+const CURTAIN_TUCK = 10;
 
 const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
   function QuillScrollPanel(
@@ -400,7 +405,19 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
             pointerEvents="none"
             style={[
               styles.revealClip,
-              { top: rodTop + rodHeight, height: revealGrowHeight },
+              {
+                // Tucked UP behind the top rod by CURTAIN_TUCK rather than
+                // starting flush at the rod's lower edge. Flush left the
+                // curtain's own straight top edge sitting exactly on the
+                // rod's boundary, where it read as a hard line under the
+                // rod (device-reported: "the top rod is showing the
+                // curtain underneath it"). The rod is ~30-38pt tall, so
+                // the tuck stays comfortably hidden behind it. Height is
+                // grown by the same amount so the curtain's lower edge —
+                // which the moving rod rides — is unchanged.
+                top: rodTop + rodHeight - CURTAIN_TUCK,
+                height: Animated.add(revealGrowHeight, CURTAIN_TUCK),
+              },
             ]}
           >
             <DailyRevealCurtain
@@ -531,8 +548,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 0,
-    zIndex: 20,
-    elevation: 20,
+    // ABOVE the permanent bottom rod (25), below the reward paper (30).
+    // The card flies up from the grid below the scroll and crosses the
+    // paper's lower edge on its way in, so at zIndex 20 it passed BEHIND
+    // the bottom rod and then reappeared in front of the parchment —
+    // device-reported as "it goes underneath, then pops on top of it".
+    // It must stay below revealClip so the reward paper still covers it.
+    zIndex: 28,
+    elevation: 28,
   },
   inkCentre: {
     flex: 1,
@@ -550,9 +573,10 @@ const styles = StyleSheet.create({
   permanentBottomRod: {
     position: 'absolute',
     // Below revealClip (30) and movingRod (31) so the descending reward
-    // paper still covers it as a reveal grows.
-    zIndex: 29,
-    elevation: 29,
+    // paper still covers it as a reveal grows, and below the flying card
+    // (28) so the card crosses in FRONT of the rod on its way in.
+    zIndex: 25,
+    elevation: 25,
   },
   movingRod: {
     position: 'absolute',

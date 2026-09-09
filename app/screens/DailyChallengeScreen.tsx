@@ -319,9 +319,17 @@ function ClueStage({
         // this animation is rarely seen playing out — the stop exists so
         // the interpolation itself has no undefined behavior past 2, not
         // because the flat tail is expected to be visible.
+        // Every SETTLED state is exactly 1. A fractional scale on text
+        // rasterises the glyphs off the pixel grid, which reads as soft,
+        // slightly doubled type — device-reported as "blurry, like two
+        // pieces of text on top of each other". The memory clues sat at
+        // progress 2 and so rendered permanently at 0.98.
+        // Scale is now only ever used transiently, for the arrival pop
+        // between 0 and 1; hierarchy is carried by the 23/17 size step and
+        // the opacity step, which cost no sharpness.
         const scale = progress.interpolate({
           inputRange: [0, 0.22, 1, 2, 3],
-          outputRange: [0.98, 1.025, 1, 0.98, 0.98],
+          outputRange: [1, 1.025, 1, 1, 1],
         });
         const translateY = progress.interpolate({
           inputRange: [0, 0.22, 2, 3],
