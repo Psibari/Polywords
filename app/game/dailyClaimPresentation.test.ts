@@ -59,6 +59,37 @@ const transitionPhases: DailyClaimPresentationPhase[] = [
   );
   eq(layout.startX, 79.5, 'accessibility fallback starts centered below the scroll');
   eq(layout.startY, 280, 'accessibility fallback starts below the scroll');
+  eq(layout.height, 64, 'accessibility fallback height defaults to 64 with no fallbackHeight arg');
+}
+
+{
+  // A lost DailyAnswerCard measurement race (origin === null) while the
+  // DEV-ONLY cardHeight tuning knob is away from its 64 default should still
+  // fly a card sized like the tuned grid, not the pre-tuning 64.
+  const tunedLayout = createDailySubmittedAnswerLayout(
+    null,
+    { x: 20, y: 160, width: 300, height: 190 },
+    80,
+  );
+  eq(tunedLayout.height, 80, 'lost measurement race falls back to the live tuned card height');
+
+  const defaultLayout = createDailySubmittedAnswerLayout(
+    null,
+    { x: 20, y: 160, width: 300, height: 190 },
+    64,
+  );
+  eq(defaultLayout.height, 64, 'explicit default fallbackHeight matches the implicit default');
+
+  const measuredLayout = createDailySubmittedAnswerLayout(
+    { x: 64, y: 540, width: 148, height: 64 },
+    { x: 20, y: 160, width: 335, height: 190 },
+    80,
+  );
+  eq(
+    measuredLayout.height,
+    64,
+    'a successful measurement uses the real origin height, ignoring fallbackHeight',
+  );
 }
 
 {

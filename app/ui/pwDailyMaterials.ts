@@ -84,7 +84,6 @@ export const dailyCardFaceMaterial = {
 } as const;
 
 export const dailyPanelFrameMaterial = {
-  pinInner: PW.color.amber,
   sheenTop: 'rgba(255,255,255,0.06)',
 } as const;
 

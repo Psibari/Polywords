@@ -547,6 +547,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // ~45pt to the scroll. Kept behind a toggle rather than deleted so Pete can
   // compare both on device; the loser goes when the values are hard-coded.
   const headerVisible = useDailyScrollTuning((s) => s.headerVisible);
+  // DEV-ONLY (app/dev/dailyScrollTuning.ts) — also threaded into
+  // createDailySubmittedAnswerLayout's fallbackHeight below so a lost
+  // DailyAnswerCard measurement race flies a card sized like the tuned grid
+  // instead of the pre-tuning 64 default.
+  const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const dailySession = useGameStore((s) => s.dailySession);
   const dailyResult = useGameStore((s) => s.dailyResult);
   const dailyLastClaimResult = useGameStore((s) => s.dailyLastClaimResult);
@@ -908,7 +913,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     origin: DailyAnswerCardClaimOrigin | null,
   ) {
     const { startX, startY, width, height } =
-      createDailySubmittedAnswerLayout(origin, clueFrameRef.current);
+      createDailySubmittedAnswerLayout(origin, clueFrameRef.current, cardHeight);
 
     clearCorrectTransitionTimers();
     submittedProgress.stopAnimation();

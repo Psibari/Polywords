@@ -13,7 +13,13 @@ import { create } from 'zustand';
 // compensate for the old fixed-height scroll bug; geometry now derives from
 // the art itself (see dailyScrollLayout.ts), so those three are gone.
 type DailyScrollTuningState = {
-  // Overrides QuillScrollPanel's derived `reservedHeight`.
+  // Overrides QuillScrollPanel's derived `reservedHeight`. The derived value
+  // (~252 at a 375pt screen) is a worst-case reservation sized to fit a full
+  // three-clue stack; this knob turns that into a free override, so values
+  // below roughly 250 will clip a three-clue stack against `scrollBody`'s
+  // `overflow: 'hidden'` rather than reflow it. That is expected for an
+  // override knob during tuning, not a bug — the derived value remains the
+  // honest floor for full content.
   scrollHeight: number;
   // Toggles the DAILY CHALLENGE / ONE REPRESENTS ALL header block above the
   // scroll — Pete is judging on-device whether it earns its ~45pt back.
@@ -22,7 +28,10 @@ type DailyScrollTuningState = {
   cardHeight: number;
   // Nudges the fixed top rod and the permanent bottom rod together, as a
   // fallback in case the parchment-tuck fix (commit 8991411) missed on
-  // device. Never moves the reward paper's own moving rod.
+  // device. Never moves the reward paper's own moving rod. This is meant to
+  // be a small cosmetic nudge only — at the +/-24 extremes it visibly
+  // decouples the rod art from the parchment it should sit flush against,
+  // opening a gap or overlap.
   rodOffsetY: number;
   setScrollHeight: (v: number) => void;
   setHeaderVisible: (v: boolean) => void;
