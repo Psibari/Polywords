@@ -87,17 +87,24 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const revealGrowHeight = revealProgress
       ? revealProgress.interpolate({ inputRange: [0, 1], outputRange: [0, revealAreaHeight] })
       : 0;
-    // The descending paper edge uses the exact same authored rod as the
-    // fixed fixture. At progress 0 the two rods coincide; as the reward paper
-    // grows, this copy stays attached to its lower edge.
-    // The bottom rod is a permanent fixture, not a reveal-only element. It sits
-    // at the paper's lower edge in every state and rides the reward paper down
-    // when one is growing. Previously it faded in only once revealProgress left
-    // 0, so the object changed identity between normal play and the reward.
+    // This is the reward paper's OWN descending edge — a separate instance
+    // from the permanent bottom rod rendered below. Do not try to merge them:
+    // the permanent rod must read as the scroll's bottom in every state
+    // (including before any reveal exists), while this one is purely the
+    // moving paper's lower edge and must stay invisible until a reveal is
+    // actually in flight. revealProgress is always supplied at the sole call
+    // site (DailyChallengeScreen.tsx), so the fallback branch below is
+    // unreachable in the shipped app; it exists only because the prop is
+    // optional in QuillScrollPanelProps.
     const movingRodTop = revealProgress
       ? Animated.add(revealGrowHeight, rodTop)
-      : rodTop + revealAreaHeight;
-    const movingRodOpacity = 1;
+      : rodTop;
+    const movingRodOpacity = revealProgress
+      ? revealProgress.interpolate({
+          inputRange: [0, 0.02, 1],
+          outputRange: [0, 1, 1],
+        })
+      : 0;
 
     const submittedTargetX = submittedAnswer
       ? (scrollBodyWidth - submittedAnswer.width) / 2
@@ -180,6 +187,29 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
               revealPerfect={revealPerfect}
             />
           </Animated.View>
+        )}
+
+        {/* The permanent bottom rod. Unlike the moving rod above, this one
+            does not fade or move — it sits at the paper's lower edge in
+            every state, including before any claim, so the scroll reads as
+            a scroll (rod top and bottom) rather than a torn page in normal
+            play. It sits below the reward paper's revealClip (zIndex 30) so
+            the descending paper still visually covers it as a reveal grows,
+            landing coincident with it at progress 1. */}
+        {rodHeight !== undefined && (
+          <Image
+            source={SCROLL_ROD}
+            style={[
+              styles.permanentBottomRod,
+              {
+                width: rodWidth,
+                height: rodHeight,
+                left: rodLeft,
+                top: revealAreaHeight,
+              },
+            ]}
+            resizeMode="stretch"
+          />
         )}
 
         {rodHeight !== undefined && (
@@ -272,6 +302,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 30,
     elevation: 30,
+  },
+  permanentBottomRod: {
+    position: 'absolute',
+    // Below revealClip (30) and movingRod (31) so the descending reward
+    // paper still covers it as a reveal grows.
+    zIndex: 29,
+    elevation: 29,
   },
   movingRod: {
     position: 'absolute',
