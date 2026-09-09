@@ -10,7 +10,7 @@ import ParchmentSurface from './ParchmentSurface';
 // stacking/rounding cause. The top rod renders ~30-38pt tall across
 // supported device widths (see resolveRodMetrics in dailyScrollLayout.ts),
 // so 10pt keeps the tuck safely within it on every one of them.
-const PARCHMENT_TUCK = 10;
+export const PARCHMENT_TUCK = 10;
 
 type Props = {
   // Threaded explicitly from QuillScrollPanel's reservedHeight (the derived

@@ -70,7 +70,12 @@ export const dailyCardMaterial = {
 export const dailyScrollMaterial = {
   goldTrim: heroBookMaterial.goldTrim,          // #F5C842
   clueInk: '#FFF7D6',
-  clueInkMemory: 'rgba(255,247,214,0.75)',
+  // Earlier clues are still LIVE constraints — the mode's rule is that one
+  // word connects all three — so they must not read as disabled. At 0.75 on
+  // this parchment the cream desaturated toward grey and looked switched
+  // off (Pete, on device). 0.92 keeps them clearly written in the same ink;
+  // the 23/17 size step is what carries the hierarchy, not fading.
+  clueInkMemory: 'rgba(255,247,214,0.92)',
 } as const;
 
 export const dailyCardFaceMaterial = {

@@ -3,7 +3,7 @@ import { Animated, Easing, Image, LayoutChangeEvent, StyleSheet, View } from 're
 import { dailyCardMaterial } from '../../ui/pwDailyMaterials';
 import { DailySubmittedAnswerCard } from '../DailyAnswerCard';
 import DailyInkedWord from './DailyInkedWord';
-import DailyPanelFrame from './DailyPanelFrame';
+import DailyPanelFrame, { PARCHMENT_TUCK } from './DailyPanelFrame';
 import DailyRevealCurtain from './DailyRevealCurtain';
 import {
   resolveClueStackHeight,
@@ -120,7 +120,14 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     // separately, below, only to the fixed top rod and the permanent bottom
     // rod — never to this value, so the dev nudge cannot touch the moving
     // rod's independent journey.
-    const rodTop = 0;
+    // Raised by PARCHMENT_TUCK so the rod's top edge sits level with the
+    // parchment's own tucked top edge and covers it. DailyPanelFrame draws
+    // the paper at -PARCHMENT_TUCK to keep its straight cut edge hidden;
+    // with the rod left at 0 that tuck stuck out ABOVE the rod as a thin
+    // band of paper across the top (device-reported: "the curtain's peeking
+    // out on top of it"). The reward curtain does NOT need this — its own
+    // CURTAIN_TUCK starts it below the rod's top, already inside the rod.
+    const rodTop = -PARCHMENT_TUCK;
 
     // The honest worst case: both rods, the clearance above and below the
     // text, and the reserved text box itself. Device-dependent, because the
@@ -140,8 +147,12 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const reservedHeight =
       rodMetrics === null ? 0 : scrollHeightOverride ?? derivedReservedHeight;
 
+    // Measured from the rod's LOWER edge, which is now rodTop + rodHeight —
+    // rodTop is negative, so this must not assume the rod starts at 0.
     const contentTopPad =
-      rodHeight !== undefined ? rodHeight + CONTENT_TOP_CLEARANCE : CONTENT_TOP_CLEARANCE;
+      rodHeight !== undefined
+        ? rodTop + rodHeight + CONTENT_TOP_CLEARANCE
+        : CONTENT_TOP_CLEARANCE;
     // The permanent bottom rod sits at the paper's lower edge, so the clue
     // stack must clear the rod's own height as well as CONTENT_BOTTOM_
     // CLEARANCE — exactly what the reservation above budgets. styles.content
