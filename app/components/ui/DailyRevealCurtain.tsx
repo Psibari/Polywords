@@ -19,14 +19,61 @@ import ParchmentSurface from './ParchmentSurface';
 const FEATHER_WHITE = require('../../../assets/ui/feather-life-filled.png');
 const FEATHER_GOLD = require('../../../assets/ui/feather-gold-reward.png');
 
-// The seal (sealSvg below) renders at height:'34%' of this component's own
-// `height` prop with aspectRatio 1, so its rendered diameter is exactly
-// 0.34 * height and its radius is 0.17 * height — not an estimate, the
-// same math the seal's own style performs. Each feather group's inner
-// edge is held at least that radius (plus a small breathing gap) away
-// from the horizontal center, so a feather can never land on the seal.
-const SEAL_RADIUS_RATIO = 0.17;
+// sealSvg's OWN box is height:'34%' of this component's `height` prop, with
+// aspectRatio 1 — but that box is not the drawn circle. Inside
+// viewBox="0 0 40 40" the seal is `r={17}`, a diameter of 34 of the
+// viewBox's 40 units, i.e. 85% of the box. So the seal's true rendered
+// radius is (17/40) of the box's own radius: (17/40) * 0.34 * height =
+// 0.1445 * height, not 0.17 * height (which was the box's radius, not the
+// circle's — ~18% oversized). Each feather group's inner edge is held at
+// least that radius (plus a small breathing gap) away from the horizontal
+// center, so a feather can never land on the seal.
+const SEAL_RADIUS_RATIO = 0.1445;
 const FEATHER_SEAL_GAP = 6;
+
+// The seal-clearance math above only keeps feathers off the wax seal — it
+// says nothing about the parchment's own edge. ParchmentSurface draws
+// scroll_paper.png, and dailyScrollLayout.ts's own header comment records
+// its opaque width tapering 89.1% -> 98.5% of the drawn width (narrowest at
+// the top, widening going down). 89.1% is the documented floor across that
+// taper, so using it (rather than measuring a new number) is the safe
+// choice regardless of exactly where a given curtain height puts the
+// feather row within that taper. OPAQUE_EDGE_MARGIN keeps the outer
+// feather inside that field rather than touching its boundary exactly.
+const OPAQUE_WIDTH_FRACTION = 0.891;
+const OPAQUE_EDGE_MARGIN = 2;
+
+// Feather sizing/spacing, most-preferred first. A 2-feather group (the
+// widest case, at 3 or 4 correct) is fit against the opaque budget by
+// shrinking the inter-feather gap toward GAP_MIN before shrinking the
+// feather itself, and only shrinks the feather as a last resort — see
+// resolveFeatherFit. FEATHER_W_MIN is a defensive floor; at every
+// currently supported device width (320/375/430pt) the fit never needs it.
+const FEATHER_W_MAX = 44;
+const FEATHER_H_MAX = 70;
+const FEATHER_ASPECT = FEATHER_W_MAX / FEATHER_H_MAX;
+const GAP_MAX = 8;
+const GAP_MIN = 4;
+const FEATHER_W_MIN = 30;
+
+type FeatherFit = { gap: number; width: number; height: number };
+
+// outerBudget is the max value of (2 * featherWidth + gap) — a 2-feather
+// group's own footprint, not counting sealClearance — that still lands its
+// outer edge inside the opaque field. Pure/RN-free so it can be reasoned
+// about (and tested) independent of layout.
+function resolveFeatherFit(outerBudget: number): FeatherFit {
+  const neededAtMaxGap = 2 * FEATHER_W_MAX + GAP_MAX;
+  if (outerBudget >= neededAtMaxGap) {
+    return { gap: GAP_MAX, width: FEATHER_W_MAX, height: FEATHER_H_MAX };
+  }
+  const neededAtMinGap = 2 * FEATHER_W_MAX + GAP_MIN;
+  if (outerBudget >= neededAtMinGap) {
+    return { gap: outerBudget - 2 * FEATHER_W_MAX, width: FEATHER_W_MAX, height: FEATHER_H_MAX };
+  }
+  const width = Math.max(FEATHER_W_MIN, (outerBudget - GAP_MIN) / 2);
+  return { gap: GAP_MIN, width, height: width / FEATHER_ASPECT };
+}
 
 type Props = {
   // The space this layer grows into — QuillScrollPanel's VIEW_H minus the
@@ -50,7 +97,12 @@ export default function DailyRevealCurtain({ height, revealFeatherCount, revealP
   // that, and balancing the counts (instead of the old table, which put
   // both feathers of a 2-count on the left) is what actually fixes the
   // "whole right half empty" read.
-  const feathers = revealFeatherCount ?? 0;
+  // The only caller (QuillScrollPanel.tsx) passes 1-4 or undefined —
+  // exactly 5 correct routes through revealPerfect and never reaches this
+  // branch. That contract isn't enforced by the prop's type, so clamp
+  // defensively rather than let a stray out-of-range value render an
+  // unbalanced or oversized row.
+  const feathers = Math.max(0, Math.min(4, revealFeatherCount ?? 0));
   const leftCount = Math.ceil(feathers / 2);
   const rightCount = Math.floor(feathers / 2);
 
@@ -58,14 +110,17 @@ export default function DailyRevealCurtain({ height, revealFeatherCount, revealP
   const handleLayout = (e: LayoutChangeEvent) => setCurtainWidth(e.nativeEvent.layout.width);
 
   // Clearance each group's inner edge keeps from center: the seal's own
-  // radius plus a small gap, capped against the curtain's actual measured
-  // width so a wide worst-case clue stack (tall curtain, large seal) on a
-  // narrow device can't push the outer feather of a 3- or 4-count group
-  // off the edge of the parchment before curtainWidth is known (first
-  // render), fall back to the uncapped value.
-  const rawSealClearance = height * SEAL_RADIUS_RATIO + FEATHER_SEAL_GAP;
-  const sealClearance =
-    curtainWidth > 0 ? Math.min(rawSealClearance, curtainWidth * 0.14) : rawSealClearance;
+  // (corrected) radius plus a small breathing gap.
+  const sealClearance = height * SEAL_RADIUS_RATIO + FEATHER_SEAL_GAP;
+
+  // Room left, past sealClearance, for a 2-feather group's own footprint
+  // before its outer edge leaves the parchment's opaque field. Infinity
+  // before curtainWidth is known (first render) — ParchmentSurface itself
+  // renders nothing until then, so oversizing on that transient frame is
+  // invisible.
+  const opaqueHalfWidth = curtainWidth > 0 ? (curtainWidth * OPAQUE_WIDTH_FRACTION) / 2 : Infinity;
+  const outerBudget = opaqueHalfWidth - OPAQUE_EDGE_MARGIN - sealClearance;
+  const featherFit = resolveFeatherFit(outerBudget);
 
   return (
     <View style={[styles.root, { height }]} onLayout={handleLayout}>
@@ -136,21 +191,39 @@ export default function DailyRevealCurtain({ height, revealFeatherCount, revealP
         <>
           {leftCount > 0 && (
             <View
-              style={[styles.featherGroup, styles.featherGroupLeft, { marginRight: sealClearance }]}
+              style={[
+                styles.featherGroup,
+                styles.featherGroupLeft,
+                { marginRight: sealClearance, gap: featherFit.gap },
+              ]}
               pointerEvents="none"
             >
               {Array.from({ length: leftCount }).map((_, i) => (
-                <Image key={i} source={FEATHER_WHITE} style={styles.featherSmall} resizeMode="contain" />
+                <Image
+                  key={i}
+                  source={FEATHER_WHITE}
+                  style={{ width: featherFit.width, height: featherFit.height }}
+                  resizeMode="contain"
+                />
               ))}
             </View>
           )}
           {rightCount > 0 && (
             <View
-              style={[styles.featherGroup, styles.featherGroupRight, { marginLeft: sealClearance }]}
+              style={[
+                styles.featherGroup,
+                styles.featherGroupRight,
+                { marginLeft: sealClearance, gap: featherFit.gap },
+              ]}
               pointerEvents="none"
             >
               {Array.from({ length: rightCount }).map((_, i) => (
-                <Image key={i} source={FEATHER_WHITE} style={styles.featherSmall} resizeMode="contain" />
+                <Image
+                  key={i}
+                  source={FEATHER_WHITE}
+                  style={{ width: featherFit.width, height: featherFit.height }}
+                  resizeMode="contain"
+                />
               ))}
             </View>
           )}
@@ -192,7 +265,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    // gap is set inline per-render from featherFit.gap (see
+    // resolveFeatherFit) — no static default here, so there is nothing to
+    // drift out of sync with it.
   },
   featherGroupLeft: {
     // right: '50%' anchors this group's right edge to the curtain's
@@ -205,10 +280,6 @@ const styles = StyleSheet.create({
   featherGroupRight: {
     left: '50%',
     justifyContent: 'flex-start',
-  },
-  featherSmall: {
-    width: 44,
-    height: 70,
   },
   featherGold: {
     position: 'absolute',
