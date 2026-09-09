@@ -970,7 +970,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         easing: Easing.bezier(0.23, 1, 0.32, 1),
         useNativeDriver: false,
       }).start(({ finished }) => {
-        if (!finished) return;
+        // Matches the settle completion's guard below: without the
+        // candidate check, an abort path that reassigns
+        // completingCandidateRef without stopping this exact animation
+        // could fire the haptic for a claim that no longer exists.
+        if (!finished || completingCandidateRef.current !== candidate) return;
         Haptics.cueAsync('dailyRodStop');
         // BLOCKED: no rod-knock asset yet. See sfx.ts's SFX registration note.
         // playSfx('scrollRodKnock');
