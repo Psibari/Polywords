@@ -19,13 +19,14 @@ import ParchmentSurface from './ParchmentSurface';
 const FEATHER_WHITE = require('../../../assets/ui/feather-life-filled.png');
 const FEATHER_GOLD = require('../../../assets/ui/feather-gold-reward.png');
 
-// revealFeatherCount (1-4) -> [left group count, right group count]
-const FEATHER_SPLITS: Record<number, readonly [number, number]> = {
-  1: [1, 0],
-  2: [2, 0],
-  3: [2, 1],
-  4: [2, 2],
-};
+// The seal (sealSvg below) renders at height:'34%' of this component's own
+// `height` prop with aspectRatio 1, so its rendered diameter is exactly
+// 0.34 * height and its radius is 0.17 * height — not an estimate, the
+// same math the seal's own style performs. Each feather group's inner
+// edge is held at least that radius (plus a small breathing gap) away
+// from the horizontal center, so a feather can never land on the seal.
+const SEAL_RADIUS_RATIO = 0.17;
+const FEATHER_SEAL_GAP = 6;
 
 type Props = {
   // The space this layer grows into — QuillScrollPanel's VIEW_H minus the
@@ -41,10 +42,30 @@ type Props = {
 };
 
 export default function DailyRevealCurtain({ height, revealFeatherCount, revealPerfect }: Props) {
-  const [leftCount, rightCount] = FEATHER_SPLITS[revealFeatherCount ?? 0] ?? [0, 0];
+  // A centred single row shares one center point with the seal (both use
+  // absoluteFill + alignItems/justifyContent 'center'), so a lone middle
+  // feather at odd counts would sit exactly on top of it regardless of any
+  // gap value — gap only spaces items apart, it can't relocate a lone
+  // center item. Splitting into two groups that straddle the seal avoids
+  // that, and balancing the counts (instead of the old table, which put
+  // both feathers of a 2-count on the left) is what actually fixes the
+  // "whole right half empty" read.
+  const feathers = revealFeatherCount ?? 0;
+  const leftCount = Math.ceil(feathers / 2);
+  const rightCount = Math.floor(feathers / 2);
 
   const [curtainWidth, setCurtainWidth] = useState(0);
   const handleLayout = (e: LayoutChangeEvent) => setCurtainWidth(e.nativeEvent.layout.width);
+
+  // Clearance each group's inner edge keeps from center: the seal's own
+  // radius plus a small gap, capped against the curtain's actual measured
+  // width so a wide worst-case clue stack (tall curtain, large seal) on a
+  // narrow device can't push the outer feather of a 3- or 4-count group
+  // off the edge of the parchment before curtainWidth is known (first
+  // render), fall back to the uncapped value.
+  const rawSealClearance = height * SEAL_RADIUS_RATIO + FEATHER_SEAL_GAP;
+  const sealClearance =
+    curtainWidth > 0 ? Math.min(rawSealClearance, curtainWidth * 0.14) : rawSealClearance;
 
   return (
     <View style={[styles.root, { height }]} onLayout={handleLayout}>
@@ -114,14 +135,20 @@ export default function DailyRevealCurtain({ height, revealFeatherCount, revealP
       ) : (
         <>
           {leftCount > 0 && (
-            <View style={[styles.featherGroup, styles.featherGroupLeft]} pointerEvents="none">
+            <View
+              style={[styles.featherGroup, styles.featherGroupLeft, { marginRight: sealClearance }]}
+              pointerEvents="none"
+            >
               {Array.from({ length: leftCount }).map((_, i) => (
                 <Image key={i} source={FEATHER_WHITE} style={styles.featherSmall} resizeMode="contain" />
               ))}
             </View>
           )}
           {rightCount > 0 && (
-            <View style={[styles.featherGroup, styles.featherGroupRight]} pointerEvents="none">
+            <View
+              style={[styles.featherGroup, styles.featherGroupRight, { marginLeft: sealClearance }]}
+              pointerEvents="none"
+            >
               {Array.from({ length: rightCount }).map((_, i) => (
                 <Image key={i} source={FEATHER_WHITE} style={styles.featherSmall} resizeMode="contain" />
               ))}
@@ -168,10 +195,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   featherGroupLeft: {
-    left: 18,
+    // right: '50%' anchors this group's right edge to the curtain's
+    // horizontal center; the marginRight applied inline (sealClearance)
+    // then pushes the group's actual content that far left of center, so
+    // it clears the seal instead of sitting pinned to the far edge.
+    right: '50%',
+    justifyContent: 'flex-end',
   },
   featherGroupRight: {
-    right: 18,
+    left: '50%',
+    justifyContent: 'flex-start',
   },
   featherSmall: {
     width: 44,
