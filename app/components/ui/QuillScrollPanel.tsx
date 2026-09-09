@@ -203,8 +203,24 @@ const QuillScrollPanel = forwardRef<View, QuillScrollPanelProps>(
     const submittedTargetX = submittedAnswer
       ? (scrollBodyWidth - submittedAnswer.width) / 2
       : 0;
-    const submittedTargetY = submittedAnswer
-      ? Math.max(rodTop + (rodHeight ?? 0) + 12, reservedHeight - submittedAnswer.height - 16)
+    // Derived from unrollTarget (how far the parchment is unrolled RIGHT
+    // NOW), not reservedHeight (the worst-case reservation) — a card landed
+    // against reservedHeight on a one- or two-clue round flew past the
+    // paper's actual lower edge and the bottom rod onto the stone
+    // background, where the reward paper could never reach it to cover it
+    // (device-confirmed, fix round 2). This does read like the same
+    // "interpolation outputRange derived from a changing value" hazard
+    // Correction 1 exists to avoid, but it is safe here: unrollTarget only
+    // changes when the revealed clue count changes, and clue reveals are
+    // gated on isDailyClaimInputLocked in DailyChallengeScreen.tsx, which is
+    // exactly the window during which a submitted-card animation can be in
+    // flight. The two never run at the same time. Do not "fix" this by
+    // switching back to reservedHeight.
+    const submittedTargetY = submittedAnswer && rodMetrics
+      ? Math.max(
+          rodMetrics.height + CONTENT_TOP_CLEARANCE,
+          unrollTarget - rodMetrics.height - CONTENT_BOTTOM_CLEARANCE - submittedAnswer.height,
+        )
       : 0;
     const submittedTranslateX = submittedAnswer && submittedProgress
       ? submittedProgress.interpolate({
