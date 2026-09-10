@@ -18,6 +18,13 @@ import {
 } from './tileTextLayout';
 import { createBossGauntletPressProps } from './bossGauntletPress';
 import {
+  kickWall,
+  resetWallShake,
+  rumbleWall,
+  wallShakeOffset,
+  wallShakeTransform,
+} from './wallShake';
+import {
   BRICK_RECESSES,
   LEDGE_ART_Y,
   RECESS_OVERLAYS,
@@ -104,6 +111,10 @@ const SPINE_OPEN_MS = 280;
 // camera, swings upright and settles on the shelf. Opacity plays no part in
 // it: a brick is a solid object leaving a real hole, so it is fully opaque
 // from its first frame.
+// Before anything moves, the wall trembles. Nothing about a brick changes in
+// this window — it buys the break a moment of strain, so the bricks read as
+// heavy stone coming out of a structure rather than sprites arriving on cue.
+const BRICK_LEAD_IN_MS = 400;
 const BRICK_STAGGER_MS = 240;
 const BRICK_FLIGHT_MS = 900;
 // One 0 -> 1 progress value per slot, driven as three sequenced legs: push
@@ -116,7 +127,8 @@ const BRICK_INPUT = [0, BRICK_SEG[0], BRICK_SEG[1], 1];
 // Every crown arrives on ONE beat, after the last brick has settled.
 // Index-independent by design: a third stagger here would read as three
 // more events instead of the single identity reveal this is.
-const BRICK_CROWN_DELAY_MS = 2 * BRICK_STAGGER_MS + BRICK_FLIGHT_MS + 120;
+const BRICK_CROWN_DELAY_MS =
+  BRICK_LEAD_IN_MS + 2 * BRICK_STAGGER_MS + BRICK_FLIGHT_MS + 120;
 const BRICK_CROWN_MS = 460;
 // Masks the brick's top face while it is still flush in the wall. React
 // Native has no clip-path, so a flat rectangle in the recess's own shadow
@@ -360,6 +372,9 @@ function SpineSlot({
     progress.setValue(0);
     crownReveal.setValue(0);
     const flightTimer = setTimeout(() => {
+      // The kick IS this brick tearing loose, so it fires on the same frame
+      // the push-out starts — never ahead of it.
+      kickWall();
       Animated.sequence([
         // Push out of the wall.
         Animated.timing(progress, {
@@ -481,6 +496,16 @@ function SpineSlot({
     inputRange: [0, 1],
     outputRange: [0.4, 1],
   });
+  // A brick still SEATED in the wall rattles with the wall — otherwise it
+  // would appear to slide out of its own socket during the lead-in. A brick
+  // that has torn loose is no longer part of the structure and stops dead.
+  // This falls to zero over exactly the sliver of progress the recess overlay
+  // fades in on, so the brick and the hole behind it hand off cleanly.
+  const seatedInWall = progress.interpolate({
+    inputRange: [0, 0.06, 1],
+    outputRange: [1, 0, 0],
+  });
+  const seatedShake = wallShakeOffset(seatedInWall);
 
   // A closed, unopened, unresolved slot's hit target should never capture
   // touches meant for whichever OTHER slot is currently open — its own
@@ -535,8 +560,8 @@ function SpineSlot({
             // stays exactly where it was — the entrance always finishes
             // before a pick is possible, so the two never overlap.
             transform: [
-              { translateX: brickTranslateX },
-              { translateY: brickTranslateY },
+              { translateX: Animated.add(brickTranslateX, seatedShake.x) },
+              { translateY: Animated.add(brickTranslateY, seatedShake.y) },
               { rotate: brickRotate },
               { scale: brickScale },
               { perspective: CARD_PERSPECTIVE },
@@ -717,6 +742,28 @@ export function BossGauntletSpines({
     onActiveCardHeightChange?.(activeCardHeight);
   }, [activeCardHeight, onActiveCardHeightChange]);
 
+  // The lead-in tremble, once, the moment the tiles actually appear — not on
+  // mount, which can happen a phase early. Under reduced motion the bricks are
+  // already standing on the shelf, so there is nothing to shake loose and both
+  // values are held at 0.
+  //
+  // This must stay in step with the conditional return below, which is spelled
+  // out longhand there because tileTextLayout.integration.test.mjs matches it
+  // literally to prove no hook is ever added after it.
+  const tilesVisible = gatePhase === 'tiles' || gatePhase === 'wrongFail';
+  useEffect(() => {
+    if (!tilesVisible) return;
+    if (reduceMotion !== false) {
+      resetWallShake();
+      return;
+    }
+    rumbleWall(BRICK_LEAD_IN_MS);
+  }, [tilesVisible, reduceMotion]);
+
+  // The shake values are module-level and outlive this component. Leaving one
+  // stranded mid-animation would sit the wall crooked on the next screen.
+  useEffect(() => resetWallShake, []);
+
   if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
   return (
@@ -730,9 +777,18 @@ export function BossGauntletSpines({
           UNDERNEATH that brick, which covers its recess completely while
           flush — so the swap from wall brick to hole is never visible as a
           pop. They leave with the gauntlet; no hole state is persisted. */}
-      <View
+      <Animated.View
         pointerEvents="none"
-        style={[styles.recessLayer, { width: windowWidth, marginLeft: -windowWidth / 2 }]}
+        style={[
+          styles.recessLayer,
+          {
+            width: windowWidth,
+            marginLeft: -windowWidth / 2,
+            // Painted on the wall, so it moves with the wall — otherwise the
+            // holes slide out of their own sockets during the tremble.
+            transform: wallShakeTransform(),
+          },
+        ]}
       >
         {gauntletTiles.map((tile, index) => {
           const overlay = RECESS_OVERLAYS[index % RECESS_OVERLAYS.length];
@@ -761,7 +817,7 @@ export function BossGauntletSpines({
             </Animated.View>
           );
         })}
-      </View>
+      </Animated.View>
 
       <View
         // Fixed, not activeCardHeight-driven: this whole wrap is
@@ -786,7 +842,7 @@ export function BossGauntletSpines({
           anyOpen={anyOpen}
           tileLanded={tileLanded}
           inputLocked={inputLocked}
-          entranceDelay={index * BRICK_STAGGER_MS}
+          entranceDelay={BRICK_LEAD_IN_MS + index * BRICK_STAGGER_MS}
           reduceMotion={reduceMotion !== false}
           progress={brickProgress[index]}
           onPick={onPick}
@@ -812,9 +868,7 @@ export function BossGauntletSpines({
           screen centre, rather than from its edges. It also hangs well below
           the wrap's own bottom (the art runs to the wall's bottom row),
           which is why styles.wrap must not clip. */}
-      <Image
-        source={shelfLipArt}
-        contentFit="fill"
+      <Animated.View
         pointerEvents="none"
         style={[
           styles.shelfLip,
@@ -823,9 +877,13 @@ export function BossGauntletSpines({
             marginLeft: -windowWidth / 2,
             height: shelfLipHeight,
             bottom: shelfLipTop - shelfLipHeight,
+            // Cut from the wall art, so it is wall: it moves with it.
+            transform: wallShakeTransform(),
           },
         ]}
-      />
+      >
+        <Image source={shelfLipArt} contentFit="fill" style={StyleSheet.absoluteFill} />
+      </Animated.View>
 
       {/* CHOOSE A SEAL rides the shelf's front face, not the space above the
           row. The bricks are ~48pt taller than the stone cards they replaced,
@@ -835,7 +893,7 @@ export function BossGauntletSpines({
           empty carved stone directly under the cards, measured off the lip
           art in bossGauntletLedge.ts. Rendered AFTER the lip so the lip does
           not paint over it. */}
-      <View
+      <Animated.View
         style={[
           styles.shelfLabel,
           {
@@ -843,6 +901,10 @@ export function BossGauntletSpines({
             marginLeft: -windowWidth / 2,
             height: SHELF_LABEL_BOX_H,
             bottom: -(shelfFaceCentre + SHELF_LABEL_BOX_H / 2),
+            // Its position is derived from the shelf face in wall art space,
+            // so it rides the wall too. Left still, it would visibly slide
+            // across the stone it is meant to be cut into.
+            transform: wallShakeTransform(),
           },
         ]}
         pointerEvents="none"
@@ -851,7 +913,7 @@ export function BossGauntletSpines({
       >
         <Text style={styles.instruction}>CHOOSE A SEAL</Text>
         <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
-      </View>
+      </Animated.View>
     </View>
   );
 }
