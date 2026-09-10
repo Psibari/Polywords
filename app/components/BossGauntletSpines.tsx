@@ -17,14 +17,40 @@ import {
   resolveGauntletRowHeight,
 } from './tileTextLayout';
 import { createBossGauntletPressProps } from './bossGauntletPress';
-import { resolveLedgeOffset } from './bossGauntletLedge';
+import {
+  BRICK_RECESSES,
+  LEDGE_ART_Y,
+  SHELF_LIP_ART_H,
+  SHELF_LIP_ART_TOP,
+  WALL_ART_W,
+  resolveLedgeOffset,
+  wallArtScale,
+} from './bossGauntletLedge';
 
 // Per-spine identity marker (2026-08-08 doc) — a single flat-silhouette
 // crown asset (verified transparent, not a baked-in white background: all
 // four corners decode to alpha 0, the crown shape itself to alpha 255),
 // recolored per card via tintColor rather than three separate art files.
 const crownMarkerArt = require('../../assets/images/gauntlet/crown-marker.png');
-const stoneMarkerArt = require('../../assets/ui/boss-gauntlet-stone-purple.png');
+// The carved ledge's own foreground lip, cut from the wall art itself, so
+// the bricks land BEHIND the shelf rather than on top of it.
+const shelfLipArt = require('../../assets/images/gauntlet/shelf-front.png');
+
+// Each sealed card IS one of the wall's own bricks — three distinct sprites,
+// one per slot, so the row never reads as the same stone stamped three
+// times. Every sprite is authored on the SAME recipe: TOP_FACE art-units of
+// the brick's top surface, then faceH of its front face, then exactly
+// TOP_FACE more of TRANSPARENT PADDING at the bottom. That bottom padding is
+// load-bearing: it puts the padded image's own centre exactly on the centre
+// of the brick's FRONT FACE, which is the point React Native rotates a view
+// about. Never substitute an unpadded sprite and never trim the padding —
+// the punch-out below would then swing about the wrong point.
+const TOP_FACE = 46;
+const BRICK_SPRITES = [
+  { src: require('../../assets/images/gauntlet/brick1_rn.png'), w: 240, padH: 464, faceH: 372 },
+  { src: require('../../assets/images/gauntlet/brick2_rn.png'), w: 240, padH: 477, faceH: 385 },
+  { src: require('../../assets/images/gauntlet/brick3_rn.png'), w: 240, padH: 459, faceH: 367 },
+] as const;
 // Three genuinely distinct hues, not three golds, so "which one is which"
 // actually reads. Pulled from the app's own locked palette, not new colors.
 export const CARD_MARKER_COLORS = [PW.color.gold, PW.color.rose, PW.color.lavender] as const;
@@ -57,18 +83,39 @@ export type BossGauntletSpinesProps = {
 // (MaskBoard.tsx) — the flip should finish at roughly the same beat the
 // tile becomes swipeable (tileLanded).
 const SPINE_OPEN_MS = 280;
-const STONE_ENTRANCE_MS = 520;
-const STONE_ENTRANCE_STAGGER_MS = 100;
-// Starting state: small, dim, offset up into the wall — "further from the
-// viewer, still in shadow" — rather than the old below-and-slightly-shrunk
-// recess. Re-tune against an on-device look, not a lock.
-const STONE_EMBED_TRANSLATE_Y = -34;
-const STONE_EMBED_SCALE = 0.35;
-const STONE_EMBED_OPACITY = 0.55;
-// Easing.back() overshoot amount for the landing settle — the stone drops
-// slightly past its resting spot on the ledge, then eases back to it, so it
-// reads as a physical thump rather than a drift into place.
-const STONE_LANDING_OVERSHOOT = 1.6;
+
+// ── Brick punch-out entrance ──────────────────────────────────
+// The sealed cards are not faded in. Each one starts lying on its side,
+// flush inside its own recess in the wall art, punches out toward the
+// camera, swings upright and settles on the shelf. Opacity plays no part in
+// it: a brick is a solid object leaving a real hole, so it is fully opaque
+// from its first frame.
+const BRICK_STAGGER_MS = 240;
+const BRICK_FLIGHT_MS = 900;
+// One 0 -> 1 progress value per slot, driven as three sequenced legs: push
+// out of the wall, travel and tip upright, settle onto the shelf.
+const BRICK_SEG = [0.26, 0.86, 1];
+const BRICK_SEG_MS = [234, 540, 126]; // 0.26 / 0.60 / 0.14 of BRICK_FLIGHT_MS
+// Shared input range for every flight interpolation below — the leg
+// boundaries, so each interpolation is read against the same three legs.
+const BRICK_INPUT = [0, BRICK_SEG[0], BRICK_SEG[1], 1];
+// Every crown arrives on ONE beat, after the last brick has settled.
+// Index-independent by design: a third stagger here would read as three
+// more events instead of the single identity reveal this is.
+const BRICK_CROWN_DELAY_MS = 2 * BRICK_STAGGER_MS + BRICK_FLIGHT_MS + 120;
+const BRICK_CROWN_MS = 460;
+// Masks the brick's top face while it is still flush in the wall. React
+// Native has no clip-path, so a flat rectangle in the recess's own shadow
+// colour stands in for one, fading out as the brick clears the hole.
+const RECESS_SHADOW = '#120C1F';
+// Where the crown sits on the brick's front face, as a fraction of THAT
+// face's height measured from its top — not of the padded sprite.
+const CROWN_FACE_RATIO = 0.44;
+const CROWN_W = 84;
+const CROWN_H = 54;
+// The one on-device tuning knob for the shelf lip: points added to its top
+// edge, so it can be nudged without re-deriving the wall-art geometry.
+export const SHELF_LIP_NUDGE_Y = 0;
 
 // Must stay > 1 — the angle spread below divides by (DUST_PARTICLE_COUNT - 1).
 const DUST_PARTICLE_COUNT = 5;
@@ -81,9 +128,11 @@ const DUST_COLOR = '#B8A98F';
 // slots + 2 gaps fit on the narrowest realistic target width (375pt)
 // without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
 export const CARD_WIDTH = 110;
-// Closed state stays card-shaped so opening grows within one visual family;
-// the retired 110x200 standing spine read as a stick on device.
-export const CARD_CLOSED_HEIGHT = 144;
+// The closed card is now a brick standing on the shelf, so this is the
+// tallest of the three brick FRONT FACES at CARD_WIDTH wide (brick2:
+// 110 * 385 / 240). The three faces therefore end up marginally different
+// heights inside this shared box — correct, they are different bricks.
+export const CARD_CLOSED_HEIGHT = 177;
 // Floor for the *opened* gauntletCard's measured height — matches the fixed
 // tileHeight={200} SwipeMask is given below for gauntletCard mode. Kept
 // separate from CARD_CLOSED_HEIGHT: the closed card is deliberately shorter
@@ -184,9 +233,12 @@ function SpineSlot({
   slotHeight: number;
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
-  const entranceTransY = useRef(new Animated.Value(STONE_EMBED_TRANSLATE_Y)).current;
-  const entranceScale = useRef(new Animated.Value(STONE_EMBED_SCALE)).current;
-  const entranceOpacity = useRef(new Animated.Value(STONE_EMBED_OPACITY)).current;
+  // One value drives the whole punch-out — position, rotation, scale, the
+  // recess mask and the contact shadow all read off it, so the brick can
+  // never come apart mid-flight.
+  const progress = useRef(new Animated.Value(0)).current;
+  const crownReveal = useRef(new Animated.Value(0)).current;
+  const { width: windowWidth } = useWindowDimensions();
   const [showLandingDust, setShowLandingDust] = useState(false);
   const onEntranceSettled = useCallback(() => setShowLandingDust(true), []);
   // Stable identity across re-renders — StoneDustBurst's effect depends on
@@ -196,6 +248,53 @@ function SpineSlot({
   // the ~420ms dust animation mid-flight instead of letting it finish once.
   const onDustBurstDone = useCallback(() => setShowLandingDust(false), []);
   const measuredHeightRef = useRef(GAUNTLET_CARD_OPEN_MIN_HEIGHT);
+
+  const sprite = BRICK_SPRITES[index % BRICK_SPRITES.length];
+  const recess = BRICK_RECESSES[index % BRICK_RECESSES.length];
+  // All of the entrance's geometry, resolved once per width. Wall art space
+  // and screen points meet here and nowhere else: recess coordinates are
+  // wall-art units (wallArtScale), sprite measurements are art units of the
+  // brick's own image (CARD_WIDTH / sprite.w), and everything returned is
+  // screen points.
+  const brick = useMemo(() => {
+    const S = wallArtScale(windowWidth);
+    const spriteScale = CARD_WIDTH / sprite.w;
+    const faceH = sprite.faceH * spriteScale;
+    const topFaceH = TOP_FACE * spriteScale;
+    const recessCx = ((recess.x0 + recess.x1) / 2) * S;
+    const recessCy = ((recess.y0 + recess.y1) / 2) * S;
+    const recessW = (recess.x1 - recess.x0) * S;
+    // The card's resting bottom sits ON the ledge line — that is what this
+    // component's bottom-anchored wrap already guarantees — so both the card
+    // and the recess are measured against that same line, negative meaning
+    // above it.
+    //
+    // offsetX (centerOffsetX) is how far LEFT of screen centre this slot
+    // sits, so the slot's own centre is screen centre MINUS it.
+    const cardCentreX = windowWidth / 2 - offsetX;
+    const cardCentreY = -(faceH / 2);
+    const recessCentreY = -((LEDGE_ART_Y * S) - recessCy);
+    return {
+      faceH,
+      topFaceH,
+      spriteH: sprite.padH * spriteScale,
+      // The mask covers the top face plus a two-unit bleed, so no lit pixel
+      // of the brick's top surface survives at the seam.
+      capH: (TOP_FACE + 2) * spriteScale,
+      // Top of the padded sprite box within the slot, placed so the FRONT
+      // FACE's bottom edge lands on the card's bottom edge. The transparent
+      // padding then overhangs the card's bottom by exactly topFaceH.
+      spriteTop: CARD_CLOSED_HEIGHT - faceH - topFaceH,
+      startDX: recessCx - cardCentreX,
+      startDY: recessCentreY - cardCentreY,
+      // Lying on its side, the brick's face height spans the recess's width.
+      startScale: recessW / faceH,
+      // A small wall-scaled drift so the push-out reads as coming toward the
+      // camera rather than sliding along the wall.
+      driftY: 20 * S,
+    };
+  }, [windowWidth, offsetX, sprite, recess]);
+
   const resolved = status !== 'idle';
   // Open (or resolved) cards render wider than their 90px slot (see
   // SwipeMask's gauntletCard width), so they must paint above sibling
@@ -225,48 +324,59 @@ function SpineSlot({
   }, [isOpen, onMeasuredHeightChange, tile.mask.id]);
 
   useEffect(() => {
-    // null = preference not yet resolved; hold at starting position
-    // so the later false→true transition has something to animate.
-    if (reduceMotion === null) return;
+    // The parent collapses a still-unresolved preference (null) into `true`
+    // with `reduceMotion !== false`, so this branch also covers "not known
+    // yet": the bricks are simply already standing on the shelf with their
+    // crowns on, and no dust fires. A later resolved `false` re-runs this
+    // effect and resets below, so the entrance is deferred, never skipped.
     if (reduceMotion !== false) {
-      entranceTransY.setValue(0);
-      entranceScale.setValue(1);
-      entranceOpacity.setValue(1);
+      progress.setValue(1);
+      crownReveal.setValue(1);
       return;
     }
-    // Reset to embedded starting position so the animation is always visible
-    // (the previous render may have snapped values to their targets while
-    // reduceMotion was still null).
-    entranceTransY.setValue(STONE_EMBED_TRANSLATE_Y);
-    entranceScale.setValue(STONE_EMBED_SCALE);
-    entranceOpacity.setValue(STONE_EMBED_OPACITY);
-    const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(entranceTransY, {
-          toValue: 0,
-          duration: STONE_ENTRANCE_MS,
-          easing: Easing.out(Easing.back(STONE_LANDING_OVERSHOOT)),
-          useNativeDriver: true,
-        }),
-        Animated.timing(entranceScale, {
-          toValue: 1,
-          duration: STONE_ENTRANCE_MS,
+    progress.setValue(0);
+    crownReveal.setValue(0);
+    const flightTimer = setTimeout(() => {
+      Animated.sequence([
+        // Push out of the wall.
+        Animated.timing(progress, {
+          toValue: BRICK_SEG[0],
+          duration: BRICK_SEG_MS[0],
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-        Animated.timing(entranceOpacity, {
-          toValue: 1,
-          duration: STONE_ENTRANCE_MS,
-          easing: Easing.out(Easing.quad),
+        // Travel to the shelf, tipping upright on the way.
+        Animated.timing(progress, {
+          toValue: BRICK_SEG[1],
+          duration: BRICK_SEG_MS[1],
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        // Settle, with a short overshoot so it lands rather than arrives.
+        Animated.timing(progress, {
+          toValue: BRICK_SEG[2],
+          duration: BRICK_SEG_MS[2],
+          easing: Easing.out(Easing.back(1.7)),
           useNativeDriver: true,
         }),
       ]).start(({ finished }) => {
+        // Dust belongs to THIS slot's own settle, not to the row's.
         if (finished) onEntranceSettled();
       });
     }, entranceDelay);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entranceDelay, reduceMotion, entranceTransY, entranceScale, entranceOpacity]);
+    const crownTimer = setTimeout(() => {
+      Animated.timing(crownReveal, {
+        toValue: 1,
+        duration: BRICK_CROWN_MS,
+        easing: Easing.out(Easing.back(2.2)),
+        useNativeDriver: true,
+      }).start();
+    }, BRICK_CROWN_DELAY_MS);
+    return () => {
+      clearTimeout(flightTimer);
+      clearTimeout(crownTimer);
+    };
+  }, [entranceDelay, reduceMotion, progress, crownReveal, onEntranceSettled]);
 
   useEffect(() => {
     const target = isOpen || resolved ? 1 : 0;
@@ -306,6 +416,49 @@ function SpineSlot({
     : openAnim.interpolate({ inputRange: [0, 0.35, 1], outputRange: [1, 0, 0] });
   const contentOpacity = openAnim.interpolate({ inputRange: [0, 0.55, 1], outputRange: [0, 0, 1] });
 
+  // ── The punch-out itself ──────────────────────────────────────
+  // A plain 2D Z rotation is the whole trick: the brick lies horizontally in
+  // its recess at -90deg and spins upright to 0 on the way to the shelf.
+  const brickRotate = progress.interpolate({
+    inputRange: BRICK_INPUT,
+    outputRange: ['-90deg', '-90deg', '4deg', '0deg'],
+  });
+  const brickScale = progress.interpolate({
+    inputRange: BRICK_INPUT,
+    outputRange: [brick.startScale, brick.startScale * 1.09, 1.055, 1],
+  });
+  const brickTranslateX = progress.interpolate({
+    inputRange: BRICK_INPUT,
+    outputRange: [brick.startDX, brick.startDX * 0.94, 0, 0],
+  });
+  const brickTranslateY = progress.interpolate({
+    inputRange: BRICK_INPUT,
+    outputRange: [brick.startDY, brick.startDY + brick.driftY, 0, 0],
+  });
+  // Stands in for a clip-path: while the brick is flush in the wall its top
+  // face must not read, and it uncovers as the brick clears the hole.
+  const capOpacity = progress.interpolate({
+    inputRange: [0, 0.1, 0.3, 1],
+    outputRange: [1, 1, 0, 0],
+  });
+  // Contact shadow — arrives only over the last third of the flight, as the
+  // brick comes down onto the shelf.
+  const contactShadowOpacity = progress.interpolate({
+    inputRange: [0, 0.7, 1],
+    outputRange: [0, 0, 0.55],
+  });
+  const crownOpacity = crownReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+  // Deliberately NOT clamped — Easing.back overshoots past 1, and that
+  // overshoot is the small pop the crown lands with.
+  const crownScale = crownReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1],
+  });
+
   // A closed, unopened, unresolved slot's hit target should never capture
   // touches meant for whichever OTHER slot is currently open — its own
   // card can be picked only while nothing else is active anyway
@@ -324,53 +477,83 @@ function SpineSlot({
       { height: slotHeight },
       isOpen ? styles.slotOpen : elevated && styles.slotElevated,
     ]}>
+      {/* Contact shadow on the shelf. A painted ellipse, never an RN shadow
+          — see the note on styles.card below. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.contactShadow,
+          { opacity: Animated.multiply(contactShadowOpacity, closedOpacity) },
+        ]}
+      />
+
       <Animated.View
         pointerEvents="none"
         style={[
           styles.card,
-          // Shadow only while actually closed — NOT driven by closedOpacity
-          // like the rest of this view. RN/iOS shadows are computed from
-          // the layer's bounding box independently of animated `opacity`,
-          // so a shadow left on this view kept casting a faint rounded-rect
-          // "ghost" outline behind the opened card even once this view had
-          // faded to opacity 0 and turned edge-on (confirmed on device,
-          // 2026-08-15 — Pete: "there's a trace... on kind of an angle").
-          // `!elevated` alone only covers THIS card's own shadow once IT
-          // opens — it missed the same bleed from its still-closed
-          // siblings: the open card grows well past its own 110px slot and
-          // visually overlaps the other two, which are still closed and
-          // still casting their own shadow underneath it (confirmed via
-          // screenshot, 2026-08-15 — Pete: "a different outline... outside
-          // of the card"). Once any card is active, the other two are
-          // background and have no reason to keep casting depth, so
-          // `anyOpen` cuts their shadow the same instant the sibling opens.
+          // No RN shadow on this view, ever. RN/iOS shadows are computed
+          // from the layer's bounding box independently of animated
+          // `opacity`, so a shadow left here kept casting a faint
+          // rounded-rect "ghost" outline behind the opened card even once
+          // this view had faded to opacity 0 and turned edge-on (confirmed
+          // on device, 2026-08-15 — Pete: "there's a trace... on kind of an
+          // angle"), and the same bleed came from still-closed SIBLINGS,
+          // whose own shadow showed past the edge of the card overlapping
+          // them (screenshot, 2026-08-15 — Pete: "a different outline...
+          // outside of the card"). styles.cardShadow survives only as the
+          // record of that; it is deliberately not applied to anything.
           {
-            opacity: Animated.multiply(closedOpacity, entranceOpacity),
+            top: brick.spriteTop,
+            height: brick.spriteH,
+            opacity: closedOpacity,
+            // Order matters: the brick is scaled, then rotated about its own
+            // front-face centre, then translated in the parent's unrotated
+            // space. The rotateY flip after it is the PICK animation and
+            // stays exactly where it was — the entrance always finishes
+            // before a pick is possible, so the two never overlap.
             transform: [
-              { translateY: entranceTransY },
-              { scale: entranceScale },
+              { translateX: brickTranslateX },
+              { translateY: brickTranslateY },
+              { rotate: brickRotate },
+              { scale: brickScale },
               { perspective: CARD_PERSPECTIVE },
               { rotateY: closedRotateY },
             ],
           },
         ]}
       >
-        {/* Reusable prepared stone artwork; the crown remains the existing
-            repo marker and is still recolored per card. Both are separate
-            layers so the stone can be reused for all three choices and the
-            crown identity stays under app control. */}
         <Image
-          source={stoneMarkerArt}
-          contentFit="cover"
-          style={styles.stoneFace}
-        />
-        <View style={styles.stoneTint} pointerEvents="none" />
-        <Image
-          source={crownMarkerArt}
+          source={sprite.src}
           contentFit="contain"
-          tintColor={CARD_MARKER_COLORS[index % CARD_MARKER_COLORS.length]}
-          style={styles.cardMarker}
+          style={StyleSheet.absoluteFill}
         />
+        {/* The recess mask — covers the brick's top face while it is still
+            flush in the wall, so the hole reads as a hole. */}
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.recessCap, { height: brick.capH, opacity: capOpacity }]}
+        />
+        {/* The crown is the only content on the face, and the only thing
+            that distinguishes the three choices. It arrives on its own beat,
+            after every brick has landed. */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.cardMarker,
+            {
+              top: brick.topFaceH + brick.faceH * CROWN_FACE_RATIO - CROWN_H / 2,
+              opacity: crownOpacity,
+              transform: [{ scale: crownScale }],
+            },
+          ]}
+        >
+          <Image
+            source={crownMarkerArt}
+            contentFit="contain"
+            tintColor={CARD_MARKER_COLORS[index % CARD_MARKER_COLORS.length]}
+            style={styles.crownImage}
+          />
+        </Animated.View>
       </Animated.View>
 
       {showLandingDust && (
@@ -483,6 +666,13 @@ export function BossGauntletSpines({
   // where the two coordinate frames actually meet, so the stones still land
   // on the ledge as painted rather than floating above it by that amount.
   const ledgeOffset = resolveLedgeOffset(windowWidth) - insets.bottom;
+  // The shelf lip is a slice of that same wall art, so it needs no
+  // measurement either: full screen width, its own aspect ratio, and its top
+  // edge a fixed art-space distance above the ledge line the wrap's bottom
+  // already sits on.
+  const shelfLipHeight = windowWidth * (SHELF_LIP_ART_H / WALL_ART_W);
+  const shelfLipTop =
+    (LEDGE_ART_Y - SHELF_LIP_ART_TOP) * wallArtScale(windowWidth) + SHELF_LIP_NUDGE_Y;
 
   useEffect(() => {
     onActiveCardHeightChange?.(activeCardHeight);
@@ -524,7 +714,7 @@ export function BossGauntletSpines({
           anyOpen={anyOpen}
           tileLanded={tileLanded}
           inputLocked={inputLocked}
-          entranceDelay={index * STONE_ENTRANCE_STAGGER_MS}
+          entranceDelay={index * BRICK_STAGGER_MS}
           reduceMotion={reduceMotion !== false}
           onPick={onPick}
           onSwipeUp={onSwipeUp}
@@ -541,6 +731,28 @@ export function BossGauntletSpines({
         />
         ))}
       </View>
+
+      {/* The ledge's own foreground lip, rendered LAST so the bricks land
+          BEHIND the shelf rather than on top of it. It must span the full
+          screen width, but this wrap is inset by MaskBoard's container
+          padding — so the lip is re-widened from the wrap's CENTRE, which is
+          screen centre, rather than from its edges. It also hangs well below
+          the wrap's own bottom (the art runs to the wall's bottom row),
+          which is why styles.wrap must not clip. */}
+      <Image
+        source={shelfLipArt}
+        contentFit="fill"
+        pointerEvents="none"
+        style={[
+          styles.shelfLip,
+          {
+            width: windowWidth,
+            marginLeft: -windowWidth / 2,
+            height: shelfLipHeight,
+            bottom: shelfLipTop - shelfLipHeight,
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -551,6 +763,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
+    // The shelf lip hangs far below this wrap's own bottom (its art runs to
+    // the bottom row of the wall), and a brick in flight swings well outside
+    // its slot, so this must never clip its children.
+    overflow: 'visible',
   },
   header: {
     width: '100%',
@@ -580,9 +796,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: ROW_GAP,
     paddingTop: ROW_VERTICAL_INSET,
+    // A brick lying on its side spans further than its own slot, and starts
+    // from a recess that is not above its slot at all — neither this row nor
+    // a slot may clip during the flight.
+    overflow: 'visible',
   },
   slot: {
     width: CARD_WIDTH,
+    overflow: 'visible',
   },
   // Applied to a resolved-but-not-open slot so its overflowing
   // gauntletCard-width SwipeMask paints above sibling sealed spines
@@ -601,16 +822,19 @@ const styles = StyleSheet.create({
     zIndex: PW.z.activeCard,
     elevation: PW.z.activeCard,
   },
+  // Height and top are set inline per slot (see `brick` above): this box is
+  // the PADDED sprite, not the card, so its own centre lands on the centre
+  // of the brick's front face — the point React Native rotates about. It
+  // deliberately does not clip; the transparent padding overhangs the card's
+  // bottom edge by design.
   card: {
     position: 'absolute',
-    top: 0,
     left: 0,
     width: CARD_WIDTH,
-    height: CARD_CLOSED_HEIGHT,
-    overflow: 'hidden',
   },
-  // Split out from `card` — see the "shadow ghost" comment where this is
-  // applied conditionally (only while actually closed).
+  // NOT applied to anything — kept only as the record of the "shadow ghost"
+  // bug documented on `card` above, so nobody re-adds an RN shadow here.
+  // The brick's depth comes from styles.contactShadow instead.
   cardShadow: {
     // iOS-only shadow props deliberately, NOT PW.shadow.card (which sets
     // Android `elevation`) — this component already has a carefully tuned
@@ -629,24 +853,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stoneFace: {
-    ...StyleSheet.absoluteFill,
-    width: '100%',
-    height: '100%',
+  recessCap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: RECESS_SHADOW,
   },
-  stoneTint: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(15,13,42,0.10)',
+  contactShadow: {
+    position: 'absolute',
+    left: -7,
+    width: CARD_WIDTH + 14,
+    // Straddles the ledge line so roughly half of it still reads above the
+    // shelf lip drawn in front of the row.
+    top: CARD_CLOSED_HEIGHT - 13,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: PW.color.shadow,
+  },
+  shelfLip: {
+    position: 'absolute',
+    left: '50%',
   },
   // No "SEALED" label anymore — the crown is the only content, so it can
   // take up most of the card instead of sharing space with text (Pete,
   // 2026-08-15: "just the crowns as big as they go").
+  // Horizontally centred on the card; its vertical centre is placed inline
+  // at CROWN_FACE_RATIO down the brick's own front face, which differs
+  // slightly per sprite.
   cardMarker: {
     position: 'absolute',
-    left: (CARD_WIDTH - 84) / 2,
-    top: (CARD_CLOSED_HEIGHT - 54) / 2,
-    width: 84,
-    height: 54,
+    left: (CARD_WIDTH - CROWN_W) / 2,
+    width: CROWN_W,
+    height: CROWN_H,
+  },
+  crownImage: {
+    width: '100%',
+    height: '100%',
   },
   dustWrap: {
     position: 'absolute',
