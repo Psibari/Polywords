@@ -31,6 +31,16 @@ export function resolveLedgeOffset(windowWidth: number): number {
 export const SHELF_LIP_ART_TOP = 1332;
 export const SHELF_LIP_ART_H = 512;
 
+// The shelf's own front face, measured off shelf-front.png exactly the way
+// the ledge line was — scanning luminance down the middle third. The lit top
+// edge peaks at y=1352 (lum 157), the mid-dark face runs from 1356 to 1404
+// (lum ~50, near-flat), and it falls off a cliff into under-shelf shadow at
+// 1408 (lum 14). That face is empty carved stone directly beneath the cards,
+// and it is where the gauntlet's CHOOSE A SEAL label lives — there is no
+// longer clear space for it above the bricks.
+export const SHELF_FACE_ART_TOP = 1356;
+export const SHELF_FACE_ART_BOTTOM = 1404;
+
 // Where the three gauntlet bricks sit in the wall, in that same 853x1844 art
 // space — the GEOMETRY the punch-out flight starts from (each brick's flush
 // position, size and angle). Each brick lies on its side in the wall and the

@@ -21,6 +21,8 @@ import {
   BRICK_RECESSES,
   LEDGE_ART_Y,
   RECESS_OVERLAYS,
+  SHELF_FACE_ART_BOTTOM,
+  SHELF_FACE_ART_TOP,
   SHELF_LIP_ART_H,
   SHELF_LIP_ART_TOP,
   WALL_ART_W,
@@ -128,6 +130,12 @@ const CROWN_H = 54;
 // The one on-device tuning knob for the shelf lip: points added to its top
 // edge, so it can be nudged without re-deriving the wall-art geometry.
 export const SHELF_LIP_NUDGE_Y = 0;
+// The same knob for the shelf label below it.
+export const SHELF_LABEL_NUDGE_Y = 0;
+// Fixed box for the label row, sized for its own 16px progress text rather
+// than for the stone band it sits on, so the type can never be clipped by a
+// band that scales with screen width.
+const SHELF_LABEL_BOX_H = 22;
 
 // Must stay > 1 — the angle spread below divides by (DUST_PARTICLE_COUNT - 1).
 const DUST_PARTICLE_COUNT = 5;
@@ -699,6 +707,11 @@ export function BossGauntletSpines({
   const wallScale = wallArtScale(windowWidth);
   const shelfLipHeight = windowWidth * (SHELF_LIP_ART_H / WALL_ART_W);
   const shelfLipTop = (LEDGE_ART_Y - SHELF_LIP_ART_TOP) * wallScale + SHELF_LIP_NUDGE_Y;
+  // Centre of the lip's front face, in points BELOW the ledge line the wrap's
+  // bottom sits on. The label rides there.
+  const shelfFaceCentre =
+    ((SHELF_FACE_ART_TOP + SHELF_FACE_ART_BOTTOM) / 2 - LEDGE_ART_Y) * wallScale +
+    SHELF_LABEL_NUDGE_Y;
 
   useEffect(() => {
     onActiveCardHeightChange?.(activeCardHeight);
@@ -708,15 +721,6 @@ export function BossGauntletSpines({
 
   return (
     <View style={[styles.wrap, { bottom: ledgeOffset }]} pointerEvents="box-none">
-      <View
-        style={styles.header}
-        pointerEvents="none"
-        accessible
-        accessibilityLabel={`Choose a seal. ${correctCount} of ${gauntletTiles.length} correct.`}
-      >
-        <Text style={styles.instruction}>CHOOSE A SEAL</Text>
-        <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
-      </View>
       {/* The holes. Part of the WALL, not of any card — so they live in their
           own layer beneath the row and take no part in a brick's animated
           transform. Positioned in wall art space off the same ledge line the
@@ -822,6 +826,32 @@ export function BossGauntletSpines({
           },
         ]}
       />
+
+      {/* CHOOSE A SEAL rides the shelf's front face, not the space above the
+          row. The bricks are ~48pt taller than the stone cards they replaced,
+          which left no clear gap between the book and the brick tops — the
+          label was squeezed from both sides and unreadable (device,
+          2026-09-10 — Pete: "it cuts that out"). The lip's front face is
+          empty carved stone directly under the cards, measured off the lip
+          art in bossGauntletLedge.ts. Rendered AFTER the lip so the lip does
+          not paint over it. */}
+      <View
+        style={[
+          styles.shelfLabel,
+          {
+            width: windowWidth,
+            marginLeft: -windowWidth / 2,
+            height: SHELF_LABEL_BOX_H,
+            bottom: -(shelfFaceCentre + SHELF_LABEL_BOX_H / 2),
+          },
+        ]}
+        pointerEvents="none"
+        accessible
+        accessibilityLabel={`Choose a seal. ${correctCount} of ${gauntletTiles.length} correct.`}
+      >
+        <Text style={styles.instruction}>CHOOSE A SEAL</Text>
+        <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
+      </View>
     </View>
   );
 }
@@ -837,13 +867,17 @@ const styles = StyleSheet.create({
     // its slot, so this must never clip its children.
     overflow: 'visible',
   },
-  header: {
-    width: '100%',
+  // Absolutely positioned below the wrap's bottom (the ledge line), centred on
+  // the lip's front face. Re-widened to the screen from the wrap's centre, the
+  // same way the lip itself is, because the wrap is inset by MaskBoard's
+  // container padding.
+  shelfLabel: {
+    position: 'absolute',
+    left: '50%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    marginBottom: PW.space.md,
   },
   instruction: {
     color: PW.color.softWhite,

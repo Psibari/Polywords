@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import {
   BRICK_RECESSES,
   LEDGE_ART_Y,
-  RECESS_OVERLAYS,
   LEDGE_OFFSET_RATIO,
+  RECESS_OVERLAYS,
+  SHELF_FACE_ART_BOTTOM,
+  SHELF_FACE_ART_TOP,
   SHELF_LIP_ART_H,
   SHELF_LIP_ART_TOP,
   WALL_ART_H,
@@ -54,6 +56,22 @@ assert.equal(
   SHELF_LIP_ART_TOP + SHELF_LIP_ART_H,
   WALL_ART_H,
   'the lip runs to the bottom row of the wall art',
+);
+
+// The label's home. It has to be a real band of stone on the lip's front
+// face: below the ledge's lit edge, and comfortably inside the lip art.
+assert.ok(
+  SHELF_FACE_ART_TOP > LEDGE_ART_Y,
+  'the shelf face starts below the ledge\'s lit edge',
+);
+assert.ok(
+  SHELF_FACE_ART_TOP > SHELF_LIP_ART_TOP &&
+    SHELF_FACE_ART_BOTTOM < SHELF_LIP_ART_TOP + SHELF_LIP_ART_H,
+  'the shelf face must lie inside the lip art that paints it',
+);
+assert.ok(
+  SHELF_FACE_ART_BOTTOM - SHELF_FACE_ART_TOP >= 40,
+  'the shelf face must be tall enough to carry the label at any screen width',
 );
 
 assert.equal(BRICK_RECESSES.length, 3, 'the gauntlet has exactly three brick recesses');
