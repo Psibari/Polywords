@@ -20,6 +20,7 @@ import { createBossGauntletPressProps } from './bossGauntletPress';
 import {
   BRICK_RECESSES,
   LEDGE_ART_Y,
+  RECESS_OVERLAYS,
   SHELF_LIP_ART_H,
   SHELF_LIP_ART_TOP,
   WALL_ART_W,
@@ -50,6 +51,17 @@ const BRICK_SPRITES = [
   { src: require('../../assets/images/gauntlet/brick1_rn.png'), w: 240, padH: 464, faceH: 372 },
   { src: require('../../assets/images/gauntlet/brick2_rn.png'), w: 240, padH: 477, faceH: 385 },
   { src: require('../../assets/images/gauntlet/brick3_rn.png'), w: 240, padH: 459, faceH: 367 },
+] as const;
+
+// The holes those bricks leave — one per slot, cut from the wall art at the
+// RECESS_OVERLAYS rects so each one's outer bleed IS the surrounding wall and
+// disappears into it. The shared wall itself is never cut: GraphicGround
+// renders the intact StoneWall on every screen, and these appear only while
+// the gauntlet is mounted.
+const RECESS_ART = [
+  require('../../assets/images/gauntlet/recess1.png'),
+  require('../../assets/images/gauntlet/recess2.png'),
+  require('../../assets/images/gauntlet/recess3.png'),
 ] as const;
 // Three genuinely distinct hues, not three golds, so "which one is which"
 // actually reads. Pulled from the app's own locked palette, not new colors.
@@ -205,13 +217,16 @@ function StoneDustBurst({ onDone }: { onDone: () => void }) {
 
 function SpineSlot({
   tile, index, offsetX, status, isOpen, anyOpen, tileLanded, inputLocked,
-  entranceDelay, reduceMotion, onPick, onSwipeUp, onSwipeRight, onEffect,
-  onSwipeAttempt, onCardTouch, onMeasuredHeightChange, onLayoutExitComplete,
-  wordY, intakeY, totalTiles, slotHeight,
+  entranceDelay, reduceMotion, progress, onPick, onSwipeUp, onSwipeRight,
+  onEffect, onSwipeAttempt, onCardTouch, onMeasuredHeightChange,
+  onLayoutExitComplete, wordY, intakeY, totalTiles, slotHeight,
 }: {
   tile: GauntletTile;
   index: number;
   offsetX: number;
+  // Owned by the parent, not by this slot: the recess overlay this value also
+  // drives is part of the WALL, and renders in its own layer beneath the row.
+  progress: Animated.Value;
   status: SwipeMaskState;
   isOpen: boolean;
   anyOpen: boolean;
@@ -233,10 +248,10 @@ function SpineSlot({
   slotHeight: number;
 }) {
   const openAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
-  // One value drives the whole punch-out — position, rotation, scale, the
-  // recess mask and the contact shadow all read off it, so the brick can
-  // never come apart mid-flight.
-  const progress = useRef(new Animated.Value(0)).current;
+  // `progress` (a prop) drives the whole punch-out — position, rotation,
+  // scale, the top-face mask, the contact shadow and the wall's own recess
+  // overlay all read off it, so the brick and the hole it leaves can never
+  // come apart mid-flight.
   const crownReveal = useRef(new Animated.Value(0)).current;
   const { width: windowWidth } = useWindowDimensions();
   const [showLandingDust, setShowLandingDust] = useState(false);
@@ -657,6 +672,17 @@ export function BossGauntletSpines({
   const reduceMotion = useReducedMotionPreference();
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  // One punch-out progress value per slot, owned HERE rather than inside
+  // SpineSlot. Each brick's hole is part of the wall, not part of its card,
+  // so the overlays render as their own layer beneath the row — outside the
+  // slot that drives them. Grown lazily and never shrunk; MaskBoard keys this
+  // component per gauntlet (gauntletThrowKey), so every run gets fresh values
+  // and no hole state outlives the gauntlet that opened it.
+  const brickProgressRef = useRef<Animated.Value[]>([]);
+  while (brickProgressRef.current.length < gauntletTiles.length) {
+    brickProgressRef.current.push(new Animated.Value(0));
+  }
+  const brickProgress = brickProgressRef.current;
   // GameScreen.tsx renders the wall art (AmbientSkyBackground, with the
   // carved ledge this offset targets) as a direct child of the screen,
   // reaching its true bottom edge — but this component now renders inside
@@ -670,9 +696,9 @@ export function BossGauntletSpines({
   // measurement either: full screen width, its own aspect ratio, and its top
   // edge a fixed art-space distance above the ledge line the wrap's bottom
   // already sits on.
+  const wallScale = wallArtScale(windowWidth);
   const shelfLipHeight = windowWidth * (SHELF_LIP_ART_H / WALL_ART_W);
-  const shelfLipTop =
-    (LEDGE_ART_Y - SHELF_LIP_ART_TOP) * wallArtScale(windowWidth) + SHELF_LIP_NUDGE_Y;
+  const shelfLipTop = (LEDGE_ART_Y - SHELF_LIP_ART_TOP) * wallScale + SHELF_LIP_NUDGE_Y;
 
   useEffect(() => {
     onActiveCardHeightChange?.(activeCardHeight);
@@ -691,6 +717,48 @@ export function BossGauntletSpines({
         <Text style={styles.instruction}>CHOOSE A SEAL</Text>
         <Text style={styles.progress}>{correctCount}/{gauntletTiles.length}</Text>
       </View>
+      {/* The holes. Part of the WALL, not of any card — so they live in their
+          own layer beneath the row and take no part in a brick's animated
+          transform. Positioned in wall art space off the same ledge line the
+          wrap's bottom already sits on, and widened from the wrap's centre
+          (screen centre) because the wrap is inset by MaskBoard's padding.
+          Each one fades in over the first sliver of its own brick's push-out,
+          UNDERNEATH that brick, which covers its recess completely while
+          flush — so the swap from wall brick to hole is never visible as a
+          pop. They leave with the gauntlet; no hole state is persisted. */}
+      <View
+        pointerEvents="none"
+        style={[styles.recessLayer, { width: windowWidth, marginLeft: -windowWidth / 2 }]}
+      >
+        {gauntletTiles.map((tile, index) => {
+          const overlay = RECESS_OVERLAYS[index % RECESS_OVERLAYS.length];
+          return (
+            <Animated.View
+              key={tile.mask.id}
+              style={[
+                styles.recessOverlay,
+                {
+                  left: overlay.x * wallScale,
+                  width: overlay.w * wallScale,
+                  height: overlay.h * wallScale,
+                  bottom: (LEDGE_ART_Y - (overlay.y + overlay.h)) * wallScale,
+                  opacity: brickProgress[index].interpolate({
+                    inputRange: [0, 0.06, 1],
+                    outputRange: [0, 1, 1],
+                  }),
+                },
+              ]}
+            >
+              <Image
+                source={RECESS_ART[index % RECESS_ART.length]}
+                contentFit="fill"
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+          );
+        })}
+      </View>
+
       <View
         // Fixed, not activeCardHeight-driven: this whole wrap is
         // bottom-anchored (see styles.wrap above), so a height that grows
@@ -716,6 +784,7 @@ export function BossGauntletSpines({
           inputLocked={inputLocked}
           entranceDelay={index * BRICK_STAGGER_MS}
           reduceMotion={reduceMotion !== false}
+          progress={brickProgress[index]}
           onPick={onPick}
           onSwipeUp={onSwipeUp}
           onSwipeRight={onSwipeRight}
@@ -874,6 +943,18 @@ const styles = StyleSheet.create({
   shelfLip: {
     position: 'absolute',
     left: '50%',
+  },
+  // Spans the wrap's full height and is re-widened to the screen from its
+  // centre; each overlay inside is then placed by `bottom` off the wrap's
+  // bottom edge, which is the wall's own ledge line.
+  recessLayer: {
+    position: 'absolute',
+    left: '50%',
+    top: 0,
+    bottom: 0,
+  },
+  recessOverlay: {
+    position: 'absolute',
   },
   // No "SEALED" label anymore — the crown is the only content, so it can
   // take up most of the card instead of sharing space with text (Pete,
