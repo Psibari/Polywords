@@ -1,9 +1,33 @@
 # POLYWORDS Current Context
 
-Updated September 8, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current committed baseline: `688fde3`.
+Updated September 10, 2026. Branch: `play-screen-overhaul`, tracking
+`origin/play-screen-overhaul`. Current committed baseline: `509315b`.
 
 ## Verified Current State
+
+- The boss gauntlet's sealed cards are bricks that punch out of the wall (`c2ba703`,
+  `36e8533`, `86c18a6`, `e04944c`, `509315b`, 2026-09-09..10), closing this file's old open
+  item 4 — the placeholder stone card art and its fade-and-grow are both gone, and the motion
+  is the push-forward that item asked for. Each brick starts lying on its side flush in its own
+  recess, punches out, swings upright on a plain Z rotation and lands on the shelf; all three
+  crowns then arrive on one beat. `rotateY` still runs, but only as the pick flip, never the
+  entrance. Device-confirmed 2026-09-10.
+  - The wall art is NEVER cut. `GraphicGround` renders the intact `StoneWall.png` on every
+    screen; the three holes are an overlay the gauntlet owns, revealed under each brick as it
+    pushes out and gone when the gauntlet unmounts. A first pass got this wrong by baking the
+    recesses into the shared background, which showed a broken wall on Home, Daily, the
+    Polybook, Settings and every ordinary Hunt round — see the note in `GraphicGround.tsx`.
+  - Recess geometry, the lip's placement and the shelf face all live in `bossGauntletLedge.ts`
+    with the other wall-art measurements, covered by `bossGauntletLedge.test.ts`. Two on-device
+    knobs: `SHELF_LIP_NUDGE_Y` and `SHELF_LABEL_NUDGE_Y`.
+  - CHOOSE A SEAL / progress rides the shelf's front face, not the space above the row — the
+    bricks are ~48pt taller than the stone cards they replaced and there is no longer clear
+    space between the book and the brick tops.
+  - The opened gauntlet card now has ONE gold edge. `card-face.png` paints its own frame, so
+    `SwipeMask`'s `gauntletAccentRim` was a second, wider outline; it and a duplicate
+    `MaskCardArtwork` draw are removed. The gold lift-glow is unchanged.
+  - Untouched by all of the above: picking, swiping, `wrongFail`, `mastered`, and everything
+    downstream of `onPick`.
 
 - The Polybook screen is built (`7435211`..`77d710d`, 2026-09-07): a two-page spread, sideways
   paging between the work log and today's entry, vertical scroll back through the days. This
@@ -266,21 +290,19 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
 3. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should
   remember that victory. Keep the hidden pair ledger on Polly's side; do not turn it into a
   player shelf collection.
-4. Replace the placeholder Boss-gauntlet card art when the stone-block/crown direction is
-  specified. The desired motion is push-forward, not `rotateY`.
-5. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
+4. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
   persistence, gestures, animation, and performance.
-6. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
+5. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
   placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
   and the mastery beat.
-7. Re-render the four clipped animations at 724x724.
-8. The remaining Polybook writing: today's entries want roughly ten per rivalry state against
+6. Re-render the four clipped animations at 724x724.
+7. The remaining Polybook writing: today's entries want roughly ten per rivalry state against
   three or four written today; CONCEDING and MERCY are the thinnest pools; the payoff entry
   (docs/POLYBOOK.md, "The payoff") is undrafted.
-9. The three-step naming arc — "the visitor," then "the one they call [name]" using the
+8. The three-step naming arc — "the visitor," then "the one they call [name]" using the
   `playerName` that already exists in Settings, then "they" — is not built. The line pools have
   no slot for a name.
-10. The first-day label rewrites itself the day the log fills (see docs/POLYBOOK.md, "What is
+9. The first-day label rewrites itself the day the log fills (see docs/POLYBOOK.md, "What is
   not decided") — one row, roughly two hundred days out, about to be trimmed anyway. Fix is
   recording the player's first played date once; safe to add later, backfillable from the
   oldest row.
