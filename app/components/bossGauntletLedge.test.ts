@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   BRICK_RECESSES,
   LEDGE_ART_Y,
+  RECESS_OVERLAYS,
   LEDGE_OFFSET_RATIO,
   SHELF_LIP_ART_H,
   SHELF_LIP_ART_TOP,
@@ -71,6 +72,44 @@ BRICK_RECESSES.forEach((recess, index) => {
   assert.ok(
     recess.y0 >= 0 && recess.y1 <= LEDGE_ART_Y,
     `recess ${index} must sit above the ledge line`,
+  );
+});
+
+// The painted hole must always fully cover the geometric one it belongs to.
+// The two are separate numbers by design (the overlay carries a bleed), so
+// nothing but this test stops an edit to one from drifting off the other and
+// leaving a visible seam at the brick's edge.
+assert.equal(
+  RECESS_OVERLAYS.length,
+  BRICK_RECESSES.length,
+  'every brick recess must have exactly one overlay, and vice versa',
+);
+RECESS_OVERLAYS.forEach((overlay, index) => {
+  const recess = BRICK_RECESSES[index];
+  assert.ok(
+    overlay.x <= recess.x0,
+    `overlay ${index} must start at or left of its recess (${overlay.x} > ${recess.x0})`,
+  );
+  assert.ok(
+    overlay.y <= recess.y0,
+    `overlay ${index} must start at or above its recess (${overlay.y} > ${recess.y0})`,
+  );
+  assert.ok(
+    overlay.x + overlay.w >= recess.x1,
+    `overlay ${index} must end at or right of its recess (${overlay.x + overlay.w} < ${recess.x1})`,
+  );
+  assert.ok(
+    overlay.y + overlay.h >= recess.y1,
+    `overlay ${index} must end at or below its recess (${overlay.y + overlay.h} < ${recess.y1})`,
+  );
+  // And it still has to be a piece of this wall, drawn above the ledge.
+  assert.ok(
+    overlay.x >= 0 && overlay.x + overlay.w <= WALL_ART_W,
+    `overlay ${index} must sit inside the wall art horizontally`,
+  );
+  assert.ok(
+    overlay.y >= 0 && overlay.y + overlay.h <= LEDGE_ART_Y,
+    `overlay ${index} must sit above the ledge line`,
   );
 });
 

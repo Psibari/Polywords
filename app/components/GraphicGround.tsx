@@ -3,14 +3,15 @@ import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import GroundTorch from './GroundTorch';
 
-const stoneWallImage = require('../../assets/images/background/StoneWall-recessed.png');
+const stoneWallImage = require('../../assets/images/background/StoneWall.png');
 
 // Ground art: a photoreal stone wall texture filling the same box the old
 // flat-graphic SVG (gradient + flagstone tiles + pillar stacks + corner
-// vines) used to occupy, plus two torches. The wall now carries three
-// gauntlet recesses — three of its own bricks darkened into holes, at the
-// same size and on the same ledge line as before; the boss gauntlet cards
-// punch out of them (BossGauntletSpines.tsx, bossGauntletLedge.ts).
+// vines) used to occupy, plus two torches. This wall is INTACT and shared by
+// every screen — Home, Daily, the Polybook, Settings and every ordinary Hunt
+// round. The boss gauntlet's three holes are never baked in here; the
+// gauntlet owns them and shows them only while it is on screen (see
+// bossGauntletLedge.ts's RECESS_OVERLAYS).
 // The space between the torches is deliberately left empty — Polly's spot,
 // not a decorated focal point (an earlier gold-seal design was rejected).
 export default function GraphicGround() {
