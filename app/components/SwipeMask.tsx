@@ -824,23 +824,21 @@ export function SwipeMask({
               style={StyleSheet.absoluteFill}
             />
           )}
-          {!isSpecialSplit && gauntletCard && (
-            <>
-              {/* Same painted texture every regular tile uses (MaskCardArtwork),
-                  not a separate purple-leather gradient — the earlier version
-                  of this card was its own material family (matching the old
-                  standing spine, since retired for a flat card presentation —
-                  see BossGauntletSpines.tsx, 2026-08-15) and read as visibly
-                  different from the rest of the game's cards, which is
-                  exactly the "doesn't look like it belongs" complaint the
-                  2026-08-08 design doc already called out and approved fixing
-                  (never actually implemented until now, confirmed on device
-                  2026-08-15). Boss identity now comes from the gold rim
-                  accent below, not a whole separate texture. */}
-              <MaskCardArtwork />
-              <View style={styles.gauntletAccentRim} pointerEvents="none" />
-            </>
-          )}
+          {/* No gauntlet-specific layer here, deliberately. This card uses the
+              same painted MaskCardArtwork every regular tile uses, drawn by the
+              branch above (a gauntlet card never sets bookMaterial) — that is
+              the 2026-08-08 design doc's "doesn't look like it belongs" fix and
+              it is unchanged.
+
+              What used to sit here was a SECOND MaskCardArtwork plus a
+              `gauntletAccentRim` border at inset 0. card-face.png already
+              paints its own gold frame, and its art is inset 30 of 1410 across
+              and 13 of 604 down from the image's own edge — so a border at the
+              view's bounds landed about 6pt OUTSIDE that frame, on a corner
+              radius that did not match it: a stray second outline around every
+              opened gauntlet card (device, 2026-09-10 — Pete: "it's got a
+              second outline, a little wider around it"). Boss identity comes
+              from the gold lift-glow in tileAnimStyle instead. */}
           {/* Split tile background */}
           {isSpecialSplit && splitBackgroundColor && (
             <View
@@ -981,13 +979,6 @@ const styles = StyleSheet.create({
   // same MaskCardArtwork every regular tile already has, echoing the
   // gauntlet card's own gold-trim identity (crown marker, closed-card
   // border) instead of introducing a new visual language.
-  gauntletAccentRim: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: PW.color.goldSoft,
-  },
   checkmark: {
     position: 'absolute',
     top: 12,
