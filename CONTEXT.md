@@ -1,7 +1,7 @@
 # POLYWORDS Current Context
 
 Updated September 10, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current committed baseline: `509315b`.
+`origin/play-screen-overhaul`. Current committed baseline: `9f4a214`.
 
 ## Verified Current State
 
@@ -20,12 +20,35 @@ Updated September 10, 2026. Branch: `play-screen-overhaul`, tracking
   - Recess geometry, the lip's placement and the shelf face all live in `bossGauntletLedge.ts`
     with the other wall-art measurements, covered by `bossGauntletLedge.test.ts`. Two on-device
     knobs: `SHELF_LIP_NUDGE_Y` and `SHELF_LABEL_NUDGE_Y`.
-  - CHOOSE A SEAL / progress rides the shelf's front face, not the space above the row — the
-    bricks are ~48pt taller than the stone cards they replaced and there is no longer clear
-    space between the book and the brick tops.
+  - CHOOSE A SEAL / progress rides the shelf's front face, not the space above the row. The
+    move was forced when the bricks shipped: laid out above the row, the label was squeezed
+    between the book and the brick tops and read as cut out on device (2026-09-10). The
+    decision stands after the `12c71a0` resize. At the current size the tallest brick stands
+    172.4pt above the ledge including its top face (154 + 46 × 96 / 240), about 28pt taller
+    than the 144pt stone card it replaced.
   - The opened gauntlet card now has ONE gold edge. `card-face.png` paints its own frame, so
     `SwipeMask`'s `gauntletAccentRim` was a second, wider outline; it and a duplicate
     `MaskCardArtwork` draw are removed. The gold lift-glow is unchanged.
+  - The wall trembles for a 400ms lead-in and takes a kick as each brick tears loose
+    (`88735eb`). Bricks still SEATED in the wall rattle with it and stop dead the instant they
+    tear free: their share of the shake falls to zero over the same first sliver of progress
+    the hole fades in on. Under reduce motion nothing shakes and nothing sounds, because the
+    bricks are simply already on the shelf. The shake is a shared channel (`wallShake.ts`),
+    documented in CLAUDE.md's Runtime section.
+  - Sound: `0beced3` (assets), `36aa2b7` (wiring), `1775359` (one shared landing config). See
+    CLAUDE.md's Audio section; not restated here.
+  - Size and colour (`12c71a0`). At the original 110 wide the row was 346pt, 92% of a 375pt
+    screen, and each brick grew 54–62% between its hole and the shelf, which read as GROWING
+    rather than approaching. At `CARD_WIDTH` 96 the row is 304pt (81%) and the growth is
+    35–41%, both at 375pt (growth = 1 / startScale, startScale = recess width / face height).
+    The sprites are colour-matched per brick; see CLAUDE.md's Gauntlet entrance.
+  - Polly no longer appears during the entrance (`9f4a214`); `allMasksFound` still fires and
+    returns NONE explicitly. The reusable part is WHY: the label is placed from the shelf face
+    in wall art space, so it scales with screen width and shifts with the home-indicator inset,
+    while her perch is fixed screen points (a 260pt box at left −64, bottom −20 in
+    `PollyHuntVisit`). A fixed object against a scaling one: a sideways nudge of either would
+    have drifted back. Her beat was also sized for the retired card stack's ~900ms throw, not
+    the 1900ms brick entrance.
   - Untouched by all of the above: picking, swiping, `wrongFail`, `mastered`, and everything
     downstream of `onPick`.
 
@@ -164,8 +187,8 @@ Updated September 10, 2026. Branch: `play-screen-overhaul`, tracking
   auto-resolves, on all three mastery paths. Silent by design. `sulk` and its droop branch had
   existed and never fired.
 - Pose size is normalized (`f6394e1`, device-confirmed). See CLAUDE.md. Everything except
-  idle/smug renders smaller than before; sulk is 31% smaller. Boss entry and gauntlet throw use
-  `point` with perchScale 1.45 and 1.3 on top and are now ~9% smaller than originally tuned.
+  idle/smug renders smaller than before; sulk is 31% smaller. Boss entry uses `point` with
+  perchScale 1.45 on top and is now ~9% smaller than originally tuned.
 - Two Polly animations were cleaned and committed (`fde5902`): polly_sulk and polly_idle. Four
   others are unusable and need re-rendering at 724x724. See CLAUDE.md.
 - Audit of `pollyVisitPolicy.ts`, 2026-08-29, verified against live source:
@@ -306,14 +329,21 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
   not decided") — one row, roughly two hundred days out, about to be trimmed anyway. Fix is
   recording the player's first played date once; safe to add later, backfillable from the
   oldest row.
-10. KNOWN GAP, pending a device listen: the gauntlet's `stoneRumble` can start late on the
-  first gauntlet of each app session. `warmGauntletEntranceSfx` runs when `BossGauntletSpines`
-  mounts, which is the same moment the rumble fires, so that first play waits on one native
-  file load — likely tens of milliseconds, under a low sound. Later gauntlets in the same
-  session are unaffected (players persist), and so are the tears and lands, which fire 400ms+
-  after the warm. The fix is to warm the gauntlet's cues when the boss word STARTS, in
-  MaskBoard, rather than when the gauntlet mounts. If it is audible on device, do that. If it
-  is not, it stays listed here — it does not get dropped.
+10. KNOWN GAP, still open — it needs a COLD-START listen specifically; another ordinary listen
+  settles nothing. The gauntlet's `stoneRumble` can start late on the first gauntlet after the
+  app starts: `warmGauntletEntranceSfx` runs when `BossGauntletSpines` mounts, which is the
+  same moment the rumble fires, so that first play waits on one native file load, under a low
+  sound. Two device runs on 2026-09-10 called the sound good, but neither was verified as the
+  FIRST gauntlet after a cold launch — the only run where this gap can occur. The app never
+  releases a loaded SFX player (`unloadSfx()` has no caller, and App.tsx's background handler
+  only tells the music engine the app is inactive and flushes the save), so once the rumble has
+  loaded it stays loaded for the life of the process. A cold listen therefore means killing the
+  app, or a full reload in Expo Go, then listening to the FIRST gauntlet of that run — which is
+  a Returning Haunt rather than the boss whenever a haunt is queued, since the haunt comes
+  earlier and fires the same rumble. The tears and lands are unaffected; they fire 400ms+ after
+  the warm. The fix is to warm the gauntlet's cues when the boss word STARTS, in MaskBoard,
+  rather than when the gauntlet mounts. If it is audible on device, do that. If it is not, it
+  stays listed here — it does not get dropped.
 11. Navigation gap: BottomNav renders on Vault and Settings only, but has four tabs — there is
   no way to reach the Vault from Home. Solve before its 11/12pt labels are worth changing.
 12. The `tone='loss'` `PollySpeechBubble` variant is still dead — none of the four call sites
