@@ -107,23 +107,11 @@ const BOSS_ENTRY: VisitSpec = {
   // Pops in for the entrance line, then flies back out — she does not stay
   // perched through the visible tiles or the hidden gauntlet. Her enlarged
   // (perchScale 1.3) bottom-left perch overlapped and hid gauntlet card
-  // text when this held indefinitely (device test 2026-07-31); she instead
-  // returns for a separate BOSS_GAUNTLET_THROW beat when the gauntlet
-  // actually begins.
+  // text when this held indefinitely (device test 2026-07-31) — that reason
+  // still stands. She does NOT come back for the gauntlet: the throw beat
+  // that used to bring her back was cut (Pete, 2026-09-10), see the
+  // 'allMasksFound' handling in resolveVisit.
   holdPerch: false, perchMs: 4200, perchScale: 1.45,
-};
-
-// Fires when the visible boss tiles are cleared and the hidden gauntlet is
-// about to begin (see 'allMasksFound' handling below) — she flies back in
-// to throw the gauntlet cards, then flies back out so the board is clear
-// for the player to read them. No line: this is a physical beat, not a
-// dialogue beat. perchMs is a device-unverified starting point sized to
-// roughly cover BossGauntletStack's own throw-in animation (~900ms after
-// her landing) plus a short beat — re-tune once seen live.
-const BOSS_GAUNTLET_THROW: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
-  lineId: null, line: null, sfx: 'pollySqwawkShort',
-  holdPerch: false, perchMs: 1400, perchScale: 1.3,
 };
 
 // She arrives still swinging and collapses in front of the player:
@@ -292,10 +280,14 @@ export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitD
     const lineId = pickFreshLine(BOSS_ENTRY_LINES, state.recentLineIds, state.lineRoll);
     return { action: 'visit', spec: { ...BOSS_ENTRY, lineId, line: POLLY_LINES[lineId] } };
   }
-  // Only fired by useBoardMechanics on the final-gate step with hidden
-  // content — i.e. exclusively the boss-gauntlet-begin beat, never an
-  // ordinary word's completion (those fire 'cleanSweep' instead).
-  if (event === 'allMasksFound') return { action: 'visit', spec: BOSS_GAUNTLET_THROW };
+  // 'allMasksFound' is still fired by useBoardMechanics on the final-gate
+  // step with hidden content — the boss-gauntlet-begin beat. Polly used to
+  // fly in here to throw the gauntlet cards; the wall delivers the bricks
+  // itself now, so she stays away and the entrance is hers by implication
+  // rather than by her standing next to it (Pete, 2026-09-10). Explicit
+  // rather than a fall-through, so a future event added below can never
+  // silently capture this one.
+  if (event === 'allMasksFound') return NONE;
   if (event === 'gateMasteredBoss') return { action: 'visit', spec: MASTERED_REACTION };
   if (event === 'gateMastered') return { action: 'visit', spec: MASTERED_REACTION };
   if (event === 'hiddenMasterFailed') return { action: 'visit', spec: HAUNTED_GLOAT };

@@ -31,7 +31,8 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 // bossEntry: flyAngry → point, line + short squawk, bigger — pops in for the
 // line then flies back out (does NOT hold perch; holding through the visible
 // tiles + gauntlet caused her to overlap/hide gauntlet card text — device
-// test 2026-07-31). She returns separately for the gauntlet throw below.
+// test 2026-07-31). She does NOT come back for the gauntlet — the throw beat
+// that used to bring her back was cut (2026-09-10); see allMasksFound below.
 // Line now draws from a 6-line pool (pickFreshLine) same as WRONG_SMUG;
 // lineRoll 0 with no recent history picks the pool's first entry.
 {
@@ -58,17 +59,36 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 }
 
 // allMasksFound: only ever fired on the boss final-gate step, once the
-// visible tiles clear and the hidden gauntlet is about to begin — she flies
-// back in to throw the cards, then flies back out (no line: a physical beat).
+// visible tiles clear and the hidden gauntlet is about to begin. She used to
+// fly in here to throw the gauntlet cards; that beat was cut (Pete,
+// 2026-09-10) because the wall now delivers the bricks itself.
+//
+// These assertions were rewritten, not deleted. Their point was never "she
+// throws" — it was that this event is handled deliberately and cannot drift
+// into some other visit. That matters MORE now that the answer is silence,
+// because silence is also what an accidental fall-through looks like.
 {
-  const s = visitSpec(resolveVisit('allMasksFound', idle), 'allMasksFound');
-  eq(s.kind, 'guaranteed', 'allMasksFound.kind');
-  eq(s.flyPose, 'flyAngry', 'allMasksFound.flyPose');
-  eq(s.perchPose, 'point', 'allMasksFound.perchPose');
-  eq(s.line, null, 'allMasksFound.line');
-  eq(s.sfx, 'pollySqwawkShort', 'allMasksFound.sfx');
-  eq(s.holdPerch, false, 'allMasksFound.holdPerch');
-  eq(s.perchScale, 1.3, 'allMasksFound.perchScale');
+  eq(resolveVisit('allMasksFound', idle).action, 'none',
+    'allMasksFound is silent (gauntlet throw cut 2026-09-10)');
+}
+
+// ...and it stays silent with the heckle budget wide open. This pins it
+// against the heckle block below the early return: if a future heckle rule
+// ever matched this event, it would turn into a visit here and fail. The
+// control first proves the state genuinely lets a heckle through, so the
+// silence cannot be the heckle gate quietly blocking it.
+//
+// What no outcome test can do is tell the explicit early return apart from
+// the final fall-through `return NONE` — both are silent. The early return
+// is structural protection; this test is what catches it being overridden.
+{
+  const heckleOpen: PollyBudgetState = {
+    ...idle, busy: false, heckleUsedThisWord: false, isSpeedRound: false,
+  };
+  eq(visitSpec(resolveVisit('wrong', heckleOpen), 'control: wrong, heckle budget open').kind,
+    'heckle', 'control: the heckle budget really is open');
+  eq(resolveVisit('allMasksFound', heckleOpen).action, 'none',
+    'allMasksFound stays silent with the heckle budget open');
 }
 
 // gateMasteredBoss: bravado then collapse — angry fly-in, hunched sulk
@@ -128,7 +148,9 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
     ghostRunsMissed: 0, recentLineIds: [], lineRoll: 0,
   };
   eq(resolveVisit('bossEntry', jammed).action, 'visit', 'bossEntry while jammed');
-  eq(resolveVisit('allMasksFound', jammed).action, 'visit', 'allMasksFound while jammed');
+  // No longer a guaranteed beat — the gauntlet throw was cut (2026-09-10).
+  // Kept in this block to prove it is silent under a jammed budget too.
+  eq(resolveVisit('allMasksFound', jammed).action, 'none', 'allMasksFound silent while jammed');
   eq(resolveVisit('gameOver', jammed).action, 'visit', 'gameOver while jammed');
   eq(resolveVisit('gateMasteredBoss', jammed).action, 'visit', 'gateMasteredBoss while jammed');
 }
