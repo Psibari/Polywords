@@ -776,16 +776,42 @@ export function BossGauntletSpines({
   // out longhand there because tileTextLayout.integration.test.mjs matches it
   // literally to prove no hook is ever added after it.
   const tilesVisible = gatePhase === 'tiles' || gatePhase === 'wrongFail';
+  // Once per gauntlet. MaskBoard keys this component per gauntlet, so the ref
+  // starts false for each one and nothing inside a gauntlet can replay the thud.
+  const landingThudPlayedRef = useRef(false);
   useEffect(() => {
     if (!tilesVisible) return;
     if (reduceMotion !== false) {
       resetWallShake();
+      // Reduce motion still hears the bricks ARRIVE: one landing thud — one,
+      // not one per brick, and no rumble and no tears, because nothing moved
+      // and nothing tore (Pete, 2026-09-10). Fired here in the parent, never
+      // from a slot, so it cannot multiply by the brick count.
+      //
+      // useReducedMotionPreference starts EVERY mount at null and resolves
+      // asynchronously, so this branch runs first with null on every gauntlet,
+      // reduce motion or not. Two things follow:
+      //  - the thud waits for a KNOWN `true`. Played on null, every player with
+      //    motion ON would hear a thud and then the whole entrance after it;
+      //  - the null run is a free head start, so the landing cue is warmed here,
+      //    before the preference resolves, rather than in the same breath as
+      //    the play (which would gain nothing — the gateway just queues a play
+      //    until its player loads). warmGauntletEntranceSfx is the only warm in
+      //    reach; at a tile count of 1 it also warms the rumble and first tear,
+      //    which a motion player needs moments later anyway.
+      warmGauntletEntranceSfx(1);
+      if (reduceMotion === true && !landingThudPlayedRef.current) {
+        landingThudPlayedRef.current = true;
+        playSfx('stoneLand1');
+      }
       return;
     }
-    // Warm first: the tears (400ms+) and landings (1300ms+) then have a real
-    // player waiting. The rumble fires in the same breath, so its very first
-    // play can still wait on one native load — this is the earliest moment
-    // this component exists to warm anything.
+    // Warm the full set: the tears (400ms+) and landings (1300ms+) then have a
+    // real player waiting. The null run above already started the rumble,
+    // first tear and first land, so the rumble's first play now waits only on
+    // whatever part of its native load the preference's resolution did not
+    // already cover. How much that is on a cold start is unmeasured — CONTEXT.md
+    // Next Work item 10 stays open.
     warmGauntletEntranceSfx(gauntletTiles.length);
     rumbleWall(BRICK_LEAD_IN_MS);
     playSfx('stoneRumble');
