@@ -26,6 +26,16 @@ export type SfxName =
   | 'lockSpin2'
   | 'lockSpin3'
   | 'gauntletPick'
+  // Boss gauntlet entrance — the wall trembles, each brick tears out, each
+  // lands (BossGauntletSpines.tsx, wallShake.ts). One tear and one land cue
+  // PER SLOT, chosen by slot index, never shuffled — see the registry note.
+  | 'stoneRumble'
+  | 'stoneTear1'
+  | 'stoneTear2'
+  | 'stoneTear3'
+  | 'stoneLand1'
+  | 'stoneLand2'
+  | 'stoneLand3'
   // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
   // below. Uncomment together with the matching entries in SFX and the
   // guarded call sites in DailyChallengeScreen.tsx once the files land.
@@ -88,6 +98,37 @@ const SFX: Record<SfxName, SfxConfig> = {
   lockSpin3:      { source: require('../../assets/audio/sfx/lock_spin_3.mp3'),         volume: 0.40, cooldownMs: 150 },
   gauntletPick:   { source: require('../../assets/audio/sfx/gauntlet_pick_swoosh.mp3'), volume: 0.45, cooldownMs: 200 },
 
+  // Boss gauntlet entrance. These volumes are FILE-RELATIVE: each is set from
+  // that file's measured loudest 100ms (decoded with ffmpeg, sliding RMS) so
+  // the layers sit where they were asked to — the rumble UNDER at about
+  // -24 dBFS effective, the tears in the middle at about -19, the land ON TOP
+  // at about -15. The land matches trapShatter and streakBreakImpact and sits
+  // 3dB under masteredBookSlam (-12), so the round's MASTERED climax stays the
+  // loudest thing in it.
+  //
+  // Raw loudest-100ms: rumble -16.3, tears -11.3 / -12.2 / -13.6, land -9.6.
+  // That spread is why the three tear volumes differ: they are equalised to a
+  // single level, so the bricks read as three different stones by their sound,
+  // never by one of them simply being louder.
+  //
+  // One LAND cue per slot, all three on the same file, on purpose. The
+  // landings fall 240ms apart and the file runs 627ms, so at the third landing
+  // all three are sounding at once. A single shared cue caps at
+  // MAX_PLAYERS_PER_SOUND (2) and only creates its second player once the
+  // first is busy — so the second land would start a native load late, and
+  // the third would queue until about 147ms after its own dust. Three names
+  // give each landing its own pre-warmed player that starts on the dust frame.
+  //
+  // stoneRumble's cooldown is long because it fires exactly once per gauntlet;
+  // it only exists to swallow a double-run of the effect that triggers it.
+  stoneRumble: { source: require('../../assets/audio/sfx/stone_rumble.mp3'), volume: 0.41, cooldownMs: 600 },
+  stoneTear1:  { source: require('../../assets/audio/sfx/stone_tear_1.mp3'), volume: 0.41, cooldownMs: 200 },
+  stoneTear2:  { source: require('../../assets/audio/sfx/stone_tear_2.mp3'), volume: 0.46, cooldownMs: 200 },
+  stoneTear3:  { source: require('../../assets/audio/sfx/stone_tear_3.mp3'), volume: 0.54, cooldownMs: 200 },
+  stoneLand1:  { source: require('../../assets/audio/sfx/stone_land.mp3'),   volume: 0.54, cooldownMs: 200 },
+  stoneLand2:  { source: require('../../assets/audio/sfx/stone_land.mp3'),   volume: 0.54, cooldownMs: 200 },
+  stoneLand3:  { source: require('../../assets/audio/sfx/stone_land.mp3'),   volume: 0.54, cooldownMs: 200 },
+
   // Daily scroll mechanism. The 2.24s correct-claim sequence shipped with one
   // sound (correctClaim) and no haptic after the swipe, so a physical
   // mechanism read as a picture sliding around.
@@ -127,6 +168,25 @@ const BOSS_OUTCOME_SFX: readonly SfxName[] = [
   'hauntedTransformSlam',
   'hauntedResult',
 ];
+
+// The gauntlet's per-slot cues, in slot order. Index 0 is always brick 1.
+const GAUNTLET_TEAR_SFX = ['stoneTear1', 'stoneTear2', 'stoneTear3'] as const;
+const GAUNTLET_LAND_SFX = ['stoneLand1', 'stoneLand2', 'stoneLand3'] as const;
+
+/**
+ * The tear cue for a gauntlet slot, strictly by index — brick 1 always tears
+ * with stone_tear_1, and so on. Never shuffled: the variation is there so the
+ * three read as three different stones, and a shuffle would turn that into
+ * noise.
+ */
+export function gauntletTearSfx(slotIndex: number): SfxName {
+  return GAUNTLET_TEAR_SFX[slotIndex % GAUNTLET_TEAR_SFX.length];
+}
+
+/** The land cue for a gauntlet slot — its own player, see the registry note. */
+export function gauntletLandSfx(slotIndex: number): SfxName {
+  return GAUNTLET_LAND_SFX[slotIndex % GAUNTLET_LAND_SFX.length];
+}
 
 const slots: Partial<Record<SfxName, SfxSlot>> = {};
 const lastPlayedAt: Partial<Record<SfxName, number>> = {};
@@ -323,15 +383,35 @@ export function preloadSfx(): void {
   }
 }
 
-export function warmBossOutcomeSfx(): void {
+// Pre-creates one ready player per named cue, ahead of a beat that has to
+// start on time. Sounds otherwise load on demand, so a cue's FIRST play waits
+// on a native load before it makes a sound.
+function warmSfx(names: readonly SfxName[]): void {
   if (!useGameStore.getState().soundEnabled) return;
   const generation = lifecycleGeneration;
-  BOSS_OUTCOME_SFX.forEach(name => {
+  names.forEach(name => {
     const slot = getOrCreateSlot(name);
     if (slot.players.length === 0 && !slot.creating && slot.loadAttempts < 2) {
       createPlayer(name, generation);
     }
   });
+}
+
+export function warmBossOutcomeSfx(): void {
+  warmSfx(BOSS_OUTCOME_SFX);
+}
+
+/**
+ * Warms the rumble plus the tear and land cue for each slot actually on
+ * screen — one for a Returning Haunt, three for a boss.
+ */
+export function warmGauntletEntranceSfx(tileCount: number): void {
+  const names: SfxName[] = ['stoneRumble'];
+  const count = Math.min(Math.max(tileCount, 0), GAUNTLET_TEAR_SFX.length);
+  for (let i = 0; i < count; i += 1) {
+    names.push(GAUNTLET_TEAR_SFX[i], GAUNTLET_LAND_SFX[i]);
+  }
+  warmSfx(names);
 }
 
 export function sfxReady(): Promise<void> {

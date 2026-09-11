@@ -6,7 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import { ShardVariant } from '../ui/pwEffects';
-import { playSfx } from '../audio/sfx';
+import {
+  gauntletLandSfx,
+  gauntletTearSfx,
+  playSfx,
+  warmGauntletEntranceSfx,
+} from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
@@ -275,7 +280,12 @@ function SpineSlot({
   const crownReveal = useRef(new Animated.Value(0)).current;
   const { width: windowWidth } = useWindowDimensions();
   const [showLandingDust, setShowLandingDust] = useState(false);
-  const onEntranceSettled = useCallback(() => setShowLandingDust(true), []);
+  // Sound and dust are ONE event: the landing cue fires from the very callback
+  // that raises the dust, so neither can drift from the other.
+  const onEntranceSettled = useCallback(() => {
+    setShowLandingDust(true);
+    playSfx(gauntletLandSfx(index));
+  }, [index]);
   // Stable identity across re-renders — StoneDustBurst's effect depends on
   // this callback, and an inline arrow at the JSX call site would give it a
   // fresh identity on every SpineSlot re-render (e.g. from
@@ -373,8 +383,10 @@ function SpineSlot({
     crownReveal.setValue(0);
     const flightTimer = setTimeout(() => {
       // The kick IS this brick tearing loose, so it fires on the same frame
-      // the push-out starts — never ahead of it.
+      // the push-out starts — never ahead of it. So does its sound: strictly
+      // by slot, brick 1 with stone_tear_1 and so on, never shuffled.
       kickWall();
+      playSfx(gauntletTearSfx(index));
       Animated.sequence([
         // Push out of the wall.
         Animated.timing(progress, {
@@ -414,7 +426,7 @@ function SpineSlot({
       clearTimeout(flightTimer);
       clearTimeout(crownTimer);
     };
-  }, [entranceDelay, reduceMotion, progress, crownReveal, onEntranceSettled]);
+  }, [entranceDelay, reduceMotion, progress, crownReveal, onEntranceSettled, index]);
 
   useEffect(() => {
     const target = isOpen || resolved ? 1 : 0;
@@ -757,8 +769,14 @@ export function BossGauntletSpines({
       resetWallShake();
       return;
     }
+    // Warm first: the tears (400ms+) and landings (1300ms+) then have a real
+    // player waiting. The rumble fires in the same breath, so its very first
+    // play can still wait on one native load — this is the earliest moment
+    // this component exists to warm anything.
+    warmGauntletEntranceSfx(gauntletTiles.length);
     rumbleWall(BRICK_LEAD_IN_MS);
-  }, [tilesVisible, reduceMotion]);
+    playSfx('stoneRumble');
+  }, [tilesVisible, reduceMotion, gauntletTiles.length]);
 
   // The shake values are module-level and outlive this component. Leaving one
   // stranded mid-animation would sit the wall crooked on the next screen.

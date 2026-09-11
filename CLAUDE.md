@@ -114,6 +114,16 @@ navigation shell; active Hunt and Daily play are nav-free.
   `assets/audio/sfx/haunted_transform_slam_v1.wav`, and
   `assets/audio/sfx/dark_magic_curse_impact.mp3`; `warmBossOutcomeSfx()` prepares only these
   five when the boss gauntlet begins.
+- The gauntlet's brick entrance has its own cues and its own warm. `stoneRumble` sits under the
+  lead-in tremble; then each slot gets one `stoneTear{1,2,3}` and one `stoneLand{1,2,3}`, chosen
+  by slot index and never shuffled (`gauntletTearSfx`/`gauntletLandSfx`). The land fires from
+  the same settle callback that raises the landing dust, so sound and dust are one event.
+  `stoneLand1-3` are three names on one file on purpose: the landings overlap, and one cue's
+  two-player cap would start the third after its dust had already risen.
+  `warmGauntletEntranceSfx(tileCount)` runs from `BossGauntletSpines` itself rather than from
+  MaskBoard's `isBoss`-gated warm, so a Returning Haunt's single brick is covered too. Volumes
+  are file-relative, set from each file's measured loudest 100ms, with the land kept under
+  `masteredBookSlam` so the MASTERED climax stays the loudest thing in the round.
 - `MusicEngine.ts` owns one persistent looping player, switches tracks by focused owner,
   resumes after app backgrounding, and restarts a new Hunt from the beginning. Track loading
   has a bounded fallback, but normal playback is released by native status events. Its
