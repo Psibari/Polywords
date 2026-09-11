@@ -32,6 +32,25 @@ current state and blockers live in `CONTEXT.md`. Verify runtime claims against c
   sources and use native load-status events rather than screen-local preload races.
 - Bebas Neue is the hero face; Barlow Condensed is the UI/tile/dialogue face.
 - Transform/opacity animations may use the native driver; layout/color animations may not.
+- `app/components/wallShake.ts` is a module-level animation channel for shaking the stone wall
+  (`88735eb`). It is shared architecture despite its size: `GraphicGround` reads it, and that
+  sits behind Home, Daily, the Polybook, Settings and every Hunt round.
+  - Two `Animated.Value`s — `wallTremble` (the gauntlet's lead-in rattle) and `wallKick` (each
+    brick tearing out) — consumed as damped OSCILLATION, not as displacement. The driving
+    timings are plain linear 0 → 1; all the shape lives in a zigzag interpolation whose decay
+    envelope is exactly 0 at both ends, so a COMPLETED animation leaves the wall still on its
+    own. Consumers take the composed shake from `wallShakeTransform()` (or `wallShakeOffset()`
+    when adding it to a translate of their own) and never re-derive the oscillation.
+  - A module channel rather than a prop because `GraphicGround` and `BossGauntletSpines` are
+    siblings with no common owner short of the screen. Threading a shake through
+    `AmbientSkyBackground` would push a boss-round concern into a component four other
+    screens share.
+  - EVERY consumer must call `resetWallShake()` on unmount. Only an INTERRUPTED animation can
+    strand an offset, and a stranded offset sits the wall visibly crooked on the next screen.
+  - The wall's resting layout is unchanged by design. Edge bleed is a shadow backdrop inside
+    the shake layer, never a scale: any scale on the wall moves the ledge every brick is
+    aligned to, because `bossGauntletLedge.ts` derives that ledge from the wall being drawn at
+    exactly full screen width, bottom-anchored.
 
 ## Navigation and Modes
 
@@ -64,6 +83,25 @@ navigation shell; active Hunt and Daily play are nav-free.
   deliberately removed as regressive and stays removed.
 - Rank is retired from the player-facing progression as of 2026-09-04 (`c48e3fe`).
   `app/game/ranks.ts` still exists but is imported by nothing in `app/`.
+
+#### Gauntlet entrance
+
+- The sealed gauntlet cards are bricks that punch out of the wall (`BossGauntletSpines.tsx`).
+  The audio that scores this is documented under Audio below.
+- Each brick sprite (`assets/images/gauntlet/brick{1,2,3}_rn.png`) carries transparent padding
+  at the bottom equal to its top face (`TOP_FACE`), so React Native's centre-origin rotation
+  lands on the centre of the brick's FRONT FACE. Never substitute an unpadded sprite and never
+  trim the padding — the punch-out would swing about the wrong point. `BRICK_SPRITES` hardcodes
+  each sprite's `w`/`padH`/`faceH`, so a re-export must keep those dimensions exactly.
+- `CARD_CLOSED_HEIGHT` is DERIVED from that sprite table — the tallest front face at
+  `CARD_WIDTH` — and must never be typed in again. A literal can drift from `CARD_WIDTH`, and
+  the brick distorts when it does.
+- `GAUNTLET_CARD_OPEN_MIN_HEIGHT` is deliberately separate. It is the OPENED swipe card's floor,
+  not the closed card's height; using one for the other undersizes the row the instant a card
+  opens.
+- The brick sprites are colour-matched PER BRICK to the specific wall brick each replaces, never
+  to one average. The wall vignettes, so a single average correction fixes one slot and breaks
+  two (measured 2026-09-10, mean luminance: left −14.2%, middle −2.6%, right −17.9%).
 
 ### Vault
 
