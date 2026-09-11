@@ -161,22 +161,34 @@ const DUST_DURATION_MS = 420;
 // (magic gem/crystal colors) — this is ambient stone debris, not the
 // trap-shatter/gold-trail gameplay-feedback system, so it does not reuse it.
 const DUST_COLOR = '#B8A98F';
-// Sized against MaskBoard's own container padding (14px each side) so 3
-// slots + 2 gaps fit on the narrowest realistic target width (375pt)
-// without guessing: (375 - 14*2 - 8*2) / 3 = 110.3, floored to 110.
-export const CARD_WIDTH = 110;
-// The closed card is now a brick standing on the shelf, so this is the
-// tallest of the three brick FRONT FACES at CARD_WIDTH wide (brick2:
-// 110 * 385 / 240). The three faces therefore end up marginally different
-// heights inside this shared box — correct, they are different bricks.
-export const CARD_CLOSED_HEIGHT = 177;
+// Deliberately NOT the widest brick that fits. 110 was that — the most three
+// slots plus two gaps allow at 375pt inside MaskBoard's 14pt padding — and on
+// device the row filled almost the whole screen width, and each brick grew by
+// about two thirds between its hole and the shelf, which read as a brick
+// GROWING rather than one coming toward the camera (device, 2026-09-10). At 96
+// the row is 3 * 96 + 2 * ROW_GAP = 304pt wide with real margins, and the
+// growth (1 / startScale, where startScale = recess width / face height) drops
+// with it.
+export const CARD_WIDTH = 96;
+// The closed card is a brick standing on the shelf, so this is the tallest of
+// the three brick FRONT FACES at CARD_WIDTH wide: brick2, 385 / 240 at 96 wide,
+// = 154 exactly. DERIVED rather than typed in, because it has to move with
+// CARD_WIDTH or the brick distorts — computing it from the same sprite table
+// the bricks render from means the two cannot drift apart. The three faces end
+// up marginally different heights inside this shared box, which is correct:
+// they are different bricks.
+export const CARD_CLOSED_HEIGHT = Math.ceil(
+  Math.max(...BRICK_SPRITES.map(sprite => (CARD_WIDTH * sprite.faceH) / sprite.w)),
+);
 // Floor for the *opened* gauntletCard's measured height — matches the fixed
 // tileHeight={200} SwipeMask is given below for gauntletCard mode. Kept
 // separate from CARD_CLOSED_HEIGHT: the closed card is deliberately shorter
 // than this, and using CARD_CLOSED_HEIGHT as the opened-card floor would
 // undersize the row the instant something opens.
 const GAUNTLET_CARD_OPEN_MIN_HEIGHT = 200;
-// Starting point only, tuned against this card's own ~144px height (same
+// Starting point only, tuned against the ~144pt stone card the bricks later
+// replaced; re-tune against CARD_CLOSED_HEIGHT on device if the pick flip reads
+// wrong on a brick (same
 // spirit as QuillScrollPanel.tsx's PANEL_PERSPECTIVE, which is explicitly
 // NOT portable across panel sizes) — re-tune on device, not a lock.
 const CARD_PERSPECTIVE = 700;
@@ -184,9 +196,10 @@ const ROW_VERTICAL_INSET = 6;
 const ROW_GAP = 8; // must match styles.row.gap below — read by the centering math too
 
 // The expanded SwipeMask (gauntletCard width, up to 300px) is centered
-// within its OWN 110px-wide slot by default. For the outer slots that means
-// it's centered on a point far from the row's actual midpoint — on a 3-tile
-// row the left slot's card ends up centered ~118px left of screen-center,
+// within its OWN CARD_WIDTH-wide slot by default. For the outer slots that
+// means it's centered on a point far from the row's actual midpoint — on a
+// 3-tile row the left slot's card ends up centered over 100pt left of
+// screen-center (104pt at CARD_WIDTH 96; it was 118 at the original 110),
 // wide enough to clip off the left edge entirely (confirmed on device).
 // This computes the horizontal correction so an opened/resolved card at any
 // slot index re-centers on the ROW's own midpoint instead of its slot's,
@@ -341,7 +354,7 @@ function SpineSlot({
   }, [windowWidth, offsetX, sprite, recess]);
 
   const resolved = status !== 'idle';
-  // Open (or resolved) cards render wider than their 90px slot (see
+  // Open (or resolved) cards render wider than their CARD_WIDTH slot (see
   // SwipeMask's gauntletCard width), so they must paint above sibling
   // slots — otherwise a neighbor's opaque sealed panel occludes the
   // overflow and its full-slot Pressable steals touches meant for it.
