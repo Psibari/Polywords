@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "poly-words",
+    "name": "POLYWORDS",
     "slug": "poly-words",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -13,7 +13,7 @@
       "backgroundColor": "#241338"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.pdb8080.polywords",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
