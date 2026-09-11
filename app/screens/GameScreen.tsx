@@ -105,7 +105,7 @@ function GoldFlash({ flashKey, event }: { flashKey: number; event: ScreenFlashEv
 
 // ─── TOP BAR ─────────────────────────────────────────────────
 
-function TopBar({ navigation }: { navigation: any }) {
+function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPulse?: Animated.Value }) {
   const game  = useGameStore(s => s.game);
   const gauntletActive = useGameStore(s => s.game.gauntletActive);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
@@ -131,13 +131,22 @@ function TopBar({ navigation }: { navigation: any }) {
   const hudSignature = `${hud.contextLabel ?? 'NORMAL'}:${hud.label}`;
   const previousHudSignatureRef = useRef(hudSignature);
   const hudPulse = useRef(new Animated.Value(0)).current;
+  // Tier bump — stronger scale pop when readTier actually crosses a threshold
+  const tierBumpScale = useRef(new Animated.Value(1)).current;
+  const prevTierRef = useRef(hud.readTier);
   const hudAccent = hud.tier === 'rattled'
     ? PW.color.rose
-    : hud.tier === 'steady'
-    ? PW.color.softWhite
-    : PW.color.lavender;
+    : hud.readTier === 'control'
+    ? '#B388FF'
+    : hud.readTier === 'flow'
+    ? PW.color.lavender
+    : PW.color.softWhite;
   const rungLitCount = hud.readTier === 'control' ? 3 : hud.readTier === 'flow' ? 2 : 1;
-  const rungLitColor = hud.readTier === 'steady' ? PW.color.softWhite : PW.color.lavender;
+  const rungLitColor = hud.readTier === 'control'
+    ? '#B388FF'
+    : hud.readTier === 'flow'
+    ? PW.color.lavender
+    : PW.color.softWhite;
   const hudPulseScale = hudPulse.interpolate({
     inputRange: [0, 0.35, 1],
     outputRange: [1, 1.08, 1],
@@ -157,6 +166,24 @@ function TopBar({ navigation }: { navigation: any }) {
       duration: 520,
       useNativeDriver: true,
     }).start();
+
+    // Tier bump — stronger pop when the readTier crosses a threshold
+    // (steady→flow or flow→control), not on every HUD label change.
+    // Crossing into control gets a bigger bump and a haptic.
+    if (hud.readTier !== prevTierRef.current) {
+      const isControlBump = hud.readTier === 'control';
+      prevTierRef.current = hud.readTier;
+      tierBumpScale.setValue(1);
+      Animated.sequence([
+        Animated.timing(tierBumpScale, {
+          toValue: isControlBump ? 1.24 : 1.18, duration: 120, useNativeDriver: true,
+        }),
+        Animated.timing(tierBumpScale, {
+          toValue: 1.0, duration: 200, useNativeDriver: true,
+        }),
+      ]).start();
+      if (isControlBump) Haptics.selectionAsync();
+    }
 
     // Context changes and reaching the control read are deliberate beats.
     // Ordinary STEADY/READING changes stay visual-only so the status never
@@ -180,6 +207,9 @@ function TopBar({ navigation }: { navigation: any }) {
             accessibilityLabel={`${hud.contextLabel ? `${hud.contextLabel}. ` : ''}${hud.label}. Level ${rungLitCount} of 3.`}
           >
             <Animated.View
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, transform: [{ scale: tierBumpScale }] }}
+            >
+            <Animated.View
               pointerEvents="none"
               style={[tb.controlPulse, { backgroundColor: hudAccent, opacity: hudPulseOpacity }]}
             />
@@ -199,7 +229,7 @@ function TopBar({ navigation }: { navigation: any }) {
                 {hud.contextLabel ?? ' '}
               </Text>
               <Text
-                style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled]}
+                style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled, { color: hudAccent }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.72}
@@ -207,9 +237,17 @@ function TopBar({ navigation }: { navigation: any }) {
                 {hud.label}
               </Text>
             </View>
+            </Animated.View>
           </Animated.View>
-          <View
-            style={tb.featherRow}
+          <Animated.View
+            style={[tb.featherRow, featherRowPulse && {
+              backgroundColor: featherRowPulse.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: ['transparent', 'rgba(204,34,0,0.25)', 'transparent'],
+              }),
+              borderRadius: 8,
+              paddingHorizontal: 4,
+            }]}
             accessible
             accessibilityLabel={`${filledFeathers} feathers remaining`}
           >
@@ -238,7 +276,7 @@ function TopBar({ navigation }: { navigation: any }) {
                 />
               </View>
             )}
-          </View>
+          </Animated.View>
         </View>
         <RoundChips current={current} total={total} />
       </View>
@@ -928,6 +966,44 @@ function GameDirector({ navigation }: { navigation: any }) {
     AsyncStorage.setItem(HAUNT_INTRO_SEEN_KEY, 'true').catch(() => {});
   }, []);
 
+  // ── One Heart Left — dramatic feedback when lives drop to 1 ──
+  const boardShakeX = useRef(new Animated.Value(0)).current;
+  const boardShakeY = useRef(new Animated.Value(0)).current;
+  const featherRowPulse = useRef(new Animated.Value(0)).current;
+  const prevLivesForShakeRef = useRef(game.lives);
+
+  useEffect(() => {
+    const prev = prevLivesForShakeRef.current;
+    prevLivesForShakeRef.current = game.lives;
+    if (prev !== 2 || game.lives !== 1) return;
+    // Lighter board shake (4 quick jolts, not the heavy boss shake)
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: 3,  duration: 30, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: -2, duration: 30, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: -3, duration: 30, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: 2,  duration: 30, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: 2,  duration: 25, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: -1, duration: 25, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: 0,  duration: 40, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: 0,  duration: 40, useNativeDriver: true }),
+      ]),
+    ]).start();
+    // Feather row red pulse
+    featherRowPulse.setValue(0);
+    Animated.sequence([
+      Animated.timing(featherRowPulse, { toValue: 1, duration: 120, useNativeDriver: true }),
+      Animated.timing(featherRowPulse, { toValue: 0, duration: 350, useNativeDriver: true }),
+    ]).start();
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  }, [game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const prevTensionRef = useRef(0);
 
   useEffect(() => {
@@ -1132,6 +1208,32 @@ function GameDirector({ navigation }: { navigation: any }) {
       return;
     }
     setBossTransitionActive(true);
+    // Heavier board shake on boss entrance — sells the weight of the moment
+    boardShakeX.setValue(0);
+    boardShakeY.setValue(0);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: 5, duration: 40, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: -3, duration: 40, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: -5, duration: 40, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: 3, duration: 40, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: 3, duration: 35, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: -2, duration: 35, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: -3, duration: 35, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: 2, duration: 35, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(boardShakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
+        Animated.timing(boardShakeY, { toValue: 0, duration: 50, useNativeDriver: true }),
+      ]),
+    ]).start();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     const timer = setTimeout(() => {
       setBossTransitionActive(false);
     }, 760);
@@ -1184,6 +1286,7 @@ function GameDirector({ navigation }: { navigation: any }) {
         <Rect x="0" y="0" width="100%" height="100%" fill={`url(#gameVignette-${vignetteId})`} />
       </Svg>
       <SafeAreaView style={styles.content}>
+      <Animated.View style={{ flex: 1, transform: [{ translateX: boardShakeX }, { translateY: boardShakeY }] }}>
       {isBossRound && (
         <View pointerEvents="none" style={styles.bossBackground}>
           <View style={styles.bossBookGlow}>
@@ -1214,7 +1317,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
-      {!isDone && <TopBar navigation={navigation} />}
+      {!isDone && <TopBar navigation={navigation} featherRowPulse={featherRowPulse} />}
       {!isDone && (
         <Pressable
           accessibilityRole="button"
@@ -1315,6 +1418,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       {exitConfirmVisible && (
         <PollyExitConfirm onStay={handleStayHunting} onLeave={handleConfirmLeave} />
       )}
+      </Animated.View>
       </SafeAreaView>
     </View>
   );

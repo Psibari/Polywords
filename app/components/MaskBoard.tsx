@@ -567,6 +567,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const deckDeepOp   = useRef(new Animated.Value(0)).current;
   const deckMidOp    = useRef(new Animated.Value(0)).current;
   const deckActiveOp = useRef(new Animated.Value(0)).current;
+  const deckActiveScaleY = useRef(new Animated.Value(1)).current;  // squash-and-stretch on landing
   const cardPopY     = useRef(new Animated.Value(0)).current;
 
   // ── word absorption ──────────────────────────────────────────
@@ -1078,6 +1079,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           ]).start();
         }
         playSfx('bookClose');
+        Haptics.selectionAsync();
         if (reduceMotion) {
           bookSlideX.setValue(-SCREEN_WIDTH);
         } else {
@@ -1355,6 +1357,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     deckBackingOp.setValue(0);
     deckDeepRot.setValue(-4); deckMidRot.setValue(3); deckActiveRot.setValue(-2);
     [deckDeepOp, deckMidOp, deckActiveOp].forEach(v => v.setValue(0));
+    deckActiveScaleY.setValue(1);
 
     // Deep card (back) — arrives first. Timing/haptic sequencing is kept
     // even under Reduce Motion (it's pacing, not visual movement); only the
@@ -1406,12 +1409,18 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           deckActiveY.setValue(0);
           deckActiveRot.setValue(0);
           deckActiveOp.setValue(1);
+          deckActiveScaleY.setValue(1);
           onActiveCardLanded();
         } else {
           Animated.parallel([
             Animated.sequence([
               Animated.timing(deckActiveY, { toValue: -6, duration: 130, easing: CARD_SNAP, useNativeDriver: true }),
               Animated.timing(deckActiveY, { toValue: 0, duration: 90, useNativeDriver: true }),
+            ]),
+            // Squash on impact, then bounce back to 1.0 — sells the landing weight
+            Animated.sequence([
+              Animated.timing(deckActiveScaleY, { toValue: 0.92, duration: 100, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+              Animated.timing(deckActiveScaleY, { toValue: 1.0,  duration: 120, easing: Easing.out(Easing.back(1.5)), useNativeDriver: true }),
             ]),
             Animated.timing(deckActiveRot,{ toValue: 0, duration: 160, useNativeDriver: true }),
             Animated.timing(deckActiveOp, { toValue: 1, duration: 80,  useNativeDriver: true }),
@@ -2000,6 +2009,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                           ),
                         ),
                       },
+                      { scaleY: deckActiveScaleY },
                     ],
                     opacity: deckActiveOp,
                   },

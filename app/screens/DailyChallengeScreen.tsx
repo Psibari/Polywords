@@ -164,10 +164,12 @@ function DailyHUD({
   challengeNumber,
   currentRound,
   chances,
+  featherPulse,
 }: {
   challengeNumber: number;
   currentRound: number;
   chances: number;
+  featherPulse?: Animated.Value;
 }) {
   return (
     <View style={hud.row}>
@@ -200,11 +202,18 @@ function DailyHUD({
         })}
       </View>
 
-      <View style={hud.feathers}>
+      <Animated.View style={[hud.feathers, featherPulse && {
+        backgroundColor: featherPulse.interpolate({
+          inputRange: [0, 0.5, 1],
+          outputRange: ['transparent', 'rgba(204,34,0,0.25)', 'transparent'],
+        }),
+        borderRadius: 8,
+        paddingHorizontal: 4,
+      }]}>
         {Array.from({ length: DAILY_CHANCES }).map((_, i) => (
           <FeatherIcon key={i} filled={i < chances} />
         ))}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -240,8 +249,15 @@ function ClueStage({
   const clueProgresses = [clue1Progress, clue2Progress, clue3Progress];
   const activeIndex = revealedCount - 1;
   const clueKey = clues.join('|');
+  const prevRevealedRef = useRef(revealedCount);
 
   useEffect(() => {
+    // Haptic when a new clue is revealed (not on mount)
+    if (revealedCount > prevRevealedRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
+    prevRevealedRef.current = revealedCount;
+
     clueProgresses.forEach((progress, index) => {
       progress.stopAnimation();
 
@@ -641,6 +657,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   useEffect(() => clearCorrectTransitionTimers, []);
 
   const rollProgress   = useRef(new Animated.Value(0)).current;
+
   const revealProgress = useRef(new Animated.Value(0)).current;
 
   const completedRef = useRef(false);
@@ -659,6 +676,43 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     currentClaimPresentation,
     displayPhase,
   );
+
+  // ── Chance loss feedback — shake + red pulse when chances drop ──
+  const hudShakeX = useRef(new Animated.Value(0)).current;
+  const hudShakeY = useRef(new Animated.Value(0)).current;
+  const featherPulse = useRef(new Animated.Value(0)).current;
+  const prevChancesRef = useRef(3);
+
+  useEffect(() => {
+    const current = displayedDailySession?.chancesRemaining;
+    if (current == null) return;
+    const prev = prevChancesRef.current;
+    prevChancesRef.current = current;
+    if (current >= prev) return;
+    // Chance lost — shake the HUD
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(hudShakeX, { toValue: 3, duration: 25, useNativeDriver: true }),
+        Animated.timing(hudShakeY, { toValue: -2, duration: 25, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(hudShakeX, { toValue: -3, duration: 25, useNativeDriver: true }),
+        Animated.timing(hudShakeY, { toValue: 2, duration: 25, useNativeDriver: true }),
+      ]),
+      Animated.parallel([
+        Animated.timing(hudShakeX, { toValue: 0, duration: 35, useNativeDriver: true }),
+        Animated.timing(hudShakeY, { toValue: 0, duration: 35, useNativeDriver: true }),
+      ]),
+    ]).start();
+    // Red pulse on feather row
+    featherPulse.setValue(0);
+    Animated.sequence([
+      Animated.timing(featherPulse, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(featherPulse, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  }, [displayedDailySession?.chancesRemaining]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function beginClaimPresentation(
     session: DailySession,
@@ -771,8 +825,16 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   );
 
   // ROUND CHANGE
+  const prevRoundIndexRef = useRef(0);
   useEffect(() => {
     if (!displayedDailySession || displayedDailySession.status !== 'active') return;
+    // Round transition haptic (not on mount)
+    const roundIdx = displayedDailySession.currentRoundIndex;
+    if (roundIdx > prevRoundIndexRef.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    prevRoundIndexRef.current = roundIdx;
+
     const physicalTransitionActive = isDailyClaimInputLocked(claimPhaseRef.current);
     if (!physicalTransitionActive) {
       completedRef.current = false;
@@ -1263,14 +1325,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       )}
       {!isComplete && displayedDailySession && (
         <>
-          <DailyHUD
-            challengeNumber={challengeNumber}
-            currentRound={Math.min(
-              displayedDailySession.currentRoundIndex,
-              DAILY_ROUND_COUNT - 1,
-            )}
-            chances={displayedDailySession.chancesRemaining}
-          />
+          <Animated.View style={{ transform: [{ translateX: hudShakeX }, { translateY: hudShakeY }] }}>
+            <DailyHUD
+              challengeNumber={challengeNumber}
+              currentRound={Math.min(
+                displayedDailySession.currentRoundIndex,
+                DAILY_ROUND_COUNT - 1,
+              )}
+              chances={displayedDailySession.chancesRemaining}
+              featherPulse={featherPulse}
+            />
+          </Animated.View>
 
           {headerVisible && (
             <View style={styles.clueHeaderRow}>

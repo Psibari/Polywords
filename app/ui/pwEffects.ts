@@ -2,25 +2,25 @@ export const FX = {
   shard: {
     // trap variant drives TrapShatter — three-layer system
     trap: {
-      // Layer 2: tile chunks
+      // Layer 2: tile chunks — cool blue-grays, not purples
       chunkCount: 5,
-      chunkColors: ['#191541', '#2A1C5C'] as const,
-      chunkEdgeColor: '#9B2D6B' as const,
+      chunkColors: ['#3A3A5C', '#2E2E4A'] as const,
+      chunkEdgeColor: '#8899BB' as const,
       chunkSpeedMin: 180,
       chunkSpeedRange: 140,
       chunkDuration: 620,
-      // Layer 3: crystal gem shards
+      // Layer 3: crystal gem shards — silver/ice tones for glass break
       gemCount: 14,
-      gemColors: ['#7B2D8B', '#9B2D6B', '#2A1C5C', '#9B2D6B'] as const,
+      gemColors: ['#AABBCC', '#8899BB', '#667799', '#AABBCC'] as const,
       gemSpeedMin: 220,
       gemSpeedRange: 200,
       gemDuration: 700,
       // Scatter cone: leftward from right wall, 80deg spread
       coneCenter: 180,  // degrees — straight left
       coneSpread: 80,   // degrees total spread
-      // Layer 1: impact glow
-      glowColor: '#7B2D8B' as const,
-      glowFadeColor: '#9B2D6B' as const,
+      // Layer 1: impact glow — cool white-blue flash
+      glowColor: '#AABBCC' as const,
+      glowFadeColor: '#667799' as const,
       glowDuration: 300,
     },
     mastery: {
