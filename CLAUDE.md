@@ -118,8 +118,9 @@ navigation shell; active Hunt and Daily play are nav-free.
   lead-in tremble; then each slot gets one `stoneTear{1,2,3}` and one `stoneLand{1,2,3}`, chosen
   by slot index and never shuffled (`gauntletTearSfx`/`gauntletLandSfx`). The land fires from
   the same settle callback that raises the landing dust, so sound and dust are one event.
-  `stoneLand1-3` are three names on one file on purpose: the landings overlap, and one cue's
-  two-player cap would start the third after its dust had already risen.
+  `stoneLand1-3` are three names on purpose: the landings overlap, and one cue's two-player cap
+  would start the third after its dust had already risen. All three point at ONE shared config
+  object (`STONE_LAND_SFX`), so the file and its volume cannot drift between the bricks.
   `warmGauntletEntranceSfx(tileCount)` runs from `BossGauntletSpines` itself rather than from
   MaskBoard's `isBoss`-gated warm, so a Returning Haunt's single brick is covered too. Volumes
   are file-relative, set from each file's measured loudest 100ms, with the land kept under

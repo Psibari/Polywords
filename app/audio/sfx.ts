@@ -73,6 +73,18 @@ type SfxSlot = {
   loadAttempts: number;
 };
 
+// The landing sound's one and only config, shared by stoneLand1-3. There are
+// three names only so each landing gets its own player (see the registry
+// note); they must never become three different sounds. One OBJECT, not three
+// copies, so a file swap or a volume change lands on every brick at once and
+// the three cannot drift apart. Each name still gets its own player and its
+// own cooldown — both of those are keyed by name, not by config.
+const STONE_LAND_SFX: SfxConfig = {
+  source: require('../../assets/audio/sfx/stone_land.mp3'),
+  volume: 0.54,
+  cooldownMs: 200,
+};
+
 const SFX: Record<SfxName, SfxConfig> = {
   uiClick:        { source: require('../../assets/audio/sfx/ui_click.mp3'),          volume: 0.25, cooldownMs: 80 },
   tileSwipe:      { source: require('../../assets/audio/sfx/tile_swipe.mp3'),        volume: 0.25, cooldownMs: 80 },
@@ -125,9 +137,9 @@ const SFX: Record<SfxName, SfxConfig> = {
   stoneTear1:  { source: require('../../assets/audio/sfx/stone_tear_1.mp3'), volume: 0.41, cooldownMs: 200 },
   stoneTear2:  { source: require('../../assets/audio/sfx/stone_tear_2.mp3'), volume: 0.46, cooldownMs: 200 },
   stoneTear3:  { source: require('../../assets/audio/sfx/stone_tear_3.mp3'), volume: 0.54, cooldownMs: 200 },
-  stoneLand1:  { source: require('../../assets/audio/sfx/stone_land.mp3'),   volume: 0.54, cooldownMs: 200 },
-  stoneLand2:  { source: require('../../assets/audio/sfx/stone_land.mp3'),   volume: 0.54, cooldownMs: 200 },
-  stoneLand3:  { source: require('../../assets/audio/sfx/stone_land.mp3'),   volume: 0.54, cooldownMs: 200 },
+  stoneLand1:  STONE_LAND_SFX,
+  stoneLand2:  STONE_LAND_SFX,
+  stoneLand3:  STONE_LAND_SFX,
 
   // Daily scroll mechanism. The 2.24s correct-claim sequence shipped with one
   // sound (correctClaim) and no haptic after the swipe, so a physical

@@ -306,6 +306,14 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
   not decided") — one row, roughly two hundred days out, about to be trimmed anyway. Fix is
   recording the player's first played date once; safe to add later, backfillable from the
   oldest row.
+10. KNOWN GAP, pending a device listen: the gauntlet's `stoneRumble` can start late on the
+  first gauntlet of each app session. `warmGauntletEntranceSfx` runs when `BossGauntletSpines`
+  mounts, which is the same moment the rumble fires, so that first play waits on one native
+  file load — likely tens of milliseconds, under a low sound. Later gauntlets in the same
+  session are unaffected (players persist), and so are the tears and lands, which fire 400ms+
+  after the warm. The fix is to warm the gauntlet's cues when the boss word STARTS, in
+  MaskBoard, rather than when the gauntlet mounts. If it is audible on device, do that. If it
+  is not, it stays listed here — it does not get dropped.
 11. Navigation gap: BottomNav renders on Vault and Settings only, but has four tabs — there is
   no way to reach the Vault from Home. Solve before its 11/12pt labels are worth changing.
 12. The `tone='loss'` `PollySpeechBubble` variant is still dead — none of the four call sites
