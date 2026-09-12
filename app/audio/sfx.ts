@@ -86,7 +86,7 @@ const STONE_LAND_SFX: SfxConfig = {
 };
 
 const SFX: Record<SfxName, SfxConfig> = {
-  uiClick:        { source: require('../../assets/audio/sfx/ui_click.mp3'),          volume: 0.25, cooldownMs: 80 },
+  uiClick:        { source: require('../../assets/audio/sfx/ui_click.mp3'),          volume: 0.40, cooldownMs: 80 },
   tileSwipe:      { source: require('../../assets/audio/sfx/tile_swipe.mp3'),        volume: 0.25, cooldownMs: 80 },
   correctClaim:   { source: require('../../assets/audio/sfx/correct_claim.mp3'),     volume: 0.35, cooldownMs: 120 },
   trapWrong:      { source: require('../../assets/audio/sfx/trap_wrong.mp3'),        volume: 0.35, cooldownMs: 120 },
