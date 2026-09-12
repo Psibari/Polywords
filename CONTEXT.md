@@ -1,10 +1,21 @@
 # POLYWORDS Current Context
 
-Updated September 10, 2026. Branch: `play-screen-overhaul`, tracking
+Updated September 12, 2026. Branch: `play-screen-overhaul`, tracking
 `origin/play-screen-overhaul`. Current committed baseline: `9f4a214`.
 
 ## Verified Current State
 
+- Hunt's 4-tier momentum system (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE, the HUD label's
+  Bebas Neue swap, the level-up pop, the FELL OFF break flash, and the Hunt music's
+  volume/rate now climbing with it) is device-confirmed on TestFlight builds #3 and #4,
+  2026-09-12 — Pete reached UNTRAPPABLE and fell off, and separately confirmed the music
+  "moves with how you're playing... speeds up... falls slower." See CLAUDE.md's Scoring
+  section for the architecture and `docs/superpowers/specs/2026-09-12-hunt-momentum-
+  feedback-design.md` for the full design history. Sound identity for the level-up/FELL
+  OFF cues is the one deliberately unbuilt piece — still uses the existing wrong-swipe
+  SFX. Pete's Apple Developer membership is also now active and TestFlight-tested end to
+  end (build → `eas submit` → install), closing out what was previously an Expo-Go-only
+  testing limitation.
 - The boss gauntlet's sealed cards are bricks that punch out of the wall (`c2ba703`,
   `36e8533`, `86c18a6`, `e04944c`, `509315b`, 2026-09-09..10), closing this file's old open
   item 4 — the placeholder stone card art and its fade-and-grow are both gone, and the motion

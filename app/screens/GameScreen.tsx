@@ -6,7 +6,7 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
-import { resolveHuntHud } from '../game/huntControl';
+import { resolveHuntHud, HuntReadTier } from '../game/huntControl';
 import { useGameStore } from '../store/useGameStore';
 import { MaskBoard } from '../components/MaskBoard';
 import { BossBoard } from '../components/BossBoard';
@@ -105,11 +105,22 @@ function GoldFlash({ flashKey, event }: { flashKey: number; event: ScreenFlashEv
 
 // ─── TOP BAR ─────────────────────────────────────────────────
 
+// Tier rank for comparing crossings (level-up vs. a FELL OFF drop) — must
+// stay in step with resolveReadTier's boundaries in huntControl.ts.
+const READ_TIER_RANK: Record<HuntReadTier, number> = {
+  steady: 0,
+  sharp: 1,
+  razorSharp: 2,
+  untrappable: 3,
+};
+
 function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPulse?: Animated.Value }) {
   const game  = useGameStore(s => s.game);
   const gauntletActive = useGameStore(s => s.game.gauntletActive);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
+  const fellOffSeverity = useGameStore(s => s.game.fellOffSeverity);
+  const consumeFellOff = useGameStore(s => s.consumeFellOff);
   const filledFeathers = Math.max(0, Math.min(MAX_FEATHERS, game.lives));
   const hasReserve     = game.lives > MAX_FEATHERS;
   const hasGoldFeather =
@@ -131,22 +142,28 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
   const hudSignature = `${hud.contextLabel ?? 'NORMAL'}:${hud.label}`;
   const previousHudSignatureRef = useRef(hudSignature);
   const hudPulse = useRef(new Animated.Value(0)).current;
-  // Tier bump — stronger scale pop when readTier actually crosses a threshold
+  // Tier bump — spring pop + hop + white flash when readTier crosses UP a
+  // threshold. A drop in tier is handled entirely by the FELL OFF effect
+  // below, not by this one (see the guard in the crossing effect).
   const tierBumpScale = useRef(new Animated.Value(1)).current;
+  const tierBumpHopY = useRef(new Animated.Value(0)).current;
+  const tierFlashOpacity = useRef(new Animated.Value(0)).current;
   const prevTierRef = useRef(hud.readTier);
-  const hudAccent = hud.tier === 'rattled'
-    ? PW.color.rose
-    : hud.readTier === 'control'
-    ? '#B388FF'
-    : hud.readTier === 'flow'
-    ? PW.color.lavender
-    : PW.color.softWhite;
-  const rungLitCount = hud.readTier === 'control' ? 3 : hud.readTier === 'flow' ? 2 : 1;
-  const rungLitColor = hud.readTier === 'control'
-    ? '#B388FF'
-    : hud.readTier === 'flow'
-    ? PW.color.lavender
-    : PW.color.softWhite;
+  // FELL OFF — drop + shake + red flash, scaled by fellOffSeverity, plus a
+  // brief "FELL OFF" text override before the label settles back to STEADY.
+  const fellOffShakeX = useRef(new Animated.Value(0)).current;
+  const fellOffDropY = useRef(new Animated.Value(0)).current;
+  const fellOffFlashOpacity = useRef(new Animated.Value(0)).current;
+  const [showFellOffText, setShowFellOffText] = useState(false);
+  const ACCENT_BY_TIER: Record<HuntReadTier, string> = {
+    steady: PW.color.softWhite,
+    sharp: PW.color.lavender,
+    razorSharp: '#B388FF',
+    untrappable: PW.color.gold,
+  };
+  const hudAccent = hud.tier === 'rattled' ? PW.color.rose : ACCENT_BY_TIER[hud.readTier];
+  const rungLitCount = READ_TIER_RANK[hud.readTier] + 1;
+  const rungLitColor = ACCENT_BY_TIER[hud.readTier];
   const hudPulseScale = hudPulse.interpolate({
     inputRange: [0, 0.35, 1],
     outputRange: [1, 1.08, 1],
@@ -167,32 +184,92 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
       useNativeDriver: true,
     }).start();
 
-    // Tier bump — stronger pop when the readTier crosses a threshold
-    // (steady→flow or flow→control), not on every HUD label change.
-    // Crossing into control gets a bigger bump and a haptic.
+    // Tier bump — spring pop + hop + flash only on a genuine LEVEL UP
+    // (rank increasing). A rank decrease is always a real chain breaking,
+    // which the FELL OFF effect below owns entirely — this guard keeps the
+    // two from double-animating the same event.
     if (hud.readTier !== prevTierRef.current) {
-      const isControlBump = hud.readTier === 'control';
+      const wasRank = READ_TIER_RANK[prevTierRef.current];
+      const isRank = READ_TIER_RANK[hud.readTier];
       prevTierRef.current = hud.readTier;
-      tierBumpScale.setValue(1);
-      Animated.sequence([
-        Animated.timing(tierBumpScale, {
-          toValue: isControlBump ? 1.24 : 1.18, duration: 120, useNativeDriver: true,
-        }),
-        Animated.timing(tierBumpScale, {
-          toValue: 1.0, duration: 200, useNativeDriver: true,
-        }),
-      ]).start();
-      if (isControlBump) Haptics.selectionAsync();
+      if (isRank > wasRank) {
+        const bumpScale = 1.14 + isRank * 0.04; // 1.18 / 1.22 / 1.26 by tier
+        tierBumpScale.setValue(1);
+        tierBumpHopY.setValue(0);
+        tierFlashOpacity.setValue(0);
+        Animated.parallel([
+          Animated.sequence([
+            Animated.spring(tierBumpScale, {
+              toValue: bumpScale, damping: 8, stiffness: 260, useNativeDriver: true,
+            }),
+            Animated.spring(tierBumpScale, {
+              toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true,
+            }),
+          ]),
+          Animated.sequence([
+            Animated.timing(tierBumpHopY, { toValue: -6, duration: 90, useNativeDriver: true }),
+            Animated.spring(tierBumpHopY, { toValue: 0, damping: 10, stiffness: 200, useNativeDriver: true }),
+          ]),
+          Animated.sequence([
+            Animated.timing(tierFlashOpacity, { toValue: 0.9, duration: 60, useNativeDriver: true }),
+            Animated.timing(tierFlashOpacity, { toValue: 0, duration: 220, useNativeDriver: true }),
+          ]),
+        ]).start();
+        Haptics.cueAsync('tierUp');
+      }
     }
 
-    // Context changes and reaching the control read are deliberate beats.
-    // Ordinary STEADY/READING changes stay visual-only so the status never
+    // Context changes and reaching the top read are deliberate beats.
+    // Ordinary STEADY/SHARP changes stay visual-only so the status never
     // chatters in the player's hand; HUNTED already arrives with the
     // wrong-answer error cue.
-    if (hud.contextLabel !== null || hud.tier === 'control') {
+    if (hud.contextLabel !== null || hud.tier === 'untrappable') {
       Haptics.selectionAsync();
     }
-  }, [hudSignature, hud.contextLabel, hud.tier, hudPulse]);
+  }, [hudSignature, hud.contextLabel, hud.tier, hud.readTier, hudPulse]);
+
+  // FELL OFF — fires purely from game.fellOffSeverity, independent of the
+  // tier-bump effect above. Drop + shake + red flash scaled by severity,
+  // plus a brief "FELL OFF" text override before the label reveals STEADY.
+  // All timings/amplitudes here are first-pass placeholders pending a device
+  // pass (see the design spec's open items) — the shape (bigger fall = more
+  // channels react) is the locked part, not these exact numbers.
+  useEffect(() => {
+    if (fellOffSeverity === null) return;
+    setShowFellOffText(true);
+    const shakeAmp = 3 + fellOffSeverity * 3; // 6 / 9 / 12 px
+    const flashPeak = 0.35 + fellOffSeverity * 0.15; // 0.5 / 0.65 / 0.8
+    const dropDistance = 4 + fellOffSeverity * 2; // 6 / 8 / 10 px
+
+    fellOffDropY.setValue(0);
+    fellOffFlashOpacity.setValue(0);
+    fellOffShakeX.setValue(0);
+
+    const shakeSteps: Animated.CompositeAnimation[] = [];
+    for (let i = 0; i < fellOffSeverity; i++) {
+      shakeSteps.push(
+        Animated.timing(fellOffShakeX, {
+          toValue: i % 2 === 0 ? -shakeAmp : shakeAmp, duration: 45, useNativeDriver: true,
+        }),
+      );
+    }
+    shakeSteps.push(Animated.timing(fellOffShakeX, { toValue: 0, duration: 45, useNativeDriver: true }));
+
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(fellOffDropY, { toValue: dropDistance, duration: 90, useNativeDriver: true }),
+        Animated.spring(fellOffDropY, { toValue: 0, damping: 10, stiffness: 180, useNativeDriver: true }),
+      ]),
+      Animated.sequence(shakeSteps),
+      Animated.sequence([
+        Animated.timing(fellOffFlashOpacity, { toValue: flashPeak, duration: 60, useNativeDriver: true }),
+        Animated.timing(fellOffFlashOpacity, { toValue: 0, duration: 260, useNativeDriver: true }),
+      ]),
+    ]).start(() => {
+      setShowFellOffText(false);
+      consumeFellOff();
+    });
+  }, [fellOffSeverity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <View style={tb.outerRow}>
@@ -204,17 +281,32 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
               { transform: [{ scale: hudPulseScale }] },
             ]}
             accessible
-            accessibilityLabel={`${hud.contextLabel ? `${hud.contextLabel}. ` : ''}${hud.label}. Level ${rungLitCount} of 3.`}
+            accessibilityLabel={`${hud.contextLabel ? `${hud.contextLabel}. ` : ''}${hud.label}. Level ${rungLitCount} of 4.`}
           >
             <Animated.View
-              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, transform: [{ scale: tierBumpScale }] }}
+              style={{
+                flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10,
+                transform: [
+                  { scale: tierBumpScale },
+                  { translateY: Animated.add(tierBumpHopY, fellOffDropY) },
+                  { translateX: fellOffShakeX },
+                ],
+              }}
             >
             <Animated.View
               pointerEvents="none"
               style={[tb.controlPulse, { backgroundColor: hudAccent, opacity: hudPulseOpacity }]}
             />
+            <Animated.View
+              pointerEvents="none"
+              style={[tb.controlPulse, { backgroundColor: PW.color.white, opacity: tierFlashOpacity }]}
+            />
+            <Animated.View
+              pointerEvents="none"
+              style={[tb.controlPulse, { backgroundColor: PW.color.wrong, opacity: fellOffFlashOpacity }]}
+            />
             <View style={tb.controlRungColumn}>
-              {[0, 1, 2].map(i => (
+              {[0, 1, 2, 3].map(i => (
                 <View
                   key={i}
                   style={[
@@ -229,12 +321,12 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
                 {hud.contextLabel ?? ' '}
               </Text>
               <Text
-                style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled, { color: hudAccent }]}
+                style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled, { color: showFellOffText ? PW.color.wrong : hudAccent }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.72}
               >
-                {hud.label}
+                {showFellOffText ? 'FELL OFF' : hud.label}
               </Text>
             </View>
             </Animated.View>
@@ -613,7 +705,11 @@ const tb = StyleSheet.create({
     color: PW.color.white,
     fontSize: 25,
     lineHeight: 27,
-    fontFamily: FONTS.hud,
+    // Bebas Neue, not FONTS.hud (Barlow Condensed) — this label is the
+    // player's momentum state (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE), and
+    // reuses the game's existing "this is a dramatic moment" face instead of
+    // its plain UI face (Pete, 2026-09-12).
+    fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
@@ -1106,6 +1202,8 @@ function GameDirector({ navigation }: { navigation: any }) {
       state = 'crisis';
     } else if (isIdleStatic) {
       state = 'static';
+    } else if (game.chainMultiplier >= 2.5) {
+      state = 'untrappable';
     } else if (game.chainMultiplier >= 2.0) {
       state = 'onARun';
     } else if (game.chainMultiplier >= 1.5) {
@@ -1148,6 +1246,7 @@ function GameDirector({ navigation }: { navigation: any }) {
         pollyTrigger: null,
         streakMilestone: null,
         featherMilestone: null,
+        fellOffSeverity: null,
       },
     });
     setMissedCount(0);

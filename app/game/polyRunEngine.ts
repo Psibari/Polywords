@@ -20,6 +20,19 @@ export function chainMultiplierForStreak(streak: number): number {
   return Math.min(1 + Math.floor(streak / 3) * 0.5, 3.0);
 }
 
+// FELL OFF severity: how far the chain fell when a wrong swipe resets it to
+// zero. Boundaries match resolveReadTier (huntControl.ts) and
+// chainTierFromMultiplier (useBoardMechanics.ts) — 1.5/2.0/2.5x — keep all
+// three in step. null means the break was from steady (1.0x): nothing real
+// was lost, so no FELL OFF flash fires. Takes the multiplier as it was
+// BEFORE the reset.
+export function fellOffSeverityFromMultiplier(mult: number): 1 | 2 | 3 | null {
+  if (mult >= 2.5) return 3;
+  if (mult >= 2.0) return 2;
+  if (mult >= 1.5) return 1;
+  return null;
+}
+
 export function realMaskPoints(opts: { isRare?: boolean; isBoss: boolean; chainMultiplier: number }): number {
   const base = opts.isRare ? 300 : 100;
   return Math.round(base * opts.chainMultiplier * (opts.isBoss ? 2 : 1));
@@ -68,6 +81,9 @@ export type GameState = {
   streak: number;
   streakMilestone: 3 | 5 | 7 | null;
   chainMultiplier: number;
+  // Set the instant a real chain breaks (see fellOffSeverityFromMultiplier),
+  // consumed by consumeFellOff() once the HUD has shown its FELL OFF flash.
+  fellOffSeverity: 1 | 2 | 3 | null;
   mistakesOnWord: number;
   feedback: string | null;
   status: GameStatus;
@@ -165,6 +181,7 @@ export function createGame(
     streak: 0,
     streakMilestone: null,
     chainMultiplier: 1,
+    fellOffSeverity: null,
     mistakesOnWord: 0,
     feedback: null,
     status: 'playing',
@@ -339,6 +356,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     streak: 0,
     streakMilestone: null,
     chainMultiplier: 1,
+    fellOffSeverity: fellOffSeverityFromMultiplier(state.chainMultiplier),
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Not a meaning',
     lastActionAt: now,
@@ -409,6 +427,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     streak: 0,
     streakMilestone: null,
     chainMultiplier: 1,
+    fellOffSeverity: fellOffSeverityFromMultiplier(state.chainMultiplier),
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Actually a meaning',
     lastActionAt: now,
@@ -614,6 +633,7 @@ export function submitWrongSwipe(state: GameState): GameState {
     streak: 0,
     streakMilestone: null,
     chainMultiplier: 1,
+    fellOffSeverity: fellOffSeverityFromMultiplier(state.chainMultiplier),
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Wrong call.',
     lastActionAt: Date.now(),
@@ -640,6 +660,10 @@ export function consumeMilestone(state: GameState): GameState {
 
 export function consumeFeatherMilestone(state: GameState): GameState {
   return { ...state, featherMilestone: null };
+}
+
+export function consumeFellOff(state: GameState): GameState {
+  return { ...state, fellOffSeverity: null };
 }
 
 // Revive a failed Hunt in place. The fatal word result is removed because the

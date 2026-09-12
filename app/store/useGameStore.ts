@@ -15,6 +15,7 @@ import {
   type HauntOutcome,
   consumeMilestone as consumeMilestoneFn,
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
+  consumeFellOff as consumeFellOffFn,
   consumeMercy as consumeMercyFn,
 } from '../game/polyRunEngine';
 import { createActiveGamePersistenceCoordinator } from '../game/activeGamePersistence';
@@ -251,6 +252,7 @@ type GameStore = {
   addBonusScore: (pts: number) => void;
   consumeMilestone: () => void;
   consumeFeatherMilestone: () => void;
+  consumeFellOff: () => void;
   consumeMercy: () => void;
   queueFailedBoss: (step: FailedBossStep, failedPair?: HiddenPair) => void;
   reconcileHauntOutcome: (
@@ -624,6 +626,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   consumeFeatherMilestone: () =>
     set((s) => ({ game: consumeFeatherMilestoneFn(s.game) })),
+
+  consumeFellOff: () =>
+    set((s) => ({ game: consumeFellOffFn(s.game) })),
 
   consumeMercy: () =>
     set((s) => ({ game: consumeMercyFn(s.game) })),

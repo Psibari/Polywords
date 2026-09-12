@@ -18,6 +18,7 @@ import {
   isMaskResolved,
   getUnresolvedMaskIds,
   mysteryMasteryPoints,
+  fellOffSeverityFromMultiplier,
   GameState,
 } from './polyRunEngine';
 import { Mask, SessionStep, WordStep } from './types';
@@ -158,6 +159,40 @@ function freshHaunt(): GameState {
   eq(s.score, 100 + 100 + 75, 'chain.thirdScoresAt1.5x');
   s = submitSwipeDown(s, 't2');
   eq(s.score, 100 + 100 + 75 + 75, 'chain.fourthScoresAt1.5x');
+}
+
+// ── FELL OFF severity: null below 1.5x, escalating at each real tier ───
+
+{
+  eq(fellOffSeverityFromMultiplier(1), null, 'fellOff.steadyIsNull');
+  eq(fellOffSeverityFromMultiplier(1.49), null, 'fellOff.justBelowSharpIsNull');
+  eq(fellOffSeverityFromMultiplier(1.5), 1, 'fellOff.sharp');
+  eq(fellOffSeverityFromMultiplier(1.99), 1, 'fellOff.justBelowRazorSharp');
+  eq(fellOffSeverityFromMultiplier(2.0), 2, 'fellOff.razorSharp');
+  eq(fellOffSeverityFromMultiplier(2.49), 2, 'fellOff.justBelowUntrappable');
+  eq(fellOffSeverityFromMultiplier(2.5), 3, 'fellOff.untrappable');
+  eq(fellOffSeverityFromMultiplier(3.0), 3, 'fellOff.cappedMultiplierStillBiggest');
+}
+
+// A wrong swipe from a real chain sets fellOffSeverity; the state is at
+// 1.5x (streak 3) going into this swipe, so breaking it is a severity-1 fall.
+{
+  let s = fresh();
+  s = submitSwipeUp(s, 'r1');
+  s = submitSwipeUp(s, 'r2');
+  s = submitSwipeDown(s, 't1');
+  eq(s.chainMultiplier, 1.5, 'fellOff.setupAt1.5x');
+  s = submitSwipeUp(s, 't2'); // wrong: claims a trap as real
+  eq(s.chainMultiplier, 1, 'fellOff.resetsTo1x');
+  eq(s.fellOffSeverity, 1, 'fellOff.severityFromBrokenSharp');
+}
+
+// A wrong swipe from steady (never built a real chain) sets no severity.
+{
+  let s = fresh();
+  eq(s.chainMultiplier, 1, 'fellOff.startsSteady');
+  s = submitSwipeUp(s, 't1'); // wrong: claims a trap as real, from streak 0
+  eq(s.fellOffSeverity, null, 'fellOff.noLossFromSteady');
 }
 
 // ── Boss word: doubled reals, 100-point trap catches, mastery ───

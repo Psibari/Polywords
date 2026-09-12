@@ -6,6 +6,10 @@ export type HapticCue =
   | 'standardCorrect'
   | 'heightenedCorrect'
   | 'wrong'
+  | 'tierUp'
+  | 'fellOffSmall'
+  | 'fellOffMedium'
+  | 'fellOffBig'
   | 'bossEntry'
   | 'bossCorrect'
   | 'bossHaunted'
@@ -78,6 +82,31 @@ export const Haptics = {
       }
       case 'wrong':
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
+      // Momentum tier crossing (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE). One
+      // routine pulse for all three crossings, replacing a raw
+      // Haptics.selectionAsync() call that only fired on one of them and
+      // bypassed this gateway (Pete, 2026-09-12). Placeholder weight pending
+      // its own device pass — see the design spec's open items.
+      case 'tierUp':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      // FELL OFF severities — layered ON TOP of the 'wrong' cue above, not a
+      // replacement for it, scaled to how far the chain fell. fellOffSmall
+      // and fellOffMedium are first-pass placeholders (Open Items 3-4 in the
+      // design spec); fellOffBig's shape is decided — two Medium pulses
+      // 90ms apart, same shape as heightenedCorrect/gauntletBegin, not Heavy
+      // (reserved for boss beats).
+      case 'fellOffSmall':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      case 'fellOffMedium': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 70);
+        return first;
+      }
+      case 'fellOffBig': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 90);
+        return first;
+      }
       case 'bossEntry': {
         const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 100);

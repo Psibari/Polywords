@@ -36,12 +36,27 @@ const STATE_TO_TRACK: Record<Exclude<MusicState, 'off'>, TrackKey> = {
   neutral: 'hunt',
   rhythm: 'hunt',
   onARun: 'hunt',
+  untrappable: 'hunt',
   crisis: 'tension',
   boss: 'boss',
   daily: 'daily',
   home: 'home',
   static: 'static',
 };
+
+// Momentum states share one track (TRACK_PLAYBACK_RATES.hunt), so a state
+// change alone never trips the token-gated rate-set in playLoadedTrack below
+// (that only fires on an actual track switch). This table drives a second,
+// state-aware rate application so the loop still quickens between them.
+// Baseline (neutral) matches the existing authored TRACK_PLAYBACK_RATES.hunt
+// value untouched; first-pass values above it pending a device pass.
+const HUNT_MOMENTUM_RATE: Partial<Record<Exclude<MusicState, 'off'>, number>> = {
+  neutral: 0.85,
+  rhythm: 0.88,
+  onARun: 0.92,
+  untrappable: 0.97,
+};
+let configuredMomentumRate: number | null = null;
 
 const FADE_IN_MS = 300;
 const FADE_OUT_MS = 240;
@@ -196,6 +211,19 @@ function playLoadedTrack(token: number): void {
     }
   }
 
+  // Momentum rate — separate from the block above because a state change
+  // among neutral/rhythm/onARun/untrappable never switches the track (they
+  // all share 'hunt'), so it never trips the token-gated set above.
+  const momentumRate = HUNT_MOMENTUM_RATE[desiredStates[activeOwner]];
+  if (momentumRate !== undefined && momentumRate !== configuredMomentumRate) {
+    try {
+      livePlayer.setPlaybackRate(momentumRate, 'high');
+      configuredMomentumRate = momentumRate;
+    } catch (error) {
+      warnDev('failed to set momentum playback rate', error);
+    }
+  }
+
   if (restartCurrentTrackAtZero) {
     restartCurrentTrackAtZero = false;
     void livePlayer.seekTo(0, 0, 0)
@@ -292,6 +320,7 @@ function switchTrack(nextTrack: TrackKey): void {
   const token = transitionToken;
   transitionRequestedAt = performance.now();
   configuredTrackToken = -1;
+  configuredMomentumRate = null;
   cancelFade();
   clearPauseTimer();
   clearLoadRetry();

@@ -1,7 +1,7 @@
-export type HuntControlTier = 'steady' | 'flow' | 'control' | 'rattled';
+export type HuntControlTier = 'steady' | 'sharp' | 'razorSharp' | 'untrappable' | 'rattled';
 
 /** The streak read alone, never overridden by lives. See resolveLiveHuntControl. */
-export type HuntReadTier = 'steady' | 'flow' | 'control';
+export type HuntReadTier = 'steady' | 'sharp' | 'razorSharp' | 'untrappable';
 
 export type HuntControlState = {
   tier: HuntControlTier;
@@ -14,9 +14,15 @@ export type HuntHudState = HuntControlState & {
   contextLabel: string | null;
 };
 
+// Mirrors chainMultiplierForStreak's real steps (1.0/1.5/2.0/2.5/3.0) with one
+// name per boundary. 3.0x (the multiplier's hard cap) stays inside
+// untrappable on purpose — see docs/superpowers/specs/2026-09-12-hunt-momentum-
+// feedback-design.md ("12+ stays inside UNTRAPPABLE"). Keep this in step with
+// chainTierFromMultiplier in useBoardMechanics.ts — same boundaries, by design.
 function resolveReadTier(chainMultiplier: number): HuntReadTier {
-  if (chainMultiplier >= 2.0) return 'control';
-  if (chainMultiplier >= 1.5) return 'flow';
+  if (chainMultiplier >= 2.5) return 'untrappable';
+  if (chainMultiplier >= 2.0) return 'razorSharp';
+  if (chainMultiplier >= 1.5) return 'sharp';
   return 'steady';
 }
 
@@ -42,18 +48,26 @@ export function resolveLiveHuntControl(
       readTier,
     };
   }
-  if (readTier === 'control') {
+  if (readTier === 'untrappable') {
     return {
-      tier: 'control',
-      label: 'GETTING PAST',
+      tier: 'untrappable',
+      label: 'UNTRAPPABLE',
+      description: "She can't catch you right now.",
+      readTier,
+    };
+  }
+  if (readTier === 'razorSharp') {
+    return {
+      tier: 'razorSharp',
+      label: 'RAZOR SHARP',
       description: 'You are getting past her clean.',
       readTier,
     };
   }
-  if (readTier === 'flow') {
+  if (readTier === 'sharp') {
     return {
-      tier: 'flow',
-      label: 'READING',
+      tier: 'sharp',
+      label: 'SHARP',
       description: 'You are reading the pattern.',
       readTier,
     };

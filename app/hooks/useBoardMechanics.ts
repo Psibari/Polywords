@@ -5,6 +5,7 @@ import { resolveGhostPair } from '../game/hiddenPairIdentity';
 import { useGameStore } from '../store/useGameStore';
 import {
   chainMultiplierForStreak,
+  fellOffSeverityFromMultiplier,
   getUnresolvedMaskIds,
   realMaskPoints,
   trapMaskPoints,
@@ -17,7 +18,7 @@ import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { createSeededTruthPlan } from '../game/seededRandom';
 import { recordPlaytestEvent, resolveHuntTelemetryPhase } from '../game/playtestTelemetry';
 
-export type ChainTier = 1 | 2 | 3;
+export type ChainTier = 1 | 2 | 3 | 4;
 type WordOutcomeState = 'none' | 'mastered' | 'haunted';
 
 export type GauntletTile = {
@@ -48,8 +49,11 @@ const BOSS_HAUNTED_RECOGNITION_MS = 220; // let the red flash read before the bo
 const BOSS_HAUNTED_POLLY_MS = 1270;         // 800ms settle + 470ms clean hold (target: 450-500ms)
 const BOSS_HAUNTED_OUTCOME_REVEAL_MS = 1850; // 800ms settle + 1050ms hold; + onOutcomeReveal's own untouched 350ms scrim-mount = 1400ms settle-to-card-visible (target: 1.3-1.5s)
 
+// Boundaries match resolveReadTier in huntControl.ts (1.5/2.0/2.5) — keep the
+// two in step, see the note there.
 function chainTierFromMultiplier(mult: number): ChainTier {
-  if (mult >= 2.5) return 3;
+  if (mult >= 2.5) return 4;
+  if (mult >= 2.0) return 3;
   if (mult >= 1.5) return 2;
   return 1;
 }
@@ -92,7 +96,7 @@ function buildInitialTileStates(
 export type BoardMechanicsPerform = {
   onRealClaimed(info: { mask: Mask; tier: ChainTier; points: number; nextFound: number; totalReals: number }): void;
   onTrapRejected(info: { mask: Mask; tier: ChainTier; points: number }): void;
-  onWrongSwipe(info: { mask: Mask; brokeRealChain: boolean }): void;
+  onWrongSwipe(info: { mask: Mask; brokeRealChain: boolean; fellOffSeverity: 1 | 2 | 3 | null }): void;
   onGauntletCorrect(info: { swipedUp: boolean; phrase: string }): void;
   onGauntletTileDrop(index: number): void;
   onGauntletBegin(): void;
@@ -635,8 +639,9 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       // Wrong swipe — UP on trap
       wrongSwipeOccurred.current = true;
       const brokeRealChain = game.chainMultiplier >= 1.5;
+      const fellOffSeverity = fellOffSeverityFromMultiplier(game.chainMultiplier);
       firePollyEvent(game.lives === 2 ? 'oneHeartLeft' : 'wrong');
-      perform.onWrongSwipe({ mask, brokeRealChain });
+      perform.onWrongSwipe({ mask, brokeRealChain, fellOffSeverity });
       submitSwipeUp(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
@@ -668,8 +673,9 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       // Wrong swipe — RIGHT on real meaning
       wrongSwipeOccurred.current = true;
       const brokeRealChain = game.chainMultiplier >= 1.5;
+      const fellOffSeverity = fellOffSeverityFromMultiplier(game.chainMultiplier);
       firePollyEvent(game.lives === 2 ? 'oneHeartLeft' : 'wrong');
-      perform.onWrongSwipe({ mask, brokeRealChain });
+      perform.onWrongSwipe({ mask, brokeRealChain, fellOffSeverity });
       submitSwipeDown(maskId);
       // Tile exits permanently — no retry
       setTileStates(prev => new Map(prev).set(maskId, 'wrong'));
@@ -720,8 +726,9 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
       // a separate gauntlet-only callback so the "broke real chain" bonus
       // sfx/haptic isn't silently dropped for gauntlet misses.
       const brokeRealChain = game.chainMultiplier >= 1.5;
+      const fellOffSeverity = fellOffSeverityFromMultiplier(game.chainMultiplier);
       firePollyEvent(game.lives === 2 ? 'oneHeartLeft' : 'wrong');
-      perform.onWrongSwipe({ mask: tile.mask, brokeRealChain });
+      perform.onWrongSwipe({ mask: tile.mask, brokeRealChain, fellOffSeverity });
       setFinalTileStates(prev => new Map(prev).set(tile.mask.id, 'wrong'));
       triggerWrongFail(tile.mask.id);
       return;

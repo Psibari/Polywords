@@ -64,6 +64,18 @@ assert.equal(
 
 assert.equal(
   resolveMusicTargetVolume({
+    activeOwner: 'hunt',
+    state: 'untrappable',
+    muted: false,
+    transportPaused: false,
+    bossOutcomeSilenced: false,
+  }),
+  0.24,
+  'untrappable is the loudest of the four momentum states',
+);
+
+assert.equal(
+  resolveMusicTargetVolume({
     activeOwner: 'daily',
     state: 'daily',
     muted: false,

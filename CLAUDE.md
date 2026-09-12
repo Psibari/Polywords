@@ -79,10 +79,28 @@ navigation shell; active Hunt and Daily play are nav-free.
   anywhere in `app/` — treat as dead.
 - `realMaskPoints`' isRare 300-point tier has no data behind it: zero of the visible REAL
   masks carry isRare (`npm run state`).
-- `FEATHER_MILESTONES` fires for FX only. The old score-to-extra-life conversion was
-  deliberately removed as regressive and stays removed.
+- `FEATHER_MILESTONES` computes and stores a hit flag but nothing reads it: no component
+  renders `game.featherMilestone` and `consumeFeatherMilestone()` has no caller — not
+  "FX only," fully inert. The old score-to-extra-life conversion was deliberately removed
+  as regressive and stays removed.
 - Rank is retired from the player-facing progression as of 2026-09-04 (`c48e3fe`).
   `app/game/ranks.ts` still exists but is imported by nothing in `app/`.
+- Hunt has a 4-tier momentum system on `chainMultiplier`: STEADY (1.0x) → SHARP (1.5x) →
+  RAZOR SHARP (2.0x) → UNTRAPPABLE (2.5x+), the ceiling — the multiplier keeps climbing to
+  its 3.0x cap for score, but nothing new shows or sounds past UNTRAPPABLE by design. Three
+  systems share these exact boundaries: the HUD label (`resolveReadTier` in
+  `huntControl.ts`, rendered in `FONTS.wordDisplay`/Bebas Neue, not the plain UI face), the
+  per-swipe SFX pitch (`chainTierFromMultiplier`/`CHAIN_TIER_SFX_RATE` in
+  `useBoardMechanics.ts`/`MaskBoard.tsx`), and the Hunt background music's volume/rate
+  (`HUNT_MOMENTUM_RATE` in `MusicEngine.ts`, same `hunt_suspense_loop.mp3` file throughout,
+  just louder and faster: 0.85x-0.97x). Breaking a real chain (any wrong swipe resets
+  streak to 0) sets `fellOffSeverity` (1-3, `fellOffSeverityFromMultiplier` in
+  `polyRunEngine.ts`) and flashes FELL OFF before revealing STEADY, scaled to how far the
+  chain fell — STEADY itself is reserved for a fresh run and is never shown as a
+  consequence of falling. Device-confirmed 2026-09-12 (TestFlight builds #3-4); sound
+  identity for the level-up/FELL OFF cues is the one deliberately deferred piece, still
+  using the existing wrong-swipe SFX. See
+  `docs/superpowers/specs/2026-09-12-hunt-momentum-feedback-design.md`.
 
 #### Gauntlet entrance
 

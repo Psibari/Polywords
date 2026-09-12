@@ -3,6 +3,7 @@ export type MusicState =
   | 'neutral'
   | 'rhythm'
   | 'onARun'
+  | 'untrappable'
   | 'crisis'
   | 'boss'
   | 'daily'
@@ -11,10 +12,16 @@ export type MusicState =
 
 export type MusicOwner = 'hunt' | 'daily' | 'home';
 
+// neutral/rhythm/onARun/untrappable mirror the HUD's STEADY/SHARP/RAZOR
+// SHARP/UNTRAPPABLE tiers (1.0/1.5/2.0/2.5x) — see resolveReadTier in
+// huntControl.ts. Kept as their own names here (not renamed to match) since
+// they're internal-only, never player-facing. First-pass values pending a
+// device pass, same as the rest of the momentum feedback work (2026-09-12).
 export const STATE_VOLUMES: Record<Exclude<MusicState, 'off'>, number> = {
   neutral: 0.18,
   rhythm: 0.20,
   onARun: 0.22,
+  untrappable: 0.24,
   crisis: 0.20,
   boss: 0.14,
   daily: 0.16,

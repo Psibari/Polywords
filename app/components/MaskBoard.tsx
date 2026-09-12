@@ -86,7 +86,7 @@ const CARD_SNAP = Easing.bezier(0.16, 0.95, 0.22, 1.00);
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-const CHAIN_TIER_SFX_RATE: Record<ChainTier, number> = { 1: 1.0, 2: 1.08, 3: 1.16 };
+const CHAIN_TIER_SFX_RATE: Record<ChainTier, number> = { 1: 1.0, 2: 1.08, 3: 1.16, 4: 1.24 };
 
 export type Props = {
   step: WordStep;
@@ -654,11 +654,17 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
   // Face half of the old triggerWrongSwipeFeedback — shared by normal-tile
   // and gauntlet-tile wrong swipes, same as the original single function was.
-  function performWrongSwipeFeedback(brokeRealChain: boolean) {
+  function performWrongSwipeFeedback(brokeRealChain: boolean, fellOffSeverity: 1 | 2 | 3 | null) {
     playSfx(resolveWrongSwipeSfx(brokeRealChain));
     // Polly keeps her existing smug reaction just behind the physical hit.
     setTimeout(() => playSfx('pollySqwawkShort'), 70);
     Haptics.cueAsync('wrong');
+    // FELL OFF haptic layers on top of 'wrong' above, scaled to how far the
+    // chain fell — nothing extra at severity null (broke from STEADY, there
+    // was nothing real to lose).
+    if (fellOffSeverity === 1) Haptics.cueAsync('fellOffSmall');
+    else if (fellOffSeverity === 2) Haptics.cueAsync('fellOffMedium');
+    else if (fellOffSeverity === 3) Haptics.cueAsync('fellOffBig');
     triggerWrongWordRecoil();
     onWrongSwipe?.();
   }
@@ -1015,8 +1021,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
         Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
       },
-      onWrongSwipe({ brokeRealChain }) {
-        performWrongSwipeFeedback(brokeRealChain);
+      onWrongSwipe({ brokeRealChain, fellOffSeverity }) {
+        performWrongSwipeFeedback(brokeRealChain, fellOffSeverity);
       },
       onGauntletCorrect({ swipedUp, phrase }) {
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
