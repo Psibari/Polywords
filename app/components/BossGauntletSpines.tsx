@@ -13,6 +13,7 @@ import {
   warmGauntletEntranceSfx,
 } from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { Haptics } from '../utils/haptics';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
 import { heroBookMaterial } from '../ui/pwMaterials';
@@ -298,6 +299,7 @@ function SpineSlot({
   const onEntranceSettled = useCallback(() => {
     setShowLandingDust(true);
     playSfx(gauntletLandSfx(index));
+    Haptics.cueAsync('gauntletBrickLand');
   }, [index]);
   // Stable identity across re-renders — StoneDustBurst's effect depends on
   // this callback, and an inline arrow at the JSX call site would give it a
@@ -400,6 +402,7 @@ function SpineSlot({
       // by slot, brick 1 with stone_tear_1 and so on, never shuffled.
       kickWall();
       playSfx(gauntletTearSfx(index));
+      Haptics.cueAsync('gauntletBrickTear');
       Animated.sequence([
         // Push out of the wall.
         Animated.timing(progress, {
@@ -815,11 +818,21 @@ export function BossGauntletSpines({
     warmGauntletEntranceSfx(gauntletTiles.length);
     rumbleWall(BRICK_LEAD_IN_MS);
     playSfx('stoneRumble');
+    Haptics.cueAsync('gauntletWallTremble');
   }, [tilesVisible, reduceMotion, gauntletTiles.length]);
 
   // The shake values are module-level and outlive this component. Leaving one
-  // stranded mid-animation would sit the wall crooked on the next screen.
-  useEffect(() => resetWallShake, []);
+  // stranded mid-animation would sit the wall crooked on the next screen. The
+  // tremble burst is the same risk in haptic form — its pulses are scheduled
+  // with setTimeout and would otherwise keep firing into whatever screen
+  // follows a fast exit from the gauntlet, so it is cancelled alongside the
+  // wall shake here rather than with its own fired-once ref: MaskBoard keys
+  // this component per gauntlet, the same reason landingThudPlayedRef needs
+  // no reset of its own.
+  useEffect(() => () => {
+    resetWallShake();
+    Haptics.cancelGauntletWallTremble();
+  }, []);
 
   if (gatePhase !== 'tiles' && gatePhase !== 'wrongFail') return null;
 
