@@ -47,6 +47,7 @@ import {
   type ScreenFlashEvent,
 } from '../game/huntFeedbackPolicy';
 import {
+  ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
   hasBoardVerticalOverflow,
   resolveActiveCueLayout,
   resolveActiveTileHeight,
@@ -1982,8 +1983,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                           <Text
                             style={styles.deckBackingPhrase}
                             numberOfLines={2}
-                            adjustsFontSizeToFit
-                            minimumFontScale={0.8}
+                            {...ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS}
                           >
                             {backingMask.phrase}
                           </Text>
