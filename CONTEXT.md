@@ -87,6 +87,15 @@ Updated September 10, 2026. Branch: `play-screen-overhaul`, tracking
   parchment, a matching ornate rod rolls reward paper over it, the reward holds, and the
   paper rolls up to reveal the next clue. Repeated-round state/input tests, TypeScript, the
   full test suite, and an iPhone check passed.
+- App Store status: listing name locked as "POLYWORDS: Hunt or Be Trapped" (29/30 chars) — bare
+  "POLYWORDS" is unavailable in App Store Connect (claimant undisclosed), and "Pollywords" was
+  rejected for trademark exposure, not availability. Device display name stays POLYWORDS
+  (app.json); only the store string must be unique. ASC App ID 6810968284, bundle
+  com.pdb8080.polywords, SKU EX1789108287967 — permanent, unlike the name, which is editable
+  pre-release with no review. Subtitle (30 chars, indexed for search) is empty.
+- Haptic ladder retuned (`d1b5fff`); `ui_click.mp3` re-normalized -8.3 -> -1.0dB peak with its
+  multiplier 0.25 -> 0.40 (`594e0af`), effective peak -20.3 -> -8.0dB — device-confirmed on
+  iPhone except where listed under Next Work.
 - Hunt runtime content is `assets/data/huntData.json`; `npm run state` prints its live counts.
   The 24-word DISPATCH-through-FLAG import preserved all prior entries; DISCHARGE remained
   unchanged. Boss/hidden-pair structure did not change.
@@ -357,6 +366,16 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
 16. Tutorial Replay's alert still says "You'll see it again next time you start a Hunt." It now
   clears four overlays across three screens (Settings, GameScreen, VaultScreen); the copy
   undersells it.
+17. Haunt rematch's final gauntlet tile is UNTESTED: `bossCorrect`'s Rigid+Heavy at 60ms now
+  stacks with the existing extra Heavy at `MaskBoard.tsx:1042` (non-boss only) — two Heavies 60ms apart, expected to smear. Boss final tile is clean and device-tested.
+18. Reduce-motion players get the parent-level `stoneLand1` thud with no haptic paired to it —
+  undecided whether one belongs there; haptics are not motion.
+19. Four direct `Haptics.selectionAsync()` calls in `MaskBoard.tsx` (1082, 1287, 1298, 1403)
+  bypass `cueAsync` and stay at the old faint level. 1403's own comment claims "heaviest haptic on land" while calling the weakest API — a routing problem, not a tuning one.
+20. `warnDev()` in `sfx.ts` returns early when `!__DEV__`, so every audio load, player-creation
+  and playback failure is invisible in TestFlight and production builds — this is why the mystical_chime regression took a full session to locate.
+21. External TestFlight needs a hosted privacy policy URL and a support contact before Beta App
+  Review. Neither exists yet.
 
 ## Protection
 

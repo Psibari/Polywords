@@ -152,6 +152,7 @@ navigation shell; active Hunt and Daily play are nav-free.
   `assets/audio/sfx/haunted_transform_slam_v1.wav`, and
   `assets/audio/sfx/dark_magic_curse_impact.mp3`; `warmBossOutcomeSfx()` prepares only these
   five when the boss gauntlet begins.
+- Asset loudness is part of the contract, not just the volume multiplier — `player.volume` can't exceed 1.0, so an under-level file can't be rescued in code. Peak-normalize near -1 dB and balance with the multiplier; mystical_chime and ui_click both shipped inaudible from this exact fault — measure the file before debugging the player.
 - The gauntlet's brick entrance has its own cues and its own warm. `stoneRumble` sits under the
   lead-in tremble; then each slot gets one `stoneTear{1,2,3}` and one `stoneLand{1,2,3}`, chosen
   by slot index and never shuffled (`gauntletTearSfx`/`gauntletLandSfx`). The land fires from
@@ -162,7 +163,7 @@ navigation shell; active Hunt and Daily play are nav-free.
   `warmGauntletEntranceSfx(tileCount)` runs from `BossGauntletSpines` itself rather than from
   MaskBoard's `isBoss`-gated warm, so a Returning Haunt's single brick is covered too. Volumes
   are file-relative, set from each file's measured loudest 100ms, with the land kept under
-  `masteredBookSlam` so the MASTERED climax stays the loudest thing in the round.
+  `masteredBookSlam` so the MASTERED climax stays the loudest thing in the round. Same beats carry haptics: `gauntletWallTremble` is seven cancellable Soft impacts, 60ms apart across `BRICK_LEAD_IN_MS` beside `rumbleWall()` — Soft for stone's dull, diffuse grind, since expo-haptics has no sustained haptic to fake one. `gauntletBrickTear`/`gauntletBrickLand` (Rigid/Heavy) ride the same `gauntletTearSfx`/`gauntletLandSfx` call sites, never a `BRICK_*` timer, which would drift from the animation. Flight is silent; all three are unreachable under reduce motion, before `flightTimer` exists.
 - `MusicEngine.ts` owns one persistent looping player, switches tracks by focused owner,
   resumes after app backgrounding, and restarts a new Hunt from the beginning. Track loading
   has a bounded fallback, but normal playback is released by native status events. Its
@@ -171,8 +172,7 @@ navigation shell; active Hunt and Daily play are nav-free.
   after the outcome. It composes with mute, pause, foreground recovery, and later state/track
   transitions; `MaskBoard` never manipulates player volume directly. The transport remains
   alive while inaudible, so this moment neither pauses nor restarts the track.
-- `app/utils/haptics.ts` is the only haptic gateway and remains preference-gated. Its semantic
-  `masteredBookImpact` and `hauntedBookImpact` cues are both Heavy physical-impact haptics.
+- `cueAsync` in `app/utils/haptics.ts` is the only haptic gateway and stays preference-gated. Heavy is the ceiling, reserved for boss beats — routine cues climb by RHYTHM, not force, and that governs any new cue. `gestureThreshold` is Rigid (was `selectionAsync`, built for a stationary finger and imperceptible mid-drag). `standardCorrect` is Medium; `heightenedCorrect` is Medium x2 at 90ms. `bossCorrect` is its own case, Rigid then Heavy at 60ms; `bossHaunted`, `masteredBookImpact` and `hauntedBookImpact` stay a single Heavy — physical book impacts, never double-pulsed.
 - Polly's ordinary laughs, boss hidden-failure laugh, Returning Haunt final laugh, and the
   Hunt-loss Results chuckle are separate event beats. The Hunt-loss chuckle is requested by
   `ResultsScreen` with cooldown bypass so an earlier Polly laugh cannot suppress it; do not
