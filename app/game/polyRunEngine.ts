@@ -54,6 +54,11 @@ export function mysteryMasteryPoints(chainMultiplier: number): number {
 
 export type GameStatus = 'playing' | 'gameOver' | 'complete';
 export type HauntOutcome = 'pending' | 'banished' | 'haunted';
+// Which of the three life-loss sites ended the run — read only at Results,
+// never matched against the `feedback` display string, which is copy and
+// can change independently. null once no loss is active (mid-run, or after
+// a Gold Feather revive).
+export type LossCause = 'trap' | 'rejectedReal' | 'wrongCall' | null;
 
 export type WordResult = {
   wordId: string;
@@ -86,6 +91,7 @@ export type GameState = {
   fellOffSeverity: 1 | 2 | 3 | null;
   mistakesOnWord: number;
   feedback: string | null;
+  lossCause: LossCause;
   status: GameStatus;
   lastActionAt: number;
   pollyTrigger: null | 'intro' | 'perfect' | 'nearMiss' | 'bossEntry' | 'bossWord' | 'streak5' | 'locked' | 'cleanSplit' | 'bossMastery' | 'phraseBreak' | 'slangDrop' | 'slangCorrect' | 'slangMiss' | 'switchback' | 'switchbackFirst' | 'switchbackSecond' | 'switchbackFail' | 'ghostIntro' | 'ghostCorrect' | 'ghostWrong';
@@ -184,6 +190,7 @@ export function createGame(
     fellOffSeverity: null,
     mistakesOnWord: 0,
     feedback: null,
+    lossCause: null,
     status: 'playing',
     lastActionAt: Date.now(),
     pollyTrigger: null,
@@ -359,6 +366,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
     fellOffSeverity: fellOffSeverityFromMultiplier(state.chainMultiplier),
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Not a meaning',
+    lossCause: 'trap',
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
@@ -430,6 +438,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
     fellOffSeverity: fellOffSeverityFromMultiplier(state.chainMultiplier),
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Actually a meaning',
+    lossCause: 'rejectedReal',
     lastActionAt: now,
     pollyTrigger: 'nearMiss',
   };
@@ -636,6 +645,7 @@ export function submitWrongSwipe(state: GameState): GameState {
     fellOffSeverity: fellOffSeverityFromMultiplier(state.chainMultiplier),
     mistakesOnWord: state.mistakesOnWord + 1,
     feedback: 'Wrong call.',
+    lossCause: 'wrongCall',
     lastActionAt: Date.now(),
   };
   if (loss.status === 'gameOver') {
@@ -678,6 +688,7 @@ export function applyGoldFeather(state: GameState): GameState {
     lives: 1,
     status: 'playing',
     feedback: 'Gold Feather',
+    lossCause: null,
     lastActionAt: Date.now(),
     pollyTrigger: null,
     wordResults: state.wordResults.filter(result => result.wordId !== currentWordId),

@@ -3,9 +3,16 @@ import { heroBookMaterial, libraryMaterial } from './pwMaterials';
 import { WordResult } from '../game/polyRunEngine';
 import { PollyMoment } from '../game/pollyCharacter';
 import { PollyMemory, resolveResultsPollyMoment } from '../game/pollyMemory';
+import { LOSS_CAUSE_LINES, pickLossVerdictLine } from '../game/lossCauseLines';
+
+// The pure line pools + picker live in game/lossCauseLines.ts (RN-free, unit
+// tested under plain node) — same split as pollyMemory.ts/
+// deriveResultsPollyMoment below. Re-exported here so the screen has one
+// import surface for all Results copy.
+export { LOSS_CAUSE_LINES, pickLossVerdictLine };
 
 // ── Verdict copy (verdict appears exactly once, top of the ledger) ──
-export const RESULTS_SUB_LOSS = 'Out of feathers.';
+export const RESULTS_SUB_LOSS = LOSS_CAUSE_LINES.neutral[1];
 
 // ── Footer action copy ──
 export const RESULTS_RESTART_LABEL = 'START A NEW HUNT';

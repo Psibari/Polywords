@@ -25,8 +25,8 @@ import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { resolveHuntResultLabel } from '../game/huntControl';
 import {
   RESULTS_RESTART_LABEL,
-  RESULTS_SUB_LOSS,
   deriveResultsPollyMoment,
+  pickLossVerdictLine,
   resultsCard,
   resultsLedger,
   resultsType,
@@ -442,6 +442,7 @@ type Props = {
 export default function ResultsScreen({ onRestart, onHome }: Props) {
   const reduceMotion = useReducedMotionPreference();
   const game = useGameStore(s => s.game);
+  const ghosts = useGameStore(s => s.ghosts);
   const ghostRevenge = useGameStore(s => s.ghostRevenge);
   const recordRunComplete = useGameStore(s => s.recordRunComplete);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
@@ -588,8 +589,14 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     rememberPollyLine(pollyMoment.lineId, 'results');
   }, [pollyMoment, rememberPollyLine]);
 
+  // Held stable for the life of the screen — pickLossVerdictLine must stay
+  // pure (no Math.random inside it), so the roll is drawn once here, in a
+  // useState initialiser, never during render.
+  const [lossLineRoll] = useState(() => Math.random());
   const verdictText = resultLabel;
-  const verdictSub = outcome === 'loss' ? RESULTS_SUB_LOSS : null;
+  const verdictSub = outcome === 'loss'
+    ? pickLossVerdictLine(ghosts.length, game.lossCause, lossLineRoll)
+    : null;
 
   const perfectCount = wordOnlyResults.filter(
     r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0,
@@ -731,11 +738,13 @@ const rs = StyleSheet.create({
     width: '100%',
   },
   verdictSub: {
+    width: '100%',
     color: PW.color.softWhite,
     fontSize: resultsType.verdictSub,
     fontFamily: FONTS.label,
     includeFontPadding: false,
     letterSpacing: 3,
+    textAlign: 'center',
     textTransform: 'uppercase',
     marginTop: 8,
   },

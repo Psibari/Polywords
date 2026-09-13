@@ -441,6 +441,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           // honest default: it undercounts that one in-flight run's mercy
           // rather than inventing a number.
           mercyUsed: Number.isFinite(saved.mercyUsed) ? Math.max(0, saved.mercyUsed) : 0,
+          // Absent in saves written before this field existed. A resumed
+          // snapshot is always 'playing' (see the status check above), so no
+          // loss is active anyway — null is simply correct, not a guess.
+          lossCause: saved.lossCause ?? null,
           runSeed: Number.isFinite(saved.runSeed)
             ? saved.runSeed >>> 0
             : deriveSeed(saved.lastActionAt || Date.now(), 'migrated-run'),

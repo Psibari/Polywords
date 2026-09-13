@@ -220,11 +220,14 @@ function freshHaunt(): GameState {
   eq(s.streak, 0, 'wrong.upTrap.streakReset');
   eq(s.chainMultiplier, 1, 'wrong.upTrap.chainReset');
   eq(s.feedback, 'Not a meaning', 'wrong.upTrap.feedback');
+  eq(s.lossCause, 'trap', 'wrong.upTrap.lossCause');
   s = submitSwipeDown(s, 'r2');
   eq(s.lives, 4, 'wrong.downReal.lifeLost');
   eq(s.feedback, 'Actually a meaning', 'wrong.downReal.feedback');
+  eq(s.lossCause, 'rejectedReal', 'wrong.downReal.lossCause');
   s = submitWrongSwipe(s);
   eq(s.lives, 3, 'wrong.direction.lifeLost');
+  eq(s.lossCause, 'wrongCall', 'wrong.direction.lossCause');
 }
 
 // ── Feather milestone: fires for FX, no longer grants a life ─────
@@ -267,9 +270,11 @@ function freshHaunt(): GameState {
   s = submitSwipeUp(s, 't1');
   eq(s.status, 'gameOver', 'goldFeather.before.status');
   eq(s.wordResults.length, 1, 'goldFeather.before.fatalResultRecorded');
+  eq(s.lossCause, 'trap', 'goldFeather.before.lossCause');
   s = applyGoldFeather(s);
   eq(s.status, 'playing', 'goldFeather.revived.status');
   eq(s.lives, 1, 'goldFeather.revived.oneLife');
+  eq(s.lossCause, null, 'goldFeather.revived.lossCauseCleared');
   eq(s.stepIndex, 0, 'goldFeather.revived.sameWord');
   eq(s.swipedUpIds.includes('t1'), true, 'goldFeather.revived.keepsFatalSwipe');
   eq(s.wordResults.length, 0, 'goldFeather.revived.removesFatalResult');
