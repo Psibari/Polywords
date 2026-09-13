@@ -67,23 +67,31 @@ const tilesByWord = new Map();
   }
 }
 
-// ---- Boss Words (Production) sheet: word -> REAL/TRAP + hidden pair + demotion flag ----
+// ---- Boss Words (Production) sheet: word -> REAL/TRAP + hidden PAIRS + demotion flag ----
 // This sheet contains multiple non-contiguous historical blocks per word (draft pass, then a
 // later "Consolidated from verified Tiles" pass) — same last-write-wins dedup handles it.
+//
+// FIXED 2026-09-12 (was stale against the current boss schema): the sheet's 7th column,
+// "Hidden Pair ID" (e.g. "wake_h00" / "wake_h01" / "wake_h02"), groups a BOSS-HIDDEN row with
+// its matching BOSS-HIDDEN-TRAP row into one of the THREE pairs a live boss word requires
+// (runtimeHuntValidation.mjs: "boss words require exactly 3 hiddenPairs for the Route C
+// gauntlet"). The previous version never read this column — it kept only the single latest
+// BOSS-HIDDEN/BOSS-HIDDEN-TRAP row per word, silently discarding the other two pairs.
 const bossByWord = new Map();
 {
   let currentWord = '';
   for (const row of sheetRows('Boss Words (Production)').slice(1)) {
     if (!row.some((cell) => cell !== '')) continue;
-    const [wordCol, type, phrase, , status, notes] = row;
+    const [wordCol, type, phrase, , status, notes, hiddenPairId] = row;
     if (wordCol) currentWord = String(wordCol).trim();
     if (!currentWord) continue;
     if (!bossByWord.has(currentWord)) {
       bossByWord.set(currentWord, {
         reals: new Map(),
         traps: new Map(),
-        hidden: null,
-        hiddenTrap: null,
+        // Keyed by the sheet's raw Hidden Pair ID (e.g. "wake_h01") so a BOSS-HIDDEN row and
+        // its BOSS-HIDDEN-TRAP row land in the same pair regardless of row order.
+        hiddenPairs: new Map(),
         demoted: false,
         demotedNote: '',
       });
@@ -95,8 +103,21 @@ const bossByWord = new Map();
     }
     if (type === 'REAL' && phrase) entry.reals.set(normalizePhrase(phrase), { phrase: String(phrase).trim(), status });
     if (type === 'TRAP' && phrase) entry.traps.set(normalizePhrase(phrase), { phrase: String(phrase).trim(), status });
-    if (type === 'BOSS-HIDDEN' && phrase) entry.hidden = { phrase: String(phrase).trim(), status };
-    if (type === 'BOSS-HIDDEN-TRAP' && phrase) entry.hiddenTrap = { phrase: String(phrase).trim(), status };
+    if ((type === 'BOSS-HIDDEN' || type === 'BOSS-HIDDEN-TRAP') && phrase) {
+      const pairId = String(hiddenPairId || '').trim();
+      if (!pairId) continue; // ungrouped hidden row — surfaced via ungroupedHidden below
+      if (!entry.hiddenPairs.has(pairId)) {
+        entry.hiddenPairs.set(pairId, { real: null, realStatus: null, trap: null, trapStatus: null });
+      }
+      const pair = entry.hiddenPairs.get(pairId);
+      if (type === 'BOSS-HIDDEN') {
+        pair.real = String(phrase).trim();
+        pair.realStatus = status;
+      } else {
+        pair.trap = String(phrase).trim();
+        pair.trapStatus = status;
+      }
+    }
   }
 }
 
@@ -115,6 +136,13 @@ const report = {
   gpsTagNeeded: [],
   difficultyNeeded: [],
 };
+
+// Matches runtimeHuntValidation.mjs's own wordPrefix derivation exactly, so every ID this
+// script emits is guaranteed to pass that validator's prefix check rather than merely
+// echoing whatever casing/spacing the sheet's Hidden Pair ID column happened to use.
+function hiddenPairWordPrefix(word) {
+  return word.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
 
 for (const word of [...allWords].sort()) {
   const bossEntry = bossByWord.get(word);
@@ -142,28 +170,42 @@ for (const word of [...allWords].sort()) {
     continue;
   }
 
-  let hiddenMeaning = null;
-  let hiddenTrap = null;
+  // hiddenMeaning/hiddenTrap are the legacy single-pair fields — runtimeHuntValidation.mjs
+  // requires them null/absent whenever hiddenPairs (the current, 3-pair format) is used.
+  let hiddenPairs = null;
   let gpsTag = null;
   let isBoss = false;
 
   if (bossEntry && bossEntry.demoted) {
     report.demotedBoss.push({ word, note: bossEntry.demotedNote });
-  } else if (bossEntry && bossEntry.hidden && bossEntry.hiddenTrap) {
-    const hiddenReady = FINAL_STATUSES.has(bossEntry.hidden.status);
-    const hiddenTrapReady = FINAL_STATUSES.has(bossEntry.hiddenTrap.status);
-    if (hiddenReady && hiddenTrapReady) {
-      hiddenMeaning = bossEntry.hidden.phrase;
-      hiddenTrap = bossEntry.hiddenTrap.phrase;
+  } else if (bossEntry && bossEntry.hiddenPairs.size > 0) {
+    const wordPrefix = hiddenPairWordPrefix(word);
+    const sortedPairIds = [...bossEntry.hiddenPairs.keys()].sort();
+    const complete = [];
+    const incomplete = [];
+    for (const rawId of sortedPairIds) {
+      const pair = bossEntry.hiddenPairs.get(rawId);
+      const suffixMatch = rawId.match(/_h(\d+)\s*$/i);
+      const ready =
+        Boolean(pair.real) && Boolean(pair.trap) &&
+        FINAL_STATUSES.has(pair.realStatus) && FINAL_STATUSES.has(pair.trapStatus) &&
+        Boolean(suffixMatch);
+      if (ready) {
+        complete.push({ id: `${wordPrefix}_h${suffixMatch[1]}`, real: pair.real, trap: pair.trap });
+      } else {
+        incomplete.push({
+          rawId, hasReal: Boolean(pair.real), hasTrap: Boolean(pair.trap),
+          realStatus: pair.realStatus, trapStatus: pair.trapStatus,
+        });
+      }
+    }
+    if (complete.length === 3 && incomplete.length === 0) {
+      hiddenPairs = complete;
       gpsTag = 'boss';
       isBoss = true;
       report.readyBoss.push(word);
     } else {
-      report.notReadyBoss.push({
-        word,
-        hiddenStatus: bossEntry.hidden.status,
-        hiddenTrapStatus: bossEntry.hiddenTrap.status,
-      });
+      report.notReadyBoss.push({ word, completePairs: complete.length, incomplete });
     }
   } else if (bossEntry) {
     report.bossIncomplete.push(word);
@@ -177,8 +219,9 @@ for (const word of [...allWords].sort()) {
 
   staged[word] = {
     difficulty: null, // NOT in the workbook — needs an editorial pass before this can ship
-    hiddenMeaning,
-    hiddenTrap,
+    hiddenMeaning: null,
+    hiddenTrap: null,
+    hiddenPairs, // exactly 3 {id, real, trap} objects when isBoss, else null
     masks,
     gpsTag, // null for every non-boss word — needs GOLDEN_PACING_SYSTEM assignment
     wordType: WORD_TYPE_NAMES[reals.length] || `${reals.length}-MEANING`,
@@ -199,8 +242,13 @@ fs.writeFileSync(path.join(outDir, 'import-report.json'), JSON.stringify(report,
 console.log('=== IMPORT SUMMARY ===');
 console.log('Total staged words:', Object.keys(staged).length);
 console.log('\nBoss-ready (' + report.readyBoss.length + '):', report.readyBoss.join(', '));
-console.log('\nBoss NOT ready — hidden pair exists but not in a final status (' + report.notReadyBoss.length + '):');
-for (const b of report.notReadyBoss) console.log(`  - ${b.word}: hidden=${b.hiddenStatus} / hiddenTrap=${b.hiddenTrapStatus}`);
+console.log('\nBoss NOT ready — fewer than 3 complete, final-status hidden pairs (' + report.notReadyBoss.length + '):');
+for (const b of report.notReadyBoss) {
+  console.log(`  - ${b.word}: ${b.completePairs}/3 pairs complete`);
+  for (const inc of b.incomplete) {
+    console.log(`      ${inc.rawId}: real=${inc.hasReal ? inc.realStatus : 'MISSING'} trap=${inc.hasTrap ? inc.trapStatus : 'MISSING'}`);
+  }
+}
 console.log('\nBoss candidate, hidden pair never authored (' + report.bossIncomplete.length + '):', report.bossIncomplete.join(', '));
 console.log('\nDemoted from boss by Pete — imported as regular word only (' + report.demotedBoss.length + '):');
 for (const d of report.demotedBoss) console.log(`  - ${d.word}: ${d.note}`);

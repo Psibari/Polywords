@@ -11680,5 +11680,2162 @@
     ],
     "gpsTag": "tension",
     "wordType": "Quadruple"
+  },
+  "CASE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "id": "case_h00",
+        "real": "THE RESEARCH AND PREPARATION FOR A BURGLAR’S NEXT TARGET",
+        "trap": "WHAT YOU OPEN AND GO THROUGH TO LOOK AT OLD FAMILY PHOTOS"
+      },
+      {
+        "id": "case_h01",
+        "real": "WHY IT’S “HE CALLED ME” BUT “I CALLED HIM”",
+        "trap": "THE PART OF A BUILDING YOU ENTER TO TAKE THE STAIRS BETWEEN FLOORS"
+      },
+      {
+        "id": "case_h02",
+        "real": "WHEN AN EMERGENCY IS POSSIBLE BUT NOT PROBABLE",
+        "trap": "WHAT YOU NEED A FORKLIFT TO MOVE AROUND A WAREHOUSE"
+      }
+    ],
+    "masks": [
+      {
+        "id": "case_r0",
+        "phrase": "THE ONE THAT’S ALWAYS THE EXCEPTION TO THE RULE",
+        "isReal": true
+      },
+      {
+        "id": "case_r1",
+        "phrase": "A MEDICAL MYSTERY SO RARE ONLY A FEW HAVE EVER BEEN DOCUMENTED",
+        "isReal": true
+      },
+      {
+        "id": "case_r2",
+        "phrase": "ONLY A JUDGE HAS THE POWER TO THROW THIS OUT",
+        "isReal": true
+      },
+      {
+        "id": "case_r3",
+        "phrase": "WHAT WAS COLD AND UNSOLVED FOR YEARS UNTIL DNA FINALLY CRACKED IT",
+        "isReal": true
+      },
+      {
+        "id": "case_r4",
+        "phrase": "THE CONFIDENCE A LAWYER GETS WHEN THEY HAVE A STRONG ONE",
+        "isReal": true
+      },
+      {
+        "id": "case_r5",
+        "phrase": "WHAT PROFESSIONALS STUDY FROM THE PAST BEFORE HANDLING A SIMILAR SITUATION",
+        "isReal": true
+      },
+      {
+        "id": "case_r6",
+        "phrase": "WHAT AN EMPLOYEE HAS TO UNLOCK JUST SO YOU CAN BUY DEODORANT",
+        "isReal": true
+      },
+      {
+        "id": "case_r7",
+        "phrase": "WHAT FOUR SIX-PACKS MAKE",
+        "isReal": true
+      },
+      {
+        "id": "case_r8",
+        "phrase": "WHAT THE SHIFT KEY CHANGES WHEN YOU’RE TYPING AN EMAIL",
+        "isReal": true
+      },
+      {
+        "id": "case_t0",
+        "phrase": "WHAT YOU PUT OVER YOUR PHONE SCREEN TO KEEP IT FROM GETTING SCRATCHED",
+        "isReal": false
+      },
+      {
+        "id": "case_t1",
+        "phrase": "THE CARDBOARD THING A DOZEN EGGS COME IN",
+        "isReal": false
+      },
+      {
+        "id": "case_t2",
+        "phrase": "THE OUTER LAYER A TURTLE CARRIES EVERYWHERE",
+        "isReal": false
+      },
+      {
+        "id": "case_t3",
+        "phrase": "WHAT HOLDS THE GLASS INSIDE A PICTURE ON THE WALL",
+        "isReal": false
+      },
+      {
+        "id": "case_t4",
+        "phrase": "WHAT YOU BUY WHEN YOU WANT TWELVE CANS BUT NOT TWENTY-FOUR",
+        "isReal": false
+      },
+      {
+        "id": "case_t5",
+        "phrase": "THE DETAILS THAT HELP EXPLAIN WHY SOMETHING HAPPENED",
+        "isReal": false
+      },
+      {
+        "id": "case_t6",
+        "phrase": "WHERE YOU SEE THE BAND’S PICTURE ON AN ALBUM",
+        "isReal": false
+      },
+      {
+        "id": "case_t7",
+        "phrase": "WHAT A SAMURAI PULLS HIS SWORD OUT OF BEFORE A BATTLE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "9-MEANING"
+  },
+  "CUT": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "id": "cut_h00",
+        "real": "WHAT GOOD DISH SOAP DOES TO GREASE THAT WATER ALONE CAN’T",
+        "trap": "HOW YOU DESTROY DOCUMENTS SO THEY CAN’T BE USED AS EVIDENCE"
+      },
+      {
+        "id": "cut_h01",
+        "real": "WHAT THEY DID TO THE MOUNTAIN TO MAKE A ROAD THROUGH IT",
+        "trap": "WHAT A ROPE DOES WHEN IT CAN’T HANDLE THE WEIGHT"
+      },
+      {
+        "id": "cut_h02",
+        "real": "WHY YOU STILL HAVE TO TRY IT ON EVEN WHEN IT’S YOUR SIZE",
+        "trap": "WHAT HAPPENS TO PANTS THAT ARE TOO TIGHT WHEN YOU BEND OVER"
+      }
+    ],
+    "masks": [
+      {
+        "id": "cut_r0",
+        "phrase": "WHAT A DULL KNIFE CAN BARELY DO",
+        "isReal": true
+      },
+      {
+        "id": "cut_r1",
+        "phrase": "WHAT DELILAH HAD DONE TO SAMSON’S HAIR TO MAKE HIM WEAK",
+        "isReal": true
+      },
+      {
+        "id": "cut_r2",
+        "phrase": "WHAT YOU KNOW WAS DONE TO THE GRASS BECAUSE YOU CAN SMELL IT",
+        "isReal": true
+      },
+      {
+        "id": "cut_r3",
+        "phrase": "HOW YOU SHAPE A DIAMOND IN THE ROUGH",
+        "isReal": true
+      },
+      {
+        "id": "cut_r4",
+        "phrase": "WHAT YOU MADE AS THE LAST PERSON TO EARN A ROSTER SPOT",
+        "isReal": true
+      },
+      {
+        "id": "cut_r5",
+        "phrase": "WHAT YOU DO THROUGH THE PARK TO MAKE THE LONG WAY HOME SHORTER",
+        "isReal": true
+      },
+      {
+        "id": "cut_r6",
+        "phrase": "WHAT YOUR BOSS DOES TO YOUR HOURS WHEN BUSINESS GETS SLOW",
+        "isReal": true
+      },
+      {
+        "id": "cut_r7",
+        "phrase": "WHAT AN EDITOR DOES TO MAKE THE STORY SHORTER",
+        "isReal": true
+      },
+      {
+        "id": "cut_r8",
+        "phrase": "WHAT YOU DO TO A STRONG DRINK WITH WATER TO MAKE IT WEAKER",
+        "isReal": true
+      },
+      {
+        "id": "cut_r9",
+        "phrase": "WHAT A CRUEL COMMENT CAN DO WITHOUT EVER BREAKING SKIN",
+        "isReal": true
+      },
+      {
+        "id": "cut_r10",
+        "phrase": "WHAT YOU DO TO THE CLASS YOU’RE ALREADY FAILING",
+        "isReal": true
+      },
+      {
+        "id": "cut_r11",
+        "phrase": "WHAT YOU DO TO THE LIGHTS BEFORE YELLING SURPRISE",
+        "isReal": true
+      },
+      {
+        "id": "cut_r12",
+        "phrase": "WHAT YOU DO TO THE DECK AFTER THE SHUFFLE BUT BEFORE THE DEAL",
+        "isReal": true
+      },
+      {
+        "id": "cut_r13",
+        "phrase": "WHAT AN ACTOR HEARS BEFORE KNOWING IF THEY NAILED IT OR BLEW IT",
+        "isReal": true
+      },
+      {
+        "id": "cut_r14",
+        "phrase": "THE ONE A SHEET OF PAPER GIVES YOU THAT HURTS WAY MORE THAN IT SHOULD",
+        "isReal": true
+      },
+      {
+        "id": "cut_r15",
+        "phrase": "WHAT RIBEYE, SIRLOIN, AND FILET ALL ARE DIFFERENT ONES OF",
+        "isReal": true
+      },
+      {
+        "id": "cut_r16",
+        "phrase": "WHAT THE MIDDLEMAN GETS BEFORE YOU DO IT TO HIM AGAIN AND TAKE HIM OUT OF THE DEAL",
+        "isReal": true
+      },
+      {
+        "id": "cut_r17",
+        "phrase": "HOW A BODYBUILDER IS TRYING TO LOOK WHEN HE GOES NO-CARB",
+        "isReal": true
+      },
+      {
+        "id": "cut_t0",
+        "phrase": "WHAT’S ON A CD OR RECORD WHEN IT KEEPS SKIPPING",
+        "isReal": false
+      },
+      {
+        "id": "cut_t1",
+        "phrase": "WHAT YOU DO TO A PENCIL WHEN THE POINT GETS DULL",
+        "isReal": false
+      },
+      {
+        "id": "cut_t2",
+        "phrase": "WHAT YOU DO TO YOUR FINGERTIP TO CHECK YOUR BLOOD SUGAR",
+        "isReal": false
+      },
+      {
+        "id": "cut_t3",
+        "phrase": "WHAT YOU COUNT INSIDE A TREE TRUNK TO TELL HOW OLD IT IS",
+        "isReal": false
+      },
+      {
+        "id": "cut_t4",
+        "phrase": "WHAT YOU DO TO A PHOTO WHEN YOU ONLY WANT THE PART IN THE MIDDLE",
+        "isReal": false
+      },
+      {
+        "id": "cut_t5",
+        "phrase": "WHAT A SURGEON DOES TO CLOSE THE OPENING AFTER AN OPERATION",
+        "isReal": false
+      },
+      {
+        "id": "cut_t6",
+        "phrase": "WHAT YOU DO TO YOUR KNEE WHEN YOU FALL ON CONCRETE",
+        "isReal": false
+      },
+      {
+        "id": "cut_t7",
+        "phrase": "WHAT SIX PEOPLE EACH GET ONE OF WHEN THEY SHARE A PIZZA",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "18-MEANING"
+  },
+  "DRIVE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "id": "drive_h00",
+        "real": "WHAT THEY SHOULD’VE ERASED BEFORE IT HELPED GET THEM CONVICTED",
+        "trap": "THE WORD AFTER PENNSYLVANIA ON THE MONOPOLY BOARD"
+      },
+      {
+        "id": "drive_h01",
+        "real": "HOW A COWBOY GETS A STEER INTO THE CORRAL",
+        "trap": "WHAT PINS YOU BACK IN YOUR SEAT WHEN A JET TAKES OFF"
+      },
+      {
+        "id": "drive_h02",
+        "real": "THE SERIES OF DOWNS USED TO MOVE THE BALL FROM ONE END ZONE TOWARD THE OTHER",
+        "trap": "WHAT THOSE HUGE TIRES HELP A MONSTER TRUCK DO OVER ALMOST ANYTHING"
+      }
+    ],
+    "masks": [
+      {
+        "id": "drive_r0",
+        "phrase": "WHAT YOU NEED A STATE-ISSUED LICENSE TO LEGALLY DO",
+        "isReal": true
+      },
+      {
+        "id": "drive_r1",
+        "phrase": "WHAT GETS YOU OUT OF BED AT 5 A.M. FOR SOMETHING YOU REALLY WANT",
+        "isReal": true
+      },
+      {
+        "id": "drive_r2",
+        "phrase": "THE CANNED GOODS COLLECTION YOU DROP THAT CAN OF BEANS YOU’LL NEVER EAT INTO",
+        "isReal": true
+      },
+      {
+        "id": "drive_r3",
+        "phrase": "SOMETHING YOU CAN’T WAIT TO DO AS A TEENAGER BUT HATE DOING AS AN ADULT",
+        "isReal": true
+      },
+      {
+        "id": "drive_r4",
+        "phrase": "THE GEAR YOU TAKE IT OUT OF WHEN YOU WANT TO GO BACKWARDS",
+        "isReal": true
+      },
+      {
+        "id": "drive_r5",
+        "phrase": "THE RANGE WHERE YOU PRACTICE HITTING A GOLF BALL AS FAR AS YOU CAN",
+        "isReal": true
+      },
+      {
+        "id": "drive_r6",
+        "phrase": "COMPUTER STORAGE FULL OF STUFF YOU DON’T NEED",
+        "isReal": true
+      },
+      {
+        "id": "drive_r7",
+        "phrase": "THE POSSESSION THAT ENDS WITH THREE POINTS, SEVEN POINTS, OR A PUNT",
+        "isReal": true
+      },
+      {
+        "id": "drive_r8",
+        "phrase": "THE STRETCH IN FRONT OF YOUR HOUSE YOU PULL INTO AND BACK OUT OF",
+        "isReal": true
+      },
+      {
+        "id": "drive_r9",
+        "phrase": "HOW YOU CAN SEND SOMEBODY CRAZY, NUTS, OR UP THE WALL",
+        "isReal": true
+      },
+      {
+        "id": "drive_r10",
+        "phrase": "THE PART OF THE VACATION THAT TAKES SIX HOURS BEFORE YOU EVEN GET THERE",
+        "isReal": true
+      },
+      {
+        "id": "drive_r11",
+        "phrase": "THE STREET-NAME ENDING THAT ISN’T STREET, AVENUE, OR BOULEVARD",
+        "isReal": true
+      },
+      {
+        "id": "drive_r12",
+        "phrase": "THE ONLY OPTION LEFT WHEN YOU’RE AFRAID TO FLY",
+        "isReal": true
+      },
+      {
+        "id": "drive_r13",
+        "phrase": "WHAT THE COWBOYS DO TO KEEP THE HERD MOVING",
+        "isReal": true
+      },
+      {
+        "id": "drive_r14",
+        "phrase": "THE MOVE WHERE YOU TAKE THE BALL STRAIGHT AT THE BASKET",
+        "isReal": true
+      },
+      {
+        "id": "drive_t0",
+        "phrase": "WHAT THE CAR DOES WHEN YOU LET OFF THE GAS AND JUST LET IT ROLL",
+        "isReal": false
+      },
+      {
+        "id": "drive_t1",
+        "phrase": "WHAT MAKES A DOG CHASE THE BALL BEFORE YOU EVEN THROW IT",
+        "isReal": false
+      },
+      {
+        "id": "drive_t2",
+        "phrase": "THE URGE THAT MAKES YOU CHECK YOUR PHONE AGAIN FIVE SECONDS LATER",
+        "isReal": false
+      },
+      {
+        "id": "drive_t3",
+        "phrase": "WHAT KEEPS YOU GOING AFTER EVERYONE ELSE HAS QUIT",
+        "isReal": false
+      },
+      {
+        "id": "drive_t4",
+        "phrase": "HOW A BIKER GANG GETS AROUND ON THEIR MOTORCYCLES",
+        "isReal": false
+      },
+      {
+        "id": "drive_t5",
+        "phrase": "THE NEED THAT MAKES SOMEONE HAVE TO WIN AT EVERYTHING",
+        "isReal": false
+      },
+      {
+        "id": "drive_t6",
+        "phrase": "WHAT PUSHES A STUDENT TO STUDY ALL NIGHT BEFORE THE FINAL",
+        "isReal": false
+      },
+      {
+        "id": "drive_t7",
+        "phrase": "HOW YOU GET DOWN A MOUNTAIN IN THE SNOW",
+        "isReal": false
+      },
+      {
+        "id": "drive_t8",
+        "phrase": "THE WHOLE POINT OF RIDING THE BUMPER CARS",
+        "isReal": false
+      },
+      {
+        "id": "drive_t9",
+        "phrase": "WHAT A SHIP DOES TO PASS UNDER A BRIDGE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "15-MEANING"
+  },
+  "FROST": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "frost_r0",
+        "phrase": "WHAT HAS TO COME OFF THE WINDSHIELD BEFORE YOU CAN DRIVE",
+        "isReal": true
+      },
+      {
+        "id": "frost_r1",
+        "phrase": "WHAT YOU LICK OFF THE FORK WHEN EATING CAKE",
+        "isReal": true
+      },
+      {
+        "id": "frost_r2",
+        "phrase": "THE MORNING COAT THAT DISAPPEARS ONCE THE SUN’S UP",
+        "isReal": true
+      },
+      {
+        "id": "frost_r3",
+        "phrase": "THE SHOWER GLASS THAT GIVES YOU PRIVACY",
+        "isReal": true
+      },
+      {
+        "id": "frost_t0",
+        "phrase": "THE WHITE BREATH YOU SEE ON A FREEZING DAY",
+        "isReal": false
+      },
+      {
+        "id": "frost_t1",
+        "phrase": "THE COLD THAT MAKES YOUR TEETH CHATTER",
+        "isReal": false
+      },
+      {
+        "id": "frost_t2",
+        "phrase": "THE LITTLE ICE PELLETS THAT BOUNCE OFF THE WINDSHIELD",
+        "isReal": false
+      },
+      {
+        "id": "frost_t3",
+        "phrase": "WHAT THEY USE TO WRITE “HAPPY BIRTHDAY” ON THE CAKE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Quadruple"
+  },
+  "GLOBE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "globe_r0",
+        "phrase": "WHAT FLAT-EARTHERS INSIST ISN’T ROUND",
+        "isReal": true
+      },
+      {
+        "id": "globe_r1",
+        "phrase": "WHAT HARLEM’S FAMOUS BASKETBALL TEAM TROTS AROUND",
+        "isReal": true
+      },
+      {
+        "id": "globe_r2",
+        "phrase": "WHAT YOU SHAKE TO MAKE IT SNOW INDOORS",
+        "isReal": true
+      },
+      {
+        "id": "globe_r3",
+        "phrase": "THE ROUND TROPHY THEY HAND OUT IN HOLLYWOOD",
+        "isReal": true
+      },
+      {
+        "id": "globe_r4",
+        "phrase": "THE MAP YOUR TEACHER CAN TURN WITH ONE FINGER",
+        "isReal": true
+      },
+      {
+        "id": "globe_t0",
+        "phrase": "THE PATH A SATELLITE FOLLOWS AROUND EARTH",
+        "isReal": false
+      },
+      {
+        "id": "globe_t1",
+        "phrase": "THE TITAN FAMOUS FOR CARRYING THE WORLD",
+        "isReal": false
+      },
+      {
+        "id": "globe_t2",
+        "phrase": "THE LINE RUNNING STRAIGHT THROUGH BOTH POLES",
+        "isReal": false
+      },
+      {
+        "id": "globe_t3",
+        "phrase": "WHAT A FORTUNE TELLER LOOKS INTO TO SEE YOUR FUTURE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Quintuple"
+  },
+  "GRAVE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "grave_r0",
+        "phrase": "THE PLACE SOMEONE ELSE DRESSES YOU FOR YOUR FINAL SLEEP",
+        "isReal": true
+      },
+      {
+        "id": "grave_r1",
+        "phrase": "A PLACE YOU’RE SUPPOSED TO TAKE A SECRET TO",
+        "isReal": true
+      },
+      {
+        "id": "grave_r2",
+        "phrase": "THE KIND OF DANGER WHERE “BE CAREFUL” ISN’T ENOUGH",
+        "isReal": true
+      },
+      {
+        "id": "grave_t0",
+        "phrase": "THE PERSON WHO PREPARES A BODY FOR THE FUNERAL",
+        "isReal": false
+      },
+      {
+        "id": "grave_t1",
+        "phrase": "THE CAR NO ONE WANTS TO RIDE IN THE BACK OF",
+        "isReal": false
+      },
+      {
+        "id": "grave_t2",
+        "phrase": "WHAT DOCTORS CALL A CONDITION THAT COULD TURN DEADLY",
+        "isReal": false
+      },
+      {
+        "id": "grave_t3",
+        "phrase": "WHERE EGYPTIAN PHARAOHS WERE LAID TO REST",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Triple"
+  },
+  "GREEN": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "green_r0",
+        "phrase": "IT MEANS GO FOR PRETTY MUCH ANYTHING",
+        "isReal": true
+      },
+      {
+        "id": "green_r1",
+        "phrase": "WHAT YELLOW AND BLUE MAKE TOGETHER",
+        "isReal": true
+      },
+      {
+        "id": "green_r2",
+        "phrase": "WHAT BRUCE BANNER TURNS WHEN HE GETS ANGRY",
+        "isReal": true
+      },
+      {
+        "id": "green_r3",
+        "phrase": "THE COLOR OF MISS PIGGY’S BOYFRIEND",
+        "isReal": true
+      },
+      {
+        "id": "green_t0",
+        "phrase": "HOW YOU KNOW A BANANA IS RIPE",
+        "isReal": false
+      },
+      {
+        "id": "green_t1",
+        "phrase": "THE EYE COLOR MOST PEOPLE HAVE",
+        "isReal": false
+      },
+      {
+        "id": "green_t2",
+        "phrase": "THE PROMOTION FROM MOPPING FLOORS TO WORKING THE FRYER",
+        "isReal": false
+      },
+      {
+        "id": "green_t3",
+        "phrase": "THE COLOR A TRAFFIC LIGHT TURNS BEFORE RED",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Quadruple"
+  },
+  "GROSS": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "gross_r0",
+        "phrase": "WHAT YOUR PAYCHECK IS BEFORE THE CITY AND STATE SEE IT",
+        "isReal": true
+      },
+      {
+        "id": "gross_r1",
+        "phrase": "A DOZEN DOZENS IN ONE ORDER",
+        "isReal": true
+      },
+      {
+        "id": "gross_r2",
+        "phrase": "EWWWWWWW",
+        "isReal": true
+      },
+      {
+        "id": "gross_t0",
+        "phrase": "WHAT A CARTON OF EGGS USUALLY HOLDS",
+        "isReal": false
+      },
+      {
+        "id": "gross_t1",
+        "phrase": "THE SOUND YOUR THROAT MAKES RIGHT BEFORE YOU THROW UP",
+        "isReal": false
+      },
+      {
+        "id": "gross_t2",
+        "phrase": "HOW YOU FEEL AFTER A SHOWER AT THE END OF A LONG DAY",
+        "isReal": false
+      },
+      {
+        "id": "gross_t3",
+        "phrase": "FOOD YOU HAD TO LEARN TO LIKE",
+        "isReal": false
+      },
+      {
+        "id": "gross_t4",
+        "phrase": "WHAT 500 SHEETS OF PRINTER PAPER COME IN",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Triple"
+  },
+  "GROUND": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "ground_r0",
+        "phrase": "THE LAST THING YOU HIT WHEN YOU FALL",
+        "isReal": true
+      },
+      {
+        "id": "ground_r1",
+        "phrase": "WHAT A SHOVEL DIGS A HOLE INTO",
+        "isReal": true
+      },
+      {
+        "id": "ground_r2",
+        "phrase": "WHERE NEW SOLDIERS PRACTICE BEFORE COMBAT",
+        "isReal": true
+      },
+      {
+        "id": "ground_r3",
+        "phrase": "IN WAR, ONE SIDE GAINS IT WHILE THE OTHER LOSES IT",
+        "isReal": true
+      },
+      {
+        "id": "ground_r4",
+        "phrase": "ONE LEGAL REASON TO THROW THE CASE OUT",
+        "isReal": true
+      },
+      {
+        "id": "ground_r5",
+        "phrase": "WHAT A FAST MEETING CAN COVER IN AN HOUR",
+        "isReal": true
+      },
+      {
+        "id": "ground_r6",
+        "phrase": "WHERE A FAULTY CURRENT GETS SENT INSTEAD OF THROUGH YOU",
+        "isReal": true
+      },
+      {
+        "id": "ground_r7",
+        "phrase": "WHAT THE FAA CAN DO TO A PLANE THAT SHOULDN'T FLY",
+        "isReal": true
+      },
+      {
+        "id": "ground_r8",
+        "phrase": "WHAT YOUR PARENTS MAY DO AFTER YOU MISS CURFEW",
+        "isReal": true
+      },
+      {
+        "id": "ground_r9",
+        "phrase": "WHAT GETS BROKEN FIRST WHEN CONSTRUCTION BEGINS",
+        "isReal": true
+      },
+      {
+        "id": "ground_r10",
+        "phrase": "WHAT CAN HAPPEN TO A BOAT IN WATER TOO SHALLOW",
+        "isReal": true
+      },
+      {
+        "id": "ground_r11",
+        "phrase": "HOW BEEF IS SOLD BEFORE IT BECOMES BURGERS",
+        "isReal": true
+      },
+      {
+        "id": "ground_t0",
+        "phrase": "WHERE THE ELEVATOR TAKES YOU WHEN YOU PRESS 1",
+        "isReal": false
+      },
+      {
+        "id": "ground_t1",
+        "phrase": "THE EXACT SPOT WHERE AN EXPLOSION STARTED",
+        "isReal": false
+      },
+      {
+        "id": "ground_t2",
+        "phrase": "WHAT MINERS CUT THROUGH TO REACH THE COAL",
+        "isReal": false
+      },
+      {
+        "id": "ground_t3",
+        "phrase": "WHAT A WRESTLER TRIES TO PIN HIS OPPONENT TO",
+        "isReal": false
+      },
+      {
+        "id": "ground_t4",
+        "phrase": "WHAT FIGHTER JETS TAKE OFF FROM AND LAND ON",
+        "isReal": false
+      },
+      {
+        "id": "ground_t5",
+        "phrase": "THE FLOOR A PENTHOUSE IS USUALLY ON",
+        "isReal": false
+      },
+      {
+        "id": "ground_t6",
+        "phrase": "WHAT YOU BUILD A CASTLE OUT OF AT THE BEACH",
+        "isReal": false
+      },
+      {
+        "id": "ground_t7",
+        "phrase": "WHAT A BOWLING BALL ROLLS DOWN TOWARD THE PINS",
+        "isReal": false
+      },
+      {
+        "id": "ground_t8",
+        "phrase": "THE LEVEL WHERE THE SEA MEETS THE SHORE",
+        "isReal": false
+      },
+      {
+        "id": "ground_t9",
+        "phrase": "WHAT HIKERS FOLLOW THROUGH THE WOODS",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "12-MEANING"
+  },
+  "GUIDE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "guide_r0",
+        "phrase": "THE PERSON WHO TAKES A GROUP AROUND AND KNOWS EVERYTHING ABOUT THE PLACE",
+        "isReal": true
+      },
+      {
+        "id": "guide_r1",
+        "phrase": "THE SCHOOL COUNSELOR WHO GIVES CAREER ADVICE TO SENIORS",
+        "isReal": true
+      },
+      {
+        "id": "guide_r2",
+        "phrase": "THE BOOK YOU BUY BEFORE VISITING A CITY YOU'VE NEVER BEEN TO",
+        "isReal": true
+      },
+      {
+        "id": "guide_r3",
+        "phrase": "WHAT YOU RUN THE WOOD ALONG TO GET A STRAIGHT CUT ON A TABLE SAW",
+        "isReal": true
+      },
+      {
+        "id": "guide_r4",
+        "phrase": "WHAT YOU DO FOR SOMEONE WHO DOESN'T KNOW THE WAY",
+        "isReal": true
+      },
+      {
+        "id": "guide_r5",
+        "phrase": "TALKING A DRIVER INTO A TIGHT PARKING SPACE",
+        "isReal": true
+      },
+      {
+        "id": "guide_t0",
+        "phrase": "WHAT HIGHWAY MILE MARKERS TELL YOU",
+        "isReal": false
+      },
+      {
+        "id": "guide_t1",
+        "phrase": "WHAT THE BLINKER DOES BEFORE YOU MAKE A LEFT TURN",
+        "isReal": false
+      },
+      {
+        "id": "guide_t2",
+        "phrase": "WHAT A COMPASS NEEDLE POINTS TO",
+        "isReal": false
+      },
+      {
+        "id": "guide_t3",
+        "phrase": "THE NUMBER YOU LOOK FOR TO FIND YOUR TABLE AT A WEDDING",
+        "isReal": false
+      },
+      {
+        "id": "guide_t4",
+        "phrase": "WHAT A RECIPE TELLS YOU TO DO ONE STEP AT A TIME",
+        "isReal": false
+      },
+      {
+        "id": "guide_t5",
+        "phrase": "THE PERSON SENT AHEAD TO FIND THE SAFEST ROUTE",
+        "isReal": false
+      },
+      {
+        "id": "guide_t6",
+        "phrase": "THE PERSON WHO MAKES ACTORS REDO A SCENE UNTIL HE LIKES IT",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Sextuple"
+  },
+  "GUM": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "gum_r0",
+        "phrase": "WHAT CAN BLEED WHEN YOU FLOSS TOO HARD",
+        "isReal": true
+      },
+      {
+        "id": "gum_r1",
+        "phrase": "WHAT YOU KEEP CHEWING LONG AFTER THE FLAVOR IS GONE",
+        "isReal": true
+      },
+      {
+        "id": "gum_r2",
+        "phrase": "THE STICKY COATING YOU USED TO LICK ON A POSTAGE STAMP",
+        "isReal": true
+      },
+      {
+        "id": "gum_r3",
+        "phrase": "THE KIND OF TREE A KOALA SPENDS MOST OF ITS TIME IN",
+        "isReal": true
+      },
+      {
+        "id": "gum_r4",
+        "phrase": "WHAT THICK GREASE CAN DO TO MOVING PARTS",
+        "isReal": true
+      },
+      {
+        "id": "gum_r5",
+        "phrase": "HOW A BABY WORKS ON FOOD BEFORE HAVING TEETH",
+        "isReal": true
+      },
+      {
+        "id": "gum_t0",
+        "phrase": "WHAT YOU BLOW UP UNTIL IT POPS IN YOUR FACE",
+        "isReal": false
+      },
+      {
+        "id": "gum_t1",
+        "phrase": "WHAT BASEBALL PLAYERS CRACK OPEN AND SPIT OUT IN THE DUGOUT",
+        "isReal": false
+      },
+      {
+        "id": "gum_t2",
+        "phrase": "WHAT GETS STUCK TO YOUR SHOE ON A FRESHLY PAVED ROAD",
+        "isReal": false
+      },
+      {
+        "id": "gum_t3",
+        "phrase": "WHAT DRIES HARD BETWEEN BATHROOM TILES",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Sextuple"
+  },
+  "HAMPER": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "hamper_r0",
+        "phrase": "WHAT HEAVY SNOW CAN DO TO A RESCUE EFFORT",
+        "isReal": true
+      },
+      {
+        "id": "hamper_r1",
+        "phrase": "WHERE DIRTY CLOTHES WAIT FOR WASH DAY",
+        "isReal": true
+      },
+      {
+        "id": "hamper_r2",
+        "phrase": "THE BASKET FULL OF TREATS SOMEONE SENDS AS A GIFT",
+        "isReal": true
+      },
+      {
+        "id": "hamper_t0",
+        "phrase": "THE MACHINE THAT DRIES YOUR CLOTHES",
+        "isReal": false
+      },
+      {
+        "id": "hamper_t1",
+        "phrase": "WHAT A SPEED BUMP FORCES A DRIVER TO DO",
+        "isReal": false
+      },
+      {
+        "id": "hamper_t2",
+        "phrase": "WHAT YOU REPLACE WITH A CLEAN ONE ON A BABY",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Triple"
+  },
+  "HANDLE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "handle_r0",
+        "phrase": "THE PART YOU USE TO LIFT A HOT POT",
+        "isReal": true
+      },
+      {
+        "id": "handle_r1",
+        "phrase": "THE @ NAME PEOPLE KNOW YOU BY",
+        "isReal": true
+      },
+      {
+        "id": "handle_r2",
+        "phrase": "WHAT A BUDGET GIVES YOU ON YOUR SPENDING",
+        "isReal": true
+      },
+      {
+        "id": "handle_r3",
+        "phrase": "WHAT YOU DO VERY CAREFULLY WHEN DEALING WITH PRICELESS ARTIFACTS",
+        "isReal": true
+      },
+      {
+        "id": "handle_r4",
+        "phrase": "THE CAR COULDN’T TAKE THE SHARP TURN AT THAT SPEED",
+        "isReal": true
+      },
+      {
+        "id": "handle_r5",
+        "phrase": "WHAT A BULL RIDER HAS TO DO FOR EIGHT SECONDS",
+        "isReal": true
+      },
+      {
+        "id": "handle_r6",
+        "phrase": "WHY YOUR BOSS TRUSTS YOU WITH THE DIFFICULT CLIENT",
+        "isReal": true
+      },
+      {
+        "id": "handle_r7",
+        "phrase": "WHAT YOU THOUGHT YOU COULD TAKE UNTIL THE HOTTEST PEPPER PROVED YOU WRONG",
+        "isReal": true
+      },
+      {
+        "id": "handle_t0",
+        "phrase": "WHAT THE CLASSROOM WAS MISSING WHEN IT GOT OUT OF CONTROL",
+        "isReal": false
+      },
+      {
+        "id": "handle_t1",
+        "phrase": "WHAT YOU LOSE RIGHT BEFORE SOMETHING SLIPS OUT OF YOUR HAND",
+        "isReal": false
+      },
+      {
+        "id": "handle_t2",
+        "phrase": "WHAT YOU LOST WHEN THAT WAS THE LAST STRAW",
+        "isReal": false
+      },
+      {
+        "id": "handle_t3",
+        "phrase": "WHAT YOU HOLD TO FLY A KITE",
+        "isReal": false
+      },
+      {
+        "id": "handle_t4",
+        "phrase": "WHAT YOU TURN TO STEER A CAR",
+        "isReal": false
+      },
+      {
+        "id": "handle_t5",
+        "phrase": "WHAT YOU PULL TO KEEP A DOG FROM RUNNING OFF",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "8-MEANING"
+  },
+  "HARBOR": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "harbor_r0",
+        "phrase": "WHERE BOATS GO WHEN THE WATER TURNS DANGEROUS",
+        "isReal": true
+      },
+      {
+        "id": "harbor_r1",
+        "phrase": "WHAT CAN GET YOU IN TROUBLE IF A FUGITIVE IS HIDING IN YOUR BASEMENT",
+        "isReal": true
+      },
+      {
+        "id": "harbor_r2",
+        "phrase": "WHAT SOMEONE DOES WHEN THEY CAN’T LET GO OF A GRUDGE",
+        "isReal": true
+      },
+      {
+        "id": "harbor_r3",
+        "phrase": "WHAT A DIRTY KITCHEN SPONGE CAN DO WITH BACTERIA",
+        "isReal": true
+      },
+      {
+        "id": "harbor_t0",
+        "phrase": "WHERE CARGO SHIPS UNLOAD THEIR CONTAINERS",
+        "isReal": false
+      },
+      {
+        "id": "harbor_t1",
+        "phrase": "WHAT THEY BUILD TO HOLD BACK FLOODWATER FROM A COASTAL TOWN",
+        "isReal": false
+      },
+      {
+        "id": "harbor_t2",
+        "phrase": "A BEACON THAT GUIDES SHIPS THROUGH THE DARK",
+        "isReal": false
+      },
+      {
+        "id": "harbor_t3",
+        "phrase": "THE PUNISHMENT WHERE AN ANKLE BRACELET KEEPS YOU HOME",
+        "isReal": false
+      },
+      {
+        "id": "harbor_t4",
+        "phrase": "WHERE SMALL PLANES ARE KEPT BETWEEN FLIGHTS",
+        "isReal": false
+      },
+      {
+        "id": "harbor_t5",
+        "phrase": "WHERE TRAINS SIT BETWEEN RUNS",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Quadruple"
+  },
+  "HEAD": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "head_r0",
+        "phrase": "WHAT YOU HAVE A 50% CHANCE OF GETTING WHEN YOU FLIP A COIN",
+        "isReal": true
+      },
+      {
+        "id": "head_r1",
+        "phrase": "WHAT YOU HAVE TO KEEP WHEN EVERYONE ELSE PANICS",
+        "isReal": true
+      },
+      {
+        "id": "head_r2",
+        "phrase": "THE STUDENT WITH THE BEST GRADES IN CLASS",
+        "isReal": true
+      },
+      {
+        "id": "head_r3",
+        "phrase": "TOO MUCH OF THIS ON YOUR BEER COSTS THE BARTENDER A TIP",
+        "isReal": true
+      },
+      {
+        "id": "head_r4",
+        "phrase": "WHAT YOU SHOULD WATCH WHEN WALKING THROUGH AN ATTIC",
+        "isReal": true
+      },
+      {
+        "id": "head_r5",
+        "phrase": "THE HIS-AND-HERS ROOM ON A BOAT",
+        "isReal": true
+      },
+      {
+        "id": "head_r6",
+        "phrase": "HOW A RANCHER COUNTS A FIELD FULL OF CATTLE",
+        "isReal": true
+      },
+      {
+        "id": "head_r7",
+        "phrase": "WHAT YOU DO STRAIGHT TOWARD SOMEONE YOU’RE ON YOUR WAY TO SEE",
+        "isReal": true
+      },
+      {
+        "id": "head_r8",
+        "phrase": "WHAT NO ONE SEEMS TO USE ONCE ALCOHOL’S INVOLVED",
+        "isReal": true
+      },
+      {
+        "id": "head_r9",
+        "phrase": "THE PART OF A SNAKE THAT CAN STILL BITE AFTER IT’S CUT OFF",
+        "isReal": true
+      },
+      {
+        "id": "head_r10",
+        "phrase": "WHAT A PIZZA PLACE CUTS INTO FOUR AND CALLS A SALAD",
+        "isReal": true
+      },
+      {
+        "id": "head_r11",
+        "phrase": "THE PART OF THE NAIL YOU’RE SUPPOSED TO HIT WITH THE HAMMER, NOT YOUR THUMB",
+        "isReal": true
+      },
+      {
+        "id": "head_r12",
+        "phrase": "ONE WAY YOU COULD SCORE A GOAL IN SOCCER WITHOUT USING YOUR FOOT",
+        "isReal": true
+      },
+      {
+        "id": "head_r13",
+        "phrase": "THE JACKAL PART OF THE EGYPTIAN GOD ANUBIS",
+        "isReal": true
+      },
+      {
+        "id": "head_r14",
+        "phrase": "WHAT’S POUNDING THE MORNING AFTER TOO MANY DRINKS",
+        "isReal": true
+      },
+      {
+        "id": "head_t0",
+        "phrase": "THE POINT AT THE VERY TOP OF A PYRAMID",
+        "isReal": false
+      },
+      {
+        "id": "head_t1",
+        "phrase": "WHAT YOU LOOK AT TO TELL A MALE LION FROM A FEMALE",
+        "isReal": false
+      },
+      {
+        "id": "head_t2",
+        "phrase": "WHAT THE BILL OF A BASEBALL CAP PROTECTS",
+        "isReal": false
+      },
+      {
+        "id": "head_t3",
+        "phrase": "WHAT YOUR BARBER SHAVES WHEN THE BEARD COMES OFF",
+        "isReal": false
+      },
+      {
+        "id": "head_t4",
+        "phrase": "WHAT YOU PUT ON BEFORE RIDING A MOTORCYCLE",
+        "isReal": false
+      },
+      {
+        "id": "head_t5",
+        "phrase": "WHERE THAT PENCIL IS WHILE YOU’RE STILL LOOKING FOR IT",
+        "isReal": false
+      },
+      {
+        "id": "head_t6",
+        "phrase": "WHAT THE DENTIST KEEPS TELLING YOU TO OPEN WIDER",
+        "isReal": false
+      },
+      {
+        "id": "head_t7",
+        "phrase": "WHAT A BOXER IS TOLD TO KEEP TUCKED DURING A FIGHT",
+        "isReal": false
+      },
+      {
+        "id": "head_t8",
+        "phrase": "WHAT’S SUPPOSED TO BE RED ON A REDNECK",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "15-MEANING"
+  },
+  "HEDGE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "hedge_r0",
+        "phrase": "WHAT SAYING “MAYBE” DOES WHEN YOU DON’T WANT TO SAY YES OR NO",
+        "isReal": true
+      },
+      {
+        "id": "hedge_r1",
+        "phrase": "WHAT YOUR NOSY NEIGHBOR PRETENDS TO TRIM WHILE WATCHING YOU",
+        "isReal": true
+      },
+      {
+        "id": "hedge_r2",
+        "phrase": "WHAT YOU DO SO ONE BAD BET DOESN’T SINK YOU",
+        "isReal": true
+      },
+      {
+        "id": "hedge_r3",
+        "phrase": "WHAT HAPPENS WHEN YOU’RE LEFT WITH ALMOST NO OPTIONS",
+        "isReal": true
+      },
+      {
+        "id": "hedge_t0",
+        "phrase": "WHAT A RICH KID’S PARENTS MIGHT SET UP FOR THEM",
+        "isReal": false
+      },
+      {
+        "id": "hedge_t1",
+        "phrase": "THE TREE YOU TRIM EVERY DECEMBER",
+        "isReal": false
+      },
+      {
+        "id": "hedge_t2",
+        "phrase": "THE PERFECT LINE A WEED WHACKER MAKES AROUND THE LAWN",
+        "isReal": false
+      },
+      {
+        "id": "hedge_t3",
+        "phrase": "WHAT SURROUNDS YOUR BACKYARD PATIO WITH BOARDS AND POSTS",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Quadruple"
+  },
+  "HIDE": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "hide_r0",
+        "phrase": "WHAT LEATHER STARTS AS ON A COW",
+        "isReal": true
+      },
+      {
+        "id": "hide_r1",
+        "phrase": "WHAT YOU DO WHEN SOMEONE’S SEEKING YOU",
+        "isReal": true
+      },
+      {
+        "id": "hide_r2",
+        "phrase": "WHAT YOU SOMETIMES DO WITH THE TRUTH TO SPARE SOMEONE’S FEELINGS",
+        "isReal": true
+      },
+      {
+        "id": "hide_r3",
+        "phrase": "WHAT CAMOUFLAGE HELPS YOU DO IN PLAIN SIGHT",
+        "isReal": true
+      },
+      {
+        "id": "hide_r4",
+        "phrase": "WHAT YOU’RE TRYING TO SAVE WHEN THE BULL BREAKS OUT OF THE PEN",
+        "isReal": true
+      },
+      {
+        "id": "hide_r5",
+        "phrase": "WHAT A TAXIDERMIST USES TO MAKE YOUR TROPHY",
+        "isReal": true
+      },
+      {
+        "id": "hide_r6",
+        "phrase": "WHAT THEY SAY YOU CAN’T DO FOREVER, EVEN IF YOU RUN",
+        "isReal": true
+      },
+      {
+        "id": "hide_r7",
+        "phrase": "WHAT YOU DID WITH STUFF YOU KEPT IN YOUR SECRET SPOT",
+        "isReal": true
+      },
+      {
+        "id": "hide_r8",
+        "phrase": "WHAT YOU’RE BARELY DOING WHEN THE SPARE KEY IS UNDER THE WELCOME MAT",
+        "isReal": true
+      },
+      {
+        "id": "hide_r9",
+        "phrase": "WHAT YOU CAN’T DO WHEN YOU’RE EXPOSED IN A WIDE-OPEN SPACE",
+        "isReal": true
+      },
+      {
+        "id": "hide_t0",
+        "phrase": "THE COUNTER’S JOB AFTER YELLING “READY OR NOT!”",
+        "isReal": false
+      },
+      {
+        "id": "hide_t1",
+        "phrase": "HANDS COVERING A BABY’S FACE RIGHT BEFORE “PEEKABOO!”",
+        "isReal": false
+      },
+      {
+        "id": "hide_t2",
+        "phrase": "THE FACE COVERING A ROBBER PULLS UP BEFORE THE SECURITY CAMERA",
+        "isReal": false
+      },
+      {
+        "id": "hide_t3",
+        "phrase": "A TURTLE’S SAFE PLACE WHEN SOMETHING SCARES IT",
+        "isReal": false
+      },
+      {
+        "id": "hide_t4",
+        "phrase": "THE THING YOU HANG OVER A WALL HOLE BEFORE COMPANY ARRIVES",
+        "isReal": false
+      },
+      {
+        "id": "hide_t5",
+        "phrase": "THE BODY PART AN OSTRICH IS FAMOUS FOR STICKING IN THE SAND",
+        "isReal": false
+      },
+      {
+        "id": "hide_t6",
+        "phrase": "A FAKE MUSTACHE WORN SO NOBODY RECOGNIZES YOU",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "10-MEANING"
+  },
+  "HIGHLIGHT": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "highlight_r0",
+        "phrase": "THE SENTENCE YOU COLOR BECAUSE YOU KNOW IT’LL BE ON THE TEST",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r1",
+        "phrase": "A LIGHTER STREAK SOME GUYS PUT IN THEIR HAIR BUT WON’T ADMIT TO",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r2",
+        "phrase": "THE PLAY GOOD ENOUGH TO MAKE THE END-OF-YEAR REEL",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r3",
+        "phrase": "THE BRIGHTEST SPOT ON A SHINY BALD HEAD",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r4",
+        "phrase": "THE PART YOUR TEACHER KEEPS COMING BACK TO BEFORE THE TEST",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r5",
+        "phrase": "THE PART OF THE GAME THAT WENT VIRAL",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r6",
+        "phrase": "THE DETAIL A LAWYER MAKES SURE THE JURY DOESN’T MISS",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r7",
+        "phrase": "THE STREAK YOUR HAIRDRESSER MAKES LIGHTER THAN THE REST",
+        "isReal": true
+      },
+      {
+        "id": "highlight_r8",
+        "phrase": "THE NAME OR PHRASE YOU MAKE STAND OUT IN A LONG EMAIL",
+        "isReal": true
+      },
+      {
+        "id": "highlight_t0",
+        "phrase": "THE PART OF A NEWSPAPER STORY PRINTED BIGGEST AT THE TOP",
+        "isReal": false
+      },
+      {
+        "id": "highlight_t1",
+        "phrase": "THE BRIGHT FLASH THAT BOUNCES OFF A MIRROR INTO YOUR EYES",
+        "isReal": false
+      },
+      {
+        "id": "highlight_t2",
+        "phrase": "WHAT ICING DOES TO A PLAIN CAKE",
+        "isReal": false
+      },
+      {
+        "id": "highlight_t3",
+        "phrase": "WHAT WHITE-OUT USED TO DO TO YOUR MISTAKES",
+        "isReal": false
+      },
+      {
+        "id": "highlight_t4",
+        "phrase": "THE BEAM THAT FOLLOWS THE LEAD SINGER ACROSS THE STAGE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "9-MEANING"
+  },
+  "HOLD": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "id": "hold_h00",
+        "real": "WHERE A STOWAWAY HIDES FOR THE WHOLE TRIP",
+        "trap": "WHAT KEEPS TWO PIECES OF WOOD SQUEEZED TOGETHER WHILE THE GLUE DRIES"
+      },
+      {
+        "id": "hold_h01",
+        "real": "WHAT A JUDGE CAN DO TO YOU FOR BEING OUT OF ORDER IN COURT",
+        "trap": "WHAT YOU WEDGE UNDER A DOOR SO IT DOESN’T SWING SHUT"
+      },
+      {
+        "id": "hold_h02",
+        "real": "WHAT YOU REACH FOR NEXT WHEN YOU’RE HALFWAY UP A CLIMBING WALL",
+        "trap": "WHAT YOU DO WITH A GRUDGE BECAUSE LIFE’S TOO SHORT"
+      }
+    ],
+    "masks": [
+      {
+        "id": "hold_r0",
+        "phrase": "WHAT YOU CAN DO WITH ONE HAND WHEN IT’S LIGHT BUT NEED TWO FOR WHEN IT’S HEAVY",
+        "isReal": true
+      },
+      {
+        "id": "hold_r1",
+        "phrase": "WHAT YOU DO WITH THE ELEVATOR FOR SOMEONE RUNNING TOWARD IT",
+        "isReal": true
+      },
+      {
+        "id": "hold_r2",
+        "phrase": "WHAT YOU DO TO THE LADDER WHILE SOMEONE ELSE CLIMBS IT",
+        "isReal": true
+      },
+      {
+        "id": "hold_r3",
+        "phrase": "WHAT A LOAD-BEARING BEAM HAS TO DO WITH ALL THE WEIGHT ABOVE IT",
+        "isReal": true
+      },
+      {
+        "id": "hold_r4",
+        "phrase": "WHAT A FIVE-GALLON BUCKET CAN’T DO WITH SIX GALLONS OF WATER",
+        "isReal": true
+      },
+      {
+        "id": "hold_r5",
+        "phrase": "WHAT POLICE CAN’T KEEP DOING PAST 48 HOURS WITHOUT JUDICIAL REVIEW",
+        "isReal": true
+      },
+      {
+        "id": "hold_r6",
+        "phrase": "WHAT YOU SHOULD DO WITH SOMEONE’S ATTENTION ONCE YOU HAVE IT",
+        "isReal": true
+      },
+      {
+        "id": "hold_r7",
+        "phrase": "THE FAVOR SOMEONE ASKS BEFORE GETTING UP FROM THEIR SEAT",
+        "isReal": true
+      },
+      {
+        "id": "hold_r8",
+        "phrase": "WHAT THEY DO WITH YOUR COLLATERAL UNTIL YOU SETTLE UP",
+        "isReal": true
+      },
+      {
+        "id": "hold_r9",
+        "phrase": "WHAT YOU DO WITH THE TITLE OF CHAMPION WHILE YOU’RE UNDEFEATED",
+        "isReal": true
+      },
+      {
+        "id": "hold_r10",
+        "phrase": "WHAT YOUR FAMILY DOES WITH ITS REUNION AT THE SAME PARK EVERY YEAR",
+        "isReal": true
+      },
+      {
+        "id": "hold_r11",
+        "phrase": "WHAT YOU NEED TO DO WITH THE LEAD WHILE PLAYING DEFENSE TO WIN",
+        "isReal": true
+      },
+      {
+        "id": "hold_r12",
+        "phrase": "WHAT YOU’RE FORCED TO DO WHEN YOU HAVE TO PEE AND THE NEXT REST STOP IS 10 MILES AWAY",
+        "isReal": true
+      },
+      {
+        "id": "hold_r13",
+        "phrase": "WHAT SOMEONE DOES WHEN THEY MAKE YOU KEEP THE PROMISE YOU MADE",
+        "isReal": true
+      },
+      {
+        "id": "hold_r14",
+        "phrase": "WHAT YOU CAN STILL DO WITH YOUR POSITION AFTER EVERYONE ELSE CHANGES THEIRS",
+        "isReal": true
+      },
+      {
+        "id": "hold_r15",
+        "phrase": "WHAT A TEMPORARY REPAIR NEEDS TO DO UNTIL THE PLUMBER GETS THERE",
+        "isReal": true
+      },
+      {
+        "id": "hold_r16",
+        "phrase": "WHAT A RULE CAN STILL DO EVEN AFTER SOMEONE CHALLENGES IT",
+        "isReal": true
+      },
+      {
+        "id": "hold_r17",
+        "phrase": "A WRESTLING MOVE THAT CAN CHOKE YOU",
+        "isReal": true
+      },
+      {
+        "id": "hold_t0",
+        "phrase": "WHAT KEEPS A BOAT FROM DRIFTING AWAY WHILE EVERYONE’S ON SHORE",
+        "isReal": false
+      },
+      {
+        "id": "hold_t1",
+        "phrase": "WHAT YOU PUT ON A DOOR WHEN YOU DON’T WANT ANYONE GETTING IN",
+        "isReal": false
+      },
+      {
+        "id": "hold_t2",
+        "phrase": "WHAT YOU NEED WHEN YOU’RE BENCH-PRESSING MORE WEIGHT THAN YOU CAN HANDLE",
+        "isReal": false
+      },
+      {
+        "id": "hold_t3",
+        "phrase": "WHAT THE CHATBOT PUTS YOU IN WHEN YOU ASK TO SPEAK TO A REAL PERSON",
+        "isReal": false
+      },
+      {
+        "id": "hold_t4",
+        "phrase": "WHAT YOU HEAR WHILE CUSTOMER SERVICE DISAPPEARS TO CHECK SOMETHING",
+        "isReal": false
+      },
+      {
+        "id": "hold_t5",
+        "phrase": "WHAT YOU HAVE TO DO WHEN FIVE PEOPLE ARE AHEAD OF YOU IN LINE",
+        "isReal": false
+      },
+      {
+        "id": "hold_t6",
+        "phrase": "WHAT THE MUSIC DOES FOR A SECOND RIGHT BEFORE THE BEAT DROPS",
+        "isReal": false
+      },
+      {
+        "id": "hold_t7",
+        "phrase": "WHAT YOU DO TO A PARTY WHEN EVERYONE’S GONE HOME",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "18-MEANING"
+  },
+  "HOLLOW": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "hollow_r0",
+        "phrase": "HOW THE CHOCOLATE BUNNY YOU GET FOR EASTER FEELS",
+        "isReal": true
+      },
+      {
+        "id": "hollow_r1",
+        "phrase": "HOW YOUR CHEEKS CAN LOOK AFTER LOSING A LOT OF WEIGHT",
+        "isReal": true
+      },
+      {
+        "id": "hollow_r2",
+        "phrase": "THE OPPOSITE OF A GENUINE APOLOGY",
+        "isReal": true
+      },
+      {
+        "id": "hollow_r3",
+        "phrase": "KNOCKING IS ONE WAY TO FIND OUT IF SOMETHING IS OR ISN’T",
+        "isReal": true
+      },
+      {
+        "id": "hollow_r4",
+        "phrase": "WHAT A WOODPECKER DOES TO A TREE TRUNK TO MAKE ITS HOME",
+        "isReal": true
+      },
+      {
+        "id": "hollow_r5",
+        "phrase": "WHAT A CAVITY CAN DO TO THE INSIDE OF YOUR TOOTH",
+        "isReal": true
+      },
+      {
+        "id": "hollow_r6",
+        "phrase": "THE LOW SPOT BETWEEN TWO HILLS WHERE A HOUSE COULD SIT",
+        "isReal": true
+      },
+      {
+        "id": "hollow_r7",
+        "phrase": "THE FIRST STEP IN TURNING A PUMPKIN INTO A JACK-O’-LANTERN",
+        "isReal": true
+      },
+      {
+        "id": "hollow_t0",
+        "phrase": "THE RIDER WHO CHASES ICHABOD CRANE",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t1",
+        "phrase": "THE SOUND THAT COMES BACK TO YOU IN A CAVE",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t2",
+        "phrase": "THE DAY AFTER MISCHIEF NIGHT",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t3",
+        "phrase": "WHAT A BEAVER DOES TO TREES TO BUILD A DAM",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t4",
+        "phrase": "THE INSIDE PART OF A BELL THAT MAKES IT RING",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t5",
+        "phrase": "THE FIRST THING YOU USUALLY SAY AFTER ANSWERING THE PHONE",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t6",
+        "phrase": "THE KIND OF WATER A PRIEST BLESSES",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t7",
+        "phrase": "WHAT A METEOR MAKES WHEN IT CRASHES INTO EARTH",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t8",
+        "phrase": "THE SPACE INSIDE A BONE WHERE THE MARROW SITS",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t9",
+        "phrase": "THE MARK YOUR FOOT LEAVES BEHIND IN FRESH SNOW",
+        "isReal": false
+      },
+      {
+        "id": "hollow_t10",
+        "phrase": "THE EMPTY SHELL A CICADA LEAVES STUCK TO TREE BARK",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "8-MEANING"
+  },
+  "HOOD": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "hood_r0",
+        "phrase": "THE PART OF YOUR SHIRT YOU USE IN THE RAIN",
+        "isReal": true
+      },
+      {
+        "id": "hood_r1",
+        "phrase": "THE PART OF THE CAR THAT COVERS ALL THAT HORSEPOWER",
+        "isReal": true
+      },
+      {
+        "id": "hood_r2",
+        "phrase": "THE PLACE WHERE YOU AND YOUR NEIGHBORS LIVE",
+        "isReal": true
+      },
+      {
+        "id": "hood_r3",
+        "phrase": "THE PART OF THE STOVE YOU USE TO CLEAR THE AIR, NOT COOK",
+        "isReal": true
+      },
+      {
+        "id": "hood_r4",
+        "phrase": "WHAT THEY PULL OVER YOUR HEAD SO YOU CAN’T SEE",
+        "isReal": true
+      },
+      {
+        "id": "hood_r5",
+        "phrase": "WHAT THE MECHANIC TELLS YOU TO POP BEFORE DIAGNOSING THE PROBLEM",
+        "isReal": true
+      },
+      {
+        "id": "hood_r6",
+        "phrase": "THE WEARABLE OPTION WHEN YOU HAVE NO UMBRELLA",
+        "isReal": true
+      },
+      {
+        "id": "hood_r7",
+        "phrase": "A PLACE THAT CAN GET DANGEROUS IF YOU’RE IN THE WRONG ONE LATE AT NIGHT",
+        "isReal": true
+      },
+      {
+        "id": "hood_t0",
+        "phrase": "THE PART OF A CAR WHERE YOU LOAD THE GROCERIES",
+        "isReal": false
+      },
+      {
+        "id": "hood_t1",
+        "phrase": "WHAT LITTLE RED CARRIES TO GRANDMA’S HOUSE",
+        "isReal": false
+      },
+      {
+        "id": "hood_t2",
+        "phrase": "THE PART OF A FIREPLACE YOU OPEN BEFORE LIGHTING THE FIRE",
+        "isReal": false
+      },
+      {
+        "id": "hood_t3",
+        "phrase": "THE COVER YOU DUCK UNDER OUTSIDE A STORE WHEN IT STARTS RAINING",
+        "isReal": false
+      },
+      {
+        "id": "hood_t4",
+        "phrase": "WHERE A KANGAROO KEEPS ITS BABY SAFE",
+        "isReal": false
+      },
+      {
+        "id": "hood_t5",
+        "phrase": "THE SCREEN YOU CLEAN THE LINT OFF AFTER USING THE DRYER",
+        "isReal": false
+      },
+      {
+        "id": "hood_t6",
+        "phrase": "WHAT FENCERS WEAR TO PROTECT THEIR FACE DURING A BOUT",
+        "isReal": false
+      },
+      {
+        "id": "hood_t7",
+        "phrase": "WHAT YOU PUT ON TO PROTECT YOUR SKIN FROM THE SUN",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "8-MEANING"
+  },
+  "INDEX": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "index_r0",
+        "phrase": "THE PART OF THE MANUAL THAT’S SUPPOSED TO HELP YOU FIND WHAT YOU’RE LOOKING FOR",
+        "isReal": true
+      },
+      {
+        "id": "index_r1",
+        "phrase": "THE NUMBER THAT TELLS YOU HOW BAD THE SUN CAN BURN YOU",
+        "isReal": true
+      },
+      {
+        "id": "index_r2",
+        "phrase": "THE FINGER BETWEEN YOUR THUMB AND THE ONE YOU SHOULDN’T RAISE AT PEOPLE",
+        "isReal": true
+      },
+      {
+        "id": "index_r3",
+        "phrase": "WHAT A SEARCH ENGINE DOES TO A PAGE BEFORE IT CAN SHOW UP IN RESULTS",
+        "isReal": true
+      },
+      {
+        "id": "index_t0",
+        "phrase": "WHERE YOU LOOK TO FIND THE PAGE EACH CHAPTER STARTS ON",
+        "isReal": false
+      },
+      {
+        "id": "index_t1",
+        "phrase": "WHAT EXPLAINS THE UNFAMILIAR TERMS AT THE BACK OF A TEXTBOOK",
+        "isReal": false
+      },
+      {
+        "id": "index_t2",
+        "phrase": "THE SYSTEM USED TO RANK HOW HOT A PEPPER IS",
+        "isReal": false
+      },
+      {
+        "id": "index_t3",
+        "phrase": "WHAT A WEBSITE USES COOKIES TO DO WITH YOUR ACTIVITY",
+        "isReal": false
+      },
+      {
+        "id": "index_t4",
+        "phrase": "WHAT YOU USE TO SHOW EXACTLY WHERE YOU ARE ON A MAP",
+        "isReal": false
+      },
+      {
+        "id": "index_t5",
+        "phrase": "WHAT MOVES ACROSS THE SCREEN WHEN YOU MOVE THE MOUSE",
+        "isReal": false
+      },
+      {
+        "id": "index_t6",
+        "phrase": "WHAT YOU LEAVE ON GLASS AFTER TOUCHING IT WITH YOUR FINGER",
+        "isReal": false
+      },
+      {
+        "id": "index_t7",
+        "phrase": "WHAT’S ALWAYS TRYING TO POINT NORTH ON A COMPASS",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Quadruple"
+  },
+  "INTEREST": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "interest_r0",
+        "phrase": "WHAT THE SHOW KEPT UNTIL YOU’D BINGE-WATCHED THE WHOLE SEASON",
+        "isReal": true
+      },
+      {
+        "id": "interest_r1",
+        "phrase": "WHAT THE ALGORITHM USES TO DECIDE WHAT SHOWS UP ON YOUR FOR YOU PAGE",
+        "isReal": true
+      },
+      {
+        "id": "interest_r2",
+        "phrase": "WHAT BUILDS UP SO SLOWLY IN YOUR SAVINGS ACCOUNT YOU BARELY NOTICE IT",
+        "isReal": true
+      },
+      {
+        "id": "interest_r3",
+        "phrase": "WHAT YOU HAVE IN A COMPANY WHEN PART OF IT BELONGS TO YOU",
+        "isReal": true
+      },
+      {
+        "id": "interest_r4",
+        "phrase": "WHAT A GOOD LAWYER IS SUPPOSED TO ACT IN WHEN REPRESENTING YOU",
+        "isReal": true
+      },
+      {
+        "id": "interest_t0",
+        "phrase": "WHAT THE GOVERNMENT ADDS TO THE PRICE WHEN YOU BUY SOMETHING",
+        "isReal": false
+      },
+      {
+        "id": "interest_t1",
+        "phrase": "WHAT YOU SPEND YOUR PERSONAL TIME DOING",
+        "isReal": false
+      },
+      {
+        "id": "interest_t2",
+        "phrase": "WHAT A VIDEO THUMBNAIL USES TO MAKE YOU CLICK IT",
+        "isReal": false
+      },
+      {
+        "id": "interest_t3",
+        "phrase": "WHAT GETS SHORTER THE MORE YOU KEEP SWIPING UP",
+        "isReal": false
+      },
+      {
+        "id": "interest_t4",
+        "phrase": "WHAT A STORE RUNS BEFORE DECIDING WHETHER TO LET YOU BUY IT ON CREDIT",
+        "isReal": false
+      },
+      {
+        "id": "interest_t5",
+        "phrase": "WHAT YOU GET CHARGED WHEN YOU PAY A BILL LATE",
+        "isReal": false
+      },
+      {
+        "id": "interest_t6",
+        "phrase": "THE EXTRA CHARGES ON YOUR HOTEL BILL YOU DIDN’T KNOW ABOUT",
+        "isReal": false
+      },
+      {
+        "id": "interest_t7",
+        "phrase": "WHAT YOU GET BACK FROM A RETURN THAT YOU CAN ONLY SPEND AT THAT STORE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": null,
+    "wordType": "Quintuple"
+  },
+  "ROUND": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "id": "round_h00",
+        "real": "HOW KING ARTHUR AND HIS KNIGHTS SAT AT THEIR MEETINGS",
+        "trap": "THE SHAPE OF THE SIGN THAT’S RED AND SAYS STOP ON IT"
+      },
+      {
+        "id": "round_h01",
+        "real": "THE CARNIVAL RIDE WHERE KIDS SIT ON FAKE HORSES",
+        "trap": "THE DIRECTION CLOCK HANDS MOVE"
+      },
+      {
+        "id": "round_h02",
+        "real": "THE SHAPE MOST ABOVE-GROUND POOLS COME IN",
+        "trap": "THE TICKET YOU BUY WHEN YOU’RE NOT PLANNING TO COME BACK"
+      }
+    ],
+    "masks": [
+      {
+        "id": "round_r0",
+        "phrase": "THE WAY YOU WALK WHEN YOU KEEP GOING IN A CIRCLE",
+        "isReal": true
+      },
+      {
+        "id": "round_r1",
+        "phrase": "WHAT YOU DO TO A TOTAL TO MAKE IT NICE AND EVEN",
+        "isReal": true
+      },
+      {
+        "id": "round_r2",
+        "phrase": "THE CHAMPIONSHIP IS THE TOURNAMENT’S HARDEST AND FINAL ONE TO WIN",
+        "isReal": true
+      },
+      {
+        "id": "round_r3",
+        "phrase": "YOU CAN LOSE EVERY ONE AND STILL WIN THE FIGHT WITH A K.O.",
+        "isReal": true
+      },
+      {
+        "id": "round_r4",
+        "phrase": "WHAT YOU GET NINE OF WHEN YOU PLAY HALF THE COURSE",
+        "isReal": true
+      },
+      {
+        "id": "round_r5",
+        "phrase": "HOW YOU ORDER DRINKS FOR EVERYONE AT THE TABLE",
+        "isReal": true
+      },
+      {
+        "id": "round_r6",
+        "phrase": "WHAT AN ENCORE DEMANDS BECAUSE ONE WASN’T ENOUGH",
+        "isReal": true
+      },
+      {
+        "id": "round_r7",
+        "phrase": "WHAT A SIX-SHOOTER HOLDS SIX OF",
+        "isReal": true
+      },
+      {
+        "id": "round_r8",
+        "phrase": "THE HOSPITAL ROUTE A DOCTOR MAKES FROM PATIENT TO PATIENT",
+        "isReal": true
+      },
+      {
+        "id": "round_r9",
+        "phrase": "WHEN THE FIRST SET OF TALKS FAILS AND EVERYBODY HAS TO TRY AGAIN",
+        "isReal": true
+      },
+      {
+        "id": "round_r10",
+        "phrase": "WHAT YOU DO TO THE BLOCK AFTER MISSING YOUR TURN",
+        "isReal": true
+      },
+      {
+        "id": "round_t0",
+        "phrase": "WHAT YOU CALL ONE COMPLETE TRIP OF A RACETRACK",
+        "isReal": false
+      },
+      {
+        "id": "round_t1",
+        "phrase": "WHAT YOU’RE SUPPOSED TO STAY INSIDE WHEN COLORING",
+        "isReal": false
+      },
+      {
+        "id": "round_t2",
+        "phrase": "WHAT THE GUY GIVING YOU DIRECTIONS TOLD YOU TO DO AT THE LIGHT",
+        "isReal": false
+      },
+      {
+        "id": "round_t3",
+        "phrase": "WHAT IT TAKES THE EARTH 24 HOURS TO DO",
+        "isReal": false
+      },
+      {
+        "id": "round_t4",
+        "phrase": "WHAT YOU ARE IN A MAZE WHEN EVERY TURN LEADS TO ANOTHER DEAD END",
+        "isReal": false
+      },
+      {
+        "id": "round_t5",
+        "phrase": "WHAT YOU DO TO THE DOUGH BEFORE MAKING A PIZZA",
+        "isReal": false
+      },
+      {
+        "id": "round_t6",
+        "phrase": "THE SHAPE OF THE WHITE HOUSE’S MOST FAMOUS OFFICE",
+        "isReal": false
+      },
+      {
+        "id": "round_t7",
+        "phrase": "WHAT YOU PUT ON TOP OF A LOWERCASE I",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "11-MEANING"
+  },
+  "SET": {
+    "difficulty": null,
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "id": "set_h00",
+        "real": "THE LAST AND EASIEST STEP IN MAKING JELL-O",
+        "trap": "WHY ONE SHOE IS USELESS WHEN YOU LOSE THE OTHER"
+      },
+      {
+        "id": "set_h01",
+        "real": "WHAT THE DOCTOR DOES TO A BROKEN BONE BEFORE THE CAST DOES THE SAME",
+        "trap": "WHAT FANCY RESTAURANTS CALL ARRANGING YOUR FOOD ON THE PLATE"
+      },
+      {
+        "id": "set_h02",
+        "real": "WHAT YOU DO TO A TABLE JUST TO UNDO IT WHEN YOU’RE DONE",
+        "trap": "WHAT HOLDS EACH ROW OF BRICKS TOGETHER IN A WALL"
+      }
+    ],
+    "masks": [
+      {
+        "id": "set_r0",
+        "phrase": "WHAT YOU COULDN’T COMPLETE BECAUSE YOU COULDN’T FIND THE RAREST ONE",
+        "isReal": true
+      },
+      {
+        "id": "set_r1",
+        "phrase": "WHAT YOU DO TO THE WEDDING DATE ONCE YOU BOTH AGREE",
+        "isReal": true
+      },
+      {
+        "id": "set_r2",
+        "phrase": "WHAT THE SUN DOES IN THE WEST",
+        "isReal": true
+      },
+      {
+        "id": "set_r3",
+        "phrase": "THE FAKE LIVING ROOM WHERE PEOPLE PRETEND ON TV",
+        "isReal": true
+      },
+      {
+        "id": "set_r4",
+        "phrase": "WHAT COMES BETWEEN GAME AND MATCH IN TENNIS",
+        "isReal": true
+      },
+      {
+        "id": "set_r5",
+        "phrase": "WHAT YOU’RE WAITING FOR SOMEONE TO FINISH SO YOU CAN USE THE BENCH NEXT",
+        "isReal": true
+      },
+      {
+        "id": "set_r6",
+        "phrase": "WHAT’S IN BETWEEN READY AND GO?",
+        "isReal": true
+      },
+      {
+        "id": "set_t0",
+        "phrase": "WHAT YOU DO TO AN ALARM AFTER IT GOES OFF TOO EARLY",
+        "isReal": false
+      },
+      {
+        "id": "set_t1",
+        "phrase": "WHAT A COLLECTOR DOES WITH A DOUBLE THEY DON’T NEED",
+        "isReal": false
+      },
+      {
+        "id": "set_t2",
+        "phrase": "WHAT YOU DO WITH THE POOL BALLS BEFORE THE GAME STARTS",
+        "isReal": false
+      },
+      {
+        "id": "set_t3",
+        "phrase": "WHAT A FIRE NEEDS TO GET STARTED AND KEEP BURNING",
+        "isReal": false
+      },
+      {
+        "id": "set_t4",
+        "phrase": "WHAT A TAILOR MEASURES YOU FOR WHEN ALL THREE PIECES HAVE TO MATCH",
+        "isReal": false
+      },
+      {
+        "id": "set_t5",
+        "phrase": "WHAT YOU DO TO THE BED AFTER YOU SLEEP IN IT",
+        "isReal": false
+      },
+      {
+        "id": "set_t6",
+        "phrase": "WHAT YOU DO BEFORE YOU AIM AND FIRE",
+        "isReal": false
+      },
+      {
+        "id": "set_t7",
+        "phrase": "WHAT A PHOTOGRAPHER TELLS YOU TO DO BEFORE TAKING THE PICTURE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "Septuple"
   }
 }
