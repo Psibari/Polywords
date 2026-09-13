@@ -6,9 +6,10 @@ Measured in Buggie at real size against the real page width (160pt usable).
 Anything that would overflow is flagged. Lines are picked at render time from
 these pools, so each must be true for **any** day in its bucket.
 
-Voice rules: POLYBOOK_LEDGER_DESIGN.md §6. She owns her traps and nothing else,
-the joke lands on her, she never credits the player, she does not know a phone
-exists.
+Voice rules: `docs/POLLY_DIALOGUE_BANK.md` and `docs/POLYBOOK.md` (the file this line
+originally cited, `POLYBOOK_LEDGER_DESIGN.md`, no longer exists — folded into those two).
+She owns her traps and nothing else, the joke lands on her, she never credits the player,
+she does not know a phone exists.
 ---
 
 ## Part 1 — the work log, left page

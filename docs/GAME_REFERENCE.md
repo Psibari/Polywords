@@ -46,8 +46,9 @@ The chain starts at 1×, rises by 0.5× every three consecutive correct choices,
 and resets on error.
 
 Score is still calculated in `polyRunEngine.ts` and persisted, but it is displayed nowhere:
-the Hunt HUD shows live status and Results shows an outcome label, not a number or rank. See
-`docs/HUD_STATUS_SYSTEM.md`.
+the Hunt HUD shows live status and Results shows an outcome label, not a number or rank. The
+live status is a 4-tier momentum system (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE) with its own
+break state (FELL OFF); see CLAUDE.md's Scoring section for the current, detailed version.
 
 ## Gold Feather and Results
 
