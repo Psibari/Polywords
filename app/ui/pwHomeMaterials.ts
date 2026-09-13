@@ -44,6 +44,18 @@ export const homeDoor = {
   minHeight: 150,
 } as const;
 
+// ── Home book route-plate faces — shared so Results (or anything else
+// presenting a plate in this vocabulary) cannot drift from Home's shipped
+// deboss look. ──
+export const homePlateMaterial = {
+  huntFace: ['#251F4E', '#161233'] as const,
+  huntRim: 'rgba(245,200,66,0.30)',
+  huntRadius: 18,
+  quietFace: ['#1D1840', '#130F2C'] as const,
+  quietRim: 'rgba(245,200,66,0.22)',
+  quietRadius: 14,
+} as const;
+
 // ── Polly perch geometry (the branch is part of the pose art) ──
 export const homePerch = {
   bottomOffset: 364, // high enough to loom from the left, but layered behind the Home book so she never covers controls; lowered to clear the bigger tagline above her

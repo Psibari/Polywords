@@ -19,11 +19,12 @@ import { playSfx } from '../audio/sfx';
 import { FoilWord } from '../components/ui/FoilWord';
 import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/PollyResultsPerch';
 import { PW } from '../ui/pwTheme';
-import { homeDare, homeType } from '../ui/pwHomeMaterials';
+import { homePlateMaterial, homeType } from '../ui/pwHomeMaterials';
 import { usePulseScale } from '../hooks/usePulseScale';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { resolveHuntResultLabel } from '../game/huntControl';
 import {
+  RESULTS_RESTART_LABEL,
   RESULTS_SUB_LOSS,
   deriveResultsPollyMoment,
   resultsCard,
@@ -212,103 +213,149 @@ const cc = StyleSheet.create({
   },
 });
 
-// ─── RUN IT BACK (Home dare treatment, native scale pulse) ──
+// ─── START A NEW HUNT (Home plate treatment, native scale pulse) ──
 
-function RunItBackButton({ onPress }: { onPress: () => void }) {
+function StartNewHuntButton({ onPress }: { onPress: () => void }) {
   const scale = usePulseScale();
+  const glow = useRef(new Animated.Value(0)).current;
+  const glowOn = () =>
+    Animated.timing(glow, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+  const glowOff = () =>
+    Animated.timing(glow, { toValue: 0, duration: 320, useNativeDriver: true }).start();
 
   return (
-    <Animated.View style={[btn.wrap, { transform: [{ scale }] }]}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel="Run it back"
-        style={({ pressed }) => [btn.shell, pressed && btn.pressed]}
-      >
-        <LinearGradient
-          colors={[...homeDare.faceGradient]}
-          locations={[...homeDare.faceLocations]}
-          style={btn.face}
+    <View style={btn.wrap}>
+      <Animated.View pointerEvents="none" style={[btn.glowBloom, { opacity: glow }]} />
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Pressable
+          onPress={onPress}
+          onPressIn={glowOn}
+          onPressOut={glowOff}
+          accessibilityRole="button"
+          accessibilityLabel="Start a new hunt"
+          style={({ pressed }) => [btn.shell, pressed && btn.pressed]}
         >
-          <View style={btn.bottomEdge} />
-          <Text style={btn.label}>RUN IT BACK</Text>
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
+          <LinearGradient colors={homePlateMaterial.huntFace} style={btn.face}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.55}
+              style={btn.label}
+            >
+              {RESULTS_RESTART_LABEL}
+            </Text>
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
+    </View>
   );
 }
 
 const btn = StyleSheet.create({
   wrap: {
+    position: 'relative',
+  },
+  glowBloom: {
+    position: 'absolute',
+    left: -6,
+    right: -6,
+    top: -6,
+    bottom: -6,
+    borderRadius: homePlateMaterial.huntRadius + 4,
+    backgroundColor: 'rgba(245,200,66,0.16)',
     ...PW.shadow.glowGold,
   },
   shell: {
-    borderRadius: PW.radius.card,
-    borderWidth: 2,
-    borderColor: homeDare.rim,
+    borderRadius: homePlateMaterial.huntRadius,
+    borderWidth: 1.5,
+    borderColor: homePlateMaterial.huntRim,
     overflow: 'hidden',
   },
   face: {
-    minHeight: homeDare.minHeight,
+    minHeight: 84,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bottomEdge: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 6,
-    backgroundColor: homeDare.bottomEdge,
-  },
   label: {
-    color: homeDare.label,
+    color: PW.color.gold,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: homeType.dareLabel - 2,
-    letterSpacing: 3,
-    textShadowColor: homeDare.labelHighlight,
+    fontSize: homeType.dareLabel,
+    letterSpacing: 1.5,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 2,
   },
   pressed: {
     opacity: 0.84,
+    transform: [{ scale: 0.96 }],
   },
 });
 
-function ShareRunButton({ onPress }: { onPress: () => void }) {
+// ─── SHARE / HOME — a quiet plate row, Home door treatment ──
+
+function ResultsQuietRow({
+  onShare,
+  onHome,
+}: {
+  onShare: () => void;
+  onHome: () => void;
+}) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="Share this run"
-      onPress={onPress}
-      style={({ pressed }) => [sb.shell, pressed && sb.pressed]}
-    >
-      <Text style={sb.label}>SHARE RESULT</Text>
-    </Pressable>
+    <View style={qp.row}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Share this run"
+        onPress={onShare}
+        style={({ pressed }) => [qp.shell, pressed && qp.pressed]}
+      >
+        <LinearGradient colors={homePlateMaterial.quietFace} style={qp.face}>
+          <Text style={qp.label}>SHARE RESULT</Text>
+        </LinearGradient>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Go home"
+        onPress={onHome}
+        style={({ pressed }) => [qp.shell, pressed && qp.pressed]}
+      >
+        <LinearGradient colors={homePlateMaterial.quietFace} style={qp.face}>
+          <Text style={qp.label}>HOME</Text>
+        </LinearGradient>
+      </Pressable>
+    </View>
   );
 }
 
-const sb = StyleSheet.create({
+const qp = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
   shell: {
-    minHeight: 48,
+    flex: 1,
+    borderRadius: homePlateMaterial.quietRadius,
+    borderWidth: 1.5,
+    borderColor: homePlateMaterial.quietRim,
+    overflow: 'hidden',
+  },
+  face: {
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: PW.radius.card,
-    borderWidth: 1.5,
-    borderColor: PW.color.purpleSoft,
-    backgroundColor: PW.color.overlayHeavy,
-    marginTop: 12,
+  },
+  label: {
+    color: PW.color.white,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: homeType.doorTitle,
+    letterSpacing: 1,
   },
   pressed: {
     opacity: 0.84,
-  },
-  label: {
-    color: PW.color.softWhite,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    fontSize: 15,
-    letterSpacing: 2,
+    transform: [{ scale: 0.96 }],
   },
 });
 
@@ -638,16 +685,8 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             disabled={usingGoldFeather}
           />
         )}
-        <RunItBackButton onPress={handleRestart} />
-        <ShareRunButton onPress={handleShare} />
-        <Pressable
-          onPress={handleHome}
-          accessibilityRole="button"
-          accessibilityLabel="Go home"
-          style={rs.homeLink}
-        >
-          <Text style={rs.homeLinkText}>HOME</Text>
-        </Pressable>
+        <StartNewHuntButton onPress={handleRestart} />
+        <ResultsQuietRow onShare={handleShare} onHome={handleHome} />
       </Animated.View>
 
       <PollyResultsPerch outcome={outcome} line={pollyMoment?.line ?? null} />
@@ -741,17 +780,5 @@ const rs = StyleSheet.create({
     fontSize: resultsType.cardWord,
     letterSpacing: 1.5,
     textAlign: 'left',
-  },
-  homeLink: {
-    alignItems: 'center',
-    marginTop: 18,
-    paddingVertical: 8,
-  },
-  homeLinkText: {
-    color: PW.color.mutedWhite,
-    fontSize: resultsType.homeLink,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    letterSpacing: 2,
   },
 });

@@ -22,7 +22,7 @@ import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { getDisplayStreak } from '../game/dailyStreak';
 import { DAILY_CLUE_TITLE } from '../ui/pwDailyMaterials';
-import { homeDare, homeDoor, homeType } from '../ui/pwHomeMaterials';
+import { homeDare, homeDoor, homePlateMaterial, homeType } from '../ui/pwHomeMaterials';
 import { PW } from '../ui/pwTheme';
 import { usePulseScale } from '../hooks/usePulseScale';
 import { Haptics } from '../utils/haptics';
@@ -42,11 +42,6 @@ const HOME_BOOK_OFFSET_Y = 115;
 const HUNT_X = 68, HUNT_Y = 75, HUNT_W = 235, HUNT_H = 75;
 const DAILY_X = 67, DAILY_Y = 160, DAILY_W = 115, DAILY_H = 104;
 const VAULT_X = 190, VAULT_Y = 160, VAULT_W = 115, VAULT_H = 104;
-
-// Route-plate faces — the shipped deboss look: flat dark faces carved into
-// the cover's purple family, faint gold hairlines, gold text.
-const HUNT_FACE_DEBOSS = ['#251F4E', '#161233'] as const;
-const TILE_FACE_QUIET = ['#1D1840', '#130F2C'] as const;
 
 type Props = {
   navigation: any;
@@ -172,7 +167,7 @@ export default function HomeScreen({ navigation }: Props) {
                         ]}
                       >
                         <LinearGradient
-                          colors={HUNT_FACE_DEBOSS}
+                          colors={homePlateMaterial.huntFace}
                           style={styles.huntFace}
                         >
                           {progress.runsCompleted === 0 && (
@@ -226,7 +221,7 @@ export default function HomeScreen({ navigation }: Props) {
                         </View>
                       )}
                       <LinearGradient
-                        colors={TILE_FACE_QUIET}
+                        colors={homePlateMaterial.quietFace}
                         style={styles.coverPlateFace}
                       >
                         <View style={[styles.glyphMedallion, styles.glyphMedallionQuiet]}>
@@ -260,7 +255,7 @@ export default function HomeScreen({ navigation }: Props) {
                       ]}
                     >
                       <LinearGradient
-                        colors={TILE_FACE_QUIET}
+                        colors={homePlateMaterial.quietFace}
                         style={styles.coverPlateFace}
                       >
                         <View style={[styles.glyphMedallion, styles.glyphMedallionQuiet]}>
@@ -389,7 +384,7 @@ const styles = StyleSheet.create({
   huntShell: {
     width: '100%',
     height: '100%',
-    borderRadius: 18,
+    borderRadius: homePlateMaterial.huntRadius,
     borderWidth: 2,
     borderColor: homeDare.rim,
     overflow: 'hidden',
@@ -397,7 +392,7 @@ const styles = StyleSheet.create({
   },
   huntShellDeboss: {
     borderWidth: 1.5,
-    borderColor: 'rgba(245,200,66,0.30)',
+    borderColor: homePlateMaterial.huntRim,
     shadowColor: 'transparent',
     shadowOpacity: 0,
     shadowRadius: 0,
@@ -470,12 +465,12 @@ const styles = StyleSheet.create({
   },
   coverPlate: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: homePlateMaterial.quietRadius,
     borderWidth: 1.5,
     overflow: 'hidden',
   },
   coverPlateQuiet: {
-    borderColor: 'rgba(245,200,66,0.22)',
+    borderColor: homePlateMaterial.quietRim,
     shadowColor: 'transparent',
     shadowOpacity: 0,
     shadowRadius: 0,

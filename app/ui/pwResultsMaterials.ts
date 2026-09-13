@@ -7,6 +7,9 @@ import { PollyMemory, resolveResultsPollyMoment } from '../game/pollyMemory';
 // ── Verdict copy (verdict appears exactly once, top of the ledger) ──
 export const RESULTS_SUB_LOSS = 'Out of feathers.';
 
+// ── Footer action copy ──
+export const RESULTS_RESTART_LABEL = 'START A NEW HUNT';
+
 // Polly's one bubble line on the ledger. All lines are bank-sourced
 // (docs/POLLY_DIALOGUE_BANK.md, Result Screen Polly Seeds).
 export function deriveResultsPollyMoment(
@@ -37,7 +40,6 @@ export const resultsType = {
   cardHeader: 16,
   cardWord: 24,
   cardCopy: 16,
-  homeLink: 15,
 } as const;
 
 // ── Ledger panel: BOOK leather frame around a dark card face ──

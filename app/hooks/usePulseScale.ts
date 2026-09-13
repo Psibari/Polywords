@@ -3,8 +3,8 @@ import { Animated } from 'react-native';
 import { useReducedMotionPreference } from './usePollyAmbientMotion';
 
 // Shared "breathing" idle pulse for primary CTAs (Home's ENTER THE HUNT,
-// Results' RUN IT BACK). Was duplicated identically in both screens with
-// neither checking reduce-motion; this is the one copy both now use.
+// Results' START A NEW HUNT). Was duplicated identically in both screens
+// with neither checking reduce-motion; this is the one copy both now use.
 export function usePulseScale(maxScale = 1.018, periodMs = 950) {
   const reduceMotion = useReducedMotionPreference();
   const pulse = useRef(new Animated.Value(0)).current;
