@@ -11,9 +11,6 @@ import { LOSS_CAUSE_LINES, pickLossVerdictLine } from '../game/lossCauseLines';
 // import surface for all Results copy.
 export { LOSS_CAUSE_LINES, pickLossVerdictLine };
 
-// ── Verdict copy (verdict appears exactly once, top of the ledger) ──
-export const RESULTS_SUB_LOSS = LOSS_CAUSE_LINES.neutral[1];
-
 // ── Footer action copy ──
 export const RESULTS_RESTART_LABEL = 'START A NEW HUNT';
 
