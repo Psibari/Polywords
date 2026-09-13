@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Image,
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   Share,
@@ -113,7 +116,7 @@ const lr = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
     borderBottomColor: resultsLedger.rule,
@@ -133,20 +136,6 @@ const lr = StyleSheet.create({
 });
 
 // ─── CALLOUT CARDS ───────────────────────────────────────────
-
-function GhostSetCard({ firstMissedMaskId }: { firstMissedMaskId: string }) {
-  const session = useGameStore(s => s.game.session);
-  const word = findWordForMaskId(firstMissedMaskId, session);
-  if (!word) return null;
-
-  return (
-    <View style={[cc.card, cc.ghost]}>
-      <Text style={[cc.header, { color: resultsCard.ghostTitle }]}>Meaning missed</Text>
-      <Text style={[cc.word, { color: resultsCard.ghostTitle }]}>{word.toUpperCase()}</Text>
-      <Text style={cc.copy}>You left this one behind.</Text>
-    </View>
-  );
-}
 
 function TrapCard({ maskId }: { maskId: string }) {
   const session = useGameStore(s => s.game.session);
@@ -168,9 +157,9 @@ const cc = StyleSheet.create({
     backgroundColor: PW.color.cardFace,
     borderWidth: 1.5,
     borderRadius: PW.radius.lg,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    marginBottom: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 10,
   },
   ghost: {
     backgroundColor: resultsCard.ghostFace,
@@ -564,11 +553,10 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     return () => clearTimeout(t);
   }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // derived data — the missed/trap callouts are haunt territory, so they only
-  // read boss-word results (ghosts are boss-only; non-boss misses are not haunts)
+  // derived data — the trap callout is haunt territory, so it only reads
+  // boss-word results (ghosts are boss-only; non-boss misses are not haunts)
   const wordOnlyResults = wordResults.filter(r => r.roundKind === 'word');
   const bossResults = wordResults.filter(r => r.isBossWord);
-  const hauntMissedMaskIds = bossResults.flatMap(r => r.missedMaskIds);
   const hauntWrongMaskIds = bossResults.flatMap(r => r.wrongMaskIds);
   const firstWrongMaskId = hauntWrongMaskIds[0] ?? null;
   // Held stable for the life of the screen — resolveResultsPollyMoment/
@@ -602,82 +590,133 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0,
   ).length;
 
+  // Edge fades cue the player that the ledger/callouts area scrolls — the
+  // footer stays pinned outside the scroll (Start a New Hunt must never
+  // require a scroll to reach), so a short result can still clip the
+  // verdict or a callout card with no visual sign there's more to see.
+  // Threshold of 4 avoids a fade flickering on from sub-pixel rounding
+  // when content exactly fills the viewport.
+  const SCROLL_FADE_EDGE = 4;
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+  const scrollOffsetRef = useRef(0);
+  const scrollContentHeightRef = useRef(0);
+  const scrollViewportHeightRef = useRef(0);
+  function recomputeScrollFade() {
+    const maxOffset = Math.max(
+      0,
+      scrollContentHeightRef.current - scrollViewportHeightRef.current,
+    );
+    const nextUp = scrollOffsetRef.current > SCROLL_FADE_EDGE;
+    const nextDown = maxOffset > SCROLL_FADE_EDGE
+      && scrollOffsetRef.current < maxOffset - SCROLL_FADE_EDGE;
+    setCanScrollUp(prev => (prev === nextUp ? prev : nextUp));
+    setCanScrollDown(prev => (prev === nextDown ? prev : nextDown));
+  }
+  function handleResultsScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+    recomputeScrollFade();
+  }
+  function handleResultsContentSizeChange(_w: number, h: number) {
+    scrollContentHeightRef.current = h;
+    recomputeScrollFade();
+  }
+  function handleResultsScrollLayout(e: LayoutChangeEvent) {
+    scrollViewportHeightRef.current = e.nativeEvent.layout.height;
+    recomputeScrollFade();
+  }
+
   return (
     <View style={rs.container}>
-      <ScrollView
-        style={rs.scroll}
-        contentContainerStyle={rs.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── VERDICT — the ceremony, appears exactly once ── */}
-        <Animated.View
-          style={[rs.verdictBlock, { transform: [{ scale: verdictScale }, { translateY: verdictY }] }]}
+      <View style={rs.scrollWrap} onLayout={handleResultsScrollLayout}>
+        <ScrollView
+          style={rs.scroll}
+          contentContainerStyle={rs.scrollContent}
+          showsVerticalScrollIndicator={true}
+          onScroll={handleResultsScroll}
+          onContentSizeChange={handleResultsContentSizeChange}
+          scrollEventThrottle={16}
         >
-          <View style={rs.verdictBox}>
-            <FoilWord
-              word={verdictText}
-              fontSize={resultsType.verdict}
-              numberOfLines={0}
-              baseStyle={rs.verdict}
-            />
-          </View>
-          {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
-          {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
-
-          <Text style={rs.perfectLine}>
-            {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
-          </Text>
-        </Animated.View>
-
-        {/* ── DETAILS — reveal beneath the verdict ── */}
-        <Animated.View style={{ opacity: detailOpacity, transform: [{ translateY: detailY }] }}>
-          {/* Ledger */}
-          {wordOnlyResults.length > 0 && (
-            <View style={rs.ledgerPanel}>
-              <LinearGradient
-                colors={[resultsLedger.parchmentTop, resultsLedger.parchment]}
-                style={rs.parchment}
-              >
-                {wordOnlyResults.map((r, i) => (
-                  <LedgerRow key={`${r.wordId ?? r.word}-${i}`} result={r} bossMastered={bossMastered} />
-                ))}
-              </LinearGradient>
+          {/* ── VERDICT — the ceremony, appears exactly once ── */}
+          <Animated.View
+            style={[rs.verdictBlock, { transform: [{ scale: verdictScale }, { translateY: verdictY }] }]}
+          >
+            <View style={rs.verdictBox}>
+              <FoilWord
+                word={verdictText}
+                fontSize={resultsType.verdict}
+                numberOfLines={0}
+                baseStyle={rs.verdict}
+              />
             </View>
-          )}
+            {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
+            {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
 
-          {/* Ghost revenge */}
-          {ghostRevenge?.result === 'correct' && (
-            <View style={[cc.card, cc.cleared]}>
-              <Text style={[cc.header, { color: PW.color.goldSoft }]}>Haunt broken</Text>
-              <View style={rs.foilWordBox}>
-                <FoilWord
-                  word={ghostRevenge.word.toUpperCase()}
-                  fontSize={resultsType.cardWord}
-                  baseStyle={rs.foilCardWord}
-                />
+            <Text style={rs.perfectLine}>
+              {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
+            </Text>
+          </Animated.View>
+
+          {/* ── DETAILS — reveal beneath the verdict ── */}
+          <Animated.View style={{ opacity: detailOpacity, transform: [{ translateY: detailY }] }}>
+            {/* Ledger */}
+            {wordOnlyResults.length > 0 && (
+              <View style={rs.ledgerPanel}>
+                <LinearGradient
+                  colors={[resultsLedger.parchmentTop, resultsLedger.parchment]}
+                  style={rs.parchment}
+                >
+                  {wordOnlyResults.map((r, i) => (
+                    <LedgerRow key={`${r.wordId ?? r.word}-${i}`} result={r} bossMastered={bossMastered} />
+                  ))}
+                </LinearGradient>
               </View>
-              <Text style={cc.copy}>Rematch won.</Text>
-            </View>
-          )}
-          {ghostRevenge?.result === 'wrong' && (
-            <View style={[cc.card, cc.ghost]}>
-              <Text style={[cc.header, { color: resultsCard.ghostTitle }]}>Still haunting you</Text>
-              <Text style={[cc.word, { color: resultsCard.ghostTitle }]}>
-                {ghostRevenge.word.toUpperCase()}
-              </Text>
-              <Text style={cc.copy}>Missed me?</Text>
-            </View>
-          )}
+            )}
 
-          {/* Meaning missed — haunts only */}
-          {hauntMissedMaskIds.length > 0 && (
-            <GhostSetCard firstMissedMaskId={hauntMissedMaskIds[0]} />
-          )}
+            {/* Ghost revenge */}
+            {ghostRevenge?.result === 'correct' && (
+              <View style={[cc.card, cc.cleared]}>
+                <Text style={[cc.header, { color: PW.color.goldSoft }]}>Haunt broken</Text>
+                <View style={rs.foilWordBox}>
+                  <FoilWord
+                    word={ghostRevenge.word.toUpperCase()}
+                    fontSize={resultsType.cardWord}
+                    baseStyle={rs.foilCardWord}
+                  />
+                </View>
+                <Text style={cc.copy}>Rematch won.</Text>
+              </View>
+            )}
+            {ghostRevenge?.result === 'wrong' && (
+              <View style={[cc.card, cc.ghost]}>
+                <Text style={[cc.header, { color: resultsCard.ghostTitle }]}>Still haunting you</Text>
+                <Text style={[cc.word, { color: resultsCard.ghostTitle }]}>
+                  {ghostRevenge.word.toUpperCase()}
+                </Text>
+                <Text style={cc.copy}>Missed me?</Text>
+              </View>
+            )}
 
-          {/* Trap that got you */}
-          {firstWrongMaskId && <TrapCard maskId={firstWrongMaskId} />}
-        </Animated.View>
-      </ScrollView>
+            {/* Trap that got you */}
+            {firstWrongMaskId && <TrapCard maskId={firstWrongMaskId} />}
+          </Animated.View>
+        </ScrollView>
+
+        {canScrollUp && (
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(15,13,42,0.6)', 'rgba(15,13,42,0)']}
+            style={rs.scrollFadeTop}
+          />
+        )}
+        {canScrollDown && (
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(15,13,42,0)', 'rgba(15,13,42,0.6)']}
+            style={rs.scrollFadeBottom}
+          />
+        )}
+      </View>
 
       {/* ── FOOTER — always above Polly's reach, outside the scroll ── */}
       <Animated.View
@@ -705,22 +744,45 @@ const rs = StyleSheet.create({
   container: {
     flex: 1, // transparent — GameScreen's stage shows through
   },
+  scrollWrap: {
+    flex: 1,
+    position: 'relative',
+  },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 44,
-    paddingBottom: 16,
+    paddingTop: 36,
+    paddingBottom: 12,
+  },
+  scrollFadeTop: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 28,
+  },
+  scrollFadeBottom: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 28,
   },
   footer: {
     paddingHorizontal: 24,
     paddingTop: 28,
     paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE, // clears Polly's reach regardless of scroll position
+    // A permanent seam — not conditional on scroll state like the fades —
+    // marking where the ledger/callouts area ends and the footer begins, so
+    // it always reads as "there's a boundary here" even at rest.
+    borderTopWidth: 1.5,
+    borderTopColor: resultsLedger.panelRim,
   },
   verdictBlock: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 28,
   },
   verdictBox: {
     width: '100%',
@@ -771,7 +833,7 @@ const rs = StyleSheet.create({
     borderColor: resultsLedger.panelRim,
     borderRadius: PW.radius.lg,
     padding: 6,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   parchment: {
     borderRadius: PW.radius.md,
