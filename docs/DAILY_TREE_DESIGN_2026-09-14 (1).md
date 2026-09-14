@@ -3,8 +3,10 @@
 **Date:** 14 September 2026
 **Branch inspected:** `play-screen-overhaul` @ `897ee9f` (13 Sep 2026, 23:48Z)
 **Status:** design and all layout questions ruled in conversation, against three
-generated mockups. **All six §13 open items ruled 14 Sept 2026, same day,
-follow-up session.** Nothing built. No code touched.
+generated mockups. **All six §13 open items ruled 14 Sept 2026. Item 4 (Polly's
+reaction set) resolved to "medium" scope in a follow-up showrunner pass, same
+day — see §9. One sub-question from that pass is still open.** Nothing built.
+No code touched.
 
 This supersedes the current Daily presentation — the quill scroll, the stone
 card board, the HUD row. It is a **presentation change only**. Every number on
@@ -281,7 +283,10 @@ contradicts a flag that is in the code deliberately.
 
 Today `dailyPollyBehavior` is `persistent: true, mostlySilent: true`, with four
 reactions: `perched` (default), `happy` (first miss), `laughing` (loss),
-`shocked` (win).
+`shocked` (win). Her entire authored Daily voice budget is **four lines total**:
+`dailyButterKnife` (first miss), `dailyLossBat` + `dailyNotToday` (loss, picked
+fresh), `dailyWinTomorrow` (win). Three trigger points out of 8-9 possible
+events a session.
 
 What this design gives her without touching that flag:
 
@@ -291,11 +296,43 @@ What this design gives her without touching that flag:
 - The stack that spins is hanging off **her branch**, so the biggest motion on
   screen is physically attached to her.
 
-**14 Sept ruling: the plank/feather pluck beat is not enough on its own. Pete
-wants a wider reaction set / more lines — bigger scope than this doc covers.
-Routed to `polywords-showrunner` as a separate pass; not resolved here, and
-this design's own "no new art" framing for §9 is superseded pending that
-pass.** Whether `mostlySilent` survives is part of that pass, not decided.
+**14 Sept — showrunner pass, ruled "medium."** The plank/feather pluck beat
+alone was ruled insufficient; a wider reaction set was requested and routed to
+`polywords-showrunner`. That pass surfaced a real asset already live:
+`pollyMood.ts`'s `resolveRivalryState` computes Polly's five-state mood
+(DISMISSIVE / WATCHFUL / AMUSED / RATTLED / CONCEDING) fresh from the player's
+recent Hunt performance, already driving the Polybook's "today" entry, with no
+storage of its own. **Daily currently doesn't read it at all** — Daily-Polly
+and Hunt-Polly are presently two disconnected moods on the same character.
+
+**Ruled: Daily plugs into this existing rivalry state rather than building a
+new one.** Concretely:
+
+- `mostlySilent: true` does **not** survive as currently defined — she gets a
+  small line pool per round, not just three trigger points.
+- **No new poses.** The existing four (`perched`/`happy`/`laughing`/`shocked`)
+  stay; only which _line_ fires changes, based on rivalry state.
+- **No new persisted data.** `resolveRivalryState` is a pure read of state that
+  already exists.
+- **Writing cost:** roughly 3-4 lines × 5 states ≈ 15-20 new lines, sized for a
+  speech bubble rather than a Polybook page, run through the same anti-repeat
+  picker (`pickFreshLine` / `recentLineIds`) the Hunt's `WRONG_HECKLE_LINES` and
+  `STREAK_LINES` already use.
+- Rejected: a full new pose set / much deeper per-round pool. That is real cost
+  (new art plus a pool deep enough to survive Daily's play-once-a-day repetition,
+  the highest-frequency surface in the game) for a want that the rivalry-state
+  reuse already satisfies without it.
+
+**One sub-question this pass did not resolve, flagged rather than assumed:**
+does a Daily result feed the rivalry window itself (a Daily win/loss counting
+toward her mood, alongside Hunt runs), or does Daily only _read_ the
+Hunt-driven state passively? `resolveRivalryState` today reads Hunt performance
+only (`resolveHuntPerformance` stamps struggle/steady/clean per Hunt run). Left
+open, Pete's call.
+
+**Line drafting itself is a separate task**, per the project's own routing —
+`polysemy-specialist` + `docs/POLLY_DIALOGUE_BANK.md`, not this doc and not the
+showrunner pass alone.
 
 ---
 
@@ -313,6 +350,7 @@ pass.** Whether `mostlySilent` survives is part of that pass, not decided.
 | Ink write-on            | `inkProgress`                                                                   | Yes                                          |
 | Pressure                | `dailyPressure`                                                                 | Yes                                          |
 | Polly's pose            | `dailyLastClaimResult.pollyReaction` → `toPerchReaction`                        | Yes                                          |
+| Polly's rivalry state   | `pollyMood.ts` / `resolveRivalryState`                                          | Yes — not currently called from Daily        |
 
 **Nothing on this screen requires a new persisted field.** That is the strongest
 argument for building it: it is entirely presentation.
@@ -341,8 +379,13 @@ must reflect throughout.**
 - `headerVisible` stays a live dev toggle — not hardcoded either way.
 - Rope state on the plank rig (two, one, none).
 - The spin container — one rigid body, text swap at the edge-on frame.
+- Wire Daily to read `resolveRivalryState`; retire `dailyPollyBehavior.mostlySilent`;
+  route a per-round line through `pickFreshLine` keyed on rivalry state.
 
 **Data.** None.
+
+**Content.** ~15-20 new Polly lines (5 rivalry states × 3-4 each), sized for a
+Daily speech bubble. Separate task: `polysemy-specialist` + `POLLY_DIALOGUE_BANK.md`.
 
 **Separate cleanup, found while looking:** `stoneTile.png` loses its last
 consumer when the card board goes. `libraryMaterial.wood` is currently attached
@@ -375,6 +418,9 @@ this design gives that material a live home.
   centre flight path.
 - **14 Sept — feather row anchors to Polly's branch**, top-left crop, not
   floating against sky.
+- **14 Sept — Polly's Daily reaction set wires into the existing rivalry state**
+  (`resolveRivalryState`), no new poses, no new persisted data, ~15-20 new
+  lines. `mostlySilent` does not survive as currently defined. See §9.
 
 ---
 
@@ -385,18 +431,16 @@ this design gives that material a live home.
 2. ~~`DAILY #n` and `ONE REPRESENTS ALL`.~~ **Ruled 14 Sept — carved into plank
    1's frame.**
 3. ~~`clueSpeedPrompt`.~~ **Ruled 14 Sept — placed in the throw corridor.**
-4. **Polly's reaction set.** Wider than four poses? Does `mostlySilent: true`
-   survive? **Ruled 14 Sept that the answer is "wider" — Pete wants more than
-   the plank/feather pluck beat. The actual shape of that (new poses, new
-   lines, whether `mostlySilent` survives) is not decided and is routed to
-   `polywords-showrunner` as its own pass, separate from this doc.**
+4. ~~Polly's reaction set.~~ **Ruled 14 Sept — medium scope, rivalry-state
+   reuse. See §9. One sub-question remains open:** does a Daily result feed
+   the rivalry window itself, or only read it? Pete's call, not yet made.
 5. ~~The feather row's anchor.~~ **Ruled 14 Sept — anchors to Polly's branch,
    top-left.**
 6. ~~`headerVisible`.~~ **Ruled 14 Sept — stays a live toggle, not hardcoded.**
 
-**The only open item left in this document is #4, and it is explicitly out of
-scope for this doc — it belongs to the showrunner pass.** Everything else in
-§13 is closed.
+**Every §13 item is now ruled. The one open thread is the Daily/rivalry-window
+sub-question in §9 — narrower than the original item 4, and the only thing
+standing between this document and being fully closed.**
 
 ---
 
