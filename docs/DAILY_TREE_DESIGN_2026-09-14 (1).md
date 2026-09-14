@@ -3,7 +3,8 @@
 **Date:** 14 September 2026
 **Branch inspected:** `play-screen-overhaul` @ `897ee9f` (13 Sep 2026, 23:48Z)
 **Status:** design and all layout questions ruled in conversation, against three
-generated mockups. Nothing built. No code touched.
+generated mockups. **All six §13 open items ruled 14 Sept 2026, same day,
+follow-up session.** Nothing built. No code touched.
 
 This supersedes the current Daily presentation — the quill scroll, the stone
 card board, the HUD row. It is a **presentation change only**. Every number on
@@ -22,29 +23,29 @@ describes — identical.
 
 **Mode shape**
 
-| | |
-| --- | --- |
-| Rounds per session | 5 (`DAILY_ROUND_COUNT`) |
-| Chances per session | 2 (`DAILY_CHANCES`) |
-| Clues per word | 3, revealed progressively (`revealedClueCount: 1 \| 2 \| 3`) |
-| Clue reveal triggers | a wrong claim, **and** a timer (`timedClueCount`) |
-| Earlier clues | **persist on screen** — `ClueStage` calls them "memory clues"; they unmount at claim commit, not at the next reveal |
-| Clue speed is the score | share grid renders 🟨 for a 1-clue solve, 🟪 for 2 |
-| Claim input | **swipe up** — `DAILY_ACTION_RULE = 'SWIPE UP TO CLAIM'` |
-| Mode rule line | `DAILY_CLUE_RULE = 'ONE REPRESENTS ALL'` |
-| Wrong cards | go to `'disabled'` via `committedWrongClaims`, dead for the round |
+|                         |                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Rounds per session      | 5 (`DAILY_ROUND_COUNT`)                                                                                             |
+| Chances per session     | 2 (`DAILY_CHANCES`)                                                                                                 |
+| Clues per word          | 3, revealed progressively (`revealedClueCount: 1 \| 2 \| 3`)                                                        |
+| Clue reveal triggers    | a wrong claim, **and** a timer (`timedClueCount`)                                                                   |
+| Earlier clues           | **persist on screen** — `ClueStage` calls them "memory clues"; they unmount at claim commit, not at the next reveal |
+| Clue speed is the score | share grid renders 🟨 for a 1-clue solve, 🟪 for 2                                                                  |
+| Claim input             | **swipe up** — `DAILY_ACTION_RULE = 'SWIPE UP TO CLAIM'`                                                            |
+| Mode rule line          | `DAILY_CLUE_RULE = 'ONE REPRESENTS ALL'`                                                                            |
+| Wrong cards             | go to `'disabled'` via `committedWrongClaims`, dead for the round                                                   |
 
 **Content, counted from `dailyPool.ts`**
 
-| | |
-| --- | --- |
-| Daily words | 60 |
-| Clues | 180 |
-| Clue length | median 29.5 chars, **max 51**, 37 clues (20.6%) over 34 |
-| Longest clue | "THE OUTWARD ANGLE WHERE TWO SLOPING ROOF SIDES MEET" |
-| Candidate words | 540 |
-| Candidate length | median 5 chars, **max 13**, 12 words (2.2%) over 9 |
-| Longest candidate | **ASSASSINATION** |
+|                   |                                                         |
+| ----------------- | ------------------------------------------------------- |
+| Daily words       | 60                                                      |
+| Clues             | 180                                                     |
+| Clue length       | median 29.5 chars, **max 51**, 37 clues (20.6%) over 34 |
+| Longest clue      | "THE OUTWARD ANGLE WHERE TWO SLOPING ROOF SIDES MEET"   |
+| Candidate words   | 540                                                     |
+| Candidate length  | median 5 chars, **max 13**, 12 words (2.2%) over 9      |
+| Longest candidate | **ASSASSINATION**                                       |
 
 **What is already on screen today**
 
@@ -65,8 +66,8 @@ describes — identical.
    `min(0.18, currentRoundIndex × 0.025 + (2 − chancesRemaining) × 0.045)` —
    driven by depth and lives lost, not by elapsed time.
 2. **Polly's per-round feather tally already exists.** `QuillScrollPanel.tsx`
-   line 20: *"Daily's day-progress feathers: 1–4 correct claims today shows that
-   many white feathers; the 5th (`revealPerfect`) shows a single gold feather."*
+   line 20: _"Daily's day-progress feathers: 1–4 correct claims today shows that
+   many white feathers; the 5th (`revealPerfect`) shows a single gold feather."_
    It is computed and drawn today — only on the end-of-session reveal panel.
    Promoting it to live play is a move, not a build.
 
@@ -82,8 +83,8 @@ kills every version where the clue stack grows into the plaque area.
 the round's score. That is why the clue stack is the largest object on the
 screen and why it must read at a glance.
 
-**Stone is spoken for.** `chamberMaterial` is *"Settings' torch-lit
-stone-corridor world."* Stone means Settings. Polly's tree may not be stone.
+**Stone is spoken for.** `chamberMaterial` is _"Settings' torch-lit
+stone-corridor world."_ Stone means Settings. Polly's tree may not be stone.
 
 **Nothing new is persisted.** If a number is not already on the store, it does
 not go on this screen. Everything below reads an existing field.
@@ -106,19 +107,19 @@ information is an object hanging in it.
 Measured from the approved mockup (851 × 1848, aspect 2.17 = 9:19.5). All figures
 are percentages of screen height so they survive a device change.
 
-| Element | Band |
-| --- | --- |
-| Feather row | 2 – 5% |
-| Polly and her branch | 7 – 21.5% |
-| Clue plank 1 | **26.6 – 34.1%** |
-| Hidden plank lips (the peek) | 34.3 – 36.2% |
-| Open sky — the throw corridor | 36.2 – 58.1% |
-| Plaque branch 1 | 58.1 – 59.1% |
-| Plaque row 1 | 61.6 – 67.9% |
-| Plaque branch 2 | 70.2 – 71.4% |
-| Plaque row 2 | 73.8 – 80.1% |
-| Plaque branch 3 | 82.1 – 83.2% |
-| Plaque row 3 | 85.7 – 91.9% |
+| Element                       | Band             |
+| ----------------------------- | ---------------- |
+| Feather row                   | 2 – 5%           |
+| Polly and her branch          | 7 – 21.5%        |
+| Clue plank 1                  | **26.6 – 34.1%** |
+| Hidden plank lips (the peek)  | 34.3 – 36.2%     |
+| Open sky — the throw corridor | 36.2 – 58.1%     |
+| Plaque branch 1               | 58.1 – 59.1%     |
+| Plaque row 1                  | 61.6 – 67.9%     |
+| Plaque branch 2               | 70.2 – 71.4%     |
+| Plaque row 2                  | 73.8 – 80.1%     |
+| Plaque branch 3               | 82.1 – 83.2%     |
+| Plaque row 3                  | 85.7 – 91.9%     |
 
 Plaque size: 352 px wide = **41.4% of screen width**; 116 px tall = **6.3% of
 screen height ≈ 53 pt**, above the 44 pt touch minimum.
@@ -128,6 +129,10 @@ closes to 3.6%. It is also the corridor the claimed plaque flies up through, and
 it is the emptiest the screen ever looks. Ruled: leave the geometry alone. If it
 needs help, bring the dark tree silhouettes higher and add vines at the **left
 and right edges only** — never the centre, which is the flight path.
+**14 Sept ruling: `clueSpeedPrompt` (FIRST-CLUE MARK / SECOND-CLUE MARK / FINAL
+CLUE) lives in this corridor.** It is the one thing allowed in the gap besides
+the flying plaque — place it clear of the centre flight path, same rule as the
+vines.
 
 ---
 
@@ -156,6 +161,11 @@ knots near-black — hardware, not a third material.
 
 **The ink.** A clue does not appear; it is **written**. `inkProgress` is already
 a live prop on the clue panel today.
+
+**14 Sept ruling: `DAILY #n` and `ONE REPRESENTS ALL` are carved into plank 1's
+frame.** They move with the HUD-row retirement below — this is their new home,
+not a separate label row. `DAILY_CLUE_RULE` (`ONE REPRESENTS ALL`) stays exactly
+as coded; only its on-screen position changes.
 
 ---
 
@@ -208,20 +218,24 @@ is the only real loss in this design. Ruled: accept it. Two feather rows running
 in opposite directions at the top of a phone screen is the version that confuses
 people on day one.
 
+**14 Sept ruling: the feather row anchors to Polly's branch (top-left crop),**
+not left floating against sky. Ties it into the world instead of reading as a
+HUD leftover.
+
 ---
 
 ## 8. Motion
 
 ### Round change — a correct claim
 
-| Phase | Duration |
-| --- | --- |
-| Plaque unhooks and lifts | 120 ms |
-| Flight up to the plank stack | ~460 ms (existing card-flight timing) |
-| Impact — stack takes the hit, one hard overshoot frame; feather bursts off Polly on the same frame | — |
-| Stack spins 360° as **one rigid body**; clue text swapped at the edge-on frame | ~450 ms |
-| Feather drifts to its slot, arriving **before** the spin settles | ~500 ms |
-| Settle wobble, damping out | ~200 ms |
+| Phase                                                                                              | Duration                              |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Plaque unhooks and lifts                                                                           | 120 ms                                |
+| Flight up to the plank stack                                                                       | ~460 ms (existing card-flight timing) |
+| Impact — stack takes the hit, one hard overshoot frame; feather bursts off Polly on the same frame | —                                     |
+| Stack spins 360° as **one rigid body**; clue text swapped at the edge-on frame                     | ~450 ms                               |
+| Feather drifts to its slot, arriving **before** the spin settles                                   | ~500 ms                               |
+| Settle wobble, damping out                                                                         | ~200 ms                               |
 
 **Hard ceiling 700 ms on impact-to-readable.** A tap during it snaps to the end.
 Five rounds of a 1.4 s transition is seven seconds a session of watching a sign
@@ -277,26 +291,28 @@ What this design gives her without touching that flag:
 - The stack that spins is hanging off **her branch**, so the biggest motion on
   screen is physically attached to her.
 
-Whether she gets a wider reaction set, and whether `mostlySilent` survives, is
-**not decided here.** It is a tone call and it belongs with the showrunner. See
-§12.
+**14 Sept ruling: the plank/feather pluck beat is not enough on its own. Pete
+wants a wider reaction set / more lines — bigger scope than this doc covers.
+Routed to `polywords-showrunner` as a separate pass; not resolved here, and
+this design's own "no new art" framing for §9 is superseded pending that
+pass.** Whether `mostlySilent` survives is part of that pass, not decided.
 
 ---
 
 ## 10. Every element, and where its number comes from
 
-| On screen | Source | Exists? |
-| --- | --- | --- |
-| Five white feathers | `revealSolvedCount` — already fed to `QuillScrollPanel` as `revealFeatherCount` | **Yes.** Computed, drawn end-of-session only |
-| Gold feather | `revealPerfect` / `feather-gold-reward.png` | Yes |
-| Clue text on planks | `currentRound.word.clues` via `ClueStage` | Yes |
-| How many planks are out | `revealedClueCount` (1–3) | Yes |
-| Six plaque words | `currentRound.candidates` | Yes |
-| Disabled plaque state | `cardStates` / `committedWrongClaims` | Yes |
-| Rope state (lives) | `chancesRemaining` | Yes |
-| Ink write-on | `inkProgress` | Yes |
-| Pressure | `dailyPressure` | Yes |
-| Polly's pose | `dailyLastClaimResult.pollyReaction` → `toPerchReaction` | Yes |
+| On screen               | Source                                                                          | Exists?                                      |
+| ----------------------- | ------------------------------------------------------------------------------- | -------------------------------------------- |
+| Five white feathers     | `revealSolvedCount` — already fed to `QuillScrollPanel` as `revealFeatherCount` | **Yes.** Computed, drawn end-of-session only |
+| Gold feather            | `revealPerfect` / `feather-gold-reward.png`                                     | Yes                                          |
+| Clue text on planks     | `currentRound.word.clues` via `ClueStage`                                       | Yes                                          |
+| How many planks are out | `revealedClueCount` (1–3)                                                       | Yes                                          |
+| Six plaque words        | `currentRound.candidates`                                                       | Yes                                          |
+| Disabled plaque state   | `cardStates` / `committedWrongClaims`                                           | Yes                                          |
+| Rope state (lives)      | `chancesRemaining`                                                              | Yes                                          |
+| Ink write-on            | `inkProgress`                                                                   | Yes                                          |
+| Pressure                | `dailyPressure`                                                                 | Yes                                          |
+| Polly's pose            | `dailyLastClaimResult.pollyReaction` → `toPerchReaction`                        | Yes                                          |
 
 **Nothing on this screen requires a new persisted field.** That is the strongest
 argument for building it: it is entirely presentation.
@@ -309,13 +325,20 @@ argument for building it: it is entirely presentation.
 three clue planks with rope and knots, six plaques, leaves, sky, moon. This is
 the expensive part and it is not started. Three positioning mockups exist and are
 approved for layout, **not for palette** — they run warm caramel and a brighter,
-bluer sky than `#1A1830`.
+bluer sky than `#1A1830`. **14 Sept: one continuous tree (not unconnected
+branches) is now ruled — the whole set is one connected trunk, which the art
+must reflect throughout.**
 
 **Code.**
+
 - Replace the `QuillScrollPanel` usage with the plank stack rig.
 - Reskin `DailyAnswerCard` as a hanging plaque; entrance logic already exists.
-- HUD round dots become the five feather slots; `FeatherIcon` and the life-feather
-  row come out.
+- HUD round dots become the five feather slots, anchored to Polly's branch;
+  `FeatherIcon` and the life-feather row come out.
+- `DAILY #n` / `ONE REPRESENTS ALL` move from `hud.labelStack` onto plank 1's
+  frame.
+- `clueSpeedPrompt` moves into the throw-corridor gap.
+- `headerVisible` stays a live dev toggle — not hardcoded either way.
 - Rope state on the plank rig (two, one, none).
 - The spin container — one rigid body, text swap at the edge-on frame.
 
@@ -345,28 +368,38 @@ this design gives that material a live home.
 - **Lives become the two ropes. Life-feather art retired.**
 - **A wrong claim does not spin the stack.**
 - **700 ms ceiling on the round-change transition, tap to skip.**
+- **14 Sept — One continuous tree**, not unconnected floating branches.
+- **14 Sept — `DAILY #n` / `ONE REPRESENTS ALL` carved into plank 1's frame.**
+- **14 Sept — `headerVisible` stays a live dev toggle.** Not hardcoded on or off.
+- **14 Sept — `clueSpeedPrompt` placed in the throw-corridor gap**, clear of the
+  centre flight path.
+- **14 Sept — feather row anchors to Polly's branch**, top-left crop, not
+  floating against sky.
 
 ---
 
 ## 13. What is not decided
 
-1. **One continuous tree, or unconnected branches floating in sky?** Cheaper
-   unconnected, and probably fine on a phone — but it changes every asset, so it
-   is worth settling before art starts.
-2. **`DAILY #n` and `ONE REPRESENTS ALL`.** Currently in the HUD row this design
-   deletes. Carved into the clue plank's frame, or dropped. Note `ONE REPRESENTS
-   ALL` is the central rule of the mode and currently appears nowhere else when
-   `headerVisible` is off.
-3. **`clueSpeedPrompt`** — `'FIRST-CLUE MARK'` / second / `'FINAL CLUE'` is a
-   live text element with no home in this layout. Place it or cut it.
+1. ~~One continuous tree, or unconnected floating branches?~~ **Ruled 14 Sept —
+   one continuous tree.**
+2. ~~`DAILY #n` and `ONE REPRESENTS ALL`.~~ **Ruled 14 Sept — carved into plank
+   1's frame.**
+3. ~~`clueSpeedPrompt`.~~ **Ruled 14 Sept — placed in the throw corridor.**
 4. **Polly's reaction set.** Wider than four poses? Does `mostlySilent: true`
-   survive? Tone call, belongs with the showrunner.
-5. **The feather row's anchor.** It currently floats against sky. Hanging it off
-   the branch that crops in at the top-left would tie it into the world.
-6. **`headerVisible`** — the A/B is still open and this design assumes it stays
-   off.
+   survive? **Ruled 14 Sept that the answer is "wider" — Pete wants more than
+   the plank/feather pluck beat. The actual shape of that (new poses, new
+   lines, whether `mostlySilent` survives) is not decided and is routed to
+   `polywords-showrunner` as its own pass, separate from this doc.**
+5. ~~The feather row's anchor.~~ **Ruled 14 Sept — anchors to Polly's branch,
+   top-left.**
+6. ~~`headerVisible`.~~ **Ruled 14 Sept — stays a live toggle, not hardcoded.**
+
+**The only open item left in this document is #4, and it is explicitly out of
+scope for this doc — it belongs to the showrunner pass.** Everything else in
+§13 is closed.
 
 ---
 
 This document describes the screen, its materials, and its motion. **It does not
-authorise a line of code.** The art is the gate.
+authorise a line of code.** The art is the gate, and per the 14 Sept ruling, the
+"one continuous tree" constraint now applies to it.
