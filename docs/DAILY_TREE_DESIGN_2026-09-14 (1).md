@@ -3,10 +3,8 @@
 **Date:** 14 September 2026
 **Branch inspected:** `play-screen-overhaul` @ `897ee9f` (13 Sep 2026, 23:48Z)
 **Status:** design and all layout questions ruled in conversation, against three
-generated mockups. **All six §13 open items ruled 14 Sept 2026. Item 4 (Polly's
-reaction set) resolved to "medium" scope in a follow-up showrunner pass, same
-day — see §9. One sub-question from that pass is still open.** Nothing built.
-No code touched.
+generated mockups. **All six §13 items ruled 14 Sept 2026, including the item 4
+sub-question. This document is fully closed.** Nothing built. No code touched.
 
 This supersedes the current Daily presentation — the quill scroll, the stone
 card board, the HUD row. It is a **presentation change only**. Every number on
@@ -323,12 +321,17 @@ new one.** Concretely:
   the highest-frequency surface in the game) for a want that the rivalry-state
   reuse already satisfies without it.
 
-**One sub-question this pass did not resolve, flagged rather than assumed:**
-does a Daily result feed the rivalry window itself (a Daily win/loss counting
-toward her mood, alongside Hunt runs), or does Daily only _read_ the
-Hunt-driven state passively? `resolveRivalryState` today reads Hunt performance
-only (`resolveHuntPerformance` stamps struggle/steady/clean per Hunt run). Left
-open, Pete's call.
+**14 Sept — sub-question ruled: read-only.** `resolveRivalryState` reads
+`progress.recentHuntPerformance`, a 5-slot rolling window written in exactly
+one place (`recordRunComplete`, Hunt-only). Making Daily _feed_ that window
+would need a new Daily-specific performance classifier (Daily has no boss, no
+mastery — "clean" has no Daily equivalent as defined), a new write path, and a
+decision on whether Daily also counts toward `runsCompleted`/"has she
+noticed you" (currently Hunt-only, gates DISMISSIVE). **Ruled: Daily stays
+read-only.** She colors her Daily reactions off whatever mood Hunt has already
+set, but a Daily result never writes into `recentHuntPerformance` or otherwise
+moves the rivalry state. The one known gap this leaves — a player who only
+ever plays Daily stays permanently DISMISSIVE — is accepted, not solved here.
 
 **Line drafting itself is a separate task**, per the project's own routing —
 `polysemy-specialist` + `docs/POLLY_DIALOGUE_BANK.md`, not this doc and not the
@@ -350,7 +353,7 @@ showrunner pass alone.
 | Ink write-on            | `inkProgress`                                                                   | Yes                                          |
 | Pressure                | `dailyPressure`                                                                 | Yes                                          |
 | Polly's pose            | `dailyLastClaimResult.pollyReaction` → `toPerchReaction`                        | Yes                                          |
-| Polly's rivalry state   | `pollyMood.ts` / `resolveRivalryState`                                          | Yes — not currently called from Daily        |
+| Polly's rivalry state   | `pollyMood.ts` / `resolveRivalryState`                                          | Yes — read-only from Daily, never written    |
 
 **Nothing on this screen requires a new persisted field.** That is the strongest
 argument for building it: it is entirely presentation.
@@ -379,8 +382,9 @@ must reflect throughout.**
 - `headerVisible` stays a live dev toggle — not hardcoded either way.
 - Rope state on the plank rig (two, one, none).
 - The spin container — one rigid body, text swap at the edge-on frame.
-- Wire Daily to read `resolveRivalryState`; retire `dailyPollyBehavior.mostlySilent`;
-  route a per-round line through `pickFreshLine` keyed on rivalry state.
+- Wire Daily to **read** `resolveRivalryState` (read-only, per the 14 Sept
+  ruling); retire `dailyPollyBehavior.mostlySilent`; route a per-round line
+  through `pickFreshLine` keyed on rivalry state.
 
 **Data.** None.
 
@@ -421,6 +425,8 @@ this design gives that material a live home.
 - **14 Sept — Polly's Daily reaction set wires into the existing rivalry state**
   (`resolveRivalryState`), no new poses, no new persisted data, ~15-20 new
   lines. `mostlySilent` does not survive as currently defined. See §9.
+- **14 Sept — that read is one-way.** Daily reads the rivalry state; a Daily
+  result never writes into it. Hunt and Daily moods stay editorially separate.
 
 ---
 
@@ -432,15 +438,14 @@ this design gives that material a live home.
    1's frame.**
 3. ~~`clueSpeedPrompt`.~~ **Ruled 14 Sept — placed in the throw corridor.**
 4. ~~Polly's reaction set.~~ **Ruled 14 Sept — medium scope, rivalry-state
-   reuse. See §9. One sub-question remains open:** does a Daily result feed
-   the rivalry window itself, or only read it? Pete's call, not yet made.
+   reuse, read-only. See §9. A Daily-only player staying permanently
+   DISMISSIVE is a known, accepted gap, not a bug to fix here.**
 5. ~~The feather row's anchor.~~ **Ruled 14 Sept — anchors to Polly's branch,
    top-left.**
 6. ~~`headerVisible`.~~ **Ruled 14 Sept — stays a live toggle, not hardcoded.**
 
-**Every §13 item is now ruled. The one open thread is the Daily/rivalry-window
-sub-question in §9 — narrower than the original item 4, and the only thing
-standing between this document and being fully closed.**
+**Nothing remains open. Every item in this document, including the item 4
+sub-question, is ruled.**
 
 ---
 
