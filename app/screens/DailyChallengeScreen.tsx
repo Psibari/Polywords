@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Haptics } from '../utils/haptics';
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -40,6 +40,7 @@ import {
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import { resolveRivalryState } from '../game/pollyMood';
 import { useGameStore } from '../store/useGameStore';
 import { playSfx, sfxReady } from '../audio/sfx';
 import {
@@ -589,6 +590,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const dailySession = useGameStore((s) => s.dailySession);
   const dailyResult = useGameStore((s) => s.dailyResult);
   const dailyLastClaimResult = useGameStore((s) => s.dailyLastClaimResult);
+  const progress = useGameStore((s) => s.progress);
+  // Hunt-derived and inert during an active Daily session — recomputing only
+  // when the underlying progress fields change is enough, no per-round churn.
+  const rivalryState = useMemo(
+    () => resolveRivalryState({
+      recent: progress.recentHuntPerformance ?? [],
+      masteredCount: progress.masteredWords.length,
+      runsCompleted: progress.runsCompleted,
+    }),
+    [progress.recentHuntPerformance, progress.masteredWords.length, progress.runsCompleted],
+  );
   const startDailyChallenge = useGameStore((s) => s.startDailyChallenge);
   const claimDailyAnswer = useGameStore((s) => s.claimDailyAnswer);
   const revealDailyClues = useGameStore((s) => s.revealDailyClues);
@@ -600,7 +612,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [cardStates, setCardStates] = useState<Map<string, DailyAnswerCardState>>(
     new Map(),
   );
-  const [pollyPose, setPollyPose] = useState<PerchReaction>('perched');
+  const [pollyPose, setPollyPose] = useState<PerchReaction | 'correct'>('perched');
   // Starts locked (unlike the old default of unlocked) — GameScreen never
   // renders its interactive content until audioReady is true; Daily had no
   // equivalent gate at all, so a fast tap could request a sound before
@@ -947,6 +959,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // CLAIM RESULT -> Polly reaction
   useEffect(() => {
     if (!dailyLastClaimResult) return;
+    // 'correct' (an ordinary, non-winning claim) shares toPerchReaction's
+    // 'perched' fallthrough with "no reaction" — it needs its own branch here
+    // so PollyDailyPerch still gets told to react, just with the perched pose.
+    if (dailyLastClaimResult.pollyReaction === 'correct') {
+      setPollyPose('correct');
+      setTimeout(() => {
+        setPollyPose('perched');
+        clearDailyReaction();
+      }, 2800);
+      return;
+    }
     const pose = toPerchReaction(dailyLastClaimResult.pollyReaction);
     if (pose !== 'perched') {
       setPollyPose(pose);
@@ -1419,6 +1442,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       <PollyDailyPerch
         reaction={pollyPose}
+        rivalryState={rivalryState}
         show={!isComplete && !isReadyToStart}
       />
 

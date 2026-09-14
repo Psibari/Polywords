@@ -135,6 +135,18 @@ function solveAll(session: DailySession, waits: number[]): DailySession {
   ok(result.shareText.includes('POLYWORDS Daily #'), 'win.shareTag');
 }
 
+// ── Claim flow: ordinary correct claim reacts, doesn't win ───────
+
+{
+  const s = buildDailySession('2026-07-13');
+  const round = s.rounds[0];
+  const claim = claimDailyWord(s, round.word.answer);
+  eq(claim.result.isCorrect, true, 'correct.isCorrect');
+  eq(claim.result.status, 'active', 'correct.stillActive');
+  eq(claim.result.pollyReaction, 'correct', 'correct.reaction');
+  eq(claim.session.currentRoundIndex, 1, 'correct.roundAdvanced');
+}
+
 // ── Claim flow: wrong claims burn chances and reveal clues ───────
 
 {

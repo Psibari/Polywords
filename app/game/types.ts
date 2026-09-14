@@ -317,7 +317,7 @@ export type DailyRoundWord = {
 export type DailyRevealedClueCount = 1 | 2 | 3;
 export type DailyChanceCount = 0 | 1 | 2;
 export type DailySessionStatus = 'active' | 'won' | 'lost';
-export type DailyPollyReaction = 'firstMiss' | 'loss' | 'win';
+export type DailyPollyReaction = 'firstMiss' | 'loss' | 'win' | 'correct';
 
 export type DailyRound = {
   roundIndex: number;

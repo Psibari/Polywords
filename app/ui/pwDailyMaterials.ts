@@ -1,5 +1,6 @@
 import { heroBookMaterial } from './pwMaterials';
 import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
+import { BookRivalryState } from '../game/pollyBookLines';
 import { PW } from './pwTheme';
 
 export const DAILY_TITLE = "POLLY'S DAILY CHALLENGE";
@@ -10,7 +11,7 @@ export const DAILY_ACTION_RULE = 'SWIPE UP TO CLAIM';
 
 export const DAILY_FIRST_MISS_LINE = POLLY_LINES.dailyButterKnife;
 export const DAILY_LOSS_TITLE = 'YOU LOSE';
-export const DAILY_LOSS_LINE_IDS: PollyLineId[] = ['dailyLossBat', 'dailyNotToday'];
+export const DAILY_LOSS_LINE_IDS: PollyLineId[] = ['dailyLossBat'];
 export const DAILY_WIN_TITLE = 'YOU BEAT POLLY’S CHALLENGE';
 export const DAILY_WIN_REWARD = 'GOLD FEATHER EARNED';
 export const DAILY_WIN_LINE = POLLY_LINES.dailyWinTomorrow;
@@ -19,6 +20,47 @@ export const DAILY_NO_FEATHER = 'NO FEATHER TODAY';
 export function getStreakMilestoneRewardLabel(days: number): string {
   return `${days}-DAY STREAK · GOLD FEATHER EARNED`;
 }
+
+// Per-round reaction lines for an ordinary correct claim, colored by Polly's
+// current rivalry state (resolveRivalryState, Hunt-derived, read-only here).
+// Ids match the dailyDismissive*/dailyAmused*/dailyWatchful*/dailyRattled*/
+// dailyConceding* entries in pollyCharacter.ts.
+export const DAILY_MOOD_LINES: Record<BookRivalryState, PollyLineId[]> = {
+  DISMISSIVE: [
+    'dailyDismissiveInk',
+    'dailyDismissiveMovingOn',
+    'dailyDismissiveWhoAreYou',
+    'dailyDismissiveWhateverThatWas',
+  ],
+  AMUSED: [
+    'dailyAmusedDoItAgain',
+    'dailyAmusedArrangement',
+    'dailyAmusedPredictable',
+    'dailyAmusedKnewIt',
+    'dailyAmusedComeBack',
+  ],
+  WATCHFUL: [
+    'dailyWatchfulFaster',
+    'dailyWatchfulThatsNew',
+    'dailyWatchfulCoincidence',
+    'dailyWatchfulWatchingThis',
+    'dailyWatchfulGoldFeather',
+  ],
+  RATTLED: [
+    'dailyRattledLetYouHave',
+    'dailyRattledBadLight',
+    'dailyRattledLuck',
+    'dailyRattledShouldntCount',
+    'dailyRattledReallyHappening',
+  ],
+  CONCEDING: [
+    'dailyConcedingNewTraps',
+    'dailyConcedingOutOfExcuses',
+    'dailyConcedingNothingHolding',
+    'dailyConcedingDrawingBoard',
+    'dailyConcedingNooo',
+  ],
+};
 
 export const dailyBackdrop = {
   base: '#1A1830',
@@ -170,11 +212,13 @@ export const dailyChromeMaterial = {
   clueHeaderRule: 'rgba(255,247,214,0.55)',
 } as const;
 
-// Polly stays perched throughout Daily and is mostly silent. She reacts only
-// to the first lost Chance, the final loss, and the challenge win.
+// Polly stays perched throughout Daily. She now reacts every round — an
+// ordinary correct claim, a first lost Chance, the final loss, and the
+// challenge win — with the ordinary-correct line colored by her rivalry
+// state (resolveRivalryState, Hunt-derived, read-only from Daily) — see
+// DAILY_MOOD_LINES above.
 export const dailyPollyBehavior = {
   persistent: true,
-  mostlySilent: true,
   reactions: {
     default: 'perched',
     firstMiss: 'happy',

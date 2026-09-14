@@ -10,20 +10,30 @@ import {
 import {
   DAILY_FIRST_MISS_LINE,
   DAILY_LOSS_LINE_IDS,
+  DAILY_MOOD_LINES,
   DAILY_WIN_LINE,
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
 import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
 import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
+import { BookRivalryState } from '../game/pollyBookLines';
 import { pickFreshLine } from '../game/pollyVisitPolicy';
 import { useGameStore } from '../store/useGameStore';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 
+// DailyPollyReaction here is pwDailyMaterials' POSE-keyed type ('perched' |
+// 'happy' | 'laughing' | 'shocked'), NOT the trigger type of the same name in
+// game/types.ts. 'correct' is a distinct trigger that happens to render the
+// same 'perched' pose, so it's added on locally rather than folded into
+// either DailyPollyReaction.
+type Reaction = DailyPollyReaction | 'correct';
+
 type Props = {
-  reaction: DailyPollyReaction | null;
+  reaction: Reaction | null;
+  rivalryState: BookRivalryState;
   show?: boolean;
 };
 
@@ -37,21 +47,31 @@ const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropTyp
 };
 const POSE_FLY = POLLY_POSES.fly; // fly-in entrance
 
-function getLine(reaction: DailyPollyReaction | null, lossLineId: PollyLineId): string {
+function getLine(
+  reaction: Reaction | null,
+  lossLineId: PollyLineId,
+  correctLineId: PollyLineId | null,
+): string {
   if (reaction === 'happy') return DAILY_FIRST_MISS_LINE;
   if (reaction === 'laughing') return POLLY_LINES[lossLineId];
   if (reaction === 'shocked') return DAILY_WIN_LINE;
+  if (reaction === 'correct') return correctLineId ? POLLY_LINES[correctLineId] : '';
   return '';
 }
 
-function getLineId(reaction: DailyPollyReaction | null, lossLineId: PollyLineId): PollyLineId | null {
+function getLineId(
+  reaction: Reaction | null,
+  lossLineId: PollyLineId,
+  correctLineId: PollyLineId | null,
+): PollyLineId | null {
   if (reaction === 'happy') return 'dailyButterKnife';
   if (reaction === 'laughing') return lossLineId;
   if (reaction === 'shocked') return 'dailyWinTomorrow';
+  if (reaction === 'correct') return correctLineId;
   return null;
 }
 
-export default function PollyDailyPerch({ reaction, show = true }: Props) {
+export default function PollyDailyPerch({ reaction, rivalryState, show = true }: Props) {
   const rememberLine = useGameStore(s => s.rememberPollyLine);
   // Both held stable for the life of this perch, same pattern as
   // ResultsScreen.tsx's pollyMemoryBeforeRunRecorded: a live pollyMemory
@@ -64,6 +84,14 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
   const dailyLossLineId = pickFreshLine(DAILY_LOSS_LINE_IDS, pollyMemoryBeforeRecorded.recentLineIds, dailyLossRoll);
   const [pose, setPose] = useState<ImageSourcePropType>(POSE_FLY);
   const enteredRef = useRef(false);
+
+  // Unlike firstMiss/loss/win, 'correct' can fire several times per session
+  // (every non-winning correct claim), so it needs a fresh roll each time
+  // rather than the frozen mount-time pattern above — and its own record of
+  // which lines already fired this session, so it doesn't repeat sooner than
+  // the DAILY_MOOD_LINES pool for the current rivalry state runs out.
+  const [correctLineId, setCorrectLineId] = useState<PollyLineId | null>(null);
+  const firedCorrectLineIdsRef = useRef<string[]>([]);
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(280)).current;
@@ -120,7 +148,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
 
   useEffect(() => {
     const isReacting =
-      reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked';
+      reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked' || reaction === 'correct';
 
     if (!isReacting) {
       if (enteredRef.current) setPose(POSE.idle);
@@ -135,8 +163,24 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       return;
     }
 
-    setPose(POSE[reaction]);
-    const lineId = getLineId(reaction, dailyLossLineId);
+    // 'correct' can fire several times a session, so its line is rolled
+    // fresh here rather than at mount, and remembered locally so it doesn't
+    // repeat within this session even though pollyMemoryBeforeRecorded is a
+    // frozen snapshot.
+    let pickedCorrectLineId: PollyLineId | null = correctLineId;
+    if (reaction === 'correct') {
+      const roll = Math.random();
+      const recent = [
+        ...pollyMemoryBeforeRecorded.recentLineIds,
+        ...firedCorrectLineIdsRef.current,
+      ];
+      pickedCorrectLineId = pickFreshLine(DAILY_MOOD_LINES[rivalryState], recent, roll);
+      firedCorrectLineIdsRef.current = [...firedCorrectLineIdsRef.current, pickedCorrectLineId];
+      setCorrectLineId(pickedCorrectLineId);
+    }
+
+    setPose(reaction === 'correct' ? POSE.idle : POSE[reaction]);
+    const lineId = getLineId(reaction, dailyLossLineId, pickedCorrectLineId);
     if (lineId && show) rememberLine(lineId, 'daily');
     if (reaction === 'laughing') playSfx('pollySqwawkLaugh');
     else playSfx('pollySqwawkShort');
@@ -167,7 +211,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
         Animated.timing(reactX, { toValue: 12, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
         Animated.timing(reactX, { toValue: 0, duration: 540, delay: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
-    } else {
+    } else if (reaction === 'shocked') {
       // Shocked: fast recoil pop.
       Animated.sequence([
         Animated.timing(reactScale, { toValue: 1.1, duration: 80, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -178,6 +222,9 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
         Animated.timing(reactY, { toValue: 0, duration: 400, delay: 80, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
     }
+    // 'correct' fires every non-winning round, so it deliberately gets no
+    // extra body motion (unlike the three original reactions) — just the
+    // pose hold + speech bubble, so a repeatable beat doesn't wear out.
 
     Animated.timing(bubbleOpacity, {
       toValue: 1,
@@ -203,7 +250,7 @@ export default function PollyDailyPerch({ reaction, show = true }: Props) {
       {/* Speech bubble — to Polly's right, tail points left at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
         <PollySpeechBubble
-          line={getLine(reaction, dailyLossLineId)}
+          line={getLine(reaction, dailyLossLineId, correctLineId)}
           maxWidth={185}
         />
       </Animated.View>

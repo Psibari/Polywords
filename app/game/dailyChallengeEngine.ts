@@ -234,7 +234,7 @@ export function claimDailyWord(
         revealedClueCount: currentRound.revealedClueCount,
         solvedCount,
         roundAdvanced: !won,
-        ...(won ? { pollyReaction: 'win' as const } : {}),
+        pollyReaction: won ? 'win' : 'correct',
       },
     };
   }
