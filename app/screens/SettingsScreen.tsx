@@ -22,6 +22,7 @@ import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
 import { DailyTreeSceneDevViewer } from '../components/DailyTreeSceneDevViewer';
 import { DAILY_TREE_SCENE_ENABLED } from '../components/DailyTreeScene';
+import { DailyCastleSceneDevViewer } from '../components/DailyCastleSceneDevViewer';
 // Settings, not the Daily screen: app/screens/dailyDevControls.test.mjs
 // forbids DailyChallengeScreen from wiring this panel (it used to float over
 // the answer-card grid there). The tuning store is plain module state, so
@@ -105,6 +106,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
   const [showDailyScrollTuning, setShowDailyScrollTuning] = useState(false);
   const [showDailyTreeScene, setShowDailyTreeScene] = useState(false);
+  const [showDailyCastleScene, setShowDailyCastleScene] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -481,6 +483,17 @@ export default function SettingsScreen({ navigation }: Props) {
                   <Text style={styles.chevron}>›</Text>
                 </Pressable>
               )}
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowDailyCastleScene(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Daily Castle Scene</Text>
+                  <Text style={styles.rowNote}>Castle layout preview, static — tap to cycle clues</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
             </ImageBackground>
           </View>
         )}
@@ -535,6 +548,10 @@ export default function SettingsScreen({ navigation }: Props) {
               visible={showDailyTreeScene}
             />
           )}
+          <DailyCastleSceneDevViewer
+            onClose={() => setShowDailyCastleScene(false)}
+            visible={showDailyCastleScene}
+          />
           <DailyScrollTuningPanel
             onClose={() => setShowDailyScrollTuning(false)}
             visible={showDailyScrollTuning}

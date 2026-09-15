@@ -1,5 +1,7 @@
 # THE DAILY CHALLENGE — POLLY'S TREE
 
+> **SUPERSEDED 15 Sept 2026.** Pete ruled the Daily moves to a castle look (castle arch, stone clue board holding up to three clues, answer cards on the stairs). Do not build from this document. Non-visual rulings still under review for carry-over: short round-change transition with tap to skip, clues persist on screen, answer cards never move, longest word shrinks to fit, Polly's Daily reactions read the rivalry state. DailyTreeScene and its dev viewer remain in the repo pending Pete's ruling on deletion.
+
 **Date:** 14 September 2026
 **Branch inspected:** `play-screen-overhaul` @ `897ee9f` (13 Sep 2026, 23:48Z)
 **Status:** design and all layout questions ruled in conversation, against three
