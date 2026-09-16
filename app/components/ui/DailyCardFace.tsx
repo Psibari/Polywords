@@ -46,6 +46,7 @@ export default function DailyCardFace({ label }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
   },
