@@ -8,8 +8,8 @@ import { DAILY_POOL } from '../game/dailyPool';
 import DailyCardFace from './ui/DailyCardFace';
 import { PollyPerchRig } from './PollyPerchRig';
 
-const castleArt = require('../../assets/images/dailycastle/castle.png');
-const clueBoardArt = require('../../assets/images/dailycastle/daily-clue-board.png');
+const castleArt = require('../../assets/images/dailycastle/dcscreen2rev.png');
+const gateArt = require('../../assets/images/dailycastle/stoneslab.png');
 
 type Props = {
   word: 'HIT' | 'HOOD';
@@ -51,11 +51,11 @@ export const CASTLE_LAYOUT_DEFAULTS: CastleLayout = {
 };
 
 // Fixed properties of the committed art — not tunable.
-const BOARD_IMAGE_ASPECT = 1154 / 830;
-const CLUE_INSET_LEFT = 0.1395;
-const CLUE_INSET_RIGHT = 0.8847;
-const CLUE_INSET_TOP = 0.1904;
-const CLUE_INSET_BOTTOM = 0.6843;
+const BOARD_IMAGE_ASPECT = 1508 / 1439;
+const CLUE_INSET_LEFT = 0.130;
+const CLUE_INSET_RIGHT = 0.909;
+const CLUE_INSET_TOP = 0.118;
+const CLUE_INSET_BOTTOM = 0.614;
 const CLUE_FONT_FLOOR = 14;
 
 const HIT_CANDIDATES = ['SLAP', 'ASSASSINATION', 'HIT', 'SINGLE', 'SMASH', 'STRIKE'] as const;
@@ -188,7 +188,7 @@ export default function DailyCastleScene({ word, clueCount, layout, onClueFit }:
       />
 
       <Image
-        source={clueBoardArt}
+        source={gateArt}
         resizeMode="contain"
         style={[styles.absolute, { top: boardTop, left: boardLeft, width: boardWidth, height: boardHeight }]}
       />
