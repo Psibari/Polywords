@@ -53,7 +53,6 @@ export default function DailyCastleStage({
   });
 
   const opening = DAILY_CASTLE_LAYOUT.opening;
-  const cardGrid = DAILY_CASTLE_LAYOUT.cardGrid;
 
   return (
     <View pointerEvents="box-none" style={styles.stage}>
@@ -93,23 +92,27 @@ export default function DailyCastleStage({
         resizeMode="stretch"
       />
 
-      <View
-        pointerEvents="box-none"
-        style={[styles.cardArea, rect(cardGrid)]}
-      >
-        <View
-          key={`grid-${roundKey}`}
-          style={[
-            styles.cardGrid,
-            {
-              columnGap: DAILY_CASTLE_LAYOUT.cardColumnGap * scale,
-              rowGap: DAILY_CASTLE_LAYOUT.cardRowGap * scale,
-            },
-          ]}
-        >
-          {children}
-        </View>
-      </View>
+      {React.Children.toArray(children).map((child, index) => {
+        const slot = DAILY_CASTLE_LAYOUT.answerSlots[index];
+        if (!slot) return null;
+        return (
+          <View
+            key={`slot-${roundKey}-${index}`}
+            pointerEvents="box-none"
+            style={[
+              styles.cardSlot,
+              rect({
+                x: slot.x,
+                y: slot.y,
+                width: DAILY_CASTLE_LAYOUT.card.width,
+                height: DAILY_CASTLE_LAYOUT.card.height,
+              }),
+            ]}
+          >
+            {child}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -140,17 +143,10 @@ const styles = StyleSheet.create({
     zIndex: 11,
     elevation: 11,
   },
-  cardArea: {
+  cardSlot: {
     position: 'absolute',
     zIndex: 40,
     elevation: 40,
-  },
-  cardGrid: {
-    width: '100%',
-    height: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignContent: 'flex-start',
-    justifyContent: 'flex-start',
+    overflow: 'visible',
   },
 });

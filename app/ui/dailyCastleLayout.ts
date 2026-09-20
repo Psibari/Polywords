@@ -27,11 +27,17 @@ export const DAILY_CASTLE_LAYOUT = {
   answerWall: { x: 0, y: 600, width: 430, height: 300 },
   answerRecesses: { x: 0, y: 600, width: 430, height: 300 },
 
-  // Six answers: 2 columns × 3 rows.
-  cardGrid: { x: 37, y: 632, width: 356, height: 224 },
-  card: { width: 160, height: 64 },
-  cardColumnGap: 36,
-  cardRowGap: 16,
+  // Six answer plaques, registered directly to the baked recess artwork.
+  // These are full-screen reference coordinates on the 430 × 932 layout.
+  card: { width: 132, height: 53 },
+  answerSlots: [
+    { x: 48, y: 670 },
+    { x: 231, y: 673 },
+    { x: 50, y: 737 },
+    { x: 232, y: 738 },
+    { x: 47, y: 813 },
+    { x: 230, y: 813 },
+  ],
 
   // Carved reward scale inside the opening.
   stoneFeather: { width: 40, height: 56 },
