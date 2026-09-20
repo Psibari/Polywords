@@ -12,15 +12,12 @@ import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 
 const ASSETS = [
-  { name: 'arch2.png', source: require('../../assets/images/dailycastle/arch2.png'), note: 'Castle arch scene' },
-  { name: 'stonegate.png', source: require('../../assets/images/dailycastle/stonegate.png'), note: 'Gate/portcullis' },
+  { name: 'squarearch.png', source: require('../../assets/images/dailycastle/squarearch.png'), note: 'Square Arch' },
+  { name: 'gate.png', source: require('../../assets/images/dailycastle/gate.png'), note: 'Gate/portcullis' },
   { name: 'featherwall.png', source: require('../../assets/images/dailycastle/featherwall.png'), note: 'Feather wall' },
   { name: 'stonefeather.png', source: require('../../assets/images/dailycastle/stonefeather.png'), note: 'Individual feather' },
   { name: 'answerwall.png', source: require('../../assets/images/dailycastle/answerwall.png'), note: 'Answer card wall' },
   { name: 'answercard.png', source: require('../../assets/images/dailycastle/answercard.png'), note: 'Answer card brick' },
-  { name: 'SCMOCK1.png', source: require('../../assets/images/dailycastle/SCMOCK1.png'), note: 'Mock-up 1' },
-  { name: 'SCMOCK2.png', source: require('../../assets/images/dailycastle/SCMOCK2.png'), note: 'Mock-up 2' },
-  { name: 'SCMOCK3.png', source: require('../../assets/images/dailycastle/SCMOCK3.png'), note: 'Mock-up 3' },
 ] as const;
 
 type Props = {

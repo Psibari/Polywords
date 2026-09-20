@@ -1,7 +1,9 @@
-import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
 const STONE_FEATHER = require('../../assets/images/dailycastle/stonefeather.png');
+const GOLD_FEATHER = require('../../assets/ui/feather-gold-reward.png');
 
 type Props = {
   /** Number of regular feathers to show (0-4) */
@@ -17,10 +19,25 @@ type Props = {
  */
 export default function FeatherWall({ featherCount, showGold }: Props) {
   const count = Math.max(0, Math.min(4, featherCount));
+  const reduceMotion = useReducedMotionPreference();
+  const goldRise = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!showGold) {
+      goldRise.setValue(0);
+      return;
+    }
+    Animated.timing(goldRise, {
+      toValue: 1,
+      duration: reduceMotion === false ? 420 : 0,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [goldRise, reduceMotion, showGold]);
 
   return (
     <View style={styles.root}>
-      {!showGold && count > 0 && (
+      {count > 0 && (
         <View style={styles.featherRow}>
           {Array.from({ length: count }).map((_, i) => (
             <Image
@@ -33,13 +50,16 @@ export default function FeatherWall({ featherCount, showGold }: Props) {
         </View>
       )}
       {showGold && (
-        <View style={styles.featherRow}>
+        <Animated.View style={[styles.featherRow, {
+          opacity: goldRise,
+          transform: [{ translateY: goldRise.interpolate({ inputRange: [0, 1], outputRange: [35, 0] }) }],
+        }]}>
           <Image
-            source={STONE_FEATHER}
-            style={[styles.feather, styles.featherGold]}
+            source={GOLD_FEATHER}
+            style={styles.featherGold}
             resizeMode="contain"
           />
-        </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -73,8 +93,7 @@ const styles = StyleSheet.create({
     tintColor: '#FFF7D6',
   },
   featherGold: {
-    tintColor: '#F5C842',
-    width: 64,
-    height: 54,
+    width: 88,
+    height: 110,
   },
 });

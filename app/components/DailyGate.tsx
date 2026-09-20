@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { FONTS } from '../constants/fonts';
 
-const STONE_GATE = require('../../assets/images/dailycastle/stonegate.png');
+const GATE = require('../../assets/images/dailycastle/gate.png');
 
 type Props = {
   /** 0 = gate fully raised (hidden), 1 = gate fully lowered (showing clues) */
@@ -33,8 +33,8 @@ export default function DailyGate({
   revealedCount,
   width,
 }: Props) {
-  // Gate height scales from the image aspect (816x1056)
-  const GATE_ASPECT = 1056 / 816;
+  // Preserve the pushed gate art's canvas and transparent margins.
+  const GATE_ASPECT = 1242 / 1046;
   const gateHeight = width * GATE_ASPECT;
 
   // The gate's translateY: when gatePosition=1 it's at 0 (fully down),
@@ -56,7 +56,7 @@ export default function DailyGate({
       ]}
     >
       <Image
-        source={STONE_GATE}
+        source={GATE}
         style={[styles.gateImage, { width, height: gateHeight }]}
         resizeMode="stretch"
       />

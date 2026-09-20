@@ -9,7 +9,7 @@ import DailyCardFace from './ui/DailyCardFace';
 import { PollyPerchRig } from './PollyPerchRig';
 
 const castleArt = require('../../assets/images/dailycastle/answerwall.png');
-const gateArt = require('../../assets/images/dailycastle/stonegate.png');
+const gateArt = require('../../assets/images/dailycastle/gate.png');
 
 type Props = {
   word: 'HIT' | 'HOOD';

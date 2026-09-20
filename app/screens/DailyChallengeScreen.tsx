@@ -75,8 +75,7 @@ import DailyAnswerCard, {
 import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
 import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
-import DailyGate from '../components/DailyGate';
-import FeatherWall from '../components/FeatherWall';
+import DailyCastleStage from '../components/DailyCastleStage';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
@@ -87,10 +86,6 @@ import {
 } from '../hooks/usePollyAmbientMotion';
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
-
-// Gate dimensions — from stonegate.png aspect ratio (816x1056)
-const GATE_WIDTH = 340;
-const GATE_HEIGHT = GATE_WIDTH * (1056 / 816);
 
 // Full corrected-claim sequence, settle through next-clue-visible:
 // settle 460 -> landed 140 -> ink 350 -> ink hold 400 -> cover 560 ->
@@ -135,7 +130,7 @@ type SubmittedDailyAnswer = {
   height: number;
 };
 
-const CASTLE_ARCH = require('../../assets/images/dailycastle/arch2.png');
+const CASTLE_ARCH = require('../../assets/images/dailycastle/squarearch.png');
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 function toPerchReaction(
@@ -1056,16 +1051,24 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       scheduleCorrectTransition(gateDropComplete, gatePauseMs);
     };
 
-    // Phase 2: Gate drops back down for next round
+    // Phase 2: Return the gate before exposing the next round's clues.
     const gateDropComplete = () => {
       if (completingCandidateRef.current !== candidate) return;
-      setPhysicalClaimPhase('reward');
-      finishClaimPresentation(candidate);
-      finishPhysicalCorrectTransition(candidate);
+      Animated.timing(gatePosition, {
+        toValue: 1,
+        duration: gateDropMs,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start(() => {
+        if (completingCandidateRef.current !== candidate) return;
+        setPhysicalClaimPhase('reward');
+        finishClaimPresentation(candidate);
+        finishPhysicalCorrectTransition(candidate);
+      });
     };
 
-    // Animate gate up
-    requestAnimationFrame(() => {
+    // Let the committed card resolve upward before opening the gate.
+    scheduleCorrectTransition(() => {
       Animated.timing(gatePosition, {
         toValue: 0,
         duration: gateRiseMs,
@@ -1074,10 +1077,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       }).start(({ finished }) => {
         if (finished) gateRiseComplete();
       });
-    });
+    }, reduceMotion === false ? 380 : 120);
 
     // Total timeout as safety net
-    const totalMs = gateRiseMs + gatePauseMs + gateDropMs + 600;
+    const totalMs = (reduceMotion === false ? 380 : 120) + gateRiseMs + gatePauseMs + gateDropMs + 600;
     scheduleCorrectTransition(
       () => finishPhysicalCorrectTransition(candidate),
       totalMs,
@@ -1138,41 +1141,33 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       return;
     }
 
-    // Wrong — quick pop on the gate (not a full rise)
+    // Wrong — the gate slams down a short distance then rebounds.
     setLocked(true);
     setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
     Haptics.cueAsync('wrong');
     playSfx('trapWrong');
     beginClaimPresentation(dailySession, candidate, 'wrong');
 
-    // Gate pop: quick jolt up and back down
-    if (reduceMotion !== false) {
-      // Reduced motion: just a tiny scale pulse
-      Animated.sequence([
-        Animated.timing(intakeScale, {
-          toValue: 0.97,
-          duration: 60,
-          useNativeDriver: true,
-        }),
-        Animated.timing(intakeScale, {
-          toValue: 1,
-          duration: 80,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Full motion: quick gate pop (up a little, then back)
+    // Reduced motion omits the jolt.
+    if (reduceMotion === false) {
+      // Translate the gate vertically only; no scale or horizontal movement.
       Animated.sequence([
         Animated.timing(gatePosition, {
-          toValue: 0.88,
-          duration: 80,
+          toValue: 1.06,
+          duration: 75,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(gatePosition, {
+          toValue: 0.97,
+          duration: 70,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
         Animated.timing(gatePosition, {
           toValue: 1,
-          duration: 120,
-          easing: Easing.in(Easing.quad),
+          duration: 100,
+          easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
       ]).start();
@@ -1324,73 +1319,31 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             />
           </Animated.View>
 
-          {/* LAYERED CASTLE LAYOUT (back to front):
-              1. Feather wall (behind gate, visible when gate rises)
-              2. Gate (drops down through arch opening, behind arch)
-              3. Arch (the frame at top, in front of gate)
-              4. Answer wall (bottom, where cards emerge)
-              5. Cards (2×3 grid on answer wall)
-          */}
-
-          {/* Layer 1: Feather wall — behind everything, visible when gate rises */}
-          <FeatherWall
-            featherCount={revealSolvedCount > 0 && revealSolvedCount < DAILY_ROUND_COUNT ? revealSolvedCount : 0}
-            showGold={revealSolvedCount === DAILY_ROUND_COUNT}
-          />
-
-          {/* Layer 2: Stone gate — drops down behind the arch, shows clues */}
-          <Animated.View
-            onLayout={measureClueTarget}
-            style={[
-              styles.gateBehindArch,
-              { transform: [{ scale: intakeScale }] },
-            ]}
+          <DailyCastleStage
+            gatePosition={gatePosition}
+            clues={currentRound?.word.clues ?? []}
+            revealedCount={revealedCount}
+            solvedCount={revealSolvedCount || displayedDailySession.currentRoundIndex}
+            roundKey={displayedDailySession.currentRoundIndex}
+            onGateLayout={measureClueTarget}
           >
-            <DailyGate
-              gatePosition={gatePosition}
-              clues={currentRound?.word.clues ?? []}
-              revealedCount={revealedCount}
-              width={GATE_WIDTH}
-            />
-          </Animated.View>
-
-          {/* Layer 3: Castle arch — the frame at top, in front of gate */}
-          <Image
-            source={CASTLE_ARCH}
-            style={styles.castleArch}
-            resizeMode="cover"
-          />
-
-          {/* Layer 4: Answer wall — bottom area where cards emerge */}
-          <Image
-            source={require('../../assets/images/dailycastle/answerwall.png')}
-            style={styles.answerWallImage}
-            resizeMode="cover"
-          />
-
-          {/* Layer 5: Answer cards — 2×3 grid, bricks from the wall */}
-          <View style={styles.cardArea}>
-            <View
-              key={`grid-${displayedDailySession.currentRoundIndex}`}
-              style={styles.cardGrid}
-            >
-              {currentRound &&
-                [...currentRound.candidates].map((candidate, index) => (
-                  <DailyAnswerCard
-                    key={candidate}
-                    label={candidate}
-                    state={cardStates.get(candidate) ?? 'idle'}
-                    disabled={inputLocked}
-                    onClaimStart={handleClaimStart}
-                    onClaim={handleClaim}
-                    testID={`daily-answer-${index}`}
-                    enterFromLeft={index % 2 === 0}
-                    enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
-                    roundKey={displayedDailySession.currentRoundIndex}
-                  />
-                ))}
-            </View>
-          </View>
+            {currentRound &&
+              [...currentRound.candidates].map((candidate, index) => (
+                <DailyAnswerCard
+                  key={candidate}
+                  label={candidate}
+                  state={cardStates.get(candidate) ?? 'idle'}
+                  disabled={inputLocked}
+                  onClaimStart={handleClaimStart}
+                  onClaim={handleClaim}
+                  testID={`daily-answer-${index}`}
+                  enterFromRecess
+                  castleArt
+                  enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
+                  roundKey={displayedDailySession.currentRoundIndex}
+                />
+              ))}
+          </DailyCastleStage>
 
           <Text style={styles.actionLabel}>
             {displayedDailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
@@ -1583,6 +1536,10 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   actionLabel: {
+    position: 'absolute',
+    bottom: 2,
+    alignSelf: 'center',
+    zIndex: 60,
     color: dailyChromeMaterial.actionLabel,
     fontFamily: FONTS.label,
     includeFontPadding: false,

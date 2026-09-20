@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
   Dimensions,
+  ImageBackground,
   PanResponder,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import Animated, {
@@ -20,6 +22,7 @@ import { Haptics } from '../utils/haptics';
 import { playSfx } from '../audio/sfx';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
 import DailyCardFace from './ui/DailyCardFace';
+import { FONTS } from '../constants/fonts';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
@@ -46,6 +49,8 @@ type Props = {
   onClaim: (label: string, origin: DailyAnswerCardClaimOrigin | null) => void;
   testID?: string;
   enterFromLeft?: boolean;
+  enterFromRecess?: boolean;
+  castleArt?: boolean;
   enterDelay?: number;
   roundKey?: string | number;
 };
@@ -70,6 +75,8 @@ export default function DailyAnswerCard({
   onClaim,
   testID,
   enterFromLeft = false,
+  enterFromRecess = false,
+  castleArt = false,
   enterDelay = 0,
   roundKey = 0,
 }: Props) {
@@ -82,6 +89,7 @@ export default function DailyAnswerCard({
   const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
+  const entryScale = useRef(new RNAnimated.Value(1)).current;
   const entryOpacity = useRef(new RNAnimated.Value(0)).current;
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -153,19 +161,28 @@ export default function DailyAnswerCard({
   useEffect(() => {
     const entryDistance = Dimensions.get('window').width * 0.7;
     entryTranslateX.stopAnimation();
+    entryScale.stopAnimation();
     entryOpacity.stopAnimation();
     if (reduceMotion !== false) {
       entryTranslateX.setValue(0);
+      entryScale.setValue(1);
       entryOpacity.setValue(1);
       return;
     }
-    entryTranslateX.setValue(enterFromLeft ? -entryDistance : entryDistance);
+    entryTranslateX.setValue(enterFromRecess ? 0 : enterFromLeft ? -entryDistance : entryDistance);
+    entryScale.setValue(enterFromRecess ? 0.75 : 1);
     entryOpacity.setValue(0);
 
     const timer = setTimeout(() => {
       RNAnimated.parallel([
         RNAnimated.spring(entryTranslateX, {
           toValue: 0,
+          friction: 8,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        RNAnimated.spring(entryScale, {
+          toValue: 1,
           friction: 8,
           tension: 100,
           useNativeDriver: true,
@@ -182,6 +199,8 @@ export default function DailyAnswerCard({
   }, [
     enterDelay,
     enterFromLeft,
+    enterFromRecess,
+    entryScale,
     entryOpacity,
     entryTranslateX,
     reduceMotion,
@@ -214,10 +233,13 @@ export default function DailyAnswerCard({
     if (state === 'correct') {
       gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
       rotation.value = 0;
-
-      opacity.value = 0;
-      // The scroll-owned transient copy is already mounted at this exact
-      // release position, so hiding the grid source does not create a gap.
+      translateY.value = withTiming(reduceMotion === false ? -130 : -20, {
+        duration: reduceMotion === false ? 380 : 120,
+        easing: ReaEasing.in(ReaEasing.cubic),
+      });
+      scale.value = withTiming(0.62, { duration: reduceMotion === false ? 380 : 120 });
+      opacity.value = withDelay(reduceMotion === false ? 190 : 0,
+        withTiming(0, { duration: reduceMotion === false ? 190 : 120 }));
       return;
     }
 
@@ -388,7 +410,7 @@ export default function DailyAnswerCard({
         (!activelyHeld && state === 'wrong') && styles.entryShellFailing,
         {
           opacity: entryOpacity,
-          transform: [{ translateX: entryTranslateX }],
+          transform: [{ translateX: entryTranslateX }, { scale: entryScale }],
         },
       ]}
     >
@@ -408,7 +430,19 @@ export default function DailyAnswerCard({
           cardAnimatedStyle,
         ]}
       >
-        <LinearGradient
+        {castleArt ? (
+          <ImageBackground
+            source={require('../../assets/images/dailycastle/answercard.png')}
+            resizeMode="stretch"
+            style={styles.castleCard}
+          >
+            {state === 'correct' && <View pointerEvents="none" style={styles.correctOverlay} />}
+            {state === 'wrong' && <View pointerEvents="none" style={styles.wrongOverlay} />}
+            <Text style={styles.castleCardText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+              {label.toUpperCase()}
+            </Text>
+          </ImageBackground>
+        ) : <LinearGradient
           colors={rimColors(state)}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -430,7 +464,7 @@ export default function DailyAnswerCard({
               <View pointerEvents="none" style={styles.disabledOverlay} />
             )}
           </View>
-        </LinearGradient>
+        </LinearGradient>}
       </Animated.View>
     </RNAnimated.View>
   );
@@ -465,6 +499,8 @@ export function DailySubmittedAnswerCard({
 }
 
 const styles = StyleSheet.create({
+  castleCard: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  castleCardText: { color: '#FFFFFF', fontFamily: FONTS.tileCopy, fontSize: 24, fontWeight: '800', textAlign: 'center' },
   entryShell: {
     // height comes from cardHeight (see render) — DEV-ONLY tuning default is
     // 64, matching this shell's old hardcoded value.
