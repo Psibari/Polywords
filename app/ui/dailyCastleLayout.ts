@@ -29,14 +29,14 @@ export const DAILY_CASTLE_LAYOUT = {
 
   // Six answer plaques, registered directly to the baked recess artwork.
   // These are full-screen reference coordinates on the 430 × 932 layout.
-  card: { width: 132, height: 53 },
+  card: { width: 128, height: 51 },
   answerSlots: [
-    { x: 48, y: 670 },
-    { x: 231, y: 673 },
-    { x: 50, y: 737 },
-    { x: 232, y: 738 },
-    { x: 47, y: 813 },
-    { x: 230, y: 813 },
+    { x: 57, y: 683 },
+    { x: 236, y: 687 },
+    { x: 54, y: 747 },
+    { x: 235, y: 752 },
+    { x: 52, y: 819 },
+    { x: 231, y: 819 },
   ],
 
   // Carved reward scale inside the opening.
