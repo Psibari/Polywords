@@ -46,7 +46,7 @@ const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropTyp
   shocked: POLLY_POSES.shocked,  // shocked (win)
 };
 const POSE_FLY = POLLY_POSES.fly; // fly-in entrance
-const DAILY_POLLY_SIZE = 160;
+const DAILY_POLLY_SIZE = 150;
 
 function getLine(
   reaction: Reaction | null,
@@ -295,13 +295,13 @@ const styles = StyleSheet.create({
     top: 0,
     height: 260,
     pointerEvents: 'none',
-    zIndex: 70,
-    elevation: 70,
+    zIndex: 90,
+    elevation: 90,
   },
   pollyWrap: {
     position: 'absolute',
-    left: -55,
-    top: 50,
+    left: -70,
+    top: -15,
     width: DAILY_POLLY_SIZE,
     height: DAILY_POLLY_SIZE,
   },
