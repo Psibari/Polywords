@@ -8,8 +8,8 @@ import { DAILY_POOL } from '../game/dailyPool';
 import DailyCardFace from './ui/DailyCardFace';
 import { PollyPerchRig } from './PollyPerchRig';
 
-const castleArt = require('../../assets/images/dailycastle/dcscreen2rev.png');
-const gateArt = require('../../assets/images/dailycastle/stoneslab.png');
+const castleArt = require('../../assets/images/dailycastle/answerwall.png');
+const gateArt = require('../../assets/images/dailycastle/stonegate.png');
 
 type Props = {
   word: 'HIT' | 'HOOD';

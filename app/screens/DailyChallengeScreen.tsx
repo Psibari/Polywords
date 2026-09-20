@@ -75,16 +75,22 @@ import DailyAnswerCard, {
 import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
 import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
-import QuillScrollPanel from '../components/ui/QuillScrollPanel';
+import DailyGate from '../components/DailyGate';
+import FeatherWall from '../components/FeatherWall';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
+import DailyAssetAudit from '../components/DailyAssetAudit';
 import {
   usePollyAmbientMotion,
   useReducedMotionPreference,
 } from '../hooks/usePollyAmbientMotion';
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
+
+// Gate dimensions — from stonegate.png aspect ratio (816x1056)
+const GATE_WIDTH = 340;
+const GATE_HEIGHT = GATE_WIDTH * (1056 / 816);
 
 // Full corrected-claim sequence, settle through next-clue-visible:
 // settle 460 -> landed 140 -> ink 350 -> ink hold 400 -> cover 560 ->
@@ -129,7 +135,7 @@ type SubmittedDailyAnswer = {
   height: number;
 };
 
-const stoneTileTexture = require('../../assets/images/textures/stoneTile.png');
+const CASTLE_ARCH = require('../../assets/images/dailycastle/arch2.png');
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 function toPerchReaction(
@@ -646,6 +652,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // (not read from the store) so it can't race the session update.
   const [revealSolvedCount, setRevealSolvedCount] = useState(0);
 
+  // DEV: Asset audit viewer
+  const [assetAuditVisible, setAssetAuditVisible] = useState(false);
+
   function setLocked(val: boolean) {
     inputLockedRef.current = val;
     setInputLocked(val);
@@ -671,6 +680,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const rollProgress   = useRef(new Animated.Value(0)).current;
 
   const revealProgress = useRef(new Animated.Value(0)).current;
+
+  // Gate position: 1 = fully down (showing clues), 0 = fully up (hidden)
+  const gatePosition = useRef(new Animated.Value(1)).current;
 
   const completedRef = useRef(false);
   const roundStartRef = useRef<number>(Date.now());
@@ -1001,6 +1013,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     completingCandidateRef.current = null;
     setPhysicalClaimPhase('idle');
 
+    // Animate gate back down for the next round
+    const gateDropMs = reduceMotion !== false ? 0 : 350;
+    if (gateDropMs > 0) {
+      Animated.timing(gatePosition, {
+        toValue: 1,
+        duration: gateDropMs,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      gatePosition.setValue(1);
+    }
+
     const committedSession = dailySessionRef.current;
     if (committedSession?.status === 'active') {
       completedRef.current = false;
@@ -1015,147 +1040,47 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     candidate: string,
     origin: DailyAnswerCardClaimOrigin | null,
   ) {
-    const { startX, startY, width, height } =
-      createDailySubmittedAnswerLayout(origin, clueFrameRef.current, cardHeight);
-
     clearCorrectTransitionTimers();
-    submittedProgress.stopAnimation();
-    submittedProgress.setValue(0);
-    revealProgress.stopAnimation();
-    revealProgress.setValue(0);
-    inkProgress.stopAnimation();
-    inkProgress.setValue(0);
-    setSubmittedAnswer({ label: candidate, startX, startY, width, height });
     setPhysicalClaimPhase('settling');
 
-    const settleMs = reduceMotion !== false
-      ? DAILY_SCROLL_TRANSITION.reducedSettleMs
-      : DAILY_SCROLL_TRANSITION.settleMs;
-    const landedHoldMs = reduceMotion !== false
-      ? DAILY_SCROLL_TRANSITION.reducedLandedHoldMs
-      : DAILY_SCROLL_TRANSITION.landedHoldMs;
-    const inkMs = reduceMotion !== false
-      ? DAILY_SCROLL_TRANSITION.reducedInkMs
-      : DAILY_SCROLL_TRANSITION.inkMs;
-    const inkHoldMs = reduceMotion !== false
-      ? DAILY_SCROLL_TRANSITION.reducedInkHoldMs
-      : DAILY_SCROLL_TRANSITION.inkHoldMs;
-    const coverDownMs = reduceMotion !== false
-      ? DAILY_SCROLL_TRANSITION.reducedCoverDownMs
-      : DAILY_SCROLL_TRANSITION.coverDownMs;
-    const rewardHoldMs = reduceMotion !== false
-      ? DAILY_SCROLL_TRANSITION.reducedRewardHoldMs
-      : DAILY_SCROLL_TRANSITION.rewardHoldMs;
-    const revealMs = reduceMotion !== false
-      ? DAILY_SCROLL_TRANSITION.reducedRevealMs
-      : DAILY_SCROLL_TRANSITION.revealMs;
+    const gateRiseMs = reduceMotion !== false ? 120 : 400;
+    const gatePauseMs = reduceMotion !== false ? 80 : 500;
+    const gateDropMs = reduceMotion !== false ? 120 : 400;
 
-    const revealNextClue = () => {
+    // Phase 1: Gate rises up (revealing feather wall behind)
+    const gateRiseComplete = () => {
       if (completingCandidateRef.current !== candidate) return;
-      setPhysicalClaimPhase('revealing');
-      // BLOCKED: no paper-roll asset yet. See sfx.ts's SFX registration note.
-      // playSfx('scrollPaperRoll');
-      Animated.timing(revealProgress, {
-        toValue: 0,
-        duration: revealMs,
-        easing: Easing.bezier(0.23, 1, 0.32, 1),
-        useNativeDriver: false,
-      }).start(({ finished }) => {
-        if (finished) finishPhysicalCorrectTransition(candidate);
-      });
+      setPhysicalClaimPhase('landed');
+      Haptics.cueAsync('dailyRodStop');
+      // Brief pause showing the feather on the wall
+      scheduleCorrectTransition(gateDropComplete, gatePauseMs);
     };
 
-    const showReward = () => {
+    // Phase 2: Gate drops back down for next round
+    const gateDropComplete = () => {
       if (completingCandidateRef.current !== candidate) return;
       setPhysicalClaimPhase('reward');
       finishClaimPresentation(candidate);
-      setSubmittedAnswer(null);
-      scheduleCorrectTransition(revealNextClue, rewardHoldMs);
+      finishPhysicalCorrectTransition(candidate);
     };
 
-    const coverSubmittedAnswer = () => {
-      if (completingCandidateRef.current !== candidate) return;
-      setPhysicalClaimPhase('covering');
-      // BLOCKED: no paper-unroll asset yet. See sfx.ts's SFX registration note.
-      // playSfx('scrollPaperRoll');
-      Animated.timing(revealProgress, {
-        toValue: 1,
-        duration: coverDownMs,
-        easing: Easing.bezier(0.23, 1, 0.32, 1),
-        useNativeDriver: false,
-      }).start(({ finished }) => {
-        // Matches the settle completion's guard below: without the
-        // candidate check, an abort path that reassigns
-        // completingCandidateRef without stopping this exact animation
-        // could fire the haptic for a claim that no longer exists.
-        if (!finished || completingCandidateRef.current !== candidate) return;
-        Haptics.cueAsync('dailyRodStop');
-        // BLOCKED: no rod-knock asset yet. See sfx.ts's SFX registration note.
-        // playSfx('scrollRodKnock');
-        showReward();
-      });
-    };
-
-    // The card stops being a card here: its leather and gold rim fade out
-    // (QuillScrollPanel's cardChromeOpacity) while the word resolves into
-    // the clues' own typeface and ink (DailyInkedWord). Opacity + transform
-    // only, so this is the one leg of the whole sequence allowed to run on
-    // the native driver — revealProgress/unrollHeight drive height and must
-    // never be mixed with this value.
-    const inkSubmittedAnswer = () => {
-      if (completingCandidateRef.current !== candidate) return;
-      Haptics.cueAsync('dailyInkPress');
-      // BLOCKED: no ink-stamp asset yet. See sfx.ts's SFX registration note.
-      // playSfx('inkStamp');
-      setPhysicalClaimPhase('inking');
-      Animated.timing(inkProgress, {
-        toValue: 1,
-        duration: inkMs,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        // Same guard as its two siblings (the settle and cover completions):
-        // an abort path that reassigns completingCandidateRef without
-        // stopping this exact animation must not schedule the next leg for a
-        // claim that no longer exists.
-        if (!finished || completingCandidateRef.current !== candidate) return;
-        scheduleCorrectTransition(coverSubmittedAnswer, inkHoldMs);
-      });
-    };
-
+    // Animate gate up
     requestAnimationFrame(() => {
-      Animated.timing(submittedProgress, {
-        toValue: 1,
-        duration: settleMs,
+      Animated.timing(gatePosition, {
+        toValue: 0,
+        duration: gateRiseMs,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start(({ finished }) => {
-        if (!finished || completingCandidateRef.current !== candidate) return;
-        setPhysicalClaimPhase('landed');
-        if (reduceMotion === false) {
-          intakeScale.setValue(1);
-          Animated.sequence([
-            Animated.timing(intakeScale, {
-              toValue: 1.045,
-              duration: 120,
-              useNativeDriver: true,
-            }),
-            Animated.timing(intakeScale, {
-              toValue: 1,
-              duration: 180,
-              useNativeDriver: true,
-            }),
-          ]).start();
-        }
-        scheduleCorrectTransition(inkSubmittedAnswer, landedHoldMs);
+        if (finished) gateRiseComplete();
       });
     });
 
-    const totalMs =
-      settleMs + landedHoldMs + inkMs + inkHoldMs + coverDownMs + rewardHoldMs + revealMs;
+    // Total timeout as safety net
+    const totalMs = gateRiseMs + gatePauseMs + gateDropMs + 600;
     scheduleCorrectTransition(
       () => finishPhysicalCorrectTransition(candidate),
-      totalMs + 600,
+      totalMs,
     );
   }
 
@@ -1213,12 +1138,46 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       return;
     }
 
-    // Wrong
+    // Wrong — quick pop on the gate (not a full rise)
     setLocked(true);
     setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
     Haptics.cueAsync('wrong');
     playSfx('trapWrong');
     beginClaimPresentation(dailySession, candidate, 'wrong');
+
+    // Gate pop: quick jolt up and back down
+    if (reduceMotion !== false) {
+      // Reduced motion: just a tiny scale pulse
+      Animated.sequence([
+        Animated.timing(intakeScale, {
+          toValue: 0.97,
+          duration: 60,
+          useNativeDriver: true,
+        }),
+        Animated.timing(intakeScale, {
+          toValue: 1,
+          duration: 80,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Full motion: quick gate pop (up a little, then back)
+      Animated.sequence([
+        Animated.timing(gatePosition, {
+          toValue: 0.88,
+          duration: 80,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(gatePosition, {
+          toValue: 1,
+          duration: 120,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+
     const wrongExitMs = reduceMotion !== false
       ? DAILY_CARD_TIMING.reducedWrongExitMs
       : DAILY_CARD_TIMING.wrongExitMs;
@@ -1311,6 +1270,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       <SafeAreaView style={styles.content}>
       {isReadyToStart && (
         <View style={styles.startGate}>
+          <Image
+            source={CASTLE_ARCH}
+            style={styles.startArch}
+            resizeMode="contain"
+          />
           <View style={styles.startCard}>
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
@@ -1360,83 +1324,78 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             />
           </Animated.View>
 
-          {headerVisible && (
-            <View style={styles.clueHeaderRow}>
-              <Text style={styles.clueHeaderLabel}>{DAILY_CLUE_TITLE}</Text>
-              <Text style={styles.clueHeaderRule}>{DAILY_CLUE_RULE}</Text>
-            </View>
-          )}
+          {/* LAYERED CASTLE LAYOUT (back to front):
+              1. Feather wall (behind gate, visible when gate rises)
+              2. Gate (drops down through arch opening, behind arch)
+              3. Arch (the frame at top, in front of gate)
+              4. Answer wall (bottom, where cards emerge)
+              5. Cards (2×3 grid on answer wall)
+          */}
 
+          {/* Layer 1: Feather wall — behind everything, visible when gate rises */}
+          <FeatherWall
+            featherCount={revealSolvedCount > 0 && revealSolvedCount < DAILY_ROUND_COUNT ? revealSolvedCount : 0}
+            showGold={revealSolvedCount === DAILY_ROUND_COUNT}
+          />
+
+          {/* Layer 2: Stone gate — drops down behind the arch, shows clues */}
           <Animated.View
             onLayout={measureClueTarget}
             style={[
-              styles.clueVaultWrap,
+              styles.gateBehindArch,
               { transform: [{ scale: intakeScale }] },
             ]}
           >
-            <QuillScrollPanel
-              ref={clueVaultRef}
-              rollProgress={rollProgress}
-              revealProgress={revealProgress}
-              revealPerfect={revealSolvedCount === DAILY_ROUND_COUNT}
-              revealFeatherCount={
-                revealSolvedCount > 0 && revealSolvedCount < DAILY_ROUND_COUNT
-                  ? revealSolvedCount
-                  : undefined
-              }
-              submittedAnswer={submittedAnswer}
-              submittedProgress={submittedProgress}
-              inkProgress={inkProgress}
-              revealedClueCount={revealedCount}
-              contracted={clueStackContracted}
-              claimPhase={claimPhase}
-            >
-              {currentRound && !hideCompletedClueUnderlay && (
-                <ClueStage
-                  clues={currentRound.word.clues}
-                  revealedCount={revealedCount}
-                  contracted={clueStackContracted}
-                />
-              )}
-            </QuillScrollPanel>
+            <DailyGate
+              gatePosition={gatePosition}
+              clues={currentRound?.word.clues ?? []}
+              revealedCount={revealedCount}
+              width={GATE_WIDTH}
+            />
           </Animated.View>
-          <Text style={styles.speedPrompt}>{clueSpeedPrompt}</Text>
+
+          {/* Layer 3: Castle arch — the frame at top, in front of gate */}
+          <Image
+            source={CASTLE_ARCH}
+            style={styles.castleArch}
+            resizeMode="cover"
+          />
+
+          {/* Layer 4: Answer wall — bottom area where cards emerge */}
+          <Image
+            source={require('../../assets/images/dailycastle/answerwall.png')}
+            style={styles.answerWallImage}
+            resizeMode="cover"
+          />
+
+          {/* Layer 5: Answer cards — 2×3 grid, bricks from the wall */}
+          <View style={styles.cardArea}>
+            <View
+              key={`grid-${displayedDailySession.currentRoundIndex}`}
+              style={styles.cardGrid}
+            >
+              {currentRound &&
+                [...currentRound.candidates].map((candidate, index) => (
+                  <DailyAnswerCard
+                    key={candidate}
+                    label={candidate}
+                    state={cardStates.get(candidate) ?? 'idle'}
+                    disabled={inputLocked}
+                    onClaimStart={handleClaimStart}
+                    onClaim={handleClaim}
+                    testID={`daily-answer-${index}`}
+                    enterFromLeft={index % 2 === 0}
+                    enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
+                    roundKey={displayedDailySession.currentRoundIndex}
+                  />
+                ))}
+            </View>
+          </View>
+
           <Text style={styles.actionLabel}>
             {displayedDailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
             {DAILY_ACTION_RULE}
           </Text>
-
-          <View style={styles.cardArea}>
-            {/* Candidate board -- the surface the six cards rest on, so they
-                read as laid out on Polly's board instead of floating. */}
-            <ImageBackground
-              source={stoneTileTexture}
-              resizeMode="repeat"
-              style={styles.cardBoard}
-              imageStyle={styles.cardBoardTexture}
-            >
-              <View
-                key={`grid-${displayedDailySession.currentRoundIndex}`}
-                style={styles.cardGrid}
-              >
-                {currentRound &&
-                  [...currentRound.candidates].map((candidate, index) => (
-                    <DailyAnswerCard
-                      key={candidate}
-                      label={candidate}
-                      state={cardStates.get(candidate) ?? 'idle'}
-                      disabled={inputLocked}
-                      onClaimStart={handleClaimStart}
-                      onClaim={handleClaim}
-                      testID={`daily-answer-${index}`}
-                      enterFromLeft={index % 2 === 0}
-                      enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
-                      roundKey={displayedDailySession.currentRoundIndex}
-                    />
-                  ))}
-              </View>
-            </ImageBackground>
-          </View>
         </>
       )}
 
@@ -1461,6 +1420,21 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           <Text style={styles.devResetText}>DEV - RESET DAILY</Text>
         </Pressable>
       )}
+
+      {__DEV__ && (
+        <Pressable
+          onPress={() => setAssetAuditVisible(true)}
+          style={[styles.devResetBtn, { right: 14, bottom: 70 }]}
+        >
+          <Text style={styles.devResetText}>ASSET AUDIT</Text>
+        </Pressable>
+      )}
+
+      <DailyAssetAudit
+        visible={assetAuditVisible}
+        onClose={() => setAssetAuditVisible(false)}
+      />
+
       </SafeAreaView>
     </View>
   );
@@ -1489,16 +1463,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
+  startArch: {
+    width: '80%',
+    height: 160,
+    marginBottom: -20,
+    zIndex: 1,
+  },
   startCard: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: 24,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 2,
     borderColor: dailyScrollMaterial.goldTrim,
-    backgroundColor: dailyResultsMaterial.cardBg,
+    backgroundColor: 'rgba(26,24,48,0.92)',
     paddingHorizontal: 24,
     paddingVertical: 28,
     alignItems: 'center',
+    // Stone wall texture behind the card
+    overflow: 'hidden',
   },
   startKicker: {
     color: dailyResultsMaterial.challengeLabel,
@@ -1570,11 +1552,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 2,
   },
-  clueVaultWrap: {
-    // Above cardArea's zIndex: 4 so the correct tile visually ducks into the
-    // panel as it flies up, instead of hovering in front of it the whole way.
-    zIndex: 40,
-    elevation: 40,
+  // Castle arch — front frame at top, in front of gate
+  castleArch: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 280,
+    zIndex: 50,
+    elevation: 50,
+  },
+  // Gate — behind the arch, drops down through its opening
+  gateBehindArch: {
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 30,
+    elevation: 30,
+  },
+  // Answer wall — bottom area where cards emerge from
+  answerWallImage: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 320,
+    zIndex: 10,
+    elevation: 10,
   },
   actionLabel: {
     color: dailyChromeMaterial.actionLabel,
@@ -1597,22 +1603,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   cardArea: {
-    marginHorizontal: 20,
-    marginTop: 2,
-    paddingBottom: 210,
-    position: 'relative',
-    zIndex: 4,
-    elevation: 4,
-  },
-  cardBoard: {
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: dailyChromeMaterial.cardBoardBorder,
-    padding: 10,
-    overflow: 'visible',
-  },
-  cardBoardTexture: {
-    borderRadius: 26,
+    position: 'absolute',
+    bottom: 40,
+    left: 16,
+    right: 16,
+    zIndex: 40,
+    elevation: 40,
   },
   cardGrid: {
     flexDirection: 'row',
@@ -1812,12 +1808,14 @@ const res = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: dailyResultsMaterial.cardBg,
-    borderRadius: 24,
+    backgroundColor: 'rgba(26,24,48,0.94)',
+    borderRadius: 16,
     borderWidth: 2,
     padding: 20,
     alignItems: 'center',
     gap: 4,
+    // Stone wall border effect
+    borderColor: 'rgba(245,200,66,0.4)',
   },
   cardWin: {
     borderColor: dailyResultsMaterial.cardBorderWin,
