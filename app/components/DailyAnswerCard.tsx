@@ -94,6 +94,7 @@ export default function DailyAnswerCard({
   const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
+  const entryTranslateY = useRef(new RNAnimated.Value(0)).current;
   const entryScale = useRef(new RNAnimated.Value(1)).current;
   const entryOpacity = useRef(new RNAnimated.Value(0)).current;
   const translateX = useSharedValue(0);
@@ -166,17 +167,20 @@ export default function DailyAnswerCard({
   useEffect(() => {
     const entryDistance = Dimensions.get('window').width * 0.7;
     entryTranslateX.stopAnimation();
+    entryTranslateY.stopAnimation();
     entryScale.stopAnimation();
     entryOpacity.stopAnimation();
     if (reduceMotion !== false) {
       entryTranslateX.setValue(0);
+      entryTranslateY.setValue(0);
       entryScale.setValue(1);
       entryOpacity.setValue(1);
       return;
     }
     entryTranslateX.setValue(enterFromRecess ? 0 : enterFromLeft ? -entryDistance : entryDistance);
-    entryScale.setValue(enterFromRecess ? 0.75 : 1);
-    entryOpacity.setValue(0);
+    entryTranslateY.setValue(enterFromRecess ? 24 * castleScale : 0);
+    entryScale.setValue(enterFromRecess ? 0.9 : 1);
+    entryOpacity.setValue(enterFromRecess ? 0.35 : 0);
 
     const timer = setTimeout(() => {
       RNAnimated.parallel([
@@ -186,10 +190,16 @@ export default function DailyAnswerCard({
           tension: 100,
           useNativeDriver: true,
         }),
+        RNAnimated.spring(entryTranslateY, {
+          toValue: 0,
+          friction: 9,
+          tension: 95,
+          useNativeDriver: true,
+        }),
         RNAnimated.spring(entryScale, {
           toValue: 1,
-          friction: 8,
-          tension: 100,
+          friction: 9,
+          tension: 95,
           useNativeDriver: true,
         }),
         RNAnimated.timing(entryOpacity, {
@@ -205,9 +215,11 @@ export default function DailyAnswerCard({
     enterDelay,
     enterFromLeft,
     enterFromRecess,
+    castleScale,
     entryScale,
     entryOpacity,
     entryTranslateX,
+    entryTranslateY,
     reduceMotion,
     roundKey,
   ]);
@@ -425,7 +437,11 @@ export default function DailyAnswerCard({
         (!activelyHeld && state === 'wrong') && styles.entryShellFailing,
         {
           opacity: entryOpacity,
-          transform: [{ translateX: entryTranslateX }, { scale: entryScale }],
+          transform: [
+            { translateX: entryTranslateX },
+            { translateY: entryTranslateY },
+            { scale: entryScale },
+          ],
         },
       ]}
     >
