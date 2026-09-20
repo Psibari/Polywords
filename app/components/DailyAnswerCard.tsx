@@ -283,7 +283,10 @@ export default function DailyAnswerCard({
       translateY.value = withSpring(0);
       scale.value = withSpring(0.96);
       rotation.value = withSpring(0);
-      opacity.value = withTiming(dailyCardMaterial.disabledOpacity, { duration: 180 });
+      // In the castle layout, a wrong candidate should leave an empty recess.
+      // The legacy Daily grid intentionally kept disabled cards ghosted at 42%,
+      // which made a rejected word reappear after its fall animation.
+      opacity.value = withTiming(castleArt ? 0 : dailyCardMaterial.disabledOpacity, { duration: 180 });
       gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
       return;
     }
@@ -294,7 +297,7 @@ export default function DailyAnswerCard({
     scale.value = withSpring(1);
     rotation.value = withSpring(0);
     opacity.value = withTiming(1, { duration: 120 });
-  }, [gripGlow, opacity, reduceMotion, rotation, scale, state, translateX, translateY]);
+  }, [castleArt, gripGlow, opacity, reduceMotion, rotation, scale, state, translateX, translateY]);
 
   const panResponder = useRef(
     PanResponder.create({
