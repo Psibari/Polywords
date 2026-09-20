@@ -20,7 +20,10 @@ export const DAILY_CASTLE_REFERENCE = {
 
 export const DAILY_CASTLE_LAYOUT = {
   arch: { x: 0, y: 126, width: 430, height: 530 },
-  opening: { x: 79, y: 202, width: 272, height: 352 },
+  // Exact transparent doorway cutout in the approved 1290 × 1590 arch.
+  // Source bounds: x 290..1027, y 277..1339. At 3× that maps 1:1
+  // into the logical phone composition below.
+  opening: { x: 290 / 3, y: 126 + 277 / 3, width: 737 / 3, height: 1062 / 3 },
   answerWall: { x: 0, y: 600, width: 430, height: 300 },
   answerRecesses: { x: 0, y: 600, width: 430, height: 300 },
 
@@ -37,14 +40,14 @@ export const DAILY_CASTLE_LAYOUT = {
   // Reserved composition zone, not a hard Polly crop.
   pollyClearance: { x: 22, y: 128, width: 108, height: 158 },
 
-  // Four reference points beyond the opening height guarantees a clean hide.
+  // Two reference points beyond the opening height guarantees a clean hide.
   gateOpenTravel: 356,
 } as const;
 
 export const DAILY_CASTLE_EXPORT_3X = {
   squarearch: { width: 1290, height: 1590 },
-  gate: { width: 816, height: 1056 },
-  featherwall: { width: 816, height: 1056 },
+  gate: { width: 737, height: 1062 },
+  featherwall: { width: 737, height: 1062 },
   answerwall: { width: 1290, height: 900 },
   answerRecesses: { width: 1290, height: 900 },
   answercard: { width: 480, height: 192 },

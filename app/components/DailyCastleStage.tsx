@@ -17,7 +17,6 @@ import {
 } from '../ui/dailyCastleLayout';
 
 const SQUARE_ARCH = require('../../assets/images/dailycastle/squarearch.png');
-const ANSWER_WALL = require('../../assets/images/dailycastle/answerwall.png');
 const ANSWER_RECESSES = require('../../assets/images/dailycastle/answerwqallrecesses.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 
@@ -89,11 +88,6 @@ export default function DailyCastleStage({
       />
 
       <Image
-        source={ANSWER_WALL}
-        style={[styles.layer, styles.answerWall, rect(DAILY_CASTLE_LAYOUT.answerWall)]}
-        resizeMode="stretch"
-      />
-      <Image
         source={ANSWER_RECESSES}
         style={[styles.layer, styles.answerRecesses, rect(DAILY_CASTLE_LAYOUT.answerRecesses)]}
         resizeMode="stretch"
@@ -141,10 +135,6 @@ const styles = StyleSheet.create({
   arch: {
     zIndex: 50,
     elevation: 50,
-  },
-  answerWall: {
-    zIndex: 10,
-    elevation: 10,
   },
   answerRecesses: {
     zIndex: 11,
