@@ -46,6 +46,7 @@ const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropTyp
   shocked: POLLY_POSES.shocked,  // shocked (win)
 };
 const POSE_FLY = POLLY_POSES.fly; // fly-in entrance
+const DAILY_POLLY_SIZE = 160;
 
 function getLine(
   reaction: Reaction | null,
@@ -273,7 +274,7 @@ export default function PollyDailyPerch({ reaction, rivalryState, show = true }:
         {POLLY_PERCH_RIG_ENABLED && pose === POSE.idle ? (
           // 288 must track styles.pollyImage — StyleSheet.create() returns
           // opaque style IDs, not readable objects, so it can't be sourced live.
-          <PollyPerchRig size={288} reduceMotion={reduceMotion} />
+          <PollyPerchRig size={DAILY_POLLY_SIZE} reduceMotion={reduceMotion} />
         ) : (
           <Image
             source={pose}
@@ -294,19 +295,19 @@ const styles = StyleSheet.create({
     top: 0,
     height: 260,
     pointerEvents: 'none',
-    zIndex: 45,
-    elevation: 45,
+    zIndex: 70,
+    elevation: 70,
   },
   pollyWrap: {
     position: 'absolute',
-    left: -130,
+    left: -55,
     top: 50,
-    width: 230,
-    height: 230,
+    width: DAILY_POLLY_SIZE,
+    height: DAILY_POLLY_SIZE,
   },
   pollyImage: {
-    width: 230,
-    height: 230,
+    width: DAILY_POLLY_SIZE,
+    height: DAILY_POLLY_SIZE,
   },
   bubbleWrap: {
     position: 'absolute',
