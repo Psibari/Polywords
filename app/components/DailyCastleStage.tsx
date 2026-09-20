@@ -1,7 +1,20 @@
 import React from 'react';
-import { Animated, Image, StyleSheet, View } from 'react-native';
+import {
+  Animated,
+  Image,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DailyGate from './DailyGate';
 import FeatherWall from './FeatherWall';
+import {
+  DAILY_CASTLE_LAYOUT,
+  DailyCastleRect,
+  resolveDailyCastleScale,
+  resolveDailyCastleXOffset,
+} from '../ui/dailyCastleLayout';
 
 const SQUARE_ARCH = require('../../assets/images/dailycastle/squarearch.png');
 const ANSWER_WALL = require('../../assets/images/dailycastle/answerwall.png');
@@ -18,35 +31,136 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** Fixed castle layers; only the gate and the answer cards move. */
+/** Fixed castle layers; only the gate and answer cards move. */
 export default function DailyCastleStage({
-  gatePosition, clues, revealedCount, solvedCount,
-  roundKey, onGateLayout, children,
+  gatePosition,
+  clues,
+  revealedCount,
+  solvedCount,
+  roundKey,
+  onGateLayout,
+  children,
 }: Props) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const scale = resolveDailyCastleScale(windowWidth, windowHeight);
+  const xOffset = resolveDailyCastleXOffset(windowWidth, scale);
+
+  const rect = (target: DailyCastleRect) => ({
+    left: xOffset + target.x * scale,
+    top: target.y * scale - insets.top,
+    width: target.width * scale,
+    height: target.height * scale,
+  });
+
+  const opening = DAILY_CASTLE_LAYOUT.opening;
+  const cardGrid = DAILY_CASTLE_LAYOUT.cardGrid;
+
   return (
     <View pointerEvents="box-none" style={styles.stage}>
-      <Image source={FEATHER_WALL} style={styles.featherWall} resizeMode="stretch" />
-      <FeatherWall featherCount={Math.min(solvedCount, 4)} showGold={solvedCount === 5} />
-      <View onLayout={onGateLayout} style={styles.gate}>
-        <DailyGate gatePosition={gatePosition} clues={clues} revealedCount={revealedCount} width={340} />
+      <View style={[styles.opening, rect(opening)]}>
+        <Image
+          source={FEATHER_WALL}
+          style={StyleSheet.absoluteFill}
+          resizeMode="stretch"
+        />
+        <FeatherWall
+          featherCount={Math.min(solvedCount, 4)}
+          showGold={solvedCount === 5}
+          scale={scale}
+        />
+        <View onLayout={onGateLayout} style={styles.gate}>
+          <DailyGate
+            gatePosition={gatePosition}
+            clues={clues}
+            revealedCount={revealedCount}
+            width={opening.width * scale}
+            height={opening.height * scale}
+            openTravel={DAILY_CASTLE_LAYOUT.gateOpenTravel * scale}
+            scale={scale}
+          />
+        </View>
       </View>
-      <Image source={SQUARE_ARCH} style={styles.arch} resizeMode="stretch" />
-      <Image source={ANSWER_WALL} style={styles.answerWall} resizeMode="stretch" />
-      <Image source={ANSWER_RECESSES} style={styles.answerRecesses} resizeMode="stretch" />
-      <View pointerEvents="box-none" style={styles.cardArea}>
-        <View key={`grid-${roundKey}`} style={styles.cardGrid}>{children}</View>
+
+      <Image
+        source={SQUARE_ARCH}
+        style={[styles.layer, styles.arch, rect(DAILY_CASTLE_LAYOUT.arch)]}
+        resizeMode="stretch"
+      />
+
+      <Image
+        source={ANSWER_WALL}
+        style={[styles.layer, styles.answerWall, rect(DAILY_CASTLE_LAYOUT.answerWall)]}
+        resizeMode="stretch"
+      />
+      <Image
+        source={ANSWER_RECESSES}
+        style={[styles.layer, styles.answerRecesses, rect(DAILY_CASTLE_LAYOUT.answerRecesses)]}
+        resizeMode="stretch"
+      />
+
+      <View
+        pointerEvents="box-none"
+        style={[styles.cardArea, rect(cardGrid)]}
+      >
+        <View
+          key={`grid-${roundKey}`}
+          style={[
+            styles.cardGrid,
+            {
+              columnGap: DAILY_CASTLE_LAYOUT.cardColumnGap * scale,
+              rowGap: DAILY_CASTLE_LAYOUT.cardRowGap * scale,
+            },
+          ]}
+        >
+          {children}
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  stage: { position: 'absolute', top: 60, right: 0, bottom: 0, left: 0 },
-  featherWall: { position: 'absolute', top: 80, left: 0, right: 0, height: 300, zIndex: 15 },
-  arch: { position: 'absolute', top: 0, left: 0, right: 0, height: 370, zIndex: 50 },
-  gate: { position: 'absolute', top: 80, left: 0, right: 0, alignItems: 'center', zIndex: 30 },
-  answerWall: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 320, zIndex: 10 },
-  answerRecesses: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 320, zIndex: 11 },
-  cardArea: { position: 'absolute', bottom: 40, left: 16, right: 16, zIndex: 40 },
-  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, justifyContent: 'center' },
+  stage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  layer: {
+    position: 'absolute',
+  },
+  opening: {
+    position: 'absolute',
+    overflow: 'hidden',
+    zIndex: 20,
+    elevation: 20,
+  },
+  gate: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 3,
+    elevation: 3,
+  },
+  arch: {
+    zIndex: 50,
+    elevation: 50,
+  },
+  answerWall: {
+    zIndex: 10,
+    elevation: 10,
+  },
+  answerRecesses: {
+    zIndex: 11,
+    elevation: 11,
+  },
+  cardArea: {
+    position: 'absolute',
+    zIndex: 40,
+    elevation: 40,
+  },
+  cardGrid: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignContent: 'flex-start',
+    justifyContent: 'flex-start',
+  },
 });

@@ -10,14 +10,61 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
+import {
+  DAILY_CASTLE_EXPORT_3X,
+  DAILY_CASTLE_LAYOUT,
+} from '../ui/dailyCastleLayout';
 
 const ASSETS = [
-  { name: 'squarearch.png', source: require('../../assets/images/dailycastle/squarearch.png'), note: 'Square Arch' },
-  { name: 'gate.png', source: require('../../assets/images/dailycastle/gate.png'), note: 'Gate/portcullis' },
-  { name: 'featherwall.png', source: require('../../assets/images/dailycastle/featherwall.png'), note: 'Feather wall' },
-  { name: 'stonefeather.png', source: require('../../assets/images/dailycastle/stonefeather.png'), note: 'Individual feather' },
-  { name: 'answerwall.png', source: require('../../assets/images/dailycastle/answerwall.png'), note: 'Answer card wall' },
-  { name: 'answercard.png', source: require('../../assets/images/dailycastle/answercard.png'), note: 'Answer card brick' },
+  {
+    name: 'squarearch.png',
+    source: require('../../assets/images/dailycastle/squarearch.png'),
+    note: 'Square Arch',
+    logical: DAILY_CASTLE_LAYOUT.arch,
+    export3x: DAILY_CASTLE_EXPORT_3X.squarearch,
+  },
+  {
+    name: 'gate.png',
+    source: require('../../assets/images/dailycastle/gate.png'),
+    note: 'Gate / clue face',
+    logical: DAILY_CASTLE_LAYOUT.opening,
+    export3x: DAILY_CASTLE_EXPORT_3X.gate,
+  },
+  {
+    name: 'featherwall.png',
+    source: require('../../assets/images/dailycastle/featherwall.png'),
+    note: 'Feather wall behind gate',
+    logical: DAILY_CASTLE_LAYOUT.opening,
+    export3x: DAILY_CASTLE_EXPORT_3X.featherwall,
+  },
+  {
+    name: 'stonefeather.png',
+    source: require('../../assets/images/dailycastle/stonefeather.png'),
+    note: 'Individual stone feather',
+    logical: DAILY_CASTLE_LAYOUT.stoneFeather,
+    export3x: DAILY_CASTLE_EXPORT_3X.stonefeather,
+  },
+  {
+    name: 'answerwall.png',
+    source: require('../../assets/images/dailycastle/answerwall.png'),
+    note: 'Edge-to-edge answer wall',
+    logical: DAILY_CASTLE_LAYOUT.answerWall,
+    export3x: DAILY_CASTLE_EXPORT_3X.answerwall,
+  },
+  {
+    name: 'answerwqallrecesses.png',
+    source: require('../../assets/images/dailycastle/answerwqallrecesses.png'),
+    note: 'Answer recess overlay',
+    logical: DAILY_CASTLE_LAYOUT.answerRecesses,
+    export3x: DAILY_CASTLE_EXPORT_3X.answerRecesses,
+  },
+  {
+    name: 'answercard.png',
+    source: require('../../assets/images/dailycastle/answercard.png'),
+    note: 'Answer card',
+    logical: DAILY_CASTLE_LAYOUT.card,
+    export3x: DAILY_CASTLE_EXPORT_3X.answercard,
+  },
 ] as const;
 
 type Props = {
@@ -33,27 +80,33 @@ export default function DailyAssetAudit({ visible, onClose }: Props) {
   if (!visible) return null;
 
   const asset = ASSETS[index];
-  // Show at natural size, scaled to fit screen
-  const scale = Math.min(W * 0.9 / 800, H * 0.6 / 800);
+  const scale = Math.min(
+    (W * 0.9) / asset.logical.width,
+    (H * 0.52) / asset.logical.height,
+  );
 
   return (
     <View style={styles.overlay}>
-      {/* Asset display */}
       <View style={styles.assetArea}>
         <Image
           source={asset.source}
           style={{
-            width: 800 * scale,
-            height: 800 * scale,
+            width: asset.logical.width * scale,
+            height: asset.logical.height * scale,
           }}
-          resizeMode="contain"
+          resizeMode="stretch"
         />
       </View>
 
-      {/* Info bar */}
       <View style={[styles.infoBar, { bottom: insets.bottom + 16 }]}>
         <Text style={styles.assetName}>{asset.name}</Text>
         <Text style={styles.assetNote}>{asset.note}</Text>
+        <Text style={styles.target}>
+          {'TARGET ' + asset.logical.width + ' × ' + asset.logical.height + ' PT'}
+        </Text>
+        <Text style={styles.target}>
+          {'3× EXPORT ' + asset.export3x.width + ' × ' + asset.export3x.height + ' PX'}
+        </Text>
         <Text style={styles.counter}>{index + 1} / {ASSETS.length}</Text>
 
         <View style={styles.nav}>
@@ -81,7 +134,7 @@ export default function DailyAssetAudit({ visible, onClose }: Props) {
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#0A0818',
     zIndex: 999,
     elevation: 999,
@@ -114,11 +167,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
+  target: {
+    color: PW.color.white,
+    fontFamily: FONTS.label,
+    fontSize: 12,
+    letterSpacing: 1,
+    marginTop: 4,
+  },
   counter: {
     color: 'rgba(255,255,255,0.5)',
     fontFamily: FONTS.label,
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 6,
   },
   nav: {
     flexDirection: 'row',

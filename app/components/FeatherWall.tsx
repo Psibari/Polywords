@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { DAILY_CASTLE_LAYOUT } from '../ui/dailyCastleLayout';
 
 const STONE_FEATHER = require('../../assets/images/dailycastle/stonefeather.png');
 const GOLD_FEATHER = require('../../assets/ui/feather-gold-reward.png');
@@ -10,14 +11,19 @@ type Props = {
   featherCount: number;
   /** Show the gold feather instead (round 5 win) */
   showGold?: boolean;
+  /** Uniform scale from the locked 430 × 932 reference phone. */
+  scale?: number;
 };
 
 /**
- * The wall behind the gate. Visible only when the gate rises.
- * Feathers accumulate one per won round — they're carved into the stone.
- * Transparent background — sits behind the gate, no solid block.
+ * Reward layer inside the castle opening. Its parent owns the opening geometry,
+ * so this component simply fills that opening instead of guessing offsets.
  */
-export default function FeatherWall({ featherCount, showGold }: Props) {
+export default function FeatherWall({
+  featherCount,
+  showGold,
+  scale = 1,
+}: Props) {
   const count = Math.max(0, Math.min(4, featherCount));
   const reduceMotion = useReducedMotionPreference();
   const goldRise = useRef(new Animated.Value(0)).current;
@@ -36,27 +42,46 @@ export default function FeatherWall({ featherCount, showGold }: Props) {
   }, [goldRise, reduceMotion, showGold]);
 
   return (
-    <View style={styles.root}>
+    <View pointerEvents="none" style={styles.root}>
       {count > 0 && (
-        <View style={styles.featherRow}>
+        <View
+          style={[
+            styles.featherRow,
+            { gap: DAILY_CASTLE_LAYOUT.stoneFeatherGap * scale },
+          ]}
+        >
           {Array.from({ length: count }).map((_, i) => (
             <Image
               key={i}
               source={STONE_FEATHER}
-              style={styles.feather}
+              style={{
+                width: DAILY_CASTLE_LAYOUT.stoneFeather.width * scale,
+                height: DAILY_CASTLE_LAYOUT.stoneFeather.height * scale,
+              }}
               resizeMode="contain"
             />
           ))}
         </View>
       )}
+
       {showGold && (
-        <Animated.View style={[styles.featherRow, {
-          opacity: goldRise,
-          transform: [{ translateY: goldRise.interpolate({ inputRange: [0, 1], outputRange: [35, 0] }) }],
-        }]}>
+        <Animated.View
+          style={[
+            styles.featherRow,
+            {
+              opacity: goldRise,
+              transform: [{
+                translateY: goldRise.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [35 * scale, 0],
+                }),
+              }],
+            },
+          ]}
+        >
           <Image
             source={GOLD_FEATHER}
-            style={styles.featherGold}
+            style={{ width: 72 * scale, height: 96 * scale }}
             resizeMode="contain"
           />
         </Animated.View>
@@ -67,33 +92,15 @@ export default function FeatherWall({ featherCount, showGold }: Props) {
 
 const styles = StyleSheet.create({
   root: {
-    position: 'absolute',
-    top: 80,
-    left: 40,
-    right: 40,
-    height: 300,
-    zIndex: 20,
-    elevation: 20,
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 2,
+    elevation: 2,
     overflow: 'hidden',
   },
   featherRow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
-  },
-  feather: {
-    width: 48,
-    height: 40,
-    tintColor: '#FFF7D6',
-  },
-  featherGold: {
-    width: 88,
-    height: 110,
   },
 });

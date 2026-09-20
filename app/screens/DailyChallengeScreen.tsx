@@ -1307,7 +1307,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       )}
       {!isComplete && displayedDailySession && (
         <>
-          <Animated.View style={{ transform: [{ translateX: hudShakeX }, { translateY: hudShakeY }] }}>
+          <Animated.View
+            style={[
+              styles.hudLayer,
+              { transform: [{ translateX: hudShakeX }, { translateY: hudShakeY }] },
+            ]}
+          >
             <DailyHUD
               challengeNumber={challengeNumber}
               currentRound={Math.min(
@@ -1404,6 +1409,11 @@ const styles = StyleSheet.create({
   dailyPressureVeil: {
     ...StyleSheet.absoluteFill,
     backgroundColor: PW.color.purple,
+  },
+  hudLayer: {
+    position: 'relative',
+    zIndex: 80,
+    elevation: 80,
   },
   // The background layers sit on the outer View so they reach the true screen
   // edges; this holds everything that should respect the safe-area insets.

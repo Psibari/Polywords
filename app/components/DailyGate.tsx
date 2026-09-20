@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
   Animated,
-  Easing,
   Image,
   StyleSheet,
   Text,
@@ -14,34 +13,32 @@ const GATE = require('../../assets/images/dailycastle/gate.png');
 type Props = {
   /** 0 = gate fully raised (hidden), 1 = gate fully lowered (showing clues) */
   gatePosition: Animated.Value;
-  /** Clue texts to display on the gate face, one at a time */
   clues: string[];
-  /** How many clues are currently revealed (1, 2, or 3) */
   revealedCount: 1 | 2 | 3;
-  /** Width of the gate area */
   width: number;
+  height: number;
+  openTravel: number;
+  scale: number;
 };
 
 /**
  * The stone gate that drops down like a portcullis.
- * Clues appear on its face one at a time as they're revealed.
- * Rises on correct answer, pops on wrong answer.
+ * The canvas is locked to the Daily castle opening; it does not infer its
+ * height from the source PNG anymore.
  */
 export default function DailyGate({
   gatePosition,
   clues,
   revealedCount,
   width,
+  height,
+  openTravel,
+  scale,
 }: Props) {
-  // Preserve the pushed gate art's canvas and transparent margins.
-  const GATE_ASPECT = 1242 / 1046;
-  const gateHeight = width * GATE_ASPECT;
-
-  // The gate's translateY: when gatePosition=1 it's at 0 (fully down),
-  // when gatePosition=0 it's at -gateHeight (fully up/hidden)
   const translateY = gatePosition.interpolate({
     inputRange: [0, 1],
-    outputRange: [-gateHeight, 0],
+    outputRange: [-openTravel, 0],
+    extrapolate: 'extend',
   });
 
   return (
@@ -50,18 +47,26 @@ export default function DailyGate({
         styles.root,
         {
           width,
-          height: gateHeight,
+          height,
           transform: [{ translateY }],
         },
       ]}
     >
       <Image
         source={GATE}
-        style={[styles.gateImage, { width, height: gateHeight }]}
+        style={[styles.gateImage, { width, height }]}
         resizeMode="stretch"
       />
-      {/* Clue text overlaid on the gate face */}
-      <View style={styles.clueOverlay}>
+
+      <View
+        style={[
+          styles.clueOverlay,
+          {
+            paddingHorizontal: 24 * scale,
+            gap: 8 * scale,
+          },
+        ]}
+      >
         {clues.slice(0, revealedCount).map((clue, index) => {
           const isLast = index === revealedCount - 1;
           return (
@@ -69,9 +74,20 @@ export default function DailyGate({
               key={`${clue}-${index}`}
               style={[
                 styles.clueText,
-                !isLast && styles.clueTextMemory,
+                {
+                  fontSize: 23 * scale,
+                  lineHeight: 27 * scale,
+                  letterSpacing: 0.6 * scale,
+                },
+                !isLast && {
+                  color: 'rgba(255,247,214,0.92)',
+                  fontSize: 17 * scale,
+                  lineHeight: 20 * scale,
+                },
               ]}
               numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
             >
               {clue.toUpperCase()}
             </Text>
@@ -84,31 +100,21 @@ export default function DailyGate({
 
 const styles = StyleSheet.create({
   root: {
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   gateImage: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
   },
   clueOverlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 8,
   },
   clueText: {
     color: '#FFF7D6',
     fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
-    fontSize: 23,
-    lineHeight: 27,
-    letterSpacing: 0.6,
     textAlign: 'center',
     width: '100%',
-  },
-  clueTextMemory: {
-    color: 'rgba(255,247,214,0.92)',
-    fontSize: 17,
-    lineHeight: 20,
   },
 });

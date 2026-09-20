@@ -6,6 +6,7 @@ import {
   PanResponder,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, {
@@ -26,6 +27,10 @@ import { FONTS } from '../constants/fonts';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
+import {
+  DAILY_CASTLE_LAYOUT,
+  resolveDailyCastleScale,
+} from '../ui/dailyCastleLayout';
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -81,6 +86,8 @@ export default function DailyAnswerCard({
   roundKey = 0,
 }: Props) {
   const reduceMotion = useReducedMotionPreference();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const castleScale = resolveDailyCastleScale(windowWidth, windowHeight);
   // DEV-ONLY (app/dev/dailyScrollTuning.ts) — overrides entryShell's default
   // 64. The flying/landing card in QuillScrollPanel is sized from this same
   // shell's own measureInWindow() result (see publishClaim below and
@@ -405,7 +412,14 @@ export default function DailyAnswerCard({
       collapsable={false}
       style={[
         styles.entryShell,
-        { height: cardHeight },
+        {
+          height: castleArt
+            ? DAILY_CASTLE_LAYOUT.card.height * castleScale
+            : cardHeight,
+        },
+        castleArt && {
+          width: DAILY_CASTLE_LAYOUT.card.width * castleScale,
+        },
         (activelyHeld || state === 'correct') && styles.entryShellClaiming,
         (!activelyHeld && state === 'wrong') && styles.entryShellFailing,
         {
@@ -434,11 +448,19 @@ export default function DailyAnswerCard({
           <ImageBackground
             source={require('../../assets/images/dailycastle/answercard.png')}
             resizeMode="stretch"
-            style={styles.castleCard}
+            style={[
+              styles.castleCard,
+              { paddingHorizontal: 12 * castleScale },
+            ]}
           >
             {state === 'correct' && <View pointerEvents="none" style={styles.correctOverlay} />}
             {state === 'wrong' && <View pointerEvents="none" style={styles.wrongOverlay} />}
-            <Text style={styles.castleCardText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+            <Text
+              style={[styles.castleCardText, { fontSize: 24 * castleScale }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+            >
               {label.toUpperCase()}
             </Text>
           </ImageBackground>
@@ -499,8 +521,8 @@ export function DailySubmittedAnswerCard({
 }
 
 const styles = StyleSheet.create({
-  castleCard: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
-  castleCardText: { color: '#FFFFFF', fontFamily: FONTS.tileCopy, fontSize: 24, fontWeight: '800', textAlign: 'center' },
+  castleCard: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  castleCardText: { color: '#FFFFFF', fontFamily: FONTS.tileCopy, fontWeight: '800', textAlign: 'center' },
   entryShell: {
     // height comes from cardHeight (see render) — DEV-ONLY tuning default is
     // 64, matching this shell's old hardcoded value.
