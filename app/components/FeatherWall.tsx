@@ -92,13 +92,13 @@ export default function FeatherWall({
 
 const styles = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 2,
     elevation: 2,
     overflow: 'hidden',
   },
   featherRow: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -134,7 +134,7 @@ export default function DailyAssetAudit({ visible, onClose }: Props) {
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#0A0818',
     zIndex: 999,
     elevation: 999,

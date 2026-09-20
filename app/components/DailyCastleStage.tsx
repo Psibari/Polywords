@@ -122,7 +122,7 @@ export default function DailyCastleStage({
 
 const styles = StyleSheet.create({
   stage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   layer: {
     position: 'absolute',
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   gate: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 3,
     elevation: 3,
   },
