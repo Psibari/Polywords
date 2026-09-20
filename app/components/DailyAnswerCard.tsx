@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
   Dimensions,
-  ImageBackground,
   PanResponder,
   StyleSheet,
   Text,
@@ -23,7 +22,6 @@ import { Haptics } from '../utils/haptics';
 import { playSfx } from '../audio/sfx';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
 import DailyCardFace from './ui/DailyCardFace';
-import { FONTS } from '../constants/fonts';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
@@ -444,27 +442,7 @@ export default function DailyAnswerCard({
           cardAnimatedStyle,
         ]}
       >
-        {castleArt ? (
-          <ImageBackground
-            source={require('../../assets/images/dailycastle/answercard.png')}
-            resizeMode="stretch"
-            style={[
-              styles.castleCard,
-              { paddingHorizontal: 12 * castleScale },
-            ]}
-          >
-            {state === 'correct' && <View pointerEvents="none" style={styles.correctOverlay} />}
-            {state === 'wrong' && <View pointerEvents="none" style={styles.wrongOverlay} />}
-            <Text
-              style={[styles.castleCardText, { fontSize: 24 * castleScale }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-            >
-              {label.toUpperCase()}
-            </Text>
-          </ImageBackground>
-        ) : <LinearGradient
+        <LinearGradient
           colors={rimColors(state)}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -486,7 +464,7 @@ export default function DailyAnswerCard({
               <View pointerEvents="none" style={styles.disabledOverlay} />
             )}
           </View>
-        </LinearGradient>}
+        </LinearGradient>
       </Animated.View>
     </RNAnimated.View>
   );
@@ -521,15 +499,6 @@ export function DailySubmittedAnswerCard({
 }
 
 const styles = StyleSheet.create({
-  castleCard: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  castleCardText: {
-    width: '100%',
-    color: '#FFFFFF',
-    fontFamily: FONTS.tileCopy,
-    fontWeight: '800',
-    textAlign: 'center',
-    includeFontPadding: false,
-  },
   entryShell: {
     // height comes from cardHeight (see render) — DEV-ONLY tuning default is
     // 64, matching this shell's old hardcoded value.
