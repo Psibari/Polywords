@@ -46,7 +46,7 @@ export default function DailyCastleStage({
 
   const rect = (target: DailyCastleRect) => ({
     left: xOffset + target.x * scale,
-    top: target.y * scale - insets.top,
+    top: (target.y + DAILY_CASTLE_LAYOUT.topOffset) * scale - insets.top,
     width: target.width * scale,
     height: target.height * scale,
   });

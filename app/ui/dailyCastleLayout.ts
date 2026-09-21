@@ -19,6 +19,9 @@ export const DAILY_CASTLE_REFERENCE = {
 } as const;
 
 export const DAILY_CASTLE_LAYOUT = {
+  // Leave the Daily HUD clear above the crowns; apply to every castle layer
+  // together so the gate, recesses, and answer cards remain registered.
+  topOffset: 45,
   // The 1046 × 2346 full scene includes the arch, ledge, and six recesses.
   // Its width fills the reference phone; its bottom can bleed below the screen.
   scene: { x: 0, y: 0, width: 430, height: 430 * 2346 / 1046 },
