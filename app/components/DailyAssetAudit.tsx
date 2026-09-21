@@ -17,11 +17,11 @@ import {
 
 const ASSETS = [
   {
-    name: 'squarearch.png',
-    source: require('../../assets/images/dailycastle/squarearch.png'),
-    note: 'Square Arch',
-    logical: DAILY_CASTLE_LAYOUT.arch,
-    export3x: DAILY_CASTLE_EXPORT_3X.squarearch,
+    name: 'squarearchfull.png',
+    source: require('../../assets/images/dailycastle/squarearchfull.png'),
+    note: 'Full castle scene with registered recesses',
+    logical: DAILY_CASTLE_LAYOUT.scene,
+    export3x: { width: 1046, height: 2346 },
   },
   {
     name: 'gate.png',
@@ -43,20 +43,6 @@ const ASSETS = [
     note: 'Individual stone feather',
     logical: DAILY_CASTLE_LAYOUT.stoneFeather,
     export3x: DAILY_CASTLE_EXPORT_3X.stonefeather,
-  },
-  {
-    name: 'answerwall.png',
-    source: require('../../assets/images/dailycastle/answerwall.png'),
-    note: 'Edge-to-edge answer wall',
-    logical: DAILY_CASTLE_LAYOUT.answerWall,
-    export3x: DAILY_CASTLE_EXPORT_3X.answerwall,
-  },
-  {
-    name: 'answerwqallrecesses.png',
-    source: require('../../assets/images/dailycastle/answerwqallrecesses.png'),
-    note: 'Answer recess overlay',
-    logical: DAILY_CASTLE_LAYOUT.answerRecesses,
-    export3x: DAILY_CASTLE_EXPORT_3X.answerRecesses,
   },
   {
     name: 'answercard.png',

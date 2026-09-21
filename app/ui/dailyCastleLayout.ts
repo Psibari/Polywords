@@ -6,7 +6,7 @@ export type DailyCastleRect = {
 };
 
 /**
- * Locked Daily Challenge castle composition.
+ * Daily Challenge castle composition registered to squarearchfull.png.
  *
  * All coordinates are full-screen reference points on a 430 × 932 phone.
  * Runtime code scales this reference uniformly for other portrait phones.
@@ -19,13 +19,12 @@ export const DAILY_CASTLE_REFERENCE = {
 } as const;
 
 export const DAILY_CASTLE_LAYOUT = {
-  arch: { x: 0, y: 126, width: 430, height: 530 },
-  // Exact transparent doorway cutout in the approved 1290 × 1590 arch.
-  // Source bounds: x 290..1027, y 277..1339. At 3× that maps 1:1
-  // into the logical phone composition below.
-  opening: { x: 290 / 3, y: 126 + 277 / 3, width: 737 / 3, height: 1062 / 3 },
-  answerWall: { x: 0, y: 600, width: 430, height: 300 },
-  answerRecesses: { x: 0, y: 600, width: 430, height: 300 },
+  // The 1046 × 2346 full scene includes the arch, ledge, and six recesses.
+  // Its width fills the reference phone; its bottom can bleed below the screen.
+  scene: { x: 0, y: 0, width: 430, height: 430 * 2346 / 1046 },
+  // The gate travels within the transparent arch opening. Its source includes
+  // transparent padding at the top and bottom, including the hanging spikes.
+  opening: { x: 82, y: 184, width: 266, height: 404 },
 
   // Six answer plaques, registered directly to the baked recess artwork.
   // These are full-screen reference coordinates on the 430 × 932 layout.
@@ -33,12 +32,12 @@ export const DAILY_CASTLE_LAYOUT = {
   // plaques emerging from the wall rather than labels painted inside holes.
   card: { width: 146, height: 58 },
   answerSlots: [
-    { x: 48, y: 680 },
-    { x: 227, y: 684 },
-    { x: 45, y: 744 },
-    { x: 226, y: 749 },
-    { x: 43, y: 816 },
-    { x: 222, y: 816 },
+    { x: 39, y: 672 },
+    { x: 221, y: 672 },
+    { x: 39, y: 752 },
+    { x: 221, y: 752 },
+    { x: 39, y: 834 },
+    { x: 221, y: 834 },
   ],
 
   // Carved reward scale inside the opening.
@@ -49,7 +48,7 @@ export const DAILY_CASTLE_LAYOUT = {
   pollyClearance: { x: 22, y: 128, width: 108, height: 158 },
 
   // Two reference points beyond the opening height guarantees a clean hide.
-  gateOpenTravel: 356,
+  gateOpenTravel: 410,
 } as const;
 
 export const DAILY_CASTLE_EXPORT_3X = {

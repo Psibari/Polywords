@@ -16,8 +16,7 @@ import {
   resolveDailyCastleXOffset,
 } from '../ui/dailyCastleLayout';
 
-const SQUARE_ARCH = require('../../assets/images/dailycastle/squarearch.png');
-const ANSWER_RECESSES = require('../../assets/images/dailycastle/answerwqallrecesses.png');
+const CASTLE_SCENE = require('../../assets/images/dailycastle/squarearchfull.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 
 type Props = {
@@ -30,7 +29,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** Fixed castle layers; only the gate and answer cards move. */
+/** One registered castle scene; only the gate and answer cards move. */
 export default function DailyCastleStage({
   gatePosition,
   clues,
@@ -56,6 +55,11 @@ export default function DailyCastleStage({
 
   return (
     <View pointerEvents="box-none" style={styles.stage}>
+      <Image
+        source={CASTLE_SCENE}
+        style={[styles.layer, styles.castleScene, rect(DAILY_CASTLE_LAYOUT.scene)]}
+        resizeMode="stretch"
+      />
       <View style={[styles.opening, rect(opening)]}>
         <Image
           source={FEATHER_WALL}
@@ -79,18 +83,6 @@ export default function DailyCastleStage({
           />
         </View>
       </View>
-
-      <Image
-        source={SQUARE_ARCH}
-        style={[styles.layer, styles.arch, rect(DAILY_CASTLE_LAYOUT.arch)]}
-        resizeMode="stretch"
-      />
-
-      <Image
-        source={ANSWER_RECESSES}
-        style={[styles.layer, styles.answerRecesses, rect(DAILY_CASTLE_LAYOUT.answerRecesses)]}
-        resizeMode="stretch"
-      />
 
       {React.Children.toArray(children).map((child, index) => {
         const slot = DAILY_CASTLE_LAYOUT.answerSlots[index];
@@ -135,13 +127,9 @@ const styles = StyleSheet.create({
     zIndex: 3,
     elevation: 3,
   },
-  arch: {
-    zIndex: 50,
-    elevation: 50,
-  },
-  answerRecesses: {
-    zIndex: 11,
-    elevation: 11,
+  castleScene: {
+    zIndex: 30,
+    elevation: 30,
   },
   cardSlot: {
     position: 'absolute',
