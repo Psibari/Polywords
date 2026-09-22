@@ -43,7 +43,7 @@ export type DailyAnswerCardClaimOrigin = {
   height: number;
 };
 
-type Props = {
+export type DailyAnswerCardProps = {
   label: string;
   disabled?: boolean;
   state?: DailyAnswerCardState;
@@ -55,10 +55,18 @@ type Props = {
   castleArt?: boolean;
   enterDelay?: number;
   roundKey?: string | number;
+  recessProgress?: RNAnimated.Value;
 };
 
 const CLAIM_THRESHOLD = -80;
 const MOVE_THRESHOLD = 4;
+
+// DailyCastleStage owns this progress value because the recess, cap, contact
+// shadow and moving plaque must stay on one physical timeline. Scale is only
+// one contributor to the depth handoff; the wall-side layers do the heavier
+// visual work.
+const DAILY_RECESS_INPUT = [0, 0.26, 0.86, 1];
+const DAILY_RECESS_SCALE = [0.94, 0.995, 1.045, 1];
 
 function rimColors(
   state: DailyAnswerCardState,
@@ -81,7 +89,8 @@ export default function DailyAnswerCard({
   castleArt = false,
   enterDelay = 0,
   roundKey = 0,
-}: Props) {
+  recessProgress,
+}: DailyAnswerCardProps) {
   const reduceMotion = useReducedMotionPreference();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const castleScale = resolveDailyCastleScale(windowWidth, windowHeight);
@@ -93,12 +102,11 @@ export default function DailyAnswerCard({
   const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
-  const entryTranslateY = useRef(new RNAnimated.Value(0)).current;
   const entryScale = useRef(new RNAnimated.Value(1)).current;
   const entryOpacity = useRef(new RNAnimated.Value(0)).current;
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const scale = useSharedValue(0.96);
+  const scale = useSharedValue(castleArt ? 1 : 0.96);
   const rotation = useSharedValue(0);
   const opacity = useSharedValue(1);
   const gripGlow = useSharedValue(0);
@@ -166,20 +174,26 @@ export default function DailyAnswerCard({
   useEffect(() => {
     const entryDistance = Dimensions.get('window').width * 0.7;
     entryTranslateX.stopAnimation();
-    entryTranslateY.stopAnimation();
     entryScale.stopAnimation();
     entryOpacity.stopAnimation();
     if (reduceMotion !== false) {
       entryTranslateX.setValue(0);
-      entryTranslateY.setValue(0);
+      entryScale.setValue(1);
+      entryOpacity.setValue(1);
+      return;
+    }
+    // Castle depth is parent-owned: this wrapper stays fully opaque and lets
+    // the stage's one progress value coordinate plaque, socket, cap and
+    // shadows. The legacy left/right entrances below remain card-owned.
+    if (enterFromRecess && recessProgress) {
+      entryTranslateX.setValue(0);
       entryScale.setValue(1);
       entryOpacity.setValue(1);
       return;
     }
     entryTranslateX.setValue(enterFromRecess ? 0 : enterFromLeft ? -entryDistance : entryDistance);
-    entryTranslateY.setValue(enterFromRecess ? 24 * castleScale : 0);
-    entryScale.setValue(enterFromRecess ? 0.9 : 1);
-    entryOpacity.setValue(enterFromRecess ? 0.35 : 0);
+    entryScale.setValue(1);
+    entryOpacity.setValue(enterFromRecess ? 1 : 0);
 
     const timer = setTimeout(() => {
       RNAnimated.parallel([
@@ -187,12 +201,6 @@ export default function DailyAnswerCard({
           toValue: 0,
           friction: 8,
           tension: 100,
-          useNativeDriver: true,
-        }),
-        RNAnimated.spring(entryTranslateY, {
-          toValue: 0,
-          friction: 9,
-          tension: 95,
           useNativeDriver: true,
         }),
         RNAnimated.spring(entryScale, {
@@ -214,11 +222,10 @@ export default function DailyAnswerCard({
     enterDelay,
     enterFromLeft,
     enterFromRecess,
-    castleScale,
     entryScale,
     entryOpacity,
     entryTranslateX,
-    entryTranslateY,
+    recessProgress,
     reduceMotion,
     roundKey,
   ]);
@@ -226,7 +233,7 @@ export default function DailyAnswerCard({
   useEffect(() => {
     translateX.value = 0;
     translateY.value = 0;
-    scale.value = 0.96;
+    scale.value = castleArt ? 1 : 0.96;
     rotation.value = 0;
     opacity.value = 1;
     gripGlow.value = 0;
@@ -235,8 +242,10 @@ export default function DailyAnswerCard({
     gestureOffsetRef.current = { x: 0, y: 0 };
     setActivelyHeld(false);
 
-    scale.value = withSpring(1, { damping: 8, stiffness: 100 });
-  }, [label, gripGlow, opacity, rotation, scale, translateX, translateY]);
+    if (!castleArt) {
+      scale.value = withSpring(1, { damping: 8, stiffness: 100 });
+    }
+  }, [castleArt, label, gripGlow, opacity, rotation, scale, translateX, translateY]);
 
   // Held elevation only ever needs to survive up to the moment `state`
   // itself starts driving entryShellClaiming/Failing — once it's no longer
@@ -418,6 +427,14 @@ export default function DailyAnswerCard({
     opacity: gripGlow.value,
   }));
 
+  const recessScale = recessProgress?.interpolate({
+    inputRange: DAILY_RECESS_INPUT,
+    outputRange: DAILY_RECESS_SCALE,
+  });
+  const entryDepthScale = enterFromRecess && state === 'idle' && recessScale
+    ? recessScale
+    : entryScale;
+
   return (
     <RNAnimated.View
       ref={shellRef}
@@ -438,8 +455,7 @@ export default function DailyAnswerCard({
           opacity: entryOpacity,
           transform: [
             { translateX: entryTranslateX },
-            { translateY: entryTranslateY },
-            { scale: entryScale },
+            { scale: entryDepthScale },
           ],
         },
       ]}
@@ -455,6 +471,7 @@ export default function DailyAnswerCard({
         {...panResponder.panHandlers}
         style={[
           styles.shell,
+          castleArt && state === 'idle' && styles.castleIdleShell,
           state === 'correct' && styles.shellCorrect,
           state === 'wrong' && styles.shellWrong,
           cardAnimatedStyle,
@@ -540,6 +557,15 @@ const styles = StyleSheet.create({
     shadowRadius: dailyCardMaterial.shadowRadius,
     shadowOffset: dailyCardMaterial.shadowOffset,
     elevation: dailyCardMaterial.elevation,
+  },
+  castleIdleShell: {
+    // The stage paints the entrance/final depth shadow for castle cards. A
+    // permanent native shadow here would make frame one float above the wall
+    // before the socket has released it.
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 0,
   },
   shellCorrect: {
     shadowColor: '#F5C842',
