@@ -23,6 +23,7 @@ import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
 import { DailyTreeSceneDevViewer } from '../components/DailyTreeSceneDevViewer';
 import { DAILY_TREE_SCENE_ENABLED } from '../components/DailyTreeScene';
 import { DailyCastleSceneDevViewer } from '../components/DailyCastleSceneDevViewer';
+import DailyCastleCodeLab from '../components/DailyCastleCodeLab';
 // Settings, not the Daily screen: app/screens/dailyDevControls.test.mjs
 // forbids DailyChallengeScreen from wiring this panel (it used to float over
 // the answer-card grid there). The tuning store is plain module state, so
@@ -107,6 +108,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const [showDailyScrollTuning, setShowDailyScrollTuning] = useState(false);
   const [showDailyTreeScene, setShowDailyTreeScene] = useState(false);
   const [showDailyCastleScene, setShowDailyCastleScene] = useState(false);
+  const [showDailyCastleCodeLab, setShowDailyCastleCodeLab] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -494,6 +496,17 @@ export default function SettingsScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowDailyCastleCodeLab(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Daily Castle Code Lab</Text>
+                  <Text style={styles.rowNote}>Build coded backgrounds and shapes in the browser</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
             </ImageBackground>
           </View>
         )}
@@ -551,6 +564,10 @@ export default function SettingsScreen({ navigation }: Props) {
           <DailyCastleSceneDevViewer
             onClose={() => setShowDailyCastleScene(false)}
             visible={showDailyCastleScene}
+          />
+          <DailyCastleCodeLab
+            onClose={() => setShowDailyCastleCodeLab(false)}
+            visible={showDailyCastleCodeLab}
           />
           <DailyScrollTuningPanel
             onClose={() => setShowDailyScrollTuning(false)}
