@@ -2,10 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
   Dimensions,
-  ImageBackground,
   PanResponder,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -22,7 +20,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Haptics } from '../utils/haptics';
 import { playSfx } from '../audio/sfx';
 import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
-import { FONTS } from '../constants/fonts';
 import DailyCardFace from './ui/DailyCardFace';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
@@ -62,7 +59,6 @@ type Props = {
 
 const CLAIM_THRESHOLD = -80;
 const MOVE_THRESHOLD = 4;
-const CASTLE_ANSWER_CARD = require('../../assets/images/dailycastle/answercard.png');
 
 function rimColors(
   state: DailyAnswerCardState,
@@ -464,21 +460,7 @@ export default function DailyAnswerCard({
           cardAnimatedStyle,
         ]}
       >
-        {castleArt ? (
-          <ImageBackground source={CASTLE_ANSWER_CARD} resizeMode="stretch" style={styles.castleCard}>
-            <Text
-              style={styles.castleCardText}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-            >
-              {label.toUpperCase()}
-            </Text>
-            <Animated.View pointerEvents="none" style={[styles.gripGlow, gripGlowStyle]} />
-            {state === 'correct' && <View pointerEvents="none" style={styles.correctOverlay} />}
-            {state === 'wrong' && <View pointerEvents="none" style={styles.wrongOverlay} />}
-          </ImageBackground>
-        ) : <LinearGradient
+        <LinearGradient
           colors={rimColors(state)}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -500,7 +482,7 @@ export default function DailyAnswerCard({
               <View pointerEvents="none" style={styles.disabledOverlay} />
             )}
           </View>
-        </LinearGradient>}
+        </LinearGradient>
       </Animated.View>
     </RNAnimated.View>
   );
@@ -535,20 +517,6 @@ export function DailySubmittedAnswerCard({
 }
 
 const styles = StyleSheet.create({
-  castleCard: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 11,
-  },
-  castleCardText: {
-    color: dailyCardMaterial.text,
-    fontFamily: FONTS.tileCopy,
-    fontSize: 22,
-    fontWeight: '800',
-    textAlign: 'center',
-    includeFontPadding: false,
-  },
   entryShell: {
     // height comes from cardHeight (see render) — DEV-ONLY tuning default is
     // 64, matching this shell's old hardcoded value.

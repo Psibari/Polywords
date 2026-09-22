@@ -60,11 +60,13 @@ export default function DailyCastleStage({
         resizeMode="stretch"
       />
       <View style={[styles.opening, rect(opening)]}>
-        <FeatherWall
-          featherCount={Math.min(solvedCount, 4)}
-          showGold={solvedCount === 5}
-          scale={scale}
-        />
+        <View style={[styles.featherArea, { top: 24 * scale, height: 404 * scale }]}>
+          <FeatherWall
+            featherCount={Math.min(solvedCount, 4)}
+            showGold={solvedCount === 5}
+            scale={scale}
+          />
+        </View>
         <View onLayout={onGateLayout} style={styles.gate}>
           <DailyGate
             gatePosition={gatePosition}
@@ -120,6 +122,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     zIndex: 3,
     elevation: 3,
+  },
+  featherArea: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
   },
   castleScene: {
     zIndex: 30,

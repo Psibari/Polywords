@@ -59,38 +59,40 @@ export default function DailyGate({
       />
 
       <View
-        style={[
-          styles.clueOverlay,
-          {
-            paddingHorizontal: 24 * scale,
-            gap: 8 * scale,
-          },
-        ]}
+        style={styles.clueOverlay}
       >
         {clues.slice(0, revealedCount).map((clue, index) => {
           const isLast = index === revealedCount - 1;
           return (
-            <Text
+            <View
               key={`${clue}-${index}`}
               style={[
-                styles.clueText,
+                styles.clueSlot,
                 {
-                  fontSize: 23 * scale,
-                  lineHeight: 27 * scale,
-                  letterSpacing: 0.6 * scale,
-                },
-                !isLast && {
-                  color: 'rgba(255,247,214,0.92)',
-                  fontSize: 17 * scale,
-                  lineHeight: 20 * scale,
+                  top: height * (0.2 + index * 0.205),
+                  height: height * 0.19,
+                  left: 18 * scale,
+                  right: 18 * scale,
                 },
               ]}
-              numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.72}
             >
-              {clue.toUpperCase()}
-            </Text>
+              <Text
+                style={[
+                  styles.clueText,
+                  {
+                    fontSize: 24 * scale,
+                    lineHeight: 27 * scale,
+                    letterSpacing: 0.6 * scale,
+                  },
+                  !isLast && { color: 'rgba(255,247,214,0.92)' },
+                ]}
+                numberOfLines={3}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
+              >
+                {clue.toUpperCase()}
+              </Text>
+            </View>
           );
         })}
       </View>
@@ -107,6 +109,9 @@ const styles = StyleSheet.create({
   },
   clueOverlay: {
     ...StyleSheet.absoluteFill,
+  },
+  clueSlot: {
+    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
   },

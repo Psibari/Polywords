@@ -27,7 +27,7 @@ export const DAILY_CASTLE_LAYOUT = {
   scene: { x: 0, y: 0, width: 430, height: 430 * 2346 / 1046 },
   // The gate travels within the transparent arch opening. Its source includes
   // transparent padding at the top and bottom, including the hanging spikes.
-  opening: { x: 82, y: 184, width: 266, height: 404 },
+  opening: { x: 82, y: 160, width: 266, height: 428 },
 
   // Six answer plaques, registered directly to the baked recess artwork.
   // These are full-screen reference coordinates on the 430 × 932 layout.
@@ -51,7 +51,7 @@ export const DAILY_CASTLE_LAYOUT = {
   pollyClearance: { x: 22, y: 128, width: 108, height: 158 },
 
   // Two reference points beyond the opening height guarantees a clean hide.
-  gateOpenTravel: 410,
+  gateOpenTravel: 434,
 } as const;
 
 export const DAILY_CASTLE_EXPORT_3X = {
