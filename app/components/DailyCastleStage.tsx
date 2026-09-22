@@ -17,6 +17,7 @@ import {
 } from '../ui/dailyCastleLayout';
 
 const CASTLE_SCENE = require('../../assets/images/dailycastle/squarearchfull.png');
+const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 
 type Props = {
   gatePosition: Animated.Value;
@@ -60,6 +61,11 @@ export default function DailyCastleStage({
         resizeMode="stretch"
       />
       <View style={[styles.opening, rect(opening)]}>
+        <Image
+          source={FEATHER_WALL}
+          style={StyleSheet.absoluteFill}
+          resizeMode="stretch"
+        />
         <View style={[styles.featherArea, { top: 24 * scale, height: 404 * scale }]}>
           <FeatherWall
             featherCount={Math.min(solvedCount, 4)}
