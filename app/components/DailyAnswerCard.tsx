@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
   Dimensions,
+  Image,
   PanResponder,
   StyleSheet,
+  Text,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -28,6 +30,9 @@ import {
   DAILY_CASTLE_LAYOUT,
   resolveDailyCastleScale,
 } from '../ui/dailyCastleLayout';
+import { FONTS } from '../constants/fonts';
+
+const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answer-plaque.png');
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -477,14 +482,21 @@ export default function DailyAnswerCard({
           cardAnimatedStyle,
         ]}
       >
-        <LinearGradient
-          colors={rimColors(state)}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.rim}
-        >
-          <View style={styles.face}>
-            <DailyCardFace label={label} />
+        {castleArt ? (
+          <View style={styles.castlePlaque}>
+            <Image
+              source={CASTLE_ANSWER_PLAQUE}
+              resizeMode="stretch"
+              style={StyleSheet.absoluteFill}
+            />
+            <Text
+              style={styles.castlePlaqueLabel}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+            >
+              {label.toUpperCase()}
+            </Text>
             <Animated.View
               pointerEvents="none"
               style={[styles.gripGlow, gripGlowStyle]}
@@ -499,7 +511,31 @@ export default function DailyAnswerCard({
               <View pointerEvents="none" style={styles.disabledOverlay} />
             )}
           </View>
-        </LinearGradient>
+        ) : (
+          <LinearGradient
+            colors={rimColors(state)}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.rim}
+          >
+            <View style={styles.face}>
+              <DailyCardFace label={label} />
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.gripGlow, gripGlowStyle]}
+              />
+              {state === 'correct' && (
+                <View pointerEvents="none" style={styles.correctOverlay} />
+              )}
+              {state === 'wrong' && (
+                <View pointerEvents="none" style={styles.wrongOverlay} />
+              )}
+              {state === 'disabled' && (
+                <View pointerEvents="none" style={styles.disabledOverlay} />
+              )}
+            </View>
+          </LinearGradient>
+        )}
       </Animated.View>
     </RNAnimated.View>
   );
@@ -592,6 +628,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 8,
     overflow: 'hidden',
+  },
+  castlePlaque: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 11,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  castlePlaqueLabel: {
+    color: dailyCardMaterial.text,
+    fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   gripGlow: {
     ...StyleSheet.absoluteFill,
