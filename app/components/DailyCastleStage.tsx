@@ -28,8 +28,8 @@ const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 const PLAQUE_SEG = [0.26, 0.86, 1] as const;
 const PLAQUE_SEG_MS = [234, 540, 126] as const;
 const PLAQUE_INPUT = [0, PLAQUE_SEG[0], PLAQUE_SEG[1], 1];
-const RECESS_SHADOW = '#120C1F';
-const RECESS_LIP = '#2A204E';
+const RECESS_SHADOW = '#0D0918';
+const RECESS_LIP = '#21183B';
 
 type Props = {
   gatePosition: Animated.Value;
@@ -117,7 +117,7 @@ function DailyCastlePlaqueSlot({
   // enough to read as a wall release, then settles close to the plaque.
   const contactShadowOpacity = plaqueProgress.interpolate({
     inputRange: [0, 0.06, PLAQUE_SEG[0], PLAQUE_SEG[1], 1],
-    outputRange: [0, 0.08, 0.4, 0.58, 0.48],
+    outputRange: [0, 0.18, 0.48, 0.58, 0.48],
   });
   const contactShadowScale = plaqueProgress.interpolate({
     inputRange: PLAQUE_INPUT,
@@ -362,6 +362,6 @@ const styles = StyleSheet.create({
   recessCap: {
     ...StyleSheet.absoluteFill,
     borderColor: RECESS_LIP,
-    backgroundColor: 'rgba(18,12,31,0.38)',
+    backgroundColor: 'rgba(13,9,24,0.46)',
   },
 });

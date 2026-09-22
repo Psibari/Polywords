@@ -32,7 +32,7 @@ import {
 } from '../ui/dailyCastleLayout';
 import { FONTS } from '../constants/fonts';
 
-const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answer-plaque.png');
+const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answercard.png');
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -489,6 +489,7 @@ export default function DailyAnswerCard({
               resizeMode="stretch"
               style={StyleSheet.absoluteFill}
             />
+            <View pointerEvents="none" style={styles.castlePlaqueBevel} />
             <Text
               style={styles.castlePlaqueLabel}
               numberOfLines={1}
@@ -634,8 +635,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 11,
-    borderRadius: 8,
+    borderRadius: 6,
     overflow: 'hidden',
+  },
+  castlePlaqueBevel: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    bottom: 2,
+    left: 2,
+    borderRadius: 5,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,247,214,0.28)',
+    borderLeftColor: 'rgba(255,247,214,0.18)',
+    borderRightColor: 'rgba(5,4,11,0.40)',
+    borderBottomColor: 'rgba(5,4,11,0.52)',
   },
   castlePlaqueLabel: {
     color: dailyCardMaterial.text,
