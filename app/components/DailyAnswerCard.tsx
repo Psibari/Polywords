@@ -108,7 +108,7 @@ export default function DailyAnswerCard({
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
   const entryScale = useRef(new RNAnimated.Value(1)).current;
-  const entryOpacity = useRef(new RNAnimated.Value(0)).current;
+  const entryOpacity = useRef(new RNAnimated.Value(enterFromRecess ? 1 : 0)).current;
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(castleArt ? 1 : 0.96);

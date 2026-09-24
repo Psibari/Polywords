@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
   },
   pollyWrap: {
     position: 'absolute',
-    left: -70,
-    top: -15,
+    left: -20,
+    top: 5,
     width: DAILY_POLLY_SIZE,
     height: DAILY_POLLY_SIZE,
   },

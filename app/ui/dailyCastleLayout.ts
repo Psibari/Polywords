@@ -6,7 +6,7 @@ export type DailyCastleRect = {
 };
 
 /**
- * Daily Challenge castle composition registered to squarearchfull.png.
+ * Daily Challenge castle composition registered to 3darch5.png.
  *
  * All coordinates are full-screen reference points on a 430 × 932 phone.
  * Runtime code scales this reference uniformly for other portrait phones.
@@ -19,12 +19,10 @@ export const DAILY_CASTLE_REFERENCE = {
 } as const;
 
 export const DAILY_CASTLE_LAYOUT = {
-  // Leave the Daily HUD clear above the crowns; apply to every castle layer
-  // together so the gate, recesses, and answer cards remain registered.
-  topOffset: 45,
-  // The 1046 × 2346 full scene includes the arch, ledge, and six recesses.
-  // Its width fills the reference phone; its bottom can bleed below the screen.
-  scene: { x: 0, y: 0, width: 430, height: 430 * 2346 / 1046 },
+  // Fit-test registration uses the full reference composition with no offset.
+  topOffset: 0,
+  // The rebuilt scene fills the 430 by 932 logical phone exactly.
+  scene: { x: 0, y: 0, width: 430, height: 932 },
   // The gate travels within the transparent arch opening. Its source includes
   // transparent padding at the top and bottom, including the hanging spikes.
   opening: { x: 82, y: 160, width: 266, height: 428 },
@@ -33,14 +31,14 @@ export const DAILY_CASTLE_LAYOUT = {
   // These are full-screen reference coordinates on the 430 × 932 layout.
   // Slightly larger than the carved recesses so the cards read as physical
   // plaques emerging from the wall rather than labels painted inside holes.
-  card: { width: 146, height: 58 },
+  card: { width: 140, height: 54 },
   answerSlots: [
-    { x: 39, y: 672 },
-    { x: 221, y: 672 },
-    { x: 39, y: 752 },
-    { x: 221, y: 752 },
-    { x: 39, y: 834 },
-    { x: 221, y: 834 },
+    { x: 68.0262, y: 596.5254 },
+    { x: 218.8614, y: 597.7489 },
+    { x: 67.7867, y: 688.4408 },
+    { x: 219.2205, y: 689.0525 },
+    { x: 67.4276, y: 783.7207 },
+    { x: 219.4599, y: 784.3325 },
   ],
 
   // Carved reward scale inside the opening.

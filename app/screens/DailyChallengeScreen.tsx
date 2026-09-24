@@ -85,6 +85,10 @@ import {
   useReducedMotionPreference,
 } from '../hooks/usePollyAmbientMotion';
 
+const DailyCastleTuningPanel = __DEV__
+  ? require('../dev/DailyCastleTuningPanel').default
+  : null;
+
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
 // Full corrected-claim sequence, settle through next-clue-visible:
@@ -649,6 +653,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   // DEV: Asset audit viewer
   const [assetAuditVisible, setAssetAuditVisible] = useState(false);
+  const [castleTuningVisible, setCastleTuningVisible] = useState(false);
 
   function setLocked(val: boolean) {
     inputLockedRef.current = val;
@@ -1386,6 +1391,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         >
           <Text style={styles.devResetText}>ASSET AUDIT</Text>
         </Pressable>
+      )}
+
+      {__DEV__ && (
+        <Pressable
+          onPress={() => setCastleTuningVisible((visible) => !visible)}
+          style={[styles.devResetBtn, { right: 14, bottom: 104 }]}
+        >
+          <Text style={styles.devResetText}>CASTLE TUNE</Text>
+        </Pressable>
+      )}
+
+      {__DEV__ && DailyCastleTuningPanel && (
+        <DailyCastleTuningPanel visible={castleTuningVisible} />
       )}
 
       <DailyAssetAudit

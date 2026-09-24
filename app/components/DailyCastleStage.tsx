@@ -19,8 +19,16 @@ import {
   resolveDailyCastleXOffset,
 } from '../ui/dailyCastleLayout';
 
-const CASTLE_SCENE = require('../../assets/images/dailycastle/squarearchfull.png');
+const CASTLE_SCENE = require('../../assets/images/dailycastle/3darch5.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
+const useDailyCastleTuning = __DEV__
+  ? require('../dev/dailyCastleTuning').useDailyCastleTuning
+  : null;
+
+// Registration-only mode: render the full scene and flat plaques directly at
+// the measured slots. Keep the legacy gate/feather layers and every synthetic
+// plaque-depth layer disabled until the composition is confirmed on-device.
+const DAILY_CASTLE_FIT_TEST = true;
 
 // Same three physical legs as the gauntlet stones: release from the wall,
 // travel toward the player, then settle. One progress value per slot drives
@@ -48,6 +56,36 @@ type PlaqueSlotProps = {
   roundKey: number;
 };
 
+type StageWrapperProps = {
+  children: React.ReactNode;
+};
+
+function DailyCastleDevStage({ children }: StageWrapperProps) {
+  const scale = useDailyCastleTuning((state: { scale: number }) => state.scale);
+  const x = useDailyCastleTuning((state: { x: number }) => state.x);
+  const y = useDailyCastleTuning((state: { y: number }) => state.y);
+
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.stage,
+        { transform: [{ translateX: x }, { translateY: y }, { scale }] },
+      ]}
+    >
+      {children}
+    </View>
+  );
+}
+
+function DailyCastleProductionStage({ children }: StageWrapperProps) {
+  return (
+    <View pointerEvents="box-none" style={[styles.stage, styles.productionStage]}>
+      {children}
+    </View>
+  );
+}
+
 function DailyCastlePlaqueSlot({
   child,
   castleScale,
@@ -64,7 +102,7 @@ function DailyCastlePlaqueSlot({
 
   useEffect(() => {
     plaqueProgress.stopAnimation();
-    if (reduceMotion !== false) {
+    if (DAILY_CASTLE_FIT_TEST || reduceMotion !== false) {
       plaqueProgress.setValue(1);
       return;
     }
@@ -100,6 +138,7 @@ function DailyCastlePlaqueSlot({
   }, [entranceDelay, plaqueProgress, reduceMotion, roundKey]);
 
   if (!answerCard) return <>{child}</>;
+  if (DAILY_CASTLE_FIT_TEST) return <>{answerCard}</>;
 
   // The socket belongs to the wall. It appears under the plaque in the same
   // first sliver used by the gauntlet recess overlay, then remains fixed while
@@ -108,11 +147,6 @@ function DailyCastlePlaqueSlot({
     inputRange: [0, 0.06, 1],
     outputRange: [0, 1, 1],
   });
-  const socketScale = plaqueProgress.interpolate({
-    inputRange: PLAQUE_INPUT,
-    outputRange: [0.96, 1, 1.075, 1.055],
-  });
-
   // A tight contact shadow carries the main separation cue. It grows early
   // enough to read as a wall release, then settles close to the plaque.
   const contactShadowOpacity = plaqueProgress.interpolate({
@@ -171,7 +205,6 @@ function DailyCastlePlaqueSlot({
                 left: -3 * castleScale,
                 borderRadius: 11 * castleScale,
                 opacity: socketOpacity,
-                transform: [{ scale: socketScale }],
               },
             ]}
           />
@@ -250,39 +283,42 @@ export default function DailyCastleStage({
   });
 
   const opening = DAILY_CASTLE_LAYOUT.opening;
+  const StageWrapper = __DEV__ ? DailyCastleDevStage : DailyCastleProductionStage;
 
   return (
-    <View pointerEvents="box-none" style={styles.stage}>
+    <StageWrapper>
       <Image
         source={CASTLE_SCENE}
         style={[styles.layer, styles.castleScene, rect(DAILY_CASTLE_LAYOUT.scene)]}
         resizeMode="stretch"
       />
-      <View style={[styles.opening, rect(opening)]}>
-        <Image
-          source={FEATHER_WALL}
-          style={StyleSheet.absoluteFill}
-          resizeMode="stretch"
-        />
-        <View style={[styles.featherArea, { top: 24 * scale, height: 404 * scale }]}>
-          <FeatherWall
-            featherCount={Math.min(solvedCount, 4)}
-            showGold={solvedCount === 5}
-            scale={scale}
+      {!DAILY_CASTLE_FIT_TEST && (
+        <View style={[styles.opening, rect(opening)]}>
+          <Image
+            source={FEATHER_WALL}
+            style={StyleSheet.absoluteFill}
+            resizeMode="stretch"
           />
+          <View style={[styles.featherArea, { top: 24 * scale, height: 404 * scale }]}>
+            <FeatherWall
+              featherCount={Math.min(solvedCount, 4)}
+              showGold={solvedCount === 5}
+              scale={scale}
+            />
+          </View>
+          <View onLayout={onGateLayout} style={styles.gate}>
+            <DailyGate
+              gatePosition={gatePosition}
+              clues={clues}
+              revealedCount={revealedCount}
+              width={opening.width * scale}
+              height={opening.height * scale}
+              openTravel={DAILY_CASTLE_LAYOUT.gateOpenTravel * scale}
+              scale={scale}
+            />
+          </View>
         </View>
-        <View onLayout={onGateLayout} style={styles.gate}>
-          <DailyGate
-            gatePosition={gatePosition}
-            clues={clues}
-            revealedCount={revealedCount}
-            width={opening.width * scale}
-            height={opening.height * scale}
-            openTravel={DAILY_CASTLE_LAYOUT.gateOpenTravel * scale}
-            scale={scale}
-          />
-        </View>
-      </View>
+      )}
 
       {React.Children.toArray(children).map((child, index) => {
         const slot = DAILY_CASTLE_LAYOUT.answerSlots[index];
@@ -301,22 +337,27 @@ export default function DailyCastleStage({
               }),
             ]}
           >
-            <DailyCastlePlaqueSlot
-              child={child}
-              castleScale={scale}
-              reduceMotion={reduceMotion}
-              roundKey={roundKey}
-            />
+            {DAILY_CASTLE_FIT_TEST ? child : (
+              <DailyCastlePlaqueSlot
+                child={child}
+                castleScale={scale}
+                reduceMotion={reduceMotion}
+                roundKey={roundKey}
+              />
+            )}
           </View>
         );
       })}
-    </View>
+    </StageWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   stage: {
     ...StyleSheet.absoluteFill,
+  },
+  productionStage: {
+    transform: [{ translateX: 0 }, { translateY: 0 }, { scale: 1 }],
   },
   layer: {
     position: 'absolute',
