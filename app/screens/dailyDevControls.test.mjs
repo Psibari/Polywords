@@ -65,7 +65,7 @@ assert.equal(
   const unregisterTsx = register();
   const { DAILY_CASTLE_TUNING_DEFAULTS, useDailyCastleTuning } = await import(castleTuningUrl);
   await unregisterTsx();
-  assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['background', 'gate', 'grid', 'clues']);
+  assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['background', 'wall', 'gate', 'grid', 'clues']);
   assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 167);
   assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 62);
   useDailyCastleTuning.getState().setValue('gate', 'closedY', 10);
@@ -75,13 +75,16 @@ assert.equal(
   assert.equal(useDailyCastleTuning.getState().gate.closedY, 0);
 }
 
-assert.ok(castleStageSource.includes('dailycastle/3darch5.png'));
+assert.ok(castleStageSource.includes('dailycastle/castlearch.png'));
+assert.ok(castleStageSource.includes('dailycastle/castlewall.png'));
+assert.ok(!castleStageSource.includes('dailycastle/3darch5.png'));
 assert.ok(!castleStageSource.includes('dailycastle/fullarchrev5.png'));
 assert.ok(castleStageSource.includes('if (index >= 6) return null'));
 assert.ok(castleStageSource.includes('index % 2'));
 assert.ok(castleStageSource.includes('Math.floor(index / 2)'));
-assert.ok(castleStageSource.includes('resizeMode="cover"'));
-assert.ok(castleTuningPanelSource.includes('CASTLE BACKGROUND'));
+assert.ok(castleStageSource.includes('resizeMode="contain"'));
+assert.ok(castleTuningPanelSource.includes('CASTLE ARCH'));
+assert.ok(castleTuningPanelSource.includes('CASTLE WALL'));
 assert.ok(castleTuningPanelSource.includes('ANSWER GRID'));
 assert.ok(castleTuningPanelSource.includes('OPEN TRAVEL'));
 assert.ok(dailyScreenSource.includes('CASTLE TUNE'));

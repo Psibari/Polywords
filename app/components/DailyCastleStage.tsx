@@ -16,7 +16,8 @@ import {
   resolveDailyCastleScale,
 } from '../ui/dailyCastleLayout';
 
-const CASTLE_SCENE = require('../../assets/images/dailycastle/3darch5.png');
+const CASTLE_ARCH = require('../../assets/images/dailycastle/castlearch.png');
+const CASTLE_WALL = require('../../assets/images/dailycastle/castlewall.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 const useDailyCastleTuning = __DEV__
   ? require('../dev/dailyCastleTuning').useDailyCastleTuning
@@ -24,6 +25,7 @@ const useDailyCastleTuning = __DEV__
 
 const DEFAULTS = {
   background: { scale: 1, x: 0, y: 0 },
+  wall: { scale: 1, x: 0, y: 0 },
   gate: { scale: 1, x: 0, closedY: 0, openTravel: 286 },
   grid: { x: 0, y: 0, cardWidth: 167, cardHeight: 62, columnGap: 12, rowGap: 12 },
   clues: { x: 0, y: 0, width: 226, verticalGap: 76 },
@@ -241,11 +243,15 @@ export default function DailyCastleStage({
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotionPreference();
   const background = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.background) : DEFAULTS.background;
+  const wall = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.wall) : DEFAULTS.wall;
   const gate = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.gate) : DEFAULTS.gate;
   const grid = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.grid) : DEFAULTS.grid;
   const clueLayout = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.clues) : DEFAULTS.clues;
-  // Art source: 1790 × 3304. Preserve the rounded arch's native proportions.
+  // Both transparent exports share an 873 × 2048 canvas. Register the arch
+  // crown below the HUD and the wall ledge near y=410 at the reference width.
   const widthScale = windowWidth / 390;
+  const artTop = -100 * widthScale - insets.top;
+  const artHeight = windowWidth * 2048 / 873;
   const availableBottom = windowHeight - insets.bottom - 50;
   const gridTop = Math.min(435 * widthScale, availableBottom - (3 * grid.cardHeight + 2 * grid.rowGap) * widthScale);
   const opening = { left: (windowWidth - 254 * widthScale) / 2 + gate.x * widthScale,
@@ -255,14 +261,24 @@ export default function DailyCastleStage({
   return (
     <View pointerEvents="box-none" style={styles.stage}>
       <Image
-        source={CASTLE_SCENE}
-        style={[styles.layer, styles.castleScene, {
-          left: (windowWidth - windowWidth * background.scale) / 2 + background.x * widthScale,
-          top: 10 * widthScale + background.y * widthScale - insets.top,
-          width: windowWidth * background.scale,
-          height: windowWidth * background.scale * 3304 / 1790,
+        source={CASTLE_WALL}
+        style={[styles.layer, styles.castleWall, {
+          left: (windowWidth - windowWidth * wall.scale) / 2 + wall.x * widthScale,
+          top: artTop + wall.y * widthScale,
+          width: windowWidth * wall.scale,
+          height: artHeight * wall.scale,
         }]}
-        resizeMode="cover"
+        resizeMode="contain"
+      />
+      <Image
+        source={CASTLE_ARCH}
+        style={[styles.layer, styles.castleArch, {
+          left: (windowWidth - windowWidth * background.scale) / 2 + background.x * widthScale,
+          top: artTop + background.y * widthScale,
+          width: windowWidth * background.scale,
+          height: artHeight * background.scale,
+        }]}
+        resizeMode="contain"
       />
       <View style={[styles.opening, opening]}>
           <Image
@@ -348,7 +364,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  castleScene: {
+  castleWall: {
+    zIndex: 10,
+    elevation: 10,
+  },
+  castleArch: {
     zIndex: 30,
     elevation: 30,
   },
