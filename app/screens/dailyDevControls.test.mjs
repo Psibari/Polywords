@@ -75,8 +75,8 @@ assert.equal(
   assert.equal(useDailyCastleTuning.getState().gate.closedY, 0);
 }
 
-assert.ok(castleStageSource.includes('dailycastle/fullarchrev5.png'));
-assert.ok(!castleStageSource.includes('dailycastle/3darch5.png'));
+assert.ok(castleStageSource.includes('dailycastle/3darch5.png'));
+assert.ok(!castleStageSource.includes('dailycastle/fullarchrev5.png'));
 assert.ok(castleStageSource.includes('if (index >= 6) return null'));
 assert.ok(castleStageSource.includes('index % 2'));
 assert.ok(castleStageSource.includes('Math.floor(index / 2)'));

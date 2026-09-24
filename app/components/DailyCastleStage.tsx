@@ -16,7 +16,7 @@ import {
   resolveDailyCastleScale,
 } from '../ui/dailyCastleLayout';
 
-const CASTLE_SCENE = require('../../assets/images/dailycastle/fullarchrev5.png');
+const CASTLE_SCENE = require('../../assets/images/dailycastle/3darch5.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 const useDailyCastleTuning = __DEV__
   ? require('../dev/dailyCastleTuning').useDailyCastleTuning
@@ -244,7 +244,7 @@ export default function DailyCastleStage({
   const gate = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.gate) : DEFAULTS.gate;
   const grid = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.grid) : DEFAULTS.grid;
   const clueLayout = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.clues) : DEFAULTS.clues;
-  // Art source: 1796 × 3047. Uniform width-based crop puts its ledge at ~405pt.
+  // Art source: 1790 × 3304. Preserve the rounded arch's native proportions.
   const widthScale = windowWidth / 390;
   const availableBottom = windowHeight - insets.bottom - 50;
   const gridTop = Math.min(435 * widthScale, availableBottom - (3 * grid.cardHeight + 2 * grid.rowGap) * widthScale);
@@ -260,7 +260,7 @@ export default function DailyCastleStage({
           left: (windowWidth - windowWidth * background.scale) / 2 + background.x * widthScale,
           top: 10 * widthScale + background.y * widthScale - insets.top,
           width: windowWidth * background.scale,
-          height: windowWidth * background.scale * 3047 / 1796,
+          height: windowWidth * background.scale * 3304 / 1790,
         }]}
         resizeMode="cover"
       />
