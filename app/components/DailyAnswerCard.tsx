@@ -58,6 +58,8 @@ export type DailyAnswerCardProps = {
   enterFromLeft?: boolean;
   enterFromRecess?: boolean;
   castleArt?: boolean;
+  castleWidth?: number;
+  castleHeight?: number;
   enterDelay?: number;
   roundKey?: string | number;
   recessProgress?: RNAnimated.Value;
@@ -92,6 +94,8 @@ export default function DailyAnswerCard({
   enterFromLeft = false,
   enterFromRecess = false,
   castleArt = false,
+  castleWidth,
+  castleHeight,
   enterDelay = 0,
   roundKey = 0,
   recessProgress,
@@ -448,11 +452,11 @@ export default function DailyAnswerCard({
         styles.entryShell,
         {
           height: castleArt
-            ? DAILY_CASTLE_LAYOUT.card.height * castleScale
+            ? castleHeight ?? DAILY_CASTLE_LAYOUT.card.height * castleScale
             : cardHeight,
         },
         castleArt && {
-          width: DAILY_CASTLE_LAYOUT.card.width * castleScale,
+          width: castleWidth ?? DAILY_CASTLE_LAYOUT.card.width * castleScale,
         },
         (activelyHeld || state === 'correct') && styles.entryShellClaiming,
         (!activelyHeld && state === 'wrong') && styles.entryShellFailing,

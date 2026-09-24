@@ -13,22 +13,21 @@ import FeatherWall from './FeatherWall';
 import type { DailyAnswerCardProps } from './DailyAnswerCard';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import {
-  DAILY_CASTLE_LAYOUT,
-  DailyCastleRect,
   resolveDailyCastleScale,
-  resolveDailyCastleXOffset,
 } from '../ui/dailyCastleLayout';
 
-const CASTLE_SCENE = require('../../assets/images/dailycastle/3darch5.png');
+const CASTLE_SCENE = require('../../assets/images/dailycastle/fullarchrev5.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 const useDailyCastleTuning = __DEV__
   ? require('../dev/dailyCastleTuning').useDailyCastleTuning
   : null;
 
-// Registration-only mode: render the full scene and flat plaques directly at
-// the measured slots. Keep the legacy gate/feather layers and every synthetic
-// plaque-depth layer disabled until the composition is confirmed on-device.
-const DAILY_CASTLE_FIT_TEST = true;
+const DEFAULTS = {
+  background: { scale: 1, x: 0, y: 0 },
+  gate: { scale: 1, x: 0, closedY: 0, openTravel: 286 },
+  grid: { x: 0, y: 0, cardWidth: 167, cardHeight: 62, columnGap: 12, rowGap: 12 },
+  clues: { x: 0, y: 0, width: 226, verticalGap: 76 },
+};
 
 // Same three physical legs as the gauntlet stones: release from the wall,
 // travel toward the player, then settle. One progress value per slot drives
@@ -56,36 +55,6 @@ type PlaqueSlotProps = {
   roundKey: number;
 };
 
-type StageWrapperProps = {
-  children: React.ReactNode;
-};
-
-function DailyCastleDevStage({ children }: StageWrapperProps) {
-  const scale = useDailyCastleTuning((state: { scale: number }) => state.scale);
-  const x = useDailyCastleTuning((state: { x: number }) => state.x);
-  const y = useDailyCastleTuning((state: { y: number }) => state.y);
-
-  return (
-    <View
-      pointerEvents="box-none"
-      style={[
-        styles.stage,
-        { transform: [{ translateX: x }, { translateY: y }, { scale }] },
-      ]}
-    >
-      {children}
-    </View>
-  );
-}
-
-function DailyCastleProductionStage({ children }: StageWrapperProps) {
-  return (
-    <View pointerEvents="box-none" style={[styles.stage, styles.productionStage]}>
-      {children}
-    </View>
-  );
-}
-
 function DailyCastlePlaqueSlot({
   child,
   castleScale,
@@ -102,7 +71,7 @@ function DailyCastlePlaqueSlot({
 
   useEffect(() => {
     plaqueProgress.stopAnimation();
-    if (DAILY_CASTLE_FIT_TEST || reduceMotion !== false) {
+    if (reduceMotion !== false) {
       plaqueProgress.setValue(1);
       return;
     }
@@ -138,7 +107,6 @@ function DailyCastlePlaqueSlot({
   }, [entranceDelay, plaqueProgress, reduceMotion, roundKey]);
 
   if (!answerCard) return <>{child}</>;
-  if (DAILY_CASTLE_FIT_TEST) return <>{answerCard}</>;
 
   // The socket belongs to the wall. It appears under the plaque in the same
   // first sliver used by the gauntlet recess overlay, then remains fixed while
@@ -272,38 +240,41 @@ export default function DailyCastleStage({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotionPreference();
-  const scale = resolveDailyCastleScale(windowWidth, windowHeight);
-  const xOffset = resolveDailyCastleXOffset(windowWidth, scale);
-
-  const rect = (target: DailyCastleRect) => ({
-    left: xOffset + target.x * scale,
-    top: (target.y + DAILY_CASTLE_LAYOUT.topOffset) * scale - insets.top,
-    width: target.width * scale,
-    height: target.height * scale,
-  });
-
-  const opening = DAILY_CASTLE_LAYOUT.opening;
-  const StageWrapper = __DEV__ ? DailyCastleDevStage : DailyCastleProductionStage;
+  const background = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.background) : DEFAULTS.background;
+  const gate = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.gate) : DEFAULTS.gate;
+  const grid = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.grid) : DEFAULTS.grid;
+  const clueLayout = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.clues) : DEFAULTS.clues;
+  // Art source: 1796 × 3047. Uniform width-based crop puts its ledge at ~405pt.
+  const widthScale = windowWidth / 390;
+  const availableBottom = windowHeight - insets.bottom - 50;
+  const gridTop = Math.min(435 * widthScale, availableBottom - (3 * grid.cardHeight + 2 * grid.rowGap) * widthScale);
+  const opening = { left: (windowWidth - 254 * widthScale) / 2 + gate.x * widthScale,
+    top: 110 * widthScale + gate.closedY * widthScale - insets.top,
+    width: 254 * widthScale * gate.scale, height: 280 * widthScale * gate.scale };
 
   return (
-    <StageWrapper>
+    <View pointerEvents="box-none" style={styles.stage}>
       <Image
         source={CASTLE_SCENE}
-        style={[styles.layer, styles.castleScene, rect(DAILY_CASTLE_LAYOUT.scene)]}
-        resizeMode="stretch"
+        style={[styles.layer, styles.castleScene, {
+          left: (windowWidth - windowWidth * background.scale) / 2 + background.x * widthScale,
+          top: 10 * widthScale + background.y * widthScale - insets.top,
+          width: windowWidth * background.scale,
+          height: windowWidth * background.scale * 3047 / 1796,
+        }]}
+        resizeMode="cover"
       />
-      {!DAILY_CASTLE_FIT_TEST && (
-        <View style={[styles.opening, rect(opening)]}>
+      <View style={[styles.opening, opening]}>
           <Image
             source={FEATHER_WALL}
             style={StyleSheet.absoluteFill}
             resizeMode="stretch"
           />
-          <View style={[styles.featherArea, { top: 24 * scale, height: 404 * scale }]}>
+          <View style={[styles.featherArea, { top: 24 * widthScale, height: 260 * widthScale }]}>
             <FeatherWall
               featherCount={Math.min(solvedCount, 4)}
               showGold={solvedCount === 5}
-              scale={scale}
+              scale={widthScale}
             />
           </View>
           <View onLayout={onGateLayout} style={styles.gate}>
@@ -311,53 +282,52 @@ export default function DailyCastleStage({
               gatePosition={gatePosition}
               clues={clues}
               revealedCount={revealedCount}
-              width={opening.width * scale}
-              height={opening.height * scale}
-              openTravel={DAILY_CASTLE_LAYOUT.gateOpenTravel * scale}
-              scale={scale}
+              width={opening.width}
+              height={opening.width * 1062 / 737}
+              openTravel={gate.openTravel * widthScale}
+              scale={widthScale}
+              clueX={clueLayout.x * widthScale}
+              clueY={clueLayout.y * widthScale}
+              clueWidth={clueLayout.width * widthScale}
+              clueGap={clueLayout.verticalGap * widthScale}
             />
           </View>
-        </View>
-      )}
+      </View>
 
       {React.Children.toArray(children).map((child, index) => {
-        const slot = DAILY_CASTLE_LAYOUT.answerSlots[index];
-        if (!slot) return null;
+        if (index >= 6) return null;
+        const cardWidth = grid.cardWidth * widthScale;
+        const cardHeight = grid.cardHeight * widthScale;
+        const gap = grid.columnGap * widthScale;
+        const left = (windowWidth - 2 * cardWidth - gap) / 2 + (index % 2) * (cardWidth + gap) + grid.x * widthScale;
+        const top = gridTop + Math.floor(index / 2) * (cardHeight + grid.rowGap * widthScale) + grid.y * widthScale - insets.top;
         return (
           <View
             key={`slot-${roundKey}-${index}`}
             pointerEvents="box-none"
             style={[
               styles.cardSlot,
-              rect({
-                x: slot.x,
-                y: slot.y,
-                width: DAILY_CASTLE_LAYOUT.card.width,
-                height: DAILY_CASTLE_LAYOUT.card.height,
-              }),
+              { left, top, width: cardWidth, height: cardHeight },
             ]}
           >
-            {DAILY_CASTLE_FIT_TEST ? child : (
-              <DailyCastlePlaqueSlot
-                child={child}
-                castleScale={scale}
+            <DailyCastlePlaqueSlot
+                child={React.isValidElement<DailyAnswerCardProps>(child)
+                  ? React.cloneElement(child, { castleWidth: cardWidth, castleHeight: cardHeight })
+                  : child}
+                castleScale={widthScale}
                 reduceMotion={reduceMotion}
                 roundKey={roundKey}
-              />
-            )}
+            />
           </View>
         );
       })}
-    </StageWrapper>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   stage: {
     ...StyleSheet.absoluteFill,
-  },
-  productionStage: {
-    transform: [{ translateX: 0 }, { translateY: 0 }, { scale: 1 }],
   },
   layer: {
     position: 'absolute',

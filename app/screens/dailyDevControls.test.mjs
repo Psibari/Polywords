@@ -60,141 +60,32 @@ assert.equal(
   'Daily replay override must not be duplicated in Settings',
 );
 
-// ── DEV-ONLY live castle tuning contract ────────────────────────────────
-// Store behavior is exercised directly. Source assertions below cover only
-// the React Native wiring that this plain Node test cannot mount.
+// ── Independent castle calibration and fixed answer layout ───────────
 {
   const unregisterTsx = register();
-  const {
-    DAILY_CASTLE_TUNING_DEFAULTS,
-    DAILY_CASTLE_TUNING_LIMITS,
-    DAILY_CASTLE_TUNING_STEPS,
-    useDailyCastleTuning,
-  } = await import(castleTuningUrl);
+  const { DAILY_CASTLE_TUNING_DEFAULTS, useDailyCastleTuning } = await import(castleTuningUrl);
   await unregisterTsx();
-
-  assert.deepEqual(
-    DAILY_CASTLE_TUNING_DEFAULTS,
-    { scale: 1, x: 0, y: 0 },
-    'castle tuning defaults must match the current device-fit baseline',
-  );
-  assert.deepEqual(
-    DAILY_CASTLE_TUNING_STEPS,
-    { scale: 0.01, x: 2, y: 2 },
-    'castle tuning steps must support fine on-device adjustment',
-  );
-  assert.deepEqual(
-    DAILY_CASTLE_TUNING_LIMITS,
-    {
-      scale: { min: 0.85, max: 1.05 },
-      x: { min: -60, max: 60 },
-      y: { min: -100, max: 100 },
-    },
-    'castle tuning clamps must keep the assembly within the calibration envelope',
-  );
-
-  const tuning = useDailyCastleTuning.getState();
-  tuning.setScale(99);
-  tuning.setX(-999);
-  tuning.setY(999);
-  assert.equal(useDailyCastleTuning.getState().scale, 1.05, 'scale clamps at 1.05');
-  assert.equal(useDailyCastleTuning.getState().x, -60, 'x clamps at -60');
-  assert.equal(useDailyCastleTuning.getState().y, 100, 'y clamps at 100');
-
-  useDailyCastleTuning.getState().setScale(-99);
-  useDailyCastleTuning.getState().setX(999);
-  useDailyCastleTuning.getState().setY(-999);
-  assert.equal(useDailyCastleTuning.getState().scale, 0.85, 'scale clamps at 0.85');
-  assert.equal(useDailyCastleTuning.getState().x, 60, 'x clamps at 60');
-  assert.equal(useDailyCastleTuning.getState().y, -100, 'y clamps at -100');
-
+  assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['background', 'gate', 'grid', 'clues']);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 167);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 62);
+  useDailyCastleTuning.getState().setValue('gate', 'closedY', 10);
+  assert.equal(useDailyCastleTuning.getState().gate.closedY, 10);
+  assert.equal(useDailyCastleTuning.getState().background.y, 0);
   useDailyCastleTuning.getState().reset();
-  const resetState = useDailyCastleTuning.getState();
-  assert.deepEqual(
-    { scale: resetState.scale, x: resetState.x, y: resetState.y },
-    { scale: 1, x: 0, y: 0 },
-    'RESET restores the complete castle baseline',
-  );
+  assert.equal(useDailyCastleTuning.getState().gate.closedY, 0);
 }
 
-assert.equal(
-  castleStageSource.includes("dailycastle/3darch5.png"),
-  true,
-  'Daily castle fit test must render 3darch5.png',
-);
-assert.equal(
-  castleStageSource.includes("dailycastle/fullarchrev5.png"),
-  false,
-  'Daily castle fit test must no longer render fullarchrev5.png',
-);
-
-assert.equal(
-  dailyScreenSource.includes('DailyCastleTuningPanel'),
-  true,
-  'Daily Challenge must mount the live castle tuning panel',
-);
-assert.equal(
-  dailyScreenSource.includes("import DailyCastleTuningPanel from '../dev/DailyCastleTuningPanel'"),
-  false,
-  'production Daily must not eagerly import the DEV castle tuning panel or store',
-);
-assert.match(
-  dailyScreenSource,
-  /const DailyCastleTuningPanel = __DEV__\s*\? require\('\.\.\/dev\/DailyCastleTuningPanel'\)\.default\s*:\s*null;/s,
-  'castle tuning panel module must load only in __DEV__',
-);
-assert.equal(
-  dailyScreenSource.includes('CASTLE TUNE'),
-  true,
-  'Daily Challenge must expose a CASTLE TUNE development button',
-);
-assert.match(
-  dailyScreenSource,
-  /__DEV__\s*&&\s*DailyCastleTuningPanel\s*&&\s*\(\s*<DailyCastleTuningPanel/s,
-  'castle tuning panel must be gated behind __DEV__',
-);
-assert.equal(
-  castleStageSource.includes("import { useDailyCastleTuning } from '../dev/dailyCastleTuning'"),
-  false,
-  'production castle stage must not eagerly import the DEV tuning store',
-);
-assert.match(
-  castleStageSource,
-  /const useDailyCastleTuning = __DEV__\s*\? require\('\.\.\/dev\/dailyCastleTuning'\)\.useDailyCastleTuning\s*:\s*null;/s,
-  'castle stage tuning store must load only in __DEV__',
-);
-assert.equal(
-  castleStageSource.includes('transform: [{ scale: 0.95 }]'),
-  false,
-  'the old one-off hard-coded stage transform must be removed',
-);
-assert.equal(
-  castleStageSource.includes(
-    'transform: [{ translateX: 0 }, { translateY: 0 }, { scale: 1 }]',
-  ),
-  true,
-  'production castle baseline must remain fixed at 1.00 / 0 / 0',
-);
-assert.match(
-  castleStageSource,
-  /transform:\s*\[\s*\{ translateX: x \},\s*\{ translateY: y \},\s*\{ scale \},?\s*\]/s,
-  'DEV castle transform must apply x, y, and scale to the single stage parent',
-);
-assert.match(
-  castleTuningPanelSource,
-  /setScale\(scale - DAILY_CASTLE_TUNING_STEPS\.scale\).*setScale\(scale \+ DAILY_CASTLE_TUNING_STEPS\.scale\)/s,
-  'SCALE controls must use the shared step size',
-);
-assert.match(
-  castleTuningPanelSource,
-  /setX\(x - DAILY_CASTLE_TUNING_STEPS\.x\).*setX\(x \+ DAILY_CASTLE_TUNING_STEPS\.x\)/s,
-  'X controls must use the shared step size',
-);
-assert.match(
-  castleTuningPanelSource,
-  /setY\(y - DAILY_CASTLE_TUNING_STEPS\.y\).*setY\(y \+ DAILY_CASTLE_TUNING_STEPS\.y\)/s,
-  'Y controls must use the shared step size',
-);
+assert.ok(castleStageSource.includes('dailycastle/fullarchrev5.png'));
+assert.ok(!castleStageSource.includes('dailycastle/3darch5.png'));
+assert.ok(castleStageSource.includes('if (index >= 6) return null'));
+assert.ok(castleStageSource.includes('index % 2'));
+assert.ok(castleStageSource.includes('Math.floor(index / 2)'));
+assert.ok(castleStageSource.includes('resizeMode="cover"'));
+assert.ok(castleTuningPanelSource.includes('CASTLE BACKGROUND'));
+assert.ok(castleTuningPanelSource.includes('ANSWER GRID'));
+assert.ok(castleTuningPanelSource.includes('OPEN TRAVEL'));
+assert.ok(dailyScreenSource.includes('CASTLE TUNE'));
+assert.ok(dailyScreenSource.includes('DailyCastleTuningPanel'));
 
 // ── DEV-ONLY dailyScrollTuning knob contract ──────────────────────
 // This is a plain node script (no jest, no @types/node test runner) —

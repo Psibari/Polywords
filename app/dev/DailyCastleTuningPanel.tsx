@@ -1,179 +1,48 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  DAILY_CASTLE_TUNING_STEPS,
-  useDailyCastleTuning,
-} from './dailyCastleTuning';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { DailyCastleGroup, useDailyCastleTuning } from './dailyCastleTuning';
 
-type Props = {
-  visible: boolean;
-};
+const groups: { group: DailyCastleGroup; title: string; fields: [string, string, number][] }[] = [
+  { group: 'background', title: 'CASTLE BACKGROUND', fields: [['scale', 'SCALE', 0.01], ['x', 'X', 2], ['y', 'Y', 2]] },
+  { group: 'gate', title: 'GATE', fields: [['scale', 'SCALE', 0.01], ['x', 'X', 2], ['closedY', 'CLOSED Y', 2], ['openTravel', 'OPEN TRAVEL', 4]] },
+  { group: 'grid', title: 'ANSWER GRID', fields: [['x', 'X', 2], ['y', 'Y', 2], ['cardWidth', 'CARD WIDTH', 2], ['cardHeight', 'CARD HEIGHT', 2], ['columnGap', 'COLUMN GAP', 2], ['rowGap', 'ROW GAP', 2]] },
+  { group: 'clues', title: 'CLUES', fields: [['x', 'X', 2], ['y', 'Y', 2], ['width', 'WIDTH', 2], ['verticalGap', 'VERTICAL GAP', 2]] },
+];
 
-// DEV-ONLY live controls. The compact panel sits in the castle's empty arch
-// opening so Pete can still judge the silhouette, sides, recesses, and bottom
-// edge while nudging the complete registered assembly.
-export default function DailyCastleTuningPanel({ visible }: Props) {
-  const scale = useDailyCastleTuning((state) => state.scale);
-  const x = useDailyCastleTuning((state) => state.x);
-  const y = useDailyCastleTuning((state) => state.y);
-  const setScale = useDailyCastleTuning((state) => state.setScale);
-  const setX = useDailyCastleTuning((state) => state.setX);
-  const setY = useDailyCastleTuning((state) => state.setY);
-  const reset = useDailyCastleTuning((state) => state.reset);
-
+export default function DailyCastleTuningPanel({ visible }: { visible: boolean }) {
+  const tuning = useDailyCastleTuning();
   if (!visible) return null;
-
   return (
-    <View pointerEvents="box-none" style={styles.root}>
-      <View style={styles.panel}>
-        <View style={styles.header}>
-          <Text style={styles.section}>CASTLE</Text>
-          <Pressable
-            accessibilityLabel="Reset castle tuning"
-            accessibilityRole="button"
-            hitSlop={8}
-            onPress={reset}
-            style={styles.resetButton}
-          >
-            <Text style={styles.resetText}>RESET</Text>
-          </Pressable>
+    <ScrollView style={styles.panel} contentContainerStyle={styles.content} nestedScrollEnabled>
+      <Pressable accessibilityRole="button" onPress={tuning.reset}>
+        <Text style={styles.title}>RESET ALL</Text>
+      </Pressable>
+      {groups.map(({ group, title, fields }) => (
+        <View key={group}>
+          <Text style={styles.title}>{title}</Text>
+          {fields.map(([key, label, step]) => {
+            const value = (tuning[group] as Record<string, number>)[key];
+            return (
+              <View key={key} style={styles.row}>
+                <Text style={styles.label}>{label}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel={`Decrease ${title} ${label}`} onPress={() => tuning.setValue(group, key, +(value - step).toFixed(2))}><Text style={styles.button}>−</Text></Pressable>
+                <Text style={styles.value}>{value.toFixed(step < 1 ? 2 : 0)}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel={`Increase ${title} ${label}`} onPress={() => tuning.setValue(group, key, +(value + step).toFixed(2))}><Text style={styles.button}>+</Text></Pressable>
+              </View>
+            );
+          })}
         </View>
-        <TuningRow
-          label="SCALE"
-          value={scale.toFixed(2)}
-          onDec={() => setScale(scale - DAILY_CASTLE_TUNING_STEPS.scale)}
-          onInc={() => setScale(scale + DAILY_CASTLE_TUNING_STEPS.scale)}
-        />
-        <TuningRow
-          label="X"
-          value={`${Math.round(x)}`}
-          onDec={() => setX(x - DAILY_CASTLE_TUNING_STEPS.x)}
-          onInc={() => setX(x + DAILY_CASTLE_TUNING_STEPS.x)}
-        />
-        <TuningRow
-          label="Y"
-          value={`${Math.round(y)}`}
-          onDec={() => setY(y - DAILY_CASTLE_TUNING_STEPS.y)}
-          onInc={() => setY(y + DAILY_CASTLE_TUNING_STEPS.y)}
-        />
-      </View>
-    </View>
-  );
-}
-
-function TuningRow({
-  label,
-  value,
-  onDec,
-  onInc,
-}: {
-  label: string;
-  value: string;
-  onDec: () => void;
-  onInc: () => void;
-}) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Pressable
-        accessibilityLabel={`Decrease castle ${label.toLowerCase()}`}
-        accessibilityRole="button"
-        hitSlop={8}
-        onPress={onDec}
-        style={styles.stepButton}
-      >
-        <Text style={styles.stepText}>-</Text>
-      </Pressable>
-      <Text style={styles.value}>{value}</Text>
-      <Pressable
-        accessibilityLabel={`Increase castle ${label.toLowerCase()}`}
-        accessibilityRole="button"
-        hitSlop={8}
-        onPress={onInc}
-        style={styles.stepButton}
-      >
-        <Text style={styles.stepText}>+</Text>
-      </Pressable>
-    </View>
+      ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    position: 'absolute',
-    top: 210,
-    right: 0,
-    left: 0,
-    zIndex: 110,
-    elevation: 110,
-    alignItems: 'center',
-  },
-  panel: {
-    width: 158,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    gap: 3,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(245,200,66,0.55)',
-    borderRadius: 7,
-    backgroundColor: 'rgba(0,0,0,0.86)',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 1,
-  },
-  section: {
-    color: '#F5C842',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  resetButton: {
-    minHeight: 22,
-    justifyContent: 'center',
-    paddingHorizontal: 5,
-    borderRadius: 4,
-    backgroundColor: '#333333',
-  },
-  resetText: {
-    color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-  },
-  row: {
-    minHeight: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  label: {
-    width: 42,
-    color: '#00FF88',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  stepButton: {
-    width: 24,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 4,
-    backgroundColor: '#333333',
-  },
-  stepText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    lineHeight: 16,
-    fontWeight: '700',
-  },
-  value: {
-    width: 38,
-    color: '#00FF88',
-    fontSize: 11,
-    fontVariant: ['tabular-nums'],
-    textAlign: 'center',
-  },
+  panel: { position: 'absolute', top: 210, alignSelf: 'center', width: 240, maxHeight: 420, zIndex: 110, elevation: 110, backgroundColor: 'rgba(0,0,0,0.92)', borderColor: '#F5C842', borderWidth: 1, borderRadius: 8 },
+  content: { padding: 9, gap: 8 },
+  title: { color: '#F5C842', fontWeight: '800', fontSize: 11, marginBottom: 3 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 28 },
+  label: { width: 92, color: 'white', fontSize: 10 },
+  button: { color: 'white', fontSize: 18, width: 25, textAlign: 'center', backgroundColor: '#444' },
+  value: { color: 'white', width: 42, textAlign: 'center', fontSize: 11 },
 });

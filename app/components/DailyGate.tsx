@@ -19,6 +19,10 @@ type Props = {
   height: number;
   openTravel: number;
   scale: number;
+  clueX?: number;
+  clueY?: number;
+  clueWidth?: number;
+  clueGap?: number;
 };
 
 /**
@@ -34,6 +38,10 @@ export default function DailyGate({
   height,
   openTravel,
   scale,
+  clueX = 0,
+  clueY = 0,
+  clueWidth,
+  clueGap,
 }: Props) {
   const translateY = gatePosition.interpolate({
     inputRange: [0, 1],
@@ -69,10 +77,10 @@ export default function DailyGate({
               style={[
                 styles.clueSlot,
                 {
-                  top: height * (0.2 + index * 0.205),
-                  height: height * 0.19,
-                  left: 18 * scale,
-                  right: 18 * scale,
+                  top: 28 * scale + clueY + index * (clueGap ?? 76 * scale),
+                  height: 68 * scale,
+                  left: (width - (clueWidth ?? width - 28 * scale)) / 2 + clueX,
+                  width: clueWidth ?? width - 28 * scale,
                 },
               ]}
             >

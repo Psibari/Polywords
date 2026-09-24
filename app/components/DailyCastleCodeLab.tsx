@@ -46,6 +46,7 @@ const CODE_LAB_ARCH = {
   width: 430,
   height: 530,
 };
+const CODE_LAB_RECESSES = { x: 0, y: 590, width: 430, height: 300 };
 
 // This is the real Daily Castle composition rendered in a browser-sized
 // reference frame. New coded background pieces should be added as layers here
@@ -123,7 +124,7 @@ export default function DailyCastleCodeLab({ visible, onClose }: Props) {
               contentFit="fill"
               style={[
                 styles.absolute,
-                rect(DAILY_CASTLE_LAYOUT.answerRecesses),
+                rect(CODE_LAB_RECESSES),
               ]}
             />
 
