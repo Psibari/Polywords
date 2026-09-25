@@ -372,8 +372,10 @@ const styles = StyleSheet.create({
     right: 0,
   },
   castleWall: {
-    zIndex: 10,
-    elevation: 10,
+    // This export includes the two foreground rails. They must occlude the
+    // arch, while the separately layered gate stays visible in its opening.
+    zIndex: 35,
+    elevation: 35,
   },
   castleArch: {
     zIndex: 30,
