@@ -491,8 +491,8 @@ export default function SettingsScreen({ navigation }: Props) {
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               >
                 <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Daily Castle Scene</Text>
-                  <Text style={styles.rowNote}>Castle layout preview, static — tap to cycle clues</Text>
+                  <Text style={styles.rowLabel}>Legacy Castle Preview</Text>
+                  <Text style={styles.rowNote}>Older static layout; open Daily to test the current castle</Text>
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
@@ -502,8 +502,8 @@ export default function SettingsScreen({ navigation }: Props) {
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               >
                 <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Daily Castle Code Lab</Text>
-                  <Text style={styles.rowNote}>Build coded backgrounds and shapes in the browser</Text>
+                  <Text style={styles.rowLabel}>Legacy Castle Code Lab</Text>
+                  <Text style={styles.rowNote}>Older art experiment; open Daily to test the current castle</Text>
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>

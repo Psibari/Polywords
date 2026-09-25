@@ -134,7 +134,7 @@ type SubmittedDailyAnswer = {
   height: number;
 };
 
-const CASTLE_ARCH = require('../../assets/images/dailycastle/squarearch.png');
+const CASTLE_ARCH = require('../../assets/images/dailycastle/castledeep2.png');
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 function toPerchReaction(
@@ -1270,11 +1270,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       <SafeAreaView style={styles.content}>
       {isReadyToStart && (
         <View style={styles.startGate}>
-          <Image
-            source={CASTLE_ARCH}
-            style={styles.startArch}
-            resizeMode="contain"
-          />
+          <View pointerEvents="none" style={styles.startArch}>
+            <Image
+              source={CASTLE_ARCH}
+              style={styles.startArchImage}
+              resizeMode="contain"
+            />
+          </View>
           <View style={styles.startCard}>
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
@@ -1449,6 +1451,12 @@ const styles = StyleSheet.create({
     height: 160,
     marginBottom: -20,
     zIndex: 1,
+    overflow: 'hidden',
+  },
+  startArchImage: {
+    width: '100%',
+    aspectRatio: 1033 / 2048,
+    top: -80,
   },
   startCard: {
     width: '100%',
