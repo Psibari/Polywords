@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { FONTS } from '../constants/fonts';
 
-const GATE = require('../../assets/images/dailycastle/gate.png');
+const GATE = require('../../assets/images/dailycastle/gate2.png');
 
 type Props = {
   /** 0 = gate fully raised (hidden), 1 = gate fully lowered (showing clues) */

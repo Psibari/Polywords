@@ -75,8 +75,9 @@ assert.equal(
   assert.equal(useDailyCastleTuning.getState().gate.closedY, 0);
 }
 
-assert.ok(castleStageSource.includes('dailycastle/castlearch.png'));
-assert.ok(castleStageSource.includes('dailycastle/castlewall.png'));
+assert.ok(castleStageSource.includes('dailycastle/castledeep2.png'));
+assert.ok(castleStageSource.includes('dailycastle/cavlewall.png'));
+assert.ok(readFileSync(new URL('../components/DailyGate.tsx', import.meta.url), 'utf8').includes('dailycastle/gate2.png'));
 assert.ok(!castleStageSource.includes('dailycastle/3darch5.png'));
 assert.ok(!castleStageSource.includes('dailycastle/fullarchrev5.png'));
 assert.ok(castleStageSource.includes('if (index >= 6) return null'));

@@ -16,8 +16,10 @@ import {
   resolveDailyCastleScale,
 } from '../ui/dailyCastleLayout';
 
-const CASTLE_ARCH = require('../../assets/images/dailycastle/castlearch.png');
-const CASTLE_WALL = require('../../assets/images/dailycastle/castlewall.png');
+const CASTLE_ARCH = require('../../assets/images/dailycastle/castledeep2.png');
+// Mock 3's foreground provides the floor-to-parapet depth and the broad
+// wall face behind the six interactive answer plaques.
+const CASTLE_WALL = require('../../assets/images/dailycastle/cavlewall.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 const useDailyCastleTuning = __DEV__
   ? require('../dev/dailyCastleTuning').useDailyCastleTuning
@@ -26,9 +28,9 @@ const useDailyCastleTuning = __DEV__
 const DEFAULTS = {
   background: { scale: 1, x: 0, y: 0 },
   wall: { scale: 1, x: 0, y: 0 },
-  gate: { scale: 1, x: 0, closedY: 0, openTravel: 286 },
+  gate: { scale: 1, x: 0, closedY: 0, openTravel: 266 },
   grid: { x: 0, y: 0, cardWidth: 167, cardHeight: 62, columnGap: 12, rowGap: 12 },
-  clues: { x: 0, y: 0, width: 226, verticalGap: 76 },
+  clues: { x: 0, y: 0, width: 174, verticalGap: 66 },
 };
 
 // Same three physical legs as the gauntlet stones: release from the wall,
@@ -247,16 +249,21 @@ export default function DailyCastleStage({
   const gate = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.gate) : DEFAULTS.gate;
   const grid = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.grid) : DEFAULTS.grid;
   const clueLayout = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.clues) : DEFAULTS.clues;
-  // Both transparent exports share an 873 × 2048 canvas. Register the arch
-  // crown below the HUD and the wall ledge near y=410 at the reference width.
+  // The new foreground is an independent 1182 × 2048 export. Register its
+  // parapet near the bottom of the gate instead of forcing the old shared
+  // 873 × 2048 arch/wall transform onto both pieces.
   const widthScale = windowWidth / 390;
-  const artTop = -100 * widthScale - insets.top;
-  const artHeight = windowWidth * 2048 / 873;
+  const archTop = -65 * widthScale - insets.top;
+  const archHeight = windowWidth * 2048 / 1033;
+  const wallHeight = windowWidth * 2048 / 1182;
   const availableBottom = windowHeight - insets.bottom - 50;
-  const gridTop = Math.min(435 * widthScale, availableBottom - (3 * grid.cardHeight + 2 * grid.rowGap) * widthScale);
-  const opening = { left: (windowWidth - 254 * widthScale) / 2 + gate.x * widthScale,
-    top: 110 * widthScale + gate.closedY * widthScale - insets.top,
-    width: 254 * widthScale * gate.scale, height: 280 * widthScale * gate.scale };
+  const gridTop = Math.min(520 * widthScale, availableBottom - (3 * grid.cardHeight + 2 * grid.rowGap) * widthScale);
+  // On shorter phones the grid moves up to clear the action label. Bring the
+  // foreground partway with it so the first row still belongs to its wall.
+  const wallTop = 115 * widthScale + Math.min(0, (gridTop - 520 * widthScale) / 2) - insets.top;
+  const opening = { left: (windowWidth - 228 * widthScale) / 2 + gate.x * widthScale,
+    top: 150 * widthScale + gate.closedY * widthScale - insets.top,
+    width: 228 * widthScale * gate.scale, height: 266 * widthScale * gate.scale };
 
   return (
     <View pointerEvents="box-none" style={styles.stage}>
@@ -264,9 +271,9 @@ export default function DailyCastleStage({
         source={CASTLE_WALL}
         style={[styles.layer, styles.castleWall, {
           left: (windowWidth - windowWidth * wall.scale) / 2 + wall.x * widthScale,
-          top: artTop + wall.y * widthScale,
+          top: wallTop + wall.y * widthScale,
           width: windowWidth * wall.scale,
-          height: artHeight * wall.scale,
+          height: wallHeight * wall.scale,
         }]}
         resizeMode="contain"
       />
@@ -274,9 +281,9 @@ export default function DailyCastleStage({
         source={CASTLE_ARCH}
         style={[styles.layer, styles.castleArch, {
           left: (windowWidth - windowWidth * background.scale) / 2 + background.x * widthScale,
-          top: artTop + background.y * widthScale,
+          top: archTop + background.y * widthScale,
           width: windowWidth * background.scale,
-          height: artHeight * background.scale,
+          height: archHeight * background.scale,
         }]}
         resizeMode="contain"
       />
@@ -299,7 +306,7 @@ export default function DailyCastleStage({
               clues={clues}
               revealedCount={revealedCount}
               width={opening.width}
-              height={opening.width * 1062 / 737}
+              height={opening.width * 1597 / 1399}
               openTravel={gate.openTravel * widthScale}
               scale={widthScale}
               clueX={clueLayout.x * widthScale}

@@ -4,9 +4,9 @@ import { create } from 'zustand';
 export const DAILY_CASTLE_TUNING_DEFAULTS = {
   background: { scale: 1, x: 0, y: 0 },
   wall: { scale: 1, x: 0, y: 0 },
-  gate: { scale: 1, x: 0, closedY: 0, openTravel: 286 },
+  gate: { scale: 1, x: 0, closedY: 0, openTravel: 266 },
   grid: { x: 0, y: 0, cardWidth: 167, cardHeight: 62, columnGap: 12, rowGap: 12 },
-  clues: { x: 0, y: 0, width: 226, verticalGap: 76 },
+  clues: { x: 0, y: 0, width: 174, verticalGap: 66 },
 };
 
 export type DailyCastleGroup = keyof typeof DAILY_CASTLE_TUNING_DEFAULTS;
