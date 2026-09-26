@@ -40,7 +40,8 @@ import {
 // 1290 × 2796 canvas and are always drawn at the same rect.
 const CASTLE_ARCH = require('../../assets/images/dailycastle/castle_cartoon.png');
 // Framed answer wall (two recessed brick panels), built by
-// tools/art/build_daily_answer_wall.py. The old seamed wall export is retired.
+// tools/art/build_daily_answer_wall.py: Pete's cartoon wall (slate frame, purple
+// bricks). The painted walls before it are retired.
 const CASTLE_WALL = require('../../assets/images/dailycastle/answerwall_framed.png');
 // What shows behind the raised gate: a stone tunnel receding to a lit far
 // opening, built by tools/art/build_daily_tunnel.py. The thrown block flies

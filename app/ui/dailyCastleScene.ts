@@ -208,11 +208,11 @@ export const DAILY_ANSWER_PANELS: DailyCastleRect[] = [0, 1].map((i) => {
 });
 
 /**
- * Mean colour of answerwall_framed.png's bottom 16 rows (the sill's shadowed
- * underside), measured. When the scene has to rise to keep the blocks clear
+ * Mean colour of answerwall_framed.png's bottom 16 rows (the sill's face),
+ * printed by build_daily_answer_wall.py; rerun and copy it if the wall changes. When the scene has to rise to keep the blocks clear
  * of the action label, the strip left under the wall is filled with it.
  */
-export const DAILY_ANSWER_WALL_FOOT = '#07050A';
+export const DAILY_ANSWER_WALL_FOOT = '#3D3268';
 
 /**
  * Floor coins (Pete, 2026-09-26): one per solved round on the courtyard
