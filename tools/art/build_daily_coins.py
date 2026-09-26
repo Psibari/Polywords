@@ -3,12 +3,13 @@
 Pete's design (2026-09-26): each solved round leaves a coin on the
 courtyard floor between the bottom step and the answer wall, one to four
 with a white feather; the win replaces them with one bigger gold-feather
-coin. A coin is a disc seen from above at the floor's angle: a stone face
-(the step slab's top face, ledge.png) inside a gold ring, on a gold edge,
-with a soft shadow where it meets the floor. Feathers are the game's own
+coin. A coin is a disc seen from above at the floor's angle: a midnight
+enamel face inside a metal ring, on a metal edge, with a soft shadow where it
+meets the floor. Option D (Pete, 2026-09-26): the white-feather coins are
+silver and gold is kept for the win's coin, whose gold is the brand golds
+(#F5C842, amber #C8920E, gold-dark #8F6F18). Feathers are the game's own
 feather art (assets/ui/feather-life-filled.png, feather-gold-reward.png),
-standing upright on the face like an emblem. Colours are the brand golds
-(#F5C842, amber #C8920E, gold-dark #8F6F18).
+standing upright on the face like an emblem.
 
 Output is 3x: white coin 62 x 40 pt -> 186 x 120 px; gold 80 x 52 pt ->
 240 x 156 px. The coin's contact point with the floor is the bottom of the
@@ -26,19 +27,24 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[2]
-LEDGE = ROOT / "assets/images/dailycastle/ledge.png"
 WHITE_FEATHER = ROOT / "assets/ui/feather-life-filled.png"
 GOLD_FEATHER = ROOT / "assets/ui/feather-gold-reward.png"
 OUT_DIR = ROOT / "assets/images/dailycastle"
 
-SLAB = (24, 96, 1309, 292)
-SEAM = 100
 GOLD = (245, 200, 66)
 AMBER = (200, 146, 14)
 GOLD_DARK = (143, 111, 24)
+# Metals: (ring, edge highlight, edge shadow). Pete, 2026-09-26 (option D): the
+# white-feather coins are silver; gold is kept for the win's coin alone.
+GOLD_METAL = (GOLD, AMBER, GOLD_DARK)
+SILVER_METAL = ((214, 214, 228), (160, 160, 178), (88, 88, 104))
+# Enamel face: brand surface-raised at the centre darkening to background-deep
+# (#211B4A family -> #0B0920) at the rim, with a faint grain.
+FACE_CENTRE = (46, 36, 88)
+FACE_RIM = (14, 11, 32)
 FACE_RATIO = 0.53      # ellipse height / width: the floor's viewing angle
 EDGE_FRAC = 0.09       # coin thickness as a fraction of its width
-RING_FRAC = 0.055      # gold ring width as a fraction of its width
+RING_FRAC = 0.055      # ring width as a fraction of its width
 SHADOW_PAD = 6         # px of transparent margin under the edge for the shadow
 
 
@@ -48,7 +54,18 @@ def ellipse_mask(size, box, blur=0.0):
     return m.filter(ImageFilter.GaussianBlur(blur)) if blur else m
 
 
-def coin(width_px: int, feather_path: Path, feather_frac: float) -> Image.Image:
+def enamel_face(width: int, height: int) -> Image.Image:
+    """Midnight enamel: radial from FACE_CENTRE to FACE_RIM, fixed-seed grain."""
+    y, x = np.mgrid[0:height, 0:width].astype(np.float32)
+    r = np.clip(np.hypot((x + 0.5) / width * 2 - 1, (y + 0.5) / height * 2 - 1), 0, 1)[..., None] ** 1.4
+    rgb = np.array(FACE_CENTRE, np.float32) * (1 - r) + np.array(FACE_RIM, np.float32) * r
+    rgb += np.random.default_rng(1).normal(0, 6, (height, width, 1))
+    alpha = np.full((height, width, 1), 255, np.float32)
+    return Image.fromarray(np.clip(np.concatenate([rgb, alpha], 2), 0, 255).astype(np.uint8), "RGBA")
+
+
+def coin(width_px: int, feather_path: Path, feather_frac: float, metal=GOLD_METAL) -> Image.Image:
+    ring_rgb, edge_hi, edge_lo = metal
     face_h = round(width_px * FACE_RATIO)
     edge = round(width_px * EDGE_FRAC)
     h = face_h + edge + SHADOW_PAD
@@ -64,7 +81,7 @@ def coin(width_px: int, feather_path: Path, feather_frac: float) -> Image.Image:
     edge_layer = Image.new("RGBA", size)
     x = np.linspace(0, 1, width_px)[None, :, None]
     shade = 0.62 + 0.38 * np.sin(np.pi * x) ** 0.6
-    base = np.array(AMBER, np.float32)[None, None, :] * shade + np.array(GOLD_DARK, np.float32)[None, None, :] * (1 - shade) * 0.6
+    base = np.array(edge_hi, np.float32)[None, None, :] * shade + np.array(edge_lo, np.float32)[None, None, :] * (1 - shade) * 0.6
     edge_rgb = np.broadcast_to(base, (h, width_px, 3)).copy()
     edge_layer = Image.fromarray(np.clip(edge_rgb, 0, 255).astype(np.uint8), "RGB").convert("RGBA")
     sweep = Image.new("L", size, 0)
@@ -74,22 +91,17 @@ def coin(width_px: int, feather_path: Path, feather_frac: float) -> Image.Image:
     edge_layer.putalpha(sweep)
     out.alpha_composite(edge_layer)
 
-    # Gold ring (the face's rim), lit from the top.
+    # The ring (the face's rim), lit from the top.
     ring = Image.new("RGBA", size)
     rv = np.linspace(1.15, 0.8, h)[:, None, None]
-    ring_rgb = np.clip(np.array(GOLD, np.float32)[None, None, :] * rv, 0, 255)
+    ring_rgb = np.clip(np.array(ring_rgb, np.float32)[None, None, :] * rv, 0, 255)
     ring = Image.fromarray(np.broadcast_to(ring_rgb, (h, width_px, 3)).astype(np.uint8), "RGB").convert("RGBA")
     ring.putalpha(ellipse_mask(size, (0, 0, width_px - 1, face_h - 1)))
     out.alpha_composite(ring)
 
-    # Stone face inside the ring: the step slab's top face, a touch darker so
-    # the feather reads.
+    # Enamel face inside the ring.
     r = round(width_px * RING_FRAC)
-    slab = Image.open(LEDGE).convert("RGBA").crop(SLAB)
-    top = slab.crop((300, 8, 700, SEAM - 8)).resize((width_px, face_h), Image.LANCZOS)
-    t = np.asarray(top).astype(np.float32)
-    t[..., :3] *= 0.72
-    face = Image.fromarray(np.clip(t, 0, 255).astype(np.uint8), "RGBA")
+    face = enamel_face(width_px, face_h)
     face.putalpha(ellipse_mask((width_px, face_h), (r, round(r * FACE_RATIO), width_px - 1 - r, face_h - 1 - round(r * FACE_RATIO)), blur=0.6))
     out.alpha_composite(face, (0, 0))
     # inner shadow under the ring's top lip
@@ -125,8 +137,8 @@ def glow(width: int, height: int) -> Image.Image:
 
 
 def main() -> None:
-    white = coin(186, WHITE_FEATHER, 0.74)
-    gold = coin(240, GOLD_FEATHER, 0.74)
+    white = coin(186, WHITE_FEATHER, 0.74, SILVER_METAL)
+    gold = coin(240, GOLD_FEATHER, 0.74, GOLD_METAL)
     white.save(OUT_DIR / "coin_feather.png", optimize=True)
     gold.save(OUT_DIR / "coin_gold.png", optimize=True)
     halo = glow(528, 294)   # the gold coin (240 x 155) at 2.2 x 1.9
