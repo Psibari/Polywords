@@ -76,7 +76,6 @@ import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAn
 import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
 import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleStage';
-import DailyCastleEntryArt from '../components/DailyCastleEntryArt';
 import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
@@ -1353,20 +1352,29 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           registered to the full screen, and the thrown plaque's origin comes
           from measureInWindow. The SafeAreaView above it is box-none so the
           plaques in the wall stay touchable. */}
-      {!isComplete && displayedDailySession && (
+      {/* The same castle stands behind the entry card and Results, gate shut
+          and blank (Pete, 2026-09-26). One element across all three phases, so
+          a win's floor coins stay put as Results come up. */}
+      {dailyInitialized && (
         <DailyCastleStage
           gatePosition={gatePosition}
-          clues={gateClues}
+          clues={!isComplete && displayedDailySession ? gateClues : []}
           revealedCount={revealedCount}
-          solvedCount={revealSolvedCount || displayedDailySession.currentRoundIndex}
-          roundKey={displayedDailySession.currentRoundIndex}
+          solvedCount={
+            isComplete
+              ? dailyResult?.solvedCount ?? revealSolvedCount
+              : displayedDailySession
+                ? revealSolvedCount || displayedDailySession.currentRoundIndex
+                : 0
+          }
+          roundKey={displayedDailySession?.currentRoundIndex ?? 0}
           flight={castleFlight}
           flightProgress={flightProgress}
           featherRise={featherRise}
           coinCelebrate={coinCelebrate}
           hudBottom={hudBottom}
         >
-          {currentRound &&
+          {!isComplete && displayedDailySession && currentRound &&
             [...currentRound.candidates].map((candidate, index) => (
               <DailyAnswerCard
                 key={candidate}
@@ -1388,9 +1396,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       <SafeAreaView style={styles.content} pointerEvents="box-none">
       {isReadyToStart && (
         <View style={styles.startGate}>
-          <View pointerEvents="none" style={styles.startArch}>
-            <DailyCastleEntryArt />
-          </View>
           <View style={styles.startCard}>
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
@@ -1538,13 +1543,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-  },
-  startArch: {
-    width: '80%',
-    height: 160,
-    marginBottom: -20,
-    zIndex: 1,
-    overflow: 'hidden',
   },
   startCard: {
     width: '100%',

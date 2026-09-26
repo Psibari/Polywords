@@ -182,6 +182,12 @@ navigation shell; active Hunt and Daily play are nav-free.
   box at the floor, so moving it down sinks it and up raises it. The newest coin rises (and the
   older ones slide to re-centre) on the same beat as the gate coming down. `FeatherWall.tsx`
   and the feathers inside the arch are gone.
+- The castle stands behind the whole Daily screen, not just play (Pete, 2026-09-26). The entry
+  card and Results sit over it with the gate shut and blank and no plaques. On Results the
+  floor coins show what was earned. It is one `DailyCastleStage` element across all three
+  phases, so it never remounts between them. `DAILY_SKY_TUNING` sets `showGround: false`:
+  ARCHNEW's sky is transparent, and the shared Hunt wall must not show above the towers. The
+  entry card no longer carries a castle crop (`DailyCastleEntryArt.tsx` is deleted).
 - The stage renders OUTSIDE the SafeAreaView (its art is registered to the full screen and the
   thrown plaque's origin comes from `measureInWindow`), so the SafeAreaView is `box-none`.
 - Clues are painted on the gate, one per plank (planks 2–4, each 62 pt), and travel with it.

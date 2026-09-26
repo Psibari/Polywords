@@ -387,6 +387,11 @@ from 43 to 60). Each source word has three clues, nine unique approved candidate
   and playback failure is invisible in TestFlight and production builds — this is why the mystical_chime regression took a full session to locate.
 21. External TestFlight needs a hosted privacy policy URL and a support contact before Beta App
   Review. Neither exists yet.
+22. Card look across the whole game (Pete, 2026-09-26): every screen's cards and panels should
+  look uniform, or at least alike. That includes Daily's entry and Results cards, Hunt Results,
+  the explainers and Settings. Today the Daily entry card has a gold border and the Daily
+  Results card a purple one; both are a flat dark panel over the castle. This needs its own
+  design pass with Pete. It was deliberately left out of the Daily castle work.
 
 ## Protection
 
