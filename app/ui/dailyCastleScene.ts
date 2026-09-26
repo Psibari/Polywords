@@ -147,10 +147,41 @@ export function resolveDailyGateClueRects(): DailyCastleRect[] {
 }
 
 /**
- * Answer wall: the parapet ledge band ends at y 1893 px on the wall export;
- * the six plaques sit on the brick face below it.
+ * The framed answer wall, answerwall_framed.png, built by
+ * tools/art/build_daily_answer_wall.py on the shared canvas. These are that
+ * script's own constants (CAP_TOP, PANEL_TOP, PANEL_BOTTOM, PILLAR_W,
+ * PILLARS) in canvas px; change both together. Two recessed brick panels,
+ * one column of three answer blocks in each.
  */
-export const DAILY_CASTLE_WALL_FACE_TOP = 1893 / 3;
+export const DAILY_ANSWER_WALL = {
+  capTopPx: 1728,
+  panelTopPx: 1898,
+  panelBottomPx: 2640,
+  pillarWidthPx: 120,
+  pillarXPx: [0, 585, 1170],
+} as const;
+
+/** The two brick panels, in canvas points. */
+export const DAILY_ANSWER_PANELS: DailyCastleRect[] = [0, 1].map((i) => {
+  const x0 = DAILY_ANSWER_WALL.pillarXPx[i] + DAILY_ANSWER_WALL.pillarWidthPx;
+  const x1 = DAILY_ANSWER_WALL.pillarXPx[i + 1];
+  return {
+    x: x0 / 3,
+    y: DAILY_ANSWER_WALL.panelTopPx / 3,
+    width: (x1 - x0) / 3,
+    height: (DAILY_ANSWER_WALL.panelBottomPx - DAILY_ANSWER_WALL.panelTopPx) / 3,
+  };
+});
+
+/**
+ * Mean colour of answerwall_framed.png's bottom 16 rows (the sill's shadowed
+ * underside), measured. When the scene has to rise to keep the blocks clear
+ * of the action label, the strip left under the wall is filled with it.
+ */
+export const DAILY_ANSWER_WALL_FOOT = '#07050A';
+
+/** Top of the brick panels: every block sits below it. */
+export const DAILY_CASTLE_WALL_FACE_TOP = DAILY_ANSWER_WALL.panelTopPx / 3;
 
 export type DailyCastleGrid = {
   top: number;
@@ -160,13 +191,25 @@ export type DailyCastleGrid = {
   rowGap: number;
 };
 
-export const DAILY_CASTLE_GRID: DailyCastleGrid = {
-  top: 645,
-  cardWidth: 184,
-  cardHeight: 64,
-  columnGap: 14,
-  rowGap: 14,
-};
+/**
+ * Answer blocks, 136 x 72 pt (answerplaque_stone.png is 3x that), three to a
+ * panel with equal gaps above, between and below, each column centred in its
+ * panel. Derived from the panels so the two cannot drift apart.
+ */
+export const DAILY_CASTLE_GRID: DailyCastleGrid = (() => {
+  const cardWidth = 136;
+  const cardHeight = 72;
+  const [left, right] = DAILY_ANSWER_PANELS;
+  const rowGap = (left.height - 3 * cardHeight) / 4;
+  const centerDistance = right.x + right.width / 2 - (left.x + left.width / 2);
+  return {
+    top: left.y + rowGap,
+    cardWidth,
+    cardHeight,
+    columnGap: centerDistance - cardWidth,
+    rowGap,
+  };
+})();
 
 export function dailyCastleGridBottom(grid: DailyCastleGrid): number {
   return grid.top + 3 * grid.cardHeight + 2 * grid.rowGap;
@@ -187,8 +230,13 @@ export function resolveDailyCastleSlot(
   };
 }
 
-/** Room kept under the grid for the action label. */
-export const DAILY_CASTLE_ACTION_LABEL_CLEARANCE = 26;
+/**
+ * Room kept under the grid for the action label (SWIPE UP TO CLAIM: 16 pt
+ * text whose bottom sits 2 pt above the bottom inset, so ~20 pt tall). 25
+ * keeps a few points of air between the lowest blocks and the label, and on
+ * the 430 x 932 reference phone leaves the framed wall exactly bottom-anchored.
+ */
+export const DAILY_CASTLE_ACTION_LABEL_CLEARANCE = 25;
 
 export type DailyCastleFrame = {
   /** Screen points per canvas point. */
@@ -371,4 +419,67 @@ export function fitDailyClueFontSize(text: string, width: number): number {
     if (linesNeeded(text.toUpperCase(), size, usable) <= DAILY_CLUE_FONT.maxLines) return size;
   }
   return DAILY_CLUE_FONT.minSize;
+}
+
+/**
+ * Barlow Condensed Bold (FONTS.tileCopy, the answer-block label) advance
+ * widths in em for A–Z — every character the Daily candidates use — measured
+ * from the bundled font with canvas measureText. Weight 800 measured the same.
+ */
+const BARLOW_BOLD_ADVANCE_EM: Record<string, number> = {
+  A: 0.482,
+  B: 0.47,
+  C: 0.464,
+  D: 0.476,
+  E: 0.438,
+  F: 0.421,
+  G: 0.467,
+  H: 0.48,
+  I: 0.23,
+  J: 0.452,
+  K: 0.491,
+  L: 0.426,
+  M: 0.548,
+  N: 0.514,
+  O: 0.473,
+  P: 0.465,
+  Q: 0.461,
+  R: 0.471,
+  S: 0.444,
+  T: 0.468,
+  U: 0.479,
+  V: 0.488,
+  W: 0.689,
+  X: 0.475,
+  Y: 0.474,
+  Z: 0.412,
+};
+const BARLOW_BOLD_WIDEST_EM = Math.max(...Object.values(BARLOW_BOLD_ADVANCE_EM));
+
+export const DAILY_ANSWER_FONT = {
+  maxSize: 26,
+  minSize: 14,
+  letterSpacing: 0.5,
+  /** The label's side padding on the block face, each side. */
+  sidePadding: 11,
+  safety: 0.95,
+} as const;
+
+export function dailyAnswerTextWidth(text: string, size: number): number {
+  let em = 0;
+  for (const ch of text.toUpperCase()) em += BARLOW_BOLD_ADVANCE_EM[ch] ?? BARLOW_BOLD_WIDEST_EM;
+  return em * size + text.length * DAILY_ANSWER_FONT.letterSpacing;
+}
+
+/**
+ * Largest whole-point label size at which `label` fits on one line of a
+ * block `blockWidth` wide (any consistent unit). Replaces trusting
+ * adjustsFontSizeToFit, which react-native-web ignores.
+ */
+export function fitDailyAnswerFontSize(label: string, blockWidth: number): number {
+  const usable = (blockWidth - 2 * DAILY_ANSWER_FONT.sidePadding) * DAILY_ANSWER_FONT.safety;
+  for (let size = DAILY_ANSWER_FONT.maxSize; size > DAILY_ANSWER_FONT.minSize; size -= 1) {
+    if (dailyAnswerTextWidth(label, size) <= usable) return size;
+  }
+  return DAILY_ANSWER_FONT.minSize;
 }

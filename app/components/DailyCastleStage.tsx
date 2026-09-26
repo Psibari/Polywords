@@ -21,6 +21,7 @@ import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
   DAILY_CASTLE_GRID,
+  DAILY_ANSWER_WALL_FOOT,
   DAILY_CASTLE_OPENING,
   DAILY_GATE_CLOSED,
   DAILY_GATE_MAX_SINK,
@@ -35,7 +36,9 @@ import {
 // ARCHNEW (towers, arch, steps, floor) and the answer wall share one
 // 1290 × 2796 canvas and are always drawn at the same rect.
 const CASTLE_ARCH = require('../../assets/images/dailycastle/ARCHNEW.png');
-const CASTLE_WALL = require('../../assets/images/dailycastle/cornerwall.png');
+// Framed answer wall (two recessed brick panels), built by
+// tools/art/build_daily_answer_wall.py. The old seamed wall export is retired.
+const CASTLE_WALL = require('../../assets/images/dailycastle/answerwall_framed.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 // The carved socket each plaque sits in: the Hunt gauntlet's recess art, the
 // same brick material as the answer wall.
@@ -385,6 +388,20 @@ export default function DailyCastleStage({
         }]}
         resizeMode="stretch"
       />
+      {sceneTop + frame.height < windowHeight - stageOffset.y && (
+        // The scene rose to clear the action label; continue the sill to the
+        // screen edge instead of showing sky under it.
+        <View
+          pointerEvents="none"
+          style={[styles.layer, styles.castleWall, {
+            left: 0,
+            right: 0,
+            top: sceneTop + frame.height,
+            bottom: 0,
+            backgroundColor: DAILY_ANSWER_WALL_FOOT,
+          }]}
+        />
+      )}
 
       <View pointerEvents="none" style={[styles.opening, {
         left: opening.x,
@@ -548,7 +565,7 @@ function DailyCastleFlightPlaque({
       ]}
     >
       <View style={dailyCastlePlaqueStyle}>
-        <DailyCastlePlaqueFace label={flight.label} />
+        <DailyCastlePlaqueFace label={flight.label} width={origin.width} />
       </View>
     </Animated.View>
   );

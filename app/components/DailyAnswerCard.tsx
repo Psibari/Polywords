@@ -34,6 +34,7 @@ import {
   DAILY_CASTLE_LAYOUT,
   resolveDailyCastleScale,
 } from '../ui/dailyCastleLayout';
+import { DAILY_ANSWER_FONT, fitDailyAnswerFontSize } from '../ui/dailyCastleScene';
 import { FONTS } from '../constants/fonts';
 
 // Stone block from the castle-step slab, built by tools/art/build_daily_plaque.py:
@@ -539,7 +540,10 @@ export default function DailyAnswerCard({
             <View style={styles.castleHaloInner} />
           </Animated.View>
           <View style={styles.castlePlaque}>
-            <DailyCastlePlaqueFace label={label} />
+            <DailyCastlePlaqueFace
+              label={label}
+              width={castleWidth ?? DAILY_CASTLE_LAYOUT.card.width * castleScale}
+            />
             {recessShade && (
               <RNAnimated.View
                 pointerEvents="none"
@@ -597,7 +601,17 @@ export default function DailyAnswerCard({
 
 // The castle plaque's art and label. Shared by the card in the wall and the
 // copy DailyCastleStage flies into the gate, so the two can never differ.
-export function DailyCastlePlaqueFace({ label }: { label: string }) {
+export function DailyCastlePlaqueFace({
+  label,
+  width,
+}: {
+  label: string;
+  /** The block's width in screen points; sizes the label to fit it. */
+  width?: number;
+}) {
+  const fontSize = width
+    ? fitDailyAnswerFontSize(label, width)
+    : DAILY_ANSWER_FONT.maxSize;
   return (
     <>
       {/* Size passed inline: a bundled image otherwise takes the art's own
@@ -611,10 +625,10 @@ export function DailyCastlePlaqueFace({ label }: { label: string }) {
       {/* The label sits on the front face, below the top lip. */}
       <View pointerEvents="none" style={styles.castlePlaqueFront}>
         <Text
-          style={styles.castlePlaqueLabel}
+          style={[styles.castlePlaqueLabel, { fontSize }]}
           numberOfLines={1}
           adjustsFontSizeToFit
-          minimumFontScale={0.6}
+          minimumFontScale={0.9}
         >
           {label.toUpperCase()}
         </Text>
@@ -758,8 +772,8 @@ const styles = StyleSheet.create({
   castlePlaqueFront: {
     position: 'absolute',
     top: CASTLE_PLAQUE_LIP,
-    left: 11,
-    right: 11,
+    left: DAILY_ANSWER_FONT.sidePadding,
+    right: DAILY_ANSWER_FONT.sidePadding,
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
@@ -768,9 +782,9 @@ const styles = StyleSheet.create({
     color: dailyCardMaterial.text,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 26,
+    fontSize: DAILY_ANSWER_FONT.maxSize,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: DAILY_ANSWER_FONT.letterSpacing,
     textAlign: 'center',
     textShadowColor: 'rgba(10,8,20,0.8)',
     textShadowOffset: { width: 1, height: 1.5 },

@@ -6,7 +6,8 @@ castle-step slab from ledge.png, cut to a thin top lip over a tall front face
 mock except that the front's two halves crossfade instead of butting, which
 removes the vertical line the mock showed down the middle.
 
-Output is 3x the plaque slot (184 x 64 pt -> 552 x 192 px). Rerun after any
+Output is 3x the plaque slot (136 x 72 pt -> 408 x 216 px), the block that
+sits three to a panel in the framed answer wall. Rerun after any
 change to ledge.png:  python3 tools/art/build_daily_plaque.py   (needs Pillow)
 """
 from pathlib import Path
@@ -16,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "assets/images/dailycastle/ledge.png"
 OUT = ROOT / "assets/images/dailycastle/answerplaque_stone.png"
 
-W, H = 552, 192
+W, H = 408, 216            # 3x the 136 x 72 pt block that fits a wall panel
 LIP = round(H * 0.2)          # top-face share of the plaque height
 SLAB = (24, 96, 1309, 292)    # ledge.png visible-alpha bounds
 SEAM = 100                    # gold seam row inside SLAB (top face above it)
@@ -70,7 +71,7 @@ def main() -> None:
     plaque.alpha_composite(three_slice(top, W, LIP, LIP_END), (0, 0))
     plaque.alpha_composite(two_ends(front, W, H - LIP), (0, LIP))
     plaque.save(OUT, optimize=True)
-    print(f"wrote {OUT.relative_to(ROOT)} {plaque.size}")
+    print(f"wrote {OUT} {plaque.size}")
 
 
 if __name__ == "__main__":

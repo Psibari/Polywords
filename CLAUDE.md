@@ -155,7 +155,7 @@ navigation shell; active Hunt and Daily play are nav-free.
 
 - Daily is a deterministic, one-attempt-per-date, five-round UP-only mode with two Chances.
 - The play screen is a castle (`DailyCastleStage.tsx`). `ARCHNEW.png` (towers, arch, steps,
-  purple floor) and the answer wall (`cornerwall.png`) share one 1290 × 2796 canvas and are
+  purple floor) and the answer wall (`answerwall_framed.png`) share one 1290 × 2796 canvas and are
   always drawn at the same rect: full screen width, bottom-anchored, moved only as one piece.
   Never position either layer alone. Every measured coordinate — the arch opening, the gate
   (`gate2.png`) and its plank lines, the clue planks, the plaque grid, the throw — lives in
@@ -176,10 +176,22 @@ navigation shell; active Hunt and Daily play are nav-free.
   ignores. A test fits every clue in the live pool.
 - Polly's Daily perch drops to sit on the left tower just under the HUD, from the HUD's
   measured bottom edge (`hudBottom`), so she never covers the HUD label.
-- Answer plaques are stone blocks (`answerplaque_stone.png`, 552×192, built from the castle
-  step slab `ledge.png` by `tools/art/build_daily_plaque.py` — rerun it, never hand-edit the
+- The answer wall is `answerwall_framed.png` (Pete's framed layout, 2026-09-26), built by
+  `tools/art/build_daily_answer_wall.py` from existing art: the step slab (`ledge.png`) as the
+  capstone with its gold seam, the slab's front stone as edge-lit pillars and sill, and
+  `cornerwall.png`'s painted bricks set back as two equal recessed panels (the middle pillar
+  covers cornerwall's seam). The script's constants are mirrored as `DAILY_ANSWER_WALL` in
+  `dailyCastleScene.ts`; change both together. The grid is DERIVED from the panels: three
+  136×72 blocks per panel, equal gaps, each column centred. `cornerwall.png` is no longer drawn.
+  When the scene rises to clear SWIPE UP (390/393-wide iPhones, ~5 pt), the stage fills the
+  strip under the sill with the wall's measured foot colour, `DAILY_ANSWER_WALL_FOOT`.
+- Answer plaques are stone blocks (`answerplaque_stone.png`, 408×216 = 3× the 136×72 block,
+  built from `ledge.png` by `tools/art/build_daily_plaque.py` — rerun it, never hand-edit the
   output): a thin top lip (top 20%) over the front face the label sits on. The socket behind
   each is the Hunt gauntlet's `gauntlet/recess1.png`. `answercard.png` is no longer used.
+  Labels are sized by `fitDailyAnswerFontSize` (measured Barlow Condensed Bold widths, one
+  line, 26 pt down to 14 pt); a test fits every candidate in the pool on 430/375/360-wide
+  phones (the longest, ASSASSINATION, lands at 18 pt on the reference phone).
 - Plaques come out of the wall each round: sunk and shaded in the socket, pushed out past
   full size, then settled (`PLAQUE_SEG` in the stage, `DAILY_RECESS_SCALE`/`_SHADE` in the
   card, one progress value). Motion only — no sound or haptic yet.

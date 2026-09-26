@@ -14,6 +14,10 @@ import {
   DAILY_GATE_MAX_SINK,
   DAILY_GATE_OPEN_TRAVEL,
   dailyCastleGridBottom,
+  dailyAnswerTextWidth,
+  DAILY_ANSWER_FONT,
+  DAILY_ANSWER_PANELS,
+  fitDailyAnswerFontSize,
   dailyClueFits,
   DAILY_CLUE_FONT,
   DAILY_GATE_CLUE_WIDTH,
@@ -65,6 +69,30 @@ const left = resolveDailyCastleSlot(DAILY_CASTLE_GRID, 0);
 const right = resolveDailyCastleSlot(DAILY_CASTLE_GRID, 1);
 assert.equal(left.x, DAILY_CASTLE_CANVAS.width - (right.x + right.width), 'grid is centred');
 
+// Framed wall: the two panels are equal, and each column of three blocks sits
+// wholly inside its panel with equal gaps.
+assert.equal(DAILY_ANSWER_PANELS[0].width, DAILY_ANSWER_PANELS[1].width, 'panels are the same width');
+for (let i = 0; i < 6; i += 1) {
+  const slot = resolveDailyCastleSlot(DAILY_CASTLE_GRID, i);
+  const panel = DAILY_ANSWER_PANELS[i % 2];
+  assert.ok(slot.x >= panel.x && slot.x + slot.width <= panel.x + panel.width, `block ${i} inside its panel horizontally`);
+  assert.ok(slot.y >= panel.y && slot.y + slot.height <= panel.y + panel.height + 1e-9, `block ${i} inside its panel vertically`);
+  const panelCenter = panel.x + panel.width / 2;
+  assert.ok(Math.abs(slot.x + slot.width / 2 - panelCenter) < 1e-9, `block ${i} centred in its panel`);
+}
+
+// Every answer word in the live pool fits its block on one line, on the
+// smallest supported phone width too.
+for (const phoneWidth of [430, 375, 360]) {
+  const blockWidth = DAILY_CASTLE_GRID.cardWidth * (phoneWidth / 430);
+  for (const word of new Set(DAILY_POOL.flatMap((w) => w.candidates))) {
+    const size = fitDailyAnswerFontSize(word, blockWidth);
+    const usable = (blockWidth - 2 * DAILY_ANSWER_FONT.sidePadding) * DAILY_ANSWER_FONT.safety;
+    assert.ok(dailyAnswerTextWidth(word, size) <= usable, `"${word}" fits a ${phoneWidth}-wide phone's block at ${size} pt`);
+  }
+}
+assert.equal(fitDailyAnswerFontSize('LOCK', DAILY_CASTLE_GRID.cardWidth), DAILY_ANSWER_FONT.maxSize);
+
 // Frame: fills width, bottom-anchored on the reference phone, grid always
 // clears the action label, and the first clue stays on screen.
 // [width, height, top inset, bottom inset]; HUD bottom ≈ top inset + 70.
@@ -83,7 +111,9 @@ for (const [w, h, topInset, inset] of phones) {
   const gridBottom = f.top + dailyCastleGridBottom(DAILY_CASTLE_GRID) * f.scale;
   assert.ok(gridBottom <= h - inset - DAILY_CASTLE_ACTION_LABEL_CLEARANCE + 0.001, `${w}x${h}: grid clears the action label`);
   assert.ok(f.top + clues[0].y * f.scale >= hudBottom, `${w}x${h}: first clue is below the HUD`);
-  assert.ok(f.top + f.height >= h - 0.001, `${w}x${h}: the wall reaches the bottom of the screen`);
+  // When the scene rises to clear the label, the stage fills the strip under
+  // the sill (DAILY_ANSWER_WALL_FOOT); keep that strip inside the home-bar inset.
+  assert.ok(h - (f.top + f.height) <= Math.max(inset, 0) + 0.001, `${w}x${h}: any strip under the wall stays inside the bottom inset`);
 }
 // Before the HUD is measured the scene is simply bottom-anchored.
 const unmeasured = resolveDailyCastleFrame({ windowWidth: 375, windowHeight: 667, bottomInset: 0 });

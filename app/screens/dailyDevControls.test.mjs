@@ -67,8 +67,8 @@ assert.equal(
   await unregisterTsx();
   // Arch and wall share one export canvas, so neither is tunable on its own.
   assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['gate', 'grid', 'clues']);
-  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 184);
-  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 64);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 136);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 72);
   useDailyCastleTuning.getState().setValue('gate', 'y', 10);
   assert.equal(useDailyCastleTuning.getState().gate.y, 10);
   assert.equal(useDailyCastleTuning.getState().grid.x, 0);
@@ -77,9 +77,9 @@ assert.equal(
 }
 
 assert.ok(castleStageSource.includes('dailycastle/ARCHNEW.png'));
-assert.ok(castleStageSource.includes('dailycastle/cornerwall.png'));
+assert.ok(castleStageSource.includes('dailycastle/answerwall_framed.png'));
 assert.ok(readFileSync(new URL('../components/DailyGate.tsx', import.meta.url), 'utf8').includes('dailycastle/gate_scroll.png'));
-for (const retired of ['castledeep2.png', 'cavlewall.png', '3darch5.png', 'fullarchrev5.png']) {
+for (const retired of ['castledeep2.png', 'cavlewall.png', 'cornerwall.png', '3darch5.png', 'fullarchrev5.png']) {
   assert.ok(!castleStageSource.includes(retired), `castle stage must not use retired art ${retired}`);
   assert.ok(!dailyScreenSource.includes(retired), `Daily screen must not use retired art ${retired}`);
 }
