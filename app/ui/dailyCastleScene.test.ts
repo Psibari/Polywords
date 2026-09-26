@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { DAILY_POOL } from '../game/dailyPool';
 import {
+  balanceDailyClue,
+  dailyClueTextWidth,
   DAILY_CASTLE_ACTION_LABEL_CLEARANCE,
   DAILY_CASTLE_CANVAS,
   DAILY_CASTLE_FLIGHT,
@@ -65,7 +67,9 @@ for (const clueTop of [DAILY_CLUE_TOP_MIN, DAILY_CLUE_TOP_PREFERRED, DAILY_CLUE_
   assert.equal(rects.length, 3);
   for (const [i, clue] of rects.entries()) {
     const twoFullLines = DAILY_CLUE_FONT.maxSize * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines;
-    assert.ok(clue.height >= twoFullLines, `clue ${i + 1} plank is tall enough for two 24 pt lines`);
+    // At least 8 pt of plank around two full lines, so three clues read as
+    // three, not one paragraph (Pete, 2026-09-26).
+    assert.ok(clue.height - twoFullLines >= 8, `clue ${i + 1} plank leaves air around two full lines`);
     assert.ok(clue.y >= DAILY_CLUE_TOP_MIN - 1e-9, `clue ${i + 1} sits below the narrow top of the arch`);
     assert.ok(clue.y + clue.height < openingBottom, `clue ${i + 1} sits above the steps (top ${clueTop})`);
     assert.ok(clue.x >= 126.3 && clue.x + clue.width <= 304, `clue ${i + 1} fits the opening width`);
@@ -165,6 +169,20 @@ for (const clue of DAILY_POOL.flatMap((word) => word.meanings)) {
   assert.ok(size * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines <= clues[0].height, `"${clue}" two lines fit the plank height`);
 }
 assert.equal(fitDailyClueFontSize('TO GRAB ON AND NOT LET GO', DAILY_GATE_CLUE_WIDTH), DAILY_CLUE_FONT.maxSize);
+
+// The drawn clue: one line if it fits on one, otherwise two balanced lines,
+// each inside the box, and the words unchanged.
+for (const clue of DAILY_POOL.flatMap((word) => word.meanings)) {
+  const size = fitDailyClueFontSize(clue, DAILY_GATE_CLUE_WIDTH);
+  const drawn = balanceDailyClue(clue, size, DAILY_GATE_CLUE_WIDTH);
+  const lines = drawn.split('\n');
+  assert.ok(lines.length <= DAILY_CLUE_FONT.maxLines, `"${clue}" draws in at most two lines`);
+  assert.equal(lines.join(' '), clue.toUpperCase().split(' ').join(' '));
+  for (const line of lines) {
+    assert.ok(dailyClueTextWidth(line, size) <= DAILY_GATE_CLUE_WIDTH * DAILY_CLUE_FONT.safety, `"${line}" fits on one line at ${size} pt`);
+  }
+}
+assert.equal(balanceDailyClue('How you make a button work', 20, DAILY_GATE_CLUE_WIDTH), 'HOW YOU MAKE\nA BUTTON WORK');
 
 // Floor coins: on the open courtyard floor (contact line between the step
 // edge and the capstone), inside the screen, never overlapping each other.

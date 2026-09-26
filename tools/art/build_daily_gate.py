@@ -7,6 +7,13 @@ moves hue, saturation and mean lightness to the scroll's, and keeps every
 pixel's own lightness offset — the plank lines and grain keep their contrast.
 (A straight histogram match was tried first; it flattened the plank lines.)
 
+Seams (Pete, 2026-09-26): the art's own plank lines are about 1 pt and barely
+darker than the wood, so three clues on the gate read as one paragraph. Every
+plank line across the board is redrawn as a dark groove, SEAM_PT thick, soft at
+its edges. Dark, never gold: gold made the door too busy. Plank positions are
+dailyCastleScene's DAILY_GATE_ART (first line 119 px, pitch 167.4 px, board x
+107-1248 px); change both together.
+
 Rerun after any change to either source:
     python3 tools/art/build_daily_gate.py   (needs Pillow and numpy)
 """
@@ -18,6 +25,15 @@ ROOT = Path(__file__).resolve().parents[2]
 GATE = ROOT / "assets/images/dailycastle/gate2.png"
 SCROLL = ROOT / "assets/images/textures/scroll_paper.png"
 OUT = ROOT / "assets/images/dailycastle/gate_scroll.png"
+
+FIRST_LINE_SRC = 119
+PLANK_PITCH_SRC = 167.4
+PLANK_COUNT = 8
+BOARD_X_SRC = (107, 1248)
+PT_PER_SRC = 52 / PLANK_PITCH_SRC   # DAILY_GATE_PLANK_PT / plankPitchSrc
+SEAM_PT = 3.5                       # groove thickness, canvas pt (Pete: dark and a little thicker)
+SEAM_RGB = (10, 4, 30)              # near background-deep, a shade of the wood's own hue
+SEAM_EDGE_SRC = 2.5                 # soft falloff each side, source px
 
 
 def rgb_to_hls(rgb):
@@ -57,6 +73,20 @@ def stats(path):
     return np.median(h), l.mean(), s.mean()
 
 
+def seams(rgb):
+    """Dark grooves on every plank line between the board's two edges."""
+    ys = np.arange(rgb.shape[0], dtype=float)[:, None]
+    half = SEAM_PT / PT_PER_SRC / 2
+    cover = np.zeros(rgb.shape[:2])
+    for i in range(1, PLANK_COUNT):
+        d = np.abs(ys - (FIRST_LINE_SRC + PLANK_PITCH_SRC * i))
+        cover = np.maximum(cover, np.clip((half + SEAM_EDGE_SRC - d) / (2 * SEAM_EDGE_SRC), 0, 1))
+    cover[:, : BOARD_X_SRC[0]] = 0
+    cover[:, BOARD_X_SRC[1] + 1 :] = 0
+    cover = cover[..., None] * 0.92
+    return rgb * (1 - cover) + np.array(SEAM_RGB) / 255 * cover
+
+
 def main() -> None:
     g_h, g_l, g_s = stats(GATE)
     s_h, s_l, s_s = stats(SCROLL)
@@ -66,6 +96,7 @@ def main() -> None:
     l = np.clip(l + (s_l - g_l), 0, 1)
     s = np.clip(s * (s_s / g_s), 0, 1)
     rgb = np.clip(hls_to_rgb(h, l, s), 0, 1)
+    rgb = seams(rgb)
     out = np.concatenate([rgb, gate[..., 3:]], -1)
     Image.fromarray((out * 255 + 0.5).astype(np.uint8), "RGBA").save(OUT, optimize=True)
     print(f"gate hue {g_h*360:.0f} -> {s_h*360:.0f}, lightness {g_l:.3f} -> {s_l:.3f}, "

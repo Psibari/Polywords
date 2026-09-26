@@ -65,9 +65,10 @@ export const DAILY_GATE_ART = {
 
 /**
  * Canvas points per gate source px, chosen so the three clue planks fill the
- * straight part of the opening: each plank is 52 pt tall, exactly two lines
- * of 24 pt clue text (DAILY_CLUE_FONT). The board overhangs the opening on both sides, where the
- * arch jambs hide it.
+ * straight part of the opening: each plank is 52 pt tall, room for two lines
+ * of 24 pt clue text; DAILY_CLUE_FONT caps clues at 20 so each has air around
+ * it. The board overhangs the opening on both sides, where the arch jambs
+ * hide it.
  */
 export const DAILY_GATE_PLANK_PT = 52;
 export const DAILY_GATE_PT_PER_SRC =
@@ -451,7 +452,10 @@ const BEBAS_ADVANCE_EM: Record<string, number> = {
 const BEBAS_WIDEST_EM = Math.max(...Object.values(BEBAS_ADVANCE_EM));
 
 export const DAILY_CLUE_FONT = {
-  maxSize: 24,
+  // 20, not 24 (Pete, 2026-09-26): two lines of 24 filled the 52 pt plank
+  // edge to edge and three clues read as one paragraph. At 20 each clue has
+  // about 9 pt of plank around it.
+  maxSize: 20,
   // 16 is reached by one clue only ("THE OUTWARD ANGLE WHERE TWO SLOPING ROOF
   // SIDES MEET") in the cartoon castle's 178 pt clue box; every other clue fits at 17+.
   minSize: 16,
@@ -461,6 +465,11 @@ export const DAILY_CLUE_FONT = {
   /** Headroom for rendering differences between platforms. */
   safety: 0.95,
 } as const;
+
+/** Measured width of `text` on one line at `size`, in canvas points. */
+export function dailyClueTextWidth(text: string, size: number): number {
+  return textWidth(text, size);
+}
 
 function textWidth(text: string, size: number): number {
   let em = 0;
@@ -507,6 +516,32 @@ export function fitDailyClueFontSize(text: string, width: number): number {
     if (linesNeeded(text.toUpperCase(), size, usable) <= DAILY_CLUE_FONT.maxLines) return size;
   }
   return DAILY_CLUE_FONT.minSize;
+}
+
+/**
+ * The clue as it is drawn: one line when it fits on one at `size`, otherwise
+ * two lines split at the word break that makes them closest in width, so no
+ * clue ends on a lone word ("HOW YOU MAKE / A BUTTON WORK", not "HOW YOU MAKE
+ * A BUTTON / WORK"). The greedy split is one of the candidates, so a clue that
+ * fits greedily always fits balanced.
+ */
+export function balanceDailyClue(text: string, size: number, width: number): string {
+  const upper = text.toUpperCase();
+  const usable = width * DAILY_CLUE_FONT.safety;
+  if (textWidth(upper, size) <= usable) return upper;
+  const words = upper.split(' ');
+  let best = upper;
+  let bestWidth = Infinity;
+  for (let i = 1; i < words.length; i += 1) {
+    const first = words.slice(0, i).join(' ');
+    const second = words.slice(i).join(' ');
+    const widest = Math.max(textWidth(first, size), textWidth(second, size));
+    if (widest < bestWidth) {
+      bestWidth = widest;
+      best = `${first}\n${second}`;
+    }
+  }
+  return best;
 }
 
 /**

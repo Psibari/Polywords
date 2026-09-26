@@ -9,6 +9,7 @@ import {
 import { FONTS } from '../constants/fonts';
 import {
   DAILY_CLUE_FONT,
+  balanceDailyClue,
   fitDailyClueFontSize,
   type DailyCastleRect,
 } from '../ui/dailyCastleScene';
@@ -119,7 +120,7 @@ export default function DailyGate({
               adjustsFontSizeToFit
               minimumFontScale={0.9}
             >
-              {clue.toUpperCase()}
+              {balanceDailyClue(clue, fontSizes[index], rect.width / scale)}
             </Text>
           </View>
         );

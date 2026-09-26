@@ -139,7 +139,9 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   `DAILY_CLUE_TOP_MAX` (the planks end above the steps and the gate still covers the crown),
   centred unless the HUD would cover it. The gate helpers (`dailyGateClosed`,
   `dailyGateLineY`, `dailyGateOpenTravel`, `dailyGateMaxSink`, `resolveDailyGateClueRects`)
-  take that clue top. Planks are 52 pt: two lines of 24 pt, exactly. The scene only drops
+  take that clue top. Planks are 52 pt; clues are capped at 20 pt and split into two even lines
+  (`balanceDailyClue`) so each has air on its plank, and `build_daily_gate.py` redraws
+  every plank line as a dark groove (never gold: too busy). The scene only drops
   when even `DAILY_CLUE_TOP_MAX` is under the HUD. The castle has three steps: the build
   script removes the top one and extends the door into its place.
 - Every measured coordinate lives in `app/ui/dailyCastleScene.ts` beside its pixel
