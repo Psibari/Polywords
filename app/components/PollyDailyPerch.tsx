@@ -123,6 +123,14 @@ export default function PollyDailyPerch({
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(280)).current;
+  // Hidden is slideY 280. The root is anchored to the top of the screen, so
+  // the slide alone leaves her on screen, over the entry card and Results;
+  // she fades on the same value, so she is gone whenever she is slid away.
+  const perchOpacity = slideY.interpolate({
+    inputRange: [0, 280],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
 
   // Whole-image drivers (no part seams possible — we only move the whole image).
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
@@ -276,7 +284,10 @@ export default function PollyDailyPerch({
   return (
     <Animated.View
       onLayout={(e) => setRootY(e.nativeEvent.layout.y)}
-      style={[styles.root, { transform: [{ translateY: slideY }, { translateY: perchDrop }] }]}
+      style={[
+        styles.root,
+        { opacity: perchOpacity, transform: [{ translateY: slideY }, { translateY: perchDrop }] },
+      ]}
     >
       {/* Speech bubble — to Polly's right, tail points left at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
