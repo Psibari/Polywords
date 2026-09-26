@@ -76,7 +76,7 @@ assert.equal(
   assert.equal(useDailyCastleTuning.getState().gate.y, 0);
 }
 
-assert.ok(castleStageSource.includes('dailycastle/ARCHNEW.png'));
+assert.ok(castleStageSource.includes('dailycastle/castle_cartoon.png'));
 assert.ok(castleStageSource.includes('dailycastle/answerwall_framed.png'));
 assert.ok(readFileSync(new URL('../components/DailyGate.tsx', import.meta.url), 'utf8').includes('dailycastle/gate_scroll.png'));
 for (const retired of ['castledeep2.png', 'cavlewall.png', 'cornerwall.png', '3darch5.png', 'fullarchrev5.png']) {

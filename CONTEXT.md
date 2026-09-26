@@ -56,8 +56,12 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
 ## Next Work
 
 Daily castle (on `daily-castle-test`):
-1. Colour pass with Pete: coins and a gold ring, courtyard floor, castle stone. The art
-   scripts in `tools/art/` regenerate each piece.
+1. Cartoon pass (Pete, 2026-09-26): coins done (option D, silver and a 100 pt gold). The
+   castle is now cartoon art (castle B, `castle_cartoon.png`) so it matches Polly. Still in the
+   old painted style: the tunnel, the gate texture, the answer wall and the blocks. Next is
+   cartoon versions of those, likely generated in the same style (Magnific; Pete's account hit
+   its usage limit on 2026-09-26). Sharper castle: re-export B at full size from Magnific (the
+   build used Pete's 864 px screen copy).
 2. Device check of the gold-coin moment: chime volume, Success haptic, pause length, glow
    strength.
 3. Card look across the whole game: every card and panel should look alike (Pete,

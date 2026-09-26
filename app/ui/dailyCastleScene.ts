@@ -1,8 +1,9 @@
 /**
  * Daily Challenge castle scene geometry, measured from the shipped art.
  *
- * `ARCHNEW.png` (towers, arch, steps, floor) and the answer wall
- * (`cornerwall.png`) are exported on ONE 1290 × 2796 canvas — a 430 × 932 pt
+ * `castle_cartoon.png` (towers, arch, steps, floor; built by
+ * tools/art/build_daily_castle.py) and the answer wall
+ * (`answerwall_framed.png`) are drawn on ONE 1290 × 2796 canvas — a 430 × 932 pt
  * phone at 3x — so both are drawn at the same rect and stay registered. Never
  * position either layer on its own; nudging one breaks the join between them.
  *
@@ -23,20 +24,20 @@ export type DailyCastleRect = {
 export const DAILY_CASTLE_CANVAS = { width: 430, height: 932 } as const;
 
 /**
- * ARCHNEW.png's transparent arch opening, alpha-measured: x 305–985 px,
- * y 579–1340 px. The top edge is the crown of the curve; below 1340 px the
- * steps are opaque and hide whatever sits behind the opening.
+ * castle_cartoon.png's transparent arch opening, alpha-measured (the build
+ * script prints it): x 356–933 px, y 442–1190 px. The top edge is the crown of
+ * the curve; below 1190 px the steps are opaque and hide whatever sits behind.
  */
 export const DAILY_CASTLE_OPENING: DailyCastleRect = {
-  x: 305 / 3,
-  y: 579 / 3,
-  width: 680 / 3,
-  height: 761 / 3,
+  x: 356 / 3,
+  y: 442 / 3,
+  width: 578 / 3,
+  height: 749 / 3,
 };
 
 /**
  * Polly's Daily speech bubble sits on the steps, just below the arch opening
- * (whose bottom is ARCHNEW's step edge, 1340 px), so it never covers a clue on
+ * (whose bottom is the top step's edge, 1190 px), so it never covers a clue on
  * the gate (Pete, 2026-09-26). Canvas points; x/y is the bubble's top-left.
  * Two lines of the longest Daily line fit above the floor coins.
  */
@@ -44,16 +45,6 @@ export const DAILY_POLLY_BUBBLE = {
   x: 40,
   y: DAILY_CASTLE_OPENING.y + DAILY_CASTLE_OPENING.height + 4,
   maxWidth: 260,
-} as const;
-
-/**
- * Left tower crown on ARCHNEW.png: merlon tops at y 187 px, crown spans
- * x 0–396 px.
- */
-export const DAILY_CASTLE_LEFT_TOWER = {
-  x: 0,
-  crownTop: 187 / 3,
-  width: 396 / 3,
 } as const;
 
 /**
@@ -73,11 +64,12 @@ export const DAILY_GATE_ART = {
 
 /**
  * Canvas points per gate source px, chosen so the three clue planks fill the
- * straight part of the opening: each plank is 62 pt tall, room for two lines
- * of 24 pt clue text. The board overhangs the opening on both sides, where the
+ * straight part of the opening: each plank is 52 pt tall, exactly two lines
+ * of 24 pt clue text (DAILY_CLUE_FONT). Lower planks would let the first clue
+ * start higher, but a 375 × 667 phone needs it at 240 pt to clear the HUD. The board overhangs the opening on both sides, where the
  * arch jambs hide it.
  */
-export const DAILY_GATE_PLANK_PT = 62;
+export const DAILY_GATE_PLANK_PT = 52;
 export const DAILY_GATE_PT_PER_SRC =
   DAILY_GATE_PLANK_PT / DAILY_GATE_ART.plankPitchSrc;
 
@@ -86,10 +78,11 @@ export const DAILY_GATE_CLUE_PLANKS = [2, 3, 4] as const;
 
 /**
  * Where the gate image sits when closed. The clue planks run from canvas
- * y 258 pt (the opening is ~198 pt wide there, measured on ARCHNEW.png) down
- * to 444 pt, just above the step edge at 446.7 pt.
+ * y 240 pt (the opening is ~185 pt wide there, measured on castle_cartoon.png)
+ * down to 396 pt, just above the step edge at 396.7 pt. 240 is the lowest start
+ * that stays below the HUD on a 375 × 667 phone (see dailyCastleScene.test.ts).
  */
-const GATE_CLUE_TOP_Y = 258;
+const GATE_CLUE_TOP_Y = 240;
 const GATE_CLUE_CENTER_Y = GATE_CLUE_TOP_Y + DAILY_GATE_PLANK_PT * 1.5;
 const GATE_CLUE_CENTER_LINE_SRC =
   DAILY_GATE_ART.firstLineSrc + DAILY_GATE_ART.plankPitchSrc * 3.5;
@@ -133,10 +126,11 @@ export const DAILY_GATE_MAX_SINK = Math.min(
 );
 
 /**
- * Clue text box width. At the top clue plank (y 258 pt) the opening spans
- * ~117–315 pt; 190 keeps the text inside it with a few points to spare.
+ * Clue text box width. Along the clue planks (y 240–396 pt) the opening spans
+ * at least ~122.7–307.7 pt (185 pt, centred on the gate); 178 keeps the text
+ * inside it with a few points to spare and fits every clue in the pool.
  */
-export const DAILY_GATE_CLUE_WIDTH = 190;
+export const DAILY_GATE_CLUE_WIDTH = 178;
 
 /**
  * Clue rects in canvas points with the gate closed. Each fills its plank
@@ -194,16 +188,17 @@ export const DAILY_ANSWER_WALL_FOOT = '#07050A';
 
 /**
  * Floor coins (Pete, 2026-09-26): one per solved round on the courtyard
- * floor between the bottom step (its edge ends at y 1560 px, 520 pt, on
- * ARCHNEW.png) and the answer wall's capstone (576 pt). Coin art from
+ * floor between the bottom step (its edge ends at y 1538 px, ~513 pt, on
+ * castle_cartoon.png) and the answer wall's capstone (576 pt). Coin art from
  * tools/art/build_daily_coins.py: white 186 x 122 px, gold 240 x 155 px, each
  * with SHADOW_PAD 6 px of shadow below the point where the coin meets the
  * floor. Every coin's contact point sits on one line, `contactY`.
  */
 export const DAILY_FLOOR_COINS = {
-  floorTop: 1560 / 3,
+  floorTop: 1539 / 3,
   floorBottom: DAILY_ANSWER_WALL.capTopPx / 3,
-  contactY: 566,
+  // Low on the floor so the 100 pt gold coin clears the bottom step (513 pt).
+  contactY: 572,
   pitch: 76,
   white: { width: 186 / 3, height: 122 / 3, contactFromTop: (122 - 6) / 3 },
   // coin_gold.png is 300 × 192 px: 100 pt wide, ~1.6× a white coin (Pete, 2026-09-26).
@@ -360,13 +355,13 @@ export const DAILY_CASTLE_FLIGHT = {
   /** Canvas point the plaque's centre reaches at the handoff. */
   handoff: {
     x: DAILY_CASTLE_OPENING.x + DAILY_CASTLE_OPENING.width / 2,
-    y: 400,
+    y: 342,
   },
   handoffScale: 0.7,
   /** Canvas point where it disappears into the back wall. */
   end: {
     x: DAILY_CASTLE_OPENING.x + DAILY_CASTLE_OPENING.width / 2,
-    y: 322,
+    y: 302,
   },
   endScale: 0.42,
   riseMs: 450,
@@ -419,7 +414,9 @@ const BEBAS_WIDEST_EM = Math.max(...Object.values(BEBAS_ADVANCE_EM));
 
 export const DAILY_CLUE_FONT = {
   maxSize: 24,
-  minSize: 17,
+  // 16 is reached by one clue only ("THE OUTWARD ANGLE WHERE TWO SLOPING ROOF
+  // SIDES MEET") in the cartoon castle's 178 pt clue box; every other clue fits at 17+.
+  minSize: 16,
   lineHeightRatio: 26 / 24,
   letterSpacing: 0.5,
   maxLines: 2,

@@ -125,9 +125,16 @@ Deterministic, one attempt per date, five UP-only rounds, two Chances. Rules and
 sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-test`
 (see `CONTEXT.md`).
 
-- One scene, `DailyCastleStage.tsx`, behind entry, play and Results. `ARCHNEW.png` and
+- One scene, `DailyCastleStage.tsx`, behind entry, play and Results. `castle_cartoon.png` and
   `answerwall_framed.png` share one 1290 × 2796 canvas, drawn full width and bottom-anchored
   as one piece; never position either alone.
+- The castle is cartoon art to match Polly (Pete, 2026-09-26). `build_daily_castle.py` builds
+  it from `tools/art/source/castle_cartoon_src.png`: golds remapped to the game's, arch
+  centred, straight sides stretched for the clue planks, opening cut out, measurements
+  printed. The old painted `ARCHNEW.png` is no longer drawn; the tunnel and answer-wall scripts
+  still read it until they go cartoon too.
+- Clue geometry is set by the smallest phone: the first clue must start at canvas y 240 to
+  clear the HUD on 375 × 667, so the planks are 52 pt (two lines of 24 pt, exactly).
 - Every measured coordinate lives in `app/ui/dailyCastleScene.ts` beside its pixel
   measurement (opening, gate planks, clue rects, plaque grid, throw, coins, Polly's bubble),
   covered by `dailyCastleScene.test.ts`. Re-measure if an export changes.

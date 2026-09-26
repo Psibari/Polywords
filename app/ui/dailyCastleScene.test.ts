@@ -53,12 +53,13 @@ assert.ok(dailyGateLineY(0) + DAILY_GATE_MAX_SINK < opening.y, 'sunk gate still 
 const clues = resolveDailyGateClueRects();
 assert.equal(clues.length, 3);
 for (const [i, clue] of clues.entries()) {
-  assert.ok(clue.height >= 60, `clue ${i + 1} plank is tall enough for two 24 pt lines`);
-  assert.ok(clue.y >= 258, `clue ${i + 1} sits below the curve of the arch`);
+  const twoFullLines = DAILY_CLUE_FONT.maxSize * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines;
+  assert.ok(clue.height >= twoFullLines, `clue ${i + 1} plank is tall enough for two 24 pt lines`);
+  assert.ok(clue.y >= 240, `clue ${i + 1} sits below the curve of the arch`);
   assert.ok(clue.y + clue.height < openingBottom, `clue ${i + 1} sits above the steps`);
-  // Measured on ARCHNEW.png: from y 258 pt down, the opening spans at least
-  // x 117–315 pt.
-  assert.ok(clue.x >= 117 && clue.x + clue.width <= 315, `clue ${i + 1} fits the opening width`);
+  // Measured on castle_cartoon.png: from y 240 pt down, the opening spans at
+  // least x 122.7–307.7 pt.
+  assert.ok(clue.x >= 122.7 && clue.x + clue.width <= 307.7, `clue ${i + 1} fits the opening width`);
   if (i > 0) assert.equal(clue.y, clues[i - 1].y + clues[i - 1].height, 'clues sit on consecutive planks');
 }
 

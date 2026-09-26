@@ -34,9 +34,10 @@ import {
   type DailyCastleGrid,
 } from '../ui/dailyCastleScene';
 
-// ARCHNEW (towers, arch, steps, floor) and the answer wall share one
+// The cartoon castle (towers, arch, steps, floor; tools/art/build_daily_castle.py)
+// and the answer wall share one
 // 1290 × 2796 canvas and are always drawn at the same rect.
-const CASTLE_ARCH = require('../../assets/images/dailycastle/ARCHNEW.png');
+const CASTLE_ARCH = require('../../assets/images/dailycastle/castle_cartoon.png');
 // Framed answer wall (two recessed brick panels), built by
 // tools/art/build_daily_answer_wall.py. The old seamed wall export is retired.
 const CASTLE_WALL = require('../../assets/images/dailycastle/answerwall_framed.png');
