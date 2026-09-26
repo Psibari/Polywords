@@ -81,7 +81,12 @@ export default function DailyGate({
         },
       ]}
     >
-      <Image source={GATE} style={styles.gateImage} resizeMode="stretch" />
+      {/* Explicit size, never the file's own: see the back wall in DailyCastleStage. */}
+      <Image
+        source={GATE}
+        style={[styles.gateImage, { width: frame.width, height: frame.height }]}
+        resizeMode="stretch"
+      />
 
       {visibleClues.map((clue, index) => {
         const rect = clueRects[index];

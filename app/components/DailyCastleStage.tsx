@@ -409,9 +409,12 @@ export default function DailyCastleStage({
         width: opening.width,
         height: opening.height,
       }]}>
+        {/* Explicit size: with absoluteFill alone a bundled image takes its
+            file's own pixel size (737 x 1062) and only a blown-up corner of it
+            showed in the opening. */}
         <Image
           source={FEATHER_WALL}
-          style={StyleSheet.absoluteFill}
+          style={[styles.backWall, { width: opening.width, height: opening.height }]}
           resizeMode="stretch"
         />
         <FeatherWall
@@ -591,6 +594,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 20,
     elevation: 20,
+  },
+  backWall: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
   },
   gate: {
     ...StyleSheet.absoluteFill,
