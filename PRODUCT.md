@@ -30,7 +30,7 @@ generator, or owner of the words.
 3. Swiping is a meaningful physical action, not decorative navigation.
 4. Ordinary choices remain neutral until commitment.
 5. Haunted words return; mastery resolves unfinished business.
-6. The Vault belongs to the player. CONFLICT for Pete: `docs/POLYBOOK.md` (2026-09-07) makes the Polybook Polly's diary, which the player reads; older locks call this screen the player's Polly-free archive.
+6. The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26).
 7. Gold is scarce; the nocturnal purple/near-black palette is unified across modes.
 
 ## Technical Shape

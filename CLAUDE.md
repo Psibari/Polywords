@@ -117,7 +117,7 @@ Daily play are nav-free.
   off. Deleting them is Pete's call.
 - Naming collision, not fixed: the nav tab says "Polybook" and so does the in-round book's
   spine in `MaskBoard.tsx` (style `vaultLabel`). Renaming either is Pete's call.
-- CONFLICT for Pete: `docs/POLYBOOK.md` (2026-09-07) makes the Polybook Polly's diary, which the player reads; older locks call this screen the player's Polly-free archive. `AGENTS.md`, `PRODUCT.md` and `GAME_REFERENCE.md` still carry the old lock.
+- The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26).
 
 ### Daily (castle)
 

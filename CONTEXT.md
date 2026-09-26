@@ -19,6 +19,8 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
 
 ## Current State
 
+- **Ruling (Pete, 2026-09-26):** the Polybook is Polly's book, kept in the old Vault; the
+  player reads it.
 - **Daily castle** (`daily-castle-test`, device-checked on iPhone 2026-09-26). Castle scene
   behind entry, play and Results; scroll-coloured gate carrying the clues; stone tunnel behind
   it; framed answer wall with stone blocks that come out of the wall and glow when grabbed;
@@ -60,34 +62,39 @@ Daily castle (on `daily-castle-test`):
    strength.
 3. Card look across the whole game: every card and panel should look alike (Pete,
    2026-09-26). Daily entry and Results cards were deliberately left for this pass.
-4. Pete's call on cleanup: the unreferenced exports in `assets/images/dailycastle/`, the
-   Daily tree assets and `DailyTreeScene`, the old `DailyCastleScene` preview, and the
-   scroll-era leftovers the Daily screen still imports (`dailyScrollTuning`,
-   `dailyScrollLayout`). The dev-only buttons over the bottom-right blocks stay (Pete).
-5. Merge PR Psibari/Polywords#13 into `play-screen-overhaul` once Pete approves.
+4. Cleanup. The 24 unreferenced exports in `assets/images/dailycastle/` are deleted (Pete,
+   2026-09-26). Still Pete's call: eight images used only by the old dev viewers (Asset
+   Audit, CodeLab, the old `DailyCastleScene` preview) and those viewers; the Daily tree
+   assets and `DailyTreeScene`; the scroll-era leftovers the Daily screen still imports
+   (`dailyScrollTuning`, `dailyScrollLayout`). The dev-only buttons over the bottom-right
+   blocks stay (Pete).
+5. Polybook lines ending "Mine." (`pollyBookLines.ts`, from
+   `docs/POLLY_POLYBOOK_LOG_LINES.md`): Pete finds them unclear and she is not a thief.
+   Rewrite pending his choice.
+6. Merge PR Psibari/Polywords#13 into `play-screen-overhaul` once Pete approves.
 
 Whole game:
-6. Real-device journeys before release: cold-start audio, rapid navigation,
+7. Real-device journeys before release: cold-start audio, rapid navigation,
    background/foreground recovery, every Polly laugh, persistence, performance.
-7. Author more boss-capable Hunt words (three fair hidden pairs each).
-8. Decide whether a banished Haunt earns a permanent record.
-9. Known gap, needs a cold-start listen: the gauntlet's `stoneRumble` can start late on the
+8. Author more boss-capable Hunt words (three fair hidden pairs each).
+9. Decide whether a banished Haunt earns a permanent record.
+10. Known gap, needs a cold-start listen: the gauntlet's `stoneRumble` can start late on the
    first gauntlet after launch, because `warmGauntletEntranceSfx` runs when the gauntlet
    mounts. If audible, warm the cues when the boss word starts. Do not drop this item.
-10. Navigation: `BottomNav` renders only on the Polybook and Settings; Home cannot reach the
+11. Navigation: `BottomNav` renders only on the Polybook and Settings; Home cannot reach the
     Polybook.
-11. Haptics: four `Haptics.selectionAsync()` calls in `MaskBoard.tsx` and two in
+12. Haptics: four `Haptics.selectionAsync()` calls in `MaskBoard.tsx` and two in
     `GameScreen.tsx` bypass `cueAsync`. The Haunt rematch's final tile may stack two Heavies
     60 ms apart (untested). Reduce-motion `stoneLand1` has no paired haptic (undecided).
-12. `warnDev()` in `sfx.ts` is silent outside `__DEV__`, so audio failures are invisible in
+13. `warnDev()` in `sfx.ts` is silent outside `__DEV__`, so audio failures are invisible in
     TestFlight.
-13. Polly: redraw sprite9 (sulk) to sprite4's canvas if still a placeholder; re-render the four
+14. Polly: redraw sprite9 (sulk) to sprite4's canvas if still a placeholder; re-render the four
     clipped webp animations at 724×724; `flyGrin`/`masterShock`/`masterAngry` are unused;
     `tone='loss'` bubble is unused; `ONE_FEATHER_POSE` is typed `Record<string, …>`.
-14. Polybook writing: more today's entries per rivalry state (CONCEDING and MERCY thinnest),
+15. Polybook writing: more today's entries per rivalry state (CONCEDING and MERCY thinnest),
     the payoff entry, the player-name arc, and recording the first played date.
-15. Settings' Tutorial Replay alert undersells what it resets (four overlays).
-16. External TestFlight needs a hosted privacy policy and a support contact.
+16. Settings' Tutorial Replay alert undersells what it resets (four overlays).
+17. External TestFlight needs a hosted privacy policy and a support contact.
 
 ## Protection
 

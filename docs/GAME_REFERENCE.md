@@ -69,7 +69,7 @@ from `WRONG_HECKLE_LINES`, a pool `resolveVisit` now picks from on each wrong sw
 - Ordinary masks stay neutral before commitment.
 - The in-round book's spine reads **POLYBOOK**, and so does the archive screen (Vault route,
   `PolybookSpread.tsx`). That collision is open; renaming is Pete's call.
-- The archive is player-owned and Polly-free. CONFLICT for Pete: `docs/POLYBOOK.md` (2026-09-07) makes the Polybook Polly's diary, which the player reads; older locks call this screen the player's Polly-free archive.
+- The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26).
 
 ## Owners
 

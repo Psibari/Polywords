@@ -39,9 +39,8 @@ and reopenable with a request. Treat those as "do not change casually", not "nev
 - Boss outcome comes from the hidden gauntlet, not score. The Master Gate is removed.
 - Do not change scoring, swipe grammar, boss rules, persistence, or `SwipeMask` without an
   explicit request. `MaskBoard.tsx` and `SwipeMask.tsx` require a focused war-room pass.
-- The **Vault** route is the player's archive and never Polly's cage, lair, or property.
-  CONFLICT for Pete: `docs/POLYBOOK.md` (2026-09-07) makes the Polybook Polly's diary, which the player reads; older locks call this screen the player's Polly-free archive. The in-round book's spine also reads POLYBOOK; that naming collision
-  is open too.
+- The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26). The in-round book's spine also reads POLYBOOK; that naming
+  collision is open.
 - The Vault and the Polybook may never display a meaning, a trap or a hidden pair. Words
   recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
   flagged `isMasteredReturn` — so any such display is an answer key for a game still in

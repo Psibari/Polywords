@@ -94,7 +94,7 @@ layered shadow, rim light, and physical motion; pressed cards lift rather than m
   A claimed block is thrown into the raised gate, and progress is coins on the courtyard floor
   (`docs/DAILY_CHALLENGE_SPEC.md`).
 - **Polybook screen (Vault route):** Polly's diary, which the player reads
-  (`docs/POLYBOOK.md`). CONFLICT for Pete: `docs/POLYBOOK.md` (2026-09-07) makes the Polybook Polly's diary, which the player reads; older locks call this screen the player's Polly-free archive.
+  (`docs/POLYBOOK.md`).
 
 Do not redesign `MaskBoard.tsx`, `SwipeMask.tsx`, or the signature objects by convention;
 inspect the live render path and get an approved direction first.
