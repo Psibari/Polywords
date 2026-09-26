@@ -615,8 +615,9 @@ export function DailyCastlePlaqueFace({
   return (
     <>
       {/* Size passed inline: a bundled image otherwise takes the art's own
-          150 × 60 as its size, which beat absoluteFill and a stylesheet 100%
-          and left the plaque short of the wider slot. */}
+          pixel size, which beat absoluteFill and a stylesheet 100% on web.
+          The container must have no padding, or native resolves 100% inside
+          it (see castlePlaque). */}
       <Image
         source={CASTLE_ANSWER_PLAQUE}
         resizeMode="stretch"
@@ -727,9 +728,10 @@ const styles = StyleSheet.create({
   },
   castlePlaque: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 11,
+    // No padding. Both children are absolutely placed, and on native a 100%
+    // size resolves inside the padding: with 11 pt each side the stone came
+    // out 22 pt short of its socket, left-aligned (seen on device). The label
+    // insets itself (castlePlaqueFront).
     borderRadius: 6,
     overflow: 'hidden',
   },

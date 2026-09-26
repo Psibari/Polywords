@@ -1537,6 +1537,10 @@ const styles = StyleSheet.create({
   // edges; this holds everything that should respect the safe-area insets.
   content: {
     flex: 1,
+    // Above the castle stage (zIndex 1), which is its sibling: the HUD, Polly,
+    // the action label, the entry card and Results all live in here. It is
+    // box-none, so touches still reach the plaques in the stage below.
+    zIndex: 2,
   },
   startGate: {
     flex: 1,

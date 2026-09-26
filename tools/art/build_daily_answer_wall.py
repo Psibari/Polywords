@@ -83,6 +83,23 @@ def main(out_path: Path) -> None:
         shade(a, x0, x1, PANEL_BOTTOM - 24, PANEL_BOTTOM, 1.0, 0.7, "y") # onto the sill
     canvas = img(a)
 
+    # Solid backing for the frame. The slab art has see-through cracks and
+    # ragged edges; laid on a transparent canvas, those became holes in the
+    # wall that showed whatever was drawn behind the castle (seen on device).
+    # Fill them with the front stone's own colour, darkened like a crevice.
+    fa = arr(front)
+    solid = fa[..., 3] > 250
+    crevice = fa[solid][:, :3].mean(axis=0) * 0.45
+    # From the capstone's gold seam down: its front face and ragged bottom
+    # edge are covered too, while its top face keeps its shape over the floor.
+    backing_top = CAP_TOP + round((SEAM + 3) * CAP_H / slab.height)
+    backing = np.empty((H - backing_top, W, 4), np.float32)
+    backing[..., :3] = crevice
+    backing[..., 3] = 255
+    under = img(backing)
+    under.alpha_composite(canvas.crop((0, backing_top, W, H)))
+    canvas.paste(under, (0, backing_top))
+
     # Pillars: the slab's front stone turned upright, edge-lit.
     pillar_tex = front.rotate(90, expand=True)
     for px in PILLARS:
@@ -103,6 +120,10 @@ def main(out_path: Path) -> None:
 
     # Capstone: the whole slab, top face and gold seam, across the wall.
     canvas.alpha_composite(three_slice(slab, W, CAP_H), (0, CAP_TOP))
+
+    # Everything below the capstone must be opaque: nothing behind the castle
+    # may show through the wall.
+    assert (np.asarray(canvas)[backing_top:, :, 3] == 255).all(), "holes in the wall"
 
     canvas.save(out_path, optimize=True)
     print(f"wrote {out_path} {canvas.size}")

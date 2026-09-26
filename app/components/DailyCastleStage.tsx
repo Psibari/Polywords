@@ -372,6 +372,11 @@ export default function DailyCastleStage({
       ref={stageRef}
       onLayout={measureStage}
       pointerEvents="box-none"
+      // Never flattened: the layers below carry zIndex 20–40 for their order
+      // inside the castle. If this layout-only View were flattened away (native
+      // does, web does not), those zIndexes would compete with the screen's
+      // SafeAreaView and draw the castle over the HUD, Polly and Results.
+      collapsable={false}
       style={styles.stage}
     >
       <Image
@@ -588,6 +593,8 @@ function DailyCastleFlightPlaque({
 const styles = StyleSheet.create({
   stage: {
     ...StyleSheet.absoluteFill,
+    // Under the screen's SafeAreaView (DailyChallengeScreen styles.content).
+    zIndex: 1,
   },
   layer: {
     position: 'absolute',
