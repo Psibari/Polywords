@@ -49,7 +49,8 @@ export const DAILY_POLLY_BUBBLE = {
 } as const;
 
 /**
- * gate2.png, 1399 × 1597 source px. The visible board spans x 107–1248 px.
+ * gate_door.png (tools/art/build_daily_door.py), 1399 × 1597 source px. The
+ * board spans x 107–1248 px.
  * Its eight planks are divided by lines at y = 119 + 167.4·i px (i = 0…8;
  * line 0 is the board's top edge, line 8 its bottom edge).
  */

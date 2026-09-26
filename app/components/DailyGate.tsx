@@ -14,9 +14,9 @@ import {
   type DailyCastleRect,
 } from '../ui/dailyCastleScene';
 
-// gate2.png recoloured to the old Daily scroll colour by
-// tools/art/build_daily_gate.py (Pete, 2026-09-26). Same canvas and plank lines.
-const GATE = require('../../assets/images/dailycastle/gate_scroll.png');
+// The cartoon plank door, indigo (Pete, 2026-09-26), drawn by
+// tools/art/build_daily_door.py on the old gate's canvas and plank lines.
+const GATE = require('../../assets/images/dailycastle/gate_door.png');
 
 type Props = {
   /**

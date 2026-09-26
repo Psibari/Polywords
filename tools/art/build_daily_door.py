@@ -6,7 +6,7 @@ cel-shaded highlight and shadow bands, thick dark outlines in the castle's
 own line colour, a little grain, and two riveted iron straps on the planks
 that never carry a clue.
 
-Geometry is gate2.png's, so nothing in dailyCastleScene moves: a 1399 x 1597
+Geometry is the retired gate2.png's, so nothing in dailyCastleScene moved: a 1399 x 1597
 canvas, board x 107-1248 px, eight planks between lines at y = 119 + 167.4*i
 (DAILY_GATE_ART; change both together). Planks 2-4 carry the clues and are
 kept plain in the middle. Only the doorway's middle ~192 pt (about 620 px)
@@ -48,7 +48,7 @@ def line_y(i: int) -> float:
 
 
 def main() -> None:
-    wood = sys.argv[1] if len(sys.argv) > 1 else "indigo"
+    wood = sys.argv[1] if len(sys.argv) > 1 else "indigo"   # Pete picked indigo
     face, hi, lo, grain = WOODS[wood]
     rng = np.random.default_rng(7)
     img = Image.new("RGBA", (W * SS, H * SS), (0, 0, 0, 0))

@@ -32,7 +32,8 @@ The whole Daily screen is a castle: towers and an arch at the top, the gate in t
 carrying the clues, and the six answer blocks set in a framed wall below. The same castle,
 gate shut and blank, stands behind the entry card and Results.
 
-- Clues are painted on the gate, one per plank, and move with it. Dark seams mark every plank;
+- The gate is a cartoon indigo plank door with two iron straps. Clues are painted on it, one
+  per plank, and move with it. Dark seams mark every plank;
   clues are capped at 20 pt and split into two even lines so three clues read as three.
 - A correct UP claim throws the plaque at the castle while the gate lifts.
 - The plaque passes into the arch, goes in behind the gate line and flies off down the tunnel.
