@@ -76,6 +76,7 @@ import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAn
 import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
 import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleStage';
+import { type DailyCoinRise } from '../components/DailyFloorCoins';
 import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
@@ -680,7 +681,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // floor coin that rises as the gate comes back down.
   const [castleFlight, setCastleFlight] = useState<DailyCastleFlight | null>(null);
   const flightProgress = useRef(new Animated.Value(0)).current;
-  const featherRise = useRef(new Animated.Value(1)).current;
+  const [coinRise, setCoinRise] = useState<DailyCoinRise>({ token: 0, ms: 0 });
   // The win's gold-coin moment, after the coin lands and before Results.
   const coinCelebrate = useRef(new Animated.Value(0)).current;
   // Window y of the HUD's bottom edge. The SafeAreaView sits at the window
@@ -1002,8 +1003,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     flightProgress.stopAnimation();
     flightProgress.setValue(0);
     setCastleFlight(null);
-    featherRise.stopAnimation();
-    featherRise.setValue(1);
+    coinCelebrate.stopAnimation();
+    coinCelebrate.setValue(0);
     setRevealSolvedCount(0);
     completingCandidateRef.current = null;
     setPhysicalClaimPhase('idle');
@@ -1062,8 +1063,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // otherwise it simply leaves the wall and the gate beat carries the claim.
     flightProgress.stopAnimation();
     flightProgress.setValue(0);
-    featherRise.stopAnimation();
-    featherRise.setValue(0);
     setCastleFlight(motion && origin ? { label: candidate, origin } : null);
 
     gatePosition.stopAnimation();
@@ -1108,17 +1107,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       if (completingCandidateRef.current !== candidate) return;
       setCastleFlight(null);
       setPhysicalClaimPhase('reward');
-      if (motion) {
-        Animated.timing(featherRise, {
-          toValue: 1,
-          duration: gateDropMs,
-          // No overshoot: the coin is clipped to its own box at the floor.
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
-      } else {
-        featherRise.setValue(1);
-      }
+      setCoinRise((prev) => ({ token: prev.token + 1, ms: motion ? gateDropMs : 0 }));
       Animated.timing(gatePosition, {
         toValue: 1,
         duration: gateDropMs,
@@ -1370,7 +1359,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           roundKey={displayedDailySession?.currentRoundIndex ?? 0}
           flight={castleFlight}
           flightProgress={flightProgress}
-          featherRise={featherRise}
+          coinRise={coinRise}
           coinCelebrate={coinCelebrate}
           hudBottom={hudBottom}
         >

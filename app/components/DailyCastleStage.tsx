@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DailyGate from './DailyGate';
-import DailyFloorCoins from './DailyFloorCoins';
+import DailyFloorCoins, { type DailyCoinRise } from './DailyFloorCoins';
 import {
   DailyCastlePlaqueFace,
   dailyCastlePlaqueStyle,
@@ -94,8 +94,8 @@ type Props = {
   flight: DailyCastleFlight | null;
   /** 0 → 1 over the whole throw; DAILY_CASTLE_FLIGHT_HANDOFF is the handoff. */
   flightProgress: Animated.Value;
-  /** 0 → 1 rise of the newest floor coin (and, on the win, the gold one). */
-  featherRise: Animated.Value;
+  /** Starts the newest floor coin's rise (and, on the win, the gold one's). */
+  coinRise: DailyCoinRise;
   /** 0 → 1 over the win's gold-coin presentation. */
   coinCelebrate: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
@@ -305,7 +305,7 @@ export default function DailyCastleStage({
   roundKey,
   flight,
   flightProgress,
-  featherRise,
+  coinRise,
   coinCelebrate,
   hudBottom,
   children,
@@ -418,7 +418,7 @@ export default function DailyCastleStage({
           the win. Above the arch layer, below the answer wall. */}
       <DailyFloorCoins
         solvedCount={solvedCount}
-        rise={featherRise}
+        rise={coinRise}
         celebrate={coinCelebrate}
         frame={frame}
         offsetX={-stageOffset.x}

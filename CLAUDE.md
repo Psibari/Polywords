@@ -182,6 +182,16 @@ navigation shell; active Hunt and Daily play are nav-free.
   box at the floor, so moving it down sinks it and up raises it. The newest coin rises (and the
   older ones slide to re-centre) on the same beat as the gate coming down. `FeatherWall.tsx`
   and the feathers inside the arch are gone.
+  - Every coin owns its own Animated values for the component's life, and its transform is
+    always bound to them. The screen only says when to rise: `DailyCoinRise.token`, bumped at
+    the gate drop.
+  - Never swap a native-driven transform for a plain number between renders. On device the view
+    keeps the last value the native driver wrote. The first version did this: earlier coins
+    stayed sunk, and at the win they appeared stuck half a slot along the row. The browser
+    never showed it.
+  - The win's glow is `coin_glow.png`, a radial image from `build_daily_coins.py`, not a View:
+    a large borderRadius draws a hard-edged pill on native. `coinCelebrate` resets with the
+    session.
 - The castle stands behind the whole Daily screen, not just play (Pete, 2026-09-26). The entry
   card and Results sit over it with the gate shut and blank and no plaques. On Results the
   floor coins show what was earned. It is one `DailyCastleStage` element across all three

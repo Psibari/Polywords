@@ -1,4 +1,4 @@
-"""Build the Daily floor coins: coin_feather.png and coin_gold.png.
+"""Build the Daily floor coins: coin_feather.png, coin_gold.png, coin_glow.png.
 
 Pete's design (2026-09-26): each solved round leaves a coin on the
 courtyard floor between the bottom step and the answer wall, one to four
@@ -13,6 +13,11 @@ standing upright on the face like an emblem. Colours are the brand golds
 Output is 3x: white coin 62 x 40 pt -> 186 x 120 px; gold 80 x 52 pt ->
 240 x 156 px. The coin's contact point with the floor is the bottom of the
 edge, at (image height - SHADOW_PAD) — dailyCastleScene mirrors this.
+
+coin_glow.png is the win's soft gold glow behind the gold coin: an ellipse
+at the floor's angle, brand gold, falling off smoothly to fully transparent
+at its edge. It is an image because a View with a large borderRadius draws
+a hard-edged pill on native (seen on device).
 
     python3 tools/art/build_daily_coins.py   (Pillow, numpy)
 """
@@ -108,12 +113,25 @@ def coin(width_px: int, feather_path: Path, feather_frac: float) -> Image.Image:
     return out
 
 
+def glow(width: int, height: int) -> Image.Image:
+    """Elliptical radial glow: brand gold, alpha (1 - r)^2, zero at the rim."""
+    y, x = np.mgrid[0:height, 0:width].astype(np.float32)
+    r = np.hypot((x + 0.5) / width * 2 - 1, (y + 0.5) / height * 2 - 1)
+    a = np.clip(1 - r, 0, 1) ** 2
+    out = np.zeros((height, width, 4), np.uint8)
+    out[..., 0], out[..., 1], out[..., 2] = 0xF5, 0xC8, 0x42
+    out[..., 3] = np.round(a * 255).astype(np.uint8)
+    return Image.fromarray(out, "RGBA")
+
+
 def main() -> None:
     white = coin(186, WHITE_FEATHER, 0.74)
     gold = coin(240, GOLD_FEATHER, 0.74)
     white.save(OUT_DIR / "coin_feather.png", optimize=True)
     gold.save(OUT_DIR / "coin_gold.png", optimize=True)
-    print("wrote coin_feather.png", white.size, "coin_gold.png", gold.size)
+    halo = glow(528, 294)   # the gold coin (240 x 155) at 2.2 x 1.9
+    halo.save(OUT_DIR / "coin_glow.png", optimize=True)
+    print("wrote coin_feather.png", white.size, "coin_gold.png", gold.size, "coin_glow.png", halo.size)
 
 
 if __name__ == "__main__":
