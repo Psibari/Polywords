@@ -133,8 +133,15 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   centred, straight sides stretched for the clue planks, opening cut out, measurements
   printed. The old painted `ARCHNEW.png` is no longer drawn; the tunnel and answer-wall scripts
   still read it until they go cartoon too.
-- Clue geometry is set by the smallest phone: the first clue must start at canvas y 240 to
-  clear the HUD on 375 × 667, so the planks are 52 pt (two lines of 24 pt, exactly).
+- The clues sit centred in the door (Pete, 2026-09-26), so the gate position is per phone:
+  `resolveDailyClueTop(frame, hudBottom)` picks the first plank's canvas y between
+  `DAILY_CLUE_TOP_MIN` (216: above it the arch is too narrow for the 176 pt clue box) and
+  `DAILY_CLUE_TOP_MAX` (the planks end above the steps and the gate still covers the crown),
+  centred unless the HUD would cover it. The gate helpers (`dailyGateClosed`,
+  `dailyGateLineY`, `dailyGateOpenTravel`, `dailyGateMaxSink`, `resolveDailyGateClueRects`)
+  take that clue top. Planks are 52 pt: two lines of 24 pt, exactly. The scene only drops
+  when even `DAILY_CLUE_TOP_MAX` is under the HUD. The castle has three steps: the build
+  script removes the top one and extends the door into its place.
 - Every measured coordinate lives in `app/ui/dailyCastleScene.ts` beside its pixel
   measurement (opening, gate planks, clue rects, plaque grid, throw, coins, Polly's bubble),
   covered by `dailyCastleScene.test.ts`. Re-measure if an export changes.

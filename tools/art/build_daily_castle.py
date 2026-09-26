@@ -9,8 +9,11 @@ it matches Polly. This script:
      #FFF7D6;
   2. centres the arch (the source draws it CENTRE_SHIFT px left of centre;
      the left edge is filled by reflection);
-  3. stretches only the arch's straight sides (rows STRETCH_Y0..STRETCH_Y1)
-     by STRETCH_ADD px, so the three clue planks keep their full size;
+  3. removes the top step (rows STEP_CUT: one 53-row repeat of gold edge,
+     face and the next step's top) and stretches only the arch's straight
+     sides (rows STRETCH_Y0..STRETCH_Y1) by STRETCH_ADD px, so the door
+     reaches down into the removed step's place and the clues have room to
+     sit centred (Pete, 2026-09-26);
   4. scales to the 1290 px canvas width and places it on the shared
      1290 x 2796 castle canvas at OFFSET_Y, sky colour filled above, so the
      courtyard floor runs under the answer wall;
@@ -34,7 +37,8 @@ OUT = ROOT / "assets/images/dailycastle/castle_cartoon.png"
 W, H = 1290, 2796
 CENTRE_SHIFT = 23          # source px: arch centre x 409 vs image centre 432
 STRETCH_Y0, STRETCH_Y1 = 420, 685   # source rows: the arch's straight sides
-STRETCH_ADD = 60           # source px added to that band
+STEP_CUT = (697, 750)      # source rows of the top step, removed (4 steps -> 3)
+STRETCH_ADD = 60 + (STEP_CUT[1] - STEP_CUT[0])   # the cut step's height goes to the door
 OFFSET_Y = 70              # canvas px: clues clear the HUD on 375x667, step edge above the coins
 OPENING_SEED = (432, 520)  # source px inside the opening (after centring)
 OPENING_TOL = 20           # colour tolerance for the opening flood fill
@@ -70,6 +74,10 @@ def centre(a):
     return np.concatenate([pad, a[:, :-CENTRE_SHIFT]], axis=1)
 
 
+def cut_step(a):
+    return np.concatenate([a[:STEP_CUT[0]], a[STEP_CUT[1]:]], axis=0)
+
+
 def stretch(a):
     band = Image.fromarray(a[STRETCH_Y0:STRETCH_Y1])
     band = np.array(band.resize((a.shape[1], STRETCH_Y1 - STRETCH_Y0 + STRETCH_ADD), Image.LANCZOS))
@@ -92,7 +100,7 @@ def flood(a, seed, tol):
 def main():
     a = np.array(Image.open(SRC).convert("RGB"))
     a, n_gold = regold(a)
-    a = stretch(centre(a))
+    a = stretch(cut_step(centre(a)))
     k = W / a.shape[1]
     big = np.array(Image.fromarray(a).resize((W, round(a.shape[0] * k)), Image.LANCZOS))
     seed = (round(OPENING_SEED[0] * k), round((OPENING_SEED[1] + STRETCH_ADD / 2) * k))

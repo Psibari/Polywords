@@ -29,6 +29,12 @@ import {
   resolveDailyCastleFrame,
   resolveDailyCastleSlot,
   resolveDailyGateClueRects,
+  resolveDailyClueTop,
+  DAILY_CLUE_TOP_MIN,
+  DAILY_CLUE_TOP_MAX,
+  DAILY_CLUE_TOP_PREFERRED,
+  dailyGateOpenTravel,
+  dailyGateMaxSink,
 } from './dailyCastleScene';
 
 const opening = DAILY_CASTLE_OPENING;
@@ -49,19 +55,31 @@ assert.ok(dailyGateLineY(8) - DAILY_GATE_OPEN_TRAVEL < opening.y, 'raised gate c
 assert.ok(DAILY_GATE_MAX_SINK > 0);
 assert.ok(dailyGateLineY(0) + DAILY_GATE_MAX_SINK < opening.y, 'sunk gate still covers the crown');
 
-// Clues: one per plank, inside the straight part of the opening, readable height.
-const clues = resolveDailyGateClueRects();
-assert.equal(clues.length, 3);
-for (const [i, clue] of clues.entries()) {
-  const twoFullLines = DAILY_CLUE_FONT.maxSize * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines;
-  assert.ok(clue.height >= twoFullLines, `clue ${i + 1} plank is tall enough for two 24 pt lines`);
-  assert.ok(clue.y >= 240, `clue ${i + 1} sits below the curve of the arch`);
-  assert.ok(clue.y + clue.height < openingBottom, `clue ${i + 1} sits above the steps`);
-  // Measured on castle_cartoon.png: from y 240 pt down, the opening spans at
-  // least x 122.7–307.7 pt.
-  assert.ok(clue.x >= 122.7 && clue.x + clue.width <= 307.7, `clue ${i + 1} fits the opening width`);
-  if (i > 0) assert.equal(clue.y, clues[i - 1].y + clues[i - 1].height, 'clues sit on consecutive planks');
+// Clues: one per plank, readable height, inside the opening at every clue
+// position a phone can choose (MIN = the centred spot's upper limit, MAX = as
+// low as the steps allow). Measured on castle_cartoon.png: from y 216 pt down
+// the opening spans at least x 126.3–304 pt.
+assert.ok(DAILY_CLUE_TOP_MIN <= DAILY_CLUE_TOP_PREFERRED && DAILY_CLUE_TOP_PREFERRED <= DAILY_CLUE_TOP_MAX);
+for (const clueTop of [DAILY_CLUE_TOP_MIN, DAILY_CLUE_TOP_PREFERRED, DAILY_CLUE_TOP_MAX]) {
+  const rects = resolveDailyGateClueRects(clueTop);
+  assert.equal(rects.length, 3);
+  for (const [i, clue] of rects.entries()) {
+    const twoFullLines = DAILY_CLUE_FONT.maxSize * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines;
+    assert.ok(clue.height >= twoFullLines, `clue ${i + 1} plank is tall enough for two 24 pt lines`);
+    assert.ok(clue.y >= DAILY_CLUE_TOP_MIN - 1e-9, `clue ${i + 1} sits below the narrow top of the arch`);
+    assert.ok(clue.y + clue.height < openingBottom, `clue ${i + 1} sits above the steps (top ${clueTop})`);
+    assert.ok(clue.x >= 126.3 && clue.x + clue.width <= 304, `clue ${i + 1} fits the opening width`);
+    if (i > 0) assert.equal(clue.y, rects[i - 1].y + rects[i - 1].height, 'clues sit on consecutive planks');
+  }
+  // The gate still covers the opening, raises clear of it, and its slam never
+  // uncovers the crown, wherever the clues sit.
+  assert.ok(dailyGateLineY(0, clueTop) < opening.y, `gate board reaches above the opening (top ${clueTop})`);
+  assert.ok(dailyGateLineY(8, clueTop) > openingBottom, `gate board reaches below the steps (top ${clueTop})`);
+  assert.ok(dailyGateLineY(8, clueTop) - dailyGateOpenTravel(clueTop) < opening.y, 'raised gate clears the opening');
+  const sink = dailyGateMaxSink(clueTop);
+  assert.ok(sink > 0 && dailyGateLineY(0, clueTop) + sink < opening.y, 'sunk gate still covers the crown');
 }
+const clues = resolveDailyGateClueRects();
 
 // Grid sits on the brick face, centred, inside the canvas.
 assert.ok(DAILY_CASTLE_GRID.top > DAILY_CASTLE_WALL_FACE_TOP, 'grid is below the parapet ledge');
@@ -114,7 +132,9 @@ for (const [w, h, topInset, inset] of phones) {
   assert.equal(f.width, w);
   const gridBottom = f.top + dailyCastleGridBottom(DAILY_CASTLE_GRID) * f.scale;
   assert.ok(gridBottom <= h - inset - DAILY_CASTLE_ACTION_LABEL_CLEARANCE + 0.001, `${w}x${h}: grid clears the action label`);
-  assert.ok(f.top + clues[0].y * f.scale >= hudBottom, `${w}x${h}: first clue is below the HUD`);
+  const clueTop = resolveDailyClueTop(f, hudBottom);
+  assert.ok(clueTop >= DAILY_CLUE_TOP_MIN && clueTop <= DAILY_CLUE_TOP_MAX, `${w}x${h}: clue position within the door`);
+  assert.ok(f.top + clueTop * f.scale >= hudBottom, `${w}x${h}: first clue is below the HUD`);
   // When the scene rises to clear the label, the stage fills the strip under
   // the sill (DAILY_ANSWER_WALL_FOOT); keep that strip inside the home-bar inset.
   assert.ok(h - (f.top + f.height) <= Math.max(inset, 0) + 0.001, `${w}x${h}: any strip under the wall stays inside the bottom inset`);

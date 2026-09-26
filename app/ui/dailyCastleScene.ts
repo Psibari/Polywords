@@ -25,19 +25,20 @@ export const DAILY_CASTLE_CANVAS = { width: 430, height: 932 } as const;
 
 /**
  * castle_cartoon.png's transparent arch opening, alpha-measured (the build
- * script prints it): x 356–933 px, y 442–1190 px. The top edge is the crown of
- * the curve; below 1190 px the steps are opaque and hide whatever sits behind.
+ * script prints it): x 356–933 px, y 442–1269 px. The top edge is the crown of
+ * the curve; below 1269 px the steps are opaque and hide whatever sits behind.
+ * The door reaches down into the removed top step's place (Pete, 2026-09-26).
  */
 export const DAILY_CASTLE_OPENING: DailyCastleRect = {
   x: 356 / 3,
   y: 442 / 3,
   width: 578 / 3,
-  height: 749 / 3,
+  height: 828 / 3,
 };
 
 /**
  * Polly's Daily speech bubble sits on the steps, just below the arch opening
- * (whose bottom is the top step's edge, 1190 px), so it never covers a clue on
+ * (whose bottom is the top step's edge, 1269 px), so it never covers a clue on
  * the gate (Pete, 2026-09-26). Canvas points; x/y is the bubble's top-left.
  * Two lines of the longest Daily line fit above the floor coins.
  */
@@ -65,8 +66,7 @@ export const DAILY_GATE_ART = {
 /**
  * Canvas points per gate source px, chosen so the three clue planks fill the
  * straight part of the opening: each plank is 52 pt tall, exactly two lines
- * of 24 pt clue text (DAILY_CLUE_FONT). Lower planks would let the first clue
- * start higher, but a 375 × 667 phone needs it at 240 pt to clear the HUD. The board overhangs the opening on both sides, where the
+ * of 24 pt clue text (DAILY_CLUE_FONT). The board overhangs the opening on both sides, where the
  * arch jambs hide it.
  */
 export const DAILY_GATE_PLANK_PT = 52;
@@ -77,32 +77,53 @@ export const DAILY_GATE_PT_PER_SRC =
 export const DAILY_GATE_CLUE_PLANKS = [2, 3, 4] as const;
 
 /**
- * Where the gate image sits when closed. The clue planks run from canvas
- * y 240 pt (the opening is ~185 pt wide there, measured on castle_cartoon.png)
- * down to 396 pt, just above the step edge at 396.7 pt. 240 is the lowest start
- * that stays below the HUD on a 375 × 667 phone (see dailyCastleScene.test.ts).
+ * Where the clues sit (Pete, 2026-09-26: centred in the door, not bunched on
+ * the steps). `clueTop` is the canvas y of the first clue plank's top line;
+ * the whole gate moves with it. It is chosen per phone by
+ * `resolveDailyClueTop`, between:
+ *   - DAILY_CLUE_TOP_MIN: above this the arch narrows below the clue box
+ *     (castle_cartoon.png: the opening is 177.7 pt wide at y 216 pt);
+ *   - DAILY_CLUE_TOP_MAX: the planks end above the step edge and the gate's
+ *     top edge stays above the crown.
+ * The preferred spot centres the three planks in the door, never above MIN.
  */
-const GATE_CLUE_TOP_Y = 240;
-const GATE_CLUE_CENTER_Y = GATE_CLUE_TOP_Y + DAILY_GATE_PLANK_PT * 1.5;
+const DAILY_CASTLE_OPENING_BOTTOM = DAILY_CASTLE_OPENING.y + DAILY_CASTLE_OPENING.height;
+const DAILY_CLUE_BLOCK = DAILY_GATE_PLANK_PT * DAILY_GATE_CLUE_PLANKS.length;
+export const DAILY_CLUE_TOP_MIN = 216;
+// Lowest of: the planks end just above the step edge; the two planks above the
+// clues still reach past the crown with room for the 6 pt wrong-answer slam.
+export const DAILY_CLUE_TOP_MAX = Math.min(
+  DAILY_CASTLE_OPENING_BOTTOM - DAILY_CLUE_BLOCK - 2,
+  DAILY_CASTLE_OPENING.y + DAILY_GATE_PLANK_PT * DAILY_GATE_CLUE_PLANKS[0] - 7,
+);
+export const DAILY_CLUE_TOP_PREFERRED = Math.max(
+  DAILY_CLUE_TOP_MIN,
+  (DAILY_CASTLE_OPENING.y + DAILY_CASTLE_OPENING_BOTTOM) / 2 - DAILY_CLUE_BLOCK / 2,
+);
+
 const GATE_CLUE_CENTER_LINE_SRC =
   DAILY_GATE_ART.firstLineSrc + DAILY_GATE_ART.plankPitchSrc * 3.5;
 
-export const DAILY_GATE_CLOSED: DailyCastleRect = (() => {
+/** The gate's closed rect for a given clue top. */
+export function dailyGateClosed(clueTop: number = DAILY_CLUE_TOP_PREFERRED): DailyCastleRect {
   const k = DAILY_GATE_PT_PER_SRC;
   const openingCenterX = DAILY_CASTLE_OPENING.x + DAILY_CASTLE_OPENING.width / 2;
   const boardLeft = openingCenterX - (DAILY_GATE_ART.boardWidthSrc * k) / 2;
   return {
     x: boardLeft - DAILY_GATE_ART.boardXSrc * k,
-    y: GATE_CLUE_CENTER_Y - GATE_CLUE_CENTER_LINE_SRC * k,
+    y: clueTop + DAILY_GATE_PLANK_PT * 1.5 - GATE_CLUE_CENTER_LINE_SRC * k,
     width: DAILY_GATE_ART.widthSrc * k,
     height: DAILY_GATE_ART.heightSrc * k,
   };
-})();
+}
 
-/** Canvas y of plank line `i` when the gate is closed. */
-export function dailyGateLineY(i: number): number {
+/** The gate at its preferred (centred) position. */
+export const DAILY_GATE_CLOSED: DailyCastleRect = dailyGateClosed();
+
+/** Canvas y of plank line `i` when the gate is closed at `clueTop`. */
+export function dailyGateLineY(i: number, clueTop: number = DAILY_CLUE_TOP_PREFERRED): number {
   return (
-    DAILY_GATE_CLOSED.y +
+    dailyGateClosed(clueTop).y +
     (DAILY_GATE_ART.firstLineSrc + DAILY_GATE_ART.plankPitchSrc * i) *
       DAILY_GATE_PT_PER_SRC
   );
@@ -112,42 +133,47 @@ export function dailyGateLineY(i: number): number {
  * Raise distance: the board's bottom edge must clear the top of the opening.
  * Four points of margin past that.
  */
-export const DAILY_GATE_OPEN_TRAVEL =
-  dailyGateLineY(DAILY_GATE_ART.plankCount) - DAILY_CASTLE_OPENING.y + 4;
+export function dailyGateOpenTravel(clueTop: number = DAILY_CLUE_TOP_PREFERRED): number {
+  return dailyGateLineY(DAILY_GATE_ART.plankCount, clueTop) - DAILY_CASTLE_OPENING.y + 4;
+}
+export const DAILY_GATE_OPEN_TRAVEL = dailyGateOpenTravel();
 
 /**
  * How far the gate sinks past closed on the wrong-claim slam: a short, hard
  * jolt, never so deep that the board's top edge drops below the crown of the
  * opening.
  */
-export const DAILY_GATE_MAX_SINK = Math.min(
-  6,
-  DAILY_CASTLE_OPENING.y - dailyGateLineY(0) - 1,
-);
+export function dailyGateMaxSink(clueTop: number = DAILY_CLUE_TOP_PREFERRED): number {
+  return Math.min(6, DAILY_CASTLE_OPENING.y - dailyGateLineY(0, clueTop) - 1);
+}
+export const DAILY_GATE_MAX_SINK = dailyGateMaxSink();
 
 /**
- * Clue text box width. Along the clue planks (y 240–396 pt) the opening spans
- * at least ~122.7–307.7 pt (185 pt, centred on the gate); 178 keeps the text
- * inside it with a few points to spare and fits every clue in the pool.
+ * Clue text box width. From DAILY_CLUE_TOP_MIN (216 pt) down the opening is at
+ * least 177.7 pt wide, centred on the gate; 176 fits inside it and fits every
+ * clue in the pool (the longest at 16 pt).
  */
-export const DAILY_GATE_CLUE_WIDTH = 178;
+export const DAILY_GATE_CLUE_WIDTH = 176;
 
 /**
  * Clue rects in canvas points with the gate closed. Each fills its plank
  * between the two plank lines, centred on the board.
  */
-export function resolveDailyGateClueRects(): DailyCastleRect[] {
+export function resolveDailyGateClueRects(
+  clueTop: number = DAILY_CLUE_TOP_PREFERRED,
+): DailyCastleRect[] {
+  const closed = dailyGateClosed(clueTop);
   const boardCenterX =
-    DAILY_GATE_CLOSED.x +
+    closed.x +
     (DAILY_GATE_ART.boardXSrc + DAILY_GATE_ART.boardWidthSrc / 2) *
       DAILY_GATE_PT_PER_SRC;
   return DAILY_GATE_CLUE_PLANKS.map((plank) => {
-    const top = dailyGateLineY(plank);
+    const top = dailyGateLineY(plank, clueTop);
     return {
       x: boardCenterX - DAILY_GATE_CLUE_WIDTH / 2,
       y: top,
       width: DAILY_GATE_CLUE_WIDTH,
-      height: dailyGateLineY(plank + 1) - top,
+      height: dailyGateLineY(plank + 1, clueTop) - top,
     };
   });
 }
@@ -304,8 +330,9 @@ export const DAILY_CASTLE_HUD_GAP = 6;
  * instead. Two limits then move the whole scene together — the layers never
  * separate:
  *   1. the plaque grid must end above the action label (scene rises);
- *   2. the first clue plank must start below the HUD (scene drops), but never
- *      so far that it breaks limit 1.
+ *   2. the clues must be able to start below the HUD (scene drops), but never
+ *      so far that it breaks limit 1. Where the clues sit within the door is
+ *      then `resolveDailyClueTop`'s job.
  */
 export function resolveDailyCastleFrame({
   windowWidth,
@@ -327,10 +354,21 @@ export function resolveDailyCastleFrame({
     windowHeight - bottomInset - DAILY_CASTLE_ACTION_LABEL_CLEARANCE;
   const lowestTop = gridLimit - dailyCastleGridBottom(grid) * scale;
   let top = Math.min(windowHeight - height, lowestTop);
-  const firstClueY = dailyGateLineY(DAILY_GATE_CLUE_PLANKS[0]);
-  const clueTop = hudBottom + DAILY_CASTLE_HUD_GAP - firstClueY * scale;
+  // The clues can sit as low as DAILY_CLUE_TOP_MAX; only if even that is under
+  // the HUD does the scene itself drop.
+  const clueTop = hudBottom + DAILY_CASTLE_HUD_GAP - DAILY_CLUE_TOP_MAX * scale;
   if (top < clueTop) top = Math.min(clueTop, lowestTop);
   return { scale, top, width: windowWidth, height };
+}
+
+/**
+ * The first clue plank's canvas y on this phone: centred in the door
+ * (DAILY_CLUE_TOP_PREFERRED) unless the HUD would cover it, then just below the
+ * HUD, never below DAILY_CLUE_TOP_MAX.
+ */
+export function resolveDailyClueTop(frame: DailyCastleFrame, hudBottom = 0): number {
+  const belowHud = (hudBottom + DAILY_CASTLE_HUD_GAP - frame.top) / frame.scale;
+  return Math.min(DAILY_CLUE_TOP_MAX, Math.max(DAILY_CLUE_TOP_PREFERRED, belowHud));
 }
 
 /** Canvas rect → screen rect for a resolved frame. */

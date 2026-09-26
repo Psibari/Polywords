@@ -23,10 +23,11 @@ import {
   DAILY_CASTLE_GRID,
   DAILY_ANSWER_WALL_FOOT,
   DAILY_CASTLE_OPENING,
-  DAILY_GATE_CLOSED,
-  DAILY_GATE_MAX_SINK,
-  DAILY_GATE_OPEN_TRAVEL,
+  dailyGateClosed,
+  dailyGateMaxSink,
+  dailyGateOpenTravel,
   resolveDailyCastleFrame,
+  resolveDailyClueTop,
   resolveDailyCastleSlot,
   resolveDailyGateClueRects,
   toDailyCastleScreen,
@@ -360,18 +361,23 @@ export default function DailyCastleStage({
   opening.x += sceneLeft;
   opening.y -= stageOffset.y;
 
+  // Where the clues sit on this phone: centred in the door unless the HUD
+  // would cover them. The whole gate moves with them.
+  const clueTop = resolveDailyClueTop(frame, hudBottom);
+  const gateClosed = dailyGateClosed(clueTop);
+
   // Gate and clue rects relative to the opening / gate image that hold them.
   const gateFrame = {
-    x: (DAILY_GATE_CLOSED.x - DAILY_CASTLE_OPENING.x + tuning.gate.x) * s,
-    y: (DAILY_GATE_CLOSED.y - DAILY_CASTLE_OPENING.y + tuning.gate.y) * s,
-    width: DAILY_GATE_CLOSED.width * s,
-    height: DAILY_GATE_CLOSED.height * s,
+    x: (gateClosed.x - DAILY_CASTLE_OPENING.x + tuning.gate.x) * s,
+    y: (gateClosed.y - DAILY_CASTLE_OPENING.y + tuning.gate.y) * s,
+    width: gateClosed.width * s,
+    height: gateClosed.height * s,
   };
-  const clueRects = resolveDailyGateClueRects().map((rect) => {
+  const clueRects = resolveDailyGateClueRects(clueTop).map((rect) => {
     const width = (tuning.clues.width || rect.width) * s;
     return {
-      x: (rect.x - DAILY_GATE_CLOSED.x + tuning.clues.x) * s + (rect.width * s - width) / 2,
-      y: (rect.y - DAILY_GATE_CLOSED.y + tuning.clues.y) * s,
+      x: (rect.x - gateClosed.x + tuning.clues.x) * s + (rect.width * s - width) / 2,
+      y: (rect.y - gateClosed.y + tuning.clues.y) * s,
       width,
       height: rect.height * s,
     };
@@ -467,8 +473,8 @@ export default function DailyCastleStage({
             revealedCount={revealedCount}
             frame={gateFrame}
             clueRects={clueRects}
-            openTravel={DAILY_GATE_OPEN_TRAVEL * s}
-            maxSink={DAILY_GATE_MAX_SINK * s}
+            openTravel={dailyGateOpenTravel(clueTop) * s}
+            maxSink={dailyGateMaxSink(clueTop) * s}
             scale={s}
           />
         </View>
