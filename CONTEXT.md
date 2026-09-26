@@ -60,7 +60,7 @@ Daily castle (on `daily-castle-test`):
 1. Cartoon pass (Pete, 2026-09-26): coins done (option D, silver and a 100 pt gold). The
    castle is now cartoon art (castle B, `castle_cartoon.png`) so it matches Polly, and so is the
    door (indigo planks, Pete's tint; locked) and the answer wall (Pete's design: slate frame,
-   purple bricks). Still in the old painted style: the blocks, then the tunnel. Next is
+   purple bricks; locked). Still in the old painted style: the blocks, then the tunnel. Next is
    cartoon versions of those: drawn by script like the
    door, Pete's own art, or generated (Magnific shows 0 credits as of 2026-09-26). Sharper
    castle: re-export B at full size from Magnific (the build used Pete's 864 px screen copy).

@@ -132,10 +132,11 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   it from `tools/art/source/castle_cartoon_src.png`: golds remapped to the game's, arch
   centred, straight sides stretched for the clue planks, opening cut out, measurements
   printed. The old painted `ARCHNEW.png` is no longer drawn; only the tunnel script still reads it.
-- The answer wall is Pete's cartoon design (2026-09-26), drawn by
+- **Answer wall: LOCKED (Pete, device-approved 2026-09-26).** Pete's cartoon design, drawn by
   `build_daily_answer_wall.py`: slate-violet frame with strong lit and shadow edges and black
   outlines, recessed panels of purple bricks with black mortar, no cracks. It prints the
-  sill's foot colour; `DAILY_ANSWER_WALL_FOOT` must match it.
+  sill's foot colour; `DAILY_ANSWER_WALL_FOOT` must match it. Don't change it without Pete
+  reopening it.
 - The clues sit centred in the door (Pete, 2026-09-26), so the gate position is per phone:
   `resolveDailyClueTop(frame, hudBottom)` picks the first plank's canvas y between
   `DAILY_CLUE_TOP_MIN` (216: above it the arch is too narrow for the 176 pt clue box) and
