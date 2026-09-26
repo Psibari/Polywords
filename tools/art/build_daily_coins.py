@@ -11,8 +11,8 @@ silver and gold is kept for the win's coin, whose gold is the brand golds
 feather art (assets/ui/feather-life-filled.png, feather-gold-reward.png),
 standing upright on the face like an emblem.
 
-Output is 3x: white coin 62 x 40 pt -> 186 x 120 px; gold 80 x 52 pt ->
-240 x 156 px. The coin's contact point with the floor is the bottom of the
+Output is 3x: white coin 62 x 40.7 pt -> 186 x 122 px; gold 100 x 64 pt ->
+300 x 192 px. The coin's contact point with the floor is the bottom of the
 edge, at (image height - SHADOW_PAD) — dailyCastleScene mirrors this.
 
 coin_glow.png is the win's soft gold glow behind the gold coin: an ellipse
@@ -138,10 +138,11 @@ def glow(width: int, height: int) -> Image.Image:
 
 def main() -> None:
     white = coin(186, WHITE_FEATHER, 0.74, SILVER_METAL)
-    gold = coin(240, GOLD_FEATHER, 0.74, GOLD_METAL)
+    # 100 pt wide, about 1.6x a white coin (Pete, 2026-09-26).
+    gold = coin(300, GOLD_FEATHER, 0.74, GOLD_METAL)
     white.save(OUT_DIR / "coin_feather.png", optimize=True)
     gold.save(OUT_DIR / "coin_gold.png", optimize=True)
-    halo = glow(528, 294)   # the gold coin (240 x 155) at 2.2 x 1.9
+    halo = glow(660, 365)   # the gold coin (300 x 192) at 2.2 x 1.9
     halo.save(OUT_DIR / "coin_glow.png", optimize=True)
     print("wrote coin_feather.png", white.size, "coin_gold.png", gold.size, "coin_glow.png", halo.size)
 

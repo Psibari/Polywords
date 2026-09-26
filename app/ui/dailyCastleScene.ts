@@ -206,7 +206,8 @@ export const DAILY_FLOOR_COINS = {
   contactY: 566,
   pitch: 76,
   white: { width: 186 / 3, height: 122 / 3, contactFromTop: (122 - 6) / 3 },
-  gold: { width: 240 / 3, height: 155 / 3, contactFromTop: (155 - 6) / 3 },
+  // coin_gold.png is 300 × 192 px: 100 pt wide, ~1.6× a white coin (Pete, 2026-09-26).
+  gold: { width: 300 / 3, height: 192 / 3, contactFromTop: (192 - 6) / 3 },
 } as const;
 
 /** White coin `index` of `count` (1–4), centred as a row. Canvas points. */
