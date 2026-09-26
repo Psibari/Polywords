@@ -1,0 +1,186 @@
+import assert from 'node:assert/strict';
+import { DAILY_POOL } from '../game/dailyPool';
+import {
+  DAILY_CASTLE_ACTION_LABEL_CLEARANCE,
+  DAILY_CASTLE_CANVAS,
+  DAILY_CASTLE_FLIGHT,
+  DAILY_CASTLE_FLIGHT_HANDOFF,
+  DAILY_CASTLE_GRID,
+  DAILY_CASTLE_OPENING,
+  DAILY_CASTLE_WALL_FACE_TOP,
+  DAILY_GATE_ART,
+  DAILY_GATE_CLOSED,
+  DAILY_GATE_PT_PER_SRC,
+  DAILY_GATE_MAX_SINK,
+  DAILY_GATE_OPEN_TRAVEL,
+  dailyCastleGridBottom,
+  DAILY_FLOOR_COINS,
+  resolveDailyFloorCoin,
+  resolveDailyGoldCoin,
+  dailyAnswerTextWidth,
+  DAILY_ANSWER_FONT,
+  DAILY_ANSWER_PANELS,
+  fitDailyAnswerFontSize,
+  dailyClueFits,
+  DAILY_CLUE_FONT,
+  DAILY_GATE_CLUE_WIDTH,
+  fitDailyClueFontSize,
+  dailyGateLineY,
+  resolveDailyCastleFrame,
+  resolveDailyCastleSlot,
+  resolveDailyGateClueRects,
+  resolveDailyClueTop,
+  DAILY_CLUE_TOP_MIN,
+  DAILY_CLUE_TOP_MAX,
+  DAILY_CLUE_TOP_PREFERRED,
+  dailyGateOpenTravel,
+  dailyGateMaxSink,
+} from './dailyCastleScene';
+
+const opening = DAILY_CASTLE_OPENING;
+const openingBottom = opening.y + opening.height;
+
+// Closed gate covers the whole opening: board top above the crown of the
+// arch, board bottom below the step edge, board wider than the opening.
+assert.ok(dailyGateLineY(0) < opening.y, 'closed gate board reaches above the opening');
+assert.ok(dailyGateLineY(8) > openingBottom, 'closed gate board reaches below the steps');
+const boardLeft = DAILY_GATE_CLOSED.x + DAILY_GATE_ART.boardXSrc * DAILY_GATE_PT_PER_SRC;
+const boardRight = boardLeft + DAILY_GATE_ART.boardWidthSrc * DAILY_GATE_PT_PER_SRC;
+assert.ok(boardLeft < opening.x && boardRight > opening.x + opening.width, 'board overhangs both jambs');
+
+// Raised gate clears the opening entirely.
+assert.ok(dailyGateLineY(8) - DAILY_GATE_OPEN_TRAVEL < opening.y, 'raised gate clears the opening');
+
+// Wrong-claim sink never uncovers the crown of the opening.
+assert.ok(DAILY_GATE_MAX_SINK > 0);
+assert.ok(dailyGateLineY(0) + DAILY_GATE_MAX_SINK < opening.y, 'sunk gate still covers the crown');
+
+// Clues: one per plank, readable height, inside the opening at every clue
+// position a phone can choose (MIN = the centred spot's upper limit, MAX = as
+// low as the steps allow). Measured on castle_cartoon.png: from y 216 pt down
+// the opening spans at least x 126.3–304 pt.
+assert.ok(DAILY_CLUE_TOP_MIN <= DAILY_CLUE_TOP_PREFERRED && DAILY_CLUE_TOP_PREFERRED <= DAILY_CLUE_TOP_MAX);
+for (const clueTop of [DAILY_CLUE_TOP_MIN, DAILY_CLUE_TOP_PREFERRED, DAILY_CLUE_TOP_MAX]) {
+  const rects = resolveDailyGateClueRects(clueTop);
+  assert.equal(rects.length, 3);
+  for (const [i, clue] of rects.entries()) {
+    const twoFullLines = DAILY_CLUE_FONT.maxSize * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines;
+    assert.ok(clue.height >= twoFullLines, `clue ${i + 1} plank is tall enough for two 24 pt lines`);
+    assert.ok(clue.y >= DAILY_CLUE_TOP_MIN - 1e-9, `clue ${i + 1} sits below the narrow top of the arch`);
+    assert.ok(clue.y + clue.height < openingBottom, `clue ${i + 1} sits above the steps (top ${clueTop})`);
+    assert.ok(clue.x >= 126.3 && clue.x + clue.width <= 304, `clue ${i + 1} fits the opening width`);
+    if (i > 0) assert.equal(clue.y, rects[i - 1].y + rects[i - 1].height, 'clues sit on consecutive planks');
+  }
+  // The gate still covers the opening, raises clear of it, and its slam never
+  // uncovers the crown, wherever the clues sit.
+  assert.ok(dailyGateLineY(0, clueTop) < opening.y, `gate board reaches above the opening (top ${clueTop})`);
+  assert.ok(dailyGateLineY(8, clueTop) > openingBottom, `gate board reaches below the steps (top ${clueTop})`);
+  assert.ok(dailyGateLineY(8, clueTop) - dailyGateOpenTravel(clueTop) < opening.y, 'raised gate clears the opening');
+  const sink = dailyGateMaxSink(clueTop);
+  assert.ok(sink > 0 && dailyGateLineY(0, clueTop) + sink < opening.y, 'sunk gate still covers the crown');
+}
+const clues = resolveDailyGateClueRects();
+
+// Grid sits on the brick face, centred, inside the canvas.
+assert.ok(DAILY_CASTLE_GRID.top > DAILY_CASTLE_WALL_FACE_TOP, 'grid is below the parapet ledge');
+for (let i = 0; i < 6; i += 1) {
+  const slot = resolveDailyCastleSlot(DAILY_CASTLE_GRID, i);
+  assert.ok(slot.x >= 0 && slot.x + slot.width <= DAILY_CASTLE_CANVAS.width);
+}
+const left = resolveDailyCastleSlot(DAILY_CASTLE_GRID, 0);
+const right = resolveDailyCastleSlot(DAILY_CASTLE_GRID, 1);
+assert.equal(left.x, DAILY_CASTLE_CANVAS.width - (right.x + right.width), 'grid is centred');
+
+// Framed wall: the two panels are equal, and each column of three blocks sits
+// wholly inside its panel with equal gaps.
+assert.equal(DAILY_ANSWER_PANELS[0].width, DAILY_ANSWER_PANELS[1].width, 'panels are the same width');
+for (let i = 0; i < 6; i += 1) {
+  const slot = resolveDailyCastleSlot(DAILY_CASTLE_GRID, i);
+  const panel = DAILY_ANSWER_PANELS[i % 2];
+  assert.ok(slot.x >= panel.x && slot.x + slot.width <= panel.x + panel.width, `block ${i} inside its panel horizontally`);
+  assert.ok(slot.y >= panel.y && slot.y + slot.height <= panel.y + panel.height + 1e-9, `block ${i} inside its panel vertically`);
+  const panelCenter = panel.x + panel.width / 2;
+  assert.ok(Math.abs(slot.x + slot.width / 2 - panelCenter) < 1e-9, `block ${i} centred in its panel`);
+}
+
+// Every answer word in the live pool fits its block on one line, on the
+// smallest supported phone width too.
+for (const phoneWidth of [430, 375, 360]) {
+  const blockWidth = DAILY_CASTLE_GRID.cardWidth * (phoneWidth / 430);
+  for (const word of new Set(DAILY_POOL.flatMap((w) => w.candidates))) {
+    const size = fitDailyAnswerFontSize(word, blockWidth);
+    const usable = (blockWidth - 2 * DAILY_ANSWER_FONT.sidePadding) * DAILY_ANSWER_FONT.safety;
+    assert.ok(dailyAnswerTextWidth(word, size) <= usable, `"${word}" fits a ${phoneWidth}-wide phone's block at ${size} pt`);
+  }
+}
+assert.equal(fitDailyAnswerFontSize('LOCK', DAILY_CASTLE_GRID.cardWidth), DAILY_ANSWER_FONT.maxSize);
+
+// Frame: fills width, bottom-anchored on the reference phone, grid always
+// clears the action label, and the first clue stays on screen.
+// [width, height, top inset, bottom inset]; HUD bottom ≈ top inset + 70.
+const phones = [
+  [430, 932, 59, 34],
+  [390, 844, 47, 34],
+  [393, 852, 59, 34],
+  [375, 667, 20, 0],
+  [412, 915, 24, 24],
+  [360, 800, 24, 24],
+];
+for (const [w, h, topInset, inset] of phones) {
+  const hudBottom = topInset + 70;
+  const f = resolveDailyCastleFrame({ windowWidth: w, windowHeight: h, bottomInset: inset, hudBottom });
+  assert.equal(f.width, w);
+  const gridBottom = f.top + dailyCastleGridBottom(DAILY_CASTLE_GRID) * f.scale;
+  assert.ok(gridBottom <= h - inset - DAILY_CASTLE_ACTION_LABEL_CLEARANCE + 0.001, `${w}x${h}: grid clears the action label`);
+  const clueTop = resolveDailyClueTop(f, hudBottom);
+  assert.ok(clueTop >= DAILY_CLUE_TOP_MIN && clueTop <= DAILY_CLUE_TOP_MAX, `${w}x${h}: clue position within the door`);
+  assert.ok(f.top + clueTop * f.scale >= hudBottom, `${w}x${h}: first clue is below the HUD`);
+  // When the scene rises to clear the label, the stage fills the strip under
+  // the sill (DAILY_ANSWER_WALL_FOOT); keep that strip inside the home-bar inset.
+  assert.ok(h - (f.top + f.height) <= Math.max(inset, 0) + 0.001, `${w}x${h}: any strip under the wall stays inside the bottom inset`);
+}
+// Before the HUD is measured the scene is simply bottom-anchored.
+const unmeasured = resolveDailyCastleFrame({ windowWidth: 375, windowHeight: 667, bottomInset: 0 });
+assert.equal(unmeasured.top, 667 - 932 * (375 / 430));
+const reference = resolveDailyCastleFrame({ windowWidth: 430, windowHeight: 932, bottomInset: 34 });
+assert.equal(reference.scale, 1);
+assert.equal(reference.top, 0);
+
+// Flight: handoff point is where the plaque is wholly inside the opening at
+// its handoff scale, and the end point is inside the opening too.
+const halfW = (DAILY_CASTLE_GRID.cardWidth * DAILY_CASTLE_FLIGHT.handoffScale) / 2;
+const halfH = (DAILY_CASTLE_GRID.cardHeight * DAILY_CASTLE_FLIGHT.handoffScale) / 2;
+const h = DAILY_CASTLE_FLIGHT.handoff;
+assert.ok(h.x - halfW > opening.x && h.x + halfW < opening.x + opening.width, 'handoff plaque inside opening width');
+assert.ok(h.y + halfH < openingBottom && h.y - halfH > opening.y + 70, 'handoff plaque inside opening height');
+assert.ok(DAILY_CASTLE_FLIGHT.end.y > opening.y && DAILY_CASTLE_FLIGHT.end.y < h.y, 'plaque goes up and in');
+assert.ok(DAILY_CASTLE_FLIGHT_HANDOFF > 0 && DAILY_CASTLE_FLIGHT_HANDOFF < 1);
+
+// Every clue in the live Daily pool fits its plank in at most two lines, at
+// the size the fitter gives it, and short clues get the full size.
+for (const clue of DAILY_POOL.flatMap((word) => word.meanings)) {
+  const size = fitDailyClueFontSize(clue, DAILY_GATE_CLUE_WIDTH);
+  assert.ok(size >= DAILY_CLUE_FONT.minSize && size <= DAILY_CLUE_FONT.maxSize);
+  assert.ok(dailyClueFits(clue, size, DAILY_GATE_CLUE_WIDTH), `"${clue}" fits at ${size} pt`);
+  assert.ok(size * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines <= clues[0].height, `"${clue}" two lines fit the plank height`);
+}
+assert.equal(fitDailyClueFontSize('TO GRAB ON AND NOT LET GO', DAILY_GATE_CLUE_WIDTH), DAILY_CLUE_FONT.maxSize);
+
+// Floor coins: on the open courtyard floor (contact line between the step
+// edge and the capstone), inside the screen, never overlapping each other.
+for (let count = 1; count <= 4; count += 1) {
+  for (let i = 0; i < count; i += 1) {
+    const coin = resolveDailyFloorCoin(i, count);
+    assert.ok(coin.x >= 0 && coin.x + coin.width <= DAILY_CASTLE_CANVAS.width, `coin ${i + 1}/${count} on screen`);
+    if (i > 0) {
+      const prev = resolveDailyFloorCoin(i - 1, count);
+      assert.ok(prev.x + prev.width < coin.x, `coins ${i}/${count} and ${i + 1}/${count} do not overlap`);
+    }
+    assert.ok(Math.abs(coin.x + coin.width / 2 - DAILY_CASTLE_CANVAS.width / 2 - (i - (count - 1) / 2) * DAILY_FLOOR_COINS.pitch) < 1e-9);
+  }
+}
+assert.ok(DAILY_FLOOR_COINS.contactY > DAILY_FLOOR_COINS.floorTop && DAILY_FLOOR_COINS.contactY < DAILY_FLOOR_COINS.floorBottom, 'coins stand on the open floor');
+const gold = resolveDailyGoldCoin();
+assert.ok(gold.y + gold.height <= DAILY_FLOOR_COINS.floorBottom, 'gold coin clears the capstone');
+
+console.log('dailyCastleScene tests passed');

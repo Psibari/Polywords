@@ -55,6 +55,10 @@ export const DAILY_SKY_TUNING: AmbientSkyBackgroundProps = {
   meteorsEnabled: false,
   moonPhase: 'half',
   starTint: PW.color.white,
+  // The castle (DailyCastleStage) is Daily's ground on every phase — entry,
+  // play and Results — and its sky is transparent. The shared Hunt wall must
+  // not show through above the towers (Pete, 2026-09-26).
+  showGround: false,
 };
 
 // Vault sits behind its own bookcase art and candle-glow vignette, but

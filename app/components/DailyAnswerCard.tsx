@@ -2,8 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated as RNAnimated,
   Dimensions,
+  Image,
   PanResponder,
   StyleSheet,
+  Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, {
@@ -18,11 +21,26 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Haptics } from '../utils/haptics';
 import { playSfx } from '../audio/sfx';
-import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
+import {
+  dailyCardMaterial,
+  dailyCardFaceMaterial,
+  dailyCastlePlaqueMaterial,
+} from '../ui/pwDailyMaterials';
 import DailyCardFace from './ui/DailyCardFace';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
+import {
+  DAILY_CASTLE_LAYOUT,
+  resolveDailyCastleScale,
+} from '../ui/dailyCastleLayout';
+import { DAILY_ANSWER_FONT, fitDailyAnswerFontSize } from '../ui/dailyCastleScene';
+import { FONTS } from '../constants/fonts';
+
+// Stone block from the castle-step slab, built by tools/art/build_daily_plaque.py:
+// a thin top lip (top 20%) over the front face the label sits on.
+const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answerplaque_stone.png');
+const CASTLE_PLAQUE_LIP = '20%';
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -38,7 +56,7 @@ export type DailyAnswerCardClaimOrigin = {
   height: number;
 };
 
-type Props = {
+export type DailyAnswerCardProps = {
   label: string;
   disabled?: boolean;
   state?: DailyAnswerCardState;
@@ -46,12 +64,25 @@ type Props = {
   onClaim: (label: string, origin: DailyAnswerCardClaimOrigin | null) => void;
   testID?: string;
   enterFromLeft?: boolean;
+  enterFromRecess?: boolean;
+  castleArt?: boolean;
+  castleWidth?: number;
+  castleHeight?: number;
   enterDelay?: number;
   roundKey?: string | number;
+  recessProgress?: RNAnimated.Value;
 };
 
 const CLAIM_THRESHOLD = -80;
 const MOVE_THRESHOLD = 4;
+
+// DailyCastleStage owns this progress value because the recess, cap, contact
+// shadow and moving plaque must stay on one physical timeline. The plaque
+// starts sunk in its socket (small and shaded), pushes out toward the player
+// past its resting size, then settles into the face of the wall.
+const DAILY_RECESS_INPUT = [0, 0.26, 0.86, 1];
+const DAILY_RECESS_SCALE = [0.8, 0.85, 1.1, 1];
+const DAILY_RECESS_SHADE = [0.62, 0.48, 0, 0];
 
 function rimColors(
   state: DailyAnswerCardState,
@@ -70,10 +101,17 @@ export default function DailyAnswerCard({
   onClaim,
   testID,
   enterFromLeft = false,
+  enterFromRecess = false,
+  castleArt = false,
+  castleWidth,
+  castleHeight,
   enterDelay = 0,
   roundKey = 0,
-}: Props) {
+  recessProgress,
+}: DailyAnswerCardProps) {
   const reduceMotion = useReducedMotionPreference();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const castleScale = resolveDailyCastleScale(windowWidth, windowHeight);
   // DEV-ONLY (app/dev/dailyScrollTuning.ts) — overrides entryShell's default
   // 64. The flying/landing card in QuillScrollPanel is sized from this same
   // shell's own measureInWindow() result (see publishClaim below and
@@ -82,13 +120,16 @@ export default function DailyAnswerCard({
   const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
-  const entryOpacity = useRef(new RNAnimated.Value(0)).current;
+  const entryScale = useRef(new RNAnimated.Value(1)).current;
+  const entryOpacity = useRef(new RNAnimated.Value(enterFromRecess ? 1 : 0)).current;
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-  const scale = useSharedValue(0.96);
+  const scale = useSharedValue(castleArt ? 1 : 0.96);
   const rotation = useSharedValue(0);
   const opacity = useSharedValue(1);
   const gripGlow = useSharedValue(0);
+  // Castle blocks only: 1 while the drag is past the claim line.
+  const readyGlow = useSharedValue(0);
 
   const labelRef = useRef(label);
   const onClaimStartRef = useRef(onClaimStart);
@@ -148,19 +189,32 @@ export default function DailyAnswerCard({
     scale.value = withSpring(1, { damping: 7, stiffness: 110 });
     rotation.value = withSpring(0, { damping: 7, stiffness: 110 });
     gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
+    readyGlow.value = withTiming(0, { duration: dailyCastlePlaqueMaterial.readyOutMs });
   }
 
   useEffect(() => {
     const entryDistance = Dimensions.get('window').width * 0.7;
     entryTranslateX.stopAnimation();
+    entryScale.stopAnimation();
     entryOpacity.stopAnimation();
     if (reduceMotion !== false) {
       entryTranslateX.setValue(0);
+      entryScale.setValue(1);
       entryOpacity.setValue(1);
       return;
     }
-    entryTranslateX.setValue(enterFromLeft ? -entryDistance : entryDistance);
-    entryOpacity.setValue(0);
+    // Castle depth is parent-owned: this wrapper stays fully opaque and lets
+    // the stage's one progress value coordinate plaque, socket, cap and
+    // shadows. The legacy left/right entrances below remain card-owned.
+    if (enterFromRecess && recessProgress) {
+      entryTranslateX.setValue(0);
+      entryScale.setValue(1);
+      entryOpacity.setValue(1);
+      return;
+    }
+    entryTranslateX.setValue(enterFromRecess ? 0 : enterFromLeft ? -entryDistance : entryDistance);
+    entryScale.setValue(1);
+    entryOpacity.setValue(enterFromRecess ? 1 : 0);
 
     const timer = setTimeout(() => {
       RNAnimated.parallel([
@@ -168,6 +222,12 @@ export default function DailyAnswerCard({
           toValue: 0,
           friction: 8,
           tension: 100,
+          useNativeDriver: true,
+        }),
+        RNAnimated.spring(entryScale, {
+          toValue: 1,
+          friction: 9,
+          tension: 95,
           useNativeDriver: true,
         }),
         RNAnimated.timing(entryOpacity, {
@@ -182,8 +242,11 @@ export default function DailyAnswerCard({
   }, [
     enterDelay,
     enterFromLeft,
+    enterFromRecess,
+    entryScale,
     entryOpacity,
     entryTranslateX,
+    recessProgress,
     reduceMotion,
     roundKey,
   ]);
@@ -191,17 +254,20 @@ export default function DailyAnswerCard({
   useEffect(() => {
     translateX.value = 0;
     translateY.value = 0;
-    scale.value = 0.96;
+    scale.value = castleArt ? 1 : 0.96;
     rotation.value = 0;
     opacity.value = 1;
     gripGlow.value = 0;
+    readyGlow.value = 0;
     claimedRef.current = false;
     thresholdCrossedRef.current = false;
     gestureOffsetRef.current = { x: 0, y: 0 };
     setActivelyHeld(false);
 
-    scale.value = withSpring(1, { damping: 8, stiffness: 100 });
-  }, [label, gripGlow, opacity, rotation, scale, translateX, translateY]);
+    if (!castleArt) {
+      scale.value = withSpring(1, { damping: 8, stiffness: 100 });
+    }
+  }, [castleArt, label, gripGlow, opacity, readyGlow, rotation, scale, translateX, translateY]);
 
   // Held elevation only ever needs to survive up to the moment `state`
   // itself starts driving entryShellClaiming/Failing — once it's no longer
@@ -211,13 +277,25 @@ export default function DailyAnswerCard({
   }, [state]);
 
   useEffect(() => {
+    if (state !== 'idle') readyGlow.value = 0;
     if (state === 'correct') {
+      if (castleArt) {
+        // The castle stage flies a copy of this plaque from the exact spot it
+        // was released (DailyCastleStage's flight layers), so the one in the
+        // wall leaves in the same frame rather than fading beside its copy.
+        gripGlow.value = 0;
+        opacity.value = 0;
+        return;
+      }
       gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
       rotation.value = 0;
-
-      opacity.value = 0;
-      // The scroll-owned transient copy is already mounted at this exact
-      // release position, so hiding the grid source does not create a gap.
+      translateY.value = withTiming(reduceMotion === false ? -130 : -20, {
+        duration: reduceMotion === false ? 380 : 120,
+        easing: ReaEasing.in(ReaEasing.cubic),
+      });
+      scale.value = withTiming(0.62, { duration: reduceMotion === false ? 380 : 120 });
+      opacity.value = withDelay(reduceMotion === false ? 190 : 0,
+        withTiming(0, { duration: reduceMotion === false ? 190 : 120 }));
       return;
     }
 
@@ -256,7 +334,10 @@ export default function DailyAnswerCard({
       translateY.value = withSpring(0);
       scale.value = withSpring(0.96);
       rotation.value = withSpring(0);
-      opacity.value = withTiming(dailyCardMaterial.disabledOpacity, { duration: 180 });
+      // In the castle layout, a wrong candidate should leave an empty recess.
+      // The legacy Daily grid intentionally kept disabled cards ghosted at 42%,
+      // which made a rejected word reappear after its fall animation.
+      opacity.value = withTiming(castleArt ? 0 : dailyCardMaterial.disabledOpacity, { duration: 180 });
       gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
       return;
     }
@@ -267,7 +348,7 @@ export default function DailyAnswerCard({
     scale.value = withSpring(1);
     rotation.value = withSpring(0);
     opacity.value = withTiming(1, { duration: 120 });
-  }, [gripGlow, opacity, reduceMotion, rotation, scale, state, translateX, translateY]);
+  }, [castleArt, gripGlow, opacity, readyGlow, reduceMotion, rotation, scale, state, translateX, translateY]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -284,7 +365,10 @@ export default function DailyAnswerCard({
         if (interactionDisabledRef.current || claimedRef.current) return;
         thresholdCrossedRef.current = false;
         setActivelyHeld(true);
-        scale.value = withSpring(dailyCardMaterial.liftScale, { damping: 7, stiffness: 140 });
+        scale.value = withSpring(
+          castleArt ? dailyCastlePlaqueMaterial.heldScale : dailyCardMaterial.liftScale,
+          { damping: 7, stiffness: 140 },
+        );
         gripGlow.value = withTiming(1, { duration: dailyCardMaterial.motion.pressInMs });
         playSfx('pressHoldStart');
       },
@@ -302,10 +386,12 @@ export default function DailyAnswerCard({
 
         if (crossedUpThreshold && !thresholdCrossedRef.current) {
           thresholdCrossedRef.current = true;
+          readyGlow.value = withTiming(1, { duration: dailyCastlePlaqueMaterial.readyInMs });
           Haptics.cueAsync('gestureThreshold');
           playSfx('tileSwipe');
-        } else if (!crossedUpThreshold) {
+        } else if (!crossedUpThreshold && thresholdCrossedRef.current) {
           thresholdCrossedRef.current = false;
+          readyGlow.value = withTiming(0, { duration: dailyCastlePlaqueMaterial.readyOutMs });
         }
       },
 
@@ -376,6 +462,33 @@ export default function DailyAnswerCard({
   const gripGlowStyle = useAnimatedStyle(() => ({
     opacity: gripGlow.value,
   }));
+  // Castle block while held: a cream halo that swells once the drag is past
+  // the claim line, and a light lift of the stone itself.
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: Math.min(
+      1,
+      gripGlow.value * dailyCastlePlaqueMaterial.heldHaloOpacity +
+        readyGlow.value * (1 - dailyCastlePlaqueMaterial.heldHaloOpacity),
+    ),
+    transform: [{ scale: 1 + readyGlow.value * (dailyCastlePlaqueMaterial.readyHaloScale - 1) }],
+  }));
+  const readyBrightenStyle = useAnimatedStyle(() => ({
+    opacity: readyGlow.value,
+  }));
+
+  const recessScale = recessProgress?.interpolate({
+    inputRange: DAILY_RECESS_INPUT,
+    outputRange: DAILY_RECESS_SCALE,
+  });
+  const entryDepthScale = enterFromRecess && state === 'idle' && recessScale
+    ? recessScale
+    : entryScale;
+  const recessShade = enterFromRecess && state === 'idle'
+    ? recessProgress?.interpolate({
+        inputRange: DAILY_RECESS_INPUT,
+        outputRange: DAILY_RECESS_SHADE,
+      })
+    : undefined;
 
   return (
     <RNAnimated.View
@@ -383,12 +496,22 @@ export default function DailyAnswerCard({
       collapsable={false}
       style={[
         styles.entryShell,
-        { height: cardHeight },
+        {
+          height: castleArt
+            ? castleHeight ?? DAILY_CASTLE_LAYOUT.card.height * castleScale
+            : cardHeight,
+        },
+        castleArt && {
+          width: castleWidth ?? DAILY_CASTLE_LAYOUT.card.width * castleScale,
+        },
         (activelyHeld || state === 'correct') && styles.entryShellClaiming,
         (!activelyHeld && state === 'wrong') && styles.entryShellFailing,
         {
           opacity: entryOpacity,
-          transform: [{ translateX: entryTranslateX }],
+          transform: [
+            { translateX: entryTranslateX },
+            { scale: entryDepthScale },
+          ],
         },
       ]}
     >
@@ -403,22 +526,37 @@ export default function DailyAnswerCard({
         {...panResponder.panHandlers}
         style={[
           styles.shell,
+          castleArt && state === 'idle' && styles.castleIdleShell,
           state === 'correct' && styles.shellCorrect,
           state === 'wrong' && styles.shellWrong,
           cardAnimatedStyle,
         ]}
       >
-        <LinearGradient
-          colors={rimColors(state)}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.rim}
-        >
-          <View style={styles.face}>
-            <DailyCardFace label={label} />
+        {castleArt ? (
+          <>
+          {/* Halo sits outside the block (the block clips its own face). */}
+          <Animated.View pointerEvents="none" style={[styles.castleHaloWrap, haloStyle]}>
+            <View style={styles.castleHaloOuter} />
+            <View style={styles.castleHaloInner} />
+          </Animated.View>
+          <View style={styles.castlePlaque}>
+            <DailyCastlePlaqueFace
+              label={label}
+              width={castleWidth ?? DAILY_CASTLE_LAYOUT.card.width * castleScale}
+            />
+            {recessShade && (
+              <RNAnimated.View
+                pointerEvents="none"
+                style={[styles.recessShade, { opacity: recessShade }]}
+              />
+            )}
             <Animated.View
               pointerEvents="none"
-              style={[styles.gripGlow, gripGlowStyle]}
+              style={[styles.castleHeldBrighten, gripGlowStyle]}
+            />
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.castleReadyBrighten, readyBrightenStyle]}
             />
             {state === 'correct' && (
               <View pointerEvents="none" style={styles.correctOverlay} />
@@ -430,9 +568,73 @@ export default function DailyAnswerCard({
               <View pointerEvents="none" style={styles.disabledOverlay} />
             )}
           </View>
-        </LinearGradient>
+          </>
+        ) : (
+          <LinearGradient
+            colors={rimColors(state)}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.rim}
+          >
+            <View style={styles.face}>
+              <DailyCardFace label={label} />
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.gripGlow, gripGlowStyle]}
+              />
+              {state === 'correct' && (
+                <View pointerEvents="none" style={styles.correctOverlay} />
+              )}
+              {state === 'wrong' && (
+                <View pointerEvents="none" style={styles.wrongOverlay} />
+              )}
+              {state === 'disabled' && (
+                <View pointerEvents="none" style={styles.disabledOverlay} />
+              )}
+            </View>
+          </LinearGradient>
+        )}
       </Animated.View>
     </RNAnimated.View>
+  );
+}
+
+// The castle plaque's art and label. Shared by the card in the wall and the
+// copy DailyCastleStage flies into the gate, so the two can never differ.
+export function DailyCastlePlaqueFace({
+  label,
+  width,
+}: {
+  label: string;
+  /** The block's width in screen points; sizes the label to fit it. */
+  width?: number;
+}) {
+  const fontSize = width
+    ? fitDailyAnswerFontSize(label, width)
+    : DAILY_ANSWER_FONT.maxSize;
+  return (
+    <>
+      {/* Size passed inline: a bundled image otherwise takes the art's own
+          pixel size, which beat absoluteFill and a stylesheet 100% on web.
+          The container must have no padding, or native resolves 100% inside
+          it (see castlePlaque). */}
+      <Image
+        source={CASTLE_ANSWER_PLAQUE}
+        resizeMode="stretch"
+        style={[styles.castlePlaqueImage, { width: '100%', height: '100%' }]}
+      />
+      {/* The label sits on the front face, below the top lip. */}
+      <View pointerEvents="none" style={styles.castlePlaqueFront}>
+        <Text
+          style={[styles.castlePlaqueLabel, { fontSize }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.9}
+        >
+          {label.toUpperCase()}
+        </Text>
+      </View>
+    </>
   );
 }
 
@@ -489,6 +691,15 @@ const styles = StyleSheet.create({
     shadowOffset: dailyCardMaterial.shadowOffset,
     elevation: dailyCardMaterial.elevation,
   },
+  castleIdleShell: {
+    // The stage paints the entrance/final depth shadow for castle cards. A
+    // permanent native shadow here would make frame one float above the wall
+    // before the socket has released it.
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 0,
+  },
   shellCorrect: {
     shadowColor: '#F5C842',
     shadowOpacity: 0.48,
@@ -515,6 +726,72 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     overflow: 'hidden',
   },
+  castlePlaque: {
+    flex: 1,
+    // No padding. Both children are absolutely placed, and on native a 100%
+    // size resolves inside the padding: with 11 pt each side the stone came
+    // out 22 pt short of its socket, left-aligned (seen on device). The label
+    // insets itself (castlePlaqueFront).
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  recessShade: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#05040B',
+  },
+  castleHaloWrap: {
+    ...StyleSheet.absoluteFill,
+  },
+  castleHaloOuter: {
+    position: 'absolute',
+    top: dailyCastlePlaqueMaterial.haloOuterInset,
+    right: dailyCastlePlaqueMaterial.haloOuterInset,
+    bottom: dailyCastlePlaqueMaterial.haloOuterInset,
+    left: dailyCastlePlaqueMaterial.haloOuterInset,
+    borderRadius: 14,
+    backgroundColor: dailyCastlePlaqueMaterial.haloOuter,
+  },
+  castleHaloInner: {
+    position: 'absolute',
+    top: dailyCastlePlaqueMaterial.haloInnerInset,
+    right: dailyCastlePlaqueMaterial.haloInnerInset,
+    bottom: dailyCastlePlaqueMaterial.haloInnerInset,
+    left: dailyCastlePlaqueMaterial.haloInnerInset,
+    borderRadius: 9,
+    backgroundColor: dailyCastlePlaqueMaterial.haloInner,
+  },
+  castleHeldBrighten: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: dailyCastlePlaqueMaterial.heldBrighten,
+  },
+  castleReadyBrighten: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: dailyCastlePlaqueMaterial.readyBrighten,
+  },
+  castlePlaqueImage: {
+    ...StyleSheet.absoluteFill,
+  },
+  castlePlaqueFront: {
+    position: 'absolute',
+    top: CASTLE_PLAQUE_LIP,
+    left: DAILY_ANSWER_FONT.sidePadding,
+    right: DAILY_ANSWER_FONT.sidePadding,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  castlePlaqueLabel: {
+    color: dailyCardMaterial.text,
+    fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
+    fontSize: DAILY_ANSWER_FONT.maxSize,
+    fontWeight: '800',
+    letterSpacing: DAILY_ANSWER_FONT.letterSpacing,
+    textAlign: 'center',
+    textShadowColor: 'rgba(10,8,20,0.8)',
+    textShadowOffset: { width: 1, height: 1.5 },
+    textShadowRadius: 1,
+  },
   gripGlow: {
     ...StyleSheet.absoluteFill,
     backgroundColor: dailyCardMaterial.pressGlow,
@@ -532,3 +809,6 @@ const styles = StyleSheet.create({
     backgroundColor: dailyCardMaterial.disabledOverlay,
   },
 });
+
+/** Container style for DailyCastlePlaqueFace. */
+export const dailyCastlePlaqueStyle = styles.castlePlaque;

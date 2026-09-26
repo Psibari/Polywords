@@ -1,5 +1,20 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { register } from 'tsx/esm/api';
+
+const castleTuningUrl = new URL('../dev/dailyCastleTuning.ts', import.meta.url);
+const castleTuningPanelUrl = new URL('../dev/DailyCastleTuningPanel.tsx', import.meta.url);
+
+assert.equal(
+  existsSync(castleTuningUrl),
+  true,
+  'Daily castle tuning store must exist for live on-device calibration',
+);
+assert.equal(
+  existsSync(castleTuningPanelUrl),
+  true,
+  'Daily castle tuning panel must exist for live on-device calibration',
+);
 
 const dailyScreenSource = readFileSync(
   new URL('./DailyChallengeScreen.tsx', import.meta.url),
@@ -11,6 +26,11 @@ const settingsScreenSource = readFileSync(
 );
 const scrollTuningSource = readFileSync(
   new URL('../dev/dailyScrollTuning.ts', import.meta.url),
+  'utf8',
+);
+const castleTuningPanelSource = readFileSync(castleTuningPanelUrl, 'utf8');
+const castleStageSource = readFileSync(
+  new URL('../components/DailyCastleStage.tsx', import.meta.url),
   'utf8',
 );
 
@@ -39,6 +59,36 @@ assert.equal(
   false,
   'Daily replay override must not be duplicated in Settings',
 );
+
+// ── Castle calibration and registered castle art ──────────────────
+{
+  const unregisterTsx = register();
+  const { DAILY_CASTLE_TUNING_DEFAULTS, useDailyCastleTuning } = await import(castleTuningUrl);
+  await unregisterTsx();
+  // Arch and wall share one export canvas, so neither is tunable on its own.
+  assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['gate', 'grid', 'clues']);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 136);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 72);
+  useDailyCastleTuning.getState().setValue('gate', 'y', 10);
+  assert.equal(useDailyCastleTuning.getState().gate.y, 10);
+  assert.equal(useDailyCastleTuning.getState().grid.x, 0);
+  useDailyCastleTuning.getState().reset();
+  assert.equal(useDailyCastleTuning.getState().gate.y, 0);
+}
+
+assert.ok(castleStageSource.includes('dailycastle/castle_cartoon.png'));
+assert.ok(castleStageSource.includes('dailycastle/answerwall_framed.png'));
+assert.ok(readFileSync(new URL('../components/DailyGate.tsx', import.meta.url), 'utf8').includes('dailycastle/gate_scroll.png'));
+for (const retired of ['castledeep2.png', 'cavlewall.png', 'cornerwall.png', '3darch5.png', 'fullarchrev5.png']) {
+  assert.ok(!castleStageSource.includes(retired), `castle stage must not use retired art ${retired}`);
+  assert.ok(!dailyScreenSource.includes(retired), `Daily screen must not use retired art ${retired}`);
+}
+assert.ok(castleStageSource.includes('if (index >= 6) return null'));
+assert.ok(castleTuningPanelSource.includes('ANSWER GRID'));
+assert.ok(!castleTuningPanelSource.includes('CASTLE ARCH'));
+assert.ok(!castleTuningPanelSource.includes('CASTLE WALL'));
+assert.ok(dailyScreenSource.includes('CASTLE TUNE'));
+assert.ok(dailyScreenSource.includes('DailyCastleTuningPanel'));
 
 // ── DEV-ONLY dailyScrollTuning knob contract ──────────────────────
 // This is a plain node script (no jest, no @types/node test runner) —

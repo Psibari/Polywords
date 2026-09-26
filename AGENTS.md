@@ -18,6 +18,10 @@ source below. Runtime code and data outrank documentation when describing curren
 Authority: current user request > this file > focused source > `CLAUDE.md` > `CONTEXT.md`.
 Report conflicts; never blend them silently.
 
+Branches: `play-screen-overhaul` is the main working branch. `daily-castle-test` exists only
+to rebuild the Daily Challenge and merges back through a PR. `main` is stale. Details and
+open work are in `CONTEXT.md`.
+
 ## Product Locks
 
 Ruling: only two things are permanently locked — the swipe grammar (UP claims a real meaning,
@@ -35,8 +39,8 @@ and reopenable with a request. Treat those as "do not change casually", not "nev
 - Boss outcome comes from the hidden gauntlet, not score. The Master Gate is removed.
 - Do not change scoring, swipe grammar, boss rules, persistence, or `SwipeMask` without an
   explicit request. `MaskBoard.tsx` and `SwipeMask.tsx` require a focused war-room pass.
-- The in-round book is the **Polybook**. The **Vault** is the player's archive and never
-  Polly's cage, lair, or property.
+- The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26). The in-round book's spine also reads POLYBOOK; that naming
+  collision is open.
 - The Vault and the Polybook may never display a meaning, a trap or a hidden pair. Words
   recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
   flagged `isMasteredReturn` — so any such display is an answer key for a game still in
@@ -45,12 +49,10 @@ and reopenable with a request. Treat those as "do not change casually", not "nev
 ## Polly and Visual Locks
 
 - Polly is a smug opponent and trap-setter, not a friendly mascot or word owner.
-- Live Polly uses transparent pose images with whole-image motion for most poses. Pete
-  approved reviving the layered face rig on 2026-08-27; it is now live on Home, Daily, and
-  Results while she's settled in her idle/smug pose (a fresh implementation cut from
-  `sprite4.png`, not a reactivation of the old dead assets under `assets/images/polly/rig/`,
-  which remain dormant and unapproved). The Hunt perch and every non-idle pose still render
-  flat art. See CLAUDE.md's Presentation and Character section for the current detail.
+- Live Polly uses transparent pose images with whole-image motion. The layered face rig
+  (cut from `sprite4.png`) is live on Home, Daily and Results while she is settled in her
+  idle pose; everything else is flat art. The old `assets/images/polly/rig/` stays dead.
+  Detail in `CLAUDE.md`'s Polly section.
 - `BINGO BANGO ZZZZINGO!` is unassigned system text, never Polly dialogue.
 - Locked palette: `#1A1830`, `#0F0D2A`, `#F5C842`, `#7B2D8B`, `#9B2D6B`, Polly green
   `#4CAF50`, wrong red `#CC2200`, and white. No orange UI, pink/magenta, green outside
@@ -90,7 +92,9 @@ and reopenable with a request. Treat those as "do not change casually", not "nev
 - Entry/navigation: `App.tsx`
 - Screens: `app/screens/`
 - Hunt: `app/game/huntGenerator.ts`, `app/game/polyRunEngine.ts`
-- Daily: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`
+- Daily rules/content: `app/game/dailyChallengeEngine.ts`, `app/game/dailyPool.ts`
+- Daily castle: `app/components/DailyCastleStage.tsx`, `app/ui/dailyCastleScene.ts`,
+  art scripts in `tools/art/`
 - State: `app/store/useGameStore.ts`
 - Gestures/presentation: `app/components/MaskBoard.tsx`, `app/components/SwipeMask.tsx`
 - Theme/materials: `app/ui/`

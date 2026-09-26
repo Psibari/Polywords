@@ -26,19 +26,26 @@ Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hu
 - Wrong claim: costs one Chance, disables that candidate, reveals the next clue, and returns
   input after the wrong-card exit.
 
-## Correct-Claim Scroll Sequence
+## Castle and Correct-Claim Sequence
 
-1. Keep the submitted card continuous from the swipe and settle it on the clue parchment.
-2. Hold briefly with clue and card readable.
-3. Roll reward paper down from the fixed ornate rod; a matching moving rod stays attached to
-   its lower edge and physically covers clue and card.
-4. Show the existing feather/crown reward on that paper.
-5. While fully covered, render the next clue underneath.
-6. Roll the reward paper and moving rod upward to reveal only the next clue.
-7. Re-enable input after stable reveal. Lock input and reject stale/double claims throughout.
+The whole Daily screen is a castle: towers and an arch at the top, the gate in the arch
+carrying the clues, and the six answer blocks set in a framed wall below. The same castle,
+gate shut and blank, stands behind the entry card and Results.
 
-The final round must complete the same reward/reveal sequence without flashing the old clue
-before Results.
+- Clues are painted on the gate, one per plank, and move with it.
+- A correct UP claim throws the plaque at the castle while the gate lifts.
+- The plaque passes into the arch, goes in behind the gate line and flies off down the tunnel.
+- The gate comes back down carrying the next round's clues while a white-feather coin rises
+  out of the courtyard floor. Coins stay down for the rest of the challenge, up to four in a
+  row. The next plaques come out of the wall.
+- Input stays locked from the claim until the gate is down. Stale and double claims are
+  rejected throughout.
+
+The final round runs the same sequence, except its gate comes down blank, so the old clue
+never flashes. As it comes down the four white coins sink and one bigger gold-feather coin
+rises. The gold coin then gets its own presentation: a chime, the Success haptic, a gold glow
+and a pop. It holds for a pause (1.6 s, or 1.0 s under reduce motion), and only then do the
+Results come up.
 
 ## Reward, Results, and Streak
 
@@ -46,14 +53,17 @@ before Results.
   today. Hunt game-over Results can consume it once for an in-place one-feather revive.
 - Results report clue speed without exposing future answers.
 - Completing Daily—win or lose—advances the play streak. Missing a calendar day resets it.
-- Polly may react to a lost Chance or final result but must not obstruct clue, cards, or UP lane.
+- Polly perches on the left tower under the HUD. Her speech bubble sits on the steps below
+  the gate so it never covers a clue; after a correct claim it waits until the thrown block is
+  down the tunnel. She must never obstruct the clues, the blocks, or the UP lane.
 
 ## Owners
 
 - Editorial standard: `docs/DAILY_CONTENT_WRITING_STANDARD.md`
 - Authoring source: `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`
-- UI/motion: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyAnswerCard.tsx`,
-  `app/components/ui/QuillScrollPanel.tsx`
+- UI/motion: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyCastleStage.tsx`,
+  `app/components/DailyGate.tsx`, `app/components/DailyAnswerCard.tsx`
+- Castle geometry: `app/ui/dailyCastleScene.ts`
 - Gameplay rules: `app/game/dailyChallengeEngine.ts`
 - Runtime content: `app/game/dailyPool.ts`
 - State/streak: `app/store/useGameStore.ts`, `app/game/dailyStreak.ts`

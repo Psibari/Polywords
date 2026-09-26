@@ -1,6 +1,9 @@
 # POLYWORDS Game Design Audit & Implementation Roadmap
 
-> Audit date: September 2026
+> Audit date: September 2026 (written at `9858600`, 2026-09-12). A point-in-time analysis,
+> not current state: items it discusses may have changed or shipped since.
+> `CONTEXT.md` holds current state and open work. `HUD_STATUS_SYSTEM.md`, quoted below, was
+> retired in `41d0fa6`.
 > Frameworks: MDA, Csikszentmihalyi Flow, Bartle's Player Types, Self-Determination Theory
 
 ---

@@ -1,47 +1,71 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
   Animated,
-  Easing,
   Image,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { FONTS } from '../constants/fonts';
+import {
+  DAILY_CLUE_FONT,
+  fitDailyClueFontSize,
+  type DailyCastleRect,
+} from '../ui/dailyCastleScene';
 
-const STONE_GATE = require('../../assets/images/dailycastle/stonegate.png');
+// gate2.png recoloured to the old Daily scroll colour by
+// tools/art/build_daily_gate.py (Pete, 2026-09-26). Same canvas and plank lines.
+const GATE = require('../../assets/images/dailycastle/gate_scroll.png');
 
 type Props = {
-  /** 0 = gate fully raised (hidden), 1 = gate fully lowered (showing clues) */
+  /**
+   * 1 = closed (clues showing), 0 = raised out of the opening. Values above 1
+   * sink the gate past closed for the wrong-claim slam, capped at `maxSink`.
+   */
   gatePosition: Animated.Value;
-  /** Clue texts to display on the gate face, one at a time */
   clues: string[];
-  /** How many clues are currently revealed (1, 2, or 3) */
   revealedCount: 1 | 2 | 3;
-  /** Width of the gate area */
-  width: number;
+  /** Gate image rect, relative to the opening that clips it. */
+  frame: DailyCastleRect;
+  /** Clue rects, relative to the gate image. One per plank. */
+  clueRects: DailyCastleRect[];
+  openTravel: number;
+  maxSink: number;
+  /** Screen points per canvas point. */
+  scale: number;
 };
 
+// gatePosition 1.06 is the deepest point of the wrong-claim slam; it maps to
+// the full allowed sink so the board's top edge never drops below the crown of
+// the opening.
+const SLAM_DEPTH_INPUT = 1.06;
+
 /**
- * The stone gate that drops down like a portcullis.
- * Clues appear on its face one at a time as they're revealed.
- * Rises on correct answer, pops on wrong answer.
+ * The castle's portcullis. Clues are painted on its planks and travel with it,
+ * so a raised gate carries the old clues out of sight and a lowered gate
+ * brings the next round's clues down.
  */
 export default function DailyGate({
   gatePosition,
   clues,
   revealedCount,
-  width,
+  frame,
+  clueRects,
+  openTravel,
+  maxSink,
+  scale,
 }: Props) {
-  // Gate height scales from the image aspect (816x1056)
-  const GATE_ASPECT = 1056 / 816;
-  const gateHeight = width * GATE_ASPECT;
+  // Canvas-point width of each clue's box: the fitter works in canvas points
+  // (scale-free), the rects arrive in screen points.
+  const visibleClues = clues.slice(0, revealedCount);
+  const fontSizes = visibleClues.map((clue, index) =>
+    fitDailyClueFontSize(clue, (clueRects[index]?.width ?? 0) / scale),
+  );
 
-  // The gate's translateY: when gatePosition=1 it's at 0 (fully down),
-  // when gatePosition=0 it's at -gateHeight (fully up/hidden)
   const translateY = gatePosition.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-gateHeight, 0],
+    inputRange: [0, 1, SLAM_DEPTH_INPUT],
+    outputRange: [-openTravel, 0, maxSink],
+    extrapolate: 'clamp',
   });
 
   return (
@@ -49,66 +73,86 @@ export default function DailyGate({
       style={[
         styles.root,
         {
-          width,
-          height: gateHeight,
+          left: frame.x,
+          top: frame.y,
+          width: frame.width,
+          height: frame.height,
           transform: [{ translateY }],
         },
       ]}
     >
+      {/* Explicit size, never the file's own: see the back wall in DailyCastleStage. */}
       <Image
-        source={STONE_GATE}
-        style={[styles.gateImage, { width, height: gateHeight }]}
+        source={GATE}
+        style={[styles.gateImage, { width: frame.width, height: frame.height }]}
         resizeMode="stretch"
       />
-      {/* Clue text overlaid on the gate face */}
-      <View style={styles.clueOverlay}>
-        {clues.slice(0, revealedCount).map((clue, index) => {
-          const isLast = index === revealedCount - 1;
-          return (
+
+      {visibleClues.map((clue, index) => {
+        const rect = clueRects[index];
+        if (!rect) return null;
+        const isLatest = index === revealedCount - 1;
+        return (
+          <View
+            key={`${index}-${clue}`}
+            style={[
+              styles.clueSlot,
+              {
+                left: rect.x,
+                top: rect.y,
+                width: rect.width,
+                height: rect.height,
+              },
+            ]}
+          >
             <Text
-              key={`${clue}-${index}`}
               style={[
                 styles.clueText,
-                !isLast && styles.clueTextMemory,
+                {
+                  fontSize: fontSizes[index] * scale,
+                  lineHeight: fontSizes[index] * DAILY_CLUE_FONT.lineHeightRatio * scale,
+                  letterSpacing: DAILY_CLUE_FONT.letterSpacing * scale,
+                },
+                !isLatest && styles.clueTextEarlier,
               ]}
-              numberOfLines={2}
+              numberOfLines={DAILY_CLUE_FONT.maxLines}
+              adjustsFontSizeToFit
+              minimumFontScale={0.9}
             >
               {clue.toUpperCase()}
             </Text>
-          );
-        })}
-      </View>
+          </View>
+        );
+      })}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    overflow: 'hidden',
+    position: 'absolute',
   },
   gateImage: {
     ...StyleSheet.absoluteFill,
+    width: '100%',
+    height: '100%',
   },
-  clueOverlay: {
-    ...StyleSheet.absoluteFill,
+  clueSlot: {
+    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 8,
   },
   clueText: {
     color: '#FFF7D6',
     fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
-    fontSize: 23,
-    lineHeight: 27,
-    letterSpacing: 0.6,
     textAlign: 'center',
     width: '100%',
+    textShadowColor: 'rgba(5,4,11,0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  clueTextMemory: {
-    color: 'rgba(255,247,214,0.92)',
-    fontSize: 17,
-    lineHeight: 20,
+  clueTextEarlier: {
+    color: 'rgba(255,247,214,0.86)',
   },
 });

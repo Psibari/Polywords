@@ -33,8 +33,7 @@ import { INK, INK_MUTED } from "../../ui/polybookInk";
 
 const POLYBOOK_ART = require("../../../assets/images/vault/polybook_open.png");
 const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
-const POLYBOOK_SOURCE = Image.resolveAssetSource(POLYBOOK_ART);
-const POLYBOOK_ASPECT_RATIO = POLYBOOK_SOURCE.width / POLYBOOK_SOURCE.height;
+const POLYBOOK_ASPECT_RATIO = 2400 / 2000;
 
 const MONTH_ABBR = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",

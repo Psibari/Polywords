@@ -1,6 +1,7 @@
 # POLYWORDS
 
-Expo/React Native recognition game. Active work is on `play-screen-overhaul`.
+Expo/React Native recognition game. `play-screen-overhaul` is the main working branch;
+`daily-castle-test` rebuilds only the Daily Challenge and merges back through a PR.
 
 ```powershell
 npm.cmd install
