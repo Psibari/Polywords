@@ -30,6 +30,7 @@ import {
   resolveDailyCastleSlot,
   resolveDailyGateClueRects,
   toDailyCastleScreen,
+  type DailyCastleFrame,
   type DailyCastleGrid,
 } from '../ui/dailyCastleScene';
 
@@ -100,6 +101,8 @@ type Props = {
   coinCelebrate: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
   hudBottom: number;
+  /** Reports where the scene is drawn, for things placed on it from outside (Polly's bubble). */
+  onFrame?: (frame: DailyCastleFrame) => void;
   children: React.ReactNode;
 };
 
@@ -308,6 +311,7 @@ export default function DailyCastleStage({
   coinRise,
   coinCelebrate,
   hudBottom,
+  onFrame,
   children,
 }: Props) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -344,6 +348,11 @@ export default function DailyCastleStage({
     grid,
   });
   const s = frame.scale;
+  useEffect(() => {
+    onFrame?.(frame);
+    // The frame is rebuilt each render; report it only when it moves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frame.scale, frame.top, frame.width, frame.height]);
   const sceneTop = frame.top - stageOffset.y;
   const sceneLeft = -stageOffset.x;
   const opening = toDailyCastleScreen(frame, DAILY_CASTLE_OPENING);

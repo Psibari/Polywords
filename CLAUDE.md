@@ -213,6 +213,13 @@ navigation shell; active Hunt and Daily play are nav-free.
   ignores. A test fits every clue in the live pool.
 - Polly's Daily perch drops to sit on the left tower just under the HUD, from the HUD's
   measured bottom edge (`hudBottom`), so she never covers the HUD label.
+- Her speech bubble sits on the castle steps below the gate (`DAILY_POLLY_BUBBLE`), with the
+  bubble's `tail='up'` variant, so it never covers a clue (Pete, 2026-09-26). The stage reports
+  its frame (`onFrame`) and the screen hands the perch a window point.
+- After a correct claim or the win, the bubble waits `dailyThrowGoneMs`, until the thrown
+  plaque is down the tunnel, so it never covers the throw. Wrong claims show it at once.
+- The hidden perch fades as it slides away. Its root is top-anchored, so the slide alone left
+  her on screen.
 - The answer wall is `answerwall_framed.png` (Pete's framed layout, 2026-09-26), built by
   `tools/art/build_daily_answer_wall.py` from existing art: the step slab (`ledge.png`) as the
   capstone with its gold seam, the slab's front stone as edge-lit pillars and sill, and

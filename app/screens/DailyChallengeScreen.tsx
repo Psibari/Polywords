@@ -80,6 +80,8 @@ import { type DailyCoinRise } from '../components/DailyFloorCoins';
 import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
+  DAILY_POLLY_BUBBLE,
+  type DailyCastleFrame,
 } from '../ui/dailyCastleScene';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
@@ -133,6 +135,20 @@ type SubmittedDailyAnswer = {
 };
 
 // Maps store claim result reaction -> PollyDailyPerch prop
+function dailyGateRiseMs(motion: boolean): number {
+  return motion ? 400 : 120;
+}
+
+/**
+ * From a correct claim until the thrown plaque is gone down the tunnel (the
+ * gate is up by then too). Polly's bubble on the steps waits this long, so it
+ * never covers the throw.
+ */
+function dailyThrowGoneMs(motion: boolean): number {
+  const flightMs = motion ? DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs : 0;
+  return Math.max(dailyGateRiseMs(motion), flightMs);
+}
+
 function toPerchReaction(
   r: DailyClaimResult['pollyReaction'] | undefined,
 ): PerchReaction {
@@ -682,6 +698,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [castleFlight, setCastleFlight] = useState<DailyCastleFlight | null>(null);
   const flightProgress = useRef(new Animated.Value(0)).current;
   const [coinRise, setCoinRise] = useState<DailyCoinRise>({ token: 0, ms: 0 });
+  // Where the castle is drawn, so Polly's bubble can sit on its steps.
+  const [castleFrame, setCastleFrame] = useState<DailyCastleFrame | null>(null);
   // The win's gold-coin moment, after the coin lands and before Results.
   const coinCelebrate = useRef(new Animated.Value(0)).current;
   // Window y of the HUD's bottom edge. The SafeAreaView sits at the window
@@ -965,12 +983,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // 'correct' (an ordinary, non-winning claim) shares toPerchReaction's
     // 'perched' fallthrough with "no reaction" — it needs its own branch here
     // so PollyDailyPerch still gets told to react, just with the perched pose.
+    // A correct claim's line waits for the throw (PollyDailyPerch's
+    // throwDelayMs), so it stays up that much longer.
+    const throwMs = dailyThrowGoneMs(reduceMotion === false);
     if (dailyLastClaimResult.pollyReaction === 'correct') {
       setPollyPose('correct');
       setTimeout(() => {
         setPollyPose('perched');
         clearDailyReaction();
-      }, 2800);
+      }, 2800 + throwMs);
       return;
     }
     const pose = toPerchReaction(dailyLastClaimResult.pollyReaction);
@@ -979,7 +1000,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setTimeout(() => {
         setPollyPose('perched');
         clearDailyReaction();
-      }, 2800);
+      }, 2800 + (pose === 'shocked' ? throwMs : 0));
     } else {
       clearDailyReaction();
     }
@@ -1048,10 +1069,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setPhysicalClaimPhase('settling');
 
     const motion = reduceMotion === false;
-    const gateRiseMs = motion ? 400 : 120;
-    const flightMs = motion
-      ? DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs
-      : 0;
+    const gateRiseMs = dailyGateRiseMs(motion);
     const tunnelBeatMs = motion ? 180 : 80;
     const gateDropMs = motion ? 400 : 120;
     // On the win: hold on the gold coin — chime, Success haptic, pop and
@@ -1091,7 +1109,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     }
 
     // The plaque is gone down the tunnel.
-    const goneAtMs = Math.max(gateRiseMs, flightMs);
+    const goneAtMs = dailyThrowGoneMs(motion);
     scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
       setPhysicalClaimPhase('landed');
@@ -1362,6 +1380,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           coinRise={coinRise}
           coinCelebrate={coinCelebrate}
           hudBottom={hudBottom}
+          onFrame={setCastleFrame}
         >
           {!isComplete && displayedDailySession && currentRound &&
             [...currentRound.candidates].map((candidate, index) => (
@@ -1455,6 +1474,16 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         rivalryState={rivalryState}
         show={!isComplete && !isReadyToStart}
         hudBottom={hudBottom}
+        bubbleAt={
+          castleFrame
+            ? {
+                x: DAILY_POLLY_BUBBLE.x * castleFrame.scale,
+                y: castleFrame.top + DAILY_POLLY_BUBBLE.y * castleFrame.scale,
+                maxWidth: DAILY_POLLY_BUBBLE.maxWidth,
+              }
+            : undefined
+        }
+        throwDelayMs={dailyThrowGoneMs(reduceMotion === false)}
       />
 
       {isComplete && (

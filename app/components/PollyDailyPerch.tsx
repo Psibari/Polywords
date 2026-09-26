@@ -41,6 +41,17 @@ type Props = {
    * under the HUD instead of over its label.
    */
   hudBottom?: number;
+  /**
+   * Window point for the speech bubble's top-left, on the castle steps below
+   * the gate, so it never covers a clue (Pete, 2026-09-26). Without it the
+   * bubble sits beside her.
+   */
+  bubbleAt?: { x: number; y: number; maxWidth: number };
+  /**
+   * How long a correct claim's throw takes to clear the steps. The bubble for
+   * 'correct' and the win waits this long, so it never covers the plaque.
+   */
+  throwDelayMs?: number;
 };
 
 // Gap between the HUD's bottom edge and the top of Polly's pose box. Her
@@ -91,6 +102,8 @@ export default function PollyDailyPerch({
   rivalryState,
   show = true,
   hudBottom,
+  bubbleAt,
+  throwDelayMs = 0,
 }: Props) {
   // Where this perch's root actually lands in its parent. Read from layout,
   // not assumed, so the drop below is right however the parent pads it.
@@ -262,9 +275,14 @@ export default function PollyDailyPerch({
     // extra body motion (unlike the three original reactions) — just the
     // pose hold + speech bubble, so a repeatable beat doesn't wear out.
 
+    // A thrown claim's line waits until the plaque has cleared the steps.
+    const bubbleDelay = reaction === 'correct' || reaction === 'shocked' ? throwDelayMs : 0;
+    bubbleOpacity.stopAnimation();
+    bubbleOpacity.setValue(0);
     Animated.timing(bubbleOpacity, {
       toValue: 1,
       duration: 180,
+      delay: bubbleDelay,
       useNativeDriver: true,
     }).start();
 
@@ -277,7 +295,7 @@ export default function PollyDailyPerch({
       }).start(() => {
         setPose(POSE.idle);
       });
-    }, 2500);
+    }, 2500 + bubbleDelay);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reaction]);
 
@@ -290,10 +308,21 @@ export default function PollyDailyPerch({
       ]}
     >
       {/* Speech bubble — to Polly's right, tail points left at her */}
-      <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
+      <Animated.View
+        style={[
+          styles.bubbleWrap,
+          bubbleAt && rootY !== null && {
+            // bubbleAt is a window point; this root sits at rootY, dropped by perchDrop.
+            left: bubbleAt.x,
+            top: bubbleAt.y - (rootY + perchDrop),
+          },
+          { opacity: bubbleOpacity },
+        ]}
+      >
         <PollySpeechBubble
           line={getLine(reaction, dailyLossLineId, correctLineId)}
-          maxWidth={185}
+          maxWidth={bubbleAt ? bubbleAt.maxWidth : 185}
+          tail={bubbleAt ? 'up' : 'left'}
         />
       </Animated.View>
 

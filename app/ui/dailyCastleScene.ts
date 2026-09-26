@@ -35,6 +35,18 @@ export const DAILY_CASTLE_OPENING: DailyCastleRect = {
 };
 
 /**
+ * Polly's Daily speech bubble sits on the steps, just below the arch opening
+ * (whose bottom is ARCHNEW's step edge, 1340 px), so it never covers a clue on
+ * the gate (Pete, 2026-09-26). Canvas points; x/y is the bubble's top-left.
+ * Two lines of the longest Daily line fit above the floor coins.
+ */
+export const DAILY_POLLY_BUBBLE = {
+  x: 40,
+  y: DAILY_CASTLE_OPENING.y + DAILY_CASTLE_OPENING.height + 4,
+  maxWidth: 260,
+} as const;
+
+/**
  * Left tower crown on ARCHNEW.png: merlon tops at y 187 px, crown spans
  * x 0–396 px.
  */
