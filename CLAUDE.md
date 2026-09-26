@@ -164,7 +164,15 @@ navigation shell; active Hunt and Daily play are nav-free.
   the dev CodeLab/AssetAudit viewers and FeatherWall's feather size.
 - The stage renders OUTSIDE the SafeAreaView (its art is registered to the full screen and the
   thrown plaque's origin comes from `measureInWindow`), so the SafeAreaView is `box-none`.
-- Clues are painted on the gate, one per plank (planks 2–4), and travel with it.
+- Clues are painted on the gate, one per plank (planks 2–4, each 62 pt), and travel with it.
+  Each clue's size comes from `fitDailyClueFontSize` (measured Bebas Neue advance widths,
+  two lines max, 24 pt down to 17 pt), not `adjustsFontSizeToFit`, which react-native-web
+  ignores. A test fits every clue in the live pool.
+- Polly's Daily perch drops to sit on the left tower just under the HUD, from the HUD's
+  measured bottom edge (`hudBottom`), so she never covers the HUD label.
+- Plaques come out of the wall each round: sunk and shaded in the socket, pushed out past
+  full size, then settled (`PLAQUE_SEG` in the stage, `DAILY_RECESS_SCALE`/`_SHADE` in the
+  card, one progress value). Motion only — no sound or haptic yet.
 - Correct claim: the gate lifts as the plaque is thrown. The plaque is drawn twice on one
   progress value — in front of the whole castle until it is wholly inside the opening, then
   behind the gate line — and shrinks into the back wall; a feather rises there, holds, and

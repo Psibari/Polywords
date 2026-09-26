@@ -60,21 +60,25 @@ export const DAILY_GATE_ART = {
 } as const;
 
 /**
- * Canvas points per gate source px. At 0.25 a plank is ~41.9 pt tall — tall
- * enough for a two-line clue at a readable size — and the board overhangs the
- * opening on both sides, where the arch jambs hide it.
+ * Canvas points per gate source px, chosen so the three clue planks fill the
+ * straight part of the opening: each plank is 62 pt tall, room for two lines
+ * of 24 pt clue text. The board overhangs the opening on both sides, where the
+ * arch jambs hide it.
  */
-export const DAILY_GATE_PT_PER_SRC = 0.25;
+export const DAILY_GATE_PLANK_PT = 62;
+export const DAILY_GATE_PT_PER_SRC =
+  DAILY_GATE_PLANK_PT / DAILY_GATE_ART.plankPitchSrc;
 
 /** The three planks that carry clues 1–3, top to bottom. */
 export const DAILY_GATE_CLUE_PLANKS = [2, 3, 4] as const;
 
 /**
- * Where the gate image sits when closed. The middle of the clue planks
- * (line 3.5) lands at canvas y 1000 px (333.3 pt), low enough that every clue
- * plank sits in the straight part of the opening rather than the curve.
+ * Where the gate image sits when closed. The clue planks run from canvas
+ * y 258 pt (the opening is ~198 pt wide there, measured on ARCHNEW.png) down
+ * to 444 pt, just above the step edge at 446.7 pt.
  */
-const GATE_CLUE_CENTER_Y = 1000 / 3;
+const GATE_CLUE_TOP_Y = 258;
+const GATE_CLUE_CENTER_Y = GATE_CLUE_TOP_Y + DAILY_GATE_PLANK_PT * 1.5;
 const GATE_CLUE_CENTER_LINE_SRC =
   DAILY_GATE_ART.firstLineSrc + DAILY_GATE_ART.plankPitchSrc * 3.5;
 
@@ -107,15 +111,20 @@ export const DAILY_GATE_OPEN_TRAVEL =
   dailyGateLineY(DAILY_GATE_ART.plankCount) - DAILY_CASTLE_OPENING.y + 4;
 
 /**
- * How far the gate may sink past closed on a wrong claim. The board's top edge
- * sits this far above the crown of the opening, so a deeper drop would show a
- * sliver of the wall behind it.
+ * How far the gate sinks past closed on the wrong-claim slam: a short, hard
+ * jolt, never so deep that the board's top edge drops below the crown of the
+ * opening.
  */
-export const DAILY_GATE_MAX_SINK =
-  DAILY_CASTLE_OPENING.y - dailyGateLineY(0) - 1;
+export const DAILY_GATE_MAX_SINK = Math.min(
+  6,
+  DAILY_CASTLE_OPENING.y - dailyGateLineY(0) - 1,
+);
 
-/** Clue text box width: the straight part of the opening minus a margin. */
-export const DAILY_GATE_CLUE_WIDTH = 184;
+/**
+ * Clue text box width. At the top clue plank (y 258 pt) the opening spans
+ * ~117–315 pt; 190 keeps the text inside it with a few points to spare.
+ */
+export const DAILY_GATE_CLUE_WIDTH = 190;
 
 /**
  * Clue rects in canvas points with the gate closed. Each fills its plank
@@ -266,3 +275,100 @@ export const DAILY_CASTLE_FLIGHT = {
 export const DAILY_CASTLE_FLIGHT_HANDOFF =
   DAILY_CASTLE_FLIGHT.riseMs /
   (DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs);
+
+/**
+ * Bebas Neue (FONTS.wordDisplay) advance widths in em, measured from the
+ * bundled font with canvas measureText for every character the Daily pool
+ * uses. Same font file on device, so the same widths.
+ */
+const BEBAS_ADVANCE_EM: Record<string, number> = {
+  " ": 0.16,
+  "'": 0.188,
+  "-": 0.27,
+  "A": 0.401,
+  "B": 0.404,
+  "C": 0.383,
+  "D": 0.406,
+  "E": 0.363,
+  "F": 0.344,
+  "G": 0.391,
+  "H": 0.42,
+  "I": 0.192,
+  "J": 0.265,
+  "K": 0.414,
+  "L": 0.344,
+  "M": 0.538,
+  "N": 0.427,
+  "O": 0.4,
+  "P": 0.386,
+  "Q": 0.4,
+  "R": 0.403,
+  "S": 0.372,
+  "T": 0.364,
+  "U": 0.402,
+  "V": 0.382,
+  "W": 0.557,
+  "X": 0.406,
+  "Y": 0.394,
+  "Z": 0.362,
+  "\u2019": 0.188,
+};
+/** Fallback for a character the table has not seen: the widest measured. */
+const BEBAS_WIDEST_EM = Math.max(...Object.values(BEBAS_ADVANCE_EM));
+
+export const DAILY_CLUE_FONT = {
+  maxSize: 24,
+  minSize: 17,
+  lineHeightRatio: 26 / 24,
+  letterSpacing: 0.5,
+  maxLines: 2,
+  /** Headroom for rendering differences between platforms. */
+  safety: 0.95,
+} as const;
+
+function textWidth(text: string, size: number): number {
+  let em = 0;
+  for (const ch of text) em += BEBAS_ADVANCE_EM[ch] ?? BEBAS_WIDEST_EM;
+  return em * size + text.length * DAILY_CLUE_FONT.letterSpacing;
+}
+
+/** Greedy word wrap; the number of lines `text` needs at `size`. */
+function linesNeeded(text: string, size: number, width: number): number {
+  const words = text.split(' ');
+  let lines = 1;
+  let line = '';
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (textWidth(next, size) <= width) {
+      line = next;
+    } else {
+      if (!line) return Infinity; // a single word wider than the box
+      lines += 1;
+      line = word;
+      if (textWidth(line, size) > width) return Infinity;
+    }
+  }
+  return lines;
+}
+
+/** True when `text` wraps into at most two lines of `width` at `size`. */
+export function dailyClueFits(text: string, size: number, width: number): boolean {
+  return (
+    linesNeeded(text.toUpperCase(), size, width * DAILY_CLUE_FONT.safety) <=
+    DAILY_CLUE_FONT.maxLines
+  );
+}
+
+/**
+ * Largest clue size (canvas points, whole numbers) at which `text` wraps into
+ * at most two lines of `width`. Done here rather than trusting
+ * adjustsFontSizeToFit, which react-native-web ignores and which cut a clue
+ * off with an ellipsis.
+ */
+export function fitDailyClueFontSize(text: string, width: number): number {
+  const usable = width * DAILY_CLUE_FONT.safety;
+  for (let size = DAILY_CLUE_FONT.maxSize; size > DAILY_CLUE_FONT.minSize; size -= 1) {
+    if (linesNeeded(text.toUpperCase(), size, usable) <= DAILY_CLUE_FONT.maxLines) return size;
+  }
+  return DAILY_CLUE_FONT.minSize;
+}

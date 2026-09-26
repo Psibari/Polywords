@@ -35,7 +35,21 @@ type Props = {
   reaction: Reaction | null;
   rivalryState: BookRivalryState;
   show?: boolean;
+  /**
+   * Bottom edge of the Daily HUD, in the same parent coordinates as this
+   * perch's own layout. When given, Polly drops to sit on the left tower just
+   * under the HUD instead of over its label.
+   */
+  hudBottom?: number;
 };
+
+// Gap between the HUD's bottom edge and the top of Polly's pose box. Her
+// crown starts a few points inside the box, so this keeps it clear of the HUD.
+const DAILY_POLLY_HUD_GAP = 2;
+// pollyWrap's top inside the perch root. A constant rather than a read of
+// styles.pollyWrap.top: react-native-web's StyleSheet does not hand back the
+// raw values.
+const DAILY_POLLY_WRAP_TOP = 5;
 
 // Clean full-pose drawings (background stripped to transparent). The expression
 // lives in the art; life + menace come from whole-image motion + the SFX.
@@ -72,7 +86,20 @@ function getLineId(
   return null;
 }
 
-export default function PollyDailyPerch({ reaction, rivalryState, show = true }: Props) {
+export default function PollyDailyPerch({
+  reaction,
+  rivalryState,
+  show = true,
+  hudBottom,
+}: Props) {
+  // Where this perch's root actually lands in its parent. Read from layout,
+  // not assumed, so the drop below is right however the parent pads it.
+  // Transforms never change layout, so applying the drop cannot feed back.
+  const [rootY, setRootY] = useState<number | null>(null);
+  const perchDrop =
+    hudBottom && rootY !== null
+      ? Math.max(0, hudBottom + DAILY_POLLY_HUD_GAP - (rootY + DAILY_POLLY_WRAP_TOP))
+      : 0;
   const rememberLine = useGameStore(s => s.rememberPollyLine);
   // Both held stable for the life of this perch, same pattern as
   // ResultsScreen.tsx's pollyMemoryBeforeRunRecorded: a live pollyMemory
@@ -247,7 +274,10 @@ export default function PollyDailyPerch({ reaction, rivalryState, show = true }:
   }, [reaction]);
 
   return (
-    <Animated.View style={[styles.root, { transform: [{ translateY: slideY }] }]}>
+    <Animated.View
+      onLayout={(e) => setRootY(e.nativeEvent.layout.y)}
+      style={[styles.root, { transform: [{ translateY: slideY }, { translateY: perchDrop }] }]}
+    >
       {/* Speech bubble — to Polly's right, tail points left at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
         <PollySpeechBubble
@@ -301,7 +331,7 @@ const styles = StyleSheet.create({
   pollyWrap: {
     position: 'absolute',
     left: -20,
-    top: 5,
+    top: DAILY_POLLY_WRAP_TOP,
     width: DAILY_POLLY_SIZE,
     height: DAILY_POLLY_SIZE,
   },

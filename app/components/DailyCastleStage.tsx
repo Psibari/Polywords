@@ -67,10 +67,11 @@ export type DailyCastleFlight = {
 };
 
 // Same three physical legs as the gauntlet stones: release from the wall,
-// travel toward the player, then settle. One progress value per slot drives
-// both the wall-side layers below and the plaque transform in DailyAnswerCard.
+// push forward toward the player past its resting size, then settle back.
+// One progress value per slot drives both the wall-side layers below and the
+// plaque transform and depth shade in DailyAnswerCard.
 const PLAQUE_SEG = [0.26, 0.86, 1] as const;
-const PLAQUE_SEG_MS = [234, 540, 126] as const;
+const PLAQUE_SEG_MS = [200, 460, 240] as const;
 const PLAQUE_INPUT = [0, PLAQUE_SEG[0], PLAQUE_SEG[1], 1];
 const RECESS_SHADOW = '#0D0918';
 const RECESS_LIP = '#21183B';
@@ -132,13 +133,13 @@ function DailyCastlePlaqueSlot({
         Animated.timing(plaqueProgress, {
           toValue: PLAQUE_SEG[1],
           duration: PLAQUE_SEG_MS[1],
-          easing: Easing.inOut(Easing.cubic),
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.timing(plaqueProgress, {
           toValue: PLAQUE_SEG[2],
           duration: PLAQUE_SEG_MS[2],
-          easing: Easing.out(Easing.back(1.7)),
+          easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
       ]).start();
@@ -163,34 +164,36 @@ function DailyCastlePlaqueSlot({
   // enough to read as a wall release, then settles close to the plaque.
   const contactShadowOpacity = plaqueProgress.interpolate({
     inputRange: [0, 0.06, PLAQUE_SEG[0], PLAQUE_SEG[1], 1],
-    outputRange: [0, 0.18, 0.48, 0.58, 0.48],
+    outputRange: [0, 0.18, 0.5, 0.62, 0.48],
   });
+  // Tracks the plaque's own scale (DailyAnswerCard DAILY_RECESS_SCALE) a
+  // touch behind it, so the shadow trails the push toward the player.
   const contactShadowScale = plaqueProgress.interpolate({
     inputRange: PLAQUE_INPUT,
-    outputRange: [0.94, 0.985, 1.035, 1.02],
+    outputRange: [0.8, 0.84, 1.08, 1.02],
   });
   const contactShadowX = plaqueProgress.interpolate({
     inputRange: PLAQUE_INPUT,
-    outputRange: [0, 1 * castleScale, 3 * castleScale, 2 * castleScale],
+    outputRange: [0, 1 * castleScale, 4 * castleScale, 2 * castleScale],
   });
   const contactShadowY = plaqueProgress.interpolate({
     inputRange: PLAQUE_INPUT,
-    outputRange: [0, 1 * castleScale, 5 * castleScale, 4 * castleScale],
+    outputRange: [0, 1 * castleScale, 8 * castleScale, 4 * castleScale],
   });
 
-  // The broader shadow is intentionally restrained; it softens the contact
-  // edge without making the plaque look detached from the wall.
+  // The broader shadow peaks while the plaque is furthest out of the wall,
+  // then settles back to a soft rest.
   const dropShadowOpacity = plaqueProgress.interpolate({
     inputRange: [0, PLAQUE_SEG[0], PLAQUE_SEG[1], 1],
-    outputRange: [0, 0.025, 0.14, 0.1],
+    outputRange: [0, 0.04, 0.3, 0.12],
   });
   const dropShadowScale = plaqueProgress.interpolate({
     inputRange: PLAQUE_INPUT,
-    outputRange: [0.94, 1, 1.075, 1.055],
+    outputRange: [0.8, 0.86, 1.14, 1.05],
   });
   const dropShadowY = plaqueProgress.interpolate({
     inputRange: PLAQUE_INPUT,
-    outputRange: [0, 2 * castleScale, 7 * castleScale, 5 * castleScale],
+    outputRange: [0, 2 * castleScale, 12 * castleScale, 5 * castleScale],
   });
 
   // Fixed to the wall rather than the plaque. It shades/covers the rim on the

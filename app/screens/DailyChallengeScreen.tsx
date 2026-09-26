@@ -1423,6 +1423,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         reaction={pollyPose}
         rivalryState={rivalryState}
         show={!isComplete && !isReadyToStart}
+        hudBottom={hudBottom}
       />
 
       {isComplete && (

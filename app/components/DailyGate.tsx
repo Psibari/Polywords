@@ -7,7 +7,11 @@ import {
   View,
 } from 'react-native';
 import { FONTS } from '../constants/fonts';
-import type { DailyCastleRect } from '../ui/dailyCastleScene';
+import {
+  DAILY_CLUE_FONT,
+  fitDailyClueFontSize,
+  type DailyCastleRect,
+} from '../ui/dailyCastleScene';
 
 const GATE = require('../../assets/images/dailycastle/gate2.png');
 
@@ -49,6 +53,13 @@ export default function DailyGate({
   maxSink,
   scale,
 }: Props) {
+  // Canvas-point width of each clue's box: the fitter works in canvas points
+  // (scale-free), the rects arrive in screen points.
+  const visibleClues = clues.slice(0, revealedCount);
+  const fontSizes = visibleClues.map((clue, index) =>
+    fitDailyClueFontSize(clue, (clueRects[index]?.width ?? 0) / scale),
+  );
+
   const translateY = gatePosition.interpolate({
     inputRange: [0, 1, SLAM_DEPTH_INPUT],
     outputRange: [-openTravel, 0, maxSink],
@@ -70,7 +81,7 @@ export default function DailyGate({
     >
       <Image source={GATE} style={styles.gateImage} resizeMode="stretch" />
 
-      {clues.slice(0, revealedCount).map((clue, index) => {
+      {visibleClues.map((clue, index) => {
         const rect = clueRects[index];
         if (!rect) return null;
         const isLatest = index === revealedCount - 1;
@@ -91,15 +102,15 @@ export default function DailyGate({
               style={[
                 styles.clueText,
                 {
-                  fontSize: 17 * scale,
-                  lineHeight: 18.5 * scale,
-                  letterSpacing: 0.5 * scale,
+                  fontSize: fontSizes[index] * scale,
+                  lineHeight: fontSizes[index] * DAILY_CLUE_FONT.lineHeightRatio * scale,
+                  letterSpacing: DAILY_CLUE_FONT.letterSpacing * scale,
                 },
                 !isLatest && styles.clueTextEarlier,
               ]}
-              numberOfLines={2}
+              numberOfLines={DAILY_CLUE_FONT.maxLines}
               adjustsFontSizeToFit
-              minimumFontScale={0.8}
+              minimumFontScale={0.9}
             >
               {clue.toUpperCase()}
             </Text>

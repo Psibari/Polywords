@@ -69,11 +69,12 @@ const CLAIM_THRESHOLD = -80;
 const MOVE_THRESHOLD = 4;
 
 // DailyCastleStage owns this progress value because the recess, cap, contact
-// shadow and moving plaque must stay on one physical timeline. Scale is only
-// one contributor to the depth handoff; the wall-side layers do the heavier
-// visual work.
+// shadow and moving plaque must stay on one physical timeline. The plaque
+// starts sunk in its socket (small and shaded), pushes out toward the player
+// past its resting size, then settles into the face of the wall.
 const DAILY_RECESS_INPUT = [0, 0.26, 0.86, 1];
-const DAILY_RECESS_SCALE = [0.94, 0.995, 1.045, 1];
+const DAILY_RECESS_SCALE = [0.8, 0.85, 1.1, 1];
+const DAILY_RECESS_SHADE = [0.62, 0.48, 0, 0];
 
 function rimColors(
   state: DailyAnswerCardState,
@@ -451,6 +452,12 @@ export default function DailyAnswerCard({
   const entryDepthScale = enterFromRecess && state === 'idle' && recessScale
     ? recessScale
     : entryScale;
+  const recessShade = enterFromRecess && state === 'idle'
+    ? recessProgress?.interpolate({
+        inputRange: DAILY_RECESS_INPUT,
+        outputRange: DAILY_RECESS_SHADE,
+      })
+    : undefined;
 
   return (
     <RNAnimated.View
@@ -497,6 +504,12 @@ export default function DailyAnswerCard({
         {castleArt ? (
           <View style={styles.castlePlaque}>
             <DailyCastlePlaqueFace label={label} />
+            {recessShade && (
+              <RNAnimated.View
+                pointerEvents="none"
+                style={[styles.recessShade, { opacity: recessShade }]}
+              />
+            )}
             <Animated.View
               pointerEvents="none"
               style={[styles.gripGlow, gripGlowStyle]}
@@ -546,10 +559,13 @@ export default function DailyAnswerCard({
 export function DailyCastlePlaqueFace({ label }: { label: string }) {
   return (
     <>
+      {/* Size passed inline: a bundled image otherwise takes the art's own
+          150 × 60 as its size, which beat absoluteFill and a stylesheet 100%
+          and left the plaque short of the wider slot. */}
       <Image
         source={CASTLE_ANSWER_PLAQUE}
         resizeMode="stretch"
-        style={StyleSheet.absoluteFill}
+        style={[styles.castlePlaqueImage, { width: '100%', height: '100%' }]}
       />
       <View pointerEvents="none" style={styles.castlePlaqueBevel} />
       <Text
@@ -659,6 +675,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     borderRadius: 6,
     overflow: 'hidden',
+  },
+  recessShade: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#05040B',
+  },
+  castlePlaqueImage: {
+    ...StyleSheet.absoluteFill,
   },
   castlePlaqueBevel: {
     position: 'absolute',
