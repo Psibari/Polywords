@@ -682,6 +682,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [castleFlight, setCastleFlight] = useState<DailyCastleFlight | null>(null);
   const flightProgress = useRef(new Animated.Value(0)).current;
   const featherRise = useRef(new Animated.Value(1)).current;
+  // The win's gold-coin moment, after the coin lands and before Results.
+  const coinCelebrate = useRef(new Animated.Value(0)).current;
   // Window y of the HUD's bottom edge. The SafeAreaView sits at the window
   // origin, so the HUD's own layout y already includes the top inset.
   const [hudBottom, setHudBottom] = useState(0);
@@ -1052,6 +1054,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       : 0;
     const tunnelBeatMs = motion ? 180 : 80;
     const gateDropMs = motion ? 400 : 120;
+    // On the win: hold on the gold coin — chime, Success haptic, pop and
+    // glow — before Results comes up (Pete, 2026-09-26).
+    const coinPresentMs = motion ? 1600 : 1000;
+    const coinPopMs = 700;
 
     // The plaque only flies with motion on and a measured release point;
     // otherwise it simply leaves the wall and the gate beat carries the claim.
@@ -1121,15 +1127,44 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (!finished || completingCandidateRef.current !== candidate) return;
+        if (dailySessionRef.current?.status === 'won') {
+          presentGoldCoin();
+          return;
+        }
         finishClaimPresentation(candidate);
         finishPhysicalCorrectTransition(candidate);
       });
     }, dropAtMs);
 
-    // Safety net if the drop animation is interrupted.
+    // The gold coin has landed: chime, Success haptic, pop and glow, hold,
+    // then Results.
+    const presentGoldCoin = () => {
+      playSfx('mastered');
+      Haptics.cueAsync('mastery');
+      coinCelebrate.stopAnimation();
+      coinCelebrate.setValue(0);
+      if (motion) {
+        Animated.timing(coinCelebrate, {
+          toValue: 1,
+          duration: coinPopMs,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }).start();
+      } else {
+        coinCelebrate.setValue(1);
+      }
+      scheduleCorrectTransition(() => {
+        if (completingCandidateRef.current !== candidate) return;
+        finishClaimPresentation(candidate);
+        finishPhysicalCorrectTransition(candidate);
+      }, coinPresentMs);
+    };
+
+    // Safety net if the drop animation is interrupted (long enough to cover
+    // the win's gold-coin hold as well).
     scheduleCorrectTransition(
       () => finishPhysicalCorrectTransition(candidate),
-      dropAtMs + gateDropMs + 600,
+      dropAtMs + gateDropMs + coinPresentMs + 600,
     );
   }
 
@@ -1167,11 +1202,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       // Game result commits immediately; the physical presentation now owns
       // the readable settle, cover, reward, and next-clue reveal sequence.
-      Haptics.cueAsync(
-        dailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1
-          ? 'mastery'
-          : 'standardCorrect',
-      );
+      // The win's Success haptic lands with the gold coin (see
+      // runPhysicalCorrectTransition), not here at the claim.
+      Haptics.cueAsync('standardCorrect');
       playSfx('correctClaim');
       // Remaining cards fade out
       scheduleCorrectTransition(() => {
@@ -1330,6 +1363,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           flight={castleFlight}
           flightProgress={flightProgress}
           featherRise={featherRise}
+          coinCelebrate={coinCelebrate}
           hudBottom={hudBottom}
         >
           {currentRound &&

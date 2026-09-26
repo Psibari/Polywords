@@ -33,15 +33,18 @@ clues, and the six answer plaques set in the wall below.
 
 - Clues are painted on the gate, one per plank, and move with it.
 - A correct UP claim throws the plaque at the castle while the gate lifts.
-- The plaque passes into the arch and goes in behind the gate line, into the wall at the back.
-- A feather comes up on that wall. It is the gold feather on the final round.
-- The gate comes back down carrying the next round's clues, and the next plaques come out of
-  the wall.
+- The plaque passes into the arch, goes in behind the gate line and flies off down the tunnel.
+- The gate comes back down carrying the next round's clues while a white-feather coin rises
+  out of the courtyard floor. Coins stay down for the rest of the challenge, up to four in a
+  row. The next plaques come out of the wall.
 - Input stays locked from the claim until the gate is down. Stale and double claims are
   rejected throughout.
 
-The final round runs the same sequence. Its gate comes down blank and goes straight into
-Results, so the old clue never flashes.
+The final round runs the same sequence, except its gate comes down blank, so the old clue
+never flashes. As it comes down the four white coins sink and one bigger gold-feather coin
+rises. The gold coin then gets its own presentation: a chime, the Success haptic, a gold glow
+and a pop. It holds for a pause (1.6 s, or 1.0 s under reduce motion), and only then do the
+Results come up.
 
 ## Reward, Results, and Streak
 

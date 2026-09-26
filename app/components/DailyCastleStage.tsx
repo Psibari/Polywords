@@ -96,6 +96,8 @@ type Props = {
   flightProgress: Animated.Value;
   /** 0 → 1 rise of the newest floor coin (and, on the win, the gold one). */
   featherRise: Animated.Value;
+  /** 0 → 1 over the win's gold-coin presentation. */
+  coinCelebrate: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
   hudBottom: number;
   children: React.ReactNode;
@@ -304,6 +306,7 @@ export default function DailyCastleStage({
   flight,
   flightProgress,
   featherRise,
+  coinCelebrate,
   hudBottom,
   children,
 }: Props) {
@@ -411,6 +414,7 @@ export default function DailyCastleStage({
       <DailyFloorCoins
         solvedCount={solvedCount}
         rise={featherRise}
+        celebrate={coinCelebrate}
         frame={frame}
         offsetX={-stageOffset.x}
         offsetY={-stageOffset.y}

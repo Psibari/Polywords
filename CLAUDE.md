@@ -217,8 +217,13 @@ navigation shell; active Hunt and Daily play are nav-free.
   progress value — in front of the whole castle until it is wholly inside the opening, then
   behind the gate line — and flies off down the tunnel; after a short beat the gate comes down
   with the next round already on it (phase `reward` switches the display while the gate is up)
-  while this round's floor coin rises. A won challenge's gate comes down blank, straight into
-  Results.
+  while this round's floor coin rises. A won challenge's gate comes down blank, and the gold
+  coin rises instead. Then it gets a presentation before Results (Pete, 2026-09-26):
+  - `coinCelebrate` drives a gold glow and a pop (700 ms);
+  - the `mastered` SFX (`mastered_chime.mp3`) plays; it had been registered but unused;
+  - the Success haptic (`'mastery'`) plays. It moved here from the final claim, which is
+    now `standardCorrect` like every other round;
+  - it holds for `coinPresentMs` (1600 ms, or 1000 ms under reduce motion), then Results come up.
 
 ### Audio
 

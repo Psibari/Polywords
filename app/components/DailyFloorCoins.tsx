@@ -20,6 +20,12 @@ type Props = {
    * coins back into the floor as the gold one comes up.
    */
   rise: Animated.Value;
+  /**
+   * 0 → 1 over the win's presentation once the gold coin has landed: it
+   * pops and a gold glow comes up behind it (the chime and haptic ride the
+   * same beat in the screen).
+   */
+  celebrate: Animated.Value;
   frame: DailyCastleFrame;
   /** Stage-local offset of the scene. */
   offsetX: number;
@@ -32,7 +38,14 @@ type Props = {
  * coin sits in its own box clipped at its bottom edge, so moving it down
  * sinks it into the floor and moving it up raises it out.
  */
-export default function DailyFloorCoins({ solvedCount, rise, frame, offsetX, offsetY }: Props) {
+export default function DailyFloorCoins({
+  solvedCount,
+  rise,
+  celebrate,
+  frame,
+  offsetX,
+  offsetY,
+}: Props) {
   const solved = Math.max(0, Math.min(5, solvedCount));
   const won = solved === 5;
   const whites = Math.min(solved, 4);
@@ -79,12 +92,48 @@ export default function DailyFloorCoins({ solvedCount, rise, frame, offsetX, off
       })}
       {won && (() => {
         const box = place(resolveDailyGoldCoin());
+        const glowW = box.width * 2;
+        const glowH = box.height * 1.35;
+        const glowOpacity = celebrate.interpolate({
+          inputRange: [0, 0.2, 0.5, 1],
+          outputRange: [0, 0.5, 0.3, 0.38],
+          extrapolate: 'clamp',
+        });
+        const glowScale = celebrate.interpolate({
+          inputRange: [0, 0.2, 1],
+          outputRange: [0.6, 1.08, 1],
+          extrapolate: 'clamp',
+        });
+        const pop = celebrate.interpolate({
+          inputRange: [0, 0.18, 0.4, 1],
+          outputRange: [1, 1.15, 0.98, 1],
+          extrapolate: 'clamp',
+        });
         return (
-          <View key="gold" pointerEvents="none" style={[styles.clip, box]}>
-            <Animated.View style={[styles.fill, { transform: [{ translateY: up(box.height) }] }]}>
-              <Image source={GOLD_COIN} resizeMode="stretch" style={{ width: box.width, height: box.height }} />
+          <React.Fragment key="gold">
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.glow,
+                {
+                  left: box.left + box.width / 2 - glowW / 2,
+                  top: box.top + box.height / 2 - glowH / 2,
+                  width: glowW,
+                  height: glowH,
+                  borderRadius: glowW / 2,
+                  opacity: glowOpacity,
+                  transform: [{ scaleX: glowScale }, { scaleY: glowScale }],
+                },
+              ]}
+            >
+              <View style={[styles.glowCore, { borderRadius: glowW / 2 }]} />
             </Animated.View>
-          </View>
+            <Animated.View pointerEvents="none" style={[styles.clip, box, { transform: [{ scale: pop }] }]}>
+              <Animated.View style={[styles.fill, { transform: [{ translateY: up(box.height) }] }]}>
+                <Image source={GOLD_COIN} resizeMode="stretch" style={{ width: box.width, height: box.height }} />
+              </Animated.View>
+            </Animated.View>
+          </React.Fragment>
         );
       })()}
     </>
@@ -100,5 +149,19 @@ const styles = StyleSheet.create({
   },
   fill: {
     ...StyleSheet.absoluteFill,
+  },
+  // Brand gold (#F5C842): a soft outer wash with a brighter core.
+  glow: {
+    position: 'absolute',
+    zIndex: 31,
+    elevation: 31,
+    backgroundColor: 'rgba(245, 200, 66, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glowCore: {
+    width: '62%',
+    height: '62%',
+    backgroundColor: 'rgba(245, 200, 66, 0.55)',
   },
 });
