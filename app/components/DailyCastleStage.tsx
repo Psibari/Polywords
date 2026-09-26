@@ -39,7 +39,10 @@ const CASTLE_ARCH = require('../../assets/images/dailycastle/ARCHNEW.png');
 // Framed answer wall (two recessed brick panels), built by
 // tools/art/build_daily_answer_wall.py. The old seamed wall export is retired.
 const CASTLE_WALL = require('../../assets/images/dailycastle/answerwall_framed.png');
-const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
+// What shows behind the raised gate: a stone tunnel receding to a lit far
+// opening, built by tools/art/build_daily_tunnel.py. The thrown block flies
+// down it. Replaces featherwall.png.
+const BACK_TUNNEL = require('../../assets/images/dailycastle/tunnel.png');
 // The carved socket each plaque sits in: the Hunt gauntlet's recess art, the
 // same brick material as the answer wall.
 const PLAQUE_SOCKET = require('../../assets/images/gauntlet/recess1.png');
@@ -410,10 +413,10 @@ export default function DailyCastleStage({
         height: opening.height,
       }]}>
         {/* Explicit size: with absoluteFill alone a bundled image takes its
-            file's own pixel size (737 x 1062) and only a blown-up corner of it
+            file's own pixel size (the old back wall was 737 x 1062) and only a blown-up corner of it
             showed in the opening. */}
         <Image
-          source={FEATHER_WALL}
+          source={BACK_TUNNEL}
           style={[styles.backWall, { width: opening.width, height: opening.height }]}
           resizeMode="stretch"
         />

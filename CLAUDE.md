@@ -168,6 +168,13 @@ navigation shell; active Hunt and Daily play are nav-free.
   stay crisp. Same canvas as `gate2.png`, so every gate measurement still applies. Rerun the
   script, never hand-edit the output. Castle stone, steps (the Hunt ledge art) and ropes keep
   their painted colours (Pete, 2026-09-26).
+- Behind the gate is a tunnel (`tunnel.png`, 680×761 = the arch opening at 3x), built by
+  `tools/art/build_daily_tunnel.py` from ARCHNEW's tower stone and courtyard floor with a
+  perspective tunnel mapping and a lit far opening; the thrown block flies down it. It
+  replaced `featherwall.png` (Pete, 2026-09-26). Images in the opening take explicit sizes:
+  with absoluteFill alone a bundled image uses its file's pixel size and shows a blown-up corner.
+  The feathers still draw over it until the floor-feather design lands. Castle stone colours
+  are due another pass.
 - The stage renders OUTSIDE the SafeAreaView (its art is registered to the full screen and the
   thrown plaque's origin comes from `measureInWindow`), so the SafeAreaView is `box-none`.
 - Clues are painted on the gate, one per plank (planks 2–4, each 62 pt), and travel with it.
