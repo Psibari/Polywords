@@ -109,6 +109,24 @@ export const dailyCardMaterial = {
 // tokens (panelBg, panelBorder, radius) went with the flat background,
 // border and rounded-rect clip they described, all of which were removed
 // because they framed the torn-edge art in a rectangle.
+// The stone answer block while it is held. A cream foil halo rather than
+// gold: gold means "correct" everywhere else in the game, and a grab must
+// never hint at the answer. `ready` is the extra glow once the drag has
+// crossed the claim line (the moment the threshold haptic and sound fire).
+export const dailyCastlePlaqueMaterial = {
+  haloOuter: 'rgba(255, 247, 214, 0.16)',
+  haloInner: 'rgba(255, 247, 214, 0.30)',
+  heldBrighten: 'rgba(255, 247, 214, 0.10)',
+  readyBrighten: 'rgba(255, 247, 214, 0.08)',
+  haloOuterInset: -8,
+  haloInnerInset: -3,
+  heldScale: 1.06,
+  heldHaloOpacity: 0.75,
+  readyHaloScale: 1.04,
+  readyInMs: 110,
+  readyOutMs: 140,
+} as const;
+
 export const dailyScrollMaterial = {
   goldTrim: heroBookMaterial.goldTrim,          // #F5C842
   clueInk: '#FFF7D6',

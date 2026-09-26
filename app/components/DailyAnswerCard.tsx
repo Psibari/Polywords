@@ -21,7 +21,11 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Haptics } from '../utils/haptics';
 import { playSfx } from '../audio/sfx';
-import { dailyCardMaterial, dailyCardFaceMaterial } from '../ui/pwDailyMaterials';
+import {
+  dailyCardMaterial,
+  dailyCardFaceMaterial,
+  dailyCastlePlaqueMaterial,
+} from '../ui/pwDailyMaterials';
 import DailyCardFace from './ui/DailyCardFace';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
@@ -123,6 +127,8 @@ export default function DailyAnswerCard({
   const rotation = useSharedValue(0);
   const opacity = useSharedValue(1);
   const gripGlow = useSharedValue(0);
+  // Castle blocks only: 1 while the drag is past the claim line.
+  const readyGlow = useSharedValue(0);
 
   const labelRef = useRef(label);
   const onClaimStartRef = useRef(onClaimStart);
@@ -182,6 +188,7 @@ export default function DailyAnswerCard({
     scale.value = withSpring(1, { damping: 7, stiffness: 110 });
     rotation.value = withSpring(0, { damping: 7, stiffness: 110 });
     gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
+    readyGlow.value = withTiming(0, { duration: dailyCastlePlaqueMaterial.readyOutMs });
   }
 
   useEffect(() => {
@@ -250,6 +257,7 @@ export default function DailyAnswerCard({
     rotation.value = 0;
     opacity.value = 1;
     gripGlow.value = 0;
+    readyGlow.value = 0;
     claimedRef.current = false;
     thresholdCrossedRef.current = false;
     gestureOffsetRef.current = { x: 0, y: 0 };
@@ -258,7 +266,7 @@ export default function DailyAnswerCard({
     if (!castleArt) {
       scale.value = withSpring(1, { damping: 8, stiffness: 100 });
     }
-  }, [castleArt, label, gripGlow, opacity, rotation, scale, translateX, translateY]);
+  }, [castleArt, label, gripGlow, opacity, readyGlow, rotation, scale, translateX, translateY]);
 
   // Held elevation only ever needs to survive up to the moment `state`
   // itself starts driving entryShellClaiming/Failing — once it's no longer
@@ -268,6 +276,7 @@ export default function DailyAnswerCard({
   }, [state]);
 
   useEffect(() => {
+    if (state !== 'idle') readyGlow.value = 0;
     if (state === 'correct') {
       if (castleArt) {
         // The castle stage flies a copy of this plaque from the exact spot it
@@ -338,7 +347,7 @@ export default function DailyAnswerCard({
     scale.value = withSpring(1);
     rotation.value = withSpring(0);
     opacity.value = withTiming(1, { duration: 120 });
-  }, [castleArt, gripGlow, opacity, reduceMotion, rotation, scale, state, translateX, translateY]);
+  }, [castleArt, gripGlow, opacity, readyGlow, reduceMotion, rotation, scale, state, translateX, translateY]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -355,7 +364,10 @@ export default function DailyAnswerCard({
         if (interactionDisabledRef.current || claimedRef.current) return;
         thresholdCrossedRef.current = false;
         setActivelyHeld(true);
-        scale.value = withSpring(dailyCardMaterial.liftScale, { damping: 7, stiffness: 140 });
+        scale.value = withSpring(
+          castleArt ? dailyCastlePlaqueMaterial.heldScale : dailyCardMaterial.liftScale,
+          { damping: 7, stiffness: 140 },
+        );
         gripGlow.value = withTiming(1, { duration: dailyCardMaterial.motion.pressInMs });
         playSfx('pressHoldStart');
       },
@@ -373,10 +385,12 @@ export default function DailyAnswerCard({
 
         if (crossedUpThreshold && !thresholdCrossedRef.current) {
           thresholdCrossedRef.current = true;
+          readyGlow.value = withTiming(1, { duration: dailyCastlePlaqueMaterial.readyInMs });
           Haptics.cueAsync('gestureThreshold');
           playSfx('tileSwipe');
-        } else if (!crossedUpThreshold) {
+        } else if (!crossedUpThreshold && thresholdCrossedRef.current) {
           thresholdCrossedRef.current = false;
+          readyGlow.value = withTiming(0, { duration: dailyCastlePlaqueMaterial.readyOutMs });
         }
       },
 
@@ -447,6 +461,19 @@ export default function DailyAnswerCard({
   const gripGlowStyle = useAnimatedStyle(() => ({
     opacity: gripGlow.value,
   }));
+  // Castle block while held: a cream halo that swells once the drag is past
+  // the claim line, and a light lift of the stone itself.
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: Math.min(
+      1,
+      gripGlow.value * dailyCastlePlaqueMaterial.heldHaloOpacity +
+        readyGlow.value * (1 - dailyCastlePlaqueMaterial.heldHaloOpacity),
+    ),
+    transform: [{ scale: 1 + readyGlow.value * (dailyCastlePlaqueMaterial.readyHaloScale - 1) }],
+  }));
+  const readyBrightenStyle = useAnimatedStyle(() => ({
+    opacity: readyGlow.value,
+  }));
 
   const recessScale = recessProgress?.interpolate({
     inputRange: DAILY_RECESS_INPUT,
@@ -505,6 +532,12 @@ export default function DailyAnswerCard({
         ]}
       >
         {castleArt ? (
+          <>
+          {/* Halo sits outside the block (the block clips its own face). */}
+          <Animated.View pointerEvents="none" style={[styles.castleHaloWrap, haloStyle]}>
+            <View style={styles.castleHaloOuter} />
+            <View style={styles.castleHaloInner} />
+          </Animated.View>
           <View style={styles.castlePlaque}>
             <DailyCastlePlaqueFace label={label} />
             {recessShade && (
@@ -515,7 +548,11 @@ export default function DailyAnswerCard({
             )}
             <Animated.View
               pointerEvents="none"
-              style={[styles.gripGlow, gripGlowStyle]}
+              style={[styles.castleHeldBrighten, gripGlowStyle]}
+            />
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.castleReadyBrighten, readyBrightenStyle]}
             />
             {state === 'correct' && (
               <View pointerEvents="none" style={styles.correctOverlay} />
@@ -527,6 +564,7 @@ export default function DailyAnswerCard({
               <View pointerEvents="none" style={styles.disabledOverlay} />
             )}
           </View>
+          </>
         ) : (
           <LinearGradient
             colors={rimColors(state)}
@@ -684,6 +722,35 @@ const styles = StyleSheet.create({
   recessShade: {
     ...StyleSheet.absoluteFill,
     backgroundColor: '#05040B',
+  },
+  castleHaloWrap: {
+    ...StyleSheet.absoluteFill,
+  },
+  castleHaloOuter: {
+    position: 'absolute',
+    top: dailyCastlePlaqueMaterial.haloOuterInset,
+    right: dailyCastlePlaqueMaterial.haloOuterInset,
+    bottom: dailyCastlePlaqueMaterial.haloOuterInset,
+    left: dailyCastlePlaqueMaterial.haloOuterInset,
+    borderRadius: 14,
+    backgroundColor: dailyCastlePlaqueMaterial.haloOuter,
+  },
+  castleHaloInner: {
+    position: 'absolute',
+    top: dailyCastlePlaqueMaterial.haloInnerInset,
+    right: dailyCastlePlaqueMaterial.haloInnerInset,
+    bottom: dailyCastlePlaqueMaterial.haloInnerInset,
+    left: dailyCastlePlaqueMaterial.haloInnerInset,
+    borderRadius: 9,
+    backgroundColor: dailyCastlePlaqueMaterial.haloInner,
+  },
+  castleHeldBrighten: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: dailyCastlePlaqueMaterial.heldBrighten,
+  },
+  castleReadyBrighten: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: dailyCastlePlaqueMaterial.readyBrighten,
   },
   castlePlaqueImage: {
     ...StyleSheet.absoluteFill,

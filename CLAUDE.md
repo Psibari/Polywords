@@ -183,6 +183,10 @@ navigation shell; active Hunt and Daily play are nav-free.
 - Plaques come out of the wall each round: sunk and shaded in the socket, pushed out past
   full size, then settled (`PLAQUE_SEG` in the stage, `DAILY_RECESS_SCALE`/`_SHADE` in the
   card, one progress value). Motion only — no sound or haptic yet.
+- A held block lifts (1.06) with a cream foil halo and a light brightening; past the claim line
+  (the threshold haptic/sound moment) the halo swells and brightens further
+  (`dailyCastlePlaqueMaterial`). Cream, never gold: gold reads as "correct" elsewhere and a grab
+  must not hint at the answer. It replaces the flat cards' purple press wash on stone.
 - Correct claim: the gate lifts as the plaque is thrown. The plaque is drawn twice on one
   progress value — in front of the whole castle until it is wholly inside the opening, then
   behind the gate line — and shrinks into the back wall; a feather rises there, holds, and
