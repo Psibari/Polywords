@@ -170,6 +170,10 @@ navigation shell; active Hunt and Daily play are nav-free.
   ignores. A test fits every clue in the live pool.
 - Polly's Daily perch drops to sit on the left tower just under the HUD, from the HUD's
   measured bottom edge (`hudBottom`), so she never covers the HUD label.
+- Answer plaques are stone blocks (`answerplaque_stone.png`, 552×192, built from the castle
+  step slab `ledge.png` by `tools/art/build_daily_plaque.py` — rerun it, never hand-edit the
+  output): a thin top lip (top 20%) over the front face the label sits on. The socket behind
+  each is the Hunt gauntlet's `gauntlet/recess1.png`. `answercard.png` is no longer used.
 - Plaques come out of the wall each round: sunk and shaded in the socket, pushed out past
   full size, then settled (`PLAQUE_SEG` in the stage, `DAILY_RECESS_SCALE`/`_SHADE` in the
   card, one progress value). Motion only — no sound or haptic yet.

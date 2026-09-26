@@ -37,6 +37,9 @@ import {
 const CASTLE_ARCH = require('../../assets/images/dailycastle/ARCHNEW.png');
 const CASTLE_WALL = require('../../assets/images/dailycastle/cornerwall.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
+// The carved socket each plaque sits in: the Hunt gauntlet's recess art, the
+// same brick material as the answer wall.
+const PLAQUE_SOCKET = require('../../assets/images/gauntlet/recess1.png');
 const useDailyCastleTuning = __DEV__
   ? require('../dev/dailyCastleTuning').useDailyCastleTuning
   : null;
@@ -73,7 +76,6 @@ export type DailyCastleFlight = {
 const PLAQUE_SEG = [0.26, 0.86, 1] as const;
 const PLAQUE_SEG_MS = [200, 460, 240] as const;
 const PLAQUE_INPUT = [0, PLAQUE_SEG[0], PLAQUE_SEG[1], 1];
-const RECESS_SHADOW = '#0D0918';
 const RECESS_LIP = '#21183B';
 
 type Props = {
@@ -214,15 +216,20 @@ function DailyCastlePlaqueSlot({
             style={[
               styles.recessSocket,
               {
-                top: -3 * castleScale,
-                right: -3 * castleScale,
-                bottom: -3 * castleScale,
-                left: -3 * castleScale,
-                borderRadius: 11 * castleScale,
+                top: -4 * castleScale,
+                right: -4 * castleScale,
+                bottom: -4 * castleScale,
+                left: -4 * castleScale,
                 opacity: socketOpacity,
               },
             ]}
-          />
+          >
+            <Image
+              source={PLAQUE_SOCKET}
+              resizeMode="stretch"
+              style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+            />
+          </Animated.View>
           <Animated.View
             pointerEvents="none"
             style={[
@@ -592,7 +599,6 @@ const styles = StyleSheet.create({
   },
   recessSocket: {
     position: 'absolute',
-    backgroundColor: RECESS_SHADOW,
   },
   contactShadow: {
     ...StyleSheet.absoluteFill,

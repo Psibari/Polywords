@@ -32,7 +32,10 @@ import {
 } from '../ui/dailyCastleLayout';
 import { FONTS } from '../constants/fonts';
 
-const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answercard.png');
+// Stone block from the castle-step slab, built by tools/art/build_daily_plaque.py:
+// a thin top lip (top 20%) over the front face the label sits on.
+const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answerplaque_stone.png');
+const CASTLE_PLAQUE_LIP = '20%';
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -567,15 +570,17 @@ export function DailyCastlePlaqueFace({ label }: { label: string }) {
         resizeMode="stretch"
         style={[styles.castlePlaqueImage, { width: '100%', height: '100%' }]}
       />
-      <View pointerEvents="none" style={styles.castlePlaqueBevel} />
-      <Text
-        style={styles.castlePlaqueLabel}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.6}
-      >
-        {label.toUpperCase()}
-      </Text>
+      {/* The label sits on the front face, below the top lip. */}
+      <View pointerEvents="none" style={styles.castlePlaqueFront}>
+        <Text
+          style={styles.castlePlaqueLabel}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
+          {label.toUpperCase()}
+        </Text>
+      </View>
     </>
   );
 }
@@ -683,18 +688,14 @@ const styles = StyleSheet.create({
   castlePlaqueImage: {
     ...StyleSheet.absoluteFill,
   },
-  castlePlaqueBevel: {
+  castlePlaqueFront: {
     position: 'absolute',
-    top: 2,
-    right: 2,
-    bottom: 2,
-    left: 2,
-    borderRadius: 5,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,247,214,0.28)',
-    borderLeftColor: 'rgba(255,247,214,0.18)',
-    borderRightColor: 'rgba(5,4,11,0.40)',
-    borderBottomColor: 'rgba(5,4,11,0.52)',
+    top: CASTLE_PLAQUE_LIP,
+    left: 11,
+    right: 11,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   castlePlaqueLabel: {
     color: dailyCardMaterial.text,
@@ -704,6 +705,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
     textAlign: 'center',
+    textShadowColor: 'rgba(10,8,20,0.8)',
+    textShadowOffset: { width: 1, height: 1.5 },
+    textShadowRadius: 1,
   },
   gripGlow: {
     ...StyleSheet.absoluteFill,
