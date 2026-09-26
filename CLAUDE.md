@@ -173,8 +173,15 @@ navigation shell; active Hunt and Daily play are nav-free.
   perspective tunnel mapping and a lit far opening; the thrown block flies down it. It
   replaced `featherwall.png` (Pete, 2026-09-26). Images in the opening take explicit sizes:
   with absoluteFill alone a bundled image uses its file's pixel size and shows a blown-up corner.
-  The feathers still draw over it until the floor-feather design lands. Castle stone colours
-  are due another pass.
+  Castle stone colours are due another pass.
+- Progress is coins on the courtyard floor (Pete's design, 2026-09-26; `DailyFloorCoins.tsx`),
+  between the bottom step and the capstone: one white-feather coin per solved round, one to
+  four in a centred row, then on the win one bigger gold-feather coin while the four white ones
+  sink. Art from `tools/art/build_daily_coins.py` (stone face, brand-gold ring and edge, the
+  game's own feather icons); positions in `DAILY_FLOOR_COINS`. Each coin is clipped to its own
+  box at the floor, so moving it down sinks it and up raises it. The newest coin rises (and the
+  older ones slide to re-centre) on the same beat as the gate coming down. `FeatherWall.tsx`
+  and the feathers inside the arch are gone.
 - The stage renders OUTSIDE the SafeAreaView (its art is registered to the full screen and the
   thrown plaque's origin comes from `measureInWindow`), so the SafeAreaView is `box-none`.
 - Clues are painted on the gate, one per plank (planks 2–4, each 62 pt), and travel with it.
@@ -208,9 +215,10 @@ navigation shell; active Hunt and Daily play are nav-free.
   must not hint at the answer. It replaces the flat cards' purple press wash on stone.
 - Correct claim: the gate lifts as the plaque is thrown. The plaque is drawn twice on one
   progress value — in front of the whole castle until it is wholly inside the opening, then
-  behind the gate line — and shrinks into the back wall; a feather rises there, holds, and
-  the gate comes down with the next round already on it (phase `reward` switches the display
-  while the gate is up). A won challenge's gate comes down blank, straight into Results.
+  behind the gate line — and flies off down the tunnel; after a short beat the gate comes down
+  with the next round already on it (phase `reward` switches the display while the gate is up)
+  while this round's floor coin rises. A won challenge's gate comes down blank, straight into
+  Results.
 
 ### Audio
 
@@ -255,8 +263,9 @@ navigation shell; active Hunt and Daily play are nav-free.
 - `useGameStore.ts` creates sessions through `dailyChallengeEngine.ts` and persists active
   sessions/results separately from Hunt.
 - Correct-answer presentation is physical and lives in the castle (see Daily above): the
-  plaque is thrown into the raised gate, a feather rises on the wall behind it, and the gate
-  comes down carrying the next round's clues. Input stays locked until the gate is down.
+  plaque is thrown into the raised gate and down the tunnel, and the gate comes down carrying
+  the next round's clues as a coin rises from the floor. Input stays locked until the gate is
+  down.
 - `app/game/dailyPool.ts` contains the approved Daily runtime pool (`npm run state`). Each
   source word has three clues and nine approved candidates; a round deterministically
   presents six.

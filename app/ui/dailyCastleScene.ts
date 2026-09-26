@@ -180,6 +180,46 @@ export const DAILY_ANSWER_PANELS: DailyCastleRect[] = [0, 1].map((i) => {
  */
 export const DAILY_ANSWER_WALL_FOOT = '#07050A';
 
+/**
+ * Floor coins (Pete, 2026-09-26): one per solved round on the courtyard
+ * floor between the bottom step (its edge ends at y 1560 px, 520 pt, on
+ * ARCHNEW.png) and the answer wall's capstone (576 pt). Coin art from
+ * tools/art/build_daily_coins.py: white 186 x 122 px, gold 240 x 155 px, each
+ * with SHADOW_PAD 6 px of shadow below the point where the coin meets the
+ * floor. Every coin's contact point sits on one line, `contactY`.
+ */
+export const DAILY_FLOOR_COINS = {
+  floorTop: 1560 / 3,
+  floorBottom: DAILY_ANSWER_WALL.capTopPx / 3,
+  contactY: 566,
+  pitch: 76,
+  white: { width: 186 / 3, height: 122 / 3, contactFromTop: (122 - 6) / 3 },
+  gold: { width: 240 / 3, height: 155 / 3, contactFromTop: (155 - 6) / 3 },
+} as const;
+
+/** White coin `index` of `count` (1–4), centred as a row. Canvas points. */
+export function resolveDailyFloorCoin(index: number, count: number): DailyCastleRect {
+  const c = DAILY_FLOOR_COINS;
+  const cx = DAILY_CASTLE_CANVAS.width / 2 + (index - (count - 1) / 2) * c.pitch;
+  return {
+    x: cx - c.white.width / 2,
+    y: c.contactY - c.white.contactFromTop,
+    width: c.white.width,
+    height: c.white.height,
+  };
+}
+
+/** The win's single gold coin, centred. Canvas points. */
+export function resolveDailyGoldCoin(): DailyCastleRect {
+  const c = DAILY_FLOOR_COINS;
+  return {
+    x: DAILY_CASTLE_CANVAS.width / 2 - c.gold.width / 2,
+    y: c.contactY - c.gold.contactFromTop,
+    width: c.gold.width,
+    height: c.gold.height,
+  };
+}
+
 /** Top of the brick panels: every block sits below it. */
 export const DAILY_CASTLE_WALL_FACE_TOP = DAILY_ANSWER_WALL.panelTopPx / 3;
 

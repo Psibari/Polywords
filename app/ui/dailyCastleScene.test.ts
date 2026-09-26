@@ -14,6 +14,9 @@ import {
   DAILY_GATE_MAX_SINK,
   DAILY_GATE_OPEN_TRAVEL,
   dailyCastleGridBottom,
+  DAILY_FLOOR_COINS,
+  resolveDailyFloorCoin,
+  resolveDailyGoldCoin,
   dailyAnswerTextWidth,
   DAILY_ANSWER_FONT,
   DAILY_ANSWER_PANELS,
@@ -141,5 +144,22 @@ for (const clue of DAILY_POOL.flatMap((word) => word.meanings)) {
   assert.ok(size * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines <= clues[0].height, `"${clue}" two lines fit the plank height`);
 }
 assert.equal(fitDailyClueFontSize('TO GRAB ON AND NOT LET GO', DAILY_GATE_CLUE_WIDTH), DAILY_CLUE_FONT.maxSize);
+
+// Floor coins: on the open courtyard floor (contact line between the step
+// edge and the capstone), inside the screen, never overlapping each other.
+for (let count = 1; count <= 4; count += 1) {
+  for (let i = 0; i < count; i += 1) {
+    const coin = resolveDailyFloorCoin(i, count);
+    assert.ok(coin.x >= 0 && coin.x + coin.width <= DAILY_CASTLE_CANVAS.width, `coin ${i + 1}/${count} on screen`);
+    if (i > 0) {
+      const prev = resolveDailyFloorCoin(i - 1, count);
+      assert.ok(prev.x + prev.width < coin.x, `coins ${i}/${count} and ${i + 1}/${count} do not overlap`);
+    }
+    assert.ok(Math.abs(coin.x + coin.width / 2 - DAILY_CASTLE_CANVAS.width / 2 - (i - (count - 1) / 2) * DAILY_FLOOR_COINS.pitch) < 1e-9);
+  }
+}
+assert.ok(DAILY_FLOOR_COINS.contactY > DAILY_FLOOR_COINS.floorTop && DAILY_FLOOR_COINS.contactY < DAILY_FLOOR_COINS.floorBottom, 'coins stand on the open floor');
+const gold = resolveDailyGoldCoin();
+assert.ok(gold.y + gold.height <= DAILY_FLOOR_COINS.floorBottom, 'gold coin clears the capstone');
 
 console.log('dailyCastleScene tests passed');

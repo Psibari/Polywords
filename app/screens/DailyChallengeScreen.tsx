@@ -678,7 +678,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // Gate position: 1 = fully down (showing clues), 0 = fully up (hidden)
   const gatePosition = useRef(new Animated.Value(1)).current;
   // The correct plaque's throw into the gate (DailyCastleStage), and the
-  // feather that comes up on the wall behind the gate once it has gone in.
+  // floor coin that rises as the gate comes back down.
   const [castleFlight, setCastleFlight] = useState<DailyCastleFlight | null>(null);
   const flightProgress = useRef(new Animated.Value(0)).current;
   const featherRise = useRef(new Animated.Value(1)).current;
@@ -1033,9 +1033,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // Correct claim, one continuous physical beat:
   //   the plaque is thrown up at the castle while the gate lifts →
   //   it passes into the opening and goes in BEHIND the gate line →
-  //   it vanishes into the back wall and a feather comes up there →
-  //   hold on the feather → the gate comes down carrying the next
-  //   round's clues, and the next round's plaques come out of the wall.
+  //   it flies off down the tunnel → a short beat on the empty tunnel →
+  //   the gate comes down carrying the next round's clues, and as it
+  //   does this round's coin rises out of the courtyard floor (on the win,
+  //   the gold coin, while the four white ones sink) and the next round's
+  //   plaques come out of the wall.
   function runPhysicalCorrectTransition(
     candidate: string,
     origin: DailyAnswerCardClaimOrigin | null,
@@ -1048,8 +1050,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const flightMs = motion
       ? DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs
       : 0;
-    const featherRiseMs = motion ? 360 : 0;
-    const featherHoldMs = motion ? 520 : 200;
+    const tunnelBeatMs = motion ? 180 : 80;
     const gateDropMs = motion ? 400 : 120;
 
     // The plaque only flies with motion on and a measured release point;
@@ -1085,32 +1086,34 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       ]).start();
     }
 
-    // The plaque is gone into the wall: the feather comes up where it went.
-    const featherAtMs = Math.max(gateRiseMs, flightMs);
+    // The plaque is gone down the tunnel.
+    const goneAtMs = Math.max(gateRiseMs, flightMs);
     scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
       setPhysicalClaimPhase('landed');
       Haptics.cueAsync('dailyRodStop');
-      if (featherRiseMs > 0) {
+    }, goneAtMs);
+
+    // The gate comes back down, and it is the new round. 'reward' switches the
+    // display to the committed session while the gate is still up, so the
+    // next clues are already painted on it as it drops. The coin rises on
+    // the same beat and lands with the gate.
+    const dropAtMs = goneAtMs + tunnelBeatMs;
+    scheduleCorrectTransition(() => {
+      if (completingCandidateRef.current !== candidate) return;
+      setCastleFlight(null);
+      setPhysicalClaimPhase('reward');
+      if (motion) {
         Animated.timing(featherRise, {
           toValue: 1,
-          duration: featherRiseMs,
+          duration: gateDropMs,
+          // No overshoot: the coin is clipped to its own box at the floor.
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }).start();
       } else {
         featherRise.setValue(1);
       }
-    }, featherAtMs);
-
-    // The gate comes back down, and it is the new round. 'reward' switches the
-    // display to the committed session while the gate is still up, so the
-    // next clues are already painted on it as it drops.
-    const dropAtMs = featherAtMs + featherRiseMs + featherHoldMs;
-    scheduleCorrectTransition(() => {
-      if (completingCandidateRef.current !== candidate) return;
-      setCastleFlight(null);
-      setPhysicalClaimPhase('reward');
       Animated.timing(gatePosition, {
         toValue: 1,
         duration: gateDropMs,

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DailyGate from './DailyGate';
-import FeatherWall from './FeatherWall';
+import DailyFloorCoins from './DailyFloorCoins';
 import {
   DailyCastlePlaqueFace,
   dailyCastlePlaqueStyle,
@@ -94,7 +94,7 @@ type Props = {
   flight: DailyCastleFlight | null;
   /** 0 → 1 over the whole throw; DAILY_CASTLE_FLIGHT_HANDOFF is the handoff. */
   flightProgress: Animated.Value;
-  /** 0 → 1 rise of the newest feather on the wall behind the gate. */
+  /** 0 → 1 rise of the newest floor coin (and, on the win, the gold one). */
   featherRise: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
   hudBottom: number;
@@ -406,6 +406,16 @@ export default function DailyCastleStage({
         />
       )}
 
+      {/* Progress on the courtyard floor: a coin per solved round, gold on
+          the win. Above the arch layer, below the answer wall. */}
+      <DailyFloorCoins
+        solvedCount={solvedCount}
+        rise={featherRise}
+        frame={frame}
+        offsetX={-stageOffset.x}
+        offsetY={-stageOffset.y}
+      />
+
       <View pointerEvents="none" style={[styles.opening, {
         left: opening.x,
         top: opening.y,
@@ -419,12 +429,6 @@ export default function DailyCastleStage({
           source={BACK_TUNNEL}
           style={[styles.backWall, { width: opening.width, height: opening.height }]}
           resizeMode="stretch"
-        />
-        <FeatherWall
-          featherCount={Math.min(solvedCount, 4)}
-          showGold={solvedCount === 5}
-          scale={s}
-          newestRise={featherRise}
         />
         {flight && (
           <DailyCastleFlightPlaque
