@@ -190,6 +190,13 @@ navigation shell; active Hunt and Daily play are nav-free.
   entry card no longer carries a castle crop (`DailyCastleEntryArt.tsx` is deleted).
 - The stage renders OUTSIDE the SafeAreaView (its art is registered to the full screen and the
   thrown plaque's origin comes from `measureInWindow`), so the SafeAreaView is `box-none`.
+  The stage root is `collapsable={false}` at zIndex 1 and the SafeAreaView is at zIndex 2.
+  Without that, native flattened the root and the castle's layers (zIndex 20–40) drew over the
+  HUD, Polly and Results, which looked like a freeze. The browser never showed it (`dafb967`).
+- Device-only layout rule: on native, an absolutely placed child's `100%` size resolves inside
+  its parent's padding. Castle containers holding full-size art carry no padding (the stone
+  block's 11 pt padding left it 22 pt short of its socket on device). The answer wall art must
+  be opaque below the capstone seam; `build_daily_answer_wall.py` asserts it.
 - Clues are painted on the gate, one per plank (planks 2–4, each 62 pt), and travel with it.
   Each clue's size comes from `fitDailyClueFontSize` (measured Bebas Neue advance widths,
   two lines max, 24 pt down to 17 pt), not `adjustsFontSizeToFit`, which react-native-web
