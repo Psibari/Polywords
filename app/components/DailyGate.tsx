@@ -13,7 +13,9 @@ import {
   type DailyCastleRect,
 } from '../ui/dailyCastleScene';
 
-const GATE = require('../../assets/images/dailycastle/gate2.png');
+// gate2.png recoloured to the old Daily scroll colour by
+// tools/art/build_daily_gate.py (Pete, 2026-09-26). Same canvas and plank lines.
+const GATE = require('../../assets/images/dailycastle/gate_scroll.png');
 
 type Props = {
   /**

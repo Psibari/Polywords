@@ -78,7 +78,7 @@ assert.equal(
 
 assert.ok(castleStageSource.includes('dailycastle/ARCHNEW.png'));
 assert.ok(castleStageSource.includes('dailycastle/cornerwall.png'));
-assert.ok(readFileSync(new URL('../components/DailyGate.tsx', import.meta.url), 'utf8').includes('dailycastle/gate2.png'));
+assert.ok(readFileSync(new URL('../components/DailyGate.tsx', import.meta.url), 'utf8').includes('dailycastle/gate_scroll.png'));
 for (const retired of ['castledeep2.png', 'cavlewall.png', '3darch5.png', 'fullarchrev5.png']) {
   assert.ok(!castleStageSource.includes(retired), `castle stage must not use retired art ${retired}`);
   assert.ok(!dailyScreenSource.includes(retired), `Daily screen must not use retired art ${retired}`);

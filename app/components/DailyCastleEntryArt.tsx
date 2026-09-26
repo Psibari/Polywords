@@ -8,7 +8,7 @@ import {
 } from '../ui/dailyCastleScene';
 
 const CASTLE_ARCH = require('../../assets/images/dailycastle/ARCHNEW.png');
-const GATE = require('../../assets/images/dailycastle/gate2.png');
+const GATE = require('../../assets/images/dailycastle/gate_scroll.png');
 
 /**
  * The castle crown above the Daily entry card: the same ARCHNEW art and

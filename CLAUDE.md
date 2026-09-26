@@ -162,6 +162,12 @@ navigation shell; active Hunt and Daily play are nav-free.
   `app/ui/dailyCastleScene.ts` with the pixel measurement beside it; re-measure if an export
   changes. `app/ui/dailyCastleLayout.ts` is the older 3darch5 registration and now feeds only
   the dev CodeLab/AssetAudit viewers and FeatherWall's feather size.
+- The gate renders `gate_scroll.png`: `gate2.png` recoloured to the old Daily scroll colour
+  (`textures/scroll_paper.png`) by `tools/art/build_daily_gate.py` — hue, saturation and mean
+  lightness moved to the scroll's, each pixel's own lightness offset kept so the plank lines
+  stay crisp. Same canvas as `gate2.png`, so every gate measurement still applies. Rerun the
+  script, never hand-edit the output. Castle stone, steps (the Hunt ledge art) and ropes keep
+  their painted colours (Pete, 2026-09-26).
 - The stage renders OUTSIDE the SafeAreaView (its art is registered to the full screen and the
   thrown plaque's origin comes from `measureInWindow`), so the SafeAreaView is `box-none`.
 - Clues are painted on the gate, one per plank (planks 2–4, each 62 pt), and travel with it.
