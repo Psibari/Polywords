@@ -28,8 +28,9 @@ Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hu
 
 ## Castle and Correct-Claim Sequence
 
-The play screen is a castle: towers and an arch at the top, the gate in the arch carrying the
-clues, and the six answer plaques set in the wall below.
+The whole Daily screen is a castle: towers and an arch at the top, the gate in the arch
+carrying the clues, and the six answer blocks set in a framed wall below. The same castle,
+gate shut and blank, stands behind the entry card and Results.
 
 - Clues are painted on the gate, one per plank, and move with it.
 - A correct UP claim throws the plaque at the castle while the gate lifts.
@@ -52,7 +53,9 @@ Results come up.
   today. Hunt game-over Results can consume it once for an in-place one-feather revive.
 - Results report clue speed without exposing future answers.
 - Completing Daily—win or lose—advances the play streak. Missing a calendar day resets it.
-- Polly may react to a lost Chance or final result but must not obstruct clue, cards, or UP lane.
+- Polly perches on the left tower under the HUD. Her speech bubble sits on the steps below
+  the gate so it never covers a clue; after a correct claim it waits until the thrown block is
+  down the tunnel. She must never obstruct the clues, the blocks, or the UP lane.
 
 ## Owners
 

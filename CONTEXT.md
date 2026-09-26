@@ -1,400 +1,95 @@
 # POLYWORDS Current Context
 
-Updated September 12, 2026. Branch: `play-screen-overhaul`, tracking
-`origin/play-screen-overhaul`. Current committed baseline: `9f4a214`.
+Updated 2026-09-26. Current state and open work only; `CLAUDE.md` holds architecture and Git
+history is the diary. Verify anything here against code before acting on it.
 
-## Verified Current State
+## Branches
 
-- Hunt's 4-tier momentum system (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE, the HUD label's
-  Bebas Neue swap, the level-up pop, the FELL OFF break flash, and the Hunt music's
-  volume/rate now climbing with it) is device-confirmed on TestFlight builds #3 and #4,
-  2026-09-12 — Pete reached UNTRAPPABLE and fell off, and separately confirmed the music
-  "moves with how you're playing... speeds up... falls slower." See CLAUDE.md's Scoring
-  section for the architecture and `docs/superpowers/specs/2026-09-12-hunt-momentum-
-  feedback-design.md` for the full design history. Sound identity for the level-up/FELL
-  OFF cues is the one deliberately unbuilt piece — still uses the existing wrong-swipe
-  SFX. Pete's Apple Developer membership is also now active and TestFlight-tested end to
-  end (build → `eas submit` → install), closing out what was previously an Expo-Go-only
-  testing limitation.
-- The boss gauntlet's sealed cards are bricks that punch out of the wall (`c2ba703`,
-  `36e8533`, `86c18a6`, `e04944c`, `509315b`, 2026-09-09..10), closing this file's old open
-  item 4 — the placeholder stone card art and its fade-and-grow are both gone, and the motion
-  is the push-forward that item asked for. Each brick starts lying on its side flush in its own
-  recess, punches out, swings upright on a plain Z rotation and lands on the shelf; all three
-  crowns then arrive on one beat. `rotateY` still runs, but only as the pick flip, never the
-  entrance. Device-confirmed 2026-09-10.
-  - The wall art is NEVER cut. `GraphicGround` renders the intact `StoneWall.png` on every
-    screen; the three holes are an overlay the gauntlet owns, revealed under each brick as it
-    pushes out and gone when the gauntlet unmounts. A first pass got this wrong by baking the
-    recesses into the shared background, which showed a broken wall on Home, Daily, the
-    Polybook, Settings and every ordinary Hunt round — see the note in `GraphicGround.tsx`.
-  - Recess geometry, the lip's placement and the shelf face all live in `bossGauntletLedge.ts`
-    with the other wall-art measurements, covered by `bossGauntletLedge.test.ts`. Two on-device
-    knobs: `SHELF_LIP_NUDGE_Y` and `SHELF_LABEL_NUDGE_Y`.
-  - CHOOSE A SEAL / progress rides the shelf's front face, not the space above the row. The
-    move was forced when the bricks shipped: laid out above the row, the label was squeezed
-    between the book and the brick tops and read as cut out on device (2026-09-10). The
-    decision stands after the `12c71a0` resize. At the current size the tallest brick stands
-    172.4pt above the ledge including its top face (154 + 46 × 96 / 240), about 28pt taller
-    than the 144pt stone card it replaced.
-  - The opened gauntlet card now has ONE gold edge. `card-face.png` paints its own frame, so
-    `SwipeMask`'s `gauntletAccentRim` was a second, wider outline; it and a duplicate
-    `MaskCardArtwork` draw are removed. The gold lift-glow is unchanged.
-  - The wall trembles for a 400ms lead-in and takes a kick as each brick tears loose
-    (`88735eb`). Bricks still SEATED in the wall rattle with it and stop dead the instant they
-    tear free: their share of the shake falls to zero over the same first sliver of progress
-    the hole fades in on. Under reduce motion nothing shakes and nothing sounds, because the
-    bricks are simply already on the shelf. The shake is a shared channel (`wallShake.ts`),
-    documented in CLAUDE.md's Runtime section.
-  - Sound: `0beced3` (assets), `36aa2b7` (wiring), `1775359` (one shared landing config). See
-    CLAUDE.md's Audio section; not restated here.
-  - Size and colour (`12c71a0`). At the original 110 wide the row was 346pt, 92% of a 375pt
-    screen, and each brick grew 54–62% between its hole and the shelf, which read as GROWING
-    rather than approaching. At `CARD_WIDTH` 96 the row is 304pt (81%) and the growth is
-    35–41%, both at 375pt (growth = 1 / startScale, startScale = recess width / face height).
-    The sprites are colour-matched per brick; see CLAUDE.md's Gauntlet entrance.
-  - Polly no longer appears during the entrance (`9f4a214`); `allMasksFound` still fires and
-    returns NONE explicitly. The reusable part is WHY: the label is placed from the shelf face
-    in wall art space, so it scales with screen width and shifts with the home-indicator inset,
-    while her perch is fixed screen points (a 260pt box at left −64, bottom −20 in
-    `PollyHuntVisit`). A fixed object against a scaling one: a sideways nudge of either would
-    have drifted back. Her beat was also sized for the retired card stack's ~900ms throw, not
-    the 1900ms brick entrance.
-  - Untouched by all of the above: picking, swiping, `wrongFail`, `mastered`, and everything
-    downstream of `onPick`.
+| Branch | Role |
+| --- | --- |
+| `play-screen-overhaul` | The main working branch for the whole game (at `c3aaa89`). |
+| `daily-castle-test` | Used only to rebuild the Daily Challenge as the castle. Branched from `play-screen-overhaul` at `c3aaa89`; merges back through draft PR Psibari/Polywords#13. Nothing else is worked on here. |
+| `main` | Stale and untouched. Never merge into it without Pete's approval. |
 
-- The Polybook screen is built (`7435211`..`77d710d`, 2026-09-07): a two-page spread, sideways
-  paging between the work log and today's entry, vertical scroll back through the days. This
-  was the largest open design item in this file; it no longer is. The "is Vault the right name"
-  question raised alongside it is resolved the same way — it is the Polybook, in the nav tab
-  label and on the screen itself. See `docs/POLYBOOK.md` for what got ruled while building it
-  and `CLAUDE.md`'s Vault section for the module map and a naming collision it surfaced with the
-  in-round intake object, flagged there rather than fixed.
+Nothing merges into `play-screen-overhaul` without Pete's approval.
 
-- The boss MASTERED/HAUNTED outcome package is fully complete and **LOCKED** (Pete,
-  device-approved 2026-09-01). All of it is device-confirmed: the 3-piece Mastered/Haunted
-  `HeroBook` rigs; the one continuous locked open → transform → close choreography; the single
-  color-driven boss headword; and the illustrated `isBoss` result plaques. Both winning routes
-  remain intact: accepting the final REAL and correctly rejecting the final TRAP, which stays
-  rejected. The non-boss Returning Haunt path remains a separate, unchanged presentation.
-  - MASTERED starts `assets/audio/sfx/mastered_transform_v1.wav` at `onMasteredSequence`; its
-    physical book slam uses `assets/audio/sfx/mastered_book_slam_v1.wav` plus one Heavy haptic
-    at +270ms from sequence start. Its result uses `assets/audio/sfx/mastered_result_sting_v1.wav`
-    plus Success haptic at actual plaque visibility, after the existing 350ms mount delay.
-  - HAUNTED starts the combined `assets/audio/sfx/haunted_transform_slam_v1.wav` at
-    `onHauntedSequence`; one Heavy haptic and the board shake land together at the +580ms
-    physical close from sequence start. The failed decision's immediate Error feedback and Polly
-    laugh remain; the plaque adds the dark-magic result cue, but no second shake or haptic.
-  - `sfx.ts` warms only these five boss assets when the boss gauntlet begins; it does not restore
-    global eager SFX preload. `app/utils/haptics.ts` remains the preference-gated haptic gateway.
-  - `MusicEngine` owns boss-only outcome silence, never `MaskBoard` player-volume manipulation:
-    boss music fades fully inaudible, 0.14 → 0 in 100ms, when either MASTERED or HAUNTED starts,
-    remains silent through the plaque audio, and releases over 220ms afterward. Its transport
-    keeps running silently so there is no pause/restart discontinuity. Mute, background recovery,
-    state changes, and track ownership remain authoritative. Pete locked this audio rule on
-    2026-09-08; do not restore audible music during either outcome without an explicit reopening.
+Testing on the phone: the phone runs whatever is in the local checkout, not GitHub. On the
+machine that serves Expo, `git pull` the branch, then `npx expo start --clear`. A stale local
+branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24 (CI's version).
 
-- Daily's correct-answer transition now reads as one physical mechanism: card lands on the
-  parchment, a matching ornate rod rolls reward paper over it, the reward holds, and the
-  paper rolls up to reveal the next clue. Repeated-round state/input tests, TypeScript, the
-  full test suite, and an iPhone check passed.
-- App Store status: listing name locked as "POLYWORDS: Hunt or Be Trapped" (29/30 chars) — bare
-  "POLYWORDS" is unavailable in App Store Connect (claimant undisclosed), and "Pollywords" was
-  rejected for trademark exposure, not availability. Device display name stays POLYWORDS
-  (app.json); only the store string must be unique. ASC App ID 6810968284, bundle
-  com.pdb8080.polywords, SKU EX1789108287967 — permanent, unlike the name, which is editable
-  pre-release with no review. Subtitle (30 chars, indexed for search) is empty.
-- Haptic ladder retuned (`d1b5fff`); `ui_click.mp3` re-normalized -8.3 -> -1.0dB peak with its
-  multiplier 0.25 -> 0.40 (`594e0af`), effective peak -20.3 -> -8.0dB — device-confirmed on
-  iPhone except where listed under Next Work.
-- Hunt runtime content is `assets/data/huntData.json`; `npm run state` prints its live counts.
-  The 24-word DISPATCH-through-FLAG import preserved all prior entries; DISCHARGE remained
-  unchanged. Boss/hidden-pair structure did not change.
-- Merged from `localworkbooks/POLYWORDS_content_data_2026-08-30_FOSTER_FOUL_LOCKED.xlsx`
-  (copied into the repo 2026-08-31, same convention as the existing
-  `POLYWORDS_content_data_2026-08-15_DIRECT_DISCHARGE_LOCKED.xlsx`): TANK, FOAM, FOLD and FORK
-  added as brand-new boss words (full REAL/TRAP sets plus 3 locked hidden pairs each, all dated
-  complete 2026-08-26 through 2026-08-29 in the workbook); WAKE promoted from a regular
-  `tension` word to `boss` (gained a 5th REAL — "WHAT YOU DON'T DO TO A SLEEPING GIANT" — and 3
-  hidden pairs). BULB and DATE were initially "merged" with edits from this workbook — an onion
-  trap re-added to BULB, DATE's `date_t1` swapped to a fig-pun — but both were reverted within
-  the same session: the 2026-08-07 gpsTag/difficulty pacing pass (`bfbd2f2`/`8e0b1a5`) had
-  already deliberately fixed both (cut BULB's onion trap as an unfair non-contrasting trap —
-  onions genuinely are bulbs; rewrote DATE's fig trap to "A ONE-NIGHT STAND" for the same
-  reason), and this workbook still carries the pre-fix text for those two tiles specifically.
-  Confirmed via git history, not assumption. No other word in this merge had a pre-existing
-  live entry with conflicting history — this was checked for all 197 pre-merge overlap words.
-  The workbook's own `import-workbook.mjs`-staged output
-  was NOT used as-is: that tool only captures one hidden pair per boss word (a stale schema)
-  where the live game requires exactly 3 per boss word for the Route C gauntlet
-  (`runtimeHuntValidation.mjs` enforces this and passed clean on the merge). 13 other words the
-  tool flagged as "boss-ready" (BATTERY, BRIEF, CAST, CHECK, COURT, CRAFT, ENGAGED, EXCHANGE,
-  EXTRACT, HORN, IRON, STOCK, STRIKE) were left untouched — they are already complete live boss
-  words with all 3 hidden pairs; the workbook only has 1-2 of them and is stale for these (per
-  the workbook's own "Repo Sync Audit" sheet, the rest were finished through a separate
-  boss/gauntlet sync process not in this file). KERNEL was intentionally demoted from boss back
-  to a regular word on 2026-08-11 per the workbook's own Word Tracker; its leftover single
-  hidden-pair draft is historical cruft and was ignored. BOIL, flagged in the workbook's own
-  recovery audit (dated 2026-08-12) as a completed word missing from live data, is already
-  present and matches the recovered text — already resolved, no action taken. HAUNT and CRAZY
-  remain intentionally absent per the workbook's own instruction not to reconstruct lost text
-  for either.
-- 8 new non-boss headwords, fully written and LOCKED in the workbook's Tiles sheet, were merged
-  with hand-assigned difficulty/gpsTag (no precedent exists in the runtime for a word without
-  both, and gpsTag is a deliberately tuned pacing distribution — Pete asked for a judgment call
-  rather than leaving them out, so difficulty/gpsTag were assigned per
-  `docs/GOLDEN_PACING_SYSTEM.md`'s rule — semantic distance and trap sharpness — calibrated
-  against existing words of similar size): FLAT (11R/5T, hard/panic — wide domain spread, sharp
-  traps), FLUSH (6R/4T, medium/tension), FOCUS (7R/6T, hard/panic — includes obscure senses:
-  seismology, satellite, epidemiology), FOIL (6R/5T, medium/tension), FOOT (12R/5T, hard/panic —
-  widest spread in the batch), FORGE (4R/5T, medium/flow), FOSTER (3R/4T, easy/confidence —
-  smallest/gentlest, matches the confidence-bucket profile), FOUL (6R/5T, medium/tension — every
-  trap sharply baits one specific REAL). These are Pete's calls to revise, not settled fact.
-- Current gpsTag pool counts come from `npm run state`. The
-  confidence retag has happened; any earlier figure of 6 or 12 is stale.
-- The tracked Hunt workbook is `localworkbooks/POLYWORDS_HAUNT_TILES.xlsx`; live JSON remains
-  authoritative.
-- The layered face rig is live on three screens: Home (`5c6f92a`), Daily (`44b4114`) and
-  Results (`d39ca2e`), each device-confirmed before commit. `PollyPerchRig.tsx` renders the
-  five `rig2` face layers and the idle blink, with the brow riding it at 0.33. It renders only
-  when she is settled in the sprite4 idle/smug pose; fly-ins and all other poses stay flat art.
-  `POLLY_PERCH_RIG_ENABLED` turns it off in one line. The rig composite was verified against
-  `sprite4.png` pixel by pixel — nothing is displaced, the only difference is a hairline on her
-  black outlines, so the flat-to-rig swap is not visible in play.
-- Crown tilt exists as a prop and is deliberately off. A crown that rocks continuously while
-  she sits reads as a broken prop; it belongs to a one-shot reaction, which only the Hunt has.
-- The Hunt perch is unwired. The 1800ms perches block the BLINK only; a face swap is a hard
-  cut and would land fine. The actual blocker is that VisitSpec cannot express a face
-  separately from `perchPose`, so the rig reaches 2 of 13 specs.
-- `PollyFaceRigDevViewer` stays in Settings behind `__DEV__` as the tuning harness.
-- Nothing is left unpainted for the perch. `rig2` holds base, crown, beak, eye, brow, feet,
-  far wing and tail, all registered on the 283x413 sprite4 canvas (commit 981af56). Feet, far
-  wing and tail are banked and nothing imports them yet: the far wing is hidden behind the
-  body, the tail is hidden because it is still baked into `polly_base`, and the feet only
-  matter once the branch becomes its own layer. The tail's placement is provisional.
-- Both known rig defects are closed by `2a24a4e`. `EYE_PIVOT_Y_FRAC` 0.12 was verified to sit
-  on the eye artwork's lower edge, the correct blink pivot — the value was always right, only
-  its comment was wrong. The brow now follows the blink, locked at 0.33.
-- The beak is a swap, not a hinge — open and closed mouths as matched states. Chosen because
-  a hinge needs a mouth interior no pose contains.
-- `POLLY_ART_SPEC_2026-08-13.md` sets a beak-aspect test of 0.78 ±0.05. That figure was
-  measured on an open mouth. Her closed beak is ~1.01. Do not judge a closed beak against it.
-- Polly's face rig has three faces. `rig2` now holds `polly_beak_open.png`,
-  `polly_eye_wide.png` and `polly_brow_shock.png` alongside the originals, all cut
-  in place on the sprite4 canvas. Smug, laughing and shocked all read correctly on
-  device. An open mouth could not be harvested from any existing pose — Pete drew
-  the parts. See CLAUDE.md for the finding and the drawing workflow.
-- The open beak is a talking mouth, not a gasp. Shocked = wide eye + shocked brow +
-  closed beak.
-- An app-wide error boundary is live (`fb72f65`), device-confirmed catching and
-  recovering.
-- The current Hunt generator keeps mastered words in ordinary tension/panic play as marked
-  revisits. Mastered words cannot be Bosses or Returning Haunts, and deterministic regression
-  coverage protects those rules. The old mastered-word deletion/rematch behavior is retired.
-- The Vault now derives books from claimed visible REAL mask IDs: a word appears after its first
-  claim and is finished when all of its visible REALs are claimed. Banishing a Haunt removes it
-  from the active ghost queue; permanent Haunt-clear history in the Vault is not implemented yet.
-- Audio was repaired at the transport boundary. SFX now load on demand from real sources and
-  wait for native load-status events; the old eager 36-player startup burst and polling retry
-  path are retired. Music uses the same real-source construction, has app foreground recovery,
-  and restarts a new Hunt from the start. The protected Hunt-loss Results chuckle remains
-  distinct from ordinary, boss, and Returning Haunt laughs and was verified on device.
-- Polly's mastery beat changed (`e23979d`, device-confirmed). She used to fly in wide-eyed
-  shocked, land in an angry glare, stay silent, and hold the perch until the board unmounted.
-  She now flies in angry, lands in `sulk` and runs runPunch's previously-unused deflating
-  droop, says "Next time, the traps will be different." (`huntMasteredTrapsDiffer`), and sinks
-  off still hunched at perchMs 1600 — clearing the screen ~400ms before the MASTERED card
-  auto-resolves, on all three mastery paths. Silent by design. `sulk` and its droop branch had
-  existed and never fired.
-- Pose size is normalized (`f6394e1`, device-confirmed). See CLAUDE.md. Everything except
-  idle/smug renders smaller than before; sulk is 31% smaller. Boss entry uses `point` with
-  perchScale 1.45 on top and is now ~9% smaller than originally tuned.
-- Two Polly animations were cleaned and committed (`fde5902`): polly_sulk and polly_idle. Four
-  others are unusable and need re-rendering at 724x724. See CLAUDE.md.
-- Audit of `pollyVisitPolicy.ts`, 2026-08-29, verified against live source:
-  - `oneHeartLeft` no longer fires on every run and gets discarded. It now substitutes for
-    `wrong` at the three wrong-swipe call sites in `useBoardMechanics.ts` when pre-swipe
-    `game.lives` is 2, and resolves to a guaranteed five-line pool (`af1a250`). `streakX10`
-    (`:348`) was the same until 2e82c32 and now resolves to a rattled heckle.
-  - `hiddenFound`, `ghostFoundLate` and `ghostDissolved` are declared in `PollyEvent` but fired
-    by nothing anywhere.
-  - WRONG_SMUG is still the only spec for `wrong`, but it no longer carries a fixed line:
-    `resolveVisit` picks from `WRONG_HECKLE_LINES` at fire time (d623087).
-  - The Hunt now has a variant mechanism of its own: `pickFreshLine()` in `pollyVisitPolicy.ts`,
-    fed `recentLineIds` and a random roll through `PollyBudgetState`. It reads the same
-    `recentLineIds` that `resolveHomePollyMoment` and `resolveResultsPollyMoment` use via
-    `firstFresh()`. Only `wrong` and `streakX10` have pools; every other moment still holds one
-    fixed line.
-  - `resolveVisit` receives no pollyMemory data. `PollyBudgetState`'s only history field is
-    `ghostRunsMissed`, which does one thing: swaps GHOST_SMUG's `perchPose` to `'point'` at
-    >=2. Home and Results both branch on `playerWinStreak`/`pollyWinStreak`; the Hunt does not.
-    `usePollyVisits` already imports `useGameStore`, so passing the streaks through is a
-    hook-level change with no MaskBoard involvement.
-  - She has a losing register in the Hunt as of 2e82c32 — the ten-streak reaction. Everything
-    else she says in the Hunt is still her winning or threatening.
-  - `POLLY_LINES` holds the line total `npm run state` prints; only some of them have a
-    `hunt`-prefixed id. That prefix undercounts lines that actually fire in the Hunt —
-    `streakLucky`/etc. and `featherOne*` also fire only there but don't carry the prefix — so
-    "Hunt lines" is not one number without saying which count it means.
-- `isMasteredReturn` is set on returning mastered-word steps in `huntGenerator` and is read by
-  NOTHING — not the board, store, Results or Polly. A mastered word returns silently and
-  unmarked.
-- MASTERED overlay timings, for anyone coordinating against them: tap is dead for 1200ms,
-  auto-resolves at 2800ms. The HAUNTED overlay is 1200ms and 3200ms.
-- Polly's `rattled` pose is banked and live (ff3e68d, 2e82c32). Whole-pose flat art, not
-  rig-compatible. See CLAUDE.md.
-- Hunt line rotation shipped (d623087, device-confirmed). The most-repeated line in the game
-  was "Thought so.", capable of firing ~7 times in a run; it is now one of twelve.
-- The ten-streak reaction shipped (2e82c32, device-confirmed). See CLAUDE.md.
-- The one-feather beat shipped (`af1a250`, device-confirmed). The non-obvious part: every
-  life-loss path is already a wrong swipe that claims the word's single heckle via
-  `firePollyEvent('wrong')`, so a plain `oneHeartLeft` heckle branch would never have fired —
-  it had to substitute for `wrong` at the three wrong-swipe call sites in
-  `useBoardMechanics.ts` when pre-swipe `game.lives` is 2, not add alongside it. Guaranteed,
-  not heckle; `sfx: null` because MaskBoard already squawks on the swipe. Five lines; two pair
-  with the `asleep` perch pose, and `perchPose` travels with whichever line is drawn rather
-  than being fixed on the spec. This is also why the old Next Work item calling it "the same
-  shape of change as the streak reaction" was itself the wrong diagnosis: `streakX10` already
-  fired at the right moment and only needed a `resolveVisit` branch, but `oneHeartLeft` fired
-  one render late from a since-deleted `useEffect`, always after an earlier `wrong` heckle had
-  already spent the word's single-heckle budget — a `resolveVisit` branch alone could never
-  have surfaced it. That wrong diagnosis is what left the item open.
-- The Polly speech bubble inverted to light on dark screens (`a0b585f`) across all four
-  `PollySpeechBubble` surfaces — Home, Hunt, Daily, Results. The three colour tokens live in
-  `homePerch` (`pwHomeMaterials.ts`) and are read by `PollySpeechBubble` alone. Separately,
-  Hunt and Daily had each overridden the component's own 18/22 default down to 15/21; both
-  overrides were removed and the default `lineHeight` raised to 24 (`dff9b73`), so all four
-  surfaces now inherit the same type.
-- The asleep pose is live. Pete redrew the art with white Zzz beside her head instead of above
-  it (`594be2d`), `POLLY_POSE_SCALE.asleep` was corrected from 1.24 to 0.96 (`9ea32e3`; crown
-  width was the wrong scale anchor — see CLAUDE.md), and it now drives Polly's Home doze
-  (`e38e814`). The doze delay is honestly two different numbers: ~8s after the screen goes
-  still, which is ~13s from a fresh arrival because the greeting's 5.16s fade runs first, and a
-  flat ~8s on a return visit where there is no entrance or bubble at all.
-- A type and contrast pass ran across four surfaces: Vault (`3e03daa`), Hunt intro (`cbcf6de`),
-  Settings (`b38cfc6`), and the three sibling intro overlays — Boss, Haunt, Vault (`199dd1a`).
-  The rule that came out of it: 15pt is the floor for anything a player reads as prose or as a
-  label, and small text was usually also faint (`mutedWhite` or `faintWhite`), so contrast was
-  raised alongside size wherever that applied. HomeScreen was reviewed and deliberately
-  skipped — it already runs through the `homeType` token block, and its remaining small values
-  are decorative set dressing.
-- Tutorial Replay now clears all four intro seen-keys (`7c7f01e`). It had only ever cleared
-  three — `VAULT_INTRO_SEEN_KEY` was defined and consumed by `VaultIntroOverlay` but never
-  removed, so the Vault intro could never be replayed once seen.
-- A JSX branch that changes shape between renders causes React to tear down and remount the
-  node, and any animation already attached to it silently does nothing — the animation still
-  ticks, but there is no continuously-mounted layer left to see it move. This cost four passes
-  on the Home doze transition; three of them were spent diagnosing a fade that was never
-  actually running. General trap, not specific to Polly.
-- Crown width is not a valid scale anchor for any pose where the head is tilted or drooped — it
-  produced the 29% oversize on the asleep pose (1.24 vs the corrected 0.96). Use figure height
-  instead; it does not tilt.
-- Crossfading two layers (outgoing opacity 1→0, incoming 0→1 in parallel) dips to roughly 0.75
-  combined alpha at the midpoint and shows the background through the subject. Hold the
-  incoming layer opaque underneath from the start and fade only the outgoing one on top.
-- Pose art must be cropped to its true visible-alpha bounds, not eyeballed. The old `zzz.png`
-  had a handful of near-invisible stray alpha pixels in one corner, isolated roughly 65px below
-  the real artwork, that held its 271px canvas open by about a quarter of its height —
-  contain-fit sizes against the full canvas, so that invisible margin shrank the whole pose.
+## Current State
 
-## REWARD ECONOMY
+- **Daily castle** (`daily-castle-test`, device-checked on iPhone 2026-09-26). Castle scene
+  behind entry, play and Results; scroll-coloured gate carrying the clues; stone tunnel behind
+  it; framed answer wall with stone blocks that come out of the wall and glow when grabbed;
+  the throw into the gate; floor coins, one per round, and a gold coin with its own moment
+  before Results; Polly on the left tower with her bubble on the steps. Pete, on device: coins,
+  bubble and layout "looking better". Not yet confirmed on device: the gold coin's chime,
+  haptic, pause and glow strength. Spec: `docs/DAILY_CHALLENGE_SPEC.md`.
+- **Hunt momentum** (STEADY → SHARP → RAZOR SHARP → UNTRAPPABLE, FELL OFF, music that climbs
+  with it) is device-confirmed on TestFlight #3–4 (2026-09-12). The level-up/FELL OFF cues
+  still borrow the wrong-swipe SFX by design.
+- **Boss gauntlet** bricks punch out of the wall with tremble, sound and haptics
+  (device-confirmed 2026-09-10). **Boss outcome** package is LOCKED (see `CLAUDE.md`).
+- **Polybook** screen is built and live (see `docs/POLYBOOK.md`).
+- **Results** (2026-09-12/13): loss-cause verdict lines, Polybook plate controls, Meaning
+  Missed cut, scroll cues. Not recorded as device-confirmed.
+- **Polly**: face rig live on Home, Daily and Results; Hunt lines rotate; ten-streak and
+  one-feather beats and the Home doze are live and device-confirmed. Daily per-round reactions
+  read the rivalry state (`b7c6148`).
+- **TestFlight** works end to end (build → `eas submit` → install). Store name "POLYWORDS: Hunt
+  or Be Trapped" (bare "POLYWORDS" is taken); device name stays POLYWORDS. ASC App ID
+  6810968284, bundle `com.pdb8080.polywords`. Subtitle empty. iPad support is off.
 
-- Rank and score were removed from every player-facing surface on 2026-09-04 (`c48e3fe`);
-  meanings taken is the headline. Score is still computed and stored but shown nowhere.
-- Books equal words, finished when all of that word's visible REALs are found. APPROVED. No
-  perfect-clear tier — a round shows only about 2.54 of a word's 4.61 REALs, so a flawless
-  clear certifies the tiles dealt, not the word.
-- Roughly every fifth new word should carry `hiddenPairs`. APPROVED. This is the only fix for
-  the mastery ceiling.
-- Roughly every fifth new word should carry `hiddenPairs`. APPROVED as the content remedy for
-  the finite Boss pool; `npm run state` prints the current Boss word and hidden-pair counts
-  (TANK, FOAM, FOLD and FORK added and WAKE promoted, 2026-08-31).
-- Banished Haunts are removed from the active queue but are not yet recorded as a permanent Vault
-  collection item. This is a future reward/UX decision, not a reason to remove Haunts from Hunt.
+## Approved Rulings (reward and content)
 
-## Approved Daily Content
-
-`workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx` is the canonical source for
-60 approved locked words; `STAGE` is included and `SENTENCE` is excluded. It supersedes
-`POLYWORDS_Daily_Challenge_Locked_2026-08-24.xlsx` (retired, kept for history) — the prior
-43 entries carried over unchanged, plus 17 new entries added 2026-08-28 (JAM, HIGHLIGHT, HIKE,
-HIP, HIT, HOLLOW, HOOD, INDEX, INTEREST, ISSUE, JACK, KICK, KIND, LAP, LAST, LATCH, LAUNCH).
-`app/game/dailyPool.ts` is the runtime representation and was merged additively to match
-(`tsc`/full suite green; `dailyChallengeEngine.test.ts`'s hardcoded pool-size assertion updated
-from 43 to 60). Each source word has three clues, nine unique approved candidates, and tier
-1–3; each round deterministically presents the target plus five distractors.
+- Rank and score are shown nowhere (2026-09-04); meanings taken is the headline.
+- A book is a word, finished when all its visible REALs are found. No perfect-clear tier: a
+  round deals only some of a word's REALs.
+- Roughly every fifth new Hunt word should carry three `hiddenPairs`; it is the only remedy
+  for the finite Boss pool. Never generate placeholder hidden truth.
+- Daily content: the 60-word locked workbook (`STAGE` in, `SENTENCE` out); `dailyPool.ts` is
+  its runtime form.
 
 ## Next Work
 
-1. Continue real-device iOS/Android journey checks before release, including cold-start audio,
-  rapid navigation, app background/foreground recovery, and every distinct Polly laugh beat.
-2. Author and editorially approve more Boss-capable Hunt words, targeting roughly one in five
-  new words with three fair, stable-ID `hiddenPairs`. Do not generate placeholder hidden truth.
-3. Decide and implement a permanent player-facing record for banished Haunts, if the Vault should
-  remember that victory. Keep the hidden pair ledger on Polly's side; do not turn it into a
-  player shelf collection.
-4. Continue iPhone Expo Go validation for Vault density, mastered returns, Boss/Haunt placement,
-  persistence, gestures, animation, and performance.
-5. Redraw sprite9 (sulk) at 283x413 with a 164px crown to match sprite4, if it is still a
-  placeholder. It is now load-bearing in three places: Home on a win streak, Results 'beat',
-  and the mastery beat.
-6. Re-render the four clipped animations at 724x724.
-7. The remaining Polybook writing: today's entries want roughly ten per rivalry state against
-  three or four written today; CONCEDING and MERCY are the thinnest pools; the payoff entry
-  (docs/POLYBOOK.md, "The payoff") is undrafted.
-8. The three-step naming arc — "the visitor," then "the one they call [name]" using the
-  `playerName` that already exists in Settings, then "they" — is not built. The line pools have
-  no slot for a name.
-9. The first-day label rewrites itself the day the log fills (see docs/POLYBOOK.md, "What is
-  not decided") — one row, roughly two hundred days out, about to be trimmed anyway. Fix is
-  recording the player's first played date once; safe to add later, backfillable from the
-  oldest row.
-10. KNOWN GAP, still open — it needs a COLD-START listen specifically; another ordinary listen
-  settles nothing. The gauntlet's `stoneRumble` can start late on the first gauntlet after the
-  app starts: `warmGauntletEntranceSfx` runs when `BossGauntletSpines` mounts, which is the
-  same moment the rumble fires, so that first play waits on one native file load, under a low
-  sound. Two device runs on 2026-09-10 called the sound good, but neither was verified as the
-  FIRST gauntlet after a cold launch — the only run where this gap can occur. The app never
-  releases a loaded SFX player (`unloadSfx()` has no caller, and App.tsx's background handler
-  only tells the music engine the app is inactive and flushes the save), so once the rumble has
-  loaded it stays loaded for the life of the process. A cold listen therefore means killing the
-  app, or a full reload in Expo Go, then listening to the FIRST gauntlet of that run — which is
-  a Returning Haunt rather than the boss whenever a haunt is queued, since the haunt comes
-  earlier and fires the same rumble. The tears and lands are unaffected; they fire 400ms+ after
-  the warm. The fix is to warm the gauntlet's cues when the boss word STARTS, in MaskBoard,
-  rather than when the gauntlet mounts. If it is audible on device, do that. If it is not, it
-  stays listed here — it does not get dropped.
-11. Navigation gap: BottomNav renders on Vault and Settings only, but has four tabs — there is
-  no way to reach the Vault from Home. Solve before its 11/12pt labels are worth changing.
-12. The `tone='loss'` `PollySpeechBubble` variant is still dead — none of the four call sites
-  (Home, Hunt, Daily, Results) pass a `tone`. Wire it or delete it.
-13. Three poses remain unused: `flyGrin`, `masterShock`, `masterAngry` — none appear as a value
-  in any `pollyVisitPolicy.ts` VisitSpec.
-14. `ONE_FEATHER_POSE` is typed `Record<string, ...>`; a typo'd key would compile and yield an
-  undefined `perchPose`. Hardening, not urgent.
-15. Daily is the last unaddressed screen in the type pass, and the messiest file — 12 distinct
-  font sizes from 9pt to 36pt.
-16. Tutorial Replay's alert still says "You'll see it again next time you start a Hunt." It now
-  clears four overlays across three screens (Settings, GameScreen, VaultScreen); the copy
-  undersells it.
-17. Haunt rematch's final gauntlet tile is UNTESTED: `bossCorrect`'s Rigid+Heavy at 60ms now
-  stacks with the existing extra Heavy at `MaskBoard.tsx:1042` (non-boss only) — two Heavies 60ms apart, expected to smear. Boss final tile is clean and device-tested.
-18. Reduce-motion players get the parent-level `stoneLand1` thud with no haptic paired to it —
-  undecided whether one belongs there; haptics are not motion.
-19. Four direct `Haptics.selectionAsync()` calls in `MaskBoard.tsx` (1082, 1287, 1298, 1403)
-  bypass `cueAsync` and stay at the old faint level. 1403's own comment claims "heaviest haptic on land" while calling the weakest API — a routing problem, not a tuning one.
-20. `warnDev()` in `sfx.ts` returns early when `!__DEV__`, so every audio load, player-creation
-  and playback failure is invisible in TestFlight and production builds — this is why the mystical_chime regression took a full session to locate.
-21. External TestFlight needs a hosted privacy policy URL and a support contact before Beta App
-  Review. Neither exists yet.
-22. Card look across the whole game (Pete, 2026-09-26): every screen's cards and panels should
-  look uniform, or at least alike. That includes Daily's entry and Results cards, Hunt Results,
-  the explainers and Settings. Today the Daily entry card has a gold border and the Daily
-  Results card a purple one; both are a flat dark panel over the castle. This needs its own
-  design pass with Pete. It was deliberately left out of the Daily castle work.
+Daily castle (on `daily-castle-test`):
+1. Colour pass with Pete: coins and a gold ring, courtyard floor, castle stone. The art
+   scripts in `tools/art/` regenerate each piece.
+2. Device check of the gold-coin moment: chime volume, Success haptic, pause length, glow
+   strength.
+3. Card look across the whole game: every card and panel should look alike (Pete,
+   2026-09-26). Daily entry and Results cards were deliberately left for this pass.
+4. Pete's call on cleanup: the unreferenced exports in `assets/images/dailycastle/`, the
+   Daily tree assets and `DailyTreeScene`, the old `DailyCastleScene` preview, and the
+   scroll-era leftovers the Daily screen still imports (`dailyScrollTuning`,
+   `dailyScrollLayout`). The dev-only buttons over the bottom-right blocks stay (Pete).
+5. Merge PR Psibari/Polywords#13 into `play-screen-overhaul` once Pete approves.
+
+Whole game:
+6. Real-device journeys before release: cold-start audio, rapid navigation,
+   background/foreground recovery, every Polly laugh, persistence, performance.
+7. Author more boss-capable Hunt words (three fair hidden pairs each).
+8. Decide whether a banished Haunt earns a permanent record.
+9. Known gap, needs a cold-start listen: the gauntlet's `stoneRumble` can start late on the
+   first gauntlet after launch, because `warmGauntletEntranceSfx` runs when the gauntlet
+   mounts. If audible, warm the cues when the boss word starts. Do not drop this item.
+10. Navigation: `BottomNav` renders only on the Polybook and Settings; Home cannot reach the
+    Polybook.
+11. Haptics: four `Haptics.selectionAsync()` calls in `MaskBoard.tsx` and two in
+    `GameScreen.tsx` bypass `cueAsync`. The Haunt rematch's final tile may stack two Heavies
+    60 ms apart (untested). Reduce-motion `stoneLand1` has no paired haptic (undecided).
+12. `warnDev()` in `sfx.ts` is silent outside `__DEV__`, so audio failures are invisible in
+    TestFlight.
+13. Polly: redraw sprite9 (sulk) to sprite4's canvas if still a placeholder; re-render the four
+    clipped webp animations at 724×724; `flyGrin`/`masterShock`/`masterAngry` are unused;
+    `tone='loss'` bubble is unused; `ONE_FEATHER_POSE` is typed `Record<string, …>`.
+14. Polybook writing: more today's entries per rivalry state (CONCEDING and MERCY thinnest),
+    the payoff entry, the player-name arc, and recording the first played date.
+15. Settings' Tutorial Replay alert undersells what it resets (four overlays).
+16. External TestFlight needs a hosted privacy policy and a support contact.
 
 ## Protection
 
-- Preserve every Git stash unless Pete names one and explicitly requests an operation.
-- Preserve unrelated worktree changes.
-- Git history is the patch diary; do not rebuild session logs in this file.
+- Preserve every Git stash and unrelated worktree change.
+- Pete's local art files are his: ask before touching anything not in Git.

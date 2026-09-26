@@ -48,7 +48,7 @@ and resets on error.
 Score is still calculated in `polyRunEngine.ts` and persisted, but it is displayed nowhere:
 the Hunt HUD shows live status and Results shows an outcome label, not a number or rank. The
 live status is a 4-tier momentum system (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE) with its own
-break state (FELL OFF); see CLAUDE.md's Scoring section for the current, detailed version.
+break state (FELL OFF); see CLAUDE.md's Hunt section for the current, detailed version.
 
 ## Gold Feather and Results
 
@@ -67,8 +67,9 @@ from `WRONG_HECKLE_LINES`, a pool `resolveVisit` now picks from on each wrong sw
 
 - Hierarchy: hero word, active mask, Polybook, HUD, Polly visit.
 - Ordinary masks stay neutral before commitment.
-- The in-round book is **POLYBOOK**; the separate archive is **WORD VAULT**.
-- Vault is player-owned and Polly-free.
+- The in-round book's spine reads **POLYBOOK**, and so does the archive screen (Vault route,
+  `PolybookSpread.tsx`). That collision is open; renaming is Pete's call.
+- The archive is player-owned and Polly-free. CONFLICT for Pete: `docs/POLYBOOK.md` (2026-09-07) makes the Polybook Polly's diary, which the player reads; older locks call this screen the player's Polly-free archive.
 
 ## Owners
 

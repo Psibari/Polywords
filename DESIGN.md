@@ -42,7 +42,7 @@ spacing:
 ## Direction
 
 The world is a premium, tactile, nocturnal bindery: deep purple and near-black surfaces,
-painted stone, authored book/scroll objects, and scarce gilt accents. It should feel clever,
+painted stone, authored book and castle objects, and scarce gilt accents. It should feel clever,
 crafted, and faintly dangerous—not flat, pastel, generic, or childish.
 
 Live tokens and materials under `app/ui/` are authoritative. This file defines the durable
@@ -52,7 +52,7 @@ design contract, not exact component measurements.
 
 1. Current hero word or clue.
 2. Active card/tile decision.
-3. Physical destination object: Polybook, scroll, or Vault.
+3. Physical destination object: the Polybook, or the Daily castle's gate.
 4. HUD/status.
 5. Polly visit or celebration.
 
@@ -90,9 +90,11 @@ layered shadow, rim light, and physical motion; pressed cards lift rather than m
 - **Polybook:** player-owned Hunt intake object; never label it as Polly's Vault.
 - **Mask cards:** neutral painted face before commitment; outcome color appears afterward.
 - **Boss gauntlet:** three face-down cards chosen, opened, then judged independently.
-- **Daily scroll:** one fixed ornate rod plus a matching moving rod/reward face; submitted card
-  lands on parchment before being covered.
-- **Vault:** reclaimed archive with no Polly presence.
+- **Daily castle:** the clues ride a gate in the arch; answers are stone blocks in the wall.
+  A claimed block is thrown into the raised gate, and progress is coins on the courtyard floor
+  (`docs/DAILY_CHALLENGE_SPEC.md`).
+- **Polybook screen (Vault route):** Polly's diary, which the player reads
+  (`docs/POLYBOOK.md`). CONFLICT for Pete: `docs/POLYBOOK.md` (2026-09-07) makes the Polybook Polly's diary, which the player reads; older locks call this screen the player's Polly-free archive.
 
 Do not redesign `MaskBoard.tsx`, `SwipeMask.tsx`, or the signature objects by convention;
 inspect the live render path and get an approved direction first.

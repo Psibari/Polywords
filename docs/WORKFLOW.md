@@ -19,8 +19,13 @@ git diff --check
 git status --short
 ```
 
-Docs-only work requires both Git checks and a broken-reference scan. Static checks do not prove
-native animation, audio, gestures, or layout; report device coverage separately.
+Tests run on Node 24, as CI does (one suite fails on Node 22 with `ERR_REQUIRE_CYCLE_MODULE`).
+Docs-only work requires both Git checks and a broken-reference scan.
+
+Static checks and the browser preview do not prove native animation, audio, gestures, stacking
+or layout; several bugs have shown only on the phone (`CLAUDE.md`, Native rules). Report device
+coverage separately. To test on the phone, the machine serving Expo must `git pull` the branch
+first, then run `npx expo start --clear`; the phone runs the local checkout, not GitHub.
 
 ## Completion
 
