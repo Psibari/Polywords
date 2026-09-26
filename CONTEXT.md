@@ -68,9 +68,11 @@ Daily castle (on `daily-castle-test`):
    assets and `DailyTreeScene`; the scroll-era leftovers the Daily screen still imports
    (`dailyScrollTuning`, `dailyScrollLayout`). The dev-only buttons over the bottom-right
    blocks stay (Pete).
-5. Polybook lines ending "Mine." (`pollyBookLines.ts`, from
-   `docs/POLLY_POLYBOOK_LOG_LINES.md`): Pete finds them unclear and she is not a thief.
-   Rewrite pending his choice.
+5. Review with Pete (next session) of Polly's Polybook lines, starting with the four that
+   use "mine": "Good work. Mine." (light, held day), "Sloppy work. Mine." (heavy, bad day),
+   "The last one is mine." (boss held), "Badly built. Mine." (boss lost). She is not a thief.
+   Pete wants to look at them himself first. Do not rewrite or add any line until he rules.
+   Source: `docs/POLLY_POLYBOOK_LOG_LINES.md`; runtime: `app/game/pollyBookLines.ts`.
 6. Merge PR Psibari/Polywords#13 into `play-screen-overhaul` once Pete approves.
 
 Whole game:
