@@ -139,11 +139,12 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   `DAILY_CLUE_TOP_MAX` (the planks end above the steps and the gate still covers the crown),
   centred unless the HUD would cover it. The gate helpers (`dailyGateClosed`,
   `dailyGateLineY`, `dailyGateOpenTravel`, `dailyGateMaxSink`, `resolveDailyGateClueRects`)
-  take that clue top. Planks are 52 pt; clues are capped at 20 pt and split into two even lines
-  (`balanceDailyClue`) so each has air on its plank, and the door (`gate_door.png`,
-  `build_daily_door.py`: cartoon indigo planks, dark 2.5 pt seams, iron straps off the clue
-  planks) is Pete's pick; never gold seams (too busy). The scene only drops
-  when even `DAILY_CLUE_TOP_MAX` is under the HUD. The castle has three steps: the build
+  take that clue top. The scene only drops when even `DAILY_CLUE_TOP_MAX` is under the HUD.
+- **Door and clues: LOCKED (Pete, device-approved 2026-09-26).** `gate_door.png` from
+  `build_daily_door.py`: cartoon indigo planks in Pete's tint, dark 2.5 pt seams, two iron
+  straps off the clue planks. Planks are 52 pt; clues capped at 20 pt, split into two even
+  lines (`balanceDailyClue`). Never gold seams (too busy). Don't change the door, its tint,
+  the seams or the clue size without Pete reopening it. The castle has three steps: the build
   script removes the top one and extends the door into its place.
 - Every measured coordinate lives in `app/ui/dailyCastleScene.ts` beside its pixel
   measurement (opening, gate planks, clue rects, plaque grid, throw, coins, Polly's bubble),

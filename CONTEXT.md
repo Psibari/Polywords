@@ -22,8 +22,8 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
 - **Ruling (Pete, 2026-09-26):** the Polybook is Polly's book, kept in the old Vault; the
   player reads it.
 - **Daily castle** (`daily-castle-test`, device-checked on iPhone 2026-09-26). Castle scene
-  behind entry, play and Results; a cartoon indigo plank door carrying the clues; stone tunnel behind
-  it; framed answer wall with stone blocks that come out of the wall and glow when grabbed;
+  behind entry, play and Results; a cartoon indigo plank door carrying the clues (door and
+  clues LOCKED, device-approved 2026-09-26); stone tunnel behind it; framed answer wall with stone blocks that come out of the wall and glow when grabbed;
   the throw into the gate; floor coins, one per round, and a gold coin with its own moment
   before Results; Polly on the left tower with her bubble on the steps. Pete, on device: coins,
   bubble and layout "looking better". Not yet confirmed on device: the gold coin's chime,
@@ -58,10 +58,10 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
 Daily castle (on `daily-castle-test`):
 1. Cartoon pass (Pete, 2026-09-26): coins done (option D, silver and a 100 pt gold). The
    castle is now cartoon art (castle B, `castle_cartoon.png`) so it matches Polly, and so is the
-   door (indigo planks, Pete's tint). Still in the old painted style: the tunnel, the answer
-   wall and the blocks. Next is cartoon versions of those, likely generated in the same style (Magnific shows 0 credits as of
-   2026-09-26, or drawn by script like the door, or Pete's own art). Sharper castle: re-export B at full size from Magnific (the
-   build used Pete's 864 px screen copy).
+   door (indigo planks, Pete's tint; locked). Still in the old painted style: the tunnel, the
+   answer wall and the blocks. Next is cartoon versions of those: drawn by script like the
+   door, Pete's own art, or generated (Magnific shows 0 credits as of 2026-09-26). Sharper
+   castle: re-export B at full size from Magnific (the build used Pete's 864 px screen copy).
 2. Device check of the gold-coin moment: chime volume, Success haptic, pause length, glow
    strength.
 3. Card look across the whole game: every card and panel should look alike (Pete,
