@@ -42,7 +42,7 @@ const CASTLE_ARCH = require('../../assets/images/dailycastle/ARCHNEW.png');
 const CASTLE_WALL = require('../../assets/images/dailycastle/answerwall_framed.png');
 // What shows behind the raised gate: a stone tunnel receding to a lit far
 // opening, built by tools/art/build_daily_tunnel.py. The thrown block flies
-// down it. Replaces featherwall.png.
+// down it. It replaced the old feather wall.
 const BACK_TUNNEL = require('../../assets/images/dailycastle/tunnel.png');
 // The carved socket each plaque sits in: the Hunt gauntlet's recess art, the
 // same brick material as the answer wall.

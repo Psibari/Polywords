@@ -131,8 +131,8 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
 - Every measured coordinate lives in `app/ui/dailyCastleScene.ts` beside its pixel
   measurement (opening, gate planks, clue rects, plaque grid, throw, coins, Polly's bubble),
   covered by `dailyCastleScene.test.ts`. Re-measure if an export changes.
-  `dailyCastleLayout.ts` is the older registration still read by the dev viewers and one
-  fallback in `DailyAnswerCard`.
+  `dailyCastleLayout.ts` is the older registration; only a width fallback in
+  `DailyAnswerCard` still reads it.
 - Stacking: the stage is outside the SafeAreaView (its art is registered to the full screen
   and the throw origin comes from `measureInWindow`). Stage root `collapsable={false}` at
   zIndex 1; the SafeAreaView (`box-none`, HUD, Polly, labels, cards, Results) at zIndex 2.

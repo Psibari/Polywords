@@ -86,7 +86,6 @@ import {
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
-import DailyAssetAudit from '../components/DailyAssetAudit';
 import {
   usePollyAmbientMotion,
   useReducedMotionPreference,
@@ -661,8 +660,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // (not read from the store) so it can't race the session update.
   const [revealSolvedCount, setRevealSolvedCount] = useState(0);
 
-  // DEV: Asset audit viewer
-  const [assetAuditVisible, setAssetAuditVisible] = useState(false);
+  // DEV: castle tuning panel
   const [castleTuningVisible, setCastleTuningVisible] = useState(false);
 
   function setLocked(val: boolean) {
@@ -1504,15 +1502,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       {__DEV__ && (
         <Pressable
-          onPress={() => setAssetAuditVisible(true)}
-          style={[styles.devResetBtn, { right: 14, bottom: 70 }]}
-        >
-          <Text style={styles.devResetText}>ASSET AUDIT</Text>
-        </Pressable>
-      )}
-
-      {__DEV__ && (
-        <Pressable
           onPress={() => setCastleTuningVisible((visible) => !visible)}
           style={[styles.devResetBtn, { right: 14, bottom: 104 }]}
         >
@@ -1523,11 +1512,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       {__DEV__ && DailyCastleTuningPanel && (
         <DailyCastleTuningPanel visible={castleTuningVisible} />
       )}
-
-      <DailyAssetAudit
-        visible={assetAuditVisible}
-        onClose={() => setAssetAuditVisible(false)}
-      />
 
       </SafeAreaView>
     </View>

@@ -62,12 +62,12 @@ Daily castle (on `daily-castle-test`):
    strength.
 3. Card look across the whole game: every card and panel should look alike (Pete,
    2026-09-26). Daily entry and Results cards were deliberately left for this pass.
-4. Cleanup. The 24 unreferenced exports in `assets/images/dailycastle/` are deleted (Pete,
-   2026-09-26). Still Pete's call: eight images used only by the old dev viewers (Asset
-   Audit, CodeLab, the old `DailyCastleScene` preview) and those viewers; the Daily tree
-   assets and `DailyTreeScene`; the scroll-era leftovers the Daily screen still imports
-   (`dailyScrollTuning`, `dailyScrollLayout`). The dev-only buttons over the bottom-right
-   blocks stay (Pete).
+4. Cleanup. Done (Pete, 2026-09-26): the 24 unreferenced exports in
+   `assets/images/dailycastle/`; the old dev viewers (Asset Audit, CodeLab, the old
+   `DailyCastleScene` preview) with their Settings rows, the ASSET AUDIT button and their
+   eight images. Still Pete's call: the Daily tree assets and `DailyTreeScene`, and the
+   scroll-era leftovers the Daily screen still imports (`dailyScrollTuning`,
+   `dailyScrollLayout`). CASTLE TUNE and DEV - RESET DAILY stay (Pete).
 5. Review with Pete (next session) of Polly's Polybook lines, starting with the four that
    use "mine": "Good work. Mine." (light, held day), "Sloppy work. Mine." (heavy, bad day),
    "The last one is mine." (boss held), "Badly built. Mine." (boss lost). She is not a thief.
