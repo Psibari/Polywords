@@ -3,11 +3,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { DailyCastleGroup, useDailyCastleTuning } from './dailyCastleTuning';
 
 const groups: { group: DailyCastleGroup; title: string; fields: [string, string, number][] }[] = [
-  { group: 'background', title: 'CASTLE ARCH', fields: [['scale', 'SCALE', 0.01], ['x', 'X', 2], ['y', 'Y', 2]] },
-  { group: 'wall', title: 'CASTLE WALL', fields: [['scale', 'SCALE', 0.01], ['x', 'X', 2], ['y', 'Y', 2]] },
-  { group: 'gate', title: 'GATE', fields: [['scale', 'SCALE', 0.01], ['x', 'X', 2], ['closedY', 'CLOSED Y', 2], ['openTravel', 'OPEN TRAVEL', 4]] },
+  { group: 'gate', title: 'GATE', fields: [['x', 'X', 1], ['y', 'Y', 1]] },
   { group: 'grid', title: 'ANSWER GRID', fields: [['x', 'X', 2], ['y', 'Y', 2], ['cardWidth', 'CARD WIDTH', 2], ['cardHeight', 'CARD HEIGHT', 2], ['columnGap', 'COLUMN GAP', 2], ['rowGap', 'ROW GAP', 2]] },
-  { group: 'clues', title: 'CLUES', fields: [['x', 'X', 2], ['y', 'Y', 2], ['width', 'WIDTH', 2], ['verticalGap', 'VERTICAL GAP', 2]] },
+  { group: 'clues', title: 'CLUES', fields: [['x', 'X', 2], ['y', 'Y', 2], ['width', 'WIDTH (0 = PLANK)', 2]] },
 ];
 
 export default function DailyCastleTuningPanel({ visible }: { visible: boolean }) {

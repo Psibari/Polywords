@@ -26,19 +26,22 @@ Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hu
 - Wrong claim: costs one Chance, disables that candidate, reveals the next clue, and returns
   input after the wrong-card exit.
 
-## Correct-Claim Scroll Sequence
+## Castle and Correct-Claim Sequence
 
-1. Keep the submitted card continuous from the swipe and settle it on the clue parchment.
-2. Hold briefly with clue and card readable.
-3. Roll reward paper down from the fixed ornate rod; a matching moving rod stays attached to
-   its lower edge and physically covers clue and card.
-4. Show the existing feather/crown reward on that paper.
-5. While fully covered, render the next clue underneath.
-6. Roll the reward paper and moving rod upward to reveal only the next clue.
-7. Re-enable input after stable reveal. Lock input and reject stale/double claims throughout.
+The play screen is a castle: towers and an arch at the top, the gate in the arch carrying the
+clues, and the six answer plaques set in the wall below.
 
-The final round must complete the same reward/reveal sequence without flashing the old clue
-before Results.
+- Clues are painted on the gate, one per plank, and move with it.
+- A correct UP claim throws the plaque at the castle while the gate lifts.
+- The plaque passes into the arch and goes in behind the gate line, into the wall at the back.
+- A feather comes up on that wall. It is the gold feather on the final round.
+- The gate comes back down carrying the next round's clues, and the next plaques come out of
+  the wall.
+- Input stays locked from the claim until the gate is down. Stale and double claims are
+  rejected throughout.
+
+The final round runs the same sequence. Its gate comes down blank and goes straight into
+Results, so the old clue never flashes.
 
 ## Reward, Results, and Streak
 
@@ -52,8 +55,9 @@ before Results.
 
 - Editorial standard: `docs/DAILY_CONTENT_WRITING_STANDARD.md`
 - Authoring source: `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`
-- UI/motion: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyAnswerCard.tsx`,
-  `app/components/ui/QuillScrollPanel.tsx`
+- UI/motion: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyCastleStage.tsx`,
+  `app/components/DailyGate.tsx`, `app/components/DailyAnswerCard.tsx`
+- Castle geometry: `app/ui/dailyCastleScene.ts`
 - Gameplay rules: `app/game/dailyChallengeEngine.ts`
 - Runtime content: `app/game/dailyPool.ts`
 - State/streak: `app/store/useGameStore.ts`, `app/game/dailyStreak.ts`

@@ -154,6 +154,22 @@ navigation shell; active Hunt and Daily play are nav-free.
 ### Daily
 
 - Daily is a deterministic, one-attempt-per-date, five-round UP-only mode with two Chances.
+- The play screen is a castle (`DailyCastleStage.tsx`). `ARCHNEW.png` (towers, arch, steps,
+  purple floor) and the answer wall (`cornerwall.png`) share one 1290 × 2796 canvas and are
+  always drawn at the same rect: full screen width, bottom-anchored, moved only as one piece.
+  Never position either layer alone. Every measured coordinate — the arch opening, the gate
+  (`gate2.png`) and its plank lines, the clue planks, the plaque grid, the throw — lives in
+  `app/ui/dailyCastleScene.ts` with the pixel measurement beside it; re-measure if an export
+  changes. `app/ui/dailyCastleLayout.ts` is the older 3darch5 registration and now feeds only
+  the dev CodeLab/AssetAudit viewers and FeatherWall's feather size.
+- The stage renders OUTSIDE the SafeAreaView (its art is registered to the full screen and the
+  thrown plaque's origin comes from `measureInWindow`), so the SafeAreaView is `box-none`.
+- Clues are painted on the gate, one per plank (planks 2–4), and travel with it.
+- Correct claim: the gate lifts as the plaque is thrown. The plaque is drawn twice on one
+  progress value — in front of the whole castle until it is wholly inside the opening, then
+  behind the gate line — and shrinks into the back wall; a feather rises there, holds, and
+  the gate comes down with the next round already on it (phase `reward` switches the display
+  while the gate is up). A won challenge's gate comes down blank, straight into Results.
 
 ### Audio
 
@@ -197,9 +213,9 @@ navigation shell; active Hunt and Daily play are nav-free.
   remove or merge that sound without an explicit product decision.
 - `useGameStore.ts` creates sessions through `dailyChallengeEngine.ts` and persists active
   sessions/results separately from Hunt.
-- Correct-answer presentation is physical: the submitted card lands on the clue parchment,
-  the matching rod/reward paper covers it, reward appears, then the paper rolls up over the
-  already-rendered next clue. Input stays locked until the reveal finishes.
+- Correct-answer presentation is physical and lives in the castle (see Daily above): the
+  plaque is thrown into the raised gate, a feather rises on the wall behind it, and the gate
+  comes down carrying the next round's clues. Input stays locked until the gate is down.
 - `app/game/dailyPool.ts` contains the approved Daily runtime pool (`npm run state`). Each
   source word has three clues and nine approved candidates; a round deterministically
   presents six.

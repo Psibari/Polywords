@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -10,27 +10,60 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DailyGate from './DailyGate';
 import FeatherWall from './FeatherWall';
-import type { DailyAnswerCardProps } from './DailyAnswerCard';
+import {
+  DailyCastlePlaqueFace,
+  dailyCastlePlaqueStyle,
+  type DailyAnswerCardClaimOrigin,
+  type DailyAnswerCardProps,
+} from './DailyAnswerCard';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import {
-  resolveDailyCastleScale,
-} from '../ui/dailyCastleLayout';
+  DAILY_CASTLE_FLIGHT,
+  DAILY_CASTLE_FLIGHT_HANDOFF,
+  DAILY_CASTLE_GRID,
+  DAILY_CASTLE_OPENING,
+  DAILY_GATE_CLOSED,
+  DAILY_GATE_MAX_SINK,
+  DAILY_GATE_OPEN_TRAVEL,
+  resolveDailyCastleFrame,
+  resolveDailyCastleSlot,
+  resolveDailyGateClueRects,
+  toDailyCastleScreen,
+  type DailyCastleGrid,
+} from '../ui/dailyCastleScene';
 
-const CASTLE_ARCH = require('../../assets/images/dailycastle/castledeep2.png');
-// Mock 3's foreground provides the floor-to-parapet depth and the broad
-// wall face behind the six interactive answer plaques.
-const CASTLE_WALL = require('../../assets/images/dailycastle/cavlewall.png');
+// ARCHNEW (towers, arch, steps, floor) and the answer wall share one
+// 1290 × 2796 canvas and are always drawn at the same rect.
+const CASTLE_ARCH = require('../../assets/images/dailycastle/ARCHNEW.png');
+const CASTLE_WALL = require('../../assets/images/dailycastle/cornerwall.png');
 const FEATHER_WALL = require('../../assets/images/dailycastle/featherwall.png');
 const useDailyCastleTuning = __DEV__
   ? require('../dev/dailyCastleTuning').useDailyCastleTuning
   : null;
 
-const DEFAULTS = {
-  background: { scale: 1, x: 0, y: 0 },
-  wall: { scale: 1, x: 0, y: 0 },
-  gate: { scale: 1, x: 0, closedY: 0, openTravel: 266 },
-  grid: { x: 0, y: 0, cardWidth: 167, cardHeight: 62, columnGap: 12, rowGap: 12 },
-  clues: { x: 0, y: 0, width: 174, verticalGap: 66 },
+type Tuning = {
+  gate: { x: number; y: number };
+  grid: Omit<DailyCastleGrid, 'top'> & { x: number; y: number };
+  clues: { x: number; y: number; width: number };
+};
+
+const DEFAULTS: Tuning = {
+  gate: { x: 0, y: 0 },
+  grid: {
+    x: 0,
+    y: 0,
+    cardWidth: DAILY_CASTLE_GRID.cardWidth,
+    cardHeight: DAILY_CASTLE_GRID.cardHeight,
+    columnGap: DAILY_CASTLE_GRID.columnGap,
+    rowGap: DAILY_CASTLE_GRID.rowGap,
+  },
+  clues: { x: 0, y: 0, width: 0 },
+};
+
+export type DailyCastleFlight = {
+  label: string;
+  /** Window rect of the plaque at the moment it was released. */
+  origin: DailyAnswerCardClaimOrigin;
 };
 
 // Same three physical legs as the gauntlet stones: release from the wall,
@@ -48,7 +81,14 @@ type Props = {
   revealedCount: 1 | 2 | 3;
   solvedCount: number;
   roundKey: number;
-  onGateLayout: () => void;
+  /** The correct plaque being thrown into the gate, if any. */
+  flight: DailyCastleFlight | null;
+  /** 0 → 1 over the whole throw; DAILY_CASTLE_FLIGHT_HANDOFF is the handoff. */
+  flightProgress: Animated.Value;
+  /** 0 → 1 rise of the newest feather on the wall behind the gate. */
+  featherRise: Animated.Value;
+  /** Window y of the HUD's bottom edge; the first clue stays below it. */
+  hudBottom: number;
   children: React.ReactNode;
 };
 
@@ -231,120 +271,276 @@ function DailyCastlePlaqueSlot({
   );
 }
 
-/** One registered castle scene; only the gate and answer cards move. */
+/**
+ * One registered castle scene. The arch and wall never move; the gate, the
+ * feathers behind it and the answer plaques do.
+ *
+ * Layer order, back to front: sky (screen) → feather wall and feathers →
+ * plaque going in (back flight) → gate → arch → wall → plaques in the wall →
+ * plaque being thrown (front flight).
+ */
 export default function DailyCastleStage({
   gatePosition,
   clues,
   revealedCount,
   solvedCount,
   roundKey,
-  onGateLayout,
+  flight,
+  flightProgress,
+  featherRise,
+  hudBottom,
   children,
 }: Props) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotionPreference();
-  const background = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.background) : DEFAULTS.background;
-  const wall = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.wall) : DEFAULTS.wall;
-  const gate = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.gate) : DEFAULTS.gate;
-  const grid = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.grid) : DEFAULTS.grid;
-  const clueLayout = __DEV__ ? useDailyCastleTuning((s: typeof DEFAULTS) => s.clues) : DEFAULTS.clues;
-  // The new foreground is an independent 1182 × 2048 export. Register its
-  // parapet near the bottom of the gate instead of forcing the old shared
-  // 873 × 2048 arch/wall transform onto both pieces.
-  const widthScale = windowWidth / 390;
-  const archTop = -65 * widthScale - insets.top;
-  const archHeight = windowWidth * 2048 / 1033;
-  const wallHeight = windowWidth * 2048 / 1182;
-  const availableBottom = windowHeight - insets.bottom - 50;
-  const gridTop = Math.min(520 * widthScale, availableBottom - (3 * grid.cardHeight + 2 * grid.rowGap) * widthScale);
-  // On shorter phones the grid moves up to clear the action label. Bring the
-  // foreground partway with it so the first row still belongs to its wall.
-  const wallTop = 115 * widthScale + Math.min(0, (gridTop - 520 * widthScale) / 2) - insets.top;
-  const opening = { left: (windowWidth - 228 * widthScale) / 2 + gate.x * widthScale,
-    top: 150 * widthScale + gate.closedY * widthScale - insets.top,
-    width: 228 * widthScale * gate.scale, height: 266 * widthScale * gate.scale };
+  const tuning: Tuning = __DEV__
+    ? useDailyCastleTuning((s: Tuning) => s)
+    : DEFAULTS;
+
+  // Card origins arrive in window coordinates. The stage normally sits at the
+  // window origin; measuring keeps the flight honest if it ever does not.
+  const stageRef = useRef<View>(null);
+  const [stageOffset, setStageOffset] = useState({ x: 0, y: 0 });
+  const measureStage = useCallback(() => {
+    stageRef.current?.measureInWindow((x, y) => {
+      setStageOffset((prev) =>
+        prev.x === x && prev.y === y ? prev : { x, y },
+      );
+    });
+  }, []);
+
+  const grid: DailyCastleGrid = {
+    top: DAILY_CASTLE_GRID.top + tuning.grid.y,
+    cardWidth: tuning.grid.cardWidth,
+    cardHeight: tuning.grid.cardHeight,
+    columnGap: tuning.grid.columnGap,
+    rowGap: tuning.grid.rowGap,
+  };
+  const frame = resolveDailyCastleFrame({
+    windowWidth,
+    windowHeight,
+    bottomInset: insets.bottom,
+    hudBottom,
+    grid,
+  });
+  const s = frame.scale;
+  const sceneTop = frame.top - stageOffset.y;
+  const sceneLeft = -stageOffset.x;
+  const opening = toDailyCastleScreen(frame, DAILY_CASTLE_OPENING);
+  opening.x += sceneLeft;
+  opening.y -= stageOffset.y;
+
+  // Gate and clue rects relative to the opening / gate image that hold them.
+  const gateFrame = {
+    x: (DAILY_GATE_CLOSED.x - DAILY_CASTLE_OPENING.x + tuning.gate.x) * s,
+    y: (DAILY_GATE_CLOSED.y - DAILY_CASTLE_OPENING.y + tuning.gate.y) * s,
+    width: DAILY_GATE_CLOSED.width * s,
+    height: DAILY_GATE_CLOSED.height * s,
+  };
+  const clueRects = resolveDailyGateClueRects().map((rect) => {
+    const width = (tuning.clues.width || rect.width) * s;
+    return {
+      x: (rect.x - DAILY_GATE_CLOSED.x + tuning.clues.x) * s + (rect.width * s - width) / 2,
+      y: (rect.y - DAILY_GATE_CLOSED.y + tuning.clues.y) * s,
+      width,
+      height: rect.height * s,
+    };
+  });
 
   return (
-    <View pointerEvents="box-none" style={styles.stage}>
-      <Image
-        source={CASTLE_WALL}
-        style={[styles.layer, styles.castleWall, {
-          left: (windowWidth - windowWidth * wall.scale) / 2 + wall.x * widthScale,
-          top: wallTop + wall.y * widthScale,
-          width: windowWidth * wall.scale,
-          height: wallHeight * wall.scale,
-        }]}
-        resizeMode="contain"
-      />
+    <View
+      ref={stageRef}
+      onLayout={measureStage}
+      pointerEvents="box-none"
+      style={styles.stage}
+    >
       <Image
         source={CASTLE_ARCH}
         style={[styles.layer, styles.castleArch, {
-          left: (windowWidth - windowWidth * background.scale) / 2 + background.x * widthScale,
-          top: archTop + background.y * widthScale,
-          width: windowWidth * background.scale,
-          height: archHeight * background.scale,
+          left: sceneLeft,
+          top: sceneTop,
+          width: frame.width,
+          height: frame.height,
         }]}
-        resizeMode="contain"
+        resizeMode="stretch"
       />
-      <View style={[styles.opening, opening]}>
-          <Image
-            source={FEATHER_WALL}
-            style={StyleSheet.absoluteFill}
-            resizeMode="stretch"
+      <Image
+        source={CASTLE_WALL}
+        style={[styles.layer, styles.castleWall, {
+          left: sceneLeft,
+          top: sceneTop,
+          width: frame.width,
+          height: frame.height,
+        }]}
+        resizeMode="stretch"
+      />
+
+      <View pointerEvents="none" style={[styles.opening, {
+        left: opening.x,
+        top: opening.y,
+        width: opening.width,
+        height: opening.height,
+      }]}>
+        <Image
+          source={FEATHER_WALL}
+          style={StyleSheet.absoluteFill}
+          resizeMode="stretch"
+        />
+        <FeatherWall
+          featherCount={Math.min(solvedCount, 4)}
+          showGold={solvedCount === 5}
+          scale={s}
+          newestRise={featherRise}
+        />
+        {flight && (
+          <DailyCastleFlightPlaque
+            flight={flight}
+            progress={flightProgress}
+            layer="back"
+            frame={frame}
+            // Back layer lives inside the opening: window → opening-local.
+            offsetX={opening.x + stageOffset.x}
+            offsetY={opening.y + stageOffset.y}
           />
-          <View style={[styles.featherArea, { top: 24 * widthScale, height: 260 * widthScale }]}>
-            <FeatherWall
-              featherCount={Math.min(solvedCount, 4)}
-              showGold={solvedCount === 5}
-              scale={widthScale}
-            />
-          </View>
-          <View onLayout={onGateLayout} style={styles.gate}>
-            <DailyGate
-              gatePosition={gatePosition}
-              clues={clues}
-              revealedCount={revealedCount}
-              width={opening.width}
-              height={opening.width * 1597 / 1399}
-              openTravel={gate.openTravel * widthScale}
-              scale={widthScale}
-              clueX={clueLayout.x * widthScale}
-              clueY={clueLayout.y * widthScale}
-              clueWidth={clueLayout.width * widthScale}
-              clueGap={clueLayout.verticalGap * widthScale}
-            />
-          </View>
+        )}
+        <View style={styles.gate}>
+          <DailyGate
+            gatePosition={gatePosition}
+            clues={clues}
+            revealedCount={revealedCount}
+            frame={gateFrame}
+            clueRects={clueRects}
+            openTravel={DAILY_GATE_OPEN_TRAVEL * s}
+            maxSink={DAILY_GATE_MAX_SINK * s}
+            scale={s}
+          />
+        </View>
       </View>
 
       {React.Children.toArray(children).map((child, index) => {
         if (index >= 6) return null;
-        const cardWidth = grid.cardWidth * widthScale;
-        const cardHeight = grid.cardHeight * widthScale;
-        const gap = grid.columnGap * widthScale;
-        const left = (windowWidth - 2 * cardWidth - gap) / 2 + (index % 2) * (cardWidth + gap) + grid.x * widthScale;
-        const top = gridTop + Math.floor(index / 2) * (cardHeight + grid.rowGap * widthScale) + grid.y * widthScale - insets.top;
+        const slot = toDailyCastleScreen(frame, resolveDailyCastleSlot(grid, index));
         return (
           <View
             key={`slot-${roundKey}-${index}`}
             pointerEvents="box-none"
             style={[
               styles.cardSlot,
-              { left, top, width: cardWidth, height: cardHeight },
+              {
+                left: slot.x + sceneLeft + tuning.grid.x * s,
+                top: slot.y - stageOffset.y,
+                width: slot.width,
+                height: slot.height,
+              },
             ]}
           >
             <DailyCastlePlaqueSlot
                 child={React.isValidElement<DailyAnswerCardProps>(child)
-                  ? React.cloneElement(child, { castleWidth: cardWidth, castleHeight: cardHeight })
+                  ? React.cloneElement(child, { castleWidth: slot.width, castleHeight: slot.height })
                   : child}
-                castleScale={widthScale}
+                castleScale={s}
                 reduceMotion={reduceMotion}
                 roundKey={roundKey}
             />
           </View>
         );
       })}
+
+      {flight && (
+        <DailyCastleFlightPlaque
+          flight={flight}
+          progress={flightProgress}
+          layer="front"
+          frame={frame}
+          offsetX={stageOffset.x}
+          offsetY={stageOffset.y}
+        />
+      )}
     </View>
+  );
+}
+
+/**
+ * The thrown plaque. Two copies ride one progress value: the FRONT copy is
+ * drawn over the whole castle until the plaque is wholly inside the opening,
+ * then the BACK copy — inside the opening, under the gate — takes over at the
+ * identical position and carries it away into the wall. The gate is already
+ * raised by the handoff, so nothing covers either copy at the swap.
+ */
+function DailyCastleFlightPlaque({
+  flight,
+  progress,
+  layer,
+  frame,
+  offsetX,
+  offsetY,
+}: {
+  flight: DailyCastleFlight;
+  progress: Animated.Value;
+  layer: 'front' | 'back';
+  frame: ReturnType<typeof resolveDailyCastleFrame>;
+  /** Window position of this copy's parent. */
+  offsetX: number;
+  offsetY: number;
+}) {
+  const { origin } = flight;
+  const H = DAILY_CASTLE_FLIGHT_HANDOFF;
+  const handoff = {
+    x: DAILY_CASTLE_FLIGHT.handoff.x * frame.scale,
+    y: frame.top + DAILY_CASTLE_FLIGHT.handoff.y * frame.scale,
+  };
+  const end = {
+    x: DAILY_CASTLE_FLIGHT.end.x * frame.scale,
+    y: frame.top + DAILY_CASTLE_FLIGHT.end.y * frame.scale,
+  };
+  const startX = origin.x + origin.width / 2;
+  const startY = origin.y + origin.height / 2;
+
+  const translateX = progress.interpolate({
+    inputRange: [0, H, 1],
+    outputRange: [0, handoff.x - startX, end.x - startX],
+  });
+  const translateY = progress.interpolate({
+    inputRange: [0, H, 1],
+    outputRange: [0, handoff.y - startY, end.y - startY],
+  });
+  const scale = progress.interpolate({
+    inputRange: [0, H, 1],
+    outputRange: [1, DAILY_CASTLE_FLIGHT.handoffScale, DAILY_CASTLE_FLIGHT.endScale],
+  });
+  const opacity = layer === 'front'
+    ? progress.interpolate({
+        inputRange: [0, H - 0.001, H],
+        outputRange: [1, 1, 0],
+        extrapolate: 'clamp',
+      })
+    : progress.interpolate({
+        inputRange: [0, H - 0.001, H, H + (1 - H) * 0.35, 1],
+        outputRange: [0, 0, 1, 1, 0],
+        extrapolate: 'clamp',
+      });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.flight,
+        layer === 'front' ? styles.flightFront : styles.flightBack,
+        {
+          left: origin.x - offsetX,
+          top: origin.y - offsetY,
+          width: origin.width,
+          height: origin.height,
+          opacity,
+          transform: [{ translateX }, { translateY }, { scale }],
+        },
+      ]}
+    >
+      <View style={dailyCastlePlaqueStyle}>
+        <DailyCastlePlaqueFace label={flight.label} />
+      </View>
+    </Animated.View>
   );
 }
 
@@ -355,6 +551,14 @@ const styles = StyleSheet.create({
   layer: {
     position: 'absolute',
   },
+  castleArch: {
+    zIndex: 30,
+    elevation: 30,
+  },
+  castleWall: {
+    zIndex: 35,
+    elevation: 35,
+  },
   opening: {
     position: 'absolute',
     overflow: 'hidden',
@@ -363,29 +567,25 @@ const styles = StyleSheet.create({
   },
   gate: {
     ...StyleSheet.absoluteFill,
-    zIndex: 3,
-    elevation: 3,
-  },
-  featherArea: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  castleWall: {
-    // This export includes the two foreground rails. They must occlude the
-    // arch, while the separately layered gate stays visible in its opening.
-    zIndex: 35,
-    elevation: 35,
-  },
-  castleArch: {
-    zIndex: 30,
-    elevation: 30,
+    zIndex: 4,
+    elevation: 4,
   },
   cardSlot: {
     position: 'absolute',
     zIndex: 40,
     elevation: 40,
     overflow: 'visible',
+  },
+  flight: {
+    position: 'absolute',
+  },
+  flightFront: {
+    zIndex: 50,
+    elevation: 50,
+  },
+  flightBack: {
+    zIndex: 3,
+    elevation: 3,
   },
   recessSocket: {
     position: 'absolute',

@@ -75,7 +75,12 @@ import DailyAnswerCard, {
 import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
 import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
 import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
-import DailyCastleStage from '../components/DailyCastleStage';
+import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleStage';
+import DailyCastleEntryArt from '../components/DailyCastleEntryArt';
+import {
+  DAILY_CASTLE_FLIGHT,
+  DAILY_CASTLE_FLIGHT_HANDOFF,
+} from '../ui/dailyCastleScene';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
@@ -119,13 +124,6 @@ const DAILY_SCROLL_TRANSITION = {
   reducedRevealMs: 140,
 } as const;
 
-type DailyClueFrame = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
 type SubmittedDailyAnswer = {
   label: string;
   startX: number;
@@ -133,8 +131,6 @@ type SubmittedDailyAnswer = {
   width: number;
   height: number;
 };
-
-const CASTLE_ARCH = require('../../assets/images/dailycastle/castledeep2.png');
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 function toPerchReaction(
@@ -626,8 +622,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [dailyInitialized, setDailyInitialized] = useState(false);
   const [dailyStarting, setDailyStarting] = useState(false);
   const inputLockedRef = useRef(true);
-  const clueVaultRef = useRef<View>(null);
-  const clueFrameRef = useRef<DailyClueFrame | null>(null);
   const completingCandidateRef = useRef<string | null>(null);
   const pendingClaimCandidateRef = useRef<string | null>(null);
   const [claimPresentation, setClaimPresentation] = useState<
@@ -683,6 +677,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   // Gate position: 1 = fully down (showing clues), 0 = fully up (hidden)
   const gatePosition = useRef(new Animated.Value(1)).current;
+  // The correct plaque's throw into the gate (DailyCastleStage), and the
+  // feather that comes up on the wall behind the gate once it has gone in.
+  const [castleFlight, setCastleFlight] = useState<DailyCastleFlight | null>(null);
+  const flightProgress = useRef(new Animated.Value(0)).current;
+  const featherRise = useRef(new Animated.Value(1)).current;
+  // Window y of the HUD's bottom edge. The SafeAreaView sits at the window
+  // origin, so the HUD's own layout y already includes the top inset.
+  const [hudBottom, setHudBottom] = useState(0);
 
   const completedRef = useRef(false);
   const roundStartRef = useRef<number>(Date.now());
@@ -800,14 +802,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     });
   }
 
-  function measureClueTarget() {
-    requestAnimationFrame(() => {
-      clueVaultRef.current?.measureInWindow((x, y, width, height) => {
-        clueFrameRef.current = { x, y, width, height };
-      });
-    });
-  }
-
   // INIT
   useEffect(() => {
     async function init() {
@@ -898,11 +892,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         }).start();
       }
     }
-    const measureTimer = setTimeout(
-      measureClueTarget,
-      reduceMotion !== false ? 0 : 420,
-    );
-    return () => clearTimeout(measureTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayedDailySession?.currentRoundIndex]);
 
@@ -1009,6 +998,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     inkProgress.stopAnimation();
     inkProgress.setValue(0);
     setSubmittedAnswer(null);
+    flightProgress.stopAnimation();
+    flightProgress.setValue(0);
+    setCastleFlight(null);
+    featherRise.stopAnimation();
+    featherRise.setValue(1);
     setRevealSolvedCount(0);
     completingCandidateRef.current = null;
     setPhysicalClaimPhase('idle');
@@ -1036,6 +1030,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     }
   }
 
+  // Correct claim, one continuous physical beat:
+  //   the plaque is thrown up at the castle while the gate lifts →
+  //   it passes into the opening and goes in BEHIND the gate line →
+  //   it vanishes into the back wall and a feather comes up there →
+  //   hold on the feather → the gate comes down carrying the next
+  //   round's clues, and the next round's plaques come out of the wall.
   function runPhysicalCorrectTransition(
     candidate: string,
     origin: DailyAnswerCardClaimOrigin | null,
@@ -1043,52 +1043,90 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     clearCorrectTransitionTimers();
     setPhysicalClaimPhase('settling');
 
-    const gateRiseMs = reduceMotion !== false ? 120 : 400;
-    const gatePauseMs = reduceMotion !== false ? 80 : 500;
-    const gateDropMs = reduceMotion !== false ? 120 : 400;
+    const motion = reduceMotion === false;
+    const gateRiseMs = motion ? 400 : 120;
+    const flightMs = motion
+      ? DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs
+      : 0;
+    const featherRiseMs = motion ? 360 : 0;
+    const featherHoldMs = motion ? 520 : 200;
+    const gateDropMs = motion ? 400 : 120;
 
-    // Phase 1: Gate rises up (revealing feather wall behind)
-    const gateRiseComplete = () => {
+    // The plaque only flies with motion on and a measured release point;
+    // otherwise it simply leaves the wall and the gate beat carries the claim.
+    flightProgress.stopAnimation();
+    flightProgress.setValue(0);
+    featherRise.stopAnimation();
+    featherRise.setValue(0);
+    setCastleFlight(motion && origin ? { label: candidate, origin } : null);
+
+    gatePosition.stopAnimation();
+    Animated.timing(gatePosition, {
+      toValue: 0,
+      duration: gateRiseMs,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
+    if (motion && origin) {
+      Animated.sequence([
+        Animated.timing(flightProgress, {
+          toValue: DAILY_CASTLE_FLIGHT_HANDOFF,
+          duration: DAILY_CASTLE_FLIGHT.riseMs,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(flightProgress, {
+          toValue: 1,
+          duration: DAILY_CASTLE_FLIGHT.absorbMs,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+
+    // The plaque is gone into the wall: the feather comes up where it went.
+    const featherAtMs = Math.max(gateRiseMs, flightMs);
+    scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
       setPhysicalClaimPhase('landed');
       Haptics.cueAsync('dailyRodStop');
-      // Brief pause showing the feather on the wall
-      scheduleCorrectTransition(gateDropComplete, gatePauseMs);
-    };
+      if (featherRiseMs > 0) {
+        Animated.timing(featherRise, {
+          toValue: 1,
+          duration: featherRiseMs,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      } else {
+        featherRise.setValue(1);
+      }
+    }, featherAtMs);
 
-    // Phase 2: Return the gate before exposing the next round's clues.
-    const gateDropComplete = () => {
+    // The gate comes back down, and it is the new round. 'reward' switches the
+    // display to the committed session while the gate is still up, so the
+    // next clues are already painted on it as it drops.
+    const dropAtMs = featherAtMs + featherRiseMs + featherHoldMs;
+    scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
+      setCastleFlight(null);
+      setPhysicalClaimPhase('reward');
       Animated.timing(gatePosition, {
         toValue: 1,
         duration: gateDropMs,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-      }).start(() => {
-        if (completingCandidateRef.current !== candidate) return;
-        setPhysicalClaimPhase('reward');
+      }).start(({ finished }) => {
+        if (!finished || completingCandidateRef.current !== candidate) return;
         finishClaimPresentation(candidate);
         finishPhysicalCorrectTransition(candidate);
       });
-    };
+    }, dropAtMs);
 
-    // Let the committed card resolve upward before opening the gate.
-    scheduleCorrectTransition(() => {
-      Animated.timing(gatePosition, {
-        toValue: 0,
-        duration: gateRiseMs,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished) gateRiseComplete();
-      });
-    }, reduceMotion === false ? 380 : 120);
-
-    // Total timeout as safety net
-    const totalMs = (reduceMotion === false ? 380 : 120) + gateRiseMs + gatePauseMs + gateDropMs + 600;
+    // Safety net if the drop animation is interrupted.
     scheduleCorrectTransition(
       () => finishPhysicalCorrectTransition(candidate),
-      totalMs,
+      dropAtMs + gateDropMs + 600,
     );
   }
 
@@ -1225,6 +1263,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const currentRound =
     displayedDailySession?.rounds[displayedDailySession.currentRoundIndex] ?? null;
   const revealedCount = currentRound?.revealedClueCount ?? 1;
+  // A won challenge keeps its last round as current, so once the display
+  // switches to the committed session the gate would come back down wearing
+  // the final round's clues. It comes down blank instead, straight into
+  // Results.
+  const gateClues =
+    committedComplete && (claimPhase === 'reward' || claimPhase === 'revealing')
+      ? []
+      : currentRound?.word.clues ?? [];
   const hideCompletedClueUnderlay = shouldHideCompletedDailyClue(
     committedComplete,
     claimPhase,
@@ -1267,15 +1313,46 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         style={[styles.dailyPressureVeil, { opacity: dailyPressure }]}
       />
 
-      <SafeAreaView style={styles.content}>
+      {/* The castle sits outside the SafeAreaView on purpose: its art is
+          registered to the full screen, and the thrown plaque's origin comes
+          from measureInWindow. The SafeAreaView above it is box-none so the
+          plaques in the wall stay touchable. */}
+      {!isComplete && displayedDailySession && (
+        <DailyCastleStage
+          gatePosition={gatePosition}
+          clues={gateClues}
+          revealedCount={revealedCount}
+          solvedCount={revealSolvedCount || displayedDailySession.currentRoundIndex}
+          roundKey={displayedDailySession.currentRoundIndex}
+          flight={castleFlight}
+          flightProgress={flightProgress}
+          featherRise={featherRise}
+          hudBottom={hudBottom}
+        >
+          {currentRound &&
+            [...currentRound.candidates].map((candidate, index) => (
+              <DailyAnswerCard
+                key={candidate}
+                label={candidate}
+                state={cardStates.get(candidate) ?? 'idle'}
+                disabled={inputLocked}
+                onClaimStart={handleClaimStart}
+                onClaim={handleClaim}
+                testID={`daily-answer-${index}`}
+                enterFromRecess
+                castleArt
+                enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
+                roundKey={displayedDailySession.currentRoundIndex}
+              />
+            ))}
+        </DailyCastleStage>
+      )}
+
+      <SafeAreaView style={styles.content} pointerEvents="box-none">
       {isReadyToStart && (
         <View style={styles.startGate}>
           <View pointerEvents="none" style={styles.startArch}>
-            <Image
-              source={CASTLE_ARCH}
-              style={styles.startArchImage}
-              resizeMode="contain"
-            />
+            <DailyCastleEntryArt />
           </View>
           <View style={styles.startCard}>
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
@@ -1315,6 +1392,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       {!isComplete && displayedDailySession && (
         <>
           <Animated.View
+            onLayout={(e) => {
+              const { y, height } = e.nativeEvent.layout;
+              setHudBottom(y + height);
+            }}
             style={[
               styles.hudLayer,
               { transform: [{ translateX: hudShakeX }, { translateY: hudShakeY }] },
@@ -1330,32 +1411,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               featherPulse={featherPulse}
             />
           </Animated.View>
-
-          <DailyCastleStage
-            gatePosition={gatePosition}
-            clues={currentRound?.word.clues ?? []}
-            revealedCount={revealedCount}
-            solvedCount={revealSolvedCount || displayedDailySession.currentRoundIndex}
-            roundKey={displayedDailySession.currentRoundIndex}
-            onGateLayout={measureClueTarget}
-          >
-            {currentRound &&
-              [...currentRound.candidates].map((candidate, index) => (
-                <DailyAnswerCard
-                  key={candidate}
-                  label={candidate}
-                  state={cardStates.get(candidate) ?? 'idle'}
-                  disabled={inputLocked}
-                  onClaimStart={handleClaimStart}
-                  onClaim={handleClaim}
-                  testID={`daily-answer-${index}`}
-                  enterFromRecess
-                  castleArt
-                  enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
-                  roundKey={displayedDailySession.currentRoundIndex}
-                />
-              ))}
-          </DailyCastleStage>
 
           <Text style={styles.actionLabel}>
             {displayedDailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
@@ -1452,11 +1507,6 @@ const styles = StyleSheet.create({
     marginBottom: -20,
     zIndex: 1,
     overflow: 'hidden',
-  },
-  startArchImage: {
-    width: '100%',
-    aspectRatio: 1033 / 2048,
-    top: -80,
   },
   startCard: {
     width: '100%',

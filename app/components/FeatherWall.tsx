@@ -13,6 +13,13 @@ type Props = {
   showGold?: boolean;
   /** Uniform scale from the locked 430 × 932 reference phone. */
   scale?: number;
+  /**
+   * 0 → 1 rise of the newest feather (the last stone feather, or the gold one
+   * when `showGold`). The castle stage owns it so the feather comes up only
+   * after the claimed plaque has vanished into the wall. Omitted, every
+   * feather simply shows and the gold feather rises on its own.
+   */
+  newestRise?: Animated.Value;
 };
 
 /**
@@ -23,12 +30,14 @@ export default function FeatherWall({
   featherCount,
   showGold,
   scale = 1,
+  newestRise,
 }: Props) {
   const count = Math.max(0, Math.min(4, featherCount));
   const reduceMotion = useReducedMotionPreference();
   const goldRise = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (newestRise) return;
     if (!showGold) {
       goldRise.setValue(0);
       return;
@@ -39,7 +48,7 @@ export default function FeatherWall({
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [goldRise, reduceMotion, showGold]);
+  }, [goldRise, newestRise, reduceMotion, showGold]);
 
   return (
     <View pointerEvents="none" style={styles.root}>
@@ -50,17 +59,25 @@ export default function FeatherWall({
             { gap: DAILY_CASTLE_LAYOUT.stoneFeatherGap * scale },
           ]}
         >
-          {Array.from({ length: count }).map((_, i) => (
-            <Image
-              key={i}
-              source={STONE_FEATHER}
-              style={{
-                width: DAILY_CASTLE_LAYOUT.stoneFeather.width * scale,
-                height: DAILY_CASTLE_LAYOUT.stoneFeather.height * scale,
-              }}
-              resizeMode="contain"
-            />
-          ))}
+          {Array.from({ length: count }).map((_, i) => {
+            const feather = (
+              <Image
+                key={i}
+                source={STONE_FEATHER}
+                style={{
+                  width: DAILY_CASTLE_LAYOUT.stoneFeather.width * scale,
+                  height: DAILY_CASTLE_LAYOUT.stoneFeather.height * scale,
+                }}
+                resizeMode="contain"
+              />
+            );
+            if (!newestRise || showGold || i !== count - 1) return feather;
+            return (
+              <Animated.View key={i} style={riseStyle(newestRise, scale)}>
+                {feather}
+              </Animated.View>
+            );
+          })}
         </View>
       )}
 
@@ -68,15 +85,7 @@ export default function FeatherWall({
         <Animated.View
           style={[
             styles.featherRow,
-            {
-              opacity: goldRise,
-              transform: [{
-                translateY: goldRise.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [35 * scale, 0],
-                }),
-              }],
-            },
+            riseStyle(newestRise ?? goldRise, scale),
           ]}
         >
           <Image
@@ -88,6 +97,18 @@ export default function FeatherWall({
       )}
     </View>
   );
+}
+
+function riseStyle(progress: Animated.Value, scale: number) {
+  return {
+    opacity: progress,
+    transform: [{
+      translateY: progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [35 * scale, 0],
+      }),
+    }],
+  };
 }
 
 const styles = StyleSheet.create({

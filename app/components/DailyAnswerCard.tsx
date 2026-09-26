@@ -265,6 +265,14 @@ export default function DailyAnswerCard({
 
   useEffect(() => {
     if (state === 'correct') {
+      if (castleArt) {
+        // The castle stage flies a copy of this plaque from the exact spot it
+        // was released (DailyCastleStage's flight layers), so the one in the
+        // wall leaves in the same frame rather than fading beside its copy.
+        gripGlow.value = 0;
+        opacity.value = 0;
+        return;
+      }
       gripGlow.value = withTiming(0, { duration: dailyCardMaterial.motion.pressOutMs });
       rotation.value = 0;
       translateY.value = withTiming(reduceMotion === false ? -130 : -20, {
@@ -488,20 +496,7 @@ export default function DailyAnswerCard({
       >
         {castleArt ? (
           <View style={styles.castlePlaque}>
-            <Image
-              source={CASTLE_ANSWER_PLAQUE}
-              resizeMode="stretch"
-              style={StyleSheet.absoluteFill}
-            />
-            <View pointerEvents="none" style={styles.castlePlaqueBevel} />
-            <Text
-              style={styles.castlePlaqueLabel}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-            >
-              {label.toUpperCase()}
-            </Text>
+            <DailyCastlePlaqueFace label={label} />
             <Animated.View
               pointerEvents="none"
               style={[styles.gripGlow, gripGlowStyle]}
@@ -543,6 +538,29 @@ export default function DailyAnswerCard({
         )}
       </Animated.View>
     </RNAnimated.View>
+  );
+}
+
+// The castle plaque's art and label. Shared by the card in the wall and the
+// copy DailyCastleStage flies into the gate, so the two can never differ.
+export function DailyCastlePlaqueFace({ label }: { label: string }) {
+  return (
+    <>
+      <Image
+        source={CASTLE_ANSWER_PLAQUE}
+        resizeMode="stretch"
+        style={StyleSheet.absoluteFill}
+      />
+      <View pointerEvents="none" style={styles.castlePlaqueBevel} />
+      <Text
+        style={styles.castlePlaqueLabel}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+      >
+        {label.toUpperCase()}
+      </Text>
+    </>
   );
 }
 
@@ -681,3 +699,6 @@ const styles = StyleSheet.create({
     backgroundColor: dailyCardMaterial.disabledOverlay,
   },
 });
+
+/** Container style for DailyCastlePlaqueFace. */
+export const dailyCastlePlaqueStyle = styles.castlePlaque;

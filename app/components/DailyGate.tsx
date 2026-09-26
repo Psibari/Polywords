@@ -7,46 +7,52 @@ import {
   View,
 } from 'react-native';
 import { FONTS } from '../constants/fonts';
+import type { DailyCastleRect } from '../ui/dailyCastleScene';
 
 const GATE = require('../../assets/images/dailycastle/gate2.png');
 
 type Props = {
-  /** 0 = gate fully raised (hidden), 1 = gate fully lowered (showing clues) */
+  /**
+   * 1 = closed (clues showing), 0 = raised out of the opening. Values above 1
+   * sink the gate past closed for the wrong-claim slam, capped at `maxSink`.
+   */
   gatePosition: Animated.Value;
   clues: string[];
   revealedCount: 1 | 2 | 3;
-  width: number;
-  height: number;
+  /** Gate image rect, relative to the opening that clips it. */
+  frame: DailyCastleRect;
+  /** Clue rects, relative to the gate image. One per plank. */
+  clueRects: DailyCastleRect[];
   openTravel: number;
+  maxSink: number;
+  /** Screen points per canvas point. */
   scale: number;
-  clueX?: number;
-  clueY?: number;
-  clueWidth?: number;
-  clueGap?: number;
 };
 
+// gatePosition 1.06 is the deepest point of the wrong-claim slam; it maps to
+// the full allowed sink so the board's top edge never drops below the crown of
+// the opening.
+const SLAM_DEPTH_INPUT = 1.06;
+
 /**
- * The stone gate that drops down like a portcullis.
- * The canvas is locked to the Daily castle opening; it does not infer its
- * height from the source PNG anymore.
+ * The castle's portcullis. Clues are painted on its planks and travel with it,
+ * so a raised gate carries the old clues out of sight and a lowered gate
+ * brings the next round's clues down.
  */
 export default function DailyGate({
   gatePosition,
   clues,
   revealedCount,
-  width,
-  height,
+  frame,
+  clueRects,
   openTravel,
+  maxSink,
   scale,
-  clueX = 0,
-  clueY = 0,
-  clueWidth,
-  clueGap,
 }: Props) {
   const translateY = gatePosition.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-openTravel, 0],
-    extrapolate: 'extend',
+    inputRange: [0, 1, SLAM_DEPTH_INPUT],
+    outputRange: [-openTravel, 0, maxSink],
+    extrapolate: 'clamp',
   });
 
   return (
@@ -54,69 +60,64 @@ export default function DailyGate({
       style={[
         styles.root,
         {
-          width,
-          height,
+          left: frame.x,
+          top: frame.y,
+          width: frame.width,
+          height: frame.height,
           transform: [{ translateY }],
         },
       ]}
     >
-      <Image
-        source={GATE}
-        style={[styles.gateImage, { width, height }]}
-        resizeMode="stretch"
-      />
+      <Image source={GATE} style={styles.gateImage} resizeMode="stretch" />
 
-      <View
-        style={styles.clueOverlay}
-      >
-        {clues.slice(0, revealedCount).map((clue, index) => {
-          const isLast = index === revealedCount - 1;
-          return (
-            <View
-              key={`${clue}-${index}`}
+      {clues.slice(0, revealedCount).map((clue, index) => {
+        const rect = clueRects[index];
+        if (!rect) return null;
+        const isLatest = index === revealedCount - 1;
+        return (
+          <View
+            key={`${index}-${clue}`}
+            style={[
+              styles.clueSlot,
+              {
+                left: rect.x,
+                top: rect.y,
+                width: rect.width,
+                height: rect.height,
+              },
+            ]}
+          >
+            <Text
               style={[
-                styles.clueSlot,
+                styles.clueText,
                 {
-                  top: 28 * scale + clueY + index * (clueGap ?? 76 * scale),
-                  height: 68 * scale,
-                  left: (width - (clueWidth ?? width - 28 * scale)) / 2 + clueX,
-                  width: clueWidth ?? width - 28 * scale,
+                  fontSize: 17 * scale,
+                  lineHeight: 18.5 * scale,
+                  letterSpacing: 0.5 * scale,
                 },
+                !isLatest && styles.clueTextEarlier,
               ]}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
-              <Text
-                style={[
-                  styles.clueText,
-                  {
-                    fontSize: 24 * scale,
-                    lineHeight: 27 * scale,
-                    letterSpacing: 0.6 * scale,
-                  },
-                  !isLast && { color: 'rgba(255,247,214,0.92)' },
-                ]}
-                numberOfLines={3}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >
-                {clue.toUpperCase()}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
+              {clue.toUpperCase()}
+            </Text>
+          </View>
+        );
+      })}
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    overflow: 'visible',
+    position: 'absolute',
   },
   gateImage: {
     ...StyleSheet.absoluteFill,
-  },
-  clueOverlay: {
-    ...StyleSheet.absoluteFill,
+    width: '100%',
+    height: '100%',
   },
   clueSlot: {
     position: 'absolute',
@@ -129,5 +130,11 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     textAlign: 'center',
     width: '100%',
+    textShadowColor: 'rgba(5,4,11,0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  clueTextEarlier: {
+    color: 'rgba(255,247,214,0.86)',
   },
 });

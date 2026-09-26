@@ -60,34 +60,33 @@ assert.equal(
   'Daily replay override must not be duplicated in Settings',
 );
 
-// ── Independent castle calibration and fixed answer layout ───────────
+// ── Castle calibration and registered castle art ──────────────────
 {
   const unregisterTsx = register();
   const { DAILY_CASTLE_TUNING_DEFAULTS, useDailyCastleTuning } = await import(castleTuningUrl);
   await unregisterTsx();
-  assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['background', 'wall', 'gate', 'grid', 'clues']);
-  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 167);
-  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 62);
-  useDailyCastleTuning.getState().setValue('gate', 'closedY', 10);
-  assert.equal(useDailyCastleTuning.getState().gate.closedY, 10);
-  assert.equal(useDailyCastleTuning.getState().background.y, 0);
+  // Arch and wall share one export canvas, so neither is tunable on its own.
+  assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['gate', 'grid', 'clues']);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 184);
+  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 64);
+  useDailyCastleTuning.getState().setValue('gate', 'y', 10);
+  assert.equal(useDailyCastleTuning.getState().gate.y, 10);
+  assert.equal(useDailyCastleTuning.getState().grid.x, 0);
   useDailyCastleTuning.getState().reset();
-  assert.equal(useDailyCastleTuning.getState().gate.closedY, 0);
+  assert.equal(useDailyCastleTuning.getState().gate.y, 0);
 }
 
-assert.ok(castleStageSource.includes('dailycastle/castledeep2.png'));
-assert.ok(castleStageSource.includes('dailycastle/cavlewall.png'));
+assert.ok(castleStageSource.includes('dailycastle/ARCHNEW.png'));
+assert.ok(castleStageSource.includes('dailycastle/cornerwall.png'));
 assert.ok(readFileSync(new URL('../components/DailyGate.tsx', import.meta.url), 'utf8').includes('dailycastle/gate2.png'));
-assert.ok(!castleStageSource.includes('dailycastle/3darch5.png'));
-assert.ok(!castleStageSource.includes('dailycastle/fullarchrev5.png'));
+for (const retired of ['castledeep2.png', 'cavlewall.png', '3darch5.png', 'fullarchrev5.png']) {
+  assert.ok(!castleStageSource.includes(retired), `castle stage must not use retired art ${retired}`);
+  assert.ok(!dailyScreenSource.includes(retired), `Daily screen must not use retired art ${retired}`);
+}
 assert.ok(castleStageSource.includes('if (index >= 6) return null'));
-assert.ok(castleStageSource.includes('index % 2'));
-assert.ok(castleStageSource.includes('Math.floor(index / 2)'));
-assert.ok(castleStageSource.includes('resizeMode="contain"'));
-assert.ok(castleTuningPanelSource.includes('CASTLE ARCH'));
-assert.ok(castleTuningPanelSource.includes('CASTLE WALL'));
 assert.ok(castleTuningPanelSource.includes('ANSWER GRID'));
-assert.ok(castleTuningPanelSource.includes('OPEN TRAVEL'));
+assert.ok(!castleTuningPanelSource.includes('CASTLE ARCH'));
+assert.ok(!castleTuningPanelSource.includes('CASTLE WALL'));
 assert.ok(dailyScreenSource.includes('CASTLE TUNE'));
 assert.ok(dailyScreenSource.includes('DailyCastleTuningPanel'));
 
