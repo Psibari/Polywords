@@ -31,7 +31,7 @@ PLANK_PITCH_SRC = 167.4
 PLANK_COUNT = 8
 BOARD_X_SRC = (107, 1248)
 PT_PER_SRC = 52 / PLANK_PITCH_SRC   # DAILY_GATE_PLANK_PT / plankPitchSrc
-SEAM_PT = 3.5                       # groove thickness, canvas pt (Pete: dark and a little thicker)
+SEAM_PT = 2.5                       # groove thickness, canvas pt (Pete picked 2.5 over 3.5, 2026-09-26)
 SEAM_RGB = (10, 4, 30)              # near background-deep, a shade of the wood's own hue
 SEAM_EDGE_SRC = 2.5                 # soft falloff each side, source px
 
