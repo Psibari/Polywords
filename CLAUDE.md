@@ -150,12 +150,13 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   lines (`balanceDailyClue`). Never gold seams (too busy). Don't change the door, its tint,
   the seams or the clue size without Pete reopening it. The castle has three steps: the build
   script removes the top one and extends the door into its place.
-- Answer blocks (Pete, 2026-09-27): flush in the wall, marked only by gold mortar
+- **Answer blocks: LOCKED (Pete, device-approved 2026-09-27).** Flush in the wall, marked only by gold mortar
   (`answerplaque_stone.png`); pressed, the block pops out and `answerblock_top.png` grows
   above it (`DailyAnswerCard`); pulled or wrong, it leaves the recess cut into the wall art.
   New rounds slide into the recesses (`DailyCastlePlaqueSlot`). With no blocks in play
   (entry, Results) the stage draws six blank blocks. The blocks fill their panels one
-  `DAILY_ANSWER_MORTAR_PX` in: the wall script cuts the recesses by the same rule.
+  `DAILY_ANSWER_MORTAR_PX` in: the wall script cuts the recesses by the same rule. Don't change
+  their look or behaviour without Pete reopening it.
 - The action label is placed from the screen bottom, not the inset (absolute children
   ignore the SafeAreaView's padding): `dailyActionLabelBottom` (10 pt, 4 pt with no home
   bar, so a 375 x 667 phone fits) is shared by the label and the grid's clearance.
