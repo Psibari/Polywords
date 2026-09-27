@@ -131,7 +131,10 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
 - The castle is cartoon art to match Polly (Pete, 2026-09-26). `build_daily_castle.py` builds
   it from `tools/art/source/castle_cartoon_src.png`: golds remapped to the game's, arch
   centred, straight sides stretched for the clue planks, opening cut out, measurements
-  printed. The old painted `ARCHNEW.png` is no longer drawn; only the tunnel script still reads it.
+  printed. The old painted `ARCHNEW.png` is deleted.
+- The tunnel behind the gate is cartoon too (Pete, 2026-09-27): `build_daily_tunnel.py` draws
+  stepped stone rings at the opening's exact size, narrowing to a lit far opening at the
+  throw's end point (`DAILY_CASTLE_FLIGHT.end`); move both together.
 - **Answer wall: LOCKED (Pete, device-approved 2026-09-26).** Pete's cartoon design, drawn by
   `build_daily_answer_wall.py`: slate-violet frame with strong lit and shadow edges and black
   outlines, no cracks; each panel is black mortar with three block recesses (since 2026-09-27). It prints the

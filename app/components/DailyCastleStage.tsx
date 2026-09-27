@@ -43,8 +43,8 @@ const CASTLE_ARCH = require('../../assets/images/dailycastle/castle_cartoon.png'
 // cartoon wall (slate frame), each panel black mortar with three block
 // recesses. The answer blocks sit flush over the recesses.
 const CASTLE_WALL = require('../../assets/images/dailycastle/answerwall_framed.png');
-// What shows behind the raised gate: a stone tunnel receding to a lit far
-// opening, built by tools/art/build_daily_tunnel.py. The thrown block flies
+// What shows behind the raised gate: a cartoon stone tunnel receding to a lit
+// far opening, drawn by tools/art/build_daily_tunnel.py. The thrown block flies
 // down it. It replaced the old feather wall.
 const BACK_TUNNEL = require('../../assets/images/dailycastle/tunnel.png');
 // A block with no word: the wall looks whole on entry and Results (Pete,
