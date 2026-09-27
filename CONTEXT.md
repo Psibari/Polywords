@@ -62,8 +62,8 @@ Daily castle (on `daily-castle-test`):
    castle is now cartoon art (castle B, `castle_cartoon.png`) so it matches Polly, and so is the
    door (indigo planks, Pete's tint; locked), the answer wall (Pete's design, slate frame;
    locked; its panels became block recesses on 2026-09-27) and the answer blocks (Pete's
-   flush gold-mortared blocks; locked 2026-09-27) and the tunnel (drawn by script,
-   2026-09-27; not yet device-checked). No painted art is left on the Daily screen. Sharper
+   flush gold-mortared blocks; locked 2026-09-27) and the tunnel (drawn by script;
+   locked 2026-09-27). No painted art is left on the Daily screen. Sharper
    castle: re-export B at full size from Magnific (the build used Pete's 864 px screen copy).
 2. Device check of the gold-coin moment: chime volume, Success haptic, pause length, glow
    strength.
