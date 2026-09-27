@@ -134,7 +134,8 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   it from `tools/art/source/castle_cartoon_src.png`: golds remapped to the game's, arch
   centred, straight sides stretched for the clue planks, opening cut out, measurements
   printed. The old painted `ARCHNEW.png` is deleted.
-- **Tunnel: LOCKED (Pete, device-approved 2026-09-27).** Cartoon like the rest: `build_daily_tunnel.py` draws
+- **Tunnel: LOCKED (Pete, device-approved 2026-09-27; re-locked with the castle's purple and
+  gold light the same day).** Cartoon like the rest: `build_daily_tunnel.py` draws
   stepped stone rings in the castle's purple at the opening's exact size, narrowing to a far
   opening lit gold (Pete, 2026-09-27) at the
   throw's end point (`DAILY_CASTLE_FLIGHT.end`); move both together. Don't change it without
