@@ -20,13 +20,10 @@ import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
-import { DailyTreeSceneDevViewer } from '../components/DailyTreeSceneDevViewer';
-import { DAILY_TREE_SCENE_ENABLED } from '../components/DailyTreeScene';
 // Settings, not the Daily screen: app/screens/dailyDevControls.test.mjs
 // forbids DailyChallengeScreen from wiring this panel (it used to float over
 // the answer-card grid there). The tuning store is plain module state, so
 // values set here are still in force when Daily is opened afterwards.
-import DailyScrollTuningPanel from '../dev/DailyScrollTuningPanel';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
@@ -103,8 +100,6 @@ export default function SettingsScreen({ navigation }: Props) {
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
   const [showPollyCrown, setShowPollyCrown] = useState(false);
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
-  const [showDailyScrollTuning, setShowDailyScrollTuning] = useState(false);
-  const [showDailyTreeScene, setShowDailyTreeScene] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -457,30 +452,6 @@ export default function SettingsScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowDailyScrollTuning(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Daily Scroll Tuning</Text>
-                  <Text style={styles.rowNote}>Scroll height, header, card height, rod nudge</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-              {DAILY_TREE_SCENE_ENABLED && (
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setShowDailyTreeScene(true)}
-                  style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                >
-                  <View style={styles.rowTextWrap}>
-                    <Text style={styles.rowLabel}>Daily Tree Scene</Text>
-                    <Text style={styles.rowNote}>Preview the tree layout, static (no game state)</Text>
-                  </View>
-                  <Text style={styles.chevron}>›</Text>
-                </Pressable>
-              )}
             </ImageBackground>
           </View>
         )}
@@ -528,16 +499,6 @@ export default function SettingsScreen({ navigation }: Props) {
           <PollyFaceRigDevViewer
             onClose={() => setShowPollyFaceRig(false)}
             visible={showPollyFaceRig}
-          />
-          {DAILY_TREE_SCENE_ENABLED && (
-            <DailyTreeSceneDevViewer
-              onClose={() => setShowDailyTreeScene(false)}
-              visible={showDailyTreeScene}
-            />
-          )}
-          <DailyScrollTuningPanel
-            onClose={() => setShowDailyScrollTuning(false)}
-            visible={showDailyScrollTuning}
           />
         </>
       )}

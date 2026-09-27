@@ -29,7 +29,6 @@ import {
 import DailyCardFace from './ui/DailyCardFace';
 import { CLAIM_ONLY_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
-import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
 import {
   DAILY_CASTLE_LAYOUT,
   resolveDailyCastleScale,
@@ -79,6 +78,11 @@ export type DailyAnswerCardProps = {
   recessProgress?: RNAnimated.Value;
 };
 
+// The pre-castle flat card's height (castleArt false). The Daily screen always
+// draws castle blocks; the flat card is scroll-era code left for its own
+// cleanup (CONTEXT Next Work).
+const LEGACY_CARD_HEIGHT = 64;
+
 const CLAIM_THRESHOLD = -80;
 const MOVE_THRESHOLD = 4;
 
@@ -118,12 +122,6 @@ export default function DailyAnswerCard({
   const reduceMotion = useReducedMotionPreference();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const castleScale = resolveDailyCastleScale(windowWidth, windowHeight);
-  // DEV-ONLY (app/dev/dailyScrollTuning.ts) — overrides entryShell's default
-  // 64. The flying/landing card in QuillScrollPanel is sized from this same
-  // shell's own measureInWindow() result (see publishClaim below and
-  // createDailySubmittedAnswerLayout), so it tracks this override
-  // automatically rather than needing a separate wire-up.
-  const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
   const entryScale = useRef(new RNAnimated.Value(1)).current;
@@ -523,7 +521,7 @@ export default function DailyAnswerCard({
         {
           height: castleArt
             ? castleHeight ?? DAILY_CASTLE_LAYOUT.card.height * castleScale
-            : cardHeight,
+            : LEGACY_CARD_HEIGHT,
         },
         castleArt && {
           width: castleWidth ?? DAILY_CASTLE_LAYOUT.card.width * castleScale,
@@ -669,38 +667,9 @@ export function DailyCastlePlaqueFace({
   );
 }
 
-// The claimed card in flight, and the chrome that dissolves off it once it
-// lands. `showLabel` is false wherever DailyInkedWord is rendering the word
-// instead: the word must exist as ONE node for the whole beat, so the card
-// contributes only its rim and face and never a second copy of the text.
-export function DailySubmittedAnswerCard({
-  label,
-  showLabel = true,
-}: {
-  label: string;
-  showLabel?: boolean;
-}) {
-  return (
-    <View style={[styles.shell, styles.shellCorrect]} pointerEvents="none">
-      <LinearGradient
-        colors={rimColors('correct')}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.rim}
-      >
-        <View style={styles.face}>
-          {showLabel && <DailyCardFace label={label} />}
-          <View style={styles.correctOverlay} />
-        </View>
-      </LinearGradient>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   entryShell: {
-    // height comes from cardHeight (see render) — DEV-ONLY tuning default is
-    // 64, matching this shell's old hardcoded value.
+    // height: the castle block's slot, or LEGACY_CARD_HEIGHT (see render).
     width: '47%',
     overflow: 'visible',
   },

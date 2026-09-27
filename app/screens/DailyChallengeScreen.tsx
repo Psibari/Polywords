@@ -6,7 +6,6 @@ import {
   AppState,
   Easing,
   Image,
-  ImageBackground,
   Pressable,
   ScrollView,
   Share,
@@ -36,7 +35,6 @@ import {
   isDailyClaimInputLocked,
   resolveDailyActiveElapsedMs,
   selectDailyDisplaySession,
-  shouldHideCompletedDailyClue,
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
@@ -72,9 +70,6 @@ import DailyAnswerCard, {
   DAILY_CARD_TIMING,
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
-import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
-import { DAILY_CLUE_TYPE } from '../components/dailyScrollLayout';
-import { useDailyScrollTuning } from '../dev/dailyScrollTuning';
 import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleStage';
 import { type DailyCoinRise } from '../components/DailyFloorCoins';
 import {
@@ -98,41 +93,6 @@ const DailyCastleTuningPanel = __DEV__
 
 const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
-// Full corrected-claim sequence, settle through next-clue-visible:
-// settle 460 -> landed 140 -> ink 350 -> ink hold 400 -> cover 560 ->
-// reward 420 -> reveal 420 = 2750ms, up from 2240ms before this pass.
-// landedHoldMs exists so the card reads as a card — leather, gold rim,
-// sitting on the parchment — before it transforms; dropping it to 0 would
-// start the ink transform before the player's eye registers what landed,
-// which is the entire point of this task. It was cut from 240 to 140
-// because 240 landed + 350 ink + 400 ink-hold (~990ms) left the card just
-// sitting there too long; 140 keeps a recognition beat without the dead
-// air. This total is the top candidate for a trim once this is felt on
-// device.
-const DAILY_SCROLL_TRANSITION = {
-  settleMs: 460,
-  landedHoldMs: 140,
-  inkMs: 350,
-  inkHoldMs: 400,
-  coverDownMs: 560,
-  rewardHoldMs: 420,
-  revealMs: 420,
-  reducedSettleMs: 180,
-  reducedLandedHoldMs: 120,
-  reducedInkMs: 0,
-  reducedInkHoldMs: 120,
-  reducedCoverDownMs: 140,
-  reducedRewardHoldMs: 180,
-  reducedRevealMs: 140,
-} as const;
-
-type SubmittedDailyAnswer = {
-  label: string;
-  startX: number;
-  startY: number;
-  width: number;
-  height: number;
-};
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 function dailyGateRiseMs(motion: boolean): number {
@@ -191,12 +151,8 @@ function DailyHUD({
 }) {
   return (
     <View style={hud.row}>
-      {/* The mode's rule folds into the HUD row under the DAILY #<n> label.
-          The separate DAILY CHALLENGE header block that used to carry it is
-          behind headerVisible (default off, Pete's A/B), so without this the
-          central rule of the mode appeared nowhere on the play screen. Same
-          colour and type treatment the header block gives this exact line —
-          no new colour. */}
+      {/* The mode's rule sits in the HUD row under the DAILY #<n> label, so
+          the central rule of the mode is always on the play screen. */}
       <View style={hud.labelStack}>
         <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
         <Text style={hud.rule}>{DAILY_CLUE_RULE}</Text>
@@ -236,163 +192,6 @@ function DailyHUD({
   );
 }
 
-// -----------------------------------------
-// ClueStage — sequential clue-reveal text, rendered onto QuillScrollPanel
-// -----------------------------------------
-function ClueStage({
-  clues,
-  revealedCount,
-  contracted,
-}: {
-  clues: [string, string, string];
-  revealedCount: 1 | 2 | 3;
-  // True for 'settling' | 'landed' | 'inking' | 'covering' — from the
-  // moment the claim is committed, not from 'inking'. The memory clues
-  // UNMOUNT (not merely fade) the instant this flips true, which only
-  // reclaims real layout height if it happens during the 460ms card
-  // flight: that is the one moment the reflow is invisible, because the
-  // player's eye is tracking the moving card rather than the clue stack.
-  // Waiting until 'inking' would put the reflow directly against the ink
-  // transform, competing for the same attention. The active clue (this
-  // round's winner) is untouched: only clues below activeIndex unmount,
-  // and contracted only ever coincides with a state where the active clue
-  // itself is about to be hidden by the caller anyway (
-  // hideCompletedClueUnderlay / the round unmounting).
-  contracted?: boolean;
-}) {
-  const reduceMotion = useReducedMotionPreference();
-  const clue1Progress = useRef(new Animated.Value(0)).current;
-  const clue2Progress = useRef(new Animated.Value(0)).current;
-  const clue3Progress = useRef(new Animated.Value(0)).current;
-  const clueProgresses = [clue1Progress, clue2Progress, clue3Progress];
-  const activeIndex = revealedCount - 1;
-  const clueKey = clues.join('|');
-  const prevRevealedRef = useRef(revealedCount);
-
-  useEffect(() => {
-    // Haptic when a new clue is revealed (not on mount)
-    if (revealedCount > prevRevealedRef.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
-    prevRevealedRef.current = revealedCount;
-
-    clueProgresses.forEach((progress, index) => {
-      progress.stopAnimation();
-
-      if (index < activeIndex) {
-        progress.setValue(2);
-        return;
-      }
-
-      if (index > activeIndex) {
-        progress.setValue(0);
-        return;
-      }
-
-      if (reduceMotion !== false) {
-        progress.setValue(1);
-        return;
-      }
-
-      progress.setValue(0);
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 360,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealedCount, clueKey, reduceMotion]);
-
-  // The memory clues have done their job once the answer is known — the
-  // inked word needs their room. This is a SEPARATE effect from the one
-  // above: it only ever nudges progress forward from 2 to a new stop (3)
-  // on the memory clues, and must not disturb the active clue's own
-  // reveal animation or reset anything when contracted goes false again
-  // (the round-change effect above already resets everything for the
-  // next round).
-  useEffect(() => {
-    if (!contracted) return;
-    clueProgresses.forEach((progress, index) => {
-      if (index >= activeIndex) return;
-      if (reduceMotion !== false) {
-        progress.setValue(3);
-        return;
-      }
-      Animated.timing(progress, {
-        toValue: 3,
-        duration: 300,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contracted, activeIndex, reduceMotion]);
-
-  return (
-    <>
-      {clues.map((clue, index) => {
-        if (index > activeIndex) return null;
-        // Unmount, not fade: an opacity-only fade animates but reclaims no
-        // layout height, which is exactly what made the stack "contract"
-        // in name only. This return is unconditional on `contracted` — it
-        // does not wait for the progress-3 animation above to finish —
-        // because the whole point is for the removal to land inside the
-        // card's flight window, not to be seen happening.
-        if (contracted && index < activeIndex) return null;
-        const progress = clueProgresses[index];
-        const opacity = progress.interpolate({
-          inputRange: [0, 0.22, 1, 2, 3],
-          outputRange: [0, 1, 1, 0.9, 0],
-        });
-        // Both extended to a 3 stop so neither extrapolates past input 2
-        // now that progress can reach 3 (see the effect above). Held flat
-        // at the same value as input 2: these clues unmount immediately
-        // once contracted (see the early return above), so in practice
-        // this animation is rarely seen playing out — the stop exists so
-        // the interpolation itself has no undefined behavior past 2, not
-        // because the flat tail is expected to be visible.
-        // Every SETTLED state is exactly 1. A fractional scale on text
-        // rasterises the glyphs off the pixel grid, which reads as soft,
-        // slightly doubled type — device-reported as "blurry, like two
-        // pieces of text on top of each other". The memory clues sat at
-        // progress 2 and so rendered permanently at 0.98.
-        // Scale is now only ever used transiently, for the arrival pop
-        // between 0 and 1; hierarchy is carried by the 23/17 size step and
-        // the opacity step, which cost no sharpness.
-        const scale = progress.interpolate({
-          inputRange: [0, 0.22, 1, 2, 3],
-          outputRange: [1, 1.025, 1, 1, 1],
-        });
-        const translateY = progress.interpolate({
-          inputRange: [0, 0.22, 2, 3],
-          outputRange: [8, 0, 0, 0],
-        });
-
-        return (
-          <Animated.Text
-            key={`${clue}-${index}`}
-            style={[
-              styles.clueText,
-              index < activeIndex && styles.clueTextMemory,
-              index === activeIndex && styles.clueTextLast,
-              {
-                opacity,
-                transform: [{ translateY }, { scale }],
-              },
-            ]}
-            numberOfLines={DAILY_CLUE_TYPE.maxLines}
-          >
-            {clue.toUpperCase()}
-          </Animated.Text>
-        );
-      })}
-    </>
-  );
-}
-
-// -----------------------------------------
 // Daily answer-card control lives in components/DailyAnswerCard.
 // -----------------------------------------
 // -----------------------------------------
@@ -595,16 +394,6 @@ type Props = { navigation: any };
 export default function DailyChallengeScreen({ navigation }: Props) {
   const reduceMotion = useReducedMotionPreference();
   const insets = useSafeAreaInsets();
-  // DEV-ONLY (app/dev/dailyScrollTuning.ts) — the DAILY CHALLENGE header
-  // restates DAILY #<n> in the HUD directly above it, and cutting it returns
-  // ~45pt to the scroll. Kept behind a toggle rather than deleted so Pete can
-  // compare both on device; the loser goes when the values are hard-coded.
-  const headerVisible = useDailyScrollTuning((s) => s.headerVisible);
-  // DEV-ONLY (app/dev/dailyScrollTuning.ts) — also threaded into
-  // createDailySubmittedAnswerLayout's fallbackHeight below so a lost
-  // DailyAnswerCard measurement race flies a card sized like the tuned grid
-  // instead of the pre-tuning 64 default.
-  const cardHeight = useDailyScrollTuning((s) => s.cardHeight);
   const dailySession = useGameStore((s) => s.dailySession);
   const dailyResult = useGameStore((s) => s.dailyResult);
   const dailyLastClaimResult = useGameStore((s) => s.dailyLastClaimResult);
@@ -647,13 +436,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const claimPresentationRef = useRef<
     DailyClaimPresentation<DailySession> | null
   >(null);
-  const intakeScale = useRef(new Animated.Value(1)).current;
-  const submittedProgress = useRef(new Animated.Value(0)).current;
-  // 0 = the submitted card is still a card; 1 = fully inked into the
-  // parchment. Opacity/transform only — native driver only, never mixed
-  // with revealProgress/unrollHeight's height-driven (non-native) values.
-  const inkProgress = useRef(new Animated.Value(0)).current;
-  const [submittedAnswer, setSubmittedAnswer] = useState<SubmittedDailyAnswer | null>(null);
   const [claimPhase, setClaimPhase] = useState<DailyClaimPresentationPhase>('idle');
   const claimPhaseRef = useRef<DailyClaimPresentationPhase>('idle');
   const correctTransitionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -686,10 +468,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   useEffect(() => clearCorrectTransitionTimers, []);
-
-  const rollProgress   = useRef(new Animated.Value(0)).current;
-
-  const revealProgress = useRef(new Animated.Value(0)).current;
 
   // Gate position: 1 = fully down (showing clues), 0 = fully up (hidden)
   const gatePosition = useRef(new Animated.Value(1)).current;
@@ -878,14 +656,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       completedRef.current = false;
       completingCandidateRef.current = null;
       pendingClaimCandidateRef.current = null;
-      revealProgress.setValue(0);
       setRevealSolvedCount(0);
     }
     // Unlocking itself is handled by the audioReady-gated effect below —
     // it re-checks audioReady on every round change too, so this doesn't
     // need to unlock unconditionally here.
     roundStartRef.current = Date.now() - displayedDailySession.roundElapsedMs;
-    intakeScale.setValue(1);
 
     const round = displayedDailySession.rounds[displayedDailySession.currentRoundIndex];
     if (!round) return;
@@ -896,22 +672,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       map.set(c, committedWrongClaims.has(c) ? 'disabled' : 'idle'),
     );
     setCardStates(map);
-
-    if (!physicalTransitionActive) {
-      rollProgress.stopAnimation();
-      if (reduceMotion !== false) {
-        rollProgress.setValue(1);
-      } else {
-        rollProgress.setValue(0);
-        Animated.timing(rollProgress, {
-          toValue: 1,
-          duration: 320,
-          easing: Easing.out(Easing.cubic),
-          // This value drives layout height, so it cannot use native driver.
-          useNativeDriver: false,
-        }).start();
-      }
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayedDailySession?.currentRoundIndex]);
 
@@ -1014,13 +774,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       finishClaimPresentation(candidate);
     }
 
-    revealProgress.stopAnimation();
-    revealProgress.setValue(0);
-    submittedProgress.stopAnimation();
-    submittedProgress.setValue(0);
-    inkProgress.stopAnimation();
-    inkProgress.setValue(0);
-    setSubmittedAnswer(null);
     flightProgress.stopAnimation();
     flightProgress.setValue(0);
     setCastleFlight(null);
@@ -1313,19 +1066,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     committedComplete && (claimPhase === 'reward' || claimPhase === 'revealing')
       ? []
       : currentRound?.word.clues ?? [];
-  const hideCompletedClueUnderlay = shouldHideCompletedDailyClue(
-    committedComplete,
-    claimPhase,
-  );
-  // One phase check, threaded to both ClueStage (unmounts memory clues) and
-  // QuillScrollPanel (top-anchors the content band) rather than each
-  // re-deriving it — see the comments on both `contracted` props for why
-  // this span starts at 'settling' rather than 'inking'.
-  const clueStackContracted =
-    claimPhase === 'settling' ||
-    claimPhase === 'landed' ||
-    claimPhase === 'inking' ||
-    claimPhase === 'covering';
   const dailyPressure = displayedDailySession
     ? Math.min(
         0.18,
@@ -1333,11 +1073,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           (2 - displayedDailySession.chancesRemaining) * 0.045,
       )
     : 0;
-  const clueSpeedPrompt = revealedCount === 1
-    ? 'FIRST-CLUE MARK'
-    : revealedCount === 2
-      ? 'SECOND-CLUE MARK'
-      : 'FINAL CLUE';
 
   return (
     <View style={styles.screen}>
@@ -1772,30 +1507,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2.2,
     marginTop: 4,
     textTransform: 'uppercase',
-  },
-  clueText: {
-    color: dailyScrollMaterial.clueInk,
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    fontSize: DAILY_CLUE_TYPE.activeSize,
-    lineHeight: DAILY_CLUE_TYPE.activeLineHeight,
-    letterSpacing: 0.6,
-    textAlign: 'center',
-    width: '100%',
-    // The gap BETWEEN clues. The last clue in the stack drops it (see
-    // clueTextLast): the reservation budgets the stack as
-    // active + memories + (count - 1) gaps, so a trailing gap here was
-    // height the budget never counted, pushing the stack that much further
-    // toward the bottom rod.
-    marginBottom: DAILY_CLUE_TYPE.gap,
-  },
-  clueTextLast: {
-    marginBottom: 0,
-  },
-  clueTextMemory: {
-    color: dailyScrollMaterial.clueInkMemory,
-    fontSize: DAILY_CLUE_TYPE.memorySize,
-    lineHeight: DAILY_CLUE_TYPE.memoryLineHeight,
   },
 });
 

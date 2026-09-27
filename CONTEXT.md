@@ -73,9 +73,14 @@ Daily castle (on `daily-castle-test`):
 4. Cleanup. Done (Pete, 2026-09-26): the 24 unreferenced exports in
    `assets/images/dailycastle/`; the old dev viewers (Asset Audit, CodeLab, the old
    `DailyCastleScene` preview) with their Settings rows, the ASSET AUDIT button and their
-   eight images. Still Pete's call: the Daily tree assets and `DailyTreeScene`, and the
-   scroll-era leftovers the Daily screen still imports (`dailyScrollTuning`,
-   `dailyScrollLayout`). CASTLE TUNE and DEV - RESET DAILY stay (Pete).
+   eight images. Done (Pete, 2026-09-27): the old Daily tree (`DailyTreeScene`, its dev
+   viewer, the 12 `dailytree/` images and its design doc) and the scroll era
+   (`QuillScrollPanel` and the four UI pieces only it used, `dailyScrollLayout`,
+   `dailyScrollTuning` and its Settings panel, `dailySubmittedAnswerLayout`, the scroll
+   textures, and the dead clue stack and scroll animation values in the Daily screen).
+   Left for its own pass: `DailyAnswerCard`'s pre-castle flat-card branch (`castleArt`
+   false, `DailyCardFace`), which nothing renders; the component is locked, so it was not
+   refactored in a cleanup. CASTLE TUNE and DEV - RESET DAILY stay (Pete).
 5. Review with Pete (next session) of Polly's Polybook lines, starting with the four that
    use "mine": "Good work. Mine." (light, held day), "Sloppy work. Mine." (heavy, bad day),
    "The last one is mine." (boss held), "Badly built. Mine." (boss lost). She is not a thief.

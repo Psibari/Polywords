@@ -128,7 +128,7 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
 - One scene, `DailyCastleStage.tsx`, behind entry, play and Results. `castle_cartoon.png` and
   `answerwall_framed.png` share one 1290 × 2796 canvas, drawn full width and bottom-anchored
   as one piece; never position either alone.
-- The castle is cartoon art to match Polly (Pete, 2026-09-26), in the hero book's cover purple
+- **Castle: LOCKED (Pete, 2026-09-27), colour included.** Cartoon art to match Polly (Pete, 2026-09-26), in the hero book's cover purple
   (Pete, 2026-09-27: its last step retints the stone from `hero-book-rig-v1/cover-outer.png`;
   the answer blocks' face is that purple too). `build_daily_castle.py` builds
   it from `tools/art/source/castle_cartoon_src.png`: golds remapped to the game's, arch
