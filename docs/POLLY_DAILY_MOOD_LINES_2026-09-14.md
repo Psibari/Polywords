@@ -1,11 +1,11 @@
 # POLLY — DAILY MOOD LINES
 
 **Date:** 14 September 2026. Drafts approved in conversation, same session as
-`DAILY_TREE_DESIGN_2026-09-14.md`. **Not in code.** This is content only —
-adding these to `pollyCharacter.ts` and wiring the pool is a separate,
-un-started implementation step.
+the (now superseded) Daily tree design. **In code since `b7c6148`:** the lines live in
+`pollyCharacter.ts`, pooled as `DAILY_MOOD_LINES` in `app/ui/pwDailyMaterials.ts`, and `PollyDailyPerch` picks one per correct
+claim. The live code outranks this file.
 
-Written for the ruling in `DAILY_TREE_DESIGN_2026-09-14.md` §9: Daily's
+Written for the ruling in `DAILY_TREE_DESIGN_2026-09-14 (1).md` §9: Daily's
 per-round Polly reaction reads the existing rivalry state
 (`resolveRivalryState` in `pollyMood.ts`, read-only — a Daily result never
 writes into it) and picks a line from the state's pool via `pickFreshLine`,
@@ -108,7 +108,7 @@ into the five state pools.
 ## What this is, and isn't
 
 25 new lines, 5 per state — the top of the 15-20 range costed in
-`DAILY_TREE_DESIGN_2026-09-14.md` §11, plus the extra line each on AMUSED
+`DAILY_TREE_DESIGN_2026-09-14 (1).md` §11, plus the extra line each on AMUSED
 and WATCHFUL. Three of the four existing fixed lines survive unchanged;
 one retires.
 

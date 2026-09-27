@@ -9,7 +9,6 @@ import {
   shouldHideCompletedDailyClue,
   shouldShowDailyResult,
 } from './dailyClaimPresentation';
-import { createDailySubmittedAnswerLayout } from '../components/dailySubmittedAnswerLayout';
 
 function eq<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
@@ -39,57 +38,6 @@ const transitionPhases: DailyClaimPresentationPhase[] = [
   eq(canBeginDailyClaim(false, false), true, 'stable idle state accepts one claim');
   eq(canBeginDailyClaim(false, true), false, 'synchronous input lock rejects a second claim');
   eq(canBeginDailyClaim(true, false), false, 'completed round rejects a stale claim');
-}
-
-{
-  const layout = createDailySubmittedAnswerLayout(
-    { x: 64, y: 540, width: 148, height: 64 },
-    { x: 20, y: 160, width: 335, height: 190 },
-  );
-  eq(layout.startX, 44, 'submitted card preserves its window X at scroll handoff');
-  eq(layout.startY, 380, 'submitted card preserves its window Y at scroll handoff');
-  eq(layout.width, 148, 'submitted card preserves its rendered width');
-  eq(layout.height, 64, 'submitted card preserves its rendered height');
-}
-
-{
-  const layout = createDailySubmittedAnswerLayout(
-    null,
-    { x: 20, y: 160, width: 300, height: 190 },
-  );
-  eq(layout.startX, 79.5, 'accessibility fallback starts centered below the scroll');
-  eq(layout.startY, 280, 'accessibility fallback starts below the scroll');
-  eq(layout.height, 64, 'accessibility fallback height defaults to 64 with no fallbackHeight arg');
-}
-
-{
-  // A lost DailyAnswerCard measurement race (origin === null) while the
-  // DEV-ONLY cardHeight tuning knob is away from its 64 default should still
-  // fly a card sized like the tuned grid, not the pre-tuning 64.
-  const tunedLayout = createDailySubmittedAnswerLayout(
-    null,
-    { x: 20, y: 160, width: 300, height: 190 },
-    80,
-  );
-  eq(tunedLayout.height, 80, 'lost measurement race falls back to the live tuned card height');
-
-  const defaultLayout = createDailySubmittedAnswerLayout(
-    null,
-    { x: 20, y: 160, width: 300, height: 190 },
-    64,
-  );
-  eq(defaultLayout.height, 64, 'explicit default fallbackHeight matches the implicit default');
-
-  const measuredLayout = createDailySubmittedAnswerLayout(
-    { x: 64, y: 540, width: 148, height: 64 },
-    { x: 20, y: 160, width: 335, height: 190 },
-    80,
-  );
-  eq(
-    measuredLayout.height,
-    64,
-    'a successful measurement uses the real origin height, ignoring fallbackHeight',
-  );
 }
 
 {

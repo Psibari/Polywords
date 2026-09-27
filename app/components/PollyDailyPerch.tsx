@@ -35,7 +35,32 @@ type Props = {
   reaction: Reaction | null;
   rivalryState: BookRivalryState;
   show?: boolean;
+  /**
+   * Bottom edge of the Daily HUD, in the same parent coordinates as this
+   * perch's own layout. When given, Polly drops to sit on the left tower just
+   * under the HUD instead of over its label.
+   */
+  hudBottom?: number;
+  /**
+   * Window point for the speech bubble's top-left, on the castle steps below
+   * the gate, so it never covers a clue (Pete, 2026-09-26). Without it the
+   * bubble sits beside her.
+   */
+  bubbleAt?: { x: number; y: number; maxWidth: number };
+  /**
+   * How long a correct claim's throw takes to clear the steps. The bubble for
+   * 'correct' and the win waits this long, so it never covers the plaque.
+   */
+  throwDelayMs?: number;
 };
+
+// Gap between the HUD's bottom edge and the top of Polly's pose box. Her
+// crown starts a few points inside the box, so this keeps it clear of the HUD.
+const DAILY_POLLY_HUD_GAP = 2;
+// pollyWrap's top inside the perch root. A constant rather than a read of
+// styles.pollyWrap.top: react-native-web's StyleSheet does not hand back the
+// raw values.
+const DAILY_POLLY_WRAP_TOP = 5;
 
 // Clean full-pose drawings (background stripped to transparent). The expression
 // lives in the art; life + menace come from whole-image motion + the SFX.
@@ -46,6 +71,7 @@ const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropTyp
   shocked: POLLY_POSES.shocked,  // shocked (win)
 };
 const POSE_FLY = POLLY_POSES.fly; // fly-in entrance
+const DAILY_POLLY_SIZE = 150;
 
 function getLine(
   reaction: Reaction | null,
@@ -71,7 +97,22 @@ function getLineId(
   return null;
 }
 
-export default function PollyDailyPerch({ reaction, rivalryState, show = true }: Props) {
+export default function PollyDailyPerch({
+  reaction,
+  rivalryState,
+  show = true,
+  hudBottom,
+  bubbleAt,
+  throwDelayMs = 0,
+}: Props) {
+  // Where this perch's root actually lands in its parent. Read from layout,
+  // not assumed, so the drop below is right however the parent pads it.
+  // Transforms never change layout, so applying the drop cannot feed back.
+  const [rootY, setRootY] = useState<number | null>(null);
+  const perchDrop =
+    hudBottom && rootY !== null
+      ? Math.max(0, hudBottom + DAILY_POLLY_HUD_GAP - (rootY + DAILY_POLLY_WRAP_TOP))
+      : 0;
   const rememberLine = useGameStore(s => s.rememberPollyLine);
   // Both held stable for the life of this perch, same pattern as
   // ResultsScreen.tsx's pollyMemoryBeforeRunRecorded: a live pollyMemory
@@ -95,6 +136,14 @@ export default function PollyDailyPerch({ reaction, rivalryState, show = true }:
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(280)).current;
+  // Hidden is slideY 280. The root is anchored to the top of the screen, so
+  // the slide alone leaves her on screen, over the entry card and Results;
+  // she fades on the same value, so she is gone whenever she is slid away.
+  const perchOpacity = slideY.interpolate({
+    inputRange: [0, 280],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
 
   // Whole-image drivers (no part seams possible — we only move the whole image).
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
@@ -226,9 +275,14 @@ export default function PollyDailyPerch({ reaction, rivalryState, show = true }:
     // extra body motion (unlike the three original reactions) — just the
     // pose hold + speech bubble, so a repeatable beat doesn't wear out.
 
+    // A thrown claim's line waits until the plaque has cleared the steps.
+    const bubbleDelay = reaction === 'correct' || reaction === 'shocked' ? throwDelayMs : 0;
+    bubbleOpacity.stopAnimation();
+    bubbleOpacity.setValue(0);
     Animated.timing(bubbleOpacity, {
       toValue: 1,
       duration: 180,
+      delay: bubbleDelay,
       useNativeDriver: true,
     }).start();
 
@@ -241,17 +295,34 @@ export default function PollyDailyPerch({ reaction, rivalryState, show = true }:
       }).start(() => {
         setPose(POSE.idle);
       });
-    }, 2500);
+    }, 2500 + bubbleDelay);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reaction]);
 
   return (
-    <Animated.View style={[styles.root, { transform: [{ translateY: slideY }] }]}>
+    <Animated.View
+      onLayout={(e) => setRootY(e.nativeEvent.layout.y)}
+      style={[
+        styles.root,
+        { opacity: perchOpacity, transform: [{ translateY: slideY }, { translateY: perchDrop }] },
+      ]}
+    >
       {/* Speech bubble — to Polly's right, tail points left at her */}
-      <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
+      <Animated.View
+        style={[
+          styles.bubbleWrap,
+          bubbleAt && rootY !== null && {
+            // bubbleAt is a window point; this root sits at rootY, dropped by perchDrop.
+            left: bubbleAt.x,
+            top: bubbleAt.y - (rootY + perchDrop),
+          },
+          { opacity: bubbleOpacity },
+        ]}
+      >
         <PollySpeechBubble
           line={getLine(reaction, dailyLossLineId, correctLineId)}
-          maxWidth={185}
+          maxWidth={bubbleAt ? bubbleAt.maxWidth : 185}
+          tail={bubbleAt ? 'up' : 'left'}
         />
       </Animated.View>
 
@@ -273,7 +344,7 @@ export default function PollyDailyPerch({ reaction, rivalryState, show = true }:
         {POLLY_PERCH_RIG_ENABLED && pose === POSE.idle ? (
           // 288 must track styles.pollyImage — StyleSheet.create() returns
           // opaque style IDs, not readable objects, so it can't be sourced live.
-          <PollyPerchRig size={288} reduceMotion={reduceMotion} />
+          <PollyPerchRig size={DAILY_POLLY_SIZE} reduceMotion={reduceMotion} />
         ) : (
           <Image
             source={pose}
@@ -294,19 +365,19 @@ const styles = StyleSheet.create({
     top: 0,
     height: 260,
     pointerEvents: 'none',
-    zIndex: 45,
-    elevation: 45,
+    zIndex: 90,
+    elevation: 90,
   },
   pollyWrap: {
     position: 'absolute',
-    left: -130,
-    top: 50,
-    width: 230,
-    height: 230,
+    left: -20,
+    top: DAILY_POLLY_WRAP_TOP,
+    width: DAILY_POLLY_SIZE,
+    height: DAILY_POLLY_SIZE,
   },
   pollyImage: {
-    width: 230,
-    height: 230,
+    width: DAILY_POLLY_SIZE,
+    height: DAILY_POLLY_SIZE,
   },
   bubbleWrap: {
     position: 'absolute',

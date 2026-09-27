@@ -14,9 +14,9 @@ Good lanes: `Thought so.`, `Gotcha.`, `There it is.`, and `My traps remember you
 
 Avoid encouragement, tutorials, direct insults, ownership/stolen-language framing, long joke
 setups, generated dialogue, and system copy spoken as Polly. `BINGO BANGO ZZZZINGO!` is
-unassigned system text only. Five shipped lines still violate the non-thief ruling and are
-pending rewrite — see CLAUDE.md's Presentation and Character section for the current list;
-do not treat them as models even though they're live.
+unassigned system text only. The five lines that broke the non-thief ruling (Pete,
+2026-08-29) were retired on 2026-09-01; no live Hunt or Daily line uses stealing language.
+Open for Pete: several Polybook lines end "Mine." (`pollyBookLines.ts`), meaning her traps.
 
 ## Line pools
 

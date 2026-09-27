@@ -71,8 +71,7 @@ import { INK, INK_MUTED } from "../../ui/polybookInk";
 const POLYBOOK_ART = require("../../../assets/images/vault/polybook_open.png");
 const HAUNTED_SEAL = require("../../../assets/images/vault/polybook/polybook_haunted_seal_clean.png");
 const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
-const POLYBOOK_SOURCE = Image.resolveAssetSource(POLYBOOK_ART);
-const POLYBOOK_ASPECT_RATIO = POLYBOOK_SOURCE.width / POLYBOOK_SOURCE.height;
+const POLYBOOK_ASPECT_RATIO = 2400 / 2000;
 
 const DEFAULT_POLYBOOK_LAYOUT: PolybookLayoutConfig = {
   bookWidthPct: 98,
