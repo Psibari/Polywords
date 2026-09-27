@@ -37,10 +37,16 @@ import {
 import { DAILY_ANSWER_FONT, fitDailyAnswerFontSize } from '../ui/dailyCastleScene';
 import { FONTS } from '../constants/fonts';
 
-// Stone block from the castle-step slab, built by tools/art/build_daily_plaque.py:
-// a thin top lip (top 20%) over the front face the label sits on.
+// Pete's answer block (2026-09-27), drawn by tools/art/build_daily_plaque.py.
+// It sits flush in the wall, marked only by its gold mortar; tapped, it pops
+// out and its top face shows above it. Pulled out, it leaves the recess in
+// the wall art behind it.
 const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answerplaque_stone.png');
-const CASTLE_PLAQUE_LIP = '20%';
+const CASTLE_BLOCK_TOP = require('../../assets/images/dailycastle/answerblock_top.png');
+/** Top face height over block height: build_daily_plaque.py TOP_H / H. */
+const CASTLE_BLOCK_TOP_RATIO = 46 / 229;
+/** Screen points the popped block's shadow falls down and right on the wall. */
+const CASTLE_POP_SHADOW = { x: 3, y: 7, opacity: 0.45 } as const;
 
 export type DailyAnswerCardState = 'idle' | 'correct' | 'wrong' | 'disabled';
 
@@ -76,12 +82,12 @@ export type DailyAnswerCardProps = {
 const CLAIM_THRESHOLD = -80;
 const MOVE_THRESHOLD = 4;
 
-// DailyCastleStage owns this progress value because the recess, cap, contact
-// shadow and moving plaque must stay on one physical timeline. The plaque
-// starts sunk in its socket (small and shaded), pushes out toward the player
-// past its resting size, then settles into the face of the wall.
+// DailyCastleStage owns this progress value so every block of a round rides
+// one timeline. A new block starts sunk in its recess (small and shaded, the
+// dark hole showing round it), slides forward, and comes flush with the wall
+// (Pete, 2026-09-27), settling from a hair past flush.
 const DAILY_RECESS_INPUT = [0, 0.26, 0.86, 1];
-const DAILY_RECESS_SCALE = [0.8, 0.85, 1.1, 1];
+const DAILY_RECESS_SCALE = [0.9, 0.92, 1.015, 1];
 const DAILY_RECESS_SHADE = [0.62, 0.48, 0, 0];
 
 function rimColors(
@@ -475,6 +481,24 @@ export default function DailyAnswerCard({
   const readyBrightenStyle = useAnimatedStyle(() => ({
     opacity: readyGlow.value,
   }));
+  // Castle block while held: it pops out of the wall. Its top face grows up
+  // from the block's top edge and its shadow falls on the wall behind it.
+  const castleBlockWidth = castleWidth ?? DAILY_CASTLE_LAYOUT.card.width * castleScale;
+  const castleTopHeight = (castleHeight ?? DAILY_CASTLE_LAYOUT.card.height * castleScale) * CASTLE_BLOCK_TOP_RATIO;
+  const popTopStyle = useAnimatedStyle(() => ({
+    opacity: gripGlow.value > 0.01 ? 1 : 0,
+    transform: [
+      { translateY: ((1 - gripGlow.value) * castleTopHeight) / 2 },
+      { scaleY: Math.max(0.001, gripGlow.value) },
+    ],
+  }));
+  const popShadowStyle = useAnimatedStyle(() => ({
+    opacity: gripGlow.value * CASTLE_POP_SHADOW.opacity,
+    transform: [
+      { translateX: gripGlow.value * CASTLE_POP_SHADOW.x },
+      { translateY: gripGlow.value * CASTLE_POP_SHADOW.y },
+    ],
+  }));
 
   const recessScale = recessProgress?.interpolate({
     inputRange: DAILY_RECESS_INPUT,
@@ -539,6 +563,13 @@ export default function DailyAnswerCard({
             <View style={styles.castleHaloOuter} />
             <View style={styles.castleHaloInner} />
           </Animated.View>
+          <Animated.View pointerEvents="none" style={[styles.castlePopShadow, popShadowStyle]} />
+          <Animated.Image
+            source={CASTLE_BLOCK_TOP}
+            resizeMode="stretch"
+            // Explicit size: a bundled image otherwise takes the file's pixel width.
+            style={[styles.castleBlockTop, { width: castleBlockWidth, height: castleTopHeight }, popTopStyle]}
+          />
           <View style={styles.castlePlaque}>
             <DailyCastlePlaqueFace
               label={label}
@@ -623,7 +654,7 @@ export function DailyCastlePlaqueFace({
         resizeMode="stretch"
         style={[styles.castlePlaqueImage, { width: '100%', height: '100%' }]}
       />
-      {/* The label sits on the front face, below the top lip. */}
+      {/* The label is centred on the flush face. */}
       <View pointerEvents="none" style={styles.castlePlaqueFront}>
         <Text
           style={[styles.castlePlaqueLabel, { fontSize }]}
@@ -732,8 +763,17 @@ const styles = StyleSheet.create({
     // size resolves inside the padding: with 11 pt each side the stone came
     // out 22 pt short of its socket, left-aligned (seen on device). The label
     // insets itself (castlePlaqueFront).
-    borderRadius: 6,
+    borderRadius: 1,
     overflow: 'hidden',
+  },
+  castlePopShadow: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#000000',
+  },
+  castleBlockTop: {
+    position: 'absolute',
+    left: 0,
+    bottom: '100%',
   },
   recessShade: {
     ...StyleSheet.absoluteFill,
@@ -773,7 +813,7 @@ const styles = StyleSheet.create({
   },
   castlePlaqueFront: {
     position: 'absolute',
-    top: CASTLE_PLAQUE_LIP,
+    top: 0,
     left: DAILY_ANSWER_FONT.sidePadding,
     right: DAILY_ANSWER_FONT.sidePadding,
     bottom: 0,

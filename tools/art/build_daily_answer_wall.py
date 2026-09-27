@@ -2,11 +2,11 @@
 
 Pete (2026-09-26): the castle, floor and first cartoon walls were all one light
 purple. His mock separates them: a muted slate-violet frame (top face
-(101, 93, 142), body (61, 50, 104)) around recessed panels of strong purple
-bricks with thick black mortar. This draws that design cleanly in the
-castle's cartoon style: black outlines, a strong lit edge and shadow edge on
-every frame piece (Pete: stronger edges, no cracks), a flat cast shadow inside
-each panel.
+(101, 93, 142), body (61, 50, 104)) around recessed panels. This draws it in
+the castle's cartoon style: black outlines, a strong lit edge and shadow edge
+on every frame piece (Pete: stronger edges, no cracks). Since the answer
+blocks went flush (Pete, 2026-09-27) each panel is black mortar with three
+block recesses; the blocks cover them.
 
 Same geometry as the painted wall this replaced, so dailyCastleScene's
 DAILY_ANSWER_WALL (and the answer-block grid sized to its panels) did not
@@ -41,11 +41,12 @@ FRAME_LIT = (104, 92, 156)
 FRAME_SHADE = (32, 25, 60)
 TOP = (101, 93, 142)
 TOP_LIT = (122, 114, 164)
-# Pete's bricks: strong purple, sampled tints, black mortar.
-BRICKS = ((76, 32, 132), (80, 28, 144), (68, 28, 120), (88, 28, 156))
+# Panels: black mortar and the answer blocks' recesses (a dark hole, deeper
+# shadow under its top edge and down its left side, where the light is blocked).
 MORTAR = (0, 0, 0)
-RECESS = (8, 2, 16)
-BRICK_H, BRICK_W, MORTAR_W = 150, 290, 14
+MORTAR_PX = 14                      # dailyCastleScene DAILY_ANSWER_MORTAR_PX; change both together
+HOLE = (26, 12, 46)
+HOLE_SHADOW = (9, 3, 18)
 
 
 def s(v):
@@ -61,39 +62,32 @@ def slab(d, box, face, lit, shade, radius=10, lit_w=18, shade_w=24):
     d.rounded_rectangle([s(x0), s(y0), s(x1), s(y1)], radius=s(radius), outline=LINE, width=s(OUTLINE))
 
 
+def recess(d, box):
+    """An answer block's empty recess: a dark hole with a hard cast shadow."""
+    x0, y0, x1, y1 = box
+    d.rectangle([s(x0), s(y0), s(x1), s(y1)], fill=HOLE)
+    d.rectangle([s(x0), s(y0), s(x1), s(y0 + 40)], fill=HOLE_SHADOW)
+    d.rectangle([s(x0), s(y0), s(x0 + 26), s(y1)], fill=HOLE_SHADOW)
+
+
 def main(out_path: Path) -> None:
-    rng = np.random.default_rng(5)
     img = Image.new("RGBA", (W * SS, H * SS), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
     # Solid behind everything below the capstone's top edge.
     d.rectangle([0, s(CAP_TOP + 10), s(W), s(H)], fill=LINE)
 
-    # Panels: black mortar, running-bond bricks with a lit top edge.
+    # Panels (Pete, 2026-09-27): black mortar with six recesses, one per
+    # answer block. The blocks sit flush over them (dailyCastleScene's
+    # DAILY_CASTLE_GRID uses the same rule: MORTAR_PX round the panel edge and
+    # between blocks); a block pulled out leaves its recess showing.
     panels = [(PILLARS[0] + PILLAR_W, PILLARS[1]), (PILLARS[1] + PILLAR_W, PILLARS[2])]
+    block_h = (PANEL_BOTTOM - PANEL_TOP - 4 * MORTAR_PX) / 3
     for x0, x1 in panels:
         d.rectangle([s(x0), s(PANEL_TOP), s(x1), s(PANEL_BOTTOM)], fill=MORTAR)
-        row, y = 0, PANEL_TOP - 40
-        while y < PANEL_BOTTOM:
-            x = x0 - (BRICK_W * 0.55 if row % 2 else 0) - 30
-            while x < x1:   # overhang is covered by the pillars drawn later
-                bw = BRICK_W * rng.uniform(0.85, 1.15)
-                face = BRICKS[rng.integers(len(BRICKS))]
-                lit = tuple(min(255, c + 16) for c in face)
-                bx0, by0 = x + MORTAR_W / 2, y + MORTAR_W / 2
-                bx1, by1 = x + bw - MORTAR_W / 2, y + BRICK_H - MORTAR_W / 2
-                d.rounded_rectangle([s(bx0), s(by0), s(bx1), s(by1)], radius=s(6), fill=lit)
-                d.rounded_rectangle([s(bx0), s(by0 + 8), s(bx1), s(by1)], radius=s(6), fill=face)
-                x += bw
-            y += BRICK_H
-            row += 1
-        # Recessed: flat cast shadow under the capstone and down the left side.
-        shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        sd = ImageDraw.Draw(shadow)
-        sd.rectangle([s(x0), s(PANEL_TOP), s(x1), s(PANEL_TOP + 48)], fill=RECESS + (200,))
-        sd.rectangle([s(x0), s(PANEL_TOP), s(x0 + 34), s(PANEL_BOTTOM)], fill=RECESS + (170,))
-        img.alpha_composite(shadow)
-        d = ImageDraw.Draw(img)
+        for row in range(3):
+            y0 = PANEL_TOP + MORTAR_PX + row * (block_h + MORTAR_PX)
+            recess(d, (x0 + MORTAR_PX, y0, x1 - MORTAR_PX, y0 + block_h))
 
     # Pillars: one slab each.
     for px in PILLARS:

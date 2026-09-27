@@ -39,17 +39,17 @@ import {
 // and the answer wall share one
 // 1290 × 2796 canvas and are always drawn at the same rect.
 const CASTLE_ARCH = require('../../assets/images/dailycastle/castle_cartoon.png');
-// Framed answer wall (two recessed brick panels), built by
-// tools/art/build_daily_answer_wall.py: Pete's cartoon wall (slate frame, purple
-// bricks). The painted walls before it are retired.
+// The answer wall, built by tools/art/build_daily_answer_wall.py: Pete's
+// cartoon wall (slate frame), each panel black mortar with three block
+// recesses. The answer blocks sit flush over the recesses.
 const CASTLE_WALL = require('../../assets/images/dailycastle/answerwall_framed.png');
 // What shows behind the raised gate: a stone tunnel receding to a lit far
 // opening, built by tools/art/build_daily_tunnel.py. The thrown block flies
 // down it. It replaced the old feather wall.
 const BACK_TUNNEL = require('../../assets/images/dailycastle/tunnel.png');
-// The carved socket each plaque sits in: the Hunt gauntlet's recess art, the
-// same brick material as the answer wall.
-const PLAQUE_SOCKET = require('../../assets/images/gauntlet/recess1.png');
+// A block with no word: the wall looks whole on entry and Results (Pete,
+// 2026-09-27, option b), when there are no answer blocks in play.
+const BLANK_BLOCK = require('../../assets/images/dailycastle/answerplaque_stone.png');
 const useDailyCastleTuning = __DEV__
   ? require('../dev/dailyCastleTuning').useDailyCastleTuning
   : null;
@@ -79,14 +79,11 @@ export type DailyCastleFlight = {
   origin: DailyAnswerCardClaimOrigin;
 };
 
-// Same three physical legs as the gauntlet stones: release from the wall,
-// push forward toward the player past its resting size, then settle back.
-// One progress value per slot drives both the wall-side layers below and the
-// plaque transform and depth shade in DailyAnswerCard.
+// A new round's block fills its recess: it starts sunk, slides forward to a
+// hair past flush, and settles flush with the wall. One progress value per
+// slot drives the block's scale and depth shade in DailyAnswerCard.
 const PLAQUE_SEG = [0.26, 0.86, 1] as const;
 const PLAQUE_SEG_MS = [200, 460, 240] as const;
-const PLAQUE_INPUT = [0, PLAQUE_SEG[0], PLAQUE_SEG[1], 1];
-const RECESS_LIP = '#21183B';
 
 type Props = {
   gatePosition: Animated.Value;
@@ -111,14 +108,12 @@ type Props = {
 
 type PlaqueSlotProps = {
   child: React.ReactNode;
-  castleScale: number;
   reduceMotion: boolean | null;
   roundKey: number;
 };
 
 function DailyCastlePlaqueSlot({
   child,
-  castleScale,
   reduceMotion,
   roundKey,
 }: PlaqueSlotProps) {
@@ -126,8 +121,6 @@ function DailyCastlePlaqueSlot({
     ? child
     : null;
   const entranceDelay = answerCard?.props.enterDelay ?? 0;
-  const state = answerCard?.props.state ?? 'idle';
-  const sealedIdle = state === 'idle';
   const plaqueProgress = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -169,130 +162,9 @@ function DailyCastlePlaqueSlot({
 
   if (!answerCard) return <>{child}</>;
 
-  // The socket belongs to the wall. It appears under the plaque in the same
-  // first sliver used by the gauntlet recess overlay, then remains fixed while
-  // the plaque advances toward the player.
-  const socketOpacity = plaqueProgress.interpolate({
-    inputRange: [0, 0.06, 1],
-    outputRange: [0, 1, 1],
-  });
-  // A tight contact shadow carries the main separation cue. It grows early
-  // enough to read as a wall release, then settles close to the plaque.
-  const contactShadowOpacity = plaqueProgress.interpolate({
-    inputRange: [0, 0.06, PLAQUE_SEG[0], PLAQUE_SEG[1], 1],
-    outputRange: [0, 0.18, 0.5, 0.62, 0.48],
-  });
-  // Tracks the plaque's own scale (DailyAnswerCard DAILY_RECESS_SCALE) a
-  // touch behind it, so the shadow trails the push toward the player.
-  const contactShadowScale = plaqueProgress.interpolate({
-    inputRange: PLAQUE_INPUT,
-    outputRange: [0.8, 0.84, 1.08, 1.02],
-  });
-  const contactShadowX = plaqueProgress.interpolate({
-    inputRange: PLAQUE_INPUT,
-    outputRange: [0, 1 * castleScale, 4 * castleScale, 2 * castleScale],
-  });
-  const contactShadowY = plaqueProgress.interpolate({
-    inputRange: PLAQUE_INPUT,
-    outputRange: [0, 1 * castleScale, 8 * castleScale, 4 * castleScale],
-  });
-
-  // The broader shadow peaks while the plaque is furthest out of the wall,
-  // then settles back to a soft rest.
-  const dropShadowOpacity = plaqueProgress.interpolate({
-    inputRange: [0, PLAQUE_SEG[0], PLAQUE_SEG[1], 1],
-    outputRange: [0, 0.04, 0.3, 0.12],
-  });
-  const dropShadowScale = plaqueProgress.interpolate({
-    inputRange: PLAQUE_INPUT,
-    outputRange: [0.8, 0.86, 1.14, 1.05],
-  });
-  const dropShadowY = plaqueProgress.interpolate({
-    inputRange: PLAQUE_INPUT,
-    outputRange: [0, 2 * castleScale, 12 * castleScale, 5 * castleScale],
-  });
-
-  // Fixed to the wall rather than the plaque. It shades/covers the rim on the
-  // first frame, then clears as the plaque exits the carved socket.
-  const capOpacity = plaqueProgress.interpolate({
-    inputRange: [0, 0.1, 0.3, 1],
-    outputRange: [1, 1, 0, 0],
-  });
-
-  const plaque = React.cloneElement(answerCard, { recessProgress: plaqueProgress });
-
-  return (
-    <>
-      {sealedIdle && (
-        <>
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.recessSocket,
-              {
-                top: -4 * castleScale,
-                right: -4 * castleScale,
-                bottom: -4 * castleScale,
-                left: -4 * castleScale,
-                opacity: socketOpacity,
-              },
-            ]}
-          >
-            <Image
-              source={PLAQUE_SOCKET}
-              resizeMode="stretch"
-              style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-            />
-          </Animated.View>
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.dropShadow,
-              {
-                borderRadius: 12 * castleScale,
-                opacity: dropShadowOpacity,
-                transform: [
-                  { translateY: dropShadowY },
-                  { scale: dropShadowScale },
-                ],
-              },
-            ]}
-          />
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.contactShadow,
-              {
-                borderRadius: 10 * castleScale,
-                opacity: contactShadowOpacity,
-                transform: [
-                  { translateX: contactShadowX },
-                  { translateY: contactShadowY },
-                  { scale: contactShadowScale },
-                ],
-              },
-            ]}
-          />
-        </>
-      )}
-
-      {plaque}
-
-      {sealedIdle && (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.recessCap,
-            {
-              borderRadius: 10 * castleScale,
-              borderWidth: 3 * castleScale,
-              opacity: capOpacity,
-            },
-          ]}
-        />
-      )}
-    </>
-  );
+  // The recess is part of the wall art, under the block; the block's own
+  // scale and shade (DailyAnswerCard) carry it from sunk to flush.
+  return React.cloneElement(answerCard, { recessProgress: plaqueProgress });
 }
 
 /**
@@ -481,6 +353,25 @@ export default function DailyCastleStage({
         </View>
       </View>
 
+      {/* toArray, not count: count includes the `false` a finished game passes. */}
+      {React.Children.toArray(children).length === 0 &&
+        Array.from({ length: 6 }, (_, index) => {
+          const slot = toDailyCastleScreen(frame, resolveDailyCastleSlot(grid, index));
+          return (
+            <Image
+              key={`blank-${index}`}
+              source={BLANK_BLOCK}
+              resizeMode="stretch"
+              style={[styles.cardSlot, {
+                left: slot.x + sceneLeft + tuning.grid.x * s,
+                top: slot.y - stageOffset.y,
+                width: slot.width,
+                height: slot.height,
+              }]}
+            />
+          );
+        })}
+
       {React.Children.toArray(children).map((child, index) => {
         if (index >= 6) return null;
         const slot = toDailyCastleScreen(frame, resolveDailyCastleSlot(grid, index));
@@ -502,7 +393,6 @@ export default function DailyCastleStage({
                 child={React.isValidElement<DailyAnswerCardProps>(child)
                   ? React.cloneElement(child, { castleWidth: slot.width, castleHeight: slot.height })
                   : child}
-                castleScale={s}
                 reduceMotion={reduceMotion}
                 roundKey={roundKey}
             />
@@ -656,21 +546,5 @@ const styles = StyleSheet.create({
   flightBack: {
     zIndex: 3,
     elevation: 3,
-  },
-  recessSocket: {
-    position: 'absolute',
-  },
-  contactShadow: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#080611',
-  },
-  dropShadow: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#000000',
-  },
-  recessCap: {
-    ...StyleSheet.absoluteFill,
-    borderColor: RECESS_LIP,
-    backgroundColor: 'rgba(13,9,24,0.46)',
   },
 });

@@ -35,11 +35,16 @@ gate shut and blank, stands behind the entry card and Results.
 - The gate is a cartoon indigo plank door with two iron straps. Clues are painted on it, one
   per plank, and move with it. Dark seams mark every plank;
   clues are capped at 20 pt and split into two even lines so three clues read as three.
+- Answer blocks (Pete, 2026-09-27) sit flush in the wall like bricks, marked only by a gold
+  outline that is their mortar. Tapped, a block pops out and its 3D top shows; pulled out,
+  it leaves a dark recess with black edges (a wrong block leaves it too). Each new round's
+  blocks slide into the recesses and come flush. On entry and Results the wall shows six
+  blank flush blocks.
 - A correct UP claim throws the plaque at the castle while the gate lifts.
 - The plaque passes into the arch, goes in behind the gate line and flies off down the tunnel.
 - The gate comes back down carrying the next round's clues while a white-feather coin rises
   out of the courtyard floor. Coins stay down for the rest of the challenge, up to four in a
-  row. The next plaques come out of the wall.
+  row. The next blocks fill the recesses.
 - Input stays locked from the claim until the gate is down. Stale and double claims are
   rejected throughout.
 

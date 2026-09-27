@@ -134,7 +134,7 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   printed. The old painted `ARCHNEW.png` is no longer drawn; only the tunnel script still reads it.
 - **Answer wall: LOCKED (Pete, device-approved 2026-09-26).** Pete's cartoon design, drawn by
   `build_daily_answer_wall.py`: slate-violet frame with strong lit and shadow edges and black
-  outlines, recessed panels of purple bricks with black mortar, no cracks. It prints the
+  outlines, no cracks; each panel is black mortar with three block recesses (since 2026-09-27). It prints the
   sill's foot colour; `DAILY_ANSWER_WALL_FOOT` must match it. Don't change it without Pete
   reopening it.
 - The clues sit centred in the door (Pete, 2026-09-26), so the gate position is per phone:
@@ -150,6 +150,15 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   lines (`balanceDailyClue`). Never gold seams (too busy). Don't change the door, its tint,
   the seams or the clue size without Pete reopening it. The castle has three steps: the build
   script removes the top one and extends the door into its place.
+- Answer blocks (Pete, 2026-09-27): flush in the wall, marked only by gold mortar
+  (`answerplaque_stone.png`); pressed, the block pops out and `answerblock_top.png` grows
+  above it (`DailyAnswerCard`); pulled or wrong, it leaves the recess cut into the wall art.
+  New rounds slide into the recesses (`DailyCastlePlaqueSlot`). With no blocks in play
+  (entry, Results) the stage draws six blank blocks. The blocks fill their panels one
+  `DAILY_ANSWER_MORTAR_PX` in: the wall script cuts the recesses by the same rule.
+- The action label is placed from the screen bottom, not the inset (absolute children
+  ignore the SafeAreaView's padding): `dailyActionLabelBottom` (10 pt, 4 pt with no home
+  bar, so a 375 x 667 phone fits) is shared by the label and the grid's clearance.
 - Every measured coordinate lives in `app/ui/dailyCastleScene.ts` beside its pixel
   measurement (opening, gate planks, clue rects, plaque grid, throw, coins, Polly's bubble),
   covered by `dailyCastleScene.test.ts`. Re-measure if an export changes.

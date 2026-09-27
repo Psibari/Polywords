@@ -15,7 +15,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { DAILY_SKY_TUNING } from '../ui/ambientSkyTuning';
@@ -81,6 +81,7 @@ import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
   DAILY_POLLY_BUBBLE,
+  dailyActionLabelBottom,
   type DailyCastleFrame,
 } from '../ui/dailyCastleScene';
 import PollyDailyPerch from '../components/PollyDailyPerch';
@@ -593,6 +594,7 @@ type Props = { navigation: any };
 
 export default function DailyChallengeScreen({ navigation }: Props) {
   const reduceMotion = useReducedMotionPreference();
+  const insets = useSafeAreaInsets();
   // DEV-ONLY (app/dev/dailyScrollTuning.ts) — the DAILY CHALLENGE header
   // restates DAILY #<n> in the HUD directly above it, and cutting it returns
   // ~45pt to the scroll. Kept behind a toggle rather than deleted so Pete can
@@ -1460,7 +1462,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             />
           </Animated.View>
 
-          <Text style={styles.actionLabel}>
+          <Text style={[styles.actionLabel, { bottom: dailyActionLabelBottom(insets.bottom) }]}>
             {displayedDailySession.currentRoundIndex === DAILY_ROUND_COUNT - 1 ? 'FINAL CLAIM · ' : ''}
             {DAILY_ACTION_RULE}
           </Text>
@@ -1664,8 +1666,8 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   actionLabel: {
+    // bottom comes from dailyActionLabelBottom: the grid's clearance uses it.
     position: 'absolute',
-    bottom: 2,
     alignSelf: 'center',
     zIndex: 60,
     color: dailyChromeMaterial.actionLabel,
@@ -1675,8 +1677,6 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     textAlign: 'center',
     textTransform: 'uppercase',
-    marginTop: 2,
-    marginBottom: 8,
   },
   speedPrompt: {
     color: PW.color.gold,

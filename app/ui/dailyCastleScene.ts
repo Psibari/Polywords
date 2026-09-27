@@ -268,15 +268,25 @@ export type DailyCastleGrid = {
 };
 
 /**
- * Answer blocks, 136 x 72 pt (answerplaque_stone.png is 3x that), three to a
- * panel with equal gaps above, between and below, each column centred in its
- * panel. Derived from the panels so the two cannot drift apart.
+ * Black mortar between the answer blocks and round each panel, in canvas px:
+ * build_daily_answer_wall.py's MORTAR_PX, where the six recesses are cut.
+ * Change both together.
+ */
+export const DAILY_ANSWER_MORTAR_PX = 14;
+
+/**
+ * Answer blocks (Pete, 2026-09-27): they sit flush in the wall like bricks,
+ * so they fill each panel three high with one mortar gap between them and
+ * round the panel's edge. About 145.7 x 76.2 pt; answerplaque_stone.png is 3x
+ * that. Each block covers its recess in the wall art exactly. Derived from
+ * the panels so the two cannot drift apart.
  */
 export const DAILY_CASTLE_GRID: DailyCastleGrid = (() => {
-  const cardWidth = 136;
-  const cardHeight = 72;
   const [left, right] = DAILY_ANSWER_PANELS;
-  const rowGap = (left.height - 3 * cardHeight) / 4;
+  const mortar = DAILY_ANSWER_MORTAR_PX / 3;
+  const cardWidth = left.width - 2 * mortar;
+  const cardHeight = (left.height - 4 * mortar) / 3;
+  const rowGap = mortar;
   const centerDistance = right.x + right.width / 2 - (left.x + left.width / 2);
   return {
     top: left.y + rowGap,
@@ -307,12 +317,25 @@ export function resolveDailyCastleSlot(
 }
 
 /**
- * Room kept under the grid for the action label (SWIPE UP TO CLAIM: 16 pt
- * text whose bottom sits 2 pt above the bottom inset, so ~20 pt tall). 25
- * keeps a few points of air between the lowest blocks and the label, and on
- * the 430 x 932 reference phone leaves the framed wall exactly bottom-anchored.
+ * SWIPE UP TO CLAIM (DailyChallengeScreen actionLabel) is placed from the
+ * SCREEN bottom: absolutely positioned in the SafeAreaView, it ignores the
+ * home-bar inset's padding (measured in the browser and on Pete's iPhone,
+ * 2026-09-27). With a home bar it sits 10 pt up, clear of the bar; with none
+ * (375 x 667) it sits 4 pt up, which gives that phone the room to keep the
+ * clues below the HUD with nothing overlapping (Pete, 2026-09-27).
  */
-export const DAILY_CASTLE_ACTION_LABEL_CLEARANCE = 25;
+export function dailyActionLabelBottom(bottomInset: number): number {
+  return bottomInset > 0 ? 10 : 4;
+}
+/** The label's line height (16 pt Barlow Condensed), measured: 19 pt. */
+export const DAILY_ACTION_LABEL_HEIGHT = 19;
+/** Air between the lowest blocks and the label's top. */
+export const DAILY_ACTION_LABEL_AIR = 3;
+
+/** Room the grid leaves under itself for the label, from the screen bottom. */
+export function dailyActionLabelClearance(bottomInset: number): number {
+  return dailyActionLabelBottom(bottomInset) + DAILY_ACTION_LABEL_HEIGHT + DAILY_ACTION_LABEL_AIR;
+}
 
 export type DailyCastleFrame = {
   /** Screen points per canvas point. */
@@ -345,6 +368,7 @@ export function resolveDailyCastleFrame({
 }: {
   windowWidth: number;
   windowHeight: number;
+  /** The home-bar inset: it decides where the action label sits. */
   bottomInset: number;
   /** Window y of the HUD's bottom edge; 0 before it has been measured. */
   hudBottom?: number;
@@ -352,8 +376,7 @@ export function resolveDailyCastleFrame({
 }): DailyCastleFrame {
   const scale = windowWidth / DAILY_CASTLE_CANVAS.width;
   const height = DAILY_CASTLE_CANVAS.height * scale;
-  const gridLimit =
-    windowHeight - bottomInset - DAILY_CASTLE_ACTION_LABEL_CLEARANCE;
+  const gridLimit = windowHeight - dailyActionLabelClearance(bottomInset);
   const lowestTop = gridLimit - dailyCastleGridBottom(grid) * scale;
   let top = Math.min(windowHeight - height, lowestTop);
   // The clues can sit as low as DAILY_CLUE_TOP_MAX; only if even that is under

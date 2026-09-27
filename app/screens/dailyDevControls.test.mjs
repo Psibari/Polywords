@@ -67,8 +67,10 @@ assert.equal(
   await unregisterTsx();
   // Arch and wall share one export canvas, so neither is tunable on its own.
   assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['gate', 'grid', 'clues']);
-  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth, 136);
-  assert.equal(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight, 72);
+  // Blocks fill their panels (Pete, 2026-09-27): 465 px panel less two 14 px
+  // mortar gaps, and a third of the 742 px panel less four.
+  assert.ok(Math.abs(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardWidth - (465 - 28) / 3) < 1e-9);
+  assert.ok(Math.abs(DAILY_CASTLE_TUNING_DEFAULTS.grid.cardHeight - (742 - 56) / 9) < 1e-9);
   useDailyCastleTuning.getState().setValue('gate', 'y', 10);
   assert.equal(useDailyCastleTuning.getState().gate.y, 10);
   assert.equal(useDailyCastleTuning.getState().grid.x, 0);

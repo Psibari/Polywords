@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { DAILY_POOL } from '../game/dailyPool';
 import {
   balanceDailyClue,
+  DAILY_ANSWER_MORTAR_PX,
   dailyClueTextWidth,
-  DAILY_CASTLE_ACTION_LABEL_CLEARANCE,
+  DAILY_ACTION_LABEL_HEIGHT,
+  dailyActionLabelBottom,
   DAILY_CASTLE_CANVAS,
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
@@ -93,7 +95,23 @@ for (let i = 0; i < 6; i += 1) {
 }
 const left = resolveDailyCastleSlot(DAILY_CASTLE_GRID, 0);
 const right = resolveDailyCastleSlot(DAILY_CASTLE_GRID, 1);
-assert.equal(left.x, DAILY_CASTLE_CANVAS.width - (right.x + right.width), 'grid is centred');
+assert.ok(Math.abs(left.x - (DAILY_CASTLE_CANVAS.width - (right.x + right.width))) < 1e-9, 'grid is centred');
+// Blocks sit flush over the wall's recesses: one mortar gap inside each
+// panel's edges and between blocks (build_daily_answer_wall.py cuts the
+// recesses with the same rule).
+{
+  const m = DAILY_ANSWER_MORTAR_PX / 3;
+  for (let i = 0; i < 6; i += 1) {
+    const slot = resolveDailyCastleSlot(DAILY_CASTLE_GRID, i);
+    const panel = DAILY_ANSWER_PANELS[i % 2];
+    const row = Math.floor(i / 2);
+    assert.ok(Math.abs(slot.x - (panel.x + m)) < 1e-9, `block ${i} left edge`);
+    assert.ok(Math.abs(slot.x + slot.width - (panel.x + panel.width - m)) < 1e-9, `block ${i} right edge`);
+    assert.ok(Math.abs(slot.y - (panel.y + m + row * (slot.height + m))) < 1e-9, `block ${i} top edge`);
+  }
+  const last = resolveDailyCastleSlot(DAILY_CASTLE_GRID, 5);
+  assert.ok(Math.abs(last.y + last.height - (DAILY_ANSWER_PANELS[1].y + DAILY_ANSWER_PANELS[1].height - m)) < 1e-9, 'bottom row ends one mortar gap above the sill');
+}
 
 // Framed wall: the two panels are equal, and each column of three blocks sits
 // wholly inside its panel with equal gaps.
@@ -135,7 +153,10 @@ for (const [w, h, topInset, inset] of phones) {
   const f = resolveDailyCastleFrame({ windowWidth: w, windowHeight: h, bottomInset: inset, hudBottom });
   assert.equal(f.width, w);
   const gridBottom = f.top + dailyCastleGridBottom(DAILY_CASTLE_GRID) * f.scale;
-  assert.ok(gridBottom <= h - inset - DAILY_CASTLE_ACTION_LABEL_CLEARANCE + 0.001, `${w}x${h}: grid clears the action label`);
+  // The action label sits dailyActionLabelBottom above the SCREEN bottom (it
+  // ignores the inset's padding); the lowest blocks end above its top.
+  const labelTop = h - dailyActionLabelBottom(inset) - DAILY_ACTION_LABEL_HEIGHT;
+  assert.ok(gridBottom <= labelTop + 0.001, `${w}x${h}: grid clears the action label`);
   const clueTop = resolveDailyClueTop(f, hudBottom);
   assert.ok(clueTop >= DAILY_CLUE_TOP_MIN && clueTop <= DAILY_CLUE_TOP_MAX, `${w}x${h}: clue position within the door`);
   assert.ok(f.top + clueTop * f.scale >= hudBottom, `${w}x${h}: first clue is below the HUD`);

@@ -121,7 +121,9 @@ export const dailyCastlePlaqueMaterial = {
   haloOuterInset: -8,
   haloInnerInset: -3,
   heldScale: 1.06,
-  heldHaloOpacity: 0.75,
+  // Held, the block pops out of the wall instead (Pete, 2026-09-27); the
+  // cream halo now comes up only past the claim line.
+  heldHaloOpacity: 0,
   readyHaloScale: 1.04,
   readyInMs: 110,
   readyOutMs: 140,

@@ -1,77 +1,72 @@
-"""Build assets/images/dailycastle/answerplaque_stone.png from ledge.png.
+"""Draw the Daily answer block: answerplaque_stone.png and answerblock_top.png.
 
-The Daily answer plaque is a stone block jutting out of the answer wall: the
-castle-step slab from ledge.png, cut to a thin top lip over a tall front face
-(the look Pete approved from the 2026-09-26 mock), built the same way as that
-mock except that the front's two halves crossfade instead of butting, which
-removes the vertical line the mock showed down the middle.
+Pete's design (2026-09-27). A block sits flush in the answer wall like a
+brick; the only thing that sets it apart is its gold outline, which is its
+mortar. Its face is his muted purple (55, 41, 89), a touch lighter across the
+middle. When tapped it pops out of the wall and its top face shows: a
+trapezoid in the door's indigo (42, 26, 92), ringed in the same gold, drawn
+above the block by DailyAnswerCard. Pulled out, it leaves its recess in the
+wall art (build_daily_answer_wall.py).
 
-Output is 3x the plaque slot (136 x 72 pt -> 408 x 216 px), the block that
-sits three to a panel in the framed answer wall. Rerun after any
-change to ledge.png:  python3 tools/art/build_daily_plaque.py   (needs Pillow)
+answerplaque_stone.png is 3x the block, which fills its panel less the
+mortar (dailyCastleScene DAILY_CASTLE_GRID): 437 x 229 px. answerblock_top.png
+is the top face at the same width; DailyAnswerCard sizes it by TOP_RATIO.
+
+    python3 tools/art/build_daily_plaque.py   (Pillow, numpy)
 """
 from pathlib import Path
-from PIL import Image
+import numpy as np
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "assets/images/dailycastle/ledge.png"
-OUT = ROOT / "assets/images/dailycastle/answerplaque_stone.png"
+OUT_FACE = ROOT / "assets/images/dailycastle/answerplaque_stone.png"
+OUT_TOP = ROOT / "assets/images/dailycastle/answerblock_top.png"
 
-W, H = 408, 216            # 3x the 136 x 72 pt block that fits a wall panel
-LIP = round(H * 0.2)          # top-face share of the plaque height
-SLAB = (24, 96, 1309, 292)    # ledge.png visible-alpha bounds
-SEAM = 100                    # gold seam row inside SLAB (top face above it)
-LIP_END = 160                 # lip: slab px kept at each end, middle stretched
-BLEND = 60                    # front: output px over which the halves crossfade
+W, H = 437, 229             # 3x (465 - 2*14) / 3 by (742 - 4*14) / 9 pt
+TOP_H = 46                  # top face height, px; TOP_RATIO in DailyAnswerCard = TOP_H / H
+TOP_INSET = 0.07            # the top face's back edge is inset this share of the width each side
+GOLD = (245, 200, 66)
+FACE = (55, 41, 89)
+FACE_MID = (60, 44, 96)
+FACE_LOW = (48, 36, 80)
+TOP = (42, 26, 92)          # the door's indigo
+BORDER = 9                  # gold mortar round the face, px
+SS = 4
 
 
-def three_slice(img: Image.Image, width: int, height: int, end_src: int) -> Image.Image:
-    """Ends at their natural proportion, the middle stretched between them."""
-    k = height / img.height
-    end = max(1, round(end_src * k))
-    left = img.crop((0, 0, end_src, img.height)).resize((end, height), Image.LANCZOS)
-    right = img.crop((img.width - end_src, 0, img.width, img.height)).resize((end, height), Image.LANCZOS)
-    mid = img.crop((end_src, 0, img.width - end_src, img.height)).resize((width - 2 * end, height), Image.LANCZOS)
-    out = Image.new("RGBA", (width, height))
-    out.paste(left, (0, 0))
-    out.paste(mid, (end, 0))
-    out.paste(right, (width - end, 0))
+def s(v):
+    return round(v * SS)
+
+
+def face() -> Image.Image:
+    y = np.linspace(0, 1, H)[:, None, None]
+    mid = np.exp(-((y - 0.45) ** 2) / 0.08)
+    field = np.array(FACE, float) * (1 - mid) + np.array(FACE_MID, float) * mid
+    foot = np.clip((y - 0.8) / 0.2, 0, 1)
+    field = field * (1 - foot) + np.array(FACE_LOW, float) * foot
+    rgb = np.broadcast_to(field, (H, W, 3)).round().astype(np.uint8)
+    out = Image.fromarray(np.ascontiguousarray(rgb), "RGB").convert("RGBA")
+    d = ImageDraw.Draw(out)
+    for i in range(BORDER):
+        d.rectangle([i, i, W - 1 - i, H - 1 - i], outline=GOLD)
     return out
 
 
-def two_ends(img: Image.Image, width: int, height: int) -> Image.Image:
-    """The slab's two natural-proportion ends, crossfaded in the middle.
-
-    At plaque height the slab's ends alone are wider than the plaque, so the
-    front is its left end and right end meeting in the middle. A hard cut
-    there showed as a vertical line; the BLEND band hides the join.
-    """
-    k = height / img.height
-    scaled = img.resize((round(img.width * k), height), Image.LANCZOS)
-    half = width // 2 + BLEND // 2
-    left = scaled.crop((0, 0, half, height))
-    right = scaled.crop((scaled.width - half, 0, scaled.width, height))
-    out = Image.new("RGBA", (width, height))
-    out.paste(left, (0, 0))
-    # Right half, faded in across the blend band.
-    mask = Image.new("L", (half, height), 255)
-    for x in range(BLEND):
-        for y in range(height):
-            mask.putpixel((x, y), round(255 * (x + 0.5) / BLEND))
-    out.paste(right, (width - half, 0), mask)
-    return out
+def top() -> Image.Image:
+    img = Image.new("RGBA", (s(W), s(TOP_H)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    inset = W * TOP_INSET
+    d.polygon([(s(inset), 0), (s(W - inset), 0), (s(W), s(TOP_H)), (0, s(TOP_H))], fill=GOLD)
+    k = BORDER * inset / TOP_H   # slanted gold as thick as the sides
+    d.polygon([(s(inset + k), s(BORDER * 0.6)), (s(W - inset - k), s(BORDER * 0.6)),
+               (s(W - BORDER), s(TOP_H)), (s(BORDER), s(TOP_H))], fill=TOP)
+    return img.resize((W, TOP_H), Image.BOX)
 
 
 def main() -> None:
-    slab = Image.open(SRC).convert("RGBA").crop(SLAB)
-    # +3 keeps the whole gold seam on the lip.
-    top = slab.crop((0, 0, slab.width, SEAM + 3))
-    front = slab.crop((0, SEAM + 3, slab.width, slab.height))
-    plaque = Image.new("RGBA", (W, H))
-    plaque.alpha_composite(three_slice(top, W, LIP, LIP_END), (0, 0))
-    plaque.alpha_composite(two_ends(front, W, H - LIP), (0, LIP))
-    plaque.save(OUT, optimize=True)
-    print(f"wrote {OUT} {plaque.size}")
+    face().save(OUT_FACE, optimize=True)
+    top().save(OUT_TOP, optimize=True)
+    print(f"wrote {OUT_FACE.name} {W}x{H}, {OUT_TOP.name} {W}x{TOP_H}")
 
 
 if __name__ == "__main__":
