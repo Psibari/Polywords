@@ -122,8 +122,8 @@ Daily play are nav-free.
 ### Daily (castle)
 
 Deterministic, one attempt per date, five UP-only rounds, two Chances. Rules and the full
-sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-test`
-(see `CONTEXT.md`).
+sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt as the castle on `daily-castle-test`,
+merged into `play-screen-overhaul` on 2026-09-27.
 
 - One scene, `DailyCastleStage.tsx`, behind entry, play and Results. `castle_cartoon.png` and
   `answerwall_framed.png` share one 1290 × 2796 canvas, drawn full width and bottom-anchored

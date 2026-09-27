@@ -7,8 +7,8 @@ history is the diary. Verify anything here against code before acting on it.
 
 | Branch | Role |
 | --- | --- |
-| `play-screen-overhaul` | The main working branch for the whole game (at `c3aaa89`). |
-| `daily-castle-test` | Used only to rebuild the Daily Challenge as the castle. Branched from `play-screen-overhaul` at `c3aaa89`; merges back through draft PR Psibari/Polywords#13. Nothing else is worked on here. |
+| `play-screen-overhaul` | The main working branch for the whole game. The castle Daily merged in from `daily-castle-test` through PR Psibari/Polywords#13 (Pete approved, 2026-09-27). |
+| `daily-castle-test` | Finished: it rebuilt the Daily Challenge as the castle and was merged into `play-screen-overhaul` (PR Psibari/Polywords#13, 2026-09-27). Do not work on it. |
 | `main` | Stale and untouched. Never merge into it without Pete's approval. |
 
 Nothing merges into `play-screen-overhaul` without Pete's approval.
@@ -21,7 +21,7 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
 
 - **Ruling (Pete, 2026-09-26):** the Polybook is Polly's book, kept in the old Vault; the
   player reads it.
-- **Daily castle** (`daily-castle-test`, device-checked on iPhone 2026-09-26). Castle scene
+- **Daily castle** (built on `daily-castle-test`, merged 2026-09-27; device-checked on iPhone). Castle scene
   behind entry, play and Results; a cartoon indigo plank door carrying the clues (door and
   clues LOCKED, device-approved 2026-09-26); stone tunnel behind it; Pete's cartoon answer
   wall (slate frame) with flush gold-mortared blocks that pop out when pressed and leave
@@ -57,7 +57,7 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
 
 ## Next Work
 
-Daily castle (on `daily-castle-test`):
+Daily castle:
 1. Cartoon pass (Pete, 2026-09-26): coins done (option D, silver and a 100 pt gold). The
    castle is now cartoon art (castle B, `castle_cartoon.png`) so it matches Polly, and so is the
    door (indigo planks, Pete's tint, lightened when the castle took the hero book's purple
@@ -86,7 +86,8 @@ Daily castle (on `daily-castle-test`):
    "The last one is mine." (boss held), "Badly built. Mine." (boss lost). She is not a thief.
    Pete wants to look at them himself first. Do not rewrite or add any line until he rules.
    Source: `docs/POLLY_POLYBOOK_LOG_LINES.md`; runtime: `app/game/pollyBookLines.ts`.
-6. Merge PR Psibari/Polywords#13 into `play-screen-overhaul` once Pete approves.
+6. Done (2026-09-27): PR Psibari/Polywords#13 merged into `play-screen-overhaul` with Pete's
+   approval.
 
 Whole game:
 7. Real-device journeys before release: cold-start audio, rapid navigation,

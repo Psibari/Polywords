@@ -18,8 +18,8 @@ source below. Runtime code and data outrank documentation when describing curren
 Authority: current user request > this file > focused source > `CLAUDE.md` > `CONTEXT.md`.
 Report conflicts; never blend them silently.
 
-Branches: `play-screen-overhaul` is the main working branch. `daily-castle-test` exists only
-to rebuild the Daily Challenge and merges back through a PR. `main` is stale. Details and
+Branches: `play-screen-overhaul` is the main working branch. `daily-castle-test` rebuilt the
+Daily Challenge and is merged (2026-09-27); don't work on it. `main` is stale. Details and
 open work are in `CONTEXT.md`.
 
 ## Product Locks
