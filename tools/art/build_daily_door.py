@@ -36,7 +36,10 @@ SEAM = 8                    # px, about 2.5 pt: Pete's seam thickness
 WOODS = {
     # face, highlight, shadow, grain. Pete's tints (2026-09-26), sampled from
     # his edits of the first drafts; grain keeps the drafts' ratio to the face.
-    "indigo": ((42, 26, 92), (47, 30, 99), (38, 23, 84), (34, 19, 76)),
+    # Indigo is his tint x 1.45 (Pete, 2026-09-27, option B): the castle went
+    # dark to the hero book's purple, so the door is lighter than the castle
+    # now. Clue contrast (cream #FFF7D6 on the face) 10.8:1.
+    "indigo": ((61, 38, 133), (68, 44, 144), (55, 33, 122), (49, 28, 110)),
     "brown": ((89, 49, 24), (96, 54, 27), (82, 44, 22), (74, 39, 20)),
 }
 IRON = ((52, 50, 70), (104, 102, 124), (30, 28, 44))

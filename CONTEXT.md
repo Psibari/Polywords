@@ -60,7 +60,8 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
 Daily castle (on `daily-castle-test`):
 1. Cartoon pass (Pete, 2026-09-26): coins done (option D, silver and a 100 pt gold). The
    castle is now cartoon art (castle B, `castle_cartoon.png`) so it matches Polly, and so is the
-   door (indigo planks, Pete's tint; locked), the answer wall (Pete's design, slate frame;
+   door (indigo planks, Pete's tint, lightened when the castle took the hero book's purple
+   on 2026-09-27; locked), the answer wall (Pete's design, slate frame;
    locked; its panels became block recesses on 2026-09-27) and the answer blocks (Pete's
    flush gold-mortared blocks; locked 2026-09-27) and the tunnel (drawn by script;
    locked 2026-09-27). No painted art is left on the Daily screen. Sharper

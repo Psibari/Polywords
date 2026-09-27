@@ -2,9 +2,10 @@
 
 Pete's design (2026-09-27). A block sits flush in the answer wall like a
 brick; the only thing that sets it apart is its gold outline, which is its
-mortar. Its face is his muted purple (55, 41, 89), a touch lighter across the
-middle. When tapped it pops out of the wall and its top face shows: a
-trapezoid in the door's indigo (42, 26, 92), ringed in the same gold, drawn
+mortar. Its face is the castle's colour, the hero book's cover purple
+(40, 28, 116), a touch lighter across the middle (Pete, 2026-09-27; it was
+his muted (55, 41, 89)). When tapped it pops out of the wall and its top face shows: a
+trapezoid in the door's indigo (61, 38, 133), ringed in the same gold, drawn
 above the block by DailyAnswerCard. Pulled out, it leaves its recess in the
 wall art (build_daily_answer_wall.py).
 
@@ -26,10 +27,13 @@ W, H = 437, 229             # 3x (465 - 2*14) / 3 by (742 - 4*14) / 9 pt
 TOP_H = 46                  # top face height, px; TOP_RATIO in DailyAnswerCard = TOP_H / H
 TOP_INSET = 0.07            # the top face's back edge is inset this share of the width each side
 GOLD = (245, 200, 66)
-FACE = (55, 41, 89)
-FACE_MID = (60, 44, 96)
-FACE_LOW = (48, 36, 80)
-TOP = (42, 26, 92)          # the door's indigo
+# The castle's colour, which is the hero book's cover (Pete, 2026-09-27): the
+# book cover's median purple, its 75th and 25th percentiles for the lighter
+# middle and the darker foot (hero-book-rig-v1/cover-outer.png).
+FACE = (40, 28, 116)
+FACE_MID = (46, 30, 124)
+FACE_LOW = (35, 26, 105)
+TOP = (61, 38, 133)         # the door's indigo face (build_daily_door.py); change both together
 BORDER = 9                  # gold mortar round the face, px
 SS = 4
 

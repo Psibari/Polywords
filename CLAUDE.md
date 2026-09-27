@@ -128,7 +128,9 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
 - One scene, `DailyCastleStage.tsx`, behind entry, play and Results. `castle_cartoon.png` and
   `answerwall_framed.png` share one 1290 × 2796 canvas, drawn full width and bottom-anchored
   as one piece; never position either alone.
-- The castle is cartoon art to match Polly (Pete, 2026-09-26). `build_daily_castle.py` builds
+- The castle is cartoon art to match Polly (Pete, 2026-09-26), in the hero book's cover purple
+  (Pete, 2026-09-27: its last step retints the stone from `hero-book-rig-v1/cover-outer.png`;
+  the answer blocks' face is that purple too). `build_daily_castle.py` builds
   it from `tools/art/source/castle_cartoon_src.png`: golds remapped to the game's, arch
   centred, straight sides stretched for the clue planks, opening cut out, measurements
   printed. The old painted `ARCHNEW.png` is deleted.
@@ -149,7 +151,8 @@ sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt on branch `daily-castle-
   `dailyGateLineY`, `dailyGateOpenTravel`, `dailyGateMaxSink`, `resolveDailyGateClueRects`)
   take that clue top. The scene only drops when even `DAILY_CLUE_TOP_MAX` is under the HUD.
 - **Door and clues: LOCKED (Pete, device-approved 2026-09-26).** `gate_door.png` from
-  `build_daily_door.py`: cartoon indigo planks in Pete's tint, dark 2.5 pt seams, two iron
+  `build_daily_door.py`: cartoon indigo planks in Pete's tint (x1.45 since the castle went
+  dark, 2026-09-27; the popped block's top face shares it), dark 2.5 pt seams, two iron
   straps off the clue planks. Planks are 52 pt; clues capped at 20 pt, split into two even
   lines (`balanceDailyClue`). Never gold seams (too busy). Don't change the door, its tint,
   the seams or the clue size without Pete reopening it. The castle has three steps: the build

@@ -18,7 +18,13 @@ it matches Polly. This script:
      1290 x 2796 castle canvas at OFFSET_Y, sky colour filled above, so the
      courtyard floor runs under the answer wall;
   5. cuts the arch opening out (flood fill of its flat colour), so the gate
-     and tunnel behind it show.
+     and tunnel behind it show;
+  6. retints every purple to the hero book's cover (Pete, 2026-09-27: the
+     castle was too light): hue, saturation and brightness move by the
+     difference between the castle's lit stone face (median purple in
+     STONE_SAMPLE, the right tower's face) and the book's median cover
+     purple, measured from HERO_BOOK itself, so every shade keeps its place
+     relative to the others. Gold and the opening's shape are untouched.
 
 It prints the opening's measurements; app/ui/dailyCastleScene.ts mirrors them.
 Rerun it, never hand-edit the output.
@@ -42,6 +48,9 @@ STRETCH_ADD = 60 + (STEP_CUT[1] - STEP_CUT[0])   # the cut step's height goes to
 OFFSET_Y = 70              # canvas px: clues clear the HUD on 375x667, step edge above the coins
 OPENING_SEED = (432, 520)  # source px inside the opening (after centring)
 OPENING_TOL = 20           # colour tolerance for the opening flood fill
+
+HERO_BOOK = ROOT / "assets/images/hero-book-rig-v1/cover-outer.png"
+STONE_SAMPLE = (900, 400, 1290, 1000)   # canvas px: the right tower's lit stone face
 
 GOLDS = [(0x8F, 0x6F, 0x18), (0xC8, 0x92, 0x0E), (0xF5, 0xC8, 0x42), (0xFF, 0xF7, 0xD6)]
 
@@ -67,6 +76,47 @@ def regold(a):
     out = a.astype(np.float32)
     out[gold] = ramp[gold]
     return out.clip(0, 255).astype(np.uint8), int(gold.sum())
+
+
+def purples(rgb):
+    h, s, v = hsv(rgb)
+    return (h >= 235) & (h <= 305) & (s > 0.25), h, s, v
+
+
+def median_purple(rgb, mask):
+    return np.median(rgb[mask].reshape(-1, 3), axis=0)
+
+
+def hsv_of(c):
+    return [x.item() for x in hsv(np.array(c, np.float32).reshape(1, 1, 3))]
+
+
+def hsv_to_rgb(h, s, v):
+    c = v * s
+    hp = (h / 60) % 6
+    x = c * (1 - np.abs(hp % 2 - 1))
+    z = np.zeros_like(h)
+    conds = [hp < 1, hp < 2, hp < 3, hp < 4, hp < 5, hp >= 5]
+    r = np.select(conds, [c, x, z, z, x, c]); g = np.select(conds, [x, c, c, x, z, z]); b = np.select(conds, [z, z, x, c, c, x])
+    m = v - c
+    return np.stack([r + m, g + m, b + m], -1) * 255
+
+
+def retint(rgb):
+    """Move the castle's purples onto the hero book's cover purple."""
+    book = np.array(Image.open(HERO_BOOK).convert("RGBA"))
+    book_mask, *_ = purples(book[..., :3])
+    book_mask &= book[..., 3] > 250
+    target = median_purple(book[..., :3], book_mask)
+    mask, h, s, v = purples(rgb)
+    x0, y0, x1, y1 = STONE_SAMPLE
+    face = mask[y0:y1, x0:x1] & (v[y0:y1, x0:x1] > 0.55)     # lit faces, not shading or lines
+    source = median_purple(rgb[y0:y1, x0:x1], face)
+    (th, ts, tv), (sh, ss, sv) = hsv_of(target), hsv_of(source)
+    out = rgb.astype(np.float32)
+    new = hsv_to_rgb(h + (th - sh), np.clip(s * ts / ss, 0, 1), np.clip(v * tv / sv, 0, 1))
+    out[mask] = new[mask]
+    return out.clip(0, 255).astype(np.uint8), source, target
 
 
 def centre(a):
@@ -114,7 +164,9 @@ def main():
     h = min(big.shape[0], H - OFFSET_Y)
     canvas[OFFSET_Y:OFFSET_Y + h, :, :3] = big[:h]
     canvas[OFFSET_Y:OFFSET_Y + h, :, 3] = np.where(grown[:h], 0, 255)
+    canvas[..., :3], castle_purple, book_purple = retint(canvas[..., :3])
     Image.fromarray(canvas, "RGBA").save(OUT, optimize=True)
+    print(f"retint: castle median purple {castle_purple.round()} -> hero book {book_purple.round()}")
 
     ys, xs = np.nonzero(grown); ys = ys + OFFSET_Y
     print(f"wrote {OUT.name}: gold px remapped {n_gold}, source scale {k:.4f}, image bottom {OFFSET_Y + h} px")
