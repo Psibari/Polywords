@@ -131,9 +131,12 @@ merged into `play-screen-overhaul` on 2026-09-27.
 - **Castle: LOCKED (Pete, 2026-09-27), colour included.** Cartoon art to match Polly (Pete, 2026-09-26), in the hero book's cover purple
   (Pete, 2026-09-27: its last step retints the stone from `hero-book-rig-v1/cover-outer.png`;
   the answer blocks' face is that purple too). `build_daily_castle.py` builds
-  it from `tools/art/source/castle_cartoon_src.png`: golds remapped to the game's, arch
+  it from `tools/art/source/castle_cartoon_src.png`: gold trim (caps, ropes, step edges) remapped to white, arch
   centred, straight sides stretched for the clue planks, opening cut out, measurements
-  printed. The old painted `ARCHNEW.png` is deleted.
+  printed, floor retinted to Pete's mock (`FLOOR_TARGET`). It also writes
+  `castle_cartoon_gold_flash.png` (the trim in gold, clear elsewhere), which
+  `DailyCastleStage` fades 0 → 1 → 0 on `flightProgress`, peaking at
+  `DAILY_CASTLE_FLIGHT_HANDOFF`, on every correct claim. The old painted `ARCHNEW.png` is deleted.
 - **Tunnel: LOCKED (Pete, device-approved 2026-09-27; re-locked with the castle's purple and
   gold light the same day).** Cartoon like the rest: `build_daily_tunnel.py` draws
   stepped stone rings in the castle's purple at the opening's exact size, narrowing to a far
@@ -159,7 +162,7 @@ merged into `play-screen-overhaul` on 2026-09-27.
   lines (`balanceDailyClue`). Never gold seams (too busy). Don't change the door, its tint,
   the seams or the clue size without Pete reopening it. The castle has three steps: the build
   script removes the top one and extends the door into its place.
-- **Answer blocks: LOCKED (Pete, device-approved 2026-09-27).** Flush in the wall, marked only by gold mortar
+- **Answer blocks: LOCKED (Pete, device-approved 2026-09-27).** Flush in the wall, marked only by white mortar (gold until Pete, 2026-09-27)
   (`answerplaque_stone.png`); pressed, the block pops out and `answerblock_top.png` grows
   above it (`DailyAnswerCard`); pulled or wrong, it leaves the recess cut into the wall art.
   New rounds slide into the recesses (`DailyCastlePlaqueSlot`). With no blocks in play

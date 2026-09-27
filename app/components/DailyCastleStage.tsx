@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -39,6 +39,10 @@ import {
 // and the answer wall share one
 // 1290 × 2796 canvas and are always drawn at the same rect.
 const CASTLE_ARCH = require('../../assets/images/dailycastle/castle_cartoon.png');
+// The castle's white trim (tower caps, rope hooks, step edges) in gold, clear
+// everywhere else, on the same canvas; it flashes over the castle on every
+// correct answer (Pete, 2026-09-27). Built with the castle by the same script.
+const CASTLE_GOLD_FLASH = require('../../assets/images/dailycastle/castle_cartoon_gold_flash.png');
 // The answer wall, built by tools/art/build_daily_answer_wall.py: Pete's
 // cartoon wall (slate frame), each panel black mortar with three block
 // recesses. The answer blocks sit flush over the recesses.
@@ -239,6 +243,18 @@ export default function DailyCastleStage({
   const clueTop = resolveDailyClueTop(frame, hudBottom);
   const gateClosed = dailyGateClosed(clueTop);
 
+  // The trim flashes gold on every correct claim, peaking at the handoff, the
+  // moment the thrown block passes behind the gate into the tunnel. It rides
+  // the throw's own progress, so under reduced motion (or with no measured
+  // origin) it doesn't play, just as the throw doesn't: intentional.
+  const goldFlashOpacity = useMemo(
+    () => flightProgress.interpolate({
+      inputRange: [0, DAILY_CASTLE_FLIGHT_HANDOFF, 1],
+      outputRange: [0, 1, 0],
+    }),
+    [flightProgress],
+  );
+
   // Gate and clue rects relative to the opening / gate image that hold them.
   const gateFrame = {
     x: (gateClosed.x - DAILY_CASTLE_OPENING.x + tuning.gate.x) * s,
@@ -275,6 +291,17 @@ export default function DailyCastleStage({
           top: sceneTop,
           width: frame.width,
           height: frame.height,
+        }]}
+        resizeMode="stretch"
+      />
+      <Animated.Image
+        source={CASTLE_GOLD_FLASH}
+        style={[styles.layer, styles.castleGoldFlash, {
+          left: sceneLeft,
+          top: sceneTop,
+          width: frame.width,
+          height: frame.height,
+          opacity: goldFlashOpacity,
         }]}
         resizeMode="stretch"
       />
@@ -509,6 +536,10 @@ const styles = StyleSheet.create({
   castleArch: {
     zIndex: 30,
     elevation: 30,
+  },
+  castleGoldFlash: {
+    zIndex: 31,
+    elevation: 31,
   },
   castleWall: {
     zIndex: 35,

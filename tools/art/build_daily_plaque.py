@@ -1,11 +1,11 @@
 """Draw the Daily answer block: answerplaque_stone.png and answerblock_top.png.
 
 Pete's design (2026-09-27). A block sits flush in the answer wall like a
-brick; the only thing that sets it apart is its gold outline, which is its
+brick; the only thing that sets it apart is its white outline, which is its
 mortar. Its face is the castle's colour, the hero book's cover purple
 (40, 28, 116), a touch lighter across the middle (Pete, 2026-09-27; it was
 his muted (55, 41, 89)). When tapped it pops out of the wall and its top face shows: a
-trapezoid in the door's indigo (61, 38, 133), ringed in the same gold, drawn
+trapezoid in the door's indigo (61, 38, 133), ringed in the same white, drawn
 above the block by DailyAnswerCard. Pulled out, it leaves its recess in the
 wall art (build_daily_answer_wall.py).
 
@@ -26,7 +26,7 @@ OUT_TOP = ROOT / "assets/images/dailycastle/answerblock_top.png"
 W, H = 437, 229             # 3x (465 - 2*14) / 3 by (742 - 4*14) / 9 pt
 TOP_H = 46                  # top face height, px; TOP_RATIO in DailyAnswerCard = TOP_H / H
 TOP_INSET = 0.07            # the top face's back edge is inset this share of the width each side
-GOLD = (245, 200, 66)
+MORTAR = (0xDD, 0xDD, 0xDC)   # the castle trim's white (build_daily_castle.py WHITES; gold until Pete, 2026-09-27)
 # The castle's colour, which is the hero book's cover (Pete, 2026-09-27): the
 # book cover's median purple, its 75th and 25th percentiles for the lighter
 # middle and the darker foot (hero-book-rig-v1/cover-outer.png).
@@ -34,7 +34,7 @@ FACE = (40, 28, 116)
 FACE_MID = (46, 30, 124)
 FACE_LOW = (35, 26, 105)
 TOP = (61, 38, 133)         # the door's indigo face (build_daily_door.py); change both together
-BORDER = 9                  # gold mortar round the face, px
+BORDER = 9                  # white mortar round the face, px
 SS = 4
 
 
@@ -52,7 +52,7 @@ def face() -> Image.Image:
     out = Image.fromarray(np.ascontiguousarray(rgb), "RGB").convert("RGBA")
     d = ImageDraw.Draw(out)
     for i in range(BORDER):
-        d.rectangle([i, i, W - 1 - i, H - 1 - i], outline=GOLD)
+        d.rectangle([i, i, W - 1 - i, H - 1 - i], outline=MORTAR)
     return out
 
 
@@ -60,8 +60,8 @@ def top() -> Image.Image:
     img = Image.new("RGBA", (s(W), s(TOP_H)), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     inset = W * TOP_INSET
-    d.polygon([(s(inset), 0), (s(W - inset), 0), (s(W), s(TOP_H)), (0, s(TOP_H))], fill=GOLD)
-    k = BORDER * inset / TOP_H   # slanted gold as thick as the sides
+    d.polygon([(s(inset), 0), (s(W - inset), 0), (s(W), s(TOP_H)), (0, s(TOP_H))], fill=MORTAR)
+    k = BORDER * inset / TOP_H   # slanted mortar as thick as the sides
     d.polygon([(s(inset + k), s(BORDER * 0.6)), (s(W - inset - k), s(BORDER * 0.6)),
                (s(W - BORDER), s(TOP_H)), (s(BORDER), s(TOP_H))], fill=TOP)
     return img.resize((W, TOP_H), Image.BOX)

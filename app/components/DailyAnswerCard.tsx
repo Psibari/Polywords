@@ -37,7 +37,7 @@ import { DAILY_ANSWER_FONT, fitDailyAnswerFontSize } from '../ui/dailyCastleScen
 import { FONTS } from '../constants/fonts';
 
 // Pete's answer block (2026-09-27), drawn by tools/art/build_daily_plaque.py.
-// It sits flush in the wall, marked only by its gold mortar; tapped, it pops
+// It sits flush in the wall, marked only by its white mortar; tapped, it pops
 // out and its top face shows above it. Pulled out, it leaves the recess in
 // the wall art behind it.
 const CASTLE_ANSWER_PLAQUE = require('../../assets/images/dailycastle/answerplaque_stone.png');

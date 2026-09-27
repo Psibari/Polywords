@@ -4,9 +4,9 @@ Source: tools/art/source/castle_cartoon_src.png, 864 x 1152, the castle Pete
 picked on 2026-09-26 ("B"), generated in the cartoon style of his own art so
 it matches Polly. This script:
 
-  1. remaps every gold area (tower domes, ropes, step edges) onto the game's
-     golds, keeping each area's light and shade: #8F6F18, #C8920E, #F5C842,
-     #FFF7D6;
+  1. remaps every gold area (tower domes, ropes, step edges) onto a white
+     ramp at rest, keeping each area's light and shade: #C9C9C8, #DDDDDC,
+     #EFEFEE, #FFFFFF (Pete, 2026-09-27: they flash gold on a correct answer);
   2. centres the arch (the source draws it CENTRE_SHIFT px left of centre;
      the left edge is filled by reflection);
   3. removes the top step (rows STEP_CUT: one 53-row repeat of gold edge,
@@ -24,7 +24,16 @@ it matches Polly. This script:
      difference between the castle's lit stone face (median purple in
      STONE_SAMPLE, the right tower's face) and the book's median cover
      purple, measured from HERO_BOOK itself, so every shade keeps its place
-     relative to the others. Gold and the opening's shape are untouched.
+     relative to the others. The trim and the opening's shape are untouched;
+  7. retints the courtyard floor (rows FLOOR_ROWS, below the bottom step and
+     down to the answer wall's cap) the same way, from the band's own median
+     purple to FLOOR_TARGET, measured from Pete's mock (2026-09-27). The walls
+     keep step 6's colour.
+
+It also writes castle_cartoon_gold_flash.png: the same canvas, transparent
+except the trim, which it paints in the game's golds (#8F6F18, #C8920E,
+#F5C842, #FFF7D6). DailyCastleStage fades it in over the castle on every
+correct answer.
 
 It prints the opening's measurements; app/ui/dailyCastleScene.ts mirrors them.
 Rerun it, never hand-edit the output.
@@ -39,6 +48,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "tools/art/source/castle_cartoon_src.png"
 OUT = ROOT / "assets/images/dailycastle/castle_cartoon.png"
+OUT_FLASH = ROOT / "assets/images/dailycastle/castle_cartoon_gold_flash.png"
 
 W, H = 1290, 2796
 CENTRE_SHIFT = 23          # source px: arch centre x 409 vs image centre 432
@@ -52,7 +62,11 @@ OPENING_TOL = 20           # colour tolerance for the opening flood fill
 HERO_BOOK = ROOT / "assets/images/hero-book-rig-v1/cover-outer.png"
 STONE_SAMPLE = (900, 400, 1290, 1000)   # canvas px: the right tower's lit stone face
 
+FLOOR_ROWS = (1521, 1728)  # canvas px: bottom step's outline to DAILY_ANSWER_WALL.capTopPx
+FLOOR_TARGET = (0x27, 0x1A, 0x50)   # the floor in Pete's mock (2026-09-27)
+
 GOLDS = [(0x8F, 0x6F, 0x18), (0xC8, 0x92, 0x0E), (0xF5, 0xC8, 0x42), (0xFF, 0xF7, 0xD6)]
+WHITES = [(0xC9, 0xC9, 0xC8), (0xDD, 0xDD, 0xDC), (0xEF, 0xEF, 0xEE), (0xFF, 0xFF, 0xFF)]
 
 
 def hsv(rgb):
@@ -66,16 +80,17 @@ def hsv(rgb):
     return h * 60, np.where(mx > 0, d / np.where(mx > 0, mx, 1), 0), mx
 
 
-def regold(a):
+def regold(a, ramp):
+    """Remap the gold trim onto ramp; also return the trim's mask."""
     h, s, v = hsv(a)
     gold = (h >= 8) & (h <= 50) & (s > 0.3) & (v > 0.2)
-    t = np.clip((v - 0.43) / (0.98 - 0.43), 0, 1) * (len(GOLDS) - 1)
-    i = np.clip(np.floor(t).astype(int), 0, len(GOLDS) - 2); f = (t - i)[..., None]
-    stops = np.array(GOLDS, np.float32)
+    t = np.clip((v - 0.43) / (0.98 - 0.43), 0, 1) * (len(ramp) - 1)
+    i = np.clip(np.floor(t).astype(int), 0, len(ramp) - 2); f = (t - i)[..., None]
+    stops = np.array(ramp, np.float32)
     ramp = stops[i] * (1 - f) + stops[i + 1] * f
     out = a.astype(np.float32)
     out[gold] = ramp[gold]
-    return out.clip(0, 255).astype(np.uint8), int(gold.sum())
+    return out.clip(0, 255).astype(np.uint8), gold
 
 
 def purples(rgb):
@@ -102,6 +117,15 @@ def hsv_to_rgb(h, s, v):
     return np.stack([r + m, g + m, b + m], -1) * 255
 
 
+def shift(rgb, mask, h, s, v, source, target):
+    """Move the masked pixels by the HSV difference between source and target."""
+    (th, ts, tv), (sh, ss, sv) = hsv_of(target), hsv_of(source)
+    out = rgb.astype(np.float32)
+    new = hsv_to_rgb(h + (th - sh), np.clip(s * ts / ss, 0, 1), np.clip(v * tv / sv, 0, 1))
+    out[mask] = new[mask]
+    return out.clip(0, 255).astype(np.uint8)
+
+
 def retint(rgb):
     """Move the castle's purples onto the hero book's cover purple."""
     book = np.array(Image.open(HERO_BOOK).convert("RGBA"))
@@ -112,11 +136,17 @@ def retint(rgb):
     x0, y0, x1, y1 = STONE_SAMPLE
     face = mask[y0:y1, x0:x1] & (v[y0:y1, x0:x1] > 0.55)     # lit faces, not shading or lines
     source = median_purple(rgb[y0:y1, x0:x1], face)
-    (th, ts, tv), (sh, ss, sv) = hsv_of(target), hsv_of(source)
-    out = rgb.astype(np.float32)
-    new = hsv_to_rgb(h + (th - sh), np.clip(s * ts / ss, 0, 1), np.clip(v * tv / sv, 0, 1))
-    out[mask] = new[mask]
-    return out.clip(0, 255).astype(np.uint8), source, target
+    return shift(rgb, mask, h, s, v, source, target), source, target
+
+
+def retint_floor(rgb):
+    """Move the floor band's purples onto FLOOR_TARGET; nothing else moves."""
+    y0, y1 = FLOOR_ROWS
+    mask, h, s, v = purples(rgb)
+    mask[:y0] = False; mask[y1:] = False
+    source = median_purple(rgb, mask)
+    target = np.array(FLOOR_TARGET, np.float32)
+    return shift(rgb, mask, h, s, v, source, target), source, target
 
 
 def centre(a):
@@ -147,29 +177,51 @@ def flood(a, seed, tol):
     return seen
 
 
-def main():
-    a = np.array(Image.open(SRC).convert("RGB"))
-    a, n_gold = regold(a)
+def shape(a):
+    """Centre, cut the step, stretch and scale to the canvas width."""
     a = stretch(cut_step(centre(a)))
     k = W / a.shape[1]
-    big = np.array(Image.fromarray(a).resize((W, round(a.shape[0] * k)), Image.LANCZOS))
+    return np.array(Image.fromarray(a).resize((W, round(a.shape[0] * k)), Image.LANCZOS)), k
+
+
+def place(big, grown):
+    canvas = np.zeros((H, W, 4), np.uint8)
+    canvas[:OFFSET_Y + 2, :, :3] = big[2]; canvas[:OFFSET_Y + 2, :, 3] = 255
+    h = min(big.shape[0], H - OFFSET_Y)
+    canvas[OFFSET_Y:OFFSET_Y + h, :, :3] = big[:h]
+    canvas[OFFSET_Y:OFFSET_Y + h, :, 3] = np.where(grown[:h], 0, 255)
+    return canvas, h
+
+
+def main():
+    src = np.array(Image.open(SRC).convert("RGB"))
+    white, gold = regold(src, WHITES)
+    golden, _ = regold(src, GOLDS)
+    big, k = shape(white)
+    big_gold, _ = shape(golden)
+    trim, _ = shape(np.where(gold, 255, 0).astype(np.uint8))
     seed = (round(OPENING_SEED[0] * k), round((OPENING_SEED[1] + STRETCH_ADD / 2) * k))
     opening = flood(big, seed, OPENING_TOL)
     # close the opening's ragged anti-aliased rim by one pixel
     grown = opening.copy()
     for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         grown |= np.roll(opening, (dy, dx), (0, 1))
-    canvas = np.zeros((H, W, 4), np.uint8)
-    canvas[:OFFSET_Y + 2, :, :3] = big[2]; canvas[:OFFSET_Y + 2, :, 3] = 255
-    h = min(big.shape[0], H - OFFSET_Y)
-    canvas[OFFSET_Y:OFFSET_Y + h, :, :3] = big[:h]
-    canvas[OFFSET_Y:OFFSET_Y + h, :, 3] = np.where(grown[:h], 0, 255)
+    canvas, h = place(big, grown)
     canvas[..., :3], castle_purple, book_purple = retint(canvas[..., :3])
+    canvas[..., :3], floor_before, floor_after = retint_floor(canvas[..., :3])
     Image.fromarray(canvas, "RGBA").save(OUT, optimize=True)
     print(f"retint: castle median purple {castle_purple.round()} -> hero book {book_purple.round()}")
+    print(f"retint: floor median purple {floor_before.round()} -> mock floor {floor_after.round()}")
+
+    # The flash: the same trim in the golds, pixel for pixel, clear elsewhere.
+    flash, _ = place(big_gold, grown)
+    trim_canvas, _ = place(np.stack([trim] * 3, -1), grown)
+    flash[..., 3] = np.where((trim_canvas[..., 0] > 127) & (canvas[..., 3] > 0), 255, 0)
+    flash[:OFFSET_Y + 2, :, 3] = 0
+    Image.fromarray(flash, "RGBA").save(OUT_FLASH, optimize=True)
 
     ys, xs = np.nonzero(grown); ys = ys + OFFSET_Y
-    print(f"wrote {OUT.name}: gold px remapped {n_gold}, source scale {k:.4f}, image bottom {OFFSET_Y + h} px")
+    print(f"wrote {OUT.name}, {OUT_FLASH.name}: trim px {int(gold.sum())}, source scale {k:.4f}, image bottom {OFFSET_Y + h} px")
     print(f"opening px: x {xs.min()}-{xs.max()}  y {ys.min()}-{ys.max()}")
     for y in range(ys.min(), ys.max() + 1, 30):
         r = np.nonzero(grown[y - OFFSET_Y])[0]
