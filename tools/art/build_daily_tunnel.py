@@ -3,7 +3,8 @@
 Pete's idea (2026-09-26): the space behind the gate is a tunnel the thrown
 block flies down. Redrawn in castle B's cartoon style (Pete, 2026-09-27):
 rings of stone step back in perspective, each a flat colour darker than the
-last, with black outlines and stone joints, to a lit far opening. The
+last, with black outlines and stone joints, to a far opening lit gold. The
+walls are the castle's hero-book purple (2026-09-27). The
 vanishing point is where the thrown block ends its flight
 (dailyCastleScene DAILY_CASTLE_FLIGHT.end, 302 pt), and the far opening is
 about the size the block has shrunk to there, so it flies into the light.
@@ -31,11 +32,17 @@ FAR_SCALE = 0.31                     # far opening vs the mouth
 SS = 3
 
 LINE = (14, 4, 24)                   # the wall's outline colour
-WALL_MOUTH = (82, 26, 146)           # a step darker than the castle's facade stone
-FLOOR_MOUTH = (66, 18, 120)
-FOG = (18, 8, 38)                    # deep in the tunnel
-GLOW_OUT = (150, 118, 222)           # the far opening's light
-GLOW_IN = (226, 212, 255)
+# The castle's hero-book purple (40, 28, 115), a step darker at the mouth so
+# the tunnel reads as inside (Pete, 2026-09-27: match the new purple).
+WALL_MOUTH = (34, 23, 100)
+FLOOR_MOUTH = (27, 18, 82)
+FOG = (9, 5, 24)                     # deep in the tunnel
+# The far opening's light is the game's gold (Pete, 2026-09-27: not white).
+GLOW_OUT = (200, 146, 14)            # amber
+GLOW_IN = (245, 200, 66)             # gold
+# The course nearest the light is lit purple stone, not purple mixed with gold
+# (that mix went a muddy brown); the gold rim round the opening carries the spill.
+LIT_STONE = (92, 66, 176)
 JOINTS = 9                           # stone joints across each course
 
 
@@ -87,10 +94,10 @@ def main(out: Path) -> None:
         t = (k / RINGS) ** 0.9
         wall = mix(WALL_MOUTH, FOG, t * 0.85)
         floor = mix(FLOOR_MOUTH, FOG, t * 0.85)
-        # the course nearest the light picks up its glow
+        # the course nearest the light is lit by it
         if k == RINGS - 1:
-            wall = mix(wall, GLOW_OUT, 0.35)
-            floor = mix(floor, GLOW_OUT, 0.3)
+            wall = mix(wall, LIT_STONE, 0.45)
+            floor = mix(floor, LIT_STONE, 0.35)
         d.polygon([(s(x), s(y)) for x, y in outer], fill=wall)
         # floor: the band between the two rings' bottom edges
         d.polygon([(s(outer[0][0]), s(outer[0][1])), (s(outer[-1][0]), s(outer[-1][1])),
@@ -114,6 +121,10 @@ def main(out: Path) -> None:
     d.polygon([(s(x), s(y)) for x, y in far], fill=GLOW_OUT)
     d.polygon([(s(x), s(y)) for x, y in scaled(mouth, scales[-1] * 0.72)], fill=GLOW_IN)
     d.line([(s(x), s(y)) for x, y in far] + [(s(far[0][0]), s(far[0][1]))], fill=LINE, width=round(s(2.5)))
+    # gold rim: the light spilling over the opening's edge, up the walls and
+    # over the vault (the open path, not along the floor)
+    rim = scaled(mouth, scales[-1] * 1.04)
+    d.line([(s(x), s(y)) for x, y in rim], fill=GLOW_IN, width=round(s(3)))
 
     result = img.resize((W, H), Image.BOX)
     result.save(out, optimize=True)
