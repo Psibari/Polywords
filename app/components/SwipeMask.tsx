@@ -42,8 +42,10 @@ import { recordPlaytestEvent, resolveHuntTelemetryPhase } from '../game/playtest
 import { useGameStore } from '../store/useGameStore';
 import {
   ACTIVE_TILE_BASE_FONT_SIZE,
+  resolveActiveTileCardWidth,
   resolveActiveTileHeight,
   resolveActiveTileLayoutPolicy,
+  resolveActiveTileTextLayout,
 } from './tileTextLayout';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
@@ -137,9 +139,7 @@ export function SwipeMask({
   splitBackgroundColor,
 }: Props) {
   const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = gauntletCard
-    ? Math.min(screenWidth - 40, 300)
-    : Math.min(screenWidth - 80, 290);
+  const cardWidth = resolveActiveTileCardWidth(screenWidth, gauntletCard);
   const cardHeight = Math.min(
     Math.max(tileHeight, 96),
     gauntletCard ? 200 : bookMaterial ? 220 : 124,
@@ -151,6 +151,16 @@ export function SwipeMask({
     gauntletCard,
     tileHeight,
   });
+  const resolvedNormalTileTextLayout = !isSpecialSplit && !bookMaterial && !gauntletCard
+    ? resolveActiveTileTextLayout(mask.phrase, cardWidth)
+    : null;
+  // Base-size phrases keep the exact native wrapping they had before this
+  // fix. Only a phrase that actually needs fitting receives authored line
+  // breaks and a smaller font, keeping the guided FINE cards unchanged.
+  const fittedNormalTileTextLayout = resolvedNormalTileTextLayout?.fontSize ===
+    ACTIVE_TILE_BASE_FONT_SIZE
+    ? null
+    : resolvedNormalTileTextLayout;
   const reduceMotion = useReducedMotionPreference();
   const reduceFlashes = useReducedFlashesPreference();
 
@@ -929,10 +939,18 @@ export function SwipeMask({
               style={[
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
+                fittedNormalTileTextLayout && {
+                  alignSelf: 'center',
+                  width: fittedNormalTileTextLayout.textRegionWidth,
+                  fontSize: fittedNormalTileTextLayout.fontSize,
+                  lineHeight: fittedNormalTileTextLayout.lineHeight,
+                },
               ]}
               {...activeTileLayoutPolicy.textProps}
             >
-              {mask.phrase}
+              {fittedNormalTileTextLayout
+                ? fittedNormalTileTextLayout.lines.join('\n')
+                : mask.phrase}
             </Text>
           </View>
           {/* Era badge */}
