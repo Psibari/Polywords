@@ -274,6 +274,37 @@ const FEATHER_CAPTION: OnboardingCaption = {
   accessibilityLabel: 'Wrong calls cost a feather. Run out, and Polly wins the Hunt.',
 };
 
+// The feather rule is due once the core is complete, or after a wrong call in
+// the unaided beat, until Polly has explained it. The overlay fires the beat
+// from this rule, and GameScreen derives the board caption from it.
+export function isOnboardingFeatherDue(
+  state: FirstRunOnboardingState,
+  game: GameState,
+): boolean {
+  const active = state.activeRun;
+  return active !== null &&
+    game.runSeed === active.runSeed &&
+    game.onboardingMode === active.mode &&
+    !active.featherExplained &&
+    (active.phase === 'complete' || (active.phase === 'unaided' && game.mistakesOnWord > 0));
+}
+
+// Whether the board shows the feather caption. Derived in GameScreen's own
+// render rather than waiting for the overlay to report its state up through an
+// effect: the swipe that makes the rule due can also bring the swipe cues
+// back, and the caption has to hide them in that same render. Like the
+// overlay, it holds back while another onboarding visit is still under way;
+// once the overlay's own feather beat is showing, that visit is its own.
+export function resolveFeatherCaptionVisible(
+  state: FirstRunOnboardingState,
+  game: GameState,
+  overlayFeatherShowing: boolean,
+  onboardingVisitActive: boolean,
+): boolean {
+  return isOnboardingFeatherDue(state, game) &&
+    (overlayFeatherShowing || !onboardingVisitActive);
+}
+
 // Instruction text that sits above a live card, laid out by the board in the
 // band between the plate and the swipe-up cue. The feather rule wins when it
 // overlaps the unaided helper: it is the beat Polly is speaking to.

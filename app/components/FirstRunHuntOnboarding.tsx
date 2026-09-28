@@ -10,7 +10,7 @@ import { FONTS } from '../constants/fonts';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import type { VisitSpec } from '../game/pollyVisitPolicy';
-import { recognitionOpensWithHold } from '../game/firstRunOnboarding';
+import { isOnboardingFeatherDue, recognitionOpensWithHold } from '../game/firstRunOnboarding';
 import { useGameStore } from '../store/useGameStore';
 import { PW } from '../ui/pwTheme';
 import { PollyHuntVisit } from './PollyHuntVisit';
@@ -195,11 +195,8 @@ export function FirstRunHuntOnboarding({
   }, [activeRun?.phase, belongsToThisRun, reduceMotion]);
 
   useEffect(() => {
-    if (!belongsToThisRun || activeRun.featherExplained) return;
-    const readyForFeather =
-      activeRun.phase === 'complete' ||
-      (activeRun.phase === 'unaided' && game.mistakesOnWord > 0);
-    if (!readyForFeather || featherCopyVisible || visitPurposeRef.current !== null) return;
+    if (!isOnboardingFeatherDue(onboarding, game)) return;
+    if (featherCopyVisible || visitPurposeRef.current !== null) return;
     setFeatherCopyVisible(true);
     onFeatherExplainStart();
     AccessibilityInfo.announceForAccessibility(

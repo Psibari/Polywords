@@ -32,6 +32,7 @@ import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageK
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import {
   recognitionOpensWithHold,
+  resolveFeatherCaptionVisible,
   resolveOnboardingBoardPresentation,
   resolveOnboardingCaption,
   resolveOnboardingCaptionReserve,
@@ -1586,7 +1587,16 @@ function GameContent({
       : resolveOnboardingBoardPresentation(onboarding, game);
     const onboardingCaption = isBossStep
       ? null
-      : resolveOnboardingCaption(onboarding, game, onboardingFeatherVisible);
+      : resolveOnboardingCaption(
+          onboarding,
+          game,
+          resolveFeatherCaptionVisible(
+            onboarding,
+            game,
+            onboardingFeatherVisible,
+            onboardingVisitActive,
+          ),
+        );
     const activeOnboarding = onboarding.activeRun?.runSeed === game.runSeed &&
       onboarding.activeRun.mode === game.onboardingMode;
     const suppressReactivePolly = activeOnboarding &&

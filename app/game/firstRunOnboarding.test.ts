@@ -5,11 +5,13 @@ import {
   dismissCompletedOnboardingHandoffOnResume,
   finishOnboardingHandoff,
   hydrateOnboardingState,
+  isOnboardingFeatherDue,
   recognitionOpensWithHold,
   reconcileOnboardingRun,
   resolveOnboardingBoardPresentation,
   resolveOnboardingCaption,
   resolveOnboardingCaptionReserve,
+  resolveFeatherCaptionVisible,
   resolveOnboardingInputMode,
   shouldRenderDecisionStack,
   type FirstRunOnboardingState,
@@ -286,6 +288,55 @@ eq(shouldRenderDecisionStack(false, null), false, 'a hidden decision card with n
     resolveOnboardingCaption(at('guided-real'), { ...captionGame, onboardingMode: undefined }, false),
     null,
     'a Hunt without onboarding shows no caption',
+  );
+}
+
+// The feather rule: due after completion or a wrong unaided call, until it
+// has been explained; the board caption follows it in the same render.
+for (const mode of ['first-run', 'replay'] as const) {
+  const featherGame = createGame(steps, 3, seed, 0, {
+    onboardingMode: mode,
+    openingMaskIds: FIRST_RUN_FINE_MASK_IDS,
+  });
+  const run = (phase: OnboardingCorePhase, featherExplained = false): FirstRunOnboardingState => ({
+    ...createDefaultOnboardingState(),
+    activeRun: {
+      runSeed: seed,
+      mode,
+      phase,
+      presentationStep: 0,
+      unaidedAttempts: 0,
+      helperVisible: true,
+      featherExplained,
+    },
+  });
+  const wrongCall = { ...featherGame, mistakesOnWord: 1 };
+  eq(isOnboardingFeatherDue(run('unaided'), featherGame), false, `${mode}: no feather before a mistake`);
+  eq(isOnboardingFeatherDue(run('unaided'), wrongCall), true, `${mode}: a wrong unaided call makes the feather due`);
+  eq(isOnboardingFeatherDue(run('complete'), featherGame), true, `${mode}: completion makes the feather due`);
+  eq(isOnboardingFeatherDue(run('complete', true), featherGame), false, `${mode}: an explained feather is never due again`);
+  eq(isOnboardingFeatherDue(run('unaided', true), wrongCall), false, `${mode}: explained stays explained after a mistake`);
+  for (const phase of ['recognition', 'challenge', 'guided-real', 'guided-real-result', 'guided-trap', 'guided-trap-result'] as const) {
+    eq(isOnboardingFeatherDue(run(phase), wrongCall), false, `${mode}: ${phase} never makes the feather due`);
+  }
+  eq(
+    isOnboardingFeatherDue(run('complete'), { ...featherGame, runSeed: seed + 1 }),
+    false,
+    `${mode}: another Hunt never shows this run's feather`,
+  );
+
+  // Caption: shown in the very render the rule becomes due (no overlay report
+  // needed), held back only while a different onboarding visit is under way.
+  eq(resolveFeatherCaptionVisible(run('complete'), featherGame, false, false), true, `${mode}: caption shows the render the feather is due`);
+  eq(resolveFeatherCaptionVisible(run('unaided'), wrongCall, false, false), true, `${mode}: caption shows the render a wrong call lands`);
+  eq(resolveFeatherCaptionVisible(run('complete'), featherGame, false, true), false, `${mode}: another visit in flight holds the caption back`);
+  eq(resolveFeatherCaptionVisible(run('complete'), featherGame, true, true), true, `${mode}: the feather's own visit keeps the caption up`);
+  eq(resolveFeatherCaptionVisible(run('complete', true), featherGame, true, true), false, `${mode}: caption drops the render the feather is explained`);
+  eq(resolveFeatherCaptionVisible(run('unaided'), featherGame, false, false), false, `${mode}: no caption before a mistake`);
+  eq(
+    resolveOnboardingCaption(run('complete'), featherGame, resolveFeatherCaptionVisible(run('complete'), featherGame, false, false))?.kind,
+    'feather',
+    `${mode}: the board gets the feather caption in the same render`,
   );
 }
 
