@@ -75,6 +75,7 @@ import {
   ONBOARDING_VERSION,
   createDefaultOnboardingState,
   dismissCompletedOnboardingHandoffOnResume,
+  finishOnboardingHandoff as closeOnboardingHandoff,
   hydrateOnboardingState,
   reconcileOnboardingRun,
   type FirstRunOnboardingState,
@@ -1128,7 +1129,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   finishOnboardingHandoff: () => {
     const current = get().onboarding;
     if (!current.activeRun) return;
-    const next = { ...current, activeRun: null };
+    const next = closeOnboardingHandoff(current);
     set({ onboarding: next });
     persistOnboarding(next);
   },

@@ -2,13 +2,14 @@ import {
   FIRST_RUN_FINE_MASK_IDS,
   createDefaultOnboardingState,
   dismissCompletedOnboardingHandoffOnResume,
+  finishOnboardingHandoff,
   hydrateOnboardingState,
   reconcileOnboardingRun,
   resolveOnboardingBoardPresentation,
   resolveOnboardingInputMode,
   type FirstRunOnboardingState,
 } from './firstRunOnboarding';
-import { createGame, submitSwipeDown, submitSwipeUp } from './polyRunEngine';
+import { createGame, submitSwipeDown, submitSwipeUp, type GameState } from './polyRunEngine';
 import { generateHunt } from './huntGenerator';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -173,5 +174,87 @@ retryGame = retryMask.isReal
 retryOnboarding = reconcileOnboardingRun(retryOnboarding, retryGame);
 eq(retryOnboarding.activeRun?.phase, 'complete', 'next correct unaided decision completes onboarding');
 eq(retryOnboarding.activeRun?.helperVisible, false, 'first correct unaided decision removes helper');
+
+// A finished hand-off stays finished. The Hunt keeps onboardingMode for its
+// whole life, so every later game update runs reconcile against the state the
+// hand-off left behind; it must never build a fresh run for the same seed.
+for (const mode of ['first-run', 'replay'] as const) {
+  let finishedGame = createGame(steps, 3, seed, 0, {
+    onboardingMode: mode,
+    openingMaskIds: FIRST_RUN_FINE_MASK_IDS,
+  });
+  let finished: FirstRunOnboardingState = {
+    ...createDefaultOnboardingState(),
+    activeRun: {
+      runSeed: seed,
+      mode,
+      phase: 'unaided',
+      presentationStep: 0,
+      unaidedAttempts: 0,
+      helperVisible: true,
+      featherExplained: false,
+    },
+  };
+  finishedGame = submitSwipeUp(finishedGame, 'fine_r03');
+  finishedGame = submitSwipeDown(finishedGame, 'fine_t00');
+  finishedGame = submitSwipeUp(finishedGame, 'fine_r04');
+  finished = reconcileOnboardingRun(finished, finishedGame);
+  eq(finished.activeRun?.phase, 'complete', `${mode}: FINE completes before the hand-off`);
+  finished = {
+    ...finished,
+    activeRun: { ...finished.activeRun!, featherExplained: true },
+  };
+  finished = finishOnboardingHandoff(finished);
+  eq(finished.finishedRunSeed, seed, `${mode}: the hand-off records its finished seed`);
+
+  // Walk the next word's masks, one swipe per game update, and count how
+  // many times reconcile brings a finished run back to life.
+  let laterGame: GameState = { ...finishedGame, stepIndex: 1, swipedUpIds: [], swipedDownIds: [] };
+  let restarts = 0;
+  const nextMasks = laterGame.shuffledMasks[1];
+  for (const mask of nextMasks.slice(0, 4)) {
+    laterGame = mask.isReal ? submitSwipeUp(laterGame, mask.id) : submitSwipeDown(laterGame, mask.id);
+    const reconciled = reconcileOnboardingRun(finished, laterGame);
+    if (reconciled.activeRun) {
+      restarts += 1;
+      // What the component does with a rebuilt run: feather banner, hand-off.
+      finished = finishOnboardingHandoff(reconciled);
+    } else {
+      finished = reconciled;
+    }
+  }
+  eq(restarts, 0, `${mode}: a finished hand-off never restarts on later swipes`);
+
+  // A later onboarding Hunt has its own seed and still gets its own run.
+  const nextSeed = seed + 1;
+  const nextHunt = createGame(steps, 3, nextSeed, 0, {
+    onboardingMode: mode,
+    openingMaskIds: FIRST_RUN_FINE_MASK_IDS,
+  });
+  const nextRun = reconcileOnboardingRun(finished, nextHunt);
+  eq(nextRun.activeRun?.runSeed, nextSeed, `${mode}: a new Hunt seed still starts its own run`);
+  eq(nextRun.activeRun?.phase, `recognition`, `${mode}: a new Hunt run starts at recognition`);
+}
+
+// Resuming after FINE closes the hand-off the same way, so the next swipe
+// after a resume does not rebuild it either.
+const resumedFinished = dismissCompletedOnboardingHandoffOnResume(onboarding, nextWordGame);
+eq(resumedFinished.finishedRunSeed, seed, `resume after FINE records the finished seed`);
+const nextWordMask = nextWordGame.shuffledMasks[1][0];
+const afterResumeSwipe = nextWordMask.isReal
+  ? submitSwipeUp(nextWordGame, nextWordMask.id)
+  : submitSwipeDown(nextWordGame, nextWordMask.id);
+eq(
+  reconcileOnboardingRun(resumedFinished, afterResumeSwipe).activeRun,
+  null,
+  `the first swipe after a resume never restarts the finished run`,
+);
+
+// Saves written before finishedRunSeed existed hydrate with it unset.
+const legacySave = JSON.stringify({ ...createDefaultOnboardingState(), finishedRunSeed: undefined });
+eq(hydrateOnboardingState(legacySave).finishedRunSeed, null, `saves without finishedRunSeed hydrate as null`);
+eq(hydrateOnboardingState(legacySave).version, 1, `saves without finishedRunSeed keep their version`);
+const savedFinished = JSON.stringify({ ...createDefaultOnboardingState(), finishedRunSeed: seed });
+eq(hydrateOnboardingState(savedFinished).finishedRunSeed, seed, `finishedRunSeed survives a save round trip`);
 
 console.log('firstRunOnboarding tests passed');

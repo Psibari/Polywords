@@ -40,6 +40,10 @@ export type FirstRunOnboardingState = {
   coreCompleted: boolean;
   replayRequested: boolean;
   activeRun: ActiveOnboardingRun | null;
+  // The runSeed whose hand-off already closed. The Hunt keeps onboardingMode
+  // for its whole life, so without this reconcile would rebuild that run on
+  // the next game update and replay the feather banner and hand-off.
+  finishedRunSeed: number | null;
   trackedEvents: string[];
 };
 
@@ -50,6 +54,7 @@ export function createDefaultOnboardingState(): FirstRunOnboardingState {
     coreCompleted: false,
     replayRequested: false,
     activeRun: null,
+    finishedRunSeed: null,
     trackedEvents: [],
   };
 }
@@ -95,6 +100,9 @@ export function hydrateOnboardingState(
             featherExplained: active.featherExplained === true,
           }
         : null,
+      finishedRunSeed: Number.isFinite(value.finishedRunSeed)
+        ? value.finishedRunSeed! >>> 0
+        : null,
       trackedEvents: Array.isArray(value.trackedEvents)
         ? value.trackedEvents.filter((event): event is string => typeof event === 'string')
         : defaults.trackedEvents,
@@ -126,6 +134,7 @@ export function reconcileOnboardingRun(
 ): FirstRunOnboardingState {
   const gameMode = game.onboardingMode;
   if (game.onboardingVersion !== ONBOARDING_VERSION || !gameMode) return state;
+  if (state.finishedRunSeed === game.runSeed) return state;
 
   let active = state.activeRun;
   if (!active || active.runSeed !== game.runSeed) {
@@ -263,5 +272,12 @@ export function dismissCompletedOnboardingHandoffOnResume(
   ) {
     return state;
   }
-  return { ...state, activeRun: null };
+  return finishOnboardingHandoff(state);
+}
+
+export function finishOnboardingHandoff(
+  state: FirstRunOnboardingState,
+): FirstRunOnboardingState {
+  if (!state.activeRun) return state;
+  return { ...state, activeRun: null, finishedRunSeed: state.activeRun.runSeed };
 }
