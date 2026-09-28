@@ -10,9 +10,15 @@ import { FONTS } from '../constants/fonts';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import type { VisitSpec } from '../game/pollyVisitPolicy';
+import { recognitionOpensWithHold } from '../game/firstRunOnboarding';
 import { useGameStore } from '../store/useGameStore';
 import { PW } from '../ui/pwTheme';
 import { PollyHuntVisit } from './PollyHuntVisit';
+
+// FINE stands alone this long after the plate settles, before "I'M FINE.".
+const RECOGNITION_OPENING_HOLD_MS = 1500;
+// How long Polly's challenge line stays up.
+const CHALLENGE_COPY_MS = 4000;
 
 const RECOGNITION_COPY = [
   "I'M FINE.",
@@ -46,15 +52,19 @@ type Props = {
   onVisitActivityChange: (active: boolean) => void;
   // The feather rule is drawn by the board as a caption above the card.
   onFeatherCopyVisibleChange: (visible: boolean) => void;
+  // The current word's plate has finished its entrance.
+  plateSettled: boolean;
 };
 
 export function FirstRunHuntOnboarding({
   onFeatherExplainStart,
   onVisitActivityChange,
   onFeatherCopyVisibleChange,
+  plateSettled,
 }: Props) {
   const game = useGameStore(state => state.game);
-  const activeRun = useGameStore(state => state.onboarding.activeRun);
+  const onboarding = useGameStore(state => state.onboarding);
+  const activeRun = onboarding.activeRun;
   const setPhase = useGameStore(state => state.setOnboardingPhase);
   const setPresentationStep = useGameStore(state => state.setOnboardingPresentationStep);
   const markFeatherExplained = useGameStore(state => state.markOnboardingFeatherExplained);
@@ -66,6 +76,9 @@ export function FirstRunHuntOnboarding({
   >(null);
   const [featherCopyVisible, setFeatherCopyVisible] = useState(false);
   const [handoffVisible, setHandoffVisible] = useState(false);
+  // The run whose opening hold has run out. Keyed by seed so a later run
+  // (Replay) starts its own hold; nothing here is saved.
+  const [openingHoldDoneSeed, setOpeningHoldDoneSeed] = useState<number | null>(null);
   const visitIdRef = useRef(0);
   const visitPurposeRef = useRef<
     'challenge-open' | 'challenge-close' | 'real-result' | 'trap-result' | 'feather' | null
@@ -75,6 +88,8 @@ export function FirstRunHuntOnboarding({
   const belongsToThisRun = activeRun &&
     activeRun.runSeed === game.runSeed &&
     game.onboardingMode === activeRun.mode;
+  const holdingOpening = recognitionOpensWithHold(onboarding, game) &&
+    openingHoldDoneSeed !== game.runSeed;
 
   const showVisit = (purpose: NonNullable<typeof visitPurposeRef.current>, spec: VisitSpec) => {
     if (visitPurposeRef.current === purpose) return;
@@ -93,8 +108,17 @@ export function FirstRunHuntOnboarding({
     return () => onFeatherCopyVisibleChange(false);
   }, [featherCopyVisible, onFeatherCopyVisibleChange]);
 
+  // The hold counts from the plate settling, so the word has fully landed
+  // before FINE's own beat starts.
   useEffect(() => {
-    if (!belongsToThisRun || activeRun.phase !== 'recognition') return;
+    if (!holdingOpening || !plateSettled) return;
+    const runSeed = game.runSeed;
+    const timer = setTimeout(() => setOpeningHoldDoneSeed(runSeed), RECOGNITION_OPENING_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [holdingOpening, plateSettled, game.runSeed]);
+
+  useEffect(() => {
+    if (!belongsToThisRun || activeRun.phase !== 'recognition' || holdingOpening) return;
     const step = Math.min(activeRun.presentationStep, RECOGNITION_COPY.length - 1);
     const copy = RECOGNITION_COPY[step];
     AccessibilityInfo.announceForAccessibility(copy.replace(/\n/g, ' '));
@@ -118,6 +142,7 @@ export function FirstRunHuntOnboarding({
     activeRun?.phase,
     activeRun?.presentationStep,
     belongsToThisRun,
+    holdingOpening,
     opacity,
     reduceMotion,
     setPhase,
@@ -132,7 +157,7 @@ export function FirstRunHuntOnboarding({
     }
     if (activeRun.presentationStep === 1) {
       AccessibilityInfo.announceForAccessibility(CHALLENGE_COPY.replace(/\n/g, ' '));
-      const timer = setTimeout(() => setPresentationStep(2), 2800);
+      const timer = setTimeout(() => setPresentationStep(2), CHALLENGE_COPY_MS);
       return () => clearTimeout(timer);
     }
     showVisit('challenge-close', onboardingVisit('Let’s see how sure you are.'));
@@ -218,7 +243,7 @@ export function FirstRunHuntOnboarding({
   const phase = activeRun.phase;
   let copy: string | null = null;
   let compact = false;
-  if (phase === 'recognition') {
+  if (phase === 'recognition' && !holdingOpening) {
     copy = RECOGNITION_COPY[Math.min(activeRun.presentationStep, RECOGNITION_COPY.length - 1)];
   } else if (phase === 'challenge' && activeRun.presentationStep === 1) {
     copy = CHALLENGE_COPY;

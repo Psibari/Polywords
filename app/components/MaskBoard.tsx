@@ -111,6 +111,9 @@ export type Props = {
   onboardingCaption?: OnboardingCaption | null;
   // Extra room above the deck for that band, constant for the whole word.
   onboardingCaptionReserve?: number;
+  // Fires once per word when the plate's entrance has settled (the spring's
+  // completion, or at once when the entrance is skipped).
+  onEntranceSettled?: () => void;
   onDecisionCommitted?: (decision: {
     maskId: string;
     direction: 'up' | 'right';
@@ -478,7 +481,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 }
 
 
-function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onboardingCaption = null, onboardingCaptionReserve = 0, onDecisionCommitted, firePollyEvent, isBossStage }: BoardPresenterProps) {
+function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onboardingCaption = null, onboardingCaptionReserve = 0, onEntranceSettled, onDecisionCommitted, firePollyEvent, isBossStage }: BoardPresenterProps) {
   const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
@@ -1474,6 +1477,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
     if (isBoss || reduceMotion) {
       bookSlideX.setValue(0);
+      onEntranceSettled?.();
     } else {
       // Normal words keep the existing book entrance.
       Animated.spring(bookSlideX, {
@@ -1481,7 +1485,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         friction: 5,
         tension: 60,
         useNativeDriver: true,
-      }).start();
+      }).start(() => onEntranceSettled?.());
     }
 
     // Boss word rides the book cover — already visible & in position; drama fires on top

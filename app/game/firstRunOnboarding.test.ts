@@ -5,6 +5,7 @@ import {
   dismissCompletedOnboardingHandoffOnResume,
   finishOnboardingHandoff,
   hydrateOnboardingState,
+  recognitionOpensWithHold,
   reconcileOnboardingRun,
   resolveOnboardingBoardPresentation,
   resolveOnboardingCaption,
@@ -287,6 +288,43 @@ eq(shouldRenderDecisionStack(false, null), false, 'a hidden decision card with n
     'a Hunt without onboarding shows no caption',
   );
 }
+
+// The opening hold: only at the very start of a recognition phase, in both
+// modes, and never for another Hunt. It adds no saved state.
+for (const mode of ['first-run', 'replay'] as const) {
+  const holdGame = createGame(steps, 3, seed, 0, {
+    onboardingMode: mode,
+    openingMaskIds: FIRST_RUN_FINE_MASK_IDS,
+  });
+  const run = (phase: OnboardingCorePhase, presentationStep: number): FirstRunOnboardingState => ({
+    ...createDefaultOnboardingState(),
+    activeRun: {
+      runSeed: seed,
+      mode,
+      phase,
+      presentationStep,
+      unaidedAttempts: 0,
+      helperVisible: true,
+      featherExplained: false,
+    },
+  });
+  eq(recognitionOpensWithHold(run('recognition', 0), holdGame), true, `${mode}: FINE stands alone first`);
+  eq(recognitionOpensWithHold(run('recognition', 3), holdGame), false, `${mode}: a resume mid-recognition does not hold`);
+  eq(recognitionOpensWithHold(run('challenge', 0), holdGame), false, `${mode}: the challenge never holds`);
+  eq(recognitionOpensWithHold(run('guided-real', 0), holdGame), false, `${mode}: guided play never holds`);
+  eq(
+    recognitionOpensWithHold(run('recognition', 0), { ...holdGame, runSeed: seed + 1 }),
+    false,
+    `${mode}: another Hunt never holds for this run`,
+  );
+  const saved = JSON.parse(JSON.stringify(run('recognition', 0)));
+  eq(
+    JSON.stringify(hydrateOnboardingState(JSON.stringify(saved))),
+    JSON.stringify(hydrateOnboardingState(JSON.stringify(run('recognition', 0)))),
+    `${mode}: the hold adds nothing to the saved state`,
+  );
+}
+eq(recognitionOpensWithHold(createDefaultOnboardingState(), createGame(steps, 3, seed, 0)), false, 'no run, no hold');
 
 // The caption reserve belongs to the FINE tutorial word only, in both modes,
 // and never depends on the phase.

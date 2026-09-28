@@ -1554,6 +1554,8 @@ function GameContent({
   const recordOnboardingDecision = useGameStore(s => s.recordOnboardingDecision);
   const [onboardingVisitActive, setOnboardingVisitActive] = useState(false);
   const [onboardingFeatherVisible, setOnboardingFeatherVisible] = useState(false);
+  // `${runSeed}:${stepIndex}` of the board whose plate entrance has settled.
+  const [settledBoardKey, setSettledBoardKey] = useState<string | null>(null);
   const step = currentStep(game);
   const ghostRunsMissed = step.kind === 'word' && step.isHauntReturn
     ? ghosts.find(ghost => ghost.wordId === step.word.trim().toUpperCase())?.runsMissed ?? 0
@@ -1589,6 +1591,7 @@ function GameContent({
     const suppressReactivePolly = activeOnboarding &&
       (onboarding.activeRun?.phase !== 'complete' || onboardingVisitActive);
     const boardPollyEvent = suppressReactivePolly ? (() => {}) : firePollyEvent;
+    const boardKey = `${game.runSeed}:${game.stepIndex}`;
     return (
       <View style={{ flex: 1 }}>
         <Board
@@ -1604,6 +1607,7 @@ function GameContent({
           swipeCueMode={boardPresentation.swipeCueMode}
           onboardingCaption={onboardingCaption}
           onboardingCaptionReserve={isBossStep ? 0 : resolveOnboardingCaptionReserve(game)}
+          onEntranceSettled={() => setSettledBoardKey(boardKey)}
           onDecisionCommitted={({ maskId, direction, correct, responseMs }) => {
             recordOnboardingDecision(maskId, direction, correct, responseMs);
           }}
@@ -1615,6 +1619,7 @@ function GameContent({
             onFeatherExplainStart={onFeatherExplainStart}
             onVisitActivityChange={setOnboardingVisitActive}
             onFeatherCopyVisibleChange={setOnboardingFeatherVisible}
+            plateSettled={settledBoardKey === boardKey}
           />
         )}
       </View>

@@ -309,6 +309,23 @@ export function resolveOnboardingCaption(
   return null;
 }
 
+// FINE stands alone on the board for a beat before the first premise line,
+// so the player can think of their own meaning first. Only the very start of
+// a recognition phase holds; a resume at a later step shows its line at once.
+// Nothing about the hold is saved.
+export function recognitionOpensWithHold(
+  state: FirstRunOnboardingState,
+  game: GameState,
+): boolean {
+  const active = state.activeRun;
+  return active !== null &&
+    game.onboardingVersion === ONBOARDING_VERSION &&
+    game.onboardingMode === active.mode &&
+    game.runSeed === active.runSeed &&
+    active.phase === 'recognition' &&
+    active.presentationStep === 0;
+}
+
 // Room reserved above the deck on the FINE tutorial word so the caption band
 // holds a line on a 375 x 667 phone without pushing the swipe-right cue into
 // the pause button (36 did). It depends only on the Hunt, never on the phase,
