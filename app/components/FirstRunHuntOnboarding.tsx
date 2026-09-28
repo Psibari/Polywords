@@ -44,11 +44,14 @@ function onboardingVisit(line: string, perchPose: VisitSpec['perchPose'] = 'poin
 type Props = {
   onFeatherExplainStart: () => void;
   onVisitActivityChange: (active: boolean) => void;
+  // The feather rule is drawn by the board as a caption above the card.
+  onFeatherCopyVisibleChange: (visible: boolean) => void;
 };
 
 export function FirstRunHuntOnboarding({
   onFeatherExplainStart,
   onVisitActivityChange,
+  onFeatherCopyVisibleChange,
 }: Props) {
   const game = useGameStore(state => state.game);
   const activeRun = useGameStore(state => state.onboarding.activeRun);
@@ -84,6 +87,11 @@ export function FirstRunHuntOnboarding({
     onVisitActivityChange(visit !== null);
     return () => onVisitActivityChange(false);
   }, [visit, onVisitActivityChange]);
+
+  useEffect(() => {
+    onFeatherCopyVisibleChange(featherCopyVisible);
+    return () => onFeatherCopyVisibleChange(false);
+  }, [featherCopyVisible, onFeatherCopyVisibleChange]);
 
   useEffect(() => {
     if (!belongsToThisRun || activeRun.phase !== 'recognition') return;
@@ -214,18 +222,11 @@ export function FirstRunHuntOnboarding({
     copy = RECOGNITION_COPY[Math.min(activeRun.presentationStep, RECOGNITION_COPY.length - 1)];
   } else if (phase === 'challenge' && activeRun.presentationStep === 1) {
     copy = CHALLENGE_COPY;
-  } else if (phase === 'guided-real') {
-    copy = 'BELONGS TO FINE?\n\nSWIPE UP  ↑';
   } else if (phase === 'guided-real-result' && resultBeatPhase === phase) {
     copy = 'REAL MEANING';
     compact = true;
-  } else if (phase === 'guided-trap') {
-    copy = 'DOESN’T BELONG?\n\nSWIPE RIGHT  →';
   } else if (phase === 'guided-trap-result' && resultBeatPhase === phase) {
     copy = 'TRAP';
-    compact = true;
-  } else if (phase === 'unaided' && activeRun.helperVisible) {
-    copy = '↑ CLAIM A MEANING     → REJECT A TRAP';
     compact = true;
   }
 
@@ -255,18 +256,6 @@ export function FirstRunHuntOnboarding({
         >
           <Text style={[styles.copy, compact && styles.copyCompact]}>{copy}</Text>
         </Animated.View>
-      )}
-      {featherCopyVisible && (
-        <View
-          accessible
-          accessibilityLiveRegion="polite"
-          accessibilityLabel="Wrong calls cost a feather. Run out, and Polly wins the Hunt."
-          style={styles.featherCopyWrap}
-        >
-          <Text style={styles.featherCopy}>
-            WRONG CALLS COST A FEATHER.{`\n`}RUN OUT, AND POLLY WINS THE HUNT.
-          </Text>
-        </View>
       )}
       {handoffVisible && (
         <View accessible accessibilityLiveRegion="polite" style={styles.handoffWrap}>
@@ -314,28 +303,6 @@ const styles = StyleSheet.create({
     color: PW.color.gold,
     fontSize: 17,
     lineHeight: 22,
-  },
-  featherCopyWrap: {
-    position: 'absolute',
-    top: 82,
-    left: 44,
-    right: 44,
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 14,
-    backgroundColor: 'rgba(15,13,42,0.90)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-  },
-  featherCopy: {
-    color: PW.color.softWhite,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    fontSize: 14,
-    lineHeight: 19,
-    letterSpacing: 0.8,
-    textAlign: 'center',
   },
   handoffWrap: {
     position: 'absolute',

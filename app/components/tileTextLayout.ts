@@ -166,6 +166,31 @@ export function resolveBoardVerticalSpacing(
   };
 }
 
+// Extra room above the deck, taken from the space below it so the content
+// height is unchanged. Used only while a board carries an instruction caption
+// band; the deck sits lower by the reserve but does not move within the word.
+export function applyBoardTopReserve(
+  spacing: { gridPaddingTop: number; gridPaddingBottom: number },
+  reserve: number,
+): { gridPaddingTop: number; gridPaddingBottom: number } {
+  if (!Number.isFinite(reserve) || reserve <= 0) return spacing;
+  return {
+    gridPaddingTop: spacing.gridPaddingTop + reserve,
+    gridPaddingBottom: Math.max(MIN_GRID_PADDING_BOTTOM, spacing.gridPaddingBottom - reserve),
+  };
+}
+
+// The hero book's base art is drawn with contentFit fill onto a 1154x830
+// canvas; its last drawn row is 818 (all three variants, read from the PNGs
+// 2026-09-28). The page edges and ribbon hang below the plate's layout box, so
+// anything placed under the plate starts from here, never from the box.
+const HERO_BOOK_SOURCE_HEIGHT = 830;
+const HERO_BOOK_SOURCE_ART_BOTTOM = 819;
+
+export function resolveHeroBookArtBottom(bookHeight: number): number {
+  return Math.ceil((bookHeight * HERO_BOOK_SOURCE_ART_BOTTOM) / HERO_BOOK_SOURCE_HEIGHT);
+}
+
 export function hasBoardVerticalOverflow(viewportHeight: number, contentHeight: number): boolean {
   if (
     !Number.isFinite(viewportHeight) || viewportHeight <= 0 ||

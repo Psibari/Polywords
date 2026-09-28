@@ -28,7 +28,7 @@ import {
   setReturningHauntCueMusicExclusive,
 } from '../audio/MusicEngine';
 import { PW } from '../ui/pwTheme';
-import { libraryMaterial } from '../ui/pwMaterials';
+import { heroBookMaterial, libraryMaterial } from '../ui/pwMaterials';
 import { bossOutcomeAssets } from '../ui/bossOutcomeAssets';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
@@ -48,15 +48,18 @@ import {
 } from '../game/huntFeedbackPolicy';
 import {
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
+  applyBoardTopReserve,
   hasBoardVerticalOverflow,
   resolveActiveCueLayout,
   resolveActiveTileHeight,
   resolveBoardVerticalSpacing,
+  resolveHeroBookArtBottom,
 } from './tileTextLayout';
 import {
   shouldRenderDecisionStack,
   type HuntInputMode,
   type HuntSwipeCueMode,
+  type OnboardingCaption,
 } from '../game/firstRunOnboarding';
 import { shouldReleaseOpeningDecision } from './boardDecisionReadiness';
 
@@ -103,6 +106,11 @@ export type Props = {
   inputMode?: HuntInputMode;
   showDecisionCard?: boolean;
   swipeCueMode?: HuntSwipeCueMode;
+  // First-run instruction text, drawn in the band between the plate and the
+  // swipe-up cue so it never covers the plate or the live card.
+  onboardingCaption?: OnboardingCaption | null;
+  // Extra room above the deck for that band, constant for the whole word.
+  onboardingCaptionReserve?: number;
   onDecisionCommitted?: (decision: {
     maskId: string;
     direction: 'up' | 'right';
@@ -470,7 +478,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 }
 
 
-function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onDecisionCommitted, firePollyEvent, isBossStage }: BoardPresenterProps) {
+function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onboardingCaption = null, onboardingCaptionReserve = 0, onDecisionCommitted, firePollyEvent, isBossStage }: BoardPresenterProps) {
   const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
@@ -502,6 +510,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const activeTopMaskIdRef = useRef<string | null>(null);
   const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const [gridViewportHeight, setGridViewportHeight] = useState(0);
+  // Container-relative edges of the onboarding caption band. The top is the
+  // bottom of the drawn book art, which hangs below the plate's layout box.
+  const [captionTopY, setCaptionTopY] = useState<number | null>(null);
+  const [gridViewportTopY, setGridViewportTopY] = useState<number | null>(null);
   const [gridContentHeight, setGridContentHeight] = useState(0);
   const cueLayoutIdentityRef = useRef('');
   const [cueTextMeasurements, setCueTextMeasurements] = useState({
@@ -1688,10 +1700,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const ownedGridRegionHeight = showSwipeCues
     ? activeCueLayout.ownedRegionHeight
     : activeTileHeight + 48;
-  const boardSpacing = resolveBoardVerticalSpacing(
-    gridViewportHeight,
-    ownedGridRegionHeight,
-    0,
+  const boardSpacing = applyBoardTopReserve(
+    resolveBoardVerticalSpacing(gridViewportHeight, ownedGridRegionHeight, 0),
+    onboardingCaptionReserve,
   );
   const gridHasVerticalOverflow = hasBoardVerticalOverflow(
     gridViewportHeight,
@@ -1701,6 +1712,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     0,
     boardSpacing.gridPaddingTop - (showSwipeCues ? activeCueLayout.leadingCueRegionHeight : 0),
   );
+  // The feather rule hides the swipe cues but keeps their layout, and takes
+  // the up cue's emptied row as extra room.
+  const captionHidesCues = onboardingCaption?.kind === 'feather';
+  const upCueRendered = showSwipeCues && (swipeCueMode === 'both' || swipeCueMode === 'up');
+  const captionBandBottomInGrid = gridPaddingTop +
+    (captionHidesCues && upCueRendered ? activeCueLayout.leadingCueRegionHeight : 0);
 
   return (
     <Animated.View
@@ -1742,6 +1759,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         ref={wordZoneRef as any}
         onLayout={e => {
           const zoneHeight = e.nativeEvent.layout.height;
+          setCaptionTopY(
+            e.nativeEvent.layout.y + resolveHeroBookArtBottom(heroBookMaterial.bookHeight),
+          );
           (wordZoneRef.current as any)?.measure(
             (_x: number, _y: number, _w: number, _h: number, _px: number, pageY: number) => {
               setWordScreenY(pageY + zoneHeight / 2);
@@ -1958,6 +1978,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         onLayout={event => {
           setGridViewportWidth(Math.ceil(event.nativeEvent.layout.width));
           setGridViewportHeight(Math.ceil(event.nativeEvent.layout.height));
+          setGridViewportTopY(event.nativeEvent.layout.y);
         }}
         onContentSizeChange={(_width, height) => setGridContentHeight(Math.ceil(height))}
       >
@@ -1969,7 +1990,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             >
               <Text
                 key={`up-${cueLayoutIdentity}`}
-                style={[styles.swipeCueText, styles.swipeUpCue]}
+                style={[styles.swipeCueText, styles.swipeUpCue, captionHidesCues && styles.cueHiddenByCaption]}
+                accessibilityElementsHidden={captionHidesCues}
+                importantForAccessibility={captionHidesCues ? 'no-hide-descendants' : 'auto'}
                 onLayout={event => handleCueTextLayout('up', event.nativeEvent.layout.height)}
               >
                 SWIPE UP TO CLAIM
@@ -2104,7 +2127,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             >
               <Text
                 key={`right-${cueLayoutIdentity}`}
-                style={[styles.swipeCueText, styles.swipeRightCue]}
+                style={[styles.swipeCueText, styles.swipeRightCue, captionHidesCues && styles.cueHiddenByCaption]}
+                accessibilityElementsHidden={captionHidesCues}
+                importantForAccessibility={captionHidesCues ? 'no-hide-descendants' : 'auto'}
                 onLayout={event => handleCueTextLayout('right', event.nativeEvent.layout.height)}
               >
                 SWIPE RIGHT TO REJECT
@@ -2114,6 +2139,35 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
         </View>
       </ScrollView>
+
+      {/* Band from the bottom of the book art to the top of the grid content
+          (the swipe-up cue, or the card when there is no cue). Absolute, so
+          the deck never moves when a caption comes or goes. */}
+      {onboardingCaption && captionTopY !== null && gridViewportTopY !== null && (
+        <View
+          pointerEvents="none"
+          accessible
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={onboardingCaption.accessibilityLabel}
+          style={[
+            styles.onboardingCaptionBand,
+            {
+              top: captionTopY,
+              height: Math.max(0, gridViewportTopY + captionBandBottomInGrid - captionTopY),
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.swipeCueText,
+              styles.onboardingCaption,
+              onboardingCaption.kind === 'feather' && styles.onboardingCaptionFeather,
+            ]}
+          >
+            {onboardingCaption.text}
+          </Text>
+        </View>
+      )}
 
       {showGauntletCard && (
         <BossGauntletSpines
@@ -2556,6 +2610,29 @@ const styles = StyleSheet.create({
   swipeUpCue: {
     color: '#F5C842',
     opacity: 0.92,
+  },
+  onboardingCaptionBand: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 4,
+    elevation: 4,
+  },
+  onboardingCaption: {
+    color: '#F5C842',
+    fontSize: 20,
+    lineHeight: 24,
+  },
+  onboardingCaptionFeather: {
+    fontSize: 15,
+    lineHeight: 19,
+  },
+  // Keeps the cue's layout (so the deck stays put) while the feather rule
+  // uses the up cue's row.
+  cueHiddenByCaption: {
+    opacity: 0,
   },
   swipeRightCue: {
     width: 210,

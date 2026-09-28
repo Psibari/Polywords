@@ -1,14 +1,18 @@
 import {
   FIRST_RUN_FINE_MASK_IDS,
+  ONBOARDING_CAPTION_RESERVE,
   createDefaultOnboardingState,
   dismissCompletedOnboardingHandoffOnResume,
   finishOnboardingHandoff,
   hydrateOnboardingState,
   reconcileOnboardingRun,
   resolveOnboardingBoardPresentation,
+  resolveOnboardingCaption,
+  resolveOnboardingCaptionReserve,
   resolveOnboardingInputMode,
   shouldRenderDecisionStack,
   type FirstRunOnboardingState,
+  type OnboardingCorePhase,
 } from './firstRunOnboarding';
 import { createGame, submitSwipeDown, submitSwipeUp, type GameState } from './polyRunEngine';
 import { generateHunt } from './huntGenerator';
@@ -208,6 +212,106 @@ eq(
   'a promoted next card is hidden from its first frame',
 );
 eq(shouldRenderDecisionStack(false, null), false, 'a hidden decision card with no top card renders nothing');
+
+// Instruction captions: one per beat, laid out above the live card.
+{
+  const captionGame = createGame(steps, 3, seed, 0, {
+    onboardingMode: 'first-run',
+    openingMaskIds: FIRST_RUN_FINE_MASK_IDS,
+  });
+  const at = (
+    phase: OnboardingCorePhase,
+    helperVisible = true,
+  ): FirstRunOnboardingState => ({
+    ...createDefaultOnboardingState(),
+    activeRun: {
+      runSeed: seed,
+      mode: 'first-run',
+      phase,
+      presentationStep: 0,
+      unaidedAttempts: 0,
+      helperVisible,
+      featherExplained: false,
+    },
+  });
+  const guidedReal = resolveOnboardingCaption(at('guided-real'), captionGame, false);
+  eq(guidedReal?.text, 'BELONGS TO FINE?', 'guided REAL asks only the question');
+  eq(guidedReal?.kind, 'question', 'guided REAL caption is a question');
+  eq(guidedReal?.accessibilityLabel, 'BELONGS TO FINE?', 'guided REAL is announced as written');
+  const guidedTrap = resolveOnboardingCaption(at('guided-trap'), captionGame, false);
+  eq(guidedTrap?.text, 'DOESN’T BELONG?', 'guided TRAP asks only the question');
+  eq(guidedTrap?.kind, 'question', 'guided TRAP caption is a question');
+  const helper = resolveOnboardingCaption(at('unaided'), captionGame, false);
+  eq(helper?.text, '↑ CLAIM A MEANING     → REJECT A TRAP', 'unaided shows the helper');
+  eq(helper?.kind, 'helper', 'unaided caption is the helper');
+  eq(
+    resolveOnboardingCaption(at('unaided', false), captionGame, false),
+    null,
+    'unaided without the helper shows no caption',
+  );
+  const feather = resolveOnboardingCaption(at('unaided'), captionGame, true);
+  eq(feather?.kind, 'feather', 'the feather rule wins over the unaided helper');
+  eq(
+    feather?.text,
+    'WRONG CALLS COST A FEATHER.\nRUN OUT, AND POLLY WINS THE HUNT.',
+    'the feather rule keeps its two lines',
+  );
+  eq(
+    feather?.accessibilityLabel,
+    'Wrong calls cost a feather. Run out, and Polly wins the Hunt.',
+    'the feather rule keeps its spoken label',
+  );
+  eq(resolveOnboardingCaption(at('complete'), captionGame, true)?.kind, 'feather', 'feather shows after completion');
+  for (const phase of [
+    'recognition',
+    'challenge',
+    'guided-real-result',
+    'guided-trap-result',
+    'complete',
+  ] as const) {
+    eq(resolveOnboardingCaption(at(phase), captionGame, false), null, `${phase} has no board caption`);
+  }
+  eq(
+    resolveOnboardingCaption(createDefaultOnboardingState(), captionGame, true),
+    null,
+    'no active run shows no caption',
+  );
+  eq(
+    resolveOnboardingCaption(at('guided-real'), { ...captionGame, runSeed: seed + 1 }, true),
+    null,
+    'another Hunt never shows this run’s caption',
+  );
+  eq(
+    resolveOnboardingCaption(at('guided-real'), { ...captionGame, onboardingMode: undefined }, false),
+    null,
+    'a Hunt without onboarding shows no caption',
+  );
+}
+
+// The caption reserve belongs to the FINE tutorial word only, in both modes,
+// and never depends on the phase.
+for (const mode of ['first-run', 'replay'] as const) {
+  const tutorialWord = createGame(steps, 3, seed, 0, {
+    onboardingMode: mode,
+    openingMaskIds: FIRST_RUN_FINE_MASK_IDS,
+  });
+  eq(
+    resolveOnboardingCaptionReserve(tutorialWord),
+    ONBOARDING_CAPTION_RESERVE,
+    `${mode}: the FINE tutorial word reserves caption room`,
+  );
+  eq(
+    resolveOnboardingCaptionReserve({ ...tutorialWord, stepIndex: 1 }),
+    0,
+    `${mode}: later words keep the normal board`,
+  );
+}
+eq(ONBOARDING_CAPTION_RESERVE, 20, 'caption reserve is 20 pt');
+eq(
+  resolveOnboardingCaptionReserve(createGame(steps, 3, seed, 0)),
+  0,
+  'a Hunt without onboarding keeps the normal board',
+);
 
 // A finished hand-off stays finished. The Hunt keeps onboardingMode for its
 // whole life, so every later game update runs reconcile against the state the

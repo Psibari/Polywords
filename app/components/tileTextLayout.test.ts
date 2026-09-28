@@ -2,6 +2,7 @@ import {
   ACTIVE_TILE_BASE_FONT_SIZE,
   ACTIVE_TILE_MIN_FONT_SIZE,
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
+  applyBoardTopReserve,
   hasBoardVerticalOverflow,
   releaseGauntletMeasuredHeight,
   resolveActiveTileHeight,
@@ -9,6 +10,7 @@ import {
   resolveActiveCueLayout,
   resolveBoardVerticalSpacing,
   resolveGauntletRowHeight,
+  resolveHeroBookArtBottom,
 } from './tileTextLayout';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -163,5 +165,14 @@ eq(hasBoardVerticalOverflow(500, Number.POSITIVE_INFINITY), false, 'invalid cont
 const invalidSpacing = resolveBoardVerticalSpacing(Number.NaN, 300, 176);
 eq(invalidSpacing.gridPaddingTop, 110, 'invalid viewport keeps default top spacing');
 eq(invalidSpacing.gridPaddingBottom, 48, 'invalid viewport keeps default bottom spacing');
+
+const reserved = applyBoardTopReserve({ gridPaddingTop: 90, gridPaddingBottom: 48 }, 36);
+eq(reserved.gridPaddingTop, 126, 'caption reserve adds to the room above the deck');
+eq(reserved.gridPaddingBottom, 12, 'caption reserve comes out of the room below the deck');
+const tightReserve = applyBoardTopReserve({ gridPaddingTop: 48, gridPaddingBottom: 20 }, 36);
+eq(tightReserve.gridPaddingBottom, 12, 'caption reserve never takes the bottom below its floor');
+const noReserve = { gridPaddingTop: 90, gridPaddingBottom: 48 };
+eq(applyBoardTopReserve(noReserve, 0), noReserve, 'boards without a caption keep their spacing');
+eq(resolveHeroBookArtBottom(210), 208, 'hero book art ends 208 pt below the plate top at bookHeight 210');
 
 console.log('tileTextLayout tests passed');

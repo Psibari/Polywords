@@ -262,6 +262,67 @@ export function resolveOnboardingBoardPresentation(
   return { showDecisionCard: true, swipeCueMode: 'none' };
 }
 
+export type OnboardingCaption = {
+  kind: 'question' | 'helper' | 'feather';
+  text: string;
+  accessibilityLabel: string;
+};
+
+const FEATHER_CAPTION: OnboardingCaption = {
+  kind: 'feather',
+  text: 'WRONG CALLS COST A FEATHER.\nRUN OUT, AND POLLY WINS THE HUNT.',
+  accessibilityLabel: 'Wrong calls cost a feather. Run out, and Polly wins the Hunt.',
+};
+
+// Instruction text that sits above a live card, laid out by the board in the
+// band between the plate and the swipe-up cue. The feather rule wins when it
+// overlaps the unaided helper: it is the beat Polly is speaking to.
+export function resolveOnboardingCaption(
+  state: FirstRunOnboardingState,
+  game: GameState,
+  featherVisible: boolean,
+): OnboardingCaption | null {
+  const active = state.activeRun;
+  if (
+    !active ||
+    game.onboardingVersion !== ONBOARDING_VERSION ||
+    game.onboardingMode !== active.mode ||
+    game.runSeed !== active.runSeed
+  ) {
+    return null;
+  }
+
+  if (featherVisible) return FEATHER_CAPTION;
+  if (active.phase === 'guided-real') {
+    return { kind: 'question', text: 'BELONGS TO FINE?', accessibilityLabel: 'BELONGS TO FINE?' };
+  }
+  if (active.phase === 'guided-trap') {
+    return { kind: 'question', text: 'DOESN’T BELONG?', accessibilityLabel: 'DOESN’T BELONG?' };
+  }
+  if (active.phase === 'unaided' && active.helperVisible) {
+    return {
+      kind: 'helper',
+      text: '↑ CLAIM A MEANING     → REJECT A TRAP',
+      accessibilityLabel: '↑ CLAIM A MEANING     → REJECT A TRAP',
+    };
+  }
+  return null;
+}
+
+// Room reserved above the deck on the FINE tutorial word so the caption band
+// holds a line on a 375 x 667 phone without pushing the swipe-right cue into
+// the pause button (36 did). It depends only on the Hunt, never on the phase,
+// so the deck does not move while a caption comes and goes.
+export const ONBOARDING_CAPTION_RESERVE = 20;
+
+export function resolveOnboardingCaptionReserve(game: GameState): number {
+  return game.onboardingVersion === ONBOARDING_VERSION &&
+    Boolean(game.onboardingMode) &&
+    game.stepIndex === 0
+    ? ONBOARDING_CAPTION_RESERVE
+    : 0;
+}
+
 // A hidden decision card still lets a judged card finish leaving: the stack
 // keeps rendering while the top card is mid-exit and drops the moment that
 // exit completes, so the next card is never on the board underneath it.

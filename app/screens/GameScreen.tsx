@@ -32,6 +32,8 @@ import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageK
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import {
   resolveOnboardingBoardPresentation,
+  resolveOnboardingCaption,
+  resolveOnboardingCaptionReserve,
   resolveOnboardingInputMode,
 } from '../game/firstRunOnboarding';
 import {
@@ -1551,6 +1553,7 @@ function GameContent({
   const onboarding = useGameStore(s => s.onboarding);
   const recordOnboardingDecision = useGameStore(s => s.recordOnboardingDecision);
   const [onboardingVisitActive, setOnboardingVisitActive] = useState(false);
+  const [onboardingFeatherVisible, setOnboardingFeatherVisible] = useState(false);
   const step = currentStep(game);
   const ghostRunsMissed = step.kind === 'word' && step.isHauntReturn
     ? ghosts.find(ghost => ghost.wordId === step.word.trim().toUpperCase())?.runsMissed ?? 0
@@ -1578,6 +1581,9 @@ function GameContent({
     const boardPresentation = isBossStep
       ? { showDecisionCard: true, swipeCueMode: 'both' as const }
       : resolveOnboardingBoardPresentation(onboarding, game);
+    const onboardingCaption = isBossStep
+      ? null
+      : resolveOnboardingCaption(onboarding, game, onboardingFeatherVisible);
     const activeOnboarding = onboarding.activeRun?.runSeed === game.runSeed &&
       onboarding.activeRun.mode === game.onboardingMode;
     const suppressReactivePolly = activeOnboarding &&
@@ -1596,6 +1602,8 @@ function GameContent({
           inputMode={inputMode}
           showDecisionCard={boardPresentation.showDecisionCard}
           swipeCueMode={boardPresentation.swipeCueMode}
+          onboardingCaption={onboardingCaption}
+          onboardingCaptionReserve={isBossStep ? 0 : resolveOnboardingCaptionReserve(game)}
           onDecisionCommitted={({ maskId, direction, correct, responseMs }) => {
             recordOnboardingDecision(maskId, direction, correct, responseMs);
           }}
@@ -1606,6 +1614,7 @@ function GameContent({
           <FirstRunHuntOnboarding
             onFeatherExplainStart={onFeatherExplainStart}
             onVisitActivityChange={setOnboardingVisitActive}
+            onFeatherCopyVisibleChange={setOnboardingFeatherVisible}
           />
         )}
       </View>
