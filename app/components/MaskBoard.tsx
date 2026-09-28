@@ -94,6 +94,16 @@ const CARD_SNAP = Easing.bezier(0.16, 0.95, 0.22, 1.00);
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
+// Rest thresholds for the plate entrance, used only when a caller waits on
+// onEntranceSettled. The defaults (0.001) finish ~1.82 s in, a second after
+// the plate looks still. These finish 0.73-0.75 s in, 33-50 ms after it is
+// within 1 pt of rest, with a snap of at most 0.3 pt (simulated for friction
+// 5 / tension 60 from 375-430 pt at 60-120 Hz, 2026-09-28).
+const ENTRANCE_SETTLE_REST = {
+  restDisplacementThreshold: 0.3,
+  restSpeedThreshold: 20,
+} as const;
+
 const CHAIN_TIER_SFX_RATE: Record<ChainTier, number> = { 1: 1.0, 2: 1.08, 3: 1.16, 4: 1.24 };
 
 export type Props = {
@@ -1485,7 +1495,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         friction: 5,
         tension: 60,
         useNativeDriver: true,
-      }).start(() => onEntranceSettled?.());
+        ...(onEntranceSettled ? ENTRANCE_SETTLE_REST : null),
+      }).start(onEntranceSettled ? () => onEntranceSettled() : undefined);
     }
 
     // Boss word rides the book cover — already visible & in position; drama fires on top

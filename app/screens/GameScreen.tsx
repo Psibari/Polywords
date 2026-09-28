@@ -31,6 +31,7 @@ import { useReducedFlashesPreference, useReducedMotionPreference } from '../hook
 import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import {
+  recognitionOpensWithHold,
   resolveOnboardingBoardPresentation,
   resolveOnboardingCaption,
   resolveOnboardingCaptionReserve,
@@ -1607,7 +1608,9 @@ function GameContent({
           swipeCueMode={boardPresentation.swipeCueMode}
           onboardingCaption={onboardingCaption}
           onboardingCaptionReserve={isBossStep ? 0 : resolveOnboardingCaptionReserve(game)}
-          onEntranceSettled={() => setSettledBoardKey(boardKey)}
+          onEntranceSettled={recognitionOpensWithHold(onboarding, game)
+            ? () => setSettledBoardKey(boardKey)
+            : undefined}
           onDecisionCommitted={({ maskId, direction, correct, responseMs }) => {
             recordOnboardingDecision(maskId, direction, correct, responseMs);
           }}
