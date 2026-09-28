@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { register } from 'tsx/esm/api';
+import { DAILY_CASTLE_TUNING_DEFAULTS, useDailyCastleTuning } from '../dev/dailyCastleTuning';
 
 const castleTuningUrl = new URL('../dev/dailyCastleTuning.ts', import.meta.url);
 const castleTuningPanelUrl = new URL('../dev/DailyCastleTuningPanel.tsx', import.meta.url);
@@ -58,9 +58,6 @@ assert.equal(
 
 // ── Castle calibration and registered castle art ──────────────────
 {
-  const unregisterTsx = register();
-  const { DAILY_CASTLE_TUNING_DEFAULTS, useDailyCastleTuning } = await import(castleTuningUrl);
-  await unregisterTsx();
   // Arch and wall share one export canvas, so neither is tunable on its own.
   assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['gate', 'grid', 'clues']);
   // Blocks fill their panels (Pete, 2026-09-27): 465 px panel less two 14 px
