@@ -25,6 +25,7 @@ import { DAILY_CLUE_TITLE } from '../ui/pwDailyMaterials';
 import { homeDare, homeDoor, homePlateMaterial, homeType } from '../ui/pwHomeMaterials';
 import { PW } from '../ui/pwTheme';
 import { usePulseScale } from '../hooks/usePulseScale';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { Haptics } from '../utils/haptics';
 import { setMusicState, startMusic, stopMusic } from '../audio/MusicEngine';
 
@@ -56,12 +57,15 @@ export default function HomeScreen({ navigation }: Props) {
   const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const pollyMemoryLoaded = useGameStore(s => s.pollyMemoryLoaded);
+  const homeOnboardingComplete = useGameStore(s => s.onboarding.home.completed);
   const streak = getDisplayStreak(progress, getTodayDateString());
   const wordmarkWidth = Math.min(Dimensions.get('window').width - 40, 520);
   const dareScale = usePulseScale();
+  const reduceMotion = useReducedMotionPreference() !== false;
   // Press-time gold bloom on all three plates (feedback only — the resting
   // deboss state stays flat). Fades in on press, out on release.
   const huntGlow = useRef(new Animated.Value(0)).current;
+  const previousHomeOnboardingComplete = useRef(homeOnboardingComplete);
   const dailyGlow = useRef(new Animated.Value(0)).current;
   const vaultGlow = useRef(new Animated.Value(0)).current;
   const glowOn = (v: Animated.Value) =>
@@ -87,6 +91,25 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => {
     loadGoldFeather().then(checkGoldFeatherExpiry).catch(() => {});
   }, [loadGoldFeather, checkGoldFeatherExpiry]);
+
+  useEffect(() => {
+    const justCompleted = !previousHomeOnboardingComplete.current && homeOnboardingComplete;
+    previousHomeOnboardingComplete.current = homeOnboardingComplete;
+    if (!justCompleted) return;
+    if (reduceMotion) {
+      huntGlow.setValue(0.32);
+      const timer = setTimeout(() => huntGlow.setValue(0), 900);
+      return () => clearTimeout(timer);
+    }
+    const emphasis = Animated.sequence([
+      Animated.timing(huntGlow, { toValue: 0.42, duration: 180, useNativeDriver: true }),
+      Animated.timing(huntGlow, { toValue: 0.12, duration: 520, useNativeDriver: true }),
+      Animated.timing(huntGlow, { toValue: 0.32, duration: 180, useNativeDriver: true }),
+      Animated.timing(huntGlow, { toValue: 0, duration: 620, useNativeDriver: true }),
+    ]);
+    emphasis.start();
+    return () => emphasis.stop();
+  }, [homeOnboardingComplete, huntGlow, reduceMotion]);
 
   useFocusEffect(
     useCallback(() => {

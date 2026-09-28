@@ -33,9 +33,9 @@ export default function App() {
   useEffect(() => {
     if (!fontsLoaded) return;
 
-    const { loadGame, loadGhosts, loadProgress, loadSettings, loadPollyMemory } = useGameStore.getState();
+    const { loadGame, loadGhosts, loadProgress, loadSettings, loadPollyMemory, loadOnboarding } = useGameStore.getState();
 
-    // All five must finish before anything renders — a screen that mounts
+    // All boot-owned reads must finish before anything renders — a screen that mounts
     // against partially-loaded state (e.g. a Hunt generated before ghosts or
     // progress load) is the same class of bug as the audio engines racing
     // their own readiness independently.
@@ -44,9 +44,9 @@ export default function App() {
       loadProgress(),
       loadSettings(),
       loadPollyMemory(),
-      loadGame(),
+      loadOnboarding(),
       loadPlaytestEvents(),
-    ]).finally(() => setBootChecksDone(true));
+    ]).then(() => loadGame()).finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
   // Warms the Home music track and shared audio session as the landing screen

@@ -53,6 +53,7 @@ import {
   resolveActiveTileHeight,
   resolveBoardVerticalSpacing,
 } from './tileTextLayout';
+import type { HuntInputMode, HuntSwipeCueMode } from '../game/firstRunOnboarding';
 import { shouldReleaseOpeningDecision } from './boardDecisionReadiness';
 
 // ── Layout constants ──────────────────────────────────────────
@@ -95,6 +96,15 @@ export type Props = {
   onGoldFlash?: (event: ScreenFlashEvent) => void;
   onBossDecisionReady?: () => void;
   onSwipeAttempt?: () => void;
+  inputMode?: HuntInputMode;
+  showDecisionCard?: boolean;
+  swipeCueMode?: HuntSwipeCueMode;
+  onDecisionCommitted?: (decision: {
+    maskId: string;
+    direction: 'up' | 'right';
+    correct: boolean;
+    responseMs: number;
+  }) => void;
   // Owned by GameContent — the visit layer must outlive this board's
   // per-word remount (key={stepIndex}), or word-completion beats die mid-arc.
   firePollyEvent: (event: PollyEvent) => void;
@@ -456,7 +466,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 }
 
 
-function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
+function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onDecisionCommitted, firePollyEvent, isBossStage }: BoardPresenterProps) {
   const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
@@ -1009,6 +1019,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const mechanics = useBoardMechanics({
     step,
     firePollyEvent,
+    externalInputLocked: inputMode === 'locked',
     perform: {
       onRealClaimed({ mask, tier }) {
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
@@ -1651,6 +1662,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     (mechanics.gatePhase === 'wrongFail' && mechanics.gauntletTiles.length > 0);
   const showSwipeCues =
     showBoardContent &&
+    swipeCueMode !== 'none' &&
     mechanics.gatePhase !== 'tiles' &&
     mechanics.gatePhase !== 'wrongFail' &&
     mechanics.topMask !== null;
@@ -1716,6 +1728,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       <View
         style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
         pointerEvents="none"
+        accessible
+        accessibilityRole="header"
+        accessibilityLabel={step.word}
         ref={wordZoneRef as any}
         onLayout={e => {
           const zoneHeight = e.nativeEvent.layout.height;
@@ -1803,6 +1818,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               // flash AND the mastered/haunted outcome color, so there is
               // nothing left to stack on top of it.
               <Animated.Text
+                accessible={false}
                 style={[styles.word, styles.wordBoss, { color: bossHeadwordColor }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -1816,6 +1832,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 second layer. */}
             {!isBoss && (
               <Animated.Text
+                accessible={false}
                 pointerEvents="none"
                 style={[
                   styles.word,
@@ -1843,6 +1860,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 path even if that ever changed. */}
             {isHaunt && !isBoss && (
               <Animated.Text
+                accessible={false}
                 pointerEvents="none"
                 style={[
                   styles.word,
@@ -1927,6 +1945,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         removeClippedSubviews={false}
         overScrollMode="never"
         scrollEventThrottle={16}
+        accessibilityElementsHidden={inputMode === 'locked'}
+        importantForAccessibility={inputMode === 'locked' ? 'no-hide-descendants' : 'auto'}
         onLayout={event => {
           setGridViewportWidth(Math.ceil(event.nativeEvent.layout.width));
           setGridViewportHeight(Math.ceil(event.nativeEvent.layout.height));
@@ -1934,7 +1954,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         onContentSizeChange={(_width, height) => setGridContentHeight(Math.ceil(height))}
       >
         <View style={[styles.tileStackArea, { minHeight: ownedGridRegionHeight }]}>
-          {showSwipeCues && (
+          {showSwipeCues && (swipeCueMode === 'both' || swipeCueMode === 'up') && (
             <Animated.View
               pointerEvents="none"
               style={[styles.swipeUpCueRegion, { opacity: cueOpacityAnim }]}
@@ -1948,7 +1968,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               </Text>
             </Animated.View>
           )}
-          {showBoardContent && (
+          {showBoardContent && showDecisionCard && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
@@ -2033,6 +2053,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                     onSwipeReveal={() => {}}
                     revealable={false}
                     disabled={mechanics.inputLocked}
+                    inputMode={inputMode}
+                    onDecisionCommitted={onDecisionCommitted}
                     tileHeight={TILE_H}
                     entryDelay={0}
                     skipEntryAnimation={
@@ -2058,7 +2080,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           </Animated.View>
           )}
 
-          {showSwipeCues && (
+          {showSwipeCues && (swipeCueMode === 'both' || swipeCueMode === 'right') && (
             <Animated.View
               pointerEvents="none"
               style={[styles.swipeRightCueRegion, { opacity: cueOpacityAnim }]}

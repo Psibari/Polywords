@@ -132,6 +132,8 @@ export type GameState = {
   // display never briefly shows a wrong number on loss.
   gauntletCorrectCount: number;
   runSeed: number;
+  onboardingVersion?: number;
+  onboardingMode?: 'first-run' | 'replay';
   // realMaskIdsFound.length at the moment this run began. The Polybook's
   // gotPast is "NEW visible REALs claimed this run", and claims are written
   // incrementally through hiddenProgressPersistence while the run is live, so
@@ -163,6 +165,10 @@ export function createGame(
   mercyReviveLives = 0,
   runSeed = Date.now(),
   runStartRealMaskCount?: number,
+  options?: {
+    onboardingMode?: 'first-run' | 'replay';
+    openingMaskIds?: readonly string[];
+  },
 ): GameState {
   const shuffledMasks: Record<number, Mask[]> = {};
   steps.forEach((step, i) => {
@@ -171,6 +177,16 @@ export function createGame(
         step.masks.filter(m => !m.isHidden),
         deriveSeed(runSeed, `masks:${i}:${step.word}`),
       );
+      if (i === 0 && options?.openingMaskIds?.length) {
+        const byId = new Map(shuffledMasks[i].map(mask => [mask.id, mask]));
+        const pinned = options.openingMaskIds.map(id => {
+          const mask = byId.get(id);
+          if (!mask) throw new Error(`[polyRunEngine] Opening mask ${id} is missing`);
+          byId.delete(id);
+          return mask;
+        });
+        shuffledMasks[i] = [...pinned, ...byId.values()];
+      }
     }
   });
 
@@ -212,6 +228,9 @@ export function createGame(
     gauntletActive: false,
     gauntletCorrectCount: 0,
     runSeed,
+    ...(options?.onboardingMode
+      ? { onboardingVersion: 1, onboardingMode: options.onboardingMode }
+      : {}),
   };
 }
 

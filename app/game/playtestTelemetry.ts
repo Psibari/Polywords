@@ -3,6 +3,18 @@ import { createActiveGamePersistenceCoordinator } from './activeGamePersistence'
 import type { EmotionalRole, EventType } from './types';
 
 export type PlaytestEventName =
+  | 'onboarding_home_started'
+  | 'onboarding_home_completed'
+  | 'onboarding_fine_started'
+  | 'onboarding_premise_completed'
+  | 'onboarding_first_real_attempted'
+  | 'onboarding_first_real_completed'
+  | 'onboarding_first_trap_attempted'
+  | 'onboarding_first_trap_completed'
+  | 'onboarding_first_unaided_decision'
+  | 'onboarding_first_unaided_correct'
+  | 'onboarding_core_completed'
+  | 'onboarding_abandoned'
   | 'hunt_ambiguous_swipe'
   | 'hunt_hesitation'
   | 'hunt_complete'

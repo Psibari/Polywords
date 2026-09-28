@@ -62,13 +62,24 @@ import {
   rememberHunt,
   rememberPollyLine,
 } from '../game/pollyMemory';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, ONBOARDING_STATE_KEY } from '../constants/storageKeys';
 import { deriveSeed } from '../game/seededRandom';
 import {
   flushPlaytestSummary,
   flushPlaytestEvents,
   recordPlaytestEvent,
+  type PlaytestEventName,
 } from '../game/playtestTelemetry';
+import {
+  FIRST_RUN_FINE_MASK_IDS,
+  ONBOARDING_VERSION,
+  createDefaultOnboardingState,
+  dismissCompletedOnboardingHandoffOnResume,
+  hydrateOnboardingState,
+  reconcileOnboardingRun,
+  type FirstRunOnboardingState,
+  type OnboardingCorePhase,
+} from '../game/firstRunOnboarding';
 import {
   cancelDailyReminder,
   requestAndScheduleDailyReminder,
@@ -181,6 +192,29 @@ function persistSettings(state: PlayerSettings): void {
     dailyReminderEnabled: state.dailyReminderEnabled,
   };
   AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next)).catch(() => {});
+}
+
+let onboardingPersistenceQueue: Promise<void> = Promise.resolve();
+
+function persistOnboarding(state: FirstRunOnboardingState): Promise<void> {
+  const snapshot = JSON.stringify(state);
+  onboardingPersistenceQueue = onboardingPersistenceQueue
+    .catch(() => {})
+    .then(() => AsyncStorage.setItem(ONBOARDING_STATE_KEY, snapshot));
+  return onboardingPersistenceQueue;
+}
+
+function addOnboardingEvent(
+  state: FirstRunOnboardingState,
+  name: PlaytestEventName,
+  data: Record<string, string | number | boolean> = {},
+): FirstRunOnboardingState {
+  if (state.trackedEvents.includes(name)) return state;
+  const next = { ...state, trackedEvents: [...state.trackedEvents, name] };
+  persistOnboarding(next)
+    .then(() => recordPlaytestEvent(name, data))
+    .catch(() => {});
+  return next;
 }
 
 type GoldFeatherRecord = {
@@ -317,6 +351,22 @@ type GameStore = {
   // took effect just because this was invoked.
   setDailyReminderEnabled: (value: boolean) => Promise<boolean>;
   loadSettings: () => Promise<void>;
+  onboarding: FirstRunOnboardingState;
+  loadOnboarding: () => Promise<void>;
+  setOnboardingHomeStep: (step: number) => void;
+  completeOnboardingHome: () => void;
+  setOnboardingPhase: (phase: OnboardingCorePhase, presentationStep?: number) => void;
+  setOnboardingPresentationStep: (step: number) => void;
+  recordOnboardingDecision: (
+    maskId: string,
+    direction: 'up' | 'right',
+    correct: boolean,
+    responseMs: number,
+  ) => void;
+  markOnboardingFeatherExplained: () => void;
+  finishOnboardingHandoff: () => void;
+  requestOnboardingReplay: () => void;
+  markOnboardingAbandoned: (surface: 'home' | 'hunt') => void;
 };
 
 let activeGamePersistence: {
@@ -349,6 +399,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   reduceFlashesOverride: DEFAULT_SETTINGS.reduceFlashesOverride,
   playerName: DEFAULT_SETTINGS.playerName,
   dailyReminderEnabled: DEFAULT_SETTINGS.dailyReminderEnabled,
+  onboarding: createDefaultOnboardingState(),
 
   startGame: () => {
     const runSeed = createRunSeed();
@@ -365,28 +416,64 @@ export const useGameStore = create<GameStore>((set, get) => ({
       : isGrace
       ? GRACE_MERCY_LIVES
       : 0;
+    const onboarding = get().onboarding;
+    const onboardingMode = !onboarding.coreCompleted
+      ? 'first-run' as const
+      : onboarding.replayRequested
+      ? 'replay' as const
+      : null;
     const steps = generateHunt({
       masteredWords: get().progress.masteredWords.map(m => m.word),
       ghostWordIds: runStartGhostWordIds,
       recentWordIds: get().progress.recentWordIds ?? [],
       recentHuntPerformance: get().progress.recentHuntPerformance ?? [],
-      ...(isFledgling ? { length: 8, gentle: true } : {}),
+      ...(isFledgling || onboardingMode === 'first-run'
+        ? { length: 8, gentle: true }
+        : {}),
       seed: runSeed,
+      firstRunOnboarding: onboardingMode !== null,
     });
     activeGamePersistence.arm();
+    const game = createGame(
+      steps,
+      mercyReviveLives,
+      runSeed,
+      (get().progress.realMaskIdsFound ?? []).length,
+      onboardingMode
+        ? { onboardingMode, openingMaskIds: FIRST_RUN_FINE_MASK_IDS }
+        : undefined,
+    );
+    let nextOnboarding = onboardingMode || !onboarding.activeRun
+      ? onboarding
+      : { ...onboarding, activeRun: null };
+    if (onboardingMode) {
+      nextOnboarding = {
+        ...onboarding,
+        replayRequested: false,
+        activeRun: {
+          runSeed,
+          mode: onboardingMode,
+          phase: 'recognition',
+          presentationStep: 0,
+          unaidedAttempts: 0,
+          helperVisible: true,
+          featherExplained: false,
+        },
+      };
+      nextOnboarding = addOnboardingEvent(nextOnboarding, 'onboarding_fine_started', {
+        mode: onboardingMode,
+      });
+      persistOnboarding(nextOnboarding);
+    }
     set({
       // The 4th argument is the run's realMaskIdsFound baseline. Claims are
       // written incrementally while the run is live, so the Polybook's
       // "new REALs this run" is only recoverable by subtracting this at
       // completion. It rides on GameState so a resumed run keeps it.
-      game: createGame(
-        steps,
-        mercyReviveLives,
-        runSeed,
-        (get().progress.realMaskIdsFound ?? []).length,
-      ),
+      game,
       ghostRevenge: null,
       runStartGhostWordIds,
+      onboarding: nextOnboarding,
     });
   },
 
@@ -434,29 +521,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
         mysteryResolved < mysteryTotal;
 
       activeGamePersistence.arm();
+      const savedGame = {
+        ...saved,
+        // Absent in saves written before the Polybook log existed. 0 is the
+        // honest default: it undercounts that one in-flight run's mercy
+        // rather than inventing a number.
+        mercyUsed: Number.isFinite(saved.mercyUsed) ? Math.max(0, saved.mercyUsed) : 0,
+        // Absent in saves written before this field existed. A resumed
+        // snapshot is always 'playing' (see the status check above), so no
+        // loss is active anyway — null is simply correct, not a guess.
+        lossCause: saved.lossCause ?? null,
+        runSeed: Number.isFinite(saved.runSeed)
+          ? saved.runSeed >>> 0
+          : deriveSeed(saved.lastActionAt || Date.now(), 'migrated-run'),
+        mysteryTotal,
+        mysteryResolved,
+        mysteryTileTruths,
+        mysteryResolvedPairIndices,
+        hauntOutcome,
+        gauntletActive: gauntletInProgress,
+        gauntletCorrectCount: gauntletInProgress ? mysteryResolved : 0,
+      } satisfies GameState;
+      let reconciledOnboarding = reconcileOnboardingRun(get().onboarding, savedGame);
+      reconciledOnboarding = dismissCompletedOnboardingHandoffOnResume(
+        reconciledOnboarding,
+        savedGame,
+      );
+      if (reconciledOnboarding !== get().onboarding) persistOnboarding(reconciledOnboarding);
       set({
-        game: {
-          ...saved,
-          // Absent in saves written before the Polybook log existed. 0 is the
-          // honest default: it undercounts that one in-flight run's mercy
-          // rather than inventing a number.
-          mercyUsed: Number.isFinite(saved.mercyUsed) ? Math.max(0, saved.mercyUsed) : 0,
-          // Absent in saves written before this field existed. A resumed
-          // snapshot is always 'playing' (see the status check above), so no
-          // loss is active anyway — null is simply correct, not a guess.
-          lossCause: saved.lossCause ?? null,
-          runSeed: Number.isFinite(saved.runSeed)
-            ? saved.runSeed >>> 0
-            : deriveSeed(saved.lastActionAt || Date.now(), 'migrated-run'),
-          mysteryTotal,
-          mysteryResolved,
-          mysteryTileTruths,
-          mysteryResolvedPairIndices,
-          hauntOutcome,
-          gauntletActive: gauntletInProgress,
-          gauntletCorrectCount: gauntletInProgress ? mysteryResolved : 0,
-        },
+        game: savedGame,
         hasResumableGame: true,
+        onboarding: reconciledOnboarding,
       });
       return true;
     } catch {
@@ -469,7 +564,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // quitting before starting a fresh run would resume the very run the
   // player just chose to forfeit, contradicting the whole point of asking.
   forfeitGame: async () => {
-    set({ hasResumableGame: false });
+    const onboarding = get().onboarding;
+    const nextOnboarding = onboarding.activeRun
+      ? { ...onboarding, activeRun: null }
+      : onboarding;
+    set({ hasResumableGame: false, onboarding: nextOnboarding });
+    if (nextOnboarding !== onboarding) persistOnboarding(nextOnboarding);
     try {
       await activeGamePersistence.discard();
     } catch {}
@@ -912,6 +1012,142 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch {}
   },
 
+  loadOnboarding: async () => {
+    try {
+      const [raw, legacy] = await Promise.all([
+        AsyncStorage.getItem(ONBOARDING_STATE_KEY),
+        AsyncStorage.getItem(INTRO_SEEN_KEY),
+      ]);
+      const onboarding = hydrateOnboardingState(raw, legacy === 'true');
+      set({ onboarding });
+      if (!raw) persistOnboarding(onboarding);
+    } catch {
+      set({ onboarding: createDefaultOnboardingState() });
+    }
+  },
+
+  setOnboardingHomeStep: (step) => {
+    const current = get().onboarding;
+    if (current.home.completed) return;
+    let next = {
+      ...current,
+      home: { ...current.home, step: Math.max(0, step) },
+    };
+    next = addOnboardingEvent(next, 'onboarding_home_started');
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  completeOnboardingHome: () => {
+    const current = get().onboarding;
+    if (current.home.completed) return;
+    let next = { ...current, home: { completed: true, step: 4 } };
+    next = addOnboardingEvent(next, 'onboarding_home_completed');
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  setOnboardingPhase: (phase, presentationStep = 0) => {
+    const current = get().onboarding;
+    if (!current.activeRun) return;
+    let next: FirstRunOnboardingState = {
+      ...current,
+      activeRun: { ...current.activeRun, phase, presentationStep },
+    };
+    if (phase === 'challenge') {
+      next = addOnboardingEvent(next, 'onboarding_premise_completed');
+    }
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  setOnboardingPresentationStep: (step) => {
+    const current = get().onboarding;
+    if (!current.activeRun) return;
+    const next = {
+      ...current,
+      activeRun: { ...current.activeRun, presentationStep: Math.max(0, step) },
+    };
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  recordOnboardingDecision: (maskId, direction, correct, responseMs) => {
+    const current = get().onboarding;
+    const run = current.activeRun;
+    const game = get().game;
+    if (!run || game.onboardingVersion !== ONBOARDING_VERSION || game.runSeed !== run.runSeed) return;
+    let next = current;
+    const common = { direction, correct, responseMs: Math.max(0, Math.round(responseMs)) };
+    if (maskId === FIRST_RUN_FINE_MASK_IDS[0]) {
+      next = addOnboardingEvent(next, 'onboarding_first_real_attempted', common);
+      next = addOnboardingEvent(next, 'onboarding_first_real_completed', common);
+    } else if (maskId === FIRST_RUN_FINE_MASK_IDS[1]) {
+      next = addOnboardingEvent(next, 'onboarding_first_trap_attempted', common);
+      next = addOnboardingEvent(next, 'onboarding_first_trap_completed', common);
+    } else if (
+      run.helperVisible ||
+      (run.phase === 'complete' &&
+        !current.trackedEvents.includes('onboarding_first_unaided_correct'))
+    ) {
+      const attempt = run.unaidedAttempts + 1;
+      next = {
+        ...next,
+        activeRun: next.activeRun
+          ? { ...next.activeRun, unaidedAttempts: attempt }
+          : null,
+      };
+      next = addOnboardingEvent(next, 'onboarding_first_unaided_decision', { ...common, attempt });
+      if (correct) {
+        next = {
+          ...next,
+          coreCompleted: true,
+          activeRun: next.activeRun
+            ? { ...next.activeRun, phase: 'complete', helperVisible: false }
+            : null,
+        };
+        next = addOnboardingEvent(next, 'onboarding_first_unaided_correct', { ...common, attempt });
+        next = addOnboardingEvent(next, 'onboarding_core_completed', { attempt });
+      }
+    }
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  markOnboardingFeatherExplained: () => {
+    const current = get().onboarding;
+    if (!current.activeRun || current.activeRun.featherExplained) return;
+    const next = {
+      ...current,
+      activeRun: { ...current.activeRun, featherExplained: true },
+    };
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  finishOnboardingHandoff: () => {
+    const current = get().onboarding;
+    if (!current.activeRun) return;
+    const next = { ...current, activeRun: null };
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  requestOnboardingReplay: () => {
+    const current = get().onboarding;
+    const next = { ...current, replayRequested: true };
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  markOnboardingAbandoned: (surface) => {
+    const current = get().onboarding;
+    if (!current.activeRun && current.coreCompleted && current.home.completed) return;
+    const next = addOnboardingEvent(current, 'onboarding_abandoned', { surface });
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
   loadGhosts: async () => {
     try {
       const raw = await AsyncStorage.getItem(GHOSTS_KEY);
@@ -1212,11 +1448,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       await activeGamePersistence.discard();
       await dailyPersistenceQueue.catch(() => {});
+      await onboardingPersistenceQueue.catch(() => {});
       await Promise.all([
         AsyncStorage.removeItem(GHOSTS_KEY),
         AsyncStorage.removeItem(PROGRESS_KEY),
         AsyncStorage.removeItem(POLLY_MEMORY_KEY),
         AsyncStorage.removeItem(GOLD_FEATHER_KEY),
+        AsyncStorage.removeItem(ONBOARDING_STATE_KEY),
         AsyncStorage.removeItem(INTRO_SEEN_KEY),
         AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
         AsyncStorage.removeItem(attemptKey),
@@ -1237,6 +1475,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       goldFeatherAvailable: false,
       goldFeatherExpiresAt: null,
       hasResumableGame: false,
+      onboarding: createDefaultOnboardingState(),
     });
   },
 
@@ -1321,11 +1560,20 @@ activeGamePersistence = createActiveGamePersistenceCoordinator({
 });
 
 export async function flushActiveGamePersistence(): Promise<void> {
-  await activeGamePersistence.flush();
+  await Promise.all([
+    activeGamePersistence.flush(),
+    onboardingPersistenceQueue.catch(() => {}),
+  ]);
 }
 
 useGameStore.subscribe((state, prevState) => {
   if (state.game === prevState.game) return;
+
+  const reconciledOnboarding = reconcileOnboardingRun(state.onboarding, state.game);
+  if (reconciledOnboarding !== state.onboarding) {
+    persistOnboarding(reconciledOnboarding);
+    useGameStore.setState({ onboarding: reconciledOnboarding });
+  }
 
   if (state.game.status !== 'playing') {
     void activeGamePersistence.discard().catch(() => {});

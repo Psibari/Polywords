@@ -12,7 +12,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { SETTINGS_SKY_TUNING } from '../ui/ambientSkyTuning';
@@ -27,7 +26,6 @@ import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
 import { TorchGlow } from '../components/ui/TorchGlow';
 import { InfoModal } from '../components/ui/InfoModal';
 import { FONTS } from '../constants/fonts';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY, VAULT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import {
   clearPlaytestHistory,
   formatPlaytestSummaryText,
@@ -115,6 +113,8 @@ export default function SettingsScreen({ navigation }: Props) {
   const setPlayerName = useGameStore(s => s.setPlayerName);
   const setDailyReminderEnabled = useGameStore(s => s.setDailyReminderEnabled);
   const resetProgressForDev = useGameStore(s => s.resetProgressForDev);
+  const requestOnboardingReplay = useGameStore(s => s.requestOnboardingReplay);
+  const hasResumableGame = useGameStore(s => s.hasResumableGame);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(playerName);
@@ -181,13 +181,13 @@ export default function SettingsScreen({ navigation }: Props) {
   };
 
   const handleTutorialReplay = () => {
-    Promise.all([
-      AsyncStorage.removeItem(INTRO_SEEN_KEY),
-      AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
-      AsyncStorage.removeItem(HAUNT_INTRO_SEEN_KEY),
-      AsyncStorage.removeItem(VAULT_INTRO_SEEN_KEY),
-    ]).catch(() => {});
-    Alert.alert('Tutorial Replay', "You'll see it again next time you start a Hunt.");
+    requestOnboardingReplay();
+    Alert.alert(
+      'First Hunt Replay Queued',
+      hasResumableGame
+        ? 'Your live Hunt is untouched. The guided FINE opening will run when you start your next new Hunt.'
+        : 'The guided FINE opening will run when you start your next new Hunt.',
+    );
   };
 
   const ghostsToShow = ghosts.filter(
@@ -297,13 +297,13 @@ export default function SettingsScreen({ navigation }: Props) {
             />
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Replay Hunt tutorial"
+              accessibilityLabel="Replay first Hunt onboarding"
               onPress={handleTutorialReplay}
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}
             >
               <View style={styles.rowTextWrap}>
-                <Text style={styles.rowLabel}>Tutorial Replay</Text>
-                <Text style={styles.rowNote}>See the Hunt, Boss, and Haunt intros again</Text>
+                <Text style={styles.rowLabel}>First Hunt Replay</Text>
+                <Text style={styles.rowNote}>Queue the guided FINE opening for your next new Hunt</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
             </Pressable>

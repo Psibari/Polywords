@@ -22,14 +22,18 @@ import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
 import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
-import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
+import { FirstRunHuntOnboarding } from '../components/FirstRunHuntOnboarding';
 import { BossIntroOverlay } from '../components/BossIntroOverlay';
 import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import {
+  resolveOnboardingBoardPresentation,
+  resolveOnboardingInputMode,
+} from '../game/firstRunOnboarding';
 import {
   resolveScreenFlash,
   type ScreenFlashEvent,
@@ -874,6 +878,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   const ghosts     = useGameStore(s => s.ghosts);
   const startGame  = useGameStore(s => s.startGame);
   const forfeitGame = useGameStore(s => s.forfeitGame);
+  const markOnboardingAbandoned = useGameStore(s => s.markOnboardingAbandoned);
   const consumeMercy = useGameStore(s => s.consumeMercy);
   const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
@@ -905,9 +910,10 @@ function GameDirector({ navigation }: { navigation: any }) {
     setExitConfirmVisible(false);
     const action = pendingExitActionRef.current;
     pendingExitActionRef.current = null;
+    markOnboardingAbandoned('hunt');
     forfeitGame();
     if (action) navigation.dispatch(action);
-  }, [navigation, forfeitGame]);
+  }, [navigation, forfeitGame, markOnboardingAbandoned]);
 
   // ── Effects overlay ────────────────────────────────────────
   const fxLayerRef    = useRef<FXLayerHandle>(null);
@@ -988,21 +994,6 @@ function GameDirector({ navigation }: { navigation: any }) {
     });
   }, [loadGoldFeather, checkGoldFeatherExpiry]);
 
-  // ── First-hunt intro overlay ──────────────────────────────────
-  // null = still loading the flag; fail open so gameplay is never blocked.
-  const [introSeen, setIntroSeen] = useState<boolean | null>(null);
-  useEffect(() => {
-    AsyncStorage.getItem(INTRO_SEEN_KEY)
-      .then(v => setIntroSeen(v === 'true'))
-      .catch(() => setIntroSeen(true));
-  }, []);
-  const [introVisitPending, setIntroVisitPending] = useState(false);
-  const handleIntroDismiss = useCallback(() => {
-    setIntroSeen(true);
-    setIntroVisitPending(true);
-    AsyncStorage.setItem(INTRO_SEEN_KEY, 'true').catch(() => {});
-  }, []);
-
   // ── First-boss-only warning overlay ─────────────────────────────
   // The first encounter gates the board mount so its entrance, haptics, and
   // decision clock all begin after the player dismisses this explanation.
@@ -1066,6 +1057,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   const boardShakeX = useRef(new Animated.Value(0)).current;
   const boardShakeY = useRef(new Animated.Value(0)).current;
   const featherRowPulse = useRef(new Animated.Value(0)).current;
+  const directorReduceMotion = useReducedMotionPreference() !== false;
   const prevLivesForShakeRef = useRef(game.lives);
 
   useEffect(() => {
@@ -1099,6 +1091,22 @@ function GameDirector({ navigation }: { navigation: any }) {
     ]).start();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   }, [game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleOnboardingFeatherExplain = useCallback(() => {
+    featherRowPulse.stopAnimation();
+    featherRowPulse.setValue(0);
+    if (directorReduceMotion) {
+      featherRowPulse.setValue(1);
+      setTimeout(() => featherRowPulse.setValue(0), 900);
+      return;
+    }
+    Animated.sequence([
+      Animated.timing(featherRowPulse, { toValue: 1, duration: 160, useNativeDriver: true }),
+      Animated.timing(featherRowPulse, { toValue: 0.25, duration: 260, useNativeDriver: true }),
+      Animated.timing(featherRowPulse, { toValue: 0.9, duration: 160, useNativeDriver: true }),
+      Animated.timing(featherRowPulse, { toValue: 0, duration: 420, useNativeDriver: true }),
+    ]).start();
+  }, [directorReduceMotion, featherRowPulse]);
 
   const prevTensionRef = useRef(0);
 
@@ -1349,7 +1357,6 @@ function GameDirector({ navigation }: { navigation: any }) {
   }, [game.stepIndex, isHauntRound]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const gameplayGateActive =
-    introSeen !== true ||
     (isBossRound && bossIntroSeen !== true) ||
     (isHauntRound && hauntIntroSeen !== true) ||
     bossTransitionActive ||
@@ -1443,8 +1450,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           onGoldFlash={handleGoldFlash}
           onBossDecisionReady={handleBossDecisionReady}
           onSwipeAttempt={resetIdleTimer}
-          fireIntroVisit={introVisitPending}
-          onIntroVisitFired={() => setIntroVisitPending(false)}
+          onFeatherExplainStart={handleOnboardingFeatherExplain}
           fireHauntIntroVisit={hauntIntroVisitPending}
           onHauntIntroVisitFired={() => setHauntIntroVisitPending(false)}
         />
@@ -1493,15 +1499,11 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       <FXLayer ref={fxLayerRef} />
 
-      {introSeen === false && !isDone && (
-        <HuntIntroOverlay onDismiss={handleIntroDismiss} />
-      )}
-
-      {introSeen === true && bossIntroSeen === false && isBossRound && (
+      {bossIntroSeen === false && isBossRound && (
         <BossIntroOverlay onDismiss={handleBossIntroDismiss} />
       )}
 
-      {introSeen === true && hauntIntroSeen === false && isHauntRound && (
+      {hauntIntroSeen === false && isHauntRound && (
         <HauntIntroOverlay onDismiss={handleHauntIntroDismiss} />
       )}
 
@@ -1531,8 +1533,7 @@ function GameContent({
   onGoldFlash,
   onBossDecisionReady,
   onSwipeAttempt,
-  fireIntroVisit,
-  onIntroVisitFired,
+  onFeatherExplainStart,
   fireHauntIntroVisit,
   onHauntIntroVisitFired,
 }: {
@@ -1541,13 +1542,15 @@ function GameContent({
   onGoldFlash: (event: ScreenFlashEvent) => void;
   onBossDecisionReady: () => void;
   onSwipeAttempt: () => void;
-  fireIntroVisit: boolean;
-  onIntroVisitFired: () => void;
+  onFeatherExplainStart: () => void;
   fireHauntIntroVisit: boolean;
   onHauntIntroVisitFired: () => void;
 }) {
   const game = useGameStore(s => s.game);
   const ghosts = useGameStore(s => s.ghosts);
+  const onboarding = useGameStore(s => s.onboarding);
+  const recordOnboardingDecision = useGameStore(s => s.recordOnboardingDecision);
+  const [onboardingVisitActive, setOnboardingVisitActive] = useState(false);
   const step = currentStep(game);
   const ghostRunsMissed = step.kind === 'word' && step.isHauntReturn
     ? ghosts.find(ghost => ghost.wordId === step.word.trim().toUpperCase())?.runsMissed ?? 0
@@ -1561,12 +1564,6 @@ function GameContent({
   );
 
   useEffect(() => {
-    if (!fireIntroVisit) return;
-    firePollyEvent('huntIntro');
-    onIntroVisitFired();
-  }, [fireIntroVisit, firePollyEvent, onIntroVisitFired]);
-
-  useEffect(() => {
     if (!fireHauntIntroVisit) return;
     firePollyEvent('hauntIntro');
     onHauntIntroVisitFired();
@@ -1577,6 +1574,15 @@ function GameContent({
     // the boss background/scrim there stay in lockstep.
     const isBossStep = step.eventType === 'bossWord';
     const Board = isBossStep ? BossBoard : MaskBoard;
+    const inputMode = isBossStep ? 'both' : resolveOnboardingInputMode(onboarding, game);
+    const boardPresentation = isBossStep
+      ? { showDecisionCard: true, swipeCueMode: 'both' as const }
+      : resolveOnboardingBoardPresentation(onboarding, game);
+    const activeOnboarding = onboarding.activeRun?.runSeed === game.runSeed &&
+      onboarding.activeRun.mode === game.onboardingMode;
+    const suppressReactivePolly = activeOnboarding &&
+      (onboarding.activeRun?.phase !== 'complete' || onboardingVisitActive);
+    const boardPollyEvent = suppressReactivePolly ? (() => {}) : firePollyEvent;
     return (
       <View style={{ flex: 1 }}>
         <Board
@@ -1587,9 +1593,21 @@ function GameContent({
           onGoldFlash={onGoldFlash}
           onBossDecisionReady={onBossDecisionReady}
           onSwipeAttempt={onSwipeAttempt}
-          firePollyEvent={firePollyEvent}
+          inputMode={inputMode}
+          showDecisionCard={boardPresentation.showDecisionCard}
+          swipeCueMode={boardPresentation.swipeCueMode}
+          onDecisionCommitted={({ maskId, direction, correct, responseMs }) => {
+            recordOnboardingDecision(maskId, direction, correct, responseMs);
+          }}
+          firePollyEvent={boardPollyEvent}
         />
-        <PollyHuntVisit visit={visit} onDone={onVisitDone} />
+        {!onboardingVisitActive && <PollyHuntVisit visit={visit} onDone={onVisitDone} />}
+        {activeOnboarding && (
+          <FirstRunHuntOnboarding
+            onFeatherExplainStart={onFeatherExplainStart}
+            onVisitActivityChange={setOnboardingVisitActive}
+          />
+        )}
       </View>
     );
   }

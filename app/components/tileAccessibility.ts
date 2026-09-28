@@ -19,6 +19,24 @@ export const CLAIM_ONLY_ACTIONS = [
   { name: CLAIM_ACTION_NAME, label: 'Claim as the answer' },
 ] as const;
 
+export type HuntTileInputMode = 'locked' | 'up-only' | 'right-only' | 'both';
+
+export function huntActionsForInputMode(mode: HuntTileInputMode) {
+  if (mode === 'up-only') return CLAIM_REJECT_ACTIONS.slice(0, 1);
+  if (mode === 'right-only') return CLAIM_REJECT_ACTIONS.slice(1);
+  if (mode === 'both') return CLAIM_REJECT_ACTIONS;
+  return [];
+}
+
+export function isHuntDirectionAllowed(
+  mode: HuntTileInputMode,
+  direction: 'up' | 'right',
+): boolean {
+  return mode === 'both' ||
+    (mode === 'up-only' && direction === 'up') ||
+    (mode === 'right-only' && direction === 'right');
+}
+
 export function resolveTileAccessibilityAction(
   actionName: string,
 ): TileAccessibilityActionName | null {
