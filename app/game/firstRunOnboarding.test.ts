@@ -7,6 +7,7 @@ import {
   reconcileOnboardingRun,
   resolveOnboardingBoardPresentation,
   resolveOnboardingInputMode,
+  shouldRenderDecisionStack,
   type FirstRunOnboardingState,
 } from './firstRunOnboarding';
 import { createGame, submitSwipeDown, submitSwipeUp, type GameState } from './polyRunEngine';
@@ -102,6 +103,9 @@ eq(resolveOnboardingInputMode(onboarding, game), 'up-only', 'guided REAL exposes
 game = submitSwipeUp(game, 'fine_r03');
 onboarding = reconcileOnboardingRun(onboarding, game);
 eq(onboarding.activeRun?.phase, 'guided-real-result', 'committed guided REAL reconciles forward');
+const realResultPresentation = resolveOnboardingBoardPresentation(onboarding, game);
+eq(realResultPresentation.showDecisionCard, false, 'REAL MEANING beat keeps the next card off the board');
+eq(realResultPresentation.swipeCueMode, 'none', 'REAL MEANING beat shows no swipe cues');
 eq(resolveOnboardingInputMode(onboarding, game), 'locked', 'guided REAL result locks the next mask');
 
 onboarding = {
@@ -115,6 +119,10 @@ eq(resolveOnboardingInputMode(onboarding, game), 'right-only', 'guided TRAP expo
 game = submitSwipeDown(game, 'fine_t00');
 onboarding = reconcileOnboardingRun(onboarding, game);
 eq(onboarding.activeRun?.phase, 'guided-trap-result', 'committed guided TRAP reconciles forward');
+eq(resolveOnboardingInputMode(onboarding, game), 'locked', 'guided TRAP result locks the next mask');
+const trapResultPresentation = resolveOnboardingBoardPresentation(onboarding, game);
+eq(trapResultPresentation.showDecisionCard, false, 'TRAP beat keeps the next card off the board');
+eq(trapResultPresentation.swipeCueMode, 'none', 'TRAP beat shows no swipe cues');
 
 onboarding = {
   ...onboarding,
@@ -174,6 +182,32 @@ retryGame = retryMask.isReal
 retryOnboarding = reconcileOnboardingRun(retryOnboarding, retryGame);
 eq(retryOnboarding.activeRun?.phase, 'complete', 'next correct unaided decision completes onboarding');
 eq(retryOnboarding.activeRun?.helperVisible, false, 'first correct unaided decision removes helper');
+
+// While the decision card is hidden, the stack renders only for a judged
+// card that is still leaving: its exit plays in full, then the stack drops
+// before the next card is promoted, and a promoted card never flashes.
+eq(shouldRenderDecisionStack(true, null), true, 'a shown decision card always renders the stack');
+eq(
+  shouldRenderDecisionStack(true, { judged: false, exitFinished: false }),
+  true,
+  'a shown decision card renders an idle top card',
+);
+eq(
+  shouldRenderDecisionStack(false, { judged: true, exitFinished: false }),
+  true,
+  'a judged card mid-exit keeps rendering through the result beat',
+);
+eq(
+  shouldRenderDecisionStack(false, { judged: true, exitFinished: true }),
+  false,
+  'once the judged card has left, the stack drops before the next card is promoted',
+);
+eq(
+  shouldRenderDecisionStack(false, { judged: false, exitFinished: false }),
+  false,
+  'a promoted next card is hidden from its first frame',
+);
+eq(shouldRenderDecisionStack(false, null), false, 'a hidden decision card with no top card renders nothing');
 
 // A finished hand-off stays finished. The Hunt keeps onboardingMode for its
 // whole life, so every later game update runs reconcile against the state the

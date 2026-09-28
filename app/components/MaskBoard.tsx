@@ -53,7 +53,11 @@ import {
   resolveActiveTileHeight,
   resolveBoardVerticalSpacing,
 } from './tileTextLayout';
-import type { HuntInputMode, HuntSwipeCueMode } from '../game/firstRunOnboarding';
+import {
+  shouldRenderDecisionStack,
+  type HuntInputMode,
+  type HuntSwipeCueMode,
+} from '../game/firstRunOnboarding';
 import { shouldReleaseOpeningDecision } from './boardDecisionReadiness';
 
 // ── Layout constants ──────────────────────────────────────────
@@ -538,6 +542,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const [wordZoneMeasured, setWordZoneMeasured] = useState(false);
 
   const prevTopIdRef = useRef<string | null>(null);
+  // Only recorded while the decision card is hidden (onboarding result
+  // beats): the judged card has left, so the stack can drop before the
+  // next card is promoted into it.
+  const [exitedHiddenTopId, setExitedHiddenTopId] = useState<string | null>(null);
   const cardPopCountRef = useRef(0);
 
   // Deck entrance animation (native: translateY / transform only)
@@ -1968,7 +1976,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               </Text>
             </Animated.View>
           )}
-          {showBoardContent && showDecisionCard && (
+          {showBoardContent && shouldRenderDecisionStack(
+            showDecisionCard,
+            mechanics.topMask
+              ? {
+                  judged: mechanics.topMaskState !== 'idle',
+                  exitFinished: exitedHiddenTopId === mechanics.topMask.id,
+                }
+              : null,
+          ) && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
@@ -2064,6 +2080,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                     onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
                     onExitComplete={() => {
+                      if (!showDecisionCard) setExitedHiddenTopId(mechanics.topMask!.id);
                       mechanics.onTileExitComplete(mechanics.topMask!.id);
                     }}
                     onCardTouch={handleCardTouch}

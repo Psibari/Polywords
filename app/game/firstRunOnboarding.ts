@@ -249,12 +249,28 @@ export function resolveOnboardingBoardPresentation(
   if (active.phase === 'guided-trap') {
     return { showDecisionCard: true, swipeCueMode: 'right' };
   }
+  // The verdict label names the card just judged, so the next card waits
+  // off the board until the result beat is over.
+  if (active.phase === 'guided-real-result' || active.phase === 'guided-trap-result') {
+    return { showDecisionCard: false, swipeCueMode: 'none' };
+  }
   if (active.phase === 'complete') {
     return game.stepIndex > 0
       ? { showDecisionCard: false, swipeCueMode: 'none' }
       : { showDecisionCard: true, swipeCueMode: 'both' };
   }
   return { showDecisionCard: true, swipeCueMode: 'none' };
+}
+
+// A hidden decision card still lets a judged card finish leaving: the stack
+// keeps rendering while the top card is mid-exit and drops the moment that
+// exit completes, so the next card is never on the board underneath it.
+export function shouldRenderDecisionStack(
+  showDecisionCard: boolean,
+  topCard: { judged: boolean; exitFinished: boolean } | null,
+): boolean {
+  if (showDecisionCard) return true;
+  return topCard !== null && topCard.judged && !topCard.exitFinished;
 }
 
 export function dismissCompletedOnboardingHandoffOnResume(
