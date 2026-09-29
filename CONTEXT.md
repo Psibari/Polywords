@@ -27,10 +27,10 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
   clues LOCKED, device-approved 2026-09-26); stone tunnel behind it; Pete's cartoon answer
   wall (slate frame) with flush gold-mortared blocks that pop out when pressed and leave
   recesses when pulled;
-  the throw into the gate; floor coins, one per round, and a gold coin with its own moment
-  before Results; Polly on the left tower with her bubble on the steps. Pete, on device: coins,
-  bubble and layout "looking better". Not yet confirmed on device: the gold coin's chime,
-  haptic, pause and glow strength. Spec: `docs/DAILY_CHALLENGE_SPEC.md`.
+  the throw into the gate; floor coins, one per round, and a gold coin that flies off the
+  floor into a hero-coin finale before Results (finale LOCKED, device-approved 2026-09-29);
+  Polly on the left tower with her bubble on the steps. Pete, on device: coins,
+  bubble and layout "looking better". Spec: `docs/DAILY_CHALLENGE_SPEC.md`.
 - **First-run onboarding** (merged 2026-09-28, `af72a0e`; device-approved and LOCKED by Pete).
   It shipped:
   - Polly's first-ever Home lines, then a HUNT glow.
@@ -85,8 +85,8 @@ Daily castle:
    flush gold-mortared blocks; locked 2026-09-27) and the tunnel (drawn by script;
    locked 2026-09-27). No painted art is left on the Daily screen. Sharper
    castle: re-export B at full size from Magnific (the build used Pete's 864 px screen copy).
-2. Device check of the gold-coin moment: chime volume, Success haptic, pause length, glow
-   strength.
+2. Done (Pete, device-approved 2026-09-29): the gold-coin finale, chime, Success haptic and
+   timing included. LOCKED; see `CLAUDE.md`.
 3. Card look across the whole game: every card and panel should look alike (Pete,
    2026-09-26). Daily entry and Results cards were deliberately left for this pass.
 4. Cleanup. Done (Pete, 2026-09-26): the 24 unreferenced exports in

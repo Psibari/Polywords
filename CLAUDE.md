@@ -248,8 +248,8 @@ merged into `play-screen-overhaul` on 2026-09-27.
 - Correct claim: gate lifts, the block is drawn twice on one progress value (in front of the
   castle, then behind the gate line) and flies down the tunnel; the gate drops with the next
   round on it while a floor coin rises (`DailyCoinRise.token`). Input stays locked until the
-  gate is down. Win: blank gate, white coins sink, the gold coin rises, then its presentation
-  (`coinCelebrate`: glow, pop, `mastered` chime, Success haptic) and a hold before Results.
+  gate is down. Win: blank gate, white coins sink, the gold coin rises, then the coin finale
+  (below) before Results.
 - **Gold hit: LOCKED (Pete, device-approved 2026-09-29).** The castle lights gold the moment
   a correct claim is confirmed: `handleClaim` bumps `goldHitToken` beside `correctClaim`, and
   `DailyCastleStage` runs the hit on its own progress value, separate from the thrown
@@ -262,6 +262,29 @@ merged into `play-screen-overhaul` on 2026-09-27.
   layer rests at 0. Timing, keyframes and cap/bloom positions are in `dailyCastleScene.ts`
   (`DAILY_GOLD_HIT`, `dailyGoldHitKeyframes`, `DAILY_CASTLE_CAPS`, `DAILY_CASTLE_CAP_GLOWS`).
   Don't change it without Pete reopening it.
+- **Gold-coin finale: LOCKED (Pete, device-approved 2026-09-29).** The win's reward, after
+  the gold hit and the gold coin's normal floor rise. One progress value
+  (`coinFinale`, steps 0–5 in `DAILY_COIN_FINALE_STEPS`) drives the floor coin's hand-off
+  (`DailyFloorCoins`) and the hero (`DailyCoinFinale.tsx`, a screen-level layer at zIndex 3,
+  over the castle, HUD and Polly). Full motion, from landing: 300 ms rest on the floor, 520 ms
+  flight toward the player (it grows and turns face-on, the scene dims to 42%), one 106%
+  overshoot settling over 200 ms, an 800 ms hero hold with one 440 ms glint at its start, a
+  220 ms fade. The `mastered` chime and `mastery` Success haptic fire at hero arrival, once,
+  from `runGoldCoinFinale`. Results waits for the finale's end. Reduce Motion: no flight,
+  zoom, turn or overshoot; the floor coin crossfades (360 ms) to the hero in place, 900 ms
+  hold, 220 ms fade. Reduce Flashes: no glint. The floor rest stretches when needed so lift-off
+  waits for the gold hit to end (`dailyCoinFinaleFloorHoldMs`); they never overlap.
+  - The hero is drawn in code from `build_daily_coins.py`'s recipe (ring, edge, enamel,
+    `feather-gold-reward.png`, `coin_glow.png`), not by stretching `coin_gold.png`: that art
+    is the coin at the floor's angle with an upright feather, which stretches ~1.9x face-on.
+    Tilted back to the floor's angle the hero matches it, which is where it takes over.
+  - Continuity: once the coin leaves the floor, the floor coin stays hidden through the hero's
+    fade and behind Results. After a win the value rests at gone
+    (`dailyCoinFinaleRestingStep`); it returns to 0 only when a new session goes active
+    (`dailyCoinFinaleResetsFor`), with the gold coin sunk. Reopening an already-won Daily
+    still shows the gold coin on the floor as the completed-state marker.
+  - Timing, keyframes, geometry and colours are in `dailyCoinFinale.ts`, covered by
+    `dailyCoinFinale.test.ts`. Don't change it without Pete reopening it.
 - `DailyFloorCoins.tsx`: every coin owns its own Animated values for life; unearned coins
   wait sunk at the spot they first appear.
 - Polly perches on the left tower under the HUD (`hudBottom`); her bubble sits on the steps

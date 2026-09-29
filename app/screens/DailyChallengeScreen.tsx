@@ -11,6 +11,7 @@ import {
   Share,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   ViewStyle,
 } from 'react-native';
@@ -72,20 +73,32 @@ import DailyAnswerCard, {
 } from '../components/DailyAnswerCard';
 import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleStage';
 import { type DailyCoinRise } from '../components/DailyFloorCoins';
+import DailyCoinFinale from '../components/DailyCoinFinale';
 import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
   DAILY_HUD,
   DAILY_POLLY_BUBBLE,
   dailyActionLabelBottom,
+  dailyGoldHitMs,
   type DailyCastleFrame,
 } from '../ui/dailyCastleScene';
+import {
+  DAILY_COIN_FINALE,
+  DAILY_COIN_FINALE_STEPS,
+  dailyCoinFinaleArrivalMs,
+  dailyCoinFinaleFloorHoldMs,
+  dailyCoinFinaleResetsFor,
+  dailyCoinFinaleRestingStep,
+  dailyCoinFinaleTotalMs,
+} from '../ui/dailyCoinFinale';
 import { dailyPlaqueEntranceMs } from '../ui/dailyPlaqueEntrance';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
 import {
   usePollyAmbientMotion,
+  useReducedFlashesPreference,
   useReducedMotionPreference,
 } from '../hooks/usePollyAmbientMotion';
 
@@ -466,8 +479,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [goldHitToken, setGoldHitToken] = useState(0);
   // Where the castle is drawn, so Polly's bubble can sit on its steps.
   const [castleFrame, setCastleFrame] = useState<DailyCastleFrame | null>(null);
-  // The win's gold-coin moment, after the coin lands and before Results.
-  const coinCelebrate = useRef(new Animated.Value(0)).current;
+  // The win's gold-coin finale, after the coin lands and before Results
+  // (ui/dailyCoinFinale.ts). 0 at rest: the hero coin is hidden.
+  const coinFinale = useRef(new Animated.Value(0)).current;
+  // Reduce Motion or Reduce Flashes: the castle's gold hit runs calm (its
+  // length decides when the finale may start) and the hero gets no glint.
+  const reduceFlashes = useReducedFlashesPreference();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   // Window y of the HUD's bottom edge. The SafeAreaView sits at the window
   // origin, so the HUD's own layout y already includes the top inset.
   const [hudBottom, setHudBottom] = useState(0);
@@ -477,6 +495,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const dailyFocusedRef = useRef(false);
   const dailySessionRef = useRef(dailySession);
   dailySessionRef.current = dailySession;
+
+  // A new session (a new day, a dev reset) returns the coin finale to rest.
+  // Its gold coin is sunk under the floor by then, so nothing visible changes.
+  useEffect(() => {
+    if (!dailyCoinFinaleResetsFor(dailySession?.status)) return;
+    coinFinale.stopAnimation();
+    coinFinale.setValue(DAILY_COIN_FINALE_STEPS.landed);
+  }, [dailySession?.status, dailySession?.date, coinFinale]);
   const currentClaimPresentation = claimPresentationRef.current ?? claimPresentation;
   const displayPhase: DailyClaimPresentationPhase = currentClaimPresentation
     ? currentClaimPresentation.outcome === 'correct'
@@ -793,8 +819,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     flightProgress.stopAnimation();
     flightProgress.setValue(0);
     setCastleFlight(null);
-    coinCelebrate.stopAnimation();
-    coinCelebrate.setValue(0);
+    // After a win the finale stays at gone: the gold coin left the floor with
+    // the hero and must not reappear behind Results (the effect below brings
+    // it back to rest when a new session starts).
+    coinFinale.stopAnimation();
+    coinFinale.setValue(dailyCoinFinaleRestingStep(dailySessionRef.current?.status));
     setRevealSolvedCount(0);
     completingCandidateRef.current = null;
     setPhysicalClaimPhase('idle');
@@ -848,10 +877,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const gateRiseMs = dailyGateRiseMs(motion);
     const tunnelBeatMs = motion ? 180 : 80;
     const gateDropMs = motion ? 400 : 120;
-    // On the win: hold on the gold coin — chime, Success haptic, pop and
-    // glow — before Results comes up (Pete, 2026-09-26).
-    const coinPresentMs = motion ? 1600 : 1000;
-    const coinPopMs = 700;
+    // On the win the gold coin lands with the gate, then the finale flies it
+    // at the player before Results (ui/dailyCoinFinale.ts). It waits for the
+    // castle's gold hit to be over, so the two never compete.
+    const finaleMode = motion ? 'full' : 'calm';
+    const finaleTiming = DAILY_COIN_FINALE[finaleMode];
 
     // The plaque only flies with motion on and a measured release point;
     // otherwise it simply leaves the wall and the gate beat carries the claim.
@@ -897,6 +927,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // next clues are already painted on it as it drops. The coin rises on
     // the same beat and lands with the gate.
     const dropAtMs = goneAtMs + tunnelBeatMs;
+    const floorHoldMs = dailyCoinFinaleFloorHoldMs(
+      finaleMode,
+      dropAtMs + gateDropMs,
+      dailyGoldHitMs(reduceFlashes),
+    );
     scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
       setCastleFlight(null);
@@ -910,7 +945,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       }).start(({ finished }) => {
         if (!finished || completingCandidateRef.current !== candidate) return;
         if (dailySessionRef.current?.status === 'won') {
-          presentGoldCoin();
+          runGoldCoinFinale();
           return;
         }
         finishClaimPresentation(candidate);
@@ -918,35 +953,44 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       });
     }, dropAtMs);
 
-    // The gold coin has landed: chime, Success haptic, pop and glow, hold,
-    // then Results.
-    const presentGoldCoin = () => {
-      playSfx('mastered');
-      Haptics.cueAsync('mastery');
-      coinCelebrate.stopAnimation();
-      coinCelebrate.setValue(0);
-      if (motion) {
-        Animated.timing(coinCelebrate, {
-          toValue: 1,
-          duration: coinPopMs,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }).start();
-      } else {
-        coinCelebrate.setValue(1);
-      }
-      scheduleCorrectTransition(() => {
-        if (completingCandidateRef.current !== candidate) return;
+    // The gold coin has landed. It rests, leaves the floor and flies at the
+    // player, arrives at hero size (the reward chime and Success haptic land
+    // here, not at the rise), settles, glints once, holds, and goes; then
+    // Results. Reduce Motion: the same beats as a crossfade in place.
+    const runGoldCoinFinale = () => {
+      const steps = DAILY_COIN_FINALE_STEPS;
+      const step = (toValue: number, duration: number, easing: (t: number) => number) =>
+        Animated.timing(coinFinale, { toValue, duration, easing, useNativeDriver: true });
+      coinFinale.stopAnimation();
+      coinFinale.setValue(steps.landed);
+      Animated.sequence([
+        step(steps.liftOff, floorHoldMs, Easing.linear),
+        step(
+          steps.arrived,
+          finaleTiming.flightMs,
+          motion ? Easing.inOut(Easing.cubic) : Easing.inOut(Easing.quad),
+        ),
+        step(steps.settled, finaleTiming.settleMs, Easing.out(Easing.quad)),
+        step(steps.held, finaleTiming.holdMs, Easing.linear),
+        step(steps.gone, finaleTiming.exitMs, Easing.in(Easing.quad)),
+      ]).start(({ finished }) => {
+        // Results only once the hero has gone.
+        if (!finished || completingCandidateRef.current !== candidate) return;
         finishClaimPresentation(candidate);
         finishPhysicalCorrectTransition(candidate);
-      }, coinPresentMs);
+      });
+      scheduleCorrectTransition(() => {
+        if (completingCandidateRef.current !== candidate) return;
+        playSfx('mastered');
+        Haptics.cueAsync('mastery');
+      }, dailyCoinFinaleArrivalMs(finaleMode, floorHoldMs));
     };
 
-    // Safety net if the drop animation is interrupted (long enough to cover
-    // the win's gold-coin hold as well).
+    // Safety net if the drop or the finale is interrupted (long enough to
+    // cover the whole finale).
     scheduleCorrectTransition(
       () => finishPhysicalCorrectTransition(candidate),
-      dropAtMs + gateDropMs + coinPresentMs + 600,
+      dropAtMs + gateDropMs + dailyCoinFinaleTotalMs(finaleMode, floorHoldMs) + 600,
     );
   }
 
@@ -1121,7 +1165,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           plaques in the wall stay touchable. */}
       {/* The same castle stands behind the entry card and Results, gate shut
           and blank (Pete, 2026-09-26). One element across all three phases, so
-          a win's floor coins stay put as Results come up. */}
+          the floor stays as the win left it when Results come up: no gold coin
+          after the finale (DailyCoinFinale), the gold coin on a reopened win. */}
       {dailyInitialized && (
         <DailyCastleStage
           gatePosition={gatePosition}
@@ -1139,7 +1184,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           flightProgress={flightProgress}
           coinRise={coinRise}
           goldHitToken={goldHitToken}
-          coinCelebrate={coinCelebrate}
+          coinFinale={coinFinale}
           hudBottom={hudBottom}
           roundMarkers={!isComplete && displayedDailySession
             ? {
@@ -1278,6 +1323,20 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       )}
 
       </SafeAreaView>
+
+      {/* The win's hero coin, over everything (the castle, HUD and Polly
+          included); Results waits for it. Invisible at rest. */}
+      {dailyInitialized && (
+        <DailyCoinFinale
+          progress={coinFinale}
+          mode={reduceMotion === false ? 'full' : 'calm'}
+          glint={!reduceFlashes}
+          frame={castleFrame}
+          windowWidth={windowWidth}
+          windowHeight={windowHeight}
+          topInset={insets.top}
+        />
+      )}
     </View>
   );
 }

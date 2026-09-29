@@ -53,11 +53,28 @@ gate shut and blank, stands behind the entry card and Results.
 - Input stays locked from the claim until the gate is down. Stale and double claims are
   rejected throughout.
 
-The final round runs the same sequence, except its gate comes down blank, so the old clue
-never flashes. As it comes down the four white coins sink and one bigger gold-feather coin
-rises. The gold coin then gets its own presentation: a chime, the Success haptic, a gold glow
-and a pop. It holds for a pause (1.6 s, or 1.0 s under reduce motion), and only then do the
-Results come up.
+The final round runs the same sequence, castle gold hit included, except its gate comes down
+blank, so the old clue never flashes. As it comes down the four white coins sink and one
+bigger gold-feather coin rises.
+
+The gold-coin finale (LOCKED, Pete, device-approved 2026-09-29) follows:
+
+1. The gold coin rests on the floor for a moment, then leaves it.
+2. It flies toward the player, growing and turning until its face points at the camera. The
+   rest of the screen dims to 42%, so the coin reads as a foreground reward.
+3. It reaches hero size with one small overshoot and settles. The reward chime and the
+   Success haptic land on its arrival, not on the floor rise.
+4. One glint crosses the coin, it holds, then it fades.
+5. Only then do the Results come up.
+
+The finale never overlaps the castle's gold hit: the coin leaves the floor only after the hit
+is over. Once it has left the floor, the small floor coin stays hidden through the fade and
+behind Results. Reopening an already-won Daily still shows the gold coin on the floor as the
+mark of a completed challenge.
+
+Under reduce motion there is no flight, zoom, turn or overshoot: the floor coin crossfades
+into the hero coin in place, which holds and fades the same way. Under reduce flashes the
+glint is left out; the gold and its glow stay.
 
 ## Reward, Results, and Streak
 

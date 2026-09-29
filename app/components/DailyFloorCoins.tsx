@@ -7,12 +7,10 @@ import {
   type DailyCastleFrame,
   type DailyCastleRect,
 } from '../ui/dailyCastleScene';
+import { dailyCoinFinaleKeyframes, type DailyCoinFinaleMode } from '../ui/dailyCoinFinale';
 
 const WHITE_COIN = require('../../assets/images/dailycastle/coin_feather.png');
 const GOLD_COIN = require('../../assets/images/dailycastle/coin_gold.png');
-// Soft radial gold, built by tools/art/build_daily_coins.py. A real falloff:
-// a View with a large borderRadius draws a hard-edged pill on native.
-const GOLD_GLOW = require('../../assets/images/dailycastle/coin_glow.png');
 
 const WHITE_SLOTS = 4;
 
@@ -34,11 +32,12 @@ type Props = {
    */
   rise: DailyCoinRise;
   /**
-   * 0 → 1 over the win's presentation once the gold coin has landed: it
-   * pops and a gold glow comes up behind it (the chime and haptic ride the
-   * same beat in the screen).
+   * The win's finale (ui/dailyCoinFinale.ts): the gold coin hands over to the
+   * hero coin (DailyCoinFinale) as it leaves the floor, and stays off the
+   * floor after the hero has gone.
    */
-  celebrate: Animated.Value;
+  finale: Animated.Value;
+  finaleMode: DailyCoinFinaleMode;
   frame: DailyCastleFrame;
   /** Stage-local offset of the scene. */
   offsetX: number;
@@ -65,7 +64,8 @@ function rowOffset(index: number, count: number): number {
 export default function DailyFloorCoins({
   solvedCount,
   rise,
-  celebrate,
+  finale,
+  finaleMode,
   frame,
   offsetX,
   offsetY,
@@ -152,21 +152,10 @@ export default function DailyFloorCoins({
   const sunkY = (value: Animated.Value, height: number) =>
     value.interpolate({ inputRange: [0, 1], outputRange: [0, height] });
 
-  const glowW = goldBox.width * 2.2;
-  const glowH = goldBox.height * 1.9;
-  const glowOpacity = celebrate.interpolate({
-    inputRange: [0, 0.2, 0.5, 1],
-    outputRange: [0, 1, 0.75, 0.85],
-    extrapolate: 'clamp',
-  });
-  const glowScale = celebrate.interpolate({
-    inputRange: [0, 0.2, 1],
-    outputRange: [0.6, 1.08, 1],
-    extrapolate: 'clamp',
-  });
-  const pop = celebrate.interpolate({
-    inputRange: [0, 0.18, 0.4, 1],
-    outputRange: [1, 1.15, 0.98, 1],
+  const goldFloor = dailyCoinFinaleKeyframes(finaleMode, 1, false).floor;
+  const goldOpacity = finale.interpolate({
+    inputRange: goldFloor.input,
+    outputRange: goldFloor.output,
     extrapolate: 'clamp',
   });
 
@@ -189,22 +178,7 @@ export default function DailyFloorCoins({
           </Animated.View>
         </Animated.View>
       ))}
-      <Animated.Image
-        source={GOLD_GLOW}
-        resizeMode="stretch"
-        style={[
-          styles.glow,
-          {
-            left: goldBox.left + goldBox.width / 2 - glowW / 2,
-            top: goldBox.top + goldBox.height / 2 - glowH / 2,
-            width: glowW,
-            height: glowH,
-            opacity: glowOpacity,
-            transform: [{ scale: glowScale }],
-          },
-        ]}
-      />
-      <Animated.View pointerEvents="none" style={[styles.clip, goldBox, { transform: [{ scale: pop }] }]}>
+      <Animated.View pointerEvents="none" style={[styles.clip, goldBox, { opacity: goldOpacity }]}>
         <Animated.View style={[styles.fill, { transform: [{ translateY: sunkY(goldSink, goldBox.height) }] }]}>
           <Image source={GOLD_COIN} resizeMode="stretch" style={{ width: goldBox.width, height: goldBox.height }} />
         </Animated.View>
@@ -222,10 +196,5 @@ const styles = StyleSheet.create({
   },
   fill: {
     ...StyleSheet.absoluteFill,
-  },
-  glow: {
-    position: 'absolute',
-    zIndex: 31,
-    elevation: 31,
   },
 });

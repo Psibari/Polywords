@@ -119,8 +119,8 @@ type Props = {
   coinRise: DailyCoinRise;
   /** Bumped on every correct claim: the castle's gold hit plays once. 0 = never. */
   goldHitToken: number;
-  /** 0 → 1 over the win's gold-coin presentation. */
-  coinCelebrate: Animated.Value;
+  /** The win's gold-coin finale (ui/dailyCoinFinale.ts steps 0–5). */
+  coinFinale: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
   hudBottom: number;
   /** Round progress on the wall's frieze, during play only. */
@@ -235,7 +235,7 @@ export default function DailyCastleStage({
   flightProgress,
   coinRise,
   goldHitToken,
-  coinCelebrate,
+  coinFinale,
   hudBottom,
   roundMarkers,
   onFrame,
@@ -463,7 +463,8 @@ export default function DailyCastleStage({
       <DailyFloorCoins
         solvedCount={solvedCount}
         rise={coinRise}
-        celebrate={coinCelebrate}
+        finale={coinFinale}
+        finaleMode={reduceMotion === false ? 'full' : 'calm'}
         frame={frame}
         offsetX={-stageOffset.x}
         offsetY={-stageOffset.y}
