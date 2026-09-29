@@ -100,11 +100,11 @@ Daily castle:
    Left for its own pass: `DailyAnswerCard`'s pre-castle flat-card branch (`castleArt`
    false, `DailyCardFace`), which nothing renders; the component is locked, so it was not
    refactored in a cleanup. CASTLE TUNE and DEV - RESET DAILY stay (Pete).
-5. Review with Pete (next session) of Polly's Polybook lines, starting with the four that
-   use "mine": "Good work. Mine." (light, held day), "Sloppy work. Mine." (heavy, bad day),
-   "The last one is mine." (boss held), "Badly built. Mine." (boss lost). She is not a thief.
-   Pete wants to look at them himself first. Do not rewrite or add any line until he rules.
-   Source: `docs/POLLY_POLYBOOK_LOG_LINES.md`; runtime: `app/game/pollyBookLines.ts`.
+5. Done (Pete, LOCKED 2026-09-29): the four Polybook lines that used "mine" were reviewed
+   and replaced: "Good work." (light, held day), "Sloppy work." (heavy, bad day), "I'm still
+   the boss." (boss held), "Badly built." (boss lost). Same ids and pools. No other line was
+   reviewed or changed. Source: `docs/POLLY_POLYBOOK_LOG_LINES.md`; runtime:
+   `app/game/pollyBookLines.ts`.
 6. Done (2026-09-27): PR Psibari/Polywords#13 merged into `play-screen-overhaul` with Pete's
    approval.
 

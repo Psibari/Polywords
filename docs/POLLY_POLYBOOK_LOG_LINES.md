@@ -59,7 +59,7 @@ Twelve-point, her hand. One row per day.
 - Not a chance today.
 - I was never worried.
 - Did that in my sleep.
-- Good work. Mine.
+- Good work.
 - Effortless, frankly.
 - Nothing got through.
 - Held everything. Note it.
@@ -77,7 +77,7 @@ Twelve-point, her hand. One row per day.
 - A poor batch.
 - I have had better.
 - The light was wrong.
-- Sloppy work. Mine.
+- Sloppy work.
 - Not my finest hour.
 - Wrote those in a hurry.
 - That batch was weak.
@@ -109,7 +109,7 @@ Twelve-point, her hand. One row per day.
 - My best work, that.
 - So close. Not close.
 - Held it. Barely. Held it.
-- The last one is mine.
+- I'm still the boss.
 - Nowhere near the end.
 
 ### 1.5 First day
@@ -224,7 +224,7 @@ My worst work.
 
 - My worst work.
 - A weak set, that.
-- Badly built. Mine.
+- Badly built.
 - Sloppy of me.
 - I rushed that one.
 - All three. Fine.

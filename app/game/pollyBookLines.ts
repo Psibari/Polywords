@@ -59,7 +59,7 @@ export const POLLY_BOOK_LINES = {
   lightNotAChance: 'Not a chance today.',
   lightNeverWorried: 'I was never worried.',
   lightInMySleep: 'Did that in my sleep.',
-  lightGoodWorkMine: 'Good work. Mine.',
+  lightGoodWorkMine: 'Good work.',
   lightEffortless: 'Effortless, frankly.',
   lightNothingThrough: 'Nothing got through.',
   lightHeldEverything: 'Held everything. Note it.',
@@ -78,7 +78,7 @@ export const POLLY_BOOK_LINES = {
   heavyPoorBatch: 'A poor batch.',
   heavyHadBetter: 'I have had better.',
   heavyLightWasWrong: 'The light was wrong.',
-  heavySloppyWork: 'Sloppy work. Mine.',
+  heavySloppyWork: 'Sloppy work.',
   heavyNotFinestHour: 'Not my finest hour.',
   heavyWroteInAHurry: 'Wrote those in a hurry.',
   heavyBatchWasWeak: 'That batch was weak.',
@@ -109,7 +109,7 @@ export const POLLY_BOOK_LINES = {
   bossHeldBestWork: 'My best work, that.',
   bossHeldSoClose: 'So close. Not close.',
   bossHeldBarely: 'Held it. Barely. Held it.',
-  bossHeldLastIsMine: 'The last one is mine.',
+  bossHeldLastIsMine: "I'm still the boss.",
   bossHeldNowhereNear: 'Nowhere near the end.',
 
   // ── 1.5 First day ─────────────────────────────────────────────
@@ -133,7 +133,7 @@ export const POLLY_BOOK_LINES = {
   // ── 2.1 Boss lost — the word was mastered ─────────────────────
   bossLostWorstWork: 'My worst work.',
   bossLostWeakSet: 'A weak set, that.',
-  bossLostBadlyBuilt: 'Badly built. Mine.',
+  bossLostBadlyBuilt: 'Badly built.',
   bossLostSloppy: 'Sloppy of me.',
   bossLostRushed: 'I rushed that one.',
   bossLostAllThree: 'All three. Fine.',
