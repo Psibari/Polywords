@@ -509,6 +509,83 @@ export const DAILY_CASTLE_FLIGHT_HANDOFF =
   (DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs);
 
 /**
+ * The two tower caps, alpha-measured from castle_cartoon_gold_flash.png
+ * (alpha > 32, stray flecks excluded): left x 0–191 px, y 85–363 px, finial
+ * tip at x 33; right x 1113–1289 px, y 77–369 px, finial tip at x 1280. Both
+ * domes run off the canvas edge and are centred on their finials; each dome's
+ * middle is at about y 230 (left) and 225 (right).
+ */
+export const DAILY_CASTLE_CAPS: readonly DailyCastleRect[] = [
+  { x: 0, y: 85 / 3, width: 192 / 3, height: 279 / 3 },
+  { x: 1113 / 3, y: 77 / 3, width: 177 / 3, height: 293 / 3 },
+];
+const DAILY_CAP_CENTRES = [
+  { x: 33 / 3, y: 230 / 3 },
+  { x: 1280 / 3, y: 225 / 3 },
+] as const;
+/** The bloom behind each cap (coin_glow.png), well past the cap's silhouette. */
+export const DAILY_CAP_GLOW_SIZE = { width: 216, height: 180 } as const;
+export const DAILY_CASTLE_CAP_GLOWS: readonly DailyCastleRect[] = DAILY_CAP_CENTRES.map((centre) => ({
+  x: centre.x - DAILY_CAP_GLOW_SIZE.width / 2,
+  y: centre.y - DAILY_CAP_GLOW_SIZE.height / 2,
+  width: DAILY_CAP_GLOW_SIZE.width,
+  height: DAILY_CAP_GLOW_SIZE.height,
+}));
+
+/**
+ * The castle's gold hit on a correct claim (Pete, 2026-09-29: the old trim fade
+ * was too pale and easy to miss; this version device-approved and LOCKED the
+ * same day). The gold trim lights, flat crown gold is laid
+ * over it, and a bloom swells behind each cap: fast ignition, a hold near the
+ * peak, a smooth decay back to the resting art. One progress value runs
+ * 0 → 1 (ignited) → 2 (end of hold) → 3 (gone), read through the keyframes of
+ * dailyGoldHitKeyframes.
+ *
+ * `calm` is for Reduce Motion or Reduce Flashes: the same gold at the same
+ * strength, but a gentler ignition with no overshoot and no swelling.
+ */
+export const DAILY_GOLD_HIT_COLOR = '#F5C842';
+export const DAILY_GOLD_HIT = {
+  full: { igniteMs: 100, holdMs: 200, decayMs: 400 },
+  calm: { igniteMs: 200, holdMs: 150, decayMs: 400 },
+} as const;
+export const DAILY_GOLD_HIT_INPUT = [0, 1, 2, 3];
+
+export function dailyGoldHitMs(calm: boolean): number {
+  const timing = DAILY_GOLD_HIT[calm ? 'calm' : 'full'];
+  return timing.igniteMs + timing.holdMs + timing.decayMs;
+}
+
+export type DailyGoldHitKeyframes = {
+  /** The shaded gold trim art (castle_cartoon_gold_flash.png). */
+  trim: number[];
+  /** The same trim tinted flat DAILY_GOLD_HIT_COLOR, over it: saturation. */
+  tint: number[];
+  /** The bloom behind each cap. */
+  glow: number[];
+  /** The bloom's scale about its centre. */
+  glowScale: number[];
+};
+
+/** Outputs for DAILY_GOLD_HIT_INPUT. Every opacity ends at 0: nothing lingers. */
+export function dailyGoldHitKeyframes(calm: boolean): DailyGoldHitKeyframes {
+  return calm
+    ? {
+        trim: [0, 1, 1, 0],
+        tint: [0, 0.5, 0.5, 0],
+        glow: [0, 0.9, 0.9, 0],
+        glowScale: [1, 1, 1, 1],
+      }
+    : {
+        trim: [0, 1, 1, 0],
+        // One restrained overshoot at ignition, relaxing through the hold.
+        tint: [0, 0.62, 0.5, 0],
+        glow: [0, 1, 0.9, 0],
+        glowScale: [0.8, 1.12, 1.05, 1],
+      };
+}
+
+/**
  * Bebas Neue (FONTS.wordDisplay) advance widths in em, measured from the
  * bundled font with canvas measureText for every character the Daily pool
  * uses. Same font file on device, so the same widths.

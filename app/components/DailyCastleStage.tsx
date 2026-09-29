@@ -17,7 +17,10 @@ import {
   type DailyAnswerCardClaimOrigin,
   type DailyAnswerCardProps,
 } from './DailyAnswerCard';
-import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import {
+  useReducedFlashesPreference,
+  useReducedMotionPreference,
+} from '../hooks/usePollyAmbientMotion';
 import { dailyStoneSeatSfx, playSfx } from '../audio/sfx';
 import { Haptics } from '../utils/haptics';
 import {
@@ -29,8 +32,13 @@ import {
 } from '../ui/dailyPlaqueEntrance';
 import {
   DAILY_CASTLE_FLIGHT,
+  DAILY_CASTLE_CAP_GLOWS,
   DAILY_CASTLE_FLIGHT_HANDOFF,
   DAILY_CASTLE_GRID,
+  DAILY_GOLD_HIT,
+  DAILY_GOLD_HIT_COLOR,
+  DAILY_GOLD_HIT_INPUT,
+  dailyGoldHitKeyframes,
   DAILY_ANSWER_WALL_FOOT,
   DAILY_CASTLE_OPENING,
   dailyGateClosed,
@@ -51,9 +59,12 @@ import {
 // 1290 × 2796 canvas and are always drawn at the same rect.
 const CASTLE_ARCH = require('../../assets/images/dailycastle/castle_cartoon.png');
 // The castle's white trim (tower caps, rope hooks, step edges) in gold, clear
-// everywhere else, on the same canvas; it flashes over the castle on every
-// correct answer (Pete, 2026-09-27). Built with the castle by the same script.
+// everywhere else, on the same canvas; it lights up on every correct answer
+// (Pete, 2026-09-27). Built with the castle by the same script.
 const CASTLE_GOLD_FLASH = require('../../assets/images/dailycastle/castle_cartoon_gold_flash.png');
+// The gold coin's soft radial glow (build_daily_coins.py), reused as the bloom
+// that swells behind each tower cap in the gold hit.
+const CAP_GLOW = require('../../assets/images/dailycastle/coin_glow.png');
 // The answer wall, built by tools/art/build_daily_answer_wall.py: Pete's
 // cartoon wall (slate frame), each panel black mortar with three block
 // recesses. The answer blocks sit flush over the recesses.
@@ -106,6 +117,8 @@ type Props = {
   flightProgress: Animated.Value;
   /** Starts the newest floor coin's rise (and, on the win, the gold one's). */
   coinRise: DailyCoinRise;
+  /** Bumped on every correct claim: the castle's gold hit plays once. 0 = never. */
+  goldHitToken: number;
   /** 0 → 1 over the win's gold-coin presentation. */
   coinCelebrate: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
@@ -205,11 +218,12 @@ function DailyCastlePlaqueSlot({
 
 /**
  * One registered castle scene. The arch and wall never move; the gate, the
- * feathers behind it and the answer plaques do.
+ * gold hit, the floor coins and the answer plaques do.
  *
- * Layer order, back to front: sky (screen) → feather wall and feathers →
- * plaque going in (back flight) → gate → arch → wall → plaques in the wall →
- * plaque being thrown (front flight).
+ * Layer order, back to front: sky (screen) → tunnel → plaque going in (back
+ * flight) → gate → arch → gold hit (cap blooms, trim, tint) → floor coins →
+ * wall → round markers → plaques in the wall → plaque being thrown (front
+ * flight).
  */
 export default function DailyCastleStage({
   gatePosition,
@@ -220,6 +234,7 @@ export default function DailyCastleStage({
   flight,
   flightProgress,
   coinRise,
+  goldHitToken,
   coinCelebrate,
   hudBottom,
   roundMarkers,
@@ -229,6 +244,9 @@ export default function DailyCastleStage({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotionPreference();
+  // True under Reduce Motion (or while it is unknown) as well as Reduce
+  // Flashes: the gold hit keeps its gold, loses its overshoot and swell.
+  const calmGoldHit = useReducedFlashesPreference();
   const tuning: Tuning = __DEV__
     ? useDailyCastleTuning((s: Tuning) => s)
     : DEFAULTS;
@@ -276,17 +294,59 @@ export default function DailyCastleStage({
   const clueTop = resolveDailyClueTop(frame, hudBottom);
   const gateClosed = dailyGateClosed(clueTop);
 
-  // The trim flashes gold on every correct claim, peaking at the handoff, the
-  // moment the thrown block passes behind the gate into the tunnel. It rides
-  // the throw's own progress, so under reduced motion (or with no measured
-  // origin) it doesn't play, just as the throw doesn't: intentional.
-  const goldFlashOpacity = useMemo(
-    () => flightProgress.interpolate({
-      inputRange: [0, DAILY_CASTLE_FLIGHT_HANDOFF, 1],
-      outputRange: [0, 1, 0],
-    }),
-    [flightProgress],
-  );
+  // The gold hit: the castle answers a correct claim the moment it is made
+  // (ui/dailyCastleScene.ts DAILY_GOLD_HIT). It runs on its own progress, not
+  // the throw's, so it plays under reduced motion and without a measured
+  // throw origin too, and peaks well before the gate brings the next round.
+  const goldHit = useRef(new Animated.Value(0)).current;
+  const calmGoldHitRef = useRef(calmGoldHit);
+  calmGoldHitRef.current = calmGoldHit;
+  useEffect(() => {
+    if (goldHitToken === 0) return;
+    const timing = DAILY_GOLD_HIT[calmGoldHitRef.current ? 'calm' : 'full'];
+    goldHit.stopAnimation();
+    goldHit.setValue(0);
+    const hit = Animated.sequence([
+      Animated.timing(goldHit, {
+        toValue: 1,
+        duration: timing.igniteMs,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(goldHit, {
+        toValue: 2,
+        duration: timing.holdMs,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+      Animated.timing(goldHit, {
+        toValue: 3,
+        duration: timing.decayMs,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]);
+    hit.start();
+    return () => {
+      // Never leave the trim lit if the hit is cut short.
+      hit.stop();
+      goldHit.setValue(0);
+    };
+  }, [goldHit, goldHitToken]);
+  const goldHitStyles = useMemo(() => {
+    const keyframes = dailyGoldHitKeyframes(calmGoldHit);
+    const read = (outputRange: number[]) => goldHit.interpolate({
+      inputRange: DAILY_GOLD_HIT_INPUT,
+      outputRange,
+      extrapolate: 'clamp',
+    });
+    return {
+      trim: read(keyframes.trim),
+      tint: read(keyframes.tint),
+      glow: read(keyframes.glow),
+      glowScale: read(keyframes.glowScale),
+    };
+  }, [calmGoldHit, goldHit]);
 
   // Gate and clue rects relative to the opening / gate image that hold them.
   const gateFrame = {
@@ -327,6 +387,28 @@ export default function DailyCastleStage({
         }]}
         resizeMode="stretch"
       />
+      {/* The gold hit, back to front: a bloom swelling behind each tower cap,
+          the gold trim, then the trim again in flat crown gold to saturate
+          it. Same zIndex, so document order stacks them; all rest at 0. */}
+      {DAILY_CASTLE_CAP_GLOWS.map((rect, index) => {
+        const glow = toDailyCastleScreen(frame, rect);
+        return (
+          <Animated.Image
+            key={`cap-glow-${index}`}
+            source={CAP_GLOW}
+            resizeMode="stretch"
+            // Explicit size: a bundled image otherwise takes the file's pixel size.
+            style={[styles.layer, styles.castleGoldFlash, {
+              left: glow.x + sceneLeft,
+              top: glow.y - stageOffset.y,
+              width: glow.width,
+              height: glow.height,
+              opacity: goldHitStyles.glow,
+              transform: [{ scale: goldHitStyles.glowScale }],
+            }]}
+          />
+        );
+      })}
       <Animated.Image
         source={CASTLE_GOLD_FLASH}
         style={[styles.layer, styles.castleGoldFlash, {
@@ -334,7 +416,20 @@ export default function DailyCastleStage({
           top: sceneTop,
           width: frame.width,
           height: frame.height,
-          opacity: goldFlashOpacity,
+          opacity: goldHitStyles.trim,
+        }]}
+        resizeMode="stretch"
+      />
+      <Animated.Image
+        source={CASTLE_GOLD_FLASH}
+        // Runtime tint only; the art itself is untouched.
+        tintColor={DAILY_GOLD_HIT_COLOR}
+        style={[styles.layer, styles.castleGoldFlash, {
+          left: sceneLeft,
+          top: sceneTop,
+          width: frame.width,
+          height: frame.height,
+          opacity: goldHitStyles.tint,
         }]}
         resizeMode="stretch"
       />

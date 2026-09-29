@@ -40,6 +40,11 @@ gate shut and blank, stands behind the entry card and Results.
   it leaves a dark recess with black edges (a wrong block leaves it too). Each new round's
   blocks slide into the recesses and come flush. On entry and Results the wall shows six
   blank flush blocks.
+- The moment a correct claim is confirmed, the castle lights gold: both tower caps (and the
+  rest of the gold trim) go crown gold with a glow swelling behind each cap, then fade, all
+  within 0.7 s and before the next round's gate comes down (Pete, device-approved
+  2026-09-29). Under reduce motion or reduce flashes the gold is just as strong but comes up
+  more gently, with no swelling.
 - A correct UP claim throws the plaque at the castle while the gate lifts.
 - The plaque passes into the arch, goes in behind the gate line and flies off down the tunnel.
 - The gate comes back down carrying the next round's clues while a white-feather coin rises

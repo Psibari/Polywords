@@ -197,9 +197,8 @@ merged into `play-screen-overhaul` on 2026-09-27.
   it from `tools/art/source/castle_cartoon_src.png`: gold trim (caps, ropes, step edges) remapped to white, arch
   centred, straight sides stretched for the clue planks, opening cut out, measurements
   printed, floor retinted to Pete's mock (`FLOOR_TARGET`). It also writes
-  `castle_cartoon_gold_flash.png` (the trim in gold, clear elsewhere), which
-  `DailyCastleStage` fades 0 → 1 → 0 on `flightProgress`, peaking at
-  `DAILY_CASTLE_FLIGHT_HANDOFF`, on every correct claim. The old painted `ARCHNEW.png` is deleted.
+  `castle_cartoon_gold_flash.png` (the trim in gold, clear elsewhere), which the gold hit
+  lights (below). The old painted `ARCHNEW.png` is deleted.
 - **Tunnel: LOCKED (Pete, device-approved 2026-09-27; re-locked with the castle's purple and
   gold light the same day).** Cartoon like the rest: `build_daily_tunnel.py` draws
   stepped stone rings in the castle's purple at the opening's exact size, narrowing to a far
@@ -251,6 +250,18 @@ merged into `play-screen-overhaul` on 2026-09-27.
   round on it while a floor coin rises (`DailyCoinRise.token`). Input stays locked until the
   gate is down. Win: blank gate, white coins sink, the gold coin rises, then its presentation
   (`coinCelebrate`: glow, pop, `mastered` chime, Success haptic) and a hold before Results.
+- **Gold hit: LOCKED (Pete, device-approved 2026-09-29).** The castle lights gold the moment
+  a correct claim is confirmed: `handleClaim` bumps `goldHitToken` beside `correctClaim`, and
+  `DailyCastleStage` runs the hit on its own progress value, separate from the thrown
+  block's `flightProgress`, so it also plays under Reduce Motion and with no measured throw.
+  Back to front: a `coin_glow.png` bloom behind each tower cap, the gold trim, then the trim
+  again tinted `#F5C842` at runtime (the art is untouched). Full motion: 100 ms ignition
+  with one small overshoot (tint and glow; the bloom swells 0.8 → 1.12 → 1.0), 200 ms hold,
+  400 ms fade: 700 ms, over before the next round's gate comes down. Reduce Motion or
+  Reduce Flashes: the same gold and glow, 200 / 150 / 400 ms, no swell or overshoot. Every
+  layer rests at 0. Timing, keyframes and cap/bloom positions are in `dailyCastleScene.ts`
+  (`DAILY_GOLD_HIT`, `dailyGoldHitKeyframes`, `DAILY_CASTLE_CAPS`, `DAILY_CASTLE_CAP_GLOWS`).
+  Don't change it without Pete reopening it.
 - `DailyFloorCoins.tsx`: every coin owns its own Animated values for life; unearned coins
   wait sunk at the spot they first appear.
 - Polly perches on the left tower under the HUD (`hudBottom`); her bubble sits on the steps

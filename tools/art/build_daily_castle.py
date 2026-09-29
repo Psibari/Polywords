@@ -32,8 +32,9 @@ it matches Polly. This script:
 
 It also writes castle_cartoon_gold_flash.png: the same canvas, transparent
 except the trim, which it paints in the game's golds (#8F6F18, #C8920E,
-#F5C842, #FFF7D6). DailyCastleStage fades it in over the castle on every
-correct answer.
+#F5C842, #FFF7D6). DailyCastleStage lights it over the castle on every
+correct answer, as part of the gold hit (a crown-gold tint and a bloom behind
+each cap; app/ui/dailyCastleScene.ts DAILY_GOLD_HIT).
 
 It prints the opening's measurements; app/ui/dailyCastleScene.ts mirrors them.
 Rerun it, never hand-edit the output.

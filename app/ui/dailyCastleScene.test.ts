@@ -46,6 +46,13 @@ import {
   DAILY_WALL_FRIEZE,
   DAILY_ROUND_MARKERS,
   resolveDailyRoundMarkers,
+  DAILY_CASTLE_CAPS,
+  DAILY_CASTLE_CAP_GLOWS,
+  DAILY_GOLD_HIT,
+  DAILY_GOLD_HIT_COLOR,
+  DAILY_GOLD_HIT_INPUT,
+  dailyGoldHitKeyframes,
+  dailyGoldHitMs,
 } from './dailyCastleScene';
 
 const opening = DAILY_CASTLE_OPENING;
@@ -295,5 +302,79 @@ for (let count = 1; count <= 4; count += 1) {
 assert.ok(DAILY_FLOOR_COINS.contactY > DAILY_FLOOR_COINS.floorTop && DAILY_FLOOR_COINS.contactY < DAILY_FLOOR_COINS.floorBottom, 'coins stand on the open floor');
 const gold = resolveDailyGoldCoin();
 assert.ok(gold.y + gold.height <= DAILY_FLOOR_COINS.floorBottom, 'gold coin clears the capstone');
+
+// Gold hit: timing (Pete, 2026-09-29) — fast ignition, a hold near the peak,
+// a smooth decay, the whole event readable but brief.
+{
+  const { igniteMs, holdMs, decayMs } = DAILY_GOLD_HIT.full;
+  assert.ok(igniteMs >= 80 && igniteMs <= 120, `ignition ${igniteMs} ms is fast`);
+  assert.ok(holdMs >= 150 && holdMs <= 200, `hold ${holdMs} ms keeps the peak readable`);
+  assert.ok(decayMs >= 300 && decayMs <= 400, `decay ${decayMs} ms is smooth`);
+  const total = dailyGoldHitMs(false);
+  assert.ok(total >= 650 && total <= 750, `gold hit ${total} ms`);
+  // The next round's gate only starts down after the throw (650 ms) and a
+  // tunnel beat, so the peak and hold are never under new-round motion.
+  assert.ok(
+    igniteMs + holdMs < DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs,
+    'peak and hold are over before the throw ends',
+  );
+  assert.equal(DAILY_GOLD_HIT_COLOR, '#F5C842', 'crown gold');
+  assert.ok(dailyGoldHitMs(true) <= 800, 'calm gold hit stays brief too');
+}
+
+// Gold hit: keyframes. Strong at the peak, clean at rest, one overshoot only.
+{
+  assert.deepEqual(DAILY_GOLD_HIT_INPUT, [0, 1, 2, 3]);
+  for (const calm of [false, true]) {
+    const keys = dailyGoldHitKeyframes(calm);
+    const label = calm ? 'calm' : 'full';
+    for (const [name, outputs] of Object.entries(keys)) {
+      assert.equal(outputs.length, DAILY_GOLD_HIT_INPUT.length, `${label} ${name}: one output per keyframe`);
+    }
+    for (const name of ['trim', 'tint', 'glow'] as const) {
+      assert.equal(keys[name][0], 0, `${label} ${name} is invisible at rest`);
+      assert.equal(keys[name][3], 0, `${label} ${name} leaves nothing behind`);
+    }
+    assert.equal(keys.trim[1], 1, `${label} gold trim fully lit at the peak`);
+    assert.ok(keys.tint[1] >= 0.5, `${label} crown-gold tint saturates the peak`);
+    assert.ok(keys.glow[1] >= 0.9, `${label} bloom is clearly visible at the peak`);
+    assert.ok(keys.tint[2] >= 0.5 && keys.glow[2] >= 0.9, `${label} holds near the peak`);
+    // No pulsing: after the peak, every opacity only falls.
+    for (const name of ['trim', 'tint', 'glow'] as const) {
+      assert.ok(keys[name][1] >= keys[name][2] && keys[name][2] >= keys[name][3], `${label} ${name} never re-brightens`);
+    }
+  }
+
+  const full = dailyGoldHitKeyframes(false);
+  assert.ok(full.glowScale[1] > 1 && full.glowScale[1] <= 1.15, 'bloom swells a little at ignition');
+  assert.ok(full.glowScale[1] > full.glowScale[2] && full.glowScale[2] >= full.glowScale[3], 'one overshoot, then it settles');
+  assert.ok(full.tint[1] > full.tint[2], 'one restrained intensity overshoot at ignition');
+
+  const calm = dailyGoldHitKeyframes(true);
+  assert.deepEqual(calm.glowScale, [1, 1, 1, 1], 'calm: no swelling');
+  assert.equal(calm.tint[1], calm.tint[2], 'calm: no intensity overshoot');
+  assert.equal(calm.glow[1], full.glow[2], 'calm keeps the full version\'s held glow');
+  assert.ok(DAILY_GOLD_HIT.calm.igniteMs > DAILY_GOLD_HIT.full.igniteMs, 'calm ignites gently');
+}
+
+// Gold hit: each bloom is centred on its cap and reaches well past it.
+{
+  assert.equal(DAILY_CASTLE_CAPS.length, 2, 'two tower caps');
+  assert.equal(DAILY_CASTLE_CAP_GLOWS.length, 2, 'one bloom per cap');
+  DAILY_CASTLE_CAPS.forEach((cap, i) => {
+    assert.ok(cap.x >= 0 && cap.x + cap.width <= DAILY_CASTLE_CANVAS.width + 1e-9, `cap ${i} on the canvas`);
+    const glow = DAILY_CASTLE_CAP_GLOWS[i];
+    const capMiddleY = cap.y + cap.height / 2;
+    assert.ok(Math.abs(glow.y + glow.height / 2 - capMiddleY) < 12, `bloom ${i} is level with its cap`);
+    assert.ok(glow.y < cap.y - 20, `bloom ${i} reaches above the finial`);
+    assert.ok(glow.y + glow.height > cap.y + cap.height + 20, `bloom ${i} reaches below the cap`);
+    assert.ok(glow.width > cap.width * 2, `bloom ${i} spreads well beyond the cap`);
+  });
+  // The left cap's inner edge is its right side; the right cap's is its left.
+  const [left, right] = DAILY_CASTLE_CAPS;
+  const [leftGlow, rightGlow] = DAILY_CASTLE_CAP_GLOWS;
+  assert.ok(leftGlow.x + leftGlow.width > left.x + left.width + 20, 'left bloom shows past the cap toward the arch');
+  assert.ok(rightGlow.x < right.x - 20, 'right bloom shows past the cap toward the arch');
+}
 
 console.log('dailyCastleScene tests passed');

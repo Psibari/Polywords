@@ -462,6 +462,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [castleFlight, setCastleFlight] = useState<DailyCastleFlight | null>(null);
   const flightProgress = useRef(new Animated.Value(0)).current;
   const [coinRise, setCoinRise] = useState<DailyCoinRise>({ token: 0, ms: 0 });
+  // Bumped on each correct claim: the castle's gold hit (DailyCastleStage).
+  const [goldHitToken, setGoldHitToken] = useState(0);
   // Where the castle is drawn, so Polly's bubble can sit on its steps.
   const [castleFrame, setCastleFrame] = useState<DailyCastleFrame | null>(null);
   // The win's gold-coin moment, after the coin lands and before Results.
@@ -986,6 +988,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // runPhysicalCorrectTransition), not here at the claim.
       Haptics.cueAsync('standardCorrect');
       playSfx('correctClaim');
+      // The castle lights gold on the same beat as the claim's sound.
+      setGoldHitToken((token) => token + 1);
       // Remaining cards fade out
       scheduleCorrectTransition(() => {
         setCardStates(prev => {
@@ -1134,6 +1138,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           flight={castleFlight}
           flightProgress={flightProgress}
           coinRise={coinRise}
+          goldHitToken={goldHitToken}
           coinCelebrate={coinCelebrate}
           hudBottom={hudBottom}
           roundMarkers={!isComplete && displayedDailySession
