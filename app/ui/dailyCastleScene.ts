@@ -65,13 +65,18 @@ export const DAILY_GATE_ART = {
 } as const;
 
 /**
- * Canvas points per gate source px, chosen so the three clue planks fill the
- * straight part of the opening: each plank is 52 pt tall, room for two lines
- * of 24 pt clue text; DAILY_CLUE_FONT keeps two-line clues at 20 so each has
- * air around it. The board overhangs the opening on both sides, where the arch
- * jambs hide it.
+ * Canvas points per gate source px. Each plank is 61 pt tall (52 until
+ * 2026-09-28): two lines of 24 pt clue text with 9 pt of plank around them,
+ * the air 20 pt text had on the 52 pt plank (Pete, 2026-09-26). 62 does not
+ * fit the 375 x 667 phone: its three clue planks would need 186 pt between
+ * the HUD and the step edge, and it has 185.7.
+ *
+ * The door art is drawn at this one scale, never stretched, so wood, seams,
+ * straps and rivets all grow together (seams about 2.9 pt). Only the middle
+ * of the board shows: the opening clips it, so its visible width is the
+ * opening's whatever the scale.
  */
-export const DAILY_GATE_PLANK_PT = 52;
+export const DAILY_GATE_PLANK_PT = 61;
 export const DAILY_GATE_PT_PER_SRC =
   DAILY_GATE_PLANK_PT / DAILY_GATE_ART.plankPitchSrc;
 
@@ -544,10 +549,10 @@ const BEBAS_ADVANCE_EM: Record<string, number> = {
 const BEBAS_WIDEST_EM = Math.max(...Object.values(BEBAS_ADVANCE_EM));
 
 export const DAILY_CLUE_FONT = {
-  // Up to 24 (Pete, 2026-09-28), but only for a clue that fits on one line:
-  // two lines of 24 filled the 52 pt plank edge to edge and three clues read
-  // as one paragraph (Pete, 2026-09-26). `plankAir` keeps that rule, which
-  // stops two-line clues at 20 (about 9 pt of plank around them).
+  // 24 (Pete, 2026-09-28), two lines included: the 61 pt plank
+  // (DAILY_GATE_PLANK_PT) leaves 9 pt around two lines of 24. On the old 52 pt
+  // plank two lines of 24 filled it edge to edge and three clues read as one
+  // paragraph (Pete, 2026-09-26), so clues were held at 20.
   maxSize: 24,
   // 16 is reached by one clue only ("THE OUTWARD ANGLE WHERE TWO SLOPING ROOF
   // SIDES MEET") in the cartoon castle's 178 pt clue box; every other clue fits at 17+.
@@ -555,23 +560,9 @@ export const DAILY_CLUE_FONT = {
   lineHeightRatio: 26 / 24,
   letterSpacing: 0.5,
   maxLines: 2,
-  /** Plank height left clear around a clue's lines, at the least. */
-  plankAir: 8,
   /** Headroom for rendering differences between platforms. */
   safety: 0.95,
 } as const;
-
-/**
- * Lines a clue may use at `size`: as many as fit the 52 pt plank with
- * `plankAir` to spare, never more than two. One line from 21 pt up, two at 20
- * and below.
- */
-export function dailyClueMaxLines(size: number): number {
-  const fit = Math.floor(
-    (DAILY_GATE_PLANK_PT - DAILY_CLUE_FONT.plankAir) / (size * DAILY_CLUE_FONT.lineHeightRatio),
-  );
-  return Math.min(DAILY_CLUE_FONT.maxLines, fit);
-}
 
 /** Measured width of `text` on one line at `size`, in canvas points. */
 export function dailyClueTextWidth(text: string, size: number): number {
@@ -603,24 +594,24 @@ function linesNeeded(text: string, size: number, width: number): number {
   return lines;
 }
 
-/** True when `text` wraps into the lines its plank allows (dailyClueMaxLines) at `size`. */
+/** True when `text` wraps into at most two lines of `width` at `size`. */
 export function dailyClueFits(text: string, size: number, width: number): boolean {
   return (
     linesNeeded(text.toUpperCase(), size, width * DAILY_CLUE_FONT.safety) <=
-    dailyClueMaxLines(size)
+    DAILY_CLUE_FONT.maxLines
   );
 }
 
 /**
  * Largest clue size (canvas points, whole numbers) at which `text` wraps into
- * the lines its plank allows at that size: one line up to 24, two up to 20.
- * Done here rather than trusting adjustsFontSizeToFit, which react-native-web
- * ignores and which cut a clue off with an ellipsis.
+ * at most two lines of `width`. Done here rather than trusting
+ * adjustsFontSizeToFit, which react-native-web ignores and which cut a clue
+ * off with an ellipsis.
  */
 export function fitDailyClueFontSize(text: string, width: number): number {
   const usable = width * DAILY_CLUE_FONT.safety;
   for (let size = DAILY_CLUE_FONT.maxSize; size > DAILY_CLUE_FONT.minSize; size -= 1) {
-    if (linesNeeded(text.toUpperCase(), size, usable) <= dailyClueMaxLines(size)) return size;
+    if (linesNeeded(text.toUpperCase(), size, usable) <= DAILY_CLUE_FONT.maxLines) return size;
   }
   return DAILY_CLUE_FONT.minSize;
 }

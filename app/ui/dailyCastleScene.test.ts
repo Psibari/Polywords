@@ -39,7 +39,6 @@ import {
   DAILY_CLUE_TOP_PREFERRED,
   dailyGateOpenTravel,
   dailyGateMaxSink,
-  dailyClueMaxLines,
   DAILY_GATE_PLANK_PT,
   DAILY_HUD,
   dailyHudHeight,
@@ -60,6 +59,16 @@ const boardLeft = DAILY_GATE_CLOSED.x + DAILY_GATE_ART.boardXSrc * DAILY_GATE_PT
 const boardRight = boardLeft + DAILY_GATE_ART.boardWidthSrc * DAILY_GATE_PT_PER_SRC;
 assert.ok(boardLeft < opening.x && boardRight > opening.x + opening.width, 'board overhangs both jambs');
 
+// Plank height (61 pt since 2026-09-28, 52 before) sets the door's one scale:
+// the art is drawn uniformly, never stretched, centred on the opening.
+assert.equal(DAILY_GATE_PLANK_PT, 61);
+assert.ok(
+  Math.abs(DAILY_GATE_CLOSED.width / DAILY_GATE_ART.widthSrc - DAILY_GATE_CLOSED.height / DAILY_GATE_ART.heightSrc) < 1e-12,
+  'door art drawn at one scale on both axes',
+);
+assert.ok(Math.abs(dailyGateLineY(3) - dailyGateLineY(2) - DAILY_GATE_PLANK_PT) < 1e-9, 'plank lines one plank apart');
+assert.ok(Math.abs((boardLeft + boardRight) / 2 - (opening.x + opening.width / 2)) < 1e-9, 'board centred on the opening');
+
 // Raised gate clears the opening entirely.
 assert.ok(dailyGateLineY(8) - DAILY_GATE_OPEN_TRAVEL < opening.y, 'raised gate clears the opening');
 
@@ -75,15 +84,12 @@ assert.ok(DAILY_CLUE_TOP_MIN <= DAILY_CLUE_TOP_PREFERRED && DAILY_CLUE_TOP_PREFE
 for (const clueTop of [DAILY_CLUE_TOP_MIN, DAILY_CLUE_TOP_PREFERRED, DAILY_CLUE_TOP_MAX]) {
   const rects = resolveDailyGateClueRects(clueTop);
   assert.equal(rects.length, 3);
-  // The tallest block of clue text any size may draw: at least 8 pt of plank
-  // stays around it, so three clues read as three, not one paragraph (Pete,
-  // 2026-09-26).
-  let tallestText = 0;
-  for (let size = DAILY_CLUE_FONT.minSize; size <= DAILY_CLUE_FONT.maxSize; size += 1) {
-    tallestText = Math.max(tallestText, size * DAILY_CLUE_FONT.lineHeightRatio * dailyClueMaxLines(size));
-  }
+  const twoFullLines = DAILY_CLUE_FONT.maxSize * DAILY_CLUE_FONT.lineHeightRatio * DAILY_CLUE_FONT.maxLines;
   for (const [i, clue] of rects.entries()) {
-    assert.ok(clue.height - tallestText >= 8, `clue ${i + 1} plank leaves air around its tallest text`);
+    assert.ok(Math.abs(clue.height - DAILY_GATE_PLANK_PT) < 1e-9, `clue ${i + 1} fills one ${DAILY_GATE_PLANK_PT} pt plank`);
+    // At least 8 pt of plank around two full lines at the ceiling, so three
+    // clues read as three, not one paragraph (Pete, 2026-09-26).
+    assert.ok(clue.height - twoFullLines >= 8, `clue ${i + 1} plank leaves air around two full lines`);
     assert.ok(clue.y >= DAILY_CLUE_TOP_MIN - 1e-9, `clue ${i + 1} sits below the narrow top of the arch`);
     assert.ok(clue.y + clue.height < openingBottom, `clue ${i + 1} sits above the steps (top ${clueTop})`);
     assert.ok(clue.x >= 126.3 && clue.x + clue.width <= 304, `clue ${i + 1} fits the opening width`);
@@ -202,31 +208,37 @@ assert.ok(h.y + halfH < openingBottom && h.y - halfH > opening.y + 70, 'handoff 
 assert.ok(DAILY_CASTLE_FLIGHT.end.y > opening.y && DAILY_CASTLE_FLIGHT.end.y < h.y, 'plaque goes up and in');
 assert.ok(DAILY_CASTLE_FLIGHT_HANDOFF > 0 && DAILY_CASTLE_FLIGHT_HANDOFF < 1);
 
-// Lines per size: 24 down to 21 pt get one line, 20 and below two, so two
-// lines never fill the plank edge to edge (Pete, 2026-09-26).
-assert.equal(DAILY_CLUE_FONT.maxSize, 24);
-for (let size = 21; size <= 24; size += 1) assert.equal(dailyClueMaxLines(size), 1, `${size} pt: one line`);
-for (let size = DAILY_CLUE_FONT.minSize; size <= 20; size += 1) assert.equal(dailyClueMaxLines(size), 2, `${size} pt: two lines`);
-
 // Every clue in the live Daily pool fits its plank at the size the fitter
-// gives it, in the lines that size allows, with the plank's air around it.
-for (const clue of DAILY_POOL.flatMap((word) => word.meanings)) {
-  const size = fitDailyClueFontSize(clue, DAILY_GATE_CLUE_WIDTH);
-  assert.ok(size >= DAILY_CLUE_FONT.minSize && size <= DAILY_CLUE_FONT.maxSize);
-  assert.ok(dailyClueFits(clue, size, DAILY_GATE_CLUE_WIDTH), `"${clue}" fits at ${size} pt`);
-  const lines = balanceDailyClue(clue, size, DAILY_GATE_CLUE_WIDTH).split('\n').length;
-  assert.ok(lines <= dailyClueMaxLines(size), `"${clue}" draws in the lines ${size} pt allows`);
-  assert.ok(
-    lines * size * DAILY_CLUE_FONT.lineHeightRatio <= DAILY_GATE_PLANK_PT - DAILY_CLUE_FONT.plankAir,
-    `"${clue}" leaves the plank's air at ${size} pt`,
-  );
-  if (lines === 2) assert.ok(size <= 20, `"${clue}" two lines stay at 20 pt or below`);
+// gives it, in at most two lines, with 8 pt of plank around them.
+{
+  const pool = DAILY_POOL.flatMap((word) => word.meanings);
+  let twoLine = 0;
+  let twoLineAt22 = 0;
+  let at22 = 0;
+  for (const clue of pool) {
+    const size = fitDailyClueFontSize(clue, DAILY_GATE_CLUE_WIDTH);
+    assert.ok(size >= DAILY_CLUE_FONT.minSize && size <= DAILY_CLUE_FONT.maxSize);
+    assert.ok(dailyClueFits(clue, size, DAILY_GATE_CLUE_WIDTH), `"${clue}" fits at ${size} pt`);
+    const lines = balanceDailyClue(clue, size, DAILY_GATE_CLUE_WIDTH).split('\n').length;
+    assert.ok(
+      DAILY_GATE_PLANK_PT - lines * size * DAILY_CLUE_FONT.lineHeightRatio >= 8,
+      `"${clue}" leaves 8 pt of plank at ${size} pt`,
+    );
+    if (lines === 2) twoLine += 1;
+    if (lines === 2 && size >= 22) twoLineAt22 += 1;
+    if (size >= 22) at22 += 1;
+  }
+  // The taller plank is only worth it if most clues get materially bigger:
+  // 20 pt was the ceiling for every two-line clue on the 52 pt plank.
+  assert.ok(at22 / pool.length >= 0.85, `${at22}/${pool.length} clues at 22 pt or more`);
+  assert.ok(twoLineAt22 / twoLine >= 0.85, `${twoLineAt22}/${twoLine} two-line clues at 22 pt or more`);
 }
-// A short clue gets the full 24 on one line; a two-line clue keeps 20; the
-// longest live clue still fits, at the floor.
+// Two-line clues reach the 24 pt ceiling; the longest live clue still fits,
+// at the floor.
+assert.equal(DAILY_CLUE_FONT.maxSize, 24);
 assert.equal(fitDailyClueFontSize('A LOUD NOISE', DAILY_GATE_CLUE_WIDTH), 24);
-assert.equal(balanceDailyClue('A LOUD NOISE', 24, DAILY_GATE_CLUE_WIDTH), 'A LOUD NOISE');
-assert.equal(fitDailyClueFontSize('TO GRAB ON AND NOT LET GO', DAILY_GATE_CLUE_WIDTH), 20);
+assert.equal(fitDailyClueFontSize('TO GRAB ON AND NOT LET GO', DAILY_GATE_CLUE_WIDTH), 24);
+assert.equal(balanceDailyClue('TO GRAB ON AND NOT LET GO', 24, DAILY_GATE_CLUE_WIDTH).split('\n').length, 2);
 {
   const longest = DAILY_POOL.flatMap((word) => word.meanings)
     .reduce((a, b) => (dailyClueTextWidth(b.toUpperCase(), 20) > dailyClueTextWidth(a.toUpperCase(), 20) ? b : a));
