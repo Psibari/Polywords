@@ -27,6 +27,23 @@ export function canBeginDailyClaim(
   return !roundCompleted && !inputLocked;
 }
 
+/**
+ * Whether a round's blocks may take input. Not before audio is ready, not once
+ * the round is solved, and not while the blocks are still punching out of the
+ * wall (ui/dailyPlaqueEntrance.ts).
+ */
+export function canUnlockDailyRound(state: {
+  audioReady: boolean;
+  roundActive: boolean;
+  roundCompleted: boolean;
+  plaquesPresenting: boolean;
+}): boolean {
+  return state.audioReady &&
+    state.roundActive &&
+    !state.roundCompleted &&
+    !state.plaquesPresenting;
+}
+
 function usesOutgoingDailySnapshot(
   phase: DailyClaimPresentationPhase,
 ): boolean {

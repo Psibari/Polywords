@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-09-28. Current state and open work only; `CLAUDE.md` holds architecture and Git
+Updated 2026-09-29. Current state and open work only; `CLAUDE.md` holds architecture and Git
 history is the diary. Verify anything here against code before acting on it.
 
 ## Branches
@@ -107,6 +107,14 @@ Daily castle:
    Source: `docs/POLLY_POLYBOOK_LOG_LINES.md`; runtime: `app/game/pollyBookLines.ts`.
 6. Done (2026-09-27): PR Psibari/Polywords#13 merged into `play-screen-overhaul` with Pete's
    approval.
+
+- **Deferred polish: answer-stone entrance** (Pete, device-reviewed 2026-09-29). Accepted as
+  is: each round's blocks punch out of the wall in reading order and settle flush, with the
+  stone SFX, Medium haptics, the stagger, input held until the last block settles, and the
+  Reduced Motion path (`app/ui/dailyPlaqueEntrance.ts`). Open: the blocks still visibly pop in
+  before the punch starts. Improve initial Daily answer-stone emergence so each block visibly
+  originates from its wall recess instead of appearing before the punch-out. Solve it in
+  motion; do not reopen the wall or block art unless that proves necessary.
 
 Whole game:
 7. Real-device journeys before release: cold-start audio, rapid navigation,

@@ -18,6 +18,15 @@ import {
   type DailyAnswerCardProps,
 } from './DailyAnswerCard';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { dailyStoneSeatSfx, playSfx } from '../audio/sfx';
+import { Haptics } from '../utils/haptics';
+import {
+  DAILY_PLAQUE_ENTRANCE,
+  DAILY_PLAQUE_PEAK,
+  DAILY_STONE_SEAT_RATES,
+  dailyPlaqueEntranceCues,
+  dailyPlaqueEntranceDelay,
+} from '../ui/dailyPlaqueEntrance';
 import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
@@ -85,12 +94,6 @@ export type DailyCastleFlight = {
   origin: DailyAnswerCardClaimOrigin;
 };
 
-// A new round's block fills its recess: it starts sunk, slides forward to a
-// hair past flush, and settles flush with the wall. One progress value per
-// slot drives the block's scale and depth shade in DailyAnswerCard.
-const PLAQUE_SEG = [0.26, 0.86, 1] as const;
-const PLAQUE_SEG_MS = [200, 460, 240] as const;
-
 type Props = {
   gatePosition: Animated.Value;
   clues: string[];
@@ -116,62 +119,87 @@ type Props = {
 
 type PlaqueSlotProps = {
   child: React.ReactNode;
+  index: number;
   reduceMotion: boolean | null;
   roundKey: number;
 };
 
+/** A row of blocks seats in the wall: its thud and its tap, together. */
+function seatDailyPlaqueRow(row: number) {
+  playSfx(dailyStoneSeatSfx(row), {
+    rate: DAILY_STONE_SEAT_RATES[row % DAILY_STONE_SEAT_RATES.length],
+  });
+  Haptics.cueAsync('dailyStoneSeat');
+}
+
+// A new round's block punches out of the wall (ui/dailyPlaqueEntrance.ts):
+// flush → a fast punch out toward the player → a short heavy settle back
+// flush. One progress value per slot drives the block's drop, scale, top face
+// and wall shadow in DailyAnswerCard. The slots go in reading order.
 function DailyCastlePlaqueSlot({
   child,
+  index,
   reduceMotion,
   roundKey,
 }: PlaqueSlotProps) {
   const answerCard = React.isValidElement<DailyAnswerCardProps>(child)
     ? child
     : null;
-  const entranceDelay = answerCard?.props.enterDelay ?? 0;
   const plaqueProgress = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     plaqueProgress.stopAnimation();
-    if (reduceMotion !== false) {
+    // Unknown yet (the preference is still loading): show the blocks in
+    // place, silently. The effect runs again once it is known.
+    if (reduceMotion === null) {
       plaqueProgress.setValue(1);
       return;
     }
+    // Reduced motion: the blocks are simply in the wall, and the set gets
+    // one thud and one tap so a new round is still felt.
+    if (reduceMotion) {
+      plaqueProgress.setValue(1);
+      const { seatRow } = dailyPlaqueEntranceCues(index, false);
+      if (seatRow !== null) seatDailyPlaqueRow(seatRow);
+      return;
+    }
 
+    const cues = dailyPlaqueEntranceCues(index, true);
     plaqueProgress.setValue(0);
     const releaseTimer = setTimeout(() => {
-      Animated.sequence([
+      if (cues.shift) playSfx('dailyStoneShift');
+      Animated.timing(plaqueProgress, {
+        toValue: DAILY_PLAQUE_PEAK,
+        duration: DAILY_PLAQUE_ENTRANCE.punchMs,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        // Stopped: the round moved on or the slot unmounted mid-punch.
+        if (!finished) return;
+        // The thud lands on the frame the block hits its farthest point.
+        if (cues.seatRow !== null) seatDailyPlaqueRow(cues.seatRow);
+        // Eased in as well as out: the block holds out of the wall a beat,
+        // so its top face reads as depth rather than a flicker of art, then
+        // slides home and stops flush.
         Animated.timing(plaqueProgress, {
-          toValue: PLAQUE_SEG[0],
-          duration: PLAQUE_SEG_MS[0],
-          easing: Easing.out(Easing.quad),
+          toValue: 1,
+          duration: DAILY_PLAQUE_ENTRANCE.settleMs,
+          easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
-        }),
-        Animated.timing(plaqueProgress, {
-          toValue: PLAQUE_SEG[1],
-          duration: PLAQUE_SEG_MS[1],
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(plaqueProgress, {
-          toValue: PLAQUE_SEG[2],
-          duration: PLAQUE_SEG_MS[2],
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, entranceDelay);
+        }).start();
+      });
+    }, dailyPlaqueEntranceDelay(index));
 
     return () => {
       clearTimeout(releaseTimer);
       plaqueProgress.stopAnimation();
     };
-  }, [entranceDelay, plaqueProgress, reduceMotion, roundKey]);
+  }, [index, plaqueProgress, reduceMotion, roundKey]);
 
   if (!answerCard) return <>{child}</>;
 
   // The recess is part of the wall art, under the block; the block's own
-  // scale and shade (DailyAnswerCard) carry it from sunk to flush.
+  // drop, top face and shadow (DailyAnswerCard) carry it out and back.
   return React.cloneElement(answerCard, { recessProgress: plaqueProgress });
 }
 
@@ -448,6 +476,7 @@ export default function DailyCastleStage({
                 child={React.isValidElement<DailyAnswerCardProps>(child)
                   ? React.cloneElement(child, { castleWidth: slot.width, castleHeight: slot.height })
                   : child}
+                index={index}
                 reduceMotion={reduceMotion}
                 roundKey={roundKey}
             />

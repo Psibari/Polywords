@@ -1,6 +1,7 @@
 import {
   beginDailyCommittedPresentation,
   canBeginDailyClaim,
+  canUnlockDailyRound,
   createDailyClaimPresentation,
   DailyClaimPresentationPhase,
   isDailyClaimInputLocked,
@@ -38,6 +39,24 @@ const transitionPhases: DailyClaimPresentationPhase[] = [
   eq(canBeginDailyClaim(false, false), true, 'stable idle state accepts one claim');
   eq(canBeginDailyClaim(false, true), false, 'synchronous input lock rejects a second claim');
   eq(canBeginDailyClaim(true, false), false, 'completed round rejects a stale claim');
+}
+
+{
+  const open = {
+    audioReady: true,
+    roundActive: true,
+    roundCompleted: false,
+    plaquesPresenting: false,
+  };
+  eq(canUnlockDailyRound(open), true, 'settled blocks in an active round take input');
+  eq(
+    canUnlockDailyRound({ ...open, plaquesPresenting: true }),
+    false,
+    'blocks still punching out of the wall stay locked',
+  );
+  eq(canUnlockDailyRound({ ...open, audioReady: false }), false, 'no input before audio is ready');
+  eq(canUnlockDailyRound({ ...open, roundActive: false }), false, 'no input once the Daily is over');
+  eq(canUnlockDailyRound({ ...open, roundCompleted: true }), false, 'a solved round stays locked');
 }
 
 {

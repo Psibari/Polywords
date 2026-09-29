@@ -30,6 +30,7 @@ import { DailyClaimResult, DailySession } from '../game/types';
 import {
   beginDailyCommittedPresentation,
   canBeginDailyClaim,
+  canUnlockDailyRound,
   DailyClaimPresentation,
   DailyClaimPresentationPhase,
   isDailyClaimInputLocked,
@@ -40,7 +41,7 @@ import {
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { resolveRivalryState } from '../game/pollyMood';
 import { useGameStore } from '../store/useGameStore';
-import { playSfx, sfxReady } from '../audio/sfx';
+import { playSfx, sfxReady, warmDailyPlaqueEntranceSfx } from '../audio/sfx';
 import {
   setMusicState,
   startMusic,
@@ -79,6 +80,7 @@ import {
   dailyActionLabelBottom,
   type DailyCastleFrame,
 } from '../ui/dailyCastleScene';
+import { dailyPlaqueEntranceMs } from '../ui/dailyPlaqueEntrance';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { POLLY_POSES } from '../ui/pollyPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
@@ -90,8 +92,6 @@ import {
 const DailyCastleTuningPanel = __DEV__
   ? require('../dev/DailyCastleTuningPanel').default
   : null;
-
-const CARD_ENTER_DELAYS = [80, 80, 140, 140, 200, 200];
 
 
 // Maps store claim result reaction -> PollyDailyPerch prop
@@ -405,6 +405,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [dailyInitialized, setDailyInitialized] = useState(false);
   const [dailyStarting, setDailyStarting] = useState(false);
   const inputLockedRef = useRef(true);
+  // True while a new round's blocks are punching out of the wall
+  // (DailyCastleStage). Nothing is claimable until the last one is flush.
+  const [plaquesPresenting, setPlaquesPresentingState] = useState(false);
+  const plaquesPresentingRef = useRef(false);
   const completingCandidateRef = useRef<string | null>(null);
   const pendingClaimCandidateRef = useRef<string | null>(null);
   const [claimPresentation, setClaimPresentation] = useState<
@@ -427,6 +431,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function setLocked(val: boolean) {
     inputLockedRef.current = val;
     setInputLocked(val);
+  }
+
+  function setPlaquesPresenting(val: boolean) {
+    plaquesPresentingRef.current = val;
+    setPlaquesPresentingState(val);
   }
 
   function setPhysicalClaimPhase(phase: DailyClaimPresentationPhase) {
@@ -596,7 +605,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   useEffect(() => {
     let cancelled = false;
     sfxReady().then(() => {
-      if (!cancelled) setAudioReady(true);
+      if (cancelled) return;
+      // The blocks' grind and thuds start on their animation frames, so
+      // their players must already be loaded (sounds otherwise load on demand).
+      warmDailyPlaqueEntranceSfx();
+      setAudioReady(true);
     });
     return () => { cancelled = true; };
   }, []);
@@ -618,16 +631,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   );
 
   // ROUND CHANGE
-  const prevRoundIndexRef = useRef(0);
+  // No round-change haptic of its own: a new round is felt through its blocks
+  // seating in the wall (DailyCastleStage, 'dailyStoneSeat').
   useEffect(() => {
     if (!displayedDailySession || displayedDailySession.status !== 'active') return;
-    // Round transition haptic (not on mount)
-    const roundIdx = displayedDailySession.currentRoundIndex;
-    if (roundIdx > prevRoundIndexRef.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    prevRoundIndexRef.current = roundIdx;
-
     const physicalTransitionActive = isDailyClaimInputLocked(claimPhaseRef.current);
     if (!physicalTransitionActive) {
       completedRef.current = false;
@@ -652,16 +659,46 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayedDailySession?.currentRoundIndex]);
 
+  // BLOCK ENTRANCE — a new round's blocks punch out of the wall the moment
+  // their slots mount (DailyCastleStage, keyed by this round index). Hold
+  // input until the last is flush. Same inputs as the slots' own effect
+  // (round, reduce motion), so the lock and the motion start together. Must
+  // stay above the unlock gate so the gate sees the lock in the same commit.
+  const plaquesInWall =
+    dailyInitialized && displayedDailySession?.status === 'active';
+  useEffect(() => {
+    const entranceMs = plaquesInWall
+      ? dailyPlaqueEntranceMs(reduceMotion === false)
+      : 0;
+    if (entranceMs <= 0) {
+      setPlaquesPresenting(false);
+      return;
+    }
+    setPlaquesPresenting(true);
+    setLocked(true);
+    const settledTimer = setTimeout(() => setPlaquesPresenting(false), entranceMs);
+    return () => clearTimeout(settledTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayedDailySession?.currentRoundIndex, plaquesInWall, reduceMotion]);
+
   // UNLOCK GATE — fires on round change (paired with the effect above,
   // which always runs first in the same commit and resets completedRef)
   // and whenever audioReady flips true, so a round that starts before
   // audio finishes preloading unlocks retroactively instead of never.
   useEffect(() => {
-    if (!audioReady) return;
-    if (!displayedDailySession || displayedDailySession.status !== 'active') return;
-    if (completedRef.current) return;
+    if (!canUnlockDailyRound({
+      audioReady,
+      roundActive: displayedDailySession?.status === 'active',
+      roundCompleted: completedRef.current,
+      plaquesPresenting: plaquesPresentingRef.current,
+    })) return;
     setLocked(false);
-  }, [audioReady, displayedDailySession?.currentRoundIndex, displayedDailySession?.status]);
+  }, [
+    audioReady,
+    displayedDailySession?.currentRoundIndex,
+    displayedDailySession?.status,
+    plaquesPresenting,
+  ]);
 
   // CLUE TIMER — active play time only. Leaving Daily or backgrounding the
   // app saves elapsed time and stops the clock; returning resumes from there.
@@ -777,7 +814,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     if (committedSession?.status === 'active') {
       completedRef.current = false;
       roundStartRef.current = Date.now() - committedSession.roundElapsedMs;
-      setLocked(!audioReady);
+      // Still locked if the new blocks are mid-punch; the unlock gate opens
+      // input once they are flush.
+      setLocked(!canUnlockDailyRound({
+        audioReady,
+        roundActive: true,
+        roundCompleted: false,
+        plaquesPresenting: plaquesPresentingRef.current,
+      }));
     } else {
       setLocked(true);
     }
@@ -1112,7 +1156,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 testID={`daily-answer-${index}`}
                 enterFromRecess
                 castleArt
-                enterDelay={CARD_ENTER_DELAYS[index] ?? 200}
                 roundKey={displayedDailySession.currentRoundIndex}
               />
             ))}

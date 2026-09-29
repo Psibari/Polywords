@@ -36,6 +36,13 @@ export type SfxName =
   | 'stoneLand1'
   | 'stoneLand2'
   | 'stoneLand3'
+  // Daily answer wall — the new round's blocks punch out of their recesses
+  // (DailyCastleStage, ui/dailyPlaqueEntrance.ts). One grind for the set, one
+  // seat thud per row, each row on its own player.
+  | 'dailyStoneShift'
+  | 'dailyStoneSeat1'
+  | 'dailyStoneSeat2'
+  | 'dailyStoneSeat3'
   // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
   // below. Uncomment together with the matching entries in SFX and the
   // guarded call sites in DailyChallengeScreen.tsx once the files land.
@@ -82,6 +89,16 @@ type SfxSlot = {
 const STONE_LAND_SFX: SfxConfig = {
   source: require('../../assets/audio/sfx/stone_land.mp3'),
   volume: 0.54,
+  cooldownMs: 200,
+};
+
+// The Daily answer blocks' seat thud: the gauntlet's landing file, quieter.
+// Three names for the three rows, one config, for the same reason as
+// STONE_LAND_SFX: the rows land 120ms apart and the file runs 550ms, so all
+// three sound at once and each needs its own pre-warmed player.
+const DAILY_STONE_SEAT_SFX: SfxConfig = {
+  source: require('../../assets/audio/sfx/stone_land.mp3'),
+  volume: 0.25,
   cooldownMs: 200,
 };
 
@@ -141,6 +158,16 @@ const SFX: Record<SfxName, SfxConfig> = {
   stoneLand2:  STONE_LAND_SFX,
   stoneLand3:  STONE_LAND_SFX,
 
+  // Daily answer wall. Smaller stones than the gauntlet's bricks and a routine
+  // beat every round, so they sit under the Daily's own claim sound
+  // (correctClaim at 0.35, about -21 dBFS effective): the seats at about -23,
+  // the grind under them at about -30. Measured loudest 100ms, mono downmix:
+  // stone_land -11.0, stone_rumble -16.8, correct_claim -11.9.
+  dailyStoneShift: { source: require('../../assets/audio/sfx/stone_rumble.mp3'), volume: 0.22, cooldownMs: 300 },
+  dailyStoneSeat1: DAILY_STONE_SEAT_SFX,
+  dailyStoneSeat2: DAILY_STONE_SEAT_SFX,
+  dailyStoneSeat3: DAILY_STONE_SEAT_SFX,
+
   // Daily scroll mechanism. The 2.24s correct-claim sequence shipped with one
   // sound (correctClaim) and no haptic after the swipe, so a physical
   // mechanism read as a picture sliding around.
@@ -184,6 +211,13 @@ const BOSS_OUTCOME_SFX: readonly SfxName[] = [
 // The gauntlet's per-slot cues, in slot order. Index 0 is always brick 1.
 const GAUNTLET_TEAR_SFX = ['stoneTear1', 'stoneTear2', 'stoneTear3'] as const;
 const GAUNTLET_LAND_SFX = ['stoneLand1', 'stoneLand2', 'stoneLand3'] as const;
+
+const DAILY_STONE_SEAT_SFX_NAMES = ['dailyStoneSeat1', 'dailyStoneSeat2', 'dailyStoneSeat3'] as const;
+
+/** The Daily answer wall's seat thud for a row; each row has its own player. */
+export function dailyStoneSeatSfx(row: number): SfxName {
+  return DAILY_STONE_SEAT_SFX_NAMES[row % DAILY_STONE_SEAT_SFX_NAMES.length];
+}
 
 /**
  * The tear cue for a gauntlet slot, strictly by index — brick 1 always tears
@@ -424,6 +458,11 @@ export function warmGauntletEntranceSfx(tileCount: number): void {
     names.push(GAUNTLET_TEAR_SFX[i], GAUNTLET_LAND_SFX[i]);
   }
   warmSfx(names);
+}
+
+/** Warms the Daily answer wall's grind and its three row thuds. */
+export function warmDailyPlaqueEntranceSfx(): void {
+  warmSfx(['dailyStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES]);
 }
 
 export function sfxReady(): Promise<void> {

@@ -22,7 +22,8 @@ export type HapticCue =
   | 'gauntletBrickTear'
   | 'gauntletBrickLand'
   | 'dailyInkPress'
-  | 'dailyRodStop';
+  | 'dailyRodStop'
+  | 'dailyStoneSeat';
 
 function hapticsEnabled(): boolean {
   return useGameStore.getState().hapticsEnabled;
@@ -147,6 +148,13 @@ export const Haptics = {
       case 'dailyInkPress':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light);
       case 'dailyRodStop':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      // A row of Daily answer blocks seating in the wall. Three rows land 120ms
+      // apart, so three Medium taps: a rhythm the hand reads as the wall
+      // presenting the set. Light read too faint for stone on device (Pete,
+      // 2026-09-29). It rides the same call site as the row's thud
+      // (DailyCastleStage), never a timer of its own.
+      case 'dailyStoneSeat':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
       // expo-haptics has no sustained or variable-length haptic, so the wall
       // rumble is simulated: seven Soft impacts at 60ms spacing, tight enough

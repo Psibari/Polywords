@@ -34,6 +34,12 @@ import {
   resolveDailyCastleScale,
 } from '../ui/dailyCastleLayout';
 import { DAILY_ANSWER_FONT, fitDailyAnswerFontSize } from '../ui/dailyCastleScene';
+import {
+  DAILY_PLAQUE_INPUT,
+  DAILY_PLAQUE_PROUD,
+  DAILY_PLAQUE_DROP,
+  DAILY_PLAQUE_SCALE,
+} from '../ui/dailyPlaqueEntrance';
 import { FONTS } from '../constants/fonts';
 
 // Pete's answer block (2026-09-27), drawn by tools/art/build_daily_plaque.py.
@@ -86,13 +92,10 @@ const LEGACY_CARD_HEIGHT = 64;
 const CLAIM_THRESHOLD = -80;
 const MOVE_THRESHOLD = 4;
 
-// DailyCastleStage owns this progress value so every block of a round rides
-// one timeline. A new block starts sunk in its recess (small and shaded, the
-// dark hole showing round it), slides forward, and comes flush with the wall
-// (Pete, 2026-09-27), settling from a hair past flush.
-const DAILY_RECESS_INPUT = [0, 0.26, 0.86, 1];
-const DAILY_RECESS_SCALE = [0.9, 0.92, 1.015, 1];
-const DAILY_RECESS_SHADE = [0.62, 0.48, 0, 0];
+// DailyCastleStage owns this progress value, one per slot. A new block starts
+// flush in its slot, punches out of the wall toward the player (a small drop,
+// its top face and a deeper shadow), and settles back flush
+// (ui/dailyPlaqueEntrance.ts).
 
 function rimColors(
   state: DailyAnswerCardState,
@@ -125,6 +128,8 @@ export default function DailyAnswerCard({
   const shellRef = useRef<View>(null);
   const entryTranslateX = useRef(new RNAnimated.Value(0)).current;
   const entryScale = useRef(new RNAnimated.Value(1)).current;
+  // Rest value for the castle block's entrance drop (entryDepthDrop).
+  const entryTranslateY = useRef(new RNAnimated.Value(0)).current;
   const entryOpacity = useRef(new RNAnimated.Value(enterFromRecess ? 1 : 0)).current;
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -499,18 +504,71 @@ export default function DailyAnswerCard({
   }));
 
   const recessScale = recessProgress?.interpolate({
-    inputRange: DAILY_RECESS_INPUT,
-    outputRange: DAILY_RECESS_SCALE,
+    inputRange: DAILY_PLAQUE_INPUT,
+    outputRange: DAILY_PLAQUE_SCALE,
   });
   const entryDepthScale = enterFromRecess && state === 'idle' && recessScale
     ? recessScale
     : entryScale;
-  const recessShade = enterFromRecess && state === 'idle'
-    ? recessProgress?.interpolate({
-        inputRange: DAILY_RECESS_INPUT,
-        outputRange: DAILY_RECESS_SHADE,
+  const entering = enterFromRecess && state === 'idle' && recessProgress !== undefined;
+  // Always a node, never a plain 0: a native-driven transform must stay bound
+  // to a value across renders (CLAUDE.md, native rules).
+  const entryDepthDrop = entering
+    ? recessProgress.interpolate({
+        inputRange: DAILY_PLAQUE_INPUT,
+        outputRange: DAILY_PLAQUE_DROP,
       })
-    : undefined;
+    : entryTranslateY;
+  // Out of the wall, the block shows the held pop's own top face and a deeper
+  // wall shadow, most of their full depth at the farthest point, gone again
+  // once it is flush. Every value reads 0 before the punch and after the
+  // settle, so the resting block is exactly the flush art.
+  const proudTopStyle = entering
+    ? {
+        opacity: recessProgress.interpolate({
+          inputRange: [0, 0.02, 0.98, 1],
+          outputRange: [0, 1, 1, 0],
+          extrapolate: 'clamp' as const,
+        }),
+        transform: [
+          {
+            translateY: recessProgress.interpolate({
+              inputRange: DAILY_PLAQUE_INPUT,
+              outputRange: DAILY_PLAQUE_PROUD.map((proud) =>
+                ((1 - Math.max(0.001, proud)) * castleTopHeight) / 2),
+            }),
+          },
+          {
+            scaleY: recessProgress.interpolate({
+              inputRange: DAILY_PLAQUE_INPUT,
+              outputRange: DAILY_PLAQUE_PROUD.map((proud) => Math.max(0.001, proud)),
+            }),
+          },
+        ],
+      }
+    : null;
+  const proudShadowStyle = entering
+    ? {
+        opacity: recessProgress.interpolate({
+          inputRange: DAILY_PLAQUE_INPUT,
+          outputRange: DAILY_PLAQUE_PROUD.map((proud) => proud * CASTLE_POP_SHADOW.opacity),
+        }),
+        transform: [
+          {
+            translateX: recessProgress.interpolate({
+              inputRange: DAILY_PLAQUE_INPUT,
+              outputRange: DAILY_PLAQUE_PROUD.map((proud) => proud * CASTLE_POP_SHADOW.x),
+            }),
+          },
+          {
+            translateY: recessProgress.interpolate({
+              inputRange: DAILY_PLAQUE_INPUT,
+              outputRange: DAILY_PLAQUE_PROUD.map((proud) => proud * CASTLE_POP_SHADOW.y),
+            }),
+          },
+        ],
+      }
+    : null;
 
   return (
     <RNAnimated.View
@@ -532,6 +590,7 @@ export default function DailyAnswerCard({
           opacity: entryOpacity,
           transform: [
             { translateX: entryTranslateX },
+            { translateY: entryDepthDrop },
             { scale: entryDepthScale },
           ],
         },
@@ -562,6 +621,16 @@ export default function DailyAnswerCard({
             <View style={styles.castleHaloInner} />
           </Animated.View>
           <Animated.View pointerEvents="none" style={[styles.castlePopShadow, popShadowStyle]} />
+          {proudShadowStyle && (
+            <RNAnimated.View pointerEvents="none" style={[styles.castlePopShadow, proudShadowStyle]} />
+          )}
+          {proudTopStyle && (
+            <RNAnimated.Image
+              source={CASTLE_BLOCK_TOP}
+              resizeMode="stretch"
+              style={[styles.castleBlockTop, { width: castleBlockWidth, height: castleTopHeight }, proudTopStyle]}
+            />
+          )}
           <Animated.Image
             source={CASTLE_BLOCK_TOP}
             resizeMode="stretch"
@@ -573,12 +642,6 @@ export default function DailyAnswerCard({
               label={label}
               width={castleWidth ?? DAILY_CASTLE_LAYOUT.card.width * castleScale}
             />
-            {recessShade && (
-              <RNAnimated.View
-                pointerEvents="none"
-                style={[styles.recessShade, { opacity: recessShade }]}
-              />
-            )}
             <Animated.View
               pointerEvents="none"
               style={[styles.castleHeldBrighten, gripGlowStyle]}
@@ -743,10 +806,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     bottom: '100%',
-  },
-  recessShade: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#05040B',
   },
   castleHaloWrap: {
     ...StyleSheet.absoluteFill,
