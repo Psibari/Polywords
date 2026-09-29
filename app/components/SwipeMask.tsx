@@ -32,6 +32,7 @@ import {
   resolveTileAccessibilityAction,
   type HuntTileInputMode,
 } from './tileAccessibility';
+import { isHuntTileInteractive, shouldRestartDecisionClock } from './huntDecisionClock';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import {
@@ -231,8 +232,8 @@ export function SwipeMask({
   useEffect(() => { inputModeRef.current = inputMode; }, [inputMode]);
   useEffect(() => { onDecisionCommittedRef.current = onDecisionCommitted; }, [onDecisionCommitted]);
   useEffect(() => {
-    const interactive = !disabled && inputMode !== 'locked';
-    if (interactive && !wasInteractiveRef.current) {
+    const interactive = isHuntTileInteractive(disabled, inputMode);
+    if (shouldRestartDecisionClock(wasInteractiveRef.current, interactive)) {
       interactiveAtRef.current = Date.now();
       grantAtRef.current = null;
       ambiguousFiredRef.current = false;

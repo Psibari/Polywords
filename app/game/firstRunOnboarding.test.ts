@@ -1,17 +1,19 @@
 import {
+  FINE_RECOGNITION_EXAMPLES,
   FIRST_RUN_FINE_MASK_IDS,
   ONBOARDING_CAPTION_RESERVE,
   createDefaultOnboardingState,
   dismissCompletedOnboardingHandoffOnResume,
   finishOnboardingHandoff,
+  fineRecognitionStepDurationMs,
   hydrateOnboardingState,
-  isOnboardingFeatherDue,
   recognitionOpensWithHold,
   reconcileOnboardingRun,
+  resolveHudLesson,
   resolveOnboardingBoardPresentation,
   resolveOnboardingCaption,
   resolveOnboardingCaptionReserve,
-  resolveFeatherCaptionVisible,
+  resolveFineRecognitionExamples,
   resolveOnboardingInputMode,
   shouldRenderDecisionStack,
   type FirstRunOnboardingState,
@@ -35,6 +37,31 @@ eq(defaults.version, 1, 'onboarding state is versioned');
 eq(defaults.home.completed, false, 'fresh install keeps Home beat pending');
 eq(defaults.coreCompleted, false, 'fresh install keeps core onboarding pending');
 eq(defaults.activeRun, null, 'fresh install has no active onboarding Hunt');
+
+const fineRecognitionExamples = [
+  "I'M FINE.",
+  'PAY A FINE.',
+  'FINE DINING.',
+  'READ THE FINE PRINT.',
+];
+eq(
+  JSON.stringify(FINE_RECOGNITION_EXAMPLES),
+  JSON.stringify(fineRecognitionExamples),
+  'FINE recognition keeps the approved example copy and order',
+);
+for (let step = 0; step < fineRecognitionExamples.length; step += 1) {
+  eq(
+    JSON.stringify(resolveFineRecognitionExamples(step)),
+    JSON.stringify(fineRecognitionExamples.slice(0, step + 1)),
+    `FINE recognition step ${step + 1} retains every revealed example`,
+  );
+}
+eq(resolveFineRecognitionExamples(4).length, 0, 'follow-up copy begins after the example stack');
+ok(
+  fineRecognitionStepDurationMs(3) >= 1750 &&
+    fineRecognitionStepDurationMs(3) > fineRecognitionStepDurationMs(2),
+  'the completed four-line stack holds before the next onboarding beat',
+);
 
 const legacyComplete = hydrateOnboardingState(null, true);
 eq(legacyComplete.home.completed, true, 'legacy completed intro does not replay first-ever Home');
@@ -143,6 +170,14 @@ game = submitSwipeUp(game, 'fine_r04');
 onboarding = reconcileOnboardingRun(onboarding, game);
 eq(onboarding.coreCompleted, true, 'correct unaided decision completes core onboarding');
 eq(onboarding.activeRun?.phase, 'complete', 'reconciliation never replays a committed unaided decision');
+// Guided REAL + guided TRAP + the unaided call are three in a row: 1.5×. The
+// multiplier lesson lands on this last guided FINE decision and holds FINE's
+// remaining cards until it is done.
+eq(game.chainMultiplier, 1.5, 'the unaided FINE decision is the third straight correct call');
+eq(resolveHudLesson(onboarding, game), 'multiplier', 'the multiplier lesson is due on the unaided FINE decision');
+eq(resolveOnboardingInputMode(onboarding, game), 'locked', 'the multiplier lesson locks the rest of FINE');
+onboarding = { ...onboarding, hudLessons: { ...onboarding.hudLessons, multiplier: true } };
+eq(resolveOnboardingInputMode(onboarding, game), 'both', 'FINE plays on once the multiplier lesson is done');
 
 const nextWordGame = {
   ...game,
@@ -154,7 +189,18 @@ const handoffPresentation = resolveOnboardingBoardPresentation(onboarding, nextW
 eq(handoffPresentation.showDecisionCard, false, 'FINE handoff hides the next word decision card');
 eq(handoffPresentation.swipeCueMode, 'none', 'FINE handoff hides all normal swipe cues');
 eq(resolveOnboardingInputMode(onboarding, nextWordGame), 'locked', 'FINE handoff locks the next word');
-const resumedAfterFine = dismissCompletedOnboardingHandoffOnResume(onboarding, nextWordGame);
+// Resumed inside the hand-off before the round-progress lesson: the hand-off
+// stays open so the lesson owns it, the next card still hidden and locked.
+const resumedBeforeProgressLesson = dismissCompletedOnboardingHandoffOnResume(onboarding, nextWordGame);
+eq(resumedBeforeProgressLesson, onboarding, 'resume keeps the hand-off open for the untaught progress lesson');
+eq(resolveHudLesson(resumedBeforeProgressLesson, nextWordGame), 'progress', 'resume re-shows the progress lesson');
+eq(resolveOnboardingInputMode(resumedBeforeProgressLesson, nextWordGame), 'locked', 'resumed hand-off keeps the next word locked');
+// Once the player has had it, a resumed hand-off simply closes.
+const taughtOnboarding: FirstRunOnboardingState = {
+  ...onboarding,
+  hudLessons: { ...onboarding.hudLessons, progress: true },
+};
+const resumedAfterFine = dismissCompletedOnboardingHandoffOnResume(taughtOnboarding, nextWordGame);
 eq(resumedAfterFine.activeRun, null, 'resume after FINE never restores the handoff overlay');
 const normalPresentation = resolveOnboardingBoardPresentation(resumedAfterFine, nextWordGame);
 eq(normalPresentation.showDecisionCard, true, 'resume after FINE restores the normal decision card');
@@ -237,34 +283,29 @@ eq(shouldRenderDecisionStack(false, null), false, 'a hidden decision card with n
       featherExplained: false,
     },
   });
-  const guidedReal = resolveOnboardingCaption(at('guided-real'), captionGame, false);
+  const guidedReal = resolveOnboardingCaption(at('guided-real'), captionGame);
   eq(guidedReal?.text, 'BELONGS TO FINE?', 'guided REAL asks only the question');
   eq(guidedReal?.kind, 'question', 'guided REAL caption is a question');
   eq(guidedReal?.accessibilityLabel, 'BELONGS TO FINE?', 'guided REAL is announced as written');
-  const guidedTrap = resolveOnboardingCaption(at('guided-trap'), captionGame, false);
+  const guidedTrap = resolveOnboardingCaption(at('guided-trap'), captionGame);
   eq(guidedTrap?.text, 'DOESN’T BELONG?', 'guided TRAP asks only the question');
   eq(guidedTrap?.kind, 'question', 'guided TRAP caption is a question');
-  const helper = resolveOnboardingCaption(at('unaided'), captionGame, false);
+  const helper = resolveOnboardingCaption(at('unaided'), captionGame);
   eq(helper?.text, '↑ CLAIM A MEANING     → REJECT A TRAP', 'unaided shows the helper');
   eq(helper?.kind, 'helper', 'unaided caption is the helper');
   eq(
-    resolveOnboardingCaption(at('unaided', false), captionGame, false),
+    resolveOnboardingCaption(at('unaided', false), captionGame),
     null,
     'unaided without the helper shows no caption',
   );
-  const feather = resolveOnboardingCaption(at('unaided'), captionGame, true);
-  eq(feather?.kind, 'feather', 'the feather rule wins over the unaided helper');
+  // The retired end-of-FINE feather caption: a wrong unaided call keeps the
+  // helper, and completion shows nothing. Feathers are taught by the HUD
+  // lesson on a real loss instead.
   eq(
-    feather?.text,
-    'WRONG CALLS COST A FEATHER.\nRUN OUT, AND POLLY WINS THE HUNT.',
-    'the feather rule keeps its two lines',
+    resolveOnboardingCaption(at('unaided'), { ...captionGame, mistakesOnWord: 1 })?.kind,
+    'helper',
+    'a wrong unaided call no longer swaps the helper for a feather rule',
   );
-  eq(
-    feather?.accessibilityLabel,
-    'Wrong calls cost a feather. Run out, and Polly wins the Hunt.',
-    'the feather rule keeps its spoken label',
-  );
-  eq(resolveOnboardingCaption(at('complete'), captionGame, true)?.kind, 'feather', 'feather shows after completion');
   for (const phase of [
     'recognition',
     'challenge',
@@ -272,72 +313,47 @@ eq(shouldRenderDecisionStack(false, null), false, 'a hidden decision card with n
     'guided-trap-result',
     'complete',
   ] as const) {
-    eq(resolveOnboardingCaption(at(phase), captionGame, false), null, `${phase} has no board caption`);
+    eq(resolveOnboardingCaption(at(phase), captionGame), null, `${phase} has no board caption`);
   }
   eq(
-    resolveOnboardingCaption(createDefaultOnboardingState(), captionGame, true),
+    resolveOnboardingCaption(createDefaultOnboardingState(), captionGame),
     null,
     'no active run shows no caption',
   );
   eq(
-    resolveOnboardingCaption(at('guided-real'), { ...captionGame, runSeed: seed + 1 }, true),
+    resolveOnboardingCaption(at('guided-real'), { ...captionGame, runSeed: seed + 1 }),
     null,
     'another Hunt never shows this run’s caption',
   );
   eq(
-    resolveOnboardingCaption(at('guided-real'), { ...captionGame, onboardingMode: undefined }, false),
+    resolveOnboardingCaption(at('guided-real'), { ...captionGame, onboardingMode: undefined }),
     null,
     'a Hunt without onboarding shows no caption',
   );
 }
 
-// The feather rule: due after completion or a wrong unaided call, until it
-// has been explained; the board caption follows it in the same render.
+// The automatic end-of-FINE feather lesson is retired: completing FINE with
+// no feather lost and no run built makes no lesson due at all.
 for (const mode of ['first-run', 'replay'] as const) {
   const featherGame = createGame(steps, 3, seed, 0, {
     onboardingMode: mode,
     openingMaskIds: FIRST_RUN_FINE_MASK_IDS,
   });
-  const run = (phase: OnboardingCorePhase, featherExplained = false): FirstRunOnboardingState => ({
+  const completed: FirstRunOnboardingState = {
     ...createDefaultOnboardingState(),
+    coreCompleted: true,
     activeRun: {
       runSeed: seed,
       mode,
-      phase,
+      phase: 'complete',
       presentationStep: 0,
-      unaidedAttempts: 0,
-      helperVisible: true,
-      featherExplained,
+      unaidedAttempts: 1,
+      helperVisible: false,
+      featherExplained: false,
     },
-  });
-  const wrongCall = { ...featherGame, mistakesOnWord: 1 };
-  eq(isOnboardingFeatherDue(run('unaided'), featherGame), false, `${mode}: no feather before a mistake`);
-  eq(isOnboardingFeatherDue(run('unaided'), wrongCall), true, `${mode}: a wrong unaided call makes the feather due`);
-  eq(isOnboardingFeatherDue(run('complete'), featherGame), true, `${mode}: completion makes the feather due`);
-  eq(isOnboardingFeatherDue(run('complete', true), featherGame), false, `${mode}: an explained feather is never due again`);
-  eq(isOnboardingFeatherDue(run('unaided', true), wrongCall), false, `${mode}: explained stays explained after a mistake`);
-  for (const phase of ['recognition', 'challenge', 'guided-real', 'guided-real-result', 'guided-trap', 'guided-trap-result'] as const) {
-    eq(isOnboardingFeatherDue(run(phase), wrongCall), false, `${mode}: ${phase} never makes the feather due`);
-  }
-  eq(
-    isOnboardingFeatherDue(run('complete'), { ...featherGame, runSeed: seed + 1 }),
-    false,
-    `${mode}: another Hunt never shows this run's feather`,
-  );
-
-  // Caption: shown in the very render the rule becomes due (no overlay report
-  // needed), held back only while a different onboarding visit is under way.
-  eq(resolveFeatherCaptionVisible(run('complete'), featherGame, false, false), true, `${mode}: caption shows the render the feather is due`);
-  eq(resolveFeatherCaptionVisible(run('unaided'), wrongCall, false, false), true, `${mode}: caption shows the render a wrong call lands`);
-  eq(resolveFeatherCaptionVisible(run('complete'), featherGame, false, true), false, `${mode}: another visit in flight holds the caption back`);
-  eq(resolveFeatherCaptionVisible(run('complete'), featherGame, true, true), true, `${mode}: the feather's own visit keeps the caption up`);
-  eq(resolveFeatherCaptionVisible(run('complete', true), featherGame, true, true), false, `${mode}: caption drops the render the feather is explained`);
-  eq(resolveFeatherCaptionVisible(run('unaided'), featherGame, false, false), false, `${mode}: no caption before a mistake`);
-  eq(
-    resolveOnboardingCaption(run('complete'), featherGame, resolveFeatherCaptionVisible(run('complete'), featherGame, false, false))?.kind,
-    'feather',
-    `${mode}: the board gets the feather caption in the same render`,
-  );
+  };
+  eq(resolveHudLesson(completed, featherGame), null, `${mode}: FINE completing never teaches feathers by itself`);
+  eq(resolveOnboardingInputMode(completed, featherGame), 'both', `${mode}: completed FINE plays on with no feather beat`);
 }
 
 // The opening hold: only at the very start of a recognition phase, in both
@@ -465,7 +481,7 @@ for (const mode of ['first-run', 'replay'] as const) {
 
 // Resuming after FINE closes the hand-off the same way, so the next swipe
 // after a resume does not rebuild it either.
-const resumedFinished = dismissCompletedOnboardingHandoffOnResume(onboarding, nextWordGame);
+const resumedFinished = dismissCompletedOnboardingHandoffOnResume(taughtOnboarding, nextWordGame);
 eq(resumedFinished.finishedRunSeed, seed, `resume after FINE records the finished seed`);
 const nextWordMask = nextWordGame.shuffledMasks[1][0];
 const afterResumeSwipe = nextWordMask.isReal

@@ -1727,12 +1727,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     0,
     boardSpacing.gridPaddingTop - (showSwipeCues ? activeCueLayout.leadingCueRegionHeight : 0),
   );
-  // The feather rule hides the swipe cues but keeps their layout, and takes
-  // the up cue's emptied row as extra room.
-  const captionHidesCues = onboardingCaption?.kind === 'feather';
-  const upCueRendered = showSwipeCues && (swipeCueMode === 'both' || swipeCueMode === 'up');
-  const captionBandBottomInGrid = gridPaddingTop +
-    (captionHidesCues && upCueRendered ? activeCueLayout.leadingCueRegionHeight : 0);
+  const captionBandBottomInGrid = gridPaddingTop;
 
   return (
     <Animated.View
@@ -2005,9 +2000,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             >
               <Text
                 key={`up-${cueLayoutIdentity}`}
-                style={[styles.swipeCueText, styles.swipeUpCue, captionHidesCues && styles.cueHiddenByCaption]}
-                accessibilityElementsHidden={captionHidesCues}
-                importantForAccessibility={captionHidesCues ? 'no-hide-descendants' : 'auto'}
+                style={[styles.swipeCueText, styles.swipeUpCue]}
                 onLayout={event => handleCueTextLayout('up', event.nativeEvent.layout.height)}
               >
                 SWIPE UP TO CLAIM
@@ -2142,9 +2135,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             >
               <Text
                 key={`right-${cueLayoutIdentity}`}
-                style={[styles.swipeCueText, styles.swipeRightCue, captionHidesCues && styles.cueHiddenByCaption]}
-                accessibilityElementsHidden={captionHidesCues}
-                importantForAccessibility={captionHidesCues ? 'no-hide-descendants' : 'auto'}
+                style={[styles.swipeCueText, styles.swipeRightCue]}
                 onLayout={event => handleCueTextLayout('right', event.nativeEvent.layout.height)}
               >
                 SWIPE RIGHT TO REJECT
@@ -2172,13 +2163,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
             },
           ]}
         >
-          <Text
-            style={[
-              styles.swipeCueText,
-              styles.onboardingCaption,
-              onboardingCaption.kind === 'feather' && styles.onboardingCaptionFeather,
-            ]}
-          >
+          <Text style={[styles.swipeCueText, styles.onboardingCaption]}>
             {onboardingCaption.text}
           </Text>
         </View>
@@ -2639,15 +2624,6 @@ const styles = StyleSheet.create({
     color: '#F5C842',
     fontSize: 20,
     lineHeight: 24,
-  },
-  onboardingCaptionFeather: {
-    fontSize: 15,
-    lineHeight: 19,
-  },
-  // Keeps the cue's layout (so the deck stays put) while the feather rule
-  // uses the up cue's row.
-  cueHiddenByCaption: {
-    opacity: 0,
   },
   swipeRightCue: {
     width: 210,

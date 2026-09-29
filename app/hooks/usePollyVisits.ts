@@ -100,5 +100,12 @@ export function usePollyVisits(isSpeedRound: boolean, ghostRunsMissed = 0) {
     startVisit(decision.spec);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { visit, onVisitDone, firePollyEvent };
+  // Drops the current visit and anything queued behind it, with no exit arc,
+  // for a beat that owns the screen outright (a HUD lesson).
+  const dismissVisits = useCallback(() => {
+    pendingRef.current = null;
+    if (visitRef.current !== null) setVisitBoth(null);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { visit, onVisitDone, firePollyEvent, dismissVisits };
 }

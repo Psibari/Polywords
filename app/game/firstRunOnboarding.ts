@@ -1,5 +1,7 @@
 import type { GameState } from './polyRunEngine';
 
+// Bumping this resets every saved onboarding state (see hydrateOnboardingState),
+// so new fields are added with hydrate-time defaults instead.
 export const ONBOARDING_VERSION = 1 as const;
 
 export const FIRST_RUN_FINE_MASK_IDS = [
@@ -7,6 +9,31 @@ export const FIRST_RUN_FINE_MASK_IDS = [
   'fine_t00',
   'fine_r04',
 ] as const;
+
+export const FINE_RECOGNITION_EXAMPLES = [
+  "I'M FINE.",
+  'PAY A FINE.',
+  'FINE DINING.',
+  'READ THE FINE PRINT.',
+] as const;
+
+const FINE_RECOGNITION_REVEAL_MS = 1250;
+const FINE_RECOGNITION_STACK_HOLD_MS = 1800;
+
+export function resolveFineRecognitionExamples(presentationStep: number): readonly string[] {
+  if (presentationStep < 0 || presentationStep >= FINE_RECOGNITION_EXAMPLES.length) return [];
+  return FINE_RECOGNITION_EXAMPLES.slice(0, presentationStep + 1);
+}
+
+export function fineRecognitionStepDurationMs(presentationStep: number): number {
+  if (presentationStep < FINE_RECOGNITION_EXAMPLES.length - 1) {
+    return FINE_RECOGNITION_REVEAL_MS;
+  }
+  if (presentationStep === FINE_RECOGNITION_EXAMPLES.length - 1) {
+    return FINE_RECOGNITION_STACK_HOLD_MS;
+  }
+  return presentationStep === 5 || presentationStep === 7 ? 2200 : 1650;
+}
 
 export type HuntInputMode = 'locked' | 'up-only' | 'right-only' | 'both';
 export type HuntSwipeCueMode = 'none' | 'up' | 'right' | 'both';
@@ -28,7 +55,27 @@ export type ActiveOnboardingRun = {
   presentationStep: number;
   unaidedAttempts: number;
   helperVisible: boolean;
+  // Retired: the automatic end-of-FINE feather beat is gone and nothing gates
+  // on this any more. Still read and written so older saves round-trip as-is.
   featherExplained: boolean;
+};
+
+// HUD lessons are taught when the player first lives through each mechanic.
+// They are global and monotonic: a lesson flag only ever goes false → true,
+// and it lives outside activeRun because activeRun is cleared at the FINE
+// hand-off while later lessons can land on any later ordinary word.
+export type HudLessonId = 'feather' | 'multiplier' | 'streakBreak' | 'progress';
+
+export type HudLessonState = {
+  feather: boolean;
+  multiplier: boolean;
+  streakBreak: boolean;
+  progress: boolean;
+  // Feather and streak-break are events, not durable Hunt state, so the store
+  // captures them when the wrong call lands. Keyed by the Hunt's runSeed so a
+  // pending lesson never leaks into a different Hunt.
+  featherPendingRunSeed: number | null;
+  streakBreakPendingRunSeed: number | null;
 };
 
 export type FirstRunOnboardingState = {
@@ -42,10 +89,22 @@ export type FirstRunOnboardingState = {
   activeRun: ActiveOnboardingRun | null;
   // The runSeed whose hand-off already closed. The Hunt keeps onboardingMode
   // for its whole life, so without this reconcile would rebuild that run on
-  // the next game update and replay the feather banner and hand-off.
+  // the next game update and replay the hand-off.
   finishedRunSeed: number | null;
+  hudLessons: HudLessonState;
   trackedEvents: string[];
 };
+
+function createHudLessonState(completed: boolean): HudLessonState {
+  return {
+    feather: completed,
+    multiplier: completed,
+    streakBreak: completed,
+    progress: completed,
+    featherPendingRunSeed: null,
+    streakBreakPendingRunSeed: null,
+  };
+}
 
 export function createDefaultOnboardingState(): FirstRunOnboardingState {
   return {
@@ -55,7 +114,28 @@ export function createDefaultOnboardingState(): FirstRunOnboardingState {
     replayRequested: false,
     activeRun: null,
     finishedRunSeed: null,
+    hudLessons: createHudLessonState(false),
     trackedEvents: [],
+  };
+}
+
+function hydratePendingSeed(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value >>> 0 : null;
+}
+
+// Saves written before HUD lessons existed carry no hudLessons. A player who
+// already finished core onboarding is treated as having learned the HUD, so
+// nobody is suddenly tutorialized; a player still in their first run gets them.
+function hydrateHudLessons(value: unknown, coreCompleted: boolean): HudLessonState {
+  if (!value || typeof value !== 'object') return createHudLessonState(coreCompleted);
+  const saved = value as Partial<HudLessonState>;
+  return {
+    feather: saved.feather === true,
+    multiplier: saved.multiplier === true,
+    streakBreak: saved.streakBreak === true,
+    progress: saved.progress === true,
+    featherPendingRunSeed: hydratePendingSeed(saved.featherPendingRunSeed),
+    streakBreakPendingRunSeed: hydratePendingSeed(saved.streakBreakPendingRunSeed),
   };
 }
 
@@ -69,6 +149,7 @@ export function hydrateOnboardingState(
       ...createDefaultOnboardingState(),
       home: { completed: true, step: 4 },
       coreCompleted: true,
+      hudLessons: createHudLessonState(true),
     };
   }
 
@@ -103,6 +184,7 @@ export function hydrateOnboardingState(
       finishedRunSeed: Number.isFinite(value.finishedRunSeed)
         ? value.finishedRunSeed! >>> 0
         : null,
+      hudLessons: hydrateHudLessons(value.hudLessons, value.coreCompleted === true),
       trackedEvents: Array.isArray(value.trackedEvents)
         ? value.trackedEvents.filter((event): event is string => typeof event === 'string')
         : defaults.trackedEvents,
@@ -209,6 +291,9 @@ export function resolveOnboardingInputMode(
   state: FirstRunOnboardingState,
   game: GameState,
 ): HuntInputMode {
+  // A due HUD lesson holds the next decision from the render it becomes due,
+  // through its explanation and Polly's reply, including after the hand-off.
+  if (resolveHudLesson(state, game) !== null) return 'locked';
   const active = state.activeRun;
   if (
     !active ||
@@ -262,56 +347,123 @@ export function resolveOnboardingBoardPresentation(
   return { showDecisionCard: true, swipeCueMode: 'none' };
 }
 
-export type OnboardingCaption = {
-  kind: 'question' | 'helper' | 'feather';
-  text: string;
-  accessibilityLabel: string;
-};
+// ─── HUD lessons ────────────────────────────────────────────
 
-const FEATHER_CAPTION: OnboardingCaption = {
-  kind: 'feather',
-  text: 'WRONG CALLS COST A FEATHER.\nRUN OUT, AND POLLY WINS THE HUNT.',
-  accessibilityLabel: 'Wrong calls cost a feather. Run out, and Polly wins the Hunt.',
-};
+// Boss and Returning Haunt words own locked choreography; no lesson lands on them.
+function isOrdinaryWordStep(game: GameState): boolean {
+  const step = game.session[game.stepIndex];
+  return step?.kind === 'word' &&
+    step.eventType !== 'bossWord' &&
+    step.isHauntReturn !== true;
+}
 
-// The feather rule is due once the core is complete, or after a wrong call in
-// the unaided beat, until Polly has explained it. The overlay fires the beat
-// from this rule, and GameScreen derives the board caption from it.
-export function isOnboardingFeatherDue(
+// The FINE hand-off window: the opening word is done, the next word is on the
+// board with its card hidden and locked, and the run has not been closed yet.
+export function isOnboardingHandoffOpen(
   state: FirstRunOnboardingState,
   game: GameState,
 ): boolean {
   const active = state.activeRun;
   return active !== null &&
-    game.runSeed === active.runSeed &&
+    active.phase === 'complete' &&
+    game.stepIndex > 0 &&
+    game.onboardingVersion === ONBOARDING_VERSION &&
     game.onboardingMode === active.mode &&
-    !active.featherExplained &&
-    (active.phase === 'complete' || (active.phase === 'unaided' && game.mistakesOnWord > 0));
+    game.runSeed === active.runSeed;
 }
 
-// Whether the board shows the feather caption. Derived in GameScreen's own
-// render rather than waiting for the overlay to report its state up through an
-// effect: the swipe that makes the rule due can also bring the swipe cues
-// back, and the caption has to hide them in that same render. Like the
-// overlay, it holds back while another onboarding visit is still under way;
-// once the overlay's own feather beat is showing, that visit is its own.
-export function resolveFeatherCaptionVisible(
+// The one HUD lesson that owns the screen right now, or null. Pure and derived
+// from saved state, so it can lock input in the same render as the swipe that
+// made it due, and a resumed Hunt shows an unfinished lesson again without
+// replaying the decision that earned it. Flags are only set once a lesson has
+// fully finished, so the answer never flips to a different lesson mid-show:
+// input is locked while any lesson is due, and the only Hunt change that can
+// still happen (the judged word completing) makes nothing higher-priority due.
+//
+// Order: a multiplier just earned, then a real feather loss, then the short
+// streak-break reinforcement, then the round-progress lesson in the hand-off.
+export function resolveHudLesson(
   state: FirstRunOnboardingState,
   game: GameState,
-  overlayFeatherShowing: boolean,
-  onboardingVisitActive: boolean,
-): boolean {
-  return isOnboardingFeatherDue(state, game) &&
-    (overlayFeatherShowing || !onboardingVisitActive);
+): HudLessonId | null {
+  if (game.status !== 'playing') return null;
+  const lessons = state.hudLessons;
+  if (isOrdinaryWordStep(game)) {
+    if (!lessons.multiplier && game.chainMultiplier >= 1.5) return 'multiplier';
+    if (!lessons.feather && lessons.featherPendingRunSeed === game.runSeed) return 'feather';
+    if (
+      !lessons.streakBreak &&
+      lessons.multiplier &&
+      lessons.streakBreakPendingRunSeed === game.runSeed
+    ) {
+      return 'streakBreak';
+    }
+  }
+  if (!lessons.progress && isOnboardingHandoffOpen(state, game)) return 'progress';
+  return null;
 }
 
+// Called by the store where a decision commits, with the Hunt before and after.
+// A life loss is a new mistake on the same word; that counts Mercy revives too,
+// where lives jump back up in the same update. A fatal loss is never captured:
+// the death hold and Results own that moment.
+export function captureHudLessonEvents(
+  state: FirstRunOnboardingState,
+  prev: GameState,
+  next: GameState,
+): FirstRunOnboardingState {
+  if (next === prev) return state;
+  const lostLife = next.mistakesOnWord > prev.mistakesOnWord &&
+    next.stepIndex === prev.stepIndex;
+  if (!lostLife || next.status !== 'playing' || !isOrdinaryWordStep(prev)) return state;
+
+  const lessons = state.hudLessons;
+  let hudLessons = lessons;
+  if (!lessons.feather && lessons.featherPendingRunSeed !== next.runSeed) {
+    hudLessons = { ...hudLessons, featherPendingRunSeed: next.runSeed };
+  }
+  if (
+    lessons.multiplier &&
+    !lessons.streakBreak &&
+    prev.chainMultiplier >= 1.5 &&
+    next.fellOffSeverity !== null &&
+    lessons.streakBreakPendingRunSeed !== next.runSeed
+  ) {
+    hudLessons = { ...hudLessons, streakBreakPendingRunSeed: next.runSeed };
+  }
+  return hudLessons === lessons ? state : { ...state, hudLessons };
+}
+
+// Marks a lesson finished once its explanation and Polly's reply are done.
+// The progress lesson is the FINE hand-off, so it closes the run in the same
+// update; the board unlocks exactly when the hand-off is recorded.
+export function completeHudLesson(
+  state: FirstRunOnboardingState,
+  lesson: HudLessonId,
+): FirstRunOnboardingState {
+  const lessons = state.hudLessons;
+  if (lessons[lesson]) return state;
+  const hudLessons: HudLessonState = {
+    ...lessons,
+    [lesson]: true,
+    ...(lesson === 'feather' ? { featherPendingRunSeed: null } : {}),
+    ...(lesson === 'streakBreak' ? { streakBreakPendingRunSeed: null } : {}),
+  };
+  const next = { ...state, hudLessons };
+  return lesson === 'progress' ? finishOnboardingHandoff(next) : next;
+}
+
+export type OnboardingCaption = {
+  kind: 'question' | 'helper';
+  text: string;
+  accessibilityLabel: string;
+};
+
 // Instruction text that sits above a live card, laid out by the board in the
-// band between the plate and the swipe-up cue. The feather rule wins when it
-// overlaps the unaided helper: it is the beat Polly is speaking to.
+// band between the plate and the swipe-up cue.
 export function resolveOnboardingCaption(
   state: FirstRunOnboardingState,
   game: GameState,
-  featherVisible: boolean,
 ): OnboardingCaption | null {
   const active = state.activeRun;
   if (
@@ -323,7 +475,6 @@ export function resolveOnboardingCaption(
     return null;
   }
 
-  if (featherVisible) return FEATHER_CAPTION;
   if (active.phase === 'guided-real') {
     return { kind: 'question', text: 'BELONGS TO FINE?', accessibilityLabel: 'BELONGS TO FINE?' };
   }
@@ -382,19 +533,16 @@ export function shouldRenderDecisionStack(
   return topCard !== null && topCard.judged && !topCard.exitFinished;
 }
 
+// A Hunt resumed inside the hand-off closes it, unless the round-progress
+// lesson has not been taught yet: then the hand-off stays open and the lesson
+// owns it, with the next card still hidden and locked. That only moves
+// forward: the lesson has no decision to replay.
 export function dismissCompletedOnboardingHandoffOnResume(
   state: FirstRunOnboardingState,
   game: GameState,
 ): FirstRunOnboardingState {
-  const active = state.activeRun;
-  if (
-    !active ||
-    active.phase !== 'complete' ||
-    game.stepIndex === 0 ||
-    game.onboardingVersion !== ONBOARDING_VERSION ||
-    game.onboardingMode !== active.mode ||
-    game.runSeed !== active.runSeed
-  ) {
+  if (!isOnboardingHandoffOpen(state, game)) return state;
+  if (!state.hudLessons.progress && game.stepIndex === 1 && game.status === 'playing') {
     return state;
   }
   return finishOnboardingHandoff(state);

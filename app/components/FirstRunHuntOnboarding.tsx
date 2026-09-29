@@ -10,7 +10,13 @@ import { FONTS } from '../constants/fonts';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import type { VisitSpec } from '../game/pollyVisitPolicy';
-import { isOnboardingFeatherDue, recognitionOpensWithHold } from '../game/firstRunOnboarding';
+import {
+  FINE_RECOGNITION_EXAMPLES,
+  fineRecognitionStepDurationMs,
+  isOnboardingHandoffOpen,
+  recognitionOpensWithHold,
+  resolveFineRecognitionExamples,
+} from '../game/firstRunOnboarding';
 import { useGameStore } from '../store/useGameStore';
 import { PW } from '../ui/pwTheme';
 import { PollyHuntVisit } from './PollyHuntVisit';
@@ -21,10 +27,7 @@ const RECOGNITION_OPENING_HOLD_MS = 1500;
 const CHALLENGE_COPY_MS = 4000;
 
 const RECOGNITION_COPY = [
-  "I'M FINE.",
-  'PAY A FINE.',
-  'FINE DINING.',
-  'READ THE FINE PRINT.',
+  ...FINE_RECOGNITION_EXAMPLES,
   'SAME WORD.\nFOUR DIFFERENT THINGS.',
   'YOUR BRAIN SWITCHES BETWEEN THEM\nWITHOUT YOU EVEN NOTICING.',
   'THAT’S POLYWORDS.',
@@ -47,19 +50,48 @@ function onboardingVisit(line: string, perchPose: VisitSpec['perchPose'] = 'poin
   };
 }
 
+function RecognitionLine({
+  animate,
+  reduceMotion,
+  text,
+}: {
+  animate: boolean;
+  reduceMotion: boolean;
+  text: string;
+}) {
+  const opacity = useRef(new Animated.Value(animate && !reduceMotion ? 0 : 1)).current;
+
+  useEffect(() => {
+    opacity.stopAnimation();
+    if (!animate || reduceMotion) {
+      opacity.setValue(1);
+      return;
+    }
+    opacity.setValue(0);
+    const animation = Animated.timing(opacity, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [animate, opacity, reduceMotion]);
+
+  return (
+    <Animated.View style={{ opacity }}>
+      <Text style={styles.recognitionLine}>{text}</Text>
+    </Animated.View>
+  );
+}
+
 type Props = {
-  onFeatherExplainStart: () => void;
   onVisitActivityChange: (active: boolean) => void;
-  // The feather rule is drawn by the board as a caption above the card.
-  onFeatherCopyVisibleChange: (visible: boolean) => void;
   // The current word's plate has finished its entrance.
   plateSettled: boolean;
 };
 
 export function FirstRunHuntOnboarding({
-  onFeatherExplainStart,
   onVisitActivityChange,
-  onFeatherCopyVisibleChange,
   plateSettled,
 }: Props) {
   const game = useGameStore(state => state.game);
@@ -67,21 +99,19 @@ export function FirstRunHuntOnboarding({
   const activeRun = onboarding.activeRun;
   const setPhase = useGameStore(state => state.setOnboardingPhase);
   const setPresentationStep = useGameStore(state => state.setOnboardingPresentationStep);
-  const markFeatherExplained = useGameStore(state => state.markOnboardingFeatherExplained);
   const finishHandoff = useGameStore(state => state.finishOnboardingHandoff);
   const reduceMotion = useReducedMotionPreference() !== false;
   const [visit, setVisit] = useState<ActiveVisit | null>(null);
   const [resultBeatPhase, setResultBeatPhase] = useState<
     'guided-real-result' | 'guided-trap-result' | null
   >(null);
-  const [featherCopyVisible, setFeatherCopyVisible] = useState(false);
   const [handoffVisible, setHandoffVisible] = useState(false);
   // The run whose opening hold has run out. Keyed by seed so a later run
   // (Replay) starts its own hold; nothing here is saved.
   const [openingHoldDoneSeed, setOpeningHoldDoneSeed] = useState<number | null>(null);
   const visitIdRef = useRef(0);
   const visitPurposeRef = useRef<
-    'challenge-open' | 'challenge-close' | 'real-result' | 'trap-result' | 'feather' | null
+    'challenge-open' | 'challenge-close' | 'real-result' | 'trap-result' | null
   >(null);
   const opacity = useRef(new Animated.Value(1)).current;
 
@@ -103,11 +133,6 @@ export function FirstRunHuntOnboarding({
     return () => onVisitActivityChange(false);
   }, [visit, onVisitActivityChange]);
 
-  useEffect(() => {
-    onFeatherCopyVisibleChange(featherCopyVisible);
-    return () => onFeatherCopyVisibleChange(false);
-  }, [featherCopyVisible, onFeatherCopyVisibleChange]);
-
   // The hold counts from the plate settling, so the word has fully landed
   // before FINE's own beat starts.
   useEffect(() => {
@@ -122,14 +147,16 @@ export function FirstRunHuntOnboarding({
     const step = Math.min(activeRun.presentationStep, RECOGNITION_COPY.length - 1);
     const copy = RECOGNITION_COPY[step];
     AccessibilityInfo.announceForAccessibility(copy.replace(/\n/g, ' '));
-    opacity.stopAnimation();
-    if (reduceMotion) {
-      opacity.setValue(1);
-    } else {
-      opacity.setValue(0);
-      Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    if (step >= FINE_RECOGNITION_EXAMPLES.length) {
+      opacity.stopAnimation();
+      if (reduceMotion) {
+        opacity.setValue(1);
+      } else {
+        opacity.setValue(0);
+        Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+      }
     }
-    const duration = step < 4 ? 1250 : step === 5 || step === 7 ? 2200 : 1650;
+    const duration = fineRecognitionStepDurationMs(step);
     const timer = setTimeout(() => {
       if (step + 1 < RECOGNITION_COPY.length) {
         setPresentationStep(step + 1);
@@ -194,31 +221,14 @@ export function FirstRunHuntOnboarding({
     return () => clearTimeout(timer);
   }, [activeRun?.phase, belongsToThisRun, reduceMotion]);
 
+  // The hand-off: FINE is done and the next word waits, hidden and locked.
+  // Until the player has had the round-progress lesson, that lesson IS the
+  // hand-off: HudLessonLayer teaches it and closes the run when it finishes.
+  // Only a run that already has it (a Replay) gets the short banner here.
+  const handoffOpen = isOnboardingHandoffOpen(onboarding, game);
+  const progressLessonDone = onboarding.hudLessons.progress;
   useEffect(() => {
-    if (!isOnboardingFeatherDue(onboarding, game)) return;
-    if (featherCopyVisible || visitPurposeRef.current !== null) return;
-    setFeatherCopyVisible(true);
-    onFeatherExplainStart();
-    AccessibilityInfo.announceForAccessibility(
-      'Wrong calls cost a feather. Run out, and Polly wins the Hunt. Polly says, I’m counting.',
-    );
-    showVisit('feather', onboardingVisit('I’m counting.', 'point'));
-  }, [
-    activeRun?.phase,
-    activeRun?.featherExplained,
-    belongsToThisRun,
-    featherCopyVisible,
-    game.mistakesOnWord,
-    onFeatherExplainStart,
-  ]);
-
-  useEffect(() => {
-    if (
-      !belongsToThisRun ||
-      activeRun.phase !== 'complete' ||
-      !activeRun.featherExplained ||
-      game.stepIndex === 0
-    ) return;
+    if (!handoffOpen || !progressLessonDone) return;
     setHandoffVisible(true);
     const copy = 'ONE WORD DOWN. THERE ARE A LOT MORE HIDING IN PLAIN SIGHT.';
     AccessibilityInfo.announceForAccessibility(copy);
@@ -227,20 +237,17 @@ export function FirstRunHuntOnboarding({
       finishHandoff();
     }, 2300);
     return () => clearTimeout(timer);
-  }, [
-    activeRun?.phase,
-    activeRun?.featherExplained,
-    belongsToThisRun,
-    finishHandoff,
-    game.stepIndex,
-  ]);
+  }, [finishHandoff, handoffOpen, progressLessonDone]);
 
   if (!belongsToThisRun) return null;
 
   const phase = activeRun.phase;
+  const recognitionExamples = phase === 'recognition' && !holdingOpening
+    ? resolveFineRecognitionExamples(activeRun.presentationStep)
+    : [];
   let copy: string | null = null;
   let compact = false;
-  if (phase === 'recognition' && !holdingOpening) {
+  if (phase === 'recognition' && !holdingOpening && recognitionExamples.length === 0) {
     copy = RECOGNITION_COPY[Math.min(activeRun.presentationStep, RECOGNITION_COPY.length - 1)];
   } else if (phase === 'challenge' && activeRun.presentationStep === 1) {
     copy = CHALLENGE_COPY;
@@ -261,14 +268,26 @@ export function FirstRunHuntOnboarding({
     if (purpose === 'challenge-close') setPhase('guided-real', 0);
     if (purpose === 'real-result') setPhase('guided-trap', 0);
     if (purpose === 'trap-result') setPhase('unaided', 0);
-    if (purpose === 'feather') {
-      setFeatherCopyVisible(false);
-      markFeatherExplained();
-    }
   }
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {recognitionExamples.length > 0 && (
+        <View
+          accessible
+          accessibilityLabel={recognitionExamples.join(' ')}
+          style={[styles.copyWrap, styles.recognitionStackWrap]}
+        >
+          {recognitionExamples.map((line, index) => (
+            <RecognitionLine
+              key={line}
+              animate={index === recognitionExamples.length - 1}
+              reduceMotion={reduceMotion}
+              text={line}
+            />
+          ))}
+        </View>
+      )}
       {copy && (
         <Animated.View
           accessible
@@ -311,6 +330,21 @@ const styles = StyleSheet.create({
     top: '48%',
     minHeight: 66,
     paddingVertical: 12,
+  },
+  recognitionStackWrap: {
+    minHeight: 130,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  recognitionLine: {
+    color: PW.color.softWhite,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: 1.2,
+    textAlign: 'center',
   },
   copy: {
     color: PW.color.softWhite,

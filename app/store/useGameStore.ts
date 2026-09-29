@@ -73,12 +73,15 @@ import {
 import {
   FIRST_RUN_FINE_MASK_IDS,
   ONBOARDING_VERSION,
+  captureHudLessonEvents,
+  completeHudLesson as markHudLessonComplete,
   createDefaultOnboardingState,
   dismissCompletedOnboardingHandoffOnResume,
   finishOnboardingHandoff as closeOnboardingHandoff,
   hydrateOnboardingState,
   reconcileOnboardingRun,
   type FirstRunOnboardingState,
+  type HudLessonId,
   type OnboardingCorePhase,
 } from '../game/firstRunOnboarding';
 import {
@@ -203,6 +206,28 @@ function persistOnboarding(state: FirstRunOnboardingState): Promise<void> {
     .catch(() => {})
     .then(() => AsyncStorage.setItem(ONBOARDING_STATE_KEY, snapshot));
   return onboardingPersistenceQueue;
+}
+
+const HUD_LESSON_COMPLETED_EVENTS: Record<HudLessonId, PlaytestEventName> = {
+  feather: 'onboarding_hud_feather_completed',
+  multiplier: 'onboarding_hud_multiplier_completed',
+  streakBreak: 'onboarding_hud_streak_break_completed',
+  progress: 'onboarding_hud_progress_completed',
+};
+
+// A committed Hunt decision and any HUD lesson it just made due land in one
+// store update, so the lesson's input lock is in place in the very render the
+// swipe commits. fellOffSeverity is consumed by the HUD a moment later, which
+// is why the streak break is captured here with both Hunt states in hand.
+function huntDecisionUpdate(
+  onboarding: FirstRunOnboardingState,
+  prev: GameState,
+  next: GameState,
+): { game: GameState; onboarding?: FirstRunOnboardingState } {
+  const captured = captureHudLessonEvents(onboarding, prev, next);
+  if (captured === onboarding) return { game: next };
+  persistOnboarding(captured);
+  return { game: next, onboarding: captured };
 }
 
 function addOnboardingEvent(
@@ -364,7 +389,7 @@ type GameStore = {
     correct: boolean,
     responseMs: number,
   ) => void;
-  markOnboardingFeatherExplained: () => void;
+  completeHudLesson: (lesson: HudLessonId) => void;
   finishOnboardingHandoff: () => void;
   requestOnboardingReplay: () => void;
   markOnboardingAbandoned: (surface: 'home' | 'hunt') => void;
@@ -579,7 +604,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   submitSwipeUp: (maskId) => {
     const prev = get().game;
     const next = submitSwipeUp(prev, maskId);
-    set({ game: next });
+    set(huntDecisionUpdate(get().onboarding, prev, next));
 
     // Record the claim only when the engine actually accepted the swipe.
     // The engine no-ops (returns prev) when the run isn't playing, the mask
@@ -604,7 +629,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   submitSwipeDown: (maskId) => {
     const prev = get().game;
     const next = submitSwipeDown(prev, maskId);
-    set({ game: next });
+    set(huntDecisionUpdate(get().onboarding, prev, next));
     if (next.bossOutcome === 'haunted' && prev.bossOutcome !== 'haunted') {
       const bossStep = next.session.find(s => s.kind === 'word' && s.eventType === 'bossWord');
       if (bossStep && bossStep.kind === 'word') get().queueFailedBoss(bossStep);
@@ -614,7 +639,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   submitWrongSwipe: () => {
     const prev = get().game;
     const next = submitWrongSwipe(prev);
-    set({ game: next });
+    set(huntDecisionUpdate(get().onboarding, prev, next));
     if (next.bossOutcome === 'haunted' && prev.bossOutcome !== 'haunted') {
       const bossStep = next.session.find(s => s.kind === 'word' && s.eventType === 'bossWord');
       if (bossStep && bossStep.kind === 'word') get().queueFailedBoss(bossStep);
@@ -1115,13 +1140,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     persistOnboarding(next);
   },
 
-  markOnboardingFeatherExplained: () => {
+  completeHudLesson: (lesson) => {
     const current = get().onboarding;
-    if (!current.activeRun || current.activeRun.featherExplained) return;
-    const next = {
-      ...current,
-      activeRun: { ...current.activeRun, featherExplained: true },
-    };
+    let next = markHudLessonComplete(current, lesson);
+    if (next === current) return;
+    next = addOnboardingEvent(next, HUD_LESSON_COMPLETED_EVENTS[lesson]);
     set({ onboarding: next });
     persistOnboarding(next);
   },
