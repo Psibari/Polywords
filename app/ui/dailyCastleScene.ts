@@ -67,9 +67,9 @@ export const DAILY_GATE_ART = {
 /**
  * Canvas points per gate source px, chosen so the three clue planks fill the
  * straight part of the opening: each plank is 52 pt tall, room for two lines
- * of 24 pt clue text; DAILY_CLUE_FONT caps clues at 20 so each has air around
- * it. The board overhangs the opening on both sides, where the arch jambs
- * hide it.
+ * of 24 pt clue text; DAILY_CLUE_FONT keeps two-line clues at 20 so each has
+ * air around it. The board overhangs the opening on both sides, where the arch
+ * jambs hide it.
  */
 export const DAILY_GATE_PLANK_PT = 52;
 export const DAILY_GATE_PT_PER_SRC =
@@ -256,6 +256,43 @@ export function resolveDailyGoldCoin(): DailyCastleRect {
   };
 }
 
+/**
+ * The frieze: answerwall_framed.png's dark band between the capstone and the
+ * brick panels, colour-measured at y 1804–1877 px (the capstone's highlight
+ * ends above it, the panels' shadow line starts below it).
+ */
+export const DAILY_WALL_FRIEZE: DailyCastleRect = {
+  x: 0,
+  y: 1804 / 3,
+  width: DAILY_CASTLE_CANVAS.width,
+  height: (1878 - 1804) / 3,
+};
+
+/**
+ * The five round markers (Pete, 2026-09-28): a row on the frieze, above the
+ * answer blocks, drawn over the wall art (never baked into it). Canvas points;
+ * scaled with the scene so the row stays on the band on every phone.
+ */
+export const DAILY_ROUND_MARKERS = {
+  dot: 12,
+  gap: 10,
+  padX: 12,
+  padY: 5,
+} as const;
+
+/** The round-marker plate for `count` rounds, centred on the frieze. Canvas points. */
+export function resolveDailyRoundMarkers(count: number): DailyCastleRect {
+  const m = DAILY_ROUND_MARKERS;
+  const width = count * m.dot + (count - 1) * m.gap + 2 * m.padX;
+  const height = m.dot + 2 * m.padY;
+  return {
+    x: (DAILY_CASTLE_CANVAS.width - width) / 2,
+    y: DAILY_WALL_FRIEZE.y + (DAILY_WALL_FRIEZE.height - height) / 2,
+    width,
+    height,
+  };
+}
+
 /** Top of the brick panels: every block sits below it. */
 export const DAILY_CASTLE_WALL_FACE_TOP = DAILY_ANSWER_WALL.panelTopPx / 3;
 
@@ -348,6 +385,37 @@ export type DailyCastleFrame = {
 
 /** Gap kept between the HUD's bottom edge and the first clue. */
 export const DAILY_CASTLE_HUD_GAP = 6;
+
+/**
+ * The compact Daily HUD (Pete, 2026-09-28): DAILY #<n> with the chance
+ * feathers beneath it, one small plate centred between the towers. The round
+ * markers live on the wall (DAILY_ROUND_MARKERS). DailyChallengeScreen styles
+ * the plate from these, so its height below is the one the layout gets.
+ * Bebas Neue and Barlow Condensed both have a natural line height of 1.2 em
+ * (hhea 900/-300 and 1000/-200 per 1000).
+ */
+export const DAILY_HUD = {
+  marginTop: 4,
+  border: 0.5,
+  padTop: 5,
+  padBottom: 6,
+  padX: 12,
+  labelSize: 24,
+  labelLineHeight: 24 * 1.2,
+  /**
+   * feather-life-*.png is square, so this is the feather's drawn size (the
+   * old 20 x 36 box drew the same 20 x 20 feather with 8 pt empty above and
+   * below it).
+   */
+  feather: 20,
+  featherGap: 4,
+} as const;
+
+/** Height the HUD layer takes below the top inset: `hudBottom - topInset`. */
+export function dailyHudHeight(): number {
+  const h = DAILY_HUD;
+  return h.marginTop + 2 * h.border + h.padTop + h.labelLineHeight + h.feather + h.padBottom;
+}
 
 /**
  * The scene fills the screen width and is anchored to the bottom edge, so the
@@ -476,19 +544,34 @@ const BEBAS_ADVANCE_EM: Record<string, number> = {
 const BEBAS_WIDEST_EM = Math.max(...Object.values(BEBAS_ADVANCE_EM));
 
 export const DAILY_CLUE_FONT = {
-  // 20, not 24 (Pete, 2026-09-26): two lines of 24 filled the 52 pt plank
-  // edge to edge and three clues read as one paragraph. At 20 each clue has
-  // about 9 pt of plank around it.
-  maxSize: 20,
+  // Up to 24 (Pete, 2026-09-28), but only for a clue that fits on one line:
+  // two lines of 24 filled the 52 pt plank edge to edge and three clues read
+  // as one paragraph (Pete, 2026-09-26). `plankAir` keeps that rule, which
+  // stops two-line clues at 20 (about 9 pt of plank around them).
+  maxSize: 24,
   // 16 is reached by one clue only ("THE OUTWARD ANGLE WHERE TWO SLOPING ROOF
   // SIDES MEET") in the cartoon castle's 178 pt clue box; every other clue fits at 17+.
   minSize: 16,
   lineHeightRatio: 26 / 24,
   letterSpacing: 0.5,
   maxLines: 2,
+  /** Plank height left clear around a clue's lines, at the least. */
+  plankAir: 8,
   /** Headroom for rendering differences between platforms. */
   safety: 0.95,
 } as const;
+
+/**
+ * Lines a clue may use at `size`: as many as fit the 52 pt plank with
+ * `plankAir` to spare, never more than two. One line from 21 pt up, two at 20
+ * and below.
+ */
+export function dailyClueMaxLines(size: number): number {
+  const fit = Math.floor(
+    (DAILY_GATE_PLANK_PT - DAILY_CLUE_FONT.plankAir) / (size * DAILY_CLUE_FONT.lineHeightRatio),
+  );
+  return Math.min(DAILY_CLUE_FONT.maxLines, fit);
+}
 
 /** Measured width of `text` on one line at `size`, in canvas points. */
 export function dailyClueTextWidth(text: string, size: number): number {
@@ -520,24 +603,24 @@ function linesNeeded(text: string, size: number, width: number): number {
   return lines;
 }
 
-/** True when `text` wraps into at most two lines of `width` at `size`. */
+/** True when `text` wraps into the lines its plank allows (dailyClueMaxLines) at `size`. */
 export function dailyClueFits(text: string, size: number, width: number): boolean {
   return (
     linesNeeded(text.toUpperCase(), size, width * DAILY_CLUE_FONT.safety) <=
-    DAILY_CLUE_FONT.maxLines
+    dailyClueMaxLines(size)
   );
 }
 
 /**
  * Largest clue size (canvas points, whole numbers) at which `text` wraps into
- * at most two lines of `width`. Done here rather than trusting
- * adjustsFontSizeToFit, which react-native-web ignores and which cut a clue
- * off with an ellipsis.
+ * the lines its plank allows at that size: one line up to 24, two up to 20.
+ * Done here rather than trusting adjustsFontSizeToFit, which react-native-web
+ * ignores and which cut a clue off with an ellipsis.
  */
 export function fitDailyClueFontSize(text: string, width: number): number {
   const usable = width * DAILY_CLUE_FONT.safety;
   for (let size = DAILY_CLUE_FONT.maxSize; size > DAILY_CLUE_FONT.minSize; size -= 1) {
-    if (linesNeeded(text.toUpperCase(), size, usable) <= DAILY_CLUE_FONT.maxLines) return size;
+    if (linesNeeded(text.toUpperCase(), size, usable) <= dailyClueMaxLines(size)) return size;
   }
   return DAILY_CLUE_FONT.minSize;
 }

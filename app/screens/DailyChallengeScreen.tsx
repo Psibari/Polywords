@@ -53,7 +53,6 @@ import {
   DAILY_LOSS_TITLE,
   DAILY_LOSS_LINE_IDS,
   DAILY_CLUE_TITLE,
-  DAILY_CLUE_RULE,
   DAILY_ACTION_RULE,
   dailyBackdrop,
   dailyScrollMaterial,
@@ -75,6 +74,7 @@ import { type DailyCoinRise } from '../components/DailyFloorCoins';
 import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
+  DAILY_HUD,
   DAILY_POLLY_BUBBLE,
   dailyActionLabelBottom,
   type DailyCastleFrame,
@@ -140,42 +140,19 @@ function FeatherIcon({ filled }: { filled: boolean }) {
 // -----------------------------------------
 function DailyHUD({
   challengeNumber,
-  currentRound,
   chances,
   featherPulse,
 }: {
   challengeNumber: number;
-  currentRound: number;
   chances: number;
   featherPulse?: Animated.Value;
 }) {
+  // Compact, centred between the towers (Pete, 2026-09-28): DAILY #<n> with
+  // the chances beneath it. The round markers sit on the wall's frieze
+  // (DailyRoundMarkers, placed by DailyCastleStage).
   return (
-    <View style={hud.row}>
-      {/* The mode's rule sits in the HUD row under the DAILY #<n> label, so
-          the central rule of the mode is always on the play screen. */}
-      <View style={hud.labelStack}>
-        <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
-        <Text style={hud.rule}>{DAILY_CLUE_RULE}</Text>
-      </View>
-
-      <View style={hud.dots}>
-        {Array.from({ length: DAILY_ROUND_COUNT }).map((_, i) => {
-          const isDone = i < currentRound;
-          const isCurrent = i === currentRound;
-          return (
-            <View
-              key={i}
-              style={[
-                hud.dot,
-                isDone && hud.dotDone,
-                isCurrent && hud.dotCurrent,
-                !isDone && !isCurrent && hud.dotPending,
-              ]}
-            />
-          );
-        })}
-      </View>
-
+    <View style={hud.plate}>
+      <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
       <Animated.View style={[hud.feathers, featherPulse && {
         backgroundColor: featherPulse.interpolate({
           inputRange: [0, 0.5, 1],
@@ -1115,6 +1092,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           coinRise={coinRise}
           coinCelebrate={coinCelebrate}
           hudBottom={hudBottom}
+          roundMarkers={!isComplete && displayedDailySession
+            ? {
+                current: Math.min(displayedDailySession.currentRoundIndex, DAILY_ROUND_COUNT - 1),
+                total: DAILY_ROUND_COUNT,
+              }
+            : null}
           onFrame={setCastleFrame}
         >
           {!isComplete && displayedDailySession && currentRound &&
@@ -1188,10 +1171,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           >
             <DailyHUD
               challengeNumber={challengeNumber}
-              currentRound={Math.min(
-                displayedDailySession.currentRoundIndex,
-                DAILY_ROUND_COUNT - 1,
-              )}
               chances={displayedDailySession.chancesRemaining}
               featherPulse={featherPulse}
             />
@@ -1510,80 +1489,44 @@ const styles = StyleSheet.create({
   },
 });
 
+// Sized from DAILY_HUD, whose dailyHudHeight() the castle geometry tests use.
 const hud = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
+  plate: {
+    alignSelf: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-    marginTop: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
+    marginTop: DAILY_HUD.marginTop,
+    paddingTop: DAILY_HUD.padTop,
+    paddingBottom: DAILY_HUD.padBottom,
+    paddingHorizontal: DAILY_HUD.padX,
     borderRadius: 8,
     backgroundColor: dailyHudMaterial.rowBg,
-    borderWidth: 0.5,
+    borderWidth: DAILY_HUD.border,
     borderColor: dailyHudMaterial.rowBorder,
     borderBottomColor: dailyHudMaterial.rowBorderBottom,
-    borderBottomWidth: 0.5,
-  },
-  labelStack: {
-    // Shrinkable so the dots and feathers to its right keep their space on a
-    // 320pt screen; the row itself stays a single flex row.
-    flexShrink: 1,
   },
   label: {
     color: dailyHudMaterial.label,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 24,
+    fontSize: DAILY_HUD.labelSize,
+    // Barlow Condensed's own 1.2 em, stated so the plate's height is known.
+    lineHeight: DAILY_HUD.labelLineHeight,
     letterSpacing: 2,
     textShadowColor: dailyHudMaterial.labelGlow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
   },
-  rule: {
-    color: dailyChromeMaterial.clueHeaderRule,
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    fontSize: 14,
-    letterSpacing: 2.2,
-    marginTop: 2,
-    textTransform: 'uppercase',
-  },
-  dots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  dotDone: {
-    backgroundColor: dailyHudMaterial.dotDone,
-  },
-  dotCurrent: {
-    backgroundColor: dailyHudMaterial.dotCurrent,
-    shadowColor: dailyHudMaterial.dotCurrent,
-    shadowOpacity: 0.9,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  dotPending: {
-    backgroundColor: dailyHudMaterial.dotPending,
-  },
   feathers: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: DAILY_HUD.featherGap,
   },
 });
 
 const feather = StyleSheet.create({
   img: {
-    width: 20,
-    height: 36,
+    width: DAILY_HUD.feather,
+    height: DAILY_HUD.feather,
   },
 });
 

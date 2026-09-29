@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DailyGate from './DailyGate';
 import DailyFloorCoins, { type DailyCoinRise } from './DailyFloorCoins';
+import DailyRoundMarkers from './DailyRoundMarkers';
 import {
   DailyCastlePlaqueFace,
   dailyCastlePlaqueStyle,
@@ -30,6 +31,7 @@ import {
   resolveDailyClueTop,
   resolveDailyCastleSlot,
   resolveDailyGateClueRects,
+  resolveDailyRoundMarkers,
   toDailyCastleScreen,
   type DailyCastleFrame,
   type DailyCastleGrid,
@@ -105,6 +107,8 @@ type Props = {
   coinCelebrate: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
   hudBottom: number;
+  /** Round progress on the wall's frieze, during play only. */
+  roundMarkers?: { current: number; total: number } | null;
   /** Reports where the scene is drawn, for things placed on it from outside (Polly's bubble). */
   onFrame?: (frame: DailyCastleFrame) => void;
   children: React.ReactNode;
@@ -190,6 +194,7 @@ export default function DailyCastleStage({
   coinRise,
   coinCelebrate,
   hudBottom,
+  roundMarkers,
   onFrame,
   children,
 }: Props) {
@@ -380,6 +385,29 @@ export default function DailyCastleStage({
         </View>
       </View>
 
+      {/* Round progress on the frieze: over the wall art, under the blocks, so a
+          popped block's top face stays in front of it. */}
+      {roundMarkers && (() => {
+        const plate = toDailyCastleScreen(frame, resolveDailyRoundMarkers(roundMarkers.total));
+        return (
+          <View
+            pointerEvents="none"
+            style={[styles.layer, styles.roundMarkers, {
+              left: plate.x + sceneLeft,
+              top: plate.y - stageOffset.y,
+              width: plate.width,
+              height: plate.height,
+            }]}
+          >
+            <DailyRoundMarkers
+              currentRound={roundMarkers.current}
+              total={roundMarkers.total}
+              scale={s}
+            />
+          </View>
+        );
+      })()}
+
       {/* toArray, not count: count includes the `false` a finished game passes. */}
       {React.Children.toArray(children).length === 0 &&
         Array.from({ length: 6 }, (_, index) => {
@@ -544,6 +572,10 @@ const styles = StyleSheet.create({
   castleWall: {
     zIndex: 35,
     elevation: 35,
+  },
+  roundMarkers: {
+    zIndex: 38,
+    elevation: 38,
   },
   opening: {
     position: 'absolute',
