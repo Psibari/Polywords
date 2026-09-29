@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { register as registerCjs } from 'tsx/cjs/api';
 import { register } from 'tsx/esm/api';
 
 const castleTuningUrl = new URL('../dev/dailyCastleTuning.ts', import.meta.url);
@@ -58,9 +59,14 @@ assert.equal(
 
 // ── Castle calibration and registered castle art ──────────────────
 {
+  // No "type": "module", so tsx compiles the .ts files to CommonJS; their
+  // extensionless imports (../ui/dailyCastleScene) resolve only through the
+  // CJS hook, not the ESM one.
+  const unregisterTsxCjs = registerCjs();
   const unregisterTsx = register();
   const { DAILY_CASTLE_TUNING_DEFAULTS, useDailyCastleTuning } = await import(castleTuningUrl);
   await unregisterTsx();
+  unregisterTsxCjs();
   // Arch and wall share one export canvas, so neither is tunable on its own.
   assert.deepEqual(Object.keys(DAILY_CASTLE_TUNING_DEFAULTS), ['gate', 'grid', 'clues']);
   // Blocks fill their panels (Pete, 2026-09-27): 465 px panel less two 14 px
