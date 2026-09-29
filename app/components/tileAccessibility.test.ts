@@ -6,6 +6,8 @@ import {
   REJECT_ACTION_NAME,
   CLAIM_REJECT_ACTIONS,
   CLAIM_ONLY_ACTIONS,
+  huntActionsForInputMode,
+  isHuntDirectionAllowed,
   resolveTileAccessibilityAction,
 } from './tileAccessibility';
 
@@ -30,5 +32,15 @@ eq(CLAIM_REJECT_ACTIONS[1].name, REJECT_ACTION_NAME, 'second hunt action is reje
 
 eq(CLAIM_ONLY_ACTIONS.length, 1, 'daily cards expose exactly one action');
 eq(CLAIM_ONLY_ACTIONS[0].name, CLAIM_ACTION_NAME, 'daily card action is claim');
+
+eq(huntActionsForInputMode('locked').length, 0, 'locked Hunt tile exposes no actions');
+eq(huntActionsForInputMode('up-only').length, 1, 'guided REAL exposes one action');
+eq(huntActionsForInputMode('up-only')[0].name, CLAIM_ACTION_NAME, 'guided REAL exposes only claim');
+eq(huntActionsForInputMode('right-only')[0].name, REJECT_ACTION_NAME, 'guided TRAP exposes only reject');
+eq(huntActionsForInputMode('both').length, 2, 'unaided Hunt tile exposes both actions');
+eq(isHuntDirectionAllowed('up-only', 'up'), true, 'guided REAL accepts UP');
+eq(isHuntDirectionAllowed('up-only', 'right'), false, 'guided REAL rejects RIGHT before commit');
+eq(isHuntDirectionAllowed('right-only', 'up'), false, 'guided TRAP rejects UP before commit');
+eq(isHuntDirectionAllowed('right-only', 'right'), true, 'guided TRAP accepts RIGHT');
 
 console.log('OK');

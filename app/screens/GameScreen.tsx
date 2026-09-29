@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,14 +22,40 @@ import FXLayer, { FXLayerHandle } from '../components/FXLayer';
 import { ShardVariant } from '../ui/pwEffects';
 import { usePollyVisits } from '../hooks/usePollyVisits';
 import { PollyHuntVisit } from '../components/PollyHuntVisit';
-import { HuntIntroOverlay } from '../components/HuntIntroOverlay';
+import { FirstRunHuntOnboarding } from '../components/FirstRunHuntOnboarding';
+import { HudLessonLayer } from '../components/HudLessonLayer';
+import {
+  hudTargetAccessibilityLabel,
+  roundProgressAccessibilityLabel,
+  type HudLessonTarget,
+} from '../game/hudLessons';
 import { BossIntroOverlay } from '../components/BossIntroOverlay';
 import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
+import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import {
+  recognitionOpensWithHold,
+  resolveHudLesson,
+  resolveOnboardingBoardPresentation,
+  resolveOnboardingCaption,
+  resolveOnboardingCaptionReserve,
+  resolveOnboardingInputMode,
+} from '../game/firstRunOnboarding';
+
+type HudTargetRefs = Record<HudLessonTarget, React.RefObject<View | null>>;
+
+// Hides a subtree from screen readers while a HUD lesson panel is up. iOS also
+// gets accessibilityViewIsModal on the lesson layer itself; Android needs the
+// siblings hidden explicitly.
+function a11yHiddenProps(hidden: boolean) {
+  return {
+    accessibilityElementsHidden: hidden,
+    importantForAccessibility: hidden ? 'no-hide-descendants' as const : 'auto' as const,
+  };
+}
 import {
   resolveScreenFlash,
   type ScreenFlashEvent,
@@ -114,7 +140,18 @@ const READ_TIER_RANK: Record<HuntReadTier, number> = {
   untrappable: 3,
 };
 
-function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPulse?: Animated.Value }) {
+function TopBar({
+  navigation,
+  featherRowPulse,
+  hudTargets,
+  a11yHidden = false,
+}: {
+  navigation: any;
+  featherRowPulse?: Animated.Value;
+  // Live HUD elements a HUD lesson spotlights; measured, never duplicated.
+  hudTargets?: HudTargetRefs;
+  a11yHidden?: boolean;
+}) {
   const game  = useGameStore(s => s.game);
   const gauntletActive = useGameStore(s => s.game.gauntletActive);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
@@ -272,9 +309,12 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
   }, [fellOffSeverity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <View style={tb.outerRow}>
+    <View style={tb.outerRow} {...a11yHiddenProps(a11yHidden)}>
       <View style={tb.root}>
         <View style={tb.statsRow}>
+          {/* Plain, untransformed wrapper: the spotlight measures this, not the
+              control inside it, which pulses, pops and shakes. */}
+          <View ref={hudTargets?.streak} collapsable={false} style={tb.controlTarget}>
           <Animated.View
             style={[
               tb.controlWrap,
@@ -331,7 +371,10 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
             </View>
             </Animated.View>
           </Animated.View>
+          </View>
           <Animated.View
+            ref={hudTargets?.feathers}
+            collapsable={false}
             style={[tb.featherRow, featherRowPulse && {
               backgroundColor: featherRowPulse.interpolate({
                 inputRange: [0, 0.5, 1],
@@ -370,7 +413,7 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
             )}
           </Animated.View>
         </View>
-        <RoundChips current={current} total={total} />
+        <RoundChips current={current} total={total} targetRef={hudTargets?.rounds} />
       </View>
     </View>
   );
@@ -378,7 +421,15 @@ function TopBar({ navigation, featherRowPulse }: { navigation: any; featherRowPu
 
 // ─── ROUND CHIPS ─────────────────────────────────────────────
 
-function RoundChips({ current, total }: { current: number; total: number }) {
+function RoundChips({
+  current,
+  total,
+  targetRef,
+}: {
+  current: number;
+  total: number;
+  targetRef?: React.RefObject<View | null>;
+}) {
   const reduceMotion = useReducedMotionPreference();
   const chipAnims = useRef(
     Array.from({ length: total }, (_, i) => ({
@@ -439,7 +490,13 @@ function RoundChips({ current, total }: { current: number; total: number }) {
   }, [current, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <View style={tb.chipsRow}>
+    <View
+      ref={targetRef}
+      collapsable={false}
+      style={tb.chipsRow}
+      accessible
+      accessibilityLabel={roundProgressAccessibilityLabel(current + 1, total)}
+    >
       {chipAnims.map((anim, i) => {
         const isBoss = i === total - 1;
         const isCurrent = i === current;
@@ -664,6 +721,12 @@ const tb = StyleSheet.create({
     borderRadius: 1.5,
     backgroundColor: PW.color.softWhite,
   },
+  controlTarget: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   controlWrap: {
     flex: 1,
     minWidth: 0,
@@ -874,6 +937,9 @@ function GameDirector({ navigation }: { navigation: any }) {
   const ghosts     = useGameStore(s => s.ghosts);
   const startGame  = useGameStore(s => s.startGame);
   const forfeitGame = useGameStore(s => s.forfeitGame);
+  const markOnboardingAbandoned = useGameStore(s => s.markOnboardingAbandoned);
+  const onboarding = useGameStore(s => s.onboarding);
+  const completeHudLesson = useGameStore(s => s.completeHudLesson);
   const consumeMercy = useGameStore(s => s.consumeMercy);
   const loadGoldFeather = useGameStore(s => s.loadGoldFeather);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
@@ -905,9 +971,10 @@ function GameDirector({ navigation }: { navigation: any }) {
     setExitConfirmVisible(false);
     const action = pendingExitActionRef.current;
     pendingExitActionRef.current = null;
+    markOnboardingAbandoned('hunt');
     forfeitGame();
     if (action) navigation.dispatch(action);
-  }, [navigation, forfeitGame]);
+  }, [navigation, forfeitGame, markOnboardingAbandoned]);
 
   // ── Effects overlay ────────────────────────────────────────
   const fxLayerRef    = useRef<FXLayerHandle>(null);
@@ -987,21 +1054,6 @@ function GameDirector({ navigation }: { navigation: any }) {
       checkGoldFeatherExpiry();
     });
   }, [loadGoldFeather, checkGoldFeatherExpiry]);
-
-  // ── First-hunt intro overlay ──────────────────────────────────
-  // null = still loading the flag; fail open so gameplay is never blocked.
-  const [introSeen, setIntroSeen] = useState<boolean | null>(null);
-  useEffect(() => {
-    AsyncStorage.getItem(INTRO_SEEN_KEY)
-      .then(v => setIntroSeen(v === 'true'))
-      .catch(() => setIntroSeen(true));
-  }, []);
-  const [introVisitPending, setIntroVisitPending] = useState(false);
-  const handleIntroDismiss = useCallback(() => {
-    setIntroSeen(true);
-    setIntroVisitPending(true);
-    AsyncStorage.setItem(INTRO_SEEN_KEY, 'true').catch(() => {});
-  }, []);
 
   // ── First-boss-only warning overlay ─────────────────────────────
   // The first encounter gates the board mount so its entrance, haptics, and
@@ -1099,6 +1151,17 @@ function GameDirector({ navigation }: { navigation: any }) {
     ]).start();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   }, [game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── HUD lesson spotlight targets ─────────────────────────────
+  const featherTargetRef = useRef<View>(null);
+  const streakTargetRef = useRef<View>(null);
+  const roundsTargetRef = useRef<View>(null);
+  const hudTargets = useMemo<HudTargetRefs>(() => ({
+    feathers: featherTargetRef,
+    streak: streakTargetRef,
+    rounds: roundsTargetRef,
+  }), []);
+  const [hudLessonShowing, setHudLessonShowing] = useState(false);
 
   const prevTensionRef = useRef(0);
 
@@ -1349,7 +1412,6 @@ function GameDirector({ navigation }: { navigation: any }) {
   }, [game.stepIndex, isHauntRound]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const gameplayGateActive =
-    introSeen !== true ||
     (isBossRound && bossIntroSeen !== true) ||
     (isHauntRound && hauntIntroSeen !== true) ||
     bossTransitionActive ||
@@ -1363,6 +1425,51 @@ function GameDirector({ navigation }: { navigation: any }) {
     }
     setIsIdleStatic(false);
   }, [gameplayGateActive, game.status]);
+
+  // ── HUD lessons ───────────────────────────────────────────────
+  // The board locks itself from the same rule (resolveOnboardingInputMode);
+  // this only decides what the lesson layer presents. Never over Results,
+  // the death hold, or a gate that has unmounted the board.
+  const hudLesson = !isDone && !gameplayGateActive ? resolveHudLesson(onboarding, game) : null;
+  const hudLessonActive = hudLesson !== null;
+  const hudLessonWasActiveRef = useRef(false);
+  useEffect(() => {
+    const wasActive = hudLessonWasActiveRef.current;
+    hudLessonWasActiveRef.current = hudLessonActive;
+    if (game.status !== 'playing') return;
+    if (hudLessonActive) {
+      // A lesson is not idling: keep the 15 s static-music timer off it.
+      if (idleTimerRef.current !== null) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+      setIsIdleStatic(false);
+    } else if (wasActive) {
+      resetIdleTimer();
+    }
+  }, [hudLessonActive, game.status, resetIdleTimer]);
+  const hudTargetLabels = useMemo<Record<HudLessonTarget, string>>(() => {
+    const hudStep = currentStep(game);
+    const hudState = resolveHuntHud({
+      chainMultiplier: game.chainMultiplier,
+      lives: game.lives,
+      isHauntReturn: hudStep.kind === 'word' && hudStep.isHauntReturn === true,
+      isMasteredReturn: hudStep.kind === 'word' && hudStep.isMasteredReturn === true,
+      isBossWord: hudStep.kind === 'word' && hudStep.eventType === 'bossWord',
+      isGauntletActive: game.gauntletActive,
+    });
+    const hud = {
+      lives: Math.max(0, Math.min(MAX_FEATHERS, game.lives)),
+      streakLabel: hudState.label,
+      round: game.stepIndex + 1,
+      totalRounds: game.session.length,
+    };
+    return {
+      feathers: hudTargetAccessibilityLabel('feathers', hud),
+      streak: hudTargetAccessibilityLabel('streak', hud),
+      rounds: hudTargetAccessibilityLabel('rounds', hud),
+    };
+  }, [game]);
 
   return (
     <View style={styles.screen}>
@@ -1416,9 +1523,17 @@ function GameDirector({ navigation }: { navigation: any }) {
           />
         </View>
       )}
-      {!isDone && <TopBar navigation={navigation} featherRowPulse={featherRowPulse} />}
+      {!isDone && (
+        <TopBar
+          navigation={navigation}
+          featherRowPulse={featherRowPulse}
+          hudTargets={hudTargets}
+          a11yHidden={hudLessonShowing}
+        />
+      )}
       {!isDone && (
         <Pressable
+          {...a11yHiddenProps(hudLessonShowing)}
           accessibilityRole="button"
           accessibilityLabel="Pause the Hunt"
           onPress={() => {
@@ -1443,10 +1558,9 @@ function GameDirector({ navigation }: { navigation: any }) {
           onGoldFlash={handleGoldFlash}
           onBossDecisionReady={handleBossDecisionReady}
           onSwipeAttempt={resetIdleTimer}
-          fireIntroVisit={introVisitPending}
-          onIntroVisitFired={() => setIntroVisitPending(false)}
           fireHauntIntroVisit={hauntIntroVisitPending}
           onHauntIntroVisitFired={() => setHauntIntroVisitPending(false)}
+          a11yHidden={hudLessonShowing}
         />
       ) : null}
       {__DEV__ && !isDone && !isBossRound && (
@@ -1493,15 +1607,19 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       <FXLayer ref={fxLayerRef} />
 
-      {introSeen === false && !isDone && (
-        <HuntIntroOverlay onDismiss={handleIntroDismiss} />
-      )}
+      <HudLessonLayer
+        lesson={hudLesson}
+        targets={hudTargets}
+        targetLabels={hudTargetLabels}
+        onComplete={completeHudLesson}
+        onShowingChange={setHudLessonShowing}
+      />
 
-      {introSeen === true && bossIntroSeen === false && isBossRound && (
+      {bossIntroSeen === false && isBossRound && (
         <BossIntroOverlay onDismiss={handleBossIntroDismiss} />
       )}
 
-      {introSeen === true && hauntIntroSeen === false && isHauntRound && (
+      {hauntIntroSeen === false && isHauntRound && (
         <HauntIntroOverlay onDismiss={handleHauntIntroDismiss} />
       )}
 
@@ -1531,23 +1649,26 @@ function GameContent({
   onGoldFlash,
   onBossDecisionReady,
   onSwipeAttempt,
-  fireIntroVisit,
-  onIntroVisitFired,
   fireHauntIntroVisit,
   onHauntIntroVisitFired,
+  a11yHidden,
 }: {
   spawnEffect: (type: 'shard' | 'trail', x: number, y: number) => void;
   onWrongSwipe: () => void;
   onGoldFlash: (event: ScreenFlashEvent) => void;
   onBossDecisionReady: () => void;
   onSwipeAttempt: () => void;
-  fireIntroVisit: boolean;
-  onIntroVisitFired: () => void;
   fireHauntIntroVisit: boolean;
   onHauntIntroVisitFired: () => void;
+  a11yHidden: boolean;
 }) {
   const game = useGameStore(s => s.game);
   const ghosts = useGameStore(s => s.ghosts);
+  const onboarding = useGameStore(s => s.onboarding);
+  const recordOnboardingDecision = useGameStore(s => s.recordOnboardingDecision);
+  const [onboardingVisitActive, setOnboardingVisitActive] = useState(false);
+  // `${runSeed}:${stepIndex}` of the board whose plate entrance has settled.
+  const [settledBoardKey, setSettledBoardKey] = useState<string | null>(null);
   const step = currentStep(game);
   const ghostRunsMissed = step.kind === 'word' && step.isHauntReturn
     ? ghosts.find(ghost => ghost.wordId === step.word.trim().toUpperCase())?.runsMissed ?? 0
@@ -1555,16 +1676,18 @@ function GameContent({
 
   // Visit layer lives HERE, above MaskBoard's per-word remount boundary
   // (key={stepIndex}) — word-completion beats must outlive the board.
-  const { visit, onVisitDone, firePollyEvent } = usePollyVisits(
+  const { visit, onVisitDone, firePollyEvent, dismissVisits } = usePollyVisits(
     step.kind === 'word' && step.eventType === 'speedRound',
     ghostRunsMissed,
   );
 
+  // A due HUD lesson owns the moment, and its own Polly line closes it. The
+  // wrong-call or one-heart reaction fired by the same swipe never shows: it
+  // is dropped here, not parked to replay once the lesson is over.
+  const hudLessonDue = resolveHudLesson(onboarding, game) !== null;
   useEffect(() => {
-    if (!fireIntroVisit) return;
-    firePollyEvent('huntIntro');
-    onIntroVisitFired();
-  }, [fireIntroVisit, firePollyEvent, onIntroVisitFired]);
+    if (hudLessonDue) dismissVisits();
+  }, [hudLessonDue, dismissVisits]);
 
   useEffect(() => {
     if (!fireHauntIntroVisit) return;
@@ -1577,8 +1700,21 @@ function GameContent({
     // the boss background/scrim there stay in lockstep.
     const isBossStep = step.eventType === 'bossWord';
     const Board = isBossStep ? BossBoard : MaskBoard;
+    const inputMode = isBossStep ? 'both' : resolveOnboardingInputMode(onboarding, game);
+    const boardPresentation = isBossStep
+      ? { showDecisionCard: true, swipeCueMode: 'both' as const }
+      : resolveOnboardingBoardPresentation(onboarding, game);
+    const onboardingCaption = isBossStep
+      ? null
+      : resolveOnboardingCaption(onboarding, game);
+    const activeOnboarding = onboarding.activeRun?.runSeed === game.runSeed &&
+      onboarding.activeRun.mode === game.onboardingMode;
+    const suppressReactivePolly = hudLessonDue || (activeOnboarding &&
+      (onboarding.activeRun?.phase !== 'complete' || onboardingVisitActive));
+    const boardPollyEvent = suppressReactivePolly ? (() => {}) : firePollyEvent;
+    const boardKey = `${game.runSeed}:${game.stepIndex}`;
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }} {...a11yHiddenProps(a11yHidden)}>
         <Board
           key={`board-${game.stepIndex}`}
           step={step}
@@ -1587,9 +1723,28 @@ function GameContent({
           onGoldFlash={onGoldFlash}
           onBossDecisionReady={onBossDecisionReady}
           onSwipeAttempt={onSwipeAttempt}
-          firePollyEvent={firePollyEvent}
+          inputMode={inputMode}
+          showDecisionCard={boardPresentation.showDecisionCard}
+          swipeCueMode={boardPresentation.swipeCueMode}
+          onboardingCaption={onboardingCaption}
+          onboardingCaptionReserve={isBossStep ? 0 : resolveOnboardingCaptionReserve(game)}
+          onEntranceSettled={recognitionOpensWithHold(onboarding, game)
+            ? () => setSettledBoardKey(boardKey)
+            : undefined}
+          onDecisionCommitted={({ maskId, direction, correct, responseMs }) => {
+            recordOnboardingDecision(maskId, direction, correct, responseMs);
+          }}
+          firePollyEvent={boardPollyEvent}
         />
-        <PollyHuntVisit visit={visit} onDone={onVisitDone} />
+        {!onboardingVisitActive && !hudLessonDue && (
+          <PollyHuntVisit visit={visit} onDone={onVisitDone} />
+        )}
+        {activeOnboarding && (
+          <FirstRunHuntOnboarding
+            onVisitActivityChange={setOnboardingVisitActive}
+            plateSettled={settledBoardKey === boardKey}
+          />
+        )}
       </View>
     );
   }

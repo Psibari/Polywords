@@ -28,7 +28,7 @@ import {
   setReturningHauntCueMusicExclusive,
 } from '../audio/MusicEngine';
 import { PW } from '../ui/pwTheme';
-import { libraryMaterial } from '../ui/pwMaterials';
+import { heroBookMaterial, libraryMaterial } from '../ui/pwMaterials';
 import { bossOutcomeAssets } from '../ui/bossOutcomeAssets';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import MasterySeal from './MasterySeal';
@@ -48,11 +48,19 @@ import {
 } from '../game/huntFeedbackPolicy';
 import {
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
+  applyBoardTopReserve,
   hasBoardVerticalOverflow,
   resolveActiveCueLayout,
   resolveActiveTileHeight,
   resolveBoardVerticalSpacing,
+  resolveHeroBookArtBottom,
 } from './tileTextLayout';
+import {
+  shouldRenderDecisionStack,
+  type HuntInputMode,
+  type HuntSwipeCueMode,
+  type OnboardingCaption,
+} from '../game/firstRunOnboarding';
 import { shouldReleaseOpeningDecision } from './boardDecisionReadiness';
 
 // ── Layout constants ──────────────────────────────────────────
@@ -86,6 +94,16 @@ const CARD_SNAP = Easing.bezier(0.16, 0.95, 0.22, 1.00);
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
+// Rest thresholds for the plate entrance, used only when a caller waits on
+// onEntranceSettled. The defaults (0.001) finish ~1.82 s in, a second after
+// the plate looks still. These finish 0.73-0.75 s in, 33-50 ms after it is
+// within 1 pt of rest, with a snap of at most 0.3 pt (simulated for friction
+// 5 / tension 60 from 375-430 pt at 60-120 Hz, 2026-09-28).
+const ENTRANCE_SETTLE_REST = {
+  restDisplacementThreshold: 0.3,
+  restSpeedThreshold: 20,
+} as const;
+
 const CHAIN_TIER_SFX_RATE: Record<ChainTier, number> = { 1: 1.0, 2: 1.08, 3: 1.16, 4: 1.24 };
 
 export type Props = {
@@ -95,6 +113,23 @@ export type Props = {
   onGoldFlash?: (event: ScreenFlashEvent) => void;
   onBossDecisionReady?: () => void;
   onSwipeAttempt?: () => void;
+  inputMode?: HuntInputMode;
+  showDecisionCard?: boolean;
+  swipeCueMode?: HuntSwipeCueMode;
+  // First-run instruction text, drawn in the band between the plate and the
+  // swipe-up cue so it never covers the plate or the live card.
+  onboardingCaption?: OnboardingCaption | null;
+  // Extra room above the deck for that band, constant for the whole word.
+  onboardingCaptionReserve?: number;
+  // Fires once per word when the plate's entrance has settled (the spring's
+  // completion, or at once when the entrance is skipped).
+  onEntranceSettled?: () => void;
+  onDecisionCommitted?: (decision: {
+    maskId: string;
+    direction: 'up' | 'right';
+    correct: boolean;
+    responseMs: number;
+  }) => void;
   // Owned by GameContent — the visit layer must outlive this board's
   // per-word remount (key={stepIndex}), or word-completion beats die mid-arc.
   firePollyEvent: (event: PollyEvent) => void;
@@ -456,7 +491,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 }
 
 
-function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, firePollyEvent, isBossStage }: BoardPresenterProps) {
+function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onboardingCaption = null, onboardingCaptionReserve = 0, onEntranceSettled, onDecisionCommitted, firePollyEvent, isBossStage }: BoardPresenterProps) {
   const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
@@ -488,6 +523,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const activeTopMaskIdRef = useRef<string | null>(null);
   const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const [gridViewportHeight, setGridViewportHeight] = useState(0);
+  // Container-relative edges of the onboarding caption band. The top is the
+  // bottom of the drawn book art, which hangs below the plate's layout box.
+  const [captionTopY, setCaptionTopY] = useState<number | null>(null);
+  const [gridViewportTopY, setGridViewportTopY] = useState<number | null>(null);
   const [gridContentHeight, setGridContentHeight] = useState(0);
   const cueLayoutIdentityRef = useRef('');
   const [cueTextMeasurements, setCueTextMeasurements] = useState({
@@ -528,6 +567,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const [wordZoneMeasured, setWordZoneMeasured] = useState(false);
 
   const prevTopIdRef = useRef<string | null>(null);
+  // Only recorded while the decision card is hidden (onboarding result
+  // beats): the judged card has left, so the stack can drop before the
+  // next card is promoted into it.
+  const [exitedHiddenTopId, setExitedHiddenTopId] = useState<string | null>(null);
   const cardPopCountRef = useRef(0);
 
   // Deck entrance animation (native: translateY / transform only)
@@ -1009,6 +1052,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const mechanics = useBoardMechanics({
     step,
     firePollyEvent,
+    externalInputLocked: inputMode === 'locked',
     perform: {
       onRealClaimed({ mask, tier }) {
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
@@ -1443,6 +1487,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
     if (isBoss || reduceMotion) {
       bookSlideX.setValue(0);
+      onEntranceSettled?.();
     } else {
       // Normal words keep the existing book entrance.
       Animated.spring(bookSlideX, {
@@ -1450,7 +1495,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         friction: 5,
         tension: 60,
         useNativeDriver: true,
-      }).start();
+        ...(onEntranceSettled ? ENTRANCE_SETTLE_REST : null),
+      }).start(onEntranceSettled ? () => onEntranceSettled() : undefined);
     }
 
     // Boss word rides the book cover — already visible & in position; drama fires on top
@@ -1651,6 +1697,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     (mechanics.gatePhase === 'wrongFail' && mechanics.gauntletTiles.length > 0);
   const showSwipeCues =
     showBoardContent &&
+    swipeCueMode !== 'none' &&
     mechanics.gatePhase !== 'tiles' &&
     mechanics.gatePhase !== 'wrongFail' &&
     mechanics.topMask !== null;
@@ -1668,10 +1715,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const ownedGridRegionHeight = showSwipeCues
     ? activeCueLayout.ownedRegionHeight
     : activeTileHeight + 48;
-  const boardSpacing = resolveBoardVerticalSpacing(
-    gridViewportHeight,
-    ownedGridRegionHeight,
-    0,
+  const boardSpacing = applyBoardTopReserve(
+    resolveBoardVerticalSpacing(gridViewportHeight, ownedGridRegionHeight, 0),
+    onboardingCaptionReserve,
   );
   const gridHasVerticalOverflow = hasBoardVerticalOverflow(
     gridViewportHeight,
@@ -1681,6 +1727,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     0,
     boardSpacing.gridPaddingTop - (showSwipeCues ? activeCueLayout.leadingCueRegionHeight : 0),
   );
+  const captionBandBottomInGrid = gridPaddingTop;
 
   return (
     <Animated.View
@@ -1716,9 +1763,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       <View
         style={[styles.wordZone, isBoss && styles.wordZoneBoss]}
         pointerEvents="none"
+        accessible
+        accessibilityRole="header"
+        accessibilityLabel={step.word}
         ref={wordZoneRef as any}
         onLayout={e => {
           const zoneHeight = e.nativeEvent.layout.height;
+          setCaptionTopY(
+            e.nativeEvent.layout.y + resolveHeroBookArtBottom(heroBookMaterial.bookHeight),
+          );
           (wordZoneRef.current as any)?.measure(
             (_x: number, _y: number, _w: number, _h: number, _px: number, pageY: number) => {
               setWordScreenY(pageY + zoneHeight / 2);
@@ -1803,6 +1856,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               // flash AND the mastered/haunted outcome color, so there is
               // nothing left to stack on top of it.
               <Animated.Text
+                accessible={false}
                 style={[styles.word, styles.wordBoss, { color: bossHeadwordColor }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -1816,6 +1870,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 second layer. */}
             {!isBoss && (
               <Animated.Text
+                accessible={false}
                 pointerEvents="none"
                 style={[
                   styles.word,
@@ -1843,6 +1898,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                 path even if that ever changed. */}
             {isHaunt && !isBoss && (
               <Animated.Text
+                accessible={false}
                 pointerEvents="none"
                 style={[
                   styles.word,
@@ -1927,14 +1983,17 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         removeClippedSubviews={false}
         overScrollMode="never"
         scrollEventThrottle={16}
+        accessibilityElementsHidden={inputMode === 'locked'}
+        importantForAccessibility={inputMode === 'locked' ? 'no-hide-descendants' : 'auto'}
         onLayout={event => {
           setGridViewportWidth(Math.ceil(event.nativeEvent.layout.width));
           setGridViewportHeight(Math.ceil(event.nativeEvent.layout.height));
+          setGridViewportTopY(event.nativeEvent.layout.y);
         }}
         onContentSizeChange={(_width, height) => setGridContentHeight(Math.ceil(height))}
       >
         <View style={[styles.tileStackArea, { minHeight: ownedGridRegionHeight }]}>
-          {showSwipeCues && (
+          {showSwipeCues && (swipeCueMode === 'both' || swipeCueMode === 'up') && (
             <Animated.View
               pointerEvents="none"
               style={[styles.swipeUpCueRegion, { opacity: cueOpacityAnim }]}
@@ -1948,7 +2007,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
               </Text>
             </Animated.View>
           )}
-          {showBoardContent && (
+          {showBoardContent && shouldRenderDecisionStack(
+            showDecisionCard,
+            mechanics.topMask
+              ? {
+                  judged: mechanics.topMaskState !== 'idle',
+                  exitFinished: exitedHiddenTopId === mechanics.topMask.id,
+                }
+              : null,
+          ) && (
           <Animated.View style={[styles.tileStack, { transform: [{ translateY: deckSlamY }] }]}>
             <Animated.View style={{ opacity: masterAllFadeAnim }}>
             {mechanics.gatePhase !== 'tiles' && mechanics.gatePhase !== 'wrongFail' && mechanics.topMask && (
@@ -2033,6 +2100,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                     onSwipeReveal={() => {}}
                     revealable={false}
                     disabled={mechanics.inputLocked}
+                    inputMode={inputMode}
+                    onDecisionCommitted={onDecisionCommitted}
                     tileHeight={TILE_H}
                     entryDelay={0}
                     skipEntryAnimation={
@@ -2042,6 +2111,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                     onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
                     onExitComplete={() => {
+                      if (!showDecisionCard) setExitedHiddenTopId(mechanics.topMask!.id);
                       mechanics.onTileExitComplete(mechanics.topMask!.id);
                     }}
                     onCardTouch={handleCardTouch}
@@ -2058,7 +2128,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           </Animated.View>
           )}
 
-          {showSwipeCues && (
+          {showSwipeCues && (swipeCueMode === 'both' || swipeCueMode === 'right') && (
             <Animated.View
               pointerEvents="none"
               style={[styles.swipeRightCueRegion, { opacity: cueOpacityAnim }]}
@@ -2075,6 +2145,29 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
         </View>
       </ScrollView>
+
+      {/* Band from the bottom of the book art to the top of the grid content
+          (the swipe-up cue, or the card when there is no cue). Absolute, so
+          the deck never moves when a caption comes or goes. */}
+      {onboardingCaption && captionTopY !== null && gridViewportTopY !== null && (
+        <View
+          pointerEvents="none"
+          accessible
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={onboardingCaption.accessibilityLabel}
+          style={[
+            styles.onboardingCaptionBand,
+            {
+              top: captionTopY,
+              height: Math.max(0, gridViewportTopY + captionBandBottomInGrid - captionTopY),
+            },
+          ]}
+        >
+          <Text style={[styles.swipeCueText, styles.onboardingCaption]}>
+            {onboardingCaption.text}
+          </Text>
+        </View>
+      )}
 
       {showGauntletCard && (
         <BossGauntletSpines
@@ -2517,6 +2610,20 @@ const styles = StyleSheet.create({
   swipeUpCue: {
     color: '#F5C842',
     opacity: 0.92,
+  },
+  onboardingCaptionBand: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 4,
+    elevation: 4,
+  },
+  onboardingCaption: {
+    color: '#F5C842',
+    fontSize: 20,
+    lineHeight: 24,
   },
   swipeRightCue: {
     width: 210,

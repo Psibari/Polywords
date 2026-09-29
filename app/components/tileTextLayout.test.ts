@@ -2,13 +2,18 @@ import {
   ACTIVE_TILE_BASE_FONT_SIZE,
   ACTIVE_TILE_MIN_FONT_SIZE,
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
+  activeTileTextWidth,
+  applyBoardTopReserve,
   hasBoardVerticalOverflow,
   releaseGauntletMeasuredHeight,
   resolveActiveTileHeight,
   resolveActiveTileLayoutPolicy,
+  resolveActiveTileCardWidth,
+  resolveActiveTileTextLayout,
   resolveActiveCueLayout,
   resolveBoardVerticalSpacing,
   resolveGauntletRowHeight,
+  resolveHeroBookArtBottom,
 } from './tileTextLayout';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -17,8 +22,43 @@ function eq<T>(actual: T, expected: T, label: string): void {
   }
 }
 
+function ok(condition: boolean, label: string): void {
+  if (!condition) throw new Error(label);
+}
+
 eq(ACTIVE_TILE_BASE_FONT_SIZE, 27, 'active tile base font size');
 eq(ACTIVE_TILE_MIN_FONT_SIZE, 22, 'active tile minimum font size');
+
+const observedLongClue = 'WHAT STEPH CURRY DOES WITH THREES FROM THE PARKING LOT';
+const smallestIPhoneCardWidth = resolveActiveTileCardWidth(375, false);
+eq(smallestIPhoneCardWidth, 290, 'normal card width stays unchanged on the smallest supported iPhone');
+const observedLongClueLayout = resolveActiveTileTextLayout(
+  observedLongClue,
+  smallestIPhoneCardWidth,
+);
+eq(observedLongClueLayout.fontSize, 24, 'observed long clue shrinks only enough to keep three lines');
+eq(observedLongClueLayout.lineHeight, 28, 'long clue line height follows its fitted font size');
+eq(observedLongClueLayout.lines.length, 3, 'observed long clue remains a three-line card');
+eq(observedLongClueLayout.lines[0], 'WHAT STEPH CURRY', 'observed clue first line');
+eq(observedLongClueLayout.lines[1], 'DOES WITH THREES', 'observed clue second line');
+eq(observedLongClueLayout.lines[2], 'FROM THE PARKING LOT', 'observed clue final line');
+eq(
+  Math.ceil(activeTileTextWidth(observedLongClueLayout.lines[2], observedLongClueLayout.fontSize)),
+  213,
+  'bundled-font metrics include the full final line width',
+);
+ok(
+  observedLongClueLayout.lines.every(
+    line => activeTileTextWidth(line, observedLongClueLayout.fontSize) <=
+      observedLongClueLayout.textRegionWidth,
+  ),
+  'every observed-clue line fits inside the supported card text region',
+);
+
+const shortClueLayout = resolveActiveTileTextLayout('PAY A FINE.', smallestIPhoneCardWidth);
+eq(shortClueLayout.fontSize, ACTIVE_TILE_BASE_FONT_SIZE, 'short clues keep the existing font size');
+eq(shortClueLayout.lines.length, 1, 'short clues keep their existing one-line layout');
+eq(shortClueLayout.lines[0], 'PAY A FINE.', 'short clue wording is unchanged');
 
 eq(
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS.android_hyphenationFrequency,
@@ -163,5 +203,14 @@ eq(hasBoardVerticalOverflow(500, Number.POSITIVE_INFINITY), false, 'invalid cont
 const invalidSpacing = resolveBoardVerticalSpacing(Number.NaN, 300, 176);
 eq(invalidSpacing.gridPaddingTop, 110, 'invalid viewport keeps default top spacing');
 eq(invalidSpacing.gridPaddingBottom, 48, 'invalid viewport keeps default bottom spacing');
+
+const reserved = applyBoardTopReserve({ gridPaddingTop: 90, gridPaddingBottom: 48 }, 36);
+eq(reserved.gridPaddingTop, 126, 'caption reserve adds to the room above the deck');
+eq(reserved.gridPaddingBottom, 12, 'caption reserve comes out of the room below the deck');
+const tightReserve = applyBoardTopReserve({ gridPaddingTop: 48, gridPaddingBottom: 20 }, 36);
+eq(tightReserve.gridPaddingBottom, 12, 'caption reserve never takes the bottom below its floor');
+const noReserve = { gridPaddingTop: 90, gridPaddingBottom: 48 };
+eq(applyBoardTopReserve(noReserve, 0), noReserve, 'boards without a caption keep their spacing');
+eq(resolveHeroBookArtBottom(210), 208, 'hero book art ends 208 pt below the plate top at bookHeight 210');
 
 console.log('tileTextLayout tests passed');

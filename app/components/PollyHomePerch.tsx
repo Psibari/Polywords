@@ -29,19 +29,37 @@ const GREETING_FADE_END_MS = 5160;
 // nodding off rather than two pictures dissolving into each other.
 const DOZE_TRANSITION_MS = 450;
 const DOZE_SETTLE_Y = 6;
+const FIRST_HOME_LINES = [
+  'Who are you?',
+  'What do you want?',
+  'You think you know words?',
+  'You don’t look ready.',
+] as const;
+const FIRST_HOME_LINE_MS = 1450;
 
 type DozeStage = 'awake' | 'dozing' | 'asleep';
 
 export default function PollyHomePerch() {
   const memory = useGameStore(s => s.pollyMemory);
   const rememberLine = useGameStore(s => s.rememberPollyLine);
+  const onboardingHome = useGameStore(s => s.onboarding.home);
+  const setOnboardingHomeStep = useGameStore(s => s.setOnboardingHomeStep);
+  const completeOnboardingHome = useGameStore(s => s.completeOnboardingHome);
+  const markOnboardingAbandoned = useGameStore(s => s.markOnboardingAbandoned);
   const isFocused = useIsFocused();
-  const isEntrance = !enteredThisSession;
+  const firstHomeBeat = !onboardingHome.completed;
+  const [wasFirstHomeBeat] = useState(firstHomeBeat);
+  const isEntrance = firstHomeBeat || !enteredThisSession;
   const [moment] = useState(() => resolveHomePollyMoment(memory));
+  const [firstHomeLineIndex, setFirstHomeLineIndex] = useState(() =>
+    Math.min(onboardingHome.step, FIRST_HOME_LINES.length - 1)
+  );
   // isEntrance flips false the instant the entrance effect below runs, so a
   // later re-render (e.g. the poseT settle) would see the wrong value —
   // freeze it once at mount, same as `moment`.
   const [wasEntrance] = useState(isEntrance);
+  const homeCompletedRef = useRef(onboardingHome.completed);
+  homeCompletedRef.current = onboardingHome.completed;
   const settledPose = memory.playerWinStreak > 0
     ? POLLY_POSES.sulk
     : memory.pollyWinStreak > 0
@@ -77,11 +95,17 @@ export default function PollyHomePerch() {
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
     usePollyAmbientMotion('home', isFocused);
 
+  useEffect(() => () => {
+    if (wasFirstHomeBeat && !homeCompletedRef.current) {
+      markOnboardingAbandoned('home');
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Entrance + one greeting (setTimeout between phases, per animation rules).
   useEffect(() => {
     if (!isEntrance || reduceMotion === null) return;
     enteredThisSession = true;
-    rememberLine(moment.lineId, 'home');
+    if (!wasFirstHomeBeat) rememberLine(moment.lineId, 'home');
 
     if (reduceMotion) {
       slideY.setValue(0);
@@ -92,16 +116,32 @@ export default function PollyHomePerch() {
       Animated.spring(slideY, { toValue: 0, friction: 7, tension: 60, useNativeDriver: true }).start();
     }
     const poseT = setTimeout(() => setPose(settledPose), reduceMotion ? 0 : 650);
+    const showDelay = reduceMotion ? 0 : 900;
     const showT = setTimeout(() => {
       Animated.timing(bubbleOpacity, { toValue: 1, duration: 220, useNativeDriver: true }).start();
-    }, 900);
+      if (wasFirstHomeBeat) setOnboardingHomeStep(firstHomeLineIndex);
+    }, showDelay);
+    const lineTimers: ReturnType<typeof setTimeout>[] = [];
+    if (wasFirstHomeBeat) {
+      for (let index = firstHomeLineIndex + 1; index < FIRST_HOME_LINES.length; index += 1) {
+        lineTimers.push(setTimeout(() => {
+          setFirstHomeLineIndex(index);
+          setOnboardingHomeStep(index);
+        }, showDelay + FIRST_HOME_LINE_MS * (index - firstHomeLineIndex)));
+      }
+    }
+    const hideDelay = wasFirstHomeBeat
+      ? showDelay + FIRST_HOME_LINE_MS * (FIRST_HOME_LINES.length - firstHomeLineIndex)
+      : 4900;
     const hideT = setTimeout(() => {
       Animated.timing(bubbleOpacity, { toValue: 0, duration: 260, useNativeDriver: true }).start();
-    }, 4900);
+      if (wasFirstHomeBeat) completeOnboardingHome();
+    }, hideDelay);
     return () => {
       clearTimeout(poseT);
       clearTimeout(showT);
       clearTimeout(hideT);
+      lineTimers.forEach(clearTimeout);
     };
     // This entrance is deliberately keyed only to the resolved accessibility
     // preference. Recording the line updates memory immediately; depending on
@@ -143,7 +183,11 @@ export default function PollyHomePerch() {
 
     const includeGreetingBaseline = wasEntrance && !usedGreetingBaseline.current;
     usedGreetingBaseline.current = true;
-    const dozeDelay = DOZE_DELAY_MS + (includeGreetingBaseline ? GREETING_FADE_END_MS : 0);
+    const firstHomeGreetingMs = (reduceMotion ? 0 : 900) +
+      FIRST_HOME_LINE_MS * FIRST_HOME_LINES.length + 260;
+    const dozeDelay = DOZE_DELAY_MS + (includeGreetingBaseline
+      ? wasFirstHomeBeat ? firstHomeGreetingMs : GREETING_FADE_END_MS
+      : 0);
 
     const dozeT = setTimeout(() => {
       if (reduceMotion) {
@@ -190,7 +234,7 @@ export default function PollyHomePerch() {
       dozeTransitionActive.current = false;
       dozeAnimation.current?.stop();
     };
-  }, [isFocused, reduceMotion, wasEntrance]);
+  }, [isFocused, reduceMotion, wasEntrance, wasFirstHomeBeat]);
 
   const isAsleep = dozeStage === 'asleep';
   const isDozing = dozeStage === 'dozing';
@@ -246,7 +290,7 @@ export default function PollyHomePerch() {
 
       {/* Greeting bubble — to her right, tail points left at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
-        <PollySpeechBubble line={moment.line} />
+        <PollySpeechBubble line={wasFirstHomeBeat ? FIRST_HOME_LINES[firstHomeLineIndex] : moment.line} />
       </Animated.View>
     </Animated.View>
   );

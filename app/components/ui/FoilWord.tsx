@@ -54,6 +54,7 @@ export function FoilWord({
           construction, independent of numberOfLines. */}
       <Text
         {...textProps}
+        accessible={false}
         pointerEvents="none"
         importantForAccessibility="no-hide-descendants"
         style={[baseStyle, styles.sizer]}
@@ -62,18 +63,21 @@ export function FoilWord({
       </Text>
       <Text
         {...textProps}
+        accessible={false}
         style={[baseStyle, styles.deboss, { transform: [{ translateY: debossY }] }]}
       >
         {word}
       </Text>
       <Text
         {...textProps}
+        accessible={false}
         style={[baseStyle, styles.catchLight, { transform: [{ translateY: catchLightY }] }]}
       >
         {word}
       </Text>
       <Text
         {...textProps}
+        accessible={false}
         style={[baseStyle, styles.fill, { textShadowRadius: edgeRadius }]}
       >
         {word}

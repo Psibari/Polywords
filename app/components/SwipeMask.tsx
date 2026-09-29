@@ -26,7 +26,13 @@ import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { heroBookMaterial } from '../ui/pwMaterials';
 import { ShardVariant } from '../ui/pwEffects';
-import { CLAIM_REJECT_ACTIONS, resolveTileAccessibilityAction } from './tileAccessibility';
+import {
+  huntActionsForInputMode,
+  isHuntDirectionAllowed,
+  resolveTileAccessibilityAction,
+  type HuntTileInputMode,
+} from './tileAccessibility';
+import { isHuntTileInteractive, shouldRestartDecisionClock } from './huntDecisionClock';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import {
@@ -37,8 +43,10 @@ import { recordPlaytestEvent, resolveHuntTelemetryPhase } from '../game/playtest
 import { useGameStore } from '../store/useGameStore';
 import {
   ACTIVE_TILE_BASE_FONT_SIZE,
+  resolveActiveTileCardWidth,
   resolveActiveTileHeight,
   resolveActiveTileLayoutPolicy,
+  resolveActiveTileTextLayout,
 } from './tileTextLayout';
 
 export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hidden' | 'revealed';
@@ -74,6 +82,13 @@ type Props = {
   onCardTouch?: () => void;
   onMeasuredHeightChange?: (maskId: string, height: number) => void;
   disabled?: boolean;
+  inputMode?: HuntTileInputMode;
+  onDecisionCommitted?: (decision: {
+    maskId: string;
+    direction: 'up' | 'right';
+    correct: boolean;
+    responseMs: number;
+  }) => void;
   wordY?: number;
   intakeY?: number;
   splitBorderColor?: string;
@@ -116,6 +131,8 @@ export function SwipeMask({
   onCardTouch,
   onMeasuredHeightChange,
   disabled = false,
+  inputMode = 'both',
+  onDecisionCommitted,
   wordY = 180,
   intakeY,
   splitBorderColor = '#FFD700',
@@ -123,9 +140,7 @@ export function SwipeMask({
   splitBackgroundColor,
 }: Props) {
   const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = gauntletCard
-    ? Math.min(screenWidth - 40, 300)
-    : Math.min(screenWidth - 80, 290);
+  const cardWidth = resolveActiveTileCardWidth(screenWidth, gauntletCard);
   const cardHeight = Math.min(
     Math.max(tileHeight, 96),
     gauntletCard ? 200 : bookMaterial ? 220 : 124,
@@ -137,6 +152,16 @@ export function SwipeMask({
     gauntletCard,
     tileHeight,
   });
+  const resolvedNormalTileTextLayout = !isSpecialSplit && !bookMaterial && !gauntletCard
+    ? resolveActiveTileTextLayout(mask.phrase, cardWidth)
+    : null;
+  // Base-size phrases keep the exact native wrapping they had before this
+  // fix. Only a phrase that actually needs fitting receives authored line
+  // breaks and a smaller font, keeping the guided FINE cards unchanged.
+  const fittedNormalTileTextLayout = resolvedNormalTileTextLayout?.fontSize ===
+    ACTIVE_TILE_BASE_FONT_SIZE
+    ? null
+    : resolvedNormalTileTextLayout;
   const reduceMotion = useReducedMotionPreference();
   const reduceFlashes = useReducedFlashesPreference();
 
@@ -179,6 +204,8 @@ export function SwipeMask({
   const onExitCompleteRef        = useRef(onExitComplete);
   const onMeasuredHeightChangeRef = useRef(onMeasuredHeightChange);
   const disabledRef              = useRef(disabled);
+  const inputModeRef             = useRef(inputMode);
+  const onDecisionCommittedRef   = useRef(onDecisionCommitted);
   const outerRef                 = useRef<any>(null);
   const absorbRafRef             = useRef<number | null>(null);
   const lastGestureVelocityRef   = useRef({ vx: 0, vy: 0 });
@@ -187,7 +214,8 @@ export function SwipeMask({
   // is a mount-time fallback; MaskBoard doesn't pass a promotion/landing
   // timestamp prop today, so this is the only "became interactive" moment
   // available per card.
-  const visibleAtRef              = useRef(Date.now());
+  const interactiveAtRef          = useRef(Date.now());
+  const wasInteractiveRef         = useRef(false);
   const grantAtRef                = useRef<number | null>(null);
   const ambiguousFiredRef         = useRef(false);
 
@@ -201,6 +229,17 @@ export function SwipeMask({
   const onCardTouchRef = useRef(onCardTouch);
   useEffect(() => { onCardTouchRef.current = onCardTouch; }, [onCardTouch]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
+  useEffect(() => { inputModeRef.current = inputMode; }, [inputMode]);
+  useEffect(() => { onDecisionCommittedRef.current = onDecisionCommitted; }, [onDecisionCommitted]);
+  useEffect(() => {
+    const interactive = isHuntTileInteractive(disabled, inputMode);
+    if (shouldRestartDecisionClock(wasInteractiveRef.current, interactive)) {
+      interactiveAtRef.current = Date.now();
+      grantAtRef.current = null;
+      ambiguousFiredRef.current = false;
+    }
+    wasInteractiveRef.current = interactive;
+  }, [disabled, inputMode]);
 
   // A SwipeMask is keyed by mask id in every live owner. Keep an explicit
   // identity reset as well so a future unkeyed owner cannot carry a long
@@ -239,10 +278,16 @@ export function SwipeMask({
       chosenDirection: direction,
       correct,
       ...(touchToCommitMs !== undefined ? { touchToCommitMs } : {}),
-      visibleToTouchMs: Date.now() - visibleAtRef.current,
+      visibleToTouchMs: Date.now() - interactiveAtRef.current,
       chainAfter: game.chainMultiplier,
       livesAfter: game.lives,
       precededByAmbiguous: ambiguousFiredRef.current,
+    });
+    onDecisionCommittedRef.current?.({
+      maskId: mask.id,
+      direction,
+      correct,
+      responseMs: Date.now() - interactiveAtRef.current,
     });
   }
 
@@ -640,6 +685,14 @@ export function SwipeMask({
         if (disabledRef.current || judgedRef.current) return;
 
         const direction = resolveHuntSwipeDirection(g.dx, g.dy);
+        if (direction && !isHuntDirectionAllowed(inputModeRef.current, direction)) {
+          translateX.value = withSpring(0, { damping: 14, stiffness: 300 });
+          translateY.value = withSpring(0, { damping: 14, stiffness: 300 });
+          grabLift.value = withSpring(0, { damping: 14, stiffness: 300 });
+          scale.value = withSpring(1.0, { damping: 14, stiffness: 300 });
+          rotation.value = withSpring(0, { damping: 14, stiffness: 300 });
+          return;
+        }
         if (direction === 'up') {
           judgedRef.current   = true;
           swipeDirRef.current = 'up';
@@ -696,11 +749,13 @@ export function SwipeMask({
     if (disabledRef.current || judgedRef.current) return;
     const action = resolveTileAccessibilityAction(actionName);
     if (action === 'claim') {
+      if (!isHuntDirectionAllowed(inputModeRef.current, 'up')) return;
       judgedRef.current   = true;
       swipeDirRef.current = 'up';
       onSwipeUpRef.current();
       recordHuntDecision('up');
     } else if (action === 'reject') {
+      if (!isHuntDirectionAllowed(inputModeRef.current, 'right')) return;
       judgedRef.current   = true;
       swipeDirRef.current = 'right';
       onSwipeDownRef.current();
@@ -805,11 +860,20 @@ export function SwipeMask({
             }
           }}
           {...panResponder.panHandlers}
-          accessible
+          accessible={!disabled}
           accessibilityRole="button"
           accessibilityLabel={mask.phrase}
-          accessibilityHint="Choose an action to claim as real or reject as a trap."
-          accessibilityActions={CLAIM_REJECT_ACTIONS}
+          accessibilityHint={
+            inputMode === 'up-only'
+              ? 'Swipe up to claim this meaning.'
+              : inputMode === 'right-only'
+              ? 'Swipe right to reject this trap.'
+              : 'Choose an action to claim as real or reject as a trap.'
+          }
+          accessibilityState={{ disabled }}
+          accessibilityElementsHidden={disabled}
+          importantForAccessibility={disabled ? 'no-hide-descendants' : 'yes'}
+          accessibilityActions={huntActionsForInputMode(disabled ? 'locked' : inputMode)}
           onAccessibilityAction={(event) => handleAccessibilityAction(event.nativeEvent.actionName)}
         >
           {/* Approved neutral card art. Outcome feedback appears only after commitment. */}
@@ -876,10 +940,18 @@ export function SwipeMask({
               style={[
                 isSpecialSplit ? styles.splitPhrase : styles.phrase,
                 isSpecialSplit && { color: splitTextColor },
+                fittedNormalTileTextLayout && {
+                  alignSelf: 'center',
+                  width: fittedNormalTileTextLayout.textRegionWidth,
+                  fontSize: fittedNormalTileTextLayout.fontSize,
+                  lineHeight: fittedNormalTileTextLayout.lineHeight,
+                },
               ]}
               {...activeTileLayoutPolicy.textProps}
             >
-              {mask.phrase}
+              {fittedNormalTileTextLayout
+                ? fittedNormalTileTextLayout.lines.join('\n')
+                : mask.phrase}
             </Text>
           </View>
           {/* Era badge */}

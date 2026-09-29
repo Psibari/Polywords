@@ -1,6 +1,7 @@
 import { EmotionalRole, HiddenPair, HuntPerformance, SessionStep, WordStep } from './types';
 import rawHuntData from '../../assets/data/huntData.json';
 import { createSeededRng } from './seededRandom';
+import { FIRST_RUN_FINE_MASK_IDS } from './firstRunOnboarding';
 
 type HuntWordData = {
   difficulty: string;
@@ -145,18 +146,26 @@ const VISIBLE_MASK_CAP = 5;
 function selectVisibleMasks(
   masks: HuntWordData['masks'],
   rng: () => number,
+  requiredMaskIds: readonly string[] = [],
 ): HuntWordData['masks'] {
-  if (masks.length <= VISIBLE_MASK_CAP) return masks;
+  if (masks.length <= VISIBLE_MASK_CAP && requiredMaskIds.length === 0) return masks;
 
-  const reals = shuffle(masks.filter(m => m.isReal), rng);
-  const traps = shuffle(masks.filter(m => !m.isReal), rng);
+  const required = requiredMaskIds.map(id => {
+    const mask = masks.find(candidate => candidate.id === id);
+    if (!mask) throw new Error(`[huntGenerator] Required mask ${id} is missing`);
+    return mask;
+  });
+  const requiredSet = new Set(requiredMaskIds);
+
+  const reals = shuffle(masks.filter(m => m.isReal && !requiredSet.has(m.id)), rng);
+  const traps = shuffle(masks.filter(m => !m.isReal && !requiredSet.has(m.id)), rng);
 
   // Guarantee both swipe directions stay live on every word.
-  const picked: HuntWordData['masks'] = [];
-  if (reals.length) picked.push(reals[0]);
-  if (traps.length) picked.push(traps[0]);
+  const picked: HuntWordData['masks'] = [...required];
+  if (!picked.some(mask => mask.isReal) && reals.length) picked.push(reals.shift()!);
+  if (!picked.some(mask => !mask.isReal) && traps.length) picked.push(traps.shift()!);
 
-  const rest = shuffle([...reals.slice(1), ...traps.slice(1)], rng);
+  const rest = shuffle([...reals, ...traps], rng);
   while (picked.length < VISIBLE_MASK_CAP && rest.length) {
     picked.push(rest.shift()!);
   }
@@ -172,6 +181,7 @@ function buildWordStep(
   isMasteryRematch: boolean,
   isMasteredReturn: boolean,
   rng: () => number,
+  requiredMaskIds: readonly string[] = [],
 ): WordStep {
   const data = db[word];
   const step: WordStep = {
@@ -183,7 +193,7 @@ function buildWordStep(
     hapticTier,
     tileStagger: isBoss ? 120 : 80,
     meanings: [],
-    masks: selectVisibleMasks(data.masks, rng),
+    masks: selectVisibleMasks(data.masks, rng, requiredMaskIds),
   };
   if (isBoss) step.bossModifier = true;
   if (isMasteryRematch) step.isMasteryRematch = true;
@@ -204,6 +214,7 @@ export function generateHunt(opts: {
   gentle?: boolean;
   recentHuntPerformance?: HuntPerformance[];
   seed?: number;
+  firstRunOnboarding?: boolean;
 }): SessionStep[] {
   const {
     masteredWords = [],
@@ -213,10 +224,12 @@ export function generateHunt(opts: {
     gentle = false,
     recentHuntPerformance = [],
     seed = Date.now(),
+    firstRunOnboarding = false,
   } = opts;
   const mastered = new Set(masteredWords.map(w => w.toUpperCase()));
   const recentSet = new Set(recentWordIds.map(w => w.toUpperCase()));
   const selected = new Set<string>();
+  if (firstRunOnboarding) selected.add('FINE');
   const rng = createSeededRng(seed);
 
   const plan = buildPhasePlan(length);
@@ -353,7 +366,12 @@ export function generateHunt(opts: {
     isMasteredReturn?: true;
   }[] = [];
   for (let i = 0; i < length; i++) {
-    if (i === bossIdx) {
+    if (i === 0 && firstRunOnboarding) {
+      slots.push({
+        word: 'FINE',
+        ...(mastered.has('FINE') ? { isMasteredReturn: true as const } : {}),
+      });
+    } else if (i === bossIdx) {
       slots.push({ word: bossWord });
     } else if (i === hauntIdx && ghostWord) {
       slots.push({ word: ghostWord, isHauntReturn: true });
@@ -376,6 +394,7 @@ export function generateHunt(opts: {
       false,
       !!isMasteredReturn,
       rng,
+      idx === 0 && firstRunOnboarding ? FIRST_RUN_FINE_MASK_IDS : [],
     ),
   );
 }

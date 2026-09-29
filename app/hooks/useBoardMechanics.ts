@@ -114,6 +114,7 @@ export type UseBoardMechanicsParams = {
   step: WordStep;
   firePollyEvent: (event: PollyEvent) => void;
   perform: BoardMechanicsPerform;
+  externalInputLocked?: boolean;
 };
 
 // Shared headless brain for MaskBoard/BossBoard: owns tile/deck/gauntlet/outcome
@@ -122,7 +123,12 @@ export type UseBoardMechanicsParams = {
 // MaskBoard remounts per word (keyed board-${stepIndex} by GameContent), so
 // all state below is fresh on every word via plain useState/useRef
 // initializers — there is no reset() to call.
-export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMechanicsParams) {
+export function useBoardMechanics({
+  step,
+  firePollyEvent,
+  perform,
+  externalInputLocked = false,
+}: UseBoardMechanicsParams) {
   // Scoped selectors, not a bare useGameStore() — this hook drives the
   // hottest render path in the app (every swipe), so a whole-store
   // subscription here re-rendered on completely unrelated state (daily
@@ -176,6 +182,10 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const tileIndexInWordRef           = useRef(initialResolvedMaskCount);
   const resolutionClockRef           = useRef<{ startedAt: number; targetMs: number } | null>(null);
   const readyTimerRef                = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const presentationReadyRef         = useRef(false);
+  const decisionReleasedRef          = useRef(false);
+  const externalInputLockedRef       = useRef(externalInputLocked);
+  externalInputLockedRef.current = externalInputLocked;
 
   const ghost = runStartGhostWordIds.includes(step.word)
     ? ghosts.find((g: GhostMeaning) => g.wordId === step.word) ?? null
@@ -244,7 +254,7 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   const outcomeActiveRef   = useRef(false);
   const [decisionLocked, setDecisionLocked] = useState(true);
 
-  const inputLocked = wordOutcome !== 'none' || decisionLocked;
+  const inputLocked = wordOutcome !== 'none' || decisionLocked || externalInputLocked;
 
   // ── hesitation timers ─────────────────────────────────────────
   const hes1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -279,6 +289,8 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
   }
 
   function onDecisionReady() {
+    presentationReadyRef.current = true;
+    if (externalInputLockedRef.current || decisionReleasedRef.current) return;
     // Resuming directly into an already-decided boss outcome (app was
     // killed/backgrounded between the live gauntlet judgment and the
     // outcome card showing) — replay the same presentation callbacks a live
@@ -342,9 +354,14 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     }
     if (completedRef.current || outcomeActiveRef.current) return;
     gapLockedRef.current = false;
+    decisionReleasedRef.current = true;
     setDecisionLocked(false);
     startHesitationTimers();
   }
+
+  useEffect(() => {
+    if (!externalInputLocked && presentationReadyRef.current) onDecisionReady();
+  }, [externalInputLocked]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
@@ -615,6 +632,8 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     if (wordOutcome !== 'none') return;
     if (gapLockedRef.current) return;
     setDecisionLocked(true);
+    presentationReadyRef.current = false;
+    decisionReleasedRef.current = false;
     pauseHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (mask.isReal) {
@@ -656,6 +675,8 @@ export function useBoardMechanics({ step, firePollyEvent, perform }: UseBoardMec
     if (wordOutcome !== 'none') return;
     if (gapLockedRef.current) return;
     setDecisionLocked(true);
+    presentationReadyRef.current = false;
+    decisionReleasedRef.current = false;
     pauseHesitation();
     const mask = step.masks.find(m => m.id === maskId)!;
     if (!mask.isReal) {
