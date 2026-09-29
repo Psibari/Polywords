@@ -20,6 +20,8 @@ const EXCLUDED_DIRECTORY_NAMES = new Set([
   '__tests__',
 ]);
 
+// Comparison rules take a positive integer (0*[1-9]\d*), never 0: a comparison
+// with zero is an empty/non-empty guard, not a word cap.
 const CAP_PATTERNS = [
   {
     rule: 'numeric max-words constant',
@@ -27,19 +29,19 @@ const CAP_PATTERNS = [
   },
   {
     rule: 'wordCount numeric comparison',
-    pattern: /\bwordCount\s*(?:>=|>|<=|<|===?|!==?)\s*\d+\b|\b\d+\s*(?:>=|>|<=|<|===?|!==?)\s*wordCount\b/i,
+    pattern: /\bwordCount\s*(?:>=|>|<=|<|===?|!==?)\s*0*[1-9]\d*\b|\b0*[1-9]\d*\s*(?:>=|>|<=|<|===?|!==?)\s*wordCount\b/i,
   },
   {
     rule: 'words.length numeric comparison',
-    pattern: /(?:^|[^A-Za-z0-9_])words\s*\.\s*length\s*(?:>=|>|<=|<|===?|!==?)\s*\d+\b|\b\d+\s*(?:>=|>|<=|<|===?|!==?)\s*words\s*\.\s*length\b/i,
+    pattern: /(?:^|[^A-Za-z0-9_])words\s*\.\s*length\s*(?:>=|>|<=|<|===?|!==?)\s*0*[1-9]\d*\b|\b0*[1-9]\d*\s*(?:>=|>|<=|<|===?|!==?)\s*words\s*\.\s*length\b/i,
   },
   {
     rule: 'countWords numeric comparison',
-    pattern: /\bcountWords\([^()\r\n]*\)\s*(?:>=|>|<=|<|===?|!==?)\s*\d+\b|\b\d+\s*(?:>=|>|<=|<|===?|!==?)\s*countWords\([^()\r\n]*\)/i,
+    pattern: /\bcountWords\([^()\r\n]*\)\s*(?:>=|>|<=|<|===?|!==?)\s*0*[1-9]\d*\b|\b0*[1-9]\d*\s*(?:>=|>|<=|<|===?|!==?)\s*countWords\([^()\r\n]*\)/i,
   },
   {
     rule: 'split word-count numeric comparison',
-    pattern: /\.split\([^\r\n]*?\)\.length\s*(?:>=|>|<=|<|===?|!==?)\s*\d+\b/i,
+    pattern: /\.split\([^\r\n]*?\)\.length\s*(?:>=|>|<=|<|===?|!==?)\s*0*[1-9]\d*\b/i,
   },
   {
     rule: 'absolute prose word limit',
