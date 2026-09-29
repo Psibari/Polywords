@@ -404,6 +404,12 @@ export function useBoardMechanics({
     const tileIds = gauntletTiles.map(t => t.mask.id);
     if (!isGauntletTilePickable(tileIds, finalTileStates, index)) return;
     setDecisionLocked(true);
+    // A pick is a new decision, like a swipe: re-arm the one-release guard so
+    // the tile's landing (onGauntletTileLanded → onDecisionReady) can unlock
+    // it. Without this the guard was still set from the gauntlet's opening
+    // release and the opened card never took a swipe.
+    presentationReadyRef.current = false;
+    decisionReleasedRef.current = false;
     dropGauntletTile(index);
   }
 
