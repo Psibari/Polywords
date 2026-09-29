@@ -43,12 +43,70 @@ measured player data.
 | Wrong choice | 0 |
 
 The chain starts at 1×, rises by 0.5× every three consecutive correct choices, caps at 3×,
-and resets on error.
+and resets on error. Correct REAL claims and correct trap rejections both build it.
+
+| Consecutive correct | Multiplier | HUD tier |
+| --- | --- | --- |
+| 0–2 | 1.0× | STEADY |
+| 3–5 | 1.5× | SHARP |
+| 6–8 | 2.0× | RAZOR SHARP |
+| 9–11 | 2.5× | UNTRAPPABLE |
+| 12+ | 3.0× (cap) | UNTRAPPABLE |
 
 Score is still calculated in `polyRunEngine.ts` and persisted, but it is displayed nowhere:
 the Hunt HUD shows live status and Results shows an outcome label, not a number or rank. The
 live status is a 4-tier momentum system (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE) with its own
 break state (FELL OFF); see CLAUDE.md's Hunt section for the current, detailed version.
+
+## First-Run Onboarding
+
+Locked (Pete, device-approved 2026-09-28). Architecture: `CLAUDE.md`, Modes → First-run
+onboarding. Everything below runs on the real Hunt board with real scoring; there is no
+practice board and no HUD tour.
+
+**Home (first launch only).** Polly arrives on her usual perch, with no blocking modal, and
+says in turn: "Who are you?", "What do you want?", "You think you know words?", "You don’t look
+ready." HUNT then gets one subtle glow.
+
+**FINE recognition.** The first Hunt opens on FINE, which stands alone for a moment. The
+examples then build up one line at a time, and none of them is removed:
+
+> I'M FINE. / PAY A FINE. / FINE DINING. / READ THE FINE PRINT.
+
+All four stay on screen together before the next line: SAME WORD. FOUR DIFFERENT THINGS. /
+YOUR BRAIN SWITCHES BETWEEN THEM WITHOUT YOU EVEN NOTICING. / THAT’S POLYWORDS. / YOU ALREADY
+KNOW THE MEANINGS. NOW YOU HAVE TO RECOGNIZE THEM.
+
+**The challenge.** Polly: "Think you know this word?" Then: POLLY MIXES REAL MEANINGS WITH
+CONVINCING TRAPS. SHE’S TRYING TO MAKE YOU SECOND-GUESS WHAT YOU ALREADY KNOW. Polly: "Let’s see
+how sure you are."
+
+**Guided decisions.** A real FINE REAL accepts only UP (caption BELONGS TO FINE?); a real FINE
+trap accepts only RIGHT (caption DOESN’T BELONG?). Neither shows its truth before the swipe.
+Each result is labelled after commitment (REAL MEANING, then TRAP) and Polly answers it ("That
+one was easy.", "Almost sounded right."). The first unaided decision opens both directions
+with a temporary helper (↑ CLAIM A MEANING → REJECT A TRAP) until the first correct unaided call.
+
+**HUD lessons.** Each lesson fires once, the first time the player actually meets the event.
+The event plays out first; then the next decision locks, the screen dims around the live HUD
+element, an arrow points at it, the rule shows until the player taps, and Polly adds one line.
+
+| Lesson | Fires on | Rule | Polly |
+| --- | --- | --- | --- |
+| Feathers | first nonfatal feather lost on an ordinary word | THESE ARE YOUR FEATHERS. / THEY’RE YOUR LIVES. / WRONG CALLS COST ONE. / LOSE THEM ALL, AND POLLY WINS THE HUNT. | "And you lost to a bird." |
+| Run | first time the multiplier reaches 1.5× | YOU’RE ON A RUN. / CONSECUTIVE CORRECT CALLS BOOST YOUR SCORE. / KEEP IT GOING TO REACH 3×. | "Try not to ruin it." |
+| Run broken | first FELL OFF after the Run lesson | WRONG CALLS BREAK YOUR RUN. | "There it is." |
+| Hunt progress | FINE completed, round markers advanced | ONE WORD DOWN. / EACH MARKER IS ANOTHER WORD IN THE HUNT. / REACH THE CROWN TO FACE POLLY’S WORD. | "Assuming you make it that far." |
+
+- The guided REAL, guided TRAP and a correct unaided call are three in a row, so the Run lesson
+  usually lands on the first unaided FINE decision.
+- The Hunt progress lesson is the hand-off from FINE: the next word's card stays hidden and
+  locked until it ends.
+- Only one lesson shows at a time. None appears on Polly's Word, a Returning Haunt, a fatal
+  swipe or Results.
+- Reduce Motion keeps every line and the tap to continue.
+- First Hunt Replay (Settings) replays only the FINE opening on the next new Hunt. Players who
+  finished onboarding before HUD lessons existed are not shown them.
 
 ## Gold Feather and Results
 
@@ -76,5 +134,7 @@ from `WRONG_HECKLE_LINES`, a pool `resolveVisit` now picks from on each wrong sw
 - Screen/presentation: `app/screens/GameScreen.tsx`, `app/components/MaskBoard.tsx`
 - Gestures: `app/components/SwipeMask.tsx`
 - Rules/arc: `app/game/polyRunEngine.ts`, `app/game/huntGenerator.ts`
+- Onboarding: `app/game/firstRunOnboarding.ts`, `app/game/hudLessons.ts`,
+  `app/components/FirstRunHuntOnboarding.tsx`, `app/components/HudLessonLayer.tsx`
 - State: `app/store/useGameStore.ts`
 - Results/Vault: `app/screens/ResultsScreen.tsx`, `app/screens/VaultScreen.tsx`

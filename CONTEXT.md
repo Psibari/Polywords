@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-09-26. Current state and open work only; `CLAUDE.md` holds architecture and Git
+Updated 2026-09-28. Current state and open work only; `CLAUDE.md` holds architecture and Git
 history is the diary. Verify anything here against code before acting on it.
 
 ## Branches
@@ -9,6 +9,7 @@ history is the diary. Verify anything here against code before acting on it.
 | --- | --- |
 | `play-screen-overhaul` | The main working branch for the whole game. The castle Daily merged in from `daily-castle-test` through PR Psibari/Polywords#13 (Pete approved, 2026-09-27). |
 | `daily-castle-test` | Finished: it rebuilt the Daily Challenge as the castle and was merged into `play-screen-overhaul` (PR Psibari/Polywords#13, 2026-09-27). Do not work on it. |
+| `onboarding-wip` | Finished: first-run onboarding and HUD lessons (`528635a`), merged into `play-screen-overhaul` at `af72a0e` with Pete's approval (2026-09-28). Do not work on it. |
 | `main` | Stale and untouched. Never merge into it without Pete's approval. |
 
 Nothing merges into `play-screen-overhaul` without Pete's approval.
@@ -30,6 +31,24 @@ branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24
   before Results; Polly on the left tower with her bubble on the steps. Pete, on device: coins,
   bubble and layout "looking better". Not yet confirmed on device: the gold coin's chime,
   haptic, pause and glow strength. Spec: `docs/DAILY_CHALLENGE_SPEC.md`.
+- **First-run onboarding** (merged 2026-09-28, `af72a0e`; device-approved and LOCKED by Pete).
+  It shipped:
+  - Polly's first-ever Home lines, then a HUNT glow.
+  - The cumulative FINE recognition stack and the premise lines.
+  - Guided REAL (UP only) and guided TRAP (RIGHT only) on the real board with real scoring,
+    then the first unaided decision with a helper.
+  - Event-driven HUD lessons in one shared spotlight: feathers on the first real nonfatal loss,
+    the run at the first 1.5×, a short streak-break reinforcement at the first FELL OFF, and
+    Hunt progress in the FINE hand-off. Each is tap-to-continue with one Polly reply.
+  - Safeguards:
+    - Lesson flags only move forward, stored outside `activeRun`, with no version bump.
+    - Resume never replays a decision, and the hand-off can't reappear.
+    - The real input lock is used, and lesson hold time is excluded from timing.
+    - Idle music is paused, and the board is hidden from screen readers.
+    - Reduce Motion keeps every line.
+
+  The old automatic feather beat at the end of FINE ("I’m counting.") is retired. Rules and
+  copy: `docs/GAME_REFERENCE.md`; architecture: `CLAUDE.md`.
 - **Hunt momentum** (STEADY → SHARP → RAZOR SHARP → UNTRAPPABLE, FELL OFF, music that climbs
   with it) is device-confirmed on TestFlight #3–4 (2026-09-12). The level-up/FELL OFF cues
   still borrow the wrong-swipe SFX by design.
@@ -109,7 +128,8 @@ Whole game:
     `tone='loss'` bubble is unused; `ONE_FEATHER_POSE` is typed `Record<string, …>`.
 15. Polybook writing: more today's entries per rivalry state (CONCEDING and MERCY thinnest),
     the payoff entry, the player-name arc, and recording the first played date.
-16. Settings' Tutorial Replay alert undersells what it resets (four overlays).
+16. Done (2026-09-28): Settings' First Hunt Replay now queues only the FINE opening, and its
+    alert says exactly that; it no longer resets the Boss, Haunt or Vault overlays.
 17. External TestFlight needs a hosted privacy policy and a support contact.
 
 ## Protection

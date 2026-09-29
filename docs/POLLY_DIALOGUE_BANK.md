@@ -1,8 +1,16 @@
 # POLYWORDS Polly Voice
 
 `app/game/pollyCharacter.ts` is the active line catalog. This file governs new copy.
+Onboarding lines live beside their beats instead: Home in `PollyHomePerch.tsx`, the FINE
+opening in `FirstRunHuntOnboarding.tsx`, HUD lesson replies in `app/game/hudLessons.ts`.
 
 ## Voice
+
+The words are the game; Polly is the pressure. She mixes convincing traps among the real
+meanings, betting she can make the player doubt a word they already know. The fantasy is
+beating her at that. POLYWORDS explains mechanics in plain system text; Polly then adds one
+short, antagonistic jab after the moment lands. She adds rivalry and humor and stays present,
+but she never explains a rule and never outweighs the word in front of the player.
 
 Polly is a smug trickster and trap-setter, never a friendly mascot or word owner. She is NOT
 a word thief — she authored the traps; she is the designer of the deception, not a burglar
@@ -39,6 +47,14 @@ that register.
 ## Surfaces
 
 - Hunt visits obey `usePollyVisits`; Home greets once and settles.
+- First-ever Home: "Who are you?", "What do you want?", "You think you know words?", "You don’t
+  look ready."
+- First Hunt: FINE challenge ("Think you know this word?", "Let’s see how sure you are.") and
+  guided results ("That one was easy.", "Almost sounded right.").
+- HUD lessons: one reply after the player taps past the rule, never over it: "And you lost to
+  a bird." (feathers), "Try not to ruin it." (run), "There it is." (run broken), "Assuming you
+  make it that far." (Hunt progress). Reactive Hunt visits are held off while a lesson owns
+  the screen.
 - Results may acknowledge outcomes without praising or humiliating the player.
 - Daily uses only approved lost-Chance/win/loss lines.
 - Ghost copy frames unfinished business, not punishment.

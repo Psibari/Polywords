@@ -11,7 +11,7 @@ data outrank every doc; verify before you rely on a line here.
 
 | Area | Owner |
 | --- | --- |
-| Hunt rules, scoring, results | `docs/GAME_REFERENCE.md` |
+| Hunt rules, scoring, results, first-run onboarding | `docs/GAME_REFERENCE.md` |
 | Hunt pacing | `docs/GOLDEN_PACING_SYSTEM.md` |
 | Hunt editorial law | `docs/CONTENT_WRITING_STANDARD.md` |
 | Daily gameplay, castle sequence | `docs/DAILY_CHALLENGE_SPEC.md` |
@@ -75,12 +75,75 @@ Daily play are nav-free.
   or Haunt. `isMasteryRematch` is legacy only.
 - Scoring (`polyRunEngine.ts`) is computed and stored but shown nowhere; rank is retired
   (`ranks.ts` is imported by nothing). Dead: `addBonusScore()` has no caller,
-  `FEATHER_MILESTONES`/`consumeFeatherMilestone()` are read by nothing, and no content carries
-  `isRare`.
+  `FEATHER_MILESTONES`/`consumeFeatherMilestone()` are read by nothing, `streakMilestone`
+  (3/5/7) is written but read by nothing (`consumeMilestone()` has no caller), and no content
+  carries `isRare`.
 - Momentum: four tiers on `chainMultiplier` — STEADY 1.0×, SHARP 1.5×, RAZOR SHARP 2.0×,
   UNTRAPPABLE 2.5×+ (cap 3.0×). The HUD label (`resolveReadTier`), swipe SFX pitch
   (`CHAIN_TIER_SFX_RATE`) and music rate/volume (`HUNT_MOMENTUM_RATE`) share those
   boundaries. A broken chain flashes FELL OFF (`fellOffSeverity`) before STEADY.
+
+### First-run onboarding (LOCKED, Pete, device-approved 2026-09-28)
+
+Player-facing flow and copy: `docs/GAME_REFERENCE.md`. Merged into `play-screen-overhaul` at
+`af72a0e`.
+
+- One versioned state, `FirstRunOnboardingState` (`firstRunOnboarding.ts`), saved under
+  `ONBOARDING_STATE_KEY` at `ONBOARDING_VERSION` 1. A version mismatch hydrates to defaults,
+  which would re-run onboarding for every player, so new fields get hydrate-time defaults and
+  the version stays put. `INTRO_SEEN_KEY` is only a migration source for the retired intro;
+  `HuntIntroOverlay.tsx` is imported by nothing.
+- Home: the first-ever Home plays Polly's four lines through `PollyHomePerch` (no modal), then
+  `HomeScreen` glows HUNT once.
+- The first Hunt (`coreCompleted` false) is 8 gentle rounds opening on FINE with pinned masks
+  (`FIRST_RUN_FINE_MASK_IDS`: guided REAL, guided TRAP, first unaided). It is the real mounted
+  board with real scoring and feedback; `FirstRunHuntOnboarding.tsx` only presents. Phases live
+  on `activeRun`: recognition, challenge, guided-real(-result), guided-trap(-result), unaided,
+  complete.
+- The active Hunt is authoritative. `reconcileOnboardingRun` (every game change, and resume)
+  only moves the phase forward from committed swipes and `stepIndex`, so resume never replays a
+  scored decision. `finishedRunSeed` stops it rebuilding a closed run (the Hunt keeps
+  `onboardingMode` for life); without it the hand-off came back on the next swipe (`46ffc6d`).
+- Direction limits come from `resolveOnboardingInputMode` (`up-only`, `right-only`, `locked`)
+  through MaskBoard's `inputMode` → `externalInputLocked` → SwipeMask `disabled`. A locked board
+  hides its cards from screen readers and offers no actions.
+- First Hunt Replay (Settings, `replayRequested`) re-runs only the FINE opening on the next new
+  Hunt. It never resets the Boss, Haunt or Vault gates, or the HUD lessons.
+
+HUD lessons teach a HUD element the first time the player lives the event behind it. There is
+no HUD tour, and the old automatic feather beat at the end of FINE is retired.
+
+- `resolveHudLesson` returns one lesson or null, priority multiplier → feather → streakBreak →
+  progress; never on a Boss or Returning Haunt word, never once the Hunt is over.
+  `resolveOnboardingInputMode` returns `locked` whenever it is non-null, so the lock lands in
+  the same render as the triggering swipe. Never lock through `gameplayGateActive`: it
+  unmounts `GameContent`.
+- State is `hudLessons` on the onboarding state, not on `activeRun` (cleared at hand-off): four
+  flags that only go false → true, set when a lesson fully finishes (Polly included), plus
+  `featherPendingRunSeed`/`streakBreakPendingRunSeed`. Saves without `hudLessons` hydrate as
+  all done when core onboarding is complete, so established players are never tutorialized.
+- Feather and streak break are events: `fellOffSeverity` is cleared by the HUD within about
+  0.4 s. `captureHudLessonEvents` records them in the store's decision actions with both Hunt
+  states. A loss is a new mistake on the same word, which counts Mercy (lives rise in the same
+  update) and excludes fatal losses. Multiplier and progress are derived from saved state.
+  `streakMilestone` is not a trigger.
+- The progress lesson is the FINE hand-off: `completeHudLesson('progress')` closes the run, so
+  word 2's card stays hidden and locked until it ends. A resume inside the hand-off keeps it
+  open for an untaught lesson; a run that already has it (a Replay) gets the short ONE WORD
+  DOWN banner.
+- `HudLessonLayer.tsx` is the one spotlight, in `GameDirector` at zIndex 300 (above the pause
+  button, below BossIntro and ExitConfirm). It waits the lesson's `settleMs`, measures the live
+  target and itself with `measureInWindow`, draws four scrim rects, a ring and an arrow
+  (`resolveHudSpotlightGeometry` in `hudLessons.ts`), waits for a tap (armed after 450 ms),
+  then plays Polly's line, then records the lesson. Targets are refs `GameDirector` passes to
+  `TopBar`: the feather row, a plain wrapper around the streak control (the control itself
+  pulses and shakes), and the RoundChips row, all `collapsable={false}`. If measuring fails 12
+  times the panel shows over a full scrim so the Hunt never stays locked.
+- While a lesson is due: reactive Polly visits are suppressed and dropped (`dismissVisits`),
+  the 15 s idle/static music timer is paused, and the response clock restarts when the card
+  unlocks (`huntDecisionClock.ts`), so hold time never counts. iOS gets
+  `accessibilityViewIsModal`; Android hides the HUD, board and pause button. Reduce Motion
+  drops only the fade.
 
 ### Boss gauntlet entrance (`BossGauntletSpines.tsx`)
 
@@ -228,6 +291,10 @@ merged into `play-screen-overhaul` on 2026-09-27.
 
 - Polly authored the traps; she is not a word thief and never owns or steals meanings (Pete,
   2026-08-29). "My traps remember you" is the voice.
+- The words are the game; Polly is the pressure. She mixes convincing traps among real
+  meanings, betting she can make the player doubt what they already know. POLYWORDS system
+  text explains mechanics; Polly adds one short jab after a meaningful moment and never
+  teaches. Detail: `docs/POLLY_DIALOGUE_BANK.md`.
 - Live Polly is flat pose art (`assets/images/polly/poses/`) with whole-image motion. The
   layered face rig (`PollyPerchRig.tsx`, `rig2` layers) renders only when she is settled in
   the sprite4 idle pose on Home, Daily and Results; rollback is `POLLY_PERCH_RIG_ENABLED`.
@@ -249,7 +316,8 @@ merged into `play-screen-overhaul` on 2026-09-27.
 ## Services and Boundaries
 
 - App-wide `ErrorBoundary.tsx` wraps the navigator; its fallback uses system fonts only.
-- One-time Hunt, Boss, Haunt and Vault explainers use separate AsyncStorage gates.
+- First-run onboarding is one versioned state (see Modes); the Boss, Haunt and Vault
+  explainers are one-time overlays with their own AsyncStorage gates.
 - `playtestTelemetry.ts` is local only; Daily reminders are optional local notifications.
 - Theme/material tokens live in `app/ui/`; render code outranks abandoned plans.
 - Preserve all stashes. Never merge `play-screen-overhaul` into `main`, or a branch into
