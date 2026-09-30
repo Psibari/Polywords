@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     // the old bottom:140 placement put multi-line bubbles directly over the
     // active decision tile. This lane stays between Polly and the right-side
     // controls while keeping the live clue unobstructed.
-    left: 155,
-    bottom: 44,
+    left: 134,
+    bottom: 58,
   },
 });
