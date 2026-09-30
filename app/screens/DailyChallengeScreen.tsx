@@ -107,11 +107,8 @@ const DailyCastleTuningPanel = __DEV__
   : null;
 
 const DAILY_UI_PANEL_NEUTRAL = require('../../assets/images/dailycastle/ui/daily_utility_panel_neutral.png');
-const DAILY_UI_PANEL_WIN = require('../../assets/images/dailycastle/ui/daily_utility_panel_win.png');
-const DAILY_UI_PANEL_LOSS = require('../../assets/images/dailycastle/ui/daily_utility_panel_loss.png');
 const DAILY_UI_ACTION_PRIMARY = require('../../assets/images/dailycastle/ui/daily_action_plate_primary.png');
 const DAILY_UI_ACTION_SECONDARY = require('../../assets/images/dailycastle/ui/daily_action_plate_secondary.png');
-const DAILY_RESULT_PANEL_CAP_INSETS = { top: 90, right: 90, bottom: 90, left: 90 };
 
 
 // Maps store claim result reaction -> PollyDailyPerch prop
@@ -249,15 +246,7 @@ function ResultsOverlay({
         contentContainerStyle={res.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={res.card}>
-          <View style={res.cardArtworkFrame} pointerEvents="none">
-            <Image
-              source={isWin ? DAILY_UI_PANEL_WIN : DAILY_UI_PANEL_LOSS}
-              resizeMode="stretch"
-              capInsets={DAILY_RESULT_PANEL_CAP_INSETS}
-              style={res.cardArtwork}
-            />
-          </View>
+        <View style={[res.card, isWin ? res.cardWin : res.cardLoss]}>
         <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
 
         <Text style={[res.title, { color: isWin ? dailyResultsMaterial.titleWin : dailyResultsMaterial.titleLoss }]}>
@@ -364,7 +353,7 @@ function ResultsOverlay({
             />
           </Animated.View>
           <View style={styles.resultPollyBubble}>
-            <PollySpeechBubble line={resultLine} maxWidth={146} fontSize={15} lineHeight={19} />
+            <PollySpeechBubble line={resultLine} maxWidth={170} fontSize={17} lineHeight={22} />
           </View>
         </View>
 
@@ -374,13 +363,6 @@ function ResultsOverlay({
           accessibilityRole="button"
           accessibilityLabel="Share result"
         >
-          <View style={res.actionArtworkFrame} pointerEvents="none">
-            <Image
-              source={DAILY_UI_ACTION_PRIMARY}
-              resizeMode="stretch"
-              style={res.actionArtwork}
-            />
-          </View>
           <Text style={res.shareText}>SHARE RESULT</Text>
         </Pressable>
 
@@ -390,13 +372,6 @@ function ResultsOverlay({
             accessibilityRole="button"
             accessibilityLabel="Go home"
           >
-            <View style={res.actionArtworkFrame} pointerEvents="none">
-              <Image
-                source={DAILY_UI_ACTION_SECONDARY}
-                resizeMode="stretch"
-                style={res.actionArtwork}
-              />
-            </View>
             <Text style={res.homeText}>HOME</Text>
           </Pressable>
         </View>
@@ -1588,28 +1563,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   resultPollyImage: {
-    width: 112,
-    height: 112,
+    width: 140,
+    height: 140,
   },
   resultPollyStage: {
     width: '100%',
-    minHeight: 122,
+    minHeight: 150,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
   },
   resultPollyBubble: {
-    maxWidth: 146,
+    maxWidth: 170,
   },
   featherWrap: {
     alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 2,
+    marginTop: 8,
+    marginBottom: 4,
   },
   featherImage: {
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
   },
   featherLabel: {
     color: dailyChromeMaterial.featherLabel,
@@ -1714,27 +1689,25 @@ const res = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   card: {
     width: '100%',
-    paddingHorizontal: 22,
-    paddingVertical: 22,
+    backgroundColor: 'rgba(26,24,48,0.94)',
+    borderRadius: 16,
+    borderWidth: 2,
+    padding: 20,
     alignItems: 'center',
     gap: 4,
-    overflow: 'visible',
+    // Stone wall border effect
+    borderColor: 'rgba(245,200,66,0.4)',
   },
-  cardArtworkFrame: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
+  cardWin: {
+    borderColor: dailyResultsMaterial.cardBorderWin,
   },
-  cardArtwork: {
-    width: '100%',
-    height: '100%',
+  cardLoss: {
+    borderColor: dailyResultsMaterial.cardBorderLoss,
   },
   challenge: {
     color: dailyResultsMaterial.challengeLabel,
@@ -1785,7 +1758,7 @@ const res = StyleSheet.create({
     includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
-    marginTop: 12,
+    marginTop: 16,
   },
   speedCell: {
     width: 26,
@@ -1834,7 +1807,7 @@ const res = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 10,
-    marginTop: 9,
+    marginTop: 12,
   },
   speedLegendItem: {
     width: '44%',
@@ -1856,42 +1829,29 @@ const res = StyleSheet.create({
     letterSpacing: 0.9,
   },
   shareBtn: {
+    backgroundColor: dailyResultsMaterial.shareBtnBg,
+    borderRadius: 14,
+    paddingVertical: 14,
     width: '100%',
-    minHeight: 56,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 5,
+    marginTop: 12,
   },
   shareText: {
-    color: '#F2EEF8',
+    color: dailyResultsMaterial.shareBtnText,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 2,
   },
   homeBtn: {
-    width: '100%',
-    minHeight: 50,
+    paddingVertical: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
   },
   homeText: {
-    color: '#CFC7DC',
+    color: dailyResultsMaterial.homeText,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
-  },
-  actionArtworkFrame: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-  },
-  actionArtwork: {
-    width: '100%',
-    height: '100%',
   },
 });
