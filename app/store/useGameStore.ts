@@ -62,7 +62,13 @@ import {
   rememberHunt,
   rememberPollyLine,
 } from '../game/pollyMemory';
-import { INTRO_SEEN_KEY, BOSS_INTRO_SEEN_KEY, ONBOARDING_STATE_KEY } from '../constants/storageKeys';
+import {
+  INTRO_SEEN_KEY,
+  BOSS_INTRO_SEEN_KEY,
+  HAUNT_INTRO_SEEN_KEY,
+  ONBOARDING_STATE_KEY,
+  VAULT_INTRO_SEEN_KEY,
+} from '../constants/storageKeys';
 import { deriveSeed } from '../game/seededRandom';
 import {
   flushPlaytestSummary,
@@ -1481,6 +1487,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         AsyncStorage.removeItem(ONBOARDING_STATE_KEY),
         AsyncStorage.removeItem(INTRO_SEEN_KEY),
         AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
+        AsyncStorage.removeItem(HAUNT_INTRO_SEEN_KEY),
+        AsyncStorage.removeItem(VAULT_INTRO_SEEN_KEY),
         AsyncStorage.removeItem(attemptKey),
         AsyncStorage.removeItem(resultKey),
         AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY),
