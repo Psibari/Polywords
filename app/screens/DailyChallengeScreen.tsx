@@ -1224,7 +1224,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               source={DAILY_UI_PANEL_NEUTRAL}
               resizeMode="stretch"
               style={styles.startCardArtwork}
-              pointerEvents="none"
             />
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
@@ -1249,7 +1248,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 source={DAILY_UI_ACTION_PRIMARY}
                 resizeMode="stretch"
                 style={styles.startButtonArtwork}
-                pointerEvents="none"
               />
               <Text style={styles.startButtonText}>
                 {dailyStarting ? 'OPENING…' : 'BEGIN DAILY'}
@@ -1265,7 +1263,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 source={DAILY_UI_ACTION_SECONDARY}
                 resizeMode="stretch"
                 style={styles.startButtonArtwork}
-                pointerEvents="none"
               />
               <Text style={styles.startHomeText}>NOT NOW</Text>
             </Pressable>
@@ -1323,7 +1320,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         <Pressable
           onPress={async () => {
             await resetDailyForDev();
-            await startDailyChallenge();
           }}
           style={styles.devResetBtn}
         >
@@ -1404,7 +1400,11 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   startCardArtwork: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     width: '100%',
     height: '100%',
   },
@@ -1455,8 +1455,6 @@ const styles = StyleSheet.create({
     right: -4,
     bottom: -5,
     left: -4,
-    width: 'auto',
-    height: 'auto',
   },
   startButtonPressed: {
     opacity: 0.82,
