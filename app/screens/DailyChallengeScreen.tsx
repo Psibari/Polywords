@@ -107,6 +107,8 @@ const DailyCastleTuningPanel = __DEV__
   : null;
 
 const DAILY_UI_PANEL_NEUTRAL = require('../../assets/images/dailycastle/ui/daily_utility_panel_neutral.png');
+const DAILY_UI_PANEL_WIN = require('../../assets/images/dailycastle/ui/daily_utility_panel_win.png');
+const DAILY_UI_PANEL_LOSS = require('../../assets/images/dailycastle/ui/daily_utility_panel_loss.png');
 const DAILY_UI_ACTION_PRIMARY = require('../../assets/images/dailycastle/ui/daily_action_plate_primary.png');
 const DAILY_UI_ACTION_SECONDARY = require('../../assets/images/dailycastle/ui/daily_action_plate_secondary.png');
 
@@ -246,7 +248,14 @@ function ResultsOverlay({
         contentContainerStyle={res.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[res.card, isWin ? res.cardWin : res.cardLoss]}>
+        <View style={res.card}>
+          <View style={res.cardArtworkFrame} pointerEvents="none">
+            <Image
+              source={isWin ? DAILY_UI_PANEL_WIN : DAILY_UI_PANEL_LOSS}
+              resizeMode="stretch"
+              style={res.cardArtwork}
+            />
+          </View>
         <Text style={res.challenge}>{`DAILY #${dailyResult.challengeNumber}`}</Text>
 
         <Text style={[res.title, { color: isWin ? dailyResultsMaterial.titleWin : dailyResultsMaterial.titleLoss }]}>
@@ -363,6 +372,13 @@ function ResultsOverlay({
           accessibilityRole="button"
           accessibilityLabel="Share result"
         >
+          <View style={res.actionArtworkFrame} pointerEvents="none">
+            <Image
+              source={DAILY_UI_ACTION_PRIMARY}
+              resizeMode="stretch"
+              style={res.actionArtwork}
+            />
+          </View>
           <Text style={res.shareText}>SHARE RESULT</Text>
         </Pressable>
 
@@ -372,6 +388,13 @@ function ResultsOverlay({
             accessibilityRole="button"
             accessibilityLabel="Go home"
           >
+            <View style={res.actionArtworkFrame} pointerEvents="none">
+              <Image
+                source={DAILY_UI_ACTION_SECONDARY}
+                resizeMode="stretch"
+                style={res.actionArtwork}
+              />
+            </View>
             <Text style={res.homeText}>HOME</Text>
           </Pressable>
         </View>
@@ -1694,20 +1717,22 @@ const res = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: 'rgba(26,24,48,0.94)',
-    borderRadius: 16,
-    borderWidth: 2,
-    padding: 20,
+    paddingHorizontal: 28,
+    paddingVertical: 30,
     alignItems: 'center',
     gap: 4,
-    // Stone wall border effect
-    borderColor: 'rgba(245,200,66,0.4)',
+    overflow: 'visible',
   },
-  cardWin: {
-    borderColor: dailyResultsMaterial.cardBorderWin,
+  cardArtworkFrame: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
   },
-  cardLoss: {
-    borderColor: dailyResultsMaterial.cardBorderLoss,
+  cardArtwork: {
+    width: '100%',
+    height: '100%',
   },
   challenge: {
     color: dailyResultsMaterial.challengeLabel,
@@ -1829,29 +1854,42 @@ const res = StyleSheet.create({
     letterSpacing: 0.9,
   },
   shareBtn: {
-    backgroundColor: dailyResultsMaterial.shareBtnBg,
-    borderRadius: 14,
-    paddingVertical: 14,
     width: '100%',
+    minHeight: 62,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 12,
   },
   shareText: {
-    color: dailyResultsMaterial.shareBtnText,
+    color: '#F2EEF8',
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 2,
   },
   homeBtn: {
-    paddingVertical: 10,
+    width: '100%',
+    minHeight: 54,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
   },
   homeText: {
-    color: dailyResultsMaterial.homeText,
+    color: '#CFC7DC',
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
+  },
+  actionArtworkFrame: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  actionArtwork: {
+    width: '100%',
+    height: '100%',
   },
 });
