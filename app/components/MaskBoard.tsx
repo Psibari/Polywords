@@ -646,9 +646,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       Animated.timing(boardShakeX, { toValue: 0,  duration: 35, useNativeDriver: true }),
     ]).start();
   }
-  const absorbedPhraseOpacity = useRef(new Animated.Value(0)).current;
-  const [absorbedPhrase, setAbsorbedPhrase] = useState<string | null>(null);
-
   // ── wrong-swipe word recoil ───────────────────────────────────
   const wordRecoilY     = useRef(new Animated.Value(0)).current;  // useNativeDriver:false
   const wordRecoilScale = useRef(new Animated.Value(1)).current;  // useNativeDriver:false
@@ -755,19 +752,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     bookOpenAnimationRef.current.start();
   }
 
-  function triggerAbsorption(phrase: string) {
+  function triggerAbsorption() {
     absorptionScale.setValue(1);
     ringScale.setValue(1);
     ringOpacity.setValue(0);
-    setAbsorbedPhrase(phrase);
-    absorbedPhraseOpacity.setValue(1);
-    if (reduceMotion) {
-      Animated.sequence([
-        Animated.delay(300),
-        Animated.timing(absorbedPhraseOpacity, { toValue: 0, duration: 160, useNativeDriver: true }),
-      ]).start(() => setAbsorbedPhrase(null));
-      return;
-    }
+    if (reduceMotion) return;
+
     Animated.sequence([
       Animated.timing(absorptionScale, { toValue: 1.12, duration: 120, useNativeDriver: true }),
       Animated.timing(absorptionScale, { toValue: 1.0,  duration: 180, useNativeDriver: true }),
@@ -779,11 +769,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       Animated.timing(ringScale,   { toValue: 2.2, duration: 380, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       Animated.timing(ringOpacity, { toValue: 0,   duration: 380, useNativeDriver: true }),
     ]).start();
-
-    Animated.sequence([
-      Animated.delay(600),
-      Animated.timing(absorbedPhraseOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-    ]).start(() => setAbsorbedPhrase(null));
   }
 
   // Set by onRealClaimed the instant a swipe is judged correct — consumed
@@ -791,14 +776,14 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // SwipeMask's magnetic-flight physics reaching the book, up to ~1.15s
   // later) so the absorption pulse and the book's own open flick land on
   // the same beat instead of the pulse firing up to a second early.
-  const pendingAbsorbPhraseRef = useRef<string | null>(null);
+  const pendingAbsorbRef = useRef(false);
 
   function handleCardTouch() {
     if (mechanics.gatePhase !== 'locked') return;
     triggerBookOpen();
-    if (pendingAbsorbPhraseRef.current !== null) {
-      triggerAbsorption(pendingAbsorbPhraseRef.current);
-      pendingAbsorbPhraseRef.current = null;
+    if (pendingAbsorbRef.current) {
+      triggerAbsorption();
+      pendingAbsorbRef.current = false;
     }
   }
 
@@ -1058,8 +1043,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
         Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
         // Not fired directly — handleCardTouch fires it at actual arrival,
-        // synced with triggerBookOpen (see pendingAbsorbPhraseRef).
-        pendingAbsorbPhraseRef.current = mask.phrase;
+        // synced with triggerBookOpen. The accepted phrase leaves with the
+        // card; only the book/ring absorption feedback remains on screen.
+        pendingAbsorbRef.current = true;
       },
       onTrapRejected({ tier }) {
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
@@ -1092,7 +1078,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         if (isFinalGauntletTile && !isBoss) {
           setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 120);
         }
-        if (swipedUp) triggerAbsorption(phrase);
+        if (swipedUp) triggerAbsorption();
       },
       onGauntletTileDrop() {
         // No longer drives any visible animation — BossGauntletStack owns
@@ -1957,12 +1943,6 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: libraryMaterial.ghostTint, opacity: bookGhostDrainOpacity }]} />
         </Animated.View>
 
-        {/* Absorbed phrase flash */}
-        {absorbedPhrase !== null && (
-          <Animated.Text style={[styles.absorbedPhrase, { opacity: absorbedPhraseOpacity }]}>
-            {absorbedPhrase}
-          </Animated.Text>
-        )}
       </View>
 
       {/* ── TILE ZONE ───────────────────────────────────────── */}
@@ -2519,19 +2499,6 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     borderWidth: 2.5,
     borderColor: '#F5C842',
-  },
-  absorbedPhrase: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: FONT_SIZES.progressLabel,
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    letterSpacing: 0.5,
-    marginTop: 2,
-    textAlign: 'center',
-    position: 'absolute',
-    bottom: -20,
-    left: 0,
-    right: 0,
   },
   vaultLabel: {
     position: 'absolute',
