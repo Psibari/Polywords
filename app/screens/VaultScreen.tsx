@@ -1,12 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import BottomNav from "../components/BottomNav";
-import { VaultIntroOverlay } from "../components/VaultIntroOverlay";
-import { VAULT_INTRO_SEEN_KEY } from "../constants/storageKeys";
 import AmbientSkyBackground from "../components/AmbientSkyBackground";
 import { VAULT_SKY_TUNING } from "../ui/ambientSkyTuning";
 import { FONTS } from "../constants/fonts";
@@ -106,19 +102,6 @@ export default function VaultScreen({ navigation }: Props) {
 
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
 
-  const [vaultIntroSeen, setVaultIntroSeen] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    AsyncStorage.getItem(VAULT_INTRO_SEEN_KEY)
-      .then((value) => setVaultIntroSeen(value === "true"))
-      .catch(() => setVaultIntroSeen(true));
-  }, []);
-
-  const handleVaultIntroDismiss = useCallback(() => {
-    setVaultIntroSeen(true);
-
-    AsyncStorage.setItem(VAULT_INTRO_SEEN_KEY, "true").catch(() => {});
-  }, []);
 
   const claimedIds = new Set(progress.realMaskIdsFound ?? []);
 
@@ -388,9 +371,6 @@ export default function VaultScreen({ navigation }: Props) {
 
       <BottomNav active="Vault" navigation={navigation} />
 
-      {vaultIntroSeen === false && (
-        <VaultIntroOverlay onDismiss={handleVaultIntroDismiss} />
-      )}
     </SafeAreaView>
   );
 }
