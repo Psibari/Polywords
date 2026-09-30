@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Alert,
-  Image,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -33,14 +32,13 @@ import {
   getPlaytestEventCount,
 } from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
-import { chamberMaterial } from '../ui/pwMaterials';
 import { PW } from '../ui/pwTheme';
 import appConfig from '../../app.json';
 
 const APP_VERSION = appConfig.expo.version;
 
-const stoneTileTexture = require('../../assets/images/textures/stoneTile.png');
 const settingsUtilityPanel = require('../../assets/images/settings/settings_utility_panel_neutral.png');
+const SETTINGS_PANEL_CAP_INSETS = { top: 82, right: 88, bottom: 82, left: 88 };
 
 const PRIVACY_TEXT =
   "POLYWORDS stores your game progress locally on this device only — " +
@@ -222,12 +220,12 @@ export default function SettingsScreen({ navigation }: Props) {
         </View>
 
         <ImageBackground
-          source={stoneTileTexture}
-          resizeMode="repeat"
-          style={styles.profileCard}
-          imageStyle={styles.profileCardTexture}
+          source={settingsUtilityPanel}
+          resizeMode="stretch"
+          capInsets={SETTINGS_PANEL_CAP_INSETS}
+          style={[styles.profileCard, styles.utilityCard]}
+          imageStyle={styles.utilityImage}
         >
-          <View pointerEvents="none" style={styles.plaqueHighlight} />
           <View style={styles.profileTop}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>PW</Text>
@@ -278,9 +276,9 @@ export default function SettingsScreen({ navigation }: Props) {
           <ImageBackground
             source={settingsUtilityPanel}
             resizeMode="stretch"
-            capInsets={{ top: 82, right: 88, bottom: 82, left: 88 }}
-            style={[styles.card, styles.gameUtilityCard]}
-            imageStyle={styles.gameUtilityImage}
+            capInsets={SETTINGS_PANEL_CAP_INSETS}
+            style={[styles.card, styles.utilityCard]}
+            imageStyle={styles.utilityImage}
           >
             <ToggleRow
               label="Sound"
@@ -325,12 +323,12 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           <ImageBackground
-            source={stoneTileTexture}
-            resizeMode="repeat"
-            style={styles.card}
-            imageStyle={styles.cardTexture}
+            source={settingsUtilityPanel}
+            resizeMode="stretch"
+            capInsets={SETTINGS_PANEL_CAP_INSETS}
+            style={[styles.card, styles.utilityCard]}
+            imageStyle={styles.utilityImage}
           >
-            <View pointerEvents="none" style={styles.plaqueHighlight} />
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Open Credits"
@@ -365,12 +363,12 @@ export default function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Playtest Data</Text>
           <ImageBackground
-            source={stoneTileTexture}
-            resizeMode="repeat"
-            style={styles.card}
-            imageStyle={styles.cardTexture}
+            source={settingsUtilityPanel}
+            resizeMode="stretch"
+            capInsets={SETTINGS_PANEL_CAP_INSETS}
+            style={[styles.card, styles.utilityCard]}
+            imageStyle={styles.utilityImage}
           >
-            <View pointerEvents="none" style={styles.plaqueHighlight} />
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Share debug stats"
@@ -462,12 +460,12 @@ export default function SettingsScreen({ navigation }: Props) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Danger / Reset</Text>
             <ImageBackground
-              source={stoneTileTexture}
-              resizeMode="repeat"
-              style={[styles.card, styles.warningCard]}
-              imageStyle={styles.cardTexture}
+              source={settingsUtilityPanel}
+              resizeMode="stretch"
+              capInsets={SETTINGS_PANEL_CAP_INSETS}
+              style={[styles.card, styles.utilityCard, styles.warningCard]}
+              imageStyle={styles.utilityImage}
             >
-              <View pointerEvents="none" style={styles.plaqueHighlight} />
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Reset all progress"
@@ -526,15 +524,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: PW.color.bg,
   },
-  plaqueHighlight: {
-    position: 'absolute',
-    top: 6,
-    left: 14,
-    right: 14,
-    height: 1,
-    backgroundColor: PW.color.cardInner,
-    opacity: 0.5,
-  },
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
@@ -589,14 +578,9 @@ const styles = StyleSheet.create({
   profileCard: {
     marginTop: 16,
     borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: chamberMaterial.plaqueRim,
     padding: 18,
     overflow: 'hidden',
     ...PW.shadow.panel,
-  },
-  profileCardTexture: {
-    borderRadius: 20,
   },
   profileTop: {
     flexDirection: 'row',
@@ -707,25 +691,19 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: chamberMaterial.plaqueRim,
     overflow: 'hidden',
     ...PW.shadow.panel,
   },
-  cardTexture: {
-    borderRadius: 18,
-  },
-  gameUtilityCard: {
+  utilityCard: {
     borderWidth: 0,
-    borderRadius: 18,
     backgroundColor: '#15122F',
-    overflow: 'hidden',
   },
-  gameUtilityImage: {
+  utilityImage: {
     borderRadius: 18,
   },
   warningCard: {
-    borderColor: chamberMaterial.emberAccent,
+    borderWidth: 1.5,
+    borderColor: PW.color.rose,
   },
   row: {
     minHeight: 58,
