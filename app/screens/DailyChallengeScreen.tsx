@@ -111,6 +111,7 @@ const DAILY_UI_PANEL_WIN = require('../../assets/images/dailycastle/ui/daily_uti
 const DAILY_UI_PANEL_LOSS = require('../../assets/images/dailycastle/ui/daily_utility_panel_loss.png');
 const DAILY_UI_ACTION_PRIMARY = require('../../assets/images/dailycastle/ui/daily_action_plate_primary.png');
 const DAILY_UI_ACTION_SECONDARY = require('../../assets/images/dailycastle/ui/daily_action_plate_secondary.png');
+const DAILY_RESULT_PANEL_CAP_INSETS = { top: 90, right: 90, bottom: 90, left: 90 };
 
 
 // Maps store claim result reaction -> PollyDailyPerch prop
@@ -253,6 +254,7 @@ function ResultsOverlay({
             <Image
               source={isWin ? DAILY_UI_PANEL_WIN : DAILY_UI_PANEL_LOSS}
               resizeMode="stretch"
+              capInsets={DAILY_RESULT_PANEL_CAP_INSETS}
               style={res.cardArtwork}
             />
           </View>
@@ -362,7 +364,7 @@ function ResultsOverlay({
             />
           </Animated.View>
           <View style={styles.resultPollyBubble}>
-            <PollySpeechBubble line={resultLine} maxWidth={170} fontSize={17} lineHeight={22} />
+            <PollySpeechBubble line={resultLine} maxWidth={146} fontSize={15} lineHeight={19} />
           </View>
         </View>
 
@@ -1586,28 +1588,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   resultPollyImage: {
-    width: 140,
-    height: 140,
+    width: 112,
+    height: 112,
   },
   resultPollyStage: {
     width: '100%',
-    minHeight: 150,
+    minHeight: 122,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
   },
   resultPollyBubble: {
-    maxWidth: 170,
+    maxWidth: 146,
   },
   featherWrap: {
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 4,
+    marginBottom: 2,
   },
   featherImage: {
-    width: 72,
-    height: 72,
+    width: 64,
+    height: 64,
   },
   featherLabel: {
     color: dailyChromeMaterial.featherLabel,
@@ -1712,13 +1714,13 @@ const res = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
   },
   card: {
     width: '100%',
-    paddingHorizontal: 28,
-    paddingVertical: 30,
+    paddingHorizontal: 22,
+    paddingVertical: 22,
     alignItems: 'center',
     gap: 4,
     overflow: 'visible',
@@ -1783,7 +1785,7 @@ const res = StyleSheet.create({
     includeFontPadding: false,
     fontSize: 15,
     letterSpacing: 2,
-    marginTop: 16,
+    marginTop: 12,
   },
   speedCell: {
     width: 26,
@@ -1832,7 +1834,7 @@ const res = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 10,
-    marginTop: 12,
+    marginTop: 9,
   },
   speedLegendItem: {
     width: '44%',
@@ -1855,10 +1857,10 @@ const res = StyleSheet.create({
   },
   shareBtn: {
     width: '100%',
-    minHeight: 62,
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 12,
+    marginTop: 5,
   },
   shareText: {
     color: '#F2EEF8',
@@ -1869,10 +1871,10 @@ const res = StyleSheet.create({
   },
   homeBtn: {
     width: '100%',
-    minHeight: 54,
+    minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
+    marginTop: 4,
   },
   homeText: {
     color: '#CFC7DC',
