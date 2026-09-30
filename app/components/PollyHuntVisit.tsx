@@ -267,7 +267,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
           { opacity: bubbleOpacity, transform: [{ scale: bubbleScale }] },
         ]}
       >
-        <PollySpeechBubble line={line ?? ''} maxWidth={185} />
+        <PollySpeechBubble line={line ?? ''} maxWidth={170} />
       </Animated.View>
 
       {/* Polly — whole-image motion only, bottom-left, faces right */}
@@ -323,7 +323,11 @@ const styles = StyleSheet.create({
   },
   bubbleWrap: {
     position: 'absolute',
-    left: 148,
-    bottom: 140,
+    // Keep Hunt dialogue in the lower reaction lane. On a 390x844 iPhone,
+    // the old bottom:140 placement put multi-line bubbles directly over the
+    // active decision tile. This lane stays between Polly and the right-side
+    // controls while keeping the live clue unobstructed.
+    left: 155,
+    bottom: 44,
   },
 });
