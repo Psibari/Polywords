@@ -19,6 +19,7 @@ import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
+import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 // Settings, not the Daily screen: app/screens/dailyDevControls.test.mjs
 // forbids DailyChallengeScreen from wiring this panel (it used to float over
 // the answer-card grid there). The tuning store is plain module state, so
@@ -98,6 +99,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
   const [showPollyCrown, setShowPollyCrown] = useState(false);
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
+  const [showHauntIntroPreview, setShowHauntIntroPreview] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -452,6 +454,18 @@ export default function SettingsScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Preview Returning Haunt intro"
+                onPress={() => setShowHauntIntroPreview(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Returning Haunt Intro</Text>
+                  <Text style={styles.rowNote}>Preview the one-time Haunt explainer</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
             </ImageBackground>
           </View>
         )}
@@ -500,6 +514,9 @@ export default function SettingsScreen({ navigation }: Props) {
             onClose={() => setShowPollyFaceRig(false)}
             visible={showPollyFaceRig}
           />
+          {showHauntIntroPreview && (
+            <HauntIntroOverlay onDismiss={() => setShowHauntIntroPreview(false)} />
+          )}
         </>
       )}
       <InfoModal
