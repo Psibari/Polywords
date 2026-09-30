@@ -1,146 +1,79 @@
 # POLYWORDS Current Context
 
-Updated 2026-09-29. Current state and open work only; `CLAUDE.md` holds architecture and Git
-history is the diary. Verify anything here against code before acting on it.
+Updated 2026-09-30. This file is current state + next work only. `CLAUDE.md` owns durable
+architecture; focused rules live in `docs/`; code/data outrank both.
 
 ## Branches
 
 | Branch | Role |
 | --- | --- |
-| `play-screen-overhaul` | The main working branch for the whole game. The castle Daily merged in from `daily-castle-test` through PR Psibari/Polywords#13 (Pete approved, 2026-09-27). |
-| `daily-castle-test` | Finished: it rebuilt the Daily Challenge as the castle and was merged into `play-screen-overhaul` (PR Psibari/Polywords#13, 2026-09-27). Do not work on it. |
-| `onboarding-wip` | Finished: first-run onboarding and HUD lessons (`528635a`), merged into `play-screen-overhaul` at `af72a0e` with Pete's approval (2026-09-28). Do not work on it. |
-| `main` | Stale and untouched. Never merge into it without Pete's approval. |
+| `play-screen-overhaul` | Main working branch. |
+| `daily-castle-test` | Finished and merged. Do not work on it. |
+| `onboarding-wip` | Finished and merged. Do not work on it. |
+| `main` | Stale. Never merge into it without Pete's approval. |
 
-Nothing merges into `play-screen-overhaul` without Pete's approval.
-
-Testing on the phone: the phone runs whatever is in the local checkout, not GitHub. On the
-machine that serves Expo, `git pull` the branch, then `npx expo start --clear`. A stale local
-branch showing days-old art on 2026-09-26 was exactly this. Tests run on Node 24 (CI's version).
+Phone testing uses the local checkout, not GitHub. Pull the branch before Expo testing.
 
 ## Current State
 
-- **Ruling (Pete, 2026-09-26):** the Polybook is Polly's book, kept in the old Vault; the
-  player reads it.
-- **Daily castle** (built on `daily-castle-test`, merged 2026-09-27; device-checked on iPhone). Castle scene
-  behind entry, play and Results; a cartoon indigo plank door carrying the clues (door and
-  clues LOCKED, device-approved 2026-09-26); stone tunnel behind it; Pete's cartoon answer
-  wall (slate frame) with flush gold-mortared blocks that pop out when pressed and leave
-  recesses when pulled;
-  the throw into the gate; floor coins, one per round, and a gold coin that flies off the
-  floor into a hero-coin finale before Results (finale LOCKED, device-approved 2026-09-29);
-  Polly on the left tower with her bubble on the steps. Pete, on device: coins,
-  bubble and layout "looking better". Spec: `docs/DAILY_CHALLENGE_SPEC.md`.
-- **First-run onboarding** (merged 2026-09-28, `af72a0e`; device-approved and LOCKED by Pete).
-  It shipped:
-  - Polly's first-ever Home lines, then a HUNT glow.
-  - The cumulative FINE recognition stack and the premise lines.
-  - Guided REAL (UP only) and guided TRAP (RIGHT only) on the real board with real scoring,
-    then the first unaided decision with a helper.
-  - Event-driven HUD lessons in one shared spotlight: feathers on the first real nonfatal loss,
-    the run at the first 1.5×, a short streak-break reinforcement at the first FELL OFF, and
-    Hunt progress in the FINE hand-off. Each is tap-to-continue with one Polly reply.
-  - Safeguards:
-    - Lesson flags only move forward, stored outside `activeRun`, with no version bump.
-    - Resume never replays a decision, and the hand-off can't reappear.
-    - The real input lock is used, and lesson hold time is excluded from timing.
-    - Idle music is paused, and the board is hidden from screen readers.
-    - Reduce Motion keeps every line.
+- **Core Hunt:** UP claims a REAL; RIGHT rejects a trap. Polly's Word ends the arc; failed
+  boss words can return as Haunts. Boss outcome and the swipe grammar remain protected.
+- **First-run onboarding:** merged, device-approved, and locked. FINE teaches recognition on
+  the real board; HUD lessons teach feathers, momentum, a broken run, and Hunt progress.
+- **Daily castle:** locked on device. Gate/clues, tunnel, answer wall/blocks, gold hit, floor
+  coins, and the gold-coin finale stay as approved. The deferred answer-stone entrance issue
+  remains deferred; do not reopen the castle art to solve it.
+- **Polybook:** Polly's diary on the internal Vault route. It opens directly into the book.
+  The stale archive intro overlay is gone. Meanings/traps/hidden pairs never appear there.
+- **Visual consistency pass:** the governing rule is now **shared grammar, not identical
+  skins** (`DESIGN.md`).
+  - Daily Entry uses the dark utility-panel family and is locked.
+  - Daily Results was tested with that family, looked worse, and was restored. Keep it.
+  - Settings content cards use the dark utility material; background/header/nav stay as-is.
+  - Boss intro and mid-Hunt exit confirmation were reviewed and kept as-is.
+  - First-run HUD spotlight remains its own teaching system.
+  - Returning Haunt intro copy is locked: GUESS WHO'S BACK? / another win / BANISHED vs
+    STILL HAUNTED / DON'T GIVE A PARROT ANOTHER WIN. A Settings dev preview can open it.
+- **Results:** Hunt Results is the last major visual surface still awaiting a focused
+  keep/change audit. Do not assume it needs redesign.
+- **Polly:** face rig is live on Home, Daily, and Results while settled; Hunt visits remain
+  pose art. Dialogue rules live in `docs/POLLY_DIALOGUE_BANK.md`.
+- **TestFlight:** build/submit/install works end to end. Store name remains
+  "POLYWORDS: Hunt or Be Trapped"; iPad support is off.
 
-  The old automatic feather beat at the end of FINE ("I’m counting.") is retired. Rules and
-  copy: `docs/GAME_REFERENCE.md`; architecture: `CLAUDE.md`.
-- **Hunt momentum** (STEADY → SHARP → RAZOR SHARP → UNTRAPPABLE, FELL OFF, music that climbs
-  with it) is device-confirmed on TestFlight #3–4 (2026-09-12). The level-up/FELL OFF cues
-  still borrow the wrong-swipe SFX by design.
-- **Boss gauntlet** bricks punch out of the wall with tremble, sound and haptics
-  (device-confirmed 2026-09-10). **Boss outcome** package is LOCKED (see `CLAUDE.md`).
-- **Polybook** screen is built and live (see `docs/POLYBOOK.md`).
-- **Results** (2026-09-12/13): loss-cause verdict lines, Polybook plate controls, Meaning
-  Missed cut, scroll cues. Not recorded as device-confirmed.
-- **Polly**: face rig live on Home, Daily and Results; Hunt lines rotate; ten-streak and
-  one-feather beats and the Home doze are live and device-confirmed. Daily per-round reactions
-  read the rivalry state (`b7c6148`).
-- **TestFlight** works end to end (build → `eas submit` → install). Store name "POLYWORDS: Hunt
-  or Be Trapped" (bare "POLYWORDS" is taken); device name stays POLYWORDS. ASC App ID
-  6810968284, bundle `com.pdb8080.polywords`. Subtitle empty. iPad support is off.
+## Current Product Rulings
 
-## Approved Rulings (reward and content)
-
-- Rank and score are shown nowhere (2026-09-04); meanings taken is the headline.
-- A book is a word, finished when all its visible REALs are found. No perfect-clear tier: a
-  round deals only some of a word's REALs.
-- Roughly every fifth new Hunt word should carry three `hiddenPairs`; it is the only remedy
-  for the finite Boss pool. Never generate placeholder hidden truth.
-- Daily content: the 60-word locked workbook (`STAGE` in, `SENTENCE` out); `dailyPool.ts` is
-  its runtime form.
+- Recognition over vocabulary instruction.
+- Rank and score are player-facing nowhere.
+- A book is a word; mastery comes from the Boss gauntlet, not score.
+- Haunted words return; a successful rematch banishes the active Haunt.
+- Daily is deterministic, five rounds, UP-only, two lives, one attempt per date.
+- Gold is scarce and meaningful; ordinary choices stay neutral before commitment.
+- Visual consistency requires a player-facing benefit, not cosmetic sameness.
 
 ## Next Work
 
-Daily castle:
-1. Cartoon pass (Pete, 2026-09-26): coins done (option D, silver and a 100 pt gold). The
-   castle is now cartoon art (castle B, `castle_cartoon.png`) so it matches Polly, and so is the
-   door (indigo planks, Pete's tint, lightened when the castle took the hero book's purple
-   on 2026-09-27; locked), the answer wall (Pete's design, slate frame;
-   locked; its panels became block recesses on 2026-09-27) and the answer blocks (Pete's
-   flush gold-mortared blocks; locked 2026-09-27) and the tunnel (drawn by script;
-   locked 2026-09-27). No painted art is left on the Daily screen. Sharper
-   castle: re-export B at full size from Magnific (the build used Pete's 864 px screen copy).
-2. Done (Pete, device-approved 2026-09-29): the gold-coin finale, chime, Success haptic and
-   timing included. LOCKED; see `CLAUDE.md`.
-3. Card look across the whole game: every card and panel should look alike (Pete,
-   2026-09-26). Daily entry and Results cards were deliberately left for this pass.
-4. Cleanup. Done (Pete, 2026-09-26): the 24 unreferenced exports in
-   `assets/images/dailycastle/`; the old dev viewers (Asset Audit, CodeLab, the old
-   `DailyCastleScene` preview) with their Settings rows, the ASSET AUDIT button and their
-   eight images. Done (Pete, 2026-09-27): the old Daily tree (`DailyTreeScene`, its dev
-   viewer, the 12 `dailytree/` images and its design doc) and the scroll era
-   (`QuillScrollPanel` and the four UI pieces only it used, `dailyScrollLayout`,
-   `dailyScrollTuning` and its Settings panel, `dailySubmittedAnswerLayout`, the scroll
-   textures, and the dead clue stack and scroll animation values in the Daily screen).
-   Left for its own pass: `DailyAnswerCard`'s pre-castle flat-card branch (`castleArt`
-   false, `DailyCardFace`), which nothing renders; the component is locked, so it was not
-   refactored in a cleanup. CASTLE TUNE and DEV - RESET DAILY stay (Pete).
-5. Done (Pete, LOCKED 2026-09-29): the four Polybook lines that used "mine" were reviewed
-   and replaced: "Good work." (light, held day), "Sloppy work." (heavy, bad day), "I'm still
-   the boss." (boss held), "Badly built." (boss lost). Same ids and pools. No other line was
-   reviewed or changed. Source: `docs/POLLY_POLYBOOK_LOG_LINES.md`; runtime:
-   `app/game/pollyBookLines.ts`.
-6. Done (2026-09-27): PR Psibari/Polywords#13 merged into `play-screen-overhaul` with Pete's
-   approval.
+1. **Hunt Results visual audit.** Device-review the current screen and change only proven
+   readability, hierarchy, or material problems.
+2. **Real-device release journeys.** Cold start, rapid navigation, background/foreground
+   recovery, persistence, every Polly laugh/animation, performance, sound-off, and small phone.
+3. **Boss-capable content.** Author more words with three fair hidden pairs.
+4. **Banished record decision.** Decide whether a cleared Haunt gets permanent history.
+5. **Cold-start gauntlet audio.** Listen for late first-use `stoneRumble`; warm earlier only
+   if audible.
+6. **Navigation.** Home still cannot reach Polybook directly.
+7. **Technical polish backlog.** Haptic gateway stragglers, TestFlight-visible audio failures,
+   remaining Polly sprite cleanup, Polybook writing depth, privacy policy/support contact.
 
-- **Deferred polish: answer-stone entrance** (Pete, device-reviewed 2026-09-29). Accepted as
-  is: each round's blocks punch out of the wall in reading order and settle flush, with the
-  stone SFX, Medium haptics, the stagger, input held until the last block settles, and the
-  Reduced Motion path (`app/ui/dailyPlaqueEntrance.ts`). Open: the blocks still visibly pop in
-  before the punch starts. Improve initial Daily answer-stone emergence so each block visibly
-  originates from its wall recess instead of appearing before the punch-out. Solve it in
-  motion; do not reopen the wall or block art unless that proves necessary.
+## Deferred / Do Not Reopen Yet
 
-Whole game:
-7. Real-device journeys before release: cold-start audio, rapid navigation,
-   background/foreground recovery, every Polly laugh, persistence, performance.
-8. Author more boss-capable Hunt words (three fair hidden pairs each).
-9. Decide whether a banished Haunt earns a permanent record.
-10. Known gap, needs a cold-start listen: the gauntlet's `stoneRumble` can start late on the
-   first gauntlet after launch, because `warmGauntletEntranceSfx` runs when the gauntlet
-   mounts. If audible, warm the cues when the boss word starts. Do not drop this item.
-11. Navigation: `BottomNav` renders only on the Polybook and Settings; Home cannot reach the
-    Polybook.
-12. Haptics: four `Haptics.selectionAsync()` calls in `MaskBoard.tsx` and two in
-    `GameScreen.tsx` bypass `cueAsync`. The Haunt rematch's final tile may stack two Heavies
-    60 ms apart (untested). Reduce-motion `stoneLand1` has no paired haptic (undecided).
-13. `warnDev()` in `sfx.ts` is silent outside `__DEV__`, so audio failures are invisible in
-    TestFlight.
-14. Polly: redraw sprite9 (sulk) to sprite4's canvas if still a placeholder; re-render the four
-    clipped webp animations at 724×724; `flyGrin`/`masterShock`/`masterAngry` are unused;
-    `tone='loss'` bubble is unused; `ONE_FEATHER_POSE` is typed `Record<string, …>`.
-15. Polybook writing: more today's entries per rivalry state (CONCEDING and MERCY thinnest),
-    the payoff entry, the player-name arc, and recording the first played date.
-16. Done (2026-09-28): Settings' First Hunt Replay now queues only the FINE opening, and its
-    alert says exactly that; it no longer resets the Boss, Haunt or Vault overlays.
-17. External TestFlight needs a hosted privacy policy and a support contact.
+- Daily answer-stone initial pop-in before the punch-out.
+- Decorative trim passes on already-approved screens.
+- Re-skinning Boss/Haunt outcomes, Polybook pages, Hunt decisions, or Daily stone blocks merely
+  to make them look alike.
+- Deleting the old Lexicon rollback path; that remains a separate Pete decision.
 
 ## Protection
 
-- Preserve every Git stash and unrelated worktree change.
-- Pete's local art files are his: ask before touching anything not in Git.
+Preserve every stash and unrelated worktree change. Pete's local art is his; do not touch
+untracked/local art without approval. No branch merges without Pete's approval.

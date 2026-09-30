@@ -12,9 +12,9 @@ Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hu
 ## Session
 
 - Opening Daily does not spend the attempt; `BEGIN DAILY` does.
-- Five rounds use tiers `[1, 1, 2, 2, 3]` with two Chances for the whole challenge.
+- Five rounds use tiers `[1, 1, 2, 2, 3]` with two lives for the whole challenge.
 - Each round shows six candidates; one word connects all three clues.
-- The same date produces the same session. Solve all five before losing both Chances to win.
+- The same date produces the same session. Solve all five before losing both lives to win.
 
 ## Input and Clues
 
@@ -22,8 +22,8 @@ Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hu
   threshold returns it. There is no RIGHT, left, or tap-submit path.
 - All candidate cards remain neutral before commitment.
 - Clue 1 is immediate; clues 2 and 3 appear at 4s and 8s or after wrong claims. Timed reveals
-  do not cost Chances.
-- Wrong claim: costs one Chance, disables that candidate, reveals the next clue, and returns
+  do not cost lives.
+- Wrong claim: costs one life, disables that candidate, reveals the next clue, and returns
   input after the wrong-card exit.
 
 ## Castle and Correct-Claim Sequence
@@ -85,6 +85,9 @@ glint is left out; the gold and its glow stay.
 - Polly perches on the left tower under the HUD. Her speech bubble sits on the steps below
   the gate so it never covers a clue; after a correct claim it waits until the thrown block is
   down the tunnel. She must never obstruct the clues, the blocks, or the UP lane.
+- Correct-claim reactions read the existing Hunt rivalry state through `resolveRivalryState`
+  and choose from the Daily mood pool. Daily never writes that rivalry state. Session-level
+  miss/win/loss lines remain separate fixed beats.
 
 ## Owners
 

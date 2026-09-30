@@ -9,7 +9,8 @@ Nobody asked her to keep it. She appointed herself registrar of every Hunt that
 happens, and she writes about it whether the player wins, loses, or never
 opens the app at all.
 
-The player is allowed to read it. She hates that.
+The player is allowed to read it. She hates that. The route opens directly into the book;
+there is no explanatory intro modal.
 
 She writes every day, including days nobody played. That is what makes it a
 diary and not a log — a log only gets an entry when something happens, a

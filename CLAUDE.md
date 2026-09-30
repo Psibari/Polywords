@@ -91,8 +91,8 @@ Player-facing flow and copy: `docs/GAME_REFERENCE.md`. Merged into `play-screen-
 - One versioned state, `FirstRunOnboardingState` (`firstRunOnboarding.ts`), saved under
   `ONBOARDING_STATE_KEY` at `ONBOARDING_VERSION` 1. A version mismatch hydrates to defaults,
   which would re-run onboarding for every player, so new fields get hydrate-time defaults and
-  the version stays put. `INTRO_SEEN_KEY` is only a migration source for the retired intro;
-  `HuntIntroOverlay.tsx` is imported by nothing.
+  the version stays put. `INTRO_SEEN_KEY` is only a migration source for installs that saw
+  the retired fake-card intro; the old intro component has been removed.
 - Home: the first-ever Home plays Polly's four lines through `PollyHomePerch` (no modal), then
   `HomeScreen` glows HUNT once.
 - The first Hunt (`coreCompleted` false) is 8 gentle rounds opening on FINE with pinned masks
@@ -108,7 +108,7 @@ Player-facing flow and copy: `docs/GAME_REFERENCE.md`. Merged into `play-screen-
   through MaskBoard's `inputMode` → `externalInputLocked` → SwipeMask `disabled`. A locked board
   hides its cards from screen readers and offers no actions.
 - First Hunt Replay (Settings, `replayRequested`) re-runs only the FINE opening on the next new
-  Hunt. It never resets the Boss, Haunt or Vault gates, or the HUD lessons.
+  Hunt. It never resets the Boss or Haunt one-time gates, or the HUD lessons.
 
 HUD lessons teach a HUD element the first time the player lives the event behind it. There is
 no HUD tour, and the old automatic feather beat at the end of FINE is retired.
@@ -181,10 +181,12 @@ no HUD tour, and the old automatic feather beat at the end of FINE is retired.
 - Naming collision, not fixed: the nav tab says "Polybook" and so does the in-round book's
   spine in `MaskBoard.tsx` (style `vaultLabel`). Renaming either is Pete's call.
 - The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26).
+- It opens directly into the book. The stale one-time archive explainer was removed on
+  2026-09-30; do not restore an intro unless a new player problem justifies one.
 
 ### Daily (castle)
 
-Deterministic, one attempt per date, five UP-only rounds, two Chances. Rules and the full
+Deterministic, one attempt per date, five UP-only rounds, two lives. Rules and the full
 sequence are in `docs/DAILY_CHALLENGE_SPEC.md`. Rebuilt as the castle on `daily-castle-test`,
 merged into `play-screen-overhaul` on 2026-09-27.
 
@@ -350,8 +352,8 @@ merged into `play-screen-overhaul` on 2026-09-27.
 ## Services and Boundaries
 
 - App-wide `ErrorBoundary.tsx` wraps the navigator; its fallback uses system fonts only.
-- First-run onboarding is one versioned state (see Modes); the Boss, Haunt and Vault
-  explainers are one-time overlays with their own AsyncStorage gates.
+- First-run onboarding is one versioned state (see Modes); the Boss and Returning Haunt
+  explainers are separate one-time overlays with their own AsyncStorage gates.
 - `playtestTelemetry.ts` is local only; Daily reminders are optional local notifications.
 - Theme/material tokens live in `app/ui/`; render code outranks abandoned plans.
 - Preserve all stashes. Never merge `play-screen-overhaul` into `main`, or a branch into

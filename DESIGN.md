@@ -42,36 +42,59 @@ spacing:
 ## Direction
 
 The world is a premium, tactile, nocturnal bindery: deep purple and near-black surfaces,
-painted stone, authored book and castle objects, and scarce gilt accents. It should feel clever,
-crafted, and faintly dangerous—not flat, pastel, generic, or childish.
+authored books, painted stone, castle objects, and scarce gilt accents. It should feel clever,
+crafted, and faintly dangerous, never flat, generic, pastel, or childish.
 
-Live tokens and materials under `app/ui/` are authoritative. This file defines the durable
-design contract, not exact component measurements.
+Live tokens and materials under `app/ui/` are authoritative. This file defines durable visual
+rules, not exact measurements.
+
+## Consistency Rule
+
+Consistency means **shared grammar, not identical skins**.
+
+Surfaces share hierarchy, typography, semantic color, depth logic, and interaction quality while
+keeping the physical form that gives each mode its identity. A working surface is not redesigned
+merely because another screen uses a newer material.
+
+1. **Utility panels** — supporting information and controls. Dark indigo/near-black, restrained
+   depth, white copy, semantic accents only when meaningful. Current examples: Daily Entry and
+   Settings content cards.
+2. **Action plates** — tactile route or action controls where a physical plate improves the
+   action. Do not force them onto a screen whose simpler control reads better.
+3. **Decision objects** — Hunt masks, Daily stone answer blocks, and Boss sealed bricks keep
+   their native physical forms and remain neutral before commitment.
+4. **Signature objects** — the Hunt intake book and Daily castle keep authored art and should
+   not be flattened into generic UI.
+5. **Outcome ceremony** — MASTERED, HAUNTED, BANISHED, and other earned outcomes may use special
+   plaques, seals, or stone. Scarcity is part of their value.
+6. **Book/page surfaces** — the Polybook screen remains paper/book material, not a utility panel.
+
+A cross-screen change needs a player-facing benefit: better readability, hierarchy, material
+coherence, accessibility, or identity. "It matches another screen" is not enough.
 
 ## Hierarchy and Materials
 
 1. Current hero word or clue.
-2. Active card/tile decision.
-3. Physical destination object: the Polybook, or the Daily castle's gate.
+2. Active decision object.
+3. Physical destination or mode object.
 4. HUD/status.
 5. Polly visit or celebration.
 
-Use authored silhouettes and painted textures for signature objects. Supporting panels may
-use rounded rectangles, but must not visually compete with the play object. Depth comes from
-layered shadow, rim light, and physical motion; pressed cards lift rather than merely darken.
+Use authored silhouettes and painted textures for signature objects. Supporting panels may be
+simple rounded surfaces when that improves legibility. Depth comes from rim light, layered
+shadow, and physical motion; pressed objects should feel displaced, not merely recolored.
 
 ## Color
 
-- Gold means earned focus, commitment, or reward. Use it as trim, foil, glow, or a small
-  badge—not a large decorative fill.
+- Gold means earned focus, commitment, or reward. Keep it scarce.
 - Purple/near-black form the world. Rose/lavender support traps, ghosts, and secondary focus.
 - Polly green belongs to Polly. Wrong red belongs to wrong feedback.
 - No orange UI, pink/magenta, green outside Polly, or red outside wrong feedback.
-- Ordinary cards remain visually neutral until the player commits.
+- Ordinary decisions remain visually neutral until commitment.
 
 ## Type
 
-- Bebas Neue: hero words, major numbers, and display headlines.
+- Bebas Neue: hero words, major numbers, display headlines.
 - Barlow Condensed: UI, tiles, clues, labels, and Polly bubbles.
 - UI is generally uppercase; Polly speaks in natural case.
 - Do not add a third runtime font without explicit approval.
@@ -80,21 +103,20 @@ layered shadow, rim light, and physical motion; pressed cards lift rather than m
 
 - Portrait-first, thumb-readable, safe-area aware, and usable on small phones.
 - Active gameplay is nav-free and protects the vertical UP lane.
-- Motion must explain causality and preserve object continuity. Reward ceremony must never
-  expose stale state or accept input early.
-- Reduced-motion paths keep the same state order with shorter/quieter movement.
-- Test shadows, clipping, text fit, and gesture ownership on both iOS and Android.
+- Motion explains causality and preserves object continuity.
+- Reward ceremony never exposes stale state or accepts input early.
+- Reduced Motion keeps state order while shortening or quieting movement.
+- Test shadows, clipping, text fit, gesture ownership, and stacking on real iOS/Android devices.
 
 ## Signature Objects
 
-- **Polybook:** player-owned Hunt intake object; never label it as Polly's Vault.
-- **Mask cards:** neutral painted face before commitment; outcome color appears afterward.
-- **Boss gauntlet:** three face-down cards chosen, opened, then judged independently.
-- **Daily castle:** the clues ride a gate in the arch; answers are stone blocks in the wall.
-  A claimed block is thrown into the raised gate, and progress is coins on the courtyard floor
+- **Hunt intake book:** the in-round destination object; its current spine reads POLYBOOK.
+- **Hunt masks:** neutral painted face before commitment; outcome treatment follows the swipe.
+- **Boss gauntlet:** sealed bricks open into the Hunt decision language.
+- **Daily castle:** clues ride the gate; answers are stone blocks in the wall
   (`docs/DAILY_CHALLENGE_SPEC.md`).
-- **Polybook screen (Vault route):** Polly's diary, which the player reads
+- **Polybook screen (Vault route):** Polly's diary, read by the player
   (`docs/POLYBOOK.md`).
 
-Do not redesign `MaskBoard.tsx`, `SwipeMask.tsx`, or the signature objects by convention;
-inspect the live render path and get an approved direction first.
+Do not redesign `MaskBoard.tsx`, `SwipeMask.tsx`, or signature objects by convention.
+Inspect the live render path and get an approved direction first.

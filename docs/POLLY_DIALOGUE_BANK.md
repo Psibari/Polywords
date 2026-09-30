@@ -22,9 +22,9 @@ Good lanes: `Thought so.`, `Gotcha.`, `There it is.`, and `My traps remember you
 
 Avoid encouragement, tutorials, direct insults, ownership/stolen-language framing, long joke
 setups, generated dialogue, and system copy spoken as Polly. `BINGO BANGO ZZZZINGO!` is
-unassigned system text only. The five lines that broke the non-thief ruling (Pete,
-2026-08-29) were retired on 2026-09-01; no live Hunt or Daily line uses stealing language.
-Open for Pete: several Polybook lines end "Mine." (`pollyBookLines.ts`), meaning her traps.
+unassigned system text only. The five lines that broke the non-thief ruling (Pete, 2026-08-29) were retired on
+2026-09-01; no live Hunt or Daily line uses stealing language. The later Polybook "Mine."
+lines were also replaced; do not reopen possession language without a new ruling.
 
 ## Line pools
 
@@ -56,6 +56,9 @@ that register.
   make it that far." (Hunt progress). Reactive Hunt visits are held off while a lesson owns
   the screen.
 - Results may acknowledge outcomes without praising or humiliating the player.
-- Daily uses only approved lost-Chance/win/loss lines.
+- Daily correct-claim reactions draw from `DAILY_MOOD_LINES` using the existing rivalry state
+  read-only; Daily does not change that state. Session-level lost-life/win/loss lines are
+  separate fixed beats.
+- Returning Haunt intro copy is system text in `HauntIntroOverlay.tsx`, not Polly dialogue.
 - Ghost copy frames unfinished business, not punishment.
 - Copy changes never alter timing or event logic unless requested.

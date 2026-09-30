@@ -13,14 +13,15 @@ source below. Runtime code and data outrank documentation when describing curren
 | Daily gameplay/rules | `docs/DAILY_CHALLENGE_SPEC.md` |
 | Daily content/editorial writing | `docs/DAILY_CONTENT_WRITING_STANDARD.md` |
 | Polly copy | `docs/POLLY_DIALOGUE_BANK.md` |
+| Polybook | `docs/POLYBOOK.md` |
+| visual system | `DESIGN.md` |
 | workflow | `docs/WORKFLOW.md` |
 
 Authority: current user request > this file > focused source > `CLAUDE.md` > `CONTEXT.md`.
 Report conflicts; never blend them silently.
 
-Branches: `play-screen-overhaul` is the main working branch. `daily-castle-test` rebuilt the
-Daily Challenge and is merged (2026-09-27); don't work on it. `main` is stale. Details and
-open work are in `CONTEXT.md`.
+Branch state and open work live in `CONTEXT.md`. `play-screen-overhaul` is the main working
+branch; verify there before editing.
 
 ## Product Locks
 
@@ -30,7 +31,7 @@ Everything else below, and everything any other doc calls "locked", is current b
 and reopenable with a request. Treat those as "do not change casually", not "never change".
 
 - POLYWORDS creates recognition: “Wait… Oh. Right.”, not vocabulary instruction.
-- Home / Play / Vault / Settings are the main surfaces; active gameplay is nav-free.
+- Home / Play / Polybook / Settings are the main player-facing surfaces; active gameplay is nav-free.
 - Hunt: UP claims a REAL; RIGHT rejects a trap. No left swipe or tap-submit.
 - Daily is UP-only. Never apply Hunt's RIGHT gesture to Daily.
 - Ordinary choices never reveal truth, rarity, or value before commitment.
@@ -41,10 +42,9 @@ and reopenable with a request. Treat those as "do not change casually", not "nev
   explicit request. `MaskBoard.tsx` and `SwipeMask.tsx` require a focused war-room pass.
 - The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26). The in-round book's spine also reads POLYBOOK; that naming
   collision is open.
-- The Vault and the Polybook may never display a meaning, a trap or a hidden pair. Words
-  recur — `huntGenerator.ts` mixes mastered words back into the tension and panic pools
-  flagged `isMasteredReturn` — so any such display is an answer key for a game still in
-  progress. Counts, status and titles only.
+- The Polybook screen (the internal Vault route) may never display a meaning, trap, or hidden
+  pair. Words recur, so that would become an answer key. Counts, status, titles, and Polly's
+  diary copy only.
 
 ## Polly and Visual Locks
 
@@ -57,6 +57,9 @@ and reopenable with a request. Treat those as "do not change casually", not "nev
 - Locked palette: `#1A1830`, `#0F0D2A`, `#F5C842`, `#7B2D8B`, `#9B2D6B`, Polly green
   `#4CAF50`, wrong red `#CC2200`, and white. No orange UI, pink/magenta, green outside
   Polly, or red outside wrong feedback. Gold remains scarce.
+- Visual consistency means shared hierarchy, material logic, typography, and semantic color,
+  not identical skins. Do not replace a strong native surface just to make it match another
+  screen; `DESIGN.md` owns the surface-family rules.
 
 ## Content Boundaries
 
