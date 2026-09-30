@@ -1220,11 +1220,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       {isReadyToStart && (
         <View style={styles.startGate}>
           <View style={styles.startCard}>
-            <Image
-              source={DAILY_UI_PANEL_NEUTRAL}
-              resizeMode="stretch"
-              style={styles.startCardArtwork}
-            />
+            <View style={styles.startCardArtworkFrame} pointerEvents="none">
+              <Image
+                source={DAILY_UI_PANEL_NEUTRAL}
+                resizeMode="stretch"
+                style={styles.startCardArtwork}
+              />
+            </View>
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
             <Text style={styles.startRule}>FIVE WORDS · TWO CHANCES</Text>
@@ -1244,11 +1246,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 dailyStarting && styles.startButtonDisabled,
               ]}
             >
-              <Image
-                source={DAILY_UI_ACTION_PRIMARY}
-                resizeMode="stretch"
-                style={styles.startButtonArtwork}
-              />
+              <View style={styles.startButtonArtworkFrame} pointerEvents="none">
+                <Image
+                  source={DAILY_UI_ACTION_PRIMARY}
+                  resizeMode="stretch"
+                  style={styles.startButtonArtwork}
+                />
+              </View>
               <Text style={styles.startButtonText}>
                 {dailyStarting ? 'OPENING…' : 'BEGIN DAILY'}
               </Text>
@@ -1259,11 +1263,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               onPress={handleHome}
               style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
             >
-              <Image
-                source={DAILY_UI_ACTION_SECONDARY}
-                resizeMode="stretch"
-                style={styles.startButtonArtwork}
-              />
+              <View style={styles.startButtonArtworkFrame} pointerEvents="none">
+                <Image
+                  source={DAILY_UI_ACTION_SECONDARY}
+                  resizeMode="stretch"
+                  style={styles.startButtonArtwork}
+                />
+              </View>
               <Text style={styles.startHomeText}>NOT NOW</Text>
             </Pressable>
           </View>
@@ -1320,6 +1326,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         <Pressable
           onPress={async () => {
             await resetDailyForDev();
+            await startDailyChallenge();
           }}
           style={styles.devResetBtn}
         >
@@ -1399,12 +1406,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'visible',
   },
-  startCardArtwork: {
+  startCardArtworkFrame: {
     position: 'absolute',
     top: 0,
     right: 0,
     bottom: 0,
     left: 0,
+  },
+  startCardArtwork: {
     width: '100%',
     height: '100%',
   },
@@ -1449,12 +1458,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 22,
   },
-  startButtonArtwork: {
+  startButtonArtworkFrame: {
     position: 'absolute',
-    top: -5,
-    right: -4,
-    bottom: -5,
-    left: -4,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  startButtonArtwork: {
+    width: '100%',
+    height: '100%',
   },
   startButtonPressed: {
     opacity: 0.82,
