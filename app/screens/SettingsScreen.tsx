@@ -402,12 +402,12 @@ export default function SettingsScreen({ navigation }: Props) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Development</Text>
             <ImageBackground
-              source={stoneTileTexture}
-              resizeMode="repeat"
-              style={styles.card}
-              imageStyle={styles.cardTexture}
+              source={settingsUtilityPanel}
+              resizeMode="stretch"
+              capInsets={SETTINGS_PANEL_CAP_INSETS}
+              style={[styles.card, styles.utilityCard]}
+              imageStyle={styles.utilityImage}
             >
-              <View pointerEvents="none" style={styles.plaqueHighlight} />
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowPollyAnimations(true)}
