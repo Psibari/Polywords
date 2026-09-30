@@ -582,6 +582,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   // useState initialiser, never during render.
   const [lossLineRoll] = useState(() => Math.random());
   const verdictText = resultLabel;
+  const verdictUsesTallBox = verdictText === "CLOSE, BUT CLOSE DOESN'T COUNT.";
   const verdictSub = outcome === 'loss'
     ? pickLossVerdictLine(ghosts.length, game.lossCause, lossLineRoll)
     : null;
@@ -628,6 +629,45 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
   return (
     <View style={rs.container}>
+      {/* ── FIXED TOP — outcome first, then every next-step action ── */}
+      <View style={rs.topStack}>
+        <Animated.View
+          style={[rs.verdictBlock, { transform: [{ scale: verdictScale }, { translateY: verdictY }] }]}
+        >
+          <View style={[rs.verdictBox, !verdictUsesTallBox && rs.verdictBoxCompact]}>
+            <FoilWord
+              word={verdictText}
+              fontSize={resultsType.verdict}
+              numberOfLines={0}
+              baseStyle={rs.verdict}
+            />
+          </View>
+          {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
+          {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
+
+          <Text style={rs.perfectLine}>
+            {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
+          </Text>
+        </Animated.View>
+
+        <Animated.View
+          pointerEvents={detailsInteractive ? 'auto' : 'none'}
+          accessibilityElementsHidden={!detailsInteractive}
+          importantForAccessibility={detailsInteractive ? 'auto' : 'no-hide-descendants'}
+          style={[rs.actions, { opacity: detailOpacity, transform: [{ translateY: detailY }] }]}
+        >
+          {hasGoldFeather && (
+            <GoldFeatherButton
+              onPress={handleUseGoldFeather}
+              disabled={usingGoldFeather}
+            />
+          )}
+          <StartNewHuntButton onPress={handleRestart} />
+          <ResultsQuietRow onShare={handleShare} onHome={handleHome} />
+        </Animated.View>
+      </View>
+
+      {/* ── SCROLLABLE BREAKDOWN — only the run details move ── */}
       <View style={rs.scrollWrap} onLayout={handleResultsScrollLayout}>
         <ScrollView
           style={rs.scroll}
@@ -637,27 +677,6 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           onContentSizeChange={handleResultsContentSizeChange}
           scrollEventThrottle={16}
         >
-          {/* ── VERDICT — the ceremony, appears exactly once ── */}
-          <Animated.View
-            style={[rs.verdictBlock, { transform: [{ scale: verdictScale }, { translateY: verdictY }] }]}
-          >
-            <View style={rs.verdictBox}>
-              <FoilWord
-                word={verdictText}
-                fontSize={resultsType.verdict}
-                numberOfLines={0}
-                baseStyle={rs.verdict}
-              />
-            </View>
-            {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
-            {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
-
-            <Text style={rs.perfectLine}>
-              {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
-            </Text>
-          </Animated.View>
-
-          {/* ── DETAILS — reveal beneath the verdict ── */}
           <Animated.View style={{ opacity: detailOpacity, transform: [{ translateY: detailY }] }}>
             {/* Ledger */}
             {wordOnlyResults.length > 0 && (
@@ -718,23 +737,6 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         )}
       </View>
 
-      {/* ── FOOTER — always above Polly's reach, outside the scroll ── */}
-      <Animated.View
-        pointerEvents={detailsInteractive ? 'auto' : 'none'}
-        accessibilityElementsHidden={!detailsInteractive}
-        importantForAccessibility={detailsInteractive ? 'auto' : 'no-hide-descendants'}
-        style={[rs.footer, { opacity: detailOpacity, transform: [{ translateY: detailY }] }]}
-      >
-        {hasGoldFeather && (
-          <GoldFeatherButton
-            onPress={handleUseGoldFeather}
-            disabled={usingGoldFeather}
-          />
-        )}
-        <StartNewHuntButton onPress={handleRestart} />
-        <ResultsQuietRow onShare={handleShare} onHome={handleHome} />
-      </Animated.View>
-
       <PollyResultsPerch outcome={outcome} line={pollyMoment?.line ?? null} />
     </View>
   );
@@ -751,10 +753,19 @@ const rs = StyleSheet.create({
   scroll: {
     flex: 1,
   },
-  scrollContent: {
+  topStack: {
     paddingHorizontal: 24,
     paddingTop: 36,
-    paddingBottom: 12,
+  },
+  actions: {
+    paddingBottom: 14,
+    borderBottomWidth: 1.5,
+    borderBottomColor: resultsLedger.panelRim,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE + 24,
   },
   scrollFadeTop: {
     position: 'absolute',
@@ -770,25 +781,18 @@ const rs = StyleSheet.create({
     bottom: 0,
     height: 28,
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE, // clears Polly's reach regardless of scroll position
-    // A permanent seam — not conditional on scroll state like the fades —
-    // marking where the ledger/callouts area ends and the footer begins, so
-    // it always reads as "there's a boundary here" even at rest.
-    borderTopWidth: 1.5,
-    borderTopColor: resultsLedger.panelRim,
-  },
   verdictBlock: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 18,
   },
   verdictBox: {
     width: '100%',
     minHeight: resultsType.verdict * 2.6,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  verdictBoxCompact: {
+    minHeight: resultsType.verdict * 1.35,
   },
   verdict: {
     fontFamily: FONTS.wordDisplay,
