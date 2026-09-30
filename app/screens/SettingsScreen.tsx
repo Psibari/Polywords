@@ -275,14 +275,13 @@ export default function SettingsScreen({ navigation }: Props) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Game</Text>
-          <View style={[styles.card, styles.gameUtilityCard]}>
-            <View pointerEvents="none" style={styles.gameUtilityArtworkFrame}>
-              <Image
-                source={settingsUtilityPanel}
-                resizeMode="stretch"
-                style={styles.gameUtilityArtwork}
-              />
-            </View>
+          <ImageBackground
+            source={settingsUtilityPanel}
+            resizeMode="stretch"
+            capInsets={{ top: 82, right: 88, bottom: 82, left: 88 }}
+            style={[styles.card, styles.gameUtilityCard]}
+            imageStyle={styles.gameUtilityImage}
+          >
             <ToggleRow
               label="Sound"
               enabled={soundEnabled}
@@ -320,7 +319,7 @@ export default function SettingsScreen({ navigation }: Props) {
               enabled={reduceFlashesOverride}
               onPress={() => setReduceFlashesOverride(!reduceFlashesOverride)}
             />
-          </View>
+          </ImageBackground>
         </View>
 
         <View style={styles.section}>
@@ -717,22 +716,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   gameUtilityCard: {
-    position: 'relative',
     borderWidth: 0,
     borderRadius: 18,
-    backgroundColor: 'transparent',
+    backgroundColor: '#15122F',
     overflow: 'hidden',
   },
-  gameUtilityArtworkFrame: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-  },
-  gameUtilityArtwork: {
-    width: '100%',
-    height: '100%',
+  gameUtilityImage: {
+    borderRadius: 18,
   },
   warningCard: {
     borderColor: chamberMaterial.emberAccent,
