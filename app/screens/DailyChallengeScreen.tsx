@@ -106,6 +106,10 @@ const DailyCastleTuningPanel = __DEV__
   ? require('../dev/DailyCastleTuningPanel').default
   : null;
 
+const DAILY_UI_PANEL_NEUTRAL = require('../../assets/images/dailycastle/ui/daily_utility_panel_neutral.png');
+const DAILY_UI_ACTION_PRIMARY = require('../../assets/images/dailycastle/ui/daily_action_plate_primary.png');
+const DAILY_UI_ACTION_SECONDARY = require('../../assets/images/dailycastle/ui/daily_action_plate_secondary.png');
+
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 function dailyGateRiseMs(motion: boolean): number {
@@ -1216,6 +1220,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       {isReadyToStart && (
         <View style={styles.startGate}>
           <View style={styles.startCard}>
+            <Image
+              source={DAILY_UI_PANEL_NEUTRAL}
+              resizeMode="stretch"
+              style={styles.startCardArtwork}
+              pointerEvents="none"
+            />
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
             <Text style={styles.startRule}>FIVE WORDS · TWO CHANCES</Text>
@@ -1235,6 +1245,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 dailyStarting && styles.startButtonDisabled,
               ]}
             >
+              <Image
+                source={DAILY_UI_ACTION_PRIMARY}
+                resizeMode="stretch"
+                style={styles.startButtonArtwork}
+                pointerEvents="none"
+              />
               <Text style={styles.startButtonText}>
                 {dailyStarting ? 'OPENING…' : 'BEGIN DAILY'}
               </Text>
@@ -1245,6 +1261,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               onPress={handleHome}
               style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
             >
+              <Image
+                source={DAILY_UI_ACTION_SECONDARY}
+                resizeMode="stretch"
+                style={styles.startButtonArtwork}
+                pointerEvents="none"
+              />
               <Text style={styles.startHomeText}>NOT NOW</Text>
             </Pressable>
           </View>
@@ -1376,15 +1398,15 @@ const styles = StyleSheet.create({
   startCard: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: dailyScrollMaterial.goldTrim,
-    backgroundColor: 'rgba(26,24,48,0.92)',
-    paddingHorizontal: 24,
-    paddingVertical: 28,
+    paddingHorizontal: 34,
+    paddingVertical: 36,
     alignItems: 'center',
-    // Stone wall texture behind the card
-    overflow: 'hidden',
+    overflow: 'visible',
+  },
+  startCardArtwork: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   startKicker: {
     color: dailyResultsMaterial.challengeLabel,
@@ -1422,12 +1444,19 @@ const styles = StyleSheet.create({
   },
   startButton: {
     width: '100%',
-    minHeight: 54,
-    borderRadius: 16,
-    backgroundColor: dailyResultsMaterial.shareBtnBg,
+    minHeight: 62,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 22,
+  },
+  startButtonArtwork: {
+    position: 'absolute',
+    top: -5,
+    right: -4,
+    bottom: -5,
+    left: -4,
+    width: 'auto',
+    height: 'auto',
   },
   startButtonPressed: {
     opacity: 0.82,
@@ -1436,21 +1465,21 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   startButtonText: {
-    color: dailyResultsMaterial.shareBtnText,
+    color: '#F2EEF8',
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 17,
     letterSpacing: 2.5,
   },
   startHomeButton: {
-    minHeight: 44,
+    width: '100%',
+    minHeight: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    marginTop: 8,
+    marginTop: 6,
   },
   startHomeText: {
-    color: dailyResultsMaterial.homeText,
+    color: '#CFC7DC',
     fontFamily: FONTS.label,
     includeFontPadding: false,
     fontSize: 13,
