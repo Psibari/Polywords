@@ -272,7 +272,7 @@ function ResultsOverlay({
           if (isWin) {
             return (
               <Text style={res.stat}>
-                {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words - ${dailyResult.chancesRemaining} chances left`.toUpperCase()}
+                {`${dailyResult.solvedCount}/${DAILY_ROUND_COUNT} words - ${dailyResult.chancesRemaining} lives left`.toUpperCase()}
               </Text>
             );
           }
@@ -1229,7 +1229,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             </View>
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
-            <Text style={styles.startRule}>FIVE WORDS · TWO CHANCES</Text>
+            <Text style={styles.startRule}>FIVE WORDS · TWO LIVES</Text>
             <Text style={styles.startBody}>
               One word connects the clues. Swipe UP to claim it. This is your
               one attempt for today, and it begins when you enter.
