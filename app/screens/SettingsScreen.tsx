@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Alert,
+  Image,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -39,6 +40,7 @@ import appConfig from '../../app.json';
 const APP_VERSION = appConfig.expo.version;
 
 const stoneTileTexture = require('../../assets/images/textures/stoneTile.png');
+const settingsUtilityPanel = require('../../assets/images/settings/settings_utility_panel_neutral.png');
 
 const PRIVACY_TEXT =
   "POLYWORDS stores your game progress locally on this device only — " +
@@ -273,13 +275,14 @@ export default function SettingsScreen({ navigation }: Props) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Game</Text>
-          <ImageBackground
-            source={stoneTileTexture}
-            resizeMode="repeat"
-            style={styles.card}
-            imageStyle={styles.cardTexture}
-          >
-            <View pointerEvents="none" style={styles.plaqueHighlight} />
+          <View style={[styles.card, styles.gameUtilityCard]}>
+            <View pointerEvents="none" style={styles.gameUtilityArtworkFrame}>
+              <Image
+                source={settingsUtilityPanel}
+                resizeMode="stretch"
+                style={styles.gameUtilityArtwork}
+              />
+            </View>
             <ToggleRow
               label="Sound"
               enabled={soundEnabled}
@@ -317,7 +320,7 @@ export default function SettingsScreen({ navigation }: Props) {
               enabled={reduceFlashesOverride}
               onPress={() => setReduceFlashesOverride(!reduceFlashesOverride)}
             />
-          </ImageBackground>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -712,6 +715,24 @@ const styles = StyleSheet.create({
   },
   cardTexture: {
     borderRadius: 18,
+  },
+  gameUtilityCard: {
+    position: 'relative',
+    borderWidth: 0,
+    borderRadius: 18,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
+  },
+  gameUtilityArtworkFrame: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  gameUtilityArtwork: {
+    width: '100%',
+    height: '100%',
   },
   warningCard: {
     borderColor: chamberMaterial.emberAccent,
