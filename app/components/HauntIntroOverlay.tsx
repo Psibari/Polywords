@@ -45,15 +45,14 @@ export function HauntIntroOverlay({ onDismiss }: Props) {
     <Animated.View style={[ho.root, { opacity }]}>
       <View style={ho.card}>
         <Text style={ho.kicker}>RETURNING HAUNT</Text>
-        <Text style={ho.headline}>DON'T LOSE TO{'\n'}A PARROT AGAIN</Text>
+        <Text style={ho.headline}>GUESS WHO'S BACK?</Text>
         <Text style={ho.body}>
-          It's the one that got you last time. It'll keep haunting you until
-          you beat it. Polly's the one with the bird brain here — go prove
-          it.
+          The word that beat you is back to haunt you. Polly wants to watch
+          you lose to it all over again.
         </Text>
         <Text style={ho.stakes}>
-          Beat it: BANISHED, gone for good. Miss it again: STILL HAUNTED —
-          she keeps it and it comes back.
+          Beat it this time: BANISHED. Lose again: STILL HAUNTED.
+          {'\n\n'}DON'T LOSE TO A PARROT TWICE.
         </Text>
 
         <Pressable
