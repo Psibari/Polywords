@@ -1054,7 +1054,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       onWrongSwipe({ brokeRealChain, fellOffSeverity }) {
         performWrongSwipeFeedback(brokeRealChain, fellOffSeverity);
       },
-      onGauntletCorrect({ swipedUp, phrase }) {
+      onGauntletCorrect({ swipedUp }) {
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
         Haptics.cueAsync('bossCorrect');
         // gauntletCorrectCount in the store hasn't incremented for this
