@@ -47,12 +47,11 @@ export function HauntIntroOverlay({ onDismiss }: Props) {
         <Text style={ho.kicker}>RETURNING HAUNT</Text>
         <Text style={ho.headline}>GUESS WHO'S BACK?</Text>
         <Text style={ho.body}>
-          The word that beat you is back to haunt you. Polly wants to watch
-          you lose to it all over again.
+          The word that beat you is back to haunt you. Polly wants another win.
         </Text>
         <Text style={ho.stakes}>
-          Beat it this time: BANISHED. Lose again: STILL HAUNTED.
-          {'\n\n'}DON'T LOSE TO A PARROT TWICE.
+          Beat it: BANISHED. Lose: STILL HAUNTED.
+          {'\n\n'}DON'T GIVE A PARROT ANOTHER WIN.
         </Text>
 
         <Pressable
