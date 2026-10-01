@@ -1,6 +1,5 @@
 import React from 'react';
-import { Image } from 'expo-image';
-import { ImageStyle, StyleProp, StyleSheet } from 'react-native';
+import { Image, ImageStyle, StyleProp, StyleSheet } from 'react-native';
 
 const maskCardFace = require('../../../assets/images/mask-card-v1/card-face.png');
 
@@ -12,7 +11,8 @@ export default function MaskCardArtwork({ style }: Props) {
   return (
     <Image
       source={maskCardFace}
-      contentFit="fill"
+      resizeMode="stretch"
+      fadeDuration={0}
       style={[styles.artwork, style]}
     />
   );
