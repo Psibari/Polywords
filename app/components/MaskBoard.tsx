@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -1319,7 +1319,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     }
   }, [mechanics.visibleGridMasks.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
+  // Promotion has to seed the active card at the backing-card offset before
+  // the frame is painted. Running this in a normal effect allowed one frame
+  // of the newly-mounted active card at y=0 before cardPopY jumped down to
+  // the backing position, which is the intermittent "blink" visible on
+  // device. Layout effect keeps that handoff atomic to the player.
+  useLayoutEffect(() => {
     const newTopId = mechanics.remainingMaskIds[0] ?? null;
     if (newTopId && newTopId !== prevTopIdRef.current) {
       prevTopIdRef.current = newTopId;
@@ -2032,7 +2037,11 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                         styles.deckBackingCard,
                         {
                           width: backingCardWidth,
-                          opacity: deckBackingOp,
+                          // Depth shading belongs to the whole physical card,
+                          // including its phrase. Keeping text outside this
+                          // opacity was what occasionally let the words appear
+                          // a frame ahead of the painted face.
+                          opacity: Animated.multiply(deckBackingOp, anim.visualOpacity),
                           transform: [
                             { translateY: Animated.add(deckBackingY, anim.depthY) },
                             { scale: anim.scale },
@@ -2041,15 +2050,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                         },
                       ]}
                     >
-                      <Animated.View
-                        pointerEvents="none"
-                        style={[
-                          StyleSheet.absoluteFill,
-                          { opacity: anim.visualOpacity },
-                        ]}
-                      >
-                        <MaskCardArtwork />
-                      </Animated.View>
+                      <MaskCardArtwork />
                       {backingMask && (
                         <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
                           <Text
