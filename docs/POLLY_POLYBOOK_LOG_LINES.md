@@ -1,6 +1,6 @@
 # POLLY — POLYBOOK LOG LINES
 
-**Date:** 1 October 2026. Today-entry expansion approved; Quiet Day revisions are parked for later review.
+**Date:** 1 October 2026. Today-entry expansion approved; Work Log pool expansion approved through Haunt Broken.
 
 Measured in Buggie at real size against the real page width (160pt usable).
 Anything that would overflow is flagged. Lines are picked at render time from
@@ -35,7 +35,7 @@ Twelve-point, her hand. One row per day.
 - Crown untouched. Good.
 - Champ. Still. Obviously.
 - They lost their nerve.
-- Nobody volunteered for humiliation. [PARKED — VERIFY WIDTH BEFORE CODE SYNC]
+- Nobody volunteered for humiliation.
 - Still undefeated. Note it.
 - No takers. Imagine that.
 
@@ -64,6 +64,9 @@ Twelve-point, her hand. One row per day.
 - Nothing got through.
 - Held everything. Note it.
 - Big deal.
+- I think I’ll polish my crown.
+- Not even a dent.
+- Just chilling over here.
 
 ### 1.3 Heavy day — a lot got past her
 
@@ -111,6 +114,10 @@ Twelve-point, her hand. One row per day.
 - Held it. Barely. Held it.
 - I'm still the boss.
 - Nowhere near the end.
+- The stones went back in the wall.
+- Only the worthy will get by.
+- That one should haunt them nicely.
+- Let’s see if they fall for it twice.
 
 ### 1.5 First day
 
@@ -120,6 +127,15 @@ Twelve-point, her hand. One row per day.
 - A new one. Noted.
 - Another one. Fine.
 - We shall see about this.
+- This one looks soft. Give them some extra feathers.
+- Five Daily Challenges couldn’t help this one.
+- Bet they get where, wear, and were mixed up.
+- I bet this one still needs phonics lessons.
+- This one thinks “oxymoron” is an insult.
+- This one would be lost without spell check.
+- This one’s still waiting for the movie version of the dictionary.
+- Probably celebrated when the spelling test was canceled.
+- Probably thinks a homophone is a new smartphone.
 
 ### 1.6 Mercy — the run was revived
 
@@ -130,10 +146,34 @@ Twelve-point, her hand. One row per day.
 - Let it go on. Why not.
 - Gave them another.
 - Too soft, as usual.
+- Happy birthday, pal.
+- I was feeling charitable.
+- Don’t make me regret this.
+- They looked so pathetic.
+- Consider it a donation.
+- One more chance. Don’t waste it.
+- I wasn’t finished with them yet.
+- It’s more fun when they struggle.
+- I could’ve ended it there.
+- They owe me for that one.
+- Call it professional courtesy.
+- My good deed for the year.
+- Even I have a heart. Apparently.
+- Fine. One more.
+- I’m getting soft. Disgusting.
+- That was pity. Nothing more.
+- I wanted to beat them properly.
+- They’re more entertaining alive.
+- Consider that a royal pardon.
+- I’ll collect on that favor later.
+- Don’t tell anyone I did that.
+- Must be my generous phase.
+- I blame the holiday spirit.
+- They looked like they needed it.
 
-> **1.6 is a new bucket.** Verified in `polyRunEngine.ts`: the Hunt revive is
+> **1.6 is a Hunt bucket.** Verified in `polyRunEngine.ts`: the Hunt revive is
 > Mercy, and the engine comment says she revives her prey rather than ending it.
-> It is a Hunt event, so it is legal in the log. Thin — needs more lines.
+> It is a Hunt event, so it is legal in the log.
 
 ### 1.7 Two-line rows without a word
 
@@ -235,6 +275,8 @@ My worst work.
 - Fine. It was old work.
 - That set was tired.
 - Big deal.
+- Who cares?
+- One win. Look at the scoreboard.
 
 ### 2.2 Haunt left — walked away from
 
@@ -246,6 +288,24 @@ My worst work.
 - That one holds.
 - Missed entirely.
 - Never even close.
+- The haunts are stacking up.
+- Might as well live in a haunted house.
+- Lost the same way as last time. Instant replay.
+- Again? This is getting embarrassing.
+- Same word. Same result.
+- They fell for it twice. Beautiful.
+- Still haunted. I love this one.
+- This one might haunt them forever.
+- Back it goes.
+- I knew they’d miss it again.
+- They remembered nothing. Excellent.
+- Maybe third time’s the charm.
+- They saw it before. That’s the funny part.
+- I almost feel bad. Almost.
+- See you again soon.
+- This one isn’t going anywhere.
+- I’m starting to get attached to this one.
+- At this point, it lives here.
 
 ### 2.3 Haunt broken — came back and took it
 
@@ -257,6 +317,34 @@ My worst work.
 - They remembered. Hm.
 - Came back. Of course.
 - That one is settled.
+- It’s about time.
+- Finally got past one.
+- They’re learning from their mistakes now.
+- Look who thinks they’re a ghost hunter now.
+- There goes another perfectly good haunt.
+- I liked that one.
+- Fine. They learned something.
+- Apparently they do remember things.
+- They finally figured it out.
+- Took them long enough.
+- Well, that won’t haunt them anymore.
+- I should’ve changed the trap.
+- Should’ve known they’d remember.
+- They came prepared this time.
+- I preferred them the first time.
+- Beginner’s luck. The second time.
+- One less haunt. Tragic.
+- They ruined a perfectly good haunt.
+- I was saving that one.
+- So much for the rematch.
+- They got their revenge. Cute.
+- Fine. Consider it settled.
+- That ghost is officially dead.
+- I suppose they earned that one.
+- Look who finally learned.
+- I’ll find something else to haunt them with.
+- Enjoy it. I have more.
+- One down. Plenty left.
 
 ---
 ## Part 3 — today's entry, right page
@@ -608,10 +696,9 @@ thing either way.
 ---
 ## Still needed
 
-- More MERCY lines. New bucket, seven deep.
 - Verify the expanded Today-entry pools at locked typography; rewrite only lines that physically fail.
 - The line where she first writes *they* as a person rather than a dodge.
 - Haunt notes per rivalry state, if state is meant to colour them.
 - Today’s entries are now ten per rivalry state in the authored source; code sync still required.
 - Future one-time payoff where she drops both the excuse and "the visitor" remains separate from the regular CONCEDING pool.
-- Quiet Day revisions are parked. Five replacements are source-approved candidates; "Nobody volunteered for humiliation." requires width verification before code sync.
+- Work Log pool expansions through Haunt Broken are approved; verify new lines at locked typography and rewrite only lines that physically fail.
