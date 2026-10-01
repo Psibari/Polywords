@@ -1,6 +1,6 @@
 # POLLY — POLYBOOK LOG LINES
 
-**Date:** 4 September 2026. Pete's additions folded in. Nothing in code.
+**Date:** 1 October 2026. Today-entry expansion approved; Quiet Day revisions are parked for later review.
 
 Measured in Buggie at real size against the real page width (160pt usable).
 Anything that would overflow is flagged. Lines are picked at render time from
@@ -20,22 +20,22 @@ Twelve-point, her hand. One row per day.
 
 - Scared them off, then.
 - Nobody dared. Naturally.
-- Frightened them away.
+- Must be intimidating.
 - No one. They know.
 - Word must have spread.
-- Afraid, I expect.
+- Probably heard about me.
 - The champ rests.
 - Champion. Unchallenged.
 - No challengers today.
 - They stayed away. Wise.
 - Hiding, I assume.
-- Not brave enough today.
+- Maybe tomorrow. Doubt it.
 - Undefeated. Again.
-- Too frightened, I expect.
-- I am still the champ.
+- A peaceful day. Suspicious.
+- Crown untouched. Good.
 - Champ. Still. Obviously.
 - They lost their nerve.
-- Nerve failed them.
+- Nobody volunteered for humiliation. [PARKED — VERIFY WIDTH BEFORE CODE SYNC]
 - Still undefeated. Note it.
 - No takers. Imagine that.
 
@@ -283,6 +283,48 @@ Not worth the ink.
 Next.
 ```
 
+```
+Another visitor.
+Probably just a tourist.
+Not a real player.
+```
+
+```
+They came back.
+Once proves nothing.
+I barely noticed.
+```
+
+```
+Made a few moves.
+Those were easy.
+Just a setup.
+```
+
+```
+A decent run.
+Beginner’s luck.
+It won’t last.
+```
+
+```
+They got through.
+I wasn’t trying.
+Obviously.
+```
+
+```
+Getting confident.
+That’s adorable.
+Let them.
+```
+
+```
+Another decent showing.
+Still not impressed.
+Moving on.
+```
+
 ### AMUSED
 
 ```
@@ -309,6 +351,42 @@ See what they have.
 Same as always.
 ```
 
+```
+They’re improving.
+How entertaining.
+Almost impressive... almost.
+```
+
+```
+They’re getting better.
+This could be fun.
+For me, obviously.
+```
+
+```
+They surprised me.
+Once.
+Let’s not celebrate.
+```
+
+```
+Another good run.
+They’re enjoying this.
+So am I.
+```
+
+```
+They caught me twice.
+Getting interesting.
+Don’t get excited.
+```
+
+```
+I know their tricks.
+They know mine.
+Game time.
+```
+
 ### WATCHFUL
 
 ```
@@ -329,18 +407,60 @@ Coincidence.
 Obviously.
 ```
 
+```
+They’re learning me.
+Small inconvenience.
+I’ll adjust.
+```
+
+```
+That was too close.
+Not worried.
+Just paying attention.
+```
+
+```
+They’re adapting.
+So am I.
+Let’s see who’s faster.
+```
+
+```
+Another clean run.
+I’m seeing a pattern.
+I don’t like patterns.
+```
+
+```
+They’re harder to fool.
+Good.
+I was getting bored.
+```
+
+```
+They saw that coming.
+Interesting.
+I’ll make the next one harder.
+```
+
+```
+That was close.
+I don’t like close.
+Time to shake it up.
+```
+
 ### RATTLED
 
 ```
-I let them have that.    [TOO WIDE 164px]
-I was not trying.
+I gave them that.
+I wasn’t trying.
 Ask anyone.
 ```
 
 ```
-Bad week. Bad light.
-Bad batch.
-Not about them.
+I didn’t get any sleep.
+I’m a little under the weather.
+They know it. I know it.
 ```
 
 ```
@@ -349,25 +469,110 @@ Which is still luck.
 I checked.
 ```
 
+```
+Something’s off.
+Cheater, cheater.
+Big cheater.
+```
+
+```
+That one doesn’t count.
+I have my reasons.
+Several, actually.
+```
+
+```
+They’re on a streak.
+Who the hell is this guy?
+I want a background check.
+```
+
+```
+That was not supposed to work.
+I planned for that.
+I think.
+```
+
+```
+They did it again.
+This is getting annoying.
+Very annoying.
+```
+
+```
+Why is this happening?
+What is going on?
+This can’t be happening.
+```
+
+```
+Okay. That was good.
+Annoyingly good.
+I hate this.
+```
+
 ### CONCEDING
 
 ```
 Who am I?
-I doubt myself now.
-Truly.
+What have I become?
+This is humiliating.
 ```
 
 ```
-I have run out of
-reasons. So.
-New traps, then.
+I’m out of excuses.
+There. I said it.
+Back to the drawing board.
 ```
 
 ```
-Nothing I build holds.    [TOO WIDE 168px]
-Not one of them.
-I need better work.
+They break everything.
+Every single time.
+I need better traps.
 ```
+
+```
+They’re actually good.
+There. You happy now?
+You’ll never hear that again.
+```
+
+```
+I tried everything.
+They keep coming back.
+Again and again and again.
+```
+
+```
+I’m getting too old for this.
+Maybe that’s the problem.
+It’s definitely my age.
+```
+
+```
+The talent is undeniable.
+There’s nothing else to say.
+I’ve got nothing.
+```
+
+```
+I’ve underestimated them.
+For quite a while.
+That was a mistake.
+```
+
+```
+They’ve earned this.
+I hate admitting that.
+But they have.
+```
+
+```
+I know when I’m beaten.
+Apparently, it’s now.
+My reign is over.
+```
+
 
 ---
 ## Part 4 — struck-out pairs
@@ -404,10 +609,9 @@ thing either way.
 ## Still needed
 
 - More MERCY lines. New bucket, seven deep.
-- More CONCEDING. Thinnest pool and it is the payoff.
+- Verify the expanded Today-entry pools at locked typography; rewrite only lines that physically fail.
 - The line where she first writes *they* as a person rather than a dodge.
 - Haunt notes per rivalry state, if state is meant to colour them.
-- Today's entries need to reach roughly ten per rivalry state — the entry is
-  now re-picked daily, not only on a mood change.
-- The payoff entry itself: the one where she drops both the excuse and
-  "the visitor" at once.
+- Today’s entries are now ten per rivalry state in the authored source; code sync still required.
+- Future one-time payoff where she drops both the excuse and "the visitor" remains separate from the regular CONCEDING pool.
+- Quiet Day revisions are parked. Five replacements are source-approved candidates; "Nobody volunteered for humiliation." requires width verification before code sync.
