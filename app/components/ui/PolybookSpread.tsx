@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,7 +17,7 @@ import {
   WorkLogRow,
 } from "../../game/bookPage";
 import { localDateKey } from "../../game/bookLog";
-import { STRUCK_PAIRS, TODAY_ENTRIES } from "../../game/pollyBookLines";
+import { STRUCK_PAIRS, TODAY_ENTRIES, type BookRivalryState } from "../../game/pollyBookLines";
 import { resolveRivalryState } from "../../game/pollyMood";
 import { createSeededRng, deriveSeed } from "../../game/seededRandom";
 import { INK, INK_MUTED } from "../../ui/polybookInk";
@@ -186,6 +187,14 @@ type Props = {
   pollyMemory: PollyMemory;
 };
 
+const POLYBOOK_DEV_STATES: readonly BookRivalryState[] = [
+  "DISMISSIVE",
+  "AMUSED",
+  "WATCHFUL",
+  "RATTLED",
+  "CONCEDING",
+];
+
 export function PolybookSpread({ progress, pollyMemory }: Props) {
   const { width: screenWidth } = useWindowDimensions();
 
@@ -197,6 +206,8 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   // first layout pass fires.
   const [logHeaderHeight, setLogHeaderHeight] = useState(30);
   const [totalsHeight, setTotalsHeight] = useState(90);
+  const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
+  const [devTodayIndex, setDevTodayIndex] = useState(0);
 
   const bookSeed = progress.bookSeed ?? 0;
   const log = progress.bookLog ?? [];
@@ -262,11 +273,30 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
   // Re-picked daily, stable within a day — keyed on today's date, so it
   // moves only when the calendar does, never on re-render.
+  const displayedRivalryState = __DEV__ && devRivalryState ? devRivalryState : rivalryState;
+
   const todayEntry = useMemo(() => {
-    const pool = TODAY_ENTRIES[rivalryState];
+    const pool = TODAY_ENTRIES[displayedRivalryState];
+    if (__DEV__ && devRivalryState) {
+      return pool[devTodayIndex % pool.length];
+    }
     const rng = createSeededRng(deriveSeed(bookSeed, today));
     return pool[Math.floor(rng() * pool.length)];
-  }, [rivalryState, bookSeed, today]);
+  }, [displayedRivalryState, devRivalryState, devTodayIndex, bookSeed, today]);
+
+  function cycleDevState() {
+    const current = devRivalryState ?? rivalryState;
+    const index = POLYBOOK_DEV_STATES.indexOf(current);
+    setDevRivalryState(POLYBOOK_DEV_STATES[(index + 1) % POLYBOOK_DEV_STATES.length]);
+    setDevTodayIndex(0);
+  }
+
+  function cycleDevEntry() {
+    const state = devRivalryState ?? rivalryState;
+    const pool = TODAY_ENTRIES[state];
+    setDevRivalryState(state);
+    setDevTodayIndex((index) => (index + 1) % pool.length);
+  }
 
   const pageWidth = screenWidth;
   const bookWidth = pageWidth * 2;
@@ -294,6 +324,28 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
   return (
     <View style={styles.root}>
+      {__DEV__ && (
+        <View style={styles.devControls}>
+          <Pressable style={styles.devButton} onPress={cycleDevState}>
+            <Text style={styles.devButtonText}>{displayedRivalryState}</Text>
+          </Pressable>
+          <Pressable style={styles.devButton} onPress={cycleDevEntry}>
+            <Text style={styles.devButtonText}>ENTRY {(__DEV__ && devRivalryState ? devTodayIndex : 0) + 1}/10</Text>
+          </Pressable>
+          {devRivalryState && (
+            <Pressable
+              style={styles.devButton}
+              onPress={() => {
+                setDevRivalryState(null);
+                setDevTodayIndex(0);
+              }}
+            >
+              <Text style={styles.devButtonText}>AUTO</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+
       <ScrollView
         horizontal
         pagingEnabled
@@ -452,6 +504,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "visible",
+  },
+  devControls: {
+    position: "absolute",
+    top: 0,
+    right: 8,
+    zIndex: 20,
+    flexDirection: "row",
+    gap: 4,
+  },
+  devButton: {
+    backgroundColor: "rgba(15,13,42,0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(245,200,66,0.75)",
+    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+  },
+  devButtonText: {
+    fontFamily: FONTS.ui,
+    includeFontPadding: false,
+    fontSize: 9,
+    color: "#F5C842",
+    letterSpacing: 0.4,
   },
   bookArt: {
     position: "absolute",
