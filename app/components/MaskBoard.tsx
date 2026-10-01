@@ -48,6 +48,7 @@ import {
 } from '../game/huntFeedbackPolicy';
 import {
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
+  resolveActiveTileTextLayout,
   applyBoardTopReserve,
   hasBoardVerticalOverflow,
   resolveActiveCueLayout,
@@ -588,7 +589,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // identity survives the deck shrinking. This is what makes the stack
   // advance smoothly instead of snapping — see getBackingCardAnim below.
   const backingCardAnimsRef = useRef(
-    new Map<string, { depthY: Animated.Value; scale: Animated.Value; rotate: Animated.Value }>()
+    new Map<string, { depthY: Animated.Value; scale: Animated.Value; rotate: Animated.Value; visualOpacity: Animated.Value }>()
   ).current;
 
   function getBackingCardAnim(maskId: string, depth: number) {
@@ -598,6 +599,11 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         depthY: new Animated.Value(depth * DECK_BACKING_OFFSET),
         scale: new Animated.Value(1 - depth * 0.01),
         rotate: new Animated.Value(depth * -1.3),
+        // Keep depth shading on the same native animation clock as the
+        // card's physical advance. A plain render-time opacity changed a
+        // frame before the card moved, which made the phrase visibly dim/
+        // brighten ahead of the deck and exposed the stack as layers.
+        visualOpacity: new Animated.Value(1 - (depth - 1) * 0.12),
       };
       backingCardAnimsRef.set(maskId, anim);
     }
@@ -1353,10 +1359,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         anim.depthY.setValue(depth * DECK_BACKING_OFFSET);
         anim.scale.setValue(1 - depth * 0.01);
         anim.rotate.setValue(depth * -1.3);
+        anim.visualOpacity.setValue(1 - (depth - 1) * 0.12);
       } else {
         Animated.timing(anim.depthY, { toValue: depth * DECK_BACKING_OFFSET, duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
         Animated.timing(anim.scale,  { toValue: 1 - depth * 0.01,            duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
         Animated.timing(anim.rotate, { toValue: depth * -1.3,                duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
+        Animated.timing(anim.visualOpacity, { toValue: 1 - (depth - 1) * 0.12, duration: 180, easing: CARD_SNAP, useNativeDriver: true }).start();
       }
     });
     // Garbage-collect cards that have left the deck entirely (claimed,
@@ -2005,6 +2013,17 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                   const anim = getBackingCardAnim(maskId, depth);
                   const rotateDeg = anim.rotate.interpolate({ inputRange: [-6, 0], outputRange: ['-6deg', '0deg'] });
                   const backingMask = mechanics.visibleGridMasks.find(m => m.id === maskId);
+                  // Render the preview phrase with the exact same fitting
+                  // policy it will use when promoted into SwipeMask. That
+                  // keeps the visible second card from rewrapping/resizing
+                  // on the promotion frame, which reads as a blink even
+                  // though the mask identity itself is unchanged.
+                  const backingTextLayout = backingMask
+                    ? resolveActiveTileTextLayout(backingMask.phrase, backingCardWidth)
+                    : null;
+                  const fittedBackingTextLayout = backingTextLayout?.fontSize === 27
+                    ? null
+                    : backingTextLayout;
                   return (
                     <Animated.View
                       key={maskId}
@@ -2026,7 +2045,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                         pointerEvents="none"
                         style={[
                           StyleSheet.absoluteFill,
-                          { opacity: 1 - (depth - 1) * 0.12 },
+                          { opacity: anim.visualOpacity },
                         ]}
                       >
                         <MaskCardArtwork />
@@ -2034,11 +2053,21 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                       {backingMask && (
                         <View style={styles.deckBackingPhrasePanel} pointerEvents="none">
                           <Text
-                            style={styles.deckBackingPhrase}
-                            numberOfLines={2}
+                            style={[
+                              styles.deckBackingPhrase,
+                              fittedBackingTextLayout && {
+                                alignSelf: 'center',
+                                width: fittedBackingTextLayout.textRegionWidth,
+                                fontSize: fittedBackingTextLayout.fontSize,
+                                lineHeight: fittedBackingTextLayout.lineHeight,
+                              },
+                            ]}
+                            numberOfLines={3}
                             {...ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS}
                           >
-                            {backingMask.phrase}
+                            {fittedBackingTextLayout
+                              ? fittedBackingTextLayout.lines.join('\n')
+                              : backingMask.phrase}
                           </Text>
                         </View>
                       )}
