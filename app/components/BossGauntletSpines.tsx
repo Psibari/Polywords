@@ -383,15 +383,20 @@ function SpineSlot({
     onMeasuredHeightChange(tile.mask.id, measuredHeightRef.current);
   }, [isOpen, onMeasuredHeightChange, tile.mask.id]);
 
-  useEffect(() => {
-    // The parent collapses a still-unresolved preference (null) into `true`
-    // with `reduceMotion !== false`, so this branch also covers "not known
-    // yet": the bricks are simply already standing on the shelf with their
-    // crowns on, and no dust fires. A later resolved `false` re-runs this
-    // effect and resets below, so the entrance is deferred, never skipped.
-    if (reduceMotion !== false) {
+  useLayoutEffect(() => {
+    // Reduce-motion preference resolves asynchronously. On a normal-motion
+    // device its initial null used to paint the bricks at progress=1 (their
+    // final shelf positions) for a frame, then the resolved false reset them
+    // into the wall and started the entrance. Seed unknown at the entrance
+    // origin before paint; only a confirmed true may show the settled state.
+    if (reduceMotion === true) {
       progress.setValue(1);
       crownReveal.setValue(1);
+      return;
+    }
+    if (reduceMotion === null) {
+      progress.setValue(0);
+      crownReveal.setValue(0);
       return;
     }
     progress.setValue(0);
