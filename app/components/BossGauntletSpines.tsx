@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mask } from '../game/types';
@@ -599,7 +600,7 @@ function SpineSlot({
       >
         <Image
           source={sprite.src}
-          resizeMode="contain"
+          contentFit="contain"
           style={StyleSheet.absoluteFill}
         />
         {/* The recess mask — covers the brick's top face while it is still
@@ -624,7 +625,7 @@ function SpineSlot({
         >
           <Image
             source={crownMarkerArt}
-            resizeMode="contain"
+            contentFit="contain"
             tintColor={CARD_MARKER_COLORS[index % CARD_MARKER_COLORS.length]}
             style={styles.crownImage}
           />
@@ -880,7 +881,7 @@ export function BossGauntletSpines({
             >
               <Image
                 source={RECESS_ART[index % RECESS_ART.length]}
-                resizeMode="stretch"
+                contentFit="fill"
                 style={StyleSheet.absoluteFill}
               />
             </Animated.View>
@@ -951,7 +952,7 @@ export function BossGauntletSpines({
           },
         ]}
       >
-        <Image source={shelfLipArt} resizeMode="stretch" style={StyleSheet.absoluteFill} />
+        <Image source={shelfLipArt} contentFit="fill" style={StyleSheet.absoluteFill} />
       </Animated.View>
 
       {/* CHOOSE A SEAL rides the shelf's front face, not the space above the
