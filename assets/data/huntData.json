@@ -584,7 +584,7 @@
       },
       {
         "id": "bass_r1",
-        "phrase": "WHAT THE DEAF USE TO HEAR MUSIC",
+        "phrase": "WHY YOU SHOULDN’T STAND NEXT TO THE SPEAKER AT A PARTY",
         "isReal": true
       },
       {
@@ -643,7 +643,7 @@
       },
       {
         "id": "bat_t2",
-        "phrase": "ONE SLY DROP OF THE LASH",
+        "phrase": "WHAT A POLICE OFFICER CARRIES TO CONTROL A CROWD",
         "isReal": false
       }
     ],
@@ -978,7 +978,7 @@
       },
       {
         "id": "bench_t1",
-        "phrase": "SEAT RESERVED FOR THE HEAD OF THE TABLE",
+        "phrase": "WHAT YOU SIT ON WHILE GETTING YOUR SHOES SHINED",
         "isReal": false
       },
       {
@@ -1889,7 +1889,7 @@
       },
       {
         "id": "bridge_r1",
-        "phrase": "A CARD GAME PLAYED AT THE RETIREMENT HOME",
+        "phrase": "A GAME PLAYED AT THE RETIREMENT HOME",
         "isReal": true
       },
       {
@@ -2737,7 +2737,7 @@
       },
       {
         "id": "chamber_t1",
-        "phrase": "A HIDDEN PASSAGE DEEP INSIDE A CAVE",
+        "phrase": "A PASSAGE YOU WOULD FIND IN A CAVE",
         "isReal": false
       },
       {
@@ -3220,7 +3220,7 @@
       },
       {
         "id": "clap_r2",
-        "phrase": "AN ’80S FAD TO TURN LIGHTS ON AND OFF",
+        "phrase": "WHAT EVERYBODY ELSE DOES AFTER THE BIRTHDAY CANDLES ARE BLOWN OUT",
         "isReal": true
       },
       {
@@ -3481,7 +3481,7 @@
       },
       {
         "id": "cleave_r1",
-        "phrase": "A BUTCHER’S KNIFE OF CHOICE",
+        "phrase": "WHAT A DEVOTED COUPLE DOES THROUGH BETTER OR WORSE",
         "isReal": true
       },
       {
@@ -3520,7 +3520,7 @@
       },
       {
         "id": "click_r1",
-        "phrase": "THE INTERNET’S FAVORITE FORM OF BAIT",
+        "phrase": "THE SOUND MADE WHEN YOU CHAMBER A ROUND",
         "isReal": true
       },
       {
@@ -3540,7 +3540,7 @@
       },
       {
         "id": "click_r5",
-        "phrase": "WHAT GRANDPA STILL CALLS THE REMOTE",
+        "phrase": "WHEN THE MATH LESSON FINALLY MAKES SENSE",
         "isReal": true
       },
       {
@@ -3604,7 +3604,7 @@
       },
       {
         "id": "clip_r4",
-        "phrase": "THE NO-KNOT TIE FROM ELEMENTARY SCHOOL",
+        "phrase": "THE TYPE OF EARRINGS YOU CAN WEAR WITHOUT BEING PIERCED",
         "isReal": true
       },
       {
@@ -4238,7 +4238,7 @@
       },
       {
         "id": "content_r03",
-        "phrase": "WHERE A BOOK LISTS CHAPTERS AND PAGE NUMBERS",
+        "phrase": "WHAT PARENTS WORRY ABOUT IN AN R-RATED MOVIE",
         "isReal": true
       },
       {
@@ -4612,7 +4612,7 @@
       },
       {
         "id": "corner_t4",
-        "phrase": "WHAT THE BOXER SITS ON BETWEEN ROUNDS",
+        "phrase": "WHAT TWO OF THE SIX POCKETS ON A POOL TABLE ARE",
         "isReal": false
       },
       {
@@ -5053,7 +5053,7 @@
       },
       {
         "id": "cross_r02",
-        "phrase": "WHAT YOUR PARTNER IN CRIME DOES WHEN THEY BETRAY YOU",
+        "phrase": "THE PUNCH YOUR JAB SETS UP",
         "isReal": true
       },
       {
@@ -7442,13 +7442,8 @@
         "isReal": true
       },
       {
-        "id": "fast_r03",
-        "phrase": "WHAT YOUR FIRST MEAL OF THE DAY BREAKS",
-        "isReal": true
-      },
-      {
         "id": "fast_r04",
-        "phrase": "WHAT YOU BREAK WHEN YOU BREAK FAST",
+        "phrase": "WHAT BREAKFAST BREAKS",
         "isReal": true
       },
       {
@@ -8153,7 +8148,7 @@
         "id": "foam_h01"
       },
       {
-        "real": "A CERTAIN HUE OR SHADE OF GREEN",
+        "real": "WHAT ROUGH WAVES LEAVE BUBBLING ALONG THE SHORE",
         "trap": "CLEANS YOUR HAIR IN THE SHOWER",
         "id": "foam_h02"
       }
@@ -8505,11 +8500,6 @@
       {
         "id": "foot_r10",
         "phrase": "WHAT YOU STICK OUT FROM UNDER THE BLANKET WHEN YOU GET TOO HOT",
-        "isReal": true
-      },
-      {
-        "id": "foot_r11",
-        "phrase": "WHAT THE GAME IS ONCE THE ACTION HAS STARTED",
         "isReal": true
       },
       {
@@ -8882,7 +8872,7 @@
       },
       {
         "id": "horn_r3",
-        "phrase": "JAMS AN ELEVEN FOOT INTO A TEN SHOE",
+        "phrase": "WHAT YOU GRAB THE BULL BY",
         "isReal": true
       },
       {
@@ -9281,7 +9271,7 @@
       },
       {
         "id": "match_t0",
-        "phrase": "FLICK IT AND CATCH A FLAME",
+        "phrase": "WHEN TWO PUZZLE PIECES FIT TOGETHER PERFECTLY",
         "isReal": false
       },
       {
@@ -9437,7 +9427,7 @@
       },
       {
         "id": "mouse_t0",
-        "phrase": "WHISKERED RODENT NOBODY WANTS IN THE PANTRY",
+        "phrase": "WHAT YOU USE TO NAVIGATE A TOUCHSCREEN",
         "isReal": false
       },
       {
@@ -12160,7 +12150,7 @@
       },
       {
         "id": "globe_r1",
-        "phrase": "WHAT HARLEM’S FAMOUS BASKETBALL TEAM TROTS AROUND",
+        "phrase": "WHAT SANTA HAS TO MAKE IT AROUND IN ONE NIGHT",
         "isReal": true
       },
       {
@@ -12170,7 +12160,7 @@
       },
       {
         "id": "globe_r3",
-        "phrase": "THE ROUND TROPHY THEY HAND OUT IN HOLLYWOOD",
+        "phrase": "WHAT THE EQUATOR WRAPS ALL THE WAY AROUND",
         "isReal": true
       },
       {
