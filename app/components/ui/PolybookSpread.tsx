@@ -6,669 +6,286 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { FONTS } from "../../constants/fonts";
 import { PlayerProgress } from "../../game/types";
 import { PollyMemory } from "../../game/pollyMemory";
-import {
-  buildPreInstallRows,
-  buildWorkLog,
-  WorkLogRow,
-} from "../../game/bookPage";
+import { buildWorkLog } from "../../game/bookPage";
 import { localDateKey } from "../../game/bookLog";
-import { STRUCK_PAIRS, TODAY_ENTRIES, type BookRivalryState } from "../../game/pollyBookLines";
+import { TODAY_ENTRIES, type BookRivalryState } from "../../game/pollyBookLines";
 import { resolveRivalryState } from "../../game/pollyMood";
 import { createSeededRng, deriveSeed } from "../../game/seededRandom";
 import { INK, INK_MUTED } from "../../ui/polybookInk";
+import { PW } from "../../ui/pwTheme";
 
-// The Polybook spread — one open book, one page per screen. See
-// docs/POLYBOOK.md for the rulings this renders and app/game/bookPage.ts for
-// the pure functions that turn stored rows into what she wrote. This file
-// only lays that out; it decides no content of its own beyond which pool
-// entry a fixed seed points at.
-//
-// New component rather than an edit to LexiconPrototype, which is built for
-// the old two-pages-at-once idea and already carries five dead props. See
-// VaultScreen's POLYBOOK_SPREAD_ENABLED flag for the rollback path.
-
-const POLYBOOK_ART = require("../../../assets/images/vault/polybook_open.png");
+// Structural prototype for docs/POLYBOOK_LIVING_JOURNAL.md.
+// Intentionally uses simple code-drawn book materials. Final cover/page art,
+// doodles, ribbon art and transition polish wait until device geometry is approved.
 const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
-const POLYBOOK_ASPECT_RATIO = 2400 / 2000;
 
-const MONTH_ABBR = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-function formatBookDate(date: string, showYear: boolean): string {
-  const [year, month, day] = date.split("-");
-  const label = `${MONTH_ABBR[Number(month) - 1]} ${day}`;
-  return showYear ? `${label}, ${year}` : label;
-}
-
-function yearOf(date: string): string {
-  return date.slice(0, 4);
-}
-
-// The row's most recent edge — its own date for a single-day row, endDate
-// for a collapsed range. Used to find the adjacent date across a row
-// boundary, since a range's `date` is always its OLDEST (start) edge.
-function newEdgeDate(row: WorkLogRow): string {
-  return row.endDate ?? row.date;
-}
-
-// A collapsed range renders as "Aug 22 – Aug 26" in the same muted date
-// style as a single day. The base year rule (does THIS row show a year at
-// all) only ever marks the start edge, same as a single-date row — a range
-// that stays inside one calendar year has one year to show, so it shows it
-// once. A range that itself crosses a year boundary is the one exception:
-// both ends show their own year, regardless of the base rule.
-function formatRowDateLabel(row: WorkLogRow, showStartYear: boolean): string {
-  const crossesYear =
-    row.endDate !== undefined && yearOf(row.date) !== yearOf(row.endDate);
-  const startLabel = formatBookDate(row.date, showStartYear || crossesYear);
-  if (row.endDate === undefined) return startLabel;
-  const endLabel = formatBookDate(row.endDate, crossesYear);
-  return `${startLabel} – ${endLabel}`;
-}
-
-// pageContent's own padding. In Yoga, an absolutely positioned child is
-// placed from the PARENT'S PADDING EDGE, same as a normal-flow child — so an
-// absolute child inside pageContent that also sets left/right to this value
-// is not matching the padding, it is adding a second copy of it. logScroll
-// and totalsBlock learned this the hard way (device-measured: the log column
-// came out ~16pt narrower than the page box allows, exactly 2x this value)
-// and now use left:0/right:0, same as any other absolute child that wants to
-// fill pageContent's own content box exactly.
-const PAGE_CONTENT_PADDING_H = 8;
-const PAGE_CONTENT_PADDING_TOP = 10;
-const PAGE_CONTENT_PADDING_BOTTOM = 8;
-
-// Device-confirmed 2026-09-07, across seven on-device passes. The dev tuner
-// (app/dev/polybookTuning.ts) that produced these is deleted; this is the
-// frozen result, not a starting point. sealSize is a PREFERRED MAXIMUM, not
-// a fixed size — layoutBeatenSeals still shrinks it automatically once a
-// save's mastered-word count would outgrow the BEATEN corner, since the
-// word list itself is never cut.
-const POLYBOOK_LAYOUT = {
-  pageTopPct: 13.0,
-  pageHeightPct: 67.0,
-  pageWidthPct: 33.5,
-  leftPageLeftPct: 11.5,
-  rightPageLeftPct: 55.0,
-  contentScale: 1.0,
-  sealSize: 54,
-} as const;
-
-// The BEATEN corner never drops a word — it never scrolls, but it also never
-// cuts the list. BEATEN_CORNER_MAX_WIDTH is a hard bound (the corner may not
-// run into the page's centre); BEATEN_CORNER_MAX_HEIGHT is a soft ceiling —
-// the block grows upward from the bottom as words accumulate, and only once
-// it would exceed the ceiling do the seals themselves shrink to fit (see
-// layoutBeatenSeals). The list is never sliced; the size is.
-const BEATEN_CORNER_MAX_WIDTH = 170;
-const BEATEN_CORNER_MAX_HEIGHT = 120;
-const BEATEN_SEAL_GAP = 4;
-const BEATEN_SEAL_MIN_SIZE = 10;
-
-// Most-recent-first — kept for stable, deterministic ordering even though
-// nothing is ever cut from it now; every mastered word renders regardless of
-// position.
-function sortMasteredMostRecentFirst<T extends { dateMastered?: string }>(
-  words: T[],
-): T[] {
-  return [...words].sort((a, b) => {
-    const aTime = a.dateMastered ? new Date(a.dateMastered).getTime() : 0;
-    const bTime = b.dateMastered ? new Date(b.dateMastered).getTime() : 0;
-    return bTime - aTime;
-  });
-}
-
-type BeatenSealsLayout<T> = {
-  sealSize: number;
-  rows: T[][];
-  blockWidth: number;
-};
-
-/**
- * Grid the BEATEN corner's seals: shrink the seal size (never the list) until
- * every word fits under BEATEN_CORNER_MAX_HEIGHT, then group them into rows
- * with any short row FIRST — rendered at the top of a plain top-to-bottom
- * column, full rows of exactly `columns` packed below it. Computed explicitly
- * rather than left to flexWrap: a wrap-reverse + justify combination was
- * producing a genuinely broken partial row (a hole, not a taper), and this
- * sidesteps that ambiguity entirely rather than papering over it with a
- * spacer.
- */
-function layoutBeatenSeals<T>(
-  words: T[],
-  preferredSealSize: number,
-): BeatenSealsLayout<T> {
-  const count = words.length;
-  const columnsAt = (size: number) =>
-    Math.max(1, Math.floor(BEATEN_CORNER_MAX_WIDTH / (size + BEATEN_SEAL_GAP)));
-  const heightForRows = (size: number, rowCount: number) =>
-    rowCount * size + Math.max(0, rowCount - 1) * BEATEN_SEAL_GAP;
-
-  let sealSize = preferredSealSize;
-  let columns = columnsAt(sealSize);
-  let rowCount = count === 0 ? 0 : Math.ceil(count / columns);
-
-  while (
-    count > 0 &&
-    heightForRows(sealSize, rowCount) > BEATEN_CORNER_MAX_HEIGHT &&
-    sealSize > BEATEN_SEAL_MIN_SIZE
-  ) {
-    sealSize -= 1;
-    columns = columnsAt(sealSize);
-    rowCount = Math.ceil(count / columns);
-  }
-
-  const rows: T[][] = [];
-  const partial = count % columns;
-  let index = 0;
-  if (partial > 0) {
-    rows.push(words.slice(0, partial));
-    index = partial;
-  }
-  while (index < count) {
-    rows.push(words.slice(index, index + columns));
-    index += columns;
-  }
-
-  const blockWidth = columns * sealSize + Math.max(0, columns - 1) * BEATEN_SEAL_GAP;
-
-  return { sealSize, rows, blockWidth };
-}
-
-type Props = {
-  progress: PlayerProgress;
-  pollyMemory: PollyMemory;
-};
-
+type Section = "TODAY" | "JOURNAL" | "BEATEN";
+const SECTIONS: readonly Section[] = ["TODAY", "JOURNAL", "BEATEN"];
 const POLYBOOK_DEV_STATES: readonly BookRivalryState[] = [
-  "DISMISSIVE",
-  "AMUSED",
-  "WATCHFUL",
-  "RATTLED",
-  "CONCEDING",
+  "DISMISSIVE", "AMUSED", "WATCHFUL", "RATTLED", "CONCEDING",
 ];
+
+type Props = { progress: PlayerProgress; pollyMemory: PollyMemory };
 
 export function PolybookSpread({ progress, pollyMemory }: Props) {
-  const { width: screenWidth } = useWindowDimensions();
-
-  // WORK LOG (plus its framing rule) and the totals block are both pinned
-  // outside the log ScrollView, above and below it respectively (see the
-  // left-page JSX below) — the ScrollView is inset on both edges by their
-  // real rendered heights so rows clip at those edges instead of scrolling
-  // underneath either one. These are just reasonable guesses for before the
-  // first layout pass fires.
-  const [logHeaderHeight, setLogHeaderHeight] = useState(30);
-  const [totalsHeight, setTotalsHeight] = useState(90);
+  const [isOpen, setIsOpen] = useState(false);
+  const [section, setSection] = useState<Section>("TODAY");
   const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
   const [devTodayIndex, setDevTodayIndex] = useState(0);
 
   const bookSeed = progress.bookSeed ?? 0;
   const log = progress.bookLog ?? [];
   const today = useMemo(() => localDateKey(new Date()), []);
-
   const workLogRows = useMemo(
     () => buildWorkLog({ log, today, bookSeed, maxRows: 60 }),
     [log, today, bookSeed],
   );
-
-  // Oldest first in time, so they read as a continuation of the work log
-  // going further back — reversed here because buildPreInstallRows returns
-  // them oldest-first, but the page renders newest-to-oldest going down.
-  const preInstallRows = useMemo(() => {
-    const firstDate = log.length > 0 ? log[log.length - 1].date : today;
-    return [...buildPreInstallRows({ firstDate, bookSeed })].reverse();
-  }, [log, today, bookSeed]);
-
-  const allRows = useMemo(
-    () => [...workLogRows, ...preInstallRows],
-    [workLogRows, preInstallRows],
-  );
-
-  // Rendered newest-first, so the row immediately AFTER a given row in this
-  // array is the older neighbor. A row shows its year only when its own
-  // start date's year differs from the older neighbor's most recent edge —
-  // the point where the book actually crosses into a new year, shown once,
-  // on the row where the crossing happened. The oldest row on screen has no
-  // older neighbor to compare against, so it always shows its year. A
-  // collapsed range that itself spans a year boundary shows the year on
-  // both ends regardless (see formatRowDateLabel).
-  const rowDisplays = useMemo(
-    () =>
-      allRows.map((row, index) => {
-        const olderRow = allRows[index + 1];
-        const showYear =
-          !olderRow || yearOf(row.date) !== yearOf(newEdgeDate(olderRow));
-        return { row, dateLabel: formatRowDateLabel(row, showYear) };
-      }),
-    [allRows],
-  );
-
-  // Stable forever once a player's book has a seed — rolled from bookSeed
-  // alone, never the date, so this never changes as the log grows.
-  const struckPair = useMemo(() => {
-    const rng = createSeededRng(deriveSeed(bookSeed, "struckPair"));
-    return STRUCK_PAIRS[Math.floor(rng() * STRUCK_PAIRS.length)];
-  }, [bookSeed]);
-
   const rivalryState = useMemo(
-    () =>
-      resolveRivalryState({
-        recent: progress.recentHuntPerformance ?? [],
-        masteredCount: progress.masteredWords.length,
-        runsCompleted: progress.runsCompleted,
-      }),
-    [
-      progress.recentHuntPerformance,
-      progress.masteredWords.length,
-      progress.runsCompleted,
-    ],
+    () => resolveRivalryState({
+      recent: progress.recentHuntPerformance ?? [],
+      masteredCount: progress.masteredWords.length,
+      runsCompleted: progress.runsCompleted,
+    }),
+    [progress.recentHuntPerformance, progress.masteredWords.length, progress.runsCompleted],
   );
-
-  // Re-picked daily, stable within a day — keyed on today's date, so it
-  // moves only when the calendar does, never on re-render.
   const displayedRivalryState = __DEV__ && devRivalryState ? devRivalryState : rivalryState;
-
   const todayEntry = useMemo(() => {
     const pool = TODAY_ENTRIES[displayedRivalryState];
-    if (__DEV__ && devRivalryState) {
-      return pool[devTodayIndex % pool.length];
-    }
+    if (__DEV__ && devRivalryState) return pool[devTodayIndex % pool.length];
     const rng = createSeededRng(deriveSeed(bookSeed, today));
     return pool[Math.floor(rng() * pool.length)];
   }, [displayedRivalryState, devRivalryState, devTodayIndex, bookSeed, today]);
 
+  function openTo(next: Section) {
+    setSection(next);
+    setIsOpen(true);
+  }
   function cycleDevState() {
     const current = devRivalryState ?? rivalryState;
     const index = POLYBOOK_DEV_STATES.indexOf(current);
     setDevRivalryState(POLYBOOK_DEV_STATES[(index + 1) % POLYBOOK_DEV_STATES.length]);
     setDevTodayIndex(0);
   }
-
   function cycleDevEntry() {
     const state = devRivalryState ?? rivalryState;
-    const pool = TODAY_ENTRIES[state];
     setDevRivalryState(state);
-    setDevTodayIndex((index) => (index + 1) % pool.length);
+    setDevTodayIndex((value) => (value + 1) % TODAY_ENTRIES[state].length);
   }
 
-  const pageWidth = screenWidth;
-  const bookWidth = pageWidth * 2;
-  const bookHeight = bookWidth / POLYBOOK_ASPECT_RATIO;
-
-  // This is a corner of a page, not a gallery: never scrolled, but never
-  // cut either — every mastered word renders. layoutBeatenSeals shrinks the
-  // seal size instead once the group would outgrow the corner's ceiling.
-  const beatenWords = useMemo(
-    () => sortMasteredMostRecentFirst(progress.masteredWords),
-    [progress.masteredWords],
-  );
-  const beatenLayout = useMemo(
-    () => layoutBeatenSeals(beatenWords, POLYBOOK_LAYOUT.sealSize),
-    [beatenWords],
-  );
-
-  const pageBoxStyle = (leftPct: number) => ({
-    left: `${leftPct}%` as const,
-    top: `${POLYBOOK_LAYOUT.pageTopPct}%` as const,
-    width: `${POLYBOOK_LAYOUT.pageWidthPct}%` as const,
-    height: `${POLYBOOK_LAYOUT.pageHeightPct}%` as const,
-    transform: [{ scale: POLYBOOK_LAYOUT.contentScale }],
-  });
+  if (!isOpen) {
+    return (
+      <View style={styles.root}>
+        <View style={styles.closedStage}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open Polybook to Today"
+            onPress={() => openTo("TODAY")}
+            style={({ pressed }) => [styles.closedBook, pressed && styles.pressed]}
+          >
+            <View style={styles.closedSpine} />
+            <View style={styles.closedInnerFrame}>
+              <Text style={styles.closedTitle}>POLYBOOK</Text>
+              <View style={styles.coverRule} />
+              <Text style={styles.coverMark}>PW</Text>
+              <Text style={styles.closedHint}>TAP TO OPEN</Text>
+            </View>
+            <View style={styles.closedPages} />
+          </Pressable>
+          <View style={styles.closedRibbonRail}>
+            {SECTIONS.map((item) => (
+              <Pressable
+                key={item}
+                accessibilityRole="button"
+                accessibilityLabel={`Open Polybook to ${item}`}
+                onPress={() => openTo(item)}
+                style={({ pressed }) => [styles.closedRibbon, pressed && styles.pressed]}
+              >
+                <Text style={styles.closedRibbonText}>{item}</Text>
+                <View style={styles.forkCut} />
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
-      {__DEV__ && (
+      {__DEV__ && section === "TODAY" && (
         <View style={styles.devControls}>
           <Pressable style={styles.devButton} onPress={cycleDevState}>
             <Text style={styles.devButtonText}>{displayedRivalryState}</Text>
           </Pressable>
           <Pressable style={styles.devButton} onPress={cycleDevEntry}>
-            <Text style={styles.devButtonText}>ENTRY {(__DEV__ && devRivalryState ? devTodayIndex : 0) + 1}/10</Text>
+            <Text style={styles.devButtonText}>ENTRY {devRivalryState ? devTodayIndex + 1 : 1}/10</Text>
           </Pressable>
-          {devRivalryState && (
-            <Pressable
-              style={styles.devButton}
-              onPress={() => {
-                setDevRivalryState(null);
-                setDevTodayIndex(0);
-              }}
-            >
-              <Text style={styles.devButtonText}>AUTO</Text>
-            </Pressable>
-          )}
         </View>
       )}
 
-      <ScrollView
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        style={{ width: pageWidth, height: bookHeight }}
-      >
-        <View style={{ width: bookWidth, height: bookHeight }}>
-          <Image
-            source={POLYBOOK_ART}
-            resizeMode="stretch"
-            style={[
-              styles.bookArt,
-              { width: bookWidth, height: bookHeight },
-            ]}
-          />
-
-          <View style={[styles.pageContent, pageBoxStyle(POLYBOOK_LAYOUT.leftPageLeftPct)]}>
-            {/* Scroll region: the rows and ONLY the rows, framed top and
-                bottom by the pinned header+rule and the pinned totals block
-                below. */}
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              style={[
-                styles.logScroll,
-                {
-                  top: PAGE_CONTENT_PADDING_TOP + logHeaderHeight,
-                  bottom: PAGE_CONTENT_PADDING_BOTTOM + totalsHeight,
-                },
-              ]}
+      <View style={styles.openBook}>
+        <View style={styles.pageFrame}>
+          <View style={styles.page}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close Polybook"
+              onPress={() => setIsOpen(false)}
+              hitSlop={10}
+              style={styles.closeButton}
             >
-              {rowDisplays.map(({ row, dateLabel }, index) => (
-                <WorkLogRowView
-                  key={`${row.date}-${index}`}
-                  row={row}
-                  dateLabel={dateLabel}
-                />
-              ))}
-            </ScrollView>
+              <Text style={styles.closeText}>CLOSE</Text>
+            </Pressable>
 
-            {/* Pinned header — WORK LOG plus a single framing rule beneath
-                it. Normal flow, not absolute, so it naturally shares
-                pageContent's own padding (and thus the same left edge as
-                the rows above, via the explicit inset on logScroll). Never
-                scrolls. */}
-            <View
-              style={styles.logHeader}
-              onLayout={(e) => setLogHeaderHeight(e.nativeEvent.layout.height)}
-            >
-              <Text style={styles.label}>WORK LOG</Text>
-              <View style={styles.logHeaderRule} />
-            </View>
+            {section === "TODAY" && (
+              <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
+                <Text style={styles.pageDate}>{today.toUpperCase()}</Text>
+                <Text style={styles.pageHeading}>Today</Text>
+                <View style={styles.inkRule} />
+                <View style={styles.todayEntry}>
+                  {todayEntry.map((line, index) => (
+                    <Text key={index} style={styles.todayLine}>{line}</Text>
+                  ))}
+                </View>
+                <View style={styles.todayOpenSpace}>
+                  <Text style={styles.marginScratch}>♛</Text>
+                  <Text style={styles.marginNote}>still my book.</Text>
+                </View>
+              </ScrollView>
+            )}
 
-            {/* Pinned totals — the double rule and the four numbers she
-                can't argue with. Anchored to the page's own bottom padding
-                edge, out of the scroll entirely, so all four are always
-                fully visible rather than the last items a long scroll
-                might never quite reach. The double rule stays visually
-                distinct from the single one above: two strokes, not one. */}
-            <View
-              style={[styles.totalsBlock, { bottom: PAGE_CONTENT_PADDING_BOTTOM }]}
-              onLayout={(e) => setTotalsHeight(e.nativeEvent.layout.height)}
-            >
-              <View style={styles.doubleRule}>
-                <View style={styles.ruleLine} />
-                <View style={styles.ruleLine} />
-              </View>
-
-              <StatRow
-                label="GOT PAST ME"
-                value={(progress.realMaskIdsFound ?? []).length}
-              />
-              <StatRow label="HUNTS RUN" value={progress.runsCompleted} />
-              <StatRow
-                label="STREAK THEIRS"
-                value={pollyMemory.playerWinStreak}
-              />
-              <StatRow label="STREAK MINE" value={pollyMemory.pollyWinStreak} />
-            </View>
-          </View>
-
-          <View style={[styles.pageContent, pageBoxStyle(POLYBOOK_LAYOUT.rightPageLeftPct)]}>
-            <View style={styles.struckPairBlock}>
-              <Text style={styles.struckOld}>{struckPair.old}</Text>
-              <Text style={styles.struckNext}>{struckPair.next}</Text>
-            </View>
-
-            <View style={styles.todayBlock}>
-              {todayEntry.map((line, index) => (
-                <Text key={index} style={styles.todayLine} numberOfLines={1}>
-                  {line}
-                </Text>
-              ))}
-            </View>
-
-            <View style={styles.beatenCorner}>
-              <Text style={styles.label}>BEATEN</Text>
-              <View style={{ width: beatenLayout.blockWidth, gap: BEATEN_SEAL_GAP }}>
-                {beatenLayout.rows.map((rowWords, rowIndex) => (
-                  <View key={rowIndex} style={styles.beatenSealsRow}>
-                    {rowWords.map((record) => (
-                      <Image
-                        key={record.word}
-                        source={MASTERED_SEAL}
-                        resizeMode="contain"
-                        style={{
-                          width: beatenLayout.sealSize,
-                          height: beatenLayout.sealSize,
-                        }}
-                      />
+            {section === "JOURNAL" && (
+              <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
+                <Text style={styles.pageHeading}>Journal</Text>
+                <View style={styles.inkRule} />
+                {workLogRows.map((row, index) => (
+                  <View key={`${row.date}-${index}`} style={styles.journalRow}>
+                    <Text style={styles.rowDate}>{row.endDate ? `${row.date} – ${row.endDate}` : row.date}</Text>
+                    {row.word ? <Text style={styles.rowWord}>{row.word}</Text> : null}
+                    {row.lines.map((line, lineIndex) => (
+                      <Text key={lineIndex} style={styles.rowLine}>{line}</Text>
                     ))}
                   </View>
                 ))}
-              </View>
-            </View>
+                <View style={styles.statsFooter}>
+                  <Text style={styles.statsText}>HUNTS {progress.runsCompleted}</Text>
+                  <Text style={styles.statsText}>THEIRS {pollyMemory.playerWinStreak} · MINE {pollyMemory.pollyWinStreak}</Text>
+                </View>
+              </ScrollView>
+            )}
+
+            {section === "BEATEN" && (
+              <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
+                <Text style={styles.pageHeading}>Beaten</Text>
+                <Text style={styles.beatenSub}>THE ONES YOU GOT PAST POLLY</Text>
+                <View style={styles.inkRule} />
+                <View style={styles.sealGrid}>
+                  {progress.masteredWords.map((record) => (
+                    <View key={record.word} style={styles.sealItem}>
+                      <Image source={MASTERED_SEAL} resizeMode="contain" style={styles.seal} />
+                      <Text style={styles.sealWord}>{record.word}</Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
           </View>
         </View>
-      </ScrollView>
-    </View>
-  );
-}
 
-function WorkLogRowView({
-  row,
-  dateLabel,
-}: {
-  row: WorkLogRow;
-  dateLabel: string;
-}) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowDate}>{dateLabel}</Text>
-      {row.word && <Text style={styles.rowWord}>{row.word}</Text>}
-      {row.lines.map((line, index) => (
-        <Text key={index} style={styles.rowLine} numberOfLines={1}>
-          {line}
-        </Text>
-      ))}
-    </View>
-  );
-}
-
-function StatRow({ label, value }: { label: string; value: number }) {
-  return (
-    <View style={styles.statRow}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
+        <View style={styles.ribbonRail}>
+          {SECTIONS.map((item) => {
+            const selected = item === section;
+            return (
+              <Pressable
+                key={item}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+                onPress={() => setSection(item)}
+                style={({ pressed }) => [
+                  styles.ribbon,
+                  selected && styles.ribbonSelected,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={[styles.ribbonText, selected && styles.ribbonTextSelected]}>{item}</Text>
+                <View style={[styles.forkCutOpen, selected && styles.forkCutSelected]} />
+              </Pressable>
+            );
+          })}
+          <View style={[styles.ribbon, styles.futureRibbon]}>
+            <Text style={styles.futureRibbonText}>?</Text>
+            <View style={styles.forkCutOpen} />
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    minHeight: 0,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "visible",
+  root: { flex: 1, minHeight: 0, width: "100%", alignItems: "center", justifyContent: "center" },
+  pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
+
+  closedStage: { width: "92%", maxWidth: 370, height: 470, justifyContent: "center", alignItems: "center" },
+  closedBook: {
+    width: 342, maxWidth: "88%", height: 430, borderRadius: 22, backgroundColor: "#2A155E",
+    borderWidth: 4, borderColor: "#A77C1E", padding: 16, shadowColor: "#000", shadowOpacity: 0.42,
+    shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 12,
   },
-  devControls: {
-    position: "absolute",
-    top: 0,
-    right: 8,
-    zIndex: 20,
-    flexDirection: "row",
-    gap: 4,
-  },
-  devButton: {
-    backgroundColor: "rgba(15,13,42,0.92)",
-    borderWidth: 1,
-    borderColor: "rgba(245,200,66,0.75)",
-    borderRadius: 4,
-    paddingHorizontal: 7,
-    paddingVertical: 5,
-  },
-  devButtonText: {
-    fontFamily: FONTS.ui,
-    includeFontPadding: false,
-    fontSize: 9,
-    color: "#F5C842",
-    letterSpacing: 0.4,
-  },
-  bookArt: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-  },
-  pageContent: {
-    position: "absolute",
-    overflow: "hidden",
-    paddingHorizontal: PAGE_CONTENT_PADDING_H,
-    paddingTop: PAGE_CONTENT_PADDING_TOP,
-    paddingBottom: PAGE_CONTENT_PADDING_BOTTOM,
-  },
-  logScroll: {
-    // Absolute (not flex), inset below the pinned header and above the
-    // pinned totals by their own measured heights (top/bottom are set
-    // per-instance — see the left-page JSX). Rows clip at these edges
-    // rather than merely being padded past them, so nothing can travel
-    // underneath either pinned block. left/right are 0 — Yoga positions an
-    // absolute child from the parent's PADDING edge, so 0 already lands
-    // this flush with pageContent's padded content box, same edge the
-    // pinned header (a normal-flow sibling) sits at. See
-    // PAGE_CONTENT_PADDING_H's own comment for the bug this replaced.
-    position: "absolute",
-    left: 0,
-    right: 0,
-  },
-  logHeader: {
-    // Normal flow, not absolute — it sits at pageContent's own top-left
-    // padding like any other normal child, which is exactly why the rows
-    // above (inset to match, not inheriting) now share its left edge.
-  },
-  logHeaderRule: {
-    height: 1,
-    backgroundColor: INK_MUTED,
-    marginBottom: 6,
-  },
-  totalsBlock: {
-    // Anchored to pageContent's bottom padding edge (bottom is set
-    // per-instance). left/right are 0, same reasoning as logScroll — Yoga
-    // already applies the parent's padding to an absolute child.
-    position: "absolute",
-    left: 0,
-    right: 0,
-  },
-  label: {
-    fontFamily: FONTS.ui,
-    includeFontPadding: false,
-    fontSize: 14,
-    letterSpacing: 1.2,
-    color: INK,
-    marginBottom: 8,
-  },
-  row: {
-    marginBottom: 10,
-  },
-  rowDate: {
-    fontFamily: FONTS.ui,
-    includeFontPadding: false,
-    fontSize: 14,
-    color: INK_MUTED,
-  },
-  rowWord: {
-    fontFamily: FONTS.ui,
-    includeFontPadding: false,
-    fontSize: 14,
-    letterSpacing: 0.6,
-    color: INK,
-  },
-  rowLine: {
-    fontFamily: FONTS.hand,
-    includeFontPadding: false,
-    fontSize: 19,
-    color: INK,
-  },
-  doubleRule: {
-    marginTop: 6,
-    marginBottom: 8,
-    gap: 2,
-  },
-  ruleLine: {
-    height: 1,
-    backgroundColor: INK_MUTED,
-  },
-  statRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontFamily: FONTS.ui,
-    includeFontPadding: false,
-    fontSize: 14,
-    color: INK_MUTED,
-  },
-  statValue: {
-    fontFamily: FONTS.ui,
-    includeFontPadding: false,
-    fontSize: 14,
-    color: INK,
-  },
-  struckPairBlock: {
-    marginBottom: 16,
-  },
-  struckOld: {
-    fontFamily: FONTS.hand,
-    includeFontPadding: false,
-    fontSize: 17,
-    color: INK_MUTED,
-    textDecorationLine: "line-through",
-  },
-  struckNext: {
-    fontFamily: FONTS.hand,
-    includeFontPadding: false,
-    fontSize: 17,
-    color: INK,
-  },
-  todayBlock: {
-    gap: 2,
-  },
-  todayLine: {
-    fontFamily: FONTS.hand,
-    includeFontPadding: false,
-    fontSize: 21,
-    color: INK,
-  },
-  beatenCorner: {
-    // Hard into the page's bottom-right corner — she put these somewhere
-    // she does not have to look, and laid out neatly with a cushion of
-    // space around it is the opposite of that.
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    alignItems: "flex-end",
-  },
-  beatenSealsRow: {
-    // One row of the BEATEN block (see layoutBeatenSeals) — stretches to
-    // the parent's explicit blockWidth and right-aligns its own seals, so a
-    // short top row tapers flush against the same right edge as the full
-    // rows below it rather than leaving an off-center hole.
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: BEATEN_SEAL_GAP,
-  },
+  closedSpine: { position: "absolute", left: 0, top: 0, bottom: 0, width: 42, borderRightWidth: 2, borderColor: "#8A6519", backgroundColor: "#21104E", borderTopLeftRadius: 18, borderBottomLeftRadius: 18 },
+  closedInnerFrame: { flex: 1, marginLeft: 35, borderWidth: 2, borderColor: "#D2A936", borderRadius: 10, alignItems: "center", justifyContent: "center", padding: 18 },
+  closedPages: { position: "absolute", left: 48, right: 8, bottom: -8, height: 13, borderRadius: 7, backgroundColor: "#D7C38F", borderWidth: 1, borderColor: "#8F773F" },
+  closedTitle: { fontFamily: FONTS.hud, fontSize: 34, letterSpacing: 2, color: PW.color.gold, textAlign: "center" },
+  coverRule: { width: "72%", height: 2, backgroundColor: "#B98B24", marginVertical: 22 },
+  coverMark: { fontFamily: FONTS.hud, fontSize: 54, color: "rgba(245,200,66,0.78)", letterSpacing: 3 },
+  closedHint: { position: "absolute", bottom: 22, fontFamily: FONTS.label, fontSize: 10, letterSpacing: 2.2, color: "rgba(255,247,214,0.58)" },
+  closedRibbonRail: { position: "absolute", right: -2, top: 92, gap: 14 },
+  closedRibbon: { width: 76, height: 48, backgroundColor: "#55206C", borderWidth: 1, borderColor: "#A77C1E", justifyContent: "center", paddingLeft: 12 },
+  closedRibbonText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 0.8, color: "#FFF3CF" },
+  forkCut: { position: "absolute", right: -1, top: 16, width: 14, height: 14, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
+
+  openBook: { width: "94%", height: "96%", maxWidth: 430, flexDirection: "row", alignItems: "stretch", justifyContent: "center" },
+  pageFrame: { flex: 1, minWidth: 0, backgroundColor: "#24104E", borderWidth: 3, borderColor: "#A77C1E", borderRadius: 18, padding: 8, shadowColor: "#000", shadowOpacity: 0.36, shadowRadius: 10, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
+  page: { flex: 1, minHeight: 0, borderRadius: 11, backgroundColor: "#E5D3A5", borderWidth: 1, borderColor: "#9E8550", overflow: "hidden" },
+  pageScroll: { paddingHorizontal: 22, paddingTop: 30, paddingBottom: 50, minHeight: "100%" },
+  closeButton: { position: "absolute", top: 10, right: 10, zIndex: 10, paddingHorizontal: 8, paddingVertical: 5 },
+  closeText: { fontFamily: FONTS.label, fontSize: 9, letterSpacing: 1.2, color: INK_MUTED },
+  pageDate: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.2, color: INK_MUTED, marginBottom: 10 },
+  pageHeading: { fontFamily: FONTS.hand, fontSize: 34, color: INK, marginBottom: 6 },
+  inkRule: { height: 1, backgroundColor: "rgba(50,35,28,0.32)", marginBottom: 24 },
+  todayEntry: { gap: 7 },
+  todayLine: { fontFamily: FONTS.hand, fontSize: 24, lineHeight: 31, color: INK },
+  todayOpenSpace: { minHeight: 300, marginTop: 28, justifyContent: "flex-end", alignItems: "flex-end" },
+  marginScratch: { fontFamily: FONTS.hand, fontSize: 32, color: "rgba(58,39,31,0.46)", transform: [{ rotate: "-9deg" }] },
+  marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
+
+  ribbonRail: { width: 56, marginLeft: -1, paddingTop: 54, gap: 12, zIndex: 4 },
+  ribbon: { width: 54, height: 76, backgroundColor: "#4B1B63", borderWidth: 1, borderLeftWidth: 0, borderColor: "#765087", justifyContent: "center", alignItems: "center", paddingBottom: 9 },
+  ribbonSelected: { width: 61, backgroundColor: "#5F2577", borderColor: "#D4AE3D" },
+  ribbonText: { fontFamily: FONTS.label, fontSize: 8, letterSpacing: 0.3, color: "rgba(255,247,214,0.70)", transform: [{ rotate: "90deg" }] },
+  ribbonTextSelected: { color: PW.color.gold },
+  forkCutOpen: { position: "absolute", bottom: -1, left: 20, width: 14, height: 14, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
+  forkCutSelected: { left: 23 },
+  futureRibbon: { marginTop: 5, opacity: 0.38 },
+  futureRibbonText: { fontFamily: FONTS.hud, fontSize: 20, color: "rgba(255,247,214,0.55)" },
+
+  journalRow: { marginBottom: 22 },
+  rowDate: { fontFamily: FONTS.ui, fontSize: 12, color: INK_MUTED, marginBottom: 2 },
+  rowWord: { fontFamily: FONTS.ui, fontSize: 13, letterSpacing: 0.7, color: INK, marginBottom: 2 },
+  rowLine: { fontFamily: FONTS.hand, fontSize: 20, lineHeight: 26, color: INK },
+  statsFooter: { marginTop: 10, paddingTop: 14, borderTopWidth: 1, borderColor: "rgba(50,35,28,0.25)", gap: 4 },
+  statsText: { fontFamily: FONTS.ui, fontSize: 11, letterSpacing: 0.8, color: INK_MUTED },
+
+  beatenSub: { fontFamily: FONTS.ui, fontSize: 10, letterSpacing: 1, color: INK_MUTED, marginBottom: 10 },
+  sealGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  sealItem: { width: "29%", minWidth: 72, alignItems: "center", marginBottom: 10 },
+  seal: { width: 62, height: 62 },
+  sealWord: { fontFamily: FONTS.ui, fontSize: 10, color: INK, textAlign: "center", marginTop: 3 },
+
+  devControls: { position: "absolute", top: 2, right: 66, zIndex: 30, flexDirection: "row", gap: 4 },
+  devButton: { backgroundColor: "rgba(15,13,42,0.92)", borderWidth: 1, borderColor: "rgba(245,200,66,0.75)", borderRadius: 4, paddingHorizontal: 7, paddingVertical: 5 },
+  devButtonText: { fontFamily: FONTS.ui, fontSize: 9, color: "#F5C842", letterSpacing: 0.4 },
 });
