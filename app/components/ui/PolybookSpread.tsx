@@ -91,7 +91,6 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
               <Text style={styles.closedTitle}>POLYBOOK</Text>
               <View style={styles.coverRule} />
               <Text style={styles.coverMark}>PW</Text>
-              <Text style={styles.closedHint}>TAP TO OPEN</Text>
             </View>
             <View style={styles.closedPages} />
           </Pressable>
@@ -143,7 +142,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             {section === "TODAY" && (
               <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.pageDate}>{today.toUpperCase()}</Text>
-                <Text style={styles.pageHeading}>Today</Text>
+                <Text style={styles.sectionHeading}>TODAY</Text>
                 <View style={styles.inkRule} />
                 <View style={styles.todayEntry}>
                   {todayEntry.map((line, index) => (
@@ -159,7 +158,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
             {section === "JOURNAL" && (
               <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
-                <Text style={styles.pageHeading}>Journal</Text>
+                <Text style={styles.sectionHeading}>JOURNAL</Text>
                 <View style={styles.inkRule} />
                 {workLogRows.map((row, index) => (
                   <View key={`${row.date}-${index}`} style={styles.journalRow}>
@@ -179,7 +178,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
             {section === "BEATEN" && (
               <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
-                <Text style={styles.pageHeading}>Beaten</Text>
+                <Text style={styles.sectionHeading}>BEATEN</Text>
                 <Text style={styles.beatenSub}>THE ONES YOU GOT PAST POLLY</Text>
                 <View style={styles.inkRule} />
                 <View style={styles.sealGrid}>
@@ -229,9 +228,9 @@ const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, width: "100%", alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 
-  closedStage: { width: "92%", maxWidth: 370, height: 470, justifyContent: "center", alignItems: "center" },
+  closedStage: { width: "88%", maxWidth: 350, height: 440, justifyContent: "center", alignItems: "center" },
   closedBook: {
-    width: 342, maxWidth: "88%", height: 430, borderRadius: 22, backgroundColor: "#2A155E",
+    width: 306, maxWidth: "84%", height: 382, borderRadius: 22, backgroundColor: "#2A155E",
     borderWidth: 4, borderColor: "#A77C1E", padding: 16, shadowColor: "#000", shadowOpacity: 0.42,
     shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 12,
   },
@@ -241,11 +240,10 @@ const styles = StyleSheet.create({
   closedTitle: { fontFamily: FONTS.hud, fontSize: 34, letterSpacing: 2, color: PW.color.gold, textAlign: "center" },
   coverRule: { width: "72%", height: 2, backgroundColor: "#B98B24", marginVertical: 22 },
   coverMark: { fontFamily: FONTS.hud, fontSize: 54, color: "rgba(245,200,66,0.78)", letterSpacing: 3 },
-  closedHint: { position: "absolute", bottom: 22, fontFamily: FONTS.label, fontSize: 10, letterSpacing: 2.2, color: "rgba(255,247,214,0.58)" },
-  closedRibbonRail: { position: "absolute", right: -2, top: 92, gap: 14 },
-  closedRibbon: { width: 76, height: 48, backgroundColor: "#55206C", borderWidth: 1, borderColor: "#A77C1E", justifyContent: "center", paddingLeft: 12 },
-  closedRibbonText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 0.8, color: "#FFF3CF" },
-  forkCut: { position: "absolute", right: -1, top: 16, width: 14, height: 14, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
+  closedRibbonRail: { position: "absolute", right: 8, top: 104, gap: 12 },
+  closedRibbon: { width: 62, height: 42, backgroundColor: "#55206C", borderWidth: 1, borderColor: "#A77C1E", justifyContent: "center", paddingLeft: 10 },
+  closedRibbonText: { fontFamily: FONTS.label, fontSize: 9, letterSpacing: 0.5, color: "#FFF3CF" },
+  forkCut: { position: "absolute", right: -1, top: 14, width: 13, height: 13, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
 
   openBook: { width: "94%", height: "96%", maxWidth: 430, flexDirection: "row", alignItems: "stretch", justifyContent: "center" },
   pageFrame: { flex: 1, minWidth: 0, backgroundColor: "#24104E", borderWidth: 3, borderColor: "#A77C1E", borderRadius: 18, padding: 8, shadowColor: "#000", shadowOpacity: 0.36, shadowRadius: 10, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
@@ -254,7 +252,7 @@ const styles = StyleSheet.create({
   closeButton: { position: "absolute", top: 10, right: 10, zIndex: 10, paddingHorizontal: 8, paddingVertical: 5 },
   closeText: { fontFamily: FONTS.label, fontSize: 9, letterSpacing: 1.2, color: INK_MUTED },
   pageDate: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.2, color: INK_MUTED, marginBottom: 10 },
-  pageHeading: { fontFamily: FONTS.hand, fontSize: 34, color: INK, marginBottom: 6 },
+  sectionHeading: { fontFamily: FONTS.hud, fontSize: 22, letterSpacing: 1.4, color: INK, marginBottom: 8 },
   inkRule: { height: 1, backgroundColor: "rgba(50,35,28,0.32)", marginBottom: 24 },
   todayEntry: { gap: 7 },
   todayLine: { fontFamily: FONTS.hand, fontSize: 24, lineHeight: 31, color: INK },
