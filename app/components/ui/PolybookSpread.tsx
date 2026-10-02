@@ -111,6 +111,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
       )}
 
       <View style={styles.openBook}>
+        <Image
+          source={require("../../../assets/images/polybook/polybook_page.png")}
+          resizeMode="stretch"
+          style={styles.openBookArt}
+          pointerEvents="none"
+        />
         <View style={styles.pageFrame}>
           <View style={styles.page}>
             <Pressable
@@ -231,10 +237,11 @@ const styles = StyleSheet.create({
   closedRibbonText: { fontFamily: FONTS.label, fontSize: 9, letterSpacing: 0.5, color: "#FFF3CF" },
   forkCut: { position: "absolute", right: -1, top: 14, width: 13, height: 13, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
 
-  openBook: { width: "96%", height: "100%", maxWidth: 520, flexDirection: "row", alignItems: "stretch", justifyContent: "center" },
-  pageFrame: { flex: 1, minWidth: 0, backgroundColor: "#24104E", borderWidth: 3, borderColor: "#A77C1E", borderRadius: 18, padding: 8, shadowColor: "#000", shadowOpacity: 0.36, shadowRadius: 10, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
-  page: { flex: 1, minHeight: 0, borderRadius: 11, backgroundColor: "#E5D3A5", borderWidth: 1, borderColor: "#9E8550", overflow: "hidden" },
-  pageScroll: { paddingHorizontal: 22, paddingTop: 30, paddingBottom: 50, minHeight: "100%" },
+  openBook: { width: "96%", height: "100%", maxWidth: 520, position: "relative", alignItems: "stretch", justifyContent: "center" },
+  openBookArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%" },
+  pageFrame: { position: "absolute", left: "11.5%", right: "10.5%", top: "5.5%", bottom: "7.5%", minWidth: 0 },
+  page: { flex: 1, minHeight: 0, overflow: "hidden" },
+  pageScroll: { paddingHorizontal: 18, paddingTop: 24, paddingBottom: 42, minHeight: "100%" },
   closeButton: { position: "absolute", top: 10, left: 10, zIndex: 20, minWidth: 72, minHeight: 38, borderRadius: 19, backgroundColor: "rgba(42,21,94,0.90)", borderWidth: 1, borderColor: "rgba(167,124,30,0.78)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 6 },
   closeText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 1.1, color: "#FFF3CF" },
   pageDate: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.2, color: INK_MUTED, marginBottom: 10 },
@@ -246,7 +253,7 @@ const styles = StyleSheet.create({
   marginScratch: { fontFamily: FONTS.hand, fontSize: 32, color: "rgba(58,39,31,0.46)", transform: [{ rotate: "-9deg" }] },
   marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
 
-  ribbonRail: { width: 56, marginLeft: -1, paddingTop: 54, gap: 12, zIndex: 4 },
+  ribbonRail: { position: "absolute", right: 0, top: "15%", width: "12%", gap: 12, zIndex: 4, opacity: 0 },
   ribbon: { width: 54, height: 76, backgroundColor: "#4B1B63", borderWidth: 1, borderLeftWidth: 0, borderColor: "#765087", justifyContent: "center", alignItems: "center", paddingBottom: 9 },
   ribbonSelected: { width: 61, backgroundColor: "#5F2577", borderColor: "#D4AE3D" },
   ribbonText: { fontFamily: FONTS.label, fontSize: 8, letterSpacing: 0.3, color: "rgba(255,247,214,0.70)", transform: [{ rotate: "90deg" }] },
