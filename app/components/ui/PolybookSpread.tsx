@@ -115,12 +115,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           <View style={styles.page}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Close Polybook"
+              accessibilityLabel="Close Polybook and return to cover"
               onPress={() => setIsOpen(false)}
               hitSlop={10}
               style={styles.closeButton}
             >
-              <Text style={styles.closeText}>CLOSE</Text>
+              <Text style={styles.closeText}>COVER</Text>
             </Pressable>
 
             {section === "TODAY" && (
@@ -231,12 +231,12 @@ const styles = StyleSheet.create({
   closedRibbonText: { fontFamily: FONTS.label, fontSize: 9, letterSpacing: 0.5, color: "#FFF3CF" },
   forkCut: { position: "absolute", right: -1, top: 14, width: 13, height: 13, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
 
-  openBook: { width: "94%", height: "96%", maxWidth: 430, flexDirection: "row", alignItems: "stretch", justifyContent: "center" },
+  openBook: { width: "96%", height: "100%", maxWidth: 520, flexDirection: "row", alignItems: "stretch", justifyContent: "center" },
   pageFrame: { flex: 1, minWidth: 0, backgroundColor: "#24104E", borderWidth: 3, borderColor: "#A77C1E", borderRadius: 18, padding: 8, shadowColor: "#000", shadowOpacity: 0.36, shadowRadius: 10, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
   page: { flex: 1, minHeight: 0, borderRadius: 11, backgroundColor: "#E5D3A5", borderWidth: 1, borderColor: "#9E8550", overflow: "hidden" },
   pageScroll: { paddingHorizontal: 22, paddingTop: 30, paddingBottom: 50, minHeight: "100%" },
-  closeButton: { position: "absolute", top: 10, right: 10, zIndex: 10, paddingHorizontal: 8, paddingVertical: 5 },
-  closeText: { fontFamily: FONTS.label, fontSize: 9, letterSpacing: 1.2, color: INK_MUTED },
+  closeButton: { position: "absolute", top: 10, left: 10, zIndex: 20, minWidth: 72, minHeight: 38, borderRadius: 19, backgroundColor: "rgba(42,21,94,0.90)", borderWidth: 1, borderColor: "rgba(167,124,30,0.78)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 6 },
+  closeText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 1.1, color: "#FFF3CF" },
   pageDate: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.2, color: INK_MUTED, marginBottom: 10 },
   sectionHeading: { fontFamily: FONTS.hud, fontSize: 22, letterSpacing: 1.4, color: INK, marginBottom: 8 },
   inkRule: { height: 1, backgroundColor: "rgba(50,35,28,0.32)", marginBottom: 24 },
