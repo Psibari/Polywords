@@ -195,8 +195,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                   pressed && styles.pressed,
                 ]}
               >
+                <Image
+                  source={require("../../../assets/images/polybook/polybook_ribbon.png")}
+                  resizeMode="stretch"
+                  style={styles.ribbonArt}
+                />
                 <Text style={[styles.ribbonText, selected && styles.ribbonTextSelected]}>{item}</Text>
-                <View style={[styles.forkCutOpen, selected && styles.forkCutSelected]} />
               </Pressable>
             );
           })}
