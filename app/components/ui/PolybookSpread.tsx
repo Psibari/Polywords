@@ -120,11 +120,8 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           accessibilityRole="button"
           accessibilityLabel="Close Polybook and return to cover"
           onPress={() => setIsOpen(false)}
-          hitSlop={10}
-          style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.closeText}>‹ COVER</Text>
-        </Pressable>
+          style={styles.closeButton}
+        />
         <View style={styles.pageFrame}>
           <View style={styles.page}>
 
@@ -238,42 +235,42 @@ const styles = StyleSheet.create({
 
   openBook: { width: "96%", height: "100%", maxWidth: 520, position: "relative", alignItems: "stretch", justifyContent: "center" },
   openBookArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%" },
-  pageFrame: { position: "absolute", left: "11.5%", right: "10.5%", top: "5.5%", bottom: "7.5%", minWidth: 0 },
+  pageFrame: { position: "absolute", left: "10.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0 },
   page: { flex: 1, minHeight: 0, overflow: "hidden" },
-  pageScroll: { paddingHorizontal: 18, paddingTop: 24, paddingBottom: 42, minHeight: "100%" },
-  closeButton: { position: "absolute", left: "12%", top: "1.5%", zIndex: 20, minHeight: 32, justifyContent: "center", paddingHorizontal: 4 },
-  closeText: { fontFamily: FONTS.ui, fontSize: 11, letterSpacing: 0.9, color: "#FFF3CF" },
-  pageDate: { fontFamily: FONTS.ui, fontSize: 14, letterSpacing: 1.15, color: "#4A382D", marginBottom: 11 },
-  sectionHeading: { fontFamily: FONTS.hud, fontSize: 25, letterSpacing: 1.25, color: "#211812", marginBottom: 9 },
-  inkRule: { height: 1.5, backgroundColor: "rgba(45,30,22,0.46)", marginBottom: 24 },
+  pageScroll: { paddingHorizontal: 12, paddingTop: 22, paddingBottom: 54, minHeight: "100%" },
+  closeButton: { position: "absolute", left: "1%", top: "1%", zIndex: 20, width: "10%", height: "8%" },
+  closeText: { display: "none" },
+  pageDate: { fontFamily: FONTS.ui, fontSize: 15, letterSpacing: 1.1, color: "#33251D", marginBottom: 11 },
+  sectionHeading: { fontFamily: FONTS.hud, fontSize: 27, letterSpacing: 1.15, color: "#17100C", marginBottom: 9 },
+  inkRule: { height: 1.5, backgroundColor: "rgba(35,23,17,0.56)", marginBottom: 24 },
   todayEntry: { gap: 5 },
-  todayLine: { fontFamily: FONTS.hand, fontSize: 25, lineHeight: 32, color: "#1D1511" },
+  todayLine: { fontFamily: FONTS.hand, fontSize: 27, lineHeight: 34, color: "#140E0B" },
   todayOpenSpace: { minHeight: 300, marginTop: 28, justifyContent: "flex-end", alignItems: "flex-end" },
   marginScratch: { fontFamily: FONTS.hand, fontSize: 32, color: "rgba(58,39,31,0.46)", transform: [{ rotate: "-9deg" }] },
   marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
 
-  ribbonRail: { position: "absolute", right: "-1.5%", top: "14.2%", width: "15%", zIndex: 12, gap: 9 },
-  ribbon: { width: "100%", height: 72, justifyContent: "center", alignItems: "center" },
-  ribbonSelected: { transform: [{ translateX: 2 }] },
-  ribbonText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 0.5, color: "#FFF4D6", textShadowColor: "rgba(25,10,45,0.85)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2, transform: [{ rotate: "90deg" }] },
-  ribbonTextSelected: { color: PW.color.gold, fontSize: 11 },
+  ribbonRail: { position: "absolute", left: "15%", right: "7%", bottom: "1.2%", zIndex: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  ribbon: { width: "30%", height: 64, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(72,27,98,0.96)", borderWidth: 1, borderColor: "rgba(255,244,214,0.28)", borderTopWidth: 0, borderBottomLeftRadius: 5, borderBottomRightRadius: 5 },
+  ribbonSelected: { backgroundColor: "rgba(126,43,92,0.98)", borderColor: "rgba(245,200,66,0.82)", transform: [{ translateY: 3 }] },
+  ribbonText: { fontFamily: FONTS.label, fontSize: 12, letterSpacing: 0.55, color: "#FFF4D6", textShadowColor: "rgba(25,10,45,0.85)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+  ribbonTextSelected: { color: PW.color.gold, fontSize: 13 },
   forkCutOpen: { display: "none" },
   forkCutSelected: { display: "none" },
   futureRibbon: { display: "none" },
   futureRibbonText: { display: "none" },
 
   journalRow: { marginBottom: 22 },
-  rowDate: { fontFamily: FONTS.ui, fontSize: 12, color: INK_MUTED, marginBottom: 2 },
-  rowWord: { fontFamily: FONTS.ui, fontSize: 13, letterSpacing: 0.7, color: INK, marginBottom: 2 },
-  rowLine: { fontFamily: FONTS.hand, fontSize: 20, lineHeight: 26, color: INK },
-  statsFooter: { marginTop: 10, paddingTop: 14, borderTopWidth: 1, borderColor: "rgba(50,35,28,0.25)", gap: 4 },
-  statsText: { fontFamily: FONTS.ui, fontSize: 11, letterSpacing: 0.8, color: INK_MUTED },
+  rowDate: { fontFamily: FONTS.ui, fontSize: 14, color: "#4A382D", marginBottom: 3 },
+  rowWord: { fontFamily: FONTS.ui, fontSize: 14, letterSpacing: 0.7, color: "#241811", marginBottom: 3 },
+  rowLine: { fontFamily: FONTS.hand, fontSize: 22, lineHeight: 29, color: "#140E0B" },
+  statsFooter: { marginTop: 12, paddingTop: 15, borderTopWidth: 1, borderColor: "rgba(35,23,17,0.34)", gap: 5 },
+  statsText: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 0.8, color: "#4A382D" },
 
-  beatenSub: { fontFamily: FONTS.ui, fontSize: 10, letterSpacing: 1, color: INK_MUTED, marginBottom: 10 },
+  beatenSub: { fontFamily: FONTS.ui, fontSize: 11, letterSpacing: 1, color: "#4A382D", marginBottom: 10 },
   sealGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   sealItem: { width: "29%", minWidth: 72, alignItems: "center", marginBottom: 10 },
   seal: { width: 62, height: 62 },
-  sealWord: { fontFamily: FONTS.ui, fontSize: 10, color: INK, textAlign: "center", marginTop: 3 },
+  sealWord: { fontFamily: FONTS.ui, fontSize: 11, color: "#211812", textAlign: "center", marginTop: 3 },
 
   devControls: { position: "absolute", top: 2, right: 66, zIndex: 30, flexDirection: "row", gap: 4 },
   devButton: { backgroundColor: "rgba(15,13,42,0.92)", borderWidth: 1, borderColor: "rgba(245,200,66,0.75)", borderRadius: 4, paddingHorizontal: 7, paddingVertical: 5 },
