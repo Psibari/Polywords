@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 
   closedStage: { width: "88%", maxWidth: 350, height: 440, justifyContent: "center", alignItems: "center" },
-  closedBookArtButton: { width: 306, maxWidth: "84%", height: 382, alignItems: "center", justifyContent: "center" },
+  closedBookArtButton: { width: 340, maxWidth: "94%", height: 425, alignItems: "center", justifyContent: "center" },
   closedBookArt: { width: "100%", height: "100%" },
   closedBook: {
     width: 306, maxWidth: "84%", height: 382, borderRadius: 22, backgroundColor: "#2A155E",
