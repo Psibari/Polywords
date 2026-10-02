@@ -250,9 +250,10 @@ const styles = StyleSheet.create({
   marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
 
   ribbonRail: { position: "absolute", left: "15%", right: "7%", bottom: "1.2%", zIndex: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  ribbon: { width: "30%", height: 64, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(72,27,98,0.96)", borderWidth: 1, borderColor: "rgba(255,244,214,0.28)", borderTopWidth: 0, borderBottomLeftRadius: 5, borderBottomRightRadius: 5 },
-  ribbonSelected: { backgroundColor: "rgba(126,43,92,0.98)", borderColor: "rgba(245,200,66,0.82)", transform: [{ translateY: 3 }] },
-  ribbonText: { fontFamily: FONTS.label, fontSize: 12, letterSpacing: 0.55, color: "#FFF4D6", textShadowColor: "rgba(25,10,45,0.85)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+  ribbon: { width: "30%", height: 72, justifyContent: "center", alignItems: "center", position: "relative" },
+  ribbonArt: { position: "absolute", width: "100%", height: "100%", left: 0, top: 0 },
+  ribbonSelected: { transform: [{ translateY: 3 }] },
+  ribbonText: { width: "78%", fontFamily: FONTS.label, fontSize: 12, letterSpacing: 0.45, color: "#FFF4D6", textAlign: "center", textShadowColor: "rgba(25,10,45,0.92)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   ribbonTextSelected: { color: PW.color.gold, fontSize: 13 },
   forkCutOpen: { display: "none" },
   forkCutSelected: { display: "none" },
