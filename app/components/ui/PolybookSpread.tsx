@@ -115,7 +115,6 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           source={require("../../../assets/images/polybook/polybook_page.png")}
           resizeMode="stretch"
           style={styles.openBookArt}
-          pointerEvents="none"
         />
         <Pressable
           accessibilityRole="button"
