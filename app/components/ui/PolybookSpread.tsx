@@ -84,30 +84,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Open Polybook to Today"
             onPress={() => openTo("TODAY")}
-            style={({ pressed }) => [styles.closedBook, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.closedBookArtButton, pressed && styles.pressed]}
           >
-            <View style={styles.closedSpine} />
-            <View style={styles.closedInnerFrame}>
-              <Text style={styles.closedTitle}>POLYBOOK</Text>
-              <View style={styles.coverRule} />
-              <Text style={styles.coverMark}>PW</Text>
-            </View>
-            <View style={styles.closedPages} />
+            <Image
+              source={require("../../../assets/images/polybook/POLYBOOKREV3.png")}
+              resizeMode="contain"
+              style={styles.closedBookArt}
+            />
           </Pressable>
-          <View style={styles.closedRibbonRail}>
-            {SECTIONS.map((item) => (
-              <Pressable
-                key={item}
-                accessibilityRole="button"
-                accessibilityLabel={`Open Polybook to ${item}`}
-                onPress={() => openTo(item)}
-                style={({ pressed }) => [styles.closedRibbon, pressed && styles.pressed]}
-              >
-                <Text style={styles.closedRibbonText}>{item}</Text>
-                <View style={styles.forkCut} />
-              </Pressable>
-            ))}
-          </View>
         </View>
       </View>
     );
