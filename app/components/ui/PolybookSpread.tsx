@@ -99,7 +99,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
   return (
     <View style={styles.root}>
-      {__DEV__ && section === "TODAY" && (
+      {false && __DEV__ && section === "TODAY" && (
         <View style={styles.devControls}>
           <Pressable style={styles.devButton} onPress={cycleDevState}>
             <Text style={styles.devButtonText}>{displayedRivalryState}</Text>
@@ -117,17 +117,17 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           style={styles.openBookArt}
           pointerEvents="none"
         />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close Polybook and return to cover"
+          onPress={() => setIsOpen(false)}
+          hitSlop={10}
+          style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+        >
+          <Text style={styles.closeText}>‹ COVER</Text>
+        </Pressable>
         <View style={styles.pageFrame}>
           <View style={styles.page}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close Polybook and return to cover"
-              onPress={() => setIsOpen(false)}
-              hitSlop={10}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeText}>COVER</Text>
-            </Pressable>
 
             {section === "TODAY" && (
               <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
@@ -242,26 +242,26 @@ const styles = StyleSheet.create({
   pageFrame: { position: "absolute", left: "11.5%", right: "10.5%", top: "5.5%", bottom: "7.5%", minWidth: 0 },
   page: { flex: 1, minHeight: 0, overflow: "hidden" },
   pageScroll: { paddingHorizontal: 18, paddingTop: 24, paddingBottom: 42, minHeight: "100%" },
-  closeButton: { position: "absolute", top: 10, left: 10, zIndex: 20, minWidth: 72, minHeight: 38, borderRadius: 19, backgroundColor: "rgba(42,21,94,0.90)", borderWidth: 1, borderColor: "rgba(167,124,30,0.78)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 6 },
-  closeText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 1.1, color: "#FFF3CF" },
-  pageDate: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.2, color: INK_MUTED, marginBottom: 10 },
-  sectionHeading: { fontFamily: FONTS.hud, fontSize: 22, letterSpacing: 1.4, color: INK, marginBottom: 8 },
-  inkRule: { height: 1, backgroundColor: "rgba(50,35,28,0.32)", marginBottom: 24 },
-  todayEntry: { gap: 7 },
-  todayLine: { fontFamily: FONTS.hand, fontSize: 24, lineHeight: 31, color: INK },
+  closeButton: { position: "absolute", left: "12%", top: "1.5%", zIndex: 20, minHeight: 32, justifyContent: "center", paddingHorizontal: 4 },
+  closeText: { fontFamily: FONTS.ui, fontSize: 11, letterSpacing: 0.9, color: "#FFF3CF" },
+  pageDate: { fontFamily: FONTS.ui, fontSize: 14, letterSpacing: 1.15, color: "#4A382D", marginBottom: 11 },
+  sectionHeading: { fontFamily: FONTS.hud, fontSize: 25, letterSpacing: 1.25, color: "#211812", marginBottom: 9 },
+  inkRule: { height: 1.5, backgroundColor: "rgba(45,30,22,0.46)", marginBottom: 24 },
+  todayEntry: { gap: 5 },
+  todayLine: { fontFamily: FONTS.hand, fontSize: 25, lineHeight: 32, color: "#1D1511" },
   todayOpenSpace: { minHeight: 300, marginTop: 28, justifyContent: "flex-end", alignItems: "flex-end" },
   marginScratch: { fontFamily: FONTS.hand, fontSize: 32, color: "rgba(58,39,31,0.46)", transform: [{ rotate: "-9deg" }] },
   marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
 
-  ribbonRail: { position: "absolute", right: 0, top: "15%", width: "12%", gap: 12, zIndex: 4, opacity: 0 },
-  ribbon: { width: 54, height: 76, backgroundColor: "#4B1B63", borderWidth: 1, borderLeftWidth: 0, borderColor: "#765087", justifyContent: "center", alignItems: "center", paddingBottom: 9 },
-  ribbonSelected: { width: 61, backgroundColor: "#5F2577", borderColor: "#D4AE3D" },
-  ribbonText: { fontFamily: FONTS.label, fontSize: 8, letterSpacing: 0.3, color: "rgba(255,247,214,0.70)", transform: [{ rotate: "90deg" }] },
-  ribbonTextSelected: { color: PW.color.gold },
-  forkCutOpen: { position: "absolute", bottom: -1, left: 20, width: 14, height: 14, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
-  forkCutSelected: { left: 23 },
-  futureRibbon: { marginTop: 5, opacity: 0.38 },
-  futureRibbonText: { fontFamily: FONTS.hud, fontSize: 20, color: "rgba(255,247,214,0.55)" },
+  ribbonRail: { position: "absolute", right: "-1.5%", top: "14.2%", width: "15%", zIndex: 12, gap: 9 },
+  ribbon: { width: "100%", height: 72, justifyContent: "center", alignItems: "center" },
+  ribbonSelected: { transform: [{ translateX: 2 }] },
+  ribbonText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 0.5, color: "#FFF4D6", textShadowColor: "rgba(25,10,45,0.85)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2, transform: [{ rotate: "90deg" }] },
+  ribbonTextSelected: { color: PW.color.gold, fontSize: 11 },
+  forkCutOpen: { display: "none" },
+  forkCutSelected: { display: "none" },
+  futureRibbon: { display: "none" },
+  futureRibbonText: { display: "none" },
 
   journalRow: { marginBottom: 22 },
   rowDate: { fontFamily: FONTS.ui, fontSize: 12, color: INK_MUTED, marginBottom: 2 },
