@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-09-30. This file is current state + next work only. `CLAUDE.md` owns durable
+Updated 2026-10-02. This file is current state + next work only. `CLAUDE.md` owns durable
 architecture; focused rules live in `docs/`; code/data outrank both.
 
 ## Branches
@@ -23,8 +23,23 @@ Phone testing uses the local checkout, not GitHub. Pull the branch before Expo t
 - **Daily castle:** locked on device. Gate/clues, tunnel, answer wall/blocks, gold hit, floor
   coins, and the gold-coin finale stay as approved. The deferred answer-stone entrance issue
   remains deferred; do not reopen the castle art to solve it.
-- **Polybook:** Polly's diary on the internal Vault route. It opens directly into the book.
-  The stale archive intro overlay is gone. Meanings/traps/hidden pairs never appear there.
+- **Polybook:** active redesign work is now the main product focus. The old miniature two-page
+  spread is retired. The live direction is a closed physical Polybook hub opening to one large
+  portrait page, with physical forked ribbons for TODAY, JOURNAL, and BUTTERZ.
+  - The open-book shell, bottom ribbons, page safe area, and visible `< COVER` return control
+    are implemented and device-tested in progress.
+  - TODAY uses the five rivalry states and the ten-entry authored pools. DEV controls can cycle
+    TODAY entries/states and JOURNAL test content.
+  - The colored-handwriting experiment is rejected. Polly's entry returns to one dark readable
+    ink; mood moves to a stronger accent bar under TODAY. AMUSED uses Polly green. No brown.
+    Other mood-bar colors remain unapproved.
+  - Buggie is too thin on a physical phone for the journal body. A replacement handwriting font
+    is being selected; do not lock TODAY typography until it passes device readability.
+  - BUTTERZ is the mastery page. It shows crowns without redundant word labels such as ROUND.
+    Crowns need future meaning through earned Polybook access/unlocks; do not build that economy
+    during the current typography pass.
+  - Closed-cover art follow-up: remove the side ribbons from the closed-book art and place the
+    section ribbons at the bottom. This is noted work, not a reason to interrupt the font pass.
 - **Visual consistency pass:** the governing rule is now **shared grammar, not identical
   skins** (`DESIGN.md`).
   - Daily Entry uses the dark utility-panel family and is locked.
@@ -53,17 +68,18 @@ Phone testing uses the local checkout, not GitHub. Pull the branch before Expo t
 
 ## Next Work
 
-1. **Hunt Results visual audit.** Device-review the current screen and change only proven
-   readability, hierarchy, or material problems.
-2. **Real-device release journeys.** Cold start, rapid navigation, background/foreground
-   recovery, persistence, every Polly laugh/animation, performance, sound-off, and small phone.
-3. **Boss-capable content.** Author more words with three fair hidden pairs.
-4. **Banished record decision.** Decide whether a cleared Haunt gets permanent history.
-5. **Cold-start gauntlet audio.** Listen for late first-use `stoneRumble`; warm earlier only
-   if audible.
-6. **Navigation.** Home still cannot reach Polybook directly.
-7. **Technical polish backlog.** Haptic gateway stragglers, TestFlight-visible audio failures,
-   remaining Polly sprite cleanup, Polybook writing depth, privacy policy/support contact.
+1. **Polybook TODAY readability.** Select and license-check a heavier handwritten font, restore
+   dark body ink, and device-test the thicker mood bar under TODAY. AMUSED = Polly green.
+2. **Polybook JOURNAL.** Bring the approved authored journal/work-log material into the new
+   portrait-page system and verify real-phone readability with the selected font.
+3. **Polybook BUTTERZ.** Finish the mastery-page composition without turning it into a stats
+   dashboard; crowns are artifacts whose longer-term unlock value is designed later.
+4. **Polybook shell/art cleanup.** Update the closed-cover ribbon art after the page typography
+   is stable.
+5. **Real-device release journeys.** Cold start, rapid navigation, background/foreground
+   recovery, persistence, Polly animation/audio, sound-off, and small-phone coverage.
+6. **Boss-capable content.** Author more words with three fair hidden pairs.
+7. **Banished record decision.** Decide whether a cleared Haunt gets permanent history.
 
 ## Deferred / Do Not Reopen Yet
 
