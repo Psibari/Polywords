@@ -170,19 +170,37 @@ no HUD tour, and the old automatic feather beat at the end of FINE is retired.
 
 ### Polybook (the Vault route)
 
-- `PolybookSpread.tsx` is the screen, behind `VaultScreen`'s `POLYBOOK_SPREAD_ENABLED` (on).
-  Modules: `pollyMood.ts` (run stamp, rivalry state), `bookPage.ts` (day buckets, line
-  choice), `bookLog.ts` (one `BookDayRecord` per day), `pollyBookLines.ts` (authored copy,
-  transcribed from `docs/POLLY_POLYBOOK_LOG_LINES.md` only).
+- `PolybookSpread.tsx` remains the implementation owner behind `VaultScreen`'s
+  `POLYBOOK_SPREAD_ENABLED` flag, but the old miniature two-page spread interaction is retired.
+  Current product architecture is **closed physical Polybook -> one large portrait page**.
+  `docs/POLYBOOK_LIVING_JOURNAL.md` owns the redesign direction.
+- Open-page navigation uses physical bottom forked ribbons: **TODAY / JOURNAL / BUTTERZ**.
+  A visible `< COVER` control returns to the closed book. Section scroll positions reset when
+  appropriate; do not restore horizontal spread-swiping as primary navigation.
+- Modules remain `pollyMood.ts` (run stamp, rivalry state), `bookPage.ts` (day buckets, line
+  choice), `bookLog.ts` (one `BookDayRecord` per day), and `pollyBookLines.ts` (authored
+  copy transcribed from `docs/POLLY_POLYBOOK_LOG_LINES.md` only).
+- TODAY uses the five rivalry states and ten-entry authored pools. DEV-only controls may cycle
+  Today entries/states and Journal content for testing; production behavior must not depend on
+  them.
+- The Buggie handwriting face failed real-phone readability in the portrait layout because its
+  strokes are too thin. A replacement handwriting font is pending approval. Until then, body
+  writing stays dark and high-contrast. Mood color belongs in the stronger divider/accent bar
+  under TODAY, not in the body copy. **AMUSED = Polly green; no brown.** Other mood colors are
+  still experimental.
+- BUTTERZ is the mastery section. Crowns are the artifact; do not put redundant mastered-word
+  labels such as ROUND beneath a crown. Crowns need future consequence through earned
+  Polybook access/unlocks, but that economy is not part of the current visual pass.
+- Closed-cover art follow-up: remove side ribbons from the closed-book art and move that ribbon
+  language to the bottom after interior typography is stable.
 - Never display a meaning, a trap or a hidden pair here: words recur, so it would be an answer
   key. Counts, status and titles only.
-- `LexiconPrototype.tsx`/`Bookcase.tsx` (the pre-Polybook screen) render only with the flag
-  off. Deleting them is Pete's call.
+- `LexiconPrototype.tsx`/`Bookcase.tsx` render only with the flag off. Deleting them is
+  Pete's call.
 - Naming collision, not fixed: the nav tab says "Polybook" and so does the in-round book's
   spine in `MaskBoard.tsx` (style `vaultLabel`). Renaming either is Pete's call.
 - The Polybook is Polly's book, kept in the old Vault; the player reads it (Pete, 2026-09-26).
-- It opens directly into the book. The stale one-time archive explainer was removed on
-  2026-09-30; do not restore an intro unless a new player problem justifies one.
+  The stale one-time archive explainer remains retired; do not restore it without evidence.
 
 ### Daily (castle)
 
