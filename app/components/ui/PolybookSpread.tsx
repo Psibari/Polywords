@@ -126,7 +126,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           <View style={styles.page}>
 
             {section === "TODAY" && (
-              <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
+              <ScrollView key="TODAY" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.pageDate}>{today.toUpperCase()}</Text>
                 <Text style={styles.sectionHeading}>TODAY</Text>
                 <View style={styles.inkRule} />
@@ -143,7 +143,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             )}
 
             {section === "JOURNAL" && (
-              <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
+              <ScrollView key="JOURNAL" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.sectionHeading}>JOURNAL</Text>
                 <View style={styles.inkRule} />
                 {workLogRows.map((row, index) => (
@@ -163,7 +163,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             )}
 
             {section === "BEATEN" && (
-              <ScrollView contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
+              <ScrollView key="BEATEN" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.sectionHeading}>BEATEN</Text>
                 <Text style={styles.beatenSub}>THE ONES YOU GOT PAST POLLY</Text>
                 <View style={styles.inkRule} />
