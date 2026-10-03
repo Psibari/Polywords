@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
 
   openBook: { width: "96%", height: "100%", maxWidth: 520, position: "relative", alignItems: "stretch", justifyContent: "center" },
   openBookArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%" },
-  pageFrame: { position: "absolute", left: "10.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0 },
+  pageFrame: { position: "absolute", left: "16.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0 },
   page: { flex: 1, minHeight: 0, overflow: "hidden" },
   pageScroll: { paddingHorizontal: 12, paddingTop: 22, paddingBottom: 54, minHeight: "100%" },
   closeButton: { position: "absolute", left: "1%", top: "1%", zIndex: 20, width: "10%", height: "8%" },
