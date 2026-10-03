@@ -3,7 +3,7 @@
 **Status:** Canonical product direction\
 **Decision state:** LOCKED architecture; visual treatment remains
 EXPERIMENTAL\
-**Date:** 2026-10-01
+**Date:** 2026-10-02
 
 > **Implementation warning**
 >
@@ -91,9 +91,9 @@ The ribbon component must support a variable section list.
 
 1.  **TODAY**
 2.  **JOURNAL**
-3.  **BEATEN**
+3.  **BUTTERZ**
 
-Three sections are enough for V1. Do not invent additional sections
+BUTTERZ is the player-facing mastery section name. Three sections are enough for V1. Do not invent additional sections
 merely because the architecture can support them.
 
 ### Locked design principle
@@ -123,13 +123,19 @@ text inside a parchment UI card.
 
 ### Mood-color direction
 
-Polly's mood may influence restrained ink or accent color coding on her
-written pages. Mood color should reinforce emotional state without making
-Polybook look multicolored for its own sake. The page must never read as a
-rainbow UI. Base handwriting remains strongly legible against the parchment;
-mood treatment is a secondary character signal, not a substitute for
-readability. The exact mood-to-color palette remains experimental until
-device-tested.
+The experiment that colored Polly's handwriting by mood was rejected on device. It made the
+writing feel pasted onto the parchment and reduced readability.
+
+The current direction is:
+
+-   Polly's entry uses one dark, high-contrast ink.
+-   Mood color moves to a substantial accent bar directly under TODAY rather than tinting the
+    body writing.
+-   **AMUSED = Polly green**.
+-   **No brown** in the mood system.
+-   The remaining state colors are still experimental and must be judged together so the page
+    reads as one book, not a rainbow UI.
+-   Mood color is a secondary character signal. Readability wins every conflict.
 
 ### Long-term role
 
@@ -182,9 +188,9 @@ relationship.
 
 ------------------------------------------------------------------------
 
-## 6. BEATEN
+## 6. BUTTERZ
 
-**BEATEN** is the mastery section.
+**BUTTERZ** is the mastery section.
 
 It should preserve the existing mastery/seal concept while allowing it
 to become more physical, collectible, and book-native.
@@ -192,8 +198,16 @@ to become more physical, collectible, and book-native.
 Gold feather seals and mastered words should feel like earned artifacts
 rather than generic statistics.
 
-The exact V1 BEATEN page composition remains **EXPERIMENTAL** until the
-new visual system is approved.
+The current V1 direction is intentionally sparse: mastery is represented by crown artifacts,
+not by redundant mastered-word labels under each crown. The earlier crown + ROUND presentation
+was rejected because the word label did not explain the artifact and added noise.
+
+Crowns must eventually matter beyond accumulation. Future earned Polybook access/unlocks are a
+strong direction for giving them meaning, but the unlock economy is not part of the current
+typography/layout pass.
+
+The exact V1 BUTTERZ page composition remains **EXPERIMENTAL** until the new visual system is
+approved.
 
 Polybook should not become a statistics dashboard. Small lifetime
 information may exist where useful, but statistics should remain
@@ -444,7 +458,7 @@ sections or related content in the future.
 
 Do **not** design the core Polybook around monetization locks.
 
-TODAY, JOURNAL, BEATEN, and the core Polly/player relationship must not
+TODAY, JOURNAL, BUTTERZ, and the core Polly/player relationship must not
 feel held hostage behind payment.
 
 If monetized Polybook content is ever explored, it should add genuine
@@ -466,10 +480,10 @@ The first redesign should establish:
 -   Expandable forked-ribbon navigation.
 -   TODAY.
 -   JOURNAL.
--   BEATEN.
+-   BUTTERZ.
 -   A restrained living-journal visual grammar.
--   Comfortable rendering of the existing approved Today and Work Log
-    copy.
+-   Comfortable rendering of the existing approved Today and Journal/Work Log copy.
+-   A visible return-to-cover control on every open section.
 -   Architecture capable of supporting future sections without
     redesigning the shell.
 
@@ -509,7 +523,7 @@ Do not implement these as part of the initial redesign:
 -   Closed physical book → full portrait page → forked-ribbon
     navigation.
 -   Expandable section architecture.
--   Initial V1 sections: TODAY, JOURNAL, BEATEN.
+-   Initial V1 sections: TODAY, JOURNAL, BUTTERZ.
 -   New features must earn a ribbon.
 -   Future player participation and delayed Polly/player correspondence
     are part of the long-term direction.
@@ -520,13 +534,14 @@ Do not implement these as part of the initial redesign:
 
 -   Exact closed-cover treatment.
 -   Ribbon position, scale, material and selected state.
--   Exact typography.
+-   Exact typography. Buggie has failed phone readability for journal body copy; replacement
+    handwriting selection is in progress.
 -   Page composition.
 -   Transition timing.
 -   Personality/doodle density.
--   Exact TODAY layout.
+-   Exact TODAY layout beyond the dark-ink + mood-bar direction.
 -   Exact JOURNAL layout.
--   Exact BEATEN layout.
+-   Exact BUTTERZ layout.
 -   Visual treatment of locked ribbons.
 
 ### FUTURE --- APPROVED TO EXPLORE
@@ -591,7 +606,7 @@ The redesign is not ready to lock until all of the following are true:
 
 1.  Opening Polybook immediately reads as opening **Polly's physical
     book**, not entering a statistics screen.
-2.  TODAY, JOURNAL and BEATEN are understandable through their ribbon
+2.  TODAY, JOURNAL and BUTTERZ are understandable through their ribbon
     treatment without horizontal-swipe discovery.
 3.  A fourth or fifth ribbon can be added without redesigning the page
     shell.
@@ -620,7 +635,7 @@ Before implementation is considered complete:
 -   Use actual Work Log copy rather than placeholder lorem ipsum.
 -   Verify no required copy is being truncated by obsolete
     character-width assumptions.
--   Test TODAY, JOURNAL and BEATEN navigation.
+-   Test TODAY, JOURNAL and BUTTERZ navigation.
 -   Test the selected/unselected ribbon states.
 -   Test a mocked fourth/fifth ribbon for architectural scalability.
 -   Test a mocked locked ribbon without implementing a real unlock
@@ -637,29 +652,19 @@ Before implementation is considered complete:
 
 ### Single most valuable next action
 
-Create a device-scale visual prototype of:
-
-**Closed Polybook → Open TODAY page**
-
-The prototype must include the forked-ribbon system and may include one
-clearly nonfunctional locked-ribbon example solely to test the
-architecture.
+Lock **Polybook page readability** on a physical phone: choose a heavier approved handwriting
+font, restore dark body ink, and validate the thicker mood bar under TODAY.
 
 ### Next three actions
 
-1.  **Explore 2--3 visual treatments of the same architecture.**\
-    Vary personality density and visual treatment. Do not reopen the
-    architecture itself without new evidence.
+1.  **Finish TODAY typography and mood-bar treatment.**    Use the real ten-entry pools and all five rivalry states. AMUSED is Polly green; no brown.
+    Do not color the handwriting itself.
 
-2.  **Stress-test the strongest treatment with real content.**\
-    Use the longest approved Today/Work Log copy, mastery seals, and a
-    mocked future player note/Polly reply to ensure the system has room
-    to grow.
+2.  **Apply the approved page typography to JOURNAL and stress-test real content.**    Use the authored Work Log/Journal copy, including long entries. DEV cycling controls may
+    remain for testing but must not leak into production behavior.
 
-3.  **After Pete approves the device-scale design, write the
-    implementation specification.**\
-    Only then update obsolete layout/width tests to represent the newly
-    approved behavior.
+3.  **Finish BUTTERZ composition, then clean the closed-cover ribbon art.**    Keep crowns as the mastery artifact without redundant word labels. After the interior system
+    is stable, remove the closed cover's side ribbons and move that art language to the bottom.
 
 ### Do not work on yet
 
