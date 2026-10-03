@@ -17,6 +17,7 @@ import { resolveRivalryState } from "../../game/pollyMood";
 import { createSeededRng, deriveSeed } from "../../game/seededRandom";
 import { INK, INK_MUTED } from "../../ui/polybookInk";
 import { PW } from "../../ui/pwTheme";
+import { useGameStore } from "../../store/useGameStore";
 
 // Structural prototype for docs/POLYBOOK_LIVING_JOURNAL.md.
 // Intentionally uses simple code-drawn book materials. Final cover/page art,
@@ -35,7 +36,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [section, setSection] = useState<Section>("TODAY");
   const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
-  const [devTodayIndex, setDevTodayIndex] = useState(0);
+  const [devTodayIndex, setDevTodayIndex] = useState(0);\n  const playerName = useGameStore(s => s.playerName);
 
   const bookSeed = progress.bookSeed ?? 0;
   const log = progress.bookLog ?? [];
@@ -170,7 +171,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                 <View style={styles.sealGrid}>
                   {progress.masteredWords.map((record) => (
                     <View key={record.word} style={styles.sealItem}>
-                      <Image source={MASTERED_SEAL} resizeMode="contain" style={styles.seal} />
+                      <Image source={POLYBOOK_CROWN} resizeMode="contain" style={styles.crown} />
                       <Text style={styles.sealWord}>{record.word}</Text>
                     </View>
                   ))}
@@ -200,7 +201,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                   resizeMode="stretch"
                   style={styles.ribbonArt}
                 />
-                <Text style={[styles.ribbonText, selected && styles.ribbonTextSelected]}>{item}</Text>
+                <Text style={[styles.ribbonText, selected && styles.ribbonTextSelected]}>{item === "BEATEN" ? playerName.toUpperCase() : item}</Text>
               </Pressable>
             );
           })}
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
   beatenSub: { fontFamily: FONTS.ui, fontSize: 11, letterSpacing: 1, color: "#4A382D", marginBottom: 10 },
   sealGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   sealItem: { width: "29%", minWidth: 72, alignItems: "center", marginBottom: 10 },
-  seal: { width: 62, height: 62 },
+  crown: { width: 62, height: 62 },
   sealWord: { fontFamily: FONTS.ui, fontSize: 11, color: "#211812", textAlign: "center", marginTop: 3 },
 
   devControls: { position: "absolute", top: 2, right: 66, zIndex: 30, flexDirection: "row", gap: 4 },
