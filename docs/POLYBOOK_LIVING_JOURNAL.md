@@ -1,8 +1,7 @@
 # POLYWORDS --- Polybook Living Journal
 
 **Status:** Canonical product direction\
-**Decision state:** LOCKED architecture; visual treatment remains
-EXPERIMENTAL\
+**Decision state:** LOCKED V1 interior architecture and approved visual treatment\
 **Date:** 2026-10-02
 
 > **Implementation warning**
@@ -91,9 +90,10 @@ The ribbon component must support a variable section list.
 
 1.  **TODAY**
 2.  **JOURNAL**
-3.  **BUTTERZ**
+3.  **MASTERY**
 
-BUTTERZ is the player-facing mastery section name. Three sections are enough for V1. Do not invent additional sections
+MASTERY is the fixed navigation label. The player's actual profile name appears inside the
+mastery page so long legal names never have to shrink into ribbon text. Three sections are enough for V1. Do not invent additional sections
 merely because the architecture can support them.
 
 ### Locked design principle
@@ -106,6 +106,16 @@ Available physical space is not sufficient justification for adding a
 section.
 
 ------------------------------------------------------------------------
+
+### LOCKED 2026-10-03 — open-book ribbon treatment
+
+- Open navigation is **TODAY / JOURNAL / MASTERY**.
+- Ribbon position, scale, material, selected-state behavior, and labels are device-approved.
+- The straight top section of each ribbon artwork is masked so the bookmark reads as tucked
+  beneath the bottom page edge rather than pasted across the parchment.
+- Preserve the single approved open-book artwork. A split base/pages layering experiment was
+  tested, looked wrong on device, and was reverted.
+- Do not reopen this treatment without a demonstrated regression.
 
 ## 4. TODAY
 
@@ -225,11 +235,10 @@ JOURNAL is the first consumer of the reusable Polybook page-turn system.
 - Entering JOURNAL from another section starts at page 1.
 - The same page-turn architecture should be reused when BUTTERZ or future Polybook sections
   exceed one physical page.
-- BUTTERZ now uses that architecture for mastery overflow: 12 crowns per physical page in the
+- MASTERY uses that architecture for mastery overflow: 12 crowns per physical page in the
   approved three-column grid, with the shared readable `PAGE X OF Y` controls and horizontal
-  swipe. The pager stays hidden while the collection fits on one page. This implementation is
-  pending physical-phone acceptance; do not mark the BUTTERZ pagination itself locked until
-  device verification passes.
+  swipe. The pager stays hidden while the collection fits on one page. The mastery composition
+  and pagination architecture are approved and locked.
 - TODAY remains the locked single-current-entry page and is not changed by this system.
 - **LOCKED 2026-10-02 after physical-phone review:** JOURNAL pagination, page density,
   whole-entry grouping, tap arrows, horizontal swipe, parchment clipping, and the enlarged
@@ -238,9 +247,9 @@ JOURNAL is the first consumer of the reusable Polybook page-turn system.
 - DEV FULL may repeat the small amount of real journal history to stress-test pagination;
   repeated DEV entries are expected and are not a production JOURNAL defect.
 
-## 6. BUTTERZ
+## 6. MASTERY
 
-**BUTTERZ** is the mastery section.
+**MASTERY** is the mastery section.
 
 It should preserve the existing mastery/seal concept while allowing it
 to become more physical, collectible, and book-native.
@@ -256,8 +265,9 @@ Crowns must eventually matter beyond accumulation. Future earned Polybook access
 strong direction for giving them meaning, but the unlock economy is not part of the current
 typography/layout pass.
 
-The exact V1 BUTTERZ page composition remains **EXPERIMENTAL** until the new visual system is
-approved.
+The V1 MASTERY composition is **LOCKED**: live player-name heading, MASTERY label, purple crown
+artifacts, approved three-column grid, no redundant mastered-word labels, total crown count, and
+shared page-turn behavior when the collection exceeds 12 crowns.
 
 Polybook should not become a statistics dashboard. Small lifetime
 information may exist where useful, but statistics should remain
