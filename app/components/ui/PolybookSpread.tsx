@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Image,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -48,6 +49,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
   const [devTodayIndex, setDevTodayIndex] = useState(0);
   const [devJournalRows, setDevJournalRows] = useState<"REAL" | "SHORT" | "MEDIUM" | "FULL">("REAL");
+  const [journalPage, setJournalPage] = useState(0);
   const playerName = useGameStore((state) => state.playerName);
   const playerLabel = playerName.trim() || "PLAYER";
 
@@ -65,6 +67,51 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     if (workLogRows.length === 0) return [];
     return Array.from({ length: count }, (_, index) => workLogRows[index % workLogRows.length]);
   }, [workLogRows, devJournalRows]);
+  const journalPages = useMemo(() => {
+    const PAGE_BUDGET = 560;
+    const HAND_CHARS_PER_LINE = 31;
+    const pages: typeof displayedWorkLogRows[] = [];
+    let page: typeof displayedWorkLogRows = [];
+    let used = 0;
+
+    for (const row of displayedWorkLogRows) {
+      const handwritingLines = row.lines.reduce(
+        (sum, line) => sum + Math.max(1, Math.ceil(line.length / HAND_CHARS_PER_LINE)),
+        0,
+      );
+      const rowHeight = 24 + (row.word ? 22 : 0) + handwritingLines * 29 + 22;
+      if (page.length > 0 && used + rowHeight > PAGE_BUDGET) {
+        pages.push(page);
+        page = [];
+        used = 0;
+      }
+      page.push(row);
+      used += rowHeight;
+    }
+    if (page.length > 0) pages.push(page);
+    return pages.length > 0 ? pages : [[]];
+  }, [displayedWorkLogRows]);
+
+  useEffect(() => {
+    setJournalPage((current) => Math.min(current, journalPages.length - 1));
+  }, [journalPages.length]);
+
+  const turnJournalPage = (delta: number) => {
+    setJournalPage((current) => Math.max(0, Math.min(journalPages.length - 1, current + delta)));
+  };
+
+  const journalPanResponder = useMemo(
+    () => PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        section === "JOURNAL" && Math.abs(gesture.dx) > 18 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx <= -44) turnJournalPage(1);
+        else if (gesture.dx >= 44) turnJournalPage(-1);
+      },
+    }),
+    [section, journalPages.length],
+  );
+
   const rivalryState = useMemo(
     () => resolveRivalryState({
       recent: progress.recentHuntPerformance ?? [],
@@ -123,8 +170,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
   function openTo(next: Section) {
     setOpenBookArtReady(false);
+    if (next === "JOURNAL") setJournalPage(0);
     setSection(next);
     setIsOpen(true);
+  }
+
+  function selectSection(next: Section) {
+    if (next === "JOURNAL" && section !== "JOURNAL") setJournalPage(0);
+    setSection(next);
   }
   function cycleDevState() {
     const current = devRivalryState ?? rivalryState;
@@ -248,24 +301,31 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             )}
 
             {section === "JOURNAL" && (
-              <ScrollView key="JOURNAL" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
-                <Text style={styles.sectionHeading}>JOURNAL</Text>
-                <View style={styles.inkRule} />
-                {displayedWorkLogRows.map((row, index) => (
-                  <View key={`${row.date}-${index}`} style={styles.journalRow}>
-                    <Text style={styles.rowDate}>{row.endDate ? `${row.date} – ${row.endDate}` : row.date}</Text>
-                    {row.word ? <Text style={styles.rowWord}>{row.word}</Text> : null}
-                    {row.lines.map((line, lineIndex) => (
-                      <Text key={lineIndex} style={styles.rowLine}>{line}</Text>
-                    ))}
-                  </View>
-                ))}
-                <View style={styles.statsFooter}>
-                  <Text style={styles.statsText}>HUNTS {progress.runsCompleted}</Text>
-                  <Text style={styles.statsText}>THEIRS {pollyMemory.playerWinStreak} · MINE {pollyMemory.pollyWinStreak}</Text>
+              <View key="JOURNAL" style={styles.journalPage} {...journalPanResponder.panHandlers}>
+                <View style={styles.journalPageContent}>
+                  <Text style={styles.sectionHeading}>JOURNAL</Text>
+                  <View style={styles.journalRule} />
+                  {journalPages[journalPage].map((row, index) => (
+                    <View key={`${row.date}-${index}`} style={styles.journalRow}>
+                      <Text style={styles.rowDate}>{row.endDate ? `${row.date} – ${row.endDate}` : row.date}</Text>
+                      {row.word ? <Text style={styles.rowWord}>{row.word}</Text> : null}
+                      {row.lines.map((line, lineIndex) => (
+                        <Text key={lineIndex} style={styles.rowLine}>{line}</Text>
+                      ))}
+                    </View>
+                  ))}
                 </View>
-              </ScrollView>
-            )}
+                <View style={styles.pageTurner}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Previous journal page" disabled={journalPage === 0} hitSlop={10} onPress={() => turnJournalPage(-1)} style={({ pressed }) => [styles.pageTurnButton, journalPage === 0 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                    <Text style={styles.pageTurnArrow}>‹</Text>
+                  </Pressable>
+                  <Text style={styles.pageTurnLabel}>PAGE {journalPage + 1} OF {journalPages.length}</Text>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Next journal page" disabled={journalPage === journalPages.length - 1} hitSlop={10} onPress={() => turnJournalPage(1)} style={({ pressed }) => [styles.pageTurnButton, journalPage === journalPages.length - 1 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                    <Text style={styles.pageTurnArrow}>›</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))}
 
             {section === "BEATEN" && (
               <ScrollView key="BEATEN" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
@@ -308,7 +368,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                 key={item}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
-                onPress={() => setSection(item)}
+                onPress={() => selectSection(item)}
                 style={({ pressed }) => [
                   styles.ribbon,
                   selected && styles.ribbonSelected,
@@ -397,12 +457,18 @@ const styles = StyleSheet.create({
   futureRibbon: { display: "none" },
   futureRibbonText: { display: "none" },
 
+  journalPage: { flex: 1, minHeight: 0, overflow: "hidden", paddingHorizontal: 12, paddingTop: 22, paddingBottom: 48 },
+  journalPageContent: { flex: 1, minHeight: 0, overflow: "hidden" },
+  journalRule: { height: 1, backgroundColor: "rgba(35,23,17,0.42)", marginBottom: 22 },
   journalRow: { marginBottom: 22 },
   rowDate: { fontFamily: FONTS.ui, fontSize: 14, color: "#4A382D", marginBottom: 3 },
   rowWord: { fontFamily: FONTS.ui, fontSize: 14, letterSpacing: 0.7, color: "#241811", marginBottom: 3 },
   rowLine: { fontFamily: FONTS.hand, fontSize: 22, lineHeight: 29, color: "#140E0B" },
-  statsFooter: { marginTop: 12, paddingTop: 15, borderTopWidth: 1, borderColor: "rgba(35,23,17,0.34)", gap: 5 },
-  statsText: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 0.8, color: "#4A382D" },
+  pageTurner: { height: 38, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 18, borderTopWidth: 1, borderTopColor: "rgba(35,23,17,0.22)", paddingTop: 5 },
+  pageTurnButton: { width: 38, height: 32, alignItems: "center", justifyContent: "center" },
+  pageTurnDisabled: { opacity: 0.22 },
+  pageTurnArrow: { fontFamily: FONTS.ui, fontSize: 28, lineHeight: 30, color: "#2A1B14" },
+  pageTurnLabel: { minWidth: 92, textAlign: "center", fontFamily: FONTS.ui, fontSize: 10, letterSpacing: 0.8, color: "#4A382D" },
 
   masteryLabel: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.5, color: "#4A382D", marginBottom: 10 },
   masteryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignContent: "flex-start", rowGap: 18 },
