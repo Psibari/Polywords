@@ -278,7 +278,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
         <Image
           source={require("../../../assets/images/polybook/polybook_page.png")}
           resizeMode="stretch"
-          style={styles.openBookArt}
+          style={styles.openBookBaseArt}
           pointerEvents="none"
           onLoad={() => setOpenBookArtReady(true)}
         />
@@ -294,6 +294,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           <Text style={styles.closeButtonArrow}>‹</Text>
           <Text style={styles.closeButtonText}>COVER</Text>
         </Pressable>
+        <Image
+          source={require("../../../assets/images/polybook/pagesbook.png")}
+          resizeMode="stretch"
+          style={styles.openBookPagesArt}
+          pointerEvents="none"
+        />
         <View style={styles.pageFrame}>
           <View style={styles.page}>
 
@@ -472,7 +478,8 @@ const styles = StyleSheet.create({
   forkCut: { position: "absolute", right: -1, top: 14, width: 13, height: 13, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
 
   openBook: { width: "96%", height: "100%", maxWidth: 520, position: "relative", alignItems: "stretch", justifyContent: "center" },
-  openBookArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%", zIndex: 20 },
+  openBookBaseArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%", zIndex: 5 },
+  openBookPagesArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%", zIndex: 20 },
   pageFrame: { position: "absolute", left: "16.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0, zIndex: 25 },
   page: { flex: 1, minHeight: 0, overflow: "hidden" },
   pageScroll: { paddingHorizontal: 12, paddingTop: 22, paddingBottom: 54, minHeight: "100%" },
