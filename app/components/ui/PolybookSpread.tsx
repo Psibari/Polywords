@@ -50,6 +50,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const [devTodayIndex, setDevTodayIndex] = useState(0);
   const [devJournalRows, setDevJournalRows] = useState<"REAL" | "SHORT" | "MEDIUM" | "FULL">("REAL");
   const [journalPage, setJournalPage] = useState(0);
+  const [masteryPage, setMasteryPage] = useState(0);
   const playerName = useGameStore((state) => state.playerName);
   const playerLabel = playerName.trim() || "PLAYER";
 
@@ -112,6 +113,35 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     [section, journalPages.length],
   );
 
+  const masteryPages = useMemo(() => {
+    const CROWNS_PER_PAGE = 12;
+    const pages = [];
+    for (let index = 0; index < progress.masteredWords.length; index += CROWNS_PER_PAGE) {
+      pages.push(progress.masteredWords.slice(index, index + CROWNS_PER_PAGE));
+    }
+    return pages.length > 0 ? pages : [[]];
+  }, [progress.masteredWords]);
+
+  useEffect(() => {
+    setMasteryPage((current) => Math.min(current, masteryPages.length - 1));
+  }, [masteryPages.length]);
+
+  const turnMasteryPage = (delta: number) => {
+    setMasteryPage((current) => Math.max(0, Math.min(masteryPages.length - 1, current + delta)));
+  };
+
+  const masteryPanResponder = useMemo(
+    () => PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        section === "BEATEN" && Math.abs(gesture.dx) > 18 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx <= -44) turnMasteryPage(1);
+        else if (gesture.dx >= 44) turnMasteryPage(-1);
+      },
+    }),
+    [section, masteryPages.length],
+  );
+
   const rivalryState = useMemo(
     () => resolveRivalryState({
       recent: progress.recentHuntPerformance ?? [],
@@ -171,12 +201,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   function openTo(next: Section) {
     setOpenBookArtReady(false);
     if (next === "JOURNAL") setJournalPage(0);
+    if (next === "BEATEN") setMasteryPage(0);
     setSection(next);
     setIsOpen(true);
   }
 
   function selectSection(next: Section) {
     if (next === "JOURNAL" && section !== "JOURNAL") setJournalPage(0);
+    if (next === "BEATEN" && section !== "BEATEN") setMasteryPage(0);
     setSection(next);
   }
   function cycleDevState() {
@@ -328,34 +360,46 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             )}
 
             {section === "BEATEN" && (
-              <ScrollView key="BEATEN" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
-                <Text
-                  style={styles.sectionHeading}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.62}
-                >
-                  {playerLabel.toUpperCase()}
-                </Text>
-                <Text style={styles.masteryLabel}>MASTERY</Text>
-                <View style={styles.inkRule} />
-                <View style={styles.masteryGrid}>
-                  {progress.masteredWords.map((record) => (
-                    <View
-                      key={record.word}
-                      accessible
-                      accessibilityLabel={`Mastered word: ${record.word}`}
-                      style={styles.masteryItem}
-                    >
-                      <Image source={POLYBOOK_CROWN} resizeMode="contain" style={styles.crown} />
-                    </View>
-                  ))}
+              <View key="BEATEN" style={styles.masteryPage} {...masteryPanResponder.panHandlers}>
+                <View style={styles.masteryPageContent}>
+                  <Text
+                    style={styles.sectionHeading}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.62}
+                  >
+                    {playerLabel.toUpperCase()}
+                  </Text>
+                  <Text style={styles.masteryLabel}>MASTERY</Text>
+                  <View style={styles.inkRule} />
+                  <View style={styles.masteryGrid}>
+                    {masteryPages[masteryPage].map((record) => (
+                      <View
+                        key={record.word}
+                        accessible
+                        accessibilityLabel={`Mastered word: ${record.word}`}
+                        style={styles.masteryItem}
+                      >
+                        <Image source={POLYBOOK_CROWN} resizeMode="contain" style={styles.crown} />
+                      </View>
+                    ))}
+                  </View>
+                  <Text style={styles.masteryCount}>
+                    {progress.masteredWords.length} {progress.masteredWords.length === 1 ? "CROWN" : "CROWNS"}
+                  </Text>
                 </View>
-                <Text style={styles.masteryCount}>
-                  {progress.masteredWords.length} {progress.masteredWords.length === 1 ? "CROWN" : "CROWNS"}
-                </Text>
-                <View style={styles.futureMasteryArea} />
-              </ScrollView>
+                {masteryPages.length > 1 && (
+                  <View style={styles.pageTurner}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Previous mastery page" disabled={masteryPage === 0} hitSlop={10} onPress={() => turnMasteryPage(-1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === 0 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                      <Text style={styles.pageTurnArrow}>‹</Text>
+                    </Pressable>
+                    <Text style={styles.pageTurnLabel}>PAGE {masteryPage + 1} OF {masteryPages.length}</Text>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Next mastery page" disabled={masteryPage === masteryPages.length - 1} hitSlop={10} onPress={() => turnMasteryPage(1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === masteryPages.length - 1 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                      <Text style={styles.pageTurnArrow}>›</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
             )}
           </View>
         </View>
@@ -470,12 +514,13 @@ const styles = StyleSheet.create({
   pageTurnArrow: { fontFamily: FONTS.ui, fontSize: 28, lineHeight: 30, color: "#2A1B14" },
   pageTurnLabel: { minWidth: 112, textAlign: "center", fontFamily: FONTS.ui, fontSize: 14, letterSpacing: 0.7, color: "#3A291F" },
 
+  masteryPage: { flex: 1, minHeight: 0, overflow: "hidden", paddingHorizontal: 12, paddingTop: 22, paddingBottom: 48 },
+  masteryPageContent: { flex: 1, minHeight: 0, overflow: "hidden" },
   masteryLabel: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.5, color: "#4A382D", marginBottom: 10 },
   masteryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignContent: "flex-start", rowGap: 18 },
   masteryItem: { width: "33.333%", alignItems: "center", justifyContent: "center", minHeight: 64 },
   crown: { width: 54, height: 54 },
   masteryCount: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.25, color: "#4A382D", textAlign: "center", marginTop: 20 },
-  futureMasteryArea: { minHeight: 170, flexGrow: 1 },
 
   devControls: { position: "absolute", top: 2, right: 66, zIndex: 30, flexDirection: "row", gap: 4 },
   devButton: { backgroundColor: "rgba(15,13,42,0.92)", borderWidth: 1, borderColor: "rgba(245,200,66,0.75)", borderRadius: 4, paddingHorizontal: 7, paddingVertical: 5 },
