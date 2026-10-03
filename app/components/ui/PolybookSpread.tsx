@@ -22,7 +22,7 @@ import { useGameStore } from "../../store/useGameStore";
 // Structural prototype for docs/POLYBOOK_LIVING_JOURNAL.md.
 // Intentionally uses simple code-drawn book materials. Final cover/page art,
 // doodles, ribbon art and transition polish wait until device geometry is approved.
-const MASTERED_SEAL = require("../../../assets/images/vault/polybook/polybook_master_seal_clean.png");
+const POLYBOOK_CROWN = require("../../../assets/images/polybook/polybook_crown.png");
 
 type Section = "TODAY" | "JOURNAL" | "BEATEN";
 const SECTIONS: readonly Section[] = ["TODAY", "JOURNAL", "BEATEN"];
@@ -165,7 +165,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
             {section === "BEATEN" && (
               <ScrollView key="BEATEN" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
-                <Text style={styles.sectionHeading}>BEATEN</Text>
+                <Text
+                  style={styles.sectionHeading}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.62}
+                >
+                  {playerLabel.toUpperCase()}
+                </Text>
                 <Text style={styles.beatenSub}>THE ONES YOU GOT PAST POLLY</Text>
                 <View style={styles.inkRule} />
                 <View style={styles.sealGrid}>
@@ -201,7 +208,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                   resizeMode="stretch"
                   style={styles.ribbonArt}
                 />
-                <Text style={[styles.ribbonText, selected && styles.ribbonTextSelected]}>{item === "BEATEN" ? playerName.toUpperCase() : item}</Text>
+                <Text
+                  style={[styles.ribbonText, selected && styles.ribbonTextSelected]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.55}
+                >
+                  {item === "BEATEN" ? playerLabel.toUpperCase() : item}
+                </Text>
               </Pressable>
             );
           })}
