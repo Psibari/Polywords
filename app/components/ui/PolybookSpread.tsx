@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   pageTurnButton: { width: 38, height: 32, alignItems: "center", justifyContent: "center" },
   pageTurnDisabled: { opacity: 0.22 },
   pageTurnArrow: { fontFamily: FONTS.ui, fontSize: 28, lineHeight: 30, color: "#2A1B14" },
-  pageTurnLabel: { minWidth: 92, textAlign: "center", fontFamily: FONTS.ui, fontSize: 10, letterSpacing: 0.8, color: "#4A382D" },
+  pageTurnLabel: { minWidth: 112, textAlign: "center", fontFamily: FONTS.ui, fontSize: 14, letterSpacing: 0.7, color: "#3A291F" },
 
   masteryLabel: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.5, color: "#4A382D", marginBottom: 10 },
   masteryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignContent: "flex-start", rowGap: 18 },
