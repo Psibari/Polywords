@@ -43,6 +43,7 @@ type Props = { progress: PlayerProgress; pollyMemory: PollyMemory };
 
 export function PolybookSpread({ progress, pollyMemory }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openBookArtReady, setOpenBookArtReady] = useState(false);
   const [section, setSection] = useState<Section>("TODAY");
   const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
   const [devTodayIndex, setDevTodayIndex] = useState(0);
@@ -78,7 +79,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const moodGlow = useRef(new Animated.Value(0.42)).current;
 
   useEffect(() => {
-    if (!isOpen || section !== "TODAY") return;
+    if (!isOpen || !openBookArtReady || section !== "TODAY") return;
 
     moodPulse.stopAnimation();
     moodGlow.stopAnimation();
@@ -111,7 +112,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
         }),
       ]),
     ]).start();
-  }, [displayedRivalryState, isOpen, section, moodGlow, moodPulse]);
+  }, [displayedRivalryState, isOpen, openBookArtReady, section, moodGlow, moodPulse]);
 
   const todayEntry = useMemo(() => {
     const pool = TODAY_ENTRIES[displayedRivalryState];
@@ -121,6 +122,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   }, [displayedRivalryState, devRivalryState, devTodayIndex, bookSeed, today]);
 
   function openTo(next: Section) {
+    setOpenBookArtReady(false);
     setSection(next);
     setIsOpen(true);
   }
@@ -192,7 +194,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           source={require("../../../assets/images/polybook/polybook_page.png")}
           resizeMode="stretch"
           style={styles.openBookArt}
+          onLoad={() => setOpenBookArtReady(true)}
         />
+        {openBookArtReady && (
+          <>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Return to Polybook cover"
@@ -331,6 +336,8 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
             <View style={styles.forkCutOpen} />
           </View>
         </View>
+          </>
+        )}
       </View>
     </View>
   );
