@@ -420,11 +420,13 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                   pressed && styles.pressed,
                 ]}
               >
-                <Image
-                  source={require("../../../assets/images/polybook/polybook_ribbon.png")}
-                  resizeMode="stretch"
-                  style={styles.ribbonArt}
-                />
+                <View pointerEvents="none" style={styles.ribbonArtClip}>
+                  <Image
+                    source={require("../../../assets/images/polybook/polybook_ribbon.png")}
+                    resizeMode="stretch"
+                    style={styles.ribbonArt}
+                  />
+                </View>
                 <Text
                   style={[styles.ribbonText, selected && styles.ribbonTextSelected]}
                   numberOfLines={1}
@@ -493,7 +495,8 @@ const styles = StyleSheet.create({
 
   ribbonRail: { position: "absolute", left: "15%", right: "7%", bottom: "-4.8%", height: 112, zIndex: 30, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", overflow: "visible" },
   ribbon: { width: "30%", height: 108, justifyContent: "center", alignItems: "center", position: "relative", overflow: "visible" },
-  ribbonArt: { position: "absolute", width: "100%", height: "100%", left: 0, top: 0, zIndex: 1 },
+  ribbonArtClip: { position: "absolute", left: 0, right: 0, top: 28, bottom: 0, overflow: "hidden", zIndex: 1 },
+  ribbonArt: { position: "absolute", width: "100%", height: 108, left: 0, top: -28 },
   ribbonSelected: { transform: [{ translateY: 4 }] },
   ribbonText: { width: "78%", zIndex: 2, marginTop: 8, fontFamily: FONTS.label, fontSize: 12, letterSpacing: 0.45, color: "#FFF4D6", textAlign: "center", textShadowColor: "rgba(25,10,45,0.92)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   ribbonTextSelected: { color: PW.color.gold, fontSize: 13 },
