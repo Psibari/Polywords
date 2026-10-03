@@ -121,10 +121,14 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close Polybook and return to cover"
+          accessibilityLabel="Return to Polybook cover"
           onPress={() => setIsOpen(false)}
-          style={styles.closeButton}
-        />
+          hitSlop={8}
+          style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
+        >
+          <Text style={styles.closeButtonArrow}>‹</Text>
+          <Text style={styles.closeButtonText}>COVER</Text>
+        </Pressable>
         <View style={styles.pageFrame}>
           <View style={styles.page}>
 
@@ -267,8 +271,10 @@ const styles = StyleSheet.create({
   pageFrame: { position: "absolute", left: "16.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0 },
   page: { flex: 1, minHeight: 0, overflow: "hidden" },
   pageScroll: { paddingHorizontal: 12, paddingTop: 22, paddingBottom: 54, minHeight: "100%" },
-  closeButton: { position: "absolute", left: "1%", top: "1%", zIndex: 20, width: "10%", height: "8%" },
-  closeText: { display: "none" },
+  closeButton: { position: "absolute", left: "2.2%", top: "2.2%", zIndex: 40, minWidth: 68, height: 34, paddingHorizontal: 9, borderRadius: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, backgroundColor: "rgba(32,15,70,0.92)", borderWidth: 1.5, borderColor: "rgba(245,200,66,0.88)", shadowColor: "#000", shadowOpacity: 0.24, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
+  closeButtonPressed: { opacity: 0.78, transform: [{ scale: 0.97 }] },
+  closeButtonArrow: { fontFamily: FONTS.label, fontSize: 24, lineHeight: 25, color: PW.color.gold, marginTop: -2 },
+  closeButtonText: { fontFamily: FONTS.label, fontSize: 10, letterSpacing: 0.7, color: "#FFF4D6" },
   pageDate: { fontFamily: FONTS.ui, fontSize: 15, letterSpacing: 1.1, color: "#33251D", marginBottom: 11 },
   sectionHeading: { fontFamily: FONTS.hud, fontSize: 27, letterSpacing: 1.15, color: "#17100C", marginBottom: 9 },
   inkRule: { height: 1.5, backgroundColor: "rgba(35,23,17,0.56)", marginBottom: 24 },
