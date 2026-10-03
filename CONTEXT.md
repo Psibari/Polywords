@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-02. This file is current state + next work only. `CLAUDE.md` owns durable
+Updated 2026-10-03. This file is current state + next work only. `CLAUDE.md` owns durable
 architecture; focused rules live in `docs/`; code/data outrank both.
 
 ## Branches
@@ -23,23 +23,27 @@ Phone testing uses the local checkout, not GitHub. Pull the branch before Expo t
 - **Daily castle:** locked on device. Gate/clues, tunnel, answer wall/blocks, gold hit, floor
   coins, and the gold-coin finale stay as approved. The deferred answer-stone entrance issue
   remains deferred; do not reopen the castle art to solve it.
-- **Polybook:** active redesign work is now the main product focus. The old miniature two-page
-  spread is retired. The live direction is a closed physical Polybook hub opening to one large
-  portrait page, with physical forked ribbons for TODAY, JOURNAL, and BUTTERZ.
-  - The open-book shell, bottom ribbons, page safe area, and visible `< COVER` return control
-    are implemented and device-tested in progress.
-  - TODAY uses the five rivalry states and the ten-entry authored pools. DEV controls can cycle
-    TODAY entries/states and JOURNAL test content.
-  - The colored-handwriting experiment is rejected. Polly's entry returns to one dark readable
-    ink; mood moves to a stronger accent bar under TODAY. AMUSED uses Polly green. No brown.
-    Other mood-bar colors remain unapproved.
-  - Buggie is too thin on a physical phone for the journal body. A replacement handwriting font
-    is being selected; do not lock TODAY typography until it passes device readability.
-  - BUTTERZ is the mastery page. It shows crowns without redundant word labels such as ROUND.
-    Crowns need future meaning through earned Polybook access/unlocks; do not build that economy
-    during the current typography pass.
-  - Closed-cover art follow-up: remove the side ribbons from the closed-book art and place the
-    section ribbons at the bottom. This is noted work, not a reason to interrupt the font pass.
+- **Polybook:** the portrait Living Journal interior is now device-approved and locked.
+  - The live shell is a closed physical Polybook opening to one large portrait page with a
+    visible `< COVER` return control.
+  - Open navigation is **TODAY / JOURNAL / MASTERY**. The fixed MASTERY label replaced the
+    player-name ribbon so legal long names never have to shrink into unreadable tab text.
+  - The three forked ribbons sit at the bottom of the book. Their straight top section is masked
+    so they read as bookmarks tucked beneath the bottom page edge rather than pasted on top.
+    This treatment is device-approved; do not reopen it without a demonstrated regression.
+  - TODAY is locked after phone review across all five rivalry states and authored entries:
+    approved heavier handwriting, dark neutral ink, 9px mood bar with restrained glow and one
+    entrance pulse, and the open-art readiness gate.
+  - JOURNAL is locked: authored chronological entries paginate by physical page, keep logical
+    entries intact, support arrows + horizontal swipe, use the readable enlarged PAGE X OF Y
+    counter, and have no stats footer. DEV FULL may repeat real rows only to stress pagination.
+  - MASTERY is locked: live player name stays inside the page; purple crown artifacts use the
+    approved three-column collection with no redundant word labels. Overflow uses the shared
+    page-turn architecture at 12 crowns per page; the pager stays hidden on a one-page collection.
+  - Crown accumulation still needs future meaning through earned Polybook access/unlocks. Design
+    that progression separately; do not disturb the locked interior while doing it.
+  - Closed-cover art follow-up remains deferred: remove/replace its old side-ribbon treatment
+    with bottom ribbons when that artwork is addressed.
 - **Visual consistency pass:** the governing rule is now **shared grammar, not identical
   skins** (`DESIGN.md`).
   - Daily Entry uses the dark utility-panel family and is locked.
@@ -68,18 +72,14 @@ Phone testing uses the local checkout, not GitHub. Pull the branch before Expo t
 
 ## Next Work
 
-1. **Polybook TODAY readability.** Select and license-check a heavier handwritten font, restore
-   dark body ink, and device-test the thicker mood bar under TODAY. AMUSED = Polly green.
-2. **Polybook JOURNAL.** Bring the approved authored journal/work-log material into the new
-   portrait-page system and verify real-phone readability with the selected font.
-3. **Polybook BUTTERZ.** Finish the mastery-page composition without turning it into a stats
-   dashboard; crowns are artifacts whose longer-term unlock value is designed later.
-4. **Polybook shell/art cleanup.** Update the closed-cover ribbon art after the page typography
-   is stable.
-5. **Real-device release journeys.** Cold start, rapid navigation, background/foreground
+1. **Polybook mastery progression.** Define what accumulating crowns reveals or unlocks inside
+   Polly's book without turning mastery into a currency dashboard.
+2. **Polybook closed-cover art cleanup.** Replace the old side-ribbon treatment with the approved
+   bottom-ribbon language when the cover art is next touched.
+3. **Real-device release journeys.** Cold start, rapid navigation, background/foreground
    recovery, persistence, Polly animation/audio, sound-off, and small-phone coverage.
-6. **Boss-capable content.** Author more words with three fair hidden pairs.
-7. **Banished record decision.** Decide whether a cleared Haunt gets permanent history.
+4. **Boss-capable content.** Author more words with three fair hidden pairs.
+5. **Banished record decision.** Decide whether a cleared Haunt gets permanent history.
 
 ## Deferred / Do Not Reopen Yet
 
