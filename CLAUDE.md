@@ -174,7 +174,10 @@ no HUD tour, and the old automatic feather beat at the end of FINE is retired.
   `POLYBOOK_SPREAD_ENABLED` flag, but the old miniature two-page spread interaction is retired.
   Current product architecture is **closed physical Polybook -> one large portrait page**.
   `docs/POLYBOOK_LIVING_JOURNAL.md` owns the redesign direction.
-- Open-page navigation uses physical bottom forked ribbons: **TODAY / JOURNAL / BUTTERZ**.
+- Open-page navigation uses physical bottom forked ribbons: **TODAY / JOURNAL / MASTERY**.
+  MASTERY is a fixed navigation label; the player's actual name belongs inside the mastery page.
+  Ribbon artwork keeps its approved position and masks its straight top section so each bookmark
+  reads as tucked beneath the bottom page edge.
   A visible `< COVER` control returns to the closed book. Section scroll positions reset when
   appropriate; do not restore horizontal spread-swiping as primary navigation.
 - Modules remain `pollyMood.ts` (run stamp, rivalry state), `bookPage.ts` (day buckets, line
