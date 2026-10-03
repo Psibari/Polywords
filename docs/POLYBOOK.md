@@ -1,6 +1,10 @@
 # The Polybook
 
-**Date:** 7 September 2026. This file records rulings. It does not authorise code.
+**Date:** 7 September 2026. **Updated:** 2 October 2026.
+This file preserves durable Polybook behavior/voice rulings. The current visual architecture and
+V1 redesign are governed by `docs/POLYBOOK_LIVING_JOURNAL.md`. Where this file describes the
+old two-page spread, sideways spread navigation, old BEATEN corner, or old fixed typography,
+the Living Journal document wins.
 
 ## What it is
 
@@ -127,7 +131,11 @@ it. The sections below record what got ruled or discovered while building it.
 For current pool sizes and line counts, see `npm run state` and the file
 itself. This document does not restate either.
 
-## Gestures
+## Gestures — legacy spread behavior
+
+> **SUPERSEDED FOR THE CURRENT REDESIGN:** the miniature two-page spread and horizontal
+> left/right page navigation are retired. Preserve the behavioral/history notes below only as
+> implementation history; do not rebuild this interaction.
 
 Two, and no more. Sideways moves the view across the one open spread — the
 log page and today's page. Down the log goes back in time. There is no page
@@ -170,7 +178,7 @@ Setting a line on it would have made nearly every day read the same.
 `offered` is still recorded — it is the only thing that could later separate
 a long sloppy day from a long clean one.
 
-## The BEATEN corner
+## The BEATEN corner — legacy layout
 
 Every mastered word renders, always. The corner never scrolls and never cuts
 the list; once the group would outgrow the corner, the seals shrink instead.
@@ -180,8 +188,14 @@ failure this rule exists to prevent.
 
 ## Typography
 
-Her log lines 19, today's entry 21, every label, date, word name and total
-14 — the project's non-gameplay floor. Nothing on the page goes below 14.
+The old fixed Buggie sizing below is historical, not a current lock. Physical-phone testing of
+the new portrait TODAY page showed Buggie's strokes are too thin for comfortable reading.
+A heavier handwriting replacement is being selected. Until that choice is approved, keep
+Polly's body writing dark and do not use mood-colored handwriting. Mood is carried by the
+TODAY accent bar; AMUSED uses Polly green and brown is excluded.
+
+Legacy sizing reference: her log lines 19, today's entry 21, every label, date, word name and
+total 14 — the project's non-gameplay floor. Nothing on the page goes below 14.
 Every Text in her hand sets `includeFontPadding` false.
 
 The working rule that came out of the passes: a line that does not fit gets
@@ -220,3 +234,20 @@ placement was the problem, not the drawing.
 - Tabs down the page edge, jumping to a month, are the answer for when the
   log gets long. Not needed until a book is months deep, and deliberately
   not built against content nobody has yet.
+
+
+## 2026-10-02 Redesign checkpoint
+
+- The live shell is a closed physical Polybook opening to one large portrait page.
+- Open sections use bottom forked ribbons: **TODAY / JOURNAL / BUTTERZ**.
+- A visible **< COVER** control returns from an open page to the closed book.
+- TODAY's ten-entry rivalry-state pools are wired for testing; DEV controls can cycle entries
+  and Journal test states.
+- Colored body handwriting was tested and rejected. Use dark readable ink plus a stronger
+  mood-color bar under TODAY. AMUSED = Polly green. No brown. Other mood colors remain open.
+- BUTTERZ represents mastery with crowns. The crown should not carry a redundant mastered-word
+  label such as ROUND.
+- Crowns need future consequence so collecting them matters. Earned Polybook access/unlocks are
+  an approved direction to explore later, not an economy to implement during this visual pass.
+- Closed-cover art follow-up: remove the side ribbons and relocate the ribbon treatment to the
+  bottom. Do this after the interior typography is stable.
