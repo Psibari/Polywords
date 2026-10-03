@@ -79,6 +79,9 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     setDevTodayIndex((value) => (value + 1) % TODAY_ENTRIES[state].length);
   }
 
+  // POLYBOOK ART TODO: remove the side ribbons from the closed-book artwork
+  // and replace them with bottom ribbons so the closed cover matches the
+  // open-book navigation language. Artwork change only; do not alter this pass.
   if (!isOpen) {
     return (
       <View style={styles.root}>
