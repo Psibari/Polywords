@@ -226,6 +226,12 @@ JOURNAL is the first consumer of the reusable Polybook page-turn system.
 - The same page-turn architecture should be reused when BUTTERZ or future Polybook sections
   exceed one physical page.
 - TODAY remains the locked single-current-entry page and is not changed by this system.
+- **LOCKED 2026-10-02 after physical-phone review:** JOURNAL pagination, page density,
+  whole-entry grouping, tap arrows, horizontal swipe, parchment clipping, and the enlarged
+  readable `PAGE X OF Y` counter are approved. Do not reopen these choices without a
+  demonstrated regression.
+- DEV FULL may repeat the small amount of real journal history to stress-test pagination;
+  repeated DEV entries are expected and are not a production JOURNAL defect.
 
 ## 6. BUTTERZ
 
