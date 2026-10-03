@@ -157,6 +157,27 @@ The interactive functionality itself is **not V1**.
 
 ------------------------------------------------------------------------
 
+## TODAY — LOCKED 2026-10-02
+
+TODAY is approved after physical-phone testing across all five rivalry moods and the authored
+entry variations. Do not reopen this visual system without a demonstrated regression.
+
+Locked treatment:
+
+- full portrait-page composition and current date / TODAY / entry hierarchy;
+- approved heavier handwriting treatment at the current size and spacing;
+- Polly's entry uses dark neutral ink, never mood-colored body text;
+- rivalry mood is communicated by the 9px rounded bar beneath TODAY;
+- the mood bar uses a soft same-color glow and one entrance pulse, then settles;
+- AMUSED uses Polly green; the full five-state mood treatment has been device-reviewed;
+- existing authored TODAY pools remain the source of copy;
+- DEV controls may cycle moods and entries for testing only;
+- open-page content is gated until the book artwork is ready, preventing the mood bar or other
+  page UI from flashing before the open book appears.
+
+TODAY is now a baseline for the rest of the Polybook. JOURNAL should inherit its legibility and
+physical-written-page character without copying TODAY's mood treatment mechanically.
+
 ## 5. JOURNAL
 
 **JOURNAL** is the chronological living history of the rivalry.
