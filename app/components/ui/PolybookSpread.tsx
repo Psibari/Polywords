@@ -36,7 +36,9 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [section, setSection] = useState<Section>("TODAY");
   const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
-  const [devTodayIndex, setDevTodayIndex] = useState(0);\n  const playerName = useGameStore(s => s.playerName);
+  const [devTodayIndex, setDevTodayIndex] = useState(0);
+  const playerName = useGameStore((state) => state.playerName);
+  const playerLabel = playerName.trim() || "PLAYER";
 
   const bookSeed = progress.bookSeed ?? 0;
   const log = progress.bookLog ?? [];
