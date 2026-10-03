@@ -98,6 +98,10 @@ shadow, and physical motion; pressed objects should feel displaced, not merely r
 - Barlow Condensed: UI, tiles, clues, labels, and Polly bubbles.
 - UI is generally uppercase; Polly speaks in natural case.
 - Do not add a third runtime font without explicit approval.
+- Polybook is the approved exception under active evaluation: Polly's journal needs a distinct
+  handwriting face, but the current Buggie face failed physical-phone readability because its
+  strokes are too thin. Any replacement must be readable at phone scale, non-cursive, not
+  childish, commercially usable, and explicitly approved before it becomes a locked runtime font.
 
 ## Layout and Motion
 
@@ -115,8 +119,11 @@ shadow, and physical motion; pressed objects should feel displaced, not merely r
 - **Boss gauntlet:** sealed bricks open into the Hunt decision language.
 - **Daily castle:** clues ride the gate; answers are stone blocks in the wall
   (`docs/DAILY_CHALLENGE_SPEC.md`).
-- **Polybook screen (Vault route):** Polly's diary, read by the player
-  (`docs/POLYBOOK.md`).
+- **Polybook screen (Vault route):** Polly's diary, read by the player. Current architecture is
+  closed physical book -> one large portrait page, with bottom forked ribbons for TODAY, JOURNAL,
+  and BUTTERZ plus a visible return-to-cover control. Page writing stays dark and readable;
+  rivalry mood belongs in restrained page accents rather than multicolored body copy
+  (`docs/POLYBOOK_LIVING_JOURNAL.md`).
 
 Do not redesign `MaskBoard.tsx`, `SwipeMask.tsx`, or signature objects by convention.
 Inspect the live render path and get an approved direction first.
