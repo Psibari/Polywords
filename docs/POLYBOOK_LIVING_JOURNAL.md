@@ -121,6 +121,16 @@ constraints.
 TODAY should feel like Polly wrote in the book, not like a game placed
 text inside a parchment UI card.
 
+### Mood-color direction
+
+Polly's mood may influence restrained ink or accent color coding on her
+written pages. Mood color should reinforce emotional state without making
+Polybook look multicolored for its own sake. The page must never read as a
+rainbow UI. Base handwriting remains strongly legible against the parchment;
+mood treatment is a secondary character signal, not a substitute for
+readability. The exact mood-to-color palette remains experimental until
+device-tested.
+
 ### Long-term role
 
 TODAY is the natural future home of direct Polly/player interaction.
