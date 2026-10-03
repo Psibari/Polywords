@@ -225,6 +225,11 @@ JOURNAL is the first consumer of the reusable Polybook page-turn system.
 - Entering JOURNAL from another section starts at page 1.
 - The same page-turn architecture should be reused when BUTTERZ or future Polybook sections
   exceed one physical page.
+- BUTTERZ now uses that architecture for mastery overflow: 12 crowns per physical page in the
+  approved three-column grid, with the shared readable `PAGE X OF Y` controls and horizontal
+  swipe. The pager stays hidden while the collection fits on one page. This implementation is
+  pending physical-phone acceptance; do not mark the BUTTERZ pagination itself locked until
+  device verification passes.
 - TODAY remains the locked single-current-entry page and is not changed by this system.
 - **LOCKED 2026-10-02 after physical-phone review:** JOURNAL pagination, page density,
   whole-entry grouping, tap arrows, horizontal swipe, parchment clipping, and the enlarged
