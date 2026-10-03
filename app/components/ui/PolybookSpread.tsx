@@ -37,6 +37,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const [section, setSection] = useState<Section>("TODAY");
   const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
   const [devTodayIndex, setDevTodayIndex] = useState(0);
+  const [devJournalRows, setDevJournalRows] = useState<"REAL" | "SHORT" | "MEDIUM" | "FULL">("REAL");
   const playerName = useGameStore((state) => state.playerName);
   const playerLabel = playerName.trim() || "PLAYER";
 
@@ -47,6 +48,13 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     () => buildWorkLog({ log, today, bookSeed, maxRows: 60 }),
     [log, today, bookSeed],
   );
+  const displayedWorkLogRows = useMemo(() => {
+    if (!__DEV__ || devJournalRows === "REAL") return workLogRows;
+    const count = devJournalRows === "SHORT" ? 3 : devJournalRows === "MEDIUM" ? 10 : 60;
+    if (workLogRows.length >= count) return workLogRows.slice(0, count);
+    if (workLogRows.length === 0) return [];
+    return Array.from({ length: count }, (_, index) => workLogRows[index % workLogRows.length]);
+  }, [workLogRows, devJournalRows]);
   const rivalryState = useMemo(
     () => resolveRivalryState({
       recent: progress.recentHuntPerformance ?? [],
@@ -78,6 +86,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     setDevRivalryState(state);
     setDevTodayIndex((value) => (value + 1) % TODAY_ENTRIES[state].length);
   }
+  function cycleDevJournalRows() {
+    const modes = ["REAL", "SHORT", "MEDIUM", "FULL"] as const;
+    setDevJournalRows((current) => modes[(modes.indexOf(current) + 1) % modes.length]);
+  }
 
   // POLYBOOK ART TODO: remove the side ribbons from the closed-book artwork
   // and replace them with bottom ribbons so the closed cover matches the
@@ -105,14 +117,24 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
   return (
     <View style={styles.root}>
-      {false && __DEV__ && section === "TODAY" && (
+      {__DEV__ && (section === "TODAY" || section === "JOURNAL") && (
         <View style={styles.devControls}>
-          <Pressable style={styles.devButton} onPress={cycleDevState}>
-            <Text style={styles.devButtonText}>{displayedRivalryState}</Text>
-          </Pressable>
-          <Pressable style={styles.devButton} onPress={cycleDevEntry}>
-            <Text style={styles.devButtonText}>ENTRY {devRivalryState ? devTodayIndex + 1 : 1}/10</Text>
-          </Pressable>
+          {section === "TODAY" ? (
+            <>
+              <Pressable style={styles.devButton} onPress={cycleDevState}>
+                <Text style={styles.devButtonText}>{displayedRivalryState}</Text>
+              </Pressable>
+              <Pressable style={styles.devButton} onPress={cycleDevEntry}>
+                <Text style={styles.devButtonText}>
+                  ENTRY {devTodayIndex + 1}/{TODAY_ENTRIES[displayedRivalryState].length}
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <Pressable style={styles.devButton} onPress={cycleDevJournalRows}>
+              <Text style={styles.devButtonText}>JOURNAL {devJournalRows}</Text>
+            </Pressable>
+          )}
         </View>
       )}
 
@@ -156,7 +178,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
               <ScrollView key="JOURNAL" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.sectionHeading}>JOURNAL</Text>
                 <View style={styles.inkRule} />
-                {workLogRows.map((row, index) => (
+                {displayedWorkLogRows.map((row, index) => (
                   <View key={`${row.date}-${index}`} style={styles.journalRow}>
                     <Text style={styles.rowDate}>{row.endDate ? `${row.date} – ${row.endDate}` : row.date}</Text>
                     {row.word ? <Text style={styles.rowWord}>{row.word}</Text> : null}
