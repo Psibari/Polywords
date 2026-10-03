@@ -325,7 +325,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                   </Pressable>
                 </View>
               </View>
-            ))}
+            )}
 
             {section === "BEATEN" && (
               <ScrollView key="BEATEN" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
