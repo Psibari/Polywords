@@ -279,6 +279,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
           source={require("../../../assets/images/polybook/polybook_page.png")}
           resizeMode="stretch"
           style={styles.openBookArt}
+          pointerEvents="none"
           onLoad={() => setOpenBookArtReady(true)}
         />
         {openBookArtReady && (
@@ -471,8 +472,8 @@ const styles = StyleSheet.create({
   forkCut: { position: "absolute", right: -1, top: 14, width: 13, height: 13, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
 
   openBook: { width: "96%", height: "100%", maxWidth: 520, position: "relative", alignItems: "stretch", justifyContent: "center" },
-  openBookArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%" },
-  pageFrame: { position: "absolute", left: "16.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0 },
+  openBookArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%", zIndex: 20 },
+  pageFrame: { position: "absolute", left: "16.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0, zIndex: 25 },
   page: { flex: 1, minHeight: 0, overflow: "hidden" },
   pageScroll: { paddingHorizontal: 12, paddingTop: 22, paddingBottom: 54, minHeight: "100%" },
   closeButton: { position: "absolute", left: "2.2%", top: "2.2%", zIndex: 40, minWidth: 68, height: 34, paddingHorizontal: 9, borderRadius: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, backgroundColor: "rgba(32,15,70,0.92)", borderWidth: 1.5, borderColor: "rgba(245,200,66,0.88)", shadowColor: "#000", shadowOpacity: 0.24, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
   marginScratch: { fontFamily: FONTS.hand, fontSize: 32, color: "rgba(58,39,31,0.46)", transform: [{ rotate: "-9deg" }] },
   marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
 
-  ribbonRail: { position: "absolute", left: "15%", right: "7%", bottom: "-4.8%", height: 112, zIndex: 30, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", overflow: "visible" },
+  ribbonRail: { position: "absolute", left: "15%", right: "7%", bottom: "-4.8%", height: 112, zIndex: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", overflow: "visible" },
   ribbon: { width: "30%", height: 108, justifyContent: "center", alignItems: "center", position: "relative", overflow: "visible" },
   ribbonArt: { position: "absolute", width: "100%", height: "100%", left: 0, top: 0, zIndex: 1 },
   ribbonSelected: { transform: [{ translateY: 4 }] },
