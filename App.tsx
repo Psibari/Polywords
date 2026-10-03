@@ -22,7 +22,6 @@ export default function App() {
     'BebasNeue-Regular':    require('./assets/fonts/BebasNeue-Regular.ttf'),
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
     'Buggie-Regular': require('./assets/fonts/Buggie-Regular.ttf'),
-    'MsPaintMouse-Regular': require('./assets/fonts/MsPaintMouse-Regular.ttf'),
   });
 
   // Home is always the landing screen — this only gates the first paint so
