@@ -32,7 +32,7 @@ const POLYBOOK_DEV_STATES: readonly BookRivalryState[] = [
 
 const TODAY_MOOD_INK: Record<BookRivalryState, { ink: string; rule: string }> = {
   DISMISSIVE: { ink: "#17100B", rule: "rgba(94,70,45,0.78)" },
-  AMUSED: { ink: "#211008", rule: "rgba(132,82,35,0.78)" },
+  AMUSED: { ink: "#176B3A", rule: "rgba(23,107,58,0.78)" },
   WATCHFUL: { ink: "#10151A", rule: "rgba(61,78,86,0.78)" },
   RATTLED: { ink: "#260D15", rule: "rgba(126,47,68,0.80)" },
   CONCEDING: { ink: "#17102A", rule: "rgba(91,62,125,0.80)" },
