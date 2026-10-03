@@ -209,6 +209,24 @@ relationship.
 
 ------------------------------------------------------------------------
 
+### JOURNAL pagination — approved architecture
+
+JOURNAL is the first consumer of the reusable Polybook page-turn system.
+
+- Polybook overflow creates physical pages, not an infinite vertical scroll.
+- JOURNAL keeps each logical entry intact and groups entries into pages according to their
+  estimated rendered height; do not shrink the approved handwriting merely to fit more rows.
+- Visible navigation reads **PAGE X OF Y** with previous/next page controls.
+- A horizontal swipe also turns pages.
+- Page content is clipped to the parchment viewport; writing must never travel over the book
+  frame.
+- The old JOURNAL stats footer (`HUNTS / THEIRS / MINE`) is removed. Historical writing is
+  the purpose of this section.
+- Entering JOURNAL from another section starts at page 1.
+- The same page-turn architecture should be reused when BUTTERZ or future Polybook sections
+  exceed one physical page.
+- TODAY remains the locked single-current-entry page and is not changed by this system.
+
 ## 6. BUTTERZ
 
 **BUTTERZ** is the mastery section.
