@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Image,
   Pressable,
   ScrollView,
@@ -73,6 +74,45 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   );
   const displayedRivalryState = __DEV__ && devRivalryState ? devRivalryState : rivalryState;
   const todayMoodBar = TODAY_MOOD_BAR[displayedRivalryState];
+  const moodPulse = useRef(new Animated.Value(1)).current;
+  const moodGlow = useRef(new Animated.Value(0.42)).current;
+
+  useEffect(() => {
+    if (!isOpen || section !== "TODAY") return;
+
+    moodPulse.stopAnimation();
+    moodGlow.stopAnimation();
+    moodPulse.setValue(0.985);
+    moodGlow.setValue(0.42);
+
+    Animated.parallel([
+      Animated.sequence([
+        Animated.timing(moodPulse, {
+          toValue: 1.018,
+          duration: 260,
+          useNativeDriver: true,
+        }),
+        Animated.timing(moodPulse, {
+          toValue: 1,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.timing(moodGlow, {
+          toValue: 0.92,
+          duration: 260,
+          useNativeDriver: true,
+        }),
+        Animated.timing(moodGlow, {
+          toValue: 0.48,
+          duration: 420,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [displayedRivalryState, isOpen, section, moodGlow, moodPulse]);
+
   const todayEntry = useMemo(() => {
     const pool = TODAY_ENTRIES[displayedRivalryState];
     if (__DEV__ && devRivalryState) return pool[devTodayIndex % pool.length];
@@ -170,7 +210,26 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
               <ScrollView key="TODAY" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.pageDate}>{today.toUpperCase()}</Text>
                 <Text style={styles.sectionHeading}>TODAY</Text>
-                <View style={[styles.todayMoodBar, { backgroundColor: todayMoodBar }]} />
+                <View
+                  style={[
+                    styles.todayMoodGlow,
+                    {
+                      shadowColor: todayMoodBar,
+                      backgroundColor: todayMoodBar,
+                    },
+                  ]}
+                >
+                  <Animated.View
+                    style={[
+                      styles.todayMoodBar,
+                      {
+                        backgroundColor: todayMoodBar,
+                        opacity: moodGlow,
+                        transform: [{ scaleX: moodPulse }, { scaleY: moodPulse }],
+                      },
+                    ]}
+                  />
+                </View>
                 <View style={styles.todayEntry}>
                   {todayEntry.map((line, index) => (
                     <Text key={index} style={styles.todayLine}>{line}</Text>
@@ -312,7 +371,8 @@ const styles = StyleSheet.create({
   pageDate: { fontFamily: FONTS.ui, fontSize: 13, letterSpacing: 0.9, color: "#2A1B14", marginBottom: 7 },
   sectionHeading: { fontFamily: FONTS.hud, fontSize: 24, letterSpacing: 1.05, color: "#120B08", marginBottom: 7 },
   inkRule: { height: 1.5, backgroundColor: "rgba(28,17,12,0.68)", marginBottom: 22 },
-  todayMoodBar: { height: 6, borderRadius: 3, marginBottom: 22 },
+  todayMoodGlow: { height: 9, borderRadius: 5, marginBottom: 22, shadowOpacity: 0.55, shadowRadius: 8, shadowOffset: { width: 0, height: 0 }, elevation: 5 },
+  todayMoodBar: { width: "100%", height: 9, borderRadius: 5 },
   todayEntry: { gap: 3, paddingRight: 4, paddingTop: 9 },
   todayLine: { fontFamily: FONTS.hand, fontSize: 22, lineHeight: 29, color: "#140E0B" },
   todayOpenSpace: { minHeight: 300, marginTop: 28, justifyContent: "flex-end", alignItems: "flex-end" },
