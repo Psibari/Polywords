@@ -175,16 +175,24 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                 >
                   {playerLabel.toUpperCase()}
                 </Text>
-                <Text style={styles.beatenSub}>THE ONES YOU GOT PAST POLLY</Text>
+                <Text style={styles.masteryLabel}>MASTERY</Text>
                 <View style={styles.inkRule} />
-                <View style={styles.sealGrid}>
+                <View style={styles.masteryGrid}>
                   {progress.masteredWords.map((record) => (
-                    <View key={record.word} style={styles.sealItem}>
+                    <View
+                      key={record.word}
+                      accessible
+                      accessibilityLabel={`Mastered word: ${record.word}`}
+                      style={styles.masteryItem}
+                    >
                       <Image source={POLYBOOK_CROWN} resizeMode="contain" style={styles.crown} />
-                      <Text style={styles.sealWord}>{record.word}</Text>
                     </View>
                   ))}
                 </View>
+                <Text style={styles.masteryCount}>
+                  {progress.masteredWords.length} {progress.masteredWords.length === 1 ? "CROWN" : "CROWNS"}
+                </Text>
+                <View style={styles.futureMasteryArea} />
               </ScrollView>
             )}
           </View>
@@ -288,11 +296,12 @@ const styles = StyleSheet.create({
   statsFooter: { marginTop: 12, paddingTop: 15, borderTopWidth: 1, borderColor: "rgba(35,23,17,0.34)", gap: 5 },
   statsText: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 0.8, color: "#4A382D" },
 
-  beatenSub: { fontFamily: FONTS.ui, fontSize: 11, letterSpacing: 1, color: "#4A382D", marginBottom: 10 },
-  sealGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  sealItem: { width: "29%", minWidth: 72, alignItems: "center", marginBottom: 10 },
-  crown: { width: 62, height: 62 },
-  sealWord: { fontFamily: FONTS.ui, fontSize: 11, color: "#211812", textAlign: "center", marginTop: 3 },
+  masteryLabel: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.5, color: "#4A382D", marginBottom: 10 },
+  masteryGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignContent: "flex-start", rowGap: 18 },
+  masteryItem: { width: "33.333%", alignItems: "center", justifyContent: "center", minHeight: 64 },
+  crown: { width: 54, height: 54 },
+  masteryCount: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.25, color: "#4A382D", textAlign: "center", marginTop: 20 },
+  futureMasteryArea: { minHeight: 170, flexGrow: 1 },
 
   devControls: { position: "absolute", top: 2, right: 66, zIndex: 30, flexDirection: "row", gap: 4 },
   devButton: { backgroundColor: "rgba(15,13,42,0.92)", borderWidth: 1, borderColor: "rgba(245,200,66,0.75)", borderRadius: 4, paddingHorizontal: 7, paddingVertical: 5 },
