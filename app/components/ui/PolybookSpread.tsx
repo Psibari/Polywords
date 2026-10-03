@@ -30,6 +30,14 @@ const POLYBOOK_DEV_STATES: readonly BookRivalryState[] = [
   "DISMISSIVE", "AMUSED", "WATCHFUL", "RATTLED", "CONCEDING",
 ];
 
+const TODAY_MOOD_INK: Record<BookRivalryState, { ink: string; rule: string }> = {
+  DISMISSIVE: { ink: "#17100B", rule: "rgba(94,70,45,0.78)" },
+  AMUSED: { ink: "#211008", rule: "rgba(132,82,35,0.78)" },
+  WATCHFUL: { ink: "#10151A", rule: "rgba(61,78,86,0.78)" },
+  RATTLED: { ink: "#260D15", rule: "rgba(126,47,68,0.80)" },
+  CONCEDING: { ink: "#17102A", rule: "rgba(91,62,125,0.80)" },
+};
+
 type Props = { progress: PlayerProgress; pollyMemory: PollyMemory };
 
 export function PolybookSpread({ progress, pollyMemory }: Props) {
@@ -64,6 +72,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     [progress.recentHuntPerformance, progress.masteredWords.length, progress.runsCompleted],
   );
   const displayedRivalryState = __DEV__ && devRivalryState ? devRivalryState : rivalryState;
+  const todayMoodInk = TODAY_MOOD_INK[displayedRivalryState];
   const todayEntry = useMemo(() => {
     const pool = TODAY_ENTRIES[displayedRivalryState];
     if (__DEV__ && devRivalryState) return pool[devTodayIndex % pool.length];
@@ -161,10 +170,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
               <ScrollView key="TODAY" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
                 <Text style={styles.pageDate}>{today.toUpperCase()}</Text>
                 <Text style={styles.sectionHeading}>TODAY</Text>
-                <View style={styles.inkRule} />
+                <View style={[styles.inkRule, { backgroundColor: todayMoodInk.rule }]} />
                 <View style={styles.todayEntry}>
                   {todayEntry.map((line, index) => (
-                    <Text key={index} style={styles.todayLine}>{line}</Text>
+                    <Text key={index} style={[styles.todayLine, { color: todayMoodInk.ink }]}>{line}</Text>
                   ))}
                 </View>
                 <View style={styles.todayOpenSpace}>
@@ -303,8 +312,8 @@ const styles = StyleSheet.create({
   pageDate: { fontFamily: FONTS.ui, fontSize: 13, letterSpacing: 0.9, color: "#2A1B14", marginBottom: 7 },
   sectionHeading: { fontFamily: FONTS.hud, fontSize: 24, letterSpacing: 1.05, color: "#120B08", marginBottom: 7 },
   inkRule: { height: 1.5, backgroundColor: "rgba(28,17,12,0.68)", marginBottom: 22 },
-  todayEntry: { gap: 3, paddingRight: 4 },
-  todayLine: { fontFamily: FONTS.hand, fontSize: 21, lineHeight: 28, color: "#0B0705" },
+  todayEntry: { gap: 3, paddingRight: 4, paddingTop: 9 },
+  todayLine: { fontFamily: FONTS.hand, fontSize: 22, lineHeight: 29, color: "#0B0705" },
   todayOpenSpace: { minHeight: 300, marginTop: 28, justifyContent: "flex-end", alignItems: "flex-end" },
   marginScratch: { fontFamily: FONTS.hand, fontSize: 32, color: "rgba(58,39,31,0.46)", transform: [{ rotate: "-9deg" }] },
   marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
