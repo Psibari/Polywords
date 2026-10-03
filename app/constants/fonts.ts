@@ -15,7 +15,7 @@ export const FONTS = {
   // Polly's handwriting. Her writing in the Polybook and nowhere else — the
   // page is deliberately split, with everything that is not her voice (column
   // labels, dates, totals, the screen title) staying in the game's own fonts.
-  hand: 'MsPaintMouse-Regular',
+  hand: 'Buggie-Regular',
 } as const;
 
 export const FONT_SIZES = {
