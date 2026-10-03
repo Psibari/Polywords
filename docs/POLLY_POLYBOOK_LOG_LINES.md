@@ -1,9 +1,12 @@
 # POLLY — POLYBOOK LOG LINES
 
-**Date:** 1 October 2026. Today-entry expansion approved; Work Log pool expansion approved through Haunt Broken.
+**Date:** 2 October 2026. Today-entry expansion approved; Work Log pool expansion approved through Haunt Broken.
 
-Measured in Buggie at real size against the real page width (160pt usable).
-Anything that would overflow is flagged. Lines are picked at render time from
+The authored copy remains approved. Earlier fit notes were measured against the retired
+miniature-spread/Buggie layout and are historical only. The new portrait-page redesign has more
+usable width, and Buggie itself failed physical-phone readability for being too thin. Re-verify
+these pools only after the replacement handwriting font is approved; do not rewrite good copy
+merely to preserve obsolete width assumptions. Lines are picked at render time from
 these pools, so each must be true for **any** day in its bucket.
 
 Voice rules: `docs/POLLY_DIALOGUE_BANK.md` and `docs/POLYBOOK.md` (the file this line
@@ -245,8 +248,9 @@ Still no cracker.
 Nobody has offered.
 ```
 
-Every line above was measured in Buggie at 12pt against the 160pt usable
-page and fits. Do not re-measure.
+Historical note: every line above fit the old Buggie/160pt layout. That is no longer the
+acceptance target. Re-measure once against the approved replacement handwriting font on the new
+portrait page.
 
 ---
 ## Part 2 — the rows that name a word
@@ -347,9 +351,11 @@ My worst work.
 - One down. Plenty left.
 
 ---
-## Part 3 — today's entry, right page
+## Part 3 — TODAY entry
 
-Fifteen-point, three short lines. Roughly nineteen characters a line.
+Three authored lines on the full portrait TODAY page. The old fifteen-point/right-page and
+nineteen-character assumptions are retired. The copy should render comfortably at a readable
+phone size without shrinking it to satisfy the old spread.
 
 ### DISMISSIVE
 
@@ -696,7 +702,8 @@ thing either way.
 ---
 ## Still needed
 
-- Verify the expanded Today-entry pools at locked typography; rewrite only lines that physically fail.
+- Verify the expanded Today-entry pools after the new handwriting font is approved; rewrite only
+  lines that physically fail the new portrait-page layout.
 - The line where she first writes *they* as a person rather than a dodge.
 - Haunt notes per rivalry state, if state is meant to colour them.
 - Today’s entries are now ten per rivalry state in the authored source; code sync still required.
