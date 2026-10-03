@@ -239,7 +239,7 @@ placement was the problem, not the drawing.
 ## 2026-10-02 Redesign checkpoint
 
 - The live shell is a closed physical Polybook opening to one large portrait page.
-- Open sections use bottom forked ribbons: **TODAY / JOURNAL / BUTTERZ**.
+- Open sections use bottom forked ribbons: **TODAY / JOURNAL / MASTERY**. MASTERY is fixed navigation copy; the player's actual name stays on the mastery page.
 - A visible **< COVER** control returns from an open page to the closed book.
 - TODAY's ten-entry rivalry-state pools are wired for testing; DEV controls can cycle entries
   and Journal test states.
@@ -251,3 +251,17 @@ placement was the problem, not the drawing.
   an approved direction to explore later, not an economy to implement during this visual pass.
 - Closed-cover art follow-up: remove the side ribbons and relocate the ribbon treatment to the
   bottom. Do this after the interior typography is stable.
+
+
+## 2026-10-03 Locked interior checkpoint
+
+- TODAY, JOURNAL, and MASTERY are device-approved and locked.
+- JOURNAL uses physical pages, whole-entry grouping, arrows plus horizontal swipe, the enlarged
+  readable `PAGE X OF Y` counter, and no stats footer.
+- Open navigation is **TODAY / JOURNAL / MASTERY**. The ribbon positions and forked artwork stay
+  as approved; the straight top of each ribbon is masked so it reads as tucked beneath the
+  bottom page edge.
+- The rejected split-art layering experiment was reverted. Preserve the single approved open-book
+  artwork plus the ribbon-top mask.
+- The next Polybook product problem is mastery progression: what accumulating crowns reveal or
+  unlock. Preserve the locked interior while designing it.
