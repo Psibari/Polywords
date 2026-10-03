@@ -430,7 +430,7 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
                   adjustsFontSizeToFit
                   minimumFontScale={0.55}
                 >
-                  {item === "BEATEN" ? playerLabel.toUpperCase() : item}
+                  {item === "BEATEN" ? "MASTERY" : item}
                 </Text>
               </Pressable>
             );
