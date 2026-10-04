@@ -67,3 +67,11 @@ that register.
 - Returning Haunt intro copy is system text in `HauntIntroOverlay.tsx`, not Polly dialogue.
 - Ghost copy frames unfinished business, not punishment.
 - Copy changes never alter timing or event logic unless requested.
+
+## Relationship-memory register — 2026-10-04
+
+Relationship-memory dialogue is a distinct Polly register. It may be more personal than ordinary gameplay heckles because the game has proven the history that earns the remark. The four dedicated authored pools are Comeback (18), Veteran Slump (30), Return After Absence (61), and Haunt Rematch (71), for 180 approved relationship remarks.
+
+These pools are deterministic, not generated. They use the same global recent-line anti-repeat memory as the rest of Polly's spoken dialogue. Do not substitute generic Results/Home copy for a relationship beat merely because it sounds vaguely relevant; the point of this register is that Polly appears to remember the specific relationship event.
+
+`MISS ME?` and `BACK AGAIN?` are reserved for Return After Absence rather than ordinary Home rotation so hearing them carries actual memory meaning.
