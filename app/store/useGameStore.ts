@@ -59,8 +59,11 @@ import {
   PollyMemory,
   hydratePollyMemory,
   rememberDaily,
+  rememberHauntCreated,
+  rememberHauntResolution,
   rememberHunt,
   rememberPollyLine,
+  rememberVisit,
 } from '../game/pollyMemory';
 import {
   INTRO_SEEN_KEY,
@@ -342,6 +345,7 @@ type GameStore = {
   pollyMemory: PollyMemory;
   pollyMemoryLoaded: boolean;
   loadPollyMemory: () => Promise<void>;
+  rememberPollyVisit: (visitedAt?: number) => void;
   rememberPollyLine: (
     lineId: PollyLineId,
     surface: 'home' | 'hunt' | 'daily' | 'results',
@@ -781,9 +785,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
       ghost => ghost.wordId === step.word.trim().toUpperCase(),
     )?.runsMissed ?? 0;
     const next = upsertGhostRecord(get().ghosts, step, failedPair);
-    set({ ghosts: next });
+    const pollyMemory = rememberHauntCreated(
+      get().pollyMemory,
+      step.word,
+      localDateKey(new Date()),
+    );
+    set({ ghosts: next, pollyMemory });
     recordPlaytestEvent('ghost_created', { word: step.word, priorMisses, queueDepthAfter: next.length });
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
+    AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
   },
 
   reconcileHauntOutcome: (step, outcome, resolutionId) => {
@@ -796,13 +806,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       resolutionId,
     );
     if (!result.changed) return;
-    set({ ghosts: result.ghosts });
+    const pollyMemory = rememberHauntResolution(
+      get().pollyMemory,
+      wordId,
+      outcome,
+      localDateKey(new Date()),
+    );
+    set({ ghosts: result.ghosts, pollyMemory });
     if (outcome === 'banished') {
       recordPlaytestEvent('haunt_cleared', { word: wordId, priorMisses: result.priorMisses });
     } else if (outcome === 'haunted') {
       recordPlaytestEvent('haunt_failed', { word: wordId, priorMisses: result.priorMisses });
     }
     AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(result.ghosts)).catch(() => {});
+    AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
   },
 
   setGhostRevenge: (data) => set({ ghostRevenge: data }),
@@ -980,9 +997,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ? hydratePollyMemory(JSON.parse(raw))
         : { ...DEFAULT_POLLY_MEMORY };
       set({ pollyMemory, pollyMemoryLoaded: true });
+      // Hydration is also the V1→V2 migration boundary. Persist the sanitized
+      // V2 shape once so every later writer starts from the same schema.
+      if (raw) {
+        AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
+      }
     } catch {
       set({ pollyMemory: { ...DEFAULT_POLLY_MEMORY }, pollyMemoryLoaded: true });
     }
+  },
+
+  rememberPollyVisit: (visitedAt = Date.now()) => {
+    const pollyMemory = rememberVisit(get().pollyMemory, visitedAt);
+    if (pollyMemory === get().pollyMemory) return;
+    set({ pollyMemory });
+    AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
   },
 
   rememberPollyLine: (lineId, surface) => {
