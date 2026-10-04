@@ -308,3 +308,25 @@ These rules intentionally produce **behavior facts, not dialogue**. They do not 
 The thresholds above are V1 behavior-policy constants, not persisted player data. They can be tuned without save migration.
 
 Dedicated deterministic tests were added in `app/game/pollyRelationship.test.ts` and registered in the full `npm test` suite. Runtime verification is required after pulling this checkpoint before any presentation consumer is wired.
+
+
+---
+
+# Observable relationship presentation checkpoint — 2026-10-04
+
+The first relationship beats now have presentation consumers. This pass deliberately reuses the existing authored Polly bank and existing pose art; it adds no freeform dialogue and no new animation assets.
+
+Behavior:
+- **Return after absence:** Home entrance may override the ordinary greeting with a fresh authored return-recognition line. Existing Home body/ambient behavior remains unchanged.
+- **Comeback:** Results recognizes the reversal before run persistence mutates the store, uses a fresh existing authored rivalry line, and settles Polly in the existing rattled pose.
+- **Veteran slump:** Results distinguishes an established rival's three-struggle slide from beginner difficulty, uses existing authored loss-memory copy, and settles Polly smug rather than treating the player as new.
+- **Haunt rematch:** Hunt keeps the existing Ghost visit arc and `Remember me.` line. Durable word-rivalry holds are combined with the active Ghost's miss count so repeated shared history can sharpen the existing smug→point body-language rule without adding a competing presenter.
+
+Safety/side-effect rules:
+- Results freezes the pre-`recordRunComplete` memory/progress snapshot and synthesizes the current run's performance exactly once for relationship detection. This prevents the Results effect that persists the run from double-counting the current result in the presentation read.
+- Relationship presentation selects only existing `PollyLineId` entries and continues through `rememberPollyLine`, preserving the global anti-repeat memory.
+- No Polybook layout, ribbon, mastery, Daily, save-schema, or authored-bank copy was changed.
+- No new animation assets or runtime LLM behavior was added.
+- Dedicated relationship tests now cover presentation selection and silence when no beat exists.
+
+Verification gate: pull this checkpoint, then run `npm run typecheck` and the full `npm test` suite before device feel testing.
