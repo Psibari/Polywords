@@ -49,8 +49,6 @@ export const POLLY_LINES = {
   relVeteranSlump28: 'I’M GONNA NEED SOME PROOF THIS IS ACTUALLY YOU.',
   relVeteranSlump29: 'DID SOMEONE STEAL YOUR PHONE AND START PLAYING?',
   relVeteranSlump30: 'NO WAY THIS IS YOU. SHOW ME YOUR ID.',
-  relReturn01: 'MISS ME?',
-  relReturn02: 'BACK AGAIN?',
   relReturn03: 'LOOK WHO DECIDED TO COME BACK.',
   relReturn04: 'I WAS WONDERING WHERE YOU WENT.',
   relReturn05: 'TOOK YOU LONG ENOUGH.',
