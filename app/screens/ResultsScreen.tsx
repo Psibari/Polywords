@@ -26,6 +26,12 @@ import { homePlateMaterial, homeType } from '../ui/pwHomeMaterials';
 import { usePulseScale } from '../hooks/usePulseScale';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { resolveHuntResultLabel } from '../game/huntControl';
+import { resolveHuntPerformance } from '../game/pollyMood';
+import {
+  derivePollyRelationshipContext,
+  resolvePollyRelationshipBeat,
+  resolvePollyRelationshipPresentation,
+} from '../game/pollyRelationship';
 import {
   RESULTS_RESTART_LABEL,
   deriveResultsPollyMoment,
@@ -439,6 +445,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const useGoldFeatherInHunt = useGameStore(s => s.useGoldFeatherInHunt);
   const checkGoldFeatherExpiry = useGameStore(s => s.checkGoldFeatherExpiry);
   const currentPollyMemory = useGameStore(s => s.pollyMemory);
+  const currentProgress = useGameStore(s => s.progress);
   const rememberPollyLine = useGameStore(s => s.rememberPollyLine);
   const { wordResults, score, bestCombo, status } = game;
   const isComplete = status === 'complete';
@@ -451,6 +458,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     Date.now() < goldFeatherExpiresAt;
 
   const [pollyMemoryBeforeRunRecorded] = useState(() => currentPollyMemory);
+  const [progressBeforeRunRecorded] = useState(() => currentProgress);
   const [usingGoldFeather, setUsingGoldFeather] = useState(false);
   const died = status === 'gameOver';
   const bossMastered = game.bossOutcome === 'mastered';
@@ -563,7 +571,37 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   // pickFreshLine must stay pure (no Math.random inside them), so the roll
   // is drawn once here, in a useState initialiser, never during render.
   const [pollyRoll] = useState(() => Math.random());
-  const pollyMoment = deriveResultsPollyMoment(
+  const currentPerformance = resolveHuntPerformance({
+    status: died ? 'gameOver' : 'complete',
+    stepIndex: game.stepIndex,
+    sessionLength: game.session.length,
+    bossOutcome: game.bossOutcome,
+  });
+  const relationshipContext = derivePollyRelationshipContext({
+    memory: pollyMemoryBeforeRunRecorded,
+    recent: [
+      currentPerformance,
+      ...(progressBeforeRunRecorded.recentHuntPerformance ?? []),
+    ].slice(0, 5),
+    runsCompleted: progressBeforeRunRecorded.runsCompleted + 1,
+    masteredCount: progressBeforeRunRecorded.masteredWords.length,
+    now: Date.now(),
+  });
+  const relationshipDecision = resolvePollyRelationshipBeat({
+    context: relationshipContext,
+    surface: 'results',
+    currentOutcome: died
+      ? 'pollyWon'
+      : bossMastered
+      ? 'playerBeatPolly'
+      : 'playerCompleted',
+  });
+  const relationshipPresentation = resolvePollyRelationshipPresentation({
+    decision: relationshipDecision,
+    recentLineIds: pollyMemoryBeforeRunRecorded.recentLineIds,
+    lineRoll: pollyRoll,
+  });
+  const pollyMoment = relationshipPresentation?.moment ?? deriveResultsPollyMoment(
     wordResults,
     isComplete,
     bossMastered,
@@ -737,7 +775,11 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
         )}
       </View>
 
-      <PollyResultsPerch outcome={outcome} line={pollyMoment?.line ?? null} />
+      <PollyResultsPerch
+        outcome={outcome}
+        line={pollyMoment?.line ?? null}
+        relationshipPose={relationshipPresentation?.poseIntent ?? 'default'}
+      />
     </View>
   );
 }
