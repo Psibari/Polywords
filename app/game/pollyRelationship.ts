@@ -2,6 +2,8 @@ import { PollyMemory, PollyWordRivalry } from './pollyMemory';
 import { HuntPerformance } from './types';
 import { resolveRivalryState } from './pollyMood';
 import { BookRivalryState } from './pollyBookLines';
+import { POLLY_LINES, PollyLineId, PollyMoment, pollyMoment } from './pollyCharacter';
+import { pickFreshLine } from './pollyVisitPolicy';
 
 export type PollyRelationshipContext = {
   todayMood: BookRivalryState;
@@ -130,3 +132,68 @@ export function resolvePollyRelationshipBeat(input: {
 
   return null;
 }
+
+
+export type PollyRelationshipPresentation = {
+  moment: PollyMoment | null;
+  poseIntent: 'default' | 'rattled' | 'smug' | 'point';
+};
+
+const RETURN_LINES: PollyLineId[] = [
+  'homeWordsAsked',
+  'homeBackAgain',
+  'homeMissMe',
+];
+
+const COMEBACK_LINES: PollyLineId[] = [
+  'resultsIveNoticed',
+  'resultsGettingOld',
+  'resultsDontGetComfortable',
+  'resultsAdjustments',
+];
+
+const VETERAN_SLUMP_LINES: PollyLineId[] = [
+  'resultsTrapsRemember',
+  'resultsMeaningsHaunt',
+];
+
+/**
+ * Turns a proven relationship beat into a restrained presentation recipe.
+ * Every line comes from the existing authored Polly bank. This layer does not
+ * invent runtime dialogue and deliberately leaves ordinary moments alone.
+ */
+export function resolvePollyRelationshipPresentation(input: {
+  decision: PollyRelationshipBeatDecision;
+  recentLineIds: readonly string[];
+  lineRoll: number;
+}): PollyRelationshipPresentation | null {
+  const { decision, recentLineIds, lineRoll } = input;
+  if (!decision) return null;
+
+  if (decision.beat === 'returningAfterAbsence') {
+    const lineId = pickFreshLine(RETURN_LINES, recentLineIds, lineRoll);
+    return { moment: pollyMoment(lineId), poseIntent: 'default' };
+  }
+
+  if (decision.beat === 'comeback') {
+    const lineId = pickFreshLine(COMEBACK_LINES, recentLineIds, lineRoll);
+    return { moment: pollyMoment(lineId), poseIntent: 'rattled' };
+  }
+
+  if (decision.beat === 'veteranSlump') {
+    const lineId = pickFreshLine(VETERAN_SLUMP_LINES, recentLineIds, lineRoll);
+    return { moment: pollyMoment(lineId), poseIntent: 'smug' };
+  }
+
+  // The Hunt visit policy already owns the actual flight/perch arc. The
+  // relationship layer only sharpens that existing ghost-entry beat according
+  // to durable shared history, avoiding a second competing Polly presenter.
+  return {
+    moment: pollyMoment('huntRemember'),
+    poseIntent: (decision.wordRivalry?.hauntHolds ?? 0) >= 2 ? 'point' : 'smug',
+  };
+}
+
+// Keep this import live as a compile-time guarantee that relationship
+// presentation only references authored bank entries.
+void POLLY_LINES;
