@@ -370,3 +370,15 @@ The life profile reuses the existing face rig and ambient-motion systems. It doe
 Home uses the profile for eye/brow/mouth/crown treatment, ambient intensity, and doze timing. Results continues to use relationship-specific outcome poses. Returning Haunt dialogue is injected into the existing Hunt visit arc so the visit policy still owns timing/budget while durable relationship memory owns the rematch words.
 
 DEV Settings includes **Polly Life Profiles** for silent side-by-side feel checks. The profile viewer is a tuning/verification surface only and never writes player memory.
+
+
+### Desktop animation lab
+
+DEV Settings also exposes **Polly Desktop Animation Lab**, intended for the Expo web/PC build before final phone verification. It presents a large stage plus a right-side control rail for:
+
+- Rig 2 facial combinations (normal/wide eye, normal/shock/angry brow, closed/open/gape beak, crown tilt).
+- Every registered static Polly pose.
+- The six legacy animated WEBP assets with play/pause/restart inspection.
+- The five reusable whole-image motion presets with play/pause/restart.
+
+The desktop lab is an inspection/tuning surface, not a second production animation system. Pixel-level face alignment remains in the dedicated Face Rig viewer; approved values must still be verified at phone scale before production lock.
