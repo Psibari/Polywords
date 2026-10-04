@@ -36,7 +36,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
-import { derivePollyRelationshipContext } from '../game/pollyRelationship';
+import {
+  derivePollyRelationshipContext,
+  resolvePollyRelationshipBeat,
+  resolvePollyRelationshipPresentation,
+} from '../game/pollyRelationship';
 import {
   recognitionOpensWithHold,
   resolveHudLesson,
@@ -1693,12 +1697,26 @@ function GameContent({
         relationshipContext.relevantWordRivalry?.hauntHolds ?? 0,
       )
     : 0;
+  const hauntRelationshipDecision = step.kind === 'word' && step.isHauntReturn
+    ? resolvePollyRelationshipBeat({
+        context: relationshipContext,
+        surface: 'wordEntry',
+      })
+    : null;
+  // Stable per board without storing another piece of relationship state.
+  // Fresh-line filtering still prevents the recent authored lines repeating.
+  const hauntRelationshipPresentation = resolvePollyRelationshipPresentation({
+    decision: hauntRelationshipDecision,
+    recentLineIds: pollyMemory.recentLineIds,
+    lineRoll: ((game.stepIndex + 1) * 0.61803398875) % 1,
+  });
 
   // Visit layer lives HERE, above MaskBoard's per-word remount boundary
   // (key={stepIndex}) — word-completion beats must outlive the board.
   const { visit, onVisitDone, firePollyEvent, dismissVisits } = usePollyVisits(
     step.kind === 'word' && step.eventType === 'speedRound',
     ghostRunsMissed,
+    hauntRelationshipPresentation?.moment ?? null,
   );
 
   // A due HUD lesson owns the moment, and its own Polly line closes it. The
