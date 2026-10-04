@@ -12090,7 +12090,7 @@
     "wordType": "15-MEANING"
   },
   "FROST": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12126,20 +12126,20 @@
       },
       {
         "id": "frost_t2",
-        "phrase": "THE LITTLE ICE PELLETS THAT BOUNCE OFF THE WINDSHIELD",
+        "phrase": "THE LITTLE ICE PELLETS THAT STING YOUR FACE IN A STORM",
         "isReal": false
       },
       {
         "id": "frost_t3",
-        "phrase": "WHAT THEY USE TO WRITE “HAPPY BIRTHDAY” ON THE CAKE",
+        "phrase": "WHAT HANGS FROM THE EDGE OF THE ROOF IN JANUARY",
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "flow",
     "wordType": "Quadruple"
   },
   "GLOBE": {
-    "difficulty": null,
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12189,17 +12189,17 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "confidence",
     "wordType": "Quintuple"
   },
   "GRAVE": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
       {
         "id": "grave_r0",
-        "phrase": "THE PLACE SOMEONE ELSE DRESSES YOU FOR YOUR FINAL SLEEP",
+        "phrase": "WHERE YOU SLEEP FOREVER IN YOUR BEST SUIT",
         "isReal": true
       },
       {
@@ -12224,20 +12224,20 @@
       },
       {
         "id": "grave_t2",
-        "phrase": "WHAT DOCTORS CALL A CONDITION THAT COULD TURN DEADLY",
+        "phrase": "WHAT THE LOCAL PAPER RUNS WHEN SOMEONE IN TOWN DIES",
         "isReal": false
       },
       {
         "id": "grave_t3",
-        "phrase": "WHERE EGYPTIAN PHARAOHS WERE LAID TO REST",
+        "phrase": "WHAT THE FAMILY HOLDS THE NIGHT BEFORE THE SERVICE",
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "GREEN": {
-    "difficulty": null,
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12282,11 +12282,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "confidence",
     "wordType": "Quadruple"
   },
   "GROSS": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12331,11 +12331,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "tension",
     "wordType": "Triple"
   },
   "GROUND": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12401,22 +12401,22 @@
       },
       {
         "id": "ground_t0",
-        "phrase": "WHERE THE ELEVATOR TAKES YOU WHEN YOU PRESS 1",
+        "phrase": "WHERE THE ELEVATOR TAKES YOU WHEN YOU PRESS B",
         "isReal": false
       },
       {
         "id": "ground_t1",
-        "phrase": "THE EXACT SPOT WHERE AN EXPLOSION STARTED",
+        "phrase": "WHAT THE CANARY WAS CARRIED INTO THE COAL MINE TO WARN ABOUT",
         "isReal": false
       },
       {
         "id": "ground_t2",
-        "phrase": "WHAT MINERS CUT THROUGH TO REACH THE COAL",
+        "phrase": "WHAT YOU SLEEP IN WHEN YOU GO CAMPING",
         "isReal": false
       },
       {
         "id": "ground_t3",
-        "phrase": "WHAT A WRESTLER TRIES TO PIN HIS OPPONENT TO",
+        "phrase": "WHAT A BAD GOLF SWING RIPS OUT OF THE FAIRWAY",
         "isReal": false
       },
       {
@@ -12450,11 +12450,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "panic",
     "wordType": "12-MEANING"
   },
   "GUIDE": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12524,11 +12524,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "flow",
     "wordType": "Sextuple"
   },
   "GUM": {
-    "difficulty": null,
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12583,11 +12583,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "confidence",
     "wordType": "Sextuple"
   },
   "HAMPER": {
-    "difficulty": null,
+    "difficulty": "easy",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12622,11 +12622,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "confidence",
     "wordType": "Triple"
   },
   "HANDLE": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12701,11 +12701,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "panic",
     "wordType": "8-MEANING"
   },
   "HARBOR": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12731,7 +12731,7 @@
       },
       {
         "id": "harbor_t0",
-        "phrase": "WHERE CARGO SHIPS UNLOAD THEIR CONTAINERS",
+        "phrase": "WHAT SAILORS DROP TO STAY PUT FOR THE NIGHT",
         "isReal": false
       },
       {
@@ -12760,11 +12760,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "flow",
     "wordType": "Quadruple"
   },
   "HEAD": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12889,11 +12889,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "panic",
     "wordType": "15-MEANING"
   },
   "HEDGE": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -12938,11 +12938,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "HIDE": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -13032,11 +13032,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "panic",
     "wordType": "10-MEANING"
   },
   "HIGHLIGHT": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -13111,7 +13111,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "panic",
     "wordType": "9-MEANING"
   },
   "HOLD": {
@@ -13271,7 +13271,7 @@
     "wordType": "18-MEANING"
   },
   "HOLLOW": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -13371,11 +13371,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "panic",
     "wordType": "8-MEANING"
   },
   "HOOD": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -13411,7 +13411,7 @@
       },
       {
         "id": "hood_r6",
-        "phrase": "THE WEARABLE OPTION WHEN YOU HAVE NO UMBRELLA",
+        "phrase": "WHAT A COBRA FLARES WHEN IT FEELS THREATENED",
         "isReal": true
       },
       {
@@ -13451,7 +13451,7 @@
       },
       {
         "id": "hood_t6",
-        "phrase": "WHAT FENCERS WEAR TO PROTECT THEIR FACE DURING A BOUT",
+        "phrase": "WHAT KEEPS ONLY YOUR EARS WARM IN WINTER",
         "isReal": false
       },
       {
@@ -13460,11 +13460,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "flow",
     "wordType": "8-MEANING"
   },
   "INDEX": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -13529,11 +13529,11 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "tension",
     "wordType": "Quadruple"
   },
   "INTEREST": {
-    "difficulty": null,
+    "difficulty": "medium",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "masks": [
@@ -13569,7 +13569,7 @@
       },
       {
         "id": "interest_t1",
-        "phrase": "WHAT YOU SPEND YOUR PERSONAL TIME DOING",
+        "phrase": "WHAT YOU SIGN AWAY THIRTY YEARS ON AT CLOSING",
         "isReal": false
       },
       {
@@ -13589,7 +13589,7 @@
       },
       {
         "id": "interest_t5",
-        "phrase": "WHAT YOU GET CHARGED WHEN YOU PAY A BILL LATE",
+        "phrase": "WHAT THE BANK TAKES WHEN A CHECK BOUNCES",
         "isReal": false
       },
       {
@@ -13603,7 +13603,7 @@
         "isReal": false
       }
     ],
-    "gpsTag": null,
+    "gpsTag": "tension",
     "wordType": "Quintuple"
   },
   "ROUND": {
