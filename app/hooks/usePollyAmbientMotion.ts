@@ -47,6 +47,7 @@ export function useReducedFlashesPreference(): boolean {
 export function usePollyAmbientMotion(
   profile: PollyAmbientProfile,
   active = true,
+  intensity = 1,
 ) {
   const reduceMotion = useReducedMotionPreference();
   const translateX = useRef(new Animated.Value(0)).current;
@@ -60,11 +61,12 @@ export function usePollyAmbientMotion(
     if (!active || reduceMotion !== false) return;
 
     const p = PROFILE[profile];
+    const motionIntensity = Math.max(0.5, Math.min(1.5, intensity));
     const breath = Animated.loop(
       Animated.sequence([
         Animated.delay(Math.round(p.riseMs * 0.42)),
         Animated.timing(translateY, {
-          toValue: p.rise,
+          toValue: p.rise * motionIntensity,
           duration: p.riseMs,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
@@ -82,14 +84,14 @@ export function usePollyAmbientMotion(
       Animated.sequence([
         Animated.delay(Math.round(p.driftMs * 0.75)),
         Animated.timing(translateX, {
-          toValue: p.drift,
+          toValue: p.drift * motionIntensity,
           duration: p.driftMs,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
         }),
         Animated.delay(Math.round(p.driftMs * 0.38)),
         Animated.timing(translateX, {
-          toValue: -p.drift * 0.55,
+          toValue: -p.drift * 0.55 * motionIntensity,
           duration: Math.round(p.driftMs * 1.12),
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
@@ -111,7 +113,7 @@ export function usePollyAmbientMotion(
       translateX.setValue(0);
       translateY.setValue(0);
     };
-  }, [active, profile, reduceMotion, translateX, translateY]);
+  }, [active, intensity, profile, reduceMotion, translateX, translateY]);
 
   return { translateX, translateY, reduceMotion };
 }
