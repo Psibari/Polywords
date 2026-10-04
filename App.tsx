@@ -64,6 +64,11 @@ export default function App() {
     const subscription = AppState.addEventListener('change', nextState => {
       setMusicAppActive(nextState === 'active');
       if (nextState !== 'active') {
+        // Relationship memory records the last meaningful visit when the app
+        // leaves the foreground. Do not stamp during boot before hydration or
+        // we'd erase the absence interval Polly needs on the next launch.
+        const store = useGameStore.getState();
+        if (store.pollyMemoryLoaded) store.rememberPollyVisit();
         void flushActiveGamePersistence().catch(() => {});
       }
     });
