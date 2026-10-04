@@ -70,8 +70,6 @@ export const DEFAULT_POLLY_MEMORY: PollyMemory = {
 };
 
 const HOME_ROTATION: PollyLineId[] = [
-  'homeBackAgain',
-  'homeMissMe',
   'homeYourHighness',
   'homeCrown',
 ];
@@ -308,12 +306,12 @@ export function resolveHomePollyMoment(memory: PollyMemory): PollyMoment {
   }
   if (memory.playerWinStreak > 0) {
     return pollyMoment(firstFresh(memory, [
-      'homeBackAgain', 'homeCracker',
+      'homeCracker',
       'homeGoAgain', 'homeReady', 'homeDoubleOrNothing',
     ]));
   }
   if (memory.pollyWinStreak >= 2) {
-    return pollyMoment(firstFresh(memory, ['homeMissMe', 'homeChamp']));
+    return pollyMoment(firstFresh(memory, ['homeChamp', 'homeCracker']));
   }
   const rotated = HOME_ROTATION[memory.homeGreetingCursor % HOME_ROTATION.length];
   return pollyMoment(firstFresh(memory, [rotated, ...HOME_ROTATION]));
