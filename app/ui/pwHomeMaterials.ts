@@ -7,11 +7,6 @@ export const HOME_TAGLINE = 'WORDS HAVE MEANING..SSsss';
 
 // Polly speech: mixed case, never uppercase. One line per app open, rotating.
 export const HOME_GREETING_LINES = [
-  POLLY_LINES.homeBackAgain,
-  POLLY_LINES.homeMissMe,
-  POLLY_LINES.homeMissingMeanings,
-  POLLY_LINES.homeLoseFeathers,
-  POLLY_LINES.homeWordsAsked,
   POLLY_LINES.homeCracker,
 ] as const;
 
