@@ -1096,7 +1096,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       [POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)],
     ]);
     return scenario === 'return'
-      ? 'Return seeded. Go Home now.'
+      ? 'Return seeded. Fully close and relaunch the app, then go Home.'
       : scenario === 'comeback'
       ? 'Comeback seeded. Beat Polly in the next Hunt.'
       : scenario === 'veteranSlump'
