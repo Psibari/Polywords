@@ -72,9 +72,6 @@ export const DEFAULT_POLLY_MEMORY: PollyMemory = {
 const HOME_ROTATION: PollyLineId[] = [
   'homeBackAgain',
   'homeMissMe',
-  'homeMissingMeanings',
-  'homeLoseFeathers',
-  'homeWordsAsked',
   'homeYourHighness',
   'homeCrown',
 ];
@@ -311,15 +308,12 @@ export function resolveHomePollyMoment(memory: PollyMemory): PollyMoment {
   }
   if (memory.playerWinStreak > 0) {
     return pollyMoment(firstFresh(memory, [
-      'homeWordsAsked', 'homeBackAgain', 'homeCracker',
+      'homeBackAgain', 'homeCracker',
       'homeGoAgain', 'homeReady', 'homeDoubleOrNothing',
     ]));
   }
   if (memory.pollyWinStreak >= 2) {
-    return pollyMoment(firstFresh(memory, ['homeLoseFeathers', 'homeMissMe', 'homeChamp']));
-  }
-  if (memory.lastHauntWord) {
-    return pollyMoment(firstFresh(memory, ['homeMissingMeanings']));
+    return pollyMoment(firstFresh(memory, ['homeMissMe', 'homeChamp']));
   }
   const rotated = HOME_ROTATION[memory.homeGreetingCursor % HOME_ROTATION.length];
   return pollyMoment(firstFresh(memory, [rotated, ...HOME_ROTATION]));
@@ -349,11 +343,7 @@ export function resolveResultsPollyMoment(
   },
   roll: number,
 ): PollyMoment | null {
-  if (!input.isComplete) {
-    return memory.pollyWinStreak > 0
-      ? pollyMoment('resultsTrapsRemember')
-      : pollyMoment('resultsMeaningsHaunt');
-  }
+  if (!input.isComplete) return null;
   if (input.allPerfect) {
     return pollyMoment(pickFreshLine(RESULTS_FLAWLESS_LINES, memory.recentLineIds, roll));
   }
@@ -363,6 +353,6 @@ export function resolveResultsPollyMoment(
   if (input.bossMastered) {
     return pollyMoment(pickFreshLine(RESULTS_MASTERED_LINES, memory.recentLineIds, roll));
   }
-  if (input.hasMissed) return pollyMoment('resultsMeaningsPast');
+  if (input.hasMissed) return null;
   return null;
 }
