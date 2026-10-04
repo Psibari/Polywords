@@ -14,14 +14,19 @@ but she never explains a rule and never outweighs the word in front of the playe
 
 Polly is a smug trickster and trap-setter, never a friendly mascot or word owner. She is NOT
 a word thief — she authored the traps; she is the designer of the deception, not a burglar
-(Pete's ruling, 2026-08-29). She targets the choice, trap, or word—not the player's
-intelligence. Keep lines short, theatrical, and mobile-readable. Natural double meanings are
-welcome; constant puns are not.
+(Pete's ruling, 2026-08-29). She is the player's rival, and she is allowed to insult the player directly. Personal jabs,
+trash talk, mockery, and recurring insults are part of her voice when they feel funny,
+competitive, specific, and earned by the moment or relationship history. She can go after the
+player's confidence, performance, habits, or intelligence; she should feel like a sharp rival,
+not a genuinely hateful bully. Keep lines short, theatrical, and mobile-readable. Natural
+double meanings are welcome; constant puns are not.
 
 Good lanes: `Thought so.`, `Gotcha.`, `There it is.`, and `My traps remember you.`
 
-Avoid encouragement, tutorials, direct insults, ownership/stolen-language framing, long joke
-setups, generated dialogue, and system copy spoken as Polly. `BINGO BANGO ZZZZINGO!` is
+Avoid generic encouragement, tutorials, genuinely hateful or contextless cruelty,
+ownership/stolen-language framing, long joke setups, generated dialogue, and system copy spoken
+as Polly. Direct insults are allowed and should not be rejected merely because they target the
+player; relationship-aware insults can be more personal when Polly's memory earns them. `BINGO BANGO ZZZZINGO!` is
 unassigned system text only. The five lines that broke the non-thief ruling (Pete, 2026-08-29) were retired on
 2026-09-01; no live Hunt or Daily line uses stealing language. The later Polybook "Mine."
 lines were also replaced; do not reopen possession language without a new ruling.
