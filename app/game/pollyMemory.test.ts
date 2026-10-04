@@ -48,14 +48,16 @@ function eq<T>(actual: T, expected: T, label: string): void {
   }
 }
 
+// Incomplete-run relationship copy is owned by the relationship presenter now.
+// The generic Results resolver stays silent instead of resurrecting retired lines.
 {
   const repeatLoss = { ...DEFAULT_POLLY_MEMORY, pollyWinStreak: 1 };
   eq(
     resolveResultsPollyMoment(repeatLoss, {
       isComplete: false, allPerfect: false, bossMastered: false, hasMissed: true,
-    }, 0)?.lineId,
-    'resultsTrapsRemember',
-    'results.repeatLoss',
+    }, 0),
+    null,
+    'results.repeatLoss.relationshipOwned',
   );
 }
 
