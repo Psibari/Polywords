@@ -10,6 +10,7 @@ import {
   resolveHomePollyMoment,
   resolveResultsPollyMoment,
 } from './pollyMemory';
+import { derivePollyRelationshipContext } from './pollyRelationship';
 
 function eq<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) throw new Error(`${label}: expected ${String(expected)}, got ${String(actual)}`);
@@ -154,4 +155,25 @@ console.log('OK — pollyMemory: all assertions passed');
   eq(invalid.lastVisitAt, null, 'v2.invalidVisitIgnored');
   const visited = rememberVisit(invalid, 1_800_000_000_000);
   eq(visited.lastVisitAt, 1_800_000_000_000, 'v2.visitRecorded');
+}
+
+
+// Relationship context combines permanent history, reversible TODAY weather,
+// return timing, and only the current word's real shared history.
+{
+  let memory = rememberHunt(DEFAULT_POLLY_MEMORY, { outcome: 'playerBeatPolly', score: 10 });
+  memory = rememberHauntCreated(memory, 'BANK', '2026-10-04');
+  memory = rememberVisit(memory, 1_800_000_000_000);
+  const context = derivePollyRelationshipContext({
+    memory,
+    recent: ['struggle', 'struggle', 'struggle', 'steady', 'steady'],
+    runsCompleted: 12,
+    masteredCount: 3,
+    now: 1_800_086_400_000,
+    word: ' bank ',
+  });
+  eq(context.todayMood, 'AMUSED', 'relationship.reversibleMood');
+  eq(context.playerHuntsWon, 1, 'relationship.permanentHistory');
+  eq(context.awayMs, 86_400_000, 'relationship.awayTime');
+  eq(context.relevantWordRivalry?.word, 'BANK', 'relationship.wordHistory');
 }
