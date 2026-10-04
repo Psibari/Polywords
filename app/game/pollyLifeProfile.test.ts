@@ -51,7 +51,7 @@ assert.equal(resolvePollyLifeProfile({
 
 
 assert.equal(resolvePollyLifeProfile({
-  context: { ...base, playerWinStreak: 1, recent: ['strong', 'struggle', 'struggle'] },
+  context: { ...base, playerWinStreak: 1, recent: ['steady', 'struggle', 'struggle'] },
 }).name, 'rattled');
 assert.equal(resolvePollyLifeProfile({
   context: { ...base, recent: ['struggle', 'struggle', 'struggle'] },
