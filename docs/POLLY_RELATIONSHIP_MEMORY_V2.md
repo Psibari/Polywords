@@ -131,3 +131,125 @@ Do not add:
 ## Next product decision
 
 Before implementation, inspect the authoritative event write points and propose the **minimum V2 episodic schema**. Do not add fields merely because they might be useful someday.
+
+
+---
+
+# Event-write audit — 2026-10-04
+
+This audit traces the authoritative places where relationship-relevant facts are committed today. The goal is to reuse those commits, not create a second shadow history.
+
+## Authoritative write points
+
+| Event/fact | Current authoritative write point | V2 use |
+|---|---|---|
+| Hunt finished / outcome / score | `useGameStore.recordRunComplete` → `rememberHunt` | recent form, lifetime rivalry, comeback/reversal |
+| Recent Hunt quality | `recordRunComplete` → `resolveHuntPerformance` → 5-entry `recentHuntPerformance` | reversible current form |
+| Mastery | `useGameStore.recordMastery` → `upsertMasteredRecord` | permanent proof / long-term relationship |
+| Boss held / lost | `recordRunComplete` → Polybook `bookLog` | shared history |
+| Haunt created | `useGameStore.queueFailedBoss` → `upsertGhostRecord` | begin word-specific rivalry |
+| Returning Haunt held/banished | `useGameStore.reconcileHauntOutcome` → `applyReturningHauntResolution` | update word-specific rivalry |
+| Haunt left/broken in diary | `recordRunComplete` → `foldRunIntoBookLog` | historical narrative source |
+| Daily completed | `useGameStore.claimDailyAnswer` → `rememberDaily` + `applyDailyStreak` | Daily familiarity / return habit |
+| Polly line shown | existing `rememberPollyLine` | anti-repeat only |
+| Player name | `useGameStore.setPlayerName` → Settings blob | identity; future First Meeting |
+| First-run experience | onboarding persistence | distinguishes genuinely new player from established player |
+| App boot | `App.tsx` loads memory/progress/settings before first screen | future return-after-absence read/write point |
+
+## Important audit findings
+
+1. **Hunt completion is already the central relationship commit.** It records outcome, updates PollyMemory, updates the rolling five-Hunt form window, and folds facts into the Polybook log. V2 should extend this path rather than create a new run-history subsystem.
+2. **Haunt lifecycle already has clean authoritative commits.** Creation and return resolution are separate, idempotent paths. They are the correct places to maintain durable word-specific rivalry memory.
+3. **Mastery is already permanent.** V2 should read it as proof; it must not duplicate or weaken it.
+4. **TODAY already has reversible weather.** `resolveRivalryState` should remain the broad five-state current mood. V2 relationship context refines behavior around it rather than replacing it.
+5. **Daily is already persisted separately.** V2 does not need to absorb the Daily system into a giant universal event log.
+6. **There is no durable visit timestamp today.** Return-after-absence requires one new small fact.
+7. **The current Ghost record disappears/changes as the Haunt resolves, so it is not by itself a permanent shared-memory record.** Polybook day rows preserve some history, but they are capped and explicitly not backfillable. A tiny durable word-rivalry record is justified if Polly is to remember a specific old battle later.
+
+# Minimum V2 schema proposal
+
+The audit does **not** justify a large event log. Most of Polly's brain can be derived from state the game already owns.
+
+Keep all existing V1 fields and add only:
+
+```ts
+type PollyWordRivalry = {
+  word: string;
+  hauntHolds: number;
+  banished: boolean;
+  firstHauntedAt: string | null; // local YYYY-MM-DD when known going forward
+  lastHauntAt: string | null;    // local YYYY-MM-DD
+  banishedAt: string | null;     // local YYYY-MM-DD
+};
+
+type PollyMemoryV2 = PollyMemoryV1 & {
+  version: 2;
+  lastVisitAt: number | null;
+  longestPlayerWinStreak: number;
+  longestPollyWinStreak: number;
+  wordRivalries: Record<string, PollyWordRivalry>;
+};
+```
+
+## Why these are the only new persisted fields
+
+### `lastVisitAt`
+**Consumer:** return-after-absence context.  
+Nothing existing can reliably derive it.
+
+### `longestPlayerWinStreak` / `longestPollyWinStreak`
+**Consumer:** distinguish an ordinary current streak from a comeback/collapse relative to known history and support future authored recognition of exceptional runs.  
+Current streaks reset, so their previous peaks are otherwise lost.
+
+### `wordRivalries`
+**Consumer:** Polly can remember an old specific Haunt after it is no longer an active Ghost.  
+This is the one genuinely personal episodic record V1 cannot reconstruct reliably.
+
+No new fields for first Hunt, first mastery, total mastery, lifetime wins, current streak, recent form, Daily streak, boss result, or player name. Those facts already have authoritative owners and should be derived from them.
+
+# Derived context — do not persist
+
+Create pure selectors later; do not store these labels:
+
+- `experienceBand`: new / established / veteran, derived from runs/mastery/history.
+- `currentForm`: struggling / steady / surging, derived from recent Hunt performance.
+- `momentumOwner`: player / Polly / neutral, derived from current streaks/recent form.
+- `isComeback`: recent clean success after a meaningful struggle pattern.
+- `isCollapse`: recent struggle after meaningful prior success.
+- `returnBand`: normal / away-a-while / long-return, derived from `lastVisitAt`.
+- `relevantWordRivalry`: lookup only when the current word has actual shared history.
+- `todayMood`: continue using existing `resolveRivalryState`.
+
+Thresholds for these selectors are **not locked by this audit**. They should be tuned with simulations/tests rather than guessed into persistence.
+
+# Event-to-memory map
+
+- **App becomes meaningfully active:** compare previous `lastVisitAt` for return context, then update timestamp. Avoid treating background/foreground flapping as a dramatic return.
+- **Hunt completes:** existing `rememberHunt`; additionally update longest player/Polly streak peaks after the new streak is known.
+- **Boss failure creates Haunt:** initialize/update that word's rivalry record.
+- **Returning Haunt fails:** increment `hauntHolds`, update `lastHauntAt`.
+- **Returning Haunt is banished:** mark `banished`, set `banishedAt` and `lastHauntAt`.
+- **Mastery:** no duplicate V2 write unless it is also the authoritative resolution of a Haunt; permanent mastery remains owned by PlayerProgress.
+- **Daily:** no new V2 write for now. Existing Daily memory is sufficient for V1 relationship behavior.
+- **Player naming:** no V2 duplication. Future First Meeting writes through existing Settings owner.
+
+# Migration rule
+
+Hydrating V1 → V2:
+- preserve every valid V1 field;
+- `lastVisitAt = null`;
+- longest streak fields may initialize to the **current known streak only**, never an invented historical peak;
+- `wordRivalries = {}`;
+- do not infer old Haunt episodes from incomplete/capped logs and present them as certain memories.
+
+This intentionally means legacy players begin accumulating richer episodic memory from V2 onward. Their real mastery/lifetime counters still establish that they are veterans.
+
+# Implementation gate
+
+The next implementation patch should be limited to:
+1. V2 types/defaults/hydration migration in `pollyMemory.ts`;
+2. pure update helpers for streak peaks and word-rivalry events;
+3. unit tests for V1 migration, idempotent Haunt updates, permanent banish memory, and streak-peak preservation;
+4. store wiring only at the audited authoritative write points.
+
+Do **not** add authored dialogue, animation changes, Polybook layout changes, crown thresholds, or visible relationship UI in that patch.
