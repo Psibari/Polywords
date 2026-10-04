@@ -126,7 +126,7 @@ console.log('OK — pollyRelationship: all assertions passed');
 {
   const presentation = resolvePollyRelationshipPresentation({
     decision: { beat: 'returningAfterAbsence', wordRivalry: null },
-    recentLineIds: ['homeWordsAsked'],
+    recentLineIds: ['homeMissMe'],
     lineRoll: 0,
   });
   eq(presentation?.moment?.lineId, 'homeBackAgain', 'presentation.returnFreshLine');
@@ -139,7 +139,7 @@ console.log('OK — pollyRelationship: all assertions passed');
     recentLineIds: [],
     lineRoll: 0,
   });
-  eq(presentation?.moment?.lineId, 'resultsIveNoticed', 'presentation.comebackLine');
+  eq(presentation?.moment?.lineId, 'relComeback01', 'presentation.comebackLine');
   eq(presentation?.poseIntent, 'rattled', 'presentation.comebackBody');
 }
 
@@ -149,7 +149,7 @@ console.log('OK — pollyRelationship: all assertions passed');
     recentLineIds: [],
     lineRoll: 0,
   });
-  eq(presentation?.moment?.lineId, 'resultsTrapsRemember', 'presentation.veteranSlumpLine');
+  eq(presentation?.moment?.lineId, 'relVeteranSlump01', 'presentation.veteranSlumpLine');
   eq(presentation?.poseIntent, 'smug', 'presentation.veteranSlumpBody');
 }
 
@@ -167,8 +167,25 @@ console.log('OK — pollyRelationship: all assertions passed');
     recentLineIds: [],
     lineRoll: 0,
   });
-  eq(presentation?.moment?.lineId, 'huntRemember', 'presentation.hauntLine');
+  eq(presentation?.moment?.lineId, 'relHauntRematch01', 'presentation.hauntLine');
   eq(presentation?.poseIntent, 'point', 'presentation.repeatHauntBody');
+}
+
+{
+  const rivalry = {
+    word: 'BANK',
+    hauntHolds: 0,
+    banished: false,
+    firstHauntedAt: '2026-10-01',
+    lastHauntAt: '2026-10-01',
+    banishedAt: null,
+  };
+  const presentation = resolvePollyRelationshipPresentation({
+    decision: { beat: 'hauntRematch', wordRivalry: rivalry },
+    recentLineIds: [],
+    lineRoll: 50 / 71,
+  });
+  eq(presentation?.moment?.lineId, 'relHauntRematch51', 'presentation.firstRematchTwiceLine');
 }
 
 {
