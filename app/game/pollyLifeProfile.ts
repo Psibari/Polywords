@@ -83,8 +83,20 @@ export function resolvePollyLifeProfile(input: {
   if (decision?.beat === 'veteranSlump') return PROFILES.cocky;
   if (decision?.beat === 'returningAfterAbsence') return PROFILES.watchful;
 
-  // Outside a named relationship beat, current form supplies only a subtle
-  // baseline. Permanent mastery never makes Polly permanently submissive.
+  // Carry the emotional weather beyond the exact screen where a named beat
+  // fired. A rebound after a rough patch keeps Polly rattled on the next Home
+  // visit; an established three-run slump lets her stay visibly comfortable.
+  // This is derived from existing facts, never persisted as a new truth.
+  const recentStruggles = context.recent.slice(0, 3).filter(x => x === 'struggle').length;
+  const priorStruggles = context.recent.slice(1, 4).filter(x => x === 'struggle').length;
+  if (context.playerWinStreak > 0 && priorStruggles >= 2) return PROFILES.rattled;
+  if (
+    recentStruggles >= 3 &&
+    (context.runsCompleted >= 8 || context.masteredCount >= 2 || context.playerHuntsWon >= 2)
+  ) return PROFILES.cocky;
+
+  // Outside those relationship-shaped patterns, current streaks supply only
+  // a subtle baseline. Permanent mastery never makes Polly submissive.
   if (context.playerWinStreak >= 2) return PROFILES.watchful;
   if (context.pollyWinStreak >= 2) return PROFILES.cocky;
   return PROFILES.neutral;
