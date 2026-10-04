@@ -6,6 +6,7 @@ import { ImageSourcePropType } from 'react-native';
 export const POLLY_POSES = {
   idle: require('../../assets/images/polly/poses/sprite4.png'),     // smug perched, watchful
   smug: require('../../assets/images/polly/poses/sprite4.png'),     // right-facing smug perch
+  cocky: require('../../assets/images/polly/poses/sprite6.png'),    // left-facing half-lidded smug perch
   laugh: require('../../assets/images/polly/poses/sprite5.png'),    // laughing wide
   point: require('../../assets/images/polly/poses/sprite7.png'),    // pointing taunt
   shocked: require('../../assets/images/polly/poses/sprite8.png'),  // shocked recoil
@@ -35,6 +36,7 @@ void _check;
 export const POLLY_POSE_SCALE: Record<PollyPoseName, number> = {
   idle: 1,
   smug: 1,
+  cocky: 0.97,
   laugh: 0.82,
   point: 0.91,
   shocked: 0.84,
