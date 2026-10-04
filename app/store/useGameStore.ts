@@ -1065,7 +1065,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
       set({ pollyRelationshipBeatForDev: 'veteranSlump' });
     } else {
-      const ghost = current.ghosts.find(g => !g.isGhostedMaster);
+      // Every real failed Master is stored as an isGhostedMaster Ghost.
+      // That flag controls the Haunted-Master presentation; it does NOT mean
+      // the Ghost is inactive. The previous DEV filter accidentally excluded
+      // the exact Haunts this test is meant to exercise.
+      const ghost = current.ghosts[0];
       if (!ghost) return 'No active Haunt. Create/keep one first.';
       const word = ghost.word.trim().toUpperCase();
       const today = getTodayDateString();
