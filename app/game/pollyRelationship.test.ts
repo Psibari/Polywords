@@ -183,7 +183,7 @@ console.log('OK — pollyRelationship: all assertions passed');
   const presentation = resolvePollyRelationshipPresentation({
     decision: { beat: 'hauntRematch', wordRivalry: rivalry },
     recentLineIds: [],
-    lineRoll: 50 / 71,
+    lineRoll: 50 / 68,
   });
   eq(presentation?.moment?.lineId, 'relHauntRematch51', 'presentation.firstRematchTwiceLine');
 }
