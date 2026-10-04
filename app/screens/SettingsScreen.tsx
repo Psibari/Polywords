@@ -20,6 +20,7 @@ import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
 import { PollyLifeDevViewer } from '../components/PollyLifeDevViewer';
+import { PollyDesktopAnimationLab } from '../components/PollyDesktopAnimationLab';
 import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 // Settings, not the Daily screen: app/screens/dailyDevControls.test.mjs
 // forbids DailyChallengeScreen from wiring this panel (it used to float over
@@ -101,6 +102,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const [showPollyCrown, setShowPollyCrown] = useState(false);
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
   const [showPollyLife, setShowPollyLife] = useState(false);
+  const [showPollyDesktopLab, setShowPollyDesktopLab] = useState(false);
   const [showHauntIntroPreview, setShowHauntIntroPreview] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
@@ -452,6 +454,17 @@ export default function SettingsScreen({ navigation }: Props) {
               </Pressable>
               <Pressable
                 accessibilityRole="button"
+                onPress={() => setShowPollyDesktopLab(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Polly Desktop Animation Lab</Text>
+                  <Text style={styles.rowNote}>Large PC workspace for rig, poses, WEBPs, and motion</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
                 onPress={() => setShowGauntletSpineSizer(true)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               >
@@ -541,6 +554,10 @@ export default function SettingsScreen({ navigation }: Props) {
           <PollyAnimationDevViewer
             onClose={() => setShowPollyAnimations(false)}
             visible={showPollyAnimations}
+          />
+          <PollyDesktopAnimationLab
+            onClose={() => setShowPollyDesktopLab(false)}
+            visible={showPollyDesktopLab}
           />
           <GauntletSpineDevViewer
             onClose={() => setShowGauntletSpineSizer(false)}
