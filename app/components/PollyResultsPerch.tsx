@@ -29,6 +29,7 @@ export const POLLY_RESULTS_PERCH_CLEARANCE = 300;
 type Props = {
   outcome: Outcome;
   line: string | null;
+  relationshipPose?: 'default' | 'rattled' | 'smug' | 'point';
 };
 
 const OUTCOME_POSE: Record<Outcome, ImageSourcePropType> = {
@@ -39,7 +40,15 @@ const OUTCOME_POSE: Record<Outcome, ImageSourcePropType> = {
 
 const ENTRANCE_DELAY_MS = 600; // the verdict stamps first
 
-export default function PollyResultsPerch({ outcome, line }: Props) {
+export default function PollyResultsPerch({ outcome, line, relationshipPose = 'default' }: Props) {
+  const relationshipPoseArt = relationshipPose === 'rattled'
+    ? POLLY_POSES.rattled
+    : relationshipPose === 'smug'
+    ? POLLY_POSES.smug
+    : relationshipPose === 'point'
+    ? POLLY_POSES.point
+    : null;
+  const settledPose = relationshipPoseArt ?? OUTCOME_POSE[outcome];
   const [pose, setPose] = useState<ImageSourcePropType>(POLLY_POSES.fly);
 
   const slideY = useRef(new Animated.Value(300)).current;
@@ -56,7 +65,7 @@ export default function PollyResultsPerch({ outcome, line }: Props) {
       else Animated.spring(slideY, { toValue: 0, friction: 7, tension: 60, useNativeDriver: true }).start();
     }, reduceMotion ? 0 : ENTRANCE_DELAY_MS));
     timers.push(setTimeout(
-      () => setPose(OUTCOME_POSE[outcome]),
+      () => setPose(settledPose),
       reduceMotion ? 0 : ENTRANCE_DELAY_MS + 650,
     ));
     if (line) {
@@ -69,7 +78,7 @@ export default function PollyResultsPerch({ outcome, line }: Props) {
     }
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [line, outcome, reduceMotion, slideY]);
+  }, [line, outcome, relationshipPose, reduceMotion, slideY]);
 
   return (
     <Animated.View style={[styles.root, { transform: [{ translateY: slideY }] }]}>
