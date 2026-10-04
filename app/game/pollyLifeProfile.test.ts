@@ -49,6 +49,14 @@ assert.equal(resolvePollyLifeProfile({
   context: { ...base, pollyWinStreak: 2 },
 }).name, 'cocky');
 
+
+assert.equal(resolvePollyLifeProfile({
+  context: { ...base, playerWinStreak: 1, recent: ['strong', 'struggle', 'struggle'] },
+}).name, 'rattled');
+assert.equal(resolvePollyLifeProfile({
+  context: { ...base, recent: ['struggle', 'struggle', 'struggle'] },
+}).name, 'cocky');
+
 assert.ok(getPollyLifeProfile('cocky').dozeDelayMultiplier < 1);
 assert.ok(getPollyLifeProfile('rattled').dozeDelayMultiplier > 1);
 assert.ok(getPollyLifeProfile('watchful').ambientIntensity > 1);
