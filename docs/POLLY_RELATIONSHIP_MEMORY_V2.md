@@ -1,6 +1,6 @@
 # Polly Relationship Memory V2
 
-**Status:** DESIGN SPEC — implementation not yet approved  
+**Status:** V2 FOUNDATION IMPLEMENTED — source/device verification still required before lock  
 **Branch context:** `play-screen-overhaul`  
 **Purpose:** Upgrade Polly's existing deterministic memory into a persistent relationship system without changing the locked Polybook interior or authored-character model.
 
@@ -253,3 +253,33 @@ The next implementation patch should be limited to:
 4. store wiring only at the audited authoritative write points.
 
 Do **not** add authored dialogue, animation changes, Polybook layout changes, crown thresholds, or visible relationship UI in that patch.
+
+
+---
+
+# Implementation checkpoint — 2026-10-04
+
+Pete approved implementation after the dependency/side-effect audit.
+
+Implemented on `play-screen-overhaul`:
+- `pollyMemory.ts` schema version 2 with safe V1 hydration.
+- Persisted last meaningful visit time.
+- Persisted longest player/Polly Hunt win-streak peaks.
+- Persisted compact word-specific Haunt rivalry history.
+- Haunt creation/resolution wiring at the existing authoritative Ghost commit points.
+- Haunt + relationship-memory persistence written together with `AsyncStorage.multiSet` to reduce split-write drift.
+- Visit timestamp written only when the hydrated app leaves the foreground, preserving the absence interval for the next launch.
+- Pure `derivePollyRelationshipContext` exposing permanent history + reversible TODAY mood + recent form + absence duration + relevant word history without persisting policy labels.
+- Existing `pollyMemory.test.ts` extended for V1 migration, streak-peak preservation, permanent banish history, visit timestamps, and combined relationship context.
+
+Deliberately unchanged:
+- locked TODAY/JOURNAL/MASTERY visuals and ribbons;
+- existing authored Polly line pools;
+- animation/face-rig behavior;
+- mastery/crown reward thresholds;
+- player-name UI / First Meeting;
+- storage key name `polywords_polly_memory_v1` (kept intentionally so existing saves are found and migrated in place; schema version is carried inside the payload).
+
+Verification status:
+- Source was re-fetched from the target branch after writes and the event wiring was inspected in place.
+- Full TypeScript/test execution is still required in the normal repo runtime before this foundation is called locked. GitHub content access here does not provide the repo's installed runtime, so no build-pass claim is made.
