@@ -95,7 +95,7 @@ const HAUNT_INTRO: VisitSpec = {
 };
 
 const BOSS_ENTRY_LINES: PollyLineId[] = [
-  'bossCage', 'bossForYou', 'bossWroteMyself',
+  'bossCage', 'bossForYou',
   'bossWaiting', 'bossFavorite', 'bossPutWork',
 ];
 
@@ -188,7 +188,7 @@ const WRONG_HECKLE_LINES: PollyLineId[] = [
   'huntThereItIs',
   'huntEveryTime',
   'huntStillWorks',
-  'huntPointToMe',
+
   'huntAllMe',
   'huntGoodIsntIt',
   'huntLoveThisGame',
