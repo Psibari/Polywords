@@ -50,6 +50,7 @@ export function PollyDesktopAnimationLab({ visible, onClose }: Props) {
   const [crownTilt, setCrownTilt] = useState(false);
   const [mouth, setMouth] = useState<'closed' | 'open' | 'gape'>('closed');
   const [playing, setPlaying] = useState(true);
+  const [webpPlaying, setWebpPlaying] = useState(true);
   const [restartKey, setRestartKey] = useState(0);
 
   const webp = WEBPS[webpIndex];
@@ -97,8 +98,11 @@ export function PollyDesktopAnimationLab({ visible, onClose }: Props) {
                 />
               )}
               {tab === 'poses' && <Image source={POLLY_POSES[pose]} resizeMode="contain" style={styles.largeImage} />}
-              {tab === 'webp' && (
+              {tab === 'webp' && webpPlaying && (
                 <Image key={restartKey} source={webp[1]} resizeMode="contain" style={styles.largeImage} />
+              )}
+              {tab === 'webp' && !webpPlaying && (
+                <Text style={styles.pausedText}>PAUSED</Text>
               )}
               {tab === 'motion' && (
                 <PollyPoseAnimation key={restartKey} animation={motion} size={460} active={playing} loop />
@@ -131,7 +135,8 @@ export function PollyDesktopAnimationLab({ visible, onClose }: Props) {
               <>
                 <Text style={styles.section}>FORGOTTEN WEBP ANIMATIONS</Text>
                 {WEBPS.map((v,i) => <Control key={v[0]} label={v[0]} active={webpIndex === i} onPress={() => { setWebpIndex(i); setRestartKey(k => k + 1); }} />)}
-                <Pressable onPress={() => setRestartKey(k => k + 1)} style={styles.action}><Text style={styles.actionText}>RESTART</Text></Pressable>
+                <Pressable onPress={() => setWebpPlaying(v => !v)} style={styles.action}><Text style={styles.actionText}>{webpPlaying ? 'PAUSE' : 'PLAY'}</Text></Pressable>
+                <Pressable onPress={() => { setWebpPlaying(true); setRestartKey(k => k + 1); }} style={styles.action}><Text style={styles.actionText}>RESTART</Text></Pressable>
                 <Text style={styles.help}>Animated WEBP playback is renderer/platform dependent. The PC web build is the intended inspection surface.</Text>
               </>
             )}
@@ -183,4 +188,5 @@ const styles = StyleSheet.create({
   action: { minHeight: 44, borderRadius: 10, backgroundColor: PW.color.purpleSoft, alignItems: 'center', justifyContent: 'center', marginTop: 5 },
   actionText: { color: PW.color.white, fontFamily: FONTS.hud, fontSize: 14, letterSpacing: 1 },
   help: { color: PW.color.mutedWhite, fontFamily: FONTS.tileCopy, fontSize: 13, lineHeight: 19, marginTop: 10 },
+  pausedText: { color: PW.color.mutedWhite, fontFamily: FONTS.hud, fontSize: 22, letterSpacing: 2 },
 });
