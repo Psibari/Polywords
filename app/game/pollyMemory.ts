@@ -2,11 +2,20 @@ import { POLLY_LINES, PollyLineId, PollyMoment, pollyMoment } from './pollyChara
 // No cycle: pollyVisitPolicy imports only from pollyCharacter.
 import { pickFreshLine } from './pollyVisitPolicy';
 
-export const POLLY_MEMORY_VERSION = 1 as const;
+export const POLLY_MEMORY_VERSION = 2 as const;
 const RECENT_LINE_LIMIT = 5;
 
 export type PollyHuntOutcome = 'pollyWon' | 'playerCompleted' | 'playerBeatPolly';
 export type PollyDailyOutcome = 'won' | 'lost';
+
+export type PollyWordRivalry = {
+  word: string;
+  hauntHolds: number;
+  banished: boolean;
+  firstHauntedAt: string | null;
+  lastHauntAt: string | null;
+  banishedAt: string | null;
+};
 
 export type PollyMemory = {
   version: typeof POLLY_MEMORY_VERSION;
@@ -28,6 +37,14 @@ export type PollyMemory = {
   lastDailyDate: string | null;
   homeGreetingCursor: number;
   recentLineIds: PollyLineId[];
+  /** Previous meaningful visit time. Updated on app background, not on every
+   *  foreground transition, so the next launch can measure a real absence. */
+  lastVisitAt: number | null;
+  longestPlayerWinStreak: number;
+  longestPollyWinStreak: number;
+  /** Durable history for words that became personal Haunts. Active Ghost
+   *  state can disappear after resolution; this intentionally does not. */
+  wordRivalries: Record<string, PollyWordRivalry>;
 };
 
 export const DEFAULT_POLLY_MEMORY: PollyMemory = {
@@ -46,6 +63,10 @@ export const DEFAULT_POLLY_MEMORY: PollyMemory = {
   lastDailyDate: null,
   homeGreetingCursor: 0,
   recentLineIds: [],
+  lastVisitAt: null,
+  longestPlayerWinStreak: 0,
+  longestPollyWinStreak: 0,
+  wordRivalries: {},
 };
 
 const HOME_ROTATION: PollyLineId[] = [
@@ -68,10 +89,40 @@ function safeCount(value: unknown): number {
     : 0;
 }
 
+function safeTimestamp(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : null;
+}
+
+function safeDate(value: unknown): string | null {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
 function safeWord(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const word = value.trim().toUpperCase();
   return word.length > 0 && word.length <= 40 ? word : null;
+}
+
+function hydrateWordRivalries(value: unknown): Record<string, PollyWordRivalry> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const result: Record<string, PollyWordRivalry> = {};
+  for (const rawValue of Object.values(value as Record<string, unknown>)) {
+    if (!rawValue || typeof rawValue !== 'object') continue;
+    const raw = rawValue as Partial<PollyWordRivalry>;
+    const word = safeWord(raw.word);
+    if (!word) continue;
+    result[word] = {
+      word,
+      hauntHolds: safeCount(raw.hauntHolds),
+      banished: raw.banished === true,
+      firstHauntedAt: safeDate(raw.firstHauntedAt),
+      lastHauntAt: safeDate(raw.lastHauntAt),
+      banishedAt: safeDate(raw.banishedAt),
+    };
+  }
+  return result;
 }
 
 export function hydratePollyMemory(value: unknown): PollyMemory {
@@ -108,6 +159,18 @@ export function hydratePollyMemory(value: unknown): PollyMemory {
     lastDailyDate: typeof raw.lastDailyDate === 'string' ? raw.lastDailyDate : null,
     homeGreetingCursor: safeCount(raw.homeGreetingCursor),
     recentLineIds,
+    lastVisitAt: safeTimestamp(raw.lastVisitAt),
+    // V1 saves have no historical peaks. The current streak is the only peak
+    // we can prove, so migrate to that rather than inventing past history.
+    longestPlayerWinStreak: Math.max(
+      safeCount(raw.longestPlayerWinStreak),
+      safeCount(raw.playerWinStreak),
+    ),
+    longestPollyWinStreak: Math.max(
+      safeCount(raw.longestPollyWinStreak),
+      safeCount(raw.pollyWinStreak),
+    ),
+    wordRivalries: hydrateWordRivalries(raw.wordRivalries),
   };
 }
 
@@ -147,6 +210,76 @@ export function rememberHunt(
     lastHuntScore: Math.max(0, Math.floor(input.score)),
     lastBossWord: safeWord(input.bossWord),
     lastHauntWord: safeWord(input.hauntWord) ?? memory.lastHauntWord,
+    longestPlayerWinStreak: Math.max(
+      memory.longestPlayerWinStreak,
+      playerWon ? memory.playerWinStreak + 1 : 0,
+    ),
+    longestPollyWinStreak: Math.max(
+      memory.longestPollyWinStreak,
+      pollyWon ? memory.pollyWinStreak + 1 : 0,
+    ),
+  };
+}
+
+export function rememberVisit(memory: PollyMemory, visitedAt: number): PollyMemory {
+  const safeVisitedAt = safeTimestamp(visitedAt);
+  if (safeVisitedAt === null || safeVisitedAt === memory.lastVisitAt) return memory;
+  return { ...memory, lastVisitAt: safeVisitedAt };
+}
+
+export function rememberHauntCreated(
+  memory: PollyMemory,
+  wordInput: string,
+  date: string,
+): PollyMemory {
+  const word = safeWord(wordInput);
+  if (!word) return memory;
+  const existing = memory.wordRivalries[word];
+  if (existing) return memory;
+  const safeDay = safeDate(date);
+  return {
+    ...memory,
+    wordRivalries: {
+      ...memory.wordRivalries,
+      [word]: {
+        word,
+        hauntHolds: 0,
+        banished: false,
+        firstHauntedAt: safeDay,
+        lastHauntAt: safeDay,
+        banishedAt: null,
+      },
+    },
+  };
+}
+
+export function rememberHauntResolution(
+  memory: PollyMemory,
+  wordInput: string,
+  outcome: 'haunted' | 'banished',
+  date: string,
+): PollyMemory {
+  const word = safeWord(wordInput);
+  if (!word) return memory;
+  const safeDay = safeDate(date);
+  const existing = memory.wordRivalries[word] ?? {
+    word,
+    hauntHolds: 0,
+    banished: false,
+    firstHauntedAt: null,
+    lastHauntAt: null,
+    banishedAt: null,
+  };
+  // A banish is permanent relationship history. A stale/replayed failure must
+  // never resurrect it. Store wiring calls this only after the Ghost resolver's
+  // idempotency gate says the resolution actually changed state.
+  if (existing.banished) return memory;
+  const next: PollyWordRivalry = outcome === 'banished'
+    ? { ...existing, banished: true, lastHauntAt: safeDay, banishedAt: safeDay }
+    : { ...existing, hauntHolds: existing.hauntHolds + 1, lastHauntAt: safeDay };
+  return {
+    ...memory,
+    wordRivalries: { ...memory.wordRivalries, [word]: next },
   };
 }
 
