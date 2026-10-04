@@ -1,84 +1,59 @@
 import React, { useState } from 'react';
 import { Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { getPollyLifeProfile, PollyLifeProfileName } from '../game/pollyLifeProfile';
-import { usePollyAmbientMotion, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
-import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
-import { PollyPerchRig } from './PollyPerchRig';
+import { POLLY_POSES, POLLY_POSE_SCALE, PollyPoseName } from '../ui/pollyPoses';
 
 type Props = { visible: boolean; onClose: () => void };
 
 const PROFILES: PollyLifeProfileName[] = ['neutral', 'cocky', 'watchful', 'rattled', 'hauntFocused'];
 const PREVIEW_SIZE = 300;
 
+type Candidate = {
+  pose: PollyPoseName;
+  label: string;
+  scale?: number;
+  translateX?: number;
+  translateY?: number;
+};
+
+const CANDIDATES: Record<PollyLifeProfileName, Candidate> = {
+  neutral: {
+    pose: 'idle',
+    label: 'SPRITE 4 · BASELINE',
+  },
+  cocky: {
+    pose: 'cocky',
+    label: 'SPRITE 6 · LEFT-FACING / HALF-LIDDED',
+  },
+  watchful: {
+    pose: 'shocked',
+    label: 'SPRITE 8 · ALERT',
+  },
+  rattled: {
+    pose: 'masterShock',
+    label: 'HIGH-RES SHOCK · COMEBACK CANDIDATE',
+  },
+  hauntFocused: {
+    pose: 'masterAngry',
+    label: 'HIGH-RES ANGRY · HAUNT CANDIDATE',
+  },
+};
+
 /**
- * Life-profile art proof.
- *
- * Neutral/cocky/watchful intentionally keep the live layered perch rig.
- * Rattled and haunt-focused use existing clean authored poses so we can test
- * whether the current art library already carries those emotions before
- * commissioning anything new. This is DEV-only until Pete approves the reads.
+ * DEV-only five-pose comparison. Every state is deliberately rendered as
+ * static authored art here so facial-rig differences cannot muddy the read.
+ * Scale is normalized against sprite4 through the shared pose-scale table.
+ * Nothing in this viewer changes production Home behavior.
  */
-function PollyLifeCandidate({
-  name,
-  reduceMotion,
-}: {
-  name: PollyLifeProfileName;
-  reduceMotion: boolean | null;
-}) {
-  const profile = getPollyLifeProfile(name);
-
-  if (name === 'rattled') {
-    return (
-      <Image
-        source={POLLY_POSES.rattled}
-        resizeMode="contain"
-        style={[
-          styles.pose,
-          { transform: [{ scale: pollyPoseScale(POLLY_POSES.rattled) }] },
-        ]}
-      />
-    );
-  }
-
-  if (name === 'hauntFocused') {
-    return (
-      <Image
-        source={POLLY_POSES.sulk}
-        resizeMode="contain"
-        style={[
-          styles.pose,
-          {
-            transform: [
-              { translateX: 4 },
-              { translateY: 2 },
-              { scale: pollyPoseScale(POLLY_POSES.sulk) * 1.04 },
-              { rotate: '-1.5deg' },
-            ],
-          },
-        ]}
-      />
-    );
-  }
-
-  return (
-    <PollyPerchRig
-      size={PREVIEW_SIZE}
-      reduceMotion={reduceMotion}
-      crownTilt={profile.crownTilt}
-      angryBrow={profile.angryBrow}
-      eye={profile.eye}
-      mouth={profile.mouth}
-    />
-  );
-}
-
 export function PollyLifeDevViewer({ visible, onClose }: Props) {
   const [name, setName] = useState<PollyLifeProfileName>('neutral');
   const profile = getPollyLifeProfile(name);
-  const reduceMotion = useReducedMotionPreference();
+  const candidate = CANDIDATES[name];
   const { translateX, translateY } = usePollyAmbientMotion('home', visible, profile.ambientIntensity);
+  const scale = candidate.scale ?? POLLY_POSE_SCALE[candidate.pose];
 
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
@@ -93,12 +68,26 @@ export function PollyLifeDevViewer({ visible, onClose }: Props) {
           </Pressable>
         </View>
         <Text style={styles.note}>
-          Compare Polly without dialogue. These are art proofs, not production locks: Rattled uses her dedicated clean pose; Haunt Focused tests the existing angry/sulk pose; Watchful keeps the live wide-eye rig.
+          Five normalized authored-art candidates. Judge the emotional read and Polly's apparent size; production Home is unchanged.
         </Text>
         <View style={styles.stage}>
           <Animated.View style={[styles.candidate, { transform: [{ translateX }, { translateY }] }]}>
-            <PollyLifeCandidate name={name} reduceMotion={reduceMotion} />
+            <Image
+              source={POLLY_POSES[candidate.pose]}
+              resizeMode="contain"
+              style={[
+                styles.pose,
+                {
+                  transform: [
+                    { translateX: candidate.translateX ?? 0 },
+                    { translateY: candidate.translateY ?? 0 },
+                    { scale },
+                  ],
+                },
+              ]}
+            />
           </Animated.View>
+          <Text style={styles.sourceLabel}>{candidate.label}</Text>
         </View>
         <View style={styles.buttons}>
           {PROFILES.map(profileName => (
@@ -116,7 +105,7 @@ export function PollyLifeDevViewer({ visible, onClose }: Props) {
           ))}
         </View>
         <Text style={styles.readout}>
-          DOZE ×{profile.dozeDelayMultiplier.toFixed(2)} · AMBIENT ×{profile.ambientIntensity.toFixed(2)}
+          ART SCALE ×{scale.toFixed(2)} · DOZE ×{profile.dozeDelayMultiplier.toFixed(2)} · AMBIENT ×{profile.ambientIntensity.toFixed(2)}
         </Text>
       </SafeAreaView>
     </Modal>
@@ -133,6 +122,7 @@ const styles = StyleSheet.create({
   stage: { height: 390, alignItems: 'center', justifyContent: 'center' },
   candidate: { width: PREVIEW_SIZE, height: PREVIEW_SIZE, alignItems: 'center', justifyContent: 'center' },
   pose: { width: PREVIEW_SIZE, height: PREVIEW_SIZE },
+  sourceLabel: { color: PW.color.goldSoft, fontFamily: FONTS.label, fontSize: 12, letterSpacing: 1, marginTop: 8 },
   buttons: { gap: 8 },
   button: { borderWidth: 1, borderColor: PW.color.purpleSoft, borderRadius: 12, paddingVertical: 11, paddingHorizontal: 14 },
   buttonActive: { borderColor: PW.color.gold, backgroundColor: PW.color.overlayMedium },
