@@ -3,6 +3,7 @@ import {
   resolvePollyRelationshipBeat,
   resolvePollyRelationshipPresentation,
 } from './pollyRelationship';
+import { POLLY_LINES } from './pollyCharacter';
 import {
   DEFAULT_POLLY_MEMORY,
   rememberHauntCreated,
@@ -15,6 +16,18 @@ function eq<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
     throw new Error(`${label}: expected ${String(expected)}, got ${String(actual)}`);
   }
+}
+
+
+{
+  const ids = Object.keys(POLLY_LINES);
+  const count = (prefix: string) => ids.filter(id => id.startsWith(prefix)).length;
+  eq(count('relComeback'), 18, 'dialogue.comebackCount');
+  eq(count('relVeteranSlump'), 30, 'dialogue.veteranSlumpCount');
+  // Return has 59 new relationship ids plus the canonical Home ids for
+  // MISS ME? and BACK AGAIN?, for 61 approved return lines total.
+  eq(count('relReturn'), 59, 'dialogue.newReturnCount');
+  eq(count('relHauntRematch'), 71, 'dialogue.hauntRematchCount');
 }
 
 function context(input: {
