@@ -10,6 +10,11 @@ import {
 import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
 import { homePerch } from '../ui/pwHomeMaterials';
 import { resolveHomePollyMoment } from '../game/pollyMemory';
+import {
+  derivePollyRelationshipContext,
+  resolvePollyRelationshipBeat,
+  resolvePollyRelationshipPresentation,
+} from '../game/pollyRelationship';
 import { useGameStore } from '../store/useGameStore';
 import { useIsFocused } from '@react-navigation/native';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
@@ -41,6 +46,7 @@ type DozeStage = 'awake' | 'dozing' | 'asleep';
 
 export default function PollyHomePerch() {
   const memory = useGameStore(s => s.pollyMemory);
+  const progress = useGameStore(s => s.progress);
   const rememberLine = useGameStore(s => s.rememberPollyLine);
   const onboardingHome = useGameStore(s => s.onboarding.home);
   const setOnboardingHomeStep = useGameStore(s => s.setOnboardingHomeStep);
@@ -50,7 +56,22 @@ export default function PollyHomePerch() {
   const firstHomeBeat = !onboardingHome.completed;
   const [wasFirstHomeBeat] = useState(firstHomeBeat);
   const isEntrance = firstHomeBeat || !enteredThisSession;
-  const [moment] = useState(() => resolveHomePollyMoment(memory));
+  const [moment] = useState(() => {
+    const context = derivePollyRelationshipContext({
+      memory,
+      recent: progress.recentHuntPerformance ?? [],
+      runsCompleted: progress.runsCompleted,
+      masteredCount: progress.masteredWords.length,
+      now: Date.now(),
+    });
+    const relationshipDecision = resolvePollyRelationshipBeat({ context, surface: 'home' });
+    const relationshipPresentation = resolvePollyRelationshipPresentation({
+      decision: relationshipDecision,
+      recentLineIds: memory.recentLineIds,
+      lineRoll: Math.random(),
+    });
+    return relationshipPresentation?.moment ?? resolveHomePollyMoment(memory);
+  });
   const [firstHomeLineIndex, setFirstHomeLineIndex] = useState(() =>
     Math.min(onboardingHome.step, FIRST_HOME_LINES.length - 1)
   );
