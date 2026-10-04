@@ -1,14 +1,78 @@
 import React, { useState } from 'react';
-import { Animated, Modal, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { getPollyLifeProfile, PollyLifeProfileName } from '../game/pollyLifeProfile';
 import { usePollyAmbientMotion, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
+import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
 import { PollyPerchRig } from './PollyPerchRig';
 
 type Props = { visible: boolean; onClose: () => void };
 
 const PROFILES: PollyLifeProfileName[] = ['neutral', 'cocky', 'watchful', 'rattled', 'hauntFocused'];
+const PREVIEW_SIZE = 300;
+
+/**
+ * Life-profile art proof.
+ *
+ * Neutral/cocky/watchful intentionally keep the live layered perch rig.
+ * Rattled and haunt-focused use existing clean authored poses so we can test
+ * whether the current art library already carries those emotions before
+ * commissioning anything new. This is DEV-only until Pete approves the reads.
+ */
+function PollyLifeCandidate({
+  name,
+  reduceMotion,
+}: {
+  name: PollyLifeProfileName;
+  reduceMotion: boolean | null;
+}) {
+  const profile = getPollyLifeProfile(name);
+
+  if (name === 'rattled') {
+    return (
+      <Image
+        source={POLLY_POSES.rattled}
+        resizeMode="contain"
+        style={[
+          styles.pose,
+          { transform: [{ scale: pollyPoseScale(POLLY_POSES.rattled) }] },
+        ]}
+      />
+    );
+  }
+
+  if (name === 'hauntFocused') {
+    return (
+      <Image
+        source={POLLY_POSES.sulk}
+        resizeMode="contain"
+        style={[
+          styles.pose,
+          {
+            transform: [
+              { translateX: 4 },
+              { translateY: 2 },
+              { scale: pollyPoseScale(POLLY_POSES.sulk) * 1.04 },
+              { rotate: '-1.5deg' },
+            ],
+          },
+        ]}
+      />
+    );
+  }
+
+  return (
+    <PollyPerchRig
+      size={PREVIEW_SIZE}
+      reduceMotion={reduceMotion}
+      crownTilt={profile.crownTilt}
+      angryBrow={profile.angryBrow}
+      eye={profile.eye}
+      mouth={profile.mouth}
+    />
+  );
+}
 
 export function PollyLifeDevViewer({ visible, onClose }: Props) {
   const [name, setName] = useState<PollyLifeProfileName>('neutral');
@@ -29,18 +93,11 @@ export function PollyLifeDevViewer({ visible, onClose }: Props) {
           </Pressable>
         </View>
         <Text style={styles.note}>
-          Compare Polly without dialogue. Relationship memory changes her resting body language; gameplay reactions still override it.
+          Compare Polly without dialogue. These are art proofs, not production locks: Rattled uses her dedicated clean pose; Haunt Focused tests the existing angry/sulk pose; Watchful keeps the live wide-eye rig.
         </Text>
         <View style={styles.stage}>
-          <Animated.View style={{ transform: [{ translateX }, { translateY }] }}>
-            <PollyPerchRig
-              size={300}
-              reduceMotion={reduceMotion}
-              crownTilt={profile.crownTilt}
-              angryBrow={profile.angryBrow}
-              eye={profile.eye}
-              mouth={profile.mouth}
-            />
+          <Animated.View style={[styles.candidate, { transform: [{ translateX }, { translateY }] }]}>
+            <PollyLifeCandidate name={name} reduceMotion={reduceMotion} />
           </Animated.View>
         </View>
         <View style={styles.buttons}>
@@ -74,6 +131,8 @@ const styles = StyleSheet.create({
   close: { color: PW.color.white, fontSize: 42, lineHeight: 44 },
   note: { color: PW.color.softWhite, fontFamily: FONTS.tileCopy, fontSize: 15, lineHeight: 21, marginTop: 16 },
   stage: { height: 390, alignItems: 'center', justifyContent: 'center' },
+  candidate: { width: PREVIEW_SIZE, height: PREVIEW_SIZE, alignItems: 'center', justifyContent: 'center' },
+  pose: { width: PREVIEW_SIZE, height: PREVIEW_SIZE },
   buttons: { gap: 8 },
   button: { borderWidth: 1, borderColor: PW.color.purpleSoft, borderRadius: 12, paddingVertical: 11, paddingHorizontal: 14 },
   buttonActive: { borderColor: PW.color.gold, backgroundColor: PW.color.overlayMedium },
