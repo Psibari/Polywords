@@ -19,6 +19,7 @@ import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
+import { PollyLifeDevViewer } from '../components/PollyLifeDevViewer';
 import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 // Settings, not the Daily screen: app/screens/dailyDevControls.test.mjs
 // forbids DailyChallengeScreen from wiring this panel (it used to float over
@@ -99,6 +100,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
   const [showPollyCrown, setShowPollyCrown] = useState(false);
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
+  const [showPollyLife, setShowPollyLife] = useState(false);
   const [showHauntIntroPreview, setShowHauntIntroPreview] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
@@ -483,6 +485,17 @@ export default function SettingsScreen({ navigation }: Props) {
               </Pressable>
               <Pressable
                 accessibilityRole="button"
+                onPress={() => setShowPollyLife(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Polly Life Profiles</Text>
+                  <Text style={styles.rowNote}>Compare relationship body language without dialogue</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
                 accessibilityLabel="Preview Returning Haunt intro"
                 onPress={() => setShowHauntIntroPreview(true)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
@@ -540,6 +553,10 @@ export default function SettingsScreen({ navigation }: Props) {
           <PollyFaceRigDevViewer
             onClose={() => setShowPollyFaceRig(false)}
             visible={showPollyFaceRig}
+          />
+          <PollyLifeDevViewer
+            onClose={() => setShowPollyLife(false)}
+            visible={showPollyLife}
           />
           {showHauntIntroPreview && (
             <HauntIntroOverlay onDismiss={() => setShowHauntIntroPreview(false)} />
