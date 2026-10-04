@@ -2,7 +2,7 @@ import { PollyMemory, PollyWordRivalry } from './pollyMemory';
 import { HuntPerformance } from './types';
 import { resolveRivalryState } from './pollyMood';
 import { BookRivalryState } from './pollyBookLines';
-import { POLLY_LINES, PollyLineId, PollyMoment, pollyMoment } from './pollyCharacter';
+import { PollyLineId, PollyMoment, pollyMoment } from './pollyCharacter';
 import { pickFreshLine } from './pollyVisitPolicy';
 
 export type PollyRelationshipContext = {
@@ -193,7 +193,3 @@ export function resolvePollyRelationshipPresentation(input: {
     poseIntent: (decision.wordRivalry?.hauntHolds ?? 0) >= 2 ? 'point' : 'smug',
   };
 }
-
-// Keep this import live as a compile-time guarantee that relationship
-// presentation only references authored bank entries.
-void POLLY_LINES;
