@@ -67,6 +67,14 @@ const BREATHE_RANGE = -3;
 const BREATHE_DURATION_MS = 1800;
 const BREATHE_NUDGE_STEP = 0.5;
 
+// DEV proof for making the existing face rig feel alive without adding art.
+// These are intentionally restrained: a living perch, not a bobblehead.
+const LIFE_MIN_GAP_MS = 1800;
+const LIFE_MAX_GAP_MS = 5200;
+const LIFE_LEAN_X = 4;
+const LIFE_LEAN_Y = -2;
+const LIFE_ROTATE_DEG = 1.8;
+
 type MouthState = 'closed' | 'open' | 'gape';
 const MOUTH_OPTIONS: { value: MouthState; label: string }[] = [
   { value: 'closed', label: 'CLOSED' },
@@ -86,6 +94,9 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const browValue = useRef(new Animated.Value(0)).current;
   const crownValue = useRef(new Animated.Value(0)).current;
   const breatheValue = useRef(new Animated.Value(0)).current;
+  const lifeXValue = useRef(new Animated.Value(0)).current;
+  const lifeYValue = useRef(new Animated.Value(0)).current;
+  const lifeRotateValue = useRef(new Animated.Value(0)).current;
 
   const [blink, setBlink] = useState(1);
   const [brow, setBrow] = useState(0);
@@ -97,6 +108,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const [browOn, setBrowOn] = useState(false);
   const [crownTiltOn, setCrownTiltOn] = useState(false);
   const [breatheOn, setBreatheOn] = useState(false);
+  const [lifeOn, setLifeOn] = useState(false);
   const [mouth, setMouth] = useState<MouthState>('closed');
   const [eyeWide, setEyeWide] = useState(false);
   const [browShocked, setBrowShocked] = useState(false);
@@ -214,6 +226,64 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
     return () => loop.stop();
   }, [visible, breatheOn, motionAllowed, breatheValue]);
 
+  // ALIVE LOOP — irregular whole-body micro-performances layered over the
+  // existing blink/breathe/face controls. This is deliberately in the Face
+  // Rig DEV viewer first; nothing here changes production Home Polly.
+  useEffect(() => {
+    if (!visible || !lifeOn || !motionAllowed) {
+      lifeXValue.stopAnimation();
+      lifeYValue.stopAnimation();
+      lifeRotateValue.stopAnimation();
+      lifeXValue.setValue(0);
+      lifeYValue.setValue(0);
+      lifeRotateValue.setValue(0);
+      return;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+
+    const settle = () => Animated.parallel([
+      Animated.timing(lifeXValue, { toValue: 0, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(lifeYValue, { toValue: 0, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(lifeRotateValue, { toValue: 0, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+    ]);
+
+    const perform = () => {
+      if (cancelled) return;
+      const direction = Math.random() < 0.5 ? -1 : 1;
+      const move = Animated.sequence([
+        Animated.parallel([
+          Animated.timing(lifeXValue, { toValue: LIFE_LEAN_X * direction, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(lifeYValue, { toValue: LIFE_LEAN_Y, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(lifeRotateValue, { toValue: LIFE_ROTATE_DEG * direction, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.delay(320 + Math.round(Math.random() * 420)),
+        settle(),
+      ]);
+      move.start(() => {
+        if (!cancelled) scheduleNext();
+      });
+    };
+
+    const scheduleNext = () => {
+      const delay = LIFE_MIN_GAP_MS + Math.random() * (LIFE_MAX_GAP_MS - LIFE_MIN_GAP_MS);
+      timeoutId = setTimeout(perform, delay);
+    };
+
+    scheduleNext();
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      lifeXValue.stopAnimation();
+      lifeYValue.stopAnimation();
+      lifeRotateValue.stopAnimation();
+      lifeXValue.setValue(0);
+      lifeYValue.setValue(0);
+      lifeRotateValue.setValue(0);
+    };
+  }, [visible, lifeOn, motionAllowed, lifeXValue, lifeYValue, lifeRotateValue]);
+
   function nudgeBlink(delta: number) {
     if (blinkOn) return;
     blinkValue.setValue(clamp(blink + delta, EYE_CLOSED_SCALE, 1));
@@ -266,6 +336,10 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
     inputRange: [EYE_CLOSED_SCALE, 1],
     outputRange: [BROW_TO_EYE_PIVOT_FRAC * STAGE_SIZE * browFollow, 0],
   });
+  const lifeRotateDeg = lifeRotateValue.interpolate({
+    inputRange: [-LIFE_ROTATE_DEG, LIFE_ROTATE_DEG],
+    outputRange: [`${-LIFE_ROTATE_DEG}deg`, `${LIFE_ROTATE_DEG}deg`],
+  });
   const crownSpinDeg = crownValue.interpolate({
     inputRange: [CROWN_ANGLE_MIN, CROWN_ANGLE_MAX],
     outputRange: [`${CROWN_ANGLE_MIN}deg`, `${CROWN_ANGLE_MAX}deg`],
@@ -303,7 +377,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.stageWrap}>
-            <Animated.View style={[styles.stage, { transform: [{ translateY: breatheValue }] }]}>
+            <Animated.View style={[styles.stage, { transform: [{ translateX: lifeXValue }, { translateY: Animated.add(breatheValue, lifeYValue) }, { rotate: lifeRotateDeg }] }]}>
               <Image source={baseArt} resizeMode="contain" style={styles.layer} />
               <Animated.Image
                 source={mouth === 'gape' ? beakGapeArt : mouth === 'open' ? beakOpenArt : beakArt}
@@ -358,6 +432,34 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
           </View>
 
           <View style={styles.controls}>
+            <View style={styles.groupCard}>
+              <View style={styles.groupRow}>
+                <Text style={styles.groupTitle}>ALIVE LOOP</Text>
+                {motionAllowed ? (
+                  <Pressable
+                    accessibilityRole="switch"
+                    accessibilityLabel="Toggle irregular Polly micro performances"
+                    accessibilityState={{ checked: lifeOn }}
+                    onPress={() => {
+                      const next = !lifeOn;
+                      setLifeOn(next);
+                      if (next) {
+                        setBlinkOn(true);
+                        setBreatheOn(true);
+                      }
+                    }}
+                    style={[styles.toggleTrack, lifeOn && styles.toggleTrackOn]}
+                  >
+                    <View style={[styles.toggleKnob, lifeOn && styles.toggleKnobOn]} />
+                  </Pressable>
+                ) : (
+                  <Text style={styles.reduceMotionNote}>Reduce Motion — disabled</Text>
+                )}
+              </View>
+              <Text style={styles.controlLabel}>
+                RANDOM LEAN + SETTLE · BLINK + BREATHE · USE CROWN TILT SEPARATELY
+              </Text>
+            </View>
             <View style={styles.groupCard}>
               <View style={styles.groupRow}>
                 <Text style={styles.groupTitle}>BLINK</Text>
