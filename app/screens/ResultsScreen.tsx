@@ -447,6 +447,8 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const currentPollyMemory = useGameStore(s => s.pollyMemory);
   const currentProgress = useGameStore(s => s.progress);
   const rememberPollyLine = useGameStore(s => s.rememberPollyLine);
+  const pollyRelationshipBeatForDev = useGameStore(s => s.pollyRelationshipBeatForDev);
+  const clearPollyRelationshipBeatForDev = useGameStore(s => s.clearPollyRelationshipBeatForDev);
   const { wordResults, score, bestCombo, status } = game;
   const isComplete = status === 'complete';
   const haunted =
@@ -459,6 +461,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
   const [pollyMemoryBeforeRunRecorded] = useState(() => currentPollyMemory);
   const [progressBeforeRunRecorded] = useState(() => currentProgress);
+  const [relationshipBeatForDev] = useState(() => pollyRelationshipBeatForDev);
   const [usingGoldFeather, setUsingGoldFeather] = useState(false);
   const died = status === 'gameOver';
   const bossMastered = game.bossOutcome === 'mastered';
@@ -587,15 +590,17 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     masteredCount: progressBeforeRunRecorded.masteredWords.length,
     now: Date.now(),
   });
-  const relationshipDecision = resolvePollyRelationshipBeat({
-    context: relationshipContext,
-    surface: 'results',
-    currentOutcome: died
-      ? 'pollyWon'
-      : bossMastered
-      ? 'playerBeatPolly'
-      : 'playerCompleted',
-  });
+  const relationshipDecision = __DEV__ && relationshipBeatForDev === 'veteranSlump'
+    ? { beat: 'veteranSlump' as const, wordRivalry: null }
+    : resolvePollyRelationshipBeat({
+        context: relationshipContext,
+        surface: 'results',
+        currentOutcome: died
+          ? 'pollyWon'
+          : bossMastered
+          ? 'playerBeatPolly'
+          : 'playerCompleted',
+      });
   const relationshipPresentation = resolvePollyRelationshipPresentation({
     decision: relationshipDecision,
     recentLineIds: pollyMemoryBeforeRunRecorded.recentLineIds,
@@ -609,6 +614,9 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     pollyRoll,
   );
   const pollyLineRememberedRef = useRef(false);
+  useEffect(() => {
+    if (__DEV__ && relationshipBeatForDev !== null) clearPollyRelationshipBeatForDev();
+  }, [relationshipBeatForDev, clearPollyRelationshipBeatForDev]);
   useEffect(() => {
     if (!pollyMoment || pollyLineRememberedRef.current) return;
     pollyLineRememberedRef.current = true;
