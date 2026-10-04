@@ -36,6 +36,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
+import { derivePollyRelationshipContext } from '../game/pollyRelationship';
 import {
   recognitionOpensWithHold,
   resolveHudLesson,
@@ -1664,14 +1665,33 @@ function GameContent({
 }) {
   const game = useGameStore(s => s.game);
   const ghosts = useGameStore(s => s.ghosts);
+  const pollyMemory = useGameStore(s => s.pollyMemory);
+  const progress = useGameStore(s => s.progress);
   const onboarding = useGameStore(s => s.onboarding);
   const recordOnboardingDecision = useGameStore(s => s.recordOnboardingDecision);
   const [onboardingVisitActive, setOnboardingVisitActive] = useState(false);
   // `${runSeed}:${stepIndex}` of the board whose plate entrance has settled.
   const [settledBoardKey, setSettledBoardKey] = useState<string | null>(null);
   const step = currentStep(game);
-  const ghostRunsMissed = step.kind === 'word' && step.isHauntReturn
+  const activeGhostRunsMissed = step.kind === 'word' && step.isHauntReturn
     ? ghosts.find(ghost => ghost.wordId === step.word.trim().toUpperCase())?.runsMissed ?? 0
+    : 0;
+  const relationshipContext = derivePollyRelationshipContext({
+    memory: pollyMemory,
+    recent: progress.recentHuntPerformance ?? [],
+    runsCompleted: progress.runsCompleted,
+    masteredCount: progress.masteredWords.length,
+    now: Date.now(),
+    word: step.kind === 'word' ? step.word : null,
+  });
+  // The active Ghost owns current queue timing; durable rivalry memory owns
+  // shared history across restarts. Use the stronger proven count so Polly's
+  // rematch body language never forgets a battle the Ghost queue still knows.
+  const ghostRunsMissed = step.kind === 'word' && step.isHauntReturn
+    ? Math.max(
+        activeGhostRunsMissed,
+        relationshipContext.relevantWordRivalry?.hauntHolds ?? 0,
+      )
     : 0;
 
   // Visit layer lives HERE, above MaskBoard's per-word remount boundary
