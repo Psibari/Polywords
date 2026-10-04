@@ -344,6 +344,8 @@ type GameStore = {
   loadProgress: () => Promise<void>;
   pollyMemory: PollyMemory;
   pollyMemoryLoaded: boolean;
+  pollyRelationshipBeatForDev: 'veteranSlump' | null;
+  clearPollyRelationshipBeatForDev: () => void;
   loadPollyMemory: () => Promise<void>;
   rememberPollyVisit: (visitedAt?: number) => void;
   seedPollyRelationshipForDev: (scenario: 'return' | 'comeback' | 'veteranSlump' | 'hauntRematch') => Promise<string>;
@@ -422,6 +424,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   progress:    { ...DEFAULT_PROGRESS },
   pollyMemory: { ...DEFAULT_POLLY_MEMORY },
   pollyMemoryLoaded: false,
+  pollyRelationshipBeatForDev: null,
   dailySession: null,
   dailyResult: null,
   dailyAttemptDate: null,
@@ -1060,6 +1063,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         playerHuntsWon: Math.max(pollyMemory.playerHuntsWon, 2),
         recentLineIds: [],
       };
+      set({ pollyRelationshipBeatForDev: 'veteranSlump' });
     } else {
       const ghost = current.ghosts.find(g => !g.isGhostedMaster);
       if (!ghost) return 'No active Haunt. Create/keep one first.';
@@ -1092,9 +1096,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       : scenario === 'comeback'
       ? 'Comeback seeded. Beat Polly in the next Hunt.'
       : scenario === 'veteranSlump'
-      ? 'Veteran slump seeded. Struggle in the next Hunt.'
+      ? 'Veteran slump presentation armed. Finish the next Hunt any way you like; Results will force only this DEV relationship beat.'
       : 'Haunt rematch seeded. Start a Hunt that returns the active Haunt.';
   },
+
+  clearPollyRelationshipBeatForDev: () => set({ pollyRelationshipBeatForDev: null }),
 
   rememberPollyLine: (lineId, surface) => {
     const pollyMemory = rememberPollyLine(get().pollyMemory, lineId, surface);
