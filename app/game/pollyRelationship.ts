@@ -140,7 +140,6 @@ export type PollyRelationshipPresentation = {
 };
 
 const RETURN_LINES: PollyLineId[] = [
-  'homeWordsAsked',
   'homeBackAgain',
   'homeMissMe',
 ];
@@ -152,10 +151,7 @@ const COMEBACK_LINES: PollyLineId[] = [
   'resultsAdjustments',
 ];
 
-const VETERAN_SLUMP_LINES: PollyLineId[] = [
-  'resultsTrapsRemember',
-  'resultsMeaningsHaunt',
-];
+const VETERAN_SLUMP_LINES: PollyLineId[] = [];
 
 /**
  * Turns a proven relationship beat into a restrained presentation recipe.
@@ -181,8 +177,7 @@ export function resolvePollyRelationshipPresentation(input: {
   }
 
   if (decision.beat === 'veteranSlump') {
-    const lineId = pickFreshLine(VETERAN_SLUMP_LINES, recentLineIds, lineRoll);
-    return { moment: pollyMoment(lineId), poseIntent: 'smug' };
+    return { moment: null, poseIntent: 'smug' };
   }
 
   // The Hunt visit policy already owns the actual flight/perch arc. The
