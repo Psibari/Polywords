@@ -379,3 +379,16 @@ merged into `play-screen-overhaul` on 2026-09-27.
 - Theme/material tokens live in `app/ui/`; render code outranks abandoned plans.
 - Preserve all stashes. Never merge `play-screen-overhaul` into `main`, or a branch into
   `play-screen-overhaul`, without Pete's approval.
+
+
+## Polly relationship and life architecture (2026-10-04)
+
+Relationship Memory V2 and its dedicated authored presentation are implemented and physically verified. Permanent progression remains monotonic; recent rivalry/form is reversible. The active relationship beats are comeback, veteran slump, return after absence, and word-specific Haunt rematch. They use deterministic authored pools and the existing anti-repeat path. Do not replace this with freeform/LLM dialogue or a visible relationship meter.
+
+Polly Life uses the hierarchy `immediate gameplay event > relationship life profile > ambient idle`. The logical profiles are neutral, cocky, watchful, rattled, and hauntFocused. They are behavior policy, not saved progression labels.
+
+Home already has the animation foundation: `PollyHomePerch` + `PollyPerchRig` + `usePollyAmbientMotion`. Rig 2 independently owns face/crown layers and random blink; ambient motion owns subtle whole-figure rise/drift; Home owns entrance and doze. Preserve the device-locked `BROW_FOLLOW = 0.33`.
+
+The Face Rig DEV **Alive Loop** is an experiment only. It was rejected as a production solution because whole-image lean/rotation reads as a rocking sticker rather than articulated character motion. Do not wire it into Home.
+
+Next animation architecture gate: audit existing separated `rig/`, `rig2/`, `flight-rig/`, pose and clean reaction assets, then prove a minimum articulated Neutral rig in DEV before new art or production Life-profile animation. Legacy sparse WEBPs remain reference material until their active runtime references are replaced; do not spend current effort restoring them.
