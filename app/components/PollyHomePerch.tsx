@@ -15,6 +15,7 @@ import {
   resolvePollyRelationshipBeat,
   resolvePollyRelationshipPresentation,
 } from '../game/pollyRelationship';
+import { resolvePollyLifeProfile } from '../game/pollyLifeProfile';
 import { useGameStore } from '../store/useGameStore';
 import { useIsFocused } from '@react-navigation/native';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
@@ -56,7 +57,7 @@ export default function PollyHomePerch() {
   const firstHomeBeat = !onboardingHome.completed;
   const [wasFirstHomeBeat] = useState(firstHomeBeat);
   const isEntrance = firstHomeBeat || !enteredThisSession;
-  const [moment] = useState(() => {
+  const [{ moment, lifeProfile }] = useState(() => {
     const context = derivePollyRelationshipContext({
       memory,
       recent: progress.recentHuntPerformance ?? [],
@@ -70,7 +71,10 @@ export default function PollyHomePerch() {
       recentLineIds: memory.recentLineIds,
       lineRoll: Math.random(),
     });
-    return relationshipPresentation?.moment ?? resolveHomePollyMoment(memory);
+    return {
+      moment: relationshipPresentation?.moment ?? resolveHomePollyMoment(memory),
+      lifeProfile: resolvePollyLifeProfile({ context, decision: relationshipDecision }),
+    };
   });
   const [firstHomeLineIndex, setFirstHomeLineIndex] = useState(() =>
     Math.min(onboardingHome.step, FIRST_HOME_LINES.length - 1)
@@ -81,9 +85,11 @@ export default function PollyHomePerch() {
   const [wasEntrance] = useState(isEntrance);
   const homeCompletedRef = useRef(onboardingHome.completed);
   homeCompletedRef.current = onboardingHome.completed;
-  const settledPose = memory.playerWinStreak > 0
+  const settledPose = lifeProfile.name === 'rattled'
+    ? POLLY_POSES.rattled
+    : memory.playerWinStreak > 0
     ? POLLY_POSES.sulk
-    : memory.pollyWinStreak > 0
+    : memory.pollyWinStreak > 0 || lifeProfile.name === 'cocky'
     ? POLLY_POSES.smug
     : POLLY_POSES.idle;
   const [pose, setPose] = useState<ImageSourcePropType>(
@@ -114,7 +120,7 @@ export default function PollyHomePerch() {
   const slideY = useRef(new Animated.Value(isEntrance ? 300 : 0)).current;
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
-    usePollyAmbientMotion('home', isFocused);
+    usePollyAmbientMotion('home', isFocused, lifeProfile.ambientIntensity);
 
   useEffect(() => () => {
     if (wasFirstHomeBeat && !homeCompletedRef.current) {
@@ -206,7 +212,7 @@ export default function PollyHomePerch() {
     usedGreetingBaseline.current = true;
     const firstHomeGreetingMs = (reduceMotion ? 0 : 900) +
       FIRST_HOME_LINE_MS * FIRST_HOME_LINES.length + 260;
-    const dozeDelay = DOZE_DELAY_MS + (includeGreetingBaseline
+    const dozeDelay = Math.round(DOZE_DELAY_MS * lifeProfile.dozeDelayMultiplier) + (includeGreetingBaseline
       ? wasFirstHomeBeat ? firstHomeGreetingMs : GREETING_FADE_END_MS
       : 0);
 
@@ -255,7 +261,7 @@ export default function PollyHomePerch() {
       dozeTransitionActive.current = false;
       dozeAnimation.current?.stop();
     };
-  }, [isFocused, reduceMotion, wasEntrance, wasFirstHomeBeat]);
+  }, [isFocused, lifeProfile.dozeDelayMultiplier, reduceMotion, wasEntrance, wasFirstHomeBeat]);
 
   const isAsleep = dozeStage === 'asleep';
   const isDozing = dozeStage === 'dozing';
@@ -297,7 +303,14 @@ export default function PollyHomePerch() {
         {!isAsleep && (
           <Animated.View style={[styles.dozeLayer, { opacity: dozeOutOpacity }]}>
             {outgoing.showRig ? (
-              <PollyPerchRig size={homePerch.pollySize} reduceMotion={reduceMotion} />
+              <PollyPerchRig
+                size={homePerch.pollySize}
+                reduceMotion={reduceMotion}
+                crownTilt={lifeProfile.crownTilt}
+                angryBrow={lifeProfile.angryBrow}
+                eye={lifeProfile.eye}
+                mouth={lifeProfile.mouth}
+              />
             ) : (
               <Image
                 source={outgoing.pose}
