@@ -98,16 +98,16 @@ function eq<T>(actual: T, expected: T, label: string): void {
   );
 }
 
-// HOME_ROTATION's retired sixth line was replaced by homeYourHighness and
-// homeCrown — both now reachable through the rotation cursor (index 5, 6).
+// After retiring the old Home greetings, the ordinary rotation intentionally
+// contains only these two surviving general-purpose lines.
 {
   eq(
-    resolveHomePollyMoment({ ...DEFAULT_POLLY_MEMORY, homeGreetingCursor: 5, huntsRemembered: 1 }).lineId,
+    resolveHomePollyMoment({ ...DEFAULT_POLLY_MEMORY, homeGreetingCursor: 0, huntsRemembered: 1 }).lineId,
     'homeYourHighness',
     'home.rotation.yourHighness',
   );
   eq(
-    resolveHomePollyMoment({ ...DEFAULT_POLLY_MEMORY, homeGreetingCursor: 6, huntsRemembered: 1 }).lineId,
+    resolveHomePollyMoment({ ...DEFAULT_POLLY_MEMORY, homeGreetingCursor: 1, huntsRemembered: 1 }).lineId,
     'homeCrown',
     'home.rotation.crown',
   );
