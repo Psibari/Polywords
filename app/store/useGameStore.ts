@@ -792,8 +792,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     );
     set({ ghosts: next, pollyMemory });
     recordPlaytestEvent('ghost_created', { word: step.word, priorMisses, queueDepthAfter: next.length });
-    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(next)).catch(() => {});
-    AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
+    AsyncStorage.multiSet([
+      [GHOSTS_KEY, JSON.stringify(next)],
+      [POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)],
+    ]).catch(() => {});
   },
 
   reconcileHauntOutcome: (step, outcome, resolutionId) => {
@@ -818,8 +820,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } else if (outcome === 'haunted') {
       recordPlaytestEvent('haunt_failed', { word: wordId, priorMisses: result.priorMisses });
     }
-    AsyncStorage.setItem(GHOSTS_KEY, JSON.stringify(result.ghosts)).catch(() => {});
-    AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
+    AsyncStorage.multiSet([
+      [GHOSTS_KEY, JSON.stringify(result.ghosts)],
+      [POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)],
+    ]).catch(() => {});
   },
 
   setGhostRevenge: (data) => set({ ghostRevenge: data }),
