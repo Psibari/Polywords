@@ -127,3 +127,22 @@ shadow, and physical motion; pressed objects should feel displaced, not merely r
 
 Do not redesign `MaskBoard.tsx`, `SwipeMask.tsx`, or signature objects by convention.
 Inspect the live render path and get an approved direction first.
+
+
+## Polly Character Motion
+
+Polly's animation target is **character performance, not moving stickers**.
+
+The existing Home foundation is the starting point: layered facial/crown motion in `PollyPerchRig`, subtle ambient movement from `usePollyAmbientMotion`, and Home entrance/doze behavior in `PollyHomePerch`. Preserve the device-locked brow-follow alignment.
+
+Persistent life should combine irregular quiet time with small articulated behaviors such as attention/glance, posture or weight change, and settle. Important gameplay/relationship reactions may temporarily use stronger authored poses, but a reaction pose is not a permanent resting animation.
+
+Priority remains:
+
+`immediate gameplay event > relationship life profile > ambient idle`
+
+A whole-image rotate/translate loop is not sufficient evidence of life. The 2026-10-04 Face Rig **Alive Loop** is a rejected DEV experiment for production because it reads as a flat image rocking. Do not promote it to Home.
+
+Before adding new character art, audit existing `rig/`, `rig2/`, `flight-rig/`, static pose and clean reaction assets for a minimum viable articulated rig. Legacy sparse WEBP animations are reference/storyboard material, not the target animation architecture.
+
+Production Reduce Motion remains authoritative. DEV animation viewers may expose explicit manual bypasses solely for inspection; those bypasses must never leak into player-facing runtime behavior.
