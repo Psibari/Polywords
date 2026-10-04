@@ -6,6 +6,7 @@ import {
   resolveVisit,
 } from '../game/pollyVisitPolicy';
 import { useGameStore } from '../store/useGameStore';
+import type { PollyMoment } from '../game/pollyCharacter';
 
 export type ActiveVisit = {
   id: number;
@@ -17,7 +18,11 @@ export type ActiveVisit = {
 // queue; the pure policy decides, PollyHuntVisit animates. Exposes the same
 // firePollyEvent(event) signature as the quarantined usePollyAnimator so
 // MaskBoard's call sites stay untouched.
-export function usePollyVisits(isSpeedRound: boolean, ghostRunsMissed = 0) {
+export function usePollyVisits(
+  isSpeedRound: boolean,
+  ghostRunsMissed = 0,
+  ghostRelationshipMoment: PollyMoment | null = null,
+) {
   const rememberLine = useGameStore(s => s.rememberPollyLine);
   const [visit, setVisit] = useState<ActiveVisit | null>(null);
   const visitRef = useRef<ActiveVisit | null>(null);
@@ -66,7 +71,24 @@ export function usePollyVisits(isSpeedRound: boolean, ghostRunsMissed = 0) {
       recentLineIds: useGameStore.getState().pollyMemory.recentLineIds,
       lineRoll: Math.random(),
     };
-    const decision = resolveVisit(event, state);
+    let decision = resolveVisit(event, state);
+    // Returning Haunts are the one Hunt visit where durable relationship
+    // memory owns the words. The visit policy still owns timing, budget and
+    // body arc; only the authored line is sharpened by shared history.
+    if (
+      event === 'ghostEntry' &&
+      ghostRelationshipMoment &&
+      decision.action === 'visit'
+    ) {
+      decision = {
+        action: 'visit',
+        spec: {
+          ...decision.spec,
+          lineId: ghostRelationshipMoment.lineId,
+          line: ghostRelationshipMoment.line,
+        },
+      };
+    }
 
     // Flag bookkeeping happens on the EVENT, not only on shown visits:
     // the first wrong of a word consumes eligibility even if dropped.
@@ -98,7 +120,7 @@ export function usePollyVisits(isSpeedRound: boolean, ghostRunsMissed = 0) {
       return;
     }
     startVisit(decision.spec);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ghostRelationshipMoment]);
 
   // Drops the current visit and anything queued behind it, with no exit arc,
   // for a beat that owns the screen outright (a HUD lesson).
