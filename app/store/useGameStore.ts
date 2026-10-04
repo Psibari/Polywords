@@ -346,6 +346,7 @@ type GameStore = {
   pollyMemoryLoaded: boolean;
   loadPollyMemory: () => Promise<void>;
   rememberPollyVisit: (visitedAt?: number) => void;
+  seedPollyRelationshipForDev: (scenario: 'return' | 'comeback' | 'veteranSlump' | 'hauntRematch') => Promise<string>;
   rememberPollyLine: (
     lineId: PollyLineId,
     surface: 'home' | 'hunt' | 'daily' | 'results',
@@ -1016,6 +1017,83 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (pollyMemory === get().pollyMemory) return;
     set({ pollyMemory });
     AsyncStorage.setItem(POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)).catch(() => {});
+  },
+
+  seedPollyRelationshipForDev: async (scenario) => {
+    if (!__DEV__) return 'DEV only';
+
+    const current = get();
+    let progress = current.progress;
+    let pollyMemory = current.pollyMemory;
+
+    if (scenario === 'return') {
+      progress = {
+        ...progress,
+        runsCompleted: Math.max(progress.runsCompleted, 5),
+      };
+      pollyMemory = {
+        ...pollyMemory,
+        huntsRemembered: Math.max(pollyMemory.huntsRemembered, 5),
+        lastVisitAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
+        recentLineIds: [],
+      };
+    } else if (scenario === 'comeback') {
+      progress = {
+        ...progress,
+        runsCompleted: Math.max(progress.runsCompleted, 8),
+        recentHuntPerformance: ['struggle', 'struggle', 'steady'],
+      };
+      pollyMemory = {
+        ...pollyMemory,
+        huntsRemembered: Math.max(pollyMemory.huntsRemembered, 8),
+        recentLineIds: [],
+      };
+    } else if (scenario === 'veteranSlump') {
+      progress = {
+        ...progress,
+        runsCompleted: Math.max(progress.runsCompleted, 8),
+        recentHuntPerformance: ['struggle', 'struggle'],
+      };
+      pollyMemory = {
+        ...pollyMemory,
+        huntsRemembered: Math.max(pollyMemory.huntsRemembered, 8),
+        playerHuntsWon: Math.max(pollyMemory.playerHuntsWon, 2),
+        recentLineIds: [],
+      };
+    } else {
+      const ghost = current.ghosts.find(g => !g.isGhostedMaster);
+      if (!ghost) return 'No active Haunt. Create/keep one first.';
+      const word = ghost.word.trim().toUpperCase();
+      const today = getTodayDateString();
+      pollyMemory = {
+        ...pollyMemory,
+        recentLineIds: [],
+        wordRivalries: {
+          ...pollyMemory.wordRivalries,
+          [word]: {
+            word,
+            hauntHolds: Math.max(2, pollyMemory.wordRivalries[word]?.hauntHolds ?? 0),
+            banished: false,
+            firstHauntedAt: pollyMemory.wordRivalries[word]?.firstHauntedAt ?? today,
+            lastHauntAt: today,
+            banishedAt: null,
+          },
+        },
+      };
+    }
+
+    set({ progress, pollyMemory });
+    await AsyncStorage.multiSet([
+      [PROGRESS_KEY, JSON.stringify(progress)],
+      [POLLY_MEMORY_KEY, JSON.stringify(pollyMemory)],
+    ]);
+    return scenario === 'return'
+      ? 'Return seeded. Go Home now.'
+      : scenario === 'comeback'
+      ? 'Comeback seeded. Beat Polly in the next Hunt.'
+      : scenario === 'veteranSlump'
+      ? 'Veteran slump seeded. Struggle in the next Hunt.'
+      : 'Haunt rematch seeded. Start a Hunt that returns the active Haunt.';
   },
 
   rememberPollyLine: (lineId, surface) => {
