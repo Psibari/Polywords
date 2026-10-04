@@ -115,6 +115,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const setPlayerName = useGameStore(s => s.setPlayerName);
   const setDailyReminderEnabled = useGameStore(s => s.setDailyReminderEnabled);
   const resetProgressForDev = useGameStore(s => s.resetProgressForDev);
+  const seedPollyRelationshipForDev = useGameStore(s => s.seedPollyRelationshipForDev);
   const requestOnboardingReplay = useGameStore(s => s.requestOnboardingReplay);
   const hasResumableGame = useGameStore(s => s.hasResumableGame);
 
@@ -410,6 +411,32 @@ export default function SettingsScreen({ navigation }: Props) {
               style={[styles.card, styles.utilityCard]}
               imageStyle={styles.utilityImage}
             >
+              <View style={styles.devRelationshipGroup}>
+                <Text style={styles.rowLabel}>Polly Relationship Tests</Text>
+                <Text style={styles.rowNote}>Seeds real memory/history. Then follow the instruction shown.</Text>
+              </View>
+              {([
+                ['RETURN 3+ DAYS', 'return'],
+                ['COMEBACK', 'comeback'],
+                ['VETERAN SLUMP', 'veteranSlump'],
+                ['HAUNT REMATCH', 'hauntRematch'],
+              ] as const).map(([label, scenario]) => (
+                <Pressable
+                  key={scenario}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Seed Polly relationship test: ${label}`}
+                  onPress={async () => {
+                    const message = await seedPollyRelationshipForDev(scenario);
+                    Alert.alert(`DEV: ${label}`, message);
+                  }}
+                  style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                >
+                  <View style={styles.rowTextWrap}>
+                    <Text style={styles.rowLabel}>{label}</Text>
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </Pressable>
+              ))}
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowPollyAnimations(true)}
@@ -739,6 +766,12 @@ const styles = StyleSheet.create({
   placeholderRow: {
     opacity: 0.78,
     justifyContent: 'flex-start',
+  },
+  devRelationshipGroup: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: PW.color.borderMuted,
   },
   rowTextWrap: {
     flex: 1,
