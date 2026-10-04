@@ -330,3 +330,18 @@ Safety/side-effect rules:
 - Dedicated relationship tests now cover presentation selection and silence when no beat exists.
 
 Verification gate: pull this checkpoint, then run `npm run typecheck` and the full `npm test` suite before device feel testing.
+
+# Authored relationship dialogue checkpoint — 2026-10-04
+
+The four proven relationship beats now use dedicated authored dialogue rather than placeholder lines borrowed from ordinary Home/Results reactions.
+
+- **Comeback:** 18 approved lines.
+- **Veteran slump:** 30 approved lines.
+- **Return after absence:** 61 approved lines. `MISS ME?` and `BACK AGAIN?` reuse their canonical existing line IDs and are reserved for a true return; 59 additional return lines are relationship-specific.
+- **Haunt rematch:** 71 approved lines.
+
+That is **180 approved relationship remarks**. They remain deterministic and use the existing global `recentLineIds` anti-repeat path. Ordinary Home, wrong-swipe, streak, Boss, Daily, onboarding, Results, and Polybook writing retain their own jobs.
+
+Haunt copy is history-gated where wording makes a factual claim: the "beat you twice" line is first-rematch-only; repeated-loss wording requires prior holds; the comparative-record line remains authored but ineligible until the game can prove the comparison rather than bluffing with player history.
+
+The rejected legacy remarks removed before this checkpoint are not fallback copy. A relationship beat must use its dedicated pool rather than resurrecting retired dialogue.
