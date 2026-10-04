@@ -345,3 +345,28 @@ That is **180 approved relationship remarks**. They remain deterministic and use
 Haunt copy is history-gated where wording makes a factual claim: the "beat you twice" line is first-rematch-only; repeated-loss wording requires prior holds; the comparative-record line remains authored but ineligible until the game can prove the comparison rather than bluffing with player history.
 
 The rejected legacy remarks removed before this checkpoint are not fallback copy. A relationship beat must use its dedicated pool rather than resurrecting retired dialogue.
+
+
+## Relationship life layer
+
+Polly's memory now drives a quiet physical disposition as well as authored dialogue.
+
+The pure `pollyLifeProfile` resolver maps proven relationship facts into five body-language profiles:
+
+- `neutral` — ordinary baseline.
+- `cocky` — Polly has been getting the better of an established player; she settles faster and carries herself more comfortably.
+- `watchful` — the player is dangerous lately or has returned after an absence; Polly stays awake longer and watches more closely.
+- `rattled` — a comeback after a rough patch has reminded Polly that this player is a threat.
+- `hauntFocused` — a returning Haunt has specific shared history and gets sharper attention.
+
+Named relationship beats take priority. Between beats, recent proven form can keep the emotional weather alive without storing a new label in save data.
+
+Presentation hierarchy is locked as:
+
+`immediate gameplay event > relationship life profile > ambient idle`
+
+The life profile reuses the existing face rig and ambient-motion systems. It does not create a second animation engine. Reduce Motion remains authoritative.
+
+Home uses the profile for eye/brow/mouth/crown treatment, ambient intensity, and doze timing. Results continues to use relationship-specific outcome poses. Returning Haunt dialogue is injected into the existing Hunt visit arc so the visit policy still owns timing/budget while durable relationship memory owns the rematch words.
+
+DEV Settings includes **Polly Life Profiles** for silent side-by-side feel checks. The profile viewer is a tuning/verification surface only and never writes player memory.
