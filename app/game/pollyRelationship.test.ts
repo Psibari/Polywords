@@ -1,6 +1,7 @@
 import {
   derivePollyRelationshipContext,
   resolvePollyRelationshipBeat,
+  resolvePollyRelationshipPresentation,
 } from './pollyRelationship';
 import {
   DEFAULT_POLLY_MEMORY,
@@ -120,3 +121,61 @@ function context(input: {
 }
 
 console.log('OK — pollyRelationship: all assertions passed');
+
+
+{
+  const presentation = resolvePollyRelationshipPresentation({
+    decision: { beat: 'returningAfterAbsence', wordRivalry: null },
+    recentLineIds: ['homeWordsAsked'],
+    lineRoll: 0,
+  });
+  eq(presentation?.moment?.lineId, 'homeBackAgain', 'presentation.returnFreshLine');
+  eq(presentation?.poseIntent, 'default', 'presentation.returnKeepsHomeBody');
+}
+
+{
+  const presentation = resolvePollyRelationshipPresentation({
+    decision: { beat: 'comeback', wordRivalry: null },
+    recentLineIds: [],
+    lineRoll: 0,
+  });
+  eq(presentation?.moment?.lineId, 'resultsIveNoticed', 'presentation.comebackLine');
+  eq(presentation?.poseIntent, 'rattled', 'presentation.comebackBody');
+}
+
+{
+  const presentation = resolvePollyRelationshipPresentation({
+    decision: { beat: 'veteranSlump', wordRivalry: null },
+    recentLineIds: [],
+    lineRoll: 0,
+  });
+  eq(presentation?.moment?.lineId, 'resultsTrapsRemember', 'presentation.veteranSlumpLine');
+  eq(presentation?.poseIntent, 'smug', 'presentation.veteranSlumpBody');
+}
+
+{
+  const rivalry = {
+    word: 'BANK',
+    hauntHolds: 2,
+    banished: false,
+    firstHauntedAt: '2026-10-01',
+    lastHauntAt: '2026-10-03',
+    banishedAt: null,
+  };
+  const presentation = resolvePollyRelationshipPresentation({
+    decision: { beat: 'hauntRematch', wordRivalry: rivalry },
+    recentLineIds: [],
+    lineRoll: 0,
+  });
+  eq(presentation?.moment?.lineId, 'huntRemember', 'presentation.hauntLine');
+  eq(presentation?.poseIntent, 'point', 'presentation.repeatHauntBody');
+}
+
+{
+  const presentation = resolvePollyRelationshipPresentation({
+    decision: null,
+    recentLineIds: [],
+    lineRoll: 0,
+  });
+  eq(presentation, null, 'presentation.noBeatNoNoise');
+}
