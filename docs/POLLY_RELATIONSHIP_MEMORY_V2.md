@@ -283,3 +283,28 @@ Deliberately unchanged:
 Verification status:
 - Source was re-fetched from the target branch after writes and the event wiring was inspected in place.
 - Full TypeScript/test execution is still required in the normal repo runtime before this foundation is called locked. GitHub content access here does not provide the repo's installed runtime, so no build-pass claim is made.
+
+
+---
+
+# Relationship behavior rules checkpoint — 2026-10-04
+
+The first observable-behavior policy layer is now implemented as pure, presentation-free logic in `app/game/pollyRelationship.ts`.
+
+Initial beats:
+- **returningAfterAbsence** — Home only, established player, at least 3 days since the last trustworthy visit timestamp.
+- **comeback** — Results only, player beats Polly after at least two struggles in the immediately preceding three-result window.
+- **veteranSlump** — Results only, established player with three consecutive current struggles. Establishment can be proven by runs, mastery, or lifetime Hunt wins.
+- **hauntRematch** — word entry only, current word has an unresolved durable Haunt rivalry.
+
+Priority:
+1. word-specific shared history;
+2. Results reversal/form recognition;
+3. Home return recognition;
+4. otherwise no special relationship beat.
+
+These rules intentionally produce **behavior facts, not dialogue**. They do not change visuals, animations, authored line pools, Polybook layout, or save schema. The presentation layer will decide whether a beat earns speech, an existing pose, timing, or silence.
+
+The thresholds above are V1 behavior-policy constants, not persisted player data. They can be tuned without save migration.
+
+Dedicated deterministic tests were added in `app/game/pollyRelationship.test.ts` and registered in the full `npm test` suite. Runtime verification is required after pulling this checkpoint before any presentation consumer is wired.
