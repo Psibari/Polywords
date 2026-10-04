@@ -89,6 +89,10 @@ function clamp(value: number, min: number, max: number) {
 export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const reduceMotion = useReducedMotionPreference();
   const motionAllowed = reduceMotion === false;
+  // DEV-only animation proof: Alive Loop must remain testable even when the
+  // app/system Reduce Motion preference is enabled. Production motion still
+  // respects accessibility; only this manual lab control bypasses the gate.
+  const lifeMotionAllowed = visible;
 
   const blinkValue = useRef(new Animated.Value(1)).current;
   const browValue = useRef(new Animated.Value(0)).current;
@@ -230,7 +234,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   // existing blink/breathe/face controls. This is deliberately in the Face
   // Rig DEV viewer first; nothing here changes production Home Polly.
   useEffect(() => {
-    if (!visible || !lifeOn || !motionAllowed) {
+    if (!visible || !lifeOn || !lifeMotionAllowed) {
       lifeXValue.stopAnimation();
       lifeYValue.stopAnimation();
       lifeRotateValue.stopAnimation();
@@ -282,7 +286,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
       lifeYValue.setValue(0);
       lifeRotateValue.setValue(0);
     };
-  }, [visible, lifeOn, motionAllowed, lifeXValue, lifeYValue, lifeRotateValue]);
+  }, [visible, lifeOn, lifeMotionAllowed, lifeXValue, lifeYValue, lifeRotateValue]);
 
   function nudgeBlink(delta: number) {
     if (blinkOn) return;
@@ -435,29 +439,25 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
             <View style={styles.groupCard}>
               <View style={styles.groupRow}>
                 <Text style={styles.groupTitle}>ALIVE LOOP</Text>
-                {motionAllowed ? (
-                  <Pressable
-                    accessibilityRole="switch"
-                    accessibilityLabel="Toggle irregular Polly micro performances"
-                    accessibilityState={{ checked: lifeOn }}
-                    onPress={() => {
-                      const next = !lifeOn;
-                      setLifeOn(next);
-                      if (next) {
-                        setBlinkOn(true);
-                        setBreatheOn(true);
-                      }
-                    }}
-                    style={[styles.toggleTrack, lifeOn && styles.toggleTrackOn]}
-                  >
-                    <View style={[styles.toggleKnob, lifeOn && styles.toggleKnobOn]} />
-                  </Pressable>
-                ) : (
-                  <Text style={styles.reduceMotionNote}>Reduce Motion — disabled</Text>
-                )}
+                <Pressable
+                  accessibilityRole="switch"
+                  accessibilityLabel="Toggle irregular Polly micro performances"
+                  accessibilityState={{ checked: lifeOn }}
+                  onPress={() => {
+                    const next = !lifeOn;
+                    setLifeOn(next);
+                    if (next && motionAllowed) {
+                      setBlinkOn(true);
+                      setBreatheOn(true);
+                    }
+                  }}
+                  style={[styles.toggleTrack, lifeOn && styles.toggleTrackOn]}
+                >
+                  <View style={[styles.toggleKnob, lifeOn && styles.toggleKnobOn]} />
+                </Pressable>
               </View>
               <Text style={styles.controlLabel}>
-                RANDOM LEAN + SETTLE · BLINK + BREATHE · USE CROWN TILT SEPARATELY
+                RANDOM LEAN + SETTLE · DEV BYPASSES REDUCE MOTION · BLINK/BREATHE KEEP THEIR OWN ACCESSIBILITY GATE
               </Text>
             </View>
             <View style={styles.groupCard}>
