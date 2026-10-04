@@ -36,8 +36,8 @@ assert.equal(resolvePollyLifeProfile({
     word: 'CASE',
     hauntHolds: 1,
     banished: false,
-    firstHauntedAt: 1,
-    lastHauntAt: 2,
+    firstHauntedAt: '2026-09-01',
+    lastHauntAt: '2026-09-02',
     banishedAt: null,
   } },
 }).name, 'hauntFocused');
