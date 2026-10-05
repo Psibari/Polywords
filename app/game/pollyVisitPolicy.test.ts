@@ -33,7 +33,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 // tiles + gauntlet caused her to overlap/hide gauntlet card text — device
 // test 2026-07-31). She does NOT come back for the gauntlet — the throw beat
 // that used to bring her back was cut (2026-09-10); see allMasksFound below.
-// Line now draws from a 6-line pool (pickFreshLine) same as WRONG_SMUG;
+// Line now draws from a 5-line pool (pickFreshLine) same as WRONG_SMUG;
 // lineRoll 0 with no recent history picks the pool's first entry.
 {
   const s = visitSpec(resolveVisit('bossEntry', idle), 'bossEntry');
@@ -45,7 +45,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.sfx, 'pollySqwawkShort', 'bossEntry.sfx');
   eq(s.holdPerch, false, 'bossEntry.holdPerch');
   eq(s.perchMs, 4200, 'bossEntry.perchMs');
-  eq(s.perchScale, 1.45, 'bossEntry.perchScale');
+  eq(s.perchScale, 1.05, 'bossEntry.perchScale');
 }
 
 // bossEntry avoids a recently-used line from the pool, same mechanism as
@@ -148,63 +148,43 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
     ghostRunsMissed: 0, recentLineIds: [], lineRoll: 0,
   };
   eq(resolveVisit('bossEntry', jammed).action, 'visit', 'bossEntry while jammed');
-  // No longer a guaranteed beat — the gauntlet throw was cut (2026-09-10).
-  // Kept in this block to prove it is silent under a jammed budget too.
   eq(resolveVisit('allMasksFound', jammed).action, 'none', 'allMasksFound silent while jammed');
   eq(resolveVisit('gameOver', jammed).action, 'visit', 'gameOver while jammed');
   eq(resolveVisit('gateMasteredBoss', jammed).action, 'visit', 'gateMasteredBoss while jammed');
 }
 
 // ── cleanSweep tiering ──────────────────────────────────────────
-
-// First of the run: guaranteed shocked
 {
   const s = visitSpec(resolveVisit('cleanSweep', idle), 'cleanSweep first');
   eq(s.kind, 'guaranteed', 'cleanSweep first.kind');
   eq(s.perchPose, 'shocked', 'cleanSweep first.perchPose');
   eq(s.line, "Bet you can't do that again.", 'cleanSweep first.line');
-  eq(s.sfx, null, 'cleanSweep first.sfx'); // shocked recoil is silent — squawk was overused
+  eq(s.sfx, null, 'cleanSweep first.sfx');
   eq(s.holdPerch, false, 'cleanSweep first.holdPerch');
 }
-
-// Later ones: demoted to heckle (still fires when budget free)
 {
-  const s = visitSpec(
-    resolveVisit('cleanSweep', { ...idle, cleanSweepSeenThisRun: true }),
-    'cleanSweep repeat',
-  );
+  const s = visitSpec(resolveVisit('cleanSweep', { ...idle, cleanSweepSeenThisRun: true }), 'cleanSweep repeat');
   eq(s.kind, 'heckle', 'cleanSweep repeat.kind');
   eq(s.perchPose, 'shocked', 'cleanSweep repeat.perchPose');
   eq(s.sfx, null, 'cleanSweep repeat.sfx');
 }
-
-// Later ones are dropped when the word's heckle budget is spent
-eq(
-  resolveVisit('cleanSweep', { ...idle, cleanSweepSeenThisRun: true, heckleUsedThisWord: true }).action,
-  'none',
-  'cleanSweep repeat with budget spent',
-);
+eq(resolveVisit('cleanSweep', { ...idle, cleanSweepSeenThisRun: true, heckleUsedThisWord: true }).action, 'none', 'cleanSweep repeat with budget spent');
 
 // ── Heckles ─────────────────────────────────────────────────────
-
-// wrong: first of the word → smug "Thought so."
 {
   const s = visitSpec(resolveVisit('wrong', idle), 'wrong first');
   eq(s.kind, 'heckle', 'wrong.kind');
   eq(s.perchPose, 'smug', 'wrong.perchPose');
   eq(s.line, 'Thought so.', 'wrong.line');
-  eq(s.sfx, null, 'wrong.sfx'); // the wrong swipe itself already squawks in MaskBoard
+  eq(s.sfx, null, 'wrong.sfx');
 }
-
-// wrong: second wrong of the same word is ignored
 eq(resolveVisit('wrong', { ...idle, wrongSeenThisWord: true }).action, 'none', 'second wrong');
 
 const streak = visitSpec(resolveVisit('streakX10', idle), 'streakX10');
 eq(streak.perchPose, 'rattled', 'streakX10 perches rattled');
 eq(streak.kind, 'heckle', 'streakX10 is a heckle');
 
-// hesitation6s → point taunt; 3s and 9s are ignored. Line draws from a
-// 2-line pool (pickFreshLine) same as bossEntry/WRONG_SMUG.
+// hesitation6s → point taunt; 3s and 9s are ignored.
 {
   const s = visitSpec(resolveVisit('hesitation6s', idle), 'hesitation6s');
   eq(s.perchPose, 'point', 'hesitation6s.perchPose');
@@ -213,10 +193,7 @@ eq(streak.kind, 'heckle', 'streakX10 is a heckle');
   eq(s.sfx, null, 'hesitation6s.sfx');
 }
 {
-  const s = visitSpec(
-    resolveVisit('hesitation6s', { ...idle, recentLineIds: ['huntHesitation'] }),
-    'hesitation6s avoids recent',
-  );
+  const s = visitSpec(resolveVisit('hesitation6s', { ...idle, recentLineIds: ['huntHesitation'] }), 'hesitation6s avoids recent');
   eq(s.lineId, 'huntAreYouSure', 'hesitation6s avoids recent.lineId');
 }
 eq(resolveVisit('hesitation3s', idle).action, 'none', 'hesitation3s ignored');
@@ -228,18 +205,11 @@ eq(resolveVisit('hesitation9s', idle).action, 'none', 'hesitation9s ignored');
   eq(s.perchPose, 'smug', 'ghostEntry.perchPose');
   eq(s.line, 'Remember me.', 'ghostEntry.line');
 }
-
-// A repeatedly missed haunt keeps the same scarce line but points instead of
-// replaying the same smug pose: memory is visible without adding chatter.
 {
-  const s = visitSpec(
-    resolveVisit('ghostEntry', { ...idle, ghostRunsMissed: 2 }),
-    'ghostEntry repeated',
-  );
+  const s = visitSpec(resolveVisit('ghostEntry', { ...idle, ghostRunsMissed: 2 }), 'ghostEntry repeated');
   eq(s.perchPose, 'point', 'ghostEntry repeated.perchPose');
 }
 
-// Heckles drop when busy, when budget spent, and in speed rounds
 for (const [i, block] of [
   { ...idle, busy: true },
   { ...idle, heckleUsedThisWord: true },
@@ -250,22 +220,12 @@ for (const [i, block] of [
   eq(resolveVisit('ghostEntry', block).action, 'none', `blocked ghostEntry #${i}`);
 }
 
-// ── Ignored events + budget reset ───────────────────────────────
-
 eq(resolveVisit('wordEntry', idle).action, 'wordEntry', 'wordEntry resets budget');
-
-for (const ev of [
-  'correct', 'oneWrongMove',
-  'hiddenFound', 'hesitationCleared', 'ghostFoundLate', 'ghostDissolved',
-] as const) {
+for (const ev of ['correct', 'oneWrongMove', 'hiddenFound', 'hesitationCleared', 'ghostFoundLate', 'ghostDissolved'] as const) {
   eq(resolveVisit(ev, idle).action, 'none', `${ev} ignored`);
 }
 
 // ── oneHeartLeft ─────────────────────────────────────────────────
-// Substitutes for 'wrong' on the swipe that drops the player to their last
-// feather — guaranteed, so it must fire even when every heckle budget is
-// jammed and there is no time for a squawk (MaskBoard already squawks on
-// the wrong swipe itself).
 {
   const jammed: PollyBudgetState = {
     busy: true, heckleUsedThisWord: true, wrongSeenThisWord: true,
@@ -276,10 +236,6 @@ for (const ev of [
   eq(s.kind, 'guaranteed', 'oneHeartLeft.kind');
   eq(s.sfx, null, 'oneHeartLeft.sfx');
 }
-
-// perchPose travels with the drawn line: two of the five only work with her
-// eyes shut. Roll values are chosen well inside each of the pool's five
-// buckets (pool order: LookAtMine, Plucked, AroundHere, Wait, Check).
 {
   const rolls: [number, PollyLineId, 'smug' | 'asleep'][] = [
     [0.05, 'featherOneLookAtMine', 'smug'],
@@ -289,21 +245,13 @@ for (const ev of [
     [0.85, 'featherOneCheck', 'smug'],
   ];
   for (const [roll, expectedLineId, expectedPose] of rolls) {
-    const s = visitSpec(
-      resolveVisit('oneHeartLeft', { ...idle, lineRoll: roll }),
-      `oneHeartLeft roll ${roll}`,
-    );
+    const s = visitSpec(resolveVisit('oneHeartLeft', { ...idle, lineRoll: roll }), `oneHeartLeft roll ${roll}`);
     eq(s.lineId, expectedLineId, `oneHeartLeft roll ${roll}.lineId`);
     eq(s.perchPose, expectedPose, `oneHeartLeft roll ${roll}.perchPose`);
   }
 }
-
-// pickFreshLine still avoids recentLineIds for this pool.
 {
-  const s = visitSpec(
-    resolveVisit('oneHeartLeft', { ...idle, lineRoll: 0, recentLineIds: ['featherOneLookAtMine'] }),
-    'oneHeartLeft avoids recent',
-  );
+  const s = visitSpec(resolveVisit('oneHeartLeft', { ...idle, lineRoll: 0, recentLineIds: ['featherOneLookAtMine'] }), 'oneHeartLeft avoids recent');
   if (s.lineId === 'featherOneLookAtMine') throw new Error('oneHeartLeft avoids recent: repeated a recent line');
 }
 
