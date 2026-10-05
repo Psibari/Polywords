@@ -72,7 +72,8 @@ if (options && (options.help || !options.input)) {
       printList('Structural blockers', report.blockers);
       printList('Launch blockers', report.launchBlockers);
       printList('Warnings', report.warnings);
-      console.log('Editorial approval: still required; this gate cannot prove truth, voice, sourcing, or legal trap fairness.');
+      printList('Editorial review queue', report.editorialReview);
+      console.log('Editorial approval: required. Review findings are heuristic flags, not automatic writing failures or permission to rewrite approved copy.');
     }
 
     if (failed) process.exitCode = 1;
