@@ -41,34 +41,31 @@ export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
   flyPose: 'fly' | 'flyAngry' | 'masterShock' | 'hauntTaunt';
   perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'masterAngry' | 'hauntTaunt' | 'asleep';
-  exitPose?: 'fly' | 'sulk'; // pose held while flying out; defaults to 'fly'
+  exitPose?: 'fly' | 'sulk';
   lineId: PollyLineId | null;
   line: string | null;
   sfx: PollyVisitSfx | null;
-  holdPerch: boolean; // terminal beats stay perched until the board unmounts
+  holdPerch: boolean;
   perchMs: number;
-  perchScale?: number; // multiplies her rendered scale on the perch; defaults to 1 if absent
+  perchScale?: number;
 };
 
 export type PollyBudgetState = {
-  busy: boolean;                 // a visit is currently on screen
-  heckleUsedThisWord: boolean;   // one heckle visit per word
-  wrongSeenThisWord: boolean;    // only the FIRST wrong swipe of a word heckles
-  cleanSweepSeenThisRun: boolean;// first cleanSweep of the run is guaranteed
-  isSpeedRound: boolean;         // speed rounds suppress heckles entirely
-  ghostRunsMissed: number;       // repeated haunt history sharpens body language
-  recentLineIds: PollyLineId[];  // last few lines she used, any surface
-  lineRoll: number;              // 0–1, supplied by the caller; keeps this file pure
+  busy: boolean;
+  heckleUsedThisWord: boolean;
+  wrongSeenThisWord: boolean;
+  cleanSweepSeenThisRun: boolean;
+  isSpeedRound: boolean;
+  ghostRunsMissed: number;
+  recentLineIds: PollyLineId[];
+  lineRoll: number;
 };
 
 export type VisitDecision =
   | { action: 'none' }
-  | { action: 'wordEntry' } // caller resets per-word budget flags
+  | { action: 'wordEntry' }
   | { action: 'visit'; spec: VisitSpec };
 
-// Generic over the id union so the Polybook's own line ids
-// (pollyBookLines.ts) reuse this rather than growing a second picker. Callers
-// passing PollyLineId[] are unaffected — T infers to PollyLineId.
 export function pickFreshLine<T extends string>(
   candidates: T[],
   recent: readonly string[],
@@ -101,28 +98,12 @@ const BOSS_ENTRY_LINES: PollyLineId[] = [
 
 const BOSS_ENTRY: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
-  // Placeholder — overwritten at the call site with a pickFreshLine draw
-  // over BOSS_ENTRY_LINES, same pattern as WRONG_SMUG.
   lineId: 'bossCage', line: POLLY_LINES.bossCage, sfx: 'pollySqwawkShort',
-  // Pops in for the entrance line, then flies back out — she does not stay
-  // perched through the visible tiles or the hidden gauntlet. Keep this
-  // boss-specific visit near normal Hunt scale: the old 1.45 multiplier
-  // made Polly cover the gauntlet card and collide with her own bubble on
-  // device. The shared Hunt stage geometry is otherwise correct, so this is
-  // deliberately a visit-level correction rather than a global Polly shrink.
+  // Device-locked 2026-10-05: keep boss-entry Polly near normal Hunt scale
+  // so she clears the gauntlet card and her speech bubble.
   holdPerch: false, perchMs: 4200, perchScale: 1.05,
 };
 
-// She arrives still swinging and collapses in front of the player:
-// angry fly-in, hunched landing (runPunch's 'sulk' deflating droop),
-// one line, then she sinks off still hunched. Silent on purpose —
-// perform.onMasteredSequence already owns this moment's audio and a
-// squawk would fight the deflation. perchMs 1600 puts her off screen
-// ~400ms before the MASTERED card auto-resolves at 2800ms, on all
-// three mastery paths (boss 400/700, haunt 180/550, plain 2600/3450),
-// so the card is alone on screen when the run resolves. This
-// supersedes the previous silent-defeat treatment, per Pete
-// 2026-08-29.
 const MASTERED_REACTION: VisitSpec = {
   kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'sulk',
   exitPose: 'sulk',
@@ -135,9 +116,8 @@ const MASTERED_REACTION: VisitSpec = {
 const HAUNTED_GLOAT: VisitSpec = {
   kind: 'guaranteed', flyPose: 'hauntTaunt', perchPose: 'hauntTaunt',
   lineId: null, line: null, sfx: 'pollySqwawkLaugh',
-  // This is the boss-loss payoff, not ordinary gameplay staging. Give the
-  // taunt enough visual weight to land after HAUNTED without changing every
-  // Hunt visit or the boss-entry safe scale above.
+  // Device-locked 2026-10-05: Haunted loss gets a larger payoff than
+  // ordinary Hunt staging without returning to the old oversized boss entry.
   holdPerch: true, perchMs: 2500, perchScale: 1.24,
 };
 
@@ -146,17 +126,12 @@ const RETURNING_HAUNT_GLOAT: VisitSpec = {
   sfx: null,
 };
 
-// ResultsScreen owns the one terminal Hunt-loss chuckle. Keeping the board
-// visit silent prevents the death hold and Results transition from requesting
-// the same favorite sound twice.
 const GAME_OVER_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
   lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: null,
   holdPerch: true, perchMs: 2500,
 };
 
-// A failed haunt does NOT end the run — she laughs and flies out, unlike
-// gameOver which holds the perch (terminal beat).
 const HAUNT_FAILED_LAUGH: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
   lineId: 'huntLaugh', line: POLLY_LINES.huntLaugh, sfx: 'pollySqwawkLaugh',
@@ -166,7 +141,7 @@ const HAUNT_FAILED_LAUGH: VisitSpec = {
 const CLEAN_SWEEP_FIRST: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'shocked',
   lineId: 'huntCleanSweep', line: POLLY_LINES.huntCleanSweep,
-  sfx: null, // silent recoil — the squawk was overused
+  sfx: null,
   holdPerch: false, perchMs: 2000,
 };
 
@@ -177,20 +152,16 @@ const CLEAN_SWEEP_REPEAT: VisitSpec = {
 const WRONG_SMUG: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'smug',
   lineId: 'huntThoughtSo', line: POLLY_LINES.huntThoughtSo,
-  sfx: null, // the wrong swipe itself already squawks in MaskBoard
+  sfx: null,
   holdPerch: false, perchMs: 1800,
 };
 
-// Fires on the first wrong swipe of a word — up to ~7 times in a full run,
-// which makes it the most-repeated line in the game. Weighted toward quiet
-// lines on purpose; the loud ones wear out fastest.
 const WRONG_HECKLE_LINES: PollyLineId[] = [
   'huntThoughtSo',
   'huntGotcha',
   'huntThereItIs',
   'huntEveryTime',
   'huntStillWorks',
-
   'huntAllMe',
   'huntGoodIsntIt',
   'huntLoveThisGame',
@@ -200,9 +171,6 @@ const WRONG_HECKLE_LINES: PollyLineId[] = [
   'huntZing',
 ];
 
-// Ten correct in a row. She is losing and covering — the pose is a flinch
-// with a forced grin, and every line is her explaining why it doesn't count.
-// Heckle, not guaranteed: it is a flourish, and it fires again at twenty.
 const STREAK_RATTLED: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'rattled',
   lineId: 'huntStreakSoWhat', line: POLLY_LINES.huntStreakSoWhat,
@@ -220,87 +188,102 @@ const STREAK_LINES: PollyLineId[] = [
   'streakLucky',
   'streakYikes',
   'streakNotOver',
-  'streakFluke',
+  'streakStillGetYa',
+  'streakBirdBrain',
+  'streakRuffling',
 ];
 
-const HESITATION_LINES: PollyLineId[] = [
-  'huntHesitationYes',
-  'huntHesitationNo',
-  'huntHesitationMaybe',
+const HESITATION_LINES: PollyLineId[] = ['huntHesitation', 'huntAreYouSure'];
+
+const HESITATION_POINT: VisitSpec = {
+  kind: 'heckle', flyPose: 'fly', perchPose: 'point',
+  lineId: 'huntHesitation', line: POLLY_LINES.huntHesitation, sfx: null,
+  holdPerch: false, perchMs: 2000,
+};
+
+const GHOST_SMUG: VisitSpec = {
+  kind: 'heckle', flyPose: 'fly', perchPose: 'smug',
+  lineId: 'huntRemember', line: POLLY_LINES.huntRemember, sfx: null,
+  holdPerch: false, perchMs: 1800,
+};
+
+const ONE_FEATHER_LINES: PollyLineId[] = [
+  'featherOneLookAtMine',
+  'featherOnePlucked',
+  'featherOneAroundHere',
+  'featherOneWait',
+  'featherOneCheck',
 ];
 
-function lineSpec(base: VisitSpec, id: PollyLineId): VisitSpec {
-  return { ...base, lineId: id, line: POLLY_LINES[id] };
-}
+const ONE_FEATHER_POSE: Record<string, 'smug' | 'asleep'> = {
+  featherOneLookAtMine: 'smug',
+  featherOnePlucked: 'asleep',
+  featherOneAroundHere: 'smug',
+  featherOneWait: 'asleep',
+  featherOneCheck: 'smug',
+};
 
-function resolveLine(base: VisitSpec, ids: PollyLineId[], state: PollyBudgetState): VisitSpec {
-  return lineSpec(base, pickFreshLine(ids, state.recentLineIds, state.lineRoll));
-}
+const ONE_FEATHER: VisitSpec = {
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'smug',
+  lineId: 'featherOneLookAtMine',
+  line: POLLY_LINES.featherOneLookAtMine,
+  sfx: null,
+  holdPerch: false, perchMs: 2000,
+};
 
 export function resolveVisit(event: PollyEvent, state: PollyBudgetState): VisitDecision {
-  switch (event) {
-    case 'wordEntry':
-      return { action: 'wordEntry' };
-    case 'huntIntro':
-      return { action: 'visit', spec: HUNT_INTRO };
-    case 'hauntIntro':
-      return { action: 'visit', spec: HAUNT_INTRO };
-    case 'bossEntry':
-      return { action: 'visit', spec: resolveLine(BOSS_ENTRY, BOSS_ENTRY_LINES, state) };
-    case 'ghostEntry':
-      return { action: 'visit', spec: resolveLine({
-        kind: 'guaranteed', flyPose: 'fly',
-        perchPose: state.ghostRunsMissed >= 2 ? 'point' : 'smug',
-        lineId: 'huntHauntRemember', line: POLLY_LINES.huntHauntRemember,
-        sfx: 'pollySqwawkShort', holdPerch: false, perchMs: 2300,
-      }, ['huntHauntRemember'], state) };
-    case 'ghostFoundLate':
-      return { action: 'visit', spec: {
-        kind: 'guaranteed', flyPose: 'fly', perchPose: 'laugh',
-        lineId: 'huntHauntLucky', line: POLLY_LINES.huntHauntLucky,
-        sfx: 'pollySqwawkShort', holdPerch: false, perchMs: 1800,
-      } };
-    case 'ghostDissolved':
-      return NONE;
-    case 'correct':
-      return NONE;
-    case 'allMasksFound':
-      // The old gauntlet "throw" return was cut. Polly does NOT fly back in
-      // when the hidden gauntlet begins. Boss entry already gave her the
-      // one pre-gauntlet appearance; this beat belongs to the cards.
-      return NONE;
-    case 'hiddenFound':
-      return NONE;
-    case 'cleanSweep':
-      return { action: 'visit', spec: state.cleanSweepSeenThisRun ? CLEAN_SWEEP_REPEAT : CLEAN_SWEEP_FIRST };
-    case 'wrong':
-      if (state.isSpeedRound || state.heckleUsedThisWord || state.wrongSeenThisWord || state.busy) return NONE;
-      return { action: 'visit', spec: resolveLine(WRONG_SMUG, WRONG_HECKLE_LINES, state) };
-    case 'oneHeartLeft':
-      if (state.isSpeedRound || state.heckleUsedThisWord || state.wrongSeenThisWord || state.busy) return NONE;
-      return { action: 'visit', spec: resolveLine(WRONG_SMUG, WRONG_HECKLE_LINES, state) };
-    case 'oneWrongMove':
-      return NONE;
-    case 'hesitation3s':
-      if (state.isSpeedRound || state.heckleUsedThisWord || state.busy) return NONE;
-      return { action: 'visit', spec: resolveLine({ ...WRONG_SMUG, perchPose: 'point' }, HESITATION_LINES, state) };
-    case 'hesitation6s':
-    case 'hesitation9s':
-    case 'hesitationCleared':
-      return NONE;
-    case 'streakX10':
-      if (state.isSpeedRound || state.busy) return NONE;
-      return { action: 'visit', spec: resolveLine(STREAK_RATTLED, STREAK_LINES, state) };
-    case 'gameOver':
-      return { action: 'visit', spec: GAME_OVER_LAUGH };
-    case 'gateMastered':
-    case 'gateMasteredBoss':
-      return { action: 'visit', spec: MASTERED_REACTION };
-    case 'hiddenMasterFailed':
-      return { action: 'visit', spec: HAUNTED_GLOAT };
-    case 'hauntMasterFailed':
-      return { action: 'visit', spec: RETURNING_HAUNT_GLOAT };
-    case 'hauntFailed':
-      return { action: 'visit', spec: HAUNT_FAILED_LAUGH };
+  if (event === 'wordEntry') return { action: 'wordEntry' };
+
+  // Guaranteed beats ignore heckle budgets.
+  if (event === 'huntIntro') return { action: 'visit', spec: HUNT_INTRO };
+  if (event === 'hauntIntro') return { action: 'visit', spec: HAUNT_INTRO };
+  if (event === 'bossEntry') {
+    const lineId = pickFreshLine(BOSS_ENTRY_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...BOSS_ENTRY, lineId, line: POLLY_LINES[lineId] } };
   }
+  if (event === 'allMasksFound') return NONE;
+  if (event === 'gateMasteredBoss') return { action: 'visit', spec: MASTERED_REACTION };
+  if (event === 'gateMastered') return { action: 'visit', spec: MASTERED_REACTION };
+  if (event === 'hiddenMasterFailed') return { action: 'visit', spec: HAUNTED_GLOAT };
+  if (event === 'hauntMasterFailed') return { action: 'visit', spec: RETURNING_HAUNT_GLOAT };
+  if (event === 'gameOver') return { action: 'visit', spec: GAME_OVER_LAUGH };
+  if (event === 'hauntFailed') return { action: 'visit', spec: HAUNT_FAILED_LAUGH };
+  if (event === 'oneHeartLeft') {
+    const lineId = pickFreshLine(ONE_FEATHER_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: {
+      ...ONE_FEATHER, lineId, line: POLLY_LINES[lineId],
+      perchPose: ONE_FEATHER_POSE[lineId],
+    }};
+  }
+  if (event === 'cleanSweep' && !state.cleanSweepSeenThisRun) {
+    return { action: 'visit', spec: CLEAN_SWEEP_FIRST };
+  }
+
+  // Heckles: max one per word, dropped rather than queued.
+  const heckleBlocked = state.busy || state.heckleUsedThisWord || state.isSpeedRound;
+  if (heckleBlocked) return NONE;
+
+  if (event === 'wrong' && !state.wrongSeenThisWord) {
+    const lineId = pickFreshLine(WRONG_HECKLE_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...WRONG_SMUG, lineId, line: POLLY_LINES[lineId] } };
+  }
+  if (event === 'streakX10') {
+    const lineId = pickFreshLine(STREAK_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...STREAK_RATTLED, lineId, line: POLLY_LINES[lineId] } };
+  }
+  if (event === 'hesitation6s') {
+    const lineId = pickFreshLine(HESITATION_LINES, state.recentLineIds, state.lineRoll);
+    return { action: 'visit', spec: { ...HESITATION_POINT, lineId, line: POLLY_LINES[lineId] } };
+  }
+  if (event === 'ghostEntry') {
+    return {
+      action: 'visit',
+      spec: state.ghostRunsMissed >= 2
+        ? { ...GHOST_SMUG, perchPose: 'point' }
+        : GHOST_SMUG,
+    };
+  }
+  if (event === 'cleanSweep') return { action: 'visit', spec: CLEAN_SWEEP_REPEAT };
+
+  return NONE;
 }
