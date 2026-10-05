@@ -4,7 +4,6 @@ import {
   Image,
   ImageSourcePropType,
   StyleSheet,
-  View,
 } from 'react-native';
 import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
@@ -13,18 +12,12 @@ import { PollySpeechBubble } from './PollySpeechBubble';
 
 type Outcome = 'loss' | 'beat' | 'complete';
 
-const POLLY_SIZE = 300;
+const POLLY_SIZE = 244;
 
-// pollyWrap is bottom:-26, height:POLLY_SIZE, and every reachable pose scale
-// (idle 1, laugh 0.82, sulk 0.69, fly 0.8 — see pollyPoses.ts) is <= 1, so the
-// image's own layout box never rises above -26 + POLLY_SIZE = 274pt above the
-// screen bottom (idle/'complete' is the worst case, at scale 1). 300 clears
-// that hard ceiling with a 26pt buffer for the ambient idle bob's ~2pt rise
-// plus rounding. The bubble sits lower than this (bottom:190, a few dozen pt
-// of content) so it was never the tall side. The old 380 reserved ~100pt
-// nobody was using, forcing Results to scroll just to see the verdict and
-// the ledger at once — see the "you have to scroll" bug report, 2026-09-13.
-export const POLLY_RESULTS_PERCH_CLEARANCE = 300;
+// Results actions are interactive UI, so Polly gets a dedicated stage below
+// them rather than floating over the Share/Home row. The ScrollView reserves
+// this exact clearance. Her bubble also lives inside the same stage.
+export const POLLY_RESULTS_PERCH_CLEARANCE = 238;
 
 type Props = {
   outcome: Outcome;
@@ -51,7 +44,7 @@ export default function PollyResultsPerch({ outcome, line, relationshipPose = 'd
   const settledPose = relationshipPoseArt ?? OUTCOME_POSE[outcome];
   const [pose, setPose] = useState<ImageSourcePropType>(POLLY_POSES.fly);
 
-  const slideY = useRef(new Animated.Value(300)).current;
+  const slideY = useRef(new Animated.Value(POLLY_SIZE)).current;
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
     usePollyAmbientMotion('results');
@@ -99,7 +92,6 @@ export default function PollyResultsPerch({ outcome, line, relationshipPose = 'd
         )}
       </Animated.View>
 
-      {/* Bubble — to her right, tail points left at her */}
       <Animated.View style={[styles.bubbleWrap, { opacity: bubbleOpacity }]}>
         <PollySpeechBubble line={line ?? ''} />
       </Animated.View>
@@ -113,13 +105,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 220,
+    height: POLLY_RESULTS_PERCH_CLEARANCE,
     pointerEvents: 'none',
+    overflow: 'hidden',
   },
   pollyWrap: {
     position: 'absolute',
-    left: -74,
-    bottom: -26,
+    left: -44,
+    bottom: -22,
     width: POLLY_SIZE,
     height: POLLY_SIZE,
   },
@@ -129,7 +122,8 @@ const styles = StyleSheet.create({
   },
   bubbleWrap: {
     position: 'absolute',
-    left: 162,
-    bottom: 190,
+    left: 150,
+    right: 18,
+    bottom: 112,
   },
 });
