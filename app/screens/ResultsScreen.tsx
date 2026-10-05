@@ -12,21 +12,24 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
 import { WordResult } from '../game/polyRunEngine';
 import { useGameStore } from '../store/useGameStore';
-import { Mask, SessionStep } from '../game/types';
+import { SessionStep } from '../game/types';
 import { playSfx } from '../audio/sfx';
 import { FoilWord } from '../components/ui/FoilWord';
 import PollyResultsPerch, { POLLY_RESULTS_PERCH_CLEARANCE } from '../components/PollyResultsPerch';
+import { ResultsConsequencePanel } from '../components/ResultsConsequencePanel';
 import { PW } from '../ui/pwTheme';
 import { homePlateMaterial, homeType } from '../ui/pwHomeMaterials';
 import { usePulseScale } from '../hooks/usePulseScale';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { resolveHuntResultLabel } from '../game/huntControl';
 import { resolveHuntPerformance } from '../game/pollyMood';
+import { localDateKey } from '../game/bookLog';
+import { resolveResultsConsequences } from '../game/resultsAftermath';
 import {
   derivePollyRelationshipContext,
   resolvePollyRelationshipBeat,
@@ -36,33 +39,12 @@ import {
   RESULTS_RESTART_LABEL,
   deriveResultsPollyMoment,
   pickLossVerdictLine,
-  resultsCard,
   resultsLedger,
   resultsType,
 } from '../ui/pwResultsMaterials';
 
 const GOLD_FEATHER_IMG = require('../../assets/ui/feather-gold-reward.png');
 
-// ─── HELPERS ─────────────────────────────────────────────────
-
-function findMaskById(maskId: string, session: SessionStep[]): Mask | undefined {
-  for (const step of session) {
-    if (step.kind !== 'word') continue;
-    const found = step.masks.find(m => m.id === maskId);
-    if (found) return found;
-  }
-  return undefined;
-}
-
-function findWordForMaskId(maskId: string, session: SessionStep[]): string {
-  for (const step of session) {
-    if (step.kind !== 'word') continue;
-    if (step.masks.some(m => m.id === maskId)) return step.word;
-  }
-  return '';
-}
-
-// Spoiler-free run summary: one square per round, no words revealed.
 function buildShareMessage(
   session: SessionStep[],
   wordResults: WordResult[],
@@ -89,15 +71,11 @@ function buildShareMessage(
   return `POLYWORDS · ${verdict}\n${grid}`;
 }
 
-// ─── RUN READ ─────────────────────────────────────────────────
-
-// ─── LEDGER ROW ──────────────────────────────────────────────
-
 function LedgerRow({ result, bossMastered }: { result: WordResult; bossMastered: boolean }) {
   const allFound = result.correctUp === result.totalRealMasks && result.wrongSwipes === 0;
-
   let resultText: string;
   let resultColor: string;
+
   if (result.isBossWord) {
     resultText = bossMastered ? 'Boss ✓' : `${result.correctUp}/${result.totalRealMasks}`;
     resultColor = bossMastered ? resultsLedger.mark : resultsLedger.ink;
@@ -141,82 +119,11 @@ const lr = StyleSheet.create({
   },
 });
 
-// ─── CALLOUT CARDS ───────────────────────────────────────────
-
-function TrapCard({ maskId }: { maskId: string }) {
-  const session = useGameStore(s => s.game.session);
-  const mask = findMaskById(maskId, session);
-  const word = findWordForMaskId(maskId, session);
-  if (!mask) return null;
-
-  return (
-    <View style={[cc.card, cc.trap]}>
-      <Text style={[cc.header, { color: PW.color.lavender }]}>The trap that got you</Text>
-      <Text style={cc.phrase}>{mask.phrase}</Text>
-      <Text style={cc.copy}>Not a meaning of {word.toUpperCase()}. Just nearby.</Text>
-    </View>
-  );
-}
-
-const cc = StyleSheet.create({
-  card: {
-    backgroundColor: PW.color.cardFace,
-    borderWidth: 1.5,
-    borderRadius: PW.radius.lg,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
-  ghost: {
-    backgroundColor: resultsCard.ghostFace,
-    borderColor: resultsCard.ghostRim,
-  },
-  trap: {
-    borderColor: resultsCard.rimTrap,
-  },
-  cleared: {
-    borderColor: resultsCard.rimGold,
-  },
-  header: {
-    fontSize: resultsType.cardHeader,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    letterSpacing: 1,
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  word: {
-    fontSize: resultsType.cardWord,
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  phrase: {
-    color: PW.color.softWhite,
-    fontSize: resultsType.cardCopy + 1,
-    fontFamily: FONTS.tileCopy,
-    includeFontPadding: false,
-    marginBottom: 4,
-  },
-  copy: {
-    color: PW.color.mutedWhite,
-    fontSize: resultsType.cardCopy,
-    fontFamily: FONTS.tileCopy,
-    includeFontPadding: false,
-    lineHeight: resultsType.cardCopy + 5,
-  },
-});
-
-// ─── START A NEW HUNT (Home plate treatment, native scale pulse) ──
-
 function StartNewHuntButton({ onPress }: { onPress: () => void }) {
   const scale = usePulseScale();
   const glow = useRef(new Animated.Value(0)).current;
-  const glowOn = () =>
-    Animated.timing(glow, { toValue: 1, duration: 120, useNativeDriver: true }).start();
-  const glowOff = () =>
-    Animated.timing(glow, { toValue: 0, duration: 320, useNativeDriver: true }).start();
+  const glowOn = () => Animated.timing(glow, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+  const glowOff = () => Animated.timing(glow, { toValue: 0, duration: 320, useNativeDriver: true }).start();
 
   return (
     <View style={btn.wrap}>
@@ -231,12 +138,7 @@ function StartNewHuntButton({ onPress }: { onPress: () => void }) {
           style={({ pressed }) => [btn.shell, pressed && btn.pressed]}
         >
           <LinearGradient colors={homePlateMaterial.huntFace} style={btn.face}>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.55}
-              style={btn.label}
-            >
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55} style={btn.label}>
               {RESULTS_RESTART_LABEL}
             </Text>
           </LinearGradient>
@@ -247,15 +149,9 @@ function StartNewHuntButton({ onPress }: { onPress: () => void }) {
 }
 
 const btn = StyleSheet.create({
-  wrap: {
-    position: 'relative',
-  },
+  wrap: { position: 'relative' },
   glowBloom: {
-    position: 'absolute',
-    left: -6,
-    right: -6,
-    top: -6,
-    bottom: -6,
+    position: 'absolute', left: -6, right: -6, top: -6, bottom: -6,
     borderRadius: homePlateMaterial.huntRadius + 4,
     backgroundColor: 'rgba(245,200,66,0.16)',
     ...PW.shadow.glowGold,
@@ -266,11 +162,7 @@ const btn = StyleSheet.create({
     borderColor: homePlateMaterial.huntRim,
     overflow: 'hidden',
   },
-  face: {
-    minHeight: 84,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  face: { minHeight: 72, alignItems: 'center', justifyContent: 'center' },
   label: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
@@ -282,21 +174,10 @@ const btn = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  pressed: {
-    opacity: 0.84,
-    transform: [{ scale: 0.96 }],
-  },
+  pressed: { opacity: 0.84, transform: [{ scale: 0.96 }] },
 });
 
-// ─── SHARE / HOME — a quiet plate row, Home door treatment ──
-
-function ResultsQuietRow({
-  onShare,
-  onHome,
-}: {
-  onShare: () => void;
-  onHome: () => void;
-}) {
+function ResultsQuietRow({ onShare, onHome }: { onShare: () => void; onHome: () => void }) {
   return (
     <View style={qp.row}>
       <Pressable
@@ -324,11 +205,7 @@ function ResultsQuietRow({
 }
 
 const qp = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-  },
+  row: { flexDirection: 'row', gap: 10, marginTop: 10 },
   shell: {
     flex: 1,
     borderRadius: homePlateMaterial.quietRadius,
@@ -336,11 +213,7 @@ const qp = StyleSheet.create({
     borderColor: homePlateMaterial.quietRim,
     overflow: 'hidden',
   },
-  face: {
-    minHeight: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  face: { minHeight: 50, alignItems: 'center', justifyContent: 'center' },
   label: {
     color: PW.color.white,
     fontFamily: FONTS.hud,
@@ -348,30 +221,17 @@ const qp = StyleSheet.create({
     fontSize: homeType.doorTitle,
     letterSpacing: 1,
   },
-  pressed: {
-    opacity: 0.84,
-    transform: [{ scale: 0.96 }],
-  },
+  pressed: { opacity: 0.84, transform: [{ scale: 0.96 }] },
 });
 
-function GoldFeatherButton({
-  onPress,
-  disabled,
-}: {
-  onPress: () => void;
-  disabled: boolean;
-}) {
+function GoldFeatherButton({ onPress, disabled }: { onPress: () => void; disabled: boolean }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Use Gold Feather free life"
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        gf.shell,
-        pressed && !disabled && gf.pressed,
-        disabled && gf.disabled,
-      ]}
+      style={({ pressed }) => [gf.shell, pressed && !disabled && gf.pressed, disabled && gf.disabled]}
     >
       <Image source={GOLD_FEATHER_IMG} style={gf.feather} resizeMode="contain" />
       <View style={gf.copyBlock}>
@@ -384,7 +244,7 @@ function GoldFeatherButton({
 
 const gf = StyleSheet.create({
   shell: {
-    minHeight: 74,
+    minHeight: 70,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -392,18 +252,13 @@ const gf = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: PW.color.gold,
     backgroundColor: PW.color.overlayHeavy,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 10,
     ...PW.shadow.glowGold,
   },
-  feather: {
-    width: 28,
-    height: 46,
-  },
-  copyBlock: {
-    flex: 1,
-  },
+  feather: { width: 28, height: 46 },
+  copyBlock: { flex: 1 },
   title: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
@@ -419,15 +274,9 @@ const gf = StyleSheet.create({
     lineHeight: 18,
     marginTop: 3,
   },
-  pressed: {
-    opacity: 0.84,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
+  pressed: { opacity: 0.84 },
+  disabled: { opacity: 0.5 },
 });
-
-// ─── RESULTS SCREEN — THE HUNT LEDGER ────────────────────────
 
 type Props = {
   onRestart: () => void;
@@ -435,10 +284,10 @@ type Props = {
 };
 
 export default function ResultsScreen({ onRestart, onHome }: Props) {
+  const navigation = useNavigation<any>();
   const reduceMotion = useReducedMotionPreference();
   const game = useGameStore(s => s.game);
   const ghosts = useGameStore(s => s.ghosts);
-  const ghostRevenge = useGameStore(s => s.ghostRevenge);
   const recordRunComplete = useGameStore(s => s.recordRunComplete);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
@@ -451,8 +300,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const clearPollyRelationshipBeatForDev = useGameStore(s => s.clearPollyRelationshipBeatForDev);
   const { wordResults, score, bestCombo, status } = game;
   const isComplete = status === 'complete';
-  const haunted =
-    game.bossOutcome === 'haunted' || game.hauntOutcome === 'haunted';
+  const haunted = game.bossOutcome === 'haunted' || game.hauntOutcome === 'haunted';
   const hasGoldFeather =
     status === 'gameOver' &&
     goldFeatherAvailable &&
@@ -466,12 +314,20 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const died = status === 'gameOver';
   const bossMastered = game.bossOutcome === 'mastered';
   const flawlessWin = bossMastered && game.bossFlawless;
-  const outcome: 'loss' | 'beat' | 'complete' =
-    died ? 'loss' : bossMastered ? 'beat' : 'complete';
+  const outcome: 'loss' | 'beat' | 'complete' = died ? 'loss' : bossMastered ? 'beat' : 'complete';
   const resultLabel = resolveHuntResultLabel({
     status: died ? 'gameOver' : 'complete',
     bossMastered,
     haunted,
+  });
+
+  const bossStep = game.session.find(step => step.kind === 'word' && step.eventType === 'bossWord');
+  const hauntStep = game.session.find(step => step.kind === 'word' && step.isHauntReturn === true);
+  const consequences = resolveResultsConsequences({
+    bossOutcome: game.bossOutcome,
+    hauntOutcome: game.hauntOutcome,
+    bossWord: bossStep?.kind === 'word' ? bossStep.word : null,
+    hauntWord: hauntStep?.kind === 'word' ? hauntStep.word : null,
   });
 
   const recordedRef = useRef(false);
@@ -486,8 +342,6 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     recordFinalRunIfNeeded();
   }, [hasGoldFeather, status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Polly gloats over a lost run — the on-board laugh can't render because
-  // the board unmounts to Results the instant the run ends.
   useEffect(() => {
     if (status === 'gameOver') playSfx('pollySqwawkLaugh', { bypassCooldown: true });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -500,9 +354,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     if (!hasGoldFeather || usingGoldFeather) return;
     setUsingGoldFeather(true);
     const revived = await useGoldFeatherInHunt();
-    if (!revived) {
-      setUsingGoldFeather(false);
-    }
+    if (!revived) setUsingGoldFeather(false);
   }
 
   function handleRestart() {
@@ -515,22 +367,23 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     onHome();
   }
 
+  function handleOpenJournal() {
+    recordFinalRunIfNeeded();
+    navigation.navigate('Vault', {
+      polybookSection: 'JOURNAL',
+      polybookDate: localDateKey(new Date()),
+    });
+  }
+
   async function handleShare() {
     recordFinalRunIfNeeded();
     try {
       await Share.share({
-        message: buildShareMessage(
-          game.session,
-          wordResults,
-          isComplete,
-          bossMastered,
-          haunted,
-        ),
+        message: buildShareMessage(game.session, wordResults, isComplete, bossMastered, haunted),
       });
     } catch {}
   }
 
-  // Ceremony: verdict stamps in immediately; details reveal ~700ms later.
   const verdictScale = useRef(new Animated.Value(0.8)).current;
   const verdictY = useRef(new Animated.Value(20)).current;
   const detailOpacity = useRef(new Animated.Value(0)).current;
@@ -553,26 +406,18 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
       Animated.spring(verdictScale, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }),
       Animated.spring(verdictY, { toValue: 0, tension: 120, friction: 8, useNativeDriver: true }),
     ]).start();
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       Animated.parallel([
         Animated.timing(detailOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
         Animated.timing(detailY, { toValue: 0, duration: 400, useNativeDriver: true }),
       ]).start(({ finished }) => {
         if (finished) setDetailsInteractive(true);
       });
-    }, 700);
-    return () => clearTimeout(t);
+    }, 500);
+    return () => clearTimeout(timer);
   }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // derived data — the trap callout is haunt territory, so it only reads
-  // boss-word results (ghosts are boss-only; non-boss misses are not haunts)
   const wordOnlyResults = wordResults.filter(r => r.roundKind === 'word');
-  const bossResults = wordResults.filter(r => r.isBossWord);
-  const hauntWrongMaskIds = bossResults.flatMap(r => r.wrongMaskIds);
-  const firstWrongMaskId = hauntWrongMaskIds[0] ?? null;
-  // Held stable for the life of the screen — resolveResultsPollyMoment/
-  // pickFreshLine must stay pure (no Math.random inside them), so the roll
-  // is drawn once here, in a useState initialiser, never during render.
   const [pollyRoll] = useState(() => Math.random());
   const currentPerformance = resolveHuntPerformance({
     status: died ? 'gameOver' : 'complete',
@@ -582,10 +427,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   });
   const relationshipContext = derivePollyRelationshipContext({
     memory: pollyMemoryBeforeRunRecorded,
-    recent: [
-      currentPerformance,
-      ...(progressBeforeRunRecorded.recentHuntPerformance ?? []),
-    ].slice(0, 5),
+    recent: [currentPerformance, ...(progressBeforeRunRecorded.recentHuntPerformance ?? [])].slice(0, 5),
     runsCompleted: progressBeforeRunRecorded.runsCompleted + 1,
     masteredCount: progressBeforeRunRecorded.masteredWords.length,
     now: Date.now(),
@@ -595,11 +437,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     : resolvePollyRelationshipBeat({
         context: relationshipContext,
         surface: 'results',
-        currentOutcome: died
-          ? 'pollyWon'
-          : bossMastered
-          ? 'playerBeatPolly'
-          : 'playerCompleted',
+        currentOutcome: died ? 'pollyWon' : bossMastered ? 'playerBeatPolly' : 'playerCompleted',
       });
   const relationshipPresentation = resolvePollyRelationshipPresentation({
     decision: relationshipDecision,
@@ -614,60 +452,50 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     pollyRoll,
   );
   const pollyLineRememberedRef = useRef(false);
+
   useEffect(() => {
     if (__DEV__ && relationshipBeatForDev !== null) clearPollyRelationshipBeatForDev();
   }, [relationshipBeatForDev, clearPollyRelationshipBeatForDev]);
+
   useEffect(() => {
     if (!pollyMoment || pollyLineRememberedRef.current) return;
     pollyLineRememberedRef.current = true;
     rememberPollyLine(pollyMoment.lineId, 'results');
   }, [pollyMoment, rememberPollyLine]);
 
-  // Held stable for the life of the screen — pickLossVerdictLine must stay
-  // pure (no Math.random inside it), so the roll is drawn once here, in a
-  // useState initialiser, never during render.
   const [lossLineRoll] = useState(() => Math.random());
-  const verdictText = resultLabel;
-  const verdictUsesTallBox = verdictText === "CLOSE, BUT CLOSE DOESN'T COUNT.";
   const verdictSub = outcome === 'loss'
     ? pickLossVerdictLine(ghosts.length, game.lossCause, lossLineRoll)
     : null;
-
   const perfectCount = wordOnlyResults.filter(
     r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0,
   ).length;
 
-  // Edge fades cue the player that the ledger/callouts area scrolls — the
-  // footer stays pinned outside the scroll (Start a New Hunt must never
-  // require a scroll to reach), so a short result can still clip the
-  // verdict or a callout card with no visual sign there's more to see.
-  // Threshold of 4 avoids a fade flickering on from sub-pixel rounding
-  // when content exactly fills the viewport.
   const SCROLL_FADE_EDGE = 4;
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
   const scrollOffsetRef = useRef(0);
   const scrollContentHeightRef = useRef(0);
   const scrollViewportHeightRef = useRef(0);
+
   function recomputeScrollFade() {
-    const maxOffset = Math.max(
-      0,
-      scrollContentHeightRef.current - scrollViewportHeightRef.current,
-    );
+    const maxOffset = Math.max(0, scrollContentHeightRef.current - scrollViewportHeightRef.current);
     const nextUp = scrollOffsetRef.current > SCROLL_FADE_EDGE;
-    const nextDown = maxOffset > SCROLL_FADE_EDGE
-      && scrollOffsetRef.current < maxOffset - SCROLL_FADE_EDGE;
+    const nextDown = maxOffset > SCROLL_FADE_EDGE && scrollOffsetRef.current < maxOffset - SCROLL_FADE_EDGE;
     setCanScrollUp(prev => (prev === nextUp ? prev : nextUp));
     setCanScrollDown(prev => (prev === nextDown ? prev : nextDown));
   }
+
   function handleResultsScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
     scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
     recomputeScrollFade();
   }
+
   function handleResultsContentSizeChange(_w: number, h: number) {
     scrollContentHeightRef.current = h;
     recomputeScrollFade();
   }
+
   function handleResultsScrollLayout(e: LayoutChangeEvent) {
     scrollViewportHeightRef.current = e.nativeEvent.layout.height;
     recomputeScrollFade();
@@ -675,45 +503,23 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
   return (
     <View style={rs.container}>
-      {/* ── FIXED TOP — outcome first, then every next-step action ── */}
       <View style={rs.topStack}>
         <Animated.View
           style={[rs.verdictBlock, { transform: [{ scale: verdictScale }, { translateY: verdictY }] }]}
         >
-          <View style={[rs.verdictBox, !verdictUsesTallBox && rs.verdictBoxCompact]}>
+          <View style={rs.verdictBox}>
             <FoilWord
-              word={verdictText}
-              fontSize={resultsType.verdict}
+              word={resultLabel}
+              fontSize={30}
               numberOfLines={0}
               baseStyle={rs.verdict}
             />
           </View>
           {verdictSub && <Text style={rs.verdictSub}>{verdictSub}</Text>}
           {flawlessWin && <Text style={rs.flawlessTag}>FLAWLESS</Text>}
-
-          <Text style={rs.perfectLine}>
-            {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
-          </Text>
-        </Animated.View>
-
-        <Animated.View
-          pointerEvents={detailsInteractive ? 'auto' : 'none'}
-          accessibilityElementsHidden={!detailsInteractive}
-          importantForAccessibility={detailsInteractive ? 'auto' : 'no-hide-descendants'}
-          style={[rs.actions, { opacity: detailOpacity, transform: [{ translateY: detailY }] }]}
-        >
-          {hasGoldFeather && (
-            <GoldFeatherButton
-              onPress={handleUseGoldFeather}
-              disabled={usingGoldFeather}
-            />
-          )}
-          <StartNewHuntButton onPress={handleRestart} />
-          <ResultsQuietRow onShare={handleShare} onHome={handleHome} />
         </Animated.View>
       </View>
 
-      {/* ── SCROLLABLE BREAKDOWN — only the run details move ── */}
       <View style={rs.scrollWrap} onLayout={handleResultsScrollLayout}>
         <ScrollView
           style={rs.scroll}
@@ -723,8 +529,21 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
           onContentSizeChange={handleResultsContentSizeChange}
           scrollEventThrottle={16}
         >
-          <Animated.View style={{ opacity: detailOpacity, transform: [{ translateY: detailY }] }}>
-            {/* Ledger */}
+          <Animated.View
+            pointerEvents={detailsInteractive ? 'auto' : 'none'}
+            accessibilityElementsHidden={!detailsInteractive}
+            importantForAccessibility={detailsInteractive ? 'auto' : 'no-hide-descendants'}
+            style={{ opacity: detailOpacity, transform: [{ translateY: detailY }] }}
+          >
+            <ResultsConsequencePanel consequences={consequences} onOpenJournal={handleOpenJournal} />
+
+            <View style={rs.recapHeader}>
+              <Text style={rs.recapTitle}>HUNT RECAP</Text>
+              <Text style={rs.perfectLine}>
+                {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
+              </Text>
+            </View>
+
             {wordOnlyResults.length > 0 && (
               <View style={rs.ledgerPanel}>
                 <LinearGradient
@@ -738,32 +557,13 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
               </View>
             )}
 
-            {/* Ghost revenge */}
-            {ghostRevenge?.result === 'correct' && (
-              <View style={[cc.card, cc.cleared]}>
-                <Text style={[cc.header, { color: PW.color.goldSoft }]}>Haunt broken</Text>
-                <View style={rs.foilWordBox}>
-                  <FoilWord
-                    word={ghostRevenge.word.toUpperCase()}
-                    fontSize={resultsType.cardWord}
-                    baseStyle={rs.foilCardWord}
-                  />
-                </View>
-                <Text style={cc.copy}>Rematch won.</Text>
-              </View>
-            )}
-            {ghostRevenge?.result === 'wrong' && (
-              <View style={[cc.card, cc.ghost]}>
-                <Text style={[cc.header, { color: resultsCard.ghostTitle }]}>Still haunting you</Text>
-                <Text style={[cc.word, { color: resultsCard.ghostTitle }]}>
-                  {ghostRevenge.word.toUpperCase()}
-                </Text>
-                <Text style={cc.copy}>Missed me?</Text>
-              </View>
-            )}
-
-            {/* Trap that got you */}
-            {firstWrongMaskId && <TrapCard maskId={firstWrongMaskId} />}
+            <View style={rs.actions}>
+              {hasGoldFeather && (
+                <GoldFeatherButton onPress={handleUseGoldFeather} disabled={usingGoldFeather} />
+              )}
+              <StartNewHuntButton onPress={handleRestart} />
+              <ResultsQuietRow onShare={handleShare} onHome={handleHome} />
+            </View>
           </Animated.View>
         </ScrollView>
 
@@ -793,62 +593,26 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 }
 
 const rs = StyleSheet.create({
-  container: {
-    flex: 1, // transparent — GameScreen's stage shows through
-  },
-  scrollWrap: {
-    flex: 1,
-    position: 'relative',
-  },
-  scroll: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   topStack: {
     paddingHorizontal: 24,
-    paddingTop: 36,
-  },
-  actions: {
-    paddingBottom: 14,
-    borderBottomWidth: 1.5,
-    borderBottomColor: resultsLedger.panelRim,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 14,
-    paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE + 24,
-  },
-  scrollFadeTop: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 28,
-  },
-  scrollFadeBottom: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 28,
+    paddingTop: 22,
   },
   verdictBlock: {
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 8,
   },
   verdictBox: {
     width: '100%',
-    minHeight: resultsType.verdict * 2.6,
+    minHeight: 42,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  verdictBoxCompact: {
-    minHeight: resultsType.verdict * 1.35,
   },
   verdict: {
     fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
-    fontSize: resultsType.verdict,
-    lineHeight: resultsType.verdict * 1.15,
+    fontSize: 30,
+    lineHeight: 35,
     letterSpacing: 2,
     textAlign: 'center',
     width: '100%',
@@ -856,30 +620,55 @@ const rs = StyleSheet.create({
   verdictSub: {
     width: '100%',
     color: PW.color.softWhite,
-    fontSize: resultsType.verdictSub,
+    fontSize: 14,
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    letterSpacing: 3,
+    letterSpacing: 2.4,
     textAlign: 'center',
     textTransform: 'uppercase',
-    marginTop: 8,
+    marginTop: 4,
   },
   flawlessTag: {
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: resultsType.verdictSub,
+    fontSize: 14,
     color: PW.color.amber,
-    letterSpacing: 4,
+    letterSpacing: 3,
     textTransform: 'uppercase',
-    marginTop: 4,
+    marginTop: 3,
   },
-  perfectLine: {
-    color: PW.color.foilLight,
-    fontSize: resultsType.perfectLine,
+  scrollWrap: { flex: 1, position: 'relative' },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 6,
+    paddingBottom: POLLY_RESULTS_PERCH_CLEARANCE + 24,
+  },
+  scrollFadeTop: { position: 'absolute', left: 0, right: 0, top: 0, height: 28 },
+  scrollFadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 28 },
+  recapHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    gap: 12,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  recapTitle: {
+    color: PW.color.mutedWhite,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    marginTop: 4,
-    opacity: 0.85,
+    fontSize: 12,
+    letterSpacing: 2.2,
+  },
+  perfectLine: {
+    flexShrink: 1,
+    color: PW.color.foilLight,
+    fontSize: 13,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    textAlign: 'right',
+    opacity: 0.78,
   },
   ledgerPanel: {
     backgroundColor: resultsLedger.panelFace,
@@ -894,16 +683,8 @@ const rs = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  foilWordBox: {
-    height: resultsType.cardWord + 10,
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  foilCardWord: {
-    fontFamily: FONTS.wordDisplay,
-    includeFontPadding: false,
-    fontSize: resultsType.cardWord,
-    letterSpacing: 1.5,
-    textAlign: 'left',
+  actions: {
+    paddingTop: 2,
+    paddingBottom: 12,
   },
 });
