@@ -7,8 +7,8 @@ export type ResultsConsequence = {
 };
 
 type ResolveResultsAftermathInput = {
-  bossOutcome: 'mastered' | 'haunted' | null | undefined;
-  hauntOutcome: 'banished' | 'haunted' | null | undefined;
+  bossOutcome: 'pending' | 'mastered' | 'haunted' | null | undefined;
+  hauntOutcome: 'pending' | 'banished' | 'haunted' | null | undefined;
   bossWord: string | null | undefined;
   hauntWord: string | null | undefined;
 };
@@ -27,38 +27,19 @@ export function resolveResultsConsequences(
   const hauntWord = input.hauntWord?.trim().toUpperCase() || null;
 
   if (input.bossOutcome === 'mastered' && bossWord) {
-    consequences.push({
-      kind: 'mastered',
-      word: bossWord,
-      copy: 'ADDED TO YOUR MASTERY',
-    });
+    consequences.push({ kind: 'mastered', word: bossWord, copy: 'ADDED TO YOUR MASTERY' });
   } else if (input.bossOutcome === 'haunted' && bossWord) {
-    consequences.push({
-      kind: 'haunted',
-      word: bossWord,
-      copy: 'NOW HAUNTING YOU',
-    });
+    consequences.push({ kind: 'haunted', word: bossWord, copy: 'NOW HAUNTING YOU' });
   }
 
   if (input.hauntOutcome === 'banished' && hauntWord) {
-    consequences.push({
-      kind: 'banished',
-      word: hauntWord,
-      copy: 'BANISHED',
-    });
+    consequences.push({ kind: 'banished', word: hauntWord, copy: 'BANISHED' });
   } else if (input.hauntOutcome === 'haunted' && hauntWord) {
-    // A returning Haunt can end the run before the Boss. Preserve that durable
-    // result without duplicating the same word if a future session shape ever
-    // allows it to also be the Boss.
     const duplicate = consequences.some(
       consequence => consequence.kind === 'haunted' && consequence.word === hauntWord,
     );
     if (!duplicate) {
-      consequences.push({
-        kind: 'haunted',
-        word: hauntWord,
-        copy: 'STILL HAUNTING YOU',
-      });
+      consequences.push({ kind: 'haunted', word: hauntWord, copy: 'STILL HAUNTING YOU' });
     }
   }
 
