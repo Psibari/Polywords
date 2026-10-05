@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useRoute } from "@react-navigation/native";
 import { FONTS } from "../../constants/fonts";
 import { PlayerProgress } from "../../game/types";
 import { PollyMemory } from "../../game/pollyMemory";
@@ -17,13 +18,9 @@ import { localDateKey } from "../../game/bookLog";
 import { TODAY_ENTRIES, type BookRivalryState } from "../../game/pollyBookLines";
 import { resolveRivalryState } from "../../game/pollyMood";
 import { createSeededRng, deriveSeed } from "../../game/seededRandom";
-import { INK, INK_MUTED } from "../../ui/polybookInk";
 import { PW } from "../../ui/pwTheme";
 import { useGameStore } from "../../store/useGameStore";
 
-// Structural prototype for docs/POLYBOOK_LIVING_JOURNAL.md.
-// Intentionally uses simple code-drawn book materials. Final cover/page art,
-// doodles, ribbon art and transition polish wait until device geometry is approved.
 const POLYBOOK_CROWN = require("../../../assets/images/polybook/polybook_crown.png");
 
 type Section = "TODAY" | "JOURNAL" | "BEATEN";
@@ -41,11 +38,19 @@ const TODAY_MOOD_BAR: Record<BookRivalryState, string> = {
 };
 
 type Props = { progress: PlayerProgress; pollyMemory: PollyMemory };
+type PolybookRouteParams = {
+  polybookSection?: Section;
+  polybookDate?: string;
+};
 
 export function PolybookSpread({ progress, pollyMemory }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+  const route = useRoute<any>();
+  const routeParams = (route.params ?? {}) as PolybookRouteParams;
+  const deepLinkSection = routeParams.polybookSection;
+  const deepLinkDate = routeParams.polybookDate ?? null;
+  const [isOpen, setIsOpen] = useState(deepLinkSection !== undefined);
   const [openBookArtReady, setOpenBookArtReady] = useState(false);
-  const [section, setSection] = useState<Section>("TODAY");
+  const [section, setSection] = useState<Section>(deepLinkSection ?? "TODAY");
   const [devRivalryState, setDevRivalryState] = useState<BookRivalryState | null>(null);
   const [devTodayIndex, setDevTodayIndex] = useState(0);
   const [devJournalRows, setDevJournalRows] = useState<"REAL" | "SHORT" | "MEDIUM" | "FULL">("REAL");
@@ -96,6 +101,24 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   useEffect(() => {
     setJournalPage((current) => Math.min(current, journalPages.length - 1));
   }, [journalPages.length]);
+
+  // Results may enter the Polybook directly after a meaningful persistent
+  // change. Open the real JOURNAL surface and land on the page containing the
+  // run's local date rather than inventing a parallel detail screen.
+  useEffect(() => {
+    if (deepLinkSection !== "JOURNAL") return;
+    setSection("JOURNAL");
+    setIsOpen(true);
+    if (!deepLinkDate) return;
+    const pageIndex = journalPages.findIndex(page =>
+      page.some(row =>
+        row.endDate
+          ? deepLinkDate >= row.date && deepLinkDate <= row.endDate
+          : row.date === deepLinkDate,
+      ),
+    );
+    if (pageIndex >= 0) setJournalPage(pageIndex);
+  }, [deepLinkSection, deepLinkDate, journalPages]);
 
   const turnJournalPage = (delta: number) => {
     setJournalPage((current) => Math.max(0, Math.min(journalPages.length - 1, current + delta)));
@@ -165,28 +188,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 
     Animated.parallel([
       Animated.sequence([
-        Animated.timing(moodPulse, {
-          toValue: 1.018,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-        Animated.timing(moodPulse, {
-          toValue: 1,
-          duration: 420,
-          useNativeDriver: true,
-        }),
+        Animated.timing(moodPulse, { toValue: 1.018, duration: 260, useNativeDriver: true }),
+        Animated.timing(moodPulse, { toValue: 1, duration: 420, useNativeDriver: true }),
       ]),
       Animated.sequence([
-        Animated.timing(moodGlow, {
-          toValue: 0.92,
-          duration: 260,
-          useNativeDriver: true,
-        }),
-        Animated.timing(moodGlow, {
-          toValue: 0.48,
-          duration: 420,
-          useNativeDriver: true,
-        }),
+        Animated.timing(moodGlow, { toValue: 0.92, duration: 260, useNativeDriver: true }),
+        Animated.timing(moodGlow, { toValue: 0.48, duration: 420, useNativeDriver: true }),
       ]),
     ]).start();
   }, [displayedRivalryState, isOpen, openBookArtReady, section, moodGlow, moodPulse]);
@@ -227,9 +234,6 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     setDevJournalRows((current) => modes[(modes.indexOf(current) + 1) % modes.length]);
   }
 
-  // POLYBOOK ART TODO: remove the side ribbons from the closed-book artwork
-  // and replace them with bottom ribbons so the closed cover matches the
-  // open-book navigation language. Artwork change only; do not alter this pass.
   if (!isOpen) {
     return (
       <View style={styles.root}>
@@ -283,165 +287,147 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
         />
         {openBookArtReady && (
           <>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Return to Polybook cover"
-          onPress={() => setIsOpen(false)}
-          hitSlop={8}
-          style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
-        >
-          <Text style={styles.closeButtonArrow}>‹</Text>
-          <Text style={styles.closeButtonText}>COVER</Text>
-        </Pressable>
-        <View style={styles.pageFrame}>
-          <View style={styles.page}>
-
-            {section === "TODAY" && (
-              <ScrollView key="TODAY" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
-                <Text style={styles.pageDate}>{today.toUpperCase()}</Text>
-                <Text style={styles.sectionHeading}>TODAY</Text>
-                <View
-                  style={[
-                    styles.todayMoodGlow,
-                    {
-                      shadowColor: todayMoodBar,
-                      backgroundColor: todayMoodBar,
-                    },
-                  ]}
-                >
-                  <Animated.View
-                    style={[
-                      styles.todayMoodBar,
-                      {
-                        backgroundColor: todayMoodBar,
-                        opacity: moodGlow,
-                        transform: [{ scaleX: moodPulse }, { scaleY: moodPulse }],
-                      },
-                    ]}
-                  />
-                </View>
-                <View style={styles.todayEntry}>
-                  {todayEntry.map((line, index) => (
-                    <Text key={index} style={styles.todayLine}>{line}</Text>
-                  ))}
-                </View>
-                <View style={styles.todayOpenSpace}>
-                  <Text style={styles.marginScratch}>♛</Text>
-                  <Text style={styles.marginNote}>still my book.</Text>
-                </View>
-              </ScrollView>
-            )}
-
-            {section === "JOURNAL" && (
-              <View key="JOURNAL" style={styles.journalPage} {...journalPanResponder.panHandlers}>
-                <View style={styles.journalPageContent}>
-                  <Text style={styles.sectionHeading}>JOURNAL</Text>
-                  <View style={styles.journalRule} />
-                  {journalPages[journalPage].map((row, index) => (
-                    <View key={`${row.date}-${index}`} style={styles.journalRow}>
-                      <Text style={styles.rowDate}>{row.endDate ? `${row.date} – ${row.endDate}` : row.date}</Text>
-                      {row.word ? <Text style={styles.rowWord}>{row.word}</Text> : null}
-                      {row.lines.map((line, lineIndex) => (
-                        <Text key={lineIndex} style={styles.rowLine}>{line}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Return to Polybook cover"
+              onPress={() => setIsOpen(false)}
+              hitSlop={8}
+              style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
+            >
+              <Text style={styles.closeButtonArrow}>‹</Text>
+              <Text style={styles.closeButtonText}>COVER</Text>
+            </Pressable>
+            <View style={styles.pageFrame}>
+              <View style={styles.page}>
+                {section === "TODAY" && (
+                  <ScrollView key="TODAY" contentContainerStyle={styles.pageScroll} showsVerticalScrollIndicator={false}>
+                    <Text style={styles.pageDate}>{today.toUpperCase()}</Text>
+                    <Text style={styles.sectionHeading}>TODAY</Text>
+                    <View style={[styles.todayMoodGlow, { shadowColor: todayMoodBar, backgroundColor: todayMoodBar }]}>
+                      <Animated.View
+                        style={[
+                          styles.todayMoodBar,
+                          {
+                            backgroundColor: todayMoodBar,
+                            opacity: moodGlow,
+                            transform: [{ scaleX: moodPulse }, { scaleY: moodPulse }],
+                          },
+                        ]}
+                      />
+                    </View>
+                    <View style={styles.todayEntry}>
+                      {todayEntry.map((line, index) => (
+                        <Text key={index} style={styles.todayLine}>{line}</Text>
                       ))}
                     </View>
-                  ))}
-                </View>
-                <View style={styles.pageTurner}>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Previous journal page" disabled={journalPage === 0} hitSlop={10} onPress={() => turnJournalPage(-1)} style={({ pressed }) => [styles.pageTurnButton, journalPage === 0 && styles.pageTurnDisabled, pressed && styles.pressed]}>
-                    <Text style={styles.pageTurnArrow}>‹</Text>
-                  </Pressable>
-                  <Text style={styles.pageTurnLabel}>PAGE {journalPage + 1} OF {journalPages.length}</Text>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Next journal page" disabled={journalPage === journalPages.length - 1} hitSlop={10} onPress={() => turnJournalPage(1)} style={({ pressed }) => [styles.pageTurnButton, journalPage === journalPages.length - 1 && styles.pageTurnDisabled, pressed && styles.pressed]}>
-                    <Text style={styles.pageTurnArrow}>›</Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
+                    <View style={styles.todayOpenSpace}>
+                      <Text style={styles.marginScratch}>♛</Text>
+                      <Text style={styles.marginNote}>still my book.</Text>
+                    </View>
+                  </ScrollView>
+                )}
 
-            {section === "BEATEN" && (
-              <View key="BEATEN" style={styles.masteryPage} {...masteryPanResponder.panHandlers}>
-                <View style={styles.masteryPageContent}>
-                  <Text
-                    style={styles.sectionHeading}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.62}
-                  >
-                    {playerLabel.toUpperCase()}
-                  </Text>
-                  <Text style={styles.masteryLabel}>MASTERY</Text>
-                  <View style={styles.inkRule} />
-                  <View style={styles.masteryGrid}>
-                    {masteryPages[masteryPage].map((record) => (
-                      <View
-                        key={record.word}
-                        accessible
-                        accessibilityLabel={`Mastered word: ${record.word}`}
-                        style={styles.masteryItem}
-                      >
-                        <Image source={POLYBOOK_CROWN} resizeMode="contain" style={styles.crown} />
-                      </View>
-                    ))}
+                {section === "JOURNAL" && (
+                  <View key="JOURNAL" style={styles.journalPage} {...journalPanResponder.panHandlers}>
+                    <View style={styles.journalPageContent}>
+                      <Text style={styles.sectionHeading}>JOURNAL</Text>
+                      <View style={styles.journalRule} />
+                      {journalPages[journalPage].map((row, index) => (
+                        <View key={`${row.date}-${index}`} style={styles.journalRow}>
+                          <Text style={styles.rowDate}>{row.endDate ? `${row.date} – ${row.endDate}` : row.date}</Text>
+                          {row.word ? <Text style={styles.rowWord}>{row.word}</Text> : null}
+                          {row.lines.map((line, lineIndex) => (
+                            <Text key={lineIndex} style={styles.rowLine}>{line}</Text>
+                          ))}
+                        </View>
+                      ))}
+                    </View>
+                    <View style={styles.pageTurner}>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Previous journal page" disabled={journalPage === 0} hitSlop={10} onPress={() => turnJournalPage(-1)} style={({ pressed }) => [styles.pageTurnButton, journalPage === 0 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                        <Text style={styles.pageTurnArrow}>‹</Text>
+                      </Pressable>
+                      <Text style={styles.pageTurnLabel}>PAGE {journalPage + 1} OF {journalPages.length}</Text>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Next journal page" disabled={journalPage === journalPages.length - 1} hitSlop={10} onPress={() => turnJournalPage(1)} style={({ pressed }) => [styles.pageTurnButton, journalPage === journalPages.length - 1 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                        <Text style={styles.pageTurnArrow}>›</Text>
+                      </Pressable>
+                    </View>
                   </View>
-                  <Text style={styles.masteryCount}>
-                    {progress.masteredWords.length} {progress.masteredWords.length === 1 ? "CROWN" : "CROWNS"}
-                  </Text>
-                </View>
-                {masteryPages.length > 1 && (
-                  <View style={styles.pageTurner}>
-                    <Pressable accessibilityRole="button" accessibilityLabel="Previous mastery page" disabled={masteryPage === 0} hitSlop={10} onPress={() => turnMasteryPage(-1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === 0 && styles.pageTurnDisabled, pressed && styles.pressed]}>
-                      <Text style={styles.pageTurnArrow}>‹</Text>
-                    </Pressable>
-                    <Text style={styles.pageTurnLabel}>PAGE {masteryPage + 1} OF {masteryPages.length}</Text>
-                    <Pressable accessibilityRole="button" accessibilityLabel="Next mastery page" disabled={masteryPage === masteryPages.length - 1} hitSlop={10} onPress={() => turnMasteryPage(1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === masteryPages.length - 1 && styles.pageTurnDisabled, pressed && styles.pressed]}>
-                      <Text style={styles.pageTurnArrow}>›</Text>
-                    </Pressable>
+                )}
+
+                {section === "BEATEN" && (
+                  <View key="BEATEN" style={styles.masteryPage} {...masteryPanResponder.panHandlers}>
+                    <View style={styles.masteryPageContent}>
+                      <Text style={styles.sectionHeading} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.62}>
+                        {playerLabel.toUpperCase()}
+                      </Text>
+                      <Text style={styles.masteryLabel}>MASTERY</Text>
+                      <View style={styles.inkRule} />
+                      <View style={styles.masteryGrid}>
+                        {masteryPages[masteryPage].map((record) => (
+                          <View
+                            key={record.word}
+                            accessible
+                            accessibilityLabel={`Mastered word: ${record.word}`}
+                            style={styles.masteryItem}
+                          >
+                            <Image source={POLYBOOK_CROWN} resizeMode="contain" style={styles.crown} />
+                          </View>
+                        ))}
+                      </View>
+                      <Text style={styles.masteryCount}>
+                        {progress.masteredWords.length} {progress.masteredWords.length === 1 ? "CROWN" : "CROWNS"}
+                      </Text>
+                    </View>
+                    {masteryPages.length > 1 && (
+                      <View style={styles.pageTurner}>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Previous mastery page" disabled={masteryPage === 0} hitSlop={10} onPress={() => turnMasteryPage(-1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === 0 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                          <Text style={styles.pageTurnArrow}>‹</Text>
+                        </Pressable>
+                        <Text style={styles.pageTurnLabel}>PAGE {masteryPage + 1} OF {masteryPages.length}</Text>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Next mastery page" disabled={masteryPage === masteryPages.length - 1} hitSlop={10} onPress={() => turnMasteryPage(1)} style={({ pressed }) => [styles.pageTurnButton, masteryPage === masteryPages.length - 1 && styles.pageTurnDisabled, pressed && styles.pressed]}>
+                          <Text style={styles.pageTurnArrow}>›</Text>
+                        </Pressable>
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
-            )}
-          </View>
-        </View>
+            </View>
 
-        <View style={styles.ribbonRail}>
-          {SECTIONS.map((item) => {
-            const selected = item === section;
-            return (
-              <Pressable
-                key={item}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                onPress={() => selectSection(item)}
-                style={({ pressed }) => [
-                  styles.ribbon,
-                  selected && styles.ribbonSelected,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <View pointerEvents="none" style={styles.ribbonArtClip}>
-                  <Image
-                    source={require("../../../assets/images/polybook/polybook_ribbon.png")}
-                    resizeMode="stretch"
-                    style={styles.ribbonArt}
-                  />
-                </View>
-                <Text
-                  style={[styles.ribbonText, selected && styles.ribbonTextSelected]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.55}
-                >
-                  {item === "BEATEN" ? "MASTERY" : item}
-                </Text>
-              </Pressable>
-            );
-          })}
-          <View style={[styles.ribbon, styles.futureRibbon]}>
-            <Text style={styles.futureRibbonText}>?</Text>
-            <View style={styles.forkCutOpen} />
-          </View>
-        </View>
+            <View style={styles.ribbonRail}>
+              {SECTIONS.map((item) => {
+                const selected = item === section;
+                return (
+                  <Pressable
+                    key={item}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected }}
+                    onPress={() => selectSection(item)}
+                    style={({ pressed }) => [styles.ribbon, selected && styles.ribbonSelected, pressed && styles.pressed]}
+                  >
+                    <View pointerEvents="none" style={styles.ribbonArtClip}>
+                      <Image
+                        source={require("../../../assets/images/polybook/polybook_ribbon.png")}
+                        resizeMode="stretch"
+                        style={styles.ribbonArt}
+                      />
+                    </View>
+                    <Text
+                      style={[styles.ribbonText, selected && styles.ribbonTextSelected]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.55}
+                    >
+                      {item === "BEATEN" ? "MASTERY" : item}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+              <View style={[styles.ribbon, styles.futureRibbon]}>
+                <Text style={styles.futureRibbonText}>?</Text>
+                <View style={styles.forkCutOpen} />
+              </View>
+            </View>
           </>
         )}
       </View>
@@ -452,15 +438,10 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
 const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, width: "100%", alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
-
   closedStage: { width: "88%", maxWidth: 350, height: 440, justifyContent: "center", alignItems: "center" },
   closedBookArtButton: { width: 408, maxWidth: "100%", height: 510, alignItems: "center", justifyContent: "center", transform: [{ translateY: -18 }] },
   closedBookArt: { width: "100%", height: "100%" },
-  closedBook: {
-    width: 306, maxWidth: "84%", height: 382, borderRadius: 22, backgroundColor: "#2A155E",
-    borderWidth: 4, borderColor: "#A77C1E", padding: 16, shadowColor: "#000", shadowOpacity: 0.42,
-    shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 12,
-  },
+  closedBook: { width: 306, maxWidth: "84%", height: 382, borderRadius: 22, backgroundColor: "#2A155E", borderWidth: 4, borderColor: "#A77C1E", padding: 16, shadowColor: "#000", shadowOpacity: 0.42, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 12 },
   closedSpine: { position: "absolute", left: 0, top: 0, bottom: 0, width: 42, borderRightWidth: 2, borderColor: "#8A6519", backgroundColor: "#21104E", borderTopLeftRadius: 18, borderBottomLeftRadius: 18 },
   closedInnerFrame: { flex: 1, marginLeft: 35, borderWidth: 2, borderColor: "#D2A936", borderRadius: 10, alignItems: "center", justifyContent: "center", padding: 18 },
   closedPages: { position: "absolute", left: 48, right: 8, bottom: -8, height: 13, borderRadius: 7, backgroundColor: "#D7C38F", borderWidth: 1, borderColor: "#8F773F" },
@@ -471,7 +452,6 @@ const styles = StyleSheet.create({
   closedRibbon: { width: 62, height: 42, backgroundColor: "#55206C", borderWidth: 1, borderColor: "#A77C1E", justifyContent: "center", paddingLeft: 10 },
   closedRibbonText: { fontFamily: FONTS.label, fontSize: 9, letterSpacing: 0.5, color: "#FFF3CF" },
   forkCut: { position: "absolute", right: -1, top: 14, width: 13, height: 13, backgroundColor: "#17112E", transform: [{ rotate: "45deg" }] },
-
   openBook: { width: "96%", height: "100%", maxWidth: 520, position: "relative", alignItems: "stretch", justifyContent: "center" },
   openBookArt: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, width: "100%", height: "100%", pointerEvents: "none" },
   pageFrame: { position: "absolute", left: "16.5%", right: "8.5%", top: "5.2%", bottom: "8.5%", minWidth: 0 },
@@ -491,7 +471,6 @@ const styles = StyleSheet.create({
   todayOpenSpace: { minHeight: 300, marginTop: 28, justifyContent: "flex-end", alignItems: "flex-end" },
   marginScratch: { fontFamily: FONTS.hand, fontSize: 32, color: "rgba(58,39,31,0.46)", transform: [{ rotate: "-9deg" }] },
   marginNote: { fontFamily: FONTS.hand, fontSize: 16, color: "rgba(58,39,31,0.58)", transform: [{ rotate: "-3deg" }] },
-
   ribbonRail: { position: "absolute", left: "15%", right: "7%", bottom: "-4.8%", height: 112, zIndex: 30, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", overflow: "visible" },
   ribbon: { width: "30%", height: 108, justifyContent: "center", alignItems: "center", position: "relative", overflow: "visible" },
   ribbonArtClip: { position: "absolute", left: 0, right: 0, top: 28, bottom: 0, overflow: "hidden", zIndex: 1 },
@@ -503,7 +482,6 @@ const styles = StyleSheet.create({
   forkCutSelected: { display: "none" },
   futureRibbon: { display: "none" },
   futureRibbonText: { display: "none" },
-
   journalPage: { flex: 1, minHeight: 0, overflow: "hidden", paddingHorizontal: 12, paddingTop: 22, paddingBottom: 48 },
   journalPageContent: { flex: 1, minHeight: 0, overflow: "hidden" },
   journalRule: { height: 1, backgroundColor: "rgba(35,23,17,0.42)", marginBottom: 22 },
@@ -516,7 +494,6 @@ const styles = StyleSheet.create({
   pageTurnDisabled: { opacity: 0.22 },
   pageTurnArrow: { fontFamily: FONTS.ui, fontSize: 28, lineHeight: 30, color: "#2A1B14" },
   pageTurnLabel: { minWidth: 112, textAlign: "center", fontFamily: FONTS.ui, fontSize: 14, letterSpacing: 0.7, color: "#3A291F" },
-
   masteryPage: { flex: 1, minHeight: 0, overflow: "hidden", paddingHorizontal: 12, paddingTop: 22, paddingBottom: 48 },
   masteryPageContent: { flex: 1, minHeight: 0, overflow: "hidden" },
   masteryLabel: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.5, color: "#4A382D", marginBottom: 10 },
@@ -524,7 +501,6 @@ const styles = StyleSheet.create({
   masteryItem: { width: "33.333%", alignItems: "center", justifyContent: "center", minHeight: 64 },
   crown: { width: 54, height: 54 },
   masteryCount: { fontFamily: FONTS.ui, fontSize: 12, letterSpacing: 1.25, color: "#4A382D", textAlign: "center", marginTop: 20 },
-
   devControls: { position: "absolute", top: 2, right: 66, zIndex: 30, flexDirection: "row", gap: 4 },
   devButton: { backgroundColor: "rgba(15,13,42,0.92)", borderWidth: 1, borderColor: "rgba(245,200,66,0.75)", borderRadius: 4, paddingHorizontal: 7, paddingVertical: 5 },
   devButtonText: { fontFamily: FONTS.ui, fontSize: 9, color: "#F5C842", letterSpacing: 0.4 },
