@@ -257,13 +257,18 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     inputRange: [-1, 1],
     outputRange: ['-8deg', '8deg'],
   });
+  const isPointing = pose === 'point';
 
   return (
     <View style={styles.root} pointerEvents="none">
-      {/* Speech bubble — to Polly's right, tail points left at her */}
+      {/* Pointing Polly reaches much farther right than every other pose.
+          Give that pose its own bubble anchor so her wing/finger can never
+          sit on top of the line she is delivering. Her body size and stage
+          position stay unchanged. */}
       <Animated.View
         style={[
           styles.bubbleWrap,
+          isPointing && styles.bubbleWrapPointing,
           { opacity: bubbleOpacity, transform: [{ scale: bubbleScale }] },
         ]}
       >
@@ -329,5 +334,12 @@ const styles = StyleSheet.create({
     // controls while keeping the live clue unobstructed.
     left: 134,
     bottom: 58,
+  },
+  bubbleWrapPointing: {
+    // The point pose's extended wing reaches beyond the normal 134px anchor.
+    // 205 + maxWidth 170 still fits a 390pt-wide iPhone while clearing the
+    // full gesture; lifting it slightly keeps the tail aimed back at Polly.
+    left: 205,
+    bottom: 76,
   },
 });
