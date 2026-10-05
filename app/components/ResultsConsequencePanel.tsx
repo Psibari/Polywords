@@ -55,7 +55,14 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
         style={({ pressed }) => [styles.journalButton, pressed && styles.pressed]}
       >
         <Text style={styles.journalKicker}>POLLY WROTE ABOUT THIS</Text>
-        <Text style={styles.journalAction}>SEE WHAT POLLY WROTE  ›</Text>
+        <Text
+          style={styles.journalAction}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.82}
+        >
+          SEE WHAT POLLY WROTE  ›
+        </Text>
       </Pressable>
     </View>
   );
@@ -125,30 +132,34 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   journalButton: {
-    marginTop: 7,
-    borderRadius: PW.radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(179,136,255,0.34)',
-    backgroundColor: 'rgba(123,45,139,0.13)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    marginTop: 8,
+    minHeight: 74,
+    borderRadius: PW.radius.lg,
+    borderWidth: 1.5,
+    borderColor: 'rgba(179,136,255,0.58)',
+    backgroundColor: 'rgba(123,45,139,0.22)',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   journalKicker: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 10,
-    letterSpacing: 0.7,
-    opacity: 0.82,
+    fontSize: 11,
+    letterSpacing: 1.05,
+    opacity: 0.88,
   },
   journalAction: {
     color: PW.color.lavender,
-    fontFamily: FONTS.hud,
+    fontFamily: FONTS.wordDisplay,
     includeFontPadding: false,
-    fontSize: 13,
-    letterSpacing: 1.05,
-    marginTop: 1,
+    fontSize: 25,
+    lineHeight: 30,
+    letterSpacing: 1.15,
+    marginTop: 4,
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.78,
