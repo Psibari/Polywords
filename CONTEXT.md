@@ -93,3 +93,30 @@ Phone testing uses the local checkout, not GitHub. Pull the branch before Expo t
 
 Preserve every stash and unrelated worktree change. Pete's local art is his; do not touch
 untracked/local art without approval. No branch merges without Pete's approval.
+
+
+## 2026-10-04 Polly relationship + animation checkpoint
+
+- **Relationship Memory V2 is implemented and verified.** Permanent progression remains monotonic while rivalry/current form can move both directions. Durable visit timing, streak peaks, and word-specific Haunt rivalry history feed pure relationship context rather than a visible meter.
+- **Relationship presentation is implemented and device-checked.** Dedicated authored pools are wired for comeback, veteran slump, return after absence, and Haunt rematch. The physical checks passed for all four beats, so this dialogue layer is treated as locked unless a regression appears.
+- **Current product priority moved from crown progression to Polly's Life System.** Do not work on crown/Polybook progression until Polly's living-character animation direction is proven.
+- **Life-profile logic exists but its current visual proof is not approved.** Five logical profiles remain useful: neutral, cocky, watchful, rattled, hauntFocused. Static-pose comparisons demonstrated that labels/pose swaps alone do not make Polly feel alive.
+- **Existing Home animation foundation was re-audited.** `PollyHomePerch` uses `PollyPerchRig` plus `usePollyAmbientMotion`: layered Rig 2 face parts provide random blinking, brow following, beak/eye variants and crown movement; ambient motion supplies subtle whole-figure rise/drift; Home can transition into the sleeping pose after inactivity.
+- **Legacy animated WEBPs are not a production animation solution.** They are sparse six-frame storyboard/reference material with rough edges/cropping and should not be repaired now. Keep them until active runtime references are systematically replaced.
+- **DEV animation surfaces:** Polly Face Rig is the pixel/tuning workbench; Polly Desktop Animation Lab is the large PC inspection surface; Polly Life Profiles is a comparison surface.
+- A DEV-only **ALIVE LOOP** was added to Polly Face Rig as an experiment. It layers irregular whole-figure lean/settle over the existing blink/breathe controls and can be manually run even when Reduce Motion is enabled in DEV. Production accessibility behavior was not bypassed.
+- **ALIVE LOOP result: rejected as the Life solution.** On inspection it reads as a flat image tilting/rocking, not Polly articulating. Do not promote it to Home or treat it as approved animation.
+- Root limitation found: Rig 2 separates face/crown parts but most of Polly's body is baked into `polly_base.png`. It cannot independently move head, wings, feet, tail, or posture enough to create convincing character performance.
+
+### Next Polly work
+
+**Single most valuable next step:** audit the existing separated Polly art (`assets/images/polly/rig/`, `rig2/`, `flight-rig/`, poses and clean large PNGs) to determine the minimum viable articulated Rig 3 before creating any new art.
+
+Next three actions, in order:
+1. Inventory which existing clean layers can safely supply body/head/wing/tail/feet/face/crown articulation and identify unusable rough/dormant pieces.
+2. Build a DEV-only articulated Neutral prototype in the existing Polly Face Rig workbench, with real part movement rather than whole-sticker rocking.
+3. Prove one 30–60 second Neutral living sequence (blink + glance/attention + weight/posture shift + settle, with irregular quiet gaps) before extending Cocky/Watchful/Rattled/Haunt Focused or wiring production Home.
+
+**Do not work on yet:** new Polly art, WEBP restoration, crown progression, additional relationship states, Polybook changes, production Home Life-profile animation, or changes to the device-locked `BROW_FOLLOW = 0.33`.
+
+**Acceptance:** Polly must read as a living character without dialogue/labels; movement must come from believable articulation rather than rotating the whole image; reaction and resting disposition must remain distinct; apparent size/anchor must stay stable; no clipping/alpha defects; Reduce Motion must remain authoritative in production; PC proof precedes production Home and phone verification.

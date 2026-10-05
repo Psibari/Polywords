@@ -382,3 +382,57 @@ DEV Settings also exposes **Polly Desktop Animation Lab**, intended for the Expo
 - The five reusable whole-image motion presets with play/pause/restart.
 
 The desktop lab is an inspection/tuning surface, not a second production animation system. Pixel-level face alignment remains in the dedicated Face Rig viewer; approved values must still be verified at phone scale before production lock.
+
+
+---
+
+# Relationship verification + Polly Life animation checkpoint — 2026-10-04
+
+The Relationship V2 dialogue/presentation pass has now been physically checked and is considered **locked unless a regression appears**. Comeback, veteran slump, return-after-absence, and Haunt-rematch presentation all produced the intended dedicated relationship copy in testing.
+
+This closes the relationship-brain/dialogue milestone and changes the immediate product priority to **Polly Life System animation**. Crown/Polybook progression is deferred until Polly's physical character behavior is convincing.
+
+## Life-system findings
+
+The logical five-profile resolver remains useful as behavior policy:
+
+- neutral
+- cocky
+- watchful
+- rattled
+- hauntFocused
+
+However, the first visual proofs established that a profile cannot be communicated merely by swapping to an existing static pose. Static comparison is useful for reaction/reference art, not sufficient for persistent life.
+
+The production Home foundation already exists and must be extended rather than replaced:
+
+- `PollyHomePerch.tsx` owns Home entrance/settle/doze presentation.
+- `PollyPerchRig.tsx` owns the live Rig 2 layers: base, beak variants, eye variants, brow variants, crown, random blink and brow-follow/crown behavior.
+- `usePollyAmbientMotion.ts` supplies subtle whole-figure breathing/rise and drift.
+- Home can transition from awake to the authored asleep pose after inactivity.
+- Production `BROW_FOLLOW = 0.33` is device-locked and must not change without device evidence and Pete's approval.
+
+A DEV-only Alive Loop experiment was added to the existing Polly Face Rig viewer. It adds randomized lean/settle motion over the current rig and deliberately remains manually testable in DEV even when Reduce Motion is enabled. This bypass is confined to the development viewer.
+
+**Result:** the experiment is rejected as a production direction. It mainly tilts/translates the whole image and therefore reads as a sticker rocking rather than Polly moving. Do not wire this Alive Loop into Home.
+
+## Art/rig constraint
+
+Rig 2 has useful independent face/crown parts, but most body articulation is baked into `polly_base.png`. That prevents convincing head turns, wing adjustments, foot/weight shifts, tail movement, and posture changes.
+
+The repo also contains older separated `rig/` art, `flight-rig/` wing/body assets, registered static poses, and clean large reaction PNGs. Those must be audited before requesting new art. The older `rig/` README already warns that its rough raster cuts have hidden-pixel gaps, so no dormant layer should be promoted blindly.
+
+Legacy six-frame WEBPs remain reference/storyboard material. Their sparse frames, crop/boundary problems, rough alpha/white-line defects, and missing in-betweens make restoration the wrong current investment. Do not delete them yet because runtime references still exist.
+
+## Next gate
+
+**Most valuable next step:** determine whether existing clean separated art can form a minimum viable articulated Rig 3.
+
+Then:
+1. audit existing layer quality and articulation coverage;
+2. build one DEV-only Neutral articulated prototype inside the existing Face Rig workbench;
+3. prove 30–60 seconds of convincing living Neutral behavior before adding relationship variants or production wiring.
+
+The proof passes only if Polly feels alive without labels/dialogue, body parts articulate rather than the whole rectangle rocking, anchor/scale remain stable, no clipping/alpha defects appear, and production Reduce Motion behavior remains intact.
+
+Do not commission new art until this audit proves which specific missing layers are actually required.
