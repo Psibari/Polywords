@@ -29,3 +29,6 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Run live Hunt content quality gate
+        run: npm run content:quality
