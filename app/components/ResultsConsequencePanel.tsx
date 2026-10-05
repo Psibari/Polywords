@@ -4,16 +4,13 @@ import { FONTS } from '../constants/fonts';
 import type { ResultsConsequence, ResultsConsequenceKind } from '../game/resultsAftermath';
 import { PW } from '../ui/pwTheme';
 
-const CROWNS: Record<ResultsConsequenceKind, ImageSourcePropType> = {
+// Haunted intentionally remains a temporary art slot. Mastered and Banished
+// are the approved crown language; Haunted will receive its own non-crown
+// symbol without requiring another layout rewrite.
+const STATUS_ART: Record<ResultsConsequenceKind, ImageSourcePropType> = {
   mastered: require('../../assets/images/results/GoldenCrown.png'),
   haunted: require('../../assets/images/results/hauntcrown.png'),
   banished: require('../../assets/images/results/banishcrown.png'),
-};
-
-const STATUS_LABEL: Record<ResultsConsequenceKind, string> = {
-  mastered: 'MASTERED',
-  haunted: 'HAUNTED',
-  banished: 'BANISHED',
 };
 
 type Props = {
@@ -34,13 +31,12 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
             style={[styles.record, index > 0 && styles.recordSecondary]}
           >
             <Image
-              source={CROWNS[consequence.kind]}
+              source={STATUS_ART[consequence.kind]}
               resizeMode="contain"
-              style={[styles.crown, index > 0 && styles.crownSecondary]}
+              style={[styles.statusArt, index > 0 && styles.statusArtSecondary]}
               accessibilityIgnoresInvertColors
             />
             <View style={styles.copyBlock}>
-              <Text style={styles.status}>{STATUS_LABEL[consequence.kind]}</Text>
               <Text
                 style={styles.word}
                 numberOfLines={1}
@@ -70,7 +66,7 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
 
 const styles = StyleSheet.create({
   wrap: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
   kicker: {
     color: PW.color.mutedWhite,
@@ -89,39 +85,31 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   record: {
-    minHeight: 104,
+    minHeight: 94,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
   },
   recordSecondary: {
-    minHeight: 86,
+    minHeight: 80,
     borderTopWidth: 1,
     borderTopColor: 'rgba(245,200,66,0.20)',
   },
-  crown: {
-    width: 94,
-    height: 82,
-    marginRight: 12,
+  statusArt: {
+    width: 92,
+    height: 78,
+    marginRight: 6,
   },
-  crownSecondary: {
-    width: 76,
-    height: 66,
-    marginLeft: 9,
-    marginRight: 21,
+  statusArtSecondary: {
+    width: 74,
+    height: 62,
+    marginLeft: 8,
+    marginRight: 16,
   },
   copyBlock: {
     flex: 1,
     minWidth: 0,
-  },
-  status: {
-    color: PW.color.mutedWhite,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    fontSize: 11,
-    letterSpacing: 2.2,
-    marginBottom: 1,
   },
   word: {
     color: PW.color.softWhite,
@@ -140,29 +128,30 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   journalButton: {
-    marginTop: 8,
+    marginTop: 7,
     borderRadius: PW.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(179,136,255,0.42)',
-    backgroundColor: 'rgba(123,45,139,0.18)',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    borderColor: 'rgba(179,136,255,0.34)',
+    backgroundColor: 'rgba(123,45,139,0.13)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     alignItems: 'center',
   },
   journalKicker: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 12,
-    letterSpacing: 0.8,
+    fontSize: 10,
+    letterSpacing: 0.7,
+    opacity: 0.82,
   },
   journalAction: {
     color: PW.color.lavender,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 14,
-    letterSpacing: 1.2,
-    marginTop: 2,
+    fontSize: 13,
+    letterSpacing: 1.05,
+    marginTop: 1,
   },
   pressed: {
     opacity: 0.78,
