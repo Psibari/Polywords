@@ -1,36 +1,14 @@
 import React from 'react';
 import { Image, ImageSourcePropType, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { FONTS } from '../constants/fonts';
 import type { ResultsConsequence, ResultsConsequenceKind } from '../game/resultsAftermath';
 import { PW } from '../ui/pwTheme';
 
-const STATUS_ART: Partial<Record<ResultsConsequenceKind, ImageSourcePropType>> = {
+const STATUS_ART: Record<ResultsConsequenceKind, ImageSourcePropType> = {
   mastered: require('../../assets/images/results/GoldenCrown.png'),
+  haunted: require('../../assets/images/results/Padlock.png'),
   banished: require('../../assets/images/results/banishcrown.png'),
 };
-
-function HauntedLock({ secondary = false }: { secondary?: boolean }) {
-  const width = secondary ? 58 : 70;
-  const height = secondary ? 58 : 70;
-  return (
-    <View style={[styles.lockSlot, secondary && styles.lockSlotSecondary]} accessibilityElementsHidden>
-      <Svg width={width} height={height} viewBox="0 0 72 72">
-        <Path
-          d="M22 31V23C22 14.7 28.3 9 36 9s14 5.7 14 14v8"
-          fill="none"
-          stroke="#F5C842"
-          strokeWidth="7"
-          strokeLinecap="round"
-        />
-        <Rect x="13" y="28" width="46" height="36" rx="9" fill="#5B2678" stroke="#F5C842" strokeWidth="3" />
-        <Rect x="18" y="33" width="36" height="26" rx="6" fill="#24183D" opacity="0.72" />
-        <Circle cx="36" cy="44" r="5" fill="#F5C842" />
-        <Path d="M33.5 47h5L41 56H31l2.5-9Z" fill="#F5C842" />
-      </Svg>
-    </View>
-  );
-}
 
 type Props = {
   consequences: ResultsConsequence[];
@@ -44,37 +22,30 @@ export function ResultsConsequencePanel({ consequences, onOpenJournal }: Props) 
     <View style={styles.wrap}>
       <Text style={styles.kicker}>WHAT CHANGED</Text>
       <View style={styles.records}>
-        {consequences.map((consequence, index) => {
-          const secondary = index > 0;
-          return (
-            <View
-              key={`${consequence.kind}-${consequence.word}-${index}`}
-              style={[styles.record, secondary && styles.recordSecondary]}
-            >
-              {consequence.kind === 'haunted' ? (
-                <HauntedLock secondary={secondary} />
-              ) : (
-                <Image
-                  source={STATUS_ART[consequence.kind]!}
-                  resizeMode="contain"
-                  style={[styles.statusArt, secondary && styles.statusArtSecondary]}
-                  accessibilityIgnoresInvertColors
-                />
-              )}
-              <View style={styles.copyBlock}>
-                <Text
-                  style={styles.word}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.65}
-                >
-                  {consequence.word}
-                </Text>
-                <Text style={styles.copy}>{consequence.copy}</Text>
-              </View>
+        {consequences.map((consequence, index) => (
+          <View
+            key={`${consequence.kind}-${consequence.word}-${index}`}
+            style={[styles.record, index > 0 && styles.recordSecondary]}
+          >
+            <Image
+              source={STATUS_ART[consequence.kind]}
+              resizeMode="contain"
+              style={[styles.statusArt, index > 0 && styles.statusArtSecondary]}
+              accessibilityIgnoresInvertColors
+            />
+            <View style={styles.copyBlock}>
+              <Text
+                style={styles.word}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.65}
+              >
+                {consequence.word}
+              </Text>
+              <Text style={styles.copy}>{consequence.copy}</Text>
             </View>
-          );
-        })}
+          </View>
+        ))}
       </View>
 
       <Pressable
@@ -128,19 +99,6 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   statusArtSecondary: {
-    width: 74,
-    height: 62,
-    marginLeft: 8,
-    marginRight: 16,
-  },
-  lockSlot: {
-    width: 92,
-    height: 78,
-    marginRight: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lockSlotSecondary: {
     width: 74,
     height: 62,
     marginLeft: 8,
