@@ -21,6 +21,19 @@ const APPROVED_HEADWORD_LEAKS = new Map([
   ['FAST/fast_r04', 'WHAT YOU BREAK WHEN YOU BREAK FAST'],
 ]);
 
+// These words carry little or no memory-snap information by themselves. The
+// review heuristic intentionally ignores them so connective English does not
+// turn the report into a landfill fire.
+const EDITORIAL_STOPWORDS = new Set([
+  'A', 'AN', 'AND', 'ARE', 'AS', 'AT', 'BE', 'BEEN', 'BEFORE', 'BEING', 'BETWEEN',
+  'BY', 'CAN', 'DO', 'DOES', 'FOR', 'FROM', 'GET', 'GETS', 'GOT', 'HAD', 'HAS',
+  'HAVE', 'HE', 'HER', 'HIM', 'HIS', 'HOW', 'I', 'IN', 'INTO', 'IS', 'IT', 'ITS',
+  'JUST', 'LIKE', 'MORE', 'NOT', 'OF', 'OFF', 'ON', 'ONE', 'OR', 'OUT', 'OVER',
+  'SHE', 'SO', 'SOME', 'THAN', 'THAT', 'THE', 'THEIR', 'THEM', 'THEN', 'THERE',
+  'THESE', 'THEY', 'THIS', 'THOSE', 'THROUGH', 'TO', 'UP', 'WAS', 'WE', 'WERE',
+  'WHAT', 'WHEN', 'WHERE', 'WHICH', 'WHO', 'WHY', 'WITH', 'WITHOUT', 'YOU', 'YOUR',
+]);
+
 export function normalizePhrase(value) {
   return String(value ?? '')
     .toUpperCase()
@@ -31,6 +44,37 @@ export function normalizePhrase(value) {
 
 function countWords(value) {
   return String(value ?? '').trim().split(/\s+/).filter(Boolean).length;
+}
+
+function editorialStem(token) {
+  if (token.length <= 4) return token;
+  if (token.endsWith('IES') && token.length > 5) return `${token.slice(0, -3)}Y`;
+  if (token.endsWith('ING') && token.length > 6) return token.slice(0, -3).replace(/(.)\1$/, '$1');
+  if (token.endsWith('ED') && token.length > 5) return token.slice(0, -2).replace(/(.)\1$/, '$1');
+  if (token.endsWith('ER') && token.length > 5) return token.slice(0, -2).replace(/(.)\1$/, '$1');
+  if (token.endsWith('ES') && token.length > 5) return token.slice(0, -2);
+  if (token.endsWith('S') && !token.endsWith('SS') && token.length > 4) return token.slice(0, -1);
+  return token;
+}
+
+function editorialTokens(value) {
+  return new Set(
+    normalizePhrase(value)
+      .split(/\s+/)
+      .filter(token => token && !EDITORIAL_STOPWORDS.has(token) && !/^\d+$/.test(token))
+      .map(editorialStem)
+      .filter(token => token.length >= 3),
+  );
+}
+
+function sharedTokens(left, right) {
+  return [...left].filter(token => right.has(token)).sort();
+}
+
+function jaccard(left, right) {
+  const shared = sharedTokens(left, right).length;
+  const union = new Set([...left, ...right]).size;
+  return union ? shared / union : 0;
 }
 
 function obviousWordForms(word) {
@@ -67,6 +111,7 @@ function validatePhrase(
   wordForms,
   phraseOwners,
   blockers,
+  editorialReview,
   headwordLeakKey = null,
 ) {
   const phrase = typeof value === 'string' ? value.trim() : '';
@@ -85,7 +130,9 @@ function validatePhrase(
   const tokens = normalized.split(/\s+/).filter(Boolean);
   const approvedLeak =
     headwordLeakKey != null && APPROVED_HEADWORD_LEAKS.get(headwordLeakKey) === phrase;
-  if (!approvedLeak && tokens.some(token => wordForms.has(token))) {
+  if (approvedLeak) {
+    editorialReview.push(`approved headword-leak exception requires human re-review: ${headwordLeakKey} — ${phrase}`);
+  } else if (tokens.some(token => wordForms.has(token))) {
     blockers.push(`${context}: phrase leaks the headword or an obvious inflection`);
   }
 
@@ -102,10 +149,55 @@ function nonemptyLegacyHidden(entry) {
     .some(value => typeof value === 'string' ? value.trim().length > 0 : value != null);
 }
 
+function buildEditorialReview(records, editorialReview) {
+  const byWord = new Map();
+  for (const record of records) {
+    const group = byWord.get(record.word) ?? { reals: [], traps: [] };
+    (record.role === 'REAL' ? group.reals : group.traps).push(record);
+    byWord.set(record.word, group);
+  }
+
+  for (const [word, group] of byWord) {
+    for (const real of group.reals) {
+      for (const trap of group.traps) {
+        const shared = sharedTokens(real.tokens, trap.tokens);
+        const suspicious = shared.length >= 2 ||
+          (shared.length === 1 && shared[0].length >= 6);
+        if (!suspicious) continue;
+        editorialReview.push(
+          `same-headword REAL/trap overlap: ${word}/${real.id} ↔ ${word}/${trap.id}; shared=${shared.join(', ')}; REAL="${real.phrase}"; TRAP="${trap.phrase}"`,
+        );
+      }
+    }
+  }
+
+  // Exact duplicates are already structural blockers. This pass catches only
+  // strong near-duplicates across different headwords and leaves judgment to
+  // the editorial review rather than pretending lexical similarity proves a
+  // writing violation.
+  for (let leftIndex = 0; leftIndex < records.length; leftIndex += 1) {
+    const left = records[leftIndex];
+    if (left.tokens.size < 3) continue;
+    for (let rightIndex = leftIndex + 1; rightIndex < records.length; rightIndex += 1) {
+      const right = records[rightIndex];
+      if (left.word === right.word || right.tokens.size < 3) continue;
+      const shared = sharedTokens(left.tokens, right.tokens);
+      if (shared.length < 3) continue;
+      const similarity = jaccard(left.tokens, right.tokens);
+      if (similarity < 0.72) continue;
+      editorialReview.push(
+        `cross-headword near-duplicate: ${left.word}/${left.id} ↔ ${right.word}/${right.id}; similarity=${similarity.toFixed(2)}; shared=${shared.join(', ')}; A="${left.phrase}"; B="${right.phrase}"`,
+      );
+    }
+  }
+}
+
 export function validateRuntimeHuntData(data) {
   const blockers = [];
   const launchBlockers = [];
   const warnings = [];
+  const editorialReview = [];
+  const contentRecords = [];
   const byPhase = Object.fromEntries(PHASES.map(phase => [phase, 0]));
   const summary = {
     words: 0,
@@ -118,7 +210,7 @@ export function validateRuntimeHuntData(data) {
 
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     blockers.push('root: expected a word-keyed object');
-    return { blockers, launchBlockers, warnings, summary };
+    return { blockers, launchBlockers, warnings, editorialReview, summary };
   }
 
   const entries = Object.entries(data);
@@ -191,8 +283,18 @@ export function validateRuntimeHuntData(data) {
           wordForms,
           phraseOwners,
           blockers,
+          editorialReview,
           `${word}/${id}`,
         );
+        if (typeof mask.phrase === 'string' && mask.phrase.trim() && typeof mask.isReal === 'boolean') {
+          contentRecords.push({
+            word,
+            id: id || `mask[${index}]`,
+            role: mask.isReal ? 'REAL' : 'TRAP',
+            phrase: mask.phrase.trim(),
+            tokens: editorialTokens(mask.phrase),
+          });
+        }
       }
 
       summary.realMasks += realCount;
@@ -240,8 +342,14 @@ export function validateRuntimeHuntData(data) {
         } else {
           ids.set(pairId, pairContext);
         }
-        validatePhrase(pair.real, `${pairContext}/real`, wordForms, phraseOwners, blockers);
-        validatePhrase(pair.trap, `${pairContext}/trap`, wordForms, phraseOwners, blockers);
+        validatePhrase(pair.real, `${pairContext}/real`, wordForms, phraseOwners, blockers, editorialReview);
+        validatePhrase(pair.trap, `${pairContext}/trap`, wordForms, phraseOwners, blockers, editorialReview);
+        if (typeof pair.real === 'string' && pair.real.trim()) {
+          contentRecords.push({ word, id: `${pairId || `hidden[${index}]`}:real`, role: 'REAL', phrase: pair.real.trim(), tokens: editorialTokens(pair.real) });
+        }
+        if (typeof pair.trap === 'string' && pair.trap.trim()) {
+          contentRecords.push({ word, id: `${pairId || `hidden[${index}]`}:trap`, role: 'TRAP', phrase: pair.trap.trim(), tokens: editorialTokens(pair.trap) });
+        }
         if (normalizePhrase(pair.real) && normalizePhrase(pair.real) === normalizePhrase(pair.trap)) {
           blockers.push(`${pairContext}: hidden REAL and trap cannot be identical`);
         }
@@ -250,12 +358,12 @@ export function validateRuntimeHuntData(data) {
           warnings.push(`${pairContext}: REAL/trap length differs by ${lengthDelta} words; review Hidden Truth parity`);
         }
       }
-    } else {
-      if (hiddenPairs.length > 0 || nonemptyLegacyHidden(entry)) {
-        blockers.push(`${context}: non-boss words cannot contain hidden gauntlet content`);
-      }
+    } else if (hiddenPairs.length > 0 || nonemptyLegacyHidden(entry)) {
+      blockers.push(`${context}: non-boss words cannot contain hidden gauntlet content`);
     }
   }
+
+  buildEditorialReview(contentRecords, editorialReview);
 
   if (summary.words < 110) {
     launchBlockers.push(`launch supply: ${summary.words}/110 runtime words`);
@@ -266,5 +374,5 @@ export function validateRuntimeHuntData(data) {
     }
   }
 
-  return { blockers, launchBlockers, warnings, summary };
+  return { blockers, launchBlockers, warnings, editorialReview, summary };
 }
