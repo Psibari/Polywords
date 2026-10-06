@@ -55,8 +55,9 @@ bottom-anchored geometry.
 - Runtime Hunt entries are validated before selection. Invalid difficulty/gpsTag, malformed or
   duplicate mask IDs, non-Boolean REAL/trap flags, missing swipe-direction coverage, or Boss
   entries without hidden content must fail loudly rather than silently disappear from pools.
-- `assets/data/huntData.json` remains the live bank. Reviewed audit/metadata overrides may be
-  applied explicitly by `huntGenerator.ts`; they are part of runtime and must preserve stable IDs.
+- `assets/data/huntData.json` is the single live Hunt bank. The generator and every Hunt
+  validation, audit and state tool consume it directly; parallel runtime override banks are not
+  part of the architecture.
 - Scoring is computed/persisted but player-facing nowhere. Rank is retired. Momentum is the live
   STEADY / SHARP / RAZOR SHARP / UNTRAPPABLE system with FELL OFF on a broken chain.
 

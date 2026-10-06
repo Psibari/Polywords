@@ -6,8 +6,8 @@ approval. `docs/CONTENT_PHILOSOPHY.md` states the intended feeling.
 ## Data Boundary
 
 - Base live Hunt bank: `assets/data/huntData.json`.
-- Runtime may apply explicit reviewed audit/metadata overrides in `huntGenerator.ts`; the
-  effective runtime content is the base bank after those overrides and validation.
+- Runtime, validation, audit and state tooling consume `assets/data/huntData.json` directly.
+  Do not create a parallel override bank or another effective Hunt content source.
 - Editorial workbooks are staging. Approval never changes runtime automatically.
 - Runtime promotion is explicit and verified. Stable word/mask/hidden-pair IDs are persistence
   contracts; never casually renumber approved live content.

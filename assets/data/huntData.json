@@ -1889,7 +1889,7 @@
       },
       {
         "id": "bridge_r1",
-        "phrase": "A GAME PLAYED AT THE RETIREMENT HOME",
+        "phrase": "A CARD GAME PLAYED AT THE RETIREMENT HOME",
         "isReal": true
       },
       {
@@ -1913,8 +1913,8 @@
         "isReal": false
       },
       {
-        "id": "bridge_t1",
-        "phrase": "YOU MUST SAY “GIN” TO WIN THIS CARD GAME",
+        "id": "bridge_t91",
+        "phrase": "WHAT LINKS TWO RAILROAD CARS SO THEY MOVE TOGETHER",
         "isReal": false
       },
       {
@@ -1984,13 +1984,13 @@
         "isReal": false
       },
       {
-        "id": "brief_t2",
-        "phrase": "COMMANDER ASKS FOR VOLUNTEERS AFTER THE MISSION",
+        "id": "brief_t8",
+        "phrase": "LOOKS GOOD ON WOMEN, GIVES MEN A WEDGIE",
         "isReal": false
       },
       {
-        "id": "brief_t3",
-        "phrase": "SOCKS BALLED UP IN THE BOTTOM DRAWER",
+        "id": "brief_t9",
+        "phrase": "WHERE RECEIPTS, LIPSTICK, AND HER KEYS ALL DISAPPEAR",
         "isReal": false
       },
       {
@@ -2420,11 +2420,6 @@
         "isReal": false
       },
       {
-        "id": "cape_t1",
-        "phrase": "A SAFE PLACE FOR SHIPS DURING STORMS",
-        "isReal": false
-      },
-      {
         "id": "cape_t2",
         "phrase": "LAND COMPLETELY SURROUNDED BY WATER",
         "isReal": false
@@ -2432,6 +2427,11 @@
       {
         "id": "cape_t3",
         "phrase": "THE BRIDE’S DRAMATIC TRAIL DOWN THE AISLE",
+        "isReal": false
+      },
+      {
+        "id": "cape_t91",
+        "phrase": "THE GRIM REAPER’S FASHION CHOICE IN BLACK",
         "isReal": false
       }
     ],
@@ -2455,18 +2455,8 @@
       },
       {
         "id": "capital_r2",
-        "phrase": "FIRST LETTER OF A SENTENCE",
+        "phrase": "HOW EVERY SENTENCE IS SUPPOSED TO BEGIN",
         "isReal": true
-      },
-      {
-        "id": "capital_r3",
-        "phrase": "HIGHEST FORM OF PUNISHMENT",
-        "isReal": true
-      },
-      {
-        "id": "capital_t0",
-        "phrase": "INVESTORS WIRE THE SEED FUNDING",
-        "isReal": false
       },
       {
         "id": "capital_t1",
@@ -2474,13 +2464,18 @@
         "isReal": false
       },
       {
-        "id": "capital_t2",
-        "phrase": "LOWERCASE LETTER AT THE END",
+        "id": "capital_t91",
+        "phrase": "WHAT THE FIRST LETTERS OF YOUR NAME ARE CALLED",
+        "isReal": false
+      },
+      {
+        "id": "capital_t92",
+        "phrase": "WHAT CTRL+C THEN CTRL+V GIVES YOU",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Quadruple"
+    "wordType": "Triple"
   },
   "CARPET": {
     "difficulty": "easy",
@@ -2731,23 +2726,18 @@
         "isReal": true
       },
       {
-        "id": "chamber_t0",
-        "phrase": "WHERE THE JURY DECIDES THE VERDICT",
-        "isReal": false
-      },
-      {
-        "id": "chamber_t1",
-        "phrase": "A PASSAGE YOU WOULD FIND IN A CAVE",
-        "isReal": false
-      },
-      {
-        "id": "chamber_t2",
-        "phrase": "WHERE YOUR TWO INTESTINES MEET",
+        "id": "chamber_t100",
+        "phrase": "WHAT OPENS BEHIND THE BOOKCASE WHEN YOU PULL THE RIGHT BOOK",
         "isReal": false
       },
       {
         "id": "chamber_t3",
         "phrase": "WHERE SURGEONS OPERATE AT THE HOSPITAL",
+        "isReal": false
+      },
+      {
+        "id": "chamber_t101",
+        "phrase": "THE PADDED ROOM WHERE THE OCCUPANT WEARS A STRAITJACKET",
         "isReal": false
       }
     ],
@@ -3180,8 +3170,8 @@
         "isReal": false
       },
       {
-        "id": "circuit_t1",
-        "phrase": "A CONDUCTOR FOR ELECTRICITY",
+        "id": "circuit_t92",
+        "phrase": "WHAT A DOCTOR TRACES TO CHECK YOUR HEARTBEAT",
         "isReal": false
       },
       {
@@ -3190,13 +3180,13 @@
         "isReal": false
       },
       {
-        "id": "circuit_t3",
-        "phrase": "DIRECT DRIVING ROUTE TO YOUR DESTINATION",
+        "id": "circuit_t93",
+        "phrase": "WHAT CONNECTS ALL THE STOPS ON A SUBWAY MAP",
         "isReal": false
       },
       {
-        "id": "circuit_t4",
-        "phrase": "FOUR TIMES AROUND IT MAKES ONE MILE",
+        "id": "circuit_t94",
+        "phrase": "WHAT A SALESMAN IS ASSIGNED TO COVER",
         "isReal": false
       }
     ],
@@ -3451,8 +3441,8 @@
         "isReal": false
       },
       {
-        "id": "clear_t2",
-        "phrase": "HOW YOU END A MESSAGE ON A WALKIE-TALKIE",
+        "id": "clear_t6",
+        "phrase": "WHAT YOU GET AFTER PASSING A BACKGROUND CHECK",
         "isReal": false
       },
       {
@@ -4065,18 +4055,18 @@
         "isReal": false
       },
       {
-        "id": "compound_t1",
-        "phrase": "WHAT BRASS AND STEEL BOTH ARE",
+        "id": "compound_t4",
+        "phrase": "WHAT YOUR FOOD SCRAPS CAN BECOME IN THE BACKYARD",
         "isReal": false
       },
       {
-        "id": "compound_t2",
-        "phrase": "THE MONEY YOUR SAVINGS ACCOUNT EARNS",
+        "id": "compound_t5",
+        "phrase": "WHAT A DJ DOES WITH TWO RECORDS",
         "isReal": false
       },
       {
-        "id": "compound_t3",
-        "phrase": "WHEN YOU SQUASH A BEEF",
+        "id": "compound_t6",
+        "phrase": "AN EDIT OF YOUR FAVORITE VIDEO CLIPS",
         "isReal": false
       }
     ],
@@ -4116,16 +4106,6 @@
       {
         "id": "concentration_t1",
         "phrase": "UNDECIDED, STILL PICKING A MAJOR",
-        "isReal": false
-      },
-      {
-        "id": "concentration_t2",
-        "phrase": "RESTAURANTS SCATTERED ALL OVER TOWN",
-        "isReal": false
-      },
-      {
-        "id": "concentration_t3",
-        "phrase": "STRAIGHT FROM THE ORANGE, NOTHING ADDED",
         "isReal": false
       },
       {
@@ -4193,8 +4173,8 @@
         "isReal": true
       },
       {
-        "id": "conduct_t0",
-        "phrase": "THE RESULTS FROM A LAB EXPERIMENT",
+        "id": "conduct_t92",
+        "phrase": "WHAT THE FLIGHT ATTENDANT DOES BEFORE TAKEOFF",
         "isReal": false
       },
       {
@@ -4400,12 +4380,12 @@
       },
       {
         "id": "copy_r02",
-        "phrase": "A BOOTLEG VERSION OF THE ORIGINAL",
+        "phrase": "WHAT BOOTLEGS ARE TO THE ORIGINAL",
         "isReal": true
       },
       {
         "id": "copy_r03",
-        "phrase": "THE WALKIE-TALKIE VERSION OF “GOT IT”",
+        "phrase": "THE WAY YOU TELL SOMEONE YOU UNDERSTOOD THEM OVER A WALKIE-TALKIE",
         "isReal": true
       },
       {
@@ -4608,11 +4588,6 @@
       {
         "id": "corner_t3",
         "phrase": "WHERE TWO HIGHWAYS CAME TOGETHER",
-        "isReal": false
-      },
-      {
-        "id": "corner_t4",
-        "phrase": "WHAT TWO OF THE SIX POCKETS ON A POOL TABLE ARE",
         "isReal": false
       },
       {
@@ -7483,7 +7458,7 @@
       }
     ],
     "gpsTag": "flow",
-    "wordType": "9-MEANING"
+    "wordType": "8-MEANING"
   },
   "FIELD": {
     "difficulty": "hard",
@@ -8529,7 +8504,7 @@
       }
     ],
     "gpsTag": "panic",
-    "wordType": "12-MEANING"
+    "wordType": "11-MEANING"
   },
   "FORGE": {
     "difficulty": "medium",
@@ -9138,33 +9113,48 @@
         "isReal": true
       },
       {
-        "id": "light_r4",
-        "phrase": "BLUE, BUT NOT THE DARK ONE",
+        "id": "light_r7",
+        "phrase": "THE DIET VERSION OF BEER",
         "isReal": true
       },
       {
-        "id": "light_t0",
-        "phrase": "HEAVY SUITCASE THROWN ON THE SCALE",
+        "id": "light_r8",
+        "phrase": "WHAT THE MOON GIVES YOU ON A CLEAR NIGHT",
+        "isReal": true
+      },
+      {
+        "id": "light_r6",
+        "phrase": "WHAT YOUR REFRIGERATOR HAS BUT YOUR FREEZER DOESN’T",
+        "isReal": true
+      },
+      {
+        "id": "light_t91",
+        "phrase": "WHAT A CAMERA USES TO TAKE A PICTURE AT NIGHT",
         "isReal": false
       },
       {
-        "id": "light_t1",
-        "phrase": "MIDNIGHT BLACK PAINT ON THE FENCE",
+        "id": "light_t92",
+        "phrase": "WHAT THE SUN LEAVES BEHIND YOU ON THE SIDEWALK",
         "isReal": false
       },
       {
-        "id": "light_t2",
-        "phrase": "CHECKERED FLAG DROPS AT THE FINISH LINE",
+        "id": "light_t93",
+        "phrase": "WHAT MAKES YOU REACH FOR THE VISOR WHILE DRIVING",
         "isReal": false
       },
       {
-        "id": "light_t3",
-        "phrase": "PINCHES THE WICK BETWEEN TWO FINGERS",
+        "id": "light_t94",
+        "phrase": "WHAT YOU SHUT IN A ROOM WHEN YOU WANT PRIVACY",
+        "isReal": false
+      },
+      {
+        "id": "light_t95",
+        "phrase": "WHAT YOU TURN ON WHEN YOU LEAVE HOME AND OFF WHEN YOU COME BACK",
         "isReal": false
       }
     ],
     "gpsTag": "flow",
-    "wordType": "Quintuple"
+    "wordType": "Septuple"
   },
   "LOG": {
     "difficulty": "medium",
@@ -9510,12 +9500,27 @@
       },
       {
         "id": "palm_r1",
-        "phrase": "SAY TROPICAL. BET YOU JUST PICTURED ONE",
+        "phrase": "WHAT COMES TO MIND WHEN YOU THINK TROPICAL ISLAND",
         "isReal": true
       },
       {
         "id": "palm_r2",
-        "phrase": "HOW THE MAGICIAN HID IT THE WHOLE TIME",
+        "phrase": "WHERE THE MAGICIAN KEPT IT THE WHOLE TIME",
+        "isReal": true
+      },
+      {
+        "id": "palm_r6",
+        "phrase": "WHAT CHARMING MANIPULATION CAN HAVE SOMEONE EATING OUT OF",
+        "isReal": true
+      },
+      {
+        "id": "palm_r4",
+        "phrase": "WHAT SMACKS AGAINST THEIRS WHEN YOU HIGH-FIVE SOMEONE",
+        "isReal": true
+      },
+      {
+        "id": "palm_r5",
+        "phrase": "WHAT GETS CLAMMY WHEN YOU’RE REALLY NERVOUS",
         "isReal": true
       },
       {
@@ -9525,7 +9530,7 @@
       },
       {
         "id": "palm_t1",
-        "phrase": "WHAT YOU CROSS WHILE WAITING FOR RESULTS",
+        "phrase": "WHAT YOU CROSS TO MAKE A LIE NOT COUNT",
         "isReal": false
       },
       {
@@ -9535,22 +9540,22 @@
       },
       {
         "id": "palm_t3",
-        "phrase": "THE TREE GEORGE WASHINGTON COULDN’T LIE ABOUT",
+        "phrase": "THE TYPE OF TREE GEORGE WASHINGTON CHOPPED DOWN IN HIS FAMOUS STORY",
         "isReal": false
       },
       {
-        "id": "palm_t4",
-        "phrase": "WHERE THE MAGICIAN PULLED THE RABBIT FROM",
+        "id": "palm_t91",
+        "phrase": "WHAT THE POLICE TAKE IN INK AFTER THEY ARREST YOU",
         "isReal": false
       },
       {
-        "id": "palm_t5",
-        "phrase": "THE CARDS SHE FLIPPED TO READ YOUR FUTURE",
+        "id": "palm_t92",
+        "phrase": "WHAT WRINKLES UP WHEN YOU STAY IN THE POOL TOO LONG",
         "isReal": false
       }
     ],
     "gpsTag": "tension",
-    "wordType": "Triple"
+    "wordType": "Sextuple"
   },
   "PARK": {
     "difficulty": "medium",
@@ -10715,18 +10720,18 @@
         "isReal": true
       },
       {
+        "id": "sentence_t5",
+        "phrase": "WHAT YOU PUT ON THE FRONT PAGE OF A BOOK REPORT",
+        "isReal": false
+      },
+      {
         "id": "sentence_r1",
         "phrase": "WHAT THE JUDGE HANDS DOWN WHEN YOU'RE FOUND GUILTY",
         "isReal": true
       },
       {
-        "id": "sentence_t0",
-        "phrase": "STAND UP AND SPELL IT OUT LOUD",
-        "isReal": false
-      },
-      {
-        "id": "sentence_t1",
-        "phrase": "JUDGE LETS YOU OFF WITH JUST A WARNING",
+        "id": "sentence_t6",
+        "phrase": "WHAT YOU TEACH A PARROT TO SAY OVER AND OVER",
         "isReal": false
       },
       {
@@ -11672,7 +11677,7 @@
     "wordType": "Quadruple"
   },
   "CASE": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "hiddenPairs": [
@@ -11783,7 +11788,7 @@
     "wordType": "9-MEANING"
   },
   "CUT": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "hiddenPairs": [
@@ -11939,7 +11944,7 @@
     "wordType": "18-MEANING"
   },
   "DRIVE": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "hiddenPairs": [
@@ -13115,7 +13120,7 @@
     "wordType": "9-MEANING"
   },
   "HOLD": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "hiddenPairs": [
@@ -13607,7 +13612,7 @@
     "wordType": "Quintuple"
   },
   "ROUND": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "hiddenPairs": [
@@ -13728,7 +13733,7 @@
     "wordType": "11-MEANING"
   },
   "SET": {
-    "difficulty": null,
+    "difficulty": "hard",
     "hiddenMeaning": null,
     "hiddenTrap": null,
     "hiddenPairs": [

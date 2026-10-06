@@ -18,12 +18,12 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. Standard arc is 10 rounds; fledgling is 8.
   Polly's Word is final. Returning Haunt is round 5 standard / round 4 fledgling.
-- **Hunt content/runtime integrity:** the 2026-10-05 audit sync is merged at `2ecfd07` and
-  verified locally with `npm run typecheck` + the full `npm test` suite. Runtime now applies the
-  locked audit replacements and validates Hunt entries at load so malformed difficulty/gpsTag,
-  missing/duplicate mask IDs, invalid REAL/trap flags, missing swipe-direction coverage, or
-  Boss entries without hidden content fail loudly instead of being silently bypassed. Existing
-  GPS arc, fallback pools, mastery revisits, Boss selection and Returning Haunt behavior remain.
+- **Hunt content/runtime integrity:** the 2026-10-05 audited replacements and metadata repairs
+  live directly in canonical `assets/data/huntData.json`; the temporary runtime override layer is
+  retired. Hunt entries validate at load so malformed difficulty/gpsTag, missing/duplicate mask
+  IDs, invalid REAL/trap flags, missing swipe-direction coverage, or Boss entries without hidden
+  content fail loudly instead of being silently bypassed. Existing GPS arc, fallback pools,
+  mastery revisits, Boss selection and Returning Haunt behavior remain.
 - **First-run onboarding:** merged, device-approved, locked. FINE teaches recognition on the real
   board; HUD lessons teach feathers, momentum, a broken run and Hunt progress.
 - **Daily castle:** device-approved and locked. Do not reopen the castle art for the deferred

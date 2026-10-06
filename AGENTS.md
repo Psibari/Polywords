@@ -56,10 +56,10 @@ casually.
 
 - `docs/CONTENT_WRITING_STANDARD.md` exclusively governs Hunt REALS, traps, hidden content and
   editorial approval. Daily has its own standard.
-- Runtime Hunt source is `assets/data/huntData.json`. `huntGenerator.ts` may apply explicit,
-  reviewed audit/metadata overrides before selection; runtime validation must reject malformed
-  difficulty/gpsTag, IDs, REAL/trap flags and invalid Boss hidden content rather than silently
-  bypassing it.
+- Runtime Hunt source is `assets/data/huntData.json`. Every runtime, validation, audit and state
+  consumer reads that canonical bank directly; do not create parallel override banks. Runtime
+  validation must reject malformed difficulty/gpsTag, IDs, REAL/trap flags and invalid Boss
+  hidden content rather than silently bypassing it.
 - Editorial workbooks do not update runtime automatically. Promote approved content explicitly
   and preserve stable IDs.
 - `assets/data/huntData.v2.json` and `tools/content/_deprecated/mask-rewriter/` are retired.

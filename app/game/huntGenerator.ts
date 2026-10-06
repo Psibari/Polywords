@@ -1,20 +1,14 @@
 import { EmotionalRole, HiddenPair, HuntPerformance, SessionStep, WordStep } from './types';
 import rawHuntData from '../../assets/data/huntData.json';
-import auditOverrides from '../../assets/data/huntDataAuditOverrides.json';
-import metadataOverrides from '../../assets/data/huntDataMetadataOverrides.json';
 import { createSeededRng } from './seededRandom';
 import { FIRST_RUN_FINE_MASK_IDS } from './firstRunOnboarding';
 
 type HuntWordData = { difficulty:string; hiddenMeaning:string|null; hiddenTrap:string|null; hiddenPairs?:HiddenPair[]|null; gpsTag:'confidence'|'flow'|'tension'|'panic'|'boss'; wordType?:string; masks:{id:string;phrase:string;isReal:boolean}[] };
 type HuntDB=Record<string,HuntWordData>;
-type HuntOverride=Partial<Pick<HuntWordData,'difficulty'|'gpsTag'|'wordType'|'masks'>>;
-const baseDb=rawHuntData as unknown as HuntDB;
-const contentOverrides=auditOverrides as unknown as Record<string,HuntOverride>;
-const metaOverrides=metadataOverrides as unknown as Record<string,HuntOverride>;
-const db=Object.fromEntries(Object.entries(baseDb).map(([word,data])=>[word,{...data,...(contentOverrides[word]??{}),...(metaOverrides[word]??{})}])) as HuntDB;
+const db=rawHuntData as unknown as HuntDB;
 const VALID_DIFFICULTIES=new Set(['easy','medium','hard']);
 const VALID_GPS_TAGS=new Set(['confidence','flow','tension','panic','boss']);
-function validateHuntData():void{const seenMaskIds=new Set<string>(),problems:string[]=[];for(const [word,data] of Object.entries(db)){if(!VALID_DIFFICULTIES.has(data.difficulty))problems.push(`${word}: invalid difficulty ${String(data.difficulty)}`);if(!VALID_GPS_TAGS.has(data.gpsTag))problems.push(`${word}: invalid gpsTag ${String(data.gpsTag)}`);if(!Array.isArray(data.masks)||data.masks.length===0){problems.push(`${word}: no visible masks`);continue;}if(!data.masks.some(m=>m.isReal===true))problems.push(`${word}: no REAL mask`);if(!data.masks.some(m=>m.isReal===false))problems.push(`${word}: no trap mask`);for(const mask of data.masks){if(!mask.id||!mask.phrase||typeof mask.isReal!=='boolean')problems.push(`${word}: malformed mask`);if(seenMaskIds.has(mask.id))problems.push(`${word}: duplicate mask id ${mask.id}`);seenMaskIds.add(mask.id);}if(data.gpsTag==='boss'){const hasPairs=(data.hiddenPairs?.some(p=>p.real!=null&&p.trap!=null)??false)||(data.hiddenMeaning!=null&&data.hiddenTrap!=null);if(!hasPairs)problems.push(`${word}: boss has no hidden REAL/trap pair`);}}for(const word of [...Object.keys(contentOverrides),...Object.keys(metaOverrides)])if(!baseDb[word])problems.push(`${word}: Hunt override has no base word`);if(problems.length)throw new Error(`[huntData] integrity check failed:\n${problems.join('\n')}`);}validateHuntData();
+function validateHuntData():void{const seenMaskIds=new Set<string>(),problems:string[]=[];for(const [word,data] of Object.entries(db)){if(!VALID_DIFFICULTIES.has(data.difficulty))problems.push(`${word}: invalid difficulty ${String(data.difficulty)}`);if(!VALID_GPS_TAGS.has(data.gpsTag))problems.push(`${word}: invalid gpsTag ${String(data.gpsTag)}`);if(!Array.isArray(data.masks)||data.masks.length===0){problems.push(`${word}: no visible masks`);continue;}if(!data.masks.some(m=>m.isReal===true))problems.push(`${word}: no REAL mask`);if(!data.masks.some(m=>m.isReal===false))problems.push(`${word}: no trap mask`);for(const mask of data.masks){if(!mask.id||!mask.phrase||typeof mask.isReal!=='boolean')problems.push(`${word}: malformed mask`);if(seenMaskIds.has(mask.id))problems.push(`${word}: duplicate mask id ${mask.id}`);seenMaskIds.add(mask.id);}if(data.gpsTag==='boss'){const hasPairs=(data.hiddenPairs?.some(p=>p.real!=null&&p.trap!=null)??false)||(data.hiddenMeaning!=null&&data.hiddenTrap!=null);if(!hasPairs)problems.push(`${word}: boss has no hidden REAL/trap pair`);}}if(problems.length)throw new Error(`[huntData] integrity check failed:\n${problems.join('\n')}`);}validateHuntData();
 export const SESSION_LENGTH=10;
 type GpsDistribution={confidence:number;flow:number;tension:number;panic:number;boss:number};
 const GPS_ARCS:Record<number,GpsDistribution>={8:{confidence:2,flow:2,tension:2,panic:1,boss:1},10:{confidence:2,flow:2,tension:3,panic:2,boss:1}};
