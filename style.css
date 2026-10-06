@@ -1,0 +1,14 @@
+:root{--bg:#1A1830;--deep:#0B0920;--surface:#211B4A;--gold:#F5C842;--foil:#FFF7D6;--lav:#B98ADE;--text:#ECE8F6;--muted:#B7B0CC}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--deep);color:var(--text);font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:19px;line-height:1.5}
+body{background:radial-gradient(120% 60% at 50% 0%,#2A2160 0%,var(--bg) 45%,var(--deep) 100%) fixed}
+.wrap{max-width:680px;margin:0 auto;padding:48px 22px 64px}
+.brand{font-family:"Bebas Neue",Impact,sans-serif;letter-spacing:.06em;color:var(--gold);font-size:56px;line-height:1;margin:0;font-weight:400}
+.tag{font-family:"Bebas Neue",Impact,sans-serif;letter-spacing:.08em;color:var(--lav);font-size:22px;margin:6px 0 28px}
+h2{font-family:"Bebas Neue",Impact,sans-serif;letter-spacing:.05em;color:var(--foil);font-size:30px;font-weight:400;margin:36px 0 8px}
+h3{color:var(--gold);font-size:21px;margin:22px 0 4px}
+.muted{color:var(--muted);font-size:16px}
+a{color:var(--gold)}
+.card{background:rgba(33,27,74,.72);border:1px solid rgba(245,200,66,.28);border-radius:14px;padding:20px 22px;margin:18px 0}
+nav{display:flex;gap:18px;flex-wrap:wrap;margin-top:40px;padding-top:18px;border-top:1px solid rgba(185,138,222,.25)}
+nav a{font-family:"Bebas Neue",Impact,sans-serif;letter-spacing:.08em;font-size:20px;text-decoration:none}
