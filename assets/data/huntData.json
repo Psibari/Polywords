@@ -8183,6 +8183,16 @@
         "id": "foam_t0",
         "phrase": "USED TO DRY THE DISHES AFTER DINNER",
         "isReal": false
+      },
+      {
+        "id": "foam_t91",
+        "phrase": "THE PLASTIC SHEET EVERYONE POPS AFTER UNPACKING",
+        "isReal": false
+      },
+      {
+        "id": "foam_t92",
+        "phrase": "WHAT THE OLDER KIDS HANG ALL OVER THE TREES ON HALLOWEEN",
+        "isReal": false
       }
     ],
     "gpsTag": "boss",
@@ -8411,6 +8421,16 @@
       {
         "id": "fold_t0",
         "phrase": "HOW YOU SHARE ONE SANDWICH BETWEEN TWO PEOPLE",
+        "isReal": false
+      },
+      {
+        "id": "fold_t91",
+        "phrase": "WHAT YOU DO TO A NOTE BEFORE A TRASH-CAN JUMP SHOT",
+        "isReal": false
+      },
+      {
+        "id": "fold_t92",
+        "phrase": "WHAT YOU SAY WHEN YOU MATCH THE BET",
         "isReal": false
       }
     ],
