@@ -152,8 +152,9 @@ Architecture only:
   Rig 2 articulates face/crown but most body anatomy remains baked. Preserve device-approved
   `BROW_FOLLOW = 0.33`.
 - The DEV ALIVE LOOP whole-image lean/rotation experiment was rejected. Do not wire it to Home.
-- The parked articulation plan lives in `CONTEXT.md`: inventory existing separated art, then prove one
-  DEV Neutral articulated sequence before new art or production life-profile animation.
+- The parked articulation plan lives in `CONTEXT.md`: inventory existing separated art, then
+  prove one DEV Neutral articulated sequence before new art or production life-profile
+  animation.
 
 ## Services and Boundaries
 

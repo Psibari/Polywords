@@ -28,7 +28,7 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   shipped 2026-08-31 with one regular trap each; two Pete-approved traps each were added
   2026-10-06 (b505951, ids foam_t91/t92, fold_t91/t92). The live bank now passes
   `npm run content:quality` with 0 structural and 0 launch blockers, and Quality Checks CI runs
-  that gate on every push.
+  that gate on pushes to play-screen-overhaul and on pull requests.
 - **First-run onboarding:** merged, device-approved, locked. FINE teaches recognition on the real
   board; HUD lessons teach feathers, momentum, a broken run and Hunt progress.
 - **Daily castle:** device-approved and locked. Do not reopen the castle art for the deferred
@@ -75,8 +75,8 @@ animation wait until these are done.
 In order:
 1. Paste the privacy and support URLs into App Store Connect; privacy answer "Data Not Collected".
 2. Crash reporting (nothing currently reports crashes off-device).
-3. More easy (tier 1) Daily words: only 14 exist and two of five daily rounds use tier 1,
-   so each easy word repeats about weekly. Writing is Pete's.
+3. More easy (tier 1) Daily words: only 14 exist (as of 2026-10-06) and two of five daily
+   rounds use tier 1, so each easy word repeats about weekly. Writing is Pete's.
 4. Store listing: screenshots and description.
 5. Free vs paid: Pete's decision.
 6. Android device testing beyond one phone.
