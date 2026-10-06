@@ -133,6 +133,10 @@ Architecture only:
   Pete's approval and `docs/CONTENT_WRITING_STANDARD.md` decide whether copy is good.
 - Daily runtime content is `app/game/dailyPool.ts`, governed separately from Hunt.
 - Retired: `assets/data/huntData.v2.json`, `tools/content/_deprecated/mask-rewriter/`.
+- Any change to `assets/data/huntData.json` must pass `npm run content:quality` against the real
+  file before commit. A validator self-test passing is not evidence: FOAM/FOLD shipped below the
+  3-trap minimum on 2026-08-31 that way.
+- New tiles get fresh ids. Retired ids are never reused for different content.
 
 ## Polly Architecture
 
@@ -148,7 +152,7 @@ Architecture only:
   Rig 2 articulates face/crown but most body anatomy remains baked. Preserve device-approved
   `BROW_FOLLOW = 0.33`.
 - The DEV ALIVE LOOP whole-image lean/rotation experiment was rejected. Do not wire it to Home.
-- Next articulation gate lives in `CONTEXT.md`: inventory existing separated art, then prove one
+- The parked articulation plan lives in `CONTEXT.md`: inventory existing separated art, then prove one
   DEV Neutral articulated sequence before new art or production life-profile animation.
 
 ## Services and Boundaries
@@ -158,3 +162,7 @@ Architecture only:
 - `playtestTelemetry.ts` is local only; Daily reminders are optional local notifications.
 - Theme/material tokens live in `app/ui/`; render code outranks abandoned plans.
 - Preserve stashes and unrelated local art. Branch merges require Pete's approval.
+- The public website lives on orphan branch `gh-pages` (GitHub Pages), never mixed with game code.
+  Adding any network, analytics, crash-reporting or ads SDK requires updating both `PRIVACY_TEXT`
+  in `SettingsScreen.tsx` and `gh-pages:privacy/index.html` in the same release, plus the App
+  Store privacy answers.
