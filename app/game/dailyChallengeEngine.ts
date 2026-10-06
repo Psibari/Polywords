@@ -367,7 +367,7 @@ export function createDailyResult(session: DailySession): DailyResult {
     shareText: (() => {
       const tag = `POLYWORDS Daily #${session.challengeNumber} 🦜`;
       const score = `${session.solvedCount}/${DAILY_ROUND_COUNT} words.`;
-      const link = 'polywords.app';
+      const link = 'https://psibari.github.io/Polywords/';
 
       if (!won) {
         return [
