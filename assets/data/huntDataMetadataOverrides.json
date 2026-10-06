@@ -1,0 +1,10 @@
+{
+  "CASE": { "difficulty": "hard" },
+  "CUT": { "difficulty": "hard" },
+  "DRIVE": { "difficulty": "hard" },
+  "HOLD": { "difficulty": "hard" },
+  "ROUND": { "difficulty": "hard" },
+  "SET": { "difficulty": "hard" },
+  "FAST": { "wordType": "8-MEANING" },
+  "FOOT": { "wordType": "11-MEANING" }
+}
