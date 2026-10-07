@@ -109,7 +109,7 @@ export const FACE_RIG_PRESETS: readonly FaceRigPreset[] = [
     breatheMs: 3400,
     life: false,
     shake: false,
-    intent: 'Lid half shut, brow slack, slow heavy breath. Out of excuses.',
+    intent: 'Lid half shut, brow slack, slow heavy breath. The rig eye looks rough at this setting; compare SULK and EMBARRASSED below.',
   },
 ];
 
@@ -120,3 +120,22 @@ export const FACE_RIG_SHAKE_STEP_MS = 55;
 // Slack brow: drops and tips the opposite way to the angry brow.
 export const FACE_RIG_BROW_SLACK_Y = 4;
 export const FACE_RIG_BROW_SLACK_DEG = 5;
+
+// FULL-SPRITE states: the approved 1038 x 1515 acting sprites (app/ui/pollyActingSprites.ts)
+// shown in place of the old rig2 layers. The rig's face layers cannot make these looks:
+// there is no angry eye, no laughing beak, and the baked eye socket shows roughly when the
+// lid is lowered. 'laugh' plays laugh01 -> laugh02 -> laugh03 as a short loop.
+export type FaceRigSpriteId = 'angry' | 'laugh' | 'bigLaugh' | 'shocked' | 'sulk' | 'embarrassed';
+
+export const FACE_RIG_SPRITE_STATES: readonly { id: FaceRigSpriteId; label: string }[] = [
+  { id: 'angry', label: 'ANGRY' },
+  { id: 'laugh', label: 'LAUGH' },
+  { id: 'bigLaugh', label: 'BIG LAUGH' },
+  { id: 'shocked', label: 'SHOCKED' },
+  { id: 'sulk', label: 'SULK' },
+  { id: 'embarrassed', label: 'EMBARRASSED' },
+];
+
+// Brief scale pop when a full sprite takes the stage, so the swap reads as a beat.
+export const FACE_RIG_SPRITE_POP_SCALE = 1.05;
+export const FACE_RIG_SPRITE_POP_MS = 140;

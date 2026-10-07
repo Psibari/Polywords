@@ -14,12 +14,21 @@ import {
 import { FONTS } from '../constants/fonts';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import {
+  POLLY_ACTING_SPRITES,
+  POLLY_LAUGH_FRAME_MS,
+  POLLY_LAUGH_SEQUENCE,
+} from '../ui/pollyActingSprites';
+import {
   FACE_RIG_BROW_SLACK_DEG,
   FACE_RIG_BROW_SLACK_Y,
   FACE_RIG_PRESETS,
   FACE_RIG_SHAKE_STEPS,
+  FACE_RIG_SPRITE_POP_MS,
+  FACE_RIG_SPRITE_POP_SCALE,
+  FACE_RIG_SPRITE_STATES,
   FACE_RIG_SHAKE_STEP_MS,
   type FaceRigPreset,
+  type FaceRigSpriteId,
 } from '../ui/pollyFaceRigPresets';
 import { PW } from '../ui/pwTheme';
 
@@ -111,6 +120,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const lifeRotateValue = useRef(new Animated.Value(0)).current;
   const browSlackValue = useRef(new Animated.Value(0)).current;
   const shakeValue = useRef(new Animated.Value(0)).current;
+  const spritePopValue = useRef(new Animated.Value(1)).current;
 
   const [blink, setBlink] = useState(1);
   const [brow, setBrow] = useState(0);
@@ -132,6 +142,11 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const [browSlackOn, setBrowSlackOn] = useState(false);
   const [breatheMs, setBreatheMs] = useState(BREATHE_DURATION_MS);
   const [activePreset, setActivePreset] = useState<FaceRigPreset['id'] | null>(null);
+  // Full-sprite mode: when set, an approved acting sprite replaces the rig layers.
+  const [spriteState, setSpriteState] = useState<FaceRigSpriteId | null>(null);
+  const [laughFrame, setLaughFrame] = useState(1);
+  // Bumped when a preset turns the crown wobble off, so the crown eases back to level.
+  const [crownResetTick, setCrownResetTick] = useState(0);
 
   useEffect(() => {
     const id = blinkValue.addListener(({ value }) => setBlink(value));
@@ -192,6 +207,38 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
       blinkValue.setValue(eyeRest);
     };
   }, [visible, blinkOn, motionAllowed, blinkValue, eyeRest]);
+
+  // CROWN RESET — a preset that turns the wobble off must also level the crown;
+  // stopping the loop alone leaves it wherever the swing happened to be.
+  useEffect(() => {
+    if (crownResetTick === 0 || crownTiltOn) return;
+    crownValue.stopAnimation();
+    if (motionAllowed) {
+      Animated.timing(crownValue, {
+        toValue: 0,
+        duration: 220,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      crownValue.setValue(0);
+    }
+  }, [crownResetTick, crownTiltOn, motionAllowed, crownValue]);
+
+  // LAUGH SEQUENCE — laugh01 -> 02 -> 03 loop while the LAUGH sprite state is showing.
+  // Reduce Motion: hold the middle frame instead of cycling.
+  useEffect(() => {
+    if (spriteState !== 'laugh' || !visible) return;
+    if (!motionAllowed) {
+      setLaughFrame(1);
+      return;
+    }
+    setLaughFrame(0);
+    const timer = setInterval(() => {
+      setLaughFrame(i => (i + 1) % POLLY_LAUGH_SEQUENCE.length);
+    }, POLLY_LAUGH_FRAME_MS);
+    return () => clearInterval(timer);
+  }, [spriteState, visible, motionAllowed]);
 
   // EYE REST — when no blink loop owns the eye, ease it to its resting openness
   // (a heavy lid for DISMISSIVE / CONCEDING). Reduce Motion: set it, don't animate.
@@ -356,7 +403,22 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
     ).start();
   }
 
+  function showSprite(id: FaceRigSpriteId) {
+    setSpriteState(id);
+    if (!motionAllowed) return;
+    spritePopValue.stopAnimation();
+    spritePopValue.setValue(FACE_RIG_SPRITE_POP_SCALE);
+    Animated.timing(spritePopValue, {
+      toValue: 1,
+      duration: FACE_RIG_SPRITE_POP_MS,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }
+
   function applyPreset(preset: FaceRigPreset) {
+    setSpriteState(null);
+    if (!preset.crownTilt) setCrownResetTick(t => t + 1);
     setActivePreset(preset.id);
     setEyeRest(preset.eyeRest);
     setEyeWide(preset.eyeWide);
@@ -405,6 +467,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
       eyeRest: +eyeRest.toFixed(2),
       breatheMs,
       lastPreset: activePreset,
+      sprite: spriteState,
       browFollowPx: +(
         BROW_TO_EYE_PIVOT_FRAC *
         STAGE_SIZE *
@@ -477,6 +540,19 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.stageWrap}>
             <Animated.View style={[styles.stage, { transform: [{ translateX: Animated.add(lifeXValue, shakeValue) }, { translateY: Animated.add(breatheValue, lifeYValue) }, { rotate: lifeRotateDeg }] }]}>
+              {spriteState ? (
+                <Animated.Image
+                  accessibilityIgnoresInvertColors
+                  source={
+                    spriteState === 'laugh'
+                      ? POLLY_LAUGH_SEQUENCE[laughFrame]
+                      : POLLY_ACTING_SPRITES[spriteState]
+                  }
+                  resizeMode="contain"
+                  style={[styles.layer, { transform: [{ scale: spritePopValue }] }]}
+                />
+              ) : (
+                <>
               <Image source={baseArt} resizeMode="contain" style={styles.layer} />
               <Animated.Image
                 source={mouth === 'gape' ? beakGapeArt : mouth === 'open' ? beakOpenArt : beakArt}
@@ -529,6 +605,8 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
                   },
                 ]}
               />
+                </>
+              )}
             </Animated.View>
           </View>
 
@@ -577,6 +655,39 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
               </Text>
               <Text style={styles.controlLabel}>
                 DEV ONLY · STARTING GUESSES TO TUNE · PRODUCTION POLLY IS UNCHANGED
+              </Text>
+            </View>
+            <View style={styles.groupCard}>
+              <View style={styles.groupRow}>
+                <Text style={styles.groupTitle}>FULL SPRITES</Text>
+              </View>
+              <View style={styles.presetGrid}>
+                {FACE_RIG_SPRITE_STATES.map(state => (
+                  <Pressable
+                    key={state.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Show the ${state.label.toLowerCase()} sprite`}
+                    accessibilityState={{ selected: spriteState === state.id }}
+                    onPress={() => showSprite(state.id)}
+                    style={({ pressed }) => [
+                      styles.presetButton,
+                      spriteState === state.id && styles.segmentButtonActive,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        spriteState === state.id && styles.segmentTextActive,
+                      ]}
+                    >
+                      {state.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Text style={styles.controlLabel}>
+                APPROVED 1038 x 1515 SPRITES REPLACE THE OLD RIG LAYERS. TAP ANY PRESET ABOVE TO GO BACK TO THE RIG. EXPECT A SHARPNESS JUMP BETWEEN THE TWO.
               </Text>
             </View>
             <View style={styles.groupCard}>

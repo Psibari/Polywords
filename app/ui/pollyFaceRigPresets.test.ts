@@ -6,6 +6,9 @@ import {
   FACE_RIG_EYE_REST_MIN,
   FACE_RIG_PRESETS,
   FACE_RIG_SHAKE_STEPS,
+  FACE_RIG_SPRITE_POP_MS,
+  FACE_RIG_SPRITE_POP_SCALE,
+  FACE_RIG_SPRITE_STATES,
 } from './pollyFaceRigPresets';
 
 const byId = Object.fromEntries(FACE_RIG_PRESETS.map(p => [p.id, p]));
@@ -41,5 +44,23 @@ assert.equal(byId.conceding.brow, 'slack', 'CONCEDING has the slack brow');
 assert.ok(byId.rattled.breatheMs < byId.amused.breatheMs, 'RATTLED breathes faster than AMUSED');
 assert.ok(byId.conceding.breatheMs > byId.amused.breatheMs, 'CONCEDING breathes slower than AMUSED');
 assert.equal(FACE_RIG_SHAKE_STEPS[FACE_RIG_SHAKE_STEPS.length - 1], 0, 'shake must end at rest');
+
+// Full-sprite states: the ones the rig layers cannot make.
+assert.deepEqual(
+  FACE_RIG_SPRITE_STATES.map(s => s.id),
+  ['angry', 'laugh', 'bigLaugh', 'shocked', 'sulk', 'embarrassed'],
+  'full-sprite states must be the six acting looks the rig cannot make',
+);
+assert.equal(new Set(FACE_RIG_SPRITE_STATES.map(s => s.label)).size, FACE_RIG_SPRITE_STATES.length, 'labels unique');
+assert.ok(FACE_RIG_SPRITE_POP_SCALE > 1 && FACE_RIG_SPRITE_POP_SCALE < 1.2, 'pop stays a small beat');
+assert.ok(FACE_RIG_SPRITE_POP_MS >= 80 && FACE_RIG_SPRITE_POP_MS <= 300, 'pop stays under 300 ms');
+
+// Full-sprite states: the approved acting sprites that stand in where the old rig cannot act.
+assert.deepEqual(
+  FACE_RIG_SPRITE_STATES.map(st => st.id),
+  ['angry', 'laugh', 'bigLaugh', 'shocked', 'sulk', 'embarrassed'],
+  'sprite states must cover angry, laugh, big laugh, shocked, sulk, embarrassed',
+);
+assert.equal(new Set(FACE_RIG_SPRITE_STATES.map(st => st.label)).size, FACE_RIG_SPRITE_STATES.length, 'sprite labels unique');
 
 console.log('Polly face rig presets contract passed');
