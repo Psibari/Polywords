@@ -15,14 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { SETTINGS_SKY_TUNING } from '../ui/ambientSkyTuning';
-import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
-import { PollyClipLabViewer } from '../components/PollyClipLabViewer';
-import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
-import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
-import { PollyLifeDevViewer } from '../components/PollyLifeDevViewer';
-import { PollyDesktopAnimationLab } from '../components/PollyDesktopAnimationLab';
-import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 // Settings, not the Daily screen: app/screens/dailyDevControls.test.mjs
 // forbids DailyChallengeScreen from wiring this panel (it used to float over
 // the answer-card grid there). The tuning store is plain module state, so
@@ -98,14 +91,7 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
 }
 
 export default function SettingsScreen({ navigation }: Props) {
-  const [showPollyAnimations, setShowPollyAnimations] = useState(false);
-  const [showPollyClipLab, setShowPollyClipLab] = useState(false);
-  const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
-  const [showPollyCrown, setShowPollyCrown] = useState(false);
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
-  const [showPollyLife, setShowPollyLife] = useState(false);
-  const [showPollyDesktopLab, setShowPollyDesktopLab] = useState(false);
-  const [showHauntIntroPreview, setShowHauntIntroPreview] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
   const soundEnabled = useGameStore(s => s.soundEnabled);
@@ -121,7 +107,6 @@ export default function SettingsScreen({ navigation }: Props) {
   const setPlayerName = useGameStore(s => s.setPlayerName);
   const setDailyReminderEnabled = useGameStore(s => s.setDailyReminderEnabled);
   const resetProgressForDev = useGameStore(s => s.resetProgressForDev);
-  const seedPollyRelationshipForDev = useGameStore(s => s.seedPollyRelationshipForDev);
   const requestOnboardingReplay = useGameStore(s => s.requestOnboardingReplay);
   const hasResumableGame = useGameStore(s => s.hasResumableGame);
 
@@ -417,87 +402,6 @@ export default function SettingsScreen({ navigation }: Props) {
               style={[styles.card, styles.utilityCard]}
               imageStyle={styles.utilityImage}
             >
-              <View style={styles.devRelationshipGroup}>
-                <Text style={styles.rowLabel}>Polly Relationship Tests</Text>
-                <Text style={styles.rowNote}>Seeds real memory/history. Then follow the instruction shown.</Text>
-              </View>
-              {([
-                ['RETURN 3+ DAYS', 'return'],
-                ['COMEBACK', 'comeback'],
-                ['VETERAN SLUMP', 'veteranSlump'],
-                ['HAUNT REMATCH', 'hauntRematch'],
-              ] as const).map(([label, scenario]) => (
-                <Pressable
-                  key={scenario}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Seed Polly relationship test: ${label}`}
-                  onPress={async () => {
-                    const message = await seedPollyRelationshipForDev(scenario);
-                    Alert.alert(`DEV: ${label}`, message);
-                  }}
-                  style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                >
-                  <View style={styles.rowTextWrap}>
-                    <Text style={styles.rowLabel}>{label}</Text>
-                  </View>
-                  <Text style={styles.chevron}>›</Text>
-                </Pressable>
-              ))}
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowPollyClipLab(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Polly Clip Lab</Text>
-                  <Text style={styles.rowNote}>Experiment: keyed AI-video clips, idle loop + reactions</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowPollyAnimations(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Polly Animation Viewer</Text>
-                  <Text style={styles.rowNote}>Preview five isolated motion loops</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowPollyDesktopLab(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Polly Desktop Animation Lab</Text>
-                  <Text style={styles.rowNote}>Large PC workspace for rig, poses, WEBPs, and motion</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowGauntletSpineSizer(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Gauntlet Spine Sizer</Text>
-                  <Text style={styles.rowNote}>Tune the boss spine art's scale/position live</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowPollyCrown(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Polly Crown Layer Test</Text>
-                  <Text style={styles.rowNote}>Tilt the crown as its own layer</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowPollyFaceRig(true)}
@@ -506,29 +410,6 @@ export default function SettingsScreen({ navigation }: Props) {
                 <View style={styles.rowTextWrap}>
                   <Text style={styles.rowLabel}>Polly Face Rig</Text>
                   <Text style={styles.rowNote}>Blink, brow, crown, breathe</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowPollyLife(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Polly Life Profiles</Text>
-                  <Text style={styles.rowNote}>Compare relationship body language without dialogue</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Preview Returning Haunt intro"
-                onPress={() => setShowHauntIntroPreview(true)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              >
-                <View style={styles.rowTextWrap}>
-                  <Text style={styles.rowLabel}>Returning Haunt Intro</Text>
-                  <Text style={styles.rowNote}>Preview the one-time Haunt explainer</Text>
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
@@ -564,37 +445,10 @@ export default function SettingsScreen({ navigation }: Props) {
       </ScrollView>
       {__DEV__ && (
         <>
-          <PollyAnimationDevViewer
-            onClose={() => setShowPollyAnimations(false)}
-            visible={showPollyAnimations}
-          />
-          <PollyClipLabViewer
-            onClose={() => setShowPollyClipLab(false)}
-            visible={showPollyClipLab}
-          />
-          <PollyDesktopAnimationLab
-            onClose={() => setShowPollyDesktopLab(false)}
-            visible={showPollyDesktopLab}
-          />
-          <GauntletSpineDevViewer
-            onClose={() => setShowGauntletSpineSizer(false)}
-            visible={showGauntletSpineSizer}
-          />
-          <PollyCrownDevViewer
-            onClose={() => setShowPollyCrown(false)}
-            visible={showPollyCrown}
-          />
           <PollyFaceRigDevViewer
             onClose={() => setShowPollyFaceRig(false)}
             visible={showPollyFaceRig}
           />
-          <PollyLifeDevViewer
-            onClose={() => setShowPollyLife(false)}
-            visible={showPollyLife}
-          />
-          {showHauntIntroPreview && (
-            <HauntIntroOverlay onDismiss={() => setShowHauntIntroPreview(false)} />
-          )}
         </>
       )}
       <InfoModal
@@ -817,12 +671,6 @@ const styles = StyleSheet.create({
   placeholderRow: {
     opacity: 0.78,
     justifyContent: 'flex-start',
-  },
-  devRelationshipGroup: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: PW.color.borderMuted,
   },
   rowTextWrap: {
     flex: 1,
