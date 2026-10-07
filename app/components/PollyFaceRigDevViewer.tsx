@@ -417,7 +417,8 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   }
 
   function applyPreset(preset: FaceRigPreset) {
-    setSpriteState(null);
+    if (preset.sprite) showSprite(preset.sprite);
+    else setSpriteState(null);
     if (!preset.crownTilt) setCrownResetTick(t => t + 1);
     setActivePreset(preset.id);
     setEyeRest(preset.eyeRest);

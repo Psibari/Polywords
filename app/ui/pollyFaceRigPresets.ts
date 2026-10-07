@@ -33,6 +33,7 @@ export type FaceRigPreset = {
   life: boolean;
   shake: boolean;
   intent: string;
+  sprite?: FaceRigSpriteId;
 };
 
 export const FACE_RIG_PRESETS: readonly FaceRigPreset[] = [
@@ -99,9 +100,9 @@ export const FACE_RIG_PRESETS: readonly FaceRigPreset[] = [
   {
     id: 'conceding',
     label: 'CONCEDING',
-    eyeRest: 0.5,
+    eyeRest: 1,
     eyeWide: false,
-    brow: 'slack',
+    brow: 'normal',
     mouth: 'closed',
     crownTilt: false,
     blink: true,
@@ -109,7 +110,8 @@ export const FACE_RIG_PRESETS: readonly FaceRigPreset[] = [
     breatheMs: 3400,
     life: false,
     shake: false,
-    intent: 'Lid half shut, brow slack, slow heavy breath. The rig eye looks rough at this setting; compare SULK and EMBARRASSED below.',
+    intent: "The approved smirk sprite (Pete's pick for the conceding state). Slow breathing behind it.",
+    sprite: 'smirk',
   },
 ];
 
@@ -125,7 +127,7 @@ export const FACE_RIG_BROW_SLACK_DEG = 5;
 // shown in place of the old rig2 layers. The rig's face layers cannot make these looks:
 // there is no angry eye, no laughing beak, and the baked eye socket shows roughly when the
 // lid is lowered. 'laugh' plays laugh01 -> laugh02 -> laugh03 as a short loop.
-export type FaceRigSpriteId = 'angry' | 'laugh' | 'bigLaugh' | 'shocked' | 'sulk' | 'embarrassed';
+export type FaceRigSpriteId = 'angry' | 'laugh' | 'bigLaugh' | 'shocked' | 'sulk' | 'embarrassed' | 'smirk';
 
 export const FACE_RIG_SPRITE_STATES: readonly { id: FaceRigSpriteId; label: string }[] = [
   { id: 'angry', label: 'ANGRY' },

@@ -35,14 +35,13 @@ for (const p of FACE_RIG_PRESETS) {
 // Design invariants: the registers must stay distinguishable.
 assert.equal(byId.amused.eyeRest, 1, 'AMUSED is the art as drawn');
 assert.ok(byId.dismissive.eyeRest < byId.watchful.eyeRest, 'DISMISSIVE lid is heavier than WATCHFUL');
-assert.ok(byId.conceding.eyeRest < byId.dismissive.eyeRest, 'CONCEDING lid is the heaviest');
 assert.equal(byId.rattled.eyeWide, true, 'RATTLED has the wide eye');
 assert.equal(byId.rattled.brow, 'shock', 'RATTLED has the shock brow');
 assert.equal(byId.rattled.shake, true, 'RATTLED shakes');
 assert.equal(FACE_RIG_PRESETS.filter(p => p.shake).length, 1, 'only RATTLED shakes');
-assert.equal(byId.conceding.brow, 'slack', 'CONCEDING has the slack brow');
 assert.ok(byId.rattled.breatheMs < byId.amused.breatheMs, 'RATTLED breathes faster than AMUSED');
-assert.ok(byId.conceding.breatheMs > byId.amused.breatheMs, 'CONCEDING breathes slower than AMUSED');
+assert.equal(byId.conceding.sprite, 'smirk', 'CONCEDING uses the approved smirk sprite');
+assert.equal(FACE_RIG_PRESETS.filter(p => p.sprite).length, 1, 'only CONCEDING is sprite-driven');
 assert.equal(FACE_RIG_SHAKE_STEPS[FACE_RIG_SHAKE_STEPS.length - 1], 0, 'shake must end at rest');
 
 // Full-sprite states: the ones the rig layers cannot make.
