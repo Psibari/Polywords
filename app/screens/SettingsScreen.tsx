@@ -16,6 +16,7 @@ import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { SETTINGS_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { PollyAnimationDevViewer } from '../components/PollyAnimationDevViewer';
+import { PollyClipLabViewer } from '../components/PollyClipLabViewer';
 import { GauntletSpineDevViewer } from '../components/GauntletSpineDevViewer';
 import { PollyCrownDevViewer } from '../components/PollyCrownDevViewer';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
@@ -98,6 +99,7 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
 
 export default function SettingsScreen({ navigation }: Props) {
   const [showPollyAnimations, setShowPollyAnimations] = useState(false);
+  const [showPollyClipLab, setShowPollyClipLab] = useState(false);
   const [showGauntletSpineSizer, setShowGauntletSpineSizer] = useState(false);
   const [showPollyCrown, setShowPollyCrown] = useState(false);
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
@@ -443,6 +445,17 @@ export default function SettingsScreen({ navigation }: Props) {
               ))}
               <Pressable
                 accessibilityRole="button"
+                onPress={() => setShowPollyClipLab(true)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>Polly Clip Lab</Text>
+                  <Text style={styles.rowNote}>Experiment: keyed AI-video clips, idle loop + reactions</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
                 onPress={() => setShowPollyAnimations(true)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               >
@@ -554,6 +567,10 @@ export default function SettingsScreen({ navigation }: Props) {
           <PollyAnimationDevViewer
             onClose={() => setShowPollyAnimations(false)}
             visible={showPollyAnimations}
+          />
+          <PollyClipLabViewer
+            onClose={() => setShowPollyClipLab(false)}
+            visible={showPollyClipLab}
           />
           <PollyDesktopAnimationLab
             onClose={() => setShowPollyDesktopLab(false)}
