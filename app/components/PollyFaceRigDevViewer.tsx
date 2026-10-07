@@ -13,6 +13,14 @@ import {
 } from 'react-native';
 import { FONTS } from '../constants/fonts';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import {
+  FACE_RIG_BROW_SLACK_DEG,
+  FACE_RIG_BROW_SLACK_Y,
+  FACE_RIG_PRESETS,
+  FACE_RIG_SHAKE_STEPS,
+  FACE_RIG_SHAKE_STEP_MS,
+  type FaceRigPreset,
+} from '../ui/pollyFaceRigPresets';
 import { PW } from '../ui/pwTheme';
 
 const baseArt = require('../../assets/images/polly/rig2/polly_base.png');
@@ -101,6 +109,8 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const lifeXValue = useRef(new Animated.Value(0)).current;
   const lifeYValue = useRef(new Animated.Value(0)).current;
   const lifeRotateValue = useRef(new Animated.Value(0)).current;
+  const browSlackValue = useRef(new Animated.Value(0)).current;
+  const shakeValue = useRef(new Animated.Value(0)).current;
 
   const [blink, setBlink] = useState(1);
   const [brow, setBrow] = useState(0);
@@ -116,6 +126,12 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const [mouth, setMouth] = useState<MouthState>('closed');
   const [eyeWide, setEyeWide] = useState(false);
   const [browShocked, setBrowShocked] = useState(false);
+  // Preset support (DEV): what the eye rests at between blinks, a slack brow, a
+  // per-preset breathing speed, and which preset was applied last.
+  const [eyeRest, setEyeRest] = useState(1);
+  const [browSlackOn, setBrowSlackOn] = useState(false);
+  const [breatheMs, setBreatheMs] = useState(BREATHE_DURATION_MS);
+  const [activePreset, setActivePreset] = useState<FaceRigPreset['id'] | null>(null);
 
   useEffect(() => {
     const id = blinkValue.addListener(({ value }) => setBlink(value));
@@ -143,6 +159,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
 
     let timeoutId: ReturnType<typeof setTimeout>;
     let cancelled = false;
+    blinkValue.setValue(eyeRest);
 
     const scheduleNext = () => {
       const delay = BLINK_MIN_INTERVAL_MS + Math.random() * (BLINK_MAX_INTERVAL_MS - BLINK_MIN_INTERVAL_MS);
@@ -156,7 +173,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
             useNativeDriver: true,
           }),
           Animated.timing(blinkValue, {
-            toValue: 1,
+            toValue: eyeRest,
             duration: BLINK_UP_MS,
             easing: Easing.in(Easing.quad),
             useNativeDriver: true,
@@ -172,9 +189,42 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
       cancelled = true;
       clearTimeout(timeoutId);
       blinkValue.stopAnimation();
-      blinkValue.setValue(1);
+      blinkValue.setValue(eyeRest);
     };
-  }, [visible, blinkOn, motionAllowed, blinkValue]);
+  }, [visible, blinkOn, motionAllowed, blinkValue, eyeRest]);
+
+  // EYE REST — when no blink loop owns the eye, ease it to its resting openness
+  // (a heavy lid for DISMISSIVE / CONCEDING). Reduce Motion: set it, don't animate.
+  useEffect(() => {
+    if (blinkOn && motionAllowed) return;
+    if (motionAllowed) {
+      Animated.timing(blinkValue, {
+        toValue: eyeRest,
+        duration: 180,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      blinkValue.stopAnimation();
+      blinkValue.setValue(eyeRest);
+    }
+  }, [eyeRest, blinkOn, motionAllowed, blinkValue]);
+
+  // BROW SLACK — eases to the dropped, tipped-down brow while on.
+  useEffect(() => {
+    const toValue = browSlackOn ? 1 : 0;
+    if (motionAllowed) {
+      Animated.timing(browSlackValue, {
+        toValue,
+        duration: BROW_TRANSITION_MS,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      browSlackValue.stopAnimation();
+      browSlackValue.setValue(toValue);
+    }
+  }, [browSlackOn, motionAllowed, browSlackValue]);
 
   // BROW — holds the angry pose while toggled on, doesn't loop.
   useEffect(() => {
@@ -220,7 +270,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
     const swing = (toValue: number) =>
       Animated.timing(breatheValue, {
         toValue,
-        duration: BREATHE_DURATION_MS,
+        duration: breatheMs,
         easing: Easing.inOut(Easing.sin),
         useNativeDriver: true,
       });
@@ -228,7 +278,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
     loop.start();
 
     return () => loop.stop();
-  }, [visible, breatheOn, motionAllowed, breatheValue]);
+  }, [visible, breatheOn, motionAllowed, breatheValue, breatheMs]);
 
   // ALIVE LOOP — irregular whole-body micro-performances layered over the
   // existing blink/breathe/face controls. This is deliberately in the Face
@@ -288,6 +338,40 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
     };
   }, [visible, lifeOn, lifeMotionAllowed, lifeXValue, lifeYValue, lifeRotateValue]);
 
+  // SHAKE — a quick horizontal jitter of the whole figure (RATTLED). Skipped under
+  // Reduce Motion, which is authoritative for anything that moves.
+  function runShake() {
+    if (!motionAllowed) return;
+    shakeValue.stopAnimation();
+    shakeValue.setValue(0);
+    Animated.sequence(
+      FACE_RIG_SHAKE_STEPS.map(toValue =>
+        Animated.timing(shakeValue, {
+          toValue,
+          duration: FACE_RIG_SHAKE_STEP_MS,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ),
+    ).start();
+  }
+
+  function applyPreset(preset: FaceRigPreset) {
+    setActivePreset(preset.id);
+    setEyeRest(preset.eyeRest);
+    setEyeWide(preset.eyeWide);
+    setMouth(preset.mouth);
+    setBrowOn(preset.brow === 'angry');
+    setBrowShocked(preset.brow === 'shock');
+    setBrowSlackOn(preset.brow === 'slack');
+    setCrownTiltOn(preset.crownTilt);
+    setBlinkOn(preset.blink);
+    setBreatheOn(preset.breathe);
+    setBreatheMs(preset.breatheMs);
+    setLifeOn(preset.life);
+    if (preset.shake) runShake();
+  }
+
   function nudgeBlink(delta: number) {
     if (blinkOn) return;
     blinkValue.setValue(clamp(blink + delta, EYE_CLOSED_SCALE, 1));
@@ -318,6 +402,9 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
       crownAngleDeg: +crownAngle.toFixed(1),
       breatheYPx: +breathe.toFixed(2),
       browFollowFrac: +browFollow.toFixed(2),
+      eyeRest: +eyeRest.toFixed(2),
+      breatheMs,
+      lastPreset: activePreset,
       browFollowPx: +(
         BROW_TO_EYE_PIVOT_FRAC *
         STAGE_SIZE *
@@ -339,6 +426,14 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
   const browFollowY = blinkValue.interpolate({
     inputRange: [EYE_CLOSED_SCALE, 1],
     outputRange: [BROW_TO_EYE_PIVOT_FRAC * STAGE_SIZE * browFollow, 0],
+  });
+  const browSlackY = browSlackValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, FACE_RIG_BROW_SLACK_Y],
+  });
+  const browSlackDeg = browSlackValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', `${FACE_RIG_BROW_SLACK_DEG}deg`],
   });
   const lifeRotateDeg = lifeRotateValue.interpolate({
     inputRange: [-LIFE_ROTATE_DEG, LIFE_ROTATE_DEG],
@@ -381,7 +476,7 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.stageWrap}>
-            <Animated.View style={[styles.stage, { transform: [{ translateX: lifeXValue }, { translateY: Animated.add(breatheValue, lifeYValue) }, { rotate: lifeRotateDeg }] }]}>
+            <Animated.View style={[styles.stage, { transform: [{ translateX: Animated.add(lifeXValue, shakeValue) }, { translateY: Animated.add(breatheValue, lifeYValue) }, { rotate: lifeRotateDeg }] }]}>
               <Image source={baseArt} resizeMode="contain" style={styles.layer} />
               <Animated.Image
                 source={mouth === 'gape' ? beakGapeArt : mouth === 'open' ? beakOpenArt : beakArt}
@@ -411,7 +506,9 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
                     transform: [
                       { translateY: browFollowY },
                       { translateY: browValue },
+                      { translateY: browSlackY },
                       { rotate: browRotateDeg },
+                      { rotate: browSlackDeg },
                     ],
                   },
                 ]}
@@ -436,6 +533,52 @@ export function PollyFaceRigDevViewer({ visible, onClose }: Props) {
           </View>
 
           <View style={styles.controls}>
+            <View style={styles.groupCard}>
+              <View style={styles.groupRow}>
+                <Text style={styles.groupTitle}>LEDGER STATE PRESETS</Text>
+              </View>
+              <View style={styles.presetGrid}>
+                {FACE_RIG_PRESETS.map(preset => (
+                  <Pressable
+                    key={preset.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Apply ${preset.label.toLowerCase()} expression preset`}
+                    accessibilityState={{ selected: activePreset === preset.id }}
+                    onPress={() => applyPreset(preset)}
+                    style={({ pressed }) => [
+                      styles.presetButton,
+                      activePreset === preset.id && styles.segmentButtonActive,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        activePreset === preset.id && styles.segmentTextActive,
+                      ]}
+                    >
+                      {preset.label}
+                    </Text>
+                  </Pressable>
+                ))}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Run the rattled shake once"
+                  onPress={runShake}
+                  style={({ pressed }) => [styles.presetButton, pressed && styles.pressed]}
+                >
+                  <Text style={styles.segmentText}>SHAKE</Text>
+                </Pressable>
+              </View>
+              <Text style={styles.controlLabel}>
+                {activePreset
+                  ? FACE_RIG_PRESETS.find(p => p.id === activePreset)?.intent
+                  : 'TAP A STATE. EACH SETS EYE, BROW, MOUTH, CROWN, BREATH AND LEAN TOGETHER.'}
+              </Text>
+              <Text style={styles.controlLabel}>
+                DEV ONLY · STARTING GUESSES TO TUNE · PRODUCTION POLLY IS UNCHANGED
+              </Text>
+            </View>
             <View style={styles.groupCard}>
               <View style={styles.groupRow}>
                 <Text style={styles.groupTitle}>ALIVE LOOP</Text>
@@ -932,6 +1075,23 @@ const styles = StyleSheet.create({
   segmentRow: {
     flexDirection: 'row',
     gap: PW.space.sm,
+  },
+  presetGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: PW.space.sm,
+    marginBottom: PW.space.sm,
+  },
+  presetButton: {
+    minWidth: 104,
+    flexGrow: 1,
+    paddingVertical: PW.space.sm,
+    borderRadius: PW.radius.md,
+    borderWidth: 1,
+    borderColor: PW.color.cardRim,
+    backgroundColor: PW.color.overlayMedium,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   segmentButton: {
     flex: 1,
