@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const registryUrl = new URL('./pollyClips.ts', import.meta.url);
 assert.equal(existsSync(registryUrl), true, 'Polly clip registry must exist');
@@ -29,7 +30,8 @@ const allowed = new Set([
   'app/components/PollyClipPlayer.tsx',
   'app/components/PollyClipLabViewer.tsx',
 ]);
-const root = new URL('../../', import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: pathname gives "/C:/..." on Windows.
+const root = fileURLToPath(new URL('../../', import.meta.url));
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
@@ -39,7 +41,8 @@ function walk(dir, out = []) {
   return out;
 }
 for (const file of walk(join(root, 'app'))) {
-  const rel = file.slice(root.length);
+  // Normalise to forward slashes so the allow-list matches on Windows too.
+  const rel = relative(root, file).split(sep).join('/');
   if (allowed.has(rel)) continue;
   const text = readFileSync(file, 'utf8');
   assert.ok(
