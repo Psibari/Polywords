@@ -7,6 +7,12 @@ export type HapticCue =
   | 'heightenedCorrect'
   | 'wrong'
   | 'tierUp'
+  | 'tierUpRazor'
+  | 'tierUpUntrappable'
+  | 'claimMedium'
+  | 'trapRejectLight'
+  | 'trapRejectMedium'
+  | 'trapRejectHeavy'
   | 'fellOffSmall'
   | 'fellOffMedium'
   | 'fellOffBig'
@@ -90,6 +96,48 @@ export const Haptics = {
       // its own device pass — see the design spec's open items.
       case 'tierUp':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      // Momentum level-ups escalate with the level: SHARP is one Medium pulse
+      // (above), RAZOR SHARP doubles it, UNTRAPPABLE is a three-beat climb
+      // that opens Rigid. Rhythm, not Heavy, which stays reserved for Boss
+      // beats. First-pass shapes pending a device pass.
+      case 'tierUpRazor': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 80);
+        return first;
+      }
+      case 'tierUpUntrappable': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 60);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 120);
+        return first;
+      }
+      // A REAL claim is a solid Medium "take" that climbs by adding a soft
+      // follow-up at the medium phase tier; the light and heavy tiers keep
+      // standardCorrect / heightenedCorrect. First-pass, pending a device pass.
+      case 'claimMedium': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Soft), 70);
+        return first;
+      }
+      // A trap rejection always opens with a sharp Rigid "swat" so it can
+      // never be mistaken for a claim, then bounces. Same three phase tiers,
+      // climbing by what follows the swat. First-pass, pending a device pass.
+      case 'trapRejectLight': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light), 50);
+        return first;
+      }
+      case 'trapRejectMedium': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 55);
+        return first;
+      }
+      case 'trapRejectHeavy': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 55);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light), 110);
+        return first;
+      }
       // FELL OFF severities — layered ON TOP of the 'wrong' cue above, not a
       // replacement for it, scaled to how far the chain fell. fellOffSmall
       // and fellOffMedium are first-pass placeholders (Open Items 3-4 in the

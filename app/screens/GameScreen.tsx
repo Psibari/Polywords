@@ -63,6 +63,7 @@ function a11yHiddenProps(hidden: boolean) {
 }
 import {
   resolveScreenFlash,
+  resolveTierUpHapticCue,
   type ScreenFlashEvent,
 } from '../game/huntFeedbackPolicy';
 import {
@@ -257,7 +258,7 @@ function TopBar({
             Animated.timing(tierFlashOpacity, { toValue: 0, duration: 220, useNativeDriver: true }),
           ]),
         ]).start();
-        Haptics.cueAsync('tierUp');
+        Haptics.cueAsync(resolveTierUpHapticCue(isRank));
       }
     }
 

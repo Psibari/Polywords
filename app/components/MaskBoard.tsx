@@ -43,6 +43,8 @@ import {
   resolveOutcomeRevealSfx,
 } from '../game/huntOutcomeFeedback';
 import {
+  resolveClaimHapticCue,
+  resolveTrapRejectHapticCue,
   resolveWrongSwipeSfx,
   type ScreenFlashEvent,
 } from '../game/huntFeedbackPolicy';
@@ -1047,7 +1049,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     perform: {
       onRealClaimed({ mask, tier }) {
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
-        Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
+        Haptics.cueAsync(resolveClaimHapticCue(step.hapticTier));
         // Not fired directly — handleCardTouch fires it at actual arrival,
         // synced with triggerBookOpen. The accepted phrase leaves with the
         // card; only the book/ring absorption feedback remains on screen.
@@ -1055,7 +1057,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       },
       onTrapRejected({ tier }) {
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
-        Haptics.cueAsync(step.hapticTier === 'light' ? 'standardCorrect' : 'heightenedCorrect');
+        Haptics.cueAsync(resolveTrapRejectHapticCue(step.hapticTier));
       },
       onWrongSwipe({ brokeRealChain, fellOffSeverity }) {
         performWrongSwipeFeedback(brokeRealChain, fellOffSeverity);

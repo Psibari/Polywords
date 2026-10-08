@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 
 import {
+  resolveClaimHapticCue,
   resolveFXAccessibility,
+  resolveTierUpHapticCue,
+  resolveTrapRejectHapticCue,
   resolveScreenFlash,
   resolveWrongSwipeSfx,
 } from './huntFeedbackPolicy';
@@ -60,3 +63,26 @@ assert.deepEqual(
 );
 
 console.log('huntFeedbackPolicy tests passed');
+
+assert.deepEqual(
+  (['light', 'medium', 'heavy', undefined] as const).map(resolveClaimHapticCue),
+  ['standardCorrect', 'claimMedium', 'heightenedCorrect', 'heightenedCorrect'],
+  'claims climb across the three phase tiers; an unset tier keeps the old strongest claim cue',
+);
+assert.deepEqual(
+  (['light', 'medium', 'heavy', undefined] as const).map(resolveTrapRejectHapticCue),
+  ['trapRejectLight', 'trapRejectMedium', 'trapRejectHeavy', 'trapRejectHeavy'],
+  'trap rejections climb across the three phase tiers',
+);
+for (const tier of ['light', 'medium', 'heavy'] as const) {
+  assert.notEqual(
+    resolveClaimHapticCue(tier),
+    resolveTrapRejectHapticCue(tier),
+    'a claim and a rejection never share a cue at the same tier',
+  );
+}
+assert.deepEqual(
+  [1, 2, 3].map(resolveTierUpHapticCue),
+  ['tierUp', 'tierUpRazor', 'tierUpUntrappable'],
+  'each momentum level-up has its own haptic shape',
+);
