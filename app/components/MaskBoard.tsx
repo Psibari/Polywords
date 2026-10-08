@@ -8,6 +8,8 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  type StyleProp,
+  type TextStyle,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -38,9 +40,11 @@ import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import {
+  BUSTER_WORD,
   resolveBossOutcomePlaqueFeedback,
   resolveBossOutcomeSequenceFeedback,
   resolveOutcomeRevealSfx,
+  resolveRematchLossFeedback,
 } from '../game/huntOutcomeFeedback';
 import {
   resolveClaimHapticCue,
@@ -148,6 +152,8 @@ type ResolvedTileState = 'correct' | 'trap-caught' | 'wrong';
 
 type OutcomeOverlayProps = {
   word: string;
+  // MASTER'S REMATCH won: KING drops in and takes over the MASTERED headline.
+  isRematch?: boolean;
   headline?: string;
   bonusLabel?: string;
   detail?: string;
@@ -196,7 +202,59 @@ function splitHauntedDetail(detail?: string): { label: string; phrase: string } 
   return { label: 'TRAP CLAIMED', phrase: detail };
 }
 
-function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onContinue, isBoss }: OutcomeOverlayProps) {
+// MASTER'S REMATCH won (Pete, 2026-10-07): wherever the plaque says MASTERED,
+// KING drops in from above and takes its place. MASTERED holds, KING lands with
+// a small bounce while MASTERED gives way beneath it. One native-driven
+// sequence, phases sequenced with setTimeout. First-pass timings, NOT
+// device-confirmed. No new sound: the gold ceremony already carries its own.
+const KING_HOLD_MS = 700;
+const KING_LAND_MS = 240;
+const KING_DROP_DISTANCE = 52;
+
+function KingHeadline({ from, textStyle }: { from: string; textStyle: StyleProp<TextStyle> }) {
+  const reduceMotion = useReducedMotionPreference();
+  const kingY = useRef(new Animated.Value(-KING_DROP_DISTANCE)).current;
+  const kingOpacity = useRef(new Animated.Value(0)).current;
+  const fromY = useRef(new Animated.Value(0)).current;
+  const fromOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (reduceMotion !== false) {
+      kingY.setValue(0);
+      kingOpacity.setValue(1);
+      fromOpacity.setValue(0);
+      return;
+    }
+    const timer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(kingOpacity, { toValue: 1, duration: 90, useNativeDriver: true }),
+        Animated.timing(kingY, { toValue: 0, duration: KING_LAND_MS, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true }),
+        Animated.timing(fromOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(fromY, { toValue: 10, duration: 200, useNativeDriver: true }),
+      ]).start();
+    }, 180 + KING_HOLD_MS);
+    return () => {
+      clearTimeout(timer);
+      kingY.stopAnimation(); kingOpacity.stopAnimation();
+      fromY.stopAnimation(); fromOpacity.stopAnimation();
+    };
+  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <View accessible accessibilityLabel="King">
+      <Animated.Text style={[textStyle, { opacity: fromOpacity, transform: [{ translateY: fromY }] }]}>
+        {from}
+      </Animated.Text>
+      <Animated.Text
+        style={[textStyle, { position: 'absolute', left: 0, right: 0, top: 0, opacity: kingOpacity, transform: [{ translateY: kingY }] }]}
+      >
+        KING
+      </Animated.Text>
+    </View>
+  );
+}
+
+function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onContinue, isBoss, isRematch }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
   const pulse = useRef(new Animated.Value(0)).current;
@@ -308,7 +366,11 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
           <View style={[styles.plaqueFrame, styles.masteredPlaqueFrame]}>
             <Image source={masteredPlaqueArt} style={[styles.plaqueImage, { aspectRatio: MASTERED_PLAQUE_ASPECT }]} resizeMode="contain" />
             <View pointerEvents="none" style={[styles.plaqueContent, styles.masteredPlaqueContent]}>
-              <Text style={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}>{headline}</Text>
+              {isRematch === true ? (
+                <KingHeadline from={headline} textStyle={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]} />
+              ) : (
+                <Text style={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}>{headline}</Text>
+              )}
               <Text
                 style={[styles.plaqueWord, styles.masteredPlaqueWord]}
                 numberOfLines={1}
@@ -480,6 +542,128 @@ function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOver
           <Text style={styles.outcomeCopy}>It'll be waiting.</Text>
         </View>
         {detail && <Text style={styles.hauntedDetail} numberOfLines={2}>{detail}</Text>}
+        <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+// MASTER'S REMATCH lost. Plain text on the regular board, no plaque: the gold
+// plaque means "mastered" and the dark one means "haunted", and neither
+// happened. MASTER holds, the MA drops away, and BU lands in its place:
+// BUSTER (Pete's wordplay, 2026-10-07). One native-driven sequence, phases
+// sequenced with setTimeout rather than .start() callbacks. All timings are
+// first-pass and NOT device-confirmed. The only sound is the chain-fall punch
+// (resolveRematchLossFeedback), fired once as BU lands. No Polly line yet:
+// the copy under the word is Pete's to write.
+const BUSTER_HOLD_MS = 650;
+const BUSTER_DROP_MS = 260;
+const BUSTER_LAND_DELAY_MS = 150;
+const BUSTER_LAND_MS = 240;
+const BUSTER_PUNCH_AT_MS = 200;
+const BUSTER_DROP_DISTANCE = 46;
+
+function BusterOutcomeOverlay({ word, onContinue }: Pick<OutcomeOverlayProps, 'word' | 'onContinue'>) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const maY = useRef(new Animated.Value(0)).current;
+  const maOpacity = useRef(new Animated.Value(1)).current;
+  const buY = useRef(new Animated.Value(-BUSTER_DROP_DISTANCE)).current;
+  const buOpacity = useRef(new Animated.Value(0)).current;
+  const continueOpacity = useRef(new Animated.Value(0.35)).current;
+  const resolvedRef = useRef(false);
+  const reduceMotion = useReducedMotionPreference();
+  const [canDismiss, setCanDismiss] = useState(false);
+
+  function resolve() {
+    if (resolvedRef.current) return;
+    resolvedRef.current = true;
+    onContinue();
+  }
+
+  function handlePress() {
+    if (!canDismiss) return;
+    playSfx('uiClick');
+    resolve();
+  }
+
+  function punch() {
+    const feedback = resolveRematchLossFeedback();
+    playSfx(feedback.sfx);
+    Haptics.cueAsync(feedback.hapticCue);
+  }
+
+  useEffect(() => {
+    if (!canDismiss) return;
+    if (reduceMotion !== false) {
+      continueOpacity.setValue(1);
+      return;
+    }
+    Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  }, [canDismiss, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (reduceMotion !== false) {
+      // Reduce Motion: the finished word, no drop. Sound and haptic still land once.
+      opacity.setValue(1);
+      maOpacity.setValue(0);
+      buOpacity.setValue(1);
+      buY.setValue(0);
+      punch();
+      timers.push(setTimeout(resolve, 2800));
+      timers.push(setTimeout(() => setCanDismiss(true), 1200));
+      return () => timers.forEach(clearTimeout);
+    }
+    Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    const dropAt = 180 + BUSTER_HOLD_MS;
+    timers.push(setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(maY, { toValue: BUSTER_DROP_DISTANCE, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(maOpacity, { toValue: 0, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]).start();
+    }, dropAt));
+    timers.push(setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(buOpacity, { toValue: 1, duration: 90, useNativeDriver: true }),
+        Animated.timing(buY, { toValue: 0, duration: BUSTER_LAND_MS, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true }),
+      ]).start();
+    }, dropAt + BUSTER_LAND_DELAY_MS));
+    timers.push(setTimeout(punch, dropAt + BUSTER_LAND_DELAY_MS + BUSTER_PUNCH_AT_MS));
+    timers.push(setTimeout(() => setCanDismiss(true), 1800));
+    timers.push(setTimeout(resolve, 3600));
+    return () => {
+      timers.forEach(clearTimeout);
+      opacity.stopAnimation(); maY.stopAnimation(); maOpacity.stopAnimation();
+      buY.stopAnimation(); buOpacity.stopAnimation();
+    };
+  }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <Pressable
+      style={styles.outcomeOverlay}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`Buster. ${word}. Continue.`}
+    >
+      <Animated.View style={[styles.outcomePanel, styles.busterOutcomePanel, { opacity }]}>
+        <View style={styles.busterHeadlineRow}>
+          <View style={styles.busterSlot}>
+            <Animated.Text
+              style={[styles.outcomeHeadline, styles.busterHeadline, { opacity: maOpacity, transform: [{ translateY: maY }] }]}
+            >
+              {BUSTER_WORD.dropped}
+            </Animated.Text>
+            <Animated.Text
+              style={[styles.outcomeHeadline, styles.busterHeadline, styles.busterArriving, { opacity: buOpacity, transform: [{ translateY: buY }] }]}
+            >
+              {BUSTER_WORD.arriving}
+            </Animated.Text>
+          </View>
+          <Text style={[styles.outcomeHeadline, styles.busterHeadline]}>{BUSTER_WORD.kept}</Text>
+        </View>
+        <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
+          {word}
+        </Text>
         <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
@@ -1242,6 +1426,20 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         return;
         }
         if (!isBoss) return;
+        if (step.isMasteryRematch === true) {
+          // MASTER'S REMATCH lost: nothing haunts the player, so the book stays
+          // the regular neutral rig and simply rests closed. No gray rig, no
+          // haunted slam sound, no board shake. BusterOutcomeOverlay owns the
+          // reveal and its single punch. Boss outcome music stays silent, as
+          // for every other boss outcome.
+          setBossOutcomeMusicSilenced(true);
+          bookOpenAnimationRef.current?.stop();
+          bookOpenAnim.stopAnimation();
+          bookIntakeGlowAnim.stopAnimation();
+          bookOpenAnim.setValue(0);
+          bookIntakeGlowAnim.setValue(0);
+          return;
+        }
         // ── Boss path — the gray rig slam. Same shape of beat as the master
         // close (one decisive motion) but a different physical quality: the
         // mastered close is a punchy impact with bounce-settle, this is a
@@ -1273,10 +1471,13 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   useEffect(() => {
     const outcome = mechanics.wordOutcome;
     if (!isBoss || !showOutcomeCard || outcome === 'none') return;
+    // A lost MASTER'S REMATCH has no haunted plaque sound; BusterOutcomeOverlay
+    // plays its own punch as BU lands.
+    if (outcome === 'haunted' && step.isMasteryRematch === true) return;
     const feedback = resolveBossOutcomePlaqueFeedback(outcome);
     if (feedback.sfx) playSfx(feedback.sfx);
     if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
-  }, [isBoss, mechanics.wordOutcome, showOutcomeCard]);
+  }, [isBoss, mechanics.wordOutcome, showOutcomeCard, step.isMasteryRematch]);
 
   useEffect(() => {
     if (!isBoss) return;
@@ -2399,16 +2600,21 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           bonusLabel={mechanics.outcomeBonusLabel}
           onContinue={continueOutcome}
           isBoss={isBoss}
+          isRematch={isBoss && step.isMasteryRematch === true}
         />
       )}
 
       {mechanics.wordOutcome === 'haunted' && showOutcomeCard && (
-        <HauntedOutcomeOverlay
-          word={step.word}
-          detail={mechanics.outcomeDetail}
-          onContinue={continueOutcome}
-          isBoss={isBoss}
-        />
+        isBoss && step.isMasteryRematch === true ? (
+          <BusterOutcomeOverlay word={step.word} onContinue={continueOutcome} />
+        ) : (
+          <HauntedOutcomeOverlay
+            word={step.word}
+            detail={mechanics.outcomeDetail}
+            onContinue={continueOutcome}
+            isBoss={isBoss}
+          />
+        )
       )}
     </Animated.View>
   );
@@ -2734,6 +2940,30 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,13,42,0.96)',
     shadowColor: '#F5C842',
     shadowOpacity: 0.34,
+  },
+  busterOutcomePanel: {
+    borderColor: 'rgba(255,255,255,0.28)',
+    backgroundColor: 'rgba(15,13,42,0.97)',
+    shadowColor: '#000000',
+    shadowOpacity: 0,
+  },
+  busterHeadlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  busterSlot: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  busterArriving: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+  },
+  busterHeadline: {
+    color: '#FFFFFF',
   },
   hauntedOutcomePanel: {
     borderColor: 'rgba(155,45,107,0.92)',

@@ -94,4 +94,31 @@ assert.equal(
   'HAUNTED',
 );
 
+assert.equal(
+  resolveHuntResultLabel({ status: 'gameOver', bossMastered: false, haunted: true, bossRematchLost: true }),
+  'BUSTER',
+  "a lost Master's Rematch is a BUSTER, not HAUNTED",
+);
+assert.equal(
+  resolveHuntResultLabel({ status: 'complete', bossMastered: true, haunted: false, bossRematchLost: false }),
+  'MASTERED',
+  'the flag changes nothing when it is false',
+);
+
+assert.equal(
+  resolveHuntResultLabel({ status: 'complete', bossMastered: true, haunted: false, bossRematchWon: true }),
+  'KING',
+  "a won Master's Rematch reads KING where MASTERED would be",
+);
+assert.equal(
+  resolveHuntResultLabel({ status: 'complete', bossMastered: true, haunted: false, bossRematchWon: false }),
+  'MASTERED',
+  'an ordinary mastery still reads MASTERED',
+);
+assert.equal(
+  resolveHuntResultLabel({ status: 'gameOver', bossMastered: false, haunted: true, bossRematchWon: true }),
+  'HAUNTED',
+  'the win flag cannot override a loss',
+);
+
 console.log('huntControl tests passed');

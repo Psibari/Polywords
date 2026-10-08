@@ -25,4 +25,6 @@ eq(pickLossVerdictLine(2, 'wrongCall', 0), LOSS_CAUSE_LINES.haunts, 'ghosts.two.
 eq(pickLossVerdictLine(2, null, 0), LOSS_CAUSE_LINES.haunts, 'ghosts.two.outranksNull');
 eq(pickLossVerdictLine(3, 'trap', 0), LOSS_CAUSE_LINES.haunts, 'ghosts.three.stillHaunts');
 
+eq(LOSS_CAUSE_LINES.rematchLost, 'Bird brain', 'rematchLost.copy');
+
 console.log('OK — lossCauseLines: all assertions passed');

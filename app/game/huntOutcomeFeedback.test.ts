@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 
 import {
+  BUSTER_WORD,
   resolveBossOutcomePlaqueFeedback,
   resolveBossOutcomeSequenceFeedback,
   resolveOutcomeRevealSfx,
   resolveRankUpFeedback,
+  resolveRematchLossFeedback,
 } from './huntOutcomeFeedback';
 
 assert.deepEqual(
@@ -68,3 +70,19 @@ assert.deepEqual(
 );
 
 console.log('huntOutcomeFeedback tests passed');
+
+assert.deepEqual(
+  resolveRematchLossFeedback(),
+  { sfx: 'streakBreakImpact', hapticCue: 'fellOffSmall' },
+  "a Master's Rematch loss uses the chain-fall punch, not a haunted sound",
+);
+assert.equal(
+  BUSTER_WORD.dropped + BUSTER_WORD.kept,
+  BUSTER_WORD.before,
+  'MA + STER is MASTER',
+);
+assert.equal(
+  BUSTER_WORD.arriving + BUSTER_WORD.kept,
+  'BUSTER',
+  'BU + STER is BUSTER',
+);

@@ -9,6 +9,8 @@ export const LOSS_CAUSE_LINES = {
   rejectedReal: 'You know what that word means, and you still got it wrong.',
   wrongCall: "Almost doesn't count",
   neutral: ['Go again. Focus this time.', 'Out of feathers.'] as const,
+  // Shown under BUSTER, the label for a lost MASTER'S REMATCH (Pete, 2026-10-07).
+  rematchLost: 'Bird brain',
 } as const;
 
 // Pure: haunts condition first, then lossCause, then neutral. No

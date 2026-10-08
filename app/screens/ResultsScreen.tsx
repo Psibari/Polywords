@@ -38,6 +38,7 @@ import {
 import {
   RESULTS_RESTART_LABEL,
   deriveResultsPollyMoment,
+  LOSS_CAUSE_LINES,
   pickLossVerdictLine,
   resultsLedger,
   resultsType,
@@ -51,6 +52,8 @@ function buildShareMessage(
   isComplete: boolean,
   bossMastered: boolean,
   haunted: boolean,
+  bossRematchLost: boolean,
+  bossRematchWon: boolean,
 ): string {
   const resultByStep = new Map(wordResults.map(r => [r.wordId, r]));
   const grid = session
@@ -67,6 +70,8 @@ function buildShareMessage(
     status: isComplete ? 'complete' : 'gameOver',
     bossMastered,
     haunted,
+    bossRematchLost,
+    bossRematchWon,
   });
   return `POLYWORDS · ${verdict}\n${grid}`;
 }
@@ -315,14 +320,22 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const bossMastered = game.bossOutcome === 'mastered';
   const flawlessWin = bossMastered && game.bossFlawless;
   const outcome: 'loss' | 'beat' | 'complete' = died ? 'loss' : bossMastered ? 'beat' : 'complete';
+  const bossStep = game.session.find(step => step.kind === 'word' && step.eventType === 'bossWord');
+  const hauntStep = game.session.find(step => step.kind === 'word' && step.isHauntReturn === true);
+  // A lost MASTER'S REMATCH: nothing haunts the player, so it reads BUSTER.
+  const bossRematchLost =
+    game.bossOutcome === 'haunted' && bossStep?.kind === 'word' && bossStep.isMasteryRematch === true;
+  // A won MASTER'S REMATCH: KING takes over the MASTERED label.
+  const bossRematchWon =
+    bossMastered && bossStep?.kind === 'word' && bossStep.isMasteryRematch === true;
   const resultLabel = resolveHuntResultLabel({
     status: died ? 'gameOver' : 'complete',
     bossMastered,
     haunted,
+    bossRematchLost,
+    bossRematchWon,
   });
 
-  const bossStep = game.session.find(step => step.kind === 'word' && step.eventType === 'bossWord');
-  const hauntStep = game.session.find(step => step.kind === 'word' && step.isHauntReturn === true);
   const consequences = resolveResultsConsequences({
     bossOutcome: game.bossOutcome,
     hauntOutcome: game.hauntOutcome,
@@ -380,7 +393,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     recordFinalRunIfNeeded();
     try {
       await Share.share({
-        message: buildShareMessage(game.session, wordResults, isComplete, bossMastered, haunted),
+        message: buildShareMessage(game.session, wordResults, isComplete, bossMastered, haunted, bossRematchLost, bossRematchWon),
       });
     } catch {}
   }
@@ -465,9 +478,13 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   }, [pollyMoment, rememberPollyLine]);
 
   const [lossLineRoll] = useState(() => Math.random());
-  const verdictSub = outcome === 'loss'
-    ? pickLossVerdictLine(ghosts.length, game.lossCause, lossLineRoll)
-    : null;
+  // A lost MASTER'S REMATCH ends as BUSTER with its own line; it is not a
+  // 'loss' outcome (the Hunt completes), so it is checked first.
+  const verdictSub = bossRematchLost
+    ? LOSS_CAUSE_LINES.rematchLost
+    : outcome === 'loss'
+      ? pickLossVerdictLine(ghosts.length, game.lossCause, lossLineRoll)
+      : null;
   const perfectCount = wordOnlyResults.filter(
     r => r.correctUp === r.totalRealMasks && r.wrongSwipes === 0,
   ).length;

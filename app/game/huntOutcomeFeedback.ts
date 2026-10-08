@@ -66,3 +66,26 @@ export function resolveRankUpFeedback(died: boolean): RankUpFeedback {
   }
   return { sfx: 'mastered', successHaptic: true, heavyPulse: true };
 }
+
+/**
+ * A MASTER'S REMATCH loss is not a Haunt (nothing haunts the player), so it
+ * borrows none of the haunted sounds. Pete chose the punch already used when
+ * a chain falls off (`streakBreakImpact`), paired with the matching single
+ * Medium haptic. Fired once, when the BU of BUSTER lands.
+ */
+export type RematchLossFeedback = {
+  sfx: 'streakBreakImpact';
+  hapticCue: 'fellOffSmall';
+};
+
+export function resolveRematchLossFeedback(): RematchLossFeedback {
+  return { sfx: 'streakBreakImpact', hapticCue: 'fellOffSmall' };
+}
+
+/** MASTER loses its MA and gains BU. The kept letters never move. */
+export const BUSTER_WORD = {
+  before: 'MASTER',
+  dropped: 'MA',
+  arriving: 'BU',
+  kept: 'STER',
+} as const;

@@ -119,6 +119,8 @@ export function resolveHuntHud(input: {
 
 export type HuntResultLabel =
   | 'MASTERED'
+  | 'KING'
+  | 'BUSTER'
   | "CLOSE, BUT CLOSE DOESN'T COUNT."
   | 'HAUNTED'
   | 'YOU WERE HUNTED';
@@ -131,8 +133,15 @@ export function resolveHuntResultLabel(input: {
   status: 'gameOver' | 'complete';
   bossMastered: boolean;
   haunted: boolean;
+  /** The Boss round was a MASTER'S REMATCH and it was lost. Nothing haunts the
+   *  player, so this outranks `haunted`. */
+  bossRematchLost?: boolean;
+  /** The Boss round was a MASTER'S REMATCH and it was won: KING takes over MASTERED. */
+  bossRematchWon?: boolean;
 }): HuntResultLabel {
+  if (input.bossMastered && input.bossRematchWon === true) return 'KING';
   if (input.bossMastered) return 'MASTERED';
+  if (input.bossRematchLost === true) return 'BUSTER';
   if (input.haunted) return 'HAUNTED';
   if (input.status === 'gameOver') return 'YOU WERE HUNTED';
   return "CLOSE, BUT CLOSE DOESN'T COUNT.";
