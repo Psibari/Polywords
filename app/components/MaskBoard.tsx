@@ -49,6 +49,7 @@ import {
 import {
   resolveClaimHapticCue,
   resolveTrapRejectHapticCue,
+  resolvePollySquawkOnWrong,
   resolveWrongSwipeSfx,
   type ScreenFlashEvent,
 } from '../game/huntFeedbackPolicy';
@@ -117,6 +118,8 @@ export type Props = {
   step: WordStep;
   spawnEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: string) => void;
   onWrongSwipe?: () => void;
+  /** Hunt-long count for Polly's "every third" squawk. Owned by GameScreen because the board remounts per word; omitted elsewhere, the board then counts for itself. */
+  wrongSquawkCounter?: { current: number };
   onGoldFlash?: (event: ScreenFlashEvent) => void;
   onBossDecisionReady?: () => void;
   onSwipeAttempt?: () => void;
@@ -678,7 +681,7 @@ function getResolvedTileState(state: SwipeMaskState | undefined): ResolvedTileSt
 }
 
 
-function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onboardingCaption = null, onboardingCaptionReserve = 0, onEntranceSettled, onDecisionCommitted, firePollyEvent, isBossStage }: BoardPresenterProps) {
+function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDecisionReady, onSwipeAttempt, inputMode = 'both', showDecisionCard = true, swipeCueMode = 'both', onboardingCaption = null, onboardingCaptionReserve = 0, onEntranceSettled, onDecisionCommitted, firePollyEvent, isBossStage, wrongSquawkCounter }: BoardPresenterProps) {
   const { fontScale } = useWindowDimensions();
   // Only stepIndex is read here, so select it directly rather than the
   // whole store — this is the per-word presenter, remounted on every swipe
@@ -884,12 +887,17 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     recoilRafRef.current = requestAnimationFrame(tick);
   }
 
+  const localWrongCountRef = useRef(0);
+  const otherWrongCountRef = wrongSquawkCounter ?? localWrongCountRef;
   // Face half of the old triggerWrongSwipeFeedback — shared by normal-tile
   // and gauntlet-tile wrong swipes, same as the original single function was.
   function performWrongSwipeFeedback(brokeRealChain: boolean, fellOffSeverity: 1 | 2 | 3 | null) {
     playSfx(resolveWrongSwipeSfx(brokeRealChain));
-    // Polly keeps her existing smug reaction just behind the physical hit.
-    setTimeout(() => playSfx('pollySqwawkShort'), 70);
+    // Polly's smug squawk sits just behind the physical hit, but not on every
+    // wrong swipe: always when a real chain fell off, every third otherwise.
+    const squawk = resolvePollySquawkOnWrong(brokeRealChain, otherWrongCountRef.current);
+    otherWrongCountRef.current = squawk.otherWrongCountAfter;
+    if (squawk.squawk) setTimeout(() => playSfx('pollySqwawkShort'), 70);
     Haptics.cueAsync('wrong');
     // FELL OFF haptic layers on top of 'wrong' above, scaled to how far the
     // chain fell — nothing extra at severity null (broke from STEADY, there

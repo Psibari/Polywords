@@ -1677,6 +1677,11 @@ function GameContent({
   const [onboardingVisitActive, setOnboardingVisitActive] = useState(false);
   // `${runSeed}:${stepIndex}` of the board whose plate entrance has settled.
   const [settledBoardKey, setSettledBoardKey] = useState<string | null>(null);
+  // Count of wrong swipes that did not break a real chain, kept for the whole
+  // Hunt. The board remounts on every word (key=board-stepIndex), so the count
+  // cannot live inside it. Drives Polly's "every third" squawk.
+  const wrongSquawkCounter = useRef({ current: 0 }).current;
+  useEffect(() => { wrongSquawkCounter.current = 0; }, [game.runSeed, wrongSquawkCounter]);
   const step = currentStep(game);
   const activeGhostRunsMissed = step.kind === 'word' && step.isHauntReturn
     ? ghosts.find(ghost => ghost.wordId === step.word.trim().toUpperCase())?.runsMissed ?? 0
@@ -1774,6 +1779,7 @@ function GameContent({
             recordOnboardingDecision(maskId, direction, correct, responseMs);
           }}
           firePollyEvent={boardPollyEvent}
+          wrongSquawkCounter={wrongSquawkCounter}
         />
         {!onboardingVisitActive && !hudLessonDue && (
           <PollyHuntVisit visit={visit} onDone={onVisitDone} />

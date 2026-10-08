@@ -10,6 +10,24 @@ export function resolveWrongSwipeSfx(brokeRealChain: boolean): WrongSwipeSfx {
   return brokeRealChain ? 'streakBreakImpact' : 'wrongImpact';
 }
 
+// Polly's short squawk on a wrong swipe. It used to fire on every wrong swipe,
+// which wore thin (Pete, 2026-10-07). Rule: always when a real chain FELL OFF,
+// and on every third other wrong swipe. The count is a plain counter, not
+// Math.random, so it is deterministic and never touches a Hunt's rng stream.
+export const POLLY_SQUAWK_EVERY_NTH_OTHER_WRONG = 3;
+
+export function resolvePollySquawkOnWrong(
+  brokeRealChain: boolean,
+  otherWrongCountBefore: number,
+): { squawk: boolean; otherWrongCountAfter: number } {
+  if (brokeRealChain) return { squawk: true, otherWrongCountAfter: otherWrongCountBefore };
+  const otherWrongCountAfter = otherWrongCountBefore + 1;
+  return {
+    squawk: otherWrongCountAfter % POLLY_SQUAWK_EVERY_NTH_OTHER_WRONG === 0,
+    otherWrongCountAfter,
+  };
+}
+
 export type ScreenFlashEvent = Extract<HuntFeedbackEvent, 'gauntletCorrect' | 'mastery'>;
 export type ScreenFlashTier = 'gauntlet' | 'mastery';
 

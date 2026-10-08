@@ -6,6 +6,7 @@ import {
   resolveTierUpHapticCue,
   resolveTrapRejectHapticCue,
   resolveScreenFlash,
+  resolvePollySquawkOnWrong,
   resolveWrongSwipeSfx,
 } from './huntFeedbackPolicy';
 
@@ -86,3 +87,23 @@ assert.deepEqual(
   ['tierUp', 'tierUpRazor', 'tierUpUntrappable'],
   'each momentum level-up has its own haptic shape',
 );
+
+// Polly's squawk: always when a real chain fell off, every third other wrong swipe.
+{
+  let count = 0;
+  const heard: boolean[] = [];
+  for (let i = 0; i < 9; i++) {
+    const r = resolvePollySquawkOnWrong(false, count);
+    count = r.otherWrongCountAfter;
+    heard.push(r.squawk);
+  }
+  assert.deepEqual(
+    heard,
+    [false, false, true, false, false, true, false, false, true],
+    'other wrong swipes squawk on every third',
+  );
+  const fell = resolvePollySquawkOnWrong(true, 1);
+  assert.equal(fell.squawk, true, 'a FELL OFF break always squawks');
+  assert.equal(fell.otherWrongCountAfter, 1, 'a FELL OFF break does not advance the other-swipe count');
+  assert.equal(resolvePollySquawkOnWrong(false, 2).squawk, true, 'the count survives a FELL OFF in between');
+}
