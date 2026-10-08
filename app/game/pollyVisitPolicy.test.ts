@@ -28,7 +28,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 
 // ── Guaranteed beats ────────────────────────────────────────────
 
-// bossEntry: flyAngry → point, line + short squawk, bigger — pops in for the
+// bossEntry: fly → point, line + short squawk, bigger — pops in for the
 // line then flies back out (does NOT hold perch; holding through the visible
 // tiles + gauntlet caused her to overlap/hide gauntlet card text — device
 // test 2026-07-31). She does NOT come back for the gauntlet — the throw beat
@@ -38,7 +38,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 {
   const s = visitSpec(resolveVisit('bossEntry', idle), 'bossEntry');
   eq(s.kind, 'guaranteed', 'bossEntry.kind');
-  eq(s.flyPose, 'flyAngry', 'bossEntry.flyPose');
+  eq(s.flyPose, 'fly', 'bossEntry.flyPose');
   eq(s.perchPose, 'point', 'bossEntry.perchPose');
   eq(s.lineId, 'bossCage', 'bossEntry.lineId');
   eq(s.line, 'I was still in the cage when I learned that one.', 'bossEntry.line');
@@ -91,17 +91,23 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
     'allMasksFound stays silent with the heckle budget open');
 }
 
-// gateMasteredBoss: bravado then collapse — angry fly-in, hunched sulk
-// landing, one line, exits still hunched (does not hold perch).
+// gateMastered + gateMasteredBoss: plain fly-in, hunched sulk
+// landing, one line, flies away furious (does not hold perch).
 {
   const s = visitSpec(resolveVisit('gateMasteredBoss', idle), 'gateMasteredBoss');
-  eq(s.flyPose, 'flyAngry', 'gateMasteredBoss.flyPose');
+  eq(s.flyPose, 'fly', 'gateMasteredBoss.flyPose');
   eq(s.perchPose, 'sulk', 'gateMasteredBoss.perchPose');
-  eq(s.exitPose, 'sulk', 'gateMasteredBoss.exitPose');
+  eq(s.exitPose, 'flyAngry', 'gateMasteredBoss.exitPose');
   eq(s.line, 'Next time, the traps will be different.', 'gateMasteredBoss.line');
   eq(s.sfx, null, 'gateMasteredBoss.sfx');
   eq(s.holdPerch, false, 'gateMasteredBoss.holdPerch');
   eq(s.perchMs, 1600, 'gateMasteredBoss.perchMs');
+}
+{
+  const s = visitSpec(resolveVisit('gateMastered', idle), 'gateMastered');
+  eq(s.flyPose, 'fly', 'gateMastered.flyPose');
+  eq(s.perchPose, 'sulk', 'gateMastered.perchPose');
+  eq(s.exitPose, 'flyAngry', 'gateMastered.exitPose');
 }
 
 // gameOver: laugh, never-change line, holds perch (terminal beat). Silent by
@@ -116,17 +122,25 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
   eq(s.holdPerch, true, 'gameOver.holdPerch');
 }
 
-// hiddenMasterFailed keeps the boss hidden-failure gloat sound.
+// hiddenMasterFailed keeps the boss hidden-failure gloat sound. She flies in
+// plain (she cannot know the result yet) and leaves grinning.
 {
   const s = visitSpec(resolveVisit('hiddenMasterFailed', idle), 'hiddenMasterFailed');
   eq(s.sfx, 'pollySqwawkLaugh', 'hiddenMasterFailed.sfx');
+  eq(s.flyPose, 'fly', 'hiddenMasterFailed.flyPose');
+  eq(s.perchPose, 'hauntTaunt', 'hiddenMasterFailed.perchPose');
+  eq(s.exitPose, 'flyGrin', 'hiddenMasterFailed.exitPose');
 }
 
 // Returning Haunt's first failure beat is silent; the final hauntFailed beat
-// owns the one favorite chuckle, and the run continues afterward.
+// owns the one favorite chuckle, and the run continues afterward. Its poses
+// must not inherit the boss gloat's fly/exit change through the spread.
 {
   const s = visitSpec(resolveVisit('hauntMasterFailed', idle), 'hauntMasterFailed');
   eq(s.sfx, null, 'hauntMasterFailed.sfx');
+  eq(s.flyPose, 'hauntTaunt', 'hauntMasterFailed.flyPose');
+  eq(s.perchPose, 'hauntTaunt', 'hauntMasterFailed.perchPose');
+  eq(s.exitPose, 'fly', 'hauntMasterFailed.exitPose');
 }
 
 // hauntFailed: same laugh beat, but the run continues — does NOT hold the
@@ -181,7 +195,7 @@ eq(resolveVisit('cleanSweep', { ...idle, cleanSweepSeenThisRun: true, heckleUsed
 eq(resolveVisit('wrong', { ...idle, wrongSeenThisWord: true }).action, 'none', 'second wrong');
 
 const streak = visitSpec(resolveVisit('streakX10', idle), 'streakX10');
-eq(streak.perchPose, 'rattled', 'streakX10 perches rattled');
+eq(streak.perchPose, 'embarrassed', 'streakX10 perches embarrassed');
 eq(streak.kind, 'heckle', 'streakX10 is a heckle');
 
 // hesitation6s → point taunt; 3s and 9s are ignored.

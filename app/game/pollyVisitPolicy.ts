@@ -39,9 +39,9 @@ export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 
 export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
-  flyPose: 'fly' | 'flyAngry' | 'masterShock' | 'hauntTaunt';
-  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'masterAngry' | 'hauntTaunt' | 'asleep';
-  exitPose?: 'fly' | 'sulk';
+  flyPose: 'fly' | 'flyAngry' | 'jumpAngry' | 'masterShock' | 'hauntTaunt';
+  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'embarrassed' | 'masterAngry' | 'hauntTaunt' | 'asleep';
+  exitPose?: 'fly' | 'sulk' | 'flyAngry' | 'flyGrin';
   lineId: PollyLineId | null;
   line: string | null;
   sfx: PollyVisitSfx | null;
@@ -97,7 +97,7 @@ const BOSS_ENTRY_LINES: PollyLineId[] = [
 ];
 
 const BOSS_ENTRY: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'point',
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'point',
   lineId: 'bossCage', line: POLLY_LINES.bossCage, sfx: 'pollySqwawkShort',
   // Device-locked 2026-10-05: keep boss-entry Polly near normal Hunt scale
   // so she clears the gauntlet card and her speech bubble.
@@ -105,24 +105,31 @@ const BOSS_ENTRY: VisitSpec = {
 };
 
 const MASTERED_REACTION: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'flyAngry', perchPose: 'sulk',
-  exitPose: 'sulk',
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'sulk',
+  exitPose: 'flyAngry',
   lineId: 'huntMasteredTrapsDiffer',
   line: POLLY_LINES.huntMasteredTrapsDiffer,
   sfx: null,
   holdPerch: false, perchMs: 1600,
 };
 
+// She arrives in the plain fly pose (she cannot know the gauntlet result
+// yet); the result shows on the way out.
 const HAUNTED_GLOAT: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'hauntTaunt', perchPose: 'hauntTaunt',
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'hauntTaunt',
+  exitPose: 'flyGrin',
   lineId: null, line: null, sfx: 'pollySqwawkLaugh',
   // Device-locked 2026-10-05: Haunted loss gets a larger payoff than
   // ordinary Hunt staging without returning to the old oversized boss entry.
   holdPerch: true, perchMs: 2500, perchScale: 1.24,
 };
 
+// Pinned to its own poses so the boss-gloat pose rule does not leak in
+// through the spread. Unchanged pending Pete's ruling.
 const RETURNING_HAUNT_GLOAT: VisitSpec = {
   ...HAUNTED_GLOAT,
+  flyPose: 'hauntTaunt',
+  exitPose: 'fly',
   sfx: null,
 };
 
@@ -172,7 +179,7 @@ const WRONG_HECKLE_LINES: PollyLineId[] = [
 ];
 
 const STREAK_RATTLED: VisitSpec = {
-  kind: 'heckle', flyPose: 'fly', perchPose: 'rattled',
+  kind: 'heckle', flyPose: 'fly', perchPose: 'embarrassed',
   lineId: 'huntStreakSoWhat', line: POLLY_LINES.huntStreakSoWhat,
   sfx: null,
   holdPerch: false, perchMs: 1800,

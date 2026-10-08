@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { playSfx } from '../audio/sfx';
-import { POLLY_POSES, POLLY_POSE_SCALE, PollyPoseName } from '../ui/pollyPoses';
+import { PollyHuntPoseName, pollyHuntPoseArt } from '../ui/pollyHuntPoses';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollySpeechBubble } from './PollySpeechBubble';
@@ -11,8 +11,14 @@ const FLY_OUT_MS = 500;
 const FAST_EXIT_MS = 250;
 const BUBBLE_IN_MS = 180;
 const BUBBLE_OUT_MS = 150;
-const OFF_X = -240; // off-screen bottom-left start/end of the arc
+const OFF_X = -240; // off-screen bottom-left start of the fly-in
 const OFF_Y = 200;
+// Every pose faces right, so she leaves forward: up and to the right, off the
+// top edge. The Y target adds headroom past one screen height because her
+// 260pt box sits 20pt below the stage floor and the nose-up tilt lifts its
+// corners.
+const EXIT_X_FRAC = 0.6;
+const EXIT_Y_HEADROOM = 80;
 
 type Props = {
   visit: ActiveVisit | null;
@@ -23,7 +29,10 @@ type Props = {
 // (the play field already clears this lane; the right side is the reject
 // lane and is never used). Whole-image motion only — no part seams.
 export function PollyHuntVisit({ visit, onDone }: Props) {
-  const [pose, setPose] = useState<PollyPoseName>('fly');
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const exitX = screenW * EXIT_X_FRAC;
+  const exitY = -(screenH + EXIT_Y_HEADROOM);
+  const [pose, setPose] = useState<PollyHuntPoseName>('fly');
   const [line, setLine] = useState<string | null>(null);
   const [perchScale, setPerchScale] = useState(1);
 
@@ -45,7 +54,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const visitIdRef = useRef<number | null>(null);
-  const exitPoseRef = useRef<PollyPoseName>('fly');
+  const exitPoseRef = useRef<PollyHuntPoseName>('fly');
   const exitingRef = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -67,8 +76,8 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     if (reduceMotion) {
       bubbleOpacity.setValue(0);
       setPose(exitPoseRef.current);
-      arcX.setValue(OFF_X);
-      arcY.setValue(OFF_Y);
+      arcX.setValue(exitX);
+      arcY.setValue(exitY);
       const id = visitIdRef.current;
       visitIdRef.current = null;
       if (id !== null) onDoneRef.current(id);
@@ -80,8 +89,10 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     ]).start();
     setPose(exitPoseRef.current);
     Animated.parallel([
-      Animated.timing(arcX, { toValue: OFF_X, duration: ms, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(arcY, { toValue: OFF_Y, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.timing(arcX, { toValue: exitX, duration: ms, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(arcY, { toValue: exitY, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      // -1 is nose-up for a right-facing bird (-12deg, counter-clockwise),
+      // the same climb tilt the fly-in starts from.
       Animated.timing(flightTilt, { toValue: -1, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
       Animated.timing(flightScale, { toValue: 0.86, duration: ms, easing: Easing.in(Easing.quad), useNativeDriver: true }),
     ]).start();
@@ -92,7 +103,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     }, ms + 30);
   }
 
-  function runPunch(perchPose: PollyPoseName) {
+  function runPunch(perchPose: PollyHuntPoseName) {
     reactX.setValue(0);
     reactY.setValue(0);
     reactTilt.setValue(0);
@@ -143,7 +154,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
         Animated.timing(reactTilt, { toValue: -0.55, duration: 130, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
         Animated.timing(reactTilt, { toValue: 0, duration: 500, delay: 880, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       ]).start();
-    } else if (perchPose === 'rattled') {
+    } else if (perchPose === 'rattled' || perchPose === 'embarrassed') {
       // Flinch back, then straighten up too fast — she over-corrects into fine.
       Animated.sequence([
         Animated.timing(reactX, { toValue: -7, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -258,6 +269,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     outputRange: ['-8deg', '8deg'],
   });
   const isPointing = pose === 'point';
+  const poseArt = pollyHuntPoseArt(pose);
 
   return (
     <View style={styles.root} pointerEvents="none">
@@ -297,8 +309,8 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
         ]}
       >
         <Image
-          source={POLLY_POSES[pose]}
-          style={[styles.pollyImage, { transform: [{ scale: POLLY_POSE_SCALE[pose] }] }]}
+          source={poseArt.source}
+          style={[styles.pollyImage, { transform: [{ scale: poseArt.scale }] }]}
           resizeMode="contain"
         />
       </Animated.View>
