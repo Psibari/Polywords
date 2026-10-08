@@ -91,12 +91,12 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
     'allMasksFound stays silent with the heckle budget open');
 }
 
-// gateMastered + gateMasteredBoss: plain fly-in, hunched sulk
+// gateMastered + gateMasteredBoss: plain fly-in, upright angry yell
 // landing, one line, flies away furious (does not hold perch).
 {
   const s = visitSpec(resolveVisit('gateMasteredBoss', idle), 'gateMasteredBoss');
   eq(s.flyPose, 'fly', 'gateMasteredBoss.flyPose');
-  eq(s.perchPose, 'sulk', 'gateMasteredBoss.perchPose');
+  eq(s.perchPose, 'angryYell', 'gateMasteredBoss.perchPose');
   eq(s.exitPose, 'flyAngry', 'gateMasteredBoss.exitPose');
   eq(s.line, 'Next time, the traps will be different.', 'gateMasteredBoss.line');
   eq(s.sfx, null, 'gateMasteredBoss.sfx');
@@ -106,7 +106,7 @@ function visitSpec(d: VisitDecision, label: string): VisitSpec {
 {
   const s = visitSpec(resolveVisit('gateMastered', idle), 'gateMastered');
   eq(s.flyPose, 'fly', 'gateMastered.flyPose');
-  eq(s.perchPose, 'sulk', 'gateMastered.perchPose');
+  eq(s.perchPose, 'angryYell', 'gateMastered.perchPose');
   eq(s.exitPose, 'flyAngry', 'gateMastered.exitPose');
 }
 
@@ -251,11 +251,11 @@ for (const ev of ['correct', 'oneWrongMove', 'hiddenFound', 'hesitationCleared',
   eq(s.sfx, null, 'oneHeartLeft.sfx');
 }
 {
-  const rolls: [number, PollyLineId, 'smug' | 'asleep'][] = [
+  const rolls: [number, PollyLineId, 'smug' | 'laugh03'][] = [
     [0.05, 'featherOneLookAtMine', 'smug'],
-    [0.25, 'featherOnePlucked', 'asleep'],
+    [0.25, 'featherOnePlucked', 'laugh03'],
     [0.45, 'featherOneAroundHere', 'smug'],
-    [0.65, 'featherOneWait', 'asleep'],
+    [0.65, 'featherOneWait', 'laugh03'],
     [0.85, 'featherOneCheck', 'smug'],
   ];
   for (const [roll, expectedLineId, expectedPose] of rolls) {

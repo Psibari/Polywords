@@ -40,7 +40,7 @@ export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
   flyPose: 'fly' | 'flyAngry' | 'jumpAngry' | 'masterShock' | 'hauntTaunt';
-  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'embarrassed' | 'masterAngry' | 'hauntTaunt' | 'asleep';
+  perchPose: 'smug' | 'laugh' | 'point' | 'shocked' | 'sulk' | 'rattled' | 'embarrassed' | 'masterAngry' | 'hauntTaunt' | 'asleep' | 'laugh03' | 'angryYell';
   exitPose?: 'fly' | 'sulk' | 'flyAngry' | 'flyGrin';
   lineId: PollyLineId | null;
   line: string | null;
@@ -105,7 +105,7 @@ const BOSS_ENTRY: VisitSpec = {
 };
 
 const MASTERED_REACTION: VisitSpec = {
-  kind: 'guaranteed', flyPose: 'fly', perchPose: 'sulk',
+  kind: 'guaranteed', flyPose: 'fly', perchPose: 'angryYell',
   exitPose: 'flyAngry',
   lineId: 'huntMasteredTrapsDiffer',
   line: POLLY_LINES.huntMasteredTrapsDiffer,
@@ -222,11 +222,11 @@ const ONE_FEATHER_LINES: PollyLineId[] = [
   'featherOneCheck',
 ];
 
-const ONE_FEATHER_POSE: Record<string, 'smug' | 'asleep'> = {
+const ONE_FEATHER_POSE: Record<string, 'smug' | 'laugh03'> = {
   featherOneLookAtMine: 'smug',
-  featherOnePlucked: 'asleep',
+  featherOnePlucked: 'laugh03',
   featherOneAroundHere: 'smug',
-  featherOneWait: 'asleep',
+  featherOneWait: 'laugh03',
   featherOneCheck: 'smug',
 };
 

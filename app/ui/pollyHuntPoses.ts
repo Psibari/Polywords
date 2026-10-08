@@ -9,6 +9,7 @@ import { POLLY_POSES, POLLY_POSE_SCALE, PollyPoseName } from './pollyPoses';
 const POLLY_HUNT_MASTER_POSES = {
   smug: require('../../assets/images/polly/master/smug.png'),
   laugh: require('../../assets/images/polly/master/bigLaugh.png'),
+  laugh03: require('../../assets/images/polly/master/laugh03.png'),
   point: require('../../assets/images/polly/master/point.png'),
   shocked: require('../../assets/images/polly/master/shocked.png'),
   sulk: require('../../assets/images/polly/master/sulk.png'),
@@ -21,12 +22,13 @@ const POLLY_HUNT_MASTER_POSES = {
   masterShock: require('../../assets/images/polly/master/masterShock.png'),
   hauntTaunt: require('../../assets/images/polly/master/hauntTaunt.png'),
   masterAngry: require('../../assets/images/polly/master/angry.png'),
+  angryYell: require('../../assets/images/polly/master/angryYell.png'),
 } as const;
 
 export type PollyHuntMasterPoseName = keyof typeof POLLY_HUNT_MASTER_POSES;
 
 // Every pose a Hunt visit can show: the shared names plus master-only ones
-// (jumpAngry, embarrassed) that have no old-art equivalent.
+// (jumpAngry, embarrassed, laugh03, angryYell) that have no old-art equivalent.
 export type PollyHuntPoseName = PollyPoseName | PollyHuntMasterPoseName;
 
 // Type-check the values without widening the const map.
