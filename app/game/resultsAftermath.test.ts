@@ -39,3 +39,19 @@ assert.deepEqual(
 );
 
 console.log('resultsAftermath tests passed');
+
+assert.deepEqual(
+  kinds({ bossOutcome: 'mastered', hauntOutcome: null, bossWord: 'case', hauntWord: null, bossIsRematch: true }),
+  [],
+  'a rematch win adds no crown, so it must not claim ADDED TO YOUR MASTERY',
+);
+assert.deepEqual(
+  kinds({ bossOutcome: 'haunted', hauntOutcome: null, bossWord: 'case', hauntWord: null, bossIsRematch: true }),
+  [],
+  'a rematch loss creates no Haunt, so it must not claim NOW HAUNTING YOU',
+);
+assert.deepEqual(
+  kinds({ bossOutcome: 'mastered', hauntOutcome: 'banished', bossWord: 'case', hauntWord: 'fold', bossIsRematch: true }),
+  [{ kind: 'banished', word: 'FOLD', copy: 'BANISHED' }],
+  'a rematch does not hide an earlier Haunt banishment from the same Hunt',
+);

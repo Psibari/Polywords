@@ -11,6 +11,10 @@ type ResolveResultsAftermathInput = {
   hauntOutcome: 'pending' | 'banished' | 'haunted' | null | undefined;
   bossWord: string | null | undefined;
   hauntWord: string | null | undefined;
+  /** The Boss round was a MASTER'S REMATCH of an already-mastered word: no crown was
+   *  added and no Haunt was created, so neither boss line may be shown. Real rematch
+   *  wording is Pete's to write. */
+  bossIsRematch?: boolean;
 };
 
 /**
@@ -26,7 +30,9 @@ export function resolveResultsConsequences(
   const bossWord = input.bossWord?.trim().toUpperCase() || null;
   const hauntWord = input.hauntWord?.trim().toUpperCase() || null;
 
-  if (input.bossOutcome === 'mastered' && bossWord) {
+  if (input.bossIsRematch === true) {
+    // Intentionally silent until rematch copy is approved.
+  } else if (input.bossOutcome === 'mastered' && bossWord) {
     consequences.push({ kind: 'mastered', word: bossWord, copy: 'ADDED TO YOUR MASTERY' });
   } else if (input.bossOutcome === 'haunted' && bossWord) {
     consequences.push({ kind: 'haunted', word: bossWord, copy: 'NOW HAUNTING YOU' });

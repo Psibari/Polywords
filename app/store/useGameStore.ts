@@ -954,7 +954,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       offered,
       bossHeld: bossHeldByPolly ? 1 : 0,
       bossLost: bossMastered ? 1 : 0,
-      mastered: bossMastered && bossWordName ? [bossWordName] : [],
+      // A MASTER'S REMATCH win adds no crown, so it is not a new mastery for the diary.
+      mastered: bossMastered && bossWordName && !(bossStep?.kind === 'word' && bossStep.isMasteryRematch === true) ? [bossWordName] : [],
       hauntLeft: game.hauntOutcome === 'haunted' && hauntWordName ? [hauntWordName] : [],
       hauntBroken: game.hauntOutcome === 'banished' && hauntWordName ? [hauntWordName] : [],
       // Mercy only. The Gold Feather revive is deliberately not logged — it is

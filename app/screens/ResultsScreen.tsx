@@ -328,6 +328,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     hauntOutcome: game.hauntOutcome,
     bossWord: bossStep?.kind === 'word' ? bossStep.word : null,
     hauntWord: hauntStep?.kind === 'word' ? hauntStep.word : null,
+    bossIsRematch: bossStep?.kind === 'word' && bossStep.isMasteryRematch === true,
   });
 
   const recordedRef = useRef(false);
