@@ -46,6 +46,12 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   articulation. Do not promote the rocking experiment to production.
 - **Results:** Hunt Results remains the last major visual surface awaiting a focused keep/change
   audit. Do not assume it needs redesign.
+- **Master's Rematch and feedback (2026-10-07):** MASTER'S REMATCH, BUSTER, KING, split
+  claim/trap/tier-up haptics and the wrong-swipe squawk rule are built on
+  `play-screen-overhaul`. Pete checked the haptics and squawk on a phone 2026-10-07. NOT
+  device-tested: BUSTER and KING animation timings and the "Bird brain" line. No way to start
+  a rematch on a phone yet: it only appears once every boss word is mastered, and there is no
+  dev shortcut.
 - **TestFlight:** build/submit/install works end to end. Store name remains
   `POLYWORDS: Hunt or Be Trapped`; iPad support is off.
 - **Website:** live at https://psibari.github.io/Polywords/ with /privacy/ and /support/.
@@ -85,13 +91,25 @@ In order:
 Open, needs Pete's ruling:
 - FAST `fast_r04` "WHAT BREAKFAST BREAKS" contains the headword (BREAKFAST).
 - `app/screens/dailyDevControls.test.mjs` passes on Node 24 (Pete's PC, CI) but fails on
-  Node 22; unmerged fix branch `fix/dev-controls-test-esm` exists.
+  Node 22; unmerged fix branch `fix/dev-controls-test-esm` exists. Until then, run `npm test`
+  on Node 24.
+- Permanent Polly turn: her lines (about 15) and the milestone (placeholder 12 masteries).
+- Whether "Bird brain" should also show on the in-round BUSTER panel (Results only today).
+- Whether a rematch win should count as `playerBeatPolly`. It does today, so it extends the
+  win streak and feeds Polly's mood.
+- DEV rematch test run: a dev run writes to the real save in about seven places (REAL ids,
+  hidden pairs, Haunt pruning, run completion, Polly lines, Gold Feather, resume snapshot), so
+  it needs a backup/restore or a throwaway save. Not built.
+- Timer: undecided. No Hunt timer exists today; decide from real TestFlight player data, not
+  developer test swipes.
+- More boss words: the rematch is a stopgap for players who master all of them.
 
 ## Do Not Work On Yet
 
 - New Polly art or WEBP restoration before the articulation inventory.
 - Production Home life-profile animation before the DEV Neutral proof.
 - Crown/Polybook progression, additional relationship states, or Polybook interior changes.
+  The permanent Polly turn is approved in principle but unbuilt (lines unwritten).
 - Changes to the device-approved `BROW_FOLLOW = 0.33`.
 - Daily answer-stone initial pop-in or decorative passes on approved screens.
 - Re-skinning strong native surfaces merely to make screens look alike.

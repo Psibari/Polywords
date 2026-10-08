@@ -49,7 +49,13 @@ bottom-anchored geometry.
 - Boss: survive visible masks, then judge three hidden cards one at a time. All three correct =
   MASTERED; any hidden miss or Boss death = HAUNTED. `bossOutcome` is authoritative.
 - Returning Haunt re-tests the exact hidden pair that won. Mastered words may return only as
-  ordinary tension/panic `isMasteredReturn` revisits, never Boss/Haunt candidates.
+  ordinary tension/panic `isMasteredReturn` revisits, never Boss/Haunt candidates, with one
+  exception: MASTER'S REMATCH.
+- MASTER'S REMATCH: only when no unmastered word with hidden Boss content is left,
+  `generateHunt` makes the final round a mastered boss word flagged `step.isMasteryRematch`
+  instead of throwing. Hunts with an unbeaten boss word are unchanged. A rematch win adds no
+  crown and no Polybook mastery; a loss creates no Haunt. A win still counts as beating Polly
+  in `recordRunComplete` (streaks, mood).
 - GPS arc: Confidence → Flow → Tension → Panic → Boss. `docs/GOLDEN_PACING_SYSTEM.md` owns the
   product rhythm; `huntGenerator.ts` owns executable pools/fallbacks.
 - Runtime Hunt entries are validated before selection. Invalid difficulty/gpsTag, malformed or
@@ -90,6 +96,13 @@ height are geometry contracts. Wall holes are an overlay; never cut the wall art
 continuous open → transform → close choreography. Boss outcome music stays fully silent through
 both outcomes. Returning Haunts do not use this package.
 
+MASTER'S REMATCH outcomes (timings first-pass, not device-confirmed):
+- Lost (missed hidden card or ran out of feathers): BUSTER. Plain text, no plaque, book stays
+  the neutral rig: MASTER shows, "MA" drops, "BU" lands. One punch as BU lands
+  (`streakBreakImpact` + `fellOffSmall` haptic). Results label and share text read BUSTER;
+  the Results line under it is "Bird brain" (Results only, not on the board).
+- Won: KING drops in over MASTERED on the gold plaque. Results label and share text read KING.
+
 ## Polybook
 
 - Vault route is Polly's book. Current architecture: closed physical book → one large portrait
@@ -121,8 +134,14 @@ Architecture only:
 - App owns audio lifetime; screens claim music only while focused.
 - Loudness is partly asset-level. Measure/normalize files before blaming player volume.
 - `cueAsync` in `app/utils/haptics.ts` is the only haptic gateway; heavy belongs to Boss beats.
+- A REAL claim (UP) and a trap rejection (RIGHT) have different haptic shapes, each climbing with
+  the round's light/medium/heavy phase tier; tier-ups have three escalating shapes (SHARP,
+  RAZOR SHARP, UNTRAPPABLE). `huntFeedbackPolicy.ts` picks the cue; shapes live in `haptics.ts`.
+- Polly's short wrong-swipe squawk fires always when a real chain FELL OFF, otherwise on every
+  third other wrong swipe. The count lives in `GameScreen` for the whole Hunt (reset per run),
+  not in the board, which remounts per word.
 - Polly's ordinary laugh, Boss laugh, Returning Haunt laugh and Hunt-loss Results chuckle are
-  separate product beats.
+  separate product beats. The Hunt-loss Results laugh is locked (Pete) and unchanged.
 
 ## Content and Data
 
@@ -155,6 +174,10 @@ Architecture only:
 - The parked articulation plan lives in `CONTEXT.md`: inventory existing separated art, then
   prove one DEV Neutral articulated sequence before new art or production life-profile
   animation.
+- Approved but NOT built: a permanent Polly turn, a second one-way door in the Polybook mood
+  (`resolveRivalryState`, `pollyMood.ts`) after a placeholder 12 masteries, after which AMUSED
+  is unreachable. Lines are unwritten; revisit the milestone after TestFlight. Today AMUSED is
+  still reachable at any mastery count.
 
 ## Services and Boundaries
 
