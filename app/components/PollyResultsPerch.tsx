@@ -2,10 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Image,
-  ImageSourcePropType,
   StyleSheet,
 } from 'react-native';
-import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
+import { PollyScreenPoseName, pollyScreenPoseArt, pollyScreenPoseUsesRig } from '../ui/pollyScreenPoses';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
@@ -25,24 +24,27 @@ type Props = {
   relationshipPose?: 'default' | 'rattled' | 'smug' | 'point';
 };
 
-const OUTCOME_POSE: Record<Outcome, ImageSourcePropType> = {
-  loss: POLLY_POSES.laugh,     // her win — synced with the laugh SFX Results plays
-  beat: POLLY_POSES.sulk,      // carries her boss-defeat pose into the ledger
-  complete: POLLY_POSES.idle,  // the watcher
+const OUTCOME_POSE: Record<Outcome, PollyScreenPoseName> = {
+  loss: 'laugh',     // her win — synced with the laugh SFX Results plays
+  beat: 'sulk',      // carries her boss-defeat pose into the ledger
+  complete: 'idle',  // the watcher (face rig)
 };
 
 const ENTRANCE_DELAY_MS = 600; // the verdict stamps first
 
 export default function PollyResultsPerch({ outcome, line, relationshipPose = 'default' }: Props) {
-  const relationshipPoseArt = relationshipPose === 'rattled'
-    ? POLLY_POSES.rattled
+  // 'rattled' is the relationship layer's intent name (comeback); it now
+  // shows the embarrassed drawing.
+  const relationshipPoseName: PollyScreenPoseName | null = relationshipPose === 'rattled'
+    ? 'embarrassed'
     : relationshipPose === 'smug'
-    ? POLLY_POSES.smug
+    ? 'smug'
     : relationshipPose === 'point'
-    ? POLLY_POSES.point
+    ? 'point'
     : null;
-  const settledPose = relationshipPoseArt ?? OUTCOME_POSE[outcome];
-  const [pose, setPose] = useState<ImageSourcePropType>(POLLY_POSES.fly);
+  const settledPose = relationshipPoseName ?? OUTCOME_POSE[outcome];
+  const [pose, setPose] = useState<PollyScreenPoseName>('fly');
+  const poseArt = pollyScreenPoseArt(pose);
 
   const slideY = useRef(new Animated.Value(POLLY_SIZE)).current;
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
@@ -81,12 +83,12 @@ export default function PollyResultsPerch({ outcome, line, relationshipPose = 'd
           { transform: [{ translateX: breatheX }, { translateY: breatheY }] },
         ]}
       >
-        {POLLY_PERCH_RIG_ENABLED && pose === POLLY_POSES.idle ? (
+        {POLLY_PERCH_RIG_ENABLED && pollyScreenPoseUsesRig(pose) ? (
           <PollyPerchRig size={POLLY_SIZE} reduceMotion={reduceMotion} />
         ) : (
           <Image
-            source={pose}
-            style={[styles.pollyImage, { transform: [{ scale: pollyPoseScale(pose) }] }]}
+            source={poseArt.source}
+            style={[styles.pollyImage, { transform: [{ scale: poseArt.scale }] }]}
             resizeMode="contain"
           />
         )}
