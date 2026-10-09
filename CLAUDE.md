@@ -145,6 +145,10 @@ Architecture only:
 - End: after her last line she flies out (win `flyAngry`, loss `flyGrin`); Results waits for the
   fly-out (`DAILY_POLLY_EXIT_FAILSAFE_MS` 6 s safety release). The gate stays blank on a win during
   the hold; the board stays locked on a loss.
+- The results view (also what an already-finished Daily opens to) shows Polly's pose only: no
+  bubble and no remembered line (Pete). The perch is the only place the Daily line is said and
+  remembered. On unmount the screen clears the in-memory claim result (`clearDailyReaction`),
+  so leaving during the ending and returning does not replay her reaction or hold Results.
 
 ## Audio and Haptics
 
@@ -210,7 +214,10 @@ Architecture only:
   opacity (`HOME_AWAKE_LAYER_POSES`). Post-win resting pose is master `angry` (closed beak), not
   `angryYell`; the rattled profile uses `embarrassed`. After the entrance settles, the resting pose
   and life profile follow LIVE memory; the greeting stays frozen. Home stays mounted under the
-  Hunt (the code comment "Navigating away re-mounts Home" is wrong).
+  Hunt; `enteredThisSession` limits the entrance to once per app session.
+- Home's "back after an absence" look (watchful) relaxes after the first completed Hunt of the app
+  session (`homeBeatForSession` with the in-memory `sessionStartRunsCompleted`; nothing saved). A
+  Hunt quit from the pause menu is not recorded, so it does not count.
 - Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
   while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
   wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).

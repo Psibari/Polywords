@@ -48,6 +48,17 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   the Hunt (1a3a2f9, then 289d349 for laugh03/angryYell), Results (ed03503), Daily Challenge
   (95ca56b) and Home (47e0e4e) on `play-screen-overhaul`, each through its own pose table. Pete
   device-tested each before its commit. Idle and smug remain on the face rig.
+- **Polly follow-ups (2026-10-08):** d2f9681 removed the repeated Polly line from the Daily
+  results view (pose only, no bubble, no remembered line; the perch is the only place the line is
+  said and remembered). a9c668e relaxes Home's "back after an absence" watchful look after the
+  first completed Hunt of the app session, in memory only (`homeBeatForSession`,
+  `sessionStartRunsCompleted`); a Hunt quit from the pause menu is not recorded, and the saved
+  memory format and `lastVisitAt` recording are unchanged. 4c1f6d6 clears the in-memory claim
+  result when the Daily screen unmounts, so leaving during the ending and returning does not
+  replay her reaction or hold Results. Dev 'return' seed: it raises `runsCompleted` to at least
+  5, so seeding mid-session can count as a played Hunt; its own message says to fully close and
+  relaunch the app. Unverified: closing passes through the background, which stamps
+  `lastVisitAt` (App.tsx) and may cancel the seeded absence.
 - **Results:** Hunt Results remains the last major visual surface awaiting a focused keep/change
   audit. Do not assume it needs redesign.
 - **Master's Rematch and feedback (2026-10-07):** MASTER'S REMATCH, BUSTER, KING, split
@@ -88,6 +99,9 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   focus.
 - Polly sleeps only on Home (a doze timer from when Home gains focus; touches do not reset it,
   Pete accepted), never during a Hunt or the Daily.
+- Daily results card: Polly's pose only, no line (Pete).
+- Home: after a long absence she looks watchful until the first completed Hunt of the session,
+  then relaxes (Pete).
 
 ## Next Work
 
@@ -127,12 +141,6 @@ Open, needs Pete's ruling:
   angry face is a big job, parked.
 - Pause button: Pete wants to move it eventually. The boss-entry bubble overlaps it for about a
   second; Pete said leave it.
-- The Daily results view repeats Polly's last line, which she now says fully on the perch first.
-  Undecided whether one should go.
-- Home after a long absence: her life profile stays watchful for the rest of the session (the last
-  visit is recorded only when the app goes to the background). Not ruled on.
-- Daily: leaving within about 3 s of the final claim and returning might replay her last reaction
-  and hold Results again. Not traced.
 - Mastery pose: Results shows the bent sulk, the Hunt shows angryYell. Undecided whether they
   should match.
 - The Haunted gloat's flyGrin exit is rarely seen because Results cuts in; Pete is leaving it.
@@ -148,6 +156,13 @@ Open, needs Pete's ruling:
   were not checked.
 - Some Daily bubble lines wrap with one word alone on line two (for example "BAT."); Pete writes
   the lines, so nothing was changed.
+- Two Daily entry-screen button colors, `#F2EEF8` (`startButtonText`) and `#CFC7DC`
+  (`startHomeText`), are flagged by the design checker on every edit of
+  `DailyChallengeScreen.tsx`. They date from 64418b1 (2026-09-29) and are not in `DESIGN.md`'s
+  palette. Pete has not ruled whether they are intentional; do not change them or add checker
+  ignores.
+- Unverified on device: whether iOS swipe-back works on the Daily screen in this build, and the
+  re-entry test for 4c1f6d6 (finish with a final miss, swipe back within about 2 s, return).
 
 ## Do Not Work On Yet
 
