@@ -102,6 +102,25 @@ export function resolvePollyLifeProfile(input: {
   return PROFILES.neutral;
 }
 
+/**
+ * Home only: the "back after an absence" look (watchful) lasts until the player
+ * completes their first Hunt of this app session, then relaxes (Pete,
+ * 2026-10-08). The absence itself is only re-stamped when the app goes to the
+ * background, so without this she would stay watchful all session. Uses the
+ * in-memory run count: `runsCompletedAtSessionStart` is a snapshot taken when
+ * Home's perch first loads this session; nothing is persisted.
+ */
+export function homeBeatForSession(
+  decision: PollyRelationshipBeatDecision,
+  runsCompletedAtSessionStart: number,
+  runsCompleted: number,
+): PollyRelationshipBeatDecision {
+  if (decision?.beat === 'returningAfterAbsence' && runsCompleted > runsCompletedAtSessionStart) {
+    return null;
+  }
+  return decision;
+}
+
 export function getPollyLifeProfile(name: PollyLifeProfileName): PollyLifeProfile {
   return PROFILES[name];
 }

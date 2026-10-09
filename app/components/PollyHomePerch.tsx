@@ -22,7 +22,7 @@ import {
   resolvePollyRelationshipBeat,
   resolvePollyRelationshipPresentation,
 } from '../game/pollyRelationship';
-import { resolvePollyLifeProfile } from '../game/pollyLifeProfile';
+import { homeBeatForSession, resolvePollyLifeProfile } from '../game/pollyLifeProfile';
 import { useGameStore } from '../store/useGameStore';
 import { useIsFocused } from '@react-navigation/native';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
@@ -32,6 +32,10 @@ import { PollySpeechBubble } from './PollySpeechBubble';
 // Once per app session: fly-in + one greeting. Navigating away re-mounts
 // Home, but Polly is already at her post — no re-entrance, no re-greeting.
 let enteredThisSession = false;
+// Runs completed when Home's perch first loaded this app session (in memory
+// only). Once the count rises, a Hunt has been played this session and the
+// "back after an absence" look relaxes (homeBeatForSession).
+let sessionStartRunsCompleted: number | null = null;
 
 // Idle-screen doze: how long she waits, once still, before nodding off.
 const DOZE_DELAY_MS = 8000;
@@ -126,6 +130,10 @@ export default function PollyHomePerch() {
   // under the Hunt (and is not frozen while hidden), so a finished Hunt
   // updates her profile, and with it her resting pose, rig face, breathing and
   // doze delay, while she is out of sight.
+  const [runsAtSessionStart] = useState(() => {
+    if (sessionStartRunsCompleted === null) sessionStartRunsCompleted = progress.runsCompleted;
+    return sessionStartRunsCompleted;
+  });
   const lifeProfile = useMemo(() => {
     const context = derivePollyRelationshipContext({
       memory,
@@ -134,9 +142,13 @@ export default function PollyHomePerch() {
       masteredCount: progress.masteredWords.length,
       now: Date.now(),
     });
-    const relationshipDecision = resolvePollyRelationshipBeat({ context, surface: 'home' });
+    const relationshipDecision = homeBeatForSession(
+      resolvePollyRelationshipBeat({ context, surface: 'home' }),
+      runsAtSessionStart,
+      progress.runsCompleted,
+    );
     return resolvePollyLifeProfile({ context, decision: relationshipDecision });
-  }, [memory, progress.recentHuntPerformance, progress.runsCompleted, progress.masteredWords.length]);
+  }, [memory, progress.recentHuntPerformance, progress.runsCompleted, progress.masteredWords.length, runsAtSessionStart]);
   const [firstHomeLineIndex, setFirstHomeLineIndex] = useState(() =>
     Math.min(onboardingHome.step, FIRST_HOME_LINES.length - 1)
   );

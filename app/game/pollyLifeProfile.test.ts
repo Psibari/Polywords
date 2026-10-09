@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { getPollyLifeProfile, resolvePollyLifeProfile } from './pollyLifeProfile';
+import { getPollyLifeProfile, homeBeatForSession, resolvePollyLifeProfile } from './pollyLifeProfile';
 import type { PollyRelationshipContext } from './pollyRelationship';
 
 const base: PollyRelationshipContext = {
@@ -60,5 +60,27 @@ assert.equal(resolvePollyLifeProfile({
 assert.ok(getPollyLifeProfile('cocky').dozeDelayMultiplier < 1);
 assert.ok(getPollyLifeProfile('rattled').dozeDelayMultiplier > 1);
 assert.ok(getPollyLifeProfile('watchful').ambientIntensity > 1);
+
+// Home: the "back after an absence" look lasts until the first Hunt of the
+// session, then relaxes; other beats are left alone.
+{
+  const returning = { beat: 'returningAfterAbsence' as const, wordRivalry: null };
+  const slump = { beat: 'veteranSlump' as const, wordRivalry: null };
+  // No Hunt yet this session: still watchful.
+  assert.equal(homeBeatForSession(returning, 12, 12), returning);
+  assert.equal(
+    resolvePollyLifeProfile({ context: base, decision: homeBeatForSession(returning, 12, 12) }).name,
+    'watchful',
+  );
+  // One Hunt completed since the session started: relaxes to the normal profile.
+  assert.equal(homeBeatForSession(returning, 12, 13), null);
+  assert.equal(
+    resolvePollyLifeProfile({ context: base, decision: homeBeatForSession(returning, 12, 13) }).name,
+    'neutral',
+  );
+  // Other beats and no beat pass through unchanged.
+  assert.equal(homeBeatForSession(slump, 12, 13), slump);
+  assert.equal(homeBeatForSession(null, 12, 13), null);
+}
 
 console.log('pollyLifeProfile tests passed');
