@@ -29,8 +29,9 @@ import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 
-// Once per app session: fly-in + one greeting. Navigating away re-mounts
-// Home, but Polly is already at her post — no re-entrance, no re-greeting.
+// Once per app session: fly-in + one greeting. Home stays mounted under the
+// screens pushed over it (Hunt, Daily, Vault, Settings), and this flag also
+// stops a re-entrance or re-greeting if Home is ever mounted again that session.
 let enteredThisSession = false;
 // Runs completed when Home's perch first loaded this app session (in memory
 // only). Once the count rises, a Hunt has been played this session and the
