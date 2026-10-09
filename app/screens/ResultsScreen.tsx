@@ -31,6 +31,10 @@ import { resolveHuntPerformance } from '../game/pollyMood';
 import { localDateKey } from '../game/bookLog';
 import { resolveResultsConsequences } from '../game/resultsAftermath';
 import {
+  buildResultsDevPreview,
+  type ResultsDevPreviewOutcome,
+} from '../game/resultsDevPreview';
+import {
   derivePollyRelationshipContext,
   resolvePollyRelationshipBeat,
   resolvePollyRelationshipPresentation,
@@ -286,9 +290,10 @@ const gf = StyleSheet.create({
 type Props = {
   onRestart: () => void;
   onHome: () => void;
+  devPreviewOutcome?: ResultsDevPreviewOutcome;
 };
 
-export default function ResultsScreen({ onRestart, onHome }: Props) {
+export default function ResultsScreen({ onRestart, onHome, devPreviewOutcome }: Props) {
   const navigation = useNavigation<any>();
   const reduceMotion = useReducedMotionPreference();
   const game = useGameStore(s => s.game);
@@ -304,9 +309,13 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const pollyRelationshipBeatForDev = useGameStore(s => s.pollyRelationshipBeatForDev);
   const clearPollyRelationshipBeatForDev = useGameStore(s => s.clearPollyRelationshipBeatForDev);
   const { wordResults, score, bestCombo, status } = game;
-  const isComplete = status === 'complete';
-  const haunted = game.bossOutcome === 'haunted' || game.hauntOutcome === 'haunted';
+  const devPreview = __DEV__ && devPreviewOutcome ? buildResultsDevPreview(devPreviewOutcome) : null;
+  const displayWordResults = devPreview?.wordResults ?? wordResults;
+  const displayBestCombo = devPreview?.bestCombo ?? bestCombo;
+  const isComplete = devPreview?.isComplete ?? status === 'complete';
+  const haunted = devPreview?.haunted ?? (game.bossOutcome === 'haunted' || game.hauntOutcome === 'haunted');
   const hasGoldFeather =
+    devPreview === null &&
     status === 'gameOver' &&
     goldFeatherAvailable &&
     goldFeatherExpiresAt !== null &&
@@ -316,18 +325,20 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const [progressBeforeRunRecorded] = useState(() => currentProgress);
   const [relationshipBeatForDev] = useState(() => pollyRelationshipBeatForDev);
   const [usingGoldFeather, setUsingGoldFeather] = useState(false);
-  const died = status === 'gameOver';
-  const bossMastered = game.bossOutcome === 'mastered';
-  const flawlessWin = bossMastered && game.bossFlawless;
+  const died = devPreview ? false : status === 'gameOver';
+  const bossMastered = devPreview?.bossMastered ?? game.bossOutcome === 'mastered';
+  const flawlessWin = devPreview ? false : bossMastered && game.bossFlawless;
   const outcome: 'loss' | 'beat' | 'complete' = died ? 'loss' : bossMastered ? 'beat' : 'complete';
   const bossStep = game.session.find(step => step.kind === 'word' && step.eventType === 'bossWord');
   const hauntStep = game.session.find(step => step.kind === 'word' && step.isHauntReturn === true);
   // A lost MASTER'S REMATCH: nothing haunts the player, so it reads BUSTER.
-  const bossRematchLost =
-    game.bossOutcome === 'haunted' && bossStep?.kind === 'word' && bossStep.isMasteryRematch === true;
+  const bossRematchLost = devPreview?.bossRematchLost ?? (
+    game.bossOutcome === 'haunted' && bossStep?.kind === 'word' && bossStep.isMasteryRematch === true
+  );
   // A won MASTER'S REMATCH: KING takes over the MASTERED label.
-  const bossRematchWon =
-    bossMastered && bossStep?.kind === 'word' && bossStep.isMasteryRematch === true;
+  const bossRematchWon = devPreview?.bossRematchWon ?? (
+    bossMastered && bossStep?.kind === 'word' && bossStep.isMasteryRematch === true
+  );
   const resultLabel = resolveHuntResultLabel({
     status: died ? 'gameOver' : 'complete',
     bossMastered,
@@ -336,7 +347,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     bossRematchWon,
   });
 
-  const consequences = resolveResultsConsequences({
+  const consequences = devPreview ? [] : resolveResultsConsequences({
     bossOutcome: game.bossOutcome,
     hauntOutcome: game.hauntOutcome,
     bossWord: bossStep?.kind === 'word' ? bossStep.word : null,
@@ -346,23 +357,25 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
   const recordedRef = useRef(false);
   function recordFinalRunIfNeeded() {
-    if (recordedRef.current) return;
+    if (devPreview || recordedRef.current) return;
     recordedRef.current = true;
     recordRunComplete(score);
   }
 
   useEffect(() => {
+    if (devPreview) return;
     if (hasGoldFeather && status === 'gameOver') return;
     recordFinalRunIfNeeded();
   }, [hasGoldFeather, status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (status === 'gameOver') playSfx('pollySqwawkLaugh', { bypassCooldown: true });
+    if (!devPreview && status === 'gameOver') playSfx('pollySqwawkLaugh', { bypassCooldown: true });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    if (devPreview) return;
     checkGoldFeatherExpiry();
-  }, [checkGoldFeatherExpiry]);
+  }, [checkGoldFeatherExpiry]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleUseGoldFeather() {
     if (!hasGoldFeather || usingGoldFeather) return;
@@ -383,6 +396,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
   function handleOpenJournal() {
     recordFinalRunIfNeeded();
+    if (devPreview) return;
     navigation.navigate('Vault', {
       polybookSection: 'JOURNAL',
       polybookDate: localDateKey(new Date()),
@@ -391,6 +405,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
 
   async function handleShare() {
     recordFinalRunIfNeeded();
+    if (devPreview) return;
     try {
       await Share.share({
         message: buildShareMessage(game.session, wordResults, isComplete, bossMastered, haunted, bossRematchLost, bossRematchWon),
@@ -431,13 +446,13 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     return () => clearTimeout(timer);
   }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const wordOnlyResults = wordResults.filter(r => r.roundKind === 'word');
+  const wordOnlyResults = displayWordResults.filter(r => r.roundKind === 'word');
   const [pollyRoll] = useState(() => Math.random());
   const currentPerformance = resolveHuntPerformance({
     status: died ? 'gameOver' : 'complete',
     stepIndex: game.stepIndex,
-    sessionLength: game.session.length,
-    bossOutcome: game.bossOutcome,
+    sessionLength: devPreview ? 1 : game.session.length,
+    bossOutcome: devPreview?.bossOutcome ?? game.bossOutcome,
   });
   const relationshipContext = derivePollyRelationshipContext({
     memory: pollyMemoryBeforeRunRecorded,
@@ -446,7 +461,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     masteredCount: progressBeforeRunRecorded.masteredWords.length,
     now: Date.now(),
   });
-  const relationshipDecision = __DEV__ && relationshipBeatForDev === 'veteranSlump'
+  const relationshipDecision = !devPreview && __DEV__ && relationshipBeatForDev === 'veteranSlump'
     ? { beat: 'veteranSlump' as const, wordRivalry: null }
     : resolvePollyRelationshipBeat({
         context: relationshipContext,
@@ -459,7 +474,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
     lineRoll: pollyRoll,
   });
   const pollyMoment = relationshipPresentation?.moment ?? deriveResultsPollyMoment(
-    wordResults,
+    displayWordResults,
     isComplete,
     bossMastered,
     pollyMemoryBeforeRunRecorded,
@@ -468,14 +483,15 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
   const pollyLineRememberedRef = useRef(false);
 
   useEffect(() => {
+    if (devPreview) return;
     if (__DEV__ && relationshipBeatForDev !== null) clearPollyRelationshipBeatForDev();
-  }, [relationshipBeatForDev, clearPollyRelationshipBeatForDev]);
+  }, [relationshipBeatForDev, clearPollyRelationshipBeatForDev]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!pollyMoment || pollyLineRememberedRef.current) return;
+    if (devPreview || !pollyMoment || pollyLineRememberedRef.current) return;
     pollyLineRememberedRef.current = true;
     rememberPollyLine(pollyMoment.lineId, 'results');
-  }, [pollyMoment, rememberPollyLine]);
+  }, [pollyMoment, rememberPollyLine]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [lossLineRoll] = useState(() => Math.random());
   // A lost MASTER'S REMATCH ends as BUSTER with its own line; it is not a
@@ -558,7 +574,7 @@ export default function ResultsScreen({ onRestart, onHome }: Props) {
             <View style={rs.recapHeader}>
               <Text style={rs.recapTitle}>HUNT RECAP</Text>
               <Text style={rs.perfectLine}>
-                {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {bestCombo}
+                {perfectCount}/{wordOnlyResults.length} perfect  ·  best chain {displayBestCombo}
               </Text>
             </View>
 
