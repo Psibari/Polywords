@@ -8,6 +8,7 @@ import HomeScreen from './app/screens/HomeScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
+import DevSettingsScreen from './app/screens/DevSettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import DevResultsPreviewScreen from './app/screens/DevResultsPreviewScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
@@ -100,7 +101,7 @@ export default function App() {
                 catches reliably every time. */}
             <Stack.Screen name="Game" component={GameScreen} options={{ gestureEnabled: false }} />
             <Stack.Screen name="Vault" component={VaultScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Settings" component={__DEV__ ? DevSettingsScreen : SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
             {__DEV__ && <Stack.Screen name="DevResultsPreview" component={DevResultsPreviewScreen} />}
           </Stack.Navigator>
