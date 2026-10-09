@@ -811,6 +811,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailyLastClaimResult]);
 
+  // Leaving the Daily drops the in-memory claim result, so a quick return
+  // does not replay her last reaction (and hold Results) for a claim the
+  // player already saw. Unmount only; staying on the screen is unchanged.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => () => clearDailyReaction(), []);
+
   function finishPhysicalCorrectTransition(candidate: string) {
     if (completingCandidateRef.current !== candidate) return;
     clearCorrectTransitionTimers();
