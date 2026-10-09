@@ -86,7 +86,8 @@ assert.equal(
 );
 assert.equal(
   resolveHuntResultLabel({ status: 'gameOver', bossMastered: false, haunted: false }),
-  'YOU WERE HUNTED',
+  'LOST',
+  'an ordinary failed Hunt reads LOST and does not borrow Haunted terminology',
 );
 
 assert.equal(
