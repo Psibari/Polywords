@@ -4,27 +4,20 @@ function eq<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) throw new Error(`${label}: expected ${String(expected)}, got ${String(actual)}`);
 }
 
-// Each cause maps to its own line.
-eq(pickLossVerdictLine(0, 'trap', 0), LOSS_CAUSE_LINES.trap, 'cause.trap');
-eq(pickLossVerdictLine(0, 'rejectedReal', 0), LOSS_CAUSE_LINES.rejectedReal, 'cause.rejectedReal');
-eq(pickLossVerdictLine(0, 'wrongCall', 0), LOSS_CAUSE_LINES.wrongCall, 'cause.wrongCall');
+const ORDINARY_LOSS = 'Your book got closed.';
 
-// A null cause falls through to the neutral pool.
-eq(pickLossVerdictLine(0, null, 0), LOSS_CAUSE_LINES.neutral[0], 'cause.null.neutralFirst');
-eq(pickLossVerdictLine(0, null, 0.99), LOSS_CAUSE_LINES.neutral[1], 'cause.null.neutralLast');
+// Ordinary Hunt loss has one locked subtitle regardless of why the run ended
+// or how many existing Haunts the player already carries. Haunt language is
+// reserved for a real Haunted outcome, which Results handles separately.
+eq(LOSS_CAUSE_LINES.ordinary, ORDINARY_LOSS, 'ordinary.copy');
+eq(pickLossVerdictLine(0, 'trap', 0), ORDINARY_LOSS, 'cause.trap');
+eq(pickLossVerdictLine(0, 'rejectedReal', 0), ORDINARY_LOSS, 'cause.rejectedReal');
+eq(pickLossVerdictLine(0, 'wrongCall', 0), ORDINARY_LOSS, 'cause.wrongCall');
+eq(pickLossVerdictLine(0, null, 0), ORDINARY_LOSS, 'cause.null');
+eq(pickLossVerdictLine(2, 'trap', 0), ORDINARY_LOSS, 'ghosts.two.noHauntCopy');
+eq(pickLossVerdictLine(3, null, 0.99), ORDINARY_LOSS, 'ghosts.three.noHauntCopy');
 
-// One ghost does not trigger the haunt line — it takes 2 or more.
-eq(pickLossVerdictLine(1, 'trap', 0), LOSS_CAUSE_LINES.trap, 'ghosts.one.noHaunt');
-eq(pickLossVerdictLine(1, null, 0), LOSS_CAUSE_LINES.neutral[0], 'ghosts.one.stillNeutral');
-
-// The haunt condition outranks every individual cause, including a
-// non-null lossCause that would otherwise win.
-eq(pickLossVerdictLine(2, 'trap', 0), LOSS_CAUSE_LINES.haunts, 'ghosts.two.outranksTrap');
-eq(pickLossVerdictLine(2, 'rejectedReal', 0), LOSS_CAUSE_LINES.haunts, 'ghosts.two.outranksRejectedReal');
-eq(pickLossVerdictLine(2, 'wrongCall', 0), LOSS_CAUSE_LINES.haunts, 'ghosts.two.outranksWrongCall');
-eq(pickLossVerdictLine(2, null, 0), LOSS_CAUSE_LINES.haunts, 'ghosts.two.outranksNull');
-eq(pickLossVerdictLine(3, 'trap', 0), LOSS_CAUSE_LINES.haunts, 'ghosts.three.stillHaunts');
-
+// MASTER'S REMATCH loss keeps its separately approved BUSTER subtitle.
 eq(LOSS_CAUSE_LINES.rematchLost, 'Bird brain', 'rematchLost.copy');
 
 console.log('OK — lossCauseLines: all assertions passed');
