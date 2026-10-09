@@ -17,6 +17,8 @@ const POLLY_SCREEN_POSES = {
   point: require('../../assets/images/polly/master/point.png'),
   shocked: require('../../assets/images/polly/master/shocked.png'),
   embarrassed: require('../../assets/images/polly/master/embarrassed.png'),
+  flyAngry: require('../../assets/images/polly/master/flyAngry.png'),
+  flyGrin: require('../../assets/images/polly/master/flyGrin.png'),
 } as const;
 
 export type PollyScreenPoseName = keyof typeof POLLY_SCREEN_POSES;
@@ -34,6 +36,8 @@ const POLLY_SCREEN_POSE_SCALE: Record<PollyScreenPoseName, number> = {
   point: 1,
   shocked: 1,
   embarrassed: 1,
+  flyAngry: 1,
+  flyGrin: 1,
 };
 
 export function pollyScreenPoseArt(pose: PollyScreenPoseName): { source: ImageSourcePropType; scale: number } {

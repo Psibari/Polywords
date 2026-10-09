@@ -39,13 +39,30 @@ export const DAILY_CASTLE_OPENING: DailyCastleRect = {
 /**
  * Polly's Daily speech bubble sits on the steps, just below the arch opening
  * (whose bottom is the top step's edge, 1269 px), so it never covers a clue on
- * the gate (Pete, 2026-09-26). Canvas points; x/y is the bubble's top-left.
- * Two lines of the longest Daily line fit above the floor coins.
+ * the gate (Pete, 2026-09-26). It is to her right, its tail pointing left at
+ * her (Pete, 2026-10-08). Canvas points; x/y is the bubble's top-left.
+ * x clears her widest pose while it talks (point's wingtip at 158.7 pt with
+ * DAILY_POLLY_SCALE 1.25) by 8 pt on a 375 pt phone, the tightest case.
+ * maxWidth is in screen points and is capped so the bubble ends screenMargin
+ * inside the screen's right edge; every Daily line fits in two lines.
  */
 export const DAILY_POLLY_BUBBLE = {
-  x: 40,
+  x: 191.2,
   y: DAILY_CASTLE_OPENING.y + DAILY_CASTLE_OPENING.height + 4,
-  maxWidth: 260,
+  maxWidth: 204,
+  screenMargin: 12,
+} as const;
+
+/**
+ * Polly's Daily perch: the top-left of her base 150 pt picture box, low on the
+ * left at the wall beside the stairs, tail hanging over the stone band (Pete's
+ * mock-up, 2026-10-08). Canvas points, converted per phone with the castle
+ * frame like DAILY_POLLY_BUBBLE; tune on device. PollyDailyPerch scales her
+ * box by DAILY_POLLY_SCALE from this box's bottom-left corner.
+ */
+export const DAILY_POLLY_PERCH = {
+  x: -22,
+  y: 438,
 } as const;
 
 /**

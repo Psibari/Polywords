@@ -3,9 +3,9 @@ import {
   Animated,
   Easing,
   Image,
-  ImageSourcePropType,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import {
   DAILY_FIRST_MISS_LINE,
@@ -15,7 +15,7 @@ import {
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
-import { POLLY_POSES, pollyPoseScale } from '../ui/pollyPoses';
+import { PollyScreenPoseName, pollyScreenPoseArt, pollyScreenPoseUsesRig } from '../ui/pollyScreenPoses';
 import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
 import { BookRivalryState } from '../game/pollyBookLines';
 import { pickFreshLine } from '../game/pollyVisitPolicy';
@@ -23,6 +23,7 @@ import { useGameStore } from '../store/useGameStore';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
+import { DAILY_POLLY_BUBBLE } from '../ui/dailyCastleScene';
 
 // DailyPollyReaction here is pwDailyMaterials' POSE-keyed type ('perched' |
 // 'happy' | 'laughing' | 'shocked'), NOT the trigger type of the same name in
@@ -36,14 +37,14 @@ type Props = {
   rivalryState: BookRivalryState;
   show?: boolean;
   /**
-   * Bottom edge of the Daily HUD, in the same parent coordinates as this
-   * perch's own layout. When given, Polly drops to sit on the left tower just
-   * under the HUD instead of over its label.
+   * Window point for the top-left of her picture box, at the wall low on the
+   * left (DAILY_POLLY_PERCH, converted by the screen with the castle frame).
+   * She stays hidden until it is known.
    */
-  hudBottom?: number;
+  perchAt?: { x: number; y: number };
   /**
-   * Window point for the speech bubble's top-left, on the castle steps below
-   * the gate, so it never covers a clue (Pete, 2026-09-26). Without it the
+   * Window point for the speech bubble's top-left, on the castle steps to her
+   * right, so it never covers a clue (Pete, 2026-09-26). Without it the
    * bubble sits beside her.
    */
   bubbleAt?: { x: number; y: number; maxWidth: number };
@@ -52,26 +53,73 @@ type Props = {
    * 'correct' and the win waits this long, so it never covers the plaque.
    */
   throwDelayMs?: number;
+  /**
+   * Called once she has flown out after the Daily's last line (win or loss).
+   * The screen holds Results until then.
+   */
+  onExited?: () => void;
 };
-
-// Gap between the HUD's bottom edge and the top of Polly's pose box. Her
-// crown starts a few points inside the box, so this keeps it clear of the HUD.
-const DAILY_POLLY_HUD_GAP = 2;
-// pollyWrap's top inside the perch root. A constant rather than a read of
-// styles.pollyWrap.top: react-native-web's StyleSheet does not hand back the
-// raw values.
-const DAILY_POLLY_WRAP_TOP = 5;
 
 // Clean full-pose drawings (background stripped to transparent). The expression
 // lives in the art; life + menace come from whole-image motion + the SFX.
-const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', ImageSourcePropType> = {
-  idle: POLLY_POSES.idle,        // smug perched — watchful
-  happy: POLLY_POSES.point,      // pointing taunt (wrong)
-  laughing: POLLY_POSES.laugh,   // laughing wide (out of lives)
-  shocked: POLLY_POSES.shocked,  // shocked (win)
+// Art and multipliers come from the shared screen table (pollyScreenPoses.ts):
+// master art at 1, except idle, which stays sprite4 for the face rig.
+const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', PollyScreenPoseName> = {
+  idle: 'idle',         // smug perched — watchful (face rig)
+  happy: 'point',       // pointing taunt (wrong)
+  laughing: 'laugh',    // laughing wide (out of lives)
+  shocked: 'shocked',   // shocked (win)
 };
-const POSE_FLY = POLLY_POSES.fly; // fly-in entrance
-const DAILY_POLLY_SIZE = 150;
+const POSE_FLY: PollyScreenPoseName = 'fly'; // fly-in entrance
+// Her picture box: the original 150 pt perch box times DAILY_POLLY_SCALE.
+// One size for the rig and every pose layer, so they all grow together. Tune
+// DAILY_POLLY_SCALE on the phone; the wall spot is the 150 pt box's, and she
+// grows up and to the right from its bottom-left corner (see pollyWrap below).
+const DAILY_POLLY_BASE_SIZE = 150;
+const DAILY_POLLY_SCALE = 1.25;
+const DAILY_POLLY_SIZE = DAILY_POLLY_BASE_SIZE * DAILY_POLLY_SCALE;
+
+// The win and the loss end the Daily: once that last line has faded she flies
+// out (win: angry, loss: grinning) and Results opens after she is gone.
+const EXIT_POSE: Partial<Record<Reaction, PollyScreenPoseName>> = {
+  shocked: 'flyAngry',
+  laughing: 'flyGrin',
+};
+
+// Arrival (Pete, 2026-10-08): when play starts she flies in from the top-left
+// in the fly pose, drifting down to her wall spot and slowing as she lands; on
+// landing she switches to idle. Tune on the phone.
+const DAILY_POLLY_ENTRY_MS = 650;
+// Start: her box this far left of the wall spot, and its top this far above
+// the screen's top edge (one box height, so she starts fully off screen).
+const DAILY_POLLY_ENTRY_DX = -60;
+const DAILY_POLLY_ENTRY_ABOVE_TOP = DAILY_POLLY_SIZE;
+// Start tilt in flyTilt units (±1 = ±12°, the Hunt's sign convention):
+// +1 is nose-down while she descends, easing to level on landing.
+const DAILY_POLLY_ENTRY_TILT = 1;
+// Out of play she is parked this far above her spot: off screen on any phone.
+const DAILY_POLLY_PARKED_Y = -4000;
+
+// Fly-out arc, copied from PollyHuntVisit's runExit (Hunt, 2026-10-08): up
+// and to the right off the top edge, nose-up, shrinking. Kept in step by hand.
+const FLY_OUT_MS = 500;
+const EXIT_X_FRAC = 0.6;
+const EXIT_Y_HEADROOM = 80;
+
+// Every pose the perch can show gets one stacked layer that stays mounted for
+// the life of the perch; only the current pose is visible (opacity 1, the rest
+// 0). Swapping by mount/unmount made each switch create a fresh image view,
+// which draws empty for a frame or two. To give a new pose a layer, add it here.
+const PERCH_LAYER_POSES: readonly PollyScreenPoseName[] = [
+  ...new Set<PollyScreenPoseName>([
+    POSE_FLY, POSE.idle, POSE.happy, POSE.laughing, POSE.shocked,
+    ...Object.values(EXIT_POSE),
+  ]),
+];
+// Poses the face rig draws (idle) share the one rig layer instead of an image.
+const PERCH_IMAGE_POSES = PERCH_LAYER_POSES.filter(
+  p => !(POLLY_PERCH_RIG_ENABLED && pollyScreenPoseUsesRig(p)),
+);
 
 function getLine(
   reaction: Reaction | null,
@@ -101,18 +149,12 @@ export default function PollyDailyPerch({
   reaction,
   rivalryState,
   show = true,
-  hudBottom,
+  perchAt,
   bubbleAt,
   throwDelayMs = 0,
+  onExited,
 }: Props) {
-  // Where this perch's root actually lands in its parent. Read from layout,
-  // not assumed, so the drop below is right however the parent pads it.
-  // Transforms never change layout, so applying the drop cannot feed back.
-  const [rootY, setRootY] = useState<number | null>(null);
-  const perchDrop =
-    hudBottom && rootY !== null
-      ? Math.max(0, hudBottom + DAILY_POLLY_HUD_GAP - (rootY + DAILY_POLLY_WRAP_TOP))
-      : 0;
+  const { width: screenW, height: screenH } = useWindowDimensions();
   const rememberLine = useGameStore(s => s.rememberPollyLine);
   // Both held stable for the life of this perch, same pattern as
   // ResultsScreen.tsx's pollyMemoryBeforeRunRecorded: a live pollyMemory
@@ -123,7 +165,8 @@ export default function PollyDailyPerch({
   const [pollyMemoryBeforeRecorded] = useState(() => useGameStore.getState().pollyMemory);
   const [dailyLossRoll] = useState(() => Math.random());
   const dailyLossLineId = pickFreshLine(DAILY_LOSS_LINE_IDS, pollyMemoryBeforeRecorded.recentLineIds, dailyLossRoll);
-  const [pose, setPose] = useState<ImageSourcePropType>(POSE_FLY);
+  const [pose, setPose] = useState<PollyScreenPoseName>(POSE_FLY);
+  const rigVisible = POLLY_PERCH_RIG_ENABLED && pollyScreenPoseUsesRig(pose);
   const enteredRef = useRef(false);
 
   // Unlike firstMiss/loss/win, 'correct' can fire several times per session
@@ -135,15 +178,6 @@ export default function PollyDailyPerch({
   const firedCorrectLineIdsRef = useRef<string[]>([]);
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
-  const slideY = useRef(new Animated.Value(280)).current;
-  // Hidden is slideY 280. The root is anchored to the top of the screen, so
-  // the slide alone leaves her on screen, over the entry card and Results;
-  // she fades on the same value, so she is gone whenever she is slid away.
-  const perchOpacity = slideY.interpolate({
-    inputRange: [0, 280],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
 
   // Whole-image drivers (no part seams possible — we only move the whole image).
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
@@ -151,6 +185,43 @@ export default function PollyDailyPerch({
   const reactX = useRef(new Animated.Value(0)).current;
   const reactY = useRef(new Animated.Value(0)).current;
   const reactScale = useRef(new Animated.Value(1)).current;
+  // Flight offsets for the arrival and the fly-out. At rest on the wall: 0, 0,
+  // no tilt, full size. Out of play she is parked off screen above.
+  const flyX = useRef(new Animated.Value(0)).current;
+  const flyY = useRef(new Animated.Value(DAILY_POLLY_PARKED_Y)).current;
+  // Read when she arrives; later layout changes never restart the arrival.
+  const perchAtRef = useRef(perchAt);
+  perchAtRef.current = perchAt;
+  const perchKnown = perchAt !== undefined;
+  const flyTilt = useRef(new Animated.Value(0)).current;
+  const flyScale = useRef(new Animated.Value(1)).current;
+  const exitingRef = useRef(false);
+  // Set as the Daily's last reaction starts (win or loss): from then on she is
+  // leaving, so the screen's later reset to 'perched' must not settle her.
+  const leavingRef = useRef(false);
+  const onExitedRef = useRef(onExited);
+  onExitedRef.current = onExited;
+
+  function runFlyOut(exitPose: PollyScreenPoseName) {
+    if (exitingRef.current) return;
+    exitingRef.current = true;
+    setPose(exitPose);
+    const exitX = screenW * EXIT_X_FRAC;
+    const exitY = -(screenH + EXIT_Y_HEADROOM);
+    if (reduceMotion !== false) {
+      // Reduce Motion: no flight, she is simply gone.
+      flyX.setValue(exitX);
+      flyY.setValue(exitY);
+      onExitedRef.current?.();
+      return;
+    }
+    Animated.parallel([
+      Animated.timing(flyX, { toValue: exitX, duration: FLY_OUT_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(flyY, { toValue: exitY, duration: FLY_OUT_MS, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.timing(flyTilt, { toValue: -1, duration: FLY_OUT_MS, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      Animated.timing(flyScale, { toValue: 0.86, duration: FLY_OUT_MS, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+    ]).start(() => onExitedRef.current?.());
+  }
 
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -160,46 +231,67 @@ export default function PollyDailyPerch({
     };
   }, []);
 
-  // Fly in when Daily opens, then settle onto the perch.
+  // Arrival: each time play starts (and her wall spot is known) she starts a
+  // fresh session from the fly pose and flies down to the wall; she switches
+  // to idle when the descent lands. Out of play she is parked off screen.
   useEffect(() => {
     if (reduceMotion === null) return;
-    const t = setTimeout(() => {
+    const spot = perchAtRef.current;
+    if (!show || !spot) {
+      // Out of play (entry card, Results) or not placed yet: park her unseen.
+      flyX.stopAnimation();
+      flyY.stopAnimation();
+      flyTilt.stopAnimation();
+      flyX.setValue(0);
+      flyY.setValue(DAILY_POLLY_PARKED_Y);
+      flyTilt.setValue(0);
+      return;
+    }
+
+    // A fresh session: clear everything an earlier run (or its fly-out) left.
+    exitingRef.current = false;
+    leavingRef.current = false;
+    enteredRef.current = false;
+    flyScale.setValue(1);
+
+    if (reduceMotion) {
+      // Reduce Motion: no descent; she is simply at the wall, idle.
+      flyX.setValue(0);
+      flyY.setValue(0);
+      flyTilt.setValue(0);
       enteredRef.current = true;
       setPose(POSE.idle);
-    }, reduceMotion ? 0 : 650);
-    return () => clearTimeout(t);
-  }, [reduceMotion]);
-
-  useEffect(() => {
-    if (reduceMotion === null) return;
-    if (show) {
-      if (reduceMotion) slideY.setValue(0);
-      else {
-        Animated.spring(slideY, {
-          toValue: 0,
-          friction: 7,
-          tension: 60,
-          useNativeDriver: true,
-        }).start();
-      }
-    } else {
-      if (reduceMotion) slideY.setValue(280);
-      else {
-        Animated.timing(slideY, {
-          toValue: 280,
-          duration: 220,
-          useNativeDriver: true,
-        }).start();
-      }
+      return;
     }
+
+    setPose(POSE_FLY);
+    const spotTop = spot.y + DAILY_POLLY_BASE_SIZE - DAILY_POLLY_SIZE;
+    flyX.setValue(DAILY_POLLY_ENTRY_DX);
+    flyY.setValue(-DAILY_POLLY_ENTRY_ABOVE_TOP - spotTop);
+    flyTilt.setValue(DAILY_POLLY_ENTRY_TILT);
+    const entry = Animated.parallel([
+      Animated.timing(flyX, { toValue: 0, duration: DAILY_POLLY_ENTRY_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(flyY, { toValue: 0, duration: DAILY_POLLY_ENTRY_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(flyTilt, { toValue: 0, duration: DAILY_POLLY_ENTRY_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]);
+    entry.start(({ finished }) => {
+      if (!finished) return;
+      // Landed. A claim made mid-descent already chose her pose; keep it.
+      enteredRef.current = true;
+      setPose(p => (p === POSE_FLY ? POSE.idle : p));
+    });
+    // Play ending, a re-placement or unmount stops a descent mid-flight.
+    return () => entry.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show, reduceMotion]);
+  }, [show, reduceMotion, perchKnown]);
 
   useEffect(() => {
     const isReacting =
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked' || reaction === 'correct';
 
     if (!isReacting) {
+      // The screen's reset can land around her fly-out; leave her be.
+      if (leavingRef.current) return;
       if (enteredRef.current) setPose(POSE.idle);
       reactX.setValue(0);
       reactY.setValue(0);
@@ -228,11 +320,15 @@ export default function PollyDailyPerch({
       setCorrectLineId(pickedCorrectLineId);
     }
 
+    if (EXIT_POSE[reaction]) leavingRef.current = true;
     setPose(reaction === 'correct' ? POSE.idle : POSE[reaction]);
     const lineId = getLineId(reaction, dailyLossLineId, pickedCorrectLineId);
     if (lineId && show) rememberLine(lineId, 'daily');
-    if (reaction === 'laughing') playSfx('pollySqwawkLaugh');
-    else playSfx('pollySqwawkShort');
+    // Polly only makes a sound on the two misses. She is silent on right
+    // answers (correct and win) until an angry sound exists; any new
+    // reaction stays quiet unless it is added here.
+    if (reaction === 'happy') playSfx('pollySqwawkShort');
+    else if (reaction === 'laughing') playSfx('pollySqwawkLaugh');
 
     reactX.setValue(0);
     reactY.setValue(0);
@@ -293,45 +389,62 @@ export default function PollyDailyPerch({
         duration: 220,
         useNativeDriver: true,
       }).start(() => {
-        setPose(POSE.idle);
+        // The win and the loss end the Daily: she flies out instead of
+        // settling back to idle.
+        const exitPose = reaction ? EXIT_POSE[reaction] : undefined;
+        if (exitPose) runFlyOut(exitPose);
+        else setPose(POSE.idle);
       });
     }, 2500 + bubbleDelay);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reaction]);
 
+  const flyRotate = flyTilt.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ['-12deg', '12deg'],
+  });
+
   return (
-    <Animated.View
-      onLayout={(e) => setRootY(e.nativeEvent.layout.y)}
-      style={[
-        styles.root,
-        { opacity: perchOpacity, transform: [{ translateY: slideY }, { translateY: perchDrop }] },
-      ]}
-    >
+    <Animated.View style={styles.root}>
       {/* Speech bubble — to Polly's right, tail points left at her */}
       <Animated.View
         style={[
           styles.bubbleWrap,
-          bubbleAt && rootY !== null && {
-            // bubbleAt is a window point; this root sits at rootY, dropped by perchDrop.
+          bubbleAt && {
+            // bubbleAt is a window point; the root covers the screen from its top.
             left: bubbleAt.x,
-            top: bubbleAt.y - (rootY + perchDrop),
+            top: bubbleAt.y,
           },
           { opacity: bubbleOpacity },
         ]}
       >
         <PollySpeechBubble
           line={getLine(reaction, dailyLossLineId, correctLineId)}
-          maxWidth={bubbleAt ? bubbleAt.maxWidth : 185}
-          tail={bubbleAt ? 'up' : 'left'}
+          maxWidth={
+            bubbleAt
+              // Never past the screen's right edge, less the margin.
+              ? Math.min(bubbleAt.maxWidth, screenW - bubbleAt.x - DAILY_POLLY_BUBBLE.screenMargin)
+              : 185
+          }
+          tail="left"
         />
       </Animated.View>
 
-      {/* Polly — clean full pose, whole-image motion, bottom-left facing right */}
+      {/* Polly — clean full pose, whole-image motion, low-left at the wall,
+          facing right. Hidden until the screen knows her wall spot. */}
       <Animated.View
         style={[
           styles.pollyWrap,
+          perchAt
+            // Bottom-left stays on the 150 pt box's corner; extra size goes up.
+            ? { left: perchAt.x, top: perchAt.y + DAILY_POLLY_BASE_SIZE - DAILY_POLLY_SIZE }
+            : styles.pollyWrapUnplaced,
           {
             transform: [
+              { translateX: flyX },
+              { translateY: flyY },
+              { rotate: flyRotate },
+              { scale: flyScale },
               { translateX: reactX },
               { translateX: breatheX },
               { translateY: breatheY },
@@ -341,43 +454,68 @@ export default function PollyDailyPerch({
           },
         ]}
       >
-        {POLLY_PERCH_RIG_ENABLED && pose === POSE.idle ? (
-          // 288 must track styles.pollyImage — StyleSheet.create() returns
-          // opaque style IDs, not readable objects, so it can't be sourced live.
-          <PollyPerchRig size={DAILY_POLLY_SIZE} reduceMotion={reduceMotion} />
-        ) : (
-          <Image
-            source={pose}
-            style={[styles.pollyImage, { transform: [{ scale: pollyPoseScale(pose) }] }]}
-            resizeMode="contain"
-          />
+        {/* All layers stay mounted; the current pose is the only one at
+            opacity 1. Same DAILY_POLLY_SIZE box for the rig and the flat
+            poses. A hidden rig gets reduceMotion so its blink timer rests. */}
+        {POLLY_PERCH_RIG_ENABLED && (
+          <View style={[styles.poseLayer, { opacity: rigVisible ? 1 : 0 }]}>
+            <PollyPerchRig size={DAILY_POLLY_SIZE} reduceMotion={rigVisible ? reduceMotion : true} />
+          </View>
         )}
+        {PERCH_IMAGE_POSES.map(layerPose => {
+          const art = pollyScreenPoseArt(layerPose);
+          return (
+            <Image
+              key={layerPose}
+              source={art.source}
+              style={[
+                styles.pollyImage,
+                styles.poseLayer,
+                { opacity: !rigVisible && layerPose === pose ? 1 : 0, transform: [{ scale: art.scale }] },
+              ]}
+              resizeMode="contain"
+            />
+          );
+        })}
       </Animated.View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Covers the whole screen so her wall spot and the bubble can be placed by
+  // window points; touches pass straight through.
   root: {
     position: 'absolute',
     left: 0,
     right: 0,
     top: 0,
-    height: 260,
+    bottom: 0,
     pointerEvents: 'none',
     zIndex: 90,
     elevation: 90,
   },
   pollyWrap: {
     position: 'absolute',
-    left: -20,
-    top: DAILY_POLLY_WRAP_TOP,
     width: DAILY_POLLY_SIZE,
     height: DAILY_POLLY_SIZE,
+  },
+  pollyWrapUnplaced: {
+    left: 0,
+    top: 0,
+    opacity: 0,
   },
   pollyImage: {
     width: DAILY_POLLY_SIZE,
     height: DAILY_POLLY_SIZE,
+  },
+  // Every pose layer sits at the box's top-left, where the single image and
+  // the rig used to sit, so stacking them moves nothing.
+  poseLayer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    pointerEvents: 'none',
   },
   bubbleWrap: {
     position: 'absolute',

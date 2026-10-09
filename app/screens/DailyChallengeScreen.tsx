@@ -79,6 +79,7 @@ import {
   DAILY_CASTLE_FLIGHT_HANDOFF,
   DAILY_HUD,
   DAILY_POLLY_BUBBLE,
+  DAILY_POLLY_PERCH,
   dailyActionLabelBottom,
   dailyGoldHitMs,
   type DailyCastleFrame,
@@ -94,7 +95,7 @@ import {
 } from '../ui/dailyCoinFinale';
 import { dailyPlaqueEntranceMs } from '../ui/dailyPlaqueEntrance';
 import PollyDailyPerch from '../components/PollyDailyPerch';
-import { POLLY_POSES } from '../ui/pollyPoses';
+import { pollyScreenPoseArt } from '../ui/pollyScreenPoses';
 import { PollySpeechBubble } from '../components/PollySpeechBubble';
 import {
   usePollyAmbientMotion,
@@ -112,6 +113,10 @@ const DAILY_UI_ACTION_SECONDARY = require('../../assets/images/dailycastle/ui/da
 
 
 // Maps store claim result reaction -> PollyDailyPerch prop
+
+// Longest the Daily's ending waits for Polly's fly-out hand-off before opening
+// Results anyway. Her normal path is about 3.9 s after the winning claim.
+const DAILY_POLLY_EXIT_FAILSAFE_MS = 6000;
 function dailyGateRiseMs(motion: boolean): number {
   return motion ? 400 : 120;
 }
@@ -238,6 +243,7 @@ function ResultsOverlay({
 
   const isWin = dailyResult.status === 'won';
   const resultLine = isWin ? DAILY_WIN_LINE : POLLY_LINES[dailyLossLineId];
+  const resultPollyArt = pollyScreenPoseArt(isWin ? 'shocked' : 'laugh');
 
   return (
     <Animated.View style={[res.fill, { opacity: fadeIn }]}>
@@ -347,8 +353,8 @@ function ResultsOverlay({
         <View style={styles.resultPollyStage}>
           <Animated.View style={{ transform: [{ translateX: pollyX }, { translateY: pollyY }] }}>
             <Image
-              source={isWin ? POLLY_POSES.shocked : POLLY_POSES.laugh}
-              style={styles.resultPollyImage}
+              source={resultPollyArt.source}
+              style={[styles.resultPollyImage, { transform: [{ scale: resultPollyArt.scale }] }]}
               resizeMode="contain"
             />
           </Animated.View>
@@ -414,6 +420,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     new Map(),
   );
   const [pollyPose, setPollyPose] = useState<PerchReaction | 'correct'>('perched');
+  // True from the Daily's last claim (win or loss) until Polly has said her
+  // last line and flown out; Results waits for it. A safety release stops a
+  // missed hand-off from holding Results forever.
+  const [pollyExitPending, setPollyExitPending] = useState(false);
+  const pollyExitFailsafeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const releasePollyExit = useCallback(() => {
+    if (pollyExitFailsafeRef.current) clearTimeout(pollyExitFailsafeRef.current);
+    pollyExitFailsafeRef.current = null;
+    setPollyExitPending(false);
+  }, []);
+  useEffect(() => () => {
+    if (pollyExitFailsafeRef.current) clearTimeout(pollyExitFailsafeRef.current);
+  }, []);
   // Starts locked (unlike the old default of unlocked) — GameScreen never
   // renders its interactive content until audioReady is true; Daily had no
   // equivalent gate at all, so a fast tap could request a sound before
@@ -803,6 +822,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const pose = toPerchReaction(dailyLastClaimResult.pollyReaction);
     if (pose !== 'perched') {
       setPollyPose(pose);
+      if (pose === 'laughing' || pose === 'shocked') {
+        // The Daily just ended: hold Results until she has flown out.
+        setPollyExitPending(true);
+        if (pollyExitFailsafeRef.current) clearTimeout(pollyExitFailsafeRef.current);
+        pollyExitFailsafeRef.current = setTimeout(releasePollyExit, DAILY_POLLY_EXIT_FAILSAFE_MS);
+      }
       setTimeout(() => {
         setPollyPose('perched');
         clearDailyReaction();
@@ -1090,7 +1115,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setTimeout(() => {
       if (!finishClaimPresentation(candidate)) return;
       setCardStates((prev) => new Map(prev).set(candidate, 'disabled'));
-      setLocked(false);
+      // A lost Daily stays locked while Polly finishes and flies out before
+      // Results (the win path already stays locked).
+      if (dailySessionRef.current?.status === 'active') setLocked(false);
     }, wrongExitMs);
   }
 
@@ -1120,11 +1147,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     dailyInitialized &&
     (!!dailyResult || (dailySession !== null && dailySession.status !== 'active'));
   const activeClaimPresentation = claimPresentationRef.current ?? claimPresentation;
+  // Results also waits for Polly to fly out after the Daily's last line.
   const isComplete = shouldShowDailyResult(
     committedComplete,
     activeClaimPresentation,
     claimPhase,
-  );
+  ) && !pollyExitPending;
   const challengeNumber = displayedDailySession
     ? displayedDailySession.challengeNumber
     : getChallengeNumber(getTodayDateString());
@@ -1134,9 +1162,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // A won challenge keeps its last round as current, so once the display
   // switches to the committed session the gate would come back down wearing
   // the final round's clues. It comes down blank instead, straight into
-  // Results.
+  // Results. On a win it also stays blank while Results waits for Polly to fly
+  // out.
   const gateClues =
-    committedComplete && (claimPhase === 'reward' || claimPhase === 'revealing')
+    committedComplete && (
+      claimPhase === 'reward' ||
+      claimPhase === 'revealing' ||
+      (pollyExitPending && dailySession?.status === 'won')
+    )
       ? []
       : currentRound?.word.clues ?? [];
   const dailyPressure = displayedDailySession
@@ -1305,7 +1338,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         reaction={pollyPose}
         rivalryState={rivalryState}
         show={!isComplete && !isReadyToStart}
-        hudBottom={hudBottom}
+        perchAt={
+          castleFrame
+            ? {
+                x: DAILY_POLLY_PERCH.x * castleFrame.scale,
+                y: castleFrame.top + DAILY_POLLY_PERCH.y * castleFrame.scale,
+              }
+            : undefined
+        }
         bubbleAt={
           castleFrame
             ? {
@@ -1316,6 +1356,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
             : undefined
         }
         throwDelayMs={dailyThrowGoneMs(reduceMotion === false)}
+        onExited={releasePollyExit}
       />
 
       {isComplete && (
