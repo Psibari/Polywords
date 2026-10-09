@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-06. Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-08. Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -44,6 +44,10 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 - **Polly animation:** the ALIVE LOOP whole-image experiment was rejected. Existing Rig 2 is
   useful for face/crown motion but the baked body cannot provide convincing head/wing/feet/tail
   articulation. Do not promote the rocking experiment to production.
+- **Polly master art (2026-10-08):** the master set (`assets/images/polly/master/`) is used by
+  the Hunt (1a3a2f9, then 289d349 for laugh03/angryYell), Results (ed03503), Daily Challenge
+  (95ca56b) and Home (47e0e4e) on `play-screen-overhaul`, each through its own pose table. Pete
+  device-tested each before its commit. Idle and smug remain on the face rig.
 - **Results:** Hunt Results remains the last major visual surface awaiting a focused keep/change
   audit. Do not assume it needs redesign.
 - **Master's Rematch and feedback (2026-10-07):** MASTER'S REMATCH, BUSTER, KING, split
@@ -72,6 +76,18 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 - Daily is deterministic, five rounds, UP-only, two lives, one attempt per date.
 - Gold is scarce and meaningful; ordinary choices stay neutral before commitment.
 - Visual consistency requires a player-facing benefit, not cosmetic sameness.
+- Hunt visits: Polly flies in on the normal fly pose (except the Returning Haunt gloat, which flies
+  in on hauntTaunt); the result shows only on the exit: flyAngry on mastery, flyGrin on haunted.
+- Daily: Polly stays at the wall for the whole Daily, arriving by flying in from the top-left
+  when play starts (the same moment as before), and flies out before Results (win flyAngry, loss
+  flyGrin).
+- Daily sound: Polly is silent on right answers and the win; short squawk on the first miss;
+  laugh on the second miss (the loss).
+- Home: after a win she rests in master angry until the player loses a Hunt; her resting pose
+  updates after a Hunt without an app restart; sleeping Z's loop; she wakes only when Home loses
+  focus.
+- Polly sleeps only on Home (a doze timer from when Home gains focus; touches do not reset it,
+  Pete accepted), never during a Hunt or the Daily.
 
 ## Next Work
 
@@ -103,6 +119,35 @@ Open, needs Pete's ruling:
 - Timer: undecided. No Hunt timer exists today; decide from real TestFlight player data, not
   developer test swipes.
 - More boss words: the rematch is a stopgap for players who master all of them.
+- Polly sounds: she has no angry sound. Her only sounds are the short squawk (which Pete calls
+  "the laugh") and the longer laugh. One is needed for when she loses (moments and source
+  undecided). Her fly-ins are silent (some Hunt visits squawk on landing); Pete thinks they should
+  have sound.
+- Face rig: its angry brow does nothing without the beak also changing; rigging the beak for an
+  angry face is a big job, parked.
+- Pause button: Pete wants to move it eventually. The boss-entry bubble overlaps it for about a
+  second; Pete said leave it.
+- The Daily results view repeats Polly's last line, which she now says fully on the perch first.
+  Undecided whether one should go.
+- Home after a long absence: her life profile stays watchful for the rest of the session (the last
+  visit is recorded only when the app goes to the background). Not ruled on.
+- Daily: leaving within about 3 s of the final claim and returning might replay her last reaction
+  and hold Results again. Not traced.
+- Mastery pose: Results shows the bent sulk, the Hunt shows angryYell. Undecided whether they
+  should match.
+- The Haunted gloat's flyGrin exit is rarely seen because Results cuts in; Pete is leaving it.
+- Poses and sounds still unruled: Returning Haunt gloat, game over laugh, haunt failed laugh.
+- Unused master art: in the Hunt table, sulk, asleep, jumpAngry, masterShock and masterAngry (no
+  visit uses them); never referenced anywhere: laugh01, laugh02, blink, neutral, smirk,
+  sulkUpright.
+- Small-phone fit of the fixed-size Polly boxes is unchecked; the Daily size was checked only on
+  390x844 and 375x812, by calculation.
+- Never found: why the old laugh loop did not loop on device, and the cause of the old 2 to 2.5x
+  Hunt size bug.
+- Only master angry was checked for leftover white background pockets; the other master poses
+  were not checked.
+- Some Daily bubble lines wrap with one word alone on line two (for example "BAT."); Pete writes
+  the lines, so nothing was changed.
 
 ## Do Not Work On Yet
 
@@ -114,6 +159,8 @@ Open, needs Pete's ruling:
 - Daily answer-stone initial pop-in or decorative passes on approved screens.
 - Re-skinning strong native surfaces merely to make screens look alike.
 - Deleting the old Lexicon rollback path without Pete's decision.
+- Deleting the old Polly sprites or `POLLY_POSE_SCALE` before every consumer has moved to the
+  master set (`CLAUDE.md` lists the remaining consumers).
 
 ## Parked: Polly Rig 3 (after launch blockers)
 

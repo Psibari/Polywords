@@ -36,6 +36,12 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
 - Full-size art containers carry no padding; give bundled absolute images explicit dimensions.
 - Huge `borderRadius` is not a soft glow. Use art.
 - JSX shape changes remount nodes; animation on the old node silently dies.
+- A rig-or-Image either/or that mounts fresh image views on a pose switch draws an empty frame or
+  two. Keep every pose layer mounted and switch by opacity.
+- A one-time timer started at screen load cannot drive an arrival that happens later. Tie the
+  pose switch to the end of the arrival animation.
+- Pete's DEV RESET DAILY reuses the same perch instance; per-session state must reset when `show`
+  turns true, not on mount.
 
 `wallShake.ts` is the shared stone-wall shake channel. Consumers use its helpers and call
 `resetWallShake()` on unmount. Never scale the wall; the Boss ledge derives from full-width,
@@ -128,6 +134,17 @@ Architecture only:
 - Text fitting uses measured widths, not browser-dependent auto-fit behavior.
 - Correct claim, gold hit and gold-coin finale are separate progress systems. Input stays locked
   until the gate settles; Results waits for the finale.
+- Polly perch (`PollyDailyPerch.tsx`): she sits at the wall, in front of it, the whole time.
+  `DAILY_POLLY_SCALE` (1.25) grows her from the base 150 pt box's bottom-left; the spot
+  (`DAILY_POLLY_PERCH`) and bubble (`DAILY_POLLY_BUBBLE`, to her right, tail left, width capped by
+  `screenMargin` 12 pt) are castle units in `dailyCastleScene.ts`.
+- Arrival: when play starts she flies in from the top-left in `fly` (`DAILY_POLLY_ENTRY_*`) and
+  switches to idle when the descent lands. Pose and flags reset every time `show` turns true.
+- Every perch pose is a mounted layer switched by opacity (`PERCH_LAYER_POSES`, incl. `flyAngry`
+  and `flyGrin`). Never conditionally mount or unmount pose images.
+- End: after her last line she flies out (win `flyAngry`, loss `flyGrin`); Results waits for the
+  fly-out (`DAILY_POLLY_EXIT_FAILSAFE_MS` 6 s safety release). The gate stays blank on a win during
+  the hold; the board stays locked on a loss.
 
 ## Audio and Haptics
 
@@ -142,6 +159,10 @@ Architecture only:
   not in the board, which remounts per word.
 - Polly's ordinary laugh, Boss laugh, Returning Haunt laugh and Hunt-loss Results chuckle are
   separate product beats. The Hunt-loss Results laugh is locked (Pete) and unchanged.
+- Daily perch sound: silent on right answers and the winning claim; `pollySqwawkShort` on the
+  first miss; `pollySqwawkLaugh` on the lost last chance. An explicit allow-list, so new reactions
+  default to quiet.
+- Do not guess what a sound is: `pollySqwawkShort` is the sound Pete calls "the laugh".
 
 ## Content and Data
 
@@ -170,6 +191,34 @@ Architecture only:
 - `PollyHomePerch` + `PollyPerchRig` + `usePollyAmbientMotion` are the current Home foundation.
   Rig 2 articulates face/crown but most body anatomy remains baked. Preserve device-approved
   `BROW_FOLLOW = 0.33`.
+- Pose art is the master set (`assets/images/polly/master/`, 792x845, all face right), through one
+  small table per screen: Hunt `app/ui/pollyHuntPoses.ts` (multiplier 1; falls back to
+  `POLLY_POSES`/`POLLY_POSE_SCALE` only for rattled, idle, cocky); Results and Daily
+  `app/ui/pollyScreenPoses.ts` (incl. `flyAngry`, `flyGrin`); Home `app/ui/pollyHomePoses.ts` plus
+  the pure, tested `app/game/pollyHomeRestingPose.ts`. Idle and smug stay on the face rig (sprite4)
+  on Results, Daily and Home: both point at the same `POLLY_POSES.idle` object, which the rig
+  check compares against.
+- Hunt visits: she flies in on `fly` (she cannot know who wins), except the Returning Haunt gloat,
+  which flies in on `hauntTaunt`. Only the exit shows the result: mastery exits `flyAngry`; the
+  Haunted gloat exits `flyGrin` but holds the perch, so that exit is rarely seen. Boss entry
+  perches `point` (perchScale 1.05); mastery `angryYell`; Haunted gloat `hauntTaunt` (perchScale
+  1.24); streak x10 `embarrassed`; two one-feather lines `laugh03`; laugh visits `bigLaugh`. Exit
+  arc: +0.6 × screen width, -(screen height + 80), tilt -1 (nose-up), scale 0.86, `FLY_OUT_MS`
+  500 / `FAST_EXIT_MS` 250. No Hunt visit sleeps; the Hunt looping-Z work was reverted.
+- Home perch: 246 pt box; `POLLY_HOME_MASTER_SCALE` (1.07) matches master poses to the rig's
+  resting size. Awake poses (rig, fly, embarrassed, angry) are mounted together and switched by
+  opacity (`HOME_AWAKE_LAYER_POSES`). Post-win resting pose is master `angry` (closed beak), not
+  `angryYell`; the rattled profile uses `embarrassed`. After the entrance settles, the resting pose
+  and life profile follow LIVE memory; the greeting stays frozen. Home stays mounted under the
+  Hunt (the code comment "Navigating away re-mounts Home" is wrong).
+- Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
+  while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
+  wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).
+- Do not delete the old sprites or `POLLY_POSE_SCALE` until every consumer has moved. Remaining:
+  the three screen tables (`POLLY_POSES.idle`/`POLLY_POSE_SCALE.idle` for the rig; the Hunt's
+  rattled/idle/cocky fallback); unrendered `PollyFlightLandingAnimation`,
+  `PollyFlightLandingPrototype`, `PollyPoseAnimation` (+ `pollyPoseAnimations.ts`); and
+  `pollyAnimations.ts` (old `polly_*` art) behind the unused `PollyActor`/`PollySprite`.
 - The DEV ALIVE LOOP whole-image lean/rotation experiment was rejected. Do not wire it to Home.
 - The parked articulation plan lives in `CONTEXT.md`: inventory existing separated art, then
   prove one DEV Neutral articulated sequence before new art or production life-profile
