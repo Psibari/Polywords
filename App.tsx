@@ -9,6 +9,7 @@ import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
+import DevResultsPreviewScreen from './app/screens/DevResultsPreviewScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
 import { preloadHomeTrack, setMusicAppActive } from './app/audio/MusicEngine';
 import { preloadSfx } from './app/audio/sfx';
@@ -101,6 +102,7 @@ export default function App() {
             <Stack.Screen name="Vault" component={VaultScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
+            {__DEV__ && <Stack.Screen name="DevResultsPreview" component={DevResultsPreviewScreen} />}
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>
