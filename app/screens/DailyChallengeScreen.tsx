@@ -51,9 +51,7 @@ import {
 import {
   DAILY_WIN_TITLE,
   DAILY_WIN_REWARD,
-  DAILY_WIN_LINE,
   DAILY_LOSS_TITLE,
-  DAILY_LOSS_LINE_IDS,
   DAILY_CLUE_TITLE,
   DAILY_ACTION_RULE,
   dailyBackdrop,
@@ -64,8 +62,6 @@ import {
   DailyPollyReaction as PerchReaction,
   getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
-import { POLLY_LINES } from '../game/pollyCharacter';
-import { pickFreshLine } from '../game/pollyVisitPolicy';
 import DailyAnswerCard, {
   DailyAnswerCardClaimOrigin,
   DAILY_CARD_TIMING,
@@ -96,7 +92,6 @@ import {
 import { dailyPlaqueEntranceMs } from '../ui/dailyPlaqueEntrance';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { pollyScreenPoseArt } from '../ui/pollyScreenPoses';
-import { PollySpeechBubble } from '../components/PollySpeechBubble';
 import {
   usePollyAmbientMotion,
   useReducedFlashesPreference,
@@ -207,20 +202,11 @@ function ResultsOverlay({
 
   const dailyResult = useGameStore((s) => s.dailyResult);
   const streakMilestoneReward = useGameStore((s) => s.streakMilestoneReward);
-  const rememberPollyLine = useGameStore((s) => s.rememberPollyLine);
   const fadeIn = useRef(new Animated.Value(0)).current;
-  const lineRememberedRef = useRef(false);
   const { translateX: pollyX, translateY: pollyY } =
     usePollyAmbientMotion('results', dailyResult !== null);
-  // Both held stable for the life of the overlay, snapshotted the same way
-  // ResultsScreen.tsx's pollyMemoryBeforeRunRecorded is: a live pollyMemory
-  // selector here would re-derive recentLineIds (and this pick) right after
-  // the effect below calls rememberPollyLine, flipping the displayed line
-  // away from the one actually remembered. useGameStore.getState() (not a
-  // selector — matches usePollyVisits' own reasoning) reads once at mount.
-  const [pollyMemoryBeforeRecorded] = useState(() => useGameStore.getState().pollyMemory);
-  const [dailyRoll] = useState(() => Math.random());
-  const dailyLossLineId = pickFreshLine(DAILY_LOSS_LINE_IDS, pollyMemoryBeforeRecorded.recentLineIds, dailyRoll);
+  // No Polly line here: she says her last line in full on the perch before
+  // Results opens, and the perch remembers it (Pete, 2026-10-08).
 
   useEffect(() => {
     Animated.timing(fadeIn, {
@@ -230,19 +216,9 @@ function ResultsOverlay({
     }).start();
   }, [fadeIn]);
 
-  useEffect(() => {
-    if (!dailyResult || lineRememberedRef.current) return;
-    lineRememberedRef.current = true;
-    rememberPollyLine(
-      dailyResult.status === 'won' ? 'dailyWinTomorrow' : dailyLossLineId,
-      'daily',
-    );
-  }, [dailyResult, rememberPollyLine, dailyLossLineId]);
-
   if (!dailyResult) return null;
 
   const isWin = dailyResult.status === 'won';
-  const resultLine = isWin ? DAILY_WIN_LINE : POLLY_LINES[dailyLossLineId];
   const resultPollyArt = pollyScreenPoseArt(isWin ? 'shocked' : 'laugh');
 
   return (
@@ -358,9 +334,6 @@ function ResultsOverlay({
               resizeMode="contain"
             />
           </Animated.View>
-          <View style={styles.resultPollyBubble}>
-            <PollySpeechBubble line={resultLine} maxWidth={170} fontSize={17} lineHeight={22} />
-          </View>
         </View>
 
         <Pressable
@@ -1614,9 +1587,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-  },
-  resultPollyBubble: {
-    maxWidth: 170,
   },
   featherWrap: {
     alignItems: 'center',
