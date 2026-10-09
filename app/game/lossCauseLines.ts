@@ -1,31 +1,21 @@
 import { LossCause } from './polyRunEngine';
 
-// Results screen verdictSub copy for a lost run. Natural case — the
-// verdictSub Text element applies textTransform 'uppercase' at render time.
+// Results screen verdictSub copy. Ordinary Hunt loss has one locked subtitle;
+// actual Haunted outcomes are communicated by the HAUNTED result/consequence
+// system instead of borrowing haunt language here.
 export const LOSS_CAUSE_LINES = {
-  // 2+ ghosts active outranks every individual cause below.
-  haunts: 'The haunts are starting to stack.',
-  trap: 'You let a bird beat you',
-  rejectedReal: 'You know what that word means, and you still got it wrong.',
-  wrongCall: "Almost doesn't count",
-  neutral: ['Go again. Focus this time.', 'Out of feathers.'] as const,
+  ordinary: 'Your book got closed.',
   // Shown under BUSTER, the label for a lost MASTER'S REMATCH (Pete, 2026-10-07).
   rematchLost: 'Bird brain',
 } as const;
 
-// Pure: haunts condition first, then lossCause, then neutral. No
-// Math.random — the roll is an input, same purity rule pollyMemory.ts
-// follows, so ResultsScreen draws it once in a useState initialiser.
+// Kept as a pure resolver so ResultsScreen's call site stays stable. The old
+// cause/ghost-specific lines were deliberately retired: an ordinary loss must
+// not imply that this run created a Haunt when it did not.
 export function pickLossVerdictLine(
-  ghostCount: number,
-  lossCause: LossCause,
-  roll: number,
+  _ghostCount: number,
+  _lossCause: LossCause,
+  _roll: number,
 ): string {
-  if (ghostCount >= 2) return LOSS_CAUSE_LINES.haunts;
-  if (lossCause === 'trap') return LOSS_CAUSE_LINES.trap;
-  if (lossCause === 'rejectedReal') return LOSS_CAUSE_LINES.rejectedReal;
-  if (lossCause === 'wrongCall') return LOSS_CAUSE_LINES.wrongCall;
-  const pool = LOSS_CAUSE_LINES.neutral;
-  const index = Math.min(pool.length - 1, Math.floor(roll * pool.length));
-  return pool[index];
+  return LOSS_CAUSE_LINES.ordinary;
 }
