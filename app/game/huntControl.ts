@@ -123,7 +123,7 @@ export type HuntResultLabel =
   | 'BUSTER'
   | "CLOSE, BUT CLOSE DOESN'T COUNT."
   | 'HAUNTED'
-  | 'YOU WERE HUNTED';
+  | 'LOST';
 
 /**
  * The final result uses the game's actual relationship outcome. It is not a
@@ -143,6 +143,6 @@ export function resolveHuntResultLabel(input: {
   if (input.bossMastered) return 'MASTERED';
   if (input.bossRematchLost === true) return 'BUSTER';
   if (input.haunted) return 'HAUNTED';
-  if (input.status === 'gameOver') return 'YOU WERE HUNTED';
+  if (input.status === 'gameOver') return 'LOST';
   return "CLOSE, BUT CLOSE DOESN'T COUNT.";
 }
