@@ -16,6 +16,11 @@ assert.equal(purple.face, '#F5C842');
 assert.equal(purple.depth, '#8A5400');
 assert.equal(purple.highlight, '#FFF1A6');
 
+const stone = PLAQUE_TEXT_MATERIALS.stonePlaque;
+assert.equal(stone.face, '#1A1830');
+assert.equal(stone.depth, '#080711');
+assert.equal(stone.highlight, '#655F87');
+
 assert.deepEqual(resolveBusterTransformFrame('master'), {
   visibleWord: 'MASTER',
   animatedPrefix: null,
