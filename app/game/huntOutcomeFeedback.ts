@@ -67,6 +67,23 @@ export function resolveRankUpFeedback(died: boolean): RankUpFeedback {
   return { sfx: 'mastered', successHaptic: true, heavyPulse: true };
 }
 
+/** Player-facing boss labels carry stakes, not the retired score multiplier. */
+export function resolveBossEventKicker(isMasteryRematch: boolean): "POLLY'S WORD" | "MASTER'S REMATCH" {
+  return isMasteryRematch ? "MASTER'S REMATCH" : "POLLY'S WORD";
+}
+
+export type RematchPresentationPhase = 'entry' | 'king' | 'buster';
+export type RematchBookVariant = 'neutral' | 'mastered';
+
+/**
+ * A Master's Rematch starts from the already-earned gold state. Winning keeps
+ * it; losing only drops the presentation back to the regular book. Persistent
+ * Mastery is intentionally untouched by this visual policy.
+ */
+export function resolveRematchBookVariant(phase: RematchPresentationPhase): RematchBookVariant {
+  return phase === 'buster' ? 'neutral' : 'mastered';
+}
+
 /**
  * A MASTER'S REMATCH loss is not a Haunt (nothing haunts the player), so it
  * borrows none of the haunted sounds. Pete chose the punch already used when
