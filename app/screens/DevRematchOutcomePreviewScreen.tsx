@@ -5,12 +5,7 @@ import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import HeroBook from '../components/ui/HeroBook';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { buildRematchOutcomeDevPreview, type RematchOutcomeDevPreviewKind } from '../game/rematchOutcomeDevPreview';
-import {
-  BUSTER_WORD,
-  resolveBossOutcomePlaqueFeedback,
-  resolveBossOutcomeSequenceFeedback,
-  resolveRematchLossFeedback,
-} from '../game/huntOutcomeFeedback';
+import { BUSTER_WORD, resolveBossOutcomePlaqueFeedback, resolveRematchLossFeedback } from '../game/huntOutcomeFeedback';
 import { playSfx } from '../audio/sfx';
 import { Haptics } from '../utils/haptics';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
@@ -18,16 +13,14 @@ import { BOSS_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { PW } from '../ui/pwTheme';
 
 const masteredPlaqueArt = require('../../assets/images/results/mastered-result-plaque.png');
-const MASTERED_PLAQUE_ASPECT = 681 / 567;
+const kingPlaqueArt = require('../../assets/images/results/king-result-plaque.png');
+const busterPlaqueArt = require('../../assets/images/results/buster-result-plaque.png');
+const PLAQUE_ASPECT = 681 / 567;
 
-const KING_HOLD_MS = 700;
-const KING_LAND_MS = 240;
-const KING_DROP_DISTANCE = 52;
-const BUSTER_HOLD_MS = 650;
+const MASTER_HOLD_MS = 720;
 const BUSTER_DROP_MS = 260;
 const BUSTER_LAND_DELAY_MS = 150;
 const BUSTER_LAND_MS = 240;
-const BUSTER_PUNCH_AT_MS = 200;
 const BUSTER_DROP_DISTANCE = 46;
 
 type Props = {
@@ -35,92 +28,22 @@ type Props = {
   route: { params?: { outcome?: RematchOutcomeDevPreviewKind } };
 };
 
-function KingHeadline({ from }: { from: string }) {
-  const reduceMotion = useReducedMotionPreference();
-  const kingY = useRef(new Animated.Value(-KING_DROP_DISTANCE)).current;
-  const kingOpacity = useRef(new Animated.Value(0)).current;
-  const fromY = useRef(new Animated.Value(0)).current;
-  const fromOpacity = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (reduceMotion !== false) {
-      kingY.setValue(0);
-      kingOpacity.setValue(1);
-      fromOpacity.setValue(0);
-      return;
-    }
-    const timer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(kingOpacity, { toValue: 1, duration: 90, useNativeDriver: true }),
-        Animated.timing(kingY, { toValue: 0, duration: KING_LAND_MS, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true }),
-        Animated.timing(fromOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-        Animated.timing(fromY, { toValue: 10, duration: 200, useNativeDriver: true }),
-      ]).start();
-    }, 180 + KING_HOLD_MS);
-    return () => clearTimeout(timer);
-  }, [reduceMotion, fromOpacity, fromY, kingOpacity, kingY]);
-
-  return (
-    <View accessible accessibilityLabel="King">
-      <Animated.Text style={[styles.plaqueHeadline, { opacity: fromOpacity, transform: [{ translateY: fromY }] }]}>{from}</Animated.Text>
-      <Animated.Text style={[styles.plaqueHeadline, styles.kingArriving, { opacity: kingOpacity, transform: [{ translateY: kingY }] }]}>KING</Animated.Text>
-    </View>
-  );
-}
-
-function KingOverlay({ word, onContinue }: { word: string; onContinue: () => void }) {
+function PlaqueShell({
+  word,
+  finalArt,
+  kind,
+  onContinue,
+}: {
+  word: string;
+  finalArt: any;
+  kind: RematchOutcomeDevPreviewKind;
+  onContinue: () => void;
+}) {
   const reduceMotion = useReducedMotionPreference();
   const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.88)).current;
-  const continueOpacity = useRef(new Animated.Value(0.35)).current;
-  const [canDismiss, setCanDismiss] = useState(false);
-
-  useEffect(() => {
-    const feedback = resolveBossOutcomePlaqueFeedback('mastered');
-    playSfx(feedback.sfx);
-    if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
-    if (reduceMotion !== false) {
-      opacity.setValue(1);
-      scale.setValue(1);
-    } else {
-      Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: 1, damping: 8, stiffness: 160, useNativeDriver: true }),
-      ]).start();
-    }
-    const ready = setTimeout(() => setCanDismiss(true), 1200);
-    return () => clearTimeout(ready);
-  }, [opacity, reduceMotion, scale]);
-
-  useEffect(() => {
-    if (!canDismiss) return;
-    Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-  }, [canDismiss, continueOpacity]);
-
-  return (
-    <Pressable style={styles.plaqueOverlay} onPress={() => canDismiss && onContinue()}>
-      <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
-        <View style={styles.masteredPlaqueFrame}>
-          <Image source={masteredPlaqueArt} style={styles.plaqueImage} resizeMode="contain" />
-          <View pointerEvents="none" style={styles.masteredPlaqueContent}>
-            <KingHeadline from="MASTERED" />
-            <Text style={styles.plaqueWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{word}</Text>
-            <View style={styles.plaqueCopyBlock}>
-              <Text style={styles.plaqueCopy}>Not one of Polly's traps.</Text>
-              <Text style={styles.plaqueCopy}>You saw through it.</Text>
-            </View>
-            <Text style={styles.plaqueBonus}>BOSS MASTERY +600</Text>
-          </View>
-        </View>
-        <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
-
-function BusterOverlay({ word, onContinue }: { word: string; onContinue: () => void }) {
-  const reduceMotion = useReducedMotionPreference();
-  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
+  const finalArtOpacity = useRef(new Animated.Value(0)).current;
+  const masterOpacity = useRef(new Animated.Value(1)).current;
   const maY = useRef(new Animated.Value(0)).current;
   const maOpacity = useRef(new Animated.Value(1)).current;
   const buY = useRef(new Animated.Value(-BUSTER_DROP_DISTANCE)).current;
@@ -128,59 +51,111 @@ function BusterOverlay({ word, onContinue }: { word: string; onContinue: () => v
   const continueOpacity = useRef(new Animated.Value(0.35)).current;
   const [canDismiss, setCanDismiss] = useState(false);
 
-  function punch() {
-    const feedback = resolveRematchLossFeedback();
-    playSfx(feedback.sfx);
-    Haptics.cueAsync(feedback.hapticCue);
-  }
-
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
+    const feedback = resolveBossOutcomePlaqueFeedback('mastered');
+    playSfx(feedback.sfx);
+    if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
+
     if (reduceMotion !== false) {
       opacity.setValue(1);
-      maOpacity.setValue(0);
-      buOpacity.setValue(1);
-      buY.setValue(0);
-      punch();
-      timers.push(setTimeout(() => setCanDismiss(true), 1200));
-      return () => timers.forEach(clearTimeout);
+      scale.setValue(1);
+      finalArtOpacity.setValue(1);
+      masterOpacity.setValue(0);
+      if (kind === 'buster') {
+        maOpacity.setValue(0);
+        buOpacity.setValue(1);
+        buY.setValue(0);
+      }
+      setCanDismiss(true);
+      return;
     }
-    Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
-    const dropAt = 180 + BUSTER_HOLD_MS;
-    timers.push(setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(maY, { toValue: BUSTER_DROP_DISTANCE, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-        Animated.timing(maOpacity, { toValue: 0, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-      ]).start();
-    }, dropAt));
-    timers.push(setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(buOpacity, { toValue: 1, duration: 90, useNativeDriver: true }),
-        Animated.timing(buY, { toValue: 0, duration: BUSTER_LAND_MS, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true }),
-      ]).start();
-    }, dropAt + BUSTER_LAND_DELAY_MS));
-    timers.push(setTimeout(punch, dropAt + BUSTER_LAND_DELAY_MS + BUSTER_PUNCH_AT_MS));
-    timers.push(setTimeout(() => setCanDismiss(true), 1800));
-    return () => timers.forEach(clearTimeout);
-  }, [buOpacity, buY, maOpacity, maY, opacity, reduceMotion]);
 
-  useEffect(() => {
-    if (!canDismiss) return;
-    Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-  }, [canDismiss, continueOpacity]);
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, damping: 8, stiffness: 150, useNativeDriver: true }),
+    ]).start();
+
+    if (kind === 'king') {
+      timers.push(setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(masterOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
+          Animated.timing(finalArtOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
+        ]).start();
+      }, MASTER_HOLD_MS));
+    } else {
+      const dropAt = MASTER_HOLD_MS;
+      timers.push(setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(maY, { toValue: BUSTER_DROP_DISTANCE, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(maOpacity, { toValue: 0, duration: BUSTER_DROP_MS, useNativeDriver: true }),
+          Animated.timing(finalArtOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
+        ]).start();
+      }, dropAt));
+      timers.push(setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(buOpacity, { toValue: 1, duration: 90, useNativeDriver: true }),
+          Animated.timing(buY, { toValue: 0, duration: BUSTER_LAND_MS, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true }),
+        ]).start();
+        const punch = resolveRematchLossFeedback();
+        playSfx(punch.sfx);
+        Haptics.cueAsync(punch.hapticCue);
+      }, dropAt + BUSTER_LAND_DELAY_MS));
+    }
+
+    timers.push(setTimeout(() => {
+      setCanDismiss(true);
+      Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+    }, 1500));
+
+    return () => timers.forEach(clearTimeout);
+  }, [buOpacity, buY, continueOpacity, finalArtOpacity, kind, maOpacity, maY, masterOpacity, opacity, reduceMotion, scale]);
+
+  const finalWordStyle = kind === 'king' ? styles.kingWord : styles.busterWord;
 
   return (
-    <Pressable style={styles.outcomeOverlay} onPress={() => canDismiss && onContinue()} accessibilityRole="button" accessibilityLabel={`Buster. ${word}. Continue.`}>
-      <Animated.View style={[styles.outcomePanel, styles.busterOutcomePanel, { opacity }]}>
-        <View style={styles.busterHeadlineRow}>
-          <View style={styles.busterSlot}>
-            <Animated.Text style={[styles.outcomeHeadline, { opacity: maOpacity, transform: [{ translateY: maY }] }]}>{BUSTER_WORD.dropped}</Animated.Text>
-            <Animated.Text style={[styles.outcomeHeadline, styles.busterArriving, { opacity: buOpacity, transform: [{ translateY: buY }] }]}>{BUSTER_WORD.arriving}</Animated.Text>
-          </View>
-          <Text style={styles.outcomeHeadline}>{BUSTER_WORD.kept}</Text>
+    <Pressable
+      style={styles.plaqueOverlay}
+      onPress={() => canDismiss && onContinue()}
+      accessibilityRole="button"
+      accessibilityLabel={`${kind === 'king' ? 'King' : 'Buster'}. ${word}. Continue.`}
+    >
+      <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
+        <View style={styles.plaqueFrame}>
+          <Image source={masteredPlaqueArt} style={styles.plaqueImage} resizeMode="contain" />
+          <Animated.Image
+            source={finalArt}
+            style={[styles.plaqueImage, styles.plaqueImageAbsolute, { opacity: finalArtOpacity }]}
+            resizeMode="contain"
+          />
+
+          {kind === 'king' ? (
+            <>
+              <Animated.Text style={[styles.masterLabel, { opacity: masterOpacity }]}>MASTER</Animated.Text>
+              <Text style={[styles.dynamicWord, finalWordStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.58}>
+                {word}
+              </Text>
+            </>
+          ) : (
+            <>
+              <View style={styles.busterHeadlineRow}>
+                <View style={styles.busterPrefixSlot}>
+                  <Animated.Text style={[styles.busterHeadline, { opacity: maOpacity, transform: [{ translateY: maY }] }]}>
+                    {BUSTER_WORD.dropped}
+                  </Animated.Text>
+                  <Animated.Text style={[styles.busterHeadline, styles.busterArriving, { opacity: buOpacity, transform: [{ translateY: buY }] }]}>
+                    {BUSTER_WORD.arriving}
+                  </Animated.Text>
+                </View>
+                <Text style={styles.busterHeadline}>{BUSTER_WORD.kept}</Text>
+              </View>
+              <Text style={[styles.dynamicWord, finalWordStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.58}>
+                {word}
+              </Text>
+            </>
+          )}
         </View>
-        <Text style={styles.outcomeWord}>{word}</Text>
-        <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -190,40 +165,40 @@ export default function DevRematchOutcomePreviewScreen({ navigation, route }: Pr
   const kind: RematchOutcomeDevPreviewKind = route.params?.outcome === 'buster' ? 'buster' : 'king';
   const preview = buildRematchOutcomeDevPreview(kind);
   const reduceMotion = useReducedMotionPreference();
-  const cover = useRef(new Animated.Value(kind === 'king' ? 1 : 0)).current;
+  const cover = useRef(new Animated.Value(0)).current;
   const intake = useRef(new Animated.Value(0)).current;
-  const [bookVariant, setBookVariant] = useState<'neutral' | 'mastered'>('neutral');
+  const [bookVariant, setBookVariant] = useState<'neutral' | 'mastered'>('mastered');
   const [showOverlay, setShowOverlay] = useState(false);
 
   const coverRotateX = cover.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '58deg'] });
   const intakeScaleY = intake.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
 
   useEffect(() => {
+    setBookVariant('mastered');
+    setShowOverlay(false);
+    cover.setValue(0);
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
     if (kind === 'king') {
-      const feedback = resolveBossOutcomeSequenceFeedback('mastered');
-      playSfx(feedback.startSfx);
       if (reduceMotion === false) {
-        cover.setValue(1);
         Animated.sequence([
-          Animated.timing(cover, { toValue: 0.08, duration: 170, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-          Animated.timing(cover, { toValue: 0, duration: 230, easing: Easing.out(Easing.back(1.15)), useNativeDriver: true }),
+          Animated.timing(cover, { toValue: 0.16, duration: 140, useNativeDriver: true }),
+          Animated.timing(cover, { toValue: 0, duration: 210, easing: Easing.out(Easing.back(1.1)), useNativeDriver: true }),
         ]).start();
-      } else {
-        cover.setValue(0);
       }
-      const swap = setTimeout(() => setBookVariant('mastered'), 70);
-      const impact = setTimeout(() => {
-        if (feedback.impact.sfx) playSfx(feedback.impact.sfx);
-        Haptics.cueAsync(feedback.impact.hapticCue);
-      }, feedback.impact.delayMs);
-      const reveal = setTimeout(() => setShowOverlay(true), 1050);
-      return () => { clearTimeout(swap); clearTimeout(impact); clearTimeout(reveal); };
+      timers.push(setTimeout(() => setShowOverlay(true), 700));
+    } else {
+      if (reduceMotion === false) {
+        Animated.sequence([
+          Animated.timing(cover, { toValue: 0.55, duration: 220, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(cover, { toValue: 0, duration: 260, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        ]).start();
+      }
+      timers.push(setTimeout(() => setBookVariant('neutral'), reduceMotion === false ? 260 : 0));
+      timers.push(setTimeout(() => setShowOverlay(true), 850));
     }
 
-    cover.setValue(0);
-    setBookVariant('neutral');
-    const reveal = setTimeout(() => setShowOverlay(true), 950);
-    return () => clearTimeout(reveal);
+    return () => timers.forEach(clearTimeout);
   }, [cover, kind, reduceMotion]);
 
   if (!__DEV__) return null;
@@ -232,19 +207,24 @@ export default function DevRematchOutcomePreviewScreen({ navigation, route }: Pr
     <View style={styles.screen}>
       <AmbientSkyBackground {...BOSS_SKY_TUNING} />
       <SafeAreaView style={styles.safe}>
-        <Text style={styles.kicker}>MASTER'S REMATCH · 2×</Text>
+        <Text style={styles.kicker}>MASTER'S REMATCH</Text>
         <View style={styles.bookStage} pointerEvents="none">
           <HeroBook coverRotateX={coverRotateX} intakeOpacity={intake} intakeScaleY={intakeScaleY} variant={bookVariant}>
-            <Text style={styles.bookWord}>{preview.word}</Text>
+            <Text style={[styles.bookWord, bookVariant === 'mastered' ? styles.bookWordMastered : styles.bookWordNeutral]}>{preview.word}</Text>
           </HeroBook>
         </View>
         <Pressable style={styles.closeButton} onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Close preview">
           <Text style={styles.closeText}>×</Text>
         </Pressable>
       </SafeAreaView>
-      {showOverlay && (kind === 'king'
-        ? <KingOverlay word={preview.word} onContinue={() => navigation.goBack()} />
-        : <BusterOverlay word={preview.word} onContinue={() => navigation.goBack()} />)}
+      {showOverlay && (
+        <PlaqueShell
+          word={preview.word}
+          finalArt={kind === 'king' ? kingPlaqueArt : busterPlaqueArt}
+          kind={kind}
+          onContinue={() => navigation.goBack()}
+        />
+      )}
     </View>
   );
 }
@@ -268,28 +248,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,13,42,0.88)',
   },
   bookStage: { marginTop: 70, marginHorizontal: 14, height: 360, position: 'relative' },
-  bookWord: { color: PW.color.gold, fontFamily: FONTS.wordDisplay, includeFontPadding: false, fontSize: 54, textAlign: 'center' },
+  bookWord: { fontFamily: FONTS.wordDisplay, includeFontPadding: false, fontSize: 54, textAlign: 'center' },
+  bookWordMastered: { color: PW.color.purple },
+  bookWordNeutral: { color: PW.color.gold },
   closeButton: { position: 'absolute', right: 18, top: 8, width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15,13,42,0.82)', borderWidth: 1, borderColor: PW.color.purpleSoft },
   closeText: { color: PW.color.white, fontSize: 28, lineHeight: 30 },
   plaqueOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: 'rgba(15,13,42,0.42)' },
   plaqueColumn: { alignItems: 'center' },
-  masteredPlaqueFrame: { width: 324, aspectRatio: MASTERED_PLAQUE_ASPECT, position: 'relative' },
+  plaqueFrame: { width: 324, aspectRatio: PLAQUE_ASPECT, position: 'relative' },
   plaqueImage: { width: '100%', height: '100%' },
-  masteredPlaqueContent: { position: 'absolute', left: '14%', right: '14%', top: '13%', bottom: '25%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  plaqueHeadline: { color: PW.color.purple, fontFamily: FONTS.label, includeFontPadding: false, fontWeight: '900', fontSize: 33, textAlign: 'center' },
-  kingArriving: { position: 'absolute', left: 0, right: 0, top: 0 },
-  plaqueWord: { marginTop: 3, color: PW.color.purple, fontFamily: FONTS.wordDisplay, includeFontPadding: false, fontSize: 41, textAlign: 'center', maxWidth: '100%' },
-  plaqueCopyBlock: { marginTop: 4, gap: 2 },
-  plaqueCopy: { color: PW.color.bg, fontFamily: FONTS.label, includeFontPadding: false, fontSize: 14, textAlign: 'center' },
-  plaqueBonus: { marginTop: 6, color: PW.color.bg, fontWeight: '800', fontFamily: FONTS.hud, includeFontPadding: false, fontSize: 20, letterSpacing: 0.5, textAlign: 'center' },
-  plaqueContinue: { marginTop: 16, color: 'rgba(255,255,255,0.85)', fontFamily: FONTS.label, includeFontPadding: false, fontSize: FONT_SIZES.hudLabel, letterSpacing: 1, textAlign: 'center' },
-  outcomeOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22, backgroundColor: 'rgba(15,13,42,0.78)' },
-  outcomePanel: { width: '100%', maxWidth: 360, minHeight: 300, borderRadius: 18, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 26, overflow: 'hidden' },
-  busterOutcomePanel: { borderColor: 'rgba(255,255,255,0.28)', backgroundColor: 'rgba(15,13,42,0.97)' },
-  busterHeadlineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  busterSlot: { alignItems: 'center', justifyContent: 'center' },
+  plaqueImageAbsolute: { position: 'absolute', left: 0, top: 0 },
+  masterLabel: { position: 'absolute', left: '12%', right: '12%', top: '29%', color: PW.color.purple, fontFamily: FONTS.label, includeFontPadding: false, fontWeight: '900', fontSize: 36, textAlign: 'center' },
+  dynamicWord: { position: 'absolute', left: '15%', right: '15%', color: PW.color.purple, fontFamily: FONTS.wordDisplay, includeFontPadding: false, fontSize: 42, textAlign: 'center' },
+  kingWord: { top: '58%' },
+  busterWord: { top: '58%', color: PW.color.gold },
+  busterHeadlineRow: { position: 'absolute', left: '10%', right: '10%', top: '29%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  busterPrefixSlot: { position: 'relative', minWidth: 58, alignItems: 'center', justifyContent: 'center' },
+  busterHeadline: { color: PW.color.gold, fontFamily: FONTS.label, includeFontPadding: false, fontWeight: '900', fontSize: 36, textAlign: 'center' },
   busterArriving: { position: 'absolute', left: 0, right: 0, top: 0 },
-  outcomeHeadline: { color: PW.color.white, fontFamily: FONTS.label, includeFontPadding: false, fontWeight: '900', fontSize: 38, textAlign: 'center' },
-  outcomeWord: { marginTop: 8, color: PW.color.gold, fontFamily: FONTS.wordDisplay, includeFontPadding: false, fontSize: 54, textAlign: 'center', maxWidth: '100%' },
-  outcomeContinue: { marginTop: 20, color: 'rgba(255,255,255,0.72)', fontFamily: FONTS.label, includeFontPadding: false, fontSize: FONT_SIZES.hudLabel, letterSpacing: 1, textAlign: 'center' },
+  plaqueContinue: { marginTop: 16, color: 'rgba(255,255,255,0.85)', fontFamily: FONTS.label, includeFontPadding: false, fontSize: FONT_SIZES.hudLabel, letterSpacing: 1, textAlign: 'center' },
 });
