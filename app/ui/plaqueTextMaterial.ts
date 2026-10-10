@@ -1,4 +1,4 @@
-export type PlaqueTextMaterialName = 'goldPlaque' | 'purplePlaque';
+export type PlaqueTextMaterialName = 'goldPlaque' | 'purplePlaque' | 'stonePlaque';
 
 export type PlaqueTextMaterial = {
   face: string;
@@ -19,6 +19,12 @@ export const PLAQUE_TEXT_MATERIALS: Record<PlaqueTextMaterialName, PlaqueTextMat
     depth: '#8A5400',
     highlight: '#FFF1A6',
     shadow: 'rgba(53, 28, 0, 0.72)',
+  },
+  stonePlaque: {
+    face: '#1A1830',
+    depth: '#080711',
+    highlight: '#655F87',
+    shadow: 'rgba(5, 4, 15, 0.72)',
   },
 };
 

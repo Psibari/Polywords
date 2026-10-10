@@ -17,6 +17,7 @@ import type { SwipeMaskState } from '../components/SwipeMask';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
 import { createSeededTruthPlan } from '../game/seededRandom';
 import { recordPlaytestEvent, resolveHuntTelemetryPhase } from '../game/playtestTelemetry';
+import { resolveBossEventKicker } from '../game/huntOutcomeFeedback';
 
 export type ChainTier = 1 | 2 | 3 | 4;
 type WordOutcomeState = 'none' | 'mastered' | 'haunted';
@@ -59,11 +60,9 @@ function chainTierFromMultiplier(mult: number): ChainTier {
 }
 
 function eventKicker(step: WordStep): string | null {
-  // Reward-only framing let the boss round's stakes go unsignaled on every
-  // repeat visit, not just a player's first — this always-visible badge is
-  // the persistent half of that fix; BossIntroOverlay is the one-time half.
-  if (step.eventType === 'bossWord' && step.isMasteryRematch) return "MASTER'S REMATCH · 2×";
-  if (step.eventType === 'bossWord')  return "POLLY'S WORD · 2× OR HAUNTED";
+  // Boss labels identify the event only. The old multiplier/score framing is
+  // retired from the player-facing game while internal run math remains intact.
+  if (step.eventType === 'bossWord') return resolveBossEventKicker(step.isMasteryRematch === true);
   if (step.eventType === 'slangDrop') return 'SLANG DROP';
   return null;
 }
@@ -309,7 +308,7 @@ export function useBoardMechanics({
         setTimeout(() => {
           showWordOutcome(
             'mastered',
-            { bonusLabel: `BOSS MASTERY +${masteryPoints}` },
+            {},
             () => completeWord(),
           );
         }, 700);
@@ -589,11 +588,7 @@ export function useBoardMechanics({
       showWordOutcome(
         'mastered',
         {
-          bonusLabel: isHaunt
-            ? 'HAUNT BROKEN'
-            : isBoss
-              ? `BOSS MASTERY +${masteryPoints}`
-              : undefined,
+          bonusLabel: isHaunt ? 'HAUNT BROKEN' : undefined,
         },
         () => {
           completeWord();

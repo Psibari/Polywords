@@ -22,6 +22,7 @@ import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import HeroBook, { type HeroBookVariant } from './ui/HeroBook';
 import RematchOutcomePlaque from './ui/RematchOutcomePlaque';
+import PlaqueText from './ui/PlaqueText';
 import { FoilWord } from './ui/FoilWord';
 import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
@@ -330,15 +331,20 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
           <View style={[styles.plaqueFrame, styles.banishedPlaqueFrame]}>
             <Image source={banishedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: BANISHED_PLAQUE_ASPECT }]} resizeMode="contain" />
             <View pointerEvents="none" style={[styles.plaqueContent, styles.banishedPlaqueContent]}>
-              <Text style={[styles.plaqueHeadline, styles.banishedPlaqueHeadline]}>{headline}</Text>
-              <Text
-                style={[styles.plaqueWord, styles.banishedPlaqueWord]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
+              <PlaqueText
+                text={headline}
+                material="goldPlaque"
+                fontSize={33}
+                fontFamily={FONTS.label}
+                textStyle={[styles.plaqueHeadline, styles.banishedPlaqueHeadline]}
+              />
+              <PlaqueText
+                text={word}
+                material="goldPlaque"
+                fontSize={41}
+                textStyle={[styles.plaqueWord, styles.banishedPlaqueWord]}
                 minimumFontScale={0.6}
-              >
-                {word}
-              </Text>
+              />
               <View style={styles.plaqueCopyBlock}>
                 <Text style={[styles.plaqueCopy, styles.banishedPlaqueCopy]}>Not one of Polly's traps.</Text>
                 <Text style={[styles.plaqueCopy, styles.banishedPlaqueCopy]}>You saw through it.</Text>
@@ -373,16 +379,21 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
               {isRematch === true ? (
                 <KingHeadline from={headline} textStyle={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]} />
               ) : (
-                <Text style={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}>{headline}</Text>
+                <PlaqueText
+                  text={headline}
+                  material="goldPlaque"
+                  fontSize={33}
+                  fontFamily={FONTS.label}
+                  textStyle={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}
+                />
               )}
-              <Text
-                style={[styles.plaqueWord, styles.masteredPlaqueWord]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
+              <PlaqueText
+                text={word}
+                material="goldPlaque"
+                fontSize={41}
+                textStyle={[styles.plaqueWord, styles.masteredPlaqueWord]}
                 minimumFontScale={0.6}
-              >
-                {word}
-              </Text>
+              />
               <View style={styles.plaqueCopyBlock}>
                 <Text style={[styles.plaqueCopy, styles.masteredPlaqueCopy]}>Not one of Polly's traps.</Text>
                 <Text style={[styles.plaqueCopy, styles.masteredPlaqueCopy]}>You saw through it.</Text>
@@ -496,15 +507,20 @@ function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOver
           <View style={[styles.plaqueFrame, styles.hauntedPlaqueFrame]}>
             <Image source={hauntedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: HAUNTED_PLAQUE_ASPECT }]} resizeMode="contain" />
             <View pointerEvents="none" style={[styles.plaqueContent, styles.hauntedPlaqueContent]}>
-              <Text style={[styles.plaqueHeadline, styles.hauntedPlaqueHeadline]}>HAUNTED</Text>
-              <Text
-                style={[styles.plaqueWord, styles.hauntedPlaqueWord]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
+              <PlaqueText
+                text="HAUNTED"
+                material="stonePlaque"
+                fontSize={33}
+                fontFamily={FONTS.label}
+                textStyle={[styles.plaqueHeadline, styles.hauntedPlaqueHeadline]}
+              />
+              <PlaqueText
+                text={word}
+                material="stonePlaque"
+                fontSize={41}
+                textStyle={[styles.plaqueWord, styles.hauntedPlaqueWord]}
                 minimumFontScale={0.6}
-              >
-                {word}
-              </Text>
+              />
               <View style={styles.plaqueCopyBlock}>
                 <Text style={[styles.plaqueCopy, styles.hauntedPlaqueCopy]}>Polly's trap held.</Text>
                 <Text style={[styles.plaqueCopy, styles.hauntedPlaqueCopy]}>It'll be waiting.</Text>
