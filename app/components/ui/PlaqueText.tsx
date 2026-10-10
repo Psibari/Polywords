@@ -17,6 +17,15 @@ type Props = {
   accessibilityLabel?: string;
 };
 
+/**
+ * Dynamic plaque lettering that reads as part of the illustrated object.
+ *
+ * IMPORTANT: this intentionally renders ONE Text node. The earlier three-node
+ * depth/highlight/face stack could separate vertically on-device when React
+ * Native resolved absolute text bounds, exposing the construction layers as
+ * three copies of the word. A single face plus a tight material shadow is more
+ * robust and still gives the plaque a raised/pressed-metal read.
+ */
 export default function PlaqueText({
   text,
   material,
@@ -31,69 +40,29 @@ export default function PlaqueText({
 }: Props) {
   const palette = PLAQUE_TEXT_MATERIALS[material];
   const lineHeight = Math.round(fontSize * 1.08);
-  const shared: TextStyle = {
-    fontFamily,
-    includeFontPadding: false,
-    fontSize,
-    lineHeight,
-    fontWeight: '900',
-    letterSpacing: 0.25,
-    textAlign: 'center',
-  };
-
-  const fitProps = {
-    numberOfLines,
-    adjustsFontSizeToFit,
-    minimumFontScale,
-  } as const;
 
   return (
-    <View style={[styles.root, { minHeight: lineHeight + 5 }, containerStyle]} accessible accessibilityLabel={accessibilityLabel ?? text}>
+    <View
+      style={[styles.root, { minHeight: lineHeight + 5 }, containerStyle]}
+      accessible
+      accessibilityLabel={accessibilityLabel ?? text}
+    >
       <Text
-        {...fitProps}
-        pointerEvents="none"
+        numberOfLines={numberOfLines}
+        adjustsFontSizeToFit={adjustsFontSizeToFit}
+        minimumFontScale={minimumFontScale}
         style={[
-          styles.layer,
-          shared,
-          textStyle,
+          styles.text,
           {
-            color: palette.depth,
-            transform: [{ translateX: 1.2 }, { translateY: 2.2 }],
-            textShadowColor: palette.shadow,
-            textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: 1.2,
-          },
-        ]}
-      >
-        {text}
-      </Text>
-      <Text
-        {...fitProps}
-        pointerEvents="none"
-        style={[
-          styles.layer,
-          shared,
-          textStyle,
-          {
-            color: palette.highlight,
-            opacity: 0.34,
-            transform: [{ translateX: -0.7 }, { translateY: -0.9 }],
-          },
-        ]}
-      >
-        {text}
-      </Text>
-      <Text
-        {...fitProps}
-        style={[
-          shared,
-          textStyle,
-          {
+            fontFamily,
+            fontSize,
+            lineHeight,
             color: palette.face,
-            textShadowColor: palette.shadow,
-            textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: 0.8,
+            textShadowColor: palette.depth,
+            textShadowOffset: { width: 1.25, height: 1.9 },
+            textShadowRadius: 1.15,
           },
+          textStyle,
         ]}
       >
         {text}
@@ -107,11 +76,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     justifyContent: 'center',
   },
-  layer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
+  text: {
+    includeFontPadding: false,
+    fontWeight: '900',
+    letterSpacing: 0.25,
+    textAlign: 'center',
   },
 });
