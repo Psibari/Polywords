@@ -102,12 +102,20 @@ height are geometry contracts. Wall holes are an overlay; never cut the wall art
 continuous open → transform → close choreography. Boss outcome music stays fully silent through
 both outcomes. Returning Haunts do not use this package.
 
-MASTER'S REMATCH outcomes (timings first-pass, not device-confirmed):
-- Lost (missed hidden card or ran out of feathers): BUSTER. Plain text, no plaque, book stays
-  the neutral rig: MASTER shows, "MA" drops, "BU" lands. One punch as BU lands
-  (`streakBreakImpact` + `fellOffSmall` haptic). Results label and share text read BUSTER;
-  the Results line under it is "Bird brain" (Results only, not on the board).
-- Won: KING drops in over MASTERED on the gold plaque. Results label and share text read KING.
+MASTER'S REMATCH outcomes are device-approved and use the shared
+`RematchOutcomePlaque.tsx` presentation in DEV and production:
+- Lost (missed hidden card or ran out of feathers): BUSTER. The rematch begins on the gold Master
+  book; MASTER shows, `MA` drops, `BU` lands while `STER` holds, and the final BUSTER plaque is the
+  approved purple/gold treatment. The Hero Book returns to the neutral purple rig before the final
+  BUSTER plaque. No Haunt is created and persistent mastery is unchanged. Results label/share text
+  read BUSTER; `Bird brain` remains Results-only.
+- Won: the gold Master book stays mastered. The Master plaque resolves to the crown-led KING plaque;
+  the in-round final plaque does not need literal `KING` text because the crown carries the
+  promotion, and the Boss word remains beneath it. Results label/share text read KING.
+- Dynamic plaque lettering uses `PlaqueText.tsx` as one Text node with material shadow. Do not
+  restore the old three-layer text stack; it separated into visible duplicate words on-device.
+- Normal Boss/rematch event labels are `POLLY'S WORD` / `MASTER'S REMATCH`. Player-facing Boss
+  score, mastery-point and `2x` framing are retired; internal scoring remains unchanged.
 
 ## Polybook
 

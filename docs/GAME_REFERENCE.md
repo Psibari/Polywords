@@ -12,7 +12,8 @@ Owns durable Hunt player rules. Live code remains authoritative for implementati
 - UP claims a REAL; RIGHT rejects a trap. Wrong choices cost one feather, reset the chain and
   preserve chosen mask ID/direction in Results.
 - Mastered words may return to ordinary tension/panic play as marked revisits, but never Boss or
-  Returning Haunt candidates. `RUN IT BACK` creates a fresh arc with ghost priority.
+  Returning Haunt candidates except through MASTER'S REMATCH. `START A NEW HUNT` creates a fresh
+  arc with ghost priority.
 - `huntGenerator.ts` builds the arc from effective runtime Hunt data and must validate content
   metadata before selection. Approved words may not be silently bypassed because of missing
   difficulty/gpsTag or malformed REAL/trap data.
@@ -29,6 +30,10 @@ simulation target, not measured player data.
 - Returning Haunt re-tests the exact hidden pair that previously won. Success removes the active
   ghost; failure keeps it queued. Banished Haunts are not currently a separate Vault collection.
 - `bossOutcome` is authoritative. The Master Gate must not return.
+- MASTER'S REMATCH appears only when no unmastered Boss word with hidden content remains. A win is
+  KING and does not add another mastery record; a loss is BUSTER and creates no Haunt. Persistent
+  mastery survives either result. The production rematch starts on the gold Master book; KING keeps
+  it gold, while BUSTER returns it to purple before the final plaque.
 
 ## Scoring and Momentum
 
@@ -82,6 +87,9 @@ Implementation detail belongs in `CLAUDE.md` and the onboarding modules, not her
 - From Hunt game-over Results it revives the same run with one feather, preserves committed
   choices, resets `bossOutcome` to pending and is consumed once.
 - Fatal wrong choices finalize the current word result before game-over.
+- Hunt Results is integrated inside the Game flow; there is no separate Run It Back screen. It owns
+  the post-Hunt verdict/recap plus Gold Feather recovery when eligible, START A NEW HUNT, SHARE
+  RESULT and HOME.
 - Locked system text includes `YOU BEAT POLLY`, `POLLY HUNT COMPLETE`, and
   `POLLY CLIPPED YOUR RUN.`
 - `BINGO BANGO ZZZZINGO!` is unassigned and must not be reintroduced into mastery without approval.
@@ -90,6 +98,8 @@ Implementation detail belongs in `CLAUDE.md` and the onboarding modules, not her
 
 - Hierarchy: hero word, active mask, Polybook, HUD, Polly visit.
 - Ordinary masks stay neutral before commitment.
+- Normal Boss/rematch headers are `POLLY'S WORD` / `MASTER'S REMATCH`. Boss score, mastery points
+  and `2x` framing are not player-facing.
 - In-round spine and archive nav both currently say POLYBOOK; renaming remains Pete's decision.
 - The Polybook is Polly's book; the player reads it.
 

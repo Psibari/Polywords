@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-08. Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-09. Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -59,14 +59,18 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   5, so seeding mid-session can count as a played Hunt; its own message says to fully close and
   relaunch the app. Unverified: closing passes through the background, which stamps
   `lastVisitAt` (App.tsx) and may cancel the seeded absence.
-- **Results:** Hunt Results remains the last major visual surface awaiting a focused keep/change
-  audit. Do not assume it needs redesign.
-- **Master's Rematch and feedback (2026-10-07):** MASTER'S REMATCH, BUSTER, KING, split
-  claim/trap/tier-up haptics and the wrong-swipe squawk rule are built on
-  `play-screen-overhaul`. Pete checked the haptics and squawk on a phone 2026-10-07. NOT
-  device-tested: BUSTER and KING animation timings and the "Bird brain" line. No way to start
-  a rematch on a phone yet: it only appears once every boss word is mastered, and there is no
-  dev shortcut.
+- **Results:** Hunt Results is the current integrated post-Hunt experience and is device-approved.
+  It owns verdict, consequences, recap, Gold Feather recovery when eligible, START A NEW HUNT,
+  SHARE RESULT, HOME, and Polly. There is no separate Run It Back screen to redesign.
+- **Master's Rematch and Boss outcome cleanup (2026-10-09):** MASTER'S REMATCH, BUSTER and
+  KING are wired through the real production path and device-approved. Rematches start on the
+  gold Master book; KING keeps it gold and resolves to the crown plaque, while BUSTER visibly
+  returns the book to purple and runs the approved MASTER -> BUSTER transformation. DEV preview
+  buttons use the same shared plaque component as production. Normal Boss and rematch headers are
+  now `POLLY'S WORD` / `MASTER'S REMATCH`; visible 2x framing and Boss mastery-point copy are
+  retired while internal scoring remains intact. MASTERED / HAUNTED / BANISHED use the shared
+  physical plaque-text treatment. The split claim/trap/tier-up haptics and wrong-swipe squawk rule
+  remain device-checked. `Bird brain` remains Results-only unless Pete rules otherwise.
 - **TestFlight:** build/submit/install works end to end. Store name remains
   `POLYWORDS: Hunt or Be Trapped`; iPad support is off.
 - **Website:** live at https://psibari.github.io/Polywords/ with /privacy/ and /support/.
