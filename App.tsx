@@ -11,6 +11,7 @@ import SettingsScreen from './app/screens/SettingsScreen';
 import DevSettingsScreen from './app/screens/DevSettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import DevResultsPreviewScreen from './app/screens/DevResultsPreviewScreen';
+import DevRematchOutcomePreviewScreen from './app/screens/DevRematchOutcomePreviewScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
 import { preloadHomeTrack, setMusicAppActive } from './app/audio/MusicEngine';
 import { preloadSfx } from './app/audio/sfx';
@@ -104,6 +105,7 @@ export default function App() {
             <Stack.Screen name="Settings" component={__DEV__ ? DevSettingsScreen : SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
             {__DEV__ && <Stack.Screen name="DevResultsPreview" component={DevResultsPreviewScreen} />}
+            {__DEV__ && <Stack.Screen name="DevRematchOutcomePreview" component={DevRematchOutcomePreviewScreen} />}
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>
