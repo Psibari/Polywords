@@ -170,6 +170,10 @@ Open, needs Pete's ruling:
 
 ## Do Not Work On Yet
 
+- **Home polish pass:** the Home route plate still says `WORD VAULT`, but the product is now
+  POLYBOOK. When this is scheduled, change the route label to `POLYBOOK` and review/polish the
+  other Home route plates and surrounding Home presentation in the same focused pass rather than
+  making a one-off label edit now.
 - New Polly art or WEBP restoration before the articulation inventory.
 - Production Home life-profile animation before the DEV Neutral proof.
 - Crown/Polybook progression, additional relationship states, or Polybook interior changes.
