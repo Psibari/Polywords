@@ -6,12 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#241338"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pdb8080.polywords",
@@ -24,7 +18,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#241338"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": true,
       "package": "com.pdb8080.polywords"
     },
@@ -42,7 +35,16 @@
         }
       ],
       "expo-audio",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#241338"
+        }
+      ]
     ],
     "extra": {
       "eas": {
