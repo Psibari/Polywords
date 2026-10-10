@@ -3,14 +3,16 @@ import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import HeroBook from '../components/ui/HeroBook';
+import PlaqueText from '../components/ui/PlaqueText';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { buildRematchOutcomeDevPreview, type RematchOutcomeDevPreviewKind } from '../game/rematchOutcomeDevPreview';
-import { BUSTER_WORD, resolveBossOutcomePlaqueFeedback, resolveRematchLossFeedback } from '../game/huntOutcomeFeedback';
+import { resolveBossOutcomePlaqueFeedback, resolveRematchLossFeedback } from '../game/huntOutcomeFeedback';
 import { playSfx } from '../audio/sfx';
 import { Haptics } from '../utils/haptics';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { BOSS_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { PW } from '../ui/pwTheme';
+import { resolvePlaqueImagePhase, type BusterTransformPhase } from '../ui/plaqueTextMaterial';
 
 const masteredPlaqueArt = require('../../assets/images/results/mastered-result-plaque.png');
 const kingPlaqueArt = require('../../assets/images/results/king-result-plaque.png');
@@ -19,8 +21,8 @@ const PLAQUE_ASPECT = 681 / 567;
 
 const MASTER_HOLD_MS = 720;
 const BUSTER_DROP_MS = 260;
-const BUSTER_LAND_DELAY_MS = 150;
-const BUSTER_LAND_MS = 240;
+const BUSTER_LAND_DELAY_MS = 110;
+const BUSTER_LAND_MS = 230;
 const BUSTER_DROP_DISTANCE = 46;
 
 type Props = {
@@ -42,14 +44,14 @@ function PlaqueShell({
   const reduceMotion = useReducedMotionPreference();
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.9)).current;
-  const finalArtOpacity = useRef(new Animated.Value(0)).current;
-  const masterOpacity = useRef(new Animated.Value(1)).current;
   const maY = useRef(new Animated.Value(0)).current;
   const maOpacity = useRef(new Animated.Value(1)).current;
   const buY = useRef(new Animated.Value(-BUSTER_DROP_DISTANCE)).current;
   const buOpacity = useRef(new Animated.Value(0)).current;
   const continueOpacity = useRef(new Animated.Value(0.35)).current;
   const [canDismiss, setCanDismiss] = useState(false);
+  const [phase, setPhase] = useState<BusterTransformPhase>('master');
+  const [busterSplit, setBusterSplit] = useState(false);
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -60,13 +62,7 @@ function PlaqueShell({
     if (reduceMotion !== false) {
       opacity.setValue(1);
       scale.setValue(1);
-      finalArtOpacity.setValue(1);
-      masterOpacity.setValue(0);
-      if (kind === 'buster') {
-        maOpacity.setValue(0);
-        buOpacity.setValue(1);
-        buY.setValue(0);
-      }
+      setPhase('final');
       setCanDismiss(true);
       return;
     }
@@ -77,41 +73,60 @@ function PlaqueShell({
     ]).start();
 
     if (kind === 'king') {
+      timers.push(setTimeout(() => setPhase('final'), MASTER_HOLD_MS));
+    } else {
       timers.push(setTimeout(() => {
+        setBusterSplit(true);
         Animated.parallel([
-          Animated.timing(masterOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
-          Animated.timing(finalArtOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
+          Animated.timing(maY, {
+            toValue: BUSTER_DROP_DISTANCE,
+            duration: BUSTER_DROP_MS,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(maOpacity, {
+            toValue: 0,
+            duration: BUSTER_DROP_MS,
+            easing: Easing.in(Easing.quad),
+            useNativeDriver: true,
+          }),
         ]).start();
       }, MASTER_HOLD_MS));
-    } else {
-      const dropAt = MASTER_HOLD_MS;
+
       timers.push(setTimeout(() => {
+        setPhase('swap');
         Animated.parallel([
-          Animated.timing(maY, { toValue: BUSTER_DROP_DISTANCE, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-          Animated.timing(maOpacity, { toValue: 0, duration: BUSTER_DROP_MS, useNativeDriver: true }),
-          Animated.timing(finalArtOpacity, { toValue: 1, duration: 260, useNativeDriver: true }),
-        ]).start();
-      }, dropAt));
-      timers.push(setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(buOpacity, { toValue: 1, duration: 90, useNativeDriver: true }),
-          Animated.timing(buY, { toValue: 0, duration: BUSTER_LAND_MS, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true }),
+          Animated.timing(buOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
+          Animated.timing(buY, {
+            toValue: 0,
+            duration: BUSTER_LAND_MS,
+            easing: Easing.out(Easing.back(1.35)),
+            useNativeDriver: true,
+          }),
         ]).start();
         const punch = resolveRematchLossFeedback();
         playSfx(punch.sfx);
         Haptics.cueAsync(punch.hapticCue);
-      }, dropAt + BUSTER_LAND_DELAY_MS));
+      }, MASTER_HOLD_MS + BUSTER_DROP_MS + BUSTER_LAND_DELAY_MS));
+
+      timers.push(setTimeout(() => {
+        setPhase('final');
+        setBusterSplit(false);
+      }, MASTER_HOLD_MS + BUSTER_DROP_MS + BUSTER_LAND_DELAY_MS + BUSTER_LAND_MS + 80));
     }
 
     timers.push(setTimeout(() => {
       setCanDismiss(true);
       Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-    }, 1500));
+    }, 1650));
 
     return () => timers.forEach(clearTimeout);
-  }, [buOpacity, buY, continueOpacity, finalArtOpacity, kind, maOpacity, maY, masterOpacity, opacity, reduceMotion, scale]);
+  }, [buOpacity, buY, continueOpacity, kind, maOpacity, maY, opacity, reduceMotion, scale]);
 
-  const finalWordStyle = kind === 'king' ? styles.kingWord : styles.busterWord;
+  const imagePhase = resolvePlaqueImagePhase(phase);
+  const plaqueArt = imagePhase === 'master' ? masteredPlaqueArt : finalArt;
+  const finalMaterial = kind === 'king' ? 'goldPlaque' : 'purplePlaque';
+  const wordMaterial = phase === 'master' ? 'goldPlaque' : finalMaterial;
 
   return (
     <Pressable
@@ -122,36 +137,72 @@ function PlaqueShell({
     >
       <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
         <View style={styles.plaqueFrame}>
-          <Image source={masteredPlaqueArt} style={styles.plaqueImage} resizeMode="contain" />
-          <Animated.Image
-            source={finalArt}
-            style={[styles.plaqueImage, styles.plaqueImageAbsolute, { opacity: finalArtOpacity }]}
-            resizeMode="contain"
-          />
+          <Image source={plaqueArt} style={styles.plaqueImage} resizeMode="contain" />
 
           {kind === 'king' ? (
             <>
-              <Animated.Text style={[styles.masterLabel, { opacity: masterOpacity }]}>MASTER</Animated.Text>
-              <Text style={[styles.dynamicWord, finalWordStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.58}>
-                {word}
-              </Text>
+              {phase === 'master' && (
+                <PlaqueText
+                  text="MASTER"
+                  material="goldPlaque"
+                  fontSize={36}
+                  fontFamily={FONTS.label}
+                  containerStyle={styles.masterLabel}
+                />
+              )}
+              <PlaqueText
+                text={word}
+                material={wordMaterial}
+                fontSize={42}
+                containerStyle={phase === 'master' ? styles.masterWord : styles.kingWord}
+              />
             </>
           ) : (
             <>
-              <View style={styles.busterHeadlineRow}>
-                <View style={styles.busterPrefixSlot}>
-                  <Animated.Text style={[styles.busterHeadline, { opacity: maOpacity, transform: [{ translateY: maY }] }]}>
-                    {BUSTER_WORD.dropped}
-                  </Animated.Text>
-                  <Animated.Text style={[styles.busterHeadline, styles.busterArriving, { opacity: buOpacity, transform: [{ translateY: buY }] }]}>
-                    {BUSTER_WORD.arriving}
-                  </Animated.Text>
+              {phase === 'master' && !busterSplit && (
+                <PlaqueText
+                  text="MASTER"
+                  material="goldPlaque"
+                  fontSize={36}
+                  fontFamily={FONTS.label}
+                  containerStyle={styles.masterLabel}
+                />
+              )}
+
+              {busterSplit && phase === 'master' && (
+                <View style={styles.busterHeadlineRow}>
+                  <Animated.View style={{ opacity: maOpacity, transform: [{ translateY: maY }] }}>
+                    <PlaqueText text="MA" material="goldPlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterPrefix} />
+                  </Animated.View>
+                  <PlaqueText text="STER" material="goldPlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterSuffix} />
                 </View>
-                <Text style={styles.busterHeadline}>{BUSTER_WORD.kept}</Text>
-              </View>
-              <Text style={[styles.dynamicWord, finalWordStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.58}>
-                {word}
-              </Text>
+              )}
+
+              {phase === 'swap' && (
+                <View style={styles.busterHeadlineRow}>
+                  <Animated.View style={{ opacity: buOpacity, transform: [{ translateY: buY }] }}>
+                    <PlaqueText text="BU" material="purplePlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterPrefix} />
+                  </Animated.View>
+                  <PlaqueText text="STER" material="purplePlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.busterSuffix} />
+                </View>
+              )}
+
+              {phase === 'final' && (
+                <PlaqueText
+                  text="BUSTER"
+                  material="purplePlaque"
+                  fontSize={36}
+                  fontFamily={FONTS.label}
+                  containerStyle={styles.masterLabel}
+                />
+              )}
+
+              <PlaqueText
+                text={word}
+                material={wordMaterial}
+                fontSize={42}
+                containerStyle={phase === 'master' ? styles.masterWord : styles.busterWord}
+              />
             </>
           )}
         </View>
@@ -257,14 +308,12 @@ const styles = StyleSheet.create({
   plaqueColumn: { alignItems: 'center' },
   plaqueFrame: { width: 324, aspectRatio: PLAQUE_ASPECT, position: 'relative' },
   plaqueImage: { width: '100%', height: '100%' },
-  plaqueImageAbsolute: { position: 'absolute', left: 0, top: 0 },
-  masterLabel: { position: 'absolute', left: '12%', right: '12%', top: '29%', color: PW.color.purple, fontFamily: FONTS.label, includeFontPadding: false, fontWeight: '900', fontSize: 36, textAlign: 'center' },
-  dynamicWord: { position: 'absolute', left: '15%', right: '15%', color: PW.color.purple, fontFamily: FONTS.wordDisplay, includeFontPadding: false, fontSize: 42, textAlign: 'center' },
-  kingWord: { top: '58%' },
-  busterWord: { top: '58%', color: PW.color.gold },
-  busterHeadlineRow: { position: 'absolute', left: '10%', right: '10%', top: '29%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  busterPrefixSlot: { position: 'relative', minWidth: 58, alignItems: 'center', justifyContent: 'center' },
-  busterHeadline: { color: PW.color.gold, fontFamily: FONTS.label, includeFontPadding: false, fontWeight: '900', fontSize: 36, textAlign: 'center' },
-  busterArriving: { position: 'absolute', left: 0, right: 0, top: 0 },
+  masterLabel: { position: 'absolute', left: '12%', right: '12%', top: '28%' },
+  masterWord: { position: 'absolute', left: '15%', right: '15%', top: '56%' },
+  kingWord: { position: 'absolute', left: '15%', right: '15%', top: '58%' },
+  busterWord: { position: 'absolute', left: '15%', right: '15%', top: '58%' },
+  busterHeadlineRow: { position: 'absolute', left: '14%', right: '14%', top: '28%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0 },
+  busterPrefix: { width: 48 },
+  busterSuffix: { width: 79 },
   plaqueContinue: { marginTop: 16, color: 'rgba(255,255,255,0.85)', fontFamily: FONTS.label, includeFontPadding: false, fontSize: FONT_SIZES.hudLabel, letterSpacing: 1, textAlign: 'center' },
 });
