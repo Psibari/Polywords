@@ -19,13 +19,20 @@ jobs:
           ref: play-screen-overhaul
           fetch-depth: 0
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Apply production wiring
         run: python tools/dev/wire-rematch-production.py
 
       - name: Verify production wiring
         run: |
           node app/components/rematchOutcomePresentation.test.mjs
-          npx tsc --noEmit
+          npm run typecheck
 
       - name: Commit production wiring
         run: |
