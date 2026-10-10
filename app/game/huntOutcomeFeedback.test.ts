@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 
 import {
   BUSTER_WORD,
+  resolveBossEventKicker,
   resolveBossOutcomePlaqueFeedback,
   resolveBossOutcomeSequenceFeedback,
   resolveOutcomeRevealSfx,
   resolveRankUpFeedback,
+  resolveRematchBookVariant,
   resolveRematchLossFeedback,
 } from './huntOutcomeFeedback';
 
@@ -69,8 +71,6 @@ assert.deepEqual(
   'a rank-up on a lost run never talks over the loss with success feedback',
 );
 
-console.log('huntOutcomeFeedback tests passed');
-
 assert.deepEqual(
   resolveRematchLossFeedback(),
   { sfx: 'streakBreakImpact', hapticCue: 'fellOffSmall' },
@@ -86,3 +86,11 @@ assert.equal(
   'BUSTER',
   'BU + STER is BUSTER',
 );
+
+assert.equal(resolveBossEventKicker(false), "POLLY'S WORD", 'normal boss label has no point multiplier');
+assert.equal(resolveBossEventKicker(true), "MASTER'S REMATCH", 'rematch label has no point multiplier');
+assert.equal(resolveRematchBookVariant('entry'), 'mastered', 'a rematch begins on the gold mastered book');
+assert.equal(resolveRematchBookVariant('king'), 'mastered', 'KING keeps the gold mastered book');
+assert.equal(resolveRematchBookVariant('buster'), 'neutral', 'BUSTER drops the gold book back to the regular purple book');
+
+console.log('huntOutcomeFeedback tests passed');
