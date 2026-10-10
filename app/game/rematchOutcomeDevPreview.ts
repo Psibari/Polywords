@@ -3,10 +3,11 @@ export type RematchOutcomeDevPreviewKind = 'king' | 'buster';
 export type RematchOutcomeDevPreview = {
   outcome: RematchOutcomeDevPreviewKind;
   persistRun: false;
-  word: 'REMATCH';
-  productionOutcome: 'mastered' | 'haunted';
+  word: 'FOAM';
+  productionOutcome: 'mastered' | 'buster';
   resultLabel: 'KING' | 'BUSTER';
-  showMasteredBook: boolean;
+  startBookVariant: 'mastered';
+  finalBookVariant: 'mastered' | 'neutral';
 };
 
 export function buildRematchOutcomeDevPreview(
@@ -16,9 +17,10 @@ export function buildRematchOutcomeDevPreview(
   return {
     outcome,
     persistRun: false,
-    word: 'REMATCH',
-    productionOutcome: king ? 'mastered' : 'haunted',
+    word: 'FOAM',
+    productionOutcome: king ? 'mastered' : 'buster',
     resultLabel: king ? 'KING' : 'BUSTER',
-    showMasteredBook: king,
+    startBookVariant: 'mastered',
+    finalBookVariant: king ? 'mastered' : 'neutral',
   };
 }
