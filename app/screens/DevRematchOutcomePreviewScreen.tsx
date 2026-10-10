@@ -30,12 +30,7 @@ type Props = {
   route: { params?: { outcome?: RematchOutcomeDevPreviewKind } };
 };
 
-function PlaqueShell({
-  word,
-  finalArt,
-  kind,
-  onContinue,
-}: {
+function PlaqueShell({ word, finalArt, kind, onContinue }: {
   word: string;
   finalArt: any;
   kind: RematchOutcomeDevPreviewKind;
@@ -78,18 +73,8 @@ function PlaqueShell({
       timers.push(setTimeout(() => {
         setBusterSplit(true);
         Animated.parallel([
-          Animated.timing(maY, {
-            toValue: BUSTER_DROP_DISTANCE,
-            duration: BUSTER_DROP_MS,
-            easing: Easing.in(Easing.cubic),
-            useNativeDriver: true,
-          }),
-          Animated.timing(maOpacity, {
-            toValue: 0,
-            duration: BUSTER_DROP_MS,
-            easing: Easing.in(Easing.quad),
-            useNativeDriver: true,
-          }),
+          Animated.timing(maY, { toValue: BUSTER_DROP_DISTANCE, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(maOpacity, { toValue: 0, duration: BUSTER_DROP_MS, easing: Easing.in(Easing.quad), useNativeDriver: true }),
         ]).start();
       }, MASTER_HOLD_MS));
 
@@ -97,12 +82,7 @@ function PlaqueShell({
         setPhase('swap');
         Animated.parallel([
           Animated.timing(buOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-          Animated.timing(buY, {
-            toValue: 0,
-            duration: BUSTER_LAND_MS,
-            easing: Easing.out(Easing.back(1.35)),
-            useNativeDriver: true,
-          }),
+          Animated.timing(buY, { toValue: 0, duration: BUSTER_LAND_MS, easing: Easing.out(Easing.back(1.35)), useNativeDriver: true }),
         ]).start();
         const punch = resolveRematchLossFeedback();
         playSfx(punch.sfx);
@@ -142,31 +122,14 @@ function PlaqueShell({
           {kind === 'king' ? (
             <>
               {phase === 'master' && (
-                <PlaqueText
-                  text="MASTER"
-                  material="goldPlaque"
-                  fontSize={36}
-                  fontFamily={FONTS.label}
-                  containerStyle={styles.masterLabel}
-                />
+                <PlaqueText text="MASTER" material="goldPlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.masterLabel} />
               )}
-              <PlaqueText
-                text={word}
-                material={wordMaterial}
-                fontSize={42}
-                containerStyle={phase === 'master' ? styles.masterWord : styles.kingWord}
-              />
+              <PlaqueText text={word} material={wordMaterial} fontSize={42} containerStyle={phase === 'master' ? styles.masterWord : styles.kingWord} />
             </>
           ) : (
             <>
               {phase === 'master' && !busterSplit && (
-                <PlaqueText
-                  text="MASTER"
-                  material="goldPlaque"
-                  fontSize={36}
-                  fontFamily={FONTS.label}
-                  containerStyle={styles.masterLabel}
-                />
+                <PlaqueText text="MASTER" material="goldPlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.masterLabel} />
               )}
 
               {busterSplit && phase === 'master' && (
@@ -188,21 +151,10 @@ function PlaqueShell({
               )}
 
               {phase === 'final' && (
-                <PlaqueText
-                  text="BUSTER"
-                  material="purplePlaque"
-                  fontSize={36}
-                  fontFamily={FONTS.label}
-                  containerStyle={styles.masterLabel}
-                />
+                <PlaqueText text="BUSTER" material="purplePlaque" fontSize={36} fontFamily={FONTS.label} containerStyle={styles.masterLabel} />
               )}
 
-              <PlaqueText
-                text={word}
-                material={wordMaterial}
-                fontSize={42}
-                containerStyle={phase === 'master' ? styles.masterWord : styles.busterWord}
-              />
+              <PlaqueText text={word} material={wordMaterial} fontSize={42} containerStyle={phase === 'master' ? styles.masterWord : styles.busterWord} />
             </>
           )}
         </View>
@@ -269,12 +221,7 @@ export default function DevRematchOutcomePreviewScreen({ navigation, route }: Pr
         </Pressable>
       </SafeAreaView>
       {showOverlay && (
-        <PlaqueShell
-          word={preview.word}
-          finalArt={kind === 'king' ? kingPlaqueArt : busterPlaqueArt}
-          kind={kind}
-          onContinue={() => navigation.goBack()}
-        />
+        <PlaqueShell word={preview.word} finalArt={kind === 'king' ? kingPlaqueArt : busterPlaqueArt} kind={kind} onContinue={() => navigation.goBack()} />
       )}
     </View>
   );
@@ -304,7 +251,7 @@ const styles = StyleSheet.create({
   bookWordNeutral: { color: PW.color.gold },
   closeButton: { position: 'absolute', right: 18, top: 8, width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15,13,42,0.82)', borderWidth: 1, borderColor: PW.color.purpleSoft },
   closeText: { color: PW.color.white, fontSize: 28, lineHeight: 30 },
-  plaqueOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: 'rgba(15,13,42,0.42)' },
+  plaqueOverlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: 'rgba(15,13,42,0.42)' },
   plaqueColumn: { alignItems: 'center' },
   plaqueFrame: { width: 324, aspectRatio: PLAQUE_ASPECT, position: 'relative' },
   plaqueImage: { width: '100%', height: '100%' },
