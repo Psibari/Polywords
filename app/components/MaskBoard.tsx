@@ -21,6 +21,7 @@ import { WordStep } from '../game/types';
 import { useGameStore } from '../store/useGameStore';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
 import HeroBook, { type HeroBookVariant } from './ui/HeroBook';
+import RematchOutcomePlaque from './ui/RematchOutcomePlaque';
 import { FoilWord } from './ui/FoilWord';
 import { BookLight } from './ui/BookLight';
 import type { PollyEvent } from '../game/pollyVisitPolicy';
@@ -829,7 +830,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // re-render. Board remounts per word (key={`board-${stepIndex}`} in
   // GameScreen), so a fresh 'neutral' initializer is the only reset this
   // ever needs — no cleanup effect required.
-  const [bookVariant, setBookVariant] = useState<HeroBookVariant>('neutral');
+  const [bookVariant, setBookVariant] = useState<HeroBookVariant>(
+    step.isMasteryRematch === true ? 'mastered' : 'neutral'
+  );
 
   function triggerBoardShake() {
     boardShakeX.setValue(0);
@@ -1435,17 +1438,36 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         }
         if (!isBoss) return;
         if (step.isMasteryRematch === true) {
-          // MASTER'S REMATCH lost: nothing haunts the player, so the book stays
-          // the regular neutral rig and simply rests closed. No gray rig, no
-          // haunted slam sound, no board shake. BusterOutcomeOverlay owns the
-          // reveal and its single punch. Boss outcome music stays silent, as
-          // for every other boss outcome.
+          // MASTER'S REMATCH lost: the word stays mastered, but the visible
+          // hero book is demoted from the gold Master rig back to the regular
+          // purple book before the BUSTER plaque arrives. This is a visual
+          // demotion only; mastery persistence is intentionally untouched.
           setBossOutcomeMusicSilenced(true);
           bookOpenAnimationRef.current?.stop();
           bookOpenAnim.stopAnimation();
           bookIntakeGlowAnim.stopAnimation();
           bookOpenAnim.setValue(0);
           bookIntakeGlowAnim.setValue(0);
+          if (reduceMotion) {
+            setBookVariant('neutral');
+            return;
+          }
+          bookOpenAnimationRef.current = Animated.sequence([
+            Animated.timing(bookOpenAnim, {
+              toValue: 0.55,
+              duration: 220,
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.timing(bookOpenAnim, {
+              toValue: 0,
+              duration: 260,
+              easing: Easing.inOut(Easing.quad),
+              useNativeDriver: true,
+            }),
+          ]);
+          setTimeout(() => setBookVariant('neutral'), 260);
+          bookOpenAnimationRef.current.start();
           return;
         }
         // ── Boss path — the gray rig slam. Same shape of beat as the master
@@ -1466,7 +1488,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       onOutcomeReveal(outcome) {
         if (!isBoss) playSfx(resolveOutcomeRevealSfx(outcome));
         setShowOutcomeCard(false);
-        setTimeout(() => setShowOutcomeCard(true), 350);
+        const revealDelayMs = isBoss && step.isMasteryRematch === true && outcome === 'haunted'
+          ? 520
+          : 350;
+        setTimeout(() => setShowOutcomeCard(true), revealDelayMs);
       },
       onLivesDepleted() {
         Animated.timing(deckRedTint, {
@@ -1479,9 +1504,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   useEffect(() => {
     const outcome = mechanics.wordOutcome;
     if (!isBoss || !showOutcomeCard || outcome === 'none') return;
-    // A lost MASTER'S REMATCH has no haunted plaque sound; BusterOutcomeOverlay
-    // plays its own punch as BU lands.
-    if (outcome === 'haunted' && step.isMasteryRematch === true) return;
+    // Shared rematch plaque owns KING/BUSTER feedback in both production and DEV.
+    if (step.isMasteryRematch === true) return;
     const feedback = resolveBossOutcomePlaqueFeedback(outcome);
     if (feedback.sfx) playSfx(feedback.sfx);
     if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
@@ -2602,19 +2626,31 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       )}
 
       {mechanics.wordOutcome === 'mastered' && showOutcomeCard && (
-        <MasteredOutcomeOverlay
-          word={step.word}
-          headline={isHaunt ? 'BANISHED' : 'MASTERED'}
-          bonusLabel={mechanics.outcomeBonusLabel}
-          onContinue={continueOutcome}
-          isBoss={isBoss}
-          isRematch={isBoss && step.isMasteryRematch === true}
-        />
+        isBoss && step.isMasteryRematch === true ? (
+          <RematchOutcomePlaque
+            word={step.word}
+            kind="king"
+            onContinue={continueOutcome}
+          />
+        ) : (
+          <MasteredOutcomeOverlay
+            word={step.word}
+            headline={isHaunt ? 'BANISHED' : 'MASTERED'}
+            bonusLabel={mechanics.outcomeBonusLabel}
+            onContinue={continueOutcome}
+            isBoss={isBoss}
+            isRematch={false}
+          />
+        )
       )}
 
       {mechanics.wordOutcome === 'haunted' && showOutcomeCard && (
         isBoss && step.isMasteryRematch === true ? (
-          <BusterOutcomeOverlay word={step.word} onContinue={continueOutcome} />
+          <RematchOutcomePlaque
+            word={step.word}
+            kind="buster"
+            onContinue={continueOutcome}
+          />
         ) : (
           <HauntedOutcomeOverlay
             word={step.word}
