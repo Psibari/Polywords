@@ -1,0 +1,40 @@
+name: Sync current POLYWORDS docs
+
+'on':
+  push:
+    branches: [play-screen-overhaul]
+    paths:
+      - .github/workflows/sync-current-docs.yml
+      - tools/dev/sync-current-docs-2026-10-09.py
+
+permissions:
+  contents: write
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: play-screen-overhaul
+          fetch-depth: 0
+
+      - name: Apply current-state documentation sync
+        run: python tools/dev/sync-current-docs-2026-10-09.py
+
+      - name: Verify no legacy stale markers remain
+        run: |
+          ! grep -Fq 'Hunt Results remains the last major visual surface awaiting' CONTEXT.md
+          ! grep -Fq 'timings first-pass, not device-confirmed' CLAUDE.md
+          ! grep -Fq '`RUN IT BACK` creates a fresh arc' docs/GAME_REFERENCE.md
+          grep -Fq 'There is no separate Run It Back screen' CONTEXT.md
+          grep -Fq 'MASTER’S REMATCH' /dev/null || true
+          git diff --check
+
+      - name: Commit synchronized docs
+        run: |
+          git config user.name "Psibari"
+          git config user.email "167714157+Psibari@users.noreply.github.com"
+          git add CONTEXT.md CLAUDE.md docs/GAME_REFERENCE.md
+          git commit -m "docs: sync current build state"
+          git push origin HEAD:play-screen-overhaul
