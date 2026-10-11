@@ -35,6 +35,7 @@ export const HUNT_SKY_TUNING: AmbientSkyBackgroundProps = {
   // Default 8%/10% sits directly behind GameScreen's TopBar — push below it.
   moonTop: '20%',
   moonRight: '8%',
+  wallVeins: true,
 };
 
 export const BOSS_SKY_TUNING: AmbientSkyBackgroundProps = {
@@ -46,6 +47,7 @@ export const BOSS_SKY_TUNING: AmbientSkyBackgroundProps = {
   starTint: PW.color.gold,
   moonTop: '20%',
   moonRight: '8%',
+  wallVeins: true,
 };
 
 export const DAILY_SKY_TUNING: AmbientSkyBackgroundProps = {

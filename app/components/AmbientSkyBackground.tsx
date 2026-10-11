@@ -28,6 +28,8 @@ export type AmbientSkyBackgroundProps = {
   // screen top down to the bottom (cropped via GraphicGround's own
   // resizeMode="cover") instead of the default aspectRatio-based sizing.
   groundTopInset?: number;
+  // Hunt and Boss only: the wall's vein glow layers (wallVeinPulse.ts).
+  wallVeins?: boolean;
 };
 
 export default function AmbientSkyBackground({
@@ -41,6 +43,7 @@ export default function AmbientSkyBackground({
   moonRight = '10%',
   showGround = true,
   groundTopInset,
+  wallVeins = false,
 }: AmbientSkyBackgroundProps) {
   // Treat the pending (null) read as "reduce" — matches usePollyAmbientMotion's
   // `reduceMotion !== false` convention. Coercing null to false would start every
@@ -66,7 +69,7 @@ export default function AmbientSkyBackground({
               : { top: groundTopInset },
           ]}
         >
-          <GraphicGround />
+          <GraphicGround wallVeins={wallVeins} />
         </View>
       )}
     </View>

@@ -7,6 +7,7 @@ import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { resolveHuntHud, HuntReadTier } from '../game/huntControl';
+import { MOMENTUM_ACCENT_BY_TIER, resolveMomentumAccent } from '../ui/momentumAccent';
 import { useGameStore } from '../store/useGameStore';
 import { MaskBoard } from '../components/MaskBoard';
 import { BossBoard } from '../components/BossBoard';
@@ -198,15 +199,9 @@ function TopBar({
   const fellOffDropY = useRef(new Animated.Value(0)).current;
   const fellOffFlashOpacity = useRef(new Animated.Value(0)).current;
   const [showFellOffText, setShowFellOffText] = useState(false);
-  const ACCENT_BY_TIER: Record<HuntReadTier, string> = {
-    steady: PW.color.softWhite,
-    sharp: PW.color.lavender,
-    razorSharp: '#B388FF',
-    untrappable: PW.color.gold,
-  };
-  const hudAccent = hud.tier === 'rattled' ? PW.color.rose : ACCENT_BY_TIER[hud.readTier];
+  const hudAccent = resolveMomentumAccent(hud).color;
   const rungLitCount = READ_TIER_RANK[hud.readTier] + 1;
-  const rungLitColor = ACCENT_BY_TIER[hud.readTier];
+  const rungLitColor = MOMENTUM_ACCENT_BY_TIER[hud.readTier];
   const hudPulseScale = hudPulse.interpolate({
     inputRange: [0, 0.35, 1],
     outputRange: [1, 1.08, 1],
