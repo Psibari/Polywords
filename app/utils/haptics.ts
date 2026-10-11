@@ -3,6 +3,11 @@ import { useGameStore } from '../store/useGameStore';
 
 export type HapticCue =
   | 'gestureThreshold'
+  | 'pressSteady'
+  | 'pressSharp'
+  | 'pressRazor'
+  | 'pressUntrappable'
+  | 'pressHunted'
   | 'standardCorrect'
   | 'heightenedCorrect'
   | 'wrong'
@@ -77,6 +82,18 @@ export const Haptics = {
       // below the ceiling reserved for boss beats (Pete, 2026-09-12).
       case 'gestureThreshold':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
+      // A finger landing on a Hunt card, firmer with momentum. One impact,
+      // fired once at touch-down; the swipe itself stays silent. Start values
+      // pending a device pass (Pete, 2026-10-11). UNTRAPPABLE's Heavy is the
+      // one exception to Heavy being kept for Boss beats.
+      case 'pressSteady':
+      case 'pressSharp':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light);
+      case 'pressRazor':
+      case 'pressHunted':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      case 'pressUntrappable':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
       case 'standardCorrect':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
       // Heavy is reserved for boss beats, so this climbs by rhythm instead of

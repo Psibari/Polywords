@@ -1,3 +1,5 @@
+import type { MomentumStrength } from '../ui/momentumAccent';
+
 export type HuntFeedbackEvent =
   | 'routineReal'
   | 'routineTrap'
@@ -100,6 +102,26 @@ export function resolveTrapRejectHapticCue(tier: HuntHapticTier | undefined): Tr
   if (tier === 'light') return 'trapRejectLight';
   if (tier === 'medium') return 'trapRejectMedium';
   return 'trapRejectHeavy';
+}
+
+export type PressHapticCue =
+  | 'pressSteady'
+  | 'pressSharp'
+  | 'pressRazor'
+  | 'pressUntrappable'
+  | 'pressHunted';
+
+const PRESS_HAPTIC_CUE: Record<MomentumStrength, PressHapticCue> = {
+  steady: 'pressSteady',
+  sharp: 'pressSharp',
+  razorSharp: 'pressRazor',
+  untrappable: 'pressUntrappable',
+  hunted: 'pressHunted',
+};
+
+/** The touch-down cue for a Hunt card, by the same momentum as its glow. */
+export function resolvePressHapticCue(strength: MomentumStrength): PressHapticCue {
+  return PRESS_HAPTIC_CUE[strength];
 }
 
 /** `rank` is the new momentum read tier: 1 SHARP, 2 RAZOR SHARP, 3 UNTRAPPABLE. */

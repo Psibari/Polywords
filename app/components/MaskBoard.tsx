@@ -40,7 +40,10 @@ import { useBoardMechanics } from '../hooks/useBoardMechanics';
 import type { ChainTier } from '../hooks/useBoardMechanics';
 import MaskCardArtwork from './ui/MaskCardArtwork';
 import { BossGauntletSpines } from './BossGauntletSpines';
-import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
+import { resolveLiveHuntControl } from '../game/huntControl';
+import { resolveMomentumAccent } from '../ui/momentumAccent';
+import { pulseWallVeins } from './wallVeinPulse';
 import {
   BUSTER_WORD,
   resolveBossOutcomePlaqueFeedback,
@@ -53,7 +56,9 @@ import {
   resolveTrapRejectHapticCue,
   resolvePollySquawkOnWrong,
   resolveWrongSwipeSfx,
+  type ClaimHapticCue,
   type ScreenFlashEvent,
+  type TrapRejectHapticCue,
 } from '../game/huntFeedbackPolicy';
 import {
   ACTIVE_TILE_WHOLE_WORD_TEXT_PROPS,
@@ -706,6 +711,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // unrelated state (daily session, settings, pollyMemory...).
   const gameStepIndex = useGameStore(s => s.game.stepIndex);
   const gauntletCorrectCount = useGameStore(s => s.game.gauntletCorrectCount);
+  // The live momentum, through the same resolver as the HUD word (HUNTED at
+  // one feather, otherwise the streak tier), so the card glow always matches it.
+  const momentumTier = useGameStore(
+    s => resolveMomentumAccent(resolveLiveHuntControl(s.game.chainMultiplier, s.game.lives)).strength,
+  );
+  const reduceFlashes = useReducedFlashesPreference();
   const { pulseAnim, tension } = useHeartbeat();
   const tileBreatheAmount = useRef(new Animated.Value(0)).current;
   const isBoss  = step.eventType === 'bossWord';
@@ -908,16 +919,42 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
   const localWrongCountRef = useRef(0);
   const otherWrongCountRef = wrongSquawkCounter ?? localWrongCountRef;
+  // Outcome haptics fire when the player SEES the result, never at release
+  // (Pete, 2026-10-11). The judgement queues its cue here; the moment it
+  // becomes visible fires it once and clears it:
+  //   claim  -> the card reaching the book (handleCardTouch)
+  //   trap   -> the shard burst (handleEffect 'shard')
+  //   wrong  -> the card's red flash and snap back (handleWrongShown)
+  // A queue for claims, because a card can still be flying to the book when
+  // the next claim is judged. Trap and wrong show within a frame or two.
+  // Gauntlet cards are not part of this: their cues are unchanged.
+  const pendingClaimCuesRef = useRef<ClaimHapticCue[]>([]);
+  const pendingTrapCueRef = useRef<TrapRejectHapticCue | null>(null);
+  const pendingWrongCueRef = useRef(false);
+
+  function handleWrongShown() {
+    if (!pendingWrongCueRef.current) return;
+    pendingWrongCueRef.current = false;
+    Haptics.cueAsync('wrong');
+  }
+
   // Face half of the old triggerWrongSwipeFeedback — shared by normal-tile
   // and gauntlet-tile wrong swipes, same as the original single function was.
-  function performWrongSwipeFeedback(brokeRealChain: boolean, fellOffSeverity: 1 | 2 | 3 | null) {
+  // `wrongCueAtCard`: a Hunt card fires its 'wrong' cue when the card shows
+  // the miss (handleWrongShown); a gauntlet card keeps it here, unchanged.
+  function performWrongSwipeFeedback(
+    brokeRealChain: boolean,
+    fellOffSeverity: 1 | 2 | 3 | null,
+    wrongCueAtCard: boolean,
+  ) {
     playSfx(resolveWrongSwipeSfx(brokeRealChain));
     // Polly's smug squawk sits just behind the physical hit, but not on every
     // wrong swipe: always when a real chain fell off, every third otherwise.
     const squawk = resolvePollySquawkOnWrong(brokeRealChain, otherWrongCountRef.current);
     otherWrongCountRef.current = squawk.otherWrongCountAfter;
     if (squawk.squawk) setTimeout(() => playSfx('pollySqwawkShort'), 70);
-    Haptics.cueAsync('wrong');
+    if (wrongCueAtCard) pendingWrongCueRef.current = true;
+    else Haptics.cueAsync('wrong');
     // FELL OFF haptic layers on top of 'wrong' above, scaled to how far the
     // chain fell — nothing extra at severity null (broke from STEADY, there
     // was nothing real to lose).
@@ -998,6 +1035,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   const pendingAbsorbRef = useRef(false);
 
   function handleCardTouch() {
+    // Before the gate check: the claim was already judged, so its cue lands
+    // with the card even if the gate has moved on since.
+    const claimCue = pendingClaimCuesRef.current.shift();
+    if (claimCue) Haptics.cueAsync(claimCue);
     if (mechanics.gatePhase !== 'locked') return;
     triggerBookOpen();
     if (pendingAbsorbRef.current) {
@@ -1163,6 +1204,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
 
   function handleEffect(type: 'shard' | 'trail', pageX: number, pageY: number) {
     if (type === 'shard') {
+      const trapCue = pendingTrapCueRef.current;
+      pendingTrapCueRef.current = null;
+      if (trapCue) Haptics.cueAsync(trapCue);
       spawnEffect?.('shard', pageX, pageY, 'trap');
     } else {
       spawnEffect?.(type, pageX, pageY);
@@ -1249,6 +1293,16 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }
 
+  // A correct answer lights the wall's veins in the momentum it leaves the
+  // player on. Called from onRealClaimed/onTrapRejected, which the mechanics
+  // fire AFTER submitSwipeUp/submitSwipeDown has committed the chain, so the
+  // store already holds what the HUD is about to show. Wrong answers never
+  // pulse, so FELL OFF leaves the wall alone.
+  function pulseWallVeinsForCorrect() {
+    const { chainMultiplier, lives } = useGameStore.getState().game;
+    pulseWallVeins(resolveMomentumAccent(resolveLiveHuntControl(chainMultiplier, lives)), reduceFlashes);
+  }
+
   // ── mechanics (brain) ───────────────────────────────────────────
   // Every perform.* callback below is the FACE half of a function that used
   // to live directly in this component — see useBoardMechanics.ts for the
@@ -1260,7 +1314,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     perform: {
       onRealClaimed({ mask, tier }) {
         playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
-        Haptics.cueAsync(resolveClaimHapticCue(step.hapticTier));
+        pendingClaimCuesRef.current.push(resolveClaimHapticCue(step.hapticTier));
+        pulseWallVeinsForCorrect();
         // Not fired directly — handleCardTouch fires it at actual arrival,
         // synced with triggerBookOpen. The accepted phrase leaves with the
         // card; only the book/ring absorption feedback remains on screen.
@@ -1268,14 +1323,17 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
       },
       onTrapRejected({ tier }) {
         playSfx('trapShatter', { rate: CHAIN_TIER_SFX_RATE[tier] });
-        Haptics.cueAsync(resolveTrapRejectHapticCue(step.hapticTier));
+        pendingTrapCueRef.current = resolveTrapRejectHapticCue(step.hapticTier);
+        pulseWallVeinsForCorrect();
       },
-      onWrongSwipe({ brokeRealChain, fellOffSeverity }) {
-        performWrongSwipeFeedback(brokeRealChain, fellOffSeverity);
+      onWrongSwipe({ mask, brokeRealChain, fellOffSeverity }) {
+        const isGauntletCard = mechanics.gauntletTiles.some(tile => tile.mask.id === mask.id);
+        performWrongSwipeFeedback(brokeRealChain, fellOffSeverity, !isGauntletCard);
       },
       onGauntletCorrect({ swipedUp }) {
         playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
         Haptics.cueAsync('bossCorrect');
+        pulseWallVeinsForCorrect();
         // gauntletCorrectCount in the store hasn't incremented for this
         // tile yet (resolveGauntletTile calls this callback before it calls
         // incrementGauntletCorrectCount) — same for mechanics.finalTileStates,
@@ -2371,11 +2429,13 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
                     onEffect={handleEffect}
                     onSwipeStart={() => { playSfx('tileSwipe'); onSwipeAttempt?.(); }}
                     onPressHoldStart={() => playSfx('pressHoldStart')}
+                    momentumTier={momentumTier}
                     onExitComplete={() => {
                       if (!showDecisionCard) setExitedHiddenTopId(mechanics.topMask!.id);
                       mechanics.onTileExitComplete(mechanics.topMask!.id);
                     }}
                     onCardTouch={handleCardTouch}
+                    onWrongShown={handleWrongShown}
                     onMeasuredHeightChange={handleActiveTileHeightChange}
                     wordY={wordZoneMeasured ? wordScreenY : undefined}
                     intakeY={wordZoneMeasured ? wordScreenY + 73 : undefined}

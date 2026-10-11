@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   resolveClaimHapticCue,
   resolveFXAccessibility,
+  resolvePressHapticCue,
   resolveTierUpHapticCue,
   resolveTrapRejectHapticCue,
   resolveScreenFlash,
@@ -86,6 +87,11 @@ assert.deepEqual(
   [1, 2, 3].map(resolveTierUpHapticCue),
   ['tierUp', 'tierUpRazor', 'tierUpUntrappable'],
   'each momentum level-up has its own haptic shape',
+);
+assert.deepEqual(
+  (['steady', 'sharp', 'razorSharp', 'untrappable', 'hunted'] as const).map(resolvePressHapticCue),
+  ['pressSteady', 'pressSharp', 'pressRazor', 'pressUntrappable', 'pressHunted'],
+  'the touch-down cue follows the same momentum as the card glow',
 );
 
 // Polly's squawk: always when a real chain fell off, every third other wrong swipe.
