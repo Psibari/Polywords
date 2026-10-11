@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-09. Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-11. Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -71,6 +71,17 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   retired while internal scoring remains intact. MASTERED / HAUNTED / BANISHED use the shared
   physical plaque-text treatment. The split claim/trap/tier-up haptics and wrong-swipe squawk rule
   remain device-checked. `Bird brain` remains Results-only unless Pete rules otherwise.
+- **Hunt momentum feedback (2026-10-11): built on `play-screen-overhaul`, NOT committed.**
+  Shared momentum accent (`app/ui/momentumAccent.ts`); wall vein pulse (`wallVeinPulse.ts`,
+  generated `assets/images/background/wall-veins/` art from `tools/art/build_wall_veins.py`,
+  `GraphicGround` / `AmbientSkyBackground` / `ambientSkyTuning`); pressed-card glow and press-down
+  haptics (`SwipeMask`, `haptics.ts`, `huntFeedbackPolicy.ts`); outcome haptics retimed to the
+  visible result (`MaskBoard` plus SwipeMask's `onWrongShown`); SHARP now `#6EC3FF`; wall torches
+  and `GroundTorch.tsx` removed. Durable details live in `CLAUDE.md`. Device-tested in Expo Go only,
+  which Pete does not fully trust for feel: veins visible with good timing; press and outcome
+  haptics felt and approved; pressed-card glow NOT visible (known clipping cause, left as is by
+  Pete). Pending: one TestFlight build after the remaining prompts to judge haptics, vein pulse
+  and glow on a real build.
 - **TestFlight:** build/submit/install works end to end. Store name remains
   `POLYWORDS: Hunt or Be Trapped`; iPad support is off.
 - **Website:** live at https://psibari.github.io/Polywords/ with /privacy/ and /support/.
@@ -121,6 +132,26 @@ In order:
 5. Free vs paid: Pete's decision.
 6. Android device testing beyond one phone.
 7. Buy polywords.app, then custom domain + share-link switch.
+
+Next job (Pete, 2026-10-11): the Daily Challenge screen art, started in its own session with a
+read-only audit first.
+
+Hunt momentum feedback, open:
+- Pressed-card glow is clipped by its own card view (`CLAUDE.md` known issue). Left as is.
+- A device screenshot at STEADY shows the lifted card overlapping the "SWIPE UP TO CLAIM" label.
+  Not investigated; separate job.
+- The four momentum rungs follow the streak colour even while HUNTED (existing behaviour). Pete
+  has not ruled.
+- The board's top spacing (`DEFAULT_GRID_PADDING_TOP` = 110 in `tileTextLayout.ts`, shrinking to
+  48 on short boards) was raised for the old torches, per the stale comment on
+  `styles.gridWrap` in `MaskBoard.tsx` (that style's own 110 is overridden at runtime). Check on
+  a phone before changing.
+- Gauntlet black-strip bug (`recessCap` in `BossGauntletSpines.tsx`) still open.
+- Possible dropped or late claim/trap haptic cue (`CLAUDE.md` known risks) is unconfirmed on
+  device.
+- Android pass deferred: shadow colour only on Android 9+, haptic styles collapse to three
+  strengths.
+- Unused haptic cues and dead overlay code are listed in `CLAUDE.md`.
 
 Open, needs Pete's ruling:
 - FAST `fast_r04` "WHAT BREAKFAST BREAKS" contains the headword (BREAKFAST).
