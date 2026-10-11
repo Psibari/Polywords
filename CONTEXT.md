@@ -31,8 +31,9 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   that gate on pushes to play-screen-overhaul and on pull requests.
 - **First-run onboarding:** merged, device-approved, locked. FINE teaches recognition on the real
   board; HUD lessons teach feathers, momentum, a broken run and Hunt progress.
-- **Daily castle:** device-approved and locked. Do not reopen the castle art for the deferred
-  answer-stone entrance issue.
+- **Daily castle:** the Daily Challenge screen art is UNLOCKED for rework (Pete's ruling
+  2026-10-11). The next job is a read-only audit of the Daily Challenge screen first, then fixes,
+  one concern per prompt.
 - **Polybook:** portrait Living Journal interior is device-approved and locked. Closed book opens
   to one portrait page; navigation is TODAY / JOURNAL / MASTERY with bottom forked ribbons.
   Closed-cover side-ribbon cleanup remains deferred.
@@ -210,7 +211,8 @@ Open, needs Pete's ruling:
 - Crown/Polybook progression, additional relationship states, or Polybook interior changes.
   The permanent Polly turn is approved in principle but unbuilt (lines unwritten).
 - Changes to the device-approved `BROW_FOLLOW = 0.33`.
-- Daily answer-stone initial pop-in or decorative passes on approved screens.
+- Decorative passes on approved screens other than the Daily Challenge (its art is unlocked,
+  Pete 2026-10-11).
 - Re-skinning strong native surfaces merely to make screens look alike.
 - Deleting the old Lexicon rollback path without Pete's decision.
 - Deleting the old Polly sprites or `POLLY_POSE_SCALE` before every consumer has moved to the
