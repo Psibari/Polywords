@@ -16,15 +16,18 @@ import Animated, {
   withTiming,
   withSequence,
   useAnimatedStyle,
+  interpolateColor,
   Easing as ReaEasing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Haptics } from '../utils/haptics';
+import { resolvePressHapticCue } from '../game/huntFeedbackPolicy';
 import { Mask } from '../game/types';
 import { FluentEmoji } from './FluentEmoji';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { heroBookMaterial } from '../ui/pwMaterials';
+import { momentumGlowColor, type MomentumStrength } from '../ui/momentumAccent';
 import { ShardVariant } from '../ui/pwEffects';
 import {
   huntActionsForInputMode,
@@ -53,6 +56,21 @@ export type SwipeMaskState = 'idle' | 'correct' | 'trap-caught' | 'wrong' | 'hid
 
 const TILE_GAP        = 6;
 
+// The pressed card's momentum glow, at full lift: opacity / radius. At rest a
+// normal card keeps its plain dark drop shadow (styles.tile); as the card
+// lifts, that shadow turns into this glow in the tier's colour.
+// Raised after the first device pass, where STEADY's 0.10 read as nothing
+// (Pete, 2026-10-11).
+const MOMENTUM_PRESS_GLOW: Record<MomentumStrength, { opacity: number; radius: number }> = {
+  steady: { opacity: 0.30, radius: 22 },
+  sharp: { opacity: 0.55, radius: 36 },
+  razorSharp: { opacity: 0.75, radius: 50 },
+  untrappable: { opacity: 1.0, radius: 66 },
+  hunted: { opacity: 0.80, radius: 44 },
+};
+// styles.tile's resting shadow, which the glow grows out of.
+const TILE_REST_SHADOW = { opacity: 0.36, radius: 18, offsetY: 12 };
+
 type Props = {
   mask: Mask;
   onSwipeUp: () => void;
@@ -78,8 +96,12 @@ type Props = {
   onEffect?: (type: 'shard' | 'trail', x: number, y: number, variant?: ShardVariant) => void;
   onSwipeStart?: () => void;
   onPressHoldStart?: () => void;
+  /** Colours the normal card's pressed glow. */
+  momentumTier?: MomentumStrength;
   onExitComplete?: () => void;
   onCardTouch?: () => void;
+  /** The frame a wrong card starts showing the miss (red flash, snap back). */
+  onWrongShown?: () => void;
   onMeasuredHeightChange?: (maskId: string, height: number) => void;
   disabled?: boolean;
   inputMode?: HuntTileInputMode;
@@ -127,8 +149,10 @@ export function SwipeMask({
   onEffect,
   onSwipeStart,
   onPressHoldStart,
+  momentumTier = 'steady',
   onExitComplete,
   onCardTouch,
+  onWrongShown,
   onMeasuredHeightChange,
   disabled = false,
   inputMode = 'both',
@@ -201,6 +225,7 @@ export function SwipeMask({
   const onEffectRef              = useRef(onEffect);
   const onSwipeStartRef          = useRef(onSwipeStart);
   const onPressHoldStartRef      = useRef(onPressHoldStart);
+  const momentumTierRef          = useRef(momentumTier);
   const onExitCompleteRef        = useRef(onExitComplete);
   const onMeasuredHeightChangeRef = useRef(onMeasuredHeightChange);
   const disabledRef              = useRef(disabled);
@@ -224,10 +249,13 @@ export function SwipeMask({
   useEffect(() => { onEffectRef.current      = onEffect;      }, [onEffect]);
   useEffect(() => { onSwipeStartRef.current = onSwipeStart; }, [onSwipeStart]);
   useEffect(() => { onPressHoldStartRef.current = onPressHoldStart; }, [onPressHoldStart]);
+  useEffect(() => { momentumTierRef.current = momentumTier; }, [momentumTier]);
   useEffect(() => { onExitCompleteRef.current = onExitComplete; }, [onExitComplete]);
   useEffect(() => { onMeasuredHeightChangeRef.current = onMeasuredHeightChange; }, [onMeasuredHeightChange]);
   const onCardTouchRef = useRef(onCardTouch);
   useEffect(() => { onCardTouchRef.current = onCardTouch; }, [onCardTouch]);
+  const onWrongShownRef = useRef(onWrongShown);
+  useEffect(() => { onWrongShownRef.current = onWrongShown; }, [onWrongShown]);
   useEffect(() => { disabledRef.current = disabled; }, [disabled]);
   useEffect(() => { inputModeRef.current = inputMode; }, [inputMode]);
   useEffect(() => { onDecisionCommittedRef.current = onDecisionCommitted; }, [onDecisionCommitted]);
@@ -456,6 +484,7 @@ export function SwipeMask({
     // ── WRONG — failed move, then tile exits ─────────────────
     if (s === 'wrong') {
       exitCompleteFiredRef.current = false;
+      onWrongShownRef.current?.();
       grabLift.value = withTiming(0, { duration: 120 });
       if (!reduceFlashes) {
         setFlashRed(true);
@@ -602,6 +631,8 @@ export function SwipeMask({
     };
   }, [s, reduceFlashes]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const pressGlow = MOMENTUM_PRESS_GLOW[momentumTier];
+  const pressGlowColor = momentumGlowColor(momentumTier);
   const tileAnimStyle = useAnimatedStyle(() => {
     const liftAmount = Math.max(0, Math.min(1, -grabLift.value / 10));
     return {
@@ -628,8 +659,19 @@ export function SwipeMask({
           }
         : !isSpecialSplit && !bookMaterial
         ? {
-            shadowOpacity: 0.36 + (liftAmount * 0.10),
-            shadowRadius: 18 + (liftAmount * 6),
+            // Exactly styles.tile's drop shadow at rest; the momentum glow
+            // (centred, tier-coloured) at full lift. A shadow only, so it can
+            // never sit over the card's copy.
+            shadowColor: interpolateColor(
+              liftAmount,
+              [0, 1],
+              [PW.color.shadow, pressGlowColor],
+            ),
+            shadowOffset: { width: 0, height: TILE_REST_SHADOW.offsetY * (1 - liftAmount) },
+            shadowOpacity:
+              TILE_REST_SHADOW.opacity + (pressGlow.opacity - TILE_REST_SHADOW.opacity) * liftAmount,
+            shadowRadius:
+              TILE_REST_SHADOW.radius + (pressGlow.radius - TILE_REST_SHADOW.radius) * liftAmount,
             elevation: 10 + (liftAmount * 6),
           }
         : {}),
@@ -654,6 +696,10 @@ export function SwipeMask({
         grabLift.value         = withSpring(-10, { damping: 16, stiffness: 420 });
         scale.value            = withSpring(1.04, { damping: 16, stiffness: 420 });
         onPressHoldStartRef.current?.();
+        // Hunt cards: one touch-down cue, firmer with momentum. Everything
+        // after it stays silent until the result lands, so letting go reads
+        // as letting go. The gauntlet card keeps its own haptics untouched.
+        if (!gauntletCard) Haptics.cueAsync(resolvePressHapticCue(momentumTierRef.current));
       },
 
       onPanResponderMove: (_, g) => {
@@ -677,7 +723,7 @@ export function SwipeMask({
         if (thresholdDirection && !hasThresholdFiredRef.current) {
           hasThresholdFiredRef.current = true;
           onSwipeStartRef.current?.();
-          Haptics.cueAsync('gestureThreshold');
+          if (gauntletCard) Haptics.cueAsync('gestureThreshold');
         }
       },
 
