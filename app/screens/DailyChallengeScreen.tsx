@@ -102,10 +102,6 @@ const DailyCastleTuningPanel = __DEV__
   ? require('../dev/DailyCastleTuningPanel').default
   : null;
 
-const DAILY_UI_PANEL_NEUTRAL = require('../../assets/images/dailycastle/ui/daily_utility_panel_neutral.png');
-const DAILY_UI_ACTION_PRIMARY = require('../../assets/images/dailycastle/ui/daily_action_plate_primary.png');
-const DAILY_UI_ACTION_SECONDARY = require('../../assets/images/dailycastle/ui/daily_action_plate_secondary.png');
-
 
 // Maps store claim result reaction -> PollyDailyPerch prop
 
@@ -1274,13 +1270,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       {isReadyToStart && (
         <View style={styles.startGate}>
           <View style={styles.startCard}>
-            <View style={styles.startCardArtworkFrame} pointerEvents="none">
-              <Image
-                source={DAILY_UI_PANEL_NEUTRAL}
-                resizeMode="stretch"
-                style={styles.startCardArtwork}
-              />
-            </View>
             <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
             <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
             <Text style={styles.startRule}>FIVE WORDS · TWO LIVES</Text>
@@ -1300,13 +1289,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 dailyStarting && styles.startButtonDisabled,
               ]}
             >
-              <View style={styles.startButtonArtworkFrame} pointerEvents="none">
-                <Image
-                  source={DAILY_UI_ACTION_PRIMARY}
-                  resizeMode="stretch"
-                  style={styles.startButtonArtwork}
-                />
-              </View>
               <Text style={styles.startButtonText}>
                 {dailyStarting ? 'OPENING…' : 'BEGIN DAILY'}
               </Text>
@@ -1317,13 +1299,6 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               onPress={handleHome}
               style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
             >
-              <View style={styles.startButtonArtworkFrame} pointerEvents="none">
-                <Image
-                  source={DAILY_UI_ACTION_SECONDARY}
-                  resizeMode="stretch"
-                  style={styles.startButtonArtwork}
-                />
-              </View>
               <Text style={styles.startHomeText}>NOT NOW</Text>
             </Pressable>
           </View>
@@ -1462,24 +1437,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
+  // Same flat card as the results card (res.card), with a neutral white rim:
+  // gold and rose there mean win and loss.
   startCard: {
     width: '100%',
-    maxWidth: 420,
-    paddingHorizontal: 34,
-    paddingVertical: 36,
+    backgroundColor: 'rgba(26,24,48,0.94)',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: PW.color.white,
+    padding: 20,
     alignItems: 'center',
-    overflow: 'visible',
-  },
-  startCardArtworkFrame: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-  },
-  startCardArtwork: {
-    width: '100%',
-    height: '100%',
   },
   startKicker: {
     color: dailyResultsMaterial.challengeLabel,
@@ -1515,23 +1482,14 @@ const styles = StyleSheet.create({
     marginTop: 18,
     textAlign: 'center',
   },
+  // BEGIN DAILY matches the results SHARE RESULT button (res.shareBtn).
   startButton: {
+    backgroundColor: dailyResultsMaterial.shareBtnBg,
+    borderRadius: 14,
+    paddingVertical: 14,
     width: '100%',
-    minHeight: 62,
     alignItems: 'center',
-    justifyContent: 'center',
     marginTop: 22,
-  },
-  startButtonArtworkFrame: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-  },
-  startButtonArtwork: {
-    width: '100%',
-    height: '100%',
   },
   startButtonPressed: {
     opacity: 0.82,
@@ -1540,24 +1498,24 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   startButtonText: {
-    color: '#F2EEF8',
+    color: dailyResultsMaterial.shareBtnText,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 17,
-    letterSpacing: 2.5,
+    letterSpacing: 2,
   },
+  // NOT NOW matches the results HOME link (res.homeBtn).
   startHomeButton: {
-    width: '100%',
-    minHeight: 54,
+    paddingVertical: 10,
     alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
     marginTop: 6,
   },
   startHomeText: {
-    color: '#CFC7DC',
-    fontFamily: FONTS.label,
+    color: dailyResultsMaterial.homeText,
+    fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 13,
+    fontSize: 15,
     letterSpacing: 2,
   },
   // Castle arch — front frame at top, in front of gate
