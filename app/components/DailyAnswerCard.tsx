@@ -36,6 +36,8 @@ import {
 import { DAILY_ANSWER_FONT, fitDailyAnswerFontSize } from '../ui/dailyCastleScene';
 import {
   DAILY_PLAQUE_INPUT,
+  DAILY_PLAQUE_OPACITY,
+  DAILY_PLAQUE_OPACITY_INPUT,
   DAILY_PLAQUE_PROUD,
   DAILY_PLAQUE_DROP,
   DAILY_PLAQUE_SCALE,
@@ -212,9 +214,10 @@ export default function DailyAnswerCard({
       entryOpacity.setValue(1);
       return;
     }
-    // Castle depth is parent-owned: this wrapper stays fully opaque and lets
-    // the stage's one progress value coordinate plaque, socket, cap and
-    // shadows. The legacy left/right entrances below remain card-owned.
+    // Castle depth is parent-owned: this wrapper's own entry values rest, and
+    // the stage's one progress value coordinates the plaque's visibility,
+    // socket, cap and shadows. The legacy left/right entrances below remain
+    // card-owned.
     if (enterFromRecess && recessProgress) {
       entryTranslateX.setValue(0);
       entryScale.setValue(1);
@@ -519,6 +522,18 @@ export default function DailyAnswerCard({
         outputRange: DAILY_PLAQUE_DROP,
       })
     : entryTranslateY;
+  // Hidden in the wall until its turn, visible early in the zoom. A node in
+  // both branches, never a plain number.
+  const entryShellOpacity = entering
+    ? RNAnimated.multiply(
+        entryOpacity,
+        recessProgress.interpolate({
+          inputRange: DAILY_PLAQUE_OPACITY_INPUT,
+          outputRange: DAILY_PLAQUE_OPACITY,
+          extrapolate: 'clamp',
+        }),
+      )
+    : entryOpacity;
   // Out of the wall, the block shows the held pop's own top face and a deeper
   // wall shadow, most of their full depth at the farthest point, gone again
   // once it is flush. Every value reads 0 before the punch and after the
@@ -587,7 +602,7 @@ export default function DailyAnswerCard({
         (activelyHeld || state === 'correct') && styles.entryShellClaiming,
         (!activelyHeld && state === 'wrong') && styles.entryShellFailing,
         {
-          opacity: entryOpacity,
+          opacity: entryShellOpacity,
           transform: [
             { translateX: entryTranslateX },
             { translateY: entryDepthDrop },

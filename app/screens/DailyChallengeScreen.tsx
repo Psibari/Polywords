@@ -89,7 +89,7 @@ import {
   dailyCoinFinaleRestingStep,
   dailyCoinFinaleTotalMs,
 } from '../ui/dailyCoinFinale';
-import { dailyPlaqueEntranceMs } from '../ui/dailyPlaqueEntrance';
+import { dailyPlaqueEntranceMode, dailyPlaqueLockMs } from '../ui/dailyPlaqueEntrance';
 import PollyDailyPerch from '../components/PollyDailyPerch';
 import { pollyScreenPoseArt } from '../ui/pollyScreenPoses';
 import {
@@ -683,16 +683,18 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayedDailySession?.currentRoundIndex]);
 
-  // BLOCK ENTRANCE — a new round's blocks punch out of the wall the moment
+  // BLOCK ENTRANCE — a new round's blocks come out of the wall the moment
   // their slots mount (DailyCastleStage, keyed by this round index). Hold
   // input until the last is flush. Same inputs as the slots' own effect
-  // (round, reduce motion), so the lock and the motion start together. Must
-  // stay above the unlock gate so the gate sees the lock in the same commit.
+  // (round, reduce motion), so the lock and the motion start together. While
+  // reduce motion is still unknown the blocks wait hidden, so input stays
+  // held until the failsafe at most (dailyPlaqueLockMs). Must stay above the
+  // unlock gate so the gate sees the lock in the same commit.
   const plaquesInWall =
     dailyInitialized && displayedDailySession?.status === 'active';
   useEffect(() => {
     const entranceMs = plaquesInWall
-      ? dailyPlaqueEntranceMs(reduceMotion === false)
+      ? dailyPlaqueLockMs(dailyPlaqueEntranceMode(reduceMotion, false))
       : 0;
     if (entranceMs <= 0) {
       setPlaquesPresenting(false);

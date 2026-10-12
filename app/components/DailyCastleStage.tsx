@@ -25,10 +25,16 @@ import { dailyStoneSeatSfx, playSfx } from '../audio/sfx';
 import { Haptics } from '../utils/haptics';
 import {
   DAILY_PLAQUE_ENTRANCE,
+  DAILY_PLAQUE_INITIAL_PROGRESS,
+  DAILY_PLAQUE_MOTION_FAILSAFE_MS,
   DAILY_PLAQUE_PEAK,
   DAILY_STONE_SEAT_RATES,
+  DAILY_WALL_TREMBLE_X,
+  DAILY_WALL_TREMBLE_Y,
   dailyPlaqueEntranceCues,
   dailyPlaqueEntranceDelay,
+  dailyPlaqueEntranceMode,
+  dailyWallTrembleMs,
 } from '../ui/dailyPlaqueEntrance';
 import {
   DAILY_CASTLE_FLIGHT,
@@ -135,6 +141,8 @@ type PlaqueSlotProps = {
   index: number;
   reduceMotion: boolean | null;
   roundKey: number;
+  /** Starts the wall's tremble; the block carrying the grind calls it. */
+  onWallTremble: () => void;
 };
 
 /** A row of blocks seats in the wall: its thud and its tap, together. */
@@ -145,42 +153,68 @@ function seatDailyPlaqueRow(row: number) {
   Haptics.cueAsync('dailyStoneSeat');
 }
 
-// A new round's block punches out of the wall (ui/dailyPlaqueEntrance.ts):
-// flush → a fast punch out toward the player → a short heavy settle back
-// flush. One progress value per slot drives the block's drop, scale, top face
+// A new round's block comes out of the wall (ui/dailyPlaqueEntrance.ts):
+// hidden, small and deep → zooms forward past flush → settles flush. One
+// progress value per slot drives the block's opacity, scale, drop, top face
 // and wall shadow in DailyAnswerCard. The slots go in reading order.
 function DailyCastlePlaqueSlot({
   child,
   index,
   reduceMotion,
   roundKey,
+  onWallTremble,
 }: PlaqueSlotProps) {
   const answerCard = React.isValidElement<DailyAnswerCardProps>(child)
     ? child
     : null;
-  const plaqueProgress = useRef(new Animated.Value(1)).current;
+  // Hidden from the very first frame: the slot remounts every round
+  // (keyed by roundKey), so no round ever paints a finished block first.
+  const plaqueProgress = useRef(new Animated.Value(DAILY_PLAQUE_INITIAL_PROGRESS)).current;
+  // Once the failsafe has shown this round's blocks in place they stay that
+  // way, even if the preference resolves to motion afterwards.
+  const failsafeFiredRef = useRef(false);
+  const seatedStillRef = useRef(false);
 
   useEffect(() => {
     plaqueProgress.stopAnimation();
-    // Unknown yet (the preference is still loading): show the blocks in
-    // place, silently. The effect runs again once it is known.
-    if (reduceMotion === null) {
+
+    // Blocks simply in the wall. The set gets one thud and one tap so a new
+    // round is still felt; only once per round.
+    const showStill = () => {
       plaqueProgress.setValue(1);
-      return;
-    }
-    // Reduced motion: the blocks are simply in the wall, and the set gets
-    // one thud and one tap so a new round is still felt.
-    if (reduceMotion) {
-      plaqueProgress.setValue(1);
+      if (seatedStillRef.current) return;
+      seatedStillRef.current = true;
       const { seatRow } = dailyPlaqueEntranceCues(index, false);
       if (seatRow !== null) seatDailyPlaqueRow(seatRow);
+    };
+
+    const mode = failsafeFiredRef.current
+      ? 'still'
+      : dailyPlaqueEntranceMode(reduceMotion, false);
+    // Unknown yet (the preference is still loading): keep the blocks hidden.
+    // The effect runs again once it is known; if it is still unknown after
+    // the failsafe, behave as reduced motion.
+    if (mode === 'waiting') {
+      plaqueProgress.setValue(DAILY_PLAQUE_INITIAL_PROGRESS);
+      const failsafeTimer = setTimeout(() => {
+        failsafeFiredRef.current = true;
+        showStill();
+      }, DAILY_PLAQUE_MOTION_FAILSAFE_MS);
+      return () => clearTimeout(failsafeTimer);
+    }
+    if (mode === 'still') {
+      showStill();
       return;
     }
 
     const cues = dailyPlaqueEntranceCues(index, true);
-    plaqueProgress.setValue(0);
+    plaqueProgress.setValue(DAILY_PLAQUE_INITIAL_PROGRESS);
     const releaseTimer = setTimeout(() => {
-      if (cues.shift) playSfx('dailyStoneShift');
+      // The grind and the wall's tremble start together, with the first block.
+      if (cues.shift) {
+        playSfx('dailyStoneShift');
+        onWallTremble();
+      }
       Animated.timing(plaqueProgress, {
         toValue: DAILY_PLAQUE_PEAK,
         duration: DAILY_PLAQUE_ENTRANCE.punchMs,
@@ -207,12 +241,12 @@ function DailyCastlePlaqueSlot({
       clearTimeout(releaseTimer);
       plaqueProgress.stopAnimation();
     };
-  }, [index, plaqueProgress, reduceMotion, roundKey]);
+  }, [index, onWallTremble, plaqueProgress, reduceMotion, roundKey]);
 
   if (!answerCard) return <>{child}</>;
 
-  // The recess is part of the wall art, under the block; the block's own
-  // drop, top face and shadow (DailyAnswerCard) carry it out and back.
+  // The wall's dark panel shows where the block is hidden; the block's own
+  // opacity, scale, drop, top face and shadow (DailyAnswerCard) bring it out.
   return React.cloneElement(answerCard, { recessProgress: plaqueProgress });
 }
 
@@ -223,7 +257,8 @@ function DailyCastlePlaqueSlot({
  * Layer order, back to front: sky (screen) → tunnel → plaque going in (back
  * flight) → gate → arch → gold hit (cap blooms, trim, tint) → floor coins →
  * wall → round markers → plaques in the wall → plaque being thrown (front
- * flight).
+ * flight). The wall, its sill strip, the round markers and the plaques in the
+ * wall are one group that trembles while a round's blocks come out.
  */
 export default function DailyCastleStage({
   gatePosition,
@@ -247,6 +282,31 @@ export default function DailyCastleStage({
   // True under Reduce Motion (or while it is unknown) as well as Reduce
   // Flashes: the gold hit keeps its gold, loses its overshoot and swell.
   const calmGoldHit = useReducedFlashesPreference();
+
+  // The answer wall trembles while a round's blocks come out
+  // (ui/dailyPlaqueEntrance.ts): Daily-local, never the Hunt wall's channel.
+  // Linear 0 → 1; the keyframes carry the shape and rest at exactly 0 at
+  // both ends.
+  const wallTremble = useRef(new Animated.Value(0)).current;
+  const wallTrembleTransform = useMemo(() => [
+    { translateX: wallTremble.interpolate(DAILY_WALL_TREMBLE_X) },
+    { translateY: wallTremble.interpolate(DAILY_WALL_TREMBLE_Y) },
+  ], [wallTremble]);
+  const startWallTremble = useCallback(() => {
+    wallTremble.stopAnimation();
+    wallTremble.setValue(0);
+    Animated.timing(wallTremble, {
+      toValue: 1,
+      duration: dailyWallTrembleMs(),
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start();
+  }, [wallTremble]);
+  // A new round, or leaving, never inherits an interrupted tremble's offset.
+  useEffect(() => {
+    wallTremble.stopAnimation();
+    wallTremble.setValue(0);
+  }, [roundKey, wallTremble]);
   const tuning: Tuning = __DEV__
     ? useDailyCastleTuning((s: Tuning) => s)
     : DEFAULTS;
@@ -433,30 +493,6 @@ export default function DailyCastleStage({
         }]}
         resizeMode="stretch"
       />
-      <Image
-        source={CASTLE_WALL}
-        style={[styles.layer, styles.castleWall, {
-          left: sceneLeft,
-          top: sceneTop,
-          width: frame.width,
-          height: frame.height,
-        }]}
-        resizeMode="stretch"
-      />
-      {sceneTop + frame.height < windowHeight - stageOffset.y && (
-        // The scene rose to clear the action label; continue the sill to the
-        // screen edge instead of showing sky under it.
-        <View
-          pointerEvents="none"
-          style={[styles.layer, styles.castleWall, {
-            left: 0,
-            right: 0,
-            top: sceneTop + frame.height,
-            bottom: 0,
-            backgroundColor: DAILY_ANSWER_WALL_FOOT,
-          }]}
-        />
-      )}
 
       {/* Progress on the courtyard floor: a coin per solved round, gold on
           the win. Above the arch layer, below the answer wall. */}
@@ -509,76 +545,114 @@ export default function DailyCastleStage({
         </View>
       </View>
 
-      {/* Round progress on the frieze: over the wall art, under the blocks, so a
-          popped block's top face stays in front of it. */}
-      {roundMarkers && (() => {
-        const plate = toDailyCastleScreen(frame, resolveDailyRoundMarkers(roundMarkers.total));
-        return (
+      {/* The wall group: the wall, its sill strip, the round markers and the
+          plaques in it, one stacking group at the wall's zIndex so its
+          members keep their order (35 → 38 → 40) and nothing else sits
+          between them. It trembles while a round's blocks come out and rests
+          at exactly zero otherwise. Never flattened, for the same reason as
+          the stage. The thrown plaque stays outside, above it. */}
+      <Animated.View
+        pointerEvents="box-none"
+        collapsable={false}
+        style={[styles.wallGroup, { transform: wallTrembleTransform }]}
+      >
+        <Image
+          source={CASTLE_WALL}
+          style={[styles.layer, styles.castleWall, {
+            left: sceneLeft,
+            top: sceneTop,
+            width: frame.width,
+            height: frame.height,
+          }]}
+          resizeMode="stretch"
+        />
+        {sceneTop + frame.height < windowHeight - stageOffset.y && (
+          // The scene rose to clear the action label; continue the sill to the
+          // screen edge instead of showing sky under it.
           <View
             pointerEvents="none"
-            style={[styles.layer, styles.roundMarkers, {
-              left: plate.x + sceneLeft,
-              top: plate.y - stageOffset.y,
-              width: plate.width,
-              height: plate.height,
+            style={[styles.layer, styles.castleWall, {
+              left: 0,
+              right: 0,
+              top: sceneTop + frame.height,
+              bottom: 0,
+              backgroundColor: DAILY_ANSWER_WALL_FOOT,
             }]}
-          >
-            <DailyRoundMarkers
-              currentRound={roundMarkers.current}
-              total={roundMarkers.total}
-              scale={s}
-            />
-          </View>
-        );
-      })()}
+          />
+        )}
 
-      {/* toArray, not count: count includes the `false` a finished game passes. */}
-      {React.Children.toArray(children).length === 0 &&
-        Array.from({ length: 6 }, (_, index) => {
+        {/* Round progress on the frieze: over the wall art, under the blocks, so a
+            popped block's top face stays in front of it. */}
+        {roundMarkers && (() => {
+          const plate = toDailyCastleScreen(frame, resolveDailyRoundMarkers(roundMarkers.total));
+          return (
+            <View
+              pointerEvents="none"
+              style={[styles.layer, styles.roundMarkers, {
+                left: plate.x + sceneLeft,
+                top: plate.y - stageOffset.y,
+                width: plate.width,
+                height: plate.height,
+              }]}
+            >
+              <DailyRoundMarkers
+                currentRound={roundMarkers.current}
+                total={roundMarkers.total}
+                scale={s}
+              />
+            </View>
+          );
+        })()}
+
+        {/* toArray, not count: count includes the `false` a finished game passes. */}
+        {React.Children.toArray(children).length === 0 &&
+          Array.from({ length: 6 }, (_, index) => {
+            const slot = toDailyCastleScreen(frame, resolveDailyCastleSlot(grid, index));
+            return (
+              <Image
+                key={`blank-${index}`}
+                source={BLANK_BLOCK}
+                resizeMode="stretch"
+                style={[styles.cardSlot, {
+                  left: slot.x + sceneLeft + tuning.grid.x * s,
+                  top: slot.y - stageOffset.y,
+                  width: slot.width,
+                  height: slot.height,
+                }]}
+              />
+            );
+          })}
+
+        {React.Children.toArray(children).map((child, index) => {
+          if (index >= 6) return null;
           const slot = toDailyCastleScreen(frame, resolveDailyCastleSlot(grid, index));
           return (
-            <Image
-              key={`blank-${index}`}
-              source={BLANK_BLOCK}
-              resizeMode="stretch"
-              style={[styles.cardSlot, {
-                left: slot.x + sceneLeft + tuning.grid.x * s,
-                top: slot.y - stageOffset.y,
-                width: slot.width,
-                height: slot.height,
-              }]}
-            />
+            <View
+              key={`slot-${roundKey}-${index}`}
+              pointerEvents="box-none"
+              style={[
+                styles.cardSlot,
+                {
+                  left: slot.x + sceneLeft + tuning.grid.x * s,
+                  top: slot.y - stageOffset.y,
+                  width: slot.width,
+                  height: slot.height,
+                },
+              ]}
+            >
+              <DailyCastlePlaqueSlot
+                  child={React.isValidElement<DailyAnswerCardProps>(child)
+                    ? React.cloneElement(child, { castleWidth: slot.width, castleHeight: slot.height })
+                    : child}
+                  index={index}
+                  reduceMotion={reduceMotion}
+                  roundKey={roundKey}
+                  onWallTremble={startWallTremble}
+              />
+            </View>
           );
         })}
-
-      {React.Children.toArray(children).map((child, index) => {
-        if (index >= 6) return null;
-        const slot = toDailyCastleScreen(frame, resolveDailyCastleSlot(grid, index));
-        return (
-          <View
-            key={`slot-${roundKey}-${index}`}
-            pointerEvents="box-none"
-            style={[
-              styles.cardSlot,
-              {
-                left: slot.x + sceneLeft + tuning.grid.x * s,
-                top: slot.y - stageOffset.y,
-                width: slot.width,
-                height: slot.height,
-              },
-            ]}
-          >
-            <DailyCastlePlaqueSlot
-                child={React.isValidElement<DailyAnswerCardProps>(child)
-                  ? React.cloneElement(child, { castleWidth: slot.width, castleHeight: slot.height })
-                  : child}
-                index={index}
-                reduceMotion={reduceMotion}
-                roundKey={roundKey}
-            />
-          </View>
-        );
-      })}
+      </Animated.View>
 
       {flight && (
         <DailyCastleFlightPlaque
@@ -695,6 +769,11 @@ const styles = StyleSheet.create({
     elevation: 31,
   },
   castleWall: {
+    zIndex: 35,
+    elevation: 35,
+  },
+  wallGroup: {
+    ...StyleSheet.absoluteFill,
     zIndex: 35,
     elevation: 35,
   },
