@@ -34,6 +34,7 @@ export type HapticCue =
   | 'gauntletBrickLand'
   | 'dailyInkPress'
   | 'dailyRodStop'
+  | 'dailyGateShut'
   | 'dailyStoneSeat';
 
 function hapticsEnabled(): boolean {
@@ -213,6 +214,10 @@ export const Haptics = {
       case 'dailyInkPress':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light);
       case 'dailyRodStop':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      // The Daily gate landing back down after a correct claim (Pete,
+      // 2026-10-11). Medium, not Heavy: Heavy stays with Boss beats.
+      case 'dailyGateShut':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
       // A row of Daily answer blocks seating in the wall. Three rows land 120ms
       // apart, so three Medium taps: a rhythm the hand reads as the wall

@@ -112,6 +112,12 @@ const DAILY_UI_ACTION_SECONDARY = require('../../assets/images/dailycastle/ui/da
 // Longest the Daily's ending waits for Polly's fly-out hand-off before opening
 // Results anyway. Her normal path is about 3.9 s after the winning claim.
 const DAILY_POLLY_EXIT_FAILSAFE_MS = 6000;
+/**
+ * A wrong claim's gate shimmy: its first leg drives the gate past fully down
+ * until it hits the stop. The 'wrong' haptic lands on that same beat.
+ */
+const DAILY_WRONG_GATE_STOP_MS = 75;
+
 function dailyGateRiseMs(motion: boolean): number {
   return motion ? 400 : 120;
 }
@@ -464,6 +470,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   useEffect(() => clearCorrectTransitionTimers, []);
 
+  // The wrong claim's haptic, waiting for the gate to hit the stop.
+  const wrongGateStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function clearWrongGateStopTimer() {
+    if (wrongGateStopTimerRef.current !== null) clearTimeout(wrongGateStopTimerRef.current);
+    wrongGateStopTimerRef.current = null;
+  }
+  useEffect(() => clearWrongGateStopTimer, []);
+
   // Gate position: 1 = fully down (showing clues), 0 = fully up (hidden)
   const gatePosition = useRef(new Animated.Value(1)).current;
   // The correct plaque's throw into the gate (DailyCastleStage), and the
@@ -544,8 +558,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       Animated.timing(featherPulse, { toValue: 1, duration: 100, useNativeDriver: true }),
       Animated.timing(featherPulse, { toValue: 0, duration: 300, useNativeDriver: true }),
     ]).start();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    // No haptic here: a wrong claim's one haptic lands when the gate hits the
+    // stop (handleClaim).
   }, [displayedDailySession?.chancesRemaining]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function beginClaimPresentation(
@@ -680,6 +694,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       map.set(c, committedWrongClaims.has(c) ? 'disabled' : 'idle'),
     );
     setCardStates(map);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayedDailySession?.currentRoundIndex]);
+
+  // A new round never inherits a pending wrong-claim haptic.
+  useEffect(() => {
+    clearWrongGateStopTimer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayedDailySession?.currentRoundIndex]);
 
@@ -954,6 +974,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         useNativeDriver: true,
       }).start(({ finished }) => {
         if (!finished || completingCandidateRef.current !== candidate) return;
+        // The gate lands: one tap, on every correct claim including the win.
+        Haptics.cueAsync('dailyGateShut');
         if (dailySessionRef.current?.status === 'won') {
           runGoldCoinFinale();
           return;
@@ -1061,17 +1083,23 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // Wrong — the gate slams down a short distance then rebounds.
     setLocked(true);
     setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
-    Haptics.cueAsync('wrong');
     playSfx('trapWrong');
     beginClaimPresentation(dailySession, candidate, 'wrong');
 
     // Reduced motion omits the jolt.
     if (reduceMotion === false) {
+      // The one haptic lands when the gate hits the stop, the end of the
+      // shimmy's first leg, from the same constant so the two cannot drift.
+      clearWrongGateStopTimer();
+      wrongGateStopTimerRef.current = setTimeout(() => {
+        wrongGateStopTimerRef.current = null;
+        Haptics.cueAsync('wrong');
+      }, DAILY_WRONG_GATE_STOP_MS);
       // Translate the gate vertically only; no scale or horizontal movement.
       Animated.sequence([
         Animated.timing(gatePosition, {
           toValue: 1.06,
-          duration: 75,
+          duration: DAILY_WRONG_GATE_STOP_MS,
           easing: Easing.in(Easing.quad),
           useNativeDriver: true,
         }),
@@ -1088,6 +1116,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           useNativeDriver: true,
         }),
       ]).start();
+    } else {
+      // No shimmy to land on: the haptic marks the claim itself.
+      Haptics.cueAsync('wrong');
     }
 
     const wrongExitMs = reduceMotion !== false

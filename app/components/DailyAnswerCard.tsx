@@ -383,6 +383,9 @@ export default function DailyAnswerCard({
         );
         gripGlow.value = withTiming(1, { duration: dailyCardMaterial.motion.pressInMs });
         playSfx('pressHoldStart');
+        // One tap as the finger lands: the Hunt's base press cue (the Daily
+        // has no momentum tiers). Disabled or claimed blocks returned above.
+        Haptics.cueAsync('pressSteady');
       },
 
       onPanResponderMove: (_, gesture) => {
