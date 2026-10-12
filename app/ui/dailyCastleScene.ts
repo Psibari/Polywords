@@ -231,10 +231,11 @@ export const DAILY_ANSWER_PANELS: DailyCastleRect[] = [0, 1].map((i) => {
 
 /**
  * Mean colour of answerwall_framed.png's bottom 16 rows (the sill's face),
- * printed by build_daily_answer_wall.py; rerun and copy it if the wall changes. When the scene has to rise to keep the blocks clear
- * of the action label, the strip left under the wall is filled with it.
+ * measured by script; re-measure it whenever that PNG changes. When the scene
+ * has to rise to keep the blocks clear of the action label, the strip left
+ * under the wall is filled with it.
  */
-export const DAILY_ANSWER_WALL_FOOT = '#3D3268';
+export const DAILY_ANSWER_WALL_FOOT = '#36265D';
 
 /**
  * Floor coins (Pete, 2026-09-26): one per solved round on the courtyard
@@ -279,15 +280,15 @@ export function resolveDailyGoldCoin(): DailyCastleRect {
 }
 
 /**
- * The frieze: answerwall_framed.png's dark band between the capstone and the
- * brick panels, colour-measured at y 1804–1877 px (the capstone's highlight
- * ends above it, the panels' shadow line starts below it).
+ * The frieze: the wall cap's front face on answerwall_framed.png, between the
+ * cap's lit lip above and the dark line below, measured at rows 1778–1858 px
+ * of the current wall.
  */
 export const DAILY_WALL_FRIEZE: DailyCastleRect = {
   x: 0,
-  y: 1804 / 3,
+  y: 1778 / 3,
   width: DAILY_CASTLE_CANVAS.width,
-  height: (1878 - 1804) / 3,
+  height: (1858 - 1778) / 3,
 };
 
 /**
@@ -533,12 +534,12 @@ export const DAILY_CASTLE_FLIGHT_HANDOFF =
  * middle is at about y 230 (left) and 225 (right).
  */
 export const DAILY_CASTLE_CAPS: readonly DailyCastleRect[] = [
-  { x: 0, y: 85 / 3, width: 192 / 3, height: 279 / 3 },
-  { x: 1113 / 3, y: 77 / 3, width: 177 / 3, height: 293 / 3 },
+  { x: 0, y: 239 / 3, width: 212 / 3, height: 138 / 3 },
+  { x: 1078 / 3, y: 239 / 3, width: 212 / 3, height: 138 / 3 },
 ];
 const DAILY_CAP_CENTRES = [
-  { x: 33 / 3, y: 230 / 3 },
-  { x: 1280 / 3, y: 225 / 3 },
+  { x: 106 / 3, y: 307 / 3 },
+  { x: 1183 / 3, y: 307 / 3 },
 ] as const;
 /** The bloom behind each cap (coin_glow.png), well past the cap's silhouette. */
 export const DAILY_CAP_GLOW_SIZE = { width: 216, height: 180 } as const;
