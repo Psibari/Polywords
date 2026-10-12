@@ -399,6 +399,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     new Map(),
   );
   const [pollyPose, setPollyPose] = useState<PerchReaction | 'correct'>('perched');
+  // One key per reaction sent to the perch. It starts a fresh reaction even
+  // when the pose is unchanged (two correct claims in a row), and the perch
+  // hands it back when that reaction's bubble has faded. The ref is the
+  // latest key, so a report from a replaced reaction is ignored.
+  const pollyReactionKeyRef = useRef(0);
+  const [pollyReactionKey, setPollyReactionKey] = useState(0);
   // True from the Daily's last claim (win or loss) until Polly has said her
   // last line and flown out; Results waits for it. A safety release stops a
   // missed hand-off from holding Results forever.
@@ -803,35 +809,38 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // 'correct' (an ordinary, non-winning claim) shares toPerchReaction's
     // 'perched' fallthrough with "no reaction" — it needs its own branch here
     // so PollyDailyPerch still gets told to react, just with the perched pose.
-    // A correct claim's line waits for the throw (PollyDailyPerch's
-    // throwDelayMs), so it stays up that much longer.
-    const throwMs = dailyThrowGoneMs(reduceMotion === false);
+    // The perch owns how long the reaction lasts and reports back through
+    // handlePollyReactionComplete; nothing here times it.
     if (dailyLastClaimResult.pollyReaction === 'correct') {
+      pollyReactionKeyRef.current += 1;
       setPollyPose('correct');
-      setTimeout(() => {
-        setPollyPose('perched');
-        clearDailyReaction();
-      }, 2800 + throwMs);
+      setPollyReactionKey(pollyReactionKeyRef.current);
       return;
     }
     const pose = toPerchReaction(dailyLastClaimResult.pollyReaction);
     if (pose !== 'perched') {
+      pollyReactionKeyRef.current += 1;
       setPollyPose(pose);
+      setPollyReactionKey(pollyReactionKeyRef.current);
       if (pose === 'laughing' || pose === 'shocked') {
         // The Daily just ended: hold Results until she has flown out.
         setPollyExitPending(true);
         if (pollyExitFailsafeRef.current) clearTimeout(pollyExitFailsafeRef.current);
         pollyExitFailsafeRef.current = setTimeout(releasePollyExit, DAILY_POLLY_EXIT_FAILSAFE_MS);
       }
-      setTimeout(() => {
-        setPollyPose('perched');
-        clearDailyReaction();
-      }, 2800 + (pose === 'shocked' ? throwMs : 0));
     } else {
       clearDailyReaction();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailyLastClaimResult]);
+
+  // The perch's bubble for reaction `key` has faded. Only the latest
+  // reaction settles her; an older one was replaced and is ignored.
+  const handlePollyReactionComplete = useCallback((key: number) => {
+    if (key !== pollyReactionKeyRef.current) return;
+    setPollyPose('perched');
+    clearDailyReaction();
+  }, [clearDailyReaction]);
 
   // Leaving the Daily drops the in-memory claim result, so a quick return
   // does not replay her last reaction (and hold Results) for a claim the
@@ -1348,6 +1357,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       <PollyDailyPerch
         reaction={pollyPose}
+        reactionKey={pollyReactionKey}
+        onReactionComplete={handlePollyReactionComplete}
         rivalryState={rivalryState}
         show={!isComplete && !isReadyToStart}
         perchAt={

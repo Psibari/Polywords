@@ -34,6 +34,16 @@ type Reaction = DailyPollyReaction | 'correct';
 
 type Props = {
   reaction: Reaction | null;
+  /**
+   * New for every reaction the screen sends, so a repeat of the same
+   * reaction (two correct claims in a row) still starts a fresh one.
+   */
+  reactionKey?: number;
+  /**
+   * Called once per reaction, with its reactionKey, when its bubble has
+   * faded. Not called for a reaction a newer one replaced, or after unmount.
+   */
+  onReactionComplete?: (key: number) => void;
   rivalryState: BookRivalryState;
   show?: boolean;
   /**
@@ -147,6 +157,8 @@ function getLineId(
 
 export default function PollyDailyPerch({
   reaction,
+  reactionKey = 0,
+  onReactionComplete,
   rivalryState,
   show = true,
   perchAt,
@@ -174,10 +186,18 @@ export default function PollyDailyPerch({
   // rather than the frozen mount-time pattern above — and its own record of
   // which lines already fired this session, so it doesn't repeat sooner than
   // the DAILY_MOOD_LINES pool for the current rivalry state runs out.
-  const [correctLineId, setCorrectLineId] = useState<PollyLineId | null>(null);
   const firedCorrectLineIdsRef = useRef<string[]>([]);
 
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
+  // The bubble's words belong to the reaction that is showing it: set when
+  // a reaction starts, from the line it picked, and cleared when that
+  // reaction's bubble has faded. Never re-derived from the reaction prop.
+  const [bubbleLine, setBubbleLine] = useState('');
+  // Which reaction owns the bubble. Each reaction (and unmount) takes a new
+  // token, so a fade that ends after it was replaced reports nothing.
+  const reactionTokenRef = useRef(0);
+  const onReactionCompleteRef = useRef(onReactionComplete);
+  onReactionCompleteRef.current = onReactionComplete;
 
   // Whole-image drivers (no part seams possible — we only move the whole image).
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
@@ -228,6 +248,7 @@ export default function PollyDailyPerch({
   useEffect(() => {
     return () => {
       if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
+      reactionTokenRef.current += 1;
     };
   }, []);
 
@@ -304,11 +325,17 @@ export default function PollyDailyPerch({
       return;
     }
 
+    // This reaction owns the bubble from here; an older one still fading
+    // (stopped just below) sees a stale token and reports nothing.
+    reactionTokenRef.current += 1;
+    const token = reactionTokenRef.current;
+    const key = reactionKey;
+
     // 'correct' can fire several times a session, so its line is rolled
     // fresh here rather than at mount, and remembered locally so it doesn't
     // repeat within this session even though pollyMemoryBeforeRecorded is a
     // frozen snapshot.
-    let pickedCorrectLineId: PollyLineId | null = correctLineId;
+    let pickedCorrectLineId: PollyLineId | null = null;
     if (reaction === 'correct') {
       const roll = Math.random();
       const recent = [
@@ -317,7 +344,6 @@ export default function PollyDailyPerch({
       ];
       pickedCorrectLineId = pickFreshLine(DAILY_MOOD_LINES[rivalryState], recent, roll);
       firedCorrectLineIdsRef.current = [...firedCorrectLineIdsRef.current, pickedCorrectLineId];
-      setCorrectLineId(pickedCorrectLineId);
     }
 
     if (EXIT_POSE[reaction]) leavingRef.current = true;
@@ -375,6 +401,7 @@ export default function PollyDailyPerch({
     const bubbleDelay = reaction === 'correct' || reaction === 'shocked' ? throwDelayMs : 0;
     bubbleOpacity.stopAnimation();
     bubbleOpacity.setValue(0);
+    setBubbleLine(getLine(reaction, dailyLossLineId, pickedCorrectLineId));
     Animated.timing(bubbleOpacity, {
       toValue: 1,
       duration: 180,
@@ -394,10 +421,14 @@ export default function PollyDailyPerch({
         const exitPose = reaction ? EXIT_POSE[reaction] : undefined;
         if (exitPose) runFlyOut(exitPose);
         else setPose(POSE.idle);
+        // Only the reaction still owning the bubble hands it back.
+        if (reactionTokenRef.current !== token) return;
+        setBubbleLine('');
+        onReactionCompleteRef.current?.(key);
       });
     }, 2500 + bubbleDelay);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reaction]);
+  }, [reaction, reactionKey]);
 
   const flyRotate = flyTilt.interpolate({
     inputRange: [-1, 1],
@@ -419,7 +450,7 @@ export default function PollyDailyPerch({
         ]}
       >
         <PollySpeechBubble
-          line={getLine(reaction, dailyLossLineId, correctLineId)}
+          line={bubbleLine}
           maxWidth={
             bubbleAt
               // Never past the screen's right edge, less the margin.
