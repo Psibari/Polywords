@@ -147,6 +147,23 @@ In order:
 Next job (Pete, 2026-10-11): the Daily Challenge screen art, started in its own session with a
 read-only audit first.
 
+Home redesign, open:
+- Home redesign (Polly's room): direction approved, NOT built. Rulings are in
+  `docs/HOME_SCREEN_LOCKDOWN.md` (section "Pete rulings, 2026-10-13"). A rough clickable movement
+  test exists (stand-in art only). Current step: Pete is making the room background art (big
+  centered window cut out of the image, one back counter spot, crown hatch low on the floor).
+  After that: layered art (hatch, stairwell, counters, window sky/castle silhouette/moon, cage
+  pieces), then build in repo only with Pete's approval.
+- Still to check in code before building: how the real Hunt entry currently runs (navigation
+  fade, one-time intros); that the window castle silhouette matches the real Daily castle art;
+  what grants the timed gold feather (`grantGoldFeather` in `useGameStore.ts`, called from two
+  places) and whether the moon's won state fully covers it, since the reward expires and the
+  moon feather is a Daily-win marker (Pete ruled the moon feather replaces the GOLD FEATHER READY
+  line).
+- Open: where the broken cage rests after the crash; Settings cog placement; whether the Daily
+  streak badge (small number on the Daily plate, shown when streak > 0) stays and where (Pete has
+  not answered).
+
 Hunt momentum feedback, open:
 - Pressed-card glow is clipped by its own card view (`CLAUDE.md` known issue). Left as is.
 - A device screenshot at STEADY shows the lifted card overlapping the "SWIPE UP TO CLAIM" label.
