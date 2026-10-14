@@ -168,6 +168,12 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 - Old Lexicon rollback components remain until Pete decides to delete them.
 - The nav tab and in-round spine both say POLYBOOK; renaming remains Pete's decision.
 
+## Home (planned)
+
+Home redesign (Polly's room) is approved in direction and NOT built. Rulings live in
+`docs/HOME_SCREEN_LOCKDOWN.md`. Current `HomeScreen.tsx` is still the old layout until Pete says
+otherwise.
+
 ## Daily
 
 Deterministic, one attempt per date, five UP-only rounds, two lives. `docs/DAILY_CHALLENGE_SPEC.md`
