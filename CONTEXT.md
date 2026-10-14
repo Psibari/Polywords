@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-11. Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-13 (Home direction; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -16,6 +16,16 @@ focused rules live in `docs/`; runtime code/data outrank docs.
 Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` before Expo testing.
 
 ## Current State
+
+- **Home redesign (Pete, 2026-10-13): approved direction, documented; implementation not verified.**
+  Read [docs/HOME_SCREEN_LOCKDOWN.md](docs/HOME_SCREEN_LOCKDOWN.md) before any Home work.
+  Preserve Pete's deep-room mockup layout: three stone compartments extend from one compact
+  structure; Hunt retracts them as the floor opens onto a descending hall; Daily travels through
+  the window toward a castle silhouette; Polybook rises from its compartment and comes forward.
+  Polly stays left. Her existing drop/landing triggers the cage hanging from the logo's S to
+  rattle, fall, and break only on app opening, never on navigation back Home. Settings placement
+  is flexible; moon faces come last. Art/colors are not final. The focused spec separates locked
+  direction from open details and supersedes the earlier Home-design deferral for this task.
 
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. Standard arc is 10 rounds; fledgling is 8.
   Polly's Word is final. Returning Haunt is round 5 standard / round 4 fledgling.
@@ -202,10 +212,10 @@ Open, needs Pete's ruling:
 
 ## Do Not Work On Yet
 
-- **Home polish pass:** the Home route plate still says `WORD VAULT`, but the product is now
-  POLYBOOK. When this is scheduled, change the route label to `POLYBOOK` and review/polish the
-  other Home route plates and surrounding Home presentation in the same focused pass rather than
-  making a one-off label edit now.
+- **Home scope boundary (updated 2026-10-13):** Home design is now explicitly reopened by Pete;
+  follow `docs/HOME_SCREEN_LOCKDOWN.md`. The approved menu label is POLYBOOK. Do not perform an
+  unrelated cosmetic pass or assume the new design is already implemented. Moon faces and new
+  Polly animation systems remain deferred while the room/console geometry is established.
 - New Polly art or WEBP restoration before the articulation inventory.
 - Production Home life-profile animation before the DEV Neutral proof.
 - Crown/Polybook progression, additional relationship states, or Polybook interior changes.
