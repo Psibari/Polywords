@@ -49,6 +49,7 @@ The text below is deliberately self-contained so the direction survives missing 
 
 - Portrait Home, looking INTO a castle room with visible depth.
 - Preserve the basic arrangement and relative visual footprint in Pete's mockups.
+  *(superseded by 2026-10-13 rulings)*
 - The room needs enough depth for compartments to extend from a compact structure into
   separate staggered positions. Do not flatten it into a wall with stacked floating buttons.
 - Floor, side architecture, back wall/window, and console must share a coherent perspective.
@@ -68,7 +69,7 @@ The text below is deliberately self-contained so the direction survives missing 
 3. Her landing triggers the cage, connected to the S in POLYWORDS, to shake/rattle.
 4. The cage falls to the floor, crashes, and breaks.
 5. The three menu compartments emerge from their compact origin, stagger outward, lift,
-   and settle into the resting Home arrangement.
+   and settle into the resting Home arrangement. *(superseded by 2026-10-13 rulings)*
 
 The causal order is locked; exact timing and overlap between the crash and menu reveal
 are not yet specified. This opening performance happens on app opening, not whenever
@@ -82,10 +83,11 @@ and any reset policy remain open.
 ## 3. Locked console movement
 
 The three menu compartments are parts of one compact physical structure.
-They stagger out and lift into position: one, two, three.
+They stagger out and lift into position: one, two, three. *(superseded by 2026-10-13 rulings)*
 The intended effect is extension into room depth with a lift, rather than three independent
-buttons simply fading in. Emerging from the floor is an allowed construction option, not
-the defining requirement. Exact rails, travel paths, offsets, timing, and easing are open.
+buttons simply fading in. *(superseded by 2026-10-13 rulings)* Emerging from the floor is an
+allowed construction option, not the defining requirement. *(superseded by 2026-10-13 rulings)*
+Exact rails, travel paths, offsets, timing, and easing are open.
 
 Use "three-tier stone console" as a descriptive production name, not player-facing copy.
 "Compartment" is the intended word; transcript references to an "apartment" mean compartment.
@@ -96,13 +98,16 @@ Use "three-tier stone console" as a descriptive production name, not player-faci
 2. Other compartments collapse back together with the Hunt compartment.
 3. During the combined structure's retraction, only the ENTER THE HUNT face remains visible.
 4. As it retracts, the floor opens to reveal a HALL with stairs descending.
+   *(superseded by 2026-10-13 rulings)*
 5. The retraction and opening are coordinated parts of the same physical event.
+   *(superseded by 2026-10-13 rulings)*
 
 Pete explicitly corrected "hole" to "hall, H-A-L-L." Build an architectural passage with
-descending stairs, not an unexplained pit. This is not the earlier interpretation of a
-Hunt slab simply lifting like a gate.
+descending stairs, not an unexplained pit. *(superseded by 2026-10-13 rulings)* This is not
+the earlier interpretation of a Hunt slab simply lifting like a gate.
 Exact camera travel after the hall reveal and the handoff to gameplay remain to be finalized;
 do not present an assumed camera descent or extra tap as an approved requirement.
+*(superseded by 2026-10-13 rulings)*
 
 ## 5. Locked Daily selection sequence
 
@@ -114,6 +119,7 @@ The Daily route is through the window, not through the Hunt hall.
 The HOME_DC frame is a rough intermediate composition, not a separate new gameplay screen.
 Exact compartment clearing, camera path, duration, and handoff to the existing Daily
 entry/play/completed states remain implementation decisions to review.
+*(superseded by 2026-10-13 rulings)*
 
 ## 6. Locked Polybook selection sequence
 
@@ -124,14 +130,15 @@ entry/play/completed states remain implementation decisions to review.
 One button tap triggers this emergence and takeover. Do not require a second tap merely
 to reach the large closed-book state.
 Whether the cover then automatically opens, and the precise handoff to the existing
-Polybook cover/page flow, remain open. Preserve existing Polybook interior rules.
+Polybook cover/page flow, remain open. *(superseded by 2026-10-13 rulings)* Preserve
+existing Polybook interior rules.
 The book is revealed when selected; do not restore it as a permanent floating Hunt hero.
 
 ## 7. Return Home and existing behavior
 
 - Navigation back to Home does not replay the app-opening cage crash.
 - Restore a usable three-choice Home. Whether the console reassembles with a brief animation
-  or is already settled is not yet specified.
+  or is already settled is not yet specified. *(superseded by 2026-10-13 rulings)*
 - Keep Polly on the left. Existing personality, pose, sleep, and relationship behavior is
   not being rewritten by this visual specification.
 - Preserve existing Hunt, Daily, onboarding, saved progress, resume, and Polybook behavior.
@@ -179,16 +186,17 @@ All moving pieces need sufficient painted coverage so motion does not expose bla
 ## 10. Open details: never silently treat these as approved
 
 - Final colors, materials, lighting, dimensions, and exact phone framing.
-- Which mockup assets are reusable versus replacement art.
+- Which mockup assets are reusable versus replacement art. *(superseded by 2026-10-13 rulings)*
 - Exact compartment order of motion, offsets, duration, and easing.
 - Floor-opening mechanism and Hunt camera/handoff after revealing the hall.
-- Daily compartment clearing and route handoff.
-- Whether Polybook opens automatically after taking over.
+  *(superseded by 2026-10-13 rulings)*
+- Daily compartment clearing and route handoff. *(superseded by 2026-10-13 rulings)*
+- Whether Polybook opens automatically after taking over. *(superseded by 2026-10-13 rulings)*
 - Cage debris cleanup and post-crash resting state.
 - Cold launch versus background/foreground replay policy.
-- Console behavior when returning Home.
+- Console behavior when returning Home. *(superseded by 2026-10-13 rulings)*
 - Settings placement.
-- Moon expressions and timing.
+- Moon expressions and timing. *(superseded by 2026-10-13 rulings)*
 - Sound/haptic assets and timing; opening skip/interrupt behavior.
 - Reduced-motion transition treatment and first-run onboarding coordination.
 
@@ -200,10 +208,12 @@ These are implementation gates, not claims that the feature already passes.
 - [ ] Polly stays left; the window and logo retain their intended roles.
 - [ ] All three menu labels are readable and tappable; Settings remains reachable.
 - [ ] The console visibly originates as one compact structure and staggers outward/up.
+      *(superseded by 2026-10-13 rulings)*
 - [ ] Polly landing -> cage rattle -> fall -> break reads as one causal opening event.
 - [ ] Leaving and returning Home does not replay the cage crash.
 - [ ] Hunt collapses the compartments, shows only its face during retraction, and opens
       the floor concurrently to reveal an architectural hall with descending stairs.
+      *(superseded by 2026-10-13 rulings)*
 - [ ] Daily travels through the window toward a visible castle silhouette.
 - [ ] A single Polybook selection raises the book from its compartment and brings it forward.
 - [ ] No gaps, clipped moving pieces, mismatched perspective, or visibly floating stone tiers.
@@ -242,10 +252,37 @@ For every future session:
 - 2026-10-13: Pete supplied rough Home entrance, resting menu, Hunt, Daily, and Polybook frames.
 - 2026-10-13: Corrected Polly arrival to the existing drop onto her perch; cage hangs from S.
 - 2026-10-13: Corrected menu origin to one compact structure, staggered outward and upward.
+  *(superseded by 2026-10-13 rulings)*
 - 2026-10-13: Specified Daily travel through the window toward a castle silhouette.
 - 2026-10-13: Confirmed Polybook rises from its compartment and takes over the screen.
 - 2026-10-13: Corrected Hunt motion to combined retraction plus simultaneous floor opening;
-  explicitly corrected "hole" to "hall."
+  explicitly corrected "hole" to "hall." *(superseded by 2026-10-13 rulings)*
 - 2026-10-13: Confirmed Polly remains left, Settings placement flexible, moon faces deferred.
 - 2026-10-13: Reaffirmed deep-room perspective and mockup layout; art/colors still need correction.
 - 2026-10-13: Requested this durable lockdown for repository continuity.
+
+## Pete rulings, 2026-10-13
+
+Pete says nothing here is law until reviewed together, and any line can be retracted.
+Older lines above and in `POLYWORDS_HOME_VISUAL_TONE.md` that conflict are kept, marked
+"superseded by 2026-10-13 rulings".
+
+Rulings (Pete's words, paraphrased):
+
+1. Home is Polly's domain: an abandoned castle where her broken cage is, and she is having the time of her life thinking she is king. Art is campy and funny, not dark or gloomy, and not childish or cartoony. Nothing in the art may clash with the game's funny music and jokes.
+2. All Home art is new. Mock-ups and reference images only define layout, spacing and movement. New art must match the game's world, not reuse existing art.
+3. No outside artist. Pete and Claude make the art. The artist-package zip is dropped.
+4. Home keeps the title and Polly. The "words have meaning" tagline is going away for now.
+5. Opening, on app open and first Home visit only: Polly drops onto her left perch as she does now. The cage hangs from the POLYWORDS title, rattles, falls to the floor and breaks. Then the three counters come out. Where the cage rests afterwards is decided later.
+6. Counters: ENTER THE HUNT (top, biggest), DAILY CHALLENGE, POLYBOOK. They start as ONE counter on the wall under the window, then zoom out of the wall toward the viewer and stagger into place, one, two, three. They never rise from the floor. They come out once per app session; after that they stay out on every return to Home.
+7. Room structure: a plain window (no doorway) centered on the back wall, much larger than the first mock-up, with a ledge on the left for Polly's perch and a hook on the right for the cage. A round floor hatch with a crown sits low in the floor, pushed forward. Stairs must never lead up to a room or window. The window is part of the background image with the glass cut out, so the sky, the black Daily castle silhouette and the moon can sit behind it as separate layers.
+8. Hunt tap: the other two counters zoom back into the wall behind ENTER THE HUNT, the Hunt face stays visible, then it zooms back into the wall too. The crown hatch then drops down and the stairs going down into the floor are revealed (alternative Pete accepts: the hatch area becomes a sloped hole the camera zooms into; final art decides which reads better). The camera zooms down into the dark and fades into the Hunt screen, whose existing entrance plays (book slides in from the right, moving left, and exits left; cards shuffle in as a deck). No extra handoff.
+9. Daily tap: all counters retract, the camera zooms into the window ("then bang"), onto the Daily screen. The window shows a black silhouette of the real Daily castle and the moon.
+10. Moon states (full moon always): not played = idle eyes staring at Polly; lost = mad eyes staring at Polly; won = the face goes away and a gold ring with the golden feather in the middle replaces it.
+11. Polybook tap: the other two counters retract, the Polybook counter sits big at the back (the altar spot), the book rises out of it, comes forward larger and lands seamlessly on the Polybook screen's CLOSED cover. It opens only when tapped there. The player is still in Polly's room.
+12. Settings: a small cog placed wherever it fits, decided after the mechanics and art are done.
+13. Messy room direction: papers, books, candles, quills, ink splashes. Anything childish comes off (no cartoon faces, no joke chalkboards, no gag signs). Loose papers stay BLANK: it is Polly's room, where she writes the Polybook, and words can be added later. Orange light stays minimal; violet and restrained gold.
+14. Reference images (not game art): the "funniest" messy room with Polly's personality (banners, books, candles) and the arched room with the back altar that the mock-ups came from. A new room image must combine both: larger centered window, a clear spot at the back for the one counter, the hatch pushed forward.
+15. Pete is making the room background art himself first and will bring it back.
+16. Counter labels: RESUME HUNT replaces ENTER THE HUNT on the Hunt counter when a Hunt is in progress. START HERE goes underneath it on the Hunt counter.
+17. The moon's gold-ring feather REPLACES the current "GOLD FEATHER READY" line. There is no GOLD FEATHER READY text on the new Home.

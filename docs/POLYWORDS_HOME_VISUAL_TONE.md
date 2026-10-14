@@ -242,7 +242,7 @@ The collapsed / quiet desk state is part of the **app-open entrance sequence**, 
 ### First app open in a session
 
 1. Home appears in its calm initial state.
-2. Polly flies in.
+2. Polly flies in. *(superseded by 2026-10-13 rulings in HOME_SCREEN_LOCKDOWN.md)*
 3. The cage is hanging from / near the POLYWORDS logo.
 4. The cage rattles.
 5. The cage falls.
@@ -253,7 +253,7 @@ The collapsed / quiet desk state is part of the **app-open entrance sequence**, 
 
 Once the navigation compartments are out, they stay functionally available for the session.
 
-When the player selects a destination, the relevant compartments may retract as part of the transition. When the player returns Home, the navigation compartments come back out automatically.
+When the player selects a destination, the relevant compartments may retract as part of the transition. When the player returns Home, the navigation compartments come back out automatically. *(superseded by 2026-10-13 rulings in HOME_SCREEN_LOCKDOWN.md)*
 
 Do not require the player to tap the desk or discover a hidden interaction to reveal navigation.
 
