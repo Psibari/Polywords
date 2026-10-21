@@ -84,8 +84,8 @@ export const TERRACE_ANCHOR: Record<TerraceElementId, TerraceAnchor> = {
 // Art aspect ratios (height / width) of the shipped images.
 export const TERRACE_ASPECT = {
   logo: 251 / 1558,
-  wall: 317 / 890,
-  casing: 548 / 795,
+  wall: 353 / 1095,
+  casing: 1034 / 1458,
   castle: 487 / 715,
   cageTop: 363 / 400,
   cageBase: 292 / 420,
@@ -118,21 +118,20 @@ export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
 
 export const TERRACE_CAGE_TOP_ROTATION_DEG = 9;
 
-// The opening in the casing and the two slabs, as fractions of the casing rect, so they move and
-// scale with it. Measured from the cleaned casing art (hole 617 x 382 of 795 x 548).
+// The opening in the casing and the two flat buttons, as fractions of the casing rect, so they move
+// and scale with it. Measured from Pete's 2026-10-21 casing art (1458 x 1034; hole 1140 x 705 at
+// x 161, y 143). Buttons are his flat art: Hunt 1117 x 404, Polybook 1121 x 263.
 export const TERRACE_NICHE = {
-  x: (86.9 - 46) / 349.8,
-  y: (736.1 - 700) / 241.1,
-  w: 271.5 / 349.8,
-  h: 168.1 / 241.1,
+  x: 161 / 1458,
+  y: 143 / 1034,
+  w: 1140 / 1458,
+  h: 705 / 1034,
 } as const;
-// Slabs inside the niche, INSET with a dark margin around them and a gap between (as in Pete's
-// original composite). x / w are fractions of the niche width, y / h of the niche height.
-// Pixel basis: niche 617 x 382; Hunt art 619 x 243, Polybook art 619 x 128 (aspect kept).
-const SLAB_W = 555 / 617;
+// Buttons inside the niche (x / w fractions of niche width, y / h of niche height), as in Pete's
+// own composite: centred, about 17 px margin on a 1140 x 705 opening, a 7 px gap between.
 export const TERRACE_SLABS = {
-  hunt: { x: (617 - 555) / 2 / 617, w: SLAB_W, y: 18 / 382, h: (555 * 243) / 619 / 382 },
-  book: { x: (617 - 555) / 2 / 617, w: SLAB_W, y: 248 / 382, h: (555 * 128) / 619 / 382 },
+  hunt: { x: (1140 - 1117) / 2 / 1140, w: 1117 / 1140, y: 17 / 705, h: 404 / 705 },
+  book: { x: (1140 - 1121) / 2 / 1140, w: 1121 / 1140, y: 428 / 705, h: 263 / 705 },
 } as const;
 
 // Castle windows and door glow, as fractions of the castle rect (from the mock's overlays).
@@ -156,6 +155,15 @@ export const TERRACE_CASTLE_WINDOWS: readonly TerraceWindow[] = [
 export const TERRACE_GROUND_SEAM_ROWS = [22, 54, 96, 150, 218, 300] as const;
 export const TERRACE_GROUND_SEAM_COLUMNS_BOTTOM_X = [-440, -290, -140, 10, 160, 310, 460, 610, 760] as const;
 export const TERRACE_GROUND_VANISH = { x: 221, y: -260 } as const;
+
+// Wall and console are single pictures: the DEV tool only scales them uniformly, so their height
+// always follows their width. This also keeps old saved overrides (made against earlier art with a
+// different aspect) from stretching the new art.
+const ASPECT_LOCKED: ReadonlySet<TerraceElementId> = new Set<TerraceElementId>(['wall', 'casing']);
+export function lockTerraceAspect(id: TerraceElementId, rect: TerraceRect): TerraceRect {
+  if (!ASPECT_LOCKED.has(id)) return rect;
+  return { ...rect, h: rect.w * (TERRACE_ASPECT as Record<string, number>)[id] };
+}
 
 export type TerraceOverrides = Partial<Record<TerraceElementId, Partial<TerraceRect>>>;
 
@@ -192,7 +200,7 @@ function rectFor(
   const x = o.x ?? base.x;
   const y = o.y ?? base.y;
   const w = o.w ?? base.w;
-  const h = o.h ?? base.h;
+  const h = lockTerraceAspect(id, { x, y, w, h: o.h ?? base.h }).h;
   const top =
     TERRACE_ANCHOR[id] === 'top'
       ? viewport.insetTop + y * k
