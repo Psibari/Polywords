@@ -48,6 +48,14 @@ export default function DevSettingsScreen(props: Props) {
         >
           <Text style={styles.previewText}>BUSTER RESULT</Text>
         </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open the terrace Home work in progress"
+          onPress={() => props.navigation.navigate('HomeTerrace')}
+          style={({ pressed }) => [styles.previewButton, styles.liveButton, pressed && styles.pressed]}
+        >
+          <Text style={styles.previewText}>TERRACE HOME</Text>
+        </Pressable>
       </View>
     </View>
   );

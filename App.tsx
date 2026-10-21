@@ -5,6 +5,7 @@ import { useFonts } from 'expo-font';
 import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeScreen from './app/screens/HomeScreen';
+import HomeTerraceScreen from './app/screens/HomeTerraceScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
@@ -104,6 +105,7 @@ export default function App() {
             <Stack.Screen name="Vault" component={VaultScreen} />
             <Stack.Screen name="Settings" component={__DEV__ ? DevSettingsScreen : SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
+            {__DEV__ && <Stack.Screen name="HomeTerrace" component={HomeTerraceScreen} />}
             {__DEV__ && <Stack.Screen name="DevResultsPreview" component={DevResultsPreviewScreen} />}
             {__DEV__ && <Stack.Screen name="DevRematchOutcomePreview" component={DevRematchOutcomePreviewScreen} />}
           </Stack.Navigator>
