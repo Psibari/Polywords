@@ -157,7 +157,8 @@ Home redesign, open:
   app-opening crash still plays; any console entrance; moon rule (2026-10-13 states vs the mock's
   phases vs other); floor color; redraw of the wall's two angled pieces; sky placement of moon,
   bubble and stars; which 2026-10-13 rulings still apply (the lockdown section lists them as not
-  yet confirmed).
+  yet confirmed); whether the Daily streak badge (small number on the Daily plate, shown when
+  streak > 0) stays and where (Pete has not answered).
 - Still to check in code before building: how the real Hunt entry currently runs; what the Daily
   zoom lands on; what grants the timed gold feather (`grantGoldFeather` in `useGameStore.ts`,
   called from two places) and whether any moon-won state covers it; that wall/console geometry can
