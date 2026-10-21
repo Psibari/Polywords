@@ -23,20 +23,23 @@ export const TERRACE_BG_PX = { w: 1290, h: 2796 } as const;
 // front.webp starts this many source rows down the background.
 export const TERRACE_FRONT_TOP_PX = 1440;
 // The background's top-row colour, used to fill above the frame on taller phones.
-export const TERRACE_SKY_TOP_COLOR = '#11102A';
+// BOTTOM_COLOR is the front ridge's last row, used to fill below it if the picture is raised.
+export const TERRACE_SKY_TOP_COLOR = '#100E2A';
+export const TERRACE_FRONT_BOTTOM_COLOR = '#0C0B20';
 
 export type TerraceAnchor = 'top' | 'bottom';
 
 export type TerraceRect = { x: number; y: number; w: number; h: number };
 
 export const TERRACE_ELEMENT_IDS = [
+  'background',
   'logo',
   'moon',
   'cageTop',
   'castle',
-  'castleHit',
   'wall',
   'plaque',
+  'perch',
   'polly',
   'ground',
   'casing',
@@ -47,11 +50,12 @@ export const TERRACE_ELEMENT_IDS = [
 export type TerraceElementId = (typeof TERRACE_ELEMENT_IDS)[number];
 
 export const TERRACE_ELEMENT_LABEL: Record<TerraceElementId, string> = {
+  background: 'Sky and mountains',
+  perch: 'Perch',
   logo: 'Logo',
   moon: 'Moon',
   cageTop: 'Cage top',
   castle: 'Castle',
-  castleHit: 'Castle tap area',
   wall: 'Back wall',
   plaque: 'Daily plaque',
   polly: 'Polly',
@@ -62,11 +66,12 @@ export const TERRACE_ELEMENT_LABEL: Record<TerraceElementId, string> = {
 };
 
 export const TERRACE_ANCHOR: Record<TerraceElementId, TerraceAnchor> = {
+  background: 'bottom',
+  perch: 'bottom',
   logo: 'top',
   moon: 'top',
   cageTop: 'top',
   castle: 'bottom',
-  castleHit: 'bottom',
   wall: 'bottom',
   plaque: 'bottom',
   polly: 'bottom',
@@ -84,15 +89,22 @@ export const TERRACE_ASPECT = {
   castle: 487 / 715,
   cageTop: 363 / 400,
   cageBase: 292 / 420,
+  perch: 70 / 508,
 } as const;
+
+// The sky-and-mountains image: 1290 x 2796 source, width-fit, so 443 x 960.18 design units.
+export const TERRACE_BG_DESIGN_H = (TERRACE_DESIGN_W * 2796) / 1290;
 
 // Starting positions in design units (from the mock).
 export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
+  // y is negative by the sliver the image is taller than the 960 canvas, so its bottom is exact.
+  background: { x: 0, y: TERRACE_DESIGN_H - TERRACE_BG_DESIGN_H, w: 443, h: TERRACE_BG_DESIGN_H },
+  // Start values only: Pete positions the perch with the DEV tool, beside Polly's feet.
+  perch: { x: 0, y: 410, w: 120, h: 120 * TERRACE_ASPECT.perch },
   logo: { x: 71, y: 28, w: 300, h: 300 * TERRACE_ASPECT.logo },
   moon: { x: 332, y: 122, w: 66, h: 66 },
   cageTop: { x: 18, y: 98, w: 100, h: 100 * TERRACE_ASPECT.cageTop },
   castle: { x: 195, y: 445, w: 180, h: 180 * TERRACE_ASPECT.castle },
-  castleHit: { x: 190, y: 423, w: 190, h: 118 },
   wall: { x: 0, y: 495, w: 443, h: 443 * TERRACE_ASPECT.wall },
   plaque: { x: 88, y: 574, w: 268, h: 80 },
   // Polly's art box has no fixed size here: this rect is only her start point and scale.
@@ -155,7 +167,7 @@ export type ScreenRect = { left: number; top: number; width: number; height: num
 export type TerraceLayout = {
   /** Screen points per design unit. */
   k: number;
-  /** The sky and ridges image, bottom-anchored. */
+  /** The sky and ridges image (the 'background' element). */
   background: ScreenRect;
   /** The front-ridge overlay (same scale as the background). */
   front: ScreenRect;
@@ -190,18 +202,18 @@ export function resolveTerraceLayout(
   overrides: TerraceOverrides = {},
 ): TerraceLayout {
   const k = terraceScale(viewport.width);
-  const s = viewport.width / TERRACE_BG_PX.w;
-  const bgHeight = TERRACE_BG_PX.h * s;
-  const bgTop = viewport.height - bgHeight;
   const rects = {} as Record<TerraceElementId, ScreenRect>;
   for (const id of TERRACE_ELEMENT_IDS) rects[id] = rectFor(id, viewport, k, overrides);
+  // The front ridge is part of the same picture as the sky, so it follows the background rect.
+  const bg = rects.background;
+  const s = bg.width / TERRACE_BG_PX.w;
   return {
     k,
-    background: { left: 0, top: bgTop, width: viewport.width, height: bgHeight },
+    background: bg,
     front: {
-      left: 0,
-      top: bgTop + TERRACE_FRONT_TOP_PX * s,
-      width: viewport.width,
+      left: bg.left,
+      top: bg.top + TERRACE_FRONT_TOP_PX * s,
+      width: bg.width,
       height: (TERRACE_BG_PX.h - TERRACE_FRONT_TOP_PX) * s,
     },
     rects,

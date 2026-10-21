@@ -8,6 +8,7 @@ import {
   TERRACE_CAGE_TOP_ROTATION_DEG,
   TERRACE_CASTLE_WINDOWS,
   TERRACE_DESIGN_H,
+  TERRACE_FRONT_BOTTOM_COLOR,
   TERRACE_GROUND_SEAM_COLUMNS_BOTTOM_X,
   TERRACE_GROUND_SEAM_ROWS,
   TERRACE_GROUND_VANISH,
@@ -32,6 +33,7 @@ const ART = {
   slabBook: require('../../assets/images/home/terrace/slab_book.png'),
   cageTop: require('../../assets/images/home/terrace/cage_top.png'),
   cageBase: require('../../assets/images/home/terrace/cage_base.png'),
+  perch: require('../../assets/images/home/terrace/perch.png'),
   logo: require('../../assets/images/brand/home-title-lockup.png'),
   moon: require('../../assets/images/moons/moon-r2-c2.png'), // full moon
 };
@@ -50,6 +52,8 @@ type Props = {
   width: number;
   height: number;
   dailyPlayed: boolean;
+  /** The castle is hidden at rest; it is shown only for positioning or its Daily reveal. */
+  showCastle: boolean;
   huntLabel: string;
   /** Polly (the existing perch), already wrapped and positioned by the screen. */
   polly: React.ReactNode;
@@ -62,7 +66,7 @@ type Props = {
 };
 
 export function HomeTerraceScene(props: Props) {
-  const { layout, width, height, dailyPlayed, huntLabel, polly } = props;
+  const { layout, width, height, dailyPlayed, showCastle, huntLabel, polly } = props;
   const { k, rects } = layout;
   const casing = rects.casing;
   const niche = {
@@ -81,11 +85,28 @@ export function HomeTerraceScene(props: Props) {
       {/* Sky above the frame on taller phones, and the sky/ridges image itself. */}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: TERRACE_SKY_TOP_COLOR }]} />
       <Image source={ART.bg} style={[styles.img, layout.background]} resizeMode="stretch" />
+      {/* If the picture is raised, fill below its last row with the ridge's own dark. */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.abs,
+          {
+            left: 0,
+            top: layout.background.top + layout.background.height - 1,
+            width,
+            height: Math.max(0, height - (layout.background.top + layout.background.height) + 1),
+            backgroundColor: TERRACE_FRONT_BOTTOM_COLOR,
+          },
+        ]}
+      />
 
       {/* Moon sits behind the castle and the ridges. */}
       <Image source={ART.moon} style={[styles.img, rects.moon]} resizeMode="contain" />
 
-      {/* Castle, with its windows and door lit by code so the Daily state can change them. */}
+      {/* Castle, hidden at rest (Pete, 2026-10-20): it rises from behind the mountains when Daily
+          is tapped. Windows and door are lit by code so the Daily state can change them. */}
+      {showCastle ? (
+        <>
       <Svg
         pointerEvents="none"
         style={[styles.abs, { left: castle.left - 40 * k, top: castle.top - 40 * k }]}
@@ -129,16 +150,11 @@ export function HomeTerraceScene(props: Props) {
           ]}
         />
       ))}
+        </>
+      ) : null}
 
       {/* The front ridge draws over the castle's base. */}
       <Image source={ART.front} style={[styles.img, layout.front]} resizeMode="stretch" />
-
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Daily Challenge: go to the castle"
-        onPress={props.onDaily}
-        style={[styles.abs, rects.castleHit, hitDebug]}
-      />
 
       {/* Ground: the Daily floor colour, wide perspective seams, no cracks. */}
       <View pointerEvents="none" style={[styles.abs, { left: 0, top: ground.top, width, height: height - ground.top }]}>
@@ -187,6 +203,9 @@ export function HomeTerraceScene(props: Props) {
           DAILY CHALLENGE
         </Text>
       </Pressable>
+
+      {/* The perch Polly lands on: a short wooden stick sticking out of the wall. */}
+      <Image source={ART.perch} style={[styles.img, rects.perch]} resizeMode="stretch" />
 
       {/* Polly, perched on the back wall. */}
       {polly}

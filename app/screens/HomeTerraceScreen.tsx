@@ -40,6 +40,7 @@ export default function HomeTerraceScreen({ navigation }: Props) {
 
   const overrides = useHomeTerraceTuning((s) => s.overrides);
   const forceDailyPlayed = useHomeTerraceTuning((s) => s.forceDailyPlayed);
+  const showCastle = useHomeTerraceTuning((s) => s.showCastle);
   const loadTuning = useHomeTerraceTuning((s) => s.load);
   const [selected, setSelected] = useState<TerraceElementId | null>(null);
   const [showHitAreas, setShowHitAreas] = useState(false);
@@ -97,6 +98,7 @@ export default function HomeTerraceScreen({ navigation }: Props) {
         width={width}
         height={height}
         dailyPlayed={dailyPlayed}
+        showCastle={showCastle}
         huntLabel={hasResumableGame ? 'RESUME HUNT' : 'ENTER THE HUNT'}
         selected={selected}
         showHitAreas={showHitAreas}

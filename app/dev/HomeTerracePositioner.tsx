@@ -31,6 +31,8 @@ export function HomeTerracePositioner({ k, selected, onSelect, showHitAreas, onT
   const forceDailyPlayed = useHomeTerraceTuning((s) => s.forceDailyPlayed);
   const setRect = useHomeTerraceTuning((s) => s.setRect);
   const setForce = useHomeTerraceTuning((s) => s.setForceDailyPlayed);
+  const showCastle = useHomeTerraceTuning((s) => s.showCastle);
+  const setShowCastle = useHomeTerraceTuning((s) => s.setShowCastle);
   const resetElement = useHomeTerraceTuning((s) => s.resetElement);
   const resetAll = useHomeTerraceTuning((s) => s.resetAll);
 
@@ -148,6 +150,7 @@ export function HomeTerracePositioner({ k, selected, onSelect, showHitAreas, onT
                 label={forceDailyPlayed === null ? 'Daily: real' : forceDailyPlayed ? 'Daily: played' : 'Daily: not played'}
                 onPress={() => setForce(forceDailyPlayed === null ? false : forceDailyPlayed === false ? true : null)}
               />
+              <Btn label={showCastle ? 'Castle: shown' : 'Castle: hidden'} on={showCastle} onPress={() => setShowCastle(!showCastle)} />
               <Btn label={readout ? 'Readout: ON' : 'Readout'} on={readout} onPress={() => setReadout((v) => !v)} />
               <Btn label="Reset ALL" onPress={resetAll} />
               <Btn label="Back to old Home" onPress={onExit} />

@@ -20,9 +20,12 @@ type State = {
   overrides: TerraceOverrides;
   /** Force the Daily lighting state for testing: null = follow the real state. */
   forceDailyPlayed: boolean | null;
+  /** Show the castle so it can be positioned; at rest it is hidden (Pete, 2026-10-20). */
+  showCastle: boolean;
   load: () => Promise<void>;
   setRect: (id: TerraceElementId, rect: Partial<TerraceRect>) => void;
   setForceDailyPlayed: (value: boolean | null) => void;
+  setShowCastle: (value: boolean) => void;
   resetElement: (id: TerraceElementId) => void;
   resetAll: () => void;
 };
@@ -51,6 +54,7 @@ export const useHomeTerraceTuning = create<State>((set, get) => ({
   loaded: false,
   overrides: {},
   forceDailyPlayed: null,
+  showCastle: false,
   load: async () => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -65,6 +69,7 @@ export const useHomeTerraceTuning = create<State>((set, get) => ({
     persist(overrides);
   },
   setForceDailyPlayed: (value) => set({ forceDailyPlayed: value }),
+  setShowCastle: (value) => set({ showCastle: value }),
   resetElement: (id) => {
     const overrides = { ...get().overrides };
     delete overrides[id];

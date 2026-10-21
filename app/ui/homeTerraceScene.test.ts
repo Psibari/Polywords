@@ -24,7 +24,7 @@ for (const phone of PHONES) {
 
   // Background and front are bottom-anchored and the same width as the screen.
   assert.ok(Math.abs(layout.background.top + layout.background.height - phone.height) < 1e-6);
-  assert.equal(layout.background.width, phone.width);
+  assert.ok(Math.abs(layout.background.width - phone.width) < 1e-6);
   assert.ok(Math.abs(layout.front.top + layout.front.height - phone.height) < 1e-6);
 
   // The wall spans the full width and is never scaled differently from the frame.
@@ -32,7 +32,7 @@ for (const phone of PHONES) {
   assert.ok(Math.abs(layout.rects.wall.width - phone.width) < 1e-6);
 
   // Bottom-group elements keep their distance from the screen bottom (design units).
-  for (const id of ['wall', 'plaque', 'casing', 'gear', 'cageBase', 'castle'] as const) {
+  for (const id of ['wall', 'plaque', 'casing', 'gear', 'cageBase', 'castle', 'perch'] as const) {
     const d = TERRACE_DEFAULTS[id];
     const bottomGap = phone.height - (layout.rects[id].top + layout.rects[id].height);
     const want = (TERRACE_DESIGN_H - d.y - d.h) * k;
@@ -54,6 +54,16 @@ for (const phone of PHONES) {
   const moved = resolveTerraceLayout(PHONES[0], { wall: { y: TERRACE_DEFAULTS.wall.y + 10 } });
   assert.ok(Math.abs(moved.rects.wall.top - base.rects.wall.top - 10 * base.k) < 1e-6);
   assert.equal(moved.rects.wall.width, base.rects.wall.width);
+}
+
+// Raising the background moves the front ridge with it (they are one picture).
+{
+  const phone = PHONES[0];
+  const base = resolveTerraceLayout(phone);
+  const raised = resolveTerraceLayout(phone, { background: { y: TERRACE_DEFAULTS.background.y - 100 } });
+  assert.ok(Math.abs(base.background.top - raised.background.top - 100 * base.k) < 1e-6);
+  assert.ok(Math.abs(base.front.top - raised.front.top - 100 * base.k) < 1e-6);
+  assert.equal(raised.background.width, base.background.width);
 }
 
 // Polly's transform follows her rect.
