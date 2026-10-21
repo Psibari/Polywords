@@ -30,7 +30,7 @@ import {
   TERRACE_SLABS,
   TerraceLayout,
   TerraceElementId,
-  terraceLabelFontSizes,
+  terraceLabelLayout,
 } from '../ui/homeTerraceScene';
 
 // Static outdoor-terrace Home (Pete, 2026-10-20). Art and layout only: no movement yet. The
@@ -127,7 +127,7 @@ export function HomeTerraceScene(props: Props) {
   const trembleLayer = [styles.trembleLayer, { width, height }, trembleStyle];
   const hunt = TERRACE_SLABS.hunt;
   const book = TERRACE_SLABS.book;
-  const labelSizes = terraceLabelFontSizes(hunt.w * niche.width);
+  const labelSizes = terraceLabelLayout(hunt.w * niche.width, hunt.h * niche.height);
 
   return (
     <View style={[styles.root, { width, height }]} pointerEvents="box-none">
@@ -317,6 +317,8 @@ export function HomeTerraceScene(props: Props) {
             width={hunt.w * niche.width}
             height={hunt.h * niche.height}
             fontSize={labelSizes.hunt}
+            smallSize={labelSizes.small}
+            lines={huntLabel === 'RESUME HUNT' ? ['RESUME', 'HUNT'] : ['ENTER', 'the', 'HUNT']}
             k={k}
             color={dailyPlayed ? GOLD : WHITE}
             glow={dailyPlayed}
@@ -372,6 +374,10 @@ type SlabProps = {
   width: number;
   height: number;
   fontSize: number;
+  /** Size of a line written 'the' (lower case marks the small word). */
+  smallSize?: number;
+  /** The label as lines; absent = the single-line label. */
+  lines?: readonly string[];
   k: number;
   color: string;
   glow: boolean;
@@ -503,25 +509,56 @@ function Slab(p: SlabProps) {
           style={{ position: 'absolute', left: 0, top: 0, width: p.width, height: p.height }}
           resizeMode="stretch"
         />
-        <Text
-          allowFontScaling={false}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.55}
-          style={[
-            styles.slabLabel,
-            {
-              fontSize: p.fontSize,
-              letterSpacing: p.fontSize * TERRACE_LABEL.letterSpacingEm,
-              color: p.color,
-              textShadowColor: p.glow ? 'rgba(255,184,58,0.53)' : LABEL_SHADOW,
-              textShadowRadius: p.glow ? 16 * p.k : 0,
-              maxWidth: p.width * 0.96,
-            },
-          ]}
-        >
-          {p.label}
-        </Text>
+        {p.lines ? (
+          // Stacked label: big lines with a tiny THE between (Pete 2026-10-21).
+          <View style={styles.slabLines} pointerEvents="none">
+            {p.lines.map((line) => {
+              const small = line === 'the';
+              const size = small ? (p.smallSize ?? p.fontSize * TERRACE_LABEL.smallSize) : p.fontSize;
+              return (
+                <Text
+                  key={line}
+                  allowFontScaling={false}
+                  numberOfLines={1}
+                  style={[
+                    styles.slabLabel,
+                    {
+                      fontSize: size,
+                      lineHeight: p.fontSize * (small ? TERRACE_LABEL.smallLineHeight : TERRACE_LABEL.bigLineHeight),
+                      letterSpacing: size * TERRACE_LABEL.letterSpacingEm,
+                      includeFontPadding: false,
+                      color: p.color,
+                      textShadowColor: p.glow ? 'rgba(255,184,58,0.53)' : LABEL_SHADOW,
+                      textShadowRadius: p.glow ? 16 * p.k : 0,
+                    },
+                  ]}
+                >
+                  {line.toUpperCase()}
+                </Text>
+              );
+            })}
+          </View>
+        ) : (
+          <Text
+            allowFontScaling={false}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.55}
+            style={[
+              styles.slabLabel,
+              {
+                fontSize: p.fontSize,
+                letterSpacing: p.fontSize * TERRACE_LABEL.letterSpacingEm,
+                color: p.color,
+                textShadowColor: p.glow ? 'rgba(255,184,58,0.53)' : LABEL_SHADOW,
+                textShadowRadius: p.glow ? 16 * p.k : 0,
+                maxWidth: p.width * 0.96,
+              },
+            ]}
+          >
+            {p.label}
+          </Text>
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -563,6 +600,7 @@ const styles = StyleSheet.create({
   trembleLayer: { position: 'absolute', left: 0, top: 0 },
   popShadow: { backgroundColor: '#000000' },
   btnTop: { position: 'absolute', left: 0, bottom: '100%' },
+  slabLines: { alignItems: 'center', justifyContent: 'center' },
   slabLabel: { fontFamily: FONTS.terraceButton, textAlign: 'center', textShadowOffset: { width: 0, height: 2 } },
   selection: { borderWidth: 2, borderColor: '#B98ADE', borderStyle: 'dashed' },
   hitDebug: { borderWidth: 1, borderColor: 'rgba(245,200,66,0.9)', backgroundColor: 'rgba(245,200,66,0.12)' },

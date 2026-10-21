@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { TERRACE_LABEL, terraceLabelFontSizes } from './homeTerraceScene';
+import { TERRACE_LABEL, terraceLabelLayout } from './homeTerraceScene';
 import {
   TERRACE_BUTTON_COUNT,
   terraceEntranceCues,
@@ -21,10 +21,15 @@ assert.deepEqual(terraceEntranceCues(0, true), { shift: true, seatRow: 0 });
 assert.deepEqual(terraceEntranceCues(1, true), { shift: false, seatRow: 1 });
 assert.deepEqual(terraceEntranceCues(0, false), { shift: false, seatRow: 0 });
 assert.deepEqual(terraceEntranceCues(1, false), { shift: false, seatRow: null });
-// ENTER THE HUNT is much larger than POLYBOOK and fills its width fraction (with spacing).
-const sizes = terraceLabelFontSizes(300);
-assert.ok(sizes.hunt > sizes.book * 1.5);
-const huntWidth =
-  sizes.hunt * (TERRACE_LABEL.advanceEm.enterTheHunt + TERRACE_LABEL.letterSpacingEm * 14);
-assert.ok(Math.abs(huntWidth - 300 * TERRACE_LABEL.huntWidthFraction) < 0.01);
+// Hunt label: big lines much larger than POLYBOOK, a tiny THE, and the block fits the button.
+const lay = terraceLabelLayout(322, 116);
+assert.ok(lay.hunt > lay.book * 1.3);
+assert.ok(lay.small < lay.hunt * 0.5);
+const block =
+  lay.hunt * 2 * TERRACE_LABEL.bigLineHeight + lay.hunt * TERRACE_LABEL.smallLineHeight;
+assert.ok(block <= 116 * TERRACE_LABEL.huntBlockHeightFraction + 0.01);
+const widest = lay.hunt * (TERRACE_LABEL.advanceEm.resume + TERRACE_LABEL.letterSpacingEm * 6);
+assert.ok(widest <= 322 * TERRACE_LABEL.huntMaxWidthFraction + 0.01);
+// A wide, short button is limited by height, a narrow one by width.
+assert.ok(terraceLabelLayout(100, 400).hunt < terraceLabelLayout(400, 400).hunt);
 console.log('homeTerraceEntrance tests passed');

@@ -134,21 +134,41 @@ export const TERRACE_SLABS = {
   book: { x: (1140 - 1121) / 2 / 1140, w: 1121 / 1140, y: 428 / 705, h: 263 / 705 },
 } as const;
 
-// Button labels (Rammetto One, Pete 2026-10-21). ENTER THE HUNT fills most of its button; POLYBOOK
-// is set much smaller. Advance widths are in em, measured from assets/fonts/RammettoOne-Regular.ttf.
+// Button labels (Lilita One, Pete 2026-10-21). ENTER THE HUNT is three lines, ENTER and HUNT big with
+// a tiny THE between ("the" is not an important word); RESUME HUNT is two big lines; POLYBOOK is one
+// line, much smaller. Advance widths are in em, measured from assets/fonts/LilitaOne-Regular.ttf.
 export const TERRACE_LABEL = {
-  huntWidthFraction: 0.85,
-  bookSizeRatio: 0.6,
+  /** The Hunt text block fills this much of the button height. */
+  huntBlockHeightFraction: 0.78,
+  /** ...and never more than this much of its width. */
+  huntMaxWidthFraction: 0.8,
+  /** Big line height, and the small THE's size and line height, as multiples of the big size. */
+  bigLineHeight: 0.92,
+  smallSize: 0.34,
+  smallLineHeight: 0.5,
+  bookSizeRatio: 0.7,
   letterSpacingEm: 0.05,
-  advanceEm: { enterTheHunt: 10.3316, resumeHunt: 8.6729, polybook: 6.9829 },
+  advanceEm: { enter: 2.726, hunt: 2.422, resume: 3.642, polybook: 4.887 },
 } as const;
 
-/** Font sizes (points) for a button of this width. RESUME HUNT uses the Hunt size and is narrower. */
-export function terraceLabelFontSizes(buttonWidth: number): { hunt: number; book: number } {
-  const hunt =
-    (TERRACE_LABEL.huntWidthFraction * buttonWidth) /
-    (TERRACE_LABEL.advanceEm.enterTheHunt + TERRACE_LABEL.letterSpacingEm * 'ENTER THE HUNT'.length);
-  return { hunt, book: hunt * TERRACE_LABEL.bookSizeRatio };
+export type TerraceLabelLayout = {
+  /** Big-line size for ENTER / RESUME / HUNT, points. */
+  hunt: number;
+  /** The small THE between ENTER and HUNT. */
+  small: number;
+  book: number;
+};
+
+/** Label sizes (points) for the two buttons, from their pixel sizes on screen. */
+export function terraceLabelLayout(huntWidth: number, huntHeight: number): TerraceLabelLayout {
+  const L = TERRACE_LABEL;
+  // Block height: two big lines plus the small THE line.
+  const byHeight = (L.huntBlockHeightFraction * huntHeight) / (2 * L.bigLineHeight + L.smallLineHeight);
+  // The widest big line is RESUME.
+  const byWidth =
+    (L.huntMaxWidthFraction * huntWidth) / (L.advanceEm.resume + L.letterSpacingEm * 'RESUME'.length);
+  const hunt = Math.min(byHeight, byWidth);
+  return { hunt, small: hunt * L.smallSize, book: hunt * L.bookSizeRatio };
 }
 
 // Castle windows and door glow, as fractions of the castle rect (from the mock's overlays).
