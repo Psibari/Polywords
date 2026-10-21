@@ -309,7 +309,13 @@ function Slab(p: SlabProps) {
       onPress={p.onPress}
       style={[styles.slab, { top: p.top, width: p.width, height: p.height }, p.debug]}
     >
-      <Image source={p.source} style={StyleSheet.absoluteFill} resizeMode="stretch" />
+      {/* Explicit size, NOT absoluteFill: on iOS an absoluteFill Image drew at its own 619 x 241 pt
+          size (about 2x the button) and the niche clipped it to the top-left quarter. */}
+      <Image
+        source={p.source}
+        style={{ position: 'absolute', left: 0, top: 0, width: p.width, height: p.height }}
+        resizeMode="stretch"
+      />
       <Text
         allowFontScaling={false}
         numberOfLines={1}
