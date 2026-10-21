@@ -12,6 +12,9 @@ export const FONTS = {
   label: 'BarlowCondensed-Bold',
   brand: 'BarlowCondensed-Bold',
 
+  // Home terrace ENTER THE HUNT / POLYBOOK buttons (Pete picked Rammetto One, 2026-10-21).
+  terraceButton: 'RammettoOne-Regular',
+
   // Polly's handwriting. Her writing in the Polybook and nowhere else — the
   // page is deliberately split, with everything that is not her voice (column
   // labels, dates, totals, the screen title) staying in the game's own fonts.

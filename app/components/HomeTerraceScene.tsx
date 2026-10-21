@@ -1,9 +1,19 @@
-import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useRef } from 'react';
+import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
+import {
+  DAILY_PLAQUE_DROP,
+  DAILY_PLAQUE_INPUT,
+  DAILY_PLAQUE_OPACITY,
+  DAILY_PLAQUE_OPACITY_INPUT,
+  DAILY_PLAQUE_PROUD,
+  DAILY_PLAQUE_SCALE,
+  DAILY_WALL_TREMBLE_X,
+  DAILY_WALL_TREMBLE_Y,
+} from '../ui/dailyPlaqueEntrance';
 import {
   TERRACE_CAGE_TOP_ROTATION_DEG,
   TERRACE_CASTLE_WINDOWS,
@@ -12,11 +22,13 @@ import {
   TERRACE_GROUND_SEAM_COLUMNS_BOTTOM_X,
   TERRACE_GROUND_SEAM_ROWS,
   TERRACE_GROUND_VANISH,
+  TERRACE_LABEL,
   TERRACE_NICHE,
   TERRACE_SKY_TOP_COLOR,
   TERRACE_SLABS,
   TerraceLayout,
   TerraceElementId,
+  terraceLabelFontSizes,
 } from '../ui/homeTerraceScene';
 
 // Static outdoor-terrace Home (Pete, 2026-10-20). Art and layout only: no movement yet. The
@@ -31,6 +43,7 @@ const ART = {
   casing: require('../../assets/images/home/terrace/casing.png'),
   slabHunt: require('../../assets/images/home/terrace/btn_hunt.png'),
   slabBook: require('../../assets/images/home/terrace/btn_book.png'),
+  btnTop: require('../../assets/images/home/terrace/btn_top.png'),
   cageTop: require('../../assets/images/home/terrace/cage_top.png'),
   cageBase: require('../../assets/images/home/terrace/cage_base.png'),
   perch: require('../../assets/images/home/terrace/perch.png'),
@@ -46,6 +59,17 @@ const LABEL_SHADOW = '#060316';
 const GROUND_FACE = '#271E3D'; // measured Daily castle floor tile face
 const GROUND_SEAM = '#0E081C';
 const GROUND_BEVEL = '#4A3A78';
+
+// A button standing out of the console: its drop shadow and top face, as the Daily's answer blocks
+// (DailyAnswerCard). Same numbers: shadow offset x3 y7 at 0.45.
+const POP_SHADOW = { x: 3, y: 7, opacity: 0.45 } as const;
+const BTN_TOP_RATIO = 81 / 1117; // btn_top.png: 1117 x 81 over a 1117 wide button
+
+export type TerraceEntranceProps = {
+  progress: readonly Animated.Value[];
+  tremble: Animated.Value;
+  locked: boolean;
+};
 
 type Props = {
   layout: TerraceLayout;
@@ -63,6 +87,8 @@ type Props = {
   onHunt: () => void;
   onBook: () => void;
   onSettings: () => void;
+  /** Buttons coming out of the console and the tremble; absent = everything at rest. */
+  entrance?: TerraceEntranceProps;
 };
 
 export function HomeTerraceScene(props: Props) {
@@ -79,6 +105,27 @@ export function HomeTerraceScene(props: Props) {
   const ground = rects.ground;
   const plaque = rects.plaque;
   const hitDebug = props.showHitAreas ? styles.hitDebug : null;
+
+  const restEntrance = useRef<TerraceEntranceProps>({
+    progress: [new Animated.Value(1), new Animated.Value(1)],
+    tremble: new Animated.Value(0),
+    locked: false,
+  }).current;
+  const entrance = props.entrance ?? restEntrance;
+  // Wall and console tremble together while the buttons come out (the Daily wall's own keyframes).
+  const trembleStyle = useMemo(
+    () => ({
+      transform: [
+        { translateX: entrance.tremble.interpolate(DAILY_WALL_TREMBLE_X) },
+        { translateY: entrance.tremble.interpolate(DAILY_WALL_TREMBLE_Y) },
+      ],
+    }),
+    [entrance.tremble],
+  );
+  const trembleLayer = [styles.trembleLayer, { width, height }, trembleStyle];
+  const hunt = TERRACE_SLABS.hunt;
+  const book = TERRACE_SLABS.book;
+  const labelSizes = terraceLabelFontSizes(hunt.w * niche.width);
 
   return (
     <View style={[styles.root, { width, height }]} pointerEvents="box-none">
@@ -166,6 +213,7 @@ export function HomeTerraceScene(props: Props) {
         <GroundSeams width={width} height={ground.height} k={k} />
       </View>
 
+      <Animated.View pointerEvents="box-none" collapsable={false} style={trembleLayer}>
       {/* Back wall, and the soft shadow it casts onto the ground. */}
       <Image source={ART.wall} style={[styles.img, rects.wall]} resizeMode="stretch" />
       <LinearGradient
@@ -203,6 +251,7 @@ export function HomeTerraceScene(props: Props) {
           DAILY CHALLENGE
         </Text>
       </Pressable>
+      </Animated.View>
 
       {/* The perch Polly lands on: a short wooden stick sticking out of the wall. */}
       <Image source={ART.perch} style={[styles.img, rects.perch]} resizeMode="stretch" />
@@ -240,54 +289,60 @@ export function HomeTerraceScene(props: Props) {
         </Svg>
       </Pressable>
 
-      {/* The one stone console: casing, opening, two slabs. */}
-      <View
-        pointerEvents="none"
-        style={[
-          styles.abs,
-          {
-            left: casing.left - 6 * k,
-            top: casing.top + casing.height - 13 * k,
-            width: casing.width + 12 * k,
-            height: 26 * k,
-            borderRadius: 13 * k,
-            backgroundColor: 'rgba(5,3,20,0.35)',
-          },
-        ]}
-      />
-      <Image source={ART.casing} style={[styles.img, casing]} resizeMode="stretch" />
-      <View style={[styles.abs, niche, { backgroundColor: NICHE_BACK, overflow: 'hidden' }]}>
-        <Slab
-          source={ART.slabHunt}
-          label={huntLabel}
-          left={TERRACE_SLABS.hunt.x * niche.width}
-          top={TERRACE_SLABS.hunt.y * niche.height}
-          width={TERRACE_SLABS.hunt.w * niche.width}
-          height={TERRACE_SLABS.hunt.h * niche.height}
-          fontSize={34 * k}
-          k={k}
-          color={dailyPlayed ? GOLD : WHITE}
-          glow={dailyPlayed}
-          accessibilityLabel={huntLabel === 'RESUME HUNT' ? 'Resume Hunt' : 'Enter the Hunt'}
-          onPress={props.onHunt}
-          debug={hitDebug}
+      {/* The one stone console: casing, opening, two buttons. It trembles with the wall. */}
+      <Animated.View pointerEvents="box-none" collapsable={false} style={trembleLayer}>
+        <View
+          pointerEvents="none"
+          style={[
+            styles.abs,
+            {
+              left: casing.left - 6 * k,
+              top: casing.top + casing.height - 13 * k,
+              width: casing.width + 12 * k,
+              height: 26 * k,
+              borderRadius: 13 * k,
+              backgroundColor: 'rgba(5,3,20,0.35)',
+            },
+          ]}
         />
-        <Slab
-          source={ART.slabBook}
-          label="POLYBOOK"
-          left={TERRACE_SLABS.book.x * niche.width}
-          top={TERRACE_SLABS.book.y * niche.height}
-          width={TERRACE_SLABS.book.w * niche.width}
-          height={TERRACE_SLABS.book.h * niche.height}
-          fontSize={28 * k}
-          k={k}
-          color={WHITE}
-          glow={false}
-          accessibilityLabel="Open the Polybook"
-          onPress={props.onBook}
-          debug={hitDebug}
-        />
-      </View>
+        <Image source={ART.casing} style={[styles.img, casing]} resizeMode="stretch" />
+        <View style={[styles.abs, niche, { backgroundColor: NICHE_BACK }]} pointerEvents="box-none">
+          <Slab
+            source={ART.slabHunt}
+            label={huntLabel}
+            left={hunt.x * niche.width}
+            top={hunt.y * niche.height}
+            width={hunt.w * niche.width}
+            height={hunt.h * niche.height}
+            fontSize={labelSizes.hunt}
+            k={k}
+            color={dailyPlayed ? GOLD : WHITE}
+            glow={dailyPlayed}
+            progress={entrance.progress[0]}
+            locked={entrance.locked}
+            accessibilityLabel={huntLabel === 'RESUME HUNT' ? 'Resume Hunt' : 'Enter the Hunt'}
+            onPress={props.onHunt}
+            debug={hitDebug}
+          />
+          <Slab
+            source={ART.slabBook}
+            label="POLYBOOK"
+            left={book.x * niche.width}
+            top={book.y * niche.height}
+            width={book.w * niche.width}
+            height={book.h * niche.height}
+            fontSize={labelSizes.book}
+            k={k}
+            color={WHITE}
+            glow={false}
+            progress={entrance.progress[1]}
+            locked={entrance.locked}
+            accessibilityLabel="Open the Polybook"
+            onPress={props.onBook}
+            debug={hitDebug}
+          />
+        </View>
+      </Animated.View>
 
       {/* The cage's base half rests on the ground, overlapping the console's corner. */}
       <Image source={ART.cageBase} style={[styles.img, rects.cageBase]} resizeMode="contain" />
@@ -318,46 +373,116 @@ type SlabProps = {
   k: number;
   color: string;
   glow: boolean;
+  /** 0 hidden in the console, DAILY_PLAQUE_PEAK farthest out, 1 flush. */
+  progress: Animated.Value;
+  locked: boolean;
   accessibilityLabel: string;
   onPress: () => void;
   debug: object | null;
 };
 
 function Slab(p: SlabProps) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={p.accessibilityLabel}
-      onPress={p.onPress}
-      style={[styles.slab, { left: p.left, top: p.top, width: p.width, height: p.height }, p.debug]}
-    >
-      {/* Explicit size, NOT absoluteFill: on iOS an absoluteFill Image drew at its own 619 x 241 pt
-          size (about 2x the button) and the niche clipped it to the top-left quarter. */}
-      <Image
-        source={p.source}
-        style={{ position: 'absolute', left: 0, top: 0, width: p.width, height: p.height }}
-        resizeMode="stretch"
-      />
-      <Text
-        allowFontScaling={false}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.55}
-        style={[
-          styles.slabLabel,
+  const { progress } = p;
+  // The Daily answer block's own keyframes (DailyAnswerCard): scale, drop and opacity, plus the top
+  // face and wall shadow it shows while it stands out. Always Animated nodes, never plain numbers.
+  const motion = useMemo(() => {
+    const proud = (map: (v: number) => number) => DAILY_PLAQUE_PROUD.map(map);
+    const topH = p.width * BTN_TOP_RATIO;
+    return {
+      shell: {
+        opacity: progress.interpolate({
+          inputRange: DAILY_PLAQUE_OPACITY_INPUT,
+          outputRange: DAILY_PLAQUE_OPACITY,
+          extrapolate: 'clamp' as const,
+        }),
+        transform: [
+          { translateY: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_DROP }) },
+          { scale: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_SCALE }) },
+        ],
+      },
+      top: {
+        opacity: progress.interpolate({
+          inputRange: [0, 0.02, 0.98, 1],
+          outputRange: [0, 1, 1, 0],
+          extrapolate: 'clamp' as const,
+        }),
+        transform: [
           {
-            fontSize: p.fontSize,
-            letterSpacing: p.fontSize * 0.08,
-            color: p.color,
-            textShadowColor: p.glow ? 'rgba(255,184,58,0.53)' : LABEL_SHADOW,
-            textShadowRadius: p.glow ? 16 * p.k : 0,
-            maxWidth: p.width * 0.9,
+            translateY: progress.interpolate({
+              inputRange: DAILY_PLAQUE_INPUT,
+              outputRange: proud((v) => ((1 - Math.max(0.001, v)) * topH) / 2),
+            }),
           },
-        ]}
+          {
+            scaleY: progress.interpolate({
+              inputRange: DAILY_PLAQUE_INPUT,
+              outputRange: proud((v) => Math.max(0.001, v)),
+            }),
+          },
+        ],
+      },
+      shadow: {
+        opacity: progress.interpolate({
+          inputRange: DAILY_PLAQUE_INPUT,
+          outputRange: proud((v) => v * POP_SHADOW.opacity),
+        }),
+        transform: [
+          { translateX: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: proud((v) => v * POP_SHADOW.x) }) },
+          { translateY: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: proud((v) => v * POP_SHADOW.y) }) },
+        ],
+      },
+      topH,
+    };
+  }, [progress, p.width]);
+
+  return (
+    <Animated.View
+      collapsable={false}
+      pointerEvents="box-none"
+      style={[styles.abs, { left: p.left, top: p.top, width: p.width, height: p.height }, motion.shell]}
+    >
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.shadow]} />
+      <Animated.Image
+        source={ART.btnTop}
+        resizeMode="stretch"
+        // Explicit size: a bundled image otherwise takes the file's pixel width.
+        style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.top]}
+      />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={p.accessibilityLabel}
+        disabled={p.locked}
+        onPress={p.onPress}
+        style={[styles.slab, { width: p.width, height: p.height }, p.debug]}
       >
-        {p.label}
-      </Text>
-    </Pressable>
+        {/* Explicit size, NOT absoluteFill: on iOS an absoluteFill Image drew at its own pixel size
+            (about 2x the button) and was clipped to the top-left quarter. */}
+        <Image
+          source={p.source}
+          style={{ position: 'absolute', left: 0, top: 0, width: p.width, height: p.height }}
+          resizeMode="stretch"
+        />
+        <Text
+          allowFontScaling={false}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.55}
+          style={[
+            styles.slabLabel,
+            {
+              fontSize: p.fontSize,
+              letterSpacing: p.fontSize * TERRACE_LABEL.letterSpacingEm,
+              color: p.color,
+              textShadowColor: p.glow ? 'rgba(255,184,58,0.53)' : LABEL_SHADOW,
+              textShadowRadius: p.glow ? 16 * p.k : 0,
+              maxWidth: p.width * 0.96,
+            },
+          ]}
+        >
+          {p.label}
+        </Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -393,8 +518,11 @@ const styles = StyleSheet.create({
   img: { position: 'absolute', pointerEvents: 'none' },
   dailyLabel: { position: 'absolute', textAlign: 'center', fontFamily: FONTS.wordDisplay, textShadowOffset: { width: 0, height: 2 } },
   gear: { alignItems: 'center', justifyContent: 'center' },
-  slab: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  slabLabel: { fontFamily: FONTS.wordDisplay, textAlign: 'center', textShadowOffset: { width: 0, height: 2 } },
+  slab: { alignItems: 'center', justifyContent: 'center' },
+  trembleLayer: { position: 'absolute', left: 0, top: 0 },
+  popShadow: { backgroundColor: '#000000' },
+  btnTop: { position: 'absolute', left: 0, bottom: '100%' },
+  slabLabel: { fontFamily: FONTS.terraceButton, textAlign: 'center', textShadowOffset: { width: 0, height: 2 } },
   selection: { borderWidth: 2, borderColor: '#B98ADE', borderStyle: 'dashed' },
   hitDebug: { borderWidth: 1, borderColor: 'rgba(245,200,66,0.9)', backgroundColor: 'rgba(245,200,66,0.12)' },
 });

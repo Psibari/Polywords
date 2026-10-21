@@ -6,6 +6,7 @@ import { HomeTerraceScene } from '../components/HomeTerraceScene';
 import PollyHomePerch from '../components/PollyHomePerch';
 import { HomeTerracePositioner } from '../dev/HomeTerracePositioner';
 import { currentRect, useHomeTerraceTuning } from '../dev/homeTerraceTuning';
+import { useTerraceEntrance } from '../hooks/useTerraceEntrance';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { homePerch } from '../ui/pwHomeMaterials';
@@ -42,6 +43,7 @@ export default function HomeTerraceScreen({ navigation }: Props) {
   const forceDailyPlayed = useHomeTerraceTuning((s) => s.forceDailyPlayed);
   const showCastle = useHomeTerraceTuning((s) => s.showCastle);
   const loadTuning = useHomeTerraceTuning((s) => s.load);
+  const entrance = useTerraceEntrance();
   const [selected, setSelected] = useState<TerraceElementId | null>(null);
   const [showHitAreas, setShowHitAreas] = useState(false);
 
@@ -106,6 +108,7 @@ export default function HomeTerraceScreen({ navigation }: Props) {
         onHunt={handleHunt}
         onBook={handleBook}
         onSettings={() => navigation.navigate('Settings')}
+        entrance={entrance}
         polly={
           pollyMemoryLoaded ? (
             <View

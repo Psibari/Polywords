@@ -134,6 +134,23 @@ export const TERRACE_SLABS = {
   book: { x: (1140 - 1121) / 2 / 1140, w: 1121 / 1140, y: 428 / 705, h: 263 / 705 },
 } as const;
 
+// Button labels (Rammetto One, Pete 2026-10-21). ENTER THE HUNT fills most of its button; POLYBOOK
+// is set much smaller. Advance widths are in em, measured from assets/fonts/RammettoOne-Regular.ttf.
+export const TERRACE_LABEL = {
+  huntWidthFraction: 0.85,
+  bookSizeRatio: 0.6,
+  letterSpacingEm: 0.05,
+  advanceEm: { enterTheHunt: 10.3316, resumeHunt: 8.6729, polybook: 6.9829 },
+} as const;
+
+/** Font sizes (points) for a button of this width. RESUME HUNT uses the Hunt size and is narrower. */
+export function terraceLabelFontSizes(buttonWidth: number): { hunt: number; book: number } {
+  const hunt =
+    (TERRACE_LABEL.huntWidthFraction * buttonWidth) /
+    (TERRACE_LABEL.advanceEm.enterTheHunt + TERRACE_LABEL.letterSpacingEm * 'ENTER THE HUNT'.length);
+  return { hunt, book: hunt * TERRACE_LABEL.bookSizeRatio };
+}
+
 // Castle windows and door glow, as fractions of the castle rect (from the mock's overlays).
 export type TerraceWindow = { kind: 'arch' | 'slit'; x: number; y: number; w: number; h: number };
 const CASTLE_X = 195;
