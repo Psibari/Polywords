@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-20 (Home direction: outdoor terrace; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-20 (Home direction: outdoor terrace, static scene built behind DEV switch; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -17,7 +17,7 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 
 ## Current State
 
-- **Home redesign (Pete, 2026-10-20): OUTDOOR night terrace; approved direction, documented; implementation not built.**
+- **Home redesign (Pete, 2026-10-20): OUTDOOR night terrace; approved direction, documented; static scene + DEV positioner built on branch home-terrace behind `__DEV__`; movement not built.**
   Read [docs/HOME_SCREEN_LOCKDOWN.md](docs/HOME_SCREEN_LOCKDOWN.md) (section "Pete rulings,
   2026-10-20") before any Home work. The 2026-10-13 indoor room is PARKED, not deleted. Layers back
   to front: locked sky-and-ridges background (1290x2796), violet castle (locked), back wall with
@@ -148,11 +148,26 @@ Next job (Pete, 2026-10-11): the Daily Challenge screen art, started in its own 
 read-only audit first.
 
 Home redesign, open:
-- Home redesign (outdoor terrace): direction approved, NOT built. Rulings in
+- Home redesign (outdoor terrace): direction approved; static scene + DEV positioner built on branch `home-terrace`; movement NOT built. Rulings in
   `docs/HOME_SCREEN_LOCKDOWN.md` (section "Pete rulings, 2026-10-20"). Pete supplied wall, floor,
   console, slab and cage art; Claude cleaned and regraded them for a layout mock. Next: Pete
   answers the open questions, then final colors/sizes, then a DEV positioning tool, then build in
   repo only with Pete's approval.
+- Slabs (ENTER THE HUNT, POLYBOOK): the build uses Pete's ORIGINAL slab art (cut by
+  `tools/art/home_terrace/cut_slabs.py`), inset in the console opening with a gap. Pete is NOT happy
+  with the label type (too small for the slab, dislikes Bebas) and is unsure about the dark box
+  around the slabs; he is making new slab art and resumes 2026-10-21. Do not change slab labels
+  until he answers font and size.
+- Pete's DEV readout 2026-10-20 23:49 (design units) is NOT yet the code default: background x 4.13
+  y -138.38 w 434.19 h 941.08; logo 38.53,32.71,364.65x58.75; moon 337.9,98.4,65.5x65.5; cageTop
+  173.33,804.44,100x90.75; castle 140.08,431.42,162.45x110.65; wall -54.44,374.23,533.51x190.02;
+  plaque 46.07,470.03,342.04x102.1; perch -11.2,354.49,120x16.54; polly -30.11,213.51,135.12x197.25;
+  ground -50.79,641,1119.44x838.95; casing -30.16,530.32,483.53x333.3; gear 2.82,831.08,42x42;
+  cageBase 20.13,856.65,120.01x83.44.
+- Not carried onto the terrace yet (undecided): START HERE badge, GOLD FEATHER READY, streak badge,
+  first-run Hunt glow.
+- Known, pre-existing: `dailyDevControls.test.mjs` fails on a clean tree (not from the terrace
+  work, not investigated).
 - Open for Pete: where the cage base rests and the fall path from the logo; whether the
   app-opening crash still plays; any console entrance; moon rule (2026-10-13 states vs the mock's
   phases vs other); floor color; redraw of the wall's two angled pieces; sky placement of moon,

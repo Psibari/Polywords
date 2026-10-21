@@ -126,10 +126,13 @@ export const TERRACE_NICHE = {
   w: 271.5 / 349.8,
   h: 168.1 / 241.1,
 } as const;
-// Slabs inside the niche, as fractions of the niche height (width is the full niche width).
+// Slabs inside the niche, INSET with a dark margin around them and a gap between (as in Pete's
+// original composite). x / w are fractions of the niche width, y / h of the niche height.
+// Pixel basis: niche 617 x 382; Hunt art 619 x 243, Polybook art 619 x 128 (aspect kept).
+const SLAB_W = 555 / 617;
 export const TERRACE_SLABS = {
-  hunt: { y: 0, h: 106.0 / 168.1 },
-  book: { y: 112.6 / 168.1, h: 55.4 / 168.1 },
+  hunt: { x: (617 - 555) / 2 / 617, w: SLAB_W, y: 18 / 382, h: (555 * 243) / 619 / 382 },
+  book: { x: (617 - 555) / 2 / 617, w: SLAB_W, y: 248 / 382, h: (555 * 128) / 619 / 382 },
 } as const;
 
 // Castle windows and door glow, as fractions of the castle rect (from the mock's overlays).

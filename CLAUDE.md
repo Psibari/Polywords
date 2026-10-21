@@ -173,9 +173,19 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 Home redesign is approved in direction and NOT built. As of 2026-10-20 Pete chose an OUTDOOR night
 terrace (castle wall, floor, one stone console for Hunt and Polybook); the 2026-10-13 indoor room
 is parked, not deleted. Rulings live in `docs/HOME_SCREEN_LOCKDOWN.md`. Current `HomeScreen.tsx` is
-still the old layout until Pete says otherwise. When built, derive wall, console and floor geometry
-from full-width, bottom-anchored measurements (never scale the wall) and ship a DEV-only
-positioning tool, which Pete requires.
+still the old layout until Pete says otherwise. A DEV-only terrace Home exists on branch
+`home-terrace` (`app/screens/HomeTerraceScreen.tsx`, `app/components/HomeTerraceScene.tsx`,
+`app/ui/homeTerraceScene.ts`, `app/dev/HomeTerracePositioner.tsx`, `app/dev/homeTerraceTuning.ts`).
+It is a Stack screen only under `__DEV__`, opened from DevSettings > TERRACE HOME; the real
+`HomeScreen.tsx` is unchanged. Layout is one width-fit, bottom-anchored frame (design canvas 443x960,
+k = screenWidth/443); logo, moon and cage top are top-anchored below the safe-area inset. Positions
+are DEV overrides in AsyncStorage key `pw.dev.homeTerrace.v1`; Pete's final readout becomes the
+defaults in `homeTerraceScene.ts`. Movement (castle reveal, cage opening sequence, Polly landing,
+slab transitions, shooting stars) is NOT built.
+
+iOS note: an RN `Image` with `StyleSheet.absoluteFill` inside a Pressable drew at intrinsic size on
+iOS (Fabric); give such Images explicit width and height. RN `Image` takes no `pointerEvents` prop;
+use style.
 
 ## Daily
 

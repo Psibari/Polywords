@@ -405,3 +405,14 @@ deep violet. Polly is the existing master art; castle is the locked violet castl
   console colors need adjusting; cage is cut in half and falls from the logo.
 - 2026-10-20: Pete asked for a DEV positioning button for the implementation.
 - 2026-10-20: Pete asked for this section to be written into this document.
+
+## Pete rulings, 2026-10-20 (evening, terrace build)
+
+- Ground is drawn by code with big perspective slab seams (no cracks); floor color `#271E3D`; no floor image. Moonlit ground was the runner-up.
+- The sky-and-ridges background is a movable element in the DEV tool.
+- The castle is hidden at rest. Tapping DAILY CHALLENGE zooms up and over, the castle rises from behind the mountain range, then the view zooms into it.
+- A small separate wooden perch stays on the wall (cropped from Polly's own branch). Polly has no perch while flying and lands on it; align her baked branch to it afterwards.
+- App-open cage sequence stays: cage hangs from the logo, Polly lands, it shakes, falls and breaks; both halves on the floor is the end state.
+- The console may move down to use the empty bottom space (Pete does this in the DEV tool).
+- Slabs: Pete rejected the regraded slabs (dirty, not fitting the opening). Rebuilt from his original art, inset with a gap. He dislikes the label size and font and is unsure about the dark box around them; he is making new slab art and resumes 2026-10-21.
+- Build note: one width-fit, bottom-anchored frame holds the lower scene (deliberate deviation from the "cover" crop above); sky group is top-anchored below the safe-area inset.
