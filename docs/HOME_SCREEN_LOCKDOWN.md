@@ -5,6 +5,12 @@ Owner: Pete. Status: **approved design direction; not implemented or device-veri
 Working branch: `play-screen-overhaul`. Do not use `daily-castle-test`.
 Scope: Home composition, entrance, menu movement, and destination transitions.
 
+> **2026-10-20 direction change (Pete): Home is OUTDOORS, a night castle terrace, not the indoor
+> room.** The indoor room below is PARKED, not deleted. Read "Pete rulings, 2026-10-20 (outdoor
+> terrace)" at the end of this file first: it says which earlier rulings are parked, which still
+> stand, and which Pete has not yet answered. Where it conflicts with the indoor text, the
+> 2026-10-20 section wins.
+
 ## Read this first when resuming
 
 Preserve Pete's October 13 mockup layout and its sense of looking into a deep room.
@@ -286,3 +292,116 @@ Rulings (Pete's words, paraphrased):
 15. Pete is making the room background art himself first and will bring it back.
 16. Counter labels: RESUME HUNT replaces ENTER THE HUNT on the Hunt counter when a Hunt is in progress. START HERE goes underneath it on the Hunt counter.
 17. The moon's gold-ring feather REPLACES the current "GOLD FEATHER READY" line. There is no GOLD FEATHER READY text on the new Home.
+
+## Pete rulings, 2026-10-20 (outdoor terrace)
+
+Source: Pete's spoken decisions in the 2026-10-20 session. The clickable mock
+(claude.ai artifact AE5pMGoT9qUJzSmRTPs2mj, version 15) and the element PNGs are layout, color and
+motion references only. They are NOT runtime and NOT in the repo. Positions in the mock are
+approximate; Pete says "everything is off on position."
+Pete said nothing here is final until reviewed together; any line can be retracted.
+
+### A. Direction (Pete's words, paraphrased)
+
+1. Home is OUTDOORS: a night terrace on a castle wall. Reason Pete gave: it is easier to zoom to the
+   castle without making a window, and the indoor room had unresolved issues. He still wants the
+   broken cage in it.
+2. The indoor room (the 2026-10-13 composition and rulings 7, 13, 14, 15 below) is PARKED, not
+   deleted. Do not build it unless Pete reopens it.
+3. Background = ONE locked image, 1290x2796: night sky plus distant ridges only. No stars, moon,
+   castle, wall or ground detail baked in. Pete: "we can lock this in for right now."
+   Everything else is a separate element (castle, wall, floor, console, Polly, logo, cage, moon,
+   gear). Pete and Claude make the art; no outside artist.
+4. Castle: LOCKED ("castle's done"). Violet castle, windows kept, torches and pennants cut.
+   Sits between the two ridge ranges, behind the wall.
+5. Layout, back to front: sky/ridges, castle, back wall (parapet with pillars and a dark recess
+   panel), floor with a back curb, stone console casing, cage and gear.
+6. DAILY CHALLENGE is a button on the back wall's dark recess panel, with the castle behind it.
+   Tapping Daily (the panel or the castle) zooms into the castle.
+7. ONE stone console (casing + two slabs) serves BOTH Hunt and Polybook. Slabs: ENTER THE HUNT
+   (large, top) and POLYBOOK (small, below). Tap either: the slabs slide apart to reveal an opening.
+   Hunt: the camera dives down the hall and the Hunt screen takes over.
+   Polybook: the book pops out of the opening, jumps up and forward into the big closed-cover state
+   (the existing Polybook closed cover; it opens only when tapped there).
+8. Polly perches on the BACK WALL (on the wall's top ledge), not floating and not on a separate post.
+9. Cage is cut in half. The top half hangs/falls from the POLYWORDS logo. The base half rests on the
+   floor. Pete wants the cage in the scene.
+10. Settings gear goes in a BOTTOM corner, never on top. Mock has it bottom-left.
+11. Lettering is NOT gold everywhere. Default white. Fonts: Bebas Neue (labels) and Barlow Condensed.
+12. Daily-first light logic (Pete's earlier stated intent):
+    - Daily not played: castle door and windows glow (slow breathing, about 2 s, no hard blinking);
+      the DAILY CHALLENGE label is gold; Hunt and Polybook are quiet.
+    - Daily played: the castle lights dim; the ENTER THE HUNT label turns gold; a thin gold glow
+      leaks around the console slabs.
+13. Shooting star about every 30 seconds: Pete confirmed ("30 seconds is fine").
+14. Wall and console colors must be adjusted toward the game palette, with shadow where the wall,
+    casing and floor meet. (Claude's regrade is in the mock; Pete has not approved final colors.)
+15. For implementation Pete WANTS A DEV POSITIONING BUTTON: a DEV-only tool to drag/nudge each
+    Home element and read out its final values, because positions in the mock are off. Pete's words:
+    "when we're ready to put it in, I'm going to need a dev button to position stuff."
+
+### B. What happens to the 2026-10-13 rulings
+
+Not asked of Pete yet for each line; this is how the document stands until he answers.
+- PARKED with the indoor room: 6 (counters zoom out of the wall), 7 (room structure, window, hatch,
+  crown, stairs), 8 (Hunt via hatch and stairs), 13 (messy room), 14 (reference rooms),
+  15 (indoor background art).
+- NOT YET CONFIRMED for the terrace (Pete has not said either way): 1 (Polly's domain, campy tone),
+  2, 3, 4 (title and Polly, no tagline), 5 (opening cage crash), 9 (Daily tap), 10 and 17 (moon
+  states and the gold-ring feather replacing GOLD FEATHER READY), 11 (Polybook tap detail),
+  16 (RESUME HUNT and START HERE labels).
+  Do not treat these as dropped or as applying. Ask Pete.
+- Ruling 12 (Settings cog placed where it fits) is superseded by A10.
+
+### C. Open questions for Pete (answer before the related build step)
+
+1. Where does the cage base rest, and what is the fall path from the logo? In the mock it overlaps
+   the casing's lower-right corner because the casing fills the width.
+2. Does the opening still play (Polly drops onto her perch, the cage rattles, falls, breaks)? On
+   app open only, as in ruling 5?
+3. Does the console just sit there, or does it have an entrance? (The indoor "counters zoom out of
+   the wall" does not carry over.)
+4. Moon: ruling 10 states, or the 4-phase mock, or something else? New-moon handling?
+   Daily shows what moon?
+5. Floor color: Claude would tone it down a little because it is the loudest piece. Pete has only
+   named the wall and console so far.
+6. Wall art: the angled pieces beside the two pillars are slightly bumpy in Pete's original art.
+   Claude smoothed them; a clean redraw would be better.
+7. Moon, bubble and stars placement in the empty sky band above the castle.
+8. Final colors, materials and sizes for each element.
+
+### D. Implementation rules to carry (from CLAUDE.md and the mock)
+
+- Never scale the wall. Derive wall, casing and floor geometry from full-width, bottom-anchored
+  measurements (like the Boss ledge and `app/ui/dailyCastleScene.ts`), so the buttons stay aligned
+  on every phone shape. The mock scales everything with one stage and does NOT prove this.
+- Background crop math (computed, not device-tested): wider phones crop about 250 px top and bottom
+  of the 1290x2796 art; taller phones about 45 px each side. Safe box x 60..1230, y 260..2536.
+  Never bake the wall into the background.
+- Hit areas are driven by the same measured coordinates as the art, not guessed rectangles.
+- Daily gold on the label, windows and door is by code overlays on dark art, not baked into the
+  art, so the state can change.
+- Console slabs are sized to tile the opening exactly; the hall stays hidden until the slabs open.
+- Keep the palette: gold scarce and earned, no pink/magenta or orange UI, never pastel. The cage's
+  brass is Pete's art and is the only warm element; check that it does not compete with the Daily
+  gold on device.
+- Reduced-motion, repeated taps, leaving mid-transition and app interruption must not duplicate
+  navigation. Same gates as section 11.
+
+### E. Delivered elements (Pete's art, cleaned by Claude; not in the repo)
+
+Wall (back wall with pillars and recess panel), floor, console casing (opening made transparent),
+two console slabs (Hunt, Polybook), cage top and cage base. The mock uses cleaned and regraded
+copies: ragged edges and leftover background fringe removed, straight wall base, black grout made
+deep violet. Polly is the existing master art; castle is the locked violet castle.
+
+## Decision history, 2026-10-20
+
+- 2026-10-20: Pete chose OUTDOORS (night terrace) over the indoor room; indoor room parked.
+- 2026-10-20: Pete locked the sky-and-ridges background and the violet castle.
+- 2026-10-20: Pete supplied his own wall, floor, console, slab and cage art. Wall edge was rough;
+  Claude cleaned it.
+- 2026-10-20: Pete: Polly perches on the back wall; no gold lettering on everything; wall and
+  console colors need adjusting; cage is cut in half and falls from the logo.
+- 2026-10-20: Pete asked for a DEV positioning button for the implementation.
+- 2026-10-20: Pete asked for this section to be written into this document.

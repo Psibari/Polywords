@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-13 (Home direction; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-20 (Home direction: outdoor terrace; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -17,15 +17,15 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 
 ## Current State
 
-- **Home redesign (Pete, 2026-10-13): approved direction, documented; implementation not verified.**
-  Read [docs/HOME_SCREEN_LOCKDOWN.md](docs/HOME_SCREEN_LOCKDOWN.md) before any Home work.
-  Preserve Pete's deep-room mockup layout: three stone compartments extend from one compact
-  structure; Hunt retracts them as the floor opens onto a descending hall; Daily travels through
-  the window toward a castle silhouette; Polybook rises from its compartment and comes forward.
-  Polly stays left. Her existing drop/landing triggers the cage hanging from the logo's S to
-  rattle, fall, and break only on app opening, never on navigation back Home. Settings placement
-  is flexible; moon faces come last. Art/colors are not final. The focused spec separates locked
-  direction from open details and supersedes the earlier Home-design deferral for this task.
+- **Home redesign (Pete, 2026-10-20): OUTDOOR night terrace; approved direction, documented; implementation not built.**
+  Read [docs/HOME_SCREEN_LOCKDOWN.md](docs/HOME_SCREEN_LOCKDOWN.md) (section "Pete rulings,
+  2026-10-20") before any Home work. The 2026-10-13 indoor room is PARKED, not deleted. Layers back
+  to front: locked sky-and-ridges background (1290x2796), violet castle (locked), back wall with
+  Daily panel, floor, one stone console (ENTER THE HUNT and POLYBOOK slabs; both open the same
+  console; Hunt dives down the hall, Polybook pops out into the closed cover), cage (top half from
+  the logo, base on the floor), settings gear in a bottom corner. Polly perches on the back wall.
+  Daily tap zooms into the castle. Lettering is white; gold only on DAILY CHALLENGE until played,
+  then on ENTER THE HUNT. Art/colors not final. Layout mock only; positions approximate.
 
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. Standard arc is 10 rounds; fledgling is 8.
   Polly's Word is final. Returning Haunt is round 5 standard / round 4 fledgling.
@@ -148,21 +148,20 @@ Next job (Pete, 2026-10-11): the Daily Challenge screen art, started in its own 
 read-only audit first.
 
 Home redesign, open:
-- Home redesign (Polly's room): direction approved, NOT built. Rulings are in
-  `docs/HOME_SCREEN_LOCKDOWN.md` (section "Pete rulings, 2026-10-13"). A rough clickable movement
-  test exists (stand-in art only). Current step: Pete is making the room background art (big
-  centered window cut out of the image, one back counter spot, crown hatch low on the floor).
-  After that: layered art (hatch, stairwell, counters, window sky/castle silhouette/moon, cage
-  pieces), then build in repo only with Pete's approval.
-- Still to check in code before building: how the real Hunt entry currently runs (navigation
-  fade, one-time intros); that the window castle silhouette matches the real Daily castle art;
-  what grants the timed gold feather (`grantGoldFeather` in `useGameStore.ts`, called from two
-  places) and whether the moon's won state fully covers it, since the reward expires and the
-  moon feather is a Daily-win marker (Pete ruled the moon feather replaces the GOLD FEATHER READY
-  line).
-- Open: where the broken cage rests after the crash; Settings cog placement; whether the Daily
-  streak badge (small number on the Daily plate, shown when streak > 0) stays and where (Pete has
-  not answered).
+- Home redesign (outdoor terrace): direction approved, NOT built. Rulings in
+  `docs/HOME_SCREEN_LOCKDOWN.md` (section "Pete rulings, 2026-10-20"). Pete supplied wall, floor,
+  console, slab and cage art; Claude cleaned and regraded them for a layout mock. Next: Pete
+  answers the open questions, then final colors/sizes, then a DEV positioning tool, then build in
+  repo only with Pete's approval.
+- Open for Pete: where the cage base rests and the fall path from the logo; whether the
+  app-opening crash still plays; any console entrance; moon rule (2026-10-13 states vs the mock's
+  phases vs other); floor color; redraw of the wall's two angled pieces; sky placement of moon,
+  bubble and stars; which 2026-10-13 rulings still apply (the lockdown section lists them as not
+  yet confirmed).
+- Still to check in code before building: how the real Hunt entry currently runs; what the Daily
+  zoom lands on; what grants the timed gold feather (`grantGoldFeather` in `useGameStore.ts`,
+  called from two places) and whether any moon-won state covers it; that wall/console geometry can
+  be bottom-anchored like the Boss ledge and `app/ui/dailyCastleScene.ts`.
 
 Hunt momentum feedback, open:
 - Pressed-card glow is clipped by its own card view (`CLAUDE.md` known issue). Left as is.
@@ -229,10 +228,10 @@ Open, needs Pete's ruling:
 
 ## Do Not Work On Yet
 
-- **Home scope boundary (updated 2026-10-13):** Home design is now explicitly reopened by Pete;
-  follow `docs/HOME_SCREEN_LOCKDOWN.md`. The approved menu label is POLYBOOK. Do not perform an
-  unrelated cosmetic pass or assume the new design is already implemented. Moon faces and new
-  Polly animation systems remain deferred while the room/console geometry is established.
+- **Home scope boundary (updated 2026-10-20):** Home design is reopened by Pete as an outdoor
+  terrace; follow `docs/HOME_SCREEN_LOCKDOWN.md`. The approved menu label is POLYBOOK. Do not
+  perform an unrelated cosmetic pass or assume the new design is already implemented. Moon faces
+  and new Polly animation systems remain deferred while the room/console geometry is established.
 - New Polly art or WEBP restoration before the articulation inventory.
 - Production Home life-profile animation before the DEV Neutral proof.
 - Crown/Polybook progression, additional relationship states, or Polybook interior changes.

@@ -170,9 +170,12 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 
 ## Home (planned)
 
-Home redesign (Polly's room) is approved in direction and NOT built. Rulings live in
-`docs/HOME_SCREEN_LOCKDOWN.md`. Current `HomeScreen.tsx` is still the old layout until Pete says
-otherwise.
+Home redesign is approved in direction and NOT built. As of 2026-10-20 Pete chose an OUTDOOR night
+terrace (castle wall, floor, one stone console for Hunt and Polybook); the 2026-10-13 indoor room
+is parked, not deleted. Rulings live in `docs/HOME_SCREEN_LOCKDOWN.md`. Current `HomeScreen.tsx` is
+still the old layout until Pete says otherwise. When built, derive wall, console and floor geometry
+from full-width, bottom-anchored measurements (never scale the wall) and ship a DEV-only
+positioning tool, which Pete requires.
 
 ## Daily
 
