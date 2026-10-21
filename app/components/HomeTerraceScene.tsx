@@ -260,8 +260,9 @@ export function HomeTerraceScene(props: Props) {
         <Slab
           source={ART.slabHunt}
           label={huntLabel}
+          left={TERRACE_SLABS.hunt.x * niche.width}
           top={TERRACE_SLABS.hunt.y * niche.height}
-          width={niche.width}
+          width={TERRACE_SLABS.hunt.w * niche.width}
           height={TERRACE_SLABS.hunt.h * niche.height}
           fontSize={34 * k}
           k={k}
@@ -274,8 +275,9 @@ export function HomeTerraceScene(props: Props) {
         <Slab
           source={ART.slabBook}
           label="POLYBOOK"
+          left={TERRACE_SLABS.book.x * niche.width}
           top={TERRACE_SLABS.book.y * niche.height}
-          width={niche.width}
+          width={TERRACE_SLABS.book.w * niche.width}
           height={TERRACE_SLABS.book.h * niche.height}
           fontSize={28 * k}
           k={k}
@@ -308,6 +310,7 @@ function selectionRect(id: TerraceElementId, layout: TerraceLayout) {
 type SlabProps = {
   source: number;
   label: string;
+  left: number;
   top: number;
   width: number;
   height: number;
@@ -326,7 +329,7 @@ function Slab(p: SlabProps) {
       accessibilityRole="button"
       accessibilityLabel={p.accessibilityLabel}
       onPress={p.onPress}
-      style={[styles.slab, { top: p.top, width: p.width, height: p.height }, p.debug]}
+      style={[styles.slab, { left: p.left, top: p.top, width: p.width, height: p.height }, p.debug]}
     >
       {/* Explicit size, NOT absoluteFill: on iOS an absoluteFill Image drew at its own 619 x 241 pt
           size (about 2x the button) and the niche clipped it to the top-left quarter. */}
@@ -390,7 +393,7 @@ const styles = StyleSheet.create({
   img: { position: 'absolute', pointerEvents: 'none' },
   dailyLabel: { position: 'absolute', textAlign: 'center', fontFamily: FONTS.wordDisplay, textShadowOffset: { width: 0, height: 2 } },
   gear: { alignItems: 'center', justifyContent: 'center' },
-  slab: { position: 'absolute', left: 0, alignItems: 'center', justifyContent: 'center' },
+  slab: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   slabLabel: { fontFamily: FONTS.wordDisplay, textAlign: 'center', textShadowOffset: { width: 0, height: 2 } },
   selection: { borderWidth: 2, borderColor: '#B98ADE', borderStyle: 'dashed' },
   hitDebug: { borderWidth: 1, borderColor: 'rgba(245,200,66,0.9)', backgroundColor: 'rgba(245,200,66,0.12)' },
