@@ -2,8 +2,10 @@ import React, { useMemo, useRef } from 'react';
 import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { playSfx } from '../audio/sfx';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
+import { dailyCardMaterial, dailyCastlePlaqueMaterial } from '../ui/pwDailyMaterials';
 import {
   DAILY_PLAQUE_DROP,
   DAILY_PLAQUE_INPUT,
@@ -383,6 +385,18 @@ type SlabProps = {
 
 function Slab(p: SlabProps) {
   const { progress } = p;
+  // Held pop, the Daily answer block's own (DailyAnswerCard): pressed, the button stands out of the
+  // console (top face, wall shadow, a little larger); released, it settles back.
+  const grip = useRef(new Animated.Value(0)).current;
+  const popIn = () => {
+    grip.stopAnimation();
+    Animated.timing(grip, { toValue: 1, duration: dailyCardMaterial.motion.pressInMs, useNativeDriver: true }).start();
+    playSfx('pressHoldStart');
+  };
+  const popOut = () => {
+    grip.stopAnimation();
+    Animated.timing(grip, { toValue: 0, duration: dailyCardMaterial.motion.pressOutMs, useNativeDriver: true }).start();
+  };
   // The Daily answer block's own keyframes (DailyAnswerCard): scale, drop and opacity, plus the top
   // face and wall shadow it shows while it stands out. Always Animated nodes, never plain numbers.
   const motion = useMemo(() => {
@@ -397,7 +411,26 @@ function Slab(p: SlabProps) {
         }),
         transform: [
           { translateY: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_DROP }) },
-          { scale: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_SCALE }) },
+          {
+            scale: Animated.multiply(
+              progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_SCALE }),
+              grip.interpolate({ inputRange: [0, 1], outputRange: [1, dailyCastlePlaqueMaterial.heldScale] }),
+            ),
+          },
+        ],
+      },
+      popTop: {
+        opacity: grip.interpolate({ inputRange: [0, 0.01, 1], outputRange: [0, 1, 1] }),
+        transform: [
+          { translateY: grip.interpolate({ inputRange: [0, 1], outputRange: [topH / 2, 0] }) },
+          { scaleY: grip.interpolate({ inputRange: [0, 1], outputRange: [0.001, 1] }) },
+        ],
+      },
+      popShadow: {
+        opacity: grip.interpolate({ inputRange: [0, 1], outputRange: [0, POP_SHADOW.opacity] }),
+        transform: [
+          { translateX: grip.interpolate({ inputRange: [0, 1], outputRange: [0, POP_SHADOW.x] }) },
+          { translateY: grip.interpolate({ inputRange: [0, 1], outputRange: [0, POP_SHADOW.y] }) },
         ],
       },
       top: {
@@ -433,7 +466,7 @@ function Slab(p: SlabProps) {
       },
       topH,
     };
-  }, [progress, p.width]);
+  }, [progress, grip, p.width]);
 
   return (
     <Animated.View
@@ -442,6 +475,12 @@ function Slab(p: SlabProps) {
       style={[styles.abs, { left: p.left, top: p.top, width: p.width, height: p.height }, motion.shell]}
     >
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.shadow]} />
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.popShadow]} />
+      <Animated.Image
+        source={ART.btnTop}
+        resizeMode="stretch"
+        style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.popTop]}
+      />
       <Animated.Image
         source={ART.btnTop}
         resizeMode="stretch"
@@ -452,6 +491,8 @@ function Slab(p: SlabProps) {
         accessibilityRole="button"
         accessibilityLabel={p.accessibilityLabel}
         disabled={p.locked}
+        onPressIn={popIn}
+        onPressOut={popOut}
         onPress={p.onPress}
         style={[styles.slab, { width: p.width, height: p.height }, p.debug]}
       >
