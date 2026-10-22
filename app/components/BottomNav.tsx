@@ -34,7 +34,11 @@ export default function BottomNav({ active, navigation }: BottomNavProps) {
     }
 
     if (route !== active) {
-      navigation.navigate(route);
+      // Home is already underneath in the stack. React Navigation 7 pushes a second Home on a plain
+      // navigate, which left the Polybook (opened transparent from Home) showing through its top.
+      // Going Home goes back to the Home that is already there.
+      if (route === "Home") navigation.navigate("Home", undefined, { pop: true });
+      else navigation.navigate(route);
     }
   }
 
