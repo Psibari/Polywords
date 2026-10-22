@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import {
+  TERRACE_DEFAULTS,
   TERRACE_ELEMENT_IDS,
-  terraceEffectiveRect,
+  lockTerraceAspect,
   TerraceElementId,
   TerraceOverrides,
   TerraceRect,
@@ -99,10 +100,9 @@ export const useHomeTerraceTuning = create<State>((set, get) => ({
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** The element's current rect: its override over its default (the front hill follows the
- * background until it is moved on its own). */
+/** The element's current rect: its override over its default. */
 export function currentRect(id: TerraceElementId, overrides: TerraceOverrides): TerraceRect {
-  return terraceEffectiveRect(id, overrides);
+  return lockTerraceAspect(id, { ...TERRACE_DEFAULTS[id], ...(overrides[id] ?? {}) });
 }
 
 /** Plain-text readout of every element's final values, for Pete to copy. */
