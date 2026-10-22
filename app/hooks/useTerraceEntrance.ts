@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { Animated, Easing } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { dailyStoneSeatSfx, playSfx } from '../audio/sfx';
+import { dailyStoneSeatSfx, playSfx, warmTerraceEntranceSfx } from '../audio/sfx';
 import {
   DAILY_PLAQUE_ENTRANCE,
   DAILY_PLAQUE_INITIAL_PROGRESS,
@@ -50,6 +50,8 @@ export function useTerraceEntrance(): TerraceEntrance {
     useCallback(() => {
       const timers: ReturnType<typeof setTimeout>[] = [];
       let cancelled = false;
+      // Home never warmed its sounds; the first play of a cue otherwise waits on a native load.
+      warmTerraceEntranceSfx();
 
       const rest = () => {
         progress.forEach((v) => v.stopAnimation());
@@ -93,7 +95,7 @@ export function useTerraceEntrance(): TerraceEntrance {
             if (cancelled) return;
             // The grind and the tremble start together, with the first button.
             if (cues.shift) {
-              playSfx('dailyStoneShift');
+              playSfx('terraceStoneShift');
               Animated.timing(tremble, {
                 toValue: 1,
                 duration: terraceTrembleMs(),

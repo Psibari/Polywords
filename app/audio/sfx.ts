@@ -43,6 +43,9 @@ export type SfxName =
   | 'dailyStoneSeat1'
   | 'dailyStoneSeat2'
   | 'dailyStoneSeat3'
+  // Terrace Home entrance grind: the gauntlet's own level (Pete, 2026-10-22), its own cue so the
+  // Daily's quieter grind is never affected.
+  | 'terraceStoneShift'
   // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
   // below. Uncomment together with the matching entries in SFX and the
   // guarded call sites in DailyChallengeScreen.tsx once the files land.
@@ -164,6 +167,9 @@ const SFX: Record<SfxName, SfxConfig> = {
   // the grind under them at about -30. Measured loudest 100ms, mono downmix:
   // stone_land -11.0, stone_rumble -16.8, correct_claim -11.9.
   dailyStoneShift: { source: require('../../assets/audio/sfx/stone_rumble.mp3'), volume: 0.22, cooldownMs: 300 },
+  // Terrace Home entrance grind. Same file and the SAME level as the gauntlet's stoneRumble (0.41,
+  // Pete 2026-10-22). Its own name so retuning Home never moves the Daily's dailyStoneShift.
+  terraceStoneShift: { source: require('../../assets/audio/sfx/stone_rumble.mp3'), volume: 0.41, cooldownMs: 300 },
   dailyStoneSeat1: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat2: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat3: DAILY_STONE_SEAT_SFX,
@@ -463,6 +469,11 @@ export function warmGauntletEntranceSfx(tileCount: number): void {
 /** Warms the Daily answer wall's grind and its three row thuds. */
 export function warmDailyPlaqueEntranceSfx(): void {
   warmSfx(['dailyStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES]);
+}
+
+/** Warms the terrace Home's entrance grind and the three row thuds it reuses from the Daily. */
+export function warmTerraceEntranceSfx(): void {
+  warmSfx(['terraceStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES]);
 }
 
 export function sfxReady(): Promise<void> {
