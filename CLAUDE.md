@@ -183,6 +183,14 @@ Deterministic, one attempt per date, five UP-only rounds, two lives. `docs/DAILY
 owns the sequence and device-approved castle behavior.
 
 Architecture only:
+- Daily source compatibility is deliberately dual-shape during migration. Legacy
+  `app/game/dailyPool.ts` rows keep nine approved source candidates. Newly authored rows live in
+  `app/game/dailyPoolExpansion.ts` and contain exactly six visible cards: the target plus five
+  approved traps. `dailyChallengeEngine.ts` combines both pools, accepts either six or nine source
+  candidates, and always presents exactly six cards. Do not pad new rows back to nine.
+- `app/game/dailyPoolExpansion.test.ts` is the structural/reachability gate for new six-card
+  content: exactly three clues, six unique cards, target exactly once, no answer-card word inside
+  any clue, a valid tier, and deterministic runtime reachability.
 - `DailyCastleStage.tsx` owns the persistent scene behind entry/play/results.
 - Measured geometry and animation constants live in `app/ui/dailyCastleScene.ts`; re-measure when
   exported art changes rather than copying coordinates into docs.
@@ -259,7 +267,9 @@ Architecture only:
 - Word/mask/hidden-pair IDs are persistence contracts. Never renumber approved live content.
 - Runtime validation is a shipping gate, not an editorial writer: it catches structural failures;
   Pete's approval and `docs/CONTENT_WRITING_STANDARD.md` decide whether copy is good.
-- Daily runtime content is `app/game/dailyPool.ts`, governed separately from Hunt.
+- Daily runtime content is split between legacy `app/game/dailyPool.ts` and current six-card
+  `app/game/dailyPoolExpansion.ts`; `dailyChallengeEngine.ts` combines them. Daily remains governed
+  separately from Hunt by `docs/DAILY_CONTENT_WRITING_STANDARD.md`.
 - Retired: `assets/data/huntData.v2.json`, `tools/content/_deprecated/mask-rewriter/`.
 - Any change to `assets/data/huntData.json` must pass `npm run content:quality` against the real
   file before commit. A validator self-test passing is not evidence: FOAM/FOLD shipped below the
