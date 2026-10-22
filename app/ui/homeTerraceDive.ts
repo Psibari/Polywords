@@ -145,8 +145,9 @@ export function terraceDailyOrigin(castle: { left: number; top: number; width: n
 
 // ---------------------------------------------------------------------------------------------
 // The Polybook rise (Pete, 2026-10-22): tap POLYBOOK, HUNT and POLYBOOK retreat into the hall exactly
-// as in the Hunt dive, then the Polybook screen takes over and its own closed cover rises out of the
-// hall, face forward, growing into its resting place (so it lands exactly, on every phone).
+// as in the Hunt dive, then the Polybook screen opens TRANSPARENT over the Home and its own closed
+// cover rises out of the hall by itself, face forward, growing into its resting place (so it lands
+// exactly, on every phone). Only after it has landed does the Polybook page come up around it.
 export const TERRACE_BOOK_DIVE = {
   /** Multiplies the rise and hold (the retreat keeps the Hunt dive's own timescale). */
   timescale: 1,
@@ -156,6 +157,8 @@ export const TERRACE_BOOK_DIVE = {
   riseMs: 800,
   /** The cover starts this fraction of the console opening's width, at the hall's golden end. */
   startWidthFraction: 0.12,
+  /** The Polybook page (background, header, navigation) fading in once the cover has landed. */
+  pageFadeMs: 350,
 } as const;
 
 /** When Home hands over to the Polybook screen: both buttons have retreated and the hall has been seen. */

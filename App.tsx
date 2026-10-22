@@ -103,7 +103,23 @@ export default function App() {
                 button (a JS-dispatched navigation.goBack()), which the guard
                 catches reliably every time. */}
             <Stack.Screen name="Game" component={GameScreen} options={{ gestureEnabled: false }} />
-            <Stack.Screen name="Vault" component={VaultScreen} />
+            {/* Home's Polybook dive opens the Polybook transparent over the Home, so the cover rises out of
+                the hall on its own and the page comes up after it lands (Pete, 2026-10-22). Every other
+                way in is the ordinary fade. */}
+            <Stack.Screen
+              name="Vault"
+              component={VaultScreen}
+              options={({ route }) =>
+                (route.params as { polybookRiseFrom?: unknown } | undefined)?.polybookRiseFrom !== undefined
+                  ? {
+                      presentation: 'transparentModal',
+                      animation: 'none',
+                      gestureEnabled: false,
+                      contentStyle: { backgroundColor: 'transparent' },
+                    }
+                  : {}
+              }
+            />
             <Stack.Screen name="Settings" component={__DEV__ ? DevSettingsScreen : SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
             {/* The old Home, parked (Pete, 2026-10-21: the terrace is the Home). DEV-only, for comparison. */}

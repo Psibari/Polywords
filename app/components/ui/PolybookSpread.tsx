@@ -40,7 +40,12 @@ const TODAY_MOOD_BAR: Record<BookRivalryState, string> = {
   CONCEDING: "#69458D",
 };
 
-type Props = { progress: PlayerProgress; pollyMemory: PollyMemory };
+type Props = {
+  progress: PlayerProgress;
+  pollyMemory: PollyMemory;
+  /** Called once the cover has risen out of the Home hall and landed (Home's Polybook dive). */
+  onRiseEnd?: () => void;
+};
 type PolybookRouteParams = {
   polybookSection?: Section;
   polybookDate?: string;
@@ -48,7 +53,7 @@ type PolybookRouteParams = {
   polybookRiseFrom?: BookRiseFrom;
 };
 
-export function PolybookSpread({ progress, pollyMemory }: Props) {
+export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
   const route = useRoute<any>();
   const routeParams = (route.params ?? {}) as PolybookRouteParams;
   const deepLinkSection = routeParams.polybookSection;
@@ -75,6 +80,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const riseScale = useRef(new Animated.Value(1)).current;
   const coverRef = useRef<View>(null);
   const riseStarted = useRef(false);
+  const riseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function finishRise() {
+    riseT.stopAnimation();
+    riseT.setValue(1);
+    onRiseEnd?.();
+  }
   const riseStyle = useMemo(() => {
     const left = riseT.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
     return {
@@ -91,12 +102,12 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     riseStarted.current = true;
     const node = coverRef.current;
     if (reduceMotion || !node) {
-      riseT.setValue(1);
+      finishRise();
       return;
     }
     node.measureInWindow((x, y, w, h) => {
       if (!(w > 0 && h > 0)) {
-        riseT.setValue(1);
+        finishRise();
         return;
       }
       const from = terraceBookRiseTransform(riseFrom, { x, y, w, h });
@@ -109,16 +120,18 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start();
+      // The page comes up once the cover has landed, not during the move.
+      riseTimer.current = setTimeout(() => onRiseEnd?.(), TERRACE_BOOK_DIVE.riseMs * TERRACE_BOOK_DIVE.timescale);
     });
   }
   useEffect(() => {
     if (reduceMotion !== null) startRise();
     // Failsafe: the cover is never left hidden if the measurement never answers.
-    const timer = setTimeout(() => {
-      riseT.stopAnimation();
-      riseT.setValue(1);
-    }, 2500);
-    return () => clearTimeout(timer);
+    const timer = riseFrom ? setTimeout(finishRise, 2500) : null;
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (riseTimer.current) clearTimeout(riseTimer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduceMotion]);
 

@@ -110,7 +110,7 @@ export type TerraceDiveProps = {
   /** Draw the castle (it is hidden at rest; the Daily dive turns this on). */
   castleOn: boolean;
   /** Which dive is running: the zoom aims at the hall (hunt) or the castle door (daily). */
-  target: 'hunt' | 'daily' | null;
+  target: 'hunt' | 'daily' | 'book' | null;
 };
 
 export type TerraceEntranceProps = {

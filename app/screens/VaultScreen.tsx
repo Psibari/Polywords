@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useRef, useState } from "react";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import BottomNav from "../components/BottomNav";
@@ -18,6 +19,7 @@ import {
   type LexiconStatus,
 } from "../components/ui/LexiconPrototype";
 import { PolybookSpread } from "../components/ui/PolybookSpread";
+import { TERRACE_BOOK_DIVE } from "../ui/homeTerraceDive";
 
 import { useGameStore } from "../store/useGameStore";
 import {
@@ -89,6 +91,19 @@ type Props = {
 };
 
 export default function VaultScreen({ navigation }: Props) {
+  // Home's Polybook dive opens this screen transparent over the Home: only the closed cover shows
+  // and rises out of the hall by itself; the page (background, header, navigation) fades in after it
+  // has landed (Pete 2026-10-22). Opened any other way, the page is simply there.
+  const route = useRoute<any>();
+  const rising = route.params?.polybookRiseFrom !== undefined;
+  const chrome = useRef(new Animated.Value(rising ? 0 : 1)).current;
+  const showPage = () =>
+    Animated.timing(chrome, {
+      toValue: 1,
+      duration: TERRACE_BOOK_DIVE.pageFadeMs,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
   const progress = useGameStore((state) => state.progress);
   const ghosts = useGameStore((state) => state.ghosts);
   const pollyMemory = useGameStore((state) => state.pollyMemory);
@@ -320,33 +335,41 @@ export default function VaultScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <AmbientSkyBackground {...VAULT_SKY_TUNING} />
-
-      <View pointerEvents="none" style={styles.ambientWash} />
-
-      <LinearGradient
-        colors={[...stageMaterial.vignette]}
-        locations={[...stageMaterial.vignetteLocations]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      {/* The page behind the book: its colour and every ambient layer fade in together. */}
+      <Animated.View
         pointerEvents="none"
-        style={StyleSheet.absoluteFill}
-      />
+        style={[StyleSheet.absoluteFill, { backgroundColor: stageMaterial.base, opacity: chrome }]}
+      >
+        <AmbientSkyBackground {...VAULT_SKY_TUNING} />
 
-      <View pointerEvents="none" style={styles.candlePool} />
+        <View pointerEvents="none" style={styles.ambientWash} />
 
-      <View pointerEvents="none" style={styles.candleCore} />
+        <LinearGradient
+          colors={[...stageMaterial.vignette]}
+          locations={[...stageMaterial.vignetteLocations]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View pointerEvents="none" style={styles.candlePool} />
+
+        <View pointerEvents="none" style={styles.candleCore} />
+      </Animated.View>
 
       <View style={styles.content}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>POLYBOOK</Text>
+        <Animated.View style={{ opacity: chrome }}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.title}>POLYBOOK</Text>
 
-          <Text style={styles.subtitle}>YOUR HAUNTS. YOUR MASTERY.</Text>
-        </View>
+            <Text style={styles.subtitle}>YOUR HAUNTS. YOUR MASTERY.</Text>
+          </View>
+        </Animated.View>
 
         <View style={styles.polybookArea}>
           {POLYBOOK_SPREAD_ENABLED ? (
-            <PolybookSpread progress={progress} pollyMemory={pollyMemory} />
+            <PolybookSpread progress={progress} pollyMemory={pollyMemory} onRiseEnd={showPage} />
           ) : (
             <LexiconPrototype
               hauntedWords={ghostsToShow.map((ghost) => ghost.word)}
@@ -369,7 +392,9 @@ export default function VaultScreen({ navigation }: Props) {
         </View>
       </View>
 
-      <BottomNav active="Vault" navigation={navigation} />
+      <Animated.View style={{ opacity: chrome }}>
+        <BottomNav active="Vault" navigation={navigation} />
+      </Animated.View>
 
     </SafeAreaView>
   );
@@ -378,7 +403,6 @@ export default function VaultScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: stageMaterial.base,
   },
 
   content: {
