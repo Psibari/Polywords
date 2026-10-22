@@ -4,7 +4,7 @@
 // screen, and the Hunt is there. Pete asked for a fast zoom and could not remember which mock speed
 // felt right, so EVERY number is here, in one place, to be tuned on the phone after seeing it.
 // RN-free so it can be tested.
-import { TERRACE_CASTLE_WINDOWS } from './homeTerraceScene';
+import { TERRACE_CASTLE_DOOR } from './homeTerraceScene';
 
 export const TERRACE_DIVE = {
   /** Multiplies every duration. 1 = the mock's fastest zoom; 0.8 is 20% quicker. */
@@ -132,10 +132,9 @@ export function terraceDailyDiveTimeline(c: DailyDiveConfig = TERRACE_DAILY_DIVE
   return { riseMs, zoomAt, zoomMs, flashAt, flashMs: zoomAt + zoomMs - flashAt, navigateAt: zoomAt + zoomMs };
 }
 
-/** The castle door (the last, 'arch' window of the castle's lit windows), as fractions of the castle. */
+/** The castle's painted golden door (measured from castle.webp), as fractions of the castle. */
 export function terraceCastleDoor() {
-  const d = TERRACE_CASTLE_WINDOWS[TERRACE_CASTLE_WINDOWS.length - 1];
-  return { x: d.x + d.w / 2, y: d.y + d.h / 2 };
+  return { x: TERRACE_CASTLE_DOOR.x, y: TERRACE_CASTLE_DOOR.y };
 }
 
 /** Where the Daily zoom aims: the castle door, in scene pixels, given the castle's rect. */

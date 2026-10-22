@@ -10,7 +10,7 @@ import {
   terraceDiveTimeline,
   terraceZoomShift,
 } from './homeTerraceDive';
-import { TERRACE_CASTLE_WINDOWS } from './homeTerraceScene';
+import { TERRACE_CASTLE_DOOR, TERRACE_CASTLE_WINDOWS } from './homeTerraceScene';
 
 const t = terraceDiveTimeline(TERRACE_DIVE);
 assert.equal(t.polybookRetreatAt, 0, 'POLYBOOK retreats first');
@@ -39,8 +39,10 @@ const dfast = terraceDailyDiveTimeline({ ...TERRACE_DAILY_DIVE, timescale: 0.5 }
 assert.ok(Math.abs(dfast.navigateAt - d.navigateAt / 2) < 1e-9);
 assert.ok(TERRACE_DAILY_DIVE.zoomScale > TERRACE_DIVE.zoomScale, 'the tiny door needs more zoom than the hall');
 
-const door = TERRACE_CASTLE_WINDOWS[TERRACE_CASTLE_WINDOWS.length - 1];
-assert.equal(door.kind, 'arch', 'the last window is the castle door');
+// The door is the painted one at the bottom of the castle picture, below every lit window.
+for (const w of TERRACE_CASTLE_WINDOWS) {
+  assert.ok(TERRACE_CASTLE_DOOR.y > w.y + w.h, 'the door is below every lit window');
+}
 const c = terraceCastleDoor();
 assert.ok(c.x > 0 && c.x < 1 && c.y > 0 && c.y < 1, 'door centre is inside the castle');
 const co = terraceDailyOrigin({ left: 10, top: 20, width: 200, height: 100 });

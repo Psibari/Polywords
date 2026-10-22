@@ -188,12 +188,19 @@ const CASTLE_H = 180 * TERRACE_ASPECT.castle;
 function castleWindow(kind: 'arch' | 'slit', x: number, y: number, w: number, h: number): TerraceWindow {
   return { kind, x: (x - CASTLE_X) / CASTLE_W, y: (y - CASTLE_Y) / CASTLE_H, w: w / CASTLE_W, h: h / CASTLE_H };
 }
+/**
+ * The castle's golden door is painted in castle.webp (715 x 487), not one of the lit windows below.
+ * Measured from the art: its gold pixels span x 324-389, y 292-405; this is that box's centre as a
+ * fraction of the castle picture. The Daily dive zooms into this point.
+ */
+export const TERRACE_CASTLE_DOOR = { x: 356.5 / 715, y: 348.5 / 487 } as const;
+
 export const TERRACE_CASTLE_WINDOWS: readonly TerraceWindow[] = [
   castleWindow('arch', 221.7, 462.6, 6.0, 11.6),
   castleWindow('slit', 223.7, 492.8, 2.0, 12.6),
   castleWindow('arch', 342.0, 462.6, 6.0, 11.6),
   castleWindow('slit', 344.0, 492.8, 2.0, 12.6),
-  castleWindow('arch', 281.6, 492.8, 6.5, 11.6), // the castle door
+  castleWindow('arch', 281.6, 492.8, 6.5, 11.6), // the small window over the door (not the door)
 ];
 
 // Perspective seams painted on the ground (design units, ground-local): wide slabs, no cracks.
