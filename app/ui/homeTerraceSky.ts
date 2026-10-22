@@ -59,7 +59,7 @@ export const TERRACE_MOON_RISE = {
   /** Wait after Home first shows (the buttons are still coming out) before the moon starts to climb. */
   delayMs: 900,
   /** The climb from behind the back mountains to the moon's resting place. */
-  riseMs: 6500,
+  riseMs: 3000,
 } as const;
 
 /** The lowest point of the back mountains' top edge in bg.webp (2796 px tall), measured by make_ridge.py. */
