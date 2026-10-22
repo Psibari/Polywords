@@ -444,3 +444,7 @@ closely; nothing here is Claude's invention.
 10. The terrace is the real Home (swapped in 2026-10-21 after Pete's device test). The old Home is
     parked as the DEV-only `HomeOld` route.
 11. Next: the movements (moon rise, shooting stars, Daily castle reveal, Hunt dive, Polybook transition).
+
+## Pete rulings, 2026-10-22
+
+1. The Home entrance grind is LOCKED: its own cue `terraceStoneShift`, the same file and level as the gauntlet's stoneRumble (0.41), warmed on Home focus. Pete device-tested it: the grind and the slam as the buttons seat both come through; it is shorter than the gauntlet's, which he accepts. The Daily's own `dailyStoneShift` (0.22) is separate and unchanged.

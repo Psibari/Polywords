@@ -166,12 +166,12 @@ castle art remains unlocked for a later focused pass, but its gameplay/content s
 current blocker.
 
 Home, open:
-- Next session (Pete, 2026-10-21): the movements, and the missing grind sound (below). Moon rise (with the streak), shooting stars, the Daily challenge castle reveal, the Hunt dive, the transition into the Polybook. Ask Pete for the sequence
+- Next session (Pete, 2026-10-21): the movements (the grind sound is DONE and locked, below). Moon rise (with the streak), shooting stars, the Daily challenge castle reveal, the Hunt dive, the transition into the Polybook. Ask Pete for the sequence
   and feel of each before building; do not assume.
 - Hunt and Polybook empty-space art is DONE (Pete, 2026-10-21): crowns on the Hunt button; Polybook stays plain by his decision so the Hunt reads as the main button. A book and a Polly silhouette were tried and
   rejected. Nothing is pending from Pete on this.
 - Crown art is Pete's flat white/gold PNGs (about 100x72, `crown_white.png`, `crown_gold.png`); judged fine at size. Do not recolor the Results crowns for this.
-- TOMORROW (Pete, 2026-10-21): fix the stone grind sound ('dailyStoneShift') on Home. It is not audible on Home; cause unverified (probably not warmed/preloaded on Home; volume 0.22). Find the cause first.
+- Home grind sound LOCKED (Pete, device-tested 2026-10-22: "perfect"). The terrace plays its own cue `terraceStoneShift` (`stone_rumble.mp3` at 0.41, the gauntlet's `stoneRumble` level), warmed by `warmTerraceEntranceSfx()` on every Home focus (`useTerraceEntrance.ts`). Cause of the old silence: Home reused the Daily's `dailyStoneShift` (0.22, about 6 dB under the gauntlet, chosen to sit under the Daily's claim sound) and never warmed it; the exact split between the two was not isolated. The Daily's `dailyStoneShift` is unchanged. The grind runs about 0.5 s, shorter than the gauntlet's moment; Pete accepts that.
 - Pete's own saved DEV overrides equal the locked defaults; a fresh install shows the defaults.
 - Not decided: whether Hunt/Polybook need a delay so the press-pop shows on a quick tap (navigation fires on release).
 - Known, pre-existing: `dailyDevControls.test.mjs` fails on a clean tree (not from the terrace

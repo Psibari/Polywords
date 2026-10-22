@@ -184,7 +184,7 @@ Feather / Streak / Start-here state toggles) renders only under `__DEV__`.
 Buttons are Pete's flat art in the console opening (ENTER THE HUNT with a crown at each end, white,
 gold once the Daily is played; POLYBOOK plain) and the Daily plaque in the wall recess behind the
 console. Every time Home is focused, Daily, Hunt, Polybook come out in turn with the Daily's own
-entrance constants (`dailyPlaqueEntrance.ts`), a stone thud and tap each, one grind and a tremble of
+entrance constants (`dailyPlaqueEntrance.ts`), a stone thud and tap each, one grind (`terraceStoneShift`, the gauntlet's 0.41 level, Pete-locked 2026-10-22; the Daily keeps its quieter `dailyStoneShift`) and a tremble of
 wall and console. Hunt and Polybook pop out when pressed (top face and shadow); the Daily cannot come
 forward past the console, so it rises from behind the console's top edge and is pressed IN (sinks and
 dims). Plaque: gold frame and label while the Daily is unplayed, still gold and reading GOLD FEATHER
