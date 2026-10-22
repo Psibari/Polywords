@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-20 (Home direction: outdoor terrace; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-22. Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -42,8 +42,20 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 - **First-run onboarding:** merged, device-approved, locked. FINE teaches recognition on the real
   board; HUD lessons teach feathers, momentum, a broken run and Hunt progress.
 - **Daily castle:** the Daily Challenge screen art is UNLOCKED for rework (Pete's ruling
-  2026-10-11). The next job is a read-only audit of the Daily Challenge screen first, then fixes,
-  one concern per prompt.
+  2026-10-11). Gameplay behavior remains locked unless Pete explicitly reopens it.
+- **Daily content expansion (Pete-approved and verified 2026-10-22):** 50 new Daily puzzles are
+  committed on `play-screen-overhaul`, bringing the live Daily pool to 110 entries: 60 legacy
+  nine-source-candidate entries plus 50 new six-card entries. New authoring is the actual visible
+  puzzle: exactly three clues plus six cards total (target + five traps), with the clue difficulty
+  coming primarily from the trap cards rather than Hunt-style masking. The universal leak rule is
+  locked: no answer-card word may appear in any clue, including obvious inflections/derivatives.
+  `dailyChallengeEngine.ts` combines the legacy pool with `dailyPoolExpansion.ts` and accepts six
+  or nine source candidates while always presenting six cards. `dailyPoolExpansion.test.ts`
+  verifies the new batch's structure, uniqueness, target-once rule, no card-word leakage, tier
+  validity and runtime reachability. Pete's local verification passed clean on 2026-10-22:
+  `npm run typecheck`, full `npm test`, and `npm run state`; state reported 110 Daily entries with
+  the expected 60/50 split. Editorial review and automated runtime verification are both complete;
+  an exhaustive phone hunt for all 50 is not required.
 - **Polybook:** portrait Living Journal interior is device-approved and locked. Closed book opens
   to one portrait page; navigation is TODAY / JOURNAL / MASTERY with bottom forked ribbons.
   Closed-cover side-ribbon cleanup remains deferred.
@@ -111,6 +123,11 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 - Mastery comes from the Boss gauntlet, not score.
 - Haunted words return; a successful rematch banishes the active Haunt.
 - Daily is deterministic, five rounds, UP-only, two lives, one attempt per date.
+- New Daily authoring uses the six visible cards directly: target + five traps. Legacy nine-card
+  source entries remain supported only for existing content. The challenge lives primarily in the
+  traps and staged convergence, not in Hunt-style clue disguise.
+- No Daily answer-card word may appear in any clue for that puzzle. Obvious revealing inflections,
+  derivatives and compounds are also rejected unless Pete explicitly approves a narrow exception.
 - Gold is scarce and meaningful; ordinary choices stay neutral before commitment.
 - Visual consistency requires a player-facing benefit, not cosmetic sameness.
 - Hunt visits: Polly flies in on the normal fly pose (except the Returning Haunt gloat, which flies
@@ -137,15 +154,15 @@ animation wait until these are done.
 In order:
 1. Paste the privacy and support URLs into App Store Connect; privacy answer "Data Not Collected".
 2. Crash reporting (nothing currently reports crashes off-device).
-3. More easy (tier 1) Daily words: only 14 exist (as of 2026-10-06) and two of five daily
-   rounds use tier 1, so each easy word repeats about weekly. Writing is Pete's.
-4. Store listing: screenshots and description.
-5. Free vs paid: Pete's decision.
-6. Android device testing beyond one phone.
-7. Buy polywords.app, then custom domain + share-link switch.
+3. Store listing: screenshots and description.
+4. Free vs paid: Pete's decision.
+5. Android device testing beyond one phone.
+6. Buy polywords.app, then custom domain + share-link switch.
 
-Next job (Pete, 2026-10-11): the Daily Challenge screen art, started in its own session with a
-read-only audit first.
+The Daily content-capacity task is complete; do not reopen it just to manufacture more volume.
+Current active design work is the Home redesign (outdoor terrace) unless Pete redirects. Daily
+castle art remains unlocked for a later focused pass, but its gameplay/content system is not the
+current blocker.
 
 Home redesign, open:
 - Home redesign (outdoor terrace): direction approved, NOT built. Rulings in
