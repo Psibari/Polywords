@@ -141,11 +141,14 @@ export default function HomeTerraceScreen({ navigation }: Props) {
     };
     // Reduce Motion: no dive, straight in (as before).
     if (reduceMotion) arrive();
-    else dive.start(arrive);
+    else dive.start('hunt', arrive);
   };
   const handleDaily = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('Daily');
+    const arrive = () => navigation.navigate('Daily');
+    // Reduce Motion: no dive, straight in (as before).
+    if (reduceMotion) arrive();
+    else dive.start('daily', arrive);
   };
   const handleBook = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

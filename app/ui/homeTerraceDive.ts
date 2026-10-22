@@ -4,6 +4,7 @@
 // screen, and the Hunt is there. Pete asked for a fast zoom and could not remember which mock speed
 // felt right, so EVERY number is here, in one place, to be tuned on the phone after seeing it.
 // RN-free so it can be tested.
+import { TERRACE_CASTLE_WINDOWS } from './homeTerraceScene';
 
 export const TERRACE_DIVE = {
   /** Multiplies every duration. 1 = the mock's fastest zoom; 0.8 is 20% quicker. */
@@ -85,4 +86,60 @@ export function terraceDiveOrigin(niche: { left: number; top: number; width: num
  */
 export function terraceZoomShift(point: { x: number; y: number }, width: number, height: number) {
   return { dx: point.x - width / 2, dy: point.y - height / 2 };
+}
+
+// ---------------------------------------------------------------------------------------------
+// The Daily dive (Pete, 2026-10-22): the castle is hidden until DAILY CHALLENGE is tapped. It then
+// rises from behind the mountains to its place, the scene zooms into the castle's golden door, a
+// gold flash covers the screen, and the Daily is there. As with the Hunt, every number is here to
+// be tuned on the phone.
+export const TERRACE_DAILY_DIVE = {
+  /** Multiplies every duration. */
+  timescale: 1,
+  /** The castle rising from behind the mountains. */
+  riseMs: 650,
+  /** Pause with the castle standing, before the zoom. */
+  holdMs: 250,
+  zoomMs: 1100,
+  /** The castle's door is tiny on the Home, so this is much more than the Hunt's zoom. */
+  zoomScale: 30,
+  flashFrom: 0.5,
+} as const;
+
+export type DailyDiveConfig = {
+  timescale: number;
+  riseMs: number;
+  holdMs: number;
+  zoomMs: number;
+  flashFrom: number;
+};
+
+export type DailyDiveTimeline = {
+  riseMs: number;
+  zoomAt: number;
+  zoomMs: number;
+  flashAt: number;
+  flashMs: number;
+  navigateAt: number;
+};
+
+export function terraceDailyDiveTimeline(c: DailyDiveConfig = TERRACE_DAILY_DIVE): DailyDiveTimeline {
+  const s = c.timescale;
+  const riseMs = c.riseMs * s;
+  const zoomMs = c.zoomMs * s;
+  const zoomAt = riseMs + c.holdMs * s;
+  const flashAt = zoomAt + c.flashFrom * zoomMs;
+  return { riseMs, zoomAt, zoomMs, flashAt, flashMs: zoomAt + zoomMs - flashAt, navigateAt: zoomAt + zoomMs };
+}
+
+/** The castle door (the last, 'arch' window of the castle's lit windows), as fractions of the castle. */
+export function terraceCastleDoor() {
+  const d = TERRACE_CASTLE_WINDOWS[TERRACE_CASTLE_WINDOWS.length - 1];
+  return { x: d.x + d.w / 2, y: d.y + d.h / 2 };
+}
+
+/** Where the Daily zoom aims: the castle door, in scene pixels, given the castle's rect. */
+export function terraceDailyOrigin(castle: { left: number; top: number; width: number; height: number }) {
+  const door = terraceCastleDoor();
+  return { x: castle.left + door.x * castle.width, y: castle.top + door.y * castle.height };
 }

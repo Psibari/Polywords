@@ -6,7 +6,13 @@ import { playSfx } from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
-import { HALL_GOLD_CENTER, TERRACE_DIVE, terraceDiveOrigin, terraceZoomShift } from '../ui/homeTerraceDive';
+import {
+  HALL_GOLD_CENTER,
+  TERRACE_DIVE,
+  terraceDailyOrigin,
+  terraceDiveOrigin,
+  terraceZoomShift,
+} from '../ui/homeTerraceDive';
 import { dailyCardMaterial, dailyCastlePlaqueMaterial } from '../ui/pwDailyMaterials';
 import {
   DAILY_PLAQUE_DROP,
@@ -99,6 +105,12 @@ export type TerraceDiveProps = {
   hall: Animated.Value;
   /** HUNT, POLYBOOK. */
   retreat: readonly [Animated.Value, Animated.Value];
+  /** Castle rise: 0 hidden below the mountains, 1 in its place. */
+  castle: Animated.Value;
+  /** Draw the castle (it is hidden at rest; the Daily dive turns this on). */
+  castleOn: boolean;
+  /** Which dive is running: the zoom aims at the hall (hunt) or the castle door (daily). */
+  target: 'hunt' | 'daily' | null;
 };
 
 export type TerraceEntranceProps = {
@@ -169,9 +181,12 @@ export function HomeTerraceScene(props: Props) {
     flash: new Animated.Value(0),
     hall: new Animated.Value(0),
     retreat: [new Animated.Value(0), new Animated.Value(0)],
+    castle: new Animated.Value(1),
+    castleOn: false,
+    target: null,
   }).current;
   const dive = props.dive ?? restDive;
-  const diveOrigin = terraceDiveOrigin(niche);
+  const diveOrigin = dive.target === 'daily' ? terraceDailyOrigin(castle) : terraceDiveOrigin(niche);
   const zoomShift = terraceZoomShift(diveOrigin, width, height);
   // Where a retreating button goes: the hall's golden end, from the button's own centre.
   const hallPoint = { x: HALL_GOLD_CENTER.x * niche.width, y: HALL_GOLD_CENTER.y * niche.height };
@@ -248,8 +263,26 @@ export function HomeTerraceScene(props: Props) {
 
       {/* Castle, hidden at rest (Pete, 2026-10-20): it rises from behind the mountains when Daily
           is tapped. Windows and door are lit by code so the Daily state can change them. */}
-      {showCastle ? (
-        <>
+      {showCastle || dive.castleOn ? (
+        <Animated.View
+          pointerEvents="none"
+          collapsable={false}
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              // The Daily dive: the castle starts below the mountains (the front ridge and ground
+              // draw over it) and rises to its place.
+              transform: [
+                {
+                  translateY: dive.castle.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [castle.height + 40 * k, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
       <Svg
         pointerEvents="none"
         style={[styles.abs, { left: castle.left - 40 * k, top: castle.top - 40 * k }]}
@@ -293,7 +326,7 @@ export function HomeTerraceScene(props: Props) {
           ]}
         />
       ))}
-        </>
+        </Animated.View>
       ) : null}
 
       {/* The front ridge draws over the castle's base. */}
