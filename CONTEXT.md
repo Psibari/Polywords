@@ -31,6 +31,7 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   - Polybook dive: buttons retreat as in the Hunt dive; the Polybook screen then opens transparent over Home, its closed cover rises alone out of the hall to its resting spot on the Polybook page, and only after it lands do the page background, header and bottom nav fade in (350 ms). Confirmed working.
   - Sky and front hill are separate DEV elements; Pete's 17:09 readout is locked as defaults: background {-5.89,-150.81,473.12,1025.46}, front {-212.03,329.43,655.84,689.4}, moon {344.38,88.95,65.5,65.5}, castle {149.72,338.28,163.85,111.6}.
   NOT built (Pete: next session): moon rise from behind a mountain carrying the streak number (idea: tick up only when the number is new), shooting stars, cage opening sequence, Polly's fly-in landing on the perch.
+  Pete's later ideas (noted 2026-10-22): moon rise on app open with a different moon each time (half, crescent); shooting stars now and then with Polly blinking (his words: "poly idol blinking"; exact meaning to confirm); sound effects for the zoom and dive motions.
   Open (Pete): dive sound effects (none yet; Pete may supply them); the Polybook page background will be changed later; the bottom nav still pushes a new screen for Polybook and Settings (only Home now pops back to the existing Home).
 
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. Standard arc is 10 rounds; fledgling is 8.
