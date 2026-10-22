@@ -99,23 +99,24 @@ export const TERRACE_BG_DESIGN_H = (TERRACE_DESIGN_W * 2796) / 1290;
 
 // Starting positions in design units (from the mock).
 export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
-  // y is negative by the sliver the image is taller than the 960 canvas, so its bottom is exact.
-  background: { x: 0, y: TERRACE_DESIGN_H - TERRACE_BG_DESIGN_H, w: 443, h: TERRACE_BG_DESIGN_H },
-  // Start values only: Pete positions the perch with the DEV tool, beside Polly's feet.
-  perch: { x: 0, y: 410, w: 120, h: 120 * TERRACE_ASPECT.perch },
-  logo: { x: 71, y: 28, w: 300, h: 300 * TERRACE_ASPECT.logo },
-  moon: { x: 332, y: 122, w: 66, h: 66 },
-  cageTop: { x: 18, y: 98, w: 100, h: 100 * TERRACE_ASPECT.cageTop },
-  castle: { x: 195, y: 445, w: 180, h: 180 * TERRACE_ASPECT.castle },
-  wall: { x: 0, y: 495, w: 443, h: 443 * TERRACE_ASPECT.wall },
-  plaque: { x: 88, y: 574, w: 268, h: 268 * TERRACE_ASPECT.plaque },
+  // Pete's 2026-10-21 20:54 DEV readout, locked as the defaults. Heights of the single-picture art
+  // (logo, wall, plaque, castle, perch, cage, casing) equal width x TERRACE_ASPECT, as the DEV tool
+  // keeps them. The background's y is negative: the image is taller than the 960 canvas.
+  background: { x: -2.95, y: -173.24, w: 449.52, h: 974.31 },
+  logo: { x: 42.67, y: 40.98, w: 364.65, h: 58.75 },
+  moon: { x: 346.16, y: 84.81, w: 65.5, h: 65.5 },
+  cageTop: { x: 173.33, y: 804.44, w: 100, h: 90.75 },
+  castle: { x: 140.08, y: 431.42, w: 162.45, h: 110.65 },
+  wall: { x: -27.29, y: 390.81, w: 496.27, h: 159.98 },
+  plaque: { x: 62.61, y: 465.93, w: 318.77, h: 49.76 },
+  perch: { x: -7.06, y: 379.3, w: 120, h: 16.54 },
   // Polly's art box has no fixed size here: this rect is only her start point and scale.
-  // x / y / w come from the mock (her perch-and-bird picture); see terracePollyTransform.
-  polly: { x: 78, y: 448, w: 112, h: 163.5 },
-  ground: { x: 0, y: 628, w: 443, h: 332 },
-  casing: { x: 46, y: 700, w: 349.8, h: 349.8 * TERRACE_ASPECT.casing },
-  gear: { x: 4, y: 912, w: 42, h: 42 },
-  cageBase: { x: 345, y: 872, w: 98, h: 98 * TERRACE_ASPECT.cageBase },
+  // See terracePollyTransform.
+  polly: { x: -47.24, y: 238.9, w: 135.12, h: 197.25 },
+  ground: { x: -31.89, y: 792.21, w: 1119.44, h: 838.95 },
+  casing: { x: -33.1, y: 509.04, w: 497.6, h: 352.89 },
+  gear: { x: 2.82, y: 831.08, w: 42, h: 42 },
+  cageBase: { x: 20.13, y: 856.65, w: 120.01, h: 83.44 },
 };
 
 export const TERRACE_CAGE_TOP_ROTATION_DEG = 9;

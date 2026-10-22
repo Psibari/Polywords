@@ -4,6 +4,7 @@ import {
   TERRACE_DESIGN_H,
   TERRACE_DESIGN_W,
   TERRACE_ELEMENT_IDS,
+  lockTerraceAspect,
   resolveTerraceLayout,
   terracePollyTransform,
 } from './homeTerraceScene';
@@ -22,18 +23,24 @@ for (const phone of PHONES) {
   const k = phone.width / TERRACE_DESIGN_W;
   assert.ok(Math.abs(layout.k - k) < 1e-9, 'scale is full-width');
 
-  // Background and front are bottom-anchored and the same width as the screen.
-  assert.ok(Math.abs(layout.background.top + layout.background.height - phone.height) < 1e-6);
-  assert.ok(Math.abs(layout.background.width - phone.width) < 1e-6);
-  assert.ok(Math.abs(layout.front.top + layout.front.height - phone.height) < 1e-6);
+  // The background is a bottom-anchored element at Pete's locked position (raised, so the sky
+  // picture ends above the screen bottom and the ground covers below it), and it bleeds off both
+  // sides. The front ridge is the same picture: same left and width, lower part of it.
+  const bgBottomGap = phone.height - (layout.background.top + layout.background.height);
+  assert.ok(Math.abs(bgBottomGap - (TERRACE_DESIGN_H - TERRACE_DEFAULTS.background.y - TERRACE_DEFAULTS.background.h) * k) < 1e-6);
+  assert.ok(layout.background.left <= 1e-6 && layout.background.left + layout.background.width >= phone.width - 1e-6);
+  assert.equal(layout.front.left, layout.background.left);
+  assert.equal(layout.front.width, layout.background.width);
+  assert.ok(layout.front.top + layout.front.height <= layout.background.top + layout.background.height + 1e-6);
 
-  // The wall spans the full width and is never scaled differently from the frame.
-  assert.equal(layout.rects.wall.left, 0);
-  assert.ok(Math.abs(layout.rects.wall.width - phone.width) < 1e-6);
+  // The wall covers the full width (Pete's locked wall is wider than the screen, bleeding off both
+  // sides), scaled by the frame's own factor.
+  assert.ok(layout.rects.wall.left <= 1e-6);
+  assert.ok(layout.rects.wall.left + layout.rects.wall.width >= phone.width - 1e-6);
 
   // Bottom-group elements keep their distance from the screen bottom (design units).
   for (const id of ['wall', 'plaque', 'casing', 'gear', 'cageBase', 'castle', 'perch'] as const) {
-    const d = TERRACE_DEFAULTS[id];
+    const d = lockTerraceAspect(id, TERRACE_DEFAULTS[id]);
     const bottomGap = phone.height - (layout.rects[id].top + layout.rects[id].height);
     const want = (TERRACE_DESIGN_H - d.y - d.h) * k;
     assert.ok(Math.abs(bottomGap - want) < 1e-6, `${id} stays bottom-anchored`);
