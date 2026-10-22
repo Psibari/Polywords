@@ -6,6 +6,7 @@ import { playSfx } from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
+import { TERRACE_DIVE, terraceDiveOrigin } from '../ui/homeTerraceDive';
 import { dailyCardMaterial, dailyCastlePlaqueMaterial } from '../ui/pwDailyMaterials';
 import {
   DAILY_PLAQUE_DROP,
@@ -44,6 +45,7 @@ const ART = {
   castle: require('../../assets/images/home/terrace/castle.webp'),
   wall: require('../../assets/images/home/terrace/wall.png'),
   casing: require('../../assets/images/home/terrace/casing.png'),
+  hall: require('../../assets/images/home/terrace/hall.png'),
   slabHunt: require('../../assets/images/home/terrace/btn_hunt.png'),
   slabBook: require('../../assets/images/home/terrace/btn_book.png'),
   btnTop: require('../../assets/images/home/terrace/btn_top.png'),
@@ -91,6 +93,12 @@ const RECESS_PRESS_SINK = 0.06;
 const RECESS_PRESS_DIM = 0.3;
 const BTN_TOP_RATIO = 81 / 1117; // btn_top.png: 1117 x 81 over a 1117 wide button
 
+export type TerraceDiveProps = {
+  zoom: Animated.Value;
+  flash: Animated.Value;
+  hall: Animated.Value;
+};
+
 export type TerraceEntranceProps = {
   progress: readonly Animated.Value[];
   tremble: Animated.Value;
@@ -123,6 +131,8 @@ type Props = {
   onSettings: () => void;
   /** Buttons coming out of the console and the tremble; absent = everything at rest. */
   entrance?: TerraceEntranceProps;
+  /** The Hunt dive: scene zoom, hall in the console opening, gold flash. Absent = at rest. */
+  dive?: TerraceDiveProps;
 };
 
 export function HomeTerraceScene(props: Props) {
@@ -152,6 +162,13 @@ export function HomeTerraceScene(props: Props) {
     locked: false,
   }).current;
   const entrance = props.entrance ?? restEntrance;
+  const restDive = useRef<TerraceDiveProps>({
+    zoom: new Animated.Value(1),
+    flash: new Animated.Value(0),
+    hall: new Animated.Value(0),
+  }).current;
+  const dive = props.dive ?? restDive;
+  const diveOrigin = terraceDiveOrigin(niche);
   // Wall and console tremble together while the buttons come out (the Daily wall's own keyframes).
   const trembleStyle = useMemo(
     () => ({
@@ -169,6 +186,15 @@ export function HomeTerraceScene(props: Props) {
 
   return (
     <View style={[styles.root, { width, height }]} pointerEvents="box-none">
+      {/* Everything zooms together on the Hunt dive, about the hall's golden end. */}
+      <Animated.View
+        pointerEvents="box-none"
+        collapsable={false}
+        style={[
+          StyleSheet.absoluteFill,
+          { transform: [{ scale: dive.zoom }], transformOrigin: `${diveOrigin.x}px ${diveOrigin.y}px` },
+        ]}
+      >
       {/* Sky above the frame on taller phones, and the sky/ridges image itself. */}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: TERRACE_SKY_TOP_COLOR }]} />
       <Image source={ART.bg} style={[styles.img, layout.background]} resizeMode="stretch" />
@@ -353,6 +379,12 @@ export function HomeTerraceScene(props: Props) {
         />
         <Image source={ART.casing} style={[styles.img, casing]} resizeMode="stretch" />
         <View style={[styles.abs, niche, { backgroundColor: NICHE_BACK }]} pointerEvents="box-none">
+          {/* The hall behind the buttons; shown only once they retreat on the Hunt dive. */}
+          <Animated.Image
+            source={ART.hall}
+            style={[styles.img, { left: 0, top: 0, width: niche.width, height: niche.height, opacity: dive.hall }]}
+            resizeMode="stretch"
+          />
           <Slab
             source={ART.slabHunt}
             label={huntLabel}
@@ -404,6 +436,13 @@ export function HomeTerraceScene(props: Props) {
           style={[styles.abs, styles.selection, selectionRect(props.selected, layout)]}
         />
       ) : null}
+      </Animated.View>
+
+      {/* The hall's gold covers the screen at the end of the zoom. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: TERRACE_DIVE.flashColor, opacity: dive.flash }]}
+      />
     </View>
   );
 }

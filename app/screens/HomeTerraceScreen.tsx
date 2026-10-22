@@ -8,6 +8,7 @@ import { HomeTerracePositioner } from '../dev/HomeTerracePositioner';
 import { currentRect, useHomeTerraceTuning } from '../dev/homeTerraceTuning';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { useTerraceEntrance } from '../hooks/useTerraceEntrance';
+import { useTerraceDive } from '../hooks/useTerraceDive';
 import { getDisplayStreak } from '../game/dailyStreak';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
@@ -58,6 +59,12 @@ export default function HomeTerraceScreen({ navigation }: Props) {
   const showCastle = useHomeTerraceTuning((s) => s.showCastle);
   const loadTuning = useHomeTerraceTuning((s) => s.load);
   const entrance = useTerraceEntrance();
+  const dive = useTerraceDive(entrance);
+  // No button can be pressed while the dive is running.
+  const sceneEntrance = useMemo(
+    () => ({ ...entrance, locked: entrance.locked || dive.diving }),
+    [entrance, dive.diving],
+  );
   const [selected, setSelected] = useState<TerraceElementId | null>(null);
   const [showHitAreas, setShowHitAreas] = useState(false);
 
@@ -128,8 +135,13 @@ export default function HomeTerraceScreen({ navigation }: Props) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // A resumable run is already in the store (App.tsx boot check); starting fresh would
     // overwrite the run the button is offering to resume. Same rule as HomeScreen.
-    if (!hasResumableGame) startGame();
-    navigation.navigate('Game');
+    const arrive = () => {
+      if (!hasResumableGame) startGame();
+      navigation.navigate('Game');
+    };
+    // Reduce Motion: no dive, straight in (as before).
+    if (reduceMotion) arrive();
+    else dive.start(arrive);
   };
   const handleDaily = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -159,7 +171,8 @@ export default function HomeTerraceScreen({ navigation }: Props) {
         onHunt={handleHunt}
         onBook={handleBook}
         onSettings={() => navigation.navigate('Settings')}
-        entrance={entrance}
+        entrance={sceneEntrance}
+        dive={dive}
         polly={
           pollyMemoryLoaded ? (
             <View
