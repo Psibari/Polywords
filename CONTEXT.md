@@ -149,12 +149,12 @@ Next job (Pete, 2026-10-11): the Daily Challenge screen art, started in its own 
 read-only audit first.
 
 Home, open:
-- Next session (Pete, 2026-10-21): the movements. Moon rise (with the streak), shooting stars, the Daily challenge castle reveal, the Hunt dive, the transition into the Polybook. Ask Pete for the sequence
+- Next session (Pete, 2026-10-21): the movements, and the missing grind sound (below). Moon rise (with the streak), shooting stars, the Daily challenge castle reveal, the Hunt dive, the transition into the Polybook. Ask Pete for the sequence
   and feel of each before building; do not assume.
-- Hunt and Polybook button art: Pete is making emblem art for the empty space (crowns are in on Hunt; Polybook stays plain by his decision, so the Hunt reads as the main button). A book and a Polly
-  silhouette were tried and rejected (a straight cut of Polly's master art reads as a blob).
+- Hunt and Polybook empty-space art is DONE (Pete, 2026-10-21): crowns on the Hunt button; Polybook stays plain by his decision so the Hunt reads as the main button. A book and a Polly silhouette were tried and
+  rejected. Nothing is pending from Pete on this.
 - Crown art is Pete's flat white/gold PNGs (about 100x72, `crown_white.png`, `crown_gold.png`); judged fine at size. Do not recolor the Results crowns for this.
-- Grind sound ('dailyStoneShift') is not audible on Home; cause unverified (probably not warmed on Home; volume 0.22). Pete said do not worry about it.
+- TOMORROW (Pete, 2026-10-21): fix the stone grind sound ('dailyStoneShift') on Home. It is not audible on Home; cause unverified (probably not warmed/preloaded on Home; volume 0.22). Find the cause first.
 - Pete's own saved DEV overrides equal the locked defaults; a fresh install shows the defaults.
 - Not decided: whether Hunt/Polybook need a delay so the press-pop shows on a quick tap (navigation fires on release).
 - Known, pre-existing: `dailyDevControls.test.mjs` fails on a clean tree (not from the terrace
