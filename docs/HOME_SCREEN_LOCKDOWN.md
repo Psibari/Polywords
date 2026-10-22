@@ -416,3 +416,31 @@ deep violet. Polly is the existing master art; castle is the locked violet castl
 - The console may move down to use the empty bottom space (Pete does this in the DEV tool).
 - Slabs: Pete rejected the regraded slabs (dirty, not fitting the opening). Rebuilt from his original art, inset with a gap. He dislikes the label size and font and is unsure about the dark box around them; he is making new slab art and resumes 2026-10-21.
 - Build note: one width-fit, bottom-anchored frame holds the lower scene (deliberate deviation from the "cover" crop above); sky group is top-anchored below the safe-area inset.
+
+## Pete rulings, 2026-10-21 (flat buttons, entrance, and the swap)
+
+Supersedes the slab rulings above and the "not carried over" list. Pete's words are paraphrased
+closely; nothing here is Claude's invention.
+
+1. Slabs are retired: the cracks and detail in the wall and console did not look right on a phone.
+   Pete drew flat buttons, a new casing and a new back wall.
+2. Every time Home is shown, the buttons come out of the console one after another with the Daily
+   answer block's own treatment: tremble of wall and console, stone thud, haptic, and pop out when
+   pressed. Order: Daily, Hunt, Polybook.
+3. The Daily plaque cannot pop forward (it sits behind the console): it rises from behind the console
+   edge and is pressed in. Pete asked for exactly this.
+4. Labels: Lilita One. ENTER THE HUNT is much larger than POLYBOOK, three lines ENTER / tiny THE / HUNT.
+5. Daily plaque: same navy face as the other buttons. Gold frame and label while unplayed; still gold
+   and reading GOLD FEATHER READY while a Gold Feather is ready (it goes exactly where DAILY CHALLENGE
+   is); dark gray after it is played and there is no feather (never earned, used, or expired). No white
+   state. The gold-ring moon feather of item 17 (2026-10-13) is superseded.
+6. Daily streak: the number on the moon, hidden at zero. Later: the moon rises from behind a mountain
+   on app open carrying the number.
+7. START HERE: first Hunt only. Not on the ledge (it read as the plaque's caption). It is two words under
+   the Hunt crowns, START under the left crown and HERE under the right, breathing. Supersedes item 16.
+8. First-run Hunt glow: kept (a gold wash over the Hunt button).
+9. Hunt gets a crown at each end ("you enter the Hunt to earn a crown"); the feather is the Daily's
+   symbol; Polybook gets no symbol so the Hunt reads as the main button. No book, no Polly silhouette.
+10. The terrace is the real Home (swapped in 2026-10-21 after Pete's device test). The old Home is
+    parked as the DEV-only `HomeOld` route.
+11. Next: the movements (moon rise, shooting stars, Daily castle reveal, Hunt dive, Polybook transition).

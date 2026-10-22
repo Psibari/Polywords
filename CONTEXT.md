@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-20 (Home direction: outdoor terrace, static scene built behind DEV switch; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-21 (the outdoor terrace is the real Home; button entrance built, other movement not; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -17,15 +17,16 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 
 ## Current State
 
-- **Home redesign (Pete, 2026-10-20): OUTDOOR night terrace; approved direction, documented; static scene + DEV positioner built on branch home-terrace behind `__DEV__`; movement not built.**
-  Read [docs/HOME_SCREEN_LOCKDOWN.md](docs/HOME_SCREEN_LOCKDOWN.md) (section "Pete rulings,
-  2026-10-20") before any Home work. The 2026-10-13 indoor room is PARKED, not deleted. Layers back
-  to front: locked sky-and-ridges background (1290x2796), violet castle (locked), back wall with
-  Daily panel, floor, one stone console (ENTER THE HUNT and POLYBOOK slabs; both open the same
-  console; Hunt dives down the hall, Polybook pops out into the closed cover), cage (top half from
-  the logo, base on the floor), settings gear in a bottom corner. Polly perches on the back wall.
-  Daily tap zooms into the castle. Lettering is white; gold only on DAILY CHALLENGE until played,
-  then on ENTER THE HUNT. Art/colors not final. Layout mock only; positions approximate.
+- **Home (Pete, 2026-10-21): the OUTDOOR night terrace IS the real Home** (branch `home-terrace`, pushed; not merged: branch merges need Pete's approval).
+  `App.tsx` `Home` route renders `HomeTerraceScreen`; the old `HomeScreen.tsx` is parked and reachable only under `__DEV__` as `HomeOld`. Pete device-tested the swap 2026-10-21 and approved it
+  ("Everything works good"). Read [docs/HOME_SCREEN_LOCKDOWN.md](docs/HOME_SCREEN_LOCKDOWN.md) (sections "Pete rulings, 2026-10-20" and "2026-10-21") and the Home section of `CLAUDE.md` before any Home work.
+  Built: locked positions (Pete's 2026-10-21 20:54 readout is `TERRACE_DEFAULTS`); flat button art (`assets/images/home/terrace/`); entrance on every Home focus (Daily, Hunt, Polybook come out in turn with the
+  Daily's own constants, thuds, one grind, tremble of wall and console); Hunt and Polybook pop out when pressed; the Daily plaque (in the wall recess, behind the console) rises from behind the console edge and
+  is pressed in, not out; Lilita One labels (ENTER / tiny THE / HUNT; POLYBOOK; DAILY CHALLENGE); crowns at both ends of ENTER THE HUNT (white; gold once the Daily is played); plaque gold while unplayed, gold
+  reading GOLD FEATHER READY while a Gold Feather is ready, gray once played with none; Daily streak is the number on the moon (hidden at 0); first Hunt only: START / HERE breathe under the Hunt crowns;
+  first-run Hunt glow is a gold wash over the Hunt button; DEV positioner + Daily/Feather/Streak/Start-here toggles under `__DEV__` only.
+  NOT built (Pete: next session): moon rise from behind a mountain carrying the streak number (idea: tick up only when the number is new), shooting stars, castle reveal on Daily tap, Polybook transition,
+  Hunt dive (casing-with-tunnel image is available), cage opening sequence, Polly's fly-in landing on the perch.
 
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. Standard arc is 10 rounds; fledgling is 8.
   Polly's Word is final. Returning Haunt is round 5 standard / round 4 fledgling.
@@ -147,25 +148,15 @@ In order:
 Next job (Pete, 2026-10-11): the Daily Challenge screen art, started in its own session with a
 read-only audit first.
 
-Home redesign, open:
-- Home redesign (outdoor terrace): direction approved; static scene + DEV positioner built on branch `home-terrace`; movement NOT built. Rulings in
-  `docs/HOME_SCREEN_LOCKDOWN.md` (section "Pete rulings, 2026-10-20"). Pete supplied wall, floor,
-  console, slab and cage art; Claude cleaned and regraded them for a layout mock. Next: Pete
-  answers the open questions, then final colors/sizes, then a DEV positioning tool, then build in
-  repo only with Pete's approval.
-- Slabs (ENTER THE HUNT, POLYBOOK): the build uses Pete's ORIGINAL slab art (cut by
-  `tools/art/home_terrace/cut_slabs.py`), inset in the console opening with a gap. Pete is NOT happy
-  with the label type (too small for the slab, dislikes Bebas) and is unsure about the dark box
-  around the slabs; he is making new slab art and resumes 2026-10-21. Do not change slab labels
-  until he answers font and size.
-- Pete's DEV readout 2026-10-20 23:49 (design units) is NOT yet the code default: background x 4.13
-  y -138.38 w 434.19 h 941.08; logo 38.53,32.71,364.65x58.75; moon 337.9,98.4,65.5x65.5; cageTop
-  173.33,804.44,100x90.75; castle 140.08,431.42,162.45x110.65; wall -54.44,374.23,533.51x190.02;
-  plaque 46.07,470.03,342.04x102.1; perch -11.2,354.49,120x16.54; polly -30.11,213.51,135.12x197.25;
-  ground -50.79,641,1119.44x838.95; casing -30.16,530.32,483.53x333.3; gear 2.82,831.08,42x42;
-  cageBase 20.13,856.65,120.01x83.44.
-- Not carried onto the terrace yet (undecided): START HERE badge, GOLD FEATHER READY, streak badge,
-  first-run Hunt glow.
+Home, open:
+- Next session (Pete, 2026-10-21): the movements. Moon rise (with the streak), shooting stars, the Daily challenge castle reveal, the Hunt dive, the transition into the Polybook. Ask Pete for the sequence
+  and feel of each before building; do not assume.
+- Hunt and Polybook button art: Pete is making emblem art for the empty space (crowns are in on Hunt; Polybook stays plain by his decision, so the Hunt reads as the main button). A book and a Polly
+  silhouette were tried and rejected (a straight cut of Polly's master art reads as a blob).
+- Crown art is Pete's flat white/gold PNGs (about 100x72, `crown_white.png`, `crown_gold.png`); judged fine at size. Do not recolor the Results crowns for this.
+- Grind sound ('dailyStoneShift') is not audible on Home; cause unverified (probably not warmed on Home; volume 0.22). Pete said do not worry about it.
+- Pete's own saved DEV overrides equal the locked defaults; a fresh install shows the defaults.
+- Not decided: whether Hunt/Polybook need a delay so the press-pop shows on a quick tap (navigation fires on release).
 - Known, pre-existing: `dailyDevControls.test.mjs` fails on a clean tree (not from the terrace
   work, not investigated).
 - Open for Pete: where the cage base rests and the fall path from the logo; whether the
@@ -244,9 +235,9 @@ Open, needs Pete's ruling:
 
 ## Do Not Work On Yet
 
-- **Home scope boundary (updated 2026-10-20):** Home design is reopened by Pete as an outdoor
-  terrace; follow `docs/HOME_SCREEN_LOCKDOWN.md`. The approved menu label is POLYBOOK. Do not
-  perform an unrelated cosmetic pass or assume the new design is already implemented. Moon faces
+- **Home scope boundary (updated 2026-10-21):** the outdoor terrace is the real Home; follow
+  `docs/HOME_SCREEN_LOCKDOWN.md`. The approved menu label is POLYBOOK. Do not perform an unrelated
+  cosmetic pass, and do not build movement Pete has not described. Moon faces
   and new Polly animation systems remain deferred while the room/console geometry is established.
 - New Polly art or WEBP restoration before the articulation inventory.
 - Production Home life-profile animation before the DEV Neutral proof.
