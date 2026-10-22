@@ -65,6 +65,11 @@ const NICHE_BACK = '#100B2E';
 const DAILY_DONE_LABEL = '#8D8AA0';
 /** Daily label height as a fraction of its (short, wide) button. */
 const DAILY_LABEL_HEIGHT_FRACTION = 0.58;
+/** GOLD FEATHER READY has 18 letters to DAILY CHALLENGE's 15: the same button, so a smaller type. */
+const DAILY_FEATHER_LABEL_SCALE = 0.82;
+/** START HERE on the casing ledge: its top and its size as fractions of the ledge height. */
+const START_HERE_LEDGE_Y = 0.30;
+const START_HERE_LEDGE_SIZE = 0.34;
 const LABEL_SHADOW = '#060316';
 const GROUND_FACE = '#271E3D'; // measured Daily castle floor tile face
 const GROUND_SEAM = '#0E081C';
@@ -95,6 +100,14 @@ type Props = {
   width: number;
   height: number;
   dailyPlayed: boolean;
+  /** A Gold Feather is ready: the Daily plaque stays gold and says so (Pete, 2026-10-21). */
+  goldFeatherReady?: boolean;
+  /** Daily streak, shown on the moon when above zero. */
+  streak?: number;
+  /** First Hunt only: START HERE on the ledge above ENTER THE HUNT. */
+  startHere?: boolean;
+  /** First-run Hunt glow, 0..1 (gold wash over the Hunt button). */
+  huntGlow?: Animated.Value;
   /** The castle is hidden at rest; it is shown only for positioning or its Daily reveal. */
   showCastle: boolean;
   huntLabel: string;
@@ -112,6 +125,12 @@ type Props = {
 
 export function HomeTerraceScene(props: Props) {
   const { layout, width, height, dailyPlayed, showCastle, huntLabel, polly } = props;
+  const goldFeatherReady = props.goldFeatherReady === true;
+  // The plaque is lit (gold frame and label) until the Daily is played, and stays lit while a Gold
+  // Feather is ready; it goes gray once it is played and there is no feather (never earned, used
+  // or expired).
+  const dailyLit = !dailyPlayed || goldFeatherReady;
+  const dailyLabel = dailyPlayed && goldFeatherReady ? 'GOLD FEATHER READY' : 'DAILY CHALLENGE';
   const { k, rects } = layout;
   const casing = rects.casing;
   const niche = {
@@ -168,6 +187,21 @@ export function HomeTerraceScene(props: Props) {
 
       {/* Moon sits behind the castle and the ridges. */}
       <Image source={ART.moon} style={[styles.img, rects.moon]} resizeMode="contain" />
+      {props.streak !== undefined && props.streak > 0 ? (
+        // The Daily streak, a number on the moon (Pete, 2026-10-21).
+        <Text
+          allowFontScaling={false}
+          numberOfLines={1}
+          accessibilityLabel={`Daily streak ${props.streak}`}
+          style={[
+            styles.moonStreak,
+            { left: rects.moon.left, top: rects.moon.top, width: rects.moon.width, height: rects.moon.height },
+            { fontSize: rects.moon.height * (props.streak > 99 ? 0.34 : props.streak > 9 ? 0.44 : 0.52), lineHeight: rects.moon.height },
+          ]}
+        >
+          {props.streak}
+        </Text>
+      ) : null}
 
       {/* Castle, hidden at rest (Pete, 2026-10-20): it rises from behind the mountains when Daily
           is tapped. Windows and door are lit by code so the Daily state can change them. */}
@@ -244,17 +278,17 @@ export function HomeTerraceScene(props: Props) {
       {/* DAILY CHALLENGE: the same flat button as the console's two, in the wall's recess, coming
           out first. Gold frame and label until it is played, then dulled to gray. */}
       <Slab
-        source={dailyPlayed ? ART.dailyDone : ART.daily}
+        source={dailyLit ? ART.daily : ART.dailyDone}
         recessed
-        label="DAILY CHALLENGE"
+        label={dailyLabel}
         left={plaque.left}
         top={plaque.top}
         width={plaque.width}
         height={plaque.height}
-        fontSize={plaque.height * DAILY_LABEL_HEIGHT_FRACTION}
+        fontSize={plaque.height * DAILY_LABEL_HEIGHT_FRACTION * (dailyLabel === 'DAILY CHALLENGE' ? 1 : DAILY_FEATHER_LABEL_SCALE)}
         k={k}
-        color={dailyPlayed ? DAILY_DONE_LABEL : GOLD}
-        glow={!dailyPlayed}
+        color={dailyLit ? GOLD : DAILY_DONE_LABEL}
+        glow={dailyLit}
         progress={entrance.progress[0]}
         locked={entrance.locked}
         accessibilityLabel="Daily Challenge"
@@ -316,6 +350,27 @@ export function HomeTerraceScene(props: Props) {
           ]}
         />
         <Image source={ART.casing} style={[styles.img, casing]} resizeMode="stretch" />
+        {props.startHere ? (
+          // First Hunt only: on the stone ledge right above ENTER THE HUNT (Pete, 2026-10-21).
+          <Text
+            allowFontScaling={false}
+            numberOfLines={1}
+            pointerEvents="none"
+            style={[
+              styles.startHere,
+              {
+                left: niche.left + hunt.x * niche.width,
+                width: hunt.w * niche.width,
+                top: casing.top + (niche.top - casing.top) * START_HERE_LEDGE_Y,
+                fontSize: (niche.top - casing.top) * START_HERE_LEDGE_SIZE,
+                lineHeight: (niche.top - casing.top) * START_HERE_LEDGE_SIZE * 1.3,
+                letterSpacing: (niche.top - casing.top) * START_HERE_LEDGE_SIZE * 0.14,
+              },
+            ]}
+          >
+            START HERE
+          </Text>
+        ) : null}
         <View style={[styles.abs, niche, { backgroundColor: NICHE_BACK }]} pointerEvents="box-none">
           <Slab
             source={ART.slabHunt}
@@ -332,6 +387,7 @@ export function HomeTerraceScene(props: Props) {
             color={dailyPlayed ? GOLD : WHITE}
             glow={dailyPlayed}
             progress={entrance.progress[1]}
+            wash={props.huntGlow}
             locked={entrance.locked}
             accessibilityLabel={huntLabel === 'RESUME HUNT' ? 'Resume Hunt' : 'Enter the Hunt'}
             onPress={props.onHunt}
@@ -385,6 +441,8 @@ type SlabProps = {
    * (sinks and dims) instead of popping out. Fixed for the life of the button.
    */
   recessed?: boolean;
+  /** First-run glow, 0..1: a gold wash over the button face. */
+  wash?: Animated.Value;
   /** A mark at each end of the button (Pete: the Hunt's crown; you enter the Hunt to earn one). */
   emblem?: { source: number; aspect: number };
   label: string;
@@ -574,6 +632,20 @@ function Slab(p: SlabProps) {
               />
             ))
           : null}
+        {p.wash ? (
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: p.width,
+              height: p.height,
+              backgroundColor: GOLD,
+              opacity: Animated.multiply(p.wash, 0.6),
+            }}
+          />
+        ) : null}
         {p.recessed ? (
           <Animated.View
             pointerEvents="none"
@@ -669,6 +741,23 @@ const styles = StyleSheet.create({
   slab: { alignItems: 'center', justifyContent: 'center' },
   trembleLayer: { position: 'absolute', left: 0, top: 0 },
   popShadow: { backgroundColor: '#000000' },
+  moonStreak: {
+    position: 'absolute',
+    textAlign: 'center',
+    includeFontPadding: false,
+    fontFamily: FONTS.terraceButton,
+    color: '#2B1B52',
+  },
+  startHere: {
+    position: 'absolute',
+    textAlign: 'center',
+    includeFontPadding: false,
+    fontFamily: FONTS.terraceButton,
+    color: GOLD,
+    textShadowColor: LABEL_SHADOW,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
   btnTop: { position: 'absolute', left: 0, bottom: '100%' },
   slabLines: { alignItems: 'center', justifyContent: 'center' },
   slabLabel: { fontFamily: FONTS.terraceButton, textAlign: 'center', textShadowOffset: { width: 0, height: 2 } },

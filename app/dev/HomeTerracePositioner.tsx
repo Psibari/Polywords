@@ -31,6 +31,12 @@ export function HomeTerracePositioner({ k, selected, onSelect, showHitAreas, onT
   const forceDailyPlayed = useHomeTerraceTuning((s) => s.forceDailyPlayed);
   const setRect = useHomeTerraceTuning((s) => s.setRect);
   const setForce = useHomeTerraceTuning((s) => s.setForceDailyPlayed);
+  const forceGoldFeather = useHomeTerraceTuning((s) => s.forceGoldFeather);
+  const setForceGoldFeather = useHomeTerraceTuning((s) => s.setForceGoldFeather);
+  const forceStreak = useHomeTerraceTuning((s) => s.forceStreak);
+  const setForceStreak = useHomeTerraceTuning((s) => s.setForceStreak);
+  const forceStartHere = useHomeTerraceTuning((s) => s.forceStartHere);
+  const setForceStartHere = useHomeTerraceTuning((s) => s.setForceStartHere);
   const showCastle = useHomeTerraceTuning((s) => s.showCastle);
   const setShowCastle = useHomeTerraceTuning((s) => s.setShowCastle);
   const resetElement = useHomeTerraceTuning((s) => s.resetElement);
@@ -149,6 +155,18 @@ export function HomeTerracePositioner({ k, selected, onSelect, showHitAreas, onT
               <Btn
                 label={forceDailyPlayed === null ? 'Daily: real' : forceDailyPlayed ? 'Daily: played' : 'Daily: not played'}
                 onPress={() => setForce(forceDailyPlayed === null ? false : forceDailyPlayed === false ? true : null)}
+              />
+              <Btn
+                label={forceGoldFeather === null ? 'Feather: real' : forceGoldFeather ? 'Feather: ready' : 'Feather: none'}
+                onPress={() => setForceGoldFeather(forceGoldFeather === null ? true : forceGoldFeather ? false : null)}
+              />
+              <Btn
+                label={forceStreak === null ? 'Streak: real' : `Streak: ${forceStreak}`}
+                onPress={() => setForceStreak(forceStreak === null ? 0 : forceStreak === 0 ? 7 : forceStreak === 7 ? 128 : null)}
+              />
+              <Btn
+                label={forceStartHere === null ? 'Start here: real' : forceStartHere ? 'Start here: shown' : 'Start here: hidden'}
+                onPress={() => setForceStartHere(forceStartHere === null ? true : forceStartHere ? false : null)}
               />
               <Btn label={showCastle ? 'Castle: shown' : 'Castle: hidden'} on={showCastle} onPress={() => setShowCastle(!showCastle)} />
               <Btn label={readout ? 'Readout: ON' : 'Readout'} on={readout} onPress={() => setReadout((v) => !v)} />

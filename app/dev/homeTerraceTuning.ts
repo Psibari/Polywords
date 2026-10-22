@@ -21,11 +21,20 @@ type State = {
   overrides: TerraceOverrides;
   /** Force the Daily lighting state for testing: null = follow the real state. */
   forceDailyPlayed: boolean | null;
+  /** Force the Gold Feather state: null = real, true = ready, false = none. */
+  forceGoldFeather: boolean | null;
+  /** Force the moon's streak number: null = real. */
+  forceStreak: number | null;
+  /** Force START HERE: null = real (first Hunt only), true = shown, false = hidden. */
+  forceStartHere: boolean | null;
   /** Show the castle so it can be positioned; at rest it is hidden (Pete, 2026-10-20). */
   showCastle: boolean;
   load: () => Promise<void>;
   setRect: (id: TerraceElementId, rect: Partial<TerraceRect>) => void;
   setForceDailyPlayed: (value: boolean | null) => void;
+  setForceGoldFeather: (value: boolean | null) => void;
+  setForceStreak: (value: number | null) => void;
+  setForceStartHere: (value: boolean | null) => void;
   setShowCastle: (value: boolean) => void;
   resetElement: (id: TerraceElementId) => void;
   resetAll: () => void;
@@ -55,6 +64,9 @@ export const useHomeTerraceTuning = create<State>((set, get) => ({
   loaded: false,
   overrides: {},
   forceDailyPlayed: null,
+  forceGoldFeather: null,
+  forceStreak: null,
+  forceStartHere: null,
   showCastle: false,
   load: async () => {
     try {
@@ -70,6 +82,9 @@ export const useHomeTerraceTuning = create<State>((set, get) => ({
     persist(overrides);
   },
   setForceDailyPlayed: (value) => set({ forceDailyPlayed: value }),
+  setForceGoldFeather: (value) => set({ forceGoldFeather: value }),
+  setForceStreak: (value) => set({ forceStreak: value }),
+  setForceStartHere: (value) => set({ forceStartHere: value }),
   setShowCastle: (value) => set({ showCastle: value }),
   resetElement: (id) => {
     const overrides = { ...get().overrides };
