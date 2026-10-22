@@ -2,12 +2,12 @@
 
 Daily is a deterministic, one-attempt-per-date, five-round mode separate from Hunt.
 
-> **Content status:** The canonical source is the locked workbook at
-> `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`; `STAGE` is included and
-> `SENTENCE` is excluded. `app/game/dailyPool.ts` is the approved runtime representation.
-> Each source row has three clues, nine unique approved candidates, and tier 1–3. A round
-> deterministically presents the target plus five of those distractors: six candidates total.
-> `npm run state` prints the live pool size.
+> **Content status:** The original 60 locked entries remain in
+> `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx` and `app/game/dailyPool.ts`.
+> The approved 50-puzzle six-card expansion lives in `app/game/dailyPoolExpansion.ts`.
+> New Daily content is authored as the actual six-card puzzle: one target plus five distractors.
+> Legacy nine-candidate entries remain supported for backward compatibility and are reduced to
+> six deterministically at runtime. `STAGE` is included and `SENTENCE` is excluded.
 
 ## Session
 
@@ -92,10 +92,10 @@ glint is left out; the gold and its glow stay.
 ## Owners
 
 - Editorial standard: `docs/DAILY_CONTENT_WRITING_STANDARD.md`
-- Authoring source: `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`
+- Legacy authoring source: `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`
 - UI/motion: `app/screens/DailyChallengeScreen.tsx`, `app/components/DailyCastleStage.tsx`,
   `app/components/DailyGate.tsx`, `app/components/DailyAnswerCard.tsx`
 - Castle geometry: `app/ui/dailyCastleScene.ts`
 - Gameplay rules: `app/game/dailyChallengeEngine.ts`
-- Runtime content: `app/game/dailyPool.ts`
+- Runtime content: `app/game/dailyPool.ts`, `app/game/dailyPoolExpansion.ts`
 - State/streak: `app/store/useGameStore.ts`, `app/game/dailyStreak.ts`
