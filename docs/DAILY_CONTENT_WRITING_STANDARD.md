@@ -11,12 +11,13 @@ importing, and selecting Daily Challenge content.
 
 ## Source Discipline
 
-- Canonical authoring workbook:
+- Locked legacy workbook:
   `workbooks/POLYWORDS_Daily_Challenge_60_LOCKED_2026-08-28.xlsx`
-- Runtime representation: `app/game/dailyPool.ts`
-- The workbook is the authoring truth. Runtime is an exported representation.
-- When memory, chat history, runtime, and the current locked workbook disagree about approved
-  source wording or status, inspect the canonical workbook rather than guessing.
+- Runtime legacy pool: `app/game/dailyPool.ts`
+- Approved six-card expansion: `app/game/dailyPoolExpansion.ts`
+- The approved source wording is the authoring truth. Runtime files are playable representations.
+- When memory, chat history, runtime, and locked source material disagree about approved wording
+  or status, inspect the current locked source rather than guessing.
 
 ## Meaning Gate
 
@@ -38,44 +39,52 @@ For a new Daily target:
 
 1. Complete the definitions and meaning audit.
 2. Select the three meanings.
-3. Identify the human handles and recognition surfaces.
-4. Draft the three clues.
-5. Work interactively and preserve every line Pete locks.
-6. Order the clues hardest to easiest.
-7. Once the clues are stable, build the nine-word source grid.
-8. Audit the complete clue/grid set.
+3. Draft three clear, natural clues, one for each meaning.
+4. Build the actual six-card puzzle: the target exactly once plus five distractors.
+5. Make the distractors do the difficulty work. Each clue should honestly tempt at least one
+   wrong card whenever possible, while only the target survives all three clues.
+6. Work interactively and preserve every line Pete locks.
+7. Order the clues hardest to easiest when that improves the progression.
+8. Audit the complete three-clue/six-card puzzle.
 9. Lock only after explicit approval.
-10. Update the canonical workbook only from approved wording.
+10. Update runtime/source material only from approved wording.
 
 ## Clue Standard
 
-- Daily clues are more direct than Hunt REAL writing, but still target recognition memory rather
-  than dictionary prose.
-- Use familiar situations, objects, actions, roles, sayings, and everyday knowledge.
-- Use a different recognition surface for each clue.
-- Order the clues hardest, middle, easiest.
-- There is no hard word-count cap. Prefer brevity only when it is equally natural, fair, and
-  precise.
+- Daily is a staged ambiguity and convergence game, not Hunt disguise writing.
+- Daily clues should be straightforward, concise, natural descriptions of genuine meanings.
+- The challenge should come primarily from the answer-card traps, not from making the clue
+  unnecessarily clever or obscure.
+- Use a different meaning for each clue.
+- Prefer the shortest wording that remains natural, fair, and precise. Do not add modifiers that
+  merely explain what the cards can make the player work out.
 - Do not make Daily clues artificially obscure merely to imitate Hunt disguise.
 
-## Headword Rule
+## Universal No-Leakage Rule
 
-- The target may not appear inside a clue.
-- Reject obvious revealing inflections, derivatives, compounds, and morphological variants.
+- No answer-card word may appear in any clue for that puzzle. This applies to the target and all
+  five distractors.
+- Singular/plural changes do not excuse leakage.
+- Reject obvious revealing inflections, derivatives, compounds, and morphological variants of
+  the target when they give the answer away.
 - Any deliberate exception requires Pete's explicit approval. Record it narrowly; never weaken
   the general rule to accommodate one exception.
 
-## Nine-Word Source Grid
+## Six-Card Puzzle
 
-Each approved source entry contains exactly nine unique candidate words: the target exactly once
-and eight distractors. The runtime may deterministically present the target plus five distractors
-in an actual round, but editorial approval applies to all nine source candidates.
+Each newly approved Daily puzzle contains exactly six unique answer cards: the target exactly
+once and five distractors. These are the actual six cards the player sees; do not author a larger
+hidden distractor pool for new Daily content.
 
-Build distractors for the target and puzzle as a whole. Distractors:
+Legacy locked entries may still carry nine source candidates. The runtime supports those entries
+for backward compatibility and deterministically presents six. New content uses the six-card
+format.
 
-- are not rigidly paired one-to-one with clues
-- spread temptation across the three clue domains
-- are plausible from at least one clue or semantic neighborhood
+Distractors:
+
+- are the primary source of Daily difficulty
+- should honestly tempt the player from one or more individual clues
+- spread temptation across the three clue meanings
 - fail the full three-clue convergence
 - do not create a second defensible complete answer
 - are recognizable American-English words
@@ -84,17 +93,16 @@ Build distractors for the target and puzzle as a whole. Distractors:
 
 ## Cross-Contamination
 
-Audit the entire three-clue, nine-word set. Do not reuse distinctive clue wording, phrases,
-subjects, scenes, objects, or memory snaps when reuse telegraphs the answer, copies a recognition
-trigger, or makes a distractor mechanically obvious.
+Audit the entire three-clue, six-card set.
 
-- Do not let one clue reuse another clue's recognition surface.
+- No card word may appear in any clue.
+- Do not let one clue accidentally reveal another clue's answer relationship.
+- Avoid distinctive wording, scenes, subjects, or recognition surfaces that mechanically expose
+  the target or a distractor.
 - A distractor may attack the same semantic neighborhood as a clue through different language.
 - Ordinary connective or common language is not contamination.
-- Cross-reference distinctive wording, scenes, subjects, and memory snaps against the current
-  canonical Daily workbook and the wider locked POLYWORDS corpus when available.
-- Avoid recognizable recycling whenever a natural alternative exists, but do not mechanically
-  ban ordinary semantic overlap.
+- Cross-reference distinctive wording and scenes against the wider locked POLYWORDS corpus when
+  available, but do not mechanically ban ordinary semantic overlap.
 
 ## Fairness Audit Before Lock
 
@@ -102,22 +110,23 @@ Verify:
 
 1. Exactly three distinct meanings.
 2. All three are recognizable enough for Daily.
-3. Clues are ordered hardest to easiest.
-4. Each clue sounds human.
-5. Each clue represents a different meaning.
-6. There is no target/headword leakage.
-7. There are exactly nine unique candidates.
+3. Each clue sounds human and is no more elaborate than necessary.
+4. Each clue represents a different meaning.
+5. There is no target/headword leakage.
+6. No distractor word appears in any clue.
+7. There are exactly six unique answer cards for new content.
 8. The target appears exactly once.
 9. Every distractor has an honest temptation reason.
 10. Every distractor fails the full clue set.
 11. There is no second defensible answer.
 12. There is no material clue/grid cross-contamination.
-13. The canonical workbook cross-reference is complete.
+13. Locked wording has been preserved exactly.
 14. Any exception is explicit, narrow, recorded, and improves gameplay.
 
 ## Locking
 
 - Only explicit Pete approval locks content.
-- “Lock it,” “lock it next,” and explicit batch approval preserve exactly the approved wording.
+- “Lock it,” “lock it next,” “passes,” “agreed,” and explicit batch approval preserve exactly the
+  approved wording in context.
 - Never silently rewrite locked clues or grid words.
 - Intentional easier clues or gimmes are allowed when deliberately used for pacing or confidence.
