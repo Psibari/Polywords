@@ -5,6 +5,7 @@ import { useFonts } from 'expo-font';
 import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeScreen from './app/screens/HomeScreen';
+import HomeTerraceScreen from './app/screens/HomeTerraceScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
@@ -25,6 +26,7 @@ export default function App() {
     'BebasNeue-Regular':    require('./assets/fonts/BebasNeue-Regular.ttf'),
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
     'Buggie-Regular': require('./assets/fonts/Buggie-Regular.ttf'),
+    'LilitaOne-Regular': require('./assets/fonts/LilitaOne-Regular.ttf'),
   });
 
   // Home is always the landing screen — this only gates the first paint so
@@ -92,7 +94,7 @@ export default function App() {
               animation: 'fade',
             }}
           >
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Home" component={HomeTerraceScreen} />
             {/* Interactive swipe-back disabled: it's a native-driven gesture that
                 can complete before the beforeRemove exit-guard in GameScreen gets
                 a chance to intervene, desyncing JS from the native screen stack
@@ -104,6 +106,8 @@ export default function App() {
             <Stack.Screen name="Vault" component={VaultScreen} />
             <Stack.Screen name="Settings" component={__DEV__ ? DevSettingsScreen : SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
+            {/* The old Home, parked (Pete, 2026-10-21: the terrace is the Home). DEV-only, for comparison. */}
+            {__DEV__ && <Stack.Screen name="HomeOld" component={HomeScreen} />}
             {__DEV__ && <Stack.Screen name="DevResultsPreview" component={DevResultsPreviewScreen} />}
             {__DEV__ && <Stack.Screen name="DevRematchOutcomePreview" component={DevRematchOutcomePreviewScreen} />}
           </Stack.Navigator>

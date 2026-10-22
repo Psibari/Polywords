@@ -168,14 +168,37 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 - Old Lexicon rollback components remain until Pete decides to delete them.
 - The nav tab and in-round spine both say POLYBOOK; renaming remains Pete's decision.
 
-## Home (planned)
+## Home
 
-Home redesign is approved in direction and NOT built. As of 2026-10-20 Pete chose an OUTDOOR night
-terrace (castle wall, floor, one stone console for Hunt and Polybook); the 2026-10-13 indoor room
-is parked, not deleted. Rulings live in `docs/HOME_SCREEN_LOCKDOWN.md`. Current `HomeScreen.tsx` is
-still the old layout until Pete says otherwise. When built, derive wall, console and floor geometry
-from full-width, bottom-anchored measurements (never scale the wall) and ship a DEV-only
-positioning tool, which Pete requires.
+Home is the OUTDOOR night terrace (Pete, 2026-10-20; made the real Home 2026-10-21). `App.tsx`'s `Home`
+route renders `app/screens/HomeTerraceScreen.tsx` (with `app/components/HomeTerraceScene.tsx`,
+`app/ui/homeTerraceScene.ts`, `app/ui/homeTerraceEntrance.ts`, `app/hooks/useTerraceEntrance.ts`). The
+old `HomeScreen.tsx` is parked, not deleted, and is reachable only under `__DEV__` as the `HomeOld`
+route (Dev Settings > OLD HOME). Rulings live in `docs/HOME_SCREEN_LOCKDOWN.md`. Layout is one
+width-fit, bottom-anchored frame (design canvas 443x960, k = screenWidth/443); logo, moon and cage top
+are top-anchored below the safe-area inset. Positions are the defaults in `TERRACE_DEFAULTS`
+(`homeTerraceScene.ts`, Pete's 2026-10-21 20:54 DEV readout, locked). The DEV positioner
+(`app/dev/HomeTerracePositioner.tsx`, overrides in AsyncStorage `pw.dev.homeTerrace.v1`, plus Daily /
+Feather / Streak / Start-here state toggles) renders only under `__DEV__`.
+
+Buttons are Pete's flat art in the console opening (ENTER THE HUNT with a crown at each end, white,
+gold once the Daily is played; POLYBOOK plain) and the Daily plaque in the wall recess behind the
+console. Every time Home is focused, Daily, Hunt, Polybook come out in turn with the Daily's own
+entrance constants (`dailyPlaqueEntrance.ts`), a stone thud and tap each, one grind and a tremble of
+wall and console. Hunt and Polybook pop out when pressed (top face and shadow); the Daily cannot come
+forward past the console, so it rises from behind the console's top edge and is pressed IN (sinks and
+dims). Plaque: gold frame and label while the Daily is unplayed, still gold and reading GOLD FEATHER
+READY while a Gold Feather is ready, gray once played with no feather. The Daily streak is the number on
+the moon (hidden at zero). First Hunt only: START and HERE breathe under the Hunt button's crowns. The
+first-run Hunt glow (after Home onboarding completes) is a gold wash over the Hunt button.
+
+Aspect-locked art: wall, casing and the Daily plaque derive height from width (`lockTerraceAspect`).
+Movement NOT built: moon rise carrying the streak number, castle reveal on Daily, cage opening, Polly
+landing, Hunt dive, Polybook pop, shooting stars.
+
+iOS note: an RN `Image` with `StyleSheet.absoluteFill` inside a Pressable drew at intrinsic size on
+iOS (Fabric); give such Images explicit width and height. RN `Image` takes no `pointerEvents` prop;
+use style.
 
 ## Daily
 
