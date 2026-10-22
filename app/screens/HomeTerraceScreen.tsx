@@ -9,6 +9,7 @@ import { currentRect, useHomeTerraceTuning } from '../dev/homeTerraceTuning';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { useTerraceEntrance } from '../hooks/useTerraceEntrance';
 import { useTerraceDive } from '../hooks/useTerraceDive';
+import { useTerraceSky } from '../hooks/useTerraceSky';
 import { getDisplayStreak } from '../game/dailyStreak';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
@@ -26,9 +27,8 @@ import { setMusicState, startMusic, stopMusic } from '../audio/MusicEngine';
 
 // THE Home (outdoor night terrace, Pete 2026-10-20; swapped in as the real Home 2026-10-21). The
 // old HomeScreen is parked and reachable only in dev builds as 'HomeOld'. The DEV positioner and its
-// state toggles render only under __DEV__. Movement beyond the button entrance (moon rise, castle
-// reveal on Daily, cage opening, Polly's landing, Hunt dive, Polybook pop, shooting stars) is a
-// later step.
+// state toggles render only under __DEV__. Movement: the button entrance, the Hunt/Daily/Polybook dives,
+// the moon rise (real phase) and shooting stars. Still to build: the cage fall and Polly's landing.
 //
 // Carried over from HomeScreen as Pete ruled 2026-10-21: GOLD FEATHER READY takes the Daily
 // plaque's label (the plaque stays gold while the feather is ready), the Daily streak is the number
@@ -62,6 +62,7 @@ export default function HomeTerraceScreen({ navigation }: Props) {
   const loadTuning = useHomeTerraceTuning((s) => s.load);
   const entrance = useTerraceEntrance();
   const dive = useTerraceDive();
+  const sky = useTerraceSky(useReducedMotionPreference());
   // No button can be pressed while the dive is running.
   const sceneEntrance = useMemo(
     () => ({ ...entrance, locked: entrance.locked || dive.diving }),
@@ -189,6 +190,7 @@ export default function HomeTerraceScreen({ navigation }: Props) {
         onSettings={() => navigation.navigate('Settings')}
         entrance={sceneEntrance}
         dive={dive}
+        sky={{ ...sky, starsOn: sky.starsOn && !dive.diving }}
         polly={
           pollyMemoryLoaded ? (
             <View

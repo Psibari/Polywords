@@ -13,6 +13,8 @@ import {
   terraceDiveOrigin,
   terraceZoomShift,
 } from '../ui/homeTerraceDive';
+import { TerraceMoonPhase, terraceMoonRiseDistance, terraceMoonSprite, terraceSkyHeight } from '../ui/homeTerraceSky';
+import { TerraceShootingStars } from './TerraceShootingStars';
 import { dailyCardMaterial, dailyCastlePlaqueMaterial } from '../ui/pwDailyMaterials';
 import {
   DAILY_PLAQUE_DROP,
@@ -63,8 +65,21 @@ const ART = {
   cageBase: require('../../assets/images/home/terrace/cage_base.png'),
   perch: require('../../assets/images/home/terrace/perch.png'),
   logo: require('../../assets/images/brand/home-title-lockup.png'),
-  moon: require('../../assets/images/moons/moon-r2-c2.png'), // full moon
+  ridge: require('../../assets/images/home/terrace/ridge.webp'),
 };
+
+// Pete's moon phase sprites, thinnest crescent to full (lit side on the right; the shrinking half is mirrored).
+const MOON_ART = [
+  require('../../assets/images/moons/moon-r0-c0.png'),
+  require('../../assets/images/moons/moon-r0-c1.png'),
+  require('../../assets/images/moons/moon-r0-c2.png'),
+  require('../../assets/images/moons/moon-r1-c0.png'),
+  require('../../assets/images/moons/moon-r1-c1.png'),
+  require('../../assets/images/moons/moon-r1-c2.png'),
+  require('../../assets/images/moons/moon-r2-c0.png'),
+  require('../../assets/images/moons/moon-r2-c1.png'),
+  require('../../assets/images/moons/moon-r2-c2.png'),
+] as const;
 
 // Colours: the locked palette and Daily castle measurements (AGENTS.md, DESIGN.md).
 const GOLD = PW.color.gold;
@@ -113,6 +128,15 @@ export type TerraceDiveProps = {
   target: 'hunt' | 'daily' | 'book' | null;
 };
 
+export type TerraceSkyProps = {
+  /** Moon climb: 0 hidden behind the back mountains, 1 at rest. */
+  moonRise: Animated.Value;
+  /** Today's real moon phase. */
+  phase: TerraceMoonPhase;
+  /** Shooting stars may fall. */
+  starsOn: boolean;
+};
+
 export type TerraceEntranceProps = {
   progress: readonly Animated.Value[];
   tremble: Animated.Value;
@@ -147,6 +171,8 @@ type Props = {
   entrance?: TerraceEntranceProps;
   /** The Hunt dive: scene zoom, hall in the console opening, gold flash. Absent = at rest. */
   dive?: TerraceDiveProps;
+  /** Moon phase, moon rise and shooting stars. Absent = a full moon at rest and no stars. */
+  sky?: TerraceSkyProps;
 };
 
 export function HomeTerraceScene(props: Props) {
@@ -186,6 +212,14 @@ export function HomeTerraceScene(props: Props) {
     target: null,
   }).current;
   const dive = props.dive ?? restDive;
+  const restSky = useRef<TerraceSkyProps>({
+    moonRise: new Animated.Value(1),
+    phase: { age: 14.77, illumination: 1, waxing: true, cell: 8 },
+    starsOn: false,
+  }).current;
+  const sky = props.sky ?? restSky;
+  const moonSprite = terraceMoonSprite(sky.phase.cell, sky.phase.waxing, rects.moon);
+  const moonStart = terraceMoonRiseDistance(layout.background, rects.moon);
   const diveOrigin = dive.target === 'daily' ? terraceDailyOrigin(castle) : terraceDiveOrigin(niche);
   const zoomShift = terraceZoomShift(diveOrigin, width, height);
   // Where a retreating button goes: the hall's golden end, from the button's own centre.
@@ -243,8 +277,30 @@ export function HomeTerraceScene(props: Props) {
         ]}
       />
 
-      {/* Moon sits behind the castle and the ridges. */}
-      <Image source={ART.moon} style={[styles.img, rects.moon]} resizeMode="contain" />
+      {/* Moon sits behind the castle and the ridges. It is today's real phase, and on the first Home of an app
+          open it climbs from behind the back mountains (the ridge layer below hides it until it clears). */}
+      <Animated.View
+        pointerEvents="none"
+        collapsable={false}
+        style={[
+          StyleSheet.absoluteFill,
+          { transform: [{ translateY: sky.moonRise.interpolate({ inputRange: [0, 1], outputRange: [moonStart, 0] }) }] },
+        ]}
+      >
+      <Image
+        source={MOON_ART[sky.phase.cell]}
+        style={[
+          styles.img,
+          {
+            left: rects.moon.left + moonSprite.left,
+            top: rects.moon.top,
+            width: moonSprite.width,
+            height: moonSprite.height,
+          },
+          moonSprite.mirror ? { transform: [{ scaleX: -1 }] } : null,
+        ]}
+        resizeMode="stretch"
+      />
       {props.streak !== undefined && props.streak > 0 ? (
         // The Daily streak, a number on the moon (Pete, 2026-10-21).
         <Text
@@ -260,6 +316,18 @@ export function HomeTerraceScene(props: Props) {
           {props.streak}
         </Text>
       ) : null}
+      </Animated.View>
+
+      {/* A shooting star now and then, behind the back mountains. */}
+      <TerraceShootingStars
+        active={sky.starsOn}
+        width={width}
+        skyHeight={terraceSkyHeight(layout.background)}
+        k={k}
+      />
+      {/* The back mountains again, on top of the moon and the stars: a copy of the painting that is see-through
+          above the back range's top edge (tools/art/home_terrace/make_ridge.py), so they come out from behind it. */}
+      <Image source={ART.ridge} style={[styles.img, layout.background]} resizeMode="stretch" />
 
       {/* Castle, hidden at rest (Pete, 2026-10-20): it rises from behind the mountains when Daily
           is tapped. Windows and door are lit by code so the Daily state can change them. */}
