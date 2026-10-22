@@ -47,6 +47,8 @@ const ART = {
   slabBook: require('../../assets/images/home/terrace/btn_book.png'),
   btnTop: require('../../assets/images/home/terrace/btn_top.png'),
   daily: require('../../assets/images/home/terrace/btn_daily.png'),
+  crownWhite: require('../../assets/images/home/terrace/crown_white.png'),
+  crownGold: require('../../assets/images/home/terrace/crown_gold.png'),
   dailyDone: require('../../assets/images/home/terrace/btn_daily_done.png'),
   cageTop: require('../../assets/images/home/terrace/cage_top.png'),
   cageBase: require('../../assets/images/home/terrace/cage_base.png'),
@@ -73,6 +75,9 @@ const GROUND_BEVEL = '#4A3A78';
 const POP_SHADOW = { x: 3, y: 7, opacity: 0.45 } as const;
 /** Recessed (Daily) button: starts this many button-heights down behind the console, rises a hair past
  * flush, and sinks this fraction of its height and dims while pressed. */
+/** Emblem at each end of a button: width and inset as fractions of the button width. */
+const EMBLEM_WIDTH = 0.14;
+const EMBLEM_INSET = 0.07;
 const RECESS_RISE = 1.2;
 const RECESS_OVERSHOOT = 0.08;
 const RECESS_PRESS_SINK = 0.06;
@@ -321,6 +326,7 @@ export function HomeTerraceScene(props: Props) {
             height={hunt.h * niche.height}
             fontSize={labelSizes.hunt}
             smallSize={labelSizes.small}
+            emblem={{ source: dailyPlayed ? ART.crownGold : ART.crownWhite, aspect: 72 / 100 }}
             lines={huntLabel === 'RESUME HUNT' ? ['RESUME', 'HUNT'] : ['ENTER', 'the', 'HUNT']}
             k={k}
             color={dailyPlayed ? GOLD : WHITE}
@@ -379,6 +385,8 @@ type SlabProps = {
    * (sinks and dims) instead of popping out. Fixed for the life of the button.
    */
   recessed?: boolean;
+  /** A mark at each end of the button (Pete: the Hunt's crown; you enter the Hunt to earn one). */
+  emblem?: { source: number; aspect: number };
   label: string;
   left: number;
   top: number;
@@ -549,6 +557,23 @@ function Slab(p: SlabProps) {
           style={{ position: 'absolute', left: 0, top: 0, width: p.width, height: p.height }}
           resizeMode="stretch"
         />
+        {p.emblem
+          ? [0, 1].map((end) => (
+              <Image
+                key={end}
+                source={p.emblem!.source}
+                // Explicit size, same iOS reason as the button image.
+                style={{
+                  position: 'absolute',
+                  top: (p.height - p.width * EMBLEM_WIDTH * p.emblem!.aspect) / 2,
+                  [end === 0 ? 'left' : 'right']: p.width * EMBLEM_INSET,
+                  width: p.width * EMBLEM_WIDTH,
+                  height: p.width * EMBLEM_WIDTH * p.emblem!.aspect,
+                }}
+                resizeMode="contain"
+              />
+            ))
+          : null}
         {p.recessed ? (
           <Animated.View
             pointerEvents="none"

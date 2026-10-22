@@ -143,7 +143,8 @@ export const TERRACE_LABEL = {
   /** The Hunt text block fills this much of the button height. */
   huntBlockHeightFraction: 0.78,
   /** ...and never more than this much of its width. */
-  huntMaxWidthFraction: 0.8,
+  // Leaves room for the crown emblem at each end (each takes 7% + 14% of the button width).
+  huntMaxWidthFraction: 0.56,
   /** Big line height, and the small THE's size and line height, as multiples of the big size. */
   bigLineHeight: 0.92,
   smallSize: 0.34,
