@@ -2,7 +2,6 @@ import { useCallback, useRef, useState } from 'react';
 import { Animated, Easing } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { TERRACE_DIVE, terraceDiveTimeline } from '../ui/homeTerraceDive';
-import type { TerraceEntrance } from './useTerraceEntrance';
 
 // The Hunt dive's driver (timings: ui/homeTerraceDive.ts). Phases are chained with setTimeout and
 // every animation is native-driven. The zoom and flash are NOT reset when Home loses focus: the
@@ -13,17 +12,23 @@ export type TerraceDive = {
   zoom: Animated.Value;
   /** Gold flash opacity, 0 at rest. */
   flash: Animated.Value;
-  /** Hall opacity inside the console opening, 0 at rest. */
+  /** Hall popping open inside the console opening: 0 closed, 1 open (overshoots on the way). */
   hall: Animated.Value;
+  /** HUNT and POLYBOOK receding into the hall: 0 at rest, 1 gone. */
+  retreat: readonly [Animated.Value, Animated.Value];
   /** True from the tap until Home is focused again: ignore presses. */
   diving: boolean;
   start: (onArrive: () => void) => void;
 };
 
-export function useTerraceDive(entrance: TerraceEntrance): TerraceDive {
+export function useTerraceDive(): TerraceDive {
   const zoom = useRef(new Animated.Value(1)).current;
   const flash = useRef(new Animated.Value(0)).current;
   const hall = useRef(new Animated.Value(0)).current;
+  const retreat = useRef<readonly [Animated.Value, Animated.Value]>([
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const busy = useRef(false);
   const [diving, setDiving] = useState(false);
@@ -39,13 +44,15 @@ export function useTerraceDive(entrance: TerraceEntrance): TerraceDive {
       zoom.stopAnimation();
       flash.stopAnimation();
       hall.stopAnimation();
+      retreat.forEach((v) => v.stopAnimation());
       zoom.setValue(1);
       flash.setValue(0);
       hall.setValue(0);
+      retreat.forEach((v) => v.setValue(0));
       busy.current = false;
       setDiving(false);
       return clearTimers;
-    }, [clearTimers, flash, hall, zoom]),
+    }, [clearTimers, flash, hall, retreat, zoom]),
   );
 
   const start = useCallback(
@@ -57,22 +64,25 @@ export function useTerraceDive(entrance: TerraceEntrance): TerraceDive {
       const at = (ms: number, fn: () => void) => {
         timers.current.push(setTimeout(fn, ms));
       };
-      const retreat = (index: number) =>
-        Animated.timing(entrance.progress[index], {
-          toValue: 0,
+      // retreat[0] is HUNT, retreat[1] is POLYBOOK.
+      const recede = (value: Animated.Value) =>
+        Animated.timing(value, {
+          toValue: 1,
           duration: t.retreatMs,
-          easing: Easing.inOut(Easing.quad),
+          easing: Easing.in(Easing.quad),
           useNativeDriver: true,
         }).start();
 
-      Animated.timing(hall, {
-        toValue: 1,
-        duration: t.hallFadeMs,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }).start();
-      at(t.polybookRetreatAt, () => retreat(2));
-      at(t.huntRetreatAt, () => retreat(1));
+      at(t.polybookRetreatAt, () => recede(retreat[1]));
+      at(t.huntRetreatAt, () => recede(retreat[0]));
+      at(t.hallPopAt, () =>
+        Animated.timing(hall, {
+          toValue: 1,
+          duration: t.hallPopMs,
+          easing: Easing.out(Easing.back(1.8)),
+          useNativeDriver: true,
+        }).start(),
+      );
       at(t.zoomAt, () =>
         Animated.timing(zoom, {
           toValue: TERRACE_DIVE.zoomScale,
@@ -91,8 +101,8 @@ export function useTerraceDive(entrance: TerraceEntrance): TerraceDive {
       );
       at(t.navigateAt, onArrive);
     },
-    [entrance.progress, flash, hall, zoom],
+    [flash, hall, retreat, zoom],
   );
 
-  return { zoom, flash, hall, diving, start };
+  return { zoom, flash, hall, retreat, diving, start };
 }

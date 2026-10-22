@@ -8,8 +8,15 @@
 export const TERRACE_DIVE = {
   /** Multiplies every duration. 1 = the mock's fastest zoom; 0.8 is 20% quicker. */
   timescale: 1,
-  /** One button going back into the console. */
+  /** One button receding into the hall. */
   retreatMs: 380,
+  /** A retreating button ends this fraction of its size, at the hall's golden end. */
+  retreatScale: 0.3,
+  /** The hall pops open once the second button is this far (0..1) through its retreat. */
+  hallPopFrom: 0.35,
+  /** The hall popping open: starts this fraction of its size, overshoots, settles. */
+  hallPopMs: 300,
+  hallPopStartScale: 0.5,
   /** HUNT starts retreating this long after POLYBOOK. */
   retreatStaggerMs: 150,
   /** Pause with the hall showing, before the zoom starts. */
@@ -17,12 +24,11 @@ export const TERRACE_DIVE = {
   /** The zoom itself. */
   zoomMs: 1100,
   /** Final scale of the scene. Past the point the golden end fills the screen. */
-  zoomScale: 14,
+  zoomScale: 10,
   /** The flash starts this far through the zoom (0..1) and ends with it. */
   flashFrom: 0.6,
-  /** The hall's gold (hall.png's lit end) and its brighter centre. */
-  flashColor: '#FBF88A',
-  flashCenterColor: '#FBF9BD',
+  /** The flash: the Daily door's gold (PW.color.gold), richer than the hall art's pale yellow. */
+  flashColor: '#F5C842',
 } as const;
 
 /** The golden end's centre inside hall.png, as fractions of the hall (measured from the art). */
@@ -32,6 +38,8 @@ export type DiveConfig = {
   timescale: number;
   retreatMs: number;
   retreatStaggerMs: number;
+  hallPopFrom: number;
+  hallPopMs: number;
   holdMs: number;
   zoomMs: number;
   flashFrom: number;
@@ -41,8 +49,8 @@ export type DiveTimeline = {
   polybookRetreatAt: number;
   huntRetreatAt: number;
   retreatMs: number;
-  /** The hall fades in over both retreats. */
-  hallFadeMs: number;
+  hallPopAt: number;
+  hallPopMs: number;
   zoomAt: number;
   zoomMs: number;
   flashAt: number;
@@ -58,13 +66,16 @@ export function terraceDiveTimeline(c: DiveConfig = TERRACE_DIVE): DiveTimeline 
   const stagger = c.retreatStaggerMs * s;
   const zoomMs = c.zoomMs * s;
   const retreatsDone = stagger + retreatMs;
-  const zoomAt = retreatsDone + c.holdMs * s;
+  const hallPopAt = stagger + c.hallPopFrom * retreatMs;
+  const hallPopMs = c.hallPopMs * s;
+  const zoomAt = Math.max(retreatsDone, hallPopAt + hallPopMs) + c.holdMs * s;
   const flashAt = zoomAt + c.flashFrom * zoomMs;
   return {
     polybookRetreatAt: 0,
     huntRetreatAt: stagger,
     retreatMs,
-    hallFadeMs: retreatsDone,
+    hallPopAt,
+    hallPopMs,
     zoomAt,
     zoomMs,
     flashAt,
@@ -79,4 +90,12 @@ export function terraceDiveOrigin(niche: { left: number; top: number; width: num
     x: niche.left + HALL_GOLD_CENTER.x * niche.width,
     y: niche.top + HALL_GOLD_CENTER.y * niche.height,
   };
+}
+
+/**
+ * Scaling about a point without transformOrigin: shift the point to the view's centre, scale, shift
+ * back. Use as [translate(dx,dy), scale, translate(-dx,-dy)]. dx, dy = point minus view centre.
+ */
+export function terraceZoomShift(point: { x: number; y: number }, width: number, height: number) {
+  return { dx: point.x - width / 2, dy: point.y - height / 2 };
 }

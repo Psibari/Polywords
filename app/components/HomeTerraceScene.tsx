@@ -6,7 +6,7 @@ import { playSfx } from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
-import { TERRACE_DIVE, terraceDiveOrigin } from '../ui/homeTerraceDive';
+import { HALL_GOLD_CENTER, TERRACE_DIVE, terraceDiveOrigin, terraceZoomShift } from '../ui/homeTerraceDive';
 import { dailyCardMaterial, dailyCastlePlaqueMaterial } from '../ui/pwDailyMaterials';
 import {
   DAILY_PLAQUE_DROP,
@@ -97,6 +97,8 @@ export type TerraceDiveProps = {
   zoom: Animated.Value;
   flash: Animated.Value;
   hall: Animated.Value;
+  /** HUNT, POLYBOOK. */
+  retreat: readonly [Animated.Value, Animated.Value];
 };
 
 export type TerraceEntranceProps = {
@@ -166,9 +168,13 @@ export function HomeTerraceScene(props: Props) {
     zoom: new Animated.Value(1),
     flash: new Animated.Value(0),
     hall: new Animated.Value(0),
+    retreat: [new Animated.Value(0), new Animated.Value(0)],
   }).current;
   const dive = props.dive ?? restDive;
   const diveOrigin = terraceDiveOrigin(niche);
+  const zoomShift = terraceZoomShift(diveOrigin, width, height);
+  // Where a retreating button goes: the hall's golden end, from the button's own centre.
+  const hallPoint = { x: HALL_GOLD_CENTER.x * niche.width, y: HALL_GOLD_CENTER.y * niche.height };
   // Wall and console tremble together while the buttons come out (the Daily wall's own keyframes).
   const trembleStyle = useMemo(
     () => ({
@@ -192,7 +198,16 @@ export function HomeTerraceScene(props: Props) {
         collapsable={false}
         style={[
           StyleSheet.absoluteFill,
-          { transform: [{ scale: dive.zoom }], transformOrigin: `${diveOrigin.x}px ${diveOrigin.y}px` },
+          {
+            // Scale about the hall's golden end: shift it to the centre, scale, shift back.
+            transform: [
+              { translateX: zoomShift.dx },
+              { translateY: zoomShift.dy },
+              { scale: dive.zoom },
+              { translateX: -zoomShift.dx },
+              { translateY: -zoomShift.dy },
+            ],
+          },
         ]}
       >
       {/* Sky above the frame on taller phones, and the sky/ridges image itself. */}
@@ -382,7 +397,29 @@ export function HomeTerraceScene(props: Props) {
           {/* The hall behind the buttons; shown only once they retreat on the Hunt dive. */}
           <Animated.Image
             source={ART.hall}
-            style={[styles.img, { left: 0, top: 0, width: niche.width, height: niche.height, opacity: dive.hall }]}
+            style={[
+              styles.img,
+              {
+                left: 0,
+                top: 0,
+                width: niche.width,
+                height: niche.height,
+                opacity: dive.hall.interpolate({ inputRange: [0, 0.4], outputRange: [0, 1], extrapolate: 'clamp' }),
+                // Pops open from a smaller hall about its golden end, overshoots, settles.
+                transform: [
+                  { translateX: hallPoint.x - niche.width / 2 },
+                  { translateY: hallPoint.y - niche.height / 2 },
+                  {
+                    scale: dive.hall.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [TERRACE_DIVE.hallPopStartScale, 1],
+                    }),
+                  },
+                  { translateX: -(hallPoint.x - niche.width / 2) },
+                  { translateY: -(hallPoint.y - niche.height / 2) },
+                ],
+              },
+            ]}
             resizeMode="stretch"
           />
           <Slab
@@ -401,6 +438,9 @@ export function HomeTerraceScene(props: Props) {
             color={dailyPlayed ? GOLD : WHITE}
             glow={dailyPlayed}
             progress={entrance.progress[1]}
+            retreat={dive.retreat[0]}
+            retreatDx={hallPoint.x - (hunt.x + hunt.w / 2) * niche.width}
+            retreatDy={hallPoint.y - (hunt.y + hunt.h / 2) * niche.height}
             wash={props.huntGlow}
             locked={entrance.locked}
             accessibilityLabel={huntLabel === 'RESUME HUNT' ? 'Resume Hunt' : 'Enter the Hunt'}
@@ -419,6 +459,9 @@ export function HomeTerraceScene(props: Props) {
             color={WHITE}
             glow={false}
             progress={entrance.progress[2]}
+            retreat={dive.retreat[1]}
+            retreatDx={hallPoint.x - (book.x + book.w / 2) * niche.width}
+            retreatDy={hallPoint.y - (book.y + book.h / 2) * niche.height}
             locked={entrance.locked}
             accessibilityLabel="Open the Polybook"
             onPress={props.onBook}
@@ -483,6 +526,10 @@ type SlabProps = {
   glow: boolean;
   /** 0 hidden in the console, DAILY_PLAQUE_PEAK farthest out, 1 flush. */
   progress: Animated.Value;
+  /** The dive: 0 at rest, 1 receded into the hall (shrinks and travels to retreatDx/Dy). */
+  retreat?: Animated.Value;
+  retreatDx?: number;
+  retreatDy?: number;
   locked: boolean;
   accessibilityLabel: string;
   onPress: () => void;
@@ -490,7 +537,7 @@ type SlabProps = {
 };
 
 function Slab(p: SlabProps) {
-  const { progress } = p;
+  const { progress, retreat } = p;
   // The corner tags breathe once the buttons are out and pressable; still under Reduce Motion.
   const tagPulse = useRef(new Animated.Value(1)).current;
   const reduceMotion = useReducedMotionPreference();
@@ -529,20 +576,40 @@ function Slab(p: SlabProps) {
   const motion = useMemo(() => {
     const proud = (map: (v: number) => number) => DAILY_PLAQUE_PROUD.map(map);
     const topH = p.width * BTN_TOP_RATIO;
+    const entranceOpacity = progress.interpolate({
+      inputRange: DAILY_PLAQUE_OPACITY_INPUT,
+      outputRange: DAILY_PLAQUE_OPACITY,
+      extrapolate: 'clamp' as const,
+    });
+    const entranceScale = Animated.multiply(
+      progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_SCALE }),
+      grip.interpolate({ inputRange: [0, 1], outputRange: [1, dailyCastlePlaqueMaterial.heldScale] }),
+    );
     return {
       shell: {
-        opacity: progress.interpolate({
-          inputRange: DAILY_PLAQUE_OPACITY_INPUT,
-          outputRange: DAILY_PLAQUE_OPACITY,
-          extrapolate: 'clamp' as const,
-        }),
+        // Retreating (Hunt dive): the button travels to the hall's golden end, shrinking, and only
+        // fades in the last stretch, so it reads as going away, not as a fade.
+        opacity: retreat
+          ? Animated.multiply(
+              entranceOpacity,
+              retreat.interpolate({ inputRange: [0, 0.75, 1], outputRange: [1, 1, 0] }),
+            )
+          : entranceOpacity,
         transform: [
+          ...(retreat
+            ? [
+                { translateX: retreat.interpolate({ inputRange: [0, 1], outputRange: [0, p.retreatDx ?? 0] }) },
+                { translateY: retreat.interpolate({ inputRange: [0, 1], outputRange: [0, p.retreatDy ?? 0] }) },
+              ]
+            : []),
           { translateY: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_DROP }) },
           {
-            scale: Animated.multiply(
-              progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: DAILY_PLAQUE_SCALE }),
-              grip.interpolate({ inputRange: [0, 1], outputRange: [1, dailyCastlePlaqueMaterial.heldScale] }),
-            ),
+            scale: retreat
+              ? Animated.multiply(
+                  entranceScale,
+                  retreat.interpolate({ inputRange: [0, 1], outputRange: [1, TERRACE_DIVE.retreatScale] }),
+                )
+              : entranceScale,
           },
         ],
       },
@@ -614,7 +681,7 @@ function Slab(p: SlabProps) {
       },
       topH,
     };
-  }, [progress, grip, p.width, p.height]);
+  }, [progress, grip, retreat, p.retreatDx, p.retreatDy, p.width, p.height]);
 
   return (
     <Animated.View

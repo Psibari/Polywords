@@ -59,7 +59,7 @@ export default function HomeTerraceScreen({ navigation }: Props) {
   const showCastle = useHomeTerraceTuning((s) => s.showCastle);
   const loadTuning = useHomeTerraceTuning((s) => s.load);
   const entrance = useTerraceEntrance();
-  const dive = useTerraceDive(entrance);
+  const dive = useTerraceDive();
   // No button can be pressed while the dive is running.
   const sceneEntrance = useMemo(
     () => ({ ...entrance, locked: entrance.locked || dive.diving }),
