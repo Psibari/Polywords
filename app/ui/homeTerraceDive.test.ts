@@ -4,9 +4,7 @@ import { HALL_GOLD_CENTER, TERRACE_DIVE, terraceDiveOrigin, terraceDiveTimeline,
 const t = terraceDiveTimeline(TERRACE_DIVE);
 assert.equal(t.polybookRetreatAt, 0, 'POLYBOOK retreats first');
 assert.ok(t.huntRetreatAt > t.polybookRetreatAt, 'HUNT retreats after POLYBOOK');
-assert.ok(t.hallPopAt > t.huntRetreatAt && t.hallPopAt < t.huntRetreatAt + t.retreatMs, 'hall pops while HUNT is leaving');
 assert.ok(t.zoomAt >= t.huntRetreatAt + t.retreatMs, 'zoom starts after both buttons are gone');
-assert.ok(t.zoomAt >= t.hallPopAt + t.hallPopMs, 'zoom starts after the hall has popped open');
 assert.ok(t.flashAt > t.zoomAt && t.flashAt < t.navigateAt, 'flash is inside the zoom');
 assert.equal(t.flashAt + t.flashMs, t.navigateAt, 'flash ends exactly when the zoom ends');
 assert.equal(t.navigateAt, t.zoomAt + t.zoomMs, 'navigate when the zoom ends');

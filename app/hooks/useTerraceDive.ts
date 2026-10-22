@@ -12,7 +12,7 @@ export type TerraceDive = {
   zoom: Animated.Value;
   /** Gold flash opacity, 0 at rest. */
   flash: Animated.Value;
-  /** Hall opening inside the console opening: 0 closed, 1 open. */
+  /** Hall visible in the console opening: 0 at rest, 1 once the dive starts. */
   hall: Animated.Value;
   /** HUNT and POLYBOOK receding into the hall: 0 at rest, 1 gone. */
   retreat: readonly [Animated.Value, Animated.Value];
@@ -73,16 +73,10 @@ export function useTerraceDive(): TerraceDive {
           useNativeDriver: true,
         }).start();
 
+      // The hall is simply there, static: shown at once, behind the buttons that still cover it.
+      hall.setValue(1);
       at(t.polybookRetreatAt, () => recede(retreat[1]));
       at(t.huntRetreatAt, () => recede(retreat[0]));
-      at(t.hallPopAt, () =>
-        Animated.timing(hall, {
-          toValue: 1,
-          duration: t.hallPopMs,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start(),
-      );
       at(t.zoomAt, () =>
         Animated.timing(zoom, {
           toValue: TERRACE_DIVE.zoomScale,

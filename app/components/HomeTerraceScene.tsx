@@ -404,20 +404,7 @@ export function HomeTerraceScene(props: Props) {
                 top: 0,
                 width: niche.width,
                 height: niche.height,
-                opacity: dive.hall.interpolate({ inputRange: [0, 0.4], outputRange: [0, 1], extrapolate: 'clamp' }),
-                // Pops open from a smaller hall about its golden end, overshoots, settles.
-                transform: [
-                  { translateX: hallPoint.x - niche.width / 2 },
-                  { translateY: hallPoint.y - niche.height / 2 },
-                  {
-                    scale: dive.hall.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [TERRACE_DIVE.hallPopStartScale, 1],
-                    }),
-                  },
-                  { translateX: -(hallPoint.x - niche.width / 2) },
-                  { translateY: -(hallPoint.y - niche.height / 2) },
-                ],
+                opacity: dive.hall,
               },
             ]}
             resizeMode="stretch"

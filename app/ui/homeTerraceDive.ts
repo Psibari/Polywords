@@ -12,12 +12,6 @@ export const TERRACE_DIVE = {
   retreatMs: 380,
   /** A retreating button ends this fraction of its size, at the hall's golden end. */
   retreatScale: 0.3,
-  /** The hall pops open once the second button is this far (0..1) through its retreat. */
-  hallPopFrom: 0.35,
-  /** The hall opening: starts this fraction of its size and eases to full size, no overshoot
-   * (the overshoot read as the hole popping and then zooming back out, Pete 2026-10-22). */
-  hallPopMs: 260,
-  hallPopStartScale: 0.85,
   /** HUNT starts retreating this long after POLYBOOK. */
   retreatStaggerMs: 150,
   /** Pause with the hall showing, before the zoom starts. */
@@ -39,8 +33,6 @@ export type DiveConfig = {
   timescale: number;
   retreatMs: number;
   retreatStaggerMs: number;
-  hallPopFrom: number;
-  hallPopMs: number;
   holdMs: number;
   zoomMs: number;
   flashFrom: number;
@@ -50,8 +42,6 @@ export type DiveTimeline = {
   polybookRetreatAt: number;
   huntRetreatAt: number;
   retreatMs: number;
-  hallPopAt: number;
-  hallPopMs: number;
   zoomAt: number;
   zoomMs: number;
   flashAt: number;
@@ -67,16 +57,12 @@ export function terraceDiveTimeline(c: DiveConfig = TERRACE_DIVE): DiveTimeline 
   const stagger = c.retreatStaggerMs * s;
   const zoomMs = c.zoomMs * s;
   const retreatsDone = stagger + retreatMs;
-  const hallPopAt = stagger + c.hallPopFrom * retreatMs;
-  const hallPopMs = c.hallPopMs * s;
-  const zoomAt = Math.max(retreatsDone, hallPopAt + hallPopMs) + c.holdMs * s;
+  const zoomAt = retreatsDone + c.holdMs * s;
   const flashAt = zoomAt + c.flashFrom * zoomMs;
   return {
     polybookRetreatAt: 0,
     huntRetreatAt: stagger,
     retreatMs,
-    hallPopAt,
-    hallPopMs,
     zoomAt,
     zoomMs,
     flashAt,
