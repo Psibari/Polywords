@@ -18,7 +18,7 @@ export const TERRACE_DIVE = {
   /** Pause with the hall showing, before the zoom starts. */
   holdMs: 300,
   /** The zoom itself. */
-  zoomMs: 1100,
+  zoomMs: 850,
   /** Final scale of the scene. Past the point the golden end fills the screen. */
   zoomScale: 10,
   /** The flash starts this far through the zoom (0..1) and ends with it. */
