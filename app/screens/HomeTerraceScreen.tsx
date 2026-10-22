@@ -15,10 +15,12 @@ import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { homePerch } from '../ui/pwHomeMaterials';
 import { PW } from '../ui/pwTheme';
 import {
+  TERRACE_NICHE,
   TerraceElementId,
   resolveTerraceLayout,
   terracePollyTransform,
 } from '../ui/homeTerraceScene';
+import { terraceBookRiseFrom } from '../ui/homeTerraceDive';
 import { Haptics } from '../utils/haptics';
 import { setMusicState, startMusic, stopMusic } from '../audio/MusicEngine';
 
@@ -152,7 +154,18 @@ export default function HomeTerraceScreen({ navigation }: Props) {
   };
   const handleBook = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('Vault');
+    // The Polybook screen raises its own cover out of the hall, so it is told where the hall is.
+    const casing = layout.rects.casing;
+    const niche = {
+      left: casing.left + TERRACE_NICHE.x * casing.width,
+      top: casing.top + TERRACE_NICHE.y * casing.height,
+      width: TERRACE_NICHE.w * casing.width,
+      height: TERRACE_NICHE.h * casing.height,
+    };
+    const arrive = () => navigation.navigate('Vault', { polybookRiseFrom: terraceBookRiseFrom(niche) });
+    // Reduce Motion: no dive, straight in (as before).
+    if (reduceMotion) navigation.navigate('Vault');
+    else dive.start('book', arrive);
   };
 
   return (

@@ -4,16 +4,18 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   TERRACE_DAILY_DIVE,
   TERRACE_DIVE,
+  terraceBookDiveNavigateAt,
   terraceDailyDiveTimeline,
   terraceDiveTimeline,
 } from '../ui/homeTerraceDive';
 
 // The Home dives' driver (timings: ui/homeTerraceDive.ts): the Hunt (buttons retreat, hall, zoom,
-// flash) and the Daily (castle rises, zoom into its door, flash). Phases are chained with setTimeout
+// flash), the Daily (castle rises, zoom into its door, flash) and the Polybook (buttons retreat, hall,
+// then the Polybook screen raises its own cover out of the hall). Phases are chained with setTimeout
 // and every animation is native-driven. The zoom and flash are NOT reset when Home loses focus: the
 // next screen fades in over a gold Home. They reset when Home is focused again.
 
-export type TerraceDiveKind = 'hunt' | 'daily';
+export type TerraceDiveKind = 'hunt' | 'daily' | 'book';
 
 export type TerraceDive = {
   /** Scene scale, 1 at rest. */
@@ -95,7 +97,7 @@ export function useTerraceDive(): TerraceDive {
       const flashIn = (ms: number) =>
         Animated.timing(flash, { toValue: 1, duration: ms, easing: Easing.linear, useNativeDriver: true }).start();
 
-      if (kind === 'hunt') {
+      if (kind === 'hunt' || kind === 'book') {
         const t = terraceDiveTimeline(TERRACE_DIVE);
         // retreat[0] is HUNT, retreat[1] is POLYBOOK.
         const recede = (value: Animated.Value) =>
@@ -109,6 +111,11 @@ export function useTerraceDive(): TerraceDive {
         hall.setValue(1);
         at(t.polybookRetreatAt, () => recede(retreat[1]));
         at(t.huntRetreatAt, () => recede(retreat[0]));
+        if (kind === 'book') {
+          // No zoom, no flash: the Polybook screen takes over and its cover rises out of the hall.
+          at(terraceBookDiveNavigateAt(), onArrive);
+          return;
+        }
         at(t.zoomAt, () => zoomTo(TERRACE_DIVE.zoomScale, t.zoomMs));
         at(t.flashAt, () => flashIn(t.flashMs));
         at(t.navigateAt, onArrive);

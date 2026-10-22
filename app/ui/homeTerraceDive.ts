@@ -142,3 +142,46 @@ export function terraceDailyOrigin(castle: { left: number; top: number; width: n
   const door = terraceCastleDoor();
   return { x: castle.left + door.x * castle.width, y: castle.top + door.y * castle.height };
 }
+
+// ---------------------------------------------------------------------------------------------
+// The Polybook rise (Pete, 2026-10-22): tap POLYBOOK, HUNT and POLYBOOK retreat into the hall exactly
+// as in the Hunt dive, then the Polybook screen takes over and its own closed cover rises out of the
+// hall, face forward, growing into its resting place (so it lands exactly, on every phone).
+export const TERRACE_BOOK_DIVE = {
+  /** Multiplies the rise and hold (the retreat keeps the Hunt dive's own timescale). */
+  timescale: 1,
+  /** Pause with the hall showing, after both buttons are gone, before the Polybook screen opens. */
+  holdMs: 120,
+  /** The cover rising out of the hall to its resting place. */
+  riseMs: 800,
+  /** The cover starts this fraction of the console opening's width, at the hall's golden end. */
+  startWidthFraction: 0.12,
+} as const;
+
+/** When Home hands over to the Polybook screen: both buttons have retreated and the hall has been seen. */
+export function terraceBookDiveNavigateAt(
+  hunt: DiveConfig = TERRACE_DIVE,
+  book: { timescale: number; holdMs: number } = TERRACE_BOOK_DIVE,
+): number {
+  const t = terraceDiveTimeline(hunt);
+  return t.huntRetreatAt + t.retreatMs + book.holdMs * book.timescale;
+}
+
+export type BookRiseFrom = { x: number; y: number; w: number };
+
+/** Where the cover starts, in window pixels: the hall's golden end, and how wide it starts. */
+export function terraceBookRiseFrom(niche: { left: number; top: number; width: number; height: number }): BookRiseFrom {
+  const o = terraceDiveOrigin(niche);
+  return { x: o.x, y: o.y, w: TERRACE_BOOK_DIVE.startWidthFraction * niche.width };
+}
+
+/**
+ * The shift and scale that put the cover's centre on the start point at the start's width:
+ * dx, dy move the cover's centre to the start point; scale is start width over cover width.
+ */
+export function terraceBookRiseTransform(
+  from: BookRiseFrom,
+  cover: { x: number; y: number; w: number; h: number },
+): { dx: number; dy: number; scale: number } {
+  return { dx: from.x - (cover.x + cover.w / 2), dy: from.y - (cover.y + cover.h / 2), scale: from.w / cover.w };
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
+  Easing,
   Image,
   PanResponder,
   Pressable,
@@ -20,6 +21,8 @@ import { resolveRivalryState } from "../../game/pollyMood";
 import { createSeededRng, deriveSeed } from "../../game/seededRandom";
 import { PW } from "../../ui/pwTheme";
 import { useGameStore } from "../../store/useGameStore";
+import { useReducedMotionPreference } from "../../hooks/usePollyAmbientMotion";
+import { TERRACE_BOOK_DIVE, terraceBookRiseTransform, type BookRiseFrom } from "../../ui/homeTerraceDive";
 
 const POLYBOOK_CROWN = require("../../../assets/images/polybook/polybook_crown.png");
 
@@ -41,6 +44,8 @@ type Props = { progress: PlayerProgress; pollyMemory: PollyMemory };
 type PolybookRouteParams = {
   polybookSection?: Section;
   polybookDate?: string;
+  /** Set by the Home Polybook dive: the hall's golden end, in window pixels, and the start width. */
+  polybookRiseFrom?: BookRiseFrom;
 };
 
 export function PolybookSpread({ progress, pollyMemory }: Props) {
@@ -58,6 +63,64 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
   const [masteryPage, setMasteryPage] = useState(0);
   const playerName = useGameStore((state) => state.playerName);
   const playerLabel = playerName.trim() || "PLAYER";
+
+  // Home's Polybook dive (Pete 2026-10-22): the closed cover rises out of the Home hall, face forward,
+  // growing into its own resting place, so it lands exactly on every phone. It starts hidden, is
+  // measured where it really sits, and is then shifted and shrunk onto the hall and let go.
+  const riseFrom = routeParams.polybookRiseFrom;
+  const reduceMotion = useReducedMotionPreference();
+  const riseT = useRef(new Animated.Value(riseFrom ? 0 : 1)).current;
+  const riseDx = useRef(new Animated.Value(0)).current;
+  const riseDy = useRef(new Animated.Value(0)).current;
+  const riseScale = useRef(new Animated.Value(1)).current;
+  const coverRef = useRef<View>(null);
+  const riseStarted = useRef(false);
+  const riseStyle = useMemo(() => {
+    const left = riseT.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+    return {
+      opacity: riseT.interpolate({ inputRange: [0, 0.12, 1], outputRange: [0, 1, 1] }),
+      transform: [
+        { translateX: Animated.multiply(riseDx, left) },
+        { translateY: Animated.multiply(riseDy, left) },
+        { scale: Animated.add(1, Animated.multiply(Animated.add(riseScale, -1), left)) },
+      ],
+    };
+  }, [riseT, riseDx, riseDy, riseScale]);
+  function startRise() {
+    if (!riseFrom || riseStarted.current || reduceMotion === null) return;
+    riseStarted.current = true;
+    const node = coverRef.current;
+    if (reduceMotion || !node) {
+      riseT.setValue(1);
+      return;
+    }
+    node.measureInWindow((x, y, w, h) => {
+      if (!(w > 0 && h > 0)) {
+        riseT.setValue(1);
+        return;
+      }
+      const from = terraceBookRiseTransform(riseFrom, { x, y, w, h });
+      riseDx.setValue(from.dx);
+      riseDy.setValue(from.dy);
+      riseScale.setValue(from.scale);
+      Animated.timing(riseT, {
+        toValue: 1,
+        duration: TERRACE_BOOK_DIVE.riseMs * TERRACE_BOOK_DIVE.timescale,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    });
+  }
+  useEffect(() => {
+    if (reduceMotion !== null) startRise();
+    // Failsafe: the cover is never left hidden if the measurement never answers.
+    const timer = setTimeout(() => {
+      riseT.stopAnimation();
+      riseT.setValue(1);
+    }, 2500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduceMotion]);
 
   const bookSeed = progress.bookSeed ?? 0;
   const log = progress.bookLog ?? [];
@@ -238,18 +301,22 @@ export function PolybookSpread({ progress, pollyMemory }: Props) {
     return (
       <View style={styles.root}>
         <View style={styles.closedStage}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open Polybook to Today"
-            onPress={() => openTo("TODAY")}
-            style={({ pressed }) => [styles.closedBookArtButton, pressed && styles.pressed]}
-          >
-            <Image
-              source={require("../../../assets/images/polybook/POLYBOOKREV3.png")}
-              resizeMode="contain"
-              style={styles.closedBookArt}
-            />
-          </Pressable>
+          <Animated.View style={[styles.closedRise, riseStyle]}>
+            <Pressable
+              ref={coverRef}
+              onLayout={startRise}
+              accessibilityRole="button"
+              accessibilityLabel="Open Polybook to Today"
+              onPress={() => openTo("TODAY")}
+              style={({ pressed }) => [styles.closedBookArtButton, pressed && styles.pressed]}
+            >
+              <Image
+                source={require("../../../assets/images/polybook/POLYBOOKREV3.png")}
+                resizeMode="contain"
+                style={styles.closedBookArt}
+              />
+            </Pressable>
+          </Animated.View>
         </View>
       </View>
     );
@@ -439,6 +506,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, width: "100%", alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
   closedStage: { width: "88%", maxWidth: 350, height: 440, justifyContent: "center", alignItems: "center" },
+  closedRise: { width: "100%", alignItems: "center" },
   closedBookArtButton: { width: 408, maxWidth: "100%", height: 510, alignItems: "center", justifyContent: "center", transform: [{ translateY: -18 }] },
   closedBookArt: { width: "100%", height: "100%" },
   closedBook: { width: 306, maxWidth: "84%", height: 382, borderRadius: 22, backgroundColor: "#2A155E", borderWidth: 4, borderColor: "#A77C1E", padding: 16, shadowColor: "#000", shadowOpacity: 0.42, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 12 },

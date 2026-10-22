@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
 import {
   HALL_GOLD_CENTER,
+  TERRACE_BOOK_DIVE,
   TERRACE_DAILY_DIVE,
   TERRACE_DIVE,
+  terraceBookDiveNavigateAt,
+  terraceBookRiseFrom,
+  terraceBookRiseTransform,
   terraceCastleDoor,
   terraceDailyDiveTimeline,
   terraceDailyOrigin,
@@ -48,4 +52,22 @@ assert.ok(c.x > 0 && c.x < 1 && c.y > 0 && c.y < 1, 'door centre is inside the c
 const co = terraceDailyOrigin({ left: 10, top: 20, width: 200, height: 100 });
 assert.equal(co.x, 10 + c.x * 200);
 assert.equal(co.y, 20 + c.y * 100);
+
+// Polybook rise.
+{
+  const nav = terraceBookDiveNavigateAt();
+  assert.equal(nav, t.huntRetreatAt + t.retreatMs + TERRACE_BOOK_DIVE.holdMs, 'hand over after both buttons have gone');
+  assert.ok(nav < t.navigateAt, 'the Polybook hand-over is quicker than the Hunt dive');
+  const niche = { left: 100, top: 200, width: 1000, height: 500 };
+  const from = terraceBookRiseFrom(niche);
+  assert.deepEqual({ x: from.x, y: from.y }, terraceDiveOrigin(niche), 'the book starts at the hall golden end');
+  assert.equal(from.w, TERRACE_BOOK_DIVE.startWidthFraction * 1000);
+  const cover = { x: 20, y: 300, w: 350, h: 500 };
+  const x = terraceBookRiseTransform(from, cover);
+  // Applying the shift to the cover centre lands it on the start point.
+  assert.ok(Math.abs(cover.x + cover.w / 2 + x.dx - from.x) < 1e-9);
+  assert.ok(Math.abs(cover.y + cover.h / 2 + x.dy - from.y) < 1e-9);
+  assert.ok(Math.abs(x.scale * cover.w - from.w) < 1e-9, 'it starts at the requested width');
+  assert.ok(x.scale > 0 && x.scale < 1, 'it grows into place');
+}
 console.log('homeTerraceDive tests passed');
