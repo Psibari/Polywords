@@ -448,3 +448,14 @@ closely; nothing here is Claude's invention.
 ## Pete rulings, 2026-10-22
 
 1. The Home entrance grind is LOCKED: its own cue `terraceStoneShift`, the same file and level as the gauntlet's stoneRumble (0.41), warmed on Home focus. Pete device-tested it: the grind and the slam as the buttons seat both come through; it is shorter than the gauntlet's, which he accepts. The Daily's own `dailyStoneShift` (0.22) is separate and unchanged.
+
+## Pete rulings, 2026-10-22 (PM, tap dives)
+
+1. Hunt dive, Daily dive and Polybook dive are built and Pete device-confirmed all three. Timings are in `app/ui/homeTerraceDive.ts` only.
+2. Hunt dive: Polybook then Hunt retreat into the hall, hall static, zoom into the golden end, gold flash `#F5C842`, then Game. Pete on the hall: "I don't think the hole should do anything. It should just sit there." Zoom shortened from 1100 ms to 850 ms at Pete's request ("the speed is good now").
+3. Daily dive: the castle is hidden until Daily is pressed, rises between the mountain ranges from behind the front hill, zoom into the painted golden door, gold flash, then Daily. The door is painted and stays as painted when the Daily is played (Pete's choice); only the small windows go dark.
+4. Polybook dive. Pete: "the book that comes out of the tunnel by itself, and then wherever it rests, that's the same position it rests on the Polybook page. And then the Polybook page comes up, not during the move." Built: the Polybook screen opens transparent over Home, the cover rises alone, then the page (background, header, bottom nav) fades in over 350 ms. Pete said the Polybook page background will be changed later anyway.
+5. Sky and front hill are separate DEV elements. Pete's 17:09 readout is locked as defaults: background {-5.89,-150.81,473.12,1025.46}, front {-212.03,329.43,655.84,689.4}, moon {344.38,88.95,65.5,65.5}, castle {149.72,338.28,163.85,111.6}.
+6. Saved DEV overrides on a phone once made Home look wrong against Pete's screenshot; "Reset all" in the DEV positioner fixes it (the defaults already equal the locked readout).
+7. Home from the Polybook returns to the existing Home (it used to push a second Home, which let the Polybook header show through the top of Home).
+8. Open: dive sound effects (none yet; Pete may supply them).

@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-22 (the outdoor terrace Home is merged into play-screen-overhaul; button entrance built, other movement not; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-22 (the outdoor terrace Home is merged into play-screen-overhaul; button entrance and the Hunt, Daily and Polybook tap dives built and device-confirmed 2026-10-22; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -17,7 +17,7 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
 
 ## Current State
 
-- **Home (Pete, 2026-10-21): the OUTDOOR night terrace IS the real Home** (branch `home-terrace`, pushed; not merged: branch merges need Pete's approval).
+- **Home (Pete, 2026-10-21): the OUTDOOR night terrace IS the real Home** (merged into `play-screen-overhaul`).
   `App.tsx` `Home` route renders `HomeTerraceScreen`; the old `HomeScreen.tsx` is parked and reachable only under `__DEV__` as `HomeOld`. Pete device-tested the swap 2026-10-21 and approved it
   ("Everything works good"). Read [docs/HOME_SCREEN_LOCKDOWN.md](docs/HOME_SCREEN_LOCKDOWN.md) (sections "Pete rulings, 2026-10-20" and "2026-10-21") and the Home section of `CLAUDE.md` before any Home work.
   Built: locked positions (Pete's 2026-10-21 20:54 readout is `TERRACE_DEFAULTS`); flat button art (`assets/images/home/terrace/`); entrance on every Home focus (Daily, Hunt, Polybook come out in turn with the
@@ -25,8 +25,13 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   is pressed in, not out; Lilita One labels (ENTER / tiny THE / HUNT; POLYBOOK; DAILY CHALLENGE); crowns at both ends of ENTER THE HUNT (white; gold once the Daily is played); plaque gold while unplayed, gold
   reading GOLD FEATHER READY while a Gold Feather is ready, gray once played with none; Daily streak is the number on the moon (hidden at 0); first Hunt only: START / HERE breathe under the Hunt crowns;
   first-run Hunt glow is a gold wash over the Hunt button; DEV positioner + Daily/Feather/Streak/Start-here toggles under `__DEV__` only.
-  NOT built (Pete: next session): moon rise from behind a mountain carrying the streak number (idea: tick up only when the number is new), shooting stars, castle reveal on Daily tap, Polybook transition,
-  Hunt dive (casing-with-tunnel image is available), cage opening sequence, Polly's fly-in landing on the perch.
+  Tap dives (Pete device-confirmed 2026-10-22; all timings live in `app/ui/homeTerraceDive.ts`: `TERRACE_DIVE`, `TERRACE_DAILY_DIVE`, `TERRACE_BOOK_DIVE`):
+  - Hunt dive: Polybook then Hunt (150 ms later) retreat into the hall (travel plus shrink to 0.3, fading only in the last quarter); the hall is static (Pete: it should do nothing); then a zoom into the hall's golden end, a gold flash (`#F5C842`), then Game. Zoom is 850 ms (was 1100; Pete: "a little faster", then "the speed is good now").
+  - Daily dive: the castle is hidden until Daily is pressed, then rises between the mountain ranges from behind the front hill, zoom into the painted golden door (`TERRACE_CASTLE_DOOR`, measured from `castle.webp`), gold flash, then Daily ("works perfect"). The door is painted, so it never goes dark; only the small windows do. Pete chose: leave it as painted when the Daily is played.
+  - Polybook dive: buttons retreat as in the Hunt dive; the Polybook screen then opens transparent over Home, its closed cover rises alone out of the hall to its resting spot on the Polybook page, and only after it lands do the page background, header and bottom nav fade in (350 ms). Confirmed working.
+  - Sky and front hill are separate DEV elements; Pete's 17:09 readout is locked as defaults: background {-5.89,-150.81,473.12,1025.46}, front {-212.03,329.43,655.84,689.4}, moon {344.38,88.95,65.5,65.5}, castle {149.72,338.28,163.85,111.6}.
+  NOT built (Pete: next session): moon rise from behind a mountain carrying the streak number (idea: tick up only when the number is new), shooting stars, cage opening sequence, Polly's fly-in landing on the perch.
+  Open (Pete): dive sound effects (none yet; Pete may supply them); the Polybook page background will be changed later; the bottom nav still pushes a new screen for Polybook and Settings (only Home now pops back to the existing Home).
 
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. Standard arc is 10 rounds; fledgling is 8.
   Polly's Word is final. Returning Haunt is round 5 standard / round 4 fledgling.
