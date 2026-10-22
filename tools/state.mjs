@@ -32,9 +32,11 @@ for (const [, w] of words) {
   gpsTags.set(tag, (gpsTags.get(tag) ?? 0) + 1);
 }
 
-// dailyPool.ts and pollyCharacter.ts are TypeScript, so they are read as text
-// rather than imported. Both are hand-authored literals with stable shapes.
-const dailyEntries = (read('app', 'game', 'dailyPool.ts').match(/^ {4}word:\s*["'`]/gm) ?? []).length;
+// Daily sources are TypeScript, so read the hand-authored literals as text.
+const countDailyEntries = (path) => (read(...path).match(/\bword:\s*["'`]/g) ?? []).length;
+const legacyDailyEntries = countDailyEntries(['app', 'game', 'dailyPool.ts']);
+const expansionDailyEntries = countDailyEntries(['app', 'game', 'dailyPoolExpansion.ts']);
+const dailyEntries = legacyDailyEntries + expansionDailyEntries;
 
 const pollySrc = read('app', 'game', 'pollyCharacter.ts');
 const pollyStart = pollySrc.indexOf('POLLY_LINES = {');
@@ -85,8 +87,10 @@ console.log(row('traps', trapMasks));
 console.log(row('gpsTag pools', ''));
 for (const line of gpsRows) console.log(line);
 console.log('');
-console.log('Daily (app/game/dailyPool.ts)');
+console.log('Daily (legacy + six-card expansion)');
 console.log(row('pool entries', dailyEntries));
+console.log(row('legacy entries', legacyDailyEntries));
+console.log(row('six-card expansion', expansionDailyEntries));
 console.log('');
 console.log('Polly (app/game/pollyCharacter.ts, app/game/pollyVisitPolicy.ts)');
 console.log(row('authored lines', pollyLines));
