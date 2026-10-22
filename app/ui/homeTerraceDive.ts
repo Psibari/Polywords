@@ -14,9 +14,10 @@ export const TERRACE_DIVE = {
   retreatScale: 0.3,
   /** The hall pops open once the second button is this far (0..1) through its retreat. */
   hallPopFrom: 0.35,
-  /** The hall popping open: starts this fraction of its size, overshoots, settles. */
-  hallPopMs: 300,
-  hallPopStartScale: 0.5,
+  /** The hall opening: starts this fraction of its size and eases to full size, no overshoot
+   * (the overshoot read as the hole popping and then zooming back out, Pete 2026-10-22). */
+  hallPopMs: 260,
+  hallPopStartScale: 0.85,
   /** HUNT starts retreating this long after POLYBOOK. */
   retreatStaggerMs: 150,
   /** Pause with the hall showing, before the zoom starts. */

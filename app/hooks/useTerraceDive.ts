@@ -12,7 +12,7 @@ export type TerraceDive = {
   zoom: Animated.Value;
   /** Gold flash opacity, 0 at rest. */
   flash: Animated.Value;
-  /** Hall popping open inside the console opening: 0 closed, 1 open (overshoots on the way). */
+  /** Hall opening inside the console opening: 0 closed, 1 open. */
   hall: Animated.Value;
   /** HUNT and POLYBOOK receding into the hall: 0 at rest, 1 gone. */
   retreat: readonly [Animated.Value, Animated.Value];
@@ -79,7 +79,7 @@ export function useTerraceDive(): TerraceDive {
         Animated.timing(hall, {
           toValue: 1,
           duration: t.hallPopMs,
-          easing: Easing.out(Easing.back(1.8)),
+          easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }).start(),
       );
