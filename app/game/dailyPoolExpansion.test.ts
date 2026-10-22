@@ -1,3 +1,4 @@
+import { DAILY_POOL } from './dailyPool';
 import { DAILY_POOL_EXPANSION } from './dailyPoolExpansion';
 import { buildDailySession } from './dailyChallengeEngine';
 
@@ -18,6 +19,15 @@ function containsCardWord(clue: string, card: string): boolean {
 
 eq(DAILY_POOL_EXPANSION.length, 50, 'expansion.count');
 eq(new Set(DAILY_POOL_EXPANSION.map(entry => entry.word)).size, 50, 'expansion.uniqueWords');
+
+eq(
+  new Set([...DAILY_POOL, ...DAILY_POOL_EXPANSION].map(entry => entry.word)).size,
+  110,
+  'combined.uniqueWords',
+);
+eq(DAILY_POOL_EXPANSION.filter(entry => entry.tier === 1).length, 20, 'expansion.tier1Count');
+eq(DAILY_POOL_EXPANSION.filter(entry => entry.tier === 2).length, 20, 'expansion.tier2Count');
+eq(DAILY_POOL_EXPANSION.filter(entry => entry.tier === 3).length, 10, 'expansion.tier3Count');
 
 for (const entry of DAILY_POOL_EXPANSION) {
   eq(entry.meanings.length, 3, `expansion.threeClues.${entry.word}`);
