@@ -48,8 +48,6 @@ const ART = {
   btnTop: require('../../assets/images/home/terrace/btn_top.png'),
   daily: require('../../assets/images/home/terrace/btn_daily.png'),
   dailyDone: require('../../assets/images/home/terrace/btn_daily_done.png'),
-  dailyTop: require('../../assets/images/home/terrace/btn_top_daily.png'),
-  dailyTopDone: require('../../assets/images/home/terrace/btn_top_daily_done.png'),
   cageTop: require('../../assets/images/home/terrace/cage_top.png'),
   cageBase: require('../../assets/images/home/terrace/cage_base.png'),
   perch: require('../../assets/images/home/terrace/perch.png'),
@@ -73,6 +71,12 @@ const GROUND_BEVEL = '#4A3A78';
 // A button standing out of the console: its drop shadow and top face, as the Daily's answer blocks
 // (DailyAnswerCard). Same numbers: shadow offset x3 y7 at 0.45.
 const POP_SHADOW = { x: 3, y: 7, opacity: 0.45 } as const;
+/** Recessed (Daily) button: starts this many button-heights down behind the console, rises a hair past
+ * flush, and sinks this fraction of its height and dims while pressed. */
+const RECESS_RISE = 1.2;
+const RECESS_OVERSHOOT = 0.08;
+const RECESS_PRESS_SINK = 0.06;
+const RECESS_PRESS_DIM = 0.3;
 const BTN_TOP_RATIO = 81 / 1117; // btn_top.png: 1117 x 81 over a 1117 wide button
 
 export type TerraceEntranceProps = {
@@ -236,7 +240,7 @@ export function HomeTerraceScene(props: Props) {
           out first. Gold frame and label until it is played, then dulled to gray. */}
       <Slab
         source={dailyPlayed ? ART.dailyDone : ART.daily}
-        topSource={dailyPlayed ? ART.dailyTopDone : ART.dailyTop}
+        recessed
         label="DAILY CHALLENGE"
         left={plaque.left}
         top={plaque.top}
@@ -369,6 +373,12 @@ type SlabProps = {
   source: number;
   /** The proud top face; defaults to the lavender one. */
   topSource?: number;
+  /**
+   * A button set back in the wall behind the console (the Daily). It cannot stand out toward the
+   * viewer past the console, so it rises from behind the console's top edge and is pressed IN
+   * (sinks and dims) instead of popping out. Fixed for the life of the button.
+   */
+  recessed?: boolean;
   label: string;
   left: number;
   top: number;
@@ -471,29 +481,58 @@ function Slab(p: SlabProps) {
           { translateY: progress.interpolate({ inputRange: DAILY_PLAQUE_INPUT, outputRange: proud((v) => v * POP_SHADOW.y) }) },
         ],
       },
+      // Recessed button: rises from behind the console to its place (a hair past, then settles),
+      // and is pressed in. No scale, no top face, no shadow.
+      recessShell: {
+        opacity: progress.interpolate({
+          inputRange: DAILY_PLAQUE_OPACITY_INPUT,
+          outputRange: DAILY_PLAQUE_OPACITY,
+          extrapolate: 'clamp' as const,
+        }),
+        transform: [
+          {
+            translateY: progress.interpolate({
+              inputRange: DAILY_PLAQUE_INPUT,
+              outputRange: [p.height * RECESS_RISE, -p.height * RECESS_OVERSHOOT, 0],
+            }),
+          },
+          { translateY: grip.interpolate({ inputRange: [0, 1], outputRange: [0, p.height * RECESS_PRESS_SINK] }) },
+        ],
+      },
+      recessDim: {
+        opacity: grip.interpolate({ inputRange: [0, 1], outputRange: [0, RECESS_PRESS_DIM] }),
+      },
       topH,
     };
-  }, [progress, grip, p.width]);
+  }, [progress, grip, p.width, p.height]);
 
   return (
     <Animated.View
       collapsable={false}
       pointerEvents="box-none"
-      style={[styles.abs, { left: p.left, top: p.top, width: p.width, height: p.height }, motion.shell]}
+      style={[
+        styles.abs,
+        { left: p.left, top: p.top, width: p.width, height: p.height },
+        p.recessed ? motion.recessShell : motion.shell,
+      ]}
     >
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.shadow]} />
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.popShadow]} />
-      <Animated.Image
-        source={p.topSource ?? ART.btnTop}
-        resizeMode="stretch"
-        style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.popTop]}
-      />
-      <Animated.Image
-        source={p.topSource ?? ART.btnTop}
-        resizeMode="stretch"
-        // Explicit size: a bundled image otherwise takes the file's pixel width.
-        style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.top]}
-      />
+      {p.recessed ? null : (
+        <>
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.shadow]} />
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.popShadow]} />
+          <Animated.Image
+            source={p.topSource ?? ART.btnTop}
+            resizeMode="stretch"
+            style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.popTop]}
+          />
+          <Animated.Image
+            source={p.topSource ?? ART.btnTop}
+            resizeMode="stretch"
+            // Explicit size: a bundled image otherwise takes the file's pixel width.
+            style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.top]}
+          />
+        </>
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={p.accessibilityLabel}
@@ -510,6 +549,12 @@ function Slab(p: SlabProps) {
           style={{ position: 'absolute', left: 0, top: 0, width: p.width, height: p.height }}
           resizeMode="stretch"
         />
+        {p.recessed ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[{ position: 'absolute', left: 0, top: 0, width: p.width, height: p.height, backgroundColor: '#000000' }, motion.recessDim]}
+          />
+        ) : null}
         {p.lines ? (
           // Stacked label: big lines with a tiny THE between (Pete 2026-10-21).
           <View style={styles.slabLines} pointerEvents="none">
