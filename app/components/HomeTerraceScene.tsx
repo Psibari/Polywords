@@ -1,8 +1,9 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { playSfx } from '../audio/sfx';
+import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { dailyCardMaterial, dailyCastlePlaqueMaterial } from '../ui/pwDailyMaterials';
@@ -67,9 +68,10 @@ const DAILY_DONE_LABEL = '#8D8AA0';
 const DAILY_LABEL_HEIGHT_FRACTION = 0.58;
 /** GOLD FEATHER READY has 18 letters to DAILY CHALLENGE's 15: the same button, so a smaller type. */
 const DAILY_FEATHER_LABEL_SCALE = 0.82;
-/** START HERE on the casing ledge: its top and its size as fractions of the ledge height. */
-const START_HERE_LEDGE_Y = 0.30;
-const START_HERE_LEDGE_SIZE = 0.34;
+/** START / HERE tags under the Hunt button's crowns: size as a fraction of the button height, and the
+ * gap under the crown as a fraction of the button height. */
+const CORNER_TAG_SIZE = 0.11;
+const CORNER_TAG_GAP = 0.025;
 const LABEL_SHADOW = '#060316';
 const GROUND_FACE = '#271E3D'; // measured Daily castle floor tile face
 const GROUND_SEAM = '#0E081C';
@@ -350,27 +352,6 @@ export function HomeTerraceScene(props: Props) {
           ]}
         />
         <Image source={ART.casing} style={[styles.img, casing]} resizeMode="stretch" />
-        {props.startHere ? (
-          // First Hunt only: on the stone ledge right above ENTER THE HUNT (Pete, 2026-10-21).
-          <Text
-            allowFontScaling={false}
-            numberOfLines={1}
-            pointerEvents="none"
-            style={[
-              styles.startHere,
-              {
-                left: niche.left + hunt.x * niche.width,
-                width: hunt.w * niche.width,
-                top: casing.top + (niche.top - casing.top) * START_HERE_LEDGE_Y,
-                fontSize: (niche.top - casing.top) * START_HERE_LEDGE_SIZE,
-                lineHeight: (niche.top - casing.top) * START_HERE_LEDGE_SIZE * 1.3,
-                letterSpacing: (niche.top - casing.top) * START_HERE_LEDGE_SIZE * 0.14,
-              },
-            ]}
-          >
-            START HERE
-          </Text>
-        ) : null}
         <View style={[styles.abs, niche, { backgroundColor: NICHE_BACK }]} pointerEvents="box-none">
           <Slab
             source={ART.slabHunt}
@@ -382,6 +363,7 @@ export function HomeTerraceScene(props: Props) {
             fontSize={labelSizes.hunt}
             smallSize={labelSizes.small}
             emblem={{ source: dailyPlayed ? ART.crownGold : ART.crownWhite, aspect: 72 / 100 }}
+            cornerTags={props.startHere ? ['START', 'HERE'] : undefined}
             lines={huntLabel === 'RESUME HUNT' ? ['RESUME', 'HUNT'] : ['ENTER', 'the', 'HUNT']}
             k={k}
             color={dailyPlayed ? GOLD : WHITE}
@@ -445,6 +427,8 @@ type SlabProps = {
   wash?: Animated.Value;
   /** A mark at each end of the button (Pete: the Hunt's crown; you enter the Hunt to earn one). */
   emblem?: { source: number; aspect: number };
+  /** Small words under the emblems (the Hunt's START / HERE on the first Hunt); they breathe. */
+  cornerTags?: readonly [string, string];
   label: string;
   left: number;
   top: number;
@@ -468,6 +452,27 @@ type SlabProps = {
 
 function Slab(p: SlabProps) {
   const { progress } = p;
+  // The corner tags breathe once the buttons are out and pressable; still under Reduce Motion.
+  const tagPulse = useRef(new Animated.Value(1)).current;
+  const reduceMotion = useReducedMotionPreference();
+  const tagsOn = !!p.cornerTags && !p.locked && reduceMotion === false;
+  useEffect(() => {
+    if (!tagsOn) {
+      tagPulse.setValue(1);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(tagPulse, { toValue: 0.35, duration: 650, useNativeDriver: true }),
+        Animated.timing(tagPulse, { toValue: 1, duration: 650, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      tagPulse.setValue(1);
+    };
+  }, [tagsOn, tagPulse]);
   // Held pop, the Daily answer block's own (DailyAnswerCard): pressed, the button stands out of the
   // console (top face, wall shadow, a little larger); released, it settles back.
   const grip = useRef(new Animated.Value(0)).current;
@@ -632,6 +637,34 @@ function Slab(p: SlabProps) {
               />
             ))
           : null}
+        {p.emblem && p.cornerTags
+          ? [0, 1].map((end) => {
+              const ch = p.width * EMBLEM_WIDTH * p.emblem!.aspect;
+              const colW = p.width * 0.2;
+              const centerX = p.width * (EMBLEM_INSET + EMBLEM_WIDTH / 2);
+              return (
+                <Animated.Text
+                  key={end}
+                  allowFontScaling={false}
+                  numberOfLines={1}
+                  style={[
+                    styles.cornerTag,
+                    {
+                      width: colW,
+                      left: end === 0 ? centerX - colW / 2 : p.width - centerX - colW / 2,
+                      top: (p.height - ch) / 2 + ch + p.height * CORNER_TAG_GAP,
+                      fontSize: p.height * CORNER_TAG_SIZE,
+                      lineHeight: p.height * CORNER_TAG_SIZE * 1.3,
+                      letterSpacing: p.height * CORNER_TAG_SIZE * 0.12,
+                      opacity: tagPulse,
+                    },
+                  ]}
+                >
+                  {p.cornerTags![end]}
+                </Animated.Text>
+              );
+            })
+          : null}
         {p.wash ? (
           <Animated.View
             pointerEvents="none"
@@ -748,7 +781,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.terraceButton,
     color: '#2B1B52',
   },
-  startHere: {
+  cornerTag: {
     position: 'absolute',
     textAlign: 'center',
     includeFontPadding: false,
