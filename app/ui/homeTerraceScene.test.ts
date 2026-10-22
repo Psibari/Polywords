@@ -6,6 +6,8 @@ import {
   TERRACE_ELEMENT_IDS,
   lockTerraceAspect,
   resolveTerraceLayout,
+  terraceEffectiveRect,
+  terraceFrontFromBackground,
   terracePollyTransform,
 } from './homeTerraceScene';
 
@@ -81,6 +83,30 @@ for (const phone of PHONES) {
   const b = terracePollyTransform({ ...TERRACE_DEFAULTS.polly, y: TERRACE_DEFAULTS.polly.y + 10 }, phone, layout.k, 364);
   assert.ok(Math.abs(b.translateY - a.translateY - 10 * layout.k) < 1e-6);
   assert.ok(a.scale > 0);
+}
+
+// The front hill is its own element (Pete 2026-10-22): moving it leaves the background alone, and
+// until it is moved it follows the background exactly as before.
+{
+  const phone = { width: 390, height: 844, insetTop: 47 };
+  const base = resolveTerraceLayout(phone);
+  const movedFront = resolveTerraceLayout(phone, { front: { y: TERRACE_DEFAULTS.front.y - 40 } });
+  assert.equal(movedFront.background.top, base.background.top, 'moving the front hill does not move the background');
+  assert.ok(Math.abs(base.front.top - movedFront.front.top - 40 * base.k) < 1e-6, 'front hill moves on its own');
+  assert.equal(movedFront.front.left, base.front.left);
+  assert.equal(movedFront.front.width, base.front.width);
+  const scaled = resolveTerraceLayout(phone, { front: { w: TERRACE_DEFAULTS.front.w * 1.1 } });
+  assert.ok(Math.abs(scaled.front.width - base.front.width * 1.1) < 1e-6, 'front hill scales on its own');
+  assert.equal(scaled.background.width, base.background.width);
+  // The default front rect is exactly the lower part of the default background picture.
+  const f = terraceFrontFromBackground(TERRACE_DEFAULTS.background);
+  assert.deepEqual(TERRACE_DEFAULTS.front, f);
+  // The locked background height (974.31) is Pete's DEV readout, rounded to 2 places, so it is
+  // within 0.05 design units of the exact picture height, not equal to it.
+  assert.ok(Math.abs(f.y + f.h - (TERRACE_DEFAULTS.background.y + TERRACE_DEFAULTS.background.h)) < 0.05);
+  // The effective rect of an untouched front follows a moved background.
+  const eff = terraceEffectiveRect('front', { background: { y: TERRACE_DEFAULTS.background.y - 100 } });
+  assert.ok(Math.abs(eff.y - (TERRACE_DEFAULTS.front.y - 100)) < 1e-6);
 }
 
 console.log('homeTerraceScene tests passed');

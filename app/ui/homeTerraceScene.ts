@@ -33,6 +33,7 @@ export type TerraceRect = { x: number; y: number; w: number; h: number };
 
 export const TERRACE_ELEMENT_IDS = [
   'background',
+  'front',
   'logo',
   'moon',
   'cageTop',
@@ -51,6 +52,7 @@ export type TerraceElementId = (typeof TERRACE_ELEMENT_IDS)[number];
 
 export const TERRACE_ELEMENT_LABEL: Record<TerraceElementId, string> = {
   background: 'Sky and mountains',
+  front: 'Front hill',
   perch: 'Perch',
   logo: 'Logo',
   moon: 'Moon',
@@ -67,6 +69,7 @@ export const TERRACE_ELEMENT_LABEL: Record<TerraceElementId, string> = {
 
 export const TERRACE_ANCHOR: Record<TerraceElementId, TerraceAnchor> = {
   background: 'bottom',
+  front: 'bottom',
   perch: 'bottom',
   logo: 'top',
   moon: 'top',
@@ -97,12 +100,30 @@ export const TERRACE_ASPECT = {
 // The sky-and-mountains image: 1290 x 2796 source, width-fit, so 443 x 960.18 design units.
 export const TERRACE_BG_DESIGN_H = (TERRACE_DESIGN_W * 2796) / 1290;
 
+const BACKGROUND_DEFAULT: TerraceRect = { x: -2.95, y: -173.24, w: 449.52, h: 974.31 };
+
+/**
+ * Where the front hill sits when it has not been moved on its own: the lower part of the background
+ * picture (front.webp starts TERRACE_FRONT_TOP_PX source rows down), at the background's scale.
+ * Design units in, design units out.
+ */
+export function terraceFrontFromBackground(bg: TerraceRect): TerraceRect {
+  const s = bg.w / TERRACE_BG_PX.w;
+  return {
+    x: bg.x,
+    y: bg.y + TERRACE_FRONT_TOP_PX * s,
+    w: bg.w,
+    h: (TERRACE_BG_PX.h - TERRACE_FRONT_TOP_PX) * s,
+  };
+}
+
 // Starting positions in design units (from the mock).
 export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
   // Pete's 2026-10-21 20:54 DEV readout, locked as the defaults. Heights of the single-picture art
   // (logo, wall, plaque, castle, perch, cage, casing) equal width x TERRACE_ASPECT, as the DEV tool
   // keeps them. The background's y is negative: the image is taller than the 960 canvas.
-  background: { x: -2.95, y: -173.24, w: 449.52, h: 974.31 },
+  background: BACKGROUND_DEFAULT,
+  front: terraceFrontFromBackground(BACKGROUND_DEFAULT),
   logo: { x: 42.67, y: 40.98, w: 364.65, h: 58.75 },
   moon: { x: 346.16, y: 84.81, w: 65.5, h: 65.5 },
   cageTop: { x: 173.33, y: 804.44, w: 100, h: 90.75 },
@@ -208,6 +229,16 @@ export function lockTerraceAspect(id: TerraceElementId, rect: TerraceRect): Terr
 
 export type TerraceOverrides = Partial<Record<TerraceElementId, Partial<TerraceRect>>>;
 
+/** An element's final design-unit rect: its override over its default. The front hill with no
+ * override of its own follows the background. */
+export function terraceEffectiveRect(id: TerraceElementId, overrides: TerraceOverrides): TerraceRect {
+  const base =
+    id === 'front'
+      ? terraceFrontFromBackground(terraceEffectiveRect('background', overrides))
+      : TERRACE_DEFAULTS[id];
+  return lockTerraceAspect(id, { ...base, ...(overrides[id] ?? {}) });
+}
+
 export type TerraceViewport = {
   width: number;
   height: number;
@@ -221,7 +252,7 @@ export type TerraceLayout = {
   k: number;
   /** The sky and ridges image (the 'background' element). */
   background: ScreenRect;
-  /** The front-ridge overlay (same scale as the background). */
+  /** The front-hill picture. It follows the background until it is positioned on its own. */
   front: ScreenRect;
   rects: Record<TerraceElementId, ScreenRect>;
 };
@@ -255,21 +286,14 @@ export function resolveTerraceLayout(
 ): TerraceLayout {
   const k = terraceScale(viewport.width);
   const rects = {} as Record<TerraceElementId, ScreenRect>;
-  for (const id of TERRACE_ELEMENT_IDS) rects[id] = rectFor(id, viewport, k, overrides);
-  // The front ridge is part of the same picture as the sky, so it follows the background rect.
-  const bg = rects.background;
-  const s = bg.width / TERRACE_BG_PX.w;
-  return {
-    k,
-    background: bg,
-    front: {
-      left: bg.left,
-      top: bg.top + TERRACE_FRONT_TOP_PX * s,
-      width: bg.width,
-      height: (TERRACE_BG_PX.h - TERRACE_FRONT_TOP_PX) * s,
-    },
-    rects,
+  // The front hill follows the background (it is the lower part of the same picture) unless it has
+  // been positioned on its own; any part of it that was set wins over the followed value.
+  const withFront: TerraceOverrides = {
+    ...overrides,
+    front: { ...terraceFrontFromBackground(terraceEffectiveRect('background', overrides)), ...(overrides.front ?? {}) },
   };
+  for (const id of TERRACE_ELEMENT_IDS) rects[id] = rectFor(id, viewport, k, withFront);
+  return { k, background: rects.background, front: rects.front, rects };
 }
 
 // Polly is the existing PollyHomePerch (a 246 pt art box whose bottom edge sits
