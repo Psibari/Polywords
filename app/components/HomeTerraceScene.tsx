@@ -46,6 +46,10 @@ const ART = {
   slabHunt: require('../../assets/images/home/terrace/btn_hunt.png'),
   slabBook: require('../../assets/images/home/terrace/btn_book.png'),
   btnTop: require('../../assets/images/home/terrace/btn_top.png'),
+  daily: require('../../assets/images/home/terrace/btn_daily.png'),
+  dailyDone: require('../../assets/images/home/terrace/btn_daily_done.png'),
+  dailyTop: require('../../assets/images/home/terrace/btn_top_daily.png'),
+  dailyTopDone: require('../../assets/images/home/terrace/btn_top_daily_done.png'),
   cageTop: require('../../assets/images/home/terrace/cage_top.png'),
   cageBase: require('../../assets/images/home/terrace/cage_base.png'),
   perch: require('../../assets/images/home/terrace/perch.png'),
@@ -57,6 +61,10 @@ const ART = {
 const GOLD = PW.color.gold;
 const WHITE = '#FFFFFF';
 const NICHE_BACK = '#100B2E';
+/** Label of the Daily button once played: dulled to match its gray frame. */
+const DAILY_DONE_LABEL = '#8D8AA0';
+/** Daily label height as a fraction of its (short, wide) button. */
+const DAILY_LABEL_HEIGHT_FRACTION = 0.58;
 const LABEL_SHADOW = '#060316';
 const GROUND_FACE = '#271E3D'; // measured Daily castle floor tile face
 const GROUND_SEAM = '#0E081C';
@@ -109,7 +117,7 @@ export function HomeTerraceScene(props: Props) {
   const hitDebug = props.showHitAreas ? styles.hitDebug : null;
 
   const restEntrance = useRef<TerraceEntranceProps>({
-    progress: [new Animated.Value(1), new Animated.Value(1)],
+    progress: [new Animated.Value(1), new Animated.Value(1), new Animated.Value(1)],
     tremble: new Animated.Value(0),
     locked: false,
   }).current;
@@ -224,35 +232,26 @@ export function HomeTerraceScene(props: Props) {
         style={[styles.abs, { left: 0, top: rects.wall.top + rects.wall.height - 12 * k, width, height: 40 * k }]}
       />
 
-      {/* DAILY CHALLENGE sits on the wall's dark recess panel. Gold until it is played. */}
-      <Pressable
-        accessibilityRole="button"
+      {/* DAILY CHALLENGE: the same flat button as the console's two, in the wall's recess, coming
+          out first. Gold frame and label until it is played, then dulled to gray. */}
+      <Slab
+        source={dailyPlayed ? ART.dailyDone : ART.daily}
+        topSource={dailyPlayed ? ART.dailyTopDone : ART.dailyTop}
+        label="DAILY CHALLENGE"
+        left={plaque.left}
+        top={plaque.top}
+        width={plaque.width}
+        height={plaque.height}
+        fontSize={plaque.height * DAILY_LABEL_HEIGHT_FRACTION}
+        k={k}
+        color={dailyPlayed ? DAILY_DONE_LABEL : GOLD}
+        glow={!dailyPlayed}
+        progress={entrance.progress[0]}
+        locked={entrance.locked}
         accessibilityLabel="Daily Challenge"
         onPress={props.onDaily}
-        style={[styles.abs, plaque, hitDebug]}
-      >
-        <Text
-          allowFontScaling={false}
-          numberOfLines={1}
-          style={[
-            styles.dailyLabel,
-            {
-              left: 8 * k,
-              right: 0,
-              top: 22 * k,
-              fontSize: 30 * k,
-              lineHeight: 36 * k,
-              letterSpacing: 3 * k,
-              color: dailyPlayed ? WHITE : GOLD,
-              // RN has one text shadow: gold glow while lit, a crisp dark drop when white.
-              textShadowColor: dailyPlayed ? LABEL_SHADOW : 'rgba(255,184,58,0.6)',
-              textShadowRadius: dailyPlayed ? 0 : 14 * k,
-            },
-          ]}
-        >
-          DAILY CHALLENGE
-        </Text>
-      </Pressable>
+        debug={hitDebug}
+      />
       </Animated.View>
 
       {/* The perch Polly lands on: a short wooden stick sticking out of the wall. */}
@@ -322,7 +321,7 @@ export function HomeTerraceScene(props: Props) {
             k={k}
             color={dailyPlayed ? GOLD : WHITE}
             glow={dailyPlayed}
-            progress={entrance.progress[0]}
+            progress={entrance.progress[1]}
             locked={entrance.locked}
             accessibilityLabel={huntLabel === 'RESUME HUNT' ? 'Resume Hunt' : 'Enter the Hunt'}
             onPress={props.onHunt}
@@ -339,7 +338,7 @@ export function HomeTerraceScene(props: Props) {
             k={k}
             color={WHITE}
             glow={false}
-            progress={entrance.progress[1]}
+            progress={entrance.progress[2]}
             locked={entrance.locked}
             accessibilityLabel="Open the Polybook"
             onPress={props.onBook}
@@ -368,6 +367,8 @@ function selectionRect(id: TerraceElementId, layout: TerraceLayout) {
 
 type SlabProps = {
   source: number;
+  /** The proud top face; defaults to the lavender one. */
+  topSource?: number;
   label: string;
   left: number;
   top: number;
@@ -483,12 +484,12 @@ function Slab(p: SlabProps) {
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.shadow]} />
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.popShadow, motion.popShadow]} />
       <Animated.Image
-        source={ART.btnTop}
+        source={p.topSource ?? ART.btnTop}
         resizeMode="stretch"
         style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.popTop]}
       />
       <Animated.Image
-        source={ART.btnTop}
+        source={p.topSource ?? ART.btnTop}
         resizeMode="stretch"
         // Explicit size: a bundled image otherwise takes the file's pixel width.
         style={[styles.btnTop, { width: p.width, height: motion.topH }, motion.top]}
@@ -594,7 +595,6 @@ const styles = StyleSheet.create({
   root: { position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
   abs: { position: 'absolute' },
   img: { position: 'absolute', pointerEvents: 'none' },
-  dailyLabel: { position: 'absolute', textAlign: 'center', fontFamily: FONTS.wordDisplay, textShadowOffset: { width: 0, height: 2 } },
   gear: { alignItems: 'center', justifyContent: 'center' },
   slab: { alignItems: 'center', justifyContent: 'center' },
   trembleLayer: { position: 'absolute', left: 0, top: 0 },

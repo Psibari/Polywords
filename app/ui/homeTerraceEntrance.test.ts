@@ -8,17 +8,19 @@ import {
   terraceTrembleMs,
 } from './homeTerraceEntrance';
 
-assert.equal(TERRACE_BUTTON_COUNT, 2);
-// Hunt starts first; Polybook follows by the Daily stagger.
+assert.equal(TERRACE_BUTTON_COUNT, 3);
+// Daily starts first, then Hunt, then Polybook, by the Daily stagger.
 assert.ok(terraceEntranceDelay(1) > terraceEntranceDelay(0));
+assert.ok(terraceEntranceDelay(2) > terraceEntranceDelay(1));
 // Nothing is pressable before the last button is flush; reduced motion has no wait.
-assert.ok(terraceEntranceMs(true) > terraceEntranceDelay(1));
+assert.ok(terraceEntranceMs(true) > terraceEntranceDelay(2));
 assert.equal(terraceEntranceMs(false), 0);
 // The tremble ends exactly when the last button is flush.
 assert.equal(terraceTrembleMs(), terraceEntranceMs(true) - terraceEntranceDelay(0));
 // One grind, with the first button; a thud per button; reduced motion: one thud, no grind.
 assert.deepEqual(terraceEntranceCues(0, true), { shift: true, seatRow: 0 });
 assert.deepEqual(terraceEntranceCues(1, true), { shift: false, seatRow: 1 });
+assert.deepEqual(terraceEntranceCues(2, true), { shift: false, seatRow: 2 });
 assert.deepEqual(terraceEntranceCues(0, false), { shift: false, seatRow: 0 });
 assert.deepEqual(terraceEntranceCues(1, false), { shift: false, seatRow: null });
 // Hunt label: big lines much larger than POLYBOOK, a tiny THE, and the block fits the button.

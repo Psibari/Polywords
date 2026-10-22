@@ -1,15 +1,15 @@
-// The terrace Home's two buttons come out of the console the way the Daily answer blocks come out
+// The terrace Home's three buttons come out of the console the way the Daily answer blocks come out
 // of the wall (Pete, 2026-10-21: "the whole treatment, how the Daily Castle has now", every time
 // Home is shown). All timing, scale, drop, tremble and cue constants are the Daily's own
-// (ui/dailyPlaqueEntrance.ts); only the slot count (two) and the cue map differ. RN-free.
+// (ui/dailyPlaqueEntrance.ts); only the slot count (three) and the cue map differ. RN-free.
 import {
   dailyPlaqueEntranceDelay,
   dailyPlaqueEntranceMs,
   dailyWallTrembleMs,
 } from './dailyPlaqueEntrance';
 
-/** ENTER THE HUNT (index 0), then POLYBOOK (index 1). */
-export const TERRACE_BUTTON_COUNT = 2;
+/** DAILY CHALLENGE (index 0), then ENTER THE HUNT (index 1), then POLYBOOK (index 2). */
+export const TERRACE_BUTTON_COUNT = 3;
 
 /** When a button starts to move, from the entrance starting. */
 export function terraceEntranceDelay(index: number): number {
@@ -34,7 +34,7 @@ export type TerraceEntranceCues = {
 };
 
 /**
- * Two buttons, so each seats with its own thud (Hunt then Polybook, the Daily's first two stone
+ * Three buttons, so each seats with its own thud (Daily, Hunt, Polybook: the Daily's three stone
  * pitches). Reduced motion has no movement: one thud for the set.
  */
 export function terraceEntranceCues(index: number, motion: boolean): TerraceEntranceCues {

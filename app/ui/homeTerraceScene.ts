@@ -90,6 +90,8 @@ export const TERRACE_ASPECT = {
   cageTop: 363 / 400,
   cageBase: 292 / 420,
   perch: 70 / 508,
+  // The Daily button art (btn_daily.png, 1121 x 175): the strip of wall recess left above the console.
+  plaque: 175 / 1121,
 } as const;
 
 // The sky-and-mountains image: 1290 x 2796 source, width-fit, so 443 x 960.18 design units.
@@ -106,7 +108,7 @@ export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
   cageTop: { x: 18, y: 98, w: 100, h: 100 * TERRACE_ASPECT.cageTop },
   castle: { x: 195, y: 445, w: 180, h: 180 * TERRACE_ASPECT.castle },
   wall: { x: 0, y: 495, w: 443, h: 443 * TERRACE_ASPECT.wall },
-  plaque: { x: 88, y: 574, w: 268, h: 80 },
+  plaque: { x: 88, y: 574, w: 268, h: 268 * TERRACE_ASPECT.plaque },
   // Polly's art box has no fixed size here: this rect is only her start point and scale.
   // x / y / w come from the mock (her perch-and-bird picture); see terracePollyTransform.
   polly: { x: 78, y: 448, w: 112, h: 163.5 },
@@ -193,10 +195,10 @@ export const TERRACE_GROUND_SEAM_ROWS = [22, 54, 96, 150, 218, 300] as const;
 export const TERRACE_GROUND_SEAM_COLUMNS_BOTTOM_X = [-440, -290, -140, 10, 160, 310, 460, 610, 760] as const;
 export const TERRACE_GROUND_VANISH = { x: 221, y: -260 } as const;
 
-// Wall and console are single pictures: the DEV tool only scales them uniformly, so their height
+// Wall, console and the Daily button are single pictures: the DEV tool only scales them uniformly, so their height
 // always follows their width. This also keeps old saved overrides (made against earlier art with a
 // different aspect) from stretching the new art.
-const ASPECT_LOCKED: ReadonlySet<TerraceElementId> = new Set<TerraceElementId>(['wall', 'casing']);
+const ASPECT_LOCKED: ReadonlySet<TerraceElementId> = new Set<TerraceElementId>(['wall', 'casing', 'plaque']);
 export function lockTerraceAspect(id: TerraceElementId, rect: TerraceRect): TerraceRect {
   if (!ASPECT_LOCKED.has(id)) return rect;
   return { ...rect, h: rect.w * (TERRACE_ASPECT as Record<string, number>)[id] };
