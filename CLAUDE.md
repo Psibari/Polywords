@@ -193,8 +193,24 @@ the moon (hidden at zero). First Hunt only: START and HERE breathe under the Hun
 first-run Hunt glow (after Home onboarding completes) is a gold wash over the Hunt button.
 
 Aspect-locked art: wall, casing and the Daily plaque derive height from width (`lockTerraceAspect`).
-Movement NOT built: moon rise carrying the streak number, castle reveal on Daily, cage opening, Polly
-landing, Hunt dive, Polybook pop, shooting stars.
+Tap dives (Pete device-confirmed 2026-10-22), in `app/ui/homeTerraceDive.ts` (RN-free timings and maths:
+`TERRACE_DIVE`, `TERRACE_DAILY_DIVE`, `TERRACE_BOOK_DIVE`; the only place to tune them) and
+`app/hooks/useTerraceDive.ts`. Hunt: Polybook then Hunt retreat into the static hall, zoom into its golden
+end, gold flash `#F5C842`, then Game. Daily: the castle is hidden until pressed, rises between the
+mountain ranges, zoom into the painted door (`TERRACE_CASTLE_DOOR`), flash, then Daily. Polybook: buttons
+retreat, the Vault screen opens transparent over Home, its own closed cover rises out of the hall to its
+resting spot, then the page (background, header, bottom nav) fades in. Rules that came out of this:
+- Scale about a point with translate-scale-translate (`terraceZoomShift`), NOT `transformOrigin`: with an
+  animated native scale it made the scene vanish.
+- All Home layers sit in one "world" Animated.View that is scaled during a dive; the gold flash is outside it.
+- `App.tsx` opens `Vault` as `transparentModal` with `animation: 'none'` only when route param
+  `polybookRiseFrom` is set; every other way in is the ordinary fade.
+- React Navigation 7: a plain `navigate` PUSHES a new screen. `BottomNav` sends Home with `{ pop: true }` so
+  it returns to the existing Home (a second Home had let the Polybook header show through).
+- Stale DEV overrides in AsyncStorage can make Home look wrong; "Reset all" in the positioner clears them.
+
+Movement NOT built: moon rise carrying the streak number, cage opening, Polly landing, shooting stars.
+Dive sound effects are not built (Pete may supply sounds).
 
 iOS note: an RN `Image` with `StyleSheet.absoluteFill` inside a Pressable drew at intrinsic size on
 iOS (Fabric); give such Images explicit width and height. RN `Image` takes no `pointerEvents` prop;
