@@ -94,7 +94,7 @@ export default function App() {
               animation: 'fade',
             }}
           >
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Home" component={HomeTerraceScreen} />
             {/* Interactive swipe-back disabled: it's a native-driven gesture that
                 can complete before the beforeRemove exit-guard in GameScreen gets
                 a chance to intervene, desyncing JS from the native screen stack
@@ -106,7 +106,8 @@ export default function App() {
             <Stack.Screen name="Vault" component={VaultScreen} />
             <Stack.Screen name="Settings" component={__DEV__ ? DevSettingsScreen : SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
-            {__DEV__ && <Stack.Screen name="HomeTerrace" component={HomeTerraceScreen} />}
+            {/* The old Home, parked (Pete, 2026-10-21: the terrace is the Home). DEV-only, for comparison. */}
+            {__DEV__ && <Stack.Screen name="HomeOld" component={HomeScreen} />}
             {__DEV__ && <Stack.Screen name="DevResultsPreview" component={DevResultsPreviewScreen} />}
             {__DEV__ && <Stack.Screen name="DevRematchOutcomePreview" component={DevRematchOutcomePreviewScreen} />}
           </Stack.Navigator>

@@ -21,10 +21,11 @@ import {
 import { Haptics } from '../utils/haptics';
 import { setMusicState, startMusic, stopMusic } from '../audio/MusicEngine';
 
-// DEV-only work-in-progress Home (outdoor night terrace, Pete 2026-10-20). Reached from Settings
-// (DEV) while __DEV__; the real HomeScreen is untouched. Static art and navigation only: movement
-// (slabs sliding, Hunt dive, Polybook pop, cage fall, shooting stars, breathing glows) is a later
-// step, after Pete has set the positions with the positioner.
+// THE Home (outdoor night terrace, Pete 2026-10-20; swapped in as the real Home 2026-10-21). The
+// old HomeScreen is parked and reachable only in dev builds as 'HomeOld'. The DEV positioner and its
+// state toggles render only under __DEV__. Movement beyond the button entrance (moon rise, castle
+// reveal on Daily, cage opening, Polly's landing, Hunt dive, Polybook pop, shooting stars) is a
+// later step.
 //
 // Carried over from HomeScreen as Pete ruled 2026-10-21: GOLD FEATHER READY takes the Daily
 // plaque's label (the plaque stays gold while the feather is ready), the Daily streak is the number
@@ -182,14 +183,16 @@ export default function HomeTerraceScreen({ navigation }: Props) {
           ) : null
         }
       />
+      {__DEV__ ? (
       <HomeTerracePositioner
         k={layout.k}
         selected={selected}
         onSelect={setSelected}
         showHitAreas={showHitAreas}
         onToggleHitAreas={() => setShowHitAreas((v) => !v)}
-        onExit={() => navigation.goBack()}
+        onExit={() => navigation.navigate('HomeOld')}
       />
+      ) : null}
     </View>
   );
 }

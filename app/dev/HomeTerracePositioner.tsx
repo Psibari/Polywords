@@ -171,7 +171,7 @@ export function HomeTerracePositioner({ k, selected, onSelect, showHitAreas, onT
               <Btn label={showCastle ? 'Castle: shown' : 'Castle: hidden'} on={showCastle} onPress={() => setShowCastle(!showCastle)} />
               <Btn label={readout ? 'Readout: ON' : 'Readout'} on={readout} onPress={() => setReadout((v) => !v)} />
               <Btn label="Reset ALL" onPress={resetAll} />
-              <Btn label="Back to old Home" onPress={onExit} />
+              <Btn label="Old Home (dev)" onPress={onExit} />
             </View>
 
             {readout ? (
