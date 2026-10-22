@@ -1,4 +1,5 @@
 import { DAILY_POOL } from './dailyPool';
+import { DAILY_POOL_EXPANSION, DailySourceWord } from './dailyPoolExpansion';
 import {
   DailyCandidates,
   DailyClaimResult,
@@ -20,6 +21,13 @@ export const DAILY_CANDIDATE_COUNT = 6;
 export const DAILY_TIER_CURVE: readonly DailyTier[] = [1, 1, 2, 2, 3];
 export const DAILY_CLUE_2_DELAY_MS = 4000;
 export const DAILY_CLUE_3_DELAY_MS = 8000;
+
+const APPROVED_DAILY_POOL: readonly (DailyWord | DailySourceWord)[] = [
+  ...DAILY_POOL,
+  ...DAILY_POOL_EXPANSION,
+];
+
+type ApprovedDailyWord = (typeof APPROVED_DAILY_POOL)[number];
 
 export function getTodayDateString(date: Date = new Date()): string {
   const year = date.getFullYear();
@@ -62,14 +70,14 @@ function seededShuffle<T>(values: readonly T[], initialSeed: number): T[] {
   return shuffled;
 }
 
-function assertDailyWord(word: DailyWord): DailyWord {
+function assertDailyWord(word: ApprovedDailyWord): ApprovedDailyWord {
   if (word.meanings.length !== 3) {
     throw new Error(`Daily word ${word.word} must have exactly 3 clues.`);
   }
-  if (word.candidates.length !== 9) {
-    throw new Error(`Daily word ${word.word} must have exactly 9 candidates.`);
+  if (word.candidates.length !== DAILY_CANDIDATE_COUNT && word.candidates.length !== 9) {
+    throw new Error(`Daily word ${word.word} must have exactly 6 or 9 source candidates.`);
   }
-  if (new Set(word.candidates).size !== 9) {
+  if (new Set(word.candidates).size !== word.candidates.length) {
     throw new Error(`Daily word ${word.word} candidates must be unique.`);
   }
   if (word.candidates.filter(candidate => candidate === word.word).length !== 1) {
@@ -82,8 +90,8 @@ function assertDailyWord(word: DailyWord): DailyWord {
 // rotating through this list gives every word an even cadence with a
 // guaranteed minimum gap between repeats, unlike a per-day hash pick which
 // can surface the same word on back-to-back days.
-function rotationPool(tier: DailyTier): DailyWord[] {
-  const sorted = DAILY_POOL
+function rotationPool(tier: DailyTier): ApprovedDailyWord[] {
+  const sorted = APPROVED_DAILY_POOL
     .filter(word => word.tier === tier)
     .sort((a, b) => (a.word < b.word ? -1 : 1));
   return seededShuffle(sorted, getDailySeed(`polywords-tier-${tier}-rotation`));
@@ -94,7 +102,7 @@ function pickDailyWord(
   tierSlot: number,
   challengeNumber: number,
   selectedIds: Set<string>,
-): DailyWord {
+): ApprovedDailyWord {
   const pool = rotationPool(tier);
   const count = pool.length;
   if (count === 0) {
@@ -109,7 +117,7 @@ function pickDailyWord(
   return assertDailyWord(pool[index]!);
 }
 
-function buildRoundWord(word: DailyWord, seed: number): DailyRoundWord {
+function buildRoundWord(word: ApprovedDailyWord, seed: number): DailyRoundWord {
   const distractors = seededShuffle(
     word.candidates.filter(candidate => candidate !== word.word),
     seed,
