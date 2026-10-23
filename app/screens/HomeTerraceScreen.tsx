@@ -10,7 +10,6 @@ import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { useTerraceEntrance } from '../hooks/useTerraceEntrance';
 import { useTerraceDive } from '../hooks/useTerraceDive';
 import { useTerraceSky } from '../hooks/useTerraceSky';
-import { getDisplayStreak } from '../game/dailyStreak';
 import { useGameStore } from '../store/useGameStore';
 import { getTodayDateString } from '../game/dailyChallengeEngine';
 import { homePerch } from '../ui/pwHomeMaterials';
@@ -33,8 +32,9 @@ import { setMusicState, startMusic, stopMusic } from '../audio/MusicEngine';
 // the moon rise (real phase) and shooting stars. Polly falls in from the top (TERRACE_POLLY_DROP).
 //
 // Carried over from HomeScreen as Pete ruled 2026-10-21: GOLD FEATHER READY takes the Daily
-// plaque's label (the plaque stays gold while the feather is ready), the Daily streak is the number
-// on the moon, START HERE sits on the console ledge above ENTER THE HUNT for the first Hunt only,
+// plaque's label (the plaque stays gold while the feather is ready), START HERE sits on the console
+// ledge above ENTER THE HUNT for the first Hunt only (the Daily streak left Home 2026-10-23; it shows
+// on the Daily's own HUD),
 // and the first-run Hunt glow is kept. RESUME HUNT is kept so a saved run can still be resumed.
 
 type Props = { navigation: any };
@@ -58,7 +58,6 @@ export default function HomeTerraceScreen({ navigation }: Props) {
   const overrides = useHomeTerraceTuning((s) => s.overrides);
   const forceDailyPlayed = useHomeTerraceTuning((s) => s.forceDailyPlayed);
   const forceGoldFeather = useHomeTerraceTuning((s) => s.forceGoldFeather);
-  const forceStreak = useHomeTerraceTuning((s) => s.forceStreak);
   const forceStartHere = useHomeTerraceTuning((s) => s.forceStartHere);
   const showCastle = useHomeTerraceTuning((s) => s.showCastle);
   const loadTuning = useHomeTerraceTuning((s) => s.load);
@@ -126,7 +125,6 @@ export default function HomeTerraceScreen({ navigation }: Props) {
   const goldFeatherReal =
     goldFeatherAvailable && goldFeatherExpiresAt !== null && Date.now() < goldFeatherExpiresAt;
   const goldFeatherReady = forceGoldFeather ?? goldFeatherReal;
-  const streak = forceStreak ?? getDisplayStreak(progress, getTodayDateString());
   const startHere = forceStartHere ?? progress.runsCompleted === 0;
 
   const pollyT = terracePollyTransform(
@@ -179,7 +177,6 @@ export default function HomeTerraceScreen({ navigation }: Props) {
         height={height}
         dailyPlayed={dailyPlayed}
         goldFeatherReady={goldFeatherReady}
-        streak={streak}
         startHere={startHere}
         huntGlow={huntGlow}
         showCastle={showCastle}

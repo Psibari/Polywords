@@ -146,8 +146,6 @@ type Props = {
   dailyPlayed: boolean;
   /** A Gold Feather is ready: the Daily plaque stays gold and says so (Pete, 2026-10-21). */
   goldFeatherReady?: boolean;
-  /** Daily streak, shown on the moon when above zero. */
-  streak?: number;
   /** First Hunt only: START HERE on the ledge above ENTER THE HUNT. */
   startHere?: boolean;
   /** First-run Hunt glow, 0..1 (gold wash over the Hunt button). */
@@ -297,21 +295,6 @@ export function HomeTerraceScene(props: Props) {
         ]}
         resizeMode="stretch"
       />
-      {props.streak !== undefined && props.streak > 0 ? (
-        // The Daily streak, a number on the moon (Pete, 2026-10-21).
-        <Text
-          allowFontScaling={false}
-          numberOfLines={1}
-          accessibilityLabel={`Daily streak ${props.streak}`}
-          style={[
-            styles.moonStreak,
-            { left: rects.moon.left, top: rects.moon.top, width: rects.moon.width, height: rects.moon.height },
-            { fontSize: rects.moon.height * (props.streak > 99 ? 0.34 : props.streak > 9 ? 0.44 : 0.52), lineHeight: rects.moon.height },
-          ]}
-        >
-          {props.streak}
-        </Text>
-      ) : null}
       </Animated.View>
 
       {/* A shooting star now and then, behind the back mountains. */}
@@ -953,13 +936,6 @@ const styles = StyleSheet.create({
   slab: { alignItems: 'center', justifyContent: 'center' },
   trembleLayer: { position: 'absolute', left: 0, top: 0 },
   popShadow: { backgroundColor: '#000000' },
-  moonStreak: {
-    position: 'absolute',
-    textAlign: 'center',
-    includeFontPadding: false,
-    fontFamily: FONTS.terraceButton,
-    color: '#2B1B52',
-  },
   cornerTag: {
     position: 'absolute',
     textAlign: 'center',

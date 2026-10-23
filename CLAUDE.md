@@ -188,8 +188,8 @@ entrance constants (`dailyPlaqueEntrance.ts`), a stone thud and tap each, one gr
 wall and console. Hunt and Polybook pop out when pressed (top face and shadow); the Daily cannot come
 forward past the console, so it rises from behind the console's top edge and is pressed IN (sinks and
 dims). Plaque: gold frame and label while the Daily is unplayed, still gold and reading GOLD FEATHER
-READY while a Gold Feather is ready, gray once played with no feather. The Daily streak is the number on
-the moon (hidden at zero). First Hunt only: START and HERE breathe under the Hunt button's crowns. The
+READY while a Gold Feather is ready, gray once played with no feather. The Daily streak is NOT on Home (it
+left the moon 2026-10-23; it shows on the Daily HUD as STREAK n above DAILY #n). First Hunt only: START and HERE breathe under the Hunt button's crowns. The
 first-run Hunt glow (after Home onboarding completes) is a gold wash over the Hunt button.
 
 Aspect-locked art: wall, casing and the Daily plaque derive height from width (`lockTerraceAspect`).
@@ -215,7 +215,7 @@ sounds named in `TERRACE_DIVE_SFX` (Epic Swoosh on Hunt and Daily, Super Cape on
 `terraceStoneShift` when the buttons retreat; credits in `assets/audio/LICENSES.md`). The cage is OFF Home; it is a static
 prop on the Polybook page (`app/ui/polybookCage.ts`).
 Movement NOT built: the cage fall on the Polybook page (left side, once per app open, then broken on the floor; waits on
-Pete's broken-cage art), and a new place for the streak number (off the moon).
+Pete's broken-cage art). The streak moved to the Daily HUD, hidden at 0 and on phones where it would cover the first clue (`dailyStreakLineFits`).
 
 iOS note: an RN `Image` with `StyleSheet.absoluteFill` inside a Pressable drew at intrinsic size on
 iOS (Fabric); give such Images explicit width and height. RN `Image` takes no `pointerEvents` prop;

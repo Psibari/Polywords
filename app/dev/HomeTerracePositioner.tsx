@@ -33,8 +33,6 @@ export function HomeTerracePositioner({ k, selected, onSelect, showHitAreas, onT
   const setForce = useHomeTerraceTuning((s) => s.setForceDailyPlayed);
   const forceGoldFeather = useHomeTerraceTuning((s) => s.forceGoldFeather);
   const setForceGoldFeather = useHomeTerraceTuning((s) => s.setForceGoldFeather);
-  const forceStreak = useHomeTerraceTuning((s) => s.forceStreak);
-  const setForceStreak = useHomeTerraceTuning((s) => s.setForceStreak);
   const forceStartHere = useHomeTerraceTuning((s) => s.forceStartHere);
   const setForceStartHere = useHomeTerraceTuning((s) => s.setForceStartHere);
   const showCastle = useHomeTerraceTuning((s) => s.showCastle);
@@ -159,10 +157,6 @@ export function HomeTerracePositioner({ k, selected, onSelect, showHitAreas, onT
               <Btn
                 label={forceGoldFeather === null ? 'Feather: real' : forceGoldFeather ? 'Feather: ready' : 'Feather: none'}
                 onPress={() => setForceGoldFeather(forceGoldFeather === null ? true : forceGoldFeather ? false : null)}
-              />
-              <Btn
-                label={forceStreak === null ? 'Streak: real' : `Streak: ${forceStreak}`}
-                onPress={() => setForceStreak(forceStreak === null ? 0 : forceStreak === 0 ? 7 : forceStreak === 7 ? 128 : null)}
               />
               <Btn
                 label={forceStartHere === null ? 'Start here: real' : forceStartHere ? 'Start here: shown' : 'Start here: hidden'}

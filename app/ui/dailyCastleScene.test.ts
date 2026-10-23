@@ -42,6 +42,7 @@ import {
   DAILY_GATE_PLANK_PT,
   DAILY_HUD,
   dailyHudHeight,
+  dailyStreakLineFits,
   DAILY_ANSWER_WALL,
   DAILY_WALL_FRIEZE,
   DAILY_ROUND_MARKERS,
@@ -182,6 +183,19 @@ const phones = [
 assert.ok(Math.abs(dailyHudHeight() - 64.8) < 1e-9, `compact HUD is 64.8 pt tall (${dailyHudHeight()})`);
 assert.ok(dailyHudHeight() < 76.6, 'compact HUD is shorter than the old row');
 assert.equal(DAILY_HUD.feather, 20, 'feathers keep their drawn size');
+// The streak line (Pete, 2026-10-23) adds exactly its own line height, only while there is a streak.
+assert.ok(Math.abs(dailyHudHeight(true) - dailyHudHeight() - DAILY_HUD.streakLineHeight) < 1e-9);
+assert.equal(dailyHudHeight(false), dailyHudHeight());
+// The streak line is hidden where it would cover the first clue (Pete, 2026-10-23): only the 375 x 667 phone.
+for (const [w, h, topInset, inset] of phones) {
+  const fits = dailyStreakLineFits(w, h, topInset, inset);
+  assert.equal(fits, !(w === 375 && h === 667), `${w}x${h}: streak line fits only off the smallest phone`);
+  if (fits) {
+    const hudBottom = topInset + dailyHudHeight(true);
+    const f = resolveDailyCastleFrame({ windowWidth: w, windowHeight: h, bottomInset: inset, hudBottom });
+    assert.ok(f.top + resolveDailyClueTop(f, hudBottom) * f.scale >= hudBottom, `${w}x${h}: first clue is below the HUD with the streak line`);
+  }
+}
 for (const [w, h, topInset, inset] of phones) {
   const hudBottom = topInset + dailyHudHeight();
   const f = resolveDailyCastleFrame({ windowWidth: w, windowHeight: h, bottomInset: inset, hudBottom });

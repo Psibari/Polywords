@@ -27,6 +27,7 @@ import {
   getChallengeNumber,
   getTodayDateString,
 } from '../game/dailyChallengeEngine';
+import { getDisplayStreak } from '../game/dailyStreak';
 import { DailyClaimResult, DailySession } from '../game/types';
 import {
   beginDailyCommittedPresentation,
@@ -74,6 +75,7 @@ import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
   DAILY_HUD,
+  dailyStreakLineFits,
   DAILY_POLLY_BUBBLE,
   DAILY_POLLY_PERCH,
   dailyActionLabelBottom,
@@ -161,16 +163,22 @@ function DailyHUD({
   challengeNumber,
   chances,
   featherPulse,
+  streak,
 }: {
   challengeNumber: number;
   chances: number;
   featherPulse?: Animated.Value;
+  /** Consecutive days the player has finished the Daily; the line shows only above zero. */
+  streak: number;
 }) {
   // Compact, centred between the towers (Pete, 2026-09-28): DAILY #<n> with
   // the chances beneath it. The round markers sit on the wall's frieze
   // (DailyRoundMarkers, placed by DailyCastleStage).
   return (
     <View style={hud.plate}>
+      {streak > 0 ? (
+        <Text style={hud.streak} accessibilityLabel={`Streak ${streak} days`}>{`STREAK ${streak}`}</Text>
+      ) : null}
       <Text style={hud.label}>{`DAILY #${challengeNumber}`}</Text>
       <Animated.View style={[hud.feathers, featherPulse && {
         backgroundColor: featherPulse.interpolate({
@@ -1320,6 +1328,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               challengeNumber={challengeNumber}
               chances={displayedDailySession.chancesRemaining}
               featherPulse={featherPulse}
+              streak={
+                dailyStreakLineFits(windowWidth, windowHeight, insets.top, insets.bottom)
+                  ? getDisplayStreak(progress, getTodayDateString())
+                  : 0
+              }
             />
           </Animated.View>
 
@@ -1681,6 +1694,15 @@ const hud = StyleSheet.create({
     textShadowColor: dailyHudMaterial.labelGlow,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 7,
+  },
+  streak: {
+    color: dailyHudMaterial.label,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: DAILY_HUD.streakSize,
+    lineHeight: DAILY_HUD.streakLineHeight,
+    letterSpacing: 2,
+    opacity: 0.85,
   },
   feathers: {
     flexDirection: 'row',

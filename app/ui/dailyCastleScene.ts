@@ -432,12 +432,36 @@ export const DAILY_HUD = {
    */
   feather: 20,
   featherGap: 4,
+  /**
+   * The streak line above DAILY #<n> (Pete, 2026-10-23), shown only while the player has a streak. Same
+   * font as the label (Bebas Neue, 1.2 em line height), smaller so DAILY #<n> stays the plate's main line.
+   */
+  streakSize: 14,
+  streakLineHeight: 14 * 1.2,
 } as const;
 
 /** Height the HUD layer takes below the top inset: `hudBottom - topInset`. */
-export function dailyHudHeight(): number {
+export function dailyHudHeight(hasStreak = false): number {
   const h = DAILY_HUD;
-  return h.marginTop + 2 * h.border + h.padTop + h.labelLineHeight + h.feather + h.padBottom;
+  return (
+    h.marginTop + 2 * h.border + h.padTop + (hasStreak ? h.streakLineHeight : 0) + h.labelLineHeight + h.feather + h.padBottom
+  );
+}
+
+/**
+ * Whether the streak line fits on this phone (Pete, 2026-10-23: hide it where it does not). It fits when the
+ * first clue still starts below the taller HUD (the scene drops to make room, but never past the action
+ * label, so the smallest phones run out). Same maths the stage uses, so the answer matches what is drawn.
+ */
+export function dailyStreakLineFits(
+  windowWidth: number,
+  windowHeight: number,
+  topInset: number,
+  bottomInset: number,
+): boolean {
+  const hudBottom = topInset + dailyHudHeight(true);
+  const frame = resolveDailyCastleFrame({ windowWidth, windowHeight, bottomInset, hudBottom });
+  return frame.top + resolveDailyClueTop(frame, hudBottom) * frame.scale >= hudBottom;
 }
 
 /**
