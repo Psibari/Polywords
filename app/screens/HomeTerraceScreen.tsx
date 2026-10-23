@@ -28,7 +28,7 @@ import { setMusicState, startMusic, stopMusic } from '../audio/MusicEngine';
 // THE Home (outdoor night terrace, Pete 2026-10-20; swapped in as the real Home 2026-10-21). The
 // old HomeScreen is parked and reachable only in dev builds as 'HomeOld'. The DEV positioner and its
 // state toggles render only under __DEV__. Movement: the button entrance, the Hunt/Daily/Polybook dives,
-// the moon rise (real phase) and shooting stars. Still to build: the cage fall and Polly's landing.
+// the moon rise (real phase) and shooting stars. Still to build: Polly's landing (she should fall in from the top).
 //
 // Carried over from HomeScreen as Pete ruled 2026-10-21: GOLD FEATHER READY takes the Daily
 // plaque's label (the plaque stays gold while the feather is ready), the Daily streak is the number

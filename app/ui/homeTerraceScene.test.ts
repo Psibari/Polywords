@@ -39,7 +39,7 @@ for (const phone of PHONES) {
   assert.ok(layout.rects.wall.left + layout.rects.wall.width >= phone.width - 1e-6);
 
   // Bottom-group elements keep their distance from the screen bottom (design units).
-  for (const id of ['wall', 'plaque', 'casing', 'gear', 'cageBase', 'castle', 'perch'] as const) {
+  for (const id of ['wall', 'plaque', 'casing', 'gear', 'castle', 'perch'] as const) {
     const d = lockTerraceAspect(id, TERRACE_DEFAULTS[id]);
     const bottomGap = phone.height - (layout.rects[id].top + layout.rects[id].height);
     const want = (TERRACE_DESIGN_H - d.y - d.h) * k;

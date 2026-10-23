@@ -22,7 +22,8 @@ import { createSeededRng, deriveSeed } from "../../game/seededRandom";
 import { PW } from "../../ui/pwTheme";
 import { useGameStore } from "../../store/useGameStore";
 import { useReducedMotionPreference } from "../../hooks/usePollyAmbientMotion";
-import { TERRACE_BOOK_DIVE, terraceBookRiseTransform, type BookRiseFrom } from "../../ui/homeTerraceDive";
+import { TERRACE_BOOK_DIVE, TERRACE_DIVE_SFX, terraceBookRiseTransform, type BookRiseFrom } from "../../ui/homeTerraceDive";
+import { playSfx } from "../../audio/sfx";
 
 const POLYBOOK_CROWN = require("../../../assets/images/polybook/polybook_crown.png");
 
@@ -114,6 +115,8 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
       riseDx.setValue(from.dx);
       riseDy.setValue(from.dy);
       riseScale.setValue(from.scale);
+      // The whoosh as the cover leaves the hall.
+      playSfx(TERRACE_DIVE_SFX.bookRise);
       Animated.timing(riseT, {
         toValue: 1,
         duration: TERRACE_BOOK_DIVE.riseMs * TERRACE_BOOK_DIVE.timescale,
@@ -121,7 +124,11 @@ export function PolybookSpread({ progress, pollyMemory, onRiseEnd }: Props) {
         useNativeDriver: true,
       }).start();
       // The page comes up once the cover has landed, not during the move.
-      riseTimer.current = setTimeout(() => onRiseEnd?.(), TERRACE_BOOK_DIVE.riseMs * TERRACE_BOOK_DIVE.timescale);
+      // The thud as it lands (Pete, 2026-10-23: when the book slams in).
+      riseTimer.current = setTimeout(() => {
+        playSfx(TERRACE_DIVE_SFX.bookLand);
+        onRiseEnd?.();
+      }, TERRACE_BOOK_DIVE.riseMs * TERRACE_BOOK_DIVE.timescale);
     });
   }
   useEffect(() => {

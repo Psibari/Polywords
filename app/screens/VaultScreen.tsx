@@ -1,11 +1,8 @@
 import React, { useRef, useState } from "react";
-import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import BottomNav from "../components/BottomNav";
-import AmbientSkyBackground from "../components/AmbientSkyBackground";
-import { VAULT_SKY_TUNING } from "../ui/ambientSkyTuning";
 import { FONTS } from "../constants/fonts";
 import { PW } from "../ui/pwTheme";
 import { stageMaterial } from "../ui/pwMaterials";
@@ -335,27 +332,17 @@ export default function VaultScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      {/* The page behind the book: its colour and every ambient layer fade in together. */}
+      {/* The page behind the book: Pete's room painting (2026-10-23), fading in with the page. It replaces
+          the old sky, wash, vignette and candle glow, which were made for the old background. */}
       <Animated.View
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, { backgroundColor: stageMaterial.base, opacity: chrome }]}
       >
-        <AmbientSkyBackground {...VAULT_SKY_TUNING} />
-
-        <View pointerEvents="none" style={styles.ambientWash} />
-
-        <LinearGradient
-          colors={[...stageMaterial.vignette]}
-          locations={[...stageMaterial.vignetteLocations]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          pointerEvents="none"
+        <Image
+          source={require("../../assets/images/polybook/polybook_room_bg.webp")}
           style={StyleSheet.absoluteFill}
+          resizeMode="cover"
         />
-
-        <View pointerEvents="none" style={styles.candlePool} />
-
-        <View pointerEvents="none" style={styles.candleCore} />
       </Animated.View>
 
       <View style={styles.content}>
@@ -420,32 +407,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 0,
     width: "100%",
-  },
-
-  ambientWash: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: stageMaterial.purpleAmbient,
-  },
-
-  candlePool: {
-    position: "absolute",
-    alignSelf: "center",
-    top: "28%",
-    width: 420,
-    height: 420,
-    borderRadius: 210,
-    backgroundColor: stageMaterial.candleGlow,
-  },
-
-  candleCore: {
-    position: "absolute",
-    alignSelf: "center",
-    top: "28%",
-    marginTop: 90,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "rgba(245,200,66,0.12)",
   },
 
   kicker: {

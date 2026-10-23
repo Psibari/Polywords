@@ -46,6 +46,11 @@ export type SfxName =
   // Terrace Home entrance grind: the gauntlet's own level (Pete, 2026-10-22), its own cue so the
   // Daily's quieter grind is never affected.
   | 'terraceStoneShift'
+  // Home tap dives (Pete supplied the sounds, 2026-10-23): a short whoosh, a long whoosh that ends in a
+  // boom, and the Polybook landing thud. Which dive uses which is TERRACE_DIVE_SFX in ui/homeTerraceDive.ts.
+  | 'terraceWhooshCape'
+  | 'terraceWhooshEpic'
+  | 'polybookThud'
   // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
   // below. Uncomment together with the matching entries in SFX and the
   // guarded call sites in DailyChallengeScreen.tsx once the files land.
@@ -170,6 +175,11 @@ const SFX: Record<SfxName, SfxConfig> = {
   // Terrace Home entrance grind. Same file and the SAME level as the gauntlet's stoneRumble (0.41,
   // Pete 2026-10-22). Its own name so retuning Home never moves the Daily's dailyStoneShift.
   terraceStoneShift: { source: require('../../assets/audio/sfx/stone_rumble.mp3'), volume: 0.41, cooldownMs: 300 },
+  // Levels set from measured loudness (loudest 100 ms, mono) to sit near the gauntlet pick and book-close
+  // cues, about -19 dBFS effective; the thud a little hotter because it is a landing. Tune by ear.
+  terraceWhooshCape: { source: require('../../assets/audio/sfx/terrace_whoosh_cape.mp3'), volume: 0.40, cooldownMs: 400 },
+  terraceWhooshEpic: { source: require('../../assets/audio/sfx/terrace_whoosh_epic.mp3'), volume: 0.33, cooldownMs: 400 },
+  polybookThud: { source: require('../../assets/audio/sfx/polybook_thud.mp3'), volume: 0.50, cooldownMs: 400 },
   dailyStoneSeat1: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat2: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat3: DAILY_STONE_SEAT_SFX,
@@ -471,9 +481,9 @@ export function warmDailyPlaqueEntranceSfx(): void {
   warmSfx(['dailyStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES]);
 }
 
-/** Warms the terrace Home's entrance grind and the three row thuds it reuses from the Daily. */
+/** Warms the terrace Home's entrance grind, the three row thuds it reuses from the Daily, and the dive sounds. */
 export function warmTerraceEntranceSfx(): void {
-  warmSfx(['terraceStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES]);
+  warmSfx(['terraceStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES, 'terraceWhooshCape', 'terraceWhooshEpic', 'polybookThud']);
 }
 
 export function sfxReady(): Promise<void> {

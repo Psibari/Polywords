@@ -148,6 +148,20 @@ export function terraceDailyOrigin(castle: { left: number; top: number; width: n
 // as in the Hunt dive, then the Polybook screen opens TRANSPARENT over the Home and its own closed
 // cover rises out of the hall by itself, face forward, growing into its resting place (so it lands
 // exactly, on every phone). Only after it has landed does the Polybook page come up around it.
+/**
+ * Which sound each dive plays and when it starts, ms from the tap (Pete, 2026-10-23: a zoom sound for every dive,
+ * to be tried by ear). 'terraceWhooshEpic' builds for about 1.75 s and then booms, so the Hunt starts it with the
+ * tap (the boom lands near the end of the zoom) and the Daily 250 ms in (the boom lands as the zoom ends). The
+ * Polybook's whoosh is played by the Polybook screen the moment the cover starts to rise, then 'polybookThud'
+ * when it lands; those two are named here so every dive sound is chosen in one place.
+ */
+export const TERRACE_DIVE_SFX = {
+  hunt: { name: 'terraceWhooshEpic', startMs: 0 },
+  daily: { name: 'terraceWhooshEpic', startMs: 250 },
+  bookRise: 'terraceWhooshCape',
+  bookLand: 'polybookThud',
+} as const;
+
 export const TERRACE_BOOK_DIVE = {
   /** Multiplies the rise and hold (the retreat keeps the Hunt dive's own timescale). */
   timescale: 1,

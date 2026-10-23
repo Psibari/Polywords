@@ -6,10 +6,10 @@
 // the real ones on a phone.
 //
 // One frame holds the whole lower scene: width-fit (k = screenWidth / 443) and BOTTOM-anchored.
-// The sky and ridges, the castle, the front ridge, the wall, the ground, the console and the
-// cage base all share that frame, so the castle can never drift against the ridges or the wall
+// The sky and ridges, the castle, the front ridge, the wall, the ground, the console all
+// share that frame, so the castle can never drift against the ridges or the wall
 // on a different phone shape. Nothing here scales the wall by an animation. Only the sky group
-// (logo, moon, upper cage half) is TOP-anchored below the safe-area inset, so the logo is never
+// (logo, moon) is TOP-anchored below the safe-area inset, so the logo is never
 // under the status bar.
 //
 // Taller phones show extra sky above the frame (filled with the background's top colour); shorter
@@ -34,7 +34,6 @@ export const TERRACE_ELEMENT_IDS = [
   'front',
   'logo',
   'moon',
-  'cageTop',
   'castle',
   'wall',
   'plaque',
@@ -43,7 +42,6 @@ export const TERRACE_ELEMENT_IDS = [
   'ground',
   'casing',
   'gear',
-  'cageBase',
 ] as const;
 
 export type TerraceElementId = (typeof TERRACE_ELEMENT_IDS)[number];
@@ -54,7 +52,6 @@ export const TERRACE_ELEMENT_LABEL: Record<TerraceElementId, string> = {
   perch: 'Perch',
   logo: 'Logo',
   moon: 'Moon',
-  cageTop: 'Cage top',
   castle: 'Castle',
   wall: 'Back wall',
   plaque: 'Daily plaque',
@@ -62,7 +59,6 @@ export const TERRACE_ELEMENT_LABEL: Record<TerraceElementId, string> = {
   ground: 'Ground',
   casing: 'Console',
   gear: 'Settings gear',
-  cageBase: 'Cage base',
 };
 
 export const TERRACE_ANCHOR: Record<TerraceElementId, TerraceAnchor> = {
@@ -71,7 +67,6 @@ export const TERRACE_ANCHOR: Record<TerraceElementId, TerraceAnchor> = {
   perch: 'bottom',
   logo: 'top',
   moon: 'top',
-  cageTop: 'top',
   castle: 'bottom',
   wall: 'bottom',
   plaque: 'bottom',
@@ -79,7 +74,6 @@ export const TERRACE_ANCHOR: Record<TerraceElementId, TerraceAnchor> = {
   ground: 'bottom',
   casing: 'bottom',
   gear: 'bottom',
-  cageBase: 'bottom',
 };
 
 // Art aspect ratios (height / width) of the shipped images.
@@ -88,8 +82,6 @@ export const TERRACE_ASPECT = {
   wall: 353 / 1095,
   casing: 1034 / 1458,
   castle: 487 / 715,
-  cageTop: 363 / 400,
-  cageBase: 292 / 420,
   perch: 70 / 508,
   // The Daily button art (btn_daily.png, 1121 x 175): the strip of wall recess left above the console.
   plaque: 175 / 1121,
@@ -101,7 +93,7 @@ export const TERRACE_BG_DESIGN_H = (TERRACE_DESIGN_W * 2796) / 1290;
 // Starting positions in design units (from the mock).
 export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
   // Pete's 2026-10-21 20:54 DEV readout, locked as the defaults. Heights of the single-picture art
-  // (logo, wall, plaque, castle, perch, cage, casing) equal width x TERRACE_ASPECT, as the DEV tool
+  // (logo, wall, plaque, castle, perch, casing) equal width x TERRACE_ASPECT, as the DEV tool
   // keeps them. The background's y is negative: the image is taller than the 960 canvas.
   // Pete's 2026-10-22 17:09 DEV readout: the sky and the front hill are placed separately (the castle
   // stands between them), and the castle and moon moved. front.webp is 1290 x 1356, so w x 1356/1290 = h.
@@ -109,7 +101,6 @@ export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
   front: { x: -212.03, y: 329.43, w: 655.84, h: 689.4 },
   logo: { x: 42.67, y: 40.98, w: 364.65, h: 58.75 },
   moon: { x: 344.38, y: 88.95, w: 65.5, h: 65.5 },
-  cageTop: { x: 173.33, y: 804.44, w: 100, h: 90.75 },
   castle: { x: 149.72, y: 338.28, w: 163.85, h: 111.6 },
   wall: { x: -27.29, y: 390.81, w: 496.27, h: 159.98 },
   plaque: { x: 62.61, y: 465.93, w: 318.77, h: 49.76 },
@@ -120,10 +111,7 @@ export const TERRACE_DEFAULTS: Record<TerraceElementId, TerraceRect> = {
   ground: { x: -31.89, y: 792.21, w: 1119.44, h: 838.95 },
   casing: { x: -33.1, y: 509.04, w: 497.6, h: 352.89 },
   gear: { x: 2.82, y: 831.08, w: 42, h: 42 },
-  cageBase: { x: 20.13, y: 856.65, w: 120.01, h: 83.44 },
 };
-
-export const TERRACE_CAGE_TOP_ROTATION_DEG = 9;
 
 // The opening in the casing and the two flat buttons, as fractions of the casing rect, so they move
 // and scale with it. Measured from Pete's 2026-10-21 casing art (1458 x 1034; hole 1140 x 705 at

@@ -1,9 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import { Animated, Easing } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { playSfx } from '../audio/sfx';
 import {
   TERRACE_DAILY_DIVE,
   TERRACE_DIVE,
+  TERRACE_DIVE_SFX,
   terraceBookDiveNavigateAt,
   terraceDailyDiveTimeline,
   terraceDiveTimeline,
@@ -116,6 +118,7 @@ export function useTerraceDive(): TerraceDive {
           at(terraceBookDiveNavigateAt(), onArrive);
           return;
         }
+        at(TERRACE_DIVE_SFX.hunt.startMs, () => playSfx(TERRACE_DIVE_SFX.hunt.name));
         at(t.zoomAt, () => zoomTo(TERRACE_DIVE.zoomScale, t.zoomMs));
         at(t.flashAt, () => flashIn(t.flashMs));
         at(t.navigateAt, onArrive);
@@ -132,6 +135,7 @@ export function useTerraceDive(): TerraceDive {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }).start();
+      at(TERRACE_DIVE_SFX.daily.startMs, () => playSfx(TERRACE_DIVE_SFX.daily.name));
       at(t.zoomAt, () => zoomTo(TERRACE_DAILY_DIVE.zoomScale, t.zoomMs));
       at(t.flashAt, () => flashIn(t.flashMs));
       at(t.navigateAt, onArrive);

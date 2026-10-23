@@ -27,7 +27,6 @@ import {
   DAILY_WALL_TREMBLE_Y,
 } from '../ui/dailyPlaqueEntrance';
 import {
-  TERRACE_CAGE_TOP_ROTATION_DEG,
   TERRACE_CASTLE_WINDOWS,
   TERRACE_DESIGN_H,
   TERRACE_FRONT_BOTTOM_COLOR,
@@ -61,8 +60,6 @@ const ART = {
   crownWhite: require('../../assets/images/home/terrace/crown_white.png'),
   crownGold: require('../../assets/images/home/terrace/crown_gold.png'),
   dailyDone: require('../../assets/images/home/terrace/btn_daily_done.png'),
-  cageTop: require('../../assets/images/home/terrace/cage_top.png'),
-  cageBase: require('../../assets/images/home/terrace/cage_base.png'),
   perch: require('../../assets/images/home/terrace/perch.png'),
   logo: require('../../assets/images/brand/home-title-lockup.png'),
   ridge: require('../../assets/images/home/terrace/ridge.webp'),
@@ -447,16 +444,8 @@ export function HomeTerraceScene(props: Props) {
       {/* Polly, perched on the back wall. */}
       {polly}
 
-      {/* Sky group: the broken cage's top half hangs by the logo; the logo is the title. */}
-      <Image
-        source={ART.cageTop}
-        style={[
-          styles.img,
-          rects.cageTop,
-          { transform: [{ rotate: `${TERRACE_CAGE_TOP_ROTATION_DEG}deg` }] },
-        ]}
-        resizeMode="contain"
-      />
+      {/* The logo is the title. (The broken cage left Home on 2026-10-23: it was too busy, and it moves to the
+          Polybook page.) */}
       <Image source={ART.logo} accessibilityLabel="POLYWORDS" style={[styles.img, rects.logo]} resizeMode="contain" />
 
       {/* Settings gear, bottom-left, never on top. */}
@@ -557,9 +546,6 @@ export function HomeTerraceScene(props: Props) {
           />
         </View>
       </Animated.View>
-
-      {/* The cage's base half rests on the ground, overlapping the console's corner. */}
-      <Image source={ART.cageBase} style={[styles.img, rects.cageBase]} resizeMode="contain" />
 
       {props.selected ? (
         <View
