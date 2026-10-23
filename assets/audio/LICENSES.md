@@ -35,3 +35,17 @@ POLYWORDS edits: Hunt 2.500–115.750s (played at 0.85× with pitch correction);
   https://pixabay.com/sound-effects/film-special-effects-dark-magic-curse-light-impact-2-546571/
 
 POLYWORDS edits: files renamed only; audio content is unmodified.
+
+## Sound effects added 2026-10-23
+
+- `sfx/polybook_thud.mp3`: “Thick Book Placed on a Classroom Desk” by arunangshubanerjee,
+  Pixabay Content License.
+  https://pixabay.com/sound-effects/film-special-effects-thick-book-placed-on-a-classroom-desk-330037/
+- `sfx/terrace_whoosh_cape.mp3`: “Whoosh Super Cape” by SoundReality, Pixabay Content
+  License. https://pixabay.com/sound-effects/film-special-effects-whoosh-super-cape-390707/
+- `sfx/terrace_whoosh_epic.mp3`: “Epic Swoosh Boom 3” by floraphonic, Pixabay Content
+  License. https://pixabay.com/sound-effects/film-special-effects-epic-swoosh-boom-3-183998/
+
+POLYWORDS edits: polybook_thud.mp3 is renamed only. terrace_whoosh_cape.mp3 is the first
+0.95 s of the source with a 0.2 s fade-out (the rest of the 6 s file is silence).
+terrace_whoosh_epic.mp3 is the first 3.2 s of the source with a 0.4 s fade-out.

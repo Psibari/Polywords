@@ -17,6 +17,7 @@ import {
 } from "../components/ui/LexiconPrototype";
 import { PolybookSpread } from "../components/ui/PolybookSpread";
 import { TERRACE_BOOK_DIVE } from "../ui/homeTerraceDive";
+import { polybookCageRect } from "../ui/polybookCage";
 
 import { useGameStore } from "../store/useGameStore";
 import {
@@ -94,6 +95,8 @@ export default function VaultScreen({ navigation }: Props) {
   const route = useRoute<any>();
   const rising = route.params?.polybookRiseFrom !== undefined;
   const chrome = useRef(new Animated.Value(rising ? 0 : 1)).current;
+  const [pageWidth, setPageWidth] = useState(0);
+  const [headerBottom, setHeaderBottom] = useState(0);
   const showPage = () =>
     Animated.timing(chrome, {
       toValue: 1,
@@ -345,8 +348,27 @@ export default function VaultScreen({ navigation }: Props) {
         />
       </Animated.View>
 
-      <View style={styles.content}>
-        <Animated.View style={{ opacity: chrome }}>
+      <View
+        style={styles.content}
+        onLayout={(e) => setPageWidth(e.nativeEvent.layout.width)}
+      >
+        {/* The broken cage and rope hang in the room's window, placed from the header so they never touch
+            the title or the book (Pete, 2026-10-23). */}
+        {pageWidth > 0 && headerBottom > 0 ? (
+          <Animated.Image
+            source={require("../../assets/images/polybook/polybook_cage.webp")}
+            resizeMode="stretch"
+            style={[
+              styles.cageArt,
+              { opacity: chrome },
+              polybookCageRect(pageWidth, headerBottom),
+            ]}
+          />
+        ) : null}
+        <Animated.View
+          style={{ opacity: chrome }}
+          onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+        >
           <View style={styles.headerContainer}>
             <Text style={styles.title}>POLYBOOK</Text>
 
@@ -398,6 +420,8 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
   },
+
+  cageArt: { position: "absolute", pointerEvents: "none" },
 
   headerContainer: {
     paddingHorizontal: PW.space.screenX,
