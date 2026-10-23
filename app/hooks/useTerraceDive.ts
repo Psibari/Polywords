@@ -111,6 +111,8 @@ export function useTerraceDive(): TerraceDive {
           }).start();
         // The hall is simply there, static: shown at once, behind the buttons that still cover it.
         hall.setValue(1);
+        // The stone slide plays as the first button starts back (it runs about as long as both retreats).
+        at(t.polybookRetreatAt, () => playSfx(TERRACE_DIVE_SFX.retreat));
         at(t.polybookRetreatAt, () => recede(retreat[1]));
         at(t.huntRetreatAt, () => recede(retreat[0]));
         if (kind === 'book') {

@@ -158,6 +158,8 @@ export function terraceDailyOrigin(castle: { left: number; top: number; width: n
 export const TERRACE_DIVE_SFX = {
   hunt: { name: 'terraceWhooshEpic', startMs: 0 },
   daily: { name: 'terraceWhooshEpic', startMs: 250 },
+  /** The buttons retreating into the hall (Hunt and Polybook taps): the same stone slide they come out with (Pete, 2026-10-23). */
+  retreat: 'terraceStoneShift',
   bookRise: 'terraceWhooshCape',
   bookLand: 'polybookThud',
 } as const;
