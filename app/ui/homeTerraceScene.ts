@@ -266,6 +266,22 @@ export function resolveTerraceLayout(
 export const TERRACE_POLLY_ART_PT = 220; // drawn bird height inside the 246 pt box (see pollyHomePoses)
 export const TERRACE_POLLY_BOX_LEFT_PT = -66; // box left edge relative to the perch root
 
+/**
+ * Polly's entrance on the terrace Home (Pete, 2026-10-23): she falls in from above the top of the screen
+ * and lands on her perch. `marginPt` is extra clearance, in her own units, so she starts fully out of sight.
+ */
+export const TERRACE_POLLY_DROP = {
+  /** The fall, ending with a smooth slowing so she lands as her pose changes from flying to resting (650 ms in). */
+  ms: 900,
+  marginPt: 40,
+} as const;
+
+/** How far above her perch (in her own units, before scaling) she must start to be fully off the top of the screen. */
+export function terracePollyDropDistance(t: { originY: number; translateY: number; scale: number }): number {
+  const feetY = t.originY + t.translateY; // where the bottom of her box sits on screen
+  return feetY / t.scale + TERRACE_POLLY_DROP.marginPt;
+}
+
 export type TerracePollyTransform = {
   originX: number;
   originY: number;

@@ -97,7 +97,16 @@ const HOME_AWAKE_IMAGE_POSES = HOME_AWAKE_LAYER_POSES.filter(
   p => !(POLLY_PERCH_RIG_ENABLED && pollyHomePoseUsesRig(p)),
 );
 
-export default function PollyHomePerch() {
+type PollyHomePerchProps = {
+  /**
+   * The terrace Home's entrance: she starts `fromAbove` units above her perch (so out of sight over the top
+   * of the screen) and comes down over `ms`, slowing into the perch. Without it (the old Home) she springs up
+   * from 300 units below.
+   */
+  drop?: { fromAbove: number; ms: number };
+};
+
+export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   const memory = useGameStore(s => s.pollyMemory);
   const progress = useGameStore(s => s.progress);
   const rememberLine = useGameStore(s => s.rememberPollyLine);
@@ -208,7 +217,7 @@ export default function PollyHomePerch() {
     ],
   })), [zProgress]);
 
-  const slideY = useRef(new Animated.Value(isEntrance ? 300 : 0)).current;
+  const slideY = useRef(new Animated.Value(isEntrance ? (drop ? -drop.fromAbove : 300) : 0)).current;
   const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const { translateX: breatheX, translateY: breatheY, reduceMotion } =
     usePollyAmbientMotion('home', isFocused, lifeProfile.ambientIntensity);
@@ -232,7 +241,17 @@ export default function PollyHomePerch() {
     }
 
     if (!reduceMotion) {
-      Animated.spring(slideY, { toValue: 0, friction: 7, tension: 60, useNativeDriver: true }).start();
+      if (drop) {
+        // A fall ends in a landing, so no spring: a spring from above would sink below the perch and bounce back.
+        Animated.timing(slideY, {
+          toValue: 0,
+          duration: drop.ms,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      } else {
+        Animated.spring(slideY, { toValue: 0, friction: 7, tension: 60, useNativeDriver: true }).start();
+      }
     }
     // Settles to the resting pose as of NOW (live), not the one captured
     // when the entrance started.

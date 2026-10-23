@@ -7,6 +7,8 @@ import {
   lockTerraceAspect,
   resolveTerraceLayout,
   terracePollyTransform,
+  terracePollyDropDistance,
+  TERRACE_POLLY_DROP,
 } from './homeTerraceScene';
 
 // Phones Pete's players use, plus a short and a tall one: iPhone 15 (393x852, top inset 59),
@@ -86,6 +88,18 @@ for (const phone of PHONES) {
   const b = terracePollyTransform({ ...TERRACE_DEFAULTS.polly, y: TERRACE_DEFAULTS.polly.y + 10 }, phone, layout.k, 364);
   assert.ok(Math.abs(b.translateY - a.translateY - 10 * layout.k) < 1e-6);
   assert.ok(a.scale > 0);
+}
+
+// Polly's fall starts fully above the top of the screen on every phone: her box bottom, shifted up by the
+// drop distance, is at or above y = 0 (screen top), with the margin to spare.
+for (const phone of PHONES) {
+  const layout = resolveTerraceLayout(phone);
+  const t = terracePollyTransform(TERRACE_DEFAULTS.polly, phone, layout.k, 364);
+  const drop = terracePollyDropDistance(t);
+  const feetY = t.originY + t.translateY;
+  const boxBottomAtStart = feetY - drop * t.scale;
+  assert.ok(boxBottomAtStart <= -TERRACE_POLLY_DROP.marginPt * t.scale + 1e-6, `Polly starts off the top on ${phone.width}x${phone.height}`);
+  assert.ok(drop > 0);
 }
 
 console.log('homeTerraceScene tests passed');
