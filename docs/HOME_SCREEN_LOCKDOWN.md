@@ -459,3 +459,12 @@ closely; nothing here is Claude's invention.
 6. Saved DEV overrides on a phone once made Home look wrong against Pete's screenshot; "Reset all" in the DEV positioner fixes it (the defaults already equal the locked readout).
 7. Home from the Polybook returns to the existing Home (it used to push a second Home, which let the Polybook header show through the top of Home).
 8. Open: dive sound effects (none yet; Pete may supply them).
+
+## Pete rulings, 2026-10-23
+
+1. Polly's entrance on Home: she FALLS IN FROM THE TOP and lands on the perch (it used to come up from the bottom). Pete device-confirmed: "the land feels right". Tuning: `TERRACE_POLLY_DROP` in `app/ui/homeTerraceScene.ts`.
+2. The cage comes OFF Home ("it looks too busy"). It lives on the Polybook page. Pete wants it on the LEFT, falling and crashing on the floor the FIRST time the Polybook is opened in each app launch, and lying broken on the floor on every later visit. No sound for now. NOT built: waiting on Pete's transparent broken-cage image and whether the rope falls with it (default: no rope).
+3. The Polybook page background is Pete's room painting (`assets/images/polybook/polybook_room_bg.webp`). Confirmed fixed after it first drew about 3.4x too big (explicit width and height needed).
+4. Dive sounds (Pixabay, Content License): Epic Swoosh Boom on the Hunt and Daily dives, Whoosh Super Cape on the Polybook rise, a book thud when the book lands, and the stone slide (`terraceStoneShift`) when the buttons retreat. Pete removed the terrace button press sound. Pete: "everything seems all right on that front".
+5. The streak number still comes off the moon; its new place is undecided.
+6. Idea only, not decided: after a LOSS, allow a retry of the Daily after a wait. Open problems: same puzzle on retry, and what a retry-win would grant. Pete: parked.

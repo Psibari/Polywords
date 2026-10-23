@@ -209,8 +209,13 @@ resting spot, then the page (background, header, bottom nav) fades in. Rules tha
   it returns to the existing Home (a second Home had let the Polybook header show through).
 - Stale DEV overrides in AsyncStorage can make Home look wrong; "Reset all" in the positioner clears them.
 
-Movement NOT built: moon rise carrying the streak number, cage opening, Polly landing, shooting stars.
-Dive sound effects are not built (Pete may supply sounds).
+Also built and Pete-confirmed: moon rise (real phase, once per app open, `app/ui/homeTerraceSky.ts`), shooting stars,
+Polly falling in from the top (`TERRACE_POLLY_DROP`, `terracePollyDropDistance`), the Polybook room background, and dive
+sounds named in `TERRACE_DIVE_SFX` (Epic Swoosh on Hunt and Daily, Super Cape on the Polybook rise, book thud on landing,
+`terraceStoneShift` when the buttons retreat; credits in `assets/audio/LICENSES.md`). The cage is OFF Home; it is a static
+prop on the Polybook page (`app/ui/polybookCage.ts`).
+Movement NOT built: the cage fall on the Polybook page (left side, once per app open, then broken on the floor; waits on
+Pete's broken-cage art), and a new place for the streak number (off the moon).
 
 iOS note: an RN `Image` with `StyleSheet.absoluteFill` inside a Pressable drew at intrinsic size on
 iOS (Fabric); give such Images explicit width and height. RN `Image` takes no `pointerEvents` prop;
