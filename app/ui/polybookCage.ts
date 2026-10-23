@@ -1,30 +1,106 @@
-// Where the broken cage and its rope hang on the Polybook page (Pete, 2026-10-23). The art is
-// polybook_cage.webp (1290 x 1088): a rope across the top and the cage hanging from it by its ring.
-// It is placed from the page's own header, so it never lands on the POLYBOOK title or the book:
-// the ring sits just under the header at the right, over the room's window; the rope leaves the
-// top edge to the upper left and the right edge to the right.
+// The cage on the Polybook page (Pete, 2026-10-23). It hangs on a rope in the top-left corner; the first
+// time the Polybook is opened in an app launch, the book's thud shakes it loose, it falls, slams on the
+// floor and breaks into a dome and a base. Every later visit shows the pieces already lying there (and the
+// empty rope). All sizes are fractions of the page width, so every phone gets the same picture.
+//
+// Where it all sits comes from Pete's mockup (1290 x 2796) for the hanging cage and the rope, and from the
+// approved floor mock (750 x 1624) for the pieces. No sound for now.
 
-export const POLYBOOK_CAGE_ART = { w: 1290, h: 1088, ring: { x: 450, y: 360 } } as const;
-
-export const POLYBOOK_CAGE = {
-  /** Cage art width as a fraction of the page width (0.28 x 1290 / 750 on the phone it was mocked on). */
-  widthFraction: (0.28 * 1290) / 750,
-  /** The ring's horizontal position, as a fraction of the page width. */
-  ringX: 0.84,
-  /** The ring's distance below the header's bottom edge, as a fraction of the page width. */
-  ringBelowHeader: 13 / 750,
+/** The art, in pixels. `ring` is where the rope passes through the cage's ring (art is the mirrored cage). */
+export const POLYBOOK_CAGE_ART = {
+  rope: { w: 720, h: 330 },
+  hang: { w: 560, h: 641, ring: { x: 238, y: 43 } },
+  base: { w: 627, h: 436 },
+  /** The dome with its tilt already in the picture. */
+  dome: { w: 486, h: 463 },
 } as const;
 
-/** The cage image's rectangle in the page's own coordinates, from the page width and the header's bottom edge. */
-export function polybookCageRect(pageWidth: number, headerBottom: number) {
-  const width = POLYBOOK_CAGE.widthFraction * pageWidth;
-  const s = width / POLYBOOK_CAGE_ART.w;
-  const ringX = POLYBOOK_CAGE.ringX * pageWidth;
-  const ringY = headerBottom + POLYBOOK_CAGE.ringBelowHeader * pageWidth;
-  return {
-    left: ringX - POLYBOOK_CAGE_ART.ring.x * s,
-    top: ringY - POLYBOOK_CAGE_ART.ring.y * s,
-    width,
-    height: POLYBOOK_CAGE_ART.h * s,
+export const POLYBOOK_CAGE = {
+  /** The rope art's width, as a fraction of the page width (720 of the 1290 the mockup was drawn at). */
+  ropeWidthFraction: 720 / 1290,
+  hang: {
+    /** The cage art's width as a fraction of the page width. */
+    widthFraction: 448 / 1290,
+    /** The ring's place as fractions of the page width: from the left edge, and down from the top of the screen. */
+    ringX: 233 / 1290,
+    ringY: 305 / 1290,
+    /** The cage hangs tilted a little (degrees, negative = leaning to the right at the bottom). */
+    tiltDeg: -6.5,
+  },
+  floor: {
+    base: { widthFraction: 250 / 750, left: 12 / 750, bottomGap: 45 / 750 },
+    /** The dome art is 486 px wide, shown at 165/394 of that, as mocked. */
+    dome: { widthFraction: (486 * (165 / 394)) / 750, left: 300 / 750, bottomGap: 37 / 750 },
+  },
+  timing: {
+    /** After the thud: the cage jolts, then lets go. */
+    shakeAtMs: 120,
+    shakeMs: 240,
+    fallAtMs: 400,
+    fallMs: 380,
+    /** At the slam: the base squashes and settles, the dome hops out. */
+    settleMs: 220,
+    domeMs: 420,
+    /** Extra swing the jolt adds, in degrees. */
+    shakeDeg: 5,
+    /** The dome starts this far up and to the left (page widths) and tipped this much more (degrees). */
+    domeFromX: -0.05,
+    domeFromY: -0.09,
+    domeFromDeg: -40,
+  },
+} as const;
+
+type Rect = { left: number; top: number; width: number; height: number };
+
+export type PolybookCageLayout = {
+  rope: Rect;
+  hang: Rect & { originX: number; originY: number; tiltDeg: number };
+  base: Rect;
+  dome: Rect;
+  /** How far the whole cage falls so its bottom lands where the base's bottom sits. */
+  fallDistance: number;
+};
+
+/**
+ * Every rectangle in the screen's own coordinates, from the page width and the bottom of the content area
+ * (the floor strip is measured up from there, so the pieces sit under the book on every phone).
+ */
+export function polybookCageLayout(pageWidth: number, contentBottom: number): PolybookCageLayout {
+  const A = POLYBOOK_CAGE_ART;
+  const C = POLYBOOK_CAGE;
+  const ropeW = C.ropeWidthFraction * pageWidth;
+  const rope = { left: 0, top: 0, width: ropeW, height: (ropeW * A.rope.h) / A.rope.w };
+
+  const hangW = C.hang.widthFraction * pageWidth;
+  const hs = hangW / A.hang.w;
+  const originX = A.hang.ring.x * hs;
+  const originY = A.hang.ring.y * hs;
+  const hang = {
+    left: C.hang.ringX * pageWidth - originX,
+    top: C.hang.ringY * pageWidth - originY,
+    width: hangW,
+    height: A.hang.h * hs,
+    originX,
+    originY,
+    tiltDeg: C.hang.tiltDeg,
   };
+
+  const baseW = C.floor.base.widthFraction * pageWidth;
+  const baseH = (baseW * A.base.h) / A.base.w;
+  const baseBottom = contentBottom - C.floor.base.bottomGap * pageWidth;
+  const base = { left: C.floor.base.left * pageWidth, top: baseBottom - baseH, width: baseW, height: baseH };
+
+  const domeW = C.floor.dome.widthFraction * pageWidth;
+  const domeH = (domeW * A.dome.h) / A.dome.w;
+  const domeBottom = contentBottom - C.floor.dome.bottomGap * pageWidth;
+  const dome = { left: C.floor.dome.left * pageWidth, top: domeBottom - domeH, width: domeW, height: domeH };
+
+  return { rope, hang, base, dome, fallDistance: baseBottom - (hang.top + hang.height) };
 }
+
+/** True once the cage has fallen in this app launch (module scope = once per app open, like Home's moon). */
+let cageHasFallen = false;
+export const polybookCageHasFallen = () => cageHasFallen;
+export const markPolybookCageFallen = () => {
+  cageHasFallen = true;
+};

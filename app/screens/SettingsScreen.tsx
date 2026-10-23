@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import BottomNav, { bottomNavContentPadding } from '../components/BottomNav';
+import HomeButton from '../components/HomeButton';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { SETTINGS_SKY_TUNING } from '../ui/ambientSkyTuning';
 import { PollyFaceRigDevViewer } from '../components/PollyFaceRigDevViewer';
@@ -463,7 +463,9 @@ export default function SettingsScreen({ navigation }: Props) {
         body={PRIVACY_TEXT}
         onClose={() => setShowPrivacy(false)}
       />
-      <BottomNav active="Settings" navigation={navigation} />
+      <View style={styles.homeBand}>
+        <HomeButton navigation={navigation} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -476,7 +478,11 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: bottomNavContentPadding,
+    paddingBottom: 24,
+  },
+  homeBand: {
+    alignItems: 'center',
+    paddingVertical: 10,
   },
   header: {
     minHeight: 150,

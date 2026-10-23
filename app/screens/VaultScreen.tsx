@@ -2,7 +2,8 @@ import React, { useRef, useState } from "react";
 import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BottomNav from "../components/BottomNav";
+import HomeButton from "../components/HomeButton";
+import PolybookCage from "../components/PolybookCage";
 import { FONTS } from "../constants/fonts";
 import { PW } from "../ui/pwTheme";
 import { stageMaterial } from "../ui/pwMaterials";
@@ -17,7 +18,6 @@ import {
 } from "../components/ui/LexiconPrototype";
 import { PolybookSpread } from "../components/ui/PolybookSpread";
 import { TERRACE_BOOK_DIVE } from "../ui/homeTerraceDive";
-import { polybookCageRect } from "../ui/polybookCage";
 
 import { useGameStore } from "../store/useGameStore";
 import {
@@ -96,14 +96,18 @@ export default function VaultScreen({ navigation }: Props) {
   const rising = route.params?.polybookRiseFrom !== undefined;
   const chrome = useRef(new Animated.Value(rising ? 0 : 1)).current;
   const [pageWidth, setPageWidth] = useState(0);
-  const [headerBottom, setHeaderBottom] = useState(0);
-  const showPage = () =>
+  const [contentBottom, setContentBottom] = useState(0);
+  // True from the book's thud: the cage lets go (first visit of an app launch; PolybookCage decides).
+  const [cageFalling, setCageFalling] = useState(false);
+  const showPage = () => {
+    setCageFalling(true);
     Animated.timing(chrome, {
       toValue: 1,
       duration: TERRACE_BOOK_DIVE.pageFadeMs,
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     }).start();
+  };
   const progress = useGameStore((state) => state.progress);
   const ghosts = useGameStore((state) => state.ghosts);
   const pollyMemory = useGameStore((state) => state.pollyMemory);
@@ -350,25 +354,12 @@ export default function VaultScreen({ navigation }: Props) {
 
       <View
         style={styles.content}
-        onLayout={(e) => setPageWidth(e.nativeEvent.layout.width)}
+        onLayout={(e) => {
+          setPageWidth(e.nativeEvent.layout.width);
+          setContentBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height);
+        }}
       >
-        {/* The broken cage and rope hang in the room's window, placed from the header so they never touch
-            the title or the book (Pete, 2026-10-23). */}
-        {pageWidth > 0 && headerBottom > 0 ? (
-          <Animated.Image
-            source={require("../../assets/images/polybook/polybook_cage.webp")}
-            resizeMode="stretch"
-            style={[
-              styles.cageArt,
-              { opacity: chrome },
-              polybookCageRect(pageWidth, headerBottom),
-            ]}
-          />
-        ) : null}
-        <Animated.View
-          style={{ opacity: chrome }}
-          onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
-        >
+        <Animated.View style={{ opacity: chrome }}>
           <View style={styles.headerContainer}>
             <Text style={styles.title}>POLYBOOK</Text>
 
@@ -401,8 +392,21 @@ export default function VaultScreen({ navigation }: Props) {
         </View>
       </View>
 
-      <Animated.View style={{ opacity: chrome }}>
-        <BottomNav active="Vault" navigation={navigation} />
+      {/* The rope and the cage (Pete, 2026-10-23): hanging top left, falling on the first visit of an app
+          launch, lying broken on the floor after. In front of the page, fading in with it, never touchable. */}
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: chrome }]}>
+        <PolybookCage
+          canFall={rising}
+          falling={cageFalling}
+          pageWidth={pageWidth}
+          contentBottom={contentBottom}
+        />
+      </Animated.View>
+
+      {/* The old bottom nav is gone (Pete, 2026-10-23); this band keeps its height so the book does not move,
+          and the room's floor shows through it. */}
+      <Animated.View style={[styles.homeBand, { opacity: chrome }]}>
+        <HomeButton navigation={navigation} />
       </Animated.View>
 
     </SafeAreaView>
@@ -421,7 +425,8 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
 
-  cageArt: { position: "absolute", pointerEvents: "none" },
+  // 86 = what the bottom nav took (8 + 66 + 12): the book stays where it was.
+  homeBand: { height: 86, alignItems: "center", justifyContent: "center" },
 
   // An explicit size, as GraphicGround's wall has: with only absoluteFill the painting drew at its own pixel
   // size (1285 wide) from the top-left corner, about 3.4 times too big (Pete's phone, 2026-10-23).
