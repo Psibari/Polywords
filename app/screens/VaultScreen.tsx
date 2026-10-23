@@ -343,7 +343,7 @@ export default function VaultScreen({ navigation }: Props) {
       >
         <Image
           source={require("../../assets/images/polybook/polybook_room_bg.webp")}
-          style={StyleSheet.absoluteFill}
+          style={styles.roomBg}
           resizeMode="cover"
         />
       </Animated.View>
@@ -422,6 +422,10 @@ const styles = StyleSheet.create({
   },
 
   cageArt: { position: "absolute", pointerEvents: "none" },
+
+  // An explicit size, as GraphicGround's wall has: with only absoluteFill the painting drew at its own pixel
+  // size (1285 wide) from the top-left corner, about 3.4 times too big (Pete's phone, 2026-10-23).
+  roomBg: { width: "100%", height: "100%" },
 
   headerContainer: {
     paddingHorizontal: PW.space.screenX,

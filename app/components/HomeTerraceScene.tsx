@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { playSfx } from '../audio/sfx';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
@@ -635,11 +634,11 @@ function Slab(p: SlabProps) {
   }, [tagsOn, tagPulse]);
   // Held pop, the Daily answer block's own (DailyAnswerCard): pressed, the button stands out of the
   // console (top face, wall shadow, a little larger); released, it settles back.
+  // No sound on press: Pete removed the press cue from the terrace buttons (2026-10-23); the dives have their own.
   const grip = useRef(new Animated.Value(0)).current;
   const popIn = () => {
     grip.stopAnimation();
     Animated.timing(grip, { toValue: 1, duration: dailyCardMaterial.motion.pressInMs, useNativeDriver: true }).start();
-    playSfx('pressHoldStart');
   };
   const popOut = () => {
     grip.stopAnimation();
