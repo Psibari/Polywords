@@ -432,22 +432,6 @@ export function HomeTerraceScene(props: Props) {
           Polybook page.) */}
       <Image source={ART.logo} accessibilityLabel="POLYWORDS" style={[styles.img, rects.logo]} resizeMode="contain" />
 
-      {/* Settings: Pete's gold gear, bottom-left, never on top. The same size as every round icon button, centred on
-          the gear's old spot and kept on screen. */}
-      <UiIconButton
-        kind="settings"
-        accessibilityLabel="Open Settings"
-        onPress={props.onSettings}
-        style={[
-          styles.abs,
-          {
-            left: Math.max(8, rects.gear.left + rects.gear.width / 2 - UI_ICON_BUTTON_SIZE / 2),
-            top: rects.gear.top + rects.gear.height / 2 - UI_ICON_BUTTON_SIZE / 2,
-          },
-          hitDebug,
-        ]}
-      />
-
       {/* The one stone console: casing, opening, two buttons. It trembles with the wall. */}
       <Animated.View pointerEvents="box-none" collapsable={false} style={trembleLayer}>
         <View
@@ -528,6 +512,24 @@ export function HomeTerraceScene(props: Props) {
           />
         </View>
       </Animated.View>
+
+      {/* Settings: Pete's gold gear, bottom-left. The same size as every round icon button. It sits on
+          the floor just below the console's bottom edge: the old spot (centred on the gear's rect) was half behind
+          the casing (Pete's phone, 2026-10-23). It is drawn AFTER the console so the console's shadow strip, which spills onto the floor, does not darken it
+          (Pete: the gear is not part of that shadow); it does not overlap the console itself. */}
+      <UiIconButton
+        kind="settings"
+        accessibilityLabel="Open Settings"
+        onPress={props.onSettings}
+        style={[
+          styles.abs,
+          {
+            left: 14,
+            top: Math.min(casing.top + casing.height + 4, height - UI_ICON_BUTTON_SIZE - 8),
+          },
+          hitDebug,
+        ]}
+      />
 
       {props.selected ? (
         <View
