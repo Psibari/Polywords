@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import UiIconButton from '../components/UiIconButton';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -695,32 +696,12 @@ const tb = StyleSheet.create({
   // buttons (styles.devBossOverlay, right: 10, bottom: 10) rather than
   // overlapping them. This is meant to be the pause button's permanent home
   // once those dev buttons are removed, not a temporary parking spot.
+  // Pete's gold pause icon, the same size as every round icon button (ui/uiIconButton.ts).
   pauseBtn: {
     position: 'absolute',
     right: 10,
     bottom: 74,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
     zIndex: 200,
-  },
-  pausePressed: {
-    opacity: 0.7,
-  },
-  pauseBars: {
-    flexDirection: 'row',
-    gap: 3.5,
-  },
-  pauseBar: {
-    width: 3.5,
-    height: 13,
-    borderRadius: 1.5,
-    backgroundColor: PW.color.softWhite,
   },
   controlTarget: {
     flex: 1,
@@ -1533,22 +1514,16 @@ function GameDirector({ navigation }: { navigation: any }) {
         />
       )}
       {!isDone && (
-        <Pressable
+        <UiIconButton
           {...a11yHiddenProps(hudLessonShowing)}
-          accessibilityRole="button"
+          kind="pause"
           accessibilityLabel="Pause the Hunt"
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             navigation.goBack();
           }}
-          style={({ pressed }) => [tb.pauseBtn, pressed && tb.pausePressed]}
-          hitSlop={8}
-        >
-          <View style={tb.pauseBars}>
-            <View style={tb.pauseBar} />
-            <View style={tb.pauseBar} />
-          </View>
-        </Pressable>
+          style={tb.pauseBtn}
+        />
       )}
       {isDone ? (
         <ResultsScreen onRestart={handleRestart} onHome={handleHome} />

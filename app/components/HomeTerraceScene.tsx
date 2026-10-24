@@ -14,6 +14,8 @@ import {
 } from '../ui/homeTerraceDive';
 import { TerraceMoonPhase, terraceMoonRiseDistance, terraceMoonSprite, terraceSkyHeight } from '../ui/homeTerraceSky';
 import { TerraceShootingStars } from './TerraceShootingStars';
+import UiIconButton from './UiIconButton';
+import { UI_ICON_BUTTON_SIZE } from '../ui/uiIconButton';
 import { dailyCardMaterial, dailyCastlePlaqueMaterial } from '../ui/pwDailyMaterials';
 import {
   DAILY_PLAQUE_DROP,
@@ -430,23 +432,21 @@ export function HomeTerraceScene(props: Props) {
           Polybook page.) */}
       <Image source={ART.logo} accessibilityLabel="POLYWORDS" style={[styles.img, rects.logo]} resizeMode="contain" />
 
-      {/* Settings gear, bottom-left, never on top. */}
-      <Pressable
-        accessibilityRole="button"
+      {/* Settings: Pete's gold gear, bottom-left, never on top. The same size as every round icon button, centred on
+          the gear's old spot and kept on screen. */}
+      <UiIconButton
+        kind="settings"
         accessibilityLabel="Open Settings"
         onPress={props.onSettings}
-        style={[styles.abs, styles.gear, rects.gear, hitDebug]}
-      >
-        <Svg width={26 * k} height={26 * k} viewBox="0 0 24 24" fill="none" opacity={0.75}>
-          <Circle cx={12} cy={12} r={3.2} stroke="#B7ACDC" strokeWidth={2} />
-          <Path
-            d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"
-            stroke="#B7ACDC"
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-        </Svg>
-      </Pressable>
+        style={[
+          styles.abs,
+          {
+            left: Math.max(8, rects.gear.left + rects.gear.width / 2 - UI_ICON_BUTTON_SIZE / 2),
+            top: rects.gear.top + rects.gear.height / 2 - UI_ICON_BUTTON_SIZE / 2,
+          },
+          hitDebug,
+        ]}
+      />
 
       {/* The one stone console: casing, opening, two buttons. It trembles with the wall. */}
       <Animated.View pointerEvents="box-none" collapsable={false} style={trembleLayer}>

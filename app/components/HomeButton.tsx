@@ -1,7 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
-import { FONTS } from "../constants/fonts";
-import { PW } from "../ui/pwTheme";
+import UiIconButton from "./UiIconButton";
 
 type HomeButtonProps = {
   navigation: any;
@@ -15,36 +13,10 @@ type HomeButtonProps = {
  */
 export default function HomeButton({ navigation }: HomeButtonProps) {
   return (
-    <Pressable
-      accessibilityRole="button"
+    <UiIconButton
+      kind="home"
       accessibilityLabel="Go home"
       onPress={() => navigation.navigate("Home", undefined, { pop: true })}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-    >
-      <Text style={styles.text}>HOME</Text>
-    </Pressable>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    minHeight: 44,
-    paddingHorizontal: 34,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(15,13,42,0.72)",
-    borderWidth: 1,
-    borderColor: PW.color.purpleSoft,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-  text: {
-    color: PW.color.softWhite,
-    fontFamily: FONTS.hud,
-    includeFontPadding: false,
-    fontSize: 15,
-    letterSpacing: 2,
-  },
-});

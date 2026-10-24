@@ -205,7 +205,7 @@ resting spot, then the page (background, header, bottom nav) fades in. Rules tha
 - All Home layers sit in one "world" Animated.View that is scaled during a dive; the gold flash is outside it.
 - `App.tsx` opens `Vault` as `transparentModal` with `animation: 'none'` only when route param
   `polybookRiseFrom` is set; every other way in is the ordinary fade.
-- React Navigation 7: a plain `navigate` PUSHES a new screen. `BottomNav` sends Home with `{ pop: true }` so
+- React Navigation 7: a plain `navigate` PUSHES a new screen. `HomeButton` sends Home with `{ pop: true }` so
   it returns to the existing Home (a second Home had let the Polybook header show through).
 - Stale DEV overrides in AsyncStorage can make Home look wrong; "Reset all" in the positioner clears them.
 
@@ -214,7 +214,7 @@ Polly falling in from the top (`TERRACE_POLLY_DROP`, `terracePollyDropDistance`)
 sounds named in `TERRACE_DIVE_SFX` (Epic Swoosh on Hunt and Daily, Super Cape on the Polybook rise, book thud on landing,
 `terraceStoneShift` when the buttons retreat; credits in `assets/audio/LICENSES.md`). The cage is OFF Home; it is a static
 prop on the Polybook page (`app/ui/polybookCage.ts`).
-Polybook cage BUILT 2026-10-23 (`app/components/PolybookCage.tsx`, layout and timings in `app/ui/polybookCage.ts`, from Pete's mockup): rope top-left, mirrored cage hanging tilted; the first Polybook open of an app launch the book's thud jolts it, it falls and breaks into dome + base; later visits show the pieces already on the floor, BELOW the open book either side of the HOME button (the open book is far bigger than the closed cover). Reduced motion shows it broken. The slam plays `polybookCageCrash` (Pete's "Metallic Clang", Pixabay, credited in `assets/audio/LICENSES.md`). Fall and sound confirmed on Pete's phone 2026-10-23. Polybook and Settings have NO bottom nav any more: `app/components/HomeButton.tsx` (HOME pill) replaces it; `BottomNav.tsx` is now unused (delete when Pete says). The old `polybook_cage.webp` is unused too. The streak moved to the Daily HUD, hidden at 0 and on phones where it would cover the first clue (`dailyStreakLineFits`).
+Polybook cage BUILT 2026-10-23 (`app/components/PolybookCage.tsx`, layout and timings in `app/ui/polybookCage.ts`, from Pete's mockup): rope top-left, mirrored cage hanging tilted; the first Polybook open of an app launch the book's thud jolts it, it falls and breaks into dome + base; later visits show the pieces already on the floor, BELOW the open book either side of the HOME button (the open book is far bigger than the closed cover). Reduced motion shows it broken. The slam plays `polybookCageCrash` (Pete's "Metallic Clang", Pixabay, credited in `assets/audio/LICENSES.md`). Fall and sound confirmed on Pete's phone 2026-10-23. Polybook and Settings have NO bottom nav any more: `app/components/HomeButton.tsx` (Pete's round gold HOME icon) replaces it (`BottomNav.tsx` and the old `polybook_cage.webp` were deleted 2026-10-23). The streak moved to the Daily HUD, hidden at 0 and on phones where it would cover the first clue (`dailyStreakLineFits`).
 
 iOS note: an RN `Image` with `StyleSheet.absoluteFill` inside a Pressable drew at intrinsic size on
 iOS (Fabric); give such Images explicit width and height. RN `Image` takes no `pointerEvents` prop;
@@ -383,3 +383,4 @@ Architecture only:
   Adding any network, analytics, crash-reporting or ads SDK requires updating both `PRIVACY_TEXT`
   in `SettingsScreen.tsx` and `gh-pages:privacy/index.html` in the same release, plus the App
   Store privacy answers.
+Round gold icon buttons (Pete drew them 2026-10-23): `app/components/UiIconButton.tsx`, art `assets/images/ui/icon_{home,pause,settings}.webp`, ONE size everywhere (`UI_ICON_BUTTON_SIZE` 44 pt, `app/ui/uiIconButton.ts`). Used for the Home settings gear (bottom-left), the Hunt pause (bottom-right) and the HOME button on Polybook and Settings. Results/Daily keep their text HOME links.
