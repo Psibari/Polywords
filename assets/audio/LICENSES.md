@@ -49,3 +49,12 @@ POLYWORDS edits: files renamed only; audio content is unmodified.
 POLYWORDS edits: polybook_thud.mp3 is renamed only. terrace_whoosh_cape.mp3 is the first
 0.95 s of the source with a 0.2 s fade-out (the rest of the 6 s file is silence).
 terrace_whoosh_epic.mp3 is the first 3.2 s of the source with a 0.4 s fade-out.
+
+## Sound effects added 2026-10-23 (evening)
+
+- `sfx/polybook_cage_crash.mp3`: "Metallic Clang" by freesound_community (file name
+  `freesound_community-metallic-clang-100473.mp3`, which is Pixabay's naming; Pete to confirm the source page
+  and licence, not checked).
+
+POLYWORDS edits: polybook_cage_crash.mp3 is the first 1.4 s of the source with a 0.6 s fade-out (the source
+rings on at a steady level and ends abruptly at 1.7 s).

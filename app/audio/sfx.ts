@@ -51,6 +51,8 @@ export type SfxName =
   | 'terraceWhooshCape'
   | 'terraceWhooshEpic'
   | 'polybookThud'
+  // The Polybook cage hitting the floor and breaking (Pete supplied it, 2026-10-23).
+  | 'polybookCageCrash'
   // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
   // below. Uncomment together with the matching entries in SFX and the
   // guarded call sites in DailyChallengeScreen.tsx once the files land.
@@ -180,6 +182,7 @@ const SFX: Record<SfxName, SfxConfig> = {
   terraceWhooshCape: { source: require('../../assets/audio/sfx/terrace_whoosh_cape.mp3'), volume: 0.40, cooldownMs: 400 },
   terraceWhooshEpic: { source: require('../../assets/audio/sfx/terrace_whoosh_epic.mp3'), volume: 0.33, cooldownMs: 400 },
   polybookThud: { source: require('../../assets/audio/sfx/polybook_thud.mp3'), volume: 0.50, cooldownMs: 400 },
+  polybookCageCrash: { source: require('../../assets/audio/sfx/polybook_cage_crash.mp3'), volume: 0.45, cooldownMs: 400 },
   dailyStoneSeat1: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat2: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat3: DAILY_STONE_SEAT_SFX,
@@ -483,7 +486,7 @@ export function warmDailyPlaqueEntranceSfx(): void {
 
 /** Warms the terrace Home's entrance grind, the three row thuds it reuses from the Daily, and the dive sounds. */
 export function warmTerraceEntranceSfx(): void {
-  warmSfx(['terraceStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES, 'terraceWhooshCape', 'terraceWhooshEpic', 'polybookThud']);
+  warmSfx(['terraceStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES, 'terraceWhooshCape', 'terraceWhooshEpic', 'polybookThud', 'polybookCageCrash']);
 }
 
 export function sfxReady(): Promise<void> {

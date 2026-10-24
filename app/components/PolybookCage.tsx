@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet } from "react-native";
+import { playSfx } from "../audio/sfx";
 import { useReducedMotionPreference } from "../hooks/usePollyAmbientMotion";
 import {
   POLYBOOK_CAGE,
@@ -45,6 +46,9 @@ export default function PolybookCage({ canFall, falling, pageWidth, contentBotto
   const domeY = useRef(new Animated.Value(0)).current;
   const domeTurn = useRef(new Animated.Value(0)).current;
   const started = useRef(false);
+  // The fall waits for the hanging picture to be on screen. In Expo Go the art arrives over the network and can land
+  // after the thud, which let the cage fall before anyone saw it (Pete's phone, 2026-10-23).
+  const [hangReady, setHangReady] = useState(false);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
 
@@ -57,7 +61,7 @@ export default function PolybookCage({ canFall, falling, pageWidth, contentBotto
   }, [reduceMotion, phase]);
 
   useEffect(() => {
-    if (!falling || phaseRef.current !== "hanging" || reduceMotion !== false || started.current) return;
+    if (!falling || !hangReady || phaseRef.current !== "hanging" || reduceMotion !== false || started.current) return;
     started.current = true;
     markPolybookCageFallen();
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -85,6 +89,8 @@ export default function PolybookCage({ canFall, falling, pageWidth, contentBotto
     });
     // ...and breaks on the floor: the base squashes and settles, the dome hops out.
     at(T.fallAtMs + T.fallMs, () => {
+      // The crash, the instant it lands.
+      playSfx("polybookCageCrash");
       squash.setValue(0.86);
       domeX.setValue(T.domeFromX * pageWidthRef.current);
       domeY.setValue(T.domeFromY * pageWidthRef.current);
@@ -103,7 +109,7 @@ export default function PolybookCage({ canFall, falling, pageWidth, contentBotto
     // Only the screen leaving clears these: the slam changes `phase`, and that must not cancel the pieces' own start.
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [falling, reduceMotion]);
+  }, [falling, hangReady, reduceMotion]);
 
   if (!(pageWidth > 0 && contentBottom > 0)) return null;
   const L = layout;
@@ -119,6 +125,7 @@ export default function PolybookCage({ canFall, falling, pageWidth, contentBotto
         <Animated.Image
           source={require("../../assets/images/polybook/polybook_cage_hang.webp")}
           resizeMode="stretch"
+          onLoad={() => setHangReady(true)}
           style={[
             styles.art,
             {
@@ -126,7 +133,9 @@ export default function PolybookCage({ canFall, falling, pageWidth, contentBotto
               top: L.hang.top,
               width: L.hang.width,
               height: L.hang.height,
-              transformOrigin: `${L.hang.originX}px ${L.hang.originY}px`,
+              // An array, not a string: React Native's string parser (processTransformOrigin) cannot read decimals, so
+              // "58.4px 10.5px" became (4px, 5px) of nonsense and threw the cage off the screen.
+              transformOrigin: [L.hang.originX, L.hang.originY, 0],
               transform: [{ translateY: drop }, { rotate: swing.interpolate(DEG) }],
             },
           ]}

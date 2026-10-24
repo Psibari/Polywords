@@ -33,10 +33,13 @@ export const POLYBOOK_CAGE = {
     dome: { widthFraction: (486 * (165 / 394)) / 750, left: 300 / 750, bottomGap: 37 / 750 },
   },
   timing: {
-    /** After the thud: the cage jolts, then lets go. */
-    shakeAtMs: 120,
+    /**
+     * Counted from the thud. The page (and the cage with it) fades in over 350 ms after the thud, so the cage
+     * hangs in plain view for a beat (to about 700 ms), jolts, and then lets go.
+     */
+    shakeAtMs: 700,
     shakeMs: 240,
-    fallAtMs: 400,
+    fallAtMs: 1000,
     fallMs: 380,
     /** At the slam: the base squashes and settles, the dome hops out. */
     settleMs: 220,
