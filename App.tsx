@@ -9,7 +9,6 @@ import HomeTerraceScreen from './app/screens/HomeTerraceScreen';
 import GameScreen from './app/screens/GameScreen';
 import VaultScreen from './app/screens/VaultScreen';
 import SettingsScreen from './app/screens/SettingsScreen';
-import DevSettingsScreen from './app/screens/DevSettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import DevResultsPreviewScreen from './app/screens/DevResultsPreviewScreen';
 import DevRematchOutcomePreviewScreen from './app/screens/DevRematchOutcomePreviewScreen';
@@ -120,7 +119,7 @@ export default function App() {
                   : {}
               }
             />
-            <Stack.Screen name="Settings" component={__DEV__ ? DevSettingsScreen : SettingsScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Daily" component={DailyChallengeScreen} />
             {/* The old Home, parked (Pete, 2026-10-21: the terrace is the Home). DEV-only, for comparison. */}
             {__DEV__ && <Stack.Screen name="HomeOld" component={HomeScreen} />}
