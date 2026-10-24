@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Animated, Easing, Image, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Image, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import HomeButton from "../components/HomeButton";
@@ -95,6 +95,7 @@ export default function VaultScreen({ navigation }: Props) {
   const route = useRoute<any>();
   const rising = route.params?.polybookRiseFrom !== undefined;
   const chrome = useRef(new Animated.Value(rising ? 0 : 1)).current;
+  const { height: windowHeight } = useWindowDimensions();
   const [pageWidth, setPageWidth] = useState(0);
   const [contentBottom, setContentBottom] = useState(0);
   // True from the book's thud: the cage lets go (first visit of an app launch; PolybookCage decides).
@@ -399,6 +400,7 @@ export default function VaultScreen({ navigation }: Props) {
           canFall={rising}
           falling={cageFalling}
           pageWidth={pageWidth}
+          pageHeight={windowHeight}
           contentBottom={contentBottom}
         />
       </Animated.View>

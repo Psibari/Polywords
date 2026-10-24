@@ -3,8 +3,10 @@
 // floor and breaks into a dome and a base. Every later visit shows the pieces already lying there (and the
 // empty rope). All sizes are fractions of the page width, so every phone gets the same picture.
 //
-// Where it all sits comes from Pete's mockup (1290 x 2796) for the hanging cage and the rope, and from the
-// approved floor mock (750 x 1624) for the pieces. No sound for now.
+// Where it all sits comes from Pete's mockup (1290 x 2796) for the hanging cage and the rope. The pieces lie
+// on the floor BELOW the book area, either side of the HOME button (750 x 1624 mock, Pete's "perfect"): the
+// open book is far bigger than the closed cover and covers anything placed beside the cover.
+// The crash sound is `polybookCageCrash`, played by PolybookCage at the slam.
 
 /** The art, in pixels. `ring` is where the rope passes through the cage's ring (art is the mirrored cage). */
 export const POLYBOOK_CAGE_ART = {
@@ -28,9 +30,12 @@ export const POLYBOOK_CAGE = {
     tiltDeg: -6.5,
   },
   floor: {
-    base: { widthFraction: 250 / 750, left: 12 / 750, bottomGap: 45 / 750 },
+    /** `topGap`: the piece's top edge below the book area's bottom edge. Both are fractions of the page width. */
+    base: { widthFraction: 250 / 750, left: 12 / 750, topGap: 21 / 750 },
     /** The dome art is 486 px wide, shown at 165/394 of that, as mocked. */
-    dome: { widthFraction: (486 * (165 / 394)) / 750, left: 300 / 750, bottomGap: 37 / 750 },
+    dome: { widthFraction: (486 * (165 / 394)) / 750, left: 520 / 750, topGap: 6 / 750 },
+    /** The lowest a piece may reach: this far above the screen's bottom edge (short phones with no bottom inset). */
+    screenMargin: 20 / 750,
   },
   timing: {
     /**
@@ -65,10 +70,14 @@ export type PolybookCageLayout = {
 };
 
 /**
- * Every rectangle in the screen's own coordinates, from the page width and the bottom of the content area
- * (the floor strip is measured up from there, so the pieces sit under the book on every phone).
+ * Every rectangle in the screen's own coordinates, from the page width, the screen height and the bottom of
+ * the content area (the pieces are measured down from there, so they sit under the open book on every phone).
  */
-export function polybookCageLayout(pageWidth: number, contentBottom: number): PolybookCageLayout {
+export function polybookCageLayout(
+  pageWidth: number,
+  pageHeight: number,
+  contentBottom: number,
+): PolybookCageLayout {
   const A = POLYBOOK_CAGE_ART;
   const C = POLYBOOK_CAGE;
   const ropeW = C.ropeWidthFraction * pageWidth;
@@ -90,13 +99,15 @@ export function polybookCageLayout(pageWidth: number, contentBottom: number): Po
 
   const baseW = C.floor.base.widthFraction * pageWidth;
   const baseH = (baseW * A.base.h) / A.base.w;
-  const baseBottom = contentBottom - C.floor.base.bottomGap * pageWidth;
-  const base = { left: C.floor.base.left * pageWidth, top: baseBottom - baseH, width: baseW, height: baseH };
+  const lowest = pageHeight - C.floor.screenMargin * pageWidth;
+  const baseTop = Math.min(contentBottom + C.floor.base.topGap * pageWidth, lowest - baseH);
+  const baseBottom = baseTop + baseH;
+  const base = { left: C.floor.base.left * pageWidth, top: baseTop, width: baseW, height: baseH };
 
   const domeW = C.floor.dome.widthFraction * pageWidth;
   const domeH = (domeW * A.dome.h) / A.dome.w;
-  const domeBottom = contentBottom - C.floor.dome.bottomGap * pageWidth;
-  const dome = { left: C.floor.dome.left * pageWidth, top: domeBottom - domeH, width: domeW, height: domeH };
+  const domeTop = Math.min(contentBottom + C.floor.dome.topGap * pageWidth, lowest - domeH);
+  const dome = { left: C.floor.dome.left * pageWidth, top: domeTop, width: domeW, height: domeH };
 
   return { rope, hang, base, dome, fallDistance: baseBottom - (hang.top + hang.height) };
 }

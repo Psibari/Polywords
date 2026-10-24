@@ -15,7 +15,8 @@ type PolybookCageProps = {
   /** Turns true when the book has landed (its thud): the cage jolts and falls. */
   falling: boolean;
   pageWidth: number;
-  /** The bottom of the page's content area, in the screen's own coordinates. The floor pieces rest above it. */
+  pageHeight: number;
+  /** The bottom of the page's content area, in the screen's own coordinates. The floor pieces lie below it. */
   contentBottom: number;
 };
 
@@ -27,9 +28,9 @@ const DEG = { inputRange: [-90, 90], outputRange: ["-90deg", "90deg"] };
  * lying broken on the floor on every later one (Pete, 2026-10-23). Sizes and timings: ui/polybookCage.ts.
  * Everything animated here is a transform, so it all runs on the native driver. No sound for now.
  */
-export default function PolybookCage({ canFall, falling, pageWidth, contentBottom }: PolybookCageProps) {
+export default function PolybookCage({ canFall, falling, pageWidth, pageHeight, contentBottom }: PolybookCageProps) {
   const reduceMotion = useReducedMotionPreference();
-  const layout = polybookCageLayout(pageWidth, contentBottom);
+  const layout = polybookCageLayout(pageWidth, pageHeight, contentBottom);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
   const pageWidthRef = useRef(pageWidth);
@@ -111,7 +112,7 @@ export default function PolybookCage({ canFall, falling, pageWidth, contentBotto
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [falling, hangReady, reduceMotion]);
 
-  if (!(pageWidth > 0 && contentBottom > 0)) return null;
+  if (!(pageWidth > 0 && pageHeight > 0 && contentBottom > 0)) return null;
   const L = layout;
 
   return (

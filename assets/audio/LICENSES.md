@@ -52,9 +52,9 @@ terrace_whoosh_epic.mp3 is the first 3.2 s of the source with a 0.4 s fade-out.
 
 ## Sound effects added 2026-10-23 (evening)
 
-- `sfx/polybook_cage_crash.mp3`: "Metallic Clang" by freesound_community (file name
-  `freesound_community-metallic-clang-100473.mp3`, which is Pixabay's naming; Pete to confirm the source page
-  and licence, not checked).
+- `sfx/polybook_cage_crash.mp3`: "Metallic Clang" by eben-frostey (Freesound), uploaded to Pixabay by
+  freesound_community, Pixabay Content License.
+  https://pixabay.com/sound-effects/metallic-clang-100473/
 
 POLYWORDS edits: polybook_cage_crash.mp3 is the first 1.4 s of the source with a 0.6 s fade-out (the source
 rings on at a steady level and ends abruptly at 1.7 s).

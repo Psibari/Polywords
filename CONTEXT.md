@@ -304,5 +304,5 @@ Preserve every stash and unrelated worktree change. Pete's local art is his; do 
 untracked/local art without approval. No branch merges without Pete's approval.
 
 ## 2026-10-23 (evening): Polybook cage and bottom nav
-- Cage built from Pete's mockup (see CLAUDE.md): rope + mirrored cage top-left, falls on the book's thud the first Polybook open per app launch, broken on the floor after. Fall confirmed on Pete's phone. Crash sound added (`polybookCageCrash`, plays at the slam); pending: hearing it, and confirming its licence source.
+- Cage built from Pete's mockup (see CLAUDE.md): rope + mirrored cage top-left, falls on the book's thud the first Polybook open per app launch, broken on the floor after. Fall and crash sound (`polybookCageCrash`, plays at the slam) confirmed on Pete's phone..
 - Bottom nav removed from Polybook and Settings; HOME button added to both (`HomeButton.tsx`). The Polybook keeps the nav's 86 pt bottom band so the book did not move; Pete can reclaim it. Open: delete `BottomNav.tsx` and the old `polybook_cage.webp`.
