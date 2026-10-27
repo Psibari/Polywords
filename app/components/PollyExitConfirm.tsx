@@ -1,14 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Haptics } from '../utils/haptics';
 import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
-import { POLLY_LINES } from '../game/pollyCharacter';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 
-// Guards a mid-Hunt exit (back gesture, hardware back, or nav away) behind
-// a real choice — never a system "are you sure?" dialog. Losing the run is
-// framed as Polly's win, not an app warning.
+const POLLY_QUIT = require('../../assets/images/polly/polly_quit_smug.png');
 
 type Props = {
   onStay: () => void;
@@ -17,21 +14,60 @@ type Props = {
 
 export function PollyExitConfirm({ onStay, onLeave }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.94)).current;
+  const cardScale = useRef(new Animated.Value(0.97)).current;
+  const pollyY = useRef(new Animated.Value(34)).current;
+  const pollyScale = useRef(new Animated.Value(0.96)).current;
+  const bubbleOpacity = useRef(new Animated.Value(0)).current;
   const reduceMotion = useReducedMotionPreference();
 
   useEffect(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     if (reduceMotion !== false) {
       opacity.setValue(1);
-      scale.setValue(1);
+      cardScale.setValue(1);
+      pollyY.setValue(0);
+      pollyScale.setValue(1);
+      bubbleOpacity.setValue(1);
       return;
     }
+
     Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1, damping: 14, stiffness: 260, useNativeDriver: true }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 170,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardScale, {
+        toValue: 1,
+        damping: 17,
+        stiffness: 250,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pollyY, {
+        toValue: 0,
+        damping: 12,
+        stiffness: 270,
+        mass: 0.75,
+        useNativeDriver: true,
+      }),
+      Animated.spring(pollyScale, {
+        toValue: 1,
+        damping: 13,
+        stiffness: 280,
+        mass: 0.75,
+        useNativeDriver: true,
+      }),
+      Animated.sequence([
+        Animated.delay(80),
+        Animated.timing(bubbleOpacity, {
+          toValue: 1,
+          duration: 140,
+          useNativeDriver: true,
+        }),
+      ]),
     ]).start();
-  }, [opacity, scale, reduceMotion]);
+  }, [bubbleOpacity, cardScale, opacity, pollyScale, pollyY, reduceMotion]);
 
   function handleStay() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -44,32 +80,55 @@ export function PollyExitConfirm({ onStay, onLeave }: Props) {
   }
 
   return (
-    <Animated.View style={[ec.root, { opacity }]}>
-      <Animated.View style={[ec.card, { transform: [{ scale }] }]}>
-        <Text style={ec.kicker}>LEAVING THE HUNT?</Text>
-        <Text style={ec.pollyLine}>“{POLLY_LINES.huntAbandonTaunt}”</Text>
-        <Text style={ec.body}>
-          Leave now and this run ends. Your score and remaining feathers are lost.
-        </Text>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Keep hunting"
-          onPress={handleStay}
-          style={({ pressed }) => [ec.stayBtn, pressed && ec.stayPressed]}
+    <Animated.View
+      style={[ec.root, { opacity }]}
+      accessibilityViewIsModal
+      onAccessibilityEscape={handleStay}
+    >
+      <View style={ec.stage}>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            ec.pollyWrap,
+            { transform: [{ translateY: pollyY }, { scale: pollyScale }] },
+          ]}
         >
-          <Text style={ec.stayLabel}>KEEP HUNTING</Text>
-        </Pressable>
+          <Image source={POLLY_QUIT} resizeMode="contain" style={ec.polly} />
+        </Animated.View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Leave the hunt and forfeit this run"
-          onPress={handleLeave}
-          style={({ pressed }) => [ec.leaveBtn, pressed && ec.leavePressed]}
+        <Animated.View
+          pointerEvents="none"
+          style={[ec.speechBubble, { opacity: bubbleOpacity }]}
         >
-          <Text style={ec.leaveLabel}>LEAVE THE HUNT</Text>
-        </Pressable>
-      </Animated.View>
+          <Text style={ec.speechText}>See you later,{'\n'}LOSER.</Text>
+          <View style={ec.speechTail} />
+        </Animated.View>
+
+        <Animated.View style={[ec.card, { transform: [{ scale: cardScale }] }]}>
+          <Text style={ec.kicker}>LEAVING THE HUNT?</Text>
+          <Text style={ec.body}>
+            Leave now and this run ends. Your score and remaining feathers are lost.
+          </Text>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Keep hunting"
+            onPress={handleStay}
+            style={({ pressed }) => [ec.stayBtn, pressed && ec.stayPressed]}
+          >
+            <Text style={ec.stayLabel}>KEEP HUNTING</Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Leave the hunt and forfeit this run"
+            onPress={handleLeave}
+            style={({ pressed }) => [ec.leaveBtn, pressed && ec.leavePressed]}
+          >
+            <Text style={ec.leaveLabel}>LEAVE THE HUNT</Text>
+          </Pressable>
+        </Animated.View>
+      </View>
     </Animated.View>
   );
 }
@@ -83,68 +142,111 @@ const ec = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
   },
-  card: {
+  stage: {
     width: '100%',
     maxWidth: 400,
-    borderRadius: PW.radius.lg,
+    paddingTop: 116,
+    position: 'relative',
+  },
+  card: {
+    width: '100%',
+    borderRadius: PW.radius.xl,
     borderWidth: 1.5,
-    borderColor: 'rgba(155,45,107,0.55)',
-    backgroundColor: 'rgba(15,13,42,0.94)',
-    paddingVertical: 26,
+    borderColor: 'rgba(155,45,107,0.62)',
+    backgroundColor: 'rgba(15,13,42,0.97)',
+    paddingTop: 50,
+    paddingBottom: 26,
     paddingHorizontal: 24,
     alignItems: 'center',
+    ...PW.shadow.panel,
+  },
+  pollyWrap: {
+    position: 'absolute',
+    zIndex: 3,
+    left: -8,
+    top: -54,
+    width: 220,
+    height: 203,
+  },
+  polly: {
+    width: '100%',
+    height: '100%',
+  },
+  speechBubble: {
+    position: 'absolute',
+    zIndex: 4,
+    right: 0,
+    top: -82,
+    width: 214,
+    minHeight: 104,
+    borderRadius: 24,
+    backgroundColor: PW.color.white,
+    paddingHorizontal: 18,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...PW.shadow.card,
+  },
+  speechTail: {
+    position: 'absolute',
+    left: 42,
+    bottom: -13,
+    width: 28,
+    height: 28,
+    backgroundColor: PW.color.white,
+    transform: [{ rotate: '45deg' }],
+  },
+  speechText: {
+    color: '#2B2930',
+    fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
+    fontSize: 23,
+    lineHeight: 25,
+    textAlign: 'center',
   },
   kicker: {
     color: PW.color.mutedWhite,
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 12,
-    letterSpacing: 1.5,
+    fontSize: 16,
+    lineHeight: 20,
+    letterSpacing: 1.8,
     textAlign: 'center',
-    marginBottom: 12,
-  },
-  pollyLine: {
-    color: PW.color.lavender,
-    fontFamily: FONTS.tileCopy,
-    includeFontPadding: false,
-    fontSize: 22,
-    lineHeight: 27,
-    textAlign: 'center',
-    marginBottom: 14,
+    marginBottom: 16,
   },
   body: {
     color: PW.color.softWhite,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 17,
+    lineHeight: 24,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 26,
   },
   stayBtn: {
     width: '100%',
-    minHeight: 52,
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: PW.radius.card,
     borderWidth: 1.5,
     borderColor: PW.color.gold,
-    backgroundColor: 'rgba(245,200,66,0.10)',
+    backgroundColor: 'rgba(245,200,66,0.11)',
     marginBottom: 12,
   },
   stayPressed: {
-    opacity: 0.84,
+    opacity: 0.82,
   },
   stayLabel: {
     color: PW.color.gold,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 17,
+    fontSize: 19,
     letterSpacing: 3,
   },
   leaveBtn: {
     width: '100%',
-    minHeight: 44,
+    minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: PW.radius.card,
@@ -158,7 +260,7 @@ const ec = StyleSheet.create({
     color: PW.color.mutedWhite,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 14,
-    letterSpacing: 2,
+    fontSize: 17,
+    letterSpacing: 2.4,
   },
 });

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import UiIconButton from '../components/UiIconButton';
+import { HuntPauseMenu } from '../components/HuntPauseMenu';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -9,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { resolveHuntHud, HuntReadTier } from '../game/huntControl';
 import { MOMENTUM_ACCENT_BY_TIER, resolveMomentumAccent } from '../ui/momentumAccent';
-import { useGameStore } from '../store/useGameStore';
+import { flushActiveGamePersistence, useGameStore } from '../store/useGameStore';
 import { MaskBoard } from '../components/MaskBoard';
 import { BossBoard } from '../components/BossBoard';
 import { HeartbeatProvider, useHeartbeat } from '../hooks/useHeartbeat';
@@ -34,6 +35,10 @@ import {
 import { BossIntroOverlay } from '../components/BossIntroOverlay';
 import { HauntIntroOverlay } from '../components/HauntIntroOverlay';
 import { PollyExitConfirm } from '../components/PollyExitConfirm';
+import {
+  isHuntExitGuardBypassed,
+  withHuntExitGuardBypass,
+} from '../game/huntPauseNavigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReducedFlashesPreference, useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { BOSS_INTRO_SEEN_KEY, HAUNT_INTRO_SEEN_KEY } from '../constants/storageKeys';
@@ -981,31 +986,82 @@ function GameDirector({ navigation }: { navigation: any }) {
   // ── Exit guard — leaving mid-Hunt takes a real choice, never silence ────
   // beforeRemove fires for edge-swipe-back, Android back, and any
   // navigation away, so this is the one place that covers all three.
+  const [pauseVisible, setPauseVisible] = useState(false);
   const [exitConfirmVisible, setExitConfirmVisible] = useState(false);
   const pendingExitActionRef = useRef<any>(null);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-      if (game.status !== 'playing') return;
+      if (game.status !== 'playing' || isHuntExitGuardBypassed()) return;
       e.preventDefault();
       pendingExitActionRef.current = e.data.action;
+      setPauseVisible(false);
       setExitConfirmVisible(true);
     });
     return unsubscribe;
   }, [navigation, game.status]);
 
+  const preserveActiveHunt = useCallback(() => {
+    // A run started in this process is not marked resumable until loadGame()
+    // hydrates it on a later launch. Set the flag before temporary navigation
+    // so Home says RESUME HUNT now, then force the pending snapshot to disk.
+    useGameStore.setState({ hasResumableGame: true });
+    return flushActiveGamePersistence().catch(() => {});
+  }, []);
+
+  const handlePause = useCallback(() => {
+    if (game.status !== 'playing') return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    pendingExitActionRef.current = null;
+    setExitConfirmVisible(false);
+    setPauseVisible(true);
+  }, [game.status]);
+
+  const handleResumeHunt = useCallback(() => {
+    setPauseVisible(false);
+  }, []);
+
+  const handlePauseHome = useCallback(() => {
+    void preserveActiveHunt().then(() => {
+      withHuntExitGuardBypass(() => {
+        navigation.navigate('Home', undefined, { pop: true });
+      });
+    });
+  }, [navigation, preserveActiveHunt]);
+
+  const handlePauseSettings = useCallback(() => {
+    // Keep pauseVisible true while Settings sits above Game. Back from
+    // Settings therefore returns to the same deliberately paused Hunt.
+    void preserveActiveHunt().then(() => {
+      navigation.navigate('Settings', { preserveHunt: true });
+    });
+  }, [navigation, preserveActiveHunt]);
+
+  const handlePauseQuit = useCallback(() => {
+    pendingExitActionRef.current = null;
+    setPauseVisible(false);
+    setExitConfirmVisible(true);
+  }, []);
+
   const handleStayHunting = useCallback(() => {
     pendingExitActionRef.current = null;
     setExitConfirmVisible(false);
+    setPauseVisible(false);
   }, []);
 
-  const handleConfirmLeave = useCallback(() => {
+  const handleConfirmLeave = useCallback(async () => {
     setExitConfirmVisible(false);
     const action = pendingExitActionRef.current;
     pendingExitActionRef.current = null;
     markOnboardingAbandoned('hunt');
-    forfeitGame();
-    if (action) navigation.dispatch(action);
+    await forfeitGame();
+    withHuntExitGuardBypass(() => {
+      if (action) {
+        navigation.dispatch(action);
+      } else {
+        navigation.navigate('Home', undefined, { pop: true });
+      }
+    });
   }, [navigation, forfeitGame, markOnboardingAbandoned]);
 
   // ── Effects overlay ────────────────────────────────────────
@@ -1050,7 +1106,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   }, []);
 
   useEffect(() => {
-    if (game.status !== 'playing') {
+    if (game.status !== 'playing' || pauseVisible || exitConfirmVisible) {
       if (idleTimerRef.current !== null) {
         clearTimeout(idleTimerRef.current);
         idleTimerRef.current = null;
@@ -1065,7 +1121,7 @@ function GameDirector({ navigation }: { navigation: any }) {
         idleTimerRef.current = null;
       }
     };
-  }, [game.stepIndex, game.status, resetIdleTimer]);
+  }, [exitConfirmVisible, game.stepIndex, game.status, pauseVisible, resetIdleTimer]);
 
   // SFX session setup is app-owned and warmed from App.tsx. This holds the
   // initial reveal until the audio session is available; individual effects
@@ -1576,18 +1632,15 @@ function GameDirector({ navigation }: { navigation: any }) {
           navigation={navigation}
           featherRowPulse={featherRowPulse}
           hudTargets={hudTargets}
-          a11yHidden={hudLessonShowing}
+          a11yHidden={hudLessonShowing || pauseVisible || exitConfirmVisible}
         />
       )}
       {!isDone && (
         <UiIconButton
-          {...a11yHiddenProps(hudLessonShowing)}
+          {...a11yHiddenProps(hudLessonShowing || pauseVisible || exitConfirmVisible)}
           kind="pause"
           accessibilityLabel="Pause the Hunt"
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            navigation.goBack();
-          }}
+          onPress={handlePause}
           style={tb.pauseBtn}
         />
       )}
@@ -1602,7 +1655,7 @@ function GameDirector({ navigation }: { navigation: any }) {
           onSwipeAttempt={resetIdleTimer}
           fireHauntIntroVisit={hauntIntroVisitPending}
           onHauntIntroVisitFired={() => setHauntIntroVisitPending(false)}
-          a11yHidden={hudLessonShowing}
+          a11yHidden={hudLessonShowing || pauseVisible || exitConfirmVisible}
         />
       ) : null}
       {__DEV__ && !isDone && !isBossRound && (
@@ -1650,7 +1703,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       <FXLayer ref={fxLayerRef} />
 
       <HudLessonLayer
-        lesson={hudLesson}
+        lesson={pauseVisible || exitConfirmVisible ? null : hudLesson}
         targets={hudTargets}
         targetLabels={hudTargetLabels}
         onComplete={completeHudLesson}
@@ -1672,6 +1725,15 @@ function GameDirector({ navigation }: { navigation: any }) {
           </Text>
           <Text style={styles.bossTransitionCopy}>ONE LAST BREATH</Text>
         </View>
+      )}
+
+      {pauseVisible && !exitConfirmVisible && (
+        <HuntPauseMenu
+          onResume={handleResumeHunt}
+          onHome={handlePauseHome}
+          onSettings={handlePauseSettings}
+          onQuit={handlePauseQuit}
+        />
       )}
 
       {exitConfirmVisible && (

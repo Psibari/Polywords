@@ -1,22 +1,34 @@
 import React from "react";
 import UiIconButton from "./UiIconButton";
+import { withHuntExitGuardBypass } from "../game/huntPauseNavigation";
 
 type HomeButtonProps = {
   navigation: any;
+  preserveHunt?: boolean;
 };
 
 /**
  * The way back to Home from Polybook and Settings, which no longer have a bottom nav (Pete, 2026-10-23).
- * Home is already underneath in the stack. React Navigation 7 pushes a second Home on a plain navigate,
- * which left the Polybook (opened transparent from Home) showing through its top, so going Home goes
- * back to the Home that is already there (the same call the old nav made).
+ * If Settings is sitting above a deliberately paused Hunt, Home removes that Hunt screen without
+ * forfeiting it; the run is already persisted and Home will offer RESUME HUNT.
  */
-export default function HomeButton({ navigation }: HomeButtonProps) {
+export default function HomeButton({ navigation, preserveHunt = false }: HomeButtonProps) {
+  const goHome = () => {
+    const navigateHome = () => navigation.navigate("Home", undefined, { pop: true });
+
+    if (preserveHunt) {
+      withHuntExitGuardBypass(navigateHome);
+      return;
+    }
+
+    navigateHome();
+  };
+
   return (
     <UiIconButton
       kind="home"
       accessibilityLabel="Go home"
-      onPress={() => navigation.navigate("Home", undefined, { pop: true })}
+      onPress={goHome}
     />
   );
 }

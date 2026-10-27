@@ -74,6 +74,7 @@ type ToggleRowProps = {
 
 type Props = {
   navigation: any;
+  route?: any;
 };
 
 function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
@@ -96,7 +97,7 @@ function ToggleRow({ label, enabled, onPress }: ToggleRowProps) {
   );
 }
 
-export default function SettingsScreen({ navigation }: Props) {
+export default function SettingsScreen({ navigation, route }: Props) {
   const [showPollyFaceRig, setShowPollyFaceRig] = useState(false);
   const progress = useGameStore(s => s.progress);
   const ghosts = useGameStore(s => s.ghosts);
@@ -470,7 +471,10 @@ export default function SettingsScreen({ navigation }: Props) {
         onClose={() => setShowPrivacy(false)}
       />
       <View style={styles.homeBand}>
-        <HomeButton navigation={navigation} />
+        <HomeButton
+          navigation={navigation}
+          preserveHunt={route?.params?.preserveHunt === true}
+        />
       </View>
     </SafeAreaView>
   );
