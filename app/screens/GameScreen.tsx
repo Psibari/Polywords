@@ -68,6 +68,7 @@ import {
   resolveTierUpHapticCue,
   type ScreenFlashEvent,
 } from '../game/huntFeedbackPolicy';
+import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAccessibility';
 import {
   createBossReadinessState,
   markBossEntered,
@@ -160,6 +161,12 @@ function TopBar({
   hudTargets?: HudTargetRefs;
   a11yHidden?: boolean;
 }) {
+  const reduceMotion = useReducedMotionPreference();
+  const reduceFlashes = useReducedFlashesPreference();
+  const { animateMotion, animateFlashes } = resolveGameplayFeedbackAccessibility(
+    reduceMotion,
+    reduceFlashes,
+  );
   const game  = useGameStore(s => s.game);
   const gauntletActive = useGameStore(s => s.game.gauntletActive);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
@@ -217,11 +224,13 @@ function TopBar({
     previousHudSignatureRef.current = hudSignature;
     hudPulse.stopAnimation();
     hudPulse.setValue(0);
-    Animated.timing(hudPulse, {
-      toValue: 1,
-      duration: 520,
-      useNativeDriver: true,
-    }).start();
+    if (animateMotion || animateFlashes) {
+      Animated.timing(hudPulse, {
+        toValue: 1,
+        duration: 520,
+        useNativeDriver: true,
+      }).start();
+    }
 
     // Tier bump — spring pop + hop + flash only on a genuine LEVEL UP
     // (rank increasing). A rank decrease is always a real chain breaking,
@@ -233,27 +242,34 @@ function TopBar({
       prevTierRef.current = hud.readTier;
       if (isRank > wasRank) {
         const bumpScale = 1.14 + isRank * 0.04; // 1.18 / 1.22 / 1.26 by tier
+        tierBumpScale.stopAnimation();
+        tierBumpHopY.stopAnimation();
+        tierFlashOpacity.stopAnimation();
         tierBumpScale.setValue(1);
         tierBumpHopY.setValue(0);
         tierFlashOpacity.setValue(0);
-        Animated.parallel([
-          Animated.sequence([
+        const tierAnimations: Animated.CompositeAnimation[] = [];
+        if (animateMotion) {
+          tierAnimations.push(Animated.sequence([
             Animated.spring(tierBumpScale, {
               toValue: bumpScale, damping: 8, stiffness: 260, useNativeDriver: true,
             }),
             Animated.spring(tierBumpScale, {
               toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true,
             }),
-          ]),
-          Animated.sequence([
+          ]));
+          tierAnimations.push(Animated.sequence([
             Animated.timing(tierBumpHopY, { toValue: -6, duration: 90, useNativeDriver: true }),
             Animated.spring(tierBumpHopY, { toValue: 0, damping: 10, stiffness: 200, useNativeDriver: true }),
-          ]),
-          Animated.sequence([
+          ]));
+        }
+        if (animateFlashes) {
+          tierAnimations.push(Animated.sequence([
             Animated.timing(tierFlashOpacity, { toValue: 0.9, duration: 60, useNativeDriver: true }),
             Animated.timing(tierFlashOpacity, { toValue: 0, duration: 220, useNativeDriver: true }),
-          ]),
-        ]).start();
+          ]));
+        }
+        if (tierAnimations.length > 0) Animated.parallel(tierAnimations).start();
         Haptics.cueAsync(resolveTierUpHapticCue(isRank));
       }
     }
@@ -265,7 +281,15 @@ function TopBar({
     if (hud.contextLabel !== null || hud.tier === 'untrappable') {
       Haptics.selectionAsync();
     }
-  }, [hudSignature, hud.contextLabel, hud.tier, hud.readTier, hudPulse]);
+  }, [
+    animateFlashes,
+    animateMotion,
+    hudSignature,
+    hud.contextLabel,
+    hud.tier,
+    hud.readTier,
+    hudPulse,
+  ]);
 
   // FELL OFF — fires purely from game.fellOffSeverity, independent of the
   // tier-bump effect above. Drop + shake + red flash scaled by severity,
@@ -280,35 +304,55 @@ function TopBar({
     const flashPeak = 0.35 + fellOffSeverity * 0.15; // 0.5 / 0.65 / 0.8
     const dropDistance = 4 + fellOffSeverity * 2; // 6 / 8 / 10 px
 
+    fellOffDropY.stopAnimation();
+    fellOffFlashOpacity.stopAnimation();
+    fellOffShakeX.stopAnimation();
     fellOffDropY.setValue(0);
     fellOffFlashOpacity.setValue(0);
     fellOffShakeX.setValue(0);
 
-    const shakeSteps: Animated.CompositeAnimation[] = [];
-    for (let i = 0; i < fellOffSeverity; i++) {
-      shakeSteps.push(
-        Animated.timing(fellOffShakeX, {
-          toValue: i % 2 === 0 ? -shakeAmp : shakeAmp, duration: 45, useNativeDriver: true,
-        }),
-      );
-    }
-    shakeSteps.push(Animated.timing(fellOffShakeX, { toValue: 0, duration: 45, useNativeDriver: true }));
-
-    Animated.parallel([
-      Animated.sequence([
-        Animated.timing(fellOffDropY, { toValue: dropDistance, duration: 90, useNativeDriver: true }),
-        Animated.spring(fellOffDropY, { toValue: 0, damping: 10, stiffness: 180, useNativeDriver: true }),
-      ]),
-      Animated.sequence(shakeSteps),
-      Animated.sequence([
-        Animated.timing(fellOffFlashOpacity, { toValue: flashPeak, duration: 60, useNativeDriver: true }),
-        Animated.timing(fellOffFlashOpacity, { toValue: 0, duration: 260, useNativeDriver: true }),
-      ]),
-    ]).start(() => {
+    const finishFellOff = () => {
       setShowFellOffText(false);
       consumeFellOff();
+    };
+
+    if (!animateMotion && !animateFlashes) {
+      const timer = setTimeout(finishFellOff, 320);
+      return () => clearTimeout(timer);
+    }
+
+    const shakeSteps: Animated.CompositeAnimation[] = [];
+    if (animateMotion) {
+      for (let i = 0; i < fellOffSeverity; i++) {
+        shakeSteps.push(
+          Animated.timing(fellOffShakeX, {
+            toValue: i % 2 === 0 ? -shakeAmp : shakeAmp, duration: 45, useNativeDriver: true,
+          }),
+        );
+      }
+      shakeSteps.push(Animated.timing(fellOffShakeX, { toValue: 0, duration: 45, useNativeDriver: true }));
+    }
+
+    const fellOffAnimations: Animated.CompositeAnimation[] = [];
+    if (animateMotion) {
+      fellOffAnimations.push(Animated.sequence([
+        Animated.timing(fellOffDropY, { toValue: dropDistance, duration: 90, useNativeDriver: true }),
+        Animated.spring(fellOffDropY, { toValue: 0, damping: 10, stiffness: 180, useNativeDriver: true }),
+      ]));
+      fellOffAnimations.push(Animated.sequence(shakeSteps));
+    }
+    if (animateFlashes) {
+      fellOffAnimations.push(Animated.sequence([
+        Animated.timing(fellOffFlashOpacity, { toValue: flashPeak, duration: 60, useNativeDriver: true }),
+        Animated.timing(fellOffFlashOpacity, { toValue: 0, duration: 260, useNativeDriver: true }),
+      ]));
+    }
+    const animation = Animated.parallel(fellOffAnimations);
+    animation.start(({ finished }) => {
+      if (finished) finishFellOff();
     });
-  }, [fellOffSeverity]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => animation.stop();
+  }, [animateFlashes, animateMotion, fellOffSeverity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <View style={tb.outerRow} {...a11yHiddenProps(a11yHidden)}>
@@ -320,7 +364,7 @@ function TopBar({
           <Animated.View
             style={[
               tb.controlWrap,
-              { transform: [{ scale: hudPulseScale }] },
+              { transform: [{ scale: animateMotion ? hudPulseScale : 1 }] },
             ]}
             accessible
             accessibilityLabel={`${hud.contextLabel ? `${hud.contextLabel}. ` : ''}${hud.label}. Level ${rungLitCount} of 4.`}
@@ -337,7 +381,7 @@ function TopBar({
             >
             <Animated.View
               pointerEvents="none"
-              style={[tb.controlPulse, { backgroundColor: hudAccent, opacity: hudPulseOpacity }]}
+              style={[tb.controlPulse, { backgroundColor: hudAccent, opacity: animateFlashes ? hudPulseOpacity : 0 }]}
             />
             <Animated.View
               pointerEvents="none"
@@ -915,6 +959,12 @@ const tb = StyleSheet.create({
 
 function GameDirector({ navigation }: { navigation: any }) {
   const vignetteId = useId();
+  const reduceMotion = useReducedMotionPreference();
+  const reduceFlashes = useReducedFlashesPreference();
+  const { animateMotion, animateFlashes } = resolveGameplayFeedbackAccessibility(
+    reduceMotion,
+    reduceFlashes,
+  );
   const game       = useGameStore(s => s.game);
   const ghosts     = useGameStore(s => s.ghosts);
   const startGame  = useGameStore(s => s.startGame);
@@ -1106,31 +1156,39 @@ function GameDirector({ navigation }: { navigation: any }) {
     const prev = prevLivesForShakeRef.current;
     prevLivesForShakeRef.current = game.lives;
     if (prev !== 2 || game.lives !== 1) return;
-    // Lighter board shake (4 quick jolts, not the heavy boss shake)
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: 3,  duration: 30, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: -2, duration: 30, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: -3, duration: 30, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: 2,  duration: 30, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: 2,  duration: 25, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: -1, duration: 25, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: 0,  duration: 40, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: 0,  duration: 40, useNativeDriver: true }),
-      ]),
-    ]).start();
-    // Feather row red pulse
+    boardShakeX.stopAnimation();
+    boardShakeY.stopAnimation();
+    boardShakeX.setValue(0);
+    boardShakeY.setValue(0);
+    if (animateMotion) {
+      // Lighter board shake (4 quick jolts, not the heavy boss shake)
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: 3,  duration: 30, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: -2, duration: 30, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: -3, duration: 30, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: 2,  duration: 30, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: 2,  duration: 25, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: -1, duration: 25, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: 0,  duration: 40, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: 0,  duration: 40, useNativeDriver: true }),
+        ]),
+      ]).start();
+    }
     featherRowPulse.setValue(0);
-    Animated.sequence([
-      Animated.timing(featherRowPulse, { toValue: 1, duration: 120, useNativeDriver: true }),
-      Animated.timing(featherRowPulse, { toValue: 0, duration: 350, useNativeDriver: true }),
-    ]).start();
+    if (animateFlashes) {
+      // Feather row red pulse
+      Animated.sequence([
+        Animated.timing(featherRowPulse, { toValue: 1, duration: 120, useNativeDriver: true }),
+        Animated.timing(featherRowPulse, { toValue: 0, duration: 350, useNativeDriver: true }),
+      ]).start();
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   }, [game.lives]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1196,24 +1254,28 @@ function GameDirector({ navigation }: { navigation: any }) {
     mercyFloatY.setValue(0);
     mercyFloatOpacity.setValue(0);
     setShowMercyFloat(true);
+    const mercyEnter: Animated.CompositeAnimation[] = [
+      Animated.timing(mercyFloatOpacity, {
+        toValue: 1, duration: 220, useNativeDriver: true,
+      }),
+    ];
+    const mercyExit: Animated.CompositeAnimation[] = [
+      Animated.timing(mercyFloatOpacity, {
+        toValue: 0, duration: 320, useNativeDriver: true,
+      }),
+    ];
+    if (animateMotion) {
+      mercyEnter.push(Animated.timing(mercyFloatY, {
+        toValue: -10, duration: 220, useNativeDriver: true,
+      }));
+      mercyExit.push(Animated.timing(mercyFloatY, {
+        toValue: -36, duration: 320, useNativeDriver: true,
+      }));
+    }
     Animated.sequence([
-      Animated.parallel([
-        Animated.timing(mercyFloatOpacity, {
-          toValue: 1, duration: 220, useNativeDriver: true,
-        }),
-        Animated.timing(mercyFloatY, {
-          toValue: -10, duration: 220, useNativeDriver: true,
-        }),
-      ]),
+      Animated.parallel(mercyEnter),
       Animated.delay(1400),
-      Animated.parallel([
-        Animated.timing(mercyFloatOpacity, {
-          toValue: 0, duration: 320, useNativeDriver: true,
-        }),
-        Animated.timing(mercyFloatY, {
-          toValue: -36, duration: 320, useNativeDriver: true,
-        }),
-      ]),
+      Animated.parallel(mercyExit),
     ]).start(() => setShowMercyFloat(false));
   }, [game.mercyTriggered]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1353,30 +1415,34 @@ function GameDirector({ navigation }: { navigation: any }) {
     }
     setBossTransitionActive(true);
     // Heavier board shake on boss entrance — sells the weight of the moment
+    boardShakeX.stopAnimation();
+    boardShakeY.stopAnimation();
     boardShakeX.setValue(0);
     boardShakeY.setValue(0);
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: 5, duration: 40, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: -3, duration: 40, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: -5, duration: 40, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: 3, duration: 40, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: 3, duration: 35, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: -2, duration: 35, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: -3, duration: 35, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: 2, duration: 35, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(boardShakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
-        Animated.timing(boardShakeY, { toValue: 0, duration: 50, useNativeDriver: true }),
-      ]),
-    ]).start();
+    if (animateMotion) {
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: 5, duration: 40, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: -3, duration: 40, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: -5, duration: 40, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: 3, duration: 40, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: 3, duration: 35, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: -2, duration: 35, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: -3, duration: 35, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: 2, duration: 35, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(boardShakeX, { toValue: 0, duration: 50, useNativeDriver: true }),
+          Animated.timing(boardShakeY, { toValue: 0, duration: 50, useNativeDriver: true }),
+        ]),
+      ]).start();
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     const timer = setTimeout(() => {
       setBossTransitionActive(false);

@@ -49,8 +49,7 @@ export function PollyExitConfirm({ onStay, onLeave }: Props) {
         <Text style={ec.kicker}>LEAVING THE HUNT?</Text>
         <Text style={ec.pollyLine}>“{POLLY_LINES.huntAbandonTaunt}”</Text>
         <Text style={ec.body}>
-          Leave now and this run is gone — score, feathers, everything you've
-          claimed today.
+          Leave now and this run ends. Your score and remaining feathers are lost.
         </Text>
 
         <Pressable

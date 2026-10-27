@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Application from 'expo-application';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Alert,
@@ -30,9 +31,14 @@ import {
 } from '../game/playtestTelemetry';
 import { useGameStore } from '../store/useGameStore';
 import { PW } from '../ui/pwTheme';
+import { formatAppVersion } from '../utils/appVersion';
 import appConfig from '../../app.json';
 
-const APP_VERSION = appConfig.expo.version;
+const APP_VERSION = formatAppVersion(
+  Application.nativeApplicationVersion,
+  Application.nativeBuildVersion,
+  appConfig.expo.version,
+);
 
 const settingsUtilityPanel = require('../../assets/images/settings/settings_utility_panel_neutral.png');
 const SETTINGS_PANEL_CAP_INSETS = { top: 82, right: 88, bottom: 82, left: 88 };

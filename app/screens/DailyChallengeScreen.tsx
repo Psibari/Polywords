@@ -99,6 +99,7 @@ import {
   useReducedFlashesPreference,
   useReducedMotionPreference,
 } from '../hooks/usePollyAmbientMotion';
+import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAccessibility';
 
 const DailyCastleTuningPanel = __DEV__
   ? require('../dev/DailyCastleTuningPanel').default
@@ -356,7 +357,7 @@ function ResultsOverlay({
         </Pressable>
 
           <Pressable
-            style={res.homeBtn}
+            style={({ pressed }) => [res.homeBtn, pressed && res.homeBtnPressed]}
             onPress={onHome}
             accessibilityRole="button"
             accessibilityLabel="Go home"
@@ -505,6 +506,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // Reduce Motion or Reduce Flashes: the castle's gold hit runs calm (its
   // length decides when the finale may start) and the hero gets no glint.
   const reduceFlashes = useReducedFlashesPreference();
+  const { animateMotion, animateFlashes } = resolveGameplayFeedbackAccessibility(
+    reduceMotion,
+    reduceFlashes,
+  );
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   // Window y of the HUD's bottom edge. The SafeAreaView sits at the window
   // origin, so the HUD's own layout y already includes the top inset.
@@ -547,27 +552,35 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const prev = prevChancesRef.current;
     prevChancesRef.current = current;
     if (current >= prev) return;
+    hudShakeX.stopAnimation();
+    hudShakeY.stopAnimation();
+    hudShakeX.setValue(0);
+    hudShakeY.setValue(0);
     // Chance lost — shake the HUD
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(hudShakeX, { toValue: 3, duration: 25, useNativeDriver: true }),
-        Animated.timing(hudShakeY, { toValue: -2, duration: 25, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(hudShakeX, { toValue: -3, duration: 25, useNativeDriver: true }),
-        Animated.timing(hudShakeY, { toValue: 2, duration: 25, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(hudShakeX, { toValue: 0, duration: 35, useNativeDriver: true }),
-        Animated.timing(hudShakeY, { toValue: 0, duration: 35, useNativeDriver: true }),
-      ]),
-    ]).start();
+    if (animateMotion) {
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(hudShakeX, { toValue: 3, duration: 25, useNativeDriver: true }),
+          Animated.timing(hudShakeY, { toValue: -2, duration: 25, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(hudShakeX, { toValue: -3, duration: 25, useNativeDriver: true }),
+          Animated.timing(hudShakeY, { toValue: 2, duration: 25, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(hudShakeX, { toValue: 0, duration: 35, useNativeDriver: true }),
+          Animated.timing(hudShakeY, { toValue: 0, duration: 35, useNativeDriver: true }),
+        ]),
+      ]).start();
+    }
     // Red pulse on feather row
     featherPulse.setValue(0);
-    Animated.sequence([
-      Animated.timing(featherPulse, { toValue: 1, duration: 100, useNativeDriver: true }),
-      Animated.timing(featherPulse, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start();
+    if (animateFlashes) {
+      Animated.sequence([
+        Animated.timing(featherPulse, { toValue: 1, duration: 100, useNativeDriver: true }),
+        Animated.timing(featherPulse, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start();
+    }
     // No haptic here: a wrong claim's one haptic lands when the gate hits the
     // stop (handleClaim).
   }, [displayedDailySession?.chancesRemaining]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1885,11 +1898,20 @@ const res = StyleSheet.create({
     letterSpacing: 2,
   },
   homeBtn: {
-    paddingVertical: 10,
+    width: '100%',
+    paddingVertical: 12,
     alignItems: 'center',
+    backgroundColor: PW.color.surfaceDeep,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: PW.color.lavender,
+    marginTop: 8,
+  },
+  homeBtnPressed: {
+    backgroundColor: PW.color.surfaceRaised,
   },
   homeText: {
-    color: dailyResultsMaterial.homeText,
+    color: PW.color.white,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 15,
