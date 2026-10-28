@@ -106,8 +106,54 @@ const kickY = wallKick.interpolate(
   envelopedOscillation(WALL_KICK_AMP * VERTICAL_RATIO, 2, false, decayingEnvelope),
 );
 
-const shakeX = Animated.add(trembleX, kickX);
-const shakeY = Animated.add(trembleY, kickY);
+// ── Momentum strain: a continuous vibration that builds with the Hunt tier ──
+//
+// Separate from the tremble and kick above, which are one-shots for the boss
+// gauntlet. Strain is driven from the Hunt screen by setWallStrain(tier) and
+// runs for as long as the tier holds. It rides in the same composed offset, so
+// the wall, and any brick still seated in it, move together.
+//
+// Every number a phone pass is likely to retune lives in this block.
+// Tier index: 0 steady (and HUNTED: still), 1 sharp, 2 razor sharp, 3 untrappable.
+export type WallStrainTier = 0 | 1 | 2 | 3;
+/** Peak sideways offset in points. Index 0 is a still wall. */
+export const WALL_STRAIN_AMP: readonly number[] = [0, 0.6, 1.4, 2.4];
+/** The largest strain offset, for sizing the edge backdrop. */
+export const WALL_STRAIN_MAX_AMP = 2.4;
+/** One full loop of the vibration, in ms. Shorter is quicker. */
+export const WALL_STRAIN_LOOP_MS: readonly number[] = [0, 600, 420, 300];
+/** How fast the vibration swells into a new tier, and dies away on a drop. */
+export const WALL_STRAIN_RAMP_MS = 450;
+export const WALL_STRAIN_FADE_OUT_MS = 140;
+// Cycles per loop on each axis. Different counts, one axis inverted, so the
+// wall never travels a clean diagonal (same reason as the tremble above).
+const STRAIN_CYCLES_X = 3;
+const STRAIN_CYCLES_Y = 4;
+const constantEnvelope: Envelope = () => 1;
+
+/** 0..1 looping phase of the vibration. */
+export const wallStrainPhase = new Animated.Value(0);
+/** Current vibration amplitude in points, 0 when still. */
+export const wallStrainLevel = new Animated.Value(0);
+
+// The oscillation is unit amplitude and integer-cycle, so it is exactly 0 at
+// both ends of the loop. The amplitude comes from wallStrainLevel, which means
+// a still wall (level 0) is still whatever phase the loop happens to be in.
+const strainX = Animated.multiply(
+  wallStrainPhase.interpolate(
+    envelopedOscillation(1, STRAIN_CYCLES_X, false, constantEnvelope),
+  ),
+  wallStrainLevel,
+);
+const strainY = Animated.multiply(
+  wallStrainPhase.interpolate(
+    envelopedOscillation(VERTICAL_RATIO, STRAIN_CYCLES_Y, true, constantEnvelope),
+  ),
+  wallStrainLevel,
+);
+
+const shakeX = Animated.add(Animated.add(trembleX, kickX), strainX);
+const shakeY = Animated.add(Animated.add(trembleY, kickY), strainY);
 
 /**
  * The composed shake as a raw pair of offsets, in points. Use this when a
@@ -172,4 +218,222 @@ export function resetWallShake(): void {
   kickAnim = null;
   wallTremble.setValue(0);
   wallKick.setValue(0);
+}
+
+let strainLoop: Animated.CompositeAnimation | null = null;
+let strainTier: WallStrainTier = 0;
+let strainStopTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Sets the momentum vibration to a tier. 0 fades the wall to still. Calling
+ * with the tier already set does nothing, so it is safe to call from an effect.
+ */
+export function setWallStrain(tier: WallStrainTier): void {
+  if (tier === strainTier) return;
+  strainTier = tier;
+  if (strainStopTimer !== null) {
+    clearTimeout(strainStopTimer);
+    strainStopTimer = null;
+  }
+  if (tier === 0) {
+    Animated.timing(wallStrainLevel, {
+      toValue: 0,
+      duration: WALL_STRAIN_FADE_OUT_MS,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+    // Stop the loop only once the level has reached 0, so no offset is left.
+    strainStopTimer = setTimeout(() => {
+      strainStopTimer = null;
+      strainLoop?.stop();
+      strainLoop = null;
+      wallStrainPhase.setValue(0);
+    }, WALL_STRAIN_FADE_OUT_MS + 40);
+    return;
+  }
+  // A new loop length restarts the phase at 0, where the oscillation is 0, so
+  // a change of tier moves the wall by at most the previous tier's offset.
+  strainLoop?.stop();
+  wallStrainPhase.setValue(0);
+  strainLoop = Animated.loop(
+    Animated.timing(wallStrainPhase, {
+      toValue: 1,
+      duration: WALL_STRAIN_LOOP_MS[tier],
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }),
+  );
+  strainLoop.start();
+  Animated.timing(wallStrainLevel, {
+    toValue: WALL_STRAIN_AMP[tier],
+    duration: WALL_STRAIN_RAMP_MS,
+    easing: Easing.out(Easing.quad),
+    useNativeDriver: true,
+  }).start();
+}
+
+// ── Fell-off: the wall falls away from you, then zips back ──
+//
+// A chain that breaks from 1.5x or higher drops the wall away, as if you were
+// looking down at it falling, and a beat later it snaps back to full size. The
+// foreground never moves for it. Driven from the Hunt screen by fallWall(severity).
+//
+// How it is drawn, and why: the real wall in GraphicGround is ALWAYS a plain,
+// untransformed image, so its resting layout is exactly what it was before this
+// existed. While a fall plays, GraphicGround mounts an overlay on top of it
+// (subscribeWallFall): a darkened, enlarged copy of the stone for the pit, with
+// a second copy of the wall scaled down in front. At scale 1 that copy covers
+// the real wall exactly, so the overlay appears and disappears without a seam.
+// The two values below are plain Animated.Values that rest at their rest value,
+// with no interpolation in the chain, so there is nothing to evaluate wrongly
+// before the first animation. An earlier version hid the wall at rest behind an
+// interpolated scale and the wall vanished on device (2026-10-28).
+//
+// The wall is scaled here, which GraphicGround's no-scaling rule otherwise
+// forbids (the gauntlet's bricks are aligned to the ledge line). That is safe
+// because this only ever fires from game.fellOffSeverity, and a wrong swipe on
+// a gauntlet tile never sets that (resolveMysteryTile ends the gauntlet as
+// haunted without touching it), so it cannot run while the bricks are out.
+//
+// Every number a phone pass is likely to retune lives in this block.
+/** How far the wall shrinks, by severity 1 / 2 / 3 (0.04 = to 96%). */
+export const WALL_FALL_DEPTH_BY_SEVERITY: readonly number[] = [0.04, 0.07, 0.10];
+/** Wall falls away, then waits, then zips back. */
+export const WALL_FALL_DROP_MS = 90;
+export const WALL_FALL_HOLD_MS = 60;
+export const WALL_FALL_RETURN_MS = 200;
+/** From the call, when the wall reconnects and gets one kick. */
+export const WALL_FALL_RECONNECT_KICK_AT_MS =
+  WALL_FALL_DROP_MS + WALL_FALL_HOLD_MS + WALL_FALL_RETURN_MS;
+/** Margin after the return before the overlay is removed. */
+const WALL_FALL_UNMOUNT_MARGIN_MS = 80;
+/** Darkness laid over the falling wall at full depth, so it recedes into the pit. */
+export const WALL_FALL_SHADE_MAX = 0.45;
+/** The pit behind the falling wall is the same stone, bigger and darkened. */
+export const WALL_FALL_PIT_SCALE = 1.4;
+
+/** The falling wall's scale: 1 at rest, 1 - depth at the bottom of the fall. */
+export const wallFallScale = new Animated.Value(1);
+/** Darkness over the falling wall: 0 at rest. */
+export const wallFallShade = new Animated.Value(0);
+
+type FallListener = (falling: boolean) => void;
+const fallListeners = new Set<FallListener>();
+let fallActive = false;
+
+function setFallActive(next: boolean): void {
+  if (fallActive === next) return;
+  fallActive = next;
+  fallListeners.forEach(listener => listener(next));
+}
+
+/** GraphicGround mounts its overlay while this reports true. Returns unsubscribe. */
+export function subscribeWallFall(listener: FallListener): () => void {
+  fallListeners.add(listener);
+  listener(fallActive);
+  return () => {
+    fallListeners.delete(listener);
+  };
+}
+
+let fallAnim: Animated.CompositeAnimation | null = null;
+let fallKickTimer: ReturnType<typeof setTimeout> | null = null;
+let fallEndTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearFallTimers(): void {
+  if (fallKickTimer !== null) clearTimeout(fallKickTimer);
+  if (fallEndTimer !== null) clearTimeout(fallEndTimer);
+  fallKickTimer = null;
+  fallEndTimer = null;
+}
+
+let fallDepth = 0;
+
+/**
+ * Starts a fall. `severity` is game.fellOffSeverity (1, 2 or 3). This only asks
+ * GraphicGround to mount its overlay; the animation itself is started by
+ * runWallFallAnimation once that overlay exists and is attached to the values,
+ * because a native animation started before its view is attached is not
+ * reliable in React Native.
+ */
+export function fallWall(severity: 1 | 2 | 3): void {
+  fallAnim?.stop();
+  clearFallTimers();
+  fallDepth = WALL_FALL_DEPTH_BY_SEVERITY[severity - 1];
+  wallFallScale.setValue(1);
+  wallFallShade.setValue(0);
+  setFallActive(true);
+  // The end is timed from the call, and covers the overlay's mount frame too.
+  fallEndTimer = setTimeout(() => {
+    fallEndTimer = null;
+    fallAnim?.stop();
+    fallAnim = null;
+    wallFallScale.setValue(1);
+    wallFallShade.setValue(0);
+    setFallActive(false);
+  }, WALL_FALL_RECONNECT_KICK_AT_MS + WALL_FALL_UNMOUNT_MARGIN_MS);
+}
+
+/**
+ * Plays the fall. GraphicGround calls this from an effect that runs after its
+ * overlay has mounted, so both values already have a view attached.
+ */
+export function runWallFallAnimation(): void {
+  if (!fallActive) return;
+  fallAnim?.stop();
+  if (fallKickTimer !== null) clearTimeout(fallKickTimer);
+  // Down to `bottom`, hold, then back to `rest`. Both values run the same clock.
+  const fallSequence = (value: Animated.Value, bottom: number, rest: number) =>
+    Animated.sequence([
+      Animated.timing(value, {
+        toValue: bottom,
+        duration: WALL_FALL_DROP_MS,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.delay(WALL_FALL_HOLD_MS),
+      Animated.timing(value, {
+        toValue: rest,
+        duration: WALL_FALL_RETURN_MS,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]);
+  fallAnim = Animated.parallel([
+    fallSequence(wallFallScale, 1 - fallDepth, 1),
+    fallSequence(wallFallShade, WALL_FALL_SHADE_MAX, 0),
+  ]);
+  fallAnim.start();
+  fallKickTimer = setTimeout(() => {
+    fallKickTimer = null;
+    kickWall();
+  }, WALL_FALL_RECONNECT_KICK_AT_MS);
+}
+
+/** Wall back to full size, now. Call on unmount: the values outlive the screen. */
+export function resetWallFall(): void {
+  fallAnim?.stop();
+  fallAnim = null;
+  clearFallTimers();
+  wallFallScale.setValue(1);
+  wallFallShade.setValue(0);
+  setFallActive(false);
+}
+
+/**
+ * Strain back to still, now. Separate from resetWallShake on purpose: the boss
+ * gauntlet calls resetWallShake when it starts and ends, and that must not
+ * silence a momentum vibration the player has earned. The Hunt screen and the
+ * wall itself call this on unmount.
+ */
+export function resetWallStrain(): void {
+  if (strainStopTimer !== null) {
+    clearTimeout(strainStopTimer);
+    strainStopTimer = null;
+  }
+  strainLoop?.stop();
+  strainLoop = null;
+  strainTier = 0;
+  wallStrainPhase.setValue(0);
+  wallStrainLevel.setValue(0);
 }

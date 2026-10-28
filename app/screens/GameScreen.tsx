@@ -8,7 +8,14 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
-import { resolveHuntHud, HuntReadTier } from '../game/huntControl';
+import { resolveHuntHud, resolveLiveHuntControl, HuntReadTier } from '../game/huntControl';
+import {
+  fallWall,
+  resetWallFall,
+  resetWallStrain,
+  setWallStrain,
+  WallStrainTier,
+} from '../components/wallShake';
 import { MOMENTUM_ACCENT_BY_TIER, resolveMomentumAccent } from '../ui/momentumAccent';
 import { flushActiveGamePersistence, useGameStore } from '../store/useGameStore';
 import { MaskBoard } from '../components/MaskBoard';
@@ -1376,6 +1383,43 @@ function GameDirector({ navigation }: { navigation: any }) {
     }
     setMusicState('hunt', state);
   }, [game.chainMultiplier, game.lives, game.stepIndex, game.status, isIdleStatic]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Wall strain: the stone wall vibrates harder as momentum builds ──
+  // Still at STEADY, and still at HUNTED (one feather left): the wall only
+  // shakes for a streak that is actually alive. Reduced motion keeps it still.
+  // The tier read is the HUD's own (resolveLiveHuntControl), so the wall can
+  // never disagree with the label on screen.
+  const wallStrainTier: WallStrainTier = useMemo(() => {
+    if (!animateMotion || game.status !== 'playing') return 0;
+    const control = resolveLiveHuntControl(game.chainMultiplier, game.lives);
+    if (control.tier === 'rattled') return 0;
+    switch (control.readTier) {
+      case 'sharp': return 1;
+      case 'razorSharp': return 2;
+      case 'untrappable': return 3;
+      default: return 0;
+    }
+  }, [animateMotion, game.chainMultiplier, game.lives, game.status]);
+
+  useEffect(() => {
+    setWallStrain(wallStrainTier);
+  }, [wallStrainTier]);
+
+  // Fell-off: the wall falls away and zips back (wallShake.ts). Fires from the
+  // same store field as the HUD's FELL OFF effect, so it matches it exactly,
+  // and a gauntlet miss (which never sets that field) can never trigger it.
+  useEffect(() => {
+    if (game.fellOffSeverity === null || !animateMotion) return;
+    fallWall(game.fellOffSeverity);
+  }, [game.fellOffSeverity]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(
+    () => () => {
+      resetWallStrain();
+      resetWallFall();
+    },
+    [],
+  );
 
   function handleRestart() {
     startGame();

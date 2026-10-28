@@ -15,18 +15,18 @@ import {
   wallArtScale,
 } from './bossGauntletLedge';
 
-const expectedRatio = (1844 - 1350) / 853;
+const expectedRatio = (1844 - 1349) / 853;
 assert.ok(
   Math.abs(LEDGE_OFFSET_RATIO - expectedRatio) < 1e-9,
-  'LEDGE_OFFSET_RATIO must come from the measured wall-art ledge pixel (y=1350 of 1844, at 853px wide)',
+  'LEDGE_OFFSET_RATIO must come from the measured wall-art ledge pixel (y=1349 of 1844, at 853px wide)',
 );
 assert.equal(WALL_ART_W, 853, 'wall art width is the one source the ratio derives from');
 assert.equal(WALL_ART_H, 1844, 'wall art height is the one source the ratio derives from');
-assert.equal(LEDGE_ART_Y, 1350, 'ledge line is the one source the ratio derives from');
+assert.equal(LEDGE_ART_Y, 1349, 'ledge line is the one source the ratio derives from');
 
 assert.equal(resolveLedgeOffset(0), 0, 'zero width offsets to zero');
 assert.ok(
-  Math.abs(resolveLedgeOffset(853) - (1844 - 1350)) < 0.1,
+  Math.abs(resolveLedgeOffset(853) - (1844 - 1349)) < 0.1,
   'at the wall art\'s own native width, the offset equals the raw measured pixel gap',
 );
 assert.ok(

@@ -33,7 +33,6 @@ import {
 import {
   BRICK_RECESSES,
   LEDGE_ART_Y,
-  RECESS_OVERLAYS,
   SHELF_FACE_ART_BOTTOM,
   SHELF_FACE_ART_TOP,
   SHELF_LIP_ART_H,
@@ -43,43 +42,36 @@ import {
   wallArtScale,
 } from './bossGauntletLedge';
 
-// Per-spine identity marker (2026-08-08 doc) — a single flat-silhouette
-// crown asset (verified transparent, not a baked-in white background: all
-// four corners decode to alpha 0, the crown shape itself to alpha 255),
-// recolored per card via tintColor rather than three separate art files.
-const crownMarkerArt = require('../../assets/images/gauntlet/crown-marker.png');
+// Per-spine identity marker — three pre-coloured crown images (gold, rose,
+// lavender), one per slot, 432x299. They are NOT tinted: the colour is in the
+// art, so the slot index picks the file.
+const CROWN_ART = [
+  require('../../assets/images/gauntlet/crown-gold.png'),
+  require('../../assets/images/gauntlet/crown-rose.png'),
+  require('../../assets/images/gauntlet/crown-lavender.png'),
+] as const;
 // The carved ledge's own foreground lip, cut from the wall art itself, so
 // the bricks land BEHIND the shelf rather than on top of it.
 const shelfLipArt = require('../../assets/images/gauntlet/shelf-front.png');
 
 // Each sealed card IS one of the wall's own bricks — three distinct sprites,
 // one per slot, so the row never reads as the same stone stamped three
-// times. Every sprite is authored on the SAME recipe: TOP_FACE art-units of
-// the brick's top surface, then faceH of its front face, then exactly
-// TOP_FACE more of TRANSPARENT PADDING at the bottom. That bottom padding is
-// load-bearing: it puts the padded image's own centre exactly on the centre
-// of the brick's FRONT FACE, which is the point React Native rotates a view
-// about. Never substitute an unpadded sprite and never trim the padding —
-// the punch-out below would then swing about the wrong point.
-const TOP_FACE = 46;
+// times. The sprites are the stone's FRONT FACE only — no top surface and no
+// padding — so each image's own centre IS the centre of the face, which is
+// the point React Native rotates a view about. TOP_FACE stays as a named 0 so
+// the geometry below (sprite top, crown position) keeps one shape; padH equals
+// faceH for the same reason. Never add padding or a top surface to these
+// without giving TOP_FACE and padH their real values back.
+const TOP_FACE = 0;
 const BRICK_SPRITES = [
-  { src: require('../../assets/images/gauntlet/brick1_rn.png'), w: 240, padH: 464, faceH: 372 },
-  { src: require('../../assets/images/gauntlet/brick2_rn.png'), w: 240, padH: 477, faceH: 385 },
-  { src: require('../../assets/images/gauntlet/brick3_rn.png'), w: 240, padH: 459, faceH: 367 },
-] as const;
-
-// The holes those bricks leave — one per slot, cut from the wall art at the
-// RECESS_OVERLAYS rects so each one's outer bleed IS the surrounding wall and
-// disappears into it. The shared wall itself is never cut: GraphicGround
-// renders the intact StoneWall on every screen, and these appear only while
-// the gauntlet is mounted.
-const RECESS_ART = [
-  require('../../assets/images/gauntlet/recess1.png'),
-  require('../../assets/images/gauntlet/recess2.png'),
-  require('../../assets/images/gauntlet/recess3.png'),
+  { src: require('../../assets/images/gauntlet/stone-left.png'), w: 240, padH: 372, faceH: 372 },
+  { src: require('../../assets/images/gauntlet/stone-middle.png'), w: 240, padH: 385, faceH: 385 },
+  { src: require('../../assets/images/gauntlet/stone-right.png'), w: 240, padH: 367, faceH: 367 },
 ] as const;
 // Three genuinely distinct hues, not three golds, so "which one is which"
 // actually reads. Pulled from the app's own locked palette, not new colors.
+// (The crown images carry their own colour; this is kept for any other
+// consumer of the palette.)
 export const CARD_MARKER_COLORS = [PW.color.gold, PW.color.rose, PW.color.lavender] as const;
 
 type GauntletTile = { pairIndex: number; mask: Mask; isReal: boolean };
@@ -136,15 +128,12 @@ const BRICK_INPUT = [0, BRICK_SEG[0], BRICK_SEG[1], 1];
 const BRICK_CROWN_DELAY_MS =
   BRICK_LEAD_IN_MS + 2 * BRICK_STAGGER_MS + BRICK_FLIGHT_MS + 120;
 const BRICK_CROWN_MS = 460;
-// Masks the brick's top face while it is still flush in the wall. React
-// Native has no clip-path, so a flat rectangle in the recess's own shadow
-// colour stands in for one, fading out as the brick clears the hole.
-const RECESS_SHADOW = '#120C1F';
 // Where the crown sits on the brick's front face, as a fraction of THAT
 // face's height measured from its top — not of the padded sprite.
 const CROWN_FACE_RATIO = 0.44;
 const CROWN_W = 84;
-const CROWN_H = 54;
+// 84 / 1.445 — the crown art is 432x299, so the box keeps its shape.
+const CROWN_H = 58;
 // The one on-device tuning knob for the shelf lip: points added to its top
 // edge, so it can be nudged without re-deriving the wall-art geometry.
 export const SHELF_LIP_NUDGE_Y = 0;
@@ -168,8 +157,7 @@ const DUST_COLOR = '#B8A98F';
 // about two thirds between its hole and the shelf, which read as a brick
 // GROWING rather than one coming toward the camera (device, 2026-09-10). At 96
 // the row is 3 * 96 + 2 * ROW_GAP = 304pt wide with real margins, and the
-// growth (1 / startScale, where startScale = recess width / face height) drops
-// with it.
+// growth (1 / startScale — see startScaleX / startScaleY) drops with it.
 export const CARD_WIDTH = 96;
 // The closed card is a brick standing on the shelf, so this is the tallest of
 // the three brick FRONT FACES at CARD_WIDTH wide: brick2, 385 / 240 at 96 wide,
@@ -328,6 +316,7 @@ function SpineSlot({
     const recessCx = ((recess.x0 + recess.x1) / 2) * S;
     const recessCy = ((recess.y0 + recess.y1) / 2) * S;
     const recessW = (recess.x1 - recess.x0) * S;
+    const recessH = (recess.y1 - recess.y0) * S;
     // The card's resting bottom sits ON the ledge line — that is what this
     // component's bottom-anchored wrap already guarantees — so both the card
     // and the recess are measured against that same line, negative meaning
@@ -342,17 +331,19 @@ function SpineSlot({
       faceH,
       topFaceH,
       spriteH: sprite.padH * spriteScale,
-      // The mask covers the top face plus a two-unit bleed, so no lit pixel
-      // of the brick's top surface survives at the seam.
-      capH: (TOP_FACE + 2) * spriteScale,
       // Top of the padded sprite box within the slot, placed so the FRONT
       // FACE's bottom edge lands on the card's bottom edge. The transparent
       // padding then overhangs the card's bottom by exactly topFaceH.
       spriteTop: CARD_CLOSED_HEIGHT - faceH - topFaceH,
       startDX: recessCx - cardCentreX,
       startDY: recessCentreY - cardCentreY,
-      // Lying on its side, the brick's face height spans the recess's width.
-      startScale: recessW / faceH,
+      // The stone starts as an exact cutout of its hole: lying on its side,
+      // its face LENGTH (sprite y) spans the hole's width and its THICKNESS
+      // (sprite x, CARD_WIDTH wide) spans the hole's height. The two ratios
+      // differ because the stone is not the hole's shape, so each axis gets
+      // its own start scale, and both ease to 1 as the stone comes forward.
+      startScaleX: recessH / CARD_WIDTH,
+      startScaleY: recessW / faceH,
       // A small wall-scaled drift so the push-out reads as coming toward the
       // camera rather than sliding along the wall.
       driftY: 20 * S,
@@ -498,9 +489,13 @@ function SpineSlot({
     inputRange: BRICK_INPUT,
     outputRange: ['-90deg', '-90deg', '4deg', '0deg'],
   });
-  const brickScale = progress.interpolate({
+  const brickScaleX = progress.interpolate({
     inputRange: BRICK_INPUT,
-    outputRange: [brick.startScale, brick.startScale * 1.09, 1.055, 1],
+    outputRange: [brick.startScaleX, brick.startScaleX * 1.09, 1.055, 1],
+  });
+  const brickScaleY = progress.interpolate({
+    inputRange: BRICK_INPUT,
+    outputRange: [brick.startScaleY, brick.startScaleY * 1.09, 1.055, 1],
   });
   const brickTranslateX = progress.interpolate({
     inputRange: BRICK_INPUT,
@@ -509,12 +504,6 @@ function SpineSlot({
   const brickTranslateY = progress.interpolate({
     inputRange: BRICK_INPUT,
     outputRange: [brick.startDY, brick.startDY + brick.driftY, 0, 0],
-  });
-  // Stands in for a clip-path: while the brick is flush in the wall its top
-  // face must not read, and it uncovers as the brick clears the hole.
-  const capOpacity = progress.interpolate({
-    inputRange: [0, 0.1, 0.3, 1],
-    outputRange: [1, 1, 0, 0],
   });
   // Contact shadow — arrives only over the last third of the flight, as the
   // brick comes down onto the shelf.
@@ -600,7 +589,8 @@ function SpineSlot({
               { translateX: Animated.add(brickTranslateX, seatedShake.x) },
               { translateY: Animated.add(brickTranslateY, seatedShake.y) },
               { rotate: brickRotate },
-              { scale: brickScale },
+              { scaleX: brickScaleX },
+              { scaleY: brickScaleY },
               { perspective: CARD_PERSPECTIVE },
               { rotateY: closedRotateY },
             ],
@@ -611,12 +601,6 @@ function SpineSlot({
           source={sprite.src}
           contentFit="contain"
           style={StyleSheet.absoluteFill}
-        />
-        {/* The recess mask — covers the brick's top face while it is still
-            flush in the wall, so the hole reads as a hole. */}
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.recessCap, { height: brick.capH, opacity: capOpacity }]}
         />
         {/* The crown is the only content on the face, and the only thing
             that distinguishes the three choices. It arrives on its own beat,
@@ -633,9 +617,8 @@ function SpineSlot({
           ]}
         >
           <Image
-            source={crownMarkerArt}
+            source={CROWN_ART[index % CROWN_ART.length]}
             contentFit="contain"
-            tintColor={CARD_MARKER_COLORS[index % CARD_MARKER_COLORS.length]}
             style={styles.crownImage}
           />
         </Animated.View>
@@ -847,56 +830,11 @@ export function BossGauntletSpines({
 
   return (
     <View style={[styles.wrap, { bottom: ledgeOffset }]} pointerEvents="box-none">
-      {/* The holes. Part of the WALL, not of any card — so they live in their
-          own layer beneath the row and take no part in a brick's animated
-          transform. Positioned in wall art space off the same ledge line the
-          wrap's bottom already sits on, and widened from the wrap's centre
-          (screen centre) because the wrap is inset by MaskBoard's padding.
-          Each one fades in over the first sliver of its own brick's push-out,
-          UNDERNEATH that brick, which covers its recess completely while
-          flush — so the swap from wall brick to hole is never visible as a
-          pop. They leave with the gauntlet; no hole state is persisted. */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.recessLayer,
-          {
-            width: windowWidth,
-            marginLeft: -windowWidth / 2,
-            // Painted on the wall, so it moves with the wall — otherwise the
-            // holes slide out of their own sockets during the tremble.
-            transform: wallShakeTransform(),
-          },
-        ]}
-      >
-        {gauntletTiles.map((tile, index) => {
-          const overlay = RECESS_OVERLAYS[index % RECESS_OVERLAYS.length];
-          return (
-            <Animated.View
-              key={tile.mask.id}
-              style={[
-                styles.recessOverlay,
-                {
-                  left: overlay.x * wallScale,
-                  width: overlay.w * wallScale,
-                  height: overlay.h * wallScale,
-                  bottom: (LEDGE_ART_Y - (overlay.y + overlay.h)) * wallScale,
-                  opacity: brickProgress[index].interpolate({
-                    inputRange: [0, 0.06, 1],
-                    outputRange: [0, 1, 1],
-                  }),
-                },
-              ]}
-            >
-              <Image
-                source={RECESS_ART[index % RECESS_ART.length]}
-                contentFit="fill"
-                style={StyleSheet.absoluteFill}
-              />
-            </Animated.View>
-          );
-        })}
-      </Animated.View>
+      {/* No holes. The three hole pictures that used to sit behind the bricks
+          are removed for now (Pete, 2026-10-28): the layer was the source of a
+          black strip that flashed on the right stone when it was picked, and
+          Pete did not like how the holes looked. RECESS_OVERLAYS and
+          recess1-3.png are kept, unused, for if they come back. */}
 
       <View
         // Fixed, not activeCardHeight-driven: this whole wrap is
@@ -1097,13 +1035,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  recessCap: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: RECESS_SHADOW,
-  },
   contactShadow: {
     position: 'absolute',
     left: -7,
@@ -1118,18 +1049,6 @@ const styles = StyleSheet.create({
   shelfLip: {
     position: 'absolute',
     left: '50%',
-  },
-  // Spans the wrap's full height and is re-widened to the screen from its
-  // centre; each overlay inside is then placed by `bottom` off the wrap's
-  // bottom edge, which is the wall's own ledge line.
-  recessLayer: {
-    position: 'absolute',
-    left: '50%',
-    top: 0,
-    bottom: 0,
-  },
-  recessOverlay: {
-    position: 'absolute',
   },
   // No "SEALED" label anymore — the crown is the only content, so it can
   // take up most of the card instead of sharing space with text (Pete,
