@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-23 (the outdoor terrace Home is merged into play-screen-overhaul; button entrance, the Hunt, Daily and Polybook tap dives, moon rise, shooting stars, the Polybook room and Polly's fall-in built and device-confirmed 2026-10-22 and 2026-10-23; other status entries retain their own dates). Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-10-27 (Build 15 accessibility/beta hardening, the Build 16 iOS audio watchdog fix, true Hunt pause/quit, and the dedicated POLYWORDS DEV phone-testing path are now committed and pushed; device-validation status is recorded below). Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -13,7 +13,7 @@ focused rules live in `docs/`; runtime code/data outrank docs.
 | `main` | Stale. Never merge into it without Pete's approval. |
 | `gh-pages` | Live public website (GitHub Pages). Orphan branch, no shared history with game code. Never merge into or out of it. |
 
-Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` before Expo testing.
+Phone testing uses the dedicated `POLYWORDS DEV` development client against the local checkout, not the TestFlight app and not GitHub. Normal loop: `APP_VARIANT=development npx expo start --dev-client`; add `-c` only when Metro's cache needs clearing. Make sure the local checkout contains the target commit before testing.
 
 ## Current State
 
@@ -39,8 +39,8 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   - Polybook page: Pete's room painting `assets/images/polybook/polybook_room_bg.webp` (1285x2778) replaces the old sky, wash and candle glow. It needs an explicit `width/height 100%` style: `StyleSheet.absoluteFill` alone drew it at pixel size, about 3.4x too big (same iOS gotcha CLAUDE.md already lists; fixed, Pete confirmed).
   - Cage taken OFF Home ("too busy"; cage layers, ids and test entries removed). The cage art (the old static `polybook_cage.webp`, since deleted and replaced by the rope, hanging cage, base and dome pieces) sat on the Polybook page, placed from the header by `app/ui/polybookCage.ts`. It is only a static prop for now.
   - Dive sounds, all Pixabay Content License (credits in `assets/audio/LICENSES.md`), named in `TERRACE_DIVE_SFX` (`app/ui/homeTerraceDive.ts`): Hunt and Daily play `terraceWhooshEpic` (Daily starts 250 ms in); the Polybook rise plays `terraceWhooshCape`; `polybookThud` plays when the book lands (`PolybookSpread`); the buttons' retreat plays `terraceStoneShift` (Pete: "that works"). `polybook_thud` had 0.57 s of silence before the hit and `cape` 0.15 s; both were trimmed. The terrace button press sound (`pressHoldStart`) was removed at Pete's request. Volumes were set from measurement, not by ear. Pete: "everything seems all right on that front".
-  Open (Pete, 2026-10-23): (1) the cage goes on the LEFT of the Polybook page and must FALL and CRASH on the floor on the FIRST Polybook open of each app launch, then lie broken on the floor on every later visit; no sound for now; waiting on Pete's transparent broken-cage image, and whether the rope falls with it (default: no rope). Not built. (2) DONE 2026-10-23: the Daily streak is off the moon and now shows on the Daily HUD as "STREAK n" above "DAILY #n" (hidden at 0; counts consecutive days the Daily was finished, win or lose; hidden on phones where it would cover the first clue, only 375x667 today: `dailyStreakLineFits`). (3) Idea only, NOT decided: let a lost Daily be retried after a wait (for example 2 hours). Open problems: the Daily is deterministic, so a retry is the same puzzle; what a retry-win grants is undecided. Pete: park it.
-  Open (Pete): the bottom nav still pushes a new screen for Polybook and Settings (only Home now pops back to the existing Home). Dive sounds and the Polybook background are done (2026-10-23, below).
+  Closed 2026-10-23/24: the Polybook cage fall/crash is built, the Daily streak moved off Home to the Daily HUD, the Polybook/Settings bottom nav was removed, and HOME buttons now return through the shared Home control. Dive sounds and the Polybook room background are also built.
+  Parked: a lost-Daily retry-after-a-wait idea remains undecided; the deterministic puzzle and retry reward still need a product ruling before any implementation.
 
 - **Hunt:** UP claims a REAL; RIGHT rejects a trap. Standard arc is 10 rounds; fledgling is 8.
   Polly's Word is final. Returning Haunt is round 5 standard / round 4 fledgling.
@@ -109,19 +109,13 @@ Phone testing uses the local checkout, not GitHub. Pull `play-screen-overhaul` b
   retired while internal scoring remains intact. MASTERED / HAUNTED / BANISHED use the shared
   physical plaque-text treatment. The split claim/trap/tier-up haptics and wrong-swipe squawk rule
   remain device-checked. `Bird brain` remains Results-only unless Pete rules otherwise.
-- **Hunt momentum feedback (2026-10-11): built on `play-screen-overhaul`, NOT committed.**
-  Shared momentum accent (`app/ui/momentumAccent.ts`); wall vein pulse (`wallVeinPulse.ts`,
-  generated `assets/images/background/wall-veins/` art from `tools/art/build_wall_veins.py`,
-  `GraphicGround` / `AmbientSkyBackground` / `ambientSkyTuning`); pressed-card glow and press-down
-  haptics (`SwipeMask`, `haptics.ts`, `huntFeedbackPolicy.ts`); outcome haptics retimed to the
-  visible result (`MaskBoard` plus SwipeMask's `onWrongShown`); SHARP now `#6EC3FF`; wall torches
-  and `GroundTorch.tsx` removed. Durable details live in `CLAUDE.md`. Device-tested in Expo Go only,
-  which Pete does not fully trust for feel: veins visible with good timing; press and outcome
-  haptics felt and approved; pressed-card glow NOT visible (known clipping cause, left as is by
-  Pete). Pending: one TestFlight build after the remaining prompts to judge haptics, vein pulse
-  and glow on a real build.
-- **TestFlight:** build/submit/install works end to end. Store name remains
-  `POLYWORDS: Hunt or Be Trapped`; iPad support is off.
+- **Hunt momentum feedback:** committed on `play-screen-overhaul` and exercised in native builds. Shared momentum accent, wall-vein pulse, press/outcome haptics, SHARP `#6EC3FF`, and the current timing are the production path. Device evidence: vein timing and haptics read well; the pressed-card glow remains nearly invisible because the transformed tile clips its own shadow. Pete explicitly chose to leave that known issue rather than reopen the card geometry without stronger evidence.
+- **Build 15 accessibility/beta hardening (`4ec96f6`, 2026-10-27):** Hunt and Daily short-feedback effects now share `resolveGameplayFeedbackAccessibility`. Reduce Motion removes unnecessary movement and also suppresses the implied flash channel; Reduce Flashes suppresses flash/pulse feedback while motion may remain. The hardening pass also made the Hunt-leave warning truthful ("Leave now and this run ends. Your score and remaining feathers are lost."), made Daily Results HOME a full-width active secondary action, and shows native version/build in Settings.
+- **Build 16 iOS audio watchdog fix (`d6b4c3a`, 2026-10-27):** the known `expo-audio 57.0.5` iOS watchdog bug is backported with `patch-package` instead of forcing an SDK 58 migration. `patches/expo-audio+57.0.5.patch` is applied by `postinstall`; `tools/expoAudioPatch.test.mjs` guards it in the normal test suite. Fresh install/typecheck/full tests passed, and repeated device background/foreground testing on Build 16 did not reproduce the watchdog crash. Keep the patch until an intentional native/SDK upgrade replaces it and the replacement is device-verified.
+- **True Hunt pause + quit (`60bd43a`, `272b020`, `8e7813c`, 2026-10-27):** the pause icon now opens one locked HUNT PAUSED menu: RESUME HUNT, HOME, SETTINGS, QUIT HUNT. HOME and SETTINGS preserve the exact active run; Home shows RESUME HUNT; Settings Back returns to the still-paused Hunt. QUIT HUNT is the only destructive path and opens the locked Polly confirmation with the truthful loss warning and "See you later, LOSER." Reduce Motion presents the pause/quit states without the pop/bounce motion. Automated typecheck/full-suite/pause regression checks passed; the HUNT PAUSED and quit-confirm visuals were device-checked in POLYWORDS DEV and Pete locked the visuals. A complete exact-state HOME/SETTINGS/QUIT behavior pass on-device remains the final acceptance check.
+- **Fast device-testing path (`22d61a6`, 2026-10-27):** production remains `POLYWORDS` / `com.pdb8080.polywords`; development is a separate `POLYWORDS DEV` app / `com.pdb8080.polywords.dev`, selected by `APP_VARIANT=development` in `app.config.js` and the EAS development profile. Pete's iPhone is registered for internal distribution, Developer Mode is enabled, and the dev client is installed and working. Ordinary JS/TS iteration should use Metro + POLYWORDS DEV instead of consuming TestFlight builds. Rebuild the dev client only when native dependencies/config/SDK change.
+- **Branding / splash:** the current app icon is approved and passed device inspection. The splash artwork is approved, but Build 15 proved its rendered mark is too small under the current contain treatment; the remaining work is a scale/fit correction, not a redesign.
+- **TestFlight:** build/submit/install works end to end. Build 16 is the current verified production-native baseline; store name remains `POLYWORDS: Hunt or Be Trapped`; iPad support is off. Use TestFlight for release-candidate/native-production verification, not every ordinary JS/TS iteration.
 - **Website:** live at https://psibari.github.io/Polywords/ with /privacy/ and /support/.
   Contact polywords123@gmail.com. The Daily share text links there
   (`dailyChallengeEngine.ts`). polywords.app is NOT owned yet; when bought, set it as the
@@ -263,6 +257,16 @@ Open, needs Pete's ruling:
   ignores.
 - Unverified on device: whether iOS swipe-back works on the Daily screen in this build, and the
   re-entry test for 4c1f6d6 (finish with a final miss, swipe back within about 2 s, return).
+
+## Immediate sequence (2026-10-27)
+
+1. Finish one full real-device Hunt-pause behavior pass: Resume exact state; Pause -> Home -> RESUME HUNT; Pause -> Settings -> Back/Home; KEEP HUNTING; confirmed LEAVE THE HUNT. No more visual tuning unless that pass exposes a real defect.
+2. Correct the splash **rendered scale/fit** while preserving the approved artwork.
+3. Audit Daily's equivalent pause/settings behavior only if it is a real beta-path gap; do not redesign Daily.
+4. Run one systematic phone-readability pass across supporting Hunt/Daily/Polly/results/settings text; no piecemeal random font inflation.
+5. Freeze the candidate and run the First Flock external beta.
+
+Do not start an SDK 58 migration, new progression systems, more Daily content, a full Polly articulation project, monetization, or remote analytics merely because the core build is close to beta.
 
 ## Do Not Work On Yet
 

@@ -29,6 +29,23 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
 - `MusicEngine.ts` owns persistent music; `audioSession.ts` owns the app audio session;
   `sfx.ts` owns on-demand SFX players.
 
+### App variants and phone testing
+
+- Production identity stays `POLYWORDS` / `com.pdb8080.polywords`.
+- Development identity is `POLYWORDS DEV` / `com.pdb8080.polywords.dev`. `app.config.js` selects it only when `APP_VARIANT=development`; the EAS development profile sets that variable and enables the generated dev-client URL scheme.
+- Normal physical-iPhone iteration is `APP_VARIANT=development npx expo start --dev-client` and opens POLYWORDS DEV. Use `-c` only to clear Metro's cache. The TestFlight/production app must never be the target of the dev QR.
+- Rebuild POLYWORDS DEV only when native dependencies, native configuration, or the Expo SDK changes. Ordinary JS/TS/assets changes come from Metro. TestFlight remains the release-candidate/native-production check.
+
+### iOS expo-audio watchdog patch (SDK 57)
+
+- `expo-audio 57.0.5` carries the official iOS watchdog fix as `patches/expo-audio+57.0.5.patch`, applied by `patch-package` from `postinstall`.
+- `tools/expoAudioPatch.test.mjs` is a regression guard and runs in normal `npm test`. Do not delete the patch, bypass the guard, or upgrade SDK merely to remove it. Retire it only when an intentional native/SDK upgrade contains the fix and passes device background/foreground verification.
+
+### Gameplay-feedback accessibility
+
+- `app/game/gameplayFeedbackAccessibility.ts` is the shared short-feedback policy. Motion animates only when Reduce Motion resolves false. Flash/pulse feedback requires motion to be allowed **and** Reduce Flashes to be off. A pending system motion preference takes the conservative static path.
+- Preserve gameplay state, copy, decisions, timing gates, and required tap-to-continue behavior when motion/flash decoration is suppressed.
+
 ### Native rules learned on device
 
 - Never swap a native-driven transform between an Animated node and a plain number across renders.
@@ -112,6 +129,15 @@ either. `TorchGlow.tsx` stays (Settings uses it).
   outer wrapper. Any backing shape must fit inside the painted silhouette. The black
   `deckTopCardSlot` shadow (0.24, r22, 16 pt down) is not the cause. Android: Android 9+ tints the
   elevation shadow with `shadowColor` but has no opacity, radius or offset; not handled yet.
+
+### Hunt pause / resumable navigation
+
+- `HuntPauseMenu.tsx` is the one true in-Hunt pause surface: RESUME HUNT, HOME, SETTINGS, QUIT HUNT. Opening it must not forfeit or advance the run.
+- HOME and SETTINGS preserve the exact active Hunt. Before leaving Game, set `hasResumableGame` and flush active persistence. Home must show RESUME HUNT and resume the same word/masks/score/feathers/chain/Haunt/Boss state rather than generating a new run.
+- Settings opened from the pause menu carries explicit `preserveHunt: true`; Back returns to the still-paused Game screen. Settings -> Home bypasses the Hunt exit guard only for that explicit preserved-Hunt path.
+- `withHuntExitGuardBypass` is synchronous and scoped to the deliberate safe navigation dispatch. Normal back/removal still hits `beforeRemove` and cannot silently discard a live Hunt.
+- QUIT HUNT is the only pause action that enters `PollyExitConfirm`. KEEP HUNTING returns to play; LEAVE THE HUNT forfeits only after confirmation. The locked confirmation uses `assets/images/polly/polly_quit_smug.png`, the truthful loss warning, and the single bubble "See you later, LOSER."
+- Pause and quit overlays block underlying gameplay/accessibility and suspend the idle-static timer. Reduce Motion shows their final states without pop/bounce animation.
 
 ## First-Run Onboarding
 
@@ -383,4 +409,4 @@ Architecture only:
   Adding any network, analytics, crash-reporting or ads SDK requires updating both `PRIVACY_TEXT`
   in `SettingsScreen.tsx` and `gh-pages:privacy/index.html` in the same release, plus the App
   Store privacy answers.
-Round gold icon buttons (Pete drew them 2026-10-23): `app/components/UiIconButton.tsx`, art `assets/images/ui/icon_{home,pause,settings}.webp`, ONE size everywhere (`UI_ICON_BUTTON_SIZE` 44 pt, `app/ui/uiIconButton.ts`). Used for the Home settings gear (bottom-left, just under the console), the Hunt pause (bottom-right) and the HOME button on Polybook and Settings. The Home gear is drawn AFTER the console in `HomeTerraceScene.tsx` (and before the gold flash) so the console's floor shadow does not darken it (Pete 2026-10-23). Results/Daily keep their text HOME links. App flow (Pete): the Polybook opens only from Home; Home is the only way back from Polybook, Daily, Hunt and Settings; Settings is reached only from the Home gear.
+Round gold icon buttons (Pete drew them 2026-10-23): `app/components/UiIconButton.tsx`, art `assets/images/ui/icon_{home,pause,settings}.webp`, ONE size everywhere (`UI_ICON_BUTTON_SIZE` 44 pt, `app/ui/uiIconButton.ts`). Used for the Home settings gear (bottom-left, just under the console), the Hunt pause (bottom-right) and the HOME button on Polybook and Settings. The Home gear is drawn AFTER the console in `HomeTerraceScene.tsx` (and before the gold flash) so the console's floor shadow does not darken it (Pete 2026-10-23). Results/Daily keep their text HOME links. App flow (Pete): the Polybook opens only from Home. Settings is reached from the Home gear or from HUNT PAUSED. A paused Hunt may safely go Home or Settings without forfeiting; all other live-Hunt removal remains guarded. HOME from ordinary screens still returns to the existing Home rather than stacking another one.

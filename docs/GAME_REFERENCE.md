@@ -35,6 +35,16 @@ simulation target, not measured player data.
   mastery survives either result. The production rematch starts on the gold Master book; KING keeps
   it gold, while BUSTER returns it to purple before the final plaque.
 
+## Hunt Pause and Quit
+
+- The pause control opens **HUNT PAUSED**. It does not leave or forfeit the Hunt.
+- **RESUME HUNT** returns to the exact live board/run state.
+- **HOME** suspends the exact Hunt and returns Home; the Home Hunt control becomes **RESUME HUNT**. Re-entering restores the same run rather than starting a new one.
+- **SETTINGS** preserves the Hunt. Back returns to the still-paused Hunt; going Home from those Settings also preserves the resumable run.
+- **QUIT HUNT** is the only pause-menu action that can forfeit. It opens **LEAVING THE HUNT?** with the truthful warning: "Leave now and this run ends. Your score and remaining feathers are lost." KEEP HUNTING returns to the run; LEAVE THE HUNT forfeits after confirmation.
+- The locked quit presentation uses smug Polly leaning over the panel with one bubble: "See you later, LOSER." No second Polly line or run-summary clutter belongs on that confirmation.
+- Reduce Motion keeps the pause and confirmation fully usable while removing their nonessential pop/bounce animation.
+
 ## Scoring and Momentum
 
 | Action | Base points |

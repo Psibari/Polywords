@@ -108,7 +108,8 @@ shadow, and physical motion; pressed objects should feel displaced, not merely r
 - Active gameplay is nav-free and protects the vertical UP lane.
 - Motion explains causality and preserves object continuity.
 - Reward ceremony never exposes stale state or accepts input early.
-- Reduced Motion keeps state order while shortening or quieting movement.
+- **Reduce Motion** preserves state order, copy, accessibility, and required continuation while suppressing unnecessary movement. It also suppresses feedback whose flash/pulse exists only as part of that motion.
+- **Reduce Flashes** suppresses flash/pulse channels while preserving allowed causal motion. Neither setting may change game truth, skip a decision, or make required feedback inaccessible.
 - Test shadows, clipping, text fit, gesture ownership, and stacking on real iOS/Android devices.
 
 ## Signature Objects

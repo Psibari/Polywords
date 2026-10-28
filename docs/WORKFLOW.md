@@ -24,8 +24,22 @@ Docs-only work requires both Git checks and a broken-reference scan.
 
 Static checks and the browser preview do not prove native animation, audio, gestures, stacking
 or layout; several bugs have shown only on the phone (`CLAUDE.md`, Native rules). Report device
-coverage separately. To test on the phone, the machine serving Expo must `git pull` the branch
-first, then run `npx expo start --clear`; the phone runs the local checkout, not GitHub.
+coverage separately.
+
+Physical-iPhone iteration uses the dedicated **POLYWORDS DEV** development client, not Expo Go and
+not the TestFlight/production app. Make sure the local checkout contains the commit being tested,
+then run from Git Bash:
+
+```bash
+APP_VARIANT=development npx expo start --dev-client
+```
+
+Add `-c` only when Metro's cache needs clearing. Open POLYWORDS DEV on the phone or use its dev
+QR/server entry. The production bundle ID remains separate. Rebuild the dev client only when native
+dependencies, native config, or the Expo SDK changes; ordinary JS/TS/assets iterate through Metro.
+Use TestFlight for release-candidate and production-native verification, not routine UI/gameplay
+checks. The registered iPhone and iOS Developer Mode are one-time prerequisites for the internal
+development build.
 
 ## Completion
 
