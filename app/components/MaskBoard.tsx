@@ -922,13 +922,15 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // Outcome haptics fire when the player SEES the result, never at release
   // (Pete, 2026-10-11). The judgement queues its cue here; the moment it
   // becomes visible fires it once and clears it:
-  //   claim  -> the card reaching the book (handleCardTouch)
+  //   claim  -> the card reaching the book (handleCardTouch). The claim chime
+  //             fires there too, with the haptic (Pete, 2026-10-28)
   //   trap   -> the shard burst (handleEffect 'shard')
   //   wrong  -> the card's red flash and snap back (handleWrongShown)
   // A queue for claims, because a card can still be flying to the book when
   // the next claim is judged. Trap and wrong show within a frame or two.
   // Gauntlet cards are not part of this: their cues are unchanged.
-  const pendingClaimCuesRef = useRef<ClaimHapticCue[]>([]);
+  // sfxRate is the tier pitch-up the chime was judged at, kept with its haptic.
+  const pendingClaimCuesRef = useRef<{ cue: ClaimHapticCue; sfxRate: number }[]>([]);
   const pendingTrapCueRef = useRef<TrapRejectHapticCue | null>(null);
   const pendingWrongCueRef = useRef(false);
 
@@ -1037,8 +1039,11 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   function handleCardTouch() {
     // Before the gate check: the claim was already judged, so its cue lands
     // with the card even if the gate has moved on since.
-    const claimCue = pendingClaimCuesRef.current.shift();
-    if (claimCue) Haptics.cueAsync(claimCue);
+    const claim = pendingClaimCuesRef.current.shift();
+    if (claim) {
+      playSfx('correctClaimHunt', { rate: claim.sfxRate });
+      Haptics.cueAsync(claim.cue);
+    }
     if (mechanics.gatePhase !== 'locked') return;
     triggerBookOpen();
     if (pendingAbsorbRef.current) {
@@ -1313,8 +1318,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     externalInputLocked: inputMode === 'locked',
     perform: {
       onRealClaimed({ mask, tier }) {
-        playSfx('correctClaim', { rate: CHAIN_TIER_SFX_RATE[tier] });
-        pendingClaimCuesRef.current.push(resolveClaimHapticCue(step.hapticTier));
+        // The chime and the haptic both wait for the card to reach the book
+        // (handleCardTouch), so what you hear lands with what you see.
+        pendingClaimCuesRef.current.push({
+          cue: resolveClaimHapticCue(step.hapticTier),
+          sfxRate: CHAIN_TIER_SFX_RATE[tier],
+        });
         pulseWallVeinsForCorrect();
         // Not fired directly — handleCardTouch fires it at actual arrival,
         // synced with triggerBookOpen. The accepted phrase leaves with the
@@ -1331,7 +1340,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
         performWrongSwipeFeedback(brokeRealChain, fellOffSeverity, !isGauntletCard);
       },
       onGauntletCorrect({ swipedUp }) {
-        playSfx(swipedUp ? 'correctClaim' : 'trapShatter');
+        playSfx(swipedUp ? 'correctClaimHunt' : 'trapShatter');
         Haptics.cueAsync('bossCorrect');
         pulseWallVeinsForCorrect();
         // gauntletCorrectCount in the store hasn't incremented for this

@@ -6,6 +6,7 @@ export type SfxName =
   | 'uiClick'
   | 'tileSwipe'
   | 'correctClaim'
+  | 'correctClaimHunt'
   | 'trapWrong'
   | 'wrongImpact'
   | 'streakBreakImpact'
@@ -116,6 +117,12 @@ const SFX: Record<SfxName, SfxConfig> = {
   uiClick:        { source: require('../../assets/audio/sfx/ui_click.mp3'),          volume: 0.40, cooldownMs: 80 },
   tileSwipe:      { source: require('../../assets/audio/sfx/tile_swipe.mp3'),        volume: 0.25, cooldownMs: 80 },
   correctClaim:   { source: require('../../assets/audio/sfx/correct_claim.mp3'),     volume: 0.35, cooldownMs: 120 },
+  // The Hunt's own correct-answer sound (Pete, 2026-10-28): a rising two-note chime with a punchy
+  // strike layered on top. Used for a Hunt claim and the gauntlet's correct swipe-up. The Daily
+  // still plays correctClaim above. The file is level-matched to correct_claim.mp3 (both about
+  // -15.6 LUFS, peak -1 dBFS); Pete found it a little loud at 0.35 on device (2026-10-28), so this
+  // sits about 2 dB under it at 0.28. Tune by ear.
+  correctClaimHunt: { source: require('../../assets/audio/sfx/correct_claim_hunt.wav'), volume: 0.28, cooldownMs: 120 },
   trapWrong:      { source: require('../../assets/audio/sfx/trap_wrong.mp3'),        volume: 0.35, cooldownMs: 120 },
   wrongImpact:    { source: require('../../assets/audio/sfx/wrong_lame_whistle.mp3'), volume: 0.42, cooldownMs: 120 },
   streakBreakImpact: { source: require('../../assets/audio/sfx/punch_impact_hit.mp3'), volume: 0.55, cooldownMs: 120 },
