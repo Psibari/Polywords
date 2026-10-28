@@ -272,7 +272,11 @@ function SpineSlot({
   tileLanded: boolean;
   inputLocked: boolean;
   entranceDelay: number;
-  reduceMotion: boolean;
+  // Tri-state, passed straight through from useReducedMotionPreference: null
+  // means the preference has not resolved yet. SpineSlot's entrance effect must
+  // see that null (it holds the bricks inside the wall until it knows), so the
+  // parent must never collapse it to a boolean.
+  reduceMotion: boolean | null;
   onPick: (index: number) => void;
   onSwipeUp: () => void;
   onSwipeRight: () => void;
@@ -918,7 +922,7 @@ export function BossGauntletSpines({
           tileLanded={tileLanded}
           inputLocked={inputLocked}
           entranceDelay={BRICK_LEAD_IN_MS + index * BRICK_STAGGER_MS}
-          reduceMotion={reduceMotion !== false}
+          reduceMotion={reduceMotion}
           progress={brickProgress[index]}
           onPick={onPick}
           onSwipeUp={onSwipeUp}
