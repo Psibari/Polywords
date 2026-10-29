@@ -37,12 +37,20 @@ function hideSplashOnce() {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     'BebasNeue-Regular':    require('./assets/fonts/BebasNeue-Regular.ttf'),
     'BarlowCondensed-Bold': require('./assets/fonts/BarlowCondensed-Bold.ttf'),
     'Buggie-Regular': require('./assets/fonts/Buggie-Regular.ttf'),
     'LilitaOne-Regular': require('./assets/fonts/LilitaOne-Regular.ttf'),
   });
+  // A font that fails to load must not stop the boot: useFonts never reports
+  // loaded after an error, so without this the app would never reach Home.
+  // Text falls back to the system font instead.
+  const fontsDone = fontsLoaded || fontError != null;
+
+  useEffect(() => {
+    if (fontError) console.warn('Font loading failed; continuing with the system font.', fontError);
+  }, [fontError]);
 
   // Home is always the landing screen — this only gates the first paint so
   // hasResumableGame is known before Home renders its button (otherwise
@@ -51,7 +59,7 @@ export default function App() {
   const [navKey, setNavKey] = useState(0);
 
   useEffect(() => {
-    if (!fontsLoaded) return;
+    if (!fontsDone) return;
 
     const { loadGame, loadGhosts, loadProgress, loadSettings, loadPollyMemory, loadOnboarding } = useGameStore.getState();
 
@@ -67,7 +75,7 @@ export default function App() {
       loadOnboarding(),
       loadPlaytestEvents(),
     ]).then(() => loadGame()).finally(() => setBootChecksDone(true));
-  }, [fontsLoaded]);
+  }, [fontsDone]);
 
   useEffect(() => {
     const failsafe = setTimeout(hideSplashOnce, SPLASH_FAILSAFE_MS);
@@ -100,7 +108,7 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
-  if (!fontsLoaded || !bootChecksDone) {
+  if (!fontsDone || !bootChecksDone) {
     return <View style={{ flex: 1, backgroundColor: '#241338' }} />;
   }
 
