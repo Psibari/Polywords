@@ -246,7 +246,10 @@ resting spot, then the page (background, header, bottom nav) fades in. Rules tha
 - `App.tsx` opens `Vault` as `transparentModal` with `animation: 'none'` only when route param
   `polybookRiseFrom` is set; every other way in is the ordinary fade.
 - React Navigation 7: a plain `navigate` PUSHES a new screen. `HomeButton` sends Home with `{ pop: true }` so
-  it returns to the existing Home (a second Home had let the Polybook header show through).
+  it returns to the existing Home (a second Home had let the Polybook header show through). The Daily's
+  `handleHome` (HOME on Results, NOT NOW, the pause card) and the Hunt Results HOME (`GameScreen` `handleHome`)
+  do the same. Popping back is safe: `useTerraceDive` resets zoom, flash, hall, retreat and castle on focus and
+  the buttons' entrance replays on every focus.
 - Stale DEV overrides in AsyncStorage can make Home look wrong; "Reset all" in the positioner clears them.
 
 Also built and Pete-confirmed: moon rise (real phase, once per app open, `app/ui/homeTerraceSky.ts`), shooting stars,
@@ -297,6 +300,20 @@ Architecture only:
   bubble and no remembered line (Pete). The perch is the only place the Daily line is said and
   remembered. On unmount the screen clears the in-memory claim result (`clearDailyReaction`),
   so leaving during the ending and returning does not replay her reaction or hold Results.
+- Pause (Pete, 2026-10-29): `UiIconButton kind="pause"` top-right beside the DAILY # plate
+  (`top: insets.top + 4`, `right: 12`), shown whenever the HUD is. It dims (0.6) and ignores taps
+  unless `canOpenDailyPause` (`app/game/dailyPause.ts`) passes: session active, input unlocked (so
+  not during a claim, the round-start stone entrance or before audio is ready), claim phase idle, no
+  claim presentation, Polly perched (no reaction) and not flying out. `DailyPauseCard.tsx` is ONE
+  card: Polly (`polly_quit_smug.png`) and her bubble over CONTINUE / HOME / SETTINGS, the Hunt's look
+  copied (not shared). No QUIT: leaving costs nothing and the session resumes. Every string lives in
+  `app/ui/dailyPauseCopy.ts`. While open the clock is frozen: `pausedRef` gates the 250 ms clue timer
+  and the claim handlers, and `resolveDailyActiveElapsedMs`'s `paused` flag returns the saved time.
+  The card stays open under Settings; Android back closes it.
+- Midnight: a saved session is only accepted for today's local date. An unfinished Daily from an
+  earlier date is discarded (no result, no streak) at the next `loadDailyResult`, which runs when
+  the Daily opens and when Home is focused. A Daily screen left open across midnight keeps the old
+  session; finishing it records a result under the old date.
 
 ## Audio and Haptics
 
@@ -430,4 +447,4 @@ Architecture only:
   Adding any network, analytics, crash-reporting or ads SDK requires updating both `PRIVACY_TEXT`
   in `SettingsScreen.tsx` and `gh-pages:privacy/index.html` in the same release, plus the App
   Store privacy answers.
-Round gold icon buttons (Pete drew them 2026-10-23): `app/components/UiIconButton.tsx`, art `assets/images/ui/icon_{home,pause,settings}.webp`, ONE size everywhere (`UI_ICON_BUTTON_SIZE` 44 pt, `app/ui/uiIconButton.ts`). Used for the Home settings gear (bottom-left, just under the console), the Hunt pause (bottom-right) and the HOME button on Polybook and Settings. The Home gear is drawn AFTER the console in `HomeTerraceScene.tsx` (and before the gold flash) so the console's floor shadow does not darken it (Pete 2026-10-23). Results/Daily keep their text HOME links. App flow (Pete): the Polybook opens only from Home. Settings is reached from the Home gear or from HUNT PAUSED. A paused Hunt may safely go Home or Settings without forfeiting; all other live-Hunt removal remains guarded. HOME from ordinary screens still returns to the existing Home rather than stacking another one.
+Round gold icon buttons (Pete drew them 2026-10-23): `app/components/UiIconButton.tsx`, art `assets/images/ui/icon_{home,pause,settings}.webp`, ONE size everywhere (`UI_ICON_BUTTON_SIZE` 44 pt, `app/ui/uiIconButton.ts`). Used for the Home settings gear (bottom-left, just under the console), the Hunt pause (bottom-right), the Daily pause (top-right) and the HOME button on Polybook and Settings. The Home gear is drawn AFTER the console in `HomeTerraceScene.tsx` (and before the gold flash) so the console's floor shadow does not darken it (Pete 2026-10-23). Results/Daily keep their text HOME links. App flow (Pete): the Polybook opens only from Home. Settings is reached from the Home gear, from HUNT PAUSED or from the Daily pause card. A paused Hunt may safely go Home or Settings without forfeiting; all other live-Hunt removal remains guarded. HOME from ordinary screens still returns to the existing Home rather than stacking another one.
