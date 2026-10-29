@@ -109,7 +109,7 @@ Phone testing uses the dedicated `POLYWORDS DEV` development client against the 
   retired while internal scoring remains intact. MASTERED / HAUNTED / BANISHED use the shared
   physical plaque-text treatment. The split claim/trap/tier-up haptics and wrong-swipe squawk rule
   remain device-checked. `Bird brain` remains Results-only unless Pete rules otherwise.
-- **Hunt momentum feedback:** committed on `play-screen-overhaul` and exercised in native builds. Shared momentum accent, wall-vein pulse, press/outcome haptics, SHARP `#6EC3FF`, and the current timing are the production path. Device evidence: vein timing and haptics read well; the pressed-card glow remains nearly invisible because the transformed tile clips its own shadow. Pete explicitly chose to leave that known issue rather than reopen the card geometry without stronger evidence.
+- **Hunt momentum feedback:** committed on `play-screen-overhaul` and exercised in native builds. Shared momentum accent, press/outcome haptics, wall strain shake (2026-10-28; the wall-vein pulse still fires but nothing draws it), SHARP `#6EC3FF`, and the current timing are the production path. Device evidence: vein timing and haptics read well; the pressed-card glow remains nearly invisible because the transformed tile clips its own shadow. Pete explicitly chose to leave that known issue rather than reopen the card geometry without stronger evidence.
 - **Build 15 accessibility/beta hardening (`4ec96f6`, 2026-10-27):** Hunt and Daily short-feedback effects now share `resolveGameplayFeedbackAccessibility`. Reduce Motion removes unnecessary movement and also suppresses the implied flash channel; Reduce Flashes suppresses flash/pulse feedback while motion may remain. The hardening pass also made the Hunt-leave warning truthful ("Leave now and this run ends. Your score and remaining feathers are lost."), made Daily Results HOME a full-width active secondary action, and shows native version/build in Settings.
 - **Build 16 iOS audio watchdog fix (`d6b4c3a`, 2026-10-27):** the known `expo-audio 57.0.5` iOS watchdog bug is backported with `patch-package` instead of forcing an SDK 58 migration. `patches/expo-audio+57.0.5.patch` is applied by `postinstall`; `tools/expoAudioPatch.test.mjs` guards it in the normal test suite. Fresh install/typecheck/full tests passed, and repeated device background/foreground testing on Build 16 did not reproduce the watchdog crash. Keep the patch until an intentional native/SDK upgrade replaces it and the replacement is device-verified.
 - **True Hunt pause + quit (`60bd43a`, `272b020`, `8e7813c`, 2026-10-27):** the pause icon now opens one locked HUNT PAUSED menu: RESUME HUNT, HOME, SETTINGS, QUIT HUNT. HOME and SETTINGS preserve the exact active run; Home shows RESUME HUNT; Settings Back returns to the still-paused Hunt. QUIT HUNT is the only destructive path and opens the locked Polly confirmation with the truthful loss warning and "See you later, LOSER." Reduce Motion presents the pause/quit states without the pop/bounce motion. Automated typecheck/full-suite/pause regression checks passed; the HUNT PAUSED and quit-confirm visuals were device-checked in POLYWORDS DEV and Pete locked the visuals. A complete exact-state HOME/SETTINGS/QUIT behavior pass on-device remains the final acceptance check.
@@ -205,7 +205,18 @@ Hunt momentum feedback, open:
   48 on short boards) was raised for the old torches, per the stale comment on
   `styles.gridWrap` in `MaskBoard.tsx` (that style's own 110 is overridden at runtime). Check on
   a phone before changing.
-- Gauntlet black-strip bug (`recessCap` in `BossGauntletSpines.tsx`) still open.
+- Gauntlet black-strip bug: resolved 2026-10-28 by removing the recess/hole layer from
+  `BossGauntletSpines.tsx` (Pete: the gauntlet looks fine without holes). Only matters if holes return.
+- 2026-10-28 (pushed, `b08e120` and `7c299e6`): `StoneWall2.png` is the shared wall; new gauntlet
+  stones and crowns are in; wall strain shake by tier works; new Hunt chime `correctClaimHunt` plays
+  when the book accepts the card. See `CLAUDE.md` for details.
+- OPEN: the FELL OFF wall zoom is committed but not visible on device.
+- OPEN, undecided (Pete): HUNTED soft-thud book entrance, card dealing speed by tier, a foreground
+  jolt on reconnect. The gauntlet swipe-up chime still plays at release; the Daily's correct sound is
+  not ruled on. A white box at the HUD top-left was seen once and not investigated. Check the full
+  Pixabay licence before launch (the chime mixes in a Pixabay hit).
+- Unused art still in the repo: `wall-veins/veins*.png`, `shelf*.png`, `brick1-3_rn.png`,
+  `crown-marker.png`, `spine.png`, `tools/art/build_wall_veins.py`. Delete only with Pete's say-so.
 - Possible dropped or late claim/trap haptic cue (`CLAUDE.md` known risks) is unconfirmed on
   device.
 - Android pass deferred: shadow colour only on Android 9+, haptic styles collapse to three
