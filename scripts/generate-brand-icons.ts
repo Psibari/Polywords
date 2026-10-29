@@ -1,6 +1,8 @@
 // One-off asset-generation script — NOT part of the RN app bundle. Rasterizes
-// the brand SVG sources (app/ui/pwBrandAssets.ts) to the PNG files Expo's
-// app.json points at (icon, adaptive-icon foreground, splash). Uses real
+// the brand SVG sources (app/ui/pwBrandAssets.ts) to the Android adaptive-icon
+// foreground and the brand wordmark PNGs. The app icon (icon.png) and the
+// splash image (splash-icon.png) are hand-made and intentionally not written
+// here. Uses real
 // Chromium (via Playwright) rather than a lighter SVG rasterizer because it
 // needs to reliably render the bundled RammettoOne-Regular font via a
 // data-URI @font-face — librsvg-based rasterizers are unreliable with
@@ -12,7 +14,6 @@ import path from 'node:path';
 import {
   HOME_MASTHEAD_WORDMARK_SVG,
   WORDMARK_LOCKUP_SVG,
-  APP_ICON_MONOGRAM_SVG,
   APP_ICON_MONOGRAM_ADAPTIVE_SVG,
 } from '../app/ui/pwBrandAssets.ts';
 
@@ -40,7 +41,7 @@ function pageHtml(svg: string, width: number, height: number, fontBase64: string
 type Target = { svg: string; file: string; width: number; height: number };
 
 const TARGETS: Target[] = [
-  { svg: APP_ICON_MONOGRAM_SVG, file: path.join(OUT_DIR, 'icon.png'), width: 1024, height: 1024 },
+  // No icon.png here: the app icon (assets/icon.png) is hand-made; do not regenerate it.
   { svg: APP_ICON_MONOGRAM_ADAPTIVE_SVG, file: path.join(OUT_DIR, 'adaptive-icon.png'), width: 1024, height: 1024 },
   // No splash-icon.png here: the splash image is hand-made (1356x476, transparent).
   // See CLAUDE.md "App launch / splash".
