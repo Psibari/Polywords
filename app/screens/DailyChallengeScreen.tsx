@@ -1167,7 +1167,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   function handleHome() {
-    navigation.navigate('Home');
+    navigation.navigate('Home', undefined, { pop: true });
   }
 
   async function handleStartDaily() {
