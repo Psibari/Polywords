@@ -48,8 +48,10 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
   `NavigationContainer` `onReady` (`hideSplashOnce`), with an 8000 ms failsafe. The boot placeholder
   View is `#241338`. Do not hide it from the root `onLayout`: `SafeAreaProvider` renders its children
   only after native insets arrive, so its layout can land while it is still empty.
-- `scripts/generate-brand-icons.ts` still writes the old 1200x307 `splash-icon.png` (line 45). Do not
-  run it until it is updated.
+- `scripts/generate-brand-icons.ts` no longer writes `assets/splash-icon.png` (`26e0503`) or `assets/icon.png`
+  (`524b307`); both are hand-made. It still writes `assets/adaptive-icon.png`, `assets/images/brand/wordmark.png`
+  and `assets/images/brand/home-wordmark.png`.
+- Caution: the `adaptive-icon.png` it writes is the old flat July monogram, not the current crown icon.
 
 ### iOS expo-audio watchdog patch (SDK 57)
 
