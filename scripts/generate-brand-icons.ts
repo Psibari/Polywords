@@ -42,7 +42,8 @@ type Target = { svg: string; file: string; width: number; height: number };
 const TARGETS: Target[] = [
   { svg: APP_ICON_MONOGRAM_SVG, file: path.join(OUT_DIR, 'icon.png'), width: 1024, height: 1024 },
   { svg: APP_ICON_MONOGRAM_ADAPTIVE_SVG, file: path.join(OUT_DIR, 'adaptive-icon.png'), width: 1024, height: 1024 },
-  { svg: WORDMARK_LOCKUP_SVG, file: path.join(OUT_DIR, 'splash-icon.png'), width: 1200, height: 307 },
+  // No splash-icon.png here: the splash image is hand-made (1356x476, transparent).
+  // See CLAUDE.md "App launch / splash".
   // Static asset for the Home screen — rendered as a plain image (expo-image),
   // not a live SvgXml component, after react-native-svg's SvgXml proved
   // unreliable on-device (clipped to raw viewBox pixel size). 1800x460 is 2x
