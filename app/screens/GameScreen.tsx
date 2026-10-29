@@ -1427,7 +1427,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   }
 
   function handleHome() {
-    navigation.navigate('Home');
+    navigation.navigate('Home', undefined, { pop: true });
   }
 
   function handleDevJumpToBoss(livesOverride?: number) {
