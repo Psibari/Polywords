@@ -36,6 +36,21 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
 - Normal physical-iPhone iteration is `APP_VARIANT=development npx expo start --dev-client` and opens POLYWORDS DEV. Use `-c` only to clear Metro's cache. The TestFlight/production app must never be the target of the dev QR.
 - Rebuild POLYWORDS DEV only when native dependencies, native configuration, or the Expo SDK changes. Ordinary JS/TS/assets changes come from Metro. TestFlight remains the release-candidate/native-production check.
 
+### App launch / splash
+
+- The splash is the `expo-splash-screen` plugin entry in `app.json`: image `assets/splash-icon.png`,
+  `resizeMode: "contain"`, `backgroundColor: "#241338"`, `imageWidth: 288`. The image is a
+  transparent-background logo cropped tight (1356x476). The plugin fits the image into an
+  `imageWidth` square (default 100), so margin or an opaque background in the image makes the logo
+  smaller or boxed. 288 matches the plugin's 288 dp Android canvas; a larger value clips on Android.
+- A splash change needs a NEW native build (POLYWORDS DEV or TestFlight), not a Metro reload.
+- `App.tsx` holds the native splash with `SplashScreen.preventAutoHideAsync()` and hides it once from
+  `NavigationContainer` `onReady` (`hideSplashOnce`), with an 8000 ms failsafe. The boot placeholder
+  View is `#241338`. Do not hide it from the root `onLayout`: `SafeAreaProvider` renders its children
+  only after native insets arrive, so its layout can land while it is still empty.
+- `scripts/generate-brand-icons.ts` still writes the old 1200x307 `splash-icon.png` (line 45). Do not
+  run it until it is updated.
+
 ### iOS expo-audio watchdog patch (SDK 57)
 
 - `expo-audio 57.0.5` carries the official iOS watchdog fix as `patches/expo-audio+57.0.5.patch`, applied by `patch-package` from `postinstall`.
@@ -422,6 +437,16 @@ Architecture only:
 - Home sleep: master `asleep` plus three looping Z's (`HOME_Z_*`, native driver), running only
   while fully asleep, Home focused and motion allowed; Reduce Motion shows one still medium Z. She
   wakes only when Home loses focus; touches on Home do not wake her (Pete accepted).
+- Home doze (`PollyHomePerch.tsx`): a 600 ms nod (`DOZE_TRANSITION_MS`; sink `DOZE_NOD_Y` 8 pt, lean
+  `DOZE_NOD_DEG` 4 deg clockwise, `DOZE_NOD_SCALE` 0.97) while the rig closes its eyes (optional
+  `eyesClosed` prop on `PollyPerchRig`, `EYES_CLOSE_MS` 300), then one hard cut to the master asleep
+  layer; in the same frame the scale returns to 1 and the sink and lean drop to the settle's leftover
+  offset (`DOZE_SETTLE_Y` 3 pt, `DOZE_SETTLE_DEG` 1.5 deg), which then eases to rest
+  (`DOZE_SETTLE_MS` 250). The old 450 ms cross-fade is gone; `dozeOutOpacity` now only flips at the
+  cut (0 ms). The asleep layer is hidden during the nod; an interrupted nod or
+  settle returns her awake at rest. Known leftover: rig art and `asleep.png` are different art, so
+  the cut is slightly visible (Pete accepted 2026-10-29). The angry resting pose is still a static
+  image. The Daily has no sleeping pose and does not doze.
 - Do not delete the old sprites or `POLLY_POSE_SCALE` until every consumer has moved. Remaining:
   the three screen tables (`POLLY_POSES.idle`/`POLLY_POSE_SCALE.idle` for the rig; the Hunt's
   rattled/idle/cocky fallback); unrendered `PollyFlightLandingAnimation`,
