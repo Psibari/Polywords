@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeScreen from './app/screens/HomeScreen';
@@ -19,6 +20,21 @@ import { loadPlaytestEvents } from './app/game/playtestTelemetry';
 import ErrorBoundary from './app/components/ErrorBoundary';
 
 const Stack = createNativeStackNavigator();
+
+// The native splash stays up until Home has mounted, instead of hiding at the
+// first draw and leaving a blank screen while fonts and saved data load.
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// Safety net: if boot never finishes (a hung load, a font that never loads),
+// the splash still comes down rather than staying up forever.
+const SPLASH_FAILSAFE_MS = 8000;
+
+let splashHidden = false;
+function hideSplashOnce() {
+  if (splashHidden) return;
+  splashHidden = true;
+  SplashScreen.hideAsync().catch(() => {});
+}
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -53,6 +69,11 @@ export default function App() {
     ]).then(() => loadGame()).finally(() => setBootChecksDone(true));
   }, [fontsLoaded]);
 
+  useEffect(() => {
+    const failsafe = setTimeout(hideSplashOnce, SPLASH_FAILSAFE_MS);
+    return () => clearTimeout(failsafe);
+  }, []);
+
   // Warms the Home music track and shared audio session as the landing screen
   // appears, plus the on-demand SFX manager used by every screen.
   // Audio is app-owned: screens request readiness and music ownership but do
@@ -80,13 +101,16 @@ export default function App() {
   }, []);
 
   if (!fontsLoaded || !bootChecksDone) {
-    return <View style={{ flex: 1, backgroundColor: '#1A1830' }} />;
+    return <View style={{ flex: 1, backgroundColor: '#241338' }} />;
   }
 
   return (
     <SafeAreaProvider>
       <ErrorBoundary onReset={() => setNavKey(k => k + 1)}>
-        <NavigationContainer key={navKey}>
+        {/* onReady, not the root's onLayout: SafeAreaProvider renders its children only after the native
+            insets arrive, so its own layout can land while it is still empty. onReady fires only once the
+            navigator, with Home in it, has mounted. */}
+        <NavigationContainer key={navKey} onReady={hideSplashOnce}>
           <Stack.Navigator
             screenOptions={{
               headerShown: false,
