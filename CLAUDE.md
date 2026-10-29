@@ -48,6 +48,8 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
   `NavigationContainer` `onReady` (`hideSplashOnce`), with an 8000 ms failsafe. The boot placeholder
   View is `#241338`. Do not hide it from the root `onLayout`: `SafeAreaProvider` renders its children
   only after native insets arrive, so its layout can land while it is still empty.
+- A font load error no longer stops the boot (`7ee75fe`): `fontsLoaded || fontError != null` opens the gate,
+  one `console.warn` is logged, and text falls back to the system font.
 - `scripts/generate-brand-icons.ts` no longer writes `assets/splash-icon.png` (`26e0503`) or `assets/icon.png`
   (`524b307`); both are hand-made. It still writes `assets/adaptive-icon.png`, `assets/images/brand/wordmark.png`
   and `assets/images/brand/home-wordmark.png`.
