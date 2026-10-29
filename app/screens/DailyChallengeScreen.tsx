@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   Animated,
   AppState,
+  BackHandler,
   Easing,
   Image,
   Pressable,
@@ -40,6 +41,7 @@ import {
   selectDailyDisplaySession,
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
+import { canOpenDailyPause } from '../game/dailyPause';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { resolveRivalryState } from '../game/pollyMood';
 import { useGameStore } from '../store/useGameStore';
@@ -71,6 +73,9 @@ import DailyAnswerCard, {
 import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleStage';
 import { type DailyCoinRise } from '../components/DailyFloorCoins';
 import DailyCoinFinale from '../components/DailyCoinFinale';
+import { DailyPauseCard } from '../components/DailyPauseCard';
+import UiIconButton from '../components/UiIconButton';
+import { DAILY_PAUSE_ICON_A11Y } from '../ui/dailyPauseCopy';
 import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
@@ -111,6 +116,9 @@ const DailyCastleTuningPanel = __DEV__
 // Longest the Daily's ending waits for Polly's fly-out hand-off before opening
 // Results anyway. Her normal path is about 3.9 s after the winning claim.
 const DAILY_POLLY_EXIT_FAILSAFE_MS = 6000;
+// The pause icon's opacity while it ignores taps (a claim or Polly's reaction
+// in flight).
+const DAILY_PAUSE_ICON_DIMMED_OPACITY = 0.6;
 /**
  * A wrong claim's gate shimmy: its first leg drives the gate past fully down
  * until it hits the stop. The 'wrong' haptic lands on that same beat.
@@ -446,6 +454,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [claimPhase, setClaimPhase] = useState<DailyClaimPresentationPhase>('idle');
   const claimPhaseRef = useRef<DailyClaimPresentationPhase>('idle');
   const correctTransitionTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // The pause card (DailyPauseCard). The ref is read by the clue clock, the
+  // elapsed-time reads and the claim handlers, so it is set in the same call
+  // as the state.
+  const [paused, setPausedState] = useState(false);
+  const pausedRef = useRef(false);
   // How many of today's 5 rounds are solved as of this claim, for the
   // reveal curtain's feather tally. Computed synchronously in handleClaim
   // (not read from the store) so it can't race the session update.
@@ -462,6 +475,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function setPlaquesPresenting(val: boolean) {
     plaquesPresentingRef.current = val;
     setPlaquesPresentingState(val);
+  }
+
+  function setPaused(val: boolean) {
+    pausedRef.current = val;
+    setPausedState(val);
   }
 
   function setPhysicalClaimPhase(phase: DailyClaimPresentationPhase) {
@@ -640,6 +658,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     return resolveDailyActiveElapsedMs({
       presentationActive:
         presentation !== null || isDailyClaimInputLocked(claimPhaseRef.current),
+      // While the pause card is open the clock is frozen at its saved value,
+      // so leaving or backgrounding with the card open adds no play time.
+      paused: pausedRef.current,
       committedRoundElapsedMs: session.roundElapsedMs,
       presentationRoundElapsedMs,
       roundStartedAtMs: roundStartRef.current,
@@ -785,6 +806,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         if (!current || current.status !== 'active') return;
         if (claimPresentationRef.current !== null) return;
         if (isDailyClaimInputLocked(claimPhaseRef.current)) return;
+        if (pausedRef.current) return;
         revealDailyClues(Date.now() - roundStartRef.current);
       }, 250);
 
@@ -1053,6 +1075,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   function handleClaimStart(candidate: string): boolean {
+    // A stone held before the pause card opened springs back on release.
+    if (pausedRef.current) return false;
     if (!canBeginDailyClaim(completedRef.current, inputLockedRef.current)) {
       return false;
     }
@@ -1065,6 +1089,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     candidate: string,
     origin: DailyAnswerCardClaimOrigin | null,
   ) {
+    if (pausedRef.current) return;
     const ownsPendingLock = pendingClaimCandidateRef.current === candidate;
     if (completedRef.current || (inputLockedRef.current && !ownsPendingLock)) return;
     pendingClaimCandidateRef.current = null;
@@ -1170,6 +1195,65 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     navigation.navigate('Home', undefined, { pop: true });
   }
 
+  // PAUSE CARD — opens only with nothing in flight (canOpenDailyPause); any
+  // other tap is ignored. Opening saves the round's elapsed time and freezes
+  // the clock (pausedRef). Leaving never costs anything: HOME and SETTINGS
+  // leave the session active and saved, and it resumes from the frozen time.
+  function handlePause() {
+    const session = useGameStore.getState().dailySession;
+    if (!session || !canOpenDailyPause({
+      sessionActive: session.status === 'active',
+      inputLocked: inputLockedRef.current,
+      claimPhase: claimPhaseRef.current,
+      presentationActive: claimPresentationRef.current !== null,
+      pollyReacting: pollyPose !== 'perched',
+      pollyExitPending,
+      paused: pausedRef.current,
+    })) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    pendingClaimCandidateRef.current = null;
+    // Read before pausedRef is set: once paused, the read returns the saved value.
+    pauseDailyChallenge(activeDailyElapsedMs(session));
+    setPaused(true);
+  }
+
+  function handleContinue() {
+    if (!pausedRef.current) return;
+    // The store, not dailySessionRef: the ref only catches up on render.
+    const session = useGameStore.getState().dailySession;
+    if (session?.status === 'active') {
+      roundStartRef.current = Date.now() - session.roundElapsedMs;
+    }
+    setPaused(false);
+  }
+
+  function handlePauseSettings() {
+    // The card stays open under Settings; Back returns to the paused Daily.
+    navigation.navigate('Settings');
+  }
+
+  // Android back closes the card. Registered only while the card is open and
+  // the Daily is focused, so Back on Settings above it still leaves Settings.
+  useFocusEffect(
+    useCallback(() => {
+      if (!paused) return undefined;
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleContinue();
+        return true;
+      });
+      return () => subscription.remove();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [paused]),
+  );
+
+  // A session that stops being active (a DEV reset from Settings) takes the
+  // card down with it.
+  useEffect(() => {
+    if (dailySession?.status === 'active' || !pausedRef.current) return;
+    setPaused(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailySession?.status]);
+
   async function handleStartDaily() {
     if (dailyStarting) return;
     setDailyStarting(true);
@@ -1217,6 +1301,18 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           (2 - displayedDailySession.chancesRemaining) * 0.045,
       )
     : 0;
+  // The pause icon shows while the Daily is being played (the same rule as the
+  // HUD) and is dimmed and inert while anything is in flight.
+  const showPauseIcon = !isComplete && displayedDailySession !== null;
+  const pauseAvailable = canOpenDailyPause({
+    sessionActive: dailySession?.status === 'active',
+    inputLocked,
+    claimPhase,
+    presentationActive: activeClaimPresentation !== null,
+    pollyReacting: pollyPose !== 'perched',
+    pollyExitPending,
+    paused,
+  });
 
   return (
     <View style={styles.screen}>
@@ -1414,6 +1510,26 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       </SafeAreaView>
 
+      {/* Pause, top-right beside the DAILY # plate (Pete, 2026-10-29). Placed
+          from the window top: absolute children ignore the safe-area padding.
+          zIndex 2 with the SafeAreaView, later in order, so it sits above the
+          HUD row; under the coin finale's veil (3) like the HUD. */}
+      {showPauseIcon && (
+        <UiIconButton
+          kind="pause"
+          accessibilityLabel={DAILY_PAUSE_ICON_A11Y}
+          accessibilityElementsHidden={paused}
+          importantForAccessibility={paused ? 'no-hide-descendants' : 'auto'}
+          disabled={!pauseAvailable}
+          onPress={handlePause}
+          style={[
+            styles.pauseBtn,
+            { top: insets.top + DAILY_HUD.marginTop },
+            !pauseAvailable && styles.pauseBtnDimmed,
+          ]}
+        />
+      )}
+
       {/* The win's hero coin, over everything (the castle, HUD and Polly
           included); Results waits for it. Invisible at rest. */}
       {dailyInitialized && (
@@ -1425,6 +1541,17 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           windowWidth={windowWidth}
           windowHeight={windowHeight}
           topInset={insets.top}
+        />
+      )}
+
+      {/* Last child, zIndex 340 like the Hunt's: over the castle, HUD, DEV
+          buttons and coin finale. Ordinary screen state, so it is still open
+          when the player comes back from Settings. */}
+      {paused && dailySession?.status === 'active' && (
+        <DailyPauseCard
+          onContinue={handleContinue}
+          onHome={handleHome}
+          onSettings={handlePauseSettings}
         />
       )}
     </View>
@@ -1639,6 +1766,15 @@ const styles = StyleSheet.create({
     letterSpacing: 2.5,
     marginTop: 4,
     textAlign: 'center',
+  },
+  pauseBtn: {
+    position: 'absolute',
+    right: 12,
+    zIndex: 2,
+  },
+  // Visible but inert while a claim or Polly's reaction is in flight.
+  pauseBtnDimmed: {
+    opacity: DAILY_PAUSE_ICON_DIMMED_OPACITY,
   },
   devResetBtn: {
     position: 'absolute',

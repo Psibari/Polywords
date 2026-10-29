@@ -107,18 +107,21 @@ export function shouldHideCompletedDailyClue(
 
 export function resolveDailyActiveElapsedMs({
   presentationActive,
+  paused = false,
   committedRoundElapsedMs,
   presentationRoundElapsedMs,
   roundStartedAtMs,
   nowMs,
 }: {
   presentationActive: boolean;
+  /** The pause card is open: the clock is frozen at its saved value, like a presentation. */
+  paused?: boolean;
   committedRoundElapsedMs: number;
   presentationRoundElapsedMs: number;
   roundStartedAtMs: number;
   nowMs: number;
 }): number {
-  if (presentationActive) {
+  if (presentationActive || paused) {
     return Math.max(0, committedRoundElapsedMs, presentationRoundElapsedMs);
   }
   return Math.max(0, committedRoundElapsedMs, nowMs - roundStartedAtMs);
