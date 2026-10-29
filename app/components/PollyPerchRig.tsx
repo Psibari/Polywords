@@ -23,6 +23,8 @@ const BLINK_DOWN_MS = 90;
 const BLINK_UP_MS = 110;
 const BLINK_MIN_INTERVAL_MS = 2000;
 const BLINK_MAX_INTERVAL_MS = 6000;
+// Slow, sleepy close used while `eyesClosed` is held (e.g. dozing off).
+const EYES_CLOSE_MS = 300;
 const BROW_TO_EYE_PIVOT_FRAC = 0.085;
 const BROW_FOLLOW = 0.33; // Pete device-locked this value 2026-08-28
 const BROW_MAX_FRAC = 6 / 340;
@@ -40,6 +42,8 @@ type Props = {
   mouth?: 'closed' | 'open' | 'gape';
   eye?: 'default' | 'wide';
   brow?: 'default' | 'shocked';
+  /** Holds the eyes shut (no blinking) while true; they reopen when it turns false. */
+  eyesClosed?: boolean;
   reduceMotion: boolean | null;
 };
 
@@ -50,6 +54,7 @@ export function PollyPerchRig({
   mouth = 'closed',
   eye = 'default',
   brow = 'default',
+  eyesClosed = false,
   reduceMotion,
 }: Props) {
   const motionAllowed = reduceMotion === false;
@@ -58,13 +63,28 @@ export function PollyPerchRig({
   const browValue = useRef(new Animated.Value(0)).current;
   const crownValue = useRef(new Animated.Value(0)).current;
 
-  // BLINK — random-interval squash/reopen, always running while motion is allowed.
+  // BLINK — random-interval squash/reopen, always running while motion is
+  // allowed, unless `eyesClosed` holds them shut. Cleanups only stop the
+  // value, never reset it, so closing starts from wherever a blink left it.
   useEffect(() => {
-    if (!motionAllowed) {
+    if (eyesClosed) {
       blinkValue.stopAnimation();
-      blinkValue.setValue(1);
-      return;
+      if (motionAllowed) {
+        Animated.timing(blinkValue, {
+          toValue: EYE_CLOSED_SCALE,
+          duration: EYES_CLOSE_MS,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }).start();
+      } else {
+        blinkValue.setValue(EYE_CLOSED_SCALE);
+      }
+      return () => blinkValue.stopAnimation();
     }
+
+    blinkValue.stopAnimation();
+    blinkValue.setValue(1);
+    if (!motionAllowed) return;
 
     let timeoutId: ReturnType<typeof setTimeout>;
     let cancelled = false;
@@ -97,9 +117,8 @@ export function PollyPerchRig({
       cancelled = true;
       clearTimeout(timeoutId);
       blinkValue.stopAnimation();
-      blinkValue.setValue(1);
     };
-  }, [motionAllowed, blinkValue]);
+  }, [motionAllowed, eyesClosed, blinkValue]);
 
   // ANGRY BROW — holds the offset pose while true, doesn't loop. Off by
   // default this pass, so it's a no-op transition to 0.

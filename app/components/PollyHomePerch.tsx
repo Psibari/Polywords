@@ -43,10 +43,18 @@ const DOZE_DELAY_MS = 8000;
 // Matches the entrance greeting's own hideT (4900ms) + fade duration
 // (260ms) — an entrance visit's doze clock starts once that bubble is gone.
 const GREETING_FADE_END_MS = 5160;
-// Reveal + sink from awake to asleep. The sink is what sells it as her
-// nodding off rather than two pictures dissolving into each other.
-const DOZE_TRANSITION_MS = 450;
-const DOZE_SETTLE_Y = 6;
+// Nodding off: the awake pose (fully opaque, eyes closing) sinks, leans
+// forward and shrinks a touch, then one hard cut to the asleep pose, covered
+// by a short settle from a small leftover slump back to rest. No fade: two
+// different drawings dissolving into each other is what showed the swap.
+const DOZE_TRANSITION_MS = 600;
+const DOZE_NOD_Y = 8;
+// She faces right, so forward is clockwise (positive).
+const DOZE_NOD_DEG = 4;
+const DOZE_NOD_SCALE = 0.97;
+const DOZE_SETTLE_MS = 250;
+const DOZE_SETTLE_Y = 3;
+const DOZE_SETTLE_DEG = 1.5;
 const FIRST_HOME_LINES = [
   'Who are you?',
   'What do you want?',
@@ -191,7 +199,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   // visit, that is almost always mid-flight, while pose is still `fly`).
   const settledPoseRef = useRef(settledPose);
   settledPoseRef.current = settledPose;
-  // Frozen the instant the doze fade starts, so the fading top layer
+  // Frozen the instant the doze nod starts, so the nodding top layer
   // renders a snapshot rather than reacting to the live `pose`/`showRig`
   // values. A ref, not state: the write must be visible to the very next
   // render synchronously, with no tick where it could still read stale.
@@ -200,8 +208,21 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   const usedGreetingBaseline = useRef(false);
   const dozeTransitionActive = useRef(false);
   const dozeAnimation = useRef<Animated.CompositeAnimation | null>(null);
+  // 1 shows the awake layer, 0 the asleep one (asleep reads 1 - this), so the
+  // cut flips both drawings in the same native frame. Never faded.
   const dozeOutOpacity = useRef(new Animated.Value(1)).current;
-  const dozeSettleY = useRef(new Animated.Value(0)).current;
+  const asleepOpacity = useMemo(
+    () => dozeOutOpacity.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+    [dozeOutOpacity],
+  );
+  // The nod on the whole Polly wrapper; all rest at 0 / 0 / 1.
+  const dozeNodY = useRef(new Animated.Value(0)).current;
+  const dozeNodTilt = useRef(new Animated.Value(0)).current;
+  const dozeNodScale = useRef(new Animated.Value(1)).current;
+  const dozeNodRotate = useMemo(
+    () => dozeNodTilt.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }),
+    [dozeNodTilt],
+  );
   // One 0 -> 1 progress per Z (small, medium, large); 0 is fully transparent.
   const zProgress = useRef(HOME_Z_LAYERS.map(() => new Animated.Value(0))).current;
   // Built once so the native-driven animation keeps the same nodes.
@@ -299,14 +320,16 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
     setPose(settledPose);
   }, [settledPose]);
 
-  // Hard-resets the crossfade to its pre-doze rest state — used on blur,
-  // where waking is instant with no reverse transition.
+  // Hard-resets the nod to its pre-doze rest state — used on blur, where
+  // waking is instant with no reverse transition.
   const resetDozeVisuals = () => {
     dozeTransitionActive.current = false;
     dozeAnimation.current?.stop();
     dozeAnimation.current = null;
     dozeOutOpacity.setValue(1);
-    dozeSettleY.setValue(0);
+    dozeNodY.setValue(0);
+    dozeNodTilt.setValue(0);
+    dozeNodScale.setValue(1);
     outgoingPoseRef.current = null;
   };
 
@@ -316,13 +339,13 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
   // no bubble at all. reduceMotion only gates *when* it's safe to start
   // counting (the same `=== null` guard the entrance effect uses); once
   // known, she dozes on the same clock either way. With motion allowed she
-  // crosses into 'dozing' for a ~450ms reveal + sink before landing on
-  // 'asleep': the asleep pose sits underneath at constant full opacity and
-  // only the awake layer on top fades out, so a fully opaque Polly is
-  // present in every frame — a true crossfade dips both layers toward 0.5
-  // at once, which composites translucent and briefly shows the background
-  // through her. With reduceMotion she jumps straight there. Losing focus
-  // wakes her instantly (no reverse transition) and re-arms for next time.
+  // crosses into 'dozing' for the nod (awake layer fully opaque, eyes
+  // closing), then one hard cut to 'asleep' covered by a short settle. The
+  // cut runs as zero-length native animations started together, so the
+  // layer flip and the slump reset land in the same frame; a React state
+  // change alone could land a frame apart from the native values. With
+  // reduceMotion she jumps straight there. Losing focus wakes her instantly
+  // (no reverse transition) and re-arms for next time.
   useEffect(() => {
     if (!isFocused) {
       setDozeStage('awake');
@@ -341,6 +364,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
 
     const dozeT = setTimeout(() => {
       if (reduceMotion) {
+        dozeOutOpacity.setValue(0);
         setDozeStage('asleep');
         return;
       }
@@ -356,33 +380,48 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
         pose: settled,
       };
       setDozeStage('dozing');
-      const anim = Animated.parallel([
-        Animated.timing(dozeOutOpacity, {
-          toValue: 0,
-          duration: DOZE_TRANSITION_MS,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(dozeSettleY, {
-          toValue: DOZE_SETTLE_Y,
-          duration: DOZE_TRANSITION_MS,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
+      const to = (value: Animated.Value, toValue: number, duration: number) =>
+        Animated.timing(value, { toValue, duration, easing: Easing.out(Easing.quad), useNativeDriver: true });
+      const nodAndCut = Animated.sequence([
+        Animated.parallel([
+          to(dozeNodY, DOZE_NOD_Y, DOZE_TRANSITION_MS),
+          to(dozeNodTilt, DOZE_NOD_DEG, DOZE_TRANSITION_MS),
+          to(dozeNodScale, DOZE_NOD_SCALE, DOZE_TRANSITION_MS),
+        ]),
+        // The cut: asleep shows, awake hides, slump drops to the settle's
+        // small leftover offset, all in one frame.
+        Animated.parallel([
+          to(dozeOutOpacity, 0, 0),
+          to(dozeNodY, DOZE_SETTLE_Y, 0),
+          to(dozeNodTilt, DOZE_SETTLE_DEG, 0),
+          to(dozeNodScale, 1, 0),
+        ]),
       ]);
-      dozeAnimation.current = anim;
-      anim.start(() => {
-        if (dozeTransitionActive.current) {
-          setDozeStage('asleep');
-          outgoingPoseRef.current = null;
-        }
+      dozeAnimation.current = nodAndCut;
+      nodAndCut.start(({ finished }) => {
+        if (!finished || !dozeTransitionActive.current) return;
+        setDozeStage('asleep');
+        outgoingPoseRef.current = null;
+        const settle = Animated.parallel([
+          to(dozeNodY, 0, DOZE_SETTLE_MS),
+          to(dozeNodTilt, 0, DOZE_SETTLE_MS),
+        ]);
+        dozeAnimation.current = settle;
+        settle.start(() => {
+          if (dozeAnimation.current === settle) dozeAnimation.current = null;
+          dozeTransitionActive.current = false;
+        });
       });
     }, dozeDelay);
 
     return () => {
       clearTimeout(dozeT);
-      dozeTransitionActive.current = false;
-      dozeAnimation.current?.stop();
+      // Interrupted mid-nod or mid-settle: back to awake at rest rather than
+      // leaving her frozen part-way. (Blur also resets, just below.)
+      if (dozeTransitionActive.current) {
+        resetDozeVisuals();
+        setDozeStage('awake');
+      }
     };
   }, [isFocused, lifeProfile.dozeDelayMultiplier, reduceMotion, wasEntrance, wasFirstHomeBeat]);
 
@@ -436,32 +475,40 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
       <Animated.View
         style={[
           styles.pollyWrap,
-          { transform: [{ translateX: breatheX }, { translateY: breatheY }, { translateY: dozeSettleY }] },
+          {
+            transform: [
+              { translateX: breatheX },
+              { translateY: breatheY },
+              { translateY: dozeNodY },
+              { rotate: dozeNodRotate },
+              { scale: dozeNodScale },
+            ],
+          },
         ]}
       >
         {/* Asleep pose — mounted from first render so it's already decoded by
-            the time the doze needs it, at 0 opacity until then. Snaps to full
-            opacity the instant dozing starts (no animation, no fade-in); the
-            fade above is the only thing that moves. */}
-        <View style={[styles.dozeLayer, { opacity: dozeStage === 'awake' ? 0 : 1 }]}>
+            the time the doze needs it, at 0 opacity until then. Hidden through
+            the nod (so none of it peeks out around the awake drawing) and
+            shown at full opacity by the cut, in the same frame the awake
+            layer hides. Never faded. */}
+        <Animated.View style={[styles.dozeLayer, { opacity: asleepOpacity }]}>
           <Image
             source={asleepArt.source}
             style={[styles.pollyImage, { transform: [{ scale: asleepArt.scale }] }]}
             resizeMode="contain"
           />
-        </View>
+        </Animated.View>
 
         {/* Awake layer — the SAME element across 'awake' and 'dozing' so it
-            never remounts mid-fade (a remount was the actual one-frame blink:
+            never remounts mid-nod (a remount was the actual one-frame blink:
             switching render branches tore the rig down and rebuilt it fresh
-            right as the opacity animation started, so nothing was actually
-            fading — there was just nothing to fade). Only its opacity
-            animates, and only while dozing does it read the frozen
-            `outgoing` snapshot instead of the live pose. Once fully asleep it
-            is hidden at opacity 0 (a plain wrapper, so
-            the animated fade value is never swapped for a number) and the rig
-            rests, rather than unmounted — rebuilding it on wake drew empty
-            frames. Inside, every awake pose is a mounted layer (see
+            right as the doze animation started). It stays fully opaque
+            through the nod and is hidden only by the cut, and only while
+            dozing does it read the frozen `outgoing` snapshot instead of the
+            live pose. Once fully asleep it is hidden at opacity 0 (a plain
+            wrapper, so the animated cut value is never swapped for a number)
+            and the rig rests, rather than unmounted — rebuilding it on wake
+            drew empty frames. Inside, every awake pose is a mounted layer (see
             HOME_AWAKE_LAYER_POSES); only the current one is at opacity 1. */}
         <View style={[styles.dozeLayer, { opacity: isAsleep ? 0 : 1 }]}>
           <Animated.View style={[styles.dozeLayer, { opacity: dozeOutOpacity }]}>
@@ -470,6 +517,7 @@ export default function PollyHomePerch({ drop }: PollyHomePerchProps = {}) {
                 <PollyPerchRig
                   size={homePerch.pollySize}
                   reduceMotion={rigVisible ? reduceMotion : true}
+                  eyesClosed={dozeStage !== 'awake'}
                   crownTilt={lifeProfile.crownTilt}
                   angryBrow={lifeProfile.angryBrow}
                   eye={lifeProfile.eye}
