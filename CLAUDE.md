@@ -347,8 +347,8 @@ Architecture only:
   The card stays open under Settings; Android back closes it.
 - Midnight: a saved session is only accepted for today's local date. An unfinished Daily from an
   earlier date is discarded (no result, no streak) at the next `loadDailyResult`, which runs when
-  the Daily opens and when Home is focused. A Daily screen left open across midnight keeps the old
-  session; finishing it records a result under the old date.
+  the Daily opens and when Home is focused. A Daily screen left open across midnight cannot finish
+  the old session: the guards listed under Expiry end it at the next interaction or app return.
 - Expiry: an unfinished Daily is LOST when its day ends. No result, no streak credit, no Gold
   Feather; a new puzzle starts. The player sees one plain card (no Polly, no button): headline
   "TIME'S UP", small line "DAILY #N" (N = the unfinished Daily's own number). It holds 2.5 s then
