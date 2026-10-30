@@ -51,9 +51,10 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
 - A font load error no longer stops the boot (`7ee75fe`): `fontsLoaded || fontError != null` opens the gate,
   one `console.warn` is logged, and text falls back to the system font.
 - `scripts/generate-brand-icons.ts` no longer writes `assets/splash-icon.png` (`26e0503`) or `assets/icon.png`
-  (`524b307`); both are hand-made. It still writes `assets/adaptive-icon.png`, `assets/images/brand/wordmark.png`
-  and `assets/images/brand/home-wordmark.png`.
-- Caution: the `adaptive-icon.png` it writes is the old flat July monogram, not the current crown icon.
+  (`524b307`) or `assets/adaptive-icon.png`; all three are hand-made (the script carries a comment saying so).
+  It still writes `assets/images/brand/wordmark.png` and `assets/images/brand/home-wordmark.png`.
+- `assets/adaptive-icon.png` is the crown icon: `icon.png` scaled to 531 px, centered on `#240353`, 1024x1024,
+  inside the Android safe zone (a circle 66/108 of the canvas). Do not regenerate it.
 
 ### iOS expo-audio watchdog patch (SDK 57)
 
@@ -216,6 +217,21 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 - Normal Boss/rematch event labels are `POLLY'S WORD` / `MASTER'S REMATCH`. Player-facing Boss
   score, mastery-point and `2x` framing are retired; internal scoring remains unchanged.
 
+### Result plaques
+
+- Mastered, Banished and Haunted show ONLY the headline and the word (headline 40, word 56).
+  Removed: "Not one of Polly's traps. / You saw through it.", HAUNT BROKEN, and the Haunted missed
+  phrase / TRAP CLAIMED lines (never show a meaning, trap or hidden pair: words recur, so it becomes
+  an answer key).
+- KING/BUSTER (`RematchOutcomePlaque`) never had body text: headline 36, word 42, CONTINUE 18.
+- `splitHauntedDetail` and the `plaqueDanger*` styles in `MaskBoard.tsx` are now unused (left in place).
+
+### PlaqueText materials
+
+- `carvedStonePlaque` (new): face `#1A1830`, depth `rgba(238,236,252,0.8)`, tight edge via the
+  optional `edgeOffset` / `edgeRadius`. The existing stone/gold/purple materials are unchanged and
+  pinned by `plaqueTextMaterial.test.ts`.
+
 ## Polybook
 
 - Vault route is Polly's book. Current architecture: closed physical book → one large portrait
@@ -333,6 +349,24 @@ Architecture only:
   earlier date is discarded (no result, no streak) at the next `loadDailyResult`, which runs when
   the Daily opens and when Home is focused. A Daily screen left open across midnight keeps the old
   session; finishing it records a result under the old date.
+- Expiry: an unfinished Daily is LOST when its day ends. No result, no streak credit, no Gold
+  Feather; a new puzzle starts. The player sees one plain card (no Polly, no button): headline
+  "TIME'S UP", small line "DAILY #N" (N = the unfinished Daily's own number). It holds 2.5 s then
+  fades; a tap closes it sooner. It shows once, also when they come back the next day. Files:
+  `app/game/dailyExpiry.ts` (`isDailySessionExpired`, `readExpiredDailyNumber`),
+  `app/ui/dailyExpiredCopy.ts` (words; change only on Pete's word), `app/components/DailyExpiredCard.tsx`,
+  store `dailyExpiredNotice` + AsyncStorage key `polywords_daily_expired_notice_v1`. Detection is in
+  `loadDailyResult`; guards in `DailyChallengeScreen` (`handleContinue`, `handleClaimStart`,
+  `handleClaim`, AppState active). Known gap: the 250 ms clue timer does not check for midnight; the
+  card appears at the next interaction or app return.
+
+## Text sizes
+
+Pete, 2026-10-29: nothing below ~18 for copy.
+
+- Polly speech bubble default 23 (line height 25) via `POLLY_BUBBLE_FONT_SIZE` /
+  `POLLY_BUBBLE_LINE_HEIGHT` in `PollySpeechBubble.tsx`, Results included.
+- Onboarding, HUD lesson, Boss/Haunt intro and Daily entry card text enlarged (numbers only).
 
 ## Audio and Haptics
 
