@@ -348,4 +348,4 @@ untracked/local art without approval. No branch merges without Pete's approval.
 - Open: the Hunt pause button overlaps Polly's bubble. Not blocking; noted.
 - Open: TestFlight splash build skipped (monthly build quota); the splash logo is tiny there.
 - Open: the Hunt Results journal link stays as it is (Pete).
-- Open: push the three commits.
+- Open: push the three commits. DONE 2026-10-30: the three code commits were already on origin; the doc commits are pushed too.
