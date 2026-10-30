@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Pressable, StyleSheet, View } from 'react-native';
 
-import { FONTS, FONT_SIZES } from '../../constants/fonts';
+import { FONTS } from '../../constants/fonts';
 import { resolveBossOutcomePlaqueFeedback, resolveRematchLossFeedback } from '../../game/huntOutcomeFeedback';
 import { Haptics } from '../../utils/haptics';
 import { playSfx } from '../../audio/sfx';
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: FONT_SIZES.hudLabel,
+    fontSize: 18, // Pete 2026-10-29 (was hudLabel 14)
     letterSpacing: 1,
     textAlign: 'center',
   },

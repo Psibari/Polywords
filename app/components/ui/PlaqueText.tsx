@@ -59,8 +59,8 @@ export default function PlaqueText({
             lineHeight,
             color: palette.face,
             textShadowColor: palette.depth,
-            textShadowOffset: { width: 1.25, height: 1.9 },
-            textShadowRadius: 1.15,
+            textShadowOffset: palette.edgeOffset ?? { width: 1.25, height: 1.9 },
+            textShadowRadius: palette.edgeRadius ?? 1.15,
           },
           textStyle,
         ]}

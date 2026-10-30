@@ -21,6 +21,13 @@ assert.equal(stone.face, '#1A1830');
 assert.equal(stone.depth, '#080711');
 assert.equal(stone.highlight, '#655F87');
 
+const carved = PLAQUE_TEXT_MATERIALS.carvedStonePlaque;
+assert.equal(carved.face, stone.face, 'carved stone keeps the one Haunted ink');
+assert.notEqual(carved.depth, stone.depth, 'carved stone draws a light edge, not the dark smear');
+assert.deepEqual(carved.edgeOffset, { width: 0, height: 1.8 });
+assert.equal(carved.edgeRadius, 0.5);
+assert.equal(stone.edgeOffset, undefined, 'the existing stone material keeps its default shadow');
+
 assert.deepEqual(resolveBusterTransformFrame('master'), {
   visibleWord: 'MASTER',
   animatedPrefix: null,

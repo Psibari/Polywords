@@ -355,14 +355,14 @@ const styles = StyleSheet.create({
     color: PW.color.softWhite,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 17,
+    fontSize: 20,
     lineHeight: 23,
     letterSpacing: 1.1,
     textAlign: 'center',
   },
   lineLead: {
     color: PW.color.gold,
-    fontSize: 20,
+    fontSize: 22,
     lineHeight: 26,
   },
   continue: {
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     color: PW.color.gold,
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 16,
+    fontSize: 18,
     letterSpacing: 1.6,
   },
 });

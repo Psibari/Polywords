@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { FONTS } from '../constants/fonts';
-import { homePerch, homeType } from '../ui/pwHomeMaterials';
+import { homePerch } from '../ui/pwHomeMaterials';
 
 type Props = {
   line: string;
@@ -13,14 +13,19 @@ type Props = {
   tail?: 'left' | 'up';
 };
 
+// Polly's speech size (Pete, 2026-10-29): 23 / 25, the size of her bubble on the Daily pause card
+// and the Hunt quit card. It was 18 / 24 and unreadable on the Hunt and Daily.
+export const POLLY_BUBBLE_FONT_SIZE = 23;
+export const POLLY_BUBBLE_LINE_HEIGHT = 25;
+
 // All four surfaces (Home, Results, Hunt, Daily) are expected to inherit these
 // defaults. A per-surface fontSize/lineHeight override is a layout escape
 // hatch, not a style choice — reach for maxWidth first.
 export function PollySpeechBubble({
   line,
   maxWidth = 190,
-  fontSize = homeType.greeting,
-  lineHeight = 24,
+  fontSize = POLLY_BUBBLE_FONT_SIZE,
+  lineHeight = POLLY_BUBBLE_LINE_HEIGHT,
   tone = 'default',
   tail = 'left',
 }: Props) {

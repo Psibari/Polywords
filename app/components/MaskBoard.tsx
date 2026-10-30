@@ -264,7 +264,7 @@ function KingHeadline({ from, textStyle }: { from: string; textStyle: StyleProp<
   );
 }
 
-function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onContinue, isBoss, isRematch }: OutcomeOverlayProps) {
+function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue, isBoss, isRematch }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
   const pulse = useRef(new Animated.Value(0)).current;
@@ -339,31 +339,17 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
               <PlaqueText
                 text={headline}
                 material="goldPlaque"
-                fontSize={33}
+                fontSize={40}
                 fontFamily={FONTS.label}
                 textStyle={[styles.plaqueHeadline, styles.banishedPlaqueHeadline]}
               />
               <PlaqueText
                 text={word}
                 material="goldPlaque"
-                fontSize={41}
+                fontSize={56}
                 textStyle={[styles.plaqueWord, styles.banishedPlaqueWord]}
                 minimumFontScale={0.6}
               />
-              <View style={styles.plaqueCopyBlock}>
-                <Text style={[styles.plaqueCopy, styles.banishedPlaqueCopy]}>Not one of Polly's traps.</Text>
-                <Text style={[styles.plaqueCopy, styles.banishedPlaqueCopy]}>You saw through it.</Text>
-              </View>
-              {bonusLabel && (
-                <Text
-                  style={[styles.plaqueBonus, styles.banishedPlaqueBonus]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.7}
-                >
-                  {bonusLabel}
-                </Text>
-              )}
             </View>
           </View>
           <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
@@ -387,7 +373,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
                 <PlaqueText
                   text={headline}
                   material="goldPlaque"
-                  fontSize={33}
+                  fontSize={40}
                   fontFamily={FONTS.label}
                   textStyle={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}
                 />
@@ -395,24 +381,10 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
               <PlaqueText
                 text={word}
                 material="goldPlaque"
-                fontSize={41}
+                fontSize={56}
                 textStyle={[styles.plaqueWord, styles.masteredPlaqueWord]}
                 minimumFontScale={0.6}
               />
-              <View style={styles.plaqueCopyBlock}>
-                <Text style={[styles.plaqueCopy, styles.masteredPlaqueCopy]}>Not one of Polly's traps.</Text>
-                <Text style={[styles.plaqueCopy, styles.masteredPlaqueCopy]}>You saw through it.</Text>
-              </View>
-              {bonusLabel && (
-                <Text
-                  style={[styles.plaqueBonus, styles.masteredPlaqueBonus]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.7}
-                >
-                  {bonusLabel}
-                </Text>
-              )}
             </View>
           </View>
           <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
@@ -432,11 +404,6 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', bonusLabel, onCon
         <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
           {word}
         </Text>
-        <View style={styles.outcomeCopyBlock}>
-          <Text style={styles.outcomeCopy}>Not one of Polly's traps.</Text>
-          <Text style={styles.outcomeCopy}>You saw through it.</Text>
-        </View>
-        {bonusLabel && <Text style={styles.outcomeBonus}>{bonusLabel}</Text>}
         <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
@@ -505,7 +472,9 @@ function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOver
   if (isBoss) {
     // Plaque presentation. drift keeps running (untouched, above) but has
     // no haze to drive here — the illustrated frame carries that job now.
-    const parts = splitHauntedDetail(detail);
+    // The Haunted plaque is HAUNTED and the word, nothing else (Pete, 2026-10-29): Polly is already
+    // laughing, and the missed phrase was an answer key. `detail` is still built by the board
+    // (buildHauntedDetail) and splitHauntedDetail still parses it; neither is drawn here.
     return (
       <Pressable style={styles.plaqueOverlay} onPress={handlePress}>
         <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
@@ -514,35 +483,18 @@ function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOver
             <View pointerEvents="none" style={[styles.plaqueContent, styles.hauntedPlaqueContent]}>
               <PlaqueText
                 text="HAUNTED"
-                material="stonePlaque"
-                fontSize={33}
+                material="carvedStonePlaque"
+                fontSize={40}
                 fontFamily={FONTS.label}
                 textStyle={[styles.plaqueHeadline, styles.hauntedPlaqueHeadline]}
               />
               <PlaqueText
                 text={word}
-                material="stonePlaque"
-                fontSize={41}
+                material="carvedStonePlaque"
+                fontSize={56}
                 textStyle={[styles.plaqueWord, styles.hauntedPlaqueWord]}
                 minimumFontScale={0.6}
               />
-              <View style={styles.plaqueCopyBlock}>
-                <Text style={[styles.plaqueCopy, styles.hauntedPlaqueCopy]}>Polly's trap held.</Text>
-                <Text style={[styles.plaqueCopy, styles.hauntedPlaqueCopy]}>It'll be waiting.</Text>
-              </View>
-              {parts && (
-                <View style={styles.plaqueDangerBlock}>
-                  <Text style={styles.plaqueDangerLabel}>{parts.label}</Text>
-                  <Text
-                    style={styles.plaqueDangerPhrase}
-                    numberOfLines={2}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.75}
-                  >
-                    {parts.phrase}
-                  </Text>
-                </View>
-              )}
             </View>
           </View>
           <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
@@ -3274,6 +3226,7 @@ const styles = StyleSheet.create({
     color: PW.color.purple, // deep POLYWORDS purple, per spec
   },
   hauntedPlaqueHeadline: {
+    fontSize: 40, // Haunted shows only HAUNTED and the word now (Pete, 2026-10-29), so they grow: was 33
     // Unified to the same single dark ink as the rest of Haunted's text
     // (was PW.color.softWhite) — device feedback: the prior white
     // headline + dark headword + rose label + dark copy mix read as
@@ -3297,6 +3250,7 @@ const styles = StyleSheet.create({
     color: PW.color.purple,
   },
   hauntedPlaqueWord: {
+    fontSize: 56, // was 41 (plaqueWord); Haunted has only the word under the headline now
     color: PW.color.bg, // dark headword, per spec, kept off gold entirely
   },
   banishedPlaqueWord: {
@@ -3309,7 +3263,7 @@ const styles = StyleSheet.create({
   plaqueCopy: {
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 14, // was 11 (+27%)
+    fontSize: 18, // was 11, then 14; 18 per Pete 2026-10-29 (unreadable on device)
     letterSpacing: 0,
     textAlign: 'center',
   },
@@ -3327,7 +3281,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 20, // was 15 (+33%)
+    fontSize: 22, // was 15, then 20; 22 per Pete 2026-10-29
     letterSpacing: 0.5,
     textAlign: 'center',
   },
@@ -3345,7 +3299,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.label,
     includeFontPadding: false,
     fontWeight: '800',
-    fontSize: 15, // was 11 (+36%) — sits between plaqueCopy (14, priority 4) and plaqueDangerPhrase (17, priority 2), so TRAP CLAIMED reads as priority 3 as spec'd
+    fontSize: 17, // was 11, then 15; 17 per Pete 2026-10-29 — still below plaqueDangerPhrase (19), so TRAP CLAIMED reads as priority 3 as spec'd
     letterSpacing: 1,
     color: PW.color.rose, // restrained danger accent — the ONE place rose appears; everything else on the Haunted plaque is the single dark ink
     textAlign: 'center',
@@ -3354,7 +3308,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: 17, // was 12 (+42%) — recognition content, not footer copy, per spec
+    fontSize: 19, // was 12, then 17; 19 per Pete 2026-10-29 — recognition content, not footer copy, per spec
     letterSpacing: 0,
     color: PW.color.bg, // same single Haunted ink as the rest of the plaque
     textAlign: 'center',
@@ -3364,7 +3318,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     fontFamily: FONTS.label,
     includeFontPadding: false,
-    fontSize: FONT_SIZES.hudLabel,
+    fontSize: 18, // Pete 2026-10-29 (was hudLabel 14)
     letterSpacing: 1,
     textAlign: 'center',
   },
