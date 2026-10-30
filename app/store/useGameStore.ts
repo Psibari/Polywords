@@ -52,6 +52,7 @@ import {
   recoverDailySession,
 } from '../game/dailySessionPersistence';
 import { applyDailyStreak, getRewardedStreakMilestone } from '../game/dailyStreak';
+import { isDailySessionExpired, readExpiredDailyNumber } from '../game/dailyExpiry';
 import { setMusicEnabled } from '../audio/MusicEngine';
 import { PollyLineId } from '../game/pollyCharacter';
 import {
@@ -115,6 +116,9 @@ const PROGRESS_KEY = 'polywords_progress';
 const DAILY_ATTEMPT_KEY_PREFIX = 'polywords_daily_attempt_';
 const DAILY_RESULT_KEY_PREFIX = 'polywords_daily_result_';
 const DAILY_ACTIVE_SESSION_KEY = 'polywords_daily_active_session_v1';
+// The challenge number of an unfinished Daily that ran out with its day (TIME'S UP card).
+// Held until the Daily screen shows the card once.
+const DAILY_EXPIRED_NOTICE_KEY = 'polywords_daily_expired_notice_v1';
 const GOLD_FEATHER_KEY = 'polywords_gold_feather';
 const SETTINGS_KEY = 'polywords_settings';
 const POLLY_MEMORY_KEY = 'polywords_polly_memory_v1';
@@ -357,6 +361,8 @@ type GameStore = {
   dailyResult: DailyResult | null;
   dailyAttemptDate: string | null;
   dailyLastClaimResult: DailyClaimResult | null;
+  /** Challenge number of an unfinished Daily whose day ended; null when there is nothing to tell. */
+  dailyExpiredNotice: number | null;
   streakMilestoneReward: number | null;
   loadDailyResult: (date?: string) => Promise<void>;
   startDailyChallenge: (date?: string) => Promise<boolean>;
@@ -365,6 +371,9 @@ type GameStore = {
   pauseDailyChallenge: (elapsedMs: number) => void;
   clearDailyReaction: () => void;
   clearStreakMilestoneReward: () => void;
+  /** Throws away an unfinished Daily from an earlier date (no result, streak or feather). True if it did. */
+  expireStaleDailySession: () => Promise<boolean>;
+  clearDailyExpiredNotice: () => void;
   resetDailyForDev: () => Promise<void>;
   resetProgressForDev: () => Promise<void>;
   goldFeatherAvailable: boolean;
@@ -429,6 +438,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   dailyResult: null,
   dailyAttemptDate: null,
   dailyLastClaimResult: null,
+  dailyExpiredNotice: null,
   streakMilestoneReward: null,
   goldFeatherAvailable: false,
   goldFeatherExpiresAt: null,
@@ -1320,12 +1330,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       await dailyPersistenceQueue.catch(() => {});
-      const [attempt, rawResult, rawSession] = await Promise.all([
+      const [attempt, rawResult, rawSession, rawNotice] = await Promise.all([
         AsyncStorage.getItem(attemptKey),
         AsyncStorage.getItem(resultKey),
         AsyncStorage.getItem(DAILY_ACTIVE_SESSION_KEY),
+        AsyncStorage.getItem(DAILY_EXPIRED_NOTICE_KEY),
       ]);
       const attemptRecorded = attempt === date;
+
+      // An unfinished Daily from an earlier date is lost with its day: it is
+      // discarded below (no result, no streak, no feather) and the player is
+      // told once, by number, when the Daily next opens.
+      const expiredNumber = readExpiredDailyNumber(rawSession, date);
+      if (expiredNumber !== null) {
+        set({ dailyExpiredNotice: expiredNumber });
+        await enqueueDailyPersistence(() =>
+          AsyncStorage.setItem(DAILY_EXPIRED_NOTICE_KEY, String(expiredNumber)),
+        );
+      } else {
+        const storedNotice = Number(rawNotice);
+        if (rawNotice !== null && Number.isInteger(storedNotice) && storedNotice > 0) {
+          set({ dailyExpiredNotice: storedNotice });
+        }
+      }
       const dailyResult = parseDailyResult(rawResult, date);
 
       if (dailyResult) {
@@ -1571,6 +1598,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ streakMilestoneReward: null });
   },
 
+  expireStaleDailySession: async () => {
+    const session = get().dailySession;
+    if (!session || !isDailySessionExpired(session, getTodayDateString())) return false;
+    // The old date's attempt key stays, so that day can never be started again.
+    set({
+      dailySession: null,
+      dailyResult: null,
+      dailyAttemptDate: null,
+      dailyLastClaimResult: null,
+      streakMilestoneReward: null,
+      dailyExpiredNotice: session.challengeNumber,
+    });
+    try {
+      await enqueueDailyPersistence(async () => {
+        await AsyncStorage.setItem(DAILY_EXPIRED_NOTICE_KEY, String(session.challengeNumber));
+        await AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY);
+      });
+    } catch {}
+    return true;
+  },
+
+  clearDailyExpiredNotice: () => {
+    set({ dailyExpiredNotice: null });
+    enqueueDailyPersistence(() => AsyncStorage.removeItem(DAILY_EXPIRED_NOTICE_KEY)).catch(() => {});
+  },
+
   resetDailyForDev: async () => {
     const date = getTodayDateString();
     const attemptKey = DAILY_ATTEMPT_KEY_PREFIX + date;
@@ -1581,9 +1634,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         AsyncStorage.removeItem(attemptKey),
         AsyncStorage.removeItem(resultKey),
         AsyncStorage.removeItem(DAILY_ACTIVE_SESSION_KEY),
+        AsyncStorage.removeItem(DAILY_EXPIRED_NOTICE_KEY),
       ]);
     } catch {}
     set({
+      dailyExpiredNotice:    null,
       dailySession:          null,
       dailyResult:           null,
       dailyAttemptDate:      null,
@@ -1605,6 +1660,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         AsyncStorage.removeItem(PROGRESS_KEY),
         AsyncStorage.removeItem(POLLY_MEMORY_KEY),
         AsyncStorage.removeItem(GOLD_FEATHER_KEY),
+        AsyncStorage.removeItem(DAILY_EXPIRED_NOTICE_KEY),
         AsyncStorage.removeItem(ONBOARDING_STATE_KEY),
         AsyncStorage.removeItem(INTRO_SEEN_KEY),
         AsyncStorage.removeItem(BOSS_INTRO_SEEN_KEY),
@@ -1623,6 +1679,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       dailyResult: null,
       dailyAttemptDate: null,
       dailyLastClaimResult: null,
+      dailyExpiredNotice: null,
       streakMilestoneReward: null,
       goldFeatherAvailable: false,
       goldFeatherExpiresAt: null,

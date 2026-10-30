@@ -74,6 +74,8 @@ import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleSt
 import { type DailyCoinRise } from '../components/DailyFloorCoins';
 import DailyCoinFinale from '../components/DailyCoinFinale';
 import { DailyPauseCard } from '../components/DailyPauseCard';
+import { DailyExpiredCard } from '../components/DailyExpiredCard';
+import { isDailySessionExpired } from '../game/dailyExpiry';
 import UiIconButton from '../components/UiIconButton';
 import { DAILY_PAUSE_ICON_A11Y } from '../ui/dailyPauseCopy';
 import {
@@ -407,6 +409,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const clearDailyReaction = useGameStore((s) => s.clearDailyReaction);
   const loadDailyResult = useGameStore((s) => s.loadDailyResult);
   const resetDailyForDev = useGameStore((s) => s.resetDailyForDev);
+  const expireStaleDailySession = useGameStore((s) => s.expireStaleDailySession);
+  const clearDailyExpiredNotice = useGameStore((s) => s.clearDailyExpiredNotice);
+  const dailyExpiredNotice = useGameStore((s) => s.dailyExpiredNotice);
 
   const [cardStates, setCardStates] = useState<Map<string, DailyAnswerCardState>>(
     new Map(),
@@ -459,6 +464,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // as the state.
   const [paused, setPausedState] = useState(false);
   const pausedRef = useRef(false);
+  // TIME'S UP FOR DAILY #N: the number the card is showing. Copied from the store once the Daily
+  // has initialised, and the store's copy is cleared at the same moment, so the card shows once.
+  const [expiredNoticeNumber, setExpiredNoticeNumber] = useState<number | null>(null);
   // How many of today's 5 rounds are solved as of this claim, for the
   // reveal curtain's feather tally. Computed synchronously in handleClaim
   // (not read from the store) so it can't race the session update.
@@ -828,6 +836,16 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
+      // Back in the app after midnight: an unfinished Daily from yesterday is lost, wherever
+      // the screen is (under Settings or not).
+      if (nextState === 'active') {
+        void expireStaleDailySession().then(expired => {
+          if (!expired) return;
+          pendingClaimCandidateRef.current = null;
+          setLocked(false);
+          setPaused(false);
+        });
+      }
       if (!dailyFocusedRef.current) return;
       const current = dailySessionRef.current;
       if (!current || current.status !== 'active') return;
@@ -840,7 +858,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       pauseDailyChallenge(activeDailyElapsedMs(current));
     });
     return () => subscription.remove();
-  }, [pauseDailyChallenge]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pauseDailyChallenge, expireStaleDailySession]);
 
   // CLAIM RESULT -> Polly reaction
   useEffect(() => {
@@ -1077,6 +1096,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function handleClaimStart(candidate: string): boolean {
     // A stone held before the pause card opened springs back on release.
     if (pausedRef.current) return false;
+    // Midnight passed while the Daily sat open: yesterday's Daily is lost, never claimed.
+    if (isDailySessionExpired(useGameStore.getState().dailySession, getTodayDateString())) {
+      void expireStaleDaily();
+      return false;
+    }
     if (!canBeginDailyClaim(completedRef.current, inputLockedRef.current)) {
       return false;
     }
@@ -1090,6 +1114,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     origin: DailyAnswerCardClaimOrigin | null,
   ) {
     if (pausedRef.current) return;
+    if (isDailySessionExpired(useGameStore.getState().dailySession, getTodayDateString())) {
+      void expireStaleDaily();
+      return;
+    }
     const ownsPendingLock = pendingClaimCandidateRef.current === candidate;
     if (completedRef.current || (inputLockedRef.current && !ownsPendingLock)) return;
     pendingClaimCandidateRef.current = null;
@@ -1217,8 +1245,23 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setPaused(true);
   }
 
+  // An unfinished Daily from an earlier date is lost with its day: no result, no streak, no
+  // Gold Feather. The store clears it and queues the TIME'S UP card; this resets the screen's
+  // own claim lock and pause card.
+  async function expireStaleDaily() {
+    const expired = await expireStaleDailySession();
+    if (!expired) return;
+    pendingClaimCandidateRef.current = null;
+    setLocked(false);
+    setPaused(false);
+  }
+
   function handleContinue() {
     if (!pausedRef.current) return;
+    if (isDailySessionExpired(useGameStore.getState().dailySession, getTodayDateString())) {
+      void expireStaleDaily();
+      return;
+    }
     // The store, not dailySessionRef: the ref only catches up on render.
     const session = useGameStore.getState().dailySession;
     if (session?.status === 'active') {
@@ -1253,6 +1296,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setPaused(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.status]);
+
+  // TIME'S UP FOR DAILY #N: take the store's notice once the Daily has initialised, so the card
+  // never flashes before the entry is ready and is not remembered after it has been shown.
+  useEffect(() => {
+    if (!dailyInitialized || dailyExpiredNotice === null) return;
+    setExpiredNoticeNumber(dailyExpiredNotice);
+    clearDailyExpiredNotice();
+  }, [dailyInitialized, dailyExpiredNotice, clearDailyExpiredNotice]);
 
   async function handleStartDaily() {
     if (dailyStarting) return;
@@ -1552,6 +1603,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           onContinue={handleContinue}
           onHome={handleHome}
           onSettings={handlePauseSettings}
+        />
+      )}
+
+      {/* TIME'S UP FOR DAILY #N: over everything, shown once, then today's Daily entry. */}
+      {expiredNoticeNumber !== null && (
+        <DailyExpiredCard
+          number={expiredNoticeNumber}
+          onDismiss={() => setExpiredNoticeNumber(null)}
         />
       )}
     </View>

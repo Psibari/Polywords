@@ -1,6 +1,6 @@
 // One-off asset-generation script — NOT part of the RN app bundle. Rasterizes
-// the brand SVG sources (app/ui/pwBrandAssets.ts) to the Android adaptive-icon
-// foreground and the brand wordmark PNGs. The app icon (icon.png) and the
+// the brand SVG sources (app/ui/pwBrandAssets.ts) to the brand wordmark PNGs.
+// The app icon (icon.png), the Android adaptive icon (adaptive-icon.png) and the
 // splash image (splash-icon.png) are hand-made and intentionally not written
 // here. Uses real
 // Chromium (via Playwright) rather than a lighter SVG rasterizer because it
@@ -14,7 +14,6 @@ import path from 'node:path';
 import {
   HOME_MASTHEAD_WORDMARK_SVG,
   WORDMARK_LOCKUP_SVG,
-  APP_ICON_MONOGRAM_ADAPTIVE_SVG,
 } from '../app/ui/pwBrandAssets.ts';
 
 const FONT_PATH = path.resolve(import.meta.dirname, '../assets/fonts/RammettoOne-Regular.ttf');
@@ -42,7 +41,7 @@ type Target = { svg: string; file: string; width: number; height: number };
 
 const TARGETS: Target[] = [
   // No icon.png here: the app icon (assets/icon.png) is hand-made; do not regenerate it.
-  { svg: APP_ICON_MONOGRAM_ADAPTIVE_SVG, file: path.join(OUT_DIR, 'adaptive-icon.png'), width: 1024, height: 1024 },
+  // No adaptive-icon.png here: it is the hand-made crown icon scaled into the Android safe zone; do not regenerate it.
   // No splash-icon.png here: the splash image is hand-made (1356x476, transparent).
   // See CLAUDE.md "App launch / splash".
   // Static asset for the Home screen — rendered as a plain image (expo-image),
