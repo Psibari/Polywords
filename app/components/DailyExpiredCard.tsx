@@ -5,15 +5,15 @@ import { FONTS } from '../constants/fonts';
 import { PW } from '../ui/pwTheme';
 import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import {
-  DAILY_EXPIRED_BUTTON,
-  DAILY_EXPIRED_BUTTON_A11Y,
-  dailyExpiredTitle,
-  dailyExpiredTitleA11y,
+  DAILY_EXPIRED_HOLD_MS,
+  DAILY_EXPIRED_TITLE,
+  dailyExpiredA11y,
+  dailyExpiredSubtitle,
 } from '../ui/dailyExpiredCopy';
 
-// TIME'S UP FOR DAILY #N (Pete, 2026-10-29): a plain card, no Polly, one button. Shown once when
-// an unfinished Daily ran out with its day. The card and button are DailyPauseCard's, copied
-// rather than shared; the words live in app/ui/dailyExpiredCopy.ts.
+// TIME'S UP + DAILY #N (Pete, 2026-10-30): a plain card, no Polly, no button. Shown once when an
+// unfinished Daily ran out with its day. It fades away by itself after DAILY_EXPIRED_HOLD_MS;
+// a tap closes it sooner. The words live in app/ui/dailyExpiredCopy.ts.
 
 type Props = {
   /** Challenge number of the Daily that ran out. */
@@ -25,60 +25,77 @@ export function DailyExpiredCard({ number, onDismiss }: Props) {
   const opacity = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.97)).current;
   const reduceMotion = useReducedMotionPreference();
+  const closingRef = useRef(false);
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
 
-  // The pause card's entrance without Polly; Reduce Motion shows the final state.
-  useEffect(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    if (reduceMotion !== false) {
-      opacity.setValue(1);
-      cardScale.setValue(1);
+  const close = useRef((instant: boolean) => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    if (instant) {
+      onDismissRef.current();
       return;
     }
+    Animated.timing(opacity, {
+      toValue: 0,
+      duration: 260,
+      useNativeDriver: true,
+    }).start(() => onDismissRef.current());
+  }).current;
 
-    Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 170,
-        useNativeDriver: true,
-      }),
-      Animated.spring(cardScale, {
-        toValue: 1,
-        damping: 17,
-        stiffness: 250,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [cardScale, opacity, reduceMotion]);
+  // The pause card's entrance without Polly; Reduce Motion shows the final state and leaves
+  // without a fade. Either way the card holds, then closes itself.
+  useEffect(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const instant = reduceMotion !== false;
+
+    if (instant) {
+      opacity.setValue(1);
+      cardScale.setValue(1);
+    } else {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 170,
+          useNativeDriver: true,
+        }),
+        Animated.spring(cardScale, {
+          toValue: 1,
+          damping: 17,
+          stiffness: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+
+    const timer = setTimeout(() => close(instant), DAILY_EXPIRED_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [cardScale, close, opacity, reduceMotion]);
 
   return (
     <Animated.View
       style={[ex.root, { opacity }]}
       accessibilityViewIsModal
-      onAccessibilityEscape={onDismiss}
+      onAccessibilityEscape={() => close(true)}
     >
-      <Animated.View style={[ex.card, { transform: [{ scale: cardScale }] }]}>
-        <Text
-          style={ex.title}
-          accessibilityRole="header"
-          accessibilityLabel={dailyExpiredTitleA11y(number)}
-        >
-          {dailyExpiredTitle(number)}
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={DAILY_EXPIRED_BUTTON_A11Y}
-          onPress={onDismiss}
-          style={({ pressed }) => [ex.action, pressed && ex.pressed]}
-        >
-          <Text style={ex.actionLabel}>{DAILY_EXPIRED_BUTTON}</Text>
-        </Pressable>
-      </Animated.View>
+      <Pressable
+        style={ex.tapArea}
+        accessibilityRole="button"
+        accessibilityLabel={dailyExpiredA11y(number)}
+        onPress={() => close(reduceMotion !== false)}
+      >
+        <Animated.View style={[ex.card, { transform: [{ scale: cardScale }] }]}>
+          <Text style={ex.title} accessibilityRole="header">
+            {DAILY_EXPIRED_TITLE}
+          </Text>
+          <Text style={ex.subtitle}>{dailyExpiredSubtitle(number)}</Text>
+        </Animated.View>
+      </Pressable>
     </Animated.View>
   );
 }
 
-// Same overlay and card as DailyPauseCard (dp.*), minus the room Polly needed above the card.
+// Same overlay and card as DailyPauseCard (dp.*), minus Polly and the button.
 const ex = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFill,
@@ -96,39 +113,33 @@ const ex = StyleSheet.create({
     borderColor: 'rgba(155,45,107,0.62)',
     backgroundColor: 'rgba(15,13,42,0.97)',
     paddingTop: 34,
-    paddingBottom: 26,
+    paddingBottom: 32,
     paddingHorizontal: 24,
     alignItems: 'center',
     ...PW.shadow.panel,
+  },
+  tapArea: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     color: PW.color.softWhite,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 26,
-    lineHeight: 30,
-    letterSpacing: 2.5,
+    fontSize: 36,
+    lineHeight: 42,
+    letterSpacing: 3,
     textAlign: 'center',
-    marginBottom: 28,
   },
-  action: {
-    width: '100%',
-    minHeight: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: PW.radius.card,
-    borderWidth: 1.5,
-    borderColor: PW.color.gold,
-    backgroundColor: 'rgba(245,200,66,0.11)',
-  },
-  actionLabel: {
+  subtitle: {
+    marginTop: 10,
     color: PW.color.gold,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
-    fontSize: 19,
+    fontSize: 20,
     letterSpacing: 3,
-  },
-  pressed: {
-    opacity: 0.78,
+    textAlign: 'center',
   },
 });

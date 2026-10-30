@@ -1,7 +1,7 @@
 import { buildDailySession, getChallengeNumber } from './dailyChallengeEngine';
 import { encodeDailySessionSnapshot } from './dailySessionPersistence';
 import { isDailySessionExpired, readExpiredDailyNumber } from './dailyExpiry';
-import { dailyExpiredTitle } from '../ui/dailyExpiredCopy';
+import { DAILY_EXPIRED_TITLE, dailyExpiredSubtitle } from '../ui/dailyExpiredCopy';
 
 function eq<T>(actual: T, expected: T, label: string): void {
   if (actual !== expected) {
@@ -40,6 +40,7 @@ eq(readExpiredDailyNumber('{"version":1,"session":{"date":"2026-10-28"}}', TODAY
 eq(readExpiredDailyNumber('{"version":1}', TODAY), null, 'no session in the snapshot: no notice');
 
 // ── copy ──────────────────────────────────────────────────────────
-eq(dailyExpiredTitle(42), "TIME'S UP FOR DAILY #42", 'the card line is Pete\'s wording');
+eq(DAILY_EXPIRED_TITLE, "TIME'S UP", 'the card headline is Pete\'s wording');
+eq(dailyExpiredSubtitle(42), 'DAILY #42', 'the small line carries the number');
 
 console.log('dailyExpiry.test.ts passed');
