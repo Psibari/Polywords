@@ -34,3 +34,20 @@ redraw or recolor.
 | --- | --- | --- | --- |
 | banished.png | 1254×871 | — | — |
 | banished-result-plaque.png | — | 705×553 | 1.275 |
+
+## Lettered plaques (2026-10-30)
+
+The Results plaques carry their headline carved into the art, since MASTERED / HAUNTED / BANISHED
+never change. Only the round's word is live text (`PlaqueText`, Bebas, carved material).
+
+| File | Used by | Notes |
+| --- | --- | --- |
+| mastered-result-plaque-lettered.png | Results MASTERED plaque (MaskBoard) | 1362x1134 (the 681x567 crop at 2x), MASTERED in Cinzel Black |
+| banished-result-plaque-lettered.png | Results BANISHED plaque (MaskBoard) | 1410x1106 (the 705x553 crop at 2x), BANISHED in Caesar Dressing, chipped and cracked |
+| haunted-result-plaque-lettered.png | Results HAUNTED plaque (MaskBoard) | 1263x954, HAUNTED in Caesar Dressing |
+| king-result-plaque.png | KING plaque (RematchOutcomePlaque) | KING in Cinzel Black baked in (the one file overwritten in place) |
+
+`mastered-result-plaque.png` stays an EMPTY frame on purpose: the rematch plaque draws a live MASTER
+on it, which animates into BUSTER (and shrinks into KING). `haunted-result-plaque.png` and
+`banished-result-plaque.png` (empty, cleaned frames) are no longer referenced by the app; they are kept
+as the clean source the lettered versions were made from.

@@ -1,4 +1,4 @@
-export type PlaqueTextMaterialName = 'goldPlaque' | 'purplePlaque' | 'stonePlaque' | 'carvedStonePlaque';
+export type PlaqueTextMaterialName = 'goldPlaque' | 'purplePlaque' | 'stonePlaque' | 'carvedStonePlaque' | 'carvedGoldPlaque';
 
 export type PlaqueTextMaterial = {
   face: string;
@@ -32,11 +32,25 @@ export const PLAQUE_TEXT_MATERIALS: Record<PlaqueTextMaterialName, PlaqueTextMat
   // Haunted plaque lettering (Pete, 2026-10-29): the stonePlaque dark-on-dark shadow smeared on
   // the grey stone. Same dark ink, but `depth` is a thin light edge below each letter, so the
   // word reads as cut into the stone.
+  //
+  // 2026-10-30: the face now matches the ink of the carved HAUNTED / BANISHED headline baked into the
+  // plaque art (measured from the art: about #3E3A55), so the live word and the headline read as the
+  // same cut. The old #1A1830 read as black next to the headline.
   carvedStonePlaque: {
-    face: '#1A1830',
+    face: '#3E3A55',
     depth: 'rgba(238, 236, 252, 0.8)',
     highlight: '#655F87',
     shadow: 'rgba(5, 4, 15, 0.72)',
+    edgeOffset: { width: 0, height: 1.8 },
+    edgeRadius: 0.5,
+  },
+  // KING plaque word (Pete, 2026-10-30): the same engraved look as the carved KING headline baked
+  // into the art - deep purple cut into the gold, with a thin pale-gold lit edge below each letter.
+  carvedGoldPlaque: {
+    face: '#4A1E80',
+    depth: 'rgba(255, 236, 150, 0.8)',
+    highlight: '#C77BFF',
+    shadow: 'rgba(20, 4, 35, 0.72)',
     edgeOffset: { width: 0, height: 1.8 },
     edgeRadius: 0.5,
   },

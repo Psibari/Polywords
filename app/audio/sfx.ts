@@ -16,6 +16,10 @@ export type SfxName =
   | 'masteredTransform'
   | 'masteredBookSlam'
   | 'masteredResult'
+  | 'kingSwoosh'
+  | 'masteredFanfare'
+  | 'kingFanfare'
+  | 'busterFail'
   | 'hauntedTransformSlam'
   | 'hauntedResult'
   | 'pressHoldStart'
@@ -132,6 +136,23 @@ const SFX: Record<SfxName, SfxConfig> = {
   masteredTransform: { source: require('../../assets/audio/sfx/mastered_transform_v1.wav'), volume: 0.45, cooldownMs: 2200 },
   masteredBookSlam: { source: require('../../assets/audio/sfx/mastered_book_slam_v1.wav'), volume: 0.60, cooldownMs: 300 },
   masteredResult: { source: require('../../assets/audio/sfx/mastered_result_sting_v1.wav'), volume: 0.45, cooldownMs: 2200 },
+  // MASTER -> KING plaque swoosh (Pete, 2026-10-30). The file is 1.23 s: silent until ~240 ms, loudest
+  // at ~360 ms, over by ~560 ms (about -17 LUFS, peak -0.8 dBFS). RematchOutcomePlaque starts it so that
+  // the peak lands as the KING plaque pops. Volume is a first guess: tune by ear.
+  kingSwoosh:     { source: require('../../assets/audio/sfx/king_swoosh.mp3'),       volume: 0.5,  cooldownMs: 2200 },
+  // MASTERED ta-da (Pete, 2026-10-30): a quick trumpet fanfare, 1.78 s, first note ~50 ms in, peaking
+  // ~150 ms, gone by ~1.3 s (about -18 LUFS, peak -5.3 dBFS). Plays when the MASTERED card comes up,
+  // in place of the old masteredResult sting. Volume is a first guess: tune by ear.
+  masteredFanfare: { source: require('../../assets/audio/sfx/mastered_fanfare.mp3'),  volume: 0.5,  cooldownMs: 2200 },
+  // KING fanfare (Pete, 2026-10-30): bigger celebration for stepping up from Master to King. Source file
+  // trimmed from 5.16 s to 3.6 s (natural decay, then a 0.4 s fade). Loudest of the plaque sounds: about
+  // -14 LUFS, peak -3.4 dBFS, about 4 dB hotter than masteredFanfare at the same volume. Starts at the KING
+  // pop. Volume is a first guess: tune by ear.
+  kingFanfare:    { source: require('../../assets/audio/sfx/king_fanfare.mp3'),       volume: 0.5,  cooldownMs: 2200 },
+  // BUSTER failure sound (Pete, 2026-10-30): plays AFTER the BU-drop punch (streakBreakImpact), not on top of
+  // it. Source trimmed from 8.3 s to 2.3 s (the sound ends at ~1.9 s; the rest was a quiet rumble). It is
+  // quiet (-23.8 LUFS, peak -12.8 dBFS) against the punch (-14.7 LUFS at volume 0.55), so volume is 1.0.
+  busterFail:     { source: require('../../assets/audio/sfx/buster_fail.mp3'),         volume: 1.0,  cooldownMs: 2200 },
   hauntedTransformSlam: { source: require('../../assets/audio/sfx/haunted_transform_slam_v1.wav'), volume: 0.60, cooldownMs: 2600 },
   hauntedResult:  { source: require('../../assets/audio/sfx/dark_magic_curse_impact.mp3'), volume: 0.55, cooldownMs: 2600 },
   pressHoldStart: { source: require('../../assets/audio/sfx/press_hold_start.mp3'),  volume: 0.40, cooldownMs: 300 },
@@ -230,6 +251,10 @@ const BOSS_OUTCOME_SFX: readonly SfxName[] = [
   'masteredTransform',
   'masteredBookSlam',
   'masteredResult',
+  'kingSwoosh',
+  'masteredFanfare',
+  'kingFanfare',
+  'busterFail',
   'hauntedTransformSlam',
   'hauntedResult',
 ];

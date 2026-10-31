@@ -420,6 +420,72 @@ export default function SettingsScreen({ navigation, route }: Props) {
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => navigation.navigate('DevRematchOutcomePreview', { outcome: 'king' })}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>KING plaque preview</Text>
+                  <Text style={styles.rowNote}>MASTER, then KING (word FOAM)</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => navigation.navigate('DevRematchOutcomePreview', { outcome: 'king', word: 'EXCHANGE' })}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>KING plaque, longest word</Text>
+                  <Text style={styles.rowNote}>Same, word EXCHANGE</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => navigation.navigate('DevRematchOutcomePreview', { outcome: 'buster' })}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>BUSTER plaque preview</Text>
+                  <Text style={styles.rowNote}>MASTER, then BUSTER (word FOAM)</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => navigation.navigate('DevOutcomePlaquePreview', { kind: 'mastered' })}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>MASTERED plaque preview</Text>
+                  <Text style={styles.rowNote}>Results plaque, short or long word</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => navigation.navigate('DevOutcomePlaquePreview', { kind: 'haunted' })}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>HAUNTED plaque preview</Text>
+                  <Text style={styles.rowNote}>Results plaque, short or long word</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => navigation.navigate('DevOutcomePlaquePreview', { kind: 'banished' })}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              >
+                <View style={styles.rowTextWrap}>
+                  <Text style={styles.rowLabel}>BANISHED plaque preview</Text>
+                  <Text style={styles.rowNote}>Results plaque, short or long word</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Pressable>
             </ImageBackground>
           </View>
         )}

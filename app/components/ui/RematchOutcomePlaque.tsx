@@ -19,6 +19,18 @@ const BUSTER_DROP_MS = 260;
 const BUSTER_LAND_DELAY_MS = 110;
 const BUSTER_LAND_MS = 230;
 const BUSTER_DROP_DISTANCE = 46;
+// KING (Pete, 2026-10-30): the Mastered plaque shrinks away, and the KING plaque pops up from the
+// same spot (they are two different paintings, so the swap happens while the plaque is tiny),
+// with a haptic, a short gold shine and a swoosh that peaks as the plaque pops.
+const KING_SHRINK_MS = 220;
+const KING_SHRINK_TO = 0.15;
+const KING_SHINE_MS = 340;
+// The swoosh file is loudest ~360 ms in, so it starts that long before the KING plaque pops.
+const KING_SWOOSH_PEAK_MS = 360;
+// The BUSTER failure sound starts this long after the BU-drop punch so the punch is heard on its own first.
+const BUSTER_FAIL_AFTER_PUNCH_MS = 250;
+// The KING fanfare starts as the KING plaque pops.
+const KING_POP_MS = MASTER_HOLD_MS + KING_SHRINK_MS;
 
 export type RematchOutcomeKind = 'king' | 'buster';
 
@@ -37,6 +49,8 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
   const buY = useRef(new Animated.Value(-BUSTER_DROP_DISTANCE)).current;
   const buOpacity = useRef(new Animated.Value(0)).current;
   const continueOpacity = useRef(new Animated.Value(0.35)).current;
+  const kingFlash = useRef(new Animated.Value(0)).current;
+  const kingPop = useRef(new Animated.Value(1)).current;
   const resolvedRef = useRef(false);
   const [canDismiss, setCanDismiss] = useState(false);
   const [phase, setPhase] = useState<BusterTransformPhase>('master');
@@ -50,7 +64,9 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
 
   function playIntroFeedback() {
     const feedback = resolveBossOutcomePlaqueFeedback('mastered');
-    if (feedback.sfx) playSfx(feedback.sfx);
+    // Pete 2026-10-30: the returning Master gets the same trumpet fanfare as the first MASTERED card
+    // (it replaces the old masteredResult sting here too). The haptic is unchanged.
+    playSfx('masteredFanfare');
     if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
   }
 
@@ -61,6 +77,12 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
   }
 
   useEffect(() => {
+    // The reduce-motion preference loads asynchronously and reads `null` on the first render.
+    // `null` means "not known yet", not "reduced": starting now would jump straight to the final
+    // plaque (BUSTER/KING already showing, MASTER never seen), play the sound and haptic early,
+    // then restart the animation against the final state once the real value arrives.
+    if (reduceMotion === null) return;
+
     const timers: ReturnType<typeof setTimeout>[] = [];
     playIntroFeedback();
 
@@ -68,7 +90,12 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
       opacity.setValue(1);
       scale.setValue(1);
       setPhase('final');
-      if (kind === 'buster') playBusterPunch();
+      if (kind === 'buster') {
+        playBusterPunch();
+        timers.push(setTimeout(() => playSfx('busterFail'), BUSTER_FAIL_AFTER_PUNCH_MS));
+      } else {
+        timers.push(setTimeout(() => playSfx('kingFanfare'), KING_POP_MS));
+      }
       setCanDismiss(true);
       continueOpacity.setValue(1);
       timers.push(setTimeout(resolve, 2800));
@@ -81,7 +108,27 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
     ]).start();
 
     if (kind === 'king') {
-      timers.push(setTimeout(() => setPhase('final'), MASTER_HOLD_MS));
+      timers.push(setTimeout(() => playSfx('kingSwoosh'), MASTER_HOLD_MS + KING_SHRINK_MS - KING_SWOOSH_PEAK_MS));
+      timers.push(setTimeout(() => {
+        Animated.timing(kingPop, {
+          toValue: KING_SHRINK_TO,
+          duration: KING_SHRINK_MS,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      }, MASTER_HOLD_MS));
+      timers.push(setTimeout(() => {
+        // The Mastered plaque is a dot: swap in the KING plaque and pop it up from there.
+        setPhase('final');
+        playSfx('kingFanfare');
+        kingPop.setValue(KING_SHRINK_TO);
+        kingFlash.setValue(0.6);
+        Haptics.cueAsync('mastery');
+        Animated.parallel([
+          Animated.spring(kingPop, { toValue: 1, damping: 8, stiffness: 140, useNativeDriver: true }),
+          Animated.timing(kingFlash, { toValue: 0, duration: KING_SHINE_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]).start();
+      }, MASTER_HOLD_MS + KING_SHRINK_MS));
     } else {
       timers.push(setTimeout(() => {
         setBusterSplit(true);
@@ -113,6 +160,7 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
           }),
         ]).start();
         playBusterPunch();
+        timers.push(setTimeout(() => playSfx('busterFail'), BUSTER_FAIL_AFTER_PUNCH_MS));
       }, MASTER_HOLD_MS + BUSTER_DROP_MS + BUSTER_LAND_DELAY_MS));
 
       timers.push(setTimeout(() => {
@@ -136,13 +184,15 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
       buY.stopAnimation();
       buOpacity.stopAnimation();
       continueOpacity.stopAnimation();
+      kingFlash.stopAnimation();
+      kingPop.stopAnimation();
     };
   }, [kind, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const imagePhase = resolvePlaqueImagePhase(phase);
   const finalArt = kind === 'king' ? kingPlaqueArt : busterPlaqueArt;
   const plaqueArt = imagePhase === 'master' ? masteredPlaqueArt : finalArt;
-  const finalMaterial = kind === 'king' ? 'goldPlaque' : 'purplePlaque';
+  const finalMaterial = kind === 'king' ? 'carvedGoldPlaque' : 'purplePlaque';
   const wordMaterial = phase === 'master' ? 'goldPlaque' : finalMaterial;
 
   return (
@@ -153,8 +203,24 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
       accessibilityLabel={`${kind === 'king' ? 'King' : 'Buster'}. ${word}. Continue.`}
     >
       <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
-        <View style={styles.plaqueFrame}>
+        <Animated.View
+          style={[
+            styles.plaqueFrame,
+            {
+              opacity: kingPop.interpolate({ inputRange: [KING_SHRINK_TO, 0.5, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+              transform: [{ scale: kingPop }],
+            },
+          ]}
+        >
           <Image source={plaqueArt} style={styles.plaqueImage} resizeMode="contain" />
+          {kind === 'king' && (
+            <Animated.Image
+              source={plaqueArt}
+              tintColor="#FFE9A0"
+              resizeMode="contain"
+              style={[styles.kingFlash, { opacity: kingFlash }]}
+            />
+          )}
 
           {kind === 'king' ? (
             <>
@@ -170,7 +236,7 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
               <PlaqueText
                 text={word}
                 material={wordMaterial}
-                fontSize={42}
+                fontSize={phase === 'master' ? 42 : 50}
                 containerStyle={phase === 'master' ? styles.masterWord : styles.kingWord}
               />
             </>
@@ -222,7 +288,7 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
               />
             </>
           )}
-        </View>
+        </Animated.View>
         <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
@@ -271,7 +337,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '15%',
     right: '15%',
-    top: '58%',
+    top: '54.5%',
+  },
+  kingFlash: {
+    pointerEvents: 'none',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
   },
   busterWord: {
     position: 'absolute',

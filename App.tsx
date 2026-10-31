@@ -13,6 +13,7 @@ import SettingsScreen from './app/screens/SettingsScreen';
 import DailyChallengeScreen from './app/screens/DailyChallengeScreen';
 import DevResultsPreviewScreen from './app/screens/DevResultsPreviewScreen';
 import DevRematchOutcomePreviewScreen from './app/screens/DevRematchOutcomePreviewScreen';
+import DevOutcomePlaquePreviewScreen from './app/screens/DevOutcomePlaquePreviewScreen';
 import { flushActiveGamePersistence, useGameStore } from './app/store/useGameStore';
 import { preloadHomeTrack, setMusicAppActive } from './app/audio/MusicEngine';
 import { preloadSfx } from './app/audio/sfx';
@@ -157,6 +158,7 @@ export default function App() {
             {__DEV__ && <Stack.Screen name="HomeOld" component={HomeScreen} />}
             {__DEV__ && <Stack.Screen name="DevResultsPreview" component={DevResultsPreviewScreen} />}
             {__DEV__ && <Stack.Screen name="DevRematchOutcomePreview" component={DevRematchOutcomePreviewScreen} />}
+            {__DEV__ && <Stack.Screen name="DevOutcomePlaquePreview" component={DevOutcomePlaquePreviewScreen} />}
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>

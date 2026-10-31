@@ -22,11 +22,19 @@ assert.equal(stone.depth, '#080711');
 assert.equal(stone.highlight, '#655F87');
 
 const carved = PLAQUE_TEXT_MATERIALS.carvedStonePlaque;
-assert.equal(carved.face, stone.face, 'carved stone keeps the one Haunted ink');
+assert.equal(carved.face, '#3E3A55', 'carved stone word matches the ink of the carved headline in the art');
+assert.notEqual(carved.face, stone.face, 'carved stone no longer uses the near-black stone ink');
 assert.notEqual(carved.depth, stone.depth, 'carved stone draws a light edge, not the dark smear');
 assert.deepEqual(carved.edgeOffset, { width: 0, height: 1.8 });
 assert.equal(carved.edgeRadius, 0.5);
 assert.equal(stone.edgeOffset, undefined, 'the existing stone material keeps its default shadow');
+
+const carvedGold = PLAQUE_TEXT_MATERIALS.carvedGoldPlaque;
+assert.equal(carvedGold.face, '#4A1E80');
+assert.notEqual(carvedGold.depth, gold.depth, 'carved gold draws a light edge, not the dark smear');
+assert.deepEqual(carvedGold.edgeOffset, { width: 0, height: 1.8 });
+assert.equal(carvedGold.edgeRadius, 0.5);
+assert.equal(gold.edgeOffset, undefined, 'the existing gold material keeps its default shadow');
 
 assert.deepEqual(resolveBusterTransformFrame('master'), {
   visibleWord: 'MASTER',

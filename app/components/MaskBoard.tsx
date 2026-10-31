@@ -186,7 +186,12 @@ type OutcomeOverlayProps = {
 // crop's own measured width/height; contain-fit at a shared frame width
 // preserves them exactly, never stretching either plaque.
 const masteredPlaqueArt = require('../../assets/images/results/mastered-result-plaque.png');
-const hauntedPlaqueArt = require('../../assets/images/results/haunted-result-plaque.png');
+// Results plaques carry their carved headline in the art itself (Pete, 2026-10-30): MASTERED /
+// HAUNTED / BANISHED never change, so they are drawn into the *-lettered files. Only the round's
+// word is live text. The empty mastered frame above is kept for the rematch plaque, whose
+// MASTER lead-in is live because it animates into KING / BUSTER.
+const masteredPlaqueLetteredArt = require('../../assets/images/results/mastered-result-plaque-lettered.png');
+const hauntedPlaqueArt = require('../../assets/images/results/haunted-result-plaque-lettered.png');
 const MASTERED_PLAQUE_ASPECT = 681 / 567;
 const HAUNTED_PLAQUE_ASPECT = 1263 / 954;
 
@@ -196,7 +201,7 @@ const HAUNTED_PLAQUE_ASPECT = 1263 / 954;
 // isBoss below), so it renders through the full outcomeOverlay scrim, not
 // the lighter plaqueOverlay: there is no just-transformed book behind it to
 // keep visible.
-const banishedPlaqueArt = require('../../assets/images/results/banished-result-plaque.png');
+const banishedPlaqueArt = require('../../assets/images/results/banished-result-plaque-lettered.png');
 const BANISHED_PLAQUE_ASPECT = 705 / 553;
 
 // buildHauntedDetail (useBoardMechanics.ts) formats one combined string —
@@ -264,7 +269,7 @@ function KingHeadline({ from, textStyle }: { from: string; textStyle: StyleProp<
   );
 }
 
-function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue, isBoss, isRematch }: OutcomeOverlayProps) {
+export function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue, isBoss, isRematch }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
   const pulse = useRef(new Animated.Value(0)).current;
@@ -335,20 +340,13 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue, isBos
         <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
           <View style={[styles.plaqueFrame, styles.banishedPlaqueFrame]}>
             <Image source={banishedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: BANISHED_PLAQUE_ASPECT }]} resizeMode="contain" />
-            <View pointerEvents="none" style={[styles.plaqueContent, styles.banishedPlaqueContent]}>
-              <PlaqueText
-                text={headline}
-                material="goldPlaque"
-                fontSize={40}
-                fontFamily={FONTS.label}
-                textStyle={[styles.plaqueHeadline, styles.banishedPlaqueHeadline]}
-              />
+            <View pointerEvents="none" style={styles.banishedPlaqueWordSlot}>
               <PlaqueText
                 text={word}
-                material="goldPlaque"
-                fontSize={56}
-                textStyle={[styles.plaqueWord, styles.banishedPlaqueWord]}
+                material="carvedStonePlaque"
+                fontSize={55}
                 minimumFontScale={0.6}
+                accessibilityLabel={`${headline}. ${word}`}
               />
             </View>
           </View>
@@ -365,27 +363,33 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue, isBos
       <Pressable style={styles.plaqueOverlay} onPress={handlePress}>
         <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
           <View style={[styles.plaqueFrame, styles.masteredPlaqueFrame]}>
-            <Image source={masteredPlaqueArt} style={[styles.plaqueImage, { aspectRatio: MASTERED_PLAQUE_ASPECT }]} resizeMode="contain" />
-            <View pointerEvents="none" style={[styles.plaqueContent, styles.masteredPlaqueContent]}>
-              {isRematch === true ? (
+            <Image
+              source={isRematch === true ? masteredPlaqueArt : masteredPlaqueLetteredArt}
+              style={[styles.plaqueImage, { aspectRatio: MASTERED_PLAQUE_ASPECT }]}
+              resizeMode="contain"
+            />
+            {isRematch === true ? (
+              <View pointerEvents="none" style={[styles.plaqueContent, styles.masteredPlaqueContent]}>
                 <KingHeadline from={headline} textStyle={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]} />
-              ) : (
                 <PlaqueText
-                  text={headline}
+                  text={word}
                   material="goldPlaque"
-                  fontSize={40}
-                  fontFamily={FONTS.label}
-                  textStyle={[styles.plaqueHeadline, styles.masteredPlaqueHeadline]}
+                  fontSize={56}
+                  textStyle={[styles.plaqueWord, styles.masteredPlaqueWord]}
+                  minimumFontScale={0.6}
                 />
-              )}
-              <PlaqueText
-                text={word}
-                material="goldPlaque"
-                fontSize={56}
-                textStyle={[styles.plaqueWord, styles.masteredPlaqueWord]}
-                minimumFontScale={0.6}
-              />
-            </View>
+              </View>
+            ) : (
+              <View pointerEvents="none" style={styles.masteredPlaqueWordSlot}>
+                <PlaqueText
+                  text={word}
+                  material="carvedGoldPlaque"
+                  fontSize={53}
+                  minimumFontScale={0.6}
+                  accessibilityLabel={`${headline}. ${word}`}
+                />
+              </View>
+            )}
           </View>
           <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
         </Animated.View>
@@ -410,7 +414,7 @@ function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue, isBos
   );
 }
 
-function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOverlayProps) {
+export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.94)).current;
   const drift = useRef(new Animated.Value(0)).current;
@@ -480,20 +484,13 @@ function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOver
         <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
           <View style={[styles.plaqueFrame, styles.hauntedPlaqueFrame]}>
             <Image source={hauntedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: HAUNTED_PLAQUE_ASPECT }]} resizeMode="contain" />
-            <View pointerEvents="none" style={[styles.plaqueContent, styles.hauntedPlaqueContent]}>
-              <PlaqueText
-                text="HAUNTED"
-                material="carvedStonePlaque"
-                fontSize={40}
-                fontFamily={FONTS.label}
-                textStyle={[styles.plaqueHeadline, styles.hauntedPlaqueHeadline]}
-              />
+            <View pointerEvents="none" style={styles.hauntedPlaqueWordSlot}>
               <PlaqueText
                 text={word}
                 material="carvedStonePlaque"
-                fontSize={56}
-                textStyle={[styles.plaqueWord, styles.hauntedPlaqueWord]}
+                fontSize={61}
                 minimumFontScale={0.6}
+                accessibilityLabel={`HAUNTED. ${word}`}
               />
             </View>
           </View>
@@ -1542,7 +1539,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     // Shared rematch plaque owns KING/BUSTER feedback in both production and DEV.
     if (step.isMasteryRematch === true) return;
     const feedback = resolveBossOutcomePlaqueFeedback(outcome);
-    if (feedback.sfx) playSfx(feedback.sfx);
+    // Pete 2026-10-30: the sting that used to play when the MASTERED card came up sounded wrong; the
+    // trumpet fanfare replaces it. The Haunted card keeps its own sound, and the haptic below stays.
+    if (outcome === 'mastered') playSfx('masteredFanfare');
+    else if (feedback.sfx) playSfx(feedback.sfx);
     if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
   }, [isBoss, mechanics.wordOutcome, showOutcomeCard, step.isMasteryRematch]);
 
@@ -3202,6 +3202,18 @@ const styles = StyleSheet.create({
   // the original pass to use substantially more of the field per device
   // feedback — a small safety margin remains so text still never nears
   // the border.
+  // The word slots: only the round's word is live on these plaques; the headline is in the art.
+  // Placed from Pete's approved mock-ups (2026-10-30): top/left/right are percentages of each
+  // plaque's own frame, so they follow the art at any width. Tune by eye on device.
+  masteredPlaqueWordSlot: {
+    position: 'absolute', left: '15.4%', right: '15.6%', top: '45.3%',
+  },
+  banishedPlaqueWordSlot: {
+    position: 'absolute', left: '15.9%', right: '13.2%', top: '51.5%',
+  },
+  hauntedPlaqueWordSlot: {
+    position: 'absolute', left: '14.3%', right: '14.5%', top: '44.4%',
+  },
   masteredPlaqueContent: {
     left: '14%', right: '14%', top: '13%', bottom: '25%',
   },

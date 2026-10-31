@@ -32,8 +32,14 @@ assert.doesNotMatch(mechanics, /BOSS MASTERY \+/);
 // The ordinary illustrated outcome plaques share the same physical lettering
 // system as KING/BUSTER rather than falling back to flat React Native text.
 assert.match(production, /import PlaqueText from '\.\/ui\/PlaqueText'/);
-assert.match(production, /banishedPlaqueContent[\s\S]*<PlaqueText[\s\S]*text=\{headline\}/);
-assert.match(production, /masteredPlaqueContent[\s\S]*<PlaqueText[\s\S]*text=\{headline\}/);
-assert.match(production, /hauntedPlaqueContent[\s\S]*<PlaqueText[\s\S]*text="HAUNTED"/);
+// Results plaques (Pete, 2026-10-30): the headline (MASTERED / BANISHED / HAUNTED) is carved into
+// the *-lettered art, so only the round's word is live PlaqueText, in the matching carved material.
+assert.match(production, /mastered-result-plaque-lettered\.png/);
+assert.match(production, /banished-result-plaque-lettered\.png/);
+assert.match(production, /haunted-result-plaque-lettered\.png/);
+assert.match(production, /styles\.banishedPlaqueWordSlot[\s\S]*?<PlaqueText[\s\S]*?text=\{word\}[\s\S]*?material="carvedStonePlaque"/);
+assert.match(production, /styles\.masteredPlaqueWordSlot[\s\S]*?<PlaqueText[\s\S]*?text=\{word\}[\s\S]*?material="carvedGoldPlaque"/);
+assert.match(production, /styles\.hauntedPlaqueWordSlot[\s\S]*?<PlaqueText[\s\S]*?text=\{word\}[\s\S]*?material="carvedStonePlaque"/);
+assert.doesNotMatch(production, /text="HAUNTED"/, 'the HAUNTED headline is in the art, not live text');
 
 console.log('rematch and boss outcome presentation contract passed');

@@ -58,3 +58,19 @@ terrace_whoosh_epic.mp3 is the first 3.2 s of the source with a 0.4 s fade-out.
 
 POLYWORDS edits: polybook_cage_crash.mp3 is the first 1.4 s of the source with a 0.6 s fade-out (the source
 rings on at a steady level and ends abruptly at 1.7 s).
+
+## Sound effects added 2026-10-30
+
+- `sfx/king_swoosh.mp3`: “Fast Swoosh 04” by Universfield (downloaded as
+  `universfield-fast-swoosh-04-192899.mp3`), Pixabay Content License. The source page URL
+  was not recorded; add it here.
+- `sfx/mastered_fanfare.mp3`: “Tada Fanfare A” by freesound_community (downloaded as
+  `freesound_community-tada-fanfare-a-6313.mp3`), Pixabay Content License. The source page
+  URL was not recorded; add it here.
+- `sfx/king_fanfare.mp3`: “Fanfare 1” by benkirb (downloaded as `benkirb-fanfare-1-276819.mp3`).
+  Trimmed to 3.6 s with a fade-out. Pixabay Content License (Pete confirmed the source is Pixabay,
+  2026-10-30). The source page URL was not recorded; add it here.
+- `sfx/buster_fail.mp3`: “FX Loose Cartoon” by mori_sound (downloaded as
+  `mori_sound-fx-loose-cartoon-521523.mp3`). Trimmed to 2.3 s with a fade-out. Pixabay Content
+  License (Pete confirmed the source is Pixabay, 2026-10-30). The source page URL was not recorded;
+  add it here.

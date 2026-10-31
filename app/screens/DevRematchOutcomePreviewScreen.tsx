@@ -12,12 +12,13 @@ import { PW } from '../ui/pwTheme';
 
 type Props = {
   navigation: any;
-  route: { params?: { outcome?: RematchOutcomeDevPreviewKind } };
+  route: { params?: { outcome?: RematchOutcomeDevPreviewKind; word?: string } };
 };
 
 export default function DevRematchOutcomePreviewScreen({ navigation, route }: Props) {
   const kind: RematchOutcomeDevPreviewKind = route.params?.outcome === 'buster' ? 'buster' : 'king';
   const preview = buildRematchOutcomeDevPreview(kind);
+  const previewWord = route.params?.word ?? preview.word;
   const reduceMotion = useReducedMotionPreference();
   const cover = useRef(new Animated.Value(0)).current;
   const intake = useRef(new Animated.Value(0)).current;
@@ -65,7 +66,7 @@ export default function DevRematchOutcomePreviewScreen({ navigation, route }: Pr
         <View style={styles.bookStage} pointerEvents="none">
           <HeroBook coverRotateX={coverRotateX} intakeOpacity={intake} intakeScaleY={intakeScaleY} variant={bookVariant}>
             <Text style={[styles.bookWord, bookVariant === 'mastered' ? styles.bookWordMastered : styles.bookWordNeutral]}>
-              {preview.word}
+              {previewWord}
             </Text>
           </HeroBook>
         </View>
@@ -80,7 +81,7 @@ export default function DevRematchOutcomePreviewScreen({ navigation, route }: Pr
       </SafeAreaView>
       {showOverlay && (
         <RematchOutcomePlaque
-          word={preview.word}
+          word={previewWord}
           kind={kind}
           onContinue={() => navigation.goBack()}
         />
