@@ -40,8 +40,8 @@ assert.deepEqual(
 
 assert.deepEqual(
   resolveBossOutcomePlaqueFeedback('mastered'),
-  { sfx: 'masteredResult', hapticCue: 'mastery' },
-  'the visible MASTERED plaque owns the result sting and success notification',
+  { sfx: 'masteredFanfare', hapticCue: 'mastery' },
+  'the visible MASTERED plaque owns the trumpet fanfare and success notification',
 );
 assert.deepEqual(
   resolveBossOutcomePlaqueFeedback('haunted'),

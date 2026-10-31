@@ -37,7 +37,7 @@ export function resolveBossOutcomeSequenceFeedback(
 }
 
 export type BossOutcomePlaqueFeedback = {
-  sfx: 'masteredResult' | 'hauntedResult';
+  sfx: 'masteredFanfare' | 'hauntedResult';
   hapticCue: 'mastery' | null;
 };
 
@@ -45,7 +45,7 @@ export function resolveBossOutcomePlaqueFeedback(
   outcome: OutcomeReveal,
 ): BossOutcomePlaqueFeedback {
   if (outcome === 'mastered') {
-    return { sfx: 'masteredResult', hapticCue: 'mastery' };
+    return { sfx: 'masteredFanfare', hapticCue: 'mastery' };
   }
   return { sfx: 'hauntedResult', hapticCue: null };
 }

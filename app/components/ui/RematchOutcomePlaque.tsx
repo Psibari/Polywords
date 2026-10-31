@@ -64,9 +64,8 @@ export default function RematchOutcomePlaque({ word, kind, onContinue }: Props) 
 
   function playIntroFeedback() {
     const feedback = resolveBossOutcomePlaqueFeedback('mastered');
-    // Pete 2026-10-30: the returning Master gets the same trumpet fanfare as the first MASTERED card
-    // (it replaces the old masteredResult sting here too). The haptic is unchanged.
-    playSfx('masteredFanfare');
+    // Pete 2026-10-30: the returning Master gets the same trumpet fanfare as the first MASTERED card.
+    if (feedback.sfx) playSfx(feedback.sfx);
     if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
   }
 

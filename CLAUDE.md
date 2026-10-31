@@ -209,9 +209,20 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
   approved purple/gold treatment. The Hero Book returns to the neutral purple rig before the final
   BUSTER plaque. No Haunt is created and persistent mastery is unchanged. Results label/share text
   read BUSTER; `Bird brain` remains Results-only.
-- Won: the gold Master book stays mastered. The Master plaque resolves to the crown-led KING plaque;
-  the in-round final plaque does not need literal `KING` text because the crown carries the
-  promotion, and the Boss word remains beneath it. Results label/share text read KING.
+- Won: the gold Master book stays mastered. The Master plaque shrinks to a dot (220 ms) and the
+  crown-led KING plaque pops up from it (spring, with a short gold shine over the art). The KING
+  plaque now carries the carved word `KING` under the crown (Pete, 2026-10-30; this reverses the
+  old "no literal KING text" ruling); the Boss word stays live text beneath it (42 on the MASTER
+  card, 50 on KING; the longest possible Boss word, EXCHANGE, was checked to fit). Results
+  label/share text read KING.
+- Start-up rule: `useReducedMotionPreference()` returns `null` until the system value loads.
+  `RematchOutcomePlaque` waits (`if (reduceMotion === null) return;`). Treating `null` as reduced
+  motion made BUSTER/KING start already on the final plaque.
+- Rematch plaque sounds (all timings are in `RematchOutcomePlaque.tsx`): the MASTER lead-in card
+  plays `masteredFanfare` (the same trumpet fanfare as the first MASTERED card) plus the mastery
+  haptic. KING: `kingSwoosh` (its peak lands at the pop), then `kingFanfare` at the pop. BUSTER:
+  the BU-drop punch (`streakBreakImpact`) as before, then `busterFail` 250 ms after the punch
+  (`BUSTER_FAIL_AFTER_PUNCH_MS`). The same sounds play with Reduce Motion on.
 - Dynamic plaque lettering uses `PlaqueText.tsx` as one Text node with material shadow. Do not
   restore the old three-layer text stack; it separated into visible duplicate words on-device.
 - Normal Boss/rematch event labels are `POLLY'S WORD` / `MASTER'S REMATCH`. Player-facing Boss
@@ -219,18 +230,48 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 
 ### Result plaques
 
-- Mastered, Banished and Haunted show ONLY the headline and the word (headline 40, word 56).
-  Removed: "Not one of Polly's traps. / You saw through it.", HAUNT BROKEN, and the Haunted missed
-  phrase / TRAP CLAIMED lines (never show a meaning, trap or hidden pair: words recur, so it becomes
-  an answer key).
-- KING/BUSTER (`RematchOutcomePlaque`) never had body text: headline 36, word 42, CONTINUE 18.
+- Mastered, Banished and Haunted show ONLY the headline and the word. Removed: "Not one of Polly's
+  traps. / You saw through it.", HAUNT BROKEN, and the Haunted missed phrase / TRAP CLAIMED lines
+  (never show a meaning, trap or hidden pair: words recur, so it becomes an answer key).
+- The fixed headline is CARVED INTO THE ART ("lettered" plaques, 2026-10-30); only the round's word
+  is live text (`PlaqueText`, inside a `...PlaqueWordSlot` view in `MaskBoard.tsx`). Art:
+  `assets/images/results/mastered-result-plaque-lettered.png` (MASTERED, Cinzel Black; word
+  `carvedGoldPlaque`, size 53), `haunted-result-plaque-lettered.png` (HAUNTED, Caesar Dressing; word
+  `carvedStonePlaque`, 61), `banished-result-plaque-lettered.png` (BANISHED, Caesar Dressing,
+  chipped and cracked; word `carvedStonePlaque`, 55), `king-result-plaque.png` (KING baked in). The
+  empty cleaned frames are kept: `mastered-result-plaque.png` is STILL USED by the rematch MASTER
+  card; the empty haunted/banished frames are unreferenced. To change a headline, re-carve the art
+  (the renderer is not in the repo); do not draw it as live text again.
+- The live word must match the carved headline's ink; `carvedStonePlaque.face` is `#3E3A55`, measured
+  from the baked headline. See `assets/images/results/README.md`.
+- Mastered card sound: `masteredFanfare` (after the transform; the book slam is unchanged). The old
+  `masteredResult` sting was removed from the code (its .wav file `mastered_result_sting_v1.wav` is
+  left unreferenced in `assets/audio/sfx`); `resolveBossOutcomePlaqueFeedback('mastered')` now
+  returns `masteredFanfare`, and both cards play whatever it returns.
+  Haunted plays `hauntedResult`; Banished has no card sound.
+- The BUSTER final plaque and the MASTER lead-in keep live text (headline 36, word 42, CONTINUE 18);
+  they are not carved.
+- DEV only (Settings, Development): previews for KING, KING with the longest word, BUSTER and the
+  MASTERED / HAUNTED / BANISHED plaques (`DevRematchOutcomePreviewScreen`,
+  `DevOutcomePlaquePreviewScreen`).
 - `splitHauntedDetail` and the `plaqueDanger*` styles in `MaskBoard.tsx` are now unused (left in place).
 
 ### PlaqueText materials
 
-- `carvedStonePlaque` (new): face `#1A1830`, depth `rgba(238,236,252,0.8)`, tight edge via the
-  optional `edgeOffset` / `edgeRadius`. The existing stone/gold/purple materials are unchanged and
-  pinned by `plaqueTextMaterial.test.ts`.
+- `carvedStonePlaque`: face `#3E3A55` (matches the carved headline ink), depth
+  `rgba(238,236,252,0.8)`, tight edge via the optional `edgeOffset` / `edgeRadius`.
+- `carvedGoldPlaque` (2026-10-30): deep purple face `#4A1E80` with a pale-gold rim, for the word on
+  the gold plaques (Mastered result card, KING).
+- The existing stone/gold/purple materials are unchanged. All are pinned by
+  `plaqueTextMaterial.test.ts`.
+
+### Plaque sound files (`assets/audio/sfx`)
+
+`king_swoosh.mp3`, `mastered_fanfare.mp3`, `king_fanfare.mp3` (trimmed to 3.6 s), `buster_fail.mp3`
+(trimmed to 2.3 s). All Pixabay Content License; see `assets/audio/LICENSES.md` (source page URLs
+not recorded). Volumes in `sfx.ts` are first-guess values that Pete approved by ear on 2026-10-30.
+Files copied through the device tool get an ID3 block (MP3) or a `caBX` chunk (PNG) injected:
+strip it before committing.
 
 ## Polybook
 

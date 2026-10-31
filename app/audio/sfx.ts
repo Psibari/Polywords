@@ -15,7 +15,6 @@ export type SfxName =
   | 'haunted'
   | 'masteredTransform'
   | 'masteredBookSlam'
-  | 'masteredResult'
   | 'kingSwoosh'
   | 'masteredFanfare'
   | 'kingFanfare'
@@ -135,14 +134,13 @@ const SFX: Record<SfxName, SfxConfig> = {
   haunted:        { source: require('../../assets/audio/sfx/haunted_moan.mp3'),      volume: 0.30, cooldownMs: 2600 },
   masteredTransform: { source: require('../../assets/audio/sfx/mastered_transform_v1.wav'), volume: 0.45, cooldownMs: 2200 },
   masteredBookSlam: { source: require('../../assets/audio/sfx/mastered_book_slam_v1.wav'), volume: 0.60, cooldownMs: 300 },
-  masteredResult: { source: require('../../assets/audio/sfx/mastered_result_sting_v1.wav'), volume: 0.45, cooldownMs: 2200 },
   // MASTER -> KING plaque swoosh (Pete, 2026-10-30). The file is 1.23 s: silent until ~240 ms, loudest
   // at ~360 ms, over by ~560 ms (about -17 LUFS, peak -0.8 dBFS). RematchOutcomePlaque starts it so that
   // the peak lands as the KING plaque pops. Volume is a first guess: tune by ear.
   kingSwoosh:     { source: require('../../assets/audio/sfx/king_swoosh.mp3'),       volume: 0.5,  cooldownMs: 2200 },
   // MASTERED ta-da (Pete, 2026-10-30): a quick trumpet fanfare, 1.78 s, first note ~50 ms in, peaking
   // ~150 ms, gone by ~1.3 s (about -18 LUFS, peak -5.3 dBFS). Plays when the MASTERED card comes up,
-  // in place of the old masteredResult sting. Volume is a first guess: tune by ear.
+  // in place of the old result sting (removed). Volume approved by ear.
   masteredFanfare: { source: require('../../assets/audio/sfx/mastered_fanfare.mp3'),  volume: 0.5,  cooldownMs: 2200 },
   // KING fanfare (Pete, 2026-10-30): bigger celebration for stepping up from Master to King. Source file
   // trimmed from 5.16 s to 3.6 s (natural decay, then a 0.4 s fade). Loudest of the plaque sounds: about
@@ -250,7 +248,6 @@ const PLAY_RELEASE_FALLBACK_MS = 5000;
 const BOSS_OUTCOME_SFX: readonly SfxName[] = [
   'masteredTransform',
   'masteredBookSlam',
-  'masteredResult',
   'kingSwoosh',
   'masteredFanfare',
   'kingFanfare',

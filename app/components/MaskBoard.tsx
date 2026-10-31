@@ -1539,10 +1539,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     // Shared rematch plaque owns KING/BUSTER feedback in both production and DEV.
     if (step.isMasteryRematch === true) return;
     const feedback = resolveBossOutcomePlaqueFeedback(outcome);
-    // Pete 2026-10-30: the sting that used to play when the MASTERED card came up sounded wrong; the
-    // trumpet fanfare replaces it. The Haunted card keeps its own sound, and the haptic below stays.
-    if (outcome === 'mastered') playSfx('masteredFanfare');
-    else if (feedback.sfx) playSfx(feedback.sfx);
+    if (feedback.sfx) playSfx(feedback.sfx);
     if (feedback.hapticCue) Haptics.cueAsync(feedback.hapticCue);
   }, [isBoss, mechanics.wordOutcome, showOutcomeCard, step.isMasteryRematch]);
 
