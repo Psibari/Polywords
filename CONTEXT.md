@@ -360,3 +360,14 @@ untracked/local art without approval. No branch merges without Pete's approval.
 - Open: add the source page URLs for the four plaque sounds to `assets/audio/LICENSES.md` (Pete has the Pixabay links).
 - Open (unchecked, optional): the Haunted book rig and `banishcrown.png` fringe; a tiny speck at the left edge of the Mastered plaque; word position on the plaques was set by measurement and may want small nudges; the other `MASTER` label near `MaskBoard.tsx` line ~2487 was not investigated; the `masteredResult` sting file/table entry is likely unused now (check before removing).
 - Still open from before: onboarding and Daily entry text sizes need a look on the device; TestFlight splash build deferred; Hunt pause button overlaps Polly's bubble; FELL OFF wall zoom is invisible.
+
+## 2026-10-31 (night): Polly reaction sounds (`be88a91`)
+
+- Wordless Polly reaction sounds are in and wired (Pete: no spoken words, ever). Made with Higgsfield Seed Audio text-to-speech using the two repo squawks as references; levelled and cut by Claude, picked by Pete by ear. Pete says Higgsfield gives him ownership and commercial use; his reference squawks came from Pixabay (free, commercial). Terms are recorded in `assets/audio/LICENSES.md` as read 2026-10-31; the Pixabay page URLs and the two original squawk files are NOT yet listed there.
+- Pools: ANGRY `pollyAngry1..6` (random, never the same twice in a row) and STARTLED `pollyStartled1..4` (same rule). Pure picker `pickReactionSfx` and the `VisitSpec` fields `sfxGroup` (landing), `exitSfxGroup` (exit start) and `exitSfx` (one fixed exit sound) live in `app/game/pollyVisitPolicy.ts`; `app/audio/pollyReactionSfx.ts` keeps the last pick per group, shared by Hunt and Daily.
+- Placement: Hunt win (both mastered events) angry on fly-off; Daily win startled on landing and angry on fly-off; first Hunt clean sweep startled on landing, repeat sweeps silent; streak x10 plays `pollyEmbarrassedExit` on fly-off only; first arrival at RAZOR SHARP in a run plays one startled pick (`shouldPlayRazorStartle` in `huntFeedbackPolicy.ts`, module-level `lastRazorStartleRunSeed` in `GameScreen.tsx`; muted while the HUD is hidden and during an unfinished onboarding run). Reduce Motion does not mute them.
+- Volumes are the 0.42 first guess. Pete tested on his phone (POLYWORDS DEV) and approved all of it, including Claude's guessed streak x10 and RAZOR SHARP placement.
+- `pollyLaughChamp` and `pollyLaughBurst8` are in the repo but unused by Pete's ruling; nothing existing was replaced.
+- Verification: `npx tsc --noEmit` clean; full `npm test` passed on Pete's machine.
+- Closed: the "Polly ANGRY SOUNDS" open item above is done (angry and startled pools).
+- Still open: source page URLs (with dates) for the Pixabay squawks, the four plaque sounds and the Higgsfield terms in `assets/audio/LICENSES.md`; the two original squawk files are not listed there yet.
