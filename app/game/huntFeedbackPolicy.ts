@@ -130,3 +130,22 @@ export function resolveTierUpHapticCue(rank: number): TierUpHapticCue {
   if (rank === 2) return 'tierUpRazor';
   return 'tierUp';
 }
+
+/**
+ * Polly's startled squawk when momentum first reaches RAZOR SHARP in a run
+ * ("that's when she starts to get worried"). Once per Hunt run: a FELL OFF
+ * and re-climb in the same run stays quiet. Muted while the HUD is hidden
+ * (lesson, pause, exit confirm) and during first-run onboarding.
+ */
+export function shouldPlayRazorStartle(args: {
+  isRank: number;
+  wasRank: number;
+  runSeed: string | number;
+  lastStartleRunSeed: string | number | null;
+  muted: boolean;
+}): boolean {
+  return args.isRank === 2
+    && args.isRank > args.wasRank
+    && args.lastStartleRunSeed !== args.runSeed
+    && !args.muted;
+}

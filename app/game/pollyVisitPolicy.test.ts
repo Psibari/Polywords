@@ -1,7 +1,10 @@
 // Run with: npx.cmd -y tsx app/game/pollyVisitPolicy.test.ts
 // Plain assert script (repo has no jest; no node:assert — repo lacks @types/node).
 // Throws on first failure; prints OK on success.
-import { resolveVisit, PollyBudgetState, VisitDecision, VisitSpec } from './pollyVisitPolicy';
+import {
+  resolveVisit, PollyBudgetState, VisitDecision, VisitSpec,
+  pickReactionSfx, POLLY_ANGRY_SFX, POLLY_STARTLED_SFX, POLLY_REACTION_POOLS,
+} from './pollyVisitPolicy';
 import { PollyLineId } from './pollyCharacter';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -268,5 +271,80 @@ for (const ev of ['correct', 'oneWrongMove', 'hiddenFound', 'hesitationCleared',
   const s = visitSpec(resolveVisit('oneHeartLeft', { ...idle, lineRoll: 0, recentLineIds: ['featherOneLookAtMine'] }), 'oneHeartLeft avoids recent');
   if (s.lineId === 'featherOneLookAtMine') throw new Error('oneHeartLeft avoids recent: repeated a recent line');
 }
+
+// ── Reaction sound groups (angry / startled) ─────────────────────
+for (const ev of ['gateMastered', 'gateMasteredBoss'] as const) {
+  const s = visitSpec(resolveVisit(ev, idle), ev);
+  eq(s.exitSfxGroup, 'angry', `${ev}.exitSfxGroup`);
+  eq(s.sfxGroup, undefined, `${ev}.sfxGroup`);
+}
+{
+  const first = visitSpec(resolveVisit('cleanSweep', idle), 'cleanSweep first (groups)');
+  eq(first.sfxGroup, 'startled', 'cleanSweep first.sfxGroup');
+  eq(first.exitSfxGroup, undefined, 'cleanSweep first.exitSfxGroup');
+  const repeat = visitSpec(
+    resolveVisit('cleanSweep', { ...idle, cleanSweepSeenThisRun: true }),
+    'cleanSweep repeat (groups)',
+  );
+  eq(repeat.kind, 'heckle', 'cleanSweep repeat.kind');
+  eq(repeat.sfxGroup, undefined, 'cleanSweep repeat.sfxGroup');
+  eq(repeat.exitSfxGroup, undefined, 'cleanSweep repeat.exitSfxGroup');
+}
+// Every other event carries neither group.
+for (const ev of [
+  'huntIntro', 'hauntIntro', 'bossEntry', 'hiddenMasterFailed', 'hauntMasterFailed',
+  'gameOver', 'hauntFailed', 'oneHeartLeft', 'wrong', 'streakX10', 'hesitation6s', 'ghostEntry',
+] as const) {
+  const d = resolveVisit(ev, idle);
+  if (d.action === 'visit') {
+    eq(d.spec.sfxGroup, undefined, `${ev}.sfxGroup`);
+    eq(d.spec.exitSfxGroup, undefined, `${ev}.exitSfxGroup`);
+  }
+}
+// Pools hold the registered names, no duplicates.
+eq(POLLY_ANGRY_SFX.length, 6, 'angry pool size');
+eq(POLLY_STARTLED_SFX.length, 4, 'startled pool size');
+eq(new Set([...POLLY_ANGRY_SFX, ...POLLY_STARTLED_SFX]).size, 10, 'pool names unique');
+eq(POLLY_REACTION_POOLS.angry, POLLY_ANGRY_SFX, 'angry group maps to angry pool');
+eq(POLLY_REACTION_POOLS.startled, POLLY_STARTLED_SFX, 'startled group maps to startled pool');
+// pickReactionSfx: never repeats, stays in pool, reaches every entry.
+for (const pool of [POLLY_ANGRY_SFX, POLLY_STARTLED_SFX]) {
+  for (const last of [null, ...pool]) {
+    const seen = new Set<string>();
+    for (let k = 0; k < 1000; k++) {
+      const roll = k / 1000;
+      const got = pickReactionSfx(pool, last, roll);
+      if (!(pool as readonly string[]).includes(got)) throw new Error(`pick out of pool: ${got}`);
+      if (last !== null && got === last) throw new Error(`pick repeated last: ${got}`);
+      seen.add(got);
+    }
+    eq(seen.size, last === null ? pool.length : pool.length - 1, `pick reaches every entry (last=${String(last)})`);
+  }
+}
+eq(pickReactionSfx(['onlyOne'], 'onlyOne', 0.5), 'onlyOne', 'single-entry pool may repeat');
+eq(pickReactionSfx(POLLY_ANGRY_SFX, null, 0.999999), 'pollyAngry6', 'roll near 1 stays in range');
+eq(pickReactionSfx(POLLY_ANGRY_SFX, null, 0), 'pollyAngry1', 'roll 0 picks the first');
+
+// ── streak x10: embarrassed exit sound, no landing sound ─────────
+{
+  const s = visitSpec(resolveVisit('streakX10', idle), 'streakX10 (exit sound)');
+  eq(s.exitSfx, 'pollyEmbarrassedExit', 'streakX10.exitSfx');
+  eq(s.sfx, null, 'streakX10.sfx (no landing sound)');
+  eq(s.sfxGroup, undefined, 'streakX10.sfxGroup');
+  eq(s.exitSfxGroup, undefined, 'streakX10.exitSfxGroup');
+}
+for (const ev of [
+  'huntIntro', 'hauntIntro', 'bossEntry', 'gateMastered', 'gateMasteredBoss', 'hiddenMasterFailed',
+  'hauntMasterFailed', 'gameOver', 'hauntFailed', 'oneHeartLeft', 'wrong', 'hesitation6s',
+  'ghostEntry', 'cleanSweep',
+] as const) {
+  const d = resolveVisit(ev, idle);
+  if (d.action === 'visit') eq(d.spec.exitSfx, undefined, `${ev}.exitSfx`);
+}
+eq(
+  visitSpec(resolveVisit('cleanSweep', { ...idle, cleanSweepSeenThisRun: true }), 'repeat sweep exitSfx').exitSfx,
+  undefined,
+  'cleanSweep repeat.exitSfx',
+);
 
 console.log('OK — pollyVisitPolicy: all assertions passed');

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { playSfx } from '../audio/sfx';
+import { playPollyReaction } from '../audio/pollyReactionSfx';
 import { PollyHuntPoseName, pollyHuntPoseArt } from '../ui/pollyHuntPoses';
 import type { ActiveVisit } from '../hooks/usePollyVisits';
 import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
@@ -55,6 +56,8 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const visitIdRef = useRef<number | null>(null);
   const exitPoseRef = useRef<PollyHuntPoseName>('fly');
+  const exitSfxGroupRef = useRef<'angry' | null>(null);
+  const exitSfxRef = useRef<'pollyEmbarrassedExit' | null>(null);
   const exitingRef = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -73,6 +76,9 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     if (exitingRef.current) return;
     exitingRef.current = true;
     clearTimers();
+    // Exit sound plays in every exit path (normal, fast cut, Reduce Motion).
+    if (exitSfxGroupRef.current) playPollyReaction(exitSfxGroupRef.current);
+    if (exitSfxRef.current) playSfx(exitSfxRef.current);
     if (reduceMotion) {
       bubbleOpacity.setValue(0);
       setPose(exitPoseRef.current);
@@ -213,6 +219,8 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
     setPose(visit.spec.flyPose);
     setPerchScale(visit.spec.perchScale ?? 1);
     exitPoseRef.current = visit.spec.exitPose ?? 'fly';
+    exitSfxGroupRef.current = visit.spec.exitSfxGroup ?? null;
+    exitSfxRef.current = visit.spec.exitSfx ?? null;
 
     if (reduceMotion) {
       arcX.setValue(0);
@@ -238,6 +246,7 @@ export function PollyHuntVisit({ visit, onDone }: Props) {
       // Landed: reaction pose + punch + bubble + squawk.
       setPose(visit.spec.perchPose);
       if (visit.spec.sfx) playSfx(visit.spec.sfx);
+      if (visit.spec.sfxGroup) playPollyReaction(visit.spec.sfxGroup);
       runPunch(visit.spec.perchPose);
       if (visit.spec.line) {
         Animated.parallel([

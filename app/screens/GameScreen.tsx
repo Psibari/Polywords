@@ -78,8 +78,10 @@ function a11yHiddenProps(hidden: boolean) {
 import {
   resolveScreenFlash,
   resolveTierUpHapticCue,
+  shouldPlayRazorStartle,
   type ScreenFlashEvent,
 } from '../game/huntFeedbackPolicy';
+import { playPollyReaction } from '../audio/pollyReactionSfx';
 import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAccessibility';
 import {
   createBossReadinessState,
@@ -161,6 +163,10 @@ const READ_TIER_RANK: Record<HuntReadTier, number> = {
   untrappable: 3,
 };
 
+// The run that already had its RAZOR SHARP startle. Module level so a TopBar
+// remount mid-run does not replay it.
+let lastRazorStartleRunSeed: string | number | null = null;
+
 function TopBar({
   navigation,
   featherRowPulse,
@@ -180,6 +186,7 @@ function TopBar({
     reduceFlashes,
   );
   const game  = useGameStore(s => s.game);
+  const onboarding = useGameStore(s => s.onboarding);
   const gauntletActive = useGameStore(s => s.game.gauntletActive);
   const goldFeatherAvailable = useGameStore(s => s.goldFeatherAvailable);
   const goldFeatherExpiresAt = useGameStore(s => s.goldFeatherExpiresAt);
@@ -283,6 +290,21 @@ function TopBar({
         }
         if (tierAnimations.length > 0) Animated.parallel(tierAnimations).start();
         Haptics.cueAsync(resolveTierUpHapticCue(isRank));
+        // Polly's startle on first reaching RAZOR SHARP: a sound, not motion or
+        // a flash, so it plays with Reduce Motion / Reduce Flashes on.
+        const onboardingRunActive = onboarding.activeRun?.runSeed === game.runSeed &&
+          onboarding.activeRun.mode === game.onboardingMode &&
+          onboarding.activeRun.phase !== 'complete';
+        if (shouldPlayRazorStartle({
+          isRank,
+          wasRank,
+          runSeed: game.runSeed,
+          lastStartleRunSeed: lastRazorStartleRunSeed,
+          muted: a11yHidden || onboardingRunActive,
+        })) {
+          lastRazorStartleRunSeed = game.runSeed;
+          playPollyReaction('startled');
+        }
       }
     }
 

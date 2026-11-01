@@ -37,6 +37,40 @@ export type PollyEvent =
 
 export type PollyVisitSfx = 'pollySqwawkShort' | 'pollySqwawkLaugh';
 
+// Wordless reaction pools (Pete, 31 Oct 2026). A visit names a GROUP; the
+// thin caller (app/audio/pollyReactionSfx.ts) picks one sound from the pool
+// and never plays the same one twice in a row within its group.
+export type PollyReactionGroup = 'angry' | 'startled';
+
+export const POLLY_ANGRY_SFX = [
+  'pollyAngry1', 'pollyAngry2', 'pollyAngry3',
+  'pollyAngry4', 'pollyAngry5', 'pollyAngry6',
+] as const;
+export const POLLY_STARTLED_SFX = [
+  'pollyStartled1', 'pollyStartled2', 'pollyStartled3', 'pollyStartled4',
+] as const;
+export type PollyReactionSfx =
+  | (typeof POLLY_ANGRY_SFX)[number]
+  | (typeof POLLY_STARTLED_SFX)[number];
+
+export const POLLY_REACTION_POOLS: Record<PollyReactionGroup, readonly PollyReactionSfx[]> = {
+  angry: POLLY_ANGRY_SFX,
+  startled: POLLY_STARTLED_SFX,
+};
+
+// Pure pick: never returns `last` when the pool has more than one entry, and
+// spreads evenly over the remaining entries. roll is in [0, 1).
+export function pickReactionSfx<T extends string>(
+  pool: readonly T[],
+  last: T | null,
+  roll: number,
+): T {
+  if (pool.length === 0) throw new Error('pickReactionSfx: empty pool');
+  const candidates = pool.length > 1 ? pool.filter(n => n !== last) : pool;
+  const i = Math.min(candidates.length - 1, Math.max(0, Math.floor(roll * candidates.length)));
+  return candidates[i];
+}
+
 export type VisitSpec = {
   kind: 'guaranteed' | 'heckle';
   flyPose: 'fly' | 'flyAngry' | 'jumpAngry' | 'masterShock' | 'hauntTaunt';
@@ -45,6 +79,12 @@ export type VisitSpec = {
   lineId: PollyLineId | null;
   line: string | null;
   sfx: PollyVisitSfx | null;
+  // Played when she lands (a random pick from the group).
+  sfxGroup?: 'startled';
+  // Played when the exit starts, in every exit path (a random pick).
+  exitSfxGroup?: 'angry';
+  // One fixed sound played when the exit starts (streak x10 "I'm out of here").
+  exitSfx?: 'pollyEmbarrassedExit';
   holdPerch: boolean;
   perchMs: number;
   perchScale?: number;
@@ -110,6 +150,7 @@ const MASTERED_REACTION: VisitSpec = {
   lineId: 'huntMasteredTrapsDiffer',
   line: POLLY_LINES.huntMasteredTrapsDiffer,
   sfx: null,
+  exitSfxGroup: 'angry',
   holdPerch: false, perchMs: 1600,
 };
 
@@ -149,11 +190,13 @@ const CLEAN_SWEEP_FIRST: VisitSpec = {
   kind: 'guaranteed', flyPose: 'fly', perchPose: 'shocked',
   lineId: 'huntCleanSweep', line: POLLY_LINES.huntCleanSweep,
   sfx: null,
+  sfxGroup: 'startled',
   holdPerch: false, perchMs: 2000,
 };
 
+// Repeat sweeps stay silent: only the first of the run startles her.
 const CLEAN_SWEEP_REPEAT: VisitSpec = {
-  ...CLEAN_SWEEP_FIRST, kind: 'heckle',
+  ...CLEAN_SWEEP_FIRST, kind: 'heckle', sfxGroup: undefined,
 };
 
 const WRONG_SMUG: VisitSpec = {
@@ -182,6 +225,7 @@ const STREAK_RATTLED: VisitSpec = {
   kind: 'heckle', flyPose: 'fly', perchPose: 'embarrassed',
   lineId: 'huntStreakSoWhat', line: POLLY_LINES.huntStreakSoWhat,
   sfx: null,
+  exitSfx: 'pollyEmbarrassedExit',
   holdPerch: false, perchMs: 1800,
 };
 

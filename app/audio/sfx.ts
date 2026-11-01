@@ -24,6 +24,18 @@ export type SfxName =
   | 'pressHoldStart'
   | 'pollySqwawkShort'
   | 'pollySqwawkLaugh'
+  // Polly reaction pools (wordless; see app/audio/pollyReactionSfx.ts)
+  | 'pollyAngry1'
+  | 'pollyAngry2'
+  | 'pollyAngry3'
+  | 'pollyAngry4'
+  | 'pollyAngry5'
+  | 'pollyAngry6'
+  | 'pollyStartled1'
+  | 'pollyStartled2'
+  | 'pollyStartled3'
+  | 'pollyStartled4'
+  | 'pollyEmbarrassedExit'
   | 'bookClose'
   | 'detectiveSting'
   | 'lockSpin1'
@@ -156,6 +168,17 @@ const SFX: Record<SfxName, SfxConfig> = {
   pressHoldStart: { source: require('../../assets/audio/sfx/press_hold_start.mp3'),  volume: 0.40, cooldownMs: 300 },
   pollySqwawkShort: { source: require('../../assets/audio/sfx/pollySqwawkShort.wav'), volume: 0.42, cooldownMs: 120 },
   pollySqwawkLaugh: { source: require('../../assets/audio/sfx/pollySqwawkLaugh.wav'), volume: 0.42, cooldownMs: 600 },
+  pollyAngry1: { source: require('../../assets/audio/sfx/pollyAngry1.wav'), volume: 0.42, cooldownMs: 600 },
+  pollyAngry2: { source: require('../../assets/audio/sfx/pollyAngry2.wav'), volume: 0.42, cooldownMs: 600 },
+  pollyAngry3: { source: require('../../assets/audio/sfx/pollyAngry3.wav'), volume: 0.42, cooldownMs: 600 },
+  pollyAngry4: { source: require('../../assets/audio/sfx/pollyAngry4.wav'), volume: 0.42, cooldownMs: 600 },
+  pollyAngry5: { source: require('../../assets/audio/sfx/pollyAngry5.wav'), volume: 0.42, cooldownMs: 600 },
+  pollyAngry6: { source: require('../../assets/audio/sfx/pollyAngry6.wav'), volume: 0.42, cooldownMs: 600 },
+  pollyStartled1: { source: require('../../assets/audio/sfx/pollyStartled1.wav'), volume: 0.42, cooldownMs: 300 },
+  pollyStartled2: { source: require('../../assets/audio/sfx/pollyStartled2.wav'), volume: 0.42, cooldownMs: 300 },
+  pollyStartled3: { source: require('../../assets/audio/sfx/pollyStartled3.wav'), volume: 0.42, cooldownMs: 300 },
+  pollyStartled4: { source: require('../../assets/audio/sfx/pollyStartled4.wav'), volume: 0.42, cooldownMs: 300 },
+  pollyEmbarrassedExit: { source: require('../../assets/audio/sfx/pollyEmbarrassedExit.wav'), volume: 0.42, cooldownMs: 600 },
   bookClose:      { source: require('../../assets/audio/sfx/book_close_v2.mp3'),      volume: 0.60, cooldownMs: 300 },
   detectiveSting: { source: require('../../assets/audio/sfx/detective_clue_sting.mp3'), volume: 0.30, cooldownMs: 1200, fallbackReleaseMs: 16000 },
   lockSpin1:      { source: require('../../assets/audio/sfx/lock_spin_1.mp3'),         volume: 0.40, cooldownMs: 150 },

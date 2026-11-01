@@ -15,6 +15,7 @@ import {
   DailyPollyReaction,
 } from '../ui/pwDailyMaterials';
 import { playSfx } from '../audio/sfx';
+import { playPollyReaction } from '../audio/pollyReactionSfx';
 import { PollyScreenPoseName, pollyScreenPoseArt, pollyScreenPoseUsesRig } from '../ui/pollyScreenPoses';
 import { POLLY_LINES, PollyLineId } from '../game/pollyCharacter';
 import { BookRivalryState } from '../game/pollyBookLines';
@@ -225,6 +226,9 @@ export default function PollyDailyPerch({
   function runFlyOut(exitPose: PollyScreenPoseName) {
     if (exitingRef.current) return;
     exitingRef.current = true;
+    // The win's fly-off is angry: a random angry squawk as she leaves (plays
+    // with Reduce Motion too; the loss exit flies off grinning, silent).
+    if (exitPose === EXIT_POSE.shocked) playPollyReaction('angry');
     setPose(exitPose);
     const exitX = screenW * EXIT_X_FRAC;
     const exitY = -(screenH + EXIT_Y_HEADROOM);
@@ -350,11 +354,13 @@ export default function PollyDailyPerch({
     setPose(reaction === 'correct' ? POSE.idle : POSE[reaction]);
     const lineId = getLineId(reaction, dailyLossLineId, pickedCorrectLineId);
     if (lineId && show) rememberLine(lineId, 'daily');
-    // Polly only makes a sound on the two misses. She is silent on right
-    // answers (correct and win) until an angry sound exists; any new
-    // reaction stays quiet unless it is added here.
+    // Explicit allow-list: any new reaction stays quiet unless it is added
+    // here. The two misses squawk / laugh. The win lands startled (a random
+    // startled sound as the shocked pose is set) and flies off angry (see
+    // runFlyOut). Right answers (correct) stay silent.
     if (reaction === 'happy') playSfx('pollySqwawkShort');
     else if (reaction === 'laughing') playSfx('pollySqwawkLaugh');
+    else if (reaction === 'shocked') playPollyReaction('startled');
 
     reactX.setValue(0);
     reactY.setValue(0);

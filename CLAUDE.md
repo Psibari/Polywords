@@ -456,9 +456,24 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   not in the board, which remounts per word.
 - Polly's ordinary laugh, Boss laugh, Returning Haunt laugh and Hunt-loss Results chuckle are
   separate product beats. The Hunt-loss Results laugh is locked (Pete) and unchanged.
-- Daily perch sound: silent on right answers and the winning claim; `pollySqwawkShort` on the
-  first miss; `pollySqwawkLaugh` on the lost last chance. An explicit allow-list, so new reactions
-  default to quiet.
+- Daily perch sound: silent on right answers (`correct`); `pollySqwawkShort` on the first miss;
+  `pollySqwawkLaugh` on the lost last chance; the win plays a random startled sound as the
+  `shocked` pose is set and a random angry sound as she flies off (`runFlyOut('flyAngry')`). An
+  explicit allow-list, so new reactions default to quiet.
+- Polly reaction pools (Pete, 31 Oct 2026, wordless): ANGRY = `pollyAngry1..6`, STARTLED =
+  `pollyStartled1..4`. Pools and the pure picker `pickReactionSfx` (never the same sound twice in
+  a row within a group) live in `app/game/pollyVisitPolicy.ts`; `app/audio/pollyReactionSfx.ts` is
+  the thin caller that remembers the last pick per group, shared by Hunt and Daily. `VisitSpec`
+  has `sfxGroup?: 'startled'` (played at landing) and `exitSfxGroup?: 'angry'` (played when the
+  exit starts, in every exit path). Wired: Hunt win (both mastered events) angry on fly-off; Daily
+  win startled at landing and angry on fly-off; first Hunt clean sweep startled at landing (the
+  repeat clean sweep is silent). Volumes 0.42 are first guesses, tuned by ear.
+- Streak x10 visit: no landing sound; `VisitSpec.exitSfx: 'pollyEmbarrassedExit'` plays when she
+  flies off (every exit path). RAZOR SHARP: `shouldPlayRazorStartle` (`huntFeedbackPolicy.ts`)
+  plays one startled pick the first time momentum reaches RAZOR SHARP in a run (module-level
+  `lastRazorStartleRunSeed` in `GameScreen.tsx`); muted while the HUD is hidden (lesson, pause,
+  exit confirm) and during an unfinished first-run onboarding run. Both are Claude's first guesses
+  (Pete judges by ear). `pollyLaughChamp` and `pollyLaughBurst8` are in the repo but not placed.
 - Do not guess what a sound is: `pollySqwawkShort` is the sound Pete calls "the laugh".
 
 ## Content and Data

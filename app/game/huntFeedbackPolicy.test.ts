@@ -9,6 +9,7 @@ import {
   resolveScreenFlash,
   resolvePollySquawkOnWrong,
   resolveWrongSwipeSfx,
+  shouldPlayRazorStartle,
 } from './huntFeedbackPolicy';
 
 assert.equal(
@@ -112,4 +113,18 @@ assert.deepEqual(
   assert.equal(fell.squawk, true, 'a FELL OFF break always squawks');
   assert.equal(fell.otherWrongCountAfter, 1, 'a FELL OFF break does not advance the other-swipe count');
   assert.equal(resolvePollySquawkOnWrong(false, 2).squawk, true, 'the count survives a FELL OFF in between');
+}
+
+// RAZOR SHARP startle: once per run, only on a climb that lands on rank 2.
+{
+  const base = { isRank: 2, wasRank: 1, runSeed: 'run-a', lastStartleRunSeed: null as string | null, muted: false };
+  assert.equal(shouldPlayRazorStartle(base), true, 'first climb to RAZOR SHARP in a run startles her');
+  assert.equal(shouldPlayRazorStartle({ ...base, wasRank: 0 }), true, 'a climb from STEADY straight to RAZOR SHARP still startles');
+  assert.equal(shouldPlayRazorStartle({ ...base, lastStartleRunSeed: 'run-a' }), false, 'same run: no second startle');
+  assert.equal(shouldPlayRazorStartle({ ...base, lastStartleRunSeed: 'run-b' }), true, 'a new run startles again');
+  assert.equal(shouldPlayRazorStartle({ ...base, muted: true }), false, 'muted (lesson, pause, exit confirm, onboarding) is silent');
+  assert.equal(shouldPlayRazorStartle({ ...base, isRank: 1, wasRank: 0 }), false, 'SHARP does not startle');
+  assert.equal(shouldPlayRazorStartle({ ...base, isRank: 3, wasRank: 2 }), false, 'UNTRAPPABLE does not startle');
+  assert.equal(shouldPlayRazorStartle({ ...base, isRank: 2, wasRank: 3 }), false, 'dropping to RAZOR SHARP does not startle');
+  assert.equal(shouldPlayRazorStartle({ ...base, isRank: 2, wasRank: 2 }), false, 'no change does not startle');
 }
