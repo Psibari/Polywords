@@ -1,18 +1,26 @@
 // app/components/GraphicGround.tsx
 import React, { useEffect, useState } from 'react';
 import { Animated, Image, StyleSheet, View } from 'react-native';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   resetWallFall,
   resetWallShake,
   resetWallStrain,
   runWallFallAnimation,
-  WALL_FALL_PIT_SCALE,
   WALL_KICK_AMP,
   WALL_STRAIN_MAX_AMP,
   WALL_TREMBLE_AMP,
   subscribeWallFall,
+  wallFallPitScale,
+  wallFallRim,
   wallFallScale,
   wallFallShade,
+  wallFallStreakAOp,
+  wallFallStreakAY,
+  wallFallStreakBOp,
+  wallFallStreakBY,
+  WALL_FALL_STREAK_TRAVEL,
   wallShakeTransform,
 } from './wallShake';
 import { resetWallVeinPulse } from './wallVeinPulse';
@@ -29,9 +37,65 @@ const WALL_EDGE_BLEED =
 // seen for a frame or two at an edge the shake has momentarily uncovered, and
 // it has to read as more wall, never as a border.
 const WALL_SHADOW = '#140922';
-// Laid over the pit's copy of the wall. Dark enough that the pit reads as deep,
-// light enough that the stone is still visible in it.
-const PIT_DARK = 'rgba(10,5,20,0.72)';
+// Laid over the pit's copy of the wall (the hole's stone sides). Light enough
+// that the stone stays visible; the edge bands below add the depth.
+const PIT_DARK = 'rgba(10,5,20,0.5)';
+// The hole's sides: lit at the screen edge, falling into darkness toward the
+// bottom of the hole (the falling wall). TEST VALUES, tuned on device.
+const PIT_BAND_CLEAR = 'rgba(10,5,20,0)';
+const PIT_BAND_DARK = 'rgba(10,5,20,0.92)';
+const PIT_BAND_REACH = '28%';
+// The falling wall's own lip: dark at its edge, fading inward.
+const RIM_DARK = 'rgba(10,5,20,0.85)';
+const RIM_REACH = '7%';
+// Hole look, a mix of three (Pete, 2026-11-02): stone RINGS stepping down the
+// shaft, a dim warm GLOW at the bottom where the wall lands, and pale HAZE
+// along the sides. TEST VALUES, tuned on device.
+// Rings are insets (percent of the screen) in the pit's own coordinates; the
+// pit is drawn at 1.4x, so anything under ~15% is off-screen at rest.
+const PIT_RING_INSETS = [16, 22, 29, 37] as const;
+const PIT_RING_DARK = ['rgba(10,5,20,0.35)', 'rgba(10,5,20,0.45)', 'rgba(10,5,20,0.55)', 'rgba(10,5,20,0.65)'] as const;
+const PIT_RING_LIT = 'rgba(205,195,225,0.22)';
+const PIT_RING_WIDTH = 3;
+const GLOW_COLOR = '#FFCF86';
+const GLOW_PEAK_OPACITY = 0.38;
+const HAZE_EDGE = 'rgba(190,180,215,0.26)';
+const HAZE_CLEAR = 'rgba(190,180,215,0)';
+const HAZE_REACH = '24%';
+const HAZE_OUT_TO_IN = [HAZE_EDGE, HAZE_CLEAR] as const;
+const HAZE_IN_TO_OUT = [HAZE_CLEAR, HAZE_EDGE] as const;
+// Air streaks: thin pale lines, fixed pattern (no randomness, so every fall
+// looks the same). Positions are percent of the layer, which is two screen
+// heights tall so it can travel one screen height and stay covered.
+type StreakSpec = {
+  left: `${number}%`;
+  top: `${number}%`;
+  height: number;
+  width: number;
+  colors: readonly [string, string, string];
+};
+function buildStreaks(shift: number): StreakSpec[] {
+  return Array.from({ length: 24 }, (_, i) => {
+    const alpha = 0.22 + (i % 4) * 0.09;
+    const tint = `rgba(225,220,240,${alpha.toFixed(2)})`;
+    return {
+      left: `${(i * 37 + 11 + shift) % 96}%`,
+      top: `${(i * 61 + 7 + shift) % 100}%`,
+      height: 70 + ((i * 29) % 7) * 20,
+      width: i % 3 === 0 ? 2.5 : 1.5,
+      colors: ['rgba(225,220,240,0)', tint, 'rgba(225,220,240,0)'] as const,
+    };
+  });
+}
+const STREAKS_A = buildStreaks(0);
+const STREAKS_B = buildStreaks(23);
+
+// Gradient colour pairs, outer edge first. Tuples because LinearGradient wants
+// at least two stops.
+const PIT_OUT_TO_IN = [PIT_BAND_CLEAR, PIT_BAND_DARK] as const;
+const PIT_IN_TO_OUT = [PIT_BAND_DARK, PIT_BAND_CLEAR] as const;
+const RIM_EDGE_TO_IN = [RIM_DARK, PIT_BAND_CLEAR] as const;
+const RIM_IN_TO_EDGE = [PIT_BAND_CLEAR, RIM_DARK] as const;
 
 // Ground art: a photoreal stone wall texture filling the same box the old
 // flat-graphic SVG (gradient + flagstone tiles + pillar stacks + corner
@@ -63,6 +127,37 @@ const PIT_DARK = 'rgba(10,5,20,0.72)';
 type GraphicGroundProps = {
   wallVeins?: boolean;
 };
+
+function StreakLayer({
+  y,
+  op,
+  streaks,
+}: {
+  y: Animated.Value;
+  op: Animated.Value;
+  streaks: StreakSpec[];
+}) {
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.streakLayer, { opacity: op, transform: [{ translateY: y }] }]}
+    >
+      {streaks.map((st, i) => (
+        <LinearGradient
+          key={i}
+          colors={st.colors}
+          style={{
+            position: 'absolute',
+            left: st.left,
+            top: st.top,
+            width: st.width,
+            height: st.height,
+          }}
+        />
+      ))}
+    </Animated.View>
+  );
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function GraphicGround(_props: GraphicGroundProps) {
@@ -108,16 +203,99 @@ export default function GraphicGround(_props: GraphicGroundProps) {
           // the real wall exactly, so this appears and goes without a seam.
           <View style={styles.fallOverlay} pointerEvents="none">
             <View style={styles.pitClip}>
-              <Image
-                source={stoneWallImage}
-                style={[styles.wall, { transform: [{ scale: WALL_FALL_PIT_SCALE }] }]}
-                resizeMode="cover"
-              />
+              <Animated.View
+                style={[StyleSheet.absoluteFill, { transform: [{ scale: wallFallPitScale }] }]}
+              >
+                <Image source={stoneWallImage} style={styles.wall} resizeMode="cover" />
+              </Animated.View>
               <View style={styles.pitDark} />
+              <LinearGradient colors={PIT_OUT_TO_IN} style={styles.pitTop} />
+              <LinearGradient colors={PIT_IN_TO_OUT} style={styles.pitBottom} />
+              <LinearGradient
+                colors={PIT_OUT_TO_IN}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.pitLeft}
+              />
+              <LinearGradient
+                colors={PIT_IN_TO_OUT}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.pitRight}
+              />
+              {/* A: stone rings stepping down the shaft. They scale with the
+                  pit, so they rush outward on the dive. */}
+              <Animated.View
+                style={[StyleSheet.absoluteFill, { transform: [{ scale: wallFallPitScale }] }]}
+              >
+                {PIT_RING_INSETS.map((inset, i) => (
+                  <View
+                    key={inset}
+                    style={{
+                      position: 'absolute',
+                      top: `${inset}%`,
+                      bottom: `${inset}%`,
+                      left: `${inset}%`,
+                      right: `${inset}%`,
+                      borderWidth: PIT_RING_WIDTH,
+                      borderColor: PIT_RING_DARK[i],
+                      borderTopColor: PIT_RING_LIT,
+                    }}
+                  />
+                ))}
+              </Animated.View>
+              {/* C: pale haze along the sides of the shaft. */}
+              <Animated.View style={[StyleSheet.absoluteFill, { opacity: wallFallRim }]}>
+                <LinearGradient
+                  colors={HAZE_OUT_TO_IN}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.hazeLeft}
+                />
+                <LinearGradient
+                  colors={HAZE_IN_TO_OUT}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.hazeRight}
+                />
+              </Animated.View>
+              {/* B: a dim warm glow at the bottom, around the landing wall. */}
+              <Animated.View style={[StyleSheet.absoluteFill, { opacity: wallFallRim }]}>
+                <Svg width="100%" height="100%">
+                  <Defs>
+                    <RadialGradient id="wallFallGlow" cx="50%" cy="50%" rx="55%" ry="55%">
+                      <Stop offset="0" stopColor={GLOW_COLOR} stopOpacity={GLOW_PEAK_OPACITY} />
+                      <Stop offset="0.55" stopColor={GLOW_COLOR} stopOpacity={GLOW_PEAK_OPACITY * 0.5} />
+                      <Stop offset="1" stopColor={GLOW_COLOR} stopOpacity={0} />
+                    </RadialGradient>
+                  </Defs>
+                  <Rect x="0" y="0" width="100%" height="100%" fill="url(#wallFallGlow)" />
+                </Svg>
+              </Animated.View>
+              {/* Air streaks rushing up past us: A on the wall's drop, B on the
+                  camera's dive. */}
+              <StreakLayer y={wallFallStreakAY} op={wallFallStreakAOp} streaks={STREAKS_A} />
+              <StreakLayer y={wallFallStreakBY} op={wallFallStreakBOp} streaks={STREAKS_B} />
             </View>
             <Animated.View style={[styles.fallLayer, { transform: [{ scale: wallFallScale }] }]}>
               <Image source={stoneWallImage} style={styles.wall} resizeMode="cover" />
               <Animated.View style={[styles.fallShade, { opacity: wallFallShade }]} />
+              <Animated.View style={[styles.fallRim, { opacity: wallFallRim }]}>
+                <LinearGradient colors={RIM_EDGE_TO_IN} style={styles.rimTop} />
+                <LinearGradient colors={RIM_IN_TO_EDGE} style={styles.rimBottom} />
+                <LinearGradient
+                  colors={RIM_EDGE_TO_IN}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.rimLeft}
+                />
+                <LinearGradient
+                  colors={RIM_IN_TO_EDGE}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.rimRight}
+                />
+              </Animated.View>
             </Animated.View>
           </View>
         )}
@@ -164,9 +342,29 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: PIT_DARK,
   },
+  pitTop: { position: 'absolute', top: 0, left: 0, right: 0, height: PIT_BAND_REACH },
+  pitBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: PIT_BAND_REACH },
+  pitLeft: { position: 'absolute', top: 0, bottom: 0, left: 0, width: PIT_BAND_REACH },
+  pitRight: { position: 'absolute', top: 0, bottom: 0, right: 0, width: PIT_BAND_REACH },
+  hazeLeft: { position: 'absolute', top: 0, bottom: 0, left: 0, width: HAZE_REACH },
+  hazeRight: { position: 'absolute', top: 0, bottom: 0, right: 0, width: HAZE_REACH },
+  streakLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: WALL_FALL_STREAK_TRAVEL * 2,
+  },
   fallLayer: {
     ...StyleSheet.absoluteFill,
   },
+  fallRim: {
+    ...StyleSheet.absoluteFill,
+  },
+  rimTop: { position: 'absolute', top: 0, left: 0, right: 0, height: RIM_REACH },
+  rimBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: RIM_REACH },
+  rimLeft: { position: 'absolute', top: 0, bottom: 0, left: 0, width: RIM_REACH },
+  rimRight: { position: 'absolute', top: 0, bottom: 0, right: 0, width: RIM_REACH },
   fallShade: {
     ...StyleSheet.absoluteFill,
     backgroundColor: WALL_SHADOW,

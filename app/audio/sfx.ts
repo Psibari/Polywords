@@ -514,6 +514,11 @@ function warmSfx(names: readonly SfxName[]): void {
   });
 }
 
+/** Warms the four cues of the FELL OFF wall fall (wallShake.ts WALL_FALL_SFX_*). */
+export function warmWallFallSfx(): void {
+  warmSfx(['terraceWhooshCape', 'stoneLand1', 'gauntletPick', 'polybookThud']);
+}
+
 export function warmBossOutcomeSfx(): void {
   warmSfx(BOSS_OUTCOME_SFX);
 }

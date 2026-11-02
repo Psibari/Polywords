@@ -1,4 +1,5 @@
-import { Animated, Easing } from 'react-native';
+import { Animated, Dimensions, Easing } from 'react-native';
+import { playSfx, type SfxName } from '../audio/sfx';
 
 // A single shared animation channel for shaking the stone wall.
 //
@@ -296,26 +297,103 @@ export function setWallStrain(tier: WallStrainTier): void {
 // haunted without touching it), so it cannot run while the bricks are out.
 //
 // Every number a phone pass is likely to retune lives in this block.
-/** How far the wall shrinks, by severity 1 / 2 / 3 (0.04 = to 96%). */
-export const WALL_FALL_DEPTH_BY_SEVERITY: readonly number[] = [0.04, 0.07, 0.10];
-/** Wall falls away, then waits, then zips back. */
-export const WALL_FALL_DROP_MS = 90;
-export const WALL_FALL_HOLD_MS = 60;
-export const WALL_FALL_RETURN_MS = 200;
-/** From the call, when the wall reconnects and gets one kick. */
+// ALL OF THESE ARE TEST VALUES for the 2026-11-02 device pass. The idea is a
+// CAMERA: the background falls far down a hole (accelerating), hits the bottom,
+// stops and shakes, waits a beat, then the camera falls after it, carrying the
+// HUD, book and cards, and lands on top of it. Everything ends exactly where it
+// started; it only looks like we fell. The cues: the wall growing back toward
+// you, the hole's stone sides rushing past, and a quick landing squash on the
+// foreground. Nothing eases back UP.
+/** How far the wall falls away, by severity 1 / 2 / 3 (0.55 = down to 45%). */
+export const WALL_FALL_DEPTH_BY_SEVERITY: readonly number[] = [0.25, 0.4, 0.55];
+/** The fall: accelerates away into the hole (ease-in), so it reads as falling. */
+export const WALL_FALL_DROP_MS = 300;
+/** The crash shake at the bottom: this many kicks, this far apart. */
+export const WALL_FALL_CRASH_KICKS = 3;
+export const WALL_FALL_CRASH_KICK_GAP_MS = 70;
+/** A beat at the bottom before everything catches up. */
+export const WALL_FALL_BEAT_MS = 220;
+/** The catch-up: the view dives down to the wall (ease-in, so it lands hard). */
+export const WALL_FALL_CATCH_UP_MS = 260;
+/** From the start of the animation, when the wall hits the bottom. */
+export const WALL_FALL_CRASH_AT_MS = WALL_FALL_DROP_MS;
+/** From the start of the animation, when everything lands at normal size. */
 export const WALL_FALL_RECONNECT_KICK_AT_MS =
-  WALL_FALL_DROP_MS + WALL_FALL_HOLD_MS + WALL_FALL_RETURN_MS;
-/** Margin after the return before the overlay is removed. */
-const WALL_FALL_UNMOUNT_MARGIN_MS = 80;
+  WALL_FALL_DROP_MS + WALL_FALL_BEAT_MS + WALL_FALL_CATCH_UP_MS;
+/**
+ * Safety net only: the overlay is force-removed this long after a fall starts.
+ * The fall normally ends when its animation finishes, so this never cuts a
+ * fall short, however busy the JS thread is. It only rescues a fall whose
+ * animation never reports back.
+ */
+export const WALL_FALL_SAFETY_MS = 1500;
+/** The hole's stone sides rush outward to this size during the dive. */
+export const WALL_FALL_PIT_RUSH_SCALE = 3;
+/** The foreground's landing squash: how far it dips, then rebounds, then rests. */
+export const FG_LAND_SQUASH_SCALE = 0.965;
+export const FG_LAND_SQUASH_Y = 10;
+export const FG_LAND_REBOUND_SCALE = 1.015;
+export const FG_LAND_REBOUND_Y = -3;
+export const FG_LAND_DOWN_MS = 70;
+export const FG_LAND_REBOUND_MS = 90;
+export const FG_LAND_SETTLE_MS = 90;
 /** Darkness laid over the falling wall at full depth, so it recedes into the pit. */
 export const WALL_FALL_SHADE_MAX = 0.45;
 /** The pit behind the falling wall is the same stone, bigger and darkened. */
 export const WALL_FALL_PIT_SCALE = 1.4;
+/**
+ * Air streaks: pale vertical lines that rush UP past the screen while we fall,
+ * once for the wall's drop and once for the camera's dive. They travel one
+ * screen height (the streak layer is two screen heights tall), accelerating.
+ */
+export const WALL_FALL_STREAK_TRAVEL = Dimensions.get('window').height;
+const STREAK_FADE_MS = 50;
+/**
+ * Fall sounds (TEST: existing cues, nothing new). Two falls and two impacts:
+ * the wall falls and crashes, then the camera falls and crashes. The whoosh
+ * files are 0.84 s and 0.99 s, so they play faster to fit a ~0.3 s fall.
+ */
+export const WALL_FALL_SFX_BG_FALL: SfxName = 'terraceWhooshCape';
+export const WALL_FALL_SFX_BG_CRASH: SfxName = 'stoneLand1';
+export const WALL_FALL_SFX_CAM_FALL: SfxName = 'gauntletPick';
+export const WALL_FALL_SFX_CAM_CRASH: SfxName = 'polybookThud';
+export const WALL_FALL_SFX_BG_FALL_RATE = 1.5;
+export const WALL_FALL_SFX_CAM_FALL_RATE = 1.4;
+export const WALL_FALL_SFX_BG_FALL_AT_MS = 0;
+export const WALL_FALL_SFX_BG_CRASH_AT_MS = WALL_FALL_CRASH_AT_MS;
+export const WALL_FALL_SFX_CAM_FALL_AT_MS = WALL_FALL_DROP_MS + WALL_FALL_BEAT_MS;
+export const WALL_FALL_SFX_CAM_CRASH_AT_MS = WALL_FALL_RECONNECT_KICK_AT_MS;
 
 /** The falling wall's scale: 1 at rest, 1 - depth at the bottom of the fall. */
 export const wallFallScale = new Animated.Value(1);
 /** Darkness over the falling wall: 0 at rest. */
 export const wallFallShade = new Animated.Value(0);
+/** Dark lip around the falling wall's edge: 0 at rest, 1 at full depth. */
+export const wallFallRim = new Animated.Value(0);
+/** The hole's stone sides: rest size, and they rush outward during the dive. */
+export const wallFallPitScale = new Animated.Value(WALL_FALL_PIT_SCALE);
+/** The foreground's landing squash (HUD, book and cards move as one block). */
+export const fgLandScale = new Animated.Value(1);
+export const fgLandY = new Animated.Value(0);
+/** Air streaks: layer A rides the wall's drop, layer B the camera's dive. */
+export const wallFallStreakAY = new Animated.Value(0);
+export const wallFallStreakAOp = new Animated.Value(0);
+export const wallFallStreakBY = new Animated.Value(0);
+export const wallFallStreakBOp = new Animated.Value(0);
+
+/** Every fall value back to rest. One place, so no reset can miss one. */
+function resetFallValues(): void {
+  wallFallScale.setValue(1);
+  wallFallShade.setValue(0);
+  wallFallRim.setValue(0);
+  wallFallPitScale.setValue(WALL_FALL_PIT_SCALE);
+  fgLandScale.setValue(1);
+  fgLandY.setValue(0);
+  wallFallStreakAY.setValue(0);
+  wallFallStreakAOp.setValue(0);
+  wallFallStreakBY.setValue(0);
+  wallFallStreakBOp.setValue(0);
+}
 
 type FallListener = (falling: boolean) => void;
 const fallListeners = new Set<FallListener>();
@@ -338,16 +416,31 @@ export function subscribeWallFall(listener: FallListener): () => void {
 
 let fallAnim: Animated.CompositeAnimation | null = null;
 let fallKickTimer: ReturnType<typeof setTimeout> | null = null;
+let fallCrashTimer: ReturnType<typeof setTimeout> | null = null;
 let fallEndTimer: ReturnType<typeof setTimeout> | null = null;
+let fallSfxTimers: ReturnType<typeof setTimeout>[] = [];
 
 function clearFallTimers(): void {
   if (fallKickTimer !== null) clearTimeout(fallKickTimer);
+  if (fallCrashTimer !== null) clearTimeout(fallCrashTimer);
   if (fallEndTimer !== null) clearTimeout(fallEndTimer);
+  fallSfxTimers.forEach(clearTimeout);
+  fallSfxTimers = [];
   fallKickTimer = null;
+  fallCrashTimer = null;
   fallEndTimer = null;
 }
 
 let fallDepth = 0;
+
+/** Ends a fall: wall back to rest, overlay removed. */
+function finishFall(): void {
+  if (fallEndTimer !== null) clearTimeout(fallEndTimer);
+  fallEndTimer = null;
+  fallAnim = null;
+  resetFallValues();
+  setFallActive(false);
+}
 
 /**
  * Starts a fall. `severity` is game.fellOffSeverity (1, 2 or 3). This only asks
@@ -360,18 +453,14 @@ export function fallWall(severity: 1 | 2 | 3): void {
   fallAnim?.stop();
   clearFallTimers();
   fallDepth = WALL_FALL_DEPTH_BY_SEVERITY[severity - 1];
-  wallFallScale.setValue(1);
-  wallFallShade.setValue(0);
+  resetFallValues();
   setFallActive(true);
-  // The end is timed from the call, and covers the overlay's mount frame too.
+  // Safety net only (see WALL_FALL_SAFETY_MS). The fall ends when its
+  // animation finishes, not on a clock, so it can never be cut short.
   fallEndTimer = setTimeout(() => {
-    fallEndTimer = null;
     fallAnim?.stop();
-    fallAnim = null;
-    wallFallScale.setValue(1);
-    wallFallShade.setValue(0);
-    setFallActive(false);
-  }, WALL_FALL_RECONNECT_KICK_AT_MS + WALL_FALL_UNMOUNT_MARGIN_MS);
+    finishFall();
+  }, WALL_FALL_SAFETY_MS);
 }
 
 /**
@@ -379,31 +468,133 @@ export function fallWall(severity: 1 | 2 | 3): void {
  * overlay has mounted, so both values already have a view attached.
  */
 export function runWallFallAnimation(): void {
-  if (!fallActive) return;
+  if (!fallActive) {
+    return;
+  }
   fallAnim?.stop();
   if (fallKickTimer !== null) clearTimeout(fallKickTimer);
-  // Down to `bottom`, hold, then back to `rest`. Both values run the same clock.
+  if (fallCrashTimer !== null) clearTimeout(fallCrashTimer);
+  // Fall (accelerating) to `bottom`, stop dead, wait a beat, then catch up to
+  // `rest` (accelerating again, so it lands hard instead of easing up). Every
+  // value runs the same clock.
   const fallSequence = (value: Animated.Value, bottom: number, rest: number) =>
     Animated.sequence([
       Animated.timing(value, {
         toValue: bottom,
         duration: WALL_FALL_DROP_MS,
-        easing: Easing.out(Easing.quad),
+        easing: Easing.in(Easing.quad),
         useNativeDriver: true,
       }),
-      Animated.delay(WALL_FALL_HOLD_MS),
+      Animated.delay(WALL_FALL_BEAT_MS),
       Animated.timing(value, {
         toValue: rest,
-        duration: WALL_FALL_RETURN_MS,
-        easing: Easing.out(Easing.cubic),
+        duration: WALL_FALL_CATCH_UP_MS,
+        easing: Easing.in(Easing.quad),
         useNativeDriver: true,
       }),
     ]);
-  fallAnim = Animated.parallel([
+  const thisAnim = Animated.parallel([
     fallSequence(wallFallScale, 1 - fallDepth, 1),
     fallSequence(wallFallShade, WALL_FALL_SHADE_MAX, 0),
+    fallSequence(wallFallRim, 1, 0),
+    // The hole's stone sides rush outward as the camera dives: the classic
+    // falling-down-a-shaft cue. They stay opaque, so the wall copy never floats
+    // over the real wall.
+    Animated.sequence([
+      Animated.delay(WALL_FALL_DROP_MS + WALL_FALL_BEAT_MS),
+      Animated.timing(wallFallPitScale, {
+        toValue: WALL_FALL_PIT_RUSH_SCALE,
+        duration: WALL_FALL_CATCH_UP_MS,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]),
+    // Air streaks rush up past us: layer A on the wall's drop, layer B on the
+    // camera's dive. Each speeds up like the fall itself and fades out at its end.
+    Animated.timing(wallFallStreakAY, {
+      toValue: -WALL_FALL_STREAK_TRAVEL,
+      duration: WALL_FALL_DROP_MS,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }),
+    Animated.sequence([
+      Animated.timing(wallFallStreakAOp, { toValue: 1, duration: STREAK_FADE_MS, useNativeDriver: true }),
+      Animated.delay(WALL_FALL_DROP_MS - 2 * STREAK_FADE_MS),
+      Animated.timing(wallFallStreakAOp, { toValue: 0, duration: STREAK_FADE_MS, useNativeDriver: true }),
+    ]),
+    Animated.sequence([
+      Animated.delay(WALL_FALL_DROP_MS + WALL_FALL_BEAT_MS),
+      Animated.timing(wallFallStreakBY, {
+        toValue: -WALL_FALL_STREAK_TRAVEL,
+        duration: WALL_FALL_CATCH_UP_MS,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]),
+    Animated.sequence([
+      Animated.delay(WALL_FALL_DROP_MS + WALL_FALL_BEAT_MS),
+      Animated.timing(wallFallStreakBOp, { toValue: 1, duration: STREAK_FADE_MS, useNativeDriver: true }),
+      Animated.delay(WALL_FALL_CATCH_UP_MS - 2 * STREAK_FADE_MS),
+      Animated.timing(wallFallStreakBOp, { toValue: 0, duration: STREAK_FADE_MS, useNativeDriver: true }),
+    ]),
+    // The foreground lands with a quick squash, as if it came down with us.
+    Animated.sequence([
+      Animated.delay(WALL_FALL_RECONNECT_KICK_AT_MS),
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(fgLandScale, { toValue: FG_LAND_SQUASH_SCALE, duration: FG_LAND_DOWN_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(fgLandScale, { toValue: FG_LAND_REBOUND_SCALE, duration: FG_LAND_REBOUND_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(fgLandScale, { toValue: 1, duration: FG_LAND_SETTLE_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(fgLandY, { toValue: FG_LAND_SQUASH_Y, duration: FG_LAND_DOWN_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(fgLandY, { toValue: FG_LAND_REBOUND_Y, duration: FG_LAND_REBOUND_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(fgLandY, { toValue: 0, duration: FG_LAND_SETTLE_MS, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        ]),
+      ]),
+    ]),
   ]);
-  fallAnim.start();
+  fallAnim = thisAnim;
+  // Re-arm the safety net from the START of the animation, not the call.
+  if (fallEndTimer !== null) clearTimeout(fallEndTimer);
+  fallEndTimer = setTimeout(() => {
+    fallAnim?.stop();
+    finishFall();
+  }, WALL_FALL_SAFETY_MS);
+  thisAnim.start(({ finished }) => {
+    // An unfinished callback means a newer fall or a reset stopped this one;
+    // that fall now owns the state, so do nothing.
+    if (finished && fallAnim === thisAnim) finishFall();
+  });
+  // The crash: a short burst of kicks, so it rattles instead of ticking once.
+  const crashShake = (kicksLeft: number): void => {
+    fallCrashTimer = null;
+    kickWall();
+    if (kicksLeft > 1) {
+      fallCrashTimer = setTimeout(
+        () => crashShake(kicksLeft - 1),
+        WALL_FALL_CRASH_KICK_GAP_MS,
+      );
+    }
+  };
+  fallCrashTimer = setTimeout(
+    () => crashShake(WALL_FALL_CRASH_KICKS),
+    WALL_FALL_CRASH_AT_MS,
+  );
+  // Two falls and two impacts (see the WALL_FALL_SFX_* block).
+  fallSfxTimers.forEach(clearTimeout);
+  fallSfxTimers = [];
+  const cue = (atMs: number, name: SfxName, rate?: number): void => {
+    if (atMs <= 0) {
+      playSfx(name, { rate });
+      return;
+    }
+    fallSfxTimers.push(setTimeout(() => playSfx(name, { rate }), atMs));
+  };
+  cue(WALL_FALL_SFX_BG_FALL_AT_MS, WALL_FALL_SFX_BG_FALL, WALL_FALL_SFX_BG_FALL_RATE);
+  cue(WALL_FALL_SFX_BG_CRASH_AT_MS, WALL_FALL_SFX_BG_CRASH);
+  cue(WALL_FALL_SFX_CAM_FALL_AT_MS, WALL_FALL_SFX_CAM_FALL, WALL_FALL_SFX_CAM_FALL_RATE);
+  cue(WALL_FALL_SFX_CAM_CRASH_AT_MS, WALL_FALL_SFX_CAM_CRASH);
   fallKickTimer = setTimeout(() => {
     fallKickTimer = null;
     kickWall();
@@ -415,8 +606,7 @@ export function resetWallFall(): void {
   fallAnim?.stop();
   fallAnim = null;
   clearFallTimers();
-  wallFallScale.setValue(1);
-  wallFallShade.setValue(0);
+  resetFallValues();
   setFallActive(false);
 }
 

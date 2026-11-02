@@ -11,6 +11,8 @@ import { currentStep } from '../game/polyRunEngine';
 import { resolveHuntHud, resolveLiveHuntControl, HuntReadTier } from '../game/huntControl';
 import {
   fallWall,
+  fgLandScale,
+  fgLandY,
   resetWallFall,
   resetWallStrain,
   setWallStrain,
@@ -25,7 +27,7 @@ import { PW } from '../ui/pwTheme';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { BOSS_SKY_TUNING, HUNT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import ResultsScreen from './ResultsScreen';
-import { playSfx, sfxReady } from '../audio/sfx';
+import { playSfx, sfxReady, warmWallFallSfx } from '../audio/sfx';
 import { startMusic, stopMusic, setMusicState, MusicState } from '../audio/MusicEngine';
 import { Haptics } from '../utils/haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
@@ -1427,7 +1429,14 @@ function GameDirector({ navigation }: { navigation: any }) {
     setWallStrain(wallStrainTier);
   }, [wallStrainTier]);
 
-  // Fell-off: the wall falls away and zips back (wallShake.ts). Fires from the
+  // The four fall cues load on demand, so a cue's first play would wait on a
+  // native load. Warm them once when the Hunt opens.
+  useEffect(() => {
+    warmWallFallSfx();
+  }, []);
+
+  // Fell-off: the wall falls down a hole, then the camera falls after it and
+  // lands on top (wallShake.ts). Fires from the
   // same store field as the HUD's FELL OFF effect, so it matches it exactly,
   // and a gauntlet miss (which never sets that field) can never trigger it.
   useEffect(() => {
@@ -1662,7 +1671,7 @@ function GameDirector({ navigation }: { navigation: any }) {
         <Rect x="0" y="0" width="100%" height="100%" fill={`url(#gameVignette-${vignetteId})`} />
       </Svg>
       <SafeAreaView style={styles.content}>
-      <Animated.View style={{ flex: 1, transform: [{ translateX: boardShakeX }, { translateY: boardShakeY }] }}>
+      <Animated.View style={{ flex: 1, transform: [{ translateX: boardShakeX }, { translateY: boardShakeY }, { translateY: fgLandY }, { scale: fgLandScale }] }}>
       {isBossRound && (
         <View pointerEvents="none" style={styles.bossBackground}>
           <View style={styles.bossBookGlow}>
@@ -1741,6 +1750,17 @@ function GameDirector({ navigation }: { navigation: any }) {
             style={[styles.devBossButton, styles.devBossButtonCrisis]}
           >
             <Text style={styles.devBossButtonText}>BOSS{'\n'}(CRISIS)</Text>
+          </Pressable>
+          {/* Dev tool: plays the wall fall at its largest size, bypassing gameplay (for tuning the fall's look and sounds). */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Dev: play the wall fall at the largest size"
+            onPress={() => {
+              fallWall(3);
+            }}
+            style={styles.devBossButton}
+          >
+            <Text style={styles.devBossButtonText}>FALL 3</Text>
           </Pressable>
         </View>
       )}
