@@ -349,14 +349,22 @@ export const WALL_FALL_PIT_SCALE = 1.4;
 export const WALL_FALL_STREAK_TRAVEL = Dimensions.get('window').height;
 const STREAK_FADE_MS = 50;
 /**
- * Fall sounds (TEST: existing cues, nothing new). Two falls and two impacts:
- * the wall falls and crashes, then the camera falls and crashes. The whoosh
- * files are 0.84 s and 0.99 s, so they play faster to fit a ~0.3 s fall.
+ * Fall sounds: two falls and two impacts: the wall falls and crashes, then the
+ * camera falls and crashes. The impacts are Pete's own files (locked). The two
+ * whooshes are existing placeholder cues and are OFF (WALL_FALL_WHOOSH_ENABLED);
+ * they are 0.84 s and 0.99 s, so they play faster to fit a ~0.3 s fall.
  */
 export const WALL_FALL_SFX_BG_FALL: SfxName = 'terraceWhooshCape';
-export const WALL_FALL_SFX_BG_CRASH: SfxName = 'stoneLand1';
+// Pete's pairing, locked 2026-11-02 after hearing both ways: the wall slam is the hard heavy impact and
+// the camera slam is the boulder impact (rocks breaking in its tail).
+export const WALL_FALL_SFX_BG_CRASH: SfxName = 'hardHeavyImpact';
 export const WALL_FALL_SFX_CAM_FALL: SfxName = 'gauntletPick';
-export const WALL_FALL_SFX_CAM_CRASH: SfxName = 'polybookThud';
+export const WALL_FALL_SFX_CAM_CRASH: SfxName = 'boulderImpact';
+/**
+ * The two whooshes are OFF (Pete, 2026-11-02: the new impact files carry it). Set to true to hear the
+ * placeholder whooshes again.
+ */
+export const WALL_FALL_WHOOSH_ENABLED = false;
 export const WALL_FALL_SFX_BG_FALL_RATE = 1.5;
 export const WALL_FALL_SFX_CAM_FALL_RATE = 1.4;
 export const WALL_FALL_SFX_BG_FALL_AT_MS = 0;
@@ -591,9 +599,13 @@ export function runWallFallAnimation(): void {
     }
     fallSfxTimers.push(setTimeout(() => playSfx(name, { rate }), atMs));
   };
-  cue(WALL_FALL_SFX_BG_FALL_AT_MS, WALL_FALL_SFX_BG_FALL, WALL_FALL_SFX_BG_FALL_RATE);
+  if (WALL_FALL_WHOOSH_ENABLED) {
+    cue(WALL_FALL_SFX_BG_FALL_AT_MS, WALL_FALL_SFX_BG_FALL, WALL_FALL_SFX_BG_FALL_RATE);
+  }
   cue(WALL_FALL_SFX_BG_CRASH_AT_MS, WALL_FALL_SFX_BG_CRASH);
-  cue(WALL_FALL_SFX_CAM_FALL_AT_MS, WALL_FALL_SFX_CAM_FALL, WALL_FALL_SFX_CAM_FALL_RATE);
+  if (WALL_FALL_WHOOSH_ENABLED) {
+    cue(WALL_FALL_SFX_CAM_FALL_AT_MS, WALL_FALL_SFX_CAM_FALL, WALL_FALL_SFX_CAM_FALL_RATE);
+  }
   cue(WALL_FALL_SFX_CAM_CRASH_AT_MS, WALL_FALL_SFX_CAM_CRASH);
   fallKickTimer = setTimeout(() => {
     fallKickTimer = null;

@@ -111,3 +111,17 @@ heard any of them; Pete chose them by ear.
   beta-era sound effects. Adobe's current sound-effect page allows commercial use of the commercially
   released version if Adobe's guidelines are followed. Not yet confirmed for this clip. Get Adobe's
   answer in writing and keep a dated screenshot of the Firefly history entry.
+
+## Sound effects added 2026-11-02
+
+- `sfx/boulder_impact.mp3`: "Boulder Impact" by dragon-studio (downloaded as
+  `dragon-studio-boulder-impact-487673.mp3`). Pete supplied it for the FELL OFF camera landing (the camera, HUD and cards slam).
+- `sfx/hard_heavy_impact.mp3`: "Hard Heavy Impact" by dragon-studio (downloaded as
+  `dragon-studio-hard-heavy-impact-515256.mp3`). Pete supplied it for the FELL OFF background slam.
+
+The licence and source page URL for both are NOT recorded: the file names follow Pixabay's
+author-title-id download pattern, but that is an inference, not a confirmed licence. Pete to confirm
+the platform and add the page URLs and licence name here before release.
+
+POLYWORDS edits: both files are renamed only. The decoded audio is identical to the downloads (checked by
+hash); the file bytes differ slightly (tag data), which does not change the sound.

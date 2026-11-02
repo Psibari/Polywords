@@ -69,6 +69,11 @@ export type SfxName =
   | 'polybookThud'
   // The Polybook cage hitting the floor and breaking (Pete supplied it, 2026-10-23).
   | 'polybookCageCrash'
+  // FELL OFF wall fall impacts (Pete supplied both, 2026-11-02). Pete's pairing: the hard heavy impact is
+  // the BACKGROUND slamming into the bottom of the hole; the boulder impact (rocks breaking in the tail)
+  // is the CAMERA, HUD and cards slamming down after it. See WALL_FALL_SFX_* in components/wallShake.ts.
+  | 'boulderImpact'
+  | 'hardHeavyImpact'
   // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
   // below. Uncomment together with the matching entries in SFX and the
   // guarded call sites in DailyChallengeScreen.tsx once the files land.
@@ -231,6 +236,11 @@ const SFX: Record<SfxName, SfxConfig> = {
   terraceWhooshCape: { source: require('../../assets/audio/sfx/terrace_whoosh_cape.mp3'), volume: 0.40, cooldownMs: 400 },
   terraceWhooshEpic: { source: require('../../assets/audio/sfx/terrace_whoosh_epic.mp3'), volume: 0.33, cooldownMs: 400 },
   polybookThud: { source: require('../../assets/audio/sfx/polybook_thud.mp3'), volume: 0.50, cooldownMs: 400 },
+  // Both source files run hot (decoded sample peak about +3.5 dB over full scale, loudest 100 ms about
+  // 0 dBFS), so the volume is low: 0.22 is about -13 dBFS effective, next to masteredBookSlam (-12).
+  // Both hit full level 20 ms in, so each cue's start IS the impact. The tails run 2.1 s / 2.9 s.
+  boulderImpact: { source: require('../../assets/audio/sfx/boulder_impact.mp3'), volume: 0.22, cooldownMs: 400 },
+  hardHeavyImpact: { source: require('../../assets/audio/sfx/hard_heavy_impact.mp3'), volume: 0.22, cooldownMs: 400 },
   polybookCageCrash: { source: require('../../assets/audio/sfx/polybook_cage_crash.mp3'), volume: 0.45, cooldownMs: 400 },
   dailyStoneSeat1: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat2: DAILY_STONE_SEAT_SFX,
@@ -516,7 +526,7 @@ function warmSfx(names: readonly SfxName[]): void {
 
 /** Warms the four cues of the FELL OFF wall fall (wallShake.ts WALL_FALL_SFX_*). */
 export function warmWallFallSfx(): void {
-  warmSfx(['terraceWhooshCape', 'stoneLand1', 'gauntletPick', 'polybookThud']);
+  warmSfx(['terraceWhooshCape', 'hardHeavyImpact', 'gauntletPick', 'boulderImpact']);
 }
 
 export function warmBossOutcomeSfx(): void {
