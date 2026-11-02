@@ -413,8 +413,10 @@ export function captureHudLessonEvents(
   next: GameState,
 ): FirstRunOnboardingState {
   if (next === prev) return state;
+  // An armor-absorbed miss adds a mistake but takes no feather, so it does not teach the feather lesson.
   const lostLife = next.mistakesOnWord > prev.mistakesOnWord &&
-    next.stepIndex === prev.stepIndex;
+    next.stepIndex === prev.stepIndex &&
+    (next.armorUsed ?? 0) === (prev.armorUsed ?? 0);
   if (!lostLife || next.status !== 'playing' || !isOrdinaryWordStep(prev)) return state;
 
   const lessons = state.hudLessons;

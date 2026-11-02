@@ -26,8 +26,10 @@ export function chainMultiplierForStreak(streak: number): number {
 // three in step. null means the break was from steady (1.0x): nothing real
 // was lost, so no FELL OFF flash fires. Takes the multiplier as it was
 // BEFORE the reset.
+export const UNTRAPPABLE_MULTIPLIER = 2.5;
+
 export function fellOffSeverityFromMultiplier(mult: number): 1 | 2 | 3 | null {
-  if (mult >= 2.5) return 3;
+  if (mult >= UNTRAPPABLE_MULTIPLIER) return 3;
   if (mult >= 2.0) return 2;
   if (mult >= 1.5) return 1;
   return null;
@@ -108,6 +110,13 @@ export type GameState = {
   // durable per-run tally the Polybook work log reads. Persisted with the rest
   // of the run so a resumed game keeps its count.
   mercyUsed: number;
+  // ARMOR (Pete, 2026-11-02): while the chain is UNTRAPPABLE (multiplier >= UNTRAPPABLE_MULTIPLIER,
+  // see isArmored) a wrong swipe costs no feather. armorAbsorbed is the UI flag set the instant that
+  // happens, cleared by consumeArmor() once the UI has shown it (the same pattern as mercyTriggered).
+  // armorUsed is the durable per-run count of absorbed misses, for the share line. Both are absent in
+  // saves written before armor existed; the store restores them as false / 0.
+  armorAbsorbed: boolean;
+  armorUsed: number;
   bossOutcome: 'pending' | 'mastered' | 'haunted';
   // Returning Haunt truth is deliberately separate from bossOutcome because
   // Results, rank, and Polly memory consume only Polly's final-boss verdict.
@@ -217,6 +226,8 @@ export function createGame(
     mercyReviveLives,
     mercyTriggered: false,
     mercyUsed: 0,
+    armorAbsorbed: false,
+    armorUsed: 0,
     ...(runStartRealMaskCount === undefined ? {} : { runStartRealMaskCount }),
     bossOutcome: 'pending',
     hauntOutcome: 'pending',
@@ -264,6 +275,38 @@ function resolveLifeLoss(state: GameState): LifeLossResult {
     mercyUsed,
     status: lives <= 0 ? 'gameOver' : 'playing',
   };
+}
+
+// ─── ARMOR — an UNTRAPPABLE chain protects the feathers ──────
+//
+// Derived from the chain multiplier, so there is no counter and no cap: armor is
+// simply on whenever the player is UNTRAPPABLE, and the miss that takes it away
+// (chain reset to 0, tier back to STEADY) is the one it absorbs. It only ever
+// protects feathers: the word still counts as wrong (mistakesOnWord), the chain
+// still resets and FELL OFF still fires. The boss gauntlet never reaches this
+// (resolveMysteryTile has no life loss), and gauntletActive is checked anyway.
+export function isArmored(state: Pick<GameState, 'chainMultiplier' | 'gauntletActive'>): boolean {
+  return state.chainMultiplier >= UNTRAPPABLE_MULTIPLIER && !state.gauntletActive;
+}
+
+type WrongSwipeLoss = LifeLossResult & Pick<GameState, 'armorAbsorbed' | 'armorUsed'>;
+
+// The one place the three wrong-swipe paths ask "what does this cost?". Armor
+// is checked BEFORE Mercy so an absorbed miss never spends a Mercy revive.
+function resolveWrongSwipeLoss(state: GameState): WrongSwipeLoss {
+  const armorUsed = state.armorUsed ?? 0;
+  if (isArmored(state)) {
+    return {
+      lives: state.lives,
+      mercyReviveLives: state.mercyReviveLives,
+      mercyTriggered: state.mercyTriggered,
+      mercyUsed: state.mercyUsed ?? 0,
+      status: state.status,
+      armorAbsorbed: true,
+      armorUsed: armorUsed + 1,
+    };
+  }
+  return { ...resolveLifeLoss(state), armorAbsorbed: state.armorAbsorbed ?? false, armorUsed };
 }
 
 export function currentStep(state: GameState): SessionStep {
@@ -373,7 +416,7 @@ export function submitSwipeUp(state: GameState, maskId: string): GameState {
   }
 
   // wrong: claimed a trap as real
-  const loss = resolveLifeLoss(state);
+  const loss = resolveWrongSwipeLoss(state);
   const nextState: GameState = {
     ...state,
     ...loss,
@@ -445,7 +488,7 @@ export function submitSwipeDown(state: GameState, maskId: string): GameState {
   }
 
   // wrong: rejected a real meaning
-  const loss = resolveLifeLoss(state);
+  const loss = resolveWrongSwipeLoss(state);
   const nextState: GameState = {
     ...state,
     ...loss,
@@ -653,7 +696,7 @@ export function isLastRemainingGauntletTile(
 
 export function submitWrongSwipe(state: GameState): GameState {
   const step = currentStep(state);
-  const loss = resolveLifeLoss(state);
+  const loss = resolveWrongSwipeLoss(state);
   const nextState: GameState = {
     ...state,
     ...loss,
@@ -679,6 +722,12 @@ export function submitWrongSwipe(state: GameState): GameState {
 
 export function consumeMercy(state: GameState): GameState {
   return { ...state, mercyTriggered: false };
+}
+
+// ─── CONSUME ARMOR — clear the absorbed-miss flag after the UI has shown it ─
+
+export function consumeArmor(state: GameState): GameState {
+  return { ...state, armorAbsorbed: false };
 }
 
 // ─── CONSUME MILESTONE — clear milestone after UI has handled it ─

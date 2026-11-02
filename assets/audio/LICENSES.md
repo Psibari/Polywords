@@ -119,9 +119,8 @@ heard any of them; Pete chose them by ear.
 - `sfx/hard_heavy_impact.mp3`: "Hard Heavy Impact" by dragon-studio (downloaded as
   `dragon-studio-hard-heavy-impact-515256.mp3`). Pete supplied it for the FELL OFF background slam.
 
-The licence and source page URL for both are NOT recorded: the file names follow Pixabay's
-author-title-id download pattern, but that is an inference, not a confirmed licence. Pete to confirm
-the platform and add the page URLs and licence name here before release.
+Both are from Pixabay (Pete confirmed, 2026-11-02), so the Pixabay Content License applies. The source
+page URLs were not recorded; add them here (a web search could not find the pages).
 
 POLYWORDS edits: both files are renamed only. The decoded audio is identical to the downloads (checked by
 hash); the file bytes differ slightly (tag data), which does not change the sound.

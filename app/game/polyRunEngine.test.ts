@@ -5,6 +5,10 @@ import {
   createGame,
   applyGoldFeather,
   consumeMercy,
+  consumeArmor,
+  isArmored,
+  chainMultiplierForStreak,
+  UNTRAPPABLE_MULTIPLIER,
   completeWord,
   submitBossMastery,
   submitSwipeDown,
@@ -604,6 +608,123 @@ function freshHaunt(): GameState {
 
   // Single-tile gauntlet (Returning Haunt): resolving the only tile is always last.
   eq(isLastRemainingGauntletTile(['a'], new Map(), 'a'), true, 'single-tile gauntlet: always last');
+}
+
+// ── ARMOR: an UNTRAPPABLE chain (multiplier >= 2.5, streak >= 9) protects the feathers ──
+
+function untrappable(base: GameState): GameState {
+  return { ...base, streak: 9, chainMultiplier: chainMultiplierForStreak(9) };
+}
+
+{
+  eq(chainMultiplierForStreak(9), UNTRAPPABLE_MULTIPLIER, 'armor.streak9IsUntrappable');
+  eq(chainMultiplierForStreak(8) < UNTRAPPABLE_MULTIPLIER, true, 'armor.streak8IsNot');
+  eq(isArmored(fresh()), false, 'armor.offAtSteady');
+  eq(fresh().armorUsed, 0, 'armor.startsAtZero');
+  eq(fresh().armorAbsorbed, false, 'armor.flagStartsOff');
+}
+
+// A trap claimed as real (swipe up) while armored: no feather, but everything else is a normal miss.
+{
+  let s = untrappable(fresh());
+  eq(isArmored(s), true, 'armor.up.on');
+  const livesBefore = s.lives;
+  s = submitSwipeUp(s, 't1');
+  eq(s.lives, livesBefore, 'armor.up.noFeatherLost');
+  eq(s.status, 'playing', 'armor.up.stillPlaying');
+  eq(s.streak, 0, 'armor.up.streakResets');
+  eq(s.chainMultiplier, 1, 'armor.up.backToSteady');
+  eq(s.combo, 0, 'armor.up.comboResets');
+  eq(s.fellOffSeverity, 3, 'armor.up.fellOffStillFires');
+  eq(s.mistakesOnWord, 1, 'armor.up.wordStillImperfect');
+  eq(s.armorAbsorbed, true, 'armor.up.flagSet');
+  eq(s.armorUsed, 1, 'armor.up.counted');
+  eq(isArmored(s), false, 'armor.up.spentUntilEarnedAgain');
+  s = consumeArmor(s);
+  eq(s.armorAbsorbed, false, 'armor.up.flagConsumed');
+  eq(s.armorUsed, 1, 'armor.up.countSurvivesConsume');
+}
+
+// A real meaning rejected (swipe down) while armored: same.
+{
+  let s = untrappable(fresh());
+  const livesBefore = s.lives;
+  s = submitSwipeDown(s, 'r1');
+  eq(s.lives, livesBefore, 'armor.down.noFeatherLost');
+  eq(s.mistakesOnWord, 1, 'armor.down.wordStillImperfect');
+  eq(s.armorUsed, 1, 'armor.down.counted');
+  eq(s.fellOffSeverity, 3, 'armor.down.fellOffStillFires');
+}
+
+// The generic wrong swipe: same.
+{
+  let s = untrappable(fresh());
+  const livesBefore = s.lives;
+  s = submitWrongSwipe(s);
+  eq(s.lives, livesBefore, 'armor.generic.noFeatherLost');
+  eq(s.armorUsed, 1, 'armor.generic.counted');
+}
+
+// Just below UNTRAPPABLE (streak 6 = 2.0x, RAZOR SHARP): a miss costs a feather as before.
+{
+  let s: GameState = { ...fresh(), streak: 6, chainMultiplier: chainMultiplierForStreak(6) };
+  eq(isArmored(s), false, 'armor.razorSharpIsNotArmored');
+  const livesBefore = s.lives;
+  s = submitSwipeUp(s, 't1');
+  eq(s.lives, livesBefore - 1, 'armor.razorSharp.losesFeather');
+  eq(s.armorUsed, 0, 'armor.razorSharp.notCounted');
+  eq(s.armorAbsorbed, false, 'armor.razorSharp.flagStaysOff');
+}
+
+// Armor comes back every time UNTRAPPABLE is reached again: no cap, no counter to spend.
+{
+  let s = fresh();
+  const livesBefore = s.lives;
+  for (let i = 1; i <= 3; i += 1) {
+    s = untrappable(s);
+    s = submitWrongSwipe(s);
+    eq(s.armorUsed, i, `armor.returns.absorbed${i}`);
+  }
+  eq(s.lives, livesBefore, 'armor.returns.noFeatherEverLost');
+  // ...and the next miss from STEADY (armor spent, chain gone) costs a feather.
+  s = submitWrongSwipe(s);
+  eq(s.lives, livesBefore - 1, 'armor.returns.unarmoredMissCosts');
+}
+
+// On the last feather: armor saves it, and Mercy is not spent on an absorbed miss.
+{
+  let s = untrappable({ ...fresh(3), lives: 1 });
+  s = submitSwipeUp(s, 't1');
+  eq(s.lives, 1, 'armor.lastFeather.kept');
+  eq(s.status, 'playing', 'armor.lastFeather.alive');
+  eq(s.mercyTriggered, false, 'armor.lastFeather.mercyNotTriggered');
+  eq(s.mercyReviveLives, 3, 'armor.lastFeather.mercyNotSpent');
+  eq(s.mercyUsed, 0, 'armor.lastFeather.mercyNotCounted');
+}
+
+// Works on the boss word (feathers still matter there until the gauntlet starts).
+{
+  let s = untrappable({ ...fresh(), stepIndex: 1, lives: 1 });
+  s = submitSwipeUp(s, 't1');
+  eq(s.status, 'playing', 'armor.bossWord.survives');
+  eq(s.bossOutcome, 'pending', 'armor.bossWord.notHaunted');
+  eq(s.lives, 1, 'armor.bossWord.featherKept');
+}
+
+// NOT in the gauntlet: feathers mean nothing there, so armor is off while it runs.
+{
+  const s: GameState = { ...untrappable({ ...fresh(), stepIndex: 1 }), gauntletActive: true };
+  eq(isArmored(s), false, 'armor.gauntlet.off');
+}
+
+// Saves from before armor existed carry no armor fields; the engine reads them as 0 / off.
+{
+  const legacy = { ...untrappable(fresh()) } as Partial<GameState>;
+  delete legacy.armorUsed;
+  delete legacy.armorAbsorbed;
+  const s = submitSwipeUp(legacy as GameState, 't1');
+  eq(s.armorUsed, 1, 'armor.legacySave.countsFromZero');
+  eq(s.armorAbsorbed, true, 'armor.legacySave.flagSet');
 }
 
 console.log('OK');

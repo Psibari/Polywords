@@ -17,6 +17,7 @@ import {
   consumeFeatherMilestone as consumeFeatherMilestoneFn,
   consumeFellOff as consumeFellOffFn,
   consumeMercy as consumeMercyFn,
+  consumeArmor as consumeArmorFn,
 } from '../game/polyRunEngine';
 import { createActiveGamePersistenceCoordinator } from '../game/activeGamePersistence';
 import { applyReturningHauntResolution } from '../game/returningHauntResolution';
@@ -326,6 +327,7 @@ type GameStore = {
   consumeFeatherMilestone: () => void;
   consumeFellOff: () => void;
   consumeMercy: () => void;
+  consumeArmor: () => void;
   queueFailedBoss: (step: FailedBossStep, failedPair?: HiddenPair) => void;
   reconcileHauntOutcome: (
     step: HauntReturnStep,
@@ -576,6 +578,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // honest default: it undercounts that one in-flight run's mercy
         // rather than inventing a number.
         mercyUsed: Number.isFinite(saved.mercyUsed) ? Math.max(0, saved.mercyUsed) : 0,
+        // Absent in saves written before armor existed. A resumed snapshot has no armor pop in
+        // flight, so false / 0 is correct (it undercounts that one run's absorbed misses).
+        armorAbsorbed: false,
+        armorUsed: Number.isFinite(saved.armorUsed) ? Math.max(0, saved.armorUsed) : 0,
         // Absent in saves written before this field existed. A resumed
         // snapshot is always 'playing' (see the status check above), so no
         // loss is active anyway — null is simply correct, not a guess.
@@ -785,6 +791,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   consumeMercy: () =>
     set((s) => ({ game: consumeMercyFn(s.game) })),
+
+  consumeArmor: () =>
+    set((s) => ({ game: consumeArmorFn(s.game) })),
 
   queueFailedBoss: (step, failedPair) => {
     if (step.eventType !== 'bossWord' || step.isHauntReturn === true) return;
