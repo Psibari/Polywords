@@ -13,7 +13,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { FONTS, FONT_SIZES } from '../constants/fonts';
 import { Haptics } from '../utils/haptics';
@@ -79,11 +78,7 @@ import {
 import { shouldReleaseOpeningDecision } from './boardDecisionReadiness';
 
 // ── Layout constants ──────────────────────────────────────────
-const TILE_GAP   = 6;
 const TILE_H     = 152;
-const FINAL_TILE_H = 72;
-const FINAL_TILE_GAP = 10;
-const TILE_INSET = 16;
 const MAX_DECK_BACKING_CARDS = 4;
 const DECK_BACKING_OFFSET = 9;
 

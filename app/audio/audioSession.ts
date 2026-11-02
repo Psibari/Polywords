@@ -38,7 +38,6 @@ export function ensureAudioSessionConfigured(): Promise<void> {
 
     audioSessionPromise = new Promise<void>(resolve => {
       let settled = false;
-      let timedOut = false;
       const finish = (message?: string, error?: unknown) => {
         if (settled) return;
         settled = true;
@@ -46,7 +45,6 @@ export function ensureAudioSessionConfigured(): Promise<void> {
         resolve();
       };
       const timeoutId = setTimeout(() => {
-        timedOut = true;
         finish(`setAudioModeAsync did not settle within ${CONFIGURE_TIMEOUT_MS}ms — continuing without confirmation.`);
       }, CONFIGURE_TIMEOUT_MS);
 

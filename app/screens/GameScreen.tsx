@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import UiIconButton from '../components/UiIconButton';
 import { HuntPauseMenu } from '../components/HuntPauseMenu';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { FONTS, FONT_SIZES } from '../constants/fonts';
+import { FONTS } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { currentStep } from '../game/polyRunEngine';
 import { resolveHuntHud, resolveLiveHuntControl, HuntReadTier } from '../game/huntControl';

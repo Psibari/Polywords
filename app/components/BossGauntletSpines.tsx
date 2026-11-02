@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Mask } from '../game/types';
 import { SwipeMask, SwipeMaskState } from './SwipeMask';
@@ -16,7 +15,6 @@ import { useReducedMotionPreference } from '../hooks/usePollyAmbientMotion';
 import { Haptics } from '../utils/haptics';
 import { PW } from '../ui/pwTheme';
 import { FONTS } from '../constants/fonts';
-import { heroBookMaterial } from '../ui/pwMaterials';
 import {
   releaseGauntletMeasuredHeight,
   resolveActiveTileHeight,
