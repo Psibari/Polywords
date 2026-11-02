@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import UiIconButton from '../components/UiIconButton';
 import { HuntPauseMenu } from '../components/HuntPauseMenu';
 import { useFocusEffect } from '@react-navigation/native';
@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { FONTS } from '../constants/fonts';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { currentStep } from '../game/polyRunEngine';
+import { chainMultiplierForStreak, currentStep, isArmored } from '../game/polyRunEngine';
 import { resolveHuntHud, resolveLiveHuntControl, HuntReadTier } from '../game/huntControl';
 import {
   fallWall,
@@ -165,6 +165,59 @@ const READ_TIER_RANK: Record<HuntReadTier, number> = {
   untrappable: 3,
 };
 
+// UNTRAPPABLE ARMOR FLIP (Pete, 2026-11-02): the whole top bar is a slab with
+// two faces. When the armor is on, the slab turns over on its long edge and the
+// back face shows UNTRAPPABLE, pulsing harder the longer the streak holds. A
+// wrong answer turns it back to the front. All timings and sizes are first
+// pass, NOT device-confirmed.
+const ARMOR_FLIP_IN_MS = 460;
+const ARMOR_FLIP_BACK_MS = 280;
+const ARMOR_FLIP_PERSPECTIVE = 900;
+const ARMOR_PULSE_PERIOD_MS = [520, 400, 300, 230]; // by level, 0..3
+const ARMOR_PULSE_SCALE = [1.02, 1.035, 1.05, 1.065];
+const ARMOR_JITTER_PX = [0.8, 1.4, 2.2, 3.0];
+const ARMOR_LEVEL_STREAK_STEP = 3; // level 0 at streak 9, then +1 every 3 words
+const ARMOR_BACK_BG = '#DDB44A';
+const ARMOR_BACK_FACE = '#FFD84D';
+const ARMOR_BACK_EXTRUDE = '#54404F';
+const ARMOR_WORD = 'UNTRAPPABLE';
+const ARMOR_WORD_CHAR_WIDTH_EM = 0.47; // Bebas Neue, rough advance per letter incl. spacing
+
+function ArmorWord({ width, height }: { width: number; height: number }) {
+  const fontSize = Math.max(
+    12,
+    Math.floor(Math.min(height / 1.0, width / (ARMOR_WORD.length * ARMOR_WORD_CHAR_WIDTH_EM))),
+  );
+  const depth = Math.max(2, Math.round(fontSize * 0.07));
+  const textStyle = {
+    fontFamily: FONTS.wordDisplay,
+    fontSize,
+    lineHeight: Math.round(fontSize * 1.02),
+    includeFontPadding: false,
+    letterSpacing: 1,
+    textAlign: 'center' as const,
+    width,
+  };
+  const copies = [];
+  for (let k = depth; k >= 1; k--) {
+    copies.push(
+      <Text
+        key={k}
+        numberOfLines={1}
+        style={[textStyle, { position: 'absolute', left: -k, top: k, color: ARMOR_BACK_EXTRUDE }]}
+      >
+        {ARMOR_WORD}
+      </Text>,
+    );
+  }
+  return (
+    <View style={{ width, height: textStyle.lineHeight + depth, paddingLeft: depth }}>
+      {copies}
+      <Text numberOfLines={1} style={[textStyle, { color: ARMOR_BACK_FACE }]}>{ARMOR_WORD}</Text>
+    </View>
+  );
+}
+
 // The run that already had its RAZOR SHARP startle. Module level so a TopBar
 // remount mid-run does not replay it.
 let lastRazorStartleRunSeed: string | number | null = null;
@@ -228,6 +281,18 @@ function TopBar({
   const fellOffDropY = useRef(new Animated.Value(0)).current;
   const fellOffFlashOpacity = useRef(new Animated.Value(0)).current;
   const [showFellOffText, setShowFellOffText] = useState(false);
+  // Armor flip: true exactly while the engine's armor is on (UNTRAPPABLE, not
+  // the gauntlet), so the back face never shows while a wrong answer would cost.
+  const armored = isArmored(game);
+  const armorLevel = armored
+    ? Math.max(0, Math.min(3, Math.floor((game.streak - 9) / ARMOR_LEVEL_STREAK_STEP)))
+    : 0;
+  const flip = useRef(new Animated.Value(armored ? 1 : 0)).current;
+  const armorPulse = useRef(new Animated.Value(0)).current;
+  const armorJitter = useRef(new Animated.Value(0)).current;
+  const armorSinceRef = useRef<number>(armored ? 0 : -1);
+  const [armorWordBox, setArmorWordBox] = useState({ w: 0, h: 0 });
+  const { width: windowWidth } = useWindowDimensions();
   const hudAccent = resolveMomentumAccent(hud).color;
   const rungLitCount = READ_TIER_RANK[hud.readTier] + 1;
   const rungLitColor = MOMENTUM_ACCENT_BY_TIER[hud.readTier];
@@ -239,6 +304,55 @@ function TopBar({
     inputRange: [0, 0.25, 1],
     outputRange: [0, 0.14, 0],
   });
+
+  useEffect(() => {
+    flip.stopAnimation();
+    if (armored) armorSinceRef.current = Date.now();
+    else armorSinceRef.current = -1;
+    if (!animateMotion) {
+      flip.setValue(armored ? 1 : 0);
+      return;
+    }
+    const flipAnimation = Animated.timing(flip, {
+      toValue: armored ? 1 : 0,
+      duration: armored ? ARMOR_FLIP_IN_MS : ARMOR_FLIP_BACK_MS,
+      easing: armored ? Easing.out(Easing.cubic) : Easing.out(Easing.back(1.4)),
+      useNativeDriver: true,
+    });
+    flipAnimation.start();
+    return () => flipAnimation.stop();
+  }, [armored, animateMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The back face pulses and vibrates once the flip has landed, harder by level.
+  useEffect(() => {
+    armorPulse.setValue(0);
+    armorJitter.setValue(0);
+    if (!armored || !animateMotion) return;
+    const sinceFlip = armorSinceRef.current > 0 ? Date.now() - armorSinceRef.current : ARMOR_FLIP_IN_MS;
+    const wait = Math.max(0, ARMOR_FLIP_IN_MS - sinceFlip);
+    const half = ARMOR_PULSE_PERIOD_MS[armorLevel] / 2;
+    const jitter = ARMOR_JITTER_PX[armorLevel];
+    const pulseLoop = Animated.sequence([
+      Animated.delay(wait),
+      Animated.loop(Animated.sequence([
+        Animated.timing(armorPulse, { toValue: 1, duration: half, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(armorPulse, { toValue: 0, duration: half, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ])),
+    ]);
+    const jitterLoop = Animated.sequence([
+      Animated.delay(wait),
+      Animated.loop(Animated.sequence([
+        Animated.timing(armorJitter, { toValue: jitter, duration: 45, useNativeDriver: true }),
+        Animated.timing(armorJitter, { toValue: -jitter, duration: 45, useNativeDriver: true }),
+      ])),
+    ]);
+    pulseLoop.start();
+    jitterLoop.start();
+    return () => {
+      pulseLoop.stop();
+      jitterLoop.stop();
+    };
+  }, [armored, armorLevel, animateMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (previousHudSignatureRef.current === hudSignature) return;
@@ -390,8 +504,64 @@ function TopBar({
     return () => animation.stop();
   }, [animateFlashes, animateMotion, fellOffSeverity]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const renderFeathers = (withTarget: boolean) => (
+      <Animated.View
+        ref={withTarget ? hudTargets?.feathers : undefined}
+        collapsable={false}
+        style={[tb.featherRow, featherRowPulse && {
+          backgroundColor: featherRowPulse.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: ['transparent', 'rgba(204,34,0,0.25)', 'transparent'],
+          }),
+          borderRadius: 8,
+          paddingHorizontal: 4,
+        }]}
+        accessible
+        accessibilityLabel={`${filledFeathers} feathers remaining`}
+      >
+        {Array.from({ length: MAX_FEATHERS }, (_, i) => (
+          <FeatherIcon key={i} filled={i < filledFeathers} inert={gauntletActive} />
+        ))}
+        {hasReserve && (
+          <View style={tb.reserveFeatherWrap}>
+            <View style={[tb.featherBlade, tb.featherBladeFilled, tb.reserveBlade]}>
+              <View style={[tb.featherHighlight, tb.featherHighlightFilled]} />
+            </View>
+            <View style={[tb.featherShaft, tb.featherShaftFilled, tb.reserveShaft]} />
+            <Text style={tb.reservePlus}>+</Text>
+          </View>
+        )}
+        {hasGoldFeather && (
+          <View
+            style={tb.goldFeatherWrap}
+            accessible
+            accessibilityLabel="Gold Feather free life available"
+          >
+            <Image
+              source={require('../../assets/ui/feather-gold-reward.png')}
+              style={tb.goldFeatherImg}
+              resizeMode="contain"
+            />
+          </View>
+        )}
+      </Animated.View>
+  );
+
+  const frontRot = flip.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+  const backRot = flip.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
+  const armorScale = armorPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, ARMOR_PULSE_SCALE[armorLevel]],
+  });
+
   return (
     <View style={tb.outerRow} {...a11yHiddenProps(a11yHidden)}>
+      <View style={tb.flipStage}>
+      <Animated.View
+        style={[tb.flipFace, { transform: [{ perspective: ARMOR_FLIP_PERSPECTIVE }, { rotateX: frontRot }] }]}
+        accessibilityElementsHidden={armored}
+        importantForAccessibility={armored ? 'no-hide-descendants' : 'auto'}
+      >
       <View style={tb.root}>
         <View style={tb.statsRow}>
           {/* Plain, untransformed wrapper: the spotlight measures this, not the
@@ -454,48 +624,41 @@ function TopBar({
             </Animated.View>
           </Animated.View>
           </View>
-          <Animated.View
-            ref={hudTargets?.feathers}
-            collapsable={false}
-            style={[tb.featherRow, featherRowPulse && {
-              backgroundColor: featherRowPulse.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: ['transparent', 'rgba(204,34,0,0.25)', 'transparent'],
-              }),
-              borderRadius: 8,
-              paddingHorizontal: 4,
-            }]}
-            accessible
-            accessibilityLabel={`${filledFeathers} feathers remaining`}
-          >
-            {Array.from({ length: MAX_FEATHERS }, (_, i) => (
-              <FeatherIcon key={i} filled={i < filledFeathers} inert={gauntletActive} />
-            ))}
-            {hasReserve && (
-              <View style={tb.reserveFeatherWrap}>
-                <View style={[tb.featherBlade, tb.featherBladeFilled, tb.reserveBlade]}>
-                  <View style={[tb.featherHighlight, tb.featherHighlightFilled]} />
-                </View>
-                <View style={[tb.featherShaft, tb.featherShaftFilled, tb.reserveShaft]} />
-                <Text style={tb.reservePlus}>+</Text>
-              </View>
-            )}
-            {hasGoldFeather && (
-              <View
-                style={tb.goldFeatherWrap}
-                accessible
-                accessibilityLabel="Gold Feather free life available"
-              >
-                <Image
-                  source={require('../../assets/ui/feather-gold-reward.png')}
-                  style={tb.goldFeatherImg}
-                  resizeMode="contain"
-                />
-              </View>
-            )}
-          </Animated.View>
+          {renderFeathers(true)}
         </View>
         <RoundChips current={current} total={total} targetRef={hudTargets?.rounds} />
+      </View>
+      </Animated.View>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          tb.flipFace,
+          tb.armorBack,
+          { transform: [{ perspective: ARMOR_FLIP_PERSPECTIVE }, { rotateX: backRot }] },
+        ]}
+        accessible={armored}
+        accessibilityLabel={`UNTRAPPABLE. ${filledFeathers} feathers remaining.`}
+        accessibilityElementsHidden={!armored}
+        importantForAccessibility={armored ? 'yes' : 'no-hide-descendants'}
+      >
+        <View style={tb.armorBackFeathers}>
+          <View style={tb.armorBackFeathersPlate}>{renderFeathers(false)}</View>
+        </View>
+        <View
+          style={tb.armorBackWord}
+          onLayout={e => {
+            const { width, height } = e.nativeEvent.layout;
+            setArmorWordBox(prev => (prev.w === width && prev.h === height ? prev : { w: width, h: height }));
+          }}
+        >
+          {armorWordBox.w > 0 && (
+            <Animated.View style={{ transform: [{ translateX: armorJitter }, { scale: armorScale }] }}>
+              <ArmorWord width={armorWordBox.w} height={armorWordBox.h} />
+            </Animated.View>
+          )}
+        </View>
+      </Animated.View>
       </View>
     </View>
   );
@@ -738,6 +901,38 @@ function FeatherIcon({ filled, inert }: { filled: boolean; inert?: boolean }) {
 }
 
 const tb = StyleSheet.create({
+  // The slab: front face (the normal bar) and back face (UNTRAPPABLE) share it.
+  flipStage: {
+    flex: 1,
+  },
+  flipFace: {
+    backfaceVisibility: 'hidden',
+  },
+  armorBack: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PW.color.goldDark,
+    backgroundColor: ARMOR_BACK_BG,
+    paddingHorizontal: PW.space.md,
+    paddingTop: 8,
+    paddingBottom: 8,
+    overflow: 'hidden',
+  },
+  armorBackFeathers: {
+    alignItems: 'flex-end',
+  },
+  // A dark plate so the feathers read against the gold face.
+  armorBackFeathersPlate: {
+    backgroundColor: 'rgba(11,9,32,0.88)',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  armorBackWord: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   // Pause used to live inside this row, eating ~42px (button + gap) from the
   // same row the feathers/gold-feather have to share. Moved to a floating
   // bottom-right button (see pauseBtn below) so the bar keeps that width —
@@ -1761,6 +1956,22 @@ function GameDirector({ navigation }: { navigation: any }) {
             style={styles.devBossButton}
           >
             <Text style={styles.devBossButtonText}>FALL 3</Text>
+          </Pressable>
+          {/* Dev tool: steps the streak 0 -> 9 -> 12 -> 15 -> 18 -> 0 so the UNTRAPPABLE flip and its four pulse levels can be seen without playing nine words. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Dev: step the streak to preview the UNTRAPPABLE flip"
+            onPress={() => {
+              const steps = [0, 9, 12, 15, 18];
+              const g = useGameStore.getState().game;
+              const next = steps[(steps.indexOf(g.streak) + 1) % steps.length] ?? 9;
+              useGameStore.setState({
+                game: { ...g, streak: next, chainMultiplier: chainMultiplierForStreak(next) },
+              });
+            }}
+            style={styles.devBossButton}
+          >
+            <Text style={styles.devBossButtonText}>ARMOR{'\n'}STEP</Text>
           </Pressable>
         </View>
       )}
