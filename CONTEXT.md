@@ -210,7 +210,7 @@ Hunt momentum feedback, open:
 - 2026-10-28 (pushed, `b08e120` and `7c299e6`): `StoneWall2.png` is the shared wall; new gauntlet
   stones and crowns are in; wall strain shake by tier works; new Hunt chime `correctClaimHunt` plays
   when the book accepts the card. See `CLAUDE.md` for details.
-- OPEN: the FELL OFF wall zoom is committed but not visible on device.
+- DONE 2026-11-02: the FELL OFF wall fall now works and Pete approved the look (see the 2026-11-02 entry).
 - OPEN, undecided (Pete): HUNTED soft-thud book entrance, card dealing speed by tier, a foreground
   jolt on reconnect. The gauntlet swipe-up chime still plays at release; the Daily's correct sound is
   not ruled on. A white box at the HUD top-left was seen once and not investigated. Check the full
@@ -371,3 +371,14 @@ untracked/local art without approval. No branch merges without Pete's approval.
 - Verification: `npx tsc --noEmit` clean; full `npm test` passed on Pete's machine.
 - Closed: the "Polly ANGRY SOUNDS" open item above is done (angry and startled pools).
 - Still open: source page URLs (with dates) for the Pixabay squawks, the four plaque sounds and the Higgsfield terms in `assets/audio/LICENSES.md`; the two original squawk files are not listed there yet.
+
+## 2026-11-02: FELL OFF wall fall, momentum armor rulings
+
+- Wall fall (see CLAUDE.md "FELL OFF wall fall"): background falls down a hole, crashes, a beat, then the camera (HUD, book, cards) falls and lands on top; all ends at rest. Fixes: the fall used to be cut short by a fixed 430 ms timer (every real fall reported `finished=false`); it now ends on animation completion. Hole look = stone rings + dim glow at the bottom + side haze, plus air streaks rushing up. Pete: "the visuals look good, keep as is."
+- Sounds are PLACEHOLDERS (existing cues). Pete: they do not fit; he will source two fall sounds (a whoosh for the wall, one for the camera) and two impact sounds (wall crash, camera landing). Swap the `WALL_FALL_SFX_*` constants in `wallShake.ts`; new files need `LICENSES.md` entries.
+- The old punch `streakBreakImpact` still plays at the moment of the break, on top of the first whoosh. Not ruled on.
+- Left in on purpose: the dev `FALL 3` button (`__DEV__` only) so the fall can be replayed while tuning sounds. Remove when Pete says.
+- Momentum ARMOR (Pete's rulings, NOT BUILT): once UNTRAPPABLE (streak >= 9, chain multiplier >= 2.5), the next wrong answer costs no feather. The word still counts as wrong, the streak resets to 0 and the tier falls to STEADY. Armor returns every time UNTRAPPABLE is reached again (no counter, no cap). It protects feathers only. It works on the boss word, not in the boss hidden-tile gauntlet. Higher survival is fine with Pete. Share line idea: `Best chain N - Armor xN` (armor part only when above 0). Armor HUD look and Polly's reaction are undecided: it should match the wall shake and music speed, and Polly should be affected.
+- Armor build, when started (separate prompts): (1) engine in `resolveLifeLoss`/the three wrong-swipe paths in `polyRunEngine.ts` with tests, modelled on Mercy, after confirming the gauntlet never calls `resolveLifeLoss`; (2) HUD, sound and Polly signal; (3) share line; (4) fix the stale SHARP HUD lesson text (pinned by `hudLessons.test.ts`) and add an armor line.
+- Squawk licences recorded in `assets/audio/LICENSES.md` (`2691480`).
+- Open: the quit warning in `PollyExitConfirm.tsx` still says "Your score and remaining feathers are lost" (there is no score); onboarding follow-up checks; Hunt pause button overlapping Polly's bubble; TestFlight splash build; Firefly long-laugh licence terms.

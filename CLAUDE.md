@@ -92,14 +92,26 @@ off). `WALL_STRAIN_AMP` [0, 0.6, 1.4, 2.4], `WALL_STRAIN_LOOP_MS` [0, 600, 420, 
 as `add(add(trembleX, kickX), strainX)`. `GraphicGround`'s edge bleed is sized from tremble + kick +
 strain max. The shake stops on FELL OFF because the tier resets.
 
-FELL OFF wall zoom (2026-10-28, BUILT BUT NOT VISIBLE ON DEVICE, unfinished): `fallWall(severity)`,
-`runWallFallAnimation()`, `resetWallFall()`, plain Animated values `wallFallScale` / `wallFallShade`.
-`GraphicGround` draws a `falling` overlay (a darkened, enlarged wall copy as the pit and a shrinking
-wall copy in front); `GameScreen` fires it from `game.fellOffSeverity`. Gauntlet and haunt wrong paths
-never set `fellOffSeverity`. Lessons: do not interpolate unattached/at-rest native values (the wall
-vanished when the real wall was scaled through an interpolation) and start native animations after
-the target view mounts. Debug lead: a deliberately loud test build, a JS-driven animation, and a log
-in the `subscribeWallFall` callback.
+FELL OFF wall fall (2026-11-02, works on device, Pete approved the look): on FELL OFF the background
+falls down a hole, crashes at the bottom and shakes, a beat, then the camera falls after it (HUD,
+book and cards) and lands on top. Everything ends at rest size and position; nothing eases back up.
+`fallWall(severity)`, `runWallFallAnimation()`, `resetWallFall()` in `wallShake.ts`; every timing,
+depth and sound number there is a labelled TEST VALUE (drop 300 ms, beat 220 ms, catch-up 260 ms,
+depth 0.25 / 0.4 / 0.55 by severity). The fall ends when its animation finishes
+(`WALL_FALL_SAFETY_MS` 1500 is only a safety net; a fixed timer used to cut every fall short).
+`GraphicGround` draws the overlay only while falling: a darkened 1.4x pit copy, edge bands, stone
+rings, a dim warm glow and side haze, two sets of air streaks, and the shrinking wall copy with a dark
+rim. The foreground wrapper in `GameDirector` takes `fgLandScale` / `fgLandY` for a landing squash.
+`GameScreen` fires it from `game.fellOffSeverity`; gauntlet and haunt wrong paths never set it.
+`warmWallFallSfx()` (in `sfx.ts`) preloads the four cues. SOUNDS ARE PLACEHOLDERS: `terraceWhooshCape`
+(wall fall, rate 1.5), `stoneLand1` (wall crash), `gauntletPick` (camera fall, rate 1.4),
+`polybookThud` (camera crash). Pete says they do not fit and is sourcing new fall and impact sounds;
+swap the four `WALL_FALL_SFX_*` constants (new files need `LICENSES.md` entries). A dev `FALL 3`
+button sits in the `__DEV__` overlay beside BOSS. Lessons: do not interpolate unattached/at-rest
+native values (the wall vanished when the real wall was scaled through an interpolation), start
+native animations after the target view mounts, and never end a native animation with a clock that
+can fire before it finishes. A second fall starting while one plays does not replay (needs two
+breaks within ~0.5 s; breaking resets the streak, so unlikely).
 
 `wallVeinPulse.ts` is still called on every correct answer (`MaskBoard` `pulseWallVeinsForCorrect`)
 but NOTHING DRAWS IT: `GraphicGround` has carried no glow layers since 2026-10-28 (Pete rejected the
