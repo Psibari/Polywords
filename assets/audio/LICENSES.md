@@ -115,12 +115,16 @@ heard any of them; Pete chose them by ear.
 ## Sound effects added 2026-11-02
 
 - `sfx/boulder_impact.mp3`: "Boulder Impact" by dragon-studio (downloaded as
-  `dragon-studio-boulder-impact-487673.mp3`). Pete supplied it for the FELL OFF camera landing (the camera, HUD and cards slam).
+  `dragon-studio-boulder-impact-487673.mp3`), Pixabay Content License. Pete supplied it for the FELL OFF
+  camera landing (the camera, HUD and cards slam).
+  https://pixabay.com/sound-effects/horror-boulder-impact-487673/
 - `sfx/hard_heavy_impact.mp3`: "Hard Heavy Impact" by dragon-studio (downloaded as
-  `dragon-studio-hard-heavy-impact-515256.mp3`). Pete supplied it for the FELL OFF background slam.
+  `dragon-studio-hard-heavy-impact-515256.mp3`), Pixabay Content License. Pete supplied it for the FELL OFF
+  background slam.
+  https://pixabay.com/sound-effects/film-special-effects-hard-heavy-impact-515256/
 
-Both are from Pixabay (Pete confirmed, 2026-11-02), so the Pixabay Content License applies. The source
-page URLs were not recorded; add them here (a web search could not find the pages).
+Page URLs supplied by Pete, 2026-11-02. They were not opened or checked by Claude (the pages could not be
+found by web search), so the licence is as Pete reported it.
 
 POLYWORDS edits: both files are renamed only. The decoded audio is identical to the downloads (checked by
 hash); the file bytes differ slightly (tag data), which does not change the sound.
