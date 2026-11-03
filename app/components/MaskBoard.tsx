@@ -510,7 +510,8 @@ export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: Outc
           <Text style={styles.outcomeCopy}>Polly's trap held.</Text>
           <Text style={styles.outcomeCopy}>It'll be waiting.</Text>
         </View>
-        {detail && <Text style={styles.hauntedDetail} numberOfLines={2}>{detail}</Text>}
+        {/* No detail line: it printed the trap's meaning, an answer key (Pete's rule: never display a
+            meaning, trap or hidden pair; the boss plaque already dropped it, 2026-10-29). */}
         <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>

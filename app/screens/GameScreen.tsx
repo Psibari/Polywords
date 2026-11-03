@@ -170,7 +170,7 @@ const READ_TIER_RANK: Record<HuntReadTier, number> = {
 // back face shows UNTRAPPABLE, pulsing harder the longer the streak holds. A
 // wrong answer turns it back to the front. All timings and sizes are first
 // pass, NOT device-confirmed.
-const ARMOR_FLIP_IN_MS = 460;
+const ARMOR_FLIP_IN_MS = 340;
 const ARMOR_FLIP_BACK_MS = 280;
 const ARMOR_FLIP_PERSPECTIVE = 900;
 const ARMOR_PULSE_PERIOD_MS = [520, 400, 300, 230]; // by level, 0..3
