@@ -945,8 +945,9 @@ const tb = StyleSheet.create({
     marginTop: 4,
     marginBottom: 0,
   },
+  // No flex: 1 here. Inside the flip slab this sits in a column, where flex: 1
+  // collapses the height to zero and clips the bar. Width comes from stretch.
   root: {
-    flex: 1,
     paddingHorizontal: PW.space.md,
     paddingTop: 14,
     paddingBottom: 15,
