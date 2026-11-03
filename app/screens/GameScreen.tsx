@@ -180,12 +180,25 @@ const ARMOR_SWEEP_PERIOD_MS = [1800, 1500, 1200, 950]; // light sweep across the
 const ARMOR_HOT_PEAK = [0.6, 0.7, 0.8, 0.9]; // how white the letters get at the pulse's peak
 const ARMOR_GOLD = '#F5C842';
 const ARMOR_LEVEL_STREAK_STEP = 3; // level 0 at streak 9, then +1 every 3 words
-// Same dark as the front of the bar (tb.root), gold letters with a glow (Pete, 2026-11-02).
+// Same dark as the front of the bar (tb.root). Mock-up D (Pete, 2026-11-03):
+// bone letters with a fine gold rim, replacing the flat yellow, which Pete
+// found too yellow. The rim is a TIGHT gold text shadow, not a second text
+// node: PlaqueText learned that layered copies separate into visible duplicate
+// words on device, which is the same reason the extrusion was dropped.
 const ARMOR_BACK_BG = 'rgba(11,9,32,0.95)';
-const ARMOR_BACK_FACE = '#FFE680';
-const ARMOR_BACK_GLOW = 'rgba(255,216,77,0.8)';
+const ARMOR_BACK_FACE = '#F2EBDA';
+const ARMOR_BACK_GLOW = 'rgba(201,162,75,0.95)';
+// Small enough to hug the letters as an edge rather than bloom as a glow; the
+// face's own breathing ring and inner glow carry the ambient light.
+const ARMOR_BACK_RIM_RADIUS = 7;
 const ARMOR_WORD = 'UNTRAPPABLE';
 const ARMOR_WORD_CHAR_WIDTH_EM = 0.47; // Bebas Neue, rough advance per letter incl. spacing
+// Headroom. The word used to be sized to fill its box exactly (height / 1.0),
+// which was fine when it had the face to itself: once the round chips took
+// their share below it, the word still filled whatever was left and sat flush
+// against them, with its rim spilling over the top of the chips. Sizing to a
+// fraction of the box leaves a gap that belongs to neither (Pete, 2026-11-03).
+const ARMOR_WORD_HEIGHT_FIT = 1.28;
 
 function ArmorWord({
   width,
@@ -200,7 +213,10 @@ function ArmorWord({
 }) {
   const fontSize = Math.max(
     12,
-    Math.floor(Math.min(height / 1.0, width / (ARMOR_WORD.length * ARMOR_WORD_CHAR_WIDTH_EM))),
+    Math.floor(Math.min(
+      height / ARMOR_WORD_HEIGHT_FIT,
+      width / (ARMOR_WORD.length * ARMOR_WORD_CHAR_WIDTH_EM),
+    )),
   );
   const textStyle = {
     fontFamily: FONTS.wordDisplay,
@@ -220,7 +236,7 @@ function ArmorWord({
           color: ARMOR_BACK_FACE,
           textShadowColor: ARMOR_BACK_GLOW,
           textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: 16,
+          textShadowRadius: ARMOR_BACK_RIM_RADIUS,
         }]}
       >
         {ARMOR_WORD}
@@ -751,6 +767,12 @@ function TopBar({
             </Animated.View>
           )}
         </View>
+        {/* Round progress on the back face (Pete, 2026-11-03). Without it the
+            flip hides which word you are on for as long as armor holds. NO
+            targetRef here: the front face owns the lesson target, and two
+            views must never share one RefObject (the later one to mount
+            overwrites .current and the spotlight measures the wrong box). */}
+        <RoundChips current={current} total={total} />
       </Animated.View>
       </View>
     </View>
@@ -1210,14 +1232,21 @@ const tb = StyleSheet.create({
   featherShaftFilled: {
     backgroundColor: 'rgba(123,45,139,0.70)',
   },
+  // A ten-round row has to fit INSIDE the bar's padding on both faces of the
+  // flip. At 375 pt the bar is 347 wide; less its 12 pt padding and 1 pt
+  // border each side, 319 pt is usable. The old 28 pt chips with 7 pt gaps
+  // measured 343 and overflowed by about 11 pt a side, clipped against the
+  // border on the front face too (unnoticed there only because that border is
+  // a dim line, while the armor face rings it in gold). 26 + 5 measures 305
+  // and leaves about 7 pt of air each side (Pete, 2026-11-03).
   chipsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 7,
+    gap: 5,
     marginTop: 10,
   },
   chip: {
-    width: 28,
+    width: 26,
     height: 26,
     borderRadius: 6,
     borderWidth: 1,
