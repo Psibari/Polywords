@@ -642,9 +642,6 @@ function TopBar({
         accessibilityElementsHidden={!armored}
         importantForAccessibility={armored ? 'yes' : 'no-hide-descendants'}
       >
-        <View style={tb.armorBackFeathers}>
-          <View style={tb.armorBackFeathersPlate}>{renderFeathers(false)}</View>
-        </View>
         <View
           style={tb.armorBackWord}
           onLayout={e => {
@@ -917,16 +914,6 @@ const tb = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
     overflow: 'hidden',
-  },
-  armorBackFeathers: {
-    alignItems: 'flex-end',
-  },
-  // A dark plate so the feathers read against the gold face.
-  armorBackFeathersPlate: {
-    backgroundColor: 'rgba(11,9,32,0.88)',
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
   },
   armorBackWord: {
     flex: 1,

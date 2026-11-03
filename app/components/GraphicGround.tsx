@@ -50,7 +50,7 @@ const RIM_DARK = 'rgba(10,5,20,0.85)';
 const RIM_REACH = '7%';
 // Hole look, a mix of three (Pete, 2026-11-02): stone RINGS stepping down the
 // shaft, a dim warm GLOW at the bottom where the wall lands, and pale HAZE
-// along the sides. TEST VALUES, tuned on device.
+// along the sides (now dark, see HAZE_EDGE). TEST VALUES, tuned on device.
 // Rings are insets (percent of the screen) in the pit's own coordinates; the
 // pit is drawn at 1.4x, so anything under ~15% is off-screen at rest.
 const PIT_RING_INSETS = [16, 22, 29, 37] as const;
@@ -59,8 +59,10 @@ const PIT_RING_LIT = 'rgba(205,195,225,0.22)';
 const PIT_RING_WIDTH = 3;
 const GLOW_COLOR = '#FFCF86';
 const GLOW_PEAK_OPACITY = 0.38;
-const HAZE_EDGE = 'rgba(190,180,215,0.26)';
-const HAZE_CLEAR = 'rgba(190,180,215,0)';
+// Dark, not pale (Pete, 2026-11-02): a pale haze made the falling wall's outline
+// stand out against the sides. TEST VALUES, tuned on device.
+const HAZE_EDGE = 'rgba(10,5,20,0.5)';
+const HAZE_CLEAR = 'rgba(10,5,20,0)';
 const HAZE_REACH = '24%';
 const HAZE_OUT_TO_IN = [HAZE_EDGE, HAZE_CLEAR] as const;
 const HAZE_IN_TO_OUT = [HAZE_CLEAR, HAZE_EDGE] as const;
