@@ -105,6 +105,16 @@ function hasMessage(messages, fragment) {
 }
 
 {
+  const lead = makeEntry('LEAD', 'panic', 1000);
+  lead.masks[0].id = 'lead_r4';
+  lead.masks[0].phrase = 'WHAT Pb STANDS FOR ON THE PERIODIC TABLE';
+  assert.equal(hasMessage(validateRuntimeHuntData({ LEAD: lead }).blockers, 'must be uppercase'), false);
+
+  lead.masks[0].id = 'lead_r99';
+  assert.ok(hasMessage(validateRuntimeHuntData({ LEAD: lead }).blockers, 'must be uppercase'));
+}
+
+{
   const bank = makeValidBank();
   bank.WORD0.masks[0].phrase = 'TODO PLACEHOLDER';
   assert.ok(hasMessage(validateRuntimeHuntData(bank).blockers, 'placeholder text'));
