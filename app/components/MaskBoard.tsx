@@ -409,12 +409,21 @@ export function MasteredOutcomeOverlay({ word, headline = 'MASTERED', onContinue
   );
 }
 
+// Returning Haunt loss: STILL drops onto the plaque (first-pass numbers, not device-confirmed).
+const HAUNT_STILL_DELAY_MS = 620;
+const HAUNT_STILL_LAND_MS = 240;
+const HAUNT_STILL_DROP_DISTANCE = 46;
+const HAUNT_STILL_FONT_SIZE = 44;
+
 export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: OutcomeOverlayProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.94)).current;
   const drift = useRef(new Animated.Value(0)).current;
   // Same dim-until-ready treatment as MasteredOutcomeOverlay — see its comment.
   const continueOpacity = useRef(new Animated.Value(0.35)).current;
+  // Returning Haunt only: STILL drops onto the plaque after it has settled (the BU-of-BUSTER move).
+  const stillY = useRef(new Animated.Value(-HAUNT_STILL_DROP_DISTANCE)).current;
+  const stillOpacity = useRef(new Animated.Value(0)).current;
   const resolvedRef = useRef(false);
   const reduceMotion = useReducedMotionPreference();
   const [canDismiss, setCanDismiss] = useState(false);
@@ -439,6 +448,36 @@ export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: Outc
     }
     Animated.timing(continueOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
   }, [canDismiss, reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (isBoss) return;
+    // `null` = preference not loaded yet; wait so the punch is not played twice.
+    if (reduceMotion === null) return;
+    function punch() {
+      const feedback = resolveRematchLossFeedback();
+      playSfx(feedback.sfx);
+      Haptics.cueAsync(feedback.hapticCue);
+    }
+    if (reduceMotion) {
+      stillY.setValue(0);
+      stillOpacity.setValue(1);
+      punch();
+      return;
+    }
+    const timer = setTimeout(() => {
+      punch();
+      Animated.parallel([
+        Animated.timing(stillOpacity, { toValue: 1, duration: 80, useNativeDriver: true }),
+        Animated.timing(stillY, {
+          toValue: 0,
+          duration: HAUNT_STILL_LAND_MS,
+          easing: Easing.out(Easing.back(1.35)),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, HAUNT_STILL_DELAY_MS);
+    return () => { clearTimeout(timer); stillY.stopAnimation(); stillOpacity.stopAnimation(); };
+  }, [reduceMotion, isBoss]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (reduceMotion !== false) {
@@ -494,16 +533,29 @@ export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: Outc
   }
 
   // Returning Haunt lost (Pete 2026-11-02, option A): the carved HAUNTED plaque, same art as the boss
-  // plaque, through the full scrim like BANISHED. The art already carries the word HAUNTED, so the
-  // returning-haunt meaning is a live STILL line above it. Headline and word only: no trap, no
-  // meaning, no Polly copy (rule: never display a meaning, trap or hidden pair).
+  // plaque, through the full scrim like BANISHED. The art already carries HAUNTED, so the
+  // returning-haunt meaning is STILL, carved in the same lettering as the word, which drops into the
+  // gap under HAUNTED after the plaque settles (like BU landing in BUSTER), with the punch.
+  // Headline and word only: no trap, no meaning, no Polly copy (rule: never display a meaning,
+  // trap or hidden pair).
   return (
     <Pressable style={styles.outcomeOverlay} onPress={handlePress}>
       <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
-        <Text style={styles.hauntedStillLabel} accessibilityElementsHidden importantForAccessibility="no">STILL</Text>
         <View style={[styles.plaqueFrame, styles.hauntedPlaqueFrame]}>
           <Image source={hauntedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: HAUNTED_PLAQUE_ASPECT }]} resizeMode="contain" />
-          <View pointerEvents="none" style={styles.hauntedPlaqueWordSlot}>
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.hauntedStillSlot, { opacity: stillOpacity, transform: [{ translateY: stillY }] }]}
+          >
+            <PlaqueText
+              text="STILL"
+              material="carvedStonePlaque"
+              fontSize={HAUNT_STILL_FONT_SIZE}
+              textStyle={styles.hauntedStillText}
+              adjustsFontSizeToFit={false}
+            />
+          </Animated.View>
+          <View pointerEvents="none" style={styles.hauntedStillWordSlot}>
             <PlaqueText
               text={word}
               material="carvedStonePlaque"
@@ -3205,20 +3257,17 @@ const styles = StyleSheet.create({
   banishedPlaqueWordSlot: {
     position: 'absolute', left: '15.9%', right: '13.2%', top: '51.5%',
   },
-  hauntedStillLabel: {
-    marginBottom: 10,
-    color: '#EEECFC',
-    fontFamily: FONTS.label,
-    includeFontPadding: false,
-    fontWeight: '900',
-    fontSize: 38,
-    letterSpacing: 8,
-    textAlign: 'center',
-    textShadowColor: 'rgba(168,85,247,0.85)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
+  // Returning Haunt loss: HAUNTED is baked into the art (ends ~39% down), so STILL sits in the gap
+  // under it and the word moves down from the boss plaque's 44.4% slot.
+  hauntedStillSlot: {
+    position: 'absolute', left: '14.3%', right: '14.5%', top: '40.5%',
   },
-
+  hauntedStillText: {
+    letterSpacing: 10,
+  },
+  hauntedStillWordSlot: {
+    position: 'absolute', left: '14.3%', right: '14.5%', top: '56%',
+  },
   hauntedPlaqueWordSlot: {
     position: 'absolute', left: '14.3%', right: '14.5%', top: '44.4%',
   },
