@@ -292,7 +292,11 @@ function TopBar({
   const fellOffShakeX = useRef(new Animated.Value(0)).current;
   const fellOffDropY = useRef(new Animated.Value(0)).current;
   const fellOffFlashOpacity = useRef(new Animated.Value(0)).current;
-  const [showFellOffText, setShowFellOffText] = useState(false);
+  const [showFellOffTextState, setShowFellOffText] = useState(false);
+  // fellOffSeverity is set in the same state update that resets the streak, but
+  // the state above is set in an effect, one frame later. Without this the new
+  // label (STEADY) painted for a frame before FELL OFF replaced it.
+  const showFellOffText = showFellOffTextState || fellOffSeverity !== null;
   // Armor flip: true exactly while the engine's armor is on (UNTRAPPABLE, not
   // the gauntlet), so the back face never shows while a wrong answer would cost.
   const armored = isArmored(game);
@@ -318,18 +322,13 @@ function TopBar({
     flip.stopAnimation();
     if (armored) armorSinceRef.current = Date.now();
     else armorSinceRef.current = -1;
-    // The thud when the bar lands on UNTRAPPABLE (Pete: an existing thud, the
-    // Polybook landing). Only on the way in, not on a remount mid-armor.
-    let thudTimer: ReturnType<typeof setTimeout> | null = null;
-    if (armored && !wasArmoredRef.current) {
-      thudTimer = setTimeout(() => playSfx('polybookThud'), animateMotion ? ARMOR_FLIP_IN_MS : 0);
-    }
+    // The power-up sound as the bar starts to turn over to UNTRAPPABLE (Pete: a
+    // power-up type sound, no thud). Only on the way in, not on a remount.
+    if (armored && !wasArmoredRef.current) playSfx('mysticalChime');
     wasArmoredRef.current = armored;
     if (!animateMotion) {
       flip.setValue(armored ? 1 : 0);
-      return () => {
-        if (thudTimer) clearTimeout(thudTimer);
-      };
+      return;
     }
     const flipAnimation = Animated.timing(flip, {
       toValue: armored ? 1 : 0,
@@ -338,10 +337,7 @@ function TopBar({
       useNativeDriver: true,
     });
     flipAnimation.start();
-    return () => {
-      flipAnimation.stop();
-      if (thudTimer) clearTimeout(thudTimer);
-    };
+    return () => flipAnimation.stop();
   }, [armored, animateMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The back face pulses and vibrates once the flip has landed, harder by level.
