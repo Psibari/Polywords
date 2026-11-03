@@ -398,3 +398,83 @@ untracked/local art without approval. No branch merges without Pete's approval.
 **2026-11-02 (end of session) — corrections and final state of the armor / haunt-loss work.** SUPERSEDES the flip numbers, the flip sound and the haunt-loss card in the entries above. (1) Flip in is 340 ms, not 460 (Pete: faster). (2) Flip sound is `armorFlipChime` (`assets/audio/sfx/armor_flip_chime.mp3`, volume 0.45, cooldown 1500), a shortened and quickened cut of `mystical_chime.mp3`; the 0.50 full-length chime was too long and lingered past the flip. Pete confirmed he hears it (2026-11-02, evening). The licence entry is in `assets/audio/LICENSES.md`. (3) RETURNING HAUNT LOSS CARD (Pete, locked "it looks good"): the old generic panel (HAUNTED / word / "Polly's trap held. It'll be waiting." / "Trap claimed: <meaning>") is gone. It printed the trap's meaning, an answer key (Pete's rule: never display a meaning, trap or hidden pair). Pete chose option A: the carved HAUNTED plaque through the full scrim, with STILL as live carved text in the gap under the baked HAUNTED, dropping in after the plaque settles with the BUSTER punch and haptic; the word sits lower on this card. First try (plain white STILL above the plaque) was rejected as plain. Details in CLAUDE.md. (4) Wall-fall haze is dark. Flashes are on the word only. HUNTED yields to the streak tier from SHARP up. A one-frame STEADY flash before FELL OFF is fixed. (5) Delegated cleanup of unused imports and constants is done (`a172f0d`); `BusterOutcomeOverlay`, `splitHauntedDetail`, `getResolvedTileState`, `playSystemStingerWord`, `hopBig`/`FLYING_POSES`, two unused test variables, and the unused haunted panel styles are left for Pete to decide. Commits this stretch, all pushed: `9dc33d4` to `509e230`. STILL OPEN: round chips on the armor back face, feather texture, share line (parked), stale SHARP lesson text ("CONSECUTIVE CORRECT CALLS BOOST YOUR SCORE." / "KEEP IT GOING TO REACH 3×.", pinned by `hudLessons.test.ts`), an armor lesson line, the quit warning in `PollyExitConfirm.tsx` ("Your score and remaining feathers are lost", there is no score), dev `FALL 3` and `ARMOR STEP` buttons to remove when Pete says, build-size warning (Pete brings the exact message), TestFlight splash build, Hunt pause button overlapping Polly's bubble.
 
 **NEXT SESSION, FIRST ITEM (Pete, 2026-11-02, end of session): DAILY CHALLENGE ONBOARDING.** The only explanation a player gets is the single entry card (DAILY #N / DAILY CHALLENGE / FIVE WORDS · TWO LIVES / "One word connects the clues. Swipe UP to claim it. This is your one attempt for today, and it begins when you enter." / BEGIN DAILY / NOT NOW). Pete: nothing explains that the three clues come in stages, how the Daily works, or how you get a feather, and "we totally forgot about that". Before designing, read the Daily code and these docs for the real rules (clue staging, feather award, Gold Feather, one attempt a day, midnight expiry); do not assume them. Then agree the format (first-run cards like the Hunt lessons, a better entry card, or in-play hints) and the wording with Pete; the wording is his to approve.
+
+## 2026-11-03: UNTRAPPABLE onboarding, armor back face, Daily findings
+
+Pushed: `5f8d0e4` (armor lesson, run-meter rewrite, flip turn sound) and `0173cce` (back face D,
+chips, row fit). Pete pushes from Git Bash; Claude has no credentials for this repo.
+
+**Standing ruling (Pete, 2026-11-03).** Nothing in POLYWORDS is permanently locked EXCEPT the swipe
+grammar — swipe up claims, swipe right rejects — which never changes. Everything else is open to
+debate because the game keeps evolving, including anything marked LOCKED in these docs. Claude
+should propose changes to locked items freely, saying that the item is marked locked and why it
+should move, and must never change one silently. Pete decides.
+
+**Done (all device-approved).** Fifth HUD lesson for armor; the run-meter lesson rewritten off the
+dead score line; streak-targeted lessons spotlight the slab while the bar is flipped; `REPLAY
+LESSONS` dev button; the flip turn sound under the chime; back face mock-up D (bone letters, gold
+rim); round chips on the back face; the chip row made to fit. Details in CLAUDE.md.
+
+**Regression caught on device and fixed the same session:** pointing `hudTargets.streak` at
+`momentumBarTargetRef` while armored put the SAME RefObject on two views; the inner one mounts last
+and overwrote `.current`, so the spotlight measured the small box for both lessons. Fixed by keeping
+`hudTargets` one-ref-per-view and giving HudLessonLayer a separate `hudLessonTargets` map. Rule:
+never alias two HUD target entries to one ref.
+
+**Device bridge note.** Every BINARY file written to Pete's disk through the bridge gains about
+5.8 KB of injected C2PA metadata (text files are unaffected). Both armor flip MP3s went to GitHub
+carrying it; decoded audio is unchanged. Not yet stripped. Strip binaries before committing, or
+accept the bloat knowingly — it matters for the pinned build-size item.
+
+### DAILY CHALLENGE — findings, nothing built
+
+Counted live 2026-11-03: **110 puzzles — 34 tier 1, 51 tier 2, 25 tier 3.** `DAILY_TIER_CURVE` is
+`[1,1,2,2,3]`, so a day burns two tier-1, two tier-2, one tier-3.
+
+1. **Content repeats after 17 days.** Tier 1 is the choke point (34 / 2). Tier 2 and 3 last 25 days.
+   The pool is a fixed shuffled rotation indexed by challenge number, so it cycles rather than
+   reshuffling. To reach 30 days needs about 40 more puzzles, mostly tier 1. Pete says Daily writing
+   is quick, so this is a to-do, not a wall. He does NOT author by tier and did not recall seeing a
+   tier scale; `docs/DAILY_CONTENT_WRITING_STANDARD.md` does not mention tiers. WHO assigned the
+   existing tiers, and against what definition, is UNRESOLVED — check before writing more.
+2. **Retry every 2 hours (Pete's idea) is blocked, twice.** `buildDailySession(dateString)` seeds
+   everything from the date alone, so a same-day retry serves the identical five words, cards and
+   order — a replay with the answers, which also defeats the bait writing. And more attempts walk
+   players into the 17-day repeat wall several times faster.
+3. **With all three clues the puzzle is deterministic.** Each distractor baits exactly one clue
+   (RACKET: SCAM/HUSTLE bait the scheme clue, DIN/CLATTER the noise clue, PADDLE the tennis clue);
+   only the answer fits all three. So guessing early carries risk and pays nothing, while waiting
+   carries no risk and costs nothing. Waiting strictly dominates. The CLUE SPEED grid on Results is
+   the only counterweight and it is cosmetic.
+4. **Feel-engine answer (not built), inside the existing rules.** (a) Tier the correct-claim
+   celebration by `revealedClueCount`, which the round already tracks: three clues keeps today's
+   presentation exactly, two is brighter, one gets the big castle hit, a startled Polly and a
+   heavier coin. (b) Make the clue arrival visibly Polly's move so taking help feels like conceding
+   — constrained by the spec rule that she must never cover the clues, blocks or UP lane. (c) The
+   dead four seconds between clues could carry a build; riskiest, as it can read as a timer when
+   nothing is actually running out. Pete has not chosen.
+
+### NEXT SESSION
+
+1. Daily Challenge onboarding. Pete's ruling: teach in play as each thing happens, Polly speaking on
+   all of them, with the clue clock frozen (`pausedRef` already proves this works). He then ruled
+   the ENTRY CARD must also properly explain how the Daily is played, especially that three clues
+   arrive in stages, rather than being trimmed. The six things a player is never told: clue staging
+   and that timed reveals cost no life; two lives across all five words; a wrong claim costs a life
+   AND kills that card AND pulls the next clue forward; UP only, no reject swipe; the Gold Feather
+   and its one Hunt revive, expiring the same day; the streak advancing on win or loss. The Hunt's
+   HudLessonLayer can NOT be reused wholesale — it is wired to Hunt lesson ids and to Polly flying
+   in, and on the Daily she is already perched. The pure spotlight geometry is reusable.
+2. Settle the clue-speed question first; it decides the onboarding copy.
+3. Freesound licence for `armor_flip_turn.mp3` into `assets/audio/LICENSES.md` (Pete has it).
+4. Strip the injected metadata from the two armor flip MP3s.
+5. A deliberate 10-ROUND test pass. All first-run testing uses the 8-round fledgling arc, so
+   anything that only breaks at ten rounds has been invisible (the chip overflow was one).
+6. Polly's "Trap. Trap. Trap." chant — Pete likes it and wants it used somewhere; no home chosen.
+   Candidates raised: the game-over laugh, or the Returning Haunt gloat. The armor-break moment was
+   ruled out as too crowded, and the armor-break Polly beat was dropped entirely: that moment
+   already carries FELL OFF, the wall fall, two impacts, the red flash, the big haptic, and her
+   wrong-swipe squawk already fires on every real chain break.
+7. Still open from before: Hunt pause button overlapping Polly's bubble; TestFlight splash build;
+   build-size warning (Pete brings the exact message); dev `FALL 3` / `ARMOR STEP` / `REPLAY
+   LESSONS` buttons to remove when Pete says.

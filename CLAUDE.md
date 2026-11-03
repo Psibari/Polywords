@@ -125,24 +125,40 @@ HUD; back = UNTRAPPABLE only. `tb.flipStage` holds a front `Animated.View` (`tb.
 0 to 180) around `tb.root` and an absolute back view (`tb.armorBack`, rotateX 180 to 360), with
 `backfaceVisibility: hidden`, perspective 900. Flip in 340 ms (`ARMOR_FLIP_IN_MS`, Pete asked for
 faster), back on a fall in 280 ms (`ARMOR_FLIP_BACK_MS`, back-ease). `tb.root` must NOT be `flex: 1`
-inside the slab (it collapsed the HUD; fixed). Back face = HUD dark `rgba(11,9,32,0.95)`, flat gold
-`ArmorWord` (`#FFE680`, glow), a white copy pulsing over it (white-hot), a breathing gold ring and
-inner glow, and a skewed light band sweeping across. Pulse, jitter, sweep speed and whiteness rise
+inside the slab (it collapsed the HUD; fixed). Back face = HUD dark `rgba(11,9,32,0.95)`, BONE
+`ArmorWord` (`ARMOR_BACK_FACE` `#F2EBDA`) with a tight gold rim (`ARMOR_BACK_GLOW`
+`rgba(201,162,75,0.95)` at `ARMOR_BACK_RIM_RADIUS` 7, a text shadow hugging the letters, not a
+bloom), a white copy pulsing over it (white-hot), a breathing gold ring and
+inner glow, and a skewed light band sweeping across. (2026-11-03, Pete's mock-up D: the earlier
+flat gold `#FFE680` at radius 16 was too yellow. The rim is a shadow and NOT a second text node,
+because PlaqueText and the dropped extrusion both showed layered copies separate into visible
+duplicate words on device.) Pulse, jitter, sweep speed and whiteness rise
 by level = clamp(floor((streak-9)/3), 0, 3) (streak 9, 12, 15, 18+); all in `ARMOR_*` constants.
-No feathers, no extrusion, no cracks (Pete rejected them; extrusion smeared on device). Reduce Motion:
+No feathers, no extrusion, no cracks (Pete rejected them; extrusion smeared on device). ROUND CHIPS
+DO draw on the back face (2026-11-03): without them the flip hid which word the player was on for as
+long as armor held. The back-face `RoundChips` takes NO `targetRef` — two views must never share one
+RefObject, or the later one to mount overwrites `.current` and the lesson spotlight measures the wrong
+box. `ARMOR_WORD_HEIGHT_FIT` 1.28 sizes the word to a fraction of its box instead of filling it, so it
+no longer sits flush against the chips with its rim spilling over them. Reduce Motion:
 no rotation or loops, instant swap. SOUND: `armorFlipChime` (`assets/audio/sfx/armor_flip_chime.mp3`,
 a shortened, quickened cut of `mystical_chime.mp3`, 1.03 s, volume 0.45, cooldown 1500), played as the
 flip starts, only on entering armor (not on remount, not on the way back; the wall fall covers the way
-back). `warmArmorFlipSfx()` preloads it. HUNTED vs streak: `resolveLiveHuntControl` shows HUNTED only
+back). SECOND CUE (2026-11-03): `armorFlipTurn` (`assets/audio/sfx/armor_flip_turn.mp3`, Pete's
+Freesound page-flip riffle, +8.5 dB applied to reach -14.8 LUFS, peak -0.3 dBFS, no compression,
+volume 0.58) fires at the same instant. The riffle runs 20-360 ms and covers the 340 ms turn; the
+chime only reads from about 340 ms and so lands as the slab settles. The chime is the SHINE, the
+riffle is the TURN. Before this the flip was silent and Pete heard the sound arrive after the slab
+had already landed. Licence for the riffle is NOT yet recorded in `LICENSES.md`.
+`warmArmorFlipSfx()` preloads both. HUNTED vs streak: `resolveLiveHuntControl` shows HUNTED only
 when `lives <= 1 && readTier === 'steady'`; from SHARP up the streak tier shows, and the wall, glow and
 shake follow the same resolver. FLASHES: tier-up and FELL OFF flash the WORD (white `Animated.Text`
 copies, `tb.controlLabelFlash`), not a box behind it. `showFellOffText` also follows
 `fellOffSeverity !== null` so no STEADY frame shows before FELL OFF. Wall fall haze (`GraphicGround`
 `HAZE_EDGE` `rgba(10,5,20,0.5)`) is dark so the pit edges blend. Dev button `ARMOR STEP` cycles the
 streak 0/9/12/15/18; `FALL 3` also stays. Tests: `huntControl.test.ts`, 'ARMOR' block in
-`polyRunEngine.test.ts`. OPEN: round chips on the back face (Pete wants to see first), feather
-texture, share line (parked; check `bestCombo` first), stale SHARP HUD lesson text and a new armor
-lesson line (need Pete's wording).
+`polyRunEngine.test.ts`. OPEN: feather texture on the back face, share line (parked; check
+`bestCombo` first). DONE 2026-11-03: round chips, the armor HUD lesson and the stale SHARP lesson
+text (see "First-Run Onboarding").
 
 `wallVeinPulse.ts` is still called on every correct answer (`MaskBoard` `pulseWallVeinsForCorrect`)
 but NOTHING DRAWS IT: `GraphicGround` has carried no glow layers since 2026-10-28 (Pete rejected the
@@ -225,6 +241,29 @@ Player-facing flow/copy: `docs/GAME_REFERENCE.md`.
 - Active Hunt state is authoritative. Resume reconciles only from committed decisions.
 - Direction limits flow through MaskBoard input mode to SwipeMask disabled state.
 - Settings replay re-runs only the FINE opening; it does not reset Boss/Haunt/HUD lesson gates.
+- ARMOR LESSON (2026-11-03): a fifth HUD lesson, `armor`, due the first time `isArmored(game)` is
+  true on an ordinary word. Armor is durable state, not a one-frame event, so a first UNTRAPPABLE
+  reached on Polly's Word or a Returning Haunt (where no lesson lands) simply waits for the next
+  ordinary word; no pending seed is needed. It spotlights a FOURTH `HudLessonTarget`, `momentumBar`
+  (the whole flip slab), because the run meter on the front face is turned away while armored.
+  GameScreen keeps two maps: `hudTargets` (one ref per view, given to TopBar) and
+  `hudLessonTargets` (given to HudLessonLayer, which swaps `streak` for `momentumBar` while
+  `isArmored`). Copy stands alone — a clean run can reach UNTRAPPABLE having never lost a feather,
+  so it says "a wrong call can't cost you a LIFE", not "feather". Polly is `rattled` and says
+  "I'll wait." `createHudLessonState` always returns `armor: false`, and `hydrateHudLessons` reads
+  `saved.armor === true`, so EXISTING saves are still taught it once: armor shipped later than every
+  save in the wild and must never inherit the established-player default. Telemetry:
+  `onboarding_hud_armor_completed`.
+- The run-meter (`multiplier`) lesson no longer promises a score or 3x, neither of which exists. It
+  now ends on "REACH UNTRAPPABLE AND POLLY CAN'T TOUCH YOUR FEATHERS", which the armor lesson pays
+  off. Exact copy for every lesson is pinned by `hudLessons.test.ts`.
+- DEV: a `REPLAY LESSONS` button (`__DEV__` only, beside BOSS / FALL 3 / ARMOR STEP) clears every HUD
+  lesson flag via `devReplayHudLessons` and sets the streak to 9, so the run-meter lesson lands first
+  and the armor lesson right after, without Settings > Reset Progress wiping real progress.
+- ROUND CHIPS geometry (2026-11-03): 26 pt wide, 5 pt gaps. A ten-round row measured 343 pt against
+  321 pt of usable bar width at 375 pt and overflowed about 11 pt a side, clipping on BOTH faces;
+  unnoticed because the front border is a dim line and first-run testing uses the 8-round fledgling
+  arc, where it fit. 26 + 5 measures 305. Still tight on a 320 pt screen.
 - HUD lessons teach feathers, momentum, broken run and Hunt progress only after the player lives
   the event. `HudLessonLayer.tsx` owns the spotlight and accessibility lock. Do not use
   `gameplayGateActive` for this because it unmounts gameplay.
