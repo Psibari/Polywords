@@ -87,8 +87,8 @@ bottom-anchored geometry (`LEDGE_ART_Y` 1349 for `StoneWall2.png`, 853x1844).
 Momentum strain (2026-10-28, works on device): `setWallStrain(tier)` / `resetWallStrain()` (separate
 from `resetWallShake()`, which the gauntlet calls) make the wall tremble harder and quicker as the
 streak tier rises. `GameScreen`'s `GameDirector` derives the tier from `resolveLiveHuntControl`
-`readTier` (sharp 1, razorSharp 2, untrappable 3; 0 for HUNTED, when not playing, or when motion is
-off). `WALL_STRAIN_AMP` [0, 0.6, 1.4, 2.4], `WALL_STRAIN_LOOP_MS` [0, 600, 420, 300]. Offsets compose
+`readTier` (sharp 1, razorSharp 2, untrappable 3; 0 for STEADY, for HUNTED, when not playing, or when
+motion is off; HUNTED only shows below SHARP, see the armor section). `WALL_STRAIN_AMP` [0, 0.6, 1.4, 2.4], `WALL_STRAIN_LOOP_MS` [0, 600, 420, 300]. Offsets compose
 as `add(add(trembleX, kickX), strainX)`. `GraphicGround`'s edge bleed is sized from tremble + kick +
 strain max. The shake stops on FELL OFF because the tier resets.
 
@@ -114,6 +114,35 @@ native values (the wall vanished when the real wall was scaled through an interp
 native animations after the target view mounts, and never end a native animation with a clock that
 can fire before it finishes. A second fall starting while one plays does not replay (needs two
 breaks within ~0.5 s; breaking resets the streak, so unlikely).
+
+UNTRAPPABLE armor (2026-11-02, works on device; Pete: "I like E a lot"). ENGINE: while `isArmored(game)`
+(`chainMultiplier >= 2.5`, i.e. streak >= 9, and not `gauntletActive`) a wrong swipe costs no feather
+(`resolveWrongSwipeLoss` in `polyRunEngine.ts`, checked before Mercy); the word still counts wrong,
+streak and chain reset, FELL OFF still fires (severity 3). State `armorAbsorbed` (UI flag, cleared by
+`consumeArmor`) and `armorUsed` (per-run count for a future share line). Works at any feather count.
+LOOK (`TopBar` in `GameScreen.tsx`): the whole top bar is a slab with two faces. Front = the normal
+HUD; back = UNTRAPPABLE only. `tb.flipStage` holds a front `Animated.View` (`tb.flipFace`, rotateX
+0 to 180) around `tb.root` and an absolute back view (`tb.armorBack`, rotateX 180 to 360), with
+`backfaceVisibility: hidden`, perspective 900. Flip in 340 ms (`ARMOR_FLIP_IN_MS`, Pete asked for
+faster), back on a fall in 280 ms (`ARMOR_FLIP_BACK_MS`, back-ease). `tb.root` must NOT be `flex: 1`
+inside the slab (it collapsed the HUD; fixed). Back face = HUD dark `rgba(11,9,32,0.95)`, flat gold
+`ArmorWord` (`#FFE680`, glow), a white copy pulsing over it (white-hot), a breathing gold ring and
+inner glow, and a skewed light band sweeping across. Pulse, jitter, sweep speed and whiteness rise
+by level = clamp(floor((streak-9)/3), 0, 3) (streak 9, 12, 15, 18+); all in `ARMOR_*` constants.
+No feathers, no extrusion, no cracks (Pete rejected them; extrusion smeared on device). Reduce Motion:
+no rotation or loops, instant swap. SOUND: `armorFlipChime` (`assets/audio/sfx/armor_flip_chime.mp3`,
+a shortened, quickened cut of `mystical_chime.mp3`, 1.03 s, volume 0.45, cooldown 1500), played as the
+flip starts, only on entering armor (not on remount, not on the way back; the wall fall covers the way
+back). `warmArmorFlipSfx()` preloads it. HUNTED vs streak: `resolveLiveHuntControl` shows HUNTED only
+when `lives <= 1 && readTier === 'steady'`; from SHARP up the streak tier shows, and the wall, glow and
+shake follow the same resolver. FLASHES: tier-up and FELL OFF flash the WORD (white `Animated.Text`
+copies, `tb.controlLabelFlash`), not a box behind it. `showFellOffText` also follows
+`fellOffSeverity !== null` so no STEADY frame shows before FELL OFF. Wall fall haze (`GraphicGround`
+`HAZE_EDGE` `rgba(10,5,20,0.5)`) is dark so the pit edges blend. Dev button `ARMOR STEP` cycles the
+streak 0/9/12/15/18; `FALL 3` also stays. Tests: `huntControl.test.ts`, 'ARMOR' block in
+`polyRunEngine.test.ts`. OPEN: round chips on the back face (Pete wants to see first), feather
+texture, share line (parked; check `bestCombo` first), stale SHARP HUD lesson text and a new armor
+lesson line (need Pete's wording).
 
 `wallVeinPulse.ts` is still called on every correct answer (`MaskBoard` `pulseWallVeinsForCorrect`)
 but NOTHING DRAWS IT: `GraphicGround` has carried no glow layers since 2026-10-28 (Pete rejected the
@@ -153,7 +182,8 @@ glow. Do not re-add any of them. `TorchGlow.tsx` stays (Settings uses it).
   `resolveMomentumAccent(hud)`, `momentumAccentColor(strength)`, `MOMENTUM_GLOW_HUNTED`,
   `momentumGlowColor(strength)`. No second colour table exists; GameScreen's `hudAccent` and rungs
   read it. STEADY `softWhite`, SHARP ice blue `#6EC3FF` (was lavender `#B98ADE`), RAZOR SHARP
-  `#B388FF`, UNTRAPPABLE gold `#F5C842`. HUNTED (lives <= 1) turns the HUD word `PW.color.rose`
+  `#B388FF`, UNTRAPPABLE gold `#F5C842`. HUNTED (lives <= 1 AND streak tier still STEADY; from SHARP up
+  the streak tier shows instead, 2026-11-02) turns the HUD word `PW.color.rose`
   `#9B2D6B`; the card glow and vein pulse use the lighter `#D9488F` instead. The four rungs follow
   the streak tier (`readTier`) even while HUNTED. Card glow, vein pulse and press haptic always
   match the HUD word's strength, HUNTED included.
@@ -244,7 +274,8 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
 
 ### Result plaques
 
-- Mastered, Banished and Haunted show ONLY the headline and the word. Removed: "Not one of Polly's
+- Mastered, Banished and Haunted show ONLY the headline and the word. (Returning Haunt LOSS adds one
+  live word, STILL; see below.) Removed: "Not one of Polly's
   traps. / You saw through it.", HAUNT BROKEN, and the Haunted missed phrase / TRAP CLAIMED lines
   (never show a meaning, trap or hidden pair: words recur, so it becomes an answer key).
 - The fixed headline is CARVED INTO THE ART ("lettered" plaques, 2026-10-30); only the round's word
@@ -256,6 +287,18 @@ MASTER'S REMATCH outcomes are device-approved and use the shared
   empty cleaned frames are kept: `mastered-result-plaque.png` is STILL USED by the rematch MASTER
   card; the empty haunted/banished frames are unreferenced. To change a headline, re-carve the art
   (the renderer is not in the repo); do not draw it as live text again.
+- Returning Haunt LOSS card (Pete, 2026-11-02, locked "it looks good"): the non-boss branch of
+  `HauntedOutcomeOverlay` (`MaskBoard.tsx`) reuses `haunted-result-plaque-lettered.png` through the
+  full scrim (`outcomeOverlay`, like BANISHED), not the boss `plaqueOverlay`. The art already says
+  HAUNTED, so STILL is live `PlaqueText` (`carvedStonePlaque`, 44, letter spacing 10) in the gap under
+  it (`hauntedStillSlot`, top 40.5%); the round's word sits lower than on the boss plaque
+  (`hauntedStillWordSlot`, top 56%, size 61). STILL drops in 46 px with an overshoot (240 ms,
+  `HAUNT_STILL_*` constants) 620 ms after the plaque appears, with the same punch + haptic as BU
+  landing in BUSTER (`resolveRematchLossFeedback`: `streakBreakImpact` + `fellOffSmall`). Reduce
+  Motion: STILL shows at once, punch still fires. The old generic panel ("Polly's trap held. It'll be
+  waiting.", "Trap claimed: ...") is gone; no trap or meaning text. The boss Haunted plaque is
+  unchanged. The in-round purple STILL HAUNTED stamp before the card is unchanged. Unused now:
+  `hauntedOutcomePanel`, `hauntedHaze`, `hauntedOutcomeHeadline` styles and `drift` in the overlay.
 - The live word must match the carved headline's ink; `carvedStonePlaque.face` is `#3E3A55`, measured
   from the baked headline. See `assets/images/results/README.md`.
 - Mastered card sound: `masteredFanfare` (after the transform; the book slam is unchanged). The old
