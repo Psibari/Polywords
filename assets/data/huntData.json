@@ -845,7 +845,7 @@
     "masks": [
       {
         "id": "bed_r0",
-        "phrase": "WHERE YOU HIT SNOOZE FIVE TIMES",
+        "phrase": "WHERE YOU’RE STILL LYING AFTER HITTING SNOOZE FIVE TIMES",
         "isReal": true
       },
       {
@@ -1012,7 +1012,7 @@
       },
       {
         "id": "berry_t0",
-        "phrase": "SEEDS SPIT OUT ONTO THE GRASS",
+        "phrase": "WHAT YOU DO WITH A TIME CAPSULE SO SOMEONE CAN DIG IT UP YEARS LATER",
         "isReal": false
       },
       {
@@ -1433,7 +1433,7 @@
       },
       {
         "id": "boil_t00",
-        "phrase": "HOW YOU KNOW THE WATER’S READY FOR TEA",
+        "phrase": "WHAT SOME KIDS DO WITH EGGS ON HALLOWEEN",
         "isReal": false
       },
       {
@@ -1742,7 +1742,7 @@
       },
       {
         "id": "bow_t0",
-        "phrase": "WHAT THE CAST DOES WHEN THE AUDIENCE YELLS “ENCORE”",
+        "phrase": "WHAT A TREE BRANCH IS CALLED WHEN IT’S BIG ENOUGH TO SIT ON",
         "isReal": false
       },
       {
@@ -1937,19 +1937,19 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
+        "id": "brief_h00",
         "real": "ANCHOR TEASES TONIGHT'S TOP STORY AT TEN",
-        "trap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK",
-        "id": "brief_h00"
+        "trap": "NINETY-MINUTE SPECIAL AIRS ONCE A WEEK"
       },
       {
+        "id": "brief_h01",
         "real": "A CLIENT’S BLUEPRINT FOR THE DESIGN TEAM TO FOLLOW",
-        "trap": "THE FINAL APPROVAL ON A PRODUCT PROTOTYPE",
-        "id": "brief_h01"
+        "trap": "THE FINAL APPROVAL ON A PRODUCT PROTOTYPE"
       },
       {
+        "id": "brief_h02",
         "real": "CUT TO THE CHASE VERSION",
-        "trap": "THE MORAL STORIES OF AESOP",
-        "id": "brief_h02"
+        "trap": "THE MORAL STORIES OF AESOP"
       }
     ],
     "masks": [
@@ -1981,11 +1981,6 @@
       {
         "id": "brief_t1",
         "phrase": "JUDGE READS THE VERDICT OUT LOUD",
-        "isReal": false
-      },
-      {
-        "id": "brief_t8",
-        "phrase": "LOOKS GOOD ON WOMEN, GIVES MEN A WEDGIE",
         "isReal": false
       },
       {
@@ -2122,7 +2117,7 @@
       },
       {
         "id": "bulb_r1",
-        "phrase": "THOMAS’S GREATEST INVENTION",
+        "phrase": "THE INVENTION THOMAS EDISON IS MOST FAMOUS FOR",
         "isReal": true
       },
       {
@@ -2673,7 +2668,7 @@
       },
       {
         "id": "cell_t0",
-        "phrase": "WHAT POWERS YOUR FLASHLIGHT DURING A BLACKOUT",
+        "phrase": "WHAT YOU LOOK THROUGH IN BIOLOGY CLASS TO SEE WHAT’S ON THE SLIDE",
         "isReal": false
       },
       {
@@ -2683,7 +2678,7 @@
       },
       {
         "id": "cell_t2",
-        "phrase": "THE TINY ORGANISM THAT MAKES YOU SICK",
+        "phrase": "WHAT SPREADS FROM PERSON TO PERSON WHEN THE FLU GOES AROUND",
         "isReal": false
       },
       {
@@ -3554,11 +3549,6 @@
         "isReal": false
       },
       {
-        "id": "click_t4",
-        "phrase": "WHAT CLAMPS A THICK STACK THE STAPLER CAN'T HANDLE",
-        "isReal": false
-      },
-      {
         "id": "click_t5",
         "phrase": "WHAT YOU FLIP TO TURN ON THE LIGHTS",
         "isReal": false
@@ -3674,11 +3664,6 @@
       {
         "id": "close_t1",
         "phrase": "WHAT YOU LOCK BEFORE LEAVING THE HOUSE",
-        "isReal": false
-      },
-      {
-        "id": "close_t2",
-        "phrase": "WHAT A PHOTOGRAPHER SAYS BEFORE TAKING THE PICTURE",
         "isReal": false
       },
       {
@@ -3997,7 +3982,7 @@
       },
       {
         "id": "company_t1",
-        "phrase": "THE GROUP OF ACTORS IN A PLAY",
+        "phrase": "WHAT YOU CALL A GROUP OF LAWYERS IN BUSINESS TOGETHER",
         "isReal": false
       },
       {
@@ -4126,11 +4111,6 @@
       {
         "id": "concentration_t7",
         "phrase": "DAYDREAMING OUT THE CLASSROOM WINDOW",
-        "isReal": false
-      },
-      {
-        "id": "concentration_t8",
-        "phrase": "A SHOT OF WHISKY, NEAT",
         "isReal": false
       }
     ],
@@ -4734,11 +4714,6 @@
         "isReal": false
       },
       {
-        "id": "counter_t03",
-        "phrase": "WHAT CLOCK HANDS MOVE AROUND",
-        "isReal": false
-      },
-      {
         "id": "counter_t04",
         "phrase": "WHAT FORMS WHEN EVERYONE HITS THE BUFFET AT ONCE",
         "isReal": false
@@ -4873,19 +4848,19 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
+        "id": "craft_h00",
         "real": "WHERE THE FOOD'S FREE ON A MOVIE SET",
-        "trap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS",
-        "id": "craft_h00"
+        "trap": "A HOMEMADE CONTRAPTION RIGGED FROM SPARE PARTS"
       },
       {
+        "id": "craft_h01",
         "real": "THE DRINK YOU PRETEND TASTES LIKE CITRUS, PINE, AND WHATEVER ELSE THEY SAID",
-        "trap": "WHAT YOU BUILT FOR THE SCIENCE FAIR",
-        "id": "craft_h01"
+        "trap": "WHAT YOU BUILT FOR THE SCIENCE FAIR"
       },
       {
+        "id": "craft_h02",
         "real": "HOW THE MASTERMIND PUTS THE PERFECT PLAN TOGETHER",
-        "trap": "WHEN YOU’RE NOT PREPARED AND HAVE TO WING IT",
-        "id": "craft_h02"
+        "trap": "WHEN YOU’RE NOT PREPARED AND HAVE TO WING IT"
       }
     ],
     "masks": [
@@ -4906,12 +4881,12 @@
       },
       {
         "id": "craft_t0",
-        "phrase": "HONEST AS THE DAY IS LONG, NO TRICKS",
+        "phrase": "THE CHARISMATIC WAY A CON ARTIST EARNS YOUR TRUST",
         "isReal": false
       },
       {
         "id": "craft_t1",
-        "phrase": "STRAIGHT SHOOTER, TELLS YOU EXACTLY WHAT HE THINKS",
+        "phrase": "THE NATURAL TALENT THAT MAKES SOMETHING LOOK EFFORTLESS",
         "isReal": false
       },
       {
@@ -5225,7 +5200,7 @@
       },
       {
         "id": "cue_t02",
-        "phrase": "WHAT A TRAFFIC LIGHT GIVES YOU TO GO",
+        "phrase": "WHAT THE CATCHER SHOWS THE PITCHER SO HE KNOWS WHAT TO THROW NEXT",
         "isReal": false
       },
       {
