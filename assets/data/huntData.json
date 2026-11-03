@@ -13787,5 +13787,733 @@
     ],
     "gpsTag": "boss",
     "wordType": "Septuple"
+  },
+  "FLOOR": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "hiddenPairs": [
+      {
+        "id": "floor_h00",
+        "real": "WHO ALL HEARD YOUR HOTEL ROOM PARTY AT TWO IN THE MORNING",
+        "trap": "THE HIGHEST PART OF A BUILDING WHERE YOU CAN STILL THROW A PARTY"
+      },
+      {
+        "id": "floor_h01",
+        "real": "WHERE A BASKET COUNTS FROM WHEN IT ISN’T A FREE THROW",
+        "trap": "WHAT YOUR CHIN HAS TO CLEAR FOR A FULL PULL-UP"
+      },
+      {
+        "id": "floor_h02",
+        "real": "WHERE THE PRICE GETS WHEN YOU CAN’T BARGAIN IT ANY LOWER",
+        "trap": "WHERE YOU ROLL THE BALL HOPING FOR A STRIKE AND NOT THE GUTTER"
+      }
+    ],
+    "masks": [
+      {
+        "id": "floor_r0",
+        "phrase": "WHAT THEY TELL YOU TO BE CAUTIOUS OF BECAUSE IT’S WET",
+        "isReal": true
+      },
+      {
+        "id": "floor_r1",
+        "phrase": "WHAT YOU’RE COUNTING WHEN YOU TAKE THE STAIRS UP A SKYSCRAPER",
+        "isReal": true
+      },
+      {
+        "id": "floor_r2",
+        "phrase": "WHERE ALL THE DEAD LEAVES END UP IN THE WOODS",
+        "isReal": true
+      },
+      {
+        "id": "floor_r3",
+        "phrase": "WHAT YOU HAVE FOR A LIMITED TIME WHEN YOU GET TO SPEAK AND EVERYONE ELSE HAS TO LISTEN",
+        "isReal": true
+      },
+      {
+        "id": "floor_r4",
+        "phrase": "THE CHAOTIC PLACE ON WALL STREET WHERE TRADES HAPPEN",
+        "isReal": true
+      },
+      {
+        "id": "floor_r5",
+        "phrase": "WHAT YOU DO TO THE GAS PEDAL WHEN YOU NEED EVERY BIT OF SPEED",
+        "isReal": true
+      },
+      {
+        "id": "floor_r6",
+        "phrase": "WHAT A PUNCH CAN DO TO YOU BEFORE THE REF STARTS COUNTING TO TEN",
+        "isReal": true
+      },
+      {
+        "id": "floor_r7",
+        "phrase": "WHAT REALLY GOOD OR REALLY BAD NEWS CAN DO TO YOU",
+        "isReal": true
+      },
+      {
+        "id": "floor_r8",
+        "phrase": "WHERE YOU GO WHEN THE MUSIC MAKES YOU WANT TO CUT A RUG",
+        "isReal": true
+      },
+      {
+        "id": "floor_t0",
+        "phrase": "WHAT A HOUSE NEEDS UNDER IT BEFORE THE FIRST WALL GOES UP",
+        "isReal": false
+      },
+      {
+        "id": "floor_t1",
+        "phrase": "WHAT SAILORS CALL THE SURFACE THEY WALK ON ABOARD A SHIP",
+        "isReal": false
+      },
+      {
+        "id": "floor_t2",
+        "phrase": "WHAT YOU SIT ON WHEN DOING YOGA",
+        "isReal": false
+      },
+      {
+        "id": "floor_t3",
+        "phrase": "WHERE SUPERMODELS WALK BACK AND FORTH SHOWING OFF THE CLOTHES",
+        "isReal": false
+      },
+      {
+        "id": "floor_t4",
+        "phrase": "WHAT YOU STAND ON WHILE WAITING FOR THE TRAIN TO ARRIVE",
+        "isReal": false
+      },
+      {
+        "id": "floor_t5",
+        "phrase": "WHAT YOU STEP ONTO WHEN YOU REACH THE TOP OF A FLIGHT OF STAIRS",
+        "isReal": false
+      },
+      {
+        "id": "floor_t6",
+        "phrase": "WHERE ACTORS PERFORM AFTER THE CURTAIN GOES UP",
+        "isReal": false
+      },
+      {
+        "id": "floor_t7",
+        "phrase": "WHAT YOU SCRAPED YOUR KNEES ON WHEN YOU FELL OFF YOUR BIKE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "boss",
+    "wordType": "9-MEANING"
+  },
+  "ISSUE": {
+    "difficulty": "hard",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "issue_r0",
+        "phrase": "WHAT SOMEONE SAYS THEY NEED TO WORK OUT BEFORE THEY’RE READY FOR ANOTHER RELATIONSHIP",
+        "isReal": true
+      },
+      {
+        "id": "issue_r1",
+        "phrase": "THE THING BOTH SIDES OF A DEBATE CAN’T AGREE ON",
+        "isReal": true
+      },
+      {
+        "id": "issue_r2",
+        "phrase": "WHAT #25 IS TO A COMIC COLLECTOR WHO ALREADY OWNS #24 AND #26",
+        "isReal": true
+      },
+      {
+        "id": "issue_r3",
+        "phrase": "WHAT THE GOVERNMENT DOES WITH YOUR PASSPORT ONCE YOUR APPLICATION IS APPROVED",
+        "isReal": true
+      },
+      {
+        "id": "issue_r4",
+        "phrase": "WHAT A COMPANY DOES WITH A STATEMENT AFTER YOUR DATA GETS BREACHED",
+        "isReal": true
+      },
+      {
+        "id": "issue_t0",
+        "phrase": "THE THIN PAPER YOU CRUMPLE INTO A GIFT BAG BEFORE ADDING THE PRESENT",
+        "isReal": false
+      },
+      {
+        "id": "issue_t1",
+        "phrase": "WHAT A CHARITY ASKS YOU TO SUPPORT WITH A DONATION",
+        "isReal": false
+      },
+      {
+        "id": "issue_t2",
+        "phrase": "THE ONE YOU BLAME FOR CAUSING THE WHOLE MESS",
+        "isReal": false
+      },
+      {
+        "id": "issue_t3",
+        "phrase": "WHAT SOMEONE HOLDS AGAINST YOU LONG AFTER THE ARGUMENT IS OVER",
+        "isReal": false
+      },
+      {
+        "id": "issue_t4",
+        "phrase": "WHAT’S WRITTEN IN BOLD ABOVE THE MAIN STORY ON THE FRONT PAGE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "panic",
+    "wordType": "Quintuple"
+  },
+  "JACK": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "jack_r0",
+        "phrase": "THE CHEAP TOOL IN YOUR TRUNK YOU DON’T REALLY TRUST TO HOLD THE CAR UP",
+        "isReal": true
+      },
+      {
+        "id": "jack_r1",
+        "phrase": "WHAT CAN BEAT A TEN BUT LOSES TO A LADY",
+        "isReal": true
+      },
+      {
+        "id": "jack_r2",
+        "phrase": "WHAT A LANDLINE PHONE HAS TO PLUG INTO ON THE WALL TO WORK",
+        "isReal": true
+      },
+      {
+        "id": "jack_r3",
+        "phrase": "THE CLOWN YOU CRANK UNTIL IT POPS OUT OF THE BOX",
+        "isReal": true
+      },
+      {
+        "id": "jack_r4",
+        "phrase": "WHAT A MALE DONKEY IS CALLED BEFORE “ASS” TURNS IT INTO AN INSULT",
+        "isReal": true
+      },
+      {
+        "id": "jack_r5",
+        "phrase": "THE KIDS’ GAME WHERE YOU BOUNCE A LITTLE BALL AND SCOOP UP METAL PIECES",
+        "isReal": true
+      },
+      {
+        "id": "jack_r6",
+        "phrase": "WHAT MONTEREY AND PEPPER HAVE IN COMMON AT THE CHEESE COUNTER",
+        "isReal": true
+      },
+      {
+        "id": "jack_r7",
+        "phrase": "THE PERSON THAT SOMEHOW KNOWS HOW TO DO EVERYTHING",
+        "isReal": true
+      },
+      {
+        "id": "jack_r8",
+        "phrase": "WHAT YOU KNOW ABOUT COOKING IF YOU BURN WATER",
+        "isReal": true
+      },
+      {
+        "id": "jack_r9",
+        "phrase": "WHAT THE LANDLORD DID TO THE RENT EVEN AFTER SAYING HE WOULDN’T",
+        "isReal": true
+      },
+      {
+        "id": "jack_t0",
+        "phrase": "THE GIRL WHO WENT UP THE HILL TO FETCH A PAIL OF WATER",
+        "isReal": false
+      },
+      {
+        "id": "jack_t1",
+        "phrase": "WHO LIVED AT THE TOP OF THE BEANSTALK",
+        "isReal": false
+      },
+      {
+        "id": "jack_t2",
+        "phrase": "WHAT ALL WORK AND NO PLAY IS SUPPOSED TO MAKE YOU",
+        "isReal": false
+      },
+      {
+        "id": "jack_t3",
+        "phrase": "WHAT YOU ZIP UP BEFORE HEADING OUT INTO THE COLD",
+        "isReal": false
+      },
+      {
+        "id": "jack_t4",
+        "phrase": "THE LAST NAME OF THE PIRATE CAPTAIN WITH THE COMPASS THAT DOESN’T POINT NORTH",
+        "isReal": false
+      },
+      {
+        "id": "jack_t5",
+        "phrase": "WHAT YOU PICK OUT AT THE PATCH BEFORE IT GETS A FACE CARVED INTO IT",
+        "isReal": false
+      },
+      {
+        "id": "jack_t6",
+        "phrase": "THE POCKET KNIFE WITH SCISSORS, A CORKSCREW, AND HALF A TOOLBOX FOLDED INSIDE",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "flow",
+    "wordType": "10-MEANING"
+  },
+  "KICK": {
+    "difficulty": "easy",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "kick_r0",
+        "phrase": "THE MOVE A BABY PRACTICES BEFORE BEING BORN",
+        "isReal": true
+      },
+      {
+        "id": "kick_r1",
+        "phrase": "WHAT YOU GET OUT OF SOMETHING THAT AMUSES YOU",
+        "isReal": true
+      },
+      {
+        "id": "kick_r2",
+        "phrase": "WHAT A FIRST-TIME SHOTGUN SHOOTER IS NEVER READY FOR",
+        "isReal": true
+      },
+      {
+        "id": "kick_r3",
+        "phrase": "WHAT YOU CAN DO IN KARATE BUT NOT BOXING",
+        "isReal": true
+      },
+      {
+        "id": "kick_r4",
+        "phrase": "WHAT THE ROCKETTES DO WITH THEIR LEGS IN PERFECT SYNC",
+        "isReal": true
+      },
+      {
+        "id": "kick_r5",
+        "phrase": "WHAT HAPPENS ON MOST FOURTH DOWN PLAYS",
+        "isReal": true
+      },
+      {
+        "id": "kick_r6",
+        "phrase": "WHAT THE MILD-LOOKING SALSA HAS AFTER THE FIRST BITE",
+        "isReal": true
+      },
+      {
+        "id": "kick_r7",
+        "phrase": "WHAT YOU THREATEN TO DO TO SOMEONE’S ASS RIGHT BEFORE A FIGHT",
+        "isReal": true
+      },
+      {
+        "id": "kick_r8",
+        "phrase": "WHAT A BOUNCER DOES TO YOU AFTER YOU START A FIGHT",
+        "isReal": true
+      },
+      {
+        "id": "kick_r9",
+        "phrase": "WHAT YOU’RE WAITING FOR A PAINKILLER TO FINALLY DO",
+        "isReal": true
+      },
+      {
+        "id": "kick_r10",
+        "phrase": "WHAT HAPPENS RIGHT AFTER THE COIN TOSS AT A FOOTBALL GAME",
+        "isReal": true
+      },
+      {
+        "id": "kick_r11",
+        "phrase": "WHAT YOU DO WITH YOUR FEET UP AFTER CLOCKING OUT FOR THE WEEKEND",
+        "isReal": true
+      },
+      {
+        "id": "kick_r12",
+        "phrase": "WHAT CAN KILL YOU WHILE A KANGAROO IS BALANCING ON ITS TAIL",
+        "isReal": true
+      },
+      {
+        "id": "kick_t0",
+        "phrase": "HOW YOU GET A DEAD CAR BATTERY GOING USING ANOTHER CAR",
+        "isReal": false
+      },
+      {
+        "id": "kick_t1",
+        "phrase": "WHAT A HORSE DOES WHEN IT’S TRYING TO THROW THE RIDER OFF",
+        "isReal": false
+      },
+      {
+        "id": "kick_t2",
+        "phrase": "HOW A KID MAKES A SWING GO HIGHER WITHOUT SOMEONE PUSHING",
+        "isReal": false
+      },
+      {
+        "id": "kick_t3",
+        "phrase": "WHAT A COWBOY DIGS INTO A HORSE’S SIDE TO MAKE IT MOVE",
+        "isReal": false
+      },
+      {
+        "id": "kick_t4",
+        "phrase": "THE BASIC SKATEBOARD TRICK EVERYBODY LEARNS FIRST",
+        "isReal": false
+      },
+      {
+        "id": "kick_t5",
+        "phrase": "WHAT A DRUMMER PRESSES WITH ONE FOOT TO MAKE THE BASS DRUM THUMP",
+        "isReal": false
+      },
+      {
+        "id": "kick_t6",
+        "phrase": "WHAT YOU DO WHEN STEALING SECOND AND THE BALL GETS THERE FIRST",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "confidence",
+    "wordType": "13-MEANING"
+  },
+  "KIND": {
+    "difficulty": "easy",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "kind_r0",
+        "phrase": "WHAT THE STRANGER WHO CHANGED YOUR TIRE FOR YOU WAS, EVEN IF HE WAS A JERK ABOUT IT",
+        "isReal": true
+      },
+      {
+        "id": "kind_r1",
+        "phrase": "WHAT YOU’RE ASKING ABOUT A DOG WHEN THE ANSWER IS “JUST A MUTT”",
+        "isReal": true
+      },
+      {
+        "id": "kind_r2",
+        "phrase": "WHAT TWO HOURS OF SUN WITHOUT SUNSCREEN DEFINITELY ISN’T TO YOUR SKIN",
+        "isReal": true
+      },
+      {
+        "id": "kind_r3",
+        "phrase": "WHAT YOU’RE DOING WHEN YOU GIVE SOMEONE A TASTE OF THEIR OWN MEDICINE",
+        "isReal": true
+      },
+      {
+        "id": "kind_r4",
+        "phrase": "WHAT YOU SAY ABOUT SOMETHING YOU WANT TO LIKE BUT REALLY DON’T",
+        "isReal": true
+      },
+      {
+        "id": "kind_r5",
+        "phrase": "HOW YOU DESCRIBE SOMETHING THEY ONLY MADE ONE OF",
+        "isReal": true
+      },
+      {
+        "id": "kind_t0",
+        "phrase": "WHAT YOU’RE BEING WHEN YOU SAY PLEASE AND THANK YOU TO SOMEONE YOU CAN’T STAND",
+        "isReal": false
+      },
+      {
+        "id": "kind_t1",
+        "phrase": "WHAT TWO EXES ARE TRYING TO KEEP THINGS WHEN THEY HAVE TO SEE EACH OTHER AT THEIR KID’S GAME",
+        "isReal": false
+      },
+      {
+        "id": "kind_t2",
+        "phrase": "WHAT THE PORTION SIZE WAS IF HALF YOUR DINNER WENT HOME IN A BOX",
+        "isReal": false
+      },
+      {
+        "id": "kind_t3",
+        "phrase": "WHAT SANTA’S LIST SAYS YOU’VE BEEN IF YOU WEREN’T NAUGHTY",
+        "isReal": false
+      },
+      {
+        "id": "kind_t4",
+        "phrase": "WHAT COMES AFTER “BEST” OR “WARM” AT THE END OF AN EMAIL",
+        "isReal": false
+      },
+      {
+        "id": "kind_t5",
+        "phrase": "WHAT YOUR COUSINS ARE WHETHER YOU LIKE THEM OR NOT",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "confidence",
+    "wordType": "Sextuple"
+  },
+  "LAP": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "lap_r0",
+        "phrase": "WHAT THE RUNNER IN FIRST IS DOING WHEN HE PASSES THE RUNNER IN LAST",
+        "isReal": true
+      },
+      {
+        "id": "lap_r1",
+        "phrase": "WHERE YOU’RE TOO OLD TO SIT IF YOU’RE OLD ENOUGH TO KNOW SANTA ISN’T REAL",
+        "isReal": true
+      },
+      {
+        "id": "lap_r2",
+        "phrase": "HOW A DOG DRINKS WATER WITHOUT EVER TAKING A SIP",
+        "isReal": true
+      },
+      {
+        "id": "lap_r3",
+        "phrase": "WHAT WAVES DO AGAINST THE SHORE THAT CAN PUT YOU TO SLEEP",
+        "isReal": true
+      },
+      {
+        "id": "lap_r4",
+        "phrase": "WHERE SOMEONE ELSE’S PROBLEM GETS THROWN WHEN THEY DECIDE IT’S YOURS",
+        "isReal": true
+      },
+      {
+        "id": "lap_r5",
+        "phrase": "WHAT THEY HAVE TO COMPLETE 200 OF TO FINISH THE INDY 500",
+        "isReal": true
+      },
+      {
+        "id": "lap_r6",
+        "phrase": "WHERE YOU LIVE YOUR LIFE IN A PLACE CALLED LUXURY",
+        "isReal": true
+      },
+      {
+        "id": "lap_t0",
+        "phrase": "WHAT YOU TUCK A NAPKIN INTO WHEN YOU DON’T WANT TO GET YOUR SHIRT DIRTY",
+        "isReal": false
+      },
+      {
+        "id": "lap_t1",
+        "phrase": "WHAT AN ELECTRIC CURRENT TRAVELS AROUND BEFORE COMING BACK TO WHERE IT STARTED",
+        "isReal": false
+      },
+      {
+        "id": "lap_t2",
+        "phrase": "WHAT THE HOUR, MINUTE, AND SECOND HANDS EACH COMPLETE, JUST AT DIFFERENT SPEEDS",
+        "isReal": false
+      },
+      {
+        "id": "lap_t3",
+        "phrase": "WHAT A ROLLERCOASTER HAS THREE OF WHEN IT TAKES YOU UPSIDE DOWN THREE TIMES",
+        "isReal": false
+      },
+      {
+        "id": "lap_t4",
+        "phrase": "WHAT YOU PULL UP TOWARD YOUR CHEST WHEN YOU CURL INTO THE FETAL POSITION",
+        "isReal": false
+      },
+      {
+        "id": "lap_t5",
+        "phrase": "WHAT YOUR WASHING MACHINE HAS TO FINISH BEFORE THE DOOR UNLOCKS",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "flow",
+    "wordType": "Septuple"
+  },
+  "LAST": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "last_r0",
+        "phrase": "THE PLACE YOU FINISH IN WHEN YOU COME TENTH OUT OF TEN",
+        "isReal": true
+      },
+      {
+        "id": "last_r1",
+        "phrase": "THE SLICE OF PIZZA EVERYONE IS TOO POLITE TO TAKE",
+        "isReal": true
+      },
+      {
+        "id": "last_r2",
+        "phrase": "THE NIGHT BEFORE TONIGHT",
+        "isReal": true
+      },
+      {
+        "id": "last_r3",
+        "phrase": "WHEN YOU GET PICKED IF NOBODY WANTS YOU ON THEIR TEAM",
+        "isReal": true
+      },
+      {
+        "id": "last_r4",
+        "phrase": "WHERE THE THING YOU REALLY DON’T WANT TO DO RANKS ON YOUR TO-DO LIST",
+        "isReal": true
+      },
+      {
+        "id": "last_r5",
+        "phrase": "WHAT NOTHING DOES FOREVER",
+        "isReal": true
+      },
+      {
+        "id": "last_r6",
+        "phrase": "WHAT THE EXPENSIVE VERSION IS SUPPOSED TO DO LONGER THAN THE CHEAP ONE",
+        "isReal": true
+      },
+      {
+        "id": "last_r7",
+        "phrase": "WHAT A SIX-MONTH SUPPLY SOMEHOW ONLY DID FOR THREE MONTHS",
+        "isReal": true
+      },
+      {
+        "id": "last_t0",
+        "phrase": "THE OPPOSITE OF THE BEGINNING",
+        "isReal": false
+      },
+      {
+        "id": "last_t1",
+        "phrase": "WHAT THE BIG EXAM AT THE END OF A SEMESTER IS CALLED",
+        "isReal": false
+      },
+      {
+        "id": "last_t2",
+        "phrase": "THE PART OF A MOVIE WHERE THE CREDITS START ROLLING",
+        "isReal": false
+      },
+      {
+        "id": "last_t3",
+        "phrase": "WHERE YOU RANK IF YOUR TEST SCORE FALLS IN THE FIRST PERCENTILE",
+        "isReal": false
+      },
+      {
+        "id": "last_t4",
+        "phrase": "WHAT YOU CALL THE NEWEST VERSION OF AN APP",
+        "isReal": false
+      },
+      {
+        "id": "last_t5",
+        "phrase": "WHERE THE INITIAL GOES WHEN YOU WRITE OUT YOUR FULL NAME",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "tension",
+    "wordType": "8-MEANING"
+  },
+  "LATCH": {
+    "difficulty": "easy",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "latch_r0",
+        "phrase": "THE THING YOU SHUT AT THE TOP OF A HOTEL ROOM DOOR BECAUSE YOU DON’T TRUST THE STAFF",
+        "isReal": true
+      },
+      {
+        "id": "latch_r1",
+        "phrase": "WHAT YOU DO TO A TACKLE BOX BEFORE PICKING IT UP BY THE HANDLE",
+        "isReal": true
+      },
+      {
+        "id": "latch_r2",
+        "phrase": "WHAT A LEECH DOES AS SOON AS IT FINDS BARE SKIN",
+        "isReal": true
+      },
+      {
+        "id": "latch_r3",
+        "phrase": "WHAT SOMEONE DOES TO A THEORY THE SECOND IT EXPLAINS WHAT THEY WANT TO BELIEVE",
+        "isReal": true
+      },
+      {
+        "id": "latch_r4",
+        "phrase": "WHAT THE PERSON YOU CAN’T SHAKE AT A PARTY DOES TO YOU ALL NIGHT",
+        "isReal": true
+      },
+      {
+        "id": "latch_t0",
+        "phrase": "WHAT A FIGHTER PILOT NEEDS TO DO TO A TARGET BEFORE FIRING A MISSILE",
+        "isReal": false
+      },
+      {
+        "id": "latch_t1",
+        "phrase": "WHAT HOLDS THE TWO ENDS OF A NECKLACE TOGETHER",
+        "isReal": false
+      },
+      {
+        "id": "latch_t2",
+        "phrase": "WHAT YOU DO TO A TRAILER BEFORE TOWING IT BEHIND A TRUCK",
+        "isReal": false
+      },
+      {
+        "id": "latch_t3",
+        "phrase": "WHAT A NEW SLANG WORD DOES ONCE EVERYBODY STARTS USING IT",
+        "isReal": false
+      },
+      {
+        "id": "latch_t4",
+        "phrase": "WHAT A VISE DOES TO A BOARD WHEN YOU TIGHTEN IT",
+        "isReal": false
+      },
+      {
+        "id": "latch_t5",
+        "phrase": "WHAT HOLDS THE BOTTOM OF A BABY’S ONESIE CLOSED",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "flow",
+    "wordType": "Quintuple"
+  },
+  "LAUNCH": {
+    "difficulty": "medium",
+    "hiddenMeaning": null,
+    "hiddenTrap": null,
+    "masks": [
+      {
+        "id": "launch_r0",
+        "phrase": "WHAT A CATAPULT DOES TO A PUMPKIN",
+        "isReal": true
+      },
+      {
+        "id": "launch_r1",
+        "phrase": "WHAT THE COUNTDOWN IS COUNTING DOWN TO AT CAPE CANAVERAL",
+        "isReal": true
+      },
+      {
+        "id": "launch_r2",
+        "phrase": "WHAT YOU DO TO A SHIP AFTER CHRISTENING IT WITH A CHAMPAGNE BOTTLE",
+        "isReal": true
+      },
+      {
+        "id": "launch_r3",
+        "phrase": "WHAT TWO HEAVIER PEOPLE CAN DO TO A LIGHTER PERSON ON A TRAMPOLINE",
+        "isReal": true
+      },
+      {
+        "id": "launch_r4",
+        "phrase": "WHAT A COMPANY DOES TO A PRODUCT THE DAY IT GOES FROM “COMING SOON” TO “BUY NOW”",
+        "isReal": true
+      },
+      {
+        "id": "launch_r5",
+        "phrase": "WHAT KNOWING THE RIGHT PEOPLE CAN DO FOR A SINGER’S CAREER THAT TALENT ALONE CAN’T",
+        "isReal": true
+      },
+      {
+        "id": "launch_r6",
+        "phrase": "WHAT DOUBLE-CLICKING A DESKTOP APP ICON DOES THAT A SINGLE CLICK DOESN’T",
+        "isReal": true
+      },
+      {
+        "id": "launch_t0",
+        "phrase": "WHAT A FIGHTER PILOT NEEDS TO DO WHEN THE JET CAN’T BE SAVED",
+        "isReal": false
+      },
+      {
+        "id": "launch_t1",
+        "phrase": "WHAT THE SPRING IN A TOASTER MAKES THE BREAD DO WHEN IT’S DONE",
+        "isReal": false
+      },
+      {
+        "id": "launch_t2",
+        "phrase": "WHAT A COMPUTER DOES AFTER YOU PRESS THE POWER BUTTON",
+        "isReal": false
+      },
+      {
+        "id": "launch_t3",
+        "phrase": "WHAT EVEL KNIEVEL FAILED TO DO ACROSS THE SNAKE RIVER CANYON",
+        "isReal": false
+      },
+      {
+        "id": "launch_t4",
+        "phrase": "WHAT A PRO SKATER CATCHES ABOVE A HALF-PIPE WHILE DOING A TRICK",
+        "isReal": false
+      }
+    ],
+    "gpsTag": "flow",
+    "wordType": "Septuple"
   }
 }
