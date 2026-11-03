@@ -10,8 +10,17 @@ const expectedMasks = {
     bridge_t91: 'WHAT LINKS TWO RAILROAD CARS SO THEY MOVE TOGETHER',
   },
   BRIEF: {
-    brief_t8: 'LOOKS GOOD ON WOMEN, GIVES MEN A WEDGIE',
     brief_t9: 'WHERE RECEIPTS, LIPSTICK, AND HER KEYS ALL DISAPPEAR',
+  },
+  BED: {
+    bed_r0: 'WHERE YOU’RE STILL LYING AFTER HITTING SNOOZE FIVE TIMES',
+  },
+  BULB: {
+    bulb_r1: 'THE INVENTION THOMAS EDISON IS MOST FAMOUS FOR',
+  },
+  GREEN: {
+    green_r1: 'HOW THE NEW GUY STILL IS ON HIS FIRST DAY',
+    green_r3: 'WHERE YOU FINALLY USE THE PUTTER INSTEAD OF AN IRON',
   },
   CAPE: {
     cape_t91: 'THE GRIM REAPER’S FASHION CHOICE IN BLACK',
@@ -89,6 +98,29 @@ const canonicalPhrases = new Set(
 );
 for (const phrase of forbiddenPhrases) {
   assert.equal(canonicalPhrases.has(phrase), false, `retired phrase must be absent: ${phrase}`);
+}
+
+const retiredMaskIds = [
+  'brief_t8',
+  'click_t4',
+  'close_t2',
+  'concentration_t8',
+  'counter_t03',
+  'die_t00',
+  'ground_t9',
+  'hold_t3',
+  'hollow_t8',
+  'hood_t0',
+  'kind_t6',
+  'plant_t1',
+  'round_t0',
+  'tire_t5',
+];
+const canonicalMaskIds = new Set(
+  Object.values(huntData).flatMap(entry => entry.masks.map(mask => mask.id)),
+);
+for (const id of retiredMaskIds) {
+  assert.equal(canonicalMaskIds.has(id), false, `retired mask ID must be absent: ${id}`);
 }
 
 assert.deepEqual(
