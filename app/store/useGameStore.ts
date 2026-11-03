@@ -85,6 +85,7 @@ import {
   ONBOARDING_VERSION,
   captureHudLessonEvents,
   completeHudLesson as markHudLessonComplete,
+  devResetHudLessons,
   createDefaultOnboardingState,
   dismissCompletedOnboardingHandoffOnResume,
   finishOnboardingHandoff as closeOnboardingHandoff,
@@ -226,6 +227,7 @@ const HUD_LESSON_COMPLETED_EVENTS: Record<HudLessonId, PlaytestEventName> = {
   multiplier: 'onboarding_hud_multiplier_completed',
   streakBreak: 'onboarding_hud_streak_break_completed',
   progress: 'onboarding_hud_progress_completed',
+  armor: 'onboarding_hud_armor_completed',
 };
 
 // A committed Hunt decision and any HUD lesson it just made due land in one
@@ -413,6 +415,8 @@ type GameStore = {
     responseMs: number,
   ) => void;
   completeHudLesson: (lesson: HudLessonId) => void;
+  /** DEV ONLY: replay the HUD lessons without wiping progress. */
+  devReplayHudLessons: () => void;
   finishOnboardingHandoff: () => void;
   requestOnboardingReplay: () => void;
   markOnboardingAbandoned: (surface: 'home' | 'hunt') => void;
@@ -1291,6 +1295,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let next = markHudLessonComplete(current, lesson);
     if (next === current) return;
     next = addOnboardingEvent(next, HUD_LESSON_COMPLETED_EVENTS[lesson]);
+    set({ onboarding: next });
+    persistOnboarding(next);
+  },
+
+  devReplayHudLessons: () => {
+    const next = devResetHudLessons(get().onboarding);
     set({ onboarding: next });
     persistOnboarding(next);
   },

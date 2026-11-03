@@ -19,6 +19,7 @@ export type PlaytestEventName =
   | 'onboarding_hud_multiplier_completed'
   | 'onboarding_hud_streak_break_completed'
   | 'onboarding_hud_progress_completed'
+  | 'onboarding_hud_armor_completed'
   | 'hunt_ambiguous_swipe'
   | 'hunt_hesitation'
   | 'hunt_complete'

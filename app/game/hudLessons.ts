@@ -3,7 +3,7 @@
 import type { HudLessonId } from './firstRunOnboarding';
 import type { VisitSpec } from './pollyVisitPolicy';
 
-export type HudLessonTarget = 'feathers' | 'streak' | 'rounds';
+export type HudLessonTarget = 'feathers' | 'streak' | 'rounds' | 'momentumBar';
 
 export type HudLessonContent = {
   target: HudLessonTarget;
@@ -35,8 +35,8 @@ export const HUD_LESSON_CONTENT: Record<HudLessonId, HudLessonContent> = {
     target: 'streak',
     lines: [
       'YOU’RE ON A RUN.',
-      'CONSECUTIVE CORRECT CALLS BOOST YOUR SCORE.',
-      'KEEP IT GOING TO REACH 3×.',
+      'THREE CORRECT CALLS MOVE YOU UP A TIER.',
+      'REACH UNTRAPPABLE AND POLLY CAN’T TOUCH YOUR FEATHERS.',
     ],
     continueLabel: 'CONTINUE',
     pollyLine: 'Try not to ruin it.',
@@ -62,6 +62,25 @@ export const HUD_LESSON_CONTENT: Record<HudLessonId, HudLessonContent> = {
     pollyLine: 'Assuming you make it that far.',
     pollyPose: 'smug',
     settleMs: 650,
+  },
+  // Armor (Pete, 2026-11-03). Written to stand alone: a clean run can reach
+  // UNTRAPPABLE without ever losing a feather, so the feather lesson may never
+  // have fired and this copy cannot assume it did. Polly is rattled here, not
+  // smug -- the player is beating her, and 'I’ll wait.' is the setup her
+  // first armor-break line pays off.
+  armor: {
+    target: 'momentumBar',
+    lines: [
+      'NINE CORRECT IN A ROW.',
+      'A WRONG CALL CAN’T COST YOU A LIFE WHILE THIS HOLDS.',
+      'IT STILL BREAKS YOUR RUN, AND THE SHIELD GOES WITH IT.',
+    ],
+    continueLabel: 'CONTINUE',
+    pollyLine: 'I’ll wait.',
+    pollyPose: 'rattled',
+    // The slab flips in 340 ms and the chime runs about a second: let
+    // UNTRAPPABLE land and pulse once before the panel takes the screen.
+    settleMs: 950,
   },
 };
 
@@ -219,6 +238,9 @@ export function hudTargetAccessibilityLabel(
     return `Feathers. ${hud.lives} ${hud.lives === 1 ? 'feather' : 'feathers'} remaining.`;
   }
   if (target === 'streak') return `Run meter. ${hud.streakLabel}.`;
+  if (target === 'momentumBar') {
+    return `Run meter. ${hud.streakLabel}. Your feathers are safe while this holds.`;
+  }
   return roundProgressAccessibilityLabel(hud.round, hud.totalRounds);
 }
 

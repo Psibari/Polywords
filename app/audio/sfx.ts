@@ -70,6 +70,7 @@ export type SfxName =
   // The UNTRAPPABLE armor flip's power-up swell (GameScreen.tsx). armor_flip_chime.mp3 is mystical_chime.mp3 cut to
   // its first 2 s and sped to 2x, so the swell peaks as the flip lands (the flip is 460 ms); see LICENSES.md.
   | 'armorFlipChime'
+  | 'armorFlipTurn'
   // The Polybook cage hitting the floor and breaking (Pete supplied it, 2026-10-23).
   | 'polybookCageCrash'
   // FELL OFF wall fall impacts (Pete supplied both, 2026-11-02). Pete's pairing: the hard heavy impact is
@@ -239,7 +240,16 @@ const SFX: Record<SfxName, SfxConfig> = {
   terraceWhooshCape: { source: require('../../assets/audio/sfx/terrace_whoosh_cape.mp3'), volume: 0.40, cooldownMs: 400 },
   terraceWhooshEpic: { source: require('../../assets/audio/sfx/terrace_whoosh_epic.mp3'), volume: 0.33, cooldownMs: 400 },
   // -12.6 LUFS, 1.03 s; 0.45 puts it about level with the fell-off punch (streakBreakImpact).
+  // This is the SHINE, not the flip: it swells slowly and only reads from about
+  // 340 ms, which is why it lands as the slab settles rather than as it turns.
   armorFlipChime: { source: require('../../assets/audio/sfx/armor_flip_chime.mp3'), volume: 0.45, cooldownMs: 1500 },
+  // The TURN itself (Pete's file, 2026-11-03). A paper riffle running 20-360 ms,
+  // so it covers the 340 ms flip and ends as the slab lands, with the chime
+  // blooming behind it. Source was -23.3 LUFS, far too quiet to read under the
+  // chime (the polybookThud mistake), so it carries +8.5 dB of straight gain:
+  // -14.8 LUFS, peak -0.3 dBFS, no compression. 0.58 puts it about level with
+  // the chime. Both are first guesses for Pete to judge by ear.
+  armorFlipTurn: { source: require('../../assets/audio/sfx/armor_flip_turn.mp3'), volume: 0.58, cooldownMs: 1500 },
   polybookThud: { source: require('../../assets/audio/sfx/polybook_thud.mp3'), volume: 0.50, cooldownMs: 400 },
   // Both source files run hot (decoded sample peak about +3.5 dB over full scale, loudest 100 ms about
   // 0 dBFS), so the volume is low: 0.22 is about -13 dBFS effective, next to masteredBookSlam (-12).
@@ -531,7 +541,7 @@ function warmSfx(names: readonly SfxName[]): void {
 
 /** Warms the power-up sound of the UNTRAPPABLE armor flip (GameScreen.tsx). */
 export function warmArmorFlipSfx(): void {
-  warmSfx(['armorFlipChime']);
+  warmSfx(['armorFlipChime', 'armorFlipTurn']);
 }
 
 /** Warms the four cues of the FELL OFF wall fall (wallShake.ts WALL_FALL_SFX_*). */

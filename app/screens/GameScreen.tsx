@@ -329,9 +329,15 @@ function TopBar({
     flip.stopAnimation();
     if (armored) armorSinceRef.current = Date.now();
     else armorSinceRef.current = -1;
-    // The power-up sound as the bar starts to turn over to UNTRAPPABLE (Pete: a
-    // power-up type sound, no thud). Only on the way in, not on a remount.
-    if (armored && !wasArmoredRef.current) playSfx('armorFlipChime');
+    // Two cues, both at the start of the turn (Pete, 2026-11-03): the riffle
+    // covers the 340 ms flip itself, and the chime swells behind it so the
+    // shine lands as the slab settles. Supersedes the earlier "no thud" note:
+    // the chime alone read as the sound arriving after the flip was over.
+    // Only on the way in, not on a remount, not on the way back.
+    if (armored && !wasArmoredRef.current) {
+      playSfx('armorFlipTurn');
+      playSfx('armorFlipChime');
+    }
     wasArmoredRef.current = armored;
     if (!animateMotion) {
       flip.setValue(armored ? 1 : 0);
@@ -592,7 +598,7 @@ function TopBar({
 
   return (
     <View style={tb.outerRow} {...a11yHiddenProps(a11yHidden)}>
-      <View style={tb.flipStage}>
+      <View ref={hudTargets?.momentumBar} collapsable={false} style={tb.flipStage}>
       <Animated.View
         style={[tb.flipFace, { transform: [{ perspective: ARMOR_FLIP_PERSPECTIVE }, { rotateX: frontRot }] }]}
         accessibilityElementsHidden={armored}
@@ -1576,11 +1582,33 @@ function GameDirector({ navigation }: { navigation: any }) {
   const featherTargetRef = useRef<View>(null);
   const streakTargetRef = useRef<View>(null);
   const roundsTargetRef = useRef<View>(null);
+  const momentumBarTargetRef = useRef<View>(null);
+  // The bar's own refs. Each ref belongs to exactly one view: never alias two
+  // entries to the same RefObject, or the later view to mount overwrites
+  // .current and the spotlight measures the wrong box.
   const hudTargets = useMemo<HudTargetRefs>(() => ({
     feathers: featherTargetRef,
     streak: streakTargetRef,
     rounds: roundsTargetRef,
+    momentumBar: momentumBarTargetRef,
   }), []);
+  // What the LESSON LAYER measures, which is not always what the bar renders.
+  // While armor holds, the top bar is flipped to the UNTRAPPABLE face and the
+  // run meter on the front face is turned away: a lesson spotlighting it
+  // highlights a slice of the back face and points the arrow at nothing. The
+  // slab IS the run meter in that moment. Remapping here (and not in
+  // hudTargets) keeps every ref attached to one view only.
+  // Reachable in real play: lessons never land on Polly's Word or a Returning
+  // Haunt, so a streak built through one can come out already armored with the
+  // run-meter lesson still owed. Feather and round-chip targets need no
+  // fallback: a real feather loss resets the streak (armor off), an
+  // armor-absorbed miss never makes the feather lesson due, and the round-chip
+  // lesson only fires in the first-run hand-off, far below nine.
+  const hudBarFlipped = isArmored(game);
+  const hudLessonTargets = useMemo<HudTargetRefs>(() => ({
+    ...hudTargets,
+    streak: hudBarFlipped ? momentumBarTargetRef : streakTargetRef,
+  }), [hudTargets, hudBarFlipped]);
   const [hudLessonShowing, setHudLessonShowing] = useState(false);
 
   const prevTensionRef = useRef(0);
@@ -1941,6 +1969,7 @@ function GameDirector({ navigation }: { navigation: any }) {
       feathers: hudTargetAccessibilityLabel('feathers', hud),
       streak: hudTargetAccessibilityLabel('streak', hud),
       rounds: hudTargetAccessibilityLabel('rounds', hud),
+      momentumBar: hudTargetAccessibilityLabel('momentumBar', hud),
     };
   }, [game]);
 
@@ -2072,6 +2101,24 @@ function GameDirector({ navigation }: { navigation: any }) {
           >
             <Text style={styles.devBossButtonText}>ARMOR{'\n'}STEP</Text>
           </Pressable>
+          {/* Dev tool (Pete, 2026-11-03): replays the HUD lessons without Settings >
+              Reset Progress. Clears every lesson flag and puts the streak at 9, so
+              the run-meter lesson lands first and the armor lesson right after it.
+              Only the lesson flags are cleared; real progress is untouched. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Dev: replay the HUD lessons from the run meter up"
+            onPress={() => {
+              useGameStore.getState().devReplayHudLessons();
+              const g = useGameStore.getState().game;
+              useGameStore.setState({
+                game: { ...g, streak: 9, chainMultiplier: chainMultiplierForStreak(9) },
+              });
+            }}
+            style={styles.devBossButton}
+          >
+            <Text style={styles.devBossButtonText}>REPLAY{'\n'}LESSONS</Text>
+          </Pressable>
         </View>
       )}
 
@@ -2100,7 +2147,7 @@ function GameDirector({ navigation }: { navigation: any }) {
 
       <HudLessonLayer
         lesson={pauseVisible || exitConfirmVisible ? null : hudLesson}
-        targets={hudTargets}
+        targets={hudLessonTargets}
         targetLabels={hudTargetLabels}
         onComplete={completeHudLesson}
         onShowingChange={setHudLessonShowing}

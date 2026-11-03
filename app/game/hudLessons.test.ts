@@ -91,7 +91,7 @@ const fresh = createDefaultOnboardingState();
 
 // ── Persistence defaults (no version bump) ──────────────────
 eq(ONBOARDING_VERSION, 1, 'HUD lessons ship without an onboarding version bump');
-for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress'] as const) {
+for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor'] as const) {
   eq(fresh.hudLessons[lesson], false, `fresh install: ${lesson} lesson pending`);
 }
 {
@@ -102,8 +102,16 @@ for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress'] as con
   for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress'] as const) {
     eq(hydratedVeteran.hudLessons[lesson], true, `an older save with core complete skips the ${lesson} lesson`);
   }
+  // Deliberate exception to the rule above: armor shipped 2026-11-02, later
+  // than every save in the wild, so an established player has never been
+  // taught it and must still get it once.
+  eq(
+    hydratedVeteran.hudLessons.armor,
+    false,
+    'an older save still gets the armor lesson: it is newer than the save',
+  );
   const legacyNewcomer = JSON.stringify({ ...fresh, hudLessons: undefined });
-  for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress'] as const) {
+  for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor'] as const) {
     eq(hydrateOnboardingState(legacyNewcomer).hudLessons[lesson], false, `an older mid-first-run save still gets the ${lesson} lesson`);
   }
   eq(hydrateOnboardingState(null, true).hudLessons.feather, true, 'the retired intro migrates as lessons learned');
@@ -194,7 +202,19 @@ for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress'] as con
   session = { ...session, onboarding: completeHudLesson(session.onboarding, 'multiplier') };
   for (let i = 0; i < 6; i += 1) session = decide(session, true);
   ok(session.game.chainMultiplier >= 2.5, 'the run climbs past 2.0× and 2.5×');
-  eq(resolveHudLesson(session.onboarding, session.game), null, '8: later tier-ups never replay the multiplier lesson');
+  eq(
+    resolveHudLesson(session.onboarding, session.game),
+    'armor',
+    '8: past 2.5× the armor lesson is due',
+  );
+  {
+    const taught = completeHudLesson(session.onboarding, 'armor');
+    eq(
+      resolveHudLesson(taught, session.game),
+      null,
+      '8b: with armor taught, later tier-ups replay no lesson',
+    );
+  }
 }
 {
   // Chain math is untouched: 3 per step, capped at 3.0×.
@@ -406,7 +426,7 @@ function fineOnboarding(mode: 'first-run' | 'replay' = 'first-run'): FirstRunOnb
 }
 
 // ── 21. Reduced Motion keeps every lesson whole ─────────────
-for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress'] as const) {
+for (const lesson of ['feather', 'multiplier', 'streakBreak', 'progress', 'armor'] as const) {
   const full = resolveHudLessonPresentation(lesson, false);
   const reduced = resolveHudLessonPresentation(lesson, true);
   eq(reduced.lines.join('|'), full.lines.join('|'), `21: ${lesson} keeps every line under Reduce Motion`);
@@ -429,7 +449,7 @@ eq(
 eq(HUD_LESSON_CONTENT.feather.pollyLine, 'And you lost to a bird.', 'feather Polly line');
 eq(
   HUD_LESSON_CONTENT.multiplier.lines.join(' / '),
-  'YOU’RE ON A RUN. / CONSECUTIVE CORRECT CALLS BOOST YOUR SCORE. / KEEP IT GOING TO REACH 3×.',
+  'YOU’RE ON A RUN. / THREE CORRECT CALLS MOVE YOU UP A TIER. / REACH UNTRAPPABLE AND POLLY CAN’T TOUCH YOUR FEATHERS.',
   'multiplier copy',
 );
 eq(HUD_LESSON_CONTENT.multiplier.pollyLine, 'Try not to ruin it.', 'multiplier Polly line');
@@ -449,6 +469,13 @@ eq(HUD_LESSON_CONTENT.feather.target, 'feathers', 'feather lesson points at the 
 eq(HUD_LESSON_CONTENT.multiplier.target, 'streak', 'multiplier lesson points at the run meter');
 eq(HUD_LESSON_CONTENT.streakBreak.target, 'streak', 'reinforcement points at the run meter');
 eq(HUD_LESSON_CONTENT.progress.target, 'rounds', 'progress lesson points at the round markers');
+eq(
+  HUD_LESSON_CONTENT.armor.lines.join(' / '),
+  'NINE CORRECT IN A ROW. / A WRONG CALL CAN’T COST YOU A LIFE WHILE THIS HOLDS. / IT STILL BREAKS YOUR RUN, AND THE SHIELD GOES WITH IT.',
+  'armor copy',
+);
+eq(HUD_LESSON_CONTENT.armor.pollyLine, 'I’ll wait.', 'armor Polly line');
+eq(HUD_LESSON_CONTENT.armor.pollyPose, 'rattled', 'Polly is rattled by armor, not smug');
 
 // ── 22. Spotlighted HUD targets have real labels ────────────
 eq(
@@ -508,6 +535,59 @@ for (const width of [320, 375, 390, 393, 402, 430, 440]) {
   eq(g.placement, 'above', 'a low target gets the panel above it');
   ok(g.arrow.tipY <= g.hole.y, 'the arrow points down at a low target');
   eq(g.panel.bottom, layer.height - g.arrow.baseY, 'the panel sits on the arrow from above');
+}
+
+// ── Armor lesson (Pete, 2026-11-03) ──────────────────────
+{
+  const taughtBasics = withLessons(fresh, { feather: true, multiplier: true, streakBreak: true });
+  const untrappable = (over: Partial<GameState> = {}): GameState => ({
+    ...freshGame(), chainMultiplier: 2.5, streak: 9, ...over,
+  });
+
+  eq(
+    resolveHudLesson(taughtBasics, untrappable()),
+    'armor',
+    'armor is due the first time UNTRAPPABLE holds on an ordinary word',
+  );
+  eq(
+    resolveHudLesson(taughtBasics, untrappable({ chainMultiplier: 2.0, streak: 6 })),
+    null,
+    'RAZOR SHARP is not far enough: no armor lesson below 2.5×',
+  );
+  // Armor does not exist in the gauntlet, so neither does its lesson.
+  eq(
+    resolveHudLesson(taughtBasics, untrappable({ gauntletActive: true })),
+    null,
+    'the gauntlet never makes the armor lesson due',
+  );
+  // Boss and Haunt own their choreography: the lesson waits, it is not lost.
+  eq(
+    resolveHudLesson(taughtBasics, untrappable({ stepIndex: bossIndex })),
+    null,
+    'UNTRAPPABLE first reached on the boss word waits for an ordinary word',
+  );
+  eq(
+    resolveHudLesson(withLessons(taughtBasics, { armor: true }), untrappable()),
+    null,
+    'armor is taught once and never replays',
+  );
+  // The feather lesson is not a prerequisite: a clean run can reach
+  // UNTRAPPABLE having never lost one, which is why the copy stands alone.
+  eq(
+    resolveHudLesson(withLessons(fresh, { multiplier: true }), untrappable()),
+    'armor',
+    'armor still teaches on a run that never lost a feather',
+  );
+  eq(
+    resolveOnboardingInputMode(taughtBasics, untrappable()),
+    'locked',
+    'the armor lesson locks the next decision',
+  );
+  eq(HUD_LESSON_CONTENT.armor.target, 'momentumBar', 'armor spotlights the flipped momentum bar');
+  ok(
+    !HUD_LESSON_CONTENT.multiplier.lines.some(line => /SCORE|3×/.test(line)),
+    'the run-meter lesson no longer promises a score or 3×',
+  );
 }
 
 console.log('hudLessons tests passed');

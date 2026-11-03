@@ -1,3 +1,4 @@
+import { isArmored } from './polyRunEngine';
 import type { GameState } from './polyRunEngine';
 
 // Bumping this resets every saved onboarding state (see hydrateOnboardingState),
@@ -64,13 +65,14 @@ export type ActiveOnboardingRun = {
 // They are global and monotonic: a lesson flag only ever goes false → true,
 // and it lives outside activeRun because activeRun is cleared at the FINE
 // hand-off while later lessons can land on any later ordinary word.
-export type HudLessonId = 'feather' | 'multiplier' | 'streakBreak' | 'progress';
+export type HudLessonId = 'feather' | 'multiplier' | 'streakBreak' | 'progress' | 'armor';
 
 export type HudLessonState = {
   feather: boolean;
   multiplier: boolean;
   streakBreak: boolean;
   progress: boolean;
+  armor: boolean;
   // Feather and streak-break are events, not durable Hunt state, so the store
   // captures them when the wrong call lands. Keyed by the Hunt's runSeed so a
   // pending lesson never leaks into a different Hunt.
@@ -101,6 +103,9 @@ function createHudLessonState(completed: boolean): HudLessonState {
     multiplier: completed,
     streakBreak: completed,
     progress: completed,
+    // Armor is newer than every existing save, so nobody has been taught it.
+    // It never inherits the established-player default.
+    armor: false,
     featherPendingRunSeed: null,
     streakBreakPendingRunSeed: null,
   };
@@ -134,6 +139,9 @@ function hydrateHudLessons(value: unknown, coreCompleted: boolean): HudLessonSta
     multiplier: saved.multiplier === true,
     streakBreak: saved.streakBreak === true,
     progress: saved.progress === true,
+    // Absent in every save written before 2026-11-03, which is the point: it
+    // hydrates false so existing players still get taught armor once.
+    armor: saved.armor === true,
     featherPendingRunSeed: hydratePendingSeed(saved.featherPendingRunSeed),
     streakBreakPendingRunSeed: hydratePendingSeed(saved.streakBreakPendingRunSeed),
   };
@@ -398,6 +406,11 @@ export function resolveHudLesson(
     ) {
       return 'streakBreak';
     }
+    // Armor is durable state, not a one-frame event: the lesson is due for as
+    // long as UNTRAPPABLE holds on an ordinary word. So a first UNTRAPPABLE
+    // reached on Polly's Word or a Returning Haunt (where no lesson lands)
+    // just waits for the next one instead of needing a pending seed.
+    if (!lessons.armor && isArmored(game)) return 'armor';
   }
   if (!lessons.progress && isOnboardingHandoffOpen(state, game)) return 'progress';
   return null;
@@ -434,6 +447,14 @@ export function captureHudLessonEvents(
     hudLessons = { ...hudLessons, streakBreakPendingRunSeed: next.runSeed };
   }
   return hudLessons === lessons ? state : { ...state, hudLessons };
+}
+
+// DEV ONLY (Pete, 2026-11-03): clears every HUD lesson flag so the lessons can
+// be replayed without Settings > Reset Progress wiping real progress. Touches
+// nothing but the lesson flags; Home, core onboarding and the active run are
+// untouched. Never called outside __DEV__.
+export function devResetHudLessons(state: FirstRunOnboardingState): FirstRunOnboardingState {
+  return { ...state, hudLessons: createHudLessonState(false) };
 }
 
 // Marks a lesson finished once its explanation and Polly's reply are done.
