@@ -5680,11 +5680,6 @@
         "isReal": true
       },
       {
-        "id": "die_t00",
-        "phrase": "A JOKE WITH ZERO LAUGHS",
-        "isReal": false
-      },
-      {
         "id": "die_t01",
         "phrase": "AN ENGINE THAT QUITS AT THE LIGHT",
         "isReal": false
@@ -6615,12 +6610,12 @@
       },
       {
         "id": "duck_t0",
-        "phrase": "WEBBED FEET WADDLING TO THE POND",
+        "phrase": "THE BIRD THAT BROUGHT HARRY POTTER HIS HOGWARTS LETTER",
         "isReal": false
       },
       {
         "id": "duck_t1",
-        "phrase": "FLINCHING BEFORE THE DODGEBALL HITS",
+        "phrase": "THE BIRD THAT BECAME A 70S INSULT WHEN YOU PUT “JIVE” IN FRONT OF IT",
         "isReal": false
       },
       {
@@ -6659,7 +6654,7 @@
       },
       {
         "id": "dull_t00",
-        "phrase": "A FINISH WITH NO SHINE",
+        "phrase": "HOW A WEBSITE LOOKS WHEN YOU SWITCH IT TO NIGHT MODE",
         "isReal": false
       },
       {
@@ -6669,7 +6664,7 @@
       },
       {
         "id": "dull_t02",
-        "phrase": "WHAT HAPPENS TO THE SKY BEFORE A STORM",
+        "phrase": "HOW YOU FEEL WHEN YOU DON’T WANT TO GET OUT OF BED ALL DAY",
         "isReal": false
       },
       {
@@ -6679,7 +6674,7 @@
       },
       {
         "id": "dull_t04",
-        "phrase": "THE TYPE OF SWORDS THEY USE ON MOVIE SETS",
+        "phrase": "WHAT THEY USE IN PLACE OF A REAL SWORD ON A MOVIE SET",
         "isReal": false
       }
     ],
@@ -7882,7 +7877,7 @@
       },
       {
         "id": "flat_t3",
-        "phrase": "THE ROOF ON A ONE-STORY HOUSE",
+        "phrase": "HOW A ROAD FEELS AFTER ALL THE POTHOLES ARE FILLED",
         "isReal": false
       },
       {
@@ -8561,19 +8556,19 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
+        "id": "fork_h00",
         "real": "WHERE THE DNA HELIX SPLITS TO MAKE A COPY",
-        "trap": "HOW ONE SINGLE-CELLED ORGANISM BECOMES TWO OF ITSELF",
-        "id": "fork_h00"
+        "trap": "HOW ONE SINGLE-CELLED ORGANISM BECOMES TWO OF ITSELF"
       },
       {
+        "id": "fork_h01",
         "real": "A CHESS PIECE POSITIONED TO MAKE A DOUBLE THREAT",
-        "trap": "WHAT HOLDS THE RUBBER BAND YOU PULL BACK ON A SLINGSHOT",
-        "id": "fork_h01"
+        "trap": "WHAT HOLDS THE RUBBER BAND YOU PULL BACK ON A SLINGSHOT"
       },
       {
-        "real": "WHERE THE HIP BONE CONNECTS TO THE TWO THIGH BONES",
-        "trap": "THE CONNECTOR THAT TURNS ONE CABLE LINE INTO TWO",
-        "id": "fork_h02"
+        "id": "fork_h02",
+        "real": "WHAT SHOULD BE ILLEGAL TO USE WHEN EATING PIZZA",
+        "trap": "THE CONNECTOR THAT TURNS ONE CABLE LINE INTO TWO"
       }
     ],
     "masks": [
@@ -8747,7 +8742,7 @@
       },
       {
         "id": "foul_t3",
-        "phrase": "KNOWING THE RULES AND BREAKING THEM ANYWAY",
+        "phrase": "WHAT THEY CALL A FIELD GOAL WHEN THE KICKER MISSES",
         "isReal": false
       },
       {
@@ -8809,19 +8804,19 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
+        "id": "horn_h00",
         "real": "A PHRASE FOR STROKING YOUR OWN EGO",
-        "trap": "HOLD IT TO YOUR EAR AND HEAR THE OCEAN",
-        "id": "horn_h00"
+        "trap": "HOLD IT TO YOUR EAR AND HEAR THE OCEAN"
       },
       {
+        "id": "horn_h01",
         "real": "WHAT YOUR THANKSGIVING CORNUCOPIA IS ALSO CALLED",
-        "trap": "WHAT WAS USED TO WARN A MEDIEVAL TOWN OF DANGER",
-        "id": "horn_h01"
+        "trap": "WHAT SOME NATIVE AMERICAN GROUPS USED TO SIGNAL EACH OTHER FROM LONG DISTANCES"
       },
       {
+        "id": "horn_h02",
         "real": "THE SHARP TIPPY-TOP OF A MOUNTAIN",
-        "trap": "WHAT GIVES THE FINAL SOUND TO END THE GAME",
-        "id": "horn_h02"
+        "trap": "WHAT THE SHOT HAS TO BEAT WHEN IT GOES UP WITH ONE SECOND LEFT"
       }
     ],
     "masks": [
@@ -8870,30 +8865,30 @@
     "hiddenTrap": null,
     "hiddenPairs": [
       {
+        "id": "iron_h00",
         "real": "THE AGE WHEN SILVER DIDN’T FOLLOW BRONZE",
-        "trap": "WHAT THE X-RAY VEST AT THE DENTIST IS MADE OF",
-        "id": "iron_h00"
+        "trap": "WHAT THE X-RAY VEST AT THE DENTIST IS MADE OF"
       },
       {
+        "id": "iron_h01",
         "real": "PICKED IT UP AND PUT IT DOWN ALL WINTER, JUST FOR THE SUMMER",
-        "trap": "WHAT'S INSIDE EVERY TELEPHONE LINE ON THE BLOCK",
-        "id": "iron_h01"
+        "trap": "WHAT'S INSIDE EVERY TELEPHONE LINE ON THE BLOCK"
       },
       {
+        "id": "iron_h02",
         "real": "THE BALL AND CHAIN BACK WHEN IT WASN'T A WIFE JOKE",
-        "trap": "WHAT SEPARATES AN INMATE FROM HIS VISITOR",
-        "id": "iron_h02"
+        "trap": "WHAT A PRISONER TALKS THROUGH DURING A VISIT"
       }
     ],
     "masks": [
       {
         "id": "iron_r0",
-        "phrase": "WHAT YOU TURNED AROUND TO MAKE SURE YOU DIDN’T LEAVE ON",
+        "phrase": "WHAT YOU DOUBLE-CHECKED TO MAKE SURE YOU DIDN’T LEAVE ON",
         "isReal": true
       },
       {
         "id": "iron_r1",
-        "phrase": "WHY HE COULD TAKE A CLEAN SHOT TO THE CHIN AND STAY STANDING",
+        "phrase": "WHAT YOUR CHIN’S MADE OF WHEN YOU CAN TAKE A HARD PUNCH",
         "isReal": true
       },
       {
@@ -12101,7 +12096,7 @@
       },
       {
         "id": "frost_r1",
-        "phrase": "WHAT YOU LICK OFF THE FORK WHEN EATING CAKE",
+        "phrase": "WHAT YOU DO TO A CAKE BEFORE THE CANDLES GO ON",
         "isReal": true
       },
       {
@@ -12248,7 +12243,7 @@
       },
       {
         "id": "green_r1",
-        "phrase": "WHAT YELLOW AND BLUE MAKE TOGETHER",
+        "phrase": "HOW THE NEW GUY STILL IS ON HIS FIRST DAY",
         "isReal": true
       },
       {
@@ -12258,7 +12253,7 @@
       },
       {
         "id": "green_r3",
-        "phrase": "THE COLOR OF MISS PIGGY’S BOYFRIEND",
+        "phrase": "WHERE YOU FINALLY USE THE PUTTER INSTEAD OF AN IRON",
         "isReal": true
       },
       {
@@ -12442,11 +12437,6 @@
       {
         "id": "ground_t8",
         "phrase": "THE LEVEL WHERE THE SEA MEETS THE SHORE",
-        "isReal": false
-      },
-      {
-        "id": "ground_t9",
-        "phrase": "WHAT HIKERS FOLLOW THROUGH THE WOODS",
         "isReal": false
       }
     ],
@@ -12657,7 +12647,7 @@
       },
       {
         "id": "handle_r5",
-        "phrase": "WHAT A BULL RIDER HAS TO DO FOR EIGHT SECONDS",
+        "phrase": "WHAT YOU FLY OFF WHEN YOU COMPLETELY LOSE YOUR TEMPER",
         "isReal": true
       },
       {
@@ -13163,7 +13153,7 @@
       },
       {
         "id": "hold_r5",
-        "phrase": "WHAT POLICE CAN’T KEEP DOING PAST 48 HOURS WITHOUT JUDICIAL REVIEW",
+        "phrase": "WHAT POLICE CAN’T KEEP DOING TO YOU WHEN THEY’VE GOT NOTHING ON YOU",
         "isReal": true
       },
       {
@@ -13239,11 +13229,6 @@
       {
         "id": "hold_t2",
         "phrase": "WHAT YOU NEED WHEN YOU’RE BENCH-PRESSING MORE WEIGHT THAN YOU CAN HANDLE",
-        "isReal": false
-      },
-      {
-        "id": "hold_t3",
-        "phrase": "WHAT THE CHATBOT PUTS YOU IN WHEN YOU ASK TO SPEAK TO A REAL PERSON",
         "isReal": false
       },
       {
@@ -13356,11 +13341,6 @@
         "isReal": false
       },
       {
-        "id": "hollow_t8",
-        "phrase": "THE SPACE INSIDE A BONE WHERE THE MARROW SITS",
-        "isReal": false
-      },
-      {
         "id": "hollow_t9",
         "phrase": "THE MARK YOUR FOOT LEAVES BEHIND IN FRESH SNOW",
         "isReal": false
@@ -13418,11 +13398,6 @@
         "id": "hood_r7",
         "phrase": "A PLACE THAT CAN GET DANGEROUS IF YOU’RE IN THE WRONG ONE LATE AT NIGHT",
         "isReal": true
-      },
-      {
-        "id": "hood_t0",
-        "phrase": "THE PART OF A CAR WHERE YOU LOAD THE GROCERIES",
-        "isReal": false
       },
       {
         "id": "hood_t1",
