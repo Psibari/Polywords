@@ -237,7 +237,7 @@ const SFX: Record<SfxName, SfxConfig> = {
   // cues, about -19 dBFS effective; the thud a little hotter because it is a landing. Tune by ear.
   terraceWhooshCape: { source: require('../../assets/audio/sfx/terrace_whoosh_cape.mp3'), volume: 0.40, cooldownMs: 400 },
   terraceWhooshEpic: { source: require('../../assets/audio/sfx/terrace_whoosh_epic.mp3'), volume: 0.33, cooldownMs: 400 },
-  mysticalChime: { source: require('../../assets/audio/sfx/mystical_chime.mp3'), volume: 0.40, cooldownMs: 1500 },
+  mysticalChime: { source: require('../../assets/audio/sfx/mystical_chime.mp3'), volume: 0.50, cooldownMs: 1500 },
   polybookThud: { source: require('../../assets/audio/sfx/polybook_thud.mp3'), volume: 0.50, cooldownMs: 400 },
   // Both source files run hot (decoded sample peak about +3.5 dB over full scale, loudest 100 ms about
   // 0 dBFS), so the volume is low: 0.22 is about -13 dBFS effective, next to masteredBookSlam (-12).

@@ -176,21 +176,32 @@ const ARMOR_FLIP_PERSPECTIVE = 900;
 const ARMOR_PULSE_PERIOD_MS = [520, 400, 300, 230]; // by level, 0..3
 const ARMOR_PULSE_SCALE = [1.02, 1.035, 1.05, 1.065];
 const ARMOR_JITTER_PX = [0.8, 1.4, 2.2, 3.0];
+const ARMOR_SWEEP_PERIOD_MS = [1800, 1500, 1200, 950]; // light sweep across the face, by level
+const ARMOR_HOT_PEAK = [0.6, 0.7, 0.8, 0.9]; // how white the letters get at the pulse's peak
+const ARMOR_GOLD = '#F5C842';
 const ARMOR_LEVEL_STREAK_STEP = 3; // level 0 at streak 9, then +1 every 3 words
 // Same dark as the front of the bar (tb.root), gold letters with a glow (Pete, 2026-11-02).
 const ARMOR_BACK_BG = 'rgba(11,9,32,0.95)';
 const ARMOR_BACK_FACE = '#FFE680';
-const ARMOR_BACK_EXTRUDE = '#7A5C12';
 const ARMOR_BACK_GLOW = 'rgba(255,216,77,0.8)';
 const ARMOR_WORD = 'UNTRAPPABLE';
 const ARMOR_WORD_CHAR_WIDTH_EM = 0.47; // Bebas Neue, rough advance per letter incl. spacing
 
-function ArmorWord({ width, height }: { width: number; height: number }) {
+function ArmorWord({
+  width,
+  height,
+  hot,
+  hotPeak,
+}: {
+  width: number;
+  height: number;
+  hot: Animated.Value;
+  hotPeak: number;
+}) {
   const fontSize = Math.max(
     12,
     Math.floor(Math.min(height / 1.0, width / (ARMOR_WORD.length * ARMOR_WORD_CHAR_WIDTH_EM))),
   );
-  const depth = Math.max(2, Math.round(fontSize * 0.07));
   const textStyle = {
     fontFamily: FONTS.wordDisplay,
     fontSize,
@@ -200,21 +211,9 @@ function ArmorWord({ width, height }: { width: number; height: number }) {
     textAlign: 'center' as const,
     width,
   };
-  const copies = [];
-  for (let k = depth; k >= 1; k--) {
-    copies.push(
-      <Text
-        key={k}
-        numberOfLines={1}
-        style={[textStyle, { position: 'absolute', left: -k, top: k, color: ARMOR_BACK_EXTRUDE }]}
-      >
-        {ARMOR_WORD}
-      </Text>,
-    );
-  }
+  const hotOpacity = hot.interpolate({ inputRange: [0, 1], outputRange: [0, hotPeak] });
   return (
-    <View style={{ width, height: textStyle.lineHeight + depth, paddingLeft: depth }}>
-      {copies}
+    <View style={{ width, height: textStyle.lineHeight }}>
       <Text
         numberOfLines={1}
         style={[textStyle, {
@@ -226,6 +225,13 @@ function ArmorWord({ width, height }: { width: number; height: number }) {
       >
         {ARMOR_WORD}
       </Text>
+      {/* White-hot: a white copy laid over the gold, pulsing with the beat. */}
+      <Animated.Text
+        numberOfLines={1}
+        style={[textStyle, { position: 'absolute', left: 0, top: 0, color: '#FFFFFF', opacity: hotOpacity }]}
+      >
+        {ARMOR_WORD}
+      </Animated.Text>
     </View>
   );
 }
@@ -306,6 +312,7 @@ function TopBar({
   const flip = useRef(new Animated.Value(armored ? 1 : 0)).current;
   const armorPulse = useRef(new Animated.Value(0)).current;
   const armorJitter = useRef(new Animated.Value(0)).current;
+  const armorSweep = useRef(new Animated.Value(0)).current;
   const armorSinceRef = useRef<number>(armored ? 0 : -1);
   const wasArmoredRef = useRef(armored);
   const [armorWordBox, setArmorWordBox] = useState({ w: 0, h: 0 });
@@ -344,6 +351,7 @@ function TopBar({
   useEffect(() => {
     armorPulse.setValue(0);
     armorJitter.setValue(0);
+    armorSweep.setValue(0);
     if (!armored || !animateMotion) return;
     const sinceFlip = armorSinceRef.current > 0 ? Date.now() - armorSinceRef.current : ARMOR_FLIP_IN_MS;
     const wait = Math.max(0, ARMOR_FLIP_IN_MS - sinceFlip);
@@ -363,11 +371,22 @@ function TopBar({
         Animated.timing(armorJitter, { toValue: -jitter, duration: 45, useNativeDriver: true }),
       ])),
     ]);
+    const sweepLoop = Animated.sequence([
+      Animated.delay(wait),
+      Animated.loop(Animated.timing(armorSweep, {
+        toValue: 1,
+        duration: ARMOR_SWEEP_PERIOD_MS[armorLevel],
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: true,
+      })),
+    ]);
     pulseLoop.start();
     jitterLoop.start();
+    sweepLoop.start();
     return () => {
       pulseLoop.stop();
       jitterLoop.stop();
+      sweepLoop.stop();
     };
   }, [armored, armorLevel, animateMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -670,6 +689,44 @@ function TopBar({
         accessibilityElementsHidden={!armored}
         importantForAccessibility={armored ? 'yes' : 'no-hide-descendants'}
       >
+        {/* Breathing gold: the face's inner glow and ring brighten with the pulse. */}
+        <Animated.View
+          pointerEvents="none"
+          style={[tb.armorGlow, {
+            opacity: armorPulse.interpolate({ inputRange: [0, 1], outputRange: [0.04, 0.2] }),
+          }]}
+        />
+        <Animated.View
+          pointerEvents="none"
+          style={[tb.armorRing, {
+            opacity: armorPulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
+          }]}
+        />
+        {/* A soft band of light crossing the whole face. */}
+        {armorWordBox.w > 0 && (
+          <Animated.View
+            pointerEvents="none"
+            style={[tb.armorSweep, {
+              width: armorWordBox.w * 0.18,
+              transform: [
+                {
+                  translateX: armorSweep.interpolate({
+                    inputRange: [0, 0.55, 1],
+                    outputRange: [-armorWordBox.w * 0.2, armorWordBox.w * 1.15, armorWordBox.w * 1.15],
+                  }),
+                },
+                { skewX: '-18deg' },
+              ],
+            }]}
+          >
+            <LinearGradient
+              colors={['rgba(255,216,77,0)', 'rgba(255,226,120,0.32)', 'rgba(255,216,77,0)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+        )}
         <View
           style={tb.armorBackWord}
           onLayout={e => {
@@ -679,7 +736,12 @@ function TopBar({
         >
           {armorWordBox.w > 0 && (
             <Animated.View style={{ transform: [{ translateX: armorJitter }, { scale: armorScale }] }}>
-              <ArmorWord width={armorWordBox.w} height={armorWordBox.h} />
+              <ArmorWord
+                width={armorWordBox.w}
+                height={armorWordBox.h}
+                hot={armorPulse}
+                hotPeak={ARMOR_HOT_PEAK[armorLevel]}
+              />
             </Animated.View>
           )}
         </View>
@@ -942,6 +1004,22 @@ const tb = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
     overflow: 'hidden',
+  },
+  armorGlow: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: ARMOR_GOLD,
+  },
+  armorRing: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 8,
+    borderWidth: 3,
+    borderColor: ARMOR_GOLD,
+  },
+  armorSweep: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
   },
   armorBackWord: {
     flex: 1,
