@@ -465,8 +465,6 @@ export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: Outc
     return () => { clearTimeout(auto); clearTimeout(dismissTimer); loop.stop(); };
   }, [reduceMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hazeY = drift.interpolate({ inputRange: [0, 1], outputRange: [0, -10] });
-  const hazeOpacity = drift.interpolate({ inputRange: [0, 1], outputRange: [0.24, 0.48] });
 
   if (isBoss) {
     // Plaque presentation. drift keeps running (untouched, above) but has
@@ -495,24 +493,27 @@ export function HauntedOutcomeOverlay({ word, detail, onContinue, isBoss }: Outc
     );
   }
 
+  // Returning Haunt lost (Pete 2026-11-02, option A): the carved HAUNTED plaque, same art as the boss
+  // plaque, through the full scrim like BANISHED. The art already carries the word HAUNTED, so the
+  // returning-haunt meaning is a live STILL line above it. Headline and word only: no trap, no
+  // meaning, no Polly copy (rule: never display a meaning, trap or hidden pair).
   return (
     <Pressable style={styles.outcomeOverlay} onPress={handlePress}>
-      <Animated.View style={[styles.outcomePanel, styles.hauntedOutcomePanel, { opacity, transform: [{ scale }] }]}>
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.hauntedHaze, { opacity: hazeOpacity, transform: [{ translateY: hazeY }] }]}
-        />
-        <Text style={[styles.outcomeHeadline, styles.hauntedOutcomeHeadline]}>HAUNTED</Text>
-        <Text style={styles.outcomeWord} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.64}>
-          {word}
-        </Text>
-        <View style={styles.outcomeCopyBlock}>
-          <Text style={styles.outcomeCopy}>Polly's trap held.</Text>
-          <Text style={styles.outcomeCopy}>It'll be waiting.</Text>
+      <Animated.View style={[styles.plaqueColumn, { opacity, transform: [{ scale }] }]}>
+        <Text style={styles.hauntedStillLabel} accessibilityElementsHidden importantForAccessibility="no">STILL</Text>
+        <View style={[styles.plaqueFrame, styles.hauntedPlaqueFrame]}>
+          <Image source={hauntedPlaqueArt} style={[styles.plaqueImage, { aspectRatio: HAUNTED_PLAQUE_ASPECT }]} resizeMode="contain" />
+          <View pointerEvents="none" style={styles.hauntedPlaqueWordSlot}>
+            <PlaqueText
+              text={word}
+              material="carvedStonePlaque"
+              fontSize={61}
+              minimumFontScale={0.6}
+              accessibilityLabel={`STILL HAUNTED. ${word}`}
+            />
+          </View>
         </View>
-        {/* No detail line: it printed the trap's meaning, an answer key (Pete's rule: never display a
-            meaning, trap or hidden pair; the boss plaque already dropped it, 2026-10-29). */}
-        <Animated.Text style={[styles.outcomeContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
+        <Animated.Text style={[styles.plaqueContinue, { opacity: continueOpacity }]}>CONTINUE</Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -3204,6 +3205,20 @@ const styles = StyleSheet.create({
   banishedPlaqueWordSlot: {
     position: 'absolute', left: '15.9%', right: '13.2%', top: '51.5%',
   },
+  hauntedStillLabel: {
+    marginBottom: 10,
+    color: '#EEECFC',
+    fontFamily: FONTS.label,
+    includeFontPadding: false,
+    fontWeight: '900',
+    fontSize: 38,
+    letterSpacing: 8,
+    textAlign: 'center',
+    textShadowColor: 'rgba(168,85,247,0.85)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
+
   hauntedPlaqueWordSlot: {
     position: 'absolute', left: '14.3%', right: '14.5%', top: '44.4%',
   },
