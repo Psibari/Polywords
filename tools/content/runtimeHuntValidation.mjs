@@ -21,6 +21,10 @@ const APPROVED_HEADWORD_LEAKS = new Map([
   ['FAST/fast_r04', 'WHAT YOU BREAK WHEN YOU BREAK FAST'],
 ]);
 
+const APPROVED_CASE_EXCEPTIONS = new Map([
+  ['LEAD/lead_r4', 'WHAT Pb STANDS FOR ON THE PERIODIC TABLE'],
+]);
+
 // These words carry little or no memory-snap information by themselves. The
 // review heuristic intentionally ignores them so connective English does not
 // turn the report into a landfill fire.
@@ -119,7 +123,9 @@ function validatePhrase(
     blockers.push(`${context}: phrase is required`);
     return;
   }
-  if (phrase !== phrase.toUpperCase()) {
+  const approvedCase =
+    headwordLeakKey != null && APPROVED_CASE_EXCEPTIONS.get(headwordLeakKey) === phrase;
+  if (!approvedCase && phrase !== phrase.toUpperCase()) {
     blockers.push(`${context}: phrase must be uppercase`);
   }
   if (PLACEHOLDER_PATTERN.test(phrase)) {
