@@ -9,14 +9,19 @@ assert.equal(resolveLiveHuntControl(1.99, 6).label, 'SHARP');
 assert.equal(resolveLiveHuntControl(2, 4).label, 'RAZOR SHARP');
 assert.equal(resolveLiveHuntControl(2.49, 4).label, 'RAZOR SHARP');
 assert.equal(resolveLiveHuntControl(2.5, 4).label, 'UNTRAPPABLE');
-assert.equal(resolveLiveHuntControl(3, 1).label, 'HUNTED');
+assert.equal(resolveLiveHuntControl(3, 1).label, 'UNTRAPPABLE');
 assert.equal(resolveLiveHuntControl(3, 2).label, 'UNTRAPPABLE');
 
 // readTier is derived from chainMultiplier alone and is never overridden by
-// low lives: HUNTED describes the danger, readTier keeps reporting the streak.
+// low lives. HUNTED only shows while there is no streak to show (below SHARP);
+// from SHARP up the streak tier takes over at one feather too (Pete, 2026-11-02).
+assert.equal(resolveLiveHuntControl(1, 1).label, 'HUNTED');
+assert.equal(resolveLiveHuntControl(1.49, 1).label, 'HUNTED');
+assert.equal(resolveLiveHuntControl(1.5, 1).label, 'SHARP');
+assert.equal(resolveLiveHuntControl(2.5, 1).label, 'UNTRAPPABLE');
 assert.equal(resolveLiveHuntControl(1, 6).readTier, 'steady');
 assert.equal(resolveLiveHuntControl(1.75, 6).readTier, 'sharp');
-assert.equal(resolveLiveHuntControl(2.0, 1).label, 'HUNTED');
+assert.equal(resolveLiveHuntControl(2.0, 1).label, 'RAZOR SHARP');
 assert.equal(resolveLiveHuntControl(2.0, 1).readTier, 'razorSharp');
 assert.equal(resolveLiveHuntControl(2.5, 1).readTier, 'untrappable');
 

@@ -27,7 +27,7 @@ import { PW } from '../ui/pwTheme';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { BOSS_SKY_TUNING, HUNT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import ResultsScreen from './ResultsScreen';
-import { playSfx, sfxReady, warmWallFallSfx } from '../audio/sfx';
+import { playSfx, sfxReady, warmArmorFlipSfx, warmWallFallSfx } from '../audio/sfx';
 import { startMusic, stopMusic, setMusicState, MusicState } from '../audio/MusicEngine';
 import { Haptics } from '../utils/haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
@@ -177,9 +177,11 @@ const ARMOR_PULSE_PERIOD_MS = [520, 400, 300, 230]; // by level, 0..3
 const ARMOR_PULSE_SCALE = [1.02, 1.035, 1.05, 1.065];
 const ARMOR_JITTER_PX = [0.8, 1.4, 2.2, 3.0];
 const ARMOR_LEVEL_STREAK_STEP = 3; // level 0 at streak 9, then +1 every 3 words
-const ARMOR_BACK_BG = '#DDB44A';
-const ARMOR_BACK_FACE = '#FFD84D';
-const ARMOR_BACK_EXTRUDE = '#54404F';
+// Same dark as the front of the bar (tb.root), gold letters with a glow (Pete, 2026-11-02).
+const ARMOR_BACK_BG = 'rgba(11,9,32,0.95)';
+const ARMOR_BACK_FACE = '#FFE680';
+const ARMOR_BACK_EXTRUDE = '#7A5C12';
+const ARMOR_BACK_GLOW = 'rgba(255,216,77,0.8)';
 const ARMOR_WORD = 'UNTRAPPABLE';
 const ARMOR_WORD_CHAR_WIDTH_EM = 0.47; // Bebas Neue, rough advance per letter incl. spacing
 
@@ -213,7 +215,17 @@ function ArmorWord({ width, height }: { width: number; height: number }) {
   return (
     <View style={{ width, height: textStyle.lineHeight + depth, paddingLeft: depth }}>
       {copies}
-      <Text numberOfLines={1} style={[textStyle, { color: ARMOR_BACK_FACE }]}>{ARMOR_WORD}</Text>
+      <Text
+        numberOfLines={1}
+        style={[textStyle, {
+          color: ARMOR_BACK_FACE,
+          textShadowColor: ARMOR_BACK_GLOW,
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 16,
+        }]}
+      >
+        {ARMOR_WORD}
+      </Text>
     </View>
   );
 }
@@ -291,6 +303,7 @@ function TopBar({
   const armorPulse = useRef(new Animated.Value(0)).current;
   const armorJitter = useRef(new Animated.Value(0)).current;
   const armorSinceRef = useRef<number>(armored ? 0 : -1);
+  const wasArmoredRef = useRef(armored);
   const [armorWordBox, setArmorWordBox] = useState({ w: 0, h: 0 });
   const { width: windowWidth } = useWindowDimensions();
   const hudAccent = resolveMomentumAccent(hud).color;
@@ -300,18 +313,23 @@ function TopBar({
     inputRange: [0, 0.35, 1],
     outputRange: [1, 1.08, 1],
   });
-  const hudPulseOpacity = hudPulse.interpolate({
-    inputRange: [0, 0.25, 1],
-    outputRange: [0, 0.14, 0],
-  });
 
   useEffect(() => {
     flip.stopAnimation();
     if (armored) armorSinceRef.current = Date.now();
     else armorSinceRef.current = -1;
+    // The thud when the bar lands on UNTRAPPABLE (Pete: an existing thud, the
+    // Polybook landing). Only on the way in, not on a remount mid-armor.
+    let thudTimer: ReturnType<typeof setTimeout> | null = null;
+    if (armored && !wasArmoredRef.current) {
+      thudTimer = setTimeout(() => playSfx('polybookThud'), animateMotion ? ARMOR_FLIP_IN_MS : 0);
+    }
+    wasArmoredRef.current = armored;
     if (!animateMotion) {
       flip.setValue(armored ? 1 : 0);
-      return;
+      return () => {
+        if (thudTimer) clearTimeout(thudTimer);
+      };
     }
     const flipAnimation = Animated.timing(flip, {
       toValue: armored ? 1 : 0,
@@ -320,7 +338,10 @@ function TopBar({
       useNativeDriver: true,
     });
     flipAnimation.start();
-    return () => flipAnimation.stop();
+    return () => {
+      flipAnimation.stop();
+      if (thudTimer) clearTimeout(thudTimer);
+    };
   }, [armored, animateMotion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The back face pulses and vibrates once the flip has landed, harder by level.
@@ -585,18 +606,6 @@ function TopBar({
                 ],
               }}
             >
-            <Animated.View
-              pointerEvents="none"
-              style={[tb.controlPulse, { backgroundColor: hudAccent, opacity: animateFlashes ? hudPulseOpacity : 0 }]}
-            />
-            <Animated.View
-              pointerEvents="none"
-              style={[tb.controlPulse, { backgroundColor: PW.color.white, opacity: tierFlashOpacity }]}
-            />
-            <Animated.View
-              pointerEvents="none"
-              style={[tb.controlPulse, { backgroundColor: PW.color.wrong, opacity: fellOffFlashOpacity }]}
-            />
             <View style={tb.controlRungColumn}>
               {[0, 1, 2, 3].map(i => (
                 <View
@@ -612,14 +621,37 @@ function TopBar({
               <Text style={tb.controlContext} numberOfLines={1}>
                 {hud.contextLabel ?? ' '}
               </Text>
-              <Text
-                style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled, { color: showFellOffText ? PW.color.wrong : hudAccent }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-              >
-                {showFellOffText ? 'FELL OFF' : hud.label}
-              </Text>
+              {/* The flashes are on the word itself, never a box behind it
+                  (Pete, 2026-11-02): white copies of the label whose opacity
+                  flashes, laid exactly over the real one. */}
+              <View>
+                <Text
+                  style={[tb.controlLabel, hud.tier === 'rattled' && tb.controlLabelRattled, { color: showFellOffText ? PW.color.wrong : hudAccent }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.72}
+                >
+                  {showFellOffText ? 'FELL OFF' : hud.label}
+                </Text>
+                <Animated.Text
+                  pointerEvents="none"
+                  style={[tb.controlLabel, tb.controlLabelFlash, { opacity: tierFlashOpacity }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.72}
+                >
+                  {showFellOffText ? 'FELL OFF' : hud.label}
+                </Animated.Text>
+                <Animated.Text
+                  pointerEvents="none"
+                  style={[tb.controlLabel, tb.controlLabelFlash, { opacity: fellOffFlashOpacity }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.72}
+                >
+                  {showFellOffText ? 'FELL OFF' : hud.label}
+                </Animated.Text>
+              </View>
             </View>
             </Animated.View>
           </Animated.View>
@@ -908,7 +940,7 @@ const tb = StyleSheet.create({
   armorBack: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: PW.color.goldDark,
+    borderColor: PW.color.purpleSoft,
     backgroundColor: ARMOR_BACK_BG,
     paddingHorizontal: PW.space.md,
     paddingTop: 8,
@@ -981,10 +1013,6 @@ const tb = StyleSheet.create({
     borderRadius: 4,
     overflow: 'visible',
   },
-  controlPulse: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 4,
-  },
   controlRungColumn: {
     width: 3,
     height: 44,
@@ -1024,6 +1052,14 @@ const tb = StyleSheet.create({
     textShadowColor: 'rgba(185,138,222,0.30)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
+  },
+  controlLabelFlash: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    color: PW.color.white,
+    textShadowColor: 'transparent',
   },
   controlLabelRattled: {
     color: PW.color.lavender,
@@ -1616,6 +1652,7 @@ function GameDirector({ navigation }: { navigation: any }) {
   // native load. Warm them once when the Hunt opens.
   useEffect(() => {
     warmWallFallSfx();
+    warmArmorFlipSfx();
   }, []);
 
   // Fell-off: the wall falls down a hole, then the camera falls after it and

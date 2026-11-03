@@ -524,6 +524,11 @@ function warmSfx(names: readonly SfxName[]): void {
   });
 }
 
+/** Warms the thud of the UNTRAPPABLE armor flip (GameScreen.tsx). */
+export function warmArmorFlipSfx(): void {
+  warmSfx(['polybookThud']);
+}
+
 /** Warms the four cues of the FELL OFF wall fall (wallShake.ts WALL_FALL_SFX_*). */
 export function warmWallFallSfx(): void {
   warmSfx(['terraceWhooshCape', 'hardHeavyImpact', 'gauntletPick', 'boulderImpact']);

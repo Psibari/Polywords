@@ -28,7 +28,8 @@ function resolveReadTier(chainMultiplier: number): HuntReadTier {
 
 /**
  * The player's live condition. This is system status, not Polly dialogue.
- * HUNTED means the player is down to one feather and the run is in danger.
+ * HUNTED means the player is down to one feather, the run is in danger, and
+ * they have no streak (below SHARP) to show instead.
  *
  * `readTier` is derived from `chainMultiplier` alone and is always populated,
  * even at HUNTED — `tier`/`label` describe the danger, `readTier` keeps
@@ -40,7 +41,10 @@ export function resolveLiveHuntControl(
 ): HuntControlState {
   const readTier = resolveReadTier(chainMultiplier);
 
-  if (lives <= 1) {
+  // HUNTED shows at one feather only until the streak reaches SHARP (Pete,
+  // 2026-11-02): from there the streak tier takes over, so a player on a roll
+  // with one feather left still sees (and feels) their momentum.
+  if (lives <= 1 && readTier === 'steady') {
     return {
       tier: 'rattled',
       label: 'HUNTED',
