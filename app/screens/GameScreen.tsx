@@ -331,7 +331,7 @@ function TopBar({
     else armorSinceRef.current = -1;
     // The power-up sound as the bar starts to turn over to UNTRAPPABLE (Pete: a
     // power-up type sound, no thud). Only on the way in, not on a remount.
-    if (armored && !wasArmoredRef.current) playSfx('mysticalChime');
+    if (armored && !wasArmoredRef.current) playSfx('armorFlipChime');
     wasArmoredRef.current = armored;
     if (!animateMotion) {
       flip.setValue(armored ? 1 : 0);

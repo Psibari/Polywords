@@ -36,6 +36,12 @@ POLYWORDS edits: Hunt 2.500–115.750s (played at 0.85× with pitch correction);
 
 POLYWORDS edits: files renamed only; audio content is unmodified.
 
+## Sound effects added 2026-11-02 (evening)
+
+- `sfx/armor_flip_chime.mp3`: derived from “Mystical Chime” (`sfx/mystical_chime.mp3`, above) by
+  u_1cwn0vj1yq, Pixabay Content License. POLYWORDS edit: cut to the first 2 s, sped to 2x (pitch kept)
+  and faded out; for the UNTRAPPABLE flip.
+
 ## Sound effects added 2026-10-23
 
 - `sfx/polybook_thud.mp3`: “Thick Book Placed on a Classroom Desk” by arunangshubanerjee,
