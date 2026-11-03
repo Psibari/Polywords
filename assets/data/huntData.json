@@ -9251,7 +9251,7 @@
       },
       {
         "id": "match_t0",
-        "phrase": "WHEN TWO PUZZLE PIECES FIT TOGETHER PERFECTLY",
+        "phrase": "WHAT THE COLORS IN AN OUTFIT DO WHEN THEY LOOK TERRIBLE TOGETHER",
         "isReal": false
       },
       {
@@ -9334,7 +9334,7 @@
       },
       {
         "id": "miss_t1",
-        "phrase": "BALL SAILS WIDE OF THE POST",
+        "phrase": "WHAT YOUR TEACHER MARKS YOU WHEN YOU’RE NOT IN CLASS",
         "isReal": false
       },
       {
@@ -9373,12 +9373,12 @@
       },
       {
         "id": "mold_t0",
-        "phrase": "SLIMY FILM ON THE SHOWER TILE",
+        "phrase": "THE GREEN CARPET GROWING OVER A ROCK IN A DAMP FOREST",
         "isReal": false
       },
       {
         "id": "mold_t1",
-        "phrase": "CLAY SPUN INTO A BOWL ON THE WHEEL",
+        "phrase": "WHAT A POTTER KEEPS SPINNING WHILE SHAPING THE CLAY",
         "isReal": false
       },
       {
@@ -9417,7 +9417,7 @@
       },
       {
         "id": "mouse_t2",
-        "phrase": "BLACK EYE FROM A BAR FIGHT",
+        "phrase": "THE BIGGER RODENT PEOPLE DREAD SEEING IN THE SUBWAY",
         "isReal": false
       }
     ],
@@ -9791,11 +9791,6 @@
       {
         "id": "plant_t0",
         "phrase": "WHAT YOU BURY BEFORE ANYTHING GREEN APPEARS",
-        "isReal": false
-      },
-      {
-        "id": "plant_t1",
-        "phrase": "WHAT YOUR FOOD SCRAPS BECOME FOR THE GARDEN",
         "isReal": false
       },
       {
@@ -10589,7 +10584,7 @@
       },
       {
         "id": "ruler_t0",
-        "phrase": "YARDSTICK LEANING IN THE GARAGE CORNER",
+        "phrase": "THE TOOL USED TO DRAW CIRCLES INTO GEOMETRIC PATTERNS",
         "isReal": false
       },
       {
@@ -10648,7 +10643,7 @@
       },
       {
         "id": "scale_t2",
-        "phrase": "EIGHT NOTES FROM ONE C TO THE NEXT",
+        "phrase": "WHAT MUSICIANS CALL THE DISTANCE FROM ONE C TO THE NEXT",
         "isReal": false
       }
     ],
@@ -11334,11 +11329,6 @@
       {
         "id": "tire_t4",
         "phrase": "KEEPS REFRESHING FOR SOMETHING NEW",
-        "isReal": false
-      },
-      {
-        "id": "tire_t5",
-        "phrase": "ALARM CLOCK GOES OFF TOO EARLY",
         "isReal": false
       }
     ],
@@ -13657,11 +13647,6 @@
         "id": "round_r10",
         "phrase": "WHAT YOU DO TO THE BLOCK AFTER MISSING YOUR TURN",
         "isReal": true
-      },
-      {
-        "id": "round_t0",
-        "phrase": "WHAT YOU CALL ONE COMPLETE TRIP OF A RACETRACK",
-        "isReal": false
       },
       {
         "id": "round_t1",
