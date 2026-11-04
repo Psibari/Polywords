@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Haptics } from '../utils/haptics';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Animated,
   AppState,
@@ -34,14 +35,17 @@ import {
   beginDailyCommittedPresentation,
   canBeginDailyClaim,
   canUnlockDailyRound,
+  dailyCelebrationHaptic,
   DailyClaimPresentation,
   DailyClaimPresentationPhase,
   isDailyClaimInputLocked,
+  resolveDailyCelebrationGrade,
   resolveDailyActiveElapsedMs,
   selectDailyDisplaySession,
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
 import { canOpenDailyPause } from '../game/dailyPause';
+import { DAILY_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { resolveRivalryState } from '../game/pollyMood';
 import { useGameStore } from '../store/useGameStore';
@@ -55,7 +59,6 @@ import {
   DAILY_WIN_TITLE,
   DAILY_WIN_REWARD,
   DAILY_LOSS_TITLE,
-  DAILY_CLUE_TITLE,
   DAILY_ACTION_RULE,
   dailyBackdrop,
   dailyScrollMaterial,
@@ -65,6 +68,22 @@ import {
   DailyPollyReaction as PerchReaction,
   getStreakMilestoneRewardLabel,
 } from '../ui/pwDailyMaterials';
+import {
+  dailyEntryKicker,
+  DAILY_ENTRY_TITLE,
+  DAILY_ENTRY_RULE,
+  DAILY_ENTRY_INTRO,
+  DAILY_ENTRY_RULES,
+  DAILY_ENTRY_REWARD,
+  DAILY_ENTRY_ATTEMPT,
+  DAILY_ENTRY_BEGIN,
+  DAILY_ENTRY_BEGIN_BUSY,
+  DAILY_ENTRY_RULES_SHOW,
+  DAILY_ENTRY_RULES_HIDE,
+  DAILY_ENTRY_RULES_A11Y_SHOW,
+  DAILY_ENTRY_RULES_A11Y_HIDE,
+  DAILY_ENTRY_LEAVE,
+} from '../ui/dailyEntryCopy';
 import DailyAnswerCard, {
   DailyAnswerCardClaimOrigin,
   DAILY_CARD_TIMING,
@@ -442,6 +461,16 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // preloadSfx() had a chance to finish. See the audioReady effect below.
   const [inputLocked, setInputLocked] = useState(true);
   const [dailyInitialized, setDailyInitialized] = useState(false);
+  // Has this install already been told how the Daily works? Read inside the
+  // same init that flips dailyInitialized, so the entry card never renders
+  // before the answer is known and the explanation cannot flicker in. It
+  // starts true and a failed read leaves it true: on storage trouble the
+  // player gets the short card, never a repeat lecture (the Boss and Haunt
+  // explainers fail closed the same way).
+  const [dailyIntroSeen, setDailyIntroSeen] = useState(true);
+  // A returning player can reopen the rules on the short card. Reset every
+  // time the screen mounts: the short card is what they asked to see.
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [dailyStarting, setDailyStarting] = useState(false);
   const inputLockedRef = useRef(true);
   // True while a new round's blocks are punching out of the wall
@@ -679,6 +708,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // INIT
   useEffect(() => {
     async function init() {
+      try {
+        const seen = await AsyncStorage.getItem(DAILY_INTRO_SEEN_KEY);
+        setDailyIntroSeen(seen === 'true');
+      } catch {
+        setDailyIntroSeen(true);
+      }
       try {
         await loadDailyResult();
       } finally {
@@ -1141,7 +1176,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // the readable settle, cover, reward, and next-clue reveal sequence.
       // The win's Success haptic lands with the gold coin (see
       // runPhysicalCorrectTransition), not here at the claim.
-      Haptics.cueAsync('standardCorrect');
+      // How many clues were showing when the player committed grades the
+      // claim's haptic (Pete, 2026-11-03). The castle's gold hit is NOT
+      // graded: Pete tested a graded tint on device and found no readable
+      // difference, so it came out. The breach sequence is the real payoff.
+      const grade = resolveDailyCelebrationGrade(round.revealedClueCount);
+      Haptics.cueAsync(dailyCelebrationHaptic(grade));
       playSfx('correctClaim');
       // The castle lights gold on the same beat as the claim's sound.
       setGoldHitToken((token) => token + 1);
@@ -1308,6 +1348,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   async function handleStartDaily() {
     if (dailyStarting) return;
     setDailyStarting(true);
+    // Pressing BEGIN is the moment they have read it. Marked here rather than
+    // on render, so backing out with NOT NOW leaves the explanation intact.
+    if (!dailyIntroSeen) {
+      setDailyIntroSeen(true);
+      AsyncStorage.setItem(DAILY_INTRO_SEEN_KEY, 'true').catch(() => {});
+    }
     try {
       await startDailyChallenge();
     } finally {
@@ -1316,6 +1362,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   }
 
   const isReadyToStart = dailyInitialized && !dailyResult && !dailySession;
+  // The explanation is open by default the very first time, and thereafter
+  // only when the player asks for it with HOW TO PLAY.
+  const showEntryRules = !dailyIntroSeen || rulesOpen;
   const committedComplete =
     dailyInitialized &&
     (!!dailyResult || (dailySession !== null && dailySession.status !== 'active'));
@@ -1436,15 +1485,27 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
       <SafeAreaView style={styles.content} pointerEvents="box-none">
       {isReadyToStart && (
-        <View style={styles.startGate}>
+        <ScrollView
+          style={styles.startScroll}
+          contentContainerStyle={styles.startGate}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.startCard}>
-            <Text style={styles.startKicker}>{`DAILY #${challengeNumber}`}</Text>
-            <Text style={styles.startTitle}>{DAILY_CLUE_TITLE}</Text>
-            <Text style={styles.startRule}>FIVE WORDS · TWO LIVES</Text>
-            <Text style={styles.startBody}>
-              One word connects the clues. Swipe UP to claim it. This is your
-              one attempt for today, and it begins when you enter.
-            </Text>
+            <Text style={styles.startKicker}>{dailyEntryKicker(challengeNumber)}</Text>
+            <Text style={styles.startTitle}>{DAILY_ENTRY_TITLE}</Text>
+            <Text style={styles.startRule}>{DAILY_ENTRY_RULE}</Text>
+            {showEntryRules && (
+              <>
+                <Text style={styles.startIntro}>{DAILY_ENTRY_INTRO}</Text>
+                <View style={styles.startRuleList}>
+                  {DAILY_ENTRY_RULES.map((line) => (
+                    <Text key={line} style={styles.startRuleLine}>{line}</Text>
+                  ))}
+                </View>
+                <Text style={styles.startBody}>{DAILY_ENTRY_REWARD}</Text>
+              </>
+            )}
+            <Text style={styles.startAttempt}>{DAILY_ENTRY_ATTEMPT}</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Begin today's Daily Challenge"
@@ -1458,19 +1519,32 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               ]}
             >
               <Text style={styles.startButtonText}>
-                {dailyStarting ? 'OPENING…' : 'BEGIN DAILY'}
+                {dailyStarting ? DAILY_ENTRY_BEGIN_BUSY : DAILY_ENTRY_BEGIN}
               </Text>
             </Pressable>
+            {dailyIntroSeen && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={rulesOpen ? DAILY_ENTRY_RULES_A11Y_HIDE : DAILY_ENTRY_RULES_A11Y_SHOW}
+                accessibilityState={{ expanded: rulesOpen }}
+                onPress={() => setRulesOpen(open => !open)}
+                style={({ pressed }) => [styles.startRulesButton, pressed && styles.startButtonPressed]}
+              >
+                <Text style={styles.startRulesText}>
+                  {rulesOpen ? DAILY_ENTRY_RULES_HIDE : DAILY_ENTRY_RULES_SHOW}
+                </Text>
+              </Pressable>
+            )}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Return Home"
               onPress={handleHome}
               style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
             >
-              <Text style={styles.startHomeText}>NOT NOW</Text>
+              <Text style={styles.startHomeText}>{DAILY_ENTRY_LEAVE}</Text>
             </Pressable>
           </View>
-        </View>
+        </ScrollView>
       )}
       {!isComplete && displayedDailySession && (
         <>
@@ -1643,11 +1717,20 @@ const styles = StyleSheet.create({
     // box-none, so touches still reach the plaques in the stage below.
     zIndex: 2,
   },
-  startGate: {
+  // The entry card is the Daily's only explainer, so it is allowed to run long
+  // (Pete, 2026-11-03: "make the card bigger so everything fits" rather than
+  // shrink the copy). It scrolls like the results card so a long card cannot
+  // clip on a short phone, and sits 10 pt from each edge instead of 24.
+  startScroll: {
     flex: 1,
+    width: '100%',
+  },
+  startGate: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
   },
   // Same flat card as the results card (res.card), with a neutral white rim:
   // gold and rose there mean win and loss.
@@ -1685,6 +1768,33 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
+  // Polly's framing, above the mechanics.
+  startIntro: {
+    color: dailyResultsMaterial.statText,
+    fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
+    fontSize: 20,
+    lineHeight: 24,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  // How it works: one idea per line, in the HUD voice, so the three clues read
+  // as three things and not as a paragraph.
+  startRuleList: {
+    marginTop: 18,
+    gap: 7,
+    alignSelf: 'stretch',
+  },
+  startRuleLine: {
+    color: dailyResultsMaterial.speedTitle,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 19,
+    lineHeight: 23,
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  // The reward.
   startBody: {
     color: dailyResultsMaterial.statText,
     fontFamily: FONTS.tileCopy,
@@ -1692,6 +1802,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 24,
     marginTop: 18,
+    textAlign: 'center',
+  },
+  // What entering costs.
+  startAttempt: {
+    color: dailyResultsMaterial.homeText,
+    fontFamily: FONTS.tileCopy,
+    includeFontPadding: false,
+    fontSize: 18,
+    lineHeight: 22,
+    marginTop: 14,
     textAlign: 'center',
   },
   // BEGIN DAILY matches the results SHARE RESULT button (res.shareBtn).
@@ -1714,6 +1834,22 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 19,
+    letterSpacing: 2,
+  },
+  // Reopens the rules on the short returning card. Same shape as NOT NOW but
+  // in the brighter rule colour, so the only gold button on the card stays
+  // BEGIN DAILY and this still reads as an action rather than a way out.
+  startRulesButton: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 10,
+  },
+  startRulesText: {
+    color: dailyResultsMaterial.speedTitle,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 18,
     letterSpacing: 2,
   },
   // NOT NOW matches the results HOME link (res.homeBtn).

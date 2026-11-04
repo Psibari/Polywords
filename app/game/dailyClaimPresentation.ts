@@ -5,6 +5,41 @@ export type DailyClaimPresentation<TSession> = {
   roundElapsedMsAtClaim: number;
 };
 
+/**
+ * How hard the castle celebrates a correct claim, from how many clues the
+ * player needed (Pete, 2026-11-03).
+ *
+ * The three clues are a deliberate hint ladder — the workbook labels them
+ * "Clue 1 (Hardest)" through "Clue 3 (Easiest)" — so claiming on one clue
+ * means the player cracked the hardest reading, and claiming on three means
+ * they took the giveaway. Until now every correct claim looked identical, so
+ * the one moment of real nerve in the mode was celebrated like a lookup.
+ *
+ * 'solved' is today's presentation unchanged: waiting is part of the game and
+ * must never feel punished. 'sharp' and 'cold' add on top of it.
+ */
+export type DailyCelebrationGrade = 'solved' | 'sharp' | 'cold';
+
+export function resolveDailyCelebrationGrade(
+  revealedClueCount: number,
+): DailyCelebrationGrade {
+  if (revealedClueCount <= 1) return 'cold';
+  if (revealedClueCount === 2) return 'sharp';
+  return 'solved';
+}
+
+/**
+ * The claim's haptic, by grade. Named cues only — the screen fires them, this
+ * stays RN-free. 'solved' keeps the cue the Daily already used.
+ */
+export function dailyCelebrationHaptic(
+  grade: DailyCelebrationGrade,
+): 'standardCorrect' | 'claimMedium' | 'heightenedCorrect' {
+  if (grade === 'cold') return 'heightenedCorrect';
+  if (grade === 'sharp') return 'claimMedium';
+  return 'standardCorrect';
+}
+
 export type DailyClaimPresentationPhase =
   | 'idle'
   | 'settling'

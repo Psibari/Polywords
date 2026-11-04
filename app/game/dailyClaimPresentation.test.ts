@@ -9,6 +9,8 @@ import {
   selectDailyDisplaySession,
   shouldHideCompletedDailyClue,
   shouldShowDailyResult,
+  resolveDailyCelebrationGrade,
+  dailyCelebrationHaptic,
 } from './dailyClaimPresentation';
 
 function eq<T>(actual: T, expected: T, label: string): void {
@@ -233,6 +235,26 @@ const transitionPhases: DailyClaimPresentationPhase[] = [
     true,
     'the final round hides its completed clue through inking',
   );
+}
+
+
+// ── Celebration grade (Pete, 2026-11-03) ────────────────────
+// The three clues are a hint ladder (workbook: "Clue 1 (Hardest)" ->
+// "Clue 3 (Easiest)"), so the grade reads how hard the player worked.
+{
+  eq(resolveDailyCelebrationGrade(1), 'cold', 'one clue is a cold read');
+  eq(resolveDailyCelebrationGrade(2), 'sharp', 'two clues is sharp');
+  eq(resolveDailyCelebrationGrade(3), 'solved', 'three clues is the giveaway');
+  // Defensive: the engine clamps to 1-3, but a 0 must never grade below
+  // 'cold' and an over-count must never grade past 'solved'.
+  eq(resolveDailyCelebrationGrade(0), 'cold', 'nothing grades below a cold read');
+  eq(resolveDailyCelebrationGrade(9), 'solved', 'nothing grades past the giveaway');
+
+  // 'solved' MUST keep the cue the Daily already fired: waiting is part of the
+  // game and the patient player's experience is not allowed to change.
+  eq(dailyCelebrationHaptic('solved'), 'standardCorrect', 'the giveaway keeps the old cue');
+  eq(dailyCelebrationHaptic('sharp'), 'claimMedium', 'sharp steps up');
+  eq(dailyCelebrationHaptic('cold'), 'heightenedCorrect', 'a cold read hits hardest');
 }
 
 console.log('dailyClaimPresentation tests passed');
