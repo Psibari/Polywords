@@ -77,6 +77,16 @@ casually.
 - Docs-only changes: `git diff --check`, `git status --short`, and a reference/staleness scan.
 - Report device/native validation separately from static checks.
 - Commit, push, merge, or alter stashes only with explicit approval.
+- Verify every file written to Pete's disk by reading it back through the device SHELL, not the
+  staging read. On 2026-11-04 `device_commit_files` returned success with no rejections and advanced
+  the file's mtime while the OLD content stayed on disk, and the staging read then served a stale
+  snapshot that would have been reported as verified. Compare a byte count or content hash against
+  the source before claiming a write landed.
+- Pete's working tree is CRLF; the repo and any container clone are LF. Write CRLF when putting a
+  file on his disk, or every line in it shows as changed.
+- Technical housekeeping Pete does not follow — stale clones, redundant local commits, scratch files
+  — is Claude's to clean up without being asked, provided nothing is lost, nothing breaks, and
+  Claude reports what it did (Pete, 2026-11-03).
 
 ## Key Owners
 

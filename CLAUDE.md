@@ -497,6 +497,52 @@ Architecture only:
   `handleClaim`, AppState active). Known gap: the 250 ms clue timer does not check for midnight; the
   card appears at the next interaction or app return.
 
+Entry card (2026-11-04). The card behind the start button is the Daily's ONLY teaching surface and
+also its attempt gate: opening the Daily is free, pressing ACCEPT CHALLENGE spends the one attempt.
+It can therefore never stop appearing, or a mis-tap on the Home plaque would burn the day. What
+changes is how much it says. The first time an install presses ACCEPT CHALLENGE it shows the full
+explanation; every day after it is the short gate plus HOW TO PLAY, which reopens exactly the same
+lines from the same constants, so the two can never drift apart. The flag is
+`DAILY_INTRO_SEEN_KEY` (`polywords_daily_intro_seen`) in `app/constants/storageKeys.ts`, beside the
+Boss and Haunt one-time gates, read and written by the screen rather than the store (their pattern).
+It is marked when ACCEPT CHALLENGE is pressed, NOT on render, so backing out with NOT NOW leaves the
+explanation intact. The read happens inside the same `init` that flips `dailyInitialized`, so the
+card never renders before the answer is known. It can NOT be folded into `isReadyToStart`:
+`PollyDailyPerch` renders OUTSIDE the session guard and keys its `show` off that flag, so gating it
+would flash Polly onto the entry screen. A failed read leaves the flag true — short card, never a
+repeat lecture — exactly as Boss and Haunt fail closed. `resetProgressForDev` clears it (long card);
+`resetDailyForDev` deliberately does NOT (short card), so both states are testable with buttons that
+already exist.
+- Every word lives in `app/ui/dailyEntryCopy.ts`, like `dailyPauseCopy.ts` and `dailyExpiredCopy.ts`.
+  Change the copy only on Pete's word.
+- The card scrolls (`startScroll` / `startGate`) and sits 10 pt from each edge so the long version
+  cannot clip on a short phone. Measured 2026-11-04: long card 650 pt, short card 408 pt; the long
+  one fits a 390x844 screen whole and scrolls on a 375x667.
+- THREE buttons, descending weight: ACCEPT CHALLENGE (gold fill), NOT NOW (outline plus faint fill,
+  the game's own secondary copied from `DailyPauseCard` `actionSecondary`), HOW TO PLAY (outline
+  only). NOT NOW was a bare text line and did not read as pressable under a gold primary (Pete).
+- The card says LIVES, not feathers, though the HUD draws two feathers: the reward is a GOLD
+  FEATHER, so on this card the word "feather" only ever means the reward (Pete).
+- A jab is the last line on both cards. `DAILY_ENTRY_TAUNT_FIRST` is fixed on the first-run card;
+  `DAILY_ENTRY_TAUNTS` (six lines) rotates on the short card by `challengeNumber % length`, so it is
+  the same all day and different tomorrow. VOICE: these are the GAME needling the player ABOUT
+  Polly, third person on purpose — NOT her dialogue, which is first person and governed by
+  `docs/POLLY_DIALOGUE_BANK.md`. A first-person draft was rejected: in her own mouth the lines read
+  as the rules explaining themselves instead of the game having a dig.
+- Line budget: a rule line fits ONE line at 19 pt in the card's 326 pt text column on a 390 pt
+  screen, a jab at 18 pt. Most wrap on a 320 pt screen, which is accepted because the jab is last
+  and the card scrolls. Measure before adding copy; a wrapped rule line breaks the one-idea-per-line
+  rhythm the list exists for.
+- Nothing on the card may claim the clues get easier. `docs/DAILY_CONTENT_WRITING_STANDARD.md` orders
+  them hardest-to-easiest only "when that improves the progression", and the live pool varies.
+
+The castle gold hit is NOT graded by clue count (2026-11-04). A graded version was built
+(`GOLD_HIT_GRADE`, `scaleOpacity`, `scaleBloom` and a `goldHitGrade` prop threaded to
+`DailyCastleStage`); Pete found no readable difference on device and it was removed, so
+`dailyGoldHitKeyframes(calm)` takes one argument again. The clue-count grading of the CLAIM HAPTIC
+stays (`resolveDailyCelebrationGrade` / `dailyCelebrationHaptic` in `dailyClaimPresentation.ts`).
+The payoff for solving early is the unbuilt breach sequence, not lighting.
+
 ## Text sizes
 
 Pete, 2026-10-29: nothing below ~18 for copy.

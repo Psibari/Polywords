@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-10-27 (Build 15 accessibility/beta hardening, the Build 16 iOS audio watchdog fix, true Hunt pause/quit, and the dedicated POLYWORDS DEV phone-testing path are now committed and pushed; device-validation status is recorded below). Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-11-04 (the Daily entry card now teaches the mode once and gates every attempt; the graded castle gold hit is removed; the breach is designed and unbuilt). Build 15 accessibility/beta hardening, the Build 16 iOS audio watchdog fix, true Hunt pause/quit, and the dedicated POLYWORDS DEV phone-testing path are committed and pushed; device-validation status is recorded below. Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -454,27 +454,95 @@ Counted live 2026-11-03: **110 puzzles — 34 tier 1, 51 tier 2, 25 tier 3.** `D
    dead four seconds between clues could carry a build; riskiest, as it can read as a timer when
    nothing is actually running out. Pete has not chosen.
 
+## 2026-11-04: Daily entry card, jab pool, tint removed
+
+Pushed: `d6f9264` then `71efc5e` (same message on both; together they are correct).
+
+Two things about that push. The graded gold-hit tint never reached GitHub — it only ever existed as
+uncommitted changes in Pete's working tree, so removing it produced no diff and appears in neither
+commit. And `dailyClaimPresentation.ts` plus its test (the clue-count grade plumbing, 57 lines) went
+up in the first commit after sitting uncommitted since 2026-11-03.
+
+**Built, not device-tested.** The Daily finally explains itself. Architecture is in the Daily
+section of CLAUDE.md. Shape: the entry card is the attempt gate and can never stop appearing, but
+the explanation shows only the first time; after that it is the short gate plus HOW TO PLAY, which
+reopens the same lines from the same constants. Three real buttons now (ACCEPT CHALLENGE gold, NOT
+NOW outlined, HOW TO PLAY outline-only) because a bare NOT NOW did not read as pressable. New flag
+`polywords_daily_intro_seen`; new copy module `app/ui/dailyEntryCopy.ts`.
+
+**Pete's copy rulings (2026-11-04).**
+- It is POLLY'S CHALLENGE by name. The win card already said YOU BEAT POLLY'S CHALLENGE.
+- `FIVE ROUNDS • TWO LIVES` (was FIVE WORDS). ACCEPT CHALLENGE replaces BEGIN DAILY.
+- The card says LIVES, never feathers: the reward is a GOLD FEATHER, so "feather" on this card must
+  mean only the reward or the player has to work out that the gold one is not a third Daily feather.
+- The jab is the GAME's voice ABOUT Polly, third person. A first-person draft was rejected — in her
+  own mouth those lines read as the rules explaining themselves. Her own dialogue stays first person
+  and stays governed by `docs/POLLY_DIALOGUE_BANK.md`.
+- The six approved jabs, verbatim, rotating by challenge number on the short card:
+  TRY NOT TO LOSE TO A CARTOON BIRD. / EENY, MEENY, MINY, MO IS NOT A STRATEGY. / WIN THE FEATHER.
+  NOT POLLY'S RESPECT. / ARE YOU ALLERGIC TO FEATHERS? / SIX WORDS. FIVE OF THEM ARE POLLY'S. /
+  THREE CLUES IS FAIR. AND EMBARRASSING. The first-run card keeps the cartoon-bird line, fixed.
+- Nothing may claim the clues get easier. `docs/DAILY_CONTENT_WRITING_STANDARD.md` orders them
+  hardest-to-easiest only "when that improves the progression" and the live pool varies, so the line
+  would be a lie on some days.
+
+**The graded tint is dead (Pete, device-tested).** "There is no difference at all." A percentage of
+brightness was never going to carry the payoff. Removed entirely. The clue-count grading of the
+CLAIM HAPTIC survives. The real payoff is the breach, below.
+
+**Process note, cost real time.** `device_commit_files` reported success with no rejections and
+advanced the file mtime while the OLD content stayed on Pete's disk; the staging read then served a
+stale snapshot that would have been reported as verified. Caught only by comparing byte counts.
+Rule now in AGENTS.md: verify disk writes through the device SHELL and compare a hash, and write
+CRLF because Pete's working tree is CRLF while the repo is LF.
+
+### THE BREACH — Pete's design, 2026-11-03, nothing built
+
+The answer to "waiting strictly dominates". Not lighting: the gate itself behaves differently by how
+many clues the player needed. `revealedClueCount` already carries this.
+
+- **Three clues:** exactly today's sequence. Unchanged. Waiting is never punished, only out-shone.
+- **Two clues:** the gate does NOT lift when the answer plaque is thrown. The plaque HITS the shut
+  gate, the castle shakes, and only then does the gate go up. Polly jumps or flies up off her perch.
+- **One clue:** the plaque BREAKS THROUGH the gate — there is room for it because only the top clue
+  plank is filled. Lightning, sound, shake. Polly is blown off her perch and makes a sound.
+- **A lost life:** Polly gets a better celebration — a little dance or similar.
+
+Art: Pete mocked the broken gate in context and his version is right; Claude's first attempt put the
+hole at y 1130–1374 when only y 265–1023 of the file is ever visible. The tunnel light is already
+drawn behind the gate, so what is needed is ONE gate image with a genuinely transparent hole, not a
+second gate plus a light. `gate_broken_aligned.png` (Pete's art rescaled from 1505x2056 to the
+game's 1399x1597 frame with a measured +5 px correction) was delivered for Pete to save as
+`assets/images/dailycastle/gate_door_broken.png` — NOT yet saved, and it must not go through the
+device bridge, which injects ~5.8 KB of C2PA metadata into binaries.
+
+Sounds: Pete owes three distinct celebration sounds.
+
 ### NEXT SESSION
 
-1. Daily Challenge onboarding. Pete's ruling: teach in play as each thing happens, Polly speaking on
-   all of them, with the clue clock frozen (`pausedRef` already proves this works). He then ruled
-   the ENTRY CARD must also properly explain how the Daily is played, especially that three clues
-   arrive in stages, rather than being trimmed. The six things a player is never told: clue staging
-   and that timed reveals cost no life; two lives across all five words; a wrong claim costs a life
-   AND kills that card AND pulls the next clue forward; UP only, no reject swipe; the Gold Feather
-   and its one Hunt revive, expiring the same day; the streak advancing on win or loss. The Hunt's
-   HudLessonLayer can NOT be reused wholesale — it is wired to Hunt lesson ids and to Polly flying
-   in, and on the Daily she is already perched. The pure spotlight geometry is reusable.
-2. Settle the clue-speed question first; it decides the onboarding copy.
-3. Freesound licence for `armor_flip_turn.mp3` into `assets/audio/LICENSES.md` (Pete has it).
-4. Strip the injected metadata from the two armor flip MP3s.
-5. A deliberate 10-ROUND test pass. All first-run testing uses the 8-round fledgling arc, so
+1. **Build the breach** (section above). This is the live piece of work. Needs the broken-gate asset
+   saved first, and the three celebration sounds.
+2. **Device-test the entry card.** Nothing built on 2026-11-04 has run on a phone. Reset Progress
+   gives the long card, DEV RESET DAILY gives the short one. Watch for: the long card on a short
+   phone (it scrolls), the three-button hierarchy, and whether HOW TO PLAY reads as pressable now
+   that it is outline-only.
+3. **Daily in-play lessons.** Still open, and separate from the entry card. Pete's ruling stands:
+   teach in play as each thing happens, Polly speaking, with the clue clock frozen (`pausedRef`
+   already proves it works). The Hunt's `HudLessonLayer` can NOT be reused wholesale — it is wired
+   to Hunt lesson ids and to Polly flying in, and on the Daily she is already perched. The pure
+   spotlight geometry IS reusable. Note the entry card now covers most of the six gaps, so the
+   in-play set should be re-scoped before anything is built.
+4. **Daily content.** 110 puzzles repeat after 17 days, tier 1 being the choke point; about 40 more
+   are needed for 30 days, mostly tier 1. Pete has an updated 118-entry workbook to hand over. Who
+   assigned the existing tiers and against what definition is still UNRESOLVED — settle before
+   writing more.
+5. Freesound licence for `armor_flip_turn.mp3` into `assets/audio/LICENSES.md` (Pete has it).
+6. Strip the injected C2PA metadata from the two armor flip MP3s.
+7. A deliberate 10-ROUND test pass. All first-run testing uses the 8-round fledgling arc, so
    anything that only breaks at ten rounds has been invisible (the chip overflow was one).
-6. Polly's "Trap. Trap. Trap." chant — Pete likes it and wants it used somewhere; no home chosen.
+8. Polly's "Trap. Trap. Trap." chant — Pete likes it and wants it used somewhere; no home chosen.
    Candidates raised: the game-over laugh, or the Returning Haunt gloat. The armor-break moment was
-   ruled out as too crowded, and the armor-break Polly beat was dropped entirely: that moment
-   already carries FELL OFF, the wall fall, two impacts, the red flash, the big haptic, and her
-   wrong-swipe squawk already fires on every real chain break.
-7. Still open from before: Hunt pause button overlapping Polly's bubble; TestFlight splash build;
+   ruled out as too crowded.
+9. Still open from before: Hunt pause button overlapping Polly's bubble; TestFlight splash build;
    build-size warning (Pete brings the exact message); dev `FALL 3` / `ARMOR STEP` / `REPLAY
    LESSONS` buttons to remove when Pete says.
