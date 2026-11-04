@@ -75,6 +75,9 @@ import {
   DAILY_ENTRY_INTRO,
   DAILY_ENTRY_RULES,
   DAILY_ENTRY_REWARD,
+  DAILY_ENTRY_REWARD_SUB,
+  dailyEntryTaunt,
+  DAILY_ENTRY_TAUNT_FIRST,
   DAILY_ENTRY_ATTEMPT,
   DAILY_ENTRY_BEGIN,
   DAILY_ENTRY_BEGIN_BUSY,
@@ -1502,7 +1505,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                     <Text key={line} style={styles.startRuleLine}>{line}</Text>
                   ))}
                 </View>
-                <Text style={styles.startBody}>{DAILY_ENTRY_REWARD}</Text>
+                <Text style={styles.startReward}>{DAILY_ENTRY_REWARD}</Text>
+                <Text style={styles.startBody}>{DAILY_ENTRY_REWARD_SUB}</Text>
               </>
             )}
             <Text style={styles.startAttempt}>{DAILY_ENTRY_ATTEMPT}</Text>
@@ -1522,6 +1526,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 {dailyStarting ? DAILY_ENTRY_BEGIN_BUSY : DAILY_ENTRY_BEGIN}
               </Text>
             </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Return Home"
+              onPress={handleHome}
+              style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
+            >
+              <Text style={styles.startHomeText}>{DAILY_ENTRY_LEAVE}</Text>
+            </Pressable>
             {dailyIntroSeen && (
               <Pressable
                 accessibilityRole="button"
@@ -1535,14 +1547,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
                 </Text>
               </Pressable>
             )}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Return Home"
-              onPress={handleHome}
-              style={({ pressed }) => [styles.startHomeButton, pressed && styles.startButtonPressed]}
-            >
-              <Text style={styles.startHomeText}>{DAILY_ENTRY_LEAVE}</Text>
-            </Pressable>
+            <Text style={styles.startTaunt}>
+              {dailyIntroSeen ? dailyEntryTaunt(challengeNumber) : DAILY_ENTRY_TAUNT_FIRST}
+            </Text>
           </View>
         </ScrollView>
       )}
@@ -1794,14 +1801,36 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: 'center',
   },
-  // The reward.
+  // The reward, shouted in the same gold as the title so the eye lands on the
+  // payoff, then said plainly underneath.
+  startReward: {
+    color: dailyResultsMaterial.titleWin,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 20,
+    lineHeight: 24,
+    letterSpacing: 1,
+    marginTop: 18,
+    textAlign: 'center',
+  },
   startBody: {
     color: dailyResultsMaterial.statText,
     fontFamily: FONTS.tileCopy,
     includeFontPadding: false,
-    fontSize: 20,
-    lineHeight: 24,
-    marginTop: 18,
+    fontSize: 19,
+    lineHeight: 23,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  // Polly's jab under the button.
+  startTaunt: {
+    color: dailyResultsMaterial.homeText,
+    fontFamily: FONTS.hud,
+    includeFontPadding: false,
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: 1,
+    marginTop: 12,
     textAlign: 'center',
   },
   // What entering costs.
@@ -1821,7 +1850,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     width: '100%',
     alignItems: 'center',
-    marginTop: 22,
+    marginTop: 20,
   },
   startButtonPressed: {
     opacity: 0.82,
@@ -1840,31 +1869,41 @@ const styles = StyleSheet.create({
   // in the brighter rule colour, so the only gold button on the card stays
   // BEGIN DAILY and this still reads as an action rather than a way out.
   startRulesButton: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
     width: '100%',
     marginTop: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
   },
   startRulesText: {
     color: dailyResultsMaterial.speedTitle,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 18,
-    letterSpacing: 2,
+    letterSpacing: 2.5,
   },
-  // NOT NOW matches the results HOME link (res.homeBtn).
+  // NOT NOW is a real button, not a link: sitting under a gold primary and
+  // above a grey jab, a bare text line did not read as pressable (Pete,
+  // 2026-11-04). This is the game's own secondary treatment, copied from
+  // DailyPauseCard's actionSecondary, so gold stays unique to the primary.
   startHomeButton: {
-    paddingVertical: 10,
+    paddingVertical: 13,
     alignItems: 'center',
     width: '100%',
-    marginTop: 6,
+    marginTop: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: PW.color.purpleSoft,
+    backgroundColor: 'rgba(33,27,74,0.42)',
   },
   startHomeText: {
-    color: dailyResultsMaterial.homeText,
+    color: PW.color.softWhite,
     fontFamily: FONTS.hud,
     includeFontPadding: false,
     fontSize: 18,
-    letterSpacing: 2,
+    letterSpacing: 2.5,
   },
   // Castle arch — front frame at top, in front of gate
   castleArch: {

@@ -26,7 +26,7 @@ export function dailyEntryKicker(number: number): string {
 export const DAILY_ENTRY_TITLE = "POLLY'S CHALLENGE";
 
 /** The one-line rule under the title. */
-export const DAILY_ENTRY_RULE = 'FIVE WORDS · TWO LIVES';
+export const DAILY_ENTRY_RULE = 'FIVE ROUNDS • TWO LIVES';
 
 /** Polly's framing, above the mechanics. */
 export const DAILY_ENTRY_INTRO = 'Polly sets the traps. One challenge a day.';
@@ -39,34 +39,92 @@ export const DAILY_ENTRY_INTRO = 'Polly sets the traps. One challenge a day.';
  *  - a wrong claim costs one life and reveals the next clue immediately
  *  - UP only; there is no reject swipe and no tap-submit
  */
-// Measured 2026-11-03: every line below renders on ONE line at 19 pt in the
-// card's 326 pt text column on a 390 pt screen. Three of them wrap on a 320 pt
-// screen, which the card's scroll absorbs. Keep new lines inside that budget;
-// a wrapped line breaks the one-idea-per-line rhythm the list exists for.
+// Pete's wording, 2026-11-04. A capitalised opener carries each line's verb
+// and the rest stays sentence case, so the eye lands on the action.
+// Measured: every line renders on ONE line at 19 pt in the card's 326 pt text
+// column on a 390 pt screen. Keep new lines inside that budget; a wrapped line
+// breaks the one-idea-per-line rhythm the list exists for.
+//
+// Verified against app/game/dailyChallengeEngine.ts:
+//  - three clues, clue 1 immediate, 2 at 4s, 3 at 8s, all free
+//  - six candidate cards per round, the target exactly once
+//  - a wrong claim costs one of the two lives and reveals the next clue
+//  - UP only; there is no reject swipe and no tap-submit
 export const DAILY_ENTRY_RULES: readonly string[] = [
-  'THREE CLUES COME DOWN, ONE AT A TIME.',
-  'SIX WORDS WAIT IN THE WALL.',
-  'EVERY TRAP FITS A CLUE.',
-  'ONLY ONE WORD FITS ALL THREE.',
-  'SWIPE UP TO CLAIM IT.',
-  'WAIT AND THE NEXT CLUE COMES FREE.',
-  'A WRONG CLAIM COSTS A LIFE.',
+  'THREE CLUES. SIX WORDS. ONE ANSWER.',
+  'Clues appear one at a time.',
+  'Only one word fits all three.',
+  'SWIPE UP to claim your answer.',
+  'WAIT for another clue, free.',
+  'WRONG ANSWER costs one life.',
 ];
 
 /**
- * The reward. A win grants one Gold Feather (grantGoldFeather in
- * useGameStore.ts), which expires at the next local midnight and is spent at
- * Hunt game over for an in-place one-feather revive.
+ * The reward, in two parts: the shout, then what it actually is. A win grants
+ * one Gold Feather (grantGoldFeather in useGameStore.ts), which expires at the
+ * next local midnight and is spent at Hunt game over for an in-place
+ * one-feather revive.
  */
-export const DAILY_ENTRY_REWARD =
-  'Beat all five and you take her GOLD FEATHER — a free life in the Hunt, good until midnight.';
+export const DAILY_ENTRY_REWARD = 'BEAT ALL FIVE TO WIN A GOLD FEATHER!';
+export const DAILY_ENTRY_REWARD_SUB = 'One free Hunt life, good until midnight.';
 
 /** The cost of entering. Opening the screen is free; BEGIN DAILY spends the attempt. */
-export const DAILY_ENTRY_ATTEMPT = 'One attempt. It starts when you enter.';
+export const DAILY_ENTRY_ATTEMPT = 'One attempt. Starts when you enter.';
 
 /** The commit button, and the same button while the session is being built. */
-export const DAILY_ENTRY_BEGIN = 'BEGIN DAILY';
+export const DAILY_ENTRY_BEGIN = 'ACCEPT CHALLENGE';
 export const DAILY_ENTRY_BEGIN_BUSY = 'OPENING…';
+
+/**
+ * The jab, the last line on the card. It shows on BOTH cards: the short one is
+ * the card a player actually sees every day (Pete, 2026-11-04).
+ *
+ * VOICE: these are the GAME needling the player ABOUT Polly, not Polly
+ * speaking. Third person on purpose — "a cartoon bird", "Polly's respect",
+ * "five of them are Polly's". Do not "fix" them into first person; an earlier
+ * draft did and Pete rejected it, because in her own mouth a line like
+ * "five of them are mine" reads as the rules explaining themselves instead of
+ * the game having a dig. Polly's own dialogue, which IS first person, lives in
+ * docs/POLLY_DIALOGUE_BANK.md and is governed separately.
+ *
+ * A pool rather than one line, because a fixed jab read every morning stops
+ * being a jab and becomes furniture. Add more whenever; no code changes.
+ *
+ * Measured 2026-11-04: each fits ONE line at 18 pt in the card's 326 pt text
+ * column on a 390 pt screen. All but the shortest wrap to two on a 320 pt
+ * screen, which is accepted — the jab is the last element and the card scrolls.
+ *
+ * Every line is Pete's, approved verbatim 2026-11-04. Nothing here may claim
+ * anything the game does not do: no difficulty tells, no hint at an answer, and
+ * nothing about how many players have solved today (the app cannot know).
+ */
+export const DAILY_ENTRY_TAUNTS: readonly string[] = [
+  'TRY NOT TO LOSE TO A CARTOON BIRD.',
+  'EENY, MEENY, MINY, MO IS NOT A STRATEGY.',
+  "WIN THE FEATHER. NOT POLLY'S RESPECT.",
+  'ARE YOU ALLERGIC TO FEATHERS?',
+  "SIX WORDS. FIVE OF THEM ARE POLLY'S.",
+  'THREE CLUES IS FAIR. AND EMBARRASSING.',
+];
+
+/**
+ * The first-run card's jab never rotates (Pete, 2026-11-04): the long card is
+ * seen once, so it gets the signature line. The pool above belongs to the short
+ * card, the one a player sees every morning.
+ */
+export const DAILY_ENTRY_TAUNT_FIRST = 'TRY NOT TO LOSE TO A CARTOON BIRD.';
+
+/**
+ * Today's jab. Keyed to the challenge number, not a random pick, so it is the
+ * same line all day no matter how many times the player opens, backs out with
+ * NOT NOW, or reopens the rules — and a different one tomorrow.
+ */
+export function dailyEntryTaunt(challengeNumber: number): string {
+  const pool = DAILY_ENTRY_TAUNTS;
+  if (pool.length === 0) return '';
+  const index = Math.abs(Math.trunc(challengeNumber)) % pool.length;
+  return pool[index] ?? '';
+}
 
 /**
  * Opens the rules again on the short returning card (Pete, 2026-11-03: "a
