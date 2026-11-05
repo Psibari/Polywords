@@ -623,6 +623,145 @@ export function dailyBreachDustKeyframes(): {
   return { inputRange, rise, scale, opacity };
 }
 
+// ── The breach clocks ──
+// Each breach tier has one native clock (ms from the claim) started in the same
+// tick as the plaque's first leg, so both run on the native clock from the same
+// frame. Every contact visual reads it, offset to the contact, so none of them
+// waits for JS at contact. Measured on a phone (2026-11-04, development build):
+// when contact was a JS timer that set state, the sounds started 270 ms and the
+// lightning about 660 ms after the plaque's contact frame, behind the renders.
+
+/**
+ * The sounds and the haptic fire this many ms BEFORE the plaque's contact frame,
+ * to cover a phone's audio output latency. 0 = on the plaque's real contact
+ * (the first leg's completion). One number for the phone pass.
+ */
+export const BREACH_CONTACT_LEAD_MS = 0;
+
+/** Time from one keyframe to the next where a value must jump (a resting point before a start). */
+const CLOCK_EDGE_MS = 0.5;
+
+/**
+ * Places keyframes on a breach clock: input `x` lands at startMs + x * scaleMs.
+ * Before startMs the value rests at `restBefore` (default: the first output);
+ * after the last keyframe it holds the last output (the caller clamps).
+ */
+export function dailyBreachOnClock(
+  keys: DailyBreachKeyframes,
+  startMs: number,
+  scaleMs = 1,
+  restBefore: number = keys.outputRange[0],
+): DailyBreachKeyframes {
+  const inputRange = keys.inputRange.map((x) => startMs + x * scaleMs);
+  const outputRange = [...keys.outputRange];
+  if (restBefore !== outputRange[0]) {
+    inputRange.unshift(inputRange[0] - CLOCK_EDGE_MS);
+    outputRange.unshift(restBefore);
+  }
+  return { inputRange, outputRange };
+}
+
+/** The contact on a tier's clock (ms from the claim), motion on. */
+function contactOnClock(tier: 'hit' | 'smash'): number {
+  return dailyBreachBeats(tier, true).contactMs ?? 0;
+}
+
+/** How long a tier's clock runs: until every contact visual has come back to rest. */
+export function dailyBreachClockMs(tier: 'hit' | 'smash'): number {
+  const beats = dailyBreachBeats(tier, true);
+  const contact = beats.contactMs ?? 0;
+  const t = DAILY_GOLD_HIT_TIERS[tier];
+  const ends = [
+    contact + t.igniteMs + t.holdMs + t.decayMs,
+    contact + dailyBreachEffectsMs(tier),
+    contact + DAILY_BREACH_SHAKE[tier].ms,
+    contact + DAILY_BREACH_GATE_JITTER[tier].ms,
+    contact + DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs,
+  ];
+  if (tier === 'hit') ends.push(beats.gateRiseStartMs + DAILY_BREACH_CRACKS_FADE.outMs);
+  return Math.ceil(Math.max(...ends)) + 1;
+}
+
+/** The castle shake for a tier, x and y, on its clock: 0 before contact, 0 after. */
+export function dailyBreachShakeOnClock(tier: 'hit' | 'smash'): { x: DailyBreachKeyframes; y: DailyBreachKeyframes } {
+  const keys = dailyBreachShakeKeyframes(tier);
+  const at = contactOnClock(tier);
+  const ms = DAILY_BREACH_SHAKE[tier].ms;
+  return { x: dailyBreachOnClock(keys.x, at, ms), y: dailyBreachOnClock(keys.y, at, ms) };
+}
+
+/** The gate's shudder for a tier on its clock. */
+export function dailyBreachGateJitterOnClock(tier: 'hit' | 'smash'): DailyBreachKeyframes {
+  return dailyBreachOnClock(dailyBreachGateJitterKeyframes(tier), contactOnClock(tier), DAILY_BREACH_GATE_JITTER[tier].ms);
+}
+
+/** 'hit': the door's cracks on its clock, in at contact and out from the gate's rise. */
+export function dailyBreachCracksOnClock(): DailyBreachKeyframes {
+  const beats = dailyBreachBeats('hit', true);
+  const contact = beats.contactMs ?? 0;
+  const F = DAILY_BREACH_CRACKS_FADE;
+  return {
+    inputRange: [contact, contact + F.inMs, beats.gateRiseStartMs, beats.gateRiseStartMs + F.outMs],
+    outputRange: [0, 1, 1, 0],
+  };
+}
+
+/** 'hit': the plaque's press into the shut gate on its clock (eased out, then back). */
+export function dailyBreachPressOnClock(): DailyBreachKeyframes {
+  const contact = contactOnClock('hit');
+  const P = DAILY_BREACH_PLAQUE_PRESS;
+  const steps = 4;
+  const inputRange: number[] = [];
+  const outputRange: number[] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const u = i / steps;
+    inputRange.push(contact + P.inMs * u);
+    outputRange.push(1 - (1 - u) * (1 - u));
+  }
+  for (let i = 1; i <= steps; i += 1) {
+    const u = i / steps;
+    inputRange.push(contact + P.inMs + P.outMs * u);
+    outputRange.push(1 - (u < 0.5 ? 2 * u * u : 1 - 2 * (1 - u) * (1 - u)));
+  }
+  return { inputRange, outputRange };
+}
+
+/**
+ * The gold hit's phase (0 → 1 ignited → 2 held → 3 gone, as DAILY_GOLD_HIT_INPUT)
+ * for a breach tier on its clock, starting at contact with the same easings the
+ * stage's own hit uses (out-cubic, linear, in-out-quad), sampled. It rests at 0
+ * before contact and drops back to 0 once gone, so it can be ADDED to the
+ * stage's own gold value without ever stacking.
+ */
+export function dailyGoldHitPhaseOnClock(
+  tier: 'hit' | 'smash',
+  timing: { igniteMs: number; holdMs: number; decayMs: number },
+): DailyBreachKeyframes {
+  const contact = contactOnClock(tier);
+  const steps = 6;
+  const inputRange: number[] = [contact];
+  const outputRange: number[] = [0];
+  const phase = (from: number, ms: number, base: number, ease: (u: number) => number) => {
+    for (let i = 1; i <= steps; i += 1) {
+      const u = i / steps;
+      inputRange.push(from + ms * u);
+      outputRange.push(base + ease(u));
+    }
+  };
+  phase(contact, timing.igniteMs, 0, (u) => 1 - (1 - u) ** 3);
+  phase(contact + timing.igniteMs, timing.holdMs, 1, (u) => u);
+  phase(contact + timing.igniteMs + timing.holdMs, timing.decayMs, 2, (u) => (u < 0.5 ? 2 * u * u : 1 - 2 * (1 - u) * (1 - u)));
+  const end = inputRange[inputRange.length - 1];
+  inputRange.push(end + CLOCK_EDGE_MS);
+  outputRange.push(0);
+  return { inputRange, outputRange };
+}
+
+/** When the contact's sounds and haptic fire, ms from the claim (BREACH_CONTACT_LEAD_MS earlier than contact). */
+export function dailyBreachContactCueMs(tier: 'hit' | 'smash'): number {
+  return Math.max(0, contactOnClock(tier) - BREACH_CONTACT_LEAD_MS);
+}
+
 /** How long a tier's effects run on the breach clock (ms); the particles unmount after it. */
 export function dailyBreachEffectsMs(tier: DailyBreachTier): number {
   if (tier === 'open') return 0;

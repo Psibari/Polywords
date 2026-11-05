@@ -37,8 +37,17 @@ import {
   DAILY_BREACH_SEEDS,
   DAILY_BREACH_SHAKE,
   DAILY_BREACH_SPLINTERS,
+  BREACH_CONTACT_LEAD_MS,
   dailyBreachBeats,
   dailyBreachBoltKeyframes,
+  dailyBreachClockMs,
+  dailyBreachContactCueMs,
+  dailyBreachCracksOnClock,
+  dailyBreachGateJitterOnClock,
+  dailyBreachOnClock,
+  dailyBreachPressOnClock,
+  dailyBreachShakeOnClock,
+  dailyGoldHitPhaseOnClock,
   dailyBreachBolts,
   dailyBreachCrackLines,
   dailyBreachCrackPath,
@@ -585,20 +594,37 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   assert.match(run, /const beats = dailyBreachBeats\(breachTier, motion\);/);
   assert.match(run, /if \(beats\.gateRiseStartMs === 0\) raiseGate\(\);/, 'open and calm: the gate rises at once');
   assert.match(run, /stayInFront: breachTier === 'hit'/, 'a hit plaque stays in front of the shut gate');
-  // ONE contact callback, guarded, at contactMs.
-  const contact = between('// CONTACT (', '}, beats.contactMs);');
-  assert.equal(run.split('beats.contactMs);').length - 1, 1, 'one callback at contact');
-  assert.match(contact, /scheduleCorrectTransition\(\(\) => \{\n\s*if \(completingCandidateRef\.current !== candidate\) return;/);
-  for (const needle of ["playSfx('breachGateCrack')", "playSfx('breachCastleRumble')", "playSfx('breachSmash')", "playSfx('breachThunder')", 'setGoldHit(', 'setBreachShake(', 'setBreachEffects(', 'setGateBroken(true)']) {
-    assert.ok(contact.includes(needle), `contact: ${needle}`);
+  // The contact path (2026-11-04, measured on a phone: a contact TIMER that set
+  // state put the sounds 270 ms and the lightning ~660 ms after the plaque).
+  // At the claim: the gold tier (no token bump), and for a smash the broken
+  // state and the armed hole. Nothing at contact renders.
+  const atClaim = between('const contactTier = ', 'gatePosition.stopAnimation();');
+  assert.match(atClaim, /setGoldHit\(\(prev\) => \(\{ token: prev\.token, tier: contactTier \}\)\);/, 'the gold tier is set at the claim, not bumped');
+  assert.match(atClaim, /setGateBroken\(true\);\n\s*gateBreakArmed\.setValue\(1\);/);
+  assert.doesNotMatch(run, /token: prev\.token \+ 1, tier: breachTier/, 'no gold hit token at contact');
+  // The cues: guarded, sounds and haptic only, no state, no animation.
+  const cues = between('const fireContactCues = () => {', '\n    };');
+  assert.match(cues, /^const fireContactCues = \(\) => \{\n\s*if \(completingCandidateRef\.current !== candidate\) return;/);
+  for (const needle of ["playSfx('breachGateCrack')", "playSfx('breachCastleRumble')", "playSfx('breachSmash')", "playSfx('breachThunder')", "Haptics.cueAsync('trapRejectHeavy')", "Haptics.cueAsync('bossEntry')"]) {
+    assert.ok(cues.includes(needle), `contact cues: ${needle}`);
   }
-  assert.ok(!contact.includes("playSfx('correctClaim')"), 'no claim chime at contact');
+  assert.doesNotMatch(cues, /\bset[A-Z]\w*\(|Animated\.|correctClaim/, 'nothing at contact but sounds and haptics');
+  // On the plaque's real contact: the first leg's completion, cues FIRST.
+  const legEnd = between('plaqueRiseLeg().start(({ finished }) => {', '\n      });');
+  assert.ok(legEnd.indexOf('if (cuesOnLegEnd) fireContactCues();') > legEnd.indexOf('if (!finished) return;'), 'only on a finished leg');
+  assert.ok(legEnd.indexOf('if (cuesOnLegEnd) fireContactCues();') < legEnd.indexOf('plaqueAbsorbLeg().start()'), 'cues before the absorb starts');
+  assert.match(run, /const cuesOnLegEnd = contactTier !== null && BREACH_CONTACT_LEAD_MS === 0;/);
+  assert.match(run, /scheduleCorrectTransition\(fireContactCues, dailyBreachContactCueMs\(contactTier\)\);/, 'a lead fires them early instead');
+  // The tier's clock starts in the same tick as the first leg, just before it.
+  const clockAt = run.indexOf('Animated.timing(clock, {');
+  assert.ok(clockAt > 0 && clockAt < run.indexOf('plaqueRiseLeg().start('), 'clock and plaque start together');
+  assert.match(run, /const clockMs = dailyBreachClockMs\(contactTier\);/);
+  assert.equal(run.split('scheduleCorrectTransition(').length - 1, 6, 'no contact timer beyond the cue lead');
   // The broken gate is gone before the next round's gate drops.
   const landed = between("setPhysicalClaimPhase('landed');", '}, goneAtMs);');
   assert.ok(landed.includes('setGateBroken(false);'), 'whole gate again once it is up');
   // The smash's hole: armed at the claim, opened by the flight's own progress,
   // disarmed once the broken gate is up.
-  assert.match(run, /if \(breachTier === 'smash'\) gateBreakArmed\.setValue\(1\);/);
   assert.ok(landed.includes('gateBreakArmed.setValue(0);'), 'disarmed before the next gate drops');
   assert.match(
     screen,
@@ -606,7 +632,7 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
     'the hole is driven off the same progress as the plaque',
   );
   assert.match(screen, /gateBrokenArt=\{gateBrokenArt\}/);
-  assert.ok(contact.includes('setGateBroken(true)'), 'clues two and three still hidden while broken');
+  assert.ok(atClaim.includes('setGateBroken(true)'), 'clues two and three still hidden while broken');
   assert.match(run, /const runsProgress = flies \|\| beats\.contactMs !== null;/, 'a breach runs the progress even with no plaque drawn');
   assert.match(run, /const goneAtMs = dailyThrowGoneMs\(motion, breachTier\);/);
   assert.match(run, /const goldHitEndMs = \(beats\.contactMs \?\? 0\) \+ dailyGoldHitMsForTier\(breachTier, reduceFlashes\);/);
@@ -614,6 +640,99 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   // Every new piece goes back to rest with the claim timers.
   assert.match(screen, /correctTransitionTimersRef\.current = \[\];\n    resetBreachPresentation\(\);/);
   assert.doesNotMatch(screen, /Math\.random/);
+}
+
+// ── The breach clocks ──
+// Every contact visual rides its tier's clock: at rest before the contact and
+// after its effect, and invisible at 0 (where the clock rests between claims).
+{
+  const sample = (keys: { inputRange: number[]; outputRange: number[] }, t: number) => {
+    const { inputRange: xs, outputRange: ys } = keys;
+    if (t <= xs[0]) return ys[0];
+    for (let i = 1; i < xs.length; i += 1) {
+      if (t <= xs[i]) return ys[i - 1] + ((ys[i] - ys[i - 1]) * (t - xs[i - 1])) / (xs[i] - xs[i - 1]);
+    }
+    return ys[ys.length - 1];
+  };
+  assert.equal(BREACH_CONTACT_LEAD_MS, 0, 'cues on the plaque\'s contact until a phone pass says otherwise');
+
+  // dailyBreachOnClock: placement and the resting point before the start.
+  assert.deepEqual(dailyBreachOnClock({ inputRange: [0, 1], outputRange: [0, 5] }, 100, 50), { inputRange: [100, 150], outputRange: [0, 5] });
+  assert.deepEqual(dailyBreachOnClock({ inputRange: [0, 10], outputRange: [1, 0] }, 100, 1, 0), { inputRange: [99.5, 100, 110], outputRange: [0, 1, 0] });
+
+  for (const tier of ['hit', 'smash'] as const) {
+    const contact = dailyBreachBeats(tier, true).contactMs ?? 0;
+    const clockMs = dailyBreachClockMs(tier);
+    assert.equal(dailyBreachContactCueMs(tier), contact, `${tier}: cues at contact`);
+    const sets: [string, { inputRange: number[]; outputRange: number[] }, number][] = [
+      ['shake x', dailyBreachShakeOnClock(tier).x, 0],
+      ['shake y', dailyBreachShakeOnClock(tier).y, 0],
+      ['gate jitter', dailyBreachGateJitterOnClock(tier), 0],
+      ['gold phase', dailyGoldHitPhaseOnClock(tier, DAILY_GOLD_HIT_TIERS[tier]), 0],
+      ['calm gold phase', dailyGoldHitPhaseOnClock(tier, { igniteMs: 200, holdMs: 150, decayMs: 400 }), 0],
+      ['flash', dailyBreachFlashKeyframes(dailyBreachFlashes(tier).map((f) => ({ ...f, atMs: f.atMs + contact }))), 0],
+      ['dust opacity', dailyBreachOnClock({ inputRange: dailyBreachDustKeyframes().inputRange, outputRange: dailyBreachDustKeyframes().opacity }, contact, 1, 0), 0],
+    ];
+    if (tier === 'hit') {
+      sets.push(['cracks', dailyBreachCracksOnClock(), 0], ['press', dailyBreachPressOnClock(), 0]);
+    } else {
+      for (const index of [0, 1] as const) {
+        const k = dailyBreachBoltKeyframes(index);
+        sets.push([`bolt ${index}`, { inputRange: k.inputRange.map((t) => t + contact), outputRange: k.outputRange }, 0]);
+      }
+      const k = dailyBreachSplinterKeyframes(dailyBreachSplinters()[0]);
+      sets.push(['splinter opacity', dailyBreachOnClock({ inputRange: k.inputRange, outputRange: k.opacity }, contact, 1, 0), 0]);
+    }
+    for (const [name, keys, rest] of sets) {
+      for (let i = 1; i < keys.inputRange.length; i += 1) assert.ok(keys.inputRange[i] > keys.inputRange[i - 1], `${tier} ${name}: increasing input`);
+      assert.equal(sample(keys, 0), rest, `${tier} ${name}: at rest with the clock at 0`);
+      assert.equal(sample(keys, contact - 1), rest, `${tier} ${name}: nothing before the contact`);
+      assert.ok(Math.abs(sample(keys, clockMs)) < 1e-9 && sample(keys, clockMs + 1000) === sample(keys, clockMs), `${tier} ${name}: at rest when the clock ends`);
+      assert.ok(keys.inputRange[keys.inputRange.length - 1] <= clockMs, `${tier} ${name}: inside the clock`);
+      assert.ok(keys.inputRange.some((t, i) => t >= contact - 0.5 && keys.outputRange[i] !== rest), `${tier} ${name}: it does play, from the contact`);
+    }
+    // The gold hit lights at the contact, holds and goes, then drops back to 0.
+    const t = DAILY_GOLD_HIT_TIERS[tier];
+    const gold = dailyGoldHitPhaseOnClock(tier, t);
+    assert.ok(Math.abs(sample(gold, contact + t.igniteMs) - 1) < 1e-9, `${tier}: ignited`);
+    assert.ok(Math.abs(sample(gold, contact + t.igniteMs + t.holdMs) - 2) < 1e-9, `${tier}: held`);
+    assert.ok(Math.abs(sample(gold, contact + t.igniteMs + t.holdMs + t.decayMs) - 3) < 1e-9, `${tier}: gone`);
+  }
+  // 'hit': the cracks fade from the gate's rise.
+  assert.equal(sample(dailyBreachCracksOnClock(), dailyBreachBeats('hit', true).gateRiseStartMs), 1);
+}
+
+// The stage's breach layers are mounted with it (motion allowed), memoised, and
+// played by the clocks; nothing about them waits for a claim or a contact.
+{
+  const stage = readFileSync(join(__dirname, '../components/DailyCastleStage.tsx'), 'utf8').replace(/\r\n/g, '\n');
+  assert.match(stage, /const DailyBreachEffectLayers = React\.memo\(function DailyBreachEffectLayers/);
+  assert.match(stage, /\{breachLayers && <DailyBreachEffectLayers layers=\{breachLayers\}/);
+  assert.match(stage, /const breachLayers = useMemo<DailyBreachLayers \| null>\(\(\) => \{\n\s*if \(!animateMotion\) return null;/);
+  assert.doesNotMatch(stage, /setBreachRun|breachRun|breachEffects|shakeToken/, 'no mount-on-demand path left');
+  assert.match(stage, /const phase = Animated\.add\(\n\s*goldHit,\n\s*Animated\.add\(phaseOnClock\('hit', hitClock\), phaseOnClock\('smash', smashClock\)\),/);
+  const layers = between('const DailyBreachEffectLayers', 'const styles = StyleSheet.create');
+  assert.equal(layers.split('pointerEvents="none"').length - 1, 3, 'bolts, dust and splinters never take touches');
+  function between(start: string, end: string) {
+    const from = stage.indexOf(start);
+    assert.ok(from >= 0, `found ${start}`);
+    return stage.slice(from, stage.indexOf(end, from));
+  }
+}
+
+// The four breach sounds are rewound ahead of time and start with play() alone;
+// every other sound keeps its rewind-then-play path.
+{
+  const sfx = readFileSync(join(__dirname, '../audio/sfx.ts'), 'utf8').replace(/\r\n/g, '\n');
+  assert.match(sfx, /const PRE_REWOUND_SFX: ReadonlySet<SfxName> = new Set<SfxName>\(\[\n  'breachGateCrack',\n  'breachCastleRumble',\n  'breachSmash',\n  'breachThunder',\n\]\);/);
+  const play = sfx.slice(sfx.indexOf('async function playOnPlayer('), sfx.indexOf('function getOrCreateSlot('));
+  const fast = play.indexOf('if (PRE_REWOUND_SFX.has(name) && item.rewound) {');
+  assert.ok(fast > 0 && fast < play.indexOf('await item.player.seekTo(0, 0, 0);'), 'the pre-rewound start comes first');
+  const fastPath = play.slice(fast, play.indexOf('    return;\n  }', fast));
+  assert.ok(!fastPath.includes('await') && !fastPath.includes('seekTo') && fastPath.includes('item.player.play();'), 'no rewind on the contact path');
+  assert.match(play, /item\.player\.pause\(\);\n\s*await item\.player\.seekTo\(0, 0, 0\);/, 'other sounds unchanged');
+  assert.match(sfx, /onFinish\?\.\(\);\n  if \(PRE_REWOUND_SFX\.has\(name\)\) rewindAhead\(item\);/, 'rewound again when a play finishes');
+  assert.match(sfx, /slot\.loadAttempts = 0;\n\s*if \(PRE_REWOUND_SFX\.has\(name\)\) rewindAhead\(item\);/, 'rewound when the player loads (warm-up)');
 }
 
 console.log('dailyBreach tests passed');

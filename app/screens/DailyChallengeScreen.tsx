@@ -45,14 +45,15 @@ import {
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
 import {
-  DAILY_BREACH_CRACKS_FADE,
-  DAILY_BREACH_GATE_JITTER,
-  DAILY_BREACH_PLAQUE_PRESS,
+  BREACH_CONTACT_LEAD_MS,
   dailyBreachBeats,
-  dailyBreachGateJitterKeyframes,
+  dailyBreachClockMs,
+  dailyBreachContactCueMs,
+  dailyBreachCracksOnClock,
+  dailyBreachGateJitterOnClock,
+  dailyBreachPressOnClock,
   dailyGateBreakKeyframes,
   resolveDailyBreachTier,
-  type DailyBreachShakeProfile,
   type DailyBreachTier,
 } from '../ui/dailyBreach';
 import { canOpenDailyPause } from '../game/dailyPause';
@@ -581,21 +582,38 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     claimBreachTierRef.current = tier;
     setClaimBreachTierState(tier);
   }
-  // The stage's castle shake and its breach effects (lightning, flash, dust,
-  // splinters), each played once per token bump.
-  const [breachShake, setBreachShake] = useState<{ token: number; profile: DailyBreachShakeProfile }>({ token: 0, profile: 'hit' });
-  const [breachEffects, setBreachEffects] = useState<{ token: number; tier: DailyBreachTier }>({ token: 0, tier: 'open' });
-  // The gate's side of the breach: the broken art, its shudder, the cracks on
-  // the shut door, and the thrown plaque's press into it. All rest at 0 / whole.
-  const [gateBroken, setGateBroken] = useState(false);
-  const gateJitter = useRef(new Animated.Value(0)).current;
-  const [gateJitterProfile, setGateJitterProfile] = useState<DailyBreachShakeProfile>('hit');
-  const gateJitterX = useMemo(
-    () => gateJitter.interpolate({ ...dailyBreachGateJitterKeyframes(gateJitterProfile), extrapolate: 'clamp' }),
-    [gateJitter, gateJitterProfile],
+  // The breach clocks (ui/dailyBreach.ts), one per tier with a contact, in ms
+  // from the claim. The claim's clock starts in the same tick as the plaque's
+  // first leg, so every contact visual (the castle shake, the gold hit, the
+  // flash, the lightning, the splinters and dust on the stage; the shudder,
+  // cracks and press on the gate) runs on the native clock from the plaque's
+  // own start and lands on its contact frame, with no JS at contact. At 0
+  // (rest) every one of them is invisible.
+  const breachHitClock = useRef(new Animated.Value(0)).current;
+  const breachSmashClock = useRef(new Animated.Value(0)).current;
+  const breachClocks = useMemo(
+    () => ({ hit: breachHitClock, smash: breachSmashClock }),
+    [breachHitClock, breachSmashClock],
   );
-  const gateCracks = useRef(new Animated.Value(0)).current;
-  const plaquePress = useRef(new Animated.Value(0)).current;
+  // The gate's side of the breach: the broken state (it hides clues two and
+  // three), the shudder, the cracks on the shut door, and the plaque's press
+  // into it. The last three read the clocks; all rest at 0 / whole.
+  const [gateBroken, setGateBroken] = useState(false);
+  const gateJitterX = useMemo(
+    () => Animated.add(
+      breachHitClock.interpolate({ ...dailyBreachGateJitterOnClock('hit'), extrapolate: 'clamp' }),
+      breachSmashClock.interpolate({ ...dailyBreachGateJitterOnClock('smash'), extrapolate: 'clamp' }),
+    ),
+    [breachHitClock, breachSmashClock],
+  );
+  const gateCracks = useMemo(
+    () => breachHitClock.interpolate({ ...dailyBreachCracksOnClock(), extrapolate: 'clamp' }),
+    [breachHitClock],
+  );
+  const plaquePress = useMemo(
+    () => breachHitClock.interpolate({ ...dailyBreachPressOnClock(), extrapolate: 'clamp' }),
+    [breachHitClock],
+  );
   // The smash's broken art, driven natively off the flight's own progress
   // (dailyGateBreakKeyframes) so the hole opens in the very frame the plaque
   // goes behind the gate; a React render cannot land in that frame. Armed 0/1:
@@ -612,15 +630,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     [flightProgress, gateBreakArmed],
   );
   // Back to rest whenever the correct-claim timers are cleared: a new claim,
-  // the end of one, and unmount. The stage clears its own shake and effects
-  // on a new round and on unmount.
+  // the end of one, and unmount.
   function resetBreachPresentation() {
-    gateJitter.stopAnimation();
-    gateJitter.setValue(0);
-    gateCracks.stopAnimation();
-    gateCracks.setValue(0);
-    plaquePress.stopAnimation();
-    plaquePress.setValue(0);
+    breachHitClock.stopAnimation();
+    breachHitClock.setValue(0);
+    breachSmashClock.stopAnimation();
+    breachSmashClock.setValue(0);
     gateBreakArmed.setValue(0);
     setGateBroken(false);
   }
@@ -1108,12 +1123,18 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setCastleFlight(flies && origin
       ? { label: candidate, origin, stayInFront: breachTier === 'hit' }
       : null);
-    if (beats.contactMs !== null) {
-      // Set now, long before contact, so the gate's shudder keyframes are on
-      // screen before its animation starts.
-      setGateJitterProfile(breachTier === 'smash' ? 'smash' : 'hit');
-      // The smash's hole opens off the flight's progress, at the handoff.
-      if (breachTier === 'smash') gateBreakArmed.setValue(1);
+    // The tier with a contact beat ('hit' / 'smash' with motion), or null.
+    const contactTier = beats.contactMs !== null && breachTier !== 'open' ? breachTier : null;
+    if (contactTier) {
+      // Everything the contact needs is set HERE, at the claim, so neither the
+      // contact nor anything after it has to render: the gold hit's tier (its
+      // clock plays it), and for a smash the broken state (it hides clues two
+      // and three) and the hole, which opens off the flight's progress.
+      setGoldHit((prev) => ({ token: prev.token, tier: contactTier }));
+      if (contactTier === 'smash') {
+        setGateBroken(true);
+        gateBreakArmed.setValue(1);
+      }
     }
 
     gatePosition.stopAnimation();
@@ -1139,89 +1160,69 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       useNativeDriver: true,
     });
     const plaqueAbsorbAtMs = beats.plaqueGoneMs - beats.plaqueAbsorbMs;
+    // 'open' and 'smash' go straight through (the smash through the hole);
+    // a 'hit' holds at the shut gate and is absorbed as the gate rises.
+    const straightThrough = plaqueAbsorbAtMs === beats.plaqueRiseMs;
 
     // 'open' (and calm): the gate rises at once. 'hit' / 'smash': it stays
     // shut and rises at gateRiseStartMs (below).
     if (beats.gateRiseStartMs === 0) raiseGate();
 
-    if (runsProgress) {
-      if (plaqueAbsorbAtMs === beats.plaqueRiseMs) {
-        // 'open' and 'smash': straight through (the smash through the hole).
-        Animated.sequence([plaqueRiseLeg(), plaqueAbsorbLeg()]).start();
+    // CONTACT. Its visuals ride the tier's clock (below), so the only JS at
+    // contact is its sounds and haptic: fired first, with no state around them.
+    // They land on the plaque's real contact, the first leg's completion,
+    // unless BREACH_CONTACT_LEAD_MS moves them earlier for output latency.
+    const fireContactCues = () => {
+      if (completingCandidateRef.current !== candidate) return;
+      if (contactTier === 'hit') {
+        playSfx('breachGateCrack');
+        playSfx('breachCastleRumble');
+        // TODO(prompt 8): the breach's own 'hit' haptic; trapRejectHeavy stands in.
+        Haptics.cueAsync('trapRejectHeavy');
       } else {
-        // 'hit': up to the shut gate; it holds there and is absorbed as the
-        // gate rises.
-        plaqueRiseLeg().start();
+        playSfx('breachSmash');
+        playSfx('breachCastleRumble');
+        playSfx('breachThunder');
+        // TODO(prompt 8): the breach's own 'smash' haptic; bossEntry stands in.
+        Haptics.cueAsync('bossEntry');
       }
+    };
+    const cuesOnLegEnd = contactTier !== null && BREACH_CONTACT_LEAD_MS === 0;
+    if (contactTier && !cuesOnLegEnd) {
+      scheduleCorrectTransition(fireContactCues, dailyBreachContactCueMs(contactTier));
     }
 
-    // CONTACT ('hit' / 'smash' with motion): one beat, every piece of it here.
-    if (beats.contactMs !== null) {
-      scheduleCorrectTransition(() => {
-        if (completingCandidateRef.current !== candidate) return;
-        const profile: DailyBreachShakeProfile = breachTier === 'smash' ? 'smash' : 'hit';
-        // The castle lights gold on the contact, not at the claim.
-        setGoldHit((prev) => ({ token: prev.token + 1, tier: breachTier }));
-        setBreachShake((prev) => ({ token: prev.token + 1, profile }));
-        // The stage's flash, dust (and for a smash, lightning and splinters).
-        setBreachEffects((prev) => ({ token: prev.token + 1, tier: breachTier }));
-        gateJitter.stopAnimation();
-        gateJitter.setValue(0);
-        Animated.timing(gateJitter, {
-          toValue: 1,
-          duration: DAILY_BREACH_GATE_JITTER[profile].ms,
+    if (runsProgress) {
+      // The tier's clock starts in the SAME tick as the plaque's first leg, so
+      // both begin on the same native frame and stay together under load.
+      if (contactTier) {
+        const clock = contactTier === 'hit' ? breachHitClock : breachSmashClock;
+        const clockMs = dailyBreachClockMs(contactTier);
+        clock.stopAnimation();
+        clock.setValue(0);
+        Animated.timing(clock, {
+          toValue: clockMs,
+          duration: clockMs,
           easing: Easing.linear,
           useNativeDriver: true,
         }).start();
-        if (breachTier === 'hit') {
-          playSfx('breachGateCrack');
-          playSfx('breachCastleRumble');
-          Animated.timing(gateCracks, {
-            toValue: 1,
-            duration: DAILY_BREACH_CRACKS_FADE.inMs,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }).start();
-          Animated.sequence([
-            Animated.timing(plaquePress, {
-              toValue: 1,
-              duration: DAILY_BREACH_PLAQUE_PRESS.inMs,
-              easing: Easing.out(Easing.quad),
-              useNativeDriver: true,
-            }),
-            Animated.timing(plaquePress, {
-              toValue: 0,
-              duration: DAILY_BREACH_PLAQUE_PRESS.outMs,
-              easing: Easing.inOut(Easing.quad),
-              useNativeDriver: true,
-            }),
-          ]).start();
-          // TODO(prompt 8): the breach's own 'hit' haptic; trapRejectHeavy stands in.
-          Haptics.cueAsync('trapRejectHeavy');
-        } else {
-          playSfx('breachSmash');
-          playSfx('breachCastleRumble');
-          playSfx('breachThunder');
-          setGateBroken(true);
-          // TODO(prompt 8): the breach's own 'smash' haptic; bossEntry stands in.
-          Haptics.cueAsync('bossEntry');
-        }
-      }, beats.contactMs);
+      }
+      plaqueRiseLeg().start(({ finished }) => {
+        if (!finished) return;
+        if (cuesOnLegEnd) fireContactCues();
+        // The plaque's own chaining (what Animated.sequence does): the absorb
+        // starts as the first leg ends.
+        if (straightThrough) plaqueAbsorbLeg().start();
+      });
     }
 
-    // 'hit' / 'smash': the gate rises late. A 'hit' plaque is absorbed with it
-    // and the door's cracks fade as it goes.
+    // 'hit' / 'smash': the gate rises late, and a 'hit' plaque is absorbed with
+    // it (the door's cracks fade on the clock).
     if (beats.gateRiseStartMs > 0) {
       scheduleCorrectTransition(() => {
         if (completingCandidateRef.current !== candidate) return;
         raiseGate();
         if (runsProgress && plaqueAbsorbAtMs === beats.gateRiseStartMs) plaqueAbsorbLeg().start();
-        Animated.timing(gateCracks, {
-          toValue: 0,
-          duration: DAILY_BREACH_CRACKS_FADE.outMs,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }).start();
       }, beats.gateRiseStartMs);
     }
 
@@ -1660,8 +1661,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           flightProgress={flightProgress}
           coinRise={coinRise}
           goldHit={goldHit}
-          shake={breachShake}
-          breachEffects={breachEffects}
+          breachClocks={breachClocks}
           gateBroken={gateBroken}
           gateBrokenArt={gateBrokenArt}
           gateJitterX={gateJitterX}

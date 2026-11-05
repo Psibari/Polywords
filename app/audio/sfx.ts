@@ -112,6 +112,8 @@ type SfxPlayer = {
   onFinish: (() => void) | null;
   removeStatusListener: () => void;
   releaseTimer: ReturnType<typeof setTimeout> | null;
+  /** PRE_REWOUND_SFX only: the player is at 0 and can start with play() alone. */
+  rewound: boolean;
 };
 
 type SfxSlot = {
@@ -317,6 +319,31 @@ const SFX: Record<SfxName, SfxConfig> = {
   // inkStamp:        { source: require('../../assets/audio/sfx/ink_stamp_v1.wav'),         volume: 0.42, cooldownMs: 200 },
 };
 
+// The Daily breach's contact sounds start on a beat: DailyChallengeScreen
+// fires them on the plaque's real contact frame. Their players are rewound
+// AHEAD of time (when the player loads at warm-up, and again when a play
+// finishes), so the contact's call is play() alone. Before this, play() waited
+// on the rewind's reply, and on a phone (2026-11-04) that reply sat behind the
+// contact's render: the sounds started about 225 ms after they were asked for.
+// Every other sound keeps the rewind-then-play path in playOnPlayer.
+const PRE_REWOUND_SFX: ReadonlySet<SfxName> = new Set<SfxName>([
+  'breachGateCrack',
+  'breachCastleRumble',
+  'breachSmash',
+  'breachThunder',
+]);
+
+/** Rewinds a PRE_REWOUND_SFX player in the background; once done it can start with play() alone. */
+function rewindAhead(item: SfxPlayer): void {
+  item.rewound = false;
+  item.player.seekTo(0, 0, 0).then(
+    () => {
+      if (!item.busy) item.rewound = true;
+    },
+    () => {},
+  );
+}
+
 const MAX_PLAYERS_PER_SOUND = 2;
 const MAX_PENDING_PLAYS = 2;
 const LOAD_TIMEOUT_MS = 5000;
@@ -391,6 +418,7 @@ function finishPlayback(name: SfxName, item: SfxPlayer, generation: number): voi
   const onFinish = item.onFinish;
   item.onFinish = null;
   onFinish?.();
+  if (PRE_REWOUND_SFX.has(name)) rewindAhead(item);
   drainSlot(name, generation);
 }
 
@@ -457,6 +485,7 @@ function createPlayer(name: SfxName, generation: number): void {
         settled = true;
         item.ready = true;
         slot.loadAttempts = 0;
+        if (PRE_REWOUND_SFX.has(name)) rewindAhead(item);
         drainSlot(name, generation);
       };
 
@@ -468,6 +497,7 @@ function createPlayer(name: SfxName, generation: number): void {
         onFinish: null,
         removeStatusListener: () => {},
         releaseTimer: null,
+        rewound: false,
       };
       item.removeStatusListener = player.addListener('playbackStatusUpdate', status => {
         if (status.isLoaded) settleReady();
@@ -513,6 +543,24 @@ async function playOnPlayer(
   onFinish?: () => void,
 ): Promise<void> {
   item.onFinish = onFinish ?? null;
+  if (PRE_REWOUND_SFX.has(name) && item.rewound) {
+    // Already at 0 (rewindAhead): start now, with nothing to wait for.
+    try {
+      item.rewound = false;
+      item.player.shouldCorrectPitch = rate === 1;
+      item.player.setPlaybackRate(rate);
+      item.started = true;
+      item.releaseTimer = setTimeout(
+        () => finishPlayback(name, item, generation),
+        SFX[name].fallbackReleaseMs ?? PLAY_RELEASE_FALLBACK_MS,
+      );
+      item.player.play();
+    } catch (error) {
+      warnDev(`Failed to play "${name}".`, error);
+      finishPlayback(name, item, generation);
+    }
+    return;
+  }
   try {
     item.player.pause();
     await item.player.seekTo(0, 0, 0);
