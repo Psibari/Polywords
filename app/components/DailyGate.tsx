@@ -1,7 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
-  Image,
   StyleSheet,
   Text,
   View,
@@ -54,10 +53,17 @@ type Props = {
   /** Screen points per canvas point. */
   scale: number;
   /**
-   * Show the broken gate (the breach). Only the first clue shows: the hole is
-   * where clues two and three are painted. Default false.
+   * The broken gate (the breach). Only the first clue shows: the hole is where
+   * clues two and three are painted. Default false. Without `brokenArt` it also
+   * switches the art.
    */
   broken?: boolean;
+  /**
+   * The broken art's opacity 0..1 as a native-driven value. When given, it (not
+   * `broken`) switches the art, so the caller can open the hole in the same
+   * native frame as something else (the smash: the plaque going behind the gate).
+   */
+  brokenArt?: Animated.AnimatedNode;
   /**
    * Side-to-side shudder in screen points (native driver), added to the gate's
    * transform. The caller drives it deterministically. Rests at 0.
@@ -87,9 +93,18 @@ export default function DailyGate({
   maxSink,
   scale,
   broken = false,
+  brokenArt,
   jitterX,
   cracks,
 }: Props) {
+  // The art switch is always an Animated node, never a plain number: the
+  // caller's native value, or a resting one that follows `broken`.
+  const restingBrokenArt = useRef(new Animated.Value(broken ? 1 : 0)).current;
+  useEffect(() => {
+    restingBrokenArt.setValue(broken ? 1 : 0);
+  }, [broken, restingBrokenArt]);
+  const brokenOpacity = (brokenArt ?? restingBrokenArt) as Animated.Value;
+  const wholeOpacity = useMemo(() => Animated.subtract(1, brokenOpacity), [brokenOpacity]);
   // Resting values for the optional channels, so the transform and the crack
   // layer keep one shape on every render: a native-driven style must never
   // swap between an Animated node and a plain number.
@@ -128,14 +143,14 @@ export default function DailyGate({
       {/* Explicit size, never the file's own: see the back wall in DailyCastleStage.
           Both doors stay mounted and switch by opacity, so the swap never
           draws an empty frame. */}
-      <Image
+      <Animated.Image
         source={GATE}
-        style={[styles.gateImage, { width: frame.width, height: frame.height, opacity: broken ? 0 : 1 }]}
+        style={[styles.gateImage, { width: frame.width, height: frame.height, opacity: wholeOpacity }]}
         resizeMode="stretch"
       />
-      <Image
+      <Animated.Image
         source={GATE_BROKEN}
-        style={[styles.gateImage, { width: frame.width, height: frame.height, opacity: broken ? 1 : 0 }]}
+        style={[styles.gateImage, { width: frame.width, height: frame.height, opacity: brokenOpacity }]}
         resizeMode="stretch"
       />
 

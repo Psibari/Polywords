@@ -6,6 +6,8 @@ import {
   DAILY_BREACH_HOLE,
   DAILY_CAP_CENTRES,
   DAILY_CASTLE_FLIGHT,
+  DAILY_CASTLE_FLIGHT_HANDOFF,
+  DAILY_CASTLE_GRID,
   DAILY_GOLD_HALO,
   DAILY_GOLD_HIT_TIERS,
   DAILY_GOLD_HIT_WHITE,
@@ -52,6 +54,8 @@ import {
   dailyBreachSplinterKeyframes,
   dailyBreachSplinters,
   dailyBreachPollyMoveMs,
+  dailyFlightLayerOpacity,
+  dailyGateBreakKeyframes,
   dailyGateShownClueCount,
   resolveDailyBreachTier,
   type DailyBreachTier,
@@ -251,8 +255,14 @@ for (const revealed of [1, 2, 3] as const) {
   assert.doesNotMatch(gate, /clues\.slice\(0, revealedCount\)/, 'clues are never sliced by revealedCount directly');
   assert.match(gate, /\{visibleClues\.map\(/, 'only visible clues are rendered');
   assert.match(gate, /broken = false,/, 'broken defaults to false');
-  assert.match(gate, /source=\{GATE\}[\s\S]*?opacity: broken \? 0 : 1/);
-  assert.match(gate, /source=\{GATE_BROKEN\}[\s\S]*?opacity: broken \? 1 : 0/);
+  // Both doors mounted; the art switch is an Animated node (the caller's native
+  // value, or a resting one following `broken`), never a React-state style.
+  assert.match(gate, /source=\{GATE\}[\s\S]*?opacity: wholeOpacity/);
+  assert.match(gate, /source=\{GATE_BROKEN\}[\s\S]*?opacity: brokenOpacity/);
+  assert.match(gate, /const brokenOpacity = \(brokenArt \?\? restingBrokenArt\)/);
+  assert.match(gate, /const wholeOpacity = useMemo\(\(\) => Animated\.subtract\(1, brokenOpacity\), \[brokenOpacity\]\);/);
+  assert.doesNotMatch(gate, /opacity: broken \?/, 'the art is never switched by a render');
+  assert.doesNotMatch(gate, /<Image\b/, 'both doors are Animated.Image');
   assert.match(gate, /gate_door_broken\.png/);
   assert.match(gate, /transform: \[\{ translateY \}, \{ translateX \}\]/);
   assert.match(gate, /const translateX = jitterX \?\? restingJitterX;/);
@@ -492,6 +502,64 @@ assert.deepEqual(
 assert.deepEqual({ ...DAILY_BREACH_PLAQUE_PRESS }, { dipPt: 6, scaleDown: 0.04, inMs: 45, outMs: 45 });
 assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 90, 'the press lasts 90 ms');
 
+// ── The plaque's copies and the broken art, per tier ──
+// Which copy is visible at a given progress, and whether the hole is open.
+{
+  const H = DAILY_CASTLE_FLIGHT_HANDOFF;
+  const at = (keys: { inputRange: number[]; outputRange: number[] }, p: number) => {
+    const { inputRange: xs, outputRange: ys } = keys;
+    if (p <= xs[0]) return ys[0];
+    for (let i = 1; i < xs.length; i += 1) {
+      if (p <= xs[i]) return ys[i - 1] + ((ys[i] - ys[i - 1]) * (p - xs[i - 1])) / (xs[i] - xs[i - 1]);
+    }
+    return ys[ys.length - 1];
+  };
+  const fadeFrom = H + (1 - H) * 0.35;
+
+  // 'open' (and 'smash'): today's keyframes, exactly.
+  const standard = dailyFlightLayerOpacity(H, false);
+  assert.deepEqual(standard.front, { inputRange: [0, H - 0.001, H], outputRange: [1, 1, 0] });
+  assert.deepEqual(standard.back, { inputRange: [0, H - 0.001, H, fadeFrom, 1], outputRange: [0, 0, 1, 1, 0] });
+
+  // 'hit': the front copy carries it the whole way; the back copy never shows.
+  const hit = dailyFlightLayerOpacity(H, true);
+  for (let p = 0; p <= 1.0000001; p += 0.005) {
+    assert.equal(at(hit.back, p), 0, `hit: never under the gate (p ${p.toFixed(3)})`);
+    if (p < 1 - 1e-9) assert.ok(at(hit.front, p) > 0, `hit: visible at p ${p.toFixed(3)}`);
+  }
+  assert.equal(at(hit.front, H), 1, 'hit: fully visible held at the shut gate');
+  assert.equal(at(hit.front, 1), 0, 'hit: gone at the end of the tunnel');
+  // Its fade into the tunnel matches the back copy's in the other tiers.
+  for (const p of [fadeFrom, (fadeFrom + 1) / 2, 1]) {
+    assert.ok(Math.abs(at(hit.front, p) - at(standard.back, p)) < 1e-9, `hit fades like the others at ${p}`);
+  }
+
+  // 'smash': the hole is open in every frame the plaque is behind the gate.
+  const breakKeys = dailyGateBreakKeyframes(H);
+  assert.deepEqual(breakKeys.inputRange, standard.back.inputRange.slice(0, 3), 'one swap window for both');
+  for (let p = 0; p <= 1.0000001; p += 0.0005) {
+    const back = at(standard.back, p);
+    const hole = at(breakKeys, p);
+    if (p <= H) assert.ok(Math.abs(hole - back) < 1e-9, `the hole opens with the swap (p ${p.toFixed(4)})`);
+    else assert.equal(hole, 1, `the hole stays open through the absorb (p ${p.toFixed(4)})`);
+  }
+  assert.equal(at(breakKeys, H - 0.002), 0, 'whole gate on the way in');
+  assert.equal(at(breakKeys, H), 1, 'broken at the handoff');
+  assert.equal(at(standard.back, H), 1, 'the plaque is on the back copy at the handoff');
+  assert.equal(at(standard.front, H), 0, 'and no longer on the front copy');
+  // The plaque fits through the hole at the handoff (102 x 53 pt vs 154 x 130 pt).
+  const k = DAILY_GATE_PT_PER_SRC;
+  const b = DAILY_BREACH_HOLE.boundsSrc;
+  assert.ok(DAILY_CASTLE_GRID.cardWidth * DAILY_CASTLE_FLIGHT.handoffScale < (b.x1 - b.x0) * k, 'plaque narrower than the hole');
+  assert.ok(DAILY_CASTLE_GRID.cardHeight * DAILY_CASTLE_FLIGHT.handoffScale < (b.y1 - b.y0) * k, 'plaque shorter than the hole');
+
+  // The stage reads these, not its own copy of them.
+  const stage = readFileSync(join(__dirname, '../components/DailyCastleStage.tsx'), 'utf8').replace(/\r\n/g, '\n');
+  assert.match(stage, /const layers = dailyFlightLayerOpacity\(H, flight\.stayInFront === true\);/);
+  assert.match(stage, /brokenArt=\{gateBrokenArt\}/);
+  assert.doesNotMatch(stage, /frontThroughHandoff/);
+}
+
 // The claim sequence in DailyChallengeScreen (React Native, so checked by source).
 {
   const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
@@ -516,7 +584,7 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   const run = between('function runPhysicalCorrectTransition(', 'function handleClaimStart(');
   assert.match(run, /const beats = dailyBreachBeats\(breachTier, motion\);/);
   assert.match(run, /if \(beats\.gateRiseStartMs === 0\) raiseGate\(\);/, 'open and calm: the gate rises at once');
-  assert.match(run, /frontThroughHandoff: breachTier === 'hit'/, 'a hit plaque stays in front of the shut gate');
+  assert.match(run, /stayInFront: breachTier === 'hit'/, 'a hit plaque stays in front of the shut gate');
   // ONE contact callback, guarded, at contactMs.
   const contact = between('// CONTACT (', '}, beats.contactMs);');
   assert.equal(run.split('beats.contactMs);').length - 1, 1, 'one callback at contact');
@@ -528,6 +596,18 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   // The broken gate is gone before the next round's gate drops.
   const landed = between("setPhysicalClaimPhase('landed');", '}, goneAtMs);');
   assert.ok(landed.includes('setGateBroken(false);'), 'whole gate again once it is up');
+  // The smash's hole: armed at the claim, opened by the flight's own progress,
+  // disarmed once the broken gate is up.
+  assert.match(run, /if \(breachTier === 'smash'\) gateBreakArmed\.setValue\(1\);/);
+  assert.ok(landed.includes('gateBreakArmed.setValue(0);'), 'disarmed before the next gate drops');
+  assert.match(
+    screen,
+    /const gateBrokenArt = useMemo\(\n\s*\(\) => Animated\.multiply\(\n\s*gateBreakArmed,\n\s*flightProgress\.interpolate\(\{\n\s*\.\.\.dailyGateBreakKeyframes\(DAILY_CASTLE_FLIGHT_HANDOFF\),/,
+    'the hole is driven off the same progress as the plaque',
+  );
+  assert.match(screen, /gateBrokenArt=\{gateBrokenArt\}/);
+  assert.ok(contact.includes('setGateBroken(true)'), 'clues two and three still hidden while broken');
+  assert.match(run, /const runsProgress = flies \|\| beats\.contactMs !== null;/, 'a breach runs the progress even with no plaque drawn');
   assert.match(run, /const goneAtMs = dailyThrowGoneMs\(motion, breachTier\);/);
   assert.match(run, /const goldHitEndMs = \(beats\.contactMs \?\? 0\) \+ dailyGoldHitMsForTier\(breachTier, reduceFlashes\);/);
   assert.match(screen, /throwDelayMs=\{dailyThrowGoneMs\(reduceMotion === false, claimBreachTier\)\}/, 'Polly\'s bubble waits for the tier\'s throw');

@@ -40,6 +40,7 @@ import {
   dailyBreachShakeKeyframes,
   dailyBreachSplinterKeyframes,
   dailyBreachSplinters,
+  dailyFlightLayerOpacity,
   type DailyBreachShakeProfile,
   type DailyBreachTier,
 } from '../ui/dailyBreach';
@@ -140,12 +141,13 @@ export type DailyCastleFlight = {
   /** Window rect of the plaque at the moment it was released. */
   origin: DailyAnswerCardClaimOrigin;
   /**
-   * The breach's 'hit': the gate is SHUT at the handoff, so the plaque stays on
-   * the FRONT copy, over the gate, while it holds there; it changes to the back
-   * copy only once progress moves past the handoff (the absorb leg, which starts
-   * as the gate starts to rise). Default: today's switch, just before the handoff.
+   * The breach's 'hit': the gate is SHUT at the handoff and still covers it as
+   * it starts to rise, so the plaque never goes onto the back copy (under the
+   * gate). The front copy holds over the shut gate and fades into the tunnel as
+   * the gate slides up behind it (dailyFlightLayerOpacity). Default: today's
+   * switch to the back copy just before the handoff.
    */
-  frontThroughHandoff?: boolean;
+  stayInFront?: boolean;
 };
 
 type Props = {
@@ -178,8 +180,14 @@ type Props = {
    * screen can shake Polly's overlay with the castle. Called again only if they change.
    */
   onShakeTransform?: (shake: DailyCastleShakeTransform) => void;
-  /** Passed to DailyGate: the broken gate (the breach's 'smash'). */
+  /** Passed to DailyGate: the broken gate (the breach's 'smash'); it hides clues two and three. */
   gateBroken?: boolean;
+  /**
+   * Passed to DailyGate: the broken art's opacity 0..1, driven natively from
+   * the flight's progress (dailyGateBreakKeyframes) so the hole opens in the
+   * frame the plaque goes behind the gate.
+   */
+  gateBrokenArt?: Animated.AnimatedNode;
   /** Passed to DailyGate: its side-to-side shudder, screen points (the screen drives it). */
   gateJitterX?: Animated.AnimatedInterpolation<number>;
   /** Passed to DailyGate: the cracks on the shut door, opacity 0..1. */
@@ -341,6 +349,7 @@ export default function DailyCastleStage({
   breachEffects,
   onShakeTransform,
   gateBroken = false,
+  gateBrokenArt,
   gateJitterX,
   gateCracks,
   flightPress,
@@ -840,6 +849,7 @@ export default function DailyCastleStage({
             maxSink={dailyGateMaxSink(clueTop) * s}
             scale={s}
             broken={gateBroken}
+            brokenArt={gateBrokenArt}
             jitterX={gateJitterX}
             cracks={gateCracks}
           />
@@ -1133,23 +1143,14 @@ function DailyCastleFlightPlaque({
     inputRange: [0, H, 1],
     outputRange: [1, DAILY_CASTLE_FLIGHT.handoffScale, DAILY_CASTLE_FLIGHT.endScale],
   });
-  // Where the front copy gives way to the back one. Today: just BEFORE the
-  // handoff, so the plaque is already under the (raised) gate as it arrives.
-  // A 'hit' holds at the handoff against the SHUT gate, so its swap is just
-  // AFTER it: the front copy stays over the gate until the absorb leg moves on.
-  const swapFrom = flight.frontThroughHandoff ? H : H - 0.001;
-  const swapTo = flight.frontThroughHandoff ? H + 0.001 : H;
-  const opacity = layer === 'front'
-    ? progress.interpolate({
-        inputRange: [0, swapFrom, swapTo],
-        outputRange: [1, 1, 0],
-        extrapolate: 'clamp',
-      })
-    : progress.interpolate({
-        inputRange: [0, swapFrom, swapTo, H + (1 - H) * 0.35, 1],
-        outputRange: [0, 0, 1, 1, 0],
-        extrapolate: 'clamp',
-      });
+  // Which copy shows (ui/dailyBreach.ts dailyFlightLayerOpacity): today's
+  // switch to the back copy just before the handoff, or, for a 'hit', the
+  // front copy the whole way.
+  const layers = dailyFlightLayerOpacity(H, flight.stayInFront === true);
+  const opacity = progress.interpolate({
+    ...(layer === 'front' ? layers.front : layers.back),
+    extrapolate: 'clamp',
+  });
   // The press: a short dip and squeeze, canvas points scaled with the scene.
   const pressedY = Animated.add(
     translateY,

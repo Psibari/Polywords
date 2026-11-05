@@ -317,6 +317,57 @@ export const DAILY_BREACH_CRACKS_FADE = { inMs: 90, outMs: 150 } as const;
  */
 export const DAILY_BREACH_PLAQUE_PRESS = { dipPt: 6, scaleDown: 0.04, inMs: 45, outMs: 45 } as const;
 
+// ── The thrown plaque's two copies, and the broken art ──
+// DailyCastleStage draws the plaque twice on one progress value (0 → handoff →
+// 1): a FRONT copy over the whole castle and a BACK copy inside the opening,
+// UNDER the gate. These keyframes say which copy shows at each progress, and
+// when the broken gate art shows. They are the single source for both, so the
+// smash's hole opens in exactly the frame the plaque goes behind the gate.
+
+/** Where the plaque gives way from the front copy to the back one: just before the handoff. */
+const PLAQUE_SWAP_WIDTH = 0.001;
+/** How far into the absorb leg the plaque starts to fade into the tunnel. */
+const PLAQUE_FADE_FROM = 0.35;
+
+export type DailyFlightLayerOpacity = { front: DailyBreachKeyframes; back: DailyBreachKeyframes };
+
+/**
+ * Each copy's opacity over the flight's progress.
+ *   default ('open', 'smash'): front until just before the handoff, then the
+ *     back copy, which fades out down the tunnel. For 'open' the gate is already
+ *     up; for 'smash' the back copy shows through the hole (dailyGateBreakKeyframes).
+ *   stayInFront ('hit'): the gate is SHUT at the handoff and is still covering
+ *     it for the first part of its rise, so a back copy there would be hidden.
+ *     The front copy carries the plaque the whole way, holding over the gate and
+ *     fading into the tunnel as the gate slides up behind it; the back copy never
+ *     shows.
+ */
+export function dailyFlightLayerOpacity(handoff: number, stayInFront: boolean): DailyFlightLayerOpacity {
+  const fadeFrom = handoff + (1 - handoff) * PLAQUE_FADE_FROM;
+  if (stayInFront) {
+    return {
+      front: { inputRange: [0, fadeFrom, 1], outputRange: [1, 1, 0] },
+      back: { inputRange: [0, 1], outputRange: [0, 0] },
+    };
+  }
+  const swapFrom = handoff - PLAQUE_SWAP_WIDTH;
+  return {
+    front: { inputRange: [0, swapFrom, handoff], outputRange: [1, 1, 0] },
+    back: { inputRange: [0, swapFrom, handoff, fadeFrom, 1], outputRange: [0, 0, 1, 1, 0] },
+  };
+}
+
+/**
+ * The broken gate art's opacity over the same progress (the smash): 0 until the
+ * plaque starts to go behind the gate, 1 from the frame it is behind it, and it
+ * stays broken through the absorb. The screen multiplies it by a 0/1 "armed"
+ * value, so only a smash, and only until the broken gate is up, ever shows it.
+ */
+export function dailyGateBreakKeyframes(handoff: number): DailyBreachKeyframes {
+  const back = dailyFlightLayerOpacity(handoff, false).back;
+  return { inputRange: back.inputRange.slice(0, 3), outputRange: [0, 0, 1] };
+}
+
 // ── Lightning (smash only) ──
 // Two bolts. Each is three polylines from the sky to the hole and the two tower
 // caps, drawn twice: a wide violet glow under a thin white core.

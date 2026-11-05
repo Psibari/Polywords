@@ -50,6 +50,7 @@ import {
   DAILY_BREACH_PLAQUE_PRESS,
   dailyBreachBeats,
   dailyBreachGateJitterKeyframes,
+  dailyGateBreakKeyframes,
   resolveDailyBreachTier,
   type DailyBreachShakeProfile,
   type DailyBreachTier,
@@ -595,6 +596,21 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   );
   const gateCracks = useRef(new Animated.Value(0)).current;
   const plaquePress = useRef(new Animated.Value(0)).current;
+  // The smash's broken art, driven natively off the flight's own progress
+  // (dailyGateBreakKeyframes) so the hole opens in the very frame the plaque
+  // goes behind the gate; a React render cannot land in that frame. Armed 0/1:
+  // only a smash arms it, and it is disarmed once the broken gate is up.
+  const gateBreakArmed = useRef(new Animated.Value(0)).current;
+  const gateBrokenArt = useMemo(
+    () => Animated.multiply(
+      gateBreakArmed,
+      flightProgress.interpolate({
+        ...dailyGateBreakKeyframes(DAILY_CASTLE_FLIGHT_HANDOFF),
+        extrapolate: 'clamp',
+      }),
+    ),
+    [flightProgress, gateBreakArmed],
+  );
   // Back to rest whenever the correct-claim timers are cleared: a new claim,
   // the end of one, and unmount. The stage clears its own shake and effects
   // on a new round and on unmount.
@@ -605,6 +621,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     gateCracks.setValue(0);
     plaquePress.stopAnimation();
     plaquePress.setValue(0);
+    gateBreakArmed.setValue(0);
     setGateBroken(false);
   }
   // Where the castle is drawn, so Polly's bubble can sit on its steps.
@@ -1082,15 +1099,21 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     flightProgress.stopAnimation();
     flightProgress.setValue(0);
     const flies = motion && origin !== null;
-    // A 'hit' plaque holds against the SHUT gate, so it stays on the front
-    // copy until it moves on (DailyCastleFlight.frontThroughHandoff).
+    // The flight's progress also opens the smash's hole, so a breach runs it
+    // even when there is no measured plaque to draw.
+    const runsProgress = flies || beats.contactMs !== null;
+    // A 'hit' plaque holds against the SHUT gate and is still in front of it
+    // while it rises, so it never goes onto the copy under the gate
+    // (DailyCastleFlight.stayInFront).
     setCastleFlight(flies && origin
-      ? { label: candidate, origin, frontThroughHandoff: breachTier === 'hit' }
+      ? { label: candidate, origin, stayInFront: breachTier === 'hit' }
       : null);
     if (beats.contactMs !== null) {
       // Set now, long before contact, so the gate's shudder keyframes are on
       // screen before its animation starts.
       setGateJitterProfile(breachTier === 'smash' ? 'smash' : 'hit');
+      // The smash's hole opens off the flight's progress, at the handoff.
+      if (breachTier === 'smash') gateBreakArmed.setValue(1);
     }
 
     gatePosition.stopAnimation();
@@ -1121,7 +1144,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // shut and rises at gateRiseStartMs (below).
     if (beats.gateRiseStartMs === 0) raiseGate();
 
-    if (flies) {
+    if (runsProgress) {
       if (plaqueAbsorbAtMs === beats.plaqueRiseMs) {
         // 'open' and 'smash': straight through (the smash through the hole).
         Animated.sequence([plaqueRiseLeg(), plaqueAbsorbLeg()]).start();
@@ -1192,7 +1215,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       scheduleCorrectTransition(() => {
         if (completingCandidateRef.current !== candidate) return;
         raiseGate();
-        if (flies && plaqueAbsorbAtMs === beats.gateRiseStartMs) plaqueAbsorbLeg().start();
+        if (runsProgress && plaqueAbsorbAtMs === beats.gateRiseStartMs) plaqueAbsorbLeg().start();
         Animated.timing(gateCracks, {
           toValue: 0,
           duration: DAILY_BREACH_CRACKS_FADE.outMs,
@@ -1210,6 +1233,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       Haptics.cueAsync('dailyRodStop');
       // The broken gate is up out of sight: the gate that drops with the next
       // round's clues is the whole one.
+      gateBreakArmed.setValue(0);
       setGateBroken(false);
     }, goneAtMs);
 
@@ -1639,6 +1663,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           shake={breachShake}
           breachEffects={breachEffects}
           gateBroken={gateBroken}
+          gateBrokenArt={gateBrokenArt}
           gateJitterX={gateJitterX}
           gateCracks={gateCracks}
           flightPress={plaquePress}
