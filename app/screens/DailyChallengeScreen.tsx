@@ -44,6 +44,7 @@ import {
   selectDailyDisplaySession,
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
+import { resolveDailyBreachTier, type DailyBreachTier } from '../ui/dailyBreach';
 import { canOpenDailyPause } from '../game/dailyPause';
 import { DAILY_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
@@ -108,7 +109,7 @@ import {
   DAILY_POLLY_BUBBLE,
   DAILY_POLLY_PERCH,
   dailyActionLabelBottom,
-  dailyGoldHitMs,
+  dailyGoldHitMsForTier,
   type DailyCastleFrame,
 } from '../ui/dailyCastleScene';
 import {
@@ -554,8 +555,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   const [castleFlight, setCastleFlight] = useState<DailyCastleFlight | null>(null);
   const flightProgress = useRef(new Animated.Value(0)).current;
   const [coinRise, setCoinRise] = useState<DailyCoinRise>({ token: 0, ms: 0 });
-  // Bumped on each correct claim: the castle's gold hit (DailyCastleStage).
-  const [goldHitToken, setGoldHitToken] = useState(0);
+  // Bumped on each correct claim: the castle's gold hit (DailyCastleStage),
+  // graded by the claim's breach tier.
+  const [goldHit, setGoldHit] = useState<{ token: number; tier: DailyBreachTier }>({ token: 0, tier: 'open' });
   // Where the castle is drawn, so Polly's bubble can sit on its steps.
   const [castleFrame, setCastleFrame] = useState<DailyCastleFrame | null>(null);
   // The win's gold-coin finale, after the coin lands and before Results
@@ -1004,6 +1006,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function runPhysicalCorrectTransition(
     candidate: string,
     origin: DailyAnswerCardClaimOrigin | null,
+    /** The claim's breach tier: it sets the gold hit's length, which the coin finale waits out. */
+    breachTier: DailyBreachTier,
   ) {
     clearCorrectTransitionTimers();
     setPhysicalClaimPhase('settling');
@@ -1065,7 +1069,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     const floorHoldMs = dailyCoinFinaleFloorHoldMs(
       finaleMode,
       dropAtMs + gateDropMs,
-      dailyGoldHitMs(reduceFlashes),
+      dailyGoldHitMsForTier(breachTier, reduceFlashes),
     );
     scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
@@ -1173,21 +1177,24 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setCardStates(prev => new Map(prev).set(candidate, 'correct'));
       setRevealSolvedCount(dailySession.currentRoundIndex + 1);
       beginClaimPresentation(dailySession, candidate, 'correct');
-      runPhysicalCorrectTransition(candidate, origin);
+      const breachTier = resolveDailyBreachTier(round.revealedClueCount);
+      runPhysicalCorrectTransition(candidate, origin, breachTier);
 
       // Game result commits immediately; the physical presentation now owns
       // the readable settle, cover, reward, and next-clue reveal sequence.
       // The win's Success haptic lands with the gold coin (see
       // runPhysicalCorrectTransition), not here at the claim.
       // How many clues were showing when the player committed grades the
-      // claim's haptic (Pete, 2026-11-03). The castle's gold hit is NOT
-      // graded: Pete tested a graded tint on device and found no readable
-      // difference, so it came out. The breach sequence is the real payoff.
+      // claim's haptic (Pete, 2026-11-03). The castle's gold hit is graded
+      // by the breach tier from the same count (Pete, 2026-11-04: bigger,
+      // stepped versions, big3 / big2 / big1). An earlier graded TINT read no
+      // differently on device and came out; this grades size, swell, a white
+      // wash and a halo instead.
       const grade = resolveDailyCelebrationGrade(round.revealedClueCount);
       Haptics.cueAsync(dailyCelebrationHaptic(grade));
       playSfx('correctClaim');
       // The castle lights gold on the same beat as the claim's sound.
-      setGoldHitToken((token) => token + 1);
+      setGoldHit((prev) => ({ token: prev.token + 1, tier: breachTier }));
       // Remaining cards fade out
       scheduleCorrectTransition(() => {
         setCardStates(prev => {
@@ -1457,7 +1464,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           flight={castleFlight}
           flightProgress={flightProgress}
           coinRise={coinRise}
-          goldHitToken={goldHitToken}
+          goldHit={goldHit}
           coinFinale={coinFinale}
           hudBottom={hudBottom}
           roundMarkers={!isComplete && displayedDailySession

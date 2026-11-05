@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Defs, Polyline, RadialGradient, Rect, Stop } from 'react-native-svg';
 import DailyGate from './DailyGate';
 import DailyFloorCoins, { type DailyCoinRise } from './DailyFloorCoins';
 import DailyRoundMarkers from './DailyRoundMarkers';
@@ -23,6 +24,24 @@ import {
 } from '../hooks/usePollyAmbientMotion';
 import { dailyStoneSeatSfx, playSfx } from '../audio/sfx';
 import { Haptics } from '../utils/haptics';
+import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAccessibility';
+import {
+  DAILY_BREACH_DUST,
+  DAILY_BREACH_LIGHTNING,
+  DAILY_BREACH_SHAKE,
+  dailyBreachBoltKeyframes,
+  dailyBreachBolts,
+  dailyBreachDust,
+  dailyBreachDustKeyframes,
+  dailyBreachEffectsMs,
+  dailyBreachFlashes,
+  dailyBreachFlashKeyframes,
+  dailyBreachShakeKeyframes,
+  dailyBreachSplinterKeyframes,
+  dailyBreachSplinters,
+  type DailyBreachShakeProfile,
+  type DailyBreachTier,
+} from '../ui/dailyBreach';
 import {
   DAILY_PLAQUE_ENTRANCE,
   DAILY_PLAQUE_INITIAL_PROGRESS,
@@ -40,11 +59,15 @@ import {
   DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_CAP_GLOWS,
   DAILY_CASTLE_FLIGHT_HANDOFF,
+  DAILY_CASTLE_CANVAS,
   DAILY_CASTLE_GRID,
-  DAILY_GOLD_HIT,
+  DAILY_GOLD_HALO,
   DAILY_GOLD_HIT_COLOR,
   DAILY_GOLD_HIT_INPUT,
-  dailyGoldHitKeyframes,
+  DAILY_GOLD_HIT_WHITE,
+  dailyBreachHoleCanvas,
+  dailyGoldHitTierKeyframes,
+  dailyGoldHitTimingForTier,
   DAILY_ANSWER_WALL_FOOT,
   DAILY_CASTLE_OPENING,
   dailyGateClosed,
@@ -105,6 +128,12 @@ const DEFAULTS: Tuning = {
   clues: { x: 0, y: 0, width: 0 },
 };
 
+/** The castle shake, as translate values for a transform array. */
+export type DailyCastleShakeTransform = {
+  translateX: Animated.AnimatedInterpolation<number>;
+  translateY: Animated.AnimatedInterpolation<number>;
+};
+
 export type DailyCastleFlight = {
   label: string;
   /** Window rect of the plaque at the moment it was released. */
@@ -123,8 +152,24 @@ type Props = {
   flightProgress: Animated.Value;
   /** Starts the newest floor coin's rise (and, on the win, the gold one's). */
   coinRise: DailyCoinRise;
-  /** Bumped on every correct claim: the castle's gold hit plays once. 0 = never. */
-  goldHitToken: number;
+  /**
+   * The castle's gold hit: bumping `token` plays it once, graded by `tier`
+   * (DAILY_GOLD_HIT_TIERS). token 0 = never.
+   */
+  goldHit: { token: number; tier: DailyBreachTier };
+  /** The breach's castle shake: bumping `token` plays `profile` once. Absent or token 0 = never. */
+  shake?: { token: number; profile: DailyBreachShakeProfile };
+  /**
+   * The breach's flashes, lightning, splinters and dust for `tier` ('open' has
+   * none): bumping `token` plays them once, from the plaque's contact. Absent or
+   * token 0 = never.
+   */
+  breachEffects?: { token: number; tier: DailyBreachTier };
+  /**
+   * Receives the castle shake's translate values (resting at exactly 0) so the
+   * screen can shake Polly's overlay with the castle. Called again only if they change.
+   */
+  onShakeTransform?: (shake: DailyCastleShakeTransform) => void;
   /** The win's gold-coin finale (ui/dailyCoinFinale.ts steps 0–5). */
   coinFinale: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
@@ -254,11 +299,14 @@ function DailyCastlePlaqueSlot({
  * One registered castle scene. The arch and wall never move; the gate, the
  * gold hit, the floor coins and the answer plaques do.
  *
- * Layer order, back to front: sky (screen) → tunnel → plaque going in (back
- * flight) → gate → arch → gold hit (cap blooms, trim, tint) → floor coins →
- * wall → round markers → plaques in the wall → plaque being thrown (front
- * flight). The wall, its sill strip, the round markers and the plaques in the
- * wall are one group that trembles while a round's blocks come out.
+ * Layer order, back to front: sky (screen) → gold halo → tunnel → plaque
+ * going in (back flight) → gate → arch → gold hit (cap blooms, trim, tint,
+ * white wash) → floor coins → wall → round markers → plaques in the wall →
+ * breach lightning → breach dust → breach splinters → plaque being thrown
+ * (front flight) → breach white flash. The wall, its sill strip, the round
+ * markers and the plaques in the wall are one group that trembles while a
+ * round's blocks come out. Everything but the white flash sits in one world
+ * that the breach's castle shake moves.
  */
 export default function DailyCastleStage({
   gatePosition,
@@ -269,7 +317,10 @@ export default function DailyCastleStage({
   flight,
   flightProgress,
   coinRise,
-  goldHitToken,
+  goldHit: goldHitRequest,
+  shake,
+  breachEffects,
+  onShakeTransform,
   coinFinale,
   hudBottom,
   roundMarkers,
@@ -282,6 +333,101 @@ export default function DailyCastleStage({
   // True under Reduce Motion (or while it is unknown) as well as Reduce
   // Flashes: the gold hit keeps its gold, loses its overshoot and swell.
   const calmGoldHit = useReducedFlashesPreference();
+  // The breach effects follow the shared policy: the shake, splinters and dust
+  // need motion; the lightning and the screen flash need flashes too.
+  const { animateMotion, animateFlashes } = resolveGameplayFeedbackAccessibility(
+    reduceMotion,
+    calmGoldHit,
+  );
+  const animateMotionRef = useRef(animateMotion);
+  animateMotionRef.current = animateMotion;
+  const animateFlashesRef = useRef(animateFlashes);
+  animateFlashesRef.current = animateFlashes;
+
+  // The breach's castle shake (ui/dailyBreach.ts): one 0 → 1 value over the
+  // profile's length, the keyframes resting at exactly 0 at both ends. A
+  // parent transform over the whole stage, separate from the wall's tremble.
+  const breachShake = useRef(new Animated.Value(0)).current;
+  const shakeProfile: DailyBreachShakeProfile = shake?.profile ?? 'hit';
+  const shakeProfileRef = useRef(shakeProfile);
+  shakeProfileRef.current = shakeProfile;
+  const shakeTranslate = useMemo<DailyCastleShakeTransform>(() => {
+    const keys = dailyBreachShakeKeyframes(shakeProfile);
+    return {
+      translateX: breachShake.interpolate({ ...keys.x, extrapolate: 'clamp' }),
+      translateY: breachShake.interpolate({ ...keys.y, extrapolate: 'clamp' }),
+    };
+  }, [breachShake, shakeProfile]);
+  const shakeTransform = useMemo(
+    () => [{ translateX: shakeTranslate.translateX }, { translateY: shakeTranslate.translateY }],
+    [shakeTranslate],
+  );
+  useEffect(() => {
+    onShakeTransform?.(shakeTranslate);
+  }, [onShakeTransform, shakeTranslate]);
+  const shakeToken = shake?.token ?? 0;
+  useEffect(() => {
+    if (shakeToken === 0 || !animateMotionRef.current) return;
+    breachShake.stopAnimation();
+    breachShake.setValue(0);
+    const run = Animated.timing(breachShake, {
+      toValue: 1,
+      duration: DAILY_BREACH_SHAKE[shakeProfileRef.current].ms,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+    run.start();
+    return () => {
+      // A new shake, leaving, or a cut-short shake never keeps an offset.
+      run.stop();
+      breachShake.setValue(0);
+    };
+  }, [breachShake, shakeToken]);
+
+  // The breach's flashes, lightning, splinters and dust run on one clock in ms.
+  // Their views mount only while a breach plays (`breachRun`) and come off when
+  // the clock finishes; the clock starts after they mount.
+  const breachClock = useRef(new Animated.Value(0)).current;
+  const [breachRun, setBreachRun] = useState<{
+    token: number;
+    tier: 'hit' | 'smash';
+    /** Reduce Flashes is off: the lightning and the screen flash play too. */
+    flashes: boolean;
+  } | null>(null);
+  const breachTierRef = useRef<DailyBreachTier>(breachEffects?.tier ?? 'open');
+  breachTierRef.current = breachEffects?.tier ?? 'open';
+  const breachToken = breachEffects?.token ?? 0;
+  useEffect(() => {
+    const tier = breachTierRef.current;
+    if (breachToken === 0 || tier === 'open' || !animateMotionRef.current) return;
+    setBreachRun({ token: breachToken, tier, flashes: animateFlashesRef.current });
+  }, [breachToken]);
+  useEffect(() => {
+    if (!breachRun) return;
+    const total = dailyBreachEffectsMs(breachRun.tier);
+    breachClock.stopAnimation();
+    breachClock.setValue(0);
+    const run = Animated.timing(breachClock, {
+      toValue: total,
+      duration: total,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+    run.start(({ finished }) => {
+      if (!finished) return;
+      setBreachRun((current) => (current?.token === breachRun.token ? null : current));
+    });
+    return () => {
+      run.stop();
+      breachClock.setValue(0);
+    };
+  }, [breachClock, breachRun]);
+  // A new round, or leaving, ends any breach effect still on screen.
+  useEffect(() => {
+    breachShake.stopAnimation();
+    breachShake.setValue(0);
+    setBreachRun(null);
+  }, [breachShake, roundKey]);
 
   // The answer wall trembles while a round's blocks come out
   // (ui/dailyPlaqueEntrance.ts): Daily-local, never the Hunt wall's channel.
@@ -358,12 +504,18 @@ export default function DailyCastleStage({
   // (ui/dailyCastleScene.ts DAILY_GOLD_HIT). It runs on its own progress, not
   // the throw's, so it plays under reduced motion and without a measured
   // throw origin too, and peaks well before the gate brings the next round.
+  // Graded by the breach tier (DAILY_GOLD_HIT_TIERS); under calmGoldHit every
+  // tier plays today's calm hit.
   const goldHit = useRef(new Animated.Value(0)).current;
   const calmGoldHitRef = useRef(calmGoldHit);
   calmGoldHitRef.current = calmGoldHit;
+  const goldHitToken = goldHitRequest.token;
+  const goldHitTier = goldHitRequest.tier;
+  const goldHitTierRef = useRef(goldHitTier);
+  goldHitTierRef.current = goldHitTier;
   useEffect(() => {
     if (goldHitToken === 0) return;
-    const timing = DAILY_GOLD_HIT[calmGoldHitRef.current ? 'calm' : 'full'];
+    const timing = dailyGoldHitTimingForTier(goldHitTierRef.current, calmGoldHitRef.current);
     goldHit.stopAnimation();
     goldHit.setValue(0);
     const hit = Animated.sequence([
@@ -394,7 +546,7 @@ export default function DailyCastleStage({
     };
   }, [goldHit, goldHitToken]);
   const goldHitStyles = useMemo(() => {
-    const keyframes = dailyGoldHitKeyframes(calmGoldHit);
+    const keyframes = dailyGoldHitTierKeyframes(goldHitTier, calmGoldHit);
     const read = (outputRange: number[]) => goldHit.interpolate({
       inputRange: DAILY_GOLD_HIT_INPUT,
       outputRange,
@@ -405,8 +557,10 @@ export default function DailyCastleStage({
       tint: read(keyframes.tint),
       glow: read(keyframes.glow),
       glowScale: read(keyframes.glowScale),
+      white: read(keyframes.white),
+      halo: read(keyframes.halo),
     };
-  }, [calmGoldHit, goldHit]);
+  }, [calmGoldHit, goldHit, goldHitTier]);
 
   // Gate and clue rects relative to the opening / gate image that hold them.
   const gateFrame = {
@@ -425,6 +579,69 @@ export default function DailyCastleStage({
     };
   });
 
+  // The breach's layers, built only while one plays. Canvas points → stage
+  // points; the hole moves with the gate (clueTop and the DEV gate offset).
+  const holeCanvas = dailyBreachHoleCanvas(clueTop);
+  const holeX = holeCanvas.x + tuning.gate.x;
+  const holeY = holeCanvas.y + tuning.gate.y;
+  const breachLayers = useMemo(() => {
+    if (!breachRun) return null;
+    const read = (keys: { inputRange: number[]; outputRange: number[] }) =>
+      breachClock.interpolate({ ...keys, extrapolate: 'clamp' });
+    const toStage = (x: number, y: number) => ({ x: x * s + sceneLeft, y: sceneTop + y * s });
+
+    const flashes = breachRun.flashes ? dailyBreachFlashes(breachRun.tier) : [];
+    const flash = flashes.length > 0 ? read(dailyBreachFlashKeyframes(flashes)) : null;
+    const bolts = breachRun.flashes && breachRun.tier === 'smash'
+      ? dailyBreachBolts({ x: holeX, y: holeY }).map((bolt, index) => ({
+          bolt,
+          opacity: read(dailyBreachBoltKeyframes(index === 0 ? 0 : 1)),
+        }))
+      : [];
+
+    const dustKeys = dailyBreachDustKeyframes();
+    const dustCentre = breachRun.tier === 'hit' ? DAILY_BREACH_DUST.hit.at : { x: holeX, y: holeY };
+    const dust = dailyBreachDust(breachRun.tier).map((puff) => {
+      const centre = toStage(dustCentre.x + puff.dx, dustCentre.y + puff.dy);
+      const size = puff.size * s;
+      return { left: centre.x - size / 2, top: centre.y - size / 2, size };
+    });
+
+    const origin = toStage(holeX, holeY);
+    const splinters = breachRun.tier === 'smash'
+      ? dailyBreachSplinters().map((splinter) => {
+          const keys = dailyBreachSplinterKeyframes(splinter);
+          const width = splinter.width * s;
+          const height = splinter.height * s;
+          return {
+            color: splinter.color,
+            left: origin.x - width / 2,
+            top: origin.y - height / 2,
+            width,
+            height,
+            translateX: read({ inputRange: keys.inputRange, outputRange: keys.x.map((v) => v * s) }),
+            translateY: read({ inputRange: keys.inputRange, outputRange: keys.y.map((v) => v * s) }),
+            rotate: breachClock.interpolate({
+              inputRange: keys.inputRange,
+              outputRange: keys.rotateDeg.map((deg) => `${deg}deg`),
+              extrapolate: 'clamp',
+            }),
+            opacity: read({ inputRange: keys.inputRange, outputRange: keys.opacity }),
+          };
+        })
+      : [];
+
+    return {
+      flash,
+      bolts,
+      dust,
+      dustRise: read({ inputRange: dustKeys.inputRange, outputRange: dustKeys.rise.map((v) => v * s) }),
+      dustScale: read({ inputRange: dustKeys.inputRange, outputRange: dustKeys.scale }),
+      dustOpacity: read({ inputRange: dustKeys.inputRange, outputRange: dustKeys.opacity }),
+      splinters,
+    };
+  }, [breachClock, breachRun, holeX, holeY, s, sceneLeft, sceneTop]);
+
   return (
     <View
       ref={stageRef}
@@ -437,6 +654,45 @@ export default function DailyCastleStage({
       collapsable={false}
       style={styles.stage}
     >
+      {/* The breach's castle shake moves everything the stage draws, as one
+          world, except the full-stage flash below. Never flattened, for the
+          same zIndex reason as the stage; box-none so the plaques still take
+          touches. At rest its offset is exactly 0. */}
+      <Animated.View
+        pointerEvents="box-none"
+        collapsable={false}
+        style={[styles.shakeWorld, { transform: shakeTransform }]}
+      >
+      {/* The gold hit's halo: soft gold behind the castle top, under the arch
+          and the opening, so it shows only in the sky. Rests at 0. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.layer, styles.goldHalo, {
+          left: sceneLeft,
+          top: sceneTop,
+          width: DAILY_GOLD_HALO.width * s,
+          height: DAILY_GOLD_HALO.height * s,
+          opacity: goldHitStyles.halo,
+        }]}
+      >
+        <Svg width={DAILY_GOLD_HALO.width * s} height={DAILY_GOLD_HALO.height * s}>
+          <Defs>
+            <RadialGradient
+              id="dailyGoldHalo"
+              cx={`${DAILY_GOLD_HALO.centre.x * 100}%`}
+              cy={`${DAILY_GOLD_HALO.centre.y * 100}%`}
+              fx={`${DAILY_GOLD_HALO.centre.x * 100}%`}
+              fy={`${DAILY_GOLD_HALO.centre.y * 100}%`}
+              rx="50%"
+              ry="50%"
+            >
+              <Stop offset="0" stopColor={DAILY_GOLD_HALO.color} stopOpacity={DAILY_GOLD_HALO.peakOpacity} />
+              <Stop offset={DAILY_GOLD_HALO.fadeOffset} stopColor={DAILY_GOLD_HALO.color} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#dailyGoldHalo)" />
+        </Svg>
+      </Animated.View>
       <Image
         source={CASTLE_ARCH}
         style={[styles.layer, styles.castleArch, {
@@ -490,6 +746,20 @@ export default function DailyCastleStage({
           width: frame.width,
           height: frame.height,
           opacity: goldHitStyles.tint,
+        }]}
+        resizeMode="stretch"
+      />
+      {/* The white wash over the gold: the same art tinted DAILY_GOLD_HIT_WHITE.
+          Its peak counts as a flash (DAILY_BREACH_FLASH_LIMIT). */}
+      <Animated.Image
+        source={CASTLE_GOLD_FLASH}
+        tintColor={DAILY_GOLD_HIT_WHITE}
+        style={[styles.layer, styles.castleGoldFlash, {
+          left: sceneLeft,
+          top: sceneTop,
+          width: frame.width,
+          height: frame.height,
+          opacity: goldHitStyles.white,
         }]}
         resizeMode="stretch"
       />
@@ -654,6 +924,107 @@ export default function DailyCastleStage({
         })}
       </Animated.View>
 
+      {/* The breach's lightning (smash, flashes allowed): above the castle and
+          the wall, below the thrown plaque. Canvas-point viewBox, so the bolts
+          scale with the scene. */}
+      {breachLayers?.bolts.map(({ bolt, opacity }, index) => (
+        <Animated.View
+          key={`breach-bolt-${index}`}
+          pointerEvents="none"
+          style={[styles.layer, styles.breachBolt, {
+            left: sceneLeft,
+            top: sceneTop,
+            width: frame.width,
+            height: frame.height,
+            opacity,
+          }]}
+        >
+          <Svg
+            width={frame.width}
+            height={frame.height}
+            viewBox={`0 0 ${DAILY_CASTLE_CANVAS.width} ${DAILY_CASTLE_CANVAS.height}`}
+          >
+            {(['hole', 'left', 'right'] as const).map((branch) => {
+              const points = bolt[branch].map((p) => `${p.x},${p.y}`).join(' ');
+              return (
+                <React.Fragment key={branch}>
+                  <Polyline
+                    points={points}
+                    fill="none"
+                    stroke={DAILY_BREACH_LIGHTNING.glow.color}
+                    strokeWidth={DAILY_BREACH_LIGHTNING.glow.width}
+                    strokeOpacity={DAILY_BREACH_LIGHTNING.glow.opacity}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                  <Polyline
+                    points={points}
+                    fill="none"
+                    stroke={DAILY_BREACH_LIGHTNING.core.color}
+                    strokeWidth={DAILY_BREACH_LIGHTNING.core.width}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                </React.Fragment>
+              );
+            })}
+          </Svg>
+        </Animated.View>
+      ))}
+
+      {/* Dust puffs (hit at the handoff, smash at the hole) and splinters
+          (smash), mounted only while the breach plays. */}
+      {breachLayers?.dust.map((puff, index) => (
+        <Animated.View
+          key={`breach-dust-${index}`}
+          pointerEvents="none"
+          style={[styles.layer, styles.breachDust, {
+            left: puff.left,
+            top: puff.top,
+            width: puff.size,
+            height: puff.size,
+            opacity: breachLayers.dustOpacity,
+            transform: [{ translateY: breachLayers.dustRise }, { scale: breachLayers.dustScale }],
+          }]}
+        >
+          <Svg width={puff.size} height={puff.size} viewBox="0 0 100 100">
+            <Defs>
+              <RadialGradient
+                id={`dailyBreachDust${index}`}
+                cx="50"
+                cy="50"
+                r="50"
+                gradientUnits="userSpaceOnUse"
+              >
+                <Stop offset="0" stopColor={DAILY_BREACH_DUST.color} stopOpacity={DAILY_BREACH_DUST.peakOpacity} />
+                <Stop offset={DAILY_BREACH_DUST.fadeOffset} stopColor={DAILY_BREACH_DUST.color} stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            <Circle cx="50" cy="50" r="50" fill={`url(#dailyBreachDust${index})`} />
+          </Svg>
+        </Animated.View>
+      ))}
+      {breachLayers?.splinters.map((splinter, index) => (
+        <Animated.View
+          key={`breach-splinter-${index}`}
+          pointerEvents="none"
+          style={[styles.layer, styles.breachSplinter, {
+            left: splinter.left,
+            top: splinter.top,
+            width: splinter.width,
+            height: splinter.height,
+            borderRadius: splinter.width / 3,
+            backgroundColor: splinter.color,
+            opacity: splinter.opacity,
+            transform: [
+              { translateX: splinter.translateX },
+              { translateY: splinter.translateY },
+              { rotate: splinter.rotate },
+            ],
+          }]}
+        />
+      ))}
+
       {flight && (
         <DailyCastleFlightPlaque
           flight={flight}
@@ -662,6 +1033,17 @@ export default function DailyCastleStage({
           frame={frame}
           offsetX={stageOffset.x}
           offsetY={stageOffset.y}
+        />
+      )}
+      </Animated.View>
+
+      {/* The one shared full-stage white flash: the hit's flash and the
+          lightning's. Outside the shake so its edges never show. Mounted only
+          while a breach with flashes plays. */}
+      {breachLayers?.flash && (
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.breachFlash, { opacity: breachLayers.flash }]}
         />
       )}
     </View>
@@ -759,6 +1141,33 @@ const styles = StyleSheet.create({
   },
   layer: {
     position: 'absolute',
+  },
+  shakeWorld: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 1,
+    elevation: 1,
+  },
+  goldHalo: {
+    zIndex: 10,
+    elevation: 10,
+  },
+  breachBolt: {
+    zIndex: 45,
+    elevation: 45,
+  },
+  breachDust: {
+    zIndex: 46,
+    elevation: 46,
+  },
+  breachSplinter: {
+    zIndex: 47,
+    elevation: 47,
+  },
+  breachFlash: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#FFFFFF',
+    zIndex: 2,
+    elevation: 2,
   },
   castleArch: {
     zIndex: 30,

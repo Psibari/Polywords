@@ -14,6 +14,9 @@
  * Pure module: no React Native import, so it runs under plain node tests.
  */
 
+// Type only: ui/dailyBreach.ts imports this module at runtime.
+import type { DailyBreachTier } from './dailyBreach';
+
 export type DailyCastleRect = {
   x: number;
   y: number;
@@ -599,7 +602,8 @@ export const DAILY_CASTLE_CAPS: readonly DailyCastleRect[] = [
   { x: 0, y: 239 / 3, width: 212 / 3, height: 138 / 3 },
   { x: 1078 / 3, y: 239 / 3, width: 212 / 3, height: 138 / 3 },
 ];
-const DAILY_CAP_CENTRES = [
+/** Each tower cap's centre, canvas points (the bloom centres; also the breach's lightning targets). */
+export const DAILY_CAP_CENTRES = [
   { x: 106 / 3, y: 307 / 3 },
   { x: 1183 / 3, y: 307 / 3 },
 ] as const;
@@ -663,6 +667,119 @@ export function dailyGoldHitKeyframes(calm: boolean): DailyGoldHitKeyframes {
         glow: [0, 1, 0.9, 0],
         glowScale: [0.8, 1.12, 1.05, 1],
       };
+}
+
+/**
+ * The gold hit, graded by the breach tier (Pete, 2026-11-04: bigger, stepped
+ * versions for the breach, which lifts the 2026-09-29 lock for these tiers;
+ * 'open' uses big3, approved in the same 4 Nov mock). The mock's numbers.
+ * DAILY_GOLD_HIT / dailyGoldHitKeyframes above stay as the CALM variant (Reduce
+ * Flashes or Reduce Motion), for every tier, until the calm pass.
+ *
+ * Two layers beyond the old hit, both resting at 0:
+ *   white  a white wash over the gold layers: the gold-flash art again, tinted
+ *          DAILY_GOLD_HIT_WHITE, at this opacity;
+ *   halo   multiplier for the soft gold halo behind the castle top
+ *          (DAILY_GOLD_HALO): its opacity is min(1, trim * 0.55 * halo).
+ *
+ * PHOTOSENSITIVITY: the white wash's peak counts as a flash. See
+ * DAILY_BREACH_FLASH_LIMIT in ui/dailyBreach.ts.
+ */
+export type DailyGoldHitTier = {
+  igniteMs: number;
+  holdMs: number;
+  decayMs: number;
+  keyframes: DailyGoldHitKeyframes & { white: number[] };
+  halo: number;
+};
+export const DAILY_GOLD_HIT_TIERS: Record<DailyBreachTier, DailyGoldHitTier> = {
+  // big3
+  open: {
+    igniteMs: 100, holdMs: 260, decayMs: 500,
+    keyframes: {
+      trim: [0, 1, 1, 0], tint: [0, 0.85, 0.7, 0], glow: [0, 1, 1, 0],
+      glowScale: [0.9, 1.45, 1.25, 1], white: [0, 0.18, 0.06, 0],
+    },
+    halo: 1,
+  },
+  // big2
+  hit: {
+    igniteMs: 80, holdMs: 340, decayMs: 560,
+    keyframes: {
+      trim: [0, 1, 1, 0], tint: [0, 1, 0.9, 0], glow: [0, 1, 1, 0],
+      glowScale: [0.9, 1.75, 1.5, 1], white: [0, 0.45, 0.18, 0],
+    },
+    halo: 1.5,
+  },
+  // big1
+  smash: {
+    igniteMs: 70, holdMs: 460, decayMs: 700,
+    keyframes: {
+      trim: [0, 1, 1, 0], tint: [0, 1, 1, 0], glow: [0, 1, 1, 0],
+      glowScale: [0.9, 2.1, 1.8, 1], white: [0, 0.6, 0.25, 0],
+    },
+    halo: 2.2,
+  },
+};
+/** The white wash's tint (the mock masks a #fff6d8 fill with the gold-flash art). */
+export const DAILY_GOLD_HIT_WHITE = '#FFF6D8';
+
+/**
+ * The gold halo behind the castle top: a 430 x 520 canvas-point ellipse whose
+ * box sits at the scene's top-left, centred at 50% x 38% of that box, a radial
+ * gradient of rgba(245,200,66,0.55) fading to 0 at 68% of the radius. Drawn
+ * with react-native-svg; no blur, no asset.
+ */
+export const DAILY_GOLD_HALO = {
+  width: 430,
+  height: 520,
+  centre: { x: 0.5, y: 0.38 },
+  color: 'rgb(245,200,66)',
+  peakOpacity: 0.55,
+  fadeOffset: 0.68,
+  /** opacity = min(1, trim * trimFactor * tier halo). */
+  trimFactor: 0.55,
+} as const;
+
+export type DailyGoldHitTierKeyframes = DailyGoldHitKeyframes & {
+  white: number[];
+  halo: number[];
+};
+
+/**
+ * Outputs for DAILY_GOLD_HIT_INPUT for a tier. `calm` returns today's calm hit
+ * for every tier, with no white wash and no halo.
+ */
+export function dailyGoldHitTierKeyframes(
+  tier: DailyBreachTier,
+  calm: boolean,
+): DailyGoldHitTierKeyframes {
+  if (calm) {
+    return { ...dailyGoldHitKeyframes(true), white: [0, 0, 0, 0], halo: [0, 0, 0, 0] };
+  }
+  const t = DAILY_GOLD_HIT_TIERS[tier];
+  return {
+    ...t.keyframes,
+    halo: t.keyframes.trim.map((trim) =>
+      Math.min(1, trim * DAILY_GOLD_HALO.trimFactor * t.halo),
+    ),
+  };
+}
+
+/** The gold hit's phase lengths for a tier; `calm` is today's calm hit. */
+export function dailyGoldHitTimingForTier(
+  tier: DailyBreachTier,
+  calm = false,
+): { igniteMs: number; holdMs: number; decayMs: number } {
+  if (calm) return DAILY_GOLD_HIT.calm;
+  const { igniteMs, holdMs, decayMs } = DAILY_GOLD_HIT_TIERS[tier];
+  return { igniteMs, holdMs, decayMs };
+}
+
+/** The whole gold hit for a tier, for the coin finale's hold-off (dailyCoinFinaleFloorHoldMs). */
+export function dailyGoldHitMsForTier(tier: DailyBreachTier, calm = false): number {
+  const t = dailyGoldHitTimingForTier(tier, calm);
+  return t.igniteMs + t.holdMs + t.decayMs;
 }
 
 /**
