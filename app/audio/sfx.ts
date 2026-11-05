@@ -78,6 +78,12 @@ export type SfxName =
   // is the CAMERA, HUD and cards slamming down after it. See WALL_FALL_SFX_* in components/wallShake.ts.
   | 'boulderImpact'
   | 'hardHeavyImpact'
+  // The Daily breach (2026-11-04, CONTEXT.md "THE BREACH"): the gate cracking, the castle rumbling, the
+  // plaque smashing through, and the lightning. Registered only; nothing plays them yet.
+  | 'breachGateCrack'
+  | 'breachCastleRumble'
+  | 'breachSmash'
+  | 'breachThunder'
   // Daily scroll mechanism — BLOCKED on assets, see the SFX registration
   // below. Uncomment together with the matching entries in SFX and the
   // guarded call sites in DailyChallengeScreen.tsx once the files land.
@@ -257,6 +263,28 @@ const SFX: Record<SfxName, SfxConfig> = {
   boulderImpact: { source: require('../../assets/audio/sfx/boulder_impact.mp3'), volume: 0.22, cooldownMs: 400 },
   hardHeavyImpact: { source: require('../../assets/audio/sfx/hard_heavy_impact.mp3'), volume: 0.22, cooldownMs: 400 },
   polybookCageCrash: { source: require('../../assets/audio/sfx/polybook_cage_crash.mp3'), volume: 0.45, cooldownMs: 400 },
+  // The Daily breach. FILE-RELATIVE volumes, like the gauntlet entries above: each puts its file's
+  // loudest 100 ms where boulderImpact and hardHeavyImpact land at 0.22. Measured 2026-11-04 (ffmpeg,
+  // sliding 100 ms RMS, sample-exact window).
+  //
+  // The two impacts are STEREO and the four breach files are MONO. ffmpeg's float mono downmix ADDS
+  // left and right, which reads a stereo file up to 6 dB hotter than a mono file that sounds the same;
+  // that is where "about 0 dBFS" in the impacts' note comes from (summed: boulder +1.2, hard -1.3).
+  // Like for like (per-channel mean power, the level a mono file sent to both speakers needs) they are
+  // boulder -1.8 and hard -4.0, mean -2.9. At 0.22 (-13.15 dB): -2.9 - 13.15 = about -16.0 dBFS
+  // effective. That is the target.
+  //
+  // Raw loudest 100 ms (mono): crack -8.9, rumble -6.2, smash -7.9, thunder -8.0. Gain = -16.0 - raw:
+  //   crack   -7.1 dB -> 10^(-7.1/20) = 0.44
+  //   rumble  -9.8 dB -> 10^(-9.8/20) = 0.32
+  //   smash   -8.1 dB -> 10^(-8.1/20) = 0.39
+  //   thunder -8.0 dB -> 10^(-8.0/20) = 0.40
+  // (Matched to the summed figures instead, every one would be about 3 dB louder: 0.62 / 0.46 / 0.56 / 0.56.)
+  // These are START values for a phone pass, not approved levels. Cooldowns only swallow a double-run.
+  breachGateCrack:    { source: require('../../assets/audio/sfx/breach_gate_crack.mp3'),    volume: 0.44, cooldownMs: 300 },
+  breachCastleRumble: { source: require('../../assets/audio/sfx/breach_castle_rumble.mp3'), volume: 0.32, cooldownMs: 600 },
+  breachSmash:        { source: require('../../assets/audio/sfx/breach_smash.mp3'),         volume: 0.39, cooldownMs: 1200 },
+  breachThunder:      { source: require('../../assets/audio/sfx/breach_thunder.mp3'),       volume: 0.40, cooldownMs: 1500 },
   dailyStoneSeat1: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat2: DAILY_STONE_SEAT_SFX,
   dailyStoneSeat3: DAILY_STONE_SEAT_SFX,
@@ -569,6 +597,11 @@ export function warmGauntletEntranceSfx(tileCount: number): void {
 /** Warms the Daily answer wall's grind and its three row thuds. */
 export function warmDailyPlaqueEntranceSfx(): void {
   warmSfx(['dailyStoneShift', ...DAILY_STONE_SEAT_SFX_NAMES]);
+}
+
+/** Warms the four Daily breach cues (gate crack, castle rumble, smash, thunder). Not called yet. */
+export function warmBreachSfx(): void {
+  warmSfx(['breachGateCrack', 'breachCastleRumble', 'breachSmash', 'breachThunder']);
 }
 
 /** Warms the terrace Home's entrance grind, the three row thuds it reuses from the Daily, and the dive sounds. */

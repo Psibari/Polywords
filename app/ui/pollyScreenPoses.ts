@@ -19,6 +19,15 @@ const POLLY_SCREEN_POSES = {
   embarrassed: require('../../assets/images/polly/master/embarrassed.png'),
   flyAngry: require('../../assets/images/polly/master/flyAngry.png'),
   flyGrin: require('../../assets/images/polly/master/flyGrin.png'),
+  // For the Daily breach (CONTEXT.md "THE BREACH"); not used by any perch yet. masterShock here is the
+  // MASTER art, not the older polly_shocked.png that pollyPoses.ts calls masterShock.
+  masterShock: require('../../assets/images/polly/master/masterShock.png'),
+  angryYell: require('../../assets/images/polly/master/angryYell.png'),
+  angry: require('../../assets/images/polly/master/angry.png'),
+  jumpAngry: require('../../assets/images/polly/master/jumpAngry.png'),
+  laugh01: require('../../assets/images/polly/master/laugh01.png'),
+  laugh03: require('../../assets/images/polly/master/laugh03.png'),
+  hauntTaunt: require('../../assets/images/polly/master/hauntTaunt.png'),
 } as const;
 
 export type PollyScreenPoseName = keyof typeof POLLY_SCREEN_POSES;
@@ -38,6 +47,13 @@ const POLLY_SCREEN_POSE_SCALE: Record<PollyScreenPoseName, number> = {
   embarrassed: 1,
   flyAngry: 1,
   flyGrin: 1,
+  masterShock: 1,
+  angryYell: 1,
+  angry: 1,
+  jumpAngry: 1,
+  laugh01: 1,
+  laugh03: 1,
+  hauntTaunt: 1,
 };
 
 export function pollyScreenPoseArt(pose: PollyScreenPoseName): { source: ImageSourcePropType; scale: number } {

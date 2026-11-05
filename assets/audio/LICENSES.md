@@ -134,3 +134,27 @@ found by web search), so the licence is as Pete reported it.
 
 POLYWORDS edits: both files are renamed only. The decoded audio is identical to the downloads (checked by
 hash); the file bytes differ slightly (tag data), which does not change the sound.
+
+## Sound effects added 2026-11-04 (the Daily breach)
+
+- `sfx/breach_gate_crack.mp3`: "Wood Break" by freesound_community (Pixabay file 40011), the first crack
+  (starts about 1.38 s into the source), 0.44 s, Pixabay Content License.
+- `sfx/breach_castle_rumble.mp3`: "Punch A Rock" by lordsonny (Pixabay file 161647), starts about 0.30 s
+  into the source, 1.15 s, Pixabay Content License.
+- `sfx/breach_smash.mp3`: "Explosion With Debris" by dragon-studio (Pixabay file 494320), starts at the
+  beginning of the source, 1.54 s, Pixabay Content License.
+- `sfx/breach_thunder.mp3`: "Thunderstorm Lightning Strike" by freesound_community (Pixabay file 7180),
+  starts about 7.45 s into the 48 s source, 1.83 s, Pixabay Content License.
+
+Creator names and file numbers were read from the downloaded file names; the Pixabay page URLs were not
+opened or checked by Claude.
+
+POLYWORDS edits: each is a trimmed excerpt lowered roughly 6 to 8 dB so it does not clip (the sources
+decode up to +6 dBFS), re-encoded to mp3; start offsets are approximate (matched by waveform, not recorded
+at the time).
+
+Pixabay's terms were updated 20 Oct 2026; Claude read them on 4 Nov 2026 and they grant commercial use with
+no attribution and forbid selling or redistributing the sound on its own; they do not mention games or apps
+by name. Keep a dated saved copy of the licence page.
+
+"Wood Smash 3" by floraphonic (Pixabay file 170418) was auditioned and NOT used or shipped.
