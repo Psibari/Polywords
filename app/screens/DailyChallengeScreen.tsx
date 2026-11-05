@@ -1476,6 +1476,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
     // Wrong — the gate slams down a short distance then rebounds.
     setLocked(true);
+    // A new claim ends a breach move still holding from the last round, so
+    // Polly's reaction to this one starts from rest.
+    restBreachClocks();
     setCardStates((prev) => new Map(prev).set(candidate, 'wrong'));
     playSfx('trapWrong');
     beginClaimPresentation(dailySession, candidate, 'wrong');

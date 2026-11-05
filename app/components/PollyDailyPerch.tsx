@@ -29,6 +29,12 @@ import {
   pollyBreachPoseKeyframes,
   pollyDailyBreachTimeline,
 } from '../ui/pollyDailyBreach';
+import {
+  POLLY_DANCE_MS,
+  POLLY_DANCE_POSES,
+  pollyDailyDanceTimeline,
+  pollyDanceBubbleKeyframes,
+} from '../ui/pollyDailyDance';
 
 // DailyPollyReaction here is pwDailyMaterials' POSE-keyed type ('perched' |
 // 'happy' | 'laughing' | 'shocked'), NOT the trigger type of the same name in
@@ -93,7 +99,9 @@ type Props = {
 // master art at 1, except idle, which stays sprite4 for the face rig.
 const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', PollyScreenPoseName> = {
   idle: 'idle',         // smug perched — watchful (face rig)
-  happy: 'point',       // pointing taunt (wrong)
+  // First lost life (wrong): the dance (ui/pollyDailyDance.ts) plays over this
+  // and lands on it; under Reduce Motion it is the whole reaction.
+  happy: 'laugh',
   laughing: 'laugh',    // laughing wide (out of lives)
   shocked: 'shocked',   // shocked (win)
 };
@@ -141,14 +149,20 @@ const PERCH_LAYER_POSES: readonly PollyScreenPoseName[] = [
   ...new Set<PollyScreenPoseName>([
     POSE_FLY, POSE.idle, POSE.happy, POSE.laughing, POSE.shocked,
     ...Object.values(EXIT_POSE),
-    // The breach's tier moves (ui/pollyDailyBreach.ts).
+    // The breach's tier moves (ui/pollyDailyBreach.ts) and the first-miss
+    // dance (ui/pollyDailyDance.ts).
     ...POLLY_BREACH_POSES,
+    ...POLLY_DANCE_POSES,
   ]),
 ];
-const BREACH_TIMELINES = {
+// Every move that can own her pose, each on its own clock.
+const MOVE_TIMELINES = {
   hit: pollyDailyBreachTimeline('hit'),
   smash: pollyDailyBreachTimeline('smash'),
+  dance: pollyDailyDanceTimeline(),
 } as const;
+type MoveName = keyof typeof MOVE_TIMELINES;
+const MOVE_POSES: readonly PollyScreenPoseName[] = [...new Set([...POLLY_BREACH_POSES, ...POLLY_DANCE_POSES])];
 // Poses the face rig draws (idle) share the one rig layer instead of an image.
 const PERCH_IMAGE_POSES = PERCH_LAYER_POSES.filter(
   p => !(POLLY_PERCH_RIG_ENABLED && pollyScreenPoseUsesRig(p)),
@@ -230,6 +244,8 @@ export default function PollyDailyPerch({
   const reactX = useRef(new Animated.Value(0)).current;
   const reactY = useRef(new Animated.Value(0)).current;
   const reactScale = useRef(new Animated.Value(1)).current;
+  // The first-miss dance's own clock (ms from the reaction's start, 0 at rest).
+  const danceClock = useRef(new Animated.Value(0)).current;
   // Flight offsets for the arrival and the fly-out. At rest on the wall: 0, 0,
   // no tilt, full size. Out of play she is parked off screen above.
   const flyX = useRef(new Animated.Value(0)).current;
@@ -277,7 +293,9 @@ export default function PollyDailyPerch({
     return () => {
       if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
       reactionTokenRef.current += 1;
+      danceClock.stopAnimation();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Arrival: each time play starts (and her wall spot is known) she starts a
@@ -337,6 +355,10 @@ export default function PollyDailyPerch({
   useEffect(() => {
     const isReacting =
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked' || reaction === 'correct';
+    // Any new reaction (or the reset after one) ends a dance still playing:
+    // she is back at rest, (0, 0), her own pose.
+    danceClock.stopAnimation();
+    danceClock.setValue(0);
 
     if (!isReacting) {
       // The screen's reset can land around her fly-out; leave her be.
@@ -407,11 +429,15 @@ export default function PollyDailyPerch({
         Animated.timing(reactX, { toValue: 0, duration: 70, useNativeDriver: true }),
       ]).start();
     } else if (reaction === 'happy') {
-      // Cold, slow lean toward the puzzle (she's on the left → lean right).
-      Animated.sequence([
-        Animated.timing(reactX, { toValue: 12, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-        Animated.timing(reactX, { toValue: 0, duration: 540, delay: 720, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-      ]).start();
+      // The first lost life is a dance (ui/pollyDailyDance.ts), on its own
+      // clock from the squawk: it owns her pose and shows the butter-knife
+      // bubble while she hovers, and lands on the laugh pose set above.
+      Animated.timing(danceClock, {
+        toValue: POLLY_DANCE_MS,
+        duration: POLLY_DANCE_MS,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }).start();
     } else if (reaction === 'shocked') {
       // Shocked: fast recoil pop.
       Animated.sequence([
@@ -432,12 +458,17 @@ export default function PollyDailyPerch({
     bubbleOpacity.stopAnimation();
     bubbleOpacity.setValue(0);
     setBubbleLine(getLine(reaction, dailyLossLineId, pickedCorrectLineId));
-    Animated.timing(bubbleOpacity, {
-      toValue: 1,
-      duration: 180,
-      delay: bubbleDelay,
-      useNativeDriver: true,
-    }).start();
+    // The dance shows its bubble itself (in at 850 ms, out from 1650 ms, on its
+    // clock); every other reaction, and the dance under Reduce Motion, fades
+    // it in here as before.
+    if (!(reaction === 'happy' && !reduceMotion)) {
+      Animated.timing(bubbleOpacity, {
+        toValue: 1,
+        duration: 180,
+        delay: bubbleDelay,
+        useNativeDriver: true,
+      }).start();
+    }
 
     if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
     bubbleTimerRef.current = setTimeout(() => {
@@ -473,26 +504,39 @@ export default function PollyDailyPerch({
   const hitClock = breachClocks?.hit ?? restingHitClock;
   const smashClock = breachClocks?.smash ?? restingSmashClock;
   const breachMove = useMemo(() => {
+    const clocks: Record<MoveName, Animated.Value> = { hit: hitClock, smash: smashClock, dance: danceClock };
     const read = (clock: Animated.Value, keys: { inputRange: number[]; outputRange: number[] }) =>
       clock.interpolate({ ...keys, extrapolate: 'clamp' });
-    const both = (make: (tier: 'hit' | 'smash', clock: Animated.Value) => Animated.AnimatedInterpolation<number>) =>
-      Animated.add(make('hit', hitClock), make('smash', smashClock));
+    // Each move on its own clock, summed: only one ever moves at a time (a new
+    // claim or reaction rests the others), and each rests at 0.
+    const sum = (make: (move: MoveName) => { inputRange: number[]; outputRange: number[] }) =>
+      Animated.add(
+        read(clocks.hit, make('hit')),
+        Animated.add(read(clocks.smash, make('smash')), read(clocks.dance, make('dance'))),
+      );
     // 1 while a move owns her pose; her own pose shows only when it is 0.
-    const owned = both((tier, clock) => read(clock, pollyBreachActiveKeyframes(BREACH_TIMELINES[tier])));
-    const notOwned = Animated.subtract(1, owned);
-    const poseOpacity = Object.fromEntries(POLLY_BREACH_POSES.map((p) => [
+    // Clamped, so two moves overlapping for a frame can never go negative.
+    const owned = sum((m) => pollyBreachActiveKeyframes(MOVE_TIMELINES[m]));
+    const notOwned = owned.interpolate({ inputRange: [0, 1], outputRange: [1, 0], extrapolate: 'clamp' });
+    const poseOpacity = Object.fromEntries(MOVE_POSES.map((p) => [
       p,
-      both((tier, clock) => read(clock, pollyBreachPoseKeyframes(BREACH_TIMELINES[tier], p))),
+      sum((m) => pollyBreachPoseKeyframes(MOVE_TIMELINES[m], p)),
     ])) as Partial<Record<PollyScreenPoseName, Animated.AnimatedAddition<number>>>;
-    const rotateDeg = both((tier, clock) => read(clock, BREACH_TIMELINES[tier].rotateDeg));
+    const rotateDeg = sum((m) => MOVE_TIMELINES[m].rotateDeg);
     return {
       notOwned,
       poseOpacity,
-      x: both((tier, clock) => read(clock, BREACH_TIMELINES[tier].x)),
-      y: both((tier, clock) => read(clock, BREACH_TIMELINES[tier].y)),
+      x: sum((m) => MOVE_TIMELINES[m].x),
+      y: sum((m) => MOVE_TIMELINES[m].y),
       rotate: rotateDeg.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }),
+      // The dance's butter-knife bubble, added to the reactions' own bubble opacity.
+      danceBubble: read(danceClock, pollyDanceBubbleKeyframes()),
     };
-  }, [hitClock, smashClock]);
+  }, [danceClock, hitClock, smashClock]);
+  const bubbleShown = useMemo(
+    () => Animated.add(bubbleOpacity, breachMove.danceBubble),
+    [breachMove, bubbleOpacity],
+  );
 
   // Her own pose as one stable value per layer (and the rig), switched when the
   // pose changes; a breach move shows over it by its own opacity.
@@ -535,7 +579,7 @@ export default function PollyDailyPerch({
             left: bubbleAt.x,
             top: bubbleAt.y,
           },
-          { opacity: bubbleOpacity },
+          { opacity: bubbleShown },
         ]}
       >
         <PollySpeechBubble
