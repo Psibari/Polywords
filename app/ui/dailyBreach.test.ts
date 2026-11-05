@@ -636,9 +636,26 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   assert.match(run, /const runsProgress = flies \|\| beats\.contactMs !== null;/, 'a breach runs the progress even with no plaque drawn');
   assert.match(run, /const goneAtMs = dailyThrowGoneMs\(motion, breachTier\);/);
   assert.match(run, /const goldHitEndMs = \(beats\.contactMs \?\? 0\) \+ dailyGoldHitMsForTier\(breachTier, reduceFlashes\);/);
-  assert.match(screen, /throwDelayMs=\{dailyThrowGoneMs\(reduceMotion === false, claimBreachTier\)\}/, 'Polly\'s bubble waits for the tier\'s throw');
-  // Every new piece goes back to rest with the claim timers.
-  assert.match(screen, /correctTransitionTimersRef\.current = \[\];\n    resetBreachPresentation\(\);/);
+  // Polly's bubble waits for the tier's throw, less any wait her tier move
+  // already put on a delayed win.
+  assert.match(
+    screen,
+    /throwDelayMs=\{Math\.max\(\n\s*0,\n\s*dailyThrowGoneMs\(reduceMotion === false, claimBreachTier\) - \(pollyPose === 'shocked' \? pollyWinDelayMs : 0\),\n\s*\)\}/,
+    'Polly\'s bubble waits for the tier\'s throw',
+  );
+  // Every new piece goes back to rest with the claim timers; a claim that ends
+  // normally leaves the clocks running so Polly's hold can finish.
+  assert.match(screen, /correctTransitionTimersRef\.current = \[\];\n    resetBreachPresentation\(keepBreachClocks\);/);
+  assert.match(screen, /function finishPhysicalCorrectTransition\(candidate: string\) \{\n[^\n]*\n[^\n]*\n\s*clearCorrectTransitionTimers\(true\);/);
+  assert.match(screen, /if \(!keepBreachClocks\) restBreachClocks\(\);/);
+  assert.match(screen, /setPausedState\(val\);\n[\s\S]{0,200}?if \(val\) restBreachClocks\(\);/, 'a pause puts Polly back at rest');
+  // Polly rides the clocks and the castle shake; her win waits for her move.
+  assert.match(screen, /breachClocks=\{breachClocks\}\n\s*shake=\{castleShake\}/);
+  assert.match(screen, /onShakeTransform=\{setCastleShake\}/);
+  assert.match(screen, /\? dailyBreachPollyMoveEndMs\(tier\)\n\s*: 0;/);
+  assert.match(screen, /pollyExitFailsafeRef\.current = setTimeout\(releasePollyExit, dailyPollyExitFailsafeMs\(winDelayMs\)\);/);
+  assert.ok(cues.includes("playPollyReaction('startled');"), 'Polly startles on the contact');
+  assert.match(run, /if \(contactTier === 'smash'\) playPollyReaction\('angry'\);/, 'the fury yells at the throw');
   assert.doesNotMatch(screen, /Math\.random/);
 }
 

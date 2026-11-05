@@ -51,6 +51,7 @@ import {
   dailyBreachContactCueMs,
   dailyBreachCracksOnClock,
   dailyBreachGateJitterOnClock,
+  dailyBreachPollyMoveEndMs,
   dailyBreachPressOnClock,
   dailyGateBreakKeyframes,
   resolveDailyBreachTier,
@@ -62,6 +63,7 @@ import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { resolveRivalryState } from '../game/pollyMood';
 import { useGameStore } from '../store/useGameStore';
 import { playSfx, sfxReady, warmBreachSfx, warmDailyPlaqueEntranceSfx } from '../audio/sfx';
+import { playPollyReaction } from '../audio/pollyReactionSfx';
 import {
   setMusicState,
   startMusic,
@@ -104,7 +106,7 @@ import DailyAnswerCard, {
   DAILY_CARD_TIMING,
   DailyAnswerCardState,
 } from '../components/DailyAnswerCard';
-import DailyCastleStage, { DailyCastleFlight } from '../components/DailyCastleStage';
+import DailyCastleStage, { DailyCastleFlight, type DailyCastleShakeTransform } from '../components/DailyCastleStage';
 import { type DailyCoinRise } from '../components/DailyFloorCoins';
 import DailyCoinFinale from '../components/DailyCoinFinale';
 import { DailyPauseCard } from '../components/DailyPauseCard';
@@ -151,6 +153,26 @@ const DailyCastleTuningPanel = __DEV__
 // Longest the Daily's ending waits for Polly's fly-out hand-off before opening
 // Results anyway. Her normal path is about 3.9 s after the winning claim.
 const DAILY_POLLY_EXIT_FAILSAFE_MS = 6000;
+// Extra room past a winning claim's tier move, which delays the win itself.
+const DAILY_POLLY_EXIT_MOVE_MARGIN_MS = 1000;
+
+/**
+ * The exit failsafe for one claim. Her normal exit: the bubble waits for the
+ * throw, shows 2500 ms, fades 220 ms, and she flies 500 ms.
+ *   'open' win (no delay): 650 + 2500 + 220 + 500 = 3870 ms, about 3.9 s;
+ *     failsafe 6000.
+ *   two-clue win: the win starts at 2823 (her move's end) and its bubble waits
+ *     max(0, 1610 - 2823) = 0, so 2823 + 2500 + 220 + 500 = 6043 ms;
+ *     failsafe 6000 + 2823 + 1000 = 9823.
+ *   one-clue win: 2870 + 3220 = 6090 ms; failsafe 6000 + 2870 + 1000 = 9870.
+ * A delayed win's exit is today's path shifted by the delay, so the failsafe
+ * keeps today's 6000 ms of room after it, plus the margin.
+ */
+function dailyPollyExitFailsafeMs(winDelayMs: number): number {
+  return winDelayMs > 0
+    ? DAILY_POLLY_EXIT_FAILSAFE_MS + winDelayMs + DAILY_POLLY_EXIT_MOVE_MARGIN_MS
+    : DAILY_POLLY_EXIT_FAILSAFE_MS;
+}
 // The pause icon's opacity while it ignores taps (a claim or Polly's reaction
 // in flight).
 const DAILY_PAUSE_ICON_DIMMED_OPACITY = 0.6;
@@ -465,6 +487,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // missed hand-off from holding Results forever.
   const [pollyExitPending, setPollyExitPending] = useState(false);
   const pollyExitFailsafeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // A winning claim on two clues or one: the win reaction waits for her tier
+  // move (see the CLAIM RESULT effect). The delay also shortens the win
+  // bubble's wait, which counts from the claim.
+  const pollyWinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pollyWinDelayMs, setPollyWinDelayMs] = useState(0);
+  useEffect(() => () => {
+    if (pollyWinTimerRef.current) clearTimeout(pollyWinTimerRef.current);
+  }, []);
   const releasePollyExit = useCallback(() => {
     if (pollyExitFailsafeRef.current) clearTimeout(pollyExitFailsafeRef.current);
     pollyExitFailsafeRef.current = null;
@@ -535,6 +565,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function setPaused(val: boolean) {
     pausedRef.current = val;
     setPausedState(val);
+    // A tier move still holding (after its claim ended) stops, and Polly is
+    // back on her perch at rest.
+    if (val) restBreachClocks();
   }
 
   function setPhysicalClaimPhase(phase: DailyClaimPresentationPhase) {
@@ -542,10 +575,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setClaimPhase(phase);
   }
 
-  function clearCorrectTransitionTimers() {
+  /**
+   * `keepBreachClocks`: the claim has ended normally, but Polly's tier move
+   * still rides its clock through her hold (past the next gate's landing), so
+   * the clock runs out on its own. A new claim, a pause and unmount do reset it.
+   */
+  function clearCorrectTransitionTimers(keepBreachClocks = false) {
     correctTransitionTimersRef.current.forEach(clearTimeout);
     correctTransitionTimersRef.current = [];
-    resetBreachPresentation();
+    resetBreachPresentation(keepBreachClocks);
   }
 
   function scheduleCorrectTransition(callback: () => void, delayMs: number) {
@@ -631,14 +669,21 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   );
   // Back to rest whenever the correct-claim timers are cleared: a new claim,
   // the end of one, and unmount.
-  function resetBreachPresentation() {
+  function resetBreachPresentation(keepBreachClocks = false) {
+    if (!keepBreachClocks) restBreachClocks();
+    gateBreakArmed.setValue(0);
+    setGateBroken(false);
+  }
+  // Both clocks to 0: every breach visual, and Polly's tier move, at rest, and
+  // Polly back on her perch at (0, 0, 0).
+  function restBreachClocks() {
     breachHitClock.stopAnimation();
     breachHitClock.setValue(0);
     breachSmashClock.stopAnimation();
     breachSmashClock.setValue(0);
-    gateBreakArmed.setValue(0);
-    setGateBroken(false);
   }
+  // The castle shake's translate values, for Polly's layer (DailyCastleStage onShakeTransform).
+  const [castleShake, setCastleShake] = useState<DailyCastleShakeTransform | null>(null);
   // Where the castle is drawn, so Polly's bubble can sit on its steps.
   const [castleFrame, setCastleFrame] = useState<DailyCastleFrame | null>(null);
   // The win's gold-coin finale, after the coin lands and before Results
@@ -1000,14 +1045,32 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     }
     const pose = toPerchReaction(dailyLastClaimResult.pollyReaction);
     if (pose !== 'perched') {
-      pollyReactionKeyRef.current += 1;
-      setPollyPose(pose);
-      setPollyReactionKey(pollyReactionKeyRef.current);
+      // A WIN on two clues or one (Pete, 2026-11-04): her tier move plays
+      // FIRST, then today's win (pose, startled sound, recoil, bubble,
+      // fly-off). The move rides its breach clock from the claim, so the win
+      // waits until that move and its hold are over: 2823 ms on two clues
+      // (contact 450 + 1073 + 1300), 2870 on one (0 + 1570 + 1300). 'open'
+      // wins and Reduce Motion (no tier move) start at once, as before.
+      const tier = claimBreachTierRef.current;
+      const winDelayMs = pose === 'shocked' && reduceMotion === false && tier !== 'open'
+        ? dailyBreachPollyMoveEndMs(tier)
+        : 0;
+      const startReaction = () => {
+        pollyWinTimerRef.current = null;
+        pollyReactionKeyRef.current += 1;
+        setPollyWinDelayMs(winDelayMs);
+        setPollyPose(pose);
+        setPollyReactionKey(pollyReactionKeyRef.current);
+      };
+      if (pollyWinTimerRef.current) clearTimeout(pollyWinTimerRef.current);
+      if (winDelayMs > 0) pollyWinTimerRef.current = setTimeout(startReaction, winDelayMs);
+      else startReaction();
       if (pose === 'laughing' || pose === 'shocked') {
-        // The Daily just ended: hold Results until she has flown out.
+        // The Daily just ended: hold Results until she has flown out (from
+        // the claim, even while her tier move delays the win itself).
         setPollyExitPending(true);
         if (pollyExitFailsafeRef.current) clearTimeout(pollyExitFailsafeRef.current);
-        pollyExitFailsafeRef.current = setTimeout(releasePollyExit, DAILY_POLLY_EXIT_FAILSAFE_MS);
+        pollyExitFailsafeRef.current = setTimeout(releasePollyExit, dailyPollyExitFailsafeMs(winDelayMs));
       }
     } else {
       clearDailyReaction();
@@ -1031,7 +1094,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
 
   function finishPhysicalCorrectTransition(candidate: string) {
     if (completingCandidateRef.current !== candidate) return;
-    clearCorrectTransitionTimers();
+    // Polly's tier move may still be holding on its clock: let it run out.
+    clearCorrectTransitionTimers(true);
     if (claimPresentationRef.current?.candidate === candidate) {
       finishClaimPresentation(candidate);
     }
@@ -1174,6 +1238,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // unless BREACH_CONTACT_LEAD_MS moves them earlier for output latency.
     const fireContactCues = () => {
       if (completingCandidateRef.current !== candidate) return;
+      // Polly startles on the contact in both tiers: the two-clue jump starts
+      // here, and the fury is blown up and back from here.
+      playPollyReaction('startled');
       if (contactTier === 'hit') {
         playSfx('breachGateCrack');
         playSfx('breachCastleRumble');
@@ -1206,6 +1273,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           easing: Easing.linear,
           useNativeDriver: true,
         }).start();
+        // Polly's fury starts at the throw, with her yell; it rides this clock.
+        if (contactTier === 'smash') playPollyReaction('angry');
       }
       plaqueRiseLeg().start(({ finished }) => {
         if (!finished) return;
@@ -1676,6 +1745,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               }
             : null}
           onFrame={setCastleFrame}
+          onShakeTransform={setCastleShake}
         >
           {!isComplete && displayedDailySession && currentRound &&
             [...currentRound.candidates].map((candidate, index) => (
@@ -1816,8 +1886,13 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               }
             : undefined
         }
-        throwDelayMs={dailyThrowGoneMs(reduceMotion === false, claimBreachTier)}
+        throwDelayMs={Math.max(
+          0,
+          dailyThrowGoneMs(reduceMotion === false, claimBreachTier) - (pollyPose === 'shocked' ? pollyWinDelayMs : 0),
+        )}
         onExited={releasePollyExit}
+        breachClocks={breachClocks}
+        shake={castleShake}
       />
 
       {isComplete && (

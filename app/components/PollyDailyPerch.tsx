@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
-  Image,
   StyleSheet,
-  View,
   useWindowDimensions,
 } from 'react-native';
 import {
@@ -25,6 +23,12 @@ import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 import { DAILY_POLLY_BUBBLE } from '../ui/dailyCastleScene';
+import {
+  POLLY_BREACH_POSES,
+  pollyBreachActiveKeyframes,
+  pollyBreachPoseKeyframes,
+  pollyDailyBreachTimeline,
+} from '../ui/pollyDailyBreach';
 
 // DailyPollyReaction here is pwDailyMaterials' POSE-keyed type ('perched' |
 // 'happy' | 'laughing' | 'shocked'), NOT the trigger type of the same name in
@@ -69,6 +73,18 @@ type Props = {
    * The screen holds Results until then.
    */
   onExited?: () => void;
+  /**
+   * The breach clocks (ui/dailyBreach.ts), ms from the claim, which the screen
+   * starts with the plaque's first leg. Her tier moves (ui/pollyDailyBreach.ts)
+   * ride them: the two-clue jump from the contact, the one-clue fury from the
+   * throw. While a move runs it owns her pose; at 0 (rest) it shows nothing.
+   */
+  breachClocks?: { hit: Animated.Value; smash: Animated.Value };
+  /** The castle shake's translate values (DailyCastleStage onShakeTransform); 0 at rest. */
+  shake?: {
+    translateX: Animated.AnimatedInterpolation<number>;
+    translateY: Animated.AnimatedInterpolation<number>;
+  } | null;
 };
 
 // Clean full-pose drawings (background stripped to transparent). The expression
@@ -125,8 +141,14 @@ const PERCH_LAYER_POSES: readonly PollyScreenPoseName[] = [
   ...new Set<PollyScreenPoseName>([
     POSE_FLY, POSE.idle, POSE.happy, POSE.laughing, POSE.shocked,
     ...Object.values(EXIT_POSE),
+    // The breach's tier moves (ui/pollyDailyBreach.ts).
+    ...POLLY_BREACH_POSES,
   ]),
 ];
+const BREACH_TIMELINES = {
+  hit: pollyDailyBreachTimeline('hit'),
+  smash: pollyDailyBreachTimeline('smash'),
+} as const;
 // Poses the face rig draws (idle) share the one rig layer instead of an image.
 const PERCH_IMAGE_POSES = PERCH_LAYER_POSES.filter(
   p => !(POLLY_PERCH_RIG_ENABLED && pollyScreenPoseUsesRig(p)),
@@ -166,6 +188,8 @@ export default function PollyDailyPerch({
   bubbleAt,
   throwDelayMs = 0,
   onExited,
+  breachClocks,
+  shake,
 }: Props) {
   const { width: screenW, height: screenH } = useWindowDimensions();
   const rememberLine = useGameStore(s => s.rememberPollyLine);
@@ -441,8 +465,67 @@ export default function PollyDailyPerch({
     outputRange: ['-12deg', '12deg'],
   });
 
+  // The breach's tier moves, read off the screen's breach clocks (resting ones
+  // when none are passed, so every node keeps one shape). Built once: nothing
+  // here waits for a render, so she moves with the plaque and the castle.
+  const restingHitClock = useRef(new Animated.Value(0)).current;
+  const restingSmashClock = useRef(new Animated.Value(0)).current;
+  const hitClock = breachClocks?.hit ?? restingHitClock;
+  const smashClock = breachClocks?.smash ?? restingSmashClock;
+  const breachMove = useMemo(() => {
+    const read = (clock: Animated.Value, keys: { inputRange: number[]; outputRange: number[] }) =>
+      clock.interpolate({ ...keys, extrapolate: 'clamp' });
+    const both = (make: (tier: 'hit' | 'smash', clock: Animated.Value) => Animated.AnimatedInterpolation<number>) =>
+      Animated.add(make('hit', hitClock), make('smash', smashClock));
+    // 1 while a move owns her pose; her own pose shows only when it is 0.
+    const owned = both((tier, clock) => read(clock, pollyBreachActiveKeyframes(BREACH_TIMELINES[tier])));
+    const notOwned = Animated.subtract(1, owned);
+    const poseOpacity = Object.fromEntries(POLLY_BREACH_POSES.map((p) => [
+      p,
+      both((tier, clock) => read(clock, pollyBreachPoseKeyframes(BREACH_TIMELINES[tier], p))),
+    ])) as Partial<Record<PollyScreenPoseName, Animated.AnimatedAddition<number>>>;
+    const rotateDeg = both((tier, clock) => read(clock, BREACH_TIMELINES[tier].rotateDeg));
+    return {
+      notOwned,
+      poseOpacity,
+      x: both((tier, clock) => read(clock, BREACH_TIMELINES[tier].x)),
+      y: both((tier, clock) => read(clock, BREACH_TIMELINES[tier].y)),
+      rotate: rotateDeg.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }),
+    };
+  }, [hitClock, smashClock]);
+
+  // Her own pose as one stable value per layer (and the rig), switched when the
+  // pose changes; a breach move shows over it by its own opacity.
+  const ownOpacity = useRef(
+    Object.fromEntries(PERCH_IMAGE_POSES.map((p) => [p, new Animated.Value(p === POSE_FLY ? 1 : 0)])) as Record<PollyScreenPoseName, Animated.Value>,
+  ).current;
+  const rigOwnOpacity = useRef(new Animated.Value(0)).current;
+  useLayoutEffect(() => {
+    rigOwnOpacity.setValue(rigVisible ? 1 : 0);
+    for (const p of PERCH_IMAGE_POSES) ownOpacity[p].setValue(!rigVisible && p === pose ? 1 : 0);
+  }, [ownOpacity, pose, rigOwnOpacity, rigVisible]);
+  const layerOpacity = useMemo(() => {
+    const out = {} as Record<PollyScreenPoseName, Animated.AnimatedNode>;
+    for (const p of PERCH_IMAGE_POSES) {
+      const own = Animated.multiply(ownOpacity[p], breachMove.notOwned);
+      const move = breachMove.poseOpacity[p];
+      out[p] = move ? Animated.add(own, move) : own;
+    }
+    return out;
+  }, [breachMove, ownOpacity]);
+  const rigOpacity = useMemo(
+    () => Animated.multiply(rigOwnOpacity, breachMove.notOwned),
+    [breachMove, rigOwnOpacity],
+  );
+
+  // The castle shake moves her whole layer with the castle (her root keeps its
+  // zIndex, so this changes nothing about what she sits above or below).
+  const restingShake = useRef(new Animated.Value(0)).current;
+  const shakeX = shake?.translateX ?? restingShake;
+  const shakeY = shake?.translateY ?? restingShake;
+
   return (
-    <Animated.View style={styles.root}>
+    <Animated.View style={[styles.root, { transform: [{ translateX: shakeX }, { translateY: shakeY }] }]}>
       {/* Speech bubble — to Polly's right, tail points left at her */}
       <Animated.View
         style={[
@@ -482,6 +565,9 @@ export default function PollyDailyPerch({
               { translateY: flyY },
               { rotate: flyRotate },
               { scale: flyScale },
+              { translateX: breachMove.x },
+              { translateY: breachMove.y },
+              { rotate: breachMove.rotate },
               { translateX: reactX },
               { translateX: breatheX },
               { translateY: breatheY },
@@ -495,20 +581,20 @@ export default function PollyDailyPerch({
             opacity 1. Same DAILY_POLLY_SIZE box for the rig and the flat
             poses. A hidden rig gets reduceMotion so its blink timer rests. */}
         {POLLY_PERCH_RIG_ENABLED && (
-          <View style={[styles.poseLayer, { opacity: rigVisible ? 1 : 0 }]}>
+          <Animated.View style={[styles.poseLayer, { opacity: rigOpacity }]}>
             <PollyPerchRig size={DAILY_POLLY_SIZE} reduceMotion={rigVisible ? reduceMotion : true} />
-          </View>
+          </Animated.View>
         )}
         {PERCH_IMAGE_POSES.map(layerPose => {
           const art = pollyScreenPoseArt(layerPose);
           return (
-            <Image
+            <Animated.Image
               key={layerPose}
               source={art.source}
               style={[
                 styles.pollyImage,
                 styles.poseLayer,
-                { opacity: !rigVisible && layerPose === pose ? 1 : 0, transform: [{ scale: art.scale }] },
+                { opacity: layerOpacity[layerPose], transform: [{ scale: art.scale }] },
               ]}
               resizeMode="contain"
             />

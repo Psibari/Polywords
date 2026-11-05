@@ -679,7 +679,23 @@ export function dailyBreachClockMs(tier: 'hit' | 'smash'): number {
     contact + DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs,
   ];
   if (tier === 'hit') ends.push(beats.gateRiseStartMs + DAILY_BREACH_CRACKS_FADE.outMs);
+  // Polly's tier move rides the same clock, through its hold.
+  ends.push(dailyBreachPollyMoveEndMs(tier));
   return Math.ceil(Math.max(...ends)) + 1;
+}
+
+/**
+ * When Polly's tier move starts on its clock (ms from the claim): the two-clue
+ * jump at the plaque's contact, the one-clue fury at the throw.
+ */
+export function dailyBreachPollyMoveStartMs(tier: 'hit' | 'smash'): number {
+  return tier === 'hit' ? contactOnClock('hit') : 0;
+}
+
+/** When Polly's tier move and its hold are over, ms from the claim. */
+export function dailyBreachPollyMoveEndMs(tier: 'hit' | 'smash'): number {
+  const move = dailyBreachPollyMoveMs(tier, true);
+  return dailyBreachPollyMoveStartMs(tier) + move.moveMs + move.holdMs;
 }
 
 /** The castle shake for a tier, x and y, on its clock: 0 before contact, 0 after. */
