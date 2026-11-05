@@ -223,6 +223,7 @@ export const DAILY_BREACH_SEEDS = {
   splinters: 110421,
   dustSmash: 110431,
   dustHit: 110432,
+  gateJitter: 110441,
 } as const;
 
 /** Interpolation keyframes for one channel. */
@@ -250,7 +251,20 @@ export const DAILY_BREACH_SHAKE = {
 
 function dailyBreachShakeAxis(profile: DailyBreachShakeProfile, seed: number): DailyBreachKeyframes {
   const { amplitudePt, ms } = DAILY_BREACH_SHAKE[profile];
-  const steps = Math.max(2, Math.round(ms / DAILY_BREACH_SHAKE.stepMs));
+  return seededDecayingShake(amplitudePt, ms, DAILY_BREACH_SHAKE.stepMs, seed);
+}
+
+/**
+ * A seeded random offset every `stepMs`, within +/- amplitude, decaying
+ * linearly to 0, as keyframes over a 0 → 1 value; exactly 0 at both ends.
+ */
+function seededDecayingShake(
+  amplitudePt: number,
+  ms: number,
+  stepMs: number,
+  seed: number,
+): DailyBreachKeyframes {
+  const steps = Math.max(2, Math.round(ms / stepMs));
   const rng = createSeededRng(seed);
   const inputRange: number[] = [];
   const outputRange: number[] = [];
@@ -274,6 +288,34 @@ export function dailyBreachShakeKeyframes(profile: DailyBreachShakeProfile): {
     y: dailyBreachShakeAxis(profile, DAILY_BREACH_SEEDS.shakeY),
   };
 }
+
+// ── The gate's own shudder (DailyGate jitterX) ──
+// Side to side only, on top of the castle shake. Same seeded, decaying style;
+// one 0 → 1 value driven linearly for the profile's length, screen points.
+export const DAILY_BREACH_GATE_JITTER = {
+  hit: { amplitudePt: 3.5, ms: 720 },
+  smash: { amplitudePt: 4, ms: 500 },
+  stepMs: 30,
+} as const;
+
+export function dailyBreachGateJitterKeyframes(profile: DailyBreachShakeProfile): DailyBreachKeyframes {
+  const { amplitudePt, ms } = DAILY_BREACH_GATE_JITTER[profile];
+  return seededDecayingShake(amplitudePt, ms, DAILY_BREACH_GATE_JITTER.stepMs, DAILY_BREACH_SEEDS.gateJitter);
+}
+
+/**
+ * 'hit': the cracks on the shut door fade in at contact and out from
+ * gateRiseStartMs. The brief gives no fade lengths; these are start values for
+ * the phone pass.
+ */
+export const DAILY_BREACH_CRACKS_FADE = { inMs: 90, outMs: 150 } as const;
+
+/**
+ * 'hit': the plaque presses into the shut gate at contact (the mock: it dips
+ * 6 pt and scales down 0.04 for 90 ms), then springs back. Split evenly in and
+ * out; the dip is canvas points (the stage scales it with the scene).
+ */
+export const DAILY_BREACH_PLAQUE_PRESS = { dipPt: 6, scaleDown: 0.04, inMs: 45, outMs: 45 } as const;
 
 // ── Lightning (smash only) ──
 // Two bolts. Each is three polylines from the sky to the hole and the two tower

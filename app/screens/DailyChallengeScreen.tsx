@@ -44,13 +44,22 @@ import {
   selectDailyDisplaySession,
   shouldShowDailyResult,
 } from '../game/dailyClaimPresentation';
-import { resolveDailyBreachTier, type DailyBreachTier } from '../ui/dailyBreach';
+import {
+  DAILY_BREACH_CRACKS_FADE,
+  DAILY_BREACH_GATE_JITTER,
+  DAILY_BREACH_PLAQUE_PRESS,
+  dailyBreachBeats,
+  dailyBreachGateJitterKeyframes,
+  resolveDailyBreachTier,
+  type DailyBreachShakeProfile,
+  type DailyBreachTier,
+} from '../ui/dailyBreach';
 import { canOpenDailyPause } from '../game/dailyPause';
 import { DAILY_INTRO_SEEN_KEY } from '../constants/storageKeys';
 import { recordPlaytestEvent } from '../game/playtestTelemetry';
 import { resolveRivalryState } from '../game/pollyMood';
 import { useGameStore } from '../store/useGameStore';
-import { playSfx, sfxReady, warmDailyPlaqueEntranceSfx } from '../audio/sfx';
+import { playSfx, sfxReady, warmBreachSfx, warmDailyPlaqueEntranceSfx } from '../audio/sfx';
 import {
   setMusicState,
   startMusic,
@@ -102,7 +111,6 @@ import { isDailySessionExpired } from '../game/dailyExpiry';
 import UiIconButton from '../components/UiIconButton';
 import { DAILY_PAUSE_ICON_A11Y } from '../ui/dailyPauseCopy';
 import {
-  DAILY_CASTLE_FLIGHT,
   DAILY_CASTLE_FLIGHT_HANDOFF,
   DAILY_HUD,
   dailyStreakLineFits,
@@ -150,18 +158,22 @@ const DAILY_PAUSE_ICON_DIMMED_OPACITY = 0.6;
  */
 const DAILY_WRONG_GATE_STOP_MS = 75;
 
-function dailyGateRiseMs(motion: boolean): number {
-  return motion ? 400 : 120;
+/**
+ * The gate's rise on a correct claim, for the claim's breach tier
+ * (ui/dailyBreach.ts): 400 ms with motion, 120 without, every tier.
+ */
+function dailyGateRiseMs(motion: boolean, tier: DailyBreachTier): number {
+  return dailyBreachBeats(tier, motion).gateRiseMs;
 }
 
 /**
- * From a correct claim until the thrown plaque is gone down the tunnel (the
- * gate is up by then too). Polly's bubble on the steps waits this long, so it
- * never covers the throw.
+ * From a correct claim until the thrown plaque is gone down the tunnel and the
+ * gate is up, for the claim's breach tier. Polly's bubble on the steps waits
+ * this long, so it never covers the throw or the breach. 'open' is today's
+ * max(gate rise, rise 450 + absorb 200): 650 ms, 120 without motion.
  */
-function dailyThrowGoneMs(motion: boolean): number {
-  const flightMs = motion ? DAILY_CASTLE_FLIGHT.riseMs + DAILY_CASTLE_FLIGHT.absorbMs : 0;
-  return Math.max(dailyGateRiseMs(motion), flightMs);
+function dailyThrowGoneMs(motion: boolean, tier: DailyBreachTier): number {
+  return dailyBreachBeats(tier, motion).thrownGoneMs;
 }
 
 function toPerchReaction(
@@ -531,6 +543,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   function clearCorrectTransitionTimers() {
     correctTransitionTimersRef.current.forEach(clearTimeout);
     correctTransitionTimersRef.current = [];
+    resetBreachPresentation();
   }
 
   function scheduleCorrectTransition(callback: () => void, delayMs: number) {
@@ -558,6 +571,42 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // Bumped on each correct claim: the castle's gold hit (DailyCastleStage),
   // graded by the claim's breach tier.
   const [goldHit, setGoldHit] = useState<{ token: number; tier: DailyBreachTier }>({ token: 0, tier: 'open' });
+  // The breach (CONTEXT.md "THE BREACH"): the claim's tier, from the claimed
+  // round's own clue count. The ref is for the transition's timers; the state
+  // is for Polly's bubble delay.
+  const claimBreachTierRef = useRef<DailyBreachTier>('open');
+  const [claimBreachTier, setClaimBreachTierState] = useState<DailyBreachTier>('open');
+  function setClaimBreachTier(tier: DailyBreachTier) {
+    claimBreachTierRef.current = tier;
+    setClaimBreachTierState(tier);
+  }
+  // The stage's castle shake and its breach effects (lightning, flash, dust,
+  // splinters), each played once per token bump.
+  const [breachShake, setBreachShake] = useState<{ token: number; profile: DailyBreachShakeProfile }>({ token: 0, profile: 'hit' });
+  const [breachEffects, setBreachEffects] = useState<{ token: number; tier: DailyBreachTier }>({ token: 0, tier: 'open' });
+  // The gate's side of the breach: the broken art, its shudder, the cracks on
+  // the shut door, and the thrown plaque's press into it. All rest at 0 / whole.
+  const [gateBroken, setGateBroken] = useState(false);
+  const gateJitter = useRef(new Animated.Value(0)).current;
+  const [gateJitterProfile, setGateJitterProfile] = useState<DailyBreachShakeProfile>('hit');
+  const gateJitterX = useMemo(
+    () => gateJitter.interpolate({ ...dailyBreachGateJitterKeyframes(gateJitterProfile), extrapolate: 'clamp' }),
+    [gateJitter, gateJitterProfile],
+  );
+  const gateCracks = useRef(new Animated.Value(0)).current;
+  const plaquePress = useRef(new Animated.Value(0)).current;
+  // Back to rest whenever the correct-claim timers are cleared: a new claim,
+  // the end of one, and unmount. The stage clears its own shake and effects
+  // on a new round and on unmount.
+  function resetBreachPresentation() {
+    gateJitter.stopAnimation();
+    gateJitter.setValue(0);
+    gateCracks.stopAnimation();
+    gateCracks.setValue(0);
+    plaquePress.stopAnimation();
+    plaquePress.setValue(0);
+    setGateBroken(false);
+  }
   // Where the castle is drawn, so Polly's bubble can sit on its steps.
   const [castleFrame, setCastleFrame] = useState<DailyCastleFrame | null>(null);
   // The win's gold-coin finale, after the coin lands and before Results
@@ -739,6 +788,8 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // The blocks' grind and thuds start on their animation frames, so
       // their players must already be loaded (sounds otherwise load on demand).
       warmDailyPlaqueEntranceSfx();
+      // The breach's contact sounds land on a beat, so they are loaded too.
+      warmBreachSfx();
       setAudioReady(true);
     });
     return () => { cancelled = true; };
@@ -1013,7 +1064,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     setPhysicalClaimPhase('settling');
 
     const motion = reduceMotion === false;
-    const gateRiseMs = dailyGateRiseMs(motion);
+    // The breach's beats for this claim (ui/dailyBreach.ts). 'open', and every
+    // tier under Reduce Motion, is today's sequence: the gate rises at once and
+    // there is no contact beat.
+    const beats = dailyBreachBeats(breachTier, motion);
+    const gateRiseMs = dailyGateRiseMs(motion, breachTier);
     const tunnelBeatMs = motion ? 180 : 80;
     const gateDropMs = motion ? 400 : 120;
     // On the win the gold coin lands with the gate, then the finale flies it
@@ -1026,39 +1081,136 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // otherwise it simply leaves the wall and the gate beat carries the claim.
     flightProgress.stopAnimation();
     flightProgress.setValue(0);
-    setCastleFlight(motion && origin ? { label: candidate, origin } : null);
-
-    gatePosition.stopAnimation();
-    Animated.timing(gatePosition, {
-      toValue: 0,
-      duration: gateRiseMs,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-
-    if (motion && origin) {
-      Animated.sequence([
-        Animated.timing(flightProgress, {
-          toValue: DAILY_CASTLE_FLIGHT_HANDOFF,
-          duration: DAILY_CASTLE_FLIGHT.riseMs,
-          easing: Easing.inOut(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(flightProgress, {
-          toValue: 1,
-          duration: DAILY_CASTLE_FLIGHT.absorbMs,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]).start();
+    const flies = motion && origin !== null;
+    // A 'hit' plaque holds against the SHUT gate, so it stays on the front
+    // copy until it moves on (DailyCastleFlight.frontThroughHandoff).
+    setCastleFlight(flies && origin
+      ? { label: candidate, origin, frontThroughHandoff: breachTier === 'hit' }
+      : null);
+    if (beats.contactMs !== null) {
+      // Set now, long before contact, so the gate's shudder keyframes are on
+      // screen before its animation starts.
+      setGateJitterProfile(breachTier === 'smash' ? 'smash' : 'hit');
     }
 
-    // The plaque is gone down the tunnel.
-    const goneAtMs = dailyThrowGoneMs(motion);
+    gatePosition.stopAnimation();
+    const raiseGate = () => {
+      Animated.timing(gatePosition, {
+        toValue: 0,
+        duration: gateRiseMs,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    };
+    // The plaque's two legs: up to the handoff, then into the tunnel.
+    const plaqueRiseLeg = () => Animated.timing(flightProgress, {
+      toValue: DAILY_CASTLE_FLIGHT_HANDOFF,
+      duration: beats.plaqueRiseMs,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: true,
+    });
+    const plaqueAbsorbLeg = () => Animated.timing(flightProgress, {
+      toValue: 1,
+      duration: beats.plaqueAbsorbMs,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    });
+    const plaqueAbsorbAtMs = beats.plaqueGoneMs - beats.plaqueAbsorbMs;
+
+    // 'open' (and calm): the gate rises at once. 'hit' / 'smash': it stays
+    // shut and rises at gateRiseStartMs (below).
+    if (beats.gateRiseStartMs === 0) raiseGate();
+
+    if (flies) {
+      if (plaqueAbsorbAtMs === beats.plaqueRiseMs) {
+        // 'open' and 'smash': straight through (the smash through the hole).
+        Animated.sequence([plaqueRiseLeg(), plaqueAbsorbLeg()]).start();
+      } else {
+        // 'hit': up to the shut gate; it holds there and is absorbed as the
+        // gate rises.
+        plaqueRiseLeg().start();
+      }
+    }
+
+    // CONTACT ('hit' / 'smash' with motion): one beat, every piece of it here.
+    if (beats.contactMs !== null) {
+      scheduleCorrectTransition(() => {
+        if (completingCandidateRef.current !== candidate) return;
+        const profile: DailyBreachShakeProfile = breachTier === 'smash' ? 'smash' : 'hit';
+        // The castle lights gold on the contact, not at the claim.
+        setGoldHit((prev) => ({ token: prev.token + 1, tier: breachTier }));
+        setBreachShake((prev) => ({ token: prev.token + 1, profile }));
+        // The stage's flash, dust (and for a smash, lightning and splinters).
+        setBreachEffects((prev) => ({ token: prev.token + 1, tier: breachTier }));
+        gateJitter.stopAnimation();
+        gateJitter.setValue(0);
+        Animated.timing(gateJitter, {
+          toValue: 1,
+          duration: DAILY_BREACH_GATE_JITTER[profile].ms,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }).start();
+        if (breachTier === 'hit') {
+          playSfx('breachGateCrack');
+          playSfx('breachCastleRumble');
+          Animated.timing(gateCracks, {
+            toValue: 1,
+            duration: DAILY_BREACH_CRACKS_FADE.inMs,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }).start();
+          Animated.sequence([
+            Animated.timing(plaquePress, {
+              toValue: 1,
+              duration: DAILY_BREACH_PLAQUE_PRESS.inMs,
+              easing: Easing.out(Easing.quad),
+              useNativeDriver: true,
+            }),
+            Animated.timing(plaquePress, {
+              toValue: 0,
+              duration: DAILY_BREACH_PLAQUE_PRESS.outMs,
+              easing: Easing.inOut(Easing.quad),
+              useNativeDriver: true,
+            }),
+          ]).start();
+          // TODO(prompt 8): the breach's own 'hit' haptic; trapRejectHeavy stands in.
+          Haptics.cueAsync('trapRejectHeavy');
+        } else {
+          playSfx('breachSmash');
+          playSfx('breachCastleRumble');
+          playSfx('breachThunder');
+          setGateBroken(true);
+          // TODO(prompt 8): the breach's own 'smash' haptic; bossEntry stands in.
+          Haptics.cueAsync('bossEntry');
+        }
+      }, beats.contactMs);
+    }
+
+    // 'hit' / 'smash': the gate rises late. A 'hit' plaque is absorbed with it
+    // and the door's cracks fade as it goes.
+    if (beats.gateRiseStartMs > 0) {
+      scheduleCorrectTransition(() => {
+        if (completingCandidateRef.current !== candidate) return;
+        raiseGate();
+        if (flies && plaqueAbsorbAtMs === beats.gateRiseStartMs) plaqueAbsorbLeg().start();
+        Animated.timing(gateCracks, {
+          toValue: 0,
+          duration: DAILY_BREACH_CRACKS_FADE.outMs,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }).start();
+      }, beats.gateRiseStartMs);
+    }
+
+    // The plaque is gone down the tunnel and the gate is fully up.
+    const goneAtMs = dailyThrowGoneMs(motion, breachTier);
     scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
       setPhysicalClaimPhase('landed');
       Haptics.cueAsync('dailyRodStop');
+      // The broken gate is up out of sight: the gate that drops with the next
+      // round's clues is the whole one.
+      setGateBroken(false);
     }, goneAtMs);
 
     // The gate comes back down, and it is the new round. 'reward' switches the
@@ -1066,10 +1218,21 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // next clues are already painted on it as it drops. The coin rises on
     // the same beat and lands with the gate.
     const dropAtMs = goneAtMs + tunnelBeatMs;
+    // The win's coin finale waits for the gold hit to be over. The hit starts
+    // at the claim ('open', and every tier under Reduce Motion) or at contact
+    // ('hit' / 'smash'), so it ends, from the claim:
+    //   open  : 0 + 860 = 860;    the coin lands at 650 + 180 + 400 = 1230: no extra wait
+    //   hit   : 450 + 980 = 1430; lands at 1610 + 180 + 400 = 2190: no extra wait
+    //   smash : 380 + 1230 = 1610; lands at 1460 + 180 + 400 = 2040: no extra wait
+    //   calm  : 0 + 750 (calm hit) = 750; lands at 120 + 80 + 120 = 320: waits 430
+    // (Reduce Flashes with motion on: the calm 750 from the contact, still
+    // well before the coin lands.) The safety net below is measured from the
+    // new dropAtMs, so it grows with the tier.
+    const goldHitEndMs = (beats.contactMs ?? 0) + dailyGoldHitMsForTier(breachTier, reduceFlashes);
     const floorHoldMs = dailyCoinFinaleFloorHoldMs(
       finaleMode,
       dropAtMs + gateDropMs,
-      dailyGoldHitMsForTier(breachTier, reduceFlashes),
+      goldHitEndMs,
     );
     scheduleCorrectTransition(() => {
       if (completingCandidateRef.current !== candidate) return;
@@ -1176,8 +1339,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       setLocked(true);
       setCardStates(prev => new Map(prev).set(candidate, 'correct'));
       setRevealSolvedCount(dailySession.currentRoundIndex + 1);
-      beginClaimPresentation(dailySession, candidate, 'correct');
+      // The breach tier, from the claimed round's own clue count. Set before
+      // the claim commits, so Polly's bubble delay already knows it.
       const breachTier = resolveDailyBreachTier(round.revealedClueCount);
+      setClaimBreachTier(breachTier);
+      beginClaimPresentation(dailySession, candidate, 'correct');
       runPhysicalCorrectTransition(candidate, origin, breachTier);
 
       // Game result commits immediately; the physical presentation now owns
@@ -1192,9 +1358,14 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // wash and a halo instead.
       const grade = resolveDailyCelebrationGrade(round.revealedClueCount);
       Haptics.cueAsync(dailyCelebrationHaptic(grade));
-      playSfx('correctClaim');
-      // The castle lights gold on the same beat as the claim's sound.
-      setGoldHit((prev) => ({ token: prev.token + 1, tier: breachTier }));
+      // 'open' (and every tier under Reduce Motion): the chime and the gold hit
+      // at the claim, as before. 'hit' / 'smash': the claim keeps only its
+      // haptic; the castle answers at the contact (runPhysicalCorrectTransition).
+      if (dailyBreachBeats(breachTier, reduceMotion === false).contactMs === null) {
+        playSfx('correctClaim');
+        // The castle lights gold on the same beat as the claim's sound.
+        setGoldHit((prev) => ({ token: prev.token + 1, tier: breachTier }));
+      }
       // Remaining cards fade out
       scheduleCorrectTransition(() => {
         setCardStates(prev => {
@@ -1465,6 +1636,12 @@ export default function DailyChallengeScreen({ navigation }: Props) {
           flightProgress={flightProgress}
           coinRise={coinRise}
           goldHit={goldHit}
+          shake={breachShake}
+          breachEffects={breachEffects}
+          gateBroken={gateBroken}
+          gateJitterX={gateJitterX}
+          gateCracks={gateCracks}
+          flightPress={plaquePress}
           coinFinale={coinFinale}
           hudBottom={hudBottom}
           roundMarkers={!isComplete && displayedDailySession
@@ -1614,7 +1791,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
               }
             : undefined
         }
-        throwDelayMs={dailyThrowGoneMs(reduceMotion === false)}
+        throwDelayMs={dailyThrowGoneMs(reduceMotion === false, claimBreachTier)}
         onExited={releasePollyExit}
       />
 

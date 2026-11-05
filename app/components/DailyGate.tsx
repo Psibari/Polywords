@@ -62,7 +62,7 @@ type Props = {
    * Side-to-side shudder in screen points (native driver), added to the gate's
    * transform. The caller drives it deterministically. Rests at 0.
    */
-  jitterX?: Animated.Value;
+  jitterX?: Animated.Value | Animated.AnimatedInterpolation<number>;
   /** Opacity 0..1 of the cracks on the shut door (native driver). Rests at 0. */
   cracks?: Animated.Value;
 };

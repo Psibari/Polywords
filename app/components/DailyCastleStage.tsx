@@ -28,6 +28,7 @@ import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAc
 import {
   DAILY_BREACH_DUST,
   DAILY_BREACH_LIGHTNING,
+  DAILY_BREACH_PLAQUE_PRESS,
   DAILY_BREACH_SHAKE,
   dailyBreachBoltKeyframes,
   dailyBreachBolts,
@@ -138,6 +139,13 @@ export type DailyCastleFlight = {
   label: string;
   /** Window rect of the plaque at the moment it was released. */
   origin: DailyAnswerCardClaimOrigin;
+  /**
+   * The breach's 'hit': the gate is SHUT at the handoff, so the plaque stays on
+   * the FRONT copy, over the gate, while it holds there; it changes to the back
+   * copy only once progress moves past the handoff (the absorb leg, which starts
+   * as the gate starts to rise). Default: today's switch, just before the handoff.
+   */
+  frontThroughHandoff?: boolean;
 };
 
 type Props = {
@@ -170,6 +178,17 @@ type Props = {
    * screen can shake Polly's overlay with the castle. Called again only if they change.
    */
   onShakeTransform?: (shake: DailyCastleShakeTransform) => void;
+  /** Passed to DailyGate: the broken gate (the breach's 'smash'). */
+  gateBroken?: boolean;
+  /** Passed to DailyGate: its side-to-side shudder, screen points (the screen drives it). */
+  gateJitterX?: Animated.AnimatedInterpolation<number>;
+  /** Passed to DailyGate: the cracks on the shut door, opacity 0..1. */
+  gateCracks?: Animated.Value;
+  /**
+   * The thrown plaque pressing into the shut gate ('hit'): 0 at rest, 1 fully
+   * pressed (DAILY_BREACH_PLAQUE_PRESS). Rests at 0.
+   */
+  flightPress?: Animated.Value;
   /** The win's gold-coin finale (ui/dailyCoinFinale.ts steps 0–5). */
   coinFinale: Animated.Value;
   /** Window y of the HUD's bottom edge; the first clue stays below it. */
@@ -321,6 +340,10 @@ export default function DailyCastleStage({
   shake,
   breachEffects,
   onShakeTransform,
+  gateBroken = false,
+  gateJitterX,
+  gateCracks,
+  flightPress,
   coinFinale,
   hudBottom,
   roundMarkers,
@@ -339,6 +362,10 @@ export default function DailyCastleStage({
     reduceMotion,
     calmGoldHit,
   );
+  // The plaque's press into a shut gate; a resting 0 when the screen passes
+  // none, so the flight's transform keeps one shape.
+  const restingPlaquePress = useRef(new Animated.Value(0)).current;
+  const plaquePress = flightPress ?? restingPlaquePress;
   const animateMotionRef = useRef(animateMotion);
   animateMotionRef.current = animateMotion;
   const animateFlashesRef = useRef(animateFlashes);
@@ -794,6 +821,7 @@ export default function DailyCastleStage({
           <DailyCastleFlightPlaque
             flight={flight}
             progress={flightProgress}
+            press={plaquePress}
             layer="back"
             frame={frame}
             // Back layer lives inside the opening: window → opening-local.
@@ -811,6 +839,9 @@ export default function DailyCastleStage({
             openTravel={dailyGateOpenTravel(clueTop) * s}
             maxSink={dailyGateMaxSink(clueTop) * s}
             scale={s}
+            broken={gateBroken}
+            jitterX={gateJitterX}
+            cracks={gateCracks}
           />
         </View>
       </View>
@@ -1029,6 +1060,7 @@ export default function DailyCastleStage({
         <DailyCastleFlightPlaque
           flight={flight}
           progress={flightProgress}
+          press={plaquePress}
           layer="front"
           frame={frame}
           offsetX={stageOffset.x}
@@ -1060,6 +1092,7 @@ export default function DailyCastleStage({
 function DailyCastleFlightPlaque({
   flight,
   progress,
+  press,
   layer,
   frame,
   offsetX,
@@ -1067,6 +1100,8 @@ function DailyCastleFlightPlaque({
 }: {
   flight: DailyCastleFlight;
   progress: Animated.Value;
+  /** 0 → 1: the press into a shut gate ('hit'); 0 at rest. */
+  press: Animated.Value;
   layer: 'front' | 'back';
   frame: ReturnType<typeof resolveDailyCastleFrame>;
   /** Window position of this copy's parent. */
@@ -1098,17 +1133,32 @@ function DailyCastleFlightPlaque({
     inputRange: [0, H, 1],
     outputRange: [1, DAILY_CASTLE_FLIGHT.handoffScale, DAILY_CASTLE_FLIGHT.endScale],
   });
+  // Where the front copy gives way to the back one. Today: just BEFORE the
+  // handoff, so the plaque is already under the (raised) gate as it arrives.
+  // A 'hit' holds at the handoff against the SHUT gate, so its swap is just
+  // AFTER it: the front copy stays over the gate until the absorb leg moves on.
+  const swapFrom = flight.frontThroughHandoff ? H : H - 0.001;
+  const swapTo = flight.frontThroughHandoff ? H + 0.001 : H;
   const opacity = layer === 'front'
     ? progress.interpolate({
-        inputRange: [0, H - 0.001, H],
+        inputRange: [0, swapFrom, swapTo],
         outputRange: [1, 1, 0],
         extrapolate: 'clamp',
       })
     : progress.interpolate({
-        inputRange: [0, H - 0.001, H, H + (1 - H) * 0.35, 1],
+        inputRange: [0, swapFrom, swapTo, H + (1 - H) * 0.35, 1],
         outputRange: [0, 0, 1, 1, 0],
         extrapolate: 'clamp',
       });
+  // The press: a short dip and squeeze, canvas points scaled with the scene.
+  const pressedY = Animated.add(
+    translateY,
+    press.interpolate({ inputRange: [0, 1], outputRange: [0, DAILY_BREACH_PLAQUE_PRESS.dipPt * frame.scale] }),
+  );
+  const pressedScale = Animated.multiply(
+    scale,
+    press.interpolate({ inputRange: [0, 1], outputRange: [1, 1 - DAILY_BREACH_PLAQUE_PRESS.scaleDown] }),
+  );
 
   return (
     <Animated.View
@@ -1122,7 +1172,7 @@ function DailyCastleFlightPlaque({
           width: origin.width,
           height: origin.height,
           opacity,
-          transform: [{ translateX }, { translateY }, { scale }],
+          transform: [{ translateX }, { translateY: pressedY }, { scale: pressedScale }],
         },
       ]}
     >

@@ -28,7 +28,9 @@ import {
   DAILY_BREACH_CRACKS,
   DAILY_BREACH_DUST,
   DAILY_BREACH_FLASH_LIMIT,
+  DAILY_BREACH_GATE_JITTER,
   DAILY_BREACH_GATE_RISE_MS,
+  DAILY_BREACH_PLAQUE_PRESS,
   DAILY_BREACH_LIGHTNING,
   DAILY_BREACH_SEEDS,
   DAILY_BREACH_SHAKE,
@@ -45,6 +47,7 @@ import {
   dailyBreachFlashes,
   dailyBreachFlashKeyframes,
   dailyBreachFlashOpacity,
+  dailyBreachGateJitterKeyframes,
   dailyBreachShakeKeyframes,
   dailyBreachSplinterKeyframes,
   dailyBreachSplinters,
@@ -130,19 +133,24 @@ for (const tier of TIERS) {
   assert.equal(dailyBreachBeats('open', true).thrownGoneMs, 650);
   assert.equal(dailyBreachBeats('open', false).thrownGoneMs, 120);
 
-  // The screen still computes it that way. If either function changes, this
-  // model has to change with it (or replace it).
+  // The screen reads both straight from this model, per tier (2026-11-04: the
+  // breach wiring replaced the old max(gate rise, flight) bodies, so 'open'
+  // above IS the screen's old timing).
   const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
   assert.match(
     screen,
-    /function dailyGateRiseMs\(motion: boolean\): number \{\n  return motion \? 400 : 120;\n\}/,
-    'dailyGateRiseMs is still 400 / 120',
+    /function dailyGateRiseMs\(motion: boolean, tier: DailyBreachTier\): number \{\n  return dailyBreachBeats\(tier, motion\)\.gateRiseMs;\n\}/,
+    'dailyGateRiseMs reads the tier\'s beats',
   );
   assert.match(
     screen,
-    /function dailyThrowGoneMs\(motion: boolean\): number \{\n  const flightMs = motion \? DAILY_CASTLE_FLIGHT\.riseMs \+ DAILY_CASTLE_FLIGHT\.absorbMs : 0;\n  return Math\.max\(dailyGateRiseMs\(motion\), flightMs\);\n\}/,
-    'dailyThrowGoneMs is still max(gate rise, flight)',
+    /function dailyThrowGoneMs\(motion: boolean, tier: DailyBreachTier\): number \{\n  return dailyBreachBeats\(tier, motion\)\.thrownGoneMs;\n\}/,
+    'dailyThrowGoneMs reads the tier\'s beats',
   );
+  for (const tier of TIERS) {
+    assert.equal(dailyBreachBeats(tier, true).gateRiseMs, 400, `${tier} gate rise with motion`);
+    assert.equal(dailyBreachBeats(tier, false).gateRiseMs, 120, `${tier} gate rise without`);
+  }
 }
 
 // Invariants, every tier and mode: the throw is over only when both the plaque
@@ -464,6 +472,68 @@ assert.deepEqual(
   for (const source of [stage, readFileSync(join(__dirname, 'dailyBreach.ts'), 'utf8')]) {
     assert.doesNotMatch(source, /Math\.random/, 'no random at render time');
   }
+}
+
+// ── The gate's shudder (DailyGate jitterX) ──
+for (const profile of ['hit', 'smash'] as const) {
+  const keys = dailyBreachGateJitterKeyframes(profile);
+  assert.deepEqual(dailyBreachGateJitterKeyframes(profile), keys, `${profile} gate jitter is deterministic`);
+  assert.ok(Object.is(keys.outputRange[0], 0) && Object.is(keys.outputRange[keys.outputRange.length - 1], 0), `${profile} jitter rests at 0`);
+  assert.equal(keys.inputRange[0], 0);
+  assert.equal(keys.inputRange[keys.inputRange.length - 1], 1);
+  const { amplitudePt } = DAILY_BREACH_GATE_JITTER[profile];
+  keys.inputRange.forEach((t, i) => assert.ok(Math.abs(keys.outputRange[i]) <= amplitudePt * (1 - t) + 1e-9, `${profile} jitter decays`));
+  assert.ok(keys.outputRange.some((v) => Math.abs(v) > amplitudePt * 0.4), `${profile} jitter actually moves`);
+}
+assert.deepEqual(
+  { hit: DAILY_BREACH_GATE_JITTER.hit, smash: DAILY_BREACH_GATE_JITTER.smash },
+  { hit: { amplitudePt: 3.5, ms: 720 }, smash: { amplitudePt: 4, ms: 500 } },
+);
+assert.deepEqual({ ...DAILY_BREACH_PLAQUE_PRESS }, { dipPt: 6, scaleDown: 0.04, inMs: 45, outMs: 45 });
+assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 90, 'the press lasts 90 ms');
+
+// The claim sequence in DailyChallengeScreen (React Native, so checked by source).
+{
+  const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
+  const between = (start: string, end: string) => {
+    const from = screen.indexOf(start);
+    assert.ok(from >= 0, `found ${start}`);
+    const to = screen.indexOf(end, from + start.length);
+    assert.ok(to > from, `found ${end}`);
+    return screen.slice(from, to);
+  };
+  // The tier comes from the claimed round's own clue count, before the claim commits.
+  const claim = between('function handleClaim(\n', '// Wrong — the gate slams down');
+  assert.match(claim, /const breachTier = resolveDailyBreachTier\(round\.revealedClueCount\);\n      setClaimBreachTier\(breachTier\);\n      beginClaimPresentation\(/);
+  assert.match(claim, /runPhysicalCorrectTransition\(candidate, origin, breachTier\);/);
+  // At the claim: the haptic always; the chime and gold hit only without a contact beat.
+  assert.match(
+    claim,
+    /Haptics\.cueAsync\(dailyCelebrationHaptic\(grade\)\);[\s\S]*?if \(dailyBreachBeats\(breachTier, reduceMotion === false\)\.contactMs === null\) \{\n\s*playSfx\('correctClaim'\);[\s\S]*?setGoldHit\(/,
+  );
+  assert.equal(claim.split("playSfx('correctClaim')").length - 1, 1, 'one claim chime');
+
+  const run = between('function runPhysicalCorrectTransition(', 'function handleClaimStart(');
+  assert.match(run, /const beats = dailyBreachBeats\(breachTier, motion\);/);
+  assert.match(run, /if \(beats\.gateRiseStartMs === 0\) raiseGate\(\);/, 'open and calm: the gate rises at once');
+  assert.match(run, /frontThroughHandoff: breachTier === 'hit'/, 'a hit plaque stays in front of the shut gate');
+  // ONE contact callback, guarded, at contactMs.
+  const contact = between('// CONTACT (', '}, beats.contactMs);');
+  assert.equal(run.split('beats.contactMs);').length - 1, 1, 'one callback at contact');
+  assert.match(contact, /scheduleCorrectTransition\(\(\) => \{\n\s*if \(completingCandidateRef\.current !== candidate\) return;/);
+  for (const needle of ["playSfx('breachGateCrack')", "playSfx('breachCastleRumble')", "playSfx('breachSmash')", "playSfx('breachThunder')", 'setGoldHit(', 'setBreachShake(', 'setBreachEffects(', 'setGateBroken(true)']) {
+    assert.ok(contact.includes(needle), `contact: ${needle}`);
+  }
+  assert.ok(!contact.includes("playSfx('correctClaim')"), 'no claim chime at contact');
+  // The broken gate is gone before the next round's gate drops.
+  const landed = between("setPhysicalClaimPhase('landed');", '}, goneAtMs);');
+  assert.ok(landed.includes('setGateBroken(false);'), 'whole gate again once it is up');
+  assert.match(run, /const goneAtMs = dailyThrowGoneMs\(motion, breachTier\);/);
+  assert.match(run, /const goldHitEndMs = \(beats\.contactMs \?\? 0\) \+ dailyGoldHitMsForTier\(breachTier, reduceFlashes\);/);
+  assert.match(screen, /throwDelayMs=\{dailyThrowGoneMs\(reduceMotion === false, claimBreachTier\)\}/, 'Polly\'s bubble waits for the tier\'s throw');
+  // Every new piece goes back to rest with the claim timers.
+  assert.match(screen, /correctTransitionTimersRef\.current = \[\];\n    resetBreachPresentation\(\);/);
+  assert.doesNotMatch(screen, /Math\.random/);
 }
 
 console.log('dailyBreach tests passed');
