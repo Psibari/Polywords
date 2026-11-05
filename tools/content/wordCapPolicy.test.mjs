@@ -90,7 +90,7 @@ for (const source of safeFixtures) {
 
 const repositoryFindings = [];
 for (const file of governedFiles) {
-  const contents = await readFile(file, 'utf8');
+  const contents = (await readFile(file, 'utf8')).replace(/\r\n/g, '\n');
   repositoryFindings.push(...findAbsoluteWordCapFindings(file, contents));
 }
 

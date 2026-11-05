@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const game = readFileSync(new URL('./GameScreen.tsx', import.meta.url), 'utf8');
-const pauseMenu = readFileSync(new URL('../components/HuntPauseMenu.tsx', import.meta.url), 'utf8');
-const exitConfirm = readFileSync(new URL('../components/PollyExitConfirm.tsx', import.meta.url), 'utf8');
-const homeButton = readFileSync(new URL('../components/HomeButton.tsx', import.meta.url), 'utf8');
-const settings = readFileSync(new URL('./SettingsScreen.tsx', import.meta.url), 'utf8');
+const game = readFileSync(new URL('./GameScreen.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const pauseMenu = readFileSync(new URL('../components/HuntPauseMenu.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const exitConfirm = readFileSync(new URL('../components/PollyExitConfirm.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const homeButton = readFileSync(new URL('../components/HomeButton.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const settings = readFileSync(new URL('./SettingsScreen.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
 );

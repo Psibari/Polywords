@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 // navigate('Home') pushes a second Home over the finished Game; { pop: true }
 // returns to the existing one (React Navigation 7). The run has left
 // 'playing' by then, so the beforeRemove exit guard lets the pop through.
-const game = readFileSync(new URL('./GameScreen.tsx', import.meta.url), 'utf8');
+const game = readFileSync(new URL('./GameScreen.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
 );

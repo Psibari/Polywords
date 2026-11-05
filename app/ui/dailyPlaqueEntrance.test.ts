@@ -114,7 +114,7 @@ const slots = Array.from({ length: DAILY_PLAQUE_SLOT_COUNT }, (_, index) => inde
 
 // The row seat haptic is Medium, through the cueAsync gateway.
 {
-  const source = readFileSync(join(__dirname, '../utils/haptics.ts'), 'utf8');
+  const source = readFileSync(join(__dirname, '../utils/haptics.ts'), 'utf8').replace(/\r\n/g, '\n');
   assert.match(
     source,
     /case 'dailyStoneSeat':\s*return ExpoHaptics\.impactAsync\(ExpoHaptics\.ImpactFeedbackStyle\.Medium\);/,
@@ -168,7 +168,7 @@ const slots = Array.from({ length: DAILY_PLAQUE_SLOT_COUNT }, (_, index) => inde
   assert.equal(dailyPlaqueOpacity(DAILY_PLAQUE_PEAK), 1, 'visible at the farthest point');
   assert.equal(dailyPlaqueOpacity(1), 1, 'visible when flush');
   // The stage must start each round's value there, not at 1 (finished).
-  const stage = readFileSync(join(__dirname, '../components/DailyCastleStage.tsx'), 'utf8');
+  const stage = readFileSync(join(__dirname, '../components/DailyCastleStage.tsx'), 'utf8').replace(/\r\n/g, '\n');
   assert.match(
     stage,
     /useRef\(new Animated\.Value\(DAILY_PLAQUE_INITIAL_PROGRESS\)\)/,

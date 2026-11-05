@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 const registryUrl = new URL('./pollyActingSprites.ts', import.meta.url);
 assert.equal(existsSync(registryUrl), true, 'Polly acting sprite registry must exist');
 
-const source = readFileSync(registryUrl, 'utf8');
+const source = readFileSync(registryUrl, 'utf8').replace(/\r\n/g, '\n');
 const expectedFiles = [
   'polly_perch_neutral.png',
   'polly_perch_smug.png',

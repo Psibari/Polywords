@@ -7,9 +7,9 @@ import { join } from 'node:path';
 // these pin their structure in the source, the same way dailyCoinFinale.test.ts
 // pins the reward haptic.
 
-const card = readFileSync(join(__dirname, '../components/DailyAnswerCard.tsx'), 'utf8');
-const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8');
-const haptics = readFileSync(join(__dirname, '../utils/haptics.ts'), 'utf8');
+const card = readFileSync(join(__dirname, '../components/DailyAnswerCard.tsx'), 'utf8').replace(/\r\n/g, '\n');
+const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
+const haptics = readFileSync(join(__dirname, '../utils/haptics.ts'), 'utf8').replace(/\r\n/g, '\n');
 
 function between(source: string, start: string, end: string): string {
   const from = source.indexOf(start);

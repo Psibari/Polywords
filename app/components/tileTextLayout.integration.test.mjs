@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const swipeMask = await readFile('app/components/SwipeMask.tsx', 'utf8');
-const gauntletSpines = await readFile('app/components/BossGauntletSpines.tsx', 'utf8');
-const maskBoard = await readFile('app/components/MaskBoard.tsx', 'utf8');
+const swipeMask = (await readFile('app/components/SwipeMask.tsx', 'utf8')).replace(/\r\n/g, '\n');
+const gauntletSpines = (await readFile('app/components/BossGauntletSpines.tsx', 'utf8')).replace(/\r\n/g, '\n');
+const maskBoard = (await readFile('app/components/MaskBoard.tsx', 'utf8')).replace(/\r\n/g, '\n');
 
 assert.match(
   swipeMask,

@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const production = fs.readFileSync('app/components/MaskBoard.tsx', 'utf8');
-const dev = fs.readFileSync('app/screens/DevRematchOutcomePreviewScreen.tsx', 'utf8');
-const mechanics = fs.readFileSync('app/hooks/useBoardMechanics.ts', 'utf8');
+const production = fs.readFileSync('app/components/MaskBoard.tsx', 'utf8').replace(/\r\n/g, '\n');
+const dev = fs.readFileSync('app/screens/DevRematchOutcomePreviewScreen.tsx', 'utf8').replace(/\r\n/g, '\n');
+const mechanics = fs.readFileSync('app/hooks/useBoardMechanics.ts', 'utf8').replace(/\r\n/g, '\n');
 const sharedPath = 'app/components/ui/RematchOutcomePlaque.tsx';
 
 assert.equal(fs.existsSync(sharedPath), true, 'shared RematchOutcomePlaque must exist');
-const shared = fs.readFileSync(sharedPath, 'utf8');
+const shared = fs.readFileSync(sharedPath, 'utf8').replace(/\r\n/g, '\n');
 
 assert.match(production, /import RematchOutcomePlaque from '\.\/ui\/RematchOutcomePlaque'/);
 assert.match(dev, /import RematchOutcomePlaque from '\.\.\/components\/ui\/RematchOutcomePlaque'/);

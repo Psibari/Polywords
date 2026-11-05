@@ -20,16 +20,16 @@ assert.equal(
 const dailyScreenSource = readFileSync(
   new URL('./DailyChallengeScreen.tsx', import.meta.url),
   'utf8',
-);
+).replace(/\r\n/g, '\n');
 const settingsScreenSource = readFileSync(
   new URL('./SettingsScreen.tsx', import.meta.url),
   'utf8',
-);
-const castleTuningPanelSource = readFileSync(castleTuningPanelUrl, 'utf8');
+).replace(/\r\n/g, '\n');
+const castleTuningPanelSource = readFileSync(castleTuningPanelUrl, 'utf8').replace(/\r\n/g, '\n');
 const castleStageSource = readFileSync(
   new URL('../components/DailyCastleStage.tsx', import.meta.url),
   'utf8',
-);
+).replace(/\r\n/g, '\n');
 
 for (const forbiddenReference of [
   'DailyScrollTuningPanel',

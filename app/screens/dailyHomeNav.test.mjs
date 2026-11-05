@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 // The Daily's HOME (Results) and NOT NOW (entry card) both go through
 // handleHome. A plain navigate('Home') pushes a second Home over the Daily;
 // { pop: true } returns to the existing one (React Navigation 7).
-const daily = readFileSync(new URL('./DailyChallengeScreen.tsx', import.meta.url), 'utf8');
+const daily = readFileSync(new URL('./DailyChallengeScreen.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
 );

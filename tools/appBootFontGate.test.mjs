@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 // A font that fails to load must not stop the boot. useFonts never reports
 // loaded after an error, so App.tsx treats an error as "fonts finished" for
 // both the boot effect and the render gate.
-const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 assert.match(app, /const \[fontsLoaded, fontError\] = useFonts\(/, 'App.tsx must read the useFonts error');

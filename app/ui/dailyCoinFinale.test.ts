@@ -216,7 +216,7 @@ for (const [name, k] of Object.entries({ full, fullNoGlint, calm })) {
   assert.equal(dailyCoinFinaleResetsFor('won'), false, 'the win never resets under Results');
   assert.equal(dailyCoinFinaleResetsFor('lost'), false);
   assert.equal(dailyCoinFinaleResetsFor(null), false);
-  const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8');
+  const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
   assert.ok(
     !/coinFinale\.setValue\(0\)/.test(screen),
     'the screen never snaps the finale back to rest outside the new-session reset',
@@ -226,7 +226,7 @@ for (const [name, k] of Object.entries({ full, fullNoGlint, calm })) {
 // The reward chime and Success haptic belong to the finale's arrival, not the
 // claim: the screen plays them once, from the finale.
 {
-  const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8');
+  const screen = readFileSync(join(__dirname, '../screens/DailyChallengeScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
   const chimes = screen.split("playSfx('mastered')").length - 1;
   const successes = screen.split("Haptics.cueAsync('mastery')").length - 1;
   assert.equal(chimes, 1, 'one reward chime');

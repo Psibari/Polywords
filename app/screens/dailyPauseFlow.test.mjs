@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 
 // The Daily's pause icon and card (Pete, 2026-10-29). One card, no quit:
 // leaving the Daily costs nothing and an unfinished Daily can be resumed.
-const daily = readFileSync(new URL('./DailyChallengeScreen.tsx', import.meta.url), 'utf8');
-const card = readFileSync(new URL('../components/DailyPauseCard.tsx', import.meta.url), 'utf8');
-const copy = readFileSync(new URL('../ui/dailyPauseCopy.ts', import.meta.url), 'utf8');
+const daily = readFileSync(new URL('./DailyChallengeScreen.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const card = readFileSync(new URL('../components/DailyPauseCard.tsx', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const copy = readFileSync(new URL('../ui/dailyPauseCopy.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const packageJson = JSON.parse(
   readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
 );

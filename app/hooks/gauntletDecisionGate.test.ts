@@ -14,8 +14,8 @@ import { join } from 'node:path';
 import { isHuntTileInteractive } from '../components/huntDecisionClock';
 import { isHuntDirectionAllowed } from '../components/tileAccessibility';
 
-const mechanics = readFileSync(join(__dirname, 'useBoardMechanics.ts'), 'utf8');
-const spines = readFileSync(join(__dirname, '../components/BossGauntletSpines.tsx'), 'utf8');
+const mechanics = readFileSync(join(__dirname, 'useBoardMechanics.ts'), 'utf8').replace(/\r\n/g, '\n');
+const spines = readFileSync(join(__dirname, '../components/BossGauntletSpines.tsx'), 'utf8').replace(/\r\n/g, '\n');
 
 /** The body of `function name(...) { ... }` or `name: () => { ... }`, braces matched. */
 function body(source: string, name: string): string {
