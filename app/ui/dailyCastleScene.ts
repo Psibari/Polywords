@@ -203,6 +203,44 @@ export function resolveDailyGateClueRects(
 }
 
 /**
+ * The breach hole in gate_door_broken.png (Pete's art, 2026-11-04, on the same
+ * 1399 x 1597 canvas as gate_door.png). The hole is IN the art; nothing draws it.
+ * Measured from the alpha channel on 2026-11-04: the largest connected region
+ * of fully transparent pixels inside the board (103,619 px; gate_door.png is
+ * fully opaque there). It spans x 446-869, y 620-976 art px: clue planks 3 and
+ * 4 (lines 621.2-956.0), with a sliver over line 5. `xSrc`/`ySrc` is its
+ * centroid. (The rescaled art also has a few transparent px along the board's
+ * outer rim, rows 119-124 and columns 107-115; the opening clips all of it.)
+ *
+ * Check, 2026-11-04: at DAILY_CLUE_TOP_PREFERRED this is (211.0, 341.6) canvas
+ * points, 3.0 pt right / 0.6 pt below the approved mock's (208, 341), and 4.0 pt
+ * left / 0.4 pt above DAILY_CASTLE_FLIGHT.handoff (215, 342). The gate moves
+ * with clueTop; the handoff does not (see dailyBreachHoleCanvas).
+ */
+export const DAILY_BREACH_HOLE = {
+  xSrc: 666.5,
+  ySrc: 798.6,
+  boundsSrc: { x0: 446, x1: 869, y0: 620, y1: 976 },
+} as const;
+
+/** The hole's centre in the gate's own canvas points (relative to the gate image's top-left). */
+export function dailyBreachHoleInGate(): { x: number; y: number } {
+  return {
+    x: DAILY_BREACH_HOLE.xSrc * DAILY_GATE_PT_PER_SRC,
+    y: DAILY_BREACH_HOLE.ySrc * DAILY_GATE_PT_PER_SRC,
+  };
+}
+
+/** The hole's centre in canvas points with the gate closed at `clueTop`. */
+export function dailyBreachHoleCanvas(
+  clueTop: number = DAILY_CLUE_TOP_PREFERRED,
+): { x: number; y: number } {
+  const closed = dailyGateClosed(clueTop);
+  const inGate = dailyBreachHoleInGate();
+  return { x: closed.x + inGate.x, y: closed.y + inGate.y };
+}
+
+/**
  * The framed answer wall, answerwall_framed.png, built by
  * tools/art/build_daily_answer_wall.py on the shared canvas. These are that
  * script's own constants (CAP_TOP, PANEL_TOP, PANEL_BOTTOM, PILLAR_W,

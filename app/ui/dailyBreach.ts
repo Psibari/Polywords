@@ -2,6 +2,7 @@ import {
   resolveDailyCelebrationGrade,
   type DailyCelebrationGrade,
 } from '../game/dailyClaimPresentation';
+import { createSeededRng } from '../game/seededRandom';
 import { DAILY_CASTLE_FLIGHT } from './dailyCastleScene';
 
 /**
@@ -132,6 +133,68 @@ export type DailyBreachPollyMove = { moveMs: number; holdMs: number };
 
 function sumMs(segments: readonly number[]): number {
   return segments.reduce((total, ms) => total + ms, 0);
+}
+
+/**
+ * How many clues the gate shows. The broken gate shows the first clue only:
+ * its hole is where clues two and three are painted, so they are hidden even
+ * if `revealedCount` says otherwise.
+ */
+export function dailyGateShownClueCount(revealedCount: 1 | 2 | 3, broken: boolean): 1 | 2 | 3 {
+  return broken ? 1 : revealedCount;
+}
+
+/**
+ * Cracks on the shut door, radiating from the centre of the breach hole
+ * (DAILY_BREACH_HOLE). Seven short dark lines, each four segments; every
+ * segment's heading wobbles about its line's direction. All lengths are canvas
+ * points, so the gate's screen scale scales them with it. Generated from a
+ * FIXED seed, once, so the cracks are the same every time.
+ */
+export const DAILY_BREACH_CRACK_SEED = 20261104;
+export const DAILY_BREACH_CRACKS = {
+  color: '#12041F',
+  strokeWidth: 1.6,
+  lineCount: 7,
+  segmentsPerLine: 4,
+  segmentMinPt: 9,
+  segmentMaxPt: 20,
+  wobbleRad: 0.5,
+} as const;
+
+/** Each crack as a polyline of points, relative to the hole centre, canvas points. Starts at (0, 0). */
+export function dailyBreachCrackLines(
+  seed: number = DAILY_BREACH_CRACK_SEED,
+): { x: number; y: number }[][] {
+  const c = DAILY_BREACH_CRACKS;
+  const rng = createSeededRng(seed);
+  const lines: { x: number; y: number }[][] = [];
+  for (let line = 0; line < c.lineCount; line += 1) {
+    // Evenly spread around the hole, the first pointing straight up.
+    const direction = -Math.PI / 2 + (line * 2 * Math.PI) / c.lineCount;
+    let x = 0;
+    let y = 0;
+    const points = [{ x, y }];
+    for (let segment = 0; segment < c.segmentsPerLine; segment += 1) {
+      const heading = direction + (rng() * 2 - 1) * c.wobbleRad;
+      const length = c.segmentMinPt + rng() * (c.segmentMaxPt - c.segmentMinPt);
+      x += Math.cos(heading) * length;
+      y += Math.sin(heading) * length;
+      points.push({ x, y });
+    }
+    lines.push(points);
+  }
+  return lines;
+}
+
+/** The cracks as one SVG path, offset to `origin` (the hole centre in the SVG's own units). */
+export function dailyBreachCrackPath(origin: { x: number; y: number }, seed?: number): string {
+  const r = (n: number) => Math.round(n * 100) / 100;
+  return dailyBreachCrackLines(seed)
+    .map((points) =>
+      points.map((p, i) => `${i === 0 ? 'M' : 'L'}${r(origin.x + p.x)} ${r(origin.y + p.y)}`).join(' '),
+    )
+    .join(' ');
 }
 
 /** How long Polly's tier move and its hold run. 'open' has none; Reduce Motion has none for any tier. */
