@@ -248,26 +248,16 @@ export const Haptics = {
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Soft), 70);
         return first;
       }
-      // A trap rejection always opens with a sharp Rigid "swat" so it can
-      // never be mistaken for a claim, then bounces. Same three phase tiers,
-      // climbing by what follows the swat. Hunt-only. TEST VALUES (2026-11-06):
-      // each moved up one notch; the heavy tier's bounce is Heavy (Pete's
-      // override of the Boss-only Heavy rule).
-      case 'trapRejectLight': {
-        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 55);
-        return first;
-      }
-      case 'trapRejectMedium': {
-        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 55);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 110);
-        return first;
-      }
+      // Hunt trap rejection (correct RIGHT), fired at the shard burst.
+      // TEST VALUE (2026-11-06): Medium, then Heavy at +90 ms, the same shape
+      // as huntHeightenedCorrect. Pete felt this on device; the old Rigid-led
+      // shapes were not felt at all. The three tiers are identical for now;
+      // the names and the round-tier mapping stay so they can be tiered again.
+      case 'trapRejectLight':
+      case 'trapRejectMedium':
       case 'trapRejectHeavy': {
-        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 55);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 110);
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 90);
         return first;
       }
       // FELL OFF severities — layered ON TOP of the 'huntWrong' cue above, not a

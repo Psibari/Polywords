@@ -94,10 +94,11 @@ export function resolveFXAccessibility(
 }
 
 // ── Haptic cue selection ────────────────────────────────────────────────
-// Claiming a REAL and rejecting a trap are different gestures with different
-// meaning, so they get different shapes in the hand: a claim is a solid
-// Medium "take"; a rejection always opens with a sharp Rigid "swat". Both
-// climb across the Hunt's three phase tiers (light / medium / heavy). The
+// Claiming a REAL and rejecting a trap are different gestures, and each has
+// its own cue per tier. For now (2026-11-06) every trap reject feels like
+// the heavy-tier claim: the old Rigid-led "swat" shapes were not felt on
+// device. Claims climb across the Hunt's three phase tiers (light / medium /
+// heavy); the trap tiers keep their names to be tiered again later. The
 // heavy tier ends on a Heavy pulse (Pete, 2026-11-06, overriding the old rule
 // that kept Heavy for Boss beats); shapes live in utils/haptics.ts.
 // An unset tier keeps the old behavior (the strongest claim cue).
