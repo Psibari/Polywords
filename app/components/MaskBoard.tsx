@@ -96,6 +96,12 @@ const HAUNTED_DRAG_MS = 280;    // front-facing → edge-on, heavy, no punch (wa
 const HAUNTED_SWAP_AT_MS = 150; // under the rising drain haze + board shake — scaled with HAUNTED_DRAG_MS to hold the same ~54% mid-swing concealment point (was 140)
 const HAUNTED_SETTLE_MS = 300;  // edge-on → rest, no bounce — sinks shut (was 260)
 
+// ── Book cover shut sound ───────────────────────────────────────
+// TEST VALUE (Pete, 2026-11-06). The door slam plays when the cover finishes
+// closing after an accepted card. Equals triggerBookOpen's 120 ms open +
+// 200 ms hold + 120 ms close; change it with those durations.
+const BOOK_COVER_SHUT_SFX_DELAY_MS = 440;
+
 // Deck timing curves — shared by the round's opening deal-in and the
 // per-tile shuffle-forward animation (Task 1), so the deck reads as one
 // consistent object rather than two different systems.
@@ -1037,6 +1043,10 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   // later) so the absorption pulse and the book's own open flick land on
   // the same beat instead of the pulse firing up to a second early.
   const pendingAbsorbRef = useRef(false);
+  // One pending cover-shut slam. A card landing before the cover has shut
+  // restarts the cover cycle, so it cancels the earlier slam: only the last
+  // close sounds. Cleared on unmount (the mount effect below).
+  const bookCoverShutSfxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleCardTouch() {
     // Before the gate check: the claim was already judged, so its cue lands
@@ -1048,6 +1058,13 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     }
     if (mechanics.gatePhase !== 'locked') return;
     triggerBookOpen();
+    // Door slam as the cover shuts. Plays with Reduce Motion on too: sound
+    // is not motion, even though triggerBookOpen skips the animation there.
+    if (bookCoverShutSfxTimerRef.current) clearTimeout(bookCoverShutSfxTimerRef.current);
+    bookCoverShutSfxTimerRef.current = setTimeout(() => {
+      bookCoverShutSfxTimerRef.current = null;
+      playSfx('bookClose');
+    }, BOOK_COVER_SHUT_SFX_DELAY_MS);
     if (pendingAbsorbRef.current) {
       triggerAbsorption();
       pendingAbsorbRef.current = false;
@@ -1938,6 +1955,13 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   useEffect(() => {
     if (mechanics.ghost) firePollyEvent('ghostEntry');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Unmount: drop a pending cover-shut slam (handleCardTouch).
+  useEffect(() => {
+    return () => {
+      if (bookCoverShutSfxTimerRef.current) clearTimeout(bookCoverShutSfxTimerRef.current);
+    };
+  }, []);
 
   // Boss V1 entrance: stable hero word, then reveal the real tile stack.
   useEffect(() => {
