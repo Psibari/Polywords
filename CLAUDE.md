@@ -19,7 +19,7 @@ Focused product rules live in `docs/`. Runtime code/data outrank every doc.
 | Polybook | `docs/POLYBOOK.md`, `docs/POLYBOOK_LIVING_JOURNAL.md` |
 | Visual system | `DESIGN.md`, `app/ui/` |
 | Workflow | `docs/WORKFLOW.md` |
-| Daily breach build prompts (2026-11-04) | `claude/POLYWORDS_SESSION_2026-11-04_BREACH_BUILD_PROMPTS.md` (not in the repo yet; the only copy is in Pete's `Downloads/Claude outputs`) |
+| Daily breach build prompts (2026-11-04) | `claude/POLYWORDS_SESSION_2026-11-04_BREACH_BUILD_PROMPTS.md` |
 
 ## Runtime
 
