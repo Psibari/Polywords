@@ -496,32 +496,105 @@ stale snapshot that would have been reported as verified. Caught only by compari
 Rule now in AGENTS.md: verify disk writes through the device SHELL and compare a hash, and write
 CRLF because Pete's working tree is CRLF while the repo is LF.
 
-### THE BREACH — Pete's design, 2026-11-03, nothing built
+### THE BREACH — built 2026-11-04/05 (commits ec7e3bb … c2b31db)
 
-The answer to "waiting strictly dominates". Not lighting: the gate itself behaves differently by how
-many clues the player needed. `revealedClueCount` already carries this.
+The answer to "waiting strictly dominates": the gate itself behaves differently by how many clues the
+player needed.
 
-- **Three clues:** exactly today's sequence. Unchanged. Waiting is never punished, only out-shone.
-- **Two clues:** the gate does NOT lift when the answer plaque is thrown. The plaque HITS the shut
-  gate, the castle shakes, and only then does the gate go up. Polly jumps or flies up off her perch.
-- **One clue:** the plaque BREAKS THROUGH the gate — there is room for it because only the top clue
-  plank is filled. Lightning, sound, shake. Polly is blown off her perch and makes a sound.
-- **A lost life:** Polly gets a better celebration — a little dance or similar.
+**Art and sound.** The broken gate is `assets/images/dailycastle/gate_door_broken.png`, the same
+1399x1597 frame as `gate_door.png`, with the hole where clue planks two and three are painted (so the
+broken gate shows the first clue only: `dailyGateShownClueCount` in `app/ui/dailyBreach.ts`). The
+four sounds are `breachGateCrack`, `breachCastleRumble`, `breachSmash` and `breachThunder` in
+`app/audio/sfx.ts`. All four are Pixabay Content License; sources are in `assets/audio/LICENSES.md`
+("Sound effects added 2026-11-04"). Their Pixabay page URLs were not opened.
 
-Art: Pete mocked the broken gate in context and his version is right; Claude's first attempt put the
-hole at y 1130–1374 when only y 265–1023 of the file is ever visible. The tunnel light is already
-drawn behind the gate, so what is needed is ONE gate image with a genuinely transparent hole, not a
-second gate plus a light. `gate_broken_aligned.png` (Pete's art rescaled from 1505x2056 to the
-game's 1399x1597 frame with a measured +5 px correction) was delivered for Pete to save as
-`assets/images/dailycastle/gate_door_broken.png` — NOT yet saved, and it must not go through the
-device bridge, which injects ~5.8 KB of C2PA metadata into binaries.
+**Design as built.** Every correct claim, the winning round included, is graded by that round's own
+`revealedClueCount`. `resolveDailyBreachTier` gives `open` (three or more clues), `hit` (two) and
+`smash` (zero or one), through `resolveDailyCelebrationGrade`, so the Daily keeps one clue ladder.
+- **Open:** today's sequence with the bigger gold hit (big3). Its gold hit has a light white wash (peak 0.18).
+- **Hit (two clues):** the plaque hits the SHUT gate and presses into it. A shake of 7 pt for 720 ms,
+  door cracks, the gate shudders, dust, gold hit big2 (white wash peak 0.45), and a 0.18 screen flash.
+  The gate lifts 760 ms after the contact. Sounds: gate crack and rumble. Polly: shocked, a
+  straight-up jump, then embarrassed.
+- **Smash (zero or one clue):** the plaque breaks through. Broken gate art, splinters, dust, two
+  lightning bolts (each with a 0.5 screen flash), thunder, a 13 pt shake for 950 ms, and gold hit big1
+  (white wash peak 0.6). Sounds: smash, rumble and thunder. Polly: her fury move (yell, crouch,
+  launch, blown up and back, shaking in mid-air, fall, angry landing).
+- **A winning round** plays the tier move first, then today's win (shocked, startled sound, bubble,
+  angry fly-off).
+- **First lost life:** Polly's dance (laugh, hop, hover pointing with the butter-knife line, land
+  laughing) replaces the pointing lean.
+- The gold hit's old LOCKED label no longer applies (Pete, 4 Nov). The comment in
+  `app/ui/dailyCastleScene.ts` still says "LOCKED"; it is stale. Per `AGENTS.md`, only the swipe
+  grammar and the premise are permanently locked.
+- **Photosensitivity:** no tier may show more than three flashes in one second
+  (`DAILY_BREACH_FLASH_LIMIT`). The smash is at that maximum.
 
-Sounds: Pete owes three distinct celebration sounds.
+**How it is built.**
+- One native clock per tier (`breachHitClock`, `breachSmashClock` in
+  `app/screens/DailyChallengeScreen.tsx`) starts in the same tick as the plaque's first leg. Every
+  contact visual reads it: the shake, gold hit, flash, bolts, dust and splinters in
+  `app/components/DailyCastleStage.tsx`; the shudder, cracks and broken art in
+  `app/components/DailyGate.tsx`; the plaque press on the screen.
+- The effect layers are mounted with the stage, not at the claim (only while motion is allowed).
+- Contact sounds and haptic fire from the first leg's real completion callback (`fireContactCues`),
+  haptic first. The four breach sounds are pre-rewound (`PRE_REWOUND_SFX` in `sfx.ts`).
+  `BREACH_CONTACT_LEAD_MS` is 0.
+- Timing, effects and the flash budget live in `app/ui/dailyBreach.ts`; the gold hit tiers in
+  `DAILY_GOLD_HIT_TIERS` (`app/ui/dailyCastleScene.ts`).
+- Polly's moves ride the tier clock (`app/ui/pollyDailyBreach.ts`); the dance has its own clock
+  (`app/ui/pollyDailyDance.ts`). Which pose layer is visible is decided in
+  `app/ui/pollyDailyPerchLayers.ts`, which `app/components/PollyDailyPerch.tsx` composes from. Each
+  move has an on/off switch, set to 0 before its clock is stopped, so a stopped move cannot leave a
+  stale second Polly (fix 7b1005c).
+- Breach haptic tables (`breachHit`, `breachSmash`) are in `BREACH_HAPTICS`, `app/utils/haptics.ts`,
+  the one place to tune them. Pete approved them on the phone as built (5630fda). The code comment
+  still calls them START values. `Haptics.cancelBreach()` runs in `restBreachClocks` (a new claim, a
+  wrong claim, pause, unmount).
+
+**Reduce Motion / Reduce Flashes.** Every decision comes from
+`dailyBreachEffects(reduceMotion, reduceFlashes)` in `app/ui/dailyBreach.ts`, which the screen, the
+castle stage and the perch read. The gate makes no decision of its own; its effects only move while
+a breach clock runs.
+- **Reduce Motion, and Reduce Motion still unknown, take the calm path.** No contact beat, hold,
+  shake, shudder, cracks, press, dust, splinters, plaque flight, Polly tier move or dance motion.
+  Every tier gets a 120 ms gate lift, today's claim chime (`correctClaim`) and the calm gold hit.
+  `breachHit` / `breachSmash` fire once at the claim.
+- That claim-moment haptic default was not explicitly approved by Pete, who said he has no preference.
+- **Reduce Flashes (motion on)** keeps the shake, dust, splinters and the broken gate. It removes the
+  lightning, all screen flashes (including the hit's 0.18), the white wash and the halo, and plays
+  the calm gold hit for every tier.
+- **Where the settings live:**
+  - **Reduce Motion:** the phone's own setting (iOS Settings › Accessibility › Motion › Reduce Motion,
+    read through `AccessibilityInfo`), OR'd with the in-app Settings › Reduce Motion toggle
+    (`reduceMotionOverride`). Both are combined in `useReducedMotionPreference`
+    (`app/hooks/usePollyAmbientMotion.ts`). Each hook instance is unknown (`null`) until its own phone
+    read returns. The Daily holds its cards for at most 600 ms while unknown
+    (`DAILY_PLAQUE_MOTION_FAILSAFE_MS`), then unlocks.
+  - **Reduce Flashes:** in-app only, Settings › Reduce Flashes (`reduceFlashesOverride`).
+    `useReducedFlashesPreference` is also true whenever Reduce Motion is on or unknown.
+
+**Tests.** Source-reading tests normalise `\r\n` (`.replace(/\r\n/g, '\n')`) because Pete's working
+tree is CRLF (270e553, commit message "tieer"). The breach is covered by `dailyBreach.test.ts`,
+`pollyDailyBreach.test.ts`, `pollyDailyDance.test.ts`, `pollyDailyPerchLayers.test.ts` and
+`dailyHaptics.test.ts` (all in `app/ui/`).
+
+**Known open items.**
+- The castle's breach effects (shake, gold hit, flashes, bolts, dust, splinters, cracks, shudder,
+  press) have no on/off switch like Polly's. They could freeze mid-effect if a clock is stopped
+  mid-run. Not verified.
+- The idle cost of the effect views mounted with the stage is not measured.
+- A win on one or two clues takes about 6 s to reach Results: Polly's move and hold (2823 / 2870 ms),
+  then the win bubble (2.72 s) and fly-out (0.5 s). Accepted.
+- On a 375x667 phone the plaque misses the hole by about 22 pt. Pete does not care.
+- The dance's hop wing overlaps clue plank 3. Pete accepted.
+- The dev build is slow and the three-clue claim chime plays late there, but not on TestFlight.
+- The design check flags `#12041F`, `#A98CFF` and `rgb(210,195,235)` in `app/ui/dailyBreach.ts`. Left alone.
+- The 4 Nov Daily entry card and onboarding card have still not been device-tested.
 
 ### NEXT SESSION
 
-1. **Build the breach** (section above). This is the live piece of work. Needs the broken-gate asset
-   saved first, and the three celebration sounds.
+1. **The breach is built** (section above). What is left is its known open items.
 2. **Device-test the entry card.** Nothing built on 2026-11-04 has run on a phone. Reset Progress
    gives the long card, DEV RESET DAILY gives the short one. Watch for: the long card on a short
    phone (it scrolls), the three-button hierarchy, and whether HOW TO PLAY reads as pressable now
