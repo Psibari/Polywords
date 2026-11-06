@@ -158,3 +158,17 @@ no attribution and forbid selling or redistributing the sound on its own; they d
 by name. Keep a dated saved copy of the licence page.
 
 "Wood Smash 3" by floraphonic (Pixabay file 170418) was auditioned and NOT used or shipped.
+
+## Sound effects added 2026-11-06 (Hunt wrong swipe and book shut)
+
+- `sfx/wrong_slap.mp3`: "Face Slap" by freesound_community (Pixabay file 48025, downloaded as
+  `freesound_community-060887_face-slap-48025`). The Hunt's wrong-swipe slap. The original holds five
+  slaps; this is the second, cut to 0.50 s (-11.6 LUFS).
+- `sfx/book_shut_door_slam.mp3`: "Door Slam" by soundreality (Pixabay file 172171). The Hunt's book-shut
+  sound (`bookClose`), replacing `book_close_v2.mp3`, which stays in the repo unreferenced. 0.89 s
+  (-12.1 LUFS).
+
+Source page and licence terms NOT verified: creator names and file numbers come from the downloaded file
+names, and no Pixabay page was opened. Confirm both before launch.
+
+POLYWORDS edits: the slap is trimmed as above; both files had their ID3 tag stripped.

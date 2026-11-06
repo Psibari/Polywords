@@ -947,7 +947,11 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     fellOffSeverity: 1 | 2 | 3 | null,
     wrongCueAtCard: boolean,
   ) {
-    playSfx(resolveWrongSwipeSfx(brokeRealChain));
+    // The slap now, the whistle as the card falls. Every wrong swipe, both
+    // card kinds, broken chain or not. Fire-and-forget like the squawk below.
+    const wrongSfx = resolveWrongSwipeSfx();
+    playSfx(wrongSfx.first);
+    setTimeout(() => playSfx(wrongSfx.fall), wrongSfx.fallDelayMs);
     // Polly's smug squawk sits just behind the physical hit, but not on every
     // wrong swipe: always when a real chain fell off, every third otherwise.
     const squawk = resolvePollySquawkOnWrong(brokeRealChain, otherWrongCountRef.current);

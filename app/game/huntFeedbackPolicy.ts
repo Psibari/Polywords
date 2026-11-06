@@ -6,10 +6,24 @@ export type HuntFeedbackEvent =
   | 'gauntletCorrect'
   | 'mastery';
 
-export type WrongSwipeSfx = 'wrongImpact' | 'streakBreakImpact';
+// TEST VALUE. The whistle waits for the card's sideways buzz (SwipeMask: 70 ms
+// + 55 ms) so it starts as the 420 ms fall starts. Tune by ear.
+export const WRONG_FALL_WHISTLE_DELAY_MS = 125;
 
-export function resolveWrongSwipeSfx(brokeRealChain: boolean): WrongSwipeSfx {
-  return brokeRealChain ? 'streakBreakImpact' : 'wrongImpact';
+export type WrongSwipeSfxPlan = {
+  /** Plays at judgement. */
+  first: 'wrongSlap';
+  /** Plays fallDelayMs later, as the card falls. */
+  fall: 'wrongImpact';
+  fallDelayMs: number;
+};
+
+// Every wrong swipe, broken chain or not, normal card or gauntlet card: the
+// slap, then the whistle as the card falls. The streak-break punch
+// (streakBreakImpact) no longer plays here; BUSTER and the Haunt STILL card
+// still use it.
+export function resolveWrongSwipeSfx(): WrongSwipeSfxPlan {
+  return { first: 'wrongSlap', fall: 'wrongImpact', fallDelayMs: WRONG_FALL_WHISTLE_DELAY_MS };
 }
 
 // Polly's short squawk on a wrong swipe. It used to fire on every wrong swipe,

@@ -27,7 +27,7 @@ import { PW } from '../ui/pwTheme';
 import AmbientSkyBackground from '../components/AmbientSkyBackground';
 import { BOSS_SKY_TUNING, HUNT_SKY_TUNING } from '../ui/ambientSkyTuning';
 import ResultsScreen from './ResultsScreen';
-import { playSfx, sfxReady, warmArmorFlipSfx, warmWallFallSfx } from '../audio/sfx';
+import { playSfx, sfxReady, warmArmorFlipSfx, warmHuntSwipeSfx, warmWallFallSfx } from '../audio/sfx';
 import { startMusic, stopMusic, setMusicState, MusicState } from '../audio/MusicEngine';
 import { Haptics } from '../utils/haptics';
 import FXLayer, { FXLayerHandle } from '../components/FXLayer';
@@ -1782,10 +1782,12 @@ function GameDirector({ navigation }: { navigation: any }) {
   }, [wallStrainTier]);
 
   // The four fall cues load on demand, so a cue's first play would wait on a
-  // native load. Warm them once when the Hunt opens.
+  // native load. Warm them once when the Hunt opens, with the armor flip and
+  // the wrong-swipe slap, whistle and book-shut slam.
   useEffect(() => {
     warmWallFallSfx();
     warmArmorFlipSfx();
+    warmHuntSwipeSfx();
   }, []);
 
   // Fell-off: the wall falls down a hole, then the camera falls after it and

@@ -10,17 +10,18 @@ import {
   resolvePollySquawkOnWrong,
   resolveWrongSwipeSfx,
   shouldPlayRazorStartle,
+  WRONG_FALL_WHISTLE_DELAY_MS,
 } from './huntFeedbackPolicy';
 
-assert.equal(
-  resolveWrongSwipeSfx(false),
-  'wrongImpact',
-  'an ordinary wrong swipe adds the character impact without borrowing the streak-break punch',
+assert.deepEqual(
+  resolveWrongSwipeSfx(),
+  { first: 'wrongSlap', fall: 'wrongImpact', fallDelayMs: 125 },
+  'every wrong swipe, broken chain or not, plays the slap at judgement and the whistle 125 ms later as the card falls',
 );
 assert.equal(
-  resolveWrongSwipeSfx(true),
-  'streakBreakImpact',
-  'a wrong swipe that breaks a streak upgrades to the punch impact instead of stacking both impacts',
+  WRONG_FALL_WHISTLE_DELAY_MS,
+  125,
+  'the whistle waits for the card buzz (70 ms + 55 ms) so it starts with the fall',
 );
 
 assert.equal(

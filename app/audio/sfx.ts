@@ -9,6 +9,7 @@ export type SfxName =
   | 'correctClaimHunt'
   | 'trapWrong'
   | 'wrongImpact'
+  | 'wrongSlap'
   | 'streakBreakImpact'
   | 'trapShatter'
   | 'mastered'
@@ -157,6 +158,11 @@ const SFX: Record<SfxName, SfxConfig> = {
   correctClaimHunt: { source: require('../../assets/audio/sfx/correct_claim_hunt.wav'), volume: 0.28, cooldownMs: 120 },
   trapWrong:      { source: require('../../assets/audio/sfx/trap_wrong.mp3'),        volume: 0.35, cooldownMs: 120 },
   wrongImpact:    { source: require('../../assets/audio/sfx/wrong_lame_whistle.mp3'), volume: 0.42, cooldownMs: 120 },
+  // Hunt wrong swipe (2026-11-06): the SLAP lands at judgement, then wrongImpact's whistle follows as the
+  // card falls (resolveWrongSwipeSfx in game/huntFeedbackPolicy.ts). Volumes are FILE-RELATIVE, from
+  // measured integrated loudness: wrong_slap.mp3 is -11.6 LUFS, 0.50 s; 0.54 is about -5.4 dB, so about
+  // -17.0 LUFS effective. First guess: tune by ear.
+  wrongSlap:      { source: require('../../assets/audio/sfx/wrong_slap.mp3'),         volume: 0.54, cooldownMs: 120 },
   streakBreakImpact: { source: require('../../assets/audio/sfx/punch_impact_hit.mp3'), volume: 0.55, cooldownMs: 120 },
   trapShatter:    { source: require('../../assets/audio/sfx/broken_glass_impact.mp3'), volume: 0.55, cooldownMs: 140 },
   mastered:       { source: require('../../assets/audio/sfx/mastered_chime.mp3'),    volume: 0.45, cooldownMs: 2200 },
@@ -196,7 +202,11 @@ const SFX: Record<SfxName, SfxConfig> = {
   pollyStartled3: { source: require('../../assets/audio/sfx/pollyStartled3.wav'), volume: 0.42, cooldownMs: 300 },
   pollyStartled4: { source: require('../../assets/audio/sfx/pollyStartled4.wav'), volume: 0.42, cooldownMs: 300 },
   pollyEmbarrassedExit: { source: require('../../assets/audio/sfx/pollyEmbarrassedExit.wav'), volume: 0.42, cooldownMs: 600 },
-  bookClose:      { source: require('../../assets/audio/sfx/book_close_v2.mp3'),      volume: 0.60, cooldownMs: 300 },
+  // Book shut (2026-11-06): a door slam. book_shut_door_slam.mp3 is -12.1 LUFS, 0.89 s; 0.50 is about
+  // -6.0 dB, so about -18.1 LUFS effective. The old book_close_v2.mp3 (about -24.5 LUFS) at 0.60 came out
+  // near -28.9 effective, about 11 dB quieter and nearly inaudible; that file stays on disk, unreferenced.
+  // First guess: tune by ear.
+  bookClose:      { source: require('../../assets/audio/sfx/book_shut_door_slam.mp3'), volume: 0.50, cooldownMs: 300 },
   detectiveSting: { source: require('../../assets/audio/sfx/detective_clue_sting.mp3'), volume: 0.30, cooldownMs: 1200, fallbackReleaseMs: 16000 },
   lockSpin1:      { source: require('../../assets/audio/sfx/lock_spin_1.mp3'),         volume: 0.40, cooldownMs: 150 },
   lockSpin2:      { source: require('../../assets/audio/sfx/lock_spin_2.mp3'),         volume: 0.40, cooldownMs: 150 },
@@ -618,6 +628,11 @@ function warmSfx(names: readonly SfxName[]): void {
 /** Warms the power-up sound of the UNTRAPPABLE armor flip (GameScreen.tsx). */
 export function warmArmorFlipSfx(): void {
   warmSfx(['armorFlipChime', 'armorFlipTurn']);
+}
+
+/** Warms the Hunt's wrong-swipe slap and whistle and the book-shut slam (MaskBoard.tsx). */
+export function warmHuntSwipeSfx(): void {
+  warmSfx(['wrongSlap', 'wrongImpact', 'bookClose']);
 }
 
 /** Warms the four cues of the FELL OFF wall fall (wallShake.ts WALL_FALL_SFX_*). */
