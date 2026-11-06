@@ -618,8 +618,9 @@ export const DAILY_CASTLE_CAP_GLOWS: readonly DailyCastleRect[] = DAILY_CAP_CENT
 
 /**
  * The castle's gold hit on a correct claim (Pete, 2026-09-29: the old trim fade
- * was too pale and easy to miss; this version device-approved and LOCKED the
- * same day). The gold trim lights, flat crown gold is laid
+ * was too pale and easy to miss; this version was device-approved the same
+ * day). The gold hit tiers were device-approved and are open to change (Pete,
+ * 4 Nov 2026); only the swipe mechanic is locked. The gold trim lights, flat crown gold is laid
  * over it, and a bloom swells behind each cap: fast ignition, a hold near the
  * peak, a smooth decay back to the resting art. One progress value runs
  * 0 → 1 (ignited) → 2 (end of hold) → 3 (gone), read through the keyframes of

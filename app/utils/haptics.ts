@@ -56,7 +56,7 @@ let gauntletWallTrembleTimeouts: ReturnType<typeof setTimeout>[] = [];
 // kept for Boss beats; Pete overrode that for the breach. expo-haptics has no
 // sustained buzz, so the rumble is simulated the way gauntletWallTremble is:
 // Soft impacts close enough together to fuse into one grind.
-// START values for a phone pass. Each tier: its `hits` (ms from the contact),
+// Tuned and approved on the phone by Pete, 5 Nov 2026. Each tier: its `hits` (ms from the contact),
 // then a Soft `rumble` (one pulse every `everyMs`, from `fromMs` to `toMs`
 // inclusive), then an optional `last` hit.
 type BreachHapticShape = {
