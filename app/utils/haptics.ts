@@ -200,8 +200,9 @@ export const Haptics = {
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 60);
         return first;
       }
-      // The Hunt book shutting at the end of a word (MaskBoard onWordExit).
-      // TEST VALUE (2026-11-06): one Heavy, replacing selectionAsync.
+      // The Hunt book shutting (MaskBoard): at the end of a word (onWordExit,
+      // replacing selectionAsync) and as the cover shuts after each accepted
+      // card (handleCardTouch, with the door slam). TEST VALUE (2026-11-06): one Heavy.
       case 'bookShut':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
       // The Daily's claim cues (dailyCelebrationHaptic). The Hunt used these

@@ -1064,6 +1064,9 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     bookCoverShutSfxTimerRef.current = setTimeout(() => {
       bookCoverShutSfxTimerRef.current = null;
       playSfx('bookClose');
+      // TEST VALUE (Pete, 2026-11-06, asked for a thump on the cover shut):
+      // one Heavy, landing with the slam.
+      Haptics.cueAsync('bookShut');
     }, BOOK_COVER_SHUT_SFX_DELAY_MS);
     if (pendingAbsorbRef.current) {
       triggerAbsorption();
