@@ -1,6 +1,6 @@
 # POLYWORDS Current Context
 
-Updated 2026-11-04 (the Daily entry card now teaches the mode once and gates every attempt; the graded castle gold hit is removed; the breach is designed and unbuilt). Build 15 accessibility/beta hardening, the Build 16 iOS audio watchdog fix, true Hunt pause/quit, and the dedicated POLYWORDS DEV phone-testing path are committed and pushed; device-validation status is recorded below. Current state + next work only. `CLAUDE.md` owns durable architecture;
+Updated 2026-11-06 (Hunt wrong-swipe and book-shut sounds, stronger Hunt haptics, pause button moved; see the 2026-11-06 entry at the end). Earlier, 2026-11-04: the Daily entry card teaches the mode once and gates every attempt; the graded castle gold hit is removed; the breach was built 2026-11-04/05. Build 15 accessibility/beta hardening, the Build 16 iOS audio watchdog fix, true Hunt pause/quit, and the dedicated POLYWORDS DEV phone-testing path are committed and pushed; device-validation status is recorded below. Current state + next work only. `CLAUDE.md` owns durable architecture;
 focused rules live in `docs/`; runtime code/data outrank docs.
 
 ## Branches
@@ -606,7 +606,7 @@ tree is CRLF (270e553, commit message "tieer"). The breach is covered by `dailyB
    spotlight geometry IS reusable. Note the entry card now covers most of the six gaps, so the
    in-play set should be re-scoped before anything is built.
 4. **Daily content.** 110 puzzles repeat after 17 days, tier 1 being the choke point; about 40 more
-   are needed for 30 days, mostly tier 1. Pete has an updated 118-entry workbook to hand over. Who
+   are needed for 30 days, mostly tier 1. Pete's 118-entry workbook was cross-checked 2026-11-06 (see the 2026-11-06 entry): no new words in it. Who
    assigned the existing tiers and against what definition is still UNRESOLVED — settle before
    writing more.
 5. Freesound licence for `armor_flip_turn.mp3` into `assets/audio/LICENSES.md` (Pete has it).
@@ -616,6 +616,45 @@ tree is CRLF (270e553, commit message "tieer"). The breach is covered by `dailyB
 8. Polly's "Trap. Trap. Trap." chant — Pete likes it and wants it used somewhere; no home chosen.
    Candidates raised: the game-over laugh, or the Returning Haunt gloat. The armor-break moment was
    ruled out as too crowded.
-9. Still open from before: Hunt pause button overlapping Polly's bubble; TestFlight splash build;
+9. Still open from before (the Hunt pause button overlap was FIXED 2026-11-06, `e31898c`); TestFlight splash build;
    build-size warning (Pete brings the exact message); dev `FALL 3` / `ARMOR STEP` / `REPLAY
    LESSONS` buttons to remove when Pete says.
+
+## 2026-11-06: Hunt sounds and haptics, pause button, Daily workbook check
+
+Branch `play-screen-overhaul`. Commits, in order: `e31898c` pause button, `ff24714` wrong swipe sound and book-shut file,
+`7029e45` stronger Hunt haptics, `5761ed0` cover-shut slam, `7a0e94b` cover-shut thump, `e28e022` trap-reject haptic.
+All six commits are pushed to origin. Details of every number are in `CLAUDE.md`
+(Audio and Haptics, Hunt pause). All sound volumes and haptic shapes are TEST VALUES that Pete approved by ear and hand.
+
+- **Hunt pause button** moved to bottom-right (bottom 8), under all of Polly's bubbles. Dev overlay lifted to bottom 58.
+  Pete confirmed with screenshots.
+- **Wrong swipe** (both directions, all card kinds): `wrongSlap` at judgement, the whistle 125 ms later as the card falls,
+  `huntWrong` haptic (Rigid + Heavy +60). The streak-break punch no longer plays here.
+- **Book shut:** door slam (`book_shut_door_slam.mp3`) 440 ms after an accepted card lands, with a Heavy thump. Pete: the
+  old `book_close_v2` was never heard. He hears the new one and likes the last card as it is.
+- **Hunt haptics were weak** against the Daily: card press, claims, trap rejects and the wrong swipe each moved up a
+  notch. Heavy is now allowed on those Hunt cues (Pete's override of the Boss-only rule). The Daily's cues were left
+  alone by giving the Hunt its own `hunt*` cue names.
+- **Correct-RIGHT (trap reject) haptic was not felt at all.** A `[TRAPCUE]` device log showed the cue firing with the shatter
+  and `hapticsEnabled: true`, so it was not wiring. Swapping in a Medium-then-Heavy cue made it felt. All three trap tiers are
+  now Medium + Heavy +90 until Pete asks to tier them again. In the hand a trap reject now equals a heavy-tier claim.
+- **Daily workbooks:** `POLYWORDS_content_data_20260808_REWRITE_PASS.xlsx` and `..._20260817_DRAFT_DRAIN_LOCKED.xlsx` are identical
+  (118 rows). The live pools (60 legacy in `dailyPool.ts` plus 50 six-card in `dailyPoolExpansion.ts` = 110) match the workbook.
+  Not live: LEAN, LEFT, LEMON, LETTER, LITTER, LOCK, MARCH, MARKET ("Draft Batch 2026-09-02"). Pete set them aside back then for a
+  reason and will review them himself later; nothing was imported. Standing flags: LEMON leaks a clue, LEFT has a grammar
+  issue; every imported row must be exactly six cards (target plus five traps), each trap tempting one or two clues.
+- **Onboarding device test:** Pete said on 2026-11-06 that he device-tested onboarding; the result was never written down.
+  The 2026-11-04 Daily entry card is still recorded above as not device-tested; ask Pete.
+
+### Open as of 2026-11-06 (replaces the NEXT SESSION list above where they differ)
+
+1. `assets/audio/LICENSES.md`: the Freesound licence for `armor_flip_turn.mp3` (Pete has it), and source pages/licences for
+   `wrong_slap.mp3` and `book_shut_door_slam.mp3` (entries exist and say unverified).
+2. Strip the injected C2PA metadata from the two armor flip MP3s.
+3. `#FFD700` is the `hiddenPhrase` text colour in `SwipeMask.tsx` (about line 1218, Boss cards); the palette gold is `#F5C842`.
+   The design check flags it. Pete's call: keep it on purpose or change it.
+4. Daily in-play lessons: re-scope first (the entry card covers most of the gaps).
+5. 10-round test pass, Polly's "Trap. Trap. Trap." chant home, TestFlight splash build, build-size warning, and the dev buttons
+   (BOSS, BOSS CRISIS, FALL 3, ARMOR STEP, REPLAY LESSONS) to remove only when Pete says.
+6. Not done: the trap-reject tiers are identical; the `[BOOKCLOSE]` and `[TRAPCUE]` diagnostics were one-offs and are removed.

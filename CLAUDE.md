@@ -229,6 +229,11 @@ glow. Do not re-add any of them. `TorchGlow.tsx` stays (Settings uses it).
 - `withHuntExitGuardBypass` is synchronous and scoped to the deliberate safe navigation dispatch. Normal back/removal still hits `beforeRemove` and cannot silently discard a live Hunt.
 - QUIT HUNT is the only pause action that enters `PollyExitConfirm`. KEEP HUNTING returns to play; LEAVE THE HUNT forfeits only after confirmation. The locked confirmation uses `assets/images/polly/polly_quit_smug.png`, the truthful loss warning, and the single bubble "See you later, LOSER."
 - Pause and quit overlays block underlying gameplay/accessibility and suspend the idle-static timer. Reduce Motion shows their final states without pop/bounce animation.
+- Hunt pause button position (2026-11-06, `e31898c`): bottom-right of the play area, below every Polly bubble
+  (`tb.pauseBtn` right 10, bottom 8, zIndex 200). The 'pointing' bubble (Hunt intro, Haunt intro, Boss entry,
+  hesitation heckle; `bubbleWrapPointing` left 205, bottom 76) reaches the right screen edge and used to overlap
+  the button at the old bottom 74. The `__DEV__` overlay stack (`styles.devBossOverlay`) sits above it at bottom 58.
+  The pointing bubble still touches the right edge on a 375 pt phone; Pete accepted that.
 
 ## First-Run Onboarding
 
@@ -558,10 +563,14 @@ Pete, 2026-10-29: nothing below ~18 for copy.
 - Loudness is partly asset-level. Measure/normalize files before blaming player volume.
 - `cueAsync` in `app/utils/haptics.ts` is the only haptic gateway. Its only gate is Settings ▸
   Haptics, checked once when a cue starts; follow-up `setTimeout` pulses are not re-checked.
-  Heavy is mostly kept for Boss beats; the UNTRAPPABLE press (Pete) and the Daily's lost-chance
-  impact are the non-Boss exceptions.
+  Heavy was kept for Boss beats; Pete overrode that on 2026-11-06 for the Hunt cues named below
+  (wrong swipe, book shut, the claim and trap-reject tails, the card press). The UNTRAPPABLE press and the
+  Daily's lost-chance impact were earlier exceptions. The Daily keeps its own cues (`pressSteady` Light,
+  `wrong`, `standardCorrect`, `claimMedium`, `heightenedCorrect`); the Hunt fires separate `hunt*` cues so the
+  two never share a body. All 2026-11-06 haptic values are TEST VALUES, felt and approved on Pete's phone.
 - Hunt card press-down fires one cue by momentum (`resolvePressHapticCue`, `huntFeedbackPolicy.ts`,
-  tested): STEADY Light, SHARP Light, RAZOR SHARP Medium, UNTRAPPABLE Heavy, HUNTED Medium.
+  tested; raised one notch 2026-11-06): STEADY Medium (`huntPressSteady`; the Daily's `pressSteady` stays
+  Light), SHARP Medium, RAZOR SHARP and HUNTED Rigid then Medium +40 ms, UNTRAPPABLE Heavy.
   The swipe and the release are silent on Hunt cards; `gestureThreshold` (Rigid) still fires on
   the gauntlet card and the Daily card.
 - Outcome haptics fire when the player sees the result: a correct UP when the card reaches the
@@ -576,19 +585,44 @@ Pete, 2026-10-29: nothing below ~18 for copy.
   when the book accepts the card, not at release. The gauntlet swipe-up (`onGauntletCorrect`) still
   plays it at judgement. The old `correctClaim` is unchanged and the Daily still uses it. Hunt music
   does not slow in crisis (HUNTED switches to the tension track at rate 1.0); Pete: do not slow it.
+- Hunt wrong-swipe sound (Pete, 2026-11-06, `ff24714`): EVERY wrong swipe (up or right, normal or gauntlet
+  card, broken chain or not) plays `wrongSlap` at judgement (`assets/audio/sfx/wrong_slap.mp3`: the SECOND of
+  five slaps in Pete's face-slap file, cut to 0.50 s; volume 0.54, about -17.0 LUFS effective), then
+  `wrongImpact` (the whistle, as the card falls) `WRONG_FALL_WHISTLE_DELAY_MS` 125 ms later (TEST VALUE: the
+  card's 70 + 55 ms sideways buzz, then the 420 ms fall). `resolveWrongSwipeSfx()` in `huntFeedbackPolicy.ts`
+  returns that plan and takes no argument. The streak-break punch (`streakBreakImpact`) no longer plays on wrong
+  swipes; BUSTER and the Haunt STILL card still use it. The Polly squawk rule is unchanged.
+  `warmHuntSwipeSfx()` (called when the Hunt opens) preloads the slap, the whistle and the book slam.
+- Hunt book shut (Pete, 2026-11-06, `5761ed0`, `7a0e94b`): `bookClose` is now `book_shut_door_slam.mp3`
+  (volume 0.50, about -18.1 LUFS effective). The old `book_close_v2.mp3` came out near -28.9 effective and was
+  never heard; it stays on disk, unreferenced. Pete wants the slam when the COVER shuts after an accepted card
+  (a correct UP), not only at word exit: `BOOK_COVER_SHUT_SFX_DELAY_MS` 440 ms after `handleCardTouch` (equals
+  `triggerBookOpen`'s 120 open + 200 hold + 120 close; change them together), with a Heavy thump (`bookShut`)
+  in the same timer callback. A new card cancels the pending slam and thump, so only the last cover close
+  sounds; it plays with Reduce Motion on; the timer is cleared on unmount. The word-exit slam (`onWordExit`, with
+  `bookShut` replacing the old `selectionAsync`) and the Haunt-rematch book shut still call `bookClose`; on the
+  last card of a word Pete hears one slam and likes it, so leave that alone. Licence terms and source pages for
+  `wrong_slap.mp3` (freesound_community, id 48025) and `book_shut_door_slam.mp3` (soundreality, id 172171) are
+  NOT verified; `assets/audio/LICENSES.md` says so.
 - Outcome strength follows the ROUND (`step.hapticTier` from the pacing phase in
   `huntGenerator.ts`), not momentum, by design (Pete, 2026-10-11). Light rounds 1-4; medium 5-7
   standard / 5-6 fledgling; heavy 8-10 / 7-8; a Returning Haunt round is heavy and the round after
-  it light. Claim: `standardCorrect` Medium / `claimMedium` Medium + Soft +70 /
-  `heightenedCorrect` Medium + Medium +90. Trap: `trapRejectLight` Rigid + Light +50 /
-  `trapRejectMedium` Rigid + Medium +55 / `trapRejectHeavy` Rigid + Medium +55 + Light +110.
-  Wrong is always notification Error. Only `fellOff*` follows momentum (the chain before the miss:
+  it light. Claim (2026-11-06, Hunt-only cue names): `huntStandardCorrect` Medium + Soft +70 /
+  `huntClaimMedium` Medium + Medium +90 / `huntHeightenedCorrect` Medium + Heavy +90. Trap: `trapRejectLight`,
+  `trapRejectMedium` and `trapRejectHeavy` are ALL Medium + Heavy +90 for now. The old Rigid-led shapes were not
+  felt AT ALL on device (Pete; a device log showed the cue firing with the shatter, so it was the shape, not the
+  wiring); the three tiers stay identical until Pete wants them tiered again (names and the round-tier mapping
+  are kept). So a trap reject now feels like a heavy-tier claim in the hand; the sound tells them apart.
+  Wrong swipe: `huntWrong` Rigid + Heavy +60 (was notification Error; the Daily keeps `wrong`). Book shut:
+  `bookShut`, one Heavy. Only `fellOff*` follows momentum (the chain before the miss:
   SHARP small, RAZOR SHARP medium, UNTRAPPABLE big, STEADY none). Tier-ups have three escalating
   shapes. `huntFeedbackPolicy.ts` picks the cue; shapes live in `haptics.ts`.
 - Known haptic risks, not fixed: below ~25 fps a card can exit (1350 ms safety timer) before
-  reaching the book, leaving its claim cue to fire one card late; the trap cue waits in a single
-  slot if the card's position measurement never answers; a tier-up can land 0-35 ms from the
-  trap cue and mask it.
+  reaching the book, leaving its claim cue to fire one card late; the trap cue still waits in a single
+  slot for the card's position measurement (checked on device 2026-11-06: `measure` answered and the cue fired
+  1 ms later, so that was not why trap rejects went unfelt); a tier-up can land 0-35 ms from the
+  trap cue and mask it. The wrong swipe now stacks `huntWrong` (Rigid + Heavy) with the `fellOff*` pulses
+  at release; Pete felt it and was happy, but it was not tuned separately.
 - Defined but never fired: cues `bossEntry`, `bossHaunted`, `dailyInkPress`; the uncalled
   `playSystemStingerWord` and the unrendered `BusterOutcomeOverlay` punch. Settings, Polybook,
   Results and the onboarding/HUD-lesson overlays fire no haptics of their own.
