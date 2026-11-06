@@ -50,7 +50,9 @@ import {
   dailyBreachClockMs,
   dailyBreachContactCueMs,
   dailyBreachCracksOnClock,
+  dailyBreachEffects,
   dailyBreachGateJitterOnClock,
+  dailyBreachHapticCue,
   dailyBreachPollyMoveEndMs,
   dailyBreachPressOnClock,
   dailyGateBreakKeyframes,
@@ -709,6 +711,10 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     reduceMotion,
     reduceFlashes,
   );
+  // Which breach effects play under Reduce Motion / Reduce Flashes (and while
+  // Reduce Motion is still unknown): ONE decision, ui/dailyBreach.ts
+  // dailyBreachEffects, read by this screen, the castle stage and the perch.
+  const breachPlays = dailyBreachEffects(reduceMotion, reduceFlashes);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   // Window y of the HUD's bottom edge. The SafeAreaView sits at the window
   // origin, so the HUD's own layout y already includes the top inset.
@@ -1065,7 +1071,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // (contact 450 + 1073 + 1300), 2870 on one (0 + 1570 + 1300). 'open'
       // wins and Reduce Motion (no tier move) start at once, as before.
       const tier = claimBreachTierRef.current;
-      const winDelayMs = pose === 'shocked' && reduceMotion === false && tier !== 'open'
+      const winDelayMs = pose === 'shocked' && breachPlays.pollyTierMoves && tier !== 'open'
         ? dailyBreachPollyMoveEndMs(tier)
         : 0;
       const startReaction = () => {
@@ -1172,11 +1178,11 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     clearCorrectTransitionTimers();
     setPhysicalClaimPhase('settling');
 
-    const motion = reduceMotion === false;
+    const motion = breachPlays.motion;
     // The breach's beats for this claim (ui/dailyBreach.ts). 'open', and every
     // tier under Reduce Motion, is today's sequence: the gate rises at once and
     // there is no contact beat.
-    const beats = dailyBreachBeats(breachTier, motion);
+    const beats = dailyBreachBeats(breachTier, breachPlays.contactBeat);
     const gateRiseMs = dailyGateRiseMs(motion, breachTier);
     const tunnelBeatMs = motion ? 180 : 80;
     const gateDropMs = motion ? 400 : 120;
@@ -1254,6 +1260,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // The hit you feel, first: a hard hit and a rumble tail that rides the
       // castle shake (haptics.ts BREACH_HAPTICS).
       Haptics.cueAsync(contactTier === 'hit' ? 'breachHit' : 'breachSmash');
+      // The breach sounds belong to the contact beat (breachPlays.breachSounds).
       // Polly startles on the contact in both tiers: the two-clue jump starts
       // here, and the fury is blown up and back from here.
       playPollyReaction('startled');
@@ -1335,7 +1342,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // (Reduce Flashes with motion on: the calm 750 from the contact, still
     // well before the coin lands.) The safety net below is measured from the
     // new dropAtMs, so it grows with the tier.
-    const goldHitEndMs = (beats.contactMs ?? 0) + dailyGoldHitMsForTier(breachTier, reduceFlashes);
+    const goldHitEndMs = (beats.contactMs ?? 0) + dailyGoldHitMsForTier(breachTier, breachPlays.calmGoldHit);
     const floorHoldMs = dailyCoinFinaleFloorHoldMs(
       finaleMode,
       dropAtMs + gateDropMs,
@@ -1468,10 +1475,15 @@ export default function DailyChallengeScreen({ navigation }: Props) {
       // 'open' (and every tier under Reduce Motion): the chime and the gold hit
       // at the claim, as before. 'hit' / 'smash': the claim keeps only its
       // haptic; the castle answers at the contact (runPhysicalCorrectTransition).
-      if (dailyBreachBeats(breachTier, reduceMotion === false).contactMs === null) {
+      if (dailyBreachBeats(breachTier, breachPlays.contactBeat).contactMs === null) {
         playSfx('correctClaim');
         // The castle lights gold on the same beat as the claim's sound.
         setGoldHit((prev) => ({ token: prev.token + 1, tier: breachTier }));
+        // No contact (Reduce Motion, or while it is unknown): the tier's breach
+        // haptic lands once here, so the grade is still felt. DEFAULT, pending
+        // Pete's approval (dailyBreachEffects.breachHapticAt).
+        const breachCue = dailyBreachHapticCue(breachTier);
+        if (breachCue && breachPlays.breachHapticAt === 'claim') Haptics.cueAsync(breachCue);
       }
       // Remaining cards fade out
       scheduleCorrectTransition(() => {
@@ -1904,7 +1916,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         }
         throwDelayMs={Math.max(
           0,
-          dailyThrowGoneMs(reduceMotion === false, claimBreachTier) - (pollyPose === 'shocked' ? pollyWinDelayMs : 0),
+          dailyThrowGoneMs(breachPlays.contactBeat, claimBreachTier) - (pollyPose === 'shocked' ? pollyWinDelayMs : 0),
         )}
         onExited={releasePollyExit}
         breachClocks={breachClocks}

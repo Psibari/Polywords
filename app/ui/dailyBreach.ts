@@ -33,6 +33,86 @@ export function resolveDailyBreachTier(revealedClueCount: number): DailyBreachTi
   return DAILY_BREACH_TIER_BY_GRADE[resolveDailyCelebrationGrade(revealedClueCount)];
 }
 
+// ── Reduce Motion / Reduce Flashes (Pete, 2026-11-05: "If we have to take
+// everything off for reduce motion, then do it, whatever's needed.") ──
+
+/** Which breach effects play, for one reading of the two settings. */
+export type DailyBreachEffects = {
+  /** Motion allowed (Reduce Motion known to be off). Everything below that moves needs it. */
+  motion: boolean;
+  /** Light effects allowed: motion on AND Reduce Flashes off. */
+  flashes: boolean;
+  /** 'hit' / 'smash' get their contact beat, hold / hang and plaque flight (dailyBreachBeats). Off: today's calm claim for every tier. */
+  contactBeat: boolean;
+  /** The castle shake, the gate shudder, the door cracks, the plaque press. They ride the breach clock, which only runs with a contact beat. */
+  shake: boolean;
+  gateShudder: boolean;
+  cracks: boolean;
+  plaquePress: boolean;
+  dust: boolean;
+  splinters: boolean;
+  /** The smash's broken gate art (hides clues two and three while it hangs). */
+  brokenGateArt: boolean;
+  /** The three breach sounds; they belong to the contact beat. */
+  breachSounds: boolean;
+  /** The two lightning bolts and every screen-wide white flash (including the hit's 0.18). */
+  bolts: boolean;
+  screenFlashes: boolean;
+  /** The gold hit's white wash and halo. */
+  whiteWash: boolean;
+  halo: boolean;
+  /** The gold hit plays today's calm keyframes and length for every tier. */
+  calmGoldHit: boolean;
+  /** Where breachHit / breachSmash fire: on the plaque's contact, or once at the claim when there is no contact. */
+  breachHapticAt: 'contact' | 'claim';
+  /** Polly's two-clue jump and one-clue fury (and the win waiting for them). */
+  pollyTierMoves: boolean;
+  /** The first-miss dance's motion (off: the laugh pose on the perch with the bubble). */
+  pollyDance: boolean;
+};
+
+/**
+ * The ONE place that decides the breach's calm variants. `reduceMotion` is the
+ * hook's value: null while the system setting is still unknown, which takes the
+ * calm path (useReducedMotionPreference). `reduceFlashes` is
+ * useReducedFlashesPreference (the in-app Reduce Flashes, also true under
+ * Reduce Motion).
+ */
+export function dailyBreachEffects(reduceMotion: boolean | null, reduceFlashes: boolean): DailyBreachEffects {
+  const motion = reduceMotion === false;
+  const flashes = motion && !reduceFlashes;
+  return {
+    motion,
+    flashes,
+    contactBeat: motion,
+    shake: motion,
+    gateShudder: motion,
+    cracks: motion,
+    plaquePress: motion,
+    dust: motion,
+    splinters: motion,
+    brokenGateArt: motion,
+    breachSounds: motion,
+    bolts: flashes,
+    screenFlashes: flashes,
+    whiteWash: flashes,
+    halo: flashes,
+    calmGoldHit: !flashes,
+    // DEFAULT, not yet approved by Pete: without a contact the grade is still
+    // felt once at the claim. Haptics are not motion.
+    breachHapticAt: motion ? 'contact' : 'claim',
+    pollyTierMoves: motion,
+    pollyDance: motion,
+  };
+}
+
+/** The breach haptic for a tier ('open' has none). */
+export function dailyBreachHapticCue(tier: DailyBreachTier): 'breachHit' | 'breachSmash' | null {
+  if (tier === 'hit') return 'breachHit';
+  if (tier === 'smash') return 'breachSmash';
+  return null;
+}
+
 // Beat timing, in ms from the claim (t = 0 is when the plaque launches). The
 // numbers are the approved 4 Nov 2026 mock's; this is the one place to tune
 // them on the phone.
@@ -484,6 +564,28 @@ export const DAILY_BREACH_FLASH_LIMIT = { maxFlashes: 3, windowMs: 1000 } as con
 export function dailyBreachFlashCount(tier: DailyBreachTier): number {
   const whitePeak = Math.max(...DAILY_GOLD_HIT_TIERS[tier].keyframes.white);
   return dailyBreachFlashes(tier).length + (whitePeak > 0 ? 1 : 0);
+}
+
+/**
+ * Every flash peak a tier puts on screen under these settings, in ms from the
+ * claim: the screen flashes (the hit's, the bolts') and the gold hit's white
+ * wash. Empty whenever light effects are off (Reduce Flashes or Reduce Motion).
+ */
+export function dailyBreachFlashPeaks(
+  tier: DailyBreachTier,
+  effects: DailyBreachEffects,
+): { atMs: number; peak: number; kind: 'screen' | 'whiteWash' }[] {
+  const contact = dailyBreachBeats(tier, effects.contactBeat).contactMs ?? 0;
+  const peaks: { atMs: number; peak: number; kind: 'screen' | 'whiteWash' }[] = [];
+  if (effects.screenFlashes) {
+    for (const f of dailyBreachFlashes(tier)) peaks.push({ atMs: contact + f.atMs, peak: f.peak, kind: 'screen' });
+  }
+  const gold = DAILY_GOLD_HIT_TIERS[tier];
+  const whitePeak = Math.max(...gold.keyframes.white);
+  if (effects.whiteWash && !effects.calmGoldHit && whitePeak > 0) {
+    peaks.push({ atMs: contact + gold.igniteMs, peak: whitePeak, kind: 'whiteWash' });
+  }
+  return peaks.sort((a, b) => a.atMs - b.atMs);
 }
 
 // ── Splinters (smash) and dust (hit and smash) ──

@@ -24,7 +24,6 @@ import {
 } from '../hooks/usePollyAmbientMotion';
 import { dailyStoneSeatSfx, playSfx } from '../audio/sfx';
 import { Haptics } from '../utils/haptics';
-import { resolveGameplayFeedbackAccessibility } from '../game/gameplayFeedbackAccessibility';
 import {
   DAILY_BREACH_DUST,
   DAILY_BREACH_LIGHTNING,
@@ -34,6 +33,7 @@ import {
   dailyBreachBolts,
   dailyBreachDust,
   dailyBreachDustKeyframes,
+  dailyBreachEffects,
   dailyBreachFlashes,
   dailyBreachFlashKeyframes,
   dailyBreachOnClock,
@@ -366,23 +366,17 @@ export default function DailyCastleStage({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotionPreference();
-  // True under Reduce Motion (or while it is unknown) as well as Reduce
-  // Flashes: the gold hit keeps its gold, loses its overshoot and swell.
-  const calmGoldHit = useReducedFlashesPreference();
-  // The breach effects follow the shared policy: the shake, splinters and dust
-  // need motion; the lightning and the screen flash need flashes too.
-  const { animateMotion, animateFlashes } = resolveGameplayFeedbackAccessibility(
-    reduceMotion,
-    calmGoldHit,
-  );
+  // Which breach effects play under Reduce Motion / Reduce Flashes: ONE
+  // decision, ui/dailyBreach.ts dailyBreachEffects. The gold hit is calm (gold
+  // kept, no overshoot, swell, white wash or halo) under either setting, or
+  // while Reduce Motion is unknown; shake, splinters and dust need motion; the
+  // lightning and the screen flash need flashes too.
+  const breachPlays = dailyBreachEffects(reduceMotion, useReducedFlashesPreference());
+  const calmGoldHit = breachPlays.calmGoldHit;
   // The plaque's press into a shut gate; a resting 0 when the screen passes
   // none, so the flight's transform keeps one shape.
   const restingPlaquePress = useRef(new Animated.Value(0)).current;
   const plaquePress = flightPress ?? restingPlaquePress;
-  const animateMotionRef = useRef(animateMotion);
-  animateMotionRef.current = animateMotion;
-  const animateFlashesRef = useRef(animateFlashes);
-  animateFlashesRef.current = animateFlashes;
 
   // The breach clocks: the screen's, or resting ones (at 0 everything below
   // is at rest), so every node here keeps one shape on every render.
@@ -584,7 +578,8 @@ export default function DailyCastleStage({
   const holeX = holeCanvas.x + tuning.gate.x;
   const holeY = holeCanvas.y + tuning.gate.y;
   const breachLayers = useMemo<DailyBreachLayers | null>(() => {
-    if (!animateMotion) return null;
+    // Dust and splinters need motion (dailyBreachEffects); with neither, no layers at all.
+    if (!breachPlays.dust && !breachPlays.splinters) return null;
     const read = (clock: Animated.Value, keys: { inputRange: number[]; outputRange: number[] }) =>
       clock.interpolate({ ...keys, extrapolate: 'clamp' });
     const toStage = (x: number, y: number) => ({ x: x * s + sceneLeft, y: sceneTop + y * s });
@@ -598,11 +593,11 @@ export default function DailyCastleStage({
       clock,
       dailyBreachFlashKeyframes(dailyBreachFlashes(tier).map((f) => ({ ...f, atMs: f.atMs + contact[tier] }))),
     );
-    const flash = animateFlashes
+    const flash = breachPlays.screenFlashes
       ? Animated.add(flashOn('hit', hitClock), flashOn('smash', smashClock))
       : null;
 
-    const bolts = animateFlashes
+    const bolts = breachPlays.bolts
       ? dailyBreachBolts({ x: holeX, y: holeY }).map((bolt, index) => {
           const keys = dailyBreachBoltKeyframes(index === 0 ? 0 : 1);
           return {
@@ -655,7 +650,7 @@ export default function DailyCastleStage({
     });
 
     return { flash, bolts, dust, splinters };
-  }, [animateFlashes, animateMotion, hitClock, holeX, holeY, s, sceneLeft, sceneTop, smashClock]);
+  }, [breachPlays.bolts, breachPlays.dust, breachPlays.screenFlashes, breachPlays.splinters, hitClock, holeX, holeY, s, sceneLeft, sceneTop, smashClock]);
 
   return (
     <View

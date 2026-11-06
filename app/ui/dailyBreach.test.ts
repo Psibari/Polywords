@@ -54,8 +54,11 @@ import {
   dailyBreachDust,
   dailyBreachDustKeyframes,
   dailyBreachEffectsMs,
+  dailyBreachEffects,
   dailyBreachFlashCount,
+  dailyBreachFlashPeaks,
   dailyBreachFlashes,
+  dailyBreachHapticCue,
   dailyBreachFlashKeyframes,
   dailyBreachFlashOpacity,
   dailyBreachGateJitterKeyframes,
@@ -586,12 +589,12 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   // At the claim: the haptic always; the chime and gold hit only without a contact beat.
   assert.match(
     claim,
-    /Haptics\.cueAsync\(dailyCelebrationHaptic\(grade\)\);[\s\S]*?if \(dailyBreachBeats\(breachTier, reduceMotion === false\)\.contactMs === null\) \{\n\s*playSfx\('correctClaim'\);[\s\S]*?setGoldHit\(/,
+    /Haptics\.cueAsync\(dailyCelebrationHaptic\(grade\)\);[\s\S]*?if \(dailyBreachBeats\(breachTier, breachPlays\.contactBeat\)\.contactMs === null\) \{\n\s*playSfx\('correctClaim'\);[\s\S]*?setGoldHit\(/,
   );
   assert.equal(claim.split("playSfx('correctClaim')").length - 1, 1, 'one claim chime');
 
   const run = between('function runPhysicalCorrectTransition(', 'function handleClaimStart(');
-  assert.match(run, /const beats = dailyBreachBeats\(breachTier, motion\);/);
+  assert.match(run, /const beats = dailyBreachBeats\(breachTier, breachPlays\.contactBeat\);/);
   assert.match(run, /if \(beats\.gateRiseStartMs === 0\) raiseGate\(\);/, 'open and calm: the gate rises at once');
   assert.match(run, /stayInFront: breachTier === 'hit'/, 'a hit plaque stays in front of the shut gate');
   // The contact path (2026-11-04, measured on a phone: a contact TIMER that set
@@ -616,7 +619,10 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
     'breachHit / breachSmash fire first from the contact cues',
   );
   // ('breachSmash' is also the smash's sound; only haptic calls are counted.)
-  assert.equal(screen.split("? 'breachHit' : 'breachSmash'").length - 1, 1, 'the breach haptics fire only from the contact cues');
+  // With a contact they fire only from these cues (without one, once at the
+  // claim instead: see the Reduce Motion block below).
+  assert.equal(screen.split("? 'breachHit' : 'breachSmash'").length - 1, 1, 'the contact\'s breach haptic fires only from the contact cues');
+  assert.equal(screen.split('Haptics.cueAsync(breachCue)').length - 1, 1, 'the one other breach haptic call: the calm claim');
   assert.doesNotMatch(screen, /Haptics\.cueAsync\('breach(Hit|Smash)'\)/, 'no other breach haptic call');
   assert.doesNotMatch(cues, /trapRejectHeavy|bossEntry/, 'the stand-ins are gone');
   // A rumble still running stops wherever the clocks are rested (a new claim,
@@ -652,12 +658,12 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   assert.ok(atClaim.includes('setGateBroken(true)'), 'clues two and three still hidden while broken');
   assert.match(run, /const runsProgress = flies \|\| beats\.contactMs !== null;/, 'a breach runs the progress even with no plaque drawn');
   assert.match(run, /const goneAtMs = dailyThrowGoneMs\(motion, breachTier\);/);
-  assert.match(run, /const goldHitEndMs = \(beats\.contactMs \?\? 0\) \+ dailyGoldHitMsForTier\(breachTier, reduceFlashes\);/);
+  assert.match(run, /const goldHitEndMs = \(beats\.contactMs \?\? 0\) \+ dailyGoldHitMsForTier\(breachTier, breachPlays\.calmGoldHit\);/);
   // Polly's bubble waits for the tier's throw, less any wait her tier move
   // already put on a delayed win.
   assert.match(
     screen,
-    /throwDelayMs=\{Math\.max\(\n\s*0,\n\s*dailyThrowGoneMs\(reduceMotion === false, claimBreachTier\) - \(pollyPose === 'shocked' \? pollyWinDelayMs : 0\),\n\s*\)\}/,
+    /throwDelayMs=\{Math\.max\(\n\s*0,\n\s*dailyThrowGoneMs\(breachPlays\.contactBeat, claimBreachTier\) - \(pollyPose === 'shocked' \? pollyWinDelayMs : 0\),\n\s*\)\}/,
     'Polly\'s bubble waits for the tier\'s throw',
   );
   // Every new piece goes back to rest with the claim timers; a claim that ends
@@ -742,7 +748,7 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   const stage = readFileSync(join(__dirname, '../components/DailyCastleStage.tsx'), 'utf8').replace(/\r\n/g, '\n');
   assert.match(stage, /const DailyBreachEffectLayers = React\.memo\(function DailyBreachEffectLayers/);
   assert.match(stage, /\{breachLayers && <DailyBreachEffectLayers layers=\{breachLayers\}/);
-  assert.match(stage, /const breachLayers = useMemo<DailyBreachLayers \| null>\(\(\) => \{\n\s*if \(!animateMotion\) return null;/);
+  assert.match(stage, /const breachLayers = useMemo<DailyBreachLayers \| null>\(\(\) => \{\n(\s*\/\/[^\n]*\n)*\s*if \(!breachPlays\.dust && !breachPlays\.splinters\) return null;/);
   assert.doesNotMatch(stage, /setBreachRun|breachRun|breachEffects|shakeToken/, 'no mount-on-demand path left');
   assert.match(stage, /const phase = Animated\.add\(\n\s*goldHit,\n\s*Animated\.add\(phaseOnClock\('hit', hitClock\), phaseOnClock\('smash', smashClock\)\),/);
   const layers = between('const DailyBreachEffectLayers', 'const styles = StyleSheet.create');
@@ -767,6 +773,97 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   assert.match(play, /item\.player\.pause\(\);\n\s*await item\.player\.seekTo\(0, 0, 0\);/, 'other sounds unchanged');
   assert.match(sfx, /onFinish\?\.\(\);\n  if \(PRE_REWOUND_SFX\.has\(name\)\) rewindAhead\(item\);/, 'rewound again when a play finishes');
   assert.match(sfx, /slot\.loadAttempts = 0;\n\s*if \(PRE_REWOUND_SFX\.has\(name\)\) rewindAhead\(item\);/, 'rewound when the player loads (warm-up)');
+}
+
+// ── Reduce Motion / Reduce Flashes: ONE helper decides (2026-11-05) ──
+// (A) both off, (B) Reduce Flashes only, (C) Reduce Motion, (D) Reduce Motion
+// still unknown (the hook's null). useReducedFlashesPreference is true under
+// Reduce Motion and while it is unknown, so (C) and (D) pass true.
+{
+  const A = dailyBreachEffects(false, false);
+  const B = dailyBreachEffects(false, true);
+  const C = dailyBreachEffects(true, true);
+  const D = dailyBreachEffects(null, true);
+  const MOTION = ['contactBeat', 'shake', 'gateShudder', 'cracks', 'plaquePress', 'dust', 'splinters', 'brokenGateArt', 'breachSounds', 'pollyTierMoves', 'pollyDance'] as const;
+  const LIGHT = ['bolts', 'screenFlashes', 'whiteWash', 'halo'] as const;
+  // (A): everything as built.
+  for (const k of [...MOTION, ...LIGHT]) assert.equal(A[k], true, `A: ${k}`);
+  assert.equal(A.calmGoldHit, false, 'A: the graded gold hit');
+  assert.equal(A.breachHapticAt, 'contact');
+  // (B): motion plays, every light effect is calm.
+  for (const k of MOTION) assert.equal(B[k], true, `B: ${k} (motion carries the tier)`);
+  for (const k of LIGHT) assert.equal(B[k], false, `B: no ${k}`);
+  assert.equal(B.calmGoldHit, true, 'B: the calm gold hit for every tier');
+  assert.equal(B.brokenGateArt, true, 'B: the one-clue broken art stays');
+  assert.equal(B.breachHapticAt, 'contact');
+  // (C) and (D): nothing moves, nothing flashes; today's calm claim.
+  for (const [name, e] of [['C', C], ['D', D]] as const) {
+    for (const k of [...MOTION, ...LIGHT]) assert.equal(e[k], false, `${name}: no ${k}`);
+    assert.equal(e.calmGoldHit, true, `${name}: the calm gold hit`);
+    // DEFAULT pending Pete: the tier's haptic once at the claim.
+    assert.equal(e.breachHapticAt, 'claim', `${name}: the breach haptic at the claim`);
+    for (const tier of TIERS) {
+      const beats = dailyBreachBeats(tier, e.contactBeat);
+      assert.equal(beats.contactMs, null, `${name} ${tier}: no contact beat`);
+      assert.equal(beats.gateRiseMs, 120, `${name} ${tier}: the calm 120 ms lift`);
+      assert.equal(beats.plaqueRiseMs + beats.plaqueAbsorbMs, 0, `${name} ${tier}: no plaque flight`);
+      assert.equal(beats.thrownGoneMs, 120, `${name} ${tier}: no hold`);
+    }
+  }
+  // Even if the flashes flag were off, unknown motion is never motion.
+  assert.equal(dailyBreachEffects(null, false).motion, false);
+  assert.equal(dailyBreachEffects(null, false).flashes, false);
+  assert.equal(dailyBreachHapticCue('open'), null);
+  assert.equal(dailyBreachHapticCue('hit'), 'breachHit');
+  assert.equal(dailyBreachHapticCue('smash'), 'breachSmash');
+
+  // THE FLASH BUDGET per state: (B), (C) and (D) put no flash peak on screen at
+  // all; (A) never more than three in any one second, for any tier.
+  for (const tier of TIERS) {
+    for (const [name, e] of [['B', B], ['C', C], ['D', D]] as const) {
+      assert.deepEqual(dailyBreachFlashPeaks(tier, e), [], `${name} ${tier}: no flash peaks`);
+    }
+    const peaks = dailyBreachFlashPeaks(tier, A);
+    assert.equal(peaks.length, dailyBreachFlashCount(tier), `A ${tier}: the counted flashes`);
+    for (const p of peaks) {
+      const inWindow = peaks.filter((q) => q.atMs >= p.atMs && q.atMs < p.atMs + DAILY_BREACH_FLASH_LIMIT.windowMs);
+      assert.ok(inWindow.length <= DAILY_BREACH_FLASH_LIMIT.maxFlashes, `A ${tier}: ${inWindow.length} peaks within 1 s of ${p.atMs} ms`);
+    }
+  }
+  assert.deepEqual(dailyBreachFlashPeaks('hit', A).map((p) => p.kind), ['screen', 'whiteWash'], 'A hit: its 0.18 flash, then the wash');
+  assert.equal(dailyBreachFlashPeaks('hit', A)[0].peak, 0.18);
+
+  // The wiring: every breach decision reads the helper.
+  const read = (path: string) => readFileSync(join(__dirname, path), 'utf8').replace(/\r\n/g, '\n');
+  const stage = read('../components/DailyCastleStage.tsx');
+  const perch = read('../components/PollyDailyPerch.tsx');
+  const screen = read('../screens/DailyChallengeScreen.tsx');
+  assert.match(stage, /const breachPlays = dailyBreachEffects\(reduceMotion, useReducedFlashesPreference\(\)\);/);
+  assert.match(stage, /const calmGoldHit = breachPlays\.calmGoldHit;/);
+  assert.match(stage, /const flash = breachPlays\.screenFlashes\n/);
+  assert.match(stage, /const bolts = breachPlays\.bolts\n/);
+  assert.doesNotMatch(stage, /resolveGameplayFeedbackAccessibility/, 'the stage has no breach check of its own');
+  assert.match(screen, /const breachPlays = dailyBreachEffects\(reduceMotion, reduceFlashes\);/);
+  const run = screen.slice(screen.indexOf('function runPhysicalCorrectTransition('), screen.indexOf('function handleClaimStart('));
+  assert.match(run, /const motion = breachPlays\.motion;/);
+  assert.match(run, /const beats = dailyBreachBeats\(breachTier, breachPlays\.contactBeat\);/);
+  assert.match(run, /dailyGoldHitMsForTier\(breachTier, breachPlays\.calmGoldHit\)/);
+  assert.match(screen, /if \(dailyBreachBeats\(breachTier, breachPlays\.contactBeat\)\.contactMs === null\) \{\n\s*playSfx\('correctClaim'\);/);
+  assert.match(
+    screen,
+    /const breachCue = dailyBreachHapticCue\(breachTier\);\n\s*if \(breachCue && breachPlays\.breachHapticAt === 'claim'\) Haptics\.cueAsync\(breachCue\);/,
+    'no contact: the tier\'s breach haptic once at the claim',
+  );
+  assert.match(screen, /pose === 'shocked' && breachPlays\.pollyTierMoves && tier !== 'open'/);
+  assert.match(screen, /dailyThrowGoneMs\(breachPlays\.contactBeat, claimBreachTier\)/);
+  // The perch: unknown motion is calm; the calm dance is the laugh pose with
+  // the bubble, faded in by the reaction itself.
+  assert.match(perch, /const plays = dailyBreachEffects\(reduceMotion, true\);\n\s*if \(!plays\.motion\) \{/);
+  assert.match(perch, /\} else if \(reaction === 'happy' && plays\.pollyDance\) \{/);
+  assert.match(perch, /if \(!\(reaction === 'happy' && plays\.pollyDance\)\) \{\n\s*Animated\.timing\(bubbleOpacity/);
+  // (The arrival's own `if (reduceMotion)` sits after `if (reduceMotion === null) return;`.)
+  const reactionEffect = perch.slice(perch.indexOf('const isReacting ='), perch.indexOf('}, [reaction, reactionKey]);'));
+  assert.doesNotMatch(reactionEffect, /if \(reduceMotion\)|!reduceMotion/, 'no truthy check that would read unknown as motion');
 }
 
 console.log('dailyBreach tests passed');

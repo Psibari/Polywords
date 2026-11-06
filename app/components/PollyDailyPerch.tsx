@@ -24,6 +24,7 @@ import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 import { DAILY_POLLY_BUBBLE } from '../ui/dailyCastleScene';
 import { POLLY_DANCE_MS } from '../ui/pollyDailyDance';
+import { dailyBreachEffects } from '../ui/dailyBreach';
 import {
   DAILY_PERCH_EXIT_POSE,
   DAILY_PERCH_FLY_POSE,
@@ -398,7 +399,10 @@ export default function PollyDailyPerch({
     reactY.setValue(0);
     reactScale.setValue(1);
 
-    if (reduceMotion) {
+    // Reduce Motion, AND while it is still unknown (null), is the calm path:
+    // no bark, no recoil, no dance (ui/dailyBreach.ts dailyBreachEffects).
+    const plays = dailyBreachEffects(reduceMotion, true);
+    if (!plays.motion) {
       reactX.setValue(0);
       reactY.setValue(0);
       reactScale.setValue(1);
@@ -414,7 +418,7 @@ export default function PollyDailyPerch({
         Animated.timing(reactX, { toValue: 6, duration: 60, useNativeDriver: true }),
         Animated.timing(reactX, { toValue: 0, duration: 70, useNativeDriver: true }),
       ]).start();
-    } else if (reaction === 'happy') {
+    } else if (reaction === 'happy' && plays.pollyDance) {
       // The first lost life is a dance (ui/pollyDailyDance.ts), on its own
       // clock from the squawk: it owns her pose and shows the butter-knife
       // bubble while she hovers, and lands on the laugh pose set above.
@@ -446,9 +450,9 @@ export default function PollyDailyPerch({
     bubbleOpacity.setValue(0);
     setBubbleLine(getLine(reaction, dailyLossLineId, pickedCorrectLineId));
     // The dance shows its bubble itself (in at 850 ms, out from 1650 ms, on its
-    // clock); every other reaction, and the dance under Reduce Motion, fades
-    // it in here as before.
-    if (!(reaction === 'happy' && !reduceMotion)) {
+    // clock); every other reaction, and the calm dance (the laugh pose on the
+    // perch), fades it in here as before.
+    if (!(reaction === 'happy' && plays.pollyDance)) {
       Animated.timing(bubbleOpacity, {
         toValue: 1,
         duration: 180,
