@@ -23,18 +23,16 @@ import { usePollyAmbientMotion } from '../hooks/usePollyAmbientMotion';
 import { PollyPerchRig, POLLY_PERCH_RIG_ENABLED } from './PollyPerchRig';
 import { PollySpeechBubble } from './PollySpeechBubble';
 import { DAILY_POLLY_BUBBLE } from '../ui/dailyCastleScene';
+import { POLLY_DANCE_MS } from '../ui/pollyDailyDance';
 import {
-  POLLY_BREACH_POSES,
-  pollyBreachActiveKeyframes,
-  pollyBreachPoseKeyframes,
-  pollyDailyBreachTimeline,
-} from '../ui/pollyDailyBreach';
-import {
-  POLLY_DANCE_MS,
-  POLLY_DANCE_POSES,
-  pollyDailyDanceTimeline,
-  pollyDanceBubbleKeyframes,
-} from '../ui/pollyDailyDance';
+  DAILY_PERCH_EXIT_POSE,
+  DAILY_PERCH_FLY_POSE,
+  DAILY_PERCH_LAYER_POSES,
+  DAILY_PERCH_POSE,
+  DailyPerchMove,
+  composeDailyPerch,
+  dailyPerchOwnOpacity,
+} from '../ui/pollyDailyPerchLayers';
 
 // DailyPollyReaction here is pwDailyMaterials' POSE-keyed type ('perched' |
 // 'happy' | 'laughing' | 'shocked'), NOT the trigger type of the same name in
@@ -84,8 +82,12 @@ type Props = {
    * starts with the plaque's first leg. Her tier moves (ui/pollyDailyBreach.ts)
    * ride them: the two-clue jump from the contact, the one-clue fury from the
    * throw. While a move runs it owns her pose; at 0 (rest) it shows nothing.
+   * Each clock has a live gate (0/1, only ever set, never animated): the
+   * screen sets it to 1 as it starts that clock and to 0 BEFORE it stops one,
+   * so a stopped clock can never light a layer (ui/pollyDailyPerchLayers.ts,
+   * THE LIVE GATES).
    */
-  breachClocks?: { hit: Animated.Value; smash: Animated.Value };
+  breachClocks?: { hit: Animated.Value; smash: Animated.Value; hitLive: Animated.Value; smashLive: Animated.Value };
   /** The castle shake's translate values (DailyCastleStage onShakeTransform); 0 at rest. */
   shake?: {
     translateX: Animated.AnimatedInterpolation<number>;
@@ -96,16 +98,11 @@ type Props = {
 // Clean full-pose drawings (background stripped to transparent). The expression
 // lives in the art; life + menace come from whole-image motion + the SFX.
 // Art and multipliers come from the shared screen table (pollyScreenPoses.ts):
-// master art at 1, except idle, which stays sprite4 for the face rig.
-const POSE: Record<'idle' | 'happy' | 'laughing' | 'shocked', PollyScreenPoseName> = {
-  idle: 'idle',         // smug perched — watchful (face rig)
-  // First lost life (wrong): the dance (ui/pollyDailyDance.ts) plays over this
-  // and lands on it; under Reduce Motion it is the whole reaction.
-  happy: 'laugh',
-  laughing: 'laugh',    // laughing wide (out of lives)
-  shocked: 'shocked',   // shocked (win)
-};
-const POSE_FLY: PollyScreenPoseName = 'fly'; // fly-in entrance
+// master art at 1, except idle, which stays sprite4 for the face rig. Which
+// pose each reaction shows, and which layer is visible, live in
+// ui/pollyDailyPerchLayers.ts (pure, tested).
+const POSE = DAILY_PERCH_POSE;
+const POSE_FLY = DAILY_PERCH_FLY_POSE; // fly-in entrance
 // Her picture box: the original 150 pt perch box times DAILY_POLLY_SCALE.
 // One size for the rig and every pose layer, so they all grow together. Tune
 // DAILY_POLLY_SCALE on the phone; the wall spot is the 150 pt box's, and she
@@ -116,10 +113,7 @@ const DAILY_POLLY_SIZE = DAILY_POLLY_BASE_SIZE * DAILY_POLLY_SCALE;
 
 // The win and the loss end the Daily: once that last line has faded she flies
 // out (win: angry, loss: grinning) and Results opens after she is gone.
-const EXIT_POSE: Partial<Record<Reaction, PollyScreenPoseName>> = {
-  shocked: 'flyAngry',
-  laughing: 'flyGrin',
-};
+const EXIT_POSE: Partial<Record<Reaction, PollyScreenPoseName>> = DAILY_PERCH_EXIT_POSE;
 
 // Arrival (Pete, 2026-10-08): when play starts she flies in from the top-left
 // in the fly pose, drifting down to her wall spot and slowing as she lands; on
@@ -144,29 +138,14 @@ const EXIT_Y_HEADROOM = 80;
 // Every pose the perch can show gets one stacked layer that stays mounted for
 // the life of the perch; only the current pose is visible (opacity 1, the rest
 // 0). Swapping by mount/unmount made each switch create a fresh image view,
-// which draws empty for a frame or two. To give a new pose a layer, add it here.
-const PERCH_LAYER_POSES: readonly PollyScreenPoseName[] = [
-  ...new Set<PollyScreenPoseName>([
-    POSE_FLY, POSE.idle, POSE.happy, POSE.laughing, POSE.shocked,
-    ...Object.values(EXIT_POSE),
-    // The breach's tier moves (ui/pollyDailyBreach.ts) and the first-miss
-    // dance (ui/pollyDailyDance.ts).
-    ...POLLY_BREACH_POSES,
-    ...POLLY_DANCE_POSES,
-  ]),
-];
-// Every move that can own her pose, each on its own clock.
-const MOVE_TIMELINES = {
-  hit: pollyDailyBreachTimeline('hit'),
-  smash: pollyDailyBreachTimeline('smash'),
-  dance: pollyDailyDanceTimeline(),
-} as const;
-type MoveName = keyof typeof MOVE_TIMELINES;
-const MOVE_POSES: readonly PollyScreenPoseName[] = [...new Set([...POLLY_BREACH_POSES, ...POLLY_DANCE_POSES])];
+// which draws empty for a frame or two. To give a new pose a layer, add it to
+// DAILY_PERCH_LAYER_POSES.
 // Poses the face rig draws (idle) share the one rig layer instead of an image.
-const PERCH_IMAGE_POSES = PERCH_LAYER_POSES.filter(
+const PERCH_IMAGE_POSES = DAILY_PERCH_LAYER_POSES.filter(
   p => !(POLLY_PERCH_RIG_ENABLED && pollyScreenPoseUsesRig(p)),
 );
+// One Animated number node of the perch's layer graph.
+type PerchNode = Animated.Value | Animated.AnimatedInterpolation<number>;
 
 function getLine(
   reaction: Reaction | null,
@@ -244,8 +223,11 @@ export default function PollyDailyPerch({
   const reactX = useRef(new Animated.Value(0)).current;
   const reactY = useRef(new Animated.Value(0)).current;
   const reactScale = useRef(new Animated.Value(1)).current;
-  // The first-miss dance's own clock (ms from the reaction's start, 0 at rest).
+  // The first-miss dance's own clock (ms from the reaction's start, 0 at rest)
+  // and its live gate: 1 only while the dance plays, set to 0 BEFORE the clock
+  // is stopped (ui/pollyDailyPerchLayers.ts, THE LIVE GATES).
   const danceClock = useRef(new Animated.Value(0)).current;
+  const danceLive = useRef(new Animated.Value(0)).current;
   // Flight offsets for the arrival and the fly-out. At rest on the wall: 0, 0,
   // no tilt, full size. Out of play she is parked off screen above.
   const flyX = useRef(new Animated.Value(0)).current;
@@ -293,6 +275,7 @@ export default function PollyDailyPerch({
     return () => {
       if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
       reactionTokenRef.current += 1;
+      danceLive.setValue(0);
       danceClock.stopAnimation();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -356,7 +339,10 @@ export default function PollyDailyPerch({
     const isReacting =
       reaction === 'happy' || reaction === 'laughing' || reaction === 'shocked' || reaction === 'correct';
     // Any new reaction (or the reset after one) ends a dance still playing:
-    // she is back at rest, (0, 0), her own pose.
+    // she is back at rest, (0, 0), her own pose. The gate goes first: a dance
+    // stopped mid-way reports its last value back to JS AFTER this reset, and
+    // only the gate keeps that value from lighting a dance pose.
+    danceLive.setValue(0);
     danceClock.stopAnimation();
     danceClock.setValue(0);
 
@@ -432,6 +418,7 @@ export default function PollyDailyPerch({
       // The first lost life is a dance (ui/pollyDailyDance.ts), on its own
       // clock from the squawk: it owns her pose and shows the butter-knife
       // bubble while she hovers, and lands on the laugh pose set above.
+      danceLive.setValue(1);
       Animated.timing(danceClock, {
         toValue: POLLY_DANCE_MS,
         duration: POLLY_DANCE_MS,
@@ -497,69 +484,58 @@ export default function PollyDailyPerch({
   });
 
   // The breach's tier moves, read off the screen's breach clocks (resting ones
-  // when none are passed, so every node keeps one shape). Built once: nothing
-  // here waits for a render, so she moves with the plaque and the castle.
+  // when none are passed, so every node keeps one shape), and the dance off its
+  // own clock. Built once: nothing here waits for a render, so she moves with
+  // the plaque and the castle. Which layer shows is composed by
+  // ui/pollyDailyPerchLayers.ts, the same composition the tests sample.
   const restingHitClock = useRef(new Animated.Value(0)).current;
   const restingSmashClock = useRef(new Animated.Value(0)).current;
+  const restingLive = useRef(new Animated.Value(0)).current;
   const hitClock = breachClocks?.hit ?? restingHitClock;
   const smashClock = breachClocks?.smash ?? restingSmashClock;
-  const breachMove = useMemo(() => {
-    const clocks: Record<MoveName, Animated.Value> = { hit: hitClock, smash: smashClock, dance: danceClock };
-    const read = (clock: Animated.Value, keys: { inputRange: number[]; outputRange: number[] }) =>
-      clock.interpolate({ ...keys, extrapolate: 'clamp' });
-    // Each move on its own clock, summed: only one ever moves at a time (a new
-    // claim or reaction rests the others), and each rests at 0.
-    const sum = (make: (move: MoveName) => { inputRange: number[]; outputRange: number[] }) =>
-      Animated.add(
-        read(clocks.hit, make('hit')),
-        Animated.add(read(clocks.smash, make('smash')), read(clocks.dance, make('dance'))),
-      );
-    // 1 while a move owns her pose; her own pose shows only when it is 0.
-    // Clamped, so two moves overlapping for a frame can never go negative.
-    const owned = sum((m) => pollyBreachActiveKeyframes(MOVE_TIMELINES[m]));
-    const notOwned = owned.interpolate({ inputRange: [0, 1], outputRange: [1, 0], extrapolate: 'clamp' });
-    const poseOpacity = Object.fromEntries(MOVE_POSES.map((p) => [
-      p,
-      sum((m) => pollyBreachPoseKeyframes(MOVE_TIMELINES[m], p)),
-    ])) as Partial<Record<PollyScreenPoseName, Animated.AnimatedAddition<number>>>;
-    const rotateDeg = sum((m) => MOVE_TIMELINES[m].rotateDeg);
-    return {
-      notOwned,
-      poseOpacity,
-      x: sum((m) => MOVE_TIMELINES[m].x),
-      y: sum((m) => MOVE_TIMELINES[m].y),
-      rotate: rotateDeg.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }),
-      // The dance's butter-knife bubble, added to the reactions' own bubble opacity.
-      danceBubble: read(danceClock, pollyDanceBubbleKeyframes()),
-    };
-  }, [danceClock, hitClock, smashClock]);
-  const bubbleShown = useMemo(
-    () => Animated.add(bubbleOpacity, breachMove.danceBubble),
-    [breachMove, bubbleOpacity],
-  );
+  const hitLive = breachClocks?.hitLive ?? restingLive;
+  const smashLive = breachClocks?.smashLive ?? restingLive;
 
   // Her own pose as one stable value per layer (and the rig), switched when the
-  // pose changes; a breach move shows over it by its own opacity.
+  // pose changes; a move shows over it by its own opacity.
   const ownOpacity = useRef(
     Object.fromEntries(PERCH_IMAGE_POSES.map((p) => [p, new Animated.Value(p === POSE_FLY ? 1 : 0)])) as Record<PollyScreenPoseName, Animated.Value>,
   ).current;
   const rigOwnOpacity = useRef(new Animated.Value(0)).current;
   useLayoutEffect(() => {
-    rigOwnOpacity.setValue(rigVisible ? 1 : 0);
-    for (const p of PERCH_IMAGE_POSES) ownOpacity[p].setValue(!rigVisible && p === pose ? 1 : 0);
+    const own = dailyPerchOwnOpacity(pose, rigVisible, PERCH_IMAGE_POSES);
+    rigOwnOpacity.setValue(own.rig);
+    for (const p of PERCH_IMAGE_POSES) ownOpacity[p].setValue(own.images[p]);
   }, [ownOpacity, pose, rigOwnOpacity, rigVisible]);
-  const layerOpacity = useMemo(() => {
-    const out = {} as Record<PollyScreenPoseName, Animated.AnimatedNode>;
-    for (const p of PERCH_IMAGE_POSES) {
-      const own = Animated.multiply(ownOpacity[p], breachMove.notOwned);
-      const move = breachMove.poseOpacity[p];
-      out[p] = move ? Animated.add(own, move) : own;
-    }
-    return out;
-  }, [breachMove, ownOpacity]);
-  const rigOpacity = useMemo(
-    () => Animated.multiply(rigOwnOpacity, breachMove.notOwned),
-    [breachMove, rigOwnOpacity],
+
+  const perch = useMemo(() => {
+    const clocks: Record<DailyPerchMove, { clock: Animated.Value; live: Animated.Value }> = {
+      hit: { clock: hitClock, live: hitLive },
+      smash: { clock: smashClock, live: smashLive },
+      dance: { clock: danceClock, live: danceLive },
+    };
+    const layers = composeDailyPerch<PerchNode>(
+      {
+        // A move's keyframes on its clock, times its live gate.
+        read: (move, keys) => Animated.multiply(
+          clocks[move].clock.interpolate({ ...keys, extrapolate: 'clamp' }),
+          clocks[move].live,
+        ),
+        add: (a, b) => Animated.add(a, b),
+        multiply: (a, b) => Animated.multiply(a, b),
+        release: (owned) => owned.interpolate({ inputRange: [0, 1], outputRange: [1, 0], extrapolate: 'clamp' }),
+      },
+      PERCH_IMAGE_POSES,
+      { rig: rigOwnOpacity, image: (p) => ownOpacity[p] },
+    );
+    return {
+      ...layers,
+      rotate: layers.rotateDeg.interpolate({ inputRange: [-360, 360], outputRange: ['-360deg', '360deg'] }),
+    };
+  }, [danceClock, danceLive, hitClock, hitLive, ownOpacity, rigOwnOpacity, smashClock, smashLive]);
+  const bubbleShown = useMemo(
+    () => Animated.add(bubbleOpacity, perch.danceBubble),
+    [perch, bubbleOpacity],
   );
 
   // The castle shake moves her whole layer with the castle (her root keeps its
@@ -609,9 +585,9 @@ export default function PollyDailyPerch({
               { translateY: flyY },
               { rotate: flyRotate },
               { scale: flyScale },
-              { translateX: breachMove.x },
-              { translateY: breachMove.y },
-              { rotate: breachMove.rotate },
+              { translateX: perch.x },
+              { translateY: perch.y },
+              { rotate: perch.rotate },
               { translateX: reactX },
               { translateX: breatheX },
               { translateY: breatheY },
@@ -625,7 +601,7 @@ export default function PollyDailyPerch({
             opacity 1. Same DAILY_POLLY_SIZE box for the rig and the flat
             poses. A hidden rig gets reduceMotion so its blink timer rests. */}
         {POLLY_PERCH_RIG_ENABLED && (
-          <Animated.View style={[styles.poseLayer, { opacity: rigOpacity }]}>
+          <Animated.View style={[styles.poseLayer, { opacity: perch.rig }]}>
             <PollyPerchRig size={DAILY_POLLY_SIZE} reduceMotion={rigVisible ? reduceMotion : true} />
           </Animated.View>
         )}
@@ -638,7 +614,7 @@ export default function PollyDailyPerch({
               style={[
                 styles.pollyImage,
                 styles.poseLayer,
-                { opacity: layerOpacity[layerPose], transform: [{ scale: art.scale }] },
+                { opacity: perch.images[layerPose], transform: [{ scale: art.scale }] },
               ]}
               resizeMode="contain"
             />

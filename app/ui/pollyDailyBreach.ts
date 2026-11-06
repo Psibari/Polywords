@@ -227,7 +227,14 @@ export function pollyBreachActiveKeyframes(timeline: PollyBreachTimeline): Daily
   return { inputRange, outputRange };
 }
 
-/** A pose layer's opacity during the move: 1 through its segments (merged when adjacent), 0 otherwise. */
+/**
+ * A pose layer's opacity during the move: 1 through its segments (merged when
+ * adjacent), 0 otherwise. Where one pose hands over to the next, the old one
+ * steps down over the same 0.5 ms the new one steps up in, so the two always
+ * sum to 1: never two Pollys at once, whatever frame the clock is sampled on.
+ * The move's last pose steps down with the move's own hand-back (endMs to
+ * endMs + 0.5), as her own pose steps back up.
+ */
 export function pollyBreachPoseKeyframes(timeline: PollyBreachTimeline, pose: PollyScreenPoseName): DailyBreachKeyframes {
   const runs: { from: number; to: number }[] = [];
   for (const s of timeline.segments) {
@@ -242,10 +249,11 @@ export function pollyBreachPoseKeyframes(timeline: PollyBreachTimeline, pose: Po
   for (const { from, to } of runs) {
     const [off, on] = stepUp(from);
     if (inputRange.length === 0 && off > 0) { inputRange.push(0); outputRange.push(0); }
+    const [hold, gone] = to < timeline.endMs ? [to - EDGE_MS, to] : [to, to + EDGE_MS];
     inputRange.push(off); outputRange.push(0);
     inputRange.push(on); outputRange.push(1);
-    inputRange.push(to); outputRange.push(1);
-    inputRange.push(to + EDGE_MS); outputRange.push(0);
+    inputRange.push(hold); outputRange.push(1);
+    inputRange.push(gone); outputRange.push(0);
   }
   return { inputRange, outputRange };
 }

@@ -629,9 +629,16 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // (rest) every one of them is invisible.
   const breachHitClock = useRef(new Animated.Value(0)).current;
   const breachSmashClock = useRef(new Animated.Value(0)).current;
+  // Polly's live gate per clock (0/1, only ever set, never animated): 1 from
+  // the moment that clock starts, 0 BEFORE it is stopped. A clock stopped
+  // mid-run reports its last value back to JS after it was reset to 0, so the
+  // clock alone cannot say her tier move is over (ui/pollyDailyPerchLayers.ts,
+  // THE LIVE GATES).
+  const breachHitLive = useRef(new Animated.Value(0)).current;
+  const breachSmashLive = useRef(new Animated.Value(0)).current;
   const breachClocks = useMemo(
-    () => ({ hit: breachHitClock, smash: breachSmashClock }),
-    [breachHitClock, breachSmashClock],
+    () => ({ hit: breachHitClock, smash: breachSmashClock, hitLive: breachHitLive, smashLive: breachSmashLive }),
+    [breachHitClock, breachSmashClock, breachHitLive, breachSmashLive],
   );
   // The gate's side of the breach: the broken state (it hides clues two and
   // three), the shudder, the cracks on the shut door, and the plaque's press
@@ -677,6 +684,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // Both clocks to 0: every breach visual, and Polly's tier move, at rest, and
   // Polly back on her perch at (0, 0, 0).
   function restBreachClocks() {
+    // Polly's gates first, so the stopped clocks' late values cannot light her.
+    breachHitLive.setValue(0);
+    breachSmashLive.setValue(0);
     breachHitClock.stopAnimation();
     breachHitClock.setValue(0);
     breachSmashClock.stopAnimation();
@@ -1267,6 +1277,7 @@ export default function DailyChallengeScreen({ navigation }: Props) {
         const clockMs = dailyBreachClockMs(contactTier);
         clock.stopAnimation();
         clock.setValue(0);
+        (contactTier === 'hit' ? breachHitLive : breachSmashLive).setValue(1);
         Animated.timing(clock, {
           toValue: clockMs,
           duration: clockMs,
