@@ -684,6 +684,9 @@ export default function DailyChallengeScreen({ navigation }: Props) {
   // Both clocks to 0: every breach visual, and Polly's tier move, at rest, and
   // Polly back on her perch at (0, 0, 0).
   function restBreachClocks() {
+    // A breach rumble still running stops with its breach (a new claim, a
+    // wrong claim, a pause, unmount).
+    Haptics.cancelBreach();
     // Polly's gates first, so the stopped clocks' late values cannot light her.
     breachHitLive.setValue(0);
     breachSmashLive.setValue(0);
@@ -1248,20 +1251,19 @@ export default function DailyChallengeScreen({ navigation }: Props) {
     // unless BREACH_CONTACT_LEAD_MS moves them earlier for output latency.
     const fireContactCues = () => {
       if (completingCandidateRef.current !== candidate) return;
+      // The hit you feel, first: a hard hit and a rumble tail that rides the
+      // castle shake (haptics.ts BREACH_HAPTICS).
+      Haptics.cueAsync(contactTier === 'hit' ? 'breachHit' : 'breachSmash');
       // Polly startles on the contact in both tiers: the two-clue jump starts
       // here, and the fury is blown up and back from here.
       playPollyReaction('startled');
       if (contactTier === 'hit') {
         playSfx('breachGateCrack');
         playSfx('breachCastleRumble');
-        // TODO(prompt 8): the breach's own 'hit' haptic; trapRejectHeavy stands in.
-        Haptics.cueAsync('trapRejectHeavy');
       } else {
         playSfx('breachSmash');
         playSfx('breachCastleRumble');
         playSfx('breachThunder');
-        // TODO(prompt 8): the breach's own 'smash' haptic; bossEntry stands in.
-        Haptics.cueAsync('bossEntry');
       }
     };
     const cuesOnLegEnd = contactTier !== null && BREACH_CONTACT_LEAD_MS === 0;

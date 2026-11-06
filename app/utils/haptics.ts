@@ -35,7 +35,9 @@ export type HapticCue =
   | 'dailyInkPress'
   | 'dailyRodStop'
   | 'dailyGateShut'
-  | 'dailyStoneSeat';
+  | 'dailyStoneSeat'
+  | 'breachHit'
+  | 'breachSmash';
 
 function hapticsEnabled(): boolean {
   return useGameStore.getState().hapticsEnabled;
@@ -47,6 +49,68 @@ function hapticsEnabled(): boolean {
 // must keep returning Promise<void> for every other cue — cancelled through
 // the companion Haptics.cancelGauntletWallTremble() instead.
 let gauntletWallTrembleTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+// ── THE BREACH HAPTICS: the one place to tune them ──
+// Pete, 2026-11-04: "I want them to hit heavy when the castle rumbles. I want
+// to feel it. When the brick breaks, I want to feel it." Heavy is otherwise
+// kept for Boss beats; Pete overrode that for the breach. expo-haptics has no
+// sustained buzz, so the rumble is simulated the way gauntletWallTremble is:
+// Soft impacts close enough together to fuse into one grind.
+// START values for a phone pass. Each tier: its `hits` (ms from the contact),
+// then a Soft `rumble` (one pulse every `everyMs`, from `fromMs` to `toMs`
+// inclusive), then an optional `last` hit.
+type BreachHapticShape = {
+  hits: readonly { atMs: number; style: ExpoHaptics.ImpactFeedbackStyle }[];
+  rumble: { style: ExpoHaptics.ImpactFeedbackStyle; fromMs: number; toMs: number; everyMs: number };
+  last: { atMs: number; style: ExpoHaptics.ImpactFeedbackStyle } | null;
+};
+export const BREACH_HAPTICS: Readonly<{ hit: BreachHapticShape; smash: BreachHapticShape }> = {
+  // Two clues: the plaque hits the shut gate. About 0.5 s, the strongest part
+  // of the 720 ms castle shake. 7 rumble pulses.
+  hit: {
+    hits: [
+      { atMs: 0, style: ExpoHaptics.ImpactFeedbackStyle.Rigid },
+      { atMs: 55, style: ExpoHaptics.ImpactFeedbackStyle.Heavy },
+    ],
+    rumble: { style: ExpoHaptics.ImpactFeedbackStyle.Soft, fromMs: 120, toMs: 480, everyMs: 60 },
+    last: null,
+  },
+  // One clue: the brick breaks. Two Heavy hits, the Rigid crack, a 13-pulse
+  // rumble, a Medium to settle. About 0.9 s, matching the 950 ms shake.
+  smash: {
+    hits: [
+      { atMs: 0, style: ExpoHaptics.ImpactFeedbackStyle.Heavy },
+      { atMs: 70, style: ExpoHaptics.ImpactFeedbackStyle.Heavy },
+      { atMs: 130, style: ExpoHaptics.ImpactFeedbackStyle.Rigid },
+    ],
+    rumble: { style: ExpoHaptics.ImpactFeedbackStyle.Soft, fromMs: 190, toMs: 850, everyMs: 55 },
+    last: { atMs: 900, style: ExpoHaptics.ImpactFeedbackStyle.Medium },
+  },
+};
+
+/** Every pulse of a breach shape, in order: its hits, the rumble, the last hit. */
+export function breachHapticPulses(shape: BreachHapticShape): { atMs: number; style: ExpoHaptics.ImpactFeedbackStyle }[] {
+  const pulses = [...shape.hits];
+  const { style, fromMs, toMs, everyMs } = shape.rumble;
+  for (let atMs = fromMs; atMs <= toMs; atMs += everyMs) pulses.push({ atMs, style });
+  if (shape.last) pulses.push(shape.last);
+  return pulses;
+}
+
+// A breach's pending pulses. Starting either breach cue cancels the earlier
+// one first; Haptics.cancelBreach() clears them (a new claim, a pause, leaving).
+let breachTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+function playBreach(shape: BreachHapticShape): Promise<void> {
+  breachTimeouts.forEach(clearTimeout);
+  breachTimeouts = [];
+  let first: Promise<void> = Promise.resolve();
+  for (const { atMs, style } of breachHapticPulses(shape)) {
+    if (atMs <= 0) first = ExpoHaptics.impactAsync(style);
+    else breachTimeouts.push(setTimeout(() => ExpoHaptics.impactAsync(style), atMs));
+  }
+  return first;
+}
 
 /**
  * Single haptics gateway for player-facing feedback.
@@ -255,11 +319,23 @@ export const Haptics = {
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
       case 'gauntletBrickLand':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
+      // The Daily breach's contact: a hard hit, then a rumble tail that rides
+      // the castle shake. Every number lives in BREACH_HAPTICS above.
+      case 'breachHit':
+        return playBreach(BREACH_HAPTICS.hit);
+      case 'breachSmash':
+        return playBreach(BREACH_HAPTICS.smash);
     }
   },
 
   cancelGauntletWallTremble(): void {
     gauntletWallTrembleTimeouts.forEach(clearTimeout);
     gauntletWallTrembleTimeouts = [];
+  },
+
+  /** Stops a breach rumble still running (a new claim, a pause, leaving the Daily). */
+  cancelBreach(): void {
+    breachTimeouts.forEach(clearTimeout);
+    breachTimeouts = [];
   },
 } as const;

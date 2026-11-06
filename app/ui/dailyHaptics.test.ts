@@ -94,4 +94,36 @@ const count = (source: string, needle: string) => source.split(needle).length - 
   assert.ok(!screen.includes('NotificationFeedbackType.Error'), 'no extra Error on the Daily screen');
 }
 
+// The breach (2026-11-05): a hard hit and a simulated rumble per tier, every
+// number in ONE block (BREACH_HAPTICS); the cases only play it.
+{
+  const block = between(haptics, 'export const BREACH_HAPTICS', '\n};');
+  const shape = (tier: string) => between(block, `  ${tier}: {`, '\n  },');
+  const hit = shape('hit');
+  assert.match(hit, /\{ atMs: 0, style: ExpoHaptics\.ImpactFeedbackStyle\.Rigid \},\s*\{ atMs: 55, style: ExpoHaptics\.ImpactFeedbackStyle\.Heavy \},/);
+  assert.match(hit, /rumble: \{ style: ExpoHaptics\.ImpactFeedbackStyle\.Soft, fromMs: 120, toMs: 480, everyMs: 60 \},\s*last: null,/);
+  const smash = shape('smash');
+  assert.match(
+    smash,
+    /\{ atMs: 0, style: ExpoHaptics\.ImpactFeedbackStyle\.Heavy \},\s*\{ atMs: 70, style: ExpoHaptics\.ImpactFeedbackStyle\.Heavy \},\s*\{ atMs: 130, style: ExpoHaptics\.ImpactFeedbackStyle\.Rigid \},/,
+  );
+  assert.match(smash, /rumble: \{ style: ExpoHaptics\.ImpactFeedbackStyle\.Soft, fromMs: 190, toMs: 850, everyMs: 55 \},\s*last: \{ atMs: 900, style: ExpoHaptics\.ImpactFeedbackStyle\.Medium \},/);
+  // The rumble's inclusive range gives the pulse counts in the brief.
+  assert.equal(Math.floor((480 - 120) / 60) + 1, 7, 'hit: 7 rumble pulses');
+  assert.equal(Math.floor((850 - 190) / 55) + 1, 13, 'smash: 13 rumble pulses');
+  assert.match(haptics, /for \(let atMs = fromMs; atMs <= toMs; atMs \+= everyMs\) pulses\.push\(\{ atMs, style \}\);/);
+  // The cases: no numbers of their own.
+  assert.match(haptics, /case 'breachHit':\n\s*return playBreach\(BREACH_HAPTICS\.hit\);/);
+  assert.match(haptics, /case 'breachSmash':\n\s*return playBreach\(BREACH_HAPTICS\.smash\);/);
+  // Restarting either cancels the earlier one; cancelBreach clears them.
+  const play = between(haptics, 'function playBreach(', '\n}');
+  assert.match(play, /\{\n\s*breachTimeouts\.forEach\(clearTimeout\);\n\s*breachTimeouts = \[\];/, 'a new breach cancels the old first');
+  assert.match(haptics, /cancelBreach\(\): void \{\n\s*breachTimeouts\.forEach\(clearTimeout\);\n\s*breachTimeouts = \[\];/);
+  // Gated like every cue: cueAsync's single hapticsEnabled check comes first.
+  const cue = between(haptics, 'cueAsync(cue: HapticCue): Promise<void> {', 'switch (cue) {');
+  assert.match(cue, /if \(!hapticsEnabled\(\)\) return Promise\.resolve\(\);/);
+  // The graded claim haptic at the claim is untouched.
+  for (const c of ['standardCorrect', 'claimMedium', 'heightenedCorrect']) assert.ok(haptics.includes(`case '${c}'`), c);
+}
+
 console.log('dailyHaptics tests passed');

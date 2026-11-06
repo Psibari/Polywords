@@ -605,9 +605,26 @@ assert.equal(DAILY_BREACH_PLAQUE_PRESS.inMs + DAILY_BREACH_PLAQUE_PRESS.outMs, 9
   // The cues: guarded, sounds and haptic only, no state, no animation.
   const cues = between('const fireContactCues = () => {', '\n    };');
   assert.match(cues, /^const fireContactCues = \(\) => \{\n\s*if \(completingCandidateRef\.current !== candidate\) return;/);
-  for (const needle of ["playSfx('breachGateCrack')", "playSfx('breachCastleRumble')", "playSfx('breachSmash')", "playSfx('breachThunder')", "Haptics.cueAsync('trapRejectHeavy')", "Haptics.cueAsync('bossEntry')"]) {
+  for (const needle of ["playSfx('breachGateCrack')", "playSfx('breachCastleRumble')", "playSfx('breachSmash')", "playSfx('breachThunder')"]) {
     assert.ok(cues.includes(needle), `contact cues: ${needle}`);
   }
+  // The breach haptics (2026-11-05) replaced the stand-ins: fired from these
+  // cues, FIRST after the guard, nothing before them.
+  assert.match(
+    cues,
+    /^const fireContactCues = \(\) => \{\n\s*if \(completingCandidateRef\.current !== candidate\) return;\n(\s*\/\/[^\n]*\n)*\s*Haptics\.cueAsync\(contactTier === 'hit' \? 'breachHit' : 'breachSmash'\);/,
+    'breachHit / breachSmash fire first from the contact cues',
+  );
+  // ('breachSmash' is also the smash's sound; only haptic calls are counted.)
+  assert.equal(screen.split("? 'breachHit' : 'breachSmash'").length - 1, 1, 'the breach haptics fire only from the contact cues');
+  assert.doesNotMatch(screen, /Haptics\.cueAsync\('breach(Hit|Smash)'\)/, 'no other breach haptic call');
+  assert.doesNotMatch(cues, /trapRejectHeavy|bossEntry/, 'the stand-ins are gone');
+  // A rumble still running stops wherever the clocks are rested (a new claim,
+  // a wrong claim, a pause, unmount through clearCorrectTransitionTimers).
+  const restClocks = between('function restBreachClocks() {', '\n  }');
+  assert.match(restClocks, /^function restBreachClocks\(\) \{\n(\s*\/\/[^\n]*\n)*\s*Haptics\.cancelBreach\(\);/, 'cancelBreach where the clocks rest');
+  assert.equal(screen.split('Haptics.cancelBreach();').length - 1, 1, 'one cancel, inside restBreachClocks');
+  assert.match(screen, /useEffect\(\(\) => clearCorrectTransitionTimers, \[\]\);/, 'unmount rests the clocks, so it cancels too');
   assert.doesNotMatch(cues, /\bset[A-Z]\w*\(|Animated\.|correctClaim/, 'nothing at contact but sounds and haptics');
   // On the plaque's real contact: the first leg's completion, cues FIRST.
   const legEnd = between('plaqueRiseLeg().start(({ finished }) => {', '\n      });');
