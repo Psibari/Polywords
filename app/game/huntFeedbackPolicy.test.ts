@@ -70,7 +70,7 @@ console.log('huntFeedbackPolicy tests passed');
 
 assert.deepEqual(
   (['light', 'medium', 'heavy', undefined] as const).map(resolveClaimHapticCue),
-  ['standardCorrect', 'claimMedium', 'heightenedCorrect', 'heightenedCorrect'],
+  ['huntStandardCorrect', 'huntClaimMedium', 'huntHeightenedCorrect', 'huntHeightenedCorrect'],
   'claims climb across the three phase tiers; an unset tier keeps the old strongest claim cue',
 );
 assert.deepEqual(
@@ -92,7 +92,7 @@ assert.deepEqual(
 );
 assert.deepEqual(
   (['steady', 'sharp', 'razorSharp', 'untrappable', 'hunted'] as const).map(resolvePressHapticCue),
-  ['pressSteady', 'pressSharp', 'pressRazor', 'pressUntrappable', 'pressHunted'],
+  ['huntPressSteady', 'pressSharp', 'pressRazor', 'pressUntrappable', 'pressHunted'],
   'the touch-down cue follows the same momentum as the card glow',
 );
 

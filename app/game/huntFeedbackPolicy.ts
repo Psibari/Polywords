@@ -97,19 +97,22 @@ export function resolveFXAccessibility(
 // Claiming a REAL and rejecting a trap are different gestures with different
 // meaning, so they get different shapes in the hand: a claim is a solid
 // Medium "take"; a rejection always opens with a sharp Rigid "swat". Both
-// climb across the Hunt's three phase tiers (light / medium / heavy) by
-// rhythm, never by Heavy force, which stays reserved for Boss beats.
+// climb across the Hunt's three phase tiers (light / medium / heavy). The
+// heavy tier ends on a Heavy pulse (Pete, 2026-11-06, overriding the old rule
+// that kept Heavy for Boss beats); shapes live in utils/haptics.ts.
 // An unset tier keeps the old behavior (the strongest claim cue).
 export type HuntHapticTier = 'light' | 'medium' | 'heavy';
 
-export type ClaimHapticCue = 'standardCorrect' | 'claimMedium' | 'heightenedCorrect';
+// Hunt-only copies of the Daily's claim cues (2026-11-06), so the Hunt could
+// get stronger without moving the Daily.
+export type ClaimHapticCue = 'huntStandardCorrect' | 'huntClaimMedium' | 'huntHeightenedCorrect';
 export type TrapRejectHapticCue = 'trapRejectLight' | 'trapRejectMedium' | 'trapRejectHeavy';
 export type TierUpHapticCue = 'tierUp' | 'tierUpRazor' | 'tierUpUntrappable';
 
 export function resolveClaimHapticCue(tier: HuntHapticTier | undefined): ClaimHapticCue {
-  if (tier === 'light') return 'standardCorrect';
-  if (tier === 'medium') return 'claimMedium';
-  return 'heightenedCorrect';
+  if (tier === 'light') return 'huntStandardCorrect';
+  if (tier === 'medium') return 'huntClaimMedium';
+  return 'huntHeightenedCorrect';
 }
 
 export function resolveTrapRejectHapticCue(tier: HuntHapticTier | undefined): TrapRejectHapticCue {
@@ -119,14 +122,14 @@ export function resolveTrapRejectHapticCue(tier: HuntHapticTier | undefined): Tr
 }
 
 export type PressHapticCue =
-  | 'pressSteady'
+  | 'huntPressSteady'
   | 'pressSharp'
   | 'pressRazor'
   | 'pressUntrappable'
   | 'pressHunted';
 
 const PRESS_HAPTIC_CUE: Record<MomentumStrength, PressHapticCue> = {
-  steady: 'pressSteady',
+  steady: 'huntPressSteady',
   sharp: 'pressSharp',
   razorSharp: 'pressRazor',
   untrappable: 'pressUntrappable',

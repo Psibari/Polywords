@@ -935,12 +935,12 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
   function handleWrongShown() {
     if (!pendingWrongCueRef.current) return;
     pendingWrongCueRef.current = false;
-    Haptics.cueAsync('wrong');
+    Haptics.cueAsync('huntWrong');
   }
 
   // Face half of the old triggerWrongSwipeFeedback — shared by normal-tile
   // and gauntlet-tile wrong swipes, same as the original single function was.
-  // `wrongCueAtCard`: a Hunt card fires its 'wrong' cue when the card shows
+  // `wrongCueAtCard`: a Hunt card fires its 'huntWrong' cue when the card shows
   // the miss (handleWrongShown); a gauntlet card keeps it here, unchanged.
   function performWrongSwipeFeedback(
     brokeRealChain: boolean,
@@ -958,8 +958,8 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
     otherWrongCountRef.current = squawk.otherWrongCountAfter;
     if (squawk.squawk) setTimeout(() => playSfx('pollySqwawkShort'), 70);
     if (wrongCueAtCard) pendingWrongCueRef.current = true;
-    else Haptics.cueAsync('wrong');
-    // FELL OFF haptic layers on top of 'wrong' above, scaled to how far the
+    else Haptics.cueAsync('huntWrong');
+    // FELL OFF haptic layers on top of 'huntWrong' above, scaled to how far the
     // chain fell — nothing extra at severity null (broke from STEADY, there
     // was nothing real to lose).
     if (fellOffSeverity === 1) Haptics.cueAsync('fellOffSmall');
@@ -1404,7 +1404,7 @@ function BoardPresenter({ step, spawnEffect, onWrongSwipe, onGoldFlash, onBossDe
           ]).start();
         }
         playSfx('bookClose');
-        Haptics.selectionAsync();
+        Haptics.cueAsync('bookShut');
         if (reduceMotion) {
           bookSlideX.setValue(-SCREEN_WIDTH);
         } else {

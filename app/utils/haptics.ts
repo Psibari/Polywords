@@ -18,6 +18,14 @@ export type HapticCue =
   | 'trapRejectLight'
   | 'trapRejectMedium'
   | 'trapRejectHeavy'
+  // Hunt-only copies of cues the Daily also fires (2026-11-06): the Hunt was
+  // made stronger, the Daily keeps the originals untouched.
+  | 'huntPressSteady'
+  | 'huntStandardCorrect'
+  | 'huntClaimMedium'
+  | 'huntHeightenedCorrect'
+  | 'huntWrong'
+  | 'bookShut'
   | 'fellOffSmall'
   | 'fellOffMedium'
   | 'fellOffBig'
@@ -147,28 +155,67 @@ export const Haptics = {
       // below the ceiling reserved for boss beats (Pete, 2026-09-12).
       case 'gestureThreshold':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
-      // A finger landing on a Hunt card, firmer with momentum. One impact,
-      // fired once at touch-down; the swipe itself stays silent. Start values
-      // pending a device pass (Pete, 2026-10-11). UNTRAPPABLE's Heavy is the
-      // one exception to Heavy being kept for Boss beats.
+      // The Daily answer card's touch-down. The Hunt used this too until
+      // 2026-11-06; it now fires huntPressSteady below.
       case 'pressSteady':
-      case 'pressSharp':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light);
-      case 'pressRazor':
-      case 'pressHunted':
+      // A finger landing on a Hunt card, firmer with momentum. Fired once at
+      // touch-down; the swipe itself stays silent. TEST VALUES (Pete,
+      // 2026-11-06, "they all feel weak"): each moved up one notch. Pete
+      // allows Heavy on Hunt cues now (2026-11-06), overriding the old rule
+      // that kept Heavy for Boss beats.
+      case 'huntPressSteady':
+      case 'pressSharp':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+      case 'pressRazor':
+      case 'pressHunted': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 40);
+        return first;
+      }
       case 'pressUntrappable':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
+      // Hunt REAL claim by round tier (resolveClaimHapticCue). TEST VALUES
+      // (2026-11-06): each tier moved up one notch; the heavy tier ends on Heavy.
+      case 'huntStandardCorrect': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Soft), 70);
+        return first;
+      }
+      case 'huntClaimMedium': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 90);
+        return first;
+      }
+      case 'huntHeightenedCorrect': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 90);
+        return first;
+      }
+      // Hunt wrong swipe, up or right, normal card and gauntlet card. TEST
+      // VALUES (2026-11-06): a Rigid hit then a Heavy, replacing the Error
+      // notification the Daily still uses ('wrong' below).
+      case 'huntWrong': {
+        const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 60);
+        return first;
+      }
+      // The Hunt book shutting at the end of a word (MaskBoard onWordExit).
+      // TEST VALUE (2026-11-06): one Heavy, replacing selectionAsync.
+      case 'bookShut':
+        return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy);
+      // The Daily's claim cues (dailyCelebrationHaptic). The Hunt used these
+      // until 2026-11-06; it now fires the hunt* copies above.
       case 'standardCorrect':
         return ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
-      // Heavy is reserved for boss beats, so this climbs by rhythm instead of
-      // force: a double Medium pulse, same shape as gauntletBegin's pulses
-      // (Pete, 2026-09-12).
+      // Daily only now. Climbs by rhythm instead of force: a double Medium
+      // pulse, same shape as gauntletBegin's pulses (Pete, 2026-09-12).
       case 'heightenedCorrect': {
         const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 90);
         return first;
       }
+      // The Daily's wrong claim. The Hunt fires huntWrong (above) since 2026-11-06.
       case 'wrong':
         return ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Error);
       // Momentum tier crossing (STEADY/SHARP/RAZOR SHARP/UNTRAPPABLE). One
@@ -193,9 +240,8 @@ export const Haptics = {
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 120);
         return first;
       }
-      // A REAL claim is a solid Medium "take" that climbs by adding a soft
-      // follow-up at the medium phase tier; the light and heavy tiers keep
-      // standardCorrect / heightenedCorrect. First-pass, pending a device pass.
+      // Daily only now (the Hunt fires huntClaimMedium). A solid Medium "take"
+      // with a soft follow-up, between standardCorrect and heightenedCorrect.
       case 'claimMedium': {
         const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium);
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Soft), 70);
@@ -203,24 +249,27 @@ export const Haptics = {
       }
       // A trap rejection always opens with a sharp Rigid "swat" so it can
       // never be mistaken for a claim, then bounces. Same three phase tiers,
-      // climbing by what follows the swat. First-pass, pending a device pass.
+      // climbing by what follows the swat. Hunt-only. TEST VALUES (2026-11-06):
+      // each moved up one notch; the heavy tier's bounce is Heavy (Pete's
+      // override of the Boss-only Heavy rule).
       case 'trapRejectLight': {
         const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light), 50);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 55);
         return first;
       }
       case 'trapRejectMedium': {
         const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
         setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 55);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 110);
         return first;
       }
       case 'trapRejectHeavy': {
         const first = ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Rigid);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 55);
-        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Light), 110);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Heavy), 55);
+        setTimeout(() => ExpoHaptics.impactAsync(ExpoHaptics.ImpactFeedbackStyle.Medium), 110);
         return first;
       }
-      // FELL OFF severities — layered ON TOP of the 'wrong' cue above, not a
+      // FELL OFF severities — layered ON TOP of the 'huntWrong' cue above, not a
       // replacement for it, scaled to how far the chain fell. fellOffSmall
       // and fellOffMedium are first-pass placeholders (Open Items 3-4 in the
       // design spec); fellOffBig's shape is decided — two Medium pulses
