@@ -1089,15 +1089,17 @@ const tb = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  // Floating, bottom-right — stacked above the __DEV__-only boss-jump
-  // buttons (styles.devBossOverlay, right: 10, bottom: 10) rather than
-  // overlapping them. This is meant to be the pause button's permanent home
-  // once those dev buttons are removed, not a temporary parking spot.
+  // Floating, bottom-right, in its own low lane: this is the pause button's
+  // permanent home. At bottom 8 its top edge (52 pt up) sits below every one of
+  // Polly's Hunt bubbles (PollyHuntVisit.tsx: normal bubble bottom 58, pointing
+  // bubble bottom 76), so the pointing bubble, which reaches the right edge of
+  // a 375 pt phone, never draws under it. The __DEV__-only boss-jump stack
+  // (styles.devBossOverlay) is lifted above it (bottom 58) instead of behind it.
   // Pete's gold pause icon, the same size as every round icon button (ui/uiIconButton.ts).
   pauseBtn: {
     position: 'absolute',
     right: 10,
-    bottom: 74,
+    bottom: 8,
     zIndex: 200,
   },
   controlTarget: {
@@ -2440,7 +2442,7 @@ const styles = StyleSheet.create({
   devBossOverlay: {
     position: 'absolute',
     right: 10,
-    bottom: 10,
+    bottom: 58,
     zIndex: 200,
     gap: 6,
     alignItems: 'flex-end',
