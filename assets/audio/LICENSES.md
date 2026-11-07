@@ -176,3 +176,13 @@ licence summary itself was not read):
   credit not required).
 
 POLYWORDS edits: the slap is trimmed as above; both files had their ID3 tag stripped.
+
+## Armor flip turn source (recorded 2026-11-06)
+
+- `sfx/armor_flip_turn.mp3`: "Page Flip", uploaded to Pixabay by freesound_community, artist credit on the
+  page "qubodup (Freesound)", Pixabay file 47177, published 2022-06-21,
+  https://pixabay.com/sound-effects/page-flip-47177/ . The page states "Free for use under the Pixabay Content
+  License" (the licence summary itself was not read; the artist credit points to a Freesound original whose own
+  licence was not checked). Downloaded as `freesound_community-page-flip-47177.mp3`; the in-game file matches it
+  (waveform correlation 0.995). POLYWORDS edit: +8.5 dB gain to reach about -14.8 LUFS, no compression. The
+  hidden content-credentials tag was stripped on 2026-11-06 without re-encoding the audio.
